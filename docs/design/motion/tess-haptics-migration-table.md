@@ -19,7 +19,7 @@ Key: **swap** = same sound, change only the modifier (no behavior change). **cha
 | 5 | `Features/Command/BottomChrome.swift:130` | `.selection` on `opens` | `.tesseraFeedback(.selection, ...)` | Tess opens |
 | 6 | `Features/Command/BottomChrome.swift:132` | `.decrease` on `undos` | `.tesseraFeedback(.undo, trigger: undos)` | UNDO (the one app-wide slot) |
 | 7 | `Features/Command/CaptureParts.swift:141` | `.selection` on `isPressed` | `.tesseraFeedback(.selection, ...)` for every capture part except the UNDO word (row 26) | Capture part pressed |
-| 8 | `Features/Exercise/CarriageRail.swift:47` | `.selection` on `current` | `.tesseraFeedback(.selection, ...)` | Rail detent |
+| 8 | `Features/Exercise/CarriageRail.swift:47` | `.selection` on `current` | **none** (G386, ruled Oct 17 3:55 PM: no tick on any exercise page turn and none on appear; delete the raw haptic, Builder A work item) | Rail detent |
 | 9 | `Features/Home/HomeQueue.swift:276` | `.selection` on `armed` | `.tesseraFeedback(.selection, ...)` | Swipe armed |
 | 10 | `Features/Home/HomeQueue.swift:277` | light 0.5 on `holding` | `.tesseraFeedback(.pickedUp, trigger: holding)` | Row picked up |
 | 11 | `Features/Home/HomeQueue.swift:291` | light on `moves` | `.tesseraFeedback(.notNow, trigger: moves)` | Not now |
