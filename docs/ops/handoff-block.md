@@ -70,8 +70,8 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
    - No cards; elegant, smooth transitions and text effects; the app must make him want to use it (Oct 15, 12:45 AM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MFAjBiVQe19swLsWzT6BSt9)
 
 ### Kitchen
-- Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MBXXiW98VQjyxykT4o3aJzs (Kitchen lead, rotated Oct 17) and before it cmsg_01VTPva3JGXrfvetgUvAWE7MHov6f1LgB5VxUochonHG95 (Recipes and groceries apps); old session cse_01WEnBRbu1uKt5FybKX4ffbe (and cse_01Fe7U23BpiBM3LSkVTTfatZ).
-- Fresh thread: cmsg_01VTPva3JGXrfvetgUvAWE7MJ6x15H146i8Ubn1hrFjuEJ; session cse_01TRh7xwt9UhB98fN8BteVgs.
+- Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MJ6x15H146i8Ubn1hrFjuEJ (Kitchen lead, rotated 6:45 PM Oct 17, session_01TRh7xwt9UhB98fN8BteVgs stood down), before it cmsg_01VTPva3JGXrfvetgUvAWE7MBXXiW98VQjyxykT4o3aJzs and cmsg_01VTPva3JGXrfvetgUvAWE7MHov6f1LgB5VxUochonHG95; older sessions cse_01WEnBRbu1uKt5FybKX4ffbe, cse_01Fe7U23BpiBM3LSkVTTfatZ.
+- Fresh thread: cmsg_01VTPva3JGXrfvetgUvAWE7M89s9yq77kzrHiVK6fDMbrZ; session cse_01WXUguo5FzJwPMPZohELbQR.
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "Kitchen" if present; if not, ask the coordinator for the note the outgoing lead sent.
 - Rules for Kitchen (plus G):
