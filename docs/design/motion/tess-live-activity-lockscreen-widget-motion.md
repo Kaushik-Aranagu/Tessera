@@ -31,17 +31,17 @@ Code today: none of the Widgets code reads RM, LP, reduce transparency or Dynami
 | Dynamic Island compact | tick + 17 pt time; "Go" swaps in place | system | system | `:70-86`; compact "Go" has no transition (`:77-79`): add `.id` + the same push so it matches the Lock Screen |
 | Island expanded / minimal | countdown 40, Done, horizon / tick | system | system | `:54-69`, `:87-89`; match |
 | +15 / Skip / Done buttons | intent runs in the app process, state updates, countdown re-bases | same | same | `RestIntents`, `LiveWorkout.swift:12-33`; no animation of ours |
-| End | `activity.end(nil, .immediate)`: the card is gone at once | same | same | `RestActivityController.swift:222-226`; see section 5 for the 60 s "all sets in" face (unbuilt) |
+| End | `activity.end(nil, .immediate)`: the card is gone at once | same | same | `RestActivityController.swift:175-177` (`endAll`); see section 5 for the 60 s "all sets in" face (unbuilt) |
 
 Haptic and sound for the rest end:
 
 - **In the app** (workout in front): `.timeUp` once (`WorkoutModeView.swift:140`), plays in RM and LP. See the training pass: only if seen live within 2 s of T0.
 - **Locked or backgrounded**: today a silent flip. The Live Activity sends an `AlertConfiguration` with the default sound only when the app is alive
-  (`RestActivityController.swift:195-201`), so a locked phone is silent. LS:12 and :24 say the activity's updates are silent and
+  (`RestActivityController.swift:149-153` (`restEndAlert`, sent at `:53`)), so a locked phone is silent. LS:12 and :24 say the activity's updates are silent and
   the notification N2 is what rings. Resolve it so: **N2 rings, the activity never carries an alert** (remove the `AlertConfiguration`);
   if notifications are off, N2 is skipped and the activity is the only signal, by its flip alone. This also removes the foreground double
   (haptic + alert sound).
-- **Privacy of N2** (QA, #957): same shape as the kitchen timer: fixed title, masked body. Title "Rest is up", body "Set 3 is next." or "Next set is ready." when the exercise name is private or empty. Today the alert title is "Set N is up" with a body that can carry the exercise name (`RestActivityController.swift:195-201`); check the body against the masking rule before N2 is built.
+- **Privacy of N2** (QA, #957): same shape as the kitchen timer: fixed title, masked body. Title "Rest is up", body "Set 3 is next." or "Next set is ready." when the exercise name is private or empty. Today the alert is titled "Set N is up" with the body `"<exercise>, <planned set>"` (`RestActivityController.swift:152`), which carries the exercise name onto the Lock Screen unmasked (`RestActivityController.swift:149-153` (`restEndAlert`, sent at `:53`)); check the body against the masking rule before N2 is built.
 
 ## 3. Cook timer (Live Activity and notification) - unbuilt
 
@@ -58,12 +58,12 @@ Spec per CK:46 and LS:28-31, made explicit:
 | Quiet hours | his own started timers ring at any hour (LS:52, CK:46) | same | same | follows the notification's setting |
 
 Rules: the activity is silent (no `AlertConfiguration`, test `liveActivityUpdateCarriesNoAlert`, CK:77); one tap target opens the cook
-page at that step; two timers ending within 600 ms play one haptic and one N3 (stacked count in the body "2 timers are done.").
+page at that step; two timers ending within 600 ms play one haptic and one N3 (stacked count in the body "2 timers are done.": new copy, Design to rule before it ships).
 
 ## 4. Workout activity - none beyond the rest activity
 
 The rest activity is the workout's only surface; it starts at the first rest, ends with the workout or when no set is planned
-(`RestActivityController.swift:76-79`). Two sheeted faces are unbuilt: **Undo after Done** ("Set N taken back", LA:67, LS:20-21, no
+(`plannedSet(of:)` returns nil for `.workoutDone`, `RestActivityController.swift:87-89`, then `endAll()`, `:164`). Two sheeted faces are unbuilt: **Undo after Done** ("Set N taken back", LA:67, LS:20-21, no
 `UndoLastSet` intent yet) and the **60 s "Push A, all sets in."** face (WS:80-84, LS:22, :74). Both are state changes only:
 
 | Face | Normal | RM | LP | Notes |
@@ -71,7 +71,7 @@ The rest activity is the workout's only surface; it starts at the first rest, en
 | Undo after Done | one state change, Undo as a button for 10 s, then back to resting | system | system | one UNDO slot (matches the app's 10 s change window); plays `.undo` only if the app is in front |
 | All sets in | the activity does not end at once: a still face for 60 s ("Push A, all sets in."), then default dismissal | system | system | no timer, no countdown on it, so it costs nothing in LP |
 
-The set-aside face (ready for 10 min, then "<title> set aside", `RLA:206-222`, `RestActivityController.swift:171`) is code-only; add it to LA so the sheet and the build agree.
+The set-aside face (ready for 10 min, then "<title> set aside", `RLA:206-222`, `RestActivityController.swift:124` (`readyLife`) and `:130` (the `staleDate`)) is code-only; add it to LA so the sheet and the build agree.
 
 ## 5. Widgets (home and lock screen) - unbuilt
 
@@ -92,7 +92,7 @@ Nothing in a widget may poll or tick. No App Group exists yet, which blocks the 
 1. Remove the rest `AlertConfiguration`; build N2 (title "Rest is up", masked body) via Core's G217 path. Until N2 exists, keep today's alert and say so in the receipt notes.
 2. Under `isLuminanceReduced` drop washes and the horizon.
 3. Add `.id` + push to the compact trailing "Go".
-4. Delete `lookDay`/`lookNight` from the activity state (`RestActivityAttributes.swift:492-493`, unused).
+4. Delete `lookDay`/`lookNight` from the activity state (`Shared/RestActivityAttributes.swift:33-34`, written by the controller at `RestActivityController.swift:118`, unused by the drawing).
 5. Cook activity and N3, silent activity, one `.timeUp` in front.
 6. Undo-after-Done and 60 s "all sets in" faces.
 7. Remove from LA: the Go glow breathing, the 700 ms/blur timing and the 1.4 s wash fade (not buildable), so the sheet stops promising them.
