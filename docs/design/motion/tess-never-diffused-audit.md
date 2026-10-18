@@ -5,7 +5,7 @@ docs/design/motion/prototype/tess-motion.html (at 0b6b824) and tess-*.md. Imager
 banner where she is the picture; the live soul's own working colour is his 11:58 PM Oct 15 ask and is listed separately.
 
 ## Fix (reads as dimmed Tess)
-1. Reduce Motion grade: opacity x0.6 over the whole soul (html line 530 `lerp(1,.6,reduced)`), plus satellites at 40% (tess-motion.md section 13, tess-quiet-versions.md Working row). In Reduce Motion she sits at 60% for the whole state. Fix: keep full opacity, loosen the three mains and drop the satellites only; the colour grade may still drain.
+1. Reduce Motion grade: opacity x0.6 over the whole soul (html line 530 `lerp(1,.6,reduced)`), plus satellites at 40% (tess-motion.md section 13, tess-quiet-versions.md Working row). In Reduce Motion she sits at 60% for the whole state. Fix: keep full opacity, loosen the three mains and drop the satellites only; the colour grade may still drain. **Superseded Oct 17, PM (G225, Product): no grade change either; Reduce Motion Working is position and size only.**
 2. Sleep (pick d, 23:00 to 07:00): "muted colour" with closed eyes (tess-quiet-versions.md Sleep row). Fix: closed eyes and slower breath carry sleep; keep the pigment at the look's full strength.
 3. Reference clips that freeze mid-fade: any poster or contact-sheet frame taken during the 500 ms working fade (saturation .62, opacity x.9, halo gone). Fix: pick poster frames from rest or the gather's last frame, never the fade.
 
@@ -21,7 +21,7 @@ banner where she is the picture; the live soul's own working colour is his 11:58
 Widgets, Lock Screen card and the Live Activity do not draw her (tess-picks.md, board item 9). The new imagery (sheet 88/91 pockets) must show her crisp and whole or not at all.
 
 ## Acceptance list for Builder A (all three must hold)
-1. Reduce Motion, Working: the soul's group opacity stays 1.0 (no x0.6). The three mains loosen 1.5x in place, satellites drop, colour may drain to the working grade. Check: a frame of Reduce Motion Working has the same alpha on the mains as Idle.
+1. Reduce Motion, Working: the soul's group opacity stays 1.0 (no x0.6). The three mains loosen 1.5x in place, satellites stay at their idle places, and the grade and halo are as at rest (G225 supersedes "colour may drain"). Check: a frame of Reduce Motion Working has the same alpha on the mains as Idle.
 2. Asleep (23:00 to 07:00): eyes closed and the slow breath carry sleep; pigment strength equals Idle's in every look. Check (named test): `prototype/check-pigment.sh <idle.mp4> <sleep.mp4>` (see tess-motion-check.md section 6) crops the soul, averages it to one RGB with ffmpeg and fails if any channel differs by more than 2%.
 3. No poster, thumbnail, contact-sheet or QA still is taken inside the 500 ms working fade; use rest or the gather's last frame. Check: frame.mjs poster times are listed in each sheet and none falls in the fade window.
 Each item gets a line in tess-motion-check.md so QA tests it.
