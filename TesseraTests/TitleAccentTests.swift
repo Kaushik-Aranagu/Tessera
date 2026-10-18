@@ -11,6 +11,14 @@ struct TitleAccentTests {
         #expect(TitleAccent.keyWord(in: "Tacos,") == nil)
     }
 
+    @Test func aMaskedTitleLeadsWithWorkoutNotPrivate() {
+        let title = "Private workout"
+        #expect(TitleAccent.keyWord(in: title).map { String(title[$0]) } == "workout")
+        let done = "Private workout, done"
+        #expect(TitleAccent.keyWord(in: done).map { String(done[$0]) } == "done")
+        #expect(TitleAccent.keyWord(in: "Private ") == nil)
+    }
+
     @Test func progressHoldsUnderTheCapUntilDone() {
         #expect(TitleAccent(progress: 0.5).shownProgress == 0.5)
         #expect(TitleAccent(progress: 0.95).shownProgress == TitleAccent.progressCap)
