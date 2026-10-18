@@ -21,3 +21,9 @@ Product's refill item 3 (Oct 17, 7:40 PM PT). Applies sheet 90 (six rows a page,
 - Both screens feed `PagedRun(groups:, pinned:)` from sheet 90; Money's pinned item is nothing (the dial is on its own page), Reading's is nothing. A run of six or fewer rows is one page, no rail.
 - Rail neutral (ink 3 pt current, inkSecondary 2 pt others), area colour only in the text: Money and Reading take the colour of the area they are opened from (sheet 92 s2).
 - Test: Money with 41 spends over 9 days gives day pages of at most 6; Reading with 14 finished gives 5+5+4; VoiceOver says the page word then the rows ("Thursday 15, 4 spends"), and the rail is not read.
+
+## Drum haptics: Motion lab's default confirmed (Oct 17, 8:20 PM PT)
+- Every drum-like control (the money dial, the date chip, the book page drum) ticks `.selection` per step, **capped at 25 ticks a second**; ticks past the cap are dropped, not queued.
+- **The landing tick always plays**, even inside the cap, so the settle on the final value is always felt once.
+- A hit at a limit plays `.bound` once per push (sheet 92 (c)), not per frame. Reduce Motion changes the coasting, not the ticks.
+- This is one gesture (a continuous drag or flick), so it stays inside the one-haptic-per-moment rule; the ticks are the gesture's texture, the landing is its moment.
