@@ -1,5 +1,8 @@
 # 91. Pockets, round 2: crisp drawings and a real figure (replaces 88's top plate)
 
+**Superseded (Kaushik, Oct 18; sheet 91 addendum, decisions stand-in sweep):** every drawn or generated food stand-in is withdrawn. A food page shows his own photo or nothing: no wash, no pigment patch, no drawn pan, no ingredient colour picture, and no widget wash. Only the muscle figure (information) stays. Where this sheet says otherwise, this note wins.
+
+
 **Round 2 (Kaushik, 12:46 PM Oct 17):** the muscle figure "looks super bad ... not nice or accurate" (redrawn below, in proportion, from anatomical charts) and the soft colour patches "look like a diffused, dead Tess". Nothing is blurred any more: **Tess is the only soft, blurred thing in the app.** A pocket is now a crisp drawing (fine line, one flat colour) or his own photo. No pocket on Groceries (sheet 88 said none; round 1 added it wrongly). The figure's source is `studies/muscle-figure.js` (front and back, one path per stored muscle, left half drawn and mirrored). Everything below about size, strength, place and loading still stands, with "patch" read as "drawing".
 
 **Kaushik on sheet 88 (Oct 17, 12:31 PM PT):** "I don't want like a band at the top ... very faded images in small section which make it look good, especially where it doesn't feel too cluttered ... I don't like the banner thing."

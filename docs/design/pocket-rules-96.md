@@ -2,9 +2,9 @@
 
 From Kaushik's Oct 17 12:31 to 12:46 answers. A pocket is a small picture in a page's emptiest corner.
 **Allowed**
-- A crisp drawing (a fine line plus flat colour), or his own photo.
+- His own photo, or the muscle figure. A food page gets no drawing, wash or stand-in (Kaushik, Oct 18); with no photo it has plain ground.
 - 160 pt or less, at 18% strength (Obsidian 16%), in the emptiest corner.
-- Where the page has room: a recipe, a book, a note, a habit page, an empty state.
+- Where the page has room: a recipe with his own photo; the muscle figure on Exercise and Routine. Nothing else gets a picture.
 - It arrives by fading up over 380 ms, no blur.
 - The muscle figure is information, not a pocket, and runs at full strength.
 **Never**
