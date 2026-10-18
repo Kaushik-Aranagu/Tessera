@@ -52,3 +52,7 @@ Sheet 75's table has 27 rows plus the "designed but not built" list. Screens in 
 | Ask slot (the bar open) | none: it is a sheet over the screen; side swipe is not offered | (excluded) |
 | Plan my day | THE DAY (row 1, 2) | declared |
 Holes: **Lists shelf, a list page and the Put away page** are the three with nothing declared. Settings has its row 21 side but no page 2.
+
+## G175: Pantry colour, one answer (Oct 17, 6:45 PM PT)
+- **Ochre is removed from the Pantry spec.** Pantry state words (OUT, LOW, IN, NOT SURE) and the Pantry index take Kitchen's `areaLean`, never #A4601A / #E3A857. Sheet 99 closes the reasoning.
+- **PO01, PO02 and PO07 use the 72% mix, not the pigment.** On Porcelain that is **#126E52** (6.22:1), not #12936A. Obsidian uses #72DCB1 (12.59:1). All five looks are in the table on sheet 92 and sheet 99. Research should fix the fixture rows to the mixed value.
