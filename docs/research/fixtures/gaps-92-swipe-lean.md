@@ -215,8 +215,8 @@ All are pure (Core or `DesignSystem` logic, no UI), except those marked UI.
 | AL12 | Contrast, large text | lead numeral and title key word at least 3:1 | no check | gap | Core | `areaLeanLargeTextContrastAtLeastThree` |
 | AL13 | Hairline at 34% | the section hairline is the lean colour at opacity 0.34, not a separate token | hairline today is `ink.opacity(0.14)` (`Theme.swift:395-397`) | gap | Builder A / B | `sectionHairlineIsLeanAtThirtyFourPercent` |
 | AL14 | Mix definition (Reading B only) | `mix72(pigment, ink)` per channel equals `round(0.72 x p + 0.28 x i)` within 3 | the same recipe, with a different base, is at `PantryColour.swift:17` | gap | Core | `seventyTwoPercentMixMatchesArithmetic` |
-| AL15 | Pantry state word | `PantryColour.stateWord` is gone; the state word equals `areaLean(.kitchen)` in the current look; `0xA4601A` and `0xE3A857` appear nowhere in app code | `PantryColour.swift:11-12` still defines both; used at `PantryView.swift:196` | gap | Builder B (Pantry owner) | `pantryStateWordIsKitchenLean` |
-| AL16 | Pantry, no second hue | a pantry state differs from another by its word and position only: assert the colour of every pantry state word is the same value | `PantryView.swift:196` single use | inferred | Builder B | `pantryStatesShareOneColour` |
+| AL15 | Pantry state word | `PantryColour.stateWord` is gone; the state word is plain ink (OUT bold, LOW semibold), never `areaLean`; `0xA4601A` and `0xE3A857` appear nowhere in app code | `PantryColour.swift:11-12` still defines both; used at `PantryView.swift:196` | gap | Builder B (Pantry owner) | `pantryStateWordIsPlainInk` |
+| AL16 | Pantry, no second hue | a pantry state differs from another by its word, weight (OUT bold, LOW semibold) and position only: assert the colour of every pantry state word is the same ink value | `PantryView.swift:196` single use | inferred | Builder B | `pantryStatesShareOneColour` |
 | AL17 | Opened-from rule, Lists | Lists opened from Kitchen (Groceries side) takes Kitchen lean; opened from Home takes ink | no origin context is passed to Lists in master (not found in `ListsView.swift`) | gap | Builder B | `listsLeanFollowsOriginArea` |
 | AL18 | Opened-from rule, Notes, Habits, Money, Reading | same table: origin area gives its lean; Home gives ink (Today) | same | gap | Builder A / B | `notesHabitsMoneyReadingLeanFollowsOrigin` |
 | AL19 | Opened from two places in turn | the same page re-opened from a different area recolours (the origin is read at open, not cached from the first open) | none | gap | Builder B | `leanIsReadAtOpenNotCached` |
@@ -257,7 +257,7 @@ Each is a test that finds the colour where it must not be. Implementation hint: 
 - Recipe: portion drum limit absorption (SW21, SW22, SW24 are likely real bugs once paging lands because nested scroll views chain), timer number (SW25 to SW27), plain step and ingredient text (SW28, SW29).
 - Money dial: the whole instrument (SW30M to SW39M).
 - Accessibility named actions and adjustable parity (SW72 to SW78).
-- Remove `PantryColour` ochre and take Kitchen's lean (AL15, AL16, AN08); Lists, Notes, Habits, Money, Reading origin-area lean (AL17, AL18, AL19).
+- Remove `PantryColour` ochre; state words become plain ink (OUT bold, LOW semibold), and `areaLean(.kitchen)` goes only on Kitchen caps labels and the Pantry index line, the index line only after the area-colour pass (AL15, AL16, AN08); Lists, Notes, Habits, Money, Reading origin-area lean (AL17, AL18, AL19).
 
 **Design**
 - The small stop (SW60): what it looks like, how far, which curve (through `MotionPolicy`).
