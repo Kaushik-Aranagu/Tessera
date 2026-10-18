@@ -16,7 +16,7 @@ struct PrivacyParityTests {
         "Weeknight dal", "milk", "socks", "Push A", "blood orange", "hearts of palm", "energy drink", "sleep tea",
         "Dr Pepper", "Rent car", "flour 5 kg", "ground beef 2 lb", "pain au chocolat", "recovery shake",
         "Weight Watchers chili", "drained tuna", "sleepy time tea", "dentist-appt", "5 kg flour", "1 pound butter",
-        "2.5 kg rice",
+        "2.5 kg rice", "2.25 kg rice", "2 pounds ground beef", "1 pound cake",
     ]
 
     @Test(arguments: PrivacyParityTests.walled)
