@@ -9,7 +9,7 @@ Master facts read (`origin/master` bed4ea3b):
 - Zero hits for `isIdleTimerDisabled` in any Swift file, the workout included.
 - `isLowPowerModeEnabled` is read in one place, `Features/Tess/TessSoul.swift:109`. `DesignSystem/Haptics.swift` and `MotionPolicy.swift` never read it.
 - `PaintKey` (`DesignSystem/Paint.swift`) gives every key, hold or tap, a default VoiceOver action that completes (`Paint.swift:314`), and its hint doc says the hint names the effect, never the gesture (`Paint.swift:250-253`).
-- `docs/design/haptic-moments.md`, named by the gap hunt, is not on master; the "zero haptics" wording G223 corrects cannot be checked here (LP09).
+- `docs/research/fixtures/haptic-moments.md` is on master (the gap hunt named `docs/design/haptic-moments.md`, which is not); its item 3 carries the G223 ruling and #941 corrects it (LP09).
 
 ## 1. G228: the clock page is the cook (CK)
 
@@ -31,7 +31,7 @@ Ruled: Design 69 replaces sheet 12's cover. VO5 to VO24 govern the cook screen. 
 
 ## 2. G229: finish keys are named-action-only for VoiceOver (FK)
 
-Ruled: the newer ruling wins. A double tap on Done speaks the hint "Hold to finish"; the named action "Finish" completes (K84.26). Timer-start keys keep double-tap start. VO19 is amended (it wanted a default action that finishes and a hint that does not say hold).
+Ruled: the newer ruling wins. A double tap on Done speaks the hint "Hold to finish"; the named action "Finish" completes (K84.26). Product's 9:18 PM PT Oct 17 answer extends it to every key that finishes or clears: cook Done, Finish workout, Groceries Done, Clear the basket, Lists Reset. Keys that start something (Start shopping, timer start, Cook) keep double-tap. It binds VoiceOver's double tap only. VO19 is amended (it wanted a default action that finishes and a hint that does not say hold).
 
 | Id | Input | Expected | Master today | Status | Owner | Test |
 |---|---|---|---|---|---|---|
@@ -40,39 +40,39 @@ Ruled: the newer ruling wins. A double tap on Done speaks the hint "Hold to fini
 | FK03 | Done's custom actions | exactly one named action, "Finish", which completes the cook | string traced (`CookModeCopy.swift:15`); no wiring | traced (string), gap (wiring) | Builder A | `finishNamedActionCompletesTheCook` |
 | FK04 | Done's default action | none (named-action-only); VoiceOver lists "Finish" in the actions rotor | `Paint.swift:314` adds a default action | gap | Builder A | `doneHasNoDefaultVoiceOverAction` |
 | FK05 | A timer-start key (tap key, `isTap: true`) | double tap starts the timer; no named action needed | tap keys complete on `complete()` (`Paint.swift:307,314`) | inferred | Builder A | `timerStartKeepsDoubleTapStart` |
-| FK06 | Other hold keys in the app (Start shopping, Finish workout, Lists RESET) | not changed by G229 unless Product extends it; each keeps today's behaviour | Groceries has a named "Start shopping" (`GroceriesView.swift:404`); workout has named "Finish workout" (`WorkoutModeView.swift:678`, `ExerciseStrip.swift:119`) next to a default action | inferred | Builder A | `otherHoldKeysKeepTheirDefaultAction` |
+| FK06 | Other finish or clear keys (Finish workout, Groceries Done, Clear the basket, Lists Reset) | same rule as Done: no VoiceOver default action, hint "Hold to finish" style, one named finishing action. Start keys (Start shopping, timer start, Cook) keep double-tap | Groceries has a named "Start shopping" (`GroceriesView.swift:404`); workout has named "Finish workout" (`WorkoutModeView.swift:678`, `ExerciseStrip.swift:119`) next to a default action | gap | Builder A (workout), Builder B (Groceries, Lists) | `finishAndClearKeysAreNamedActionOnly` |
 | FK07 | VO19 as amended | Done: label "Done"; value "4 minutes left" (VO19's value); button; hint "Hold to finish"; action "Finish"; no hint "Finishes the cook" | `voiceover-recipe-clock-lists.md` VO19 still lists the old hint and default action | gap | Design | `vo19MatchesG229` (doc edit, no Swift) |
-| FK08 | Switch Control or Voice Control "Tap Done" | the cook does not finish by tap; Voice Control reaches "Finish" through the named action | none; not addressed in the ruling | gap | Builder A | `voiceControlReachesFinishByName` |
+| FK08 | Voice Control "Tap Done" or Switch Control activation on Done | activates the key's Finish action directly; never a dead control. Only VoiceOver's double tap is named-action-only | none | gap | Builder A | `voiceControlAndSwitchControlFinishDirectly` |
 | FK09 | Finish by a real hold, VoiceOver off | completes after the hold; same receipt and Undo as CK08 | hold path exists in `PaintKey` (`Paint.swift:285-312`); no cook caller | inferred | Builder A | `holdFinishStillCompletes` |
 
 ## 3. G223: Low Power haptics (LP)
 
-Ruled: in Low Power his own touches and the timer-end success keep their haptics (a missed timer is worse than a buzz). Tess-initiated landings (the bead lighting a step) follow quiet hours only. The fixture is corrected to match: no "zero haptics". Low Power itself follows Reduce Motion for motion (D5, per the gap hunt); that part is G219 and is not repeated.
+Ruled: in Low Power his own touches and the timer-end alert keep their haptics (Product's answer: the haptic map wins, so "timer-end success" reads as `timeUp`, heavy impact) (a missed timer is worse than a buzz). Tess-initiated landings (the bead lighting a step) follow quiet hours only: no haptic 23:00 to 07:00, while his touches and the timer-end alert always play. That needs a small gate in `Haptics` (not only scheduling dates). The fixture is corrected to match: no "zero haptics". Low Power itself follows Reduce Motion for motion (D5, per the gap hunt); that part is G219 and is not repeated.
 
 | Id | Input | Expected | Master today | Status | Owner | Test |
 |---|---|---|---|---|---|---|
 | LP01 | Low Power on, his touch on a key (tap, hold start, step change) | the haptic plays exactly as with Low Power off | no Low Power read in `Haptics.swift` (whole file), so every haptic plays | traced | Builder A | `lowPowerKeepsHisOwnTouchHaptics` |
-| LP02 | Low Power on, a kitchen timer ends with the app on screen | the timer-end haptic plays | `Haptic.timeUp` exists, "or a kitchen timer ends" (`Haptics.swift:36-37,64`); only caller is the workout rest (`WorkoutModeView.swift:140`); no kitchen timer caller | traced (haptic), gap (caller) | Builder A | `lowPowerKeepsTimerEndHaptic` |
-| LP03 | Low Power on, bead lights a step (Tess-initiated) | haptic only if outside quiet hours; with Low Power alone nothing changes | no cook caller; no quiet-hours input to `Haptics.swift` (quiet hours exist only for dates, `TesseraCore/Sources/TesseraTess/TessGrammar.swift:721,769`) | gap | Builder A | `beadLandingFollowsQuietHoursOnly` |
-| LP04 | Bead lights a step inside quiet hours, Low Power off | no haptic | none | gap | Builder A | `beadLandingIsSilentInQuietHours` |
+| LP02 | Low Power on, a kitchen timer ends with the app on screen | `timeUp` (heavy impact) plays | `Haptic.timeUp` exists, "or a kitchen timer ends" (`Haptics.swift:36-37,64`); only caller is the workout rest (`WorkoutModeView.swift:140`); no kitchen timer caller | traced (haptic), gap (caller) | Builder A | `lowPowerKeepsTimerEndHaptic` |
+| LP03 | Low Power on, bead lights a step (Tess-initiated) | haptic only outside 23:00-07:00; with Low Power alone nothing changes | no cook caller; no quiet-hours gate in `Haptics.swift` (quiet hours exist only for dates, `TesseraCore/Sources/TesseraTess/TessGrammar.swift:721,769`); Haptics needs a small gate | gap | Builder A | `beadLandingFollowsQuietHoursOnly` |
+| LP04 | Bead lights a step inside quiet hours, Low Power off | no haptic from 23:00 to 07:00; his touches and the timer-end alert still play | none | gap | Builder A | `beadLandingIsSilentInQuietHours` |
 | LP05 | Bead lights a step outside quiet hours, Low Power on | haptic plays (Low Power is not a reason to silence it) | none | gap | Builder A | `lowPowerDoesNotSilenceTheBead` |
 | LP06 | Reduce Motion on | haptics keep beat for beat (K84.17 to K84.19, per the gap hunt's reading of D5) | no Reduce Motion read in `Haptics.swift` | inferred | Builder A | `reduceMotionKeepsHaptics` |
 | LP07 | Low Power on, timer ends with the app in the background | the local notification alert is the signal; not changed by Low Power | no local notification exists on master: no `UNUserNotificationCenter` call in `App`, `Features` or `TesseraCore/Sources` (G217) | gap | Core | `backgroundTimerRingsInLowPower` |
 | LP08 | Low Power on, a missed timer (screen off at end) | a notification is delivered; haptic follows the system, nothing app-side to suppress | none | gap | Core | `missedTimerStillNotifies` |
-| LP09 | Docs: the haptic fixture | wording "Low Power: zero haptics" replaced by the G223 ruling | `haptic-moments.md` is not on master, so the correction cannot be verified here | gap | Design | `hapticFixtureMatchesG223` (doc edit, no Swift) |
+| LP09 | Docs: the haptic fixture | `docs/research/fixtures/haptic-moments.md` is on master; its item 3 states the G223 ruling and #941 corrects it (timer-end reads `timeUp`). Verify that wording after #941 lands | file read on master; item 3 still says "timer-end success" until #941 | inferred | Design | `hapticFixtureMatchesG223` (doc check, no Swift) |
 | LP10 | Low Power toggled mid-cook | next haptic and next motion follow the new state with no relaunch | `TessSoul` caches the flag at a mode change only (`TessSoul.swift:109`); no power-state observer | gap | Builder A | `lowPowerChangeAppliesWithoutRelaunch` |
 | LP11 | The Core observer for tests (D6: HapticLog) | tests can count cues, including `.done` and the trigger form | `HapticCue.count` covers them poorly (board `core.md:264`) | gap | Core | `hapticLogCountsEveryCue` |
 
 ## 4. G218: keep-awake rule (KA)
 
-Ruled: keep-awake is a screen-on rule. The idle timer is off only while the cook page is visible, the scene is active, and (a timer runs or the last step change was under 45 min ago). It returns on the idle rule, Finish, leaving, backgrounding, and re-arms on the next touch. G217 (blocker) stands: a kitchen timer must be able to ring (local notification) before `cookModeReady` flips; boarded on ios-a.
+Ruled: keep-awake is a screen-on rule. The idle timer is off only while the cook page is visible, the scene is active, and (a timer runs or the last step change was under 45 min ago; the 45 min edge is exclusive, so at 45:00 the screen may sleep). It returns on the idle rule, Finish, leaving, backgrounding, and re-arms on any touch on the cook page, for a fresh 45 min. G217 (blocker) stands: a kitchen timer must be able to ring (local notification) before `cookModeReady` flips; boarded on ios-a.
 
 | Id | Input | Expected | Master today | Status | Owner | Test |
 |---|---|---|---|---|---|---|
 | KA01 | Cook page visible, scene active, timer running | `isIdleTimerDisabled` is true | no hit anywhere | gap | Builder A | `idleTimerOffWhileATimerRuns` |
 | KA02 | Cook page visible, active, no timer, last step change 44 min ago | true | none | gap | Builder A | `idleTimerOffInsideFortyFiveMinutes` |
-| KA03 | Same, last step change exactly 45 min ago | false (under 45 min is the keep-awake side; 45 is the first minute off). Boundary needs Product's confirmation (Q4) | none | gap | Builder A | `idleTimerReturnsAtFortyFiveMinutes` |
-| KA04 | Same, then a touch on the page | re-arms: true again for a fresh window (touch counts as a step change or a separate touch clock: Q5) | none | gap | Builder A | `touchRearmsKeepAwake` |
+| KA03 | Same, last step change exactly 45 min ago | false (the edge is exclusive: at 45:00 the screen may sleep) | none | gap | Builder A | `idleTimerReturnsAtFortyFiveMinutes` |
+| KA04 | Same, then any touch on the cook page | re-arms: true again for a fresh 45 min window (a touch restarts the clock; it need not be a step change) | none | gap | Builder A | `touchRearmsKeepAwake` |
 | KA05 | Finish pressed | false at once | none | gap | Builder A | `finishReleasesTheIdleTimer` |
 | KA06 | Leave the clock page (back word, VO24) while the cook runs | false at once; the cook itself keeps running | none | gap | Builder A | `leavingReleasesTheIdleTimer` |
 | KA07 | Scene goes inactive or background | false | none; scene phase is read on the recipe page only for other work (`RecipePage.swift:201`) | gap | Builder A | `backgroundingReleasesTheIdleTimer` |
@@ -86,28 +86,21 @@ Ruled: keep-awake is a screen-on rule. The idle timer is off only while the cook
 
 ## Counts
 
-45 rows. A row with two parts is counted under its first word.
+45 rows (statuses revised after Product's answers: LP09 moves from gap to inferred). A row with two parts is counted under its first word.
 
 | Status | Rows |
 |---|---|
 | traced (CK09, FK02, FK03, LP01, LP02; FK02, FK03 and LP02 also carry a wiring or caller gap) | 5 |
-| inferred | 9 |
-| gap (including the doc-edit rows CK10, FK07, LP09) | 31 |
+| inferred (LP09 added) | 10 |
+| gap (including the doc-edit rows CK10, FK07) | 30 |
 
-By group: CK 11, FK 9, LP 11, KA 14. Three rows (CK10, FK07, LP09) are doc edits, not Swift.
+By group: CK 11, FK 9, LP 11, KA 14. Rows CK10, FK07 and LP09 are doc edits or checks, not Swift.
 
 ## Open questions
 
-For Product:
-1. Q1 (FK06): does G229 extend to the other hold keys with named actions already on master (Finish workout, Start shopping, Lists RESET), or only to Done in the cook?
-2. Q2 (LP02): the ruling says "timer-end success"; the haptic map uses a heavy impact called `timeUp` for a kitchen timer ending. Which one plays? Master has no `.success` in the map for this moment.
-3. Q3 (LP03): what are quiet hours for a haptic? The only quiet hours in code are for scheduling dates (`TessGrammar.swift:769`); is it the same window, and is it read from Settings?
-4. Q4 (KA03): is the 45 minute edge inclusive (at exactly 45 min the screen may sleep) or exclusive?
-5. Q5 (KA04): does a touch re-arm a fresh 45 minute window, or only restore keep-awake until the next idle check? "Last step change" does not move on a plain touch.
-6. Q6 (FK08): should Voice Control and Switch Control get a way to finish the cook by name? A named-action-only Done reaches them through the action, but "Tap Done" would do nothing.
+For Design (Product has not ruled on these):
+1. Q7 (CK10, FK07): edit K84.20 and VO19 so only one reading order stands, and mark which K84 rows survive (K84.14, K84.26, K84.22, K84.25, K84.27).
+2. Q9 (CK11): do K84's 64 pt and 88 pt targets carry over to the clock page's keys?
+3. Q10 (FK02): `PaintKey`'s hint doc forbids naming the gesture; Done's ruled hint is "Hold to finish". Should `PaintKey` get an explicit opt-out for this one key?
 
-For Design:
-7. Q7 (CK10, FK07): edit K84.20 and VO19 so only one reading order stands, and mark which K84 rows survive (K84.14, K84.26, K84.22, K84.25, K84.27).
-8. Q8 (LP09): confirm the haptic fixture's corrected wording, since `haptic-moments.md` is not on master and cannot be checked here.
-9. Q9 (CK11): do K84's 64 pt and 88 pt targets carry over to the clock page's keys?
-10. Q10 (FK02): `PaintKey`'s hint doc forbids naming the gesture; Done's ruled hint is "Hold to finish". Should `PaintKey` get an explicit opt-out for this one key?
+Answered by Product (decisions.md lines 1011-1012, 9:18 PM PT Oct 17, defaults, reversible) and folded into the rows above: G229 covers every finish or clear key (old Q1); `timeUp` plays in Low Power (old Q2); haptic quiet hours, with a gate in Haptics (old Q3); the 45 min edge is exclusive (old Q4); any touch re-arms 45 min (old Q5); named-action-only is VoiceOver double tap only (old Q6). Old Q8 is closed by the LP09 check.
