@@ -48,8 +48,8 @@ Default: Porcelain, phone. Each step needs a private/test item; never type a rea
    See: "3 eggs benedict" is the title; a numbered step is never the title; "2 large eggs" still reads as a title (known low, Product ruled it must not; Core's next PR).
    PASS / FIX FIRST.
 12. #884 capture-miss lows. Tess ask bar.
-   Do: type "dentist by 4.15"; paste a phrase over 600 characters; while a cook timer runs say "8 mins".
-   See: first is not read as money; long phrase gets a fixed refusal line, nothing written; the refusal reads "That's too long to send. Say it shorter."; while a cook runs nothing goes to Claude (TessModel.swift:100-107): "8 mins" stays local and an unrelated phrase reads "Didn't catch that."
+   Do: type "dentist by 4.15"; paste a phrase over 600 characters.
+   See: first is not read as money; long phrase gets a fixed refusal line, nothing written; the refusal reads "That's too long to send. Say it shorter." Not walkable on this release: the cook-running rule (nothing goes to Claude while a cook runs, TessModel.swift:100-107) has no cook to run, since RecipePage.cookModeReady is false and master has no cook view; it stays a code check until cook mode lands.
    PASS / FIX FIRST.
 13. #564 question walls. Tess ask bar.
    Do: ask "was $12 too much?" and "is 82.4 good?".
@@ -60,3 +60,12 @@ Default: Porcelain, phone. Each step needs a private/test item; never type a rea
 - #868 paste duplicate lows: no UI change (copy tail shared, test only).
 - Docs PRs #911, #915, #916, #918, #919, #920, #921: no walk.
 - core/g105b (221d7444): no PR yet; not in 14.
+
+## Motion feel (added by the motion lab, Oct 17 PM; quick looks after the numbered steps, never blocks)
+M1. Haptic sanity. Finish one task or one workout: the haptic map says ONE done pattern (three quick rising taps), or ONE `.success` if the workout set a new best; never two buzzes, never a heavy medium thud. KNOWN until Builder A's migration PR (haptics-migration-table rows 17, 18, 25) is in the release: a task finish buzzes twice (raw medium 0.8 plus the soul's `.success`, TessSoul.swift:143), and a logged set and a finish do too; that is a known row, not a fail. FIX FIRST only if the release claims the migration and a finish still buzzes twice. Pantry row tap opens the object page, no haptic, no state change, no ochre (a private row opens nothing). (Source: Motion lab, 9:45 PM PT Oct 17; the migration rows are UNVERIFIED by Ops.)
+M2. Soul sanity. On any screen she blinks and breathes at rest; for a private item or private workout she does nothing different (no glance, pause or beat). With Reduce Motion on she should stay at full strength (no dimming); KNOWN until the soul fix PR (she fades to a loosened frame today, TessSoul.swift:155-160), not a fail. FIX FIRST if she reacts to a private thing.
+M3. Low Power. With Low Power on, FIX FIRST only if the release contains the Low Power flag PR (G219); until then Low Power does nothing to screens and sides (KNOWN, MotionPolicy.swift:5-11 reads Reduce Motion only) and the zoom ignores Reduce Motion too (G269). When the PR is in: a quick crossfade (about 150 ms), no sliding or zoom; Tess keeps her own Low Power look (slower, fewer lights); haptics still play for his own touches.
+M4. Rest end (needs a workout). Log a set, let the rest run out with the app in front: ONE heavy buzz (`.timeUp`) at 0, Go appears; note whether a sound plays (not a fail, the in-app haptic and the Live Activity alert can both fire). Skip a rest: no heavy buzz. KNOWN until Core's rest-end notification (N2) lands: with the phone locked the Live Activity flips to Go silently; not a fail. Lock-screen part UNVERIFIED.
+M5. UNDO. Finish a task, tap UNDO (a finished task's UNDO window is 10 s). KNOWN until the UNDO style is silenced: UNDO plays two ticks today (press `.selection` plus `.decrease`, CaptureParts.swift:141 and BottomChrome.swift:132); not a fail. Target: one light decreasing tick only.
+(The cook timer end is not walkable: no cook view in release 14, UNVERIFIED.)
+(The #662 stroke tick, #786/#806 swipes and #871 copy are already steps 1, 2, 3 and 10 above.)

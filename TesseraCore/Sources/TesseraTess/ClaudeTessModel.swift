@@ -9,6 +9,8 @@ import TesseraCore
 public struct ClaudeTessModel: TessModel {
     public static let model = "claude-haiku-5-5"
     static let maxTokens = 512
+    /// The longest phrase sent to Claude, in characters.
+    static let maxPhraseCharacters = 600
     /// Tool rounds before Tess gives up on a phrase.
     static let maxRounds = 3
 
@@ -52,6 +54,13 @@ public struct ClaudeTessModel: TessModel {
         // The switch and the key shape are checked here too, not only in `isAvailable` and the router: a direct
         // caller must not skip them (a4-bypass item 3).
         guard sendsMisses(), !looksLikeClaudeKey(request.text) else { return .missed }
+        // A phrase past the cap never goes: Claude reads a sentence, not a page (a pasted recipe has its own path).
+        guard request.text.count <= Self.maxPhraseCharacters else {
+            // A refusal is its own answer: the long phrase is not logged as a miss either.
+            var refusal = TessCapture(records: [], line: "That's too long to send. Say it shorter.", source: .none)
+            refusal.isRefusal = true
+            return .asked(refusal)
+        }
         // His "yes, all but the key": a capture miss goes whole, so no secret, money or body wall runs here. The
         // key-shape refusal above stays, and the system prompt is checked below.
         // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).

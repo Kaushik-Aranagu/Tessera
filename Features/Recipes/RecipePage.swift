@@ -23,13 +23,16 @@ struct RecipePage: View {
     @State private var sent: (line: String, record: OpRecord)?
     /// When the receipt went up, so a hand-off keeps what is left of its window rather than a fresh 10 s (QA on #819).
     @State private var sentAt: Date?
+    /// A refused add's line, a tap on which tries again (ER14); clears on its own after 10 s.
+    @State private var failed: String?
+    @State private var failedID: String?
+    /// Bumped once per failed add, never twice within a second.
+    @State private var notSaved = 0
+    @State private var notSavedAt: Date?
     @State private var drag: CGFloat = 0
     @State private var columnWidth: CGFloat = 260
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var away = false
-    /// A private recipe's title, tapped open for this visit; leaving or locking masks it again (G53).
-    @State private var titleShown = false
-    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         // At accessibility sizes the whole page is one scroll, so nothing is clipped (G69).
@@ -69,21 +72,13 @@ struct RecipePage: View {
                 .accessibilityHint("Back to the recipes")
                 .entrance(0)
 
-                let masked = RecipeCopy.isPrivate(recipe.title, model: model) && !titleShown
-                Group {
-                    if masked {
-                        // A private recipe reads "Private recipe" until tapped (G53); the next tap opens as usual.
-                        Button {
-                            withTesseraAnimation(reduceMotion: reduceMotion) { titleShown = true }
-                        } label: {
-                            heroTitle(ObjectPrivacy.recipeLabel)
-                        }
-                        .accessibilityHint("Shows it")
-                    } else {
-                        NavigationLink(value: Route.object(recipe.id)) { heroTitle(recipe.title) }
-                            .accessibilityHint("The original text and when it was cooked")
-                    }
+                // A private recipe always reads "Private recipe": nothing reveals it (G53, G102), and the tap opens
+                // its original page, which stays masked too.
+                let masked = RecipeCopy.isPrivate(recipe.title, model: model)
+                NavigationLink(value: Route.object(recipe.id)) {
+                    heroTitle(masked ? ObjectPrivacy.recipeLabel : recipe.title)
                 }
+                .accessibilityHint("The original text and when it was cooked")
                 .buttonStyle(HandleButtonStyle())
                 .matchedTransitionSource(id: recipe.id, in: zoom)
                 .accessibilityAddTraits(.isHeader)
@@ -142,7 +137,17 @@ struct RecipePage: View {
 
                 // Already on the list (and not just sent): how much of it is still to buy.
                 let onList = Groceries(store: model.store, classes: model.classes).share(of: recipe).count
-                if sent == nil, onList > 0 {
+                if let failed {
+                    // The failure line is the retry: "Didn't save that. Try again." (ER14, G70).
+                    Button(failed) { send(recipe: recipe.id, serves: size) }
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .buttonStyle(HandleButtonStyle())
+                        .frame(minHeight: 44)
+                        .padding(.top, Theme.Spacing.s)
+                        .accessibilityHint("Tries the add again")
+                        .transition(.opacity)
+                } else if sent == nil, onList > 0 {
                     (Text("\(onList)").fontWeight(.semibold) + Text(" to buy, on Groceries"))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
@@ -187,8 +192,9 @@ struct RecipePage: View {
                     .navigationTransition(.zoom(sourceID: routeID(route), in: zoom))
             }
             .tesseraFeedback(.made, trigger: sent?.line)
+            // The one soft warning for a write that didn't save, once per failure (Product and Design 12:45).
+            .tesseraFeedback(.notSaved, trigger: notSaved)
             .onDisappear {
-                titleShown = false
                 // Leaving inside the window hands the receipt and its UNDO to Tess's shared line, so the UNDO
                 // follows him (G67).
                 if let sent {
@@ -196,11 +202,6 @@ struct RecipePage: View {
                                          holds: RecipeCopy.holdLeft(since: sentAt, now: .now))
                     self.sent = nil
                     away = false
-                }
-            }
-            .onChange(of: scenePhase) { _, phase in
-                if phase != .active {
-                    titleShown = false
                 }
             }
         } else {
@@ -288,7 +289,21 @@ struct RecipePage: View {
             if case let .nothing(line) = outcome {
                 TessVoice.shared.say(line)
             } else if case let .failed(line) = outcome {
-                TessVoice.shared.say(line)
+                let shown = UUID().uuidString
+                failedID = shown
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { failed = line }
+                if RecipeCopy.playsNotSaved(last: notSavedAt, now: .now) {
+                    notSaved += 1
+                    notSavedAt = .now
+                }
+                // VoiceOver hears it too, as the success path does (Design on #889).
+                UIAccessibility.post(notification: .announcement, argument: line)
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(10))
+                    if failedID == shown {
+                        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { failed = nil }
+                    }
+                }
             }
             return
         }
@@ -300,6 +315,7 @@ struct RecipePage: View {
             drag = 0
             sent = (line, record)
             sentAt = .now
+            failed = nil
             model.touch()
         }
         UIAccessibility.post(notification: .announcement, argument: line)
@@ -453,23 +469,17 @@ private struct RecipeDepth: View {
 private struct RecipeOriginal: View {
     let recipe: ObjectRecord
     @Environment(AppModel.self) private var model
-    /// The title tapped open on this page; leaving or locking masks it again (G53).
-    @State private var titleShown = false
-    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         let cooks = CookLog(store: model.store, classes: model.classes).cooks(of: recipe)
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.xxl) {
                 let isPrivate = RecipeCopy.isPrivate(recipe.title, model: model)
-                Text(RecipeCopy.shownTitle(recipe.title, isPrivate: isPrivate, shown: titleShown))
+                // Always masked when private; no tap shows it (G102).
+                Text(RecipeCopy.shownTitle(recipe.title, isPrivate: isPrivate))
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
-                    .onTapGesture { titleShown = true }
-                    .accessibilityAddTraits(isPrivate && !titleShown ? .isButton : [])
-                    .accessibilityHint(isPrivate && !titleShown ? "Shows it" : "")
-                    .onDisappear { titleShown = false }
                 MarginSection(label: "Cooked", color: Theme.Colors.inkSecondary) {
                     if cooks.isEmpty {
                         Text("Not yet.")
@@ -488,7 +498,7 @@ private struct RecipeOriginal: View {
                 // Only when there's text he pasted: a recipe made another way has no AS PASTED (gap hunt G4).
                 if let pasted = RecipeCopy.pasted(model.store.value("sourceText", of: recipe)?.stringValue) {
                     // The title's own line in the paste stays masked while the title is (QA on #752).
-                    let source = RecipeCopy.maskedSource(pasted, title: recipe.title, masked: isPrivate && !titleShown)
+                    let source = RecipeCopy.maskedSource(pasted, title: recipe.title, masked: isPrivate)
                     MarginSection(label: "As pasted") {
                         Text(source)
                             .font(Theme.voice)
@@ -503,16 +513,16 @@ private struct RecipeOriginal: View {
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
-        .onChange(of: scenePhase) { _, phase in
-            if phase != .active {
-                titleShown = false
-            }
-        }
     }
 }
 
 @MainActor
 enum RecipeCopy {
+    /// Whether a failed add plays the warning: not again within a second of the last one.
+    static func playsNotSaved(last: Date?, now: Date) -> Bool {
+        last.map { now.timeIntervalSince($0) >= 1 } ?? true
+    }
+
     /// What is left of the add's 10 s UNDO window, at least 1 s (VoiceOver keeps its flat 10 s in TessVoice).
     static func holdLeft(since start: Date?, now: Date) -> Duration {
         let elapsed = start.map { now.timeIntervalSince($0) } ?? 0
@@ -547,7 +557,10 @@ enum RecipeCopy {
     static func send(isPrivate: Bool = false,
                      _ perform: () throws -> (count: Int, record: OpRecord)) -> SendOutcome
     {
-        guard let result = try? perform() else { return .failed("Didn't save that. Try again.") }
+        // ER14 (ruled Oct 17, 4:35): a private recipe's failure keeps the form and prints only the kind.
+        guard let result = try? perform() else {
+            return .failed(isPrivate ? "Didn't save that. Private recipe." : "Didn't save that. Try again.")
+        }
         // The engine's own line, masked for a private recipe since #836: "Tacos, 3 updated.", "Tacos, 2 added, 3
         // updated.", "Private recipe, 2 added.". A write of any kind (new rows or changed amounts) is an add with
         // its 10 s change UNDO; only a write of nothing is "nothing to add" (Product 11:20, QA on #836).
@@ -612,9 +625,9 @@ enum RecipeCopy {
         return name.trimmingCharacters(in: .whitespaces)
     }
 
-    /// The title a surface shows: "Private recipe" for a private one unless it's been tapped open.
-    static func shownTitle(_ title: String, isPrivate: Bool, shown: Bool) -> String {
-        isPrivate && !shown ? ObjectPrivacy.recipeLabel : title
+    /// The title a surface shows: "Private recipe" for a private one, always; nothing reveals it (G102).
+    static func shownTitle(_ title: String, isPrivate: Bool) -> String {
+        isPrivate ? ObjectPrivacy.recipeLabel : title
     }
 
     /// The text he pasted, or nil when there is none or only blank space.

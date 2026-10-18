@@ -7,7 +7,7 @@ M = measured on real calls, A = assumed. Month = 30 days. Calls/day cap: "doc" m
 
 | Job | Model | Effort | Max tokens | Typical in / out | Cost per call typ / worst | Calls/day typ / cap | Month typ / worst |
 |---|---|---|---|---|---|---|---|
-| capture (misses) | Haiku 5.5 | none | 512 | 5,150 / 130 A (2 rounds) | $0.0006 / $0.0015 (3 rounds held) | 5 / 20 (worst case, no cap) | $0.09 / $0.35 |
+| capture (misses, incl. walled phrases since #860) | Haiku 5.5 | none | 512 | 5,150 / 130 A (2 rounds) | $0.0006 / $0.0015 (3 rounds held); a walled phrase adds a few tokens | 5 / 20 (worst case; no daily count cap; phrase cap 600 characters, Core #884) | $0.09 / $0.35 |
 | Home done lines | Sonnet 5.5 | low | 512 | 600 / 80 A | $0.0020 / $0.0075 | 1 / 3 (doc cap 40, not in code) | $0.06 / $0.68 |
 | Plan my day wording | Sonnet 5.5 | low | 1,024 | 1,000 / 300 A | $0.0050 / $0.0128 | 2 / 5 (no cap) | $0.30 / $1.92 |
 | week story | Sonnet 5.5 | low | 400 | 2,000 / 300 A | $0.0070 / $0.0100 (gate) | 8 a month / 2 a day (no cap) | $0.06 / $0.60 |
@@ -18,6 +18,8 @@ M = measured on real calls, A = assumed. Month = 30 days. Calls/day cap: "doc" m
 | living colour | Haiku 5.5 | low | not stated | 1,200 / 60 A | $0.00015 / same | 1 / 1 | $0.005 / $0.005 |
 | keyCheck | Haiku 5.5 | none | n/a | count_tokens, free; fallback "Hi" | about $0 | rare | $0.00 / $0.00 |
 | **Ten jobs above** | | | | | | | **about $0.74 / about $6.85** |
+| Questions (answerQuery, Haiku) | Haiku 5.5 | none | 512 | A | $0.0003 / $0.0013 | 5 / none | $0.05 / $0.20 |
+| **All jobs, with Questions** | | | | | | | **about $0.79 / about $7.05** (doc: $0.79 / $6.90) |
 
 The ask-a-log-question job (Haiku, 5 a day, $0.05 typical, $0.20 worst) is in spend-projection.md but not in
 your list. Adding it gives the doc's $0.79 typical and $6.90 worst. Worst-case column sums are my arithmetic on
@@ -42,7 +44,8 @@ the doc's rows; they round differently by a cent or two.
 
 - $50 cap: the in-app Claude cap is $50 a month, a hard stop; it resets on the 1st (Product's 8:16 ruling). Worst
   month of every planned job is about $6.90 (14%), so the cap holds with more than 7x room. Stale text still saying
-  $10: `ClaudeKey.swift` comment (Swift, not changed here), claude-first-uses.md, recipe-link-fetch.md.
+  $10: claude-first-uses.md body and recipe-link-fetch.md (docs/research); the `ClaudeKey.swift` comment is gone.
+- **Typical month, $3.23 vs $0.79 (Oct 17 re-audit).** The memory index quotes about $3.23 a month. That is most likely the older figure, which priced Home lines at 20 a day ($2.70 a month, architecture.md line 141); I did not find its source. With one Sonnet call per finish the typical month is $0.79 (2% of $50). Use $0.79; keep $3.23 only as a deliberately heavy case.
 - $40 step-aside: at 80% ($40), Home lines, the week story and living colour step aside before the reserve; capture,
   plan, recipe and questions keep running to $50 (settled). linkItems runs to $50 (Product 8:21) and never steps aside. Only the Settings warm line at 80%
   exists in code; the step-aside itself is docs only. At worst spend ($6.90) it never fires, so it guards only loops.

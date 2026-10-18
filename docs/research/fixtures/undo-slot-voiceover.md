@@ -8,8 +8,8 @@ Sources: `fixtures/undo-collision.md` (the slot, UC1 to UC18), `undo-windows-aud
 `fixtures/voiceover-recipe-clock-lists.md` (VO rules, VO20, VO23), `receipts-thing-first.md` (RC rows),
 `accessibility.md` (A9, A11, A14, B3, B11), `fixtures/settings-day-one.md` (S45 to S61),
 `fixtures/notes-day-one.md` (N35), `product/meal-plan-groceries-acceptance.md` (KW20), and these rulings in
-`product/decisions.md`: 1:35 pm (one UNDO slot), 12:39 pm (VoiceOver 10 s), 12:45 pm (windows pause, Claude key
-commits early, 4 am roll), 12:35 pm (receipts name the thing, "Rice, on Groceries."), 1:13 pm (Claude key line),
+`product/decisions.md`: 1:35 pm (one UNDO slot), 12:39 pm (VoiceOver 10 s), 12:45 pm (windows pause, 4 am roll; its
+Claude key early-commit rule is superseded, the Claude key has no UNDO, 10:47 PM Oct 17), 12:35 pm (receipts name the thing, "Rice, on Groceries."), 1:13 pm (Claude key line),
 1:15 pm (Notes receipts, VoiceOver announces them), 6:37 pm Oct 15 ("is back" for undoing a removal), F2 ("Push A,
 back on.").
 
@@ -52,7 +52,7 @@ is new on master unless a row says otherwise.
 10. **Hints.** One short sentence saying what the tap changes, thing named, ending in a period. Hints are off for
     many users, so nothing needed lives only in the hint.
 11. **The answer word.** "Thing, taken back." (1:35 pm, 12:35 pm). Undoing a removal says "Thing is back." (6:37 pm
-    Oct 15 exception: delete note, routine dropped, backup folder, Claude key). Undoing a finish says "Push A, back on."
+    Oct 15 exception: delete note, routine dropped, backup folder; the Claude key is no longer one, it has no UNDO). Undoing a finish says "Push A, back on."
     (F2). See C1.
 
 ## Window close: say nothing
@@ -231,23 +231,23 @@ The folder name is his to pick; build the spoken thing as "\(location) \(folderN
 
 A first line longer than 8 words is cut to its first 8 words in Shown, Ann, Label and Back alike (Q2).
 
-### K10. Claude key removed (Builder B, Settings: Claude)
+### K10. Claude key removed (Builder B, Settings: Claude) - NO UNDO
+
+Product ruled (10:47 PM Oct 17) that removing the Claude key has no UNDO, because nothing keeps a copy of the key, and
+shows a plain receipt with no key content. K10 therefore takes no slot claim: no Label, Hint, Value or Back, no window,
+and nothing to commit when the app goes to the background. Remove is a two-step tap key ("Remove the Claude key?" with
+"Remove" and "Keep it", 11:07 PM Oct 17, #978 item 4) and keeps VoiceOver double tap.
 
 | Field | Words |
 |---|---|
 | Thing | `Claude key` |
-| Shown | "Claude key removed. Leaving the app makes it final." (1:13 pm) |
-| Ann | "Claude key removed. Leaving the app makes it final." |
-| Label | "Undo Claude key" |
-| Hint | "Puts the Claude key back." |
-| Value | "10 seconds left" |
-| Back | "Claude key is back." (S50) |
-| Close | none |
-| Window | 10 s; does NOT pause: going to the background commits it (12:45 pm), and on return nothing is said |
+| Shown | "Claude key removed. Everything stays on this phone." |
+| Ann | "Claude key removed. Everything stays on this phone." |
+| UNDO | none (no slot claim) |
 
-No string here carries the key, its prefix or its last four. Replacing a key (S45) is the same claim shape with
-Shown "Claude key replaced." and the same Back; the "Ends in" digits stay on screen only and are hidden from
-VoiceOver in the announcement.
+No string here carries the key, its prefix or its last four; key state is yes/no only (10:44 PM Oct 17, item 4).
+Replacing a key (S45) is also a plain receipt, "Claude key replaced.", with no UNDO and no digits. The old
+`undoRemove()` path (`ClaudeSection.swift:~393-398`) is what Core/Builder B must remove.
 
 ### K11. Live workout, LOG a set (Builder A, the live corner)
 
@@ -343,8 +343,8 @@ no plain name.
 ## Conflicts with existing rulings
 
 - **C1. "taken back" or "is back".** 1:35 pm says "The receipt is 'Thing, taken back.'"; the 6:37 pm Oct 15 ruling
-  keeps "is back" for undoing a removal, and Settings (S50, 1:13 pm's "same as REMOVE") and the habit delete ("Read is
-  back.") use it. This file keeps "is back" for K8, K9, K10, K13 and F2's "Push A, back on." for K12, reading 1:35 pm
+  keeps "is back" for undoing a removal; the habit delete ("Read is
+  back.") use it. This file keeps "is back" for K8, K9, K13 and F2's "Push A, back on." for K12, reading 1:35 pm
   as the general rule. Product to confirm.
 - **C2. "Undo Milk" or "Undo, Milk".** UC11 proposed the comma; this file uses the brief's "Undo Milk".
 - **C3. Pause while focused.** `voiceover-recipe-clock-lists.md` (rules line, VO20, VO40) wanted windows to pause
@@ -363,7 +363,7 @@ no plain name.
 2. K5's one-task form "Call mom, carried into today." and the joined roll and wrap-up claim (label, hint, back).
 3. K8's spoken thing "iCloud Drive Tessera folder" (no slash) and its hint.
 4. K9's private form "Private note, deleted." and "Private note is back."; the 8-word cut.
-5. K10's "Claude key replaced." claim line.
+5. K10's "Claude key replaced." and "Claude key removed." plain receipts (no slot claim).
 6. K11's spoken variants: "a bench best", "Plus 10 kilograms for 8", "8 reps", and "Undo set 3" in lower case.
 7. K12's hint naming the set for LOG AND FINISH.
 8. K14's "Unmarks Read for Monday." before 4 am.
@@ -381,7 +381,7 @@ no plain name.
 ## Swift Testing table (sketch, not code to paste)
 
 Builders add one pure value, `UndoSpeech`, computed from a claim, so these run without VoiceOver or a clock.
-Builder B's file covers K1 to K10, K14, K15, K16; Builder A's covers K11 to K13 and K16 in the live corner.
+Builder B's file covers K1 to K9, K14, K15, K16; Builder A's covers K11 to K13 and K16 in the live corner.
 
 ```swift
 import Testing
@@ -433,10 +433,6 @@ let bottomChromeRows: [UndoSpeechRow] = [
     .init(id: "K9p", claim: .noteDeleted(firstLine: "wifi password is hunter2", isPrivate: true),
           shown: "Private note, deleted.", announcement: "Private note, deleted.",
           label: "Undo Private note", hint: "Brings the note back.", takenBack: "Private note is back."),
-    .init(id: "K10", claim: .claudeKeyRemoved,
-          shown: "Claude key removed. Leaving the app makes it final.",
-          announcement: "Claude key removed. Leaving the app makes it final.",
-          label: "Undo Claude key", hint: "Puts the Claude key back.", takenBack: "Claude key is back."),
     .init(id: "K14", claim: .habitMarked("Read", count: 3, target: 5),
           shown: "Read, 3 of 5 this week.", announcement: "Read, 3 of 5 this week.",
           label: "Undo Read", hint: "Unmarks Read for today.", takenBack: "Read, taken back."),
@@ -497,7 +493,7 @@ let liveCornerRows: [UndoSpeechRow] = [
     @Test func newerClaimAnnouncesOnlyItself()    // UC1, UC3: one post, the new line
     @Test func newerClaimGivesTheKeyANewIdentity()
     @Test func voiceOverMakesEveryKindTenSeconds()
-    @Test func claudeKeyCommitsInTheBackground()  // K10: no pause, no UNDO on return, nothing said
+    @Test func claudeKeyRemoveHasNoUndo()  // K10: plain receipt, no slot claim, nothing to commit on background
     @Test func partialUndoSaysPartly()            // K16: "Tacos, partly taken back. 2 stayed on Groceries."
 }
 ```

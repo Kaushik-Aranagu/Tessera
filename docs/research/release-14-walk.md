@@ -48,8 +48,10 @@ before release 14 is cut.
 - **Timers stay home (if merged, #884).** A phrase about a timer, or a cook phrase said while a cook is running
   ("8 mins", "step 3", "stop the rice"), is never sent to Claude. The gate is narrowed to cook phrases only
   (decisions 3:38 PM PT and 4:20 PM PT (6), Core's next PR); an unrelated phrase mid-cook ("call mom half 7") goes
-  the normal route, and a dropped cook phrase keeps the line "Didn't catch that." and is not logged. This bullet
-  and row W27 describe #884 as built until that PR lands, then change.
+  the normal route, and a dropped cook phrase keeps the line "Didn't catch that." and is not logged. Re-traced at
+  master a852d5bb (#884 merged): the narrowing and the not-logged rule are NOT in master. Every phrase is kept off
+  Claude while a cook runs (TessModel.swift:98-107), and a held phrase is written to the miss log
+  (TessCaptureEngine.swift:59-60). Only the over-cap refusal is skipped by the log.
 - **Clocks are not money (if merged, #884).** "dinner at 7.30" is a time. "rent at 7.30" is still money.
 - **Stone is a body fact (if merged, #884).** "Eleven stone four" and "12 st 3" stay private.
 
@@ -105,8 +107,8 @@ Merged rows are on master now. Open rows carry "if merged" and the head SHA read
 | W23 | #564 | Ask bar with an Ask bar key shape | "That looks like a Claude key. It goes in Review, under Claude." | The key echoed | traced (existing line; fixture text updated) | none |
 | W24 | #564 | Phone build, any launch | No `-wallsSpy`, no `walls.probe`, no seeded private note | Any of them | traced (all behind `#if DEBUG` and `LaunchFlags`) | none |
 | W25 | #868 open (b574dec), if merged | Paste "Ibuprofen tea" twice on Recipes | "Private recipe is already on Recipes." | The word "Ibuprofen"; a miss log line | traced (PasteCycleTests); a non-medicine title still reads "<title> is already on Recipes." | none |
-| W26 | #884 open (5665c60), if merged | Ask bar: a phrase over 600 characters | "That's too long to send. Say it shorter." and no Claude call | The phrase logged as a miss | traced (ClaudeRouteTests) | none |
-| W27 | #884 | Timer phrases; cook phrases while a cook runs (any phrase, as #884 is built; narrowed to cook phrases by 3:38 PM PT) | Handled on the phone only | A Claude call (Receipts row) | traced (MoneyWallTests) | none |
+| W26 | #884 merged (2f839063) | Ask bar: a phrase over 600 characters | "That's too long to send. Say it shorter." and no Claude call | The phrase logged as a miss | matches for a phrase that reaches the Claude route (ClaudeTessModel.swift:58-63, ClaudeRouteTests.swift:150-158); drifted mid-cook: the cook gate skips Claude first, so the cap line never shows and the phrase ends "Didn't catch that." (TessModel.swift:98-107,129) | none |
+| W27 | #884 | Timer phrases; cook phrases while a cook runs (any phrase, as #884 is built; narrowed to cook phrases by 3:38 PM PT) | Handled on the phone only | A Claude call (Receipts row) | matches for the zero Claude calls (MoneyWallTests.swift:125-135 timers, :152-170 six cook phrases); drifted for any other phrase mid-cook, which is also held (TessModel.swift:102-107) | none |
 | W28 | #884 | "dinner at 7.30" vs "rent at 7.30" vs "coffee 7.30 today" | Clock; money; money | "dinner at 7.30" walled as money | traced | none |
 | W29 | #884 | "Eleven stone four", "12 st 3", "I'm 11 stone 4"; "bring a stone for the wall" | First three walled as body; last plain | Stone words sent to Claude | traced | R19 is the bare-number case, a different rule: do not tick |
 | W30 | #884 | "move dentist to 7" with no such task | "Didn't catch that" prefix, no records | A guessed task | traced | none |
@@ -128,7 +130,7 @@ Merged rows are on master now. Open rows carry "if merged" and the head SHA read
 | W46 | #890 | Siri read-back of a list, routine or workout named "Dentist cake" or "dentist"; "5 kg flour" as a Groceries line | Per 4:50 PM items (6) and (7): Siri goes through the one check; a unit amount never masks a grocery item | The raw name in Siri's line | **gap** for Siri (Intents.swift is not in the diff); "flour 5 kg" is traced raw, "5 kg flour" inferred | none (Core) |
 | W47 | #890 | Shared export of a task "Pay the therapist" and a weigh-in note | Task title masked (health title word); weigh-in note masked | The word "therapist" in the file | traced (PrivateWordsTests now use "Pay the therapist"; `PrivateWords.titleWords` delegates to `ObjectPrivacy.titleWords`) | none; note "Pay Dr Lee" no longer masks as a title (bare "dr" removed), see W45 |
 | W48 | #886 open (5bbd506), if merged | Paste first lines "3 eggs benedict", "7 Up Cake", "2 Eggs", "5 Spice", "5-Ingredient Chili", "2-3 eggs", "1 14.5 oz can" | Per decisions 4:20 PM item (1) and 4:25 PM: "3 eggs benedict" and "7 Up Cake" are titles; "2 Eggs", "5 Spice", "2-3 eggs", "1 14.5 oz can" are amounts; "5-Ingredient Chili" a title | "Untitled recipe" over "3 eggs benedict" | **gap** for "3 eggs benedict": at head the second word is lowercase, so `startsWithAmount` returns true and the title is lost; the other six read as ruled except "1 14.5 oz can", which is inferred (depends on `IngredientLine.parse`) | none (Core) |
-| W49 | #884 open (5665c60), if merged | Start a cook, then say "call mom half 7"; then "8 mins" | Per decisions 3:38 PM and 4:20 PM item (6): "call mom half 7" takes the normal route; "8 mins" stays on the phone, a dropped cook phrase reads "Didn't catch that." and is not logged | "call mom half 7" blocked from Claude while cooking | **gap**: at head any phrase is kept off Claude while a cook runs (the `cooking` flag has no phrase test); the not-logged rule is inferred (no miss-log code in the diff) | none (Core, next PR) |
+| W49 | #884 merged (2f839063) | Start a cook, then say "call mom half 7"; then "8 mins" | Per decisions 3:38 PM and 4:20 PM item (6): "call mom half 7" takes the normal route; "8 mins" stays on the phone, a dropped cook phrase reads "Didn't catch that." and is not logged | "call mom half 7" blocked from Claude while cooking | **gap** (re-traced at a852d5bb): any phrase is kept off Claude while a cook runs (TessModel.swift:102-107, no phrase test); "8 mins" has no local reading and ends "Didn't catch that." (TessModel.swift:129) and IS logged (TessCaptureEngine.swift:59-60) | none (Core, next PR) |
 | W50 | #884 | "dinner at 7.30", "dentist by 4.15", "dinner 7.30", "coffee 4.50" | Per decisions 5:30 PM: first two are clocks; the last two are prices and walled as money | "dinner 7.30" read as a clock | traced (regex clears only "at" or "by" before a clock-shaped number, and only when no money word is present) | none |
 | W51 | docs | Survivor check, tap-to-reveal copy | Zero live promises of reveal or "Shows it" | A spec row that still promises reveal | **gap**: see "Tap-to-reveal survivors" below | Research or Product (docs) |
 
@@ -145,7 +147,7 @@ Merged rows are on master now. Open rows carry "if merged" and the head SHA read
   it except "3 eggs benedict" (W48); the hyphen-to-letter exemption and "2-3 eggs" as an amount match. (c) The one
   private-text check with trimmed title words (4:22 PM, 4:35 PM, 4:50 PM): #890 matches 4:22 and 4:35 (W39, W40)
   and misses three of the 4:50 PM items (W43 to W46). (d) Clock rule (5:30 PM): #884 matches (W50). (e) Cook gate
-  narrowed (3:38 PM): not yet in #884 (W49, and the note on W27). 4:20 PM reached the repo copy of decisions.md only
+  narrowed (3:38 PM): not in #884, and #884 is now merged, so not in master either (W49, and the note on W27). 4:20 PM reached the repo copy of decisions.md only
   by reference: docs/product/decisions.md ends at line 943 here, the project copy at line 965 holds the 4:20 PM to
   4:50 PM entries.
 - **#885 and #890 together.** `ShopTrip.isPrivate` calls `ObjectPrivacy.isPrivateRecipeTitle`, which #890 reroutes

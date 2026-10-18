@@ -1,6 +1,6 @@
 # Board 43 (side peeks on three holes) and 44 (motion items needing a Builder A decision). Oct 17, PM; (lab) = default for Design to overrule
 
-## 43 Side-swipe peeks (gaps-98 section 5): Lists shelf LAST RUNS, a list page WHAT IT HOLDS, Put away page WHAT WENT BACK
+## 43 Side-swipe peeks (gaps-98 section 5): Lists shelf LAST RUNS (**stale: sheet 87 ruled ON THEM, see `tess-pantry-first-day-and-four-sides-motion.md` row 28; a list's past rides on its own line**), a list page WHAT IT HOLDS, Put away page WHAT WENT BACK
 All three ride `SideHost` with no motion of their own (tess-sides-motion.md). What differs:
 | Side | Page entry | Glance's one big fact (arrives with the glance, 300 ms blur-in, no count-up) | Run end |
 |---|---|---|---|
