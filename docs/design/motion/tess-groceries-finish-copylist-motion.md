@@ -20,7 +20,7 @@ Acceptance: exactly one `.success` per finish; no `.selection` from pantry words
 
 ## 47 / 51 CopyList (#866) receipt and open-list, per Design's sheet 102 (as relayed by Product; the sheet file itself was not readable from the lab, so confirm values against it)
 - **Receipt frame:** Tess's line "Packing, Lisbon, new list." (source, then the word he gave; thing first; decisions 3:50 PM Oct 17) arrives with a 240 ms fade and an 8 pt rise in the UNDO slot (Reduce Motion / Low Power: 150 ms crossfade, no rise). One `.made` haptic at arrival (a new thing was made); nothing else buzzes.
-- **Never opens by itself.** A tap on the receipt opens the copy with the house push (380 ms spring; Reduce Motion 150 ms crossfade); the copied rows arrive with the page, no stagger; the title carries the title-progress ink at progress 0.
-- **UNDO** (one slot, 10 s, a change): "Lisbon, taken back." For a private list: "Private list, taken back." The copy leaves the shelf with the 320 ms line close-up; if its page is open, it pops back over 380 ms.
+- **Never opens by itself.** A tap on the receipt opens the copy with the house list-opening zoom out of the line (420 ms, as for any list; Reduce Motion 150 ms crossfade); the copied rows arrive with the page, no stagger. A list copy has no title accent (that is only for a workout or cook in progress).
+- **UNDO** (one slot, 10 s, a change): "Lisbon, taken back." For a private list: "Private list, taken back." The copy leaves the shelf with the 320 ms line close-up; if its page is open, UNDO closes it with the back transition first and then removes the copy (not a pop over the removal).
 - The original list is untouched and unmoved; no flight between the two lists.
 - Private: a Private list copies with identical motion and haptic; the receipt reads "Private list, new list." (decisions 4:00 PM Oct 17).
