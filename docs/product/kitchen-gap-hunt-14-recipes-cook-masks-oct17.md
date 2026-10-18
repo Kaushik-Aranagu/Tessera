@@ -1,4 +1,4 @@
-# Gap hunt 14: Recipes screens and cook mode under the new masks (static read, origin/master 297e955, Oct 18)
+# Gap hunt 14: Recipes screens and cook mode under the new masks (static read, origin/master 297e955, Oct 17 PDT)
 
 Written Sat Oct 17, 7:40 pm PDT (the oct18 in the file name is the UTC date). Graded against origin/master head 297e955 (merge of #921, Oct 17, 6:55 pm PDT). Static read only: nothing built or run, so every "shown" below is what the code draws, and "inferred" marks a reading I did not see executed. No key printed or stored. Highest earlier gap number was G180, so this file starts at G181.
 
@@ -60,7 +60,7 @@ Blockers: G181 and G182 (two reveal gestures on the recipe pages, against G102);
 
 Top 5: G181, G182, G183, G184, G187.
 
-Update Oct 18: G185 is closed (ruled), so 14 gaps stay open, 3 of them low. G182 is half fixed (reveal in #912, body still open). G187 goes stale when #890 merges.
+Update Oct 17 (PDT): G185 is closed (ruled), so 14 gaps stay open, 3 of them low. G182 is half fixed (reveal in #912, body still open). G187 goes stale when #890 merges.
 
 ## Not found (clean)
 
