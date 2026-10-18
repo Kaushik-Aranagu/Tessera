@@ -1,4 +1,4 @@
-# Gap hunt 19: Money, Reading and Notes under Low Power and VoiceOver (static read, master dd1f283, Sat Oct 17 PDT)
+# Gap hunt 19: Money, Reading and Notes under Low Power and VoiceOver (static read, master eaa4c30; app, engine and design files unchanged through dd1f283, Sat Oct 17 PDT)
 
 Written Sat Oct 17, late night PDT. Graded against master eaa4c30 (app, engine and design files unchanged through dd1f283) (read only; the local branch carries docs-only commits on top, so every code cite below stands on master). Static read only: nothing built or run (no Swift toolchain, no simulator), so every "shown" below is what the code draws or the spec says, and "inferred" marks a reading I did not see executed. No Claude key was printed or stored. Highest earlier gap number was G288 (hunt 18, `kitchen-gap-hunt-18-home-settings-lowpower-voiceover-oct17.md`, checked by `git grep` for G289 and G290 over `docs`, zero hits), so this file starts at G289.
 
@@ -116,3 +116,14 @@ Cross-cutting calls for Product:
 3. G303, what a Spend reads as when masked ("Private item" is the only money mask in the brief), and whether a Book title or review line is ever private (no ruling today; I recommend no, with the review line staying on the book page only).
 4. G292 and G293, quiet hours for Tess-landed slots (the Reading evening slot, the Money "Groceries total?" question) and the retry inbox: confirm the slot ends at 11 pm, the total question is not re-offered overnight, and `readWaiting`, when wired, is an automatic call that waits for Low Power to end.
 5. G294, whether a live "now" on a note row is worth one coarse update per minute while the page is open, given the no-polling ruling, or whether the word is simply drawn at open and on return to the app.
+
+## Rulings in (Product, Oct 17 9:40 pm PDT, recorded in decisions.md)
+
+- **Ship lists:** amend both (Money and Reading) with thing-first lines, the house clock and Low Power forms; Kitchen drafts, Design checks the look (amendment sections at the foot of `ship-list-m5-money.md` and `ship-list-m5-reading.md`).
+- **Private note (call 2):** a private note opens on a plain tap from the list. The row is masked, opening is editing, and the live field shows raw. No tap-to-reveal.
+- **Masked Spend and Book (call 3):** a masked Spend reads "Private spend" (the amount shows, it is the screen's data). A Book can be private and reads "Private book".
+- **Quiet hours and Low Power (call 4):** Tess-initiated lines (Reading 7 pm, Money total) follow quiet hours. The retry inbox pauses in Low Power and resumes on power ok or his tap.
+- **Note row time word (call 5):** the row's "now" refreshes on whole minutes while the page is open.
+- **Overlap:** Research's #953 (`docs/research/fixtures/gap-hunt-19-money-reading-notes.md`, G607-G616) covers the same area. Cross-reference by id rather than duplicate rows; this hunt's G289-G311 stand as the Kitchen read.
+- **#953 answers (Product, Oct 17 9:33 pm PDT):** deleting a note is a tap with a 10 s UNDO; a private note in the editor is not a reveal; `EditNote` runs the same private check as `CreateNote`; Money titles use the one check.
+- **Duplicates with Research's #953 (one id on the walk list):** Kitchen G295, G298, G299, G289, G300, G301 are the same findings as Research G607, G608, G609, G616, G611, G612. The walk list carries the Research id; the Kitchen rows stay here for the cites.
