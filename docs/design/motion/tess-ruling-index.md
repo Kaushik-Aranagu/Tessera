@@ -89,7 +89,7 @@ Same rule: a work list, not a ruling source. "Matrix" = `tess-lowpower-reducemot
 
 **Folded into the specs (lane 82):** N4 (Remove key two-step, `tess-settings-motion.md`), N6 (reduced page turn helper, `tess-page-turn-motion.md`), N10 (`groceries-lp:43`), N11 (`tess-training-motion-lowpower-pass.md:95`), N12 (`tess-quiet-versions.md`, `tess-motion.md`). **Left:** the Q1 and M1 to M4 lines in section 5 above, and N8's `tess-settings-motion.md:14` timings.
 
-## 7. Rulings after DEC:1069 (DEC:1071 to 1085, Oct 18 1:12 AM to 2:16 AM)
+## 7. Rulings after DEC:1069 (DEC:1071 to 1085, Oct 18 1:12 AM to 5:17 AM)
 Same columns and statuses as section 6. Line numbers are the 1083-line copy on the shared drive.
 
 | # | Ruling | Spec that carries it | Status |
