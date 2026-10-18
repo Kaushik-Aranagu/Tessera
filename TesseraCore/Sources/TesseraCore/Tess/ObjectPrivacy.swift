@@ -56,10 +56,32 @@ public enum ObjectPrivacy {
         return nil
     }
 
-    /// Whether a recipe's title is private (a secret word, money, a body fact or a medicine).
+    /// The one check for a title or a word he typed (G105): a secret word, money, a body fact, a medicine, or one of
+    /// the
+    /// money and health title words ("dentist", "therapy", "clinic", "rent"). Receipts, UNDO, Tess lines, screens and
+    /// the shared export all ask this, so a thing reads private everywhere or nowhere ("Dentist cake" is "Private
+    /// recipe" on a screen and in a file alike).
+    public static func isPrivateTitle(_ text: String, lastWeightKg: Double?) -> Bool {
+        text == SecretWords.title || isPrivateText(text, lastWeightKg: lastWeightKg)
+            || PrivateFacts.words(text.lowercased()).contains(where: titleWords.contains)
+            // A bare medicine is a health fact: "lexapro", "advil", "take melatonin".
+            || EngineWall.isHealth(text, lastWeightKg: lastWeightKg)
+    }
+
+    /// Medical and care words that make a bare title private even with no number (Product: money and body titles are
+    /// private in an export, and on a screen alike).
+    /// Money words are not here: money masks only with an amount or a sign (Product, 4:22 PM PT: "Rent car" stays
+    /// raw). Words that are also food or plain English are out: "blood orange", "hearts of palm", "energy drink",
+    /// "sleep tea", "Dr Pepper".
+    static let titleWords: Set<String> = TessMemoryScreen.healthWords
+        .subtracting(["blood", "heart", "energy", "sleep", "tight", "tip", "pepper", "dr", "kg", "lb", "lbs", "kcal",
+                      "calories", "pain", "recovery", "weight"])
+        .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "dentist", "clinic",
+                "hospital"])
+
+    /// Whether a recipe's title is private: the one check above.
     public static func isPrivateRecipeTitle(_ title: String, lastWeightKg: Double?) -> Bool {
-        title == recipeLabel || PrivateFacts.isPrivateTitle(title, lastWeightKg: lastWeightKg)
-            || EngineWall.isHealth(title, lastWeightKg: lastWeightKg)
+        title == recipeLabel || isPrivateTitle(title, lastWeightKg: lastWeightKg)
     }
 
     /// A field that is always private on its class: a workout's notes are a body fact (Product 5:07 PM PT).
@@ -85,7 +107,7 @@ public enum ObjectPrivacy {
     @MainActor
     public static func isPrivateWord(_ text: String, in store: ObjectStore) -> Bool {
         let last = BodyWeight.lastKg(in: store)
-        return isPrivateText(text, lastWeightKg: last) || EngineWall.isHealth(text, lastWeightKg: last)
+        return isPrivateTitle(text, lastWeightKg: last)
     }
 
     static func isPrivateText(_ text: String, lastWeightKg: Double?) -> Bool {

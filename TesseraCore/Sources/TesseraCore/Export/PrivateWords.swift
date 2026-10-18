@@ -25,16 +25,13 @@ enum PrivateWords {
 
     /// Medical and care words that make a bare title private even with no number (Product: money and body titles are
     /// private in an export). Not the Home pack's rules for what goes to Claude (loose numbers, places, people).
-    static let titleWords: Set<String> = PrivateFacts.moneyWords.union(TessMemoryScreen.healthWords)
-        .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "dr", "dentist",
-                "clinic", "hospital"])
+    static let titleWords: Set<String> = ObjectPrivacy.titleWords
 
     /// A title is private by the usual rule, or when it holds a money or health word.
+    /// ObjectPrivacy.isPrivateTitle asks this: the one check (G105).
     static func isPrivateTitle(_ title: String, lastWeightKg: Double?) -> Bool {
-        isPrivateText(title, lastWeightKg: lastWeightKg)
-            || PrivateFacts.words(title.lowercased()).contains(where: titleWords.contains)
-            // A bare medicine is a health fact (QA on #710): "lexapro", "advil", "take melatonin".
-            || EngineWall.isHealth(title, lastWeightKg: lastWeightKg)
+        labels.contains(title.trimmingCharacters(in: .whitespacesAndNewlines))
+            || ObjectPrivacy.isPrivateTitle(title, lastWeightKg: lastWeightKg)
     }
 
     /// A list of numbers ("25, 20, 15, 1.25": the plates an equipment object holds) is not a spend or a weigh-in.

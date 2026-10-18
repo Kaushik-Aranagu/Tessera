@@ -642,7 +642,7 @@ public struct AddGroceries: EngineAction {
     /// A medicine or body line is never said back (#688): it reads "Private item".
     @MainActor
     private func shown(_ line: String, in store: ObjectStore) -> String {
-        EngineWall.isHealth(line, lastWeightKg: BodyWeight.lastKg(in: store)) || AddListItem
+        ObjectPrivacy.isPrivateWord(line, in: store) || AddListItem
             .kept(line, store: store) == nil
             ? "Private item" : line
     }
