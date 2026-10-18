@@ -6,7 +6,7 @@ One table of where each lead is now. Product keeps it current when a lead moves 
 |---|---|---|
 | Coordinator | (project chat) | session_017NnYJ1KC3sgjujSxa7psmU |
 | Product (rotated about 4:30 PM Oct 17) | cmsg_01VTPva3JGXrfvetgUvAWE7M4PS458UQbE4cTCBrUUs8ZG | session_01RBgnhXvCZZhM8wDwJqs5Rx |
-| Kitchen | cmsg_01VTPva3JGXrfvetgUvAWE7MJ6x15H146i8Ubn1hrFjuEJ | session_01TRh7xwt9UhB98fN8BteVgs |
+| Kitchen | cmsg_01VTPva3JGXrfvetgUvAWE7M89s9yq77kzrHiVK6fDMbrZ | session_01WXUguo5FzJwPMPZohELbQR |
 | QA (rotated about 4:30 PM Oct 17) | cmsg_01VTPva3JGXrfvetgUvAWE7MCy1jQu1AAK4DaoaMNk6LTX | session_01LivGht4DsiiWp8zDyRGFtz |
 | Design | cmsg_01VTPva3JGXrfvetgUvAWE7MPgmjA8hTn97dR7fqUQnzdE | session_015X5sbwjvU5TcEzjZg4LaQr |
 | Research | cmsg_01VTPva3JGXrfvetgUvAWE7MPtwgew3oJ7cvhswUWWXx7k | session_017t1kiDAoSpJVo4NVP2BpZU |
@@ -17,7 +17,7 @@ One table of where each lead is now. Product keeps it current when a lead moves 
 | Builder B (Mac) | cmsg_01VTPva3JGXrfvetgUvAWE7MVrjJCAw7HRqQ33DygSn2Qc | session_01MP1MQQduHXSJ11GiBAgEB4 |
 | Ops | cmsg_01VTPva3JGXrfvetgUvAWE7MDeYL2K6E16xSrmKNzZoVJF | session_01RWgiTA9S2ayUkTS9R4LtQ2 |
 
-Retired (a message to these gets `session_inactive`): QA session_011G5V3Hxc6iNaYxFTxRs5Eg (thread cmsg_01VTPva3JGXrfvetgUvAWE7MCGo649SeUBPdKzkV1rnwTw); Product cse_01STY2yX8fnVksnqnnPkcBQG (thread cmsg_01VTPva3JGXrfvetgUvAWE7MRLK2oiTKs6EG9Uu5qfT6M1); QA cse_01SPUv55gtzktZjCda2KjMoW, cse_01M6UTgTZa2bJBa8bLiyL3rv, cse_016hxroCB7KSo9FQG2RL5PdR; motion lab cse_01DRmRTCUkFkcxiqBGpsU9Jw; old coordinator session_016gJ8tAQxkZ4HmhA3ukc6ok.
+Retired (a message to these gets `session_inactive`): Kitchen session_01TRh7xwt9UhB98fN8BteVgs (thread cmsg_01VTPva3JGXrfvetgUvAWE7MJ6x15H146i8Ubn1hrFjuEJ, rotated 6:45 PM Oct 17); QA session_011G5V3Hxc6iNaYxFTxRs5Eg (thread cmsg_01VTPva3JGXrfvetgUvAWE7MCGo649SeUBPdKzkV1rnwTw); Product cse_01STY2yX8fnVksnqnnPkcBQG (thread cmsg_01VTPva3JGXrfvetgUvAWE7MRLK2oiTKs6EG9Uu5qfT6M1); QA cse_01SPUv55gtzktZjCda2KjMoW, cse_01M6UTgTZa2bJBa8bLiyL3rv, cse_016hxroCB7KSo9FQG2RL5PdR; motion lab cse_01DRmRTCUkFkcxiqBGpsU9Jw; old coordinator session_016gJ8tAQxkZ4HmhA3ukc6ok.
 
 ## The check (about two minutes, after any move)
 1. For each retired id above, run `grep -rl "<id>" /mnt/project-files/tessera /tmp/claude/memory/team/silo --include=*.md`.
