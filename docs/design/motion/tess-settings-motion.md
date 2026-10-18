@@ -20,7 +20,7 @@ Lab spec for Builder B (Settings screens) and Builder A (haptics, Look). Docs on
 
 ## 2. Page turn inside Settings (R1 to R4, DEC:925/933; D5)
 - Four pages, each at most six rows: **Claude**, **Your day**, **Looks**, **Data** (DEC:1019 makes the first page Claude; sheet 93's "Tess" page is replaced). The rail on the right edge shows the page; the section word at the top is the only heading.
-- A vertical swipe on plain text or empty space turns the page; on a stepper or dial row it steps that row instead (sheet 90b, DEC:1007 line "a swipe on an element is its action, else it turns the page"); a horizontal edge swipe is the side (settings-80 "what leaves the phone"). Rows that open keep their horizontal swipe.
+- A vertical swipe on plain text or empty space turns the page; on a stepper or dial row it steps that row instead (sheet 90b, DEC:917, his 12:46 PM answer: "a swipe on an element is its action, else it turns the page"); a horizontal edge swipe is the side (settings-80 "what leaves the phone"). Rows that open keep their horizontal swipe.
 - **R2: no haptic on any page turn.** The auto lead-turn plays none either.
 - Page turn word chosen in Settings (Slide, Turn, Soften, Rotate; default Turn): row "Page turn" on the Looks page next to Look (placement is a default the lab picks; sheet 93 had it on page 1, which is now Claude).
   - Tap opens the four words in place (320 ms grow). Each word previews once on a mini page (1 s hold). Re-picking the word that is already set does not replay (R4).
@@ -30,7 +30,7 @@ Lab spec for Builder B (Settings screens) and Builder A (haptics, Look). Docs on
 - Test: a page turn plays zero haptics in each of the four words; re-picking the current word does not start a preview; with LP on, each word's turn lasts 150 ms.
 
 ## 3. The CLAUDE page (page 1)
-Rows top to bottom: **Tess asks Claude** (yes / no), **This month** (spend line), **key state** (Key saved / No Claude key yet.), **Receipts** one layer down. Copy per Research's table, third person ("Tess asks Claude: yes.", DEC:597). Cap is $50 (DEC:570); sheet text that says $10 is stale.
+Rows top to bottom: **Tess asks Claude** (yes / no), **This month** (spend line), **key state** (Key saved / No Claude key yet.), **Receipts** one layer down. Per Product's 10:44 PM call (DEC:1047) Key, This month and Receipts sit under "Tess asks Claude", which opens in place, so page 1 stays at six rows; the line under the switch reads "Sends only what Receipts lists." Copy per Research's table, third person ("Tess asks Claude: yes.", DEC:597). Cap is $50 (DEC:570); sheet text that says $10 is stale.
 
 | Moment | Normal | RM and LP | Haptic | Code |
 |---|---|---|---|---|
@@ -39,20 +39,19 @@ Rows top to bottom: **Tess asks Claude** (yes / no), **This month** (spend line)
 | Paste lands | field clears at once; Tess says "Checking it with Claude." beside the soul; cloud wisps rise (3 wisps, 18 pt drift, 1.1 s, 220 ms apart) while the check is away | no wisps: the soul's thinking pose plus the line; nothing drifts | none | the wisps are the model-layer cloud mark in `claude-settings.md` |
 | Check answers (works / not allowed / not checked / account paused) | the key row's status word crossfades; "works" lets the sentences below unfold (40 ms stagger, 10 pt rise) | crossfade, no stagger | none (information), except a failed save: `.notSaved` once | `:357` |
 | Key refused ("That doesn't look like a Claude key. Paste it again?") | line empties and stays open, Tess's line under it | same | none (information) | |
-| REMOVE (a tap, no confirm) | lines 1 to 5 fold away (220 ms) and the no-key state shows. Today `.easeInOut(0.22)`; the house curve is the lab's pick. Tess: "Claude key removed. Everything stays on this phone." with UNDO. | crossfade | `.selection` (his tap) | `:378-383` |
-| UNDO within 10 s | "Claude key is back."; rows return as they were | crossfade | `.undo` alone | `:393-398`; the key is held only in memory (`:544`) |
+| REMOVE (a tap, no confirm) | lines 1 to 5 fold away (220 ms) and the no-key state shows. Today `.easeInOut(0.22)`; the house curve is the lab's pick. Tess: "Claude key removed. Everything stays on this phone." **No UNDO** (ruled 10:47 PM, DEC:1049: nothing keeps a copy of the key) and no key content in the line. | crossfade | `.selection` (his tap) | `:378-383`; build removes the 10 s UNDO and the in-memory key hold today at `:393-398`, `:544` |
 | Add, replace or test a key | a plain receipt, no UNDO, no key content (DEC:1023). | same | none | |
-| Month line | 6 pt stroke painted along a hairline to the share spent (500 ms draw, once) | full length shown at once | none | `:438` (`drawn \|\| reduceMotion`) |
+| Month line | 6 pt stroke painted along a hairline to the share spent (500 ms draw, once) | full length shown at once | none | `:432` (`drawn \|\| reduceMotion`), draw animation `:438` |
 | 80% / cap / rollover | stroke turns to `now` (amber, never red; text stays ink); at cap "Paused until Nov 1."; rollover drains back (500 ms) | colour step with no drain | none | |
 
 - The characters of a pasted key never animate (no 9 ms drain, no `...a1B2` tail): `claude-settings.md` S4 is superseded by DEC:77 (9:53 PM Oct 15). The row reads "Key saved" or "No Claude key yet." in both the screen and the VoiceOver label.
-- VoiceOver: the field announces "Claude key, secure field", never its contents or length; after the check Tess's line is spoken once; REMOVE speaks the receipt and offers UNDO as an action on the shared line, flat 10 s under VoiceOver.
-- Test: after a paste, the accessibility tree contains no run of characters from the field; REMOVE then UNDO plays exactly one `.undo`; RM removes the stroke draw but not the amber/ink colour state.
+- VoiceOver: the field announces "Claude key, secure field", never its contents or length; after the check Tess's line is spoken once; REMOVE speaks the receipt and offers no UNDO.
+- Test: after a paste, the accessibility tree contains no run of characters from the field; REMOVE plays exactly one `.selection`, shows no UNDO and leaves no key copy in memory; RM removes the stroke draw but not the amber/ink colour state.
 
-## 4. "Haptics, on" (Looks page; H13, DEC:1019, 1045)
-- A value row: name left, "on" or "off" right in `inkSecondary`. Tap flips it.
+## 4. "Haptics, on" (Looks page; H13, DEC:1019, 1045, 1049)
+- A value row reading "Haptics, on" / "Haptics, off" (ruled wording; yes/no is for the key state only). Tap flips it.
 - **Off silences every app haptic except the one soft `.warning` for a failed save** (`Haptic.notSaved`). Timer-end and rest-end notifications still ring (they are the system's, not an app haptic).
-- Turning it **off** plays one `.selection` as the last haptic (the flip is his touch, played before the gate closes); turning it **on** plays `.selection` after the gate opens. No other row haptic fires while off.
+- Lab default, not ruled (see asks): turning it **off** plays one `.selection` as the last haptic (the flip is his touch, played before the gate closes); turning it **on** plays `.selection` after the gate opens. No other row haptic fires while off.
 - RM and LP: the value word crossfades (150 ms); no scale or colour pop.
 - Build note: `tesseraFeedback` is the one gate. Raw `.sensoryFeedback` calls bypass it: `LookSentence.swift:69-70` (selection, medium 0.8) are two of the 25 sites in the migration table and must move first, or "off" is a lie there.
 - Test: with Haptics off, none of `.made .done .selection .pickedUp .undo .timeUp ...` fires, `.notSaved` still does once per failed save; the flip itself fires the one `.selection` above.
@@ -73,14 +72,15 @@ Rows top to bottom: **Tess asks Claude** (yes / no), **This month** (spend line)
 |---|---|---|
 | `settings-93.md` page 1 "Quiet hours: 11 pm to 7 am", tap opens two clocks | fixed, fact line on Your day (HS36, DEC:1019) | Design |
 | `settings-93.md` page 1 is "Tess" (Tess asks, Quiet, Page turn) | page 1 is Claude (DEC:1019) | Design |
-| `settings-93.md` "Off is the default"; On/Off wording | code and DEC:683 default yes once a key is there; value words yes/no, but Haptics is "on" (DEC:1019); mixed wording is a Product question | Product |
+| `settings-93.md` "Off is the default"; On/Off wording | code and DEC:683 default yes once a key is there; key state yes/no, Haptics "Haptics, on/off" (ruled DEC:1049) | Design (sheet) |
 | `claude-settings.md` S4 drains the key to `...a1B2`; "$10" | no tail anywhere (DEC:77); cap $50 (DEC:570) | Design |
 | `settings-place.md:26` Look flood 250 ms under RM | 150 ms (HS43, DEC:1017); code `LookSentence.swift:119` literal 0.25 is dead because `withTesseraAnimation` already forces 150 ms | Design and Builder A |
-| `settings-93.md` "Delete everything: two taps, a held confirm" | no ruling found; a hold key means named-action VoiceOver (DEC:1027/1039) | Product |
-| Strings still saying "It goes in Review, under Claude." / "Turn this off on Review: Claude." | become "Settings, under Claude." / "Settings: Claude." when Settings ships (DEC:1019); capture-miss code already says "Settings: Claude" | Builder B |
+| `settings-93.md` "Delete everything: two taps, a held confirm" | ruled (DEC:1049): one held confirm, a hold key, named action "Delete everything" under VoiceOver, **no UNDO** (it cannot be undone) | Design (sheet) |
+| `claude-settings.md` "Receipts" row and "Sends only what you ask her." | Key, This month and Receipts sit under "Tess asks Claude" (opens in place); the line reads "Sends only what Receipts lists." (DEC:1047, 10:44 PM) | Design |
+| `claude-settings.md` REMOVE with UNDO 10 s | REMOVE has no UNDO (DEC:1049) | Design |
+| Strings still saying "It goes in Review, under Claude." / "Turn this off on Review: Claude." | become "Settings, under Claude." / "Settings: Claude." when Settings ships (DEC:1019); `ClaudeTessModel.swift:151` already says "in Settings" while DEC:1019 still says "on Review" and Product's 10:44 PM call says all six pointers say "Review" until Settings ships, built from one Core value `ClaudeWhere` | Core and Builder B |
 
 ## 8. Asks
-1. Product: wording of Haptics (on/off vs yes/no), and whether Delete everything stays a held confirm (if so it is a named action under VoiceOver and plays no `.done`: its completion is the delete receipt).
-2. Product: confirm REMOVE keeps UNDO (code and `claude-settings.md` say yes; DEC:1023 "a key change gets no UNDO" reads as add/replace only).
+1. Product: ruled since (DEC:1049): Haptics wording, Delete everything held with no UNDO, REMOVE no UNDO. Still open: the lab default that flipping Haptics plays one `.selection` (before the gate closes when turning off); H13 says only that off silences everything except `.warning`.
 3. Design: the Settings entry, `settings-93.md` and `claude-settings.md` edits in §7.
 4. Builder A: migrate `LookSentence.swift:69-70` to the map, then gate `tesseraFeedback` on the Haptics setting; LP flag via `PowerState`.
