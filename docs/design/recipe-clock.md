@@ -60,3 +60,18 @@ The cook Live Activity stays as built (Design 54): the current step's title and 
 - **Core:** a start and end minute per step from the parser; one timer per timed step; the used set per minute for the peek. Later, with lanes: a lane per step, more than one live step, and the model's pairs as #414 rules them.
 - **Kitchen lead:** ruled in #419 (cook-mode-acceptance.md, b0b54f1), PASS on this sheet. A step is timed only when its own text carries a duration (lower bounds summed; "a side" doubles); an untimed step is a 2-minute span on the clock; a wait over 3 hours (marinate, overnight) is drawn at a fixed 10-minute span with its hours ("8 HR") and no countdown or timer. The peek's key follows Groceries' add rules exactly, its number a dry run of that add; at 0 the key word is absent. The lane rules are #414's, for when lanes come back.
 - **Later, Product:** Pantry (his idea: a stock of what he has, feeding Groceries, Recipes and the peek's on hand / to buy). This sheet only reserves the peek's right column for it.
+
+## VoiceOver, finish keys and targets on the clock page (G228, G229; Oct 17, 9:07 PM PT rulings)
+The clock page IS the cook. Sheet 12's cover is gone, and so is its reading order.
+**One reading order (replaces K84.20 and the cover order; VO5 to VO24 govern).** Top to bottom, one stop each:
+1. The back word ("Recipes").
+2. The name (a heading; a private recipe reads "Private recipe").
+3. The context line ("serves 4, 45 minutes, cooked 12 days ago").
+4. The steps in time order, one element per step: done steps with value "Done", the lit step "Now, 14 minutes left" (or "Now"), steps ahead "Step 5 of 6, at minute 39". Untimed steps carry no minutes. The minute column, stroke, bead and wet/dry spans are hidden (VO6, VO15).
+5. The key row: STOP with "33 minutes left", or DONE at the last step.
+6. The INGREDIENTS word (STEPS when the peek is open).
+- **Not on this page:** a "Next" bar (K84.20 does not apply), a cover heading ("Weeknight dal, cooking"), a "Step N of M" line apart from each step's value. The step moves on by the bead, or by "Next step" as an action on the held step (VO14).
+- **Focus** stays where it was when a step lights or a timer ends; the news is announced, once, not focused (VO13, K84.22).
+**Finish key (G229, VO19 amended).** DONE is named-action-only for VoiceOver: label "Done", value "4 minutes left", button, hint "Hold to finish", and one named action "Finish". There is no default action, so a double tap speaks the hint and does not finish; the named action finishes, with the same receipt and 10 s UNDO as a real hold. Voice Control and Switch Control reach Finish by its name, since a tap on DONE alone must not end a cook. A timer-start key (a tap key) keeps double-tap start. Other hold keys are unchanged.
+- **For Builder A:** give `PaintKey` an opt-out of the default action and the default hint for these keys (a parameter such as `finishAction: String?`: when set, the key adds that named action, no default action, and the hint reads "Hold to finish"). This is the only exception to the hint rule "the hint names the effect, never the gesture", and it applies to the finish and clear keys only.
+**Targets (K84 carries over).** The key row, the INGREDIENTS word, the lit step's actions and Tess's UNDO use the cook-mode targets on the clock page: at least 64 pt, and 88 pt from the first accessibility text size up (AX1). The page is where he cooks with wet hands, so the sizes follow the screen, not the old cover. Everything else on the page, such as back, rows in the peek and the portion drum, stays at 44 pt. The key row grows to 64 pt in place without moving the bead's column.
