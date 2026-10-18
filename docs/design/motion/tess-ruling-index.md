@@ -3,7 +3,7 @@
 Board 71. One page: each ruling, the spec that carries it, and every line that still contradicts it. Sources: `decisions.md` (DEC, line numbers from the 1043-line copy on the shared drive; the repo copy stops near line 995), the haptic map in `DesignSystem/Haptics.swift` (the map is the code and wins over any sheet), and the files in this folder. Stamps are real PT.
 
 **This is a work list, not a ruling source:** the rulings are in `decisions.md` and the haptic map; a line here only points at them. Status: **OK** carried and nothing contradicts it. **FIX** a stale line exists. **GAP** no spec carries it.
-"MRA" = `tess-money-reading-motion-amended.md` (#963, not yet on master). "Day screens" = `tess-day-screens-motion-pass.md` (#966, not yet on master). "Row 26" = the UNDO-alone row in #964.
+"MRA" = `tess-money-reading-motion-amended.md` (#963, not yet on master). "Day screens" = `tess-day-screens-motion-pass.md` (#966, not yet on master). "Row 26" = the UNDO-alone row in #964. "groceries-lp" = `tess-groceries-lists-and-home-settings-lowpower.md`.
 
 ## 1. Haptics: which case plays
 
