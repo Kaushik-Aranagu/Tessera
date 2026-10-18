@@ -1,12 +1,16 @@
 # PagedRun edge cases: sizes, caps, private rows, Dynamic Type, Low Power
 
-For: Core (the pure page build), Builder B (`PagedRun`, Settings), QA. Docs only; nothing was built or run. Written Sun Oct 18 against origin/master `b2048d91`. **`PagedRun` is not on master.** `git grep -il "pagedrun\|PageBuild" -- '*.swift'` returns nothing, and neither does `PageTurn` or `Theme.Motion.pageTurn`. So this list is worked from the spec: `design/pages-90.md` (rules 1 to 8, "Calls settled Oct 17"), `design/settings-93.md`, and the merged fixtures `docs/research/fixtures/page-turn.md` (PG, RL, TM, ST) and `docs/research/fixtures/sheets-93-94-95.md` (SP). Ids here are **PR** so they do not collide with PG, RL, TN, TM, ST, WS, SP or LV. A row that only repeats an earlier fixture says "per PG04" and adds the edge.
+For: Core (the pure page build), Builder B (`PagedRun`, Settings), QA. Docs only; nothing was built or run. Written Sat Oct 17 (PDT) against origin/master `b2048d91`. **`PagedRun` is not on master.** `git grep -il "pagedrun\|PageBuild" -- '*.swift'` returns nothing, and neither does `PageTurn` or `Theme.Motion.pageTurn`. So this list is worked from the spec: `design/pages-90.md` (rules 1 to 8, "Calls settled Oct 17"), `design/settings-93.md`, and the merged fixtures `docs/research/fixtures/page-turn.md` (PG, RL, TM, ST) and `docs/research/fixtures/sheets-93-94-95.md` (SP). Ids here are **PR** so they do not collide with PG, RL, TN, TM, ST, WS, SP or LV. A row that only repeats an earlier fixture says "per PG04" and adds the edge.
 
 Status: **traced** means a master line does what the row says (file:line cited); **inferred** follows from the spec or from a neighbouring master line without a test; **gap** means master has nothing for it, or the spec leaves it undecided. Owners: Core, Builder B. Test names are Swift Testing names unless marked UI.
 
 ## The rule these rows test
 
 Rule 1 and 2 of sheet 90 give one page-size function for a group of n rows: pages = ceil(n / 6), sizes differ by at most one, larger pages first. Worked: 7 is 4+3, 10 is 5+5, 11 is 6+5, 13 is 5+4+4, 19 is 5+5+5+4, 23 is 6+6+6+5, 24 is 6+6+6+6, 25 is 5+5+5+5+5. Only 7, 10 and 13 are written in the sheet; the others are the same rule applied, and the tie order ("larger first") is stated for odd splits only (pages-90 "Calls settled", Odd splits).
+
+**Our reading, not the sheet's.** "Fewest pages, sizes differ by at most one, larger first" is Research's reading of sheet 90's "nearest even break". For 19, 23 and 25 the sheet is silent. Design must confirm 19 = 5+5+5+4, 23 = 6+6+6+5 and 25 = 5x5 before PR07 to PR10 become tests. Until then those four rows are provisional.
+
+**Not for Core's first PR.** Rows marked "after ruling" (PR14, PR15, PR21, PR27, PR28, PR39, PR40, PR49) wait on Product or Design (Open 1 to 5). Keep them out of Core's first PR. Rows PR07 to PR10 also wait on the confirmation above.
 
 ## Rows
 
@@ -22,10 +26,10 @@ Columns: Id, Items in, Expected page sizes, Status, Owner, Test. "Master" is whe
 | PR04 | 7 | [4, 3]; the second page keeps the word; rail appears (per PG02, PG14) | gap | Core | `sevenItemsSplitFourThree` |
 | PR05 | 11 | [6, 5]; fewest pages (2), sizes differ by one, larger first | inferred from rules 1 and 2; not written in the sheet | Core | `elevenItemsSplitSixFive` |
 | PR06 | 13 | [5, 4, 4] (per PG05, PG11) | gap | Core | `thirteenItemsSplitFiveFourFour` |
-| PR07 | 19 | [5, 5, 5, 4]; four pages, none above 6 | inferred | Core | `nineteenSplitsFiveFiveFiveFour` |
-| PR08 | 23 | [6, 6, 6, 5]; four pages, three full | inferred | Core | `twentyThreeSplitsSixSixSixFive` |
+| PR07 | 19 | [5, 5, 5, 4]; four pages, none above 6 | inferred; Design to confirm before this is a test | Core | `nineteenSplitsFiveFiveFiveFour` |
+| PR08 | 23 | [6, 6, 6, 5]; four pages, three full | inferred; Design to confirm before this is a test | Core | `twentyThreeSplitsSixSixSixFive` |
 | PR09 | 24 | [6, 6, 6, 6]; four full pages, no split loses a row (the Groceries example is 24 rows over several aisles, pages-90 table) | inferred | Core | `twentyFourItemsFourFullPages` |
-| PR10 | 25 | [5, 5, 5, 5, 5]; ceil(25/6) is 5, so the fewest-pages rule gives five pages of five, not 6+6+6+6+1 | inferred; the sheet never tests 25 | Core | `twentyFiveItemsFiveEvenPages` |
+| PR10 | 25 | [5, 5, 5, 5, 5]; ceil(25/6) is 5, so the fewest-pages rule gives five pages of five, not 6+6+6+6+1 | inferred; the sheet never tests 25; Design to confirm before this is a test | Core | `twentyFiveItemsFiveEvenPages` |
 | PR11 | any n from 0 to 60 | sum of sizes equals n; max size 6; max minus min is at most 1 inside a group; sizes non-increasing | gap | Core | `everySizeKeepsSumCapAndOrder` |
 | PR12 | same input twice (13, then 13) | identical output (per PG15) | gap | Core | `pageBuildIsDeterministic` |
 
@@ -34,8 +38,8 @@ Columns: Id, Items in, Expected page sizes, Status, Owner, Test. "Master" is whe
 | Id | Items in | Expected page sizes | Status | Owner | Test |
 |---|---|---|---|---|---|
 | PR13 | THIS WEEK 7, EARLIER 13 (Notes, 20) | [4, 3, 5, 4, 4], five pages; 3 + 5 = 8 so no merge (per PG05) | gap | Core | `notesTwentySplitsEvenly` |
-| PR14 | A 7, B 2 | [4, 3] with the 3 possibly sharing with B (3 plus 2 is 5 rows), two groups, so the tail of A may share with B. The sheet merges "small neighbouring groups", not a tail of a split group | gap, undecided (see Open 3) | Core, Design | `splitTailMayShareWithNeighbour` (after ruling) |
-| PR15 | A 11, B 1 | [6, 5, 1] or [6, 5+1 merged]; same open question as PR14 | gap, undecided | Core, Design | same as PR14 |
+| PR14 | A 7, B 2 | [4, 3] with the 3 possibly sharing with B (3 plus 2 is 5 rows), two groups, so the tail of A may share with B. The sheet merges "small neighbouring groups", not a tail of a split group | gap, undecided; after ruling, not for Core's first PR (see Open 3) | Core, Design | `splitTailMayShareWithNeighbour` (after ruling) |
+| PR15 | A 11, B 1 | [6, 5, 1] or [6, 5+1 merged]; same open question as PR14 | gap, undecided; after ruling, not for Core's first PR | Core, Design | same as PR14 |
 | PR16 | A 6, B 7 | [6, 4, 3]; a full page never absorbs a neighbour (per PG10) | gap | Core | `fullPageDoesNotMerge` |
 | PR17 | A 3, B 3, C 3, D 3 | [3+3, 3+3] if merged; four pages if each stays named. Settings uses this exact shape | gap, contradiction (SP03) | Core, Design | `namedPagesAreNotMerged` |
 | PR18 | the lead is inside a 19-group | the lead sits on the page that holds it and counts in that page's 6; the 5+5+5+4 sizes do not move to favour it (per PG12) | gap | Core | `leadDoesNotChangePageSizes` |
@@ -48,7 +52,7 @@ Sheet 93 as written: Tess (3 rows), Your day (3), Looks (3), Data (3). The four 
 |---|---|---|---|---|---|
 | PR19 | Settings as sheet 93 | [3, 3, 3, 3]; four pages, words Tess, Your day, Looks, Data (per SP01, SP02). Master has no `SettingsView`; Settings is a stack of sentences at the foot of Review | gap: `Features/Review/ReviewView.swift:219-240`, `TesseraCore/Sources/TesseraCore/Settings/TesseraSettings.swift:5-38` | Builder B | `settingsHasFourPagesInOrder` |
 | PR20 | Settings with six rows on every page | [6, 6, 6, 6]; the largest legal Settings, 24 rows, four pages, none above 6 | gap | Builder B | `settingsMaxFourSixRowPages` |
-| PR21 | Settings, one page grows to 7 (an open row adds a row) | the page does not split into 4+3 and make a fifth page; an in-place expansion is not a row (SP41, SP50) | gap, undecided (see Open 2) | Design | n/a |
+| PR21 | Settings, one page grows to 7 (an open row adds a row) | the page does not split into 4+3 and make a fifth page; an in-place expansion is not a row (SP41, SP50) | gap, undecided; after ruling, not for Core's first PR (see Open 2) | Design | n/a |
 | PR22 | Settings, page 1 has 3 rows and page 2 has 3 | stay two pages; the page build is not run on authored pages, or runs with a never-merge flag (SP03) | gap | Core | `settingsGroupsAreNotMergedByPageBuild` |
 | PR23 | Settings, the Page turn row = Rotate | no row slots declared, so Rotate falls back to Turn; no error line (per ST05, SP43) | gap | Builder B | `rotateOnSettingsFallsBackToTurn` |
 | PR24 | Settings, last page, swipe up; first page, swipe down | no rubber-band, nothing moves (per RL09, RL10, SP64) | gap | Builder B | `settingsEdgePagesDoNotRubberBand` |
@@ -60,9 +64,9 @@ Sheet 93 says "one scroll of 5 pages at most under sheet 90's rules; here 4 page
 
 | Id | Items in | Expected page sizes | Status | Owner | Test |
 |---|---|---|---|---|---|
-| PR26 | a 4-page screen gets 24 items | exactly four full pages; at the cap, no overflow | inferred | Core | `atCapFillsFourPages` |
-| PR27 | a 4-page screen gets 25 items | overflow. Candidate A: a fifth page of 1 (6+6+6+6+1, breaks "fewest pages equal"). Candidate B: five pages of 5 (the plain rule, PR10). Candidate C: the cap holds and the last page takes 7 (breaks rule 1). Rule 1 forbids C | gap, undecided (see Open 1) | Core, Design | `overflowPastCapKeepsRuleOne` (after ruling) |
-| PR28 | Settings gets a 5th group | five pages is within "5 pages at most" in sheet 93 but outside "4 pages"; which one is the cap | gap, undecided (see Open 1) | Design | n/a |
+| PR26 | Settings at 24 rows | exactly four full pages; at Settings' 4-page limit, no overflow (not a general cap) | inferred | Core | `settingsAt24RowsFillsFourPages` |
+| PR27 | Settings at 25 rows | overflow past Settings' 4 pages (not a general cap). Candidate A: a fifth page of 1 (6+6+6+6+1, breaks "fewest pages equal"). Candidate B: five pages of 5 (the plain rule, PR10). Candidate C: the cap holds and the last page takes 7 (breaks rule 1). Rule 1 forbids C | gap, undecided; after ruling, not for Core's first PR (see Open 1) | Core, Design | `overflowPastCapKeepsRuleOne` (after ruling) |
+| PR28 | Settings gets a 5th group | five pages is within "5 pages at most" in sheet 93 but outside "4 pages"; which one is the cap | gap, undecided; after ruling, not for Core's first PR (see Open 1) | Design | n/a |
 | PR29 | cap overflow while the reader is on page 4 | the reader stays on page 4; pages 4 and 5 re-split and the rail gains a segment without a turn | gap | Builder B | `capOverflowKeepsReadersPage` |
 | PR30 | overflow items are private | counted by the same rule; no private item is dropped silently | gap | Core | `overflowNeverDropsPrivateItems` |
 
@@ -87,8 +91,8 @@ Rule 1 counts rows, not height. Master has no paging, so every row here is a gap
 | Id | Items in | Expected page sizes | Status | Owner | Test |
 |---|---|---|---|---|---|
 | PR38 | 7 items at the default size | [4, 3] | gap | Core | per PR04 |
-| PR39 | 7 items at AX5 (largest accessibility size) | [4, 3] unchanged; the page build never reads the type size; page content scrolls inside its page if 4 rows do not fit | gap, undecided (see Open 4) | Core, Design | `pageSizesIgnoreDynamicType` |
-| PR40 | 6 items at AX5 | [6]; one page, still no rail, even if the six rows do not fit the screen; the page scrolls | gap, undecided (see Open 4) | Builder B | `sixItemsAtAX5StayOnePage` (UI) |
+| PR39 | 7 items at AX5 (largest accessibility size) | [4, 3] unchanged; the page build never reads the type size; page content scrolls inside its page if 4 rows do not fit | gap, undecided; after ruling, not for Core's first PR (see Open 4) | Core, Design | `pageSizesIgnoreDynamicType` |
+| PR40 | 6 items at AX5 | [6]; one page, still no rail, even if the six rows do not fit the screen; the page scrolls | gap, undecided; after ruling, not for Core's first PR (see Open 4) | Builder B | `sixItemsAtAX5StayOnePage` (UI) |
 | PR41 | Settings at AX3 | four pages of 3; the value stacks under the name; no truncation (SP30) | gap | Builder B | `settingsRowStacksValueAtAccessibilitySizes` (UI) |
 | PR42 | rail and peek at AX5 | rail stays 2 pt (3 pt current) on the right edge; the peek word at 30% ink over a 14 pt hairline is not scaled into the page; hidden from VoiceOver | gap | Builder B | `railAndPeekIgnoreTypeSize` (UI) |
 | PR43 | the foot tap target at AX5 | the foot stays a turn target of at least 44 pt tall | gap | Builder B | `footTapTargetStaysFortyFour` (UI) |
@@ -104,7 +108,7 @@ R3 (pages-90, "Calls settled Oct 17"): Low Power Mode behaves like Reduce Motion
 | PR46 | Low Power on, Slide, Soften, Rotate each | all three also become the 150 ms crossfade | gap | Builder B | `lowPowerCrossfadesEveryOption` |
 | PR47 | Low Power on, Settings row | still reads the user's word ("Soften, on"); the choice is not rewritten | gap | Builder B | `lowPowerKeepsSettingsChoice` |
 | PR48 | Low Power on, picking a word in Settings | the preview is the 150 ms crossfade (per ST06) | gap | Builder B | `lowPowerPreviewIsCrossfade` |
-| PR49 | Low Power turns on while a turn is playing | the turn in flight finishes; the next turn uses the crossfade (per TM08 for interruption) | gap, undecided (see Open 5) | Builder B | `lowPowerMidTurnThenFades` |
+| PR49 | Low Power turns on while a turn is playing | the turn in flight finishes; the next turn uses the crossfade (per TM08 for interruption) | gap, undecided; after ruling, not for Core's first PR (see Open 5) | Builder B | `lowPowerMidTurnThenFades` |
 | PR50 | Low Power turns off while a crossfade is playing | the crossfade finishes; the next turn uses the chosen word | inferred | Builder B | `lowPowerOffRestoresChosenTurn` |
 | PR51 | Low Power on, Reduce Motion off | crossfade; the page sizes are untouched, only the turn changes | gap | Core | `lowPowerNeverChangesPageSizes` |
 | PR52 | Low Power on, a lead change turns the page by itself | the automatic turn is the 150 ms crossfade, once (per TN07), no haptic (TN09) | gap | Builder B | `lowPowerLeadTurnFadesOnce` |
