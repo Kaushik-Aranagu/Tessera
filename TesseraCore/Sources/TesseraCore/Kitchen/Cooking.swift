@@ -91,7 +91,7 @@ extension ObjectPrivacy {
     /// What a cook or recipe is called in an op summary, the day story and the cook's own title: its title, or
     /// "Private recipe" when the recipe is private by the recipe rule (G21b).
     @MainActor
-    static func cookTitle(_ object: ObjectRecord, in store: ObjectStore) -> String {
+    public static func cookTitle(_ object: ObjectRecord, in store: ObjectStore) -> String {
         let recipe = store.linkedObjects("recipe", of: object).first ?? object
         let isPrivate = isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store))
             || isPrivateRecipeTitle(object.title, lastWeightKg: BodyWeight.lastKg(in: store))
