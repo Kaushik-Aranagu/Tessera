@@ -109,3 +109,15 @@ By pass: Low Power 11 (G217 to G227: 1 blocker, 8 important, 2 low); VoiceOver a
 Blocker: G217 (no timer alert exists; reachable today by Tess while a cook runs, and the one thing that must exist before `cookModeReady` flips).
 
 Cross-cutting calls for Product: (1) G228, does the clock page replace the cook cover; (2) G223, haptics in Low Power; (3) G229, does K84.26 beat VO19; (4) G218, the keep-awake window.
+
+## Rulings in (Product, Oct 17 9:07 pm PDT, recorded in decisions.md)
+
+- **G228 ruled:** the clock page is the cook and replaces the cover (Design 69); VO5 to VO24 govern; K84 rows carry over only for Done (K84.14, K84.26), K84.22, K84.25, K84.27; K84.20's Next bar does not apply. The map is written in `cook-mode-acceptance.md` ("Which rows apply to which screen").
+- **G223 ruled:** Low Power keeps his own touches and the timer-end success haptic; Tess-initiated landings (the bead lighting a step) follow quiet hours only. Fixture corrected in `docs/research/fixtures/haptic-moments.md` (item 3). Test name `lowPowerKeepsTimerEndHaptic` stands as a proposal until Builder A names it.
+- **G229 ruled:** K84.26 wins. Finish and Done keys are named-action-only for VoiceOver (double tap speaks "Hold to finish", the action "Finish" completes); timer-start keys keep double-tap. VO19 amended in `docs/research/fixtures/voiceover-recipe-clock-lists.md`.
+- **G218 ruled as proposed:** the screen stays on only while the cook page is visible, the scene is active, and (a timer runs or the last step change was under 45 min ago); it releases on idle, Finish, leaving and backgrounding, and re-arms on touch. Written into the UI bar of `cook-mode-acceptance.md`. Rows still to add when Builder A takes it: auto-lock returns 45 min after the last step with no timer; auto-lock returns the moment Finish completes; Low Power does not extend the window.
+- **G217** is boarded on ios-a as a gate before `cookModeReady` flips.
+
+**Re-checked (Oct 17 9:07 pm PDT):** this hunt was graded at master 5634526; master has since moved to 6008b07 (docs only, #938). No app file it cites changed, so every cite stands.
+
+**Naming note (QA, #939):** the PE25 to PE29 test names in the Pantry v2 acceptance file are proposals until Core names the real ones.
