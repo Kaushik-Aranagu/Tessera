@@ -88,8 +88,8 @@ extension ButtonStyle where Self == LabelActionStyle {
         LabelActionStyle()
     }
 
-    static func labelWord(_ color: Color) -> LabelActionStyle {
-        LabelActionStyle(color: color)
+    static func labelWord(_ color: Color, silent: Bool = false) -> LabelActionStyle {
+        LabelActionStyle(color: color, silent: silent)
     }
 }
 

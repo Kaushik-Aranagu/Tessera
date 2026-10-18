@@ -14,6 +14,8 @@ struct BackupView: View {
     @Environment(\.isPresented) private var isPresented
     @State private var picking = false
     @State private var folderTaps = 0
+    /// A restore staged: the Restore hold plays nothing itself, so this owner plays `.made` (Product 11:04 PM).
+    @State private var restores = 0
     @State private var importing = false
     @State private var saving: BackupFile?
     @State private var line: String?
@@ -102,6 +104,7 @@ struct BackupView: View {
                         return .handled
                     })
                     .tesseraFeedback(.selection, trigger: folderTaps)
+                    .tesseraFeedback(.made, trigger: restores)
                     .accessibilityAction(named: "Choose the folder") { picking = true }
                     .padding(.top, Theme.Spacing.m)
                     .entrance(3)
@@ -293,6 +296,7 @@ struct BackupView: View {
         guard let picked = confirming else { return }
         do {
             pending = try TesseraBackup.stageRestore(from: picked.url)
+            restores += 1
             dropPicked()
             say("What's here now is kept in Backups, so this can be undone.")
         } catch {

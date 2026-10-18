@@ -19,4 +19,18 @@ struct HapticMapTests {
         cue.play(.notSaved)
         #expect(cue.count == 2 && cue.haptic == .notSaved)
     }
+
+    @Test func theWorkoutUndoWordPlaysNoTickOfItsOwn() {
+        // WorkoutModeView plays .undo from its own slot; the UNDO word must not add a selection tick.
+        #expect(LabelActionStyle(color: .clear, silent: true).silent)
+        #expect(!LabelActionStyle(color: .clear).silent)
+        #expect(InkLabelWordStyle.undo.silent)
+    }
+
+    @Test func restorePlaysMadeFromItsOwner() {
+        // The Restore hold's key is silent (no moment in a key); BackupView's `restores` counter plays .made.
+        var cue = HapticCue()
+        cue.play(.made)
+        #expect(cue.haptic == .made && cue.haptic.feedback == Haptic.made.feedback)
+    }
 }
