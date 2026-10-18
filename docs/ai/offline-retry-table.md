@@ -2,12 +2,12 @@
 
 Sources: origin/master docs/ai/ (claude-client, architecture 5.5 and 6, old-callers, home-lines-job,
 week-story-job, ask-subject-pack, side-jobs, spend-projection). Month cap $50, a hard stop; it resets on the 1st. At 80% ($40) Home lines, the week story and living colour step aside before the reserve; capture, plan, recipe and questions run to $50.
-Shared rules: switch off, demo, no key, and money or secret packs send nothing and write no row.
+Shared rules: switch off, demo, no key and a key-shaped input send nothing and write no row. Money, body and secret words in a pack send nothing; the one exception is a capture-miss phrase, which goes whole except the key (his "all but the key", Core #860).
 At the cap every job gets "Claude paused until <date>." and no row. No job retries today.
 
 | Job | Timeout | Retries | User sees offline or on failure | Cache or ledger effect | Cap and step-aside |
 |---|---|---|---|---|---|
-| Tess capture ("capture", Haiku, up to 3 rounds) | 8 s | None | Offline: "No connection. Saved it for Claude." Other failures: the five Failure lines | Offline text waits in TessInbox and is read later. One row per run, use .capture, tokens summed | Priority .capture, never steps aside. Cap: paused line, no row |
+| Tess capture ("capture", Haiku, up to 3 rounds) | 8 s | None | Offline: "No connection. Saved it for Claude." Other failures: the five Failure lines. A phrase over 600 characters: "That's too long to send. Say it shorter.", nothing sent. A walled phrase that did go shows the masked receipt, never Claude's words | Offline text waits in TessInbox and is read later, **except a walled phrase, which is never queued or logged** (not in the retry inbox, not in the miss log). One row per run, use .capture, tokens summed. A timer or cook-shaped phrase makes no request (Core #884) | Priority .capture, never steps aside. Cap: paused line, no row |
 | Home lines, incl. done lines (Sonnet) | 6 s | None | Rules lines at once. Cached words for unchanged items. Failure lines never shown on Home, Settings only | Pack-hash cache, day-keyed JSON file. No queue. Max 1 call per 10 min, 40 a day (docs only). Row says why on a reject | .lines steps aside at $40 before reserve. Cap: .refused(.cap), rules lines |
 | Workout done line (part of Home lines) | 6 s | None | Rules line stays. A timeout is final: that finish is never asked again | Cached by workout id only, one call per finish, ever | Same as Home lines. Done lines go quiet first, intended |
 | Week story (Sonnet) | 20 s | None | All three rules lines stay (no mixing), nothing visible | Pack-hash cache in the Home lines file. Row records the reason. Once a week, Monday after 04:00 | Steps aside at $40 before the reserve (word job). Rules lines |
@@ -30,6 +30,10 @@ At the cap every job gets "Claude paused until <date>." and no row. No job retri
 6. fillFacts has no timeout, priority, ledger job name or retry. Needs a TessJob entry.
 7. Recipe retry: spend-projection cites recipe-link-fetch.md pricing a Sonnet retry ($0.026); code has Haiku only,
    and claude-client says no retries today.
-8. Cap wording: settled at $50. ClaudeKey.swift still says "The $10 month" (Swift, not changed here).
+8. Cap wording: settled at $50. The `ClaudeKey.swift` comment is gone on master (Oct 18).
 9. A cancelled URLError is "offline" for capture but "cancelled" (no line) for plan.
 10. Done line timeout is final (never re-asked); Home line timeouts retry on the next pack change. State this in B2.
+11. **Capture row (Oct 17 re-audit).** The old row said offline text always waits in TessInbox. Since #860 a walled phrase is not queued (no inbox row, no miss-log row), so offline for a walled phrase reads "No connection." and the phrase is not kept. Core to confirm the inbox write is skipped for a walled phrase, or the row must say it is queued.
+12. **Cap and length lines.** Add the 600-character refusal to the shared lines; it is a refusal, not a failure, so it writes no row and no retry.
+13. **Kept recipe links.** The recipe row says "None in code". The proposed automatic retry (offline, busy, timeout; one attempt per link per day; never a bad key; paused until the cap resets) is in gap-lane part 3, section 1, and is not built.
+14. **Pointer strings** in the failure lines name Review now and Settings later; see `settings-claude-page-spec.md` section 5 (one Core value, `ClaudeWhere`).
