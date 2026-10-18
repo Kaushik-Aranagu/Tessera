@@ -309,6 +309,69 @@ struct ClaudeKeyTests {
         let october = TessUsageLedger.monthInterval(containing: fourAM, calendar: calendar)
         #expect(october.start == fourAM && october.end == novemberFirst)
     }
+
+    // MARK: The month edge, further cases (QA on #1007)
+
+    private func pacific() throws -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        return calendar
+    }
+
+    @Test func theRepeatedHourOnTheFallBackDayIsStillOctober() throws {
+        // Sunday 1 Nov 2026: 1:00 to 2:00 AM happens twice. Both are before 4:00, so both are October; 4:00 is
+        // November.
+        let calendar = try pacific()
+        let firstOne = Date(timeIntervalSince1970: 1_793_520_000 + 1800) // 1:30 AM PDT
+        let secondOne = firstOne.addingTimeInterval(3600) // 1:30 AM PST
+        #expect(calendar.component(.hour, from: firstOne) == 1 && calendar.component(.hour, from: secondOne) == 1)
+        let four = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 1, hour: 4)))
+        for moment in [firstOne, secondOne] {
+            ledger.record(use: .capture, model: ClaudeKeyCheck.model, input: 0, output: 0, costNano: 100,
+                          latency: 0, outcome: "works", requestID: nil, at: moment)
+        }
+        #expect(ledger.monthTotal(now: secondOne, calendar: calendar) == 200)
+        #expect(ledger.monthTotal(now: four, calendar: calendar) == 0)
+        let october = TessUsageLedger.monthInterval(containing: firstOne, calendar: calendar)
+        #expect(october.end == four)
+    }
+
+    @Test func theSpendLineAndTheCapAgreeAtTheEdge() throws {
+        // The spend line (monthTotal) and the cap check (canSpend) read the same month at 3:59 and 4:00.
+        let calendar = try pacific()
+        let late = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 3, minute: 59)))
+        let four = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 4)))
+        ledger.record(use: .capture, model: ClaudeKeyCheck.model, input: 0, output: 0,
+                      costNano: TessUsageLedger.capNano, latency: 0, outcome: "works", requestID: nil, at: late)
+        #expect(ledger.monthTotal(now: late, calendar: calendar) == TessUsageLedger.capNano)
+        #expect(!ledger.canSpend(1, now: late, calendar: calendar))
+        #expect(ledger.monthTotal(now: four, calendar: calendar) == 0)
+        #expect(ledger.canSpend(1, now: four, calendar: calendar))
+    }
+
+    @Test func aTimeZoneChangeMovesTheEdgeWithTheWallClock() throws {
+        // The edge is 4:00 on the phone's clock: the same instant is one month in Los Angeles, the next in Tokyo.
+        let la = try pacific()
+        var tokyo = Calendar(identifier: .gregorian)
+        tokyo.timeZone = try #require(TimeZone(identifier: "Asia/Tokyo"))
+        let instant = try #require(la.date(from: DateComponents(year: 2026, month: 10, day: 31, hour: 20)))
+        let inLA = TessUsageLedger.monthInterval(containing: instant, calendar: la)
+        let inTokyo = TessUsageLedger.monthInterval(containing: instant, calendar: tokyo)
+        #expect(inLA.end != inTokyo.end)
+        #expect(la.component(.day, from: inLA.end) == 1 && tokyo.component(.hour, from: inTokyo.end) == 4)
+    }
+
+    @Test func thePausedDateAtTwoInTheMorningOnTheFirstIsTheNextFirst() throws {
+        // At 2:00 AM on 1 Nov it is still October, so the cap resets on 1 Nov (today at 4 AM), and a use then counts
+        // for October.
+        let calendar = try pacific()
+        let two = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 1, hour: 2)))
+        let interval = TessUsageLedger.monthInterval(containing: two, calendar: calendar)
+        let first = calendar.dateComponents([.month, .day, .hour], from: interval.end)
+        #expect(first.month == 11 && first.day == 1 && first.hour == 4)
+        #expect(RecipeLinkLine.paused(until: interval.end.formatted(.dateTime.month(.abbreviated).day()))
+            .contains("Nov 1"))
+    }
 }
 
 /// A Keychain that refuses every save.
