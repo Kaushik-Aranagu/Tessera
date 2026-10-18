@@ -19,7 +19,7 @@ Shutdown at 21:00 on Now, redrawn on the build's Home frame under today's rules:
 | 670 | **Shutdown complete**, Title 34 on the ink line in `context`, ending at 718. Hold 0.7s |
 | 736 → 820 | Tess's band. It holds one plain line, "Read today?" with DONE and NOT TODAY, one habit at a time, once per habit per day, never on a day a record already counts and never during a workout (decisions line 593; G418). Nothing else on the page enters it |
 
-- **Private habit:** a habit name in the tomorrow line or the "Read today?" ask goes through the one private-text function; a masked habit reads "Private habit" at full ink, no lock, no reveal. Receipts read "Private habit, done." and "Private habit, 3 of 5 this week." (G416, G417).
+- **Private habit:** a habit name in the tomorrow line or the "Read today?" ask goes through the one private-text function; a masked habit reads "Private habit" at full ink, no lock, no reveal. The masked ask reads "Private habit today?" (the unmasked ask is the habit name plus " today?", e.g. "Read today?"), at 100% ink, with the same DONE and NOT TODAY answers as plain taps, no hold. Receipts read "Private habit, done." and "Private habit, 3 of 5 this week." (G416, G417).
 - **On a B7 day** ("A quiet one. Want a line for tomorrow?"), the opener already offers the line, so the writing line shows no placeholder (Research's rule D).
 - **Late night** (opened at or after 23:00, or 00:00 to 04:00): F1 replaces the opener and F2 the carry-over ("2 moving to Wednesday. Tap any for later."). The page is the same.
 - **Rows:** tap one and an ink-line strike draws across TOMORROW (260ms, house curve), the word drops to 50%, and **LATER** sets in to its left (settle spring). Tap again to bring it back. No dots, no colour.
