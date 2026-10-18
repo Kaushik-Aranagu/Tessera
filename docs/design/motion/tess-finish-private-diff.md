@@ -14,7 +14,7 @@ The bests line may be absent on an ordinary finish too (no best that day), so it
 1. Screen transition in (normal 380 ms house spring or Reduce Motion 150 ms crossfade).
 2. Hero rise (10 pt, 4 pt blur clearing, to t = 260 ms) and the count line fade (220 ms, 60 ms later).
 3. The strike: starts 400 ms, 380 ms, same easing, same x-height, same colour (Obsidian inkSecondary); its length follows the hero's text width, so the lengths differ only because the words do.
-4. Haptic: one `.success` at the strike's start, same time, same strength. No second haptic anywhere (no best haptic, no soft lock tick).
+4. Haptic: one `.success` at the strike's start, same time, same strength. No second haptic anywhere (no best haptic, no soft lock tick). This follows sheet 95 ("one haptic per moment, so nothing else buzzes") and the project rule of one haptic per moment.
 5. Hero ink: full ink in both; no dimming, no lock glyph, no masked blocks, no blur held on any text.
 6. Tess's soul: same reward beat at the strike (soul-signals section 4), no glance, pause, or beat for being private; same eye state, mouth, roam and pigment.
 7. Drain after 4 s or any tap: same 300 ms crossfade to Home's resting line, same blur.
@@ -26,6 +26,6 @@ The bests line may be absent on an ordinary finish too (no best that day), so it
 A lock, a dimmed hero, a masked or blurred block, a reveal affordance, a different haptic, a pause before the strike, a skipped soul beat, a shorter or longer drain, or a different receipt shape.
 
 ## Checks for QA (three)
-1. Record ordinary and Private on the demo day with `-demoTime`; diff all frames outside the text boxes: expect zero differing pixels outside the hero word, the line and the strike length.
+1. Record ordinary and Private on the demo day with `-demoTime`; diff all frames outside the text boxes: expect per-frame SSIM of at least 0.99 outside the hero word, the line text and the strike length (the same bar as the ten items above).
 2. Count haptics: exactly one `.success` on each.
 3. Read both receipts aloud with VoiceOver: same sentence shape, thing first.
