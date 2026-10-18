@@ -7,7 +7,7 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
         continueAfterFailure = false
     }
 
-    func testRemoveUndoThenAddRefusesANonKey() {
+    func testRemoveAsksThenGoesAndAddRefusesANonKey() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-openLink", "review", "-fakeClaudeKey"]
         app.launch()
@@ -20,18 +20,22 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
         app.swipeUp()
         sleep(1)
 
+        // Step one asks, and Keep leaves the key where it was.
         app.buttons["REMOVE"].tap()
+        XCTAssertTrue(app.buttons["REMOVE KEY"].waitForExistence(timeout: 3))
+        app.buttons["KEEP"].tap()
+        XCTAssertTrue(keyLine.waitForExistence(timeout: 3))
+        assertNoKeyTail(in: app)
+        sleep(1)
+
+        // Step two removes it at once: a plain receipt, no UNDO, nothing held for 10 s.
+        app.buttons["REMOVE"].tap()
+        app.buttons["REMOVE KEY"].tap()
         XCTAssertTrue(app.staticTexts["Claude key removed. Everything stays on this phone."]
             .waitForExistence(timeout: 3))
-        app.buttons["UNDO"].tap()
-        XCTAssertTrue(app.staticTexts["Claude key is back."].waitForExistence(timeout: 3))
-        XCTAssertTrue(keyLine.exists)
-        assertNoKeyTail(in: app)
-        sleep(2)
-
-        app.buttons["REMOVE"].tap()
+        XCTAssertFalse(app.buttons["UNDO"].exists)
         let add = app.buttons["Add a Claude key"]
-        XCTAssertTrue(add.waitForExistence(timeout: 15), "After 10 s the key is gone")
+        XCTAssertTrue(add.waitForExistence(timeout: 3), "The key is gone right away")
         add.tap()
         sleep(1)
         // Focus can lag the open: tap the line itself before typing.

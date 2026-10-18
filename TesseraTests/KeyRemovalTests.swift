@@ -3,28 +3,21 @@ import Foundation
 import TesseraTess
 import Testing
 
-/// Kitchen gap hunt G10: once REMOVE is tapped, no Claude job may find the key, even inside UNDO's 10 s.
+/// Product 12:22 AM Oct 18: Remove is two steps with a plain receipt; nothing holds the key and nothing undoes it.
 @MainActor
 struct KeyRemovalTests {
-    /// A made-up key, built here so nothing key-shaped sits in the file.
-    private let fake = "sk-" + "ant-" + String(repeating: "x", count: 32)
+    /// A stand-in value; nothing key-shaped sits in this file.
+    private let stored = "placeholder value"
 
-    @Test func removeTakesTheKeyOutAtOnce() {
-        let keys = InMemoryKeychain(fake)
-        let held = KeyRemoval.take(from: keys)
-        #expect(held != nil)
-        #expect(keys.read() == nil, "a call due in the window would still find the key")
+    @Test func removeDeletesTheKeyAtOnceAndNothingBringsItBack() {
+        let keys = InMemoryKeychain(stored)
+        KeyRemoval.remove(from: keys)
+        #expect(keys.read() == nil, "a call due right after would find a key")
     }
 
-    @Test func undoPutsTheSameKeyBack() {
-        let keys = InMemoryKeychain(fake)
-        let held = KeyRemoval.take(from: keys)
-        #expect(held?.restore(to: keys) == true)
-        #expect(keys.read() == fake)
-    }
-
-    @Test func nothingToTakeWithNoKey() {
+    @Test func removingWithNoKeyIsHarmless() {
         let keys = InMemoryKeychain(nil)
-        #expect(KeyRemoval.take(from: keys) == nil)
+        KeyRemoval.remove(from: keys)
+        #expect(keys.read() == nil)
     }
 }

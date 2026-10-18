@@ -62,17 +62,14 @@ struct ClaudeSection: View {
     @State private var draft = ""
     @State private var checking = false
     @State private var line: String?
-    @State private var removed = false
+    /// Remove is two steps: "Remove" asks, "Remove key" does it (Product, 12:22 AM Oct 18).
+    @State private var confirmingRemove = false
     /// The first line, "Tess asks Claude": misses and Plan my day. Lives in Core's settings object only.
     @State private var missesGoToClaude = true
     /// Tess's answer to the last flip of the switch, shown under it.
     @State private var switchLine: String?
-    @State private var removal: Task<Void, Never>?
-    /// The key between REMOVE and the end of its 10 s: out of the Keychain, held only here for UNDO.
-    @State private var held: KeyRemoval?
     /// The clipboard's change count when a key was pasted, so a key still sitting there can be cleared after it passes.
     @State private var pasteChange: Int?
-    @Environment(\.scenePhase) private var scenePhase
     @FocusState private var focused: Bool
 
     private var ledger: TessUsageLedger {
@@ -87,7 +84,7 @@ struct ClaudeSection: View {
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .accessibilityAddTraits(.isHeader)
 
-            if hasKey, !removed {
+            if hasKey {
                 withKey
                     .transition(.opacity)
             } else {
@@ -101,32 +98,15 @@ struct ClaudeSection: View {
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.tess)
                         .fixedSize(horizontal: false, vertical: true)
-                    if removed {
-                        Button("Undo", action: undoRemove)
-                            .buttonStyle(.labelWord(Theme.Colors.liveInk))
-                    }
                 }
                 .transition(.opacity.combined(with: .offset(y: 6)))
             }
         }
         .tesseraAnimation(value: hasKey)
-        .tesseraAnimation(value: removed)
+        .tesseraAnimation(value: confirmingRemove)
         .tesseraAnimation(value: line)
         .tesseraAnimation(value: writing)
         .onAppear(perform: load)
-        // Killed or backgrounded inside the 10 s: the removal goes through then, not never (QA C2).
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .background, removed {
-                removal?.cancel()
-                finishRemoval()
-            }
-        }
-        .onDisappear {
-            // Leaving with a removal pending: it goes through now, as it would after 10 s.
-            if removed {
-                finishRemoval()
-            }
-        }
     }
 
     // MARK: No key
@@ -222,14 +202,21 @@ struct ClaudeSection: View {
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityLabel("Claude key saved, \(status)")
                 HStack(spacing: 0) {
-                    Button("Test") { retest() }
-                    Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
-                    Button("Replace") {
-                        replacing = true
-                        open()
+                    if confirmingRemove {
+                        Text("Remove the key? ").textRole(.body).foregroundStyle(Theme.Colors.ink)
+                        Button("Remove key", action: remove)
+                        Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
+                        Button("Keep") { confirmingRemove = false }
+                    } else {
+                        Button("Test") { retest() }
+                        Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
+                        Button("Replace") {
+                            replacing = true
+                            open()
+                        }
+                        Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
+                        Button("Remove") { confirmingRemove = true }
                     }
-                    Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
-                    Button("Remove", action: remove)
                 }
                 .buttonStyle(.labelWord(Theme.Colors.inkSecondary))
                 .disabled(checking)
@@ -373,41 +360,16 @@ struct ClaudeSection: View {
         }
     }
 
-    /// One tap, no confirm: everything folds away and S1 shows, with UNDO for 10 s. The key leaves the Keychain at
-    /// once, so no Claude job due in the window can send (kitchen gap hunt G10); UNDO puts it back.
+    /// Step two: the key leaves the Keychain at once and nothing holds it (no UNDO, no timer). A plain receipt says so.
     private func remove() {
-        held = KeyRemoval.take(from: keys)
+        KeyRemoval.remove(from: keys)
         withTesseraAnimation(.easeInOut(duration: 0.22), reduceMotion: reduceMotion) {
-            removed = true
+            confirmingRemove = false
             writing = false
+            hasKey = false
+            status = "not checked"
             line = "Claude key removed. Everything stays on this phone."
         }
-        removal?.cancel()
-        removal = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(10))
-            guard !Task.isCancelled, removed else { return }
-            finishRemoval()
-        }
-    }
-
-    private func undoRemove() {
-        removal?.cancel()
-        let back = held?.restore(to: keys) ?? false
-        held = nil
-        withTesseraAnimation(reduceMotion: reduceMotion) {
-            removed = false
-            hasKey = back
-            line = back ? "Claude key is back." : "I couldn't bring the key back. Add it again?"
-        }
-    }
-
-    private func finishRemoval() {
-        held = nil
-        keys.delete()
-        removed = false
-        hasKey = false
-        status = "not checked"
-        withTesseraAnimation(reduceMotion: reduceMotion) { line = nil }
         model.touch()
     }
 }
@@ -541,20 +503,10 @@ extension ClaudeKeyWords {
     }
 }
 
-/// A removed key's 10 s of UNDO. Taking it deletes it from the Keychain at once and keeps it only in this value;
-/// restoring writes it back. Nothing here logs or shows any part of it.
-struct KeyRemoval {
-    private let key: String
-
-    /// Takes the key out of the Keychain; nil when there was none.
-    static func take(from keys: any TessKeychain) -> KeyRemoval? {
-        guard let key = keys.read() else { return nil }
+/// Removing the key: it is deleted from the Keychain at once and held nowhere, so no Claude job can find it and
+/// nothing can bring it back. Nothing here logs or shows any part of it.
+enum KeyRemoval {
+    static func remove(from keys: any TessKeychain) {
         keys.delete()
-        return KeyRemoval(key: key)
-    }
-
-    /// Puts the key back; false if the Keychain wouldn't take it.
-    func restore(to keys: any TessKeychain) -> Bool {
-        keys.save(key)
     }
 }
