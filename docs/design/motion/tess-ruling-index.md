@@ -66,3 +66,25 @@ Board 71. One page: each ruling, the spec that carries it, and every line that s
 - **Design's files (not mine):** every line marked FIX (Design). They are listed once here so Design can work them top to bottom.
 - **Product, answered at 10:15 PM Oct 17 (DEC:1045):** H7 Pantry add plays `.made`; H13 "Haptics, on" off silences every app haptic except the failed-save `.warning`, and timer-end and rest-end notifications still ring; U2 the shared UNDO line sits directly above the key row, UNDO at its right, and above the bottom chrome when there is no key row; user lines say "best", never "record" (day-log-v1.md:52 is Design's to fix).
 - Also noticed: board motion.md quotes Rotate 650 ms, page-turn spec carries Design's 460 ms.
+
+## 6. Rulings since this index (DEC:1053 to 1069, Oct 17 10:58 PM to Oct 18 12:23 AM)
+
+Same rule: a work list, not a ruling source. "Matrix" = `tess-lowpower-reducemotion-matrix.md`; "HAB" = `tess-habits-shutdown-quiet-private-pass.md`; "LRB" = `tess-look-settings-rotate-budget-check.md`; "BHR" = `tess-backups-health-review-motion.md`; "LAW" = `tess-live-activity-lockscreen-widget-motion.md`.
+
+| # | Ruling (DEC line, time) | Carried by | Status and stale lines |
+|---|---|---|---|
+| N1 | Widget new-day words appear at 07:00; the data day still turns at 04:00. (1053, 10:58 PM) | LAW §5 (#981) | OK |
+| N2 | Restore plays `.made`, hold key, named-action-only, action "Restore"; Backups line on the shared slot now; receipt "Backup, saved."; Face ID before an export leaves the app; Health permission only on his foreground tap, at most once a day. (1055, 11:04 PM) | BHR (#976, #981) | OK. Build: `Paint.swift:314` still completes a hold on one double tap |
+| N3 | The week story is one gate inside the Claude client for every automatic job (Low Power, the 07:00 floor, the switch, the cap); asked only from Monday 07:00; a skipped week shows three count lines. (1057 item 1-2, 11:07 PM) | BHR §4; Matrix (Review row) | OK |
+| N4 | Remove key is a two-step ("Remove the Claude key?", "Remove", "Keep it"), plain receipt, no UNDO. (1057 item 4; 1067 item 2) | none | **GAP (lab):** `tess-settings-motion.md` carries no UNDO but not the two-step wording or its motion |
+| N5 | A capture miss routed to Claude and written plays `.made` once. (1059, 11:31 PM) | HMT row 14 (#981) | OK. Row H14 above is stale: it says row 14's `.made` is wrong; the too-long line and the dropped cook phrase are the no-haptic cases, row 14 now says so |
+| N6 | A reduced page turn is a tapped word cutting to the new page with a 150 ms crossfade; a finger swipe is untouched; one shared helper for the Plans and exercise pagers. (1061 item 2, 11:40 PM) | none | **GAP (lab):** `tess-page-turn-motion.md` has the 150 ms crossfade for the word, not the "finger swipe untouched" half or the shared helper |
+| N7 | Private text goes through one function with a "Private habit" case; the "Read today?" ask sits in the Shutdown band as one plain line. (1067 item 6-7, 12:22 AM) | HAB §3 | OK. FIX (Design): `shutdown.md` empty-band wording |
+| N8 | Rotate 160 / 260 / 24 (460 ms at six rows) is the Rotate turn only; other Look/Settings motion has a 260 ms ceiling; first Shutdown line "3 moving to tomorrow. Tap any to keep."; private-habit receipts; pause/resume UNDO 10 s; Settings waits for the Low Power flag PR. (1065, 12:20 AM) | LRB; HAB | OK. FIX (lab): `tess-settings-motion.md:14` (40 ms, 420 ms grow) predates it. FIX (Design): `pages-90.md:21`; `shutdown.md` first-line wording |
+| N9 | The raw `.sensoryFeedback` sites go through the haptic map (rides #958); Haptics off gates them; row values read Off/On everywhere. (1067 items 3-4) | Matrix (b), HMT | OK. Count differs: the ruling says 27, the code has 25 outside `Haptics.swift` (re-count when #958 lands) |
+| N10 | Clear the basket plays `.done`. (1069 item 1, 12:23 AM) | groceries-lp:38 | OK. **Row H5 above is superseded:** it says Clear plays `.success` and `groceries-lp:38` is wrong; the ruling is `.done` and the spec was right. Still FIX (lab): `groceries-lp:43` lists Clear as named-action-only (it is a tap key) |
+| N11 | Rest-end notification title "Timer", body "Rest is up". (1069 item 2) | LAW | **Row Q3 above is superseded** (it says title "Rest is up"). FIX (lab): `tess-training-motion-lowpower-pass.md:95` ("Set 3 is up"), and `RestActivityController.swift:152` |
+| N12 | Soul Low Power form runs 30 fps, full opacity; older 20 fps lines are superseded. (1069 item 3) | Matrix (soul row) | FIX (lab): `tess-quiet-versions.md:12,15,43` (20 fps), `tess-motion.md:242` |
+| N13 | Builder A owns the clock page; Builder B owns the recipe page, Pantry screens and the hand-off into the cook. (1063, 11:49 PM) | Matrix (owner column) | OK |
+
+**Left for the next lab follow-up:** N4, N6, N10 (`groceries-lp:43`), N11, N12, and the Q1 to Q3 and M1 to M4 lines in section 5 above.
