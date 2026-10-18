@@ -59,7 +59,8 @@ public struct KitchenTimerAlerts {
                 let name = timer.label.trimmingCharacters(in: .whitespacesAndNewlines)
                 let plain = name.isEmpty || name.allSatisfy { $0.isNumber || ".,: ".contains($0) }
                 let hidden = plain || ObjectPrivacy.isPrivateWord(name, in: store)
-                return TimerAlert(id: timer.id, label: hidden ? "Timer" : name, fireAt: timer.endsAt)
+                return TimerAlert(id: timer.id, label: hidden ? "Timer" : name.prefix(1).uppercased() + name.dropFirst(),
+                                  fireAt: timer.endsAt)
             }
     }
 
