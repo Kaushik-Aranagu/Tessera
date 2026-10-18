@@ -48,8 +48,8 @@ Default: Porcelain, phone. Each step needs a private/test item; never type a rea
    See: "3 eggs benedict" is the title; a numbered step is never the title; "2 large eggs" still reads as a title (known low, Product ruled it must not; Core's next PR).
    PASS / FIX FIRST.
 12. #884 capture-miss lows. Tess ask bar.
-   Do: type "dentist by 4.15"; paste a phrase over 600 characters; while a cook timer runs say "8 mins".
-   See: first is not read as money; long phrase gets a fixed refusal line, nothing written; the refusal reads "That's too long to send. Say it shorter."; while a cook runs nothing goes to Claude (TessModel.swift:100-107): "8 mins" stays local and an unrelated phrase reads "Didn't catch that."
+   Do: type "dentist by 4.15"; paste a phrase over 600 characters.
+   See: first is not read as money; long phrase gets a fixed refusal line, nothing written; the refusal reads "That's too long to send. Say it shorter." Not walkable on this release: the cook-running rule (nothing goes to Claude while a cook runs, TessModel.swift:100-107) has no cook to run, since RecipePage.cookModeReady is false and master has no cook view; it stays a code check until cook mode lands.
    PASS / FIX FIRST.
 13. #564 question walls. Tess ask bar.
    Do: ask "was $12 too much?" and "is 82.4 good?".
@@ -60,3 +60,9 @@ Default: Porcelain, phone. Each step needs a private/test item; never type a rea
 - #868 paste duplicate lows: no UI change (copy tail shared, test only).
 - Docs PRs #911, #915, #916, #918, #919, #920, #921: no walk.
 - core/g105b (221d7444): no PR yet; not in 14.
+
+## Motion feel (added by the motion lab, Oct 17 PM; quick looks after the numbered steps, never blocks)
+M1. Haptic sanity. Finish one task or workout: one `.success`, no second buzz. Tap a Pantry state word (#917): one `.selection` and a quick word change; no ochre. FIX FIRST if a tap buzzes twice.
+M2. Soul sanity. On any screen she blinks and breathes at rest; for a private item or private workout she does nothing different (no glance, pause or beat). FIX FIRST if she reacts to a private thing.
+M3. Low Power. With Low Power on, screens and sides change by a quick crossfade (about 150 ms), no sliding (decision Oct 17 PM: Low Power = Reduce Motion). FIX FIRST if a side still slides.
+(The #662 stroke tick, #786/#806 swipes and #871 copy are already steps 1, 2, 3 and 10 above.)
