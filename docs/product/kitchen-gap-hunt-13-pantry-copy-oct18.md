@@ -1,6 +1,6 @@
 # Gap hunt 13: Pantry copy and private lines (static read, origin/master 6899613b, Oct 18)
 
-Static read only. Nothing built or run. "inferred" marks a reading I did not see executed. No key printed or stored.
+Written Sat Oct 17 PDT (the oct18 in this file name is the UTC date). Graded against master; Core's branch core/g105b already fixes G105 and G139, so re-grade both when it lands. Static read only. Nothing built or run. "inferred" marks a reading I did not see executed. No key printed or stored.
 
 ## Part A: string and private-path check
 
