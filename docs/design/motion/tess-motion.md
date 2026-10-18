@@ -219,7 +219,7 @@ Nothing on the page moves, and nothing of hers is owed to the page. There is no 
 **How QA checks it** (`tess-motion-check.md`, the "Minute" row): the build's blinks are random, so the minute is compared by count and cadence, not frame by frame: 7 to 15 blinks, every gap 3 to 8 s, at least one double, each blink 160 ms ± 1 frame at 30 fps; the soul crop's mean SSIM against the clip over any 10 s window ≥ 0.92 (breath and drift are periodic, so the windows match without alignment); zero frames in which anything outside the soul crop changed.
 
 ## 13. Reduce Motion and Low Power, state by state (board item 13, added 4:05 AM PT Oct 16)
-Two switches, two different reasons. **Reduce Motion** is his accessibility setting: motion itself is the problem, so travel, blur-in and swell go and crossfades take their place; the soul is still (the build's `paused: reduceMotion` timeline, the mode shown by size, grade and opacity). **Low Power Mode** (`ProcessInfo.isLowPowerModeEnabled`, with `NSProcessInfoPowerStateDidChange`) is the phone's battery: motion is fine, cost is not, so everything keeps its shape at a lower tick with the expensive layers dropped. Master has no Low Power path yet; this is it. With both on, Reduce Motion wins (nothing moves, so there is nothing left to cheapen).
+Two switches, two different reasons. **Reduce Motion** is his accessibility setting: motion itself is the problem, so travel, blur-in and swell go and crossfades take their place; the soul is still (the build's `paused: reduceMotion` timeline, the mode shown by position and size; **never by opacity, grade or halo: decisions D4/G225, Oct 17**). **Low Power Mode** (`ProcessInfo.isLowPowerModeEnabled`, with `NSProcessInfoPowerStateDidChange`) is the phone's battery: motion is fine, cost is not, so everything keeps its shape at a lower tick with the expensive layers dropped. Master has no Low Power path yet; this is it. With both on, Reduce Motion wins (nothing moves, so there is nothing left to cheapen).
 
 | State | As designed (sections above) | Reduce Motion | Low Power |
 |---|---|---|---|
@@ -227,10 +227,10 @@ Two switches, two different reasons. **Reduce Motion** is his accessibility sett
 | **Eyes** (1) | blink 160 ms, glance spring 300 ms | **the blink stays** (160 ms, no travel: not motion in Apple's sense); no glance, the dots sit still | blink stays (5 frames at 30, 3 at 20 are enough); glance stays (it is an offset, not a redraw) |
 | **Roam** (3) | `SoulTravel` 760 ms, works beside the row, rides the scroll | no travel: she stays home, the line names the row | **no roam**: she stays at the dock; the line names the row; the work state runs at the dock (the readers' canvas is the one thing that leaves hers, and it is the first cost to drop) |
 | **Drag** (4) | pick up, carry with paint lag, drop on the house spring, flick | 200 ms crossfade to the dock on release; no carry lag, no grow | unchanged (a drag is an `offset` on the view; the lag is six fills she already draws); the carry bloom's breath held at its mean |
-| **Working** (5) | fade 500 ms, split 900 ms into 12 lights, readers, gather 820 ms, colour back, Done | 200 ms crossfade to the faded grade, the three mains loosened 1.5×, satellites at 40%; 200 ms back; Done its still frame | fade and gather unchanged; **six lights, not twelve** (the six children never leave the dabs); **no readers**; constellation at **30 fps** (not 60); the colour returns over the same 550 ms; Done as built |
+| **Working** (5) | fade 500 ms, split 900 ms into 12 lights, readers, gather 820 ms, colour back, Done | **shown by position and size only (G225, D4):** 200 ms crossfade to the loosened pose, the three mains 1.5× from the centre, the satellites held at their idle places; **opacity 1, grade and halo exactly as at rest**; 200 ms back; Done its still frame | fade and gather unchanged; **six lights, not twelve** (the six children never leave the dabs); **no readers**; constellation at **30 fps** (not 60); the colour returns over the same 550 ms; Done as built |
 | **Thinking** (as built) | per-dab pulse at 60 | still, shown by size | 30 fps |
 | **Listening** (8) | bloom ×1.4 to ×1.55 with the mic level, travel to (196, 698) | blooms in the corner, no travel; eyes hold | unchanged but the level smoothing at 30 fps; travel stays (an offset) |
-| **A one-ask wait** (8) | breath 4.8 s, 4 pt lean | no lean; the breath still | lean stays; 20 fps as idle |
+| **A one-ask wait** (8) | breath 4.8 s, 4 pt lean | no lean; the breath still | lean stays; 30 fps as idle (DEC:1069 item 3) |
 | **Done** (as built) | pour, swell, splash, relax 1.8 s + `.success` | its still frame, 1.8 s, `.success` | unchanged (1.8 s once; cheapening Done changes Done) |
 | **Reward beat** (6) | glance, gather 180 / 320 ms, brighten 1.12, one blink | no gather, no glance; the brighten is a 200 ms crossfade; the blink stays | unchanged (940 ms, six fills) |
 | **Repaint / living colour** (7) | three pools 120 ms apart, 900 ms, wet swell, dry 2.8 s | one 600 ms crossfade of the pigments, no swell | **deferred**: no repaint starts in Low Power (the palette waits for the next idle after Low Power ends); a repaint in flight finishes at 30 fps |
@@ -239,7 +239,7 @@ Two switches, two different reasons. **Reduce Motion** is his accessibility sett
 | **Haptics** | one per moment | unchanged, beat for beat | unchanged (a haptic costs nothing worth a dead moment) |
 
 **The Low Power rules, in four lines**
-1. Tick: idle and resting 20 fps, every other mode 30 fps, never 60. The constellation and the listening bloom are the two that notice; both still read (the split's 900 ms is 27 frames).
+1. Tick: every mode 30 fps in Low Power, never 60 (ruled DEC:1069 item 3; idle and resting were 20 fps in the first draft). The constellation and the listening bloom are the two that notice; both still read (the split's 900 ms is 27 frames).
 2. Layers: no readers' canvas, no children (six lights), halo breath held. That is at most 9 blurred fills a frame in any mode, against 14 in full.
 3. Nothing leaves the dock: no roam. Drag stays (his hand, not hers), the Done in place rule is moot.
 4. Nothing new starts that only beautifies: no repaint. Everything that answers him (listening, working, Done, the beat, the lines) keeps its timing exactly, so Low Power never changes what a moment *means*, only how much it costs.
@@ -337,7 +337,7 @@ Two new `Haptic` cases (`.soulPickUp`, `.soulDrop`) in `DesignSystem/Haptics.swi
 
 ## Reduce Motion
 - Nothing travels. Roam: she stays home and the line still names the row. Drag: she jumps to the dock with a 200 ms crossfade. Eyes: the blink stays, no glance. The breath is opacity only, 0.85 to 1 over 3.2 s, no scale: a still soul reads as dead (section 1), and an opacity breath and a 160 ms blink are not motion in Apple's sense (Design, 11-13 pass).
-- Working: a 200 ms crossfade to the faded grade with the three main dabs loosened 1.5× from the centre and the satellites at 40%; a 200 ms crossfade back when done. Done is its still frame as built.
+- Working: a 200 ms crossfade to the loosened pose with the three main dabs 1.5× from the centre and the satellites at their idle places; **group opacity stays 1, the colour grade and the halo do not change** (G225, D4); a 200 ms crossfade back when done. Done is its still frame as built. The working fade of the full version (500 ms, live motion) is unchanged.
 - Haptics stay, beat for beat.
 
 ## Performance budget

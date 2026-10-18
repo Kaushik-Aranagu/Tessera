@@ -510,6 +510,19 @@ final class AppModel {
     func touch() {
         try? context.save()
         revision += 1
+        reconcileTimerAlerts()
+    }
+
+    /// One local notification per running kitchen timer, kept in step after every change (G217): Stop, Finish and an
+    /// UNDO cancel it, so a timer never rings for something he has put down. Off on a throwaway store and in demos.
+    @ObservationIgnored private var timerAlertScheduler: SystemTimerAlertScheduler?
+
+    private func reconcileTimerAlerts() {
+        guard settingsAreReal, !Self.isDemo else { return }
+        let scheduler = timerAlertScheduler ?? SystemTimerAlertScheduler()
+        timerAlertScheduler = scheduler
+        let alerts = KitchenTimerAlerts(store: store, classes: classes)
+        Task { await alerts.reconcile(with: scheduler) }
     }
 
     // MARK: Lookup

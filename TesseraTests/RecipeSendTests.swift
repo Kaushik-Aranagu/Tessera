@@ -108,4 +108,20 @@ struct RecipeSendTests {
         _ = model.engine.undo(record)
         #expect(add(2) == .nothing("Tacos, nothing to add."))
     }
+
+    /// G70 (ER14): a private recipe's failed add prints only the kind, never a word of its title.
+    @Test func aPrivateRefusalSaysOnlyTheKind() {
+        let outcome = RecipeCopy.send(isPrivate: true) { () throws -> (count: Int, record: OpRecord) in
+            throw ActionError.invalidArguments(action: "addRecipeToGroceries", reason: "x")
+        }
+        #expect(outcome == .failed("Didn't save that. Private recipe."))
+    }
+
+    /// Product and Design 12:45: one warning per failure, never twice within a second.
+    @Test func theWarningPlaysOncePerFailure() {
+        let start = Date(timeIntervalSince1970: 1000)
+        #expect(RecipeCopy.playsNotSaved(last: nil, now: start))
+        #expect(!RecipeCopy.playsNotSaved(last: start, now: start.addingTimeInterval(0.4)))
+        #expect(RecipeCopy.playsNotSaved(last: start, now: start.addingTimeInterval(1.2)))
+    }
 }

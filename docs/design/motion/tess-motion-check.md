@@ -69,3 +69,8 @@ What the eye checks that SSIM can't: the order of the lights leaving and landing
 ## Values the sheets don't give (assumed in the index and accent references; Design to confirm)
 - Sheet 73: the flight's curve (the house curve is used), the page's rise and the sheet's close timings (460 ms, as the flight), the timing and curve of a tap-open (460 ms, house curve), the scale anchor of the 0.9 page (screen centre), the glass fill, each row's word and live-line baselines inside its 104 pt slot (word at +36, line at +66), the rows' form-in (a fade over the stagger), and the exact pull-to-finger ratio (1:1 here).
 - Sheet 72 round 2: how the 250 ms "lift" is drawn (here the whole title reaches the area's 72% mix, starting when the strike ends), what "quiet ink at 50%" means (here ink at 50% opacity, weight 500), what the dry's 900 ms is measured from (the done), the step values of p (here 0.85 x sets/4 until done), and the font weight axis (Inter Tight variable, 640).
+
+## 6. Never-diffused checks (from tess-never-diffused-audit.md)
+1. **Reduce Motion Working keeps full opacity.** In a Reduce Motion recording of Working, the mean alpha of the three mains equals Idle's (same crop, within 2%). Fail on the old x0.6 grade.
+2. **Asleep keeps full pigment.** `prototype/check-pigment.sh idle.mp4 sleep.mp4`: crop the soul box, `ffmpeg -vf "crop=W:H:X:Y,scale=1:1" -f rawvideo -pix_fmt rgb24 -` for a frame of each clip, compare the RGB triplets; pass if each channel is within 2% (eyes closed, pigment unchanged). The script ships with the first sleep PR.
+3. **No poster frame in the 500 ms working fade.** The poster, thumbnail and contact-sheet times listed in each pick sheet must fall outside the fade window; QA reads the list.

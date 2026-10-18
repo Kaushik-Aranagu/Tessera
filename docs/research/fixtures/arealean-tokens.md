@@ -119,7 +119,7 @@ Every use is text, so one bar: 4.5:1, judged on the drawn (mixed) colour over th
 3. **Thinnest passing cells are the two light-look Kitchens**: Plein 4.82 (4.71 tinted) and Celadon 5.14 (5.02 tinted). Any change to Plein's `ink` `#26201E` or `health` `#5E8F5A`, or a stronger ground tint, can push Plein Kitchen under 4.5. Owner: Design.
 4. **Lacquer Training `#F4A5B3` and Review `#E0B8C0` are both rose.** The sheet's own watch item; the word, not the hue, separates them. Not a contrast issue (10.10 and 10.94). Owner: Design (decide after a phone look).
 5. **Mix space.** sRGB bytes by ruling. A test that pins a hex must not go through `Color.mix`. Owner: Core.
-6. **Pantry ochre still ships.** `Features/Kitchen/PantryColour.swift:8-9` hold `0xA4601A` and `0xE3A857`. Replaced by Kitchen's drawn lean at the pass. Owner: Builder B.
+6. **Pantry ochre still ships.** `Features/Kitchen/PantryColour.swift:8-9` hold `0xA4601A` and `0xE3A857`. Ochre is removed: the state word becomes plain ink, and Kitchen's drawn lean goes only on the caps labels and the index line at the pass. Owner: Builder B.
 7. **Lacquer groundTint percentage** (3% as a dark look) and **Plein** (2.5% as a light look) are assumed from `type-round-86.md:45`, which names Porcelain and Obsidian only. Owner: Design.
 8. **Hairline** has no row and no test of contrast: decoration, by ruling.
 
@@ -143,7 +143,7 @@ All are gap rows until `areaLean(area, look)` and the contrast helper exist. Tol
 | S12 | `areaLeanFollowsLookDarkness` | `Look.isDark` picks the dark tint (Obsidian, Lacquer) | gap (flag traced, `Looks.swift:24`) | Core |
 | S13 | `areaLeanIsTotalOverLooksAll` | returns a value for every look in `Look.all` and every area except Today | gap | Core |
 | S14 | `lookTableStillPinsLeanTokens` | `training`, `health`, `context`, `ink`, `ground`, `raised` of all five looks equal section 1 values (today only some are pinned, `LookTableDriftTests.swift:23-27`) | inferred (partly covered by `LookTableTests`) | Builder A |
-| S15 | `pantryStateWordIsKitchenLean` | `PantryColour` ochre gone; state word equals `areaLean(.kitchen)` | gap (`PantryColour.swift:8-9`) | Builder B |
+| S15 | `pantryStateWordIsPlainInk` | `PantryColour` ochre gone; the state word is plain ink (not `areaLean`); `areaLean(.kitchen)` only on the Pantry caps labels and index line (index line ink until the area-colour pass, then Kitchen lean; Product 6:39 and 6:45 pm Oct 17) | gap (`PantryColour.swift:8-9`) | Builder B |
 
 There is deliberately no hairline test.
 

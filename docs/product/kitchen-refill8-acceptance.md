@@ -5,7 +5,7 @@
 **Rulings used by every row.**
 - A photo is read on the phone; the picture never goes to Claude and is not stored.
 - Link and reader asks happen only on his tap, and never retry on their own.
-- Trip mode masks a Private item until he taps that row (K51).
+- Trip mode always reads a Private item as "Private item"; one tap strikes it, nothing shows its words (K51, as ruled by G102, Oct 17).
 - A locked phone's Siri reads ordinary titles; a private one is read as "a private item" (K52).
 - No restore after the 10 s delete window (K54).
 - Receipts name the thing first and use "on" ("Milk, on Groceries."). No "at" before a time. Clocks are lowercase ("8:30 pm"). Digits for counts. US English and US units.
@@ -23,29 +23,29 @@
 
 ---
 
-## K51. Trip mode: a Private item stays masked until he taps that row
+## K51. Trip mode: a Private item always reads "Private item" (G102, Oct 17)
 
-**Source rules.** In the trip (K46) a walled row reads "Private item". It stays masked until he taps that row; then its words show for that row only. Other rows are unaffected. The words go back under the mask when he leaves the trip, leaves the app, or the phone locks. This replaces K46.24 (a plain tap opened the words with no re-mask) and closes flag F4. The reveal is a view state only: nothing is written, no op, no UNDO slot claim. Walled rows are still never offered in USUALLY (K44.8).
+**Source rules.** In the trip (K46) a walled row reads "Private item". It always reads "Private item". One tap strikes it (puts it in the basket) like any other row. Nothing shows its words: there is no reveal and no "Shows it" hint. **Ruling G102 (Product, Oct 17) supersedes the earlier tap-to-reveal rule (K51, B8).** This replaces K46.24 (a plain tap opened the words with no re-mask) and closes flag F4. Words going back under the mask never applies, because they are never shown. Walled rows are still never offered in USUALLY (K44.8).
 
 | # | Action | Expected |
 |---|---|---|
 | K51.1 | Hold the page title to start the trip with the Trip list | The two walled rows read "Private item" in the Other aisle (the words of neither appear anywhere, including the accessibility tree). Ordinary rows read as themselves. The count line still counts them: "13 to get" (digits). One `.impact` haptic, as K46.1 |
-| K51.2 | Tap the first "Private item" row | That row alone shows its words, in ink, in place (a 150 ms crossfade; Reduce Motion: the same). The second "Private item" row still reads "Private item". One `.light` haptic. No receipt, no Tess line, no op, no UNDO slot used (a UNDO already showing keeps its remaining time) |
-| K51.3 | With the first row shown, tap the second "Private item" row | The second shows its words. The first goes back under "Private item" at the same moment (only one row open at a time; proposed, Product to rule: the alternative is several open, flag F1) |
-| K51.4 | With a row shown, tap the same row again | It goes back under "Private item". Tapping a shown row never opens an editor, a sheet or a menu |
-| K51.5 | With a row shown, swipe it right to strike it | It strikes and sinks, and the strike shows the words as struck for the rest of that reveal. Swipe right again undoes it, as K46.17. After the row re-masks, a struck private row reads "Private item" in strikethrough (the strike stays; the words do not) |
-| K51.6 | With a row shown, check Milk, add "foil", scroll, change aisle | Milk and foil act as in K46. The shown row stays shown through a scroll and through a check elsewhere, and re-masks on the first of: leaving the trip, the app going to the background, or the phone locking |
-| K51.7 | With a row shown, press the side button to lock, then unlock | Back on the trip, the row reads "Private item" again. The locked screen, the app switcher snapshot and any Live Activity or widget never held the words |
-| K51.8 | With a row shown, tap DONE (nothing checked) | "Nothing to clear." (proposed, Product to rule; K46.21). The row re-masks as the trip ends. Back on the plain list, the walled rows read "Private item" |
-| K51.9 | With a row shown, switch to another app and return | The row is masked on return. The app switcher snapshot taken meanwhile shows "Private item" (the snapshot is taken after the re-mask) |
-| K51.10 | Kill the app with a row shown; reopen | The trip returns with the same checked rows and hero (K46.15). Every walled row is masked. The reveal is never stored |
-| K51.11 | The row is shown and he checks off the last Other-aisle row, so the hero advances | The shown row re-masks as its aisle leaves the hero. Nothing about the words stays on screen |
-| K51.12 | Add a walled item on the Add line during the trip ("Ozempic refill") | Tess: "Private item, on Groceries." with UNDO 4 s (a new row; 10 s with VoiceOver). UNDO line "Private item, taken back." (proposed, Product to rule). The new row lands masked and is not auto-shown |
+| K51.2 | Tap the first "Private item" row | The row stays "Private item" and one tap strikes it (puts it in the basket), like any other row. Nothing shows its words. The second "Private item" row still reads "Private item" and is unaffected. The same haptic as striking an ordinary row. No Tess line, no UNDO slot used by the tap itself (a UNDO already showing keeps its remaining time) |
+| K51.3 | REMOVED by G102 (Oct 17) | Was: second tap moves the reveal. There is no reveal, so there is nothing to move. Flag F1 is moot |
+| K51.4 | REMOVED by G102 (Oct 17) | Was: tap a shown row to hide it again. No row is ever shown. A struck row taps back like any ordinary struck row (K46.17) |
+| K51.5 | Swipe a "Private item" row right to strike it | It strikes and sinks and reads "Private item" in strikethrough; the words are never shown. Swipe right again undoes it, as K46.17 |
+| K51.6 | Check Milk, add "foil", scroll, change aisle | Milk and foil act as in K46. Every private row reads "Private item" through a scroll, an aisle change and a check elsewhere |
+| K51.7 | Press the side button to lock, then unlock | Back on the trip, every private row reads "Private item". The locked screen, the app switcher snapshot and any Live Activity or widget never held the words |
+| K51.8 | Tap DONE (nothing checked) | "Nothing to clear." (proposed, Product to rule; K46.21). Back on the plain list, the walled rows read "Private item" |
+| K51.9 | Switch to another app and return | Every private row reads "Private item" on return. The app switcher snapshot taken meanwhile shows "Private item" |
+| K51.10 | Kill the app with a private row struck; reopen | The trip returns with the same checked rows and hero (K46.15). Every walled row reads "Private item". Words are never stored on screen state because they are never shown |
+| K51.11 | He checks off the last Other-aisle row, so the hero advances | The private rows read "Private item" throughout. Nothing about the words is on screen |
+| K51.12 | Add a walled item on the Add line during the trip ("Ozempic refill") | Tess: "Private item, on Groceries." with UNDO 4 s (a new row; 10 s with VoiceOver). UNDO line "Private item, taken back." (proposed, Product to rule). The new row lands as "Private item" |
 | K51.13 | Rows from a Private recipe's share (K46.25) | Each reads as itself unless walled. No row says "for Private recipe" or the recipe's name. A walled one among them follows K51.2 |
-| K51.14 | VoiceOver on | A masked row reads "Private item. Double tap to show." (proposed, Product to rule). After the tap VoiceOver reads the words once, then "Double tap to hide." The tap is the only reveal; no custom action reveals all. The hero count reads "Other, 2 to get, Private item and Private item" with no words. UNDO stays 10 s |
-| K51.15 | AX3 and Bold Text | Shown and masked rows both wrap to as many lines as needed; nothing is cut with an ellipsis; nothing covers the Add line or the UNDO slot |
-| K51.16 | Dump the request log, sent log, ledger, widget timeline, notification payloads and capture-miss log after K51.1 to K51.15 | None holds a walled row's words. The trip made no Claude request (K46.16) |
-| K51.17 | Copy sweep | The only new words are "Private item" and the VoiceOver hints above. No "hidden", "locked", "reveal", "tap to show" in view text; no lock icon; no cobalt (the mask and the words are ink) |
+| K51.14 | VoiceOver on | A private row reads "Private item" with the hint "Puts it in the basket" (G102). After the tap it is struck and VoiceOver never reads the words; there is no "Double tap to show" or "Double tap to hide" and no custom action that reveals. The hero count reads "Other, 2 to get, Private item and Private item" with no words. UNDO stays 10 s |
+| K51.15 | AX3 and Bold Text | Private and ordinary rows both wrap to as many lines as needed; nothing is cut with an ellipsis; nothing covers the Add line or the UNDO slot |
+| K51.16 | Dump the request log, sent log, ledger, widget timeline, notification payloads and capture-miss log after K51.1 to K51.15 (K51.3 and K51.4 removed) | None holds a walled row's words. The trip made no Claude request (K46.16) |
+| K51.17 | Copy sweep | The only new words are "Private item" and the VoiceOver hint "Puts it in the basket". No "hidden", "locked", "reveal", "Shows it", "tap to show" in view text; no lock icon; no cobalt (the mask and the words are ink) |
 
 ---
 
@@ -66,7 +66,7 @@
 | K52.9 | Locked: "add milk" | Face ID is asked (K45.2). Writes are not made readable by this row. On a Face ID failure: "Face ID needed to add to Groceries." and nothing is written (K45.3) |
 | K52.10 | Locked: read an ordinary title that was made private after it was planned | The next read says "a private item" (or "Private recipe, 7 pm." for a recipe plan). No cached old title survives in a donation, a Spotlight result or the on-screen text |
 | K52.11 | Locked, Siri's on-screen text | Equals what is spoken, word for word. No emoji, no "at" before a time, no cobalt, no cut-off ellipsis |
-| K52.12 | Unlocked: the same reads | The same words as locked. Unlocking never reveals a private word through Siri; only the app screens (K51 for the trip) show it |
+| K52.12 | Unlocked: the same reads | The same words as locked. Unlocking never reveals a private word through Siri, and no app screen shows it in the trip either (G102, K51) |
 | K52.13 | Claude and logs | No Claude request. The sent log, ledger and capture-miss log hold no title, private or ordinary. An unparsed phrase holding a secret word, money or a body fact is not logged |
 | K52.14 | Copy sweep | "a private item" is lowercase inside a sentence and "Private item" at the start of a line or receipt. "Private recipe, 7 pm." keeps its capital. No "hidden", "locked" or "redacted" spoken |
 
@@ -213,14 +213,14 @@
 ## Assumptions and flags
 
 **Assumptions taken (not ruled; Product to rule).**
-1. Proposed copy, each marked in its row: Siri's lists "2 on your list: Call dentist, Pick up parcel." and its private forms (K52.4 to K52.7); the trip's VoiceOver hint "Private item. Double tap to show."; "Private item, taken back."; "Tacos is gone. I can't bring it back." (K54.11); the photo lines "Reading the photo…", "Photo, kept for later.", "I couldn't read that photo. Try it in better light, or paste the text.", "No text in that photo. Paste the text instead.", "The steps are missing. Paste them below.", "No recipe card there.", "Using the first 4."; "Private recipe saved.", "Private recipe. I won't send it to Claude."; "Rice, not now."; and the Pantry joiner forms in K58.
+1. Proposed copy, each marked in its row: Siri's lists "2 on your list: Call dentist, Pick up parcel." and its private forms (K52.4 to K52.7); the trip's VoiceOver hint "Puts it in the basket" (Groceries) or "Checks it off" (list), per G102; "Private item, taken back."; "Tacos is gone. I can't bring it back." (K54.11); the photo lines "Reading the photo…", "Photo, kept for later.", "I couldn't read that photo. Try it in better light, or paste the text.", "No text in that photo. Paste the text instead.", "The steps are missing. Paste them below.", "No recipe card there.", "Using the first 4."; "Private recipe saved.", "Private recipe. I won't send it to Claude."; "Rice, not now."; and the Pantry joiner forms in K58.
 2. Ruled copy reused word for word: "Milk, on Groceries.", "Private item, on Groceries.", "Private note, kept.", "Private recipe, 7 pm." and its no-time forms, "Nothing planned.", "Recipe gone." with "Back to the list", "Cleared N from the basket.", "Didn't save. Try again.", and `RecipeLinkLine` (`found`, `claudeRead`, `noRecipe`, `paused` and the Claude failure lines).
 3. UNDO windows: a new row 4 s, a change 10 s, 10 s with VoiceOver; one slot, last write wins. A trip strike is its own undo and claims no slot (K46.17).
-4. A trip reveal is view state only (K51): nothing written, no slot claimed.
+4. There is no trip reveal (G102, Oct 17): a private row always reads "Private item" and one tap strikes it (K51).
 5. The 4 AM day boundary applies to "dinner" (K53.12) and the quiet hours are unchanged.
 
 **Flags.**
-- **F1 (K51.3, K58.15). Several private rows at once.** K51 allows one row shown at a time (proposed). In Pantry USUALLY HAVE, a private name takes a slot as "Private item" while Groceries USUALLY never draws a mask (K44.8). The two ruled behaviors differ; Product to say whether the Pantry line should also hide privates entirely (then K58.15 and K58.16 change).
+- **F1 (K51.3, K58.15). Several private rows at once.** **Resolved by G102 (Oct 17): there is no reveal, so no row is ever shown.** In Pantry USUALLY HAVE, a private name takes a slot as "Private item" while Groceries USUALLY never draws a mask (K44.8). The two ruled behaviors differ; Product to say whether the Pantry line should also hide privates entirely (then K58.15 and K58.16 change).
 - **F2 (K53.5). The 4 pm cutoff.** "After 4 pm" is read as 4:00 pm or later. Product to say if 4:00 pm sharp is dinner.
 - **F3 (K53.7). Two dinner-tagged slots.** The later one wins (proposed).
 - **F4 (K53.9). A cook with no time** counts as dinner only when tagged. An untagged, untimed cook is "Nothing planned."

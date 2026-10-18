@@ -164,13 +164,13 @@ Other looks (Plein, Lacquer, Celadon) are not given values by the sheet: **gap**
 | Fills (washes, bars, buttons, backgrounds, the Obsidian bloom) | never | |
 | Dots (state dots, bullets, rail dots) | never | the product also has `no-dots.md`; the rail is not a dot (RL05) |
 | Tess (her line, her soul, her words) | never | cobalt is hers |
-| Pantry state words | yes, and only as Kitchen's lean | replaces `PantryColour` (below) |
+| Pantry state words | no, plain ink (OUT bold, LOW semibold); Kitchen's lean goes only on Kitchen caps labels and the Pantry index line (after the area-colour pass) | replaces `PantryColour` (below) |
 | Today | no area colour at all | Today's pages use plain ink |
 | A page opened from an area (Lists, Notes, Habits, Money, Reading) | takes that area's lean | from Home it takes Today's ink (`Theme.Colors.ink`), which means no lean colour |
 | A page turn | never changes the colour | sheet 97: "colour never changes with the page turn (sheet 90) because the area has not changed" |
 | Moving between areas by the side swipe | the colour travels with the name | sheet 97; nothing else recolours |
 
-Pantry in master: `Features/Kitchen/PantryColour.swift:4-17` holds `light = 0xA4601A` and `dark = 0xE3A857` and `stateWord = ochre.mix(with: ink, by: 0.28)`, used once at `Features/Kitchen/PantryView.swift:196`. The sheet removes the ochre; the state word takes Kitchen's `areaLean` ("the same 72% mix", so under Reading B the mix is Kitchen pigment, not ochre, and under Reading A it is `#12936A` / `#52D3A3` directly). Master has no `areaLean` function, no `Area` type carrying a colour, and no Theme token for any of this (grep of `*.swift` for `areaLean`: only the comment at `PantryColour.swift:4`): **gap**.
+Pantry in master: `Features/Kitchen/PantryColour.swift:4-17` holds `light = 0xA4601A` and `dark = 0xE3A857` and `stateWord = ochre.mix(with: ink, by: 0.28)`, used once at `Features/Kitchen/PantryView.swift:196`. The sheet removes the ochre; the state word becomes plain ink, and `areaLean(.kitchen)` goes only on Kitchen caps labels and the Pantry index line ("the same 72% mix", so under Reading B the mix is Kitchen pigment, not ochre, and under Reading A it is `#12936A` / `#52D3A3` directly). Master has no `areaLean` function, no `Area` type carrying a colour, and no Theme token for any of this (grep of `*.swift` for `areaLean`: only the comment at `PantryColour.swift:4`): **gap**.
 
 ### 4d. Contrast of the label usage (plain arithmetic, shown)
 
@@ -215,8 +215,8 @@ All are pure (Core or `DesignSystem` logic, no UI), except those marked UI.
 | AL12 | Contrast, large text | lead numeral and title key word at least 3:1 | no check | gap | Core | `areaLeanLargeTextContrastAtLeastThree` |
 | AL13 | Hairline at 34% | the section hairline is the lean colour at opacity 0.34, not a separate token | hairline today is `ink.opacity(0.14)` (`Theme.swift:395-397`) | gap | Builder A / B | `sectionHairlineIsLeanAtThirtyFourPercent` |
 | AL14 | Mix definition (Reading B only) | `mix72(pigment, ink)` per channel equals `round(0.72 x p + 0.28 x i)` within 3 | the same recipe, with a different base, is at `PantryColour.swift:17` | gap | Core | `seventyTwoPercentMixMatchesArithmetic` |
-| AL15 | Pantry state word | `PantryColour.stateWord` is gone; the state word equals `areaLean(.kitchen)` in the current look; `0xA4601A` and `0xE3A857` appear nowhere in app code | `PantryColour.swift:11-12` still defines both; used at `PantryView.swift:196` | gap | Builder B (Pantry owner) | `pantryStateWordIsKitchenLean` |
-| AL16 | Pantry, no second hue | a pantry state differs from another by its word and position only: assert the colour of every pantry state word is the same value | `PantryView.swift:196` single use | inferred | Builder B | `pantryStatesShareOneColour` |
+| AL15 | Pantry state word | `PantryColour.stateWord` is gone; the state word is plain ink (OUT bold, LOW semibold), never `areaLean`; `0xA4601A` and `0xE3A857` appear nowhere in app code | `PantryColour.swift:11-12` still defines both; used at `PantryView.swift:196` (removed in #917) | gap | Builder B (Pantry owner) | `pantryStateWordIsPlainInk` |
+| AL16 | Pantry, no second hue | a pantry state differs from another by its word, weight (OUT bold, LOW semibold) and position only: assert the colour of every pantry state word is the same ink value | `PantryView.swift:196` single use | inferred | Builder B | `pantryStatesShareOneColour` |
 | AL17 | Opened-from rule, Lists | Lists opened from Kitchen (Groceries side) takes Kitchen lean; opened from Home takes ink | no origin context is passed to Lists in master (not found in `ListsView.swift`) | gap | Builder B | `listsLeanFollowsOriginArea` |
 | AL18 | Opened-from rule, Notes, Habits, Money, Reading | same table: origin area gives its lean; Home gives ink (Today) | same | gap | Builder A / B | `notesHabitsMoneyReadingLeanFollowsOrigin` |
 | AL19 | Opened from two places in turn | the same page re-opened from a different area recolours (the origin is read at open, not cached from the first open) | none | gap | Builder B | `leanIsReadAtOpenNotCached` |
@@ -257,7 +257,7 @@ Each is a test that finds the colour where it must not be. Implementation hint: 
 - Recipe: portion drum limit absorption (SW21, SW22, SW24 are likely real bugs once paging lands because nested scroll views chain), timer number (SW25 to SW27), plain step and ingredient text (SW28, SW29).
 - Money dial: the whole instrument (SW30M to SW39M).
 - Accessibility named actions and adjustable parity (SW72 to SW78).
-- Remove `PantryColour` ochre and take Kitchen's lean (AL15, AL16, AN08); Lists, Notes, Habits, Money, Reading origin-area lean (AL17, AL18, AL19).
+- Remove `PantryColour` ochre; state words become plain ink (OUT bold, LOW semibold), and `areaLean(.kitchen)` goes only on Kitchen caps labels and the Pantry index line, the index line only after the area-colour pass (AL15, AL16, AN08); Lists, Notes, Habits, Money, Reading origin-area lean (AL17, AL18, AL19).
 
 **Design**
 - The small stop (SW60): what it looks like, how far, which curve (through `MotionPolicy`).
