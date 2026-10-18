@@ -32,15 +32,15 @@ Code facts: hold 400 ms (`BottomChrome:252`), pause 1.2 s, silence 5 s, cap 60 s
 | Refusal line (mic off etc.) | house spring in; line in cobalt with one ink word that still works | 150 ms fade | none (information; `.notSaved` is for a write that did not save) |
 | Cancel (drag left off the soul, or tap the veil) | nothing saved, no line | same | none |
 
-Raw literals to route through the policy (code): `SpeakLayer:49` and `:53`; `BottomChrome:76`, `:87`, `:272`, `:482`, `:654`; the hand-gated ones in `CaptureParts:74-96` and `Paint.swift:316-317` can stay if the flag feeds them.
+Raw literals to route through the policy (code): `SpeakLayer:49` and `:53`; `BottomChrome:76`, `:87`, `:272`, `:482`, `:654`; the hand-gated ones in `CaptureParts:74-96` and `Paint.swift:296`, `:324`, `:342`, `:350` and `:396` can stay if the flag feeds them.
 
 ## C. Plan my day
-Code facts: Claude wording is off (`AppModel.planWordingReady = false`, `AppModel.swift:64`), so only the rules plan shows; `HomePlan.swift` never calls `soul.handle(.askClaude)`, so Tess does not work while a plan is requested; the cloud mark with three wisps, the 07:00 pull and row editing are not built. The pieces that exist match the sheet: hold START WITH 0.7 s (`Paint.swift:318-330`), the ink dry of a kept row (700 ms spring, time +250 ms, `HomePlan:362-367`), the breathing rows (0.5 to 0.66, `HomePlan:342`), skip plan silent.
+Code facts: Claude wording is off (`AppModel.planWordingReady = false`, `AppModel.swift:64`), so only the rules plan shows; `HomePlan.swift` never calls `soul.handle(.askClaude)`, so Tess does not work while a plan is requested; the cloud mark with three wisps, the 07:00 pull and row editing are not built. The pieces that exist match the sheet: hold START WITH 0.7 s (the `duration: 0.7` at the call site, `NowPage.swift:192`), the ink dry of a kept row (700 ms spring, time +250 ms, `HomePlan:362-367`), the breathing rows (0.5 to 0.66, `HomePlan:342`), skip plan silent.
 
 | Moment | Normal | RM and LP | Haptic |
 |---|---|---|---|
 | Plan offered | rules plan drawn at once, entrance on first visit (`NowPage:33-45`); silent on purpose (plan-home) | opacity only 150 ms | none |
-| Rows breathing | one `TimelineView` per row at 30 fps, up to five (`HomePlan:307`) | still at the mean (0.58): LP gets the RM value the code already uses; normal power: one shared timeline for all rows, not five | none |
+| Rows breathing | one `TimelineView` per row at 30 fps, up to five (`HomePlan:307`) | still at the Reduce Motion value (0.6, `HomePlan.swift:342`): LP gets the RM value the code already uses; normal power: one shared timeline for all rows, not five | none |
 | Keep a row (swipe right, past 120 pt) | row dries to ink: title 700 ms spring, time +250 ms | one 150 ms ink fade, no stagger | `.made` once (the map documents it for "a plan is kept", `Haptics.swift:8`; not called today) |
 | Skip a row (swipe left) | row slides off, queue closes up 320 ms (code: 250 + 420 ms: align) | 150 ms fade | none |
 | Skip the plan (swipe the hero left) | house spring; silent | 150 ms fade | none |
