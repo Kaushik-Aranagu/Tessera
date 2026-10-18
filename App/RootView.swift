@@ -9,6 +9,8 @@ struct RootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var zoom
     @State private var flooding = false
+    /// Low Power, read through `PowerState` only; the system's change notice just says when to ask it again.
+    @State private var lowPower = PowerState.isLowPower
 
     var body: some View {
         @Bindable var model = model
@@ -70,6 +72,10 @@ struct RootView: View {
         }
         .background { ThemedBackground() }
         .modifier(RestReceipt())
+        .environment(\.lowPowerMotion, lowPower)
+        .onReceive(NotificationCenter.default.publisher(for: .NSProcessInfoPowerStateDidChange)) { _ in
+            lowPower = PowerState.isLowPower
+        }
     }
 
     /// Paint floods out of Tess (~0.5 s); Home is swapped in underneath, then the paint fades. Tapping her again on

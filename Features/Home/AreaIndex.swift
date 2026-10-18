@@ -247,7 +247,7 @@ struct AreaIndexSheet: View {
 }
 
 extension EnvironmentValues {
-    /// Low Power, fed once at the root from `PowerState.isLowPower` (App/PowerState.swift, #945) so no second
-    /// read of the system flag exists; false until that helper is wired in.
+    /// Low Power, fed once at the root (RootView) from `PowerState.isLowPower` (App/PowerState.swift) so no second
+    /// read of the system flag exists.
     @Entry var lowPowerMotion = false
 }
