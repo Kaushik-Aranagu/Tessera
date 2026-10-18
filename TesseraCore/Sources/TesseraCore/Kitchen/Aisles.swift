@@ -34,6 +34,11 @@ public enum AisleGuide {
     ]
 
     /// Whether a line names only staples: "kosher salt and black pepper", "salt & pepper" (Research 123 G-R3).
+    /// Whether the guide's table names this exact key (no head-noun guess).
+    static func guideKnows(_ key: String) -> Bool {
+        guide[key] != nil
+    }
+
     public static func isStaple(_ key: String) -> Bool {
         if staples.contains(key) {
             return true
