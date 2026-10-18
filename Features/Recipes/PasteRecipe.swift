@@ -247,7 +247,8 @@ struct PasteRecipe: View {
     private func readLink(_ link: URL) {
         guard !readingLink else { return }
         readingLink = true
-        linkLine = RecipeLinkLine.reading(link.host() ?? "the page")
+        // The wait line while the link is read (Product ruling): Claude's line when he may be asked, else the host.
+        linkLine = PasteCopy.waitLine(host: link.host(), asksClaude: model.asksClaude)
         let store = model.store
         var claude = ClaudeRecipeReader(keys: SystemKeychain(), ledger: TessUsageLedger(store: store,
                                                                                         classes: model.classes))
@@ -533,6 +534,11 @@ struct PasteKeyFilter {
 }
 
 enum PasteCopy {
+    /// "Asking Claude to read the recipe." while Claude may read it; "Reading example.com." when only the phone does.
+    static func waitLine(host: String?, asksClaude: Bool) -> String {
+        asksClaude ? "Asking Claude to read the recipe." : RecipeLinkLine.reading(host ?? "the page")
+    }
+
     /// What Save came to.
     enum SaveOutcome {
         case saved(ObjectRecord, OpRecord)

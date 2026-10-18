@@ -98,4 +98,10 @@ struct PasteCycleTests {
         guard case .failed = save("https://example.com/dal") else { Issue.record("a bare link writes nothing"); return }
         #expect(log.all().count == 1)
     }
+
+    /// Product ruling: the wait line while a link is read.
+    @Test func theWaitLineNamesClaudeWhenHeMayRead() {
+        #expect(PasteCopy.waitLine(host: "example.com", asksClaude: true) == "Asking Claude to read the recipe.")
+        #expect(PasteCopy.waitLine(host: "example.com", asksClaude: false) == RecipeLinkLine.reading("example.com"))
+    }
 }
