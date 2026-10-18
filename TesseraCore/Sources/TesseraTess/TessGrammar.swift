@@ -27,6 +27,8 @@ public struct TessGrammar {
         case timer(label: String, minutes: Double)
         /// "list: packing".
         case list(name: String)
+        /// "copy packing for lisbon": a new list named Lisbon with Packing's items, all open.
+        case copyList(source: String, name: String)
         /// "shop": start shopping the groceries list.
         case shop
         /// Pasted text with an Ingredients heading.

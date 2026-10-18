@@ -8,6 +8,8 @@ import TesseraTess
 /// fixed by tapping the line to cycle it (ingredient, step, ignore), never by a form. Tess says what she read, in
 /// cobalt. Save commits it with an Undo.
 struct PasteRecipe: View {
+    /// A kept link from the Recipes shelf: lands in the box and reads at once, as "Read 1 waiting" does (G65).
+    var initialLink: URL?
     var onSaved: (UUID) -> Void = { _ in }
 
     @Environment(AppModel.self) private var model
@@ -35,7 +37,7 @@ struct PasteRecipe: View {
     /// The saved line's name: a private recipe is only "Private recipe" here too, spoken or drawn (G53).
     private var savedTitle: String {
         guard let title = saved.flatMap({ model.store.object(id: $0.id)?.title }) else { return "Recipe" }
-        return RecipeCopy.shownTitle(title, isPrivate: RecipeCopy.isPrivate(title, model: model), shown: false)
+        return RecipeCopy.shownTitle(title, isPrivate: RecipeCopy.isPrivate(title, model: model))
     }
 
     var body: some View {
@@ -148,7 +150,14 @@ struct PasteRecipe: View {
             }
         }
         .onDisappear(perform: closeUndo)
-        .onAppear { waitingLinks = RecipeLinkShelf.beside(model.store)?.waiting() ?? [] }
+        .onAppear {
+            waitingLinks = RecipeLinkShelf.beside(model.store)?.waiting() ?? []
+            if let initialLink, text.isEmpty, !readingLink {
+                fromLink = true
+                text = initialLink.absoluteString
+                readLink(initialLink)
+            }
+        }
         .onChange(of: readingLink) { _, isReading in
             if !isReading {
                 waitingLinks = RecipeLinkShelf.beside(model.store)?.waiting() ?? []
@@ -575,7 +584,15 @@ enum PasteCopy {
 
     /// The engine's duplicate refusal: "<title> is already on Recipes." ("Private recipe" for a walled one).
     static func isDuplicate(_ line: String) -> Bool {
-        line.hasSuffix(" is already on Recipes.")
+        line.hasSuffix(alreadyOnRecipes)
+    }
+
+    /// The duplicate line's tail, one constant for building and reading it (QA on #865); Core's #854 says the same.
+    static let alreadyOnRecipes = " is already on Recipes."
+
+    /// "Weeknight dal is already on Recipes." / "Private recipe is already on Recipes."
+    static func duplicate(_ name: String) -> String {
+        name + alreadyOnRecipes
     }
 
     /// Whether Tess's line on Paste is a refusal, drawn in ink.
@@ -590,7 +607,7 @@ enum PasteCopy {
         guard let existing = RecipeBook(store: store, classes: classes).recipe(pastedAs: text) else { return nil }
         let walled = store.value("isPrivate", of: existing) == .bool(true)
             || ObjectPrivacy.isPrivateRecipeTitle(existing.title, lastWeightKg: BodyWeight.lastKg(in: store))
-        return "\(walled ? ObjectPrivacy.recipeLabel : existing.title) is already on Recipes."
+        return duplicate(walled ? ObjectPrivacy.recipeLabel : existing.title)
     }
 
     /// "Read 1 waiting" / "Read 3 waiting": the links kept for later.

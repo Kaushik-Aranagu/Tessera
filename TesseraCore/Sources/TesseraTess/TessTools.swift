@@ -328,31 +328,10 @@ extension TessTools.Call {
     /// a prefix of three letters or more, when exactly one list starts with it. Two matches write nothing and ask
     /// which (G40). A one- or two-letter prefix never matches.
     func list(named name: String) throws -> ObjectRecord {
-        let query = name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        let lists = ListContents(store: store, classes: engine.classes).lists()
-        func title(_ list: ObjectRecord) -> String {
-            list.title.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        // A private word is never echoed back, even as his own query.
-        let shown = ObjectPrivacy.isPrivateWord(name, in: store) ? "that" : name
-        let exact = lists.filter { title($0) == query }
-        if exact.count == 1, let list = exact.first {
-            return list
-        }
-        if exact.count > 1 {
-            throw TessToolError(ListLookupLine.moreThanOne(shown))
-        }
-        let prefixed = query.count >= Self.listPrefixMinimum ? lists.filter { title($0).hasPrefix(query) } : []
-        if prefixed.count > 1 {
-            throw TessToolError(ListLookupLine.moreThanOne(shown))
-        }
-        guard let list = prefixed.first else { throw TessToolError("no list called \(shown)") }
-        return list
+        try ListLookup.find(name, store: store, classes: engine.classes)
     }
 
     /// The fewest letters that count as a prefix of a list's name.
-    static let listPrefixMinimum = 3
-
     /// Any thing by name, recipes first ("about" links).
     func object(named name: String) -> ObjectRecord? {
         if let recipe = grammar.recipe(named: name) {
@@ -385,6 +364,37 @@ extension TessTools.Call {
         }
         guard !records.isEmpty else { throw TessToolError("no items to add") }
         return records
+    }
+}
+
+/// A list by name for Tess's phrases and tools: an exact name wins only when exactly one list has it; else a prefix of
+/// three letters or more, when exactly one list starts with it. Two matches write nothing and ask which (G40).
+@MainActor
+public enum ListLookup {
+    /// The fewest letters that count as a prefix of a list's name.
+    static let prefixMinimum = 3
+
+    static func find(_ name: String, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) throws -> ObjectRecord {
+        let query = name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let lists = ListContents(store: store, classes: classes).lists()
+        func title(_ list: ObjectRecord) -> String {
+            list.title.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        // A private word is never echoed back, even as his own query.
+        let shown = ObjectPrivacy.isPrivateWord(name, in: store) ? "that" : name
+        let exact = lists.filter { title($0) == query }
+        if exact.count == 1, let list = exact.first {
+            return list
+        }
+        if exact.count > 1 {
+            throw TessToolError(ListLookupLine.moreThanOne(shown))
+        }
+        let prefixed = query.count >= prefixMinimum ? lists.filter { title($0).hasPrefix(query) } : []
+        if prefixed.count > 1 {
+            throw TessToolError(ListLookupLine.moreThanOne(shown))
+        }
+        guard let list = prefixed.first else { throw TessToolError("no list called \(shown)") }
+        return list
     }
 }
 

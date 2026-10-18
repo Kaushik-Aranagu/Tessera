@@ -1,5 +1,6 @@
 import Foundation
 import TesseraCore
+import TesseraTess
 
 /// Seeds a lived-in day on top of Core's exercise library: a Push / Pull / Legs plan, six weeks of history, today's
 /// schedule and tonight's workout.
@@ -31,6 +32,8 @@ enum DemoData {
 
     private static func reset(_ model: AppModel) {
         model.store.resetUserData()
+        // The links kept for later go with the rest of his data (G65): the shelf file sits beside the store.
+        RecipeLinkShelf.beside(model.store)?.erase()
         // The wipe takes the library's muscles, equipment and exercise profiles with it: put them back.
         model.store.invalidateCaches()
         _ = try? ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: model.store,
