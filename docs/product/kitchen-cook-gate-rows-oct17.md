@@ -33,7 +33,7 @@ While a cook runs, the six cook phrases N21-N26 stay on the phone. They are neve
 
 | Row | Phrase | State | Expected route | Expected receipt wording | A fail looks like |
 |---|---|---|---|---|---|
-| D01 | `stop the pasta` (no timer named pasta is running) | cook running | Held on the phone. Spy: 0. Not queued in the inbox. Not in the miss log. No haptic. No retry | "Didn't catch that." exactly (PROPOSED: this line for a held cook phrase with no local reading is not yet ruled) | The phrase reaches Claude; or any suffix such as "Try ..." is added; or a miss row is logged; or a haptic fires; or the phrase is queued and re-sent later |
+| D01 | `stop the pasta` (no timer named pasta is running) | cook running | Held on the phone. Spy: 0. Not queued in the inbox. Not in the miss log. No haptic. No retry | "Didn't catch that." plus the context example, nothing else (the real line, TessModel.swift:129; a shop adds ' Try "milk, eggs".'). PROPOSED: this line for a held cook phrase with no local reading is not yet ruled | Anything other than the line plus the context example, nothing else: the phrase reaches Claude; or any other words are added; or a miss row is logged; or a haptic fires; or the phrase is queued and re-sent later |
 
 ## D. Key-shaped text (never leaves, with or without a cook)
 
