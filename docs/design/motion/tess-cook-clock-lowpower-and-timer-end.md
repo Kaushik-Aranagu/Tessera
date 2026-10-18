@@ -1,24 +1,26 @@
 # Cook clock in Low Power, working under Reduce Motion, and the timer-end moment (board items 56, 57, 58)
 
-For: Builder A (clock, soul, notification), Builder B (clock view, Home DrainBar), Kitchen lead (rows), Design (numbers), QA. Written Oct 17, PM (Pacific). Sources: kitchen gap hunt 16 (G217, G220, G223, G225, G226, G233, `docs/product/`), decisions D4/D5 (7:39 PM Oct 17) and 8:20 PM A, `recipe-clock.md` (bead, stroke), `12-cook-mode.md` (horizons, flare, Lock Screen), `kitchen-cook-mode-accessibility-acceptance.md` K84.17 to K84.24, `research/fixtures/kitchen-timer-alerts.md` KT1 to KT19. Product's 8:3x to 9:xx PM rulings were not in the master copy of decisions.md when this was written; the rules below follow Product's board message and the gap hunt's proposed rules. Where a ruling lands differently, only the named row changes.
+For: Builder A (clock, soul, notification), Builder B (clock view, Home DrainBar), Kitchen lead (rows), Design (numbers), QA. Written Oct 17, PM (Pacific). Sources: kitchen gap hunt 16 (G217, G220, G223, G225, G226, G233, `docs/product/`), decisions D4/D5 (7:39 PM Oct 17) and 8:20 PM A, `recipe-clock.md` (bead, stroke), `12-cook-mode.md` (horizons, flare, Lock Screen), `kitchen-cook-mode-accessibility-acceptance.md` K84.17 to K84.24, `research/fixtures/kitchen-timer-alerts.md` KT1 to KT19. Rulings checked against decisions.md (project mirror lines 1007 and 1011): G228 (9:07 PM, the clock page IS the cook, Design 69 replaces sheet 12's cover), G223 (Low Power keeps his touches and the timer end), and 9:18 PM item 2 (the haptic map wins: the timer end is `timeUp`, the heavy impact, and it plays in Low Power).
 
-Low Power (LP) = Reduce Motion (RM) for the cook cover and the clock (D5): the soul alone keeps her own LP form (30 fps, six lights, no readers, full opacity and pigment). Done never changes. One haptic per moment.
+Low Power (LP) = Reduce Motion (RM) for the cook clock page (D5): the soul alone keeps her own LP form (30 fps, six lights, no readers, full opacity and pigment). Done never changes. One haptic per moment.
 
 ## 56. Cook clock: Low Power columns, ticks and the spoken value
 
 **The rule that makes it cheap: nothing counts, everything is derived.** Every figure comes from the absolute `endsAt`. No running tick count anywhere. The page body never holds a clock; each moving thing is a leaf view. The one timeline is paused when the scene is not active.
 
+**Which rows still apply (G228).** The clock page is the cook; sheet 12's cover is superseded. Clock-page rows: bead, stroke, a step lights, key figure, DrainBar, spoken value, soul. **Cover-only rows, kept as history for the record, not to be built:** step advance by Next, cover open and close, horizon line, the "SOFTEN 7:42" label. Their reduced rules stand only as the reference for the clock page's equivalents (a step change is a 150 ms crossfade; the page opens and closes with the 150 ms fade).
+
 | Thing | Normal | RM and LP (same) |
 |---|---|---|
-| Step advance (Next, or "next") | slide as built | 150 ms crossfade in place, dim line above still shows (K84.17) |
-| Cover open and close | rises 460 ms | fades, no rise (K84.19) |
-| Horizon line (cook cover) | burns down continuously (30 fps while the screen is still) | steps once at each whole-minute boundary of `endsAt` (rem = k x 60 s), each step a 150 ms fade of the fill edge; in the last minute every 10 s (six steps) so a short timer still moves. Lab default, Design to confirm the 10 s |
+| Step advance (history: Next on the cover; on the clock page the bead moves) | slide as built | 150 ms crossfade in place, dim line above still shows (K84.17) |
+| Cover open and close (history) | rises 460 ms | fades, no rise (K84.19) |
+| Horizon line (history, cover only) | burns down continuously (30 fps while the screen is still) | steps once at each whole-minute boundary of `endsAt` (rem = k x 60 s), each step a 150 ms fade of the fill edge; in the last minute every 10 s (six steps) so a short timer still moves. Lab default, Design to confirm the 10 s |
 | Seconds drawn in the label ("SOFTEN 7:42") | `Text(timerInterval:)`, drawn by the system, not by our tick | same: the system draws it; it costs us no redraw in LP |
 | Key figure ("33 MIN LEFT") | changes at each minute boundary of `endsAt` (never a 60 s period from view appear: that lags by up to 59 s); house numeric roll | same boundary, 150 ms crossfade, no roll. Figure = ceil(rem / 60), so it changes when rem crosses k x 60 s |
 | Recipe-clock bead | breathes (x1.14, 2.4 s), one ring per breath, walks the stroke at 30 fps | sits still: no breath, no ring; moves in 1-minute steps with a **150 ms** fade (this sets recipe-clock.md:30's 200 ms to the house RM crossfade) |
 | Stroke behind the bead | wet `now` span, dries to ink 55% at step end | same colours; the span steps with the bead; drying is a 150 ms crossfade |
 | A step lights | title lands wet, dries over 2 s; Tess says the step | title lands dry (no wet landing); line and haptic as normal |
-| Home DrainBar (G226) | a step every 5 s (not 1 s), 400 ms ease per step; the line under it ("Pasta, 6 min") on the minute | one step per minute boundary, 150 ms fade of the fill edge; the line on the minute, 150 ms crossfade |
+| Home DrainBar (G226) | a step every 5 s (not 1 s), linear over the full 5 s step (Builder B's #945, Design-passed 9:21 PM), so it never sits still and never redraws more than once per 5 s; the line under it ("Pasta, 6 min") on the minute | one step per minute boundary, 150 ms fade of the fill edge; the line on the minute, 150 ms crossfade |
 | Soul on the cook screen | as built | her LP form; when he asks "how long left" she works by position and size only (item 57) |
 
 **Haptics are not part of the motion switch:** see the matrix in item 58.
@@ -47,11 +49,13 @@ Checks (names for the builders' tests): `spokenTimerValueChangesOnlyAtMinuteBoun
 
 | t (ms) | Normal | RM and LP |
 |---|---|---|
-| T0 | one `.notificationOccurred(.success)` on the first frame of the flare; the high-priority "Simmer is done." announcement posted (VoiceOver); notification shows no banner, `willPresent` returns `[.sound, .list]` | same haptic, same announcement |
+| T0 | one `timeUp` (the map's heavy impact, 0.9) on the first frame of the flare; the high-priority "Simmer is done." announcement posted (VoiceOver); notification shows no banner, `willPresent` returns `[.sound, .list]` | same haptic, same announcement |
 | T0 to T0+420 | the line's whole stroke brightens to 6 pt and blooms; the label crossfades to "SOFTEN · DONE" in cadmium (150 ms) | the line turns cadmium, 150 ms, no bloom (K84.18) |
 | T0 to T0+600 | **the timer-end ring:** one ring leaves the line's wet tip (to x2.6, 35% opacity at start, fading to 0), played once, never looped | no ring |
 | T0 to T0+420 | the step slides back over the page (24 pt, blur 4 to 0); the step beneath fades out in 200 ms | the overlay crossfades, 150 ms, no travel |
 | T0+420 onward | the line holds flared until he stops it (tap the stack, or Stop on the Lock Screen); no pulse, no loop | same |
+
+**On the clock page (G228).** "The line" above is the ended timer's span on the stroke and its key; the ring leaves the bead (the clock's own ring idiom, played once, not per breath); the overlay is K84.22's step overlay, and "Stop" is the timer key's Stop (VO rows apply, not the cover's reading order). Lab default for the flare's exact spot; Design confirms.
 
 **Other places:**
 - **Phone locked or app away:** nothing of ours moves or buzzes (the app is suspended). The notification's sound and vibration are the alert; the Live Activity flips to Done silently.
@@ -60,13 +64,13 @@ Checks (names for the builders' tests): `spokenTimerValueChangesOnlyAtMinuteBoun
 - **Two timers ending inside 600 ms:** both lines flare, one haptic, one ring per line, one overlay (the soonest); the other waits behind a "+1". Further than 600 ms apart: a new moment, a new haptic.
 - **Stop (drag left or the Stop action):** the line fades (150 ms), "Simmer stopped." with UNDO; no haptic on a stop; the pending notification is removed.
 
-**Haptic matrix for the cook (G223).** Rule in one line: his touches and the timer-end success stay everywhere; Tess's own landings follow quiet hours.
+**Haptic matrix for the cook (G223).** Rule in one line: his touches and the timer-end `timeUp` stay everywhere; Tess's own landings follow quiet hours.
 
 | Haptic | Whose | Normal | RM | LP | Quiet hours (11 pm to 7 am) |
 |---|---|---|---|---|---|
 | Next step, medium impact | his touch | yes | yes | yes | yes |
 | Hold start, medium 0.8 | his touch | yes | yes | yes | yes |
-| Timer end, `.success` | the timer, his (KT2) | yes | yes | **yes** | yes |
+| Timer end, `timeUp` (heavy impact) | the timer, his (KT2) | yes | yes | **yes** | yes |
 | Bead lights a step, soft impact | Tess's | yes | yes | yes | no |
 | Done (Finish), `.success` | his hold | yes | yes | yes | yes |
 
@@ -74,5 +78,5 @@ Notes: a step that starts within 600 ms of his Next gives only the medium impact
 
 ## Open (none block the build)
 1. 10 s steps in a timer's last minute: Design confirms.
-2. Bead soft impact in LP: kept here (D5), Product may drop.
+2. Bead soft impact in LP: confirmed by Product (kept in LP; no haptic 23:00 to 07:00, a small gate in `Haptics` rather than only scheduling dates, 9:18 PM item 3).
 3. No clip yet for the timer end; the prototype has no cook scene. One 8 s clip (flare, ring, overlay, normal and RM) is cheap if Design wants to see it before Builder A builds.
