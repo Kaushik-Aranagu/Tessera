@@ -103,9 +103,9 @@ Sections 9 to 12 of `lists-acceptance.md` repeat the screens above: **4 blocks, 
 | 13.5 ON THEM side | NOT BUILT | |
 | 13.6 Swipe remove, count rolls, "Rice, removed." UNDO 10 s | NOT BUILT | No action, no swipe |
 | 13.7 Shelf and recipe rows have no swipe | NOT BUILT | No shelf |
-| 13.8 Private item at 66% ink; receipts "Private item, on Groceries." / "removed" / "back on" | FAIL | Add receipt right (`Lists.swift:183`, `TessCaptureEngine.swift:371`); Groceries shows "Private item" until tapped (`ShopTrip.swift:8-33`) with no 66% value read; no remove, so "Private item, removed." and "back on" are absent; no other list screen |
+| 13.8 Private item at 66% ink; receipts "Private item, on Groceries." / "removed" / "back on" | FAIL | Add receipt right (`Lists.swift:183`, `TessCaptureEngine.swift:371`); Groceries shows "Private item" until tapped (`ShopTrip.swift:8-33`; superseded by G102, Oct 17: it must always read "Private item" and one tap strikes it) with no 66% value read; no remove, so "Private item, removed." and "back on" are absent; no other list screen |
 | 13.9 KEPT PRIVATE count on the side | NOT BUILT | |
-| 13.10 Body and health items show as typed on his phone | NOT BUILT | Engine keeps them (`Lists.swift:156-157`, see 8b.4); no list screen shows them. Groceries masks them as "Private item" until tapped, which is the 13.8 rule |
+| 13.10 Body and health items show as typed on his phone | NOT BUILT | Engine keeps them (`Lists.swift:156-157`, see 8b.4); no list screen shows them. Groceries masks them as "Private item" (superseded by G102, Oct 17: always masked, never shown, one tap strikes it), which is the 13.8 rule |
 | 13.11 to 13.13 Recipes front, empty and one states, Recipes side | Not walked | Recipes, not Lists; the Pantry walk covers `RecipePage`. Excluded from counts |
 | 13.14 Reduce Motion, haptic, AX3 on both fronts | NOT BUILT | |
 | 13.15 Copy sweep: no "at" before a time, no "…", cobalt only Tess, digits | PASS | Over `ListsCopy.swift` and `Lists.swift`: none present; counts are digits |

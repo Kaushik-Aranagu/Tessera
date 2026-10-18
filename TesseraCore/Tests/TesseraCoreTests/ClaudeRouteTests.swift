@@ -147,6 +147,33 @@ struct ClaudeRouteTests {
                 "\(second.line)")
     }
 
+    @Test func aLongPhraseIsRefusedBeforeItLeaves() async {
+        let long = String(repeating: "could you log the bench ", count: 40)
+        let capture = await tess().capture(long, context: context)
+        #expect(
+            capture.line == "That's too long to send. Say it shorter." && capture.records.isEmpty,
+            "\(capture.line)"
+        )
+        #expect(RouteStub.requests.isEmpty)
+    }
+
+    @Test func theReceiptsHoldNoWordOfAWalledPhrase() async {
+        // "What was sent" lists the ledger's rows (time, job, model, cost): none holds the phrase, masked or not.
+        let phrase = "could you log that I paid 40 for gas earlier?"
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Noted."))]
+        _ = await tess().capture(phrase, context: context)
+        let calls = ledger.calls()
+        #expect(!calls.isEmpty)
+        for call in calls {
+            for value in call.values.storage.values {
+                if case let .text(text) = value {
+                    #expect(!text.lowercased().contains("gas") && !text.contains("40"), "\(text)")
+                }
+            }
+            #expect(!call.title.lowercased().contains("gas"))
+        }
+    }
+
     @Test func aMissGoesToClaudeAndLandsAsAPendingGhost() async throws {
         RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
         let capture = await tess().capture(miss, context: context)

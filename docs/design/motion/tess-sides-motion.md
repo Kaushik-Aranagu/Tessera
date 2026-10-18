@@ -33,10 +33,10 @@ The soul stays exactly as on any other label. There is no reveal animation, no g
 ## Reduced-motion and Low Power variants
 | What | Reduce Motion | Low Power |
 |---|---|---|
-| Into the glance, full side, along, between pages | A 150 ms crossfade, no 1:1 slide settle (the drag still follows the thumb while it is down) | The same as Reduce Motion for the settle only; the drag keeps its spring |
-| Edge zones | The same zones and rules; no edge shadow | The same as normal |
-| Run-end bump | No bump: the body stops at the end and nothing moves | Normal |
-| Facet word | A 150 ms crossfade, as normal | Normal |
+| Into the glance, full side, along, between pages | A 150 ms crossfade, no 1:1 slide settle (the drag still follows the thumb while it is down) | The same as Reduce Motion: a 150 ms crossfade, no drag spring (decision Oct 17, PM: Low Power = Reduce Motion everywhere) |
+| Edge zones | The same zones and rules; no edge shadow | The same as Reduce Motion |
+| Run-end bump | No bump: the body stops at the end and nothing moves | The same as Reduce Motion |
+| Facet word | A 150 ms crossfade, as normal | The same as Reduce Motion |
 | The soul | `sideTurned` plays nothing. She holds §13's still frame with the opacity breath and the blink | `sideTurned` plays nothing; the idle tick is 30 fps (§13) |
 | Her line | Lands at the same time with a 150 ms crossfade, no blur | Normal |
 
