@@ -53,6 +53,8 @@ No motion row in this folder assumes a drawn food stand-in. Read: `tess-notes-re
 6. Grep: nothing in the app draws a food stand-in (pan, ingredient colour picture, wash patch); `ObjectPocket` (`ObjectPlate` today) draws only a photo or the muscle figure.
 
 ## 6. Asks
-1. **Product:** all worked parts dry in together with no stagger *(lab default)*; the 260 ms crossfade when muscles change.
-2. **Design:** the figure hidden from VoiceOver because the rows say the same, and a worked part's tap opening the muscle page like its row *(lab defaults)*.
+Product accepted asks 1 and 2 (DEC:1083, 2:16 AM); the list is kept as the record.
+
+1. **Product (done):** all worked parts dry in together with no stagger *(lab default)*; the 260 ms crossfade when muscles change.
+2. **Product (done), Design to see:** the figure hidden from VoiceOver because the rows say the same, and a worked part's tap opening the muscle page like its row *(lab defaults)*.
 3. **Builder B (when built):** `ObjectPocket` draws only a photo or the figure, through `MotionPolicy`; the Recipe photo dries in over plain ground (no colour patch).
