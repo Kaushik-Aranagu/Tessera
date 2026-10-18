@@ -7,6 +7,7 @@ Board citations are to `/mnt/project-files/tessera/ops/board/<file>:<line>`.
 ## Summary
 
 | Verdict | Count |
+|---|---|
 | MATCH | 16 |
 | UNBUILT-KNOWN | 18 |
 | PARTIAL | 2 |
