@@ -12,8 +12,8 @@ Master facts read: the Groceries normalizer is `IngredientLine.key(for:)` (`Tess
 |---|---|---|---|---|---|---|
 | EF01 | `IngredientLine.key(for:)` on `Egg`, `Eggs`, `eggs`, `EGGS` | all four give `egg` | `Quantities.swift:281-284` | traced | Core | `eggAndEggsShareOneKey` |
 | EF02 | Backfill sees `Egg` (in, Saturday 10:00) and `Eggs` (out, Sunday 18:30) | one ingredient, key `egg`, state `out`, stateAt Sunday 18:30; later timestamp wins (extends PB20) | `find` returns first match, no fold | gap | Core | `backfillFoldsEggAndEggsToOneKey` (PB20 name, not new) |
-| EF03 | Same pair, both stamped Sunday 18:30, `Egg` in and `Eggs` low | one row, state `low` (surer wins: out over low over in) | none | gap | Core | `foldTieKeepsTheSurerState` |
-| EF04 | Same pair, `Eggs` older than `Egg` | newer stamp wins, the older never overwrites; tie that changes nothing writes nothing, no receipt, no haptic | none | gap | Core | `foldNeverLetsAnOlderStampWin` |
+| EF03 | Same pair, both stamped Sunday 18:30, `Egg` in and `Eggs` low | one row, state `low` (surer wins: out over low over in) | none | gap | Core | `foldTieKeepsTheSurerState` (one tie test with PD31, PB13, PE15 in `pantry-v2.md`; Core writes it once) |
+| EF04 | Same pair, `Eggs` older than `Egg` | newer stamp wins, the older never overwrites; tie that changes nothing writes nothing, no receipt, no haptic | none | gap | Core | `foldNeverLetsAnOlderStampWin` (same tie rule as PD31, PB13, PE15; share the test) |
 | EF05 | Fold runs a second time (second launch) | no op written; `pantryBackfilled` already set | none | gap | Core | `foldIsIdempotent` |
 | EF06 | Shop clear checks a row titled `Eggs` while the folded ingredient was created as `Egg` | writes `in` and `lastBoughtAt` on the folded key, no second ingredient made | none | gap | Core | `aClearWritesTheFoldedKey` |
 | EF07 | Cook finish with line "2 eggs" when `Egg` exists | `low` or `out` lands on the folded key | none | gap | Core | `aCookWritesTheFoldedKey` |
@@ -72,7 +72,7 @@ Reading: every pair clears 4.5:1 with room (lowest is 5.73:1, the Porcelain caps
 
 ## 4. Questions
 
-- Q1 (Design): should the peek draw `used` for an optional line (jam), or only for lines that count? The data is stored either way (LU02); this is a display choice (LU13).
+- Q1 (Design), ruled by Product: the `used` peek is drawn only for lines that count toward the drop. Staples and optional lines (jam) record `lastUsedAt` (LU02) but draw no peek (LU13).
 - Q2 (Core): name the `lastUsedAt` accessor (6:45 pm leaves the name to Core); the tests above call it only through the ingredient.
 
 ## 5. Counts and test names
