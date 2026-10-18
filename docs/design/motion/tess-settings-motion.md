@@ -80,7 +80,7 @@ Rows top to bottom: **Tess asks Claude** (yes / no), **This month** (spend line)
 | Strings still saying "It goes in Review, under Claude." / "Turn this off on Review: Claude." | become "Settings, under Claude." / "Settings: Claude." when Settings ships (DEC:1019); capture-miss code already says "Settings: Claude" | Builder B |
 
 ## 8. Asks
-1. Product: wording of Haptics (on/off vs yes/no), and whether Delete everything stays a held confirm (if so it is a named action under VoiceOver and plays `.done`-free: its completion is the delete receipt).
+1. Product: wording of Haptics (on/off vs yes/no), and whether Delete everything stays a held confirm (if so it is a named action under VoiceOver and plays no `.done`: its completion is the delete receipt).
 2. Product: confirm REMOVE keeps UNDO (code and `claude-settings.md` say yes; DEC:1023 "a key change gets no UNDO" reads as add/replace only).
 3. Design: the Settings entry, `settings-93.md` and `claude-settings.md` edits in §7.
 4. Builder A: migrate `LookSentence.swift:69-70` to the map, then gate `tesseraFeedback` on the Haptics setting; LP flag via `PowerState`.
