@@ -80,18 +80,18 @@ already correct. Line numbers are master.
 | TesseraCore/Sources/TesseraTess/PlanWording.swift:25,40,47,177,190,314-326 | pack titleWords (a different set), "Private ..." label list, SecretWords + isWalled | planner wording check | none (name clash only: local `titleWords`) | ok | Core |
 | TesseraCore/Sources/TesseraIntents/Intents.swift:180,205 | PrivateFacts.isPrivateTitle | Siri / Shortcuts task receipt and hidden flag | one check | straggler | Core |
 | TesseraCore/Sources/TesseraIntents/Entities.swift:84,91,102 | none: RoutineEntity(title: routine.title) raw; search matches raw title | Siri/Spotlight routine name and search (7th site of #881) | routineTitle for display; search must not reveal a private routine by title | straggler | Core |
-| Features/Workout/WorkoutSession.swift:31 | ObjectPrivacy.routineTitle | live workout, Live Activity (RestActivityController:75), WorkoutParts:178, WorkoutModeView:93,116 | one check (via routineTitle) | covered by #890 | Builder B |
-| Features/Objects/ObjectPage.swift:54,256,304,332,434 | ObjectPrivacy.label | ObjectPage hero, children, links | none for routines: label() has no workout/routine branch (#881 extra site ObjectPage:260) | straggler (routine hero raw) | Builder B |
+| Features/Workout/WorkoutSession.swift:31 | ObjectPrivacy.routineTitle | live workout, Live Activity (RestActivityController:75), WorkoutParts:178, WorkoutModeView:93,116 | one check (via routineTitle) | covered by #890 | Builder A |
+| Features/Objects/ObjectPage.swift:54,256,304,332,434 | ObjectPrivacy.label | ObjectPage hero, children, links | none for routines: label() has no workout/routine branch (#881 extra site ObjectPage:260) | straggler (routine hero raw) | Builder A or B (ObjectPage is unassigned) |
 | Features/Command/CaptureParts.swift:189-190 | SecretWords.mentions + isWalled | capture bar gate | none (outbound wall) | ok | Builder B |
-| Features/Kitchen/CookModeCopy.swift:72 | isPrivateRecipeTitle | cook mode copy | one check | covered by #890 | Builder A |
-| Features/Kitchen/PantryLedger.swift:100,166-168 | isPrivateRecipeTitle + "Private item" string | pantry rows | one check, label constant | covered by #890; string straggler | Builder A |
-| Features/Lists/ListsShelf.swift:97 | isPrivateRecipeTitle + "Private list" string | lists shelf | one check, label constant | covered by #890; string straggler | Builder A |
-| Features/Recipes/PasteRecipe.swift:567-568,592 | SecretWords + isWalled; isPrivateRecipeTitle | paste capture gate | 567-568 none (paste wall); 592 one check | ok (567); covered by #890 (592) | Builder A |
-| Features/Recipes/RecipePage.swift:584,616-618 | isPrivateRecipeTitle; shownTitle | recipe page | one check | covered by #890 | Builder A |
-| Features/Recipes/RecipesShelf.swift:39 | isPrivateRecipeTitle | recipes shelf | one check | covered by #890 | Builder A |
-| Features/Groceries/GroceriesWall.swift:40 | SecretWords.isSecretListLine / mentions | Groceries wall reason (.secret) | one check for the mask reason | straggler | Builder A |
-| Features/Groceries/ShopTrip.swift:12,19,53 | isPrivateRecipeTitle, "Private item" string | shop trip rows | one check, label constant | covered by #890; string straggler | Builder A |
-| Widgets/, Shared/, App/ | no check, no masking code found | widgets and any widget timeline | n/a: widgets read through Core (RestActivity uses session.shownTitle) | ok | Builder B |
+| Features/Kitchen/CookModeCopy.swift:72 | isPrivateRecipeTitle | cook mode copy | one check | covered by #890 | Builder B |
+| Features/Kitchen/PantryLedger.swift:100,166-168 | isPrivateRecipeTitle + "Private item" string | pantry rows | one check, label constant | covered by #890; string straggler | Builder B |
+| Features/Lists/ListsShelf.swift:97 | isPrivateRecipeTitle + "Private list" string | lists shelf | one check, label constant | covered by #890; string straggler | Builder B |
+| Features/Recipes/PasteRecipe.swift:567-568,592 | SecretWords + isWalled; isPrivateRecipeTitle | paste capture gate | 567-568 none (paste wall); 592 one check | ok (567); covered by #890 (592) | Builder B |
+| Features/Recipes/RecipePage.swift:584,616-618 | isPrivateRecipeTitle; shownTitle | recipe page | one check | covered by #890 | Builder B |
+| Features/Recipes/RecipesShelf.swift:39 | isPrivateRecipeTitle | recipes shelf | one check | covered by #890 | Builder B |
+| Features/Groceries/GroceriesWall.swift:40 | SecretWords.isSecretListLine / mentions | Groceries wall reason (.secret) | one check for the mask reason | straggler | Builder B |
+| Features/Groceries/ShopTrip.swift:12,19,53 | isPrivateRecipeTitle, "Private item" string | shop trip rows | one check, label constant | covered by #890; string straggler | Builder B |
+| Widgets/, Shared/, App/ | no check, no masking code found | widgets and any widget timeline | n/a: widgets read through Core (RestActivity uses session.shownTitle) | ok | Builder A |
 
 ## Counts (rows, not call lines; a row with mixed status is counted in each)
 
@@ -132,6 +132,5 @@ they are listed under their main status and the string note is in the cell.
    "Private note". Confirm notes and memory bodies get title words, or only their titles.
 4. Outbound walls (SideFacts, TessInbox, PlanWording, ClaudeTessModel): confirm they stay on secret + walled only. The
    ruling lists "receipts, UNDO, Tess lines, screens, export", not what goes to Claude.
-5. Owners: Builder A and Builder B are inferred (A: Kitchen, Recipes, Lists, Groceries screens; B: Workout, Objects,
-   Command, widgets) because no file names the split. Every straggler fix except the literal-string ones in Features (Builder A) is in Core.
+5. Owners follow the team split in the project notes: Builder A has training, workout, widgets and Live Activities; Builder B has Home, the ask slot (Command), Groceries, Recipes, Lists and Kitchen week. ObjectPage is not named for either. Every straggler fix except the literal-string ones in Features (Builder B) is in Core.
 6. Op log keeps the raw title by ruling (4:20 PM O3); this audit did not count op payloads as masking sites.
