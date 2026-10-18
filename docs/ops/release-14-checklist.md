@@ -31,5 +31,6 @@ Roll forward first; then the previous release, but only if no privacy fix landed
 
 ## Other
 - Signing lapse Fri Oct 23 2:12 PM PT: a build installed after Oct 22 needs a fresh profile.
-- Record the release in memory pin-release-log-3.md (new file; pin-release-log-2.md holds release 12); keep pin-release.md under 3000 bytes.
+- Records go to pin-release-log-2.md style notes; keep pin-release.md under 3000 bytes.
+- The release 14 record goes in a new memory file, pin-release-log-3.md (pin-release-log-2.md holds release 12).
 - Session ids: send_message needs the `session_` form; a `cse_` id in a handoff block is the same id, swap the prefix.
