@@ -55,6 +55,10 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 | 25 | Backups | WHAT'S IN ONE (FACTS) | swipe or word | Drawn. Restore stays on the front |
 | 26 | A class page | ITS OBJECTS (PARTS; the Recipes class page is LINKS, sheets 77 and 87) | swipe or word | |
 | 27 | Any other object | **the default side**: LINKS plus every field the front doesn't show (FACTS) | swipe or word | Every new class gets a side for free, and a class can declare its own |
+| 28 | Lists shelf | ON THEM (PARTS), sheet 87 | swipe or word | Settled in 103 |
+| 29 | A list page | WHAT IT HOLDS (FACTS) | swipe or word | 103 |
+| 30 | Put away page | WHAT WENT BACK (BEFORE) | swipe or word | 103 |
+| 31 | Settings page 2 | WHAT IS STORED (FACTS) | swipe or word | 103; the front keeps every control |
 
 **Designed but not built:** each gets its side when it's built.
 - Habits: LATELY (BEFORE) and HOW IT COUNTS (FACTS), two pages (sheet 85, ruled 8:33 PM): past weeks show as plain days, never a score, streak or miss mark; glance "3 habits".
