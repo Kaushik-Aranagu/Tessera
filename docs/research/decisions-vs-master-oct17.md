@@ -72,7 +72,7 @@ Nothing in the window tells master to do something it already does the opposite 
 | 38 | 4:00 PM: private list's copy receipt "Private list, new list." (thing first, like "Private item, on Groceries."). | `CopyList.summary` already masks the destination through `ObjectPrivacy.isPrivateWord` to `ListContents.privateListLabel` (`ListReuse.swift:200-207`), but the receipt shape is the retired "..., copied from ..." (`:216,222`). | UNBUILT-KNOWN | Core | core.md:385, kitchen.md:3 (#871) |
 | 39 | 12:45 PM: haptic map document reworded from "no error or warning case" to "no scolding: one soft .warning ...". | Code comment reworded (`DesignSystem/Haptics.swift:6`). The haptic map doc itself: no file in `docs/design` on master contains the old or new sentence (only research fixtures quote the old one, `docs/research/fixtures/perform-failures.md:9`, and `docs/product/kitchen-acceptance-782-793-oct17.md:72` still says "no error or warning case exists"). | MATCH for code; docs quoting the old sentence are stale (low) | Design / docs worker | none found |
 
-Tally from the Verdict column: MATCH rows 19 to 28, 30, 35, 39 (13); UNBUILT-KNOWN rows 2 to 9, 11 to 18, 29, 31, 32, 34, 36, 37, 38 (23, rows 30 and 37 are split copy-vs-gate and counted by their open half: 30 as MATCH, 37 as UNBUILT-KNOWN); MISMATCH row 1; UNTRACEABLE rows 10 and 33.
+Tally from the Verdict column: MATCH rows 19 to 28, 30, 35, 39 (13); UNBUILT-KNOWN rows 2 to 5, 7 to 9, 11 to 18, 29, 31, 32, 34, 36, 37, 38 (22, rows 30 and 37 are split copy-vs-gate and counted by their open half: 30 as MATCH, 37 as UNBUILT-KNOWN); PARTIAL row 6 (#884 merged, gate built wide); MISMATCH row 1; UNTRACEABLE rows 10 and 33.
 
 ## Notes and doubts
 
