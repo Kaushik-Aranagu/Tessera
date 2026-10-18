@@ -638,7 +638,7 @@ enum RecipeCopy {
     /// line: "Sheet-pan paprika chicken with lemon" reads "Sheet-pan paprika chicken"; "Chili con carne" stays whole.
     static func shortName(_ title: String) -> String {
         var name = title
-        for cut in [" with ", ", ", ": ", " (", " - ", " – ", " — "] {
+        for cut in [" with ", ", ", ": ", " (", " - ", " \u{2013} ", " \u{2014} "] {
             if let range = name.range(of: cut, options: .caseInsensitive) {
                 name = String(name[..<range.lowerBound])
             }
