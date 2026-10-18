@@ -100,7 +100,8 @@ public extension TesseraExport {
     /// Reads the whole store. With `maskingPrivate` (the shared file, G28) every private note, item, recipe or secret
     /// line reads "Private note", "Private item" or "Private recipe": title and field values both, and the op log's
     /// summaries and values for it. Money and body words count as private. Not lossless then, and there is no opt-in in
-    /// v1. It defaults to true, so every export masks. `false` is test-only, for lossless round trips; the app never does it. Anything the person
+    /// v1. It defaults to true, so every export masks. `false` is test-only, for lossless round trips; the app never
+    /// does it. Anything the person
     /// can send elsewhere must pass `maskingPrivate: true`.
     init(context: TesseraContext, now: Date = .now, maskingPrivate: Bool = true) throws {
         let classDefs = context.all(ClassDef.self).sorted { $0.createdAt < $1.createdAt }
@@ -144,14 +145,45 @@ public extension TesseraExport {
                     route: record.routeRaw, model: record.model, zone: record.zone)
         }
         if maskingPrivate {
+            leaveOutPantryState()
             let current = PrivateWords.labels(in: context)
             mask(current, past: PrivateWords.historyLabels(in: context, current: current), context: context)
         }
     }
 
+    /// Pantry state stays out of the shared file (R18, G196): the Ingredient values, every op that wrote them, and the
+    /// one backfill op. The full backup keeps all of it.
+    private mutating func leaveOutPantryState() {
+        let pantry = PantryFields.fieldIDs(in: classes)
+        guard !pantry.isEmpty else {
+            operations.removeAll { $0.action == PantryFields.backfillAction }
+            return
+        }
+        objects = objects.map { entry in
+            guard entry.values.keys.contains(where: pantry.contains) else { return entry }
+            var kept = entry
+            kept.values = entry.values.filter { !pantry.contains($0.key) }
+            return kept
+        }
+        operations = operations.compactMap { entry in
+            guard entry.action != PantryFields.backfillAction else { return nil }
+            var kept = entry
+            kept.ops = entry.ops.filter { op in
+                if case let .setValue(_, field, _, _) = op {
+                    return !pantry.contains(field.uuidString)
+                }
+                return true
+            }
+            return kept
+        }
+    }
+
     /// Replaces what the private objects hold with their label; only done flags and dates stay.
     private mutating func mask(_ labels: [UUID: String], past: [UUID: String], context: TesseraContext) {
-        guard !labels.isEmpty || !past.isEmpty || operations.contains(where: { PrivateWords.summaryIsPrivate($0.summary, context: context) })
+        guard !labels.isEmpty || !past.isEmpty || operations.contains(where: { PrivateWords.summaryIsPrivate(
+            $0.summary,
+            context: context
+        ) })
         else { return }
         objects = objects.map { entry in
             guard let label = labels[entry.id] else { return entry }
@@ -171,11 +203,20 @@ public extension TesseraExport {
             masked.ops = entry.ops.map { op in
                 guard let label = labels[op.objectID] else { return op }
                 switch op {
-                case let .create(object, classID, parent, _): return .create(object: object, classID: classID, parent: parent, title: label)
+                case let .create(object, classID, parent, _): return .create(
+                        object: object,
+                        classID: classID,
+                        parent: parent,
+                        title: label
+                    )
                 case let .setTitle(object, _, _): return .setTitle(object: object, old: label, new: label)
                 case let .setValue(object, field, old, new):
-                    return .setValue(object: object, field: field, old: old.flatMap { PrivateWords.structural($0) ? $0 : nil },
-                                     new: new.flatMap { PrivateWords.structural($0) ? $0 : nil })
+                    return .setValue(
+                        object: object,
+                        field: field,
+                        old: old.flatMap { PrivateWords.structural($0) ? $0 : nil },
+                        new: new.flatMap { PrivateWords.structural($0) ? $0 : nil }
+                    )
                 default: return op
                 }
             }
