@@ -142,7 +142,14 @@ struct RecipeTitleTests {
         #expect(try #require(RecipeParser.parse("A pinch of salt\nMethod\n1. Whisk.")).title == "Untitled recipe")
     }
 
-    @Test(arguments: ["30-Minute Dal", "7 Layer Dip", "5 Spice Chicken", "3 Cheese Pasta Bake"])
+    @Test(arguments: [
+        "30-Minute Dal",
+        "7 Layer Dip",
+        "5 Spice Chicken",
+        "3 Cheese Pasta Bake",
+        "3 eggs benedict",
+        "4 cheese pizza",
+    ])
     func aNameThatStartsWithANumberStaysATitle(_ first: String) throws {
         let parsed = try #require(RecipeParser.parse("\(first)\n2 eggs\n1 cup flour\nBake it for 20 minutes."))
         #expect(parsed.title == first)
@@ -156,6 +163,9 @@ struct RecipeTitleTests {
         "2-3 cloves garlic",
         "2 Tbsp butter",
         "3",
+        "2 Eggs",
+        "2 tbsp olive oil",
+        "500 g plain flour",
     ])
     func aQuantityIsNeverTheTitle(_ first: String) throws {
         let parsed = try #require(RecipeParser.parse("\(first)\nMethod\n1. Whisk it."))

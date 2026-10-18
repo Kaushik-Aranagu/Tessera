@@ -191,11 +191,9 @@ public enum RecipeParser {
         if tokens.count == 2, tokens[1].allSatisfy(\.isLetter) {
             return true
         }
-        let next = tokens[1]
-        if next.first?.isLowercase == true {
-            return true
-        }
-        // A capitalised word is a name ("7 Layer Dip") unless it is a unit ("2 Tbsp butter").
+        // Three or more words are a title unless a unit word follows the number (Product 4:20 PM): "3 eggs benedict"
+        // and
+        // "7 Layer Dip" are names; "1 cup flour" and "2 Tbsp butter" are amounts.
         return IngredientLine.parse(clean)?.unit != nil
     }
 
