@@ -6,10 +6,14 @@ Sources: design/gaps-98.md (Pantry v2 states, error states), design/area-motion-
 A tap on the right-hand state word cycles the state. The line itself never moves except where the group changes.
 - Word: the old word crossfades to the new in place, 160 ms (lab), same width slot so nothing reflows. Weight follows the state (out 700, low 600, in 400); the weight change rides the same 160 ms.
 - Ring (out only, 11 pt faint ring): draws in 220 ms from 0 to full stroke when going to out; erases 160 ms when leaving out. Nothing else on the line changes.
-- Group move: out and low lines belong to OUT and LOW; going to "in" leaves the line: it closes up over 320 ms (sheet 78 close-up) while the name joins USUALLY HAVE as a name, which opens its slot over 320 ms. Hero digits count (4 out, 2 low) roll 220 ms, one step at a time; unknown is never counted.
+- Group move: out and low lines belong to OUT and LOW; going to "in" leaves the line: it closes up over 320 ms (sheet 78 close-up) while the name joins USUALLY HAVE as a name, which opens its slot over 320 ms. The hero digits just change (sheet 78: nothing counts up): the changed digit crossfades 160 ms with the word, never rolling through the values between; unknown is never counted. When a segment appears or goes ("2 low" joining, "Nothing out"), the whole hero string crossfades 220 ms.
 - Haptic: `.selection` once at the tap. Nothing at the group move. A private line ("Private item") runs the identical motion and haptic (no reveal, nothing hints).
 - A tap that changes nothing (a tie, G178 at 6:39 PM Oct 17) writes nothing and plays no receipt, no haptic and no word motion; the motion above is for a real change only.
-- Undo slot shows the receipt "Limes, low. Undo" per the app-wide UNDO rule; no extra motion.
+- The receipt names the thing first and carries no UNDO word of its own: "Limes, low." (the UNDO is the slot's button, PW02). One app-wide slot, 10 s for a pure state change (4 s only when the op adds a row; 10 s under VoiceOver for both, PG53); a second receipt replaces the first note and its UNDO in place with a crossfade and the first op stays done (PG55). UNDO returns the row: it opens its slot over 320 ms (the line comes back to its group) and Tess's cook line blurs back in 300 ms; no extra haptic beyond the map's `.undo`.
+- The cycle is in, low, out, in on the front's state word and on the Ingredient page's (PW01); on the Ingredient page the word crossfades 160 ms and the page's sentence under it crossfades with it ("Out since you cooked dal on Tuesday."), no other motion.
+- A group that empties closes up with its label (PW08: an empty group draws nothing, not even its label): line and label leave together over 320 ms, the label's own fade 200 ms. A group that gains its first line opens label and line together over 320 ms.
+- A line mid-close (320 ms) has no tap target, so a quick second tap never lands on the leaving line.
+- A Pantry line has no press highlight (a private line has no tap target by ruling, R12; the only difference is that a tap on its name opens nothing).
 - Reduce Motion / Low Power: word and ring, group move and digits are one 150 ms crossfade together; haptic unchanged.
 
 ## 41 Pantry greyed 42% to live (day one to first state)
