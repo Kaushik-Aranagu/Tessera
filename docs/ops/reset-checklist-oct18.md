@@ -44,7 +44,7 @@ Labels: [K] Kaushik's words, [D] derived by Ops, [I] inferred, low confidence.
 ### The numbers
 - [D] 90% over 168 h = 0.54% of the week per hour, about 12.8% a day. Tonight is about 2% an hour, so about 4 times the even pace. At tonight's pace 90% is gone in about 45 hours (Monday night).
 - [D] Pace line from the reset: week % allowed at hour h = 0.54 x h. At 9 AM Sun it is 2.1%, at 5 PM 6.5%, Mon 5 AM 13%, Wed 5 AM 39%, Fri 5 AM 65%, Sat 5 AM 90%.
-- [D] Tolerance: plus or minus 5 points from the line (the existing "below pace by 5 points" rule, staffing-model.md). So the first day may run hotter than even: about 9 hours at tonight's pace before the line plus 5 is reached.
+- [D] Tolerance: plus or minus 5 points from the line (the existing "below pace by 5 points" rule, staffing-model.md). So the first day may run hotter than even: at the 9:09 to 10:00 PM Oct 17 pace (79% to 83%, about 4.7% an hour) the line plus 5 is reached in about 1.2 hours, and at 2% an hour in about 3.4 hours (5 divided by the pace minus 0.54).
 - [I] Dollar fit is stale and conflicts with tonight's books. Visible cloud spend is about $29 an hour at about 2% an hour of the week, which would put 100% of the week near $1.4k of visible cloud dollars, far below usage-governor.md's $8k to $11k. Possible reasons: Mac leads and their workers (not visible), Kaushik's own use, or cost_usd is not list price. If the visible-cloud fit holds, the whole visible budget after the reset is about $8 an hour, below the coordinator session's own average of $17.5 an hour. Do not act on this before a refit from the first two hours after the reset.
 
 ### Lane plan [I], for the coordinator to approve
@@ -61,7 +61,7 @@ Keep every team running (never stop one); change how much each costs. Cost is mo
 | Motion lab | 0 to 1 | Sonnet low | holds until work is sent |
 | Ops | 1 | Sonnet low | docs and ledger only |
 | Core, Builder A, Builder B (Mac) | 1 each, only while the Mac is unlocked | Opus or Sonnet medium | Mac burn is not visible; read the meter before adding a second lane |
-Rule that replaces the two-lane default for this week: second (gap) lane opens only when week % is at least 5 points below the pace line; it closes when week % is within 2 points of the line plus 5.
+Rule that replaces the two-lane default for this week: second (gap) lane opens only when week % is at least 5 points below the pace line; it closes when week % is at line + 3 (2 points inside the 5-point band).
 
 ### When Product switches
 - 5:00 AM Sun: Product moves every cloud lead to the table above (one lane each) as soon as the coordinator confirms the first post-reset reading is under 5% for the week.
