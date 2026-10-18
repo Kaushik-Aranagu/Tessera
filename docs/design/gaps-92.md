@@ -42,3 +42,16 @@ Blocked: this environment's network proxy blocks the sites that hold anatomical 
 - **(c) The drum absorbs at its limit.** The portion drum owns every vertical drag that starts on it (a high-priority gesture, parent scroll disabled while it is down). At 1 or its top value it rubber-bands 6 pt and stops with `.bound` once per push; the drag is never handed to the page, so it cannot turn the page. A drag that starts anywhere else on the recipe page turns it. Same for the Money dial and any stepper (sheet 90b).
 - **(d) The rail stays neutral.** Research's lean wins: the current segment is `ink` at 3 pt, the others `inkSecondary` at 2 pt; text carries the area colour (label, key word, numeral). Sheet 90's "current segment in the area colour" is withdrawn.
 - **(e) Sheet 73 is in the folder as `area-index.md`** (title "73. No tab row: the index"); it lives under that name, not 73.md.
+
+## Area lean per look (Oct 17, 5:05 PM PT; supersedes the table in section 2)
+`areaLean` is the 72% mix of the area's token with the look's `ink`. Tokens are master's (`looks-recut.md`): Training = `training` (never `liveInk`, which is reserved for a running thing), Kitchen = `health`, Review = `context`. The earlier board hexes are void.
+| Look | Training | Kitchen | Review |
+|---|---|---|---|
+| Porcelain | #CC3F68 → #983251 (7.22) | #12936A → #126E52 (6.22) | #5A3DAF → #463084 (10.41) |
+| Plein | #B04A5E → #893E4C (6.31) | #5E8F5A → #4E7049 (4.82) | #7D4E6E → #654158 (7.36) |
+| Celadon | #BF4664 → #8D3B4F (5.93) | #1F8B6A → #1A6C53 (5.14) | #3A6584 → #2D5166 (6.87) |
+| Obsidian | #FF6B92 → #FC91AB (9.78) | #3FD49A → #72DCB1 (12.59) | #B7A6E0 → #C8BBE3 (11.67) |
+| Lacquer | #F48BA6 → #F4A5B3 (10.10) | #86C9A0 → #A5D2AF (11.55) | #D9A6B8 → #E0B8C0 (10.94) |
+Contrast in brackets, mixed colour on the look's `ground`; every cell clears 4.5:1 for small caps labels.
+- **Watch:** on Lacquer, Training (#F4A5B3) and Review (#E0B8C0) are both rose and close. The word, not the hue, tells them apart there; if it reads muddy on the phone, Review gets a gold-leaning `context` on Lacquer only.
+- **The 34% hairline is decoration.** It needs no 3:1 contrast because nothing is carried by the hairline alone. Meaning lives in the label, the key word and the numeral, and those pass 4.5:1 (above). The 3:1 row is dropped.
