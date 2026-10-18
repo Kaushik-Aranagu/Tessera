@@ -20,7 +20,7 @@ Lab spec for Builder B (Settings screens) and Builder A (haptics, Look). Docs on
 
 ## 2. Page turn inside Settings (R1 to R4, DEC:925/933; D5)
 - Four pages, each at most six rows: **Claude**, **Your day**, **Looks**, **Data** (DEC:1019 makes the first page Claude; sheet 93's "Tess" page is replaced). The rail on the right edge shows the page; the section word at the top is the only heading.
-- A vertical swipe on plain text or empty space turns the page; on a stepper or dial row it steps that row instead (sheet 90b, DEC:917, his 12:46 PM answer: "a swipe on an element is its action, else it turns the page"); a horizontal edge swipe is the side (settings-80 "what leaves the phone"). Rows that open keep their horizontal swipe.
+- A vertical swipe on plain text or empty space turns the page; on a stepper or dial row it steps that row instead (sheet 90b, DEC:917, his 12:46 PM answer: a swipe on an element is its action, otherwise it turns the page); a horizontal edge swipe is the side (settings-80 "what leaves the phone"). Rows that open keep their horizontal swipe.
 - **R2: no haptic on any page turn.** The auto lead-turn plays none either.
 - Page turn word chosen in Settings (Slide, Turn, Soften, Rotate; default Turn): row "Page turn" on the Looks page next to Look (placement is a default the lab picks; sheet 93 had it on page 1, which is now Claude).
   - Tap opens the four words in place (320 ms grow). Each word previews once on a mini page (1 s hold). Re-picking the word that is already set does not replay (R4).
