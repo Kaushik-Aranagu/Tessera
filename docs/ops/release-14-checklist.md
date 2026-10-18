@@ -3,14 +3,14 @@
 Written 6:45 PM PT Oct 17 from pin-release.md and pin-release-product.md. Release 14 is HELD and not named. Fill the blanks in order; do not name a SHA until the trigger below is true.
 
 ## Trigger (any one)
-- The Mac-run app PRs have merged (the eight waiting on test.sh: #564, #868, #871, #884, #885, #889, #890, #895; #886 once Core's fix is re-pinned and re-verdicted), or
+- The Mac-run app PRs have merged (the list and exact heads live in qa/release-14-gate-table.md, which changes often: use it, not a copy here; #886 is fixed at 97d00ff5, QA PASS WITH NOTES, Design PASS), or
 - 30 minutes after the Mac unlocks, with whatever has merged by then.
 Docs and scripts/ai merges never trigger a release.
 
 ## Fill-in
 - Release SHA: master at the last merge in the batch = `________` (full 40 characters, from GitHub, not typed from memory).
-- Installed on the phone now: `bbadf141` if release 13 went in, else `e149e66` (release 8). Ask Builder A which; do not guess.
-- Step 0 name, exactly: `Before <SHA> (from bbadf141 or e149e66, whichever is installed) <time>` with the real SHA and the real installed SHA filled in, time from a fresh date run in PT. It sits outside Backups, never overwrites, renames or deletes an existing copy.
+- Installed on the phone at walk time: ask Builder A and use the answer. As of 6:44 PM Oct 17 only `e149e66` (release 8) is installed; `bbadf141` (release 13) is armed but NOT installed (phone locked). Never write it as installed unless Builder A says it went in.
+- Step 0 name, exactly: `Before <SHA> (from <installed SHA>) <time>`, picked from whatever is actually installed at walk time (today that reads `from e149e66`), with the real SHA, real installed SHA and PT time filled in, time from a fresh date run in PT. It sits outside Backups, never overwrites, renames or deletes an existing copy.
 - Release 13 and 14 may go as one install if 13 never went in: then the installer is re-armed on the release 14 SHA only (13's loop stopped).
 
 ## Gates (all must be yes, recorded at the exact head)
@@ -32,3 +32,5 @@ Roll forward first; then the previous release, but only if no privacy fix landed
 ## Other
 - Signing lapse Fri Oct 23 2:12 PM PT: a build installed after Oct 22 needs a fresh profile.
 - Records go to pin-release-log-2.md style notes; keep pin-release.md under 3000 bytes.
+- The release 14 record goes in a new memory file, pin-release-log-3.md (pin-release-log-2.md holds release 12).
+- Session ids: send_message needs the `session_` form; a `cse_` id in a handoff block is the same id, swap the prefix.
