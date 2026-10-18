@@ -1,8 +1,8 @@
 # Cook-phrase gate acceptance rows (N21-N26)
 
-Docs only. Open for Core: the exact shapes #884 holds (G06, G07) and which key line the router returns. Sources: research/fixtures/capture-miss-route-eval.md (N21-N26), research/fixtures/decisions-328-332-338.md (K03-K12, G01-G08, D01-D05), product/decisions.md (3:38 PM PT Oct 17 narrowing; 4:14 PM PT Oct 17 cap of 600 characters, line "Say it shorter."), qa/review-884.md.
+Docs only. Open for Core: the exact shapes #884 holds (G06, G07) and which key line the router returns. Sources: research/fixtures/capture-miss-route-eval.md (N21-N26), research/fixtures/decisions-328-332-338.md (K03-K12, G01-G08, D01-D05), product/decisions.md (3:38 PM PT Oct 17 narrowing; 4:14 PM PT Oct 17 cap of 600 characters, line "That's too long to send. Say it shorter."), qa/review-884.md.
 
-## Ruling in one paragraph (per Kaushik)
+## Ruling in one paragraph (Kaushik's capture-miss route, narrowed by Product's 3:38 PM Oct 17 ruling)
 While a cook runs, the six cook phrases N21-N26 stay on the phone. They are never sent to Claude through the capture-miss route (#860). Key-shaped text never leaves, with or without a cook. A phrase over 600 characters is refused. An unrelated miss mid-cook (for example "call mom half 7") takes the normal route. Once FinishCooking has run, the six phrases are ordinary misses.
 
 ## Setup and how to read the rows
@@ -33,7 +33,7 @@ While a cook runs, the six cook phrases N21-N26 stay on the phone. They are neve
 
 | Row | Phrase | State | Expected route | Expected receipt wording | A fail looks like |
 |---|---|---|---|---|---|
-| D01 | `stop the pasta` (no timer named pasta is running) | cook running | Held on the phone. Spy: 0. Not queued in the inbox. Not in the miss log. No haptic. No retry | "Didn't catch that." exactly | The phrase reaches Claude; or any suffix such as "Try ..." is added; or a miss row is logged; or a haptic fires; or the phrase is queued and re-sent later |
+| D01 | `stop the pasta` (no timer named pasta is running) | cook running | Held on the phone. Spy: 0. Not queued in the inbox. Not in the miss log. No haptic. No retry | "Didn't catch that." exactly (PROPOSED: this line for a held cook phrase with no local reading is not yet ruled) | The phrase reaches Claude; or any suffix such as "Try ..." is added; or a miss row is logged; or a haptic fires; or the phrase is queued and re-sent later |
 
 ## D. Key-shaped text (never leaves, with or without a cook)
 
@@ -48,9 +48,9 @@ While a cook runs, the six cook phrases N21-N26 stay on the phone. They are neve
 | Row | Phrase | State | Expected route | Expected receipt wording | A fail looks like |
 |---|---|---|---|---|---|
 | LEN-1 | A phrase of exactly 600 characters, ending in `step 3` | cook running | Not refused by the cap. The cook gate handles it on the phone. Spy: 0 | Step line, as N26 | The cap refuses at 600 (off by one) |
-| LEN-2 | A phrase of 601 characters, ending in `step 3` | cook running | Refused. Spy: 0. Not written. Miss log skips it (refusals are not logged). Once, no haptic, no retry | "Say it shorter." | The phrase is sent; or the cook jumps to step 3; or the old line "That's long. Keep it as a note?" or a 500-character cap shows (superseded 4:14 PM PT Oct 17); or the text lands in the miss log |
-| LEN-3 | A 700-character phrase with no cook phrase in it | cook running | Refused the same way | "Say it shorter." | Reaches Claude, or reaches the normal route |
-| LEN-4 | A phrase of 601 characters with key-shaped text inside (test code) | cook running | Key check wins. Nothing sent, nothing logged | Key line, not "Say it shorter." | The cap line shows and the key text is stored anywhere |
+| LEN-2 | A phrase of 601 characters, ending in `step 3` | cook running | Refused. Spy: 0. Not written. Miss log skips it (refusals are not logged). Once, no haptic, no retry | "That's too long to send. Say it shorter." | The phrase is sent; or the cook jumps to step 3; or the old line "That's long. Keep it as a note?" or a 500-character cap shows (superseded 4:14 PM PT Oct 17); or the text lands in the miss log |
+| LEN-3 | A 700-character phrase with no cook phrase in it | cook running | Refused the same way | "That's too long to send. Say it shorter." | Reaches Claude, or reaches the normal route |
+| LEN-4 | A phrase of 601 characters with key-shaped text inside (test code) | cook running | Key check wins. Nothing sent, nothing logged | Key line, not "That's too long to send. Say it shorter." | The cap line shows and the key text is stored anywhere |
 
 ## F. Not held (the narrowing; the gate is the six cook phrases only)
 
@@ -61,8 +61,8 @@ While a cook runs, the six cook phrases N21-N26 stay on the phone. They are neve
 | G03 | `buy milk` | cook running | Groceries as usual | The usual add line, item on Groceries | Held mid-cook |
 | G04 | `bench 80 x 8` | cook running | Normal route | The usual lift line or the usual miss | Held mid-cook |
 | G05 | A walled phrase (a money amount) | cook running | Walled rules exactly as without a cook | "Private item, on Groceries." only where the grammar can place it; else "Didn't catch that." | The wall behaves differently with a cook, or the amount reaches Claude |
-| G06 | `how long is the flight` | cook running | Normal route; only the shapes #884 holds are cook phrases | Normal route's line | Treated as N24 and answered with minutes left |
-| G07 | `step on the scale`, `step counter` | cook running | Normal route; a cook phrase is "step N" only | Normal route's line | Treated as N26 |
+| G06 | `how long is the flight`, `call mom half 7` | cook running | **At #884 (5665c600) the hold is all or nothing**: while a cook is the running process no phrase of any kind goes to Claude (TessModel.swift:102-107), so both are held and end at "Didn't catch that." (TessModel.swift:129). **After Core's narrowing PR** (branch from #884): normal route, because only N21-N26 are cook phrases | #884: "Didn't catch that." After the narrowing PR: the normal route's line | Judged against the wrong build; or, after the narrowing PR, treated as N24 and answered with minutes left |
+| G07 | `step on the scale`, `step counter` | cook running | Same split as G06: held at #884; normal route after the narrowing PR (a cook phrase is "step N" only) | #884: "Didn't catch that." After: the normal route's line | After the narrowing PR, treated as N26 |
 
 ## Cross-checks for every row above
 - The sent log gets no row for any phrase held on the phone.
@@ -71,6 +71,6 @@ While a cook runs, the six cook phrases N21-N26 stay on the phone. They are neve
 - Spend meter does not move for N21-N26.
 
 ## Open items for the Kitchen lead
-- The exact "held" shape list is whatever #884 built; G06 and G07 need a check against that code.
-- The key line wording for KEY-1 to KEY-3 and LEN-4 is the existing one; confirm which line the router returns (it differs between the Ask bar and a spoken phrase in older fixtures).
-- Existing quoted lines ("Timer, 8 min.", "Pasta, 10 min.") are kept as the fixtures have them. The thing-first "on" form applies to the lines that name a list or place (Groceries, Private item). Flag if Kitchen wants the timer lines to read "Timer on Cook, 8 min." instead.
+- Answered by Core at #884 5665c600: the hold is all or nothing (TessModel.swift:98-107); a phrase containing "timer" or "timers" is held with or without a cook (TessModel.swift:98-99). The narrowing to N21-N26 comes in Core's next PR; run F (G01-G08) against that PR, not #884.
+- There is no new key line: the grammar and the on-device model try first, an unread phrase ends at TessModel.swift:129 with "Didn't catch that." plus the context example (a shop adds ' Try "milk, eggs".', a workout ' Try "80 × 8".'). Nothing is written, no retry copy. Rows D01 and the context suffix are proposed, not ruled.
+- Existing quoted lines ("Timer, 8 min.", "Pasta, 10 min.") are kept as the fixtures have them. Flag if Kitchen wants the timer lines to read "Timer on Cook, 8 min." instead.
