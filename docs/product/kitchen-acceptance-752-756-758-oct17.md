@@ -37,7 +37,7 @@ Note 1 (new, minor). With `recipeID == nil` the pick is recomputed on every `mod
 | VoiceOver header reads "Private recipe" | PASS (inferred): the masked hero is a button carrying the header trait with text "Private recipe" | `RecipePage.swift:70,78` | no test |
 | Original page header is a button to VoiceOver while masked | PASS (extra, from QA on #752) | `RecipePage.swift:366-369` | no test |
 | Ingredient column and steps stay as written | PASS | `RecipePage.swift:90,119` untouched by the mask | no test |
-| Tap shows it for this visit; leaving or locking masks it again (extra to the row) | PASS (inferred) | `RecipePage.swift:28,66,156-161` and `:355,370,404-408` | `aPrivateTitleIsMaskedUntilShown` (shown flag only); the reset has no test |
+| REMOVED by G102 (Oct 17): a private recipe title always reads "Private recipe" on every screen; no tap shows it (was: tap shows it for this visit; leaving or locking masks it again) | PASS (inferred) (superseded by G102; the build must now keep the title masked on tap) | `RecipePage.swift:28,66,156-161` and `:355,370,404-408` | `aPrivateTitleIsMaskedUntilShown` (shown flag only); the reset has no test |
 | Test with a weight title and a secret-word title | PARTLY: secret words and money are tested ("Rent 1200 stew", "Wifi code lasagna"); no title that carries a body weight is used | `RecipeTitleWallTests.swift:16` | `aPrivateTitleIsMaskedUntilShown` |
 
 Side effect to know: a masked hero is a button that shows the title; the ordinary tap into the original page needs a second tap (`RecipePage.swift:65-74`). That is a design choice in the PR, not in the row.
@@ -117,4 +117,4 @@ The three PRs touch only `RecipePage.swift`, `RecipesEntry.swift`, `PasteRecipe.
 2. **Pantry after a private cook.** Use a private-titled recipe with limes; cook it to DONE through Tess ("cook ...", then "done"). Open Pantry: the hero counts limes out ("1 out"), the Tess line under it is empty, and with VoiceOver on nothing reads "Private recipe took". Then do the same with Tacos: "Tacos took the ..." appears.
 3. **Recipes opening last opened.** Save two recipes, open the older one from its page, close to Home, tap Recipes: the older one opens. Open the other, close, tap Recipes: that one opens. Delete the open recipe from a second route and watch whether Recipes jumps to the other recipe (note 1).
 4. **No steps, no Cook key.** Paste only an ingredient list, save, open the page: no Cook key, and under the ingredients "No steps yet. Paste them below." Check a recipe with steps also shows no Cook key and "4 steps" style peek. Look at where "below" points.
-5. **Mask on the VoiceOver rotor.** With VoiceOver on, the masked hero should say "Private recipe, button, Shows it" and be found as a header.
+5. **Mask on the VoiceOver rotor.** With VoiceOver on, the masked hero should say "Private recipe" and be found as a header. It has no "Shows it" hint and is not a button for a reveal (G102, Oct 17).

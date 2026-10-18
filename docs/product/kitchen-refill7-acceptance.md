@@ -180,7 +180,7 @@ Setup: a stub text reader that returns fixture text per picture, a stub Claude w
 
 | # | Action | Expected |
 |---|---|---|
-| K46.24 | A walled row in the trip | Ruled Oct 17: a Private item is masked in the trip until he taps that row; then its words show for that row only, and the row masks again when he leaves it, checks it or closes the trip. Other private rows stay masked. No Face ID gate (decisions 8:14 PM Oct 16). The hero, count line and VoiceOver say "Private item" until that tap |
+| K46.24 | A walled row in the trip | Ruled Oct 17 (G102, supersedes the earlier tap-to-reveal ruling): a Private item always reads "Private item" in the trip. One tap strikes it (puts it in the basket) like any other row; nothing shows its words and there is no reveal. No Face ID gate (decisions 8:14 PM Oct 16). The hero, count line and VoiceOver say "Private item" always; the VoiceOver hint is "Puts it in the basket" |
 | K46.25 | Rows from a Private recipe's share | Each reads as itself unless walled; no row says "for Private recipe" or the recipe's name |
 | K46.26 | Home while the trip is open | The planned cook's row "2 to buy" counts down as he checks; at 0 it returns to the time (`groceries-ai-acceptance.md` section 5). No notification, Live Activity or widget change |
 
@@ -251,7 +251,7 @@ Setup: a stub text reader that returns fixture text per picture, a stub Claude w
 - **F1. (ruled Oct 17) Pantry USUALLY shows 4 names.** `docs/research/pantry-light.md` rule 9 and its check 8 said 3; both are edited to 4. `pantry-acceptance.md` S5 still reads "1 to 3 names" and needs Pantry's owner to align it.
 - **F2. (ruled Oct 17) Locked read.** Siri on a locked phone reads ordinary titles; a private item is "a private item" (K45.13). Open: K45.14 keeps "Private recipe, 7 pm." for a private cook (K32.10); Product to confirm that form, or change it to "a private item".
 - **F3. (ruled Oct 17) Which cook is "dinner":** the slot tagged dinner, else the last cook after 4 pm (K45.17).
-- **F4. (ruled Oct 17) Trip mode masks a Private item until he taps that row**, then its words show for that row only (K46.24).
+- **F4. (ruled Oct 17, then superseded by G102) Trip mode always reads a Private item as "Private item"**; one tap strikes it and nothing shows its words (K46.24).
 - **F5. (ruled Oct 17) No restore after the 10 s window** (K47.6). No "bring back" phrase and no Review restore.
 - **F6. G7 fails today.** K47.2, K47.5, K47.13 and K47.14 fail on master until Core lands share removal in the delete op and the "Recipe gone." page (already failing as G3).
 - **F7. Build targets.** Nothing on master reads a picture (K43), draws the history long-press line, or has the one-handed trip checks; these rows are targets for Core and Builder B.

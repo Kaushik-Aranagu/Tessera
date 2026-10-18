@@ -52,7 +52,7 @@
 | FW15 | 10:30 am. Holds the Groceries title | The page becomes the trip, one `.impact` haptic. Hero is the first aisle with open rows (Produce), lit seam beneath. Count line `14 to get`. Line under the hero reads `then` plus the next aisle with open rows. Tess says nothing | K46.1, K46.2 |
 | FW16 | 10:40 am. Checks the Produce rows one by one | Each strikes in ink and sinks; no receipt per strike. When Produce has no open row the hero advances with a 380 ms slide and one `.success` haptic | K46.3, K46.17 |
 | FW17 | 10:55 am. Types `foil` on the trip's Add line, then taps UNDO inside 4 s | Tess: `Foil, on Groceries.` UNDO 4 s; the row lands in Household and does not take the hero. UNDO line: `Foil, taken back.` | K46.18 |
-| FW18 | 11:05 am. Reaches the Private item row; taps it once, then moves on | The row reads `Private item` until the tap; the tap shows its words for that row only; it masks again when he leaves it. The hero, count line and VoiceOver say `Private item` until that tap. Other private rows stay masked | K46.24 |
+| FW18 | 11:05 am. Reaches the Private item row; taps it once, then moves on | The row reads `Private item` before and after the tap; the tap strikes it (puts it in the basket) and nothing shows its words (G102, Oct 17). The hero, count line and VoiceOver say `Private item` always; the VoiceOver hint is "Puts it in the basket". Other private rows read the same | K46.24 |
 | FW19 | 11:30 am. All 14 rows struck. Holds DONE | Tess: `Cleared 14 from the basket.` UNDO 10 s | K46.20 |
 | FW20 | 11:30 am plus 6 s. Taps UNDO, then holds DONE again | UNDO line: `Cleared 14, taken back.` and the rows return struck. Holding DONE again clears them again. Open rows: none | K46.20, K46.22 |
 | FW21 | 11:45 am. Opens Pantry | Hero `Nothing out` (everything he checked is in; none is out or low). Context line `since Sunday's shop` (template of "since Saturday's shop"). Groups OUT and LOW are not drawn. The in things are not listed on the front. The side reads `Nothing out.` with no key. The Private item is never named | S11, S1, S8, K26.9, S15 (state words written by the shop clear: pantry-acceptance P) |
@@ -202,7 +202,7 @@ Siri "What's for dinner": Sat `Nothing planned.`; Tue `Chili con carne, 7 pm.`; 
 | | K45 | K45.3 to 10, 15, 17 to 22 | Siri write edge cases and Dinner rows |
 | | K46 | K46.4 to 16, 19, 21, 23, 26 | Trip edge cases, offline, one-hand reach, Home while the trip is open |
 | | K47 | All 24 | Recipe delete, undo and restore |
-| `kitchen-refill8-acceptance.md` | K51, K52, K54, K55, K58 | All | Trip reveal rows, locked Siri reads, delete window, photo failure, USUALLY rows |
+| `kitchen-refill8-acceptance.md` | K51, K52, K54, K55, K58 | All | Trip private-row strike rows (no reveal, G102), locked Siri reads, delete window, photo failure, USUALLY rows |
 | | K53 | 14 of 17 (K53.2, K53.4 and K53.14 are run) | Dinner definition |
 | `kitchen-refill9-lane1-acceptance.md` | K61 | K61.6 to K61.34 | Turning Private off, backups, widget, Siri variants |
 | | K62 | K62.2 to 4, 6 to 9, 12 to 14, 16 to 18, 22, 23, 25 to 32 | Half-hour and tomorrow plans, pause, two cooks, delete, quiet hours |
