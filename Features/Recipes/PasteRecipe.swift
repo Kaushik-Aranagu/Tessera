@@ -8,6 +8,8 @@ import TesseraTess
 /// fixed by tapping the line to cycle it (ingredient, step, ignore), never by a form. Tess says what she read, in
 /// cobalt. Save commits it with an Undo.
 struct PasteRecipe: View {
+    /// A kept link from the Recipes shelf: lands in the box and reads at once, as "Read 1 waiting" does (G65).
+    var initialLink: URL?
     var onSaved: (UUID) -> Void = { _ in }
 
     @Environment(AppModel.self) private var model
@@ -148,7 +150,14 @@ struct PasteRecipe: View {
             }
         }
         .onDisappear(perform: closeUndo)
-        .onAppear { waitingLinks = RecipeLinkShelf.beside(model.store)?.waiting() ?? [] }
+        .onAppear {
+            waitingLinks = RecipeLinkShelf.beside(model.store)?.waiting() ?? []
+            if let initialLink, text.isEmpty, !readingLink {
+                fromLink = true
+                text = initialLink.absoluteString
+                readLink(initialLink)
+            }
+        }
         .onChange(of: readingLink) { _, isReading in
             if !isReading {
                 waitingLinks = RecipeLinkShelf.beside(model.store)?.waiting() ?? []
