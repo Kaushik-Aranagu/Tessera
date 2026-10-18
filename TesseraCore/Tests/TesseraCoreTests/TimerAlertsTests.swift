@@ -40,8 +40,8 @@ struct TimerAlertsTests {
         let spy = Spy()
         let timer = try engine.perform(StartKitchenTimer(label: "pasta", minutes: 10, time: start), by: .user).output
         await alerts.reconcile(with: spy, now: start)
-        #expect(spy.scheduled[timer.id] == TimerAlert(id: timer.id, label: "pasta", fireAt: start + 600))
-        #expect(spy.scheduled[timer.id]?.body == "pasta is done.")
+        #expect(spy.scheduled[timer.id] == TimerAlert(id: timer.id, label: "Pasta", fireAt: start + 600))
+        #expect(spy.scheduled[timer.id]?.body == "Pasta is done.")
         #expect(spy.permissionAsks == 1)
         // Again, nothing new: one request per timer, permission not asked twice.
         await alerts.reconcile(with: spy, now: start + 30)
