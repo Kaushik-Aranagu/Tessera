@@ -24,7 +24,7 @@ Board `mockups/pantry.png`, recording `recordings/pantry.mp4` (18 s, Porcelain, 
 ## The index, five areas (73)
 - Order REVIEW, TODAY, TRAINING, KITCHEN, PANTRY (past at the top, Pantry nearest the kitchen). Same 104 pt pitch from 96. The glass grows from 600 to 700 and the hint moves from 548 to 652; it still ends above Tess's band at 736. Sheet 73's "five rows to 616" is superseded by this.
 - **Pantry's line:** "4 out, 2 low" (12 characters), the hero, as Home does. Quiet lines: "Nothing out", "Nothing yet". Under the finger the word takes the pantry colour (72% mix), scaled to 1.06.
-- **The pantry colour** is new and Design's proposal: ochre, Porcelain #A4601A and Obsidian #E3A857. It appears only on the state words and in the index. Cobalt stays Tess's voice only.
+- **The pantry has no colour of its own (sheet 99, G175).** The ochre proposal is withdrawn. State words are ink; OUT reads heavier than LOW by weight alone (out 700, low 600). Kitchen's `areaLean` appears only on the caps labels and the index line, as on any Kitchen page. Cobalt stays Tess's voice only.
 - The KITCHEN line is "Tacos, 7 pm": Product's 6:32 PM ruling drops "at" before any time, app-wide (copy-pass rule 6). This replaces the earlier "Tacos at 7 pm" of sheets 73 and 78.
 
 ## Copy rules the sheet follows

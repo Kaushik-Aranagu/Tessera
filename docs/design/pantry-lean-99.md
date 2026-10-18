@@ -3,7 +3,7 @@
 Product's refill of Oct 17 (6:40 PM PT). Docs only; nothing in the app changes.
 
 ## 1. Pantry ochre: decided, it stays out (G175)
-Pick **Reading B: the Pantry's state words take Kitchen's `areaLean`; there is no ochre.** (Sheet 92 section 2 already ruled this; this sheet closes G175 and retires the ochre line in `pantry.md`.)
+Pick **Reading B: no ochre. The state words are ink and OUT is heavier than LOW by weight; Kitchen's `areaLean` stays on the caps labels and the index line only.** (Corrected Oct 17, 6:55 PM PT after #917: an earlier draft put `areaLean` on the words, but sheet 92 keeps it off rows, and ink is what the app built.) (Sheet 92 section 2 already ruled this; this sheet closes G175 and retires the ochre line in `pantry.md`.)
 - Pantry is a part of Kitchen. A second Kitchen-side hue would make the index say two things for one area.
 - State is told by the word (OUT, LOW, IN, NOT SURE) and its place on the page (sheet 98), never by colour alone; that holds for colour-blind readers too.
 - Ochre (#A4601A / #E3A857) is Plein's third dab for Tess, so using it for words would blur her voice with a state.

@@ -21,7 +21,7 @@ The rule: a vertical swipe on an element with its own vertical action runs that 
 | Kitchen | #12936A | #52D3A3 |
 | Review | #5A3DAF | #B8A3FF |
 | Today | none (cobalt is Tess's voice) | none |
-- **Pantry ochre goes.** Pantry is part of Kitchen, so its state words take Kitchen's `areaLean` (the same 72% mix), not #A4601A / #E3A857. The index keeps one Kitchen colour. A pantry state is told apart by its word and its position, never by a second hue.
+- **Pantry ochre goes.** The state words are ink (OUT heavier than LOW by weight alone, as built in #917); Kitchen's `areaLean` stays on the caps labels and the index line only, never on rows. A pantry state is told apart by its word, its weight and its position, never by a hue.
 - Lists, Notes, Habits, Money and Reading take the colour of the area they are opened from; opened from Home they take Today's ink.
 - Never on rows, notes, fills, dots or Tess.
 
