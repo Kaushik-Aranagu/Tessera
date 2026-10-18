@@ -1,6 +1,6 @@
 # Page turn motion: Slide, Turn, Soften, Rotate (board 26, 27, 31). Spec from Design sheet 90; clips to follow
 
-Source of truth for looks and rules: design/pages-90.md. This note adds timelines, the drag model, the Rotate slot model and the Settings preview, so Builder B can build one `PageTurn` with four options. Haptics: none on a user turn (R2); the lead-row auto-turn plays .selection once on landing. Curve: Theme.Motion.pageTurn (.22, .8, .2, 1). Reduce Motion and Low Power: every option is one 150 ms crossfade (R3), no stagger, no blur, no travel.
+Source of truth for looks and rules: design/pages-90.md. This note adds timelines, the drag model, the Rotate slot model and the Settings preview, so Builder B can build one `PageTurn` with four options. Haptics: none on a user turn (R2), and none on the lead-row auto-turn either (decision 5:30 PM Oct 17). Curve: Theme.Motion.pageTurn (.22, .8, .2, 1). Reduce Motion and Low Power: every option is one 150 ms crossfade (R3), no stagger, no blur, no travel.
 
 ## Timelines (t = 0 at release or tap on the foot; N = rows on the page, max 6)
 | Option | Old page | New page | Total | Stagger order |
@@ -21,7 +21,7 @@ Rotate numbers are Design's (Oct 17, PM): 160 out, 260 in, 24 ms stagger, arriva
 - A screen declares N <= 6 slots up front (slot 0 is the lead position). A page assigns rows to slots; empty slots on a short last page stay empty and keep their space so nothing below jumps.
 - Rotation is forward by one page at a time. Rows that stay (the same object on both pages, e.g. a lead that carries over) do not animate, they hold their slot.
 - Pinned writing line, add field and Tess's line never join the slots.
-- One haptic per moment: none for the turn; the .selection on an automatic lead-change turn only.
+- One haptic per moment: none for the turn, including an automatic lead-change turn (QA contradiction review 5:30 PM Oct 17 removed sheet 90 rule 7's .selection under R2; the check's own finish haptic is the only cue).
 
 ## Whose swipe (also board 33)
 A vertical swipe is claimed in this order: a focused field (never turns) > a number or dial that steps (its own step, no page turn) > any row's own vertical action > the page turn. A row's horizontal swipe is untouched. The recogniser begins after a 10 pt vertical move with a 2:1 vertical-to-horizontal ratio, so a diagonal side swipe stays a side swipe.
