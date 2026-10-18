@@ -23,6 +23,7 @@ Owner is the lane named in the ruling, else the lane that owns the file. Test na
 | 6:00 PM | Size words count as unit words | A |
 | 6:10 PM | G139 sticky; Dr Pepper raw; "180 pounds today" private | B, C, D |
 | 6:39 PM | G177 PE group, G178 no-change tie writes nothing, lastUsedAt | D |
+| 6:44 PM | Research #918 answers (1) to (6): weight units are not money words, ambiguous first line, amount = first ingredient, undo clears the mask, Pantry vs Groceries after a private cook, notes restated | A, D1, F |
 
 Earlier entries are cited only where a later ruling says "plus the 4:22 rows" (the 4:35 trim) or amends them. The 4:30 PM entries higher in the file (Day log v1, "buy" non-food) sit in an older block of the file and are not in scope.
 
@@ -30,7 +31,9 @@ Earlier entries are cited only where a later ruling says "plus the 4:22 rows" (t
 
 Rule as ruled (5:59, 6:00, amending 3:43 and 4:20 PM): a recipe's first line that starts with a number or fraction is an AMOUNT when it is exactly two words, or when a unit word or size word (small, medium, large, extra-large, whole, half) follows the number at any length. Three or more words with no unit or size word are a TITLE. A hyphen joining a number to a letter word ("30-Minute Dal", "5-Spice") stays a title; a digit range ("2-3 eggs") or a mixed number with a unit ("1 14.5 oz can") is an amount (4:25).
 
-Master: `RP:171-175` `startsWithAmount` is true for ANY line whose first character is a number, and `RP:53` then refuses the title. So every "number first" line is an amount on master. Rows that expect a title disagree.
+Master: `RP:171-175` `startsWithAmount` is true for ANY line whose first character is a number, and `RP:53` then refuses the title. So every "number first" line is an amount on master. Rows that expect a title disagree on master.
+
+Status below is graded at **#886's head `97d00ff5`** (core/g94, still open and frozen; diff read via the PR). Its `startsWithAmount` makes a number-led line an amount when it is exactly two words with a letter-only second word, when a step number ("1.") leads, when a digit run is glued to a lowercase letter or is a range ("200g", "2-3"), or when three or more words have a unit word that `IngredientLine.parse` reads. A digit glued to a capitalised word ("30-Minute") and three or more words with no unit word are titles. #886 has NO size-word list (small, medium, large, extra-large, whole, half; the 6:00 PM ruling rides Core's next PR), so size-word rows stay gap. Its own tests cover: "3 eggs benedict", "7 Layer Dip", "30-Minute Dal", "5 Spice Chicken" (titles) and "2 eggs", "2 Eggs", "2 tbsp olive oil", "500 g plain flour", "2-3 cloves garlic" (amounts).
 
 | Id | Input (first line) | Expected | Status | Trace | Owner | Test |
 |---|---|---|---|---|---|---|
@@ -38,34 +41,34 @@ Master: `RP:171-175` `startsWithAmount` is true for ANY line whose first charact
 | A2 | `2 Eggs` | amount (capitalised second word) | traced | RP:173 | Core | `twoWordCapitalisedIsAmount` |
 | A3 | `5 Spice` | amount, "Untitled recipe" (3:43 accepted trade) | traced | RP:173 | Core | `fiveSpiceIsAmount` |
 | A4 | `7 Up` | amount, "Untitled recipe" | traced | RP:173 | Core | `sevenUpIsAmount` |
-| A5 | `2 large eggs` | amount (size word, 6:00) | traced | RP:173; fragile: becomes a gap if the 3-word title rule lands without the size list | Core | `sizeWordKeepsThreeWordLineAmount` |
-| A6 | `500 g plain flour` | amount (unit word, 5:59) | traced | RP:173; same fragility | Core | `unitWordKeepsLongLineAmount` |
+| A5 | `2 large eggs` | amount (size word, 6:00) | **gap** | #886 head: 3 words, `IngredientLine.parse` reads no unit from "large", so it falls to a title; no size-word list until Core's next PR | Core | `sizeWordKeepsThreeWordLineAmount` |
+| A6 | `500 g plain flour` | amount (unit word, 5:59) | traced | #886 head: unit "g" via `parse`; covered by #886's own test | Core | `unitWordKeepsLongLineAmount` |
 | A7 | `2 cups flour` | amount | traced | RP:173 | Core | `cupsFlourIsAmount` |
-| A8 | `2 extra-large eggs` | amount (size word with its own hyphen; the hyphen exemption is number-to-letter only) | traced | RP:173; fragile | Core | `extraLargeIsSizeWord` |
-| A9 | `1 whole chicken` | amount (size word "whole") | traced | RP:173; fragile | Core | `wholeIsSizeWord` |
-| A10 | `6 small potatoes` | amount | traced | RP:173; fragile | Core | `smallIsSizeWord` |
+| A8 | `2 extra-large eggs` | amount (size word with its own hyphen; the hyphen exemption is number-to-letter only) | **gap** | #886 head: 3 words, no unit; no size-word list | Core | `extraLargeIsSizeWord` |
+| A9 | `1 whole chicken` | amount (size word "whole") | **gap** | #886 head: 3 words, no unit; no size-word list | Core | `wholeIsSizeWord` |
+| A10 | `6 small potatoes` | amount | **gap** | #886 head: 3 words, no unit; no size-word list | Core | `smallIsSizeWord` |
 | A11 | `1 egg` | amount | traced | RP:173 | Core | `oneEggIsAmount` |
 | A12 | `100 g` | amount (two words) | traced | RP:173 | Core | `gramsLineIsAmount` |
-| A13 | `2 tbsp olive oil` | amount (unit word) | traced | RP:173; fragile | Core | `tbspOilIsAmount` |
-| A14 | `2-3 eggs` | amount (digit range, 4:25) | traced | RP:173; fragile | Core | `digitRangeIsAmount` |
-| A15 | `1 14.5 oz can tomatoes` | amount (mixed number with unit, 4:25) | traced | RP:173; fragile | Core | `mixedNumberUnitIsAmount` |
+| A13 | `2 tbsp olive oil` | amount (unit word) | traced | #886 head: unit "tbsp"; covered by #886's own test | Core | `tbspOilIsAmount` |
+| A14 | `2-3 eggs` | amount (digit range, 4:25) | traced | #886 head: first token is a numeric range, two words | Core | `digitRangeIsAmount` |
+| A15 | `1 14.5 oz can tomatoes` | amount (mixed number with unit, 4:25) | **inferred** | #886 head: 4 words, so the result is `IngredientLine.parse(clean)?.unit != nil`; it holds only if "oz" is the unit read after "1 14.5". Oz trace to add (Core test): `parse("1 14.5 oz can tomatoes").unit == oz`, then this row becomes traced | Core | `mixedNumberUnitIsAmount` |
 | A16 | `1/2 cup sugar` | amount (fraction) | traced | RP:173 | Core | `fractionIsAmount` |
 | A17 | `A pinch of salt` | amount (existing "a pinch" rule) | traced | RP:174 | Core | `pinchIsAmount` |
-| A18 | `3 eggs benedict` | TITLE "3 eggs benedict" | **gap** | master: RP:173 true, so RP:53 skips the title and the recipe is "Untitled recipe" | Core | `threeWordNoUnitIsTitle` |
-| A19 | `7 Up Cake` | TITLE | **gap** | RP:173 | Core | `sevenUpCakeIsTitle` |
-| A20 | `3 Bean Chili` | TITLE (3 words, "bean" is not a unit or size word) | **gap** (inferred from the rule, not named in a ruling) | RP:173 | Core | `threeBeanChiliIsTitle` |
-| A21 | `12 Angry Men Chili` | TITLE (4 words, no unit) | **gap** (inferred) | RP:173 | Core | `fourWordNoUnitIsTitle` |
-| A22 | `30-Minute Dal` | TITLE (hyphen joins number to a letter word) | **gap** | RP:173 (first char is a digit) | Core | `hyphenNumberWordIsTitle` |
-| A23 | `5-Spice` | TITLE (4:25, 5:59: hyphen stays a title) | **gap** | RP:173 | Core | `fiveHyphenSpiceIsTitle` |
-| A24 | `5 Spice` then `Ingredients` heading later, no other title candidate | TITLE "5 Spice" (4:30 paste edge: an ambiguous first line is a title when an Ingredients heading comes later and no other title candidate exists) | **gap**, and the ruling is ambiguous (see Q1) | RP:53 has no look-ahead; `RP:48` sees headings only line by line | Core | `ambiguousFirstLineBecomesTitleBeforeHeading` |
-| A25 | `2 Eggs` then `Ingredients` heading later | same question as A24 | **gap**, see Q1 | RP:53 | Core | `twoEggsBeforeHeadingQuestion` |
-| A26 | `5 Spice` with NO heading anywhere | amount, "Untitled recipe" (A3 still holds without a heading) | traced | RP:173 | Core | `noHeadingKeepsAmount` |
+| A18 | `3 eggs benedict` | TITLE "3 eggs benedict" | traced at #886 head (**gap on master**: RP:173 is true, RP:53 skips the title) | #886 head: 3 words, no unit, so a title; covered by #886's own test | Core | `threeWordNoUnitIsTitle` |
+| A19 | `7 Up Cake` | TITLE | traced at #886 head (**gap on master**) | #886 head: 3 words, no unit ("7 Layer Dip" is its test) | Core | `sevenUpCakeIsTitle` |
+| A20 | `3 Bean Chili` | TITLE (3 words, "bean" is not a unit or size word) | traced at #886 head (**gap on master**) | #886 head: 3 words, no unit (inferred from the rule, not named in a ruling) | Core | `threeBeanChiliIsTitle` |
+| A21 | `12 Angry Men Chili` | TITLE (4 words, no unit) | traced at #886 head (**gap on master**) | #886 head: 4 words, no unit | Core | `fourWordNoUnitIsTitle` |
+| A22 | `30-Minute Dal` | TITLE (hyphen joins number to a letter word) | traced at #886 head (**gap on master**) | #886 head: "30-Minute" is neither numeric nor digit-plus-lowercase; covered by #886's own test | Core | `hyphenNumberWordIsTitle` |
+| A23 | `5-Spice` | TITLE (4:25, 5:59: hyphen stays a title) | traced at #886 head (**gap on master**) | #886 head: same path as A22 | Core | `fiveHyphenSpiceIsTitle` |
+| A24 | a first line that is not an amount, not a heading, with no other title candidate (e.g. `Nonna's Sunday sauce`), then an `Ingredients` heading later | TITLE (4:30 paste edge, answered 6:44 PM (2)) | **gap** | RP:53 has no look-ahead for a heading; #886 does not add one | Core | `ambiguousFirstLineBecomesTitleBeforeHeading` |
+| A25 | `2 Eggs` then `Ingredients` heading later | still an amount, "Untitled recipe": a two-word number line is an amount, so it is not ambiguous and the heading does not rescue it (6:44 PM (2)) | traced at #886 head | #886 head: two words, letter-only second word | Core | `twoEggsBeforeHeadingStaysAmount` |
+| A26 | `5 Spice` with NO heading anywhere | amount, "Untitled recipe" (A3 still holds without a heading) | traced | #886 head: two words | Core | `noHeadingKeepsAmount` |
 
-Where the amount line goes. The 3:43 entry says "Untitled recipe with the line kept as step 1". Master classifies a non-title first line by shape (`RP:56-61`): mode unknown and `looksLikeIngredient` (`RP:162-163`, at most 10 words) makes `2 Eggs` an INGREDIENT, not step 1. The 5:59 and 4:20 entries call it an "amount". Row A27 pins master's behaviour so the question is visible.
+Where the amount line goes. Answered 6:44 PM (3): an amount first line is read as the FIRST INGREDIENT, not step 1 and not the title; with no other candidate the title is "Untitled recipe". This supersedes the 3:43 wording ("kept as step 1"). Master already does this: it classifies a non-title first line by shape (`RP:56-61`), and `looksLikeIngredient` (`RP:162-163`, at most 10 words) makes `2 Eggs` an ingredient.
 
 | Id | Input | Expected | Status | Trace | Owner | Test |
 |---|---|---|---|---|---|---|
-| A27 | `5 Spice` then `Toast the seeds.` | title "Untitled recipe"; the first line reads as an ingredient (master) or as step 1 (3:43 wording) | **gap or wording gap**, see Q2 | RP:56-61, RP:162-163 | Core | `amountFirstLineKind` |
+| A27 | `5 Spice` then `Toast the seeds.` | title "Untitled recipe"; `5 Spice` is the first ingredient, not step 1 (6:44 PM (3)) | traced | RP:56-61, RP:162-163 | Core | `amountFirstLineIsFirstIngredient` |
 
 ## B. Dr Pepper and Dr. Patel (suite `PrivateTitleWordsTests`, Core)
 
@@ -136,13 +139,13 @@ Master: `PL:146-161` `cookUses` never looks at the recipe's privacy, and `PL:163
 | D1.2 | As D1.1, then finish a PUBLIC cook that also uses flour | flour still reads "Private item" (sticky) | **gap** | PL:163-169 | Core | `maskIsStickyAfterPublicCook` |
 | D1.3 | Public cook only, ingredient flour | flour reads "flour" | traced | PL:166-168 | Core | `publicCookKeepsName` |
 | D1.4 | Public cook, then a private-recipe cook | flour reads "Private item" (order does not matter) | **gap** | PL:163-169 | Core | `maskIsOrderIndependent` |
-| D1.5 | Private cook used flour, then the cook is deleted (Undo of finish) | inferred: mask clears with the cook (the ruling says "once a private recipe is cooked"; an undone cook never happened). QA flag: pre-review asks if a deleted cook counts | **inferred**, see Q3 | PL:150 reads `store.objects(of: cookClass)`; deleted cooks are not filtered there | Core | `undoneCookClearsMask` |
+| D1.5 | Private cook used flour, then the cook is deleted (Undo of finish) | undo restores the exact earlier state, so the mask that cook added is cleared; stickiness from OTHER private cooks stays (6:44 PM (4)) | **gap** | PL:150 reads `store.objects(of: cookClass)` and does not filter deleted cooks; no per-cook mask bookkeeping | Core | `undoneCookClearsMask` |
 | D1.6 | Private recipe never cooked, only saved | ingredients read raw (no cook, no mask) | traced | PL:146-161 (no cook, no row) | Core | `uncookedPrivateRecipeLeavesNamesRaw` |
 | D1.7 | Ingredient whose own name is walled (a medicine) cooked in a public recipe | "Private item" | traced | PL:166 via OP:59-63 and EngineWall | Core | `walledIngredientNameMasks` |
 | D1.8 | Private cook of a recipe with a staple and an optional line | masked rows only for the non-staple, non-optional lines that become low or out (staples and optional lines are skipped, R3, R4) | traced for the skip, **gap** for the mask | PL:155 (skips staple, optional, toTaste) | Core | `privateCookRespectsStaplesAndOptional` |
 | D1.9 | Masked row | no reveal path, no tap target (R12, G102) | **inferred** (PantryView.swift:7 says a private name "opens nothing") | Features/Kitchen/PantryView.swift:7 | Builder B | `privateRowHasNoTapTarget` |
 | D1.10 | Masked row in the hero count | counted, with no name (R13: a private recipe counted with no names) | traced for a walled name (entries include private rows) | PL:49-51, PL:72-79 | Core | `privateRowStillCounts` |
-| D1.11 | Groceries row for flour after a private cook | not specified by the ruling: QA notes Pantry reads "Private item" while Groceries reads "flour" | **inferred**, see Q4 | prereview-g105b.md:18 | Product | `groceriesRowAfterPrivateCook` |
+| D1.11 | Groceries row for flour after a private cook | "Private item" only when the ingredient is used ONLY by private recipes; if any non-private recipe uses it, the plain name (6:44 PM (5), the 5:16 AM rule). Pantry stays "Private item" (sticky) either way | **gap** | prereview-g105b.md:18 shows Groceries reading the plain name today in every case | Core | `groceriesRowAfterPrivateCook` |
 | D1.12 | Tess cook line after a private cook | none; even "Private recipe took ..." is withheld | traced | PL:97-100 | Core | `privateCookGetsNoTessLine` |
 | D1.13 | Tap-to-reveal survivor: list shelf private row | no reveal (G102: dropped on all four surfaces) | **gap** | Features/Lists/ListsView.swift:364 still sets the hint "Shows it" | Builder A | `listsShelfHasNoReveal` |
 
@@ -182,41 +185,45 @@ Master: `PL:146-161` `cookUses` never looks at the recipe's privacy, and `PL:163
 
 | Id | Input | Expected | Status | Trace | Owner | Test |
 |---|---|---|---|---|---|---|
-| F1 | `180 pounds today` (any private-text surface) | PRIVATE, even with the new grocery unit words (6:10) | traced | money-shaped: "180" is an amount and "pounds" is a money word (PF:27, PF:48); also a bare weight: pounds convert at PF:170 and "today" is a day word (PF:67, PF:135) | Core | `bodyWeightPoundsTodayStaysPrivate` |
+| F1 | `180 pounds today` (any private-text surface) | PRIVATE via the body-fact rule (a weight number with a day word such as today; 6:10, 6:44 PM (1)), even though pound is no longer a money word | traced | body facts: pounds convert at PF:170, "today" is a day word (PF:66-67, PF:135). It is also money-shaped today by PF:27/PF:48, which is the wrong reason and goes away with F3; the row must still hold afterwards | Core | `bodyWeightPoundsTodayStaysPrivate` |
 | F2 | `180 lb today`, `82 kg this morning` | private | traced | PF:134-135, PF:66 | Core | `bodyWeightUnitsStayPrivate` |
-| F3 | `1 pound butter` (grocery item or recipe line) | raw (4:50 6: a unit amount never masks a grocery item or recipe) | **gap, top finding** | PF:48: "1" is an amount and "pound" is in moneyWords, so the line is money-shaped and masks | Core | `onePoundButterStaysRaw` |
-| F4 | `2 pounds ground beef` | raw | **gap** | PF:27, PF:48 | Core | `poundsBeefStaysRaw` |
-| F5 | `1 pound cake` (item) | raw | **gap** | PF:48 | Core | `poundCakeStaysRaw` |
+| F3 | `1 pound butter` (grocery item or recipe line) | AMOUNT, never money; raw (6:44 PM (1); 4:50 (6)). The two-decimal price rule does not apply when a unit word follows the number | **gap, top finding** | PF:27 puts "pound" in moneyWords and PF:48 makes "1 pound" money-shaped, so it masks. Fix: pound, pounds and kg are never money words | Core | `onePoundButterStaysRaw` |
+| F4 | `2 pounds ground beef` | amount, raw | **gap** | PF:27, PF:48 | Core | `poundsBeefStaysRaw` |
+| F5 | `1 pound cake` (item) | amount, raw | **gap** | PF:48 | Core | `poundCakeStaysRaw` |
 | F6 | `5 kg flour` | raw | traced on the OP path (PF:132-135, rest "flour" is not day words); **gap** on the title check (kg in TM:104) | | Core | `fiveKgFlourStaysRaw` |
-| F7 | `2.25 kg rice` (decimal kg) | raw | **gap** | PF:51 treats a two-decimal number as money | Core | `decimalKgStaysRaw` |
+| F7 | `2.25 kg rice` (decimal kg) | amount, raw | **gap** | PF:51 treats a two-decimal number as money; it must not when a unit word follows | Core | `decimalKgStaysRaw` |
 | F8 | `1.5 kg potatoes` | raw | traced | one decimal; PF:51 needs exactly two | Core | `oneDecimalKgStaysRaw` |
 | F9 | `flour 500 g` | raw | traced | PF:73-75 other units | Core | `gramsStayRaw` |
 | F10 | `weigh the flour 500 g` | raw (kitchen, not body) | traced | PF:88-89, PF:129 | Core | `weighFlourIsKitchen` |
 | F11 | `my weight 82.4` | private | traced | PF:128-130 | Core | `myWeightIsPrivate` |
 | F12 | note, unflagged, `dentist friday` | raw note (no secret/money/body word; titleWords are not applied to notes, 4:50 1) | traced | OP:44-47 | Core | `unflaggedDentistNoteIsRaw` |
-| F13 | note, unflagged, `paid 20 for lunch` | 4:50 (1): private (holds money words). 5:58: "only when flagged" | traced to the 4:50 reading; **conflicts with the literal 5:58 wording**, see Q5 | OP:44-47 | Product | `noteWithMoneyWords` |
+| F13 | note, unflagged, `paid 20 for lunch` | private: holds money words (4:50 (1) stands). 5:58 PM only restates 4:50, so there is no conflict (6:44 PM (6)) | traced | OP:44-47 | Core | `noteWithMoneyWords` |
 | F14 | note, flagged | "Private note" | traced | OP:45 | Core | `flaggedNoteIsPrivate` |
 | F15 | Siri task read-back for a list, routine or workout name | goes through the one check (4:50 7); tasks keep their own rules | **inferred** | Intents.swift:180,205 | Core | `siriReadbackUsesOneCheck` |
 
-## Questions raised by tracing (for Product)
+Core's g105b (`221d7444`) already routes unit amounts away on the TITLE path (pound, pounds, kilo, kilos added to `AddListItem.isAmountOfAThing`, so they skip `isPrivateText`), which covers F3 to F7 there, but its parity list tests only `2.5 kg rice` (one decimal, F8's case). Still needing tests there: `2.25 kg rice` (F7, the two-decimal case), `2 pounds ground beef` (F4) and `1 pound cake` (F5). The outbound wall (`PrivateFacts.isWalled`, what goes to Claude) still treats `1 pound butter` as money-shaped; that is the safe side, and 4:50 (6) and 6:44 PM (1) speak about masking, not sending, so it is left as is unless Product says otherwise.
 
-- Q1. The 4:30 paste edge says "an ambiguous first line is a title when an Ingredients heading comes later and no other title candidate exists". It does not say which lines are ambiguous. If it covers `5 Spice` and `2 Eggs`, then the 3:43 trade ("5 Spice becomes Untitled recipe") only holds for pastes with no heading. Rows A24 to A26 assume "ambiguous" means a two-word number-led line.
-- Q2. Is an amount first line kept as step 1 (3:43) or read as an ingredient (master, `RP:56-61`)? The 5:59 and 4:20 wording says "amount".
-- Q3. Does an undone or deleted private cook still mask its ingredients (sticky) or clear them (D1.5)?
-- Q4. After a private cook, does Groceries keep reading "flour" while Pantry reads "Private item"? The pre-review raised it as a question, and 6:10 says "everywhere in Pantry" only.
-- Q5. Notes: 5:58 says "Private note only when flagged" and cites the 4:50 correction, which says flagged or holding secret, money or body words. Master follows 4:50. Which one stands for an unflagged `paid 20 for lunch` note?
+## Questions raised by tracing: all answered
+
+Q1 to Q5 were closed by Product at 6:44 PM Oct 17 (Research #918 questions) and the 6:44 entry's item (6).
+
+- Q1 (answered, 6:44 PM (2)): an ambiguous first line is one that is not clearly an amount and not a heading, with no other title candidate; it is the title when an Ingredients heading comes later. `5 Spice` and `2 Eggs` are amounts, not ambiguous (rows A24, A25). Original question: The 4:30 paste edge says "an ambiguous first line is a title when an Ingredients heading comes later and no other title candidate exists". It does not say which lines are ambiguous. If it covers `5 Spice` and `2 Eggs`, then the 3:43 trade ("5 Spice becomes Untitled recipe") only holds for pastes with no heading. Rows A24 to A26 assume "ambiguous" means a two-word number-led line.
+- Q2 (answered, 6:44 PM (3)): the first ingredient (A27). Original question: Is an amount first line kept as step 1 (3:43) or read as an ingredient (master, `RP:56-61`)? The 5:59 and 4:20 wording says "amount".
+- Q3 (answered, 6:44 PM (4)): undo restores the earlier state and clears the mask that cook added (D1.5). Original question: Does an undone or deleted private cook still mask its ingredients (sticky) or clear them (D1.5)?
+- Q4 (answered, 6:44 PM (5)): Groceries reads "Private item" only when the ingredient is used only by private recipes (D1.11). Original question: After a private cook, does Groceries keep reading "flour" while Pantry reads "Private item"? The pre-review raised it as a question, and 6:10 says "everywhere in Pantry" only.
+- Q5 (answered, 6:44 PM (6)): no conflict; 5:58 restates 4:50, master follows 4:50 (F13). Original question: Notes: 5:58 says "Private note only when flagged" and cites the 4:50 correction, which says flagged or holding secret, money or body words. Master follows 4:50. Which one stands for an unflagged `paid 20 for lunch` note?
 
 ## Row counts
 
 | Section | Rows | traced | gap | inferred |
 |---|---|---|---|---|
-| A. Title rule | 27 | 18 | 9 | 0 |
+| A. Title rule | 27 | 21 | 5 | 1 |
 | B. Dr Pepper | 9 | 5 | 4 | 0 |
 | C. titleWords trims | 26 (C26 is a pointer to F12) | 12 | 13 | 0 |
-| D1. G139 | 13 | 5 | 5 | 3 |
+| D1. G139 | 13 | 5 | 7 | 1 |
 | D2. Pantry v2 | 17 | 5 | 8 | 4 |
 | E. Home masks | 5 | 0 | 2 | 3 |
 | F. Body, units, notes | 15 | 9 | 5 | 1 |
-| Total | 112 | 54 | 46 | 11 |
+| Total | 112 | 57 | 44 | 10 |
 
-Counts treat mixed rows (traced on one path, gap on another) as gap; see each row. Rows are fixtures only; no Swift test is written by this file.
+Section A is graded at #886's head `97d00ff5` (gap on master for A18 to A23 is stated in each row). Counts treat mixed rows (traced on one path, gap on another) as gap; see each row. Rows are fixtures only; no Swift test is written by this file.
