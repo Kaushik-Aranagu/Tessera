@@ -1,6 +1,6 @@
 # Check: the #969 rulings against the Live Activity, Lock Screen and widget motion spec (board 75)
 
-Short check of `tess-live-activity-lockscreen-widget-motion.md` (LAM) against Product's 10:47 PM Oct 17 calls on Kitchen gap hunt 21 (#969, `decisions.md` 1051, items 1 to 6, and 1049 G348). Result: the spec agrees with five of the seven rulings, needs three small additions, and one real tension goes to Product. Edits to LAM ride the next lab follow-up (one source of truth, no double-editing a frozen file).
+Short check of `tess-live-activity-lockscreen-widget-motion.md` (LAM) against Product's 10:47 PM Oct 17 calls on Kitchen gap hunt 21 (#969, `decisions.md` 1051, items 1 to 6, and 1049 G348). Result: four of the seven rulings already agree with the spec (each needs a line or a rename added), two need a new row, and one real tension goes to Product. Edits to LAM ride the next lab follow-up (one source of truth, no double-editing a frozen file).
 
 | Ruling (DEC) | LAM today | Verdict | Carry |
 |---|---|---|---|
