@@ -2,6 +2,10 @@
 
 *Kitchen lead, 2026-10-15. Design's build sheet `docs/design/kitchen/12-cook-mode.md` matches this file (Finish has no confirm and no note field, and stopping is a drag left with UNDO). This reads with the slice 12 steer in `ship-list-kitchen.md` and Research's `docs/research/fixtures/cook-mode-scenarios.md` (S01-S15, ASSUMED 1-12). It settles the open points so Core can build without waiting. Product can overrule any line; until then these are the defaults.*
 
+## Which rows apply to which screen (Product ruling, Oct 17 9:07 pm, G228)
+
+The clock page (Design 69) is the cook and replaces the cover. VO5 to VO24 (`docs/research/fixtures/voiceover-recipe-clock-lists.md`) govern the reading order of the cook screen. K84 rows carry over only where the clock page has the same thing: K84.14 and K84.26 (Done), K84.22 (timer end), K84.25 (ingredient peek key), K84.27 (Finish receipt). K84.20's reading order and its Next bar do not apply to the clock page, so K84.20 and K84.29 (the cover's reading order) are read as history unless the cover returns. Inferred, not ruled: the Dynamic Type, thumb-reach and Reduce Motion rows stay as targets for the clock page's own keys; Product to confirm per row. Where a K84 row and a VO row disagree, the newer ruling wins (K84.26 over VO19, see G229).
+
 ## The cut: what slice 12 must have
 
 **In slice 12:**
@@ -53,7 +57,7 @@ These wait because the scenarios that need them (S08, S09) are edge cases in a f
 - Every target is at least 64 pt.
 - No text is under 16 pt.
 - There are no cards, pills or modals.
-- The screen stays awake.
+- The screen stays awake only while the cook page is visible, the scene is active, and (a timer runs or the last step change was under 45 min ago). It releases on idle, Finish, leaving and backgrounding, and re-arms on touch (Product, Oct 17 9:07 pm, G218). Low Power does not extend the window.
 - Reduce Motion swaps the slides for fades.
 - Cobalt is used only for Tess's line, and vermilion only for "running".
 
