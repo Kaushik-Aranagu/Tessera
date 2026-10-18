@@ -40,7 +40,7 @@ A private habit reads **"Private habit"** (DEC:1039(1), 1049, 1051), never its w
 |---|---|---|
 | Habit line on the page | "Private habit", count "3 of 5" | as any habit |
 | Check-in receipt (Tess) | "Private habit, 3 of 5 this week." *(lab default; thing first)* | as any habit; `.done` |
-| Habit ask (Shutdown) | "Private habit today?" with DONE and NOT TODAY (needs Design's verdict, `tess-day-screens-motion-pass.md:140`) | as any ask; answer `.selection` |
+| Habit ask (Shutdown) | sits in the Shutdown band as one plain line (G418, DEC:1067 item 7; DEC:593 wins over the empty band in `shutdown.md`); masked: "Private habit today?" with DONE and NOT TODAY (the "Private habit" case of the one private-text function, G416/G417; the exact ask wording still needs Design's verdict, `tess-day-screens-motion-pass.md:140`) | as any ask; answer `.selection` |
 | Ask receipt | "Private habit, done." UNDO 10 s *(lab default)* | as any habit |
 | Week met | "Private habit is done for the week." (the code's plural form, `HabitsCopy.swift:31`); in a list: "Private habit and Stretch are done for the week." | joined stroke, 700 ms; none |
 | Rule line ("Train now counts workouts.") | "Private habit now counts workouts." | `.selection` |

@@ -87,4 +87,4 @@ Same rule: a work list, not a ruling source. "Matrix" = `tess-lowpower-reducemot
 | N12 | Soul Low Power form runs 30 fps, full opacity; older 20 fps lines are superseded. (1069 item 3) | Matrix (soul row) | FIX (lab): `tess-quiet-versions.md:12,15,43` (20 fps), `tess-motion.md:242` |
 | N13 | Builder A owns the clock page; Builder B owns the recipe page, Pantry screens and the hand-off into the cook. (1063, 11:49 PM) | Matrix (owner column) | OK |
 
-**Left for the next lab follow-up:** N4, N6, N10 (`groceries-lp:43`), N11, N12, and the Q1 to Q3 and M1 to M4 lines in section 5 above.
+**Folded into the specs (lane 82):** N4 (Remove key two-step, `tess-settings-motion.md`), N6 (reduced page turn helper, `tess-page-turn-motion.md`), N10 (`groceries-lp:43`), N11 (`tess-training-motion-lowpower-pass.md:95`), N12 (`tess-quiet-versions.md`, `tess-motion.md`). **Left:** the Q1 and M1 to M4 lines in section 5 above, and N8's `tess-settings-motion.md:14` timings.

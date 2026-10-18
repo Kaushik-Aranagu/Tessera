@@ -62,6 +62,8 @@ Everything here is his own touch (a note, a paste, a drum step, an add), so ever
 7. Grep: no raw `.sensoryFeedback` or `withAnimation` in `Features/Notes` or `Features/Recipes`.
 
 ## 7. Asks
+Product ruled 1 to 5 below "yes" at 1:15 AM Oct 18 (DEC:1073): `.made`, one "Note, saved." on leaving, the portion drum on the money-drum rules, the link-wait line is DEC:522's "Asking Claude to read the recipe." (the code string changes), and the left-swipe add stays until the peek exists. The private-title reveal at `RecipePage.swift:81,471` is boarded as a Builder B fix. The list is kept as the record.
+
 1. **Product:** the note write haptic is `.made` (lab default; NG's `.light` has no case). Confirm.
 2. **Product:** one "Note, saved." line on leaving an edited note (10 s UNDO), not one per autosave. Confirm, and confirm no haptic on delete besides UNDO.
 3. **Product:** the portion drum follows the money drums' rules (40 ms floor, landing tick, no coast).
