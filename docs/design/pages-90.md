@@ -48,3 +48,11 @@ None blocking: all four turns ship. Say if Turn should not be the default.
 - **R3** Low Power Mode behaves like Reduce Motion for the page turn (the 150 ms crossfade).
 - **R4** Re-picking the word already chosen in Settings does not replay the preview.
 - **Odd splits** put the larger pages first (7 = 4+3, 13 = 5+4+4).
+
+## Rotate timing at 6 rows: the sheet wins (Oct 17, 6:50 PM PT)
+Motion lab measured Rotate at 650 ms for 6 rows (per row 220 out / 360 in, 34 ms stagger). **The 480 ms budget stands as the total for a full page of 6 rows**, so Rotate is not slower than Turn (0.6 s) and the page never feels like it is dragging.
+- Fit the budget by shortening, not by dropping rows: per row 160 ms out and 260 ms in, 24 ms stagger (the same as Turn's out stagger), the arrivals starting 80 ms after the first leave. Last row ends at 80 + 5 x 24 + 260 = 460 ms.
+- With fewer rows the total shrinks with them (3 rows: about 390 ms); never pad to 480.
+- A slow drag still follows the finger, and the settle uses the same per-row times from where the finger lets go.
+- Reduce Motion and Low Power Mode: the 150 ms crossfade, as for every option. No haptic (R2).
+- The 34 ms stagger on the sheet is withdrawn for the 24 ms above; the preview line in Settings plays at these same times.
