@@ -57,11 +57,22 @@ public struct KitchenTimerAlerts {
             .filter { $0.endsAt > now && !$0.object.isDeleted }
             .map { timer in
                 let name = timer.label.trimmingCharacters(in: .whitespacesAndNewlines)
-                let plain = name.isEmpty || name.allSatisfy { $0.isNumber || ".,: ".contains($0) }
-                let ofPrivateCook = timer.cook.map { ObjectPrivacy.isPrivateCook($0, in: store) } ?? false
-                let hidden = plain || ofPrivateCook || ObjectPrivacy.isPrivateWord(name, in: store)
-                return TimerAlert(id: timer.id, label: hidden ? "Timer" : name, fireAt: timer.endsAt)
+                let hidden = Self.hidesLabel(name, cook: timer.cook, in: store)
+                return TimerAlert(
+                    id: timer.id,
+                    label: hidden ? "Timer" : name.prefix(1).uppercased() + name.dropFirst(),
+                    fireAt: timer.endsAt
+                )
             }
+    }
+
+    /// True when a timer's label stays off the lock screen and Now: empty, only a number, a private word, or any
+    /// label on a private recipe's cook. One rule for the alert and the Now line.
+    public static func hidesLabel(_ label: String, cook: ObjectRecord?, in store: ObjectStore) -> Bool {
+        let name = label.trimmingCharacters(in: .whitespacesAndNewlines)
+        let plain = name.isEmpty || name.allSatisfy { $0.isNumber || ".,: ".contains($0) }
+        let ofPrivateCook = cook.map { ObjectPrivacy.isPrivateCook($0, in: store) } ?? false
+        return plain || ofPrivateCook || ObjectPrivacy.isPrivateWord(name, in: store)
     }
 
     /// What to add and what to cancel to make `scheduled` match `wanted`.

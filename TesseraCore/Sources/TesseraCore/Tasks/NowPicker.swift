@@ -55,8 +55,9 @@ public struct NowPicker {
         guard let running = ProcessTable(engine: engine).running(), let subject = running.subject else { return nil }
         let timer = CookLog(store: store, classes: engine.classes).timers()
             .first { $0.cook?.id == subject.id && $0.endsAt > now }
-        // A private recipe's timer is just "Timer" here, as on the lock screen.
-        let timerName = ObjectPrivacy.isPrivateCook(subject, in: store) ? "Timer" : timer?.label
+        // The lock screen's rule: a private word, or any timer of a private recipe's cook, is just "Timer" here.
+        let timerName = timer
+            .map { KitchenTimerAlerts.hidesLabel($0.label, cook: subject, in: store) ? "Timer" : $0.label }
         return NowItem(
             id: subject.id,
             kind: .process,

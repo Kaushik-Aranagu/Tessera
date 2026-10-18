@@ -40,8 +40,8 @@ struct TimerAlertsTests {
         let spy = Spy()
         let timer = try engine.perform(StartKitchenTimer(label: "pasta", minutes: 10, time: start), by: .user).output
         await alerts.reconcile(with: spy, now: start)
-        #expect(spy.scheduled[timer.id] == TimerAlert(id: timer.id, label: "pasta", fireAt: start + 600))
-        #expect(spy.scheduled[timer.id]?.body == "pasta is done.")
+        #expect(spy.scheduled[timer.id] == TimerAlert(id: timer.id, label: "Pasta", fireAt: start + 600))
+        #expect(spy.scheduled[timer.id]?.body == "Pasta is done.")
         #expect(spy.permissionAsks == 1)
         // Again, nothing new: one request per timer, permission not asked twice.
         await alerts.reconcile(with: spy, now: start + 30)
@@ -168,5 +168,15 @@ struct TimerAlertsTests {
         try engine.perform(StartKitchenTimer(label: "lasagna", minutes: 30, cook: cook.id, time: start), by: .user)
         let now = NowPicker(engine: engine).pick(at: start + 30).now
         #expect(now?.nextStep == "Timer, 30 min", "\(now?.nextStep ?? "nil")")
+    }
+
+    @Test func aPrivateWordTimerOnAPlainCookReadsTimerOnNow() throws {
+        let (engine, _) = try setUp()
+        let recipe = try engine.perform(
+            CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\n1. Fry."), by: .user
+        ).output
+        let cook = try engine.perform(StartCooking(recipe: recipe.id, time: start), by: .user).output
+        try engine.perform(StartKitchenTimer(label: "lexapro", minutes: 5, cook: cook.id, time: start), by: .user)
+        #expect(NowPicker(engine: engine).pick(at: start + 30).now?.nextStep == "Timer, 5 min")
     }
 }
