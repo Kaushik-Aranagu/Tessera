@@ -17,7 +17,7 @@ Page 3, **Looks**
 Page 4, **Data**
 - Back up: "Today, 9:02 am" and a tap to run one.
 - Export Health, Delete everything (the last one is the only vermilion word, two taps, a held confirm).
-- Remove key (inside the "Tess asks Claude" row): a two-step, tap then confirm in place. Receipt is one plain line naming the thing ("Key, removed."), with no UNDO; nothing holds the key for 10 s and it closes no other screen's UNDO slot (G375, G421).
+- Remove key (inside the "Tess asks Claude" row): a two-step: tap Remove and the Test and Replace words swap in place for the question "Remove the Claude key?" with "Remove" and "Keep it" (decisions 11:07 PM Oct 17, G375). Receipt is the plain line "Claude key removed. Everything stays on this phone.", with no UNDO; nothing holds the key for 10 s and it closes no other screen's UNDO slot (G375, G421).
 
 ## Rules
 - A row never wraps; the value shortens, never the name.
