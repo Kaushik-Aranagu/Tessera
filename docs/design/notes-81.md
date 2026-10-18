@@ -11,7 +11,7 @@ Board `mockups/notes-81.png`, recording `recordings/notes-81.mp4` (16 s, Porcela
 
 ## The three states
 1. **First use, empty.** Context "A place for loose thoughts", the writing line, then "Nothing written yet." at Body 21, 66% ink, where the first row goes. No art, no guilt, no count. Tess: `Say "note: bar felt heavy" and I'll keep it here.` (57's line, kept).
-2. **A Private note row.** The row reads "Private note" in place of the note's first line, at 66% ink (a note's own words are ink), with its time like any note ("Tue"). Its words appear nowhere else: not in the context line, not in the side, not in Tess's line, not in VoiceOver. A tap opens it for him like any note (his own phone; Face ID gating is not drawn, see Unresolved). A mention inside it is not counted under a thing on the side.
+2. **A Private note row.** The row reads "Private note" in place of the note's first line, at 100% ink, like any note (no dimming), with its time like any note ("Tue"). Its words appear nowhere else: not in the context line, not in the side, not in Tess's line, not in VoiceOver. A tap opens it for him like any note (his own phone; Face ID gating is not drawn, see Unresolved). A mention inside it is not counted under a thing on the side.
 3. **A long list.** 23 notes, one line each; a long first line wraps to two (74 tall), never cut. The page scrolls as one sheet: the writing line and hairline scroll away, the back word stays pinned with a fade under it, and rows melt into Tess's band at 736 (a 40 pt fade, nothing under her line). Pull down at the top opens the area index (73). No search field, no section headers, no seams. Tess: "Landlord and Bench press come up most." (two named; the phone's fact, from the same counts as the side).
 
 ## The side: BY THING (LINKS), as every-side.md row 22
@@ -28,7 +28,7 @@ A row never shows a list of names (a mention is a word inside the note's own lin
 ## Accessibility
 - **VoiceOver order:** back, Notes (heading), the context line, BY THING (button), the writing line (text field), then one stop per row reading its text then its time ("Sleep is training too, yesterday"); a Private note reads "Private note, Tuesday". Then Tess's line. The side is also a custom action, "Show by thing", because the swipe is VoiceOver's own. A written note announces "Note kept."; UNDO is 10 s under VoiceOver (one app-wide slot).
 - **Dynamic Type:** one column to Accessibility 3 and beyond. Rows wrap in full and the time drops to its own line under its row; the context line wraps and BY THING drops under it; Title scales. Tess's line stays within the band at three lines at most, and VoiceOver always has the whole line.
-- Row targets are the full row height, at least 44 pt. The Private note's 66% ink is 5.5 to 1 on Porcelain and 6.9 to 1 on Obsidian; its words say what it is, so colour never carries the meaning alone.
+- Row targets are the full row height, at least 44 pt. The Private note is full ink, so its contrast is the page's own; its words say what it is, so colour never carries the meaning alone.
 
 ## Obsidian
 Same frame: bg #121014, ink 245,242,236, context #B8A3FF, Tess #86B4FF. Drawn: the list with a Private note, and Accessibility 3.

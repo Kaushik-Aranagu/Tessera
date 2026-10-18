@@ -14,7 +14,7 @@ Board `mockups/lists-recipes-87.png`, recording `recordings/lists-recipes-87.mp4
 | Empty | Context "Just Groceries"; Groceries at 56 "NOTHING TO GET"; one quiet line "No other lists yet."; Tess `Say "new list: packing" and I'll start it.` | Context "None yet"; "No recipes yet." at 66%; Tess `Paste a link or a page and I'll read it.` No art, no guilt |
 | One | "2 lists, Packing running": Packing 56, Groceries 34; Tess "Packing has 9 left." | "1 recipe", one row "Tacos, Tue"; Tess "Tacos, cooked 2 times." |
 | Long | 9 lists, scrolls as one sheet under a pinned back word, fading into Tess's band at 736 (40 pt) | 38 recipes, one line each; a name over 30 characters wraps to two, never cut; Tess "Chili is the one you cook most." |
-| Private | (a list's name is his own words; see Unresolved) | The row reads **"Private recipe"** at 66% (names are ink) with its day. Context counts it: "38 recipes, 2 private" |
+| Private | (a list's name is his own words; see Unresolved) | The row reads **"Private recipe"** at 100% ink, like any recipe (sheet 99: no dimming), with its day. Context counts it: "38 recipes, 2 private" |
 
 A private recipe's name appears nowhere: not the row's context, the side, Tess's lines (she says "Private recipe" if one is the top), VoiceOver, Spotlight or the index. No Claude call for it (every-side.md PER 100 G rule). A tap opens it on his phone like any row.
 
@@ -27,12 +27,12 @@ A private recipe's name appears nowhere: not the row's context, the side, Tess's
 As sheet 65 and Product NE11/AQ15, drawn on a list page (Groceries), the same on Packing: swipe left, REMOVE rises in `live` at 60 pt, commits past 96, the rows close up, the count rolls ("9 to get" to "8 to get"), Tess "Rice, removed." with UNDO under her line. **UNDO is 10 s** (a change; 10 s under VoiceOver), one app-wide slot; UNDO returns the row wet and Tess says "Rice, back on Groceries." Never a hold, a red row, a confirm or a trash can. Shelf and recipe rows are not removed by swipe; removing a list or recipe is its own page's act (not drawn here).
 
 ## A private item (ruled 8:35)
-A list item that is private reads only **"Private item"** at 66% ink, the same as "Private recipe", in its list (drawn in PANTRY on Groceries). Its receipts name the thing first: **"Private item, on Groceries."** when it lands and **"Private item, removed."** with the 10 s UNDO (UNDO returns it: "Private item, back on Groceries."). The Lists side's count line reads as a count only, **KEPT PRIVATE: "Private item", 2**, nothing tappable behind it. Its words appear nowhere else: not the row's context, Tess, VoiceOver ("Private item", actions Check off and Remove) or Spotlight.
+A list item that is private reads only **"Private item"** at 100% ink, the same as "Private recipe", in its list (drawn in PANTRY on Groceries). Its receipts name the thing first: **"Private item, on Groceries."** when it lands and **"Private item, removed."** with the 10 s UNDO (UNDO returns it: "Private item, back on Groceries."). The Lists side's count line reads as a count only, **KEPT PRIVATE: "Private item", 2**, nothing tappable behind it. Its words appear nowhere else: not the row's context, Tess, VoiceOver ("Private item", actions Check off and Remove) or Spotlight.
 
 ## Accessibility
 - **VoiceOver:** back, title (heading), context, side word (button), then one stop per row reading name then day ("Private recipe, Wednesday"); a list row carries custom actions Check off and Remove (Remove announces "Rice, removed."); each side is also a custom action ("Show its objects", "Show on them"). Then Tess's line.
 - **Dynamic Type AX3:** one column; Title 58; names wrap in full; the context wraps and the side word drops under it; the day drops under its row; Tess at most 3 lines; rows at least 44 pt.
-- **Obsidian:** bg #121014, ink 245,242,236, context #B8A3FF, Tess #86B4FF, `live` #FF7D62; the Private recipe stays at 66% of ink (6.9 to 1).
+- **Obsidian:** bg #121014, ink 245,242,236, context #B8A3FF, Tess #86B4FF, `live` #FF7D62; the Private recipe is full ink like every row (no dimming).
 - **Reduce Motion:** crossfades 150 ms for stops and the row leaving.
 
 ## Rows for acceptance

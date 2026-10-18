@@ -15,7 +15,7 @@ To read a sheet: `git show HEAD:docs/design/<file>` (branch claude/project-threa
 ## 81. Notes front (Builder B; Core for the counts)
 **Build, in order**
 1. Empty page: context "A place for loose thoughts", the writing line, "Nothing written yet." at 66% ink. Tess: `Say "note: bar felt heavy" and I'll keep it here.`
-2. Private note row: reads "Private note" at 66% ink plus its time ("Tue"); no words anywhere.
+2. Private note row: reads "Private note" at 100% ink plus its time ("Tue"); no words anywhere.
 3. Long list: one sheet, back word pinned, rows fade into Tess's band from 736, a long line wraps to two, never cut. Tess: "Landlord and Bench press come up most."
 4. Side word BY THING at the right of the context line; wire it to SideHost.
 5. Core: by-thing counts through the walls (thing names only; a Private note adds only to the private count).
@@ -86,7 +86,7 @@ To read a sheet: `git show HEAD:docs/design/<file>` (branch claude/project-threa
 1. Recipes empty: context "None yet", "No recipes yet.", Tess `Paste a link or a page and I'll read it.`
 2. Lists empty: context "Just Groceries", Groceries "NOTHING TO GET", "No other lists yet." Tess `Say "new list: packing" and I'll start it.`
 3. One and long states: Recipes "1 recipe", row "Tacos, Tue"; 38 recipes scroll as one sheet, names over 30 characters wrap; Tess "Chili is the one you cook most."
-4. Private recipe row: "Private recipe" at 66% plus its day; context "38 recipes, 2 private".
+4. Private recipe row: "Private recipe" at 100% ink plus its day; context "38 recipes, 2 private".
 5. Remove an item: swipe left, REMOVE in `live` at 60 pt, commits past 96, count rolls, "Rice, removed." with 10 s UNDO; UNDO says "Rice, back on Groceries." A private item reads "Private item"; "Private item, removed.".
 **Side swipe:** Recipes ITS OBJECTS (LINKS): glance "38" recipes, "Newest, Dal", "Most used, Chili", foot ALL LINKS; full side NEWEST (3 named, "and 35 more"), MOST USED, EVERY RECIPE HAS, KEPT PRIVATE ("Private recipe", 2). Lists ON THEM (PARTS, proposed): "9" lists, "Packing 9 left", foot ALL OF THEM. Empty sides: "Nothing to show yet.", "Nothing else to show yet." Rows have no swipe of their own on the shelf.
 **Walls:** a private recipe or item name appears nowhere else and never reaches Claude.
