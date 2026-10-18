@@ -1,6 +1,6 @@
 # Pantry v2 acceptance walk script
 
-For: whoever runs the walk the moment Core's Pantry v2 PR lands. Written Sun Oct 18. Static read only: no Swift toolchain here, nothing is built or run, so a PASS below means "I read the code and the test and they match the fixture", never "the test ran green". Running `swift test` and `scripts/test.sh` stays a Mac step (see Still open).
+For: whoever runs the walk the moment Core's Pantry v2 PR lands. Written Sat Oct 17, 6:20 pm PDT (the oct18 in this file name is the UTC date). Static read only: no Swift toolchain here, nothing is built or run, so a PASS below means "I read the code and the test and they match the fixture", never "the test ran green". Running `swift test` and `scripts/test.sh` stays a Mac step (see Still open).
 
 Inputs: `docs/research/fixtures/pantry-v2.md` (Research #902, revision 2), `docs/product/kitchen-gap-hunt-12-pantry-v2-spec-oct17.md` (the spec, clauses S/E/V/U/M/C/F/P, R1 to R20 ruled with every recommended default accepted), `docs/product/pantry-acceptance.md`, and the Pantry files on origin/master (`Features/Kitchen/Pantry*.swift`, `TesseraTests/Pantry*.swift`). Rows below copy the fixture's expected text; where I name a Swift symbol that does not exist on master yet, it is marked inferred.
 
@@ -45,7 +45,7 @@ T=TesseraCore/Sources/TesseraTess/TessGrammar+Kitchen.swift
 4. Test-name sweep. Every row names the test that should cover it. This lists names from this file that no test file defines at `$R`; each missing name is "test NOT BUILT" for its row.
 
 ```bash
-WALK=/tmp/claude-0/-home-user/504a25e2-29ee-50a7-8fec-5eab60c7a5a8/scratchpad/pantry-v2-walk-script.md
+WALK=docs/product/kitchen-pantry-v2-walk-script-oct18.md   # run from the repo root
 awk -F'|' '/^\| P[DBGWPOR][0-9]+ /{print $6}' "$WALK" | grep -oE '`[a-z][A-Za-z0-9]+`' | tr -d '`' | sort -u |
 while read n; do
   git grep -qE "func $n\b" "$R" -- TesseraCore/Tests TesseraTests || echo "NO TEST: $n"
