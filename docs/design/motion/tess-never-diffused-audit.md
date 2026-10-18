@@ -1,7 +1,7 @@
 # Tess never diffused: audit of current motion scenes (item 28, Oct 17)
 
 Rule (Kaushik 12:46 PM): never a diffused or faded Tess as imagery ("looks like it died"). Audited
-docs/design/motion/prototype/tess-motion.html (master 0b6b824) and tess-*.md. Imagery here means any still, clip frame or
+docs/design/motion/prototype/tess-motion.html (at 0b6b824) and tess-*.md. Imagery here means any still, clip frame or
 banner where she is the picture; the live soul's own working colour is his 11:58 PM Oct 15 ask and is listed separately.
 
 ## Fix (reads as dimmed Tess)
@@ -22,9 +22,9 @@ Widgets, Lock Screen card and the Live Activity do not draw her (tess-picks.md, 
 
 ## Acceptance list for Builder A (all three must hold)
 1. Reduce Motion, Working: the soul's group opacity stays 1.0 (no x0.6). The three mains loosen 1.5x in place, satellites drop, colour may drain to the working grade. Check: a frame of Reduce Motion Working has the same alpha on the mains as Idle.
-2. Asleep (23:00 to 07:00): eyes closed and the slow breath carry sleep; pigment strength equals Idle's in every look. Check: the sleep clip's mean colour of the soul crop matches Idle within 2%.
+2. Asleep (23:00 to 07:00): eyes closed and the slow breath carry sleep; pigment strength equals Idle's in every look. Check (named test): `prototype/check-pigment.sh <idle.mp4> <sleep.mp4>` (see tess-motion-check.md section 6) crops the soul, averages it to one RGB with ffmpeg and fails if any channel differs by more than 2%.
 3. No poster, thumbnail, contact-sheet or QA still is taken inside the 500 ms working fade; use rest or the gather's last frame. Check: frame.mjs poster times are listed in each sheet and none falls in the fade window.
 Each item gets a line in tess-motion-check.md so QA tests it.
 
-## Board items 1-35 pass (item 39, Oct 18)
+## Board items 1-35 pass (item 39, Oct 17, PM)
 Only these board items dim or fade her: item 3/5 working fade (his own ask, live motion, ends whole: keep), item 13 quiet versions (fixes 1 and 2 above), M1 error notice (it dims Tess's LINE text to 60% on tap for 150 ms, not the soul and not imagery: keep, never use that frame as a picture), item 22 sleep (fix 2). Items 26-35 so far add no soul dimming; 32 (Low Power = Reduce Motion) must not bring back the x0.6 opacity (fix 1). No new fixes beyond the three.
