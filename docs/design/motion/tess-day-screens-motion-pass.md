@@ -137,4 +137,4 @@ fill does not run for a named action: the result lands at once, with the same si
 - Design (their files): `shutdown.md` and `shutdown-grammar.md` say `.success` for the close (map: `.done`); `habits-grammar.md:25` says medium 0.8 (map: `.done`); `day-log-v1.md:52` says "PR" (must be "best"). Kitchen's G319, G320 and G327 to G333 (spoken forms) were proposals; only the six calls above are ruled.
 - Build: `TessVoice.hold(undo:holds:)` gives any UNDO line 10 s unless the caller passes `holds` (`HomeQueue.swift:45-52`), so every row here that says "UNDO 4 s" (check-in, new habit) must pass `holds: .seconds(4)`; under VoiceOver it is a flat 10 s regardless.
 - Build: there is no timer or poll at 22:00; the Shutdown mark is written on the next open (row 76, test 7).
-- Design (new strings, unruled): "Plan skipped for today." and "Private habit today?" need Design's wording verdict before the build.
+- Design (new string, unruled): "Plan skipped for today." needs Design's wording verdict before the build. "Private habit today?" is confirmed (100% ink, plain DONE and NOT TODAY taps, no hold; `shutdown.md` commit 3fd66f0f).

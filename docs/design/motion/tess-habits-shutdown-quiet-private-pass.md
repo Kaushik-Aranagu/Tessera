@@ -40,7 +40,7 @@ A private habit reads **"Private habit"** (DEC:1039(1), 1049, 1051), never its w
 |---|---|---|
 | Habit line on the page | "Private habit", count "3 of 5" | as any habit |
 | Check-in receipt (Tess) | "Private habit, 3 of 5 this week." *(lab default; thing first)* | as any habit; `.done` |
-| Habit ask (Shutdown) | sits in the Shutdown band as one plain line (G418, DEC:1067 item 7; DEC:593 wins over the empty band in `shutdown.md`); masked: "Private habit today?" with DONE and NOT TODAY (the "Private habit" case of the one private-text function, G416/G417; the exact ask wording still needs Design's verdict, `tess-day-screens-motion-pass.md:140`) | as any ask; answer `.selection` |
+| Habit ask (Shutdown) | sits in the Shutdown band as one plain line (G418, DEC:1067 item 7; DEC:593 wins over the empty band in `shutdown.md`); masked: "Private habit today?" with DONE and NOT TODAY (the "Private habit" case of the one private-text function, G416/G417; Design confirmed the wording: 100% ink, plain DONE and NOT TODAY taps, no hold; `shutdown.md` commit 3fd66f0f) | as any ask; answer `.selection` |
 | Ask receipt | "Private habit, done." UNDO 10 s *(lab default)* | as any habit |
 | Week met | "Private habit is done for the week." (the code's plural form, `HabitsCopy.swift:31`); in a list: "Private habit and Stretch are done for the week." | joined stroke, 700 ms; none |
 | Rule line ("Train now counts workouts.") | "Private habit now counts workouts." | `.selection` |
@@ -84,7 +84,7 @@ Windows are 4 s for a new write, 10 s for a change or removal, and a flat 10 s u
 ## 7. Asks
 1. **Product:** first-Shutdown line, `DEC:590` "3 moving to tomorrow. Tap any to keep." against `DEC:342` and `shutdown-grammar.md:31` "Tap any for later." Which wins?
 2. **Product:** confirm §3's two receipts, "Private habit, 3 of 5 this week." and "Private habit, done."; confirm §5's pause window (10 s) and the thing-first undo wording; confirm §6 items 1, 2, 3 and 4.
-3. **Design:** the verdict on "Private habit today?" (open since `tess-day-screens-motion-pass.md:140`); `shutdown.md` and `shutdown-grammar.md` still say `.success` for the close, `habits-grammar.md:25` still says medium 0.8, and the sheets differ on the undo line ("Shutdown, taken back." against "Shutdown taken back.").
+3. **Design:** "Private habit today?" is confirmed (closed); `shutdown.md` and `shutdown-grammar.md` still say `.success` for the close, `habits-grammar.md:25` still says medium 0.8, and the sheets differ on the undo line ("Shutdown, taken back." against "Shutdown taken back.").
 4. **Builder A (when built):** the quiet-hours gate and origin field on `Haptic`; close `Paint.swift:314`; delete the raw `.success` at `TessSoul.swift:143`; pass `holds: .seconds(4)` on the 4 s rows.
 
 ## 8. Tests
