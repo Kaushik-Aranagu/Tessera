@@ -89,7 +89,7 @@ struct RoutineEditor: View {
         .navigationBarBackButtonHidden(true)
         .toolbarVisibility(.hidden, for: .navigationBar)
         .background { EdgeSwipeBack() }
-        .sensoryFeedback(.selection, trigger: haptic)
+        .tesseraFeedback(.selection, trigger: haptic)
     }
 
     /// "Routines" when he came from the Routines page, else "Training".

@@ -309,7 +309,7 @@ struct ReviewPage: View {
             Spacer(minLength: 0)
         }
         .tesseraAnimation(Theme.Motion.house, value: reading)
-        .sensoryFeedback(.selection, trigger: taps)
+        .tesseraFeedback(.selection, trigger: taps)
         .contentShape(Rectangle())
         // Tap anywhere else and the week comes back.
         .onTapGesture {
