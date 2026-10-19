@@ -91,6 +91,10 @@ public struct HoldNotice: EngineAction {
         return notice
     }
 
+    public var recordsOps: Bool {
+        false
+    }
+
     public func summary(in _: ObjectStore) -> String {
         "Held a notification"
     }
@@ -114,6 +118,10 @@ public struct ReleaseHeldNotices: EngineAction {
     }
 
     public var logsWhenEmpty: Bool {
+        false
+    }
+
+    public var recordsOps: Bool {
         false
     }
 

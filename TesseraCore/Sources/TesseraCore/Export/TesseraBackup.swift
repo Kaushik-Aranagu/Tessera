@@ -94,6 +94,19 @@ public enum TesseraBackup {
         if leavingOutPrivate {
             try leaveOutPrivate(PrivateWords.labels(in: context), from: copy, context: context)
         }
+        // The mirrors (calendar, Health, held notices) are in no copy at all, the local one included.
+        let mirrors = PrivateWords.mirrorIDs(in: context)
+        if !mirrors.isEmpty {
+            try copy.writeWithoutTransaction { try $0.execute(sql: "PRAGMA secure_delete = ON") }
+            try copy.write { db in
+                for id in mirrors.map(\.uuidString) {
+                    try db.execute(sql: "DELETE FROM object WHERE id = ?", arguments: [id])
+                    try db.execute(sql: "DELETE FROM link WHERE fromID = ? OR toObjectID = ?", arguments: [id, id])
+                    try db.execute(sql: "DELETE FROM op WHERE instr(objectIDs, ?) > 0", arguments: [id])
+                }
+            }
+            try copy.writeWithoutTransaction { try $0.execute(sql: "VACUUM") }
+        }
         // One self-contained file: the copy inherits WAL mode from the store, which would leave -wal/-shm siblings.
         try copy.writeWithoutTransaction { try $0.execute(sql: "PRAGMA journal_mode = DELETE") }
         try copy.write { db in

@@ -246,6 +246,11 @@ public struct SyncHealth: EngineAction {
         false
     }
 
+    /// Calendar and Health values never reach the op log (nor, through it, a backup or an export).
+    public var recordsOps: Bool {
+        false
+    }
+
     public func summary(in _: ObjectStore) -> String {
         "Read Health"
     }
