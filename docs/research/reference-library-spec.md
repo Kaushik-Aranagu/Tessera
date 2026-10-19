@@ -137,7 +137,7 @@ Per 100 g of the food as described by the source record. Stored exactly as publi
 | `protein` | 1003 | g | yes |
 | `fat` | 1004 (total lipid) | g | yes |
 | `carbohydrate` | 1005 (by difference) | g | yes |
-| `fibre` | 1079 (total dietary) | g | yes |
+| `fiber` | 1079 (total dietary) | g | yes |
 | `sugars` | 2000 (total sugars) | g | new, to agree |
 | `sodium` | 1093 | mg | new, to agree |
 | `saturatedFat` | 1258 | g | new, to agree |
@@ -147,8 +147,8 @@ Plus per row: `fdcID`, `dataType` (Foundation or SR Legacy), the FDC description
 Portions (subject to CALL 1): table `portion` with `refID`, `label` (the FDC measure and modifier, "1 cup, chopped"),
 `amount`, `gramWeight` (g), `sortIndex`. Used only to turn "1 cup" on a recipe line into grams for the PER 100 G
 side; never multiplied into a total. Units: mass in g and mg as above; energy kcal only (no kJ in v1); no per-serving
-values anywhere. Missing nutrient = no value (null), never 0. **To agree with Kitchen:** the three new fields, the
-key names, and whether portions ship at all.
+values anywhere. Missing nutrient = no value (null), never 0. **Agreed with Kitchen (Oct 19):** the 8 fields, units and FDC ids; null never 0; per 100 g stored as published; the key is `fiber` (US spelling; the earlier `fibre_g` in `food-table-usda.md` is renamed `fiber_g` in this PR). Portions ship as ruled in CALL 1 B.
+Portion choice: when a food has several portions, pick the one whose label matches the recipe line's unit; if none matches, show no grams. Never guess.
 
 ## 5. Exclusions (what the library is never part of)
 
@@ -236,6 +236,8 @@ script, Sources page, library pages), **Kitchen** (nutrition fields, ingredient 
 | R15 | Every refID in the previous file is live or retired in the new one. | `noRefIDVanishesBetweenVersions` | Builder B |
 | R16 | Each food row has the 8 fields of section 4 in their units; a missing nutrient is null, never 0. | `foodRowsHaveTheAgreedFieldsAndUnits` | Kitchen |
 | R17 | No row or portion carries a per-serving or total field (`decisions.md:183`). | `noFoodRowHasPerServingOrTotalFields` | Kitchen |
+| R17b | No code multiplies a portion's `gramWeight` by a nutrient value, and the PER 100 G side shows only the per-100 g figures plus the gram conversion of the line (intake is a walled body fact, `decisions.md:183`). | `noCodeMultipliesPortionGramsByNutrients` | Kitchen |
+| R17c | A food with several portions uses the one whose label matches the recipe line's unit; with no match it shows no grams. | `portionPickedByUnitMatchElseNoGrams` | Kitchen |
 | R18 | The 20 fixture keys match the bundle (`docs/research/fixtures/food-table-20.json`). | `foodFixtureKeysMatchTheBundle` | Kitchen |
 | R19 | Every dataset row has licence, version, source URL, checked date and attribution line. | `everyDatasetRecordsLicenceAndVersion` | Builder B |
 | R20 | The builder refuses a dataset whose verdict is not BUNDLE or whose download hash differs. | `builderRefusesUnverifiedOrChangedSources` | Builder B |
@@ -243,12 +245,14 @@ script, Sources page, library pages), **Kitchen** (nutrition fields, ingredient 
 | R22 | The reference file is at most 8 MB and each dataset within its cap. | `referenceFileFitsTheSizeBudget` | Builder B |
 | R23 | The Sources page lists every bundled dataset with its attribution line verbatim. | `sourcesPageListsEveryDataset` | Builder B |
 | R24 | A missing or bad-checksum file reads as an empty library; Kitchen and Training still open. | `missingLibraryReadsEmptyAndAppRuns` | Core |
-| R25 | A library lookup in the Ask bar never routes to Claude; secret words are refused first. | `libraryLookupsStayOnThePhone` | Core |
+| R25 | A phrase the grammar reads as a library lookup stays on the phone (Core adds library-lookup phrases to the grammar, preferred); an unreadable phrase follows the capture-miss route; secret words are refused first. | `libraryLookupsStayOnThePhone` | Core |
 | R26 | Nothing sent to Claude includes library rows labelled as his data. | `claudePayloadNeverPacksLibraryAsHis` | Core |
 | R27 | A widget or Live Activity state never holds a library value for a masked object of his. | `widgetStateNeverShowsLibraryValuesOfMasked` | Core |
 | R28 | A library page's "used in" list shows a private recipe as "Private recipe". | `libraryBacklinksMaskPrivateObjects` | Kitchen |
 | R29 | Library items are never donated to Spotlight. | `libraryItemsAreNotIndexedInSpotlight` | Builder B |
 | R30 | No image file is in the reference bundle. | `referenceBundleHoldsNoImages` | Builder B |
+| R31 | A private ingredient shows no library title and gets no name-match suggestion; the `libraryRef` title snapshot masks with the ingredient (`ObjectPrivacy.isPrivateTitle` on the ingredient name). | `privateIngredientShowsNoLibraryTitleOrSuggestion` | Kitchen |
+| R32 | Pantry and Groceries show no library facts on a masked item. | `maskedPantryAndGroceryItemsShowNoLibraryFacts` | Builder B |
 
 ## 9. PRODUCT CALLS
 
