@@ -125,8 +125,6 @@ struct MuscleFigure: View {
     /// The one VoiceOver line for the whole figure ("Works chest, shoulders and triceps"); empty hides it.
     var spoken = ""
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     private var outline: [String] {
         back ? MuscleFigureArt.backOutline : MuscleFigureArt.frontOutline
     }
