@@ -447,7 +447,7 @@ private struct PropertyList: View {
         }
     }
 
-    /// One element per property (OL23): "Weight, 60 kg". At accessibility sizes the value stacks under its name
+    /// One element per plain property (OL23): "Weight, 60 kg"; a link property contains its handles. At accessibility sizes the value stacks under its name
     /// rather than squeezing beside it (OL24).
     private func row(_ field: ResolvedField) -> some View {
         let inherited = field.declaringClassID != classDef.id
@@ -469,7 +469,8 @@ private struct PropertyList: View {
             value(field).multilineTextAlignment(stacked ? .leading : .trailing)
         }
         .padding(.vertical, Theme.Spacing.m)
-        .accessibilityElement(children: .combine)
+        // A link row keeps each handle its own stop, so every target can be reached (Design on #1075).
+        .accessibilityElement(children: [.ref, .refList, .classRef].contains(field.kind) ? .contain : .combine)
     }
 
     @ViewBuilder private func value(_ field: ResolvedField) -> some View {
