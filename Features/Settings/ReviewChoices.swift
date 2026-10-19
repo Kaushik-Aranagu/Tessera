@@ -25,6 +25,9 @@ final class ReviewChoices {
         let defaultValue: String
         /// One short line per value, for the before/after line: "Rest counts down after every set."
         let says: [String: String]
+        /// The new way sends something to Claude. The type doesn't enforce it: the feature that reads the switch
+        /// must also gate on "Tess asks Claude" (`AppModel.asksClaude`) and the month's cap, and a switch never turns
+        /// Claude on by itself.
         var needsClaude = false
         var readiness: Readiness = .live
     }
@@ -33,13 +36,14 @@ final class ReviewChoices {
 
     /// Product's rows (huddle batches, Oct 19), in its order. A row turns `.live` in the PR that wires its feature.
     nonisolated static let all: [Choice] = [
+        // Today leaves today's type tokens untouched; Sheet 99's sizes come through a switch-aware lookup.
         Choice(id: "readingLayout", name: "Reading layout", values: ["Today", "Sheet 99"], defaultValue: "Today",
                says: ["Today": "Groceries, Now, Exercise and Backups read as they do now.",
                       "Sheet 99": "Those four pages use three type sizes, refit for reading."],
                readiness: .arrivesWith("the sheet 99 refit")),
         Choice(id: "restTimer", name: "Rest timer", values: ["On", "Off"], defaultValue: "On",
                says: ["On": "Rest counts down after each set and says when it's up.",
-                      "Off": "No countdown and no alert between sets."],
+                      "Off": "No countdown, no rest alert and no rest keys on the Lock Screen."],
                readiness: .arrivesWith("the rest-end alert")),
         Choice(id: "swapExercise", name: "Swap exercise", values: ["Two taps", "One tap"], defaultValue: "Two taps",
                says: ["Two taps": "Swap asks once, then swaps.",
@@ -49,19 +53,21 @@ final class ReviewChoices {
                says: ["Off": "A workout left open waits quietly.",
                       "On": "One quiet nudge when a workout was left open."],
                readiness: .arrivesWith("the finish nudge")),
-        Choice(id: "pageTurn", name: "Page turn", values: ["Slide", "Turn", "Soften", "Rotate"],
-               defaultValue: "Slide",
-               says: ["Slide": "Pages slide across, as now.",
+        Choice(id: "pageTurn", name: "Page turn", values: ["Today", "Slide", "Turn", "Soften", "Rotate"],
+               defaultValue: "Today",
+               says: ["Today": "Pages change as they do now.",
+                      "Slide": "Pages slide across.",
                       "Turn": "Pages turn like paper.",
                       "Soften": "Pages soften into each other.",
                       "Rotate": "Pages rotate on their edge."],
                readiness: .arrivesWith("page turns")),
-        Choice(id: "tessFace", name: "Tess's face", values: ["Off", "Eyes", "Eyes and mouth"], defaultValue: "Off",
+        Choice(id: "tessFace", name: "Tess has eyes", values: ["Off", "Eyes", "Eyes and mouth"], defaultValue: "Off",
                says: ["Off": "Tess is a plain mark, as now.", "Eyes": "Tess has eyes.",
                       "Eyes and mouth": "Tess has eyes and a small mouth."],
                readiness: .arrivesWith("Tess's mouth")),
-        Choice(id: "planMyDay", name: "Plan my day", values: ["Off", "On"], defaultValue: "Off",
-               says: ["Off": "No morning plan.", "On": "A plan for the day on Now at 8 am."],
+        Choice(id: "planMyDay", name: "Plan my day, Claude wording", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The morning plan in Tess's own words, as now.",
+                      "On": "The same plan, worded by Claude."],
                needsClaude: true, readiness: .arrivesWith("Plan my day")),
         Choice(id: "shutdown", name: "Shutdown", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No evening close.", "On": "A short close of the day on Now at 9 pm."],
@@ -81,9 +87,9 @@ final class ReviewChoices {
                says: ["Today's": "The area index shows today's areas.",
                       "All": "Body weight, Habits, Money, Reading, People and Upkeep show too."],
                readiness: .arrivesWith("the new areas")),
-        Choice(id: "linkFetch", name: "Link fetch", values: ["Off", "On"], defaultValue: "Off",
-               says: ["Off": "A recipe link waits for you to read it.",
-                      "On": "A recipe link is read as soon as it's kept."],
+        Choice(id: "linkFetch", name: "Link reader v2", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Recipe links are read as they are now.",
+                      "On": "A link the first reader can't read goes to a second reader, then Claude."],
                needsClaude: true, readiness: .arrivesWith("link reading")),
         Choice(id: "cookTimerVoice", name: "Cook timer voice", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "A cook timer ends with its alert.", "On": "Tess says the timer's name when it ends."],
@@ -118,8 +124,9 @@ final class ReviewChoices {
     }
 
     /// The value in force: his pick this run, else the one kept on the phone, else the default. A kept value that
-    /// is no longer one of the choice's values reads as the default.
+    /// is no longer one of the choice's values reads as the default, and so does any switch that isn't live yet.
     func value(of choice: Choice) -> String {
+        guard choice.readiness == .live else { return choice.defaultValue }
         if let value = picked[choice.id] {
             return value
         }
@@ -142,8 +149,9 @@ final class ReviewChoices {
         set(choice, to: choice.values[next])
     }
 
+    /// A switch that isn't live only ever goes back to its default (QA on #1096).
     func set(_ choice: Choice, to value: String) {
-        guard choice.values.contains(value) else { return }
+        guard choice.values.contains(value), choice.readiness == .live || value == choice.defaultValue else { return }
         picked[choice.id] = value
         guard writes else { return }
         if value == choice.defaultValue {

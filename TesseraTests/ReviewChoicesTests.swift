@@ -31,17 +31,18 @@ struct ReviewChoicesTests {
         let (choices, defaults) = try fresh()
         var pageTurn = try choice("pageTurn")
         pageTurn.readiness = .live
+        #expect(choices.value(of: pageTurn) == "Today")
         choices.step(pageTurn)
-        #expect(choices.value(of: pageTurn) == "Turn")
-        #expect(defaults.string(forKey: "review.pageTurn") == "Turn")
-        #expect(ReviewChoices(defaults: defaults, writes: true).value(of: pageTurn) == "Turn")
+        #expect(choices.value(of: pageTurn) == "Slide")
+        #expect(defaults.string(forKey: "review.pageTurn") == "Slide")
+        #expect(ReviewChoices(defaults: defaults, writes: true).value(of: pageTurn) == "Slide")
         choices.step(pageTurn, forward: false)
         choices.step(pageTurn, forward: false)
         #expect(choices.value(of: pageTurn) == "Rotate")
-        #expect(choices.beforeAfter(pageTurn, before: "Slide")
-            == "Before: Pages slide across, as now. Now: Pages rotate on their edge.")
+        #expect(choices.beforeAfter(pageTurn, before: "Today")
+            == "Before: Pages change as they do now. Now: Pages rotate on their edge.")
         choices.resetAll([pageTurn])
-        #expect(choices.value(of: pageTurn) == "Slide")
+        #expect(choices.value(of: pageTurn) == "Today")
         #expect(defaults.string(forKey: "review.pageTurn") == nil)
     }
 
@@ -52,6 +53,18 @@ struct ReviewChoicesTests {
         #expect(calendar.readiness == .later)
         choices.step(calendar)
         #expect(choices.value(of: calendar) == "Off")
+    }
+
+    /// QA on #1096: setting a waiting switch straight to its new value leaves it at today's and writes nothing.
+    @Test func setOnAWaitingSwitchWritesNothing() throws {
+        let (choices, defaults) = try fresh()
+        let calendar = try choice("calendar")
+        choices.set(calendar, to: "On")
+        #expect(choices.value(of: calendar) == "Off")
+        #expect(defaults.string(forKey: "review.calendar") == nil)
+        // A value kept on the phone from before reads as the default while the switch waits.
+        defaults.set("On", forKey: "review.calendar")
+        #expect(ReviewChoices(defaults: defaults, writes: true).value(of: calendar) == "Off")
     }
 
     /// Under -demo nothing is written: a pick lasts until the app quits.
