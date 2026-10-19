@@ -19,7 +19,7 @@ public enum SystemCatalog {
         case process
         case slot, plan
         case tessCall
-        case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice
+        case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend
         case tessSent
         case settings
         case tessWaiting
@@ -258,6 +258,17 @@ public enum SystemCatalog {
                       FieldSpec(key: "priority", name: "Priority", kind: .text),
                       FieldSpec(key: "dueAt", name: "Due", kind: .date),
                   ]),
+        // One spend (Money, M5): an amount logged like a set. Stored as typed ("12.40", "€8", "20 eur"); nothing is
+        // converted and nothing is summed across currencies. Private everywhere except its own page and the Month.
+        ClassSpec(key: .spend, name: "Spend", parent: .thing, symbol: "banknote", colorRole: "neutral", fields: [
+            FieldSpec(key: "amount", name: "Amount", kind: .number),
+            FieldSpec(key: "typed", name: "As typed", kind: .text),
+            FieldSpec(key: "currency", name: "Currency", kind: .text),
+            FieldSpec(key: "note", name: "Note", kind: .text),
+            FieldSpec(key: "category", name: "Category", kind: .text),
+            FieldSpec(key: "spentAt", name: "Spent", kind: .date),
+            FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+        ]),
         ClassSpec(key: .sleepNight, name: "Sleep Night", parent: .thing, symbol: "bed.double", colorRole: "neutral",
                   fields: [
                       FieldSpec(key: "date", name: "Night ending", kind: .date),

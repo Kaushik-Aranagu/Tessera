@@ -27,6 +27,7 @@ public enum ActionRegistry {
         WaitOnTask.descriptor, KeepPlannedTask.descriptor, CreateClass.descriptor,
         SyncCalendar.descriptor, SyncHealth.descriptor, CloseDay.descriptor, StartFocusBlock.descriptor,
         FocusCheckIn.descriptor, AcceptFirstStep.descriptor, HoldNotice.descriptor, ReleaseHeldNotices.descriptor,
+        LogSpend.descriptor, EditSpend.descriptor, LogShopTotal.descriptor, SkipShopTotal.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
@@ -123,6 +124,10 @@ public enum ActionRegistry {
         AcceptFirstStep.descriptor.name: { try decode(AcceptFirstStep.self, AcceptFirstStep.descriptor.name, $0) },
         HoldNotice.descriptor.name: { try decode(HoldNotice.self, HoldNotice.descriptor.name, $0) },
         ReleaseHeldNotices.descriptor.name: { try decode(ReleaseHeldNotices.self, ReleaseHeldNotices.descriptor.name, $0) },
+        LogSpend.descriptor.name: { try decode(LogSpend.self, LogSpend.descriptor.name, $0) },
+        EditSpend.descriptor.name: { try decode(EditSpend.self, EditSpend.descriptor.name, $0) },
+        LogShopTotal.descriptor.name: { try decode(LogShopTotal.self, LogShopTotal.descriptor.name, $0) },
+        SkipShopTotal.descriptor.name: { try decode(SkipShopTotal.self, SkipShopTotal.descriptor.name, $0) },
         SyncHealth.descriptor.name: { try decode(SyncHealth.self, SyncHealth.descriptor.name, $0) },
         AddSlot.descriptor.name: { try decode(AddSlot.self, AddSlot.descriptor.name, $0) },
         StartRoutine.descriptor.name: { try decode(StartRoutine.self, StartRoutine.descriptor.name, $0) },

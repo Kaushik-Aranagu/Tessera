@@ -102,7 +102,7 @@ public enum DayStory {
         "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
         "endProcess", "writeSettings", "createClass", "syncCalendar", "syncHealth", "closeDay", "startFocusBlock", "focusCheckIn", "acceptFirstStep",
-        "holdNotice", "releaseHeldNotices",
+        "holdNotice", "releaseHeldNotices", "logSpend", "editSpend", "logShopTotal", "skipShopTotal",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).

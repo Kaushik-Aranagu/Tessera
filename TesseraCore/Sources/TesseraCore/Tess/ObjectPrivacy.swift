@@ -11,6 +11,8 @@ public enum ObjectPrivacy {
     public static let memoryLabel = "Private memory"
     /// A recipe has no flag on master; the title rule decides (kitchen-week-one-private-filter PF4, gap hunt G21).
     public static let recipeLabel = "Private recipe"
+    /// What a spend reads everywhere but its own page and the Month page (Money amendment 2).
+    public static let spendLabel = "Private spend"
     /// What a workout's notes read on the generic page (Product 5:20 PM PT).
     public static let keptNoteLabel = "Note kept private"
     /// What a private routine's title reads wherever a workout shows its name: the Done hero and line, the UNDO line,
@@ -57,6 +59,11 @@ public enum ObjectPrivacy {
         // are #895's branches.
         if isA(.ingredient) {
             return isPrivateRecipeTitle(object.title, lastWeightKg: last) ? "Private item" : nil
+        }
+        // A spend always carries an amount, so outside its own page and the Month page it is always private
+        // (Money amendment 2).
+        if isA(.spend) {
+            return spendLabel
         }
         return nil
     }
