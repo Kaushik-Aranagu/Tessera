@@ -207,6 +207,7 @@ final class AppModel {
             }
             // Only when a request really leaves the phone: the Ask shows "Asking Claude." with Cancel (batch 3).
             claudeFlags.willSend = { [weak self] in self?.isAskingClaude = true }
+            refreshKeyQuestion()
         }
         // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.
         let outcome: String? = switch TesseraSchema.lastOpenOutcome {
@@ -224,6 +225,10 @@ final class AppModel {
     /// A capture is on its way to Claude right now: the Ask says "Asking Claude." with Cancel until it answers, fails
     /// or is cancelled (8 s at most, Core's one deadline).
     private(set) var isAskingClaude = false
+    /// "Use the Claude key still on this phone?" is due: a key is here and he has never answered (G687).
+    private(set) var keyQuestionDue = false
+    /// He said Later, or Now already showed it this launch: Now stays quiet until the next cold launch.
+    var keyQuestionQuietOnNow = false
 
     /// The first launch's "Sunday, rest day." op, shown once in Tess's band with UNDO, then cleared.
     var restReceipt: OpRecord?
@@ -756,5 +761,32 @@ extension AppModel {
     /// Cancel under "Asking Claude.": Core stops the call and the capture ends with "Cancelled.".
     func cancelAskingClaude() {
         claudeFlags.cancelAsking()
+    }
+}
+
+// MARK: - The found-key question (G687)
+
+extension AppModel {
+    /// Whether the question is due now. Key presence is a Bool only: the key's text is read by the Keychain call and
+    /// dropped here, never kept, logged or written. Never in a demo or on a throwaway store.
+    func refreshKeyQuestion(keys: any TessKeychain = SystemKeychain()) {
+        keyQuestionDue = !Self.isDemo && settingsAreReal
+            && SettingsStore(engine: engine).claudeQuestionDue(keyPresent: keys.read() != nil)
+    }
+
+    /// His answer: Yes or No writes one op and returns its receipt; Later (nil) writes nothing and quiets Now for
+    /// this launch.
+    @discardableResult
+    func answerKeyQuestion(_ answer: Bool?) -> String? {
+        guard let answer else {
+            keyQuestionQuietOnNow = true
+            return nil
+        }
+        guard (try? SettingsStore(engine: engine).answerClaudeQuestion(answer)) != nil else {
+            return ClaudeKeyQuestionCopy.notSaved
+        }
+        keyQuestionDue = false
+        touch()
+        return answer ? ClaudeKeyQuestionCopy.yesReceipt : ClaudeKeyQuestionCopy.noReceipt
     }
 }

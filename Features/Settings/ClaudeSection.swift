@@ -206,10 +206,26 @@ struct ClaudeSection: View {
             }
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("Key saved · \(Text(status).foregroundStyle(Theme.Colors.inkSecondary))")
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .accessibilityLabel("Claude key saved, \(status)")
+                if model.keyQuestionDue {
+                    // A key found on a fresh store sends nothing until he answers (G687).
+                    Text(ClaudeKeyQuestionCopy.found)
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.ink)
+                    ClaudeKeyQuestion { answer in
+                        let receipt = model.answerKeyQuestion(answer)
+                        missesGoToClaude = model.asksClaude
+                        if let receipt {
+                            withTesseraAnimation(reduceMotion: reduceMotion) { switchLine = receipt }
+                            AccessibilityNotification.Announcement(receipt).post()
+                        }
+                    }
+                    .padding(.vertical, Theme.Spacing.s)
+                } else {
+                    Text("Key saved · \(Text(status).foregroundStyle(Theme.Colors.inkSecondary))")
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .accessibilityLabel("Claude key saved, \(status)")
+                }
                 if confirmingRemove {
                     removeQuestion
                         .transition(.opacity.combined(with: .offset(y: -4)))
@@ -373,6 +389,7 @@ struct ClaudeSection: View {
             if result.saved, !LaunchFlags.has("-demo") {
                 try? SettingsStore(engine: model.engine).noteKeySaved()
                 missesGoToClaude = model.asksClaude
+                model.refreshKeyQuestion(keys: keys)
             }
             withTesseraAnimation(reduceMotion: reduceMotion) {
                 line = result.line
