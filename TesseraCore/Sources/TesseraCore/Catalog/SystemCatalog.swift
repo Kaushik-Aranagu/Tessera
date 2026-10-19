@@ -19,6 +19,7 @@ public enum SystemCatalog {
         case process
         case slot, plan
         case tessCall
+        case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice
         case tessSent
         case settings
         case tessWaiting
@@ -220,6 +221,66 @@ public enum SystemCatalog {
             // never in memory, packs or the miss log; in his backups (Q1).
             FieldSpec(key: "isPrivate", name: "Private", kind: .bool),
         ]),
+        // The calendar and Health mounts (M4 slices 1 and 2): read-only mirrors, written by the system, never by him.
+        ClassSpec(key: .event, name: "Event", parent: .thing, symbol: "calendar", colorRole: "neutral", fields: [
+            FieldSpec(key: "start", name: "Start", kind: .date),
+            FieldSpec(key: "end", name: "End", kind: .date),
+            FieldSpec(key: "allDay", name: "All day", kind: .bool),
+            FieldSpec(key: "calendarName", name: "Calendar", kind: .text),
+            FieldSpec(key: "location", name: "Location", kind: .text),
+            FieldSpec(key: "isRecurring", name: "Recurring", kind: .bool),
+            FieldSpec(key: "key", name: "Key", kind: .text),
+            FieldSpec(key: "busy", name: "Busy", kind: .bool),
+            FieldSpec(key: "attendance", name: "Attendance", kind: .text),
+            FieldSpec(key: "cancelled", name: "Cancelled", kind: .bool),
+            FieldSpec(key: "eventTimeZone", name: "Time zone", kind: .text),
+            FieldSpec(key: "kind", name: "Kind", kind: .text),
+            FieldSpec(key: "contactId", name: "Contact", kind: .text),
+            FieldSpec(key: "edited", name: "Edited", kind: .bool),
+            FieldSpec(key: "countsForMe", name: "Counts for me", kind: .bool),
+            FieldSpec(key: "marker", name: "Marker", kind: .bool),
+            FieldSpec(key: "frozen", name: "Frozen", kind: .bool),
+        ]),
+        // One closed day (Shutdown, M4 slice 7): when it closed and by whom, his line for tomorrow, and the frozen Day log
+        // line for that day.
+        ClassSpec(key: .closedDay, name: "Closed Day", parent: .thing, symbol: "moon.stars", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "date", name: "Day", kind: .date),
+                      FieldSpec(key: "closedAt", name: "Closed at", kind: .date),
+                      FieldSpec(key: "silent", name: "Closed by itself", kind: .bool),
+                      FieldSpec(key: "tomorrowLine", name: "Tomorrow, first", kind: .text),
+                      FieldSpec(key: "dayLine", name: "Day log line", kind: .text),
+                  ]),
+        // A Tessera notification held back while a workout, cook or focus block runs (M4 slice 4): released as one
+        // digest at the next context switch. Never holds anything but the notice's own words.
+        ClassSpec(key: .heldNotice, name: "Held Notice", parent: .thing, symbol: "bell.slash", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "priority", name: "Priority", kind: .text),
+                      FieldSpec(key: "dueAt", name: "Due", kind: .date),
+                  ]),
+        ClassSpec(key: .sleepNight, name: "Sleep Night", parent: .thing, symbol: "bed.double", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "date", name: "Night ending", kind: .date),
+                      FieldSpec(key: "asleepMinutes", name: "Asleep", kind: .number, unit: "min"),
+                      FieldSpec(key: "inBedMinutes", name: "In bed", kind: .number, unit: "min"),
+                      FieldSpec(key: "awakeMinutes", name: "Awake", kind: .number, unit: "min"),
+                      FieldSpec(key: "coreMinutes", name: "Core", kind: .number, unit: "min"),
+                      FieldSpec(key: "deepMinutes", name: "Deep", kind: .number, unit: "min"),
+                      FieldSpec(key: "remMinutes", name: "REM", kind: .number, unit: "min"),
+                      FieldSpec(key: "source", name: "Source", kind: .text),
+                      FieldSpec(key: "basis", name: "Basis", kind: .text),
+                      FieldSpec(key: "partial", name: "Partial", kind: .bool),
+                  ]),
+        ClassSpec(key: .stepsDay, name: "Steps Day", parent: .thing, symbol: "figure.walk", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "date", name: "Day", kind: .date),
+                      FieldSpec(key: "count", name: "Steps", kind: .number),
+                  ]),
+        ClassSpec(key: .restingHeartRate, name: "Resting Heart Rate", parent: .thing, symbol: "heart",
+                  colorRole: "neutral", fields: [
+                      FieldSpec(key: "date", name: "Day", kind: .date),
+                      FieldSpec(key: "bpm", name: "Resting heart rate", kind: .number, unit: "bpm"),
+                  ]),
         // One call Tess made to Claude (or a key Test): tokens, cost in nano-dollars, outcome. Written without ops;
         // never
         // holds the key. The month cap (TessUsageLedger.capNano) is a query over these.
