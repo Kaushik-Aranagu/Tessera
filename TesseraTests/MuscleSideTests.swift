@@ -92,4 +92,28 @@ struct MuscleSideTests {
         }
         #expect(MuscleReading.lit(day, isPrivate: false).count == day.count)
     }
+
+    @Test func theExercisePageIsPlainWhenOpenedFromAPrivateWorkout() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let routine = try #require(model.todaysRoutine())
+        let exercise = try #require(model.classDef(.exercise))
+        // A plain routine: the page lights as usual, whether it came from the routine or from nowhere.
+        model.path = [.object(routine.id), .classDef(exercise.id)]
+        #expect(!MuscleReading.openedFromPrivate(model))
+        model.path = [.classDef(exercise.id)]
+        #expect(!MuscleReading.openedFromPrivate(model))
+        // The same routine renamed to something private: opened from it, the page is the plain outline.
+        try model.engine.perform(RenameObject(object: routine.id, title: "Knee rehab day"), by: .user)
+        model.path = [.object(routine.id), .classDef(exercise.id)]
+        #expect(MuscleReading.openedFromPrivate(model))
+        // Opened from a page that is not the private one: lit as usual.
+        model.path = [.classDef(exercise.id)]
+        #expect(!MuscleReading.openedFromPrivate(model))
+        // From the live private workout.
+        model.startRoutine(routine)
+        model.isWorkoutPresented = true
+        #expect(MuscleReading.openedFromPrivate(model))
+        model.endWorkout()
+    }
 }

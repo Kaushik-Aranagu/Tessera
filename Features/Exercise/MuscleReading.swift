@@ -39,4 +39,18 @@ enum MuscleReading {
         let primary = muscles.filter { $0.role == .primary }.map(\.name)
         return primary.isEmpty ? "" : MuscleWords.works(primary).lowercased()
     }
+
+    /// Whether the exercise page was opened from a private workout or routine (the live workout, or any page before
+    /// this one on the stack): its figure is then the plain outline. When unsure, wall.
+    static func openedFromPrivate(_ model: AppModel) -> Bool {
+        if model.isWorkoutPresented, let session = model.session, session.shownTitle != session.workout.title {
+            return true
+        }
+        let stack = model.isWorkoutPresented ? model.workoutPath : model.path
+        return stack.dropLast().contains { route in
+            guard case let .object(id) = route, let record = model.object(id) else { return false }
+            return ObjectPrivacy.routineTitle(model.store.displayTitle(of: record), in: model.store)
+                == ObjectPrivacy.routineLabel
+        }
+    }
 }

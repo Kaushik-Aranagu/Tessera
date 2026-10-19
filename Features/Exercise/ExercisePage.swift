@@ -32,7 +32,7 @@ struct ExercisePage: View {
             ExerciseHeader(digest: digest)
                 .padding(.bottom, Theme.Spacing.l)
 
-            ExerciseSummary(digest: digest)
+            ExerciseSummary(digest: digest, isPrivate: MuscleReading.openedFromPrivate(model))
                 .entrance(3)
                 .padding(.bottom, Theme.Spacing.l)
 
@@ -121,6 +121,8 @@ private struct ExerciseHeader: View {
 
 private struct ExerciseSummary: View {
     let digest: ExerciseDigest
+    /// Opened from a private workout or routine: the figures draw the plain outline.
+    var isPrivate = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -138,7 +140,8 @@ private struct ExerciseSummary: View {
                 // right edge, drawn a little into the gutter, and hidden from VoiceOver.
                 .overlay(alignment: .topTrailing) {
                     if !typeSize.isAccessibilitySize {
-                        ExerciseFigures(muscles: digest.muscles.map { (name: $0.name, role: MuscleRole($0.role)) })
+                        ExerciseFigures(muscles: digest.muscles.map { (name: $0.name, role: MuscleRole($0.role)) },
+                                        isPrivate: isPrivate)
                             .offset(x: 20, y: -16)
                     }
                 }
@@ -191,11 +194,15 @@ private struct ExerciseSummary: View {
 struct ExerciseFigures: View {
     let muscles: [(name: String, role: MuscleRole)]
     var tint: Color = Theme.Colors.training
+    /// Opened from a private workout or routine: nothing is lit.
+    var isPrivate = false
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach([false, true], id: \.self) { back in
-                MuscleFigure(back: back, roles: MuscleFigureMap.roles(muscles, back: back), tint: tint,
+                MuscleFigure(back: back,
+                             roles: MuscleFigureMap.roles(MuscleReading.lit(muscles, isPrivate: isPrivate), back: back),
+                             tint: tint,
                              lineOpacity: 0.45, lineWidth: 2.2)
                     .frame(height: 100)
             }
