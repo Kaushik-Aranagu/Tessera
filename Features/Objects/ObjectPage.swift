@@ -452,8 +452,8 @@ private struct PropertyList: View {
         }
     }
 
-    /// One element per plain property (OL23): "Weight, 60 kg"; a link property contains its handles. At accessibility sizes the value stacks under its name
-    /// rather than squeezing beside it (OL24).
+    /// One element per plain property (OL23): "Weight, 60 kg"; a link property contains its handles. At
+    /// accessibility sizes the value stacks under its name rather than squeezing beside it (OL24).
     private func row(_ field: ResolvedField) -> some View {
         let inherited = field.declaringClassID != classDef.id
         let stacked = typeSize.isAccessibilitySize
