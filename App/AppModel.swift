@@ -275,17 +275,6 @@ final class AppModel {
     /// Everything Tess just proposed (one phrase can become several actions).
     private(set) var pendingCaptures: [OpRecord] = []
 
-    /// A key is in the Keychain that this install has not been told to use (a reinstall): Review asks "Use the Claude
-    /// key still on this phone?" once, and nothing goes to Claude until he answers (G687).
-    var keyNeedsQuestion: Bool {
-        SystemKeychain().needsAdoptionQuestion
-    }
-
-    func answerKeyQuestion(useIt: Bool) {
-        KeyAdoption.standard.answer(useIt: useIt)
-        touch()
-    }
-
     /// Ask Tess: the grammar or on-device model turns the phrase into pending actions (ghost rows), which dry after
     /// `captureDryTime` unless tapped or dropped. Returns Tess's one line.
     func ask(_ phrase: String) async -> String {

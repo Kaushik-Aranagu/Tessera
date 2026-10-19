@@ -25,7 +25,7 @@ struct SettingsTests {
     @Test func readIsAllNilBeforeAnyWrite() {
         #expect(settings.read() == TesseraSettings())
         #expect(store.object(id: SettingsStore.objectID) == nil)
-        #expect(settings.read().sendsMissesToClaude && settings.read().restWeekday == nil)
+        #expect(!settings.read().sendsMissesToClaude && settings.read().restWeekday == nil)
     }
 
     @Test func theFirstWriteMakesOneObjectWithTheFixedIDAndOneOp() throws {
@@ -124,7 +124,10 @@ struct SettingsTests {
     @Test func settingsAreInTheExport() throws {
         try settings.update { $0.restWeekday = 1 }
         // Test-only lossless export (maskingPrivate: false); the app never does this.
-        let json = try String(data: TesseraExport(context: store.context, maskingPrivate: false).encoded(), encoding: .utf8) ?? ""
+        let json = try String(
+            data: TesseraExport(context: store.context, maskingPrivate: false).encoded(),
+            encoding: .utf8
+        ) ?? ""
         #expect(json.contains(SettingsStore.objectID.uuidString))
     }
 
@@ -168,6 +171,44 @@ struct SettingsTests {
         try settings.migrate(looks: looks, standard: standard, folderName: nil)
         #expect(settings.read().lookDay == "Obsidian")
         #expect(settings.read().missesGoToClaude == false)
+    }
+
+    // MARK: G687, a found key asks once
+
+    @Test func foundKeyAsksOnceAndYesWritesOneOp() throws {
+        #expect(settings.claudeQuestionDue(keyPresent: true))
+        #expect(!settings.claudeQuestionDue(keyPresent: false))
+        let before = engine.history(limit: 100).count
+        try settings.answerClaudeQuestion(true)
+        #expect(engine.history(limit: 100).count == before + 1)
+        #expect(!settings.claudeQuestionDue(keyPresent: true) && settings.read().sendsMissesToClaude)
+    }
+
+    @Test func noAnswerKeepsClaudeOffAcrossLaunches() throws {
+        #expect(settings.claudeQuestionDue(keyPresent: true))
+        let reopened = try ObjectStore(context: TesseraContext(url: url))
+        let again = try SettingsStore(engine: ActionEngine(store: reopened, classes: reopened.prepareCatalog()))
+        #expect(again.claudeQuestionDue(keyPresent: true) && !again.read().sendsMissesToClaude)
+    }
+
+    @Test func savingAKeyInSettingsOptsInWhenUnanswered() throws {
+        try settings.noteKeySaved()
+        #expect(settings.read().missesGoToClaude == true)
+        // A stored no is left alone.
+        try settings.update { $0.missesGoToClaude = false }
+        try settings.noteKeySaved()
+        #expect(settings.read().missesGoToClaude == false)
+    }
+
+    @Test(arguments: [true, false])
+    func aRestoredCopyKeepsItsClaudeAnswer(_ answer: Bool) throws {
+        try settings.answerClaudeQuestion(answer)
+        let json = try TesseraExport(context: store.context, maskingPrivate: false).encoded()
+        let fresh = ObjectStore.open(inMemory: true)
+        try TesseraExport.decode(json).restore(into: fresh.context)
+        let restored = try SettingsStore(engine: ActionEngine(store: fresh, classes: fresh.prepareCatalog()))
+        #expect(!restored.claudeQuestionDue(keyPresent: true))
+        #expect(restored.read().missesGoToClaude == answer)
     }
 }
 
