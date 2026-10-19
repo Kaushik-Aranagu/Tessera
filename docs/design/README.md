@@ -21,3 +21,5 @@ Index of the docs in `docs/design/`.
 - [studies/pantry.html](studies/pantry.html): Sheet 78 study (`?play` records the clip)
 - [mockups/pantry.png](mockups/pantry.png): Sheet 78 board
 - [recordings/pantry.mp4](recordings/pantry.mp4): Sheet 78 clip (18 s, Porcelain)
+- [reading-layouts-99.md](reading-layouts-99.md): 99. Reading layouts, one type layout for each kind of content (sheet, not yet okayed by Kaushik)
+- [settings-review-100.md](settings-review-100.md): 100. Settings, the Review section: every open choice is a switch he flips live (spec, not yet okayed by Kaushik)

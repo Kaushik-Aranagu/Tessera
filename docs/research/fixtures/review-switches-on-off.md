@@ -1,0 +1,433 @@
+# Review switches: what each shows ON and OFF, and whether OFF equals today (static read, master 5af7cf5f, Mon Oct 19 PT)
+
+For: Builder B (the Review section and the one store), Builder A (live workout, rest, look, top bar), Core (Plan my day, Shutdown, quiet interrupts, the areas), Design (the before and after lines), QA, Product. Docs only. Nothing was run, built or tested and no Claude key was read, used or needed: this is a read of Swift and docs in the worktree of master 5af7cf5f. No key, no part of one and no key-shaped text appears here; where the key matters it is described in words.
+
+What this file is. Product's huddle plan puts a Review section in Settings: one row per open choice, each a switch Kaushik flips live, with a plain before and after line, and "off shows today's look" (off must equal the app as it is on master today). For each switch below this file gives the rows a test or a builder needs: what the screen shows ON, what it shows OFF, whether OFF equals master today (with the line), the state it needs, where it reads, the edge cases, and named tests.
+
+Status words. **traced**: I read the line on master and saw what the row says. **inferred**: the row follows from code or a document I did not read in full or could not see run. **gap (not built)**: master has nothing for it, so the row is a spec to test when it lands; it also marks a promise "off equals today" that master cannot yet keep. **ruled**: a Product entry settles the Expected; the entry is cited. **unruled**: the Expected rests on my default; each is also in PRODUCT CALLS. A test name followed by "(add)" is a name to add; none of them was looked up in `TesseraTests` or `TesseraCore/Tests`.
+
+Sources, and which copy a line is from. Decisions have two copies: the repo copy `docs/product/decisions.md` (1,065 lines) and the project mirror `/mnt/project-files/tessera/product/decisions.md` (1,117 lines). Every mirror line cited here was compared with the same line of the repo copy: lines 199, 221, 263, 341, 462, 590, 652, 666, 917, 925, 1003, 1037, 1047, 1051 and 1061 are identical in both ("repo and mirror"). Lines 1065 and 1069 differ between the copies and are cited as the mirror's (mirror only). Lines 1099 and above are past the repo's end, so they are **mirror only** until the docs worker carries them: 1101, 1103, 1107, 1109, 1111, 1113, 1115, 1117. Product's switch list is three mirror files that exist only there (not in the repo): `product/huddle-batches-oct19.md` (the huddle page), `product/review-choices-oct19.md` (the choice list, 19 rows, newer and narrower), and `design/settings-review-100.md` (sheet 100, the drawing; its header says "Not yet okayed by Kaushik"). Also read: `docs/design/reading-layouts-99.md`, `docs/research/fixtures/reading-layouts-inventory.md`, `docs/research/fixtures/page-turn.md`, `docs/design/motion/tess-page-turn-motion.md`, `docs/research/training-week-one.md`, `docs/research/quiet-interrupts.md`, `docs/research/notifications.md`, `docs/research/fixtures/gap-hunt-26-widgets-live-activities.md` (hunt 26, rows WL), `docs/research/fixtures/gap-hunt-28-first-launch-upgrades.md` (rows FL, the CALL shape), and mirror `design/m4-steers.md`, `design/pages-90.md`.
+
+**Two conflicts in the sources, found first.**
+1. The prompt's switch list (the huddle page, batch 0 and batch 1) still names Top bar, Stage titles, Area colours and Small images as switches. Product's newer `review-choices-oct19.md` rows 6 to 9 say "Removed: Kaushik decided, ships directly, no switch", and so does sheet 100's header. Switch 11 below is therefore written as "if a switch is wanted" and CALL 9 asks Product to settle it.
+2. The list of areas. `review-choices-oct19.md` row 18 is one row per area for six areas (Body weight, Habits, Money, Reading, People, Upkeep) with default "Today's set". This file covers the four in the prompt (Money, Reading, People, Upkeep) and says where Body weight and Habits differ.
+
+## 1. The shared ground: the Review section and the one store (RS01 to RS13)
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS01 | Where Settings is today | There is no Settings page. The look sentence, the rest-day sentence and the Claude section sit at the foot of the Review page, each commented "until Settings exists", then a Backups word. Product moves them into a Settings page (review-choices: "Settings becomes its own page"). | traced | `Features/Review/ReviewView.swift:218-233` | `settingsPageHoldsTheMovedRows` (add) |
+| RS02 | Store for the switches | Nothing exists: no `ReviewChoices` type, no review key, no `@AppStorage` for a choice. The only `@AppStorage` keys on master are `restHorizonHints` and `tess.holdHint`. | traced (grep, zero hits for `ReviewChoices`) | `Features/Workout/WorkoutModeView.swift:75`; `Features/Command/BottomChrome.swift:46` | none |
+| RS03 | Where the store goes | Product: one `ReviewChoices` type app-side, "not in the catalog, not in backups". The settings object rides in every op, backup and export, so the switches must not be fields of it. The device-only pattern exists: plain `UserDefaults` for flags that never ride in a backup. | ruled; pattern traced | `TesseraCore/Sources/TesseraCore/Settings/TesseraSettings.swift:3-6`; `TesseraCore/Sources/TesseraTess/ClaudeTessModel.swift:312-322`; `Features/Home/HomePlan.swift:33-34` | `reviewChoicesAreNotInTheSettingsObject` (add) |
+| RS04 | Default of every key | An absent key reads as Today. Shipping the section changes nothing until he flips (sheet 100, "For Builder B"; review-choices: "Default is always today's behavior"). | ruled | mirror `design/settings-review-100.md`; mirror `product/review-choices-oct19.md` | `absentReviewKeysReadAsToday` (add) |
+| RS05 | Everything as before | A row at the top sets every row to Today; a second tap within 3 seconds confirms; it is the only confirm. | ruled | mirror `design/settings-review-100.md` | `everythingAsBeforeRestoresEveryDefault` (add) |
+| RS06 | THE FLIPS | The side keeps the last 10 flips (row name, value, time) so a tap flips one back. It needs a small device-only list that is new state. It stores names and values only, never anyone's words. | ruled (draft); state gap (not built) | mirror `design/settings-review-100.md` | `flipsKeepTheLastTenOnly` (add) |
+| RS07 | Reinstall and restore | `UserDefaults` go with the app on a delete and are not in a backup, so a reinstalled or restored phone reads every switch as Today. Data written while a switch was on (a Money spend, a finished plan) does come back from the backup, and shows only when its switch is on again. | inferred (hunt 28 table: UserDefaults go with the app) | `docs/research/fixtures/gap-hunt-28-first-launch-upgrades.md` section 1, "What a reinstall keeps" | `restoreLeavesReviewChoicesAsTheyWere` (add) |
+| RS08 | Reading a switch | One `@Observable` main-actor value read inside `body`, as the look store is, so a flip redraws the screen at once with no relaunch. | pattern traced | `DesignSystem/Looks.swift:115-117, 171-177` | `flipRedrawsWithoutRelaunch` (add) |
+| RS09 | The flip's own motion | House spring 0.42 s, 150 ms crossfade under Reduce Motion and Low Power, one haptic per flip, no toast, no Tess line. Master's `MotionPolicy.resolve` takes Reduce Motion only; Low Power is read by two places directly, so Batch 1's "Low Power flag" is the gate this needs. | gap (not built) | `DesignSystem/MotionPolicy.swift:8-10`; `App/PowerState.swift:5-9`; `Features/Home/NowPage.swift:425`; `Features/Tess/TessSoul.swift:108` | `lowPowerResolvesLikeReduceMotion` (add) |
+| RS10 | Private words | No switch value changes a mask. Previews and before and after lines show "Private ..." labels at 100% ink and never real words. | ruled | mirror `design/settings-review-100.md`; `TesseraCore/Sources/TesseraCore/Tess/ObjectPrivacy.swift:14-23` (label "Private workout") | `previewsKeepPrivateLabelsOnBothSides` (add) |
+| RS11 | Claude | No row turns "Tess asks Claude" on (sheet 100, "Never"). On master the stored field is read as yes when empty, which the 11:08 AM Oct 19 ruling reverses (an unanswered field reads as no; not built). | ruled; master default traced | `TesseraSettings.swift:41-43`; `App/AppModel.swift:57-60`; mirror line 1117 CALL 1 A | `noSwitchTurnsClaudeOn` (add) |
+| RS12 | Siri and Shortcuts | No intent reads or writes a Review key, and nothing in the intents module calls Claude (the only Claude mention is a key-shape guard). A flip never sends anything anywhere. | traced (grep) | `TesseraCore/Sources/TesseraIntents/Intents.swift:156-161` | `intentsNeverReadReviewChoices` (add) |
+| RS13 | Launch arguments | A `UserDefaults` key named like a launch argument can be set by an Xcode scheme argument on any build, including the phone, while `LaunchFlags` is built so that flags work on the simulator only. A review key set that way is only his own choice, but it is the one place the "flags never touch the phone" rule does not cover. Tests and recordings should inject a suite, not an argument. | inferred (system behavior, not checked here) | `App/LaunchFlags.swift:8-30`; `CLAUDE.md` "Running the demo" | `reviewKeysReadFromAnInjectedSuite` (add) |
+
+## 2. Switch 1: Reading layouts, Today / Sheet 99 (RS14 to RS27)
+
+**Today on master, in a line.** Groceries, Home/Now and the Exercise page each carry five type sizes at once, 18 and 34 are typed as literal sizes in many places, two spots use the system font, and running text has three tokens for one job.
+
+**Before and after line he reads.** "Reading layouts on Groceries, Home, Exercise and Backup. Today uses five type sizes. Sheet 99 uses three."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS14 | Setting exists? | No. A new key `readingLayout`, values today and sheet99. Default today. | gap (not built); default ruled | review-choices row 1; RS02 | `readingLayoutDefaultsToToday` (add) |
+| RS15 | ON shows | Groceries: aisle name 16 strong in the area colour, not 56; the one detail line only on the lead row; sizes 44 / 21 / 16. Home/Now: one weight of heading instead of three. Exercise page: name 44, today's number 56, three 28 numerals with 16 labels, cues in the `read` token at 21 in a 330 pt column, history date column as wide as "Mon 12 Oct". Backup: the 56 head goes and "A restore is waiting" becomes 21 strong in the Tess colour, so four sizes become three. | inferred (sheet read, no code exists) | `docs/design/reading-layouts-99.md` sections A and B2, B3, B5 | `groceriesSheet99UsesThreeSizes`, `backupSheet99DropsTheHero` (add) |
+| RS16 | OFF shows | The four screens exactly as today: Groceries titles at hero 56 with 21, 18 and 16 below; the Backup head at 56 with a 44 "A restore is waiting". | traced for the hero uses | `Features/Groceries/GroceriesView.swift:350, 354, 528` (`.textRole(.hero)`); `docs/research/fixtures/reading-layouts-inventory.md` RL rows | `groceriesTodayKeepsFiveSizes` (add) |
+| RS17 | OFF equals today? | **Cannot be promised as drawn.** Sheet 99 changes shared tokens, not only four screens: `body` becomes an alias of a new `read`, 17 is deleted, 34 is retired for words, `voice` gets a Dynamic Type cap. Any of these moves other screens, so OFF would not equal today. It holds only if the four screens keep their current view code behind the switch and the shared tokens stay as they are. See CALL 1. | gap (not built) | `docs/design/reading-layouts-99.md` section A rulings 1, 2, 3 | `todayTokensUnchangedWhenSheet99Ships` (add) |
+| RS18 | The literal-size cleanup | Replacing a literal size with a token is invisible only when the token has the same size and line height. `Theme.voice` and `numeral` take any number and get the system line height; `textRole` applies a line height (1.0 to 1.33). A cleanup that swaps a literal for `textRole` changes line height on that line, so it is a visible change and belongs behind the switch, not before it. | inferred (line heights from the inventory) | `DesignSystem/Editorial.swift:38-45`; inventory section 1 | `literalCleanupKeepsLineHeightOnToday` (add) |
+| RS19 | Two system-font spots | One line uses the system font at 16 semibold, one at 17. Sheet 99 ruling 6 forbids the system font; ON changes them, OFF keeps them. | traced | `Features/Home/TrainingPage.swift:606`; `Features/Objects/ObjectPage.swift:488` | `systemFontSpotsOnlyChangeOnSheet99` (add) |
+| RS20 | Where it reads | In each of the four screens' body through the one observable (RS08), and in `textRole` only if the role map is given the layout. Backup is one view. | inferred | `Features/Backup/BackupView.swift:10, 31`; `Features/Groceries/GroceriesView.swift`; `Features/Home/NowPage.swift` | none |
+| RS21 | The Exercise page is shared | Every object route is drawn by `ObjectPage`, so a change meant for the Exercise page must be keyed to the exercise route or every object page changes with it and OFF stops equalling today. | traced for the route; inferred for the page | `App/RootView.swift:21-27`; `Features/Objects/ObjectPage.swift` | `onlyTheExercisePageRefits` (add) |
+| RS22 | Dynamic Type | Sheet 99: `read` and `voice` scale to AX3 on rows and AX5 on paragraphs, hero numerals cap at xxxLarge, and at AX1 and up each kind drops to one column. OFF keeps today's caps: `voice` has none. | ruled (sheet); today per inventory, not re-read | `docs/design/reading-layouts-99.md` ruling 3; inventory section 1 (`Machined.swift:225-231`, not opened) | `voiceCapOnlyOnSheet99` (add) |
+| RS23 | Reduce Motion, Low Power | The flip changes sizes in the house spring and in a 150 ms crossfade under Reduce Motion and Low Power (RS09). Sizes themselves never animate per frame. | ruled | mirror `design/settings-review-100.md` | covered by `lowPowerResolvesLikeReduceMotion` |
+| RS24 | Private words | Sizes change, words do not. A masked label ("Private item", "Private workout") draws at the new size with the same text; a line limit must not cut "Private workout" in half on either side. | inferred | `Tess/ObjectPrivacy.swift:14-23` | `maskedLabelsFitOnBothLayouts` (add) |
+| RS25 | Tess line and Home | Tess's lines stay the `voice` token at 21 and 270 pt wide (sheet 99 rulings 2 and 4), so her words and Home's words are identical on both sides; only Home's heading sizes differ. | ruled | `docs/design/reading-layouts-99.md` rulings 2, 4 | `tessLineUnchangedByReadingLayout` (add) |
+| RS26 | Quiet hours, Siri | Not touched: no notification and no intent shows a layout. | traced by absence | n/a | none |
+| RS27 | Mid-use flip | Flipping while on Groceries redraws that page at once (RS08). A live workout is out of scope: its numerals (80, reps, RPE) "stay free" in sheet 99 ruling 5, so a flip never moves them. | ruled (sheet) | `docs/design/reading-layouts-99.md` ruling 5 | `flipNeverMovesLiveWorkoutNumerals` (add) |
+
+## 3. Switch 2: Page turn, Slide / Turn / Soften / Rotate, and paged long lists (RS28 to RS43)
+
+**Today on master, in a line.** Pages move by the system's sideways paging scroll (Home's four pages, Plans' Week and Month, the exercise lane); no list is paged, there is no vertical page turn, and none of the four named turns exists.
+
+**Before and after line he reads.** "Page turn: pages change with a vertical swipe. Slide moves the whole page, Turn lifts row by row, Soften blurs across, Rotate cycles the rows in place."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS28 | Setting exists? | No. Zero hits for `PageTurn`, `PagedRun` or `Theme.Motion.pageTurn`; the Motion tokens stop at the house spring and the dry settle. A new key `pageTurn`. | traced (grep) | `DesignSystem/Theme.swift:564-573`; `docs/research/fixtures/page-turn.md` header | `pageTurnKeyDefaultsToToday` (add) |
+| RS29 | What today is, in code | Home: a horizontal paging scroll over Review, Today, Training, Kitchen with a painted word rail above. Plans: the same for Week and Month. Exercise lane: a horizontal scroll aligned by one. | traced | `Features/Home/HomeSpatialView.swift:31-32, 88, 95, 107`; `Features/Plans/PlansView.swift:11-12, 43, 54`; `Features/Workout/WorkoutParts.swift:23, 71` | `homePagesPageSideways` (add) |
+| RS30 | ON shows | The chosen turn between pages of up to 6 rows, driven by a vertical swipe or a tap on a section word, with the rail's current segment sliding over 200 ms. Slide 520 ms; Turn 190 + 38(N-1) + 440 ms (820 ms at six rows); Soften 590 ms; Rotate 80 + 24(N-1) + 260 ms (460 ms at six rows). A long list (13 rows) becomes 5 + 4 + 4. | ruled (specs); not built | `docs/design/motion/tess-page-turn-motion.md` timeline table; `docs/research/fixtures/page-turn.md` PG01 to PG15; mirror line 1065 (Rotate budget, mirror only) | `thirteenRowsThreePagesAtMostSix` (exists as a name in the fixture; add) |
+| RS31 | OFF shows | There is no OFF among the four words. The row has four values and no "Today" value (review-choices row 5, sheet 100 page 1). Today's look is the sideways paging scroll with unpaged lists. | gap (not built) | mirror `product/review-choices-oct19.md` row 5 | none |
+| RS32 | OFF equals today? | **No honest promise.** The default Product wrote is Slide; the decision of 12:46 PM Oct 17 says default Turn; neither is today's sideways scroll. Unless a fifth value "Today" exists, flipping the row at all leaves today's look. See CALL 2. | gap (not built); conflicting rulings | mirror `product/review-choices-oct19.md` row 5 (Slide); repo and mirror line 917 (Turn) | `todayValueKeepsSidewaysPaging` (add) |
+| RS33 | Where it reads | One shared page-turn helper that the Plans pager and the exercise pager both use (decision 11:40 PM Oct 17 item 2, G385), plus Home's pager and every paged long list (Notes, Set history, Groceries aisles per sheet 90). The helper reads the key; the pure page build in Core does not. | ruled; inferred for the helper | mirror line 1061 (not re-read for this row; cited from the motion note header); `docs/design/motion/tess-page-turn-motion.md` line 3 | `onePagerHelperServesAllThree` (add) |
+| RS34 | Whose swipe | A vertical swipe on a thing with its own action (a stepping number, the dial) does that action; on plain text or the empty page it turns the page. The swap pull-down on the exercise name already owns a vertical drag. | ruled; swap drag traced | repo and mirror line 917; `Features/Workout/WorkoutParts.swift:78-91` | `ownActionBeatsPageTurn` (add) |
+| RS35 | Reduce Motion and Low Power | Every option is one 150 ms crossfade; a reduced page turn is a tapped word cutting to the new page; a finger swipe is untouched. Low Power equals Reduce Motion for the page turn. | ruled | repo and mirror line 925 (R3); repo and mirror line 1003 (A); mirror line 1061 item 2 | `lowPowerPageTurnIsOneCrossfade` (add) |
+| RS36 | Haptics | None on a user turn, Rotate included, and none on the lead-row auto-turn. | ruled | repo and mirror line 925 (R2); `docs/design/motion/tess-page-turn-motion.md` line 3 | `userPageTurnPlaysNoHaptic` (add) |
+| RS37 | Rotate budget | 160 ms out, 260 ms in, 24 ms stagger, 460 ms at six rows is a ceiling for Rotate only; every other Look or Settings motion has a 260 ms ceiling. | ruled (mirror only) | mirror line 1065 | `rotateStaysUnder460msAtSixRows` (add) |
+| RS38 | Preview on pick | Picking a word previews it once; re-picking the same word does not replay. No preview animation under Reduce Motion or Low Power. | ruled | repo and mirror line 925 (R4); mirror `design/settings-review-100.md` States | `repickingTheSameWordDoesNotReplay` (add) |
+| RS39 | Private words | A private row inside a page keeps its label ("Private note") on both sides and in every turn; a private row never moves its label through the blur as real words. | ruled | `docs/research/fixtures/page-turn.md` PG13 | `privateRowKeepsLabelInPaging` (exists as a name in the fixture; add) |
+| RS40 | Edge: a seventh row | Adding a seventh row to a six-row run adds a rail and a second page without losing the reader's place. | ruled (spec) | `docs/research/fixtures/page-turn.md` PG14 | `addingSeventhRowAddsRail` |
+| RS41 | Quiet hours, Siri | None. | traced by absence | n/a | none |
+| RS42 | Tess line and Home | Pages carry the same words on every turn; a Tess line that sits above the page does not move (title, context line, rail and pinned things never move). | ruled (spec) | `docs/design/motion/tess-page-turn-motion.md` timeline note | `titleAndContextNeverMove` (add) |
+| RS43 | Where the setting row lives | Page 1 of the Review section, three or more values, so the row opens its words in place, each previewing once. | ruled (sheet) | mirror `design/settings-review-100.md` | none |
+
+## 4. Switch 3: Rest timer, On / Off (RS44 to RS60)
+
+**Today on master, in a line.** After each logged set a rest countdown starts and a rest bar shows; a Live Activity starts at the first rest and plays its own Live Activity alert "Set N is up" when rest runs out; no local notification exists for rest.
+
+**Before and after line he reads.** "Rest timer: a countdown starts after each set and a quiet alert rings when rest ends. Off: no countdown and no alert."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS44 | Setting exists? | No. A new key `restTimer`, values on and off. Default on. | gap (not built); default ruled | mirror `product/review-choices-oct19.md` row 2 | `restTimerDefaultsToOn` (add) |
+| RS45 | Today, traced | A logged set sets the rest length; the live screen draws the rest bar; the Live Activity starts at the first rest if the system allows it and ends with the workout; the alert is the Live Activity's own, fired by an in-process sleep, with title "Set N is up" and the sound. | traced | `Features/Workout/WorkoutSession.swift:390, 428`; `Features/Workout/WorkoutModeView.swift:521`; `Features/Workout/LiveActivity/RestActivityController.swift:53, 57-61, 148-153` | `restStartsAfterEachLoggedSet` (add) |
+| RS46 | ON shows | The timer as today, plus the ruled alert: the local notification with title "Timer" and body "Rest is up" (never both; the Live Activity alert is removed in the same change); a walled exercise reads "Private exercise" on the Lock Screen, alert and button label. | ruled; not built | mirror line 1107 CALLs 1 A and 2 A (mirror only), line 1069 (mirror only); repo and mirror line 1037 | `restEndPostsOnlyTheNotification` (add) |
+| RS47 | OFF shows | No countdown and no rest bar after a set, no rest Live Activity, no rest alert of either kind. | unruled for the Live Activity part | `RestActivityController.swift:57-61` starts the activity only for a resting state | `offStartsNoRestAnything` (add) |
+| RS48 | OFF equals today? | **No, and by design.** Today has the timer. ON is today for the countdown, bar and Live Activity, so the default On equals today until the notification lands; after it lands ON differs from today in the alert only (one channel instead of the other). OFF removes today's behavior. "Off shows today's look" is therefore true of the default value, not of OFF. See CALL 3. | gap (conflict with the rule) | sheet 100 page 2 marks "On (Today)" | `onEqualsTodayExceptTheAlert` (add) |
+| RS49 | The alert is not built | Master has no local notification for rest end: `UNUserNotificationCenter` appears only in the Kitchen timer scheduler. Title and body are ruled three ways across entries: title "Rest is up" (line 1037, repo and mirror), then title "Timer" with body "Rest is up" (line 1069, mirror only), confirmed by line 1107 CALL 1 A (mirror only). The later two agree. | traced (grep); ruled | `TesseraCore/Sources/TesseraCore/Kitchen/TimerAlerts.swift:110-135` | `restNotificationTitleIsTimerBodyRestIsUp` (add) |
+| RS50 | Lock Screen keys | Done, +15 and Skip live on the rest Live Activity. With the timer off no activity starts, so the Lock Screen Done key never appears. Week-one question 1 had a third answer, "only on the Lock Screen". See CALL 3. | traced (activity start); the third answer from the doc | `RestActivityController.swift:57-61`; `docs/research/training-week-one.md:251` | `offKeepsOrDropsLockScreenKeys` (add, depends on CALL 3) |
+| RS51 | Flip mid-rest | Flipping off while a rest is counting must end the countdown and the activity without ending the workout or losing a logged set; flipping on mid-workout starts nothing until the next set. Rest also survives an app kill today. | inferred (rest persistence traced) | `Features/Workout/WorkoutSession+Rest.swift:39` (`persistRest`); `Features/Workout/WorkoutSession.swift:36` | `flippingOffMidRestEndsOnlyTheRest` (add) |
+| RS52 | Private exercise on the Lock Screen | The alert body on master carries the exercise name unmasked (the class name); the ruling is "Private exercise" for a walled exercise on both sides of this switch. | traced (unmasked); ruled | `RestActivityController.swift:152`; mirror line 1107 CALL 2 A (mirror only) | `walledExerciseReadsPrivateInRestAlert` (add) |
+| RS53 | Quiet hours | A rest he started rings at any hour: a countdown he started is the one thing that still changes words and sounds between 23:00 and 07:00. | ruled | hunt 26 quotes line 1051 (no entry changes words 23:00 to 07:00 except a countdown he started; read only through hunt 26); repo and mirror line 221 item 9 (a time he typed still rings) | `restAlertRingsInQuietHours` (add) |
+| RS54 | Permission | The notification permission is asked when the first timer is scheduled. For rest the first rest of the first workout would ask; if denied, the Live Activity alert is the only sound, and the ruled one-time line "Live Activities are off. Rest shows here only." covers the activity side. | traced for the ask; ruled for the line | `TimerAlerts.swift:116-119`; mirror line 1107 CALL 4 A (mirror only) | `deniedNotificationLeavesRestShowingOnScreen` (add) |
+| RS55 | Reduce Motion, Low Power, Dynamic Type | The rest bar's own motion follows `calm = reduceMotion or Low Power` for the clock only on Now, not for the rest bar; Live Activity fonts are fixed sizes with no Dynamic Type (hunt 26 G347, open). The switch does not change these. | inferred; G347 per hunt 26 | `Features/Home/NowPage.swift:425`; hunt 26 section 2 | none |
+| RS56 | Siri and Shortcuts | Log Next Set and Done reach the running session; a log through Siri does not refresh the activity (hunt 26 G337, open). With the timer off a Siri log starts no rest. Nothing is sent to Claude. | inferred (hunt 26) | `TesseraIntents/Intents.swift:31-34, 56-57` per hunt 26 | `sirilogStartsNoRestWhenOff` (add) |
+| RS57 | Tess line and Home | Tess's set line ("Set 3. 80 x 8.") does not mention rest; the closing face reads what Home reads ("<title>, ready to finish", masked), and neither says anything about the timer. | ruled | mirror line 1113 (10:51 AM Oct 19, mirror only) | `closingFaceMatchesHome` (add) |
+| RS58 | The idle clock | The app suspends a workout idle longer than the rest time plus 10 minutes; with the timer off the rest time term is still read (`restSeconds`), so the idle limit does not change. | traced | `App/AppModel.swift:412, 421` | `idleLimitUnchangedWhenRestTimerOff` (add) |
+| RS59 | The rest-horizon hint | `restHorizonHints` counts down three hints on the rest bar. Unrelated to this switch; it is the one existing key near it. | traced | `Features/Workout/WorkoutModeView.swift:75` | none |
+| RS60 | Writes | The switch writes nothing to the op log; logged sets and finishing are unchanged on both sides. | inferred | RS03 | `flippingRestTimerWritesNoOp` (add) |
+
+## 5. Switch 4: Swap, one tap or two (RS61 to RS74)
+
+**Today on master, in a line.** He pulls the exercise name down (or long-presses it, or uses a VoiceOver action) to open a panel of up to four alternatives, then taps one; a tap on the name itself opens the exercise page.
+
+**Before and after line he reads.** "Swap: Two taps pulls the name down, then picks. One tap on the name opens the swap panel at once."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS61 | Setting exists? | No. A new key `swapTaps`, values two and one. Default two. | gap (not built); default ruled | mirror `product/review-choices-oct19.md` row 3 | `swapDefaultsToTwoTaps` (add) |
+| RS62 | Today, traced | A downward drag of more than 44 pt on the name toggles the panel; the long-press menu has "Swap within the movement"; a VoiceOver action does the same. The panel shows two groups (same family, same movement), at most four rows; a tap on a row fills it with a cobalt wash, then 220 ms later the swap runs for today only. | traced | `Features/Workout/WorkoutParts.swift:54-63, 78-91`; `Features/Workout/SwapPanel.swift:65-73`; `Features/Workout/WorkoutModeView.swift:374-381, 391-398` | `swapPanelPicksOnOneTapOfARow` (add) |
+| RS63 | Two taps (Today) is not quite two taps | Sheet 100 calls today "Two taps". On master the opening gesture is a pull or a long-press, then one tap on a row: two actions, but the first is not a tap. The label is close enough for a switch value; the before and after line says what happens. | traced | `WorkoutParts.swift:78-91`; mirror `design/settings-review-100.md` page 2 | none |
+| RS64 | ON (one tap) shows | A tap on the exercise name opens the panel at once; a tap on a row still swaps. | ruled (sheet); not built | mirror `design/settings-review-100.md` page 2 | `oneTapOnNameOpensPanel` (add) |
+| RS65 | OFF (two taps) shows | The pull, the long-press and the VoiceOver action as today, and a tap on the name opens the exercise page as today. | traced | `WorkoutParts.swift:49-63` (the name is a button with the zoom source to the exercise page; the hint is "Opens the exercise page") | `twoTapsKeepsTodaysGestures` (add) |
+| RS66 | OFF equals today? | Yes, if the one-tap branch is added next to the pull and the long-press and the default branch is untouched. Traced for the current gestures. | traced (conditional on how the build lands) | `WorkoutParts.swift:49-91` | `twoTapsEqualsMasterGestures` (add) |
+| RS67 | The tap on the name is taken | With one tap, the name's tap no longer opens the exercise page, and that page is the only way to the exercise's history from the live screen. Where it moves (a long-press, a second tap, the pull) is not drawn. See CALL 4. | gap (conflict) | `WorkoutParts.swift:49-51, 62` | `exercisePageStillReachableWithOneTap` (add) |
+| RS68 | Pull stays on both sides | With one tap the pull should still work, so a person who learned it loses nothing. Only the tap's meaning changes. | unruled | `WorkoutParts.swift:78-91` | `pullStillOpensPanelWithOneTap` (add) |
+| RS69 | Private exercise names in the panel | Panel rows print the alternative's class name as stored. A class name that fails the walled-words check reads "Private class" outside the phone and in Shortcuts; on the panel it is on his own screen and not covered by that rule. Both sides print it the same. | traced (rows print the name); ruled (outside) | `SwapPanel.swift:75`; mirror line 1103 (mirror only) | `panelRowsMatchOnBothSettings` (add) |
+| RS70 | Mid-rest, after sets | A swap mid-rest keeps the rest counting after a kill, and the swap is for today only ("Swaps for today only"). Neither changes with the switch. | traced for the hint; board item for the rest | `SwapPanel.swift:98` (accessibility hint "Swaps for today only"); `ops/board/ios-a.md` item 3 | `swapKeepsRestOnBothSettings` (add) |
+| RS71 | Reduce Motion, Low Power, Dynamic Type | The panel opens in a 0.42 s curve through `withTesseraAnimation`, so Reduce Motion gives the 150 ms fade; the one-tap path uses the same call. Rows are 56 pt minimum height. | traced | `WorkoutModeView.swift:394-396`; `SwapPanel.swift:87` | none |
+| RS72 | Quiet hours, Siri, Claude | None. No swap intent exists in the intents module (inferred from the seven-intent list in hunt 26). | inferred | hunt 26 section 1, "App Intents" | none |
+| RS73 | Tess line and Home | After a swap the soul reacts (`.swapped`); Home says nothing about swaps. Same on both sides. | traced | `WorkoutModeView.swift:381` | none |
+| RS74 | Writes | The swap writes its own op on both sides (an exercise swap for today); the switch writes none. | inferred (action named in week-one doc) | `docs/research/training-week-one.md:58-60` | `flippingSwapWritesNoOp` (add) |
+
+## 6. Switch 5: Finish nudge, Off / On (RS75 to RS87)
+
+**Today on master, in a line.** Nothing nudges: a workout idle past the rest time plus 10 minutes is suspended, and one left suspended for 6 hours is wrapped up and saved with the sets already logged.
+
+**Before and after line he reads.** "Finish nudge: Off leaves an open workout alone until it wraps up after six hours. On asks once whether to finish it."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS75 | Setting exists? | No. A new key `finishNudge`, values off and on. Default off. | gap (not built); default ruled | mirror `product/review-choices-oct19.md` row 4 | `finishNudgeDefaultsToOff` (add) |
+| RS76 | Today, traced | A running workout idle longer than the rest time plus 10 minutes is suspended on the next launch or foreground; a suspended one that reaches 6 hours is wrapped up by Core and the live session is released. Nothing is said before that. | traced | `App/AppModel.swift:412, 421, 435-438`; `TesseraCore/Sources/TesseraCore/Processes/ProcessTable.swift:14, 85-100, 124-125` | `idleWorkoutSuspendsAndWrapsAtSixHours` (add) |
+| RS77 | ON shows | One quiet nudge that a workout was left unfinished. The channel (a Tess line on Now, a notification, a Home row) and the moment are not specified anywhere I read. See CALL 5. | unruled; not built | mirror `product/huddle-batches-oct19.md` batch 2; sheet 100 line: "Tess asks once whether to finish it" | `nudgeFiresOncePerWorkout` (add) |
+| RS78 | OFF shows | Exactly the two rows above: no nudge. | traced by absence | RS76 | `offKeepsSilentWrapUp` (add) |
+| RS79 | OFF equals today? | Yes, traced: no code produces a nudge today. | traced | RS76; grep for "nudge" in `App`, `Features`: only soul motion and a recipe link hint | `finishNudgeOffEqualsMaster` (add) |
+| RS80 | Not auto-finish | The week-one question 3 said a "yes" could mean finishing automatically once the last planned set is logged; the switch here is a nudge, not an auto-finish, and must never finish for him. | doc read | `docs/research/training-week-one.md:253` | `nudgeNeverFinishesAWorkout` (add) |
+| RS81 | Order against the wrap-up | The nudge has to come before the 6-hour wrap-up to mean anything; after wrap-up the Day log shows the faint unfinished row with no words. | ruled for the faint row; timing unruled | mirror line 666 (not re-read); `ProcessTable.swift:124`; CALL 5 | `nudgeComesBeforeSixHourWrapUp` (add) |
+| RS82 | Quiet hours | A nudge between 23:00 and 07:00 would be an interrupt in the night. Evening rulings: a Finish after 11 pm closes quietly, and a hold that never ends closes at the 6-hour wrap-up or at 4 am, whichever is first. A nudge falling in quiet hours should wait for 7 am. | ruled (the closes); unruled (the nudge) | repo and mirror line 221 items 1, 2 | `noNudgeInQuietHours` (add) |
+| RS83 | Tess line and Home | The nudge must read what Home reads at that moment: Home stays "Ready to finish" and the closing face reads "<title>, ready to finish" with the masked title. The nudge borrows the same words. | ruled | mirror line 1113 (mirror only) | `nudgeWordsMatchHomeWords` (add) |
+| RS84 | Private workout | A private routine title reads "Private workout" in the nudge on both settings. | ruled | `ObjectPrivacy.swift:18-23`; mirror line 1113 (mirror only) | `nudgeMasksPrivateTitle` (add) |
+| RS85 | Reduce Motion, Low Power | The nudge appears as a crossfade; no new motion. | inferred | n/a | none |
+| RS86 | Siri, Shortcuts, Claude | Not reached from an intent; nothing is sent to Claude; the words are fixed. | inferred | RS12 | none |
+| RS87 | Edge: he finishes before the nudge | A finished workout cancels a pending nudge; flipping the switch off cancels it too. | inferred | n/a | `finishingCancelsPendingNudge` (add) |
+
+## 7. Switch 6: Plan my day, Off / On (RS88 to RS103)
+
+**Today on master, in a line.** Home's Today page offers the rules plan from 8 am to 9 pm (or pulled from 7 am), once a day, as ghost rows he swipes to keep or skip; Claude's wording is built but held off by a constant.
+
+**Before and after line he reads (if the switch means Claude wording on top, CALL 6 A).** "Plan my day: Tess offers the plan at 8 am, in rule order. On lets Claude word it when Tess asks Claude is on."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS88 | Setting exists? | No Plan my day switch. Two related gates exist: the shared Claude field and a constant that holds the wording off. | traced | `App/AppModel.swift:57-60, 64`; `Features/Home/HomePlan.swift:115` | `planMyDayKeyDefaultsPerCall6` (add) |
+| RS89 | Today, traced | The offer opens at 08:00 (or pulled earlier) and closes at 21:00, builds a rules plan, shows ghost rows, and is spent for the day once used. No Settings switch hides it. | traced | `Features/Home/HomePlan.swift:66-81, 90-92` | `rulesPlanOffersBetween8And21` (add) |
+| RS90 | Today's Claude wording | When Tess asks Claude is on and a key is saved and the constant allows it, Claude orders and words the plan; the constant is false, so no call is made. | traced | `App/AppModel.swift:64`; `HomePlan.swift:114-120` | `noClaudeCallWhileConstantFalse` (add) |
+| RS91 | The row, as Product wrote it | "Plan my day, Off / On, default Off, Now at 8 AM", with the line "Tess offers the day's plan on Now at 8 am. You say yes or no." Read that way, **Off hides an offer master shows today**. | traced vs ruled | mirror `product/review-choices-oct19.md` row 12; mirror `design/settings-review-100.md` page 1 | none |
+| RS92 | OFF equals today? | **Not with that meaning.** Off (default) would remove the rules plan master offers now. It equals today only if the switch is the Claude wording on top (CALL 6 A), because then Off is the rules plan that ships now. | gap (conflict with the rule) | RS89 vs RS91 | `planOffOfferedRulesPlanLikeMaster` (add, per CALL 6) |
+| RS93 | ON shows (CALL 6 A) | The same plan, ordered and worded by Claude through the one door; Tess says Claude's line once; first use shows one line under VIA CLAUDE: "Sends your task and event titles, never notes or places." | ruled for the wording and the line; not shipped | repo and mirror line 652; `HomePlan.swift:121-142` | `viaClaudeLineShowsOnce` (add) |
+| RS94 | ON needs Claude | If Tess asks Claude is off, or no key is saved, the plan stays rules-only and the row's value reads "Needs Claude" and a tap goes to that row; the switch never turns Claude on. | ruled | mirror `design/settings-review-100.md` page 3 note | `planOnWithoutClaudeStaysRules` (add) |
+| RS95 | Rules first | The rules plan is drawn at once; Claude's order arrives later and is dropped if he has touched anything. The rules plan reads the same ON or OFF. | traced | `HomePlan.swift:3-9, 118-126` | `claudeReplyDroppedAfterTouch` (add) |
+| RS96 | Low Power | The plan wording should skip a send in Low Power through `PowerState`; that gate is ruled and not built. | ruled; gap (not built) | mirror line 1099 rank 7 (mirror only); `App/PowerState.swift:5-9` | `lowPowerSkipsPlanWording` (add) |
+| RS97 | Private words | The pack sends titles and times and the workout name, never notes, attendees, locations or health; private titles read masked in what is sent and on screen. | ruled; pack flag traced | repo and mirror line 652; `HomePlan.swift:118` (`includesEventTitles: false`) | `walledTitlesNeverReachThePack` (add) |
+| RS98 | Quiet hours | The offer window ends at 21:00 and starts at 08:00; before 7 am nothing opens; a task given only a day never lands inside 23:00 to 07:00. | traced (window); ruled (tasks) | `HomePlan.swift:73-77`; repo and mirror lines 263, 221 | `planOfferClosedBefore8` (add) |
+| RS99 | Tess line and Home | Tess says one line about the plan and Home shows the rows; both come from the same plan and the same switch read, so a worded plan and a rules plan never both show. | inferred | `HomePlan.swift:128-141` (`TessVoice.shared.say`) | `tessAndHomeShareOnePlan` (add) |
+| RS100 | Siri, Shortcuts | No intent starts or words a plan; nothing is sent from an intent. | inferred | RS12 | none |
+| RS101 | Reduce Motion, Low Power, Dynamic Type | The rows draw "wet" in cobalt; under Reduce Motion they appear without the brush; the switch does not change motion. | inferred | `HomePlan.swift:7` comment; motion notes | none |
+| RS102 | Edge: flip mid-day | Turning Claude wording on after the rules plan was kept does not re-offer the plan: the offer is spent for the day (`plan.offerSpentDay`). Turning it on before keeping applies on the next refresh. | traced (spent flag) | `HomePlan.swift:33, 90-96` | `flippingOnAfterKeepDoesNotReoffer` (add) |
+| RS103 | Edge: the demo | The demo flags switch Claude's Home words off and `-resetDemo` clears the spent day. | traced | `App/AppModel.swift:84-86`; `HomePlan.swift:37-43` | none |
+
+## 8. Switch 7: Shutdown, Off / On (RS104 to RS115)
+
+**Today on master, in a line.** There is no Shutdown page; unfinished tasks from earlier days roll to today at the 4 am day change, after seven rolls they go to Later; and Home's closing look ahead reads "tomorrow, first".
+
+**Before and after line he reads.** "Shutdown: Off rolls unfinished tasks at 4 am on its own. On adds one line on Now at 9 pm with what is done and what moves."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS104 | Setting exists? | No. A new key `shutdown`, values off and on. Default off. | gap (not built); default ruled | mirror `product/review-choices-oct19.md` row 13 | `shutdownDefaultsToOff` (add) |
+| RS105 | Today, traced | Day parts name 21:00 to 22:00 as the shutdown part; evening hours read "tonight"; the planned-workout look ahead reads "tomorrow, first" when the fact is tomorrow's; the roll to today runs at launch and on foreground and is one undoable action. | traced | `TesseraCore/Sources/TesseraCore/Tasks/NowRanker.swift:37`; `TesseraCore/Sources/TesseraCore/Home/HomeLines.swift:283-284, 359-360`; `App/AppModel.swift:426-429`; `TesseraCore/Sources/TesseraCore/Tasks/RollForward.swift:3-12` | `unfinishedTasksRollAtFourAm` (add) |
+| RS106 | ON shows | At 9 pm one Now line with counts only ("Did 4 tasks, 1 workout, cooked once"), unfinished items preselected to move (one tap keeps any), an optional line for tomorrow, "Shutdown complete" ends it and writes to the Day log. The first Shutdown ever says "3 moving to tomorrow. Tap any to keep." Never a list of what did not happen. | ruled; not built | mirror `product/ship-list-m4.md` row 7; repo and mirror line 590 | `shutdownShowsCountsOnly` (add) |
+| RS107 | OFF shows | No Shutdown line and no Shutdown page; the 4 am roll and the "tomorrow, first" look ahead as today. | traced | RS105 | `shutdownOffEqualsMaster` (add) |
+| RS108 | OFF equals today? | Yes, traced: nothing in the app presents a Shutdown. | traced | grep for "Shutdown" in `App`, `Features`: only a haptic comment and one `isAutoShutdownEnabled` audio line | `shutdownOffEqualsMaster` |
+| RS109 | A decided line today | Decision 462: "At 9 pm Now flips to 'tomorrow, first', even before Shutdown is built." Master has the pieces (the day part, the phrase) but I did not trace that Now flips at 21:00 with the switch gone; this is the one edge where OFF may not match the decision. | ruled; inferred on master | repo and mirror line 462; `HomeLines.swift:359-360` | `nowFlipsToTomorrowFirstAtNine` (add) |
+| RS110 | Roll over at 9 pm vs 4 am | ON lets him move items at 9 pm; the 4 am roll still runs for anything he did not touch, with the same seven-rolls rule. The two must not double-roll an item moved at 9 pm. | unruled | `RollForward.swift:3-12`; CALL 7 | `nineOclockMoveDoesNotRollAgainAtFour` (add) |
+| RS111 | Quiet hours | A Finish after 11 pm closes the day quietly, stamped 10:00 pm, with no Shutdown page; Shutdown has no "not now" and leaving the page is the not now; a close that waited for Shutdown on screen is stamped 10:00 pm. | ruled | repo and mirror line 221 items 1, 4, 7 | `lateFinishSkipsShutdown` (add) |
+| RS112 | Counts only | Shutdown counts what he did and never what he did not. The Day log writes it. | ruled | mirror `product/ship-list-m4.md` row 7 | `shutdownNeverListsMisses` (add) |
+| RS113 | Private words | Counts of private items stay counts; no private title is read in the line; a private task moving reads "Private task". | ruled (per hunt 26) | hunt 26 quotes repo and mirror line 341 (a secret-word task shows as "Private task"); `Tess/ObjectPrivacy.swift:14-23` | `shutdownNamesNoPrivateTitle` (add) |
+| RS114 | Tess line and Home | Tess's Shutdown line and Home's evening line must read the same on both sides: with OFF, "tomorrow, first"; with ON, the Shutdown line replaces it on Now only after it is shown, never both. | ruled (rule); inferred (how) | mirror line 1113 (mirror only) | `homeAndTessAgreeAtNine` (add) |
+| RS115 | Reduce Motion, Siri, Claude | No new motion beyond the crossfade; no intent; no Claude call (counts and a line he types). | inferred | RS12 | none |
+
+## 9. Switch 8: Energy check-in, Off / On (RS116 to RS126)
+
+**Today on master, in a line.** There is no energy check-in; the day's plan takes no energy or sleep input, and the app reads no Health data (it asks only to share finished workouts).
+
+**Before and after line he reads.** "Energy check-in: one tap on the morning drum, from flat to bright. Off shows no check-in."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS116 | Setting exists? | No. A new key `energyCheckIn`, values off and on. Default off. | gap (not built); default ruled | mirror `product/review-choices-oct19.md` row 14 | `energyDefaultsToOff` (add) |
+| RS117 | Today, traced | The plan's light-day rule names "sleep, energy and health" as never inputs. Health is share-only: the request asks to write workouts and reads nothing. The rep drum exists only in the live workout. | traced | `TesseraCore/Sources/TesseraCore/Tasks/DayPlan.swift:348-349`; `App/Health/HealthExporter.swift:36-48`; `Features/Workout/Instruments/RepsRow.swift:9` | `lightDayIgnoresEnergy` (add) |
+| RS118 | ON shows | One optional line under the context line: "Energy", the drum's numeral, its word as a label. Two sources disagree on the scale: design says 1 to 5 (flat, low, okay, good, bright), logged for the Day log only; the review sheet says low, steady or high. | conflict | mirror `design/m4-steers.md` lines 24, 39; mirror `design/settings-review-100.md` page 1 | `energyScaleIsOneToFive` (add, per CALL 8) |
+| RS119 | Does it shape the plan? | Sheet 100's line says "It shapes the plan." Design says "It never changes the plan, and Tess says nothing about it", and the code says energy is never an input. Product's list says "paired with sleep" and "low-energy days offer a lighter top set". Three answers. | conflict | mirror `design/settings-review-100.md`; mirror `design/m4-steers.md` line 39; `DayPlan.swift:348-349`; mirror `product/ship-list-m4.md` row 10b | `energyNeverChangesThePlan` or the opposite (add, per CALL 8) |
+| RS120 | OFF shows | No check-in line, no drum, no energy log; the plan as today. | traced by absence | RS117 | `energyOffEqualsMaster` (add) |
+| RS121 | OFF equals today? | Yes, traced, for the check-in. The "paired with sleep" half is a separate switch (Health), not this one. | traced | RS117 | `energyOffEqualsMaster` |
+| RS122 | Sleep pairing | Pairing with sleep needs a Health read that master does not have, and no entitlements exist yet (a free account): the Health row reads Later on his phone. With Energy on and Health later, the check-in shows without sleep. | traced (share-only); ruled (Later) | `HealthExporter.swift:43`; `App/Tessera.entitlements` (empty read list per hunt 26); mirror `design/settings-review-100.md` page 3 | `energyWorksWithoutSleep` (add) |
+| RS123 | Private words and the wall | Energy and sleep words are in the health word lists that mask or refuse; a typed "tired" stays out of Claude packs and the Home hero. The check-in value is a number he taps, never a typed word. | traced (word lists) | `TesseraCore/Sources/TesseraTess/PlanWording.swift:220`; `TesseraCore/Sources/TesseraCore/Tess/TessMemory.swift:101` | `energyNeverReachesClaude` (add) |
+| RS124 | Quiet hours | The check-in is a morning line; it should not appear in quiet hours or after the plan window. Unruled. | unruled | CALL 8 | none |
+| RS125 | Tess line and Home | Design says Tess says nothing about energy; Home shows no energy. Then both stay silent on both sides. | ruled (design) | mirror `design/m4-steers.md` line 39 | `tessSilentAboutEnergy` (add) |
+| RS126 | Siri, Shortcuts, Reduce Motion | No intent; the drum is a hand control; motion follows the drum's own rules. | inferred | RS12 | none |
+
+## 10. Switch 9: Quiet interrupts, Off / On (RS127 to RS138)
+
+**Today on master, in a line.** The only notification the app posts is the Kitchen timer, at the default level; there is no priority on notices and no holding, and notices (the launch note, process notes) are shown in place.
+
+**Before and after line he reads.** "Quiet interrupts: Off shows notices as they come. On holds low priority notices while you work out or cook and shows them together after."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS127 | Setting exists? | No. A new key `quietInterrupts`, values off and on. Default off. | gap (not built); default ruled | mirror `product/review-choices-oct19.md` row 15 | `quietInterruptsDefaultsToOff` (add) |
+| RS128 | Today, traced | Local notifications exist only for Kitchen timers: `.active`, default sound, grouped in the kitchen thread; the permission is asked when the first timer is scheduled. The launch note is one string in `UserDefaults` shown in the Ask bar; process notes append at each foreground. | traced | `TesseraCore/Sources/TesseraCore/Kitchen/TimerAlerts.swift:110-135`; `TesseraCore/Sources/TesseraCore/Model/TesseraSchema.swift:107-121`; `App/AppModel.swift:423-429` | `onlyKitchenTimersNotify` (add) |
+| RS129 | ON shows | Per the research design: low and normal notifications wait in a queue while a workout, cook or focus block runs, then one grouped notification posts when it ends; timers are never held. | design only; not built | `docs/research/quiet-interrupts.md` "Smallest design" | `lowPriorityHeldWhileWorkoutRuns` (add) |
+| RS130 | OFF shows | Exactly RS128. | traced | RS128 | `quietOffEqualsMaster` (add) |
+| RS131 | OFF equals today? | Yes, traced, because today has no low-priority notices to hold. The value of ON on master is empty until timed-task or digest notifications exist. | traced | `TimerAlerts.swift:110-135` (the only `UNUserNotificationCenter` use) | `quietOffEqualsMaster` |
+| RS132 | What counts as low priority | Not ruled. The design names three priorities (timer, normal, low) stored on the notification. Which of today's notices (the launch note, process notes, a restore note) become "low" is not decided. See CALL 7 (second part). | unruled | `docs/research/quiet-interrupts.md` item 1 | none |
+| RS133 | Timers never held | A rest end, a cook timer or a focus end rings on time in either setting. | ruled in research; consistent with line 221 item 9 | `docs/research/quiet-interrupts.md` item 4 | `timersNeverHeld` (add) |
+| RS134 | Quiet hours | Holding is by process, not by clock; quiet hours (23:00 to 07:00) are a separate rule and still apply to timed items he did not type. | ruled | repo and mirror lines 263, 221 | `quietHoursIndependentOfHolding` (add) |
+| RS135 | Private words | A held notice's body is masked the same way when it posts as the grouped one; "3 things waited" never lists private titles. | inferred | `Tess/ObjectPrivacy.swift:14-23` | `digestBodyNamesNoPrivateTitle` (add) |
+| RS136 | Tess line and Home | Home's notice line and the grouped notification must count the same items; the digest and Now agree. If the day's one non-timer notification is used, the queue shows on Now instead. | design only | `docs/research/quiet-interrupts.md` item 3 | `digestCountMatchesNow` (add) |
+| RS137 | Siri, Shortcuts | A Shortcut that posts nothing is unaffected; an intent that triggers a notice follows the same hold. | inferred | RS12 | none |
+| RS138 | Reduce Motion, Low Power, Dynamic Type | The grouped notice is a system surface; nothing in the app animates. | inferred | n/a | none |
+
+## 11. Switch 10: the four areas, Money, Reading, People, Upkeep (RS139 to RS162)
+
+One switch each: area shown or hidden. Product's wording (sheet 100 page 4): "Showing one adds its word to the index and its page to Home's side; hiding keeps every object and only stops showing it (Hidden, nothing deleted)." Body weight and Habits are rows on the same page in `review-choices-oct19.md`; they differ in that a body-weight class and a Habits copy file already exist.
+
+**Today on master, in a line.** None of the four areas exists: there is no Money, Reading, People or Upkeep class, page, phrase or front page, and there is no area index; Home is Review, Today, Training, Kitchen.
+
+**Before and after lines he reads.**
+- "Money: Hidden keeps spending out of Home, Now and the area index. Shown adds it. Nothing is deleted either way."
+- "Reading: Hidden keeps books out of Home, Now and the area index. Shown adds them. Nothing is deleted either way."
+- "People: Hidden keeps people and birthdays out of Home, Now and the area index. Shown adds them. Nothing is deleted either way."
+- "Upkeep: Hidden keeps chores out of Home, Now and the area index. Shown adds them. Nothing is deleted either way."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS139 | Setting exists? | No. Four new keys `area.money`, `area.reading`, `area.people`, `area.upkeep`, values shown and hidden. | gap (not built) | mirror `product/review-choices-oct19.md` row 18 | `areaKeysDefaultPerCall8` (add) |
+| RS140 | Default | "Today's set" is empty for these four, so by the rule they default to hidden; but then each ships invisible until flipped. Unruled which default Product wants for a newly built area. See CALL 8 (areas). | unruled | mirror `product/review-choices-oct19.md` row 18 | none |
+| RS141 | Money today | The grammar refuses money said as a task or list ("until Money exists: the miss line"); a past-tense money phrase with a day becomes a private note on that day. Nothing logs a spend. | traced | `TesseraCore/Sources/TesseraTess/TessGrammar.swift:135-141` | `spentPhraseKeepsTodaysMissLine` (add) |
+| RS142 | Reading today | No book class or shelf; "Reading" appears on master only as the busy word on the recipe link read. | traced (grep) | `Features/Recipes/PasteRecipe.swift:391` | none |
+| RS143 | People today | No Person class and no People page. "People" exists only as one kind of Tess memory (`area` choice) and a memory label. | traced | `TesseraCore/Sources/TesseraCore/Catalog/SystemCatalog.swift:260`; `TesseraCore/Sources/TesseraCore/Tess/TessMemory.swift:28` | none |
+| RS144 | Upkeep today | No chore class and no page; the specs exist in docs only. | traced (grep) | mirror `product/ship-list-m5-upkeep.md`; `docs/research/fixtures/upkeep.md` | none |
+| RS145 | Home today | Home has four pages: Review, Today, Training, Kitchen, with a painted rail of their words; no area index. | traced | `Features/Home/HomeSpatialView.swift:31-47, 88` | `homeHasFourPagesToday` (add) |
+| RS146 | The area index is not on master | The one-word top bar and area index (sheet 73 A) belong to PR #1055, which I did not find in master's history. Until it merges there is no index to add a word to. | traced (history); PR not read | `docs/research/fixtures/top-bar-walk.md` line 5 | none |
+| RS147 | Shown shows | The area's word in the index with one line through the private-text function, its page on Home's side, its rows on Now where the ranker chooses them (the stalest Upkeep chore drifts toward Now, never red), and its lines in the Day log. | design only | mirror `product/huddle-batches-oct19.md` batch 7; repo and mirror line 199 (index lines) | `shownAreaAppearsInIndexAndHome` (add) |
+| RS148 | Hidden shows | Nothing of the area on Home, Now, the area index, Tess lines or the Day log; its phrases behave as master does today (the money phrase keeps the miss line); its objects stay in the store. | ruled in part (sheet 100); the rest unruled | mirror `design/settings-review-100.md` page 4 | `hiddenAreaShowsNowhere` (add) |
+| RS149 | Hidden equals today? | **Yes for all four, trivially, until each area is built.** After an area is built, hidden equals today only if hiding also removes the new phrases, the Day log lines, the ranker's picks and the Tess lines; those are the rows below. | traced for master; conditional after | RS141 to RS145 | `hiddenAreaEqualsMaster` (add) |
+| RS150 | Nothing lost or deleted | A flip to hidden writes no op, deletes no object, and removes nothing from backups or exports; data entered while shown comes back when shown again. A backup restore on a phone where the area is hidden holds the area's data and shows none of it. | ruled (sheet); inferred (restore) | mirror `design/settings-review-100.md` page 4; RS07 | `hidingDeletesNothing`, `hiddenAreaStillInBackup` (add) |
+| RS151 | Phrases while hidden | The grammar for the area's phrases is gated by the same key: "spent 12.40" hidden gets today's refusal, not a spend. Otherwise a phrase would write to an area he cannot see. | unruled | `TessGrammar.swift:135-141`; CALL 8 | `hiddenMoneyPhraseKeepsTodaysLine` (add) |
+| RS152 | Now and the ranker | A hidden area contributes no picks and no reasons to Now. The ranker's areas are a closed list (tasks, training, groceries, kitchen, notes, other) with no entry for these four. | traced | `TesseraCore/Sources/TesseraCore/Tasks/NowRanker.swift:21-23` | `hiddenAreaNeverRanksOnNow` (add) |
+| RS153 | Day log | Batch 7 says each area writes into the Day log. Hidden must keep an area's lines out of the Day log pages, or it tells a hidden fact. | unruled | mirror `product/huddle-batches-oct19.md` batch 7 | `hiddenAreaLinesAbsentFromDayLog` (add) |
+| RS154 | Tess lines | Tess and the Home lines read the same switch: a hidden area is never named in a Home line, the area index line, a Tess reply or a widget. | ruled (rule); not built | mirror line 1113 (mirror only); `HomeLines.swift` has no money or people facts | `tessNeverNamesAHiddenArea` (add) |
+| RS155 | Private words | No area is ever private (the area itself), but every line it draws goes through the one private-text function; Money and body words stay masked on and off; class names that trip the check read "Private class" outside the phone. A shown area never un-masks a thing. | ruled | mirror line 1101 item 4; mirror line 1103 (both mirror only) | `areaIndexLinesGoThroughPrivateText` (add) |
+| RS156 | Index motion | The index opens and closes in 150 ms; a hidden area removes its row with a crossfade, never a collapse. | ruled for 150 ms (mirror only); the row removal inferred | mirror line 1101 item 6 | none |
+| RS157 | Reduce Motion, Low Power, Dynamic Type | Index rows reflow at accessibility sizes; the bar word stays at the largest standard size; Increase Contrast lifts the 42% rows to 70%. The switch does not change them. | ruled (mirror only) | mirror line 1101 item 6 | none |
+| RS158 | Quiet hours | None for the switch; a birthday task (People) or a chore (Upkeep) that is timed follows the quiet-hours rule for default times. | ruled | repo and mirror line 263 | none |
+| RS159 | Siri, Shortcuts | While hidden an area has no intent or entity; masked classes read "Private class". When shown, areas follow the Spotlight and Siri rules (private objects absent, not relabelled). | ruled (mirror only) | mirror line 1103, line 1107 CALL 6 | `hiddenAreaHasNoShortcut` (add) |
+| RS160 | Body weight and Habits | Different today: `BodyWeight` reads exist (the plan pack reads the last weight) and a Habits copy file exists, but no Habits class or page; both are still "Shown or Hidden" rows in review-choices. | traced | `HomePlan.swift:119`; `Features/Habits/HabitsCopy.swift` | none |
+| RS161 | Memory page | Hiding People does not hide Tess's "People" memory lines: memory is a separate taxonomy (what she learned) with its own page and its own forget. | inferred | `SystemCatalog.swift:260` | none |
+| RS162 | Edge: all four hidden | With all four hidden the area index and Home read as they do on master. | ruled by the default rule | RS149 | `allAreasHiddenEqualsMaster` (add) |
+
+## 12. Switch 11: the Batch 0 look switches, Top bar, Stage titles, Area colours, Small images (RS163 to RS176)
+
+Product's newer choice list removes all four ("Kaushik decided, ships directly, no switch"; review-choices rows 6 to 9). The huddle page still lists them. If a switch is wanted (CALL 9), these rows say what master shows, so OFF can be checked against it.
+
+**Today on master, in a line.** No top bar, no area index, no stage-coloured titles, no area colours and no small faded images: the navigation bar is hidden and Home is a painted rail over four sideways pages.
+
+**Before and after lines he reads (only if CALL 9 keeps them).**
+- "Top bar: Off keeps the rail of page words. On shows one word up top; pull down or tap it for the area index."
+- "Stage titles: Off keeps today's titles. On makes titles bolder, one color per stage, key word first, done struck through."
+- "Area colors: Off keeps today's colors. On gives each area its own color across Kitchen, Training and the rest."
+- "Small images: Off shows none. On shows small faded images where the screen is not crowded."
+
+| ID | Facet | What it says | Status | file:line or source | Test |
+|---|---|---|---|---|---|
+| RS163 | PR #1055 | The top bar is built on PR #1055 (`ios/top-bar`); I found no merge of it in master's history (`git log --merges` on 5af7cf5f). So on master there is no top bar. I did not read the PR. | traced (history); PR not read | `docs/research/fixtures/top-bar-walk.md` line 5 | none |
+| RS164 | Top bar, master shows | The navigation bar is hidden on Home; the screen's own rail of words (Review, Today, Training, Kitchen) sits at the top, with a hold-and-slide lens. | traced | `App/RootView.swift:20`; `Features/Home/HomeSpatialView.swift:88-92` | `masterTopIsThePaintedRail` (add) |
+| RS165 | Top bar, ON | One word up top, a pull down or a tap on the name opens the area index; each screen declares its side swipe; the index opens in 150 ms; the app reopens on Today after a relaunch; the pull and tap refuse while Tess is listening or an ask is open. | ruled (mirror only); not on master | mirror line 1101 items 1 to 6; `docs/research/fixtures/top-bar-walk.md` | `topBarOffKeepsRail` (add) |
+| RS166 | Top bar, OFF equals today? | Yes if the rail stays in the tree behind the switch. The ruled swipe rule ("a left swipe on a tab page opens that screen side; where none exists it does nothing, no paging to a neighbour") supersedes the rail's sideways paging for the bar, so ON and OFF differ in what the left swipe does. | conflict stated; OFF conditional | mirror line 1101 item 1 | `leftSwipeDiffersOnVersusOff` (add) |
+| RS167 | Stage titles, master shows | Titles use the hero, title and body roles; the word "stage" in Features is about staged restores only. A colour per stage, key word first and done struck through do not exist. | traced (grep) | `Features/Backup/BackupView.swift:17-28` (the only "stage" uses) | none |
+| RS168 | Area colours, master shows | The `areaLean` colour rule exists only in docs; zero hits in Swift. Area color roles exist on classes as a `colorRole` string only. | traced (grep) | `docs/research/fixtures/arealean-tokens.md`; `SystemCatalog.swift:49, 56` (`colorRole`) | none |
+| RS169 | Small images, master shows | No images are drawn from assets; `Image(` finds system symbols only. | traced (grep) | grep over `Features`, `App`, `DesignSystem` | none |
+| RS170 | OFF equals today? | Yes for all four trivially, because master has none of them; after the builds land, OFF holds only if each keeps its old code path. | traced for master | RS164 to RS169 | `lookSwitchOffEqualsMaster` (add) |
+| RS171 | Where they read | The look store (`ThemeStore`) already gives views one observable theme; Area colours and Stage titles would add values to the theme or a new observable, not a UserDefaults read in each view. | inferred | `DesignSystem/Looks.swift:115-117, 171-177` | none |
+| RS172 | Private words | Index lines pass through the private-text function; a stage colour or area colour carries no word; a small image never shows a private title. | ruled (index); inferred | mirror line 1101 item 4 | none |
+| RS173 | Reduce Motion, Low Power | A colour change crossfades; the index uses 150 ms; no image animates. | ruled for 150 ms | mirror line 1101 item 6 | none |
+| RS174 | Tess line and Home | Index lines (6 words, 32 characters) and Home's lines are built from the same facts; the bar word stays the area name on a side. | ruled | repo and mirror line 199; mirror line 1101 item 5 | none |
+| RS175 | Quiet hours, Siri | None. | traced by absence | n/a | none |
+| RS176 | If removed (Product's newer list) | They ship directly. Then "off shows today's look" has no row, and the only way back to today is a revert. | ruled in the choice list | mirror `product/review-choices-oct19.md` rows 6 to 9 | none |
+
+## 13. SUMMARY
+
+Counts. 176 rows (RS01 to RS176), eleven switches plus the shared ground. Nothing was run.
+
+**Which switches have a ready setting.** None of the eleven. Master has no Review store (RS02), no Settings page (RS01) and no flag for any of them. The nearest existing state is the shared Claude field in the settings object (`TesseraSettings.swift:12, 41-43`) for Plan my day's wording, the constant `AppModel.planWordingReady` (`AppModel.swift:64`), the look store's pattern (`Looks.swift:171-177`), and the device-only `UserDefaults` pattern for flags that stay out of backups (`ClaudeTessModel.swift:312-322`).
+
+**Which need new state.** All of them: one device-only `ReviewChoices` store (RS03) with keys `readingLayout`, `pageTurn`, `restTimer`, `swapTaps`, `finishNudge`, `planMyDay`, `shutdown`, `energyCheckIn`, `quietInterrupts`, `area.money`, `area.reading`, `area.people`, `area.upkeep` (and the four look keys if CALL 9 keeps them), plus a last-ten flips list for THE FLIPS side (RS06). Not the settings object, which rides in every backup.
+
+**Which can honestly promise "off equals today", and which cannot.**
+- Off equals today, traced on master: Swap two taps (RS66), Finish nudge off (RS79), Shutdown off (RS108; one edge, RS109), Energy off (RS121), Quiet interrupts off (RS131), the four areas hidden (RS149, trivially because none is built), the four look switches (RS170, trivially).
+- Conditional on how it is built: Reading layouts (RS17, RS18, RS21): only if the four screens keep their current view code and the shared tokens stay unchanged; the sheet as drawn edits shared tokens and the literal-size cleanup changes line heights.
+- Cannot promise: Page turn (RS31, RS32): the four values have no "Today", the default is Slide in one list and Turn in a decision, and neither is today's sideways scroll. Rest timer (RS48): Today has the timer, so OFF removes today's behavior; only the default On equals today, and after the notification ships ON differs in the alert. Plan my day (RS91, RS92): the rules plan is offered today with no switch, so a default Off removes it; it equals today only if the switch means "Claude wording on top".
+
+**Walls and rules that hold in every row.** Private words stay masked on and off (RS10); no switch turns Claude on (RS11); no intent reads a switch or sends anything (RS12); Tess's line and Home read one switch value so they never disagree (RS57, RS83, RS114, RS154); Reduce Motion and Low Power give the 150 ms crossfade, and Low Power is not yet an input to `MotionPolicy` (RS09).
+
+## 14. PRODUCT CALLS
+
+Each call is in the Kitchen CALL shape: the question, the options with their consequence, a recommendation and its reason, and an owner. All are unruled; none is answered here.
+
+### CALL 1 (RS17, RS18, RS21): What "Reading layouts: Today" must equal
+
+| Option | Consequence |
+|---|---|
+| A. Keep the current view code of the four screens behind the switch; shared tokens and every other screen stay as they are | OFF equals today exactly; the refit is more code, and tokens such as `read` are added, not substituted. |
+| B. Ship the shared token changes (read alias, delete 17, retire 34 for words, cap voice) to everyone, switch only the four screens' layout | Smaller code; other screens change before he chooses, so OFF does not equal today. |
+| C. Drop the switch and ship sheet 99 | No promise to keep; against the "off shows today's look" rule. |
+
+Recommended: A. Reason: the rule is that off looks and acts exactly like master, and the sheet's rulings 1, 2 and 3 touch shared tokens. Owner: Builder A and Builder B, Design for the screen list.
+
+### CALL 2 (RS31, RS32, RS28): Page turn has no "Today" and two defaults
+
+| Option | Consequence |
+|---|---|
+| A. Add a fifth value "Today" (today's sideways paging, unpaged lists), default Today, with Slide, Turn, Soften, Rotate as the four turns | Off equals today; the section says Today first like every other row; Kaushik's Oct 17 default of Turn waits until he flips. |
+| B. Keep four values; default Slide (the choice list) | Nothing equals today on first flip; the first run changes Home's paging to a vertical turn. |
+| C. Keep four values; default Turn (decision 12:46 PM Oct 17) | Same as B with a different feel; the two Product documents disagree and one must be struck. |
+
+Recommended: A. Reason: it is the only option where nothing changes until he flips. Owner: Product, Design, Builder B.
+
+### CALL 3 (RS46 to RS50): What Rest timer Off turns off
+
+| Option | Consequence |
+|---|---|
+| A. Off removes the countdown, the rest bar, the Live Activity and the alert (the sheet's line "Off: no timer") | One clean rule; the Lock Screen Done, +15 and Skip keys also disappear. |
+| B. Off removes only the countdown and the alert; the Live Activity still shows the planned set with its Done key | Lock Screen Done survives; two things named "rest" behave differently. |
+| C. Three values: On, Lock Screen only, Off (the week-one question 1 had "only on the Lock Screen") | Matches the question he was going to be asked; a three-value row. |
+
+Recommended: A with a line in the row ("Off also removes the rest keys on the Lock Screen"). Reason: simplest; and note that the default On equals today only until the ruled notification replaces the Live Activity alert, a change that should be told once in the build note. Owner: Product, Builder A.
+
+### CALL 4 (RS67, RS68): Where the exercise page goes when one tap opens the swap panel
+
+| Option | Consequence |
+|---|---|
+| A. The name's tap opens the swap panel; the exercise page opens from a long-press or a second tap | Fast swap; a changed route to history. |
+| B. Keep the name's tap for the exercise page; one tap means a swap key beside the name | The page stays reachable; adds a mark to the live screen. |
+| C. One tap is dropped; keep today's pull and long-press | Nothing to build; the switch row disappears. |
+
+Recommended: A, keeping the pull working. Reason: it is what sheet 100 draws; the page is still one press away. Owner: Design, Builder A.
+
+### CALL 5 (RS77, RS81, RS82): What the Finish nudge is
+
+| Option | Consequence |
+|---|---|
+| A. One quiet Tess line on Now, once per workout, after the idle limit, before the 6-hour wrap-up, worded as Home words it ("<title>, ready to finish", masked), never in quiet hours | No notification permission needed; he sees it only when he opens the app. |
+| B. One local notification at the same moment | He is reached when away; needs the permission; a second notification kind. |
+| C. Both | Most reliable; the most interruption. |
+
+Recommended: A. Reason: it fits "one quiet nudge" and "Tess line and Home never disagree", and quiet interrupts are not built. Owner: Product, Builder A.
+
+### CALL 6 (RS91, RS92, RS93): What the Plan my day switch controls
+
+| Option | Consequence |
+|---|---|
+| A. The switch is "Claude wording on top"; Off (default) is the rules plan master offers today | Off equals today; nothing hides; the sheet's line changes to "Tess offers the plan at 8 am. On lets Claude word it." |
+| B. The switch is the offer itself; default On | Matches today but contradicts the choice list's default Off and the sheet's "Tess offers the day's plan". |
+| C. The switch is the offer; default Off (as written) | Off removes the offer master shows today; breaks "off equals today". |
+
+Recommended: A. Reason: the offer is already in the app and has no switch; Claude's wording is the only new thing. Owner: Product, Builder B.
+
+### CALL 7 (RS110, RS132): Shutdown's roll and Quiet interrupts' scope
+
+| Option | Consequence |
+|---|---|
+| A. A move at 9 pm marks the item so the 4 am roll skips it; "low priority" means timed-task reminders and the digest only (not the launch note or process notes) | No double roll; quiet interrupts do not hold anything he needs to read at launch. |
+| B. The 4 am roll runs regardless; low priority includes process notes | Simpler; an item may roll twice; notes could wait out a long workout. |
+
+Recommended: A. Reason: counts-only and no double move; held notices should be the ones that can wait. Owner: Product, Core.
+
+### CALL 8 (RS118, RS119, RS140, RS151, RS153): Energy's scale and effect, and an area's default and reach
+
+| Option | Consequence |
+|---|---|
+| A. Energy is 1 to 5, logged for the Day log only, never changes the plan, Tess silent (design m4-steers); each new area defaults to hidden and, hidden, its phrases keep today's behavior and it writes no Day log lines | Matches the code rule that energy is never an input; every area needs a flip; a hidden area stays invisible everywhere. |
+| B. Energy is low, steady, high and shapes the plan (sheet 100); each area defaults to shown when built | Needs a new plan input against the code rule; areas appear on their own. |
+| C. A for energy, B for areas | Safe energy, areas appear on build. |
+
+Recommended: A. Reason: the standing rule is default is today's behavior; energy as a plan input contradicts `DayPlan.swift:348-349` and a health-word wall. Owner: Product, Core, Design.
+
+### CALL 9 (RS163 to RS176): Do the four look switches exist
+
+| Option | Consequence |
+|---|---|
+| A. Removed, as the newer choice list says; they ship directly | No switch to test; no way back to today except a revert. |
+| B. Keep them as four switches for one release | OFF equals today (the old code stays); more code, two paths for each. |
+
+Recommended: A (Product has already decided). Reason: `review-choices-oct19.md` says Kaushik decided; the huddle page is the older list and should be corrected. Owner: Product.
+
+## 15. Not verified
+
+- Nothing was built, run or tested; no simulator, no phone. All test names are names to add; none was looked up in `TesseraTests` or `TesseraCore/Tests`.
+- The three Product switch files (`huddle-batches-oct19.md`, `review-choices-oct19.md`, `settings-review-100.md`) exist only in the mirror; the repo copy of decisions was not compared past line 1065 (it ends there).
+- RS13: that a launch argument sets a `UserDefaults` key on the phone is system behavior I did not check.
+- RS07: that `UserDefaults` go with the app on a delete rests on hunt 28's table, which I did not re-verify.
+- RS15, RS22: the Sheet 99 sizes and `Machined.swift:225-231` come from the design sheet and the inventory; I read two inventory-cited lines (`TrainingPage.swift:606`, `ObjectPage.swift:488`) but not the Groceries, Home or Exercise views in full. The count of literal 18 and 34 sizes was not recounted.
+- RS21: `ObjectPage` was seen as the destination of every route in `RootView.swift`, not read to see how it draws an exercise.
+- RS33: decision line 1061 item 2 (G385) was cited from the motion note and a ruling search, not re-read in full this time.
+- RS50, RS54, RS56: `RestIntents.swift` and `Intents.swift` buttons are cited from hunt 26, not re-read.
+- RS55: Live Activity fonts and the Always-On face were not opened.
+- RS72: that no swap intent exists comes from hunt 26's list of seven intents, not a fresh read.
+- RS81: decision line 666 (the faint row) was read through a search result, not in full.
+- RS99, RS101: the `TessVoice.shared.say` calls were located by line (`HomePlan.swift:130, 138, 156, 191`) but which one fires in which state was not traced.
+- RS109: that Now flips to "tomorrow, first" at 21:00 was not traced; only the day part and the phrase were read.
+- RS113: line 341 of the decisions is quoted from hunt 26, not re-read here.
+- RS135, RS136: the notification digest is a research design; no code exists.
+- RS146, RS163: PR #1055 was not read; "not found in master's history" is a search of `git log --merges` for the number and "top-bar", which can miss a squash merge titled otherwise.
+- RS147 to RS162: the four areas' pages, phrases and Day log writes are specs in the ship lists (`ship-list-m5-money.md`, `-reading.md`, `-people.md`, `-upkeep.md`), which I did not open.
+- Tess eyes and mouth (review-choices row 10), Calendar, Health and Link fetch (rows 16, 17, 19) were not part of this file's list and are not covered, except where the Health row touches Energy (RS122).

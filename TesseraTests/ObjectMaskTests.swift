@@ -38,13 +38,13 @@ struct ObjectMaskTests {
     }
 
     /// QA on #912: the same set as a private list item; "blood orange" is food.
-    @Test func dentistIsPrivateAndBloodOrangeIsNot() throws {
+    @Test func lexaproIsPrivateAndBloodOrangeIsNot() throws {
         let list = try model.engine.perform(CreateList(name: "Errands"), by: .user).output
-        let dentist = try model.engine.perform(AddListItem(list: list.id, text: "dentist"), by: .user).output
+        let lexapro = try model.engine.perform(AddListItem(list: list.id, text: "lexapro"), by: .user).output
         let orange = try model.engine.perform(AddListItem(list: list.id, text: "blood orange"), by: .user).output
-        #expect(label(dentist) == "Private item")
+        #expect(label(lexapro) == "Private item")
         #expect(label(orange) == nil)
-        let run = try model.engine.perform(CreateList(name: "Dentist run"), by: .user).output
+        let run = try model.engine.perform(CreateList(name: "Lexapro run"), by: .user).output
         #expect(label(run) == "Private list")
     }
 }

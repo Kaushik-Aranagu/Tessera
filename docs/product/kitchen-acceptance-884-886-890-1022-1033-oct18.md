@@ -7,7 +7,7 @@ Static only, against origin/master fdc75400 (nothing built or run). Diffs read w
 | PR | Clause | Verdict | Where | Covering test |
 |---|---|---|---|---|
 | #884 | Phrases past 600 characters never go to Claude; answer "That's too long to send. Say it shorter." as a refusal, not logged as a miss (G423 cap) | PASS (engine) | ClaudeTessModel.swift new `maxPhraseCharacters` guard | ClaudeRouteTests (new, 27 lines) |
-| #884 | A phrase about a timer, or any phrase while a cook runs, is read on the phone or not at all (G423 cook gate) | PASS (engine) | TessModel.swift `aboutATimer`, `cooking` in the router loop | ClaudeRouteTests |
+| #884 | A phrase about a timer, or any phrase while a cook runs, is read on the phone or not at all (G423 cook gate) | PASS (engine) | TessModel.swift:83-95 `TessRouter.staysOnPhone` (the router and the offline inbox drain both ask it; QA low on #1069) | ClaudeRouteTests |
 | #884 | "dinner at 7.30" is a clock, not money, unless a money word is present; "eleven stone four" is a body weight | PASS | PrivateFacts.swift `clockless`, `spokenNumbers` | MoneyWallTests (+66 lines) |
 | #886 | "30-Minute Dal", "7 Layer Dip", "3 eggs benedict" stay titles; "1. Preheat", "200g flour", "2 Tbsp butter" are not titles (G94) | PASS | RecipeParser.swift `startsWithAmount` | RecipeTests (+36 lines) |
 | #890 | One private-title check for receipts, UNDO, Tess lines, screens and export (G105); "Rent car" stays raw, "Dr Pepper" and "blood orange" stay raw | PASS | ObjectPrivacy.swift `isPrivateTitle`, `titleWords`; PrivateWords.swift now delegates | PrivacyParityTests (+54), PrivateWordsTests |

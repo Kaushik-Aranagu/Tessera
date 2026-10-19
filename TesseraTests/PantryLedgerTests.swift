@@ -48,7 +48,7 @@ struct PantryLedgerTests {
     @Test func aPrivateRecipesCookNeverListsItsIngredientNames() throws {
         // G139: what a private recipe used reads "Private item" under OUT and LOW, with no reveal.
         let stew = try model.engine.perform(CreateRecipe(text: """
-        Dentist stew
+        Lexapro stew
         1 lb ground saffron
         2 cups cumin lentils
         Method
