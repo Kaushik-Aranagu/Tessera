@@ -40,19 +40,19 @@ When the final set logs, the activity does not end at once. It shows one still f
 
 | Moment | Normal | Reduce Motion | Low Power | Haptic / sound |
 |---|---|---|---|---|
-| Last set logs | the resting face changes to the closing face: the line "<title>, done" (for example "Push A, done"), no countdown, no horizon, no keys | the same swap, a system crossfade | same as RM; no timer runs on it, so it costs nothing in Low Power | none from the activity (the app's own `.done` for the set is unchanged) |
+| Last set logs | the resting face changes to the closing face: the line "<title>, ready to finish" (for example "Push A, ready to finish"), no countdown, no horizon, no keys | the same swap, a system crossfade | same as RM; no timer runs on it, so it costs nothing in Low Power | none from the activity (the app's own `.done` for the set is unchanged) |
 | The minute | the face stays still; nothing animates (lab default: 60 s, from the set's log time, ended by one scheduled end) | same | same | none |
 | After the minute | the activity ends with the default system dismissal | same | same | none |
 | He finishes the workout in the app first | the activity ends at once with the workout | same | same | none |
 | Undo of the last set (within its 10 s) | the face goes back to the resting face and the minute is cancelled | same | same | `.undo` only if the app is in front |
-| Private title | the title is the masked form from the one private-text function; on the Lock Screen that reads "Private exercise" (CALL 2 A, decision 1103), so "Private exercise, done" | same | same | none |
-| VoiceOver | the face reads "<title>, done"; no live region, no announcement of ours | same | same | n/a |
+| Private title | the title is the masked form from the one private-text function; on the Lock Screen that reads "Private exercise" (CALL 2 A, decision 1103), so "Private exercise, ready to finish" | same | same | none |
+| VoiceOver | the face reads "<title>, ready to finish"; no live region, no announcement of ours | same | same | n/a |
 
 The face carries no keys: Done, +15 and Skip are gone with the last set, so no tap target competes with the app. Tapping the card opens the app to the workout wrap-up.
 
 ### What Home says at the same moment
 
-Home's Training line stays "Ready to finish" until he finishes (the app's state). The face says "<title>, done" because that is what is true of the sets. They describe the same moment from two sides: sets all done, workout not yet wrapped. Tess's line and Home never disagree: the face never says "finished", and Home never says "done" before the last set is logged. (Lab default; ask below.)
+Ruled by Product (Oct 19, `decisions.md` last bullet): Home's Training line stays "Ready to finish", and the closing face reads what Home reads at that moment: "<title>, ready to finish" with the masked title. Tess's line and Home never disagree, so the face never says "done" or "finished". The 60 s length stands.
 
 ### Build checks (Builder A)
 
@@ -65,6 +65,6 @@ Home's Training line stays "Ready to finish" until he finishes (the app's state)
 
 ## Asks
 
-- **Product:** the closing face's length. The ruling says "about one minute"; 60 s is a lab default.
-- **Product:** whether Home's Training line should read "<title>, done" too at that moment, or keep "Ready to finish" (lab default: keep).
-- **Design:** wording check on "Private exercise, done" for a masked workout title.
+- **Design:** wording check on "Private exercise, ready to finish" for a masked workout title.
+
+(Product's two asks, the length and Home's line, are ruled; see above.)
