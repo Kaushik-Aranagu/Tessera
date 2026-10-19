@@ -22,20 +22,23 @@ struct AreaIndexPullTests {
     @Test func theAreaYouAreInIsUnderTheFingerWhenItForms() {
         var pull = AreaIndexPull()
         _ = pull.progress(translation: 120)
-        #expect(pull.picked(translation: 120, current: 1, count: 4) == 1)
-        #expect(pull.picked(translation: 120, current: 3, count: 4) == 3)
+        // A flick that first reports 120 still anchors at 90: 30 pt on is half a row, which stays put.
+        #expect(pull.picked(translation: 90, current: 1, count: 4) == 1)
+        #expect(pull.picked(translation: 90, current: 3, count: 4) == 3)
+        #expect(pull.picked(translation: 119, current: 1, count: 4) == 1)
     }
 
     @Test func anyRowIsReachableFromAnyStartingHeight() {
         var pull = AreaIndexPull()
         _ = pull.progress(translation: 100)
-        // In Today (1): down two rows is Kitchen, up one is Review, and travel past the ends stops there.
-        #expect(pull.picked(translation: 220, current: 1, count: 4) == 3)
-        #expect(pull.picked(translation: 40, current: 1, count: 4) == 0)
+        // In Today (1), anchored at 90: down two rows is Kitchen, up one is Review, and travel past the ends stops
+        // there.
+        #expect(pull.picked(translation: 210, current: 1, count: 4) == 3)
+        #expect(pull.picked(translation: 30, current: 1, count: 4) == 0)
         #expect(pull.picked(translation: 900, current: 1, count: 4) == 3)
         #expect(pull.picked(translation: -900, current: 1, count: 4) == 0)
         // Training from Today: one row down.
-        #expect(pull.picked(translation: 160, current: 1, count: 4) == 2)
+        #expect(pull.picked(translation: 150, current: 1, count: 4) == 2)
     }
 
     @Test func aNewPullStartsFresh() {

@@ -85,6 +85,8 @@ struct HomeSpatialView: View {
     @State private var pulling = false
     @State private var pullAxisDown: Bool?
     @State private var pullState = AreaIndexPull()
+    /// True only while a finger is down on the pull; the system resets it to false when the drag is cancelled.
+    @GestureState private var pullTouching = false
     /// A page's vertical scroll is away from its top: pulling then scrolls it back and never opens the index.
     @State private var pageScrolled = false
     @State private var pickTicks = 0
@@ -202,6 +204,18 @@ struct HomeSpatialView: View {
                                pulling: pulling, calm: calm, namespace: areaWord, onPick: pick, onClose: closeIndex)
                     .ignoresSafeArea(edges: .top)
                     .transition(.opacity)
+            }
+        }
+        .onChange(of: pullTouching) { _, touching in
+            // A drag the system cancelled (Notification Center, a call) never reaches onEnded. The finger-up flag flips
+            // before onEnded runs for a normal lift, so look again a beat later: still mid-pull means it was cancelled.
+            guard !touching, pullAxisDown != nil else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(150))
+                guard pullAxisDown != nil else { return }
+                pullAxisDown = nil
+                pullState = AreaIndexPull()
+                closeIndex()
             }
         }
         .onChange(of: indexProgress) { _, new in
@@ -324,16 +338,23 @@ struct HomeSpatialView: View {
     /// it, on your own area to close, or short of forming to cancel.
     private var pull: some Gesture {
         DragGesture(minimumDistance: 12, coordinateSpace: .global)
+            .updating($pullTouching) { _, touching, _ in touching = true }
             .onChanged { value in
                 guard !rowGrabbed, !pageScrolled, !model.isCommandExpanded, !model.soul.refusesLens,
                       !typeSize.isAccessibilitySize else { return }
                 if pullAxisDown == nil {
+                    // A new pull never inherits the last one's anchor (a cancelled drag may not reach onEnded).
+                    pullState = AreaIndexPull()
                     pullAxisDown = value.translation.height > 0
                         && abs(value.translation.height) > abs(value.translation.width) * 1.5
                 }
                 guard pullAxisDown == true else { return }
                 let drag = value.translation.height
                 indexProgress = pullState.progress(translation: drag)
+                // The sheet only mounts while the index is open or forming; a pull has to mount it too.
+                if indexProgress > 0 {
+                    indexMounted = true
+                }
                 pulling = pullState.isFormed
                 guard pullState.isFormed else {
                     picked = nil

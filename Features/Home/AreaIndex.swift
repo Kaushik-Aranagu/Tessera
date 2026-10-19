@@ -152,7 +152,8 @@ struct AreaIndexPull: Equatable {
         }
         let formed = Double(min(max((translation - Self.startAt) / (Self.formedAt - Self.startAt), 0), 1))
         if formed >= 1 {
-            anchor = translation
+            // Where the index forms (90 pt), not the first event past it: a fast flick still steps its rows.
+            anchor = Self.formedAt
         }
         return formed
     }
