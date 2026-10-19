@@ -600,7 +600,9 @@ final class AppModel {
         if let workout = tonightWorkout(around: now),
            case let .date(start)? = store.value("scheduledFor", of: workout)
         {
-            items.append(ScheduleItem(id: workout.id, title: workout.title, start: start,
+            // Masked at the source: the queue row, its label and hint and the spoken receipts all read this (G274).
+            items.append(ScheduleItem(id: workout.id, title: ObjectPrivacy.routineTitle(workout.title, in: store),
+                                      start: start,
                                       end: start.addingTimeInterval(75 * 60), isDone: false, isWorkout: true))
         }
         return items.sorted { $0.start < $1.start }

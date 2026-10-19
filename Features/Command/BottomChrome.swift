@@ -294,13 +294,13 @@ struct BottomChrome: View {
     /// At most one fast path, the likeliest for right now. "Today" is gone: a double tap on the soul goes home.
     private var fastPath: (String, () -> Void)? {
         if let session = model.session {
-            return ("Back to \(session.workout.title)", { [model] in
+            return ("Back to \(session.shownTitle)", { [model] in
                 model.isCommandExpanded = false
                 model.isWorkoutPresented = true
             })
         }
         if let workout = model.tonightWorkout() {
-            return ("Start \(workout.title)", { [model] in
+            return ("Start \(ObjectPrivacy.routineTitle(workout.title, in: model.store))", { [model] in
                 model.isCommandExpanded = false
                 model.startWorkout(workout)
             })
