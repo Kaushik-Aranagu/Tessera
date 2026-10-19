@@ -197,11 +197,11 @@ struct NowPage: View {
                     planModel.keepPlan(model: model)
                 }
             }, label: { _ in
-                Text("Start with \(first.title)")
+                Text("Start with \(PlanWords.shownTitle(first, model: model))")
                     .textRole(.labelStrong)
                     .fixedSize(horizontal: false, vertical: true)
             })
-            .accessibilityLabel("Start with \(first.title)")
+            .accessibilityLabel("Start with \(PlanWords.shownTitle(first, model: model))")
             .tesseraFeedback(.made, trigger: planKept)
         }
     }

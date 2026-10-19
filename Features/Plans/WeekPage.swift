@@ -83,6 +83,7 @@ private struct DayColumn: View {
     let seed: Int
     let action: () -> Void
     @Environment(\.zoomNamespace) private var namespace
+    @Environment(AppModel.self) private var model
 
     var body: some View {
         let isToday = day.state == .today
@@ -140,7 +141,8 @@ private struct DayColumn: View {
 
     private var spoken: String {
         let name = day.date.formatted(.dateTime.weekday(.wide))
-        let routine = day.routine ?? ""
+        // The routine as VoiceOver may say it: "Private workout" when private (G274, hunt 22).
+        let routine = day.routine.map { ObjectPrivacy.routineTitle($0, in: model.store) } ?? ""
         return switch day.state {
         case .done: "\(name), \(routine), done"
         case .today: "\(name), today, \(routine)"
