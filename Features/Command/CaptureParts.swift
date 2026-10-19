@@ -228,7 +228,7 @@ struct CommandInterpreter {
         }
         guard let session = model.session,
               let index = session.entries.firstIndex(where: { session.exerciseClass(of: $0)?.id == exercise.id })
-        else { return "\(exercise.name) isn’t in \(workout.title)." }
+        else { return "\(exercise.name) isn’t in \(ObjectPrivacy.routineTitle(workout.title, in: model.store))." }
         session.select(entryAt: index)
         session.weight = weight
         session.reps = reps

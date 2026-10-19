@@ -153,7 +153,10 @@ final class HomePlanModel {
         }
         kept[id] = record
         model.touch()
-        TessVoice.shared.say("\(block.title), \(Self.spoken(block.start)).", undo: record) { [weak self] in
+        TessVoice.shared.say(
+            "\(PlanWords.shownTitle(block, model: model)), \(Self.spoken(block.start)).",
+            undo: record
+        ) { [weak self] in
             self?.kept[id] = nil
         }
     }
@@ -185,15 +188,18 @@ final class HomePlanModel {
         state = .kept
         spend()
         model.touch()
-        TessVoice.shared.say("Plan kept. \(first.title) is up.", takeBack: { [weak self] in
-            for record in records.values {
-                _ = model.engine.undo(record)
+        TessVoice.shared.say(
+            "Plan kept. \(PlanWords.shownTitle(first, model: model)) is up.",
+            takeBack: { [weak self] in
+                for record in records.values {
+                    _ = model.engine.undo(record)
+                }
+                self?.kept = before
+                self?.state = self?.worded == nil ? .offered : .worded
+                UserDefaults.standard.removeObject(forKey: Self.spentKey)
+                model.touch()
             }
-            self?.kept = before
-            self?.state = self?.worded == nil ? .offered : .worded
-            UserDefaults.standard.removeObject(forKey: Self.spentKey)
-            model.touch()
-        })
+        )
     }
 
     /// Swipe the hero left: the offer is spent until tomorrow; nothing is written and nothing is said.
@@ -212,6 +218,17 @@ final class HomePlanModel {
 // MARK: - Words
 
 enum PlanWords {
+    /// A plan row's name as it may be shown or said: a private task's label ("Private task") or "Private workout",
+    /// by Core's own checks, else the block's title (hunt 22, plan ghost rows).
+    @MainActor
+    static func shownTitle(_ block: DayPlan.Block, model: AppModel) -> String {
+        if block.kind == .workout {
+            return ObjectPrivacy.routineTitle(block.title, in: model.store)
+        }
+        guard let id = block.object, let object = model.store.object(id: id) else { return block.title }
+        return ObjectPrivacy.label(of: object, in: model.store, classes: model.classes) ?? block.title
+    }
+
     /// The hero counts the tasks and the workout, never free, clear or open time (no calendar is read).
     /// Longest first; the page draws the first that fits.
     /// `shown` masks the workout's name: "Private workout" for a private routine (G274).
@@ -293,6 +310,7 @@ struct PlanRow: View {
     let keep: () -> Void
     let skip: () -> Void
 
+    @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.homePagerIdle) private var pagerIdle
     @Environment(\.homeRowGrab) private var grab
@@ -304,7 +322,10 @@ struct PlanRow: View {
     private static let threshold: CGFloat = 120
 
     var body: some View {
-        let title = Text(block.title).font(Theme.Typography.font(Theme.concept.scale.body, weight: .medium))
+        let title = Text(PlanWords.shownTitle(block, model: model)).font(Theme.Typography.font(
+            Theme.concept.scale.body,
+            weight: .medium
+        ))
         let time = Text(Format.clock(block.start)).font(Theme.Typography.font(Theme.concept.scale.label))
             .monospacedDigit()
         TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion || kept)) { context in
@@ -328,7 +349,9 @@ struct PlanRow: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Proposed: \(block.title), \(HomePlanModel.spoken(block.start))")
+        .accessibilityLabel(
+            "Proposed: \(PlanWords.shownTitle(block, model: model)), \(HomePlanModel.spoken(block.start))"
+        )
         .accessibilityHint("Swipe right to keep, left to skip")
         .accessibilityAction(named: "Keep", keep)
         .accessibilityAction(named: "Skip", skip)
