@@ -61,7 +61,7 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### Product
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M9buvsufEBhXZqJtov6ZY72; old session cse_013bC75Wtuv4sc7B2EmqcXVZ.
-- Current thread (rotated 4:13 PM PT Oct 18, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7MPpZf8SHuuu5MKd4dyxghiS; session session_01URwf36dgzxqtXqPtSKpSDn.
+- Current thread (rotated 12:11 PM PT Oct 19, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7M67xkTi2tkZyXQpvvkCvCC5; session session_01QiZtFZteCNTczaE8Lpmtux.
 - Retired (Product, 4:13 PM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7MWi2dCL7tNxRpj8bBAegpPg; session session_01TtjFYrCSBXmZzXXajVQvgq.
 - Retired (Product, 7:20 AM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7M4PS458UQbE4cTCBrUUs8ZG; session session_01RBgnhXvCZZhM8wDwJqs5Rx. Earlier line: Fresh thread (rotated about 4:30 PM PT Oct 17, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7M4PS458UQbE4cTCBrUUs8ZG; session session_01RBgnhXvCZZhM8wDwJqs5Rx. Retired: thread cmsg_01VTPva3JGXrfvetgUvAWE7MRLK2oiTKs6EG9Uu5qfT6M1, session cse_01STY2yX8fnVksnqnnPkcBQG.
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
@@ -87,7 +87,7 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### QA
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M3cdnVjUDBstQ8XtwdEoetT (Repo maintainer, resolved Oct 17 7:21 AM PT); old session cse_016hxroCB7KSo9FQG2RL5PdR.
-- Current thread (rotated 11:28 AM PT Oct 18, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7M8HsLv7SwF7ADQiw2UCohCr; session session_01LbGAxUTg7rWH8bWgK5EBJA.
+- Current thread (rotated 12:11 PM PT Oct 19, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7MQPXBCg4QYM6kfnL9Qfjdjy; session session_01VmVVVDzqDh498xomkPzqRJ.
 - Retired (QA, 11:28 AM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7MGdnjMQ1bVU1jh77iNkirwA; session session_0159fgVMPVtfHwTED546XWC8.
 - Retired (QA, 7:20 AM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7M4ssnyX2AFNBvTnuUMj5Y1K; session session_016tTiZavEry3vudhWSeD15v. Earlier line: Fresh thread (rotated again about 8:56 PM PT Oct 17, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7M4ssnyX2AFNBvTnuUMj5Y1K (QA); session session_016tTiZavEry3vudhWSeD15v. Retired: thread cmsg_01VTPva3JGXrfvetgUvAWE7MCy1jQu1AAK4DaoaMNk6LTX, session session_01LivGht4DsiiWp8zDyRGFtz (the 4:30 PM generation); thread cmsg_01VTPva3JGXrfvetgUvAWE7MCGo649SeUBPdKzkV1rnwTw, session session_011G5V3Hxc6iNaYxFTxRs5Eg; and thread cmsg_01VTPva3JGXrfvetgUvAWE7MGRpS7oj5KfU9dSEo1Piu6j, session cse_01SPUv55gtzktZjCda2KjMoW (and the earlier cmsg_01VTPva3JGXrfvetgUvAWE7M5h3w4owqhDYuba8C5nBymK, cse_01M6UTgTZa2bJBa8bLiyL3rv).
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
@@ -169,7 +169,7 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### Ops
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M4sZwbno9N8W6eaaMTwMASs (Ops lead, rotated 8:56 PM Oct 17); old session cse_01RWgiTA9S2ayUkTS9R4LtQ2 (stood down).
-- Fresh thread (rotated 9:15 AM PT Oct 18): cmsg_01VTPva3JGXrfvetgUvAWE7M1vz7FSmbHaEGzZghmdPzNf; session session_015Nf4mTXVRg1fwrCCGNxDtR.
+- Fresh thread (rotated 6:15 PM PT Oct 18): cmsg_01VTPva3JGXrfvetgUvAWE7MUSz7kmvLnHTRkNdw81zL64; session session_01WRnan5VuSgav7AZBXqAtew.
 - Retired (Ops, 9:15 AM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7M6dJfVeBsPFV1RHWEuVJhxU; session session_018JM7uZ2p9n5pHhe2U4JvC8.
 - Handoff note: ops/rotation-handoffs.md, section "Ops team, 9:15 AM PT Oct 18" (the earlier "Ops lead, 8:56 PM PT Oct 17" section sits before it). Board: ops/board/ops.md.
 - Rules for Ops (plus G): team update every 2 to 3 hours in the Ops thread, 3 to 4 plain lines (hold after 11 PM PT until 7:48 AM); never touch keys, never change permissions; anything that changes another team's workflow goes to the coordinator as a proposal first; docs PRs keep PIN and approval-gate lines byte-identical; delegate broad scans to read-only Sonnet subagents.

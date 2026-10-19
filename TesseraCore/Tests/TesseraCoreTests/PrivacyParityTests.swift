@@ -8,14 +8,16 @@ struct PrivacyParityTests {
     let store = ObjectStore.open(inMemory: true)
 
     nonisolated static let walled: [String] = [
-        "Dentist cake", "dentist", "therapy ideas", "lexapro", "rent 2100", "take melatonin", "wifi password zebra99",
+        "Lexapro cake", "therapy ideas", "lexapro", "rent 2100", "take melatonin", "wifi password zebra99",
         "paid 40 for gas",
-        "dentists", "Dr Patel", "Dr. Smith", "dr. lee",
+        "Dr Patel", "Dr. Smith", "dr. lee",
     ]
     nonisolated static let plain: [String] = [
         "Weeknight dal", "milk", "socks", "Push A", "blood orange", "hearts of palm", "energy drink", "sleep tea",
         "Dr Pepper", "Rent car", "flour 5 kg", "ground beef 2 lb", "pain au chocolat", "recovery shake",
-        "Weight Watchers chili", "drained tuna", "sleepy time tea", "dentist-appt", "5 kg flour", "1 pound butter",
+        "Weight Watchers chili", "drained tuna", "sleepy time tea", "dentist-appt", "Dentist cake", "dentist",
+        "dentists",
+        "Dentist appt", "5 kg flour", "1 pound butter",
         "2.5 kg rice", "2.25 kg rice", "2 pounds ground beef", "1 pound cake",
     ]
 
@@ -37,16 +39,16 @@ struct PrivacyParityTests {
         #expect(AddListItem.shownTitle(title, store: store) == title)
     }
 
-    @Test func aRecipeCalledDentistCakeIsPrivateOnTheScreenAndInTheExport() throws {
+    @Test func aRecipeCalledLexaproCakeIsPrivateOnTheScreenAndInTheExport() throws {
         let classes = try store.prepareCatalog()
         let engine = ActionEngine(store: store, classes: classes)
         let cake = try engine.perform(
-            CreateRecipe(text: "Dentist cake\nIngredients\n1 cup flour\nMethod\n1. Bake it."), by: .user
+            CreateRecipe(text: "Lexapro cake\nIngredients\n1 cup flour\nMethod\n1. Bake it."), by: .user
         ).output
         #expect(ObjectPrivacy.label(of: cake, in: store, classes: classes) == "Private recipe")
         #expect(PrivateWords.labels(in: store.context)[cake.id] != nil)
         let line = try engine.perform(AddRecipeToGroceries(recipe: cake.id), by: .user).record.summary
-        #expect(!line.lowercased().contains("dentist"), "\(line)")
+        #expect(!line.lowercased().contains("lexapro"), "\(line)")
     }
 
     @Test(arguments: ["weighed 82.4 kg", "82.4 kg this morning", "my weight is 82.4", "weigh in 183 lb"])
@@ -55,7 +57,7 @@ struct PrivacyParityTests {
     }
 
     @Test func theDoctorPhraseRuleKeepsDrPepperRaw() {
-        for walled in ["Dr Patel", "Dr. Smith", "dr. lee", "dentists", "Dentist appt"] {
+        for walled in ["Dr Patel", "Dr. Smith", "dr. lee"] {
             #expect(ObjectPrivacy.isPrivateTitle(walled, lastWeightKg: nil), "\(walled)")
         }
         for plain in ["Dr Pepper", "dr pepper", "Dr. Pepper", "dr. pepper", "drive home", "dentist-appt"] {

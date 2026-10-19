@@ -84,7 +84,8 @@ private struct RecipesShelfPage: View {
                             HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
                                 Text(row.name)
                                     .textRole(.body)
-                                    .foregroundStyle(Theme.Colors.ink.opacity(row.isPrivate ? 0.66 : 1))
+                                    // Full ink, like every masked line: "Private recipe" isn't dimmed (sheet 99).
+                                    .foregroundStyle(Theme.Colors.ink)
                                     .multilineTextAlignment(.leading)
                                     .fixedSize(horizontal: false, vertical: true)
                                 Spacer(minLength: Theme.Spacing.m)
@@ -144,9 +145,15 @@ private struct RecipesShelfPage: View {
                         .buttonStyle(.labelWord)
                         .accessibilityLabel("Read \(RecipesKeptCopy.host(link))")
                     Button("Remove") {
-                        RecipeLinkShelf.beside(model.store)?.remove(link)
+                        guard let shelf = RecipeLinkShelf.beside(model.store) else { return }
+                        let putBack = KeptLinks.remove(link, from: shelf)
                         refreshKept()
-                        TessVoice.shared.say(RecipesKeptCopy.removed(link))
+                        // A slip beside Read isn't final: the app-wide UNDO for a change, 10 s (Design on #913). It
+                        // puts the link back in its own place, not at the end (QA on #1031).
+                        TessVoice.shared.say(RecipesKeptCopy.removed(link), takeBack: {
+                            putBack()
+                            refreshKept()
+                        })
                     }
                     .buttonStyle(.labelWord)
                     .accessibilityLabel("Remove \(RecipesKeptCopy.host(link))")
@@ -205,5 +212,29 @@ enum RecipesKeptCopy {
     /// "seriouseats.com, removed."
     static func removed(_ link: URL) -> String {
         "\(host(link)), removed."
+    }
+}
+
+/// Remove and its UNDO on the kept links. Core's shelf only appends, so putting a link back in its old place takes
+/// the links after it off and keeps them again behind it.
+@MainActor
+enum KeptLinks {
+    /// Takes the link off the shelf and returns the take-back that restores it where it was.
+    static func remove(_ link: URL, from shelf: RecipeLinkShelf) -> @MainActor () -> Void {
+        let index = shelf.waiting().firstIndex(of: link)
+        shelf.remove(link)
+        return { restore(link, at: index, on: shelf) }
+    }
+
+    /// Puts the link back at its old index; a link kept since then stays behind it. With no index, at the end.
+    static func restore(_ link: URL, at index: Int?, on shelf: RecipeLinkShelf) {
+        let after = index.map { Array(shelf.waiting().dropFirst($0)) } ?? []
+        for later in after {
+            shelf.remove(later)
+        }
+        shelf.keep(link)
+        for later in after {
+            shelf.keep(later)
+        }
     }
 }

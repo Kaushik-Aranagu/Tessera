@@ -101,7 +101,7 @@ public enum DayStory {
         "removeRecipeFromGroceries", "moveTask", "keepPlannedTask", "rollForwardTasks", "waitOnTask", "startTask",
         "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
-        "endProcess", "writeSettings",
+        "endProcess", "writeSettings", "createClass",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).
