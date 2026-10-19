@@ -47,15 +47,28 @@ struct MuscleSideTests {
         return [red, green, blue].map { Int(($0 * 255).rounded()) }
     }
 
-    @Test func routinesWearTheirColourAndMixedOnesTheTrainingColour() {
-        #expect(rgb(MuscleTint.colour(routineTitle: "Push A")) == rgb(Theme.Colors.live))
-        #expect(rgb(MuscleTint.colour(routineTitle: "Pull B")) == rgb(Theme.Colors.tess))
-        #expect(rgb(MuscleTint.colour(routineTitle: "Legs A")) == rgb(Theme.Colors.now))
-        #expect(rgb(MuscleTint.colour(routineTitle: "Push Pull Legs")) == rgb(Theme.Colors.training))
-        #expect(rgb(MuscleTint.colour(routineTitle: "Upper body")) == rgb(Theme.Colors.training))
-        #expect(rgb(MuscleTint.colour(routineTitle: nil)) == rgb(Theme.Colors.training))
+    @Test func routinesWearTheirKindsColourAndOthersTheTrainingColour() {
+        #expect(rgb(MuscleTint.colour(kind: .push)) == rgb(Theme.Colors.live))
+        #expect(rgb(MuscleTint.colour(kind: .pull)) == rgb(Theme.Colors.tess))
+        #expect(rgb(MuscleTint.colour(kind: .legs)) == rgb(Theme.Colors.now))
+        #expect(rgb(MuscleTint.colour(kind: nil)) == rgb(Theme.Colors.training))
         // The three routine colours are three different colours.
         #expect(Set([rgb(Theme.Colors.live), rgb(Theme.Colors.tess), rgb(Theme.Colors.now)]).count == 3)
+    }
+
+    @Test func aRoutineWithNoKindFallsBackToWhatItsMusclesSay() throws {
+        func day(_ keys: [String]) throws -> [(name: String, role: MuscleRole)] {
+            try MuscleReading.union(keys.map(primaries))
+        }
+        #expect(try MuscleTint.kind(ofPrimaries: day(["benchPress", "ropePushdown", "dbLateralRaise"])) == .push)
+        #expect(try MuscleTint.kind(ofPrimaries: day(["barbellRow", "dbCurl"])) == .pull)
+        #expect(try MuscleTint.kind(ofPrimaries: day(["backSquat", "lyingLegCurl"])) == .legs)
+        // Mixed: no kind, so the Training colour.
+        #expect(try MuscleTint.kind(ofPrimaries: day(["benchPress", "barbellRow"])) == nil)
+        #expect(MuscleTint.kind(ofPrimaries: []) == nil)
+        // The routine's own kind wins over its muscles.
+        #expect(try rgb(MuscleTint.colour(kind: .pull, muscles: day(["benchPress"]))) == rgb(Theme.Colors.tess))
+        #expect(try rgb(MuscleTint.colour(kind: nil, muscles: day(["benchPress"]))) == rgb(Theme.Colors.live))
     }
 
     @Test func theDaysUnionIsPrimaryWhereverItIsPrimary() {

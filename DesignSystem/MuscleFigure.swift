@@ -171,13 +171,36 @@ enum MuscleSide {
 }
 
 /// The colour a routine's figures wear: Push vermilion, Pull cobalt, Legs cadmium; anything mixed or unknown is the
-/// Training colour.
+/// Training colour. It follows the routine's own kind (Core's `RoutineKind`); a routine with none falls back to what
+/// its day's primary muscles say.
 enum MuscleTint {
-    static func colour(routineTitle: String?) -> Color {
-        let title = (routineTitle ?? "").lowercased()
-        let kinds = [("push", Theme.Colors.live), ("pull", Theme.Colors.tess), ("leg", Theme.Colors.now)]
-            .filter { title.contains($0.0) }
-        return kinds.count == 1 ? kinds[0].1 : Theme.Colors.training
+    static func colour(kind: RoutineKind?) -> Color {
+        switch kind {
+        case .push: Theme.Colors.live
+        case .pull: Theme.Colors.tess
+        case .legs: Theme.Colors.now
+        case nil: Theme.Colors.training
+        }
+    }
+
+    /// The kind a set of muscles points to: chest, shoulders and triceps are push; back and biceps pull; quads, glutes
+    /// and hamstrings legs. Mixed (or only core) muscles point to none.
+    static func kind(ofPrimaries muscles: [(name: String, role: MuscleRole)]) -> RoutineKind? {
+        var kinds: Set<RoutineKind> = []
+        for muscle in muscles where muscle.role == .primary {
+            switch muscle.name.lowercased() {
+            case "chest", "front delts", "side delts", "triceps": kinds.insert(.push)
+            case "lats", "upper back", "lower back", "rear delts", "biceps", "forearms": kinds.insert(.pull)
+            case "quads", "glutes", "hamstrings", "calves", "adductors", "abductors": kinds.insert(.legs)
+            default: break
+            }
+        }
+        return kinds.count == 1 ? kinds.first : nil
+    }
+
+    /// The routine's kind, else the muscles' kind, else the Training colour.
+    static func colour(kind: RoutineKind?, muscles: [(name: String, role: MuscleRole)]) -> Color {
+        colour(kind: kind ?? Self.kind(ofPrimaries: muscles))
     }
 }
 

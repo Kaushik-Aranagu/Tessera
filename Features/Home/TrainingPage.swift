@@ -139,7 +139,7 @@ private struct TrainingAtRest: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
-                    LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone, tint: figureTint,
+                    LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone, tint: figureTint(day),
                             isPrivate: isPrivateDay,
                             showsStrokes: isRunning || isDone || lane.logged > 0,
                             isLast: index == min(lanes.count, 5) - 1)
@@ -231,7 +231,7 @@ private struct TrainingAtRest: View {
                     MuscleFigure(back: back,
                                  roles: MuscleFigureMap.roles(MuscleReading.lit(day, isPrivate: isPrivateDay),
                                                               back: back),
-                                 tint: figureTint,
+                                 tint: figureTint(day),
                                  lineOpacity: 0.4, lineWidth: 1.4)
                         .frame(height: 112)
                 }
@@ -398,10 +398,16 @@ private struct TrainingAtRest: View {
         "\(Format.kilograms(value)) \(Format.unit.symbol)"
     }
 
-    /// The routine's colour for the figures: Push vermilion, Pull cobalt, Legs cadmium, else Training. A private
-    /// routine's title is masked, so it falls to the Training colour.
-    private var figureTint: Color {
-        MuscleTint.colour(routineTitle: titleAndRoute.0)
+    /// The routine's colour for the figures: Push vermilion, Pull cobalt, Legs cadmium, else Training; the routine's
+    /// kind decides, and the day's muscles when it has none.
+    private func figureTint(_ day: MuscleReading.Muscles) -> Color {
+        let routine: ObjectRecord? = switch plan {
+        case let .routine(routine): routine
+        case let .scheduled(workout): model.store.linkedObjects("routine", of: workout).first
+        case let .running(session): model.store.linkedObjects("routine", of: session.workout).first
+        case let .done(summary): model.store.linkedObjects("routine", of: summary.workout).first
+        }
+        return MuscleTint.colour(kind: routine.flatMap { RoutineKind.of($0, in: model.store) }, muscles: day)
     }
 
     /// "today, 5 exercises, about 55 min"; done: "done this afternoon".

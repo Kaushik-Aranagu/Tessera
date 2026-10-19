@@ -44,7 +44,7 @@ struct RoutineEditor: View {
                                 perform: perform,
                                 onSwap: { setLibrary(.swap(slot.id)) },
                                 index: index,
-                                tint: figureTint,
+                                tint: figureTint(slots: slots),
                                 isPrivate: isPrivateRoutine
                             )
                         }
@@ -119,10 +119,9 @@ struct RoutineEditor: View {
         }
     }
 
-    /// The figures' colour: the routine's own (Push vermilion, Pull cobalt, Legs cadmium); a private routine's name is
-    /// not read for it, so it wears the Training colour.
-    private var figureTint: Color {
-        MuscleTint.colour(routineTitle: isPrivateRoutine ? nil : routine.title)
+    /// The figures' colour: the routine's own kind (Push vermilion, Pull cobalt, Legs cadmium), else its muscles'.
+    private func figureTint(slots: [ObjectRecord]) -> Color {
+        MuscleTint.colour(kind: RoutineKind.of(routine, in: model.store), muscles: unionMuscles(slots))
     }
 
     /// " Works chest, shoulders and triceps." for the context line; nothing for a private routine or an empty one.

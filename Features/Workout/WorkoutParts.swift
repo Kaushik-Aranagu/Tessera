@@ -20,6 +20,15 @@ struct ExerciseLane: View {
     @Environment(\.zoomNamespace) private var zoomNamespace
     @Environment(\.dynamicTypeSize) private var typeSize
 
+    /// The workout's routine kind (else what its exercises work) picks the figures' colour.
+    private var figureTint: Color {
+        let routine = model.store.linkedObjects("routine", of: session.workout).first
+        let day = MuscleReading.union(session.entries.map {
+            MuscleReading.muscles(of: session.exerciseClass(of: $0), store: model.store)
+        })
+        return MuscleTint.colour(kind: routine.flatMap { RoutineKind.of($0, in: model.store) }, muscles: day)
+    }
+
     var body: some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 0) {
@@ -55,7 +64,7 @@ struct ExerciseLane: View {
                                     isPrivate: session.shownTitle != session.workout.title
                                 )
                                 MuscleFigure(back: back, roles: MuscleFigureMap.roles(lit, back: back),
-                                             tint: MuscleTint.colour(routineTitle: session.shownTitle),
+                                             tint: figureTint,
                                              lineOpacity: 0.45, lineColor: Paint.cream, lineWidth: 2.2)
                                     .frame(height: 92)
                                     .offset(y: -20)
