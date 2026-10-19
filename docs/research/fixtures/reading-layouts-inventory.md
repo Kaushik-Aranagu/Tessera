@@ -1,6 +1,6 @@
 # Reading layouts inventory (for Design's reading-layouts sheet)
 
-Static read of master f5fd3a86, no app run. Rule being checked (Kaushik,(Kaushik's rule, project chat, Oct 18): reading layouts differ per content kind (notes, lists, paragraphs, exercise details, recipe steps, receipts), no new fonts, at most about 3 type sizes per screen. Facts only; proposals are limited to the last section.
+Static read of master f5fd3a86, no app run. Rule being checked (Kaushik, project chat, Oct 18): reading layouts differ per content kind (notes, lists, paragraphs, exercise details, recipe steps, receipts), no new fonts, at most about 3 type sizes per screen. Facts only; proposals are limited to the last section.
 
 Method notes. Every `file:line` was taken from a numbered read of that line on master. Sizes are the Plein concept's (the active look; `ThemeConcept.all = [.plein, .workshop, .machined]`, Theme.swift:244; the other two were not read for sizes). "Sizes" counts distinct point sizes among the text on the screen in its main state (empty and error states noted). Characters per line are estimates (Inter Tight averages roughly 0.48 em per character), not measurements: 56 pt about 13, 44 pt about 16, 21 pt about 34, 18 pt about 39, 16 pt about 44 characters in the 358 pt column (402 pt iPhone 17 screen minus two 22 pt gutters). Row text is the visible text only; fixed-width or `lineLimit(1)` rows are noted.
 
