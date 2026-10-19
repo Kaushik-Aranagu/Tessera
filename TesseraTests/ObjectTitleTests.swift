@@ -53,4 +53,22 @@ struct ObjectTitleTests {
         #expect(ObjectPage.live(nil) == nil)
         #expect(ObjectPageCopy.gone == "Not on this phone anymore.")
     }
+
+    /// OL35: New subclass goes through the op log, says "New Bench Press, made." and its UNDO takes the class back.
+    @Test func newSubclassIsMadeWithAReceiptAndUndoes() throws {
+        let bench = try #require(model.classDef(.benchPress))
+        let result = try model.engine.perform(CreateClass(parent: bench.id), by: .user)
+        #expect(ObjectPageCopy.made(result.output.name) == "New Bench Press, made.")
+        #expect(model.classDef(id: result.output.id) != nil)
+        _ = model.engine.undo(result.record)
+        #expect(model.classDef(id: result.output.id) == nil)
+    }
+
+    /// Product on class names: plain by default; a name that trips the walled-words check reads "Private class".
+    @Test func aWalledClassNameReadsPrivateClass() throws {
+        let bench = try #require(model.classDef(.benchPress))
+        #expect(ClassTitle.shown(bench, in: model.store) == "Bench Press")
+        let result = try model.engine.perform(CreateClass(parent: bench.id, name: "Rent 1200 lifts"), by: .user)
+        #expect(ClassTitle.shown(result.output, in: model.store) == "Private class")
+    }
 }

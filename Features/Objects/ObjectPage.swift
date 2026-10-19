@@ -120,7 +120,11 @@ private struct GoneBody: View {
                 .frame(minHeight: 44)
         }
         .padding(.top, Theme.Spacing.xxl)
-        .onAppear { focused = true }
+        .onAppear {
+            focused = true
+            // Said once on arrival, so a link that leads nowhere is never a silent page (OL36).
+            AccessibilityNotification.Announcement(ObjectPageCopy.gone).post()
+        }
     }
 }
 
@@ -130,6 +134,8 @@ private struct ClassBody: View {
     let classDef: ClassDef
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Bumped when New subclass didn't save: the one soft warning.
+    @State private var notSaved = 0
 
     var body: some View {
         let lineage = ClassResolver.lineage(of: classDef)
@@ -139,8 +145,11 @@ private struct ClassBody: View {
         let subclasses = (classDef.subclasses ?? []).sorted { $0.name < $1.name }
         let workouts = uniqueWorkouts(history)
 
-        Header(path: lineage.dropLast().map { ($0.name, Route.classDef($0.id)) }, title: classDef.name,
-               classLine: classLine(lineage))
+        Header(
+            path: lineage.dropLast().map { (ClassTitle.shown($0, in: model.store), Route.classDef($0.id)) },
+            title: ClassTitle.shown(classDef, in: model.store),
+            classLine: classLine(lineage)
+        )
 
         if isExercise {
             ExerciseSummary(history: history).entrance(4)
@@ -177,7 +186,7 @@ private struct ClassBody: View {
             MarginSection(label: "Subclasses") {
                 VStack(spacing: 0) {
                     ForEach(subclasses) { subclass in
-                        ObjectRow(title: subclass.name, route: .classDef(subclass.id)) {
+                        ObjectRow(title: ClassTitle.shown(subclass, in: model.store), route: .classDef(subclass.id)) {
                             Text("\((subclass.subclasses ?? []).count)").textRole(.label)
                                 .foregroundStyle(Theme.Colors.inkTertiary)
                                 .opacity((subclass.subclasses ?? []).isEmpty ? 0 : 1)
@@ -207,19 +216,35 @@ private struct ClassBody: View {
                 model.commandDraft = "log \(classDef.name.lowercased()) "
                 withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = true }
             default:
-                // Through the store, so its caches see the new class. (Schema changes join the op log with Build A1.)
-                let subclass = model.store.createClass(name: "New \(classDef.name)", parent: classDef,
-                                                       symbolName: classDef.symbolName, colorRole: classDef.colorRole)
-                model.touch()
-                model.open(.classDef(subclass.id))
+                makeSubclass()
             }
         }
         .entrance(10)
+        .tesseraFeedback(.notSaved, trigger: notSaved)
+    }
+
+    /// New subclass is one tap through the op log (OL35): a thing-first receipt, "New Bench Press, made.", with the
+    /// app-wide 10 s UNDO, announced once (OL36). An UNDO while its page is open leaves the gone line there.
+    private func makeSubclass() {
+        guard let result = try? model.engine.perform(CreateClass(parent: classDef.id), by: .user) else {
+            TessVoice.shared.say(ObjectPageCopy.notSaved)
+            AccessibilityNotification.Announcement(ObjectPageCopy.notSaved).post()
+            notSaved += 1
+            return
+        }
+        model.touch()
+        let receipt = ObjectPageCopy.made(result.output.name)
+        TessVoice.shared.say(receipt, undo: result.record)
+        AccessibilityNotification.Announcement(receipt).post()
+        model.open(.classDef(result.output.id))
     }
 
     private func classLine(_ lineage: [ClassDef]) -> String {
-        let name = Format.identifier(classDef.name, upperFirst: true)
-        let parent = lineage.dropLast().last.map { " : " + Format.identifier($0.name, upperFirst: true) } ?? ""
+        let name = Format.identifier(ClassTitle.shown(classDef, in: model.store), upperFirst: true)
+        let parent = lineage.dropLast().last.map { " : " + Format.identifier(
+            ClassTitle.shown($0, in: model.store),
+            upperFirst: true
+        ) } ?? ""
         return "class \(name)\(parent)"
     }
 
@@ -299,12 +324,18 @@ private struct InstanceBody: View {
         let shownTitle = ObjectTitle.shown(object, in: model.store, classes: model.classes)
 
         Header(
-            path: lineage.map { ($0.name, Route.classDef($0.id)) },
+            path: lineage.map { (ClassTitle.shown($0, in: model.store), Route.classDef($0.id)) },
             title: shownTitle,
             classLine: privateLabel == nil
                 ? "object \(Format.identifier(shownTitle, upperFirst: false)) : "
-                + Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
-                : Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
+                + Format.identifier(
+                    object.classDef.map { ClassTitle.shown($0, in: model.store) } ?? "Thing",
+                    upperFirst: true
+                )
+                : Format.identifier(
+                    object.classDef.map { ClassTitle.shown($0, in: model.store) } ?? "Thing",
+                    upperFirst: true
+                )
         )
 
         // A workout's notes are a body fact: they read "Note kept private" (Product 5:20 PM PT).
@@ -342,7 +373,7 @@ private struct InstanceBody: View {
                 VStack(spacing: 0) {
                     ForEach(backlinks) { source in
                         if let classDef = source.classDef, model.prototype(of: classDef)?.id == source.id {
-                            ObjectRow(title: classDef.name, route: .classDef(classDef.id))
+                            ObjectRow(title: ClassTitle.shown(classDef, in: model.store), route: .classDef(classDef.id))
                         } else {
                             ObjectRow(object: source, in: model)
                         }
@@ -366,7 +397,7 @@ private struct ChildRow: View {
 
     var body: some View {
         if let exercise = model.store.linkedClass("exercise", of: child) {
-            ObjectRow(title: exercise.name, route: .classDef(exercise.id)) {
+            ObjectRow(title: ClassTitle.shown(exercise, in: model.store), route: .classDef(exercise.id)) {
                 Text(target(child)).textRole(.data).foregroundStyle(Theme.Colors.inkSecondary)
             }
         } else {
@@ -488,14 +519,23 @@ private struct PropertyList: View {
             }
         case .classRef:
             if let target = object.flatMap({ model.store.linkedClass(field.key, of: $0) }) {
-                ObjectHandle(title: target.name, route: .classDef(target.id))
+                ObjectHandle(title: ClassTitle.shown(target, in: model.store), route: .classDef(target.id))
             } else {
                 dash
             }
         default:
             let value = object.flatMap { model.store.value(field.key, of: $0) } ?? field.defaultValue
             if let value {
-                Text(describe(value, unit: field.unit)).textRole(.data).foregroundStyle(Theme.Colors.ink)
+                let text = describe(value, unit: field.unit)
+                // A value a side may not print (money, a body fact, a secret, a key) reads "Kept private" here too;
+                // a set's load is the bar's, never a weigh-in (OL04, Core's field-aware check).
+                if SideFacts.isShowable(field, text, of: classDef, classes: model.classes,
+                                        lastWeightKg: BodyWeight.lastKg(in: model.store))
+                {
+                    Text(text).textRole(.data).foregroundStyle(Theme.Colors.ink)
+                } else {
+                    Text(ObjectPageCopy.keptPrivate).textRole(.data).foregroundStyle(Theme.Colors.inkSecondary)
+                }
             } else {
                 Text(field.kind == .computed ? "ƒ \(field.expression ?? "")" : "—")
                     .textRole(.data)
@@ -613,6 +653,17 @@ enum ObjectNotes {
 /// cover yet. An ingredient or a list item with a secret word, money, a body fact or a medicine reads "Private item";
 /// such a list reads "Private list". Masked at the source: every row, link and header on the page goes through here,
 /// and only the live text field ever shows the raw words.
+/// A class's name as it may be shown: plain, unless it trips the walled-words check (money, body, secret words),
+/// then "Private class", by the same function a private item uses (Product, decisions on class names).
+enum ClassTitle {
+    static let label = "Private class"
+
+    @MainActor
+    static func shown(_ classDef: ClassDef, in store: ObjectStore) -> String {
+        ObjectPrivacy.isPrivateWord(classDef.name, in: store) ? label : classDef.name
+    }
+}
+
 /// The one shown title for an object on the object page and every row that names it (OL03, OL11): its private
 /// label, else its title, else its class name and place ("Set 3"), never blank and never "Untitled".
 enum ObjectTitle {
@@ -664,4 +715,13 @@ enum ObjectPageCopy {
     /// A link whose object is deleted or not on this phone (OL28, OL29).
     static let gone = "Not on this phone anymore."
     static let back = "Back"
+    /// A property value held back from the page (OL04).
+    static let keptPrivate = "Kept private"
+    /// A write that didn't take.
+    static let notSaved = "Didn't save that. Try again."
+
+    /// The New subclass receipt, thing first: "New Bench Press, made." (OL35).
+    static func made(_ name: String) -> String {
+        "\(name), made."
+    }
 }
