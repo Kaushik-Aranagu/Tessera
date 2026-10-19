@@ -26,9 +26,11 @@ GPL/AGPL, non-commercial, unclear or unverified.
 - Licence: CC0 1.0 Universal. Search excerpt of the FDC site: "USDA FoodData Central data are in the public
   domain and they are not copyrighted. They are published under CC0 1.0 Universal (CC0 1.0)." Credit to FDC is
   requested, not required. Link: https://creativecommons.org/publicdomain/zero/1.0/
-- Verdict: UNVERIFIED from primary page, but expected BUNDLE for Foundation, SR Legacy, FNDDS. Branded: BUNDLE-eligible
-  by licence but likely too large and noisy for on-device bundling; consider a trimmed top-N subset later.
-  Confirm the licence text on fdc.nal.usda.gov before any data ships.
+- Licence check (Core, Oct 19, read on a networked Mac; plain reading, not legal advice): page https://fdc.nal.usda.gov/ says
+  "USDA FoodData Central data are in the public domain and they are not copyrighted." Licence CC0 1.0. Citing FDC is a
+  request, not a condition.
+- Verdict: BUNDLE for Foundation, SR Legacy, FNDDS (confirmed from the publisher's page, relayed by Core; Research
+  did not read it itself). Branded: licence-eligible but likely too large and noisy; consider a trimmed top-N subset later.
 
 ### Open Food Facts
 - Publisher: Open Food Facts association. URL: https://world.openfoodfacts.org/terms-of-use
@@ -42,10 +44,12 @@ GPL/AGPL, non-commercial, unclear or unverified.
 ### Canadian Nutrient File (CNF) 2015
 - Publisher: Health Canada. URL: https://www.canada.ca/en/health-canada/services/food-nutrition/healthy-eating/nutrient-data/canadian-nutrient-file-2015-download-files.html
 - Contents: CSV/Excel/Access: foods, nutrient amounts, measures/conversion factors, food groups.
-- Licence: UNVERIFIED. Search excerpt says a third-party portal tags it ca-ogl-lgo (Open Government Licence -
-  Canada) while the official page only says "refer to Crown Copyright". An archived guideline page reportedly
-  forbids modifying nutrient values. Health Canada notes a CNF 2026 is being prepared.
-- Verdict: SKIP (UNVERIFIED). Revisit if OGL-Canada is confirmed (OGL-Canada is attribution-only, would be OK).
+- Licence: UNVERIFIED for the 2015 files. Core read the official page (Oct 19): it names no licence, only "Refer to Crown
+  Copyright for more information." A different open.canada.ca dataset, the 2008 "Nutrient Value of Some Common Foods",
+  states "Licence: Open Government Licence - Canada" (commercial use allowed, no share-alike; requires the line
+  "Contains information licensed under the Open Government Licence - Canada."). That is not the 2015 file set.
+  An archived guideline page reportedly forbids modifying nutrient values. Health Canada notes a CNF 2026 is being prepared.
+- Verdict: pending, SKIP until the Crown Copyright terms for CNF 2015 are read; expected OK only if OGL-Canada is confirmed for that set.
 
 ### Other nutrition candidates (not researched this pass)
 - UK CoFID (OGL v3), Australian AFCD (check licence), NCCDB (non-commercial, SKIP), EFSA/FAO INFOODS tables
@@ -81,7 +85,7 @@ Best source is the FDC food_portion table (gram_weight per measure), covered by 
 
 ## 3. Groceries
 No source verified this pass. Candidates to check next, all UNVERIFIED/SKIP for now:
-- Shelf life/storage: USDA FoodKeeper (USDA/FSIS, expected public domain US government work; confirm).
+- Shelf life/storage: USDA FoodKeeper (USDA/FSIS). Core read https://catalog.data.gov/dataset/fsis-foodkeeper-data (Oct 19): the page has no licence sentence; its License field links https://creativecommons.org/publicdomain/zero/1.0/ (CC0 1.0). Verdict: BUNDLE by CC0's terms (relayed by Core).
 - Units/conversions: FDC food_portion plus a hand-written SI/US table (our own, no licence issue).
 - Categories/aisles: derive from FDC food categories or write our own taxonomy.
 - Substitutions: no clean open dataset known; likely author our own.
@@ -96,14 +100,15 @@ No source verified this pass. Candidates to check next, all UNVERIFIED/SKIP for 
 (Next tier micronutrients: potassium, calcium, iron, vitamin C, vitamin D.) Plus portion table: measure label + gram_weight.
 
 ## Open questions
-1. Re-run the licence checks from a networked machine (USDA, CNF, FoodKeeper, OFF terms, wger) and capture exact text.
+1. Licence checks: USDA FDC and FoodKeeper are now read from the publishers' pages (Core, Oct 19). Still open: CNF 2015 Crown Copyright terms, OFF terms, wger.
+6. free-exercise-db: check provenance of the data (not only the images) before anything ships.
 2. Is attribution inside the app acceptable (Settings > Sources) for CC-BY or OGL sources?
 3. Bundle size budget? Foundation + SR Legacy trimmed to the 8 fields is small; Branded is not.
 4. free-exercise-db images: confirm provenance, or ship text only.
 5. Do we want our own curated exercise list layered over the data for muscle/equipment taxonomy?
 
 ## Which feature uses which set (Research, Oct 19)
-- USDA FDC Foundation, SR Legacy, FNDDS (nutrition per 100 g and portions): Kitchen ingredient pages, recipe totals, pantry and groceries quantities. Fields recommended: energy kcal, protein, fat, carbohydrate, fibre, sugars, sodium, saturated fat, plus the portion table (measure and gram weight). To agree with Kitchen.
+- USDA FDC Foundation, SR Legacy, FNDDS (CC0 per the publisher's page, relayed by Core; nutrition per 100 g and portions): Kitchen ingredient pages, recipe totals, pantry and groceries quantities. Fields recommended: energy kcal, protein, fat, carbohydrate, fibre, sugars, sodium, saturated fat, plus the portion table (measure and gram weight). To agree with Kitchen.
 - free-exercise-db (exercises, muscles, equipment): Training exercise pages, muscle figure, swap alternatives. Images need a provenance check before anything ships.
 - Grocery packs, aisles, swaps, shelf life: Groceries and Pantry. All candidates are UNVERIFIED; nothing chosen yet.
 
