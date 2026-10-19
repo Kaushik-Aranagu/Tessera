@@ -1,8 +1,8 @@
 # Offline inbox drain (G648) and the 8 s cap (G655): build spec and test vectors, plus the #1066 handle check
 
-For: Product, then Core (drain, cap, log rows) and Builder B (the lines, Now and Receipts). From: AI architecture. Docs only: no Claude calls, no key use, no key content. Read against master f5fd3a8 and Core's #1066 at db1cd77b. **[code]** = read in Swift; **[ruling]** = from Product's relay of decisions 3:58 PM Oct 18 and 4:xx PM Oct 19 (those entries are **not on master yet**, so the wording below is Product's summary, to be matched against `decisions.md` when it lands); **[proposed]** = my call where no ruling or sheet exists.
+For: Product, then Core (drain, cap, log rows) and Builder B (the lines, Now and Receipts). From: AI architecture. Docs only: no Claude calls, no key use, no key content. Read against master f5fd3a8 and Core's #1066 at db1cd77b. **[code]** = read in Swift; **[ruling]** = from the decisions mirror in the project folder (`tessera/product/decisions.md` lines 1105 and 1115, stamped 6:07 PM PT Oct 18 and 10:54 AM PT Oct 19; **mirror-only**, not yet in the git copy of `decisions.md` on master); **[proposed]** = my call where no ruling or sheet exists.
 
-**Rulings used (stamps: decisions 3:58 PM Oct 18 and 4:xx PM Oct 19; `decisions.md` on master lags, so Product confirmed the wording by message on Oct 19 and the answers below are final, not defaults):** a log row exists only when a request really goes out; a drained phrase writes one row; walls are re-checked at read time; a waiting phrase is deleted after it is sent; seven days at most; Cancel on the wait.
+**Rulings used (decisions mirror line 1105, 6:07 PM PT Oct 18, and line 1115, 10:54 AM PT Oct 19, both mirror-only; the 3:58 PM and 4:xx PM stamps in Product's first message were its shorthand for these; the answers below are final, not defaults):** a log row exists only when a request really goes out; a drained phrase writes one row; walls are re-checked at read time; a waiting phrase is deleted after it is sent; seven days at most; Cancel on the wait.
 
 ## 0. The drain is already wired (the gap-hunt row is stale)
 
@@ -44,7 +44,7 @@ A Tess Sent row and a Tess Call row are written **when a request was handed to t
 
 **Now** [proposed]. A waiting phrase is not a task and not a ghost, so it does not get a row. One quiet line under Tess's line, only while the count is above zero: **"1 waiting for Claude"** ("3 waiting for Claude"). Tap opens a short list of the phrases as he said them (they are unwalled by construction) with a **DROP** per phrase (`TessInbox.remove`) and one **DROP ALL** (`clearWaiting`, built but unused). No badge, no colour change, no haptic. Gone at zero. In Low Power the line still shows and the drain runs on the next foreground as normal. Nothing here ever shows a walled phrase's words.
 
-**The drain wait** [proposed, same component as the live wait]. While a drained request is out: one line "Asking Claude" with CANCEL, the same line the live Ask wait uses (section 4). For a lone phrase the result keeps its own line; for two or more, "Offline, 2 read." [code `AppModel.swift:305-307`].
+**The drain wait** [proposed, same component as the live wait]. While a drained request is out: one line "Asking Claude" with CANCEL, the same line the live Ask wait uses (section 4). For a lone phrase the result keeps its own line; for two or more, "Offline, 2 read." [code `AppModel.swift:303`].
 
 **Receipts** (Settings, Claude, Receipts). A drained phrase is an ordinary capture row: "A capture", newest first, the send time, model, cost. No "drained" word, no "offline" word. A timed-out attempt shows "A capture - Haiku - under 0.1 cents" with the ledger's outcome word. The Sent layer under a row shows the phrase as stored, or **"Private phrase"** if a wall catches it at log time (it cannot get there through the inbox, but live captures can).
 
