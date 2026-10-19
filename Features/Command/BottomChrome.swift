@@ -633,6 +633,8 @@ extension BottomChrome {
                 }
                 return
             }
+            // A start cancelled during the prompt isn't listening: no hint for it (QA on #1011).
+            guard listener.state == .listening else { return }
             // After the first Allow, the hold hint shows by the soul until the first hold that listens.
             if hold {
                 holdHint = 2
