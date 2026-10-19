@@ -73,7 +73,7 @@ struct RootView: View {
         .background { ThemedBackground() }
         .modifier(RestReceipt())
         .environment(\.lowPowerMotion, lowPower)
-        .onReceive(NotificationCenter.default.publisher(for: .NSProcessInfoPowerStateDidChange)) { _ in
+        .onReceive(PowerState.changes) { _ in
             lowPower = PowerState.isLowPower
         }
     }

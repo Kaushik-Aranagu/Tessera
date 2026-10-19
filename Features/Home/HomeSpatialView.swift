@@ -265,6 +265,7 @@ struct HomeSpatialView: View {
         guard indexProgress > 0 else { return }
         pulling = false
         picked = nil
+        nameFocused = true
         withAnimation(indexCurve) {
             indexProgress = 0
         }
@@ -287,7 +288,9 @@ struct HomeSpatialView: View {
         } completion: {
             picked = nil
             arrivals += 1
-            nameFocused = true
+            // VoiceOver lands on the opened area's front heading: with the bar word read after the page (below),
+            // the first element of the new screen is that heading.
+            UIAccessibility.post(notification: .screenChanged, argument: nil)
         }
     }
 

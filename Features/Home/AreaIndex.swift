@@ -111,7 +111,9 @@ struct AreaName: View {
         }
         .buttonStyle(.plain)
         // The bar word never outgrows its row at accessibility sizes.
-        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        // Read after the page's own front heading (focus lands there after a pick); still reachable by swipe.
+        .accessibilitySortPriority(-1)
         .accessibilityLabel("\(titles[min(max(current, 0), titles.count - 1)]), area")
         .accessibilityHint("Double tap to show all areas")
     }
@@ -185,6 +187,8 @@ struct AreaIndexSheet: View {
         .allowsHitTesting(progress > 0.9)
         // Closed, the rows are not read (opacity 0 alone leaves them in the accessibility tree).
         .accessibilityHidden(progress < 0.5)
+        // VoiceOver's way out: closes without changing the area (HomeSpatialView returns focus to the bar word).
+        .accessibilityAction(.escape, onClose)
     }
 
     private var glass: some View {
