@@ -14,9 +14,36 @@ enum MuscleRole: Equatable, Sendable {
 
 /// SVG path data of the absolute commands the figure uses: M, L, C and Z.
 enum FigurePath {
+    /// Command letters and numbers, whether or not a space separates them ("M92 66" and "M 92 66" read the same).
+    static func tokens(_ data: String) -> [String] {
+        var result: [String] = []
+        var number = ""
+        func flush() {
+            if !number.isEmpty {
+                result.append(number)
+            }
+            number = ""
+        }
+        for character in data {
+            if character.isLetter {
+                flush()
+                result.append(String(character))
+            } else if character == " " || character == "," {
+                flush()
+            } else if character == "-", !number.isEmpty {
+                flush()
+                number = "-"
+            } else {
+                number.append(character)
+            }
+        }
+        flush()
+        return result
+    }
+
     static func path(_ data: String) -> Path {
         var path = Path()
-        let tokens = data.split(whereSeparator: { $0 == " " || $0 == "," }).map(String.init)
+        let tokens = Self.tokens(data)
         var index = 0
         func number() -> CGFloat? {
             guard index < tokens.count, let value = Double(tokens[index]) else { return nil }

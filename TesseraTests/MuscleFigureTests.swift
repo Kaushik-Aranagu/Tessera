@@ -6,6 +6,12 @@ import Testing
 /// Design's muscle figure (sheet 88/91, board 84): the drawing, its muscle map and its taps.
 @MainActor
 struct MuscleFigureTests {
+    @Test func commandLettersStuckToNumbersAreTokensOfTheirOwn() {
+        // Design's art writes "M92 66 C86 74 ...": the letter touches the first number.
+        #expect(FigurePath.tokens("M92 66 C86 74") == ["M", "92", "66", "C", "86", "74"])
+        #expect(FigurePath.tokens("M 1.5,-2 L3-4Z") == ["M", "1.5", "-2", "L", "3", "-4", "Z"])
+    }
+
     @Test func theSvgPathDataBecomesAPath() {
         let box = FigurePath.path("M10 20 L30 20 C30 40 10 40 10 20 Z").boundingRect
         #expect(box.minX == 10 && box.maxX == 30 && box.minY == 20)
