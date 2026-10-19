@@ -103,7 +103,7 @@ Watch = `{bundle: com.apple.health.W1, productType: Watch7,1}`, iPhone = `{com.a
 
 ## 9. Privacy
 
-Health reads live only in memory as `HealthReads` values for the current screen and day. They are never `ObjectRecord`s, never in the op log or backups, never in widgets, and never in any context pack (on-device Foundation Models or Claude). W1's avg and max are re-read when a summary is shown, not saved on the Workout object, so they cannot reach history packs. Health stays the source of truth. This matches `recovery-line.md` section 6.
+Health reads live only in memory as `HealthReads` values for the current screen and day. They are never in the op log, backups, exports, packs or logs, never in widgets, and never in any context pack (on-device Foundation Models or Claude). Ruled (Product, Oct 19, with Kaushik's approval in the Research thread): SleepNight, StepsDay and RestingHeartRate may exist as read-only mirror objects under `/health`, written store-only (no `OpRecord`); health values never leave the phone. W1's avg and max are re-read when a summary is shown, not saved on the Workout object, so they cannot reach history packs. Health stays the source of truth. This matches `recovery-line.md` section 6.
 
 ## 10. Smallest slice (H-reads) and done-when
 
@@ -114,6 +114,6 @@ Done when:
 - `deniedEqualsEmpty`: D06 `.normal` and `.denied` encode to the same JSON.
 - `lockedIsNotEmpty`: D13 first read throws `storeLocked` and earlier values stay.
 - `workoutHRNeedsThree`: 0, 1 and 2 samples give nil; 3 give a value.
-- `healthNeverPersisted`: after D01 with W1's summary shown, no `OpRecord`, `ObjectRecord` or pack JSON contains 123, 152, 435 or "heart".
+- `healthNeverPersisted`: after D01 with W1's summary shown, no `OpRecord`, backup copy, export or pack JSON contains 123, 152, 435 or "heart" (a store-only mirror object is allowed and is not checked).
 - `scripts/test.sh` checks that no file under `TesseraCore/` imports HealthKit.
 - On Kaushik's phone: no Health sheet at launch; the first finish shows one sheet with heart rate; a Watch-worn workout shows avg and max; Health > Tessera lists the read types. Photo in the PR.

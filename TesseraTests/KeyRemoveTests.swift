@@ -30,6 +30,12 @@ struct KeyRemoveTests {
     @Test func removingWithNoKeyIsStillTheReceipt() {
         #expect(KeyRemove.remove(from: InMemoryKeychain(nil)) == KeyRemove.receipt)
     }
+
+    /// Product 3:58 PM: with no key, Settings says "No Claude key yet."; no part of a key shows either way.
+    @Test func theNoKeyLineIsPlain() {
+        #expect(ClaudeKeyWords.noKey == "No Claude key yet.")
+        #expect(!ClaudeKeyWords.noKey.contains("Paste"))
+    }
 }
 
 private struct StuckKeychain: TessKeychain {

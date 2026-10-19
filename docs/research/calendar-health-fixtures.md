@@ -103,7 +103,7 @@ Event object key (A): `key = calendarItemExternalIdentifier + "@" + occurrenceDa
     events: []   # after EKEventStoreChanged, refetch no longer returns it
   expected:
     - {path: "/calendar/1on1@2026-10-21T22:00Z", op: delete}
-  rule: In-window object missing from the refetch is deleted through ObjectStore (an op, so undo and Day log see it).
+  rule: In-window object missing from the refetch is deleted through ObjectStore as a store-only delete (no OpRecord; Day log reads the mirror live). Calendar and health mirror objects are never in backups, the shared export, a Claude payload, a Sent row, a log or a widget (Product ruling, Oct 19, approved by Kaushik).
 
 - id: C10 event with no title
   input:
@@ -380,7 +380,7 @@ For Core:
 2. Extra `Event` fields: `busy`, `attendance` (accepted, tentative, pending, declined, unknown), `cancelled`, `eventTimeZone`, `kind` (event, birthday), `contactId`, `edited`, `countsForMe`, `marker`. `title` nullable.
 3. Busy = owned or invited calendar, not declined, not cancelled, availability not free, not all-day; busy time is the interval union split at local midnight in the device zone.
 4. Refetch on `EKEventStoreChanged` (debounced) and on system time zone change.
-5. Out-of-window objects are frozen, in-window absence is a delete op.
+5. Out-of-window objects are frozen, in-window absence is a store-only delete (no OpRecord; ruled Oct 19).
 6. Health class names `SleepNight`, `StepsDay`, `RestingHeartRate` under `/health/<kind>/<date>`; no object is written for absent data.
 7. Night = largest sample cluster (gaps under 90 min) ending in the 18:00 to 14:00 window, dated by its local end date; recompute on every foreground of the wake day, then freeze.
 8. Read errors (locked store) never overwrite existing objects.

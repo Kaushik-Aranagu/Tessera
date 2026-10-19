@@ -108,10 +108,12 @@ public struct TessRouter {
         let secret = SecretWords.mentions(request.text)
         let walled = PrivateFacts.isWalled(request.text, lastWeightKg: request.lastWeightKg(engine))
         let stayHome = Self.staysOnPhone(request.text, engine: engine)
-        for model in models where model.isAvailable(for: request.use)
-            && !((secret || walled) && model.route == .claude && asked?.source == .grammar)
-            && !(stayHome && model.route == .claude)
-        {
+        for model in models where model.isAvailable(for: request.use) {
+            // A phrase that stays on the phone counts as held back, when Claude was on and would have been asked.
+            if model.route == .claude, stayHome || ((secret || walled) && asked?.source == .grammar) {
+                (model as? ClaudeTessModel)?.flags.heldBack += 1
+                continue
+            }
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)
             engine.attribution = nil
@@ -123,6 +125,15 @@ public struct TessRouter {
         }
         if let asked {
             return asked
+        }
+        // A phrase past the cap that nobody on the phone read is too long to send, cook or timer or not (Product, LEN-2
+        // and LEN-3): the same refusal Claude's route gives, never logged as a miss.
+        if request.use == .capture, request.text.count > ClaudeTessModel.maxPhraseCharacters,
+           models.contains(where: { $0.route == .claude && $0.isAvailable(for: .capture) })
+        {
+            var refusal = TessCapture(records: [], line: ClaudeTessModel.tooLongLine, source: .none)
+            refusal.isRefusal = true
+            return refusal
         }
         // An example only where it fits: a set in a workout, things while shopping (Design's Speak review).
         let example = if request.context.entry != nil {
