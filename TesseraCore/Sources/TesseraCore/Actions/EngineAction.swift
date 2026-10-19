@@ -21,10 +21,17 @@ public protocol EngineAction: Codable, Sendable {
     /// False for a system sync (the calendar and Health mounts): when it changed nothing it leaves no op record, so
     /// a foreground with no news writes nothing.
     var logsWhenEmpty: Bool { get }
+    /// False for a mirror (the calendar and Health mounts, held notices): what it writes never reaches the op log, so
+    /// a health or calendar value cannot ride in an op, a backup copy or an export. It cannot be undone either.
+    var recordsOps: Bool { get }
 }
 
 public extension EngineAction {
     var logsWhenEmpty: Bool {
+        true
+    }
+
+    var recordsOps: Bool {
         true
     }
 

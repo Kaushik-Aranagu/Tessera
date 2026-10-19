@@ -21,18 +21,45 @@ enum PrivateWords {
     /// Claude's own bookkeeping stays on the phone: the receipts (`tessCall`: what was asked, when, what it cost) and
     /// the phrases waiting for Claude (`tessWaiting`) are in the local copy only, never in the iCloud copy or the
     /// shared export (Research, Claude-layer gap hunt).
-    static let localOnlyClassKeys: Set<String> = [
+    static let localOnlyClassKeys: Set<String> = Set([
         SystemCatalog.Key.tessCall.systemKey,
         SystemCatalog.Key.tessWaiting.systemKey,
         SystemCatalog.Key.tessSent.systemKey,
+    ]).union(mirrorClassKeys)
+
+    /// The calendar and Health mirrors and held notices (M4): never in an op, a backup copy (the local one included),
+    /// the iCloud copy or an export. They are read again from EventKit and Health on the next foreground.
+    static let mirrorClassKeys: Set<String> = [
+        SystemCatalog.Key.event.systemKey, SystemCatalog.Key.sleepNight.systemKey,
+        SystemCatalog.Key.stepsDay.systemKey, SystemCatalog.Key.restingHeartRate.systemKey,
+        SystemCatalog.Key.heldNotice.systemKey,
     ]
+
+    static func isMirror(_ record: ObjectRecord) -> Bool {
+        var current = record.classDef
+        var depth = 0
+        while let classDef = current, depth < 12 {
+            if let key = classDef.systemKey, mirrorClassKeys.contains(key) {
+                return true
+            }
+            current = classDef.parent
+            depth += 1
+        }
+        return false
+    }
+
+    static func mirrorIDs(in context: TesseraContext) -> Set<UUID> {
+        Set(context.all(ObjectRecord.self).filter(isMirror).map(\.id))
+    }
 
     /// The family, not the exact class: a subclass of Tess Call, Tess Waiting or Tess Sent is local-only too.
     static func isLocalOnly(_ record: ObjectRecord) -> Bool {
         var current = record.classDef
         var depth = 0
         while let classDef = current, depth < 12 {
-            if let key = classDef.systemKey, localOnlyClassKeys.contains(key) { return true }
+            if let key = classDef.systemKey, localOnlyClassKeys.contains(key) {
+                return true
+            }
             current = classDef.parent
             depth += 1
         }

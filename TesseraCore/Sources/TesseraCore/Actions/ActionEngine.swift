@@ -67,7 +67,7 @@ public final class ActionEngine {
         // Which zone he was in, so a day can be read where it happened (a New York session stays Wednesday's).
         record.zone = zone().identifier
         // A mount that changed nothing writes nothing (the record is returned but never stored).
-        if transaction.ops.isEmpty, !action.logsWhenEmpty {
+        if (transaction.ops.isEmpty && !action.logsWhenEmpty) || !action.recordsOps {
             return Result(record: record, output: output)
         }
         store.context.insert(record)

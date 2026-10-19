@@ -122,7 +122,8 @@ public enum ActionRegistry {
         FocusCheckIn.descriptor.name: { try decode(FocusCheckIn.self, FocusCheckIn.descriptor.name, $0) },
         AcceptFirstStep.descriptor.name: { try decode(AcceptFirstStep.self, AcceptFirstStep.descriptor.name, $0) },
         HoldNotice.descriptor.name: { try decode(HoldNotice.self, HoldNotice.descriptor.name, $0) },
-        ReleaseHeldNotices.descriptor.name: { try decode(ReleaseHeldNotices.self, ReleaseHeldNotices.descriptor.name, $0) },
+        ReleaseHeldNotices.descriptor
+            .name: { try decode(ReleaseHeldNotices.self, ReleaseHeldNotices.descriptor.name, $0) },
         SyncHealth.descriptor.name: { try decode(SyncHealth.self, SyncHealth.descriptor.name, $0) },
         AddSlot.descriptor.name: { try decode(AddSlot.self, AddSlot.descriptor.name, $0) },
         StartRoutine.descriptor.name: { try decode(StartRoutine.self, StartRoutine.descriptor.name, $0) },

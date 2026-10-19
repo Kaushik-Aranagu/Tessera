@@ -118,10 +118,8 @@ struct CalendarMountTests {
         try sync(engine, [oneOnOne])
         let result = try sync(engine, [])
         #expect(result.deleted == 1 && events(engine).isEmpty)
-        // An op, so undo brings it back.
-        let record = try #require(engine.history(limit: 5).first)
-        engine.undo(record)
-        #expect(events(engine).count == 1)
+        // A mirror writes no op: nothing of it is in the op log (and so none of it can reach a backup or an export).
+        #expect(engine.history(limit: 20).isEmpty)
     }
 
     @Test func c10NoTitleStoresNoPlaceholderAndStaysBusy() throws {
