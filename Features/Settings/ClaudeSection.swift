@@ -368,6 +368,12 @@ struct ClaudeSection: View {
                 model.touch()
                 return
             }
+            // A key he saved is his yes to Claude if he hasn't answered; a stored no stays (Core's noteKeySaved).
+            // Never while a demo flag is on.
+            if result.saved, !LaunchFlags.has("-demo") {
+                try? SettingsStore(engine: model.engine).noteKeySaved()
+                missesGoToClaude = model.asksClaude
+            }
             withTesseraAnimation(reduceMotion: reduceMotion) {
                 line = result.line
                 hasKey = result.saved
@@ -552,18 +558,25 @@ enum SentWords {
         var words: [String: String] = [:]
         for entry in log.entries() {
             if let id = log.store.value("requestID", of: entry)?.stringValue, words[id] == nil {
-                words[id] = log.words(of: entry)
+                // Judged again now, so a row written before a wall changed still reads "Private phrase" (QA on #1110).
+                words[id] = log.shownWords(of: entry)
             }
         }
         return words
     }
 
     /// The words under one receipt, quoted: “buy oat milk”; nil when the call has none on record.
+    /// The phrase comes first, in quotes; what rode with it (his date, the workout and last set in focus) follows on
+    /// its own lines, as sent.
     @MainActor
     static func of(_ call: ObjectRecord, in store: ObjectStore, words: [String: String]) -> String? {
         guard let id = store.value("requestID", of: call)?.stringValue, let said = words[id], !said.isEmpty
         else { return nil }
-        return said == TessSentLog.privatePhrase ? said : "\u{201C}\(said)\u{201D}"
+        var lines = said.components(separatedBy: "\n")
+        if let phrase = lines.first, phrase != TessSentLog.privatePhrase {
+            lines[0] = "\u{201C}\(phrase)\u{201D}"
+        }
+        return lines.joined(separator: "\n")
     }
 
     /// "1 request held back on this phone", "3 requests …"; nil when none were.
