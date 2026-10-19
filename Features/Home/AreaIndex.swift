@@ -110,6 +110,8 @@ struct AreaName: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // The bar word never outgrows its row at accessibility sizes.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .accessibilityLabel("\(titles[min(max(current, 0), titles.count - 1)]), area")
         .accessibilityHint("Double tap to show all areas")
     }
@@ -146,6 +148,13 @@ struct AreaIndexSheet: View {
     let onPick: (Int) -> Void
     let onClose: () -> Void
 
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    /// The areas you are not in rest at 42% ink, and at 70% under Increase Contrast.
+    private var restInk: Double {
+        contrast == .increased ? 0.7 : 0.42
+    }
+
     static let height: CGFloat = 580
     static let firstRow: CGFloat = 96
     static let rowPitch: CGFloat = 104
@@ -165,7 +174,7 @@ struct AreaIndexSheet: View {
                 Spacer(minLength: 0)
                 Text(pulling ? "Let go to open" : "Tap one to open")
                     .font(PageType.small)
-                    .foregroundStyle(Theme.Colors.ink.opacity(0.42))
+                    .foregroundStyle(Theme.Colors.ink.opacity(restInk))
                     .frame(height: 52)
             }
             .padding(.top, Self.firstRow)
@@ -203,7 +212,7 @@ struct AreaIndexSheet: View {
                 word(index, picked: isPicked, current: isCurrent)
                 Text(lines.indices.contains(index) ? lines[index] : "")
                     .textRole(.body)
-                    .foregroundStyle(Theme.Colors.ink.opacity(isCurrent || isPicked ? 0.7 : 0.42))
+                    .foregroundStyle(Theme.Colors.ink.opacity(isCurrent || isPicked ? 0.7 : restInk))
                     .lineLimit(1)
             }
             .padding(.horizontal, Theme.Spacing.gutter)
@@ -220,7 +229,7 @@ struct AreaIndexSheet: View {
 
     @ViewBuilder
     private func word(_ index: Int, picked: Bool, current: Bool) -> some View {
-        let color: Color = picked ? Self.areaColour(index) : Theme.Colors.ink.opacity(current ? 1 : 0.42)
+        let color: Color = picked ? Self.areaColour(index) : Theme.Colors.ink.opacity(current ? 1 : restInk)
         let text = Text(titles[index].uppercased())
             .font(.system(size: 40, weight: picked && index == 1 ? .bold : .semibold))
             .tracking(-0.8)

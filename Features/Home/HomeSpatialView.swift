@@ -85,12 +85,14 @@ struct HomeSpatialView: View {
     @State private var pickTicks = 0
     @State private var arrivals = 0
     @Namespace private var areaWord
+    @AccessibilityFocusState private var nameFocused: Bool
 
     var body: some View {
         VStack(spacing: Theme.Spacing.l) {
             AreaName(titles: Page.allCases.map(\.title), progress: progress, namespace: areaWord,
                      indexShown: indexProgress > 0.001, current: Int(progress.rounded()), flies: !calm,
                      onTap: openIndex)
+                .accessibilityFocused($nameFocused)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.s)
                 .tesseraFeedback(.selection, trigger: pickTicks)
@@ -100,6 +102,7 @@ struct HomeSpatialView: View {
                 HStack(spacing: 0) {
                     ForEach(Page.allCases) { sibling in
                         fitted(content(for: sibling))
+                            .scrollDisabled(false)
                             .containerRelativeFrame(.horizontal)
                             // The hero's parallax stays inside its own page.
                             .clipped()
@@ -118,7 +121,9 @@ struct HomeSpatialView: View {
                     settled = true
                 }
             }
-            .scrollDisabled(rowGrabbed || indexProgress > 0.001)
+            // x is no longer the rail (sheet 73, his pick): a side swipe does nothing where a screen has no side page.
+            // Pages still turn by position (the index); the vertical scrolls inside the pages stay live (see `fitted`).
+            .scrollDisabled(true)
             // The page stays live under the index: 90%, blurred, dropped (sheet 73 A).
             .scaleEffect(calm ? 1 : 1 - 0.1 * indexProgress)
             .blur(radius: calm ? 0 : 6 * indexProgress)
@@ -221,6 +226,7 @@ struct HomeSpatialView: View {
         if typeSize.isAccessibilitySize {
             ScrollView(.vertical) { padded }
                 .scrollIndicators(.hidden)
+                .scrollDisabled(false)
                 .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y > 1 } action: { _, new in
                     pageScrolled = new
                 }
@@ -247,7 +253,7 @@ struct HomeSpatialView: View {
 
     /// A tap on the name opens the index without a finger.
     private func openIndex() {
-        guard !model.isCommandExpanded else { return }
+        guard !model.isCommandExpanded, !model.soul.refusesLens else { return }
         pulling = false
         picked = nil
         withAnimation(indexCurve) {
@@ -281,6 +287,7 @@ struct HomeSpatialView: View {
         } completion: {
             picked = nil
             arrivals += 1
+            nameFocused = true
         }
     }
 
@@ -289,7 +296,7 @@ struct HomeSpatialView: View {
     private var pull: some Gesture {
         DragGesture(minimumDistance: 12, coordinateSpace: .global)
             .onChanged { value in
-                guard !rowGrabbed, !pageScrolled, !model.isCommandExpanded,
+                guard !rowGrabbed, !pageScrolled, !model.isCommandExpanded, !model.soul.refusesLens,
                       !typeSize.isAccessibilitySize else { return }
                 if pullAxisDown == nil {
                     pullAxisDown = value.translation.height > 0
