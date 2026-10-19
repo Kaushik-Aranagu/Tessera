@@ -63,7 +63,8 @@ public enum ObjectPrivacy {
 
     /// The one check for a title or a word he typed (G105): a secret word, money, a body fact, a medicine, or one of
     /// the
-    /// money and health title words ("dentist", "therapy", "clinic", "rent"). Receipts, UNDO, Tess lines, screens and
+    /// money and health title words ("therapy", "clinic", "rent"; not "dentist", which stays plain, decisions Oct 16).
+    /// Receipts, UNDO, Tess lines, screens and
     /// the shared export all ask this, so a thing reads private everywhere or nowhere ("Dentist cake" is "Private
     /// recipe" on a screen and in a file alike).
     public static func isPrivateTitle(_ text: String, lastWeightKg: Double?) -> Bool {
@@ -119,7 +120,7 @@ public enum ObjectPrivacy {
     static let titleWords: Set<String> = TessMemoryScreen.healthWords
         .subtracting(["blood", "heart", "energy", "sleep", "tight", "tip", "pepper", "dr", "kg", "lb", "lbs", "kcal",
                       "calories", "pain", "recovery", "weight", "slept", "sleepy", "drained"])
-        .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "dentist", "clinic",
+        .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "clinic",
                 "hospital"])
 
     /// Whether a recipe's title is private: the one check above.

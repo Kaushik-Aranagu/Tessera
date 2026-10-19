@@ -62,9 +62,9 @@ struct ObjectPrivacyTests {
         // O7 (PM9): a plain task shows. A task titled with a body fact masks (PM7 once the medicine words land).
         let plain = try engine.perform(CreateTask(title: "Call mom"), by: .user).output
         #expect(label(plain) == nil)
-        // G105: a task title is judged by the one shared check, so a title word ("dentist") masks it too.
+        // Dentist tasks stay plain (decisions Oct 16, item 2); a drug name or a diagnosis word still walls.
         let dentist = try engine.perform(CreateTask(title: "Call the dentist"), by: .user).output
-        #expect(label(dentist) == "Private task")
+        #expect(label(dentist) == nil)
         let advil = try store.create(#require(classes[.task]), title: "Take advil 400mg")
         #expect(label(advil) == "Private task")
         // Product 5:07 PM PT: a workout's notes are a body fact, never printed on the generic page.
