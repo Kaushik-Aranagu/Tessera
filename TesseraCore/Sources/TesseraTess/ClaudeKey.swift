@@ -17,20 +17,65 @@ public protocol TessKeychain: Sendable {
     func delete()
 }
 
+/// Whether this install may use the key it finds in the Keychain (G687). The Keychain outlives a deleted app, so a
+/// reinstalled phone can hold a key the new install never saved, and a restored setting can say "Tess asks Claude" yes.
+/// Neither is a yes: the app asks once, "Use the Claude key still on this phone?", and sends nothing to Claude until
+/// he answers. A key saved in this install counts as answered. Device-only (UserDefaults), never in a backup.
+public final class KeyAdoption: @unchecked Sendable {
+    public enum State: String, Sendable {
+        case notAsked, accepted, declined
+    }
+
+    public static let question = "Use the Claude key still on this phone?"
+    public static let standard = KeyAdoption()
+    static let stateKey = "tess.claudeKeyAdoption"
+
+    private let defaults: UserDefaults
+
+    public init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    public var state: State {
+        get { defaults.string(forKey: Self.stateKey).flatMap(State.init(rawValue:)) ?? .notAsked }
+        set { defaults.set(newValue.rawValue, forKey: Self.stateKey) }
+    }
+
+    /// His answer to the question: yes lets Tess use the key, no leaves it unused (and asks no more).
+    public func answer(useIt: Bool) {
+        state = useIt ? .accepted : .declined
+    }
+}
+
 #if canImport(Security)
-    /// The real store: a generic password, this device only, unlocked only, never synced.
+    /// The real store: a generic password, this device only, unlocked only, never synced. It reads as empty until the
+    /// key is adopted (`KeyAdoption`): a key saved here, or one he said to use.
     public struct SystemKeychain: TessKeychain {
         public static let service = "com.kaushikaranagu.tessera.anthropic"
         public static let account = "api-key"
 
-        public init() {}
+        let adoption: KeyAdoption
+
+        public init(adoption: KeyAdoption = .standard) {
+            self.adoption = adoption
+        }
 
         private var query: [String: Any] {
             [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: Self.service,
              kSecAttrAccount as String: Self.account, kSecAttrSynchronizable as String: false]
         }
 
+        /// Whether a key sits in the Keychain that this install has not been told to use: the app asks about it once.
+        public var needsAdoptionQuestion: Bool {
+            adoption.state == .notAsked && storedKey() != nil
+        }
+
         public func read() -> String? {
+            adoption.state == .accepted ? storedKey() : nil
+        }
+
+        /// The key as stored, whatever its adoption state. Only the question and Settings' remove use this.
+        public func storedKey() -> String? {
             var lookup = query
             lookup[kSecReturnData as String] = true
             lookup[kSecMatchLimit as String] = kSecMatchLimitOne
@@ -46,11 +91,16 @@ public protocol TessKeychain: Sendable {
             var item = query
             item[kSecValueData as String] = Data(key.utf8)
             item[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-            return SecItemAdd(item as CFDictionary, nil) == errSecSuccess
+            let saved = SecItemAdd(item as CFDictionary, nil) == errSecSuccess
+            if saved {
+                adoption.state = .accepted
+            }
+            return saved
         }
 
         public func delete() {
             SecItemDelete(query as CFDictionary)
+            adoption.state = .notAsked
         }
     }
 #endif
@@ -160,10 +210,17 @@ public struct TessUsageLedger {
     }
 
     /// One row per call, written straight to the store (no op: it isn't something he did, and undo shouldn't see it).
+    /// A request that never left (offline) writes no row at all. `sent` is what went out, as sent: it also writes the
+    /// request's Tess Sent row (G653), "Held back on this phone" for a payload too large to keep.
     @discardableResult
     public func record(use: TessUse, model: String, input: Int, output: Int, costNano: Int64, latency: TimeInterval,
-                       outcome: String, requestID: String?, at date: Date = .now) -> ObjectRecord?
+                       outcome: String, requestID: String?, at date: Date = .now, sent: String? = nil)
+        -> ObjectRecord?
     {
+        guard outcome != "offline" else { return nil }
+        if let sent {
+            TessSentLog(store: store, classes: classes).record(words: sent, use: use, requestID: requestID, at: date)
+        }
         guard let classDef = classes[.tessCall], let call = try? store.create(classDef, title: "\(use.rawValue) call")
         else { return nil }
         call.createdAt = date
@@ -281,7 +338,7 @@ public struct ClaudeKeyCheck {
     {
         ledger.record(use: .keyCheck, model: Self.model, input: used.input, output: used.output, costNano: cost,
                       latency: Date.now.timeIntervalSince(started), outcome: outcome.rawValue, requestID: requestID,
-                      at: now())
+                      at: now(), sent: "Key check")
         return Result(outcome: outcome, line: Self.line(outcome, now: now(), calendar: calendar),
                       saved: true)
     }

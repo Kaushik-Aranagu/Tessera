@@ -325,4 +325,13 @@ struct TessMemoryTests {
         #expect(TessMemoryStore.guessArea("cook tacos on Tuesdays") == .kitchen)
         #expect(TessMemoryStore.guessArea("likes the window seat") == .about)
     }
+
+    @Test func forgetReceiptKeepsTheWholeThing() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let made = try engine.perform(RememberFact(text: "You rest on Sundays"), by: .user)
+        let forgot = try engine.perform(ForgetMemory(memory: made.output.id), by: .user)
+        #expect(forgot.record.summary == "Rest on Sundays, forgotten.", "\(forgot.record.summary)")
+        #expect(TessMemoryStore.receiptThing(of: "Left shoulder is sore") == "Left shoulder")
+    }
 }

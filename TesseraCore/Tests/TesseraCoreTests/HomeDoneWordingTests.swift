@@ -130,6 +130,22 @@ struct HomeDoneWordingTests {
         #expect(!body.contains("weight") || body.contains("No weights")) // only the instructions name weights
     }
 
+    @Test func sentLogPayloadHasHandlesNotRealIdsAndNoHandleMap() async throws {
+        HomeStub.reply = (200, Self.reply(context: "7:40 pm, a bench best", detail: nil))
+        let line = Self.line()
+        let realID = try #require(line.fact.id).uuidString
+        _ = await job().words(for: line, dayLabel: "Thursday evening", store: store)
+        let log = TessSentLog(store: store, classes: classes)
+        let row = try #require(log.entries().first)
+        let payload = log.words(of: row)
+        let body = try #require(String(data: HomeStub.bodies[0], encoding: .utf8))
+        // What the log holds is the facts block that left, with its handle, and no real id or handle map.
+        #expect(payload.contains("h1"), "\(payload)")
+        #expect(!payload.contains(realID) && !body.contains(realID))
+        #expect(!payload.lowercased().contains("handle map") && !payload.lowercased().contains("handlemap"))
+        #expect(log.count == 1 && ledger.calls().count == 1)
+    }
+
     @Test func sonnetIsNeverForcedToATool() async throws {
         // AI architecture on #658: Sonnet 5.5 refuses a forced tool, so the choice is auto.
         _ = await job().words(for: Self.line(), dayLabel: "Thursday evening", store: store)

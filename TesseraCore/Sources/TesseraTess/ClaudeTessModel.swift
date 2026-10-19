@@ -56,6 +56,7 @@ public struct ClaudeTessModel: TessModel {
         guard sendsMisses(), !looksLikeClaudeKey(request.text) else { return .missed }
         // A phrase past the cap never goes: Claude reads a sentence, not a page (a pasted recipe has its own path).
         guard request.text.count <= Self.maxPhraseCharacters else {
+            flags.heldBack += 1
             // A refusal is its own answer: the long phrase is not logged as a miss either.
             var refusal = TessCapture(records: [], line: "That's too long to send. Say it shorter.", source: .none)
             refusal.isRefusal = true
@@ -71,6 +72,7 @@ public struct ClaudeTessModel: TessModel {
                                                 maxTokens: Self.maxTokens, model: Self.model) * Int64(Self.maxRounds)
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
             // At the cap: the rules and on-device paths go on; Tess says so if nothing else caught it.
+            flags.heldBack += 1
             let reset = (calendar.dateInterval(of: .month, for: now())?.end ?? now())
                 .formatted(.dateTime.month(.abbreviated).day())
             return .asked(TessCapture(records: [], line: "Claude paused until \(reset).", source: .none))
@@ -82,9 +84,14 @@ public struct ClaudeTessModel: TessModel {
         var usage = Usage()
         var requestID: String?
         var reply = ""
+        // One shared deadline for every round (8 s), so three rounds can never hold the Ask slot for 25 s.
+        let deadline = started.addingTimeInterval(timeout)
+        // Whether anything really went out: an offline attempt that never left writes no Call row and no Sent row.
+        var left = false
         do {
             for _ in 0 ..< Self.maxRounds {
-                let response = try await send(conversation, system: system, key: key)
+                let response = try await send(conversation, system: system, key: key, until: deadline)
+                left = true
                 usage.add(response.usage)
                 requestID = response.requestID ?? requestID
                 reply = response.text
@@ -126,9 +133,13 @@ public struct ClaudeTessModel: TessModel {
             // Every call writes its row, an unreadable reply included (QA on #283).
             let failure = error as? Failure ?? .other
             usage.add(failure.used)
-            ledger.record(use: .capture, model: Self.model, input: usage.input, output: usage.output,
-                          costNano: usage.cost, latency: Date().timeIntervalSince(started),
-                          outcome: failure.outcome, requestID: requestID, at: now())
+            // A request that left and failed keeps its one row; one that never connected writes none.
+            if left || failure.outcome != "offline" {
+                ledger.record(use: .capture, model: Self.model, input: usage.input, output: usage.output,
+                              costNano: usage.cost, latency: Date().timeIntervalSince(started),
+                              outcome: failure.outcome, requestID: requestID, at: now())
+                logSent(request, requestID: requestID, engine: engine)
+            }
             discard(records, engine: engine)
             // Offline: the phrase waits for Claude instead of being lost (section 7), unless it's already a retry.
             if failure.outcome == "offline", !retrying,
@@ -141,6 +152,7 @@ public struct ClaudeTessModel: TessModel {
         ledger.record(use: .capture, model: Self.model, input: usage.input, output: usage.output,
                       costNano: usage.cost, latency: Date().timeIntervalSince(started),
                       outcome: records.isEmpty ? "nothing" : "works", requestID: requestID, at: now())
+        logSent(request, requestID: requestID, engine: engine)
         guard !records.isEmpty else { return .missed }
         // Never claim more than was done: Claude's own line only if it passes Tess's voice checks.
         var line = reply.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -165,6 +177,24 @@ public struct ClaudeTessModel: TessModel {
         var capture = TessCapture(records: records, line: line, source: .claude)
         capture.isNotice = isNotice
         return .handled(capture)
+    }
+
+    /// The words of this request, as sent, on the phone only (G653), beside the Tess Call row just written.
+    private func logSent(_ request: TessRequest, requestID: String?, engine: ActionEngine) {
+        TessSentLog(store: engine.store, classes: engine.classes, flags: flags)
+            .record(words: request.text, context: sentContext(request, engine: engine), use: request.use,
+                    requestID: requestID, at: now())
+    }
+
+    /// What went with the phrase besides the fixed instructions: his date, and the workout and last set in focus
+    /// (or the words that say there is none). The same three values `system` sends, so "as sent" is exact.
+    func sentContext(_ request: TessRequest, engine: ActionEngine) -> [String] {
+        let walled = Self.exerciseIsWalled(request.context, engine: engine, lastWeightKg: request.lastWeightKg(engine))
+        return [
+            "Today: \(TessModelCapture.today(request.context))",
+            "Workout: \(walled ? "no workout in focus" : TessModelCapture.workout(request.context, engine: engine))",
+            "Last set: \(walled ? "no last set" : TessModelCapture.lastSet(request.context, engine: engine))",
+        ]
     }
 
     /// Takes back any ghost past the per-phrase cap (a single call may write several).
@@ -249,6 +279,7 @@ public struct ClaudeTessModel: TessModel {
         static let offline = Failure(outcome: "offline", line: "No connection, so Claude didn't see that.")
         static let timeout = Failure(outcome: "timeout", line: "Claude didn't answer in time.")
         static let busy = Failure(outcome: "busy", line: "Claude is busy right now.")
+        static let cancelled = Failure(outcome: "cancelled", line: "Cancelled.")
         static let badKey = Failure(
             outcome: "badKey",
             line: "Claude didn't take the key. Check it in Settings: Claude."
@@ -256,8 +287,11 @@ public struct ClaudeTessModel: TessModel {
         static let other = Failure(outcome: "other", line: "Didn't catch that.")
     }
 
-    func send(_ messages: [[String: Any]], system: String, key: String) async throws -> Response {
-        var http = URLRequest(url: ClaudeKeyCheck.base, timeoutInterval: timeout)
+    func send(_ messages: [[String: Any]], system: String, key: String, until deadline: Date) async throws -> Response {
+        // What is left of the call's one deadline; none left is a timeout before anything is sent.
+        let remaining = deadline.timeIntervalSinceNow
+        guard remaining > 0 else { throw Failure.timeout }
+        var http = URLRequest(url: ClaudeKeyCheck.base, timeoutInterval: remaining)
         http.httpMethod = "POST"
         http.setValue(key, forHTTPHeaderField: "x-api-key")
         http.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
@@ -273,11 +307,35 @@ public struct ClaudeTessModel: TessModel {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: http, delegate: NoRedirects.shared)
+            // A hard cap, not just an idle timeout: the call races the deadline, and either one wins. Cancel (from the
+            // Ask slot, or the caller's own task) stops the call through the same handle.
+            let session = session
+            let request = http
+            let work = Task { try await session.data(for: request, delegate: NoRedirects.shared) }
+            let timer = Task {
+                try await Task.sleep(for: .seconds(remaining))
+                work.cancel()
+            }
+            flags.inFlight = work
+            flags.noteSending()
+            defer {
+                timer.cancel()
+                flags.inFlight = nil
+            }
+            (data, response) = try await withTaskCancellationHandler { try await work.value } onCancel: {
+                work.cancel()
+            }
         } catch let error as URLError {
-            throw error.code == .timedOut ? Failure.timeout : Failure.offline
+            switch error.code {
+            case .timedOut: throw Failure.timeout
+            // Cancelled: by the deadline (a timeout) or by him (Cancel).
+            case .cancelled: throw deadline.timeIntervalSinceNow <= 0 ? Failure.timeout : Failure.cancelled
+            default: throw Failure.offline
+            }
+        } catch is CancellationError {
+            throw Failure.cancelled
         } catch {
-            throw Failure.other // cancelled
+            throw Failure.other
         }
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         switch status {
@@ -345,5 +403,29 @@ public final class ClaudeMissFlags {
     public var noticeShown: Bool {
         get { defaults.bool(forKey: Self.noticeKey) }
         set { defaults.set(newValue, forKey: Self.noticeKey) }
+    }
+
+    /// The call in flight, so Cancel can stop it (set only while a request is on the network).
+    var inFlight: Task<(Data, URLResponse), Error>?
+
+    /// Called, with no request content, when a request to Claude actually leaves the phone: the Ask slot shows
+    /// "Asking Claude." with Cancel from here to the end of the call. Grammar-only answers never reach it.
+    public var willSend: (@MainActor () -> Void)?
+
+    func noteSending() {
+        willSend?()
+    }
+
+    /// Cancel: stops the call on the network, if there is one. The capture then ends with "Cancelled.".
+    public func cancelAsking() {
+        inFlight?.cancel()
+    }
+
+    static let heldBackKey = "tess.claudeHeldBack"
+
+    /// Requests that never left the phone (a walled or cook phrase, too long, the month cap): "N held back".
+    public var heldBack: Int {
+        get { defaults.integer(forKey: Self.heldBackKey) }
+        set { defaults.set(newValue, forKey: Self.heldBackKey) }
     }
 }
