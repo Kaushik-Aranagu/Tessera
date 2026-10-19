@@ -2,7 +2,7 @@
 
 For: Product, then Core (drain, cap, log rows) and Builder B (the lines, Now and Receipts). From: AI architecture. Docs only: no Claude calls, no key use, no key content. Read against master f5fd3a8 and Core's #1066 at db1cd77b. **[code]** = read in Swift; **[ruling]** = from Product's relay of decisions 3:58 PM Oct 18 and 4:xx PM Oct 19 (those entries are **not on master yet**, so the wording below is Product's summary, to be matched against `decisions.md` when it lands); **[proposed]** = my call where no ruling or sheet exists.
 
-**Rulings used (as relayed):** a log row exists only when a request really goes out; a drained phrase writes one row; walls are re-checked at read time; a waiting phrase is deleted after it is sent; seven days at most; Cancel on the wait.
+**Rulings used (stamps: decisions 3:58 PM Oct 18 and 4:xx PM Oct 19; `decisions.md` on master lags, so Product confirmed the wording by message on Oct 19 and the answers below are final, not defaults):** a log row exists only when a request really goes out; a drained phrase writes one row; walls are re-checked at read time; a waiting phrase is deleted after it is sent; seven days at most; Cancel on the wait.
 
 ## 0. The drain is already wired (the gap-hunt row is stale)
 
@@ -22,12 +22,12 @@ States: **Typed**, **Queued**, **Checked**, **Sending**, **Removed**.
 | Checked | Contains "timer", or a Cook is the running process | Queued | Nothing | Count stays. Never sent while that holds |
 | Checked | Passes | Sending | Task starts with an 8 s deadline (section 4) | Drain line "Asking Claude" with CANCEL |
 | Sending | A connection was made and Claude answered (ghosts, or read and understood nothing) | Removed | **One Tess Sent row and one Tess Call row** | Ghost(s), or nothing. Receipt rules in section 3 |
-| Sending | Connection made, then busy (429, 5xx), bad key, no answer by the deadline | Queued | One Sent row and one Call row for that attempt [ruling: the request really went out] | One quiet line (section 3). **Open call O1**: keep or delete |
+| Sending | Connection made, then busy (429, 5xx), bad key, no answer by the deadline | Queued | One Sent row and one Call row for that attempt [ruling: the request really went out] | One quiet line (section 3). O1 ruled: kept |
 | Sending | Went offline again before any connection | Queued | Nothing | Nothing |
 | Sending | CANCEL | Queued | If the body had been handed to the network: one Sent row and one Call row, outcome "cancelled"; else nothing | Line gone, count unchanged |
 | Sending | Month cap reached | Queued | Nothing (a reserve that fails writes no request) | "Claude paused until Nov 1." once; counts as held back |
 
-**O1 (one question for Product).** "Deleted after send" read literally deletes the phrase the moment the request goes out, so a busy or timed-out attempt would lose it. Master keeps it until Claude answers, then removes it. My default, the safer reading for him: **delete on any answer; keep after busy, timeout, bad key, cancel (up to 7 days)**, so each real attempt writes its own row. If Product wants the literal reading, a phrase that gets no answer is dropped with the line "Claude didn't answer in time. Let that one go." and the tests `aTimedOutDrainKeepsThePhrase` / `aTimedOutDrainDeletesThePhrase` swap.
+**O1 (ruled, Product Oct 19).** Keep the phrase after a busy or timed-out attempt; delete it after a successful send or at 7 days. Each real attempt that left writes its own Sent row. So: **delete on any answer; keep after busy, timeout, bad key, cancel (up to 7 days)**, as master does.
 
 Rule that closes a loophole: a phrase that hits **Sending** twice for the same cause (two timeouts in a row) stays Queued but is not retried until the next foreground, never in a loop. The drain runs on foreground only, never on a timer [code, `readWaiting` doc comment].
 
@@ -37,7 +37,7 @@ A Tess Sent row and a Tess Call row are written **when a request was handed to t
 
 - **Writes a row:** HTTP answer of any status, a timeout after connect, a cancel after the body was sent.
 - **Writes no row:** not-connected / no route (`URLError` offline before connect), refused by a wall, too long, month cap, switch off, no key, Siri/Shortcuts, cook/timer hold.
-- Today #1066 writes a Sent row on **every** failure including offline (`ClaudeTessModel.swift` diff: `logSent` after `ledger.record` in the `catch`), which breaks the rule: see D1.
+- Today #1066 writes a Sent row on **every** failure including offline (`ClaudeTessModel.swift` diff: `logSent` after `ledger.record` in the `catch`), which breaks the rule: see D1. Ruled Oct 19: drop both the offline Sent row and the offline Call row. QA's `qa/review-1066.md` notes the same, and that the retry logs it a second time.
 - A drained phrase writes **exactly one** row per attempt that went out, stamped with the **send time**, not the time he said it. The words are the phrase as stored.
 
 ## 3. What shows on Now and in Receipts
@@ -96,11 +96,11 @@ What matches: one row per built request beside its Tess Call row, linked by `req
 
 | # | Drift | In the doc | In #1066 | Owner / action |
 |---|---|---|---|---|
-| D1 | **Rows on failures that never left.** The doc says a row for each request that was built; the new ruling says only when it really goes out. #1066 calls `logSent` in the `catch` after `ledger.record` for every failure, offline included. | `what-was-sent-log.md` section 1 | `ClaudeTessModel.swift` diff, `logSent` in the failure path | Core: skip the Sent row when `failure.outcome == "offline"`. Product: also skip the Call row for offline (cost 0), my recommendation |
-| D2 | **"Word for word as Claude received it" is not true.** The capture request also carries a date line, the current exercise name, the last set and 11 tool definitions in the system prompt (`architecture.md` capture row). The row holds only `request.text`. | Sections 1 and 4: "exactly what left the phone" | `TessSentLog.record(words:)` is passed `request.text` only | Core: either store the full body or add "Also sent: today's date, the exercise you were on, your last set" as a fixed line on the screen; Builder B copy must not say "exactly". Docs: I will soften section 1 of the log doc |
-| D3 | **Handles.** The doc says payloads show handles (h1, s1) and the handle map is never stored. Capture sends the phrase whole with no handles, and the other jobs (Home lines, Plan my day, askSubject) are not logged yet. The test `whatWasSentHoldsWordsAsSentWithHandles` asserts only `words == route.miss`; no handle case exists. | Sections 1, 2, 4; test 4 | Test name overclaims; no handle path | Core: rename to `whatWasSentHoldsTheWordsAsSaid` now, and add `sentLogPayloadHasHandlesNotRealIdsAndNoHandleMap` with the first handle-using job |
+| D1 | **Rows on failures that never left.** The doc says a row for each request that was built; the new ruling says only when it really goes out. #1066 calls `logSent` in the `catch` after `ledger.record` for every failure, offline included. | `what-was-sent-log.md` section 1 | `ClaudeTessModel.swift` diff, `logSent` in the failure path | Core: skip the Sent row **and** the Call row when `failure.outcome == "offline"` (ruled Oct 19) |
+| D2 | **"Word for word as Claude received it" is not true.** The capture request also carries a date line, the current exercise name, the last set and 11 tool definitions in the system prompt (`architecture.md` capture row). The row holds only `request.text`. | Sections 1 and 4: "exactly what left the phone" | `TessSentLog.record(words:)` is passed `request.text` only | **Ruled Oct 19:** the log holds everything that left in the request (the phrase plus the date line, the exercise and the last set) as sent, with handles. Core stores the whole variable part of the body, not `request.text` alone; the copy may then say "exactly" |
+| D3 | **Handles.** The doc says payloads show handles (h1, s1) and the handle map is never stored. Capture sends the phrase whole with no handles, and the other jobs (Home lines, Plan my day, askSubject) are not logged yet. The test `whatWasSentHoldsWordsAsSentWithHandles` asserts only `words == route.miss`; no handle case exists. | Sections 1, 2, 4; test 4 | Test name overclaims; no handle path | **Ruled Oct 19:** make the handle tests real. Core: capture's pack applies handles where it names objects (the exercise, the last set), `whatWasSentHoldsWordsAsSentWithHandles` asserts a handle in the stored body and no real id, and add `sentLogPayloadHasHandlesNotRealIdsAndNoHandleMap` |
 | D4 | **Fields.** The doc has job, sentAt, payload, bytes, model, tokens, cost, outcome. #1066 has `use`, `words`, `requestID` plus `createdAt`. Model, tokens, cost and outcome live on the linked Tess Call row (fine). `bytes` is on neither, yet the list shows "1.1 KB" and the 1,200-byte pack caps check it. | Section 1 | `SystemCatalog.swift` `tessSent` fields | Core: add `bytes` (UTF-8 length of the body sent), or drop "KB" from the list. Docs: say model, tokens, cost and outcome are read by `requestID` |
-| D5 | **Retention.** 30 days or the last 500 rows, trimmed at the 04:00 turnover. #1066 keeps rows until Clear. | Section 3 | No trim | Core: trim at the turnover, with `sentLogTrimsToThirtyDaysAndFiveHundredAtTurnover` (doc test 6). Product to confirm 30/500 still stands |
+| D5 | **Retention.** 30 days or the last 500 rows, trimmed at the 04:00 turnover. #1066 keeps rows until Clear. | Section 3 | No trim | Core: trim at the turnover, with `sentLogTrimsToThirtyDaysAndFiveHundredAtTurnover` (doc test 6). **Ruled Oct 19:** 30 days or 500 rows, whichever first |
 | D6 | **Wall language is stale in the doc, not in the code.** The doc says a wall hit means no call so nothing to log, and a key-shaped body is refused. Since #860 a walled miss goes whole, so a walled phrase **does** produce a row, stored as "Private phrase" (decisions 2:40 AM Oct 17 item 3). | Section 2 | Matches the ruling | Docs (me): fix section 2 in the log doc |
 | D7 | **Migration.** The doc says catalog v11. #1066 seeds the new class with no version bump (the seed adds missing classes). | Section 3 | `SystemCatalog.swift` | Docs (me): fix; Core confirms an old build opens the store |
 | D8 | **Held-back count.** The PR text counts cook/timer, walled-and-grammar-answered, too long and the month cap. In `ClaudeTessModel.swift` only two increments exist (too long, cap). I did not read the router change in `TessModel.swift`, so cook/timer and grammar-answered are unconfirmed. The count lives in `UserDefaults` as a number (no words), which is fine for a count. | Section 1 | `ClaudeMissFlags.heldBack` | Core: confirm all four causes increment; test `heldBackCountsEachCause` |
@@ -109,7 +109,4 @@ What matches: one row per built request beside its Tess Call row, linked by `req
 
 ## 7. Open for Product
 
-1. **O1** above: keep the phrase after a busy or timed-out attempt (my default) or delete it as soon as the request goes out.
-2. D1: also drop the Tess Call row for an offline failure (my recommendation, cost is zero).
-3. D5: confirm 30 days or 500 rows for the sent log.
-4. Now line wording "1 waiting for Claude" and the DROP list are mine; Design has not seen them.
+None. O1, the offline rows, D2, D3 and D5 were ruled by Product on Oct 19; Product sends D1, D2, D3 and D5 to Core. Still mine: the Now line wording "1 waiting for Claude" and the DROP list (Design has not seen them).
