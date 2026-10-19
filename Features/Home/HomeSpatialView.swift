@@ -77,6 +77,10 @@ struct HomeSpatialView: View {
     @Namespace private var linkZoom
     /// The area index (sheet 73 A): 0 closed … 1 open; the row under the finger; whether a pull (not a tap) is open.
     @State private var indexProgress = 0.0
+    /// Whether the sheet is in the view tree at all: only while it is open or animating, so its rows are never in the
+    /// accessibility tree (nor under a tap) while it is closed.
+    @State private var indexMounted = false
+    @State private var indexClosing = false
     @State private var picked: Int?
     @State private var pulling = false
     @State private var pullAxisDown: Bool?
@@ -200,10 +204,19 @@ struct HomeSpatialView: View {
         }
         .onDisappear { closeIndex() }
         .overlay(alignment: .top) {
-            AreaIndexSheet(titles: Page.allCases.map(\.title), lines: indexLines,
-                           current: Int(progress.rounded()), progress: indexProgress, picked: picked,
-                           pulling: pulling, calm: calm, namespace: areaWord, onPick: pick, onClose: closeIndex)
-                .ignoresSafeArea(edges: .top)
+            if indexMounted {
+                AreaIndexSheet(titles: Page.allCases.map(\.title), lines: indexLines,
+                               current: Int(progress.rounded()), progress: indexProgress, picked: picked,
+                               pulling: pulling, calm: calm, namespace: areaWord, onPick: pick, onClose: closeIndex)
+                    .ignoresSafeArea(edges: .top)
+                    .transition(.opacity)
+            }
+        }
+        .onChange(of: indexProgress) { _, new in
+            // A pull dragged back to nothing (no close animation) leaves the tree too.
+            if new <= 0.001, !indexClosing {
+                indexMounted = false
+            }
         }
         .environment(\.homeLinkZoom, linkZoom)
     }
@@ -265,8 +278,10 @@ struct HomeSpatialView: View {
         guard !model.isCommandExpanded, !model.soul.refusesLens else { return }
         pulling = false
         picked = nil
-        withAnimation(indexCurve) {
-            indexProgress = 1
+        // Mounted at rest first, then opened on the next turn, so the glass and the rows form as they should.
+        indexMounted = true
+        Task { @MainActor in
+            withAnimation(indexCurve) { indexProgress = 1 }
         }
     }
 
@@ -275,8 +290,14 @@ struct HomeSpatialView: View {
         pulling = false
         picked = nil
         nameFocused = true
+        indexClosing = true
         withAnimation(indexCurve) {
             indexProgress = 0
+        } completion: {
+            indexClosing = false
+            if indexProgress <= 0.001 {
+                indexMounted = false
+            }
         }
     }
 
@@ -292,9 +313,12 @@ struct HomeSpatialView: View {
         Self.remembered = index
         picked = index
         pulling = false
+        indexClosing = true
         withAnimation(indexCurve) {
             indexProgress = 0
         } completion: {
+            indexClosing = false
+            indexMounted = false
             picked = nil
             arrivals += 1
             // VoiceOver lands on the opened area's front heading: with the bar word read after the page (below),
@@ -318,6 +342,9 @@ struct HomeSpatialView: View {
                 let drag = value.translation.height
                 let formed = min(max((drag - 20) / 70, 0), 1)
                 pulling = formed >= 1
+                if formed > 0 {
+                    indexMounted = true
+                }
                 indexProgress = formed
                 guard formed >= 1 else {
                     picked = nil
