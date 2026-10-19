@@ -106,10 +106,10 @@ Today, a single quiet line under the bar (Builder B, new view; text style of the
 ### 2.6 Default when he does not answer
 The line stays until his first action or a picked folder; nothing is restored, nothing is written. Restoring itself is unchanged: pick, hold REPLACE, next cold launch.
 
-### 2.7 Edge cases
+### 2.7 Edge cases (order of the two lines ruled, mirror line 1117 CALL 5)
 - Restore staged but not yet applied: line hides (pending marker exists).
 - New phone (FL62): same line; the folder must be picked again; iCloud copies lack private rows (hunt 27 CALL 2 B warning applies at restore).
-- Found key plus offer: both lines may be due on a reinstall; show the key question first, the offer second, one at a time (hunt 28 CALL 3 B queue, mirror 1111; order ruled, mirror line 1117 CALL 5).
+- Found key plus offer: both lines may be due on a reinstall; show the key question first, the offer second, one at a time (hunt 28 CALL 3 B queue, mirror 1111) (my default order).
 - A workout or cook open: the line does not show (restore refuses then, hunt 27 CALL 3 A).
 - Offline: no dependence on network.
 - Siri/Shortcuts: no effect; neither reads nor sends.
