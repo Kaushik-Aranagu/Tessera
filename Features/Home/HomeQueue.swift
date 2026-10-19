@@ -85,6 +85,7 @@ struct QueueEntry: Identifiable, Equatable {
 /// One bounded surface: a pinned heading word, then Next (up to 3 rows at 21/500, ink stepping down) and Later
 /// (21/400 at 62%). The pinned word rolls from Next to Later as the in-flow "Later" reaches it.
 struct QueueWindow: View {
+    @Environment(\.homePageScrolled) private var reportScrolled
     let next: [QueueEntry]
     let later: [QueueEntry]
 
@@ -152,6 +153,7 @@ struct QueueWindow: View {
                 .scrollDisabled(rowGrabbed)
                 .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in
                     offset = new
+                    reportScrolled(new > 1)
                 }
                 .frame(height: Self.windowHeight)
                 .mask {
@@ -273,8 +275,8 @@ private struct QueueRow: View {
         ))
         .onTapGesture { model.open(.object(entry.id)) }
         .modifier(ZoomSource(id: Route.object(entry.id), namespace: namespace))
-        .sensoryFeedback(.selection, trigger: armed) { _, now in now }
-        .sensoryFeedback(.impact(weight: .light, intensity: 0.5), trigger: holding) { _, now in now }
+        .tesseraFeedback(trigger: armed) { _, now in now ? .selection : nil }
+        .tesseraFeedback(trigger: holding) { _, now in now ? .pickedUp : nil }
         // A held row that leaves the tree (it finished, or the page changed) must give the pager back.
         .onDisappear {
             if holding {
@@ -287,8 +289,8 @@ private struct QueueRow: View {
                 settle()
             }
         }
-        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: finishes)
-        .sensoryFeedback(.impact(weight: .light), trigger: moves)
+        .tesseraFeedback(.done, trigger: finishes)
+        .tesseraFeedback(.notNow, trigger: moves)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(entry.time.map { "\(entry.title), \(Format.clock($0))" } ?? entry.title)
         .accessibilityHint("Opens \(entry.title)")
@@ -498,6 +500,8 @@ extension EnvironmentValues {
     /// A row reports when it has the finger (after its press), so Home's pager and the queue stop scrolling.
     @Entry var homeRowGrab: (Bool) -> Void = { _ in }
     @Entry var homeRowGrabbed = false
+    /// A page's vertical scroll reports whether it is scrolled away from its top (the index only pulls from the top).
+    @Entry var homePageScrolled: (Bool) -> Void = { _ in }
 }
 
 /// Press for 0.2 s without moving, then drag: reports the horizontal travel since the press landed. Built on

@@ -63,17 +63,18 @@ struct ClaudeSection: View {
     @State private var draft = ""
     @State private var checking = false
     @State private var line: String?
-    @State private var removed = false
+    /// Remove asked "Remove the Claude key?" and waits for Remove or Keep it (G647).
+    @State private var confirmingRemove = false
+    @AccessibilityFocusState private var questionFocused: Bool
+    /// Bumped when the key wouldn't leave the Keychain: the one soft warning for a write that didn't save.
+    @State private var notSaved = 0
+    @State private var notSavedAt: Date?
     /// The first line, "Tess asks Claude": misses and Plan my day. Lives in Core's settings object only.
     @State private var missesGoToClaude = true
     /// Tess's answer to the last flip of the switch, shown under it.
     @State private var switchLine: String?
-    @State private var removal: Task<Void, Never>?
-    /// The key between REMOVE and the end of its 10 s: out of the Keychain, held only here for UNDO.
-    @State private var held: KeyRemoval?
     /// The clipboard's change count when a key was pasted, so a key still sitting there can be cleared after it passes.
     @State private var pasteChange: Int?
-    @Environment(\.scenePhase) private var scenePhase
     @FocusState private var focused: Bool
 
     private var ledger: TessUsageLedger {
@@ -88,7 +89,7 @@ struct ClaudeSection: View {
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .accessibilityAddTraits(.isHeader)
 
-            if hasKey, !removed {
+            if hasKey {
                 withKey
                     .transition(.opacity)
             } else {
@@ -97,37 +98,22 @@ struct ClaudeSection: View {
             }
 
             if let line {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(line)
-                        .textRole(.body)
-                        .foregroundStyle(Theme.Colors.tess)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if removed {
-                        Button("Undo", action: undoRemove)
-                            .buttonStyle(.labelWord(Theme.Colors.liveInk))
-                    }
-                }
-                .transition(.opacity.combined(with: .offset(y: 6)))
+                Text(line)
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.tess)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .transition(.opacity.combined(with: .offset(y: 6)))
             }
         }
         .tesseraAnimation(value: hasKey)
-        .tesseraAnimation(value: removed)
+        .tesseraAnimation(value: confirmingRemove)
+        // A delete that didn't take is a write that didn't save: one soft warning, once per failure (QA on #1059).
+        .tesseraFeedback(.notSaved, trigger: notSaved)
         .tesseraAnimation(value: line)
         .tesseraAnimation(value: writing)
         .onAppear(perform: load)
-        // Killed or backgrounded inside the 10 s: the removal goes through then, not never (QA C2).
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .background, removed {
-                removal?.cancel()
-                finishRemoval()
-            }
-        }
-        .onDisappear {
-            // Leaving with a removal pending: it goes through now, as it would after 10 s.
-            if removed {
-                finishRemoval()
-            }
-        }
+        // Leaving with the question open keeps the key: nothing is removed without his Remove.
+        .onDisappear { confirmingRemove = false }
     }
 
     // MARK: No key
@@ -222,21 +208,46 @@ struct ClaudeSection: View {
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityLabel("Claude key saved, \(status)")
-                HStack(spacing: 0) {
-                    Button("Test") { retest() }
-                    Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
-                    Button("Replace") {
-                        replacing = true
-                        open()
+                if confirmingRemove {
+                    removeQuestion
+                        .transition(.opacity.combined(with: .offset(y: -4)))
+                } else {
+                    HStack(spacing: 0) {
+                        Button("Test") { retest() }
+                        Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
+                        Button("Replace") {
+                            replacing = true
+                            open()
+                        }
+                        Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
+                        Button("Remove", action: askRemove)
                     }
-                    Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
-                    Button("Remove", action: remove)
+                    .buttonStyle(.labelWord(Theme.Colors.inkSecondary))
+                    .disabled(checking)
+                    .transition(.opacity)
                 }
-                .buttonStyle(.labelWord(Theme.Colors.inkSecondary))
-                .disabled(checking)
                 if replacing, writing {
                     writingLine(prompt: "Paste the new key")
                 }
+            }
+        }
+    }
+
+    /// The second step, in the key's own row: the question in ink, then Remove and Keep it. No system alert, no
+    /// UNDO after (G647).
+    private var removeQuestion: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(KeyRemove.question)
+                .textRole(.body)
+                .foregroundStyle(Theme.Colors.ink)
+                .accessibilityFocused($questionFocused)
+            HStack(spacing: 0) {
+                Button(KeyRemove.removeWord, action: confirmRemove)
+                    .buttonStyle(.labelWord(Theme.Colors.ink))
+                    .accessibilityLabel("Remove the Claude key")
+                Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
+                Button(KeyRemove.keepWord, action: keepKey)
+                    .buttonStyle(.labelWord(Theme.Colors.inkSecondary))
             }
         }
     }
@@ -374,41 +385,39 @@ struct ClaudeSection: View {
         }
     }
 
-    /// One tap, no confirm: everything folds away and S1 shows, with UNDO for 10 s. The key leaves the Keychain at
-    /// once, so no Claude job due in the window can send (kitchen gap hunt G10); UNDO puts it back.
-    private func remove() {
-        held = KeyRemoval.take(from: keys)
+    /// Remove asks first; nothing leaves the Keychain until he says Remove (G647).
+    private func askRemove() {
+        // A replacement half-pasted when Remove is asked leaves nothing in the field (QA on #1059).
+        draft = ""
+        focused = false
         withTesseraAnimation(.easeInOut(duration: 0.22), reduceMotion: reduceMotion) {
-            removed = true
             writing = false
-            line = "Claude key removed. Everything stays on this phone."
+            replacing = false
+            line = nil
+            confirmingRemove = true
         }
-        removal?.cancel()
-        removal = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(10))
-            guard !Task.isCancelled, removed else { return }
-            finishRemoval()
-        }
+        questionFocused = true
     }
 
-    private func undoRemove() {
-        removal?.cancel()
-        let back = held?.restore(to: keys) ?? false
-        held = nil
-        withTesseraAnimation(reduceMotion: reduceMotion) {
-            removed = false
-            hasKey = back
-            line = back ? "Claude key is back." : "I couldn't bring the key back. Add it again?"
-        }
+    private func keepKey() {
+        withTesseraAnimation(reduceMotion: reduceMotion) { confirmingRemove = false }
     }
 
-    private func finishRemoval() {
-        held = nil
-        keys.delete()
-        removed = false
-        hasKey = false
-        status = "not checked"
-        withTesseraAnimation(reduceMotion: reduceMotion) { line = nil }
+    /// Remove deletes the key at once and says a plain receipt, announced once. Nothing keeps a copy, so there is
+    /// no UNDO: a key comes back only by pasting it again.
+    private func confirmRemove() {
+        let receipt = KeyRemove.remove(from: keys)
+        withTesseraAnimation(.easeInOut(duration: 0.22), reduceMotion: reduceMotion) {
+            confirmingRemove = false
+            hasKey = receipt == KeyRemove.failed
+            status = hasKey ? status : "not checked"
+            line = receipt
+        }
+        if receipt == KeyRemove.failed, RecipeCopy.playsNotSaved(last: notSavedAt, now: .now) {
+            notSaved += 1
+            notSavedAt = .now
+        }
+        UIAccessibility.post(notification: .announcement, argument: receipt)
         model.touch()
     }
 }
@@ -542,20 +551,18 @@ extension ClaudeKeyWords {
     }
 }
 
-/// A removed key's 10 s of UNDO. Taking it deletes it from the Keychain at once and keeps it only in this value;
-/// restoring writes it back. Nothing here logs or shows any part of it.
-struct KeyRemoval {
-    private let key: String
+/// Remove's two steps (G647): the question, its two words and the receipt. Removing keeps nothing, so no part of
+/// the key is held anywhere afterwards.
+enum KeyRemove {
+    static let question = "Remove the Claude key?"
+    static let removeWord = "Remove"
+    static let keepWord = "Keep it"
+    static let receipt = "Claude key removed. Everything stays on this phone."
+    static let failed = "I couldn't remove the key. Try again?"
 
-    /// Takes the key out of the Keychain; nil when there was none.
-    static func take(from keys: any TessKeychain) -> KeyRemoval? {
-        guard let key = keys.read() else { return nil }
+    /// Deletes the key and returns the line to show: the receipt, or the failure if the Keychain still has one.
+    static func remove(from keys: any TessKeychain) -> String {
         keys.delete()
-        return KeyRemoval(key: key)
-    }
-
-    /// Puts the key back; false if the Keychain wouldn't take it.
-    func restore(to keys: any TessKeychain) -> Bool {
-        keys.save(key)
+        return keys.read() == nil ? receipt : failed
     }
 }

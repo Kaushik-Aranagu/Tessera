@@ -21,3 +21,11 @@ Index of the docs in `docs/design/`.
 - [studies/pantry.html](studies/pantry.html): Sheet 78 study (`?play` records the clip)
 - [mockups/pantry.png](mockups/pantry.png): Sheet 78 board
 - [recordings/pantry.mp4](recordings/pantry.mp4): Sheet 78 clip (18 s, Porcelain)
+- [reading-layouts-99.md](reading-layouts-99.md): 99. Reading layouts, one type layout for each kind of content (sheet, not yet okayed by Kaushik)
+- [settings-review-100.md](settings-review-100.md): 100. Settings, the Review section: every open choice is a switch he flips live (spec, not yet okayed by Kaushik)
+- [remix-editor-101.md](remix-editor-101.md): 101. The Remix editor, the class page itself in an edit state (spec, not yet okayed by Kaushik)
+- [build-with-tess-102.md](build-with-tess-102.md): 102. Build with Tess, one sentence in and a ghost app out (spec, not yet okayed by Kaushik)
+- [review-rows-2-103.md](review-rows-2-103.md): 103. Settings Review pages 5 and 6 (spec, not yet okayed by Kaushik)
+- [kitchen-stretch-104.md](kitchen-stretch-104.md): 104. Kitchen stretch: Pantry kept, Can cook shelf, Week of dinners (spec, not yet okayed by Kaushik)
+- [watch-set-logging-105.md](watch-set-logging-105.md): 105. Watch one-screen set logging (spec, not yet okayed by Kaushik)
+- [claude-gate-106.md](claude-gate-106.md): 106. The Claude gate: the key question, the Sent rows, the willSend line and the restore offer (release 22 gate)

@@ -12,6 +12,8 @@ struct NowPage: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openHomeLink) private var openLink
     @State private var finishes = 0
+    /// Keeping the plan plays `.made` (the hold itself is silent).
+    @State private var planKept = 0
     /// The current Now, passed back to the ranker so it holds against equal challengers (no flicker).
     @State private var incumbent: UUID?
     private let planModel = HomePlanModel.shared
@@ -49,17 +51,22 @@ struct NowPage: View {
                     LineHero(line: HomeLines.line(for: fact, now: now)) {
                         PaintKey(paint: Theme.Colors.liveInk, isTap: true, progress: progress(of: process),
                                  action: { model.isWorkoutPresented = true }, label: { _ in
-                                     Text("Resume \(session.workout.title)").textRole(.labelStrong)
+                                     Text(
+                                         "Resume \(workoutName(session.workout.title))"
+                                     )
+                                     .textRole(.labelStrong)
                                  })
-                                 .accessibilityLabel("Resume \(session.workout.title)")
+                                 .accessibilityLabel(
+                                     "Resume \(workoutName(session.workout.title))"
+                                 )
                     }
                 } else if let process = ledger.first, let fact = facts.fact(process: process) {
                     LineHero(line: HomeLines.line(for: fact, now: now), opens: .object(fact.id ?? process.id)) {
                         PaintKey(paint: Theme.Colors.ink, isTap: true, progress: progress(of: process),
                                  action: { model.resume(process) }, label: { _ in
-                                     Text("Resume \(fact.title)").textRole(.labelStrong)
+                                     Text("Resume \(resumeName(process))").textRole(.labelStrong)
                                  })
-                                 .accessibilityLabel("Resume \(fact.title)")
+                                 .accessibilityLabel("Resume \(resumeName(process))")
                     }
                 } else if let top, top.item.kind == .rest {
                     let next = top.item.object
@@ -71,9 +78,16 @@ struct NowPage: View {
                                 planKey
                             } else if model.canStart(next) {
                                 PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startRoutine(next) },
-                                         label: { _ in Text("Start \(next.title)").textRole(.labelStrong) })
-                                    .accessibilityLabel("Start \(next.title)")
-                                    .accessibilityHint("Starts \(next.title) anyway")
+                                         label: { _ in
+                                             Text("Start \(workoutName(next.title))")
+                                                 .textRole(.labelStrong)
+                                         })
+                                         .accessibilityLabel(
+                                             "Start \(workoutName(next.title))"
+                                         )
+                                         .accessibilityHint(
+                                             "Starts \(workoutName(next.title)) anyway"
+                                         )
                             }
                         }
                     } else if let workout = facts.plannedSession(on: now) {
@@ -83,9 +97,14 @@ struct NowPage: View {
                         {
                             PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startWorkout(workout) },
                                      label: { _ in
-                                         Text("Start \(model.store.displayTitle(of: workout))").textRole(.labelStrong)
+                                         Text(
+                                             "Start \(workoutName(model.store.displayTitle(of: workout)))"
+                                         )
+                                         .textRole(.labelStrong)
                                      })
-                                     .accessibilityLabel("Start \(model.store.displayTitle(of: workout))")
+                                     .accessibilityLabel(
+                                         "Start \(workoutName(model.store.displayTitle(of: workout)))"
+                                     )
                         }
                     }
                 } else if planNow {
@@ -116,7 +135,7 @@ struct NowPage: View {
 
             Spacer(minLength: 0)
         }
-        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: finishes)
+        .tesseraFeedback(.done, trigger: finishes)
         .onChange(of: top?.id, initial: true) { _, id in
             incumbent = id
         }
@@ -163,7 +182,8 @@ struct NowPage: View {
     /// skip the whole plan: nothing written, nothing said.
     private func planHero(now _: Date) -> some View {
         let calendar = Calendar.current
-        let forms = PlanWords.heroForms(tasks: planModel.rows.count, workout: planModel.workout, calendar: calendar)
+        let forms = PlanWords.heroForms(tasks: planModel.rows.count, workout: planModel.workout, calendar: calendar,
+                                        shown: { workoutName($0) })
         return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
             if let context = PlanWords.context(first: planModel.rows.first, calendar: calendar) {
                 Text(context)
@@ -190,16 +210,29 @@ struct NowPage: View {
     @ViewBuilder private var planKey: some View {
         if let first = planModel.first {
             PaintKey(paint: Theme.Colors.ink, duration: 0.7, hint: "Keeps the plan", action: {
+                planKept += 1
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
                     planModel.keepPlan(model: model)
                 }
             }, label: { _ in
-                Text("Start with \(first.title)")
+                Text("Start with \(PlanWords.shownTitle(first, model: model))")
                     .textRole(.labelStrong)
                     .fixedSize(horizontal: false, vertical: true)
             })
-            .accessibilityLabel("Start with \(first.title)")
+            .accessibilityLabel("Start with \(PlanWords.shownTitle(first, model: model))")
+            .tesseraFeedback(.made, trigger: planKept)
         }
+    }
+
+    /// The name on a Resume key: the ledger row's own (masked) name, so the key and its row never disagree (G274).
+    private func resumeName(_ process: ProcessSnapshot) -> String {
+        LedgerRow.shown(process, store: model.store, classes: model.classes,
+                        lastWeightKg: BodyWeight.lastKg(in: model.store)).title
+    }
+
+    /// A routine or workout's name on a key, label or hint: "Private workout" when private (G274).
+    private func workoutName(_ title: String) -> String {
+        ObjectPrivacy.routineTitle(title, in: model.store)
     }
 
     /// The workout's progress for the key's ink line (41.5): the share of its sets logged, nil before any.
@@ -296,8 +329,11 @@ struct NowPage: View {
             {
                 if model.canStart(routine) {
                     PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startRoutine(routine) },
-                             label: { _ in Text("Start \(routine.title)").textRole(.labelStrong) })
-                        .accessibilityLabel("Start \(routine.title)")
+                             label: { _ in
+                                 Text("Start \(workoutName(routine.title))")
+                                     .textRole(.labelStrong)
+                             })
+                             .accessibilityLabel("Start \(workoutName(routine.title))")
                 }
             }
         } else if let done = model.finishedToday(now: now).first {
@@ -379,11 +415,16 @@ struct NowPage: View {
 struct DrainBar: View {
     let start: Date
     let end: Date
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let height: CGFloat = 14
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
+        // The bar moves a pixel or two a step, so it steps every 5 s; in Low Power or Reduce Motion once a minute,
+        // with a short fade (G226, K84.19).
+        let calm = reduceMotion || PowerState.isLowPower
+        let step = Self.step(calm: calm)
+        TimelineView(.periodic(from: .now, by: step)) { context in
             let now = AppClock.adjust(context.date)
             let fraction = Self.remaining(start: start, end: end, now: now)
             GeometryReader { proxy in
@@ -399,15 +440,27 @@ struct DrainBar: View {
                                              startPoint: .leading, endPoint: .trailing))
                         .frame(width: max(proxy.size.width * (1 - fraction), 0), height: 6)
                         .blur(radius: 0.3)
-                        .tesseraAnimation(.linear(duration: 1), value: fraction)
+                        .tesseraAnimation(calm ? .easeOut(duration: 0.15) : .linear(duration: step), value: fraction)
                 }
                 .frame(maxHeight: .infinity)
             }
             .frame(height: Self.height)
             .accessibilityElement()
             .accessibilityLabel("Time left")
-            .accessibilityValue("\(Int((fraction * 100).rounded())) percent")
+            // Minutes, as he'd say it: "6 minutes left", never a percent of an interval he didn't set (G234).
+            .accessibilityValue(Self.spoken(end: end, now: now))
         }
+    }
+
+    /// Seconds between steps: 5, or 60 when calm (Low Power, Reduce Motion).
+    static func step(calm: Bool) -> TimeInterval {
+        calm ? 60 : 5
+    }
+
+    /// "6 minutes left", "under a minute left", "done" at the end.
+    static func spoken(end: Date, now: Date) -> String {
+        let left = end.timeIntervalSince(now)
+        return left > 0 ? "\(CookModeCopy.duration(left)) left" : "done"
     }
 
     /// 1 before the start, draining to 0 at the end.
@@ -577,12 +630,24 @@ struct LedgerRow: View {
 
     /// The row's name and next step. A list run never shows a walled name: its title is the shelf's shown name and
     /// its step is built from that and the live count, never the engine's stored "<title>, 6 left" (QA on #814).
+    /// A private recipe's cook reads "Private recipe" and "Step 2 of 6", never the step's own text (QA on #1032).
     static func shown(_ process: ProcessSnapshot, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef],
                       lastWeightKg: Double?) -> (title: String, nextStep: String?)
     {
+        if case let .some(step) = KitchenMask.cookStep(process, store: store, classes: classes) {
+            return (ObjectPrivacy.recipeLabel, step)
+        }
         guard let subject = process.subject, let listClass = classes[.list], let subjectClass = subject.classDef,
               ClassResolver.isSubclass(subjectClass, of: listClass), subject.id != Groceries.listID
-        else { return (process.subject?.title ?? process.object.title, process.nextStep) }
+        else {
+            // A workout or routine reads "Private workout" when its title is private, as everywhere (G274).
+            let isWorkout = [SystemCatalog.Key.workout, .routine].contains { key in
+                guard let target = classes[key], let def = process.subject?.classDef else { return false }
+                return ClassResolver.isSubclass(def, of: target)
+            }
+            let title = process.subject?.title ?? process.object.title
+            return (isWorkout ? ObjectPrivacy.routineTitle(title, in: store) : title, process.nextStep)
+        }
         let name = ListsShelf.shownName(store.displayTitle(of: subject), lastWeightKg: lastWeightKg)
         let left = ListContents(store: store, classes: classes).open(in: subject).count
         // The step under the name doesn't repeat it: "1 left" (Design on #814).

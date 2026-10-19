@@ -9,6 +9,8 @@ import TesseraCore
 public struct ClaudeTessModel: TessModel {
     public static let model = "claude-haiku-5-5"
     static let maxTokens = 512
+    /// The longest phrase sent to Claude, in characters.
+    static let maxPhraseCharacters = 600
     /// Tool rounds before Tess gives up on a phrase.
     static let maxRounds = 3
 
@@ -52,6 +54,14 @@ public struct ClaudeTessModel: TessModel {
         // The switch and the key shape are checked here too, not only in `isAvailable` and the router: a direct
         // caller must not skip them (a4-bypass item 3).
         guard sendsMisses(), !looksLikeClaudeKey(request.text) else { return .missed }
+        // A phrase past the cap never goes: Claude reads a sentence, not a page (a pasted recipe has its own path).
+        guard request.text.count <= Self.maxPhraseCharacters else {
+            flags.heldBack += 1
+            // A refusal is its own answer: the long phrase is not logged as a miss either.
+            var refusal = TessCapture(records: [], line: "That's too long to send. Say it shorter.", source: .none)
+            refusal.isRefusal = true
+            return .asked(refusal)
+        }
         // His "yes, all but the key": a capture miss goes whole, so no secret, money or body wall runs here. The
         // key-shape refusal above stays, and the system prompt is checked below.
         // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).
@@ -62,6 +72,7 @@ public struct ClaudeTessModel: TessModel {
                                                 maxTokens: Self.maxTokens, model: Self.model) * Int64(Self.maxRounds)
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
             // At the cap: the rules and on-device paths go on; Tess says so if nothing else caught it.
+            flags.heldBack += 1
             let reset = TessUsageLedger.monthInterval(containing: now(), calendar: calendar).end
                 .formatted(.dateTime.month(.abbreviated).day())
             return .asked(TessCapture(records: [], line: "Claude paused until \(reset).", source: .none))
@@ -120,6 +131,7 @@ public struct ClaudeTessModel: TessModel {
             ledger.record(use: .capture, model: Self.model, input: usage.input, output: usage.output,
                           costNano: usage.cost, latency: Date().timeIntervalSince(started),
                           outcome: failure.outcome, requestID: requestID, at: now())
+            logSent(request, requestID: requestID, engine: engine)
             discard(records, engine: engine)
             // Offline: the phrase waits for Claude instead of being lost (section 7), unless it's already a retry.
             if failure.outcome == "offline", !retrying,
@@ -132,6 +144,7 @@ public struct ClaudeTessModel: TessModel {
         ledger.record(use: .capture, model: Self.model, input: usage.input, output: usage.output,
                       costNano: usage.cost, latency: Date().timeIntervalSince(started),
                       outcome: records.isEmpty ? "nothing" : "works", requestID: requestID, at: now())
+        logSent(request, requestID: requestID, engine: engine)
         guard !records.isEmpty else { return .missed }
         // Never claim more than was done: Claude's own line only if it passes Tess's voice checks.
         var line = reply.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -146,12 +159,22 @@ public struct ClaudeTessModel: TessModel {
             ].summary) + "." : "\(records.count) things done."
         }
         // The first miss ever sent says where it went, once (Product 8:28 PM PT Oct 15).
+        var isNotice = false
         if !flags.noticeShown {
             flags.noticeShown = true
+            isNotice = true
             line = phraseWalled ? "Sent that to Claude. Turn this off in Settings: Claude."
                 : "Sent \u{201C}\(request.text)\u{201D} to Claude. Turn this off in Settings: Claude."
         }
-        return .handled(TessCapture(records: records, line: line, source: .claude))
+        var capture = TessCapture(records: records, line: line, source: .claude)
+        capture.isNotice = isNotice
+        return .handled(capture)
+    }
+
+    /// The words of this request, as sent, on the phone only (G653), beside the Tess Call row just written.
+    private func logSent(_ request: TessRequest, requestID: String?, engine: ActionEngine) {
+        TessSentLog(store: engine.store, classes: engine.classes, flags: flags)
+            .record(words: request.text, use: request.use, requestID: requestID, at: now())
     }
 
     /// Takes back any ghost past the per-phrase cap (a single call may write several).
@@ -332,5 +355,13 @@ public final class ClaudeMissFlags {
     public var noticeShown: Bool {
         get { defaults.bool(forKey: Self.noticeKey) }
         set { defaults.set(newValue, forKey: Self.noticeKey) }
+    }
+
+    static let heldBackKey = "tess.claudeHeldBack"
+
+    /// Requests that never left the phone (a walled or cook phrase, too long, the month cap): "N held back".
+    public var heldBack: Int {
+        get { defaults.integer(forKey: Self.heldBackKey) }
+        set { defaults.set(newValue, forKey: Self.heldBackKey) }
     }
 }

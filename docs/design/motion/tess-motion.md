@@ -230,16 +230,16 @@ Two switches, two different reasons. **Reduce Motion** is his accessibility sett
 | **Working** (5) | fade 500 ms, split 900 ms into 12 lights, readers, gather 820 ms, colour back, Done | **shown by position and size only (G225, D4):** 200 ms crossfade to the loosened pose, the three mains 1.5× from the centre, the satellites held at their idle places; **opacity 1, grade and halo exactly as at rest**; 200 ms back; Done its still frame | fade and gather unchanged; **six lights, not twelve** (the six children never leave the dabs); **no readers**; constellation at **30 fps** (not 60); the colour returns over the same 550 ms; Done as built |
 | **Thinking** (as built) | per-dab pulse at 60 | still, shown by size | 30 fps |
 | **Listening** (8) | bloom ×1.4 to ×1.55 with the mic level, travel to (196, 698) | blooms in the corner, no travel; eyes hold | unchanged but the level smoothing at 30 fps; travel stays (an offset) |
-| **A one-ask wait** (8) | breath 4.8 s, 4 pt lean | no lean; the breath still | lean stays; 20 fps as idle |
+| **A one-ask wait** (8) | breath 4.8 s, 4 pt lean | no lean; the breath still | lean stays; 30 fps as idle (DEC:1069 item 3) |
 | **Done** (as built) | pour, swell, splash, relax 1.8 s + `.success` | its still frame, 1.8 s, `.success` | unchanged (1.8 s once; cheapening Done changes Done) |
 | **Reward beat** (6) | glance, gather 180 / 320 ms, brighten 1.12, one blink | no gather, no glance; the brighten is a 200 ms crossfade; the blink stays | unchanged (940 ms, six fills) |
 | **Repaint / living colour** (7) | three pools 120 ms apart, 900 ms, wet swell, dry 2.8 s | one 600 ms crossfade of the pigments, no swell | **deferred**: no repaint starts in Low Power (the palette waits for the next idle after Low Power ends); a repaint in flight finishes at 30 fps |
-| **Look switch flood** (11) | `PaintFlood` 700 ms from the soul | 250 ms crossfade (as built) | unchanged (one pass, 700 ms) |
+| **Look switch flood** (11) | `PaintFlood` 700 ms from the soul | 150 ms crossfade (G227) | 150 ms crossfade (Low Power = Reduce Motion) |
 | **Outside the app** (9) | nothing of her; the return glance | the return glance stays (a spring under 300 ms) | nothing to change; the widget timeline is the system's |
 | **Haptics** | one per moment | unchanged, beat for beat | unchanged (a haptic costs nothing worth a dead moment) |
 
 **The Low Power rules, in four lines**
-1. Tick: idle and resting 20 fps, every other mode 30 fps, never 60. The constellation and the listening bloom are the two that notice; both still read (the split's 900 ms is 27 frames).
+1. Tick: every mode 30 fps in Low Power, never 60 (ruled DEC:1069 item 3; idle and resting were 20 fps in the first draft). The constellation and the listening bloom are the two that notice; both still read (the split's 900 ms is 27 frames).
 2. Layers: no readers' canvas, no children (six lights), halo breath held. That is at most 9 blurred fills a frame in any mode, against 14 in full.
 3. Nothing leaves the dock: no roam. Drag stays (his hand, not hers), the Done in place rule is moot.
 4. Nothing new starts that only beautifies: no repaint. Everything that answers him (listening, working, Done, the beat, the lines) keeps its timing exactly, so Low Power never changes what a moment *means*, only how much it costs.

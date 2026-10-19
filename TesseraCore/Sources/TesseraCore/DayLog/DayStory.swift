@@ -101,7 +101,7 @@ public enum DayStory {
         "removeRecipeFromGroceries", "moveTask", "keepPlannedTask", "rollForwardTasks", "waitOnTask", "startTask",
         "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
-        "endProcess", "writeSettings",
+        "endProcess", "writeSettings", "createClass",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).
@@ -478,6 +478,10 @@ public struct StoreDayLookup: DayLookup {
            ClassResolver.isSubclass(classDef, of: cook) || ClassResolver.isSubclass(classDef, of: recipe)
         {
             return ObjectPrivacy.cookTitle(object, in: store)
+        }
+        // A list with a walled name reads "Private list" in the story, as it does everywhere else (G75).
+        if let list = classes[.list], let classDef = object.classDef, ClassResolver.isSubclass(classDef, of: list) {
+            return ListContents.shownName(of: object, in: store)
         }
         return object.title
     }

@@ -177,7 +177,7 @@ public struct CreateTaskIntent: AppIntent {
                 return "\(SecretWords.title), kept."
             }
             let isPrivate = stored == ObjectPrivacy.taskLabel
-                || PrivateFacts.isPrivateTitle(stored, lastWeightKg: BodyWeight.lastKg(in: engine.store))
+                || ObjectPrivacy.isPrivateTitle(stored, lastWeightKg: BodyWeight.lastKg(in: engine.store))
             return isPrivate ? TessCaptureEngine.privateTaskLine(startsAt, context: context) : "\(made.record.summary)."
         }
     }
@@ -202,7 +202,9 @@ public struct TellTessIntent: AppIntent {
     public func perform() async throws -> some IntentResult & ProvidesDialog {
         let capture = await runtime.tess.capture(phrase, context: TessContext(commitImmediately: true))
         // What it wrote is never read back in his words when the words are private (Product P14).
-        let hidden = PrivateFacts.isPrivateTitle(phrase, lastWeightKg: BodyWeight.lastKg(in: runtime.engine.store))
+        // Items, lists, recipes, workouts and tasks all go through the one check (G105).
+        let last = BodyWeight.lastKg(in: runtime.engine.store)
+        let hidden = ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: last)
             && !capture.records.isEmpty
             && !capture.line.hasPrefix("\(SecretWords.title), kept") && !capture.line.hasPrefix("Task added")
         return .result(dialog: "\(hidden ? "Saved." : capture.line)")

@@ -41,6 +41,10 @@ enum Haptic: Equatable, Sendable {
     case pinned
     /// His finger strokes across Tess (tess-picks.md idea 3): one soft tick as it comes onto her.
     case soulStroke
+    /// The area word lands in the top bar after the index (sheet 73 A): one soft impact on arrival.
+    case areaLands
+    /// The basket is cleared (Clear the basket, ruled .success by Product on #957).
+    case cleared
     /// A write did not save ("Didn't save that. Try again."): the map's single warning, once per failure.
     case notSaved
 
@@ -65,6 +69,8 @@ enum Haptic: Equatable, Sendable {
         case .aisleCleared: .impact(weight: .medium)
         case .pinned: .impact(weight: .medium)
         case .soulStroke: .impact(flexibility: .soft, intensity: 0.3)
+        case .areaLands: .impact(flexibility: .soft)
+        case .cleared: .success
         case .notSaved: .warning
         }
     }

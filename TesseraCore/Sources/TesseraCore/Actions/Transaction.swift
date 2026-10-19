@@ -82,6 +82,17 @@ public struct Transaction {
         store.noteChange(object)
     }
 
+    /// Creates a user class and logs it; undo removes it while nothing uses it.
+    @discardableResult
+    public mutating func createClass(name: String, parent: ClassDef?, symbolName: String = "circle",
+                                     colorRole: String = "neutral") -> ClassDef
+    {
+        let classDef = store.createClass(name: name, parent: parent, symbolName: symbolName, colorRole: colorRole)
+        ops.append(.createClass(classID: classDef.id, parent: parent?.id, name: name, symbolName: symbolName,
+                                colorRole: colorRole))
+        return classDef
+    }
+
     /// Soft-deletes the object and its children; undo restores them.
     public mutating func delete(_ object: ObjectRecord) {
         guard !object.isDeleted else { return }

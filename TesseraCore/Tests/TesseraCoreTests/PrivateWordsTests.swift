@@ -7,7 +7,7 @@ import Testing
 @MainActor
 struct PrivateWordsTests {
     /// Words that must never leave the phone, and words that may.
-    static let secrets = ["hunter2zebra", "82.4", "120.50", "Dr Lee", "zebra99", "lexapro", "advil", "melatonin"]
+    static let secrets = ["hunter2zebra", "82.4", "120.50", "therapist", "zebra99", "lexapro", "advil", "melatonin"]
     static let ordinary = ["Bench felt heavy", "Buy lemons", "Pasta night"]
 
     func folder() throws -> URL {
@@ -25,7 +25,7 @@ struct PrivateWordsTests {
         try engine.perform(CreateNote(body: "weighed 82.4 kg this morning"), by: .user) // a weigh-in note
         try engine.perform(CreateNote(body: "paid 120.50 for shoes"), by: .user) // money
         try engine.perform(CreateTask(title: "Buy lemons"), by: .user)
-        try engine.perform(CreateTask(title: "Pay Dr Lee"), by: .user) // a money task
+        try engine.perform(CreateTask(title: "Pay the therapist"), by: .user) // a health title word
         let list = try engine.perform(CreateList(name: "Packing"), by: .user).output
         try engine.perform(AddListItem(list: list.id, text: "Pasta night"), by: .user)
         try engine.perform(AddListItem(list: list.id, text: "reset router zebra99 pin"), by: .user) // a secret line
@@ -120,7 +120,7 @@ struct PrivateWordsTests {
         for word in Self.secrets + Self.ordinary {
             #expect(blob.contains(word), "\(word) missing from the local copy")
         }
-        #expect(titles.contains("Pay Dr Lee"))
+        #expect(titles.contains("Pay the therapist"))
         // Built from pieces: a key shape never sits in a source file.
         let prefix = ["sk", "ant"].joined(separator: "-") + "-"
         #expect(!blob.contains(prefix))
@@ -254,7 +254,7 @@ struct PrivateWordsFalsePositiveTests {
     @Test func moneyAndBodyTitlesStayPrivate() throws {
         let store = ObjectStore.open(inMemory: true)
         let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
-        try engine.perform(CreateTask(title: "Pay Dr Lee 120"), by: .user)
+        try engine.perform(CreateTask(title: "Pay the therapist"), by: .user)
         try engine.perform(CreateTask(title: "weighed 82.4 kg"), by: .user)
         #expect(PrivateWords.labels(in: store.context).count == 2)
     }

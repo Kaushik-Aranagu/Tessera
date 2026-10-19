@@ -13,6 +13,7 @@ Index of the docs in `docs/product/`.
 - [groceries-ai-runnable-rows.md](groceries-ai-runnable-rows.md): AI-12 engine acceptance: runnable rows
 - [groceries-side-acceptance.md](groceries-side-acceptance.md): Groceries FOR WHAT: sheet 77 acceptance, rows GS1 to GS16 (K17)
 - [grocery-capture-miss-acceptance.md](grocery-capture-miss-acceptance.md): Capture-miss routing for grocery phrases (rows CM1..CM14)
+- [huddle-batches-oct19.md](huddle-batches-oct19.md): Huddle batches, Oct 19: the build order in nine batches
 - [kitchen-copy-recheck-oct17.md](kitchen-copy-recheck-oct17.md): Kitchen copy recheck, Oct 17 (K69)
 - [kitchen-counts-vs-claude-acceptance.md](kitchen-counts-vs-claude-acceptance.md): Kitchen counts vs Claude: acceptance rows KC1 to KC32
 - [kitchen-error-states-acceptance.md](kitchen-error-states-acceptance.md): K16: Kitchen error and offline states against sheet 84
@@ -56,9 +57,11 @@ Index of the docs in `docs/product/`.
 - [recipe-clock-dst-acceptance.md](recipe-clock-dst-acceptance.md): Recipe clock start minutes across DST, midnight and the 4 am day (RC1-RC10)
 - [recipe-edit-acceptance.md](recipe-edit-acceptance.md): Recipe edit in place: defaults and acceptance (kitchen v2, slice 1 of the default cut)
 - [recipe-plate-acceptance.md](recipe-plate-acceptance.md): Recipe and Ingredient plate: acceptance (Design sheet 88, Product 8:37 PM Oct 16)
+- [review-choices-oct19.md](review-choices-oct19.md): Review choices for Settings, Oct 19: 19 switches, defaults keep today's behavior
 - [ship-list-build.md](ship-list-build.md): Build ship list: make an app from a sentence
 - [ship-list-m5-money.md](ship-list-m5-money.md): Money ship list: second slice for M5 (engine-first)
 - [ship-list-m5-people.md](ship-list-m5-people.md): People ship list: fourth slice for M5 (engine-first)
 - [ship-list-m5-reading.md](ship-list-m5-reading.md): M5 Reading ship list (engine-first)
 - [ship-list-m5-upkeep.md](ship-list-m5-upkeep.md): Home upkeep ship list: third slice for M5 (engine-first)
+- [training-switch-specs-oct19.md](training-switch-specs-oct19.md): Training switch specs for the Settings Review section, Oct 19
 - [us-shop-acceptance.md](us-shop-acceptance.md): US shop: acceptance (K7)

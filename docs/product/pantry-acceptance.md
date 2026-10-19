@@ -1,6 +1,6 @@
 # Pantry area: defaults and acceptance (kitchen v2, after a week of real v1 use)
 
-*Kitchen lead, 2026-10-16, drafted ahead. Kaushik (Oct 16) wants a Pantry area that knows what he has, feeds Groceries and Recipes, and lets the ingredient peek show need against have; Product places it as the home for the held R (usually have) and P (pantry light) slices, after a week of Kitchen v1, not in the next builds. Engine rules come from Research's `docs/research/pantry-light.md` (rules 1-9), Design's `kitchen-v2.md` §P, §R, §W, and `kitchen-v2-backlog.md` ("Pantry area"). The screen rows wait for Design's sheet; the engine rows do not.*
+*Kitchen lead, 2026-10-16, drafted ahead. Kaushik (Oct 16) wants a Pantry area that knows what he has, feeds Groceries and Recipes, and lets the ingredient peek show need against have; Product places it as the home for the held R (usually have) and P (pantry light) slices, pulled in Oct 19 (was: after a week of Kitchen v1, not in the next builds). Engine rules come from Research's `docs/research/pantry-light.md` (rules 1-9), Design's `kitchen-v2.md` section P, section R, section W, and `kitchen-v2-backlog.md` ("Pantry area"). The screen rows wait for Design's sheet; the engine rows do not.*
 
 ## The one rule
 

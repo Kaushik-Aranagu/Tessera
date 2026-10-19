@@ -18,6 +18,31 @@ enum PrivateWords {
         ObjectPrivacy.noteLabel, ObjectPrivacy.taskLabel, ObjectPrivacy.memoryLabel, ObjectPrivacy.keptNoteLabel,
     ]
 
+    /// Claude's own bookkeeping stays on the phone: the receipts (`tessCall`: what was asked, when, what it cost) and
+    /// the phrases waiting for Claude (`tessWaiting`) are in the local copy only, never in the iCloud copy or the
+    /// shared export (Research, Claude-layer gap hunt).
+    static let localOnlyClassKeys: Set<String> = [
+        SystemCatalog.Key.tessCall.systemKey,
+        SystemCatalog.Key.tessWaiting.systemKey,
+        SystemCatalog.Key.tessSent.systemKey,
+    ]
+
+    /// The family, not the exact class: a subclass of Tess Call, Tess Waiting or Tess Sent is local-only too.
+    static func isLocalOnly(_ record: ObjectRecord) -> Bool {
+        var current = record.classDef
+        var depth = 0
+        while let classDef = current, depth < 12 {
+            if let key = classDef.systemKey, localOnlyClassKeys.contains(key) { return true }
+            current = classDef.parent
+            depth += 1
+        }
+        return false
+    }
+
+    static func localOnlyIDs(in context: TesseraContext) -> Set<UUID> {
+        Set(context.all(ObjectRecord.self).filter(isLocalOnly).map(\.id))
+    }
+
     static func isPrivateText(_ text: String, lastWeightKg: Double?) -> Bool {
         labels.contains(text.trimmingCharacters(in: .whitespacesAndNewlines))
             || ObjectPrivacy.isPrivateText(text, lastWeightKg: lastWeightKg)
@@ -25,16 +50,13 @@ enum PrivateWords {
 
     /// Medical and care words that make a bare title private even with no number (Product: money and body titles are
     /// private in an export). Not the Home pack's rules for what goes to Claude (loose numbers, places, people).
-    static let titleWords: Set<String> = PrivateFacts.moneyWords.union(TessMemoryScreen.healthWords)
-        .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "dr", "dentist",
-                "clinic", "hospital"])
+    static let titleWords: Set<String> = ObjectPrivacy.titleWords
 
     /// A title is private by the usual rule, or when it holds a money or health word.
+    /// ObjectPrivacy.isPrivateTitle asks this: the one check (G105).
     static func isPrivateTitle(_ title: String, lastWeightKg: Double?) -> Bool {
-        isPrivateText(title, lastWeightKg: lastWeightKg)
-            || PrivateFacts.words(title.lowercased()).contains(where: titleWords.contains)
-            // A bare medicine is a health fact (QA on #710): "lexapro", "advil", "take melatonin".
-            || EngineWall.isHealth(title, lastWeightKg: lastWeightKg)
+        labels.contains(title.trimmingCharacters(in: .whitespacesAndNewlines))
+            || ObjectPrivacy.isPrivateTitle(title, lastWeightKg: lastWeightKg)
     }
 
     /// A list of numbers ("25, 20, 15, 1.25": the plates an equipment object holds) is not a spend or a weigh-in.
@@ -235,6 +257,11 @@ extension TesseraBackup {
         // Deleted rows must not linger in free pages: overwrite on delete, then rebuild the file below.
         try copy.writeWithoutTransaction { try $0.execute(sql: "PRAGMA secure_delete = ON") }
         try copy.write { db in
+            for id in PrivateWords.localOnlyIDs(in: context).map(\.uuidString) {
+                try db.execute(sql: "DELETE FROM object WHERE id = ?", arguments: [id])
+                try db.execute(sql: "DELETE FROM link WHERE fromID = ? OR toObjectID = ?", arguments: [id, id])
+                try db.execute(sql: "DELETE FROM op WHERE instr(objectIDs, ?) > 0", arguments: [id])
+            }
             for id in ids.keys.map(\.uuidString) {
                 try db.execute(sql: "DELETE FROM object WHERE id = ?", arguments: [id])
                 try db.execute(sql: "DELETE FROM link WHERE fromID = ? OR toObjectID = ?", arguments: [id, id])

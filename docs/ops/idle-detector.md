@@ -1,6 +1,6 @@
 # Idle detector: what a team pulls when it is under its pace line
 
-Ops, 1:20 AM PT Oct 18. One page. Pace line numbers: ops/reset-checklist-oct18.md (0.54 percent an hour from the Sun Oct 18 5 AM reset, plus or minus 5 points). Labels: **[M]** measured, **[I]** inferred.
+Ops, 1:12 AM PT Oct 18. One page. Pace line numbers: ops/reset-checklist-oct18.md (0.54 percent an hour from the Sun Oct 18 5 AM reset, plus or minus 5 points). Labels: **[M]** measured, **[I]** inferred.
 
 ## When a team counts as idle
 A lead is idle when ALL are true: no worker running for it, no PR waiting on its fix, and its board Next has an item it could start. A team is also under pace when the week % is 5 or more points below the pace line (the coordinator reads it; the lead does not check the meter itself).
