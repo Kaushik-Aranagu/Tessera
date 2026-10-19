@@ -225,23 +225,33 @@ private struct MuscleList: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, Theme.Spacing.s)
         } else {
-            VStack(spacing: Theme.Spacing.l) {
-                LazyVStack(spacing: 0) {
-                    ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
-                        MuscleRowView(row: row, index: index).riseIn(index, token: token, stagger: 0.04)
+            // Stopgap for the 196 pt MUSCLES window (Design): the figures pinned on the left, the rows scrolling on
+            // their
+            // own on the right, so neither hides the other.
+            HStack(alignment: .top, spacing: Theme.Spacing.m) {
+                figures
+                ScrollView(.vertical) {
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                            MuscleRowView(row: row, index: index).riseIn(index, token: token, stagger: 0.04)
+                        }
                     }
                 }
-                figures
+                .scrollIndicators(.hidden)
             }
+            .frame(height: Self.window)
         }
     }
 
-    /// Both sides, always drawn side by side (no flip), under the rows (board 84). At accessibility text sizes they
-    /// shrink to 220 tall and the rows above stack (imagery-88.md). VoiceOver reads them as one element.
+    /// The MUSCLES window's height.
+    private static let window: CGFloat = 196
+
+    /// Both sides, side by side (no flip), about 70 pt wide and 150 tall each, pinned. VoiceOver reads them as one
+    /// element.
     private var figures: some View {
         let muscles = rows.map { (name: $0.name, role: MuscleRole($0.role)) }
         let spoken = MuscleWords.works(rows.map(\.name))
-        return HStack(spacing: Theme.Spacing.m) {
+        return HStack(spacing: Theme.Spacing.xs) {
             ForEach([false, true], id: \.self) { back in
                 MuscleFigure(back: back, roles: MuscleFigureMap.roles(muscles, back: back),
                              onTap: { regionID in
@@ -252,10 +262,9 @@ private struct MuscleList: View {
                                  }
                              },
                              spoken: back ? "" : spoken)
-                    .frame(maxWidth: typeSize.isAccessibilitySize ? 220 * 200 / 440 : 166)
+                    .frame(width: 70, height: 154)
             }
         }
-        .frame(maxWidth: .infinity)
     }
 }
 
@@ -280,13 +289,15 @@ private struct MuscleRowView: View {
                          seed: index)
                     .opacity(primary ? 1 : 0.7)
                     .frame(width: 34, alignment: .leading)
-                Text(MuscleWords.shown(row.name))
-                    .textRole(.bodyStrong)
-                    .foregroundStyle(Theme.Colors.ink)
-                Spacer(minLength: Theme.Spacing.s)
-                Text(ExerciseWords.role(row.role))
-                    .font(PageType.small)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(MuscleWords.shown(row.name))
+                        .textRole(.bodyStrong)
+                        .foregroundStyle(Theme.Colors.ink)
+                    Text(ExerciseWords.role(row.role))
+                        .font(PageType.small)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                }
+                Spacer(minLength: 0)
             }
             .frame(minHeight: 56)
             .contentShape(Rectangle())
