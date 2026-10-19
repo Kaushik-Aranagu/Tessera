@@ -94,9 +94,12 @@ final class FinishNudges {
         let rounded = Date(timeIntervalSinceReferenceDate: fire.timeIntervalSinceReferenceDate.rounded())
         guard last?.id != id || last?.at != rounded || last?.title != title else { return }
         last = (id, title, rounded)
-        enqueue { [scheduler] in
-            // Once per workout: if it already went out, it is never scheduled again.
+        // Remembered now (device-only), so a later set after this time has passed finds the nudge already spent.
+        memory.setScheduled(id, at: rounded)
+        enqueue { [scheduler, memory] in
+            // If it already went out it is retired for good and never scheduled again.
             if await scheduler.wasDelivered(id: id) {
+                memory.retire(id)
                 return
             }
             await scheduler.schedule(id: id, title: title, at: rounded)
