@@ -267,3 +267,40 @@ public struct CalendarDay {
         }
     }
 }
+
+/// Busy time inside a range: the union of the mirrored busy events clipped to it, never double-counted (slice 3).
+@MainActor
+public enum CalendarBusy {
+    public static func minutes(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], from: Date,
+                               to: Date) -> Double
+    {
+        guard to > from, let eventClass = classes[.event] else { return 0 }
+        var spans: [(start: Date, end: Date)] = []
+        for object in store.objects(of: eventClass) where !object.isDeleted {
+            guard store.value("busy", of: object) == .bool(true),
+                  let start = store.value("start", of: object)?.dateValue,
+                  let end = store.value("end", of: object)?.dateValue else { continue }
+            let clippedStart = max(start, from), clippedEnd = min(end, to)
+            if clippedStart < clippedEnd {
+                spans.append((clippedStart, clippedEnd))
+            }
+        }
+        spans.sort { $0.start < $1.start }
+        var total: TimeInterval = 0
+        var current: (start: Date, end: Date)?
+        for span in spans {
+            if let held = current, span.start <= held.end {
+                current = (held.start, max(held.end, span.end))
+            } else {
+                if let held = current {
+                    total += held.end.timeIntervalSince(held.start)
+                }
+                current = span
+            }
+        }
+        if let held = current {
+            total += held.end.timeIntervalSince(held.start)
+        }
+        return total / 60
+    }
+}
