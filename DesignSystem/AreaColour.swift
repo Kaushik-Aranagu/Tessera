@@ -32,3 +32,15 @@ extension Theme.Colors {
         return self.area(area).opacity(ThemeStore.shared.paintLook.isDark ? 0.03 : 0.025)
     }
 }
+
+extension HomeSpatialView.Page {
+    /// The area a Home page belongs to (sheet 86 C): Today, with no area of its own, stays neutral.
+    var area: AppArea {
+        switch self {
+        case .review: .review
+        case .today: .neutral
+        case .training: .training
+        case .kitchen: .kitchen
+        }
+    }
+}

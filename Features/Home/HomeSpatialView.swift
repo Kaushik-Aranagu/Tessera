@@ -96,6 +96,8 @@ struct HomeSpatialView: View {
                 HStack(spacing: 0) {
                     ForEach(Page.allCases) { sibling in
                         fitted(content(for: sibling))
+                            // The page ground leans 2.5% toward its area (sheet 86 C); Today stays neutral.
+                            .background { Theme.Colors.groundTint(sibling.area) }
                             .containerRelativeFrame(.horizontal)
                             // The hero's parallax stays inside its own page.
                             .clipped()
