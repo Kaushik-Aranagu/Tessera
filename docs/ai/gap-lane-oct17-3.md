@@ -41,7 +41,7 @@ From master 7b0cda7. Seven routes exist in code (`TessUse` and the clients). "Wa
 
 | Route | Model | What leaves | Walls on it |
 |---|---|---|---|
-| Capture (`capture`), after #860 | Haiku 5.5, 512 tokens, 3 rounds | His phrase whole (money, body, health and secret words included, by his "all but the key"); the date line; the current exercise name and last set (kg x reps) if not walled; 11 tool definitions [code] | The key and key-shaped text refused in the router and again in the Claude route; Siri and Shortcuts never send; a walled phrase the grammar already answered stays; no notes, people, tasks, body weight or money in the pack; a walled phrase's reply is the masked receipt; not stored in the miss log or retry inbox; a 500-character cap is specified, not built (part 2 of this lane). Cook timers: the phone should answer them, but no cook check exists yet [code, Research #880] |
+| Capture (`capture`), after #860 | Haiku 5.5, 512 tokens, 3 rounds | His phrase whole (money, body, health and secret words included, by his "all but the key"); the date line; the current exercise name and last set (kg x reps) if not walled; 11 tool definitions [code] | The key and key-shaped text refused in the router and again in the Claude route; Siri and Shortcuts never send; a walled phrase the grammar already answered stays; no notes, people, tasks, body weight or money in the pack; a walled phrase's reply is the masked receipt; not stored in the miss log or retry inbox; phrases over 600 characters are refused with "That's too long to send. Say it shorter." and a phrase with "timer" or "timers", or any phrase while a Cook is the running process, is read on the phone only (both built in Core #884, merged; the cook hold is wider than the ruling, see pre-review-notes-oct17.md section 2) |
 | Question (`question`) | Haiku 5.5 | His question; counts come from the phone's `answerQuery` over an allow-list of classes [code for the tool, docs for the pack] | Same router walls as capture; `answerQuery` counts only allow-listed classes (never money, body or his own classes) |
 | Paste (`paste`) | Haiku 5.5 [docs] | Pasted text the parsers could not read | Key-shaped paste cut or refused in the view; `SecretWords.cut`; open gaps G1 to G9 in Research #876 (stores without a key check) |
 | Recipe link (`recipeLink`) | Haiku 5.5 | Page text, about 1,500 characters before the first "ingredient" and 22,000 after, cap 24,000 [code] | Lines that are key-shaped or walled dropped; `SecretWords.cut`; money spans stripped; a login or password line dropped; https only, no private hosts, redirects checked per hop with `safeURL` but not the key test (G9); `NoRedirects` on the client; reply checked for secret words |
@@ -51,7 +51,7 @@ From master 7b0cda7. Seven routes exist in code (`TessUse` and the clients). "Wa
 
 **Not built on master (no text can leave from these yet):** week story, living colour, Ask about this (`askSubject`), Facts Claude may fill (`fillFacts`), grocery connect (`linkItems`).
 
-**Gaps in this table, in one list for Core:** (1) cook check before the capture route; (2) 500-character cap on capture; (3) the nine key-shape store gaps in #876; (4) Home done hero shows a private title on the phone; (5) the money screen in the router and `PrivateFacts` must agree on one list (ruling G105 makes that the same function).
+**Gaps in this table, in one list for Core:** (1) and (2), the cook check and the 600-character cap, are built in Core #884 (merged); remaining: (3) the nine key-shape store gaps in #876; (4) Home done hero shows a private title on the phone; (5) the money screen in the router and `PrivateFacts` must agree on one list (ruling G105 makes that the same function).
 
 ## 4. Tess as first contact: open questions for when Kaushik unparks it
 
@@ -68,12 +68,12 @@ Parked ideas are in `parked.md`. Nothing here asks for research, calls or spend.
 9. **Roam and motion.** The Tess motion lab owns the near-term fix; does this replace it, or wait?
 10. **Evals.** A job that decides what to show needs a test that cannot be passed by luck; who writes it and what is the bar?
 
-## 5. The 500-character phrase cap: UI line
+## 5. The phrase cap: UI line (as built; replaces the 500-character draft)
 
-Needed, one line, because the alternative is a silent drop.
+Product's ruling, 4:14 PM Oct 17: the cap is what Core #884 built.
 
-- **Trigger:** the trimmed capture phrase is over 500 characters, after the key refusal.
-- **Line (Tess, no exclamation, no haptic):** "That's long. Keep it as a note?" with KEEP and NOT NOW. KEEP makes a note (private by default if a wall word is in it, per the existing note rule); NOT NOW does nothing and keeps nothing.
-- **Nothing sent, nothing logged:** no Claude event, no ledger row, no miss-log line for a walled phrase.
+- **Trigger:** the capture phrase is over **600** characters.
+- **Line:** "That's too long to send. Say it shorter." A refusal: no note offer, no KEEP or NOT NOW.
+- **Nothing sent, nothing logged:** no Claude event, no ledger row, and not a miss-log line.
 - **Siri and Shortcuts:** unchanged; they never send.
-- **Test:** `longPhraseNeverReachesClaude` (501 characters: no request; 500: sent) and `longPhraseOffersANoteAndWritesNothingUntilKeep`.
+- **Tests:** in #884.

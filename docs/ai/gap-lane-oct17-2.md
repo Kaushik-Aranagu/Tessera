@@ -6,12 +6,12 @@ For: Product (Core gets the fix designs). From: AI architecture. Read against ma
 
 | Ruling (decisions.md, 4:10 PM Oct 17) | `architecture.md` before | Fits? | Doc change |
 |---|---|---|---|
-| Cook timer phrases never leave the phone; Core adds a cook check before the route | Section 7 "never leaves" list names cook timers | Doc is right; the route has no cook check yet (#880 trace) | Add "enforced by a cook check before the route (Core, pending); until it lands the route does not stop them" |
-| A number after "at" or "by" in clock shape ("dinner at 7.30") is a time, not money | Money wall says "a money screen", no clock exception | Does not fit | Money bullet: add the clock-shape exception; money still needs a currency sign or amount words |
+| Cook timer phrases never leave the phone; Core adds a cook check before the route | Section 7 "never leaves" list names cook timers | Doc is right; the check is built in Core #884 | Add "enforced before the route (Core #884, merged): a phrase with timer or timers, and anything said while a Cook is the running process; wider than the ruling, narrowing is open in pre-review-notes-oct17.md section 2" |
+| A number after "at" or "by" in clock shape ("dinner at 7.30") is a time, not money | Money wall says "a money screen", no clock exception | Does not fit | Money bullet: add the clock-shape exception (not when a money word is present) and keep a bare two-place decimal as a price |
 | The capture pack carries no open tasks | Capture row lists "open task titles" in the pack | Does not fit, and the code agrees with the ruling | Remove "open task titles" from the capture row; add "a move with no local match is a plain miss, not a guess" |
 | Number-word weights ("eleven stone four") are body facts, walled like digit weights | Body wall lists weight numbers | Fits; add the number-word form | One clause on the body bullet |
 
-The doc edits ride with this PR (architecture.md capture row, the never-leaves bullet and the money bullet). Core's two code items are the cook check and the clock-shape test in `isMoneyShaped`; the test names are in #880 section 2b (`cookPhraseNeverReachesClaude`, `cookCheckRunsBeforeTheRouter`).
+The doc edits ride with this PR (architecture.md capture row, the never-leaves bullet and the money bullet). Both code items are built in Core #884 (cook check and the clock-shape test in `isMoneyShaped`).
 
 ## 2. Key-shape refusal audit (Research #876 gaps) and one fix design
 
@@ -33,7 +33,7 @@ The doc edits ride with this PR (architecture.md capture row, the never-leaves b
 
 ## 3. Phrase cap and "What was sent" row for walled phrases (spec)
 
-**Cap.** The Claude capture route sends at most **500 characters** of the phrase. Longer: nothing is sent, the rules line shows, and the phrase is handled as a miss on the phone ("That's long. Paste it as a note?" with the usual keep). 500 is a guess, well above a spoken or typed capture; Research should check it against the 913-row suite before Core builds it. A pasted recipe or email never reaches Claude by this route. The count is of the trimmed phrase after the key refusal, before any wall test. A test `longPhraseNeverReachesClaude` with a 501-character phrase and a 500-character phrase.
+**Cap (as built in Core #884, Product 4:14 PM Oct 17).** The Claude capture route sends at most **600 characters** of the phrase (`maxPhraseCharacters`). Longer: nothing is sent, the line reads "That's too long to send. Say it shorter." (a refusal, so the long phrase is not logged as a miss either). A pasted recipe has its own path. This replaces the 500-character, note-offer draft.
 
 **What was sent row.** Every capture-miss request writes one row to the log in `what-was-sent-log.md`:
 - Walled phrase (secret, money, body or health word per `SecretWords` or `PrivateFacts`): the row reads "Sent to Claude: a private phrase, <time>" with the job, the cost and the outcome. The phrase text is not stored (the log is on the phone, but a log that held the words would be the one place the walled phrase is kept in plain text). A tap shows "Sent whole because you chose All but the key."
@@ -45,7 +45,7 @@ The doc edits ride with this PR (architecture.md capture row, the never-leaves b
 
 Finding (one fix, high value): `HomeFacts.fact(done:)` at line 503 builds the Home fact from `summary.title`, which is unmasked (`WorkoutSummary.doneLine` is internal on purpose, QA on #787; only `doneLine(in:)` masks). `NowPage.swift:305` feeds that fact to `HomeLines.line`, and I found no masking in `HomeLines.swift` (the only privacy check there is the cook title at line 599). So a done workout from a private routine shows its real title on the Home hero. The same holds for the running or paused workout branch at line ~512, which uses `store.displayTitle(of:)` (not read for masking).
 
-Roughly 15 line variants use `fact.title` for a workout (the done, running, paused and glance forms, lines 253 to 309). Fix once, in the builders, so every variant inherits it: in `fact(done:)` and in the workout branch of `fact(process:)`, set `title: ObjectPrivacy.routineTitle(summary.title, in: store)`. That returns "Private workout" for a private title (Product 12:35 PM, decisions on #849). Then:
+Roughly 15 line variants use `fact.title` for a workout (the done, running, paused and glance forms, lines 253 to 309). **Fix at the one root, not in the Home builders (QA's review, Research PT45):** `WorkoutSummary` is built at `WorkoutSummary.swift:92` with `title: store.displayTitle(of: workout)`. Set that to `ObjectPrivacy.routineTitle(store.displayTitle(of: workout), in: store)`, which returns "Private workout" for a private title (Product 12:35 PM, decisions on #849). Every consumer inherits it: the Home hero, WeekFacts, the Day log and Review. A builder-only fix would be a second copy. The running or paused workout branch of `fact(process:)` reads `store.displayTitle(of: subject)` and still needs the same call.
 - A Home test over all 15 variants with a private routine title: none contains the title; each reads "Private workout ...".
 - `HomeDonePack` and the Claude Home done job already refuse a walled pack (reviewed in #658), so Claude is covered; this fix covers the phone's own lines, the Live Activity and Siri.
 - The exercise short names in `records` stay (exercise names are not private; a private routine's exercises are named in the history anyway). Flag to Product if a private routine's best should also read "Private workout best".
