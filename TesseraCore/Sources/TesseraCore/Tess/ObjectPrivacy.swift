@@ -47,8 +47,8 @@ public enum ObjectPrivacy {
             return flagged || isPrivateText(object.title) || isPrivateText(rule) ? memoryLabel : nil
         }
         if isA(.task) {
-            return object.title == taskLabel || PrivateFacts
-                .isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
+            // The one shared title check (G105): title words and "Dr Name" count for a task as for a routine or recipe.
+            return object.title == taskLabel || isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
         }
         if isA(.recipe) {
             return isPrivateRecipeTitle(object.title, lastWeightKg: last) ? recipeLabel : nil
