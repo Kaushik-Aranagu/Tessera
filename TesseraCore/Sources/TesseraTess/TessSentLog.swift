@@ -9,6 +9,8 @@ import TesseraCore
 @MainActor
 public struct TessSentLog {
     public static let privatePhrase = "Private phrase"
+    /// A payload too large to keep (a recipe page's text): the row shows the job, time, size, model and cost only.
+    public static let heldBackPayload = "Held back on this phone"
     /// The receipt for "Clear what was sent": plain, and there is no UNDO.
     public static let clearedLine = "Cleared what was sent."
 

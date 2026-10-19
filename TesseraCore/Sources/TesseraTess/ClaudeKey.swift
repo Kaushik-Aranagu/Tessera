@@ -160,10 +160,17 @@ public struct TessUsageLedger {
     }
 
     /// One row per call, written straight to the store (no op: it isn't something he did, and undo shouldn't see it).
+    /// A request that never left (offline) writes no row at all. `sent` is what went out, as sent: it also writes the
+    /// request's Tess Sent row (G653), "Held back on this phone" for a payload too large to keep.
     @discardableResult
     public func record(use: TessUse, model: String, input: Int, output: Int, costNano: Int64, latency: TimeInterval,
-                       outcome: String, requestID: String?, at date: Date = .now) -> ObjectRecord?
+                       outcome: String, requestID: String?, at date: Date = .now, sent: String? = nil)
+        -> ObjectRecord?
     {
+        guard outcome != "offline" else { return nil }
+        if let sent {
+            TessSentLog(store: store, classes: classes).record(words: sent, use: use, requestID: requestID, at: date)
+        }
         guard let classDef = classes[.tessCall], let call = try? store.create(classDef, title: "\(use.rawValue) call")
         else { return nil }
         call.createdAt = date
@@ -281,7 +288,7 @@ public struct ClaudeKeyCheck {
     {
         ledger.record(use: .keyCheck, model: Self.model, input: used.input, output: used.output, costNano: cost,
                       latency: Date.now.timeIntervalSince(started), outcome: outcome.rawValue, requestID: requestID,
-                      at: now())
+                      at: now(), sent: "Key check")
         return Result(outcome: outcome, line: Self.line(outcome, now: now(), calendar: calendar),
                       saved: true)
     }

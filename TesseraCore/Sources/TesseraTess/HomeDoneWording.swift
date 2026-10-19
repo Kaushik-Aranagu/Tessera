@@ -120,7 +120,7 @@ public final class ClaudeHomeDone {
             ledger.record(use: .lines, model: Self.model, input: usage.input, output: usage.output,
                           costNano: TessUsageLedger.cost(model: Self.model, input: usage.input, output: usage.output),
                           latency: Date().timeIntervalSince(started), outcome: outcome, requestID: requestID,
-                          at: now())
+                          at: now(), sent: body)
         }
         let reply: (lines: [ProposedLine]?, usage: (Int, Int), requestID: String?)
         do {

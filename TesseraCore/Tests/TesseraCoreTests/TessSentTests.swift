@@ -115,4 +115,26 @@ struct TessSentTests {
         let words = log.entries().map { log.words(of: $0) }
         #expect(!words.contains("old words") && words.first == "row 504" && !words.contains("row 0"))
     }
+
+    @Test func everyClaudeJobWritesASentRow() {
+        let ledger = route.ledger
+        let at = route.context.now
+        for use in [TessUse.lines, .plan, .recipeLink, .keyCheck] {
+            ledger.record(use: use, model: ClaudeTessModel.model, input: 10, output: 5, costNano: 1, latency: 0.1,
+                          outcome: "works", requestID: "req_\(use.rawValue)", at: at,
+                          sent: use == .recipeLink ? TessSentLog.heldBackPayload : "payload for \(use.rawValue)")
+        }
+        let entries = sentLog().entries()
+        #expect(entries.count == 4 && ledger.calls().count == 4)
+        let byRequest = Dictionary(uniqueKeysWithValues: entries.map { (
+            route.store.value("requestID", of: $0)?.stringValue ?? "",
+            sentLog().words(of: $0)
+        ) })
+        #expect(byRequest["req_recipeLink"] == "Held back on this phone")
+        #expect(byRequest["req_keyCheck"] == "payload for keyCheck")
+        // An offline attempt of any job writes nothing at all.
+        ledger.record(use: .plan, model: ClaudeTessModel.model, input: 0, output: 0, costNano: 0, latency: 0,
+                      outcome: "offline", requestID: nil, at: at, sent: "never left")
+        #expect(sentLog().count == 4 && ledger.calls().count == 4)
+    }
 }
