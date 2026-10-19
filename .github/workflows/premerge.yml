@@ -15,4 +15,11 @@ jobs:
       - name: Stale-tree check
         run: scripts/ops/tree_check.sh "origin/${{ github.base_ref }}" "${{ github.event.pull_request.head.sha }}"
       - name: Diff scans (secrets, data safety, pin lines, scripts rules)
-        run: git diff --unified=0 --no-color "origin/${{ github.base_ref }}...${{ github.event.pull_request.head.sha }}" | python3 -I scripts/ops/premerge_check.py
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr_body.txt"
+          git show "origin/${{ github.base_ref }}:docs/product/decisions.md" > "$RUNNER_TEMP/decisions.md"
+          git diff --unified=0 --no-color "origin/${{ github.base_ref }}...${{ github.event.pull_request.head.sha }}" | python3 -I scripts/ops/premerge_check.py --pr-body "$RUNNER_TEMP/pr_body.txt" --decisions "$RUNNER_TEMP/decisions.md"
+      - name: Pin-ruling tests
+        run: python3 -B -I scripts/ops/test_premerge_pin.py
