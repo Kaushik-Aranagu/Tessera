@@ -45,7 +45,7 @@ When the final set logs, the activity does not end at once. It shows one still f
 | After the minute | the activity ends with the default system dismissal | same | same | none |
 | He finishes the workout in the app first | the activity ends at once with the workout | same | same | none |
 | Undo of the last set (within its 10 s) | the face goes back to the resting face and the minute is cancelled | same | same | `.undo` only if the app is in front |
-| Private title | the title is the masked form from the one private-text function; on the Lock Screen that reads "Private exercise" (CALL 2 A, decision 1103), so "Private exercise, ready to finish" | same | same | none |
+| Private title | the face shows the workout's title ("Push A"), not an exercise name, so a private title reads the masked workout form from the one private-text function: "Private workout, ready to finish" (the same word as #1061, #1063, #1074 and the G274 rule). If the face ever shows an exercise name, it reads "Private exercise" (CALL 2 A, decision 1103) | same | same | none |
 | VoiceOver | the face reads "<title>, ready to finish"; no live region, no announcement of ours | same | same | n/a |
 
 The face carries no keys: Done, +15 and Skip are gone with the last set, so no tap target competes with the app. Tapping the card opens the app to the workout wrap-up.
@@ -60,11 +60,11 @@ Ruled by Product (Oct 19, 10:51 AM PT, mirror `decisions.md` line 1113; mirror o
 2. `closingFaceEndsAfterAboutAMinute`: one scheduled end, no repeating timer on the face.
 3. `closingFaceEndsWithTheWorkout`: finishing in the app ends it at once.
 4. `closingFaceUndoRestoresResting`: undo within 10 s returns to the resting face and cancels the end.
-5. `closingFaceIsMasked`: a private title reads the masked form.
+5. `closingFaceIsMasked`: a private workout title reads "Private workout, ready to finish"; never the workout name and never "Private exercise" on this face.
 6. Grep: no `withAnimation` or `.animation(` in `Widgets/`.
 
 ## Asks
 
-- **Design:** wording check on "Private exercise, ready to finish" for a masked workout title.
+- **Design:** answered: the face shows the workout title, so the masked form is "Private workout, ready to finish".
 
 (Product's two asks, the length and Home's line, are ruled; see above.)
