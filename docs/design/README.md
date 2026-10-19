@@ -28,3 +28,4 @@ Index of the docs in `docs/design/`.
 - [review-rows-2-103.md](review-rows-2-103.md): 103. Settings Review pages 5 and 6 (spec, not yet okayed by Kaushik)
 - [kitchen-stretch-104.md](kitchen-stretch-104.md): 104. Kitchen stretch: Pantry kept, Can cook shelf, Week of dinners (spec, not yet okayed by Kaushik)
 - [watch-set-logging-105.md](watch-set-logging-105.md): 105. Watch one-screen set logging (spec, not yet okayed by Kaushik)
+- [claude-gate-106.md](claude-gate-106.md): 106. The Claude gate: the key question, the Sent rows, the willSend line and the restore offer (release 22 gate)
