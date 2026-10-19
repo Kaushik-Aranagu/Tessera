@@ -29,12 +29,18 @@ public extension ObjectStore {
     @MainActor
     private func closeStaleCooksAfterRestore(classes: [SystemCatalog.Key: ClassDef], now: Date, calendar: Calendar) {
         guard let url = context.url, let restored = TesseraBackup.restoredAt(for: url),
-              let madeSeconds = try? context.database.read({ try Double.fetchOne($0, sql: "SELECT createdAt FROM backupInfo") })
+              let madeSeconds = try? context.database.read({ try Double.fetchOne(
+                  $0,
+                  sql: "SELECT createdAt FROM backupInfo"
+              ) })
         else { return }
         let made = Date(timeIntervalSince1970: madeSeconds)
         let day = TesseraDay(calendar: calendar)
         guard day.day(of: made) < day.day(of: restored) else { return }
-        _ = try? ActionEngine(store: self, classes: classes).perform(CloseStaleCooks(madeAt: made, at: now), by: .system)
+        _ = try? ActionEngine(store: self, classes: classes).perform(
+            CloseStaleCooks(madeAt: made, at: now),
+            by: .system
+        )
     }
 
     /// Persists pending writes now (they also save automatically).
@@ -56,13 +62,27 @@ public extension ObjectStore {
     /// Creates a user class (the class editor's "New subclass").
     @discardableResult
     func createClass(name: String, parent: ClassDef?, symbolName: String = "circle",
-                     colorRole: String = "neutral", traits: [ClassTrait] = []) -> ClassDef
+                     colorRole: String = "neutral", traits: [ClassTrait] = [], id: UUID? = nil) -> ClassDef
     {
         let classDef = ClassDef(name: name, parent: nil, symbolName: symbolName, colorRole: colorRole, traits: traits)
+        if let id {
+            classDef.id = id
+        }
         context.insert(classDef)
         classDef.parent = parent
         invalidateCaches()
         return classDef
+    }
+
+    /// Removes a user class nothing uses yet (undo of a new subclass). False for a built-in class, or one with
+    /// subclasses or objects.
+    @discardableResult
+    func deleteClass(_ classDef: ClassDef) -> Bool {
+        guard classDef.systemKey == nil, (classDef.subclasses ?? []).isEmpty, (classDef.objects ?? []).isEmpty,
+              (classDef.incomingLinks ?? []).isEmpty else { return false }
+        context.delete(classDef)
+        invalidateCaches()
+        return true
     }
 
     /// Wipes objects, links, the op log and user classes, keeping built-in and library classes (demo reset).

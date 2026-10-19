@@ -14,6 +14,18 @@ extension TessGrammar {
         return .recipe(text: trimmed)
     }
 
+    /// Whether a word is one of his lists (exact or a prefix), or matches more than one.
+    func namesAList(_ source: String) -> Bool {
+        do {
+            _ = try ListLookup.find(source, store: store, classes: classes)
+            return true
+        } catch let error as TessToolError {
+            return error.description == ListLookupLine.moreThanOne(source)
+        } catch {
+            return false
+        }
+    }
+
     func parseKitchen(_ phrase: String, context: TessContext) -> Parse? {
         let trimmed = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
         let text = trimmed.lowercased()
@@ -24,6 +36,19 @@ extension TessGrammar {
         if let match = trimmed.firstMatch(of: /^(?i)(?:list:|new\s+list[:\s])\s*(.+)$/) {
             let name = String(match.1).trimmingCharacters(in: .whitespaces)
             return name.isEmpty ? nil : .list(name: name.prefix(1).uppercased() + name.dropFirst())
+        }
+        // "copy packing for lisbon": the new list takes the name he said (lists 4c). A day in it ("copy the report
+        // thursday") is not a list phrase.
+        // Only when the source is one of his lists (or matches two: the app then asks which): "copy the report to
+        // dad" is a task, as before. Never from Siri or Shortcuts, which commit at once and never copy a list.
+        if !hasDate, !context.commitImmediately, let match = trimmed.firstMatch(
+            of: /^(?i)copy\s+(?:my\s+|the\s+)?(.+?)\s+(?:for|as|to|called|named)\s+(.+)$/
+        ) {
+            let source = String(match.1).trimmingCharacters(in: .whitespaces)
+            let name = String(match.2).trimmingCharacters(in: .whitespaces)
+            if !source.isEmpty, !name.isEmpty, namesAList(source) {
+                return .copyList(source: source, name: name.prefix(1).uppercased() + name.dropFirst())
+            }
         }
         if ["shop", "start shopping", "shopping", "go shopping", "at the shop"].contains(text) {
             // Already shopping: nothing to start.

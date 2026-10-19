@@ -37,9 +37,8 @@ private struct GroceriesPage: View {
     @State private var basketTarget: CGPoint = .zero
     @State private var breathe = false
     @State private var landed = 0
-    /// SHOP mode's private rows (B8): masked until tapped, masked again when the trip ends.
+    /// SHOP mode's rows: a private one is always masked (G102).
     @State private var trip = ShopTrip()
-    @Environment(\.scenePhase) private var scenePhase
     @FocusState private var writing: Bool
 
     private var groceries: Groceries {
@@ -113,19 +112,6 @@ private struct GroceriesPage: View {
             .padding(.bottom, Theme.Spacing.section)
             .tesseraAnimation(Theme.Motion.house, value: aisles.map(\.aisle))
             .tesseraAnimation(Theme.Motion.house, value: shopping)
-            .onChange(of: shopping) { _, now in
-                if !now {
-                    trip.end()
-                }
-            }
-            // Leaving the page masks every opened row again (B11).
-            .onDisappear { trip.end() }
-            // A lock or an app switch masks every opened row again (QA F1 on #732).
-            .onChange(of: scenePhase) { _, phase in
-                if phase != .active {
-                    trip.end()
-                }
-            }
             .opacity(basketOpen && !shopping ? 0.5 : 1)
             .tesseraAnimation(Theme.Motion.house, value: basketOpen)
         }
@@ -206,7 +192,7 @@ private struct GroceriesPage: View {
             }
         }
         .onPreferenceChange(RowCenters.self) { rowCenters = $0 }
-        .sensoryFeedback(.impact(weight: .light), trigger: landed)
+        .tesseraFeedback(.notNow, trigger: landed)
         // The shop finished is .done in the house map; never a raw sensoryFeedback (Haptics.swift).
         .tesseraFeedback(.done, trigger: finished)
     }
@@ -235,7 +221,7 @@ private struct GroceriesPage: View {
         }
     }
 
-    /// What a row reads, in the list and in SHOP mode: "Private item" until it's tapped open (B8, B11).
+    /// What a row reads, in the list and in SHOP mode: a private item is always "Private item" (G102).
     private func rowLabel(_ item: ListContents.Item) -> String {
         trip.label(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
@@ -245,12 +231,9 @@ private struct GroceriesPage: View {
         trip.maskedLabel(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
-    /// A masked private row opens on its first tap, in the list or in SHOP mode; any other tap strikes.
+    /// One tap strikes any row, a private one included; nothing opens (G102).
     private func shopTap(_ item: ListContents.Item) {
-        switch trip.tap(item, lastWeightKg: BodyWeight.lastKg(in: model.store)) {
-        case .reveal: break
-        case .strike: check(item)
-        }
+        check(item)
     }
 
     /// The ink strike runs through first (light tap when it ends), then the item folds into a sage dab that arcs
@@ -360,7 +343,6 @@ private struct ShopTitle: View {
     @State private var fill: CGFloat = 0
     /// Once the hold lands the title stays vermilion as it folds away (Design).
     @State private var held = false
-    @State private var started = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -381,7 +363,6 @@ private struct ShopTitle: View {
             .fixedSize(horizontal: false, vertical: true)
             .contentShape(Rectangle())
             .onLongPressGesture(minimumDuration: 0.7, maximumDistance: 30) {
-                started += 1
                 held = true
                 onHold()
                 // If the shop didn't start, the title is still here: drain it back to ink (QA G8). Once the shop
@@ -399,7 +380,6 @@ private struct ShopTitle: View {
                     withTesseraAnimation(.smooth(duration: 0.22), reduceMotion: reduceMotion) { fill = 0 }
                 }
             }
-            .sensoryFeedback(.impact(flexibility: .rigid), trigger: started)
             .accessibilityAddTraits(.isHeader)
             .accessibilityAction(named: "Start shopping", onHold)
     }
@@ -444,7 +424,7 @@ private struct AisleSection: View {
     let items: [ListContents.Item]
     let striking: Set<UUID>
     let recipes: (ListContents.Item) -> [String]
-    /// What each row reads (a private one: "Private item" until tapped).
+    /// What each row reads: a private one is always masked (G102).
     let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -476,8 +456,8 @@ private struct GroceryRow: View {
     let isStriking: Bool
     let recipes: [String]
     var height: CGFloat = 48
-    /// The words to show in place of the item's own (SHOP mode's "Private item").
-    var name: String?
+    /// The words the row shows, already masked at the source ("Private item" for a private one); never the raw text.
+    let name: String
     let onTap: () -> Void
     @State private var showsRecipes = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -487,7 +467,7 @@ private struct GroceryRow: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
                     (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold)
-                        + Text(name ?? GroceriesCopy.name(item)).fontWeight(.regular))
+                        + Text(name).fontWeight(.regular))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
                         // A long name wraps, never cut (K36.19, the AX rule).
@@ -523,7 +503,7 @@ private struct GroceryRow: View {
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { showsRecipes.toggle() }
         })
         .accessibilityElement(children: .combine)
-        .accessibilityHint(name == ShopTrip.privateLabel ? "Shows it" : "Puts it in the basket")
+        .accessibilityHint("Puts it in the basket")
         .accessibilityAction(named: "Which recipes") { showsRecipes.toggle() }
     }
 }
@@ -534,7 +514,7 @@ private struct AtTheShop: View {
     let aisles: [(aisle: String, items: [ListContents.Item])]
     let striking: Set<UUID>
     let recipes: (ListContents.Item) -> [String]
-    /// What each row reads (a private one: "Private item" until tapped).
+    /// What each row reads: a private one is always masked (G102).
     let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -578,7 +558,6 @@ private struct AtTheShop: View {
                 }
             }
             .animation(reduceMotion ? .easeOut(duration: 0.18) : .smooth(duration: 0.42), value: current.aisle)
-            .sensoryFeedback(.impact(weight: .medium), trigger: current.aisle)
         }
     }
 }
@@ -637,6 +616,8 @@ private struct BasketFold: View {
     let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     let onClear: () -> Void
+    /// Clear the basket plays `.cleared` itself: the hold's key is silent (the map has no cue in a key).
+    @State private var clears = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -670,11 +651,15 @@ private struct BasketFold: View {
                         .buttonStyle(HandleButtonStyle())
                         .accessibilityHint("Puts it back on the list")
                     }
-                    PaintKey(paint: Theme.Colors.health, hint: "Clears the basket", action: onClear) { _ in
+                    PaintKey(paint: Theme.Colors.health, hint: "Clears the basket", action: {
+                        clears += 1
+                        onClear()
+                    }) { _ in
                         Text("Clear the basket")
                     } meta: {
                         Text("Hold")
                     }
+                    .tesseraFeedback(.cleared, trigger: clears)
                 }
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .transition(.opacity.combined(with: .move(edge: .bottom)))

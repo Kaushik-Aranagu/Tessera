@@ -3,7 +3,7 @@ import Foundation
 import TesseraCore
 import Testing
 
-/// B8: in SHOP mode a private item reads "Private item" until tapped, only that row opens, and leaving masks again.
+/// B8 and G102: a private item reads "Private item" on every surface, and nothing opens it.
 @MainActor
 struct ShopTripTests {
     let container = TesseraSchema.makeContainer(inMemory: true)
@@ -19,22 +19,15 @@ struct ShopTripTests {
         return ListContents(store: model.store, classes: model.classes).open(in: list)
     }
 
-    @Test func aPrivateRowOpensOnItsFirstTapAndMasksAgainAfterTheTrip() throws {
+    /// G102: a private row always reads "Private item"; there is no tap that shows it.
+    @Test func aPrivateRowAlwaysReadsPrivateItem() throws {
         let rows = try items(["advil", "milk"])
         let advil = try #require(rows.first { $0.text.lowercased().contains("advil") })
         let milk = try #require(rows.first { $0.text.lowercased().contains("milk") })
         let trip = ShopTrip()
-
         #expect(trip.label(for: advil, name: advil.text, lastWeightKg: nil) == "Private item")
         #expect(trip.label(for: milk, name: milk.text, lastWeightKg: nil) == milk.text)
-
-        #expect(trip.tap(advil, lastWeightKg: nil) == .reveal)
-        #expect(trip.label(for: advil, name: advil.text, lastWeightKg: nil) == advil.text)
-        #expect(trip.tap(advil, lastWeightKg: nil) == .strike, "the next tap strikes as any row's would")
-        #expect(trip.tap(milk, lastWeightKg: nil) == .strike)
-
-        trip.end()
-        #expect(trip.label(for: advil, name: advil.text, lastWeightKg: nil) == "Private item")
+        #expect(trip.maskedLabel(for: advil, name: advil.text, lastWeightKg: nil) == "Private item")
     }
 
     @Test func aislesComeInTheShopsWalkOrder() {
@@ -54,14 +47,18 @@ struct ShopTripTests {
         #expect(rows.allSatisfy { trip.maskedLabel(for: $0, name: $0.text, lastWeightKg: nil) == "Private item" })
     }
 
-    @Test func theBasketStaysMaskedEvenForARowThatWasOpened() throws {
-        let rows = try items(["advil", "milk"])
-        let advil = try #require(rows.first { $0.text.lowercased().contains("advil") })
-        let milk = try #require(rows.first { $0.text.lowercased().contains("milk") })
+    /// QA on #885: private rows keep the list's own order (all read "Private item", so the order can't come from the
+    /// words), and the same row stays in the same place across reads.
+    @Test func privateRowsKeepAStableOrder() throws {
+        let rows = try items(["advil", "milk", "ibuprofen", "eggs"])
+        let groceries = Groceries(store: model.store, classes: model.classes)
+        let first = groceries.aisles().flatMap { $0.items.map(\.id) }
+        let second = groceries.aisles().flatMap { $0.items.map(\.id) }
+        #expect(first == second)
         let trip = ShopTrip()
-        #expect(trip.tap(advil, lastWeightKg: nil) == .reveal)
-        #expect(trip.tap(advil, lastWeightKg: nil) == .strike)
-        #expect(trip.maskedLabel(for: advil, name: advil.text, lastWeightKg: nil) == "Private item")
-        #expect(trip.maskedLabel(for: milk, name: milk.text, lastWeightKg: nil) == milk.text)
+        let privateOnes = rows.filter { trip.label(for: $0, name: $0.text, lastWeightKg: nil) == "Private item" }
+        #expect(privateOnes.count == 2)
+        let order = first.filter { id in privateOnes.contains { $0.id == id } }
+        #expect(order == first.filter { id in privateOnes.contains { $0.id == id } } && order.count == 2)
     }
 }

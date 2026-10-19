@@ -45,6 +45,23 @@ struct PantryLedgerTests {
         try model.engine.perform(FinishCooking(cook: cook.id, time: date.addingTimeInterval(1800)), by: .user)
     }
 
+    @Test func aPrivateRecipesCookNeverListsItsIngredientNames() throws {
+        // G139: what a private recipe used reads "Private item" under OUT and LOW, with no reveal.
+        let stew = try model.engine.perform(CreateRecipe(text: """
+        Dentist stew
+        1 lb ground saffron
+        2 cups cumin lentils
+        Method
+        1. Cook it.
+        """), by: .user).output
+        try cook(stew, at: saturday)
+        let entries = ledger.entries()
+        #expect(!entries.isEmpty)
+        #expect(entries.allSatisfy { $0.isPrivate && $0.label == "Private item" }, "\(entries.map(\.label))")
+        #expect(!entries
+            .contains { $0.label.lowercased().contains("saffron") || $0.label.lowercased().contains("lentil") })
+    }
+
     @Test func aShopMakesThingsInThenACookMakesThemLowAndProduceOut() throws {
         let recipe = try tacos()
         #expect(PantryLedger.hero(ledger.entries()) == "Nothing yet")

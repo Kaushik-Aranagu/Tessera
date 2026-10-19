@@ -7,7 +7,8 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
         continueAfterFailure = false
     }
 
-    func testRemoveUndoThenAddRefusesANonKey() {
+    /// G647: Remove asks "Remove the Claude key?"; Keep it keeps it; Remove deletes at once, with no UNDO.
+    func testRemoveAsksThenAddRefusesANonKey() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-openLink", "review", "-fakeClaudeKey"]
         app.launch()
@@ -21,17 +22,21 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
         sleep(1)
 
         app.buttons["REMOVE"].tap()
-        XCTAssertTrue(app.staticTexts["Claude key removed. Everything stays on this phone."]
-            .waitForExistence(timeout: 3))
-        app.buttons["UNDO"].tap()
-        XCTAssertTrue(app.staticTexts["Claude key is back."].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Remove the Claude key?"].waitForExistence(timeout: 3))
+        app.buttons["KEEP IT"].tap()
+        let gone = expectation(for: NSPredicate(format: "exists == false"),
+                               evaluatedWith: app.staticTexts["Remove the Claude key?"])
+        XCTAssertEqual(XCTWaiter().wait(for: [gone], timeout: 3), .completed, "Keep it closes the question")
         XCTAssertTrue(keyLine.exists)
         assertNoKeyTail(in: app)
-        sleep(2)
 
         app.buttons["REMOVE"].tap()
+        app.buttons["Remove the Claude key"].tap()
+        XCTAssertTrue(app.staticTexts["Claude key removed. Everything stays on this phone."]
+            .waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["UNDO"].exists, "Remove is final: no UNDO")
         let add = app.buttons["Add a Claude key"]
-        XCTAssertTrue(add.waitForExistence(timeout: 15), "After 10 s the key is gone")
+        XCTAssertTrue(add.waitForExistence(timeout: 3), "The key is gone at once")
         add.tap()
         sleep(1)
         // Focus can lag the open: tap the line itself before typing.

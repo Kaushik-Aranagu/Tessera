@@ -66,9 +66,12 @@ public struct RoutineEntity: AppEntity {
         DisplayRepresentation(title: "\(title)")
     }
 
-    public init(id: UUID, title: String) {
-        self.id = id
-        self.title = title
+    /// The one way to build a routine entity: the title it carries and shows is the masked one ("Private workout"
+    /// for a private routine), so Shortcuts, Siri's picker and Spotlight never see the raw words.
+    @MainActor
+    init(routine: ObjectRecord, in store: ObjectStore) {
+        id = routine.id
+        title = ObjectPrivacy.routineTitle(routine.title, in: store)
     }
 }
 
@@ -78,18 +81,11 @@ public struct RoutineQuery: EntityStringQuery {
     public init() {}
 
     public func entities(for identifiers: [UUID]) async throws -> [RoutineEntity] {
-        await MainActor.run {
-            identifiers.compactMap { id in
-                guard let routine = runtime.store.object(id: id), !routine.isDeleted else { return nil }
-                return RoutineEntity(id: routine.id, title: routine.title)
-            }
-        }
+        await MainActor.run { Self.entities(for: identifiers, runtime) }
     }
 
     public func entities(matching string: String) async throws -> [RoutineEntity] {
-        await MainActor.run {
-            Self.all(runtime).filter { $0.title.lowercased().contains(string.lowercased()) }
-        }
+        await MainActor.run { Self.entities(matching: string, runtime) }
     }
 
     public func suggestedEntities() async throws -> [RoutineEntity] {
@@ -97,8 +93,22 @@ public struct RoutineQuery: EntityStringQuery {
     }
 
     @MainActor
+    static func entities(for identifiers: [UUID], _ runtime: TesseraRuntime) -> [RoutineEntity] {
+        identifiers.compactMap { id in
+            guard let routine = runtime.store.object(id: id), !routine.isDeleted else { return nil }
+            return RoutineEntity(routine: routine, in: runtime.store)
+        }
+    }
+
+    /// Matches the shown title only: typing a private routine's own words finds nothing.
+    @MainActor
+    static func entities(matching string: String, _ runtime: TesseraRuntime) -> [RoutineEntity] {
+        all(runtime).filter { $0.title.lowercased().contains(string.lowercased()) }
+    }
+
+    @MainActor
     static func all(_ runtime: TesseraRuntime) -> [RoutineEntity] {
         guard let routineClass = runtime.engine.classes[.routine] else { return [] }
-        return runtime.store.objects(of: routineClass).map { RoutineEntity(id: $0.id, title: $0.title) }
+        return runtime.store.objects(of: routineClass).map { RoutineEntity(routine: $0, in: runtime.store) }
     }
 }

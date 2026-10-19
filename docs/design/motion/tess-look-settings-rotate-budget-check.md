@@ -22,7 +22,7 @@ Nothing animates a Settings page turn: there is no page-turn code, no Settings s
 
 Spec only (no code, no number in any ruling): Settings arrival rows (10 pt rise, 40 ms apart, `tess-settings-motion.md:14`), the page-turn row opening (320 ms, `tess-finish-hero-settings-paging.md:19`), stepper and picker steps (none anywhere), the Look swatch on the Settings Looks page (none; `settings-place.md:26` has a 250 ms flood, ruled down to 150 ms under Reduce Motion).
 
-Two stale lines found on the way: `Editorial.swift:54` says "25 ms stagger" while the code at `Theme.swift:583` uses 35 ms; and `LookSentence.swift:119` carries a dead 0.25 s Reduce Motion literal (the policy makes it 0.15 s).
+Two stale lines found on the way: `Editorial.swift:57` says "25 ms stagger" while the code at `Theme.swift:583` uses 35 ms; and `LookSentence.swift:119` carries a dead 0.25 s Reduce Motion literal (the policy makes it 0.15 s).
 
 ## 3. What blows the budget (arithmetic)
 | Case | Math | Verdict |
@@ -60,7 +60,7 @@ All marked *(lab default)*; Product confirms or changes in §6.
 2. **Product:** confirm §5 items 2 to 6 (one 24 ms stagger on Settings, 260 ms row ceiling, 120 ms step crossfade, 250 ms Looks flood, Look change waits for the turn).
 3. **Product:** log 160 / 260 / 24 in `decisions.md` next to line 917; today the numbers live only in a lab sheet.
 4. **Design:** sheet 90's Rotate line (`pages-90.md:21`, 480 ms / 34 ms) is superseded; fix it.
-5. **Builder A (when Settings is built):** `Theme.Motion.pageTurn` and `rotateStagger` tokens; fix the `Editorial.swift:54` comment (25 vs 35 ms); drop the dead 0.25 s literal at `LookSentence.swift:119`; `MotionPolicy` reads Low Power before Settings ships.
+5. **Builder A (when Settings is built):** `Theme.Motion.pageTurn` and `rotateStagger` tokens; fix the `Editorial.swift:57` comment (25 vs 35 ms); drop the dead 0.25 s literal at `LookSentence.swift:119`; `MotionPolicy` reads Low Power before Settings ships.
 
 ## 7. Tests
 1. A six-row Rotate turn measures 460 ms +/- one frame; a three-row turn 388 ms; never padded.

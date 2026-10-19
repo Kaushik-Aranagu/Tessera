@@ -64,6 +64,10 @@ public struct TessCapture {
     /// A refusal that is its own answer ("Dal is already on Recipes."): the phrase never goes to the miss log.
     public var isRefusal = false
 
+    /// The line is the first-send notice ("Sent that to Claude. Turn this off in Settings: Claude."): it is shown
+    /// once and must never be replaced by another line.
+    public var isNotice = false
+
     public var understood: Bool {
         !records.isEmpty
     }

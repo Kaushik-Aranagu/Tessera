@@ -25,6 +25,8 @@ struct ReviewWeekData {
     let tasksDone: [Int?]
     let cooked: [Int?]
     let lines: [Int: [DayLine]]
+    /// Each session's name as the week may show it: "Private workout" for a private routine (G274).
+    var shownTitles: [UUID: String] = [:]
 
     static func compute(_ model: AppModel, now: Date, calendar: Calendar) -> ReviewWeekData {
         let tesseraDay = TesseraDay(calendar: calendar)
@@ -72,7 +74,15 @@ struct ReviewWeekData {
                               sessions: week.map(\.done), perWeek: perWeek,
                               headline: "\(headline.lead) \(headline.tail)", hero: hero,
                               coreBestLines: builder.facts(weekContaining: now, plan: plan, now: now).bestLines,
-                              tasksDone: tasksDone, cooked: cooked, lines: lines)
+                              tasksDone: tasksDone, cooked: cooked, lines: lines,
+                              shownTitles: Dictionary(week.flatMap(\.done).map {
+                                  ($0.id, ObjectPrivacy.routineTitle($0.title, in: model.store))
+                              }, uniquingKeysWith: { first, _ in first }))
+    }
+
+    /// A session's name as shown: masked when private, never the raw title (G274).
+    func title(of workout: WorkoutSummary) -> String {
+        shownTitles[workout.id] ?? ObjectPrivacy.routineLabel
     }
 
     func isPast(_ index: Int) -> Bool {
@@ -111,7 +121,7 @@ struct ReviewWeekData {
         guard finished.isEmpty else { return finished }
         return sessions[index].map { workout in
             let best = workout.records.first.map { ", \($0.exercise) best" } ?? ""
-            return DayLine(time: workout.startedAt, text: "\(workout.title) done\(best).", objectIDs: [workout.id],
+            return DayLine(time: workout.startedAt, text: "\(title(of: workout)) done\(best).", objectIDs: [workout.id],
                            kind: .finished)
         }
     }
@@ -170,8 +180,8 @@ struct ReviewWeekData {
             ?? sessions[index].first?.records.first.map { "\(TesseraCore.ExerciseWords.short($0.exercise)) best" }
         let forms: [String] = if let workout = sessions[index].first {
             [[best, doneWords].compactMap(\.self).joined(separator: ", "),
-             [workout.title, doneWords].compactMap(\.self).joined(separator: ", "),
-             workout.title].filter { !$0.isEmpty }
+             [title(of: workout), doneWords].compactMap(\.self).joined(separator: ", "),
+             title(of: workout)].filter { !$0.isEmpty }
         } else if let doneWords {
             [doneWords]
         } else if marks[index] == .rest {

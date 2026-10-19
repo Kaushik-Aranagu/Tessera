@@ -11,6 +11,9 @@ public struct ClaudeTessModel: TessModel {
     static let maxTokens = 512
     /// An offline miss that hit a wall: kept nowhere, so it can only be said again online.
     static let walledOfflineLine = "Couldn't read that offline. Try again online."
+
+    /// The longest phrase sent to Claude, in characters.
+    static let maxPhraseCharacters = 600
     /// Tool rounds before Tess gives up on a phrase.
     static let maxRounds = 3
 
@@ -54,6 +57,13 @@ public struct ClaudeTessModel: TessModel {
         // The switch and the key shape are checked here too, not only in `isAvailable` and the router: a direct
         // caller must not skip them (a4-bypass item 3).
         guard sendsMisses(), !looksLikeClaudeKey(request.text) else { return .missed }
+        // A phrase past the cap never goes: Claude reads a sentence, not a page (a pasted recipe has its own path).
+        guard request.text.count <= Self.maxPhraseCharacters else {
+            // A refusal is its own answer: the long phrase is not logged as a miss either.
+            var refusal = TessCapture(records: [], line: "That's too long to send. Say it shorter.", source: .none)
+            refusal.isRefusal = true
+            return .asked(refusal)
+        }
         // His "yes, all but the key": a capture miss goes whole, so no secret, money or body wall runs here. The
         // key-shape refusal above stays, and the system prompt is checked below.
         // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).
@@ -159,12 +169,16 @@ public struct ClaudeTessModel: TessModel {
             ].summary) + "." : "\(records.count) things done."
         }
         // The first miss ever sent says where it went, once (Product 8:28 PM PT Oct 15).
+        var isNotice = false
         if !flags.noticeShown {
             flags.noticeShown = true
+            isNotice = true
             line = phraseWalled ? "Sent that to Claude. Turn this off in Settings: Claude."
                 : "Sent \u{201C}\(request.text)\u{201D} to Claude. Turn this off in Settings: Claude."
         }
-        return .handled(TessCapture(records: records, line: line, source: .claude))
+        var capture = TessCapture(records: records, line: line, source: .claude)
+        capture.isNotice = isNotice
+        return .handled(capture)
     }
 
     /// Takes back any ghost past the per-phrase cap (a single call may write several).

@@ -80,6 +80,19 @@ public struct TessRouter {
         self.models = models
     }
 
+    /// A cook timer never leaves the phone (Research #880): a phrase about a timer is read here or not at all. While a
+    /// cook is running, what he says belongs to the cook ("8 mins", "pasta 10", "step 3", "how long left", "stop the
+    /// rice"): read on the phone or not at all (N21 to N26). The router and the offline inbox's drain both ask this.
+    public static func staysOnPhone(_ text: String, engine: ActionEngine) -> Bool {
+        let words = text.lowercased().split { !$0.isLetter }
+        if words.contains("timer") || words.contains("timers") {
+            return true
+        }
+        return ProcessTable(engine: engine).running().flatMap(\.subject).map { subject in
+            engine.classes[.cook].map { subject.classDef?.id == $0.id } ?? false
+        } ?? false
+    }
+
     public func run(_ request: TessRequest) async -> TessCapture {
         // A Claude key pasted into the Ask bar never reaches a route (it would become a note, then every backup).
         if looksLikeClaudeKey(request.text) {
@@ -94,8 +107,10 @@ public struct TessRouter {
         // or a refusal ("I don't keep sums of money.", "$212.37 at Costco?") is its own, and stays on the phone.
         let secret = SecretWords.mentions(request.text)
         let walled = PrivateFacts.isWalled(request.text, lastWeightKg: request.lastWeightKg(engine))
+        let stayHome = Self.staysOnPhone(request.text, engine: engine)
         for model in models where model.isAvailable(for: request.use)
             && !((secret || walled) && model.route == .claude && asked?.source == .grammar)
+            && !(stayHome && model.route == .claude)
         {
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)

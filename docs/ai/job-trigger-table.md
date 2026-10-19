@@ -7,7 +7,7 @@ background word jobs (week story, living colour) and Home lines (.lines) step as
 
 | Job | User trigger | Priority class | Steps aside at $40? |
 |---|---|---|---|
-| capture (Tess) | Tap (user sends a capture) | .capture | No, runs to $50 |
+| capture (Tess) | Tap, or a phrase typed or spoken in Ask that the grammar and the on-device model missed. Siri and Shortcuts never send. A phrase containing "timer", or any phrase while a Cook is running, stays on the phone (Core #884, merged; wider than the ruling, narrowing open). Over 600 characters is refused | .capture | No, runs to $50 |
 | Home done lines | Unclear, see flag 1 (finishing a workout, then generated in background) | .lines | Yes |
 | Home lines (other Home words) | Background, when the pack changes | .lines | Yes |
 | Plan my day wording | Tap (Plan my day) | .plan | No, runs to $50 |
@@ -32,6 +32,6 @@ background word jobs (week story, living colour) and Home lines (.lines) step as
    the edit.
 7. Step-aside is docs only today. Only the Settings warm line at 80% exists in code. At worst projected spend
    (about $6.90 a month) it never fires, so it guards loops only.
-8. Stale text: ClaudeKey.swift comment, claude-first-uses.md and recipe-link-fetch.md still say a $10 month.
-   Code `capNano` is $50.
+8. Stale text: claude-first-uses.md and recipe-link-fetch.md (docs/research) still say a $10 month; only claude-first-uses.md carries a $50 note at the top. The ClaudeKey.swift comment is gone on master (Oct 18). Code `capNano` is $50.
 9. Cap behavior for all jobs: at $50 every job shows "Claude paused until <date>." and writes no row.
+10. **Re-audit, Oct 17 rulings (rows that disagreed, now fixed above or listed here).** (a) Capture: since #860 a missed phrase goes whole, walled words included, and only the Claude key and key-shaped text stay back; the trigger cell now names Siri, the timer and running-cook hold (as merged in #884) and the 600-character refusal. (b) Home done lines: the phone's own Home line shows a private routine's real title until the mask lands at `WorkoutSummary.swift:92` ("Private workout"); the Claude pack is already walled. (c) Recipe reader: a kept link is read again only when he taps it; an automatic retry is proposed (gap-lane part 3, section 1: offline, busy or timeout only, one attempt per link per day, never on a bad key) and is not built, so the trigger stays Tap. (d) askSubject: unbuilt on master; its walls use the one `isPrivateText` function and a walled name sends the class word (G105). (e) The notice and key-pointer strings name Review now and Settings later (`settings-claude-page-spec.md`).
