@@ -150,4 +150,14 @@ extension ClaudeRouteTests {
         let line = await task.value
         #expect(line == "Cancelled.", "\(line)")
     }
+
+    @Test func theLogReChecksWhenShown() throws {
+        // A row written before the wall knew a word: stored raw, but shown as "Private phrase" now.
+        let row = try #require(sentLog().record(words: "ring the plumber", use: .capture, requestID: nil,
+                                                at: context.now))
+        try store.set("words", to: .text("paid 40 for gas\nToday: Mon Oct 19"), on: row)
+        #expect(sentLog().shownWords(of: row) == "Private phrase\nToday: Mon Oct 19")
+        try store.set("words", to: .text("ring the plumber\nToday: Mon Oct 19"), on: row)
+        #expect(sentLog().shownWords(of: row) == "ring the plumber\nToday: Mon Oct 19")
+    }
 }

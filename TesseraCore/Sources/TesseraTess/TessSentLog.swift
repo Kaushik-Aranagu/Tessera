@@ -39,6 +39,24 @@ public struct TessSentLog {
         store.value("words", of: entry)?.stringValue ?? ""
     }
 
+    /// What a row shows, judged again now (QA on #1110): a row written before a wall or word-list change still reads
+    /// "Private phrase" if its phrase is walled today, and a context line that is walled today is dropped. The row
+    /// itself is not rewritten. Builder B's Receipts list calls this, never `words(of:)`.
+    public func shownWords(of entry: ObjectRecord) -> String {
+        let lastKg = BodyWeight.lastKg(in: store)
+        func walled(_ text: String) -> Bool {
+            text != Self.privatePhrase && text != Self.heldBackPayload
+                && (looksLikeClaudeKey(text) || SecretWords.mentions(text) || PrivateFacts.isWalled(
+                    text,
+                    lastWeightKg: lastKg
+                ))
+        }
+        let lines = words(of: entry).components(separatedBy: "\n")
+        guard let first = lines.first else { return Self.privatePhrase }
+        return ([walled(first) ? Self.privatePhrase : first] + lines.dropFirst().filter { !walled($0) })
+            .joined(separator: "\n")
+    }
+
     /// Requests held back on the phone (a walled or cook phrase, too long, or at the month cap): how many never left.
     public var heldBackCount: Int {
         flags?.heldBack ?? 0

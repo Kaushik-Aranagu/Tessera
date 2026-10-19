@@ -295,6 +295,33 @@ struct ClaudeRouteTests {
         #expect(second.contains("that name or value didn't fit") && !second.contains("Underwater Bench\\u"))
     }
 
+    // MARK: G687, the found key
+
+    @Test func foundKeyOnAFreshStoreSendsNothingUntilAsked() async {
+        // A key in the fake keychain and fresh settings: the one field reads no, so nothing leaves.
+        let settings = SettingsStore(engine: engine)
+        var claude = ClaudeTessModel(keys: InMemoryKeychain(Self.key), ledger: ledger, flags: flags,
+                                     session: RouteStub.session()) { settings.read().sendsMissesToClaude }
+        claude.now = { TesseraDayTests.at(10, 15, 18, 10) }
+        let capture = TessCaptureEngine(engine: engine)
+        capture.claude = claude
+        _ = await capture.capture(miss, context: context)
+        #expect(RouteStub.requests.isEmpty && !settings.read().sendsMissesToClaude)
+        // Yes: the next miss goes.
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Logged."))]
+        try? settings.answerClaudeQuestion(true)
+        _ = await capture.capture(miss, context: context)
+        #expect(RouteStub.requests.count == 2)
+    }
+
+    @Test func shortcutsAndSiriNeverSendWithAnAnsweredYes() async {
+        try? SettingsStore(engine: engine).answerClaudeQuestion(true)
+        var shortcut = context
+        shortcut.commitImmediately = true
+        _ = await tess().capture(miss, context: shortcut)
+        #expect(RouteStub.requests.isEmpty)
+    }
+
     @Test func whatTheGrammarReadsNeverReachesClaude() async {
         _ = await tess().capture("buy milk", context: context)
         #expect(RouteStub.requests.isEmpty)
