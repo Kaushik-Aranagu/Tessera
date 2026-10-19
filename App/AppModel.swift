@@ -147,10 +147,10 @@ final class AppModel {
         soul.mode
     }
 
-    /// "Tess has eyes" (Settings › Tess, off by default). Core's `tessEyes` field is on its way; until then only the
-    /// simulator's `-tessEyes` flag turns them on (LaunchFlags is simulator-only, so never on the phone).
+    /// "Tess has eyes": the review switch "Tess has eyes" (Off by default; its UserDefaults key is `review.tessFace`),
+    /// or the simulator's `-tessEyes` flag (LaunchFlags is simulator-only, so never on the phone).
     var tessHasEyes: Bool {
-        LaunchFlags.has("-tessEyes")
+        LaunchFlags.has("-tessEyes") || Choice.tessHasEyes()
     }
 
     /// Home (the launcher Tess paints in) vs Today.

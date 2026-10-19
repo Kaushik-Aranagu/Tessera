@@ -27,4 +27,10 @@ enum Choice {
     static func restTimerIsOn(defaults: UserDefaults = .standard) -> Bool {
         value("restTimer", options: ["On", "Off"], default: "On", defaults: defaults) == "On"
     }
+
+    /// Tess's face: "Off" (default) is the plain mark; "Eyes" and "Eyes and mouth" give her eyes. The mouth is not
+    /// drawn yet, so "Eyes and mouth" shows eyes until it is.
+    static func tessHasEyes(defaults: UserDefaults = .standard) -> Bool {
+        value("tessFace", options: ["Off", "Eyes", "Eyes and mouth"], default: "Off", defaults: defaults) != "Off"
+    }
 }
