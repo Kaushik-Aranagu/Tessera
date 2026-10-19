@@ -103,8 +103,6 @@ struct HomeSpatialView: View {
                     ForEach(Page.allCases) { sibling in
                         fitted(content(for: sibling))
                             .scrollDisabled(false)
-                            // The page ground leans 2.5% toward its area (sheet 86 C); Today stays neutral.
-                            .background { Theme.Colors.groundTint(sibling.area) }
                             .containerRelativeFrame(.horizontal)
                             // The hero's parallax stays inside its own page.
                             .clipped()
@@ -167,7 +165,16 @@ struct HomeSpatialView: View {
                 }
             }
         }
-        .background { ThemedBackground() }
+        .background {
+            ThemedBackground()
+            // The ground leans 2.5% (3% in a dark look) toward the area on show (sheet 86 C), one full-screen layer so
+            // no seam shows under the bar or Tess's band; it follows the pager, and Today stays neutral.
+            ForEach(Page.allCases) { page in
+                Theme.Colors.groundTint(page.area)
+                    .opacity(max(0, 1 - abs(Double(page.rawValue) - progress)))
+                    .ignoresSafeArea()
+            }
+        }
         .toolbarVisibility(.hidden, for: .navigationBar)
         // Each of these screens keeps its own NavigationStack, so it zooms out of the word that opened it (full
         // screen, swipe down to close) instead of being pushed inside Home's stack.

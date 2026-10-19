@@ -62,6 +62,8 @@ struct RoutineEditor: View {
                     .padding(.top, Theme.Spacing.xl)
                     .entrance(4)
 
+                    routineFigure(slots: slots)
+
                     if let library {
                         ExerciseLibraryList(title: libraryTitle(library, slots: slots)) { exercise in
                             choose(exercise, for: library)
@@ -91,27 +93,24 @@ struct RoutineEditor: View {
         .toolbarVisibility(.hidden, for: .navigationBar)
         .background { EdgeSwipeBack() }
         .tesseraFeedback(.selection, trigger: haptic)
-        // The small muscle figure, bottom right: the union of what the routine works (board 84). It is part of the
-        // page, never over Tess's band, and not drawn for a Private routine (never an image for a Private thing).
-        .overlay(alignment: .bottomTrailing) {
-            routineFigure(slots: routine.orderedChildren)
-        }
     }
 
-    /// Front and back at 44 pt wide each, dried in with the page; none when the routine has no stored muscles, is
-    /// Private, or the text is too large for it to clear the words.
+    /// The small muscle figure, in the list's footer, bottom right (board 84): front and back at 44 pt wide each, the
+    /// union of what the routine works. In the footer it never sits over a row's right-hand values (Design on #1097).
+    /// None when the routine has no stored muscles, is Private (never an image for a Private thing), or the text is
+    /// too large for it to clear the words.
     @ViewBuilder
     private func routineFigure(slots: [ObjectRecord]) -> some View {
         let muscles = unionMuscles(slots)
         if !muscles.isEmpty, !isPrivateRoutine, !typeSize.isAccessibilitySize {
             HStack(spacing: 4) {
+                Spacer(minLength: 0)
                 ForEach([false, true], id: \.self) { back in
                     MuscleFigure(back: back, roles: MuscleFigureMap.roles(muscles, back: back))
                         .frame(width: 44)
                 }
             }
-            .padding(.trailing, Theme.Spacing.gutter)
-            .padding(.bottom, 96)
+            .padding(.top, Theme.Spacing.l)
             .allowsHitTesting(false)
             .transition(.opacity)
             .accessibilityHidden(true)
