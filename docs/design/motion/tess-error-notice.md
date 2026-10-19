@@ -20,7 +20,7 @@ instruction, and the whole band is the tap target (44 pt minimum).
 | Success | 5.0 s | Crossfade 150 ms to the area's own receipt, "Set 4 logged." with UNDO | same, 150 ms |
 | Haptic on success | none | The area's own success haptic, never both | same |
 
-Copy: "Didn't save. Try again." everywhere; the live workout names the set: "Set 4 didn't save. Try again."; the
+Copy: "Didn't save that. Try again." everywhere (index H13, G266, G393; Lists and the routine screens use the same line and the same single `.notSaved`); the live workout names the set: "Set 4 didn't save. Try again."; the
 receipt is the area's own, "Set 4 logged." with UNDO. Never a red, never an icon, never an alert.
 
 **Failing again:** the line returns to full ink and there is no second `.warning` at all.

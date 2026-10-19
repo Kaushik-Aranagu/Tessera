@@ -98,6 +98,8 @@ struct PlanData {
 
     // MARK: Helpers
 
+    /// The routine's own title, as the key the week, month and paints match on (never shown as is): every place that
+    /// draws or speaks it masks it there with `ObjectPrivacy.routineTitle` (G274, hunt 22).
     static func routine(of workout: ObjectRecord, store: ObjectStore) -> String {
         store.linkedObjects("routine", of: workout).first?.title ?? workout.title
     }

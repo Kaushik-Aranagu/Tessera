@@ -40,9 +40,9 @@ Tick in this order; each line names the cite in (b) below.
 | Reading | coast ~900 ms; resume rise 460 ms + glint 760 ms; flight 620 ms | resume 150 ms; glint -> 150 ms page-number highlight; flight fades | = RM | resume: none normal, `.selection` in RM/LP (replaces glint); Finished `.done`; set aside none | A | MRA:77-93 |
 | Habits (not built) | stroke fall 26 pt, wet, dry 2 s; week-met stroke 700 ms; fleck 520 ms | strokes fade in place; no fall/fleck; week-met whole | = RM (G318) | check-in `.done` (his, plays 23-07); fleck/rule-counted none | B (haptic A) | DAY:80-97, HAB:14-34 |
 | Shutdown (not built) | hold bead; handoff lift 620 ms/80 ms stagger; fold 420 ms | fill no bead; crossfades no lift | = RM (G317) | close `.done`; UNDO `.undo`; 22:00 close silent, written next open | B | DAY:62-78, HAB:17-34 |
-| Notes | NOT specced for motion (INFERRED house policy) | INFERRED 150 ms | INFERRED = RM | note write = landing tick `.made` (IDX H16, unspecced); delete tap + UNDO 10 s | B | IDX:25 only |
+| Notes | page fades 380 ms, write flies 420 ms (NRM:5-36); list entrance opacity only under the flag (G290) | row crossfades to the page, 150 ms (G289) | = RM | note write = landing tick `.made` (IDX H16, unspecced); delete tap + UNDO 10 s | B | IDX:25 only |
 | Day log (not built) | lines rise 10 pt/40 ms; scrub dim 200 ms; object reveal 440 ms | 150 ms fades, numeral no travel | = RM | scrub `.selection` per day (25/s cap, landing always), `.pickedUp` per week; Tess-written line none | B | DAY:99-108, SPD:55-72 |
-| Speak (listen, ghost, commit) | swell 1.06; bloom x1.4-1.55; ghost dry 3 s (2 s in workout); commit gather 220 ms | no swell; bloom x1.2; dry 0.8 s (0.6 workout); words fade no blur | **soul LP form; mic <=20 samples/s; dry stays 3 s as 4 steps ~0.75 s** | `.selection` touch-down; `.listening`; commit `.made`; UNDO `.undo` alone | B (soul/haptics A) | DAY:45-57, SPD:24-35 |
+| Speak (listen, ghost, commit) | swell 1.06; bloom x1.4-1.55; ghost dry 3 s (2 s in workout); commit gather 220 ms | no swell; bloom x1.2; dry 0.8 s (0.6 workout); words fade no blur | **soul LP form; bloom still x1.2, mic level not fed (G313); dry stays 3 s as 4 steps ~0.75 s** | `.selection` touch-down; `.listening`; commit `.made`; UNDO `.undo` alone | B (soul/haptics A) | DAY:45-57, SPD:24-35 |
 | Review (week page, story) | entrance 35 ms/14 pt; story blur-in 300 ms | 150 ms fade; soul works by position | = RM; automatic Monday story does not run in LP | tap day `.selection`; story none | B (Core pack) | BHR:51-63 |
 | Settings: entry, Claude page, Looks, Your day | Review lifts 380 ms, grows 420 ms; Claude line draw 360 ms; month stroke 500 ms | 150 ms crossfade; no line draw; stroke whole | = RM (Claude section: opacity only, no 6 pt offset) | Haptics-on flip `.selection`; Claude flip `.selection`; REMOVE `.selection` no UNDO; check answers none | B (haptics/Look A, Core settings) | SET:10-17, 35-45, GRO:63-67 |
 | Settings: Look (pin, change) | paint flood from soul 700 ms (Review sentence) / 250 ms (Looks swatch, lab) | 150 ms (HS43) | = RM per HS43; GRO:67 says flood "stays" (stale) | `.pinned`; `.selection` word cycle | A | SET:77, LRB s.5.6, GRO:67 |
@@ -61,7 +61,7 @@ Tick in this order; each line names the cite in (b) below.
 
 1. Soul keeps her own LP form (30 fps, six lights, no readers, full opacity/pigment); RM = still frame/position-only: MOT:241-247, QV:10-30, IDX M2.
 2. Speak ghost wait: RM 0.8 s (0.6 workout); LP keeps full 3 s with stepped drain (~0.75 s x4): DAY:51, SPD:31, IDX M5. VoiceOver flat 10 s with Cancel, never shortened.
-3. Speak mic sampling: LP <=20/s; level smoothed at 30 fps: SPD:27, DAY:48.
+3. Speak mic level: in LP the bloom is a still mark at x1.2 and the level is not fed at all (G313); no sampling cap to build: SPD:27, DAY:48.
 4. Automatic Claude calls (plan wording, Monday week story, `readWaiting`) do not run in LP; asked calls do: DAY:34, BHR:57, MRA:104-109, IDX M8. (State, no motion.)
 5. Ambient timelines PAUSED in LP, not just reduced: workout strip glint, guide breath, corner breath (TRN:34-39); Home breathing words, day-stroke end, training waiting guide, sky ground (GRO:53-56).
 6. Thinking glyph (looks without soul): LP 30 fps; RM no turning but a 0.85-1 pulse over 3.2 s; stays alive in both: GRO:57.
@@ -91,3 +91,16 @@ Tick in this order; each line names the cite in (b) below.
 7. Plan skip haptic: SPD:47 earlier "none" vs DAY:29 / IDX H11 `.notNow`. Day-log week tick: SPD:64 `.impact(.light)` vs DAY:106 `.pickedUp`.
 8. Plan hold hint wording: DAY:31/:40/:117/:136 "Keep the plan" vs DEC:1043 "Hold to keep N tasks" (IDX U4).
 9. Gaps (no spec): Notes motion, Watch, non-cook Recipes, Money/Reading haptics in SLM/SLR (IDX H10), the Haptics gate in LP.
+
+## Changes from Kitchen's open calls (Oct 18, rows N22 to N59 in `tess-ruling-index.md`)
+Folded in by #1036 (Oct 18) as an appended section, not yet merged cell by cell into the table above; Builder A reads these as the newer cells.
+
+1. First cell "Notes": Normal `page fades 380 ms, context and body draw in, words settle at 128 ms; write flies 420 ms; list entrance opacity only under the flag (G290)`; RM `row crossfades to the page, opacity only (G289)`; LP `= RM`; Haptics `note write .made; delete tap + UNDO 10 s`; Cite `NRM:5-36`. (Replaces "NOT specced for motion (INFERRED house policy)" at MAT:43.)
+2. First cell "Speak (listen, ghost, commit)": LP cell becomes `soul LP form; bloom still x1.2 and level not fed (G313); dry stays 3 s as 4 steps ~0.75 s`; RM cell adds `Write dry 0.6 s (G314)`. Fix MAT:64 item 3 to match (drop "mic <=20 samples/s").
+3. First cell "Cook mode / clock page": LP cell adds `horizon steps once a minute, every 10 s in the last minute (ruled Oct 17 9:22 PM); Home DrainBar one step a minute (G226)`.
+4. First cell "Backups / Export / Health": LP cell becomes `= RM; first daily copy still runs, late-tail and folder re-check wait for power OK (G359)`; Normal cell folder words `Backup folder, ... changed/stopped` with 10 s UNDO (G371).
+5. First cell "Widgets (home/lock)": LP cell becomes `system; Go swap is a crossfade and digits do not roll (G339); no extra entries; no word change 23-07 except started countdowns`.
+6. First cell "Sides / page turns": Haptics cell becomes `.selection on full side only; none on exercise rail turns or on appear (G386)`.
+7. First cell "Ask / BottomChrome / capture": Haptics cell adds `typed "undo" = spoken (G441); receipt line first, first-send notice second (G428)`.
+8. New row after "Training / workout": `Plans and Exercise pages (week/month, zooms, Trend tip, Add to routine)`; Normal `day-word stagger, page zoom, wet-tip breath`; RM `tesseraAnimation, no offsets (G387); zooms 150 ms crossfade (G384)`; LP `= RM; Trend tip still at 0.75, no loop (G383)`; Haptics `.made on add (UNDO 4 s, 10 s VoiceOver, G390); .notSaved once on a failed write (G393)`; Owner `A`; Cite `none yet`.
+9. First cell "Home: Now hero, queue, day strip": LP cell adds `proposed plan words still at the breath's mean (G267)`; no other change.

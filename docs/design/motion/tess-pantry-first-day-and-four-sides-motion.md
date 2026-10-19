@@ -54,3 +54,18 @@ Product and Design ruled asks 1 to 4 (lane 83): row 28 is ON THEM and `tess-side
 3. **Product:** glance facts for rows 28 and 31, and row 30's page turn word. Done.
 4. **Design:** 320 ms against the house spring. Done: the spring wins.
 5. **Builder B (when built):** the Pantry day-one page and the four sides; Settings page 2's side waits for the flag PR.
+
+## 3. After the first big shop (Kitchen G207, G208, G211; ruled Oct 18, 7:16 AM Design pick and 7:24 AM defaults)
+This is the day after section 1: a shop has landed and nothing is out.
+
+| Moment | Normal | RM / LP | VoiceOver | Haptic |
+|---|---|---|---|---|
+| Nothing out after a shop (G207) | the hero reads "Nothing out" (sheet 78's quiet form, full `ink`), the USUALLY HAVE line shows what is known; no second line and no count of what is "in"; the day-one pair ("Nothing yet" and its quiet line) is gone for good; hero changes crossfade 150 ms, no roll | same | "Pantry, nothing out", then the USUALLY HAVE line | none |
+| The "out of milk" teaching line (G208) | shown once per install, on the first Pantry open after the backfill or the first time OUT is empty; it enters with the shared entrance (35 ms stagger, 14 pt rise) and leaves in 150 ms after he says the phrase or opens another page; it is never shown again; **the build gates the text on `outOfMilkSetsOutAndAddsARow` passing** | opacity only | read once after the hero, never again | none |
+| Long-press a line to "unknown" (G211) | the word crossfades 160 ms to nothing and the line leaves its group (an unknown thing is absent, not "in"); nothing is written for `hasAnyState`; Tess "Milk, cleared." with UNDO 10 s (a change) | 150 ms | the line's custom action "Clear to unknown"; the receipt is announced once | one `.selection` for the long-press, the same as a state tap; no `.warning`, no `.made` (it writes nothing new) |
+| Tap cycle | unchanged: in, low, out, in; a long-press never advances the cycle | same | same | `.selection` once |
+
+Lab defaults, for Product to overrule: the "Milk, cleared." receipt wording and its 10 s UNDO; the long-press haptic being `.selection` (G211 rules the gesture, not its feedback).
+
+Build checks: the teaching line is absent when the grammar test fails; it never appears twice in one install; a long-press on a private item reads "Private item, cleared." and the same motion; the day-one invitation never returns after section 3 applies.
+
