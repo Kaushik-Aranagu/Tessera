@@ -89,7 +89,16 @@ struct BottomChrome: View {
                                             removal: .opacity.animation(.easeOut(duration: 0.16))))
             }
             resting
+            // One host for every path to Claude (typed, spoken, or a waiting phrase drained on the way in): the line
+            // sits above the soul whatever the chrome is showing (Design on #1123, sheet 106).
+            if model.isAskingClaude {
+                AskingClaudeLine { model.cancelAskingClaude() }
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                    .padding(.bottom, Self.soulLift + Self.rowHeight)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
+        .tesseraAnimation(value: model.isAskingClaude)
         .onChange(of: model.isCommandExpanded) { _, expanded in
             if expanded {
                 opened()
@@ -530,11 +539,7 @@ extension BottomChrome {
             }
             .contentShape(Rectangle())
             .onTapGesture { cancelDrying() }
-            if model.isAskingClaude {
-                AskingClaudeLine { model.cancelAskingClaude() }
-            }
         }
-        .tesseraAnimation(value: model.isAskingClaude)
         .padding(.horizontal, Theme.Spacing.gutter)
         .padding(.bottom, Theme.Spacing.xl)
     }
