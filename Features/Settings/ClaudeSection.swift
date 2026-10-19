@@ -29,7 +29,8 @@ enum ClaudeKeyWords {
 
     /// "Nov 1": when a paused month opens again.
     static func nextMonth(_ now: Date, calendar: Calendar = .current) -> String {
-        (calendar.dateInterval(of: .month, for: now)?.end ?? now).formatted(.dateTime.month(.abbreviated).day())
+        TessUsageLedger.monthInterval(containing: now, calendar: calendar).end
+            .formatted(.dateTime.month(.abbreviated).day())
     }
 }
 

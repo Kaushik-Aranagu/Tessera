@@ -21,9 +21,11 @@ struct TessSpendFile {
         url = database.deletingLastPathComponent().appendingPathComponent(Self.fileName)
     }
 
-    /// "2026-10": the month a date falls in, in the phone's calendar.
+    /// "2026-10": the ledger's month a date falls in (the month turns at 4 AM, like the cap), so the file and the
+    /// rows always agree on which month a call belongs to.
     static func monthKey(_ date: Date, calendar: Calendar) -> String {
-        let parts = calendar.dateComponents([.year, .month], from: date)
+        let start = TessUsageLedger.monthInterval(containing: date, calendar: calendar).start
+        let parts = calendar.dateComponents([.year, .month], from: start)
         return String(format: "%04d-%02d", parts.year ?? 0, parts.month ?? 0)
     }
 
