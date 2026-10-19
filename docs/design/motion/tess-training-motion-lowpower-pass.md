@@ -92,7 +92,7 @@ Two rules to build:
 
 1. Drive the flip from `restEndsAt`, not from the 1 Hz tick: schedule the boundary so the visible Go and the haptic land within
    one frame of T0 (today they can lag up to 1 s). Make the glint start at the flip and run once so it never misses (today it misses about 36% of the time).
-2. Rest end while locked needs a local notification at `restEndsAt` (title "Set 3 is up", the default sound), because the in-process alert
+2. Rest end while locked needs a local notification at `restEndsAt` (title "Timer", body "Rest is up", the default sound; ruled DEC:1069 item 2, no "Set 3 is up"), because the in-process alert
    cannot fire when the app is suspended. In the foreground, suppress the alert and play `.timeUp` only: never both.
    Quiet hours: his own rest timer rings at any hour (live-workout:52), so the notification is not held.
 

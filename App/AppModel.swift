@@ -158,7 +158,7 @@ final class AppModel {
 
     /// `launchDefaults`: where once-per-install launch decisions are kept; the app tests pass a throwaway suite (QA on
     /// #665), so a test run never decides for an install.
-    init(context: TesseraContext, launchDefaults: UserDefaults = .standard) {
+    init(context: TesseraContext, launchDefaults: UserDefaults = .standard, seedsStarterLists: Bool = false) {
         self.context = context
         store = ObjectStore(context: context)
         do {
@@ -185,6 +185,11 @@ final class AppModel {
             // The first launch with the restWeekday reader: Sunday, as one op with UNDO ("Sunday, rest day.";
             // Research 146). Once; an UNDO or a later "Any" leaves a record, so it is never written twice.
             restReceipt = SettingsStore(engine: engine).writeFirstRestWeekday(defaults: launchDefaults)
+            // The three starter lists (Gym bag, Leaving the house, Packing): once each, never put back after a delete.
+            // Only the app's own launch asks for them: a test model starts with just the lists it makes.
+            if seedsStarterLists {
+                _ = try? StarterLists.installIfNeeded(store: store, classes: classes)
+            }
         }
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()
@@ -277,6 +282,27 @@ final class AppModel {
         let result = await runtime.tess.capture(phrase, context: TessContext(now: AppClock.now,
                                                                              entry: session?.currentEntry?.id))
         return land(result)
+    }
+
+    private var isDrainingWaiting = false
+
+    /// On the way to the foreground: the phrases that waited for Claude go through the walls again and are read, each
+    /// as its own ghost; a week-old one is deleted. Nothing happens with Claude off or no key, and a phrase that is
+    /// still offline stays.
+    func drainWaitingPhrases() async {
+        // Never while he has a ghost waiting: committing it would be a write he did not tap.
+        guard !isDrainingWaiting, pendingCapture == nil, !isWorkoutPresented,
+              let engine = runtime.tess as? TessCaptureEngine,
+              engine.waitingCount > 0 else { return }
+        isDrainingWaiting = true
+        defer { isDrainingWaiting = false }
+        let read = await engine.readWaiting(context: TessContext(now: AppClock.now, entry: session?.currentEntry?.id))
+        guard let last = read.last else { return }
+        // The first-send notice wins and is never dropped; else a lone phrase keeps its own line, and two or more
+        // read together get a count.
+        let line = read.first(where: \.isNotice)?.line ?? (read.count == 1 ? last.line : "Offline, \(read.count) read.")
+        // One landing for the lot, so every drained ghost stays pending together and is seen.
+        _ = land(TessCapture(records: read.flatMap(\.records), line: line, source: .claude))
     }
 
     /// The open set-count ask ("2 × 10: 2 sets, or 2 kg?"), if the last phrase raised one.
@@ -510,6 +536,19 @@ final class AppModel {
     func touch() {
         try? context.save()
         revision += 1
+        reconcileTimerAlerts()
+    }
+
+    /// One local notification per running kitchen timer, kept in step after every change (G217): Stop, Finish and an
+    /// UNDO cancel it, so a timer never rings for something he has put down. Off on a throwaway store and in demos.
+    @ObservationIgnored private var timerAlertScheduler: SystemTimerAlertScheduler?
+
+    private func reconcileTimerAlerts() {
+        guard settingsAreReal, !Self.isDemo else { return }
+        let scheduler = timerAlertScheduler ?? SystemTimerAlertScheduler()
+        timerAlertScheduler = scheduler
+        let alerts = KitchenTimerAlerts(store: store, classes: classes)
+        Task { await alerts.reconcile(with: scheduler) }
     }
 
     // MARK: Lookup

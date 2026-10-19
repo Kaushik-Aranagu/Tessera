@@ -116,6 +116,8 @@ struct PantryLedger {
         var events: [UUID: [Event]] = [:]
         var bought: [UUID: Date] = [:]
         var ingredients: [UUID: ObjectRecord] = [:]
+        // What a private recipe's cook used reads "Private item" (G139): the names would give the recipe away.
+        var maskedByCook: Set<UUID> = []
         func note(_ ingredient: ObjectRecord, _ state: State, at date: Date) {
             ingredients[ingredient.id] = ingredient
             events[ingredient.id, default: []].append(Event(when: date, state: state))
@@ -124,14 +126,18 @@ struct PantryLedger {
             note(ingredient, .have, at: when)
             bought[ingredient.id] = max(bought[ingredient.id] ?? when, when)
         }
-        for (ingredient, state, when) in cookUses() {
+        for (ingredient, state, when, fromPrivate) in cookUses() {
             note(ingredient, state, at: when)
+            if fromPrivate {
+                maskedByCook.insert(ingredient.id)
+            }
         }
         return ingredients.mapValues { ingredient in
             let last = (events[ingredient.id] ?? []).max { lhs, rhs in
                 lhs.when != rhs.when ? lhs.when < rhs.when : lhs.state > rhs.state
             }
-            return make(ingredient, state: last?.state ?? .unknown, lastBoughtAt: bought[ingredient.id])
+            return make(ingredient, state: last?.state ?? .unknown, lastBoughtAt: bought[ingredient.id],
+                        masked: maskedByCook.contains(ingredient.id))
         }
     }
 
@@ -143,27 +149,28 @@ struct PantryLedger {
     }
 
     /// What finished cooks used: each non-staple ingredient low, Produce out.
-    private func cookUses() -> [(ObjectRecord, State, Date)] {
+    private func cookUses() -> [(ObjectRecord, State, Date, Bool)] {
         guard let cookClass = classes[.cook] else { return [] }
         let book = RecipeBook(store: store, classes: classes)
-        return store.objects(of: cookClass).flatMap { cook -> [(ObjectRecord, State, Date)] in
+        return store.objects(of: cookClass).flatMap { cook -> [(ObjectRecord, State, Date, Bool)] in
             guard let when = store.value("cookedAt", of: cook)?.dateValue,
                   let recipe = store.linkedObjects("recipe", of: cook).first, !recipe.isDeleted
             else { return [] }
+            let fromPrivate = ObjectPrivacy.label(of: recipe, in: store, classes: classes) != nil
             return book.lines(of: recipe).compactMap { line in
                 // Optional and to-taste lines aren't counted as used (QA on #722).
                 guard let ingredient = line.ingredient, !line.isStaple, !line.line.optional, !line.line.toTaste,
                       !isStaple(ingredient)
                 else { return nil }
-                return (ingredient, aisle(of: ingredient) == .produce ? .out : .low, when)
+                return (ingredient, aisle(of: ingredient) == .produce ? .out : .low, when, fromPrivate)
             }
         }
     }
 
-    private func make(_ ingredient: ObjectRecord, state: State, lastBoughtAt: Date?) -> Entry {
+    private func make(_ ingredient: ObjectRecord, state: State, lastBoughtAt: Date?, masked: Bool = false) -> Entry {
         let title = store.displayTitle(of: ingredient)
-        // The same full wall as a recipe title: secret words, money, body facts and medicines (QA L1 on #727).
-        let walled = ObjectPrivacy.isPrivateRecipeTitle(title, lastWeightKg: BodyWeight.lastKg(in: store))
+        // The one private-title check (G105, G140), or an ingredient only a private cook used (G139).
+        let walled = masked || ObjectPrivacy.isPrivateTitle(title, lastWeightKg: BodyWeight.lastKg(in: store))
         return Entry(id: ingredient.id, ingredient: ingredient, state: state, lastBoughtAt: lastBoughtAt,
                      aisle: aisle(of: ingredient), isPrivate: walled, label: walled ? "Private item" : title)
     }

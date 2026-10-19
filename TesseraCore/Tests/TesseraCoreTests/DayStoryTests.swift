@@ -293,6 +293,15 @@ struct DayStoryTests {
         #expect(lines(Self.at(13, 12)).contains("13:15  New list: Lisbon"), "\(lines(Self.at(13, 12)))")
     }
 
+    @Test func aCopiedPrivateListIsPrivateInTheDay() throws {
+        let secret = try run(CreateList(name: "Lexapro refills"), at: Self.at(13, 9)).output
+        try run(AddListItem(list: secret.id, text: "pills"), at: Self.at(13, 9, 5))
+        try run(CopyList(list: secret.id, name: "Lexapro refills, Lisbon"), at: Self.at(13, 13, 15))
+        let day = lines(Self.at(13, 12))
+        #expect(day.contains { $0.contains("New list: Private list") }, "\(day)")
+        #expect(!day.contains { $0.lowercased().contains("lexapro") }, "\(day)")
+    }
+
     @Test func donesCountFromThree() throws {
         let titles = ["water the plants", "call mom", "pay rent", "bins", "post"]
         let tasks = try titles.map { try task($0, at: Self.at(10, 9)) }

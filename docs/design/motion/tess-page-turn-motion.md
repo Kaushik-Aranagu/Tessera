@@ -1,6 +1,6 @@
 # Page turn motion: Slide, Turn, Soften, Rotate (board 26, 27, 31). Spec from Design sheet 90; clips to follow
 
-Source of truth for looks and rules: design/pages-90.md. This note adds timelines, the drag model, the Rotate slot model and the Settings preview, so Builder B can build one `PageTurn` with four options. Haptics: none on a user turn (R2), and none on the lead-row auto-turn either (decision 5:30 PM Oct 17). Curve: Theme.Motion.pageTurn (.22, .8, .2, 1). Reduce Motion and Low Power: every option is one 150 ms crossfade (R3), no stagger, no blur, no travel.
+Source of truth for looks and rules: design/pages-90.md. This note adds timelines, the drag model, the Rotate slot model and the Settings preview, so Builder B can build one `PageTurn` with four options. Haptics: none on a user turn (R2), and none on the lead-row auto-turn either (decision 5:30 PM Oct 17). Curve: Theme.Motion.pageTurn (.22, .8, .2, 1). Reduce Motion and Low Power: every option is one 150 ms crossfade (R3), no stagger, no blur, no travel. A reduced page turn is a tapped word cutting to the new page with that 150 ms crossfade; a finger swipe is untouched; the Plans pager and the exercise pager share one helper (G385, DEC:1061 item 2).
 
 ## Timelines (t = 0 at release or tap on the foot; N = rows on the page, max 6)
 | Option | Old page | New page | Total | Stagger order |

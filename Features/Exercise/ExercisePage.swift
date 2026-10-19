@@ -207,7 +207,7 @@ private struct ExerciseMethods: View {
 
             addToRoutine
         }
-        .sensoryFeedback(.success, trigger: added)
+        .tesseraFeedback(.made, trigger: added)
     }
 
     /// Logging goes through the command bar, prefilled with the exercise (Tess parses "log bench press 82.5×8").

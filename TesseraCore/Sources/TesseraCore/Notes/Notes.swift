@@ -169,7 +169,10 @@ public struct EditNote: EngineAction {
         // A private note stays private, and a code added to a plain note makes it private (QA F1 on #422): the title
         // stays "Private note" and nothing is linked from its words.
         let wasPrivate = transaction.store.value("isPrivate", of: note) == .bool(true)
-        let isPrivate = wasPrivate || body.map(SecretWords.mentions) == true || title.map(SecretWords.mentions) == true
+        // The same one check as CreateNote: a secret word, money or a body fact (a weigh-in) added in an edit (G607).
+        let store = transaction.store
+        let isPrivate = wasPrivate || body.map { CreateNote.isPrivateText($0, store: store) } == true
+            || title.map { CreateNote.isPrivateText($0, store: store) } == true
         if isPrivate {
             if !wasPrivate {
                 try transaction.set("isPrivate", to: .bool(true), on: note)

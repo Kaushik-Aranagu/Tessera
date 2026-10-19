@@ -161,21 +161,15 @@ enum SoulWork {
         )
     }
 
-    /// Reduce Motion (§13): a crossfade to faded and loosened, no travel. The mains move apart in place to 1.5×
-    /// their offset and the satellites fade; `amount` is the 200 ms crossfade.
+    /// Reduce Motion (§13): no travel, and never a faded Tess (Kaushik 12:46 PM; Product G-soul): she keeps full
+    /// opacity, saturation and halo, and shows "working" by position only (no swell, §13). The mains move apart in
+    /// place to 1.5x their offset; the satellites stay as they are. `amount` is the 200 ms crossfade.
     static func reduced(_ frame: SoulFrame, amount: CGFloat) -> SoulFrame {
         var result = frame
-        for index in result.dabs.indices {
-            if index < 3 {
-                result.dabs[index].x *= 1 + 0.5 * amount
-                result.dabs[index].y *= 1 + 0.5 * amount
-            } else {
-                result.dabs[index].opacity *= 1 - 0.6 * amount
-            }
+        for index in result.dabs.indices where index < 3 {
+            result.dabs[index].x *= 1 + 0.5 * amount
+            result.dabs[index].y *= 1 + 0.5 * amount
         }
-        result.look.saturation *= 1 - 0.5 * amount
-        result.look.opacity *= 1 - 0.4 * amount
-        result.halo.opacity *= 1 - amount
         return result
     }
 }

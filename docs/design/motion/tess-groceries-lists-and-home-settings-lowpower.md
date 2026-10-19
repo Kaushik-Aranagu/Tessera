@@ -40,7 +40,7 @@ Dead code to delete (G247): the `reduceMotion ? .easeInOut(0.2) : ...` ternaries
 | Aisle cleared by his last strike in it | `.aisleCleared` (medium), keyed to his strike, not to the aisle value, so an UNDO or a row landing from Pantry or the Bar never buzzes (GroceriesView:581) | his touch | yes | yes |
 | Pick lands (ListsPick) | `.pickedUp` (light 0.5) stays until Product rules 12.2's "medium" | his touch | yes | yes |
 | Remove armed on the swipe | `.selection` (ListsSwipe:34) | his touch | yes | yes |
-Done, Clear the basket and Reset are named-action-only for VoiceOver (G258, 9:17 PM): double tap speaks the hold hint, the named action completes, and the haptic above plays once either way; UNDO covers each for 10 s.
+Done and Reset are named-action-only for VoiceOver (G258, 9:17 PM); Clear the basket is a tap key that plays `.done` (ruled DEC:1069 item 1): double tap speaks the hold hint, the named action completes, and the haptic above plays once either way; UNDO covers each for 10 s.
 
 Rules: raw `.sensoryFeedback` on these screens (GroceriesView:209, 402, 581) goes through `tesseraFeedback`; `Haptic` gains an origin (his touch, or Tess's landing) so a landing can follow quiet hours; nothing on these two screens is a Tess landing today. Tests: `uncheckPlaysLightImpact`, `finishPlaysOneDone`, `resetPlaysMedium`, `undoDoesNotBuzzAisleCleared`, `lowPowerKeepsGroceryHaptics`.
 

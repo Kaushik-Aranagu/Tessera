@@ -241,7 +241,7 @@ public final class TessCaptureEngine: TessCapturing {
                Groceries(store: engine.store, classes: engine.classes).isOn(line.name)
             {
                 // The wall first (QA on #763): a second "lexapro" is "Private item, already on Groceries."
-                let hidden = EngineWall.isHealth(lines[0], lastWeightKg: BodyWeight.lastKg(in: engine.store))
+                let hidden = ObjectPrivacy.isPrivateWord(lines[0], in: engine.store)
                     || AddListItem.kept(lines[0], store: engine.store) == nil
                 let name = hidden ? "Private item" : lines[0].prefix(1).uppercased() + lines[0].dropFirst()
                 return TessCapture(records: [], line: "\(name), already on Groceries.", source: .grammar,
@@ -381,10 +381,7 @@ public final class TessCaptureEngine: TessCapturing {
             // Said as the wall kept them: "buy milk 4.99" is "Milk, on Groceries." (Product 8:40 AM PT Oct 17).
             let lines = AddGroceries.kept(lines, store: engine.store)
             // The wall before the already-on line (QA on #763): a second "lexapro" is a "Private item" too.
-            let hidden = lines.count == 1 && (EngineWall.isHealth(
-                lines[0],
-                lastWeightKg: BodyWeight.lastKg(in: engine.store)
-            )
+            let hidden = lines.count == 1 && (ObjectPrivacy.isPrivateWord(lines[0], in: engine.store)
                 || AddListItem.kept(lines[0], store: engine.store) == nil)
             let name = hidden ? "Private item" : lines.first.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? ""
             // One bare thing already on: nothing new was made ("Chickpeas, already on Groceries.").
@@ -431,6 +428,13 @@ public final class TessCaptureEngine: TessCapturing {
                 return (record, "\(shown), already a list.")
             }
             return (record, "\(shown), new list.")
+        case let .copyList(source, name):
+            // The source by his words (G40: two matches write nothing and ask which). The copy is the source's name,
+            // then his word: "copy packing for lisbon" makes "Packing, Lisbon" (Product's final ruling).
+            let from = try ListLookup.find(source, store: engine.store, classes: engine.classes)
+            let result = try engine.perform(CopyList(list: from.id, name: "\(from.title), \(name)"), by: .tess,
+                                            pending: pending)
+            return (result.record, (result.record.receipt ?? "Copied") + ".")
         case .shop:
             let record = try engine.perform(StartShop(), by: .tess, pending: pending).record
             let line = Groceries(store: engine.store, classes: engine.classes).shoppingLine()
@@ -511,6 +515,10 @@ public final class TessCaptureEngine: TessCapturing {
     }
 
     static func line(for error: any Error) -> String {
+        // A lookup that found no list, or two (G40): its own words, nothing written.
+        if let lookup = error as? TessToolError {
+            return lookup.description
+        }
         if case let ActionError.invalidArguments(_, reason) = error {
             // A running workout is never suspended from the Bar: the refusal is the line itself (G56, QA on #788).
             if reason == StartCooking.workoutRunningReason {

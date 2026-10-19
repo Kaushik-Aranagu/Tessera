@@ -44,7 +44,10 @@ public enum PrivateFacts {
             return true
         }
         // Only the set itself is the bar (AI architecture D1 on #643): "Rent 1850 for 5x5" is still money.
-        let words = words(withoutTimes(withoutNotation(lower)))
+        // "dinner at 7.30" and "dentist by 4.15" are clocks, not money (Research #880), unless a money word is there.
+        let clockless = words(lower).contains(where: moneyWords.contains)
+            ? lower : lower.replacing(/\b(?:at|by)\s+(?:[01]?\d|2[0-3])\.[0-5]\d\b/, with: " at ")
+        let words = words(withoutTimes(withoutNotation(clockless)))
         if words.contains(where: isAmount), words.contains(where: moneyWords.contains) {
             return true
         }
@@ -104,8 +107,21 @@ public enum PrivateFacts {
         return isBodyShaped(rest: withoutNotation(lower), lastWeightKg: lastWeightKg)
     }
 
+    /// Number words a spoken weight uses: "eleven stone four", "twelve st 3".
+    static let spokenNumbers: Set<String> = [
+        "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen",
+        "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
+    ]
+
     static func isBodyShaped(rest lower: String, lastWeightKg: Double?) -> Bool {
         if isBareWeight(lower, lastWeightKg: lastWeightKg) {
+            return true
+        }
+        // "Eleven stone four" is his weight in stone (Research #880), said in words or digits.
+        let spoken = words(lower)
+        if let stone = spoken.firstIndex(where: { $0 == "stone" || $0 == "st" }), stone > 0,
+           spokenNumbers.contains(spoken[stone - 1]) || spoken[stone - 1].first?.isNumber == true
+        {
             return true
         }
         let words = words(lower)
