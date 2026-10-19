@@ -19,7 +19,7 @@ public enum SystemCatalog {
         case process
         case slot, plan
         case tessCall
-        case event, sleepNight, stepsDay, restingHeartRate
+        case event, sleepNight, stepsDay, restingHeartRate, closedDay
         case tessSent
         case settings
         case tessWaiting
@@ -241,6 +241,16 @@ public enum SystemCatalog {
             FieldSpec(key: "marker", name: "Marker", kind: .bool),
             FieldSpec(key: "frozen", name: "Frozen", kind: .bool),
         ]),
+        // One closed day (Shutdown, M4 slice 7): when it closed and by whom, his line for tomorrow, and the frozen Day log
+        // line for that day.
+        ClassSpec(key: .closedDay, name: "Closed Day", parent: .thing, symbol: "moon.stars", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "date", name: "Day", kind: .date),
+                      FieldSpec(key: "closedAt", name: "Closed at", kind: .date),
+                      FieldSpec(key: "silent", name: "Closed by itself", kind: .bool),
+                      FieldSpec(key: "tomorrowLine", name: "Tomorrow, first", kind: .text),
+                      FieldSpec(key: "dayLine", name: "Day log line", kind: .text),
+                  ]),
         ClassSpec(key: .sleepNight, name: "Sleep Night", parent: .thing, symbol: "bed.double", colorRole: "neutral",
                   fields: [
                       FieldSpec(key: "date", name: "Night ending", kind: .date),

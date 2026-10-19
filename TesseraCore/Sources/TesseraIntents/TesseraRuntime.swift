@@ -47,6 +47,7 @@ public enum TesseraIntentsCatalog {
         "createClass": "in-app only: the class page's New subclass",
         "syncCalendar": "system: the calendar mount on foreground",
         "syncHealth": "system: the Health mount on foreground",
+        "closeDay": "in-app only: Shutdown's close",
         "addSlot": "in-app only",
         "startRoutine": "StartRoutineIntent",
         "createPlan": "in-app only",
