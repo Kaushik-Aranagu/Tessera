@@ -185,10 +185,11 @@ struct AreaIndexSheet: View {
         }
         .opacity(progress > 0.001 ? 1 : 0)
         .allowsHitTesting(progress > 0.9)
-        // Closed, the rows are not read (opacity 0 alone leaves them in the accessibility tree).
-        .accessibilityHidden(progress < 0.5)
         // VoiceOver's way out: closes without changing the area (HomeSpatialView returns focus to the bar word).
         .accessibilityAction(.escape, onClose)
+        // Closed, the sheet is not in the tree at all (HomeSpatialView mounts it only while open); while it forms or
+        // leaves, it is not read. Last, so no later modifier can expose it again.
+        .accessibilityHidden(progress < 0.5)
     }
 
     private var glass: some View {
