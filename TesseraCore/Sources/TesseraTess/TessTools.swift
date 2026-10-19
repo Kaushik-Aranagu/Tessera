@@ -274,6 +274,31 @@ public enum TessTools {
     static let countable: [SystemCatalog.Key] = [.workout, .exerciseEntry, .set, .routine, .exercise, .task, .note,
                                                  .list, .listItem, .recipe, .cook, .ingredient]
 
+    /// Whether an object is private for what goes to Claude: the one title check for every countable class (a list,
+    /// an item, an ingredient, a workout, a routine, a set), the cook rule for a cook, and the note, task, memory and
+    /// recipe rules. An object inside a private one (a set of a private workout) is private with it.
+    static func isPrivateForClaude(_ object: ObjectRecord, store: ObjectStore,
+                                   classes: [SystemCatalog.Key: ClassDef]) -> Bool
+    {
+        let last = BodyWeight.lastKg(in: store)
+        var current: ObjectRecord? = object
+        var depth = 0
+        while let item = current, depth < 8 {
+            if ObjectPrivacy.label(of: item, in: store, classes: classes) != nil
+                || store.value("isPrivate", of: item) == .bool(true)
+                || ObjectPrivacy.isPrivateTitle(item.title, lastWeightKg: last)
+                || item.title == ObjectPrivacy.routineLabel
+                || item.classDef?.id == classes[.cook]?.id
+                && ObjectPrivacy.cookTitle(item, in: store) == ObjectPrivacy.recipeLabel
+            {
+                return true
+            }
+            current = item.parent
+            depth += 1
+        }
+        return false
+    }
+
     /// Read-only: counts of things over a span, answered on the phone. (The full query AST is M3 slice 4; this is
     /// the first slice of it: count, from one class, during today / this week / this month.)
     static var answerQuery: Tool {
@@ -289,7 +314,10 @@ public enum TessTools {
             guard let classDef = call.store.allClasses().first(where: {
                 countable.contains($0.id) && IngredientLine.key(for: $0.name) == IngredientLine.key(for: from)
             }) else { throw TessToolError("nothing called \(from)") }
-            let objects = call.store.objects(of: classDef)
+            // What goes to Claude drops private objects (ruling 61): on-screen counts keep them, this count does not.
+            let objects = call.store.objects(of: classDef).filter {
+                !Self.isPrivateForClaude($0, store: call.store, classes: call.engine.classes)
+            }
             let calendar = Calendar.current
             let day = TesseraDay(calendar: calendar)
             // His day and week (04:00 edges): "coffees today" at 01:00 counts from 04:00 yesterday.
@@ -374,7 +402,9 @@ public enum ListLookup {
     /// The fewest letters that count as a prefix of a list's name.
     static let prefixMinimum = 3
 
-    static func find(_ name: String, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) throws -> ObjectRecord {
+    static func find(_ name: String, store: ObjectStore,
+                     classes: [SystemCatalog.Key: ClassDef]) throws -> ObjectRecord
+    {
         let query = name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         let lists = ListContents(store: store, classes: classes).lists()
         func title(_ list: ObjectRecord) -> String {
