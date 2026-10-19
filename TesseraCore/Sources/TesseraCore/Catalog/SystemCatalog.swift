@@ -19,6 +19,7 @@ public enum SystemCatalog {
         case process
         case slot, plan
         case tessCall
+        case tessSent
         case settings
         case tessWaiting
         case tessMemory
@@ -230,6 +231,14 @@ public enum SystemCatalog {
             FieldSpec(key: "costNano", name: "Cost (n$)", kind: .number),
             FieldSpec(key: "latencyMs", name: "Latency", kind: .number, unit: "ms"),
             FieldSpec(key: "outcome", name: "Outcome", kind: .text),
+            FieldSpec(key: "requestID", name: "Request", kind: .text),
+        ]),
+        // The words of one request to Claude, exactly as sent ("Private phrase" for a walled one), beside its Tess Call
+        // row and linked by requestID. On the phone only: never in a backup copy, the iCloud copy or an export, and
+        // never the key. "Clear what was sent" deletes the rows; the spend stays in Tess Call (G653).
+        ClassSpec(key: .tessSent, name: "Tess Sent", parent: .thing, symbol: "paperplane", colorRole: "neutral", fields: [
+            FieldSpec(key: "use", name: "Use", kind: .text),
+            FieldSpec(key: "words", name: "Words", kind: .text),
             FieldSpec(key: "requestID", name: "Request", kind: .text),
         ]),
         // His preferences that travel with a restore (docs/research/settings-object.md): one object, a fixed id, every

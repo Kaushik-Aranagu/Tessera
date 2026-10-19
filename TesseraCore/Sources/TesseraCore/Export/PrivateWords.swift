@@ -24,10 +24,19 @@ enum PrivateWords {
     static let localOnlyClassKeys: Set<String> = [
         SystemCatalog.Key.tessCall.systemKey,
         SystemCatalog.Key.tessWaiting.systemKey,
+        SystemCatalog.Key.tessSent.systemKey,
     ]
 
+    /// The family, not the exact class: a subclass of Tess Call, Tess Waiting or Tess Sent is local-only too.
     static func isLocalOnly(_ record: ObjectRecord) -> Bool {
-        record.classDef?.systemKey.map(localOnlyClassKeys.contains) ?? false
+        var current = record.classDef
+        var depth = 0
+        while let classDef = current, depth < 12 {
+            if let key = classDef.systemKey, localOnlyClassKeys.contains(key) { return true }
+            current = classDef.parent
+            depth += 1
+        }
+        return false
     }
 
     static func localOnlyIDs(in context: TesseraContext) -> Set<UUID> {

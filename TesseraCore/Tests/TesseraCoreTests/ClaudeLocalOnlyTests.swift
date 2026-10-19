@@ -47,4 +47,45 @@ struct ClaudeLocalOnlyTests {
         #expect(try titles(local).contains("Capture quokkaphrase"))
         #expect(try titles(local).contains("ring the quokkaplumber on tuesday"))
     }
+
+    @Test func sentLogNeverInBackupOrExport() throws {
+        let dir = try base.folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = try storeWithClaudeRows(at: dir.appendingPathComponent("tessera.sqlite"))
+        let classes = try store.prepareCatalog()
+        let sent = try store.create(#require(classes[.tessSent]), title: "capture request")
+        try store.set("words", to: .text("zebrasentwords"), on: sent)
+        // A subclass of Tess Call is in the family, and a link from a Claude row goes with it.
+        let sub = store.createClass(name: "Tess Call Extra", parent: classes[.tessCall])
+        let extra = store.create(sub, title: "extra quokkasub")
+        let noteClass = try #require(classes[.note])
+        let note = try #require(store.objects(of: noteClass).first)
+        store.context.insert(ObjectLink(from: sent, fieldID: UUID(), toObject: note))
+        store.context.insert(OpRecord(action: "x", actor: .system, summary: "quokkaop",
+                                      ops: [.setTitle(object: extra.id, old: "a", new: "quokkaop")], state: .committed))
+        store.save()
+        let json = try base.text(of: TesseraExport(context: store.context).encoded())
+        #expect(!json.contains("zebrasentwords") && !json.contains("quokka"))
+        let icloud = dir.appendingPathComponent("icloud.sqlite")
+        try TesseraBackup.write(from: store.context, to: icloud, leavingOutPrivate: true)
+        let queue = try DatabaseQueue(path: icloud.path)
+        let ids = [sent.id, extra.id].map(\.uuidString)
+        let counts: [Int] = try queue.read { db in
+            try ids.flatMap { id -> [Int] in
+                [
+                    try Int.fetchOne(db, sql: "SELECT count(*) FROM object WHERE id = ?", arguments: [id]) ?? -1,
+                    try Int.fetchOne(db, sql: "SELECT count(*) FROM link WHERE fromID = ?", arguments: [id]) ?? -1,
+                    try Int.fetchOne(db, sql: "SELECT count(*) FROM op WHERE instr(objectIDs, ?) > 0",
+                                     arguments: [id]) ?? -1,
+                ]
+            }
+        }
+        #expect(counts == Array(repeating: 0, count: 6), "\(counts)")
+        // The local copy keeps them.
+        let local = dir.appendingPathComponent("local.sqlite")
+        try TesseraBackup.write(from: store.context, to: local)
+        let titles = try DatabaseQueue(path: local.path)
+            .read { try String.fetchAll($0, sql: "SELECT title FROM object") }
+        #expect(titles.contains("capture request"))
+    }
 }
