@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Training reorganized</title>
+<style>
+:root{--ink:20,24,31;--s2:.66;--ctx:#5B3FB8;--tess:#2F5BD0;--push:#D8432A;--pull:#2F5BD0;--legs:#C98A12;--live:#E5482C}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight','Inter',sans-serif;padding:28px 30px 30px;width:max-content}
+.board{display:flex;gap:36px;margin-bottom:40px}
+.cell{width:390px}
+.cap{font-weight:700;font-size:15px;letter-spacing:.07em;color:rgba(23,20,31,.66);height:58px;line-height:21px;text-transform:uppercase}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#FBFBF8;color:rgb(var(--ink));border-radius:0}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap;text-transform:uppercase}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),.38)}
+.b{font-size:21px;line-height:28px}
+.ctx{color:var(--ctx)}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.t56{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.name{font-size:21px;font-weight:500;line-height:26px;letter-spacing:-.01em}
+.d16{font-size:16px;line-height:20px}
+.num{font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.hr{position:absolute;height:1px;background:rgba(var(--ink),.12)}
+.key{position:absolute;white-space:nowrap}
+.key i{display:block;height:6px;margin-top:8px;background:rgb(var(--ink));border-radius:3px 3px 3px 3px/3px 3px 3px 3px}
+.tess{position:absolute;right:71px;width:270px;text-align:right;color:var(--tess);font-size:21px;line-height:28px}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{width:1900px;font-weight:600;font-size:15px;letter-spacing:.04em;color:rgba(23,20,31,.7);line-height:22px;text-transform:uppercase}
+.names{display:flex;gap:36px}
+.opt{width:610px;background:#FBFBF8;padding:34px 36px 38px;box-sizing:border-box;color:rgb(var(--ink))}
+.opt h3{margin:0 0 4px;font-size:21px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.opt .why{font-size:21px;line-height:28px;color:rgba(var(--ink),.66);margin-bottom:22px}
+.opt .six{border-top:1px solid rgba(var(--ink),.12)}
+.opt .six div{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid rgba(var(--ink),.12)}
+.opt .six b{font-size:28px;font-weight:500;letter-spacing:-.02em}
+.opt .six span{font-size:16px;color:rgba(var(--ink),.66)}
+.opt .reads{margin-top:20px;font-size:16px;line-height:24px;color:rgba(var(--ink),.66)}
+.opt .reads b{color:rgb(var(--ink));font-weight:600}
+.pick{display:inline-block;margin-bottom:10px;font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--push)}
+</style></head><body>
+<div class="board" id="c1"></div>
+<div class="board" id="c2"></div>
+<div class="board" id="c3"></div>
+<div class="board" id="c4"></div>
+<script src="muscle-figure.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+// ---- the figure: SVG from Design's path data, left half drawn and mirrored ----
+const FIG={front:FRONT,back:BACK};
+const TINT={push:'#D8432A',pull:'#2F5BD0',legs:'#C98A12'};
+function fig(side,roles,h,tint,opt={}){
+  const d=FIG[side],w=h*200/440,dim=opt.dim||{};
+  const half=(m)=>`<g transform="${m}">`+
+    Object.entries(d.regions).map(([id,p])=>roles[id]?`<path d="${p}" fill="${tint}" fill-opacity="${roles[id]==='p'?1:.7}"/>`:'').join('')+
+    d.outline.concat(d.lines).map(p=>`<path d="${p}" fill="none" stroke="rgb(20,24,31)" stroke-opacity="${opt.oa||.24}" stroke-width="${opt.line||1.4}" stroke-linecap="round" stroke-linejoin="round"/>`).join('')+`</g>`;
+  return `<svg viewBox="0 0 200 440" width="${w}" height="${h}" style="${opt.style||''}">${half('')}${half('translate(200 0) scale(-1 1)')}</svg>`;
+}
+// stored muscle -> region id per side
+const REG=(m,side)=>({chest:'Chest',frontDelts:'FrontDelts',sideDelts:side==='back'?'RearDelts':'FrontDelts',rearDelts:'RearDelts',triceps:'Triceps',biceps:'Biceps',forearms:'Forearms',lats:'Lats',upperBack:'UpperBack',lowerBack:'LowerBack',abs:'Abs',obliques:'Obliques',glutes:'Glutes',quads:'Quads',hamstrings:'Hamstrings',adductors:'Adductors',abductors:'Abductors',calves:'Calves'})[m];
+const hasRegion=(m,side)=>{const r=REG(m,side);return r&&FIG[side].regions[r]};
+function rolesFor(ex,side){const o={};(ex.s||[]).forEach(m=>{if(hasRegion(m,side))o[REG(m,side)]='s'});(ex.p||[]).forEach(m=>{if(hasRegion(m,side))o[REG(m,side)]='p'});return o}
+function sideFor(ex){const pf=(ex.p||[]).filter(m=>hasRegion(m,'front')&&!['sideDelts'].includes(m)).length,pb=(ex.p||[]).filter(m=>hasRegion(m,'back')&&!['sideDelts','frontDelts'].includes(m)&&REG(m,'back')!=='Calves'&&m!=='forearms').length;return pb>pf?'back':'front'}
+function union(list,side){const o={};list.forEach(ex=>{(ex.s||[]).forEach(m=>{if(hasRegion(m,side)&&!o[REG(m,side)])o[REG(m,side)]='s'});});list.forEach(ex=>(ex.p||[]).forEach(m=>{if(hasRegion(m,side))o[REG(m,side)]='p'}));return o}
+
+const PUSH={name:'Bench day',cls:'push',time:'about 55 min',works:'Works chest, shoulders and triceps',tess:'Bench press is ready for 82.5 today.',plan:'Push Pull Legs, rolls on',ex:[
+ {n:'Bench press',t:'4 \u00d7 5\u20138',w:'82.5',p:['chest'],s:['triceps','frontDelts']},
+ {n:'Overhead press',t:'3 \u00d7 6\u201310',w:'47.5',p:['frontDelts'],s:['triceps','sideDelts']},
+ {n:'Incline dumbbell press',t:'3 \u00d7 8\u201312',w:'28',p:['chest','frontDelts'],s:['triceps']},
+ {n:'Dumbbell lateral raise',t:'3 \u00d7 12\u201315',w:'10',p:['sideDelts']},
+ {n:'Rope pushdown',t:'3 \u00d7 10\u201315',w:'30',p:['triceps']}]};
+const PULL={name:'Row day',cls:'pull',time:'about 50 min',works:'Works back, shoulders and biceps',tess:'Barbell row is ready for 70 today.',plan:'Push Pull Legs, rolls on',ex:[
+ {n:'Barbell row',t:'4 \u00d7 6\u201310',w:'70',p:['upperBack','lats'],s:['biceps','rearDelts','lowerBack']},
+ {n:'Lat pulldown',t:'3 \u00d7 8\u201312',w:'62.5',p:['lats'],s:['biceps','upperBack']},
+ {n:'Seated cable row',t:'3 \u00d7 10\u201312',w:'55',p:['upperBack','lats'],s:['biceps','rearDelts']},
+ {n:'Face pull',t:'3 \u00d7 12\u201315',w:'27.5',p:['rearDelts'],s:['upperBack']},
+ {n:'Dumbbell curl',t:'3 \u00d7 10\u201312',w:'14',p:['biceps'],s:['forearms']}]};
+const TC=c=>TINT[c];
+const soul=()=>{const P=['#86B4FF','#FF5B3A','#FFC23D'];return `<div class="soul"><i style="left:0;top:8px;background:${P[0]}"></i><i style="left:16px;top:0;background:${P[1]}"></i><i style="left:10px;top:18px;background:${P[2]}"></i></div>`};
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const strip=(P,lit=-1,part=0)=>{const total=P.ex.reduce((s,e)=>s+parseInt(e.t),0);let x=24;return `<div class="abs" style="left:0;right:0;top:0;height:3px">${P.ex.map((e,i)=>{const w=(342-4*(P.ex.length-1))*parseInt(e.t)/total;const h=`<div class="abs" style="top:0;height:3px;left:${x}px;width:${w}px;background:rgba(var(--ink),${i<lit?.9:.14})"></div>${i===lit?`<div class="abs" style="top:0;height:3px;left:${x}px;width:${w*part}px;background:var(--live)"></div>`:''}`;x+=w+4;return h}).join('')}</div>`};
+const startKey=(txt,y)=>`<div class="key lbl" style="left:24px;top:${y}px">${txt}<i style="width:${txt.length*10.4}px"></i></div>`;
+const area=(y=58)=>`<div class="abs" style="left:24px;top:${y}px;font-size:21px;font-weight:600;letter-spacing:-.01em">Training</div>`;
+function words(P){return `<div class="abs b ctx" style="left:24px;top:100px">today, ${P.ex.length} exercises, ${P.time}</div>`}
+
+const cell=(cap,html)=>`<div class="cell"><div class="cap">${cap}</div>${html}</div>`;
+const strip2=0;
+// ---- set marks ----
+const PAL='#D8432A';
+// sets: {r:reps, w:kg, st:'done'|'now'|'next'}; top = heaviest weight of the exercise today
+const REP=4.2;
+function markA(sets,top){ // tally: one tick per rep, tick height = weight
+  let x=0,out='';const H=22;
+  sets.forEach((s,i)=>{const h=Math.max(.45,s.w/top)*H, n=s.r;
+    for(let k=0;k<n;k++){const tx=x+k*REP+1, ty=(H-h)/2;
+      const over=s.over&&k>=n-s.over;
+      if(s.st==='done') out+=`<rect x="${tx}" y="${ty}" width="2.4" height="${h}" rx="1.2" fill="${over?'#14181F':PAL}"/>`;
+      else if(s.st==='now') out+=`<rect x="${tx+.6}" y="${ty+.6}" width="1.6" height="${h-1.2}" rx=".8" fill="none" stroke="rgb(20,24,31)" stroke-opacity=".9" stroke-width="1.2"/>`;
+      else out+=`<rect x="${tx+.6}" y="${ty+.6}" width="1.6" height="${h-1.2}" rx=".8" fill="none" stroke="rgb(20,24,31)" stroke-opacity=".28" stroke-width="1.2"/>`;}
+    x+=n*REP+16;});
+  return `<svg width="${x}" height="22" style="overflow:visible">${out}</svg>`;
+}
+function markB(sets,top){ // bars: length = reps, thickness = weight
+  let x=0,out='';
+  sets.forEach((s,i)=>{const len=s.r*REP*1.1,t=3+Math.max(.4,s.w/top)*7,y=11-t/2;
+    const fill=s.st==='done'?PAL:'none';const stk=s.st==='done'?'none':`rgb(20,24,31)`;const op=s.st==='next'?.28:.9;
+    out+=`<rect x="${x}" y="${y}" width="${len}" height="${t}" rx="2" fill="${fill}" stroke="${stk}" stroke-opacity="${op}" stroke-width="1.2" ${s.st==='next'?'stroke-dasharray="3 3"':''}/>`;
+    x+=len+14;});
+  return `<svg width="${x}" height="22" style="overflow:visible">${out}</svg>`;
+}
+function markC(sets,top){ // blocks: height = reps (stacked rep cells), width = weight
+  let x=0,out='';const CH=2.6,GAP=1.1;
+  sets.forEach((s,i)=>{const w=6+Math.max(.4,s.w/top)*8;
+    for(let k=0;k<s.r;k++){const y=24-(k+1)*(CH+GAP);
+      const fill=s.st==='done'?PAL:'none';const op=s.st==='next'?.28:.9;
+      out+=`<rect x="${x}" y="${y+24-24}" width="${w}" height="${CH}" rx="1" fill="${fill}" stroke="${s.st==='done'?'none':'rgb(20,24,31)'}" stroke-opacity="${op}" stroke-width="1"/>`;}
+    x+=w+12;});
+  return `<svg width="${x}" height="26" style="overflow:visible">${out}</svg>`;
+}
+const BENCH=[{r:8,w:82.5,st:'done'},{r:7,w:82.5,st:'done'},{r:8,w:80,st:'now'},{r:8,w:80,st:'next'}];
+const BENCHREST=BENCH.map(s=>({...s,st:'next',r:Math.min(s.r,8)}));
+const OHP=[{r:8,w:47.5,st:'next'},{r:8,w:47.5,st:'next'},{r:8,w:47.5,st:'next'}];
+const DONE=[{r:8,w:82.5,st:'done'},{r:7,w:82.5,st:'done'},{r:9,w:80,st:'done',over:1},{r:6,w:77.5,st:'done'}];
+const FN={A:markA,B:markB,C:markC};
+function panel(opt,title,sub,rec){
+ const f=FN[opt];
+ const rowH=(name,sets,top,line,y,tapNote)=>`<div class="abs" style="left:30px;right:30px;top:${y}px">
+   <div class="name">${name}</div>
+   <div style="margin-top:12px">${f(sets,top)}</div>
+   <div class="d16 s2" style="margin-top:8px">${line}</div>${tapNote||''}</div>`;
+ return `<div class="cell" style="width:560px"><div class="cap" style="height:92px;width:560px">${rec?'<span style="color:#D8432A">RECOMMENDED</span><br>':''}${title}<br><span style="font-weight:600;color:rgba(23,20,31,.55)">${sub}</span></div>
+ <div class="ph" style="width:560px;height:640px">
+  <div class="abs lbl s2" style="left:30px;top:26px;font-size:15px">Before you start</div>
+  ${rowH('Bench press',BENCHREST,82.5,'4 \u00d7 5\u20138 \u00b7 82.5 kg',54)}
+  ${rowH('Overhead press',OHP,82.5,'3 \u00d7 6\u201310 \u00b7 47.5 kg',172)}
+  <div class="hr" style="left:30px;right:30px;top:276px"></div>
+  <div class="abs lbl s2" style="left:30px;top:296px;font-size:15px">Mid-workout, set 3 on its way</div>
+  ${rowH('Bench press',BENCH,82.5,'set 2: 82.5 \u00d7 7 (a tap on any mark says this)',324)}
+  <div class="hr" style="left:30px;right:30px;top:432px"></div>
+  <div class="abs lbl s2" style="left:30px;top:452px;font-size:15px">Done: one set ran over, one came in light</div>
+  ${rowH('Bench press',DONE,82.5,'4 sets, 82.5 \u00d7 8 best',480)}
+ </div></div>`;
+}
+$('c1').innerHTML=panel('A','A \u00b7 Tally: one tick per rep','Tick height is the weight. Count the ticks, read the heaviness.',true)+panel('B','B \u00b7 Bars','Bar length is the reps, thickness is the weight.',false)+panel('C','C \u00b7 Blocks','A column per set: it grows a block per rep, wider when heavier.',false);
+
+// ---- long press: how it is done ----
+function press(){
+ const e=PUSH.ex[0],tint=TC('push');
+ const rows=PUSH.ex.map((x,i)=>{const side=sideFor(x),y=268+i*72;return `<div class="abs" style="left:24px;right:24px;top:${y}px;height:70px;opacity:${i===0?1:.9}"><div class="abs" style="left:0;top:3px">${fig(side,rolesFor(x,side),62,tint,{line:2.6,oa:.5})}</div><div class="abs name" style="left:44px;top:6px">${x.n}</div><div class="abs d16 s2" style="left:44px;top:38px">${x.t}</div></div>`}).join('');
+ return `<div class="ph"><div class="abs" style="inset:0;filter:blur(7px);transform:scale(.94);transform-origin:50% 40%;opacity:.85">${strip(PUSH)}${area()}<div class="abs t44" style="left:24px;top:136px">Bench day</div>${rows}</div>
+ <div class="abs" style="left:0;right:0;top:0;height:640px;background:rgba(251,251,248,.82);backdrop-filter:blur(16px);border-radius:0 0 40px 40px;box-shadow:0 10px 40px rgba(20,24,31,.18)">
+  <div class="abs t44" style="left:24px;top:96px">Bench press</div>
+  <div class="abs b ctx" style="left:24px;top:152px">barbell, flat bench</div>
+  <div class="abs" style="left:24px;top:196px;width:342px;height:192px;background:linear-gradient(135deg,#2a2f3a,#14181F);overflow:hidden">
+    <div class="abs" style="left:0;right:0;bottom:0;top:0;display:flex;align-items:center;justify-content:center"><div style="font-weight:700;font-size:16px;letter-spacing:.08em;color:#F6F4EC">WATCH</div></div>
+    <div class="abs" style="left:14px;bottom:10px;font-size:16px;color:rgba(246,244,236,.7)">0:14 \u00b7 side view</div></div>
+  <div class="abs" style="left:24px;top:408px;width:262px" ><div class="b s2" style="font-size:21px">Shoulder blades pinned, bar to lower chest, press back up.</div></div>
+  <div class="abs" style="left:306px;top:404px">${fig('front',rolesFor(e,'front'),88,tint,{line:2.2,oa:.45})}</div><div class="abs" style="left:342px;top:404px"></div>
+  <div class="abs b ctx" style="left:24px;top:496px;width:340px;font-size:18px;line-height:24px">chest, with triceps and front shoulders</div>
+  <div class="abs d16" style="left:24px;top:526px">About 6 kcal a set at your weight. An estimate.</div>
+  <div class="abs lbl" style="left:24px;top:570px;font-size:15px">Open exercise<span style="margin-left:26px" class="s2">Swap</span><span style="margin-left:26px" class="s2">Close</span></div>
+ </div>${soul()}</div>`;
+}
+function you(){return `<div class="ph">
+ <div class="abs lbl s2" style="left:24px;top:58px;font-size:15px">\u2039 Settings</div>
+ <div class="abs b ctx" style="left:24px;top:100px">kept on this phone</div>
+ <div class="abs t56" style="left:24px;top:132px">You</div>
+ <div class="abs b" style="left:24px;top:230px;width:340px;line-height:40px">Weight <b style="font-weight:600;background:rgba(20,24,31,.06)">82.4 kg</b>, from your last weigh-in.<br>Height <b style="font-weight:600;background:rgba(20,24,31,.06)">178 cm</b>.<br>Age <b style="font-weight:600;background:rgba(20,24,31,.06)">31</b>.<br>Sex <b style="font-weight:600;background:rgba(20,24,31,.06)">not said</b>.</div>
+ <div class="abs b s2" style="left:24px;top:440px;width:330px">Used for one thing: an estimate of the calories a set or a workout burns. It stays on this phone and never goes to Claude.</div>
+ <div class="tess" style="top:765px">Say your weight and I'll keep it here.</div>${soul()}</div>`}
+$('c2').innerHTML=cell('Long press on an exercise: how it is done (a glass sheet from the top, the page behind)',press())+cell('The profile behind the calorie estimate: four sentences, value words',you());
+
+// ---- peeking tabs on the exercise page ----
+const TABS=['History','Rep maxes','Muscles','How'];
+function titles(pos,bl){ // pos: fractional index of the centred tab
+  return TABS.map((tx,i)=>{const d=i-pos,a=Math.abs(d);if(a>1.6)return '';
+    const size=21-5*Math.min(a,1),blur=(bl?1.4:0)*Math.min(a,1),op=1-.62*Math.min(a,1),x=195+d*118;
+    return `<div class="abs" style="left:${x}px;top:0;transform:translateX(-50%);font-size:${size}px;font-weight:${a<.5?600:500};opacity:${op*(a>1?Math.max(0,1.6-a)/.6:1)};filter:blur(${blur}px);white-space:nowrap">${tx}</div>`}).join('')+
+   `<div class="abs" style="left:181px;top:30px;width:28px;height:5px;border-radius:3px;background:rgb(20,24,31)"></div>`;}
+const ex0=PUSH.ex[0];
+function histTab(){const rows=[['Oct 17','82.5 \u00d7 8','4 sets'],['Oct 13','82.5 \u00d7 7','4 sets'],['Oct 10','80 \u00d7 8','4 sets'],['Oct 6','80 \u00d7 8','3 sets'],['Oct 3','77.5 \u00d7 8','4 sets']];
+ const pts='M0 70 C40 66 80 68 120 54 C160 44 200 50 240 32 C280 22 310 18 342 8';
+ return `<svg class="abs" style="left:24px;top:0" width="342" height="84"><path d="${pts}" fill="none" stroke="#2F5BD0" stroke-width="4" stroke-linecap="round"/></svg>
+ <div class="abs lbl s2" style="left:24px;top:92px;font-size:15px">90 days</div><div class="abs lbl" style="right:24px;top:92px;font-size:15px;color:#2F5BD0">+6.5 since July</div>
+ ${rows.map((r,i)=>`<div class="abs" style="left:24px;right:24px;top:${130+i*46}px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:16px;color:rgba(20,24,31,.66);width:74px">${r[0]}</span><span class="d16 s2" style="flex:1">${r[2]}</span><span class="name" style="font-weight:600">${r[1]}</span></div>`).join('')}
+ <div class="abs lbl" style="left:24px;top:372px;font-size:15px">All 24 sessions</div>`;}
+function repTab(){const g=[[1,'104.5'],[2,'98.0'],[3,'95.0'],[4,'92.0'],[5,'90.0'],[6,'87.5'],[7,'85.0'],[8,'82.5'],[9,'80.0'],[10,'77.5']];
+ return g.map((c,i)=>{const col=i%2,row=Math.floor(i/2);return `<div class="abs" style="left:${24+col*172}px;top:${6+row*64}px"><div class="lbl s2" style="font-size:15px">${c[0]}RM</div><div class="num" style="font-size:28px;font-weight:300;margin-top:4px">${c[1]}</div></div>`}).join('')+`<div class="abs d16 s2" style="left:24px;top:340px;width:320px">Warm-ups and sets over 12 reps don\u2019t count here.</div>`;}
+function musTab(){const roles=[['Chest','primary'],['Triceps','half a set each'],['Front shoulders','half a set each']];
+ return `<div class="abs" style="left:20px;top:0">${fig('front',rolesFor(ex0,'front'),215,TC('push'),{line:2.2,oa:.4})}</div><div class="abs" style="left:116px;top:0">${fig('back',rolesFor(ex0,'back'),215,TC('push'),{line:2.2,oa:.4})}</div>
+ ${roles.map((r,i)=>`<div class="abs" style="left:224px;right:16px;top:${10+i*66}px"><div style="display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:14px;height:14px;border-radius:7px;background:#D8432A;opacity:${i?0.7:1}"></span><span class="name" style="font-size:19px">${r[0]}</span></div><div class="d16 s2" style="margin:4px 0 0 22px">${r[1]}</div></div>`).join('')}
+ <div class="abs d16 s2" style="left:224px;right:16px;top:222px">Tap a part to open that muscle.</div>`;}
+function howTab(){return `<div class="abs" style="left:24px;top:0;width:342px;height:168px;background:linear-gradient(135deg,#2a2f3a,#14181F)"><div class="abs" style="inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;letter-spacing:.08em;color:#F6F4EC">WATCH</div><div class="abs" style="left:12px;bottom:8px;font-size:16px;color:rgba(246,244,236,.7)">0:14, side view</div></div>
+ <div class="abs b s2" style="left:24px;top:188px;width:342px">Shoulder blades pinned, bar to lower chest, press back up.</div>
+ <div class="abs d16" style="left:24px;top:262px">Barbell, flat bench, 20 kg bar</div><div class="abs d16 s2" style="left:24px;top:290px">About 6 kcal a set at your weight. An estimate.</div>`;}
+
+function zoneOverlay(){const z=(l,t,w,h,c,txt,lab='center')=>`<div class="abs" style="left:${l}px;top:${t}px;width:${w}px;height:${h}px;background:${c};display:flex;align-items:${lab};justify-content:center;text-align:center;padding:3px 8px;box-sizing:border-box"><span style="font-weight:700;font-size:12px;letter-spacing:.06em;color:rgb(20,24,31);text-transform:uppercase">${txt}</span></div>`;
+ return z(0,50,390,270,'rgba(47,91,208,.14)','Along the routine: next exercise','flex-end')+z(24,324,342,392,'rgba(216,67,42,.14)','Between the tabs','flex-end')+z(0,50,24,666,'rgba(20,24,31,.16)','')+z(358,50,32,666,'rgba(20,24,31,.16)','')+`<div class="abs lbl" style="left:2px;top:690px;font-size:13px;width:22px;line-height:14px;writing-mode:vertical-rl;color:rgba(20,24,31,.7)">edge: back</div><div class="abs lbl" style="left:352px;top:620px;font-size:13px;line-height:14px;writing-mode:vertical-rl;color:rgba(20,24,31,.7)">edge: what it knows</div>`;}
+const CONT={0:histTab,1:repTab,2:musTab,3:howTab};
+function exPage(pos,bl,zones){const i0=Math.floor(pos),f=pos-i0;
+ const stage=[i0,i0+1].filter(i=>i>=0&&i<4).map(i=>{const off=(i-pos)*390,a=Math.abs(i-pos);return `<div class="abs" style="left:0;top:0;width:390px;height:340px;transform:translateX(${off}px);opacity:${1-.7*Math.min(a,1)};filter:blur(${(bl?1.6:0)*Math.min(a,1)}px)">${CONT[i]()}</div>`}).join('');
+ return `<div class="ph">
+ <div class="abs lbl s2" style="left:24px;top:58px;font-size:15px">Exercises  \u203a  Barbell lifts</div>
+ <div class="abs t56" style="left:24px;top:90px">Bench press</div>
+ <div class="abs b ctx" style="left:24px;top:156px;width:300px">chest, with triceps and front shoulders</div>
+ <div class="abs" style="left:24px;top:232px"><div class="num" style="font-size:44px;font-weight:300">104.5</div><div class="lbl s2" style="font-size:15px;margin-top:6px">e1RM, kg</div></div>
+ <div class="abs" style="left:152px;top:232px"><div class="num" style="font-size:44px;font-weight:300">85 \u00d7 6</div><div class="lbl s2" style="font-size:15px;margin-top:6px">Best set</div></div>
+ <div class="abs" style="left:296px;top:216px">${fig('front',rolesFor(ex0,'front'),100,TC('push'),{line:2.2,oa:.45})}</div><div class="abs" style="left:340px;top:216px">${fig('back',rolesFor(ex0,'back'),100,TC('push'),{line:2.2,oa:.45})}</div>
+ <div class="abs" style="left:0;right:0;top:330px;height:40px">${titles(pos,bl)}</div>
+ <div class="abs" style="left:0;top:376px;width:390px;height:340px;overflow:hidden">${stage}</div>
+ ${zones?zoneOverlay():''}
+ ${startKey('Log a set',724)}
+ <div class="tess" style="top:765px">Next time: 82.5 for 7.</div>${soul()}</div>`;}
+
+function reviewPage(pos){
+ const T=['Looks and day','Workout','Connected','Shown'];
+ const tt=T.map((tx,i)=>{const d=i-pos,a=Math.abs(d);if(a>1.6)return '';const size=21-5*Math.min(a,1),op=1-.62*Math.min(a,1),x=195+d*130;return `<div class="abs" style="left:${x}px;top:0;transform:translateX(-50%);font-size:${size}px;font-weight:${a<.5?600:500};opacity:${op};white-space:nowrap">${tx}</div>`}).join('')+`<div class="abs" style="left:181px;top:30px;width:28px;height:5px;border-radius:3px;background:rgb(20,24,31)"></div>`;
+ const rows=[['Rest timer','On','Rest counts down after each set and says when it\'s up.'],['Swap exercise','Two taps','Swap asks once, then swaps.'],['Forgot Finish nudge','Off','A workout left open waits quietly.'],['Quiet interrupts','Off','']];
+ return `<div class="ph">
+ <div class="abs lbl s2" style="left:24px;top:58px;font-size:15px">\u2039 Review</div>
+ <div class="abs b ctx" style="left:24px;top:100px">how Tessera runs</div>
+ <div class="abs t56" style="left:24px;top:132px">Settings</div>
+ <div class="abs b s2" style="left:24px;top:214px;width:342px">Try a new way; today\'s stays one tap away.</div>
+ <div class="abs" style="left:0;right:0;top:300px;height:40px">${tt}</div>
+ ${rows.map((r,i)=>`<div class="abs" style="left:24px;right:24px;top:${[372,486,558,630][i]}px"><div class="b">${r[0]}: <b style="font-weight:600;background:rgba(20,24,31,.06)">${r[1]}</b>.</div>${i===0?`<div class="b" style="color:var(--tess);margin-top:4px">${r[2]}</div>`:''}</div>${i<3?`<div class="hr" style="left:24px;right:24px;top:${[474,546,618][i]}px"></div>`:''}`).join('')}
+ <div class="abs lbl" style="left:24px;top:700px;font-size:15px">Everything as before</div>
+ <div class="tess" style="top:765px">Try one, and I'll say what changed.</div>${soul()}</div>`;}
+$('c3').innerHTML=cell('One tab pattern: the tab you are on sits in the middle, its neighbours wait at the sides, smaller and dimmed, crisp ink. History',exPage(0,false))+cell('Mid-swipe, the default: the words slide, grow and darken into the middle, the page follows the finger',exPage(.45,false))+cell('Variant, if you want blurred neighbours: same swipe, the sides softened (your Oct 17 rule was no soft patches)',exPage(.45,true))+cell('Muscles: everything fits, no scrolling. Big figures, every muscle and its role',exPage(2,false))+cell('How: the clip, the cue, the kit, the calorie estimate',exPage(3,false));
+$('c4').innerHTML=cell('Two swipes, kept apart: above the tabs goes along the routine, on the tabs goes between tabs, the edges are unchanged',exPage(2,false,true))+cell('The same pattern in Settings: Review switches in pages of six, each page named',reviewPage(1));
+</script></body></html>

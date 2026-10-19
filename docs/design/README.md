@@ -29,3 +29,5 @@ Index of the docs in `docs/design/`.
 - [kitchen-stretch-104.md](kitchen-stretch-104.md): 104. Kitchen stretch: Pantry kept, Can cook shelf, Week of dinners (spec, not yet okayed by Kaushik)
 - [watch-set-logging-105.md](watch-set-logging-105.md): 105. Watch one-screen set logging (spec, not yet okayed by Kaushik)
 - [claude-gate-106.md](claude-gate-106.md): 106. The Claude gate: the key question, the Sent rows, the willSend line and the restore offer (release 22 gate)
+- [training-reorg-107.md](training-reorg-107.md): 107. Training reorganized: list-first page with a figure on every exercise row and the day's pair, plain routine names (three options, recommended: by the lift, Bench day), live and exercise-page figures, the body-first alternative, review switches and the Builder A brief (spec only, waiting on Kaushik's pick)
+- [set-marks-tabs-108.md](set-marks-tabs-108.md): 108. Set marks (Tally, Bars recommended, Blocks) replacing the wave, the long-press how-it-is-done sheet, the profile, and one app-wide tab pattern (centered current tab, crisp dimmed neighbours, no scrolling, swipe zones)
