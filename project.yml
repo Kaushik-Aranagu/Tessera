@@ -99,6 +99,27 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         SKIP_INSTALL: YES
         SUPPORTS_MACCATALYST: NO
+  TesseraWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "27.0"
+    info:
+      path: Watch/Info.plist
+      properties:
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.kaushikaranagu.tessera
+        UIAppFonts:
+          - InterTight-Variable.ttf
+    sources:
+      - Watch
+      - path: Shared/WatchLink.swift
+      - path: Resources/Fonts/InterTight-Variable.ttf
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera.watch
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Tessera
+        TARGETED_DEVICE_FAMILY: "4"
   TesseraTests:
     type: bundle.unit-test
     platform: iOS
