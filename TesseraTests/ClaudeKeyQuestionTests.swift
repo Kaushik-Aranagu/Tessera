@@ -15,8 +15,7 @@ struct ClaudeKeyQuestionTests {
         #expect(ClaudeKeyQuestionCopy.question == "Use the Claude key still on this phone?")
         #expect([ClaudeKeyQuestionCopy.yes, ClaudeKeyQuestionCopy.no, ClaudeKeyQuestionCopy.later]
             == ["Yes", "No", "Later"])
-        #expect(ClaudeKeyQuestionCopy.yesReceipt == "Claude on. Turn this off in Settings: Claude.")
-        #expect(!ClaudeKeyQuestionCopy.spoken.contains("sk-"))
+        #expect(ClaudeKeyQuestionCopy.yesReceipt == "Using the Claude key.")
     }
 
     @Test func keyQuestionIsAbsentWithoutAKey() {
@@ -26,7 +25,7 @@ struct ClaudeKeyQuestionTests {
         #expect(!model.keyQuestionDue)
     }
 
-    @Test func laterWritesNothingAndYesAnswersOnce() throws {
+    @Test func laterWritesNothingAndYesAnswersOnce() {
         let model = AppModel(context: container.mainContext)
         model.settingsAreReal = true
         model.refreshKeyQuestion(keys: InMemoryKeychain(fake))

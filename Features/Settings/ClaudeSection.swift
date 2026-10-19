@@ -71,6 +71,8 @@ struct ClaudeSection: View {
     /// Bumped when the key wouldn't leave the Keychain: the one soft warning for a write that didn't save.
     @State private var notSaved = 0
     @State private var notSavedAt: Date?
+    /// Yes to the key question: one soft success (sheet 106).
+    @State private var answeredYes = 0
     /// The first line, "Tess asks Claude": misses and Plan my day. Lives in Core's settings object only.
     @State private var missesGoToClaude = true
     /// Tess's answer to the last flip of the switch, shown under it.
@@ -160,6 +162,7 @@ struct ClaudeSection: View {
                     Button(missesGoToClaude ? "yes" : "no", action: toggleMisses)
                         .buttonStyle(.valueWash)
                         .fontWeight(.semibold)
+                        .foregroundStyle(model.keyQuestionDue ? Theme.Colors.inkSecondary : Theme.Colors.ink)
                         .contentTransition(.opacity)
                         .accessibilityLabel("Tess asks Claude")
                         .accessibilityValue(missesGoToClaude ? "yes" : "no")
@@ -167,6 +170,12 @@ struct ClaudeSection: View {
                 }
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
+                // Until he answers the key question every Claude path is closed (sheet 106, section 1).
+                if model.keyQuestionDue {
+                    Text(ClaudeKeyQuestionCopy.waiting)
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                }
                 // Tess answers the flip inline, under the switch.
                 if let switchLine {
                     Text(switchLine)
@@ -214,12 +223,16 @@ struct ClaudeSection: View {
                     ClaudeKeyQuestion { answer in
                         let receipt = model.answerKeyQuestion(answer)
                         missesGoToClaude = model.asksClaude
+                        if answer == true {
+                            answeredYes += 1
+                        }
                         if let receipt {
                             withTesseraAnimation(reduceMotion: reduceMotion) { switchLine = receipt }
                             AccessibilityNotification.Announcement(receipt).post()
                         }
                     }
                     .padding(.vertical, Theme.Spacing.s)
+                    .tesseraFeedback(.cleared, trigger: answeredYes)
                 } else {
                     Text("Key saved · \(Text(status).foregroundStyle(Theme.Colors.inkSecondary))")
                         .textRole(.body)
@@ -484,6 +497,8 @@ struct ClaudeReceipts: View {
     @Environment(\.dismiss) private var dismiss
     /// "Cleared what was sent." after the clear: plain, and no UNDO (G653).
     @State private var clearedLine: String?
+    /// One soft haptic on Clear (sheet 106).
+    @State private var cleared = 0
 
     var body: some View {
         let _ = model.revision
@@ -527,10 +542,12 @@ struct ClaudeReceipts: View {
                                 .textRole(.body)
                                 .foregroundStyle(Theme.Colors.ink)
                             if let said = SentWords.of(call, in: model.store, words: words) {
+                                // At most four lines in the list; "Private phrase" plain, at full ink (sheet 106).
                                 Text(said)
                                     .textRole(.body)
-                                    .foregroundStyle(Theme.Colors.inkSecondary)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                    .foregroundStyle(said.hasPrefix(TessSentLog.privatePhrase) ? Theme.Colors.ink
+                                        : Theme.Colors.inkSecondary)
+                                    .lineLimit(4)
                             }
                         }
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -540,6 +557,7 @@ struct ClaudeReceipts: View {
                 if sent.count > 0 {
                     Button(SentWords.clear) {
                         let line = sent.clear()
+                        cleared += 1
                         clearedLine = line
                         AccessibilityNotification.Announcement(line).post()
                         model.touch()
@@ -557,6 +575,7 @@ struct ClaudeReceipts: View {
             .padding(.vertical, Theme.Spacing.l)
         }
         .background { ThemedBackground() }
+        .tesseraFeedback(.cleared, trigger: cleared)
         // The system back button is hidden, so the edge swipe back is ours (QA L1 on #353).
         .background { EdgeSwipeBack() }
         .navigationBarBackButtonHidden()

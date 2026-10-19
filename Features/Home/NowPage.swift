@@ -45,11 +45,10 @@ struct NowPage: View {
 
             // A Claude key found on a fresh store: one line on Now per cold launch until he answers (G687).
             if model.keyQuestionDue, !model.keyQuestionQuietOnNow {
-                ClaudeKeyQuestion { answer in
-                    let receipt = model.answerKeyQuestion(answer)
-                    if let receipt {
-                        TessVoice.shared.say(receipt)
-                    }
+                ClaudeKeyQuestionNowLine {
+                    // Shown once this launch: the three words wait in Claude's section (Review until Settings ships).
+                    model.keyQuestionQuietOnNow = true
+                    openLink(.review)
                 }
                 .padding(.bottom, Theme.Spacing.xl)
                 .transition(.opacity)
