@@ -51,6 +51,17 @@ struct TrainingLane: Identifiable, Equatable {
     let sets: Int
     /// The set numbers already logged (drawn as dried strokes in their pigments).
     let logged: Int
+    /// "4 × 5–8": the plan's scheme; the second line at rest.
+    var scheme = ""
+    /// Today's weight with its unit ("82.5 kg"); none when there is no weight yet.
+    var weight: String?
+    /// What the exercise works, for the lane's figure.
+    var muscles: [(name: String, role: MuscleRole)] = []
+
+    static func == (lhs: TrainingLane, rhs: TrainingLane) -> Bool {
+        lhs.id == rhs.id && lhs.name == rhs.name && lhs.target == rhs.target && lhs.sets == rhs.sets
+            && lhs.logged == rhs.logged && lhs.scheme == rhs.scheme && lhs.weight == rhs.weight
+    }
 }
 
 private struct TrainingAtRest: View {
@@ -58,6 +69,7 @@ private struct TrainingAtRest: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.zoomNamespace) private var namespace
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     /// The START tap's flight: 0 at the word, 1 landed in the strip.
     @State private var lift: CGFloat = 0
@@ -75,6 +87,10 @@ private struct TrainingAtRest: View {
 
     var body: some View {
         let lanes = lanes
+        let day = MuscleReading.union(lanes.map(\.muscles))
+        // The works line adds two lines under the name; the page's spacing tightens by what it adds so the bar word
+        // above never moves.
+        let tight = worksLine(day) != nil
         VStack(alignment: .leading, spacing: 0) {
             TrainingStrip(sets: lanes.map(\.sets), state: stripState(lanes))
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
@@ -83,18 +99,33 @@ private struct TrainingAtRest: View {
                     let width = (frame.width - spacing) * CGFloat(lanes.first?.sets ?? 0) / CGFloat(total)
                     firstSegment = CGRect(x: frame.minX, y: frame.minY, width: width, height: frame.height)
                 }
-                .padding(.bottom, Theme.Spacing.l)
+                .padding(.bottom, tight ? Theme.Spacing.m : Theme.Spacing.l)
 
             Text(context(lanes))
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.context)
                 .contentTransition(.opacity)
-                .padding(.bottom, Theme.Spacing.s)
+                .padding(.bottom, tight ? Theme.Spacing.xs : Theme.Spacing.s)
                 .entrance(0)
 
-            titleButton
-                .padding(.bottom, Theme.Spacing.l)
-                .entrance(1, hero: true)
+            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                titleButton
+                // A private workout says nothing about what it works (its figure still draws).
+                if let works = worksLine(day) {
+                    Text(works)
+                        .font(Theme.voice(size: 21))
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: 220, alignment: .leading)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(alignment: .topTrailing) {
+                dayPair(day)
+            }
+            .padding(.bottom, tight ? Theme.Spacing.s : Theme.Spacing.l)
+            .entrance(1, hero: true)
 
             StartMark(state: markState, lift: lift)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
@@ -103,12 +134,14 @@ private struct TrainingAtRest: View {
                 .onTapGesture { tapMark() }
                 .accessibilityAddTraits(markState.isAction ? .isButton : [])
                 .accessibilityAction { tapMark() }
-                .padding(.bottom, Theme.Spacing.xl)
+                .padding(.bottom, tight ? Theme.Spacing.s : Theme.Spacing.xl)
                 .entrance(2)
 
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
-                    LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone)
+                    LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone, tint: figureTint,
+                            showsStrokes: isRunning || isDone || lane.logged > 0,
+                            isLast: index == min(lanes.count, 5) - 1)
                         .frame(height: 72, alignment: .top)
                         // Live mode rises out of the first lane; the others sink away.
                         .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
@@ -140,7 +173,7 @@ private struct TrainingAtRest: View {
                             .transition(.opacity)
                     }
                 }
-                .padding(.top, Theme.Spacing.m)
+                .padding(.top, tight ? Theme.Spacing.xs : Theme.Spacing.m)
                 .entrance(5)
             }
             .modifier(Sinking(isOn: sinking))
@@ -174,6 +207,36 @@ private struct TrainingAtRest: View {
     }
 
     // MARK: Parts
+
+    /// "Works chest, shoulders and triceps" (the day's primary muscles); none for a private workout or when nothing
+    /// is stored.
+    private func worksLine(_ day: MuscleReading.Muscles) -> String? {
+        guard !isPrivateDay, !typeSize.isAccessibilitySize else { return nil }
+        let primary = day.filter { $0.role == .primary }.map(\.name)
+        return primary.isEmpty ? nil : MuscleWords.works(primary)
+    }
+
+    private var isPrivateDay: Bool {
+        titleAndRoute.0 == ObjectPrivacy.routineLabel
+    }
+
+    /// The day's pair of figures, 112 pt tall at the right: the union of the day's muscles, primary if primary
+    /// anywhere, in the routine's colour. Info only.
+    @ViewBuilder
+    private func dayPair(_ day: MuscleReading.Muscles) -> some View {
+        if !day.isEmpty, !typeSize.isAccessibilitySize {
+            HStack(spacing: 0) {
+                ForEach([false, true], id: \.self) { back in
+                    MuscleFigure(back: back, roles: MuscleFigureMap.roles(day, back: back), tint: figureTint,
+                                 lineOpacity: 0.4, lineWidth: 1.4)
+                        .frame(height: 112)
+                }
+            }
+            .offset(x: 20, y: -4)
+            .accessibilityHidden(true)
+            .allowsHitTesting(false)
+        }
+    }
 
     @ViewBuilder
     private var titleButton: some View {
@@ -226,6 +289,13 @@ private struct TrainingAtRest: View {
 
     private var isDone: Bool {
         if case .done = plan {
+            return true
+        }
+        return false
+    }
+
+    private var isRunning: Bool {
+        if case .running = plan {
             return true
         }
         return false
@@ -298,21 +368,36 @@ private struct TrainingAtRest: View {
         guard let exercise = model.store.linkedClass("exercise", of: slot) else { return nil }
         let sets = Int(model.store.number("sets", of: slot) ?? 3)
         let last = model.ledger.sessions(of: exercise).first?.sets.first
-        let target = last.map { "\(Format.kilograms($0.weight)) × \(Int($0.reps.rounded()))" }
-            ?? TrainingPage.scheme(sets: Double(sets), repMin: model.store.number("repMin", of: slot),
-                                   repMax: model.store.number("repMax", of: slot))
+        let scheme = TrainingPage.scheme(sets: Double(sets), repMin: model.store.number("repMin", of: slot),
+                                         repMax: model.store.number("repMax", of: slot))
+        let target = last.map { "\(Format.kilograms($0.weight)) × \(Int($0.reps.rounded()))" } ?? scheme
         return TrainingLane(id: slot.id, exercise: exercise, name: exercise.name, target: target, sets: sets,
-                            logged: 0)
+                            logged: 0, scheme: scheme, weight: last.map { Self.weightText($0.weight) },
+                            muscles: MuscleReading.muscles(of: exercise, store: model.store))
     }
 
     private func entryLane(_ entry: ObjectRecord, logged: Int, sets: Int? = nil) -> TrainingLane? {
         guard let exercise = model.store.linkedClass("exercise", of: entry) else { return nil }
         let planned = Int(model.store.number("targetSets", of: entry) ?? 3)
         let prefill = model.ledger.prefill(for: entry)
-        let target = prefill.weight.map { "\(Format.kilograms($0)) × \(prefill.reps)" }
-            ?? TrainingPage.target(sets: Double(planned), reps: model.store.number("targetReps", of: entry))
+        let scheme = TrainingPage.target(sets: Double(planned), reps: model.store.number("targetReps", of: entry))
+        let target = prefill.weight.map { "\(Format.kilograms($0)) × \(prefill.reps)" } ?? scheme
         return TrainingLane(id: entry.id, exercise: exercise, name: exercise.name, target: target,
-                            sets: max(sets ?? planned, logged, 1), logged: logged)
+                            sets: max(sets ?? planned, logged, 1), logged: logged,
+                            scheme: scheme.replacingOccurrences(of: " ×", with: " ×"),
+                            weight: prefill.weight.map { Self.weightText($0) },
+                            muscles: MuscleReading.muscles(of: exercise, store: model.store))
+    }
+
+    /// "82.5 kg": a weight with its unit.
+    private static func weightText(_ value: Double) -> String {
+        "\(Format.kilograms(value)) \(Format.unit.symbol)"
+    }
+
+    /// The routine's colour for the figures: Push vermilion, Pull cobalt, Legs cadmium, else Training. A private
+    /// routine's title is masked, so it falls to the Training colour.
+    private var figureTint: Color {
+        MuscleTint.colour(routineTitle: titleAndRoute.0)
     }
 
     /// "today, 5 exercises, about 55 min"; done: "done this afternoon".
@@ -585,37 +670,89 @@ struct StartMark: View {
 
 // MARK: - Lanes
 
-/// One exercise: the name, its target at the right and one stroke per set at 48 pt pitch; future sets are the live
-/// page's dashed guides at 22%, logged sets their pigment dried to the rest tint.
+/// One exercise (Design brief 1, sheet 107): a 62 pt figure of what it works at the left (28 wide, top inset 3), the
+/// name at x 44 (21 medium, one line, top 6) and under it, at top 38, the scheme ("4 × 5–8") with today's weight at
+/// the right edge ("82.5 kg", none when there is none). Once the workout is running the second line is the set
+/// strokes live mode draws: logged ones painted in the rest tint, the rest dashed guides. A hairline at 12% ink runs
+/// between rows from x 44.
 private struct LaneRow: View {
     let lane: TrainingLane
     /// The first guide wakes when START lands: 22% to 90%, breathing.
     var wakes = false
     var dried = false
+    var tint: Color = Theme.Colors.training
+    var showsStrokes = false
+    var isLast = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
+        ZStack(alignment: .topLeading) {
+            if !lane.muscles.isEmpty {
+                MuscleFigure(back: MuscleSide.showsBack(lane.muscles),
+                             roles: MuscleFigureMap.roles(lane.muscles, back: MuscleSide.showsBack(lane.muscles)),
+                             tint: tint, lineOpacity: 0.45, lineWidth: 2.4)
+                    .frame(height: 62)
+                    .padding(.top, 3)
+                    .accessibilityHidden(true)
+            }
+            VStack(alignment: .leading, spacing: 0) {
                 Text(lane.name)
                     .font(Theme.voice(size: 21).weight(.medium))
                     .foregroundStyle(Theme.Colors.ink)
                     .lineLimit(1)
-                Spacer(minLength: Theme.Spacing.s)
-                Text(lane.target)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .monospacedDigit()
+                    .padding(.top, 6)
+                secondLine
+                    .padding(.top, typeSize.isAccessibilitySize ? 4 : 10)
             }
+            .padding(.leading, 44)
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .overlay(alignment: .bottomLeading) {
+            if !isLast {
+                Rectangle().fill(Theme.Colors.ink.opacity(0.12)).frame(height: 1).padding(.leading, 44)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+    }
+
+    @ViewBuilder
+    private var secondLine: some View {
+        if showsStrokes {
             HStack(spacing: 8) {
                 ForEach(0 ..< lane.sets, id: \.self) { index in
                     stroke(index)
                         .frame(width: 40, height: 12)
                 }
             }
+            .frame(height: 24, alignment: .leading)
+        } else {
+            let layout = typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 0))
+            layout {
+                Text(lane.scheme)
+                    .font(.system(size: 16))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .monospacedDigit()
+                if !typeSize.isAccessibilitySize {
+                    Spacer(minLength: Theme.Spacing.s)
+                }
+                if let weight = lane.weight {
+                    Text(weight)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Theme.Colors.ink)
+                        .monospacedDigit()
+                }
+            }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(lane.name), \(lane.target), \(lane.sets) \(lane.sets == 1 ? "set" : "sets")")
+    }
+
+    private var label: String {
+        let works = MuscleReading.spoken(lane.muscles)
+        let sets = "\(lane.sets) \(lane.sets == 1 ? "set" : "sets")"
+        return ([lane.name, lane.target, sets] + (works.isEmpty ? [] : [works])).joined(separator: ", ")
     }
 
     @ViewBuilder

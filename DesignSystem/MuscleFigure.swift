@@ -145,6 +145,42 @@ enum MuscleFigureMap {
     }
 }
 
+/// Which side of the body to show for an exercise (Design brief 1, sheet 107): count the primary muscles that have a
+/// region on the front and on the back (Side Delts ride the front delts on the front and the rear delts on the back;
+/// Calves and Forearms are ignored when counting the back). More on the back than the front is the back figure;
+/// otherwise, and on a tie, the front.
+enum MuscleSide {
+    static func showsBack(_ muscles: [(name: String, role: MuscleRole)]) -> Bool {
+        let front = Set(MuscleFigureArt.frontRegions.map(\.id))
+        let back = Set(MuscleFigureArt.backRegions.map(\.id))
+        var onFront = 0, onBack = 0
+        for muscle in muscles where muscle.role == .primary {
+            guard let seed = MuscleSeed.allCases.first(where: { $0.name.lowercased() == muscle.name.lowercased() })
+            else { continue }
+            if let id = MuscleFigureMap.regionID(for: seed, back: false), front.contains(id) {
+                onFront += 1
+            }
+            if seed != .calves, seed != .forearms, let id = MuscleFigureMap.regionID(for: seed, back: true),
+               back.contains(id)
+            {
+                onBack += 1
+            }
+        }
+        return onBack > onFront
+    }
+}
+
+/// The colour a routine's figures wear: Push vermilion, Pull cobalt, Legs cadmium; anything mixed or unknown is the
+/// Training colour.
+enum MuscleTint {
+    static func colour(routineTitle: String?) -> Color {
+        let title = (routineTitle ?? "").lowercased()
+        let kinds = [("push", Theme.Colors.live), ("pull", Theme.Colors.tess), ("leg", Theme.Colors.now)]
+            .filter { title.contains($0.0) }
+        return kinds.count == 1 ? kinds[0].1 : Theme.Colors.training
+    }
+}
+
 /// One side of the figure. The drawing is a 200 x 440 box with the left half drawn and mirrored about x = 100.
 struct MuscleFigure: View {
     let back: Bool
@@ -154,6 +190,12 @@ struct MuscleFigure: View {
     var onTap: ((String) -> Void)?
     /// The one VoiceOver line for the whole figure ("Works chest, shoulders and triceps"); empty hides it.
     var spoken = ""
+    /// The outline's ink: 22% by default; Design's small figures (under 70 pt) use 40 to 50% so the line stays visible.
+    var lineOpacity = 0.22
+    /// The outline's colour: ink unless a page paints on something else (live mode draws in its cream).
+    var lineColor: Color?
+    /// The outline's width in viewBox units (2.2 to 2.6 under 70 pt tall, 1.4 from 110 pt); nil keeps the 1 pt line.
+    var lineWidth: CGFloat?
 
     private var outline: [String] {
         back ? MuscleFigureArt.backOutline : MuscleFigureArt.frontOutline
@@ -185,7 +227,8 @@ struct MuscleFigure: View {
     private var figure: some View {
         Canvas { context, size in
             let place = Self.placement(in: size)
-            let ink = Theme.Colors.ink.opacity(0.22)
+            let ink = (lineColor ?? Theme.Colors.ink).opacity(lineOpacity)
+            let width = lineWidth.map { $0 * min(size.width / 200, size.height / 440) } ?? 1
             for half in [CGAffineTransform.identity, Self.mirror] {
                 let transform = half.concatenating(place)
                 for (id, data) in regions {
@@ -195,7 +238,7 @@ struct MuscleFigure: View {
                 }
                 for data in outline + lines {
                     context.stroke(FigurePath.path(data).applying(transform), with: .color(ink),
-                                   style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+                                   style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
                 }
             }
         }
