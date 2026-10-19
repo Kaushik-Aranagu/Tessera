@@ -77,7 +77,7 @@ public struct ClaudeTessModel: TessModel {
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
             // At the cap: the rules and on-device paths go on; Tess says so if nothing else caught it.
             flags.heldBack += 1
-            let reset = (calendar.dateInterval(of: .month, for: now())?.end ?? now())
+            let reset = TessUsageLedger.monthInterval(containing: now(), calendar: calendar).end
                 .formatted(.dateTime.month(.abbreviated).day())
             return .asked(TessCapture(records: [], line: "Claude paused until \(reset).", source: .none))
         }
