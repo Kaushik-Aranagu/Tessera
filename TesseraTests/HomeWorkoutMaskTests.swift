@@ -33,4 +33,16 @@ struct HomeWorkoutMaskTests {
         #expect(ObjectPrivacy.routineTitle("Therapy legs", in: model.store) == "Private workout")
         #expect(ObjectPrivacy.routineTitle("Push A", in: model.store) == "Push A")
     }
+
+    /// QA on #1061: Home's queue takes tonight's workout from the schedule, so the schedule itself is masked: the
+    /// row, its VoiceOver label and "Opens" hint and the spoken receipts all read "Private workout".
+    @Test func theScheduleMasksTonightsPrivateWorkout() throws {
+        let now = AppClock.now
+        let workout = try model.store.create(#require(model.classes[.workout]), title: "Knee rehab day")
+        try model.store.set("scheduledFor", to: .date(now), on: workout)
+        model.touch()
+        let item = try #require(model.schedule(around: now).first { $0.id == workout.id })
+        #expect(item.title == ObjectPrivacy.routineLabel)
+        #expect(item.isWorkout)
+    }
 }
