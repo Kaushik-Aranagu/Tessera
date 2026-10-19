@@ -56,6 +56,23 @@ public enum StarterContent {
         ]),
     ]
 
+    /// push, pull or legs, from a starter routine's key ("pushA" gives push).
+    static func kind(forKey key: String) -> String? {
+        ["push", "pull", "legs"].first { key.hasPrefix($0) }
+    }
+
+    /// The additive migration: each seeded routine that has no kind gets one, whatever its title is now (he may have
+    /// renamed "Push A" to "Bench day"). Never overwrites a kind he or a later rule set. Run at every launch.
+    public static func backfillKinds(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) {
+        guard classes[.routine] != nil else { return }
+        for (key, _, _) in routines {
+            guard let kind = kind(forKey: key),
+                  let object = store.object(id: SystemCatalog.stableID("starter.routine.\(key)")),
+                  !object.isDeleted, store.value("kind", of: object) == nil else { continue }
+            try? store.set("kind", to: .choice(kind), on: object)
+        }
+    }
+
     /// Gym kit: a 20 kg bar, plates down to 1.25 kg (pairs), dumbbells in 2 kg steps.
     static let plates = "25, 20, 15, 10, 5, 2.5, 1.25"
     static let dumbbells = stride(from: 2.0, through: 50, by: 2).map { "\(Int($0))" }.joined(separator: ", ")
@@ -75,6 +92,9 @@ public enum StarterContent {
         for routine in self.routines {
             let object = store.create(routineClass, title: routine.title)
             object.id = SystemCatalog.stableID("starter.routine.\(routine.key)")
+            if let kind = Self.kind(forKey: routine.key) {
+                try store.set("kind", to: .choice(kind), on: object)
+            }
             for (index, slot) in routine.slots.enumerated() {
                 guard let exercise = store.classDef(id: SystemCatalog.stableID("library.\(slot.exercise)"))
                     ?? (slot.exercise == "benchPress" ? classes[.benchPress] : nil) else { continue }
