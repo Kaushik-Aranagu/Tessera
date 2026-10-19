@@ -28,6 +28,12 @@ enum MuscleReading {
         return roles.map { (name: $0.key, role: $0.value) }.sorted { $0.name < $1.name }
     }
 
+    /// What a figure may light: a private routine lights nothing (the lit figure says what the "Works ..." words
+    /// would, so drawing it loosens the privacy rule); its figure is the plain outline.
+    static func lit(_ muscles: Muscles, isPrivate: Bool) -> Muscles {
+        isPrivate ? [] : muscles
+    }
+
     /// The primary muscles' words for VoiceOver ("works chest and triceps"); empty when none.
     static func spoken(_ muscles: Muscles) -> String {
         let primary = muscles.filter { $0.role == .primary }.map(\.name)

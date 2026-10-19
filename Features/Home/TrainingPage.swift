@@ -140,6 +140,7 @@ private struct TrainingAtRest: View {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
                     LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone, tint: figureTint,
+                            isPrivate: isPrivateDay,
                             showsStrokes: isRunning || isDone || lane.logged > 0,
                             isLast: index == min(lanes.count, 5) - 1)
                         .frame(height: 72, alignment: .top)
@@ -227,7 +228,10 @@ private struct TrainingAtRest: View {
         if !day.isEmpty, !typeSize.isAccessibilitySize {
             HStack(spacing: 0) {
                 ForEach([false, true], id: \.self) { back in
-                    MuscleFigure(back: back, roles: MuscleFigureMap.roles(day, back: back), tint: figureTint,
+                    MuscleFigure(back: back,
+                                 roles: MuscleFigureMap.roles(MuscleReading.lit(day, isPrivate: isPrivateDay),
+                                                              back: back),
+                                 tint: figureTint,
                                  lineOpacity: 0.4, lineWidth: 1.4)
                         .frame(height: 112)
                 }
@@ -384,7 +388,7 @@ private struct TrainingAtRest: View {
         let target = prefill.weight.map { "\(Format.kilograms($0)) × \(prefill.reps)" } ?? scheme
         return TrainingLane(id: entry.id, exercise: exercise, name: exercise.name, target: target,
                             sets: max(sets ?? planned, logged, 1), logged: logged,
-                            scheme: scheme.replacingOccurrences(of: " ×", with: " ×"),
+                            scheme: scheme,
                             weight: prefill.weight.map { Self.weightText($0) },
                             muscles: MuscleReading.muscles(of: exercise, store: model.store))
     }
@@ -681,6 +685,8 @@ private struct LaneRow: View {
     var wakes = false
     var dried = false
     var tint: Color = Theme.Colors.training
+    /// A private workout's figure is the plain outline: nothing lit, and no muscle words either.
+    var isPrivate = false
     var showsStrokes = false
     var isLast = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -689,9 +695,11 @@ private struct LaneRow: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             if !lane.muscles.isEmpty {
-                MuscleFigure(back: MuscleSide.showsBack(lane.muscles),
-                             roles: MuscleFigureMap.roles(lane.muscles, back: MuscleSide.showsBack(lane.muscles)),
-                             tint: tint, lineOpacity: 0.45, lineWidth: 2.4)
+                // The side comes from the muscles, but a private workout lights none of them.
+                let back = MuscleSide.showsBack(lane.muscles)
+                let lit = MuscleReading.lit(lane.muscles, isPrivate: isPrivate)
+                MuscleFigure(back: back, roles: MuscleFigureMap.roles(lit, back: back),
+                             tint: tint, lineOpacity: 0.5, lineWidth: 2.6)
                     .frame(height: 62)
                     .padding(.top, 3)
                     .accessibilityHidden(true)
@@ -750,7 +758,7 @@ private struct LaneRow: View {
     }
 
     private var label: String {
-        let works = MuscleReading.spoken(lane.muscles)
+        let works = isPrivate ? "" : MuscleReading.spoken(lane.muscles)
         let sets = "\(lane.sets) \(lane.sets == 1 ? "set" : "sets")"
         return ([lane.name, lane.target, sets] + (works.isEmpty ? [] : [works])).joined(separator: ", ")
     }

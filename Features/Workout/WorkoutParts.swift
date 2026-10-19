@@ -49,7 +49,12 @@ struct ExerciseLane: View {
                             if !muscles.isEmpty, !typeSize.isAccessibilitySize {
                                 // One figure, the exercise's side, that slides in and out with the name.
                                 let back = MuscleSide.showsBack(muscles)
-                                MuscleFigure(back: back, roles: MuscleFigureMap.roles(muscles, back: back),
+                                // A private workout lights nothing.
+                                let lit = MuscleReading.lit(
+                                    muscles,
+                                    isPrivate: session.shownTitle != session.workout.title
+                                )
+                                MuscleFigure(back: back, roles: MuscleFigureMap.roles(lit, back: back),
                                              tint: MuscleTint.colour(routineTitle: session.shownTitle),
                                              lineOpacity: 0.45, lineColor: Paint.cream, lineWidth: 2.2)
                                     .frame(height: 92)
@@ -76,8 +81,12 @@ struct ExerciseLane: View {
                             }
                         }
                     }
-                    .accessibilityLabel([name, MuscleReading.spoken(muscles)].filter { !$0.isEmpty }
-                        .joined(separator: ", "))
+                    .accessibilityLabel([
+                        name,
+                        session.shownTitle != session.workout.title ? "" : MuscleReading.spoken(muscles),
+                    ]
+                    .filter { !$0.isEmpty }
+                    .joined(separator: ", "))
                     .accessibilityHint(isCurrent ? "Opens the exercise page" : "")
                     .accessibilityAction(named: "Swap within the movement") { setSwap(true) }
                     .tesseraAnimation(.easeOut(duration: 0.24), value: isCurrent)

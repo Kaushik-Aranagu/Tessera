@@ -44,7 +44,8 @@ struct RoutineEditor: View {
                                 perform: perform,
                                 onSwap: { setLibrary(.swap(slot.id)) },
                                 index: index,
-                                tint: figureTint
+                                tint: figureTint,
+                                isPrivate: isPrivateRoutine
                             )
                         }
                     }
@@ -269,6 +270,8 @@ private struct SlotEditorRow: View {
     var onSwap: () -> Void
     let index: Int
     var tint: Color = Theme.Colors.training
+    /// A private routine's row figure is the plain outline.
+    var isPrivate = false
     @Environment(AppModel.self) private var model
 
     var body: some View {
@@ -283,8 +286,10 @@ private struct SlotEditorRow: View {
                     if !muscles.isEmpty {
                         // The row's figure, 22 pt wide, at the left (the exercise's own side); info only.
                         let back = MuscleSide.showsBack(muscles)
-                        MuscleFigure(back: back, roles: MuscleFigureMap.roles(muscles, back: back), tint: tint,
-                                     lineOpacity: 0.45, lineWidth: 2.6)
+                        MuscleFigure(back: back,
+                                     roles: MuscleFigureMap.roles(MuscleReading.lit(muscles, isPrivate: isPrivate),
+                                                                  back: back),
+                                     tint: tint, lineOpacity: 0.5, lineWidth: 2.6)
                             .frame(width: 22)
                             .accessibilityHidden(true)
                     }
@@ -304,7 +309,7 @@ private struct SlotEditorRow: View {
             .buttonStyle(HandleButtonStyle())
             .accessibilityLabel(
                 ["\(exercise?.name ?? "Exercise"), \(Int(sets)) sets of \(Int(low)) to \(Int(high))",
-                 MuscleReading.spoken(muscles)].filter { !$0.isEmpty }.joined(separator: ", ")
+                 isPrivate ? "" : MuscleReading.spoken(muscles)].filter { !$0.isEmpty }.joined(separator: ", ")
             )
             .accessibilityHint(isOpen ? "Closes it" : "Opens it to change")
 

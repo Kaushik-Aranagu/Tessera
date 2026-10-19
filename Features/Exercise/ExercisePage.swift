@@ -154,7 +154,8 @@ private struct ExerciseSummary: View {
             if let best = digest.bestE1RM {
                 stat(Format.kilograms(best), label: "Best e1RM, kg",
                      spoken: "Best estimated one-rep max, \(Format.kilograms(best)) kilograms")
-                    // The second number starts at x 152 (the first at 24); its label wraps rather than touch the next one.
+                    // The second number starts at x 152 (the first at 24); its label wraps rather than touch the next
+                    // one.
                     .frame(width: typeSize.isAccessibilitySize || digest.bestSet == nil ? nil : 120)
             }
             if let set = digest.bestSet {

@@ -82,4 +82,14 @@ struct MuscleSideTests {
         #expect(MuscleReading.spoken(muscles) == "works chest")
         #expect(MuscleReading.spoken([]).isEmpty)
     }
+
+    /// Product: a private routine shows no lit muscles anywhere (the lit figure says what "Works ..." would).
+    @Test func aPrivateRoutineLightsNothing() throws {
+        let day = try MuscleReading.union(["benchPress", "ropePushdown"].map(primaries))
+        for back in [false, true] {
+            #expect(!MuscleFigureMap.roles(day, back: back).isEmpty)
+            #expect(MuscleFigureMap.roles(MuscleReading.lit(day, isPrivate: true), back: back).isEmpty)
+        }
+        #expect(MuscleReading.lit(day, isPrivate: false).count == day.count)
+    }
 }
