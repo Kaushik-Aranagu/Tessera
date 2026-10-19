@@ -145,12 +145,13 @@ private struct RecipesShelfPage: View {
                         .buttonStyle(.labelWord)
                         .accessibilityLabel("Read \(RecipesKeptCopy.host(link))")
                     Button("Remove") {
-                        let shelf = RecipeLinkShelf.beside(model.store)
-                        shelf?.remove(link)
+                        guard let shelf = RecipeLinkShelf.beside(model.store) else { return }
+                        let putBack = KeptLinks.remove(link, from: shelf)
                         refreshKept()
-                        // A slip beside Read isn't final: the app-wide UNDO for a change, 10 s (Design on #913).
+                        // A slip beside Read isn't final: the app-wide UNDO for a change, 10 s (Design on #913). It
+                        // puts the link back in its own place, not at the end (QA on #1031).
                         TessVoice.shared.say(RecipesKeptCopy.removed(link), takeBack: {
-                            shelf?.keep(link)
+                            putBack()
                             refreshKept()
                         })
                     }
@@ -211,5 +212,29 @@ enum RecipesKeptCopy {
     /// "seriouseats.com, removed."
     static func removed(_ link: URL) -> String {
         "\(host(link)), removed."
+    }
+}
+
+/// Remove and its UNDO on the kept links. Core's shelf only appends, so putting a link back in its old place takes
+/// the links after it off and keeps them again behind it.
+@MainActor
+enum KeptLinks {
+    /// Takes the link off the shelf and returns the take-back that restores it where it was.
+    static func remove(_ link: URL, from shelf: RecipeLinkShelf) -> @MainActor () -> Void {
+        let index = shelf.waiting().firstIndex(of: link)
+        shelf.remove(link)
+        return { restore(link, at: index, on: shelf) }
+    }
+
+    /// Puts the link back at its old index; a link kept since then stays behind it. With no index, at the end.
+    static func restore(_ link: URL, at index: Int?, on shelf: RecipeLinkShelf) {
+        let after = index.map { Array(shelf.waiting().dropFirst($0)) } ?? []
+        for later in after {
+            shelf.remove(later)
+        }
+        shelf.keep(link)
+        for later in after {
+            shelf.keep(later)
+        }
     }
 }
