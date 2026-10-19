@@ -219,6 +219,7 @@ private struct WorkoutContent: View {
             ExerciseLane(session: session, laneIndex: $laneIndex, isSwapOpen: isSwapOpen, setSwap: setSwap(open:))
                 .padding(.top, Theme.Spacing.m)
                 .overlay(alignment: .topLeading) { swapPanel }
+                .overlay(alignment: .bottomLeading) { oneTapSwapWord }
                 .zIndex(2)
             LiveSetStrokes(session: session, phase: actual) { id in
                 // Tap a stroke to edit it, the same one again to leave, another to switch.
@@ -386,6 +387,38 @@ extension WorkoutContent {
                 : .asymmetric(insertion: AnyTransition.offset(y: -16).combined(with: AnyTransition(.blurReplace)),
                               removal: .opacity))
         }
+    }
+
+    /// The easy swap (switch "One tap"): a small Swap word under the name applies the top alternative at once, with a
+    /// 10 s UNDO; the full list is still one pull-down away. Session-only, and the load converts like the panel's.
+    @ViewBuilder
+    private var oneTapSwapWord: some View {
+        if Choice.swapIsOneTap(), !isSwapOpen, session.finishedAt == nil, !session.isEditing,
+           let entry = session.currentEntry, session.setRows(of: entry).isEmpty
+        {
+            Button("Swap", action: oneTapSwap)
+                .buttonStyle(.labelWord(Paint.secondary))
+                .padding(.leading, Theme.Spacing.gutter)
+                .offset(y: 22)
+                .accessibilityHint("Swaps this exercise for the closest alternative, with undo")
+        }
+    }
+
+    private func oneTapSwap() {
+        guard let top = session.swapOptions().first else {
+            TessVoice.shared.say("Nothing to swap this for.")
+            return
+        }
+        var record: OpRecord?
+        withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.5), reduceMotion: reduceMotion) {
+            record = session.swap(to: top)
+        }
+        soul.handle(.swapped)
+        guard let record else { return }
+        let name = SwapPanel.short(top.exercise.name)
+        TessVoice.shared.say("\(name), swapped in.", holds: .seconds(10), takeBack: { [session] in
+            withTesseraAnimation(reduceMotion: reduceMotion) { session.undoSwap(record) }
+        })
     }
 
     private func setSwap(open: Bool) {

@@ -30,9 +30,13 @@ final class RestActivityController {
 
     private func update(for session: WorkoutSession?, restRanOut: Bool) {
         guard let session else {
+            FinishNudges.shared.sync(workoutID: nil, workoutTitle: "", lastSetAt: nil, enabled: false)
             end()
             return
         }
+        // The forgot-Finish nudge follows the last set (a no-op unless its switch is On).
+        FinishNudges.shared.sync(workoutID: session.workout.id, workoutTitle: session.shownTitle,
+                                 lastSetAt: session.lastTouchedAt, enabled: Choice.finishNudgeIsOn())
         guard let planned = Self.plannedSet(of: session) else {
             showClosingFace(for: session)
             return

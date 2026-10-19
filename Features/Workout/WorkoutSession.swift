@@ -563,13 +563,15 @@ extension WorkoutSession {
             .options(for: exercise, from: weight, excludingWorkout: workout.id)
     }
 
-    /// Swaps the current exercise for today only, through the engine. The slot and scheme stay.
-    func swap(to option: ExerciseSwaps.Option) {
+    /// Swaps the current exercise for today only, through the engine. The slot and scheme stay. Returns the op, which
+    /// the easy swap hands to its UNDO.
+    @discardableResult
+    func swap(to option: ExerciseSwaps.Option) -> OpRecord? {
         endEditing()
-        guard let entry = currentEntry, let from = currentExercise else { return }
+        guard let entry = currentEntry, let from = currentExercise else { return nil }
         guard let result = try? model.engine.perform(
             SwapEntryExercise(entry: entry.id, exercise: option.exercise.id, targetWeight: option.load), by: .user
-        ) else { return }
+        ) else { return nil }
         let swappedID = result.output
         if swappedID != entry.id, let index = order.firstIndex(of: entry.id) {
             order.removeAll { $0 == swappedID }
@@ -592,6 +594,15 @@ extension WorkoutSession {
         lastTouchedAt = AppClock.now
         // The swap moves the resume point on; a rest that was running keeps running after a relaunch.
         persistRest()
+        model.touch()
+        return result.record
+    }
+
+    /// Takes a swap back (the easy swap's UNDO): the engine undoes it and the live screen re-reads its entries.
+    func undoSwap(_ record: OpRecord) {
+        _ = model.engine.undo(record)
+        refreshAfterExternalWrite()
+        loadDefaults()
         model.touch()
     }
 
