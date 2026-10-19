@@ -84,7 +84,8 @@ private struct RecipesShelfPage: View {
                             HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
                                 Text(row.name)
                                     .textRole(.body)
-                                    .foregroundStyle(Theme.Colors.ink.opacity(row.isPrivate ? 0.66 : 1))
+                                    // Full ink, like every masked line: "Private recipe" isn't dimmed (sheet 99).
+                                    .foregroundStyle(Theme.Colors.ink)
                                     .multilineTextAlignment(.leading)
                                     .fixedSize(horizontal: false, vertical: true)
                                 Spacer(minLength: Theme.Spacing.m)
@@ -144,9 +145,14 @@ private struct RecipesShelfPage: View {
                         .buttonStyle(.labelWord)
                         .accessibilityLabel("Read \(RecipesKeptCopy.host(link))")
                     Button("Remove") {
-                        RecipeLinkShelf.beside(model.store)?.remove(link)
+                        let shelf = RecipeLinkShelf.beside(model.store)
+                        shelf?.remove(link)
                         refreshKept()
-                        TessVoice.shared.say(RecipesKeptCopy.removed(link))
+                        // A slip beside Read isn't final: the app-wide UNDO for a change, 10 s (Design on #913).
+                        TessVoice.shared.say(RecipesKeptCopy.removed(link), takeBack: {
+                            shelf?.keep(link)
+                            refreshKept()
+                        })
                     }
                     .buttonStyle(.labelWord)
                     .accessibilityLabel("Remove \(RecipesKeptCopy.host(link))")
