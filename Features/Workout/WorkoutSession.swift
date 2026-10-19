@@ -401,11 +401,17 @@ extension WorkoutSession {
         offerTopSetCheck(entry: entry, number: number)
         rpe = nil
         // The last set of the exercise doesn't need a rest before paging on, but the workout's last does nothing.
-        restEndsAt = entries.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
+        restEndsAt = nextRestEnd(finished: entries.allSatisfy(isFinished))
         persistRest()
         model.touch()
         // The next set opens prefilled: this session's weight, last time's reps for that set.
         loadDefaults()
+    }
+
+    /// When the rest after a set ends: never after the workout's last set, and never with the Rest timer switch Off
+    /// (a flip mid-workout takes effect at the next set; Product's default is On).
+    private func nextRestEnd(finished: Bool) -> Date? {
+        finished || !Choice.restTimerIsOn() ? nil : AppClock.now.addingTimeInterval(restTotal)
     }
 
     /// Sets logged from outside the live screen (typed in the Bar, Tess) seat like a held set once they dry: the
@@ -426,7 +432,7 @@ extension WorkoutSession {
         lastSeated = Seated(setID: row.id, entryID: entry.id, number: row.number, records: [], e1RM: row.e1RM,
                             weight: row.weight, reps: row.reps)
         restTotal = restSeconds
-        restEndsAt = all.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
+        restEndsAt = nextRestEnd(finished: all.allSatisfy(isFinished))
         persistRest()
         lastTouchedAt = AppClock.now
         loggedCount += 1

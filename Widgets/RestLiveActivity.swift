@@ -38,7 +38,10 @@ struct RestLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RestActivityAttributes.self) { context in
             LockScreenRoot(state: context.state) {
-                if RestFace.isSetAside(context) {
+                if context.state.phase == .closing {
+                    ClosingFace(line: context.state
+                        .closingLine ?? "\(context.attributes.workoutTitle), ready to finish")
+                } else if RestFace.isSetAside(context) {
                     SetAsideFace(title: context.attributes.workoutTitle)
                 } else {
                     RestLockScreenView(state: context.state, isGo: RestFace.isGoTime(context))
@@ -52,27 +55,38 @@ struct RestLiveActivity: Widget {
             let mood = RestPalette.obsidian
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Countdown(state: state, isGo: isGo, size: 40)
-                        .padding(.leading, 8)
-                        .environment(\.restPalette, mood)
+                    if state.phase != .closing {
+                        Countdown(state: state, isGo: isGo, size: 40)
+                            .padding(.leading, 8)
+                            .environment(\.restPalette, mood)
+                    }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    PlannedSetButton(state: state, isGo: isGo, nameSize: 16, setSize: 21)
-                        .padding(.trailing, 8)
-                        .environment(\.restPalette, mood)
+                    if state.phase != .closing {
+                        PlannedSetButton(state: state, isGo: isGo, nameSize: 16, setSize: 21)
+                            .padding(.trailing, 8)
+                            .environment(\.restPalette, mood)
+                    }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    HorizonLine(state: state, isGo: isGo, color: mood.line)
-                        .padding(.horizontal, 8)
-                        .padding(.top, 6)
-                        .environment(\.restPalette, mood)
+                    if state.phase == .closing {
+                        ClosingFace(line: state.closingLine ?? "Ready to finish")
+                            .environment(\.restPalette, mood)
+                    } else {
+                        HorizonLine(state: state, isGo: isGo, color: mood.line)
+                            .padding(.horizontal, 8)
+                            .padding(.top, 6)
+                            .environment(\.restPalette, mood)
+                    }
                 }
             } compactLeading: {
                 Tick(color: mood.tick)
                     .frame(width: 18, height: 14)
             } compactTrailing: {
                 Group {
-                    if RestFace.isSetAside(context) {
+                    if state.phase == .closing {
+                        Text("Ready")
+                    } else if RestFace.isSetAside(context) {
                         Text("Aside")
                     } else if isGo {
                         Text("Go")
@@ -199,6 +213,21 @@ private enum RestFace {
     /// doesn't say "Go" on the Lock Screen all night.
     static func isSetAside(_ context: ActivityViewContext<RestActivityAttributes>) -> Bool {
         context.state.phase == .ready && context.isStale
+    }
+}
+
+/// "Push A, ready to finish": the last set is logged. One still line, no countdown, no keys, nothing animating; the
+/// activity ends about a minute later (spec: tess-rest-end-alert-and-closing-face.md, section 2).
+private struct ClosingFace: View {
+    @Environment(\.restPalette) private var palette
+    let line: String
+
+    var body: some View {
+        Text(line)
+            .font(Typeface.font(24, .medium))
+            .foregroundStyle(palette.cream)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
     }
 }
 
