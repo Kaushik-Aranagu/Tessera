@@ -58,7 +58,9 @@ struct ShopTripTests {
         let trip = ShopTrip()
         let privateOnes = rows.filter { trip.label(for: $0, name: $0.text, lastWeightKg: nil) == "Private item" }
         #expect(privateOnes.count == 2)
-        let order = first.filter { id in privateOnes.contains { $0.id == id } }
-        #expect(order == first.filter { id in privateOnes.contains { $0.id == id } } && order.count == 2)
+        // Added advil first, so advil comes first; the test fails if the two ever swap (QA on #1030).
+        let advil = try #require(rows.first { $0.text.lowercased().contains("advil") })
+        let ibuprofen = try #require(rows.first { $0.text.lowercased().contains("ibuprofen") })
+        #expect(first.filter { id in privateOnes.contains { $0.id == id } } == [advil.id, ibuprofen.id])
     }
 }
