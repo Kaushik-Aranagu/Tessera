@@ -59,7 +59,7 @@ then the area's quiet line. Never an ellipsis.
 | Pull | Index forms from 20 to 90 pt (page to 0.9, 6 pt blur, drops 40 pt; glass comes down 40 pt; rows stagger 40 ms). Past 90 pt it holds and picks; `.selection` once per row (on in quiet hours, 2:23 pm) | `MotionPolicy` only |
 | Hint at y 528 | "Let go to open" while pulling; "Tap one to open" after a tap | Copy, no stop |
 | Let go | The word flies to the name's place, scale 0.38 over 460 ms; one `.impact(.soft)` on arrival. Above the first row or on the current one: closes | |
-| Reduce Motion | The index crossfades in 200 ms; the word swaps without flying | `Theme.Motion.dry(reduceMotion:)` path |
+| Reduce Motion | The index crossfades in 150 ms; the word swaps without flying | `Theme.Motion.dry(reduceMotion:)` path |
 | VoiceOver, the name | "Today, area. Double tap to show all areas" | Button label and hint |
 | VoiceOver, a row | "Training, Push Day A is on" (detail cap, no stop) | Rotor Headings jump between areas |
 

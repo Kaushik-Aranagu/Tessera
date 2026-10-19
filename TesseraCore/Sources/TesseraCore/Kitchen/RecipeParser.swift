@@ -168,10 +168,33 @@ public enum RecipeParser {
         return words <= 5 && !clean.hasSuffix(".")
     }
 
+    /// A quantity is a number or fraction followed by a unit word or a lowercase noun ("2 eggs", "1/2 cup", "200g
+    /// flour"). "30-Minute Dal" and "7 Layer Dip" are names, so they stay titles (G94).
     static func startsWithAmount(_ line: String) -> Bool {
         let clean = IngredientLine.clean(line)
-        return clean.first?.isNumber == true
-            || clean.firstMatch(of: /(?i)^an?\s+(pinch|handful|bunch|clove|can|tin|slice|sprig)/) != nil
+        if clean.firstMatch(of: /(?i)^an?\s+(pinch|handful|bunch|clove|can|tin|slice|sprig)/) != nil {
+            return true
+        }
+        guard clean.first?.isNumber == true else { return false }
+        let tokens = clean.split(separator: " ", maxSplits: 2).map(String.init)
+        guard let first = tokens.first else { return false }
+        // "1. Preheat the oven", "2) Whisk the eggs": a step number is never a title.
+        if first.firstMatch(of: /^\d+[.)]$/) != nil {
+            return true
+        }
+        // "30-Minute": a number glued to a capitalised word is a name; "200g" or "2-3" is an amount.
+        if first.firstMatch(of: /^[\d.,\/½¼¾⅓⅔⅛]+(?:[-–][\d.,\/½¼¾⅓⅔⅛]+)?$/) == nil {
+            return first.firstMatch(of: /^[\d.,\/½¼¾⅓⅔⅛]+(?:[-–][\d.,\/½¼¾⅓⅔⅛]+)?\p{Ll}/) != nil
+        }
+        guard tokens.count > 1 else { return true }
+        // Two words, number first ("2 Eggs"): an amount of a thing; a name that starts with a number has more words.
+        if tokens.count == 2, tokens[1].allSatisfy(\.isLetter) {
+            return true
+        }
+        // Three or more words are a title unless a unit word follows the number (Product 4:20 PM): "3 eggs benedict"
+        // and
+        // "7 Layer Dip" are names; "1 cup flour" and "2 Tbsp butter" are amounts.
+        return IngredientLine.parse(clean)?.unit != nil
     }
 
     static func stripNumbering(_ line: String) -> String {

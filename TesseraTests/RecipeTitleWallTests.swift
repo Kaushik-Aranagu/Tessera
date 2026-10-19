@@ -13,18 +13,17 @@ struct RecipeTitleWallTests {
         model = AppModel(context: container.mainContext)
     }
 
-    @Test func aPrivateTitleIsMaskedUntilShown() {
+    @Test func aPrivateTitleIsAlwaysMasked() {
         for title in ["Rent 1200 stew", "Wifi code lasagna"] {
             let isPrivate = RecipeCopy.isPrivate(title, model: model)
             #expect(isPrivate, "\(title)")
-            #expect(RecipeCopy.shownTitle(title, isPrivate: isPrivate, shown: false) == "Private recipe")
-            #expect(RecipeCopy.shownTitle(title, isPrivate: isPrivate, shown: true) == title)
+            #expect(RecipeCopy.shownTitle(title, isPrivate: isPrivate) == "Private recipe")
         }
     }
 
     @Test func aPlainTitleShowsAsIs() {
         #expect(!RecipeCopy.isPrivate("Weeknight dal", model: model))
-        #expect(RecipeCopy.shownTitle("Weeknight dal", isPrivate: false, shown: false) == "Weeknight dal")
+        #expect(RecipeCopy.shownTitle("Weeknight dal", isPrivate: false) == "Weeknight dal")
     }
 
     @Test func thePastedTitleLineStaysMaskedWhileTheTitleIs() {
@@ -47,7 +46,7 @@ struct RecipeTitleWallTests {
         #expect(RecipeCopy.shortName("Chili con carne") == "Chili con carne")
         #expect(RecipeCopy.shortName("Weeknight dal (instant pot)") == "Weeknight dal")
         #expect(RecipeCopy.shortName("Mac and cheese") == "Mac and cheese")
-        let title = RecipeCopy.shownTitle("Rent 1200 stew", isPrivate: true, shown: false)
+        let title = RecipeCopy.shownTitle("Rent 1200 stew", isPrivate: true)
         #expect(RecipeCopy.saved(title) == "Private recipe, on Recipes.")
     }
 

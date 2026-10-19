@@ -12,6 +12,8 @@ struct NowPage: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openHomeLink) private var openLink
     @State private var finishes = 0
+    /// Keeping the plan plays `.made` (the hold itself is silent).
+    @State private var planKept = 0
     /// The current Now, passed back to the ranker so it holds against equal challengers (no flicker).
     @State private var incumbent: UUID?
     private let planModel = HomePlanModel.shared
@@ -116,7 +118,7 @@ struct NowPage: View {
 
             Spacer(minLength: 0)
         }
-        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: finishes)
+        .tesseraFeedback(.done, trigger: finishes)
         .onChange(of: top?.id, initial: true) { _, id in
             incumbent = id
         }
@@ -190,6 +192,7 @@ struct NowPage: View {
     @ViewBuilder private var planKey: some View {
         if let first = planModel.first {
             PaintKey(paint: Theme.Colors.ink, duration: 0.7, hint: "Keeps the plan", action: {
+                planKept += 1
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
                     planModel.keepPlan(model: model)
                 }
@@ -199,6 +202,7 @@ struct NowPage: View {
                     .fixedSize(horizontal: false, vertical: true)
             })
             .accessibilityLabel("Start with \(first.title)")
+            .tesseraFeedback(.made, trigger: planKept)
         }
     }
 
@@ -379,11 +383,16 @@ struct NowPage: View {
 struct DrainBar: View {
     let start: Date
     let end: Date
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let height: CGFloat = 14
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
+        // The bar moves a pixel or two a step, so it steps every 5 s; in Low Power or Reduce Motion once a minute,
+        // with a short fade (G226, K84.19).
+        let calm = reduceMotion || PowerState.isLowPower
+        let step = Self.step(calm: calm)
+        TimelineView(.periodic(from: .now, by: step)) { context in
             let now = AppClock.adjust(context.date)
             let fraction = Self.remaining(start: start, end: end, now: now)
             GeometryReader { proxy in
@@ -399,15 +408,27 @@ struct DrainBar: View {
                                              startPoint: .leading, endPoint: .trailing))
                         .frame(width: max(proxy.size.width * (1 - fraction), 0), height: 6)
                         .blur(radius: 0.3)
-                        .tesseraAnimation(.linear(duration: 1), value: fraction)
+                        .tesseraAnimation(calm ? .easeOut(duration: 0.15) : .linear(duration: step), value: fraction)
                 }
                 .frame(maxHeight: .infinity)
             }
             .frame(height: Self.height)
             .accessibilityElement()
             .accessibilityLabel("Time left")
-            .accessibilityValue("\(Int((fraction * 100).rounded())) percent")
+            // Minutes, as he'd say it: "6 minutes left", never a percent of an interval he didn't set (G234).
+            .accessibilityValue(Self.spoken(end: end, now: now))
         }
+    }
+
+    /// Seconds between steps: 5, or 60 when calm (Low Power, Reduce Motion).
+    static func step(calm: Bool) -> TimeInterval {
+        calm ? 60 : 5
+    }
+
+    /// "6 minutes left", "under a minute left", "done" at the end.
+    static func spoken(end: Date, now: Date) -> String {
+        let left = end.timeIntervalSince(now)
+        return left > 0 ? "\(CookModeCopy.duration(left)) left" : "done"
     }
 
     /// 1 before the start, draining to 0 at the end.

@@ -15,6 +15,16 @@ public struct TessInbox {
         self.classes = classes
     }
 
+    /// A phrase still unsent after this long is deleted: Claude never reads a week-old "tomorrow".
+    public static let maxAge: TimeInterval = 7 * 24 * 3600
+
+    /// Deletes every waiting phrase older than `maxAge`.
+    func expire(now: Date) {
+        for item in waiting() where now.timeIntervalSince(item.createdAt) > Self.maxAge {
+            remove(item)
+        }
+    }
+
     /// Oldest first.
     public func waiting() -> [ObjectRecord] {
         guard let waitingClass = classes[.tessWaiting] else { return [] }
@@ -41,6 +51,9 @@ public struct TessInbox {
 }
 
 public extension TessCaptureEngine {
+    /// The most ghosts one drain lands.
+    static let maxDrainedGhosts = 3
+
     /// How many phrases wait for Claude ("1 waiting for Tess").
     var waitingCount: Int {
         TessInbox(store: engine.store, classes: engine.classes).waiting().count
@@ -53,20 +66,32 @@ public extension TessCaptureEngine {
     }
 
     /// Reads the waiting phrases with Claude, oldest first, each as its own pending ghost. A phrase leaves the inbox
-    /// once Claude has read it (whatever it made of it); one that's offline again stays. Call it when the app opens
-    /// online, never on a timer.
+    /// once Claude has read it (whatever it made of it); one that's offline again stays. The app calls it each time
+    /// it comes to the foreground (`AppModel.drainWaitingPhrases`), never on a timer.
     func readWaiting(context: TessContext) async -> [TessCapture] {
+        let inbox = TessInbox(store: engine.store, classes: engine.classes)
+        // A week unsent and it goes, whether or not Claude is on.
+        inbox.expire(now: context.now)
         guard var claude, !context.commitImmediately else { return [] }
         claude.retrying = true
-        let inbox = TessInbox(store: engine.store, classes: engine.classes)
         var captures: [TessCapture] = []
         for item in inbox.waiting() where claude.isAvailable(for: .capture) {
+            // At most 3 ghosts per foreground: commit acts on the whole group, so every one has to be on screen.
+            // The rest keep waiting and drain after the group is kept or dropped.
+            if captures.count >= TessCaptureEngine.maxDrainedGhosts {
+                break
+            }
             // Queued before the walls (Research 139): a secret, money or body phrase leaves the inbox unread.
             if SecretWords.mentions(item.title) || PrivateFacts.isWalled(
                 item.title,
                 lastWeightKg: BodyWeight.lastKg(in: engine.store)
             ) {
                 inbox.remove(item)
+                continue
+            }
+            // A timer phrase, or anything said while a cook runs, is read on the phone or not at all: it stays (until
+            // its week is up) and is never sent.
+            if TessRouter.staysOnPhone(item.title, engine: engine) {
                 continue
             }
             var request = TessRequest(text: item.title, context: context, use: .capture)
