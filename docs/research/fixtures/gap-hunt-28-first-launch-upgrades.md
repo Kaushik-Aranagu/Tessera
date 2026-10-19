@@ -140,7 +140,7 @@ Columns: id; what to check (with the gap id where ranked); expected (with the Sw
 | FL54 | Streak and weekly counts across the change. | Streaks and Review week counts use `TesseraDay` week math (Monday, 04:00 edges), so a clock change does not split a week; a streak that counts "days in a row" through `startOfDay` (16 `Calendar.current` sites) would. I did not read the streak code. | inferred | `TesseraDay.swift:75-83`; `ReviewView.swift:265` | Clock. | Core |
 | FL55 | `-demoTime`. | Debug and simulator only; shifts `AppClock.now` by a fixed offset computed once at launch (set to HH:mm today), after which the clock runs at the normal rate (only the start is shifted, so a long recording still crosses 04:00 on schedule). Stamps made with `AppClock.now` carry the shifted time, which is why it is banned on the phone. | traced | `AppClock.swift:4-31` | Clock. | Builder A |
 
-### 3G. The Oct 23 signing lapse and what a new phone sees
+### 3G. The signing lapse (about Oct 26) and what a new phone sees
 
 | ID | What to check | Expected | Status | file:line | Angle | Owner |
 |---|---|---|---|---|---|---|
