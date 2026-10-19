@@ -181,7 +181,7 @@ the recipe, and the library page's "used in" count shows "Private recipe" for it
 - Only datasets marked BUNDLE in the inventory (`reference-library-inventory.md:12-15`) can ship, and only after the
   licence is confirmed from the publisher's own page (the inventory's UNVERIFIED label blocks it, `:5-11`). Today that
   means: USDA FDC Foundation and SR Legacy (CC0, confirmed from the publisher page by Core on Oct 19, and in `food-table-usda.md:10-16`), free-exercise-db data once its data provenance is checked
-  (Unlicense, `reference-library-inventory.md:63-69`). USDA FoodKeeper is pending (CC0 per its data.gov record; FSIS's own page still to be read). Everything SKIP, pending or UNVERIFIED is refused by the builder.
+  (Unlicense, `reference-library-inventory.md:60-66`). USDA FoodKeeper is pending (CC0 per its data.gov record; FSIS's own page still to be read). Everything SKIP, pending or UNVERIFIED is refused by the builder.
 - Each dataset row in the bundle records: `datasetID`, `name`, `publisher`, `sourceURL`, `licence` (SPDX-style id,
   e.g. CC0-1.0, Unlicense), `licenceCheckedOn`, `sourceVersion` (the publisher's release, e.g. FDC Dec 2025),
   `downloadSHA256`, `rowCount`, `attributionLine`.
