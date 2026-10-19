@@ -108,10 +108,12 @@ public struct TessRouter {
         let secret = SecretWords.mentions(request.text)
         let walled = PrivateFacts.isWalled(request.text, lastWeightKg: request.lastWeightKg(engine))
         let stayHome = Self.staysOnPhone(request.text, engine: engine)
-        for model in models where model.isAvailable(for: request.use)
-            && !((secret || walled) && model.route == .claude && asked?.source == .grammar)
-            && !(stayHome && model.route == .claude)
-        {
+        for model in models where model.isAvailable(for: request.use) {
+            // A phrase that stays on the phone counts as held back, when Claude was on and would have been asked.
+            if model.route == .claude, stayHome || ((secret || walled) && asked?.source == .grammar) {
+                (model as? ClaudeTessModel)?.flags.heldBack += 1
+                continue
+            }
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)
             engine.attribution = nil
