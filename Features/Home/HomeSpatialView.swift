@@ -84,6 +84,9 @@ struct HomeSpatialView: View {
     @State private var picked: Int?
     @State private var pulling = false
     @State private var pullAxisDown: Bool?
+    @State private var pullState = AreaIndexPull()
+    /// True only while a finger is down on the pull; the system resets it to false when the drag is cancelled.
+    @GestureState private var pullTouching = false
     /// A page's vertical scroll is away from its top: pulling then scrolls it back and never opens the index.
     @State private var pageScrolled = false
     @State private var pickTicks = 0
@@ -212,6 +215,18 @@ struct HomeSpatialView: View {
                     .transition(.opacity)
             }
         }
+        .onChange(of: pullTouching) { _, touching in
+            // A drag the system cancelled (Notification Center, a call) never reaches onEnded. The finger-up flag flips
+            // before onEnded runs for a normal lift, so look again a beat later: still mid-pull means it was cancelled.
+            guard !touching, pullAxisDown != nil else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(150))
+                guard pullAxisDown != nil else { return }
+                pullAxisDown = nil
+                pullState = AreaIndexPull()
+                closeIndex()
+            }
+        }
         .onChange(of: indexProgress) { _, new in
             // A pull dragged back to nothing (no close animation) leaves the tree too.
             if new <= 0.001, !indexClosing {
@@ -327,32 +342,35 @@ struct HomeSpatialView: View {
         }
     }
 
-    /// Pull a tab page down past its top (80 pt): from 20 pt to 90 pt the index forms, and past 90 pt the row under
-    /// the finger is picked (one selection tick per row); let go on a row to open it, let go short to cancel.
+    /// Pull a tab page down past its top: from 20 pt to 90 pt the index forms and then stays open; from there the row
+    /// follows the finger up or down (one selection tick per row, the area you are in first); let go on a row to open
+    /// it, on your own area to close, or short of forming to cancel.
     private var pull: some Gesture {
         DragGesture(minimumDistance: 12, coordinateSpace: .global)
+            .updating($pullTouching) { _, touching, _ in touching = true }
             .onChanged { value in
                 guard !rowGrabbed, !pageScrolled, !model.isCommandExpanded, !model.soul.refusesLens,
                       !typeSize.isAccessibilitySize else { return }
                 if pullAxisDown == nil {
+                    // A new pull never inherits the last one's anchor (a cancelled drag may not reach onEnded).
+                    pullState = AreaIndexPull()
                     pullAxisDown = value.translation.height > 0
                         && abs(value.translation.height) > abs(value.translation.width) * 1.5
                 }
                 guard pullAxisDown == true else { return }
                 let drag = value.translation.height
-                let formed = min(max((drag - 20) / 70, 0), 1)
-                pulling = formed >= 1
-                if formed > 0 {
+                indexProgress = pullState.progress(translation: drag)
+                // The sheet only mounts while the index is open or forming; a pull has to mount it too.
+                if indexProgress > 0 {
                     indexMounted = true
                 }
-                indexProgress = formed
-                guard formed >= 1 else {
+                pulling = pullState.isFormed
+                guard pullState.isFormed else {
                     picked = nil
                     return
                 }
-                // Above the first row there is no row under the finger: letting go there closes the index.
-                let row = Int(((value.location.y - AreaIndexSheet.firstRow) / AreaIndexSheet.rowPitch).rounded(.down))
-                let target: Int? = row < 0 ? nil : min(row, Page.allCases.count - 1)
+                let target = pullState.picked(translation: drag, current: Int(progress.rounded()),
+                                              count: Page.allCases.count)
                 if picked != target {
                     picked = target
                     if target != nil {
@@ -361,7 +379,10 @@ struct HomeSpatialView: View {
                 }
             }
             .onEnded { _ in
-                defer { pullAxisDown = nil }
+                defer {
+                    pullAxisDown = nil
+                    pullState = AreaIndexPull()
+                }
                 guard pullAxisDown == true else { return }
                 // Letting go on the area you are in, or above the first row, closes the index.
                 if indexProgress >= 1, let picked, picked != Int(progress.rounded()) {
