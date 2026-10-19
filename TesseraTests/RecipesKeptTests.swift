@@ -32,6 +32,29 @@ struct RecipesKeptTests {
         #expect(shelf.waiting().isEmpty)
     }
 
+    /// QA on #1031: Remove's UNDO puts the link back in its own place, and a link kept meanwhile stays behind it.
+    @Test func undoingARemovePutsTheLinkBackInItsPlace() throws {
+        let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let shelf = RecipeLinkShelf(fileURL: folder.appending(path: "recipe-links.json"))
+        shelf.fileProtection = []
+        let links = try ["dal", "tacos", "stew"].map { try #require(URL(string: "https://example.com/\($0)")) }
+        for link in links {
+            shelf.keep(link)
+        }
+        let takeBack = KeptLinks.remove(links[1], from: shelf)
+        #expect(shelf.waiting() == [links[0], links[2]])
+        let soup = try #require(URL(string: "https://example.com/soup"))
+        shelf.keep(soup)
+        takeBack()
+        #expect(shelf.waiting() == [links[0], links[1], links[2], soup])
+        // The first and the last come back in place too.
+        KeptLinks.remove(links[0], from: shelf)()
+        KeptLinks.remove(soup, from: shelf)()
+        #expect(shelf.waiting() == [links[0], links[1], links[2], soup])
+        shelf.erase()
+    }
+
     /// QA on #913: with "Tess asks Claude" off, a kept link that needs Claude to read is a firm "Claude is off" and
     /// leaves the shelf; no call is made.
     @Test func withClaudeOffAKeptLinkLeavesTheShelf() async throws {
