@@ -32,7 +32,7 @@ struct MirrorPrivacyTests {
         try engine.perform(SyncCalendar(inputs: [event], windowStart: at(0), windowEnd: at(23)), by: .system)
         let sleep = [SleepSample(value: .asleepCore, start: at(0).addingTimeInterval(-3600), end: at(6),
                                  sourceBundle: "w", productType: "Watch7,1")]
-        try engine.perform(SyncHealth(inputs: HealthInputs(sleep: sleep, stepsToday: 4242, restingHeartRate: 61,
+        try engine.perform(SyncHealth(inputs: HealthInputs(sleep: sleep, stepsToday: 7_654_321, restingHeartRate: 61,
                                                            restingHeartRateAt: at(7)),
                                       now: at(8), zone: "America/Los_Angeles"), by: .system)
         try engine.perform(HoldNotice(title: "zebraheld notice"), by: .system)
@@ -59,7 +59,7 @@ struct MirrorPrivacyTests {
         defer { try? FileManager.default.removeItem(at: dir) }
         let (store, _) = try mirrored(at: dir.appendingPathComponent("tessera.sqlite"))
         let json = try String(decoding: TesseraExport(context: store.context).encoded(), as: UTF8.self)
-        #expect(!json.contains("quokkaclinic") && !json.contains("4242") && !json.contains("zebraheld"))
+        #expect(!json.contains("quokkaclinic") && !json.contains("7654321") && !json.contains("zebraheld"))
         #expect(json.contains("Bench felt heavy"))
     }
 
