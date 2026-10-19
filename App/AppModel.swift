@@ -72,7 +72,8 @@ final class AppModel {
             keys: SystemKeychain(),
             ledger: TessUsageLedger(store: store, classes: classes)
         ) {
-            [weak self] in self?.asksClaude ?? false
+            // Not in Low Power: the plan's words are a nicety, so Claude waits for charge.
+            [weak self] in (self?.asksClaude ?? false) && !PowerState.isLowPower
         }
         planWordingStore = wording
         return wording
