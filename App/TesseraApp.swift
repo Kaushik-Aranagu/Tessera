@@ -33,6 +33,14 @@ struct TesseraApp: App {
         if LaunchFlags.has("-demo") || LaunchFlags.has("-resetDemo") {
             DemoData.prepare(model)
         }
+        #if DEBUG
+            // `-wallsSeedPrivate <kg|none>` (simulator only, walls-ui-test-spec.md §12): his last weight, after the
+            // demo reseed, written the way master keeps one today, as a weigh-in private note. "none" writes nothing.
+            if let kg = LaunchFlags.value(after: "-wallsSeedPrivate").flatMap(Double.init) {
+                let body = "\(kg.formatted(.number.precision(.fractionLength(0 ... 1)))) this morning"
+                _ = try? model.engine.perform(CreateNote(body: body, isPrivate: true), by: .user)
+            }
+        #endif
         _model = State(initialValue: model)
         LiveWorkout.model = model
         // App Intents (Shortcuts, Siri, the Action button) run against the same engine as the UI.

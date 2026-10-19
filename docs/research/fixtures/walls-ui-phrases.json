@@ -82,9 +82,9 @@
       "expectNotInMissLog": true,
       "expectLine": "It's in your private notes.",
       "lineMatch": "exact",
-      "passesOnMaster": false,
+      "passesOnMaster": true,
       "masterEvidence": "Fails in the app: BottomChrome.swift:508-509 sends any phrase ending in ? to CommandInterpreter, which writes a task titled with the phrase (CaptureParts.swift:184-188, line \"Drying. Swipe to drop it.\"). The grammar answer at TessGrammar.swift:497-498 is never reached from the Ask bar.",
-      "pending": "Builder B: route ? phrases with a secret word through model.ask, or have CommandInterpreter check SecretWords first",
+      "pending": null,
       "notes": "V5's second phrase. Nothing may be written; the test also checks no task row with this title appears."
     },
     {
@@ -97,9 +97,9 @@
       "expectNotInMissLog": true,
       "expectLine": "It's in your private notes.",
       "lineMatch": "exact",
-      "passesOnMaster": false,
+      "passesOnMaster": true,
       "masterEvidence": "Leak: BottomChrome.swift:508-509 then CaptureParts.swift:184-188 write a plain task \"Door code 4417?\" with the value in its title, so it shows on Home and in the Day log and rides backups unmarked.",
-      "pending": "Builder B, same fix as A06",
+      "pending": null,
       "notes": "A secret with a value plus a question mark. The test asserts no static text containing 4417 after the dry."
     },
     {
@@ -222,7 +222,7 @@
       "expectPrivate": false,
       "expectNoClaude": true,
       "expectNotInMissLog": true,
-      "expectLine": "Milk, on the list.",
+      "expectLine": "Milk, on Groceries.",
       "lineMatch": "exact",
       "passesOnMaster": true,
       "masterEvidence": "TessGrammar+Kitchen.swift:49-65; TessCaptureEngine.swift:323-337",
@@ -270,6 +270,34 @@
       "masterEvidence": "No grammar rule reads it and PrivateFacts has no match (BW108)",
       "pending": null,
       "notes": "Plain control. May reach Claude under the spy; must never read \"Private note\"."
+    },
+    {
+      "id": "A20",
+      "phrase": "was $12 too much?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "That stays on this phone.",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Added with #564's fix: BottomChrome.commit answers a walled money or body question itself and saves nothing",
+      "pending": null,
+      "notes": "Money question (Product's 2:30 ruling). Nothing saved, no private note."
+    },
+    {
+      "id": "A21",
+      "phrase": "is my bp 140 too high?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "That stays on this phone.",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Added with #564's fix: BottomChrome.commit answers a walled money or body question itself and saves nothing",
+      "pending": null,
+      "notes": "Body question (Product's 2:30 ruling). Nothing saved, no private note."
     },
     {
       "id": "N01",
@@ -325,7 +353,7 @@
       "lineMatch": null,
       "passesOnMaster": false,
       "masterEvidence": "Notes.swift:111 checks SecretWords only, so it is a plain note titled \"knee hurts\" with nothing walled.",
-      "pending": "Core 0aa",
+      "pending": null,
       "notes": "Decisions 1:15 pm: body facts typed on the Notes page go private."
     },
     {
@@ -339,7 +367,7 @@
       "lineMatch": null,
       "passesOnMaster": false,
       "masterEvidence": "Notes.swift:111 checks SecretWords only: a plain note titled with the amount.",
-      "pending": "Core 0aa",
+      "pending": null,
       "notes": "Decisions 1:15 pm: money with an amount stays private everywhere."
     },
     {
@@ -353,7 +381,7 @@
       "lineMatch": null,
       "passesOnMaster": false,
       "masterEvidence": "Notes.swift:111 uses SecretWords.mentions, which has no account words; the account rule lives only in SecretWords.swift:127-136 for pastes.",
-      "pending": "Core 0aa",
+      "pending": null,
       "notes": "Decisions 1:15 pm: an account-number line makes the whole note private."
     },
     {
@@ -477,7 +505,7 @@
       "expectPrivate": false,
       "expectNoClaude": true,
       "expectNotInMissLog": true,
-      "expectLine": "That looks like a Claude key. It goes in Settings, not a recipe.",
+      "expectLine": "That looks like a Claude key. It goes in Review, under Claude.",
       "lineMatch": "exact",
       "passesOnMaster": true,
       "masterEvidence": "PasteRecipe.swift:119-121 clears the text; :33 shows the line",
@@ -493,9 +521,9 @@
       "expectNotInMissLog": true,
       "expectLine": null,
       "lineMatch": null,
-      "passesOnMaster": false,
+      "passesOnMaster": true,
       "masterEvidence": "PasteRecipe.swift:205-206 logs any failed paste unless SecretWords.mentions, so the amount lands in the miss log.",
-      "pending": "Builder B: add !PrivateFacts.isWalled(text) at PasteRecipe.swift:205",
+      "pending": null,
       "notes": "Paste alone, tap Done, then SAVE: nothing is written (no ingredients). Money never goes in the miss log (12:30 pm)."
     },
     {
@@ -1307,7 +1335,7 @@
       "lineMatch": "exact",
       "passesOnMaster": false,
       "masterEvidence": "PrivateFacts.swift:104-108 walls a decimal or body unit only when every other word is a day word; master has no last-weight check (\"good\" is not a day word)",
-      "pending": "Core 0ai (body-word list, \"weight\" out of dayWords)",
+      "pending": null,
       "seed": {
         "lastWeightKg": null
       },

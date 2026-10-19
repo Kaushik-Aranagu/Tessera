@@ -112,7 +112,7 @@ struct BottomChrome: View {
         .onDisappear(perform: askLeft)
         .onAppear {
             model.soul.handle(.appeared)
-            breathe = !reduceMotion
+            breathe = !reduceMotion && !LaunchFlags.has("-wallsSpy") // a UI test needs the app to idle
             #if DEBUG
                 if LaunchFlags.has("-tessScript") {
                     playScript()
@@ -142,11 +142,6 @@ struct BottomChrome: View {
     }
 
     // MARK: Rest
-
-    /// One line per capture: Tess's reply wins; there are no generic fallbacks. UNDO stays while there's a capture.
-    private var line: String? {
-        reply ?? voice.note?.text ?? model.launchNote
-    }
 
     private var resting: some View {
         HStack(alignment: .center, spacing: Theme.Spacing.m) {
@@ -201,6 +196,7 @@ struct BottomChrome: View {
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.tess)
                         .contentTransition(.opacity)
+                        .accessibilityIdentifier("tess.line")
                     }
                     if canUndo {
                         Button("Undo") { undo() }
@@ -456,18 +452,6 @@ struct BottomChrome: View {
     }
 
     /// Return: the text dims to a ghost and a cobalt line dries under it for 2 s (touching cancels), then it commits.
-    /// Core's shared guard (anything that starts like a Claude key, in any case).
-    static func looksLikeClaudeKey(_ text: String) -> Bool {
-        TesseraCore.looksLikeClaudeKey(text)
-    }
-
-    private func refuseKey() {
-        ghost = nil
-        dryTask?.cancel()
-        close()
-        say("That looks like a Claude key. It goes in Review, under Claude.")
-    }
-
     private func dry() {
         let text = model.commandDraft
         guard !Self.looksLikeClaudeKey(text) else {
@@ -507,11 +491,24 @@ struct BottomChrome: View {
         }
         isBusy = true
         let lowered = text.lowercased()
-        let isQuestion = lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?")
-        let answer = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
+        // A secret phrase always goes to Tess, question or not: her walls make it a private note or answer
+        // "It's in your private notes.", never a plain task (Research AU, A06 and A07). A money or body question
+        // gets "That stays on this phone." and nothing is saved (Product's 2:30 ruling, A20 and A21).
+        let secret = SecretWords.mentions(text)
+        let walled = secret || PrivateFacts.isWalled(text, lastWeightKg: BodyWeight.lastKg(in: model.store))
+        let factQuestion = walled && !secret && lowered.hasSuffix("?")
+        let isQuestion = !walled
+            && (lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?"))
+        let answer = if factQuestion {
+            "That stays on this phone."
+        } else if isQuestion {
+            CommandInterpreter(model: model).run(text)
+        } else {
+            await model.ask(text)
+        }
         // A doubtful set count waits for a tap on one of its two answers (Core's set guard).
-        let asked = isQuestion ? nil : model.pendingSetAsk
-        let lift = isQuestion ? nil : model.pendingDatedLift
+        let asked = isQuestion || factQuestion ? nil : model.pendingSetAsk
+        let lift = isQuestion || factQuestion ? nil : model.pendingDatedLift
         ghost = nil
         drying = 0
         // Offline, a capture the walls stopped can't be read yet: his words stay in the Ask for the retry online
@@ -536,6 +533,23 @@ struct BottomChrome: View {
 // MARK: - Speak and the asks (same file, so they reach the view's private state)
 
 extension BottomChrome {
+    /// One line per capture: Tess's reply wins; there are no generic fallbacks. UNDO stays while there's a capture.
+    private var line: String? {
+        reply ?? voice.note?.text ?? model.launchNote
+    }
+
+    /// Core's shared guard (anything that starts like a Claude key, in any case).
+    static func looksLikeClaudeKey(_ text: String) -> Bool {
+        TesseraCore.looksLikeClaudeKey(text)
+    }
+
+    private func refuseKey() {
+        ghost = nil
+        dryTask?.cancel()
+        close()
+        say("That looks like a Claude key. It goes in Review, under Claude.")
+    }
+
     /// An ask can't wait off screen (tess-motion.md §14 `askLeft`): leaving with one open lets it go, or the router
     /// would keep refusing the lens. Emitted here because the ask's onChange won't run once the view is gone.
     private func askLeft() {
@@ -721,7 +735,10 @@ extension BottomChrome {
         replyCount += 1
         let shown = replyCount
         Task { @MainActor in
-            try? await Task.sleep(for: TessVoice.hold(undo: canUndo, holds: .seconds(4)))
+            // `-wallsSpy` (simulator only): the line stays until the next one, so a UI test that reaches it late
+            // (XCUITest waits up to 120 s per step for an app that never idles) still reads it.
+            try? await Task.sleep(for: LaunchFlags.has("-wallsSpy") ? .seconds(600)
+                : TessVoice.hold(undo: canUndo, holds: .seconds(4)))
             guard replyCount == shown else { return }
             withTesseraAnimation(reduceMotion: reduceMotion) { reply = nil }
         }

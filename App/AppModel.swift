@@ -206,6 +206,22 @@ final class AppModel {
                 self?.asksClaude ?? false
             }
         }
+        #if DEBUG
+            // `-wallsSpy` (simulator only): grammar only, Claude answered in memory by the spy, and a clean miss log,
+            // so WallsUITests counts calls and misses the same on any Mac (walls-ui-test-spec.md §5).
+            if LaunchFlags.has("-wallsSpy"), let capture = runtime.tess as? TessCaptureEngine {
+                capture.model = nil
+                capture.claude = ClaudeTessModel(
+                    keys: InMemoryKeychain(ClaudeSection.fakeKey),
+                    ledger: TessUsageLedger(store: store, classes: classes),
+                    flags: ClaudeMissFlags(defaults: UserDefaults(suiteName: "walls-spy") ?? .standard),
+                    session: WallsSpy.session()
+                ) { true }
+                if let log = CaptureMissLog.beside(store) {
+                    try? FileManager.default.removeItem(at: log.url)
+                }
+            }
+        #endif
         // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.
         let outcome: String? = switch TesseraSchema.lastOpenOutcome {
         case .opened: nil
