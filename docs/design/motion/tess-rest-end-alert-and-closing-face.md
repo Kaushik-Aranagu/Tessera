@@ -52,7 +52,7 @@ The face carries no keys: Done, +15 and Skip are gone with the last set, so no t
 
 ### What Home says at the same moment
 
-Ruled by Product (Oct 19, `decisions.md` last bullet): Home's Training line stays "Ready to finish", and the closing face reads what Home reads at that moment: "<title>, ready to finish" with the masked title. Tess's line and Home never disagree, so the face never says "done" or "finished". The 60 s length stands.
+Ruled by Product (Oct 19, 10:51 AM PT, mirror `decisions.md` line 1113; mirror only, the repo copy does not have it yet): Home's Training line stays "Ready to finish", and the closing face reads what Home reads at that moment: "<title>, ready to finish" with the masked title. Tess's line and Home never disagree, so the face never says "done" or "finished". The 60 s length stands.
 
 ### Build checks (Builder A)
 
