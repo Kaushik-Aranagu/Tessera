@@ -52,7 +52,8 @@ struct KitchenMaskTests {
         let cake = try recipe("Dentist cake\n2 cups flour\n\nSoak the dates overnight.\nBake 30 minutes.")
         try model.engine.perform(StartCooking(recipe: cake.id), by: .user)
         let process = try #require(ProcessTable(engine: model.engine).running())
-        #expect(process.nextStep?.contains("dates") == true)
+        // Core stores the step masked already (#1033); Home still reads it by number, not as "Private recipe" twice.
+        #expect(process.nextStep?.contains("dates") != true)
         let shown = LedgerRow.shown(process, store: model.store, classes: model.classes, lastWeightKg: nil)
         #expect(shown.title == ObjectPrivacy.recipeLabel)
         #expect(shown.nextStep == "Step 1 of 2")
