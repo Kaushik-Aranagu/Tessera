@@ -37,8 +37,8 @@ public enum SideFacts {
 
     /// A training load ("Weight: 60 kg" on a set, a target weight, a bar) is the bar's, not his body (QA on #785):
     /// checked for secrets, keys and money, never read as a weigh-in. Every other field is read whole.
-    static func isShowable(_ field: ResolvedField, _ text: String, of classDef: ClassDef,
-                           classes: [SystemCatalog.Key: ClassDef], lastWeightKg: Double?) -> Bool
+    public static func isShowable(_ field: ResolvedField, _ text: String, of classDef: ClassDef,
+                                  classes: [SystemCatalog.Key: ClassDef], lastWeightKg: Double?) -> Bool
     {
         let line = "\(field.name): \(text)"
         let load = field.kind == .mass && [SystemCatalog.Key.set, .exerciseEntry, .equipment].contains { key in
