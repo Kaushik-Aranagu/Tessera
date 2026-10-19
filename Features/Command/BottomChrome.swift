@@ -367,60 +367,6 @@ struct BottomChrome: View {
                    act: { act(on: $0) }, editGhost: editVoiceGhost)
     }
 
-    private var writing: some View {
-        @Bindable var model = model
-        return VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-            ZStack(alignment: .bottomLeading) {
-                TextField("Ask", text: $model.commandDraft,
-                          prompt: Text("Write anything").foregroundStyle(Theme.Colors.inkSecondary))
-                    // His typing sits one step under her voice: Field 18 (calm-capture.md addendum).
-                    .textRole(.field)
-                    // The drying ghost reads in inkSecondary (calm-capture.md).
-                    .foregroundStyle(ghost == nil ? Theme.Colors.ink : Theme.Colors.inkSecondary)
-                    .tint(Theme.Colors.tess)
-                    .textFieldStyle(.plain)
-                    .focused($focused)
-                    .submitLabel(.send)
-                    .onSubmit(dry)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .disabled(ghost != nil)
-                    .padding(.bottom, 6)
-                    .onKeyPress(.escape) {
-                        close()
-                        return .handled
-                    }
-                    .onChange(of: model.commandDraft) { _, draft in
-                        // A Claude key never stays in Ask: not on screen, not as a ghost, not as a task. Cleared the
-                        // moment it lands, before any interpreter can see it.
-                        if Self.looksLikeClaudeKey(draft) {
-                            model.commandDraft = ""
-                            refuseKey()
-                            return
-                        }
-                        if !isBusy {
-                            model.soul.handle(.draft(isEmpty: draft.isEmpty))
-                        }
-                    }
-                // While the ghost dries only the dry line shows (Design B2 on #264).
-                if ghost == nil {
-                    CaptureWritingLine(color: Theme.Colors.tess, reduceMotion: reduceMotion)
-                }
-                if ghost != nil {
-                    // One dry line for every drying ghost: 2.5 pt cobalt, draining right to left (speak.md 10).
-                    Rectangle()
-                        .fill(Theme.Colors.tess)
-                        .frame(height: 2.5)
-                        .scaleEffect(x: 1 - drying, anchor: .leading)
-                }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture { cancelDrying() }
-        }
-        .padding(.horizontal, Theme.Spacing.gutter)
-        .padding(.bottom, Theme.Spacing.xl)
-    }
-
     // MARK: Actions
 
     private func open() {
@@ -535,6 +481,64 @@ struct BottomChrome: View {
 // MARK: - Speak and the asks (same file, so they reach the view's private state)
 
 extension BottomChrome {
+    private var writing: some View {
+        @Bindable var model = model
+        return VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+            ZStack(alignment: .bottomLeading) {
+                TextField("Ask", text: $model.commandDraft,
+                          prompt: Text("Write anything").foregroundStyle(Theme.Colors.inkSecondary))
+                    // His typing sits one step under her voice: Field 18 (calm-capture.md addendum).
+                    .textRole(.field)
+                    // The drying ghost reads in inkSecondary (calm-capture.md).
+                    .foregroundStyle(ghost == nil ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+                    .tint(Theme.Colors.tess)
+                    .textFieldStyle(.plain)
+                    .focused($focused)
+                    .submitLabel(.send)
+                    .onSubmit(dry)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .disabled(ghost != nil)
+                    .padding(.bottom, 6)
+                    .onKeyPress(.escape) {
+                        close()
+                        return .handled
+                    }
+                    .onChange(of: model.commandDraft) { _, draft in
+                        // A Claude key never stays in Ask: not on screen, not as a ghost, not as a task. Cleared the
+                        // moment it lands, before any interpreter can see it.
+                        if Self.looksLikeClaudeKey(draft) {
+                            model.commandDraft = ""
+                            refuseKey()
+                            return
+                        }
+                        if !isBusy {
+                            model.soul.handle(.draft(isEmpty: draft.isEmpty))
+                        }
+                    }
+                // While the ghost dries only the dry line shows (Design B2 on #264).
+                if ghost == nil {
+                    CaptureWritingLine(color: Theme.Colors.tess, reduceMotion: reduceMotion)
+                }
+                if ghost != nil {
+                    // One dry line for every drying ghost: 2.5 pt cobalt, draining right to left (speak.md 10).
+                    Rectangle()
+                        .fill(Theme.Colors.tess)
+                        .frame(height: 2.5)
+                        .scaleEffect(x: 1 - drying, anchor: .leading)
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { cancelDrying() }
+            if model.isAskingClaude {
+                AskingClaudeLine { model.cancelAskingClaude() }
+            }
+        }
+        .tesseraAnimation(value: model.isAskingClaude)
+        .padding(.horizontal, Theme.Spacing.gutter)
+        .padding(.bottom, Theme.Spacing.xl)
+    }
+
     private var line: String? {
         slot?.text
     }
