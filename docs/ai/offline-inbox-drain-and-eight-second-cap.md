@@ -46,7 +46,7 @@ A Tess Sent row and a Tess Call row are written **when a request was handed to t
 
 **The drain wait** [proposed, same component as the live wait]. While a drained request is out: one line "Asking Claude" with CANCEL, the same line the live Ask wait uses (section 4). For a lone phrase the result keeps its own line; for two or more, "Offline, 2 read." [code `AppModel.swift:305-307`].
 
-**Receipts** (Settings, Claude, Receipts). A drained phrase is an ordinary capture row: "A capture", newest first, the send time, model, cost. No "drained" word, no "offline" word. A timed-out attempt shows "A capture · Haiku · under 0.1¢" with the ledger's outcome word. The Sent layer under a row shows the phrase as stored, or **"Private phrase"** if a wall catches it at log time (it cannot get there through the inbox, but live captures can).
+**Receipts** (Settings, Claude, Receipts). A drained phrase is an ordinary capture row: "A capture", newest first, the send time, model, cost. No "drained" word, no "offline" word. A timed-out attempt shows "A capture - Haiku - under 0.1 cents" with the ledger's outcome word. The Sent layer under a row shows the phrase as stored, or **"Private phrase"** if a wall catches it at log time (it cannot get there through the inbox, but live captures can).
 
 **What was sent.** One row per attempt. Two attempts for one phrase are two rows with two send times.
 
