@@ -11,6 +11,8 @@ struct AskingClaudeLine: View {
             Text(AskingClaudeCopy.line)
                 .font(Theme.voice)
                 .foregroundStyle(Theme.Colors.tess)
+            // Cancel at the right edge (Design on #1123).
+            Spacer(minLength: Theme.Spacing.m)
             Button(AskingClaudeCopy.cancel, action: cancel)
                 .buttonStyle(.labelWord)
                 .frame(minHeight: 44)

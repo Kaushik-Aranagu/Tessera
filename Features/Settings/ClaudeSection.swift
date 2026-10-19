@@ -456,6 +456,8 @@ struct ClaudeSection: View {
             notSavedAt = .now
         }
         UIAccessibility.post(notification: .announcement, argument: receipt)
+        // No key, no question: the Now line goes at once, not at the next launch (QA on #1123).
+        model.refreshKeyQuestion(keys: keys)
         model.touch()
     }
 }
@@ -611,6 +613,12 @@ enum SentWords {
         var lines = said.components(separatedBy: "\n")
         if let phrase = lines.first, phrase != TessSentLog.privatePhrase {
             lines[0] = "\u{201C}\(phrase)\u{201D}"
+        }
+        // A private routine in the context reads "Private workout" here too (Design on #1123).
+        let workout = "Workout: "
+        lines = lines.map { line in
+            guard line.hasPrefix(workout) else { return line }
+            return workout + ObjectPrivacy.routineTitle(String(line.dropFirst(workout.count)), in: store)
         }
         return lines.joined(separator: "\n")
     }

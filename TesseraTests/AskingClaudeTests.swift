@@ -22,9 +22,12 @@ struct AskingClaudeTests {
     }
 
     /// Core's signal sets the line; the capture landing clears it.
-    @Test func theSignalShowsTheLineUntilTheAnswer() async {
+    @Test func theSignalShowsTheLineUntilTheAnswer() async throws {
         let model = AppModel(context: container.mainContext)
-        model.claudeFlags.willSend?()
+        // The real Claude model is wired to the flags at launch (QA on #1123): its signal is set, and it sets the line.
+        let willSend = try #require(model.claudeFlags.willSend)
+        willSend()
+        #expect(model.isAskingClaude)
         _ = await model.ask("buy milk")
         #expect(!model.isAskingClaude)
     }

@@ -60,4 +60,13 @@ struct SentWordsTests {
         #expect(SentWords.heldBackLine(1) == "1 request held back on this phone")
         #expect(SentWords.heldBackLine(3) == "3 requests held back on this phone")
     }
+
+    /// A private routine named in the context reads "Private workout" (Design on #1123).
+    @Test func aPrivateWorkoutInTheContextIsMasked() throws {
+        try row(.tessSent, words: "two more sets\nWorkout: Knee rehab day", request: "a")
+        let call = try row(.tessCall, request: "a")
+        let words = SentWords.byRequest(TessSentLog(store: model.store, classes: model.classes))
+        #expect(SentWords.of(call, in: model.store, words: words)
+            == "\u{201C}two more sets\u{201D}\nWorkout: Private workout")
+    }
 }
