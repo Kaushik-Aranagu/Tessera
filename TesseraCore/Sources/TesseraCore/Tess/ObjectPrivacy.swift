@@ -61,12 +61,11 @@ public enum ObjectPrivacy {
         return nil
     }
 
-    /// The one check for a title or a word he typed (G105): a secret word, money, a body fact, a medicine, or one of
-    /// the
-    /// money and health title words ("therapy", "clinic", "rent"; not "dentist", which stays plain, decisions Oct 16).
-    /// Receipts, UNDO, Tess lines, screens and
-    /// the shared export all ask this, so a thing reads private everywhere or nowhere ("Dentist cake" is "Private
-    /// recipe" on a screen and in a file alike).
+    /// The one check for a title or a word he typed (G105): a secret word, money, a body fact, a medicine, a doctor's
+    /// name ("Dr Lin", "dr lin"), or one of the money and health title words ("therapy", "clinic", "rent"; not
+    /// "dentist" or "physio", which stay plain, decisions Oct 16). Receipts, UNDO, Tess lines, screens and the shared
+    /// export all ask this, so a thing reads private everywhere or nowhere ("Lexapro cake" is "Private recipe" on a
+    /// screen and in a file alike).
     public static func isPrivateTitle(_ text: String, lastWeightKg: Double?) -> Bool {
         if text == SecretWords.title {
             return true
@@ -105,11 +104,12 @@ public enum ObjectPrivacy {
         }
     }
 
-    /// "Dr. Patel" and "Dr Patel": a "dr" with a stop, or followed by a capitalised name other than Pepper. A bare "dr"
+    /// "Dr. Patel", "Dr Patel" and "dr lin": a "dr" with a stop, or followed by any name other than Pepper. A bare "dr"
     /// is not a title word, so "Dr Pepper" stays raw.
     static func isDoctorName(_ text: String) -> Bool {
         text.firstMatch(of: /\b[Dd]r\.(?!\s*(?i:pepper)\b)/) != nil
-            || text.firstMatch(of: /\bDr\s+(?!Pepper\b)\p{Lu}/) != nil
+            // He dictates by voice and gets lowercase: "dr lin" walls like "Dr Lin". Unsure walls (Product Oct 19).
+            || text.firstMatch(of: /\b[Dd][Rr]\s+(?!(?i:pepper)\b)\p{L}/) != nil
     }
 
     /// Medical and care words that make a bare title private even with no number (Product: money and body titles are
@@ -120,7 +120,7 @@ public enum ObjectPrivacy {
     static let titleWords: Set<String> = TessMemoryScreen.healthWords
         .subtracting(["blood", "heart", "energy", "sleep", "tight", "tip", "pepper", "dr", "kg", "lb", "lbs", "kcal",
                       "calories", "pain", "recovery", "weight", "slept", "sleepy", "drained"])
-        .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "clinic",
+        .union(["rehab", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "clinic",
                 "hospital"])
 
     /// Whether a recipe's title is private: the one check above.

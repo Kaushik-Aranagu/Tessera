@@ -43,4 +43,25 @@ struct TaskTitleCheckTests {
         #expect(!capture.records.isEmpty)
         #expect(!capture.line.lowercased().contains("lin"), "\(capture.line)")
     }
+
+    @Test func bookPhysioStaysPlain() throws {
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        for title in ["Book physio", "physio", "PT"] {
+            let task = try engine.perform(CreateTask(title: title), by: .user).output
+            #expect(ObjectPrivacy.label(of: task, in: store, classes: engine.classes) == nil, "\(title)")
+            #expect(!ObjectPrivacy.isPrivateTitle(title, lastWeightKg: nil), "\(title)")
+        }
+    }
+
+    @Test func lowercaseDrNameIsPrivate() throws {
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        for title in ["call dr lin", "CALL DR LIN", "dr. lin tue", "see dr patel friday"] {
+            #expect(ObjectPrivacy.isPrivateTitle(title, lastWeightKg: nil), "\(title)")
+            let task = try engine.perform(CreateTask(title: title), by: .user).output
+            #expect(ObjectPrivacy.label(of: task, in: store, classes: engine.classes) == "Private task", "\(title)")
+        }
+        for plain in ["Dr Pepper run", "dr pepper", "drive home", "dry cleaning", "call dr", "dentist"] {
+            #expect(!ObjectPrivacy.isPrivateTitle(plain, lastWeightKg: nil), "\(plain)")
+        }
+    }
 }
