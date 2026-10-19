@@ -14,7 +14,7 @@
   - Later: nothing is written. The block stays as is; the question returns on the next cold launch with the one Now line, and not before (no nag inside a session).
 - **Unanswered always reads No** in the Tess asks Claude row and in every gate (SecretWords refusal, capture-miss, plan wording): until Yes, every Claude path is closed, and the row's value says "No" in inkSecondary with the sentence "Waiting on your answer." under it.
 - **Never shown:** any character of the key, its length, its prefix, a masked run of dots. The only key word is "found" or "No Claude key yet.". VoiceOver reads the same lines; the three words are buttons with the hints "Uses the Claude key", "Does not use it", "Asks again next time you open Tessera".
-- **Side (sheet 75):** WHAT THIS DOES: "Yes lets Tess ask Claude about phrases she cannot read. Notes, places, health and money never go. You can turn it off any time." Plain, `read` 21, 330 pt.
+- **Side (sheet 75):** WHAT THIS DOES: "Yes lets Tess ask Claude about phrases she cannot read. The key never goes. A phrase Tess cannot read goes whole. You can turn it off any time." Plain, `read` 21, 330 pt.
 - **States:** no key (the old line "No Claude key yet." and the field hint), found and unanswered (above), yes, no, later. AX: the three words stack, one per row, 44 pt. Reduce Motion: the block crossfades 150 ms.
 
 ## 2. The Sent rows (receipts as built in #1110, plus what ships)
@@ -26,15 +26,15 @@
 - **Side:** WHAT EACH JOB SENDS (from 80): the job names with what each sends.
 
 ## 3. The willSend line (the moment before a phrase goes)
-- One Now line from Tess in cobalt `voice` 21: "Asking Claude." with one ink word **Cancel** at the right, 44 pt, while the call runs. The call has a hard 8 s cap; at 8 s the line becomes "Couldn't reach Claude." and Cancel goes.
-- It appears only for a phrase that is going (never for a walled one, which stays on the phone and says so: the capture-miss line). A pasted recipe page says "Reading <host>." first, then "Asking Claude to read the recipe." at the handoff (sheet on link fetch).
-- On success the line becomes the answer and the receipt "Sent that to Claude. Turn this off in Settings: Claude." appears once, with the masked words ("Private phrase" for a walled one, which never sends).
-- Cancel: the line says "Cancelled." and nothing is recorded as sent. Reduce Motion: the line swaps by a 150 ms crossfade. One haptic at the answer, none at the start.
+- One Now line from Tess in cobalt `voice` 21: "Asking Claude." with one ink word **Cancel** at the right, 44 pt, while the call runs. The call has a hard 8 s cap; at 8 s the line becomes "Claude didn't answer in time." and Cancel goes.
+- It appears only for a phrase that is going. Per the capture-miss ruling an unreadable phrase goes whole, money and body words included; only the key and key-shaped text never leave, and a walled phrase that the grammar answers stays on the phone and never shows this line. A pasted recipe page says "Reading <host>." first, then "Asking Claude to read the recipe." at the handoff (sheet on link fetch).
+- On success the line becomes the answer and the receipt "Sent that to Claude. Turn this off in Settings: Claude." appears once, with the masked words ("Private phrase" for a walled one).
+- Cancel: the line says "Cancelled." The engine still records the call and its Sent row (the spend may already be used), so the receipt and the row appear in Settings like any other. Reduce Motion: the line swaps by a 150 ms crossfade. One haptic at the answer, none at the start.
 - Offline: "Couldn't read that offline. Try again online." with his text left in the box (never queued for a walled phrase).
 
 ## 4. The restore offer (second priority)
 - **When:** the first launch after a reinstall that finds a backup copy in iCloud Drive/Tessera and an empty store. One Now line from Tess: "A copy from <date> is on this phone's iCloud Drive. Restore it?" with the ink word **Restore** and **Not now**; both 44 pt.
-- **Restore:** goes to Review, Backups, with the copy already picked, shows the existing "A restore is waiting" page (it replaces everything the next time Tessera opens) and the existing Cancel restore word. The Claude key does not come back with a copy (it never leaves the keychain), so after a restore the key question in section 1 appears if a key is found, else "No Claude key yet.".
+- **Restore:** goes to Review, Backups, with the copy already picked, shows the existing "A restore is waiting" page (it replaces everything the next time Tessera opens) and the existing Cancel restore word. The Claude key does not come back with a copy (it never leaves the keychain), so after a restore the key question in section 1 appears only if he had not answered it: a restored copy keeps its answer. With no key found the line is "No Claude key yet.".
 - **Not now:** the line goes; Settings, Backups keeps a **Restore** word. It is not asked again by itself.
 - **Never:** the offer never restores without a tap, never lists file names or sizes in the Now line (the date only), and never shows anything private.
 - **Side:** WHAT A RESTORE DOES: replaces everything, keeps the current store as "Before restore <date>", never includes the Claude key, your flags or the folder bookmark.
