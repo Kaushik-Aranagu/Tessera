@@ -94,7 +94,8 @@ struct BottomChrome: View {
             if model.isAskingClaude {
                 AskingClaudeLine { model.cancelAskingClaude() }
                     .padding(.horizontal, Theme.Spacing.gutter)
-                    .padding(.bottom, Self.soulLift + Self.rowHeight)
+                    // 8 pt clear of the writing line and its drying ghost while the surface is open (Design on #1123).
+                    .padding(.bottom, Self.soulLift + Self.rowHeight + (model.isCommandExpanded ? Theme.Spacing.s : 0))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
