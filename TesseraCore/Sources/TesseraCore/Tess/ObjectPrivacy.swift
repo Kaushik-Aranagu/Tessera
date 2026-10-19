@@ -13,6 +13,8 @@ public enum ObjectPrivacy {
     public static let recipeLabel = "Private recipe"
     /// What a spend reads everywhere but its own page and the Month page (Money amendment 2).
     public static let spendLabel = "Private spend"
+    /// What a private book reads wherever it is masked; its review shows on the book page only (Reading amendment 2).
+    public static let bookLabel = "Private book"
     /// What a workout's notes read on the generic page (Product 5:20 PM PT).
     public static let keptNoteLabel = "Note kept private"
     /// What a private routine's title reads wherever a workout shows its name: the Done hero and line, the UNDO line,
@@ -64,6 +66,10 @@ public enum ObjectPrivacy {
         // (Money amendment 2).
         if isA(.spend) {
             return spendLabel
+        }
+        // A private book (flagged by him): bare words never mask, so a title alone does not make a book private.
+        if isA(.book) {
+            return flagged ? bookLabel : nil
         }
         return nil
     }

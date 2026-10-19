@@ -28,6 +28,8 @@ public enum ActionRegistry {
         SyncCalendar.descriptor, SyncHealth.descriptor, CloseDay.descriptor, StartFocusBlock.descriptor,
         FocusCheckIn.descriptor, AcceptFirstStep.descriptor, HoldNotice.descriptor, ReleaseHeldNotices.descriptor,
         LogSpend.descriptor, EditSpend.descriptor, LogShopTotal.descriptor, SkipShopTotal.descriptor,
+        QueueBook.descriptor, EditBook.descriptor, StartReading.descriptor, SetBookPage.descriptor,
+        FinishBook.descriptor, SetBookAside.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
@@ -128,6 +130,12 @@ public enum ActionRegistry {
         EditSpend.descriptor.name: { try decode(EditSpend.self, EditSpend.descriptor.name, $0) },
         LogShopTotal.descriptor.name: { try decode(LogShopTotal.self, LogShopTotal.descriptor.name, $0) },
         SkipShopTotal.descriptor.name: { try decode(SkipShopTotal.self, SkipShopTotal.descriptor.name, $0) },
+        QueueBook.descriptor.name: { try decode(QueueBook.self, QueueBook.descriptor.name, $0) },
+        EditBook.descriptor.name: { try decode(EditBook.self, EditBook.descriptor.name, $0) },
+        StartReading.descriptor.name: { try decode(StartReading.self, StartReading.descriptor.name, $0) },
+        SetBookPage.descriptor.name: { try decode(SetBookPage.self, SetBookPage.descriptor.name, $0) },
+        FinishBook.descriptor.name: { try decode(FinishBook.self, FinishBook.descriptor.name, $0) },
+        SetBookAside.descriptor.name: { try decode(SetBookAside.self, SetBookAside.descriptor.name, $0) },
         SyncHealth.descriptor.name: { try decode(SyncHealth.self, SyncHealth.descriptor.name, $0) },
         AddSlot.descriptor.name: { try decode(AddSlot.self, AddSlot.descriptor.name, $0) },
         StartRoutine.descriptor.name: { try decode(StartRoutine.self, StartRoutine.descriptor.name, $0) },

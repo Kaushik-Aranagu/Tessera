@@ -19,7 +19,7 @@ public enum SystemCatalog {
         case process
         case slot, plan
         case tessCall
-        case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend
+        case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend, book
         case tessSent
         case settings
         case tessWaiting
@@ -268,6 +268,18 @@ public enum SystemCatalog {
             FieldSpec(key: "category", name: "Category", kind: .text),
             FieldSpec(key: "spentAt", name: "Spent", kind: .date),
             FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+        ]),
+        // One book (Reading, M5): the page he is on is its resume point. Queued, reading, finished or dropped.
+        ClassSpec(key: .book, name: "Book", parent: .thing, symbol: "book", colorRole: "neutral", fields: [
+            FieldSpec(key: "author", name: "Author", kind: .text),
+            FieldSpec(key: "pages", name: "Pages", kind: .number),
+            FieldSpec(key: "isbn", name: "ISBN", kind: .text),
+            FieldSpec(key: "state", name: "State", kind: .choice, defaultValue: .choice("queued"),
+                      options: ["queued", "reading", "finished", "dropped"]),
+            FieldSpec(key: "page", name: "Page", kind: .number, defaultValue: .number(0)),
+            FieldSpec(key: "review", name: "Review", kind: .text),
+            FieldSpec(key: "finishedAt", name: "Finished", kind: .date),
+            FieldSpec(key: "isPrivate", name: "Private", kind: .bool, defaultValue: .bool(false)),
         ]),
         ClassSpec(key: .sleepNight, name: "Sleep Night", parent: .thing, symbol: "bed.double", colorRole: "neutral",
                   fields: [
