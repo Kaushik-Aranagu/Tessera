@@ -91,8 +91,10 @@ struct RecipePage: View {
                     .entrance(2)
 
                 ZStack(alignment: .topLeading) {
-                    let column = IngredientColumn(lines: lines, zoom: zoom) { send(recipe: recipe.id, serves: size) }
-                        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { columnWidth = $0 }
+                    let column = IngredientColumn(lines: lines, zoom: zoom, isPrivate: masked) {
+                        send(recipe: recipe.id, serves: size)
+                    }
+                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { columnWidth = $0 }
                     let drum = PortionDrum(
                         serves: Binding(get: { min(max(size ?? 2, 1), PortionDrum.range(written: own).upperBound) },
                                         set: { serves = $0 }),
@@ -371,6 +373,9 @@ enum IngredientColumnLayout {
 private struct IngredientColumn: View {
     let lines: [RecipeBook.Line]
     let zoom: Namespace.ID
+    /// A private recipe gives counts, never names (G183): each row reads "Private item", to the eye and to
+    /// VoiceOver, and opens nothing.
+    var isPrivate = false
     /// "1 1/2 tbsp" fits at every text size (G69).
     @ScaledMetric(relativeTo: .body) private var amountWidth: CGFloat = 92
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -399,29 +404,39 @@ private struct IngredientColumn: View {
                                    value: line.line.amount)
                         .frame(width: IngredientColumnLayout.stacks(typeSize) ? nil : amountWidth, alignment: .leading)
                         .onTapGesture { flip(line) }
-                    NavigationLink(value: Route.object(line.ingredient?.id ?? line.id)) {
-                        (Text(line.line.name)
-                            .foregroundStyle(Theme.Colors.ink)
-                            + Text(line.line.prep.map { ", \($0)" } ?? "")
-                            .foregroundStyle(Theme.Colors.inkSecondary))
+                    if isPrivate {
+                        Text(ShopTrip.privateLabel)
                             .textRole(.body)
-                            .multilineTextAlignment(.leading)
+                            .foregroundStyle(Theme.Colors.ink)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        NavigationLink(value: Route.object(line.ingredient?.id ?? line.id)) {
+                            (Text(line.line.name)
+                                .foregroundStyle(Theme.Colors.ink)
+                                + Text(line.line.prep.map { ", \($0)" } ?? "")
+                                .foregroundStyle(Theme.Colors.inkSecondary))
+                                .textRole(.body)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .buttonStyle(HandleButtonStyle())
+                        .matchedTransitionSource(id: line.ingredient?.id ?? line.id, in: zoom)
+                        .accessibilityHint("Opens the ingredient")
                     }
-                    .buttonStyle(HandleButtonStyle())
-                    .matchedTransitionSource(id: line.ingredient?.id ?? line.id, in: zoom)
-                    .accessibilityHint("Opens the ingredient")
                 }
                 .opacity(dim ? 0.45 : 1)
                 .frame(minHeight: 44)
                 // One stop per row: "2 cups flour, chopped"; activating opens the ingredient (G58).
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel(RecipeCopy.spokenRow(amount(line), line.line))
+                .accessibilityLabel(isPrivate ? RecipeCopy.privateRow(amount(line))
+                    : RecipeCopy.spokenRow(amount(line), line.line))
                 .accessibilityActions {
-                    // Only the row's own action here; adding the recipe lives on the list as a whole (G68).
                     if line.line.metricText != nil {
                         Button("Show in metric") { flip(line) }
                     }
+                    // A .contain container isn't a focus stop, so its own action would be unreachable (G230): each
+                    // row offers it, named for what it does, the whole recipe ("Add all", G68).
+                    Button(RecipeCopy.addAllAction, action: onAdd)
                 }
             }
         }
@@ -497,8 +512,9 @@ private struct RecipeOriginal: View {
                 }
                 // Only when there's text he pasted: a recipe made another way has no AS PASTED (gap hunt G4).
                 if let pasted = RecipeCopy.pasted(model.store.value("sourceText", of: recipe)?.stringValue) {
-                    // The title's own line in the paste stays masked while the title is (QA on #752).
-                    let source = RecipeCopy.maskedSource(pasted, title: recipe.title, masked: isPrivate)
+                    // A private recipe shows no pasted body at all, only "Private recipe", with no reveal (G182).
+                    let source = isPrivate ? ObjectPrivacy.recipeLabel
+                        : RecipeCopy.maskedSource(pasted, title: recipe.title, masked: false)
                     MarginSection(label: "As pasted") {
                         Text(source)
                             .font(Theme.voice)
@@ -572,6 +588,11 @@ enum RecipeCopy {
         return result.record.ops.isEmpty ? .nothing(line) : .added(line, result.record)
     }
 
+    /// A private recipe's row to VoiceOver: the amount and "Private item", never the name (G183).
+    static func privateRow(_ amount: String) -> String {
+        [amount, ShopTrip.privateLabel].filter { !$0.isEmpty }.joined(separator: " ")
+    }
+
     /// One VoiceOver stop per ingredient row: "2 cups flour, chopped".
     static func spokenRow(_ amount: String, _ line: IngredientLine) -> String {
         [amount, line.name].filter { !$0.isEmpty }.joined(separator: " ") + (line.prep.map { ", \($0)" } ?? "")
@@ -617,7 +638,7 @@ enum RecipeCopy {
     /// line: "Sheet-pan paprika chicken with lemon" reads "Sheet-pan paprika chicken"; "Chili con carne" stays whole.
     static func shortName(_ title: String) -> String {
         var name = title
-        for cut in [" with ", ", ", ": ", " (", " - ", " – ", " — "] {
+        for cut in [" with ", ", ", ": ", " (", " - ", " \u{2013} ", " \u{2014} "] {
             if let range = name.range(of: cut, options: .caseInsensitive) {
                 name = String(name[..<range.lowerBound])
             }

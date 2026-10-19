@@ -527,7 +527,8 @@ All 26 blockers are placed below. Status in brackets: R = RULED, C = CALL (none 
 
 ## Changes since this index was drafted (superseded by the batch rulings at the end)
 
-- G206 and G209 (hunt 15) moved from PRODUCT CALL to RULED (Core answers via the coordinator, Oct 18 7:15 AM): G206 the iCloud folder copy is a leaving-the-phone copy and drops Pantry state; G209 CAN COOK stays grey until at least 60% of a recipe's non-staple lines are known, floor of 3 lines. Totals above are as drafted: subtract 2 from PRODUCT CALL and add 2 to RULED.- G145, G207 and G422 (Design picks, Oct 18 7:16 AM) are picks awaiting Product's batch rule, still PRODUCT CALL: G145 stored case in Tess lines, G207 hero "Nothing out" with no second line, G422 no row folds (page turn pushes down; AX3 uses sheet 90's page size).
+- G206 and G209 (hunt 15) moved from PRODUCT CALL to RULED (Core answers via the coordinator, Oct 18 7:15 AM): G206 the iCloud folder copy is a leaving-the-phone copy and drops Pantry state; G209 CAN COOK stays grey until at least 60% of a recipe's non-staple lines are known, floor of 3 lines. The totals line in the batch-rulings block below replaces any count adjustment here.
+- G145, G207 and G422 (Design picks, Oct 18 7:16 AM) were picks awaiting Product's batch rule (answered in the block below): G145 stored case in Tess lines, G207 hero "Nothing out" with no second line, G422 no row folds (page turn pushes down; AX3 uses sheet 90's page size).
 
 ## Batch rulings in (Product, Oct 18 7:25 AM)
 
