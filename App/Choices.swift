@@ -19,7 +19,8 @@ enum Choice {
         value("finishNudge", default: "Off", defaults: defaults) == "On"
     }
 
-    /// The rest timer: "On" rings one local notification when a rest ends; "Off" keeps today's Live Activity alert.
+    /// The rest timer: "On" (default) runs the rest countdown, its Live Activity and one local notification "Rest is
+    /// up"; "Off" drops the countdown and its Lock Screen keys (a flip takes effect at the next set).
     static func restTimerIsOn(defaults: UserDefaults = .standard) -> Bool {
         value("restTimer", default: "On", defaults: defaults) == "On"
     }

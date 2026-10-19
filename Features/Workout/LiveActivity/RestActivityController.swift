@@ -16,8 +16,6 @@ final class RestActivityController {
     private var queue: Task<Void, Never>?
     /// Flips the activity to "ready" when the rest runs out while the app is alive.
     private var readyTimer: Task<Void, Never>?
-    /// The rest end that has already played its alert, so it never repeats.
-    private var alertedRestEnd: Date?
     /// The one scheduled end of the closing face (about a minute after the last set).
     private var closingEnd: Task<Void, Never>?
     static let closingLife: Duration = .seconds(60)
@@ -25,10 +23,6 @@ final class RestActivityController {
     private init() {}
 
     func update(for session: WorkoutSession?) {
-        update(for: session, restRanOut: false)
-    }
-
-    private func update(for session: WorkoutSession?, restRanOut: Bool) {
         guard let session else {
             FinishNudges.shared.sync(workoutID: nil, workoutTitle: "", lastSetAt: nil, enabled: false)
             end()
@@ -71,10 +65,10 @@ final class RestActivityController {
             }
         }
         if let activity {
-            let alert = restRanOut ? restEndAlert(from: lastState, to: state) : nil
             lastState = state
             let id = activity.id, content = Self.content(state)
-            enqueue { await Self.push(content, alert: alert, to: id) }
+            // The activity carries no alert: the rest end rings as one local notification (RestAlert).
+            enqueue { await Self.push(content, to: id) }
         } else if state.phase == .resting, ActivityAuthorizationInfo().areActivitiesEnabled {
             // The activity starts when the first rest begins.
             let attributes = Self.attributes(for: session)
@@ -165,18 +159,8 @@ final class RestActivityController {
         readyTimer = Task { [weak session] in
             try? await Task.sleep(for: .seconds(max(delay, 0) + 0.05))
             guard !Task.isCancelled, let session else { return }
-            self.update(for: session, restRanOut: true)
+            self.update(for: session)
         }
-    }
-
-    /// One alert, at the moment rest runs out (not on Skip), never repeated for the same rest.
-    private func restEndAlert(from old: State?, to new: State) -> AlertConfiguration? {
-        // On: the local notification rings instead, and the activity carries no alert.
-        guard !Choice.restTimerIsOn() else { return nil }
-        guard let old, old.phase == .resting, new.phase == .ready, alertedRestEnd != old.restEndsAt else { return nil }
-        alertedRestEnd = old.restEndsAt
-        return AlertConfiguration(title: "Set \(new.setNumber) is up", body: "\(new.exercise), \(new.plannedSet)",
-                                  sound: .default)
     }
 
     /// The last set logged: the activity does not end at once. It shows one still face, "<title>, ready to finish"
@@ -198,7 +182,7 @@ final class RestActivityController {
         state.closingLine = Self.closingLine(title: session.shownTitle)
         lastState = state
         let id = activity.id, content = Self.content(state)
-        enqueue { await Self.push(content, alert: nil, to: id) }
+        enqueue { await Self.push(content, to: id) }
         closingEnd?.cancel()
         closingEnd = Task { @MainActor in
             try? await Task.sleep(for: Self.closingLife)
@@ -227,11 +211,9 @@ final class RestActivityController {
     }
 
     /// `Activity` isn't Sendable: the ActivityKit calls run off the main actor on activities looked up there.
-    private nonisolated static func push(_ content: ActivityContent<State>, alert: AlertConfiguration?,
-                                         to id: String) async
-    {
+    private nonisolated static func push(_ content: ActivityContent<State>, to id: String) async {
         guard let activity = Activity<RestActivityAttributes>.activities.first(where: { $0.id == id }) else { return }
-        await activity.update(content, alertConfiguration: alert)
+        await activity.update(content)
     }
 
     private nonisolated static func endAll() async {
