@@ -18,7 +18,8 @@ ARCH = `ai/architecture.md`, CC = `ai/claude-client.md`.
   whose only field is a menu id. An id not in the menu the phone sent is rejected and the as-built choice stands,
   the same rule as `proposeSoul` (ARCH:207).
 - Cost: about 350 in / 8 out tokens (lab default) at Haiku's $0.10 / $0.50 per million (ARCH:137) is about $0.00004 a
-  call; capped at 150 calls a day (lab default), worst month about $0.18 inside the $50 hard cap
+  call; capped at 150 calls a day (lab default; AI architecture's stretch-1 page says 200 a day, about 1,200 in /
+  40 out and one call per 20 s, and its numbers replace these three lab defaults when they differ), worst month about $0.18 inside the $50 hard cap
   (`ai/job-trigger-table.md:4`). It only beautifies, so it steps aside at $40 like living colour
   (`ai/job-trigger-table.md:5`, `:19`) (lab default). Receipt word "Screen read" (lab default, pattern of
   `ai/settings-claude-page-spec.md:20`).
