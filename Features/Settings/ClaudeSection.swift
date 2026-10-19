@@ -8,6 +8,9 @@ import TesseraTess
 
 /// The words for the key's state after a check: "works", "not allowed", "not checked", "account paused".
 enum ClaudeKeyWords {
+    /// The status line with no key saved (Product 3:58 PM): "Paste one here" lives only in the field's own hint.
+    static let noKey = "No Claude key yet."
+
     static func status(_ outcome: String?) -> String {
         switch outcome.flatMap(ClaudeKeyCheck.Outcome.init(rawValue:)) {
         case .works, .capReached: "works"
@@ -122,7 +125,7 @@ struct ClaudeSection: View {
             // After a reinstall or on a new phone the key doesn't come along (restore-walk 6).
             Text(ledger.calls().isEmpty
                 ? "Tess thinks \(Text("on this phone").fontWeight(.semibold)) only."
-                : "No Claude key on this phone. Paste one here.")
+                : ClaudeKeyWords.noKey)
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
             if writing {
