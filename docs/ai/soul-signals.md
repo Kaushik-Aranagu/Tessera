@@ -5,6 +5,8 @@ Product's board, motion.md item 20. Date: Oct 16, 2026 (Pacific).
 
 Kaushik asked that Tess react the same way in every area. Today only the workout and the capture surface send her events. Every other area changes without her noticing, so she reacts to a set but not to a cooked dinner or a finished shop. This sheet maps the signals the phone **already computes** to the events of the motion lab's contract (`docs/design/motion/tess-motion.md` §14). **There are no new model calls.** Claude is never asked how she should move. The screen-aware Tess stays parked (`docs/ai/parked.md`).
 
+_Amended Oct 19: with "Tess reads the screen" on, a small model may pick the move; default Off; she never waits on it. See `design/motion/tess-reads-the-screen-motion.md`._
+
 ## 1. The one source: Home's facts, diffed
 
 Every area that has a "thing" already reports it to Home as a `HomeFact`: workout, cook, shop, task and rest, each with a `kind`, a `state` (planned, running, paused, done), `step` of `steps`, `records`, `toBuy` and `endedAt` (`TesseraCore/Home/HomeLines.swift`). So the router doesn't need a hook in each feature. It needs one diff.
@@ -41,6 +43,7 @@ One rule decides the reaction: **how big the thing is, never which area it's in.
 - **One event per moment.** This matches the one-haptic rule (`task-reward.md`). When a change fits two rows, the higher row wins (finished beats ticked, a best beats finished), and the router's order (§14) settles anything left.
 - **Same size, same reaction.** A cooked dinner is the same size as a finished workout. A ticked grocery row is the same size as a ticked task.
 - **The phone decides.** Every row comes from counts and states already on the phone. Claude's lines, the pack and the switch play no part, and with "Tess asks Claude" off she reacts exactly the same.
+  _Amended Oct 19: with "Tess reads the screen" on, a small model may pick the move; default Off; she never waits on it. See `design/motion/tess-reads-the-screen-motion.md`._
 - **No private signal moves her.** The diff reads only `HomeFact` fields, which hold titles, states, counts and times, the same promise Settings makes.
 - **Demo days react too.** The diff doesn't care where the data came from, so the demo recording shows the same moments.
 
