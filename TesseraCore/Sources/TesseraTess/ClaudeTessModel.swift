@@ -9,6 +9,9 @@ import TesseraCore
 public struct ClaudeTessModel: TessModel {
     public static let model = "claude-haiku-5-5"
     static let maxTokens = 512
+    /// An offline miss that hit a wall: kept nowhere, so it can only be said again online.
+    static let walledOfflineLine = "Couldn't read that offline. Try again online."
+
     /// The longest phrase sent to Claude, in characters.
     static let maxPhraseCharacters = 600
     /// Tool rounds before Tess gives up on a phrase.
@@ -138,6 +141,17 @@ public struct ClaudeTessModel: TessModel {
                TessInbox(store: engine.store, classes: engine.classes).add(request.text, at: now()) != nil
             {
                 return .asked(TessCapture(records: [], line: "No connection. Saved it for Claude.", source: .none))
+            }
+            // A walled phrase (money, body, secret) is never queued, so offline it is neither kept nor sent: the line
+            // says
+            // so and the text stays in the box (ruled; the other offline cases keep their line).
+            if failure.outcome == "offline",
+               SecretWords.mentions(request.text)
+               || PrivateFacts.isWalled(request.text, lastWeightKg: request.lastWeightKg(engine))
+            {
+                var held = TessCapture(records: [], line: Self.walledOfflineLine, source: .none)
+                held.isRefusal = true
+                return .asked(held)
             }
             return error is Failure ? .asked(TessCapture(records: [], line: failure.line, source: .none)) : .missed
         }
