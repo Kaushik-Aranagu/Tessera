@@ -16,8 +16,9 @@ Lab spec to pair with Kitchen's gap hunt 22 (no hunt 22 file exists yet; this is
 | Page arrives | rows rise in order 0 to 5 (smooth 0.28, 35 ms stagger, 14 pt; hero blur 4 pt) | 150 ms fade, no rise, no stagger | none | as built; LP needs the flag |
 | Hero word flips "Kept on this iPhone" / "Kept in two places" | crossfade 150 ms (today no animation) | same | none | `BackupView.swift:52` |
 | Choose a folder (tap the folder word) | system folder sheet; no custom motion | same | none on the tap; `.selection` once when a folder is **picked** (today it fires on the tap, `:104`) | fix: move to the pick result |
-| Folder picked, first copy written | shared Tess line: "Saved a copy there. One a day from now on." with UNDO, 10 s | 150 ms fade | `.made` once *(lab default)* | his write; UNDO plays `.undo` alone |
-| Stop using the folder | folder sentence folds (220 ms, house); line "Copies stay on this iPhone only now." with UNDO 10 s | crossfade | `.selection` (his tap) | change, so 10 s; VoiceOver flat 10 s |
+| Folder picked, first copy written | shared Tess line: "Backup folder, saved. One a day from now on." with UNDO, 10 s (G371: pick, change and stop each get a 10 s UNDO; the words lead with the thing; the local Undo word goes; wording is a lab default) | 150 ms fade | `.made` once *(lab default)* | his write; UNDO plays `.undo` alone |
+| Stop using the folder | folder sentence folds (220 ms, house); line "Backup folder, stopped. Copies stay on this iPhone only now." with UNDO 10 s (lab default wording) | crossfade | `.selection` (his tap) | change, so 10 s; VoiceOver flat 10 s |
+| Change the folder (G371) | the folder sentence crossfades 160 ms to the new name; line "Backup folder, changed." with UNDO 10 s (lab default wording) | crossfade | `.selection` (his pick) | change, so 10 s; UNDO restores the old folder, `.undo` alone |
 | UNDO the stop | "The folder is back." and the folder line returns | crossfade | `.undo` alone | clears the stop line (today it stays) |
 | Save a copy | system share sheet; then "Copy saved." | fade | `.made` once when it lands | needs Face ID when whole (DEC:45/51) |
 | Copy fails (his action) | line "Couldn't make a copy just now." stays until replaced | fade | **one** `.notSaved`, once per failure | `errors-84.md:21`: only for what he just did |

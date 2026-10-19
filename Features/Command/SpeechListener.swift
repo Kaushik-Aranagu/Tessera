@@ -60,6 +60,17 @@ final class SpeechListener {
     private var timer: Task<Void, Never>?
     private var cap: Task<Void, Never>?
     private var holdMode = false
+    /// Bumped by every stop, so a start that was waiting on a system prompt knows it was cancelled.
+    private var attempt = 0
+
+    /// The system prompts, swappable in tests: the mic, then speech recognition.
+    var askMic: @MainActor () async -> Bool = { await AVAudioApplication.requestRecordPermission() }
+    var askSpeech: @MainActor () async -> Bool = {
+        await withCheckedContinuation { continuation in
+            // Speech calls back on its own queue: the handler must not be main-actor (QA S2).
+            SFSpeechRecognizer.requestAuthorization { @Sendable status in continuation.resume(returning: status) }
+        } == .authorized
+    }
 
     /// Whether the mic can be used without asking (for the Speak word's state).
     static var micDenied: Bool {
@@ -67,19 +78,23 @@ final class SpeechListener {
     }
 
     /// Starts listening, asking for the mic, then speech, the first time. Returns a refusal when it can't.
+    /// After each system prompt it checks it wasn't cancelled meanwhile (Kitchen hunt 27, ruled): a stop during the
+    /// first mic or speech prompt can never leave a live listen.
     func start(hold: Bool) async -> Refusal? {
         guard state == .idle else { return nil }
         holdMode = hold
         state = .asking
-        guard await AVAudioApplication.requestRecordPermission() else {
+        attempt += 1
+        let mine = attempt
+        let mic = await askMic()
+        guard stillMine(mine) else { return nil }
+        guard mic else {
             state = .idle
             return .micOff
         }
-        let speech = await withCheckedContinuation { continuation in
-            // Speech calls back on its own queue: the handler must not be main-actor (QA S2).
-            SFSpeechRecognizer.requestAuthorization { @Sendable status in continuation.resume(returning: status) }
-        }
-        guard speech == .authorized else {
+        let speech = await askSpeech()
+        guard stillMine(mine) else { return nil }
+        guard speech else {
             state = .idle
             return .speechOff
         }
@@ -99,9 +114,15 @@ final class SpeechListener {
         return nil
     }
 
+    /// Whether this start is still the live one: still asking, and no stop since.
+    private func stillMine(_ mine: Int) -> Bool {
+        attempt == mine && state == .asking
+    }
+
     /// Ends listening. `send` false drops what was heard (a veil tap, a drag off the soul).
     func stop(send: Bool) {
         guard state == .listening || state == .asking else { return }
+        attempt += 1
         let words = heard.trimmingCharacters(in: .whitespacesAndNewlines)
         stopAudio()
         state = .idle

@@ -479,6 +479,10 @@ public struct StoreDayLookup: DayLookup {
         {
             return ObjectPrivacy.cookTitle(object, in: store)
         }
+        // A list with a walled name reads "Private list" in the story, as it does everywhere else (G75).
+        if let list = classes[.list], let classDef = object.classDef, ClassResolver.isSubclass(classDef, of: list) {
+            return ListContents.shownName(of: object, in: store)
+        }
         return object.title
     }
 
