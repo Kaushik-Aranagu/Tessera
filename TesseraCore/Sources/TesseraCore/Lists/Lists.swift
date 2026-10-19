@@ -127,6 +127,10 @@ public struct CreateList: EngineAction {
         guard !name.isEmpty else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "the list needs a name")
         }
+        // A name with a secret word in it, or a key, is never a list name (G77): it would sit on screen and in the log.
+        guard !looksLikeClaudeKey(name), !SecretWords.mentions(name) else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "that can't be a list name")
+        }
         outcome.wasRepeat = false
         if let existing = Self.existing(named: name, in: transaction.store, classes: transaction.classes) {
             outcome.wasRepeat = true
@@ -239,7 +243,9 @@ public struct AddListItem: EngineAction {
     /// "1.50 lb apples", "2 kg rice": a number, a unit, then a word that isn't a day or body word.
     static func isAmountOfAThing(_ line: String) -> Bool {
         let lower = line.lowercased()
-        guard let match = lower.firstMatch(of: /\b\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs|g|oz|ml|l)\s+([a-z]+)/) else {
+        guard let match = lower
+            .firstMatch(of: /\b\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs|pound|pounds|kilo|kilos|g|oz|ml|l)\s+([a-z]+)/)
+        else {
             return false
         }
         let word = String(match.output.1)
@@ -258,6 +264,25 @@ public struct AddListItem: EngineAction {
             "for",
             "from",
             "on",
+            // A conjunction or filler after a weight is a sentence, not a food ("82 kg and felt great", "82 kg then
+            // bench"); "of" stays out, since "2 kg of rice" is a grocery line.
+            "and",
+            "or",
+            "then",
+            "but",
+            "so",
+            "felt",
+            "feel",
+            "feeling",
+            "with",
+            "while",
+            "when",
+            "though",
+            "because",
+            "as",
+            "if",
+            "was",
+            "is",
         ]
         return !PrivateFacts.dayWords.contains(word) && !PrivateFacts.bodyWords.contains(word)
             && !PrivateFacts.weighWords.contains(word) && !neverFood.contains(word)

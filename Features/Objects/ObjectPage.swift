@@ -51,7 +51,7 @@ struct ObjectPage: View {
     /// shows only the label "Private note" and none of its text.
     static func opensAsNote(_ note: ObjectRecord, model: AppModel) -> Bool {
         note.classDef?.id == model.classDef(.note)?.id
-            && ObjectPrivacy.label(of: note, in: model.store, classes: model.classes) == nil
+            && ObjectMask.label(of: note, in: model.store, classes: model.classes) == nil
     }
 
     /// The latched choice once made; the live check only before the first appearance.
@@ -152,7 +152,9 @@ private struct ClassBody: View {
             MarginSection(label: "Used in") {
                 VStack(spacing: 0) {
                     ForEach(workouts, id: \.workout.id) { item in
-                        ObjectRow(title: item.workout.title, route: .object(item.workout.id)) {
+                        ObjectRow(title: ObjectTitle.shown(item.workout, in: model.store, classes: model.classes),
+                                  route: .object(item.workout.id))
+                        {
                             Text("×\(item.count)").textRole(.data).foregroundStyle(Theme.Colors.inkSecondary)
                         }
                     }
@@ -184,9 +186,11 @@ private struct ClassBody: View {
     }
 
     private func uniqueWorkouts(_ history: [AppModel.SessionSummary]) -> [(workout: ObjectRecord, count: Int)] {
-        var counts: [String: (ObjectRecord, Int)] = [:]
+        // Grouped by the routine (else the workout) by id, never by the shown word: two private routines both read
+        // "Private workout" and stay two rows (OL02).
+        var counts: [UUID: (ObjectRecord, Int)] = [:]
         for session in history {
-            let key = session.workout.title
+            let key = model.store.linkedObjects("routine", of: session.workout).first?.id ?? session.workout.id
             counts[key] = (counts[key]?.0 ?? session.workout, (counts[key]?.1 ?? 0) + 1)
         }
         return counts.values.map { (workout: $0.0, count: $0.1) }.sorted { $0.count > $1.count }
@@ -258,13 +262,14 @@ private struct InstanceBody: View {
         let backlinks = model.store.backlinks(to: object)
         let children = object.orderedChildren
         // A private object shows only its label: no title, fields, notes or contents (board 0ai mask).
-        let privateLabel = ObjectPrivacy.label(of: object, in: model.store, classes: model.classes)
+        let privateLabel = ObjectMask.label(of: object, in: model.store, classes: model.classes)
+        let shownTitle = ObjectTitle.shown(object, in: model.store, classes: model.classes)
 
         Header(
             path: lineage.map { ($0.name, Route.classDef($0.id)) },
-            title: privateLabel ?? (object.title.isEmpty ? "Untitled" : object.title),
+            title: shownTitle,
             classLine: privateLabel == nil
-                ? "object \(Format.identifier(object.title, upperFirst: false)) : "
+                ? "object \(Format.identifier(shownTitle, upperFirst: false)) : "
                 + Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
                 : Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
         )
@@ -306,8 +311,8 @@ private struct InstanceBody: View {
                         if let classDef = source.classDef, model.prototype(of: classDef)?.id == source.id {
                             ObjectRow(title: classDef.name, route: .classDef(classDef.id))
                         } else {
-                            ObjectRow(title: ObjectPrivacy.label(of: source, in: model.store, classes: model.classes)
-                                ?? source.title, route: .object(source.id))
+                            ObjectRow(title: ObjectTitle.shown(source, in: model.store, classes: model.classes),
+                                      route: .object(source.id))
                         }
                     }
                 }
@@ -334,8 +339,7 @@ private struct ChildRow: View {
             }
         } else {
             ObjectRow(
-                title: ObjectPrivacy.label(of: child, in: model.store, classes: model.classes)
-                    ?? (child.title.isEmpty ? child.classDef?.name ?? "Item" : child.title),
+                title: ObjectTitle.shown(child, in: model.store, classes: model.classes),
                 route: .object(child.id)
             )
         }
@@ -436,8 +440,8 @@ private struct PropertyList: View {
                 VStack(alignment: .trailing, spacing: Theme.Spacing.s) {
                     // A private target shows its label, never its words (QA on #580).
                     ForEach(targets) { target in
-                        ObjectHandle(title: ObjectPrivacy.label(of: target, in: model.store, classes: model.classes)
-                            ?? target.title, route: .object(target.id))
+                        ObjectHandle(title: ObjectTitle.shown(target, in: model.store, classes: model.classes),
+                                     route: .object(target.id))
                     }
                 }
             }
@@ -570,5 +574,56 @@ enum ObjectCopy {
     /// A cell's value, or "none" when it has none.
     static func cell(_ value: String?) -> String {
         value ?? none
+    }
+}
+
+/// What an object page prints in place of a private object's title (G141): Core's label, plus the kinds it doesn't
+/// cover yet. An ingredient or a list item with a secret word, money, a body fact or a medicine reads "Private item";
+/// such a list reads "Private list". Masked at the source: every row, link and header on the page goes through here,
+/// and only the live text field ever shows the raw words.
+/// The one shown title for an object on the object page and every row that names it (OL03, OL11): its private
+/// label, else its title, else its class name and place ("Set 3"), never blank and never "Untitled".
+enum ObjectTitle {
+    @MainActor
+    static func shown(_ object: ObjectRecord, in store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> String {
+        if let label = ObjectMask.label(of: object, in: store, classes: classes) {
+            return label
+        }
+        if !object.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return object.title
+        }
+        let name = object.classDef?.name ?? "Item"
+        guard let place = object.parent?.orderedChildren.firstIndex(where: { $0.id == object.id }) else { return name }
+        return "\(name) \(place + 1)"
+    }
+}
+
+enum ObjectMask {
+    @MainActor
+    static func label(of object: ObjectRecord, in store: ObjectStore,
+                      classes: [SystemCatalog.Key: ClassDef]) -> String?
+    {
+        // A private routine or workout reads "Private workout" here too, by Tess's own check (G274, hunt 22).
+        let isTraining = [SystemCatalog.Key.workout, .routine].contains { key in
+            guard let target = classes[key], let def = object.classDef else { return false }
+            return ClassResolver.isSubclass(def, of: target)
+        }
+        if isTraining, ObjectPrivacy.routineTitle(object.title, in: store) == ObjectPrivacy.routineLabel {
+            return ObjectPrivacy.routineLabel
+        }
+        if let core = ObjectPrivacy.label(of: object, in: store, classes: classes) {
+            return core
+        }
+        guard let classDef = object.classDef else { return nil }
+        func isA(_ key: SystemCatalog.Key) -> Bool {
+            classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
+        }
+        // The same set as AddListItem's private item: secret words, money, body facts and medicines (QA on #912).
+        let walled = ObjectPrivacy.isPrivateWord(object.title, in: store)
+        guard walled else { return nil }
+        if isA(.ingredient) || isA(.listItem) {
+            return ShopTrip.privateLabel
+        }
+        return isA(.list) ? "Private list" : nil
     }
 }

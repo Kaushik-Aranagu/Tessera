@@ -221,7 +221,7 @@ private struct SetAsideFace: View {
     }
 }
 
-/// The countdown (cream, Light, tabular), or "Go" pushing in from below. Always-On shows a still "Ready at 6:26 pm".
+/// The countdown (cream, Light, tabular), or "Go" pushing in from below. Always-On shows a still "Ready 6:26 pm".
 private struct Countdown: View {
     @Environment(\.restPalette) private var palette
     let state: RestActivityAttributes.ContentState
@@ -237,7 +237,7 @@ private struct Countdown: View {
                     .transition(.push(from: .bottom))
             } else if isLuminanceReduced {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text("Ready at")
+                    Text("Ready")
                         .font(Typeface.font(17))
                         .foregroundStyle(palette.cream.opacity(0.62))
                     Text(HouseClock.time(state.restEndsAt))

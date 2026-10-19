@@ -333,6 +333,71 @@ struct ClaudeRouteTests {
         #expect(!sent.isEmpty && !sent.contains("tacocat") && !sent.contains("38.20") && !sent.contains("182.4"))
     }
 
+    @Test func aPhraseUnsentAfterAWeekIsDeletedAndANewerOneStays() async {
+        let inbox = TessInbox(store: store, classes: classes)
+        let day: TimeInterval = 24 * 3600
+        inbox.add("log bench from eight days ago", at: context.now - 8 * day)
+        inbox.add("log bench from six days ago", at: context.now - 6 * day)
+        #expect(tess().waitingCount == 2)
+        // Offline again: nothing is sent, the old one goes, the newer one waits.
+        RouteStub.failure = .notConnectedToInternet
+        #expect(await tess().readWaiting(context: context).isEmpty)
+        #expect(inbox.waiting().map(\.title) == ["log bench from six days ago"])
+    }
+
+    @Test func aWeekOldPhraseIsDeletedEvenWithClaudeOff() async {
+        let inbox = TessInbox(store: store, classes: classes)
+        inbox.add("log bench from earlier", at: context.now - 8 * 24 * 3600)
+        inbox.add("log squat from earlier", at: context.now - 3600)
+        let off = tess(sends: false)
+        #expect(await off.readWaiting(context: context).isEmpty)
+        #expect(inbox.waiting().map(\.title) == ["log squat from earlier"] && RouteStub.requests.isEmpty)
+    }
+
+    @Test func aCookRunningKeepsWaitingPhrasesHomeUntilItEnds() async throws {
+        let inbox = TessInbox(store: store, classes: classes)
+        inbox.add("stop the rice", at: context.now - 3600)
+        inbox.add("how is the timer doing", at: context.now - 3600)
+        let recipe = try engine.perform(
+            CreateRecipe(text: "Dal\nIngredients\n1 cup lentils\nMethod\n1. Simmer 20 minutes."), by: .user
+        ).output
+        let cook = try engine.perform(StartCooking(recipe: recipe.id, time: context.now), by: .user).output
+        let tess = tess()
+        #expect(await tess.readWaiting(context: context).isEmpty)
+        #expect(RouteStub.requests.isEmpty && tess.waitingCount == 2, "a cook phrase was sent")
+        // The cook ends: "stop the rice" goes; a phrase about a timer is never sent.
+        try engine.perform(FinishCooking(cook: cook.id, time: context.now), by: .user)
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        _ = await tess.readWaiting(context: context)
+        let sent = RouteStub.bodies.compactMap { String(data: $0, encoding: .utf8) }.joined()
+        #expect(sent.contains("stop the rice") && !sent.contains("timer doing"))
+        #expect(inbox.waiting().map(\.title) == ["how is the timer doing"])
+    }
+
+    @Test func theFirstDrainedPhraseCarriesTheNoticeAndOnlyIt() async {
+        let inbox = TessInbox(store: store, classes: classes)
+        inbox.add(miss, at: context.now - 7200)
+        inbox.add("could you log squat 100 for 5 from earlier?", at: context.now - 3600)
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged.")),
+                           (200, Self.logBench), (200, Self.answer("Squat logged."))]
+        let read = await tess().readWaiting(context: context)
+        #expect(read.map(\.isNotice) == [true, false], "\(read.map(\.line))")
+        #expect(read.first?.line.contains("Turn this off in Settings: Claude.") == true)
+    }
+
+    @Test func aDrainLandsAtMostThreeGhostsAndTheRestKeepWaiting() async {
+        let inbox = TessInbox(store: store, classes: classes)
+        for index in 1 ... 5 {
+            inbox.add("could you log bench \(70 + index) for 8 from earlier?", at: context.now - Double(6000 - index))
+        }
+        RouteStub.queue = Array(repeating: [(200, Self.logBench), (200, Self.answer("Logged."))], count: 5)
+            .flatMap(\.self)
+        let tess = tess()
+        #expect(await tess.readWaiting(context: context).count == 3 && tess.waitingCount == 2)
+        #expect(inbox.waiting().map(\.title) == ["could you log bench 74 for 8 from earlier?",
+                                                 "could you log bench 75 for 8 from earlier?"])
+    }
+
     @Test func nothingWaitsForSiriAndAKeyNeverWaits() async {
         RouteStub.failure = .notConnectedToInternet
         let tess = tess()

@@ -193,7 +193,8 @@ struct PantryLine: View {
             Text(entry.state.word)
                 .textRole(.body)
                 .fontWeight(entry.state == .out ? .bold : .semibold)
-                .foregroundStyle(PantryColour.stateWord)
+                // Ink, no ochre (Design sheet 99): out reads heavier than low by weight alone.
+                .foregroundStyle(Theme.Colors.ink)
         }
         .padding(.leading, 24)
         .overlay(alignment: .leading) {

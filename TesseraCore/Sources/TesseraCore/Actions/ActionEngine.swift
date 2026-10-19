@@ -251,6 +251,19 @@ public final class ActionEngine {
 
     /// Applies one op. When guarded, only if the current state still matches the op's "before".
     private func apply(_ operation: Op, guarded: Bool) -> Bool {
+        // Classes are not objects: the two class ops are applied here.
+        switch operation {
+        case let .createClass(classID, parent, name, symbol, color):
+            guard store.classDef(id: classID) == nil else { return !guarded }
+            store.createClass(name: name, parent: parent.flatMap { store.classDef(id: $0) }, symbolName: symbol,
+                              colorRole: color, id: classID)
+            return true
+        case let .deleteClass(classID, _, _, _, _):
+            guard let classDef = store.classDef(id: classID) else { return !guarded }
+            return store.deleteClass(classDef)
+        default:
+            break
+        }
         guard let object = store.object(id: operation.objectID) else { return false }
         switch operation {
         case .create, .restore:
@@ -281,6 +294,8 @@ public final class ActionEngine {
                 return false
             }
             store.setLinksRaw(fieldID: field, on: object, to: new)
+        case .createClass, .deleteClass:
+            return false
         }
         return true
     }

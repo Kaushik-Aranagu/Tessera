@@ -126,7 +126,6 @@ private struct ListPage: View {
     let listID: UUID
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
     @State private var striking: Set<UUID> = []
@@ -153,7 +152,7 @@ private struct ListPage: View {
     @State private var resetAsk: UUID?
     /// NOT NOW on the reset ask: its own trigger for .notNow (Design on #823).
     @State private var notNow = 0
-    /// Private rows: "Private item" until tapped, masked again on leaving (as Groceries, B11).
+    /// Private rows read "Private item" on every surface; nothing opens them (G102).
     @State private var rows = ShopTrip()
     @FocusState private var writing: Bool
 
@@ -317,12 +316,6 @@ private struct ListPage: View {
             .tesseraFeedback(.notNow, trigger: removed)
             // A cleared run (Design on #806); .done is for finishing.
             .tesseraFeedback(.aisleCleared, trigger: reset)
-            .onDisappear { rows.end() }
-            .onChange(of: scenePhase) { _, phase in
-                if phase != .active {
-                    rows.end()
-                }
-            }
         } else {
             Text("List gone.")
                 .font(Theme.voice)
@@ -361,7 +354,7 @@ private struct ListPage: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
-        .accessibilityHint(shown == ShopTrip.privateLabel ? "Shows it" : "Checks it off")
+        .accessibilityHint("Checks it off")
     }
 
     /// "Rice, removed." with UNDO 10 s; UNDO puts it back where it was and says "Rice, back on Packing." A private
@@ -384,7 +377,6 @@ private struct ListPage: View {
     }
 
     private func tap(_ item: ListContents.Item) {
-        guard rows.tap(item, lastWeightKg: BodyWeight.lastKg(in: model.store)) == .strike else { return }
         withTesseraAnimation(.smooth(duration: 0.26), reduceMotion: reduceMotion) { _ = striking.insert(item.id) }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 420))

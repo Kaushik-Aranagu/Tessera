@@ -98,4 +98,22 @@ struct PasteCycleTests {
         guard case .failed = save("https://example.com/dal") else { Issue.record("a bare link writes nothing"); return }
         #expect(log.all().count == 1)
     }
+
+    /// QA on #865: a made-up medicine-titled recipe pasted twice reads "Private recipe" and the miss log stays empty.
+    @Test func aMedicineTitledDuplicateIsPrivateAndNeverLogged() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext)
+        let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let log = CaptureMissLog(url: folder.appending(path: "misses.jsonl"))
+        let tea = "Ibuprofen tea\n1 cup water\n\nSteep it."
+        func save() -> PasteCopy.SaveOutcome {
+            PasteCopy.save(tea, corrections: [:], engine: model.engine, store: model.store, classes: model.classes,
+                           missLog: log)
+        }
+        guard case .saved = save() else { Issue.record("expected the first paste to save"); return }
+        guard case let .duplicate(line) = save() else { Issue.record("expected a duplicate"); return }
+        #expect(line == PasteCopy.duplicate("Private recipe") && !line.lowercased().contains("ibuprofen"))
+        #expect(log.all().isEmpty)
+    }
 }

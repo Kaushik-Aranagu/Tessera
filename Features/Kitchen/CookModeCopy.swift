@@ -45,8 +45,9 @@ enum CookModeCopy {
     }
 
     /// A running timer read aloud, durations in words: "Simmer, 8 minutes left." (K84.20, K41.12).
+    /// At zero it is the done line, never "0 minutes left" (G233).
     static func timeLeft(_ label: String, seconds: TimeInterval) -> String {
-        "\(label), \(duration(seconds)) left."
+        seconds > 0 ? "\(label), \(duration(seconds)) left." : timerDoneLine(label)
     }
 
     /// "8 minutes", "1 minute", "1 hour 5 minutes", "under a minute".
