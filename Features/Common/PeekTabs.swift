@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Named pages you swipe between, with the neighbours peeking (Design sheet 108). The current tab's name sits in the
-/// middle at body size, 600; up to two neighbours on each side at label size in 38% ink, crisp or blurred by the
+/// middle at body size, 600; up to two neighbours on each side at label size in 38% ink, blurred (or crisp) by the
 /// Review switch "Tab neighbours"; a 28 x 5 ink bar under the current name. A swipe on the tab row or the page moves
 /// one tab; a tap on a neighbour goes to it. Reduce Motion: a 150 ms crossfade. At accessibility sizes only the
 /// current name shows, with "next: <name>" under it. Shared: Settings › Review now, Plans and Exercise next.
@@ -12,6 +12,7 @@ struct PeekTabs<Content: View>: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var scrolled: Int?
 
     var body: some View {
@@ -73,7 +74,9 @@ struct PeekTabs<Content: View>: View {
 
     private func tabWord(_ index: Int, distance: Int) -> some View {
         let current = distance == 0
-        let blurred = !current && ReviewChoices.shared.value(of: "tabs.neighbours") == "Blurred"
+        // Kaushik's pick (4:38 PM): neighbours blurred by default; crisp under Reduce Transparency or the Crisp switch.
+        let blurred = !current && !reduceTransparency
+            && ReviewChoices.shared.value(of: "tabs.neighbours") != "Crisp"
         return Button { go(index) } label: {
             Text(tabs[index])
                 .font(current ? Theme.Typography.font(Theme.concept.scale.body, weight: .semibold)
@@ -81,7 +84,7 @@ struct PeekTabs<Content: View>: View {
                 .foregroundStyle(Theme.Colors.ink.opacity(current ? 1 : 0.38))
                 .lineLimit(1)
                 .fixedSize()
-                .blur(radius: blurred ? 2 : 0)
+                .blur(radius: blurred ? 1.6 : 0)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
         }

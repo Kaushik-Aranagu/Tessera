@@ -61,7 +61,7 @@ final class ReviewChoices {
                       "Soften": "Pages soften into each other.",
                       "Rotate": "Pages rotate on their edge."],
                readiness: .arrivesWith("page turns")),
-        Choice(id: "tabs.neighbours", name: "Tab neighbours", values: ["Crisp", "Blurred"], defaultValue: "Crisp",
+        Choice(id: "tabs.neighbours", name: "Tab neighbours", values: ["Blurred", "Crisp"], defaultValue: "Blurred",
                says: ["Crisp": "The tabs beside the current one read crisp and faint.",
                       "Blurred": "The tabs beside the current one soften into a blur."],
                readiness: .live),
