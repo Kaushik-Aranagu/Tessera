@@ -6,7 +6,8 @@ For: the coordinator and Product, before Monday Oct 19, 8:15 am PT. Checked Oct 
 PT on the coordinator's word: his phone has release 18 `aba79265d07f8246c73c75c598d866654cd9ef3c`, installed 6:36 AM Oct 19;
 release 17 `f38bc089` went on at 11:17 PM Oct 18; release 19 `2c0e6eb4` is named and waits on its Mac test run. Signing
 lapses Fri Oct 23, 2:12 PM PT. The riders checklist and release 13 and 15 lines in the sources are older than this.
-Read the real build from the copy's `backupInfo.migrations`. Read-only: the source files are not edited. Nothing run.
+decisions.md line numbers are from the mirror copy (1,105 lines); the repo copy has 1,065 lines (last entry 11:33 AM Oct 18) and
+agrees on every cited line (195, 229, 546, 629, 637, 667) except :1105, which is mirror-only (Oct 18 6:07 PM). Read the real build from the copy's `backupInfo.migrations`. Read-only: the source files are not edited. Nothing run.
 
 The Oct 17 check's 25 rows are mostly folded into the two files already. These rows are what is still stale.
 
