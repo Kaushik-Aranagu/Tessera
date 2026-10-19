@@ -4,7 +4,7 @@ For: Product, then Core (jobs, profile builder, gate) and Builder B (the Review 
 
 ## 0. The one-paragraph answer
 
-Claude may word Home's lines (every slot, not only the finished-workout pair) and the week's story, **reading** one compact **profile** of what Tess knows, and **never writing it**. The profile is built on the phone, from his told lines, the noticed patterns the phone counted and the last 7 recent lines, with private, People, About-you and forgotten lines left out. Both jobs are off by default behind **Home lines** (week story is a sub-row). Typical month **$2.76 to $3.24**, capped worst **$6.00 to $6.48** (12% to 13% of $50). I keep the earlier honest finding on the front: the last Home-lines eval said Claude adds little over the rules, so this ships in **shadow mode** first and only shows wording that passes the line checks and a replay (section 7).
+Claude may word Home's lines (every slot, not only the finished-workout pair) and the week's story, **reading** one compact **profile** of what Tess knows, and **never writing it**. The profile is built on the phone, from his told lines, the noticed patterns the phone counted and the last 7 recent lines, with private, People, About-you and forgotten lines left out. Both jobs are off by default behind **Home lines** (week story is a sub-row). Typical month **$2.76 to $3.30**, capped worst **$5.82 to $6.90** (12% to 14% of $50). I keep the earlier honest finding on the front: the last Home-lines eval said Claude adds little over the rules, so this ships in **shadow mode** first and only shows wording that passes the line checks and a replay (section 7).
 
 ## 1. What is built and what is not
 
@@ -57,11 +57,12 @@ Numbers from the cost table (Sonnet 5.5 low): Home done line $0.0020 typical / $
 | Case | Home lines | Week story | Together | Share of $50 |
 |---|---|---|---|---|
 | Typical: Home 20 a day, week story 8 a month | $2.70 | $0.06 | **$2.76** | 5.5% |
-| Typical if the profile block (about 450 tokens in = $0.0009 a call) is not already inside the $0.0045 | $3.18 | $0.06 | **$3.24** | 6.5% (this is the "$3.23 heavy case" in memory) |
-| Capped worst: Home 40 a day, week story 2 a day | $5.40 | $0.60 | **$6.00** to **$6.48** with the profile added | 12% to 13% |
+| Typical if the profile block (about 450 tokens in = $0.0009 a call, 600 calls a month = $0.54) is not already inside the $0.0045 | $3.24 | $0.06 | **$3.30** | 6.6% (close to the "$3.23 heavy case" in memory) |
+| Capped worst: Home 40 a day (1,200 calls x $0.0045), week story 2 a day (60 x $0.0070) | $5.40 | $0.42 | **$5.82** | 11.6% |
+| Capped worst with the profile added (Home +$1.08 at 1,200 x $0.0009) | $6.48 | $0.42 | **$6.90** | 13.8% |
 | **Runaway with no cap** (a ticking value, 1,440 calls a day) | $6.48 a day | | **$40 in 6.2 days; $50 in 7.7 days** | why the 40-a-day cap and the debounce are part of the job |
 
-The five jobs in `batch-3-4-claude-jobs.md` ($0.40 typical, $2.35 worst) and the other stretch jobs add under $2; the whole app stays near **$14** worst (about 28% of the cap): $7.05 base, Home lines raised from $0.68 to $5.40, plus about $2 of stretch jobs.
+The five jobs in `batch-3-4-claude-jobs.md` ($0.40 typical, $2.35 worst) and the other stretch jobs add under $2; the whole app stays near **$14** worst (about 28% of the cap): $7.05 base, Home lines raised from $0.68 to $6.48, week story at $0.42, plus about $1 of stretch jobs.
 
 ## 6. Review switches (off by default)
 
