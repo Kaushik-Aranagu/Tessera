@@ -74,7 +74,7 @@ Rules for A (proposed):
   survives rebuilds, and the same on every phone. Where a UUID is needed (a list cell id), use
   `SystemCatalog.stableID("ref.<refID>")` (`SystemCatalog.swift:483-493`), which is deterministic.
 - Package ids use the prefix `ref.` (`ref.fdc`, `ref.fedb`). They must never be `library`: that id already names the
-  in-store exercise library (seeder file beside `ExerciseLibrary.swift`, line 22).
+  in-store exercise library (seeder file `ExerciseLibraryInstaller.swift`, beside `ExerciseLibrary.swift`, line 22).
 
 ### 2.3 The source flag
 - In the app a library item is a value type `ReferenceItem` (not built) with `source == .library`, never an
@@ -180,8 +180,8 @@ the recipe, and the library page's "used in" count shows "Private recipe" for it
 
 - Only datasets marked BUNDLE in the inventory (`reference-library-inventory.md:12-15`) can ship, and only after the
   licence is confirmed from the publisher's own page (the inventory's UNVERIFIED label blocks it, `:5-11`). Today that
-  means: USDA FDC Foundation and SR Legacy (CC0, confirmed from the publisher page by Core on Oct 19, and in `food-table-usda.md:10-16`), USDA FoodKeeper (CC0 per its data.gov record), free-exercise-db data
-  (Unlicense, `reference-library-inventory.md:63-69`). Everything SKIP or UNVERIFIED is refused by the builder.
+  means: USDA FDC Foundation and SR Legacy (CC0, confirmed from the publisher page by Core on Oct 19, and in `food-table-usda.md:10-16`), free-exercise-db data once its data provenance is checked
+  (Unlicense, `reference-library-inventory.md:63-69`). USDA FoodKeeper is pending (CC0 per its data.gov record; FSIS's own page still to be read). Everything SKIP, pending or UNVERIFIED is refused by the builder.
 - Each dataset row in the bundle records: `datasetID`, `name`, `publisher`, `sourceURL`, `licence` (SPDX-style id,
   e.g. CC0-1.0, Unlicense), `licenceCheckedOn`, `sourceVersion` (the publisher's release, e.g. FDC Dec 2025),
   `downloadSHA256`, `rowCount`, `attributionLine`.
@@ -245,7 +245,7 @@ script, Sources page, library pages), **Kitchen** (nutrition fields, ingredient 
 | R22 | The reference file is at most 8 MB and each dataset within its cap. | `referenceFileFitsTheSizeBudget` | Builder B |
 | R23 | The Sources page lists every bundled dataset with its attribution line verbatim. | `sourcesPageListsEveryDataset` | Builder B |
 | R24 | A missing or bad-checksum file reads as an empty library; Kitchen and Training still open. | `missingLibraryReadsEmptyAndAppRuns` | Core |
-| R25 | A phrase the grammar reads as a library lookup stays on the phone (Core adds library-lookup phrases to the grammar, preferred); an unreadable phrase follows the capture-miss route; secret words are refused first. | `libraryLookupsStayOnThePhone` | Core |
+| R25 | Ruled by Product (Oct 19): an unreadable phrase follows the capture-miss route (it goes whole to Claude; only the key and key-shaped text never leave); secret words are refused first. Grammar-read library lookups staying on the phone are a later Core option. | `libraryLookupsStayOnThePhone` | Core |
 | R26 | Nothing sent to Claude includes library rows labelled as his data. | `claudePayloadNeverPacksLibraryAsHis` | Core |
 | R27 | A widget or Live Activity state never holds a library value for a masked object of his. | `widgetStateNeverShowsLibraryValuesOfMasked` | Core |
 | R28 | A library page's "used in" list shows a private recipe as "Private recipe". | `libraryBacklinksMaskPrivateObjects` | Kitchen |
