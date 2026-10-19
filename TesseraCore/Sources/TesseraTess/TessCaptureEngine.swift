@@ -320,7 +320,7 @@ public final class TessCaptureEngine: TessCapturing {
                 return (record, "\(SecretWords.title), kept.")
             }
             if stored == ObjectPrivacy.taskLabel
-                || PrivateFacts.isPrivateTitle(stored, lastWeightKg: BodyWeight.lastKg(in: engine.store))
+                || ObjectPrivacy.isPrivateTitle(stored, lastWeightKg: BodyWeight.lastKg(in: engine.store))
             {
                 return (record, Self.privateTaskLine(startsAt, context: context))
             }

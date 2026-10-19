@@ -185,7 +185,7 @@ private struct RepMaxGrid: View {
                 ForEach(Array(TrainingLedger.repMaxRange), id: \.self) { reps in
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(reps)RM").textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
-                        Text(maxes[reps].map { Format.kilograms($0) } ?? "—")
+                        Text(ObjectCopy.cell(maxes[reps].map { Format.kilograms($0) }))
                             .font(Theme.numeral(24, weight: .regular))
                             .foregroundStyle(maxes[reps] == nil ? Theme.Colors.inkTertiary : Theme.Colors.ink)
                             .lineLimit(1)

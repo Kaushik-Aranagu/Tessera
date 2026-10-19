@@ -60,4 +60,10 @@ struct RecipeTitleWallTests {
         #expect(RecipeCopy.isGone(shown.id, store: model.store))
         #expect(!RecipeCopy.isGone(other.id, store: model.store))
     }
+
+    /// G183: a private recipe's rows read "Private item" to VoiceOver too, with the amount and never the name.
+    @Test func aPrivateRecipesRowsNameNothing() {
+        #expect(RecipeCopy.privateRow("2 cups") == "2 cups Private item")
+        #expect(RecipeCopy.privateRow("") == "Private item")
+    }
 }
