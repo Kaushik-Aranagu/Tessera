@@ -65,6 +65,9 @@ struct ClaudeSection: View {
     /// Remove asked "Remove the Claude key?" and waits for Remove or Keep it (G647).
     @State private var confirmingRemove = false
     @AccessibilityFocusState private var questionFocused: Bool
+    /// Bumped when the key wouldn't leave the Keychain: the one soft warning for a write that didn't save.
+    @State private var notSaved = 0
+    @State private var notSavedAt: Date?
     /// The first line, "Tess asks Claude": misses and Plan my day. Lives in Core's settings object only.
     @State private var missesGoToClaude = true
     /// Tess's answer to the last flip of the switch, shown under it.
@@ -103,6 +106,8 @@ struct ClaudeSection: View {
         }
         .tesseraAnimation(value: hasKey)
         .tesseraAnimation(value: confirmingRemove)
+        // A delete that didn't take is a write that didn't save: one soft warning, once per failure (QA on #1059).
+        .tesseraFeedback(.notSaved, trigger: notSaved)
         .tesseraAnimation(value: line)
         .tesseraAnimation(value: writing)
         .onAppear(perform: load)
@@ -381,6 +386,9 @@ struct ClaudeSection: View {
 
     /// Remove asks first; nothing leaves the Keychain until he says Remove (G647).
     private func askRemove() {
+        // A replacement half-pasted when Remove is asked leaves nothing in the field (QA on #1059).
+        draft = ""
+        focused = false
         withTesseraAnimation(.easeInOut(duration: 0.22), reduceMotion: reduceMotion) {
             writing = false
             replacing = false
@@ -403,6 +411,10 @@ struct ClaudeSection: View {
             hasKey = receipt == KeyRemove.failed
             status = hasKey ? status : "not checked"
             line = receipt
+        }
+        if receipt == KeyRemove.failed, RecipeCopy.playsNotSaved(last: notSavedAt, now: .now) {
+            notSaved += 1
+            notSavedAt = .now
         }
         UIAccessibility.post(notification: .announcement, argument: receipt)
         model.touch()
