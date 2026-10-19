@@ -20,8 +20,9 @@ struct AreaIndexTests {
     }
 
     @Test func eachAreaHasItsOwnColourAndTodayStaysInk() {
-        #expect(AreaIndexSheet.areaColour(2) != AreaIndexSheet.areaColour(3))
-        #expect(AreaIndexSheet.areaColour(1) == Theme.Colors.ink, "cobalt is Tess's voice only")
+        #expect(AreaIndexSheet.areaTint(0) == .review && AreaIndexSheet.areaTint(2) == .training)
+        #expect(AreaIndexSheet.areaTint(3) == .kitchen)
+        #expect(AreaIndexSheet.areaTint(1) == .ink, "cobalt is Tess's voice only")
     }
 
     @Test func theQuietLinesReadPlainWhenNothingIsOn() {
@@ -36,7 +37,7 @@ struct AreaIndexTests {
         // QA and Design on #1055: the TODAY and TRAINING rows read through the masking accessors.
         let container = TesseraSchema.makeContainer(inMemory: true)
         let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
-        let task = try model.engine.perform(CreateTask(title: "Pay Dr Lin rent 1200"), by: .user).output
+        let task = try model.engine.perform(CreateTask(title: "Lexapro refills"), by: .user).output
         #expect(AreaLines.taskTitle(task.title, id: task.id, model: model) == "Private task")
         let plain = try model.engine.perform(CreateTask(title: "Call the bank"), by: .user).output
         #expect(AreaLines.taskTitle(plain.title, id: plain.id, model: model) == "Call the bank")

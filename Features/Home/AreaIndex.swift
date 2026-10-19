@@ -250,11 +250,25 @@ struct AreaIndexSheet: View {
     /// Review violet, Today ink (cobalt is Tess's voice only), Training's colour, Kitchen's green; 72% with ink.
     static func areaColour(_ index: Int) -> Color {
         let ink = Theme.Colors.ink
+        switch areaTint(index) {
+        case .review: return ink.mix(with: Theme.Colors.context, by: 0.72)
+        case .training: return ink.mix(with: Theme.Colors.training, by: 0.72)
+        case .kitchen: return ink.mix(with: Theme.Colors.health, by: 0.72)
+        case .ink: return ink
+        }
+    }
+
+    enum Tint: Equatable {
+        case review, ink, training, kitchen
+    }
+
+    /// Which colour an area wears under the finger; Today stays ink (cobalt is Tess's voice only).
+    static func areaTint(_ index: Int) -> Tint {
         switch index {
-        case 0: return ink.mix(with: Theme.Colors.context, by: 0.72)
-        case 2: return ink.mix(with: Theme.Colors.training, by: 0.72)
-        case 3: return ink.mix(with: Theme.Colors.health, by: 0.72)
-        default: return ink
+        case 0: .review
+        case 2: .training
+        case 3: .kitchen
+        default: .ink
         }
     }
 }
