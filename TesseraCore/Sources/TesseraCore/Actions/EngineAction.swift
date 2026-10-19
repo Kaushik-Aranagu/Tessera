@@ -18,9 +18,16 @@ public protocol EngineAction: Codable, Sendable {
     @MainActor func summary(in store: ObjectStore, output: Output) -> String
     /// The receipt for this run, from what `apply` returned. Defaults to `receipt(in:)`.
     @MainActor func receipt(in store: ObjectStore, output: Output) -> String?
+    /// False for a system sync (the calendar and Health mounts): when it changed nothing it leaves no op record, so
+    /// a foreground with no news writes nothing.
+    var logsWhenEmpty: Bool { get }
 }
 
 public extension EngineAction {
+    var logsWhenEmpty: Bool {
+        true
+    }
+
     @MainActor func receipt(in _: ObjectStore) -> String? {
         nil
     }

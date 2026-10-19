@@ -25,6 +25,7 @@ public enum ActionRegistry {
         FinishWorkoutEarly.descriptor,
         RollForwardTasks.descriptor, StartTask.descriptor,
         WaitOnTask.descriptor, KeepPlannedTask.descriptor, CreateClass.descriptor,
+        SyncCalendar.descriptor, SyncHealth.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
@@ -114,6 +115,8 @@ public enum ActionRegistry {
         EndProcess.descriptor.name: { try decode(EndProcess.self, EndProcess.descriptor.name, $0) },
         CreateRoutine.descriptor.name: { try decode(CreateRoutine.self, CreateRoutine.descriptor.name, $0) },
         CreateClass.descriptor.name: { try decode(CreateClass.self, CreateClass.descriptor.name, $0) },
+        SyncCalendar.descriptor.name: { try decode(SyncCalendar.self, SyncCalendar.descriptor.name, $0) },
+        SyncHealth.descriptor.name: { try decode(SyncHealth.self, SyncHealth.descriptor.name, $0) },
         AddSlot.descriptor.name: { try decode(AddSlot.self, AddSlot.descriptor.name, $0) },
         StartRoutine.descriptor.name: { try decode(StartRoutine.self, StartRoutine.descriptor.name, $0) },
         CreatePlan.descriptor.name: { try decode(CreatePlan.self, CreatePlan.descriptor.name, $0) },
