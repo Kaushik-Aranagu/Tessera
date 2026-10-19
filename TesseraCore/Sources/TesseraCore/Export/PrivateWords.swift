@@ -70,8 +70,14 @@ enum PrivateWords {
         func isA(_ key: SystemCatalog.Key) -> Bool {
             classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
         }
-        if isA(.listItem) {
+        if isA(.listItem) || isA(.ingredient) {
             return "Private item"
+        }
+        if isA(.list) {
+            return "Private list"
+        }
+        if isA(.routine) || isA(.workout) {
+            return ObjectPrivacy.routineLabel
         }
         if isA(.recipe) || isA(.recipeLine) || isA(.recipeStep) || isA(.cook) {
             return "Private recipe"
@@ -169,8 +175,14 @@ enum PrivateWords {
         func genericLabel(_ object: ObjectRecord) -> String {
             Self.genericLabel(object, classes: classes)
         }
+        let processClass = classes[.process]
         func words(_ object: ObjectRecord) -> [String] {
-            [object.title] + object.values.storage.values.compactMap { value in
+            // A process keeps its resume point as JSON ({"weight":20,"reps":5}): not words, and it must not make a
+            // plain running workout, or the routine it came from, private. Its one line of words is `nextStep`.
+            if let processClass, object.classDef?.id == processClass.id {
+                return [object.title] + [store.value("nextStep", of: object)?.stringValue].compactMap(\.self)
+            }
+            return [object.title] + object.values.storage.values.compactMap { value in
                 switch value {
                 case let .text(text), let .richText(text): text
                 default: nil
