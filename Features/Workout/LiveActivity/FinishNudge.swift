@@ -22,6 +22,30 @@ enum FinishNudgePlan {
     }
 }
 
+/// Device-only memory (UserDefaults, never in a backup or the op log): which workouts' nudge has been scheduled for
+/// when, and which are retired. A workout whose nudge time has passed, or whose nudge was ever delivered, is retired
+/// and never nudged again, even after he dismisses it and logs another set.
+struct NudgeMemory {
+    var defaults: UserDefaults = .standard
+
+    func isRetired(_ id: String) -> Bool {
+        defaults.bool(forKey: "finishNudge.retired.\(id)")
+    }
+
+    func retire(_ id: String) {
+        defaults.set(true, forKey: "finishNudge.retired.\(id)")
+        defaults.removeObject(forKey: "finishNudge.at.\(id)")
+    }
+
+    func scheduledAt(_ id: String) -> Date? {
+        defaults.object(forKey: "finishNudge.at.\(id)") as? Date
+    }
+
+    func setScheduled(_ id: String, at date: Date) {
+        defaults.set(date, forKey: "finishNudge.at.\(id)")
+    }
+}
+
 @MainActor
 protocol FinishNudgeScheduler {
     func schedule(id: String, title: String, at date: Date) async
@@ -38,16 +62,31 @@ final class FinishNudges {
     private var queue: Task<Void, Never>?
     private var last: (id: String, title: String, at: Date)?
 
-    init(scheduler: FinishNudgeScheduler) {
+    private let memory: NudgeMemory
+
+    init(scheduler: FinishNudgeScheduler, memory: NudgeMemory = NudgeMemory()) {
         self.scheduler = scheduler
+        self.memory = memory
     }
 
     /// Makes the pending nudge match the session (nil cancels). Idempotent for the same last set.
-    func sync(workoutID: UUID?, workoutTitle: String, lastSetAt: Date?, enabled: Bool, calendar: Calendar = .current) {
+    func sync(workoutID: UUID?, workoutTitle: String, lastSetAt: Date?, enabled: Bool, calendar: Calendar = .current,
+              now: Date = .now)
+    {
         let id = workoutID.map { "tessera.finish-nudge.\($0.uuidString)" }
         guard let id, let lastSetAt, let fire = FinishNudgePlan.fireAt(lastSetAt: lastSetAt, enabled: enabled,
                                                                        calendar: calendar)
         else {
+            cancelPending()
+            return
+        }
+        // Once per workout: retired for good once its time has passed or it was delivered.
+        if memory.isRetired(id) {
+            cancelPending()
+            return
+        }
+        if let prior = memory.scheduledAt(id), prior <= now {
+            memory.retire(id)
             cancelPending()
             return
         }
@@ -92,7 +131,7 @@ final class SystemFinishNudgeScheduler: FinishNudgeScheduler {
     }
 
     func schedule(id: String, title: String, at date: Date) async {
-        _ = try? await center.requestAuthorization(options: [.alert])
+        await NotificationPermission.requestOnce(center)
         let content = UNMutableNotificationContent()
         content.title = title
         content.interruptionLevel = .passive

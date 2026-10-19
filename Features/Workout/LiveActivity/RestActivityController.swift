@@ -18,7 +18,7 @@ final class RestActivityController {
     private var readyTimer: Task<Void, Never>?
     /// The one scheduled end of the closing face (about a minute after the last set).
     private var closingEnd: Task<Void, Never>?
-    static let closingLife: Duration = .seconds(60)
+    static let closingLife: TimeInterval = 60
 
     private init() {}
 
@@ -35,9 +35,16 @@ final class RestActivityController {
             showClosingFace(for: session)
             return
         }
-        // Anything but the closing face (an undone last set, a new rest) cancels its scheduled end.
+        // Anything but the closing face (an undone last set, a new rest) cancels its scheduled end. The closing
+        // face's activity is already ended (iOS removes it on its own at 60 s), so an undo takes it away now and the
+        // next rest starts a fresh one.
         closingEnd?.cancel()
         closingEnd = nil
+        if lastState?.phase == .closing {
+            activity = nil
+            lastState = nil
+            enqueue { await Self.endAll() }
+        }
         if workoutID != nil, workoutID != session.workout.id {
             end()
         }
@@ -182,13 +189,22 @@ final class RestActivityController {
         state.closingLine = Self.closingLine(title: session.shownTitle)
         lastState = state
         let id = activity.id, content = Self.content(state)
-        enqueue { await Self.push(content, to: id) }
+        // The face is the activity's final content, dismissed by iOS 60 s out: a locked phone cannot keep it for
+        // hours when the app is suspended and its own timer never runs.
+        let dismissAt = Self.closingDismissal(from: .now)
+        enqueue { await Self.endClosing(content, to: id, dismissAt: dismissAt) }
         closingEnd?.cancel()
         closingEnd = Task { @MainActor in
-            try? await Task.sleep(for: Self.closingLife)
+            try? await Task.sleep(for: .seconds(Self.closingLife))
             guard !Task.isCancelled else { return }
             self.end()
         }
+    }
+
+    /// When the system removes the closing face: 60 s after it appears, whatever the app is doing (locked and
+    /// suspended included).
+    static func closingDismissal(from now: Date) -> Date {
+        now.addingTimeInterval(closingLife)
     }
 
     /// "Push A, ready to finish"; a private workout reads "Private workout, ready to finish".
@@ -214,6 +230,13 @@ final class RestActivityController {
     private nonisolated static func push(_ content: ActivityContent<State>, to id: String) async {
         guard let activity = Activity<RestActivityAttributes>.activities.first(where: { $0.id == id }) else { return }
         await activity.update(content)
+    }
+
+    private nonisolated static func endClosing(_ content: ActivityContent<State>, to id: String,
+                                               dismissAt: Date) async
+    {
+        guard let activity = Activity<RestActivityAttributes>.activities.first(where: { $0.id == id }) else { return }
+        await activity.end(content, dismissalPolicy: .after(dismissAt))
     }
 
     private nonisolated static func endAll() async {

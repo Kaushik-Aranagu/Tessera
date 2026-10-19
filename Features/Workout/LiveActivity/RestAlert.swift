@@ -72,8 +72,7 @@ final class SystemRestAlertScheduler: RestAlertScheduler {
     }
 
     func requestPermissionIfNeeded() async {
-        // The system asks once; later calls return the answer without asking again.
-        _ = try? await center.requestAuthorization(options: [.alert, .sound])
+        await NotificationPermission.requestOnce(center)
     }
 
     func schedule(at date: Date) async {
@@ -90,5 +89,18 @@ final class SystemRestAlertScheduler: RestAlertScheduler {
 
     func cancel() async {
         center.removePendingNotificationRequests(withIdentifiers: [Self.identifier])
+    }
+}
+
+/// Asks for notification permission once per launch, with [.alert, .sound] (the system itself asks the person only
+/// once; later calls return the stored answer).
+@MainActor
+enum NotificationPermission {
+    private static var asked = false
+
+    static func requestOnce(_ center: UNUserNotificationCenter) async {
+        guard !asked else { return }
+        asked = true
+        _ = try? await center.requestAuthorization(options: [.alert, .sound])
     }
 }

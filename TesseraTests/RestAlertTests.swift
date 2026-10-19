@@ -43,6 +43,10 @@ struct RestAlertTests {
         #expect(scheduler.log == ["schedule 90", "schedule 105", "cancel"], "\(scheduler.log)")
     }
 
+    @Test func theClosingFaceEndsWithASystemDismissalSixtySecondsOut() {
+        #expect(RestActivityController.closingDismissal(from: now) == now.addingTimeInterval(60))
+    }
+
     @Test func theClosingFaceReadsTheMaskedTitle() {
         #expect(RestActivityController.closingLine(title: "Push A") == "Push A, ready to finish")
         #expect(RestActivityController.closingLine(title: "Private workout") == "Private workout, ready to finish")
