@@ -6,7 +6,7 @@ Product defaults, reversible. Every default is today's behavior.
 On: after a set commits, the rest countdown runs (Live Activity, rest-end local notification title "Timer", body "Rest is up"; no ActivityKit alert). Off: no countdown, no rest Live Activity, no rest-end notification; set logging, Done and the closing face are unchanged. Flipping it mid-workout takes effect at the next set; a running rest finishes.
 
 ## swapExercise (Two taps | One tap, default Two taps)
-Two taps (today): pull down on the exercise name, see alternatives (same family, then same pattern, ranked by muscle overlap then gym equipment), tap one. One tap: a tap on a small "Swap" word under the name applies the top-ranked alternative at once as a ghost (commit after 2 s or on tap), with a 10 s UNDO; the full list is still one pull down away. Either way the swap is for this session only and loads convert.
+Two taps (today): pull down on the exercise name, see alternatives (same family, then same pattern, ranked by muscle overlap then gym equipment), tap one. One tap: a tap on a small "Swap" word under the name applies the top-ranked alternative at once with a 10 s UNDO (no 2 s ghost; ruled Oct 19); the full list is still one pull down away. Either way the swap is for this session only and loads convert.
 
 ## finishNudge (Off | On, default Off)
 On: if a workout is still running 45 min after its last logged set (the same 45 min idle rule), send one quiet local notification, once per workout: "<title>, ready to finish?" (masked: "Private workout, ready to finish?"). Never between 11 PM and 7 AM, never a second time, no red, no count of what was missed. Tapping opens the closing face "<title>, ready to finish". The 6 h auto-finish is unchanged.
