@@ -502,13 +502,21 @@ public struct HomeFacts {
     /// A workout finished today, from Core's summary (counts and records; never the weights).
     public func fact(done summary: WorkoutSummary) -> HomeFact {
         let routine = store.linkedObjects("routine", of: summary.workout).first
-        return HomeFact(id: summary.id, kind: .workout, title: summary.title, state: .done, sets: summary.sets,
-                        exercisesDone: summary.exercisesDone, exercisesPlanned: summary.exercisesPlanned,
-                        records: summary.records.map { ExerciseWords.short($0.exercise) },
-                        sinceLastDays: routine.flatMap {
-                            daysSinceLastRun(of: $0, before: summary.startedAt ?? summary.endedAt ?? .now)
-                        },
-                        startedAt: summary.startedAt, endedAt: summary.endedAt)
+        return HomeFact(
+            id: summary.id,
+            kind: .workout,
+            title: workoutTitle(summary.title),
+            state: .done,
+            sets: summary.sets,
+            exercisesDone: summary.exercisesDone,
+            exercisesPlanned: summary.exercisesPlanned,
+            records: summary.records.map { ExerciseWords.short($0.exercise) },
+            sinceLastDays: routine.flatMap {
+                daysSinceLastRun(of: $0, before: summary.startedAt ?? summary.endedAt ?? .now)
+            },
+            startedAt: summary.startedAt,
+            endedAt: summary.endedAt
+        )
     }
 
     /// A running or suspended process: a workout, a cook or a shop.
@@ -522,7 +530,7 @@ public struct HomeFacts {
             let sets = subject.orderedChildren.reduce(0) { total, entry in
                 total + entry.orderedChildren.count { !$0.isDeleted && store.number("reps", of: $0) != nil }
             }
-            return HomeFact(id: subject.id, kind: .workout, title: title, state: state,
+            return HomeFact(id: subject.id, kind: .workout, title: workoutTitle(title), state: state,
                             exercise: progress.exerciseName.map(ExerciseWords.short),
                             step: progress.isComplete ? nil : progress.setIndex + 1, sets: sets,
                             exercisesDone: progress.entriesStarted, exercisesPlanned: progress.entryCount,
@@ -555,7 +563,7 @@ public struct HomeFacts {
     public func fact(planned routine: ObjectRecord, at startsAt: Date? = nil, now: Date = .now,
                      tomorrow: Bool = false) -> HomeFact
     {
-        HomeFact(id: routine.id, kind: .workout, title: store.displayTitle(of: routine), state: .planned,
+        HomeFact(id: routine.id, kind: .workout, title: workoutTitle(store.displayTitle(of: routine)), state: .planned,
                  sinceLastDays: daysSinceLastRun(of: routine, before: now), startsAt: startsAt, tomorrow: tomorrow)
     }
 
@@ -589,6 +597,12 @@ public struct HomeFacts {
         }
     }
 
+    /// A workout's or routine's name on Home: "Private workout" when the title is private. The hero text and its
+    /// "Opens ..." hint are made from this, so a private routine never shows in words.
+    private func workoutTitle(_ title: String) -> String {
+        ObjectPrivacy.routineTitle(title, in: store)
+    }
+
     /// A cook's name on Home: "Private recipe" when the recipe's title is private (gap hunt G21, ObjectPrivacy).
     private func cookTitle(_ object: ObjectRecord, recipe: ObjectRecord?) -> String {
         let last = BodyWeight.lastKg(in: store)
@@ -615,7 +629,10 @@ public struct HomeFacts {
 
     /// A timed task on Now or Next: his words, with its time.
     public func fact(task: ObjectRecord, startsAt: Date?) -> HomeFact {
-        HomeFact(id: task.id, kind: .task, title: store.displayTitle(of: task), state: .planned, startsAt: startsAt)
+        HomeFact(id: task.id, kind: .task,
+                 title: ObjectPrivacy.label(of: task, in: store, classes: engine.classes) ?? store
+                     .displayTitle(of: task),
+                 state: .planned, startsAt: startsAt)
     }
 
     /// The quiet "Rest day." line; `next` is the routine one tap away. `tomorrow` for "Rest day tomorrow". Nil when a
@@ -643,7 +660,7 @@ public struct HomeFacts {
 
     /// A scheduled session, not started: "Push A at 7 pm" over the START key.
     public func fact(scheduled workout: ObjectRecord) -> HomeFact {
-        HomeFact(id: workout.id, kind: .workout, title: store.displayTitle(of: workout), state: .planned,
+        HomeFact(id: workout.id, kind: .workout, title: workoutTitle(store.displayTitle(of: workout)), state: .planned,
                  startsAt: store.value("scheduledFor", of: workout)?.dateValue)
     }
 

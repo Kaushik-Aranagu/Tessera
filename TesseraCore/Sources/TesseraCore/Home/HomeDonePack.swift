@@ -52,6 +52,8 @@ public struct HomeDonePack: Equatable, Sendable {
                       lastWeightKg: Double?) -> Result<HomeDonePack, Skip>
     {
         guard fact.kind == .workout, fact.state == .done, let ended = fact.endedAt else { return .failure(.notDone) }
+        // A title Home already masks ("Private workout") is a private routine: no pack, as for any walled title.
+        guard fact.title != ObjectPrivacy.routineLabel else { return .failure(.walled) }
         guard fact.sets > 0 else { return .failure(.noSets) }
         guard !fact.records.isEmpty || (fact.sinceLastDays ?? 0) >= 4 else { return .failure(.nothingToAdd) }
         guard !([fact.title] + fact.records).contains(where: {
