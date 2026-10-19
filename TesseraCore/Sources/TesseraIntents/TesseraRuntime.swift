@@ -44,6 +44,7 @@ public enum TesseraIntentsCatalog {
         "resumeProcess": "kernel-internal",
         "endProcess": "kernel-internal",
         "createRoutine": "in-app only",
+        "createClass": "in-app only: the class page's New subclass",
         "addSlot": "in-app only",
         "startRoutine": "StartRoutineIntent",
         "createPlan": "in-app only",
