@@ -234,7 +234,7 @@ Two switches, two different reasons. **Reduce Motion** is his accessibility sett
 | **Done** (as built) | pour, swell, splash, relax 1.8 s + `.success` | its still frame, 1.8 s, `.success` | unchanged (1.8 s once; cheapening Done changes Done) |
 | **Reward beat** (6) | glance, gather 180 / 320 ms, brighten 1.12, one blink | no gather, no glance; the brighten is a 200 ms crossfade; the blink stays | unchanged (940 ms, six fills) |
 | **Repaint / living colour** (7) | three pools 120 ms apart, 900 ms, wet swell, dry 2.8 s | one 600 ms crossfade of the pigments, no swell | **deferred**: no repaint starts in Low Power (the palette waits for the next idle after Low Power ends); a repaint in flight finishes at 30 fps |
-| **Look switch flood** (11) | `PaintFlood` 700 ms from the soul | 250 ms crossfade (as built) | unchanged (one pass, 700 ms) |
+| **Look switch flood** (11) | `PaintFlood` 700 ms from the soul | 150 ms crossfade (G227) | 150 ms crossfade (Low Power = Reduce Motion) |
 | **Outside the app** (9) | nothing of her; the return glance | the return glance stays (a spring under 300 ms) | nothing to change; the widget timeline is the system's |
 | **Haptics** | one per moment | unchanged, beat for beat | unchanged (a haptic costs nothing worth a dead moment) |
 

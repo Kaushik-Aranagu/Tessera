@@ -231,13 +231,16 @@ enum PlanWords {
 
     /// The hero counts the tasks and the workout, never free, clear or open time (no calendar is read).
     /// Longest first; the page draws the first that fits.
-    static func heroForms(tasks: Int, workout: DayPlan.Block?, calendar: Calendar) -> [String] {
+    /// `shown` masks the workout's name: "Private workout" for a private routine (G274).
+    static func heroForms(tasks: Int, workout: DayPlan.Block?, calendar: Calendar,
+                          shown: (String) -> String = { $0 }) -> [String]
+    {
         // Digits in heroes (copy pass rows 52-55): "3 tasks", "1 task".
         let count = tasks == 1 ? "1 task" : "\(tasks) tasks"
         guard let workout else { return [count] }
         // Clock times in heroes carry am or pm, in the one house time (copy pass, Design 62): "Push A, 6 pm".
         let clock = HouseTime.clock(workout.start, calendar: calendar)
-        return ["\(count), \(workout.title), \(clock)", count]
+        return ["\(count), \(shown(workout.title)), \(clock)", count]
     }
 
     /// The plan's first time, never a part of the day under the day label (copy pass): "from 8 am".

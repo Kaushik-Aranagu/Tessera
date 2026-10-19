@@ -650,7 +650,8 @@ enum ObjectMask {
         func isA(_ key: SystemCatalog.Key) -> Bool {
             classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
         }
-        let walled = ObjectPrivacy.isPrivateRecipeTitle(object.title, lastWeightKg: BodyWeight.lastKg(in: store))
+        // The same set as AddListItem's private item: secret words, money, body facts and medicines (QA on #912).
+        let walled = ObjectPrivacy.isPrivateWord(object.title, in: store)
         guard walled else { return nil }
         if isA(.ingredient) || isA(.listItem) {
             return ShopTrip.privateLabel

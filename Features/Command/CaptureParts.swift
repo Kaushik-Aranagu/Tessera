@@ -157,7 +157,7 @@ struct RunningSeam: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(session.workout.title) is running. Return to workout")
+        .accessibilityLabel("\(session.shownTitle) is running. Return to workout")
     }
 }
 

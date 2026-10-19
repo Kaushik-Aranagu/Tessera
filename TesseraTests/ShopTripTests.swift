@@ -46,4 +46,19 @@ struct ShopTripTests {
         #expect(rows.allSatisfy { trip.label(for: $0, name: $0.text, lastWeightKg: nil) == "Private item" })
         #expect(rows.allSatisfy { trip.maskedLabel(for: $0, name: $0.text, lastWeightKg: nil) == "Private item" })
     }
+
+    /// QA on #885: private rows keep the list's own order (all read "Private item", so the order can't come from the
+    /// words), and the same row stays in the same place across reads.
+    @Test func privateRowsKeepAStableOrder() throws {
+        let rows = try items(["advil", "milk", "ibuprofen", "eggs"])
+        let groceries = Groceries(store: model.store, classes: model.classes)
+        let first = groceries.aisles().flatMap { $0.items.map(\.id) }
+        let second = groceries.aisles().flatMap { $0.items.map(\.id) }
+        #expect(first == second)
+        let trip = ShopTrip()
+        let privateOnes = rows.filter { trip.label(for: $0, name: $0.text, lastWeightKg: nil) == "Private item" }
+        #expect(privateOnes.count == 2)
+        let order = first.filter { id in privateOnes.contains { $0.id == id } }
+        #expect(order == first.filter { id in privateOnes.contains { $0.id == id } } && order.count == 2)
+    }
 }
