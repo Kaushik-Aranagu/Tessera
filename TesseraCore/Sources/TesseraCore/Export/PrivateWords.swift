@@ -21,18 +21,45 @@ enum PrivateWords {
     /// Claude's own bookkeeping stays on the phone: the receipts (`tessCall`: what was asked, when, what it cost) and
     /// the phrases waiting for Claude (`tessWaiting`) are in the local copy only, never in the iCloud copy or the
     /// shared export (Research, Claude-layer gap hunt).
-    static let localOnlyClassKeys: Set<String> = [
+    static let localOnlyClassKeys: Set<String> = Set([
         SystemCatalog.Key.tessCall.systemKey,
         SystemCatalog.Key.tessWaiting.systemKey,
         SystemCatalog.Key.tessSent.systemKey,
+    ]).union(mirrorClassKeys)
+
+    /// The calendar and Health mirrors and held notices (M4): never in an op, a backup copy (the local one included),
+    /// the iCloud copy or an export. They are read again from EventKit and Health on the next foreground.
+    static let mirrorClassKeys: Set<String> = [
+        SystemCatalog.Key.event.systemKey, SystemCatalog.Key.sleepNight.systemKey,
+        SystemCatalog.Key.stepsDay.systemKey, SystemCatalog.Key.restingHeartRate.systemKey,
+        SystemCatalog.Key.heldNotice.systemKey,
     ]
+
+    static func isMirror(_ record: ObjectRecord) -> Bool {
+        var current = record.classDef
+        var depth = 0
+        while let classDef = current, depth < 12 {
+            if let key = classDef.systemKey, mirrorClassKeys.contains(key) {
+                return true
+            }
+            current = classDef.parent
+            depth += 1
+        }
+        return false
+    }
+
+    static func mirrorIDs(in context: TesseraContext) -> Set<UUID> {
+        Set(context.all(ObjectRecord.self).filter(isMirror).map(\.id))
+    }
 
     /// The family, not the exact class: a subclass of Tess Call, Tess Waiting or Tess Sent is local-only too.
     static func isLocalOnly(_ record: ObjectRecord) -> Bool {
         var current = record.classDef
         var depth = 0
         while let classDef = current, depth < 12 {
-            if let key = classDef.systemKey, localOnlyClassKeys.contains(key) { return true }
+            if let key = classDef.systemKey, localOnlyClassKeys.contains(key) {
+                return true
+            }
             current = classDef.parent
             depth += 1
         }
@@ -79,8 +106,14 @@ enum PrivateWords {
         func isA(_ key: SystemCatalog.Key) -> Bool {
             classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
         }
-        if isA(.listItem) {
+        if isA(.listItem) || isA(.ingredient) {
             return "Private item"
+        }
+        if isA(.list) {
+            return "Private list"
+        }
+        if isA(.routine) || isA(.workout) {
+            return ObjectPrivacy.routineLabel
         }
         if isA(.recipe) || isA(.recipeLine) || isA(.recipeStep) || isA(.cook) {
             return "Private recipe"
@@ -178,8 +211,18 @@ enum PrivateWords {
         func genericLabel(_ object: ObjectRecord) -> String {
             Self.genericLabel(object, classes: classes)
         }
+        let processClass = classes[.process]
         func words(_ object: ObjectRecord) -> [String] {
-            [object.title] + object.values.storage.values.compactMap { value in
+            // A process keeps its resume point as JSON ({"weight":20,"reps":5}): not words, and it must not make a
+            // plain running workout, or the routine it came from, private. Every other text it holds (`nextStep`,
+            // `waitingOn`) is words and counts.
+            if let processClass, let classDef = object.classDef, classDef.id == processClass.id {
+                let texts = ClassResolver.effectiveFields(of: classDef).filter { $0.key != "resumePoint" }.compactMap {
+                    store.value($0.key, of: object)?.stringValue
+                }
+                return [object.title] + texts
+            }
+            return [object.title] + object.values.storage.values.compactMap { value in
                 switch value {
                 case let .text(text), let .richText(text): text
                 default: nil

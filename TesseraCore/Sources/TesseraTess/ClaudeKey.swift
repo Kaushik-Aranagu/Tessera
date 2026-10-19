@@ -80,8 +80,8 @@ public final class InMemoryKeychain: TessKeychain, @unchecked Sendable {
 
 // MARK: - Ledger
 
-/// The $50 month, in nano-dollars (one Haiku input token is 100 n$). The month starts at 00:00 on the 1st in the
-/// phone's calendar, not his 4 AM day and not Anthropic's UTC.
+/// The $50 month, in nano-dollars (one Haiku input token is 100 n$). The month turns at 04:00 on the 1st in the
+/// phone's calendar, his house day (Product 8:24 PM PT Oct 17), not midnight and not Anthropic's UTC.
 @MainActor
 public struct TessUsageLedger {
     /// The month's cap: $50 (Kaushik, decisions.md Oct 16). Settings' spend line and the paused copy read this.
@@ -107,10 +107,16 @@ public struct TessUsageLedger {
         classes[.tessCall].map { store.objects(of: $0) } ?? []
     }
 
+    /// The month a moment belongs to, with 04:00 edges: 3:59 AM on the 1st is still last month, 4:00 AM is the new one.
+    /// The cap, the spend line and every "paused until" date read this one rule.
+    public nonisolated static func monthInterval(containing date: Date, calendar: Calendar = .current) -> DateInterval {
+        TesseraDay(calendar: calendar).month(containing: date)
+    }
+
     /// Spent this month, in nano-dollars.
     public func monthTotal(now: Date = .now, calendar: Calendar = .current) -> Int64 {
-        guard let month = calendar.dateInterval(of: .month, for: now) else { return 0 }
-        let rows = calls().filter { month.contains($0.createdAt) }
+        let month = Self.monthInterval(containing: now, calendar: calendar)
+        let rows = calls().filter { $0.createdAt >= month.start && $0.createdAt < month.end }
             .reduce(0) { $0 + Int64(store.number("costNano", of: $1) ?? 0) }
         // The file beside the store survives what the rows do not (a restore, a reset): the higher total wins.
         let kept = TessSpendFile(store: store)?.total(month: TessSpendFile.monthKey(now, calendar: calendar)) ?? 0
@@ -340,7 +346,7 @@ public struct ClaudeKeyCheck {
         case .notSaved: return "I couldn't save that key. Try again?"
         case .other: return "I couldn't check that key. Try again?"
         case .capReached:
-            let next = calendar.dateInterval(of: .month, for: now)?.end ?? now
+            let next = TessUsageLedger.monthInterval(containing: now, calendar: calendar).end
             return "Key saved. Claude paused until \(next.formatted(.dateTime.month(.abbreviated).day()))."
         }
     }

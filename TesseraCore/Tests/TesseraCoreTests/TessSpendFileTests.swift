@@ -74,4 +74,16 @@ struct TessSpendFileTests {
         file.add(5, month: "2026-10")
         #expect(file.total(month: "2026-10") == 5 && file.total(month: "2026-09") == 0)
     }
+
+    @Test func theFilesMonthTurnsAtFourAMLikeTheLedger() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        func at(_ month: Int, _ day: Int, _ hour: Int, _ minute: Int) -> Date {
+            calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: hour, minute: minute))!
+        }
+        // 00:30 on 1 November is still October's month; 04:00 is November's.
+        #expect(TessSpendFile.monthKey(at(11, 1, 0, 30), calendar: calendar) == "2026-10")
+        #expect(TessSpendFile.monthKey(at(11, 1, 4, 0), calendar: calendar) == "2026-11")
+        #expect(TessSpendFile.monthKey(at(10, 31, 23, 59), calendar: calendar) == "2026-10")
+    }
 }

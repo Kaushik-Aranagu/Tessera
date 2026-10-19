@@ -18,9 +18,23 @@ public protocol EngineAction: Codable, Sendable {
     @MainActor func summary(in store: ObjectStore, output: Output) -> String
     /// The receipt for this run, from what `apply` returned. Defaults to `receipt(in:)`.
     @MainActor func receipt(in store: ObjectStore, output: Output) -> String?
+    /// False for a system sync (the calendar and Health mounts): when it changed nothing it leaves no op record, so
+    /// a foreground with no news writes nothing.
+    var logsWhenEmpty: Bool { get }
+    /// False for a mirror (the calendar and Health mounts, held notices): what it writes never reaches the op log, so
+    /// a health or calendar value cannot ride in an op, a backup copy or an export. It cannot be undone either.
+    var recordsOps: Bool { get }
 }
 
 public extension EngineAction {
+    var logsWhenEmpty: Bool {
+        true
+    }
+
+    var recordsOps: Bool {
+        true
+    }
+
     @MainActor func receipt(in _: ObjectStore) -> String? {
         nil
     }
