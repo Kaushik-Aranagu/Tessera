@@ -4,7 +4,7 @@ For: Product, then Core (director, pack, gate), Motion lab (rules and the replay
 
 ## 0. The one-paragraph answer
 
-Tess picks her next roam, glance or rest from a **text description of the screen and his last touch**, never pixels and never his words. She still moves only through the states the router already has (`SoulEvent` to `SoulRouter.handle`, `Features/Tess/SoulRouter.swift` [code]); a chooser only picks **which allowed move and which place**. Three tiers, cheapest first, each falling back to the one below: **tier 0** rules plus smooth noise (motion idea 11, no model, ships regardless); **tier 1** the on-phone Apple model picking from an enum; **tier 2** Claude Haiku 5.5, only for choices that can wait a second. My recommendation: build tier 0 and the director interface now, tier 1 behind the switch, tier 2 last and only if a measured latency says it can steer anything. Typical month for tier 2: **$0.19**; capped worst: **$0.84** (1.7% of $50).
+Tess picks her next roam, glance or rest from a **text description of the screen and his last touch**, never pixels and never his words. She still moves only through states the router already has (`SoulEvent` to `SoulRouter.handle`, `Features/Tess/SoulRouter.swift` [code]). The answer is **one id from a closed menu the phone sends** (the Motion lab's sheet, `design/motion/tess-reads-the-screen-motion.md`, PR #1101): no coordinates, no durations, no text. Three tiers, cheapest first, each falling back to the one below: **tier 0** rules plus smooth noise (motion idea 11, no model); **tier 1** the on-phone Apple model picking from the same menu; **tier 2** Claude Haiku 5.5. Product ruled (Oct 19): build tiers 0 and 1 first; whether tier 2 runs at all is decided after latency is measured. If tier 2 ships, the one number set is in section 5: **$0.078 typical, $0.29 capped worst a month** (0.6% of $50).
 
 ## 1. What "reads the screen" means (the pack)
 
@@ -23,31 +23,20 @@ This is stricter than a Home pack (no titles at all), so there is nothing for th
 
 ## 2. The director interface (tiers share it)
 
+Superseded by the Motion lab's closed menu (agreed with the lab, Oct 19). One interface for all tiers:
+
 ```swift
 // new [unbuilt]. Pure, Sendable, in the app target (the router lives in Features/Tess).
 protocol SoulDirector: Sendable {
-    func choose(_ pack: ScreenPack, deadline: Duration) async -> SoulChoice?   // nil = "no opinion"
-}
-struct SoulChoice: Equatable {
-    enum Action { case stay, roam, glance, nudge, rest }
-    var action: Action
-    var target: String?          // a row handle r1..r8 or a region name from the pack; nil for stay and rest
-    var dwellMs: Int             // 400...4000
+    func choose(_ menu: [MotionID], pack: ScreenPack, deadline: Duration) async -> MotionID?   // nil = no opinion
 }
 ```
 
-The router asks the director on a `rowChanged`, a long idle, or a page appear. A reply that arrives after the **300 ms** budget is dropped and the rules decide (`tess-aware-motion-notes.md`: "a late one is dropped and the rule decides"). A reply that is earlier than its beat is held until the beat. `SoulChoice` is then turned into the **same events the router already handles**, so every motion safety rule in `tess-motion.md` section 14 holds by construction: never over words, never while listening, asked or carried, never in Low Power, one haptic per moment, Done never changes.
+`MotionID` is the lab's menu (`asBuilt`, `readersJobOrder`, `readersSweep`, `constellationOnly`, `roamSlot1`..`roamSlot4`, `stayHome`, `peek`, `nudgeLean`, `nudgeEyes`, `sideGlance`, `dropGlance`, `none`). The phone sends only the subset that is **legal right now** (eyes setting, page, Reduce Motion, Low Power and precedence applied first), `asBuilt` is always in it, and Done and opacity, grade or halo are never on it. An id not in the menu that was sent is rejected and the as-built choice stands (the same rule as `proposeSoul`). Slots are the page's declared free ground; the model never sees their positions.
 
-**Validator (`SoulChoiceValidator`, pure, runs on every choice from every tier)** [proposed]:
+**Latency (the lab's rules; they are the contract):** the first frame always plays as built and never waits. At most one `screenRead` call is in flight; an event during the flight opens no call. An answer by 300 ms may steer the next beat of the moment running; at 300 to 1,200 ms it may change only the next moment of the same kind and only if the snapshot hash (page, state, slot list) still matches; later, or after a state change, it is dropped. The request is cancelled at 1,500 ms (outcome `late`). No retry and no queue. An answer is a router event at precedence 8 or lower, so it never cuts a mode above it.
 
-| Check | Rule |
-|---|---|
-| Action | Member of the five |
-| Target | Exists in this pack; a row target must have a free-ground rect; roam target not under text (the page's declared ground) |
-| Dwell | 400 to 4000 ms; roam arcs keep the 760 ms travel |
-| State | Refuses `roam`/`nudge` while `listening`, `asked`, `carried`, Low Power or Reduce Motion; allows `stay`/`rest` only |
-| Rate | At most one roam per 6 s and 12 an hour; two refusals in a row mean tier 0 for 60 s |
-| Shape | Output decodes strictly (below); anything else is `nil` |
+**Validator (`MotionChoiceValidator`, pure, every tier):** id is in the sent menu; snapshot hash matches (for answers after 300 ms); not while listening, an ask waiting, carried, Done in flight, live workout or cook, Speak, Settings or quiet hours; minimum gap 2 s between calls. **No call in Low Power or Reduce Motion** (the lab: automatic calls skip in Low Power, and nothing travels under Reduce Motion), so the menu in those states is `asBuilt` only. Anything else decodes to `nil`.
 
 ## 3. Tier 0, no model (ships first, free)
 
@@ -55,25 +44,26 @@ Drive the lights from the page itself: go to the words that just changed, wander
 
 ## 4. Tier 1, on the phone (the model is Apple's)
 
-`LanguageModelSession` with guided generation into `SoulChoice` (an enum plus a target string checked against the pack) [proposed; the same Foundation Models stack as `TessModelCapture.swift` [code]]. The prompt is the pack and a 400-token instruction block. No network, no cost, nothing leaves the phone. **[unverified]:** latency per choice on an iPhone 17 and whether it fits 300 ms; the replay harness measures it and the switch stays off if the median misses 300 ms. If the model is unavailable, the row reads "Not on this phone" and tier 0 runs.
+`LanguageModelSession` with guided generation into `MotionID` (the same closed menu, so the validator is shared) [proposed; the same Foundation Models stack as `TessModelCapture.swift` [code]]. The prompt is the pack and a 400-token instruction block. No network, no cost, nothing leaves the phone. **[unverified]:** latency per choice on an iPhone 17 and whether it fits 300 ms; the replay harness measures it and the switch stays off if the median misses 300 ms. If the model is unavailable, the row reads "Not on this phone" and tier 0 runs.
 
-## 5. Tier 2, Claude (opt-in on top)
+## 5. Tier 2, Claude (opt-in on top): the one number set
+
+This replaces the earlier plan-ahead design (a list of 3 choices per page appear, 200 a day, one call per 20 s) and the lab's draft numbers (350 in / 8 out, 150 a day, $0.00004 a call). Core builds to **this table**.
 
 | Item | Value |
 |---|---|
-| Job | `TessUse.motion` [unbuilt]; `TessJob(name: "motion", model: "claude-haiku-5-5", maxTokens: 96, effort: nil, timeout: 1.2, writeTools: [], memory: [], priority: .lines, toolChoice: .forced)` |
-| Output tool | `chooseMotion` strict: `{ "action": enum[stay,roam,glance,nudge,rest], "target": string|null, "dwell_ms": integer }`. No `why` or text field: Claude returns no words |
-| Pack | `ScreenPack` above, about 350 tokens, plus about 250 of static instructions and the tool (cached prefix). **1,200 in / 40 out** (A) |
-| Cost per call | 1,200 x 100 + 40 x 500 = 140,000 n$ = **$0.00014** |
-| Why Haiku, forced | Cheapest, and forced tool choice is the rule for Haiku (`claude-client.md` section 2) |
-| When it is asked | **Ahead of need:** one call when a page appears or its rows change, returning a list of up to 3 choices good while the page's state hash is unchanged. Choices are consumed on beats; a changed hash discards the rest. Never on the critical path of a touch |
-| Latency | Round trip is **[unverified]** (hundreds of ms to over a second). It cannot steer a 300 ms beat, so it only ever supplies the next choices; if the list is not back, tier 1 or 0 answers |
-| Caps | 1 call per 20 s, at most **200 a day** [proposed, in code], 8 s idle timeout via the one door; follows the **$40 step-aside** with Home lines, week story and living colour (it is decoration) |
-| Offline, busy, cap, bad key | Silent: tier 1 or 0 answers. No Tess line, no Sent noise beyond the normal log row |
+| Job | `TessUse.screenRead` [unbuilt]; `TessJob(name: "screenRead", model: "claude-haiku-5-5", maxTokens: 16, effort: nil, timeout: 1.5, writeTools: [], memory: [], priority: .lines, toolChoice: .forced)` |
+| Output tool | `proposeMotion` strict: `{ "id": enum[<menu ids>] }`, nothing else: no text, no coordinates, no duration |
+| Pack | `ScreenPack` (section 1) about 250 tokens plus the sent menu, plus about 350 of static instructions and the tool. **600 in / 10 out** (A). The lab's 350 in was an estimate with no instruction block; the first live run is measured and this row is corrected from it |
+| Cost per call | 600 x 100 + 10 x 500 = 65,000 n$ = **$0.000065** |
+| When it is asked | Only on a router event that already fires as built (the lab's section 1 table). No event, no call. At most one in flight, **2 s minimum gap**, no retry, no queue |
+| Caps | **150 calls a day** (in code), the lab's number, replacing my 200; the $40 step-aside applies (decoration, like living colour); none in Low Power or Reduce Motion |
+| Offline, busy, refused, cap, bad key | Silent: tier 1 or 0 answers, no line on screen; a Sent row only when a request really left |
 
-**Budget against the $50 cap.** Typical: 40 page appears a day at one call each = 40 x $0.00014 x 30 = **$0.17**, plus changed-row refetches about **$0.19 a month** (0.4%). Capped worst: 200 a day = $0.028 a day = **$0.84**; with the 5 jobs of the other batches still under **$8** (16%). **Runaway with no cap in code:** one call per 2 s for 16 waking hours is 28,800 a day, $4.03 a day, **$121 a month**, so the $50 cap would be hit in about 12 days. That is why the 200-a-day cap is part of the job, not a note.
-
-**Sent log.** Each call writes a Sent row like any job (use `motion`); the "what was sent" page shows the pack, which is kinds and cells only.
+**Budget against the $50 cap.**
+- Typical: about 40 calls a day (events that fire a call on a normal day) x 30 x $0.000065 = **$0.078 a month** (0.2%).
+- Capped worst: 150 a day x 30 x $0.000065 = **$0.29 a month** (0.6%). At the lab's draft numbers it was $0.18; the difference is the instruction block.
+- **Runaway with no cap in code:** one call every 2 s for 16 waking hours is 28,800 a day = $1.87 a day = **$56 a month**, over the cap in about 27 days. That is why 150 a day is part of the job. With the other stretch jobs and the base month (about $14 worst) the app stays under $15.
 
 ## 6. Review switch (off by default)
 
@@ -91,17 +81,15 @@ With the master off or no key she moves exactly as with the row Off (`soul-signa
 |---|---|
 | `screenPackHoldsNoTitleNoValueNoImage` | Snapshot: only kind words, state words, cells |
 | `privatePageBuildsEmptyPack` | A masked page sends nothing |
-| `validatorRefusesRoamWhileListeningAskedCarriedOrLowPower` | The safety table |
+| `lowPowerAndReduceMotionSendNoScreenRead` and `validatorRefusesIdOutsideTheSentMenu` | The safety table and the closed menu |
 | `lateChoiceIsDroppedAndTheRuleDecides` | The 300 ms budget |
-| `staleChoiceListDiscardedWhenPageHashChanges` | Plan-ahead lists |
-| `motionJobStopsAtTwoHundredCallsADay` and `motionJobStepsAsideAtFortyDollars` | Caps |
+| `answerAfterStateChangeIsDropped` and `onlyOneScreenReadInFlight` | Snapshot hash and the single flight |
+| `screenReadStopsAtOneHundredFiftyCallsADay` and `motionJobStepsAsideAtFortyDollars` | Caps |
 | `masterOffOrRowOffMakesNoRequest` | Gate |
 | `tierFallsBackSilentlyWhenOfflineOrUnavailable` | Fallback |
 
-**Replay reel (free, on the phone or the simulator):** Motion lab records 30 screen traces (page, rows, events, touches) as JSON; each tier is scored by the validator and by a short list of must-not rules (never under words, never toward a private row, never twice in 6 s). Only after tiers 0 and 1 are scored does anyone ask Kaushik whether to run tier 2 on the same traces (about 30 x $0.00014 = **$0.004**). The fine-tune or local-RL idea he named stays in `parked.md`: v1 only writes a phone-local log of (pack hash, choice, whether he touched within 3 s) so a later trainer has data; nothing trains.
+**Replay reel (free, on the phone or the simulator):** Motion lab records 30 screen traces (page, rows, events, touches) as JSON; each tier is scored by the validator and by a short list of must-not rules (never under words, never toward a private row, never twice in 6 s). Only after tiers 0 and 1 are scored does anyone ask Kaushik whether to run tier 2 on the same traces (about 30 x $0.000065 = **$0.002**). The fine-tune or local-RL idea he named stays in `parked.md`: v1 only writes a phone-local log of (pack hash, choice, whether he touched within 3 s) so a later trainer has data; nothing trains.
 
 ## 8. Open questions for Product
 
-1. Tier 2 is worth building only if the measured Claude latency can supply "next 3 choices" faster than the page changes. OK to build tiers 0 and 1 first and decide tier 2 after the replay reel?
-2. Name the row **Tess reads the screen** and keep it under Review (default Off)?
-3. The phone-local choice log: yes (no training) or none?
+Ruled Oct 19: tiers 0 and 1 first; tier 2 decided after latency is measured; the phone-local choice log is yes (never in backups, no private words). Still open, for the lab's Asks: (1) the row goes in the Review section under "Tess asks Claude", not on sheet 93 page 1 (the 6-row limit is full: Key, This month, Receipts); (2) the earlier doc lines "Claude is never asked how she should move" (`soul-signals.md`) and "Nothing here adds a model call" (`tess-picks.md`) are amended by this batch 9 go, with the switch-off half unchanged (with the switch off she reacts exactly the same); (3) cap line: `screenRead` stays silent at the cap, like Home lines.

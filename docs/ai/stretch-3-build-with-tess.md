@@ -4,7 +4,7 @@ For: Product, then Core (validator, tools, route) and Builder B (the ghost class
 
 ## 0. The one-paragraph answer
 
-"I want to track my plants" becomes **one** strict tool call (`proposeClass`, `proposeFields`, `proposeList`, `useExisting` or `clarify`). The phone validates it against the block catalog, applies it as one pending op group, and shows a **ghost of the class's own page**; one tap accepts, undo removes it all. Claude never writes code, formulas or screens, and never sees a single object of his. Sonnet 5.5 low, about **$0.012 a call**. Typical month **$0.06**; capped worst **$0.72** (1.4% of $50). Off by default behind **Build with Tess**.
+"I want to track my plants" becomes **one** strict tool call (`proposeClass`, `proposeFields`, `proposeList`, `useExisting` or `clarify`). The phone validates it against the block catalog, applies it as one pending op group, and shows a **ghost of the class's own page**; one tap accepts, undo removes it all. Claude never writes code, formulas or screens, and never sees a single object of his. Sonnet 5.5 low, about **$0.012 a call**. Typical month **$0.06**; capped worst **$0.48** (1.0% of $50). Off by default behind **Build with Tess**.
 
 ## 1. What master has today (verified in code)
 
@@ -59,10 +59,10 @@ Per call: 2,500 in (catalog 2,000 + sentence + instructions) / 700 out (A) = 5,0
 | Case | Calls | Cost |
 |---|---|---|
 | Typical: 4 builds a month, 1.3 calls each | 5 | **$0.06** (0.1%) |
-| Capped worst: 20 build attempts a month, 3 calls each | 60 | **$0.72** (1.4%) |
+| Capped worst: 20 sentences a month, 2 calls each (one retry, or a clarify; his answer to a clarify counts as a new sentence) | 40 | **$0.48** (1.0%) |
 | Runaway without caps: a bug looping one retry per tick | unbounded | $0.012 each; 4,000 calls is the $50 cap |
 
-Caps [proposed, in code]: **10 sentences a day, 20 a month**, at most 2 calls per sentence (one retry), at most 2 pending schema records at once (research table). Build is user-initiated, so a runaway needs a bug, not a habit; the caps make that bug cost at most $0.72 a month. Step-aside at $40: **does not apply** (a build is something he asked for; it runs to $50, like capture, plan, recipe and questions).
+Caps [proposed, in code]: **10 sentences a day, 20 a month**, at most 2 calls per sentence (one retry), at most 2 pending schema records at once (research table). Build is user-initiated, so a runaway needs a bug, not a habit; the caps make that bug cost at most $0.48 a month. Step-aside at $40: **does not apply** (a build is something he asked for; it runs to $50, like capture, plan, recipe and questions).
 
 **Model.** The roadmap and `research/ai-and-tess.md` item 10 say Opus 5.5 for "build me an app"; the research page chose Sonnet 5.5 at about $0.01. I recommend Sonnet 5.5 low. Opus has **no price row** in the ledger, and an unknown model string prices as 0 so the cap cannot see it (`model-effort-cost-table.md`, risks): if Opus is wanted, a price row is added first, with a test that every job's model is a key of `prices`.
 
