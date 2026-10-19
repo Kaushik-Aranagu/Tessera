@@ -37,4 +37,10 @@ struct ObjectTitleTests {
         #expect(shown(loose) == model.classes[.note]?.name)
         #expect(![shown(second), shown(loose)].contains { $0.isEmpty || $0 == "Untitled" })
     }
+
+    /// QA on #1063: the word under a week dab is the routine's short name as shown, never its first raw word.
+    @Test func theWeekCaptionNeverShowsAPrivateRoutinesWord() {
+        #expect(DayColumn.caption("Knee rehab day", store: model.store) == "Private")
+        #expect(DayColumn.caption("Push Day A", store: model.store) == "Push")
+    }
 }

@@ -78,7 +78,7 @@ private struct DaysAcross: View {
     }
 }
 
-private struct DayColumn: View {
+struct DayColumn: View {
     let day: PlanWeek.Day
     let seed: Int
     let action: () -> Void
@@ -135,8 +135,14 @@ private struct DayColumn: View {
         switch day.state {
         case .rest: "Rest"
         case .open: " "
-        default: day.routine.map(RoutinePaint.short) ?? " "
+        default: day.routine.map { Self.caption($0, store: model.store) } ?? " "
         }
+    }
+
+    /// The word under a dab: the routine's short name as it may be shown, so a private "Knee rehab day" reads
+    /// "Private", never "Knee" (QA on #1063).
+    static func caption(_ routine: String, store: ObjectStore) -> String {
+        RoutinePaint.short(ObjectPrivacy.routineTitle(routine, in: store))
     }
 
     private var spoken: String {
