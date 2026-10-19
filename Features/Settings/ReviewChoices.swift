@@ -64,7 +64,7 @@ final class ReviewChoices {
         Choice(id: "tabs.neighbours", name: "Tab neighbours", values: ["Crisp", "Blurred"], defaultValue: "Crisp",
                says: ["Crisp": "The tabs beside the current one read crisp and faint.",
                       "Blurred": "The tabs beside the current one soften into a blur."],
-               readiness: .arrivesWith("peek tabs")),
+               readiness: .live),
         Choice(id: "tessFace", name: "Tess has eyes", values: ["Off", "Eyes", "Eyes and mouth"], defaultValue: "Off",
                says: ["Off": "Tess is a plain mark, as now.", "Eyes": "Tess has eyes.",
                       "Eyes and mouth": "Tess has eyes and a small mouth."],
@@ -114,8 +114,8 @@ final class ReviewChoices {
     nonisolated static let facets: [(word: String, ids: [String])] = [
         ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace"]),
         ("Workout", ["restTimer", "swapExercise", "finishNudge", "quietInterrupts"]),
-        ("Connected", ["planMyDay", "shutdown", "energyCheckIn", "calendar", "health", "linkFetch"]),
         ("Kitchen", ["cookTimerVoice", "pantryState", "canCookShelf", "handsFreeCook"]),
+        ("Connected", ["planMyDay", "shutdown", "energyCheckIn", "calendar", "health", "linkFetch"]),
         ("Shown", ["areasShown"]),
     ]
 

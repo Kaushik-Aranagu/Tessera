@@ -58,4 +58,15 @@ struct SettingsPageTests {
         #expect(receipt.hasSuffix("forgotten."))
         #expect(store.countLine() == "Nothing kept yet.")
     }
+
+    /// Sheet 108: VoiceOver hears "Workout, tab 2 of 5"; at accessibility sizes the next tab reads "next: Kitchen".
+    @Test func peekTabsSayWhereYouAre() {
+        let tabs = ReviewChoices.facetPages().map(\.word)
+        #expect(tabs == ["Looks and day", "Workout", "Kitchen", "Connected", "Shown"])
+        #expect(PeekTabsCopy.spoken(tabs, 1) == "Workout, tab 2 of 5")
+        #expect(PeekTabsCopy.next(tabs, 1) == "next: Kitchen")
+        #expect(PeekTabsCopy.next(tabs, 4) == nil)
+        #expect(PeekTabsLayout.offset(0, width: 300) == 0)
+        #expect(PeekTabsLayout.offset(-2, width: 300) < PeekTabsLayout.offset(-1, width: 300))
+    }
 }

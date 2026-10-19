@@ -119,7 +119,7 @@ private struct TessKnowsDoor: View {
 /// after. A switch whose feature hasn't landed shows today's value, quietly, and doesn't move.
 struct ReviewSection: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var page: Int? = 0
+    @State private var page = 0
     /// The switch he touched last and its value before the touch.
     @State private var touched: (id: String, before: String)?
     @State private var resetLine: String?
@@ -131,50 +131,23 @@ struct ReviewSection: View {
         let choices = ReviewChoices.shared
         MarginSection(label: "Review") {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Try a new way; today's stays one tap away.")
-                        .textRole(.body)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: Theme.Spacing.s)
-                    if pages.count > 1 {
-                        Text(ReviewSwitchCopy.facetPage(pages[min(page ?? 0, pages.count - 1)].word,
-                                                        (page ?? 0) + 1, pages.count))
-                            .textRole(.data)
-                            .foregroundStyle(Theme.Colors.inkSecondary)
-                            .contentTransition(.numericText())
-                            .accessibilityHidden(true)
-                    }
-                }
+                Text("Try a new way; today's stays one tap away.")
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                ScrollView(.horizontal) {
-                    LazyHStack(alignment: .top, spacing: 0) {
-                        ForEach(pages.indices, id: \.self) { index in
-                            VStack(alignment: .leading, spacing: 0) {
-                                ForEach(Array(pages[index].rows.enumerated()), id: \.element.id) { offset, choice in
-                                    row(choice)
-                                    if offset < pages[index].rows.count - 1 {
-                                        RowSeparator()
-                                    }
-                                }
+                // Named pages with their neighbours peeking (Design sheet 108): Looks and day, Workout, Kitchen,
+                // Connected, Shown.
+                PeekTabs(tabs: pages.map(\.word), selection: $page) { index in
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(pages[index].rows.enumerated()), id: \.element.id) { offset, choice in
+                            row(choice)
+                            if offset < pages[index].rows.count - 1 {
+                                RowSeparator()
                             }
-                            .containerRelativeFrame(.horizontal)
-                            // The flip: the page leaving fades as the next comes in; with Reduce Motion it's
-                            // opacity only, which this already is.
-                            .scrollTransition(.interactive, axis: .horizontal) { content, phase in
-                                content.opacity(phase.isIdentity ? 1 : 0.25)
-                            }
-                            .accessibilityElement(children: .contain)
-                            .accessibilityLabel(ReviewSwitchCopy.facetPage(pages[index].word, index + 1, pages.count))
-                            .id(index)
                         }
                     }
-                    .scrollTargetLayout()
                 }
-                .scrollTargetBehavior(.paging)
-                .scrollPosition(id: $page)
-                .scrollIndicators(.hidden)
-                .tesseraFeedback(.selection, trigger: page)
 
                 if choices.anyTrying() || resetLine != nil {
                     VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
