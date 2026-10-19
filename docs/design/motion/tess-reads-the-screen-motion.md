@@ -11,8 +11,8 @@ ARCH = `ai/architecture.md`, CC = `ai/claude-client.md`.
   images, ever (AWARE:11, `ai/private-surfaces-images-failure-lines.md:26`).
 - The model only picks among states and places she already has, never invents motion, so every rule in MOT still
   holds (AWARE:14). The input is structured text, not pixels (AWARE:15).
-- Switch: "Tess reads the screen", default off, one row inside "Tess asks Claude" (`ai/parked.md:18` puts the idea
-  under that switch). Effective value = "Tess asks Claude" is effectively on (key saved and stored value on,
+- Switch: "Tess reads the screen", default off, a row in the Review section, group "Tess asks Claude", beside Tess
+  experts (Product, Oct 19, mirror only; `ai/parked.md:18` puts the idea under that switch). Effective value = "Tess asks Claude" is effectively on (key saved and stored value on,
   `ai/settings-claude-page-spec.md:13`) AND this row is on (lab default). Off: nothing is sent and she is as built.
 - Job `screenRead` (lab default name): Haiku 5.5, the house's fast model (ARCH:152), one strict tool `proposeMotion`
   whose only field is a menu id. An id not in the menu the phone sent is rejected and the as-built choice stands,
@@ -148,10 +148,9 @@ first). The model returns one id. No coordinates, no rects, no text, no duration
 ## Asks (contradictions only)
 1. Docs say no model call moves her: "Claude is never asked how she should move" (`ai/soul-signals.md:6`), "with
    Tess asks Claude off she reacts exactly the same" (`ai/soul-signals.md:43`), "Nothing here adds a model call"
-   (PICK:7), and nothing gets calls or spend until he says (`ai/parked.md:3`). Product: confirm batch 9 is his go
+   (PICK:7), and nothing gets calls or spend until he says (`ai/parked.md:3`). Product ruled yes on Oct 19 (mirror only) and asked for a dated "Amended" note under each of those lines; Product: confirm batch 9 is his go
    and amend those lines (the switch-off half still holds).
-2. The Claude section is at its 6-row limit (`ai/settings-claude-page-spec.md:7`); this row makes 7. Product: where
-   does the row go?
+2. Answered by Product (Oct 19, mirror only): the row lives in the Review section, group "Tess asks Claude", beside Tess experts, default Off; the Claude section stays as is. (The Claude section was at its 6-row limit, `ai/settings-claude-page-spec.md:7`; that is why the row goes to Review.)
 3. Sleep: PICK:135 drops saturation 0.35; the never-diffused audit keeps Idle's pigment (audit:25). And
    `ops/board/ios-a.md:19` asks Reduce Motion working at opacity 90%, against full opacity (MOT:222, audit:24). This
    sheet follows the audit and G225; Design to confirm.

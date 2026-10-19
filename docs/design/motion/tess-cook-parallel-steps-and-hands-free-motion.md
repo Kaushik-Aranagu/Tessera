@@ -64,14 +64,14 @@ Rows from `CCK:69-77`. A guest and its host starting together give one haptic (`
 
 Ground: "Next", "back", "timer" by voice; on-device speech, grammar only (`KB:18`); Speak is SpeechAnalyzer on the phone (`DEC:880`); the cook phrases stay on the phone and never go to Claude (`GATE:6`). The docs name no wake word, no always-on listening and no spoken reply: those are open (Asks). Today a cook phrase reads: "8 mins" starts "Timer, 8 min."; "pasta 10" starts "Pasta, 10 min."; "step 3" goes to that step; "stop the rice" stops it (`GATE:18-23`). "next" and "back" are not in that list yet (Ask to Core).
 
-Lab default: a listening window is open only while the clock page is open and the screen is awake, with its mark drawn; it closes with the page. Ambient talk with no cook keyword gets no reply at all.
+Ruled by Product (Oct 19, mirror only): listening is opened by a tap (no always-on mic), there is no wake word, the window ends after 8 s of silence or when he leaves the page, a visible listening mark shows while it is open, there is no earcon (kitchens are loud), and a heard command gets one light haptic tick through MotionPolicy. Ambient talk with no cook keyword gets no reply at all.
 
 ### 2.1 The four states (what shows; no sound of ours)
 
 | State | Normal | Reduce Motion and Low Power | Haptic and sound |
 |---|---|---|---|
-| Window opens | a small cobalt mark appears beside the key row, "Listening" for first use only, then the mark alone; cobalt is Tess's voice (`K84:8`) | mark fades in 150 ms; Low Power: still mark at x1.2, mic level not fed (`SPK:27`, `MAT:64`) | `listening` once at open (`SPK:27`); no sound |
-| Heard | the keyword as heard rises into Tess's line out of a 6 pt blur, large type for reading from across the room (`SPK:29`) | word fades in, 150 ms, no blur | none (it repeats; one haptic per moment) |
+| Window opens (by his tap; closes after 8 s of silence or when he leaves the page) | a small cobalt mark appears beside the key row, "Listening" for first use only, then the mark alone; cobalt is Tess's voice (`K84:8`) | mark fades in 150 ms; Low Power: still mark at x1.2, mic level not fed (`SPK:27`, `MAT:64`) | `listening` once at open (`SPK:27`); no sound |
+| Heard | the keyword as heard rises into Tess's line out of a 6 pt blur, large type for reading from across the room (`SPK:29`) | word fades in, 150 ms, no blur | one light tick through MotionPolicy on a heard command (ruled); no sound; the action's own haptic below is held back inside the same moment |
 | Understood | the action's own motion is the answer: "next" moves the current track's bead only (`PS:10`); "timer 8" or "pasta 10" adds a labelled line; then a receipt in Tess's line: "Timer, 8 min." (`GATE:18-19`); step: "Step 3 of 6" | 150 ms crossfades; bead steps 150 ms (`K84:46`) | at most the action's own haptic: bead soft impact for a step (Tess's, off 23:00-07:00, `CCK:74`); a timer start has none (hold-to-start plays no haptic, `HMT:4`); no sound |
 | Not understood | keyword heard, nothing it can act on ("timer" with no number; "stop the pasta" when no pasta timer): the existing line "Didn't catch that." plus the context example, nothing else (`GATE:36`) | 150 ms fade | none, no retry, not queued, not logged (`DEC:941`, `GATE:36`) |
 | Wall-refused | key-shaped text or a phrase over 600 characters: refused first, nothing acts, nothing logged, "That's too long to send. Say it shorter." for length (`GATE:42, 51`); a walled word in a timer label (private name) still starts the timer but the label reads "Timer" (`LAW:53`, `DEC:89` rule: the wall masks the label, never the kind) | 150 ms fade | none, once, no retry (`GATE:51`) |
@@ -100,7 +100,7 @@ Timing (lab default): a cook command commits when the grammar matches plus a 400
 
 ## Asks
 
-- **Product:** is listening continuous while the page is open, or opened by a tap or a word? Any wake word? (Docs say none.) Is a short earcon allowed for "understood" for a cook with wet hands and eyes off the phone (docs give the app no sound of its own, only notification sounds)? Is continuous recognition kept or ended in Low Power (lab default: kept if he turned it on)?
+- **Product:** answered Oct 19 (mirror only): tap-opened, no wake word, 8 s of silence ends it, no earcon, one light tick on a heard command. Still open: does Low Power end a listening window early (lab default: no, it is short and tap-opened)?
 - **Core:** add "next" and "back" to the cook grammar next to N21-N26 (`GATE:18-23`); add a "2 timers are done." line (`LAW:61`).
 - **Design:** confirm the overlay as a band when two timers are live (1.2), the one-breath rule, and the 320 ms hand-over.
 - **Builder A:** the lane fork needs the draw path for a second stroke and a second bead; both read one `endsAt` each.

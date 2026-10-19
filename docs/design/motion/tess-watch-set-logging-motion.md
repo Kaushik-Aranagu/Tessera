@@ -112,7 +112,7 @@ A set logged on the Watch writes through the phone's op log and moves the same r
 
 ## Asks
 
-- **Builder A (decision, blocks everything):** this needs a new watchOS target (plus, for faces, a Watch widget extension). That contradicts `CLAUDE.md:14` today and spends two more free-team App IDs (AW:49). Run the throwaway build first (AW:68). Also decide: one `WatchHaptic` map file, Watch-side `isReduced`.
+- **Builder A (decision; Product ruled Oct 19 to draw it, slotted after this gate; Kaushik's Oct 15 yes covers it):** this needs a new watchOS target (plus, for faces, a Watch widget extension). That contradicts `CLAUDE.md:14` today and spends two more free-team App IDs (AW:49). Run the throwaway build first (AW:68). Also decide: one `WatchHaptic` map file, Watch-side `isReduced`.
 - **Product:** does the Watch app finish a workout, or only the phone (TRN:103 is a hold)? Tap or a short hold to log on the wrist (AW:68 says tap; the phone holds 0.7 s, TRN:44)? Is the "Watch (off)" switch the only gate?
 - **Core:** add source `watch` to Set (WK:29); queue-and-send for sets made while the phone is out of reach.
 - **Design:** confirm the haptic name map (section 3) on a real Watch, and the crown owning +15 during rest (section 2).
