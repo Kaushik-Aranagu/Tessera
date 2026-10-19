@@ -106,7 +106,10 @@ enum MuscleWords {
                 words.append(word)
             }
         }
-        return words.isEmpty ? "" : "Works \(words.formatted(.list(type: .and)))"
+        // Design's wording has no Oxford comma ("chest, shoulders and triceps"), whatever the locale's list style.
+        guard let last = words.last else { return "" }
+        let head = words.dropLast().joined(separator: ", ")
+        return head.isEmpty ? "Works \(last)" : "Works \(head) and \(last)"
     }
 }
 

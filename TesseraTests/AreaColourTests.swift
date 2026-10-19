@@ -11,9 +11,14 @@ struct AreaColourTests {
     }
 
     @Test func eachAreaLeansTowardItsOwnColour() {
-        #expect(Theme.Colors.area(.training) == Theme.Colors.training)
-        #expect(Theme.Colors.area(.kitchen) == Theme.Colors.health)
-        #expect(Theme.Colors.area(.review) == Theme.Colors.context)
-        #expect(Theme.Colors.areaLean(.kitchen) != Theme.Colors.areaLean(.training))
+        /// Colours compare by their resolved components (a dynamic Color is not reliably Equatable).
+        func rgb(_ color: Color) -> [Float] {
+            let resolved = color.resolve(in: EnvironmentValues())
+            return [resolved.red, resolved.green, resolved.blue]
+        }
+        #expect(rgb(Theme.Colors.area(.training)) == rgb(Theme.Colors.training))
+        #expect(rgb(Theme.Colors.area(.kitchen)) == rgb(Theme.Colors.health))
+        #expect(rgb(Theme.Colors.area(.review)) == rgb(Theme.Colors.context))
+        #expect(rgb(Theme.Colors.areaLean(.kitchen)) != rgb(Theme.Colors.areaLean(.training)))
     }
 }
