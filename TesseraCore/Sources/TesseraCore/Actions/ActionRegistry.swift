@@ -25,7 +25,8 @@ public enum ActionRegistry {
         FinishWorkoutEarly.descriptor,
         RollForwardTasks.descriptor, StartTask.descriptor,
         WaitOnTask.descriptor, KeepPlannedTask.descriptor, CreateClass.descriptor,
-        SyncCalendar.descriptor, SyncHealth.descriptor, CloseDay.descriptor,
+        SyncCalendar.descriptor, SyncHealth.descriptor, CloseDay.descriptor, StartFocusBlock.descriptor,
+        FocusCheckIn.descriptor, AcceptFirstStep.descriptor, HoldNotice.descriptor, ReleaseHeldNotices.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
@@ -117,6 +118,11 @@ public enum ActionRegistry {
         CreateClass.descriptor.name: { try decode(CreateClass.self, CreateClass.descriptor.name, $0) },
         SyncCalendar.descriptor.name: { try decode(SyncCalendar.self, SyncCalendar.descriptor.name, $0) },
         CloseDay.descriptor.name: { try decode(CloseDay.self, CloseDay.descriptor.name, $0) },
+        StartFocusBlock.descriptor.name: { try decode(StartFocusBlock.self, StartFocusBlock.descriptor.name, $0) },
+        FocusCheckIn.descriptor.name: { try decode(FocusCheckIn.self, FocusCheckIn.descriptor.name, $0) },
+        AcceptFirstStep.descriptor.name: { try decode(AcceptFirstStep.self, AcceptFirstStep.descriptor.name, $0) },
+        HoldNotice.descriptor.name: { try decode(HoldNotice.self, HoldNotice.descriptor.name, $0) },
+        ReleaseHeldNotices.descriptor.name: { try decode(ReleaseHeldNotices.self, ReleaseHeldNotices.descriptor.name, $0) },
         SyncHealth.descriptor.name: { try decode(SyncHealth.self, SyncHealth.descriptor.name, $0) },
         AddSlot.descriptor.name: { try decode(AddSlot.self, AddSlot.descriptor.name, $0) },
         StartRoutine.descriptor.name: { try decode(StartRoutine.self, StartRoutine.descriptor.name, $0) },

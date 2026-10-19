@@ -19,7 +19,7 @@ public enum SystemCatalog {
         case process
         case slot, plan
         case tessCall
-        case event, sleepNight, stepsDay, restingHeartRate, closedDay
+        case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice
         case tessSent
         case settings
         case tessWaiting
@@ -250,6 +250,13 @@ public enum SystemCatalog {
                       FieldSpec(key: "silent", name: "Closed by itself", kind: .bool),
                       FieldSpec(key: "tomorrowLine", name: "Tomorrow, first", kind: .text),
                       FieldSpec(key: "dayLine", name: "Day log line", kind: .text),
+                  ]),
+        // A Tessera notification held back while a workout, cook or focus block runs (M4 slice 4): released as one
+        // digest at the next context switch. Never holds anything but the notice's own words.
+        ClassSpec(key: .heldNotice, name: "Held Notice", parent: .thing, symbol: "bell.slash", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "priority", name: "Priority", kind: .text),
+                      FieldSpec(key: "dueAt", name: "Due", kind: .date),
                   ]),
         ClassSpec(key: .sleepNight, name: "Sleep Night", parent: .thing, symbol: "bed.double", colorRole: "neutral",
                   fields: [
