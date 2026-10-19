@@ -266,7 +266,7 @@ struct ListReuseTests {
     }
 }
 
-/// 4c: CopyList ("copy packing for lisbon", "Lisbon, copied from Packing.").
+/// 4c: CopyList ("copy packing for lisbon", "Packing, Lisbon, new list.").
 @MainActor
 struct CopyListTests {
     let store = ObjectStore.open(inMemory: true)
@@ -283,7 +283,7 @@ struct CopyListTests {
         let rows = lists.items(of: copied.output)
         #expect(rows.map(\.text) == ["Socks", "Charger"] && rows.allSatisfy { !$0.isDone })
         #expect(rows.first?.quantity == "3" && rows.last?.section == "Tech")
-        #expect(copied.record.receipt == "Lisbon, copied from Packing" && copied.record
+        #expect(copied.record.receipt == "Lisbon, new list" && copied.record
             .summary == "Copied Packing to Lisbon")
         // One op record, and the original is untouched (Socks still checked).
         #expect(lists.items(of: packing).first?.isDone == true && lists.items(of: packing).count == 2)
@@ -298,7 +298,7 @@ struct CopyListTests {
         let lisbon = try engine.perform(CreateList(name: "Lisbon"), by: .user).output
         let again = try engine.perform(CopyList(list: packing.id, name: "lisbon"), by: .user)
         #expect(again.output.id == lisbon.id && again.record.ops.isEmpty && again.record
-            .receipt == "Lisbon, already a list")
+            .receipt == "Lisbon, already a list" && again.record.summary == "Opened Lisbon")
         #expect(throws: ActionError.self) {
             try engine.perform(CopyList(list: packing.id, name: "Groceries"), by: .user)
         }
@@ -346,7 +346,7 @@ struct CopyListTests {
         let engine = ActionEngine(store: store, classes: classes)
         let packing = try engine.perform(CreateList(name: "Packing"), by: .user).output
         let copied = try engine.perform(CopyList(list: packing.id, name: "Lexapro refills"), by: .user)
-        #expect(copied.record.receipt == "Private list, copied from Packing")
+        #expect(copied.record.receipt == "Private list, new list")
         #expect(!copied.record.summary.lowercased().contains("lexapro"))
     }
 }

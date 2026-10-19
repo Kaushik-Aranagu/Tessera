@@ -37,4 +37,20 @@ struct CookModeCopyTests {
         #expect(CookModeCopy.minTarget(accessibilitySize: false) == 64)
         #expect(CookModeCopy.minTarget(accessibilitySize: true) == 88)
     }
+
+    /// G233: at zero the timer reads its done line; the last minute is "under a minute".
+    @Test func aTimerAtZeroIsDone() {
+        #expect(CookModeCopy.timeLeft("Simmer", seconds: 0) == "Simmer, done.")
+        #expect(CookModeCopy.timeLeft("Simmer", seconds: 40) == "Simmer, under a minute left.")
+        #expect(CookModeCopy.timeLeft("Simmer", seconds: 480) == "Simmer, 8 minutes left.")
+    }
+
+    /// G234, G226: Home's bar speaks minutes, and steps every 5 s, once a minute when calm.
+    @Test func theDrainBarSpeaksMinutes() {
+        let now = Date(timeIntervalSince1970: 10000)
+        #expect(DrainBar.spoken(end: now.addingTimeInterval(360), now: now) == "6 minutes left")
+        #expect(DrainBar.spoken(end: now.addingTimeInterval(30), now: now) == "under a minute left")
+        #expect(DrainBar.spoken(end: now, now: now) == "done")
+        #expect(DrainBar.step(calm: false) == 5 && DrainBar.step(calm: true) == 60)
+    }
 }

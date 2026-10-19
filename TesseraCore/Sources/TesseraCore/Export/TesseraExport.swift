@@ -100,7 +100,8 @@ public extension TesseraExport {
     /// Reads the whole store. With `maskingPrivate` (the shared file, G28) every private note, item, recipe or secret
     /// line reads "Private note", "Private item" or "Private recipe": title and field values both, and the op log's
     /// summaries and values for it. Money and body words count as private. Not lossless then, and there is no opt-in in
-    /// v1. It defaults to true, so every export masks. `false` is test-only, for lossless round trips; the app never does it. Anything the person
+    /// v1. It defaults to true, so every export masks. `false` is test-only, for lossless round trips; the app never
+    /// does it. Anything the person
     /// can send elsewhere must pass `maskingPrivate: true`.
     init(context: TesseraContext, now: Date = .now, maskingPrivate: Bool = true) throws {
         let classDefs = context.all(ClassDef.self).sorted { $0.createdAt < $1.createdAt }
@@ -144,6 +145,15 @@ public extension TesseraExport {
                     route: record.routeRaw, model: record.model, zone: record.zone)
         }
         if maskingPrivate {
+            let local = PrivateWords.localOnlyIDs(in: context)
+            if !local.isEmpty {
+                objects.removeAll { local.contains($0.id) }
+                links
+                    .removeAll { link in
+                        link.from.map(local.contains) == true || link.toObject.map(local.contains) == true
+                    }
+                operations.removeAll { entry in entry.ops.contains { local.contains($0.objectID) } }
+            }
             let current = PrivateWords.labels(in: context)
             mask(current, past: PrivateWords.historyLabels(in: context, current: current), context: context)
         }
@@ -151,7 +161,10 @@ public extension TesseraExport {
 
     /// Replaces what the private objects hold with their label; only done flags and dates stay.
     private mutating func mask(_ labels: [UUID: String], past: [UUID: String], context: TesseraContext) {
-        guard !labels.isEmpty || !past.isEmpty || operations.contains(where: { PrivateWords.summaryIsPrivate($0.summary, context: context) })
+        guard !labels.isEmpty || !past.isEmpty || operations.contains(where: { PrivateWords.summaryIsPrivate(
+            $0.summary,
+            context: context
+        ) })
         else { return }
         objects = objects.map { entry in
             guard let label = labels[entry.id] else { return entry }
@@ -171,11 +184,20 @@ public extension TesseraExport {
             masked.ops = entry.ops.map { op in
                 guard let label = labels[op.objectID] else { return op }
                 switch op {
-                case let .create(object, classID, parent, _): return .create(object: object, classID: classID, parent: parent, title: label)
+                case let .create(object, classID, parent, _): return .create(
+                        object: object,
+                        classID: classID,
+                        parent: parent,
+                        title: label
+                    )
                 case let .setTitle(object, _, _): return .setTitle(object: object, old: label, new: label)
                 case let .setValue(object, field, old, new):
-                    return .setValue(object: object, field: field, old: old.flatMap { PrivateWords.structural($0) ? $0 : nil },
-                                     new: new.flatMap { PrivateWords.structural($0) ? $0 : nil })
+                    return .setValue(
+                        object: object,
+                        field: field,
+                        old: old.flatMap { PrivateWords.structural($0) ? $0 : nil },
+                        new: new.flatMap { PrivateWords.structural($0) ? $0 : nil }
+                    )
                 default: return op
                 }
             }

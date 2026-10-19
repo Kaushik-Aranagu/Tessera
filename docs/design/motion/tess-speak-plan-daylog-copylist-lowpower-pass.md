@@ -24,7 +24,7 @@ Code facts: hold 400 ms (`BottomChrome:252`), pause 1.2 s, silence 5 s, cap 60 s
 | Moment | Normal (sheet; code where it differs) | RM and LP | Haptic |
 |---|---|---|---|
 | Soul touch-down | swell 1.06 over 130 ms (`BottomChrome:247`) | no swell | `.selection` once (raw today, `BottomChrome:130`) |
-| Hold starts listening (400 ms) | bloom x1.4, breathes with the level to x1.55; level scale animates 120 ms (raw `.animation`, `SpeakLayer:53`, not RM-gated) | RM: still bloom at **x1.2** (sheet; code holds 1.4: fix); LP: the soul's LP form, level smoothed at 30 fps, mic samples consumed at no more than 20 per second (today about 43, `SpeechListener:129-132`) | `.listening` once at the moment listening begins (the map has it, unused). Touch-down `.selection` stays: two moments 400 ms apart |
+| Hold starts listening (400 ms) | bloom x1.4, breathes with the level to x1.55; level scale animates 120 ms (raw `.animation`, `SpeakLayer:53`, not RM-gated) | RM: still bloom at **x1.2** (sheet; code holds 1.4: fix); LP: the soul's LP form, still bloom at x1.2 and the mic level is not fed (G313; today about 43 samples a second, `SpeechListener:129-132`) | `.listening` once at the moment listening begins (the map has it, unused). Touch-down `.selection` stays: two moments 400 ms apart |
 | Other words fold | 200 ms fade (code: the house spring, ~420 ms: fix to the sheet) | 150 ms crossfade | none |
 | Words as heard | each word rises from a 6 pt blur (code: opacity 0.2 s, not RM-gated, `SpeakLayer:49`) | each word fades in, no blur, 150 ms | none |
 | Tidying (fillers squeeze, 320 ms; the clean sentence in ink with the destination word) | built nowhere: the filler cut is instant and the ghost is `inkSecondary` with no destination word (`SpeakLayer:19`, `SpeechListener:236`) | crossfade 150 ms | none |
@@ -33,6 +33,8 @@ Code facts: hold 400 ms (`BottomChrome:252`), pause 1.2 s, silence 5 s, cap 60 s
 | UNDO tap | Tess's line "Milk, taken back."-style, 10 s | same | `.undo` once. Today the UNDO word also plays `.selection` (`CaptureParts:141`) and `.decrease` (`BottomChrome:132`): one moment, one haptic, so the word plays only `.undo` |
 | Refusal line (mic off etc.) | house spring in; line in cobalt with one ink word that still works | 150 ms fade | none (information; `.notSaved` is for a write that did not save) |
 | Cancel (drag left off the soul, or tap the veil) | nothing saved, no line | same | none |
+| Release during the first mic prompt (DEC:1085, G447) | the bloom never starts: no "Listening", no ghost, no words; the soul stays at rest (touch-down swell undoes in 130 ms); nothing records after he taps Allow unless he is still holding, in which case the hold flow starts then | no swell; same | none (a listen that never began is not a miss or a save) |
+| Masked notification wording (DEC:1085, G451; Core gate, no app notifications scheduled yet) | every notification title and body passes the one private-text function: "Private task" when masked, same as the timer rule; no motion, the alert is the system's | same | system sound only |
 
 Raw literals to route through the policy (code): `SpeakLayer:49` and `:53`; `BottomChrome:76`, `:87`, `:272`, `:482`, `:654`; the hand-gated ones in `CaptureParts:74-96` and `Paint.swift:296`, `:324`, `:342`, `:350` and `:396` can stay if the flag feeds them.
 

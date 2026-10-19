@@ -155,12 +155,16 @@ public struct ClaudeTessModel: TessModel {
             ].summary) + "." : "\(records.count) things done."
         }
         // The first miss ever sent says where it went, once (Product 8:28 PM PT Oct 15).
+        var isNotice = false
         if !flags.noticeShown {
             flags.noticeShown = true
+            isNotice = true
             line = phraseWalled ? "Sent that to Claude. Turn this off in Settings: Claude."
                 : "Sent \u{201C}\(request.text)\u{201D} to Claude. Turn this off in Settings: Claude."
         }
-        return .handled(TessCapture(records: records, line: line, source: .claude))
+        var capture = TessCapture(records: records, line: line, source: .claude)
+        capture.isNotice = isNotice
+        return .handled(capture)
     }
 
     /// Takes back any ghost past the per-phrase cap (a single call may write several).

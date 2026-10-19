@@ -17,7 +17,7 @@ parts that differ by side, and the values are lab defaults for Design to overrul
 |---|---|---|---|
 | THE SETS (a workout) | The sets arrive with the page, no stagger | The count of sets (Hero 56), no count-up | Not a run |
 | PER 100 G (an ingredient) | The table arrives with the page | The top number, e.g. "165", with its unit "kcal" at 21 | Not a run |
-| An exercise's four pages: HISTORY, REP MAXES, MUSCLES, SETUP | Along the pages: 44 pt and a fade, 380 ms. The facet word changes between ink and 40% with a 150 ms crossfade. Nothing else moves | HISTORY's last set ("82.5 × 7") | After SETUP, and before HISTORY, the body rubber-bands: 1:1 under the thumb with 0.35 resistance, at most 24 pt, back on the house spring over 380 ms. It never wraps. No haptic |
+| An exercise's four pages: HISTORY, REP MAXES, MUSCLES, SETUP | Along the pages: 44 pt and a fade, 380 ms. The facet word changes between ink and 40% with a 150 ms crossfade. Nothing else moves. The rail plays no haptic on a turn or on appear (G386) | HISTORY's last set ("82.5 × 7") | After SETUP, and before HISTORY, the body rubber-bands: 1:1 under the thumb with 0.35 resistance, at most 24 pt, back on the house spring over 380 ms. It never wraps. No haptic |
 | WHERE IT'S MENTIONED (a note) | The links arrive with the page | The count of places | Not a run |
 | ITS STORY (a task) | The events arrive with the page, newest first | The last event, one line | Not a run |
 | WHAT'S IN ONE (a backup) | The contents arrive with the page | The size or the count, Hero 56 | Not a run |

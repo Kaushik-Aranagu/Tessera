@@ -77,6 +77,6 @@ Checks (names for the builders' tests): `spokenTimerValueChangesOnlyAtMinuteBoun
 Notes: a step that starts within 600 ms of his Next gives only the medium impact (one haptic per moment; two steps starting together give one). If Product wants Tess's landings dropped in LP, only the bead row changes (the Research fixture's "zero haptics in Low Power" should be corrected either way, per the gap hunt). Tests: `lowPowerKeepsTimerEndHaptic`, `lowPowerKeepsHoldAndNextHaptics`, `beadStepHapticFollowsQuietHours`, `nextAndBeadStepGiveOneHaptic`, `lateOpenFlareHasNoHaptic`, `twoTimersEndingTogetherGiveOneHaptic`, `liveActivityUpdateCarriesNoAlert`, `timerStartedThenLockedRingsWithLowPowerOn` (the cook gate for G217).
 
 ## Open (none block the build)
-1. 10 s steps in a timer's last minute: Design confirms.
+1. ~~10 s steps in a timer's last minute: Design confirms.~~ Ruled (Oct 17 9:22 PM, G220): the horizon steps once a minute and every 10 s in the last minute.
 2. Bead soft impact in LP: confirmed by Product (kept in LP; no haptic 23:00 to 07:00, a small gate in `Haptics` rather than only scheduling dates, 9:18 PM item 3).
 3. No clip yet for the timer end; the prototype has no cook scene. One 8 s clip (flare, ring, overlay, normal and RM) is cheap if Design wants to see it before Builder A builds.
