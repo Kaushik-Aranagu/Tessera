@@ -204,9 +204,14 @@ private struct ExerciseSummary: View {
         let best = history.flatMap(\.sets).max { $0.e1RM < $1.e1RM }
         let top = history.first?.sets.max { $0.weight * 100 + $0.reps < $1.weight * 100 + $1.reps }
         VStack(spacing: Theme.Spacing.m) {
-            Stat(label: "Best e1RM", value: best.map { "\(Format.kilograms(($0.e1RM * 10).rounded() / 10))kg" } ?? "—",
-                 tint: Theme.Colors.ink)
-            Stat(label: "Last top set", value: top.map { "\(Format.kilograms($0.weight))×\(Int($0.reps))" } ?? "—")
+            // An empty value drops out; no lone dash (decisions 5:57).
+            if let best {
+                Stat(label: "Best e1RM", value: "\(Format.kilograms((best.e1RM * 10).rounded() / 10))kg",
+                     tint: Theme.Colors.ink)
+            }
+            if let top {
+                Stat(label: "Last top set", value: "\(Format.kilograms(top.weight))×\(Int(top.reps))")
+            }
             Stat(label: "Sessions", value: "\(history.count)")
         }
     }
@@ -451,7 +456,8 @@ private struct PropertyList: View {
             if let value {
                 Text(describe(value, unit: field.unit)).textRole(.data).foregroundStyle(Theme.Colors.ink)
             } else {
-                Text(field.kind == .computed ? "ƒ \(field.expression ?? "")" : "—")
+                // A cell that must show something says "none", never a lone dash (decisions 5:57).
+                Text(field.kind == .computed ? "ƒ \(field.expression ?? "")" : ObjectCopy.none)
                     .textRole(.data)
                     .foregroundStyle(Theme.Colors.inkTertiary)
             }
@@ -459,7 +465,7 @@ private struct PropertyList: View {
     }
 
     private var dash: some View {
-        Text("—").textRole(.label).foregroundStyle(Theme.Colors.inkTertiary)
+        Text(ObjectCopy.none).textRole(.label).foregroundStyle(Theme.Colors.inkTertiary)
     }
 
     private func describe(_ value: FieldValue, unit: String?) -> String {
@@ -557,6 +563,17 @@ enum ObjectNotes {
             return trimmed != "#reusable" && trimmed != "#pick-one" && !isPickedStamp(trimmed)
         }.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
         return kept.isEmpty ? nil : kept
+    }
+}
+
+/// The object page's words.
+enum ObjectCopy {
+    /// An empty cell that must show something (decisions 5:57): never a lone dash.
+    static let none = "none"
+
+    /// A cell's value, or "none" when it has none.
+    static func cell(_ value: String?) -> String {
+        value ?? none
     }
 }
 

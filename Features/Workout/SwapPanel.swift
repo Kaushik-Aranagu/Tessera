@@ -99,7 +99,7 @@ struct SwapPanel: View {
     }
 
     private func loadText(_ option: ExerciseSwaps.Option) -> String {
-        guard let load = option.load else { return "—" }
+        guard let load = option.load else { return ObjectCopy.none }
         let each = option.isPerHand ? " each" : ""
         return "\(option.isEstimate ? "≈ " : "")\(Format.kilograms(load))\(each)"
     }
