@@ -147,7 +147,7 @@ Plus per row: `fdcID`, `dataType` (Foundation or SR Legacy), the FDC description
 Portions (subject to CALL 1): table `portion` with `refID`, `label` (the FDC measure and modifier, "1 cup, chopped"),
 `amount`, `gramWeight` (g), `sortIndex`. Used only to turn "1 cup" on a recipe line into grams for the PER 100 G
 side; never multiplied into a total. Units: mass in g and mg as above; energy kcal only (no kJ in v1); no per-serving
-values anywhere. Missing nutrient = no value (null), never 0. **Agreed with Kitchen (Oct 19):** the 8 fields, units and FDC ids; null never 0; per 100 g stored as published; the key is `fiber` (US spelling; the earlier `fibre_g` in `food-table-usda.md` is renamed `fiber_g` in this PR). Portions ship as ruled in CALL 1 B.
+values anywhere. Missing nutrient = no value (null), never 0. **Agreed with Kitchen (Oct 19):** the 8 fields, units and FDC ids; null never 0; per 100 g stored as published; the stored key is `fiber_g` in the research tables and fixtures (`food-table-usda.md`, `fixtures/food-table-20.json`) and `fiber` in the app's field list above (US spelling; the earlier `fibre_g` is renamed everywhere in this PR). Portions ship as ruled in CALL 1 B.
 Portion choice: when a food has several portions, pick the one whose label matches the recipe line's unit; if none matches, show no grams. Never guess.
 
 ## 5. Exclusions (what the library is never part of)

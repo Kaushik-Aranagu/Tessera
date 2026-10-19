@@ -93,7 +93,7 @@ One source read this pass (FoodKeeper, via its data.gov record); the rest are ca
 - Units: UCUM / NIST SI tables (US gov public domain). Foundation Models can handle conversion, no data needed.
 
 ## Recommended 8 nutrition fields (per 100 g)
-1. energy_kcal  2. protein_g  3. fat_total_g  4. carbohydrate_g  5. fibre_g  6. sugars_g  7. sodium_mg  8. saturated_fat_g
+1. energy_kcal  2. protein_g  3. fat_total_g  4. carbohydrate_g  5. fiber_g  6. sugars_g  7. sodium_mg  8. saturated_fat_g
 (Next tier micronutrients: potassium, calcium, iron, vitamin C, vitamin D.) Plus portion table: measure label + gram_weight.
 
 ## Open questions
@@ -104,7 +104,7 @@ One source read this pass (FoodKeeper, via its data.gov record); the rest are ca
 5. Do we want our own curated exercise list layered over the data for muscle/equipment taxonomy?
 
 ## Which feature uses which set (Research, Oct 19)
-- USDA FDC Foundation, SR Legacy, FNDDS (CC0 per the publisher's page, relayed by Core; nutrition per 100 g and portions): Kitchen ingredient pages, recipe totals, pantry and groceries quantities. Fields recommended: energy kcal, protein, fat, carbohydrate, fibre, sugars, sodium, saturated fat, plus the portion table (measure and gram weight). To agree with Kitchen.
+- USDA FDC Foundation, SR Legacy, FNDDS (CC0 per the publisher's page, relayed by Core; nutrition per 100 g and portions): Kitchen ingredient pages, recipe totals, pantry and groceries quantities. Fields recommended: energy kcal, protein, fat, carbohydrate, fiber, sugars, sodium, saturated fat, plus the portion table (measure and gram weight). To agree with Kitchen.
 - free-exercise-db (exercises, muscles, equipment): Training exercise pages, muscle figure, swap alternatives. Images need a provenance check before anything ships.
 - Grocery packs, aisles, swaps, shelf life: Groceries and Pantry. Shelf life (FoodKeeper) is pending; the other candidates are UNVERIFIED; nothing chosen yet.
 
