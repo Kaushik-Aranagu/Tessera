@@ -131,8 +131,8 @@ struct PeekTabs<Content: View>: View {
 
     // MARK: Moving
 
-    private func step(_ by: Int) {
-        go(selection + by)
+    private func step(_ offset: Int) {
+        go(selection + offset)
     }
 
     private func go(_ index: Int) {
