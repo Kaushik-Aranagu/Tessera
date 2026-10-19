@@ -21,7 +21,7 @@ struct KitchenMaskTests {
     }
 
     @Test func aPrivateRecipesStepsLinesAndTimersReadTheirLabels() throws {
-        let cake = try recipe("Dentist cake\n2 cups flour\n\nSoak the dates overnight.\nBake 30 minutes.")
+        let cake = try recipe("Lexapro cake\n2 cups flour\n\nSoak the dates overnight.\nBake 30 minutes.")
         let book = RecipeBook(store: model.store, classes: model.classes)
         let step = try #require(book.steps(of: cake).first)
         #expect(label(step.object) == KitchenMask.stepLabel)
@@ -49,7 +49,7 @@ struct KitchenMaskTests {
 
     /// Home's ledger: the cook reads "Private recipe" and its step by number, never "Soak the dates overnight."
     @Test func homeShowsAPrivateCooksStepByNumberOnly() throws {
-        let cake = try recipe("Dentist cake\n2 cups flour\n\nSoak the dates overnight.\nBake 30 minutes.")
+        let cake = try recipe("Lexapro cake\n2 cups flour\n\nSoak the dates overnight.\nBake 30 minutes.")
         try model.engine.perform(StartCooking(recipe: cake.id), by: .user)
         let process = try #require(ProcessTable(engine: model.engine).running())
         // Core stores the step masked already (#1033); Home still reads it by number, not as "Private recipe" twice.
