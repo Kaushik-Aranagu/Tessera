@@ -1,6 +1,6 @@
 # Build spec: the reinstall key question, the restore offer, the first Before-restore copy
 
-Static spec for Core and Builder B (G687, G688, G689; hunt 28 rows FL36-FL38, hunt 27 rows BK45/BK46). Read from master f5fd3a86. No code run. Mirror = `/mnt/project-files/tessera/product/decisions.md` (1,111 lines, lines past 1064 are mirror-only); repo copy not cited for those lines. Every code cite was read on master.
+Static spec for Core and Builder B (G687, G688, G689; hunt 28 rows FL36-FL38, hunt 27 rows BK45/BK46). Read from master f5fd3a86. No code run. Mirror = `/mnt/project-files/tessera/product/decisions.md` (1,117 lines, lines past 1064 are mirror-only; the five calls are ruled at line 1117); repo copy not cited for those lines. Every code cite was read on master.
 
 ## 0. Order and owners
 
@@ -21,7 +21,7 @@ Ruled: mirror 1099 CALL 6 B (3:58 PM Oct 18, hunt 23): "a key found on a fresh s
 
 ### 1.2 Design (my default where marked)
 Reuse the existing field `missesGoToClaude: Bool?` (no catalog change, `SystemCatalog.swift:241`), and make nil mean "not asked yet":
-- `sendsMissesToClaude` becomes `missesGoToClaude ?? false` (my default). Stored `true` / `false` are his answers.
+- `sendsMissesToClaude` becomes `missesGoToClaude ?? false` (ruled, mirror line 1117 CALL 1 A). Stored `true` / `false` are his answers.
 - A new Core read `claudeQuestionDue: Bool` = key present AND `missesGoToClaude == nil` AND settings real AND not later-snoozed (see Later). Key presence is a Bool only; the key text is never read into settings, logs or ops.
 - Typing or pasting a key in Settings (ClaudeSection save path, `ClaudeSection.swift:357` area) writes `missesGoToClaude = true` if nil (preserves the Oct 15 "typing the key opts in" rule; he acted). If he already said no, saving a new key leaves no (my default).
 - Remove key (ruled two-step, 1099 CALL 1 A) leaves the field as it is; the question is only due when a key exists.
@@ -34,7 +34,7 @@ Reuse the existing field `missesGoToClaude: Bool?` (no catalog change, `SystemCa
 | Yes | taps "Yes" | line goes; receipt "Claude on. Turn this off in Settings: Claude." | op: `missesGoToClaude = true`, actor him |
 | No | taps "No" | line goes; receipt "Claude off. Turn this on in Settings: Claude." | op: `missesGoToClaude = false`; key stays on the phone |
 | Later | taps "Later" or ignores | line stays quiet in Settings: Claude only (Today line hides for this launch) | nothing; no op |
-| No key | no Keychain item | no question; "No Claude key yet." (`ClaudeSection.swift:483` region) | nothing goes (no key) |
+| No key | no Keychain item | no question; "No Claude key yet." (`docs/ai/private-surfaces-images-failure-lines.md:45`) | nothing goes (no key) |
 
 ### 1.4 Strings (one line each, thing first, plain US English)
 - Question: `Use the Claude key still on this phone?` (exact, ruled).
@@ -48,7 +48,7 @@ Reuse the existing field `missesGoToClaude: Bool?` (no catalog change, `SystemCa
 Question and buttons: new `ClaudeKeyQuestion` view in `Features/Settings/ClaudeSection.swift` (Settings: Claude, always) and one line on Today under the top bar, first foreground only (Builder B; one line, never a modal, never a sheet). Receipts: the standard receipt line used by the switch (`ClaudeSection.swift:297-310`, `switchLine`). Core read API for Builder B: `SettingsStore.claudeQuestionDue(keyPresent: Bool) -> Bool` and `SettingsStore.answerClaudeQuestion(_ answer: Bool)` (one op).
 
 ### 1.6 Default when he does not answer
-Nothing goes to Claude, ever, until Yes. The question stays available (Settings: Claude shows it on every visit; Today line returns at most once per cold launch while unasked, my default). Later = not answering; no timer, no auto-yes.
+Nothing goes to Claude, ever, until Yes. The question stays available (Settings: Claude shows it on every visit; Today line returns at most once per cold launch while unasked, ruled, mirror line 1117 CALL 2 A). Later = not answering; no timer, no auto-yes.
 
 ### 1.7 Edge cases
 - **Store restored from a copy that carried an answer:** the field rides in the copy, so the answer is kept and no question shows (key present, field true or false). Restore of a copy with field nil and a key present: asks.
@@ -97,7 +97,7 @@ All of: settings real; `TesseraBackup.userOps` over the live store is 0 (`Tesser
 
 ### 2.4 Strings
 - Line: `Have a copy from before? Backups, Restore.` (ruled text in CALL 1 B; hunt FL36 row words it "Backups > Restore"; the CALL text is the later one, use it).
-- Dismiss: `Not now` (my default).
+- Dismiss: `Not now` (ruled, mirror line 1117 CALL 4 A).
 - VoiceOver: line text, then "Opens Backups." (my default).
 
 ### 2.5 Where it reads
@@ -109,7 +109,7 @@ The line stays until his first action or a picked folder; nothing is restored, n
 ### 2.7 Edge cases
 - Restore staged but not yet applied: line hides (pending marker exists).
 - New phone (FL62): same line; the folder must be picked again; iCloud copies lack private rows (hunt 27 CALL 2 B warning applies at restore).
-- Found key plus offer: both lines may be due on a reinstall; show the key question first, the offer second, one at a time (hunt 28 CALL 3 B queue, mirror 1111) (my default order).
+- Found key plus offer: both lines may be due on a reinstall; show the key question first, the offer second, one at a time (hunt 28 CALL 3 B queue, mirror 1111; order ruled, mirror line 1117 CALL 5).
 - A workout or cook open: the line does not show (restore refuses then, hunt 27 CALL 3 A).
 - Offline: no dependence on network.
 - Siri/Shortcuts: no effect; neither reads nor sends.
@@ -123,7 +123,7 @@ Restore stays whole replace, staged and applied at the next cold launch, never m
 
 ## 3. G689: the first Before-restore copy must hold something of his
 
-Ruled: hunt 27 CALL 6 B, mirror 1109 (10:15 AM Oct 19): keep the first-ever Before-restore copy plus the three newest; no set-aside on a clean restore. **Not ruled, my default:** skip the Before-restore copy when the live store has no user ops (hunt 28 FL37 says so; mirror 1111 CALL 1 B rules only the offer line).
+Ruled: hunt 27 CALL 6 B, mirror 1109 (10:15 AM Oct 19): keep the first-ever Before-restore copy plus the three newest; no set-aside on a clean restore. **Ruled (mirror line 1117 CALL 3 A):** skip the Before-restore copy when the live store has no user ops (hunt 28 FL37 says so; mirror 1111 CALL 1 B rules only the offer line).
 
 ### 3.1 Verified starting point
 `applyPendingRestore` (`TesseraBackup.swift:371`) sets `hasStore` (`:389`); `if hasStore` (`:390`) writes `Before-restore-<stamp>` and prunes with `dropFirst(keepBeforeRestore)` (`:404`, constant `:41` = 3). On a reinstall the store exists (launch 1 made it), so the first-ever slot would hold only seeded data. If the copy cannot be kept the restore does not happen (launch note `:408-411`).
@@ -156,36 +156,36 @@ No question. Restore of a copy over a non-empty store is unchanged. The day's ro
 
 ## 4. PRODUCT CALLS (Kitchen CALL shape)
 
-### CALL 1 (G687): What an unanswered field means
+### CALL 1 RULED A (mirror line 1117) (G687): What an unanswered field means
 | Option | Consequence |
 |---|---|
 | A. nil reads as no; typing a key writes yes; reinstall with a key asks once | Matches the ruling; one default flips from true to false for a key-less nil. |
 | B. nil stays yes; add a separate "asked" flag | No change to the old default; a second field and a catalog change. |
 Recommended: A. Reason: one field, nothing can send before an answer. Owner: Core.
 
-### CALL 2 (G687): "Later" and where the question shows
+### CALL 2 RULED A (mirror line 1117) (G687): "Later" and where the question shows
 | Option | Consequence |
 |---|---|
 | A. Settings: Claude always, plus one Today line per cold launch while unasked | He cannot miss it; one extra quiet line at most. |
 | B. Settings: Claude only | Quietest; he may never see it and Claude stays off. |
 Recommended: A. Reason: a found key is the case the ruling cares about. Owner: Builder B.
 
-### CALL 3 (G689): Skip the Before-restore copy of an empty store
+### CALL 3 RULED A (mirror line 1117) (G689): Skip the Before-restore copy of an empty store
 | Option | Consequence |
 |---|---|
 | A. Skip when userOps is 0 | The first-ever slot holds his first real data; a restore over nothing has no undo (nothing to undo to). |
 | B. Always write it | Simplest; the protected slot holds seeded data only. |
-Recommended: A. Reason: it is what CALL 6 B is for. Owner: Core. My default today, not ruled.
+Recommended: A. Reason: it is what CALL 6 B is for. Owner: Core. Ruled (mirror line 1117, 11:08 AM PT Oct 19).
 
-### CALL 4 (G688): "Not now" on the offer
+### CALL 4 RULED A (mirror line 1117) (G688): "Not now" on the offer
 | Option | Consequence |
 |---|---|
 | A. Line has "Not now" and stays gone | He is not nagged; Backups > Restore stays. |
 | B. No dismiss; line ends only on action or folder | Fewer controls; the line may linger days. |
-Recommended: A. Owner: Builder B. My default.
+Recommended: A. Owner: Builder B. Ruled (mirror line 1117).
 
-### CALL 5: Order of the lines on launch 1
-Key question first, restore offer second, one at a time. Recommended. Owner: Builder B. My default.
+### CALL 5 RULED (mirror line 1117): Order of the lines on launch 1
+Key question first, restore offer second, one at a time. Recommended. Owner: Builder B. Ruled (mirror line 1117).
 
 ## 5. Not verified
 iOS keeping the Keychain item across a delete (inferred, hunt 23 CL26). No code or tests were run. Line cites for mirror text are mirror-only (1099 and 1109-1111 text read in the mirror, which carries lines past 1064).
