@@ -9,12 +9,12 @@ Product. One ReviewChoices type app-side; not in the catalog, not in backups. De
 | 3 | Swap exercise | One tap / Two taps | Two taps | Live workout exercise row |
 | 4 | Forgot Finish nudge | Off / On | Off | Workout left unfinished: one quiet nudge |
 | 5 | Page turn | Slide / Turn / Soften / Rotate | Slide | Page changes and paged long lists |
-| 6 | Top bar | Today / Sheet 73 A | Today | Home top bar |
-| 7 | Stage titles | Today / Bolder, stage colour | Today | Titles on pages |
-| 8 | Area colours | Off / On | Off | Area colour lean |
-| 9 | Small images | Off / On | Off | Where not cluttered |
+| 6 | Top bar | Removed: Kaushik decided, ships directly, no switch | - | - |
+| 7 | Stage titles | Removed: Kaushik decided, ships directly, no switch | - | - |
+| 8 | Area colours | Removed: Kaushik decided, ships directly, no switch | - | - |
+| 9 | Small images | Removed: Kaushik decided, ships directly, no switch | - | - |
 | 10 | Tess eyes and mouth | Off / Eyes / Eyes and mouth | Today's setting | Tess on Home |
-| 11 | Tess motion picks | Off / On | Off | The 11 picked ideas |
+| 11 | Tess motion picks | Removed: Kaushik decided, ships directly, no switch | - | - |
 | 12 | Plan my day | Off / On | Off | Now at 8 AM |
 | 13 | Shutdown | Off / On | Off | Now at 9 PM |
 | 14 | Energy check-in | Off / On | Off | Morning rep drum |
@@ -25,3 +25,4 @@ Product. One ReviewChoices type app-side; not in the catalog, not in backups. De
 | 19 | Link fetch | Off / On | Today | Recipe from a website |
 
 Settings becomes its own page: Review, LookSentence, RestDaySentence and the Claude section move into it. Copy rules: plain words, no "at" before a clock time, one before/after line per row.
+

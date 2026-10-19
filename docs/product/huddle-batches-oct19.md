@@ -12,7 +12,7 @@ Settings, first. Every open choice becomes a switch he flips live, so nothing wa
 | Reading layouts: refit of Groceries, Home/Now, Exercise page, Backup, literal-size cleanup (sheet 99) | Builder A + B | Reading layouts: Today / Sheet 99 |
 | Page turn: Slide, Turn, Soften, Rotate, plus paged long lists | Builder B | Page turn (4 choices) |
 | Rest timer, easy swap, forgot-Finish nudge (week-one training questions) | Builder A | Rest timer / Swap / Finish nudge, each on or off |
-| Top bar, stage-coloured titles, area colours, small images | Builder A | One switch each, off shows today's look |
+| Top bar, stage-coloured titles, area colours, small images (he decided all of these) | Builder A | none, decided: ships directly |
 
 ## Batch 1: Look and Home
 
@@ -20,13 +20,13 @@ The visible gap between the board and his phone. Biggest first. (Builder A, with
 
 | Feature | Who | Settings switch |
 |---|---|---|
-| Top bar: one word up top, pull down or tap for the area index (sheet 73 A), each screen declares its side swipe | Builder A | Top bar |
-| Titles bolder, a colour per stage, key word leads, done strikes through | Builder A | Stage titles |
-| Area colours (areaLean) across Kitchen, Training and the rest | Builder A | Area colours |
-| Small faded images only where the screen is not cluttered | Builder A | Small images |
+| Top bar: one word up top, pull down or tap for the area index (sheet 73 A), each screen declares its side swipe | Builder A | none, decided |
+| Titles bolder, a colour per stage, key word leads, done strikes through | Builder A | none, decided |
+| Area colours (areaLean) across Kitchen, Training and the rest | Builder A | none, decided |
+| Small faded images only where the screen is not cluttered | Builder A | none, decided |
 | Muscle figure on Exercise and Routine pages (approved, sheet 91) | Builder A | none, approved |
 | Reading-layout refit in Design section C order | Builder A | Reading layouts |
-| Tess motion: all 11 ideas and the small mouth, one sheet per pick | Builder A + Motion lab | Tess eyes and mouth; Tess motion picks |
+| Tess motion: all 11 ideas and the small mouth, one sheet per pick | Builder A + Motion lab | Tess eyes and mouth (eyes stay a setting) |
 | Low Power flag (MotionPolicy.isReduced) so Settings can ship | Builder A | none, gate |
 
 ## Batch 2: Training
