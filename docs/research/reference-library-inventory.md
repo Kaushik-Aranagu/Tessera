@@ -1,0 +1,113 @@
+# Tessera reference library: candidate sources (DRAFT)
+
+Date: 2026-10-19. Scope: bundled, read-only, offline data inside a closed-source app.
+
+## Research limits (read first)
+The sandbox could only fetch github.com pages. fdc.nal.usda.gov, openfoodfacts.org, canada.ca, wger.de and
+openfoodfacts.github.io all failed DNS (getaddrinfo ENOTFOUND). Licence text below is therefore quoted only where
+it came from a fetched GitHub page; everything from search excerpts is labelled "search excerpt" and is NOT a
+primary confirmation. Per the rule, anything not confirmed from the source's own page is UNVERIFIED and SKIP until
+re-checked from a networked machine. Sizes and version dates were not retrievable and are marked "not checked".
+
+## Verdict rule
+BUNDLE only for public domain/CC0, CC-BY (attribution), Unlicense/MIT-style. SKIP share-alike (CC-BY-SA, ODbL),
+GPL/AGPL, non-commercial, unclear or unverified.
+
+## 1. Nutrition
+
+### USDA FoodData Central (FDC) - Foundation Foods, SR Legacy, FNDDS, Branded
+- Publisher: USDA Agricultural Research Service. URL: https://fdc.nal.usda.gov/ (downloads: /download-datasets/)
+- Contents: per-100 g nutrient values (about 150+ nutrients keyed by nutrient id), food descriptions, food
+  categories, portion tables (food_portion: gram_weight, amount, modifier, e.g. "1 cup", "1 medium") which give
+  household measures and implicit densities. Foundation = few hundred richly analysed foods; SR Legacy = about
+  7,800 generic foods (frozen since 2018 release per a secondary blog, unconfirmed); FNDDS = survey foods with
+  portions and recipes; Branded = several hundred thousand label products.
+- Size / version: not checked (fetch blocked). Check CSV zips on the download page.
+- Licence: CC0 1.0 Universal. Search excerpt of the FDC site: "USDA FoodData Central data are in the public
+  domain and they are not copyrighted. They are published under CC0 1.0 Universal (CC0 1.0)." Credit to FDC is
+  requested, not required. Link: https://creativecommons.org/publicdomain/zero/1.0/
+- Verdict: UNVERIFIED from primary page, but expected BUNDLE for Foundation, SR Legacy, FNDDS. Branded: BUNDLE-eligible
+  by licence but likely too large and noisy for on-device bundling; consider a trimmed top-N subset later.
+  Confirm the licence text on fdc.nal.usda.gov before any data ships.
+
+### Open Food Facts
+- Publisher: Open Food Facts association. URL: https://world.openfoodfacts.org/terms-of-use
+- Contents: crowd-sourced packaged products, barcodes, nutrition per 100 g, Nutri-Score, ingredients, images.
+- Licence (search excerpt of OFF support/docs, not primary): database under the Open Database License (ODbL),
+  contents under the Database Contents License (DbCL), images under CC-BY-SA. Conditions stated: attribution and
+  share-alike; combined databases must be released as open data.
+- Verdict: SKIP. ODbL and CC-BY-SA are share-alike. (Live lookup by barcode over the network is a different
+  question and out of scope for the bundled library.)
+
+### Canadian Nutrient File (CNF) 2015
+- Publisher: Health Canada. URL: https://www.canada.ca/en/health-canada/services/food-nutrition/healthy-eating/nutrient-data/canadian-nutrient-file-2015-download-files.html
+- Contents: CSV/Excel/Access: foods, nutrient amounts, measures/conversion factors, food groups.
+- Licence: UNVERIFIED. Search excerpt says a third-party portal tags it ca-ogl-lgo (Open Government Licence -
+  Canada) while the official page only says "refer to Crown Copyright". An archived guideline page reportedly
+  forbids modifying nutrient values. Health Canada notes a CNF 2026 is being prepared.
+- Verdict: SKIP (UNVERIFIED). Revisit if OGL-Canada is confirmed (OGL-Canada is attribution-only, would be OK).
+
+### Other nutrition candidates (not researched this pass)
+- UK CoFID (OGL v3), Australian AFCD (check licence), NCCDB (non-commercial, SKIP), EFSA/FAO INFOODS tables
+  (per-source licences). All UNVERIFIED, SKIP until checked.
+
+### Household portions and densities
+Best source is the FDC food_portion table (gram_weight per measure), covered by the FDC verdict above.
+
+## 2. Training / exercises
+
+### free-exercise-db (yuhonas)
+- URL: https://github.com/yuhonas/free-exercise-db
+- Contents: "over 800 exercises" (README "800+"), JSON with fields id, name, force, level, mechanic, equipment,
+  primaryMuscles, secondaryMuscles, instructions, category, images. README notes force, mechanic, equipment may be null.
+- Licence (fetched from repo page): "License: Unlicense" (https://unlicense.org). Public-domain dedication.
+- Size / version: not checked. Images are in the repo; check image provenance before bundling photos.
+- Verdict: BUNDLE (data). Images: BUNDLE only after confirming they are covered by the same Unlicense.
+
+### wger exercise database
+- URL: https://github.com/wger-project/wger
+- Fetched: "Application Code: AGPL-3.0-or-later"; "Exercise/Ingredient Data: Creative Commons (see individual entries)."
+- Search excerpt: older releases cite CC-BY-SA 3.0 for initial data.
+- Verdict: SKIP. Code is AGPL; data licence is per entry, with share-alike variants likely.
+
+### ExerciseDB (ExerciseDB/exercisedb-api)
+- URL: https://github.com/ExerciseDB/exercisedb-api
+- Fetched: "AGPL-3.0 license"; "11,000+ structured exercises"; 5,000+ GIFs; terms of use linked, text not seen.
+  Search excerpt hints media is credited to a third party with its own licence.
+- Verdict: SKIP (AGPL, media terms unclear).
+
+### Liftosaur
+- AGPL. Verdict: SKIP (per brief).
+
+## 3. Groceries
+No source verified this pass. Candidates to check next, all UNVERIFIED/SKIP for now:
+- Shelf life/storage: USDA FoodKeeper (USDA/FSIS, expected public domain US government work; confirm).
+- Units/conversions: FDC food_portion plus a hand-written SI/US table (our own, no licence issue).
+- Categories/aisles: derive from FDC food categories or write our own taxonomy.
+- Substitutions: no clean open dataset known; likely author our own.
+
+## 4. Other domains (one line each, UNVERIFIED)
+- Sleep/steps norms: CDC/NIH/WHO public guidance (US gov works are public domain; WHO is CC BY-NC-SA, SKIP).
+- Holidays: Unicode CLDR / date-nager (check licence); or compute locally. Time zones: IANA tz database (public domain).
+- Units: UCUM / NIST SI tables (US gov public domain). Foundation Models can handle conversion, no data needed.
+
+## Recommended 8 nutrition fields (per 100 g)
+1. energy_kcal  2. protein_g  3. fat_total_g  4. carbohydrate_g  5. fibre_g  6. sugars_g  7. sodium_mg  8. saturated_fat_g
+(Next tier micronutrients: potassium, calcium, iron, vitamin C, vitamin D.) Plus portion table: measure label + gram_weight.
+
+## Open questions
+1. Re-run the licence checks from a networked machine (USDA, CNF, FoodKeeper, OFF terms, wger) and capture exact text.
+2. Is attribution inside the app acceptable (Settings > Sources) for CC-BY or OGL sources?
+3. Bundle size budget? Foundation + SR Legacy trimmed to the 8 fields is small; Branded is not.
+4. free-exercise-db images: confirm provenance, or ship text only.
+5. Do we want our own curated exercise list layered over the data for muscle/equipment taxonomy?
+
+## Which feature uses which set (Research, Oct 19)
+- USDA FDC Foundation, SR Legacy, FNDDS (nutrition per 100 g and portions): Kitchen ingredient pages, recipe totals, pantry and groceries quantities. Fields recommended: energy kcal, protein, fat, carbohydrate, fibre, sugars, sodium, saturated fat, plus the portion table (measure and gram weight). To agree with Kitchen.
+- free-exercise-db (exercises, muscles, equipment): Training exercise pages, muscle figure, swap alternatives. Images need a provenance check before anything ships.
+- Grocery packs, aisles, swaps, shelf life: Groceries and Pantry. All candidates are UNVERIFIED; nothing chosen yet.
+
+## Next steps
+1. Re-run every licence check from a machine that can reach fdc.nal.usda.gov and the other publishers (this sandbox could not).
+2. Agree the nutrition fields with Kitchen.
+3. Step 2, the spec for how the library sits on the phone: read-only objects, no runtime calls, refreshed by app updates, never mixed with his own data, privacy rules unchanged.
