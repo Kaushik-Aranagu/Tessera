@@ -307,23 +307,29 @@ public struct ClaudeTessModel: TessModel {
         let data: Data
         let response: URLResponse
         do {
-            // A hard cap, not just an idle timeout: the call races the deadline, and either one wins.
+            // A hard cap, not just an idle timeout: the call races the deadline, and either one wins. Cancel (from the
+            // Ask slot, or the caller's own task) stops the call through the same handle.
             let session = session
             let request = http
-            (data, response) = try await withThrowingTaskGroup(of: (Data, URLResponse).self) { group in
-                group.addTask { try await session.data(for: request, delegate: NoRedirects.shared) }
-                group.addTask {
-                    try await Task.sleep(for: .seconds(remaining))
-                    throw URLError(.timedOut)
-                }
-                defer { group.cancelAll() }
-                guard let first = try await group.next() else { throw URLError(.unknown) }
-                return first
+            let work = Task { try await session.data(for: request, delegate: NoRedirects.shared) }
+            let timer = Task {
+                try await Task.sleep(for: .seconds(remaining))
+                work.cancel()
+            }
+            flags.inFlight = work
+            flags.noteSending()
+            defer {
+                timer.cancel()
+                flags.inFlight = nil
+            }
+            (data, response) = try await withTaskCancellationHandler { try await work.value } onCancel: {
+                work.cancel()
             }
         } catch let error as URLError {
             switch error.code {
             case .timedOut: throw Failure.timeout
-            case .cancelled: throw Failure.cancelled
+            // Cancelled: by the deadline (a timeout) or by him (Cancel).
+            case .cancelled: throw deadline.timeIntervalSinceNow <= 0 ? Failure.timeout : Failure.cancelled
             default: throw Failure.offline
             }
         } catch is CancellationError {
@@ -397,6 +403,22 @@ public final class ClaudeMissFlags {
     public var noticeShown: Bool {
         get { defaults.bool(forKey: Self.noticeKey) }
         set { defaults.set(newValue, forKey: Self.noticeKey) }
+    }
+
+    /// The call in flight, so Cancel can stop it (set only while a request is on the network).
+    var inFlight: Task<(Data, URLResponse), Error>?
+
+    /// Called, with no request content, when a request to Claude actually leaves the phone: the Ask slot shows
+    /// "Asking Claude." with Cancel from here to the end of the call. Grammar-only answers never reach it.
+    public var willSend: (@MainActor () -> Void)?
+
+    func noteSending() {
+        willSend?()
+    }
+
+    /// Cancel: stops the call on the network, if there is one. The capture then ends with "Cancelled.".
+    public func cancelAsking() {
+        inFlight?.cancel()
     }
 
     static let heldBackKey = "tess.claudeHeldBack"
