@@ -101,4 +101,15 @@ struct OneLabelTests {
             #expect(SideFacts.defaultFields(of: object, in: store, classes: engine.classes) == nil)
         }
     }
+
+    @Test func aWalledWaitingOnKeepsItsProcessPrivateInTheExport() throws {
+        let engine = try engine()
+        let task = try engine.perform(CreateTask(title: "Follow up"), by: .user).output
+        try engine.perform(
+            WaitOnTask(task: task.id, waitingOn: "Waiting on wifi password hunter2zebra", checkAt: .now + 86400),
+            by: .user
+        )
+        let json = try String(decoding: TesseraExport(context: store.context).encoded(), as: UTF8.self)
+        #expect(!json.lowercased().contains("hunter2zebra"), "a walled waitingOn leaked into the export")
+    }
 }

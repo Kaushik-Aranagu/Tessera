@@ -178,9 +178,13 @@ enum PrivateWords {
         let processClass = classes[.process]
         func words(_ object: ObjectRecord) -> [String] {
             // A process keeps its resume point as JSON ({"weight":20,"reps":5}): not words, and it must not make a
-            // plain running workout, or the routine it came from, private. Its one line of words is `nextStep`.
-            if let processClass, object.classDef?.id == processClass.id {
-                return [object.title] + [store.value("nextStep", of: object)?.stringValue].compactMap(\.self)
+            // plain running workout, or the routine it came from, private. Every other text it holds (`nextStep`,
+            // `waitingOn`) is words and counts.
+            if let processClass, let classDef = object.classDef, classDef.id == processClass.id {
+                let texts = ClassResolver.effectiveFields(of: classDef).filter { $0.key != "resumePoint" }.compactMap {
+                    store.value($0.key, of: object)?.stringValue
+                }
+                return [object.title] + texts
             }
             return [object.title] + object.values.storage.values.compactMap { value in
                 switch value {
