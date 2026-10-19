@@ -116,8 +116,11 @@ public struct TessUsageLedger {
     /// Spent this month, in nano-dollars.
     public func monthTotal(now: Date = .now, calendar: Calendar = .current) -> Int64 {
         let month = Self.monthInterval(containing: now, calendar: calendar)
-        return calls().filter { $0.createdAt >= month.start && $0.createdAt < month.end }
+        let rows = calls().filter { $0.createdAt >= month.start && $0.createdAt < month.end }
             .reduce(0) { $0 + Int64(store.number("costNano", of: $1) ?? 0) }
+        // The file beside the store survives what the rows do not (a restore, a reset): the higher total wins.
+        let kept = TessSpendFile(store: store)?.total(month: TessSpendFile.monthKey(now, calendar: calendar)) ?? 0
+        return max(rows, kept)
     }
 
     func canSpend(_ estimateNano: Int64, now: Date = .now, calendar: Calendar = .current) -> Bool {
@@ -172,6 +175,7 @@ public struct TessUsageLedger {
     {
         guard let classDef = classes[.tessCall], let call = try? store.create(classDef, title: "\(use.rawValue) call")
         else { return nil }
+        TessSpendFile(store: store)?.add(costNano, month: TessSpendFile.monthKey(date, calendar: Calendar.current))
         call.createdAt = date
         try? store.set("use", to: .text(use.rawValue), on: call)
         try? store.set("model", to: .text(model), on: call)

@@ -11,6 +11,8 @@ struct LineHero<Key: View>: View {
     var opens: Route?
     /// Words for the context line in place of Core's (nil keeps Core's).
     var context: String??
+    /// The thing's own progress for the title accent (72): the share of a workout's sets logged.
+    var progress: Double?
     @ViewBuilder var key: () -> Key
 
     @Environment(AppModel.self) private var model
@@ -45,14 +47,14 @@ struct LineHero<Key: View>: View {
                     Button {
                         model.open(opens)
                     } label: {
-                        HomeHeroText(text: line.hero)
+                        HomeHeroText(text: line.hero, accent: accent)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(HandleButtonStyle())
                     .modifier(ZoomSource(id: opens, namespace: namespace))
                     .accessibilityHint("Opens \(line.fact.title)")
                 } else {
-                    HomeHeroText(text: line.hero)
+                    HomeHeroText(text: line.hero, accent: accent)
                 }
             }
             .siblingParallax()
@@ -63,6 +65,25 @@ struct LineHero<Key: View>: View {
         .task(id: line.objectID) { await askClaude() }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+
+    /// Title accent (72): a workout leans to Training's colour, a cook to Kitchen's green; a done one strikes and
+    /// dries (already done when it appears: drawn dried). Nothing in progress, no accent.
+    private var accent: TitleAccent? {
+        let fact = line.fact
+        let tint: Color = switch fact.kind {
+        case .workout: Theme.Colors.training
+        case .cook: Theme.Colors.health
+        default: Theme.Colors.ink
+        }
+        guard fact.kind == .workout || fact.kind == .cook else { return nil }
+        if fact.state == .done {
+            let fresh = fact.endedAt.map { AppClock.now.timeIntervalSince($0) < 5 } ?? false
+            return TitleAccent(progress: 1, isDone: true, tint: tint, isSettled: !fresh)
+        }
+        let share = progress ?? fact.step.flatMap { step in fact.steps.map { Double(step) / Double(max($0, 1)) } }
+        guard let share, share > 0 else { return nil }
+        return TitleAccent(progress: share, tint: tint)
+    }
 }
 
 /// The hero in the first of three forms that fits its width: Hero 56 on one line, Title 44 on one line, Title 44
@@ -70,6 +91,8 @@ struct LineHero<Key: View>: View {
 /// proposals, which misfire mid-transition.
 struct HomeHeroText: View {
     let text: String
+    /// The title accent (72), when the thing has progress.
+    var accent: TitleAccent?
     @ScaledMetric(relativeTo: .largeTitle) private var heroSize = Theme.concept.scale.hero.size
     @ScaledMetric(relativeTo: .title) private var titleSize = Theme.concept.scale.title.size
     @State private var width: CGFloat = 0
@@ -78,13 +101,19 @@ struct HomeHeroText: View {
 
     var body: some View {
         Group {
-            switch form {
-            case .hero:
-                Text(text).textRole(.hero).lineLimit(1)
-            case .title:
-                Text(text).textRole(.title).lineLimit(1)
-            case .wrapped:
-                Text(text).textRole(.title)
+            if let accent {
+                let scale = Theme.concept.scale
+                AccentTitle(text: text, accent: accent, spec: form == .hero ? scale.hero : scale.title,
+                            lineLimit: form == .wrapped ? nil : 1)
+            } else {
+                switch form {
+                case .hero:
+                    Text(text).textRole(.hero).lineLimit(1)
+                case .title:
+                    Text(text).textRole(.title).lineLimit(1)
+                case .wrapped:
+                    Text(text).textRole(.title)
+                }
             }
         }
         .foregroundStyle(Theme.Colors.ink)
@@ -94,13 +123,15 @@ struct HomeHeroText: View {
         .accessibilityLabel(text)
     }
 
-    /// An average advance of about 0.56 em for the display face at this weight.
+    /// An average advance of about 0.56 em for the display face at this weight; 0.60 for an accent title, which grows
+    /// to weight 640 as it fills and so must fit at that weight (never an ellipsis).
     private var form: Form {
         guard width > 0 else { return .hero }
-        if CGFloat(text.count) <= width / (heroSize * 0.56) {
+        let advance: CGFloat = accent == nil ? 0.56 : 0.60
+        if CGFloat(text.count) <= width / (heroSize * advance) {
             return .hero
         }
-        return CGFloat(text.count) <= width / (titleSize * 0.56) ? .title : .wrapped
+        return CGFloat(text.count) <= width / (titleSize * advance) ? .title : .wrapped
     }
 }
 
