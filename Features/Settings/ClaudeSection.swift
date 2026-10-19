@@ -8,6 +8,9 @@ import TesseraTess
 
 /// The words for the key's state after a check: "works", "not allowed", "not checked", "account paused".
 enum ClaudeKeyWords {
+    /// The status line with no key saved (Product 3:58 PM): "Paste one here" lives only in the field's own hint.
+    static let noKey = "No Claude key yet."
+
     static func status(_ outcome: String?) -> String {
         switch outcome.flatMap(ClaudeKeyCheck.Outcome.init(rawValue:)) {
         case .works, .capReached: "works"
@@ -122,7 +125,7 @@ struct ClaudeSection: View {
             // After a reinstall or on a new phone the key doesn't come along (restore-walk 6).
             Text(ledger.calls().isEmpty
                 ? "Tess thinks \(Text("on this phone").fontWeight(.semibold)) only."
-                : "No Claude key on this phone. Paste one here.")
+                : ClaudeKeyWords.noKey)
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
             if writing {
@@ -456,11 +459,15 @@ private struct MonthLine: View {
 struct ClaudeReceipts: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    /// "Cleared what was sent." after the clear: plain, and no UNDO (G653).
+    @State private var clearedLine: String?
 
     var body: some View {
         let _ = model.revision
         let ledger = TessUsageLedger(store: model.store, classes: model.classes)
         let calls = ledger.calls().sorted { $0.createdAt > $1.createdAt }
+        let sent = TessSentLog(store: model.store, classes: model.classes, flags: ClaudeMissFlags())
+        let words = SentWords.byRequest(sent)
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 Button { dismiss() } label: {
@@ -480,17 +487,47 @@ struct ClaudeReceipts: View {
                 )
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
+                if let held = SentWords.heldBackLine(sent.heldBackCount) {
+                    Text(held)
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                }
                 if calls.isEmpty {
                     Text("Nothing has gone to Claude yet.")
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 } else {
+                    // One element per call: time, job, model, cost, then the words that went (CL55).
                     ForEach(calls, id: \.id) { call in
-                        Text(ClaudeKeyWords.receipt(call, store: model.store))
-                            .textRole(.body)
-                            .foregroundStyle(Theme.Colors.ink)
-                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                            Text(ClaudeKeyWords.receipt(call, store: model.store))
+                                .textRole(.body)
+                                .foregroundStyle(Theme.Colors.ink)
+                            if let said = SentWords.of(call, in: model.store, words: words) {
+                                Text(said)
+                                    .textRole(.body)
+                                    .foregroundStyle(Theme.Colors.inkSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .accessibilityElement(children: .combine)
                     }
+                }
+                if sent.count > 0 {
+                    Button(SentWords.clear) {
+                        let line = sent.clear()
+                        clearedLine = line
+                        AccessibilityNotification.Announcement(line).post()
+                        model.touch()
+                    }
+                    .buttonStyle(.labelWord(Theme.Colors.inkSecondary))
+                    .frame(minHeight: 44)
+                }
+                if let clearedLine {
+                    Text(clearedLine)
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.tess)
                 }
             }
             .padding(.horizontal, Theme.Spacing.gutter)
@@ -501,6 +538,38 @@ struct ClaudeReceipts: View {
         .background { EdgeSwipeBack() }
         .navigationBarBackButtonHidden()
         .toolbarVisibility(.hidden, for: .navigationBar)
+    }
+}
+
+/// What was sent, under each receipt (G653, CL55): the words as Core stored them ("Private phrase" for a walled
+/// one), matched to the call by its request id, and how many requests never left the phone.
+enum SentWords {
+    static let clear = "Clear what was sent"
+
+    /// Each request's words, by request id.
+    @MainActor
+    static func byRequest(_ log: TessSentLog) -> [String: String] {
+        var words: [String: String] = [:]
+        for entry in log.entries() {
+            if let id = log.store.value("requestID", of: entry)?.stringValue, words[id] == nil {
+                words[id] = log.words(of: entry)
+            }
+        }
+        return words
+    }
+
+    /// The words under one receipt, quoted: “buy oat milk”; nil when the call has none on record.
+    @MainActor
+    static func of(_ call: ObjectRecord, in store: ObjectStore, words: [String: String]) -> String? {
+        guard let id = store.value("requestID", of: call)?.stringValue, let said = words[id], !said.isEmpty
+        else { return nil }
+        return said == TessSentLog.privatePhrase ? said : "\u{201C}\(said)\u{201D}"
+    }
+
+    /// "1 request held back on this phone", "3 requests …"; nil when none were.
+    static func heldBackLine(_ count: Int) -> String? {
+        guard count > 0 else { return nil }
+        return "\(count) request\(count == 1 ? "" : "s") held back on this phone"
     }
 }
 
