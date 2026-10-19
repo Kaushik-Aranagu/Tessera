@@ -42,6 +42,11 @@ struct SettingsPage: View {
                     .padding(.top, Theme.Spacing.xxl)
                     .entrance(3)
 
+                // What Tess keeps about him, in ink, the count the door to the page (AI-9).
+                TessKnowsDoor()
+                    .padding(.top, Theme.Spacing.xxl)
+                    .entrance(4)
+
                 // The key, the month and what Tess may send.
                 ClaudeSection()
                     .padding(.top, Theme.Spacing.xxl)
@@ -69,6 +74,34 @@ struct SettingsPage: View {
         .background { EdgeSwipeBack() }
         .navigationBarBackButtonHidden()
         .toolbarVisibility(.hidden, for: .navigationBar)
+    }
+}
+
+// MARK: - What Tess knows
+
+/// "Tess remembers 12 things.", the count a value word that opens What Tess knows.
+private struct TessKnowsDoor: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let _ = model.revision
+        let count = TessMemoryStore(engine: model.engine).countWord()
+        VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+            Text("Memory")
+                .textRole(.label)
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .accessibilityAddTraits(.isHeader)
+            NavigationLink {
+                TessKnowsPage()
+            } label: {
+                Text(TessKnowsCopy.door(count))
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .multilineTextAlignment(.leading)
+            }
+            .buttonStyle(.valueWash)
+            .accessibilityHint("Opens what Tess knows")
+        }
     }
 }
 
