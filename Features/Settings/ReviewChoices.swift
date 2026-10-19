@@ -106,6 +106,28 @@ final class ReviewChoices {
     ]
 
     /// The rows in pages of at most six, for the side swipe (Design sheet 100).
+    /// Review's pages by facet, each named beside the counter ("Workout, 2 of 5"; Design sheet 100), six rows at most.
+    nonisolated static let facets: [(word: String, ids: [String])] = [
+        ("Looks and day", ["readingLayout", "pageTurn", "tessFace"]),
+        ("Workout", ["restTimer", "swapExercise", "finishNudge", "quietInterrupts"]),
+        ("Connected", ["planMyDay", "shutdown", "energyCheckIn", "calendar", "health", "linkFetch"]),
+        ("Kitchen", ["cookTimerVoice", "pantryState", "canCookShelf", "handsFreeCook"]),
+        ("Shown", ["areasShown"]),
+    ]
+
+    /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
+    nonisolated static func facetPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
+        var pages = facets.map { facet in
+            (word: facet.word, rows: facet.ids.compactMap { id in choices.first { $0.id == id } })
+        }.filter { !$0.rows.isEmpty }
+        let named = Set(facets.flatMap(\.ids))
+        let rest = choices.filter { !named.contains($0.id) }
+        if !rest.isEmpty {
+            pages.append((word: "More", rows: rest))
+        }
+        return pages
+    }
+
     nonisolated static func pages(_ choices: [Choice] = all, size: Int = 6) -> [[Choice]] {
         stride(from: 0, to: choices.count, by: size).map { Array(choices[$0 ..< min($0 + size, choices.count)]) }
     }

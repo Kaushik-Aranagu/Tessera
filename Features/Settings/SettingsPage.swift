@@ -91,16 +91,23 @@ private struct TessKnowsDoor: View {
                 .textRole(.label)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .accessibilityAddTraits(.isHeader)
-            NavigationLink {
-                TessKnowsPage()
-            } label: {
-                Text(TessKnowsCopy.door(count))
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .multilineTextAlignment(.leading)
+            // Only the count is the value word: "Tess remembers 12 things." (Design on #1127).
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
+                Text(TessKnowsCopy.doorLead(count))
+                NavigationLink {
+                    TessKnowsPage()
+                } label: {
+                    Text(TessKnowsCopy.doorCount(count)).fontWeight(.semibold)
+                }
+                .buttonStyle(.valueWash)
+                Text(".")
             }
-            .buttonStyle(.valueWash)
+            .textRole(.body)
+            .foregroundStyle(Theme.Colors.ink)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(TessKnowsCopy.door(count))
             .accessibilityHint("Opens what Tess knows")
+            .accessibilityAddTraits(.isButton)
         }
     }
 }
@@ -118,7 +125,7 @@ struct ReviewSection: View {
     @State private var resetLine: String?
     @State private var flips = 0
 
-    private let pages = ReviewChoices.pages()
+    private let pages = ReviewChoices.facetPages()
 
     var body: some View {
         let choices = ReviewChoices.shared
@@ -131,7 +138,8 @@ struct ReviewSection: View {
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: Theme.Spacing.s)
                     if pages.count > 1 {
-                        Text(ReviewSwitchCopy.pageOf((page ?? 0) + 1, pages.count))
+                        Text(ReviewSwitchCopy.facetPage(pages[min(page ?? 0, pages.count - 1)].word,
+                                                        (page ?? 0) + 1, pages.count))
                             .textRole(.data)
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .contentTransition(.numericText())
@@ -143,9 +151,9 @@ struct ReviewSection: View {
                     LazyHStack(alignment: .top, spacing: 0) {
                         ForEach(pages.indices, id: \.self) { index in
                             VStack(alignment: .leading, spacing: 0) {
-                                ForEach(Array(pages[index].enumerated()), id: \.element.id) { offset, choice in
+                                ForEach(Array(pages[index].rows.enumerated()), id: \.element.id) { offset, choice in
                                     row(choice)
-                                    if offset < pages[index].count - 1 {
+                                    if offset < pages[index].rows.count - 1 {
                                         RowSeparator()
                                     }
                                 }
@@ -157,7 +165,7 @@ struct ReviewSection: View {
                                 content.opacity(phase.isIdentity ? 1 : 0.25)
                             }
                             .accessibilityElement(children: .contain)
-                            .accessibilityLabel(ReviewSwitchCopy.pageOf(index + 1, pages.count))
+                            .accessibilityLabel(ReviewSwitchCopy.facetPage(pages[index].word, index + 1, pages.count))
                             .id(index)
                         }
                     }
@@ -204,11 +212,15 @@ struct ReviewSection: View {
             HStack(alignment: .firstTextBaseline, spacing: 0) {
                 Text("\(choice.name): ")
                     .foregroundStyle(live ? Theme.Colors.ink : Theme.Colors.inkSecondary)
-                Button(value) { flip(choice, forward: true) }
-                    .buttonStyle(.valueWash)
-                    .fontWeight(.semibold)
-                    .contentTransition(.opacity)
-                    .disabled(!live)
+                Button { flip(choice, forward: true) } label: {
+                    Text(value)
+                        .fontWeight(.semibold)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.valueWash)
+                .contentTransition(.opacity)
+                .disabled(!live)
                 Text(".")
                 Spacer(minLength: Theme.Spacing.s)
                 if let mark = ReviewSwitchCopy.mark(choice) {
@@ -226,6 +238,8 @@ struct ReviewSection: View {
             .accessibilityAdjustableAction { direction in
                 flip(choice, forward: direction != .decrement)
             }
+            // A double tap flips it too, as a tap on the value word does (Design on #1127).
+            .accessibilityAction { flip(choice, forward: true) }
             if let touched, touched.id == choice.id {
                 Text(choices.beforeAfter(choice, before: touched.before))
                     .textRole(.body)
@@ -263,6 +277,11 @@ enum ReviewSwitchCopy {
     /// "2 of 3".
     static func pageOf(_ page: Int, _ count: Int) -> String {
         "\(page) of \(count)"
+    }
+
+    /// "Workout, 2 of 5": the page's facet beside the counter (Design sheet 100).
+    static func facetPage(_ facet: String, _ page: Int, _ count: Int) -> String {
+        "\(facet), \(pageOf(page, count))"
     }
 
     /// The quiet mark beside a row: Needs Claude wins (it never turns Claude on by itself), then Later for an
