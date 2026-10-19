@@ -22,7 +22,10 @@ struct TessSentTests {
         RouteStub.queue = [(200, ClaudeRouteTests.logBench), (200, ClaudeRouteTests.answer("Bench 80 × 8 logged."))]
         _ = await tess.capture(route.miss, context: route.context)
         let entries = sentLog().entries()
-        #expect(entries.count == 1 && sentLog().words(of: entries[0]) == route.miss)
+        // The phrase first, then what rode with it (his date, the workout and last set in focus).
+        let sent = sentLog().words(of: entries[0]).split(separator: "\n").map(String.init)
+        #expect(entries.count == 1 && sent.first == route.miss && sent.count == 4, "\(sent)")
+        #expect(sent.dropFirst().map { $0.prefix(5) } == ["Today", "Worko", "Last "])
         // Beside its Tess Call row, linked by the request id.
         let call = try #require(TessUsageLedger(store: route.store, classes: route.classes).calls().first)
         let callID = store(call, "requestID")
@@ -40,7 +43,8 @@ struct TessSentTests {
         let walled = "could you log that I paid 40 for gas earlier?"
         _ = await tess.capture(walled, context: route.context)
         let entries = sentLog().entries()
-        #expect(entries.map { sentLog().words(of: $0) } == ["Private phrase"])
+        #expect(entries
+            .map { sentLog().words(of: $0).split(separator: "\n").first.map(String.init) } == ["Private phrase"])
         let all = route.store.context.all(ObjectRecord.self).map { sentLog().words(of: $0) + $0.title }
         #expect(!all.contains { $0.contains("gas") || $0.contains("sk-ant") })
     }
@@ -66,5 +70,49 @@ struct TessSentTests {
         // A timer phrase stays home even though Claude is on.
         _ = await tess.capture("could you check on the timer for me please?", context: route.context)
         #expect(sentLog().heldBackCount == 1 && RouteStub.requests.isEmpty)
+    }
+
+    @Test func offlineAttemptWritesNoSentRow() async {
+        RouteStub.failure = .notConnectedToInternet
+        let tess = route.tess()
+        let capture = await tess.capture(route.miss, context: route.context)
+        #expect(capture.line == "No connection. Saved it for Claude.")
+        #expect(sentLog().count == 0 && route.ledger.calls().isEmpty, "an offline attempt wrote a row")
+    }
+
+    @Test func drainedPhraseWritesOneSentRow() async {
+        RouteStub.failure = .notConnectedToInternet
+        let tess = route.tess()
+        _ = await tess.capture(route.miss, context: route.context)
+        #expect(sentLog().count == 0)
+        RouteStub.failure = nil
+        RouteStub.queue = [(200, ClaudeRouteTests.logBench), (200, ClaudeRouteTests.answer("Logged."))]
+        _ = await tess.readWaiting(context: route.context)
+        #expect(sentLog().count == 1 && route.ledger.calls().count == 1)
+        let first = sentLog().entries()[0]
+        #expect(sentLog().words(of: first).hasPrefix(route.miss))
+    }
+
+    @Test func aRequestThatLeftAndTimedOutKeepsItsOneRow() async throws {
+        RouteStub.hang = true
+        var claude = try #require(route.tess().claude)
+        claude.timeout = 0.3
+        let tess = TessCaptureEngine(engine: route.engine)
+        tess.claude = claude
+        let capture = await tess.capture(route.miss, context: route.context)
+        #expect(capture.line == "Claude didn't answer in time.", "\(capture.line)")
+        #expect(sentLog().count == 1 && route.ledger.calls().count == 1)
+    }
+
+    @Test func theLogKeepsThirtyDaysAndFiveHundredRows() {
+        let log = sentLog()
+        let now = route.context.now
+        log.record(words: "old words", use: .capture, requestID: nil, at: now - 31 * 24 * 3600)
+        for index in 0 ..< 505 {
+            log.record(words: "row \(index)", use: .capture, requestID: nil, at: now - Double(600 - index))
+        }
+        #expect(log.count == TessSentLog.maxRows)
+        let words = log.entries().map { log.words(of: $0) }
+        #expect(!words.contains("old words") && words.first == "row 504" && !words.contains("row 0"))
     }
 }

@@ -44,17 +44,35 @@ public struct TessSentLog {
 
     /// Writes the row for one built request.
     @discardableResult
-    func record(words: String, use: TessUse, requestID: String?, at date: Date) -> ObjectRecord? {
+    func record(words: String, context: [String] = [], use: TessUse, requestID: String?, at date: Date)
+        -> ObjectRecord?
+    {
         guard let sentClass = classes[.tessSent] else { return nil }
         let walled = looksLikeClaudeKey(words) || SecretWords.mentions(words)
             || PrivateFacts.isWalled(words, lastWeightKg: BodyWeight.lastKg(in: store))
-        let stored = walled ? Self.privatePhrase : words
+        // The phrase, then whatever rode with it (his date, the workout and last set in focus), exactly as sent.
+        let lines = context.filter { !looksLikeClaudeKey($0) }
+        let stored = ([walled ? Self.privatePhrase : words] + lines).joined(separator: "\n")
+        trim(now: date)
         guard let row = try? store.create(sentClass, title: "\(use.rawValue) request") else { return nil }
         row.createdAt = date
         try? store.set("use", to: .text(use.rawValue), on: row)
         try? store.set("words", to: .text(stored), on: row)
         try? store.set("requestID", to: requestID.map(FieldValue.text), on: row)
         return row
+    }
+
+    /// The log keeps 30 days and 500 rows, whichever comes first (the oldest go).
+    public static let maxAge: TimeInterval = 30 * 24 * 3600
+    public static let maxRows = 500
+
+    func trim(now: Date) {
+        let all = entries() // newest first
+        for (index, entry) in all.enumerated() where index >= Self.maxRows - 1
+            || now.timeIntervalSince(entry.createdAt) > Self.maxAge
+        {
+            store.context.delete(entry)
+        }
     }
 
     /// "Clear what was sent": deletes every row for good (no UNDO, no op). The spend in Tess Call stays.

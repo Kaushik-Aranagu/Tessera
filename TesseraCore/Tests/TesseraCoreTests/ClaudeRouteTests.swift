@@ -14,6 +14,8 @@ final class RouteStub: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var queue: [(status: Int, body: String)] = []
     /// Each request's JSON body (URLProtocol sees it as a stream).
     nonisolated(unsafe) static var bodies: [Data] = []
+    /// Never answers: the request is taken and then nothing comes back (the 8-second cap).
+    nonisolated(unsafe) static var hang = false
 
     static func session() -> URLSession {
         let configuration = URLSessionConfiguration.ephemeral
@@ -44,6 +46,9 @@ final class RouteStub: URLProtocol, @unchecked Sendable {
             Self.bodies.append(data)
         } else {
             Self.bodies.append(request.httpBody ?? Data())
+        }
+        if Self.hang {
+            return
         }
         if let failure = Self.failure {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
@@ -99,6 +104,7 @@ struct ClaudeRouteTests {
         RouteStub.requests = []
         RouteStub.redirect = nil
         RouteStub.bodies = []
+        RouteStub.hang = false
     }
 
     static func answer(_ text: String) -> String {
@@ -232,7 +238,8 @@ struct ClaudeRouteTests {
         #expect(offline.records.isEmpty && offline.line == "No connection. Saved it for Claude.")
         RouteStub.failure = .timedOut
         #expect(await tess().capture(miss, context: context).line == "Claude didn't answer in time.")
-        #expect(ledger.calls().count == 2)
+        // The offline attempt never left, so it wrote no row; the timeout did leave, so it kept its one.
+        #expect(ledger.calls().count == 1)
     }
 
     @Test func aToolThatFailsMidwayLeavesNoGhost() async throws {
