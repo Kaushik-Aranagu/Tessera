@@ -9,6 +9,8 @@ import Foundation
 public enum DayNames {
     /// The Review switch "Tess names training days", default On.
     public static let reviewKey = "trainingAutoName"
+    /// `autoNameKey` after he took a name from "Suggest a name": auto-naming never touches that routine again.
+    static let chosenMark = "chosen"
     static let placeholders: Set = ["", "new routine", "untitled", "routine", "new day", "workout"]
 
     /// What a naming call may carry: exercise names and muscle words, nothing else.
@@ -105,14 +107,28 @@ public enum DayNames {
         }
     }
 
+    /// The stock day titles the app itself made ("Push A", "Pull B", "Legs A", the demo's "Push Day A") and plain
+    /// stock patterns of the same kind ("Push day", "Legs"): not a name he chose, so Tess may replace one once.
+    static func isStockTitle(_ title: String) -> Bool {
+        title.lowercased().firstMatch(of: /^(?:push|pull|legs?)(?: day)?(?: [a-z])?$/) != nil
+    }
+
     /// Whether Tess may name this routine now: never a private one; only while the title is empty, a placeholder,
-    /// or still the name Tess gave it.
+    /// a stock title never yet renamed by Tess, or still the name Tess gave it. Any other name is his.
     @MainActor
     public static func mayAutoName(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
         guard pack(of: routine, store: store) != nil else { return false }
         let title = routine.title.trimmingCharacters(in: .whitespacesAndNewlines)
         let given = store.value("autoName", of: routine)?.stringValue ?? ""
-        return placeholders.contains(title.lowercased()) || (!given.isEmpty && title == given)
+        // A name taken from "Suggest a name" is his choice for good, even if it looks like a stock title.
+        if store.value("autoNameKey", of: routine)?.stringValue == chosenMark {
+            return false
+        }
+        if !given.isEmpty {
+            return title == given
+        }
+        // Never named by Tess (or taken from Suggest, which clears the mark): a placeholder or stock title is fair.
+        return placeholders.contains(title.lowercased()) || isStockTitle(title)
     }
 
     /// The name last given and the exercises it was given for.
@@ -172,7 +188,7 @@ public struct ApplyDayName: EngineAction {
         transaction.setTitle(clean, on: target)
         // A name he takes from "Suggest a name" is his choice: auto-naming stops (nothing remembered as Tess's).
         try transaction.set("autoName", to: .text(force == true ? "" : clean), on: target)
-        try transaction.set("autoNameKey", to: .text(pack.key), on: target)
+        try transaction.set("autoNameKey", to: .text(force == true ? DayNames.chosenMark : pack.key), on: target)
     }
 
     public func summary(in store: ObjectStore) -> String {
