@@ -45,7 +45,16 @@ public struct Bookshelf {
         books(in: "dropped").sorted { $0.updatedAt > $1.updatedAt }
     }
 
-    /// Exact title first (any state), then every word contained: the `recipe(named:)` rule.
+    /// The book with exactly this title (case-insensitive, any state): what queueing a book matches, so "Dune" never
+    /// finds "Dune Messiah" and "It" never finds "Little Women".
+    public func book(exactly name: String) -> ObjectRecord? {
+        guard let bookClass = classes[.book] else { return nil }
+        let wanted = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !wanted.isEmpty else { return nil }
+        return store.objects(of: bookClass).first { !$0.isDeleted && $0.title.lowercased() == wanted }
+    }
+
+    /// Exact title first (any state), then every whole word contained: the `recipe(named:)` rule.
     public func book(named name: String) -> ObjectRecord? {
         guard let bookClass = classes[.book] else { return nil }
         let wanted = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -56,8 +65,8 @@ public struct Bookshelf {
         }
         let words = wanted.split(separator: " ").map(String.init)
         return all.first { book in
-            let title = book.title.lowercased()
-            return words.allSatisfy { title.contains($0) }
+            let titleWords = Set(book.title.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init))
+            return words.allSatisfy { titleWords.contains($0) }
         }
     }
 

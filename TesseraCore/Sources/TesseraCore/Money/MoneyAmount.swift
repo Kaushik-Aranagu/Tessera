@@ -10,7 +10,7 @@ public struct MoneyAmount: Equatable, Sendable {
 
     static let symbols: [Character: String] = ["€": "EUR", "£": "GBP", "$": "USD", "₹": "INR"]
     static let words: [String: String] = [
-        "eur": "EUR", "euro": "EUR", "euros": "EUR", "gbp": "GBP", "quid": "GBP", "pounds": "GBP", "usd": "USD",
+        "eur": "EUR", "euro": "EUR", "euros": "EUR", "gbp": "GBP", "quid": "GBP", "usd": "USD",
         "dollars": "USD", "bucks": "USD", "inr": "INR", "rs": "INR", "rupees": "INR",
     ]
 

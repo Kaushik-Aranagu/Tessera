@@ -53,7 +53,7 @@ public struct LogShopTotal: EngineAction {
             .init("amount", .number, "The total"),
             .init("typed", .string, "The total as typed", required: false),
             .init("currency", .string, "EUR, GBP, USD or INR, only if said", required: false),
-        ]
+        ], isOfferedToModel: false
     )
 
     public var amount: Double
@@ -98,7 +98,7 @@ public struct LogShopTotal: EngineAction {
 /// total, skipped." then "Groceries total is back.").
 public struct SkipShopTotal: EngineAction {
     public static let descriptor = ActionDescriptor(
-        name: "skipShopTotal", summary: "Skip the groceries total", parameters: []
+        name: "skipShopTotal", summary: "Skip the groceries total", parameters: [], isOfferedToModel: false
     )
 
     public var time: Date?

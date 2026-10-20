@@ -29,7 +29,7 @@ public struct QueueBook: EngineAction {
         }
         let shelf = Bookshelf(store: transaction.store, classes: transaction.classes)
         let book: ObjectRecord
-        if let existing = shelf.book(named: name) {
+        if let existing = shelf.book(exactly: name) {
             book = existing
         } else {
             book = try transaction.create(transaction.classDef(.book), title: name)

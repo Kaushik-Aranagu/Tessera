@@ -12,7 +12,7 @@ public struct LogSpend: EngineAction {
             .init("currency", .string, "EUR, GBP, USD or INR, only if said", required: false),
             .init("note", .string, "What it was for, e.g. lunch with sam", required: false),
             .init("spentAt", .date, "When; defaults to now", required: false),
-        ]
+        ], isOfferedToModel: false
     )
 
     public var amount: Double
