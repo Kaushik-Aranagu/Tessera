@@ -216,27 +216,16 @@ private struct ReviewPageBody: View {
                         .entrance(6)
                 }
 
-                // The look, until Settings exists: "Porcelain by day, Obsidian by night", each name a value word.
-                LookSentence()
-                    .padding(.top, Theme.Spacing.section)
-
-                // His rest day, until Settings exists (RG4).
-                RestDaySentence()
-                    .padding(.top, Theme.Spacing.xxl)
-
-                // Claude, until Settings exists: the key, the month and what Tess may send.
-                ClaudeSection()
-                    .padding(.top, Theme.Spacing.xxl)
-
-                // The quiet way in to backups: a label word at the foot of the week.
+                // The quiet way in to Settings (the look, rest day, Claude, Review, Backups): a label word at the
+                // foot of the week.
                 NavigationLink {
-                    BackupView()
+                    SettingsPage()
                 } label: {
-                    Text("Backups")
+                    Text("Settings")
                 }
                 .buttonStyle(.labelWord)
-                .padding(.top, Theme.Spacing.l)
-                .accessibilityHint("Where your history is kept")
+                .padding(.top, Theme.Spacing.section)
+                .accessibilityHint("The look, your rest day, Claude, and new ways to try")
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)

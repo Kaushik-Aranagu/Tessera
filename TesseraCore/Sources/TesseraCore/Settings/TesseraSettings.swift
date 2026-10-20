@@ -8,7 +8,8 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
     public var lookDay: String?
     public var lookNight: String?
     public var lookPinned: String?
-    /// Read as `missesGoToClaude ?? true` (typing the key opts in; Product 8:28 PM PT Oct 15).
+    /// Read as `missesGoToClaude ?? false` (G687): nil means not asked yet, and nothing goes to Claude before an
+    /// answer. Typing a key in Settings writes yes when nothing is stored; a found key asks once.
     public var missesGoToClaude: Bool?
     /// The folder's display name only ("iCloud Drive/Tessera"); never a path or URL.
     public var backupFolderName: String? {
@@ -39,7 +40,7 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
 
     /// "Misses go to Claude", with its default.
     public var sendsMissesToClaude: Bool {
-        missesGoToClaude ?? true
+        missesGoToClaude ?? false
     }
 
     /// A display name, not a path: no leading "/", no "file:", no "/private/var" or container ids.
@@ -95,6 +96,23 @@ public struct SettingsStore {
         guard settings != before else { return settings }
         try engine.perform(WriteSettings(settings: settings), by: actor)
         return settings
+    }
+
+    /// "Use the Claude key still on this phone?" is due when a key exists and he has never answered (the field is
+    /// nil). Key presence is a Bool only: the key text never reaches settings, logs or ops (G687).
+    public func claudeQuestionDue(keyPresent: Bool) -> Bool {
+        keyPresent && read().missesGoToClaude == nil
+    }
+
+    /// His answer to that question: one op, actor him. Yes lets misses go to Claude; no keeps them home.
+    @discardableResult
+    public func answerClaudeQuestion(_ answer: Bool) throws -> TesseraSettings {
+        try update { $0.missesGoToClaude = answer }
+    }
+
+    /// He typed or pasted a key in Settings: that is a yes if he has not answered (a stored no is left alone).
+    public func noteKeySaved() throws {
+        try update { $0.missesGoToClaude = $0.missesGoToClaude ?? true }
     }
 
     /// The release that adds the object (docs/research/settings-object.md, Migration): copies the old keys that are

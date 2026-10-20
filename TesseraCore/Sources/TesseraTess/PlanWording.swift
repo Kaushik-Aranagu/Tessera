@@ -475,7 +475,7 @@ public final class ClaudePlanWording {
         let estimate = TessUsageLedger.estimate(text: Self.instructions + Self.schemaText + input,
                                                 maxTokens: Self.maxTokens, model: Self.model)
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
-            let reset = (calendar.dateInterval(of: .month, for: now())?.end ?? now())
+            let reset = TessUsageLedger.monthInterval(containing: now(), calendar: calendar).end
                 .formatted(.dateTime.month(.abbreviated).day())
             return .rules(line: "Claude paused until \(reset). Here's your usual plan.")
         }
@@ -488,7 +488,7 @@ public final class ClaudePlanWording {
             ledger.record(use: .plan, model: Self.model, input: usage.input, output: usage.output,
                           costNano: TessUsageLedger.cost(model: Self.model, input: usage.input, output: usage.output),
                           latency: Date().timeIntervalSince(started), outcome: outcome, requestID: requestID,
-                          at: now())
+                          at: now(), sent: input)
         }
         // A call that reached Claude is remembered for today; offline, cancelled and a bad key (a new key may come)
         // never are.

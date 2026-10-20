@@ -310,7 +310,7 @@ public struct ForgetMemory: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "\(store.object(id: memory).map { TessMemoryStore.thing(of: $0.title) } ?? "That"), forgotten."
+        "\(store.object(id: memory).map { TessMemoryStore.receiptThing(of: $0.title) } ?? "That"), forgotten."
     }
 }
 
@@ -739,6 +739,19 @@ public struct TessMemoryStore {
         }
         words = words.prefix(1).uppercased() + words.dropFirst()
         return words.hasSuffix(".") ? words : words + "."
+    }
+
+    /// The thing a forget receipt names: two words, or three when the second only joins ("Rest on Sundays", not
+    /// "Rest on"). `thing(of:)` stays two words for matching noticed lines.
+    static func receiptThing(of text: String) -> String {
+        var words = text.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).split(separator: " ")
+        if let first = words.first, ["you", "your", "you're"].contains(first.lowercased()) {
+            words.removeFirst()
+        }
+        let joiners: Set = ["on", "at", "in", "to", "with", "for", "of", "from", "by"]
+        let count = words.count > 2 && joiners.contains(words[1].lowercased()) ? 3 : 2
+        let head = words.prefix(count).joined(separator: " ")
+        return head.prefix(1).uppercased() + head.dropFirst()
     }
 
     /// The thing a line is about, for "Left shoulder, forgotten.": its first few words.

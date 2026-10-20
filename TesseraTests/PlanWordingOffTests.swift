@@ -17,6 +17,9 @@ struct PlanWordingOffTests {
     }
 
     @Test func thePlanMakesNoClaudeCall() throws {
+        // "Tess asks Claude" is off until he says yes (G687): turn it on the way the app does, then prove the plan
+        // still makes no call.
+        try SettingsStore(engine: model.engine).answerClaudeQuestion(true)
         #expect(model.asksClaude)
         #expect(!AppModel.planWordingReady)
         let plan = HomePlanModel()

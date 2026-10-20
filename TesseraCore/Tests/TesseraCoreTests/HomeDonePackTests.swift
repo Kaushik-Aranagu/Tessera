@@ -188,7 +188,7 @@ struct HomeDonePackTests {
         let engine = ActionEngine(store: store, classes: classes)
         let (_, summary) = try finish(routineTitle: "Gym pin 1234 day", engine: engine, store: store, classes: classes)
         let fact = HomeFacts(engine: engine, calendar: Self.calendar).fact(done: summary)
-        #expect(fact.title.contains("1234"))
+        #expect(fact.title == "Private workout") // Home masks it; the pack refuses the masked title as walled
         // A first session has no best to beat, so give it one: the wall, not the gate, must stop it.
         #expect(Self.pack(Self.done(fact.title, bests: ["Squat"])) == .failure(.walled))
     }

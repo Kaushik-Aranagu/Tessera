@@ -61,5 +61,21 @@ if [[ $RUN_APP == 1 ]]; then
   fi
 fi
 
+if [[ $RUN_APP == 1 ]]; then
+  # The Watch app has its own gate: it must build for the watch simulator before anything installs it.
+  echo "==> Watch app build"
+  log="$(mktemp)"
+  (cd "$ROOT" && xcodebuild -scheme TesseraWatch -destination "generic/platform=watchOS Simulator" \
+    -derivedDataPath "$DERIVED" build >"$log" 2>&1)
+  watch=$?
+  grep -E "error:|BUILD (SUCCEEDED|FAILED)" "$log" | sort -u | head -20
+  if [[ $watch != 0 ]]; then
+    echo "!! Watch app build failed (full log: $log)"
+    status=1
+  else
+    rm -f "$log"
+  fi
+fi
+
 if [[ $status == 0 ]]; then echo "==> All green"; fi
 exit $status

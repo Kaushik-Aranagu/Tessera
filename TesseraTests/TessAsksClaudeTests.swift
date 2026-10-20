@@ -41,9 +41,9 @@ struct TessAsksClaudeTests {
         }
     }
 
-    @Test func aFreshInstallAsks() {
+    @Test func aFreshInstallDoesNotAskUntilAnswered() {
         launch()
-        #expect(asks)
+        #expect(!asks)
     }
 
     /// QA F1: on a throwaway store (memory fallback, failed seed) the empty settings must not read as yes.
@@ -51,6 +51,18 @@ struct TessAsksClaudeTests {
         model.settingsAreReal = false
         #expect(!model.asksClaude)
         model.settingsAreReal = true
+        #expect(!model.asksClaude) // unanswered reads as no (G687)
+        try? SettingsStore(engine: model.engine).update { $0.missesGoToClaude = true }
         #expect(model.asksClaude)
+        model.settingsAreReal = false
+        #expect(!model.asksClaude)
+    }
+
+    @Test func asksClaudeIsFalseWhileTheKeyQuestionIsUnanswered() {
+        model.settingsAreReal = true
+        let settings = SettingsStore(engine: model.engine)
+        #expect(settings.claudeQuestionDue(keyPresent: true) && !model.asksClaude)
+        try? settings.answerClaudeQuestion(true)
+        #expect(!settings.claudeQuestionDue(keyPresent: true) && model.asksClaude)
     }
 }

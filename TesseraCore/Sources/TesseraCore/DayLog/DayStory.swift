@@ -101,9 +101,10 @@ public enum DayStory {
         "removeRecipeFromGroceries", "moveTask", "keepPlannedTask", "rollForwardTasks", "waitOnTask", "startTask",
         "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
-        "endProcess", "writeSettings", "createClass", "syncCalendar", "syncHealth", "closeDay", "startFocusBlock", "focusCheckIn", "acceptFirstStep",
-        "holdNotice", "releaseHeldNotices", "logSpend", "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading",
-        "setBookPage", "finishBook", "setBookAside",
+        "endProcess", "writeSettings", "createClass", "setRoutineKind", "syncCalendar", "syncHealth", "closeDay",
+        "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice", "releaseHeldNotices", "logSpend",
+        "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading", "setBookPage",
+        "finishBook", "setBookAside",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).

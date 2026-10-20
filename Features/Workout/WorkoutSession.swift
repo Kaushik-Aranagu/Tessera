@@ -401,11 +401,17 @@ extension WorkoutSession {
         offerTopSetCheck(entry: entry, number: number)
         rpe = nil
         // The last set of the exercise doesn't need a rest before paging on, but the workout's last does nothing.
-        restEndsAt = entries.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
+        restEndsAt = nextRestEnd(finished: entries.allSatisfy(isFinished))
         persistRest()
         model.touch()
         // The next set opens prefilled: this session's weight, last time's reps for that set.
         loadDefaults()
+    }
+
+    /// When the rest after a set ends: never after the workout's last set, and never with the Rest timer switch Off
+    /// (a flip mid-workout takes effect at the next set; Product's default is On).
+    private func nextRestEnd(finished: Bool) -> Date? {
+        finished || !Choice.restTimerIsOn() ? nil : AppClock.now.addingTimeInterval(restTotal)
     }
 
     /// Sets logged from outside the live screen (typed in the Bar, Tess) seat like a held set once they dry: the
@@ -426,7 +432,7 @@ extension WorkoutSession {
         lastSeated = Seated(setID: row.id, entryID: entry.id, number: row.number, records: [], e1RM: row.e1RM,
                             weight: row.weight, reps: row.reps)
         restTotal = restSeconds
-        restEndsAt = all.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
+        restEndsAt = nextRestEnd(finished: all.allSatisfy(isFinished))
         persistRest()
         lastTouchedAt = AppClock.now
         loggedCount += 1
@@ -557,13 +563,15 @@ extension WorkoutSession {
             .options(for: exercise, from: weight, excludingWorkout: workout.id)
     }
 
-    /// Swaps the current exercise for today only, through the engine. The slot and scheme stay.
-    func swap(to option: ExerciseSwaps.Option) {
+    /// Swaps the current exercise for today only, through the engine. The slot and scheme stay. Returns the op, which
+    /// the easy swap hands to its UNDO.
+    @discardableResult
+    func swap(to option: ExerciseSwaps.Option) -> OpRecord? {
         endEditing()
-        guard let entry = currentEntry, let from = currentExercise else { return }
+        guard let entry = currentEntry, let from = currentExercise else { return nil }
         guard let result = try? model.engine.perform(
             SwapEntryExercise(entry: entry.id, exercise: option.exercise.id, targetWeight: option.load), by: .user
-        ) else { return }
+        ) else { return nil }
         let swappedID = result.output
         if swappedID != entry.id, let index = order.firstIndex(of: entry.id) {
             order.removeAll { $0 == swappedID }
@@ -586,6 +594,15 @@ extension WorkoutSession {
         lastTouchedAt = AppClock.now
         // The swap moves the resume point on; a rest that was running keeps running after a relaunch.
         persistRest()
+        model.touch()
+        return result.record
+    }
+
+    /// Takes a swap back (the easy swap's UNDO): the engine undoes it and the live screen re-reads its entries.
+    func undoSwap(_ record: OpRecord) {
+        _ = model.engine.undo(record)
+        refreshAfterExternalWrite()
+        loadDefaults()
         model.touch()
     }
 

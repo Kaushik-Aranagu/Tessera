@@ -215,7 +215,8 @@ struct BackupLogicalDayTests {
         let befores = try FileManager.default.contentsOfDirectory(atPath: kept.path).filter {
             $0.hasPrefix("Before-restore-")
         }
-        #expect(befores.count == TesseraBackup.keepBeforeRestore)
+        // The first-ever copy and the three newest stay: four files after four restores (G689).
+        #expect(befores.count == TesseraBackup.keepBeforeRestore + 1, "\(befores.sorted())")
         // A copy written after a restore carries when it happened.
         let reopened = try ObjectStore(context: TesseraContext(url: storeURL))
         let copy = dir.appendingPathComponent("after.tessera")

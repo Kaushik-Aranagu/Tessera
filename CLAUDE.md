@@ -11,6 +11,7 @@ class-based object (OOP/OS concepts), with dense information revealed progressiv
 plans, PRs, live workout mode) is the first domain.
 
 ## Platform & stack
+- Watch target allowed (Kaushik, 2:17 PM PT Oct 19): a watchOS app target may be added after Builder A's throwaway signing check passes. iPhone stays the primary target; its bundle id, scheme and install are unchanged. This overrides "no watch targets" on the next line.
 - iPhone only (no iPad, Mac or watch targets). Deployment target: iOS 27.0+ — use iOS 27 APIs freely; no `#available` fallbacks for older OSes.
 - UI: SwiftUI. Use modern APIs (Observation `@Observable`, Swift concurrency, Swift 6 strict concurrency).
 - Persistence: SQLite through GRDB (chosen after `docs/research/storage-spike.md`), behind the TesseraCore engine: the whole object graph lives in memory (`TesseraContext`) and writes through to `Application Support/Tessera/tessera.sqlite`. The app never touches the database directly; use `ObjectStore`. iCloud sync (CKSyncEngine over the op log) is parked until there is a second device.

@@ -30,6 +30,20 @@ struct KeyRemoveTests {
     @Test func removingWithNoKeyIsStillTheReceipt() {
         #expect(KeyRemove.remove(from: InMemoryKeychain(nil)) == KeyRemove.receipt)
     }
+
+    /// Product 3:58 PM: with no key, Settings says "No Claude key yet."; no part of a key shows either way.
+    @Test func theNoKeyLineIsPlain() {
+        #expect(ClaudeKeyWords.noKey == "No Claude key yet.")
+        #expect(!ClaudeKeyWords.noKey.contains("Paste"))
+    }
+
+    /// Builder A on release 21: the line before any call printed "Tess thinks Text(storage: …) only.". It reads
+    /// plain words now, and both branches build a Text.
+    @Test func theQuietLineReadsPlainWords() {
+        #expect(ClaudeKeyWords.noKeyLine(hasCalls: false) == "Tess thinks on this phone only.")
+        #expect(ClaudeKeyWords.noKeyLine(hasCalls: true) == "No Claude key yet.")
+        #expect(!ClaudeKeyWords.noKeyLine(hasCalls: false).contains("Text("))
+    }
 }
 
 private struct StuckKeychain: TessKeychain {
