@@ -48,6 +48,11 @@ final class RestActivityController {
         if workoutID != nil, workoutID != session.workout.id {
             end()
         }
+        // The attributes' title is fixed when the activity starts: a workout that turns private (or public) mid-session
+        // ends the activity so the next rest starts one with the right title.
+        if Self.needsRestart(shownPrivate: lastState?.isPrivate, nowPrivate: session.isPrivate) {
+            end()
+        }
         let realNow = Date.now
         // Masked at the source: a private workout's exercise, weight, reps and set number never reach the activity.
         let state = Self.contentState(planned: session.isPrivate ? Self.maskedSet : planned,
@@ -92,6 +97,12 @@ final class RestActivityController {
     }
 
     // MARK: Mapping
+
+    /// Whether the running activity was started under the other privacy: it must end so the title is remade.
+    static func needsRestart(shownPrivate: Bool?, nowPrivate: Bool) -> Bool {
+        guard let shownPrivate else { return false }
+        return shownPrivate != nowPrivate
+    }
 
     /// The Live Activity's fixed attributes. The title is masked: the Lock Screen and Dynamic Island show it without
     /// unlocking, so a private routine reads "Private workout" there.
@@ -145,7 +156,7 @@ final class RestActivityController {
                      restTotal: restTotal, phase: isResting ? .resting : .ready,
                      lookDay: followsLook ? ThemeStore.shared.pair.day.name : nil,
                      lookNight: followsLook ? ThemeStore.shared.pair.night.name : nil,
-                     isPrivate: isPrivate ? true : nil)
+                     isPrivate: isPrivate)
     }
 
     /// While resting the content goes stale when the rest ends, so the Lock Screen flips to "ready" on its own even

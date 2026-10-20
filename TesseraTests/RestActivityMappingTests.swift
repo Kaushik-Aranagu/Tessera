@@ -59,11 +59,19 @@ struct RestActivityMappingTests {
     @Test func anOrdinaryWorkoutShowsItsSetAndOldStatesDecode() throws {
         let state = RestActivityController.contentState(planned: planned, restEndsAt: now.addingTimeInterval(90),
                                                         restTotal: 180, appNow: now, realNow: now)
-        #expect(state.isPrivate == nil && state.showsSet)
+        #expect(state.isPrivate == false && state.showsSet)
         var object = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(state)) as? [String: Any])
         object.removeValue(forKey: "isPrivate")
         let decoded = try JSONDecoder().decode(RestActivityAttributes.ContentState.self,
                                                from: JSONSerialization.data(withJSONObject: object))
         #expect(decoded.showsSet)
+    }
+
+    @Test func aPrivacyChangeMidSessionRestartsTheActivity() {
+        #expect(RestActivityController.needsRestart(shownPrivate: false, nowPrivate: true), "turned private")
+        #expect(RestActivityController.needsRestart(shownPrivate: true, nowPrivate: false), "turned public")
+        #expect(!RestActivityController.needsRestart(shownPrivate: true, nowPrivate: true))
+        #expect(!RestActivityController.needsRestart(shownPrivate: false, nowPrivate: false))
+        #expect(!RestActivityController.needsRestart(shownPrivate: nil, nowPrivate: true), "no activity yet")
     }
 }

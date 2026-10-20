@@ -315,11 +315,15 @@ private struct PlannedSetButton: View {
                         .tracking(-setSize * 0.01)
                         .foregroundStyle(palette.cream)
                 } else {
-                    // A private workout: the one plain line, nothing of the set.
-                    Text("Private workout")
-                        .font(Typeface.font(setSize * 0.75))
-                        .foregroundStyle(palette.cream)
+                    // A private workout fills the same two slots with the plain words, nothing of the set.
+                    Text("workout")
+                        .font(Typeface.font(nameSize))
+                        .foregroundStyle(palette.cream.opacity(0.62))
                         .padding(.trailing, 26)
+                    Text("Private")
+                        .font(Typeface.font(setSize))
+                        .tracking(-setSize * 0.01)
+                        .foregroundStyle(palette.cream)
                 }
             }
             .lineLimit(1)
