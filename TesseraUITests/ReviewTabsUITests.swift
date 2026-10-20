@@ -1,10 +1,10 @@
 import XCTest
 
-/// Design on #1137: the fullest Review tab (Connected, six switches with 44 pt value words) fits on one screen at the
-/// default size, so no tab ever needs a scroll of its own.
+/// Design on #1137: the fullest Review tab fits on one screen at the default size, so no tab ever needs a scroll of its
+/// own. Since #1167 only switches that ship are drawn; the fullest drawn tab is Workout (Looks and day ties).
 @MainActor
 final class ReviewTabsUITests: SimulatorOnlyTestCase {
-    func testConnectedTabFitsOnOneScreen() {
+    func testFullestDrawnTabFitsOnOneScreen() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "-demoTime", "18:10", "-openLink", "review"]
         app.launch()
@@ -16,20 +16,20 @@ final class ReviewTabsUITests: SimulatorOnlyTestCase {
         for _ in 0 ..< 4 where !tabRow.isHittable {
             app.swipeUp()
         }
-        // Looks and day, Workout, Kitchen, Connected: three steps right.
-        for _ in 0 ..< 3 {
-            tabRow.swipeLeft()
-            sleep(1)
-        }
-        let names = ["Plan my day, Claude wording", "Shutdown", "Energy check-in", "Calendar", "Health",
-                     "Link reader v2"]
+        // Looks and day, then Workout: one step right.
+        tabRow.swipeLeft()
+        sleep(1)
+        let names = ["Rest timer", "Swap exercise", "Forgot Finish nudge"]
         let rows = names.map { app.descendants(matching: .any)[$0] }
         for (name, row) in zip(names, rows) {
-            XCTAssertTrue(row.waitForExistence(timeout: 5), "\(name) on the Connected tab")
+            XCTAssertTrue(row.waitForExistence(timeout: 5), "\(name) on the Workout tab")
         }
+        // A switch whose feature hasn't shipped is not drawn.
+        XCTAssertFalse(app.descendants(matching: .any)["Plan my day, Claude wording"].exists,
+                       "a waiting switch is drawn")
         let top = rows.map(\.frame.minY).min() ?? 0
         let bottom = rows.map(\.frame.maxY).max() ?? 0
         XCTAssertLessThan(bottom - top, app.windows.firstMatch.frame.height,
-                          "the Connected tab is taller than one screen")
+                          "the Workout tab is taller than one screen")
     }
 }
