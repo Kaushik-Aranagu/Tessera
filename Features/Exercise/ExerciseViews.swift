@@ -100,11 +100,12 @@ private struct HistoryList: View {
     let token: Int
     @Environment(AppModel.self) private var model
     @Environment(\.zoomNamespace) private var namespace
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         if rows.isEmpty {
             Text("No sessions yet. The first set you log starts the history.")
-                .font(PageType.small)
+                .reading(.note)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -127,20 +128,33 @@ private struct HistoryList: View {
 
     private func label(_ row: ExerciseDigest.HistoryRow) -> some View {
         HStack(spacing: Theme.Spacing.m) {
-            Text(ExerciseWords.historyDate(row.date, now: AppClock.now, calendar: .current,
-                                           zone: OpZones(store: model.store).zone(of: row.workoutID)))
-                .font(PageType.small)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .frame(width: 92, alignment: .leading)
+            historyDate(row)
             SetStrokes(count: row.setCount)
             Spacer(minLength: Theme.Spacing.s)
             Text(row.topSet)
-                .font(Theme.numeral(21, weight: .regular))
+                .reading(.historyNumber)
+                .lineLimit(ReadingLayout.current() == .today ? nil : typeSize.isAccessibilitySize ? 2 : 1)
+                .minimumScaleFactor(ReadingLayout.current() == .sheet99 ? 0.6 : 1)
                 .foregroundStyle(Theme.Colors.ink)
                 .glintOnce(row.isRecord)
         }
         .frame(minHeight: 52)
         .contentShape(Rectangle())
+    }
+
+    /// Today the date sits in a 92 pt column. Sheet 99 sets the column to the width of "Mon 12 Oct" at the current
+    /// size (a hidden twin gives it), so a larger type size widens the column instead of clipping the date.
+    @ViewBuilder private func historyDate(_ row: ExerciseDigest.HistoryRow) -> some View {
+        let text = Text(ExerciseWords.historyDate(row.date, now: AppClock.now, calendar: .current,
+                                                  zone: OpZones(store: model.store).zone(of: row.workoutID)))
+            .reading(.historyDate)
+            .foregroundStyle(Theme.Colors.inkSecondary)
+        if ReadingLayout.current() == .today {
+            text.frame(width: 92, alignment: .leading)
+        } else {
+            Text("Mon 12 Oct").reading(.historyDate).hidden().lineLimit(1)
+                .overlay(alignment: .leading) { text.lineLimit(1).fixedSize() }
+        }
     }
 
     private func spoken(_ row: ExerciseDigest.HistoryRow) -> String {
@@ -186,7 +200,7 @@ private struct RepMaxGrid: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(reps)RM").textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
                         Text(ObjectCopy.cell(maxes[reps].map { Format.kilograms($0) }))
-                            .font(Theme.numeral(24, weight: .regular))
+                            .reading(.rowNumeral)
                             .foregroundStyle(maxes[reps] == nil ? Theme.Colors.inkTertiary : Theme.Colors.ink)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
@@ -200,7 +214,7 @@ private struct RepMaxGrid: View {
             .padding(.top, 6)
 
             Text("Warm-ups and sets over 12 reps don’t count here.")
-                .font(PageType.small)
+                .reading(.note)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -218,7 +232,7 @@ private struct MuscleList: View {
     var body: some View {
         if rows.isEmpty {
             Text("No muscles linked yet.")
-                .font(PageType.small)
+                .reading(.note)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, Theme.Spacing.s)
@@ -258,7 +272,7 @@ private struct MuscleRowView: View {
                     .foregroundStyle(Theme.Colors.ink)
                 Spacer(minLength: Theme.Spacing.s)
                 Text(ExerciseWords.role(row.role))
-                    .font(PageType.small)
+                    .reading(.note)
                     .foregroundStyle(Theme.Colors.inkSecondary)
             }
             .frame(minHeight: 56)

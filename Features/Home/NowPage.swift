@@ -612,7 +612,7 @@ struct LedgerRow: View {
                             .textRole(.bodyStrong)
                             .foregroundStyle(Theme.Colors.ink)
                         Text(step(shown.nextStep))
-                            .font(Theme.voice(size: 18))
+                            .reading(.queueDetail)
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .lineLimit(1)
                             .truncationMode(.middle)

@@ -40,7 +40,7 @@ final class ReviewChoices {
         Choice(id: "readingLayout", name: "Reading layout", values: ["Today", "Sheet 99"], defaultValue: "Today",
                says: ["Today": "Groceries, Now, Exercise and Backups read as they do now.",
                       "Sheet 99": "Those four pages use three type sizes, refit for reading."],
-               readiness: .arrivesWith("the sheet 99 refit")),
+               readiness: .live),
         Choice(id: "restTimer", name: "Rest timer", values: ["On", "Off"], defaultValue: "On",
                says: ["On": "Rest counts down after each set and says when it's up.",
                       "Off": "No countdown, no rest alert and no rest keys on the Lock Screen."],

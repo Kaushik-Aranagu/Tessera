@@ -132,7 +132,7 @@ struct QueueWindow: View {
                         }
                         if !next.isEmpty, !later.isEmpty {
                             Text("Later")
-                                .font(Theme.voice(size: 34))
+                                .reading(.queueHead)
                                 .foregroundStyle(Theme.Colors.ink)
                                 .opacity(inFlowOpacity)
                                 .frame(height: Self.headingHeight, alignment: .bottomLeading)
@@ -179,7 +179,7 @@ struct QueueWindow: View {
     private var pinnedHeading: some View {
         ZStack(alignment: .bottomLeading) {
             Text(heading)
-                .font(Theme.voice(size: 34))
+                .reading(.queueHead)
                 .foregroundStyle(Theme.Colors.ink)
                 .id(heading)
                 .transition(reduceMotion ? .opacity : .asymmetric(

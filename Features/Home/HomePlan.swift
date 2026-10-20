@@ -265,7 +265,7 @@ struct PlanRows: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Plan")
-                    .font(Theme.voice(size: 34))
+                    .reading(.queueHead)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 0)

@@ -54,6 +54,7 @@ struct ExercisePage: View {
                     .font(PageType.voice)
                     .foregroundStyle(Theme.Colors.tess)
                     .fixedSize(horizontal: false, vertical: true)
+                    .readingColumn(typeSize)
                     .padding(.bottom, Theme.Spacing.m)
                     .accessibilityLabel("Tess: \(line)")
             }
@@ -73,6 +74,7 @@ struct ExercisePage: View {
 private struct ExerciseHeader: View {
     let digest: ExerciseDigest
     @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -99,7 +101,7 @@ private struct ExerciseHeader: View {
                 .entrance(0)
             }
 
-            HeroText(text: digest.name) { $0 }
+            HeroText(text: digest.name, titleOnly: ReadingLayout.current() == .sheet99) { $0 }
                 .foregroundStyle(Theme.Colors.ink)
                 .accessibilityAddTraits(.isHeader)
                 .arrivesFromRight()
@@ -110,6 +112,7 @@ private struct ExerciseHeader: View {
                     .font(PageType.voice)
                     .foregroundStyle(Theme.Colors.context)
                     .fixedSize(horizontal: false, vertical: true)
+                    .readingColumn(typeSize)
                     .accessibilityLabel("Works \(context)")
                     .entrance(2)
             }
@@ -149,36 +152,47 @@ private struct ExerciseSummary: View {
     }
 
     private var stats: some View {
-        let layout = typeSize.isAccessibilitySize
+        // Sheet 99: the number first (56), then the best set (28) under it, one column at every size.
+        let sheet = ReadingLayout.current() == .sheet99
+        let layout = typeSize.isAccessibilitySize || sheet
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.m))
             : AnyLayout(HStackLayout(alignment: .top, spacing: 0))
         return layout {
             // An empty value drops out; no lone dash (decisions 5:57).
             if let best = digest.bestE1RM {
-                stat(Format.kilograms(best), label: "Best e1RM, kg",
+                stat(Format.kilograms(best), label: "Best e1RM, kg", slot: .todayNumber,
                      spoken: "Best estimated one-rep max, \(Format.kilograms(best)) kilograms")
                     // The second number starts at x 152 (the first at 24); its label wraps rather than touch the next
                     // one.
                     .frame(width: typeSize.isAccessibilitySize || digest.bestSet == nil ? nil : 120)
             }
             if let set = digest.bestSet {
-                stat(set, label: "Best set", spoken: "Best set, \(set.replacingOccurrences(of: "×", with: "by"))")
-                    // Stays clear of the figures at the right (they begin at x 296; this starts at x 152).
-                    .frame(width: typeSize.isAccessibilitySize || digest.bestE1RM == nil ? nil : 136)
-                    .padding(.leading, typeSize.isAccessibilitySize || digest.bestE1RM == nil ? 0 : 8)
+                stat(
+                    set,
+                    label: "Best set",
+                    slot: .rowNumeral,
+                    spoken: "Best set, \(set.replacingOccurrences(of: "×", with: "by"))"
+                )
+                // Stays clear of the figures at the right (they begin at x 296; this starts at x 152).
+                .frame(width: typeSize.isAccessibilitySize || digest.bestE1RM == nil ? nil : 136)
+                .padding(.leading, typeSize.isAccessibilitySize || digest.bestE1RM == nil ? 0 : 8)
             }
         }
     }
 
-    private func stat(_ value: String, label: String, spoken: String?) -> some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+    /// `slot` is the number's size: under Today both numbers are 44 (`.todayNumber` is the only one read there).
+    private func stat(_ value: String, label: String, slot: ReadingSlot, spoken: String?) -> some View {
+        let sheet = ReadingLayout.current() == .sheet99
+        return VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text(value)
-                .font(Theme.numeral(44))
+                .reading(sheet ? slot : .todayNumber)
                 .foregroundStyle(Theme.Colors.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-                // One height whether or not the numeral shrank, so both labels sit on one line.
-                .frame(height: 54, alignment: .leading)
+                // One height whether or not the numeral shrank, so both labels sit on one line. Under sheet 99 the
+                // height is a floor, so a large type size grows the row instead of clipping the numeral.
+                .frame(minHeight: sheet ? (slot == .todayNumber ? 66 : 36) : 54, alignment: .leading)
+                .frame(height: sheet ? nil : 54, alignment: .leading)
             Text(label).textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
@@ -245,7 +259,9 @@ private struct ExerciseMethods: View {
     @State private var added = 0
 
     var body: some View {
-        let layout = typeSize.isAccessibilitySize
+        // Sheet 99: the number first (56), then the best set (28) under it, one column at every size.
+        let sheet = ReadingLayout.current() == .sheet99
+        let layout = typeSize.isAccessibilitySize || sheet
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.m))
             : AnyLayout(HStackLayout(alignment: .center, spacing: Theme.Spacing.l))
         layout {

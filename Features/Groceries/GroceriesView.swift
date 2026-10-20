@@ -63,7 +63,7 @@ private struct GroceriesPage: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Text(GroceriesCopy.context(open: open, aisles: aisles.count, shopping: shopping))
-                    .font(Theme.voice)
+                    .reading(.contextLine)
                     .foregroundStyle(Theme.Colors.context)
                     .contentTransition(.numericText())
                     .entrance(0)
@@ -95,7 +95,8 @@ private struct GroceriesPage: View {
                                 VStack(alignment: .leading, spacing: 24) {
                                     ForEach(Array(aisles.enumerated()), id: \.element.aisle) { index, aisle in
                                         AisleSection(name: aisle.aisle, items: aisle.items, striking: striking,
-                                                     recipes: recipes(for:), label: rowLabel, onTap: shopTap)
+                                                     recipes: recipes(for:), label: rowLabel, isFirstAisle: index == 0,
+                                                     onTap: shopTap)
                                             .entrance(3 + min(index, 3))
                                             .transition(.opacity)
                                     }
@@ -347,11 +348,11 @@ private struct ShopTitle: View {
 
     var body: some View {
         Text("Groceries")
-            .textRole(.hero)
+            .reading(.pageHead)
             .foregroundStyle(Theme.Colors.ink)
             .overlay(alignment: .leading) {
                 Text("Groceries")
-                    .textRole(.hero)
+                    .reading(.pageHead)
                     .foregroundStyle(Theme.Colors.live)
                     .mask(alignment: .leading) {
                         GeometryReader { proxy in
@@ -426,19 +427,22 @@ private struct AisleSection: View {
     let recipes: (ListContents.Item) -> [String]
     /// What each row reads: a private one is always masked (G102).
     let label: (ListContents.Item) -> String
+    /// Sheet 99: only the first row of the first aisle may carry the one detail line.
+    var isFirstAisle = false
     let onTap: (ListContents.Item) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text(name)
-                .textRole(.title)
+                .reading(.aisleHead)
                 .foregroundStyle(Theme.Colors.ink.opacity(0.85))
                 .accessibilityAddTraits(.isHeader)
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(items) { item in
                     GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item),
-                               height: 48, name: label(item)) { onTap(item) }
+                               height: 48, name: label(item),
+                               isLead: isFirstAisle && item.id == items.first?.id) { onTap(item) }
                         .transition(.asymmetric(insertion: .push(from: .top).combined(with: .opacity),
                                                 removal: .opacity.combined(with: .scale(scale: 1, anchor: .top))))
                 }
@@ -458,6 +462,8 @@ private struct GroceryRow: View {
     var height: CGFloat = 48
     /// The words the row shows, already masked at the source ("Private item" for a private one); never the raw text.
     let name: String
+    /// The lead row: the only one that shows a detail line under Sheet 99 (Today shows it on any row).
+    var isLead = true
     let onTap: () -> Void
     @State private var showsRecipes = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -479,9 +485,9 @@ private struct GroceryRow: View {
                                  seed: item.text.count)
                     }
                 }
-                if showsRecipes, !recipes.isEmpty {
+                if showsRecipes, !recipes.isEmpty, isLead || ReadingLayout.current() == .today {
                     Text("for \(recipes.joined(separator: ", ").lowercased())")
-                        .font(Theme.voice(size: 18))
+                        .reading(.detailLine)
                         .foregroundStyle(Theme.Colors.health)
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
@@ -525,14 +531,15 @@ private struct AtTheShop: View {
                 ZStack(alignment: .topLeading) {
                     VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                         Text(current.aisle)
-                            .textRole(.hero)
+                            .reading(.shopAisle)
                             .foregroundStyle(Theme.Colors.ink)
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityAddTraits(.isHeader)
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(current.items) { item in
                                 GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item),
-                                           height: 64, name: label(item)) { onTap(item) }
+                                           height: 64, name: label(item),
+                                           isLead: item.id == current.items.first?.id) { onTap(item) }
                                     .transition(.opacity)
                             }
                         }

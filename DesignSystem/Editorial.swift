@@ -161,6 +161,8 @@ private struct RotatedLayout: Layout {
 /// unreliable mid-transition (a `ViewThatFits` here picked the wrong candidate while rows were animating).
 struct HeroText<Rendered: View>: View {
     let text: String
+    /// Sheet 99: the name is the page's 44 title and never the 56 hero.
+    var titleOnly = false
     /// Applies per-glyph effects to the chosen candidate.
     var render: (Text) -> Rendered
     @ScaledMetric(relativeTo: .largeTitle) private var heroSize = Theme.concept.scale.hero.size
@@ -192,6 +194,7 @@ struct HeroText<Rendered: View>: View {
 
     /// Estimates lines per candidate from an average advance of ~0.56 em (display faces at this weight).
     private var fit: Fit {
+        guard !titleOnly else { return .title }
         guard width > 0 else { return .hero(.standard) }
         let words = text.split(separator: " ").map(\.count)
         let longest = words.max() ?? 0

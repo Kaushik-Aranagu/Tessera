@@ -12,6 +12,7 @@ struct BackupView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var picking = false
     @State private var folderTaps = 0
     /// A restore staged: the Restore hold plays nothing itself, so this owner plays `.made` (Product 11:04 PM).
@@ -53,9 +54,10 @@ struct BackupView: View {
                 // Two places only when the folder copy is actually saving.
                 Text(folder == nil || failures.contains { $0.place == .folder } ? "Kept on this iPhone"
                     : "Kept in two places")
-                    .textRole(.hero)
+                    .reading(.pageHead)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
+                    .readingColumn(typeSize)
                     .accessibilityAddTraits(.isHeader)
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1, hero: true)
@@ -64,6 +66,7 @@ struct BackupView: View {
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
+                    .readingColumn(typeSize)
                     .padding(.top, Theme.Spacing.xl)
                     .entrance(2)
 
@@ -78,6 +81,7 @@ struct BackupView: View {
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.tess)
                         .fixedSize(horizontal: false, vertical: true)
+                        .readingColumn(typeSize)
                         .padding(.top, Theme.Spacing.s)
                         .entrance(2)
                 }
@@ -88,6 +92,7 @@ struct BackupView: View {
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
+                        .readingColumn(typeSize)
                         .padding(.top, Theme.Spacing.s)
                 }
 
@@ -98,6 +103,7 @@ struct BackupView: View {
                     .foregroundStyle(Theme.Colors.ink)
                     .tint(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
+                    .readingColumn(typeSize)
                     .environment(\.openURL, OpenURLAction { _ in
                         folderTaps += 1
                         picking = true
@@ -125,6 +131,7 @@ struct BackupView: View {
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .readingColumn(typeSize)
                     .padding(.top, Theme.Spacing.s)
                     .entrance(4)
 
@@ -151,6 +158,7 @@ struct BackupView: View {
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.tess)
                         .fixedSize(horizontal: false, vertical: true)
+                        .readingColumn(typeSize)
                         .padding(.top, Theme.Spacing.m)
                         .transition(.opacity)
                 }
@@ -204,11 +212,13 @@ struct BackupView: View {
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
+                    .readingColumn(typeSize)
                 if let weight = confirming.weight {
                     Text(weight)
                         .textRole(.label)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
+                        .readingColumn(typeSize)
                 }
                 PaintKey(paint: Theme.Colors.live, hint: "Restores this backup", action: confirmRestore) { _ in
                     Text("Replace")
@@ -224,13 +234,14 @@ struct BackupView: View {
         } else if let staged = pending {
             VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                 Text("A restore is waiting")
-                    .textRole(.title)
-                    .foregroundStyle(Theme.Colors.ink)
+                    .reading(.restoreHead)
+                    .foregroundStyle(ReadingLayout.current() == .sheet99 ? Theme.Colors.tess : Theme.Colors.ink)
                 Text("The copy from \(BackupCopy.fileDay(staged.createdAt)) replaces everything the next time "
                     + "Tessera opens. Close Tessera from the app switcher to restore now.")
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .readingColumn(typeSize)
                 Button("Cancel restore") {
                     TesseraBackup.cancelRestore()
                     pending = nil
