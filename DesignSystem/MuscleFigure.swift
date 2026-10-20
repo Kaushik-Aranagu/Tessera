@@ -100,8 +100,8 @@ enum MuscleWords {
     static func works(_ stored: [String]) -> String {
         var words: [String] = []
         for name in stored {
-            let shown = shown(name)
-            let word = shown.hasSuffix("shoulders") ? "shoulders" : shown.lowercased()
+            // Core's one mapping: the delts fold into "shoulders", Lats and the two backs into "back".
+            let word = MuscleSummary.word(for: name)
             if !words.contains(word) {
                 words.append(word)
             }
