@@ -181,6 +181,10 @@ public enum SystemCatalog {
                       // Which kind of day it is, so its colour and muscles do not depend on the title ("Bench day").
                       // Optional: a routine of his own may have none.
                       FieldSpec(key: "kind", name: "Kind", kind: .choice, options: ["push", "pull", "legs"]),
+                      // The name Tess gave the day, and the exercises it was given for: while the title is still this,
+                      // Tess may rename it as the exercises change; once he types another, it never does.
+                      FieldSpec(key: "autoName", name: "Name from Tess", kind: .text),
+                      FieldSpec(key: "autoNameKey", name: "Named for", kind: .text),
                   ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [
