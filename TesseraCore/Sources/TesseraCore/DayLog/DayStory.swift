@@ -64,6 +64,14 @@ public protocol DayLookup {
     func topSet(inWorkout id: UUID) -> (text: String, isPR: Bool)?
     /// A field's key ("isDone"), for reading a record's values.
     func fieldKey(_ id: UUID) -> String?
+    /// A spend's amount as typed, its currency and its one word (nil word when the word is walled).
+    func spend(_ id: UUID) -> (amount: Decimal, currency: String?, word: String?)?
+}
+
+public extension DayLookup {
+    func spend(_: UUID) -> (amount: Decimal, currency: String?, word: String?)? {
+        nil
+    }
 }
 
 /// Folds the op log into a day's story: records by action, by his 4 AM day, groups by their root's start, loose things
@@ -102,14 +110,15 @@ public enum DayStory {
         "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
         "endProcess", "writeSettings", "createClass", "setRoutineKind", "syncCalendar", "syncHealth", "closeDay",
-        "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice", "releaseHeldNotices", "logSpend",
-        "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading", "setBookPage",
-        "finishBook", "setBookAside",
+        "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice", "releaseHeldNotices",
+        "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading", "setBookAside",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).
     static let folded: Set = ["startCooking", "finishCooking", "startShop", "finishShop", "createTask", "addGroceries",
-                              "addRecipeToGroceries", "addListItem", "setTaskDone", "checkListItem", "createNote"]
+                              "addRecipeToGroceries", "addListItem", "setTaskDone", "checkListItem", "createNote",
+                              "logSpend",
+                              "setBookPage", "finishBook"]
 
     /// Whether an action has a rule here (a test fails when a new action has none).
     public static func hasRule(for action: String) -> Bool {
@@ -213,7 +222,10 @@ public enum DayStory {
             var objects: [UUID] = []
             var titles: [String] = []
         }
-        var tasks: Count?, groceries: Count?, dones: Count?, notes: Count?
+        var tasks: Count?, groceries: Count?, dones: Count?, notes: Count?, spends: Count?
+        // Reading: the page he started the day on and ended it on, per book; a finish takes the book's one line.
+        var pages: [UUID: (from: Int, to: Int, time: Date)] = [:]
+        var finishedBooks: [UUID: Date] = [:]
         var ticks: [UUID: Count] = [:]
         func add(_ count: inout Count?, at time: Date, objects: [UUID], titles: [String] = []) {
             if count == nil {
@@ -307,6 +319,27 @@ public enum DayStory {
                     add(&count, at: record.createdAt, objects: [item])
                     ticks[list] = count
                 }
+            case "logSpend":
+                guard onDay(record.createdAt, zone: zone(of: record)) else { continue }
+                let made = created(record, kind: "spend").filter { !deletedToday.contains($0) }
+                guard !made.isEmpty else { continue }
+                add(&spends, at: record.createdAt, objects: made)
+            case "setBookPage":
+                guard onDay(record.createdAt, zone: zone(of: record)) else { continue }
+                for op in record.ops {
+                    guard case let .setValue(object, id, old, new) = op, lookup.fieldKey(id) == "page",
+                          case let .number(to) = new else { continue }
+                    var from = 0
+                    if let old, case let .number(value) = old {
+                        from = Int(value)
+                    }
+                    pages[object] = (pages[object]?.from ?? from, Int(to), pages[object]?.time ?? record.createdAt)
+                }
+            case "finishBook":
+                guard onDay(record.createdAt, zone: zone(of: record)) else { continue }
+                for book in record.objectIDs where lookup.kind(of: book) == "book" {
+                    finishedBooks[book] = finishedBooks[book] ?? record.createdAt
+                }
             case "createNote":
                 // A note said afterwards lands on the day it's about (its own createdAt), in its record's zone.
                 for note in created(record, kind: "note") where !deletedToday.contains(note) {
@@ -330,6 +363,18 @@ public enum DayStory {
             }
         }
 
+        for (book, time) in finishedBooks.sorted(by: { $0.value < $1.value }) {
+            lines.append((DayLine(time: time, text: "Finished \(lookup.title(of: book) ?? "a book")", objectIDs: [book],
+                                  kind: .finished), false))
+        }
+        for (book, moved) in pages.sorted(by: { $0.value.time < $1.value.time })
+            where finishedBooks[book] == nil && moved.to != moved.from
+        {
+            let title = lookup.title(of: book) ?? "a book"
+            lines.append((DayLine(time: moved.time, text: "Read \(title), p \(moved.from) to \(moved.to)",
+                                  objectIDs: [book], kind: .finished), false))
+        }
+
         // The loose counts, each one line at its first time.
         struct Loose {
             let line: DayLine
@@ -351,6 +396,10 @@ public enum DayStory {
                                              objectIDs: (tasks?.objects ?? []) + (groceries?.objects ?? []),
                                              kind: .finished),
                                size: size, tail: parts.joined(separator: ", ")))
+        }
+        if let spends, let line = spendLine(spends.objects, at: spends.time, lookup: lookup) {
+            loose.append(Loose(line: line, size: spends.objects.count,
+                               tail: "\(spends.objects.count) \(spends.objects.count == 1 ? "spend" : "spends")"))
         }
         if let dones, !dones.objects.isEmpty {
             let text = dones.objects.count <= 2 ? "Done: \(dones.titles.joined(separator: ", "))"
@@ -409,6 +458,36 @@ public enum DayStory {
             drawn.insert(DayLine(time: nil, text: "Rest day", objectIDs: [], kind: .rest), at: 0)
         }
         return drawn
+    }
+}
+
+extension DayStory {
+    /// "Spent 12.40, lunch" for one; "Spent 3 times, 26.90 (lunch, coffee, taxi)" for several. The total is shown only
+    /// when every spend has the same currency (never converted); words are lowercased, deduplicated, at most 3.
+    @MainActor
+    static func spendLine(_ ids: [UUID], at time: Date, lookup: any DayLookup) -> DayLine? {
+        let facts = ids.compactMap { id in lookup.spend(id).map { (id, $0) } }
+        guard !facts.isEmpty else { return nil }
+        let currencies = Set(facts.map { $0.1.currency ?? "" })
+        let total: String? = currencies.count == 1
+            ? (facts[0].1.currency.map { (SpendLedger.symbols[$0] ?? $0) + " " } ?? "")
+            + MoneyAmount.format(facts.reduce(Decimal(0)) { $0 + $1.1.amount })
+            : nil
+        var words: [String] = []
+        for fact in facts {
+            if let word = fact.1.word, !word.isEmpty, !words.contains(word) {
+                words.append(word)
+            }
+        }
+        let shown = words.prefix(3).joined(separator: ", ")
+        let text: String
+        if facts.count == 1 {
+            text = "Spent " + [total, shown.isEmpty ? nil : shown].compactMap(\.self).joined(separator: ", ")
+        } else {
+            let lead = "Spent \(facts.count) times"
+            text = [lead, total].compactMap(\.self).joined(separator: ", ") + (shown.isEmpty ? "" : " (\(shown))")
+        }
+        return DayLine(time: time, text: text, objectIDs: facts.map(\.0), kind: .finished)
     }
 }
 
@@ -482,11 +561,27 @@ public struct StoreDayLookup: DayLookup {
         {
             return ObjectPrivacy.cookTitle(object, in: store)
         }
+        if let book = classes[.book], let classDef = object.classDef, ClassResolver.isSubclass(classDef, of: book) {
+            return ObjectPrivacy.label(of: object, in: store, classes: classes) ?? object.title
+        }
         // A list with a walled name reads "Private list" in the story, as it does everywhere else (G75).
         if let list = classes[.list], let classDef = object.classDef, ClassResolver.isSubclass(classDef, of: list) {
             return ListContents.shownName(of: object, in: store)
         }
         return object.title
+    }
+
+    public func spend(_ id: UUID) -> (amount: Decimal, currency: String?, word: String?)? {
+        guard kind(of: id) == "spend", let object = store.object(id: id) else { return nil }
+        let typed = store.value("typed", of: object)?.stringValue ?? ""
+        let amount = MoneyAmount.parse(typed)?.amount
+            ?? store.number("amount", of: object).flatMap { Decimal(string: String($0)) } ?? 0
+        let currency = store.value("currency", of: object)?.stringValue.flatMap { $0.isEmpty ? nil : $0 }
+        // A walled word never reaches the line (the amount may; the word may not).
+        let word = store.value("category", of: object)?.stringValue.flatMap {
+            PrivateWords.isPrivateTitle($0, lastWeightKg: nil) ? nil : $0
+        }
+        return (amount, currency, word)
     }
 
     public func kind(of id: UUID) -> String? {
