@@ -1,22 +1,22 @@
 # Huddle batches, Oct 19
 
-Product. Source of the huddle page. Row status is not checked against master. Default of every switch is today's behavior.
+Product. Source of the huddle page. 82 features in 12 batches. Target dates are Product estimates, not a written plan (they assume the Mac stays unlocked and test.sh runs once per batch). Row status is not checked against master. Default of every switch is today's behavior.
 
 ## Batch 0: The Review section
 
-Settings, first. Every open choice becomes a switch he flips live, so nothing waits on his word. (Design draws it, Builder B builds it)
+Settings, first. Every open choice becomes a switch he flips live, so nothing waits on his word. (Design draws it, Builder B builds it). Target Tue Oct 20.
 
 | Feature | Who | Settings switch |
 |---|---|---|
 | Review section in Settings: one screen, one row per open choice, each with a plain before/after line | Builder B + Design | Is the option list below |
-| Reading layouts: refit of Groceries, Home/Now, Exercise page, Backup, literal-size cleanup (sheet 99) | Builder A + B | Reading layouts: Today / Sheet 99 |
+| Reading layouts: refit of Groceries, Home/Now, Exercise page, Backup, literal-size cleanup (reading-layouts-99.md) | Builder A + B | Reading layouts: Today / Reading layouts 99 |
 | Page turn: Slide, Turn, Soften, Rotate, plus paged long lists | Builder B | Page turn (4 choices) |
 | Rest timer, easy swap, forgot-Finish nudge (week-one training questions) | Builder A | Rest timer / Swap / Finish nudge, each on or off |
 | Top bar, stage-coloured titles, area colours, small images (he decided all of these) | Builder A | none, decided: ships directly |
 
 ## Batch 1: Look and Home
 
-The visible gap between the board and his phone. Biggest first. (Builder A, with Design and Motion lab)
+The visible gap between the board and his phone. Biggest first. (Builder A, with Design and Motion lab). Target Wed Oct 21.
 
 | Feature | Who | Settings switch |
 |---|---|---|
@@ -31,7 +31,7 @@ The visible gap between the board and his phone. Biggest first. (Builder A, with
 
 ## Batch 2: Training
 
-Daily use first. Live workout stays the best screen in the app. (Builder A)
+Daily use first. Live workout stays the best screen in the app. (Builder A). Target Tue Oct 20.
 
 | Feature | Who | Settings switch |
 |---|---|---|
@@ -40,10 +40,15 @@ Daily use first. Live workout stays the best screen in the app. (Builder A)
 | Easy exercise swap in a live workout | Builder A | Swap: one tap or two |
 | Nudge when a workout was left unfinished | Builder A | Finish nudge |
 | Widgets, Live Activity and lock-screen Done kept in step with the new look | Builder A | none |
+| Set marks: liquid ink drops, one brush circle per set (closed on target, open short, overlap extra rep, flare best, thicker heavier); tap for the numbers (replaces the wave, you picked it) | Design, then Builder A | none, you asked for it |
+| Long press an exercise: how it is done, equipment, muscles, about how many kcal | Design, Builder A, Research | Calories burned (off) |
+| Me profile: weight (from your entries, Health only if you turn it on), height, birth year, whatever you choose; stays on the phone | Core + Builder B | none |
+| Calories burned: estimated from the exercise and your profile, shown as "about N kcal", never a budget | Core + Builder A | Calories burned (off) |
+| Training reorganization: new routine names, a clearer Training screen for the gym, a muscle figure on every exercise. Design shows you options first; target after you pick | Design, then Builder A + Core | Pick from Design options |
 
 ## Batch 3: Tess and Claude
 
-Tess keeps her walls. The in-app switch Tess asks Claude still gates everything. (Core, Builder B, AI architecture)
+Tess keeps her walls. The in-app switch Tess asks Claude still gates everything. (Core, Builder B, AI architecture). Target Thu Oct 22.
 
 | Feature | Who | Settings switch |
 |---|---|---|
@@ -58,7 +63,7 @@ Tess keeps her walls. The in-app switch Tess asks Claude still gates everything.
 
 ## Batch 4: My day, connected
 
-Tess sees the calendar and the body, then plans the day and closes it. Counts only, never a guilt list. (Core engine, Builder B screens)
+Tess sees the calendar and the body, then plans the day and closes it. Counts only, never a guilt list. (Core engine, Builder B screens). Target Fri Oct 23.
 
 | Feature | Who | Settings switch |
 |---|---|---|
@@ -72,7 +77,7 @@ Tess sees the calendar and the body, then plans the day and closes it. Counts on
 
 ## Batch 5: Make it mine
 
-The OS part: classes he can shape. Check what is already built before starting a row. (Core, Builder B)
+The OS part: classes he can shape. Check what is already built before starting a row. (Core, Builder B). Target Sat Oct 24.
 
 | Feature | Who | Settings switch |
 |---|---|---|
@@ -85,7 +90,7 @@ The OS part: classes he can shape. Check what is already built before starting a
 
 ## Batch 6: Kitchen
 
-Groceries, recipes, pantry and cook. The Oct 22 morning packet is Kitchen's. (Builder B, Builder A for the clock page, Kitchen)
+Groceries, recipes, pantry and cook. The Oct 22 morning packet is Kitchen's. (Builder B, Builder A for the clock page, Kitchen). Target Thu Oct 22.
 
 | Feature | Who | Settings switch |
 |---|---|---|
@@ -96,7 +101,7 @@ Groceries, recipes, pantry and cook. The Oct 22 morning packet is Kitchen's. (Bu
 
 ## Batch 7: Money, Reading, People, Upkeep
 
-Four small areas. Each one is a class, phrases, a page and a front page, and each writes into the Day log. (Core engine, Builder B screens)
+Four small areas. Each one is a class, phrases, a page and a front page, and each writes into the Day log. (Core engine, Builder B screens). Target Sat Oct 24.
 
 | Feature | Who | Settings switch |
 |---|---|---|
@@ -107,7 +112,7 @@ Four small areas. Each one is a class, phrases, a page and a front page, and eac
 
 ## Batch 8: Backups and safety
 
-Before he trusts it with a week of data. (Core, Builder B, Research)
+Before he trusts it with a week of data. (Core, Builder B, Research). Target Thu Oct 22.
 
 | Feature | Who | Settings switch |
 |---|---|---|
@@ -117,7 +122,7 @@ Before he trusts it with a week of data. (Core, Builder B, Research)
 
 ## Batch 9: Stretch: Tess grows up
 
-The big ones that were parked or pushed to Later. Anything that sends to Claude is off by default, behind Tess asks Claude, inside the $50 a month cap. Walls and key rules unchanged. (Core, AI architecture, Motion lab, Builder B)
+The big ones that were parked or pushed to Later. Anything that sends to Claude is off by default, behind Tess asks Claude, inside the $50 a month cap. Walls and key rules unchanged. (Core, AI architecture, Motion lab, Builder B). Target Wed Oct 28.
 
 | Feature | Who | Settings switch |
 |---|---|---|
@@ -128,25 +133,37 @@ The big ones that were parked or pushed to Later. Anything that sends to Claude 
 | Rules and automations: "when X finishes, do Y", every action undoable | Core | Automations (off) |
 | Two-way calendar sync, after the read-only mount has a week of use | Core | Calendar (off) |
 | Remix editor and code view for classes; your own app tiles on Home | Design + Builder B | none, new screens |
-| Apple Watch: sleep and resting heart rate first, then one-screen set logging with the crown | Builder A | Watch (off) |
-| Share Extension from Safari stays blocked until a paid developer account; the Shortcut route works now | Builder B | none, blocked |
+| Apple Watch: sleep and resting heart rate first, then one-screen set logging with the crown. Allowed Oct 19; starts with a signing check | Builder A | Watch (off) |
+| Share Extension from Safari: parked until you get the paid developer account (later); the Shortcut route works now | Builder B | none, parked |
 
 ## Batch 10: Stretch: Kitchen v2
 
-Held for a week of use before, now pulled in. Engine first, screens after. (Kitchen, Core, Builder B, Builder A for cook)
+Pulled in now (it was held for a week of use). Twelve features, engine first, screens after. Rows: kitchen-v2-build-ready-rows-oct19.md. (Kitchen, Core, Builder B, Builder A for cook). Target Sat Oct 31.
 
 | Feature | Who | Settings switch |
 |---|---|---|
-| Pantry area with no counting; recipe page shows need against have | Core + Builder B | Pantry state (off) |
+| Pantry state: have it, low, out, with no counting; recipe page shows need against have | Core + Builder B | Pantry state (off) |
 | What can I cook: rank by what is missing, ties by not cooked lately | Core + Builder B | Can cook shelf (off) |
 | Running low by rhythm: a dim "usually by now" line, never auto-added | Core | Pantry state |
-| Week of dinners strip; recurring groceries; leftovers from cooking double | Core + Builder B | none |
+| Store aisle order learned from check-offs | Core | none |
+| Week of dinners strip | Core + Builder B | none |
+| Recurring groceries (setting the flag is the tap) | Core + Builder B | none |
+| Leftovers: cook double plus one undated Later task | Core + Builder B | Leftovers (off) |
+| Recipe edit in place | Builder B | none |
 | Parallel steps in one cook: roast and sauce, several timers at once | Builder A + Core | none |
-| Hands-free cook mode: "next", "back", "timer" by voice, on-phone speech, grammar only | Builder A | Hands-free cook mode (off) |
-| Recipe from a link: JSON-LD, plain pages, Claude as the last resort | Core + Builder B | Link fetch; Misses go to Claude (off) |
-| Recipe edit in place; cook notes flow back into the recipe; store aisle order learned from check-offs | Builder B + Core | none |
-| Nutrition needs a data licence first; his call | Kitchen | none, his call |
+| Hands-free cook mode: "next", "back", "timer", on-phone speech, tap-opened, grammar only | Builder A | Hands-free cook mode (off) |
+| Link reader v2: second reader, Claude as the last resort | Core + Builder B | Link reader v2 (off) |
+| Cook notes into the recipe: optional note on Finish | Builder A + Core | none |
 
-## Left out
+## Batch 11: Reference library
 
-Shared or social features; anything needing a paid developer account; Liftosaur (AGPL).
+Nutrition first, then anything useful for training, groceries and work: public sources collected into our own library on the phone, so features can look things up without a call. Sources and licences are listed in an inventory file. (Research, Core, Kitchen). Target Wed Nov 4.
+
+| Feature | Who | Settings switch |
+|---|---|---|
+| Nutrition table: calories, protein, fat, carbs per food from a public-domain source (inventory of sources and licences first) | Research + Kitchen | Nutrition (off) |
+| Training reference: exercise names, muscles, equipment, standard load steps from open sources | Research + Core | none |
+| Grocery reference: pack sizes, aisles, common swaps for a US kitchen | Research + Kitchen | none |
+| Exercise drawings: our own short animations for every exercise and 9 equipment drawings (no third-party media), plus a calorie (MET) table | Design + Research + Core | none |
+| Library inventory: one list of every reference set with source, licence, size and date | Research | none |
+| Library on the phone: read-only objects, no calls, refreshed by an app update, never mixed with his own data | Core | none |

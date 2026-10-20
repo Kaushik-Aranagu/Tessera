@@ -1,5 +1,12 @@
 import Foundation
 
+public extension ObjectStore {
+    /// Whether Tess kept this note to sort later: the inbox's quiet "To sort" label (`CreateNote.isKeptToSort`).
+    func isKeptToSort(_ object: ObjectRecord) -> Bool {
+        CreateNote.isKeptToSort(object, in: self)
+    }
+}
+
 /// Notes (M2 slice 5): plain text with @ links to any object. "@Bench Press felt heavy" links the note to Bench
 /// Press, so it shows in Bench Press's backlinks. Brackets take any name: "@[Push Day A]".
 @MainActor
@@ -94,12 +101,26 @@ public struct CreateNote: EngineAction {
     public var on: Date?
     /// A private note: its title is "Private note", its words stay in the body (secret words, Research 134).
     public var isPrivate: Bool?
+    /// A phrase Tess couldn't read, kept to sort later (`TessRouter`): the inbox labels it "To sort". Not a tool
+    /// parameter, so neither model can set it.
+    public var toSort: Bool?
 
-    public init(body: String, title: String? = nil, on: Date? = nil, isPrivate: Bool? = nil) {
+    public init(body: String, title: String? = nil, on: Date? = nil, isPrivate: Bool? = nil, toSort: Bool? = nil) {
         self.body = body
         self.title = title
         self.on = on
         self.isPrivate = isPrivate
+        self.toSort = toSort
+    }
+
+    /// The note field that marks a phrase kept to sort later.
+    public static let toSortField = "toSort"
+
+    /// A note Tess kept because nothing could read the phrase (Product ruling, 6:10 PM PT Oct 19): the inbox shows a
+    /// quiet "To sort" label on it. A deleted note is never to sort.
+    @MainActor
+    public static func isKeptToSort(_ object: ObjectRecord, in store: ObjectStore) -> Bool {
+        !object.isDeleted && store.value(toSortField, of: object) == .bool(true)
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
@@ -117,6 +138,9 @@ public struct CreateNote: EngineAction {
         let note = try transaction.create(transaction.classDef(.note),
                                           title: isPrivate ? SecretWords.title : title ?? Self.firstLine(text))
         try transaction.set("body", to: .text(text), on: note)
+        if toSort == true {
+            try transaction.set(Self.toSortField, to: .bool(true), on: note)
+        }
         if isPrivate {
             try transaction.set("isPrivate", to: .bool(true), on: note)
         } else {

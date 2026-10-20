@@ -57,10 +57,13 @@ struct TrainingLane: Identifiable, Equatable {
     var weight: String?
     /// What the exercise works, for the lane's figure.
     var muscles: [(name: String, role: MuscleRole)] = []
+    /// The sets logged so far as ink-drop marks (the circles that replace the dashed strokes).
+    var marks: [SetMarkSpec] = []
 
     static func == (lhs: TrainingLane, rhs: TrainingLane) -> Bool {
         lhs.id == rhs.id && lhs.name == rhs.name && lhs.target == rhs.target && lhs.sets == rhs.sets
-            && lhs.logged == rhs.logged && lhs.scheme == rhs.scheme && lhs.weight == rhs.weight
+            && lhs.logged == rhs.logged && lhs.scheme == rhs.scheme && lhs.weight == rhs.weight && lhs.marks == rhs
+            .marks
     }
 }
 
@@ -390,7 +393,25 @@ private struct TrainingAtRest: View {
                             sets: max(sets ?? planned, logged, 1), logged: logged,
                             scheme: scheme,
                             weight: prefill.weight.map { Self.weightText($0) },
-                            muscles: MuscleReading.muscles(of: exercise, store: model.store))
+                            muscles: MuscleReading.muscles(of: exercise, store: model.store),
+                            marks: marks(of: entry))
+    }
+
+    /// The entry's logged sets as marks (target reps from the entry; a best from the running session).
+    private func marks(of entry: ObjectRecord) -> [SetMarkSpec] {
+        let rows = entry.orderedChildren.compactMap { set -> (UUID, Double, Double)? in
+            guard let weight = model.store.number("weight", of: set), let reps = model.store.number("reps", of: set)
+            else { return nil }
+            return (set.id, weight, reps)
+        }
+        guard !rows.isEmpty else { return [] }
+        let target = Int(model.store.number("targetReps", of: entry) ?? 8)
+        let heaviest = rows.map(\.1).max() ?? 0
+        let bests = Set(model.session?.bests.map(\.setID) ?? [])
+        return rows.enumerated().map { index, row in
+            SetMarkSpec(id: row.0, number: index + 1, reps: Int(row.2.rounded()), target: target, weight: row.1,
+                        heaviest: heaviest, isBest: bests.contains(row.0), isPrivate: isPrivateDay)
+        }
     }
 
     /// "82.5 kg": a weight with its unit.
@@ -737,7 +758,7 @@ private struct LaneRow: View {
             HStack(spacing: 8) {
                 ForEach(0 ..< lane.sets, id: \.self) { index in
                     stroke(index)
-                        .frame(width: 40, height: 12)
+                        .frame(width: 26, height: 22)
                 }
             }
             .frame(height: 24, alignment: .leading)
@@ -769,26 +790,25 @@ private struct LaneRow: View {
         return ([lane.name, lane.target, sets] + (works.isEmpty ? [] : [works])).joined(separator: ", ")
     }
 
+    /// A logged set is its brush circle (22 pt); the ones to come are faint rings, the next one breathing when START
+    /// has landed.
     @ViewBuilder
     private func stroke(_ index: Int) -> some View {
-        if index < lane.logged {
-            Brushstroke()
-                .stroke(Theme.Colors.restTint(WorkoutPaint.set(index + 1)),
-                        style: StrokeStyle(lineWidth: 5, lineCap: .round))
-        } else if wakes, index == lane.logged {
+        if index < lane.marks.count {
+            SetMarkCircle(spec: lane.marks[index], side: 22)
+        } else if wakes, index == lane.marks.count {
             TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion)) { context in
                 let breath = (sin(context.date.timeIntervalSinceReferenceDate / 2.4 * 2 * .pi) + 1) / 2
-                guide.opacity(reduceMotion ? 0.9 : 0.6 + 0.3 * breath)
+                ring.opacity(reduceMotion ? 0.9 : 0.6 + 0.3 * breath)
             }
             .transition(.opacity)
         } else {
-            guide.opacity(dried ? 0.12 : 0.22)
+            ring.opacity(dried ? 0.12 : 0.22)
         }
     }
 
-    private var guide: some View {
-        Brushstroke()
-            .stroke(Theme.Colors.ink, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 5]))
+    private var ring: some View {
+        Circle().stroke(Theme.Colors.ink, lineWidth: 1.4).frame(width: 16, height: 16)
     }
 }
 

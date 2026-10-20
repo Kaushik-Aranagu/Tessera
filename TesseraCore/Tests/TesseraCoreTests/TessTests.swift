@@ -142,14 +142,14 @@ struct TessTests {
             "Dentist, tomorrow 3 pm.",
         ])
         await lines.append(tess.capture("blorp", context: context()).line)
-        #expect(lines.last?.hasPrefix("Didn't catch that.") == true)
+        #expect(lines.last == "blorp, kept to sort later.")
         #expect(lines.allSatisfy { TessVoice.violations(in: $0).isEmpty })
         #expect(entry.orderedChildren.count == 4)
     }
 
     @Test func invalidCapturesWriteNothing() async throws {
         let capture = await tess.capture("bench 80x0", context: context())
-        #expect(!capture.understood)
+        #expect(capture.keptToSort && capture.line == "bench 80x0, kept to sort later.")
         #expect(try store.objects(of: #require(classes[.workout])).isEmpty)
     }
 

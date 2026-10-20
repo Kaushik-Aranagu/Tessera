@@ -68,6 +68,18 @@ public struct TessCapture {
     /// once and must never be replaced by another line.
     public var isNotice = false
 
+    /// Nothing on the phone could read it and Claude was not there to (no key, switched off, paused or over the cap):
+    /// the phrase was kept as a note to sort later, flagged `toSort` (`ObjectStore.isKeptToSort`).
+    /// It is still a miss for the week-one miss log, though the phrase is no longer lost.
+    public var keptToSort = false
+
+    /// His words stay in the Ask for a retry: Claude was on and couldn't be reached ("Couldn't reach Claude. Try
+    /// again."), or a walled phrase met no connection ("Couldn't read that offline. Try again online.").
+    public var keepsWords = false
+
+    /// Claude was on but over the month's cap: idle, the router keeps the phrase to sort later instead.
+    var claudeAtCap = false
+
     public var understood: Bool {
         !records.isEmpty
     }
