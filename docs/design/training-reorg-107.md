@@ -23,19 +23,19 @@ Same page, same START flight, same strip. Top to bottom (390 x 844):
 | 100 | Context line in `context`, 21: "today, 5 exercises, about 55 min" |
 | 136 | The day's name at Title 44 (names below) |
 | 198 | One line in `inkSecondary`, 21, at most 2 lines in a 220 pt column: "Works chest, shoulders and triceps" |
-| 134 to 246, right | The day's figure pair: front at x 268, back at x 320, 112 pt tall, the union of the day's muscles (primary full tint, secondary 70%), outline at ink 40%. Tint is the routine's colour (Push vermilion, Pull cobalt, Legs cadmium). Information only: hidden from VoiceOver, no motion, no stagger |
+| 134 to 246, right | The day's figure pair: front at x 268, back at x 320, 112 pt tall, the union of the day's muscles (primary full tint, secondary 70%), outline at ink 40%. Tint is the routine's colour (Push vermilion, Pull cobalt, Legs cadmium), read from the routine's kind (Core's kind field, else the day's primary muscles), never from the title's words. Information only: hidden from VoiceOver, no motion, no stagger |
 | 268 + 72k | One row per exercise, 70 pt: the exercise's own figure at the left (62 pt tall, ONE side: the side showing most of its primary muscles, front on a tie), the name at 21/500, under it "4 x 5-8" at 16 `inkSecondary` and today's weight at the right at 16/600 ("82.5 kg"). Hairline between rows from x 44. Tap opens the exercise (zoom as now) |
 | 642 | START (label word, ink line), "Start Bench day" |
 | 700 | The plan line and ROUTINES, as now |
 | 736 to 820 | Tess's band, as now |
 
 - Six or more exercises: rows keep 72 pt and the list scrolls under the fixed START; the first five and the day's figure pair stay in view at rest.
-- Row figure side rule: count the exercise's primary muscles that have a region on each side (side delts ride the front delt on the front and the rear delt on the back); more on the back means the back figure.
+- Row figure side rule: count the exercise's primary muscles that have a region on each side (side delts ride the front delt on the front and the rear delt on the back); more on the back means the back figure. Triceps has a region only on the back, so a triceps-only exercise (rope pushdown) shows the back figure.
 - The sentence under the name: top three muscles by working sets, in his label style with no Oxford comma ("Works chest, shoulders and triceps"). Fold lats, upper back and lower back into "back", and the three delts into "shoulders". This extends `MuscleWords.works` (Core, small).
 - The set strokes leave the rest page. They appear as each row's second line when the workout runs: the detail line "4 x 5-8" becomes the set strokes, logged ones painted, as live mode draws them. The START flight still matches the first row's name into live mode's name (the figure fades with the sinking rows).
 - Running: the day's figure pair lights muscle by muscle, a part going full tint once any set of an exercise that works it is logged; unworked parts stay 40% (information, no animation beyond the 260 ms fade the figure already has).
 - Done ("Bench day done"): rows show the logged sets, the figure pair shows what was worked at full tint; START becomes the tomorrow label as in sheet 44.
-- A private routine reads "Private workout" everywhere; the figure still draws (muscles are not private) but the sentence under the name is "Private workout" only. Tess's line and the closing face follow `ObjectPrivacy.routineTitle`.
+- A private routine reads "Private workout" everywhere and shows no lit muscles (Product ruling, Oct 19): lit muscles would say what the hidden words hide, so the day's figure pair and the row figures draw as the plain outline only, in the Training colour, and the sentence under the name is "Private workout" only. Tess's line and the closing face follow `ObjectPrivacy.routineTitle`.
 
 ## Live mode
 The exercise's figure sits at the top right, one side (same side rule), 92 pt tall at x 326, y 40, outline at ink 45%. It never carries a number. The name keeps its fitting rule (Title 44, then 34, then two lines of 34) with 56 pt kept free at the right while the figure shows. Everything else on `live-workout.md` is unchanged. Reduce Motion: the figure swaps with the exercise by a 150 ms crossfade, otherwise it slides with the name along x.
