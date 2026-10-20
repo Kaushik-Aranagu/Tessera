@@ -59,7 +59,7 @@ struct NowPage: View {
                 if let session = model.session, let process = model.processes.running(),
                    process.subject?.id == session.workout.id, let fact = facts.fact(process: process)
                 {
-                    LineHero(line: HomeLines.line(for: fact, now: now)) {
+                    LineHero(line: HomeLines.line(for: fact, now: now), progress: progress(of: process)) {
                         PaintKey(paint: Theme.Colors.liveInk, isTap: true, progress: progress(of: process),
                                  action: { model.isWorkoutPresented = true }, label: { _ in
                                      Text(

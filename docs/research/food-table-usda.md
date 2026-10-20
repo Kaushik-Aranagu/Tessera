@@ -63,7 +63,7 @@ Five values per 100 g, all from FDC nutrient ids (the record's legacy "number" i
 | protein_g | 1003 (203) | Protein | g |
 | carbohydrate_g | 1005 (205) | Carbohydrate, by difference | g |
 | fat_g | 1004 (204) | Total lipid (fat) | g |
-| fibre_g | 1079 (291) | Fiber, total dietary | g |
+| fiber_g | 1079 (291) | Fiber, total dietary | g |
 
 Plus: `key`, `fdcId`, `dataType` ("Foundation" or "SR Legacy"), and the FDC description as published, so anyone can
 check a row on fdc.nal.usda.gov.
@@ -99,7 +99,7 @@ check a row on fdc.nal.usda.gov.
 host (`api.nal.usda.gov`, with DEMO_KEY) was not reachable from this network, so no value came from the API and none
 was recalled from memory. Each row keeps the published string (`published`, by nutrient id) next to the number.
 
-| Key | Aisle | fdcId | kcal | Protein | Carb | Fat | Fibre |
+| Key | Aisle | fdcId | kcal | Protein | Carb | Fat | Fiber |
 |---|---|---|---|---|---|---|---|
 | chicken thigh | meat | 173627 | 121 | 19.7 | 0.00 | 4.12 | 0.0 |
 | salmon | meat | 175167 | 208 | 20.4 | 0.00 | 13.4 | 0.0 |

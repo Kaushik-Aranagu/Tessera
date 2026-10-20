@@ -153,6 +153,53 @@ struct ClaudeRouteTests {
                 "\(second.line)")
     }
 
+    /// A real-file store, so the miss log is real; returns the capture engine, the log and the engine.
+    func fileTess() throws -> (TessCaptureEngine, CaptureMissLog, ActionEngine, URL) {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let fileStore = try ObjectStore(context: TesseraContext(url: dir.appendingPathComponent("tessera.sqlite")))
+        let fileClasses = try fileStore.prepareCatalog()
+        let fileEngine = ActionEngine(store: fileStore, classes: fileClasses)
+        let capture = TessCaptureEngine(engine: fileEngine)
+        var claude = ClaudeTessModel(keys: InMemoryKeychain(Self.key),
+                                     ledger: TessUsageLedger(store: fileStore, classes: fileClasses), flags: flags,
+                                     session: RouteStub.session(), sendsMisses: { true })
+        claude.now = { TesseraDayTests.at(10, 15, 18, 10) }
+        claude.calendar = TesseraDayTests.calendar
+        capture.claude = claude
+        return (capture, CaptureMissLog.beside(fileStore)!, fileEngine, dir)
+    }
+
+    @Test func anOverCapPhraseMidCookIsRefusedNotLogged() async throws {
+        // LEN-2: the cook gate holds Claude off, but a phrase past 600 characters still gets the refusal.
+        let (capture, log, engine, dir) = try fileTess()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let recipe = try engine.perform(
+            CreateRecipe(text: "Rice\nIngredients\n1 cup rice\nMethod\n1. Simmer."), by: .user
+        ).output
+        try engine.perform(StartCooking(recipe: recipe.id), by: .user)
+        let long = String(repeating: "pasta water ", count: 60)
+        let said = await capture.capture(long, context: context)
+        #expect(said.line == ClaudeTessModel.tooLongLine && said.isRefusal && said.records.isEmpty, "\(said.line)")
+        #expect(log.all().isEmpty)
+        #expect(RouteStub.requests.isEmpty)
+        // A short phrase mid-cook keeps its plain miss.
+        let short = await capture.capture("how long is left on the pasta", context: context)
+        #expect(short.line.hasPrefix("Didn't catch that"), "\(short.line)")
+    }
+
+    @Test func anOverCapPhraseAboutATimerIsRefusedNotLogged() async throws {
+        // LEN-3: the timer words hold Claude off too, and the cap still wins.
+        let (capture, log, _, dir) = try fileTess()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let long = "the pasta timer " + String(repeating: "and then some more words about it ", count: 25)
+        #expect(long.count > ClaudeTessModel.maxPhraseCharacters)
+        let said = await capture.capture(long, context: context)
+        #expect(said.line == ClaudeTessModel.tooLongLine && said.isRefusal, "\(said.line)")
+        #expect(log.all().isEmpty)
+        #expect(RouteStub.requests.isEmpty)
+    }
+
     @Test func aLongPhraseIsRefusedBeforeItLeaves() async {
         let long = String(repeating: "could you log the bench ", count: 40)
         let capture = await tess().capture(long, context: context)
@@ -240,6 +287,41 @@ struct ClaudeRouteTests {
         #expect(await tess().capture(miss, context: context).line == "Claude didn't answer in time.")
         // The offline attempt never left, so it wrote no row; the timeout did leave, so it kept its one.
         #expect(ledger.calls().count == 1)
+    }
+
+    @Test(arguments: [
+        "could you log that I paid 40 for gas earlier?",
+        "could you note that I weighed 82.4 kg this morning please?",
+    ])
+    func aWalledMissOfflineIsNeitherQueuedNorLoggedAndSaysSo(_ phrase: String) async {
+        // Money, body and secret words: the ruled line, nothing in the inbox, nothing logged, the other lines
+        // unchanged.
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil) || SecretWords.mentions(phrase), "\(phrase)")
+        RouteStub.failure = .notConnectedToInternet
+        let capture = await tess().capture(phrase, context: context)
+        #expect(capture.records.isEmpty && capture.line == "Couldn't read that offline. Try again online.",
+                "\(capture.line)")
+        #expect(capture.isRefusal)
+        #expect(TessInbox(store: store, classes: classes).waiting().isEmpty)
+        // A plain miss offline still waits for Claude.
+        let plain = await tess().capture(miss, context: context)
+        #expect(plain.line == "No connection. Saved it for Claude.")
+        #expect(TessInbox(store: store, classes: classes).waiting().count == 1)
+    }
+
+    @Test func aSecretMissOfflineSaysTheSameWhenItReachesTheRoute() async {
+        // The grammar keeps a secret phrase on the phone, so it rarely gets here; the route itself still holds.
+        var claude = ClaudeTessModel(keys: InMemoryKeychain(Self.key), ledger: ledger, flags: flags,
+                                     session: RouteStub.session(), sendsMisses: { true })
+        claude.now = { TesseraDayTests.at(10, 15, 18, 10) }
+        claude.calendar = TesseraDayTests.calendar
+        RouteStub.failure = .notConnectedToInternet
+        let phrase = "could you hold the wifi password zebra99 for me later?"
+        #expect(SecretWords.mentions(phrase))
+        let result = await claude.run(TessRequest(text: phrase, context: context, use: .capture), engine: engine)
+        guard case let .asked(capture) = result else { Issue.record("expected the offline line"); return }
+        #expect(capture.line == "Couldn't read that offline. Try again online." && capture.isRefusal)
+        #expect(TessInbox(store: store, classes: classes).waiting().isEmpty)
     }
 
     @Test func aToolThatFailsMidwayLeavesNoGhost() async throws {

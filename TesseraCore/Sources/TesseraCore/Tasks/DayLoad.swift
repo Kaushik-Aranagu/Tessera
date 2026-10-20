@@ -27,7 +27,10 @@ public extension TaskList {
     {
         let start = calendar.date(bySettingHour: dayStartHour, minute: 0, second: 0, of: now) ?? now
         let end = calendar.date(bySettingHour: dayEndHour, minute: 0, second: 0, of: now) ?? now
-        let free = max(end.timeIntervalSince(max(now, start)), 0) / 60
+        let rangeStart = max(now, start)
+        // The calendar's busy time comes off the free time (M4 slice 3): a day of meetings is a fuller day.
+        let busy = CalendarBusy.minutes(store: store, classes: classes, from: rangeStart, to: end)
+        let free = max(max(end.timeIntervalSince(rangeStart), 0) / 60 - busy, 0)
 
         let open = today(now, calendar: calendar).filter { !$0.isDone }
         // Timed tasks already over don't load the rest of the day; carried-over and untimed ones still do.

@@ -232,6 +232,12 @@ private struct MuscleList: View {
     }
 }
 
+extension MuscleRole {
+    init(_ role: ExerciseDigest.Role) {
+        self = role == .primary ? .primary : .secondary
+    }
+}
+
 private struct MuscleRowView: View {
     let row: ExerciseDigest.MuscleRow
     let index: Int
@@ -247,7 +253,7 @@ private struct MuscleRowView: View {
                          seed: index)
                     .opacity(primary ? 1 : 0.7)
                     .frame(width: 34, alignment: .leading)
-                Text(row.name)
+                Text(MuscleWords.shown(row.name))
                     .textRole(.bodyStrong)
                     .foregroundStyle(Theme.Colors.ink)
                 Spacer(minLength: Theme.Spacing.s)
@@ -261,8 +267,8 @@ private struct MuscleRowView: View {
         .buttonStyle(HandleButtonStyle())
         .modifier(ZoomSource(id: Route.object(row.id), namespace: namespace))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(row.name), \(ExerciseWords.role(row.role))")
-        .accessibilityHint("Opens \(row.name)")
+        .accessibilityLabel("\(MuscleWords.shown(row.name)), \(ExerciseWords.role(row.role))")
+        .accessibilityHint("Opens \(MuscleWords.shown(row.name))")
         .accessibilityAddTraits(.isButton)
     }
 }

@@ -88,6 +88,61 @@ struct TessToolsTests {
         }
     }
 
+    @Test func answerQueryCountSkipsPrivateObjects() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(CreateNote(body: "Bench felt heavy"), by: .user)
+        try engine.perform(CreateNote(body: "the wifi password is hunter2zebra"), by: .user)
+        try engine.perform(CreateTask(title: "Buy lemons"), by: .user)
+        try engine.perform(CreateTask(title: "Weigh in 82.4 kg"), by: .user)
+        try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\n1. Fry."), by: .user)
+        try engine.perform(CreateRecipe(text: "Melatonin lasagna\nIngredients\n2 onions\nMethod\n1. Bake."), by: .user)
+        for (from, line) in [("notes", "1 note."), ("tasks", "1 task."), ("recipes", "1 recipe.")] {
+            do {
+                _ = try call("answerQuery", #"{"from":"\#(from)","during":null}"#, engine)
+                Issue.record("answerQuery should answer, not log")
+            } catch let answer as TessToolAnswer {
+                #expect(answer.line == line, "\(from): \(answer.line)")
+            }
+        }
+    }
+
+    @Test func answerQueryCountSkipsPrivateListsItemsRoutinesAndCooks() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        func count(_ from: String) throws -> Int {
+            do {
+                _ = try call("answerQuery", #"{"from":"\#(from)","during":null}"#, engine)
+            } catch let answer as TessToolAnswer {
+                return Int(answer.line.prefix { $0.isNumber }) ?? -1
+            }
+            return -1
+        }
+        let before = try (count("lists"), count("list items"), count("routines"), count("cooks"))
+        // Lists and items: one plain and one private of each.
+        let plainList = try engine.perform(CreateList(name: "Errands"), by: .user).output
+        let secretList = try engine.perform(CreateList(name: "Lexapro refills"), by: .user).output
+        try engine.perform(AddListItem(list: plainList.id, text: "Pasta night"), by: .user)
+        try engine.perform(AddListItem(list: plainList.id, text: "take melatonin"), by: .user)
+        try engine.perform(AddListItem(list: secretList.id, text: "Walk"), by: .user)
+        // Routines.
+        try engine.perform(CreateRoutine(title: "Push Day Z"), by: .user)
+        try engine.perform(CreateRoutine(title: "Knee rehab day"), by: .user)
+        // A finished cook of a plain recipe and a running cook of a private one.
+        let tacos = try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\n1. Fry."), by: .user)
+            .output
+        let secret = try engine.perform(
+            CreateRecipe(text: "Melatonin lasagna\nIngredients\n2 onions\nMethod\n1. Bake."), by: .user
+        ).output
+        let plainCook = try engine.perform(StartCooking(recipe: tacos.id), by: .user).output
+        try engine.perform(FinishCooking(cook: plainCook.id), by: .user)
+        try engine.perform(StartCooking(recipe: secret.id), by: .user)
+        try #expect(count("lists") == before.0 + 1)
+        try #expect(count("list items") == before.1 + 1)
+        try #expect(count("routines") == before.2 + 1)
+        try #expect(count("cooks") == before.3 + 1)
+    }
+
     @Test func aTimeWithNoZoneIsReadInHisZone() throws {
         // QA T1: "15:00" from a model with no offset is 3 pm where he is, not 3 pm UTC (8 am in Los Angeles).
         let store = ObjectStore.open(inMemory: true)

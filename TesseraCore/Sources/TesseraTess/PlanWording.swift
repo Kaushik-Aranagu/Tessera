@@ -475,7 +475,7 @@ public final class ClaudePlanWording {
         let estimate = TessUsageLedger.estimate(text: Self.instructions + Self.schemaText + input,
                                                 maxTokens: Self.maxTokens, model: Self.model)
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
-            let reset = (calendar.dateInterval(of: .month, for: now())?.end ?? now())
+            let reset = TessUsageLedger.monthInterval(containing: now(), calendar: calendar).end
                 .formatted(.dateTime.month(.abbreviated).day())
             return .rules(line: "Claude paused until \(reset). Here's your usual plan.")
         }

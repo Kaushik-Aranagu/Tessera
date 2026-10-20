@@ -29,3 +29,6 @@ enum LaunchFlags {
         return arguments[index + 1]
     }
 }
+
+// Note: the Watch app's -demoSet / -demoRest / -demoPrivate flags (Watch/WatchStore.swift) read CommandLine directly
+// instead of through here, in a #if targetEnvironment(simulator) block, so they can never run on a real watch.

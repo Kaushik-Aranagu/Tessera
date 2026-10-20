@@ -63,4 +63,5 @@ Index of the docs in `docs/product/`.
 - [ship-list-m5-people.md](ship-list-m5-people.md): People ship list: fourth slice for M5 (engine-first)
 - [ship-list-m5-reading.md](ship-list-m5-reading.md): M5 Reading ship list (engine-first)
 - [ship-list-m5-upkeep.md](ship-list-m5-upkeep.md): Home upkeep ship list: third slice for M5 (engine-first)
+- [training-switch-specs-oct19.md](training-switch-specs-oct19.md): Training switch specs for the Settings Review section, Oct 19
 - [us-shop-acceptance.md](us-shop-acceptance.md): US shop: acceptance (K7)

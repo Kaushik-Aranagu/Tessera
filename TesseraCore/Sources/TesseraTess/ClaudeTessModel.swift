@@ -9,8 +9,12 @@ import TesseraCore
 public struct ClaudeTessModel: TessModel {
     public static let model = "claude-haiku-5-5"
     static let maxTokens = 512
+    /// An offline miss that hit a wall: kept nowhere, so it can only be said again online.
+    static let walledOfflineLine = "Couldn't read that offline. Try again online."
+
     /// The longest phrase sent to Claude, in characters.
     static let maxPhraseCharacters = 600
+    static let tooLongLine = "That's too long to send. Say it shorter."
     /// Tool rounds before Tess gives up on a phrase.
     static let maxRounds = 3
 
@@ -58,7 +62,7 @@ public struct ClaudeTessModel: TessModel {
         guard request.text.count <= Self.maxPhraseCharacters else {
             flags.heldBack += 1
             // A refusal is its own answer: the long phrase is not logged as a miss either.
-            var refusal = TessCapture(records: [], line: "That's too long to send. Say it shorter.", source: .none)
+            var refusal = TessCapture(records: [], line: Self.tooLongLine, source: .none)
             refusal.isRefusal = true
             return .asked(refusal)
         }
@@ -73,7 +77,7 @@ public struct ClaudeTessModel: TessModel {
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
             // At the cap: the rules and on-device paths go on; Tess says so if nothing else caught it.
             flags.heldBack += 1
-            let reset = (calendar.dateInterval(of: .month, for: now())?.end ?? now())
+            let reset = TessUsageLedger.monthInterval(containing: now(), calendar: calendar).end
                 .formatted(.dateTime.month(.abbreviated).day())
             return .asked(TessCapture(records: [], line: "Claude paused until \(reset).", source: .none))
         }
@@ -146,6 +150,17 @@ public struct ClaudeTessModel: TessModel {
                TessInbox(store: engine.store, classes: engine.classes).add(request.text, at: now()) != nil
             {
                 return .asked(TessCapture(records: [], line: "No connection. Saved it for Claude.", source: .none))
+            }
+            // A walled phrase (money, body, secret) is never queued, so offline it is neither kept nor sent: the line
+            // says
+            // so and the text stays in the box (ruled; the other offline cases keep their line).
+            if failure.outcome == "offline",
+               SecretWords.mentions(request.text)
+               || PrivateFacts.isWalled(request.text, lastWeightKg: request.lastWeightKg(engine))
+            {
+                var held = TessCapture(records: [], line: Self.walledOfflineLine, source: .none)
+                held.isRefusal = true
+                return .asked(held)
             }
             return error is Failure ? .asked(TessCapture(records: [], line: failure.line, source: .none)) : .missed
         }
