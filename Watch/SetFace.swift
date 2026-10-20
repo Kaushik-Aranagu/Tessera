@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The set screen (docs/design/watch-set-logging-105.md): exercise, weight, reps, set count and the word Done on its ink
+/// The set screen (docs/design/watch-set-logging-105.md): exercise, weight, reps, set count and the word Done on its
+/// ink
 /// line. After Done the weight row turns into the rest countdown on the same screen. Sizes 44 / 21 / 16, nothing else.
 struct SetFace: View {
     @Environment(WatchStore.self) private var store
@@ -10,7 +11,9 @@ struct SetFace: View {
     @State private var repsWidth: CGFloat = 160
     @FocusState private var crownFocused: Bool
 
-    private var snap: WatchSnapshot { store.snapshot }
+    private var snap: WatchSnapshot {
+        store.snapshot
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -37,13 +40,19 @@ struct SetFace: View {
         .digitalCrownRotation($crown, from: 0, through: 400, by: store.crownMovesWeight ? snap.weightStep : 1,
                               sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
         .onChange(of: crown) { _, value in
-            if store.crownMovesWeight { store.weight = value } else { store.reps = max(1, Int(value)) }
+            if store.crownMovesWeight {
+                store.weight = value
+            } else {
+                store.reps = max(1, Int(value))
+            }
         }
         .onChange(of: store.crownMovesWeight) { syncCrown() }
         .onChange(of: snap) { syncCrown() }
         .onAppear { crownFocused = true; syncCrown() }
         .overlay(alignment: .topTrailing) {
-            if store.writeFailed { Text("Not saved").font(WatchInk.face(16)).opacity(0.7).padding(.trailing, 12) }
+            if store.writeFailed {
+                Text("Not saved").font(WatchInk.face(16)).opacity(0.7).padding(.trailing, 12)
+            }
         }
         .modifier(SetFaceAccess(store: store, label: spokenLabel, onDefault: defaultAction, onAdjust: adjust))
     }
@@ -61,12 +70,15 @@ struct SetFace: View {
     /// "SET 4 of 5", or for ten seconds after an undo "Set 4, removed." as plain text with the ink word UNDO.
     @ViewBuilder
     private var setLabel: some View {
-        if snap.phase == .set, let note = store.undoNote {
+        if let note = store.undoNote {
             HStack(spacing: 8) {
                 Text(note).font(WatchInk.face(16, .regular)).opacity(0.7).lineLimit(1).minimumScaleFactor(0.8)
-                Button("UNDO") { store.putBack() }
-                    .buttonStyle(.plain).font(WatchInk.face(16)).tracking(0.6)
-                    .accessibilityLabel("Undo. Log the removed set back.")
+                // UNDO only once the phone has confirmed a removal (never beside "Not removed.").
+                if snap.phase == .set, store.removed != nil {
+                    Button("UNDO") { store.putBack() }
+                        .buttonStyle(.plain).font(WatchInk.face(16)).tracking(0.6)
+                        .accessibilityLabel("Undo. Log the removed set back.")
+                }
             }
             .padding(.top, 2)
         } else {
@@ -87,7 +99,11 @@ struct SetFace: View {
 
     private func defaultAction() {
         if snap.phase == .rest {
-            if (snap.restEndsAt ?? .distantPast) <= Date.now { store.skipRest() } else { store.undo() }
+            if (snap.restEndsAt ?? .distantPast) <= Date.now {
+                store.skipRest()
+            } else {
+                store.undo()
+            }
         } else {
             store.done()
         }
@@ -117,7 +133,9 @@ struct SetFace: View {
     private func numeral(_ text: String, unit: String?, active: Bool) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
             Text(text).font(WatchInk.face(44)).monospacedDigit().minimumScaleFactor(0.7).lineLimit(1)
-            if let unit { Text(unit).font(WatchInk.face(16, .regular)).opacity(0.7) }
+            if let unit {
+                Text(unit).font(WatchInk.face(16, .regular)).opacity(0.7)
+            }
         }
         .opacity(active ? 1 : 0.7)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -131,7 +149,9 @@ struct SetFace: View {
             inkLine(line, action: store.undo)
                 // A swipe back on the line takes the set out, as the tap does.
                 .gesture(DragGesture(minimumDistance: 16).onEnded { drag in
-                    if drag.translation.width > 30, abs(drag.translation.height) < 30 { store.undo() }
+                    if drag.translation.width > 30, abs(drag.translation.height) < 30 {
+                        store.undo()
+                    }
                 })
         } else {
             inkLine("Done", action: store.done)
@@ -194,7 +214,7 @@ struct RestRow: View {
     }
 
     /// A 2 pt cream line that empties from the right; it glides, except always-on and Reduce Motion, where it steps.
-    private func horizon(remaining: TimeInterval, at date: Date) -> some View {
+    private func horizon(remaining: TimeInterval, at _: Date) -> some View {
         let total = max(store.snapshot.restTotal, 1)
         let end = store.snapshot.restEndsAt ?? .distantPast
         return GeometryReader { proxy in
@@ -231,9 +251,21 @@ private struct SetFaceAccess: ViewModifier {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(label)
             .accessibilityAction(.default, onDefault)
-            .accessibilityAction(named: "Add 15 seconds") { if resting { store.extendRest() } }
-            .accessibilityAction(named: "Go") { if resting { store.skipRest() } }
-            .accessibilityAction(named: "Remove set") { if resting { store.undo() } }
+            .accessibilityAction(named: "Add 15 seconds") {
+                if resting {
+                    store.extendRest()
+                }
+            }
+            .accessibilityAction(named: "Go") {
+                if resting {
+                    store.skipRest()
+                }
+            }
+            .accessibilityAction(named: "Remove set") {
+                if resting {
+                    store.undo()
+                }
+            }
             .accessibilityAction(named: "This exercise") { store.sideShown = true }
             .accessibilityAdjustableAction(onAdjust)
     }

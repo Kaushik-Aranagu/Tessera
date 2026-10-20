@@ -19,8 +19,6 @@ final class WatchStore: NSObject {
     private(set) var removed: (weight: Double, reps: Int)?
     /// THIS EXERCISE is showing over the set screen.
     var sideShown = false
-    /// The numbers last sent with Done, for the undo that follows.
-    private var lastLogged: (weight: Double, reps: Int)?
     private(set) var writeFailed = false
     private var undoTask: Task<Void, Never>?
     private var restTask: Task<Void, Never>?
@@ -77,23 +75,39 @@ final class WatchStore: NSObject {
     // MARK: Asking the phone
 
     func done() {
-        lastLogged = (weight, reps)
         send(.logSet(weight: weight, reps: reps))
         undoNote = nil
         removed = nil
     }
 
     func undo() {
+        // The set the wrist can see is the one it removes, with exactly its numbers; the phone takes it out only if it
+        // is still the latest, and the note appears only once the phone says so.
+        guard let removal = WatchUndo.removal(in: snapshot) else {
+            say("Not removed.", removed: nil)
+            return
+        }
         let number = max(snapshot.setNumber - 1, 1)
-        removed = lastLogged ?? Self.numbers(in: snapshot.sets.first)
-        send(.undo)
-        undoNote = "Set \(number), removed."
+        send(.undo(setID: removal.setID)) { [weak self] done in
+            guard let self else { return }
+            if done {
+                say("Set \(number), removed.", removed: (removal.weight, removal.reps))
+            } else {
+                say("Not removed.", removed: nil)
+            }
+        }
+    }
+
+    /// Shows a line under the numerals for ten seconds; UNDO shows beside it only when a set was taken out.
+    private func say(_ note: String, removed: (weight: Double, reps: Int)?) {
+        self.removed = removed
+        undoNote = note
         undoTask?.cancel()
         undoTask = Task { @MainActor in
             try? await Task.sleep(for: .seconds(10))
             guard !Task.isCancelled else { return }
             undoNote = nil
-            removed = nil
+            self.removed = nil
         }
     }
 
@@ -105,15 +119,7 @@ final class WatchStore: NSObject {
         self.removed = nil
         weight = removed.weight
         reps = removed.reps
-        lastLogged = removed
         send(.logSet(weight: removed.weight, reps: removed.reps))
-    }
-
-    /// "82.5 x 8" back into numbers, when the app has not logged a set itself this run.
-    private static func numbers(in line: String?) -> (weight: Double, reps: Int)? {
-        guard let parts = line?.split(separator: " ").filter({ $0 != "x" && $0 != "×" }), parts.count == 2,
-              let weight = Double(parts[0]), let reps = Int(parts[1]) else { return nil }
-        return (weight, reps)
     }
 
     func extendRest() {
@@ -124,16 +130,24 @@ final class WatchStore: NSObject {
         send(.skipRest)
     }
 
-    private func send(_ command: WatchCommand) {
+    /// Sends a command; with `confirm`, the phone's yes or no comes back to it (no reply, or a failed send, is a no).
+    private func send(_ command: WatchCommand, confirm: (@MainActor (Bool) -> Void)? = nil) {
         guard let data = command.encoded() else { return }
         let session = WCSession.default
         guard session.activationState == .activated, session.isReachable else {
             fail()
+            confirm?(false)
             return
         }
-        session.sendMessage([WatchLink.commandKey: data], replyHandler: nil) { [weak self] _ in
-            Task { @MainActor in self?.fail() }
-        }
+        session.sendMessage([WatchLink.commandKey: data], replyHandler: { reply in
+            let ok = reply["ok"] as? Bool ?? false
+            Task { @MainActor in confirm?(ok) }
+        }, errorHandler: { [weak self] _ in
+            Task { @MainActor in
+                self?.fail()
+                confirm?(false)
+            }
+        })
     }
 
     /// A failed write: one soft warning, the only warning.
@@ -149,7 +163,7 @@ final class WatchStore: NSObject {
 
 extension WatchStore: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState,
-                             error: Error?)
+                             error _: Error?)
     {
         let data = session.receivedApplicationContext[WatchLink.snapshotKey] as? Data
         if state == .activated, session.isReachable, let hello = WatchCommand.hello.encoded() {
@@ -158,7 +172,7 @@ extension WatchStore: WCSessionDelegate {
         Task { @MainActor in self.read(data) }
     }
 
-    nonisolated func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
+    nonisolated func session(_: WCSession, didReceiveApplicationContext context: [String: Any]) {
         let data = context[WatchLink.snapshotKey] as? Data
         Task { @MainActor in self.read(data) }
     }

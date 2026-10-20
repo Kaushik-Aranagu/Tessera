@@ -108,5 +108,7 @@ struct SideFace: View {
         .padding(.top, 8)
         .background(WatchInk.ground.opacity(0.92).ignoresSafeArea())
         .accessibilityElement(children: .combine)
+        // VoiceOver's way out: the two-finger scrub closes THIS EXERCISE and returns to the set.
+        .accessibilityAction(.escape) { store.sideShown = false }
     }
 }

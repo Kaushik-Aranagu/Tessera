@@ -36,6 +36,8 @@ struct WatchSnapshot: Codable, Equatable, Sendable {
     var restTotal: TimeInterval
     /// Sets logged so far on this exercise, newest first, as "82.5 x 8".
     var sets: [String]
+    /// The id of each of those sets, in the same order: an undo names the set it means.
+    var setIDs: [String] = []
     var isPrivate: Bool
     /// Bumped on every phone-side change so the Watch ignores an older delivery.
     var revision: Int
@@ -60,7 +62,9 @@ struct WatchSnapshot: Codable, Equatable, Sendable {
         let words = name.split(separator: " ").map(String.init)
         guard words.count > 1 else { return [] }
         var forms: [String] = []
-        if words.count > 2 { forms.append(words.suffix(2).joined(separator: " ")) }
+        if words.count > 2 {
+            forms.append(words.suffix(2).joined(separator: " "))
+        }
         forms.append(words[0])
         return forms
     }
@@ -69,7 +73,8 @@ struct WatchSnapshot: Codable, Equatable, Sendable {
 /// What the wrist asks the phone to do. Every one maps to an action the phone already has.
 enum WatchCommand: Codable, Equatable, Sendable {
     case logSet(weight: Double, reps: Int)
-    case undo
+    /// Take out the set with this id, and only that one: nothing happens if the latest set is another one.
+    case undo(setID: String)
     case extendRest(seconds: Int)
     case skipRest
     /// The Watch just woke: send a fresh snapshot.
@@ -91,5 +96,28 @@ extension WatchSnapshot {
 
     static func decode(_ data: Data) -> WatchSnapshot? {
         try? JSONDecoder().decode(WatchSnapshot.self, from: data)
+    }
+}
+
+/// What taking a set out from the wrist means, in one place for both ends: the wrist names the latest set it can
+/// see, remembers exactly its numbers, and the phone removes it only if it is still the latest.
+enum WatchUndo {
+    struct Removal: Equatable {
+        let setID: String
+        let weight: Double
+        let reps: Int
+    }
+
+    /// The set the wrist would remove: the newest in its snapshot, with the numbers that snapshot shows for it.
+    static func removal(in snapshot: WatchSnapshot) -> Removal? {
+        guard let id = snapshot.setIDs.first, let line = snapshot.sets.first else { return nil }
+        let parts = line.split(separator: " ").filter { $0 != "x" && $0 != "×" }
+        guard parts.count == 2, let weight = Double(parts[0]), let reps = Int(parts[1]) else { return nil }
+        return Removal(setID: id, weight: weight, reps: reps)
+    }
+
+    /// Whether the phone should take the set out: only when it is the one the wrist named.
+    static func accepts(requested: String, latest: String?) -> Bool {
+        latest == requested
     }
 }
