@@ -53,6 +53,15 @@ final class ReviewChoices {
                says: ["Off": "A workout left open waits quietly.",
                       "On": "One quiet nudge when a workout was left open."],
                readiness: .live),
+        Choice(
+            id: "lockScreenLook",
+            name: "Lock Screen look",
+            values: ["Cobalt sky", "Follows the look"],
+            defaultValue: "Cobalt sky",
+            says: ["Cobalt sky": "The rest card on the Lock Screen is Cobalt sky in every look.",
+                   "Follows the look": "The rest card takes your day or night look. The Island stays Obsidian."],
+            readiness: .live
+        ),
         Choice(id: "pageTurn", name: "Page turn", values: ["Today", "Slide", "Turn", "Soften", "Rotate"],
                defaultValue: "Today",
                says: ["Today": "Pages change as they do now.",

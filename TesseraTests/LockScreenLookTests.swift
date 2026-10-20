@@ -72,3 +72,13 @@ struct LockScreenLookTests {
         return (high + 0.05) / (low + 0.05)
     }
 }
+
+/// The Review row for the Lock Screen look is listed live, with the same values the shim reads.
+struct LockScreenLookRowTests {
+    @Test func theReviewRowOffersTheSameTwoValuesWithCobaltSkyFirst() throws {
+        let row = try #require(ReviewChoices.all.first { $0.id == "lockScreenLook" })
+        #expect(row.values == Choice.lockScreenLookOffered)
+        #expect(row.defaultValue == "Cobalt sky")
+        #expect(row.readiness == .live)
+    }
+}
