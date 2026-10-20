@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 @testable import Tessera
 import TesseraCore
 import Testing
@@ -39,8 +40,16 @@ struct MePageTests {
     @Test func theOtherThreeAreNotSaidAndTheKeptLineNamesThePhone() {
         #expect(MeCopy.unsaidFields == ["Height", "Age", "Sex"])
         #expect(MeCopy.notSaid == "not said")
-        #expect(MeCopy.keptLine.contains("stays on this phone"))
-        #expect(MeCopy.keptLine.contains("never goes to Claude"))
+        #expect(MeCopy.keptLine == "That stays on this phone.")
+        #expect(!MeCopy.keptLine.contains("never"))
+    }
+
+    /// QA on #1155: the weight hides whenever the app leaves the front, not only when he leaves the page.
+    @Test func theWeightHidesWhenTheAppLeavesTheFront() {
+        #expect(MeCopy.weightStaysShown(true, in: .active))
+        #expect(!MeCopy.weightStaysShown(true, in: .inactive))
+        #expect(!MeCopy.weightStaysShown(true, in: .background))
+        #expect(!MeCopy.weightStaysShown(false, in: .active))
     }
 
     // MARK: Training lines
@@ -72,11 +81,16 @@ struct MePageTests {
         #expect(MeCopy.ordered(lifts).map(\.name) == ["Bench Press", "Deadlift", "Squat"])
     }
 
-    @Test func bestTrailingIsTheEstimateOrTheSessionCount() {
+    /// Product 6:30 PM: "best 102.5 kg" in his load unit through the app's load formatter, never "e1RM".
+    @Test func bestTrailingIsTheBestInHisLoadUnitOrTheSessionCount() {
         let bench = MeFacts.Best(id: UUID(), name: "Bench Press", bestE1RM: 102.46, sessions: 48)
-        #expect(MeCopy.bestTrailing(bench, format: kg) == "e1RM 102.5 kg")
-        #expect(MeCopy.bestSpoken(bench, format: kg)
-            == "Bench Press, best estimated one-rep max 102.5 kg, 48 sessions")
+        let kilograms = { MassUnit.kilograms.format(kilograms: $0) }
+        let pounds = { MassUnit.pounds.format(kilograms: $0) }
+        #expect(MeCopy.bestTrailing(bench, format: kilograms) == "best 102.5 kg")
+        #expect(MeCopy.bestTrailing(bench, format: pounds) == "best 226 lb")
+        #expect(MeCopy.bestSpoken(bench, format: kilograms) == "Bench Press, best 102.5 kg, 48 sessions")
+        #expect(!MeCopy.bestTrailing(bench).contains("e1RM"))
+        #expect(!MeCopy.bestSpoken(bench).contains("one-rep"))
         let plank = MeFacts.Best(id: UUID(), name: "Plank", bestE1RM: nil, sessions: 1)
         #expect(MeCopy.bestTrailing(plank, format: kg) == "1 session")
         #expect(MeCopy.bestSpoken(plank, format: kg) == "Plank, 1 session")

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// The You page's words (Design 108 section 3 and its mockup `long-press-and-you-108.png`): four sentences with the
 /// values as words, then what the app knows of his training, in the same plain voice. No em-dashes, no streaks.
@@ -25,8 +26,7 @@ enum MeCopy {
     static let notSaid = "not said"
     static let unsaidFields = ["Height", "Age", "Sex"]
 
-    static let keptLine = "Used for one thing: an estimate of the calories a workout burns. That stays on this phone "
-        + "and never goes to Claude."
+    static let keptLine = "That stays on this phone."
 
     static let weightShowHint = "Shows your last weigh-in"
     static let weightHideHint = "Hides it again"
@@ -74,17 +74,22 @@ enum MeCopy {
         count == 1 ? "1 session" : "\(count.formatted(.number)) sessions"
     }
 
-    /// The trailing best: "e1RM 102.5 kg", or the session count for a lift with no estimate (bodyweight work).
+    /// The trailing best: "best 102.5 kg" in his load unit through the app's one load formatter (`Format.mass`), or
+    /// the session count for a lift with no estimate (bodyweight work). Never the word "e1RM" (Product, 6:30 PM).
     static func bestTrailing(_ best: MeFacts.Best, format: (Double) -> String = Format.mass) -> String {
-        guard let e1RM = best.bestE1RM, e1RM > 0 else { return sessions(best.sessions) }
-        return "e1RM \(format((e1RM * 10).rounded() / 10))"
+        guard let load = best.bestE1RM, load > 0 else { return sessions(best.sessions) }
+        return "best \(format(load))"
     }
 
-    /// VoiceOver for a best row: "Bench Press, best estimated one-rep max 102.5 kg, 48 sessions".
+    /// VoiceOver for a best row: "Bench Press, best 102.5 kg, 48 sessions".
     static func bestSpoken(_ best: MeFacts.Best, format: (Double) -> String = Format.mass) -> String {
-        guard let e1RM = best.bestE1RM, e1RM > 0 else { return "\(best.name), \(sessions(best.sessions))" }
-        return "\(best.name), best estimated one-rep max \(format((e1RM * 10).rounded() / 10)), "
-            + sessions(best.sessions)
+        guard let load = best.bestE1RM, load > 0 else { return "\(best.name), \(sessions(best.sessions))" }
+        return "\(best.name), best \(format(load)), \(sessions(best.sessions))"
+    }
+
+    /// Whether the weight stays shown: only while the app is in front. Backgrounding or the app switcher hides it.
+    static func weightStaysShown(_ shown: Bool, in phase: ScenePhase) -> Bool {
+        shown && phase == .active
     }
 
     /// The reveal word under the first five: "All 14" or "Fewer". Nil when everything already shows.

@@ -12,6 +12,7 @@ struct MePage: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var facts = MeFacts.empty
     @State private var weightShown = false
@@ -76,35 +77,39 @@ struct MePage: View {
         .onChange(of: model.revision) { facts = MeFacts.read(model) }
         // Shown for this visit only: leaving hides the weight again.
         .onDisappear { weightShown = false }
+        // And whenever the app leaves the front (background, app switcher).
+        .onChange(of: scenePhase) { _, phase in
+            weightShown = MeCopy.weightStaysShown(weightShown, in: phase)
+        }
     }
 
     // MARK: The four sentences
 
     private var sentences: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            HStack(alignment: .firstTextBaseline, spacing: 0) {
-                Text("Weight ")
-                if facts.weightKg != nil {
-                    Button(MeCopy.weightWord(facts.weightKg, shown: weightShown)) {
-                        withTesseraAnimation(reduceMotion: reduceMotion) { weightShown.toggle() }
-                    }
-                    .buttonStyle(.valueWash)
-                    .fontWeight(.semibold)
-                    .contentTransition(.opacity)
-                    .privacySensitive(weightShown)
-                    .frame(minHeight: 44)
-                    .tesseraFeedback(.selection, trigger: weightShown)
-                    .accessibilityLabel("Weight")
-                    .accessibilityValue(MeCopy.weightWord(facts.weightKg, shown: weightShown))
-                    .accessibilityHint(weightShown ? MeCopy.weightHideHint : MeCopy.weightShowHint)
-                } else {
-                    Text(MeCopy.weightWord(nil, shown: false)).fontWeight(.semibold)
+            // One wrapping run, so the sentence reflows at accessibility sizes; the whole sentence is the 44 pt door.
+            if facts.weightKg != nil {
+                Button {
+                    withTesseraAnimation(reduceMotion: reduceMotion) { weightShown.toggle() }
+                } label: {
+                    weightSentence
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
-                Text(MeCopy.weightTail(facts.weightKg))
+                .buttonStyle(.valueWash)
+                .privacySensitive(weightShown)
+                .tesseraFeedback(.selection, trigger: weightShown)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Weight")
+                .accessibilityValue(MeCopy.weightWord(facts.weightKg, shown: weightShown))
+                .accessibilityHint(weightShown ? MeCopy.weightHideHint : MeCopy.weightShowHint)
+                .accessibilityAddTraits(.isButton)
+            } else {
+                weightSentence
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Weight")
+                    .accessibilityValue(MeCopy.weightWord(nil, shown: false))
             }
-            .textRole(.body)
-            .foregroundStyle(Theme.Colors.ink)
-            .fixedSize(horizontal: false, vertical: true)
 
             ForEach(MeCopy.unsaidFields, id: \.self) { field in
                 Text("\(field) \(Text(MeCopy.notSaid).fontWeight(.semibold)).")
@@ -122,6 +127,17 @@ struct MePage: View {
                 .padding(.top, Theme.Spacing.s)
         }
         .accessibilityElement(children: .contain)
+    }
+
+    /// "Weight hidden, from your last weigh-in." as one Text, the value word in semibold, so it wraps as a sentence.
+    private var weightSentence: some View {
+        let word = Text(MeCopy.weightWord(facts.weightKg, shown: weightShown)).fontWeight(.semibold)
+        return Text("Weight \(word)\(MeCopy.weightTail(facts.weightKg))")
+            .textRole(.body)
+            .foregroundStyle(Theme.Colors.ink)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .contentTransition(.opacity)
     }
 
     // MARK: Training
