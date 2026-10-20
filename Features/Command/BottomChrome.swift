@@ -57,6 +57,10 @@ struct BottomChrome: View {
     /// The soul's centre sits this far above the bottom of the chrome; the mode column starts above it.
     static let soulLift: CGFloat = 54
 
+    private var holdHintWords: String {
+        model.session != nil ? "Hold me to tell me a set." : "Hold me to talk."
+    }
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             if model.isCommandExpanded {
@@ -180,8 +184,9 @@ struct BottomChrome: View {
                             Button("Not now") { answerLift(.notNow) }
                         }
                         .buttonStyle(.labelWord)
-                    } else if setAsk == nil, line == nil, !canUndo, holdHint == 1 {
-                        Text(model.session != nil ? "Hold me to tell me a set." : "Hold me to talk.")
+                    } else if setAsk == nil, line == nil, !canUndo, holdHint == 1, !typeSize.isAccessibilitySize {
+                        // At accessibility sizes the hint would sit over the page; it stays the soul's spoken hint.
+                        Text(holdHintWords)
                             .font(Theme.voice)
                             .foregroundStyle(Theme.Colors.tess)
                     }
@@ -288,7 +293,8 @@ struct BottomChrome: View {
             .animation(.easeOut(duration: 0.12), value: listener.level)
             .accessibilityElement()
             .accessibilityLabel("Tess")
-            .accessibilityHint("Opens Tess.")
+            .accessibilityHint(holdHint == 1 && typeSize
+                .isAccessibilitySize ? "Opens Tess. \(holdHintWords)" : "Opens Tess.")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { toggle() }
             .accessibilityAction(named: "Go home") { onSoulDoubleTap() }

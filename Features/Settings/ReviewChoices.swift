@@ -116,16 +116,57 @@ final class ReviewChoices {
         Choice(id: "handsFreeCook", name: "Hands-free cook mode", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Steps move on a tap.", "On": "Steps move by voice while you cook."],
                readiness: .arrivesWith("hands-free cooking")),
+        // Kitchen v2 (kitchen-v2-build-ready-rows-oct19.md): each its own switch, default Off.
+        Choice(id: "weekStrip", name: "Week strip", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Plans show on the week side only.",
+                      "On": "A Mon to Sun strip with one key to add the week to Groceries."],
+               readiness: .arrivesWith("the week strip")),
+        Choice(id: "repeatItems", name: "Repeat items", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "A bought item leaves with the shop.",
+                      "On": "An item marked every week comes back after the shop ends."],
+               readiness: .arrivesWith("repeat items")),
+        Choice(id: "cookDouble", name: "Cook double", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "\"Cook double\" is not understood.",
+                      "On": "It doubles the cook and puts a leftovers task on Later."],
+               readiness: .arrivesWith("cook double")),
+        Choice(id: "parallelSteps", name: "Parallel steps", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "One lane, steps one after another.",
+                      "On": "Meanwhile steps run on a second lane with their own timer."],
+               readiness: .arrivesWith("parallel steps")),
+        Choice(id: "cookNotes", name: "Cook notes on the recipe", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Notes live with each cook.", "On": "The newest note shows on the recipe page."],
+               readiness: .arrivesWith("cook notes")),
+        Choice(id: "fixRecipe", name: "Fix a recipe", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Paste again to change a recipe.",
+                      "On": "FIX opens the recipe to change lines and steps."],
+               readiness: .arrivesWith("recipe fixing")),
+        Choice(id: "usuallyLine", name: "Usually line", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Groceries and Pantry end with no usually line.",
+                      "On": "Up to 4 things you buy on a rhythm show at the foot."],
+               readiness: .arrivesWith("the usually line")),
+        Choice(id: "aisleOrder", name: "Learned aisle order", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Aisles in the fixed walk order.", "On": "Aisles in the order you walked last shop."],
+               readiness: .arrivesWith("aisle order")),
+        Choice(id: "classInspector", name: "Class inspector", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "A class shows its objects.", "On": "A class also shows its fields, to shape it."],
+               readiness: .arrivesWith("the class inspector")),
+        // Design 110: on, the kcal line shows on a finished workout; it needs weight and height under Me.
+        Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
+               readiness: .arrivesWith("calories burned")),
     ]
 
     /// The rows in pages of at most six, for the side swipe (Design sheet 100).
     /// Review's pages by facet, each named beside the counter ("Workout, 2 of 5"; Design sheet 100), six rows at most.
     nonisolated static let facets: [(word: String, ids: [String])] = [
         ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace", "lockScreenLook"]),
-        ("Workout", ["restTimer", "swapExercise", "finishNudge", "quietInterrupts"]),
-        ("Kitchen", ["cookTimerVoice", "pantryState", "canCookShelf", "handsFreeCook"]),
-        ("Connected", ["planMyDay", "shutdown", "energyCheckIn", "calendar", "health", "linkFetch"]),
-        ("Shown", ["areasShown"]),
+        // Design 110: Calories burned and Energy check-in sit with the workout; Class inspector with Shown.
+        ("Workout", ["restTimer", "swapExercise", "finishNudge", "quietInterrupts", "caloriesBurned", "energyCheckIn"]),
+        // Kitchen v2 adds eight rows: what is in the house and the shop on Kitchen, the cook itself on Cooking.
+        ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
+        ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
+        ("Connected", ["planMyDay", "shutdown", "calendar", "health", "linkFetch"]),
+        ("Shown", ["areasShown", "classInspector"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
