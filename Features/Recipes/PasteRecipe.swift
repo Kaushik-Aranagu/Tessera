@@ -58,7 +58,7 @@ struct PasteRecipe: View {
                 // Links kept for later (K86.7): read only on his tap, oldest first, never by themselves.
                 if !reading, text.isEmpty, !readingLink, let waiting = waitingLinks.first {
                     Button(PasteCopy.readWaiting(waitingLinks.count)) {
-                        // The reader's own fill: its "Reading <host>." line stays up (QA on #830).
+                        // The reader's own fill: its "Reading the recipe from <host>." line stays up (QA on #830).
                         fromLink = true
                         text = waiting.absoluteString
                         readLink(waiting)
@@ -256,13 +256,19 @@ struct PasteRecipe: View {
     private func readLink(_ link: URL) {
         guard !readingLink else { return }
         readingLink = true
-        linkLine = RecipeLinkLine.reading(link.host() ?? "the page")
+        // "Reading the recipe from <host>." until the page is handed to Claude (Product ruling on #993).
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { linkLine = PasteLinkWait.startLine(link)
+        }
         let store = model.store
         var claude = ClaudeRecipeReader(keys: SystemKeychain(), ledger: TessUsageLedger(store: store,
                                                                                         classes: model.classes))
         { [model] in model.asksClaude }
         claude.lastWeightKg = { BodyWeight.lastKg(in: store) }
-        let reader = RecipeLinkReader(claude: claude)
+        let reader = PasteLinkWait.reader(claude: claude) { line in
+            // Only while this link is still the one being read: an edit in the meantime keeps his box.
+            guard readingLink, RecipePasteLink.bareLink(text) == link else { return }
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { linkLine = line }
+        }
         Task { @MainActor in
             let outcome = await RecipePasteLink.read(link, reader: reader, asksClaude: model.asksClaude,
                                                      shelf: RecipeLinkShelf.beside(store))
