@@ -1,5 +1,6 @@
 @testable import Tessera
 import TesseraCore
+import TesseraTess
 import Testing
 
 /// "Tess names training days": the Review row and its switch read (Core's #1160).
@@ -37,5 +38,27 @@ struct DayNamingTests {
         // He renames it: Tess stops for good.
         routine.title = "Chest and shoulders"
         #expect(await model.nameTrainingDays().isEmpty && routine.title == "Chest and shoulders")
+    }
+
+    /// QA on #1170: the app's namer reads the phone's model, so a phone that has it never asks Claude; with no
+    /// on-device closure yet it takes the rule name.
+    @Test func aPhoneWithItsOwnModelNeverAsksClaude() async throws {
+        let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext)
+        #expect(model.dayNamer.onDeviceAvailable() == DayNamingSwitch.onDeviceModelReady())
+        try ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: model.store,
+                                             classes: model.classes)
+        try StarterContent.installIfNeeded(store: model.store, classes: model.classes)
+        let plan = try #require(model.store.object(id: StarterContent.planID))
+        let routine = try #require(model.store.linkedObjects("routines", of: plan).first { $0.title == "Push A" })
+        routine.title = "New routine"
+        let namer = model.dayNamer
+        var claudeAsked = false
+        namer.allowed = { claudeAsked = true
+            return true
+        }
+        namer.onDeviceAvailable = { true }
+        let suggestion = try #require(await namer.suggest(for: routine, engine: model.engine))
+        #expect(suggestion.source == .rules && suggestion.name == "Push day")
+        #expect(!claudeAsked, "Claude's gate was read on a phone with its own model")
     }
 }

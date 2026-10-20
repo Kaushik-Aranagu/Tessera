@@ -1,4 +1,5 @@
 import Foundation
+import FoundationModels
 import TesseraCore
 import TesseraTess
 
@@ -15,6 +16,9 @@ extension AppModel {
                              allowed: { [weak self] in (self?.asksClaude ?? false) && !PowerState.isLowPower },
                              enabled: { DayNamingSwitch.isOn(ReviewChoices.shared.value(of: DayNames.reviewKey)) })
         namer.now = { AppClock.now }
+        // On-device first (his 7:12 PM rule): with the phone's own model present, Claude is never asked; until Builder
+        // A's closure plugs in, such a phone takes the rule name.
+        namer.onDeviceAvailable = { DayNamingSwitch.onDeviceModelReady() }
         dayNamerStore = namer
         return namer
     }
@@ -55,5 +59,10 @@ extension AppModel {
 enum DayNamingSwitch {
     static func isOn(_ value: String?) -> Bool {
         value != "Off"
+    }
+
+    /// The phone's own model can run now.
+    static func onDeviceModelReady() -> Bool {
+        SystemLanguageModel.default.isAvailable
     }
 }
