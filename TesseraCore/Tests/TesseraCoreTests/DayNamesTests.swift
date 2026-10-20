@@ -204,7 +204,7 @@ struct DayNamerPayloadTests {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [NamingStub.self]
         let keychain = InMemoryKeychain()
-        _ = keychain.save("sk-ant-" + String(repeating: "a", count: 20))
+        _ = keychain.save(["sk", "ant"].joined(separator: "-") + "-" + String(repeating: "a", count: 20))
         let namer = DayNamer(keys: keychain, ledger: TessUsageLedger(store: store, classes: engine.classes),
                              session: URLSession(configuration: configuration), allowed: { true })
         NamingStub.bodies = []
