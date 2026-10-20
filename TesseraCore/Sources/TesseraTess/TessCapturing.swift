@@ -68,6 +68,10 @@ public struct TessCapture {
     /// once and must never be replaced by another line.
     public var isNotice = false
 
+    /// Nothing on the phone could read it and Claude was not there to: the phrase was kept as a note to sort later.
+    /// It is still a miss for the week-one miss log, though the phrase is no longer lost.
+    public var keptToSort = false
+
     public var understood: Bool {
         !records.isEmpty
     }
