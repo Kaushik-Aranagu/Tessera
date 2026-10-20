@@ -555,7 +555,7 @@ public struct ClaudeRecipeReader {
         let estimate = TessUsageLedger.estimate(text: Self.instructions + page, maxTokens: Self.maxTokens,
                                                 model: Self.model)
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
-            let reset = (calendar.dateInterval(of: .month, for: now())?.end ?? now())
+            let reset = TessUsageLedger.monthInterval(containing: now(), calendar: calendar).end
                 .formatted(.dateTime.month(.abbreviated).day())
             return failed(RecipeLinkLine.paused(until: reset), retry: .claudePaused)
         }

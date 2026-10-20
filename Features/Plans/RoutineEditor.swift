@@ -11,6 +11,7 @@ struct RoutineEditor: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     /// The slot opened in place.
     @State private var openSlot: UUID?
@@ -61,6 +62,8 @@ struct RoutineEditor: View {
                     .padding(.top, Theme.Spacing.xl)
                     .entrance(4)
 
+                    routineFigure(slots: slots)
+
                     if let library {
                         ExerciseLibraryList(title: libraryTitle(library, slots: slots)) { exercise in
                             choose(exercise, for: library)
@@ -90,6 +93,51 @@ struct RoutineEditor: View {
         .toolbarVisibility(.hidden, for: .navigationBar)
         .background { EdgeSwipeBack() }
         .tesseraFeedback(.selection, trigger: haptic)
+    }
+
+    /// The small muscle figure, in the list's footer, bottom right (board 84): front and back at 44 pt wide each, the
+    /// union of what the routine works. In the footer it never sits over a row's right-hand values (Design on #1097).
+    /// None when the routine has no stored muscles, is Private (never an image for a Private thing), or the text is
+    /// too large for it to clear the words.
+    @ViewBuilder
+    private func routineFigure(slots: [ObjectRecord]) -> some View {
+        let muscles = unionMuscles(slots)
+        if !muscles.isEmpty, !isPrivateRoutine, !typeSize.isAccessibilitySize {
+            HStack(spacing: 4) {
+                Spacer(minLength: 0)
+                ForEach([false, true], id: \.self) { back in
+                    MuscleFigure(back: back, roles: MuscleFigureMap.roles(muscles, back: back))
+                        .frame(width: 44)
+                }
+            }
+            .padding(.top, Theme.Spacing.l)
+            .allowsHitTesting(false)
+            .transition(.opacity)
+            .accessibilityHidden(true)
+        }
+    }
+
+    private var isPrivateRoutine: Bool {
+        ObjectPrivacy.label(of: routine, in: model.store, classes: model.classes) != nil
+            || ObjectPrivacy.routineTitle(model.store.displayTitle(of: routine), in: model.store)
+            == ObjectPrivacy.routineLabel
+    }
+
+    /// Every exercise's primary and secondary muscles, the stronger role per muscle.
+    private func unionMuscles(_ slots: [ObjectRecord]) -> [(name: String, role: MuscleRole)] {
+        var roles: [String: MuscleRole] = [:]
+        for slot in slots {
+            guard let exercise = model.store.linkedClass("exercise", of: slot) else { continue }
+            for muscle in model.store.linkedObjects("primaryMuscles", ofClass: exercise) {
+                roles[muscle.title] = .primary
+            }
+            for muscle in model.store.linkedObjects("secondaryMuscles", ofClass: exercise)
+                where roles[muscle.title] == nil
+            {
+                roles[muscle.title] = .secondary
+            }
+        }
+        return roles.map { (name: $0.key, role: $0.value) }.sorted { $0.name < $1.name }
     }
 
     /// "Routines" when he came from the Routines page, else "Training".

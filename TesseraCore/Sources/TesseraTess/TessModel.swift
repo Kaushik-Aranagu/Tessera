@@ -126,6 +126,15 @@ public struct TessRouter {
         if let asked {
             return asked
         }
+        // A phrase past the cap that nobody on the phone read is too long to send, cook or timer or not (Product, LEN-2
+        // and LEN-3): the same refusal Claude's route gives, never logged as a miss.
+        if request.use == .capture, request.text.count > ClaudeTessModel.maxPhraseCharacters,
+           models.contains(where: { $0.route == .claude && $0.isAvailable(for: .capture) })
+        {
+            var refusal = TessCapture(records: [], line: ClaudeTessModel.tooLongLine, source: .none)
+            refusal.isRefusal = true
+            return refusal
+        }
         // An example only where it fits: a set in a workout, things while shopping (Design's Speak review).
         let example = if request.context.entry != nil {
             " Try \u{201C}80 × 8\u{201D}."

@@ -214,6 +214,8 @@ private struct RepMaxGrid: View {
 private struct MuscleList: View {
     let rows: [ExerciseDigest.MuscleRow]
     let token: Int
+    @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         if rows.isEmpty {
@@ -223,12 +225,52 @@ private struct MuscleList: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, Theme.Spacing.s)
         } else {
-            LazyVStack(spacing: 0) {
-                ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
-                    MuscleRowView(row: row, index: index).riseIn(index, token: token, stagger: 0.04)
+            // Stopgap for the 196 pt MUSCLES window (Design): the figures pinned on the left, the rows scrolling on
+            // their
+            // own on the right, so neither hides the other.
+            HStack(alignment: .top, spacing: Theme.Spacing.m) {
+                figures
+                ScrollView(.vertical) {
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                            MuscleRowView(row: row, index: index).riseIn(index, token: token, stagger: 0.04)
+                        }
+                    }
                 }
+                .scrollIndicators(.hidden)
+            }
+            .frame(height: Self.window)
+        }
+    }
+
+    /// The MUSCLES window's height.
+    private static let window: CGFloat = 196
+
+    /// Both sides, side by side (no flip), about 70 pt wide and 150 tall each, pinned. VoiceOver reads them as one
+    /// element.
+    private var figures: some View {
+        let muscles = rows.map { (name: $0.name, role: MuscleRole($0.role)) }
+        let spoken = MuscleWords.works(rows.map(\.name))
+        return HStack(spacing: Theme.Spacing.xs) {
+            ForEach([false, true], id: \.self) { back in
+                MuscleFigure(back: back, roles: MuscleFigureMap.roles(muscles, back: back),
+                             onTap: { regionID in
+                                 if let row = rows
+                                     .first(where: { MuscleFigureMap.matches($0.name, regionID: regionID) })
+                                 {
+                                     model.open(.object(row.id))
+                                 }
+                             },
+                             spoken: back ? "" : spoken)
+                    .frame(width: 70, height: 154)
             }
         }
+    }
+}
+
+private extension MuscleRole {
+    init(_ role: ExerciseDigest.Role) {
+        self = role == .primary ? .primary : .secondary
     }
 }
 
@@ -247,13 +289,15 @@ private struct MuscleRowView: View {
                          seed: index)
                     .opacity(primary ? 1 : 0.7)
                     .frame(width: 34, alignment: .leading)
-                Text(row.name)
-                    .textRole(.bodyStrong)
-                    .foregroundStyle(Theme.Colors.ink)
-                Spacer(minLength: Theme.Spacing.s)
-                Text(ExerciseWords.role(row.role))
-                    .font(PageType.small)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(MuscleWords.shown(row.name))
+                        .textRole(.bodyStrong)
+                        .foregroundStyle(Theme.Colors.ink)
+                    Text(ExerciseWords.role(row.role))
+                        .font(PageType.small)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                }
+                Spacer(minLength: 0)
             }
             .frame(minHeight: 56)
             .contentShape(Rectangle())
@@ -261,8 +305,8 @@ private struct MuscleRowView: View {
         .buttonStyle(HandleButtonStyle())
         .modifier(ZoomSource(id: Route.object(row.id), namespace: namespace))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(row.name), \(ExerciseWords.role(row.role))")
-        .accessibilityHint("Opens \(row.name)")
+        .accessibilityLabel("\(MuscleWords.shown(row.name)), \(ExerciseWords.role(row.role))")
+        .accessibilityHint("Opens \(MuscleWords.shown(row.name))")
         .accessibilityAddTraits(.isButton)
     }
 }
