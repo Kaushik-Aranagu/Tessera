@@ -57,9 +57,12 @@ struct SettingsPage: View {
                     .padding(.top, Theme.Spacing.xxl)
                     .entrance(4)
 
-                ReviewSection()
-                    .padding(.top, Theme.Spacing.section)
-                    .entrance(5)
+                // Drawn only while some switch ships in this build (Product, Oct 20).
+                if !ReviewChoices.drawnPages().isEmpty {
+                    ReviewSection()
+                        .padding(.top, Theme.Spacing.section)
+                        .entrance(5)
+                }
 
                 NavigationLink {
                     BackupView()
@@ -130,7 +133,7 @@ struct ReviewSection: View {
     @State private var resetLine: String?
     @State private var flips = 0
 
-    private let pages = ReviewChoices.facetPages()
+    private let pages = ReviewChoices.drawnPages()
 
     var body: some View {
         let choices = ReviewChoices.shared

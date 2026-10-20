@@ -77,4 +77,36 @@ struct SettingsPageTests {
             #expect(abs(gapBetween - PeekTabsLayout.gap) < 0.001)
         }
     }
+
+    /// Six tabs (Cooking joined in #1163): still one gap edge to edge, whichever tab is current.
+    @Test func sixTabsNeverOverlap() {
+        let widths: [CGFloat] = [126, 74, 62, 70, 96, 58]
+        for selection in widths.indices {
+            let centers = PeekTabsLayout.centers(widths: widths, selection: selection)
+            #expect(centers[selection] == 0)
+            for index in 0 ..< widths.count - 1 {
+                let gapBetween = (centers[index + 1] - widths[index + 1] / 2) - (centers[index] + widths[index] / 2)
+                #expect(abs(gapBetween - PeekTabsLayout.gap) < 0.001)
+            }
+        }
+    }
+
+    /// Product, Oct 20: Settings draws only rows whose feature ships, so no row reads Soon or Later, and a tab with
+    /// nothing live is not drawn.
+    @Test func onlyShippedRowsAreDrawn() {
+        let drawn = ReviewChoices.drawnPages()
+        #expect(!drawn.isEmpty)
+        #expect(drawn.allSatisfy { !$0.rows.isEmpty && $0.rows.count <= 6 })
+        #expect(drawn.flatMap(\.rows).allSatisfy { $0.readiness == .live })
+        let live = ReviewChoices.all.filter { $0.readiness == .live }.map(\.id)
+        #expect(Set(drawn.flatMap(\.rows).map(\.id)) == Set(live))
+        // The words keep the facets' order.
+        let order = ReviewChoices.facets.map(\.word)
+        let words = drawn.map(\.word)
+        #expect(words == order.filter { words.contains($0) })
+        // A waiting row stays off the page even when the row list asks for it.
+        let waiting = ReviewChoices.Choice(id: "pantryState", name: "Pantry state", values: ["Off", "On"],
+                                           defaultValue: "Off", says: [:], readiness: .arrivesWith("pantry state"))
+        #expect(ReviewChoices.drawnPages([waiting]).isEmpty)
+    }
 }
