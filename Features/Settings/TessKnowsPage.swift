@@ -153,6 +153,16 @@ enum TessKnowsCopy {
 
     /// Settings' door, third person, in ink: "Tess remembers 12 things." or "Tess remembers nothing yet."
     static func door(_ countWord: String) -> String {
-        countWord == "Nothing yet" ? "Tess remembers nothing yet." : "Tess remembers \(countWord)."
+        "\(doorLead(countWord))\(doorCount(countWord))."
+    }
+
+    /// "Tess remembers " before the count word.
+    static func doorLead(_: String) -> String {
+        "Tess remembers "
+    }
+
+    /// The count word itself, the door's only value word: "12 things", or "nothing yet".
+    static func doorCount(_ countWord: String) -> String {
+        countWord == "Nothing yet" ? "nothing yet" : countWord
     }
 }
