@@ -13,6 +13,8 @@ private struct WrapsWithinPage: ViewModifier {
             .fixedSize(horizontal: false, vertical: true)
             .frame(width: WrapsWithinFit.width(natural: natural, column: page - 2 * Theme.Spacing.gutter),
                    alignment: .leading)
+            // Unseen until both widths are read, so the first frame never flashes one wide line (QA on #1162).
+            .opacity(WrapsWithinFit.isMeasured(natural: natural, page: page) ? 1 : 0)
             .background(alignment: .leading) {
                 content
                     .fixedSize()
@@ -29,6 +31,10 @@ private struct WrapsWithinPage: ViewModifier {
 }
 
 enum WrapsWithinFit {
+    static func isMeasured(natural: CGFloat, page: CGFloat) -> Bool {
+        natural > 0 && page > 0
+    }
+
     /// The column's width when the one-line label wouldn't fit in it; nil (its own width) otherwise.
     static func width(natural: CGFloat, column: CGFloat?) -> CGFloat? {
         guard let column, column > 0, natural > column else { return nil }

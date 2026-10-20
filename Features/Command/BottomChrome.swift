@@ -482,9 +482,9 @@ struct BottomChrome: View {
         let lift = isQuestion ? nil : model.pendingDatedLift
         ghost = nil
         drying = 0
-        // Offline, a capture the walls stopped can't be read yet: his words stay in the Ask for the retry online
-        // (Product ruling), and Tess's line says so.
-        model.commandDraft = AskCopy.keepsDraft(answer) ? model.commandDraft : ""
+        // When the engine says to keep them (Claude unreachable, a walled phrase offline, Core's `keepsWords`), his
+        // words stay in the Ask for the retry, and Tess's line says why. A question answered here never keeps them.
+        model.commandDraft = AskCopy.keepsDraft(isQuestion ? false : model.lastKeepsWords) ? model.commandDraft : ""
         withTesseraAnimation(.spring(response: 0.42, dampingFraction: 0.9), reduceMotion: reduceMotion) {
             model.isCommandExpanded = false
             // At rest the soul is small: `.done` would multiply its dabs into mud, so it brightens instead.
@@ -864,12 +864,10 @@ enum AskSlot {
 
 /// The Ask's own rules for a reply.
 enum AskCopy {
-    /// Core's offline line for a capture the walls stopped (Product ruling): the typed words are kept for the retry.
-    static let offlineRetry = "Couldn't read that offline. Try again online."
-
-    /// Whether the Ask keeps what he typed after this reply.
-    static func keepsDraft(_ answer: String) -> Bool {
-        answer == offlineRetry
+    /// Whether the Ask keeps what he typed after this reply: only when the engine flagged the capture
+    /// (`TessCapture.keepsWords`), never by matching Tess's words.
+    static func keepsDraft(_ keepsWords: Bool) -> Bool {
+        keepsWords
     }
 }
 

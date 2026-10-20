@@ -368,7 +368,7 @@ public enum DayStory {
                                   kind: .finished), false))
         }
         for (book, moved) in pages.sorted(by: { $0.value.time < $1.value.time })
-            where finishedBooks[book] == nil && moved.to != moved.from
+            where finishedBooks[book] == nil && moved.to > moved.from
         {
             let title = lookup.title(of: book) ?? "a book"
             // No earlier page: "Read Dune to p 142"; a real start page: "Read Dune, p 120 to 142".

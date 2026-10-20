@@ -340,6 +340,19 @@ struct ClaudeRouteTests {
         #expect(try store.objects(of: #require(classes[.spend])).isEmpty)
     }
 
+    @Test func aRefusedKeyKeepsHisWordsAndCancelledDoesNot() async {
+        RouteStub.failure = nil
+        RouteStub.reply = (401, "{}")
+        let refused = await tess().capture(miss, context: context)
+        #expect(refused.keepsWords && !refused.keptToSort && refused.line.contains("Settings: Claude"))
+        // His own stop clears the box: cancelled keeps nothing.
+        RouteStub.reply = (200, "{}")
+        RouteStub.failure = .cancelled
+        let cancelled = await tess().capture(miss, context: context)
+        #expect(cancelled.line == "Cancelled." && !cancelled.keepsWords && !cancelled.keptToSort)
+        RouteStub.failure = nil
+    }
+
     @Test func aBusyReplyKeepsHisWordsToo() async {
         RouteStub.failure = nil
         RouteStub.reply = (429, "{}")

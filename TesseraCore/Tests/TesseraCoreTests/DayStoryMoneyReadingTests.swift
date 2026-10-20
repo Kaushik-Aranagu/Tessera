@@ -81,4 +81,13 @@ extension DayStoryTests {
         let text = try #require(lines(Self.at(14, 23)).first)
         #expect(text == "21:00  Read Private book to p 30" && !text.contains("Therapy"))
     }
+
+    @Test func aPageThatGoesBackwardShowsNoReadLine() throws {
+        let book = try run(QueueBook(title: "Dune", pages: 600), at: Self.at(14, 8)).output
+        try run(StartReading(book: book.id, time: Self.at(14, 8)), at: Self.at(14, 8))
+        try run(SetBookPage(book: book.id, page: 120, time: Self.at(13, 21)), at: Self.at(13, 21))
+        try run(SetBookPage(book: book.id, page: 142, time: Self.at(14, 20)), at: Self.at(14, 20))
+        try run(SetBookPage(book: book.id, page: 100, time: Self.at(14, 21)), at: Self.at(14, 21))
+        #expect(lines(Self.at(14, 23)).isEmpty)
+    }
 }
