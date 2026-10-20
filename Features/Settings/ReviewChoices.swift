@@ -53,6 +53,15 @@ final class ReviewChoices {
                says: ["Off": "A workout left open waits quietly.",
                       "On": "One quiet nudge when a workout was left open."],
                readiness: .live),
+        Choice(
+            id: "lockScreenLook",
+            name: "Lock Screen look",
+            values: ["Cobalt sky", "Follows the look"],
+            defaultValue: "Cobalt sky",
+            says: ["Cobalt sky": "The rest card on the Lock Screen is Cobalt sky in every look.",
+                   "Follows the look": "The rest card takes your day or night look. The Island stays Obsidian."],
+            readiness: .live
+        ),
         Choice(id: "pageTurn", name: "Page turn", values: ["Today", "Slide", "Turn", "Soften", "Rotate"],
                defaultValue: "Today",
                says: ["Today": "Pages change as they do now.",
@@ -112,7 +121,7 @@ final class ReviewChoices {
     /// The rows in pages of at most six, for the side swipe (Design sheet 100).
     /// Review's pages by facet, each named beside the counter ("Workout, 2 of 5"; Design sheet 100), six rows at most.
     nonisolated static let facets: [(word: String, ids: [String])] = [
-        ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace"]),
+        ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace", "lockScreenLook"]),
         ("Workout", ["restTimer", "swapExercise", "finishNudge", "quietInterrupts"]),
         ("Kitchen", ["cookTimerVoice", "pantryState", "canCookShelf", "handsFreeCook"]),
         ("Connected", ["planMyDay", "shutdown", "energyCheckIn", "calendar", "health", "linkFetch"]),

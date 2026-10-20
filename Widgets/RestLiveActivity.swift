@@ -115,10 +115,12 @@ struct RestLiveActivity: Widget {
 private struct LockScreenRoot<Content: View>: View {
     let state: RestActivityAttributes.ContentState
     @ViewBuilder var content: Content
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        // The Lock Screen stays Kaushik's Cobalt sky in every look (QA B3); the names ride along for later.
-        let palette = RestPalette.cobaltSky
+        // Cobalt sky in every look (QA B3, Kaushik's pick) unless the app wrote the look names (Review switch
+        // review.lockScreenLook = "Follows the look"); then the look pair, by the Lock Screen's appearance.
+        let palette = RestPalette.lockScreen(day: state.lookDay, night: state.lookNight, dark: colorScheme == .dark)
         content
             .environment(\.restPalette, palette)
             .activityBackgroundTint(palette.materialTint)
@@ -128,6 +130,7 @@ private struct LockScreenRoot<Content: View>: View {
 
 private struct RestLockScreenView: View {
     @Environment(\.restPalette) private var palette
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
     let state: RestActivityAttributes.ContentState
     let isGo: Bool
 
@@ -150,6 +153,7 @@ private struct RestLockScreenView: View {
             HorizonLine(state: state, isGo: isGo, color: palette.line)
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
+                .opacity(isLuminanceReduced ? 0 : 1)
             HStack(spacing: 0) {
                 Group {
                     if isGo {
@@ -179,6 +183,7 @@ private struct RestLockScreenView: View {
 private struct Washes: View {
     @Environment(\.restPalette) private var palette
     let isGo: Bool
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
     var body: some View {
         GeometryReader { proxy in
@@ -197,6 +202,7 @@ private struct Washes: View {
                     .blur(radius: 10)
             }
         }
+        .opacity(isLuminanceReduced ? 0 : 1)
         .allowsHitTesting(false)
     }
 }
