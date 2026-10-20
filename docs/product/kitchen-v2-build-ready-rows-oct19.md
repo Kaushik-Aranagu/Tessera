@@ -56,7 +56,7 @@ Already covered: K44.1-K44.16, groceries-ai sec 4 rows 7, Pantry S5-S6, PW09-PW1
 | RL-S3 | A tap gives one soft haptic and the receipt; nothing is added without the tap. | HapticMapTests.swift + K44.12 grep | Builder B | K44.4 |
 
 Review switch: Usually line (new, inferred), default Off, before/after: Off, Groceries and Pantry end with no USUALLY line / On, up to 4 names he buys on a rhythm show at the foot.
-Ruled: USUALLY is 21/400 at 55% on Groceries, label USUALLY; the Pantry label is USUALLY HAVE (backlog look; keeps the 3-size limit). Still open: "Oat milk, not now." is proposed (K44.5).
+Ruled: USUALLY is 21/400 at 55% on Groceries, label USUALLY; the Pantry label is USUALLY HAVE (backlog look; keeps the 3-size limit). "Oat milk, not now." stands (Product, Oct 19).
 
 ## AO Store aisle order
 Only the backlog line and K46.4 ("no per-store order in v1") exist. Gate: only if he says a shop's order feels wrong.
@@ -64,15 +64,15 @@ Only the backlog line and K46.4 ("no per-store order in v1") exist. Gate: only i
 | ID | Clause | How checked | Owner | Depends on |
 |---|---|---|---|---|
 | AO-E1 | A finished shop records its aisle order as the order of first `checkedAt` per aisle. | new test `checkOffOrderGivesAisleOrder`, ShoppingTests.swift | Core | FinishShop |
-| AO-E2 | A learned order replaces K7.3's default only after the same order wins 2 of the last 3 shops (inferred). | new test `orderNeedsTwoOfThree` | Core | AO-E1 |
+| AO-E2 | An item moves only when checked off in the same relative place in 2 of his last 3 shops (ruled Oct 19). | new test `orderNeedsTwoOfThree` | Core | AO-E1 |
 | AO-E3 | Learning moves aisles, never an item's learned aisle (K36.6 stays). | new test `aisleOrderLeavesItemAislesAlone` | Core | K36.6 |
-| AO-E4 | Order is per shop; with no shop named, the default walk order holds. | new test `noShopKeepsDefaultOrder` | Core | open Q1 |
+| AO-E4 | One learned order serves every shop (no shop object); with nothing learned, the default walk order holds (ruled Oct 19). | new test `noLearnedOrderKeepsDefault` | Core | AO-E2 |
 | AO-E5 | No shop name or order leaves the phone (pack, Claude, shared export). | ExportTests.swift + groceries-ai row 5 | Core | |
 | AO-S1 | Groceries, the trip hero and "then X" all read the learned order. | walk: K46.1 with a learned fixture | Builder B | AO-E2 |
 | AO-S2 | A re-order slides once on open (`.tesseraAnimation`; Reduce Motion crossfades), no receipt or haptic (inferred). | walk | Builder B | AO-S1 |
 
 Review switch: Learned aisle order, default Off, before/after: Off, aisles in the fixed walk order / On, aisles in the order he walked this shop.
-Open questions: (1) No shop object exists; how a shop is picked is not ruled. (2) AO-E2's 2-of-3 bar is inferred. (3) Resetting a learned order is not ruled.
+Ruled (Product, decisions.md 6:00 PM Oct 19): one learned order for all shops, no shop object; an item moves only when checked off in the same relative place in 2 of his last 3 shops; switch Off. So AO-E4 (per shop) is replaced by one order for all shops, and AO-E2's 2-of-3 bar is a ruling. Open: resetting a learned order is not ruled.
 
 ---
 
@@ -249,3 +249,20 @@ Product ruled all 12 at 12:47 PM Oct 19 (defaults, reversible), folded into the 
 10. **Done by voice**: "<title>, cooked."; Builder A changes `TessCaptureEngine.swift:452`.
 11. **Cook notes**: optional "Note for next time" line on Finish feeding `FinishCooking(note:)`; voice "note: less salt" also works.
 12. **Hands-free**: "back" approved, reply plain "Step N."
+
+## Looks: Design sheet 114 (Kitchen v2 looks)
+
+Design item 114 (`design/kitchen-v2-114.md`, Oct 19) draws these screen rows. Rows keep their ids; the sheet gives the look and the wording.
+
+| Rows | Sheet 114 section | What it fixes |
+|---|---|---|
+| WD-S1, WD-S3 | 1 Week strip | one row per day, "Tacos, skipped" in secondary ink with no strike, key "Add the week to Groceries", receipt "Week, 5 added." UNDO 4 s |
+| RG-S1, RG-S2 | 2 Repeats word | quiet word "weekly" at the row's right; tap clears, "Milk, not every week." UNDO 10 s |
+| HF-S5 | 3 Listening mark | the word "Listening" with a breathing hairline, no mic icon; static under Reduce Motion and Low Power |
+| CN-S1, CN-S2 | 4 Note line | "Last time: less salt." on the recipe page and the first cook step; optional "Note for next time" line on Finish |
+| RE-S1 to RE-S3 | 5 FIX | top-right word FIX or long press on the title; step number is the drag handle (hold 0.3 s); refusal "Nothing saved: every line is ignored." |
+| PL-S3, PL-S4 | 6 Second lane | "Meanwhile, rice, step 2 of 4, 9 minutes left."; proposal bracket at 25% ink, read as "Proposed" |
+| CC-S2 | 7 Also | "2 to check" block under a hairline, rows at 55% ink |
+| AO-S2 | 7 Also | headings slide once on open, 240 ms; 150 ms crossfade under Reduce Motion |
+
+Switch wording on the Kitchen page (sheet 114): "Week strip is off.", "Repeat items are off.", "Hands-free cooking is off.", "Cook notes on the recipe are off.", "Fixing a recipe is off.", "Steps run in parallel are off." Accepted switch ids (Product, Oct 19, all default Off): weekStrip, repeatItems, cookDouble, parallelSteps, cookNotes, fixRecipe, usuallyLine, aisleOrder.
