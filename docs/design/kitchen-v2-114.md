@@ -46,7 +46,7 @@ From Kitchen's list (Oct 19) over `docs/product/kitchen-v2-build-ready-rows-oct1
 
 ## 7. Also, from the same pages
 - CAN COOK (CC-S2): the recipes below the 60% bar sit under a hairline in a block headed by one line "2 to check" in `inkSecondary` 16; the rows below it are ink at 55%. A tap on the greyed CAN COOK word speaks the empty line once, no haptic.
-- Aisle order (AO-S2): when the learned order differs, the aisle headings slide to the new order once on open, 240 ms with the snappy curve through MotionPolicy. No receipt, no haptic. Reduce Motion: a 150 ms crossfade.
+- Aisle order (AO-S2): when the learned order differs, the aisle headings slide to the new order once on open, with the snappy curve (0.25 s) through MotionPolicy. No receipt, no haptic. Reduce Motion: a 150 ms crossfade.
 
 ## Never
 A pill, an icon, a coloured dot, a drawn food image, a red word, a dialog, more than one haptic per moment, a switch that names what is not built.
