@@ -10,7 +10,10 @@ public struct ClaudeTessModel: TessModel {
     public static let model = "claude-haiku-5-5"
     static let maxTokens = 512
     /// An offline miss that hit a wall: kept nowhere, so it can only be said again online.
-    static let walledOfflineLine = "Couldn't read that offline. Try again online."
+    public static let walledOfflineLine = "Couldn't read that offline. Try again online."
+    /// Claude was on and the call failed (offline and not saved for later, a cut-off or refused reply, an unreadable
+    /// answer): his words stay in the Ask for the retry (Product ruling, 6:10 PM PT Oct 19).
+    public nonisolated static let unreachedLine = "Couldn't reach Claude. Try again."
 
     /// The longest phrase sent to Claude, in characters.
     static let maxPhraseCharacters = 600
@@ -79,7 +82,11 @@ public struct ClaudeTessModel: TessModel {
             flags.heldBack += 1
             let reset = TessUsageLedger.monthInterval(containing: now(), calendar: calendar).end
                 .formatted(.dateTime.month(.abbreviated).day())
-            return .asked(TessCapture(records: [], line: "Claude paused until \(reset).", source: .none))
+            // Idle, the router keeps the phrase to sort later instead (Product ruling, Oct 19); this line is for a
+            // live set or a shop, which keep their own lines.
+            var paused = TessCapture(records: [], line: "Claude paused until \(reset).", source: .none)
+            paused.claudeAtCap = true
+            return .asked(paused)
         }
         defer { ledger.settle(reservation) }
         let started = Date()
@@ -160,9 +167,13 @@ public struct ClaudeTessModel: TessModel {
             {
                 var held = TessCapture(records: [], line: Self.walledOfflineLine, source: .none)
                 held.isRefusal = true
+                held.keepsWords = true
                 return .asked(held)
             }
-            return error is Failure ? .asked(TessCapture(records: [], line: failure.line, source: .none)) : .missed
+            guard error is Failure else { return .missed }
+            var failed = TessCapture(records: [], line: failure.line, source: .none)
+            failed.keepsWords = failure.line == Self.unreachedLine
+            return .asked(failed)
         }
         ledger.record(use: .capture, model: Self.model, input: usage.input, output: usage.output,
                       costNano: usage.cost, latency: Date().timeIntervalSince(started),
@@ -291,7 +302,7 @@ public struct ClaudeTessModel: TessModel {
         /// Tokens billed before it failed (a 200 with no content).
         var used = Usage()
 
-        static let offline = Failure(outcome: "offline", line: "No connection, so Claude didn't see that.")
+        static let offline = Failure(outcome: "offline", line: ClaudeTessModel.unreachedLine)
         static let timeout = Failure(outcome: "timeout", line: "Claude didn't answer in time.")
         static let busy = Failure(outcome: "busy", line: "Claude is busy right now.")
         static let cancelled = Failure(outcome: "cancelled", line: "Cancelled.")
@@ -299,7 +310,7 @@ public struct ClaudeTessModel: TessModel {
             outcome: "badKey",
             line: "Claude didn't take the key. Check it in Settings: Claude."
         )
-        static let other = Failure(outcome: "other", line: "Didn't catch that.")
+        static let other = Failure(outcome: "other", line: ClaudeTessModel.unreachedLine)
     }
 
     func send(_ messages: [[String: Any]], system: String, key: String, until deadline: Date) async throws -> Response {

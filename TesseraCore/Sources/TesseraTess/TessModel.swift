@@ -123,7 +123,8 @@ public struct TessRouter {
             case .missed: break
             }
         }
-        if let asked {
+        // Over the cap counts as no Claude (Product ruling, Oct 19): idle, the phrase is kept to sort later.
+        if let asked, !asked.claudeAtCap {
             return asked
         }
         // A phrase past the cap that nobody on the phone read is too long to send, cook or timer or not (Product, LEN-2
@@ -146,11 +147,16 @@ public struct TessRouter {
         // Nothing on the phone read it and Claude is not there to (no key, asking off, or no answer yet to the key
         // question): the phrase is kept as a note he can sort later, rather than dropped. Idle only (a live set or a
         // shop keeps its own "Try ..." line), never a cook or timer phrase, and never a Claude key (refused above).
+        // Over the cap reads the same as Claude not there (Product ruling, 6:10 PM PT Oct 19).
         if example.isEmpty, request.use == .capture, !stayHome,
-           !models.contains(where: { $0.route == .claude && $0.isAvailable(for: .capture) }),
+           asked?.claudeAtCap == true
+           || !models.contains(where: { $0.route == .claude && $0.isAvailable(for: .capture) }),
            let kept = keepToSort(request)
         {
             return kept
+        }
+        if let asked {
+            return asked
         }
         return TessCapture(records: [], line: "Didn't catch that.\(example)", source: .none)
     }
@@ -164,7 +170,7 @@ public struct TessRouter {
         guard !phrase.isEmpty, !looksLikeClaudeKey(phrase) else { return nil }
         engine.attribution = (.grammar, nil)
         defer { engine.attribution = nil }
-        guard let made = try? engine.perform(CreateNote(body: phrase), by: .tess,
+        guard let made = try? engine.perform(CreateNote(body: phrase, toSort: true), by: .tess,
                                              pending: !request.context.commitImmediately)
         else { return nil }
         // A private note (a walled phrase) never echoes the phrase, nor even its own "Private note" title.

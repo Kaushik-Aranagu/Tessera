@@ -19,7 +19,7 @@ public enum SystemCatalog {
         case process
         case slot, plan
         case tessCall
-        case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice
+        case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend, book
         case tessSent
         case settings
         case tessWaiting
@@ -223,6 +223,9 @@ public enum SystemCatalog {
             // A private note (secret words, Research 134 SW4): titled "Private note" everywhere outside its page,
             // never in memory, packs or the miss log; in his backups (Q1).
             FieldSpec(key: "isPrivate", name: "Private", kind: .bool),
+            // A phrase Tess couldn't read, kept to sort later (Product ruling, Oct 19): the inbox shows "To sort".
+            // Added without a version bump: seeding adds a missing field to a class seeded earlier.
+            FieldSpec(key: "toSort", name: "To sort", kind: .bool),
         ]),
         // The calendar and Health mounts (M4 slices 1 and 2): read-only mirrors, written by the system, never by him.
         ClassSpec(key: .event, name: "Event", parent: .thing, symbol: "calendar", colorRole: "neutral", fields: [
@@ -261,6 +264,29 @@ public enum SystemCatalog {
                       FieldSpec(key: "priority", name: "Priority", kind: .text),
                       FieldSpec(key: "dueAt", name: "Due", kind: .date),
                   ]),
+        // One spend (Money, M5): an amount logged like a set. Stored as typed ("12.40", "€8", "20 eur"); nothing is
+        // converted and nothing is summed across currencies. Private everywhere except its own page and the Month.
+        ClassSpec(key: .spend, name: "Spend", parent: .thing, symbol: "banknote", colorRole: "neutral", fields: [
+            FieldSpec(key: "amount", name: "Amount", kind: .number),
+            FieldSpec(key: "typed", name: "As typed", kind: .text),
+            FieldSpec(key: "currency", name: "Currency", kind: .text),
+            FieldSpec(key: "note", name: "Note", kind: .text),
+            FieldSpec(key: "category", name: "Category", kind: .text),
+            FieldSpec(key: "spentAt", name: "Spent", kind: .date),
+            FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+        ]),
+        // One book (Reading, M5): the page he is on is its resume point. Queued, reading, finished or dropped.
+        ClassSpec(key: .book, name: "Book", parent: .thing, symbol: "book", colorRole: "neutral", fields: [
+            FieldSpec(key: "author", name: "Author", kind: .text),
+            FieldSpec(key: "pages", name: "Pages", kind: .number),
+            FieldSpec(key: "isbn", name: "ISBN", kind: .text),
+            FieldSpec(key: "state", name: "State", kind: .choice, defaultValue: .choice("queued"),
+                      options: ["queued", "reading", "finished", "dropped"]),
+            FieldSpec(key: "page", name: "Page", kind: .number, defaultValue: .number(0)),
+            FieldSpec(key: "review", name: "Review", kind: .text),
+            FieldSpec(key: "finishedAt", name: "Finished", kind: .date),
+            FieldSpec(key: "isPrivate", name: "Private", kind: .bool, defaultValue: .bool(false)),
+        ]),
         ClassSpec(key: .sleepNight, name: "Sleep Night", parent: .thing, symbol: "bed.double", colorRole: "neutral",
                   fields: [
                       FieldSpec(key: "date", name: "Night ending", kind: .date),

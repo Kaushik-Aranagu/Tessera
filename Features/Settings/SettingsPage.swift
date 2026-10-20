@@ -32,6 +32,11 @@ struct SettingsPage: View {
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1, hero: true)
 
+                // His own page: weight, height, age, sex, and what the app knows of his training (Design 108 s3).
+                MeDoor()
+                    .padding(.top, Theme.Spacing.m)
+                    .entrance(2)
+
                 // "Porcelain by day, Obsidian by night", each name a value word.
                 LookSentence()
                     .padding(.top, Theme.Spacing.xxl)

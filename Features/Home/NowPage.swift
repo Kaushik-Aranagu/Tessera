@@ -43,16 +43,9 @@ struct NowPage: View {
                 .entrance(0)
                 .padding(.bottom, Theme.Spacing.xl)
 
-            // A Claude key found on a fresh store: one line on Now per cold launch until he answers (G687).
-            if model.keyQuestionDue, !model.keyQuestionQuietOnNow {
-                ClaudeKeyQuestionNowLine {
-                    // Shown once this launch: the three words wait in Claude's section (Review until Settings ships).
-                    model.keyQuestionQuietOnNow = true
-                    openLink(.review)
-                }
-                .padding(.bottom, Theme.Spacing.xl)
-                .transition(.opacity)
-            }
+            // One quiet line at most (never stacked): the found-key question (G687), the restore offer (G688), the
+            // signing lapse (G693), in that order.
+            NowQuietLines()
 
             Group {
                 // A running process is Now (docs/product/whats-running.md); a paused one is Now too (41.7).
@@ -228,7 +221,7 @@ struct NowPage: View {
             }, label: { _ in
                 Text("Start with \(PlanWords.shownTitle(first, model: model))")
                     .textRole(.labelStrong)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .wrapsWithinPage()
             })
             .accessibilityLabel("Start with \(PlanWords.shownTitle(first, model: model))")
             .tesseraFeedback(.made, trigger: planKept)

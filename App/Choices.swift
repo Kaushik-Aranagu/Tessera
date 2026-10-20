@@ -36,4 +36,14 @@ enum Choice {
     static func tessHasEyes(defaults: UserDefaults = .standard) -> Bool {
         value("tessFace", options: tessFaceOffered + ["Eyes and mouth"], default: "Off", defaults: defaults) != "Off"
     }
+
+    /// The Lock Screen rest card's colours: "Cobalt sky" (default, Kaushik's pick of 2026-10-15) in every look, or
+    /// "Follows the look", where the card takes the day or night look like the app. The Island stays Obsidian either
+    /// way.
+    static let lockScreenLookOffered = ["Cobalt sky", "Follows the look"]
+
+    static func lockScreenFollowsLook(defaults: UserDefaults = .standard) -> Bool {
+        value("lockScreenLook", options: lockScreenLookOffered, default: "Cobalt sky", defaults: defaults)
+            == "Follows the look"
+    }
 }
