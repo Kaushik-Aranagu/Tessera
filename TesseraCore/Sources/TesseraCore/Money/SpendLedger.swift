@@ -39,6 +39,30 @@ public struct SpendLedger {
 
     static let symbols = ["EUR": "€", "GBP": "£", "USD": "$", "INR": "₹"]
 
+    /// An amount as the house shows it: the sign against the number when a currency is set ("€26.90"), the bare
+    /// number otherwise, never a code.
+    public static func shown(_ amount: Decimal, currency: String?) -> String {
+        (currency.flatMap { symbols[$0] } ?? "") + MoneyAmount.format(amount)
+    }
+
+    /// The thing first, then the amount: "Coffee, 12.40." A walled word reads "Private spend"; no word reads
+    /// "Spent 12.40."
+    public static func receiptLine(for spend: ObjectRecord, in store: ObjectStore) -> String {
+        let typed = store.value("typed", of: spend)?.stringValue ?? ""
+        let amount = MoneyAmount.parse(typed)?.amount
+            ?? store.number("amount", of: spend).flatMap { Decimal(string: String($0)) } ?? 0
+        let currency = store.value("currency", of: spend)?.stringValue.flatMap { $0.isEmpty ? nil : $0 }
+        let shown = shown(amount, currency: currency)
+        let note = (store.value("note", of: spend)?.stringValue ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if note.isEmpty {
+            return "Spent \(shown)."
+        }
+        if PrivateWords.isPrivateTitle(note, lastWeightKg: BodyWeight.lastKg(in: store)) {
+            return "\(ObjectPrivacy.spendLabel), \(shown)."
+        }
+        return "\(note.prefix(1).uppercased() + note.dropFirst()), \(shown)."
+    }
+
     /// "October, logged: 41 spends · groceries 312.40 · lunch 86.10", then one line per other currency
     /// ("€ 60.00 in 3 spends"). "October: nothing logged yet" for an empty month.
     public func monthLine(for date: Date, calendar: Calendar = .current) -> String {

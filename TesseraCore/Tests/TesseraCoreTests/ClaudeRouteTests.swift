@@ -327,6 +327,19 @@ struct ClaudeRouteTests {
         #expect(ledger.calls().count == 1)
     }
 
+    @Test func anUnreadableMoneyPhraseIsKeptOnThePhoneNotLoggedByClaude() async throws {
+        // The route is unchanged (#860: it goes whole); Claude has no money action to call, so nothing is logged
+        // and the phrase is kept to sort later, private, never echoed.
+        let phrase = "lunch with sam was about 23 quid I think"
+        RouteStub.queue = [(200, Self.answer("I can't log that."))]
+        let capture = await tess().capture(phrase, context: context)
+        #expect(capture.keptToSort && capture.line == "Kept to sort later.", "\(capture.line)")
+        #expect(!capture.line.contains("23") && capture.records.map(\.action) == ["createNote"])
+        let tools = String(decoding: RouteStub.bodies.last ?? Data(), as: UTF8.self)
+        #expect(!tools.contains("logSpend") && !tools.contains("logShopTotal") && !tools.contains("editSpend"))
+        #expect(try store.objects(of: #require(classes[.spend])).isEmpty)
+    }
+
     @Test func aBusyReplyKeepsHisWordsToo() async {
         RouteStub.failure = nil
         RouteStub.reply = (429, "{}")
