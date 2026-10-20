@@ -233,6 +233,7 @@ struct BackupView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Button("Cancel restore") {
                     TesseraBackup.cancelRestore()
+                    RestoreOffer.forgetStaged()
                     pending = nil
                     say("Cancelled. Nothing will be replaced.")
                 }
@@ -296,6 +297,7 @@ struct BackupView: View {
         guard let picked = confirming else { return }
         do {
             pending = try TesseraBackup.stageRestore(from: picked.url)
+            RestoreOffer.rememberStaged(picked.info.createdAt)
             restores += 1
             dropPicked()
             say("What's here now is kept in Backups, so this can be undone.")
