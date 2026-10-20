@@ -628,10 +628,17 @@ enum SentWords {
             lines[0] = "\u{201C}\(phrase)\u{201D}"
         }
         // A private routine in the context reads "Private workout" here too (Design on #1123).
-        let workout = "Workout: "
+        // Core sends "Workout: current exercise <name>" (or "Workout: <title>"): a private name reads
+        // "Workout: Private workout" (QA on #1143).
+        let workout = "Workout: ", current = "current exercise "
         lines = lines.map { line in
             guard line.hasPrefix(workout) else { return line }
-            return workout + ObjectPrivacy.routineTitle(String(line.dropFirst(workout.count)), in: store)
+            var name = String(line.dropFirst(workout.count))
+            if name.hasPrefix(current) {
+                name = String(name.dropFirst(current.count))
+            }
+            let shown = ObjectPrivacy.routineTitle(name, in: store)
+            return shown == ObjectPrivacy.routineLabel ? workout + shown : line
         }
         return lines.joined(separator: "\n")
     }
