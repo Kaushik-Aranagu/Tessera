@@ -34,7 +34,7 @@ struct QAFixes1148Tests {
 
     @Test func theMoneyActionsAreNotInTheModelsToolList() {
         let offered = Set(ActionRegistry.offered.map(\.name))
-        for name in ["logSpend", "logShopTotal", "skipShopTotal"] {
+        for name in ["logSpend", "editSpend", "logShopTotal", "skipShopTotal"] {
             #expect(!offered.contains(name), "\(name)")
             #expect(ActionRegistry.descriptors.contains { $0.name == name })
         }
