@@ -8,6 +8,8 @@ import UniformTypeIdentifiers
 ///
 /// Entry point: present `BackupView()`, or launch with `-backup` in DEBUG (`-backupFailure` shows a failed copy).
 struct BackupView: View {
+    /// Where the back word goes: Settings from Settings, or wherever else opened it (the restore offer).
+    var backTo = "Settings"
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
@@ -38,13 +40,13 @@ struct BackupView: View {
             VStack(alignment: .leading, spacing: 0) {
                 if isPresented {
                     Button { dismiss() } label: {
-                        Text("‹ Settings")
+                        Text("‹ \(backTo)")
                             .textRole(.label)
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .frame(minHeight: 44)
                     }
                     .buttonStyle(HandleButtonStyle())
-                    .accessibilityLabel("Back to Settings")
+                    .accessibilityLabel("Back to \(backTo)")
                 }
                 Text("your history")
                     .font(Theme.voice)

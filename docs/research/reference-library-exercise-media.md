@@ -86,6 +86,13 @@ licence-clean GIF/clip set was found. GitHub search itself was blocked, so a net
   the "no stock screens" principle, and is the lowest-risk pick for the equipment picture.
 
 ## 4. MET values
+**Update (Core read the Compendium page on a networked Mac, Oct 19; plain reading, not legal advice):** free to use
+commercially on three conditions: do not change MET values, do not combine activities with different MET levels,
+and cite the Compendium. There is no app-specific terms page. Consequences (Product to rule): drop the two-tier
+3.5 / 6.0 table below, because one table for many exercises would combine levels; use the unchanged Compendium
+value for each activity, mapped per exercise (a code per exercise or movement), with the citation in the library's
+notes and an About line. We do not email the Compendium for now (outside messages need Kaushik). The notes below
+were written before this read and are kept for history; where they say UNVERIFIED or two-tier, this update wins.
 - Compendium of Physical Activities (Arizona State University), site pacompendium.com. Licence/terms: NOT read
   (DNS failure). No GitHub-hosted copy or repo citing it with a licence was found. A search excerpt mentions a
   CC BY-NC-ND licence on a repository page for the Older Adult Compendium paper only; that is a different
@@ -106,7 +113,7 @@ licence-clean GIF/clip set was found. GitHub search itself was blocked, so a net
   Citations (from memory/excerpts, unverified): Ainsworth et al., Med Sci Sports Exerc 2000 (PubMed 10993420);
   Herrmann et al., J Sport Health Sci 2024 (2024 update).
 
-## 5. Our catalog (read-only grep of /home/user/wt-hk)
+## 5. Our catalog (read-only grep of the repo)
 - Note: "catalog v9" is the SystemCatalog package (SystemCatalog.swift: CatalogPackage id "system", version 9).
   The exercise library is a separate package, ExerciseLibraryInstaller: id "library", version 1.
 - Exercise seeds in ExerciseLibrary.swift: 72 (grep of top-level ExerciseSeed( entries). Each seed has: id, name,
@@ -125,12 +132,12 @@ licence-clean GIF/clip set was found. GitHub search itself was blocked, so a net
    simple figure-and-bar motion with muscles highlighted. It is original work, tiny, scales on any device, and fits
    the UI-invention principle. Ship text cue + muscle highlight first, animation per pattern second.
 3. Equipment picture: draw 9 own icons/illustrations. Commons CC0 images only after a manual check.
-4. MET: own two-tier table (3.5 / 6.0) plus cardio rows, labelled estimate, citing the Compendium; Core to read the
-   Compendium terms first.
+4. MET: the unchanged Compendium value for each activity, mapped per exercise (never a combined two-tier table), with the
+   Compendium cited in the library's notes and an About line (see the update at the top of section 4).
 
 ## Open checks (from a networked Mac)
-1. Read pacompendium.com terms/copyright and the 2024 adult PDF rows for 02050, 02052, 02054, and cardio codes
-   (rowing 02061-ish, running, cycling). Confirm numbers and whether reuse in an app needs permission.
+1. Done 2026-10-20 (Core, Mac): terms and the 2024 rows for all 9 codes used are read and confirmed (see
+   reference-library-met-mapping.md). Still open for later seeds: cardio codes (rowing, running, cycling).
 2. Read https://gymvisual.com/content/3-terms-and-conditions-of-use, and decide if a paid licence is wanted (out of
    brief).
 3. Identify the original author of the wrkout / free-exercise-db photos; read open issues on both repos about image

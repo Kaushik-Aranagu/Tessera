@@ -1,0 +1,99 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight','Inter',sans-serif;color:#14181F;padding:24px;width:1100px;box-sizing:border-box}
+.row{display:flex;gap:28px}
+.ph{width:390px;height:700px;background:#FBFBF8;position:relative;overflow:hidden}
+.side{width:600px}
+.l{font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
+.d{font-size:17px;line-height:23px;color:rgba(20,24,31,.66)}
+.abs{position:absolute}
+.cap{font-size:21px;font-weight:500;letter-spacing:-.01em}
+.sub{font-size:16px;color:rgba(20,24,31,.66)}
+.card{background:#FBFBF8;padding:22px 24px;margin-bottom:14px;box-sizing:border-box}
+</style></head><body><div class="row">
+<div class="ph" id="ph"><svg id="sv" width="390" height="700" viewBox="0 0 390 700" style="position:absolute;left:0;top:0"><defs><filter id="goo" filterUnits="userSpaceOnUse" x="0" y="0" width="390" height="700"><feGaussianBlur in="SourceGraphic" stdDeviation="3.4" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></defs><g id="dyn"></g></svg>
+<div class="abs l" style="left:24px;top:26px" id="head">Live: Bench press</div>
+<div class="abs cap" id="cap" style="left:24px;top:60px;width:340px;line-height:28px"></div>
+<div class="abs" style="left:24px;top:470px;right:24px;height:1px;background:rgba(20,24,31,.12)"></div>
+<div class="abs cap" style="left:24px;top:488px">Bench press</div><div class="abs sub" style="left:24px;top:516px">4 x 6-8, on the Training page</div>
+<div class="abs cap" id="det" style="left:24px;top:640px"></div></div>
+<div class="side"><div class="card"><div class="l">Ink drops that draw each set (v6 motion, Motion lab)</div><div class="d" style="margin-top:6px">Five tiny ink drops drift like liquid and merge and part. Each rep is a soft pull together and a release, and the last hard reps slow and tremble. When the set lands they draw it as one brush circle, a bit of calligraphy that tells how the set went. A small copy stays on the row.</div></div>
+<div class="card"><div class="l">The shapes</div><div class="d" style="margin-top:6px"><b>Closed circle</b> on target.<br><b>Open circle</b> short: the gap is the missing reps.<br><b>Circle that overlaps itself</b> more than planned: the extra rep runs past the start.<br><b>Circle with a flare</b> a personal best: rays flick out.<br>A heavier set draws a thicker stroke. The wet ink starts warm and dries to ink. Rest: the drops swirl together slowly.</div></div></div></div>
+<script>
+const INK='20,24,31',PAL='216,67,42',LIVE='229,72,44';
+const clamp=x=>Math.max(0,Math.min(1,x));const ease=p=>{p=clamp(p);return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2};
+const SETS=[{r:8,T:8,w:80,lab:'On target'},{r:6,T:8,w:85,lab:'Short of the plan'},{r:9,T:8,w:85,lab:'One more than planned'},{r:6,T:6,w:95,lab:'Personal best',best:true}];
+const START=2.6,SPAN=6.6,LOOP=START+SPAN*4+3.4;
+const C={x:195,y:300},R=48,N=5,SZF=[1,.78,1.15,.7,.95];
+const repDur=(S,k)=>.30+(k>=S.r-2?.22*(k-(S.r-3)):0);   // the last two reps slow down (0.52 s, 0.74 s)
+function times(s){const S=SETS[s],b=START+s*SPAN;let t=b;const rs=[];for(let k=0;k<S.r;k++){rs.push(t);t+=repDur(S,k)}const rEnd=t+.15,dEnd=rEnd+1.5,hEnd=dEnd+1.5;return{b,rs,rEnd,dEnd,hEnd,fEnd:hEnd+.9}}
+const TM=SETS.map((_,s)=>times(s));
+function setAt(t){for(let s=0;s<4;s++){if(t>=TM[s].b-.3&&t<TM[s].fEnd)return s}return -1}
+const span=S=>2*Math.PI*S.r/S.T;
+function thetaAt(S,tm,t){return span(S)*ease((t-tm.rEnd)/(tm.dEnd-tm.rEnd))}
+const mixc=(a,b,m)=>a.split(',').map((v,i)=>Math.round(+v+(+b.split(',')[i]-v)*m)).join(',');
+// calligraphic circle: polygon pieces, wet at the tip and dry behind; progress in radians
+function enso(S,th,cx,cy,sc,now,drawStart,flare){let o='';const W=Math.max(2.2,(5+(S.w-60)/45*5)*sc),n=Math.max(8,Math.floor(th/.07)),sp=span(S);
+ const pts=[];for(let j=0;j<=n;j++){const u=j/n,ang=-Math.PI/2+th*u,over=Math.max(0,th*u-2*Math.PI),rr=R*sc*(1+.025*Math.sin(2*ang+1)+over*.13);const uu=th*u/sp;const w=W*(.18+.82*clamp(uu/.1))*(1+.18*Math.sin(uu*9+S.w))*(1-.62*clamp((uu-.82)/.18));pts.push([cx+rr*Math.cos(ang),cy+rr*Math.sin(ang),w,ang])}
+ for(let j=0;j<n;j++){const a=pts[j],b=pts[j+1];const age=now-drawStart-(j/n)*(th/sp)*1.5;const warm=drawStart>0?Math.max(0,1-Math.max(age,0)/1.1):0;const c=mixc(INK,PAL,Math.min(1,warm));
+  const nx=Math.cos(a[3]),ny=Math.sin(a[3]),nx2=Math.cos(b[3]),ny2=Math.sin(b[3]);
+  o+=`<path d="M${(a[0]+nx*a[2]/2).toFixed(1)} ${(a[1]+ny*a[2]/2).toFixed(1)}L${(b[0]+nx2*b[2]/2).toFixed(1)} ${(b[1]+ny2*b[2]/2).toFixed(1)}L${(b[0]-nx2*b[2]/2).toFixed(1)} ${(b[1]-ny2*b[2]/2).toFixed(1)}L${(a[0]-nx*a[2]/2).toFixed(1)} ${(a[1]-ny*a[2]/2).toFixed(1)}Z" fill="rgba(${c},.93)"/>`}
+ if(th>=sp*.99&&sc>.9&&drawStart>0&&now-drawStart<3.5){const ang=-Math.PI/2+sp,age=clamp((now-drawStart-1.5)/1);for(let k=0;k<3;k++){const d=(10+k*7)*(.5+.5*age),a2=ang+.15+k*.22;o+=`<circle cx="${(cx+(R*sc+d)*Math.cos(a2)).toFixed(1)}" cy="${(cy+(R*sc+d)*Math.sin(a2)).toFixed(1)}" r="${(2.4-k*.6).toFixed(1)}" fill="rgba(${INK},${(.8*Math.min(1,age*2)).toFixed(2)})"/>`}}
+ if(flare>0){for(let k=0;k<9;k++){const ang=-Math.PI/2+2*Math.PI*k/9+.2,r0=R*sc+W,r1=r0+(10+14*Math.sin(k*2.1)**2)*sc*Math.min(1,flare*1.4);const al=(1-flare)*.9;o+=`<path d="M${(cx+r0*Math.cos(ang)).toFixed(1)} ${(cy+r0*Math.sin(ang)).toFixed(1)}L${(cx+r1*Math.cos(ang)).toFixed(1)} ${(cy+r1*Math.sin(ang)).toFixed(1)}" stroke="rgba(${LIVE},${al.toFixed(2)})" stroke-width="${(2.2*sc*(1-flare*.5)).toFixed(1)}" stroke-linecap="round"/>`}}
+ return o}
+// ink drop: round head with a tail along its motion
+function tear(x,y,r,L,dx,dy,c,al){const nx=-dy,ny=dx,tx=x-dx*L,ty=y-dy*L,k=.62;
+ return `<path d="M${tx.toFixed(1)} ${ty.toFixed(1)}C${(x+nx*r*k-dx*L*.35).toFixed(1)} ${(y+ny*r*k-dy*L*.35).toFixed(1)} ${(x+nx*r*1.05).toFixed(1)} ${(y+ny*r*1.05).toFixed(1)} ${(x+dx*r*.95).toFixed(1)} ${(y+dy*r*.95).toFixed(1)}C${(x-nx*r*1.05).toFixed(1)} ${(y-ny*r*1.05).toFixed(1)} ${(x-nx*r*k-dx*L*.35).toFixed(1)} ${(y-ny*r*k-dy*L*.35).toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)}Z" fill="rgba(${c},${al})"/>`}
+function drop(p,sz,warm){if(sz<.03)return '';const r=Math.max(3.5,Math.min(5,4.4*sz*(1+.07*Math.sin(NOW*3+p.x))))*(sz<.3?sz/.3:1);const c=mixc(INK,PAL,warm);
+ return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r.toFixed(1)}" fill="rgb(${c})"/>`}
+let NOW=0;
+function draw(t){NOW=t;let o='';const s=setAt(t);
+ // finished sets: the stage one while held, then flying to its row slot, then resting there
+ for(let k=0;k<4;k++){const S=SETS[k],tm=TM[k];if(t<tm.dEnd)continue;const q=ease((t-tm.hEnd)/(tm.fEnd-tm.hEnd));const gx=62+k*86,gy=598;
+  const cx=C.x+(gx-C.x)*q,cy=C.y+(gy-C.y)*q,sc=1-.7*q;const th=t<tm.dEnd?thetaAt(S,tm,t):span(S);const fl=S.best?clamp((t-tm.dEnd)/.9):0;
+  o+=enso(S,th,cx,cy,sc,t,tm.rEnd,fl>0&&fl<1?fl:0)}
+ // the stroke still being drawn
+ if(s>=0){const S=SETS[s],tm=TM[s];if(t>=tm.rEnd&&t<tm.dEnd){o+=enso(S,Math.max(.05,thetaAt(S,tm,t)),C.x,C.y,1,t,tm.rEnd,0)}}
+ let g='';for(let i=0;i<N;i++){const p=P[i];const warm=Math.min(1,Math.hypot(p.vx,p.vy)/260);g+=drop(p,p.sz,warm)}o+='<g filter="url(#goo)">'+g+'</g>'
+ document.getElementById('dyn').innerHTML=o;
+ let cap='Between sets the drops drift on their own.';
+ if(s>=0){const S=SETS[s],tm=TM[s];cap=t<tm.b?'Set '+(s+1)+' is next.':t<tm.rEnd?'Set '+(s+1)+': a soft pull per rep. The last reps slow and tremble.':t<tm.hEnd?S.lab+'.':'Rest.'}
+ document.getElementById('cap').textContent=cap;
+ const tt=t-(START+SPAN*4);document.getElementById('det').textContent=tt>.4&&tt<3?'Set 3: 85 kg x 9':'';}
+
+// ---- v6 motion: spring-damped drops driven by smooth noise, nothing shared between drops ----
+const H=(a,b)=>{const v=Math.sin(a*127.1+b*311.7)*43758.5453;return v-Math.floor(v)};
+const sm=u=>u*u*(3-2*u);
+function noise(seed,x){const i=Math.floor(x),f=x-i;return (H(seed,i)*(1-sm(f))+H(seed,i+1)*sm(f))*2-1}      // smooth value noise, -1..1
+function fbm(seed,x){return noise(seed,x)*.65+noise(seed+9.1,x*2.3)*.35}
+// each drop has its own spring (natural frequency, damping), noise speeds and home; none of it is shared
+const DROP=[...Array(N)].map((_,i)=>({w:11+H(i,1)*5, z:.34+H(i,2)*.2, fx:.9+H(i,3)*.9, fy:.8+H(i,4)*1.0, hx:[-12,-6,0,6,12][i]+(H(i,5)-.5)*4, hy:[3,-3,2,-2,3][i]+(H(i,6)-.5)*4, ph:H(i,7)*40}));
+const IDLE_A=13;                          // thinking-dot scale: tiny, close, quick
+const idlePos=(i,t,k=1)=>{const d=DROP[i];return[d.hx*k+fbm(i*3.1,t*d.fx+d.ph)*IDLE_A*k, d.hy*k+fbm(i*3.1+1.7,t*d.fy+d.ph)*IDLE_A*.8*k]};
+// one rep for one drop: a soft pull toward the middle that eases in slowly, then a quicker release (the spring overshoots it)
+function pullOf(S,tm,i,t){let pull=0,trem=0;
+ for(let k=0;k<S.r;k++){const hard=k>=S.r-2,del=H(i,k)*.09+i*.012,dur=repDur(S,k)*(.9+H(k,i)*.2),u=(t-tm.rs[k]-del)/dur;
+  if(u>0&&u<1){const a=(.7+.25*H(i,k+5))*(hard?1.1:1),shape=u<.58?sm(u/.58):1-sm((u-.58)/.42)*1.0;pull=Math.max(pull,shape*a);
+   if(hard)trem=Math.max(trem,Math.sin(Math.PI*u))}}
+ return[pull,trem]}
+function plan(t,i){const s=setAt(t),d=DROP[i];
+ if(s<0||t<TM[s].b){const[x,y]=idlePos(i,t);return{x,y,sz:SZF[i],m:'idle'}}
+ const S=SETS[s],tm=TM[s];
+ if(t<tm.rEnd){const[pull,trem]=pullOf(S,tm,i,t);
+  const ix=idlePos(i,t,.8);const x=ix[0]*(1-.3*pull)+trem*1.9*noise(i+20,t*23+d.ph)-pull*d.hx*.18, y=ix[1]*(1-.3*pull)-13*pull*(.55+.45*H(i,3))+trem*1.9*noise(i+30,t*21+d.ph);
+  return{x,y,sz:SZF[i]*(1-.12*pull),m:'rep'}}
+ if(t<tm.dEnd){const th=thetaAt(S,tm,t),a=-Math.PI/2+th-i*.3,rr=R*(th>2*Math.PI?1+.1*(th-2*Math.PI)/.8:1)+1.6*noise(i+40,t*3+d.ph);return{x:rr*Math.cos(a),y:rr*Math.sin(a),sz:1,m:'draw'}}
+ if(t<tm.hEnd){const th=span(S),a=-Math.PI/2+th-i*.3*(1-ease((t-tm.dEnd)/.4)),k=ease((t-tm.dEnd)/.5);return{x:R*Math.cos(a),y:R*Math.sin(a),sz:Math.max(0,1-k),m:'draw'}}
+ const k=ease((t-tm.hEnd)/.9);const[x,y]=idlePos(i,t,.3+.7*k);return{x,y,sz:k*SZF[i],m:'idle'}}
+const P=[...Array(N)].map(()=>({x:C.x,y:C.y,vx:0,vy:0,sz:1,h:[]}));
+function step(t,dt){for(let i=0;i<N;i++){const a=plan(t,i),p=P[i],d=DROP[i];
+  // drops follow their own plan through their own spring; drawing the ring is stiffer and well damped, the rest underdamped and alive
+  const w=a.m==='draw'?20+H(i,8)*4:a.m==='rep'?d.w*1.35:d.w, z=a.m==='draw'?.9:a.m==='rep'?d.z*.9:d.z;
+  const gx=C.x+a.x,gy=C.y+a.y;p.vx+=((gx-p.x)*w*w-2*z*w*p.vx)*dt;p.vy+=((gy-p.y)*w*w-2*z*w*p.vy)*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.sz+=(a.sz-p.sz)*Math.min(1,dt*10)}}
+let sim=0;
+function run(to){const dt=1/240;while(sim<to){step(sim,dt);sim+=dt}}
+window.LOOP=LOOP;window.renderAt=t=>{run(t);draw(t)};
+if(window.FREEZE!==undefined){run(window.FREEZE);draw(window.FREEZE)}else if(!window.RECORD){const w0=performance.now();let last=0;(function f(){const t=((performance.now()-w0)/1000)%LOOP;if(t<last-1){sim=t}last=t;run(t);draw(t);requestAnimationFrame(f)})()}
+
+document.body.style.zoom=window.ZOOM||1;
+</script></body></html>
