@@ -1,10 +1,11 @@
 @testable import Tessera
 import Testing
 
-/// Product ruling: offline, a capture the walls stopped keeps his words in the Ask for the retry.
+/// The Ask keeps his words only when the engine says so (Core's `TessCapture.keepsWords`): Claude unreachable, a
+/// walled phrase offline, a bad key. The view never matches Tess's words.
 struct AskCopyTests {
-    @Test func theOfflineLineKeepsTheDraft() {
-        #expect(AskCopy.keepsDraft("Couldn't read that offline. Try again online."))
-        #expect(!AskCopy.keepsDraft("Milk, on Groceries."))
+    @Test func theEnginesFlagDecides() {
+        #expect(AskCopy.keepsDraft(true))
+        #expect(!AskCopy.keepsDraft(false))
     }
 }
