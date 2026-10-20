@@ -1,0 +1,82 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight','Inter',sans-serif;color:#14181F;padding:24px;width:1100px;box-sizing:border-box}
+.row{display:flex;gap:28px}
+.ph{width:390px;height:700px;background:#FBFBF8;position:relative;overflow:hidden}
+.side{width:600px}
+.l{font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
+.d{font-size:17px;line-height:23px;color:rgba(20,24,31,.66)}
+.abs{position:absolute}
+.cap{font-size:21px;font-weight:500;letter-spacing:-.01em}
+.sub{font-size:16px;color:rgba(20,24,31,.66)}
+.card{background:#FBFBF8;padding:22px 24px;margin-bottom:14px;box-sizing:border-box}
+</style></head><body><div class="row">
+<div class="ph" id="ph"><svg id="sv" width="390" height="700" viewBox="0 0 390 700" style="position:absolute;left:0;top:0"></svg>
+<div class="abs l" style="left:24px;top:26px" id="head">Live: Bench press</div>
+<div class="abs cap" id="cap" style="left:24px;top:60px;width:340px;line-height:28px"></div>
+<div class="abs" style="left:24px;top:470px;right:24px;height:1px;background:rgba(20,24,31,.12)"></div>
+<div class="abs cap" style="left:24px;top:488px">Bench press</div><div class="abs sub" style="left:24px;top:516px">4 x 6-8, on the Training page</div>
+<div class="abs cap" id="det" style="left:24px;top:640px"></div></div>
+<div class="side"><div class="card"><div class="l">One swarm, five dots</div><div class="d" style="margin-top:6px">They drift on their own like the thinking dots. While you lift, they count: one ripple per rep, so you can count the reps. When the set lands they settle into a shape that says how it went, and a small copy of that shape stays on the row.</div></div>
+<div class="card"><div class="l">The shapes</div><div class="d" style="margin-top:6px"><b>Ring</b> on target.<br><b>Open ring</b> short: the gap is the missing reps.<br><b>Ring with a satellite</b> more than planned: the extra rep orbits out.<br><b>Star</b> a personal best: a burst, then the dots join.<br>Heavier sets draw bigger dots. Rest: they shrink to a small ring and breathe, then brighten for the next set.<br>Dots rest in ink; warmth shows only while they move.</div></div></div></div>
+<script>
+const INK='20,24,31',PAL='216,67,42',LIVE='229,72,44';
+const clamp=x=>Math.max(0,Math.min(1,x));const ease=p=>{p=clamp(p);return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2};
+const SETS=[{r:8,T:8,w:80,out:'ring',lab:'On target'},{r:6,T:8,w:85,out:'arc',lab:'Short of the plan'},{r:9,T:8,w:85,out:'sat',lab:'One more than planned'},{r:6,T:6,w:95,out:'star',lab:'Personal best'}];
+const START=2.6,SPAN=5.6,REP=.3,LOOP=START+SPAN*4+3.4;
+const C={x:195,y:300};
+const N=5;
+// formation positions (relative to C) for dot i
+function form(kind,i,set,rot){const R=34+(set.w-60)/45*14;
+ if(kind==='ring'||kind==='star0'){const a=2*Math.PI*i/N-Math.PI/2+rot;return[R*Math.cos(a),R*Math.sin(a)]}
+ if(kind==='arc'){const span=2*Math.PI*set.r/set.T,a=-Math.PI/2+span*i/(N-1)+rot*.15;return[R*Math.cos(a),R*Math.sin(a)]}
+ if(kind==='sat'){if(i<4){const a=2*Math.PI*i/4-Math.PI/2+rot;return[R*Math.cos(a),R*Math.sin(a)]}const a=rot*1.6-.6;return[R*1.9*Math.cos(a),R*1.9*Math.sin(a)]}
+ if(kind==='star'){const a=2*Math.PI*i/N-Math.PI/2;return[R*1.2*Math.cos(a),R*1.2*Math.sin(a)]}
+ if(kind==='rest'){const a=2*Math.PI*i/N+rot*.4,rr=11+2*Math.sin(rot*3);return[rr*Math.cos(a),rr*Math.sin(a)]}
+ return[0,0]}
+const idlePos=(i,t)=>[Math.sin(t*(.6+i*.13)+i*1.7)*(38+i*8),Math.cos(t*(.5+i*.11)+i*2.3)*(26+i*6)];
+function setAt(t){for(let s=0;s<4;s++){const b=START+s*SPAN;if(t>=b-.3&&t<b+SPAN-.3)return s}return -1}
+// where should dot i be, and how warm / big / bright
+function plan(t,i){
+ const s=setAt(t);let tx,ty,warm=0,sz=1,br=1,mode='idle',snap=false;
+ const rot=t*.9;
+ if(s<0){[tx,ty]=idlePos(i,t);if(t>START+SPAN*4+.4){const k=ease((t-START-SPAN*4-.4)/1.2);}return{tx,ty,warm,sz,br,mode:'idle'}}
+ const S=SETS[s],b=START+s*SPAN,rEnd=b+S.r*REP+.2,fEnd=rEnd+1.5,hEnd=fEnd+1.4;
+ sz=1+(S.w-60)/45*.7;
+ if(t<b){[tx,ty]=idlePos(i,t);return{tx,ty,warm,sz,br,mode:'idle'}}
+ if(t<rEnd){ // reps: row, each rep a ripple travelling across the dots
+  const k=(t-b)/REP,rep=Math.floor(k),f=k-rep;const x=(i-2)*40;let y=0;const d=clamp((f*REP-i*.05)/.22);y=-24*Math.sin(Math.PI*d)*(rep<S.r?1:0);warm=Math.sin(Math.PI*d);
+  return{tx:x,ty:y,warm:Math.max(0,warm),sz,br,mode:'reps',direct:true}}
+ if(t<hEnd){const kind=S.out==='star'?(t<rEnd+.5?'burst':'star'):S.out;let p;
+  if(kind==='burst'){const a=2*Math.PI*i/N-Math.PI/2,k=ease((t-rEnd)/.5);p=[Math.cos(a)*90*k,Math.sin(a)*90*k];warm=1;return{tx:p[0],ty:p[1],warm,sz,br,mode:'form'}}
+  p=form(kind,i,S,rot);warm=S.out==='sat'&&i===4?1:S.out==='star'?.8*(1-ease((t-rEnd-.5)/1.3)):0;
+  return{tx:p[0],ty:p[1],warm,sz,br,mode:'form',line:S.out==='star'}}
+ // rest: shrink, breathe; brighten at the end
+ const p=form('rest',i,S,rot);const left=1-clamp((t-hEnd)/(b+SPAN-.3-hEnd));
+ return{tx:p[0],ty:p[1],warm:0,sz:.7,br:.45+.55*(1-left>0.9?1:.0)+.2*Math.sin(t*2+i),mode:'rest'}}
+// springs
+const P=[...Array(N)].map((_,i)=>({x:C.x+idlePos(i,0)[0],y:C.y+idlePos(i,0)[1],vx:0,vy:0,warm:0,sz:1,br:1}));
+let T0=0;
+function step(t,dt){for(let i=0;i<N;i++){const a=plan(t,i),p=P[i];const k=a.direct?220:70,dm=a.direct?26:11;
+  const gx=C.x+a.tx,gy=C.y+a.ty;p.vx+=((gx-p.x)*k-p.vx*dm)*dt;p.vy+=((gy-p.y)*k-p.vy*dm)*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
+  p.warm+=(a.warm-p.warm)*Math.min(1,dt*12);p.sz+=(a.sz-p.sz)*Math.min(1,dt*6);p.br+=(a.br-p.br)*Math.min(1,dt*4)}}
+const mixc=(a,b,m)=>a.split(',').map((v,i)=>Math.round(+v+(+b.split(',')[i]-v)*m)).join(',');
+function draw(t){let o='';
+ const s=setAt(t);
+ // star lines
+ if(s>=0&&SETS[s].out==='star'){const S=SETS[s],b=START+s*SPAN,rEnd=b+S.r*REP+.2;const k=clamp((t-rEnd-.6)/.6)*(1-clamp((t-rEnd-2.2)/.6));if(k>0){const order=[0,2,4,1,3,0];let d='';order.forEach((j,n)=>{d+=(n?'L':'M')+P[j].x.toFixed(1)+' '+P[j].y.toFixed(1)});o+=`<path d="${d}" fill="none" stroke="rgba(${INK},${(.5*k).toFixed(2)})" stroke-width="1.4"/>`}}
+ for(let i=0;i<N;i++){const p=P[i];const c=mixc(INK,i===4&&s>=0&&SETS[s].out==='sat'?LIVE:PAL,p.warm);o+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(6.5*p.sz).toFixed(1)}" fill="rgba(${c},${(.9*Math.min(1,p.br)).toFixed(2)})"/>`}
+ // row glyphs
+ for(let k=0;k<4;k++){const S=SETS[k],b=START+k*SPAN,rEnd=b+S.r*REP+.2,at=rEnd+1.1;const q=ease((t-at)/.6);if(q<=0)continue;
+  const gx=62+k*86,gy=598,sc=.46;for(let i=0;i<N;i++){const f=S.out==='star'?form('star',i,S,0):form(S.out==='ring'?'ring':S.out,i,S,0);const x=gx+f[0]*sc*q,y=gy+f[1]*sc*q;o+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(2.6+(S.w-60)/45*1.8).toFixed(1)}" fill="rgba(${INK},${(.45+(S.w-60)/45*.45).toFixed(2)})"/>`}}
+ document.getElementById('sv').innerHTML=o;
+ const sl=setAt(t);let cap='Between sets the dots drift on their own.',head='Live: Bench press';
+ if(sl>=0){const S=SETS[sl],b=START+sl*SPAN,rEnd=b+S.r*REP+.2,hEnd=rEnd+2.9;cap=t<b?'Set '+(sl+1)+' is next.':t<rEnd?'Set '+(sl+1)+': a ripple per rep.':t<hEnd?S.lab+'.':'Rest.'}
+ document.getElementById('cap').textContent=cap;
+ const tt=t-(START+SPAN*4);document.getElementById('det').textContent=tt>.4&&tt<3?'Set 3: 85 kg x 9':'';
+}
+let sim=0;
+function run(to){const dt=1/120;while(sim<to){step(sim,dt);sim+=dt}}
+if(window.FREEZE!==undefined){run(window.FREEZE);draw(window.FREEZE)}else{const w0=performance.now();(function f(){const t=((performance.now()-w0)/1000);const tt=t%LOOP;if(tt<sim-1){sim=tt;for(const p of P){}}run(tt);draw(tt);requestAnimationFrame(f)})()}
+document.body.style.zoom=window.ZOOM||1;
+</script></body></html>
