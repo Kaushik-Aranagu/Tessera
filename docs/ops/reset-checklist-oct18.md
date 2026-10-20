@@ -71,3 +71,25 @@ Rule that replaces the two-lane default for this week: second (gap) lane opens o
 ### Open for the coordinator
 - Do you want the pace line as a house rule (even spending), or the 90% only as a ceiling with front-loading allowed? Kaushik has not said. Default in this plan: pace line with plus or minus 5 points.
 - Coordinator model and effort after the reset.
+
+## Huddle push override (coordinator relay, 12:37 PM PT Oct 19; Kaushik 12:37 PM: every feature and stretch goal, full effort)
+Replaces the even-pace rule above until the huddle. The week was at 17%, on pace.
+- Cloud teams may run two lanes.
+- Stronger model and effort for build and design work; cheaper ones for routine docs.
+- Pace may rise to about 1% an hour. The weekly ceiling stays at 90%.
+- Re-trim only if the projection crosses 90% before Sun Oct 25 5 AM PDT, or if any five-hour window goes past 80%. Never by stopping a team.
+- Research's hold on new hunts ended at 7 AM Oct 19; the 5:45 PM Oct 18 trim is gone.
+
+## Usage trim (coordinator relay, 1:47 PM PT Oct 19)
+- Week meter read 22% at 1:43 PM (+3 in the last hour, +6 since 10:44 AM). Ease cloud lanes to about 1%/h now.
+- Routine docs, ledger work and QA re-pins: Haiku or Sonnet at low effort. Stronger models only for build specs and design that gate batches 2 to 4. No lane sits idle.
+- Mac leads (Builder A, Builder B, Core) stay as they are. Next check 2:44 PM; a deeper trim follows if the meter reads 24% or more.
+
+## Usage trim, step 2 (coordinator relay, 2:44 PM PT Oct 19)
+- Week meter 24% (+2 in the last hour), 5-hour window 26%. Tighten every cloud lane from about 1%/h to about 0.5%/h.
+- One working lane per cloud team, no parallel subagents. Haiku, or Sonnet on low effort, for docs PRs, QA re-pins and routine replies. Opus only for a real design or architecture call.
+- Product holds the stretch design for batches 9 and 10 until batches 2 to 4 ship. No lane polls or idles: a finished lane ends its turn.
+- Mac leads keep their batch work. Next check at the 4:48 PM overview.
+
+## Usage brakes lifted (coordinator relay, 5:57 PM PT Oct 19; Kaushik: "it's okay for now about the usage, let's be a little aggressive")
+- Trim steps 1 and 2 and the Kitchen and AI architecture pauses are lifted. Cloud lanes pick model and effort by task again; Fable stays rare. The 90% weekly ceiling still stands and the coordinator keeps the hourly meter.

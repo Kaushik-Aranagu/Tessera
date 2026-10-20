@@ -14,6 +14,7 @@ Index of the docs in `docs/product/`.
 - [groceries-side-acceptance.md](groceries-side-acceptance.md): Groceries FOR WHAT: sheet 77 acceptance, rows GS1 to GS16 (K17)
 - [grocery-capture-miss-acceptance.md](grocery-capture-miss-acceptance.md): Capture-miss routing for grocery phrases (rows CM1..CM14)
 - [huddle-batches-oct19.md](huddle-batches-oct19.md): Huddle batches, Oct 19: the build order in nine batches
+- [huddle-gap-oct19.md](huddle-gap-oct19.md): Huddle gap list, 6:15 PM Oct 19: what the huddle page still lacks on his phone, by owner
 - [kitchen-copy-recheck-oct17.md](kitchen-copy-recheck-oct17.md): Kitchen copy recheck, Oct 17 (K69)
 - [kitchen-counts-vs-claude-acceptance.md](kitchen-counts-vs-claude-acceptance.md): Kitchen counts vs Claude: acceptance rows KC1 to KC32
 - [kitchen-error-states-acceptance.md](kitchen-error-states-acceptance.md): K16: Kitchen error and offline states against sheet 84

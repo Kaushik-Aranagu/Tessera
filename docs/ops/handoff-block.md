@@ -75,7 +75,8 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### Kitchen
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MJ6x15H146i8Ubn1hrFjuEJ (Kitchen lead, rotated 6:45 PM Oct 17, session_01TRh7xwt9UhB98fN8BteVgs stood down), before it cmsg_01VTPva3JGXrfvetgUvAWE7MBXXiW98VQjyxykT4o3aJzs and cmsg_01VTPva3JGXrfvetgUvAWE7MHov6f1LgB5VxUochonHG95; older sessions cse_01WEnBRbu1uKt5FybKX4ffbe, cse_01Fe7U23BpiBM3LSkVTTfatZ.
-- Fresh thread (rotated 9:15 AM PT Oct 18): cmsg_01VTPva3JGXrfvetgUvAWE7M4Apt8RTcQ1bkk4838dHvZT; session session_01FYpVsczTwVXiUhydnzexBt.
+- Fresh thread (rotated 6:25 PM PT Oct 19, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7MHW7rYPrUhFmJFXFwdYSxWR; session session_01VJwxTsMRFF28hauVcxLUEV.
+- Retired (Kitchen, 6:25 PM Oct 19; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7M4Apt8RTcQ1bkk4838dHvZT; session session_01FYpVsczTwVXiUhydnzexBt.
 - Retired (Kitchen, 9:15 AM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7M89s9yq77kzrHiVK6fDMbrZ; session session_01WXUguo5FzJwPMPZohELbQR.
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "Kitchen" if present; if not, ask the coordinator for the note the outgoing lead sent.
@@ -118,7 +119,8 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 ### Research
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MCHUVZQTvpxVy5UZmhdenMF; old session cse_01WMUdQQHF9pRNj9dwSJFGef.
 - Previous fresh thread (retired 9:40 PM PT Oct 17): cmsg_01VTPva3JGXrfvetgUvAWE7MPtwgew3oJ7cvhswUWWXx7k; session cse_017t1kiDAoSpJVo4NVP2BpZU.
-- Current thread (rotated 4:13 PM PT Oct 18, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7M8ZFLBCB5S55JXA8Vkm1q2m; session session_0149nnvEZKkqzcu5DJ1rLWqH.
+- Current thread (rotated 6:26 PM PT Oct 19, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7MMe84rZu6HqD5aR4qqKBAjk; session session_01QgnXYVGk4zvYfnEvbqLg5K.
+- Retired (Research, 6:26 PM Oct 19; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7M8ZFLBCB5S55JXA8Vkm1q2m; session session_0149nnvEZKkqzcu5DJ1rLWqH.
 - Retired (Research, 4:13 PM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7MWr4kZQo1z1nwP1aRpCcNCw; session session_01LdX7E6RE6FmHbEE6K5Hth9.
 - Retired (Research, 7:20 AM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7MVwggk1QksBUnspxQ8a39Qi; session session_016prm61LgTia7soLeQ5zxP8. Earlier line: Current thread (rotated 9:40 PM PT Oct 17): cmsg_01VTPva3JGXrfvetgUvAWE7MVwggk1QksBUnspxQ8a39Qi; session cse_016prm61LgTia7soLeQ5zxP8 (send_message form: session_016prm61LgTia7soLeQ5zxP8).
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
@@ -127,8 +129,8 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
    - Integrate Claude early (yes) (Oct 15, 11:41 AM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MXfAj9rS5WnrrZNzcFQbtHD)
 
 ### AI architecture
-- Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MNFdmU6fKkCLKUHUNnUMoWs; old session cse_01DjmvkyvRv3FrANnLQQx6U6.
-- Fresh thread: cmsg_01VTPva3JGXrfvetgUvAWE7MFkXAPBQ4sJbazgjECDVsu7; session cse_011uM8VcURgDjjMD2eApQiCb.
+- Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MFkXAPBQ4sJbazgjECDVsu7; old session cse_011uM8VcURgDjjMD2eApQiCb.
+- Fresh thread (2:30 PM Oct 19): cmsg_01VTPva3JGXrfvetgUvAWE7MM5XjePKEvYiDXS3aC1arTX; session cse_011ou6NG7Z9dq7sehtzYrwyH.
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "AI architecture" if present; if not, ask the coordinator for the note the outgoing lead sent.
 - Rules for AI architecture (plus G):

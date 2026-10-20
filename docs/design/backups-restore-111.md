@@ -20,5 +20,6 @@ Product rulings (huddle, Oct 19): plain, date first. One quiet screen under Sett
 
 ## Motion, accessibility
 - The page turn is the standard one; Reduce Motion: a 150 ms crossfade. One soft haptic when the restore is done, none on the first tap.
+- VoiceOver on the first Restore tap: the word becomes "Replace what is on this phone, button" and VoiceOver announces "Restore the 3 October backup? This replaces what is on this phone now." when the page turns; focus moves to the sentence, then the two words.
 - VoiceOver: the row reads "3 October backup, 412 objects"; the replace word reads "Replace what is on this phone, button".
 - Dynamic Type: the sentence wraps, the two words stack at accessibility sizes.
