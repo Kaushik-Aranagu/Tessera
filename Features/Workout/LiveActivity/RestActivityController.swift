@@ -128,7 +128,7 @@ final class RestActivityController {
     /// counts down in real time, so it is moved onto the real clock (rounded to the second so repeated calls map to
     /// an identical state). Once ready, the end is pinned to `.distantPast` for the same reason.
     static func contentState(planned: PlannedSet, restEndsAt: Date?, restTotal: TimeInterval, appNow: Date,
-                             realNow: Date) -> State
+                             realNow: Date, followsLook: Bool = Choice.lockScreenFollowsLook()) -> State
     {
         let shift = realNow.timeIntervalSince(appNow)
         let isResting = restEndsAt.map { $0 > appNow } ?? false
@@ -137,7 +137,8 @@ final class RestActivityController {
                      reps: planned.reps,
                      restEndsAt: isResting ? Date(timeIntervalSinceReferenceDate: endsAt) : .distantPast,
                      restTotal: restTotal, phase: isResting ? .resting : .ready,
-                     lookDay: ThemeStore.shared.pair.day.name, lookNight: ThemeStore.shared.pair.night.name)
+                     lookDay: followsLook ? ThemeStore.shared.pair.day.name : nil,
+                     lookNight: followsLook ? ThemeStore.shared.pair.night.name : nil)
     }
 
     /// While resting the content goes stale when the rest ends, so the Lock Screen flips to "ready" on its own even

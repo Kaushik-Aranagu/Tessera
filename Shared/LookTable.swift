@@ -48,6 +48,15 @@ struct RestPalette: Hashable {
         dark ? named(night) ?? .obsidian : named(day) ?? .porcelain
     }
 
+    /// The Lock Screen's palette. Kaushik's pick stands (Cobalt sky in every look) unless the app wrote the look names
+    /// into the activity state, which it does only under the Review switch `review.lockScreenLook` = "Follows the
+    /// look".
+    /// Names present: the day look by Light, the night look by Dark. No names: Cobalt sky. The Island ignores this.
+    static func lockScreen(day: String?, night: String?, dark: Bool) -> RestPalette {
+        guard day != nil || night != nil else { return .cobaltSky }
+        return forState(day: day, night: night, dark: dark)
+    }
+
     /// The colours the face draws with.
     var cream: Color {
         Color(rgb: ink)
