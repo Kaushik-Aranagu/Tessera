@@ -21,8 +21,8 @@ struct PasteKeyTests {
         #expect(PasteCopy.withoutKeys(fake) == "")
     }
 
-    @Test func theLineSaysReview() {
-        #expect(claudeKeyLine.contains("Review"))
+    @Test func theLineSaysSettings() {
+        #expect(claudeKeyLine.contains("Settings"))
     }
 
     /// The cut's own change keeps the key line up and reads the kept recipe (QA on #767).

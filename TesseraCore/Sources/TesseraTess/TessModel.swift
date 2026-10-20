@@ -72,7 +72,7 @@ public struct TessRouter {
     public let engine: ActionEngine
     public let models: [any TessModel]
 
-    /// A key typed into Ask: where it goes instead (it lives in Review, under Claude; lines audit item 4).
+    /// A key typed into Ask: where it goes instead (it lives in Settings, under Claude; lines audit item 4).
     public static let keyLine = claudeKeyLine
 
     public init(engine: ActionEngine, models: [any TessModel]) {

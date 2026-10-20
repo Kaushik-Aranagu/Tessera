@@ -155,7 +155,7 @@ private struct WorkoutContent: View {
         .ignoresSafeArea(.keyboard)
         .sheet(isPresented: $isAsking) {
             LiveAskField(isShown: $isAsking, onAsk: { phrase in ask(phrase) }, onRefuse: {
-                askReply = "That looks like a Claude key. It goes in Review, under Claude."
+                askReply = claudeKeyLine
             })
             .presentationDetents([.height(84)])
             .presentationBackground(Theme.Colors.Workout.ground)
