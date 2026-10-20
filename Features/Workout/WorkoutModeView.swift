@@ -54,6 +54,9 @@ private struct WorkoutContent: View {
     @State private var soul = SoulRouter(page: .live)
     /// Workout-level moments: a set seated, a new best, rest up on screen, the workout finished.
     @State private var moment = HapticCue()
+    /// The set's haptic, held until its circle closes (played at once under Reduce Motion or Low Power).
+    @State private var deferredCue: Haptic?
+    @Environment(\.lowPowerMotion) private var lowPower
     /// The subline whose cadmium has dried.
     @State private var sublineDried: String?
     @State private var undoHaptic = 0
@@ -199,7 +202,14 @@ private struct WorkoutContent: View {
             guard let seated, session.finishedAt == nil else { return }
             // One haptic per set, played here so it survives the key leaving (Reduce Motion, VoiceOver's action):
             // the set's tap, or .success in its place for a new best.
-            moment.play(seated.records.isEmpty ? .setLogged : .newBest)
+            // With the ink drops the one haptic waits for the circle to close (LiveSetMarks tells us); without them
+            // (Reduce Motion, Low Power) it plays now.
+            let cue: Haptic = seated.records.isEmpty ? .setLogged : .newBest
+            if reduceMotion || lowPower {
+                moment.play(cue)
+            } else {
+                deferredCue = cue
+            }
             soul.handle(seated.records.isEmpty ? .setLogged : .newBest)
         }
         .tesseraFeedback(.undo, trigger: undoHaptic)
@@ -221,7 +231,7 @@ private struct WorkoutContent: View {
                 .overlay(alignment: .topLeading) { swapPanel }
                 .overlay(alignment: .bottomLeading) { oneTapSwapWord }
                 .zIndex(2)
-            LiveSetStrokes(session: session, phase: actual) { id in
+            LiveSetMarks(session: session, phase: actual, onEdit: { id in
                 // Tap a stroke to edit it, the same one again to leave, another to switch.
                 let isSame = session.isEditing && session.editingSetID == id
                 if !isSame {
@@ -234,7 +244,12 @@ private struct WorkoutContent: View {
                         session.beginEditing(setID: id)
                     }
                 }
-            }
+            }, onClosed: { _ in
+                if let cue = deferredCue {
+                    moment.play(cue)
+                    deferredCue = nil
+                }
+            })
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
             .opacity(isSwapOpen ? 0 : 1)
