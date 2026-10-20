@@ -14,7 +14,8 @@ backing without the pale-blue ground problem of the other candidate.
 
 ## Mapping: all 72 seeds covered
 57 seeds match a Workout Guide exercise of the same name; 15 use a sibling with the same motion
-(Kaushik: the motion and the muscles are what matter). An earlier count of 62 exact came from a looser name match;
+(Kaushik: the motion and the muscles are what matter). By name alone, 60 are identical and 12 differ in spelling
+or wording only; three sibling rows carry the identical name. An earlier count of 62 exact came from a looser name match;
 the table below is the strict one. Every slug was checked against the manifest. Sibling rows are marked so Builder A
 can label them correctly; none needs new art.
 
@@ -96,7 +97,7 @@ can label them correctly; none needs new art.
 Notes on siblings: Barbell Curl and Dumbbell Curl both use bicep-curl (same elbow-flexion motion); Back Squat uses
 squat; Barbell Shrug uses shrug; the pulldown, row, press and extension siblings differ only in grip or handle.
 Two of our seeds share one slug (bicep-curl); files are stored once per slug, keyed by slug, so the bundle holds
-71 distinct exercises (216 files at most).
+71 distinct exercises (213 files, 71 x 3).
 
 ## Credit and license notice (for the credits screen)
 Product ruling (decisions.md, 2026-10-19 5:30 PM): one plain About page at the foot of Settings, one line per
@@ -111,6 +112,10 @@ pages. The Exercise pictures line reads:
   display, and vector-traced." Our change line must add whatever Design and Builder A do on top (see next section).
 - Core must read the repo's LICENSE and README on the Mac and paste the exact wording used; this author saw the
   manifest's per-frame attribution, not the repo license file text.
+
+Note: only some Workout Guide frames come from Everkinetic art (QA counted 76 of 302 exercises with an Everkinetic
+sourced frame 1; frames 2 and 3 are Bryl Lim's). The About line credits both because the manifest names both; do
+not describe every picture as Everkinetic art.
 
 ## Adaptations Kaushik allowed
 - Color depth toward our ink look: swap the white fill for the theme ink color at render time (one SVG fill token)
@@ -131,7 +136,7 @@ pages. The Exercise pictures line reads:
   phone only, so nothing is shared today. If a second person ever receives a build, the pictures (and any adapted
   versions) must stay CC BY-SA 4.0, the credit must show, and Product should re-check the app code question first.
 - Bundle as a read-only resource folder next to the library; never in backups, export or the op log; no network.
-- Size estimate for our 72 seeds: about 6.5 MB of raw SVG (earlier estimate; Core to measure on the Mac).
+- Size estimate for our 72 seeds: 5.3 MB of raw SVG for the 213 files (QA measured; my earlier 6.5 MB was an estimate).
 - The 72 seeds are strength, core and carry only. Workout Guide also has stretches and cardio (isStretch flag,
   Cardio equipment) for later seeds.
 
