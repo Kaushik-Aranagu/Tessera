@@ -11,6 +11,8 @@ final class RestActivityController {
 
     private var activity: Activity<RestActivityAttributes>?
     private var workoutID: UUID?
+    /// Activities this controller has ended and the system may still list: never adopted again.
+    private var endedIDs: Set<String> = []
     private var lastState: State?
     /// Serialises the async ActivityKit calls so they land in order.
     private var queue: Task<Void, Never>?
@@ -73,7 +75,11 @@ final class RestActivityController {
             activity = nil
         }
         if activity == nil {
-            activity = Activity<RestActivityAttributes>.activities.first { $0.activityState == .active }
+            // An activity this controller already ended (a privacy flip) can still be listed for a moment: not it.
+            let listed = Activity<RestActivityAttributes>.activities
+            endedIDs.formIntersection(listed.map(\.id))
+            let pick = Self.adoptable(listed.map { ($0.id, $0.activityState == .active) }, excluding: endedIDs)
+            activity = listed.first { $0.id == pick }
             if activity != nil {
                 workoutID = session.workout.id
             }
@@ -97,6 +103,11 @@ final class RestActivityController {
     }
 
     // MARK: Mapping
+
+    /// The first active activity that was not ended by this controller (the id of the one to adopt, if any).
+    static func adoptable(_ listed: [(id: String, isActive: Bool)], excluding ended: Set<String>) -> String? {
+        listed.first { $0.isActive && !ended.contains($0.id) }?.id
+    }
 
     /// Whether the running activity was started under the other privacy: it must end so the title is remade.
     static func needsRestart(shownPrivate: Bool?, nowPrivate: Bool) -> Bool {
@@ -237,7 +248,9 @@ final class RestActivityController {
         closingEnd?.cancel()
         closingEnd = nil
         RestAlerts.shared.sync(fireAt: nil)
-        let hadActivities = !Activity<RestActivityAttributes>.activities.isEmpty
+        let listed = Activity<RestActivityAttributes>.activities
+        let hadActivities = !listed.isEmpty
+        endedIDs.formUnion(listed.map(\.id))
         activity = nil
         workoutID = nil
         lastState = nil
