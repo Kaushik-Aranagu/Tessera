@@ -19,6 +19,8 @@ struct ExerciseDigest {
         let topSet: String
         /// Holds the best e1RM set.
         let isRecord: Bool
+        /// The session's sets as ink-drop marks (History's row of circles).
+        var marks: [SetMarkSpec] = []
     }
 
     enum Role: Hashable {
@@ -81,12 +83,28 @@ struct ExerciseDigest {
                 date: session.date,
                 setCount: session.sets.count,
                 topSet: top.map { ExerciseWords.set(weight: $0.weight, reps: $0.reps) } ?? "",
-                isRecord: best.map { record in session.sets.contains { $0.id == record.id } } ?? false
+                isRecord: best.map { record in session.sets.contains { $0.id == record.id } } ?? false,
+                marks: Self.marks(of: session.sets, bestID: best?.id,
+                                  isPrivate: ObjectPrivacy.routineTitle(session.workout.title, in: store)
+                                      == ObjectPrivacy.routineLabel)
             )
         }
 
         trend = Self.trend(overview.trend.map { ($0.date, $0.bestE1RM) }, now: now, calendar: calendar)
         nextTime = Self.nextTime(for: exercise, ledger: ledger, store: store)
+    }
+
+    /// A session's sets as marks. History has no plan to compare with, so a set is "on target" when it matches the
+    /// session's usual rep count (the median).
+    static func marks(of sets: [TrainingLedger.LoggedSet], bestID: UUID?, isPrivate: Bool = false) -> [SetMarkSpec] {
+        guard !sets.isEmpty else { return [] }
+        let reps = sets.map { Int($0.reps.rounded()) }.sorted()
+        let usual = reps[reps.count / 2]
+        let heaviest = sets.map(\.weight).max() ?? 0
+        return sets.enumerated().map { index, set in
+            SetMarkSpec(id: set.id, number: index + 1, reps: Int(set.reps.rounded()), target: usual, weight: set.weight,
+                        heaviest: heaviest, isBest: set.id == bestID && !isPrivate, isPrivate: isPrivate)
+        }
     }
 
     // MARK: Pieces (static so they can be tested)
