@@ -115,6 +115,10 @@ struct NowPage: View {
             }
             .padding(.bottom, Theme.Spacing.xl)
 
+            // Money and Reading's quiet lines (the evening book, the groceries total), only when areas are shown.
+            AreaNowLines(now: now, timedItemCurrent: current.map { $0.start <= now && now < $0.end } ?? false,
+                         shownSubjects: Set(ledger.compactMap { $0.subject?.id }))
+
             // Anything else left paused (a cook under a paused workout) keeps its ledger row.
             ForEach(Array(ledger.dropFirst())) { process in
                 LedgerRow(process: process, now: now)

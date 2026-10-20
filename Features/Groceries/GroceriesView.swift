@@ -68,6 +68,11 @@ private struct GroceriesPage: View {
                     .contentTransition(.numericText())
                     .entrance(0)
 
+                // After a shop: the total, asked once, as a quiet line (Money slice 3), only when areas are shown.
+                if !shopping {
+                    ShopTotalLine(top: Theme.Spacing.l)
+                }
+
                 // Shop and list share one slot: the outgoing layout folds back as the incoming one rises (never a
                 // cross-fade of two whole layouts).
                 ZStack(alignment: .topLeading) {
