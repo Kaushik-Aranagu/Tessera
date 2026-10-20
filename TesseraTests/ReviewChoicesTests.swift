@@ -84,4 +84,19 @@ struct ReviewChoicesTests {
         #expect(pages.allSatisfy { $0.count <= 6 })
         #expect(pages.flatMap(\.self).count == ReviewChoices.all.count)
     }
+
+    /// The three training switches are live and drive Builder A's readers through the same keys.
+    @Test func theTrainingSwitchesReachTheirFeatures() throws {
+        let (choices, defaults) = try fresh()
+        for id in ["restTimer", "swapExercise", "finishNudge"] {
+            #expect(try choice(id).readiness == .live, "\(id)")
+        }
+        #expect(Choice.restTimerIsOn(defaults: defaults) && !Choice.swapIsOneTap(defaults: defaults))
+        try choices.step(choice("restTimer"))
+        try choices.step(choice("swapExercise"))
+        try choices.step(choice("finishNudge"))
+        #expect(!Choice.restTimerIsOn(defaults: defaults))
+        #expect(Choice.swapIsOneTap(defaults: defaults))
+        #expect(Choice.finishNudgeIsOn(defaults: defaults))
+    }
 }
