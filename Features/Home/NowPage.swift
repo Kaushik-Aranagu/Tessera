@@ -36,6 +36,9 @@ struct NowPage: View {
         // The plan takes Now only in its place (§6): never over a running workout or a timed task within 15 min.
         let planNow = planModel.isShowing && model.session == nil && ledger.isEmpty
             && (!(current.map { $0.start.timeIntervalSince(now) < 15 * 60 } ?? false) || Self.pullsPlan)
+        // Shutdown (Review switch, Off by default) takes Now from 9 pm, never over a running or paused process.
+        let shutdown = ShutdownModel.shared.stage(model: model, now: now, calendar: .current)
+            .flatMap { model.session == nil && ledger.isEmpty ? $0 : nil }
 
         VStack(alignment: .leading, spacing: 0) {
             // The only day word on Home (41.4): the painted stroke lives one tap down now.
@@ -55,9 +58,12 @@ struct NowPage: View {
             }
 
             Group {
+                if let shutdown {
+                    ShutdownNow(stage: shutdown, now: now)
+                }
                 // A running process is Now (docs/product/whats-running.md); a paused one is Now too (41.7).
-                if let session = model.session, let process = model.processes.running(),
-                   process.subject?.id == session.workout.id, let fact = facts.fact(process: process)
+                else if let session = model.session, let process = model.processes.running(),
+                        process.subject?.id == session.workout.id, let fact = facts.fact(process: process)
                 {
                     LineHero(line: HomeLines.line(for: fact, now: now), progress: progress(of: process)) {
                         PaintKey(paint: Theme.Colors.liveInk, isTap: true, progress: progress(of: process),
@@ -133,7 +139,9 @@ struct NowPage: View {
                     .transition(.offset(y: 10).combined(with: .opacity))
             }
 
-            if planNow {
+            if shutdown != nil {
+                // Shutdown is the whole page: no queue under it.
+            } else if planNow {
                 PlanRows(model: planModel)
                     .entrance(4)
             } else {
@@ -191,7 +199,7 @@ struct NowPage: View {
 
     /// The day as the hero ("Three tasks, Push A at 6"), the time above it, START WITH under it. Swipe it left to
     /// skip the whole plan: nothing written, nothing said.
-    private func planHero(now _: Date) -> some View {
+    private func planHero(now: Date) -> some View {
         let calendar = Calendar.current
         let forms = PlanWords.heroForms(tasks: planModel.rows.count, workout: planModel.workout, calendar: calendar,
                                         shown: { workoutName($0) })
@@ -211,6 +219,11 @@ struct NowPage: View {
                     }
                 }, cancelled: {}))
                 .accessibilityAction(named: "Skip the plan") { planModel.skipPlan() }
+            // The energy check-in (Review switch, Off by default): the morning plan line with last night's sleep.
+            if MyDaySwitches().energyCheckIn, MyDayWindow.energyIsOpen(at: now, calendar: calendar) {
+                EnergyPlanLine(now: now, calendar: calendar)
+                    .entrance(3)
+            }
             planKey
                 .entrance(3)
         }

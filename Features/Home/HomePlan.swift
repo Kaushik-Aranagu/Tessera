@@ -27,7 +27,7 @@ final class HomePlanModel {
     private(set) var showsPrivacy = false
     private var day: Date?
     private var wording: Task<Void, Never>?
-    /// How many times the plan went to Claude (zero while `AppModel.planWordingReady` is false).
+    /// How many times the plan went to Claude (zero while `AppModel.planWordingReady` and the Review switch are off).
     private(set) var wordingCalls = 0
 
     static let spentKey = "plan.offerSpentDay"
@@ -111,8 +111,9 @@ final class HomePlanModel {
 
     /// Claude words the plan when "Tess asks Claude" is on and a key is saved; the rules plan stays readable meanwhile.
     private func word(model: AppModel, now: Date, calendar: Calendar, restDay: Bool) {
-        // Claude's wording ships off until its eval passes (AI architecture): rules wording only, no call made.
-        guard let plan, model.asksClaude, AppModel.planWordingReady else { return }
+        // Claude's wording ships off until its eval passes (AI architecture): rules wording only, no call made,
+        // unless he tries it through the Review switch "Plan my day, Claude wording" (still under Tess asks Claude).
+        guard let plan, MyDaySwitches().wordsPlanViaClaude(asksClaude: model.asksClaude) else { return }
         wordingCalls += 1
         let pack = PlanPack(plan: plan, now: now, calendar: calendar, calendarKnown: false, restDay: restDay,
                             otherNames: plan.notPlanned.map(\.title), includesEventTitles: false,
