@@ -34,6 +34,10 @@ struct NowQuietLines: View {
     @State private var lapse: String?
     /// The copy's warning is showing: Restore turned into "Replace what is here" (sheet 111's two-step).
     @State private var confirming = false
+    /// A fast double tap must not pass both words (QA on #1157).
+    @State private var twoStep = RestoreTwoStep()
+    /// VoiceOver lands on the warning when Restore turns it on.
+    @AccessibilityFocusState private var warningFocused: Bool
     /// Tess's one line after the offer: staged, refused or not staged.
     @State private var receipt: String?
     @State private var restored = 0
@@ -87,6 +91,7 @@ struct NowQuietLines: View {
         case let .copy(url, createdAt):
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 voice(confirming ? RestoreOfferCopy.confirm(createdAt) : RestoreOfferCopy.offer(createdAt))
+                    .accessibilityFocused($warningFocused)
                 if confirming {
                     VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                         ForEach([RestoreOfferCopy.inIt, RestoreOfferCopy.notInIt, RestoreOfferCopy.walled],
@@ -105,9 +110,14 @@ struct NowQuietLines: View {
                     // (sheet 111). No haptic on the first tap; one when the restore is staged.
                     Button(confirming ? RestoreOfferCopy.replace : RestoreOfferCopy.restore) {
                         if confirming {
+                            guard twoStep.accepts() else { return }
                             stage(url, createdAt: createdAt)
                         } else {
+                            twoStep.arm()
                             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { confirming = true }
+                            // VoiceOver hears the warning and lands on it, not on the Replace word.
+                            AccessibilityNotification.Announcement(RestoreOfferCopy.confirm(createdAt)).post()
+                            warningFocused = true
                         }
                     }
                     .buttonStyle(.labelWord(Theme.Colors.ink, silent: true))
@@ -159,6 +169,7 @@ struct NowQuietLines: View {
         RestoreOffer.dismiss()
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
             confirming = false
+            twoStep.reset()
             offer = nil
         }
     }
@@ -187,6 +198,7 @@ struct NowQuietLines: View {
     private func say(_ text: String) {
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
             confirming = false
+            twoStep.reset()
             offer = nil
             receipt = text
         }

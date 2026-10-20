@@ -169,3 +169,23 @@ struct RestoreOfferTests {
             .flatMap(Double.init) == (LaunchFlags.allowed ? 1 : nil))
     }
 }
+
+/// QA on #1157: a fast double tap on Restore must not pass "Replace what is here".
+struct RestoreTwoStepTests {
+    final class Clock: @unchecked Sendable {
+        var now = Date(timeIntervalSince1970: 1_790_000_000)
+    }
+
+    @Test func aSecondTapAtPointTwoSecondsIsIgnoredAndAtPointFiveGoesThrough() {
+        let clock = Clock()
+        var step = RestoreTwoStep { clock.now }
+        #expect(!step.accepts())
+        step.arm()
+        clock.now += 0.2
+        #expect(!step.accepts())
+        clock.now += 0.3
+        #expect(step.accepts())
+        step.reset()
+        #expect(!step.accepts() && !step.isArmed)
+    }
+}

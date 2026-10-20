@@ -133,3 +133,36 @@ enum RestoreOfferCopy {
         return formatter.string(from: noon)
     }
 }
+
+/// The guard between the offer's two words (QA on #1157): Restore and "Replace what is here" sit in the same place,
+/// so a fast double tap would pass both. The second word takes a tap only once `delay` has passed since the first.
+/// The clock is injected so tests can step it.
+struct RestoreTwoStep {
+    static let delay: TimeInterval = 0.4
+
+    var now: () -> Date = { .now }
+    private(set) var armedAt: Date?
+
+    init(now: @escaping () -> Date = { .now }) {
+        self.now = now
+    }
+
+    var isArmed: Bool {
+        armedAt != nil
+    }
+
+    /// The first tap (Restore): the warning shows and the clock starts.
+    mutating func arm() {
+        armedAt = now()
+    }
+
+    mutating func reset() {
+        armedAt = nil
+    }
+
+    /// Whether a tap on "Replace what is here" counts now: armed, and at least `delay` since Restore.
+    func accepts() -> Bool {
+        guard let armedAt else { return false }
+        return now().timeIntervalSince(armedAt) >= Self.delay
+    }
+}
