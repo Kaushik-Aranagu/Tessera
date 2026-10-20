@@ -107,7 +107,7 @@ struct PlayingPicture: View {
                 let cycle = Self.cycle(frameCount: picture.frames.count)
                 let step = Int(context.date.timeIntervalSinceReferenceDate / Self.hold) % cycle.count
                 frames(showing: cycle[step])
-                    .animation(.easeInOut(duration: 0.15), value: cycle[step])
+                    .tesseraAnimation(.easeInOut(duration: 0.15), value: cycle[step])
             }
         }
     }
@@ -136,7 +136,7 @@ struct ExerciseSheetModifier: ViewModifier {
     func body(content: Content) -> some View {
         if let exercise {
             content
-                .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
+                .highPriorityGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
                     haptic += 1
                     presented = true
                 })
