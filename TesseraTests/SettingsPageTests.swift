@@ -75,4 +75,15 @@ struct SettingsPageTests {
             #expect(abs(gapBetween - PeekTabsLayout.gap) < 0.001)
         }
     }
+
+    /// The page turn's timings follow the motion spec, and Reduce Motion is one 150 ms crossfade for every style.
+    @Test func pageTurnTimingsFollowTheSpec() {
+        #expect(PageTurnStyle.allCases.map(\.rawValue) == ["Today", "Slide", "Turn", "Soften", "Rotate"])
+        #expect(abs(PageTurnTiming.total(.turn, rows: 6, reduceMotion: false) - 0.82) < 0.001)
+        #expect(abs(PageTurnTiming.total(.rotate, rows: 6, reduceMotion: false) - 0.46) < 0.001)
+        #expect(abs(PageTurnTiming.total(.rotate, rows: 3, reduceMotion: false) - 0.388) < 0.001)
+        #expect(PageTurnTiming.total(.slide, rows: 6, reduceMotion: false) == 0.52)
+        #expect(PageTurnStyle.allCases.allSatisfy { PageTurnTiming.total($0, rows: 6, reduceMotion: true) == 0.15 })
+        #expect(PageTurnStyle.slide.isWholePage && !PageTurnStyle.turn.isWholePage)
+    }
 }

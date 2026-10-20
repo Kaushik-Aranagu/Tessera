@@ -63,6 +63,8 @@ struct PeekTabs<Content: View>: View {
                     .accessibilityHidden(true)
             }
             .tesseraAnimation(value: selection)
+            // Hidden until every word is measured, so no frame shows them stacked (Design on #1137).
+            .opacity(widths.count == tabs.count ? 1 : 0)
         }
         .frame(height: 48)
         .contentShape(Rectangle())
@@ -118,7 +120,19 @@ struct PeekTabs<Content: View>: View {
 
     // MARK: The pages
 
-    private var pages: some View {
+    @ViewBuilder private var pages: some View {
+        if reduceMotion {
+            // Reduce Motion: the page cuts with a 150 ms crossfade, never slides (Design on #1137).
+            content(selection)
+                .id(selection)
+                .transition(.opacity.animation(PageTurnTiming.reduced))
+                .accessibilityElement(children: .contain)
+        } else {
+            slidingPages
+        }
+    }
+
+    private var slidingPages: some View {
         ScrollView(.horizontal) {
             LazyHStack(alignment: .top, spacing: 0) {
                 ForEach(tabs.indices, id: \.self) { index in

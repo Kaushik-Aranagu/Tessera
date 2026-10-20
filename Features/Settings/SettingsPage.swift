@@ -213,6 +213,10 @@ struct ReviewSection: View {
             }
             // A double tap flips it too, as a tap on the value word does (Design on #1127).
             .accessibilityAction { flip(choice, forward: true) }
+            // Page turn plays its pick once on a two-line mini page (sheet 93).
+            if choice.id == "pageTurn" {
+                PageTurnPreview(style: PageTurnStyle(rawValue: value) ?? .today)
+            }
             if let touched, touched.id == choice.id {
                 Text(choices.beforeAfter(choice, before: touched.before))
                     .textRole(.body)
