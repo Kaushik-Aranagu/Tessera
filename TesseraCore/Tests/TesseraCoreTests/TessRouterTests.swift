@@ -49,7 +49,8 @@ struct TessRouterTests {
             context: context,
             use: .capture
         ))
-        #expect(none.source == .none && none.records.isEmpty)
+        // Nothing takes it and no Claude is there: it is kept as a note to sort later, not dropped.
+        #expect(none.keptToSort && none.records.count == 1 && none.line == "x, kept to sort later.")
     }
 
     @Test func routeAndModelSurviveAReopenAndAnExport() throws {
