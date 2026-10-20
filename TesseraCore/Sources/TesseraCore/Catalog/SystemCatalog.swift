@@ -223,6 +223,9 @@ public enum SystemCatalog {
             // A private note (secret words, Research 134 SW4): titled "Private note" everywhere outside its page,
             // never in memory, packs or the miss log; in his backups (Q1).
             FieldSpec(key: "isPrivate", name: "Private", kind: .bool),
+            // A phrase Tess couldn't read, kept to sort later (Product ruling, Oct 19): the inbox shows "To sort".
+            // Added without a version bump: seeding adds a missing field to a class seeded earlier.
+            FieldSpec(key: "toSort", name: "To sort", kind: .bool),
         ]),
         // The calendar and Health mounts (M4 slices 1 and 2): read-only mirrors, written by the system, never by him.
         ClassSpec(key: .event, name: "Event", parent: .thing, symbol: "calendar", colorRole: "neutral", fields: [
