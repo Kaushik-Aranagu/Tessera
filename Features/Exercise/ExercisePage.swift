@@ -32,7 +32,7 @@ struct ExercisePage: View {
             ExerciseHeader(digest: digest)
                 .padding(.bottom, Theme.Spacing.l)
 
-            ExerciseSummary(digest: digest)
+            ExerciseSummary(digest: digest, isPrivate: MuscleReading.openedFromPrivate(model))
                 .entrance(3)
                 .padding(.bottom, Theme.Spacing.l)
 
@@ -121,6 +121,8 @@ private struct ExerciseHeader: View {
 
 private struct ExerciseSummary: View {
     let digest: ExerciseDigest
+    /// Opened from a private workout or routine: the figures draw the plain outline.
+    var isPrivate = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -133,6 +135,16 @@ private struct ExerciseSummary: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             stats
+                .frame(maxWidth: .infinity, alignment: .leading)
+                // The pair of figures stands beside the two numbers (Design brief 1): 100 pt tall, the back one at the
+                // right edge, drawn a little into the gutter, and hidden from VoiceOver.
+                .overlay(alignment: .topTrailing) {
+                    if !typeSize.isAccessibilitySize {
+                        ExerciseFigures(muscles: digest.muscles.map { (name: $0.name, role: MuscleRole($0.role)) },
+                                        isPrivate: isPrivate)
+                            .offset(x: 20, y: -16)
+                    }
+                }
         }
     }
 
@@ -145,9 +157,15 @@ private struct ExerciseSummary: View {
             if let best = digest.bestE1RM {
                 stat(Format.kilograms(best), label: "Best e1RM, kg",
                      spoken: "Best estimated one-rep max, \(Format.kilograms(best)) kilograms")
+                    // The second number starts at x 152 (the first at 24); its label wraps rather than touch the next
+                    // one.
+                    .frame(width: typeSize.isAccessibilitySize || digest.bestSet == nil ? nil : 120)
             }
             if let set = digest.bestSet {
                 stat(set, label: "Best set", spoken: "Best set, \(set.replacingOccurrences(of: "×", with: "by"))")
+                    // Stays clear of the figures at the right (they begin at x 296; this starts at x 152).
+                    .frame(width: typeSize.isAccessibilitySize || digest.bestE1RM == nil ? nil : 136)
+                    .padding(.leading, typeSize.isAccessibilitySize || digest.bestE1RM == nil ? 0 : 8)
             }
         }
     }
@@ -159,11 +177,37 @@ private struct ExerciseSummary: View {
                 .foregroundStyle(Theme.Colors.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
+                // One height whether or not the numeral shrank, so both labels sit on one line.
+                .frame(height: 54, alignment: .leading)
             Text(label).textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(spoken ?? "\(label), none yet")
+    }
+}
+
+/// The front and back figures for an exercise's muscles, 100 pt tall, in the Training colour (an exercise is not in a
+/// routine). Info only: hidden from VoiceOver, the rows say the same.
+struct ExerciseFigures: View {
+    let muscles: [(name: String, role: MuscleRole)]
+    var tint: Color = Theme.Colors.training
+    /// Opened from a private workout or routine: nothing is lit.
+    var isPrivate = false
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach([false, true], id: \.self) { back in
+                MuscleFigure(back: back,
+                             roles: MuscleFigureMap.roles(MuscleReading.lit(muscles, isPrivate: isPrivate), back: back),
+                             tint: tint,
+                             lineOpacity: 0.45, lineWidth: 2.2)
+                    .frame(height: 100)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 
