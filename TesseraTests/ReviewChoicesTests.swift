@@ -83,7 +83,7 @@ struct ReviewChoicesTests {
     /// default with a line for every value, and none of them flips before its feature lands.
     @Test func theAddedRowsWaitAtOff() throws {
         let (choices, defaults) = try fresh()
-        let ids = ["weekStrip", "repeatItems", "cookDouble", "parallelSteps", "cookNotes", "fixRecipe", "usuallyLine",
+        let ids = ["weekStrip", "repeatItems", "cookDouble", "fixRecipe", "usuallyLine",
                    "aisleOrder", "classInspector", "caloriesBurned"]
         for id in ids {
             let row = try choice(id)
@@ -96,6 +96,19 @@ struct ReviewChoicesTests {
             #expect(defaults.string(forKey: "review.\(id)") == nil, "\(id)")
         }
         #expect(Set(ReviewChoices.all.map(\.id)).count == ReviewChoices.all.count)
+    }
+
+    /// The cook clock page ships hands-free cooking, parallel steps and cook notes: their rows are live, Off by default,
+    /// and flip through the same keys the page reads.
+    @Test func theCookClockSwitchesAreLive() throws {
+        let (choices, defaults) = try fresh()
+        for id in ["handsFreeCook", "parallelSteps", "cookNotes"] {
+            let row = try choice(id)
+            #expect(row.readiness == .live && row.defaultValue == "Off", "\(id)")
+            choices.step(row)
+            #expect(choices.value(of: row) == "On", "\(id)")
+            #expect(defaults.string(forKey: "review.\(id)") == "On", "\(id)")
+        }
     }
 
     @Test func pagesHoldSixOrFewer() {
