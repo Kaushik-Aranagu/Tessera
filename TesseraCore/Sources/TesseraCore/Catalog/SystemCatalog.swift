@@ -178,6 +178,9 @@ public enum SystemCatalog {
                                 options: ["day", "week", "month"]),
                       // Design 44: "2,5" for Mondays and Thursdays on a fixed-days plan (1 Sunday to 7 Saturday).
                       FieldSpec(key: "fixedWeekdays", name: "Days", kind: .text),
+                      // Which kind of day it is, so its colour and muscles do not depend on the title ("Bench day").
+                      // Optional: a routine of his own may have none.
+                      FieldSpec(key: "kind", name: "Kind", kind: .choice, options: ["push", "pull", "legs"]),
                   ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [

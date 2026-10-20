@@ -5,12 +5,15 @@ import Foundation
 public struct CreateRoutine: EngineAction {
     public static let descriptor = ActionDescriptor(name: "createRoutine", summary: "Create a routine", parameters: [
         .init("title", .string, "e.g. Push Day A"),
+        .init("kind", .string, "push, pull or legs, if it is one of those days", required: false),
     ])
 
     public var title: String
+    public var kind: String?
 
-    public init(title: String) {
+    public init(title: String, kind: String? = nil) {
         self.title = title
+        self.kind = kind
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
@@ -18,11 +21,55 @@ public struct CreateRoutine: EngineAction {
         guard !trimmed.isEmpty else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "title is empty")
         }
-        return try transaction.create(transaction.classDef(.routine), title: trimmed)
+        let routine = try transaction.create(transaction.classDef(.routine), title: trimmed)
+        if let kind = RoutineKind(rawValue: kind?.lowercased() ?? "") {
+            try transaction.set("kind", to: .choice(kind.rawValue), on: routine)
+        }
+        return routine
     }
 
     public func summary(in _: ObjectStore) -> String {
         "Created \(title)"
+    }
+}
+
+/// What kind of day a routine is (Builder A's colour and muscles key off it, not off the title).
+public enum RoutineKind: String, Codable, Sendable, CaseIterable {
+    case push, pull, legs
+
+    /// A routine's kind; nil when it has none.
+    @MainActor
+    public static func of(_ routine: ObjectRecord, in store: ObjectStore) -> RoutineKind? {
+        store.value("kind", of: routine)?.stringValue.flatMap(RoutineKind.init(rawValue:))
+    }
+}
+
+/// Sets or clears a routine's kind: when he builds a routine from a seeded one, it keeps the kind. One undo.
+public struct SetRoutineKind: EngineAction {
+    public static let descriptor = ActionDescriptor(
+        name: "setRoutineKind", summary: "Set what kind of day a routine is",
+        parameters: [
+            .init("routine", .object, "The routine"),
+            .init("kind", .string, "push, pull or legs; empty clears it", required: false),
+        ], isOfferedToModel: false
+    )
+
+    public var routine: UUID
+    public var kind: String?
+
+    public init(routine: UUID, kind: String?) {
+        self.routine = routine
+        self.kind = kind
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        let object = try transaction.object(routine, is: .routine)
+        let value = RoutineKind(rawValue: kind?.lowercased() ?? "")
+        try transaction.set("kind", to: value.map { .choice($0.rawValue) }, on: object)
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        "\(store.object(id: routine)?.title ?? "A routine"), kind changed"
     }
 }
 
