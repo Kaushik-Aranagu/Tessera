@@ -144,6 +144,10 @@ struct NowPage: View {
                     .entrance(4)
             }
 
+            // What Tess did today, then the area blocks when Areas shown is All (Batch 5).
+            NowBlocks()
+                .entrance(5)
+
             Spacer(minLength: 0)
         }
         .tesseraFeedback(.done, trigger: finishes)

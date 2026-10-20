@@ -140,7 +140,7 @@ private struct ClassBody: View {
         let workouts = uniqueWorkouts(history)
 
         Header(path: lineage.dropLast().map { ($0.name, Route.classDef($0.id)) }, title: classDef.name,
-               classLine: classLine(lineage))
+               classLine: classLine(lineage), inspectsTitle: classDef.id)
 
         if isExercise {
             ExerciseSummary(history: history).entrance(4)
@@ -309,7 +309,9 @@ private struct InstanceBody: View {
             classLine: privateLabel == nil
                 ? "object \(Format.identifier(shownTitle, upperFirst: false)) : "
                 + Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
-                : Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
+                : Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true),
+            // A private object still opens its class's inspector: the inspector never shows values (sheet 113).
+            inspectsClassLine: object.classDef?.id
         )
 
         // A workout's notes are a body fact: they read "Note kept private" (Product 5:20 PM PT).
@@ -394,6 +396,10 @@ private struct Header: View {
     let path: [(String, Route)]
     let title: String
     let classLine: String
+    /// Long press on the class page's title opens that class's inspector (sheet 113), when its switch is on.
+    var inspectsTitle: UUID?
+    /// Long press on an object's class line opens its class's inspector.
+    var inspectsClassLine: UUID?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.l) {
@@ -419,12 +425,14 @@ private struct Header: View {
 
             RevealingHero(text: title)
                 .accessibilityAddTraits(.isHeader)
+                .inspectsClass(inspectsTitle)
                 .entrance(2, hero: true)
 
             Text(classLine)
                 .textRole(.data)
                 .padding(.top, Theme.Spacing.s)
                 .foregroundStyle(Theme.Colors.inkSecondary)
+                .inspectsClass(inspectsClassLine)
                 .entrance(3)
         }
     }
