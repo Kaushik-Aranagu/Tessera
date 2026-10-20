@@ -74,4 +74,20 @@ struct RestActivityMappingTests {
         #expect(!RestActivityController.needsRestart(shownPrivate: false, nowPrivate: false))
         #expect(!RestActivityController.needsRestart(shownPrivate: nil, nowPrivate: true), "no activity yet")
     }
+
+    @Test func anActivityEndedByAPrivacyFlipIsNotAdoptedAgain() {
+        let listed = [(id: "old", isActive: true), (id: "new", isActive: true)]
+        #expect(RestActivityController.adoptable(listed, excluding: ["old"]) == "new")
+        #expect(RestActivityController.adoptable(listed, excluding: []) == "old")
+        #expect(RestActivityController.adoptable([(id: "old", isActive: true)], excluding: ["old"]) == nil,
+                "nothing else listed: the next rest starts a fresh one")
+        #expect(RestActivityController.adoptable([(id: "x", isActive: false)], excluding: []) == nil)
+    }
+
+    @Test func anActivityRequestedAfterTheEndIsNotEnded() {
+        // "old" was listed when the end was queued; "fresh" was requested in the same update afterwards.
+        let ended = RestActivityController.idsToEnd(listed: ["old", "fresh"], captured: ["old"])
+        #expect(ended == ["old"])
+        #expect(RestActivityController.idsToEnd(listed: ["fresh"], captured: ["old"]).isEmpty)
+    }
 }
