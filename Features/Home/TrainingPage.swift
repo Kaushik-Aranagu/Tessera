@@ -124,9 +124,6 @@ private struct TrainingAtRest: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .topTrailing) {
-                dayPair(day)
-            }
             .padding(.bottom, tight ? Theme.Spacing.s : Theme.Spacing.l)
             .entrance(1, hero: true)
 
@@ -142,7 +139,7 @@ private struct TrainingAtRest: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
-                    LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone, tint: figureTint(day),
+                    LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
                             isPrivate: isPrivateDay,
                             showsStrokes: isRunning || isDone || lane.logged > 0,
                             isLast: index == min(lanes.count, 5) - 1)
@@ -222,27 +219,6 @@ private struct TrainingAtRest: View {
 
     private var isPrivateDay: Bool {
         titleAndRoute.0 == ObjectPrivacy.routineLabel
-    }
-
-    /// The day's pair of figures, 112 pt tall at the right: the union of the day's muscles, primary if primary
-    /// anywhere, in the routine's colour. Info only.
-    @ViewBuilder
-    private func dayPair(_ day: MuscleReading.Muscles) -> some View {
-        if !day.isEmpty, !typeSize.isAccessibilitySize {
-            HStack(spacing: 0) {
-                ForEach([false, true], id: \.self) { back in
-                    MuscleFigure(back: back,
-                                 roles: MuscleFigureMap.roles(MuscleReading.lit(day, isPrivate: isPrivateDay),
-                                                              back: back),
-                                 tint: figureTint(day),
-                                 lineOpacity: 0.4, lineWidth: 1.4)
-                        .frame(height: 112)
-                }
-            }
-            .offset(x: 20, y: -4)
-            .accessibilityHidden(true)
-            .allowsHitTesting(false)
-        }
     }
 
     @ViewBuilder
@@ -417,18 +393,6 @@ private struct TrainingAtRest: View {
     /// "82.5 kg": a weight with its unit.
     private static func weightText(_ value: Double) -> String {
         "\(Format.kilograms(value)) \(Format.unit.symbol)"
-    }
-
-    /// The routine's colour for the figures: Push vermilion, Pull cobalt, Legs cadmium, else Training; the routine's
-    /// kind decides, and the day's muscles when it has none.
-    private func figureTint(_ day: MuscleReading.Muscles) -> Color {
-        let routine: ObjectRecord? = switch plan {
-        case let .routine(routine): routine
-        case let .scheduled(workout): model.store.linkedObjects("routine", of: workout).first
-        case let .running(session): model.store.linkedObjects("routine", of: session.workout).first
-        case let .done(summary): model.store.linkedObjects("routine", of: summary.workout).first
-        }
-        return MuscleTint.colour(kind: routine.flatMap { RoutineKind.of($0, in: model.store) }, muscles: day)
     }
 
     /// "today, 5 exercises, about 55 min"; done: "done this afternoon".
@@ -701,18 +665,17 @@ struct StartMark: View {
 
 // MARK: - Lanes
 
-/// One exercise (Design brief 1, sheet 107): a 62 pt figure of what it works at the left (28 wide, top inset 3), the
-/// name at x 44 (21 medium, one line, top 6) and under it, at top 38, the scheme ("4 × 5–8") with today's weight at
+/// One exercise (Design brief 1, sheet 107; Kaushik, Oct 20: no figure beside the name): the
+/// name (21 medium, one line, top 6) and under it, at top 38, the scheme ("4 × 5–8") with today's weight at
 /// the right edge ("82.5 kg", none when there is none). Once the workout is running the second line is the set
 /// strokes live mode draws: logged ones painted in the rest tint, the rest dashed guides. A hairline at 12% ink runs
-/// between rows from x 44.
+/// between rows.
 private struct LaneRow: View {
     let lane: TrainingLane
     /// The first guide wakes when START lands: 22% to 90%, breathing.
     var wakes = false
     var dried = false
-    var tint: Color = Theme.Colors.training
-    /// A private workout's figure is the plain outline: nothing lit, and no muscle words either.
+    /// A private workout names no muscles.
     var isPrivate = false
     var showsStrokes = false
     var isLast = false
@@ -721,16 +684,6 @@ private struct LaneRow: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            if !lane.muscles.isEmpty {
-                // The side comes from the muscles, but a private workout lights none of them.
-                let back = MuscleSide.showsBack(lane.muscles)
-                let lit = MuscleReading.lit(lane.muscles, isPrivate: isPrivate)
-                MuscleFigure(back: back, roles: MuscleFigureMap.roles(lit, back: back),
-                             tint: tint, lineOpacity: 0.5, lineWidth: 2.6)
-                    .frame(height: 62)
-                    .padding(.top, 3)
-                    .accessibilityHidden(true)
-            }
             VStack(alignment: .leading, spacing: 0) {
                 Text(lane.name)
                     .font(Theme.voice(size: 21).weight(.medium))
@@ -740,12 +693,11 @@ private struct LaneRow: View {
                 secondLine
                     .padding(.top, typeSize.isAccessibilitySize ? 4 : 10)
             }
-            .padding(.leading, 44)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .overlay(alignment: .bottomLeading) {
             if !isLast {
-                Rectangle().fill(Theme.Colors.ink.opacity(0.12)).frame(height: 1).padding(.leading, 44)
+                Rectangle().fill(Theme.Colors.ink.opacity(0.12)).frame(height: 1)
             }
         }
         .accessibilityElement(children: .ignore)
