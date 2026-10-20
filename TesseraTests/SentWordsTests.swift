@@ -38,6 +38,14 @@ struct SentWordsTests {
         #expect(SentWords.of(callC, in: model.store, words: words) == nil)
     }
 
+    /// What rode with the phrase follows it on its own lines; only the phrase is quoted.
+    @Test func theContextFollowsThePhrase() throws {
+        try row(.tessSent, words: "buy oat milk\nToday: Monday", request: "a")
+        let call = try row(.tessCall, request: "a")
+        let words = SentWords.byRequest(TessSentLog(store: model.store, classes: model.classes))
+        #expect(SentWords.of(call, in: model.store, words: words) == "\u{201C}buy oat milk\u{201D}\nToday: Monday")
+    }
+
     @Test func clearTakesTheWordsAndKeepsTheReceipts() throws {
         try row(.tessSent, words: "buy oat milk", request: "a")
         try row(.tessCall, request: "a")

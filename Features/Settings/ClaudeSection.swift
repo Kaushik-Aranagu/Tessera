@@ -84,6 +84,8 @@ struct ClaudeSection: View {
     /// Bumped when the key wouldn't leave the Keychain: the one soft warning for a write that didn't save.
     @State private var notSaved = 0
     @State private var notSavedAt: Date?
+    /// Yes to the key question: one soft success (sheet 106).
+    @State private var answeredYes = 0
     /// The first line, "Tess asks Claude": misses and Plan my day. Lives in Core's settings object only.
     @State private var missesGoToClaude = true
     /// Tess's answer to the last flip of the switch, shown under it.
@@ -173,6 +175,7 @@ struct ClaudeSection: View {
                     Button(missesGoToClaude ? "yes" : "no", action: toggleMisses)
                         .buttonStyle(.valueWash)
                         .fontWeight(.semibold)
+                        .foregroundStyle(model.keyQuestionDue ? Theme.Colors.inkSecondary : Theme.Colors.ink)
                         .contentTransition(.opacity)
                         .accessibilityLabel("Tess asks Claude")
                         .accessibilityValue(missesGoToClaude ? "yes" : "no")
@@ -180,6 +183,12 @@ struct ClaudeSection: View {
                 }
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
+                // Until he answers the key question every Claude path is closed (sheet 106, section 1).
+                if model.keyQuestionDue {
+                    Text(ClaudeKeyQuestionCopy.waiting)
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                }
                 // Tess answers the flip inline, under the switch.
                 if let switchLine {
                     Text(switchLine)
@@ -219,10 +228,30 @@ struct ClaudeSection: View {
             }
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("Key saved · \(Text(status).foregroundStyle(Theme.Colors.inkSecondary))")
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .accessibilityLabel("Claude key saved, \(status)")
+                if model.keyQuestionDue {
+                    // A key found on a fresh store sends nothing until he answers (G687).
+                    Text(ClaudeKeyQuestionCopy.found)
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.ink)
+                    ClaudeKeyQuestion { answer in
+                        let receipt = model.answerKeyQuestion(answer)
+                        missesGoToClaude = model.asksClaude
+                        if answer == true {
+                            answeredYes += 1
+                        }
+                        if let receipt {
+                            withTesseraAnimation(reduceMotion: reduceMotion) { switchLine = receipt }
+                            AccessibilityNotification.Announcement(receipt).post()
+                        }
+                    }
+                    .padding(.vertical, Theme.Spacing.s)
+                    .tesseraFeedback(.cleared, trigger: answeredYes)
+                } else {
+                    Text("Key saved · \(Text(status).foregroundStyle(Theme.Colors.inkSecondary))")
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .accessibilityLabel("Claude key saved, \(status)")
+                }
                 if confirmingRemove {
                     removeQuestion
                         .transition(.opacity.combined(with: .offset(y: -4)))
@@ -381,6 +410,13 @@ struct ClaudeSection: View {
                 model.touch()
                 return
             }
+            // A key he saved is his yes to Claude if he hasn't answered; a stored no stays (Core's noteKeySaved).
+            // Never while a demo flag is on.
+            if result.saved, !LaunchFlags.has("-demo") {
+                try? SettingsStore(engine: model.engine).noteKeySaved()
+                missesGoToClaude = model.asksClaude
+                model.refreshKeyQuestion(keys: keys)
+            }
             withTesseraAnimation(reduceMotion: reduceMotion) {
                 line = result.line
                 hasKey = result.saved
@@ -474,6 +510,8 @@ struct ClaudeReceipts: View {
     @Environment(\.dismiss) private var dismiss
     /// "Cleared what was sent." after the clear: plain, and no UNDO (G653).
     @State private var clearedLine: String?
+    /// One soft haptic on Clear (sheet 106).
+    @State private var cleared = 0
 
     var body: some View {
         let _ = model.revision
@@ -517,10 +555,12 @@ struct ClaudeReceipts: View {
                                 .textRole(.body)
                                 .foregroundStyle(Theme.Colors.ink)
                             if let said = SentWords.of(call, in: model.store, words: words) {
+                                // At most four lines in the list; "Private phrase" plain, at full ink (sheet 106).
                                 Text(said)
                                     .textRole(.body)
-                                    .foregroundStyle(Theme.Colors.inkSecondary)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                    .foregroundStyle(said.hasPrefix(TessSentLog.privatePhrase) ? Theme.Colors.ink
+                                        : Theme.Colors.inkSecondary)
+                                    .lineLimit(4)
                             }
                         }
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -530,6 +570,7 @@ struct ClaudeReceipts: View {
                 if sent.count > 0 {
                     Button(SentWords.clear) {
                         let line = sent.clear()
+                        cleared += 1
                         clearedLine = line
                         AccessibilityNotification.Announcement(line).post()
                         model.touch()
@@ -547,6 +588,7 @@ struct ClaudeReceipts: View {
             .padding(.vertical, Theme.Spacing.l)
         }
         .background { ThemedBackground() }
+        .tesseraFeedback(.cleared, trigger: cleared)
         // The system back button is hidden, so the edge swipe back is ours (QA L1 on #353).
         .background { EdgeSwipeBack() }
         .navigationBarBackButtonHidden()
@@ -565,18 +607,25 @@ enum SentWords {
         var words: [String: String] = [:]
         for entry in log.entries() {
             if let id = log.store.value("requestID", of: entry)?.stringValue, words[id] == nil {
-                words[id] = log.words(of: entry)
+                // Judged again now, so a row written before a wall changed still reads "Private phrase" (QA on #1110).
+                words[id] = log.shownWords(of: entry)
             }
         }
         return words
     }
 
     /// The words under one receipt, quoted: “buy oat milk”; nil when the call has none on record.
+    /// The phrase comes first, in quotes; what rode with it (his date, the workout and last set in focus) follows on
+    /// its own lines, as sent.
     @MainActor
     static func of(_ call: ObjectRecord, in store: ObjectStore, words: [String: String]) -> String? {
         guard let id = store.value("requestID", of: call)?.stringValue, let said = words[id], !said.isEmpty
         else { return nil }
-        return said == TessSentLog.privatePhrase ? said : "\u{201C}\(said)\u{201D}"
+        var lines = said.components(separatedBy: "\n")
+        if let phrase = lines.first, phrase != TessSentLog.privatePhrase {
+            lines[0] = "\u{201C}\(phrase)\u{201D}"
+        }
+        return lines.joined(separator: "\n")
     }
 
     /// "1 request held back on this phone", "3 requests …"; nil when none were.
