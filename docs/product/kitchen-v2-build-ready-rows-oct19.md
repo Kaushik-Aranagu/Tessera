@@ -64,7 +64,7 @@ Only the backlog line and K46.4 ("no per-store order in v1") exist. Gate: only i
 | ID | Clause | How checked | Owner | Depends on |
 |---|---|---|---|---|
 | AO-E1 | A finished shop records its aisle order as the order of first `checkedAt` per aisle. | new test `checkOffOrderGivesAisleOrder`, ShoppingTests.swift | Core | FinishShop |
-| AO-E2 | An item moves only when checked off in the same relative place in 2 of his last 3 shops (ruled Oct 19). | new test `orderNeedsTwoOfThree` | Core | AO-E1 |
+| AO-E2 | An item moves only when checked off in the same relative place in 2 of his last 3 shops (ruled Oct 19). | new test `orderNeedsTwoOfThree`: an item checked off in the same relative place (for example, after the same aisle) in 2 of the last 3 shops moves; once in 3 does not | Core | AO-E1 |
 | AO-E3 | Learning moves aisles, never an item's learned aisle (K36.6 stays). | new test `aisleOrderLeavesItemAislesAlone` | Core | K36.6 |
 | AO-E4 | One learned order serves every shop (no shop object); with nothing learned, the default walk order holds (ruled Oct 19). | new test `noLearnedOrderKeepsDefault` | Core | AO-E2 |
 | AO-E5 | No shop name or order leaves the phone (pack, Claude, shared export). | ExportTests.swift + groceries-ai row 5 | Core | |
@@ -258,11 +258,25 @@ Design item 114 (`design/kitchen-v2-114.md`, Oct 19) draws these screen rows. Ro
 |---|---|---|
 | WD-S1, WD-S3 | 1 Week strip | one row per day, "Tacos, skipped" in secondary ink with no strike, key "Add the week to Groceries", receipt "Week, 5 added." UNDO 4 s |
 | RG-S1, RG-S2 | 2 Repeats word | quiet word "weekly" at the row's right; tap clears, "Milk, not every week." UNDO 10 s |
-| HF-S5 | 3 Listening mark | the word "Listening" with a breathing hairline, no mic icon; static under Reduce Motion and Low Power |
+| HF-S5 | 3 Listening mark (proposed) | the word "Listening" with a breathing hairline, no mic icon; static under Reduce Motion and Low Power |
 | CN-S1, CN-S2 | 4 Note line | "Last time: less salt." on the recipe page and the first cook step; optional "Note for next time" line on Finish |
 | RE-S1 to RE-S3 | 5 FIX | top-right word FIX or long press on the title; step number is the drag handle (hold 0.3 s); refusal "Nothing saved: every line is ignored." |
 | PL-S3, PL-S4 | 6 Second lane | "Meanwhile, rice, step 2 of 4, 9 minutes left."; proposal bracket at 25% ink, read as "Proposed" |
 | CC-S2 | 7 Also | "2 to check" block under a hairline, rows at 55% ink |
-| AO-S2 | 7 Also | headings slide once on open, 240 ms; 150 ms crossfade under Reduce Motion |
+| AO-S2 | 7 Also | headings slide once on open with the snappy curve through MotionPolicy; 150 ms crossfade under Reduce Motion |
 
-Switch wording on the Kitchen page (sheet 114): "Week strip is off.", "Repeat items are off.", "Hands-free cooking is off.", "Cook notes on the recipe are off.", "Fixing a recipe is off.", "Steps run in parallel are off." Accepted switch ids (Product, Oct 19, all default Off): weekStrip, repeatItems, cookDouble, parallelSteps, cookNotes, fixRecipe, usuallyLine, aisleOrder.
+Switch wording on the Kitchen page (sheet 114), paired with ids (all default Off). Sheet 114 gives no wording for usuallyLine and aisleOrder, and cookDouble has none on the sheet either; those three are inferred here and Design may change them.
+
+| Id | Wording |
+|---|---|
+| weekStrip | "Week strip is off." |
+| repeatItems | "Repeat items are off." |
+| handsFreeCook | "Hands-free cooking is off." (id already in ReviewChoices, not one of the eight new) |
+| cookNotes | "Cook notes on the recipe are off." |
+| fixRecipe | "Fixing a recipe is off." |
+| parallelSteps | "Steps run in parallel are off." |
+| cookDouble | "Cook double is off." (inferred) |
+| usuallyLine | "Usually line is off." (inferred) |
+| aisleOrder | "Learned aisle order is off." (inferred) |
+
+The eight new ids accepted by Product (Oct 19): weekStrip, repeatItems, cookDouble, parallelSteps, cookNotes, fixRecipe, usuallyLine, aisleOrder.
