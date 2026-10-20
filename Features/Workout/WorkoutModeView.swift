@@ -212,7 +212,7 @@ private struct WorkoutContent: View {
             } else {
                 deferredCues.append(cue)
             }
-            soul.handle(seated.records.isEmpty ? .setLogged : .newBest)
+            soul.handle(seated.records.isEmpty || isPrivate ? .setLogged : .newBest)
         }
         .tesseraFeedback(.undo, trigger: undoHaptic)
         .tesseraFeedback(.selection, trigger: editHaptic)
@@ -756,7 +756,8 @@ extension WorkoutContent {
 
     /// One haptic for the moment: done, or .success when the set it finished with was a best.
     private func finish(early: Bool = false, withSet: Bool = false) {
-        let best = withSet && session.lastSeated?.records.isEmpty == false
+        let isPrivate = session.shownTitle != session.workout.title
+        let best = withSet && !isPrivate && session.lastSeated?.records.isEmpty == false
         moment.play(best ? .newBest : .done)
         isSwapOpen = false
         isOrderOpen = false
