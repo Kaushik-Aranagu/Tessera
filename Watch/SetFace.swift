@@ -7,6 +7,7 @@ struct SetFace: View {
     @Environment(\.isLuminanceReduced) private var dimmed
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var crown: Double = 0
+    @State private var repsWidth: CGFloat = 160
     @FocusState private var crownFocused: Bool
 
     private var snap: WatchSnapshot { store.snapshot }
@@ -21,11 +22,10 @@ struct SetFace: View {
                     .onTapGesture { store.crownMovesWeight = true }
                 numeral("\(store.reps)", unit: nil, active: !store.crownMovesWeight)
                     .contentShape(Rectangle())
+                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { repsWidth = $0 }
                     .onTapGesture { location in step(reps: location.x) }
             }
-            Text("SET \(snap.setNumber) of \(snap.setCount)")
-                .font(WatchInk.face(16, .regular)).tracking(0.6).opacity(0.7)
-                .padding(.top, 2)
+            setLabel
             Spacer(minLength: 4)
             bottomLine
         }
@@ -45,19 +45,51 @@ struct SetFace: View {
         .overlay(alignment: .topTrailing) {
             if store.writeFailed { Text("Not saved").font(WatchInk.face(16)).opacity(0.7).padding(.trailing, 12) }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-            "\(snap.exercise), set \(snap.setNumber) of \(snap.setCount), weight \(WatchSnapshot.number(store.weight)) "
-                + "\(snap.unit == "kg" ? "kilograms" : "pounds"), reps \(store.reps). Done."
-        )
-        .accessibilityAdjustableAction { direction in
-            let sign: Double = direction == .increment ? 1 : -1
-            if store.crownMovesWeight {
-                store.weight = max(0, store.weight + sign * snap.weightStep)
-            } else {
-                store.reps = max(1, store.reps + Int(sign))
+        .modifier(SetFaceAccess(store: store, label: spokenLabel, onDefault: defaultAction, onAdjust: adjust))
+    }
+
+    private func adjust(_ direction: AccessibilityAdjustmentDirection) {
+        let sign: Double = direction == .increment ? 1 : -1
+        if store.crownMovesWeight {
+            store.weight = max(0, store.weight + sign * snap.weightStep)
+        } else {
+            store.reps = max(1, store.reps + Int(sign))
+        }
+        syncCrown()
+    }
+
+    /// "SET 4 of 5", or for ten seconds after an undo "Set 4, removed." as plain text with the ink word UNDO.
+    @ViewBuilder
+    private var setLabel: some View {
+        if snap.phase == .set, let note = store.undoNote {
+            HStack(spacing: 8) {
+                Text(note).font(WatchInk.face(16, .regular)).opacity(0.7).lineLimit(1).minimumScaleFactor(0.8)
+                Button("UNDO") { store.putBack() }
+                    .buttonStyle(.plain).font(WatchInk.face(16)).tracking(0.6)
+                    .accessibilityLabel("Undo. Log the removed set back.")
             }
-            syncCrown()
+            .padding(.top, 2)
+        } else {
+            Text("SET \(snap.setNumber) of \(snap.setCount)")
+                .font(WatchInk.face(16, .regular)).tracking(0.6).opacity(0.7)
+                .padding(.top, 2)
+        }
+    }
+
+    private var spokenLabel: String {
+        let unit = snap.unit == "kg" ? "kilograms" : "pounds"
+        let base = "\(snap.exercise), set \(snap.setNumber) of \(snap.setCount), "
+        if snap.phase == .rest {
+            return base + "resting. Double tap to remove the set just logged."
+        }
+        return base + "weight \(WatchSnapshot.number(store.weight)) \(unit), reps \(store.reps). Done."
+    }
+
+    private func defaultAction() {
+        if snap.phase == .rest {
+            if (snap.restEndsAt ?? .distantPast) <= Date.now { store.skipRest() } else { store.undo() }
+        } else {
+            store.done()
         }
     }
 
@@ -68,7 +100,7 @@ struct SetFace: View {
     /// Tap the left half of the reps row to step down, the right half to step up.
     private func step(reps location: CGFloat) {
         store.crownMovesWeight = false
-        store.reps = max(1, store.reps + (location > 70 ? 1 : -1))
+        store.reps = max(1, store.reps + (location > repsWidth / 2 ? 1 : -1))
         syncCrown()
     }
 
@@ -96,11 +128,13 @@ struct SetFace: View {
     private var bottomLine: some View {
         if snap.phase == .rest {
             let line = snap.sets.first ?? ""
-            inkLine(store.undoNote ?? line, action: store.undo)
-                .accessibilityLabel(store.undoNote ?? "\(line). Double tap to remove this set.")
+            inkLine(line, action: store.undo)
+                // A swipe back on the line takes the set out, as the tap does.
+                .gesture(DragGesture(minimumDistance: 16).onEnded { drag in
+                    if drag.translation.width > 30, abs(drag.translation.height) < 30 { store.undo() }
+                })
         } else {
-            inkLine(store.undoNote ?? "Done", action: store.done)
-                .accessibilityLabel(store.undoNote ?? "Done")
+            inkLine("Done", action: store.done)
         }
     }
 
@@ -180,5 +214,27 @@ struct RestRow: View {
             Rectangle().fill(WatchInk.cream).frame(width: max(width, 0))
             Spacer(minLength: 0)
         }
+    }
+}
+
+/// VoiceOver can do everything the screen does: the default action is Done (in the rest, Go once it is over, else take
+/// the set out), and the rest are named.
+private struct SetFaceAccess: ViewModifier {
+    let store: WatchStore
+    let label: String
+    let onDefault: () -> Void
+    let onAdjust: (AccessibilityAdjustmentDirection) -> Void
+
+    func body(content: Content) -> some View {
+        let resting = store.snapshot.phase == .rest
+        content
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(label)
+            .accessibilityAction(.default, onDefault)
+            .accessibilityAction(named: "Add 15 seconds") { if resting { store.extendRest() } }
+            .accessibilityAction(named: "Go") { if resting { store.skipRest() } }
+            .accessibilityAction(named: "Remove set") { if resting { store.undo() } }
+            .accessibilityAction(named: "This exercise") { store.sideShown = true }
+            .accessibilityAdjustableAction(onAdjust)
     }
 }

@@ -13,8 +13,14 @@ final class WatchStore: NSObject {
     var reps: Int = 0
     /// Which numeral the Digital Crown moves.
     var crownMovesWeight = true
-    /// "Set 4, removed." for ten seconds after an undo.
+    /// "Set 4, removed." for ten seconds after an undo; UNDO beside it logs the removed set back.
     private(set) var undoNote: String?
+    /// The set that was just taken out, for the UNDO word.
+    private(set) var removed: (weight: Double, reps: Int)?
+    /// THIS EXERCISE is showing over the set screen.
+    var sideShown = false
+    /// The numbers last sent with Done, for the undo that follows.
+    private var lastLogged: (weight: Double, reps: Int)?
     private(set) var writeFailed = false
     private var undoTask: Task<Void, Never>?
     private var restTask: Task<Void, Never>?
@@ -71,12 +77,15 @@ final class WatchStore: NSObject {
     // MARK: Asking the phone
 
     func done() {
+        lastLogged = (weight, reps)
         send(.logSet(weight: weight, reps: reps))
         undoNote = nil
+        removed = nil
     }
 
     func undo() {
         let number = max(snapshot.setNumber - 1, 1)
+        removed = lastLogged ?? Self.numbers(in: snapshot.sets.first)
         send(.undo)
         undoNote = "Set \(number), removed."
         undoTask?.cancel()
@@ -84,7 +93,27 @@ final class WatchStore: NSObject {
             try? await Task.sleep(for: .seconds(10))
             guard !Task.isCancelled else { return }
             undoNote = nil
+            removed = nil
         }
+    }
+
+    /// UNDO beside "Set 4, removed.": logs the removed weight and reps back.
+    func putBack() {
+        guard let removed else { return }
+        undoTask?.cancel()
+        undoNote = nil
+        self.removed = nil
+        weight = removed.weight
+        reps = removed.reps
+        lastLogged = removed
+        send(.logSet(weight: removed.weight, reps: removed.reps))
+    }
+
+    /// "82.5 x 8" back into numbers, when the app has not logged a set itself this run.
+    private static func numbers(in line: String?) -> (weight: Double, reps: Int)? {
+        guard let parts = line?.split(separator: " ").filter({ $0 != "x" && $0 != "×" }), parts.count == 2,
+              let weight = Double(parts[0]), let reps = Int(parts[1]) else { return nil }
+        return (weight, reps)
     }
 
     func extendRest() {

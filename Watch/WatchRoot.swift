@@ -15,7 +15,7 @@ enum WatchInk {
 struct WatchRoot: View {
     @Environment(WatchStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var sideShown = false
+    @State private var width: CGFloat = 200
 
     var body: some View {
         ZStack {
@@ -25,25 +25,27 @@ struct WatchRoot: View {
             case .finished: FinishedFace()
             case .set, .rest:
                 SetFace()
-                    .offset(x: sideShown ? -28 : 0)
-                    .opacity(sideShown ? 0.35 : 1)
+                    .offset(x: store.sideShown ? -28 : 0)
+                    .opacity(store.sideShown ? 0.35 : 1)
             }
-            if sideShown, store.snapshot.phase == .set || store.snapshot.phase == .rest {
+            if store.sideShown, store.snapshot.phase == .set || store.snapshot.phase == .rest {
                 SideFace()
                     .transition(.move(edge: .trailing))
             }
         }
         .gesture(
-            DragGesture(minimumDistance: 24)
+            // The side opens from the right edge only (a swipe in from the last 32 pt); a swipe back closes it from
+            // anywhere on the screen.
+            DragGesture(minimumDistance: 20)
                 .onEnded { value in
-                    let towardsLeft = value.translation.width < -40, towardsRight = value.translation.width > 40
                     guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                    withAnimation(reduceMotion ? nil : .smooth(duration: 0.28)) {
-                        if towardsLeft { sideShown = true }
-                        if towardsRight { sideShown = false }
-                    }
+                    let opens = value.translation.width < -30 && value.startLocation.x > width - 32
+                    let closes = value.translation.width > 40
+                    guard opens || (closes && store.sideShown) else { return }
+                    withAnimation(reduceMotion ? nil : .smooth(duration: 0.28)) { store.sideShown = opens }
                 }
         )
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .foregroundStyle(WatchInk.cream)
     }
 
