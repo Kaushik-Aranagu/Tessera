@@ -48,7 +48,7 @@ enum ClaudeKeyWords {
 
 struct ClaudeSection: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     /// The real Keychain in the app; previews and recordings pass an in-memory one with a fake key.
     var keys: any TessKeychain = ClaudeSection.defaultKeys
@@ -119,7 +119,7 @@ struct ClaudeSection: View {
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.tess)
                     .fixedSize(horizontal: false, vertical: true)
-                    .transition(.opacity.combined(with: .offset(y: 6)))
+                    .transition(.opacity.combined(with: .offset(y: reduceMotion ? 0 : 6)))
             }
         }
         .tesseraAnimation(value: hasKey)
@@ -254,7 +254,7 @@ struct ClaudeSection: View {
                 }
                 if confirmingRemove {
                     removeQuestion
-                        .transition(.opacity.combined(with: .offset(y: -4)))
+                        .transition(.opacity.combined(with: .offset(y: reduceMotion ? 0 : -4)))
                 } else {
                     HStack(spacing: 0) {
                         Button("Test") { retest() }
@@ -331,7 +331,7 @@ struct ClaudeSection: View {
                 .frame(height: 0.5)
         }
         .frame(minHeight: 44)
-        .transition(.opacity.combined(with: .offset(y: -6)))
+        .transition(.opacity.combined(with: .offset(y: reduceMotion ? 0 : -6)))
     }
 
     // MARK: Actions
@@ -478,7 +478,7 @@ struct ClaudeSection: View {
 private struct MonthLine: View {
     let share: Double
     let warm: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var drawn = false
 
     var body: some View {

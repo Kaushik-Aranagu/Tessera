@@ -7,7 +7,7 @@ import TesseraCore
 /// Core scrubs a forgotten line's words from history.
 struct TessKnowsPage: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
 

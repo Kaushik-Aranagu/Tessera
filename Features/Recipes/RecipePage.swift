@@ -16,7 +16,7 @@ struct RecipePage: View {
     var onCook: ((UUID, Int?) -> Void)?
 
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Namespace private var zoom
     @State private var serves: Int?
@@ -383,7 +383,7 @@ private struct IngredientColumn: View {
     /// The same add as the swipe, for VoiceOver and Switch Control (G58).
     var onAdd: () -> Void = {}
     @State private var metric: UUID?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

@@ -35,7 +35,7 @@ struct PaintedTrend: View {
 
     @State private var drawn: CGFloat = 0
     @State private var wet = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         GeometryReader { proxy in
@@ -111,7 +111,7 @@ private struct RiseIn: ViewModifier {
     let token: Int
     var stagger: Double = 0.03
     @State private var shown = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
@@ -139,7 +139,7 @@ extension View {
 /// The object's name comes in from the right (18 pt, blur 4 → 0, 340 ms) on the first visit. Reduce Motion: a fade.
 private struct ArriveFromRight: ViewModifier {
     @Environment(\.animateEntrance) private var animate
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var shown = false
 
     func body(content: Content) -> some View {
@@ -168,7 +168,7 @@ extension View {
 /// The glint motif, once: a warm sheen crosses the content a single time on arrival. Reduce Motion: nothing.
 private struct GlintOnce: ViewModifier {
     @State private var sweep: CGFloat = -0.6
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     func body(content: Content) -> some View {
         content

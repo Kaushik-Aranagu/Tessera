@@ -14,7 +14,7 @@ struct ExerciseStrip: View {
     }
 
     let segments: [Segment]
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     private static let period = 4.5
 
@@ -77,7 +77,7 @@ struct RunningOrderSheet: View {
     @State private var dragOffset: CGFloat = 0
     @State private var liftHaptic = 0
     @State private var slotHaptic = 0
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     private static let pitch: CGFloat = 64
 

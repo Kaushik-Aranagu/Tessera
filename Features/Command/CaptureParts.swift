@@ -26,7 +26,7 @@ struct ModeRow: View {
     let isFolded: Bool
     let action: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var risen = false
     @State private var landed = false
     @State private var inWord = false
@@ -93,7 +93,7 @@ struct CaptureWritingLine: View {
             .scaleEffect(x: drawn ? 1 : 0.06, anchor: .trailing)
             .opacity(drawn ? 1 : 0)
             .onAppear {
-                withAnimation(reduceMotion ? .easeOut(duration: 0.2) : Theme.Motion.house.delay(0.05)) { drawn = true }
+                withTesseraAnimation(Theme.Motion.house.delay(0.05), reduceMotion: reduceMotion) { drawn = true }
             }
     }
 }

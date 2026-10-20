@@ -67,7 +67,7 @@ struct TrainingLane: Identifiable, Equatable {
 private struct TrainingAtRest: View {
     let plan: TrainingSource
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.zoomNamespace) private var namespace
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -695,7 +695,7 @@ private struct LaneRow: View {
     var isPrivate = false
     var showsStrokes = false
     var isLast = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {

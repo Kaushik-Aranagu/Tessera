@@ -129,7 +129,7 @@ struct HandleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .opacity(configuration.isPressed ? 0.5 : 1)
-            .animation(Theme.Motion.snappy, value: configuration.isPressed)
+            .tesseraAnimation(Theme.Motion.snappy, value: configuration.isPressed)
     }
 }
 
@@ -137,7 +137,7 @@ struct PressScaleStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(Theme.Motion.snappy, value: configuration.isPressed)
+            .tesseraAnimation(Theme.Motion.snappy, value: configuration.isPressed)
     }
 }
 
@@ -160,7 +160,7 @@ struct ArrivalTransition<ID: Hashable>: ViewModifier {
     let id: ID
     let arrival: AppModel.Arrival
     let namespace: Namespace.ID?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     func body(content: Content) -> some View {
         content.navigationTransition(transition)

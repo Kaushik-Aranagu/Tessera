@@ -71,7 +71,7 @@ struct RevealText: View {
     var delay: Double = 0.1
     var once: Binding<Bool>?
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var progress: Double = 0
 
     var body: some View {
@@ -96,7 +96,7 @@ struct RevealText: View {
 struct RevealingHero: View {
     let text: String
     var completion: Double = 0
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.animateEntrance) private var animate
     @State private var reveal: Double = 0
 

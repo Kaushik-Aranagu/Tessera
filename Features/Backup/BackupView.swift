@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 /// Entry point: present `BackupView()`, or launch with `-backup` in DEBUG (`-backupFailure` shows a failed copy).
 struct BackupView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
     @State private var picking = false

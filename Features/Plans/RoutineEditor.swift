@@ -9,7 +9,7 @@ import TesseraCore
 struct RoutineEditor: View {
     let routine: ObjectRecord
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -469,7 +469,7 @@ private struct DaysLine: View {
     let routine: ObjectRecord
     var onChange: (OpRecord, String) -> Void
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var open = false
     /// The day just picked, wet in tess until it dries (900 ms).
     @State private var wet: Int?
@@ -540,7 +540,8 @@ private struct DaysLine: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(Weekdays.name(weekday))
                 .accessibilityAddTraits(picked ? .isSelected : [])
-                .transition(.opacity.animation(.easeOut(duration: 0.2).delay(Double(order) * 0.04)))
+                .transition(.opacity.animation(MotionPolicy.resolve(.easeOut(duration: 0.2).delay(Double(order) * 0.04),
+                                                                    reduceMotion: reduceMotion)))
             }
             Spacer(minLength: 0)
         }

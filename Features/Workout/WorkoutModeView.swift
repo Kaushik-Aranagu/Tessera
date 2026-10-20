@@ -46,7 +46,7 @@ private typealias Paint = WorkoutPaint
 private struct WorkoutContent: View {
     @Bindable var session: WorkoutSession
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     /// The lane's scroll position (x). Kept in step with `session.currentIndex` both ways.
     @State private var laneIndex: Int?

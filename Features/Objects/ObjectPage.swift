@@ -129,7 +129,7 @@ private struct GoneBody: View {
 private struct ClassBody: View {
     let classDef: ClassDef
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         let lineage = ClassResolver.lineage(of: classDef)

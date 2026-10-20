@@ -5,7 +5,7 @@ import SwiftUI
 struct PaintFlood: View {
     let isOn: Bool
     let origin: CGPoint
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         Circle()
@@ -24,8 +24,8 @@ struct PaintFlood: View {
             .scaleEffect(isOn && !reduceMotion ? 16 : 0.3)
             .opacity(isOn ? 1 : 0)
             .position(origin)
-            .animation(.timingCurve(0.6, 0, 0.3, 1, duration: 0.52), value: isOn)
-            .animation(.easeOut(duration: 0.42), value: isOn)
+            .tesseraAnimation(.timingCurve(0.6, 0, 0.3, 1, duration: 0.52), value: isOn)
+            .tesseraAnimation(.easeOut(duration: 0.42), value: isOn)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
     }

@@ -16,7 +16,7 @@ struct ExerciseLane: View {
 
     @State private var namePull: CGFloat = 0
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.zoomNamespace) private var zoomNamespace
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -350,7 +350,7 @@ struct EditSetKeys: View {
     let session: WorkoutSession
     var onSave: () -> Void
     var onRemove: () -> Void = {}
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         if let row = session.editingRow {

@@ -5,7 +5,7 @@ import SwiftUI
 /// ("Obsidian always."), and a hold again lets it follow light and dark mode. No Tess line and no UNDO: a look isn't
 /// a record, and tapping again goes back.
 struct LookSentence: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var taps = 0
     @State private var pins = 0
 

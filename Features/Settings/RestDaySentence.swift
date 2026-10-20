@@ -5,7 +5,7 @@ import TesseraCore
 /// under it as label words, Sun to Sat and Any, and one tap writes it as one op with UNDO in Tess's band.
 struct RestDaySentence: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var choosing = false
     /// The day shown in a demo, which never writes his settings.
     @State private var demoDay: Int?

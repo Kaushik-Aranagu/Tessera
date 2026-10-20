@@ -125,7 +125,7 @@ private struct ListsShelfPage: View {
 private struct ListPage: View {
     let listID: UUID
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
     @State private var striking: Set<UUID> = []
@@ -763,9 +763,10 @@ struct BackWord: View {
                 .textRole(.label)
                 .textCase(.uppercase)
                 .foregroundStyle(Theme.Colors.inkSecondary)
-                .frame(minHeight: 44)
+                .frame(minHeight: BarWord.height)
         }
         .buttonStyle(HandleButtonStyle())
+        .padding(.top, BarWord.topInset)
         .accessibilityLabel("Back to \(title)")
     }
 }

@@ -29,7 +29,7 @@ struct GroceriesView: View {
 
 private struct GroceriesPage: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var draft = ""
     @State private var striking: Set<UUID> = []
     @State private var sinking: [Sink] = []
@@ -343,7 +343,7 @@ private struct ShopTitle: View {
     @State private var fill: CGFloat = 0
     /// Once the hold lands the title stays vermilion as it folds away (Design).
     @State private var held = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         Text("Groceries")
@@ -460,7 +460,7 @@ private struct GroceryRow: View {
     let name: String
     let onTap: () -> Void
     @State private var showsRecipes = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         Button(action: onTap) {
@@ -517,7 +517,7 @@ private struct AtTheShop: View {
     /// What each row reads: a private one is always masked (G102).
     let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         if let current = aisles.first {
@@ -557,7 +557,7 @@ private struct AtTheShop: View {
                     .padding(.top, Theme.Spacing.xxl)
                 }
             }
-            .animation(reduceMotion ? .easeOut(duration: 0.18) : .smooth(duration: 0.42), value: current.aisle)
+            .tesseraAnimation(.smooth(duration: 0.42), value: current.aisle)
         }
     }
 }
@@ -567,7 +567,7 @@ private struct AtTheShop: View {
 /// never fully visible together. Reduce Motion: a short cross-fade.
 private enum AisleHandoff {
     static func transition(reduceMotion: Bool) -> AnyTransition {
-        guard !reduceMotion else { return .opacity.animation(.easeOut(duration: 0.18)) }
+        guard !reduceMotion else { return .opacity.animation(MotionPolicy.reducedMotionFade) }
         return .asymmetric(
             insertion: .modifier(active: RiseIn(progress: 0), identity: RiseIn(progress: 1))
                 .animation(.smooth(duration: 0.34).delay(0.16)),
@@ -618,7 +618,7 @@ private struct BasketFold: View {
     let onClear: () -> Void
     /// Clear the basket plays `.cleared` itself: the hold's key is silent (the map has no cue in a key).
     @State private var clears = 0
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -675,7 +675,7 @@ private struct BasketFold: View {
 /// shared `TessVoice`, for layers that cover her soul.
 private struct TessNoteLine: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     private let voice = TessVoice.shared
 
     var body: some View {

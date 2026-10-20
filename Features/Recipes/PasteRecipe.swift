@@ -13,7 +13,7 @@ struct PasteRecipe: View {
     var onSaved: (UUID) -> Void = { _ in }
 
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var text = ""
     @State private var reading = false
     @State private var revealed = 0
@@ -484,7 +484,7 @@ private struct IngredientPaint: View {
     let line: String
     let parsed: IngredientLine
     let painted: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         let (amount, rest) = PasteCopy.split(line, name: parsed.name)

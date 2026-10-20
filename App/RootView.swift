@@ -73,6 +73,7 @@ struct RootView: View {
         .background { ThemedBackground() }
         .modifier(RestReceipt())
         .environment(\.lowPowerMotion, lowPower)
+        .environment(\.motionReduced, MotionPolicy.isReduced(reduceMotion: reduceMotion, lowPower: lowPower))
         .onReceive(PowerState.changes) { _ in
             lowPower = PowerState.isLowPower
         }
@@ -85,7 +86,7 @@ struct RootView: View {
         model.soul.handle(.goHome(reduceMotion: reduceMotion))
         flooding = true
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 480))
+            try? await Task.sleep(for: .milliseconds(reduceMotion || lowPower ? 150 : 480))
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {

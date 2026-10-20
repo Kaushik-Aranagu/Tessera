@@ -245,7 +245,7 @@ private struct WeekDabs: View {
     let plan: [Date: WeekReview.DayMark]
     let now: Date
     @State private var shown = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     private func mark(_ index: Int) -> WeekReview.DayMark {
         if good[index] {

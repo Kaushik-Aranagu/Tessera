@@ -6,7 +6,7 @@ struct Glint: ViewModifier {
     var period: Double = 5
     /// The look's sheen (gold through the letters on white looks, light over dark ones); nil reads it per frame.
     var sheen: Color?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     func body(content: Content) -> some View {
         if reduceMotion {
@@ -48,7 +48,7 @@ extension View {
 struct RoundRobin: View {
     var tint: Color = Theme.Colors.live
     var ink: Color = Theme.Colors.ink
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
@@ -82,6 +82,6 @@ struct Tick: View {
         Text(Format.duration(seconds))
             .textRole(role)
             .contentTransition(.numericText(countsDown: countsDown))
-            .animation(Theme.Motion.snappy, value: Int(seconds))
+            .tesseraAnimation(Theme.Motion.snappy, value: Int(seconds))
     }
 }

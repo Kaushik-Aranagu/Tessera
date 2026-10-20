@@ -10,7 +10,7 @@ struct PickMoment: View {
     @Binding var picked: Int
     let rows: ShopTrip
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         if let picking {

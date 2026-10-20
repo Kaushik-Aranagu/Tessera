@@ -17,7 +17,7 @@ struct LineHero<Key: View>: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.zoomNamespace) private var namespace
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     /// Claude's context words for a finished workout, when they passed the phone's checks and differ (0al).
     @State private var claudeContext: String?
     /// True while Claude's words are fresh on the page: drawn in Tess's ink, then dry to the context colour.

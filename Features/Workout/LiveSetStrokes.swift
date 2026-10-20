@@ -72,7 +72,7 @@ private struct LoggedStroke: View {
     @State private var progress: CGFloat = 1
     /// A fresh mark lands wet in its pigment and dries to the rest tint (sweep-19: colour only in the moment).
     @State private var wet = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     private var paint: Color {
         if isGhost {
@@ -113,7 +113,7 @@ private struct LoggedStroke: View {
 
 private struct GuideStroke: View {
     let isCurrent: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 20, paused: !isCurrent || reduceMotion)) { context in

@@ -9,7 +9,12 @@ import TesseraTess
 struct BottomChrome: View {
     var onSoulDoubleTap: () -> Void = {}
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Reduce Motion or Low Power: every decorative move below.
+    @Environment(\.motionReduced) private var reduceMotion
+    /// The system flags alone: the ghost's dry time keeps its full 3 s in Low Power (it steps; it does not shorten).
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.lowPowerMotion) private var lowPower
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     @Environment(\.colorScheme) private var colorScheme
     @FocusState private var focused: Bool
     @State private var layer = Layer.modes
@@ -75,7 +80,10 @@ struct BottomChrome: View {
                 .accessibilityHidden(true)
                 // The page comes back only after the words have gone, so they never overlap it.
                 .transition(.asymmetric(insertion: .opacity,
-                                        removal: .opacity.animation(.easeInOut(duration: 0.42).delay(0.12))))
+                                        removal: .opacity.animation(MotionPolicy.resolve(
+                                            .easeInOut(duration: 0.42).delay(0.12),
+                                            reduceMotion: reduceMotion
+                                        ))))
                 CaptureWash(dark: colorScheme == .dark)
                     .transition(.asymmetric(insertion: .offset(y: 60).combined(with: .opacity),
                                             removal: .offset(y: 40).combined(with: .opacity)))
@@ -86,7 +94,8 @@ struct BottomChrome: View {
                     })
                 surface
                     .transition(.asymmetric(insertion: .opacity,
-                                            removal: .opacity.animation(.easeOut(duration: 0.16))))
+                                            removal: .opacity.animation(MotionPolicy.resolve(.easeOut(duration: 0.16),
+                                                                                             reduceMotion: reduceMotion))))
             }
             resting
             // One host for every path to Claude (typed, spoken, or a waiting phrase drained on the way in): the line
@@ -253,7 +262,7 @@ struct BottomChrome: View {
                     holdFired = false
                     opens += 1
                     if !reduceMotion {
-                        withAnimation(.easeOut(duration: 0.13)) { swell = true }
+                        withTesseraAnimation(.easeOut(duration: 0.13), reduceMotion: reduceMotion) { swell = true }
                     }
                     // Holding the soul at rest is the fast path: listen while held (speak.md 1).
                     holdTimer = Task { @MainActor in
@@ -267,7 +276,7 @@ struct BottomChrome: View {
                 .onEnded { value in
                     pressed = false
                     holdTimer?.cancel()
-                    withAnimation(.easeInOut(duration: 0.13)) { swell = false }
+                    withTesseraAnimation(.easeInOut(duration: 0.13), reduceMotion: reduceMotion) { swell = false }
                     // Let go to send; drag left off the soul to cancel.
                     if holdListening {
                         holdListening = false
@@ -276,8 +285,8 @@ struct BottomChrome: View {
                         soulTapped()
                     }
                 })
-            .scaleEffect(holdListening ? 1.4 + listener.level * 0.15 : 1)
-            .animation(.easeOut(duration: 0.12), value: listener.level)
+            .scaleEffect(holdListening ? (reduceMotion ? 1.2 : 1.4 + listener.level * 0.15) : 1)
+            .tesseraAnimation(.easeOut(duration: 0.12), value: reduceMotion ? 0 : listener.level)
             .accessibilityElement()
             .accessibilityLabel("Tess")
             .accessibilityHint("Opens Tess.")
@@ -393,8 +402,8 @@ struct BottomChrome: View {
         liftAsk = nil
         model.soul.handle(.tessOpened)
         if !reduceMotion {
-            withAnimation(.easeOut(duration: 0.13)) { swell = true }
-            withAnimation(.easeInOut(duration: 0.13).delay(0.13)) { swell = false }
+            withTesseraAnimation(.easeOut(duration: 0.13), reduceMotion: reduceMotion) { swell = true }
+            withTesseraAnimation(.easeInOut(duration: 0.13).delay(0.13), reduceMotion: reduceMotion) { swell = false }
         }
         if !model.commandDraft.isEmpty {
             layer = .write
@@ -433,9 +442,14 @@ struct BottomChrome: View {
         ghost = text
         drying = 0
         model.soul.handle(.sent)
-        withAnimation(reduceMotion ? .linear(duration: 0.01) : .linear(duration: 2)) { drying = 1 }
+        // Reduce Motion shortens the typed dry; Low Power keeps it and steps it (four crossfades), as the voice ghost.
+        let seconds = systemReduceMotion ? 0.6 : 2.0
+        let stepped = lowPower && !systemReduceMotion
+        if !stepped {
+            withAnimation(systemReduceMotion ? .linear(duration: 0.01) : .linear(duration: 2)) { drying = 1 }
+        }
         dryTask = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(reduceMotion ? 0.6 : 2))
+            await waitDrying(seconds, stepped: stepped)
             guard !Task.isCancelled else { return }
             await commit(text)
         }
@@ -686,14 +700,33 @@ extension BottomChrome {
         withTesseraAnimation(reduceMotion: reduceMotion) { voiceGhost = (clean, heard) }
         model.soul.handle(.heard)
         drying = 0
-        let seconds = reduceMotion ? 0.8 : 3.0
-        withAnimation(.linear(duration: seconds)) { drying = 1 }
+        // Reduce Motion: 0.8 s. VoiceOver: a flat 10 s, never shortened. Low Power keeps the full 3 s, drawn as four
+        // ~0.75 s steps so the wait is not a continuous animation.
+        let seconds = BottomChromeDry.seconds(reduceMotion: systemReduceMotion, voiceOver: voiceOver)
+        let stepped = lowPower && !systemReduceMotion
+        if !stepped {
+            withAnimation(.linear(duration: seconds)) { drying = 1 }
+        }
         dryTask = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(seconds))
+            await waitDrying(seconds, stepped: stepped)
             guard !Task.isCancelled, voiceGhost != nil else { return }
             // The ghost stays on screen until the commit closes the surface.
             await commit(clean)
             voiceGhost = nil
+        }
+    }
+
+    /// Waits out the ghost's dry time. Stepped (Low Power): four crossfaded steps across the same wait.
+    private func waitDrying(_ seconds: Double, stepped: Bool) async {
+        guard stepped else {
+            try? await Task.sleep(for: .seconds(seconds))
+            return
+        }
+        let steps = BottomChromeDry.lowPowerSteps
+        for index in 1 ... steps {
+            try? await Task.sleep(for: .seconds(seconds / Double(steps)))
+            guard !Task.isCancelled else { return }
+            withAnimation(MotionPolicy.reducedMotionFade) { drying = Double(index) / Double(steps) }
         }
     }
 
@@ -836,5 +869,18 @@ enum AskCopy {
     /// Whether the Ask keeps what he typed after this reply.
     static func keepsDraft(_ answer: String) -> Bool {
         answer == offlineRetry
+    }
+}
+
+/// The ghost's dry time (speak.md): Reduce Motion 0.8 s, VoiceOver a flat 10 s that is never shortened, else 3 s;
+/// Low Power keeps the 3 s and draws it in four steps.
+enum BottomChromeDry {
+    static let lowPowerSteps = 4
+
+    static func seconds(reduceMotion: Bool, voiceOver: Bool) -> Double {
+        if voiceOver {
+            return 10
+        }
+        return reduceMotion ? 0.8 : 3
     }
 }

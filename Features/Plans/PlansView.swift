@@ -24,7 +24,7 @@ struct PlansView: View {
     @MainActor private static var remembered = Page.week.rawValue
 
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var position = ScrollPosition(id: PlansView.remembered)
     @State private var progress = Double(PlansView.remembered)

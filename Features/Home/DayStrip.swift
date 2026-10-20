@@ -138,7 +138,7 @@ private struct DayStroke: View {
     let isToday: Bool
     /// Finished workouts, as fractions of the day: a short vermilion stroke laid over the day where each happened.
     var marks: [ClosedRange<Double>] = []
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var drawn: Double = 0
 
     var body: some View {
@@ -216,7 +216,7 @@ private struct WetTip: View {
     let length: Double
     /// The stroke's own spectrum: the end keeps its colour, only thicker and breathing (amber is a moment only).
     let gradient: LinearGradient
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var breathe = false
 
     var body: some View {

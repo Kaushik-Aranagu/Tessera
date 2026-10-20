@@ -1,10 +1,13 @@
 import SwiftUI
 
-/// "Tess is thinking", drawn per the concept's `ThinkingStyle`. Reduce Motion: a static glyph with a slow fade.
+/// "Tess is thinking", drawn per the concept's `ThinkingStyle`. Reduce Motion: a static glyph with a slow fade; Low
+/// Power: 30 fps.
 struct ThinkingIndicator: View {
     var color: Color = Theme.Colors.live
     var size: CGFloat = 22
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Low Power: the glyph stays alive (a still thinking mark reads as stuck) but redraws at 30 fps, not 60.
+    @Environment(\.lowPowerMotion) private var lowPower
 
     var body: some View {
         if Theme.concept.thinking == .soul {
@@ -17,7 +20,10 @@ struct ThinkingIndicator: View {
     }
 
     private var glyph: some View {
-        TimelineView(.animation(minimumInterval: 1 / 60, paused: false)) { context in
+        TimelineView(.animation(
+            minimumInterval: lowPower || reduceMotion ? 1 / 30 : 1 / 60,
+            paused: false
+        )) { context in
             let time = context.date.timeIntervalSinceReferenceDate
             switch Theme.concept.thinking {
             case .dots: dots(time: time)

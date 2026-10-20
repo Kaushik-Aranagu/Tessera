@@ -31,7 +31,7 @@ struct RPEStops: View {
     @Binding var rpe: Double?
 
     @State private var dragHaptic = 0
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     static let stops: [Double] = Array(stride(from: 6.0, through: 10.0, by: 0.5))
 

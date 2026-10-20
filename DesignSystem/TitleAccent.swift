@@ -45,7 +45,7 @@ struct AccentTitle: View {
     let spec: ThemeConcept.TypeSpec
     var lineLimit: Int?
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var strike: Double = 0
     @State private var dry: Double = 0
     @State private var lift = false

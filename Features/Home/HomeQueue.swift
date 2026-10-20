@@ -94,7 +94,7 @@ struct QueueWindow: View {
     static let gap: CGFloat = 24
     static let windowHeight: CGFloat = 156
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.homeRowGrabbed) private var rowGrabbed
     @State private var offset: CGFloat = 0
     /// Next's ids as last drawn, so a row that moves up into Next can bloom once (nil until the first draw).
@@ -219,7 +219,7 @@ private struct QueueRow: View {
     @Environment(AppModel.self) private var model
     private let voice = TessVoice.shared
     @Environment(\.zoomNamespace) private var namespace
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var drag: CGFloat = 0
     @State private var strike: Double = 0
     @State private var armed = false

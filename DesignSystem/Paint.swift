@@ -15,7 +15,7 @@ struct PleinGround: View {
     static let nightGround: UInt32 = 0x1C1828
 
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     private struct Wash {
         let color: UInt32
@@ -109,7 +109,7 @@ struct PleinGround: View {
 private struct DriftingWash: View {
     let dark: Bool
     @State private var away = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         let tint = dark ? Color(hex: 0x7A5C8E).opacity(0.35) : Color(hex: 0xE9B7A8).opacity(0.5)
@@ -121,6 +121,14 @@ private struct DriftingWash: View {
             .onAppear {
                 guard !reduceMotion else { return }
                 withAnimation(.easeInOut(duration: dark ? 8 : 7).repeatForever(autoreverses: true)) { away = true }
+            }
+            // Low Power (or Reduce Motion) arriving while it drifts: the wash comes to rest, no sheen.
+            .onChange(of: reduceMotion) { _, reduce in
+                if reduce {
+                    withTesseraAnimation(reduceMotion: true) { away = false }
+                } else {
+                    withAnimation(.easeInOut(duration: dark ? 8 : 7).repeatForever(autoreverses: true)) { away = true }
+                }
             }
     }
 }
@@ -265,7 +273,7 @@ struct PaintKey<Label: View, Meta: View>: View {
     /// Each release runs the sheen once (keyframes).
     @State private var releases = 0
     @State private var completions = 0
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.onWorkoutGround) private var onWorkoutGround
     @Environment(\.isEnabled) private var isEnabled
@@ -300,7 +308,7 @@ struct PaintKey<Label: View, Meta: View>: View {
                 }
             } else if completionsSnapshot == completions {
                 // Let go early: the paint drains back.
-                withAnimation(.easeIn(duration: 0.22)) { fill = 1 }
+                withTesseraAnimation(.easeIn(duration: 0.22), reduceMotion: reduceMotion) { fill = 1 }
             }
         }
         // A tap key completes with the house selection tick. A hold plays nothing here: a key cannot know its moment,

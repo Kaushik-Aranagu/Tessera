@@ -119,16 +119,20 @@ private struct ActionBloom: ViewModifier {
 
 /// Flat ground with a slow, time-of-day mesh tint across the top only.
 private struct GroundWithSky: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack(alignment: .top) {
             Theme.Colors.paper
-            TimelineView(.animation(minimumInterval: 1 / 15, paused: reduceMotion)) { context in
-                let time = context.date.timeIntervalSinceReferenceDate
-                let hour = Double(Calendar.current.component(.hour, from: AppClock.adjust(context.date)))
-                sky(time: reduceMotion ? 0 : time, tints: Theme.Colors.skyTints(hour: hour))
+            // Reduce Motion / Low Power: one still frame at the hour's tint, looked at again each minute so the next
+            // hour arrives as a 150 ms crossfade rather than a drift.
+            Group {
+                if reduceMotion {
+                    TimelineView(.periodic(from: .now, by: 60)) { context in frame(at: context.date) }
+                } else {
+                    TimelineView(.animation(minimumInterval: 1 / 15)) { context in frame(at: context.date) }
+                }
             }
             .frame(height: 360)
             .mask(LinearGradient(colors: [.black, .black.opacity(0.6), .clear], startPoint: .top, endPoint: .bottom))
@@ -136,6 +140,13 @@ private struct GroundWithSky: View {
             .allowsHitTesting(false)
         }
         .ignoresSafeArea()
+    }
+
+    private func frame(at date: Date) -> some View {
+        let time = date.timeIntervalSinceReferenceDate
+        let hour = Double(Calendar.current.component(.hour, from: AppClock.adjust(date)))
+        return sky(time: reduceMotion ? 0 : time, tints: Theme.Colors.skyTints(hour: hour))
+            .tesseraAnimation(.easeOut(duration: 0.15), value: Int(hour))
     }
 
     private func sky(time: Double, tints: [Color]) -> some View {

@@ -46,7 +46,7 @@ struct PlateStack: View {
     /// plates dropping on from above and lifting off.
     var large: Bool = false
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.displayScale) private var displayScale
 
     private enum Metrics {

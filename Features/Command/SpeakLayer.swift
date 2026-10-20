@@ -10,6 +10,8 @@ struct SpeakLayer: View {
     let drying: CGFloat
     let act: (SpeechListener.Refusal) -> Void
     let editGhost: () -> Void
+    /// Reduce Motion or Low Power: the bloom is a still mark at x1.2 and the mic level is not fed to it (G313).
+    @Environment(\.motionReduced) private var calm
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
@@ -46,11 +48,11 @@ struct SpeakLayer: View {
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .contentTransition(.opacity)
-                    .animation(.easeOut(duration: 0.2), value: listener.heard)
+                    .tesseraAnimation(.easeOut(duration: 0.2), value: listener.heard)
                 // The listening bloom: the soul's pigments breathing with the mic. A tap on it ends the listen.
                 TessSoul(mode: .listening)
-                    .scaleEffect(1.4 + listener.level * 0.15)
-                    .animation(.easeOut(duration: 0.12), value: listener.level)
+                    .scaleEffect(calm ? 1.2 : 1.4 + listener.level * 0.15)
+                    .tesseraAnimation(.easeOut(duration: 0.12), value: calm ? 0 : listener.level)
                     .frame(width: 64, height: 64)
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())

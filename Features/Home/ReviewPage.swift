@@ -217,7 +217,7 @@ struct MuscleVolume: Identifiable, Equatable {
 /// columns recede, the hero and the lines become the day's. No rules, no boxes: the columns align by the letters.
 struct ReviewPage: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     /// The column being read, if any.
     @State private var reading: Int?
     @State private var taps = 0
@@ -331,7 +331,7 @@ struct ReviewPage: View {
 /// count fades out with a 4 pt blur and the next fades in; there's no celebration, the sentence is the reward.
 struct ReviewHeadline: View {
     let text: String
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     /// Lines in two-word pairs (three on the first line when the count is odd), so none holds one word alone.
     private var pairs: [String] {
@@ -411,7 +411,7 @@ private struct TrainedMark: View {
     let count: Int
     let seed: Int
     let delay: Double
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var dried = false
 
     var body: some View {
@@ -438,7 +438,7 @@ private struct TrainedMark: View {
 private struct RestMark: View {
     let seed: Int
     var delay: Double = 0.1
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var drawn = false
 
     var body: some View {

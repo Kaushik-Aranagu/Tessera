@@ -64,7 +64,7 @@ struct HomeSpatialView: View {
     }()
 
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.lowPowerMotion) private var lowPower
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.scenePhase) private var scenePhase
@@ -100,9 +100,14 @@ struct HomeSpatialView: View {
                      indexShown: indexProgress > 0.001, current: Int(progress.rounded()), flies: !calm,
                      onTap: openIndex)
                 .accessibilityFocused($nameFocused)
+                // At the left gutter, where the back word sits one page down (it was centred in the stack).
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Theme.Spacing.gutter)
-                .padding(.top, Theme.Spacing.s)
-                .tesseraFeedback(.selection, trigger: pickTicks)
+                .padding(.top, BarWord.topInset)
+                // His per-row tick; off in quiet hours (23:00 to 07:00), on under Reduce Motion and Low Power.
+                .tesseraFeedback(trigger: pickTicks) { _, _ in
+                    SoulRouter.isQuietHour(Calendar.current.component(.hour, from: AppClock.now)) ? nil : .selection
+                }
                 .tesseraFeedback(.areaLands, trigger: arrivals)
 
             ScrollView(.horizontal) {
@@ -186,16 +191,19 @@ struct HomeSpatialView: View {
         // Each of these screens keeps its own NavigationStack, so it zooms out of the word that opened it (full
         // screen, swipe down to close) instead of being pushed inside Home's stack.
         .fullScreenCover(item: $presented) { link in
-            link.destination
-                // Its own row above the screen, so it never sits on a title.
-                .safeAreaInset(edge: .top, spacing: 0) {
+            // Its own row above the screen, so it never sits on a title: the back word naming where he came from
+            // ("‹ KITCHEN"), at the bar word's y. Screens that draw their own back word keep theirs.
+            VStack(spacing: 0) {
+                if let origin = link.backWordOrigin {
                     HStack {
+                        BackWord(title: origin) { presented = nil }
                         Spacer()
-                        Button("Close") { presented = nil }
-                            .buttonStyle(InkLabelWordStyle())
                     }
-                    .padding(.horizontal, Theme.Spacing.gutter - 8)
+                    .padding(.horizontal, Theme.Spacing.gutter)
                 }
+                link.destination
+            }
+            .background { ThemedBackground() }
                 .navigationTransition(.zoom(sourceID: link, in: linkZoom))
         }
         .environment(\.openHomeLink) { presented = $0 }
@@ -424,6 +432,16 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         }
     }
 
+    /// The area this screen opens from, for its back word; nil where the screen draws its own ("‹ KITCHEN" on Lists,
+    /// "‹ RECIPES" on a recipe shelf).
+    var backWordOrigin: String? {
+        switch self {
+        case .groceries, .pantry, .pasteRecipe: "Kitchen"
+        case .notes, .review: "Review"
+        case .lists, .recipes: nil
+        }
+    }
+
     @MainActor @ViewBuilder
     var destination: some View {
         switch self {
@@ -518,7 +536,7 @@ extension EnvironmentValues {
 
 /// Each page's hero travels at 70% of the page while paging (30% parallax). Reduce Motion: none.
 private struct SiblingParallax: ViewModifier {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.inHomeDeck) private var inDeck
 
     func body(content: Content) -> some View {

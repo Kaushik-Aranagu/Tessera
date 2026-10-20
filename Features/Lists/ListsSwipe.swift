@@ -7,7 +7,7 @@ struct SwipeToRemove: ViewModifier {
     let onRemove: () -> Bool
     /// The word that rises: "Remove" on a list, "Forget" on What Tess knows.
     var word = "Remove"
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var pull: CGFloat = 0
     /// The house "swipe is armed" tick, once as the pull crosses 96 pt (Design on #786).
     @State private var armed = false

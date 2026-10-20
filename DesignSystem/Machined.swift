@@ -183,7 +183,7 @@ struct Seam: View {
 
 struct ProcessSeam: View {
     var color: Color = Theme.Colors.live
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 60, paused: reduceMotion)) { context in

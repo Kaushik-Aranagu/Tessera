@@ -14,7 +14,7 @@ struct WeightField: View {
     /// "81 isn't loadable; 80", shown for 2 s under the numeral after a snap.
     var onSnapped: (String) -> Void = { _ in }
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var text = ""
     @State private var lineDrawn = false
     @FocusState private var focused: Bool

@@ -111,7 +111,7 @@ private struct TessKnowsDoor: View {
 /// "Rest timer: On.", whose value word cycles on a tap. The row he touched says what changed in one line, before and
 /// after. A switch whose feature hasn't landed shows today's value, quietly, and doesn't move.
 struct ReviewSection: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var page: Int? = 0
     /// The switch he touched last and its value before the touch.
     @State private var touched: (id: String, before: String)?

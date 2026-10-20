@@ -9,7 +9,7 @@ struct NoteEditor: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var heading = ""
     @State private var text = ""
     @FocusState private var focus: Field?

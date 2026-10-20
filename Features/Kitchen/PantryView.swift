@@ -22,7 +22,7 @@ struct PantryView: View {
 
 private struct PantryPage: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     private var ledger: PantryLedger {
         PantryLedger(store: model.store, classes: model.classes)
@@ -125,7 +125,7 @@ private struct PantryPage: View {
 struct PantryLine: View {
     let entry: PantryLedger.Entry
     var onAdd: () -> Bool = { false }
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var pull: CGFloat = 0
     @State private var added = 0

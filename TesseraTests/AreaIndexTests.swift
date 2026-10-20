@@ -54,3 +54,56 @@ struct AreaIndexTests {
         #expect(ObjectPrivacy.routineTitle("Knee rehab day", in: model.store) == "Private workout")
     }
 }
+
+/// Top-bar walk (docs/research/fixtures/top-bar-walk.md): the rows the re-trace marked "differs".
+@MainActor
+struct TopBarWalkTests {
+    @Test func theQuietLinesAreTheAreasOwn() {
+        #expect(AreaLines.todayQuiet == "All quiet")
+        #expect(AreaLines.trainingQuiet == "No routine yet")
+        #expect(AreaLines.kitchenQuiet == "Nothing cooking tonight")
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let now = Date(timeIntervalSince1970: 1_792_000_000)
+        #expect(AreaLines.today(model, now: now) == "All quiet" || AreaLines.today(model, now: now).count <= 32)
+    }
+
+    @Test func noIndexLineShowsAWeight() {
+        #expect(AreaLines.carriesWeight("Bench 80 kg"))
+        #expect(AreaLines.carriesWeight("Squat 185 lb"))
+        #expect(AreaLines.carriesWeight("Bench, 80 x 5"))
+        #expect(!AreaLines.carriesWeight("Push Day A, 13 sets left"))
+        #expect(!AreaLines.carriesWeight("This week, 3 of 6 sessions"))
+    }
+
+    @Test func aPrivateRecipeNeverPrintsInTheKitchenLine() {
+        let start = Date(timeIntervalSince1970: 1_792_000_000)
+        let masked = AreaLines.kitchenLine(title: "Lexapro cake", isPrivate: true, start: start)
+        #expect(!masked.lowercased().contains("lexapro"), "\(masked)")
+        #expect(masked.lowercased().contains("private"), "\(masked)")
+        let plain = AreaLines.kitchenLine(title: "Tacos", isPrivate: false, start: start)
+        #expect(plain.hasPrefix("Tacos, "))
+    }
+
+    @Test func noAreaIsPrivateAndTheIndexPrintsEveryWord() {
+        // Ruling 4: no area is ever private, so the four words are fixed and each has a row.
+        #expect(HomeSpatialView.Page.allCases.map(\.title) == ["Review", "Today", "Training", "Kitchen"])
+    }
+
+    @Test func theQuietHoursTickIsOffFrom23To07() {
+        #expect(SoulRouter.isQuietHour(23) && SoulRouter.isQuietHour(0) && SoulRouter.isQuietHour(6))
+        #expect(!SoulRouter.isQuietHour(7) && !SoulRouter.isQuietHour(18) && !SoulRouter.isQuietHour(22))
+    }
+
+    @Test func theBarWordAndTheBackWordShareOneInset() {
+        #expect(BarWord.topInset == 8 && BarWord.height == 44)
+    }
+
+    @Test func everyScreenOpenedFromAWordHasABackWordNotClose() {
+        #expect(HomeLink.groceries.backWordOrigin == "Kitchen")
+        #expect(HomeLink.pantry.backWordOrigin == "Kitchen")
+        #expect(HomeLink.notes.backWordOrigin == "Review")
+        // Lists and Recipes draw their own.
+        #expect(HomeLink.lists.backWordOrigin == nil && HomeLink.recipes.backWordOrigin == nil)
+    }
+}

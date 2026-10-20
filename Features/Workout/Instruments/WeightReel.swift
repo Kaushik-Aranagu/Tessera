@@ -18,7 +18,7 @@ struct WeightReel: View {
     var platesPerSide: (Double) -> [Double]? = { _ in nil }
     var onType: () -> Void = {}
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var touching = false
     @State private var axis: ScrubFeel.Axis?
     @State private var drag = ScrubFeel.Drag()
@@ -85,7 +85,7 @@ struct WeightReel: View {
         Text(detents.indices.contains(index) ? Format.kilograms(detents[index]) : "")
             .font(Theme.numeral(Metrics.neighbour))
             .foregroundStyle(Paint.cream.opacity(0.35))
-            .transition(.opacity.animation(.easeOut(duration: 0.18)))
+            .transition(.opacity.animation(MotionPolicy.resolve(.easeOut(duration: 0.18), reduceMotion: reduceMotion)))
     }
 
     private var currentIndex: Int {

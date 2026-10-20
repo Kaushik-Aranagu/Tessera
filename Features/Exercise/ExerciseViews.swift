@@ -30,7 +30,7 @@ struct ExerciseViews: View {
     @State private var progress: Double = 0
     /// Bumped per view each time it becomes the active one, so its rows rise in again.
     @State private var arrivals: [Int: Int] = [:]
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {

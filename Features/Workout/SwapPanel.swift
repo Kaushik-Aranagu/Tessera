@@ -13,7 +13,7 @@ struct SwapPanel: View {
     var onPick: (ExerciseSwaps.Option) -> Void
 
     @State private var picked: UUID?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -125,7 +125,7 @@ struct TopSetCheckLine: View {
     var onAccept: () -> Void
 
     @State private var stroke: CGFloat = 0
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         let weight = Format.kilograms(check.suggested)

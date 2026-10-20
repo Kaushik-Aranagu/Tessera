@@ -18,7 +18,7 @@ struct PortionDrum: View {
         return 1 ... min(cap, max(12, 2 * size))
     }
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var scrolled: Int?
     @State private var tick = 0
 

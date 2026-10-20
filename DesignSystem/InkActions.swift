@@ -59,7 +59,7 @@ struct LabelActionStyle: ButtonStyle {
         let configuration: Configuration
         let color: Color
         let silent: Bool
-        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @Environment(\.motionReduced) private var reduceMotion
 
         var body: some View {
             configuration.label

@@ -240,7 +240,7 @@ private struct TrendStrip: View {
 private struct ExerciseMethods: View {
     let exercise: ClassDef
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var added = 0
 

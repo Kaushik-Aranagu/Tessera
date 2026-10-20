@@ -15,7 +15,7 @@ struct RepsRow: View {
     /// Once per set, when reps first pass last time (Tess: "One more than last time.").
     var onBeat: () -> Void = {}
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var touching = false
     @State private var axis: ScrubFeel.Axis?
     @State private var drag = ScrubFeel.Drag(pitch: ScrubFeel.repsPitch, accelerates: false)

@@ -25,7 +25,7 @@ struct WorkoutFinishView: View {
     @State private var gathered = false
     @State private var mark: CGFloat = 0
     @State private var settled = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     private static let gather = 1.9
     private static let stagger = 0.022

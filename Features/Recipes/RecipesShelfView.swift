@@ -36,6 +36,7 @@ struct RecipesShelfView: View {
 private struct RecipesShelfPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.motionReduced) private var reduceMotion
     /// Tess speaks once per visit, not each time the shelf reappears (QA on #765).
     @State private var spoke = false
     /// Links kept for later (G65, K86.7), read when the shelf shows and after a remove.
@@ -165,7 +166,9 @@ private struct RecipesShelfPage: View {
     }
 
     private func refreshKept() {
-        withAnimation(.smooth(duration: 0.24)) { kept = RecipeLinkShelf.beside(model.store)?.waiting() ?? [] }
+        withTesseraAnimation(.smooth(duration: 0.24), reduceMotion: reduceMotion) {
+            kept = RecipeLinkShelf.beside(model.store)?.waiting() ?? []
+        }
     }
 }
 

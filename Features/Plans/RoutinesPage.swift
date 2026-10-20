@@ -9,7 +9,7 @@ struct RoutinesPage: View {
     let plan: ObjectRecord
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     @State private var making = false
     @State private var draft = ""
@@ -36,6 +36,7 @@ struct RoutinesPage: View {
                         .frame(minHeight: 44)
                 }
                 .buttonStyle(HandleButtonStyle())
+                .padding(.top, BarWord.topInset)
                 .accessibilityLabel("Back to Training")
                 .padding(.bottom, Theme.Spacing.m)
                 Text("Routines")
@@ -269,6 +270,7 @@ struct RoutineRow: View {
     var onDrop: () -> Void
     @Environment(AppModel.self) private var model
     @Environment(\.zoomNamespace) private var namespace
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var pull: CGFloat = 0
     /// A sideways drag owns the touch: the row doesn't also open on the lift (the walk showed a drop opening it).
     @State private var swiped = false
@@ -324,7 +326,9 @@ struct RoutineRow: View {
                     if pull < -Self.arm {
                         onDrop()
                     }
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { pull = 0 }
+                    withTesseraAnimation(.spring(response: 0.3, dampingFraction: 0.8), reduceMotion: reduceMotion) {
+                        pull = 0
+                    }
                     // After the button has seen the lift, a tap opens the row again.
                     Task { @MainActor in
                         try? await Task.sleep(for: .milliseconds(150))

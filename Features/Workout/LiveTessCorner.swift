@@ -19,7 +19,7 @@ struct LiveTessCorner: View {
     var onOpen: (() -> Void)?
     var onHome: (() -> Void)?
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var shownLine: String?
     @State private var breathe = false
     @State private var swell = false
@@ -46,7 +46,9 @@ struct LiveTessCorner: View {
                 shownLine = nil
             }
         }
-        .onAppear { breathe = true }
+        .onAppear { breathe = !reduceMotion }
+        // Low Power or Reduce Motion: the corner breath stops (one 150 ms settle), and resumes when power returns.
+        .onChange(of: reduceMotion) { _, reduce in breathe = !reduce }
     }
 
     /// Her line, trailing beside the soul, with UNDO under it.

@@ -185,7 +185,7 @@ private struct MuscleFillRow: View {
     let scale: Double
     let index: Int
     @State private var drawn: CGFloat = 0
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {

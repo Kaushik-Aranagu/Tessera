@@ -311,7 +311,7 @@ struct PlanRow: View {
     let skip: () -> Void
 
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.homePagerIdle) private var pagerIdle
     @Environment(\.homeRowGrab) private var grab
     @State private var drag: CGFloat = 0
@@ -330,7 +330,7 @@ struct PlanRow: View {
             .monospacedDigit()
         TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion || kept)) { context in
             words(title: title, time: time,
-                  breath: (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2)
+                  breath: reduceMotion ? 0.5 : (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2)
         }
         .offset(x: drag)
         .contentShape(Rectangle())

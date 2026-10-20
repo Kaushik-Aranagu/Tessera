@@ -56,7 +56,7 @@ struct MonthPage: View {
 private struct MonthGrid: View {
     let month: PlanMonth
     let calendar: Calendar
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)

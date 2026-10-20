@@ -60,7 +60,7 @@ private struct EntranceModifier: ViewModifier {
     let order: Int
     let hero: Bool
     @Environment(\.animateEntrance) private var animate
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var shown = false
 
     func body(content: Content) -> some View {
@@ -74,8 +74,8 @@ private struct EntranceModifier: ViewModifier {
                 guard active else { return }
                 // Start after the first frame is on screen, so a busy first frame can't swallow the animation.
                 try? await Task.sleep(for: .milliseconds(120))
-                withAnimation(reduceMotion ? .easeOut(duration: 0.15)
-                    : .smooth(duration: 0.28).delay(Double(order) * Theme.Motion.stagger)) { shown = true }
+                withTesseraAnimation(.smooth(duration: 0.28).delay(Double(order) * Theme.Motion.stagger),
+                                     reduceMotion: reduceMotion) { shown = true }
             }
     }
 }

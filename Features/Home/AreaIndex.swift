@@ -28,12 +28,27 @@ enum AreaLines {
     static func today(_ model: AppModel, now: Date) -> String {
         let facts = HomeFacts(engine: model.engine)
         if model.session != nil, let process = model.processes.running(), let fact = facts.fact(process: process) {
-            return capped(HomeLines.line(for: fact, now: now).hero)
+            // No lift weight in the index (it shows no kg): a hero that carries one falls back to the next source.
+            let hero = HomeLines.line(for: fact, now: now).hero
+            if !carriesWeight(hero) {
+                return capped(hero)
+            }
         }
         if let task = model.currentTask(around: now) {
             return capped(taskTitle(task.title, id: task.id, model: model))
         }
-        return "Nothing on"
+        return todayQuiet
+    }
+
+    /// The quiet lines (area-index-lines.md): Today "All quiet", Training "No routine yet", Kitchen "Nothing cooking
+    /// tonight".
+    static let todayQuiet = "All quiet"
+    static let trainingQuiet = "No routine yet"
+    static let kitchenQuiet = "Nothing cooking tonight"
+
+    /// Whether a line prints a weight ("80 kg", "185 lb", "80 x 5"): the index never shows kg.
+    static func carriesWeight(_ line: String) -> Bool {
+        line.range(of: #"\d\s?(kg|lbs?)\b|\d+\s?[x×]\s?\d"#, options: [.regularExpression, .caseInsensitive]) != nil
     }
 
     /// "Push Day A is on": the routine on, or the one next; the quiet line when nothing is.
@@ -45,21 +60,26 @@ enum AreaLines {
             // Through the masking accessor: a private routine reads "Private workout".
             return capped("\(ObjectPrivacy.routineTitle(model.store.displayTitle(of: workout), in: model.store)) is on")
         }
-        return "Nothing on"
+        return trainingQuiet
     }
 
     /// "Tacos, 7 pm": tonight's cook; the quiet line when nothing is planned.
     static func kitchen(_ model: AppModel, now: Date) -> String {
-        guard let recipeClass = model.classDef(.recipe) else { return "Nothing cooking tonight" }
+        guard let recipeClass = model.classDef(.recipe) else { return kitchenQuiet }
         for item in model.schedule(around: now) {
             guard let task = model.object(item.id),
                   let recipe = model.store.linkedObjects("about", of: task).first(where: { object in
                       !object.isDeleted && object.classDef.map { ClassResolver.isSubclass($0, of: recipeClass) } == true
                   }) else { continue }
-            let title = RecipeCopy.shownTitle(recipe.title, isPrivate: RecipeCopy.isPrivate(recipe.title, model: model))
-            return capped("\(title), \(HouseTime.clock(item.start))")
+            return kitchenLine(title: recipe.title, isPrivate: RecipeCopy.isPrivate(recipe.title, model: model),
+                               start: item.start)
         }
-        return "Nothing cooking tonight"
+        return kitchenQuiet
+    }
+
+    /// "Tacos, 7 pm"; a private recipe reads "Private recipe" (never its own title).
+    static func kitchenLine(title: String, isPrivate: Bool, start: Date) -> String {
+        capped("\(RecipeCopy.shownTitle(title, isPrivate: isPrivate)), \(HouseTime.clock(start))")
     }
 
     /// A task's title as the room may see it: "Private task" for a private one.
@@ -77,6 +97,13 @@ enum AreaLines {
         let line = words.joined(separator: " ")
         return line.count > 32 ? String(line.prefix(32)) : line
     }
+}
+
+/// Where the one word at the top of every page sits: the area name on a tab page and the back word one page down
+/// share this inset under the safe area, so the word never jumps between them (ruling 6, y 58).
+enum BarWord {
+    static let topInset: CGFloat = 8
+    static let height: CGFloat = 44
 }
 
 /// The one word at the top of a tab page: Label 15/700, +0.08 em, ink. It rolls 1:1 with the pager (up or down to the
@@ -188,6 +215,12 @@ struct AreaIndexSheet: View {
     let onClose: () -> Void
 
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// At accessibility sizes the rows reflow: lines wrap, rows grow, and the list scrolls inside the sheet.
+    private var reflows: Bool {
+        typeSize.isAccessibilitySize
+    }
 
     /// The areas you are not in rest at 42% ink, and at 70% under Increase Contrast.
     private var restInk: Double {
@@ -205,20 +238,10 @@ struct AreaIndexSheet: View {
                 .onTapGesture(perform: onClose)
                 .accessibilityHidden(true)
             glass
-            VStack(spacing: 0) {
-                ForEach(titles.indices, id: \.self) { index in
-                    row(index)
-                        .opacity(rowOpacity(index))
-                }
-                Spacer(minLength: 0)
-                Text(pulling ? "Let go to open" : "Tap one to open")
-                    .font(PageType.small)
-                    .foregroundStyle(Theme.Colors.ink.opacity(restInk))
-                    .frame(height: 52)
-            }
-            .padding(.top, Self.firstRow)
-            .frame(height: Self.height, alignment: .top)
-            .offset(y: calm ? 0 : -40 * (1 - progress))
+            rows
+                .padding(.top, Self.firstRow)
+                .frame(height: Self.height, alignment: .top)
+                .offset(y: calm ? 0 : -40 * (1 - progress))
         }
         .opacity(progress > 0.001 ? 1 : 0)
         .allowsHitTesting(progress > 0.9)
@@ -227,6 +250,27 @@ struct AreaIndexSheet: View {
         // Closed, the sheet is not in the tree at all (HomeSpatialView mounts it only while open); while it forms or
         // leaves, it is not read. Last, so no later modifier can expose it again.
         .accessibilityHidden(progress < 0.5)
+    }
+
+    @ViewBuilder
+    private var rows: some View {
+        let list = VStack(spacing: 0) {
+            ForEach(titles.indices, id: \.self) { index in
+                row(index)
+                    .opacity(rowOpacity(index))
+            }
+            Spacer(minLength: 0)
+            Text(pulling ? "Let go to open" : "Tap one to open")
+                .font(PageType.small)
+                .foregroundStyle(Theme.Colors.ink.opacity(restInk))
+                .frame(minHeight: 52)
+        }
+        if reflows {
+            ScrollView(.vertical) { list }
+                .scrollIndicators(.hidden)
+        } else {
+            list
+        }
     }
 
     private var glass: some View {
@@ -255,18 +299,22 @@ struct AreaIndexSheet: View {
                 Text(lines.indices.contains(index) ? lines[index] : "")
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink.opacity(isCurrent || isPicked ? 0.7 : restInk))
-                    .lineLimit(1)
+                    .lineLimit(reflows ? nil : 1)
+                    .fixedSize(horizontal: false, vertical: reflows)
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .frame(maxWidth: .infinity, minHeight: Self.rowPitch, alignment: .topLeading)
             .padding(.top, 16)
-            .frame(height: Self.rowPitch, alignment: .topLeading)
+            .frame(minHeight: Self.rowPitch, alignment: .topLeading)
+            .frame(height: reflows ? nil : Self.rowPitch, alignment: .topLeading)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(titles[index]), \(lines.indices.contains(index) ? lines[index] : "")")
-        .accessibilityAddTraits(isCurrent ? [.isButton, .isSelected] : .isButton)
+        // Each row is a heading, so the Headings rotor jumps between areas.
+        .accessibilityAddTraits(isCurrent ? [.isButton, .isHeader, .isSelected] : [.isButton, .isHeader])
+        .accessibilityHeading(.h1)
     }
 
     @ViewBuilder

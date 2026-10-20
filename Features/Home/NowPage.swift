@@ -9,7 +9,7 @@ struct NowPage: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.zoomNamespace) private var namespace
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @Environment(\.openHomeLink) private var openLink
     @State private var finishes = 0
     /// Keeping the plan plays `.made` (the hold itself is silent).
@@ -426,14 +426,14 @@ struct NowPage: View {
 struct DrainBar: View {
     let start: Date
     let end: Date
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     private static let height: CGFloat = 14
 
     var body: some View {
         // The bar moves a pixel or two a step, so it steps every 5 s; in Low Power or Reduce Motion once a minute,
         // with a short fade (G226, K84.19).
-        let calm = reduceMotion || PowerState.isLowPower
+        let calm = reduceMotion
         let step = Self.step(calm: calm)
         TimelineView(.periodic(from: .now, by: step)) { context in
             let now = AppClock.adjust(context.date)
@@ -523,7 +523,7 @@ private struct HeroWriteIn: ViewModifier {
 private struct GhostRow: View {
     let item: ScheduleItem
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var stroke: CGFloat = 0
     @State private var drag: CGFloat = 0
     @State private var arrived = false
@@ -558,7 +558,8 @@ private struct GhostRow: View {
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
-            words(breath: (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2)
+            // Calm (Reduce Motion or Low Power): paused at the breath's mean.
+            words(breath: reduceMotion ? 0.5 : (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2)
         }
         .frame(maxHeight: .infinity)
         .overlay(alignment: .bottomLeading) {

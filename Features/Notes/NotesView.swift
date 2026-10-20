@@ -50,7 +50,7 @@ private struct NotesIndex: View {
     let open: (UUID) -> Void
 
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var draft = ""
     @State private var justWritten: UUID?
     /// A Claude key typed or pasted into the writing line: cleared at once, and Tess says where it goes (QA B1).
@@ -179,7 +179,7 @@ private struct NoteRow: View {
     let open: () -> Void
 
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
 
     var body: some View {
         let body = model.store.value("body", of: note)?.stringValue ?? ""

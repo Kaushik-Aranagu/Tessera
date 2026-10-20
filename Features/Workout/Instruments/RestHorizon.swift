@@ -11,7 +11,7 @@ struct RestHorizon: View {
     var onExtend: () -> Void
     var onSkip: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.motionReduced) private var reduceMotion
     @State private var pull: CGFloat = 0
     @State private var drawn = false
     @State private var extends = 0
