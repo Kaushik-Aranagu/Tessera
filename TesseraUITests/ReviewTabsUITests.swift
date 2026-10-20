@@ -10,11 +10,8 @@ final class ReviewTabsUITests: SimulatorOnlyTestCase {
         app.launch()
         openSettings(app)
 
-        let tabRow = app.descendants(matching: .any).matching(NSPredicate(
-            format: "label BEGINSWITH %@",
-            "Looks and day, tab"
-        ))
-        .firstMatch
+        let tabRow = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", ", tab "))
+            .firstMatch
         XCTAssertTrue(tabRow.waitForExistence(timeout: 10), "Review's tab row")
         for _ in 0 ..< 4 where !tabRow.isHittable {
             app.swipeUp()
