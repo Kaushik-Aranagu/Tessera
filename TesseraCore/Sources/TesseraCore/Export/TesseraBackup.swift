@@ -253,6 +253,19 @@ public enum TesseraBackup {
                          arguments: [SettingsStore.objectID.uuidString]) ?? 0
     }
 
+    /// G688: a fresh store (a reinstall) shows one quiet line offering the restore: no action of his in the store (the
+    /// seeded "Sunday, rest day." op is the system's), no backup folder picked, no restore staged, not dismissed.
+    @MainActor
+    public static func offersRestore(in context: TesseraContext, folderPicked: Bool, restoreStaged: Bool,
+                                     dismissed: Bool) -> Bool
+    {
+        guard !folderPicked, !restoreStaged, !dismissed else { return false }
+        // The in-memory log, so an action he just took counts before it is saved to disk.
+        return !context.all(OpRecord.self).contains {
+            $0.actor != .system && !$0.objectIDs.contains(SettingsStore.objectID)
+        }
+    }
+
     /// The same count in a copy on disk, opened read-only.
     nonisolated static func userOps(at url: URL) throws -> Int {
         var configuration = Configuration()
@@ -400,7 +413,11 @@ public enum TesseraBackup {
             return false
         }
         let hasStore = manager.fileExists(atPath: storeURL.path)
-        if hasStore {
+        // A store with none of his actions (a reinstall's seeded launch) has nothing to undo to: no Before-restore
+        // copy, so the first-ever slot holds his first real data (G689). Unreadable counts as having things.
+        let hasThings = hasStore && ((try? userOps(at: storeURL)) ?? 1) > 0
+        var keptACopy = false
+        if hasThings {
             // What's here now is kept first as a stamped backup he can restore again: the undo for a restore.
             // Local time in the name (UTC read a day ahead every evening).
             let formatter = DateFormatter()
@@ -411,11 +428,14 @@ public enum TesseraBackup {
             do {
                 try manager.createDirectory(at: keptFolder, withIntermediateDirectories: true)
                 try write(fromStoreAt: storeURL, to: kept, now: now)
-                // The 3 newest Before-restore copies are kept; older ones go (never the one just written).
-                let befores = (try? manager.contentsOfDirectory(atPath: keptFolder.path)) ?? []
-                for old in befores.filter({ $0.hasPrefix("Before-restore-") }).sorted(by: >)
-                    .dropFirst(keepBeforeRestore)
-                    where old != kept.lastPathComponent
+                keptACopy = true
+                // The first-ever Before-restore copy and the 3 newest are kept; the rest go (never the one just
+                // written). The first-ever is the earliest-stamped one still there.
+                let befores = ((try? manager.contentsOfDirectory(atPath: keptFolder.path)) ?? [])
+                    .filter { $0.hasPrefix("Before-restore-") }.sorted(by: >)
+                let firstEver = befores.last
+                for old in befores.dropFirst(keepBeforeRestore)
+                    where old != kept.lastPathComponent && old != firstEver
                 {
                     try? manager.removeItem(at: keptFolder.appendingPathComponent(old))
                 }
@@ -452,8 +472,13 @@ public enum TesseraBackup {
             atomically: true,
             encoding: .utf8
         )
-        TesseraSchema.setLaunchNote("Restored from your backup. What was here before is kept in Backups, "
-            + "so you can restore it again.")
+        // A clean restore leaves no set-aside folder behind (hunt 27): the Before-restore copy is the undo.
+        if let backup {
+            try? manager.removeItem(at: backup)
+        }
+        TesseraSchema.setLaunchNote(keptACopy
+            ? "Restored from your backup. What was here before is kept in Backups, so you can restore it again."
+            : "Restored from your backup.")
         return true
     }
 }
