@@ -172,7 +172,7 @@ public struct ClaudeTessModel: TessModel {
             }
             guard error is Failure else { return .missed }
             var failed = TessCapture(records: [], line: failure.line, source: .none)
-            failed.keepsWords = failure.line == Self.unreachedLine
+            failed.keepsWords = failure.line == Self.unreachedLine || ["timeout", "busy"].contains(failure.outcome)
             return .asked(failed)
         }
         ledger.record(use: .capture, model: Self.model, input: usage.input, output: usage.output,

@@ -321,9 +321,17 @@ struct ClaudeRouteTests {
         let offline = await tess().capture(miss, context: context)
         #expect(offline.records.isEmpty && offline.line == "No connection. Saved it for Claude.")
         RouteStub.failure = .timedOut
-        #expect(await tess().capture(miss, context: context).line == "Claude didn't answer in time.")
+        let slow = await tess().capture(miss, context: context)
+        #expect(slow.line == "Claude didn't answer in time." && slow.keepsWords)
         // The offline attempt never left, so it wrote no row; the timeout did leave, so it kept its one.
         #expect(ledger.calls().count == 1)
+    }
+
+    @Test func aBusyReplyKeepsHisWordsToo() async {
+        RouteStub.failure = nil
+        RouteStub.reply = (429, "{}")
+        let busy = await tess().capture(miss, context: context)
+        #expect(busy.line == "Claude is busy right now." && busy.keepsWords && !busy.keptToSort)
     }
 
     @Test(arguments: [
