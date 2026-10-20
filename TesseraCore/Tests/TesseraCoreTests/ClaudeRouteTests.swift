@@ -258,10 +258,11 @@ struct ClaudeRouteTests {
     }
 
     @Test func switchedOffPausedOrKeylessNothingIsSent() async {
-        #expect(await tess(sends: false).capture(miss, context: context).line.hasPrefix("Didn't catch that."))
-        #expect(await tess(key: nil).capture(miss, context: context).records.isEmpty)
+        // Claude is not there: the phrase is kept as a note to sort later, and nothing is sent.
+        #expect(await tess(sends: false).capture(miss, context: context).keptToSort)
+        #expect(await tess(key: nil).capture(miss, context: context).keptToSort)
         flags.pauseUntilTomorrow(now: context.now, calendar: TesseraDayTests.calendar)
-        #expect(await tess().capture(miss, context: context).records.isEmpty)
+        #expect(await tess().capture(miss, context: context).keptToSort)
         #expect(RouteStub.requests.isEmpty)
         // "Not today" ends at his next 04:00.
         #expect(flags.pausedUntil(now: context.now) == TesseraDayTests.at(10, 16, 4))

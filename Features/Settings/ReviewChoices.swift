@@ -70,10 +70,14 @@ final class ReviewChoices {
                       "Soften": "Pages soften into each other.",
                       "Rotate": "Pages rotate on their edge."],
                readiness: .arrivesWith("page turns")),
-        Choice(id: "tessFace", name: "Tess has eyes", values: ["Off", "Eyes", "Eyes and mouth"], defaultValue: "Off",
-               says: ["Off": "Tess is a plain mark, as now.", "Eyes": "Tess has eyes.",
-                      "Eyes and mouth": "Tess has eyes and a small mouth."],
-               readiness: .arrivesWith("Tess's mouth")),
+        Choice(id: "tabs.neighbours", name: "Tab neighbours", values: ["Blurred", "Crisp"], defaultValue: "Blurred",
+               says: ["Crisp": "The tabs beside the current one read crisp and faint.",
+                      "Blurred": "The tabs beside the current one soften into a blur."],
+               readiness: .live),
+        // Off and Eyes only until the mouth is drawn (Builder A's #1125 reads it).
+        Choice(id: "tessFace", name: "Tess has eyes", values: ["Off", "Eyes"], defaultValue: "Off",
+               says: ["Off": "Tess is a plain mark, as now.", "Eyes": "Tess has eyes."],
+               readiness: .live),
         Choice(id: "planMyDay", name: "Plan my day, Claude wording", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The morning plan in Tess's own words, as now.",
                       "On": "The same plan, worded by Claude."],
@@ -115,6 +119,28 @@ final class ReviewChoices {
     ]
 
     /// The rows in pages of at most six, for the side swipe (Design sheet 100).
+    /// Review's pages by facet, each named beside the counter ("Workout, 2 of 5"; Design sheet 100), six rows at most.
+    nonisolated static let facets: [(word: String, ids: [String])] = [
+        ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace"]),
+        ("Workout", ["restTimer", "swapExercise", "finishNudge", "quietInterrupts"]),
+        ("Kitchen", ["cookTimerVoice", "pantryState", "canCookShelf", "handsFreeCook"]),
+        ("Connected", ["planMyDay", "shutdown", "energyCheckIn", "calendar", "health", "linkFetch"]),
+        ("Shown", ["areasShown"]),
+    ]
+
+    /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
+    nonisolated static func facetPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
+        var pages = facets.map { facet in
+            (word: facet.word, rows: facet.ids.compactMap { id in choices.first { $0.id == id } })
+        }.filter { !$0.rows.isEmpty }
+        let named = Set(facets.flatMap(\.ids))
+        let rest = choices.filter { !named.contains($0.id) }
+        if !rest.isEmpty {
+            pages.append((word: "More", rows: rest))
+        }
+        return pages
+    }
+
     nonisolated static func pages(_ choices: [Choice] = all, size: Int = 6) -> [[Choice]] {
         stride(from: 0, to: choices.count, by: size).map { Array(choices[$0 ..< min($0 + size, choices.count)]) }
     }

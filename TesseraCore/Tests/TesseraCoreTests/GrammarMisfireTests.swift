@@ -194,7 +194,7 @@ struct CaptureMissLogTests {
         let log = try #require(CaptureMissLog.beside(store))
 
         let missed = await capture.capture("https://example.com/best-dal", context: TessContext())
-        #expect(!missed.understood)
+        #expect(missed.keptToSort) // kept as a note, and still a miss for the week-one log
         _ = await capture.capture("bench 80x8", context: TessContext())
         log.record(String(repeating: "x", count: 500), route: "none", source: "paste")
 

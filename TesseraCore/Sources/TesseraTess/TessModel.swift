@@ -143,7 +143,40 @@ public struct TessRouter {
         } else {
             ""
         }
+        // Nothing on the phone read it and Claude is not there to (no key, asking off, or no answer yet to the key
+        // question): the phrase is kept as a note he can sort later, rather than dropped. Idle only (a live set or a
+        // shop keeps its own "Try ..." line), never a cook or timer phrase, and never a Claude key (refused above).
+        if example.isEmpty, request.use == .capture, !stayHome,
+           !models.contains(where: { $0.route == .claude && $0.isAvailable(for: .capture) }),
+           let kept = keepToSort(request)
+        {
+            return kept
+        }
         return TessCapture(records: [], line: "Didn't catch that.\(example)", source: .none)
+    }
+
+    /// "<phrase>, kept to sort later.": a note, as a ghost row with one UNDO (committed at once for Siri). A phrase
+    /// with a secret word, money or a body fact becomes a private note and reads "Private note, kept to sort later."
+    static let keptLine = "kept to sort later."
+
+    private func keepToSort(_ request: TessRequest) -> TessCapture? {
+        let phrase = request.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !phrase.isEmpty, !looksLikeClaudeKey(phrase) else { return nil }
+        engine.attribution = (.grammar, nil)
+        defer { engine.attribution = nil }
+        guard let made = try? engine.perform(CreateNote(body: phrase), by: .tess,
+                                             pending: !request.context.commitImmediately)
+        else { return nil }
+        // A private note (a walled phrase) never echoes the phrase, nor even its own "Private note" title.
+        let lastKg = BodyWeight.lastKg(in: engine.store)
+        let isPrivate = ObjectPrivacy.label(of: made.output, in: engine.store, classes: engine.classes) != nil
+            || SecretWords.mentions(phrase) || PrivateFacts.isWalled(phrase, lastWeightKg: lastKg)
+            || ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: lastKg)
+        let line = isPrivate ? "Kept to sort later." : "\(made.output.title), \(Self.keptLine)"
+        made.record.receipt = line
+        var kept = TessCapture(records: [made.record], line: line, source: .grammar)
+        kept.keptToSort = true
+        return kept
     }
 }
 
