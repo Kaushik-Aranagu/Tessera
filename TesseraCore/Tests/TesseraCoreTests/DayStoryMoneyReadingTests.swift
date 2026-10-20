@@ -39,7 +39,7 @@ extension DayStoryTests {
         try run(StartReading(book: book.id, time: Self.at(14, 8)), at: Self.at(14, 8))
         try run(SetBookPage(book: book.id, page: 120, time: Self.at(14, 21)), at: Self.at(14, 21))
         try run(SetBookPage(book: book.id, page: 142, time: Self.at(14, 22)), at: Self.at(14, 22))
-        #expect(lines(Self.at(14, 23)) == ["21:00  Read Dune, p 0 to 142"])
+        #expect(lines(Self.at(14, 23)) == ["21:00  Read Dune to p 142"])
     }
 
     @Test func aFinishTakesTheBooksLineForTheDay() throws {
@@ -54,6 +54,31 @@ extension DayStoryTests {
         let book = try run(QueueBook(title: "Dune", pages: 600), at: Self.at(14, 8)).output
         try run(EditBook(book: book.id, isPrivate: true), at: Self.at(14, 8, 5))
         try run(SetBookPage(book: book.id, page: 50, time: Self.at(14, 21)), at: Self.at(14, 21))
-        #expect(lines(Self.at(14, 23)) == ["21:00  Read Private book, p 0 to 50"])
+        #expect(lines(Self.at(14, 23)) == ["21:00  Read Private book to p 50"])
+    }
+
+    @Test func aRealStartPageKeepsTheFromTo() throws {
+        let book = try run(QueueBook(title: "Dune", pages: 600), at: Self.at(14, 8)).output
+        try run(StartReading(book: book.id, time: Self.at(14, 8)), at: Self.at(14, 8))
+        try run(SetBookPage(book: book.id, page: 120, time: Self.at(13, 21)), at: Self.at(13, 21))
+        try run(SetBookPage(book: book.id, page: 142, time: Self.at(14, 21)), at: Self.at(14, 21))
+        #expect(lines(Self.at(14, 23)) == ["21:00  Read Dune, p 120 to 142"])
+    }
+
+    @Test func aCurrencySignSitsAgainstTheAmountAndNoCodeIsAdded() throws {
+        try run(LogSpend(amount: 8, typed: "€8", currency: "EUR", note: "lunch"), at: Self.at(14, 12))
+        try run(LogSpend(amount: 18.9, typed: "€18.90", currency: "EUR", note: "dinner"), at: Self.at(14, 19))
+        #expect(lines(Self.at(14, 20)) == ["12:00  Spent 2 times, €26.90 (lunch, dinner)"])
+        let other = try run(LogSpend(amount: 5, typed: "5 chf", currency: "CHF", note: "tea"), at: Self.at(15, 12))
+        _ = other
+        let text = try #require(lines(Self.at(15, 12)).first)
+        #expect(!text.contains("CHF") && text.contains("Spent 5"))
+    }
+
+    @Test func anUnflaggedBookWithAWalledWordReadsPrivate() throws {
+        let book = try run(QueueBook(title: "Therapy workbook", pages: 100), at: Self.at(14, 8)).output
+        try run(SetBookPage(book: book.id, page: 30, time: Self.at(14, 21)), at: Self.at(14, 21))
+        let text = try #require(lines(Self.at(14, 23)).first)
+        #expect(text == "21:00  Read Private book to p 30" && !text.contains("Therapy"))
     }
 }

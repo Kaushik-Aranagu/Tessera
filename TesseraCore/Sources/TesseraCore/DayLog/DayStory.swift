@@ -371,7 +371,9 @@ public enum DayStory {
             where finishedBooks[book] == nil && moved.to != moved.from
         {
             let title = lookup.title(of: book) ?? "a book"
-            lines.append((DayLine(time: moved.time, text: "Read \(title), p \(moved.from) to \(moved.to)",
+            // No earlier page: "Read Dune to p 142"; a real start page: "Read Dune, p 120 to 142".
+            let span = moved.from == 0 ? "to p \(moved.to)" : "p \(moved.from) to \(moved.to)"
+            lines.append((DayLine(time: moved.time, text: "Read \(title)\(moved.from == 0 ? " " : ", ")\(span)",
                                   objectIDs: [book], kind: .finished), false))
         }
 
@@ -470,8 +472,8 @@ extension DayStory {
         guard !facts.isEmpty else { return nil }
         let currencies = Set(facts.map { $0.1.currency ?? "" })
         let total: String? = currencies.count == 1
-            ? (facts[0].1.currency.map { (SpendLedger.symbols[$0] ?? $0) + " " } ?? "")
-            + MoneyAmount.format(facts.reduce(Decimal(0)) { $0 + $1.1.amount })
+            ? (facts[0].1.currency.flatMap { SpendLedger.symbols[$0] } ?? "") + MoneyAmount
+            .format(facts.reduce(Decimal(0)) { $0 + $1.1.amount })
             : nil
         var words: [String] = []
         for fact in facts {
@@ -562,7 +564,12 @@ public struct StoreDayLookup: DayLookup {
             return ObjectPrivacy.cookTitle(object, in: store)
         }
         if let book = classes[.book], let classDef = object.classDef, ClassResolver.isSubclass(classDef, of: book) {
-            return ObjectPrivacy.label(of: object, in: store, classes: classes) ?? object.title
+            // Bare words wall a book here, as everywhere a title can reach a memory line: when unsure, wall.
+            if let label = ObjectPrivacy.label(of: object, in: store, classes: classes) {
+                return label
+            }
+            return PrivateWords.isPrivateTitle(object.title, lastWeightKg: BodyWeight.lastKg(in: store))
+                ? ObjectPrivacy.bookLabel : object.title
         }
         // A list with a walled name reads "Private list" in the story, as it does everywhere else (G75).
         if let list = classes[.list], let classDef = object.classDef, ClassResolver.isSubclass(classDef, of: list) {
