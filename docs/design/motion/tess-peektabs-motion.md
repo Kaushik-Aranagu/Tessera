@@ -19,7 +19,13 @@ Lab spec with Normal / Reduce Motion (RM) / Low Power (LP) columns. Docs only; B
 | Tab bar (28 x 5 ink bar) | never moves: it stays under the middle word; only the word above it changes | same | same |
 | First or last tab | the missing neighbour side is empty; a drag past the edge resists (the system's paging bounce) and plays nothing | same | same |
 
-The bar and the middle position are fixed so the eye has one place to rest. The page's own content never scrolls inside a tab (sheet 108), so there is no vertical gesture to fight; a drag counts as a tab swipe only when it is more than 24 pt and more horizontal than vertical (PT: `DragGesture(minimumDistance: 24)` and the width/height check).
+The bar and the middle position are fixed so the eye has one place to rest. The page's own content never scrolls inside a tab (sheet 108), so there is no vertical gesture to fight. On the tab row, a drag counts as a tab swipe only when it is more than 24 pt and more horizontal than vertical (PT: `DragGesture(minimumDistance: 24)` and the width/height check); on the page, the paging `ScrollView` decides, with no extra threshold of ours.
+
+### Names that do not fit (QA note on #1142)
+- Each neighbour keeps a minimum gap from the word nearer the middle (lab default: 12 pt between the end of one word and the start of the next, measured on the measured text widths, not the slots).
+- When the gap would be smaller, the far neighbour on that side is dropped first (it fades out over 150 ms, in every mode), then the near one only if it still collides with the current word. The current name is never truncated.
+- This is evaluated at rest and when the selection changes, not per frame while dragging; a word that appears or disappears during a drag does so by the 150 ms fade.
+- Build check: the longest Review name next to its longest neighbour (for example "Looks and day" beside "Workout") on the smallest iPhone width fits with the gap, or drops the far neighbour.
 
 ## 2. The blur on the neighbours
 - Value: 1.6 pt, ink 38% (sheet 108, Kaushik's pick). It is static at rest and animates only as part of a drag or a settle (section 1): the radius is a function of p, not a separate timeline.
@@ -44,7 +50,8 @@ The bar and the middle position are fixed so the eye has one place to rest. The 
 5. `peekTabsLowPowerKeepsRestingBlurWithoutLiveRadius`.
 6. `peekTabsAccessibilitySizeShowsOneNameAndNext`.
 7. `peekTabsBarNeverMoves`.
-8. Grep: no raw `withAnimation` or `.animation(` in `PeekTabs.swift` (only `tesseraAnimation` and `withTesseraAnimation`).
+8. `peekTabsLongestNamesKeepAGapOnSmallestPhone` and `peekTabsFarNeighbourDropsFirst` (section 1, names that do not fit).
+9. Grep: no raw `withAnimation` or `.animation(` in `PeekTabs.swift` (only `tesseraAnimation` and `withTesseraAnimation`).
 
 ## Asks
 - **Builder B:** the words do not follow the finger in #1137 (they move only when `selection` changes). The sheet's mid-swipe look needs the page's scroll progress (for example `onScrollGeometryChange` on the paging view) fed into `tabWord`. If that is too costly for this batch, ship as built and take section 1's first row as the next step; the as-built behavior is acceptable for Review.
