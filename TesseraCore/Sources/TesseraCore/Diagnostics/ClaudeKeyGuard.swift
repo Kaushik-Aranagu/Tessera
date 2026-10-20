@@ -1,7 +1,7 @@
 import Foundation
 
 /// What Tess says when a Claude key is refused: in the Bar, in Notes and from Siri.
-public let claudeKeyLine = "That looks like a Claude key. It goes in Review, under Claude."
+public let claudeKeyLine = "That looks like a Claude key. It goes in Settings, under Claude."
 
 /// The text with every Claude key taken out, for a field that must keep the rest of what was typed. A key pasted
 /// across a line break or a space comes out whole: the long key-like runs right after it go too (QA R4 on #471).
