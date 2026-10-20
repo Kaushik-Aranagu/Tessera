@@ -66,7 +66,13 @@ struct SettingsPageTests {
         #expect(PeekTabsCopy.spoken(tabs, 1) == "Workout, tab 2 of 5")
         #expect(PeekTabsCopy.next(tabs, 1) == "next: Kitchen")
         #expect(PeekTabsCopy.next(tabs, 4) == nil)
-        #expect(PeekTabsLayout.offset(0, width: 300) == 0)
-        #expect(PeekTabsLayout.offset(-2, width: 300) < PeekTabsLayout.offset(-1, width: 300))
+        // Measured: words never overlap, whatever their widths, and the current one is centred.
+        let widths: [CGFloat] = [120, 60, 50, 90, 55]
+        let centers = PeekTabsLayout.centers(widths: widths, selection: 1)
+        #expect(centers[1] == 0)
+        for index in 0 ..< widths.count - 1 {
+            let gapBetween = (centers[index + 1] - widths[index + 1] / 2) - (centers[index] + widths[index] / 2)
+            #expect(abs(gapBetween - PeekTabsLayout.gap) < 0.001)
+        }
     }
 }

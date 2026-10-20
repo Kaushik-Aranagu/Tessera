@@ -14,6 +14,8 @@ struct PeekTabs<Content: View>: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var scrolled: Int?
+    /// Each tab word's drawn width, for the measured layout.
+    @State private var widths: [Int: CGFloat] = [:]
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
@@ -43,12 +45,16 @@ struct PeekTabs<Content: View>: View {
         GeometryReader { proxy in
             let mid = proxy.size.width / 2
             ZStack {
+                // Each word sits a fixed gap from its neighbour, measured, with the current one centred, so a long
+                // name never runs into the next (sheet 108).
+                let centers = PeekTabsLayout.centers(widths: tabs.indices.map { widths[$0] ?? 0 }, selection: selection)
                 ForEach(tabs.indices, id: \.self) { index in
                     let distance = index - selection
-                    if abs(distance) <= 2 {
-                        tabWord(index, distance: distance)
-                            .position(x: mid + PeekTabsLayout.offset(distance, width: proxy.size.width), y: 18)
-                    }
+                    tabWord(index, distance: distance)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { widths[index] = $0 }
+                        .position(x: mid + centers[index], y: 18)
+                        .opacity(abs(distance) <= 2 ? 1 : 0)
+                        .accessibilityHidden(abs(distance) > 2)
                 }
                 Capsule(style: .continuous)
                     .fill(Theme.Colors.ink)
@@ -158,8 +164,25 @@ enum PeekTabsLayout {
         return spec
     }
 
-    static func offset(_ distance: Int, width: CGFloat) -> CGFloat {
-        CGFloat(distance) * width * 0.27
+    /// The space between two tab words.
+    static let gap: CGFloat = 22
+
+    /// Each word's centre relative to the current word's centre, from the words' drawn widths: neighbours sit `gap`
+    /// apart edge to edge, so nothing overlaps whatever the names' lengths.
+    static func centers(widths: [CGFloat], selection: Int) -> [CGFloat] {
+        guard widths.indices.contains(selection) else { return widths.map { _ in 0 } }
+        var centers = Array(repeating: CGFloat(0), count: widths.count)
+        var edge = widths[selection] / 2
+        for index in (selection + 1) ..< widths.count {
+            centers[index] = edge + gap + widths[index] / 2
+            edge = centers[index] + widths[index] / 2
+        }
+        edge = -widths[selection] / 2
+        for index in stride(from: selection - 1, through: 0, by: -1) {
+            centers[index] = edge - gap - widths[index] / 2
+            edge = centers[index] - widths[index] / 2
+        }
+        return centers
     }
 }
 
