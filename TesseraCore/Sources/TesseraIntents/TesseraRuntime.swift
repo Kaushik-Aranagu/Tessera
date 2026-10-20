@@ -44,6 +44,7 @@ public enum TesseraIntentsCatalog {
         "resumeProcess": "kernel-internal",
         "endProcess": "kernel-internal",
         "createRoutine": "in-app only",
+        "setRoutineKind": "in-app only: the routine editor",
         "createClass": "in-app only: the class page's New subclass",
         "syncCalendar": "system: the calendar mount on foreground",
         "syncHealth": "system: the Health mount on foreground",
