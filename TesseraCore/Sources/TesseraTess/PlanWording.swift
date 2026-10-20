@@ -488,7 +488,7 @@ public final class ClaudePlanWording {
             ledger.record(use: .plan, model: Self.model, input: usage.input, output: usage.output,
                           costNano: TessUsageLedger.cost(model: Self.model, input: usage.input, output: usage.output),
                           latency: Date().timeIntervalSince(started), outcome: outcome, requestID: requestID,
-                          at: now())
+                          at: now(), sent: input)
         }
         // A call that reached Claude is remembered for today; offline, cancelled and a bad key (a new key may come)
         // never are.
