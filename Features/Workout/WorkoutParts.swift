@@ -18,6 +18,16 @@ struct ExerciseLane: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.zoomNamespace) private var zoomNamespace
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// The workout's routine kind (else what its exercises work) picks the figures' colour.
+    private var figureTint: Color {
+        let routine = model.store.linkedObjects("routine", of: session.workout).first
+        let day = MuscleReading.union(session.entries.map {
+            MuscleReading.muscles(of: session.exerciseClass(of: $0), store: model.store)
+        })
+        return MuscleTint.colour(kind: routine.flatMap { RoutineKind.of($0, in: model.store) }, muscles: day)
+    }
 
     var body: some View {
         ScrollView(.horizontal) {
@@ -26,21 +36,42 @@ struct ExerciseLane: View {
                     let exercise = session.exerciseClass(of: entry)
                     let isCurrent = index == (laneIndex ?? session.currentIndex)
                     let name = exercise?.name ?? "Exercise"
+                    let muscles = MuscleReading.muscles(of: exercise, store: model.store)
                     Button {
                         if let exercise {
                             model.open(.classDef(exercise.id), .deeper)
                         }
                     } label: {
-                        // Title 44 on one line, else 34 on one line, else two lines of 34. Never cut.
+                        // Title 44 on one line, else 34 on one line, else two lines of 34. Never cut. While the figure
+                        // shows, the name keeps 56 pt clear on the right of it.
                         ViewThatFits(in: .horizontal) {
                             Text(name).textRole(.title).lineLimit(1).fixedSize()
                             Text(name).font(Self.title34).lineLimit(1).fixedSize()
                             Text(name).font(Self.title34).lineLimit(2)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
+                        .padding(.trailing, muscles.isEmpty || typeSize.isAccessibilitySize ? 0 : 56)
                         .foregroundStyle(Paint.cream)
                         .opacity(isCurrent ? 1 : 0)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .overlay(alignment: .topTrailing) {
+                            if !muscles.isEmpty, !typeSize.isAccessibilitySize {
+                                // One figure, the exercise's side, that slides in and out with the name.
+                                let back = MuscleSide.showsBack(muscles)
+                                // A private workout lights nothing.
+                                let lit = MuscleReading.lit(
+                                    muscles,
+                                    isPrivate: session.shownTitle != session.workout.title
+                                )
+                                MuscleFigure(back: back, roles: MuscleFigureMap.roles(lit, back: back),
+                                             tint: figureTint,
+                                             lineOpacity: 0.45, lineColor: Paint.cream, lineWidth: 2.2)
+                                    .frame(height: 92)
+                                    .offset(y: -20)
+                                    .accessibilityHidden(true)
+                                    .allowsHitTesting(false)
+                            }
+                        }
                         .id(name)
                         .transition(reduceMotion ? .opacity
                             : .asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -59,6 +90,12 @@ struct ExerciseLane: View {
                             }
                         }
                     }
+                    .accessibilityLabel([
+                        name,
+                        session.shownTitle != session.workout.title ? "" : MuscleReading.spoken(muscles),
+                    ]
+                    .filter { !$0.isEmpty }
+                    .joined(separator: ", "))
                     .accessibilityHint(isCurrent ? "Opens the exercise page" : "")
                     .accessibilityAction(named: "Swap within the movement") { setSwap(true) }
                     .tesseraAnimation(.easeOut(duration: 0.24), value: isCurrent)

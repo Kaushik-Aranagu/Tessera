@@ -43,7 +43,9 @@ struct RoutineEditor: View {
                                 onToggle: { toggle(slot.id) },
                                 perform: perform,
                                 onSwap: { setLibrary(.swap(slot.id)) },
-                                index: index
+                                index: index,
+                                tint: figureTint(slots: slots),
+                                isPrivate: isPrivateRoutine
                             )
                         }
                     }
@@ -117,6 +119,18 @@ struct RoutineEditor: View {
         }
     }
 
+    /// The figures' colour: the routine's own kind (Push vermilion, Pull cobalt, Legs cadmium), else its muscles'.
+    private func figureTint(slots: [ObjectRecord]) -> Color {
+        MuscleTint.colour(kind: RoutineKind.of(routine, in: model.store), muscles: unionMuscles(slots))
+    }
+
+    /// " Works chest, shoulders and triceps." for the context line; nothing for a private routine or an empty one.
+    private func worksSentence(slots: [ObjectRecord]) -> String {
+        guard !isPrivateRoutine else { return "" }
+        let primary = unionMuscles(slots).filter { $0.role == .primary }.map(\.name)
+        return primary.isEmpty ? "" : " \(MuscleWords.works(primary))."
+    }
+
     private var isPrivateRoutine: Bool {
         ObjectPrivacy.label(of: routine, in: model.store, classes: model.classes) != nil
             || ObjectPrivacy.routineTitle(model.store.displayTitle(of: routine), in: model.store)
@@ -170,7 +184,8 @@ struct RoutineEditor: View {
                 .foregroundStyle(Theme.Colors.ink)
                 .accessibilityAddTraits(.isHeader)
                 .entrance(2, hero: true)
-            Text("\(slots.count) \(slots.count == 1 ? "exercise" : "exercises"), \(sets) sets. Tap one to change it.")
+            Text("\(slots.count) \(slots.count == 1 ? "exercise" : "exercises"), \(sets) sets. Tap one to change it."
+                + worksSentence(slots: slots))
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.context)
                 .fixedSize(horizontal: false, vertical: true)
@@ -253,16 +268,30 @@ private struct SlotEditorRow: View {
     var perform: (any EngineAction) -> Void
     var onSwap: () -> Void
     let index: Int
+    var tint: Color = Theme.Colors.training
+    /// A private routine's row figure is the plain outline.
+    var isPrivate = false
     @Environment(AppModel.self) private var model
 
     var body: some View {
         let exercise = model.store.linkedClass("exercise", of: slot)
+        let muscles = MuscleReading.muscles(of: exercise, store: model.store)
         let sets = model.store.number("sets", of: slot) ?? 3
         let low = model.store.number("repMin", of: slot) ?? 8
         let high = model.store.number("repMax", of: slot) ?? low
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
             Button(action: onToggle) {
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .center) {
+                    if !muscles.isEmpty {
+                        // The row's figure, 22 pt wide, at the left (the exercise's own side); info only.
+                        let back = MuscleSide.showsBack(muscles)
+                        MuscleFigure(back: back,
+                                     roles: MuscleFigureMap.roles(MuscleReading.lit(muscles, isPrivate: isPrivate),
+                                                                  back: back),
+                                     tint: tint, lineOpacity: 0.5, lineWidth: 2.6)
+                            .frame(width: 22)
+                            .accessibilityHidden(true)
+                    }
                     Text(exercise?.name ?? "Exercise")
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
@@ -277,7 +306,10 @@ private struct SlotEditorRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(HandleButtonStyle())
-            .accessibilityLabel("\(exercise?.name ?? "Exercise"), \(Int(sets)) sets of \(Int(low)) to \(Int(high))")
+            .accessibilityLabel(
+                ["\(exercise?.name ?? "Exercise"), \(Int(sets)) sets of \(Int(low)) to \(Int(high))",
+                 isPrivate ? "" : MuscleReading.spoken(muscles)].filter { !$0.isEmpty }.joined(separator: ", ")
+            )
             .accessibilityHint(isOpen ? "Closes it" : "Opens it to change")
 
             if isOpen {
