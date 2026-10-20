@@ -283,6 +283,8 @@ struct SoulMomentsTests {
             }
         }
         #expect(SoulReaders.word(step: 3, reader: 0, count: 3) == 0)
+        #expect(SoulReaders.word(step: -1, reader: 0, count: 3) == 2)
+        #expect(SoulReaders.position(words: words, reader: 0, time: 0.1) != nil)
     }
 
     @Test func aHopArcsUpAndFewerThanTwoWordsMeansNoReaders() {

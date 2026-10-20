@@ -110,7 +110,7 @@ enum SoulReaders {
     /// Which of `count` words reader `reader` is on during step `step` (the readers start on different words).
     static func word(step: Int, reader: Int, count: Int) -> Int {
         guard count > 0 else { return 0 }
-        return (step + reader) % count
+        return ((step + reader) % count + count) % count
     }
 
     /// The step a time falls in, and where in it (hopping, then dwelling).

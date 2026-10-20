@@ -89,7 +89,7 @@ struct SoulMouthLine: Shape {
         }
     }
 
-    func path(in _: CGRect) -> Path {
+    func path(in rect: CGRect) -> Path {
         let half = width / 2
         let lift = 0.5 * curve
         let left = CGPoint(x: -half, y: -lift)
@@ -99,7 +99,7 @@ struct SoulMouthLine: Shape {
         var path = Path()
         path.move(to: left)
         path.addQuadCurve(to: right, control: CGPoint(x: 0, y: middle / 0.5))
-        return path
+        return path.offsetBy(dx: rect.midX, dy: rect.midY)
     }
 }
 
@@ -112,10 +112,10 @@ struct SoulMouthBlob: Shape {
         set { open = newValue }
     }
 
-    func path(in _: CGRect) -> Path {
+    func path(in rect: CGRect) -> Path {
         let wide = 5.6 + (2.7 - 5.6) * open
         let tall = SoulExpression.height + (2.8 - SoulExpression.height) * open
-        return Path(ellipseIn: CGRect(x: -wide / 2, y: -tall / 2, width: wide, height: tall))
+        return Path(ellipseIn: CGRect(x: rect.midX - wide / 2, y: rect.midY - tall / 2, width: wide, height: tall))
     }
 }
 
