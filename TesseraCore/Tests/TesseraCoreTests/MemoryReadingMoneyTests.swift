@@ -54,4 +54,16 @@ struct MemoryReadingMoneyTests {
         let text = recent()?.lowercased() ?? ""
         #expect(!text.contains("lexapro") && !text.contains("therapy") && !text.contains("private book"))
     }
+
+    @Test func theGuardRefusesSpendsAndPrivateBooksAndNothingElse() {
+        // The guard on its own, so no other layer can hide it going missing.
+        for line in ["Spent 12.40, lunch", "Spent 2 times (lunch, cab)", "Read Private book to p 30",
+                     "Finished Private book"]
+        {
+            #expect(TessMemoryStore.staysOutOfMemory(line), "\(line)")
+        }
+        for line in ["Read Dune to p 142", "Finished Dune", "Push A, 50 min", "Cooked chili, 40 min"] {
+            #expect(!TessMemoryStore.staysOutOfMemory(line), "\(line)")
+        }
+    }
 }
