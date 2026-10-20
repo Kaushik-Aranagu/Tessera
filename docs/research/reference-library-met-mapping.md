@@ -1,6 +1,6 @@
 # MET mapping draft: exercise seeds -> Compendium of Physical Activities (DRAFT)
 
-Date: 2026-10-19. Status: DRAFT for Product and Core. Docs only; nothing was added to the repo.
+Date: 2026-10-19; verified 2026-10-20. Status: VERIFIED by Core against the official 2024 Adult Compendium pages. Docs only; nothing was added to the repo.
 
 ## Read first: estimate input, never a measurement
 This mapping feeds a calorie estimate: kcal = MET x body-mass-kg x hours. The app must show the result as
@@ -8,19 +8,19 @@ This mapping feeds a calorie estimate: kcal = MET x body-mass-kg x hours. The ap
 energy use varies with the person, load, tempo and rest. Rest time inside a lifting session is part of the
 Compendium figure for resistance training, so use session time, not only set time.
 
-## Terms (as relayed from Core; not read by this author)
+## Terms (read by Core on pacompendium.com, 2026-10-20)
 Free commercial use if MET values are NOT changed; activities with different MET levels are NOT combined or
 averaged; the Compendium is cited. So this file gives ONE code and ONE unchanged MET per exercise. No averages,
-no scaling, no invented numbers. Suggested citation line (Core to confirm wording on pacompendium.com):
-"Compendium of Physical Activities, 2024 Adult Compendium (pacompendium.com)".
+no scaling, no invented numbers. The site says the data is free to use commercially, MET values must not be changed,
+and the website or publication must be cited. In-app citation (About line, from the site's own citation list):
+"Energy costs from the 2024 Adult Compendium of Physical Activities (pacompendium.com). Herrmann SD, Willis EA,
+Ainsworth BE, et al. Journal of Sport and Health Science, 2024;13(1):6-12."
 
 ## What was and was not possible
-pacompendium.com is not reachable from this sandbox. The official table was therefore NOT seen. Every code and
-value below comes from GitHub-hosted third-party copies, fetched read-only from raw.githubusercontent.com into a
-scratch folder outside the repo. Rule applied: VERIFIED only if seen in a source quoting the official table
-itself. None qualifies, so every row is VERIFY ON MAC. Confidence is still good: for all 9 codes used, the MET
-agrees across the independent copies listed below (3 copies per code), and S1 tracks 1993/2000/2011/2024 side
-by side so the 2024 column is identifiable (a few codes changed between editions, see "Edition warning").
+Update 2026-10-20: Core read the official 2024 Adult Compendium pages on pacompendium.com in the browser pane and
+confirmed all 9 codes, descriptions and METs below match the official table (nothing was bought or downloaded).
+Before that read, every value came from GitHub-hosted third-party copies fetched read-only from
+raw.githubusercontent.com (the sources below), which agreed with each other and now with the official table.
 
 Sources seen:
 - S1: https://github.com/tonningp/met_calc , file data/adult_compendium_tracking_2024.csv (columns code_2024,
@@ -37,8 +37,8 @@ Not usable: brazoramonk-arch/compendium-of-physical-activities (README only, lin
 ## Edition warning (important for Core)
 Between 2011 and 2024 several MET values changed (examples seen in S1: 02020 8.0 -> 7.5, 02040 8.0 -> 7.5,
 02070 6.0 -> 7.3, 02068 12.3 -> 11.0). The 9 codes used here are identical in the 2011 and 2024 columns of S1
-(the six older codes: 02022, 02024, 02030, 02050, 02052, 02054); Core must confirm on the official 2024 table, and the in-app citation
-must name the edition used. Codes 02056, 02058 and 17018 do not exist in 2011 (new in 2024).
+(the six older codes: 02022, 02024, 02030, 02050, 02052, 02054); Core confirmed them on the official 2024 table, and the in-app citation
+names the 2024 edition. Codes 02056, 02058 and 17018 do not exist in 2011 (new in 2024).
 
 ## Mapping rules (explained once)
 Pick by the seed's own equipment, pattern, log type and rep range. Each exercise gets exactly one rule.
@@ -69,78 +69,78 @@ source | status.
 
 | Exercise | Equipment | Pattern | Code | Code description | MET | Rule | Source | Status |
 |---|---|---|---|---|---|---|---|---|
-| Bench Press | barbell | horizontalPush | 02050 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210) [text from S3; S1 row is run together with 02049]" | 6.0 | R2 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Incline Bench Press | barbell | horizontalPush | 02050 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210) [text from S3; S1 row is run together with 02049]" | 6.0 | R2 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Close-Grip Bench Press | barbell | horizontalPush | 02050 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210) [text from S3; S1 row is run together with 02049]" | 6.0 | R2 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Dumbbell Bench Press | dumbbell | horizontalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Incline Dumbbell Press | dumbbell | horizontalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Machine Chest Press | machine | horizontalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Push-Up | bodyweight | horizontalPush | 02022 | "Calisthenics (e.g., pushups, sit ups, pull-ups, lunges), moderate effort" | 3.8 | R4 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Dip | bodyweight | horizontalPush | 02022 | "Calisthenics (e.g., pushups, sit ups, pull-ups, lunges), moderate effort" | 3.8 | R4 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Cable Fly | cable | horizontalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Pec Deck | machine | horizontalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Overhead Press | barbell | verticalPush | 02050 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210) [text from S3; S1 row is run together with 02049]" | 6.0 | R2 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Seated Dumbbell Shoulder Press | dumbbell | verticalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Machine Shoulder Press | machine | verticalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Dumbbell Lateral Raise | dumbbell | verticalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Cable Lateral Raise | cable | verticalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Barbell Row | barbell | horizontalPull | 02050 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210) [text from S3; S1 row is run together with 02049]" | 6.0 | R2 | S1, S2, S3(2011) | VERIFY ON MAC |
-| One-Arm Dumbbell Row | dumbbell | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Seated Cable Row | cable | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Chest-Supported Row | machine | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| T-Bar Row | barbell | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Face Pull | cable | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Reverse Pec Deck | machine | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Pull-Up | bodyweight | verticalPull | 02022 | "Calisthenics (e.g., pushups, sit ups, pull-ups, lunges), moderate effort" | 3.8 | R4 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Chin-Up | bodyweight | verticalPull | 02022 | "Calisthenics (e.g., pushups, sit ups, pull-ups, lunges), moderate effort" | 3.8 | R4 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Assisted Pull-Up | machine | verticalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Lat Pulldown | cable | verticalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Close-Grip Pulldown | cable | verticalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Straight-Arm Pulldown | cable | verticalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Back Squat | barbell | squat | 02052 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | 5.0 | R3 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Front Squat | barbell | squat | 02052 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | 5.0 | R3 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Goblet Squat | dumbbell | squat | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Hack Squat | machine | squat | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Leg Press | machine | squat | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Smith Machine Squat | smith | squat | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Bulgarian Split Squat | dumbbell | lunge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Walking Lunge | dumbbell | lunge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Reverse Lunge | dumbbell | lunge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Step-Up | dumbbell | lunge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Deadlift | barbell | hinge | 02052 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | 5.0 | R3 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Sumo Deadlift | barbell | hinge | 02052 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | 5.0 | R3 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Romanian Deadlift | barbell | hinge | 02052 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | 5.0 | R3 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Dumbbell Romanian Deadlift | dumbbell | hinge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Good Morning | barbell | hinge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Kettlebell Swing | kettlebell | hinge | 02058 | "Kettle bell swings" | 9.8 | R6 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Hip Thrust | barbell | hinge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Back Extension | bodyweight | hinge | 02030 | "Calisthenics, light or moderate effort, general (e.g., back exercises), going up & down from floor (Taylor Code 150)" | 3.5 | R5 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Cable Pull-Through | cable | hinge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Leg Extension | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Lying Leg Curl | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Seated Leg Curl | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Hip Adduction | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Hip Abduction | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Standing Calf Raise | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Seated Calf Raise | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Barbell Curl | barbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Dumbbell Curl | dumbbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Hammer Curl | dumbbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Incline Dumbbell Curl | dumbbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Preacher Curl | ezBar | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Cable Curl | cable | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Rope Pushdown | cable | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Overhead Cable Extension | cable | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Skull Crusher | ezBar | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Dumbbell Overhead Extension | dumbbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Barbell Shrug | barbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Dumbbell Shrug | dumbbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Plank | bodyweight | core | 02024 | "Calisthenics (e.g., curl ups, abdominal crunches, plank), light effort" | 2.8 | R5 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Ab Wheel Rollout | bodyweight | core | 02056 | "Body weight resistance exercises (e.g., squat, lunge, push-up, crunch), general" | 3.0 | R5 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Hanging Leg Raise | bodyweight | core | 02056 | "Body weight resistance exercises (e.g., squat, lunge, push-up, crunch), general" | 3.0 | R5 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Cable Crunch | cable | core | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Pallof Press | cable | core | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFY ON MAC |
-| Farmer's Carry | dumbbell | carry | 17018 | "Carrying 15 - 155 lb (6.8 - 70.4 kg) load (e.g. suitcase, boxes, furniture), level ground or downstairs, slow pace" | 4.5 | R7 | S1, S2, S3(2011) | VERIFY ON MAC |
+| Bench Press | barbell | horizontalPush | 02050 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210)" | 6.0 | R2 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Incline Bench Press | barbell | horizontalPush | 02050 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210)" | 6.0 | R2 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Close-Grip Bench Press | barbell | horizontalPush | 02050 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210)" | 6.0 | R2 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Dumbbell Bench Press | dumbbell | horizontalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Incline Dumbbell Press | dumbbell | horizontalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Machine Chest Press | machine | horizontalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Push-Up | bodyweight | horizontalPush | 02022 | "Calisthenics (e.g., pushups, sit ups, pull-ups, lunges), moderate effort" | 3.8 | R4 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Dip | bodyweight | horizontalPush | 02022 | "Calisthenics (e.g., pushups, sit ups, pull-ups, lunges), moderate effort" | 3.8 | R4 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Cable Fly | cable | horizontalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Pec Deck | machine | horizontalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Overhead Press | barbell | verticalPush | 02050 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210)" | 6.0 | R2 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Seated Dumbbell Shoulder Press | dumbbell | verticalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Machine Shoulder Press | machine | verticalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Dumbbell Lateral Raise | dumbbell | verticalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Cable Lateral Raise | cable | verticalPush | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Barbell Row | barbell | horizontalPull | 02050 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210)" | 6.0 | R2 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| One-Arm Dumbbell Row | dumbbell | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Seated Cable Row | cable | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Chest-Supported Row | machine | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| T-Bar Row | barbell | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Face Pull | cable | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Reverse Pec Deck | machine | horizontalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Pull-Up | bodyweight | verticalPull | 02022 | "Calisthenics (e.g., pushups, sit ups, pull-ups, lunges), moderate effort" | 3.8 | R4 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Chin-Up | bodyweight | verticalPull | 02022 | "Calisthenics (e.g., pushups, sit ups, pull-ups, lunges), moderate effort" | 3.8 | R4 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Assisted Pull-Up | machine | verticalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Lat Pulldown | cable | verticalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Close-Grip Pulldown | cable | verticalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Straight-Arm Pulldown | cable | verticalPull | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Back Squat | barbell | squat | 02052 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | 5.0 | R3 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Front Squat | barbell | squat | 02052 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | 5.0 | R3 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Goblet Squat | dumbbell | squat | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Hack Squat | machine | squat | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Leg Press | machine | squat | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Smith Machine Squat | smith | squat | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Bulgarian Split Squat | dumbbell | lunge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Walking Lunge | dumbbell | lunge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Reverse Lunge | dumbbell | lunge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Step-Up | dumbbell | lunge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Deadlift | barbell | hinge | 02052 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | 5.0 | R3 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Sumo Deadlift | barbell | hinge | 02052 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | 5.0 | R3 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Romanian Deadlift | barbell | hinge | 02052 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | 5.0 | R3 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Dumbbell Romanian Deadlift | dumbbell | hinge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Good Morning | barbell | hinge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Kettlebell Swing | kettlebell | hinge | 02058 | "Kettle bell swings" | 9.8 | R6 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Hip Thrust | barbell | hinge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Back Extension | bodyweight | hinge | 02030 | "Calisthenics, light or moderate effort, general (e.g., back exercises), going up & down from floor (Taylor Code 150)" | 3.5 | R5 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Cable Pull-Through | cable | hinge | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Leg Extension | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Lying Leg Curl | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Seated Leg Curl | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Hip Adduction | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Hip Abduction | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Standing Calf Raise | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Seated Calf Raise | machine | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Barbell Curl | barbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Dumbbell Curl | dumbbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Hammer Curl | dumbbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Incline Dumbbell Curl | dumbbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Preacher Curl | ezBar | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Cable Curl | cable | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Rope Pushdown | cable | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Overhead Cable Extension | cable | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Skull Crusher | ezBar | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Dumbbell Overhead Extension | dumbbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Barbell Shrug | barbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Dumbbell Shrug | dumbbell | isolation | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Plank | bodyweight | core | 02024 | "Calisthenics (e.g., curl ups, abdominal crunches, plank), light effort" | 2.8 | R5 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Ab Wheel Rollout | bodyweight | core | 02056 | "Body weight resistance exercises (e.g., squat, lunge, push-up, crunch), general" | 3.0 | R5 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Hanging Leg Raise | bodyweight | core | 02056 | "Body weight resistance exercises (e.g., squat, lunge, push-up, crunch), general" | 3.0 | R5 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Cable Crunch | cable | core | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Pallof Press | cable | core | 02054 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | 3.5 | R1 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
+| Farmer's Carry | dumbbell | carry | 17018 | "Carrying 15 - 155 lb (6.8 - 70.4 kg) load (e.g. suitcase, boxes, furniture), level ground or downstairs, slow pace" | 4.5 | R7 | S1, S2, S3(2011) | VERIFIED (Core, official 2024 page) |
 
 ## Codes used (9 distinct)
 
@@ -149,23 +149,23 @@ source | status.
 | 02022 | 3.8 | "Calisthenics (e.g., pushups, sit ups, pull-ups, lunges), moderate effort" | S1, S2, S3(2011) | 4 |
 | 02024 | 2.8 | "Calisthenics (e.g., curl ups, abdominal crunches, plank), light effort" | S1, S2, S3(2011) | 1 |
 | 02030 | 3.5 | "Calisthenics, light or moderate effort, general (e.g., back exercises), going up & down from floor (Taylor Code 150)" | S1, S2, S3(2011) | 1 |
-| 02050 | 6.0 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210) [text from S3; S1 row is run together with 02049]" | S1, S2, S3(2011) | 5 |
+| 02050 | 6.0 | "Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous effort (Taylor Code 210)" | S1, S2, S3(2011) | 5 |
 | 02052 | 5.0 | "Resistance (weight) training, squats, deadlift, slow or explosive effort" | S1, S2, S3(2011) | 5 |
 | 02054 | 3.5 | "Resistance (weight) training, multiple exercises, 8-15 reps at varied resistance" | S1, S2, S3(2011) | 52 |
 | 02056 | 3.0 | "Body weight resistance exercises (e.g., squat, lunge, push-up, crunch), general" | S1, S2, S3(2011) | 2 |
 | 02058 | 9.8 | "Kettle bell swings" | S1, S2, S3(2011) | 1 |
 | 17018 | 4.5 | "Carrying 15 - 155 lb (6.8 - 70.4 kg) load (e.g. suitcase, boxes, furniture), level ground or downstairs, slow pace" | S1, S2, S3(2011) | 1 |
 
-Note on 02050: in S1 the description cell is run together with 02049 ("Elliptical trainer, vigorous effort
-Resistance (weight lifting - free weight, nautilus or universal-type), power lifting or body building, vigorous
-effort") and shows only "(Taylor Code 210)" for 02050; S2 stores just " 210)". The text quoted above is from S3.
-The MET 6.0 agrees in S1, S2, S3, PyExPhys and the Xsatc77 copy. Core: read the exact current wording.
+Note on 02050: Core read the official row as "Resistance (weight lifting - free weight, nautilus or universal-type),
+power lifting or body building, vigorous effort (Taylor Code 210)", MET 6.0, so "Taylor Code 210" is part of the
+official text.
 
 ## Judgement calls to confirm (Product / Core)
 1. Dip -> 02022 (not named in the description). Alternative 02056 (3.0). Pick one; do not average.
 2. Hanging leg raise and ab wheel rollout -> 02056 (3.0) rather than 02024 (2.8, light effort); both are
    harder than plank-level work. Alternative 02022 (3.8).
-3. Farmer's carry -> 17018 (4.5). Other loaded-carry codes seen: 17016 (4.0, 5-14 lb, moderate pace) and 17019
+3. Farmer's carry -> 17018 (4.5); Core confirmed it is still the best fit (17019 is 6.5 but covers feed or fence-pipe
+   carrying at a moderate pace, and no gym carry code exists). Other loaded-carry codes seen: 17016 (4.0, 5-14 lb, moderate pace) and 17019
    (6.5, 50-150 lb, moderate pace); loads in the app are heavier than 17016 but pace is slow, so 17018 fits best.
 4. Barbell compounds that start at 6 reps (bench, row, OHP, squat, deadlift) are labelled vigorous/heavy by
    the rep-range rule. A user doing 6-10 reps at moderate load may argue for 02054 (3.5). The rule uses the
@@ -175,10 +175,10 @@ The MET 6.0 agrees in S1, S2, S3, PyExPhys and the Xsatc77 copy. Core: read the 
    exercise alone is an approximation. Show "about", always.
 
 ## Counts
-- Rows: 72. VERIFIED from official table: 0. VERIFY ON MAC: 72. NOT FOUND: 0.
+- Rows: 72. VERIFIED from official table (Core, 2026-10-20): 72. VERIFY ON MAC: 0. NOT FOUND: 0.
 - Distinct codes used: 9 (02022, 02024, 02030, 02050, 02052, 02054, 02056, 02058, 17018).
 
-## What Core must read from pacompendium.com
+## What Core read from pacompendium.com (done 2026-10-20; answers below)
 1. The official 2024 Adult Compendium entries for the 9 codes above: confirm code, exact description text, and
    MET (S1/S2/S3 agree on the values listed; the official page was not seen). Priority: 02054, 02050, 02052.
 2. The exact 02050 description (see note above) and whether "Taylor Code 210" is part of the official text.

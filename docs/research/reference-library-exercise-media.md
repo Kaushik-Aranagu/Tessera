@@ -136,8 +136,8 @@ were written before this read and are kept for history; where they say UNVERIFIE
    Compendium cited in the library's notes and an About line (see the update at the top of section 4).
 
 ## Open checks (from a networked Mac)
-1. Read pacompendium.com terms/copyright and the 2024 adult PDF rows for 02050, 02052, 02054, and cardio codes
-   (rowing 02061-ish, running, cycling). Confirm numbers and whether reuse in an app needs permission.
+1. Done 2026-10-20 (Core, Mac): terms and the 2024 rows for all 9 codes used are read and confirmed (see
+   reference-library-met-mapping.md). Still open for later seeds: cardio codes (rowing, running, cycling).
 2. Read https://gymvisual.com/content/3-terms-and-conditions-of-use, and decide if a paid licence is wanted (out of
    brief).
 3. Identify the original author of the wrkout / free-exercise-db photos; read open issues on both repos about image
