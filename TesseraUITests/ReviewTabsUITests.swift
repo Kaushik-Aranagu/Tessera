@@ -19,7 +19,7 @@ final class ReviewTabsUITests: SimulatorOnlyTestCase {
         // Looks and day, then Workout: one step right.
         tabRow.swipeLeft()
         sleep(1)
-        let names = ["Rest timer", "Swap exercise", "Forgot Finish nudge"]
+        let names = ["Rest timer", "Swap exercise", "Forgot Finish nudge", "Tess names training days"]
         let rows = names.map { app.descendants(matching: .any)[$0] }
         for (name, row) in zip(names, rows) {
             XCTAssertTrue(row.waitForExistence(timeout: 5), "\(name) on the Workout tab")

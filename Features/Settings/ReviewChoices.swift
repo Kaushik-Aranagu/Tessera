@@ -70,6 +70,12 @@ final class ReviewChoices {
                       "Soften": "Pages soften into each other.",
                       "Rotate": "Pages rotate on their edge."],
                readiness: .arrivesWith("page turns")),
+        // Core's #1160 (Kaushik, Oct 19, 7:12 PM): the phone's own model first, Claude only with "Tess asks Claude";
+        // a private routine stays "Private workout"; his own name stops it. Off leaves every name to him.
+        Choice(id: "trainingAutoName", name: "Tess names training days", values: ["On", "Off"], defaultValue: "On",
+               says: ["On": "A new training day gets a short name from its exercises until you name it.",
+                      "Off": "Training days keep the name you give them."],
+               readiness: .live),
         Choice(id: "tabs.neighbours", name: "Tab neighbours", values: ["Blurred", "Crisp"], defaultValue: "Blurred",
                says: ["Crisp": "The tabs beside the current one read crisp and faint.",
                       "Blurred": "The tabs beside the current one soften into a blur."],
@@ -161,11 +167,15 @@ final class ReviewChoices {
     nonisolated static let facets: [(word: String, ids: [String])] = [
         ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace", "lockScreenLook"]),
         // Design 110: Calories burned and Energy check-in sit with the workout; Class inspector with Shown.
-        ("Workout", ["restTimer", "swapExercise", "finishNudge", "quietInterrupts", "caloriesBurned", "energyCheckIn"]),
+        // Tess names training days joins Workout; Quiet interrupts (notices) moves to Connected to keep six a page.
+        (
+            "Workout",
+            ["restTimer", "swapExercise", "finishNudge", "trainingAutoName", "caloriesBurned", "energyCheckIn"]
+        ),
         // Kitchen v2 adds eight rows: what is in the house and the shop on Kitchen, the cook itself on Cooking.
         ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
-        ("Connected", ["planMyDay", "shutdown", "calendar", "health", "linkFetch"]),
+        ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
         ("Shown", ["areasShown", "classInspector"]),
     ]
 
