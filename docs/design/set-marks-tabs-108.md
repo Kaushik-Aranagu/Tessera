@@ -9,7 +9,7 @@ Boards (source `studies/set-marks-tabs-108.html`, needs `studies/muscle-figure.j
 - `mockups/tabs-zones-108.png`: the swipe zones, and the same pattern in Settings > Review.
 
 ## 1. Set marks (replace the wave)
-PICKED: Kaushik, 12:51 AM Oct 20 (his Oct 19 5:51 PM PT), "Yes, this" on the ink-drop swarm with brush circles (Design shapes and ink, Motion lab motion). Clip `clips/set-marks-ink-108-v6-motion.mp4`, source `studies/set-marks-ink-108-v6-motion.html` (earlier rounds: bars, rings, dots, swarm, ink v1 to v5 are dropped; his words: dots too circular, motion too robotic, an inside drop makes no sense).
+PICKED: Kaushik, 5:51 PM PT Oct 19, "Yes, this" on the ink-drop swarm with brush circles (Design shapes and ink, Motion lab motion). Clip `clips/set-marks-ink-108-v6-motion.mp4`, source `studies/set-marks-ink-108-v6-motion.html` (earlier rounds: bars, rings, dots, swarm, ink v1 to v5 are dropped; his words: dots too circular, motion too robotic, an inside drop makes no sense).
 The mark is a few tiny ink drops that move like liquid and draw each set as one brush circle:
 - Drops: five, radius 3.5 to 5 pt on the 390 pt stage, close together, drawn as liquid (they merge and part), crisp edges, no soft patches. Each has its own spring (natural frequency 11 to 16 rad/s, damping 0.34 to 0.54) and its own smooth noise, so nothing shares a timer or a path. Idle: they drift in noise about 13 pt around their homes. Colour: ink 20,24,31; a drop in motion is warmer (wet ink 216,67,42 drying to ink in about 1.1 s).
 - Each rep is a soft pull together (slow ease-in, about 58% of the rep) and a quicker release with overshoot. Rep time 0.30 s; the last two reps run longer (0.52 s and 0.74 s) and tremble (1.9 pt noise at about 22 Hz, each drop on its own phase).
@@ -17,7 +17,7 @@ The mark is a few tiny ink drops that move like liquid and draw each set as one 
 - Rest: the drops are reborn and drift again.
 - No numbers in the mark. Tap a circle: its exact line shows under the row in `inkSecondary`, 16 ("Set 3: 85 kg x 9"), and the circle rises 2 pt; tap again or elsewhere to clear.
 - Where it lives: live mode (replacing the wave; the drops are the live mark and the circles collect under them), the Training row (the circles replace the dashed strokes, 22 pt tall), the exercise History tab (one row of circles per session).
-- One haptic per logged set, at the moment the circle closes. Reduce Motion: no drops; the finished circle appears with a 150 ms crossfade. Low Power: three drops, no goo blur, 30 fps. (Motion lab writes the rows.)
+- One haptic per logged set, at the moment the circle closes. Reduce Motion: no drops; the finished circle appears with a 150 ms crossfade. Low Power: Motion lab's rows decide (their PeekTabs spec has Low Power = Reduce Motion plus a static blur).
 - VoiceOver: each circle reads "Set 2, 8 reps, 82.5 kilograms". A private workout shows circles without any values.
 - Switch: `training.marks` is dropped; the ink mark is the only mark. Never a wave.
 

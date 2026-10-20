@@ -30,5 +30,9 @@ Index of the docs in `docs/design/`.
 - [watch-set-logging-105.md](watch-set-logging-105.md): 105. Watch one-screen set logging (spec, not yet okayed by Kaushik)
 - [claude-gate-106.md](claude-gate-106.md): 106. The Claude gate: the key question, the Sent rows, the willSend line and the restore offer (release 22 gate)
 - [training-reorg-107.md](training-reorg-107.md): 107. Training reorganized: list-first page with a figure on every exercise row and the day's pair, plain routine names (three options, recommended: by the lift, Bench day), live and exercise-page figures, the body-first alternative, review switches and the Builder A brief (spec only, waiting on Kaushik's pick)
-- [set-marks-tabs-108.md](set-marks-tabs-108.md): 108. Set marks (Tally, Bars recommended, Blocks) replacing the wave, the long-press how-it-is-done sheet, the profile, and one app-wide tab pattern (centered current tab, crisp dimmed neighbours, no scrolling, swipe zones)
+- [set-marks-tabs-108.md](set-marks-tabs-108.md): 108. The set mark (picked: liquid ink drops that draw each set as a brush circle), the long-press sheet, the profile, and one app-wide tab pattern (current tab centred, blurred neighbours, no scrolling, swipe zones)
 - [exercise-pictures-about-109.md](exercise-pictures-about-109.md): 109. How the Workout Guide pictures are treated (ink colour, size, frame timing, siblings) and the About page at the foot of Settings
+- [review-addendum-110.md](review-addendum-110.md): 110. The new Review switches (tab neighbours, calories burned, energy check-in) placed on the Review pages
+- [backups-restore-111.md](backups-restore-111.md): 111. The Backups restore line (date first, replaces what is on the phone, refuses a newer backup)
+- [energy-112.md](energy-112.md): 112. The Energy check-in (1 to 5 on the rep drum, once a day, one quiet Day log line)
+- [class-inspector-113.md](class-inspector-113.md): 113. The read-only class inspector (fields, links, views, computed fields, one Edit key)
