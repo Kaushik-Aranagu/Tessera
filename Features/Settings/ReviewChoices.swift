@@ -151,10 +151,13 @@ final class ReviewChoices {
     /// Review's pages by facet, each named beside the counter ("Workout, 2 of 5"; Design sheet 100), six rows at most.
     nonisolated static let facets: [(word: String, ids: [String])] = [
         ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace"]),
-        ("Workout", ["restTimer", "swapExercise", "finishNudge", "quietInterrupts"]),
-        ("Kitchen", ["cookTimerVoice", "pantryState", "canCookShelf", "handsFreeCook"]),
-        ("Connected", ["planMyDay", "shutdown", "energyCheckIn", "calendar", "health", "linkFetch"]),
-        ("Shown", ["areasShown"]),
+        // Design 110: Calories burned and Energy check-in sit with the workout; Class inspector with Shown.
+        ("Workout", ["restTimer", "swapExercise", "finishNudge", "quietInterrupts", "caloriesBurned", "energyCheckIn"]),
+        // Kitchen v2 adds eight rows: what is in the house and the shop on Kitchen, the cook itself on Cooking.
+        ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
+        ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
+        ("Connected", ["planMyDay", "shutdown", "calendar", "health", "linkFetch"]),
+        ("Shown", ["areasShown", "classInspector"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
