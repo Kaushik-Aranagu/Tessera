@@ -27,4 +27,9 @@ enum Choice {
     static func restTimerIsOn(defaults: UserDefaults = .standard) -> Bool {
         value("restTimer", options: ["On", "Off"], default: "On", defaults: defaults) == "On"
     }
+
+    /// The calorie line on an exercise's sheet: Off by default.
+    static func caloriesBurnedIsOn(defaults: UserDefaults = .standard) -> Bool {
+        value("caloriesBurned", options: ["Off", "On"], default: "Off", defaults: defaults) == "On"
+    }
 }

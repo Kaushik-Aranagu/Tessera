@@ -306,6 +306,7 @@ private struct SlotEditorRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(HandleButtonStyle())
+            .exerciseSheet(exercise, isPrivate: isPrivate)
             .accessibilityLabel(
                 ["\(exercise?.name ?? "Exercise"), \(Int(sets)) sets of \(Int(low)) to \(Int(high))",
                  isPrivate ? "" : MuscleReading.spoken(muscles)].filter { !$0.isEmpty }.joined(separator: ", ")

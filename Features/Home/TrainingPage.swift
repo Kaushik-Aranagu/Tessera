@@ -722,6 +722,7 @@ private struct LaneRow: View {
             .padding(.leading, 44)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
+        .exerciseSheet(lane.exercise, isPrivate: isPrivate)
         .overlay(alignment: .bottomLeading) {
             if !isLast {
                 Rectangle().fill(Theme.Colors.ink.opacity(0.12)).frame(height: 1).padding(.leading, 44)
