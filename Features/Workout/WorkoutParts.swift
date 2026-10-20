@@ -39,7 +39,7 @@ struct ExerciseLane: View {
                         ViewThatFits(in: .horizontal) {
                             Text(name).textRole(.title).lineLimit(1).fixedSize()
                             Text(name).font(Self.title34).lineLimit(1).fixedSize()
-                            Text(name).font(Self.title34).lineLimit(2)
+                            Text(name).font(Self.title34).lineLimit(nil)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .foregroundStyle(Paint.cream)
