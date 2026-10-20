@@ -228,7 +228,7 @@ struct NowPage: View {
             }, label: { _ in
                 Text("Start with \(PlanWords.shownTitle(first, model: model))")
                     .textRole(.labelStrong)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .wrapsWithinPage()
             })
             .accessibilityLabel("Start with \(PlanWords.shownTitle(first, model: model))")
             .tesseraFeedback(.made, trigger: planKept)

@@ -57,10 +57,12 @@ struct BottomChrome: View {
         ZStack(alignment: .bottomTrailing) {
             if model.isCommandExpanded {
                 // The page recedes behind a veil of blurred ground (z); a tap on it closes Tess.
-                // Calmer: the page blurs a little and drops to 50% (calm-capture.md).
+                // Calmer: the page blurs a little and drops to 50% (calm-capture.md). While he writes, the flat paper
+                // rises to 94% so the page's words don't show through his own (Design on #1143's AX5 shot).
                 ZStack {
                     Rectangle().fill(.ultraThinMaterial).opacity(0.35)
-                    Theme.Colors.paper.opacity(0.5)
+                    Theme.Colors.paper.opacity(CommandVeil.paperOpacity(writing: layer == .write))
+                        .tesseraAnimation(.easeInOut(duration: 0.25), value: layer == .write)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
@@ -836,5 +838,15 @@ enum AskCopy {
     /// Whether the Ask keeps what he typed after this reply.
     static func keepsDraft(_ answer: String) -> Bool {
         answer == offlineRetry
+    }
+}
+
+/// The paper over the page while Tess is open: 50% for the modes and Speak, 94% under the Write field.
+enum CommandVeil {
+    static let recede = 0.5
+    static let writing = 0.94
+
+    static func paperOpacity(writing isWriting: Bool) -> Double {
+        isWriting ? writing : recede
     }
 }

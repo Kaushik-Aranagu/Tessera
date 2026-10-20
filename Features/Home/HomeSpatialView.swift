@@ -261,12 +261,23 @@ struct HomeSpatialView: View {
             .padding(.bottom, Self.dockClearance)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         if typeSize.isAccessibilitySize {
-            ScrollView(.vertical) { padded }
-                .scrollIndicators(.hidden)
-                .scrollDisabled(false)
-                .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y > 1 } action: { _, new in
-                    pageScrolled = new
-                }
+            // The content takes the page's width less its gutters, so a long line wraps instead of widening the
+            // page and clipping both edges (AX5 on #1143's shot).
+            ScrollView(.vertical) {
+                page
+                    .containerRelativeFrame(.horizontal, alignment: .leading) { length, _ in
+                        max(length - 2 * Theme.Spacing.gutter, 0)
+                    }
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                    .padding(.top, Theme.Spacing.s)
+                    .padding(.bottom, Self.dockClearance)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
+            .scrollIndicators(.hidden)
+            .scrollDisabled(false)
+            .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y > 1 } action: { _, new in
+                pageScrolled = new
+            }
         } else {
             padded
         }
