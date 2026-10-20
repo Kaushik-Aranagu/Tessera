@@ -147,10 +147,10 @@ final class AppModel {
         soul.mode
     }
 
-    /// "Tess has eyes" (Settings › Tess, off by default). Core's `tessEyes` field is on its way; until then only the
-    /// simulator's `-tessEyes` flag turns them on (LaunchFlags is simulator-only, so never on the phone).
+    /// "Tess has eyes": the review switch "Tess has eyes" (Off by default; its UserDefaults key is `review.tessFace`),
+    /// or the simulator's `-tessEyes` flag (LaunchFlags is simulator-only, so never on the phone).
     var tessHasEyes: Bool {
-        LaunchFlags.has("-tessEyes")
+        LaunchFlags.has("-tessEyes") || Choice.tessHasEyes()
     }
 
     /// Home (the launcher Tess paints in) vs Today.
@@ -202,10 +202,13 @@ final class AppModel {
             capture.claude = ClaudeTessModel(
                 keys: SystemKeychain(),
                 ledger: TessUsageLedger(store: store, classes: classes),
-                flags: ClaudeMissFlags()
+                flags: claudeFlags
             ) { [weak self] in
                 self?.asksClaude ?? false
             }
+            // Only when a request really leaves the phone: the Ask shows "Asking Claude." with Cancel (batch 3).
+            claudeFlags.willSend = { [weak self] in self?.isAskingClaude = true }
+            refreshKeyQuestion()
         }
         // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.
         let outcome: String? = switch TesseraSchema.lastOpenOutcome {
@@ -218,6 +221,16 @@ final class AppModel {
 
     /// One calm line in Tess's voice when launch didn't go normally (a failed migration). Shown in the Ask bar.
     var launchNote: String?
+    /// Claude's flags, kept so Cancel can reach the call in flight.
+    @ObservationIgnored let claudeFlags = ClaudeMissFlags()
+    /// A capture is on its way to Claude right now: the Ask says "Asking Claude." with Cancel until it answers, fails
+    /// or is cancelled (8 s at most, Core's one deadline).
+    private(set) var isAskingClaude = false
+    /// "Use the Claude key still on this phone?" is due: a key is here and he has never answered (G687).
+    private(set) var keyQuestionDue = false
+    /// He said Later, or Now already showed it this launch: Now stays quiet until the next cold launch.
+    var keyQuestionQuietOnNow = false
+
     /// The first launch's "Sunday, rest day." op, shown once in Tess's band with UNDO, then cleared.
     var restReceipt: OpRecord?
 
@@ -282,29 +295,11 @@ final class AppModel {
         commitCapture()
         let result = await runtime.tess.capture(phrase, context: TessContext(now: AppClock.now,
                                                                              entry: session?.currentEntry?.id))
+        isAskingClaude = false
         return land(result)
     }
 
     private var isDrainingWaiting = false
-
-    /// On the way to the foreground: the phrases that waited for Claude go through the walls again and are read, each
-    /// as its own ghost; a week-old one is deleted. Nothing happens with Claude off or no key, and a phrase that is
-    /// still offline stays.
-    func drainWaitingPhrases() async {
-        // Never while he has a ghost waiting: committing it would be a write he did not tap.
-        guard !isDrainingWaiting, pendingCapture == nil, !isWorkoutPresented,
-              let engine = runtime.tess as? TessCaptureEngine,
-              engine.waitingCount > 0 else { return }
-        isDrainingWaiting = true
-        defer { isDrainingWaiting = false }
-        let read = await engine.readWaiting(context: TessContext(now: AppClock.now, entry: session?.currentEntry?.id))
-        guard let last = read.last else { return }
-        // The first-send notice wins and is never dropped; else a lone phrase keeps its own line, and two or more
-        // read together get a count.
-        let line = read.first(where: \.isNotice)?.line ?? (read.count == 1 ? last.line : "Offline, \(read.count) read.")
-        // One landing for the lot, so every drained ghost stays pending together and is seen.
-        _ = land(TessCapture(records: read.flatMap(\.records), line: line, source: .claude))
-    }
 
     /// The open set-count ask ("2 × 10: 2 sets, or 2 kg?"), if the last phrase raised one.
     var pendingSetAsk: TessSetCountAsk? {
@@ -738,5 +733,61 @@ extension SettingsStore {
     func migrateAtLaunch(looks: UserDefaults, standard: UserDefaults, folderName: String?) {
         guard (try? migrate(looks: looks, standard: standard, folderName: folderName)) != nil else { return }
         standard.removeObject(forKey: Self.legacyMissesKey)
+    }
+}
+
+// MARK: - Claude in the Ask (same file, so it reaches the private state)
+
+extension AppModel {
+    /// On the way to the foreground: the phrases that waited for Claude go through the walls again and are read, each
+    /// as its own ghost; a week-old one is deleted. Nothing happens with Claude off or no key, and a phrase that is
+    /// still offline stays.
+    func drainWaitingPhrases() async {
+        // Never while he has a ghost waiting: committing it would be a write he did not tap.
+        guard !isDrainingWaiting, pendingCapture == nil, !isWorkoutPresented,
+              let engine = runtime.tess as? TessCaptureEngine,
+              engine.waitingCount > 0 else { return }
+        isDrainingWaiting = true
+        defer { isDrainingWaiting = false }
+        let read = await engine.readWaiting(context: TessContext(now: AppClock.now, entry: session?.currentEntry?.id))
+        isAskingClaude = false
+        guard let last = read.last else { return }
+        // The first-send notice wins and is never dropped; else a lone phrase keeps its own line, and two or more
+        // read together get a count.
+        let line = read.first(where: \.isNotice)?.line ?? (read.count == 1 ? last.line : "Offline, \(read.count) read.")
+        // One landing for the lot, so every drained ghost stays pending together and is seen.
+        _ = land(TessCapture(records: read.flatMap(\.records), line: line, source: .claude))
+    }
+
+    /// Cancel under "Asking Claude.": Core stops the call and the capture ends with "Cancelled.".
+    func cancelAskingClaude() {
+        claudeFlags.cancelAsking()
+    }
+}
+
+// MARK: - The found-key question (G687)
+
+extension AppModel {
+    /// Whether the question is due now. Key presence is a Bool only: the key's text is read by the Keychain call and
+    /// dropped here, never kept, logged or written. Never in a demo or on a throwaway store.
+    func refreshKeyQuestion(keys: any TessKeychain = SystemKeychain()) {
+        keyQuestionDue = !Self.isDemo && settingsAreReal
+            && SettingsStore(engine: engine).claudeQuestionDue(keyPresent: keys.read() != nil)
+    }
+
+    /// His answer: Yes or No writes one op and returns its receipt; Later (nil) writes nothing and quiets Now for
+    /// this launch.
+    @discardableResult
+    func answerKeyQuestion(_ answer: Bool?) -> String? {
+        guard let answer else {
+            keyQuestionQuietOnNow = true
+            return nil
+        }
+        guard (try? SettingsStore(engine: engine).answerClaudeQuestion(answer)) != nil else {
+            return ClaudeKeyQuestionCopy.notSaved
+        }
+        keyQuestionDue = false
+        touch()
+        return answer ? ClaudeKeyQuestionCopy.yesReceipt : ClaudeKeyQuestionCopy.noReceipt
     }
 }
