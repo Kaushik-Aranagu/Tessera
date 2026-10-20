@@ -36,3 +36,4 @@ Index of the docs in `docs/design/`.
 - [backups-restore-111.md](backups-restore-111.md): 111. The Backups restore line (date first, replaces what is on the phone, refuses a newer backup)
 - [energy-112.md](energy-112.md): 112. The Energy check-in (1 to 5 on the rep drum, once a day, one quiet Day log line)
 - [class-inspector-113.md](class-inspector-113.md): 113. The read-only class inspector (fields, links, views, computed fields, one Edit key)
+- [kitchen-v2-114.md](kitchen-v2-114.md): 114. Kitchen v2 looks: the week strip, the weekly word on Groceries, the listening mark, the note line, FIX and the step handle, VoiceOver for the second lane, CAN COOK and aisle re-order
