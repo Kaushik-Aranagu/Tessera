@@ -125,7 +125,7 @@ struct SetLossTests {
 
     @Test func theMissLineOffersAnExampleOnlyWhereItFits() async throws {
         let tess = TessCaptureEngine(engine: engine)
-        #expect(await tess.capture("what is a plate?", context: context).line == "Didn't catch that.")
+        #expect(await tess.capture("what is a plate?", context: context).line == "what is a plate?, kept to sort later.")
         let workout = try store.create(#require(classes[.workout]), title: "Push")
         let entry = try engine.perform(AddExercise(workout: workout.id, exercise: #require(classes[.benchPress]).id),
                                        by: .user).output
