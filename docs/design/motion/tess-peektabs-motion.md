@@ -22,10 +22,10 @@ Lab spec with Normal / Reduce Motion (RM) / Low Power (LP) columns. Docs only; B
 The bar and the middle position are fixed so the eye has one place to rest. The page's own content never scrolls inside a tab (sheet 108), so there is no vertical gesture to fight. On the tab row, a drag counts as a tab swipe only when it is more than 24 pt and more horizontal than vertical (PT: `DragGesture(minimumDistance: 24)` and the width/height check); on the page, the paging `ScrollView` decides, with no extra threshold of ours.
 
 ### Names that do not fit (QA note on #1142)
-- Each neighbour keeps a minimum gap from the word nearer the middle (lab default: 12 pt between the end of one word and the start of the next, measured on the measured text widths, not the slots).
+- Each neighbour keeps a minimum gap from the word nearer the middle (22 pt, the gap #1137 already ships between the end of one word and the start of the next, measured on the measured text widths, not the slots; the far-neighbour drop below is not built yet).
 - When the gap would be smaller, the far neighbour on that side is dropped first (it fades out over 150 ms, in every mode), then the near one only if it still collides with the current word. The current name is never truncated.
 - This is evaluated at rest and when the selection changes, not per frame while dragging; a word that appears or disappears during a drag does so by the 150 ms fade.
-- Build check: the longest Review name next to its longest neighbour (for example "Looks and day" beside "Workout") on the smallest iPhone width fits with the gap, or drops the far neighbour.
+- Build check: the longest Review name next to its longest neighbour (for example "Looks and day" beside "Workout") on the smallest iPhone width fits with the 22 pt gap, or drops the far neighbour.
 
 ## 2. The blur on the neighbours
 - Value: 1.6 pt, ink 38% (sheet 108, Kaushik's pick). It is static at rest and animates only as part of a drag or a settle (section 1): the radius is a function of p, not a separate timeline.
