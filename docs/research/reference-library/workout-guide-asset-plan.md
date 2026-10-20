@@ -99,7 +99,9 @@ Two of our seeds share one slug (bicep-curl); files are stored once per slug, ke
 71 distinct exercises (216 files at most).
 
 ## Credit and license notice (for the credits screen)
-Show one row, "Exercise pictures", with this text and links:
+Product ruling (decisions.md, 2026-10-19 5:30 PM): one plain About page at the foot of Settings, one line per
+source (Compendium, Everkinetic art with both names and CC BY-SA 4.0, reference library). No credits on exercise
+pages. The Exercise pictures line reads:
 
 - "Exercise pictures: Workout Guide by Bryl Lim (bryllim.com), CC BY-SA 4.0. Artwork by Everkinetic / Greg Priday,
   CC BY-SA 4.0. Changes: recolored and resized."
@@ -122,6 +124,9 @@ Show one row, "Exercise pictures", with this text and links:
 - Every adapted file stays under CC BY-SA 4.0 with the credit above. Do not relicense or strip the credit.
 
 ## Scope and limits
+- GATE: no second-person build ships without the CC BY-SA 4.0 license kept on the pictures and both credits in
+  place on the About page (Product ruling).
+- Art is stored on the phone as bundled files; no runtime fetch, and the pictures never go to Claude.
 - Share-alike applies when the app or its pictures are shared with someone. Kaushik's build is signed for his own
   phone only, so nothing is shared today. If a second person ever receives a build, the pictures (and any adapted
   versions) must stay CC BY-SA 4.0, the credit must show, and Product should re-check the app code question first.
