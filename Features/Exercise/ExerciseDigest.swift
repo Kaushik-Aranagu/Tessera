@@ -84,7 +84,9 @@ struct ExerciseDigest {
                 setCount: session.sets.count,
                 topSet: top.map { ExerciseWords.set(weight: $0.weight, reps: $0.reps) } ?? "",
                 isRecord: best.map { record in session.sets.contains { $0.id == record.id } } ?? false,
-                marks: Self.marks(of: session.sets, bestID: best?.id)
+                marks: Self.marks(of: session.sets, bestID: best?.id,
+                                  isPrivate: ObjectPrivacy.routineTitle(session.workout.title, in: store)
+                                      == ObjectPrivacy.routineLabel)
             )
         }
 
@@ -94,14 +96,14 @@ struct ExerciseDigest {
 
     /// A session's sets as marks. History has no plan to compare with, so a set is "on target" when it matches the
     /// session's usual rep count (the median).
-    static func marks(of sets: [TrainingLedger.LoggedSet], bestID: UUID?) -> [SetMarkSpec] {
+    static func marks(of sets: [TrainingLedger.LoggedSet], bestID: UUID?, isPrivate: Bool = false) -> [SetMarkSpec] {
         guard !sets.isEmpty else { return [] }
         let reps = sets.map { Int($0.reps.rounded()) }.sorted()
         let usual = reps[reps.count / 2]
         let heaviest = sets.map(\.weight).max() ?? 0
         return sets.enumerated().map { index, set in
             SetMarkSpec(id: set.id, number: index + 1, reps: Int(set.reps.rounded()), target: usual, weight: set.weight,
-                        heaviest: heaviest, isBest: set.id == bestID)
+                        heaviest: heaviest, isBest: set.id == bestID && !isPrivate, isPrivate: isPrivate)
         }
     }
 

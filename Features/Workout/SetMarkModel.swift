@@ -27,6 +27,10 @@ struct SetMarkSpec: Hashable, Identifiable {
     }
 
     var shape: Shape {
+        // A private workout draws one uniform closed ring for every set: no short or extra reps, no best.
+        if isPrivate {
+            return .closed
+        }
         if isBest {
             return .flare
         }
@@ -42,13 +46,17 @@ struct SetMarkSpec: Hashable, Identifiable {
 
     /// 5 to 10 pt on the 390 pt stage: the heavier the set against the heaviest, the thicker the stroke.
     var thickness: Double {
+        // And one fixed width: the load does not show either.
+        if isPrivate {
+            return 6
+        }
         guard heaviest > 0, weight > 0 else { return 5 }
         return 5 + 5 * min(max(weight / heaviest, 0), 1)
     }
 
     /// The exact line a tap shows, in the app's own weight unit: "Set 3: 85 kg x 9". Nothing for a private workout.
     func detailLine(format: (Double) -> String) -> String? {
-        isPrivate ? nil : "Set \(number): \(format(weight)) \u{00D7} \(reps)"
+        isPrivate ? nil : "Set \(number): \(format(weight)) x \(reps)"
     }
 
     /// What VoiceOver says: "Set 2, 8 reps, 82.5 kilograms". A private workout says only the set.
@@ -103,5 +111,58 @@ enum SetMarkClock {
     /// Whether the rep is one of the last two, which tremble.
     static func trembles(index: Int, reps: Int) -> Bool {
         reps > 0 && index >= max(reps - 2, 0)
+    }
+}
+
+/// The live mark's state machine, apart from the view so it can be tested: at most one set is playing; a set logged
+/// before the first one has closed settles that one at once (its slot fills and its haptic is owed) and then starts.
+struct SetMarkQueue {
+    struct Play: Equatable {
+        let spec: SetMarkSpec
+        let started: Date
+    }
+
+    private(set) var current: Play?
+    private(set) var settled: Set<UUID> = []
+
+    /// Marks already on the page (sets logged before the view appeared) as settled.
+    mutating func seed(_ ids: [UUID]) {
+        settled.formUnion(ids)
+    }
+
+    /// A new set is logged. Returns the spec of a play it had to settle first, if there was one.
+    @discardableResult
+    mutating func start(_ spec: SetMarkSpec, at now: Date) -> SetMarkSpec? {
+        let interrupted = current.map(\.spec)
+        if let interrupted {
+            settled.insert(interrupted.id)
+        }
+        current = Play(spec: spec, started: now)
+        return interrupted
+    }
+
+    /// The circle has closed and flown: its slot fills. False when it was already settled or is not the current play.
+    @discardableResult
+    mutating func finish(_ id: UUID) -> Bool {
+        guard current?.spec.id == id else { return false }
+        settled.insert(id)
+        current = nil
+        return true
+    }
+
+    /// A set appears at once (Reduce Motion, Low Power).
+    mutating func settleNow(_ id: UUID) {
+        settled.insert(id)
+    }
+
+    /// Sets that no longer exist (undone): forget them. Returns whether the current play was one of them.
+    @discardableResult
+    mutating func forget(keeping ids: [UUID]) -> Bool {
+        settled.formIntersection(ids)
+        if let current, !ids.contains(current.spec.id) {
+            self.current = nil
+            return true
+        }
+        return false
     }
 }

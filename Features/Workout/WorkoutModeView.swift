@@ -55,7 +55,7 @@ private struct WorkoutContent: View {
     /// Workout-level moments: a set seated, a new best, rest up on screen, the workout finished.
     @State private var moment = HapticCue()
     /// The set's haptic, held until its circle closes (played at once under Reduce Motion or Low Power).
-    @State private var deferredCue: Haptic?
+    @State private var deferredCues: [Haptic] = []
     @Environment(\.lowPowerMotion) private var lowPower
     /// The subline whose cadmium has dried.
     @State private var sublineDried: String?
@@ -204,11 +204,13 @@ private struct WorkoutContent: View {
             // the set's tap, or .success in its place for a new best.
             // With the ink drops the one haptic waits for the circle to close (LiveSetMarks tells us); without them
             // (Reduce Motion, Low Power) it plays now.
-            let cue: Haptic = seated.records.isEmpty ? .setLogged : .newBest
+            // A private workout never announces a best: the same plain tap for every set.
+            let isPrivate = session.shownTitle != session.workout.title
+            let cue: Haptic = seated.records.isEmpty || isPrivate ? .setLogged : .newBest
             if reduceMotion || lowPower {
                 moment.play(cue)
             } else {
-                deferredCue = cue
+                deferredCues.append(cue)
             }
             soul.handle(seated.records.isEmpty ? .setLogged : .newBest)
         }
@@ -245,9 +247,13 @@ private struct WorkoutContent: View {
                     }
                 }
             }, onClosed: { _ in
-                if let cue = deferredCue {
-                    moment.play(cue)
-                    deferredCue = nil
+                if !deferredCues.isEmpty {
+                    moment.play(deferredCues.removeFirst())
+                }
+            }, onCancelled: {
+                // The set was undone before its circle closed: its haptic goes with it.
+                if !deferredCues.isEmpty {
+                    deferredCues.removeLast()
                 }
             })
             .padding(.horizontal, Theme.Spacing.gutter)

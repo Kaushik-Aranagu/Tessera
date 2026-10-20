@@ -28,20 +28,23 @@ struct LiveSetMarks: View {
     var onEdit: (UUID) -> Void = { _ in }
     /// The circle just closed: the moment for the one haptic.
     var onClosed: (SetMarkSpec) -> Void = { _ in }
+    /// A set that was playing was undone before its circle closed: its pending haptic should be dropped.
+    var onCancelled: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.lowPowerMotion) private var lowPower
     @Namespace private var flight
     @State private var swarm = InkDropSwarm()
-    @State private var play: Play?
-    @State private var settled: Set<UUID> = []
+    @State private var queue = SetMarkQueue()
     @State private var seeded = false
     @State private var detail: UUID?
 
-    /// One set's animation, from the moment it was logged.
-    private struct Play: Equatable {
-        let spec: SetMarkSpec
-        let started: Date
+    private var play: SetMarkQueue.Play? {
+        queue.current
+    }
+
+    private var settled: Set<UUID> {
+        queue.settled
     }
 
     private var calm: Bool {
@@ -58,7 +61,8 @@ struct LiveSetMarks: View {
         let target = entry.map(session.targetSets(of:)) ?? 0
         let specs = specs(rows: rows, entry: entry)
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-            // The circles collect on the left; the drops live at the right of the same line (the page keeps its height).
+            // The circles collect on the left; the drops live at the right of the same line (the page keeps its
+            // height).
             HStack(alignment: .center, spacing: Theme.Spacing.s) {
                 circles(specs: specs, target: target)
                 Spacer(minLength: Theme.Spacing.s)
@@ -71,24 +75,28 @@ struct LiveSetMarks: View {
         .onAppear {
             guard !seeded else { return }
             seeded = true
-            settled = Set(rows.map(\.id))
+            queue.seed(rows.map(\.id))
+        }
+        .onDisappear {
+            // Leaving the page (or the exercise) while a circle is still drawing: it lands now, with its haptic.
+            if let running = queue.current?.spec {
+                queue.finish(running.id)
+                onClosed(running)
+            }
         }
         .onChange(of: rows.map(\.id)) { old, new in
-            guard let added = new.last, new.count > old.count, !settled.contains(added),
-                  let spec = specs.first(where: { $0.id == added })
-            else {
-                // An undone set leaves: forget it.
-                settled = settled.intersection(Set(new))
-                if let play, !new.contains(play.spec.id) {
-                    self.play = nil
-                }
-                return
+            if queue.forget(keeping: new) {
+                onCancelled()
             }
+            guard let added = new.last, new.count > old.count, !queue.settled.contains(added),
+                  let spec = specs.first(where: { $0.id == added })
+            else { return }
             if calm {
-                withTesseraAnimation(.easeInOut(duration: 0.15), reduceMotion: false) { _ = settled.insert(added) }
+                withTesseraAnimation(.easeInOut(duration: 0.15), reduceMotion: false) { queue.settleNow(added) }
                 onClosed(spec)
-            } else {
-                play = Play(spec: spec, started: .now)
+            } else if let interrupted = queue.start(spec, at: .now) {
+                // A second set before the first circle closed: the first lands (and fires its haptic) now.
+                onClosed(interrupted)
             }
         }
         .task(id: play?.spec.id) {
@@ -96,10 +104,10 @@ struct LiveSetMarks: View {
             let spec = play.spec
             try? await Task.sleep(for: .seconds(SetMarkClock.closes(reps: spec.reps)))
             guard !Task.isCancelled else { return }
-            onClosed(spec)
             withTesseraAnimation(.spring(response: 0.5, dampingFraction: 0.82), reduceMotion: false) {
-                settled.insert(spec.id)
-                self.play = nil
+                if queue.finish(spec.id) {
+                    onClosed(spec)
+                }
             }
         }
     }
@@ -122,7 +130,7 @@ struct LiveSetMarks: View {
             if !calm {
                 TimelineView(.animation) { context in
                     let motion = motion(at: context.date)
-                    InkDropView(swarm: swarm, pull: motion.pull, tremble: motion.tremble, warmth: motion.warmth)
+                    InkDropView(swarm: swarm, rep: motion.rep, warmth: motion.warmth)
                 }
                 if let play {
                     TimelineView(.animation) { context in
@@ -142,15 +150,12 @@ struct LiveSetMarks: View {
         .accessibilityHidden(true)
     }
 
-    /// How hard the drops are pulled in, whether they tremble and how warm (wet) they are, at `date`.
-    private func motion(at date: Date) -> (pull: Double, tremble: Bool, warmth: Double) {
-        guard let play else { return (0, false, 0) }
+    /// The rep under way and how warm (wet) the drops are, at `date`.
+    private func motion(at date: Date) -> (rep: SwarmRep?, warmth: Double) {
+        guard let play else { return (nil, 0) }
         let elapsed = date.timeIntervalSince(play.started)
-        guard let rep = SetMarkClock.rep(at: elapsed, reps: play.spec.reps) else { return (0, false, 0.4) }
-        // A slow ease-in to the pull for the first 58% of the rep, then the quicker release.
-        let phase = rep.phase
-        let pull = phase < 0.58 ? pow(phase / 0.58, 2) : max(0, 1 - (phase - 0.58) / 0.12)
-        return (pull, SetMarkClock.trembles(index: rep.index, reps: play.spec.reps), 1)
+        guard let rep = SetMarkClock.rep(at: elapsed, reps: play.spec.reps) else { return (nil, 0.4) }
+        return (SwarmRep(index: rep.index, phase: rep.phase, reps: play.spec.reps), 1)
     }
 
     /// One circle per planned set: a brush circle for a logged one (flown in), a faint ring for one to come.

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 @testable import Tessera
 import Testing
 
@@ -31,7 +32,7 @@ struct SetMarkModelTests {
 
     @Test func aTapShowsTheExactLineInTheAppsUnitAndPrivateShowsNone() {
         let line = spec(reps: 9, weight: 85).detailLine { "\(Int($0)) kg" }
-        #expect(line == "Set 3: 85 kg \u{00D7} 9")
+        #expect(line == "Set 3: 85 kg x 9")
         #expect(spec(reps: 9, weight: 85, isPrivate: true).detailLine { "\(Int($0)) kg" } == nil)
     }
 
@@ -60,5 +61,56 @@ struct SetMarkModelTests {
         #expect(SetMarkClock.rep(at: 99, reps: 8) == nil)
         #expect(!SetMarkClock.trembles(index: 5, reps: 8))
         #expect(SetMarkClock.trembles(index: 6, reps: 8) && SetMarkClock.trembles(index: 7, reps: 8))
+    }
+
+    @MainActor private func pixels(_ spec: SetMarkSpec) -> Data? {
+        let renderer = ImageRenderer(content: SetMarkCircle(spec: spec, side: 60).environment(\.colorScheme, .light))
+        renderer.scale = 2
+        return renderer.uiImage?.pngData()
+    }
+
+    @MainActor @Test func aPrivateSetIsOneIdenticalRingWhateverItsReps() {
+        let six = pixels(spec(reps: 6, weight: 40, isPrivate: true))
+        #expect(six != nil)
+        for other in [spec(reps: 8, weight: 100, isPrivate: true), spec(reps: 12, weight: 60, isPrivate: true),
+                      spec(reps: 8, best: true, isPrivate: true)]
+        {
+            #expect(pixels(other) == six, "a private ring shows nothing of the set")
+        }
+        #expect(pixels(spec(reps: 6, weight: 40)) != six, "an ordinary set still differs")
+    }
+
+    @Test func aPrivateSetShapeIsAlwaysClosedAtFixedWidth() {
+        #expect(spec(reps: 3, best: true, isPrivate: true).shape == .closed)
+        #expect(spec(reps: 3, weight: 10, heaviest: 100, isPrivate: true).thickness == 6)
+    }
+
+    @Test func aSecondSetSettlesTheFirstPlayThatWasRunning() {
+        var queue = SetMarkQueue()
+        let first = spec(reps: 8), second = spec(reps: 8)
+        let none = queue.start(first, at: .now)
+        #expect(none == nil)
+        let interrupted = queue.start(second, at: .now)
+        #expect(interrupted == first, "the running play lands first")
+        #expect(queue.settled.contains(first.id) && queue.current?.spec.id == second.id)
+        let again = queue.finish(first.id)
+        #expect(!again, "the interrupted play cannot finish again")
+        let done = queue.finish(second.id)
+        #expect(done && queue.current == nil && queue.settled.contains(second.id))
+    }
+
+    @Test func anUndoneSetIsForgottenAndCancelsItsPlay() {
+        var queue = SetMarkQueue()
+        let one = spec(reps: 8)
+        queue.start(one, at: .now)
+        let cancelled = queue.forget(keeping: [])
+        #expect(cancelled)
+        #expect(queue.current == nil && queue.settled.isEmpty)
+    }
+
+    @Test func theFlareSeedIsTheSameEveryTime() {
+        let id = UUID()
+        #expect(BrushCircleArt.stableSeed(id) == BrushCircleArt.stableSeed(id))
+        #expect(BrushCircleArt.stableSeed(id) != BrushCircleArt.stableSeed(UUID()))
     }
 }
