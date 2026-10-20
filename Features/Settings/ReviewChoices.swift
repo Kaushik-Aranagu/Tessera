@@ -121,7 +121,7 @@ final class ReviewChoices {
     /// The rows in pages of at most six, for the side swipe (Design sheet 100).
     /// Review's pages by facet, each named beside the counter ("Workout, 2 of 5"; Design sheet 100), six rows at most.
     nonisolated static let facets: [(word: String, ids: [String])] = [
-        ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace"]),
+        ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace", "lockScreenLook"]),
         ("Workout", ["restTimer", "swapExercise", "finishNudge", "quietInterrupts"]),
         ("Kitchen", ["cookTimerVoice", "pantryState", "canCookShelf", "handsFreeCook"]),
         ("Connected", ["planMyDay", "shutdown", "energyCheckIn", "calendar", "health", "linkFetch"]),
