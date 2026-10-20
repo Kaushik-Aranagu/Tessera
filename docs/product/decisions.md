@@ -1131,3 +1131,66 @@ Two more: money phrases never go into the capture-miss log, and an empty Add a T
 - 4:08 PM PT Oct 19 (Kaushik, project chat). Training naming and layout REOPENED: he does not like Push A / Push B / Pull A / Pull B, finds the Training screens disorganized for an actual workout, and wants a muscle figure on every exercise. The routine names and copy ("Push A, no fixed days.", "Push A, all sets in.") and the Training screen layout are open until he picks from Design's options; the plan structure rulings stand (see product/training-reorg-brief-oct19.md).
 
 - 4:25 PM PT Oct 19 (Product, Kaushik in Design's thread: replace the wave set marks, long press an exercise for a clip and details, a profile, calories adjusted to it). (1) Set marks: one mark per set; its height shows the reps, its tone the load, no exact numbers on the mark; tapping a mark shows reps and weight. Design draws it and replaces the wave. (2) Long press on an exercise opens a detail view: how it is done (a short clip when a clip with an open licence exists, otherwise the still muscle figure), the equipment, muscles, and "about N kcal" when Calories burned is on. (3) A Me profile object holds what he chooses; default fields: weight, height, birth year, sex (optional, only used for calorie math). Weight comes from his own entries (his body weight log, latest entry) first; the Health mirror (store-only, switch Health) may fill it only when he turns Health on, and his own entry wins on the same day. Typed profile values follow exactly the backup and export behavior his body weight log has today (no new exposure; Core confirms and matches); Health-derived values are never in backups, the op log or the shared export. (4) Calories: MET x weight x time, shown as "about N kcal" rounded to 10, per exercise in the long-press detail and per workout, never as a daily budget, never compared or shamed; Review switch Calories burned, default Off. MET values come from a public compendium Research confirms the licence of. (5) Body values stay on the phone: never in Claude payloads, Sent rows, logs or widgets; body questions answer "That stays on this phone." Nothing here loosens a wall. (6) Clips: reopens the "never images" call for the Reference library for clips and stills only when an open licence is confirmed in the inventory; stored on the phone, no runtime fetch, no hotlinking, never sent to Claude. Research sources the clips and the MET table (batch 11).
+
+- 2:19 PM PT Oct 19 (Ops, correction found by QA on #1152): the 2:21 PM Apple Watch / paid-account block above records Kaushik's project chat message of 2:19 PM PT (21:19Z), not 2:21 PM. The 2:17 PM Watch ruling is unchanged. The older line stays as written.
+
+- 5:52 PM PT Oct 19 (Product): the set-mark wording in the 4:25 PM entry above (height = reps, tone = load) is REPLACED by Kaushik's ink-drop pick; see the 5:52 PM block below.
+
+## 4:27 PM Oct 19: exercise media (Research verdicts, PR #1129)
+
+No third-party clips or stills: free-exercise-db stills and the two GIF repos have unclear provenance, so they are skipped (its data text stays in as the bundle). "No images" is NOT reopened. We draw our own short animations and 9 equipment drawings (catalog: 72 exercises, 9 equipment kinds, 18 muscles). The long-press detail uses the muscle figure plus our drawings. MET table licence is unverified; Core reads the compendium terms from the Mac. Fallback if unverified: use standard values 3.5 (light) and 6.0 (hard) for strength training, rounded to 10 kcal.
+
+Kaushik's pick, 4:28 PM Oct 19 (card "Use our own drawn exercise animations instead of internet clips?"): Own drawings. The 4:27 PM media ruling above now stands as his decision.
+
+## 4:30 PM Oct 19: MET source settled
+
+Compendium of Physical Activities is free for commercial use if MET values stay unchanged, activities with different MET levels are not combined, and it is cited. This replaces the two-tier 3.5 / 6.0 fallback above: use the unchanged Compendium value mapped per exercise, cited in the library notes and an About line. Research drafts the 72-exercise mapping (seed code per exercise, values copied unchanged); Core reviews it before it ships. No email to the Compendium for now. Calories burned stays Off by default.
+
+## 4:33 PM Oct 19: Compendium mapping calls (PR #1132)
+
+Accept Research's mapping of all 72 seeds (one code and one unchanged MET value each). Calls: dip stays 02022; ab wheel and hanging leg raise stay 02056; "heavy" is read from the seed's rep range. Every row stays marked VERIFY ON MAC until Core confirms codes, edition and citation wording against the Compendium. Calories burned stays Off by default, so nothing shows until then.
+
+## 5:30 PM Oct 19: Exercise motion = Workout Guide art (his pick, option B)
+
+Kaushik picked Workout Guide (option B) for exercise motion; recoloring to our look and trimming size are fine. It replaces the drawn animations for the bench press at least; Design keeps drawing only for exercises the manifest lacks. Licence CC BY-SA 4.0 (Everkinetic art by Greg Priday, adapted by Bryl Lim): fine for his phone only. Any build for another person needs the same licence on the art plus both credits, so that is a gate before any second-person build. Credits: a plain "About" page at the foot of Settings, one line per source (Compendium, this art with both names and the licence, reference library sources); no credits on exercise pages. Mapping of our 72 exercises to its manifest (62 exact, 10 siblings): Research drafts it as an ASCII doc PR, Core reviews; the 10 siblings are marked so Design can draw or accept the sibling. Art stored on the phone, no runtime fetch, never sent to Claude.
+
+## 5:29 to 5:37 PM Oct 19: exercise picture sources (Kaushik, Research and Builder A threads)
+
+1. 5:29 PM: Workout Guide (CC BY-SA 4.0) for exercise pictures. He said: "Can we do something like option B, and especially if it's free, we should do it." The 5:30 PM credits and gate rulings above cover it.
+2. 5:33 PM: the Gym visual GIF set from GitHub becomes the first picture source. He said: "Pick those GIFs, it's fine. I will take care of the licensing thing." At 5:37 PM: "this is what I'm looking for. ... see if you can isolate only the exercise and the background," so cutouts are allowed. This reverses the earlier rule that the GIF repos are not usable. Rules: files live in a git-ignored folder on the Mac and are bundled at build, never committed; the 180px source is never stretched until Research finds a smoother set; the credit "(c) Gym visual - https://gymvisual.com/" goes on the About page; pictures never go to Claude and are never fetched at runtime. About-only credit is enough while the app is on his phone only; the set's terms ask for the credit on each use, so before any second-person build the credit also appears on each exercise page and he says the licence is sorted.
+3. 5:35 PM, standing: free downloads may be pulled whatever their licence, and he is told after ("download them and just let me know I'll take care of the license"). Paid sets still need his yes. This is for pictures and reference data only; it does not loosen any privacy or key rule.
+
+## 5:43 PM Oct 19: GIF set plan (#1141) rulings
+
+Added quote, Research thread 5:37 PM: "I think earlier you were restricting yourself because of the licensing thing, but I'm telling you, it's fine."
+1. In-app credit: the About page shows the exact NOTICE line, with the copyright sign and em dash, as an in-app string. Docs keep the ASCII form.
+2. Size: the Gym visual limit of 180 by 180 is read as 180 points on screen at most (never drawn larger), scaled smoothly, not as 180 pixels at 1x. On his phone this is a soft upscale and is accepted until the smoother set lands. Nothing shows larger than 180 points.
+3. Smoother set: Research tunes size (about 2 MB each is too heavy for 72 exercises; target under 500 KB each, frames reduced, kept on the phone). His verdict on the sample decides the final set.
+
+## 5:47 PM Oct 19: "Didn't catch that" and the growing ask box
+
+Kaushik, Builder B thread 5:31 PM: the ask text pane should grow upward with the text (to a maximum height, then scroll inside) so nothing goes behind something, and "Didn't catch that" should be fixed.
+1. Ask box: grows up with the text to a fixed maximum, then scrolls inside itself; never hides behind the keyboard, tab bar or Now line. Builder B builds it; no switch.
+2. Unread phrase with Claude unavailable (off, offline, no key, over cap): Tess keeps it as an unsorted capture to sort later. Receipt names the thing first: "<phrase>, kept to sort later." No "Didn't catch that" dead end. Order unchanged: SecretWords refusal first; key-shaped text is never kept or echoed; a walled phrase is kept on the phone only, its receipt reads "Kept to sort later." without echoing it, and it is private like any private title; over 600 characters is still refused. Unsorted captures appear in the existing inbox/Now flow, no new screen.
+
+## 5:52 PM Oct 19: set mark picked (sheet 108)
+
+Kaushik picked the set mark: liquid ink drops that draw each set as a brush circle. Closed = on target, open = short, overlap = extra rep, flare = best, thicker = heavier. No numbers in the mark; tap shows the exact line (sets, reps, load); one haptic per set. This replaces the earlier "height = reps, tone = load" wording. The training.marks switch is dropped, so it ships directly. Sheet 109 (About page and picture rules) is written; Builder A builds from sheets 108 and 109 once the picture set is chosen.
+
+## 6:00 PM Oct 19: Kitchen v2 open calls
+
+Running low: wording "Oat milk, not now." stands for the dismiss receipt (name first). Aisle order: one learned order for all shops (no shop object); an item moves only when it was checked off in the same relative place in 2 of his last 3 shops; behind switch "Learned aisle order", Off. Seven new switches join ReviewChoices, all default Off or today's behavior: weekStrip, repeatItems, cookDouble, parallelSteps, cookNotes, fixRecipe, usuallyLine, aisleOrder. Builder B adds them with the Review page; Design owes the week strip, repeats word, listening mark, note line, FIX word looks.
+
+## 6:10 PM Oct 19: kept-phrase follow-up rulings (#1145, #993)
+
+1. Claude on but the call fails: the older BottomChrome ruling wins for offline and cut-off or refused replies; his words stay in Ask for the retry, and the line reads "Couldn't reach Claude. Try again." instead of "Didn't catch that." Over the cap or paused: the phrase is kept as an unsorted capture, receipt "<phrase>, kept to sort later." (walled phrase: "Kept to sort later."). So the 5:47 PM list splits: no model available or capped = kept; model on and failed = stays in Ask. Walled offline stays "Couldn't read that offline. Try again online."
+2. Kept phrases must be marked: they show in the inbox with a quiet "To sort" label (not plain notes). Follow-up for Core, rides after #1145; default installs (Claude off) show them the same way.
+3. #993: the recipe link line shows the host first ("Reading the recipe from <host>.") and changes to "Asking Claude to read the recipe." only when Claude is actually asked. Follow-up for Builder B.
+
+## 6:15 PM Oct 19: B10 ownership
+
+Engine to Core, screens to Builder B (Builder B's ios/kitchen-v2 holds the screens): pantry state, what can I cook, running low, aisle order, week of dinners, recurring groceries, leftovers, recipe edit, link reader v2. Parallel steps, hands-free cook and cook notes: Core engine, Builder A screens. Full list: product/huddle-gap-oct19.md.
+
+## 6:20 PM Oct 19: Claude and the Money/Reading actions (#1148, QA note 7)
+
+Money actions are NOT offered to the model: LogSpend, LogShopTotal, SkipShopTotal set isOfferedToModel false. The grammar on the phone handles money phrases; a money phrase it cannot read still follows the capture-miss route (#860) but Claude cannot act on it, so it is kept to sort later. No money values (amounts, month line, totals) appear in any tool result Claude sees. Reading actions (QueueBook, StartReading, SetBookPage, FinishBook, SetBookAside) stay offered; a private book title is masked like any private title. Stricter than the default, so no sign-off from Kaushik is needed. Offering money actions to Claude later would widen what Claude can act on and needs his yes.
