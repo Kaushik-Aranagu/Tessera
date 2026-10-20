@@ -17,6 +17,11 @@ struct SoulLight: Equatable {
 struct SoulWorkTimes: Equatable {
     var split: Date
     var gather: Date?
+
+    /// Seeds the dock lights' drift, so no two working states move alike (idea 1).
+    var seed: UInt64 {
+        UInt64(abs(split.timeIntervalSinceReferenceDate) * 1000)
+    }
 }
 
 /// Working: fade, split, process, gather (docs/design/motion/tess-motion.md §5, the lab's `tess-motion.html`).
@@ -62,6 +67,9 @@ enum SoulWork {
         }
         return result
     }()
+
+    /// The three lights that read, by index: the cobalt main and a vermilion and a cadmium child.
+    static let readerNumber: [Int: Int] = [1: 0, 6: 1, 10: 2]
 
     private static let splitCurve = UnitCurve.bezier(startControlPoint: UnitPoint(x: 0.4, y: 0),
                                                      endControlPoint: UnitPoint(x: 0.2, y: 1))
@@ -116,7 +124,7 @@ enum SoulWork {
     /// The twelve lights for one frame, in dab space. `scale` is the soul's on-screen scale per dab-space point
     /// (the look's scale times whatever the host scales her by). Low Power keeps the children home: six lights.
     static func lights(_ frame: SoulFrame, scale: CGFloat, sinceSplit: Double, sinceGather: Double?,
-                       lowPower: Bool = false) -> [SoulLight]
+                       lowPower: Bool = false, readers: [CGRect] = [], seed: UInt64? = nil) -> [SoulLight]
     {
         let time = sinceSplit + phase
         return parent.indices.map { index in
@@ -129,6 +137,18 @@ enum SoulWork {
             let amount = lowPower && index >= 6 ? 0 : weight(index, sinceSplit: sinceSplit, sinceGather: sinceGather)
             guard amount > 0 else { return formed }
             var out = constellation(index, time: time)
+            // The three that read go to the words the ask touches (idea 1); Low Power has no readers.
+            if !lowPower, let reader = readerNumber[index],
+               let point = SoulReaders.position(words: readers, reader: reader, time: max(sinceSplit - 0.9, 0))
+            {
+                out.x = point.x
+                out.y = point.y
+            }
+            if let seed {
+                let drift = SoulNoise.offset(light: index, time: lowPower ? 0 : sinceSplit, seed: seed)
+                out.x += drift.x
+                out.y += drift.y
+            }
             out.x /= scale
             out.y /= scale
             out.radiusX /= scale

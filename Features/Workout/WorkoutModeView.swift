@@ -43,6 +43,14 @@ struct WorkoutModeView: View {
 
 private typealias Paint = WorkoutPaint
 
+/// Rest is running and has 10 s or less left.
+private func isRestEnding(_ phase: WorkoutSession.Phase, _ now: Date) -> Bool {
+    if case let .rest(end) = phase {
+        return end.timeIntervalSince(now) <= 10
+    }
+    return false
+}
+
 private struct WorkoutContent: View {
     @Bindable var session: WorkoutSession
     @Environment(AppModel.self) private var model
@@ -109,6 +117,8 @@ private struct WorkoutContent: View {
                             // LOG … AND FINISH keeps a 10 s UNDO that takes back the set and the finish together.
                             canUndo: session.canTakeBackFinish(at: now),
                             eyes: model.tessHasEyes, wear: soul.wear(at:),
+                            gaze: soul.isWatchingRest ? soul.gaze : .ahead, mouth: model.tessHasMouth,
+                            overlays: soul.overlays,
                             // The line (and its UNDO) stays for the whole 10 s window.
                             holdsLine: session.canTakeBackFinish(at: now),
                             onUndo: {
@@ -132,6 +142,10 @@ private struct WorkoutContent: View {
                 } else {
                     live(phase: phase, now: now)
                 }
+            }
+            // His own timer's last 10 s: her eyes go to it and nothing else of hers moves (idea 10).
+            .onChange(of: isRestEnding(phase, now)) { _, ending in
+                soul.handle(ending ? .restEnding(at: .zero) : .restEnded)
             }
             .onChange(of: phase == .set) { wasSet, isSet in
                 // Rest ran out on its own (not skipped or undone): the next set rises already prefilled and one
@@ -259,6 +273,8 @@ private struct WorkoutContent: View {
                            mode: soul.mode,
                            canUndo: session.canUndoLast && !session.isEditing,
                            eyes: model.tessHasEyes, wear: soul.wear(at:),
+                           gaze: soul.isWatchingRest ? soul.gaze : .ahead, mouth: model.tessHasMouth,
+                           overlays: soul.overlays,
                            holdsLine: askReply == nil && phase == .workoutDone,
                            onUndo: {
                                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }

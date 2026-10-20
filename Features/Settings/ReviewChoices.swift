@@ -64,7 +64,7 @@ final class ReviewChoices {
         Choice(id: "tessFace", name: "Tess has eyes", values: ["Off", "Eyes", "Eyes and mouth"], defaultValue: "Off",
                says: ["Off": "Tess is a plain mark, as now.", "Eyes": "Tess has eyes.",
                       "Eyes and mouth": "Tess has eyes and a small mouth."],
-               readiness: .arrivesWith("Tess's mouth")),
+               readiness: .live),
         Choice(id: "planMyDay", name: "Plan my day, Claude wording", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The morning plan in Tess's own words, as now.",
                       "On": "The same plan, worded by Claude."],

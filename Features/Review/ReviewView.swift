@@ -231,6 +231,7 @@ private struct ReviewPageBody: View {
             .padding(.top, Theme.Spacing.l)
             .padding(.bottom, Theme.Spacing.section)
         }
+        .soulReachesEnd("review")
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
     }

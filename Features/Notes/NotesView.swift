@@ -109,6 +109,7 @@ private struct NotesIndex: View {
             .padding(.top, Theme.Spacing.l)
             .padding(.bottom, Theme.Spacing.section)
         }
+        .soulReachesEnd("notes")
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.interactively)
         .background { ThemedBackground() }

@@ -232,7 +232,11 @@ struct BottomChrome: View {
     private var soulKey: some View {
         TessSoul(mode: model.tessMode, hostScale: 0.72, eyes: model.tessHasEyes, gaze: model.soul.gaze,
                  wake: model.soul.wake, stroke: model.soul.stroke, strokeBlink: model.soul.strokeBlink,
-                 beat: model.soul.beat, wear: model.soul.wear(at:)) { model.soul.placeDock($0) }
+                 beat: model.soul.beat, wear: model.soul.wear(at:),
+                 mouth: model.tessHasEyes && model.tessHasMouth, overlays: model.soul.overlays,
+                 tilt: { [soul = model.soul] in soul.refusesTilt ? .zero : SoulTilt.shared.vector },
+                 onDock: { model.soul.placeDock($0) })
+            .soulTiltDriver()
             .scaleEffect(0.72)
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
@@ -513,7 +517,11 @@ extension BottomChrome {
                         close()
                         return .handled
                     }
-                    .onChange(of: model.commandDraft) { _, draft in
+                    .onChange(of: model.commandDraft) { old, draft in
+                        // She hears him type: one pulse per finished word (idea 8).
+                        if SoulRouter.endsWord(from: old, to: draft) {
+                            model.soul.handle(.wordTyped)
+                        }
                         // A Claude key never stays in Ask: not on screen, not as a ghost, not as a task. Cleared the
                         // moment it lands, before any interpreter can see it.
                         if Self.looksLikeClaudeKey(draft) {

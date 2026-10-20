@@ -70,6 +70,9 @@ struct SoulFrame: Equatable {
     /// `scaleX` is the halo's scale.
     var halo = SoulPose(scaleX: 0.9, scaleY: 0.9, opacity: 0.8)
     var look = SoulLook()
+    /// A moment's whole-body move (a lean, a peek's rise), in the canvas's points after the look's scale. Not mixed:
+    /// it belongs to the overlay that sets it, never to a mode.
+    var shift = CGPoint.zero
 
     static func mix(_ start: Self, _ end: Self, _ amount: CGFloat) -> Self {
         SoulFrame(

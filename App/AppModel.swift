@@ -150,7 +150,12 @@ final class AppModel {
     /// "Tess has eyes": the review switch "Tess has eyes" (Off by default; its UserDefaults key is `review.tessFace`),
     /// or the simulator's `-tessEyes` flag (LaunchFlags is simulator-only, so never on the phone).
     var tessHasEyes: Bool {
-        LaunchFlags.has("-tessEyes") || Choice.tessHasEyes()
+        LaunchFlags.has("-tessEyes") || LaunchFlags.has("-tessMouth") || Choice.tessHasEyes()
+    }
+
+    /// The small mouth: the "Eyes and mouth" value (or the simulator's `-tessMouth` flag).
+    var tessHasMouth: Bool {
+        LaunchFlags.has("-tessMouth") || Choice.tessHasMouth()
     }
 
     /// Home (the launcher Tess paints in) vs Today.

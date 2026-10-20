@@ -50,6 +50,12 @@ struct TessSoul: View {
     /// Her beat (§6, `SoulRouter.beat`) and the colour she wears for his day (idea 4, `SoulRouter.wear(at:)`).
     var beat: Date?
     var wear: (Date) -> CGFloat = { _ in 0 }
+    /// The small mouth (18c): drawn only with the eyes, only when "Eyes and mouth" is chosen.
+    var mouth = false
+    /// What the router adds to her mode: the mouth's shape, a nudge, a peek, a pulse, sleep, the words she reads.
+    var overlays = SoulOverlays()
+    /// The phone's tilt (idea 11), read each frame, zero when she's carried, working, listening or live.
+    var tilt: (() -> CGSize)?
     /// Told her centre on screen (global) when she's drawn at the dock, so a band pan can find her.
     var onDock: ((CGPoint) -> Void)?
 
@@ -65,6 +71,8 @@ struct TessSoul: View {
     @State private var lowPower = false
     /// The eyes fade out in 120 ms as Done begins and back in 200 ms after it ends, so Done plays as built.
     @State private var eyesShown = true
+    /// Her centre on screen (global), to put the words she reads relative to her.
+    @State private var centre = CGPoint.zero
 
     var body: some View {
         let slow = SoulParameters.table(mode).isSlow || (work != nil && workIsLong)
@@ -100,12 +108,13 @@ struct TessSoul: View {
             let frame = proxy.frame(in: .global)
             return CGPoint(x: frame.midX, y: frame.midY)
         } action: { centre in
+            self.centre = centre
             onDock?(centre)
         }
         .onChange(of: mode, initial: true) { old, new in
             let now = Date.now
             layers = SoulBlend.push(new, onto: layers, at: now)
-            lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
+            lowPower = PowerState.isLowPower
             // Gone for Done and while she works (§1: the eyes are gone while she is split); back 200 ms after.
             if new == .done || new == .working || new == .gathering {
                 withTesseraAnimation(.linear(duration: 0.12), reduceMotion: reduceMotion) { eyesShown = false }
@@ -155,7 +164,9 @@ struct TessSoul: View {
         }
         let graded = SoulWork.grade(base, fade: SoulWork.fade(sinceSplit: sinceSplit, sinceGather: sinceGather))
         let lights = SoulWork.lights(base, scale: base.look.scale * hostScale, sinceSplit: sinceSplit,
-                                     sinceGather: sinceGather, lowPower: lowPower)
+                                     sinceGather: sinceGather, lowPower: lowPower,
+                                     readers: overlays.readers.map { $0.offsetBy(dx: -centre.x, dy: -centre.y) },
+                                     seed: work.seed)
         return (graded, lights)
     }
 
@@ -169,6 +180,7 @@ struct TessSoul: View {
         let gather = reduceMotion ? 0 : beat.map { SoulBeat.gather(date.timeIntervalSince($0)) } ?? 0
         var frame = SoulBeat.beating(base, gather: gather, wear: wear(date), swells: mode != .resting)
         guard !reduceMotion else { return frame }
+        frame = moved(frame, at: date)
         if let wake, !lowPower {
             frame = SoulWake.stretched(frame, amount: SoulWake.stretch(at: date.timeIntervalSince(wake)))
         }
@@ -178,6 +190,44 @@ struct TessSoul: View {
             frame = SoulRipple.rippled(frame, elapsed: date.timeIntervalSince(stroke), scale: scale)
         }
         return frame
+    }
+
+    /// Her small moments on a frame: the nudge's lean and the peek's rise (neither in Low Power), the typing pulse, and
+    /// the tilt (idea 11). Reduce Motion never gets here.
+    private func moved(_ frame: SoulFrame, at date: Date) -> SoulFrame {
+        var result = frame
+        var shift = CGPoint.zero
+        if !lowPower {
+            if let nudge = overlays.nudge {
+                let amount = SoulMove.lean.amount(at: date.timeIntervalSince(nudge.start))
+                shift.x += nudge.direction.dx * SoulMove.lean.distance * amount
+                shift.y += nudge.direction.dy * SoulMove.lean.distance * amount
+            }
+            if let peek = overlays.peek {
+                shift.y -= SoulMove.peek.distance * SoulMove.peek.amount(at: date.timeIntervalSince(peek))
+            }
+        }
+        result.shift = CGPoint(x: shift.x / hostScale, y: shift.y / hostScale)
+        if let pulse = overlays.pulse {
+            result.look.scale *= 1 + SoulPulse.swell * SoulPulse.amount(at: date.timeIntervalSince(pulse))
+        }
+        if let vector = tilt?(), vector != .zero {
+            result = SoulTiltMath.shifted(result, vector: vector, hostScale: hostScale)
+        }
+        return result
+    }
+
+    /// Asleep, or opening one eye at a time, or drifting off again (idea 5): each eye's own lid.
+    private func sleepLids(at date: Date) -> (left: CGFloat, right: CGFloat)? {
+        guard let sleep = overlays.sleep else { return nil }
+        switch sleep {
+        case .asleep:
+            return (SoulSleep.shut, SoulSleep.shut)
+        case let .opening(since):
+            return SoulSleep.lids(opening: date.timeIntervalSince(since), quiet: reduceMotion || lowPower)
+        case let .drifting(since):
+            return SoulSleep.lids(drifting: date.timeIntervalSince(since))
+        }
     }
 
     /// The eyes ride the same frame as the dabs. Their own timeline keeps the blink under Reduce Motion (30 fps),
@@ -192,9 +242,19 @@ struct TessSoul: View {
             // A moment's own blink (the beat's landing, a stroke's leaving), else the wake's lids, else the schedule.
             let lid = beat.flatMap { SoulBlink.once(since: context.date.timeIntervalSince($0)) }
                 ?? strokeBlink.flatMap { SoulBlink.once(since: context.date.timeIntervalSince($0)) }
+                ?? overlays.blink.flatMap { SoulBlink.once(since: context.date.timeIntervalSince($0)) }
                 ?? wake.map { SoulWake.lid(at: context.date.timeIntervalSince($0), quiet: reduceMotion || lowPower) }
-            SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
-                     still: reduceMotion, lid: lid)
+            let tiltLook = tilt.map { SoulTiltMath.eyesLook($0()) } ?? .zero
+            ZStack {
+                SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
+                         still: reduceMotion, lid: lid, lids: sleepLids(at: context.date),
+                         extraLook: reduceMotion ? .zero : tiltLook)
+                if mouth {
+                    SoulMouth(frame: frame, expression: overlays.expression, gaze: gaze, color: dark,
+                              extraLook: reduceMotion ? .zero : tiltLook, still: reduceMotion,
+                              duration: overlays.expressionDuration)
+                }
+            }
         }
         .opacity(eyesShown ? 1 : 0)
     }
@@ -287,7 +347,7 @@ enum SoulRenderer {
     static func draw(_ frame: SoulFrame, in context: inout GraphicsContext, size: CGSize, palette: SoulPalette,
                      lights: [SoulLight]? = nil)
     {
-        context.translateBy(x: size.width / 2, y: size.height / 2)
+        context.translateBy(x: size.width / 2 + frame.shift.x, y: size.height / 2 + frame.shift.y)
         context.scaleBy(x: frame.look.scale, y: frame.look.scale)
 
         if frame.halo.opacity > 0.01 {

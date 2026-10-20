@@ -43,6 +43,48 @@ enum SoulEvent: Equatable {
     case foregrounded(underLive: Bool)
     /// The live workout came up over Home (QA R1 on #558): a wake still playing gives way to it.
     case liveOpened
+    /// She watches what he holds (idea 6): a row of a reorderable list is lifted, moved (its centre's global y) and
+    /// dropped.
+    case rowLifted(y: CGFloat), rowMoved(y: CGFloat), rowDropped
+    /// A nudge before the next thing (idea 7): Core's scheduler, ten minutes before a timed item. `row` is its row's
+    /// centre on screen (global), nil when the row isn't on screen (then nothing happens: it's not a notification).
+    case upcoming(id: String, row: CGPoint?)
+    /// She hears him type (idea 8): a space or punctuation after a letter, while she listens.
+    case wordTyped
+    /// She peeks at the end of a list (idea 9): the page's scroll reached its last row; once per page visit.
+    case reachedEnd(page: String), pageLeft(page: String)
+    /// She watches the rest clock (idea 10): the live workout's rest timer is in its last 10 s (at its centre).
+    case restEnding(at: CGPoint), restEnded
+    /// A side turned (sheet 75): `toward` is +1 into the right side, -1 back to the front.
+    case sideTurned(toward: CGFloat)
+}
+
+/// The nudge's lean: out toward the row, held, and back.
+struct SoulNudge: Equatable {
+    var start: Date
+    /// A unit vector from her toward the row.
+    var direction: CGVector
+}
+
+/// Everything a moment adds to how she is drawn that isn't her mode, so the chrome passes one value.
+struct SoulOverlays: Equatable {
+    var expression = SoulExpression.rest
+    var expressionDuration = SoulExpression.transition
+    var nudge: SoulNudge?
+    var peek: Date?
+    var pulse: Date?
+    var sleep: SoulSleepLook?
+    /// The words the ask touches, as page rects (global), in the job's order.
+    var readers: [CGRect] = []
+    /// A moment's own blink (a drop, the rest clock's Go, a nudge's end, a peek's top), starting then.
+    var blink: Date?
+}
+
+/// How her eyes sleep: shut and still, opening one eye at a time, or drifting off again.
+enum SoulSleepLook: Equatable {
+    case asleep
+    case opening(since: Date)
+    case drifting(since: Date)
 }
 
 /// The one place that turns events into Tess's state, and the only timer for it (§14: "views never set a mode",
@@ -71,7 +113,82 @@ final class SoulRouter {
         if isStrokeCrossing {
             return .alongStroke
         }
-        return isLookingAtLine ? .atLine : .ahead
+        if let heldRowY {
+            return .look(x: -1, y: Self.lookY(forRowAt: heldRowY, from: dockCentre))
+        }
+        if isWatchingRest {
+            return .look(x: -1, y: -1)
+        }
+        if let nudge, isNudging {
+            return .look(x: nudge.direction.dx, y: nudge.direction.dy)
+        }
+        if peek != nil {
+            return .look(x: 0.5, y: -1)
+        }
+        if let sideGlance {
+            return .look(x: sideGlance * 0.4, y: 0)
+        }
+        if let sleepOpening {
+            let glance = SoulSleep.glance(opening: Date.now.timeIntervalSince(sleepOpening))
+            if glance != .ahead {
+                return glance
+            }
+        }
+        // Thinking and waiting look aside, toward her line (18c).
+        return isLookingAtLine || mode == .thinking || isAskWaiting ? .atLine : .ahead
+    }
+
+    /// The held row's pull: y clamped to (row y - her y) / 600 (her dock's y, 779 when not yet placed).
+    static func lookY(forRowAt rowY: CGFloat, from dock: CGPoint?) -> CGFloat {
+        min(max((rowY - (dock?.y ?? 779)) / 600, -1), 1)
+    }
+
+    /// The nudge's eyes go to the row while the lean is out, until its last moment.
+    private var isNudging: Bool {
+        guard let nudge else { return false }
+        return Date.now.timeIntervalSince(nudge.start) < SoulMove.lean.duration
+    }
+
+    /// The mouth's shape for the moment (18c), derived from the mode plus overlays so no view picks a face.
+    var expression: SoulExpression {
+        SoulExpression.resolve(.init(mode: mode, isAsleep: isAsleep, isAskWaiting: isAskWaiting,
+                                     isSmiling: isSmilingAtLine || beat != nil, isFailed: isFailed,
+                                     isLive: page == .live))
+    }
+
+    /// Her line's smile relaxes over 600 ms; every other change of shape takes 250 ms.
+    var expressionDuration: Double {
+        isRelaxing ? SoulExpression.relax : SoulExpression.transition
+    }
+
+    /// What the chrome draws on top of her mode.
+    var overlays: SoulOverlays {
+        SoulOverlays(expression: expression, expressionDuration: expressionDuration, nudge: nudge, peek: peek,
+                     pulse: pulse, sleep: sleepLook, readers: touchedWords, blink: momentBlink)
+    }
+
+    /// In the quiet hours (23:00 to 07:00), at Home.
+    var isQuiet: Bool {
+        page == .home && Self.isQuietHour(Calendar.current.component(.hour, from: clock()))
+    }
+
+    /// Asleep: quiet hours and he has not opened the app (or has left it alone for a minute).
+    var isAsleep: Bool {
+        isQuiet && openedAt == nil
+    }
+
+    /// When the opening of her eyes began, while it is still going on.
+    private var sleepOpening: Date? {
+        guard isQuiet, let openedAt else { return nil }
+        return Date.now.timeIntervalSince(openedAt) < SoulSleep.opening ? openedAt : nil
+    }
+
+    var sleepLook: SoulSleepLook? {
+        guard isQuiet else { return nil }
+        if let openedAt {
+            return Date.now.timeIntervalSince(openedAt) < SoulSleep.opening ? .opening(since: openedAt) : nil
+        }
+        return driftStart.map { .drifting(since: $0) } ?? .asleep
     }
 
     /// An ask is waiting beside her (§8): no lens, no roam.
@@ -103,6 +220,35 @@ final class SoulRouter {
     /// Bumped once per stroke for its one soft tick (a second within the ripple restarts it with no tick).
     private(set) var strokeTicks = 0
     @ObservationIgnored private var strokeTimer: Task<Void, Never>?
+
+    // MARK: Face, sleep and the small moments
+
+    /// Her line was shown (smile for 1.5 s, then it relaxes over 600 ms) and her own failure (1.2 s).
+    private(set) var isSmilingAtLine = false
+    private(set) var isFailed = false
+    private(set) var isRelaxing = false
+    /// The row he holds (global y), the rest clock's pull, a side's glance, the nudge and the peek.
+    private(set) var heldRowY: CGFloat?
+    private(set) var isWatchingRest = false
+    private(set) var sideGlance: CGFloat?
+    private(set) var nudge: SoulNudge?
+    private(set) var peek: Date?
+    private(set) var pulse: Date?
+    private(set) var pulseCount = 0
+    /// A moment's own blink (a drop, the rest clock's Go, a nudge's end, a peek's top), starting then.
+    private(set) var momentBlink: Date?
+    /// The words the ask touches (page rects, global, in the job's order); stays on the phone.
+    private(set) var touchedWords: [CGRect] = []
+    /// When he opened the app in the quiet hours (she is awake until she is left alone), and when she began to drift
+    /// off.
+    private(set) var openedAt: Date?
+    private(set) var driftStart: Date?
+    @ObservationIgnored private var moments: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var nudged: Set<String> = []
+    @ObservationIgnored private var peeked: Set<String> = []
+    @ObservationIgnored private var lastPulse: Date?
+    @ObservationIgnored private var sleepTimer: Task<Void, Never>?
+    @ObservationIgnored private var skippedLaunchOpen = false
 
     /// When her last beat landed (§6, `SoulBeat.duration`); nil when none is playing.
     private(set) var beat: Date?
@@ -137,14 +283,17 @@ final class SoulRouter {
     /// Idle, or resting from 23:00 to 06:00 (as built). The workout's corner always rests at idle.
     var rest: TessSoul.Mode {
         guard page == .home else { return .idle }
-        let hour = Calendar.current.component(.hour, from: clock())
-        // Quiet hours end at 07:00 (decisions 2:00 PM PT Oct 16, Research EQ32).
-        return Self.isQuietHour(hour) ? .resting : .idle
+        // Quiet hours end at 07:00 (decisions 2:00 PM PT Oct 16, Research EQ32). She sleeps in them until he opens
+        // the app; she stays awake while he is in it (idea 5).
+        return isAsleep ? .resting : .idle
     }
 
     /// The whole contract is this one switch (§14's table): one case per event, read top to bottom.
     // swiftlint:disable:next cyclomatic_complexity function_body_length
     func handle(_ event: SoulEvent) {
+        if openedAt != nil, event != .backgrounded {
+            scheduleSleep()
+        }
         switch event {
         case .closed, .heardNothing:
             isSurfaceOpen = false
@@ -152,6 +301,8 @@ final class SoulRouter {
             guard !isDoneInFlight, !isWorking else { return }
             settle(rest)
         case .claudeFailed:
+            touchedWords = []
+            fail()
             // A failure answers the queued ask too: nothing is left to think about (F4).
             guard !isDoneInFlight else {
                 queued = nil
@@ -163,6 +314,9 @@ final class SoulRouter {
         case let .foregrounded(underLive):
             rollWearDay()
             wakeIfFirstOpen(quiet: underLive)
+            if !underLive {
+                openEyesAtNight()
+            }
             guard !isDoneInFlight, !isWorking else { return }
             settle(rest)
         case .appeared, .returnLine:
@@ -176,6 +330,7 @@ final class SoulRouter {
             }
             brighten()
         case .lineShown:
+            smileAtLine()
             isLookingAtLine = true
             glanceTimer?.cancel()
             glanceTimer = Task { @MainActor [weak self] in
@@ -215,6 +370,7 @@ final class SoulRouter {
             guard mode != .working else { return }
             settle(.working)
         case .claudeDone:
+            touchedWords = []
             // The lights gather first; Done begins as they land (§5).
             guard !isWorking else { return gather(thenDone: true) }
             playDone()
@@ -265,7 +421,159 @@ final class SoulRouter {
         case .backgrounded:
             // A Done cut by the background would never end: she goes back to rest (QA L6).
             settle(rest)
+        case let .rowLifted(y):
+            guard !refusesWatching else { return }
+            heldRowY = y
+        case let .rowMoved(y):
+            guard heldRowY != nil else { return }
+            heldRowY = y
+        case .rowDropped:
+            guard heldRowY != nil else { return }
+            heldRowY = nil
+            momentBlink = Date.now.addingTimeInterval(0.2)
+        case let .upcoming(id, row):
+            nudgeToward(id: id, row: row)
+        case .wordTyped:
+            typed(at: .now)
+        case let .reachedEnd(page):
+            peekAtEnd(of: page)
+        case let .pageLeft(page):
+            peeked.remove(page)
+        case .restEnding:
+            guard page == .live else { return }
+            isWatchingRest = true
+        case .restEnded:
+            guard isWatchingRest else { return }
+            isWatchingRest = false
+            momentBlink = Date.now.addingTimeInterval(0.1)
+        case let .sideTurned(toward):
+            // Eyes only: 0.4 toward the incoming content over 380 ms, then ahead over 300. Idle only.
+            guard mode == .idle, page == .home, !isAskWaiting else { return }
+            sideGlance = toward
+            runMoment("side", after: 0.38 + 0.3) { [weak self] in self?.sideGlance = nil }
         }
+    }
+
+    /// A word finished: one character added, a space or punctuation, right after a letter or digit.
+    static func endsWord(from old: String, to new: String) -> Bool {
+        guard new.count == old.count + 1, new.hasPrefix(old), let last = new.last,
+              let before = old.last, before.isLetter || before.isNumber else { return false }
+        return last.isWhitespace || last.isPunctuation
+    }
+
+    /// Working, split into lights, or carried at the dock: she watches nothing (ideas 6 and 10's refusals).
+    var refusesWatching: Bool {
+        page != .home || isWorking || isPinned
+    }
+
+    /// The tilt never moves her while carried, working, listening or on a live page (idea 11).
+    var refusesTilt: Bool {
+        page != .home || isWorking || isPinned || mode == .listening
+    }
+
+    /// The page tells her which words the ask touches, in the job's order (idea 1); they never leave the phone.
+    func setTouched(_ words: [CGRect]) {
+        touchedWords = words
+    }
+
+    private func runMoment(_ key: String, after seconds: Double, _ finish: @escaping @MainActor () -> Void) {
+        moments[key]?.cancel()
+        moments[key] = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(seconds))
+            guard !Task.isCancelled else { return }
+            finish()
+        }
+    }
+
+    /// Her line's smile: +1 for 1.5 s, then it relaxes over 600 ms.
+    private func smileAtLine() {
+        isSmilingAtLine = true
+        isRelaxing = false
+        runMoment("smile", after: SoulExpression.lineSmile) { [weak self] in
+            self?.isSmilingAtLine = false
+            self?.isRelaxing = true
+            self?.runMoment("relax", after: SoulExpression.relax) { self?.isRelaxing = false }
+        }
+    }
+
+    /// A miss of her own: the only thing that turns a corner down, for 1.2 s.
+    private func fail() {
+        isFailed = true
+        runMoment("fail", after: SoulExpression.failure) { [weak self] in self?.isFailed = false }
+    }
+
+    /// He opened the app at night: the right eye first, the left 2.4 s later; she stays awake until left alone.
+    private func openEyesAtNight() {
+        // Simulator only, for the sleep clip: the cold launch's own foreground leaves her asleep once.
+        if LaunchFlags.has("-asleepAtLaunch"), !skippedLaunchOpen {
+            skippedLaunchOpen = true
+            return
+        }
+        guard isQuiet else {
+            openedAt = nil
+            return
+        }
+        if openedAt == nil {
+            openedAt = .now
+            driftStart = nil
+        }
+        scheduleSleep()
+    }
+
+    private func scheduleSleep() {
+        sleepTimer?.cancel()
+        sleepTimer = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(SoulSleep.idleBeforeSleep))
+            guard !Task.isCancelled, let self else { return }
+            fallAsleep()
+        }
+    }
+
+    /// Left alone for a minute: she drifts back to sleep over 3 s.
+    func fallAsleep() {
+        guard openedAt != nil else { return }
+        openedAt = nil
+        driftStart = .now
+        if mode == .idle {
+            settle(rest)
+        }
+    }
+
+    /// One nudge per item, only when its row is on screen, never in the quiet hours or on a live page.
+    private func nudgeToward(id: String, row: CGPoint?) {
+        guard page == .home, !isQuiet, !nudged.contains(id), let row, let dock = dockCentre,
+              !isWorking, mode != .listening, !isPinned else { return }
+        nudged.insert(id)
+        let dx = row.x - dock.x, dy = row.y - dock.y
+        let length = max(hypot(dx, dy), 0.001)
+        let start = Date.now
+        nudge = SoulNudge(start: start, direction: CGVector(dx: dx / length, dy: dy / length))
+        // The eyes blink once as it ends.
+        momentBlink = start.addingTimeInterval(SoulMove.lean.duration - 0.2)
+        runMoment("nudge", after: SoulMove.lean.duration) { [weak self] in self?.nudge = nil }
+    }
+
+    /// One pulse per word, at most one per 180 ms (400 ms in Low Power), only while she listens.
+    func typed(at now: Date) {
+        guard mode == .listening else { return }
+        let gap = PowerState.isLowPower ? SoulPulse.lowPowerGap : SoulPulse.gap
+        if let lastPulse, now.timeIntervalSince(lastPulse) < gap {
+            return
+        }
+        lastPulse = now
+        pulse = now
+        pulseCount += 1
+    }
+
+    /// One peek per page visit.
+    private func peekAtEnd(of pageID: String) {
+        guard page == .home, !refusesWatching, !isAskWaiting, mode != .listening,
+              !peeked.contains(pageID) else { return }
+        peeked.insert(pageID)
+        let start = Date.now
+        peek = start
+        momentBlink = start.addingTimeInterval(SoulMove.peek.out)
+        runMoment("peek", after: SoulMove.peek.duration) { [weak self] in self?.peek = nil }
     }
 
     /// The glass-tab lens can't form while she listens, the surface is open or an ask waits (§15).
@@ -473,12 +781,65 @@ extension SoulRouter {
             }
             return
         }
+        if script != "work", script != "workFail", let steps = Self.demoSteps(script) {
+            // The picks' scenes (mouth, nudge, peek, type, readers, rows, side), from 2.4 s after launch.
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(2.4))
+                for (wait, event) in steps {
+                    try? await Task.sleep(for: .seconds(wait))
+                    if case let .touched(words) = event {
+                        self?.setTouched(words)
+                    } else if case let .event(event) = event {
+                        self?.handle(event)
+                    }
+                }
+            }
+            return
+        }
         guard script.hasPrefix("work") else { return }
         Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(2.4))
             self?.handle(.askClaude)
             try? await Task.sleep(for: .seconds(5.2))
             self?.handle(script == "workFail" ? .claudeFailed : .claudeDone)
+        }
+    }
+}
+
+extension SoulRouter {
+    enum DemoStep {
+        case event(SoulEvent)
+        case touched([CGRect])
+    }
+
+    /// The scenes for `-soulScript`: (seconds to wait, then what happens).
+    static func demoSteps(_ script: String) -> [(Double, DemoStep)]? {
+        func at(_ wait: Double, _ event: SoulEvent) -> (Double, DemoStep) {
+            (wait, .event(event))
+        }
+        switch script {
+        case "mouth":
+            return [at(0.5, .tessOpened), at(2.5, .closed), at(0.5, .sent), at(2.5, .lineShown), at(3, .closed),
+                    at(0.5, .askWaiting), at(2.5, .askAnswered), at(0.5, .claudeFailed), at(2, .closed)]
+        case "nudge":
+            return [at(0.5, .upcoming(id: "demo", row: CGPoint(x: 120, y: 330)))]
+        case "peek":
+            return [at(0.5, .reachedEnd(page: "demo"))]
+        case "type":
+            return [at(0.5, .tessOpened)] + (0 ..< 8).map { _ in at(0.22, .wordTyped) }
+        case "readers":
+            let words = [CGRect(x: 40, y: 330, width: 150, height: 22), CGRect(x: 210, y: 420, width: 120, height: 22),
+                         CGRect(x: 60, y: 520, width: 170, height: 22), CGRect(x: 180, y: 610, width: 130, height: 22)]
+            return [(0.5, .touched(words)), at(0.1, .askClaude), at(6, .claudeDone)]
+        case "rows":
+            return [at(0.5, .rowLifted(y: 300)), at(0.8, .rowMoved(y: 420)), at(0.8, .rowMoved(y: 600)),
+                    at(0.8, .rowDropped)]
+        case "side":
+            return [at(0.5, .sideTurned(toward: 1)), at(2, .sideTurned(toward: -1))]
+        case "sleep":
+            return [at(3, .foregrounded(underLive: false))]
+        default:
+            return nil
         }
     }
 }

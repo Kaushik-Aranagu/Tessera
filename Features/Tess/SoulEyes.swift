@@ -10,10 +10,13 @@ enum SoulGaze: Equatable {
     case atHim
     /// Along his finger while it strokes across her (idea 3).
     case alongStroke
+    /// Anywhere in the glance box: x and y in -1 ... 1 (a held row, the rest clock, a nudge, a peek, a side).
+    case look(x: CGFloat, y: CGFloat)
 
     /// The pair's offset at soul scale 1: up to 3 pt sideways and 2.2 pt up or down.
     var offset: CGSize {
         switch self {
+        case let .look(x, y): CGSize(width: 3 * min(max(x, -1), 1), height: 2.2 * min(max(y, -1), 1))
         case .ahead: .zero
         case .atLine: CGSize(width: -3, height: 2.2)
         case .atHim: CGSize(width: 0, height: -2.2)
@@ -126,6 +129,10 @@ struct SoulEyes: View {
     var still = false
     /// A lid from a moment of hers (the wake) in place of the blink schedule.
     var lid: CGFloat?
+    /// Asleep (idea 5): each eye's own lid, the right one opening first.
+    var lids: (left: CGFloat, right: CGFloat)?
+    /// The eyes' extra look (the tilt, idea 11), in look units.
+    var extraLook = CGSize.zero
 
     /// Where the pair sits, in the canvas's points from its centre: the main dabs' mean, 3 pt above it, both scaled
     /// by the soul's drawn scale (the same transform `SoulRenderer` applies to the dabs).
@@ -133,18 +140,19 @@ struct SoulEyes: View {
         let mains = frame.dabs.prefix(3)
         let count = CGFloat(max(mains.count, 1))
         let scale = frame.look.scale
-        return CGPoint(x: mains.reduce(0) { $0 + $1.x } / count * scale,
-                       y: (mains.reduce(0) { $0 + $1.y } / count - 3) * scale)
+        return CGPoint(x: mains.reduce(0) { $0 + $1.x } / count * scale + frame.shift.x,
+                       y: (mains.reduce(0) { $0 + $1.y } / count - 3) * scale + frame.shift.y)
     }
 
     var body: some View {
         let centre = Self.centre(of: frame)
         let scale = frame.look.scale
         let lid = lid ?? SoulBlink.lid(at: time)
-        let glance = still ? .zero : gaze.offset
+        let base = still ? CGSize.zero : gaze.offset
+        let glance = CGSize(width: base.width + extraLook.width * 3, height: base.height + extraLook.height * 2.2)
         HStack(spacing: 8.4 - 3.2) {
-            eye(lid)
-            eye(lid)
+            eye(lids?.left ?? lid)
+            eye(lids?.right ?? lid)
         }
         // Scaled first, then placed: the offset is already in screen points (no second scale).
         .scaleEffect(scale)

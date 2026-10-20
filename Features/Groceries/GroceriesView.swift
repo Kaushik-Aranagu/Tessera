@@ -115,6 +115,7 @@ private struct GroceriesPage: View {
             .opacity(basketOpen && !shopping ? 0.5 : 1)
             .tesseraAnimation(Theme.Motion.house, value: basketOpen)
         }
+        .soulReachesEnd("groceries")
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.interactively)
         .background { ThemedBackground() }

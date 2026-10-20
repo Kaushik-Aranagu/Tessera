@@ -28,12 +28,20 @@ enum Choice {
         value("restTimer", options: ["On", "Off"], default: "On", defaults: defaults) == "On"
     }
 
-    /// Tess's face: "Off" (default) is the plain mark, "Eyes" gives her eyes. Only what is drawn is offered; the mouth
-    /// comes back as a third option in the change that draws it. A stored "Eyes and mouth" from an earlier build still
-    /// reads as eyes.
-    static let tessFaceOffered = ["Off", "Eyes"]
+    /// Tess's face: "Off" (default) is the plain mark, "Eyes" gives her eyes, "Eyes and mouth" adds a small mouth, one
+    /// short line that turns with the moment (docs/design/motion/tess-picks.md 18c).
+    static let tessFaceOffered = ["Off", "Eyes", "Eyes and mouth"]
+
+    static func tessFace(defaults: UserDefaults = .standard) -> String {
+        value("tessFace", options: tessFaceOffered, default: "Off", defaults: defaults)
+    }
 
     static func tessHasEyes(defaults: UserDefaults = .standard) -> Bool {
-        value("tessFace", options: tessFaceOffered + ["Eyes and mouth"], default: "Off", defaults: defaults) != "Off"
+        tessFace(defaults: defaults) != "Off"
+    }
+
+    /// The mouth is only drawn when that value is chosen (no mouth without eyes).
+    static func tessHasMouth(defaults: UserDefaults = .standard) -> Bool {
+        tessFace(defaults: defaults) == "Eyes and mouth"
     }
 }
