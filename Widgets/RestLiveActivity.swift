@@ -159,7 +159,7 @@ private struct RestLockScreenView: View {
                     if isGo {
                         Text("Rested \(Duration.seconds(state.restTotal).formatted(.time(pattern: .minuteSecond)))")
                     } else {
-                        Text("Rest, then set \(state.setNumber)")
+                        Text(state.showsSet ? "Rest, then set \(state.setNumber)" : "Rest")
                     }
                 }
                 .font(Typeface.font(17))
@@ -305,14 +305,22 @@ private struct PlannedSetButton: View {
     var body: some View {
         Button(intent: LogPlannedSetIntent()) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(state.exercise)
-                    .font(Typeface.font(nameSize))
-                    .foregroundStyle(palette.cream.opacity(0.62))
-                    .padding(.trailing, 26)
-                Text(state.plannedSet)
-                    .font(Typeface.font(setSize).monospacedDigit())
-                    .tracking(-setSize * 0.01)
-                    .foregroundStyle(palette.cream)
+                if state.showsSet {
+                    Text(state.exercise)
+                        .font(Typeface.font(nameSize))
+                        .foregroundStyle(palette.cream.opacity(0.62))
+                        .padding(.trailing, 26)
+                    Text(state.plannedSet)
+                        .font(Typeface.font(setSize).monospacedDigit())
+                        .tracking(-setSize * 0.01)
+                        .foregroundStyle(palette.cream)
+                } else {
+                    // A private workout: the one plain line, nothing of the set.
+                    Text("Private workout")
+                        .font(Typeface.font(setSize * 0.75))
+                        .foregroundStyle(palette.cream)
+                        .padding(.trailing, 26)
+                }
             }
             .lineLimit(1)
             .minimumScaleFactor(0.75)
@@ -334,7 +342,7 @@ private struct PlannedSetButton: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Log \(state.exercise), \(state.plannedSet)")
+        .accessibilityLabel(state.showsSet ? "Log \(state.exercise), \(state.plannedSet)" : "Log the set")
     }
 }
 

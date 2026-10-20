@@ -31,6 +31,11 @@ final class WorkoutSession {
         ObjectPrivacy.routineTitle(workout.title, in: model.store)
     }
 
+    /// Whether the routine's title is private (the room sees "Private workout" in its place).
+    var isPrivate: Bool {
+        shownTitle != workout.title
+    }
+
     /// The effort stop-slider is hidden until you pull up on the reps.
     var isEffortShown = false
     private(set) var restEndsAt: Date?

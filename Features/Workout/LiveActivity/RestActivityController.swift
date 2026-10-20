@@ -49,8 +49,10 @@ final class RestActivityController {
             end()
         }
         let realNow = Date.now
-        let state = Self.contentState(planned: planned, restEndsAt: session.restEndsAt,
-                                      restTotal: session.restTotal, appNow: AppClock.adjust(realNow), realNow: realNow)
+        // Masked at the source: a private workout's exercise, weight, reps and set number never reach the activity.
+        let state = Self.contentState(planned: session.isPrivate ? Self.maskedSet : planned,
+                                      restEndsAt: session.restEndsAt, restTotal: session.restTotal,
+                                      appNow: AppClock.adjust(realNow), realNow: realNow, isPrivate: session.isPrivate)
         scheduleReadyFlip(for: state, session: session)
         // The rest-end alert is one local notification when the switch is On; Off keeps the activity's own alert.
         RestAlerts.shared.sync(fireAt: RestAlertPlan.fireAt(
@@ -106,6 +108,9 @@ final class RestActivityController {
         var reps: Int
     }
 
+    /// What a private workout's activity carries in place of the planned set: nothing.
+    static let maskedSet = PlannedSet(exercise: "", setNumber: 0, weight: 0, reps: 0)
+
     static func plannedSet(of session: WorkoutSession) -> PlannedSet? {
         switch session.phase() {
         case .workoutDone:
@@ -128,7 +133,8 @@ final class RestActivityController {
     /// counts down in real time, so it is moved onto the real clock (rounded to the second so repeated calls map to
     /// an identical state). Once ready, the end is pinned to `.distantPast` for the same reason.
     static func contentState(planned: PlannedSet, restEndsAt: Date?, restTotal: TimeInterval, appNow: Date,
-                             realNow: Date, followsLook: Bool = Choice.lockScreenFollowsLook()) -> State
+                             realNow: Date, followsLook: Bool = Choice.lockScreenFollowsLook(),
+                             isPrivate: Bool = false) -> State
     {
         let shift = realNow.timeIntervalSince(appNow)
         let isResting = restEndsAt.map { $0 > appNow } ?? false
@@ -138,7 +144,8 @@ final class RestActivityController {
                      restEndsAt: isResting ? Date(timeIntervalSinceReferenceDate: endsAt) : .distantPast,
                      restTotal: restTotal, phase: isResting ? .resting : .ready,
                      lookDay: followsLook ? ThemeStore.shared.pair.day.name : nil,
-                     lookNight: followsLook ? ThemeStore.shared.pair.night.name : nil)
+                     lookNight: followsLook ? ThemeStore.shared.pair.night.name : nil,
+                     isPrivate: isPrivate ? true : nil)
     }
 
     /// While resting the content goes stale when the rest ends, so the Lock Screen flips to "ready" on its own even
