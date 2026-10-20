@@ -86,30 +86,10 @@ final class AppModel {
         ["-demo", "-resetDemo", "-theme", "-fakeClaudeKey"].contains(where: { LaunchFlags.has($0) })
     }
 
-    /// Home's done job through Claude (board 0al): one instance, so its per-workout cache holds.
-    var homeDone: ClaudeHomeDone {
-        if let job = homeDoneStore {
-            return job
-        }
-        let job = ClaudeHomeDone(keys: SystemKeychain(), ledger: TessUsageLedger(store: store, classes: classes),
-                                 cacheURL: Self.isDemo ? nil : ClaudeHomeDone.defaultCacheURL)
-        {
-            [weak self] in self?.asksClaude ?? false
-        }
-        homeDoneStore = job
-        return job
-    }
-
     @ObservationIgnored private var homeDoneStore: ClaudeHomeDone?
-
-    /// Claude's words for a finished workout's Home slots, or nil: the rules words stand (Kaushik's "Sonnet on
-    /// Home", 2:41 PM PT Oct 16). Show the rules line first; a returned slot replaces its rules words.
-    func homeDoneWords(for line: HomeLine) async -> HomeDoneWords? {
-        guard !Self.isDemo, line.fact.kind == .workout, line.fact.state == .done, let ended = line.fact.endedAt
-        else { return nil }
-        let label = HomeDonePack.dayLabel(finish: ended, calendar: homeDone.calendar)
-        return await homeDone.words(for: line, dayLabel: label, store: store)
-    }
+    /// Names training days (Core's DayNamer): one instance; see AppModel+DayNames.swift.
+    @ObservationIgnored var dayNamerStore: DayNamer?
+    @ObservationIgnored var dayNaming: Task<Void, Never>?
 
     /// Bumped after writes so views re-read derived data.
     private(set) var revision = 0
@@ -335,8 +315,12 @@ final class AppModel {
         return land(result)
     }
 
+    /// The last capture asked to keep his words in the Ask for a retry (Core's `TessCapture.keepsWords`).
+    private(set) var lastKeepsWords = false
+
     /// Pending records become ghost rows that dry after `captureDryTime`; returns Tess's line.
     private func land(_ result: TessCapture) -> String {
+        lastKeepsWords = result.keepsWords
         let pending = result.records.filter { $0.state == .pending }
         if let first = pending.first {
             pendingCaptures = pending
@@ -543,6 +527,7 @@ final class AppModel {
         try? context.save()
         revision += 1
         reconcileTimerAlerts()
+        nameTrainingDaysSoon()
     }
 
     /// One local notification per running kitchen timer, kept in step after every change (G217): Stop, Finish and an
@@ -816,5 +801,31 @@ extension AppModel {
                 launchNotes.advance()
             }
         }
+    }
+}
+
+/// Home's done job, kept out of the class body.
+extension AppModel {
+    /// Home's done job through Claude (board 0al): one instance, so its per-workout cache holds.
+    var homeDone: ClaudeHomeDone {
+        if let job = homeDoneStore {
+            return job
+        }
+        let job = ClaudeHomeDone(keys: SystemKeychain(), ledger: TessUsageLedger(store: store, classes: classes),
+                                 cacheURL: Self.isDemo ? nil : ClaudeHomeDone.defaultCacheURL)
+        {
+            [weak self] in self?.asksClaude ?? false
+        }
+        homeDoneStore = job
+        return job
+    }
+
+    /// Claude's words for a finished workout's Home slots, or nil: the rules words stand (Kaushik's "Sonnet on
+    /// Home", 2:41 PM PT Oct 16). Show the rules line first; a returned slot replaces its rules words.
+    func homeDoneWords(for line: HomeLine) async -> HomeDoneWords? {
+        guard !Self.isDemo, line.fact.kind == .workout, line.fact.state == .done, let ended = line.fact.endedAt
+        else { return nil }
+        let label = HomeDonePack.dayLabel(finish: ended, calendar: homeDone.calendar)
+        return await homeDone.words(for: line, dayLabel: label, store: store)
     }
 }
