@@ -153,3 +153,67 @@ struct DayNamesTests {
         #expect(!DayNames.needsName(routine, store: store))
     }
 }
+
+/// What leaves the phone: the request body of a Claude naming call.
+final class NamingStub: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var bodies: [String] = []
+    override class func canInit(with _: URLRequest) -> Bool {
+        true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        var data = request.httpBody ?? Data()
+        if data.isEmpty, let stream = request.httpBodyStream {
+            stream.open()
+            var buffer = [UInt8](repeating: 0, count: 8192)
+            while stream.hasBytesAvailable {
+                let count = stream.read(&buffer, maxLength: buffer.count)
+                if count <= 0 {
+                    break
+                }
+                data.append(buffer, count: count)
+            }
+            stream.close()
+        }
+        Self.bodies.append(String(decoding: data, as: UTF8.self))
+        let reply = #"{"content":[{"type":"text","text":"Press day"}],"usage":{"input_tokens":50,"output_tokens":4}}"#
+        let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(reply.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
+}
+
+@MainActor
+@Suite(.serialized)
+struct DayNamerPayloadTests {
+    @Test func noRoutineTitleEverLeavesThePhone() async throws {
+        let (store, engine, routines) = try DayNamesTests().seeded()
+        let routine = try #require(routines["Push A"])
+        routine.title = "New routine"
+        let secret = try #require(routines["Pull A"])
+        secret.title = "Knee rehab day"
+        let typed = try #require(routines["Legs A"])
+        typed.title = "Zebra Mondays"
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [NamingStub.self]
+        let keychain = InMemoryKeychain()
+        _ = keychain.save("sk-ant-" + String(repeating: "a", count: 20))
+        let namer = DayNamer(keys: keychain, ledger: TessUsageLedger(store: store, classes: engine.classes),
+                             session: URLSession(configuration: configuration), allowed: { true })
+        NamingStub.bodies = []
+        let result = await namer.suggest(for: routine, engine: engine, avoiding: ["Heavy push"])
+        #expect(result?.source == .claude)
+        let body = try #require(NamingStub.bodies.first)
+        for hidden in ["Knee rehab", "Zebra", "New routine", "Pull A", "Legs A", "Push A"] {
+            #expect(!body.contains(hidden), "\(hidden)")
+        }
+        #expect(body.lowercased().contains("heavy push"))
+    }
+}

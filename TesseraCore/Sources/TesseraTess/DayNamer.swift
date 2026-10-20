@@ -60,7 +60,9 @@ public final class DayNamer {
                   !taken.contains(name.lowercased()) else { return nil }
             return name
         }
-        let avoid = Array(taken.sorted().prefix(12))
+        // Only names Tess offered herself this session go out. Other routines' titles (private ones, his typed ones)
+        // stay here for de-duplication: a colliding name is refused and the rule name stands.
+        let avoid = Array(Set(avoiding.map { $0.lowercased() }).sorted().prefix(12))
         if onDeviceAvailable(), let onDevice, let name = await usable(onDevice(pack, avoid)) {
             return Suggestion(name: name, source: .onDevice)
         }
