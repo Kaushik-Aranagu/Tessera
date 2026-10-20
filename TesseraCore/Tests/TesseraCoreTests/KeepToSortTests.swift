@@ -58,6 +58,33 @@ struct KeepToSortTests {
         #expect(!capture.keptToSort && capture.line == "Didn't catch that. Try \u{201C}80 × 8\u{201D}.")
     }
 
+    @Test func aKeptNoteCarriesTheToSortFlagAndAPlainNoteDoesNot() async throws {
+        // Product ruling, 6:10 PM PT Oct 19: the inbox shows a quiet "To sort" label on what Tess kept.
+        let (tess, engine) = try tess()
+        let capture = await tess.capture("the thing about the garage door", context: TessContext())
+        let id = try #require(capture.records.first?.objectIDs.first)
+        let kept = try #require(store.object(id: id))
+        #expect(store.isKeptToSort(kept) && store.value("toSort", of: kept) == .bool(true))
+        let plain = try engine.perform(CreateNote(body: "the garage door code is on the fridge"), by: .user).output
+        #expect(!store.isKeptToSort(plain))
+        // A walled phrase kept to sort is private and flagged both ways.
+        let walled = await tess.capture("blorp I paid 40 for gas blorp", context: TessContext())
+        let note = try #require(walled.records.first?.objectIDs.first.flatMap(store.object(id:)))
+        #expect(store.isKeptToSort(note) && store.value("isPrivate", of: note) == .bool(true))
+        // Kept, then undone: no longer to sort.
+        try engine.commit(capture.records[0])
+        #expect(store.isKeptToSort(kept))
+        engine.undo(capture.records[0])
+        #expect(store.object(id: id).map(store.isKeptToSort) != true)
+    }
+
+    @Test func theToSortFieldIsSeededWithoutAVersionBump() throws {
+        let (_, engine) = try tess()
+        let note = try #require(engine.classes[.note])
+        #expect(ClassResolver.field("toSort", of: note)?.kind == .bool)
+        #expect(SystemCatalog.package.version == 9)
+    }
+
     @Test func siriCommitsAtOnce() async throws {
         let (tess, engine) = try tess()
         var shortcut = TessContext()
