@@ -27,6 +27,7 @@ struct BottomChrome: View {
     @State private var replyCapture: UUID?
     /// The writing field's one-line height, and how far it has grown above that: "Asking Claude." rides on top.
     @State private var fieldBase: CGFloat?
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var fieldGrowth: CGFloat = 0
     @State private var ghost: String?
     @State private var drying: CGFloat = 0
@@ -522,16 +523,21 @@ extension BottomChrome {
                         close()
                         return .handled
                     }
+                    // A new text size measures the one-line height again (Design on #1143).
+                    .onChange(of: typeSize) { _, _ in fieldBase = nil }
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                         fieldBase = fieldBase ?? height
                         fieldGrowth = max(0, height - (fieldBase ?? height))
                     }
-                    .onChange(of: model.commandDraft) { _, draft in
-                        // A grown field takes Return as a newline: here it still sends, as Send did on one line.
+                    .onChange(of: model.commandDraft) { old, draft in
+                        // A grown field takes Return as a newline. Only Return's own trailing newline sends; a
+                        // pasted line break becomes a space and nothing sends (Design on #1143).
                         if draft.contains("\n") {
-                            model.commandDraft = draft.replacingOccurrences(of: "\n", with: " ")
-                                .trimmingCharacters(in: .whitespaces)
-                            dry()
+                            let read = AskDraft.read(old: old, new: draft)
+                            model.commandDraft = read.text
+                            if read.send {
+                                dry()
+                            }
                             return
                         }
                         // A Claude key never stays in Ask: not on screen, not as a ghost, not as a task. Cleared the

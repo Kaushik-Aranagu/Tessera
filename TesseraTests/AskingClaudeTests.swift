@@ -31,4 +31,11 @@ struct AskingClaudeTests {
         _ = await model.ask("buy milk")
         #expect(!model.isAskingClaude)
     }
+
+    /// Design on #1143: only Return's own newline sends; a pasted line break is a space and sends nothing.
+    @Test func onlyReturnSends() {
+        #expect(AskDraft.read(old: "buy milk", new: "buy milk\n") == ("buy milk", true))
+        #expect(AskDraft.read(old: "", new: "milk\neggs") == ("milk eggs", false))
+        #expect(AskDraft.read(old: "buy", new: "buy milk\nand eggs").send == false)
+    }
 }

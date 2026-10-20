@@ -31,3 +31,13 @@ enum AskingClaudeCopy {
     /// One element, spoken once (CL31).
     static let spoken = "Asking Claude. Cancel."
 }
+
+/// What a newline in the Ask's draft means: Return's own (one character added, at the end) sends; any other line break,
+/// as from a paste, is a space and sends nothing.
+enum AskDraft {
+    static func read(old: String, new: String) -> (text: String, send: Bool) {
+        let typedReturn = new.count == old.count + 1 && new.hasSuffix("\n") && new.dropLast() == Substring(old)
+        let text = new.replacingOccurrences(of: "\n", with: " ")
+        return typedReturn ? (text.trimmingCharacters(in: .whitespaces), true) : (text, false)
+    }
+}
