@@ -28,9 +28,12 @@ enum Choice {
         value("restTimer", options: ["On", "Off"], default: "On", defaults: defaults) == "On"
     }
 
-    /// Tess's face: "Off" (default) is the plain mark; "Eyes" and "Eyes and mouth" give her eyes. The mouth is not
-    /// drawn yet, so "Eyes and mouth" shows eyes until it is.
+    /// Tess's face: "Off" (default) is the plain mark, "Eyes" gives her eyes. Only what is drawn is offered; the mouth
+    /// comes back as a third option in the change that draws it. A stored "Eyes and mouth" from an earlier build still
+    /// reads as eyes.
+    static let tessFaceOffered = ["Off", "Eyes"]
+
     static func tessHasEyes(defaults: UserDefaults = .standard) -> Bool {
-        value("tessFace", options: ["Off", "Eyes", "Eyes and mouth"], default: "Off", defaults: defaults) != "Off"
+        value("tessFace", options: tessFaceOffered + ["Eyes and mouth"], default: "Off", defaults: defaults) != "Off"
     }
 }

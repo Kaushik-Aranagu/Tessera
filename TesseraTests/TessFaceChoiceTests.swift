@@ -22,6 +22,11 @@ struct TessFaceChoiceTests {
         defaults.removePersistentDomain(forName: "TessFaceChoiceTests.default")
     }
 
+    @Test func onlyWhatIsDrawnIsOffered() {
+        #expect(Choice.tessFaceOffered == ["Off", "Eyes"])
+        #expect(!Choice.tessFaceOffered.contains("Eyes and mouth"))
+    }
+
     @Test func anUnknownValueReadsOff() throws {
         let defaults = try suite("TessFaceChoiceTests.unknown")
         defaults.set("Googly", forKey: "review.tessFace")
