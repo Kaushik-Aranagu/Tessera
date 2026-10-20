@@ -170,6 +170,12 @@ final class ReviewChoices {
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
+    /// The pages Settings draws: only rows whose feature ships in this build (Product, Oct 20; sheet 110). A waiting
+    /// row is not drawn at all, and a tab with nothing live goes with it.
+    nonisolated static func drawnPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
+        facetPages(choices.filter { $0.readiness == .live })
+    }
+
     nonisolated static func facetPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
         var pages = facets.map { facet in
             (word: facet.word, rows: facet.ids.compactMap { id in choices.first { $0.id == id } })
