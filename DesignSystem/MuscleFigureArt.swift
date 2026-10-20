@@ -1,5 +1,4 @@
-/// Generated from Design's docs/design/studies/muscle-figure.js (sheet 88/91, approved by Kaushik Oct 18). viewBox 0 0
-/// 200 440,
+/// Generated from Design's docs/design/studies/muscle-figure.js (sheet 88/91, approved by Kaushik Oct 18). viewBox 0 0 200 440,
 /// the left half drawn, mirrored about x = 100. Region ids are the stored muscle names without spaces.
 enum MuscleFigureArt {
     static let frontOutline: [String] = [
