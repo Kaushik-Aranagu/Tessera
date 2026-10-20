@@ -45,7 +45,10 @@ final class RestActivityController {
         if lastState?.phase == .closing {
             activity = nil
             lastState = nil
-            enqueue { await Self.endAll() }
+            // Only the activities listed now: one requested later in this update must survive the queued end.
+            let ids = Set(Activity<RestActivityAttributes>.activities.map(\.id))
+            endedIDs.formUnion(ids)
+            enqueue { await Self.end(ids: ids) }
         }
         if workoutID != nil, workoutID != session.workout.id {
             end()
@@ -255,7 +258,8 @@ final class RestActivityController {
         workoutID = nil
         lastState = nil
         guard hadActivities else { return }
-        enqueue { await Self.endAll() }
+        let ids = Set(listed.map(\.id))
+        enqueue { await Self.end(ids: ids) }
     }
 
     /// `Activity` isn't Sendable: the ActivityKit calls run off the main actor on activities looked up there.
@@ -271,10 +275,18 @@ final class RestActivityController {
         await activity.end(content, dismissalPolicy: .after(dismissAt))
     }
 
-    private nonisolated static func endAll() async {
-        for activity in Activity<RestActivityAttributes>.activities {
+    /// Ends exactly the activities that were listed when the end was asked for, never one requested after.
+    private nonisolated static func end(ids: Set<String>) async {
+        let listed = Activity<RestActivityAttributes>.activities
+        let doomed = Set(idsToEnd(listed: listed.map(\.id), captured: ids))
+        for activity in listed where doomed.contains(activity.id) {
             await activity.end(nil, dismissalPolicy: .immediate)
         }
+    }
+
+    /// Of the activities listed now, those captured when the end was queued (a later request is not among them).
+    nonisolated static func idsToEnd(listed: [String], captured: Set<String>) -> [String] {
+        listed.filter { captured.contains($0) }
     }
 
     private func enqueue(_ work: @escaping @Sendable () async -> Void) {
