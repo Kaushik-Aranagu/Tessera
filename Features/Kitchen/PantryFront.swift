@@ -12,6 +12,8 @@ struct PantryFront {
     /// The OUT and LOW groups; an empty group isn't drawn, not even its label (S8).
     let out: [PantryLedger.Entry]
     let low: [PantryLedger.Entry]
+    /// What is in: drawn only with Pantry state on (kitchen-v2 PS); today's front leaves in things off.
+    let have: [PantryLedger.Entry]
     /// Nothing known yet: the empty body shows (S12).
     let isEmpty: Bool
     /// Tess's line: what the last cook used up (S13); nil otherwise.
@@ -23,6 +25,7 @@ struct PantryFront {
         context = PantryCopy.context(lastShop: ledger.lastShop(), now: now, calendar: calendar)
         out = entries.filter { $0.state == .out }
         low = entries.filter { $0.state == .low }
+        have = entries.filter { $0.state == .have }
         isEmpty = entries.isEmpty
         tess = ledger.lastCookUsedUp().map { PantryCopy.tess(recipe: $0.recipe, names: $0.names) }
     }

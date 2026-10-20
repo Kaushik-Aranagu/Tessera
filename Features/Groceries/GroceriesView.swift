@@ -102,6 +102,11 @@ private struct GroceriesPage: View {
                                 }
                                 .padding(.top, Theme.Spacing.xxl)
                             }
+                            // Usually line on: what he buys on a rhythm and is due for, at the foot (kitchen-v2 RL).
+                            if KitchenSwitch.usuallyLine {
+                                UsuallyLine(label: "Usually")
+                                    .padding(.top, Theme.Spacing.xxl)
+                            }
                         }
                         .transition(AisleHandoff.transition(reduceMotion: reduceMotion))
                     }

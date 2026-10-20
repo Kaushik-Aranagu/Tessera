@@ -33,6 +33,10 @@ struct RecipePage: View {
     @State private var columnWidth: CGFloat = 260
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var away = false
+    /// FIX open (Review switch Fix a recipe): the name is written in place.
+    @State private var fixing = false
+    @State private var draftTitle = ""
+    @FocusState private var titleFocused: Bool
 
     var body: some View {
         // At accessibility sizes the whole page is one scroll, so nothing is clipped (G69).
@@ -61,28 +65,64 @@ struct RecipePage: View {
             let size = serves ?? own
             let lines = size.map { book.scaledLines(of: recipe, serves: $0) } ?? book.lines(of: recipe)
             let steps = book.steps(of: recipe)
+            // Pantry state on: need against have, In, Low or Out per line (kitchen-v2 PS); off, nothing changes.
+            let pantry = KitchenSwitch.pantryState ? NeedHave(lines: NeedHave.lines(
+                lines, states: PantryLedger(store: model.store, classes: model.classes).states(), store: model.store
+            )) : nil
             VStack(alignment: .leading, spacing: 0) {
-                Button { dismiss() } label: {
-                    Text("Recipes")
-                        .textRole(.label)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .frame(minHeight: 32)
+                HStack(alignment: .firstTextBaseline) {
+                    Button { dismiss() } label: {
+                        Text("Recipes")
+                            .textRole(.label)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                            .frame(minHeight: 32)
+                    }
+                    .buttonStyle(HandleButtonStyle())
+                    .accessibilityHint("Back to the recipes")
+                    // Fix a recipe on: FIX at the top right (sheet 114 section 5); off, the header is as it was.
+                    if KitchenSwitch.fixRecipe {
+                        Spacer(minLength: Theme.Spacing.m)
+                        Button(fixing ? "Done" : "Fix") {
+                            if fixing {
+                                saveFix(recipe)
+                            } else {
+                                startFix(recipe)
+                            }
+                        }
+                        .buttonStyle(.labelWord(Theme.Colors.ink))
+                        .frame(minWidth: 44, minHeight: 44)
+                        .accessibilityHint(fixing ? "Keeps the new name" : "Change the name in place")
+                    }
                 }
-                .buttonStyle(HandleButtonStyle())
-                .accessibilityHint("Back to the recipes")
                 .entrance(0)
 
                 // A private recipe always reads "Private recipe": nothing reveals it (G53, G102), and the tap opens
                 // its original page, which stays masked too.
                 let masked = RecipeCopy.isPrivate(recipe.title, model: model)
-                NavigationLink(value: Route.object(recipe.id)) {
-                    heroTitle(masked ? ObjectPrivacy.recipeLabel : recipe.title)
+                if fixing {
+                    TextField("Name", text: $draftTitle, axis: .vertical)
+                        .textRole(.hero)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .focused($titleFocused)
+                        .submitLabel(.done)
+                        .onSubmit { saveFix(recipe) }
+                        .accessibilityLabel("Recipe name")
+                        .transition(.opacity)
+                } else {
+                    NavigationLink(value: Route.object(recipe.id)) {
+                        heroTitle(masked ? ObjectPrivacy.recipeLabel : recipe.title)
+                    }
+                    .accessibilityHint("The original text and when it was cooked")
+                    .buttonStyle(HandleButtonStyle())
+                    .matchedTransitionSource(id: recipe.id, in: zoom)
+                    .accessibilityAddTraits(.isHeader)
+                    .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
+                        if KitchenSwitch.fixRecipe {
+                            startFix(recipe)
+                        }
+                    })
+                    .entrance(1, hero: true)
                 }
-                .accessibilityHint("The original text and when it was cooked")
-                .buttonStyle(HandleButtonStyle())
-                .matchedTransitionSource(id: recipe.id, in: zoom)
-                .accessibilityAddTraits(.isHeader)
-                .entrance(1, hero: true)
 
                 Text(RecipeCopy.context(recipe, serves: size, model: model, now: AppClock.now))
                     .font(Theme.voice)
@@ -91,7 +131,7 @@ struct RecipePage: View {
                     .entrance(2)
 
                 ZStack(alignment: .topLeading) {
-                    let column = IngredientColumn(lines: lines, zoom: zoom, isPrivate: masked) {
+                    let column = IngredientColumn(lines: lines, zoom: zoom, isPrivate: masked, pantry: pantry) {
                         send(recipe: recipe.id, serves: size)
                     }
                     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { columnWidth = $0 }
@@ -155,6 +195,14 @@ struct RecipePage: View {
                         .foregroundStyle(Theme.Colors.ink)
                         .padding(.top, Theme.Spacing.s)
                         .transition(.opacity)
+                }
+
+                if let have = pantry?.line {
+                    Text(have)
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .padding(.top, Theme.Spacing.s)
+                        .contentTransition(.identity)
                 }
 
                 Text(RecipeCopy.stepCount(steps.count))
@@ -232,6 +280,29 @@ struct RecipePage: View {
             .lineLimit(typeSize.isAccessibilitySize ? nil : 3)
             .minimumScaleFactor(typeSize.isAccessibilitySize ? 1 : 0.6)
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// FIX: the name opens for writing. A private recipe opens empty, so its name never shows (G102).
+    private func startFix(_ recipe: ObjectRecord) {
+        draftTitle = RecipeCopy.isPrivate(recipe.title, model: model) ? "" : recipe.title
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { fixing = true }
+        titleFocused = true
+    }
+
+    /// Done: an unchanged or empty name writes nothing; a new one is one op with UNDO 10 s (a change).
+    private func saveFix(_ recipe: ObjectRecord) {
+        let title = draftTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { fixing = false }
+        titleFocused = false
+        guard !title.isEmpty, title != recipe.title else { return }
+        guard let record = try? model.engine.perform(EditRecipe(recipe: recipe.id, title: title), by: .user).record
+        else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return
+        }
+        model.touch()
+        TessVoice.shared.say(RecipeCopy.fixed(title, isPrivate: RecipeCopy.isPrivate(title, model: model)),
+                             undo: record)
     }
 
     private func cook(_ recipe: UUID, _ serves: Int?) {
@@ -376,6 +447,8 @@ private struct IngredientColumn: View {
     /// A private recipe gives counts, never names (G183): each row reads "Private item", to the eye and to
     /// VoiceOver, and opens nothing.
     var isPrivate = false
+    /// Pantry state on: each line's In, Low or Out at its right; nil leaves the column as it was.
+    var pantry: NeedHave?
     /// "1 1/2 tbsp" fits at every text size (G69).
     @ScaledMetric(relativeTo: .body) private var amountWidth: CGFloat = 92
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -423,13 +496,17 @@ private struct IngredientColumn: View {
                         .matchedTransitionSource(id: line.ingredient?.id ?? line.id, in: zoom)
                         .accessibilityHint("Opens the ingredient")
                     }
+                    if let word = stateWord(at: index) {
+                        stateText(word)
+                    }
                 }
                 .opacity(dim ? 0.45 : 1)
                 .frame(minHeight: 44)
                 // One stop per row: "2 cups flour, chopped"; activating opens the ingredient (G58).
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel(isPrivate ? RecipeCopy.privateRow(amount(line))
-                    : RecipeCopy.spokenRow(amount(line), line.line))
+                .accessibilityLabel((isPrivate ? RecipeCopy.privateRow(amount(line))
+                        : RecipeCopy.spokenRow(amount(line), line.line))
+                    + (stateWord(at: index).map { ", \($0)" } ?? ""))
                 .accessibilityActions {
                     if line.line.metricText != nil {
                         Button("Show in metric") { flip(line) }
@@ -443,6 +520,21 @@ private struct IngredientColumn: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Ingredients")
         .accessibilityAction(named: Text(RecipeCopy.addAllAction), onAdd)
+    }
+
+    private func stateWord(at index: Int) -> String? {
+        guard let pantry, pantry.lines.indices.contains(index) else { return nil }
+        return NeedHave.word(for: pantry.lines[index])
+    }
+
+    /// Ink only (ruling 4): Out reads heavier than Low, In plain.
+    private func stateText(_ word: String) -> some View {
+        Text(word)
+            .textRole(.body)
+            .fontWeight(word == "Out" ? .bold : word == "Low" ? .semibold : .regular)
+            .foregroundStyle(word == "In" ? Theme.Colors.inkSecondary : Theme.Colors.ink)
+            .fixedSize()
+            .accessibilityHidden(true)
     }
 
     private func amount(_ line: RecipeBook.Line) -> String {
@@ -644,6 +736,11 @@ enum RecipeCopy {
             }
         }
         return name.trimmingCharacters(in: .whitespaces)
+    }
+
+    /// FIX's receipt, thing first: "Tacos, fixed."; a private recipe "Private recipe, fixed." (RE-E2).
+    static func fixed(_ title: String, isPrivate: Bool) -> String {
+        "\(isPrivate ? ObjectPrivacy.recipeLabel : shortName(title)), fixed."
     }
 
     /// The title a surface shows: "Private recipe" for a private one, always; nothing reveals it (G102).

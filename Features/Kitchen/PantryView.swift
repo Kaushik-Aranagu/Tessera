@@ -31,6 +31,7 @@ private struct PantryPage: View {
     var body: some View {
         let _ = model.revision
         let front = PantryFront(ledger: ledger, now: AppClock.now)
+        let stated = KitchenSwitch.pantryState
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Pantry")
@@ -59,7 +60,10 @@ private struct PantryPage: View {
                         .padding(.top, Theme.Spacing.l)
                         .entrance(2)
                 }
-                ForEach([(PantryLedger.State.out, front.out), (.low, front.low)], id: \.0) { state, lines in
+                // Pantry state on: IN joins under LOW, and every line reads In, Low or Out.
+                let groups = [(PantryLedger.State.out, front.out), (.low, front.low)] +
+                    (stated ? [(.have, front.have)] : [])
+                ForEach(groups, id: \.0) { state, lines in
                     if !lines.isEmpty {
                         VStack(alignment: .leading, spacing: 0) {
                             Text(state.word.uppercased())
@@ -68,17 +72,22 @@ private struct PantryPage: View {
                                 .accessibilityAddTraits(.isHeader)
                                 .padding(.bottom, Theme.Spacing.s)
                             ForEach(lines) { entry in
-                                PantryLine(entry: entry, onAdd: { add(entry) })
+                                PantryLine(entry: entry, stated: stated, onAdd: { add(entry) })
                             }
                         }
                         .padding(.top, Theme.Spacing.xxl)
                         .entrance(2)
                     }
                 }
+                // Usually line on: USUALLY HAVE closes the front (kitchen-v2 RL, ruling 3).
+                if KitchenSwitch.usuallyLine {
+                    UsuallyLine(label: "Usually have")
+                        .padding(.top, Theme.Spacing.xxl)
+                }
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.vertical, Theme.Spacing.l)
-            .tesseraAnimation(value: (front.out + front.low).map(\.id))
+            .tesseraAnimation(value: (front.out + front.low + (stated ? front.have : [])).map(\.id))
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
@@ -124,6 +133,8 @@ private struct PantryPage: View {
 /// One thing: the name in ink, its state word at the right (out heavier than low), the faint ring on out lines.
 struct PantryLine: View {
     let entry: PantryLedger.Entry
+    /// Pantry state on: the word reads "In", "Low" or "Out" (ruling 5); off, today's "out" and "low".
+    var stated = false
     var onAdd: () -> Bool = { false }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -148,7 +159,7 @@ struct PantryLine: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(name), \(entry.state.word)")
+        .accessibilityLabel("\(name), \(word)")
         .accessibilityAction(named: "Add to Groceries") { _ = onAdd() }
         .offset(x: pull)
         // The ghost row behind the swipe: where the line is going (Design on #727).
@@ -177,6 +188,10 @@ struct PantryLine: View {
         )
     }
 
+    private var word: String {
+        stated ? entry.state.shownWord ?? entry.state.word : entry.state.word
+    }
+
     private func row(_ name: String) -> some View {
         // At accessibility sizes the state word goes under the name, one column, nothing clipped (S16).
         let layout = typeSize.isAccessibilitySize
@@ -190,7 +205,7 @@ struct PantryLine: View {
             if !typeSize.isAccessibilitySize {
                 Spacer(minLength: Theme.Spacing.m)
             }
-            Text(entry.state.word)
+            Text(word)
                 .textRole(.body)
                 .fontWeight(entry.state == .out ? .bold : .semibold)
                 // Ink, no ochre (Design sheet 99): out reads heavier than low by weight alone.

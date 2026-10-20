@@ -66,6 +66,14 @@ private struct RecipesShelfPage: View {
                     .foregroundStyle(Theme.Colors.context)
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1)
+                // Can cook shelf on: CAN COOK leads the front (sheet 104 section 2); off, the shelf is as it was.
+                if KitchenSwitch.canCookShelf, !shelf.rows.isEmpty {
+                    CanCookShelf(shelf: CanCook(store: model.store, classes: model.classes,
+                                                states: PantryLedger(store: model.store, classes: model.classes)
+                                                    .states()))
+                        .padding(.top, Theme.Spacing.xxl)
+                        .entrance(2)
+                }
                 if shelf.rows.isEmpty {
                     Text("No recipes yet.")
                         .font(Theme.voice)

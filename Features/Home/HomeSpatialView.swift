@@ -407,6 +407,8 @@ struct HomeSpatialView: View {
 /// The screens Home reaches that are not objects: Notes, Review, Groceries, Pantry and Recipes.
 enum HomeLink: Hashable, CaseIterable, Identifiable {
     case groceries, lists, pantry, recipes, pasteRecipe, notes, review
+    /// The week of dinners (sheet 104 section 3), reached from the strip on Kitchen.
+    case dinners
 
     var id: Self {
         self
@@ -421,6 +423,7 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .pasteRecipe: "Paste a recipe"
         case .notes: "Notes"
         case .review: "The week"
+        case .dinners: "Dinners"
         }
     }
 
@@ -435,6 +438,7 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .pasteRecipe: PasteRecipeView()
         case .notes: NotesView()
         case .review: ReviewView()
+        case .dinners: DinnersView()
         }
     }
 }
@@ -463,6 +467,10 @@ private struct KitchenPage: View {
                 .modifier(LinkZoomSource(link: link, zoom: zoom))
             }
             HomeLinkLine(links: [.pasteRecipe])
+            // Week strip on: the week's dinners under the doors (sheet 114 section 1); off, Kitchen is as it was.
+            if KitchenSwitch.weekStrip {
+                DinnersStrip { open(.dinners) }
+            }
             Spacer(minLength: 0)
         }
         .padding(.top, Theme.Spacing.xl)
