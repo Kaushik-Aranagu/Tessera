@@ -127,8 +127,8 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
    - Integrate Claude early (yes) (Oct 15, 11:41 AM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MXfAj9rS5WnrrZNzcFQbtHD)
 
 ### AI architecture
-- Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MNFdmU6fKkCLKUHUNnUMoWs; old session cse_01DjmvkyvRv3FrANnLQQx6U6.
-- Fresh thread: cmsg_01VTPva3JGXrfvetgUvAWE7MFkXAPBQ4sJbazgjECDVsu7; session cse_011uM8VcURgDjjMD2eApQiCb.
+- Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MFkXAPBQ4sJbazgjECDVsu7; old session cse_011uM8VcURgDjjMD2eApQiCb.
+- Fresh thread (2:30 PM Oct 19): cmsg_01VTPva3JGXrfvetgUvAWE7MM5XjePKEvYiDXS3aC1arTX; session cse_011ou6NG7Z9dq7sehtzYrwyH.
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "AI architecture" if present; if not, ask the coordinator for the note the outgoing lead sent.
 - Rules for AI architecture (plus G):
