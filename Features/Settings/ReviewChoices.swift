@@ -93,7 +93,7 @@ final class ReviewChoices {
                needsClaude: true, readiness: .arrivesWith("link reading")),
         Choice(id: "cookTimerVoice", name: "Cook timer voice", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "A cook timer ends with its alert.", "On": "Tess says the timer's name when it ends."],
-               readiness: .arrivesWith("the timer voice")),
+               readiness: .live),
         Choice(id: "pantryState", name: "Pantry state", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The pantry lists what you have.", "On": "Each pantry item shows how much is left."],
                readiness: .arrivesWith("pantry state")),
@@ -102,7 +102,15 @@ final class ReviewChoices {
                readiness: .arrivesWith("the CAN COOK shelf")),
         Choice(id: "handsFreeCook", name: "Hands-free cook mode", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Steps move on a tap.", "On": "Steps move by voice while you cook."],
-               readiness: .arrivesWith("hands-free cooking")),
+               readiness: .live),
+        Choice(id: "parallelSteps", name: "Steps in parallel", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "A cook runs one step at a time.",
+                      "On": "A 'meanwhile' step runs beside a timed one, with its own timer."],
+               readiness: .live),
+        Choice(id: "cookNotes", name: "Cook notes", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Notes stay with each cook.",
+                      "On": "Finish asks for a note for next time, and the recipe shows the latest."],
+               readiness: .live),
     ]
 
     /// The rows in pages of at most six, for the side swipe (Design sheet 100).
