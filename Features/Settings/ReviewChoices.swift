@@ -69,7 +69,7 @@ final class ReviewChoices {
                       "Turn": "Pages turn like paper.",
                       "Soften": "Pages soften into each other.",
                       "Rotate": "Pages rotate on their edge."],
-               readiness: .arrivesWith("page turns")),
+               readiness: .live),
         // Core's #1160 (Kaushik, Oct 19, 7:12 PM): the phone's own model first, Claude only with "Tess asks Claude";
         // a private routine stays "Private workout"; his own name stops it. Off leaves every name to him.
         Choice(id: "trainingAutoName", name: "Tess names training days", values: ["On", "Off"], defaultValue: "On",
@@ -162,8 +162,7 @@ final class ReviewChoices {
                readiness: .arrivesWith("calories burned")),
     ]
 
-    /// The rows in pages of at most six, for the side swipe (Design sheet 100).
-    /// Review's pages by facet, each named beside the counter ("Workout, 2 of 5"; Design sheet 100), six rows at most.
+    /// Review's tabs by facet, named in PeekTabs (Design sheets 100 and 108), six rows at most.
     nonisolated static let facets: [(word: String, ids: [String])] = [
         ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace", "lockScreenLook"]),
         // Design 110: Calories burned and Energy check-in sit with the workout; Class inspector with Shown.
@@ -198,6 +197,7 @@ final class ReviewChoices {
         return pages
     }
 
+    /// The rows in pages of at most six, in order, for any caller that pages without facets.
     nonisolated static func pages(_ choices: [Choice] = all, size: Int = 6) -> [[Choice]] {
         stride(from: 0, to: choices.count, by: size).map { Array(choices[$0 ..< min($0 + size, choices.count)]) }
     }

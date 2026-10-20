@@ -8,6 +8,9 @@ import SwiftUI
 struct PeekTabs<Content: View>: View {
     let tabs: [String]
     @Binding var selection: Int
+    /// A page turn style other than Today: one page shows at a time and turns in that style (the content plays it,
+    /// e.g. through `PageTurnRows`); a side swipe on the page still moves one tab. Nil or Today: pages slide as now.
+    var turns: PageTurnStyle?
     @ViewBuilder var content: (Int) -> Content
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -63,6 +66,8 @@ struct PeekTabs<Content: View>: View {
                     .accessibilityHidden(true)
             }
             .tesseraAnimation(value: selection)
+            // Hidden until every word is measured, so no frame shows them stacked (Design on #1137).
+            .opacity(widths.count == tabs.count ? 1 : 0)
         }
         .frame(height: 48)
         .contentShape(Rectangle())
@@ -118,9 +123,38 @@ struct PeekTabs<Content: View>: View {
 
     // MARK: The pages
 
-    private var pages: some View {
+    @ViewBuilder private var pages: some View {
+        if reduceMotion {
+            // Reduce Motion: the page cuts with a 150 ms crossfade, never slides (Design on #1137).
+            content(selection)
+                .id(selection)
+                .transition(.opacity.animation(PageTurnTiming.reduced))
+                .accessibilityElement(children: .contain)
+        } else if let turns, turns != .today {
+            turningPage
+        } else {
+            slidingPages
+        }
+    }
+
+    /// One page at a time, turning in place: the content sees the new index and plays the turn; a side swipe steps.
+    private var turningPage: some View {
+        content(selection)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 24).onEnded { value in
+                guard abs(value.translation.width) > abs(value.translation.height),
+                      abs(value.translation.width) > 40 else { return }
+                step(value.translation.width < 0 ? 1 : -1)
+            })
+            .accessibilityElement(children: .contain)
+    }
+
+    private var slidingPages: some View {
         ScrollView(.horizontal) {
-            LazyHStack(alignment: .top, spacing: 0) {
+            // A plain stack (a handful of pages): the pager is as tall as its tallest page, so every tab shows all
+            // its rows (Builder A's clip on #1173: Cook notes was cut under a three-row first page).
+            HStack(alignment: .top, spacing: 0) {
                 ForEach(tabs.indices, id: \.self) { index in
                     content(index)
                         .containerRelativeFrame(.horizontal)

@@ -109,4 +109,24 @@ struct SettingsPageTests {
                                            defaultValue: "Off", says: [:], readiness: .arrivesWith("pantry state"))
         #expect(ReviewChoices.drawnPages([waiting]).isEmpty)
     }
+
+    /// The page turn's timings follow the motion spec, and Reduce Motion is one 150 ms crossfade for every style.
+    @Test func pageTurnTimingsFollowTheSpec() {
+        #expect(PageTurnStyle.allCases.map(\.rawValue) == ["Today", "Slide", "Turn", "Soften", "Rotate"])
+        #expect(abs(PageTurnTiming.total(.turn, rows: 6, reduceMotion: false) - 0.82) < 0.001)
+        #expect(abs(PageTurnTiming.total(.rotate, rows: 6, reduceMotion: false) - 0.46) < 0.001)
+        #expect(abs(PageTurnTiming.total(.rotate, rows: 3, reduceMotion: false) - 0.388) < 0.001)
+        #expect(PageTurnTiming.total(.slide, rows: 6, reduceMotion: false) == 0.52)
+        #expect(PageTurnStyle.allCases.allSatisfy { PageTurnTiming.total($0, rows: 6, reduceMotion: true) == 0.15 })
+        #expect(PageTurnStyle.slide.isWholePage && !PageTurnStyle.turn.isWholePage)
+    }
+
+    /// Page turn ships: it is live, drawn on Looks and day, and Today (the default) keeps the pages sliding as before.
+    @Test func pageTurnIsLiveOnLooksAndDay() throws {
+        let row = try #require(ReviewChoices.all.first { $0.id == "pageTurn" })
+        #expect(row.readiness == .live && row.defaultValue == "Today" && !row.needsClaude)
+        let looks = try #require(ReviewChoices.drawnPages().first { $0.word == "Looks and day" })
+        #expect(looks.rows.contains { $0.id == "pageTurn" })
+        #expect(PageTurnStyle(rawValue: row.defaultValue) == .today)
+    }
 }
