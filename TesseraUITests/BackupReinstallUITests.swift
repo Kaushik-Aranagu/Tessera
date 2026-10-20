@@ -7,6 +7,7 @@ final class BackupReinstallUITests: SimulatorOnlyTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-resetDemo", "-openLink", "review"]
         app.launch()
+        openSettings(app)
         let backups = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Backups")).firstMatch
         XCTAssertTrue(backups.waitForExistence(timeout: 15))
         app.swipeUp()
