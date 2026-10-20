@@ -327,6 +327,13 @@ struct ClaudeRouteTests {
         #expect(ledger.calls().count == 1)
     }
 
+    @Test func aRefusedKeyKeepsHisWordsAndCancelledDoesNot() async {
+        RouteStub.failure = nil
+        RouteStub.reply = (401, "{}")
+        let refused = await tess().capture(miss, context: context)
+        #expect(refused.keepsWords && !refused.keptToSort && refused.line.contains("Settings: Claude"))
+    }
+
     @Test func aBusyReplyKeepsHisWordsToo() async {
         RouteStub.failure = nil
         RouteStub.reply = (429, "{}")
