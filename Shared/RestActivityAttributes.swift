@@ -13,6 +13,8 @@ struct RestActivityAttributes: ActivityAttributes {
             case resting
             /// Rest is over; the planned set is waiting to be logged.
             case ready
+            /// The last set is logged: one still face, "<title>, ready to finish", for about a minute.
+            case closing
         }
 
         /// The exercise of the planned set.
@@ -32,6 +34,8 @@ struct RestActivityAttributes: ActivityAttributes {
         /// the Lock Screen's appearance. Optional: older states decode without them.
         var lookDay: String?
         var lookNight: String?
+        /// The closing face's line, "Push A, ready to finish" (masked for a private workout). Set only in `.closing`.
+        var closingLine: String?
 
         /// The rest as a range for `Text(timerInterval:)` and `ProgressView(timerInterval:)`.
         var restInterval: ClosedRange<Date> {

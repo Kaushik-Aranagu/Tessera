@@ -71,7 +71,41 @@ public enum ObjectPrivacy {
         if isA(.book) {
             return flagged ? bookLabel : nil
         }
+        // A workout or routine (OL01): its own title, its flag, or the routine a workout was made from.
+        if isA(.routine) || isA(.workout) {
+            let routine = isA(.workout) ? store.linkedObjects("routine", of: object).first : nil
+            let titles = [object.title] + (routine.map { [$0.title] } ?? [])
+            return flagged || titles.contains(where: {
+                $0 == routineLabel || PrivateWords.isPrivateTitle($0, lastWeightKg: last)
+            }) ? routineLabel : nil
+        }
         return nil
+    }
+
+    /// The one private-text function for an object (OL05): what any screen, row, handle, export or index prints in
+    /// place of its title, or nil when it is plain. Core's own rules (note, memory, task, recipe, ingredient, workout,
+    /// routine), then what the export has always masked (a child of a private object, an object carrying a private
+    /// title, an ingredient only private things use, any object with a walled text value), then a private list or
+    /// item. The page, the export and the index all call this, so a thing reads private everywhere or nowhere.
+    @MainActor
+    public static func shownLabel(of object: ObjectRecord, in store: ObjectStore,
+                                  classes: [SystemCatalog.Key: ClassDef]) -> String?
+    {
+        if let core = label(of: object, in: store, classes: classes) {
+            return core
+        }
+        if let wide = PrivateWords.labels(in: store.context)[object.id] {
+            return wide
+        }
+        guard let classDef = object.classDef else { return nil }
+        func isA(_ key: SystemCatalog.Key) -> Bool {
+            classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
+        }
+        guard isPrivateRecipeTitle(object.title, lastWeightKg: BodyWeight.lastKg(in: store)) else { return nil }
+        if isA(.listItem) {
+            return "Private item"
+        }
+        return isA(.list) ? "Private list" : nil
     }
 
     /// The one check for a title or a word he typed (G105): a secret word, money, a body fact, a medicine, a doctor's

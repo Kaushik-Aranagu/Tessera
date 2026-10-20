@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 extension EnvironmentValues {
     /// Namespace shared by zoom sources (rows, handles) and zoom destinations (object pages, workout mode).
@@ -32,7 +33,8 @@ struct ObjectHandle: View {
         }
         .buttonStyle(HandleButtonStyle())
         .modifier(ZoomSource(id: route, namespace: relation == .deeper ? namespace : nil))
-        .accessibilityHint("Opens \(title)")
+        // The hint never repeats the name VoiceOver just read (OL19).
+        .accessibilityHint("Opens the page")
     }
 }
 
@@ -64,7 +66,9 @@ struct ObjectRow<Trailing: View>: View {
                 Spacer(minLength: Theme.Spacing.s)
                 trailing
                 if showsArrow {
+                    // The arrow is drawing, not words: VoiceOver skips it (OL21).
                     Text("→").textRole(.label).foregroundStyle(Theme.Colors.inkTertiary)
+                        .accessibilityHidden(true)
                 }
             }
             .padding(.vertical, Theme.Spacing.m)
@@ -74,13 +78,36 @@ struct ObjectRow<Trailing: View>: View {
         .buttonStyle(HandleButtonStyle())
         .modifier(ZoomSource(id: route, namespace: namespace))
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Opens \(title)")
+        .accessibilityHint("Opens the page")
     }
 }
 
 extension ObjectRow where Trailing == EmptyView {
     init(title: String, route: Route, role: TextRole = .body, color: Color = Theme.Colors.ink) {
         self.init(title: title, route: route, role: role, color: color) { EmptyView() }
+    }
+
+    /// A row for an object takes the object, so its name is always the one shown title (OL20).
+    @MainActor
+    init(object: ObjectRecord, in model: AppModel) {
+        self.init(title: ObjectTitle.shown(object, in: model.store, classes: model.classes), route: .object(object.id))
+    }
+}
+
+extension ObjectRow {
+    /// A row for an object, with trailing metadata (OL20).
+    @MainActor
+    init(object: ObjectRecord, in model: AppModel, @ViewBuilder trailing: () -> Trailing) {
+        self.init(title: ObjectTitle.shown(object, in: model.store, classes: model.classes), route: .object(object.id),
+                  trailing: trailing)
+    }
+}
+
+extension ObjectHandle {
+    /// An inline handle for an object takes the object, so its name is always the one shown title (OL20).
+    @MainActor
+    init(object: ObjectRecord, in model: AppModel) {
+        self.init(title: ObjectTitle.shown(object, in: model.store, classes: model.classes), route: .object(object.id))
     }
 }
 

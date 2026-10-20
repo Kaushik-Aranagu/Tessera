@@ -18,6 +18,7 @@ public extension ObjectStore {
         let classes = try SystemCatalog.seed(in: context)
         try ExerciseLibraryInstaller.installIfNeeded(store: self, classes: classes)
         try StarterContent.installIfNeeded(store: self, classes: classes)
+        StarterContent.backfillKinds(store: self, classes: classes)
         Groceries.installIfNeeded(store: self, classes: classes)
         closeStaleCooksAfterRestore(classes: classes, now: now, calendar: calendar)
         return classes

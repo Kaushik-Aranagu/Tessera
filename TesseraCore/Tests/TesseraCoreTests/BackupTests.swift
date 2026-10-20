@@ -165,7 +165,9 @@ struct BackupTests {
         let container = TesseraSchema.makeContainer(url: storeURL)
         #expect(try json(container.mainContext) == expected)
         let backups = dir.appendingPathComponent("Backups")
-        #expect(try !FileManager.default.contentsOfDirectory(atPath: backups.path).isEmpty)
+        // A clean restore leaves no set-aside folder behind (hunt 27): the Before-restore copy is the undo.
+        #expect(!FileManager.default.fileExists(atPath: backups.path)
+            || ((try? FileManager.default.contentsOfDirectory(atPath: backups.path)) ?? []).isEmpty)
         #expect(!FileManager.default.fileExists(atPath: TesseraBackup.pendingURL(for: storeURL).path))
         // QA B1: what was here is kept as a stamped backup that can be restored again (the undo).
         let kept = try FileManager.default.contentsOfDirectory(at: dir.appendingPathComponent("Kept"),
@@ -240,5 +242,97 @@ struct BackupTests {
         #expect(TesseraSchema.launchNote != nil)
         #expect(!FileManager.default.fileExists(atPath: TesseraBackup.pendingURL(for: storeURL).path))
         TesseraSchema.clearLaunchNote()
+    }
+
+    // MARK: G689, the Before-restore copy
+
+    /// A restore staged over `storeURL`, with `actions` notes in the store being replaced (nil: no store at all).
+    func restoreOver(dir: URL, actions: Int?) throws -> (applied: Bool, kept: URL) {
+        let storeURL = dir.appendingPathComponent("tessera.sqlite")
+        let source = try seededStore(at: dir.appendingPathComponent("source.sqlite"))
+        let file = dir.appendingPathComponent("from-before.tessera")
+        try TesseraBackup.write(from: source.context, to: file)
+        if let actions {
+            let current = try ObjectStore(context: TesseraContext(url: storeURL))
+            let classes = try current.prepareCatalog()
+            let engine = ActionEngine(store: current, classes: classes)
+            for index in 0 ..< actions {
+                try engine.perform(CreateNote(body: "note \(index)"), by: .user)
+            }
+            current.save()
+        }
+        _ = try TesseraBackup.stageRestore(from: file, storeURL: storeURL)
+        let kept = dir.appendingPathComponent("Kept")
+        let applied = TesseraBackup.applyPendingRestore(to: storeURL, keepIn: kept)
+        return (applied, kept)
+    }
+
+    func beforeRestoreCopies(_ kept: URL) -> [String] {
+        ((try? FileManager.default.contentsOfDirectory(atPath: kept.path)) ?? []).filter {
+            $0.hasPrefix("Before-restore-")
+        }
+    }
+
+    @Test func restoreOverAnEmptyStoreWritesNoBeforeRestoreCopy() throws {
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        // A seeded-only store: the catalog and no action of his.
+        let result = try restoreOver(dir: dir, actions: 0)
+        #expect(result.applied && beforeRestoreCopies(result.kept).isEmpty)
+        TesseraSchema.clearLaunchNote()
+    }
+
+    @Test func restoreOverAStoreWithActionsStillWritesTheCopy() throws {
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let result = try restoreOver(dir: dir, actions: 2)
+        #expect(result.applied && beforeRestoreCopies(result.kept).count == 1)
+        TesseraSchema.clearLaunchNote()
+    }
+
+    @Test func cleanRestoreLeavesNoSetAsideFolder() throws {
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let result = try restoreOver(dir: dir, actions: 2)
+        #expect(result.applied)
+        let backups = dir.appendingPathComponent("Backups")
+        #expect(!FileManager.default.fileExists(atPath: backups.path)
+            || ((try? FileManager.default.contentsOfDirectory(atPath: backups.path)) ?? []).isEmpty)
+        TesseraSchema.clearLaunchNote()
+    }
+
+    @Test func unreadableStoreCountStillWritesTheCopy() throws {
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        // A store file that is not SQLite: its count cannot be read, so the copy is attempted (safe side) and the
+        // restore, which could not keep a copy of it, does not happen.
+        let storeURL = dir.appendingPathComponent("tessera.sqlite")
+        try Data("not a database".utf8).write(to: storeURL)
+        let source = try seededStore(at: dir.appendingPathComponent("source.sqlite"))
+        let file = dir.appendingPathComponent("from-before.tessera")
+        try TesseraBackup.write(from: source.context, to: file)
+        _ = try TesseraBackup.stageRestore(from: file, storeURL: storeURL)
+        let applied = TesseraBackup.applyPendingRestore(to: storeURL, keepIn: dir.appendingPathComponent("Kept"))
+        #expect(!applied)
+        TesseraSchema.clearLaunchNote()
+    }
+
+    // MARK: G688, the quiet restore offer
+
+    @Test func freshStoreOffersRestoreOnce() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        func offered(folder: Bool = false, staged: Bool = false, dismissed: Bool = false) -> Bool {
+            TesseraBackup.offersRestore(in: store.context, folderPicked: folder, restoreStaged: staged,
+                                        dismissed: dismissed)
+        }
+        // Seeded, plus the system's own "Sunday, rest day." and a look tap: still a fresh store.
+        try engine.perform(WriteSettings(settings: TesseraSettings(lookDay: "Porcelain")), by: .user)
+        #expect(offered())
+        #expect(!offered(folder: true) && !offered(staged: true) && !offered(dismissed: true))
+        // His first action ends the offer.
+        try engine.perform(CreateNote(body: "first"), by: .user)
+        #expect(!offered())
     }
 }

@@ -2,6 +2,8 @@
 
 For: AI architecture team. Ideas Kaushik wants kept, not built. Nothing here gets research, API calls or spend until he says to pursue it.
 
+_Amended Oct 19: with "Tess reads the screen" on, a small model may pick the move; default Off; she never waits on it. See `design/motion/tess-reads-the-screen-motion.md`._
+
 ## Tess as her own agent (Kaushik, Oct 16, 8:53 AM PT, in the Tess motion lab thread)
 
 **What he said, in short.** The weak link is how Tess roams: "after it spreads the pattern it's making is very predictive", so he wants it "more interactive and more depending on what's on the screen" instead of "hard-coded stuff".

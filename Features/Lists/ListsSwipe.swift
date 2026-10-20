@@ -5,6 +5,8 @@ import SwiftUI
 struct SwipeToRemove: ViewModifier {
     /// Removes the row; true when it went. The list page plays the haptic, since the row is gone by then (QA on #786).
     let onRemove: () -> Bool
+    /// The word that rises: "Remove" on a list, "Forget" on What Tess knows.
+    var word = "Remove"
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pull: CGFloat = 0
     /// The house "swipe is armed" tick, once as the pull crosses 96 pt (Design on #786).
@@ -20,10 +22,10 @@ struct SwipeToRemove: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .accessibilityAction(named: "Remove") { _ = remove() }
+            .accessibilityAction(named: Text(word)) { _ = remove() }
             .offset(x: pull)
             .background(alignment: .trailing) {
-                Text("Remove")
+                Text(word)
                     .textRole(.labelStrong)
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.live)
@@ -58,7 +60,7 @@ struct SwipeToRemove: ViewModifier {
 }
 
 extension View {
-    func swipeToRemove(_ onRemove: @escaping () -> Bool) -> some View {
-        modifier(SwipeToRemove(onRemove: onRemove))
+    func swipeToRemove(word: String = "Remove", _ onRemove: @escaping () -> Bool) -> some View {
+        modifier(SwipeToRemove(onRemove: onRemove, word: word))
     }
 }
