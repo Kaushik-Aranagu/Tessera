@@ -35,6 +35,7 @@ struct TesseraApp: App {
         }
         _model = State(initialValue: model)
         LiveWorkout.model = model
+        WatchBridge.shared.start(model: model)
         // App Intents (Shortcuts, Siri, the Action button) run against the same engine as the UI.
         if let runtime = model.runtime {
             AppDependencyManager.shared.add(dependency: runtime)
@@ -79,8 +80,12 @@ struct TesseraApp: App {
             // The rest Live Activity follows the live session: each logged set, +15s, Skip and the end.
             .onChange(of: model.session?.loggedCount, initial: true) {
                 RestActivityController.shared.update(for: model.session)
+                WatchBridge.shared.update(for: model.session)
             }
-            .onChange(of: model.session?.restEndsAt) { RestActivityController.shared.update(for: model.session) }
+            .onChange(of: model.session?.restEndsAt) {
+                RestActivityController.shared.update(for: model.session)
+                WatchBridge.shared.update(for: model.session)
+            }
             .onChange(of: scenePhase, initial: true) { _, phase in
                 // Once a day, on the way out: a backup copy (docs/research/free-signing-survival.md).
                 if phase == .background {

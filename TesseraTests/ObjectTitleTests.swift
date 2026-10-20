@@ -43,4 +43,14 @@ struct ObjectTitleTests {
         #expect(DayColumn.caption("Knee rehab day", store: model.store) == "Private")
         #expect(DayColumn.caption("Push Day A", store: model.store) == "Push")
     }
+
+    /// OL28 / OL29: a link to a deleted object opens "Not on this phone anymore.", never a blank page.
+    @Test func aDeletedObjectOpensAsGone() throws {
+        let note = try model.engine.perform(CreateNote(body: "milk run"), by: .user).output
+        #expect(ObjectPage.live(note) != nil)
+        try model.engine.perform(DeleteObject(object: note.id), by: .user)
+        #expect(ObjectPage.live(model.object(note.id)) == nil)
+        #expect(ObjectPage.live(nil) == nil)
+        #expect(ObjectPageCopy.gone == "Not on this phone anymore.")
+    }
 }

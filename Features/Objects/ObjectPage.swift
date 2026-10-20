@@ -54,6 +54,11 @@ struct ObjectPage: View {
             && ObjectMask.label(of: note, in: model.store, classes: model.classes) == nil
     }
 
+    /// The object a link opens, or nil when it is deleted or not on this phone (OL28, OL29).
+    static func live(_ object: ObjectRecord?) -> ObjectRecord? {
+        object.flatMap { $0.isDeleted ? nil : $0 }
+    }
+
     /// The latched choice once made; the live check only before the first appearance.
     static func resolveOpensAsNote(latched: Bool?, live: () -> Bool) -> Bool {
         latched ?? live()
@@ -66,10 +71,16 @@ struct ObjectPage: View {
                 case let .classDef(id):
                     if let classDef = model.classDef(id: id) {
                         ClassBody(classDef: classDef)
+                    } else {
+                        GoneBody()
                     }
                 case let .object(id):
-                    if let object = model.object(id) {
+                    // A link to something deleted, or gone from this phone, says so rather than drawing a blank
+                    // page (OL28, OL29).
+                    if let object = Self.live(model.object(id)) {
                         InstanceBody(object: object)
+                    } else {
+                        GoneBody()
                     }
                 case .routines:
                     EmptyView()
@@ -88,11 +99,37 @@ struct ObjectPage: View {
     }
 }
 
+// MARK: - Gone
+
+/// What a link opens when its object is deleted or not on this phone: one line, focused for VoiceOver, and a back
+/// word (OL28, OL29).
+private struct GoneBody: View {
+    @Environment(\.dismiss) private var dismiss
+    @AccessibilityFocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.l) {
+            Text(ObjectPageCopy.gone)
+                .textRole(.title)
+                .foregroundStyle(Theme.Colors.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityFocused($focused)
+                .accessibilityAddTraits(.isHeader)
+            Button(ObjectPageCopy.back) { dismiss() }
+                .buttonStyle(.labelWord)
+                .frame(minHeight: 44)
+        }
+        .padding(.top, Theme.Spacing.xxl)
+        .onAppear { focused = true }
+    }
+}
+
 // MARK: - Class page
 
 private struct ClassBody: View {
     let classDef: ClassDef
     @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let lineage = ClassResolver.lineage(of: classDef)
@@ -109,7 +146,10 @@ private struct ClassBody: View {
             ExerciseSummary(history: history).entrance(4)
         }
 
-        if let notes = ObjectNotes.shown(prototype.flatMap { model.store.value("notes", of: $0)?.stringValue }) {
+        // The class page's notes pass the same mask as an object's (OL08): a private note reads its label.
+        if let notes = ObjectNotes.shown(prototype.flatMap {
+            ObjectPrivacy.notesLine(of: $0, in: model.store, classes: model.classes)
+        }) {
             Text(notes)
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.inkSecondary)
@@ -152,9 +192,7 @@ private struct ClassBody: View {
             MarginSection(label: "Used in") {
                 VStack(spacing: 0) {
                     ForEach(workouts, id: \.workout.id) { item in
-                        ObjectRow(title: ObjectTitle.shown(item.workout, in: model.store, classes: model.classes),
-                                  route: .object(item.workout.id))
-                        {
+                        ObjectRow(object: item.workout, in: model) {
                             Text("×\(item.count)").textRole(.data).foregroundStyle(Theme.Colors.inkSecondary)
                         }
                     }
@@ -167,7 +205,7 @@ private struct ClassBody: View {
             switch action {
             case "Log a set":
                 model.commandDraft = "log \(classDef.name.lowercased()) "
-                withTesseraAnimation(reduceMotion: false) { model.isCommandExpanded = true }
+                withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = true }
             default:
                 // Through the store, so its caches see the new class. (Schema changes join the op log with Build A1.)
                 let subclass = model.store.createClass(name: "New \(classDef.name)", parent: classDef,
@@ -311,8 +349,7 @@ private struct InstanceBody: View {
                         if let classDef = source.classDef, model.prototype(of: classDef)?.id == source.id {
                             ObjectRow(title: classDef.name, route: .classDef(classDef.id))
                         } else {
-                            ObjectRow(title: ObjectTitle.shown(source, in: model.store, classes: model.classes),
-                                      route: .object(source.id))
+                            ObjectRow(object: source, in: model)
                         }
                     }
                 }
@@ -338,10 +375,7 @@ private struct ChildRow: View {
                 Text(target(child)).textRole(.data).foregroundStyle(Theme.Colors.inkSecondary)
             }
         } else {
-            ObjectRow(
-                title: ObjectTitle.shown(child, in: model.store, classes: model.classes),
-                route: .object(child.id)
-            )
+            ObjectRow(object: child, in: model)
         }
     }
 
@@ -371,8 +405,11 @@ private struct Header: View {
                         HStack(spacing: Theme.Spacing.s) {
                             ObjectHandle(title: item.0, route: item.1, relation: .up, role: .label,
                                          color: Theme.Colors.inkSecondary)
+                                // "…" is read as where it goes: "Up to Thing" (OL22).
+                                .accessibilityLabel(item.0 == "…" ? "Up to \(path[0].0)" : item.0)
                             if index < shown.count - 1 {
                                 Text("/").textRole(.label).foregroundStyle(Theme.Colors.inkTertiary)
+                                    .accessibilityHidden(true)
                             }
                         }
                     }
@@ -397,6 +434,7 @@ private struct PropertyList: View {
     let classDef: ClassDef
     let object: ObjectRecord?
     @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let fields = ClassResolver.effectiveFields(of: classDef).filter { $0.key != "notes" }
@@ -414,9 +452,15 @@ private struct PropertyList: View {
         }
     }
 
+    /// One element per plain property (OL23): "Weight, 60 kg"; a link property contains its handles. At
+    /// accessibility sizes the value stacks under its name rather than squeezing beside it (OL24).
     private func row(_ field: ResolvedField) -> some View {
         let inherited = field.declaringClassID != classDef.id
-        return HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
+        let stacked = typeSize.isAccessibilitySize
+        let layout = stacked
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.xs))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Spacing.m))
+        return layout {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(field.name).textRole(.body).foregroundStyle(Theme.Colors.inkSecondary)
                 if inherited {
@@ -424,10 +468,14 @@ private struct PropertyList: View {
                         .accessibilityLabel("inherited")
                 }
             }
-            Spacer(minLength: Theme.Spacing.m)
-            value(field).multilineTextAlignment(.trailing)
+            if !stacked {
+                Spacer(minLength: Theme.Spacing.m)
+            }
+            value(field).multilineTextAlignment(stacked ? .leading : .trailing)
         }
         .padding(.vertical, Theme.Spacing.m)
+        // A link row keeps each handle its own stop, so every target can be reached (Design on #1075).
+        .accessibilityElement(children: [.ref, .refList, .classRef].contains(field.kind) ? .contain : .combine)
     }
 
     @ViewBuilder private func value(_ field: ResolvedField) -> some View {
@@ -440,8 +488,7 @@ private struct PropertyList: View {
                 VStack(alignment: .trailing, spacing: Theme.Spacing.s) {
                     // A private target shows its label, never its words (QA on #580).
                     ForEach(targets) { target in
-                        ObjectHandle(title: ObjectTitle.shown(target, in: model.store, classes: model.classes),
-                                     route: .object(target.id))
+                        ObjectHandle(object: target, in: model)
                     }
                 }
             }
@@ -483,6 +530,8 @@ private struct PropertyList: View {
 private struct Actions: View {
     let items: [String]
     let perform: (String) -> Void
+    /// The arrow grows with the words beside it (OL25).
+    @ScaledMetric(relativeTo: .body) private var arrowSize: CGFloat = 17
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.l) {
@@ -491,7 +540,8 @@ private struct Actions: View {
                 Button { perform(item) } label: {
                     HStack(spacing: Theme.Spacing.s) {
                         Text(item)
-                        Image(systemName: "arrow.right").font(.system(size: 17, weight: .semibold))
+                        Image(systemName: "arrow.right").font(.system(size: arrowSize, weight: .semibold))
+                            .accessibilityHidden(true)
                     }
                     .textRole(.bodyStrong)
                     .foregroundStyle(Theme.Colors.ink)
@@ -629,4 +679,11 @@ enum ObjectMask {
         }
         return isA(.list) ? "Private list" : nil
     }
+}
+
+/// The object page's own words.
+enum ObjectPageCopy {
+    /// A link whose object is deleted or not on this phone (OL28, OL29).
+    static let gone = "Not on this phone anymore."
+    static let back = "Back"
 }

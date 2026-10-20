@@ -38,13 +38,13 @@ struct BackupView: View {
             VStack(alignment: .leading, spacing: 0) {
                 if isPresented {
                     Button { dismiss() } label: {
-                        Text("‹ Review")
+                        Text("‹ Settings")
                             .textRole(.label)
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .frame(minHeight: 44)
                     }
                     .buttonStyle(HandleButtonStyle())
-                    .accessibilityLabel("Back to Review")
+                    .accessibilityLabel("Back to Settings")
                 }
                 Text("your history")
                     .font(Theme.voice)

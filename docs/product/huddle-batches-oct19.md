@@ -115,6 +115,38 @@ Before he trusts it with a week of data. (Core, Builder B, Research)
 | Quiet restore offer line; launch note queue; signing-lapse warning in the app | Builder B | none |
 | Private words wall in every copy; key, bookmark and flags never in a backup | Core | none, never relaxed |
 
-## Parked
+## Batch 9: Stretch: Tess grows up
 
-Tess as her own agent; Tess as chief of staff; two-way calendar sync; Claude-built apps; daemons; nutrition; anything shared.
+The big ones that were parked or pushed to Later. Anything that sends to Claude is off by default, behind Tess asks Claude, inside the $50 a month cap. Walls and key rules unchanged. (Core, AI architecture, Motion lab, Builder B)
+
+| Feature | Who | Settings switch |
+|---|---|---|
+| Tess reads the screen: she picks her own roam and motion from what is on screen and how you touch it, small fast model, no images ever | Core + Motion lab + AI arch | Tess reads the screen (off) |
+| Tess as chief of staff: area experts as bounded jobs, she gathers their facts and presents one view | AI arch spec, Core | Tess experts (off) |
+| Build me an app from one sentence, using only the block catalog, shown as a ghost you accept | Core + Builder B | Build with Tess (off) |
+| Week story and Home lines in Claude wording, with the memory profile written on the phone only | Core + AI arch | Home lines (off) |
+| Rules and automations: "when X finishes, do Y", every action undoable | Core | Automations (off) |
+| Two-way calendar sync, after the read-only mount has a week of use | Core | Calendar (off) |
+| Remix editor and code view for classes; your own app tiles on Home | Design + Builder B | none, new screens |
+| Apple Watch: sleep and resting heart rate first, then one-screen set logging with the crown | Builder A | Watch (off) |
+| Share Extension from Safari stays blocked until a paid developer account; the Shortcut route works now | Builder B | none, blocked |
+
+## Batch 10: Stretch: Kitchen v2
+
+Held for a week of use before, now pulled in. Engine first, screens after. (Kitchen, Core, Builder B, Builder A for cook)
+
+| Feature | Who | Settings switch |
+|---|---|---|
+| Pantry area with no counting; recipe page shows need against have | Core + Builder B | Pantry state (off) |
+| What can I cook: rank by what is missing, ties by not cooked lately | Core + Builder B | Can cook shelf (off) |
+| Running low by rhythm: a dim "usually by now" line, never auto-added | Core | Pantry state |
+| Week of dinners strip; recurring groceries; leftovers from cooking double | Core + Builder B | none |
+| Parallel steps in one cook: roast and sauce, several timers at once | Builder A + Core | none |
+| Hands-free cook mode: "next", "back", "timer" by voice, on-phone speech, grammar only | Builder A | Hands-free cook mode (off) |
+| Recipe from a link: JSON-LD, plain pages, Claude as the last resort | Core + Builder B | Link fetch; Misses go to Claude (off) |
+| Recipe edit in place; cook notes flow back into the recipe; store aisle order learned from check-offs | Builder B + Core | none |
+| Nutrition needs a data licence first; his call | Kitchen | none, his call |
+
+## Left out
+
+Shared or social features; anything needing a paid developer account; Liftosaur (AGPL).

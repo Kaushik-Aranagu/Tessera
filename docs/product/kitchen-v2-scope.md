@@ -45,7 +45,7 @@ Question 2 replaces week one's old question 2 (links), which the data now answer
 
 In order, each its own small PR, engine first:
 1. **Recipe edit in place.** Corrections are the one thing every paste week shows, and the surface exists.
-2. **P. Pantry light**, engine only: `Ingredient.state` and `lastBoughtAt` from shop clears, `FinishCooking` and "out of milk". It shows only as the dim out line on the recipe page and the state sentence on the Ingredient page. Kaushik (Oct 16) wants a **Pantry area** as the home for R and P after a week of v1 (`kitchen-v2-backlog.md`), so question 1 now sets how soon that area comes, not whether.
+2. **P. Pantry light**, engine only: `Ingredient.state` and `lastBoughtAt` from shop clears, `FinishCooking` and "out of milk". It shows only as the dim out line on the recipe page and the state sentence on the Ingredient page. Kaushik (Oct 16) wants a **Pantry area** as the home for R and P after a week of v1 (`kitchen-v2-backlog.md`; pulled in Oct 19), so question 1 now sets how soon that area comes, not whether.
 3. **W. CAN COOK** on the shelf, off by default, "1 to check" for unknowns, after P.
 4. **Cook notes into the recipe.**
 

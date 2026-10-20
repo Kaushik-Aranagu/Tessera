@@ -10,6 +10,18 @@ import TesseraTess
 enum ClaudeKeyWords {
     /// The status line with no key saved (Product 3:58 PM): "Paste one here" lives only in the field's own hint.
     static let noKey = "No Claude key yet."
+    /// Before any call: Tess thinks on the phone only.
+    static let onPhoneOnly = "Tess thinks on this phone only."
+
+    /// The no-key line as words: "Tess thinks on this phone only." before any call, else "No Claude key yet.".
+    static func noKeyLine(hasCalls: Bool) -> String {
+        hasCalls ? noKey : onPhoneOnly
+    }
+
+    /// The same line as drawn, "on this phone" in semibold.
+    static func noKeyText(hasCalls: Bool) -> Text {
+        hasCalls ? Text(noKey) : Text("Tess thinks \(Text("on this phone").fontWeight(.semibold)) only.")
+    }
 
     static func status(_ outcome: String?) -> String {
         switch outcome.flatMap(ClaudeKeyCheck.Outcome.init(rawValue:)) {
@@ -29,7 +41,8 @@ enum ClaudeKeyWords {
 
     /// "Nov 1": when a paused month opens again.
     static func nextMonth(_ now: Date, calendar: Calendar = .current) -> String {
-        (calendar.dateInterval(of: .month, for: now)?.end ?? now).formatted(.dateTime.month(.abbreviated).day())
+        TessUsageLedger.monthInterval(containing: now, calendar: calendar).end
+            .formatted(.dateTime.month(.abbreviated).day())
     }
 }
 
@@ -125,9 +138,9 @@ struct ClaudeSection: View {
     private var noKey: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             // After a reinstall or on a new phone the key doesn't come along (restore-walk 6).
-            Text(ledger.calls().isEmpty
-                ? "Tess thinks \(Text("on this phone").fontWeight(.semibold)) only."
-                : ClaudeKeyWords.noKey)
+            // Text in both branches: a Text interpolated into a String printed its own debug description (Builder A
+            // on release 21).
+            ClaudeKeyWords.noKeyText(hasCalls: !ledger.calls().isEmpty)
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
             if writing {

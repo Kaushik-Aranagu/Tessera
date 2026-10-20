@@ -7,6 +7,8 @@ order. Every sheet plugs into the event contract (`tess-motion.md` §14): a view
 the router owns every timer. Nothing here adds a model call; the screen-aware Tess stays parked
 (`tess-aware-motion-notes.md`).
 
+_Amended Oct 19: with "Tess reads the screen" on, a small model may pick the move; default Off; she never waits on it. See `design/motion/tess-reads-the-screen-motion.md`._
+
 Rules that hold for every sheet:
 - **Eyes off means no face.** The mouth lives under the same setting ("Tess has eyes"), default off (Product).
   An idea that uses the eyes keeps only its body part when they are off, and if it has no body part it does

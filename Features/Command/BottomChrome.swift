@@ -419,7 +419,7 @@ struct BottomChrome: View {
         ghost = nil
         dryTask?.cancel()
         close()
-        say("That looks like a Claude key. It goes in Review, under Claude.")
+        say(claudeKeyLine)
     }
 
     private func dry() {

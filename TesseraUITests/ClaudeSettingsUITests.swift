@@ -12,6 +12,7 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-openLink", "review", "-fakeClaudeKey"]
         app.launch()
+        openSettings(app)
 
         let keyLine = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Claude key saved"))
             .firstMatch
@@ -57,6 +58,7 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-openLink", "review", "-fakeClaudeKey"]
         app.launch()
+        openSettings(app)
 
         let toggle = app.buttons["Tess asks Claude"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 15))
