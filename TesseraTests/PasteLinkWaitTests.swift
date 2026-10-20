@@ -17,16 +17,26 @@ struct PasteLinkWaitTests {
     }
 
     /// The lines a read shows, in order: the start line, then whatever the reader's hook hands over.
-    private func lines(for path: String, asksClaude: Bool, key: Bool = true) async throws -> [String] {
+    private func lines(for path: String, asksClaude: Bool, key: Bool = true,
+                       overCap: Bool = false) async throws -> [String]
+    {
         let link = try #require(URL(string: "https://blog.example.com/\(path)"))
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [WaitStubPage.self]
         let session = URLSession(configuration: config)
         let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext)
-        // A made-up key, built here and never written anywhere.
-        let keys = InMemoryKeychain(key ? "sk-ant-test-" + UUID().uuidString : nil)
-        let claude = ClaudeRecipeReader(keys: keys, ledger: TessUsageLedger(store: model.store, classes: model.classes),
-                                        session: session) { true }
+        // A made-up key, built from pieces at run time and never written anywhere.
+        let keys = InMemoryKeychain(key ? "sk-" + "ant-" + String(repeating: "x", count: 32) : nil)
+        let ledger = TessUsageLedger(store: model.store, classes: model.classes)
+        let today = Date.now
+        if overCap {
+            // The month's cap already spent.
+            _ = ledger.record(use: .paste, model: ClaudeRecipeReader.model, input: 0, output: 0,
+                              costNano: TessUsageLedger.capNano, latency: 0, outcome: "works", requestID: nil,
+                              at: today)
+        }
+        var claude = ClaudeRecipeReader(keys: keys, ledger: ledger, session: session) { true }
+        claude.now = { today }
         var shown = [PasteLinkWait.startLine(link)]
         let reader = PasteLinkWait.reader(session: session, claude: claude) { shown.append($0) }
         _ = await RecipePasteLink.read(link, reader: reader, asksClaude: asksClaude, shelf: nil)
@@ -43,6 +53,12 @@ struct PasteLinkWaitTests {
         #expect(try await lines(for: "story", asksClaude: true, key: false) == [start])
         // A recipe the phone reads itself: never Claude's line.
         #expect(try await lines(for: "recipe", asksClaude: true) == [start])
+    }
+
+    /// QA on #1153: with the month's cap reached nothing goes to Claude, so his line never shows.
+    @Test func overTheCapOnlyTheStartLineShows() async throws {
+        #expect(try await lines(for: "story", asksClaude: true, overCap: true)
+            == ["Reading the recipe from blog.example.com."])
     }
 }
 
