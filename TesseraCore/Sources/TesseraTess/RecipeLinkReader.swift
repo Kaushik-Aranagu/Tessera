@@ -575,7 +575,8 @@ public struct ClaudeRecipeReader {
         defer {
             ledger.record(use: .recipeLink, model: Self.model, input: usage.input, output: usage.output,
                           costNano: TessUsageLedger.cost(model: Self.model, input: usage.input, output: usage.output),
-                          latency: Date().timeIntervalSince(started), outcome: outcome, requestID: nil, at: now())
+                          latency: Date().timeIntervalSince(started), outcome: outcome, requestID: nil, at: now(),
+                          sent: TessSentLog.heldBackPayload)
         }
         let data: Data
         let response: URLResponse
