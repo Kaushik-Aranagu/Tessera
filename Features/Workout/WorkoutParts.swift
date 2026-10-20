@@ -19,6 +19,8 @@ struct ExerciseLane: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.zoomNamespace) private var zoomNamespace
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 0) {
@@ -51,8 +53,9 @@ struct ExerciseLane: View {
                     }
                     .buttonStyle(.plain)
                     .modifier(ZoomSource(id: exercise.map { Route.classDef($0.id) }, namespace: zoomNamespace))
-                    .containerRelativeFrame(.horizontal) { width, _ in width - 2 * Theme.Spacing.gutter }
-                    .clipped()
+                    .containerRelativeFrame(.horizontal)
+                    // Nothing draws past the page's left or right edge; the height is left alone (large text wraps).
+                    .mask { Rectangle().padding(.vertical, -2000) }
                     .id(index)
                     .offset(y: isCurrent ? Self.rubberBand(namePull) : 0)
                     .contextMenu {
@@ -80,7 +83,8 @@ struct ExerciseLane: View {
         .scrollTargetBehavior(.viewAligned(limitBehavior: .alwaysByOne))
         .scrollPosition(id: $laneIndex, anchor: .leading)
         .scrollIndicators(.hidden)
-        .frame(minHeight: 64)
+        // Large text wraps the name to three lines: the pager keeps room for them (it measures one page at a time).
+        .frame(minHeight: typeSize.isAccessibilitySize ? 210 : 64)
         .fixedSize(horizontal: false, vertical: true)
         // Pull down on the name for alternatives; the pager keeps horizontal.
         .simultaneousGesture(

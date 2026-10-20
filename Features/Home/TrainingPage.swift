@@ -141,8 +141,7 @@ private struct TrainingAtRest: View {
                 ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
                     LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
                             isPrivate: isPrivateDay,
-                            showsStrokes: isRunning || isDone || lane.logged > 0,
-                            isLast: index == min(lanes.count, 5) - 1)
+                            showsStrokes: isRunning || isDone || lane.logged > 0)
                         .frame(height: 72, alignment: .top)
                         // Live mode rises out of the first lane; the others sink away.
                         .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
@@ -668,8 +667,8 @@ struct StartMark: View {
 /// One exercise (Design brief 1, sheet 107; Kaushik, Oct 20: no figure beside the name): the
 /// name (21 medium, one line, top 6) and under it, at top 38, the scheme ("4 × 5–8") with today's weight at
 /// the right edge ("82.5 kg", none when there is none). Once the workout is running the second line is the set
-/// strokes live mode draws: logged ones painted in the rest tint, the rest dashed guides. A hairline at 12% ink runs
-/// between rows.
+/// strokes live mode draws: logged ones painted in the rest tint, the rest dashed guides. No lines between rows
+/// (Kaushik, Oct 20).
 private struct LaneRow: View {
     let lane: TrainingLane
     /// The first guide wakes when START lands: 22% to 90%, breathing.
@@ -678,7 +677,6 @@ private struct LaneRow: View {
     /// A private workout names no muscles.
     var isPrivate = false
     var showsStrokes = false
-    var isLast = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -695,11 +693,6 @@ private struct LaneRow: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .overlay(alignment: .bottomLeading) {
-            if !isLast {
-                Rectangle().fill(Theme.Colors.ink.opacity(0.12)).frame(height: 1)
-            }
-        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
     }
