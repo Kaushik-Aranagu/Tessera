@@ -207,6 +207,8 @@ struct DayNamerPayloadTests {
         _ = keychain.save(["sk", "ant"].joined(separator: "-") + "-" + String(repeating: "a", count: 20))
         let namer = DayNamer(keys: keychain, ledger: TessUsageLedger(store: store, classes: engine.classes),
                              session: URLSession(configuration: configuration), allowed: { true })
+        // The suite runs beside many main-actor tests; a busy main actor must not trip the 6 s deadline here.
+        namer.timeout = 120
         NamingStub.bodies = []
         let result = await namer.suggest(for: routine, engine: engine, avoiding: ["Heavy push"])
         #expect(result?.source == .claude)
