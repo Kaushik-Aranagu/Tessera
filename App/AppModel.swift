@@ -216,11 +216,13 @@ final class AppModel {
         case .recoveredWithBackup: "Started fresh; your old data is saved in Backups."
         case .inMemoryFallback: "Couldn't open your data, so nothing will be saved this time."
         }
-        launchNote = TesseraSchema.launchNote ?? outcome
+        // Both are read, oldest first, one at a time (hunt 28 CALL 3 B); a restore says its copy's date (sheet 111).
+        launchNotes = LaunchNoteQueue([TesseraSchema.launchNote.map(RestoreOffer.dated), outcome])
     }
 
-    /// One calm line in Tess's voice when launch didn't go normally (a failed migration). Shown in the Ask bar.
-    var launchNote: String?
+    /// The notes waiting for this launch (LaunchNoteQueue): one shows at a time, never stacked.
+    var launchNotes = LaunchNoteQueue()
+
     /// Claude's flags, kept so Cancel can reach the call in flight.
     @ObservationIgnored let claudeFlags = ClaudeMissFlags()
     /// A capture is on its way to Claude right now: the Ask says "Asking Claude." with Cancel until it answers, fails
@@ -293,6 +295,14 @@ final class AppModel {
     /// `captureDryTime` unless tapped or dropped. Returns Tess's one line.
     func ask(_ phrase: String) async -> String {
         commitCapture()
+        #if DEBUG
+            // `-askingClaudeDemo` (simulator only, for recordings): the line shows for 3 s as if a request had left,
+            // through the same flag Core's willSend sets. Nothing is sent; no key is involved.
+            if LaunchFlags.has("-askingClaudeDemo") {
+                isAskingClaude = true
+                try? await Task.sleep(for: .seconds(3))
+            }
+        #endif
         let result = await runtime.tess.capture(phrase, context: TessContext(now: AppClock.now,
                                                                              entry: session?.currentEntry?.id))
         isAskingClaude = false
@@ -789,5 +799,22 @@ extension AppModel {
         keyQuestionDue = false
         touch()
         return answer ? ClaudeKeyQuestionCopy.yesReceipt : ClaudeKeyQuestionCopy.noReceipt
+    }
+}
+
+// MARK: - Launch notes (G694)
+
+extension AppModel {
+    /// One calm line in Tess's voice when launch didn't go normally (a failed migration). Shown in the Ask bar.
+    /// Letting it go (nil) brings the next waiting note, if any.
+    var launchNote: String? {
+        get { launchNotes.current }
+        set {
+            if let newValue {
+                launchNotes.enqueue(newValue)
+            } else {
+                launchNotes.advance()
+            }
+        }
     }
 }

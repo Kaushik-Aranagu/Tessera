@@ -25,6 +25,10 @@ struct BottomChrome: View {
     @State private var replyCount = 0
     /// The capture the reply on show reported (still wet or dried), the only one its UNDO may take back.
     @State private var replyCapture: UUID?
+    /// The writing field's one-line height, and how far it has grown above that: "Asking Claude." rides on top.
+    @State private var fieldBase: CGFloat?
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var fieldGrowth: CGFloat = 0
     @State private var ghost: String?
     @State private var drying: CGFloat = 0
     @State private var dryTask: Task<Void, Never>?
@@ -57,10 +61,12 @@ struct BottomChrome: View {
         ZStack(alignment: .bottomTrailing) {
             if model.isCommandExpanded {
                 // The page recedes behind a veil of blurred ground (z); a tap on it closes Tess.
-                // Calmer: the page blurs a little and drops to 50% (calm-capture.md).
+                // Calmer: the page blurs a little and drops to 50% (calm-capture.md). While he writes, the flat paper
+                // rises to 94% so the page's words don't show through his own (Design on #1143's AX5 shot).
                 ZStack {
                     Rectangle().fill(.ultraThinMaterial).opacity(0.35)
-                    Theme.Colors.paper.opacity(0.5)
+                    Theme.Colors.paper.opacity(CommandVeil.paperOpacity(writing: layer == .write))
+                        .tesseraAnimation(.easeInOut(duration: 0.25), value: layer == .write)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
@@ -94,7 +100,9 @@ struct BottomChrome: View {
             if model.isAskingClaude {
                 AskingClaudeLine { model.cancelAskingClaude() }
                     .padding(.horizontal, Theme.Spacing.gutter)
-                    .padding(.bottom, Self.soulLift + Self.rowHeight)
+                    // 8 pt clear of the writing line and its drying ghost while the surface is open (Design on #1123).
+                    .padding(.bottom, Self.soulLift + Self.rowHeight
+                        + (model.isCommandExpanded ? Theme.Spacing.s + fieldGrowth : 0))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -494,8 +502,12 @@ extension BottomChrome {
         @Bindable var model = model
         return VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             ZStack(alignment: .bottomLeading) {
+                // The field grows upward with what he writes, up to five lines, so nothing hides behind the bar
+                // or needs a scroll (Kaushik on the #1123 clip); past five it scrolls inside itself.
                 TextField("Ask", text: $model.commandDraft,
-                          prompt: Text("Write anything").foregroundStyle(Theme.Colors.inkSecondary))
+                          prompt: Text("Write anything").foregroundStyle(Theme.Colors.inkSecondary),
+                          axis: .vertical)
+                    .lineLimit(1 ... 5)
                     // His typing sits one step under her voice: Field 18 (calm-capture.md addendum).
                     .textRole(.field)
                     // The drying ghost reads in inkSecondary (calm-capture.md).
@@ -513,7 +525,23 @@ extension BottomChrome {
                         close()
                         return .handled
                     }
-                    .onChange(of: model.commandDraft) { _, draft in
+                    // A new text size measures the one-line height again (Design on #1143).
+                    .onChange(of: typeSize) { _, _ in fieldBase = nil }
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                        fieldBase = fieldBase ?? height
+                        fieldGrowth = max(0, height - (fieldBase ?? height))
+                    }
+                    .onChange(of: model.commandDraft) { old, draft in
+                        // A grown field takes Return as a newline. Only Return's own trailing newline sends; a
+                        // pasted line break becomes a space and nothing sends (Design on #1143).
+                        if draft.contains("\n") {
+                            let read = AskDraft.read(old: old, new: draft)
+                            model.commandDraft = read.text
+                            if read.send {
+                                dry()
+                            }
+                            return
+                        }
                         // A Claude key never stays in Ask: not on screen, not as a ghost, not as a task. Cleared the
                         // moment it lands, before any interpreter can see it.
                         if Self.looksLikeClaudeKey(draft) {
@@ -836,5 +864,15 @@ enum AskCopy {
     /// Whether the Ask keeps what he typed after this reply.
     static func keepsDraft(_ answer: String) -> Bool {
         answer == offlineRetry
+    }
+}
+
+/// The paper over the page while Tess is open: 50% for the modes and Speak, 94% under the Write field.
+enum CommandVeil {
+    static let recede = 0.5
+    static let writing = 0.94
+
+    static func paperOpacity(writing isWriting: Bool) -> Double {
+        isWriting ? writing : recede
     }
 }

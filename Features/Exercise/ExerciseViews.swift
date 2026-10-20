@@ -132,7 +132,7 @@ private struct HistoryList: View {
                 .font(PageType.small)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(width: 92, alignment: .leading)
-            SetStrokes(count: row.setCount)
+            SetMarks(marks: row.marks)
             Spacer(minLength: Theme.Spacing.s)
             Text(row.topSet)
                 .font(Theme.numeral(21, weight: .regular))
@@ -152,17 +152,15 @@ private struct HistoryList: View {
     }
 }
 
-/// One 30 × 12 brushstroke per set, cycling vermilion, cobalt, cadmium, sage.
-private struct SetStrokes: View {
-    let count: Int
+/// One brush circle per set (22 pt), the History row's marks; a flare for a best, open when short, overlapping when
+/// more. No numbers: the shape and the thickness say how it went.
+private struct SetMarks: View {
+    let marks: [SetMarkSpec]
 
     var body: some View {
-        let paints = [Theme.Colors.live, Theme.Colors.tess, Theme.Colors.now, Theme.Colors.health]
-        HStack(spacing: 5) {
-            ForEach(0 ..< min(count, 8), id: \.self) { index in
-                Brushstroke()
-                    .stroke(paints[index % paints.count], style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                    .frame(width: 30, height: 12)
+        HStack(spacing: 4) {
+            ForEach(marks.prefix(7)) { spec in
+                SetMarkCircle(spec: spec, side: 22)
             }
         }
         .accessibilityHidden(true)

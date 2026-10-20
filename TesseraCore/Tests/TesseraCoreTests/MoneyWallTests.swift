@@ -172,6 +172,8 @@ struct MoneyWallTests {
     @Test func aTaskLessMoveIsAPlainMiss() async {
         let tess = TessCaptureEngine(engine: engine)
         let said = await tess.capture("move dentist to 7", context: TessContext())
-        #expect(said.records.isEmpty && said.line.hasPrefix("Didn't catch that"), "\(said.line)")
+        // No move was made: the phrase is only kept as a note to sort later.
+        #expect(said.keptToSort && said.line == "move dentist to 7, kept to sort later.", "\(said.line)")
+        #expect(said.records.map(\.action) == [CreateNote.descriptor.name])
     }
 }
