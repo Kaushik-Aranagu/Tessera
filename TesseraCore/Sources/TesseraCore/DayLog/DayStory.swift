@@ -109,8 +109,8 @@ public enum DayStory {
         "removeRecipeFromGroceries", "moveTask", "keepPlannedTask", "rollForwardTasks", "waitOnTask", "startTask",
         "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
-        "endProcess", "writeSettings", "createClass", "setRoutineKind", "syncCalendar", "syncHealth", "closeDay",
-        "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice", "releaseHeldNotices",
+        "endProcess", "writeSettings", "createClass", "setRoutineKind", "applyDayName", "syncCalendar", "syncHealth",
+        "closeDay", "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice", "releaseHeldNotices",
         "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading", "setBookAside",
     ]
 

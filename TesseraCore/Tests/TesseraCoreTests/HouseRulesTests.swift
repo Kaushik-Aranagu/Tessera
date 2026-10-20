@@ -78,6 +78,9 @@ struct HouseRulesTests {
         if files.contains(where: { $0.lastPathComponent == "HomeDoneWording.swift" }) {
             expected.insert("HomeDoneWording.swift")
         }
+        if files.contains(where: { $0.lastPathComponent == "DayNamer.swift" }) {
+            expected.insert("DayNamer.swift")
+        }
         #expect(claudeSites == expected, "\(claudeSites.sorted())")
         #expect(redirectSites.count == 1, "\(redirectSites)")
         #expect(redirectSites.allSatisfy { $0.hasPrefix(Self.redirectsFile + ":") }, "\(redirectSites)")
