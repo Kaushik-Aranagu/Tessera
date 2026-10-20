@@ -66,8 +66,11 @@ public extension TessMemoryStore {
         // a memory line, so it can never reach a pack.
         // Third guard (board 0ai): a money or body-weight line never reaches memory either.
         let lastKg = BodyWeight.lastKg(in: engine.store)
+        // Fourth guard: a spend line ("Spent ...") is money and never becomes a memory line, and a private book
+        // ("Private book") has nothing to remember. Reading lines ("read dune to p 142") are fine.
         for line in lines where line.text != SecretWords.title && !SecretWords.mentions(line.text)
-            && !PrivateFacts.isWalled(line.text, lastWeightKg: lastKg)
+            && !PrivateFacts.isWalled(line.text, lastWeightKg: lastKg) && !line.text.hasPrefix("Spent ")
+            && !line.text.contains(ObjectPrivacy.bookLabel)
         {
             var text = line.text
             let workout = text.contains(" min") || text.hasSuffix(" sets.")
