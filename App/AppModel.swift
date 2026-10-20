@@ -293,6 +293,14 @@ final class AppModel {
     /// `captureDryTime` unless tapped or dropped. Returns Tess's one line.
     func ask(_ phrase: String) async -> String {
         commitCapture()
+        #if DEBUG
+            // `-askingClaudeDemo` (simulator only, for recordings): the line shows for 3 s as if a request had left,
+            // through the same flag Core's willSend sets. Nothing is sent; no key is involved.
+            if LaunchFlags.has("-askingClaudeDemo") {
+                isAskingClaude = true
+                try? await Task.sleep(for: .seconds(3))
+            }
+        #endif
         let result = await runtime.tess.capture(phrase, context: TessContext(now: AppClock.now,
                                                                              entry: session?.currentEntry?.id))
         isAskingClaude = false
