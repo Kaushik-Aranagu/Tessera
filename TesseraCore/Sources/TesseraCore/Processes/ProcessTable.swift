@@ -119,7 +119,8 @@ public struct ProcessTable {
         var notes: [Note] = []
         var putAway = 0
         var shopNotes: [Note] = []
-        for process in all() where process.state == .suspended {
+        // A book is never put away at 7 days (Reading decision 4): it leaves the Home ledger after 3, stays reading.
+        for process in all() where process.state == .suspended && process.ownerApp != Bookshelf.ownerApp {
             let idle = process.idle(at: now)
             if let workout = process.subject, isWorkout(workout), idle >= Limits.wrapUpWorkout {
                 notes.append(wrapUp(process, workout: workout))
