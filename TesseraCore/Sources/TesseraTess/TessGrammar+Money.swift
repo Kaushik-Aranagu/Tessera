@@ -7,18 +7,21 @@ import TesseraCore
 extension TessGrammar {
     /// Words that follow a whole number and make it a quantity, not a sum ("spent 2 hours on taxes").
     static let quantityWords: Set = [
-        "hour", "hours", "hr", "hrs", "minute", "minutes", "min", "mins", "day", "days", "week", "weeks", "month",
-        "months", "year", "years", "time", "times", "kg", "lb", "lbs", "reps", "rep", "sets", "set", "miles", "mile",
-        "km", "people", "items", "x",
+        "hours", "hr", "hrs", "minutes", "min", "mins", "days", "weeks", "months", "years", "times", "kg", "lb",
+        "lbs", "reps", "sets", "miles", "km", "people", "items", "x",
     ]
 
     /// "how much this month", "how much did I spend this month": the month line, from the log.
     func parseMonthQuestion(_ text: String, context: TessContext) -> Parse? {
         let asked = text.firstMatch(of: /^(?:how much|what)\b.*\b(?:this month|so far)\b/) != nil
             || text.firstMatch(of: /^(?:how much|what).*\b(?:spend|spent|logged)\b.*\bmonth\b/) != nil
-        guard asked, text.contains("month"),
-              text.contains("how much") || text.contains("spend") || text.contains("spent") || text.contains("logged")
-        else { return nil }
+        guard asked, text.contains("month") else { return nil }
+        // Only a money question: a money word, or the bare "how much this month". "how much did I lift this month"
+        // is not one.
+        let moneyWord = text.firstMatch(of: /\b(?:spend|spent|spending|logged|money|paid|pay|cost|costs|expenses?)\b/)
+            != nil
+        let bare = ["how much this month", "how much so far this month", "how much so far"].contains(text)
+        guard moneyWord || bare else { return nil }
         let ledger = SpendLedger(store: store, classes: classes)
         return .ask(ledger.monthLine(for: context.now, calendar: context.calendar))
     }
