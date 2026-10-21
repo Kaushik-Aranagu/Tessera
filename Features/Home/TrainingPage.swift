@@ -419,15 +419,8 @@ private struct TrainingAtRest: View {
         } else if case .running = plan {
             KickerRow(left: "Running now")
         } else {
-            KickerRow(left: "Today", right: Self.planPhrase(lanes: lanes))
+            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes))
         }
-    }
-
-    /// "5 exercises, about 40 min".
-    static func planPhrase(lanes: [TrainingLane]) -> String {
-        let count = lanes.count
-        let sets = lanes.map(\.sets).reduce(0, +)
-        return "\(count) \(count == 1 ? "exercise" : "exercises"), \(TrainingPage.about(sets: sets))"
     }
 
     private func tessLine(_ lanes: [TrainingLane]) -> String? {
@@ -802,6 +795,13 @@ extension TrainingPage {
     }
 
     /// "about 55 min": each set about two and a half minutes with its rest, to the nearest five.
+    /// "5 exercises, about 40 min".
+    static func planPhrase(lanes: [TrainingLane]) -> String {
+        let count = lanes.count
+        let sets = lanes.map(\.sets).reduce(0, +)
+        return "\(count) \(count == 1 ? "exercise" : "exercises"), \(about(sets: sets))"
+    }
+
     static func about(sets: Int) -> String {
         let minutes = max(5, Int((Double(sets) * 2.5 / 5).rounded()) * 5)
         return minutes >= 60 && minutes % 60 == 0 ? "about \(minutes / 60) h" : "about \(minutes) min"
