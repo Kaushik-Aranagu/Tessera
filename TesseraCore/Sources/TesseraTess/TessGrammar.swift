@@ -49,6 +49,12 @@ public struct TessGrammar {
         case askDatedLift(TessDatedLiftAsk)
         /// A guarded set phrase the grammar mustn't guess ("81", "fail at 6"): Tess's question, if no model reads it.
         case ask(String)
+        /// "spent 12.40 on coffee", "paid rent 1200": a spend, dated `on` (a past day) or now.
+        case spend(MoneyAmount, note: String, on: Date?)
+        /// The groceries total after a shop.
+        case shopTotal(MoneyAmount)
+        /// "skip" while a groceries total is awaited.
+        case skipShopTotal
     }
 
     public enum SetPhrase: Equatable, Sendable {
@@ -65,12 +71,16 @@ public struct TessGrammar {
 
     /// The rules ahead of every process and task rule: a note, a pasted recipe, a question (no write at all:
     /// `.some(nil)`) and a rest weekday. Nil when none of them applies.
-    func parseBeforeTasks(_ phrase: String, text: String) -> Parse?? {
+    func parseBeforeTasks(_ phrase: String, text: String, context: TessContext) -> Parse?? {
         if let note = parseNote(phrase) {
             return .some(note)
         }
         if let recipe = parsePastedRecipe(phrase) {
             return .some(recipe)
+        }
+        // "how much this month" is answered here, from the log, on the phone: it never reaches a model.
+        if let month = parseMonthQuestion(text, context: context) {
+            return .some(month)
         }
         // Rule 2: a question never writes; it goes to the model's read-only answer. The raw phrase, so a typed "?"
         // still counts (normalize trims it).
@@ -96,7 +106,7 @@ public struct TessGrammar {
         if let secret = parseSecret(phrase, text: text, context: context) ?? parseRememberedMoney(phrase) {
             return secret
         }
-        switch parseBeforeTasks(phrase, text: text) {
+        switch parseBeforeTasks(phrase, text: text, context: context) {
         case let .some(.some(early)): return early
         case .some(.none): return nil
         case .none: break
@@ -108,6 +118,11 @@ public struct TessGrammar {
         let entry = context.entry.flatMap { store.object(id: $0) }
         if let entry, let live = parseInFocus(phrase, text: text, context: context, entry: entry) {
             return live.parse
+        }
+        // Money (slice 4): after the relative sets above, before comma sets and lifts, so "80 x5" and
+        // "bench 82.50 x 8" stay training and "6.50 cab" is a spend.
+        if let money = parseMoney(phrase, text: text, context: context, entry: entry) {
+            return money
         }
         if phrase.contains(","), let sets = parseCommaSets(phrase, entry: entry) {
             guard let entry else { return sets }

@@ -76,11 +76,12 @@ struct DayNamesTests {
         let (store, engine, routines) = try seeded()
         let routine = try #require(routines["Push A"])
         // His own title: never.
+        routine.title = "Bench day"
         #expect(!DayNames.mayAutoName(routine, store: store))
         routine.title = "New routine"
         #expect(DayNames.mayAutoName(routine, store: store) && DayNames.needsName(routine, store: store))
         try engine.perform(ApplyDayName(routine: routine.id, name: "Push day"), by: .tess)
-        #expect(routine.title == "Push day" && !DayNames.needsName(routine, store: store))
+        #expect(routine.title == "Push day" && DayNames.isUpgradeOnly(routine, store: store))
         // The exercises change: time again.
         let slot = try #require(routine.orderedChildren.last)
         try engine.perform(DeleteObject(object: slot.id), by: .user)
@@ -92,6 +93,34 @@ struct DayNamesTests {
             ApplyDayName(routine: routine.id, name: "Upper body"),
             by: .tess
         ) }
+    }
+
+    @Test(arguments: ["Push A", "Pull B", "Legs A", "Push Day A", "Pull day", "Legs", "push", "LEG DAY B"])
+    func aStockTitleIsRenamedOnce(_ title: String) throws {
+        let (store, engine, routines) = try seeded()
+        let routine = try #require(routines["Push A"])
+        routine.title = title
+        #expect(DayNames.mayAutoName(routine, store: store))
+        try engine.perform(ApplyDayName(routine: routine.id, name: "Upper body"), by: .tess)
+        #expect(routine.title == "Upper body")
+        // Back to a stock-looking title by hand: Tess has named it once, his edit stays.
+        try engine.perform(RenameObject(object: routine.id, title: title), by: .user)
+        #expect(!DayNames.mayAutoName(routine, store: store))
+    }
+
+    @Test(arguments: ["Bench day", "Arms and abs", "Push day for Sam", "Heavy push", "Pushes", "Leg day plus"])
+    func aCustomTitleIsKept(_ title: String) throws {
+        let (store, _, routines) = try seeded()
+        let routine = try #require(routines["Push A"])
+        routine.title = title
+        #expect(!DayNames.mayAutoName(routine, store: store))
+    }
+
+    @Test func aSuggestedStockLookingNameIsHisChoiceForGood() throws {
+        let (store, engine, routines) = try seeded()
+        let routine = try #require(routines["Push A"])
+        try engine.perform(ApplyDayName(routine: routine.id, name: "Push day", force: true), by: .user)
+        #expect(routine.title == "Push day" && !DayNames.mayAutoName(routine, store: store))
     }
 
     @Test func aTakenSuggestionIsHisChoiceAndStopsAutoNaming() throws {
@@ -125,7 +154,7 @@ struct DayNamesTests {
         #expect(await bad.suggest(for: routine, engine: engine)?.source == .rules)
         // Nothing on the phone, no key: the rule name.
         let rules = namer(engine, claude: true)
-        #expect(await rules.suggest(for: routine, engine: engine) == .init(name: "Push day", source: .rules))
+        #expect(await rules.suggest(for: routine, engine: engine) == .init(name: "Heavy chest", source: .rules))
     }
 
     @Test func suggestAgainOffersADifferentNameAndAPrivateDayGetsNone() async throws {
@@ -148,9 +177,9 @@ struct DayNamesTests {
         maker.enabled = { false }
         #expect(await maker.autoName(routine, engine: engine) == nil && routine.title == "New routine")
         maker.enabled = { true }
-        #expect(await maker.autoName(routine, engine: engine) == "Push day")
+        #expect(await maker.autoName(routine, engine: engine) == "Heavy chest")
         #expect(await maker.autoName(routine, engine: engine) == nil)
-        #expect(!DayNames.needsName(routine, store: store))
+        #expect(DayNames.isUpgradeOnly(routine, store: store))
     }
 }
 
@@ -207,8 +236,9 @@ struct DayNamerPayloadTests {
         _ = keychain.save(["sk", "ant"].joined(separator: "-") + "-" + String(repeating: "a", count: 20))
         let namer = DayNamer(keys: keychain, ledger: TessUsageLedger(store: store, classes: engine.classes),
                              session: URLSession(configuration: configuration), allowed: { true })
-        // The suite runs beside many main-actor tests; heavy tests hog the main actor for minutes; no deadline may trip here.
-        namer.timeout = 3600
+        // The suite runs beside many main-actor tests; heavy tests hog the main actor for minutes; no deadline may trip
+        // here.
+        namer.timeout = 600
         NamingStub.bodies = []
         let result = await namer.suggest(for: routine, engine: engine, avoiding: ["Heavy push"])
         #expect(result?.source == .claude)

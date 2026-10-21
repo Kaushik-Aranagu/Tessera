@@ -55,6 +55,12 @@ public extension TessMemoryStore {
         return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
     }
 
+    /// Day lines that never become memory whatever the other guards say: a spend ("Spent ...") and a private book
+    /// ("Private book"). Reading lines ("Read Dune to p 142") are fine.
+    static func staysOutOfMemory(_ line: String) -> Bool {
+        line.hasPrefix("Spent ") || line.contains(ObjectPrivacy.bookLabel)
+    }
+
     /// "Wed: Pull A done, 2 tasks, cooked chili." Counts and titles from the Day log; nil for an empty day.
     func recentLine(for dayKey: Date, now: Date) -> String? {
         let noon = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: dayKey) ?? dayKey
@@ -69,8 +75,7 @@ public extension TessMemoryStore {
         // Fourth guard: a spend line ("Spent ...") is money and never becomes a memory line, and a private book
         // ("Private book") has nothing to remember. Reading lines ("read dune to p 142") are fine.
         for line in lines where line.text != SecretWords.title && !SecretWords.mentions(line.text)
-            && !PrivateFacts.isWalled(line.text, lastWeightKg: lastKg) && !line.text.hasPrefix("Spent ")
-            && !line.text.contains(ObjectPrivacy.bookLabel)
+            && !PrivateFacts.isWalled(line.text, lastWeightKg: lastKg) && !Self.staysOutOfMemory(line.text)
         {
             var text = line.text
             let workout = text.contains(" min") || text.hasSuffix(" sets.")
@@ -90,6 +95,8 @@ public extension TessMemoryStore {
             }
             parts.append(text.trimmingCharacters(in: CharacterSet(charactersIn: ". ")))
         }
+        // Every line of the day was kept out of memory: nothing to remember ("Tue: ." is not a line).
+        guard !parts.isEmpty else { return nil }
         let weekday = Weekdays.short[calendar.component(.weekday, from: noon) - 1]
         var text = "\(weekday): \(parts.joined(separator: ", "))."
         if text.count > TessMemory.maxTextLength {

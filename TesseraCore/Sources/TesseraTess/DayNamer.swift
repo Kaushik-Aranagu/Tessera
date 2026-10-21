@@ -54,7 +54,9 @@ public final class DayNamer {
         let store = engine.store
         guard let pack = DayNames.pack(of: routine, store: store) else { return nil }
         let others = routinesNamed(store: store, classes: engine.classes, besides: routine)
-        let taken = Set((others + avoiding + [routine.title]).map { $0.lowercased() })
+        // A day named before the marker existed is moved to the new rule name even if it keeps its title.
+        let unmarked = DayNames.isUnmarked(routine, store: store)
+        let taken = Set((others + avoiding + (unmarked ? [] : [routine.title])).map { $0.lowercased() })
         func usable(_ name: String?) -> String? {
             guard let name = name?.trimmingCharacters(in: .whitespacesAndNewlines), DayNames.isUsable(name),
                   !taken.contains(name.lowercased()) else { return nil }
@@ -63,13 +65,31 @@ public final class DayNamer {
         // Only names Tess offered herself this session go out. Other routines' titles (private ones, his typed ones)
         // stay here for de-duplication: a colliding name is refused and the rule name stands.
         let avoid = Array(Set(avoiding.map { $0.lowercased() }).sorted().prefix(12))
-        if onDeviceAvailable(), let onDevice, let name = await usable(onDevice(pack, avoid)) {
-            return Suggestion(name: name, source: .onDevice)
+        // A rule-made name for these exercises waits for one better name, once: only a model's name replaces it.
+        // At most one try a day: a model that keeps failing does not spend a Claude call on every launch.
+        let upgradeOnly = DayNames.isUpgradeOnly(routine, store: store) && !unmarked
+        if upgradeOnly, triedToday(routine, store: store) {
+            return nil
         }
-        if !onDeviceAvailable(), allowed(), let name = await usable(askClaude(pack, avoid: avoid)) {
-            return Suggestion(name: name, source: .claude)
+        if onDeviceAvailable(), let onDevice {
+            if let name = await usable(onDevice(pack, avoid)) {
+                return Suggestion(name: name, source: .onDevice)
+            }
+            if upgradeOnly {
+                markTried(routine, store: store)
+            }
+        } else if !onDeviceAvailable(), allowed(), keys.read() != nil {
+            if let name = await usable(askClaude(pack, avoid: avoid)) {
+                return Suggestion(name: name, source: .claude)
+            }
+            if upgradeOnly {
+                markTried(routine, store: store)
+            }
         }
-        let rules = DayNames.localChoices(muscles: pack.muscles)
+        if upgradeOnly {
+            return nil
+        }
+        let rules = pack.ruleNames
         if let name = rules.first(where: { !taken.contains($0.lowercased()) }) {
             return Suggestion(name: name, source: .rules)
         }
@@ -94,9 +114,21 @@ public final class DayNamer {
               let suggestion = await suggest(for: routine, engine: engine) else { return nil }
         // The routine may have been renamed by him while the call was out: check again.
         guard DayNames.mayAutoName(routine, store: engine.store),
-              (try? engine.perform(ApplyDayName(routine: routine.id, name: suggestion.name), by: .tess)) != nil
+              (try? engine.perform(ApplyDayName(routine: routine.id, name: suggestion.name,
+                                                source: suggestion.source == .rules ? DayNames.byRules
+                                                    : DayNames.byModel), by: .tess)) != nil
         else { return nil }
         return suggestion.name
+    }
+
+    /// Whether a model was already asked about this day today (his 04:00 day), saved on the routine.
+    private func triedToday(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
+        guard let last = store.value("autoNameTriedAt", of: routine)?.dateValue else { return false }
+        return TesseraDay(calendar: calendar).isSameDay(last, now())
+    }
+
+    private func markTried(_ routine: ObjectRecord, store: ObjectStore) {
+        try? store.set("autoNameTriedAt", to: .date(now()), on: routine)
     }
 
     private func routinesNamed(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef],

@@ -18,11 +18,17 @@ public struct MoneyAmount: Equatable, Sendable {
     /// number opens it.
     public static func parse(_ text: String) -> MoneyAmount? {
         let trimmed = text.trimmingCharacters(in: .whitespaces)
-        guard let match = trimmed.firstMatch(of: /^([€£$₹])?\s*(\d+(?:[.,]\d{1,2})?)(?:\s*([A-Za-z]+))?/) else {
+        // "1,000" and "1,234.50" read as thousands: a comma followed by exactly three digits groups; "12,40" is a
+        // decimal comma.
+        guard let match = trimmed.firstMatch(
+            of: /^([€£$₹])?\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:[.,]\d{1,2})?)(?:\s*([A-Za-z]+))?/
+        ) else {
             return nil
         }
         let symbol = match.1.flatMap(\.first)
-        let digits = String(match.2).replacingOccurrences(of: ",", with: ".")
+        let grouped = String(match.2).firstMatch(of: /^\d{1,3}(?:,\d{3})+/) != nil
+        let digits = grouped ? String(match.2).replacingOccurrences(of: ",", with: "")
+            : String(match.2).replacingOccurrences(of: ",", with: ".")
         guard let amount = Decimal(string: digits, locale: Locale(identifier: "en_US_POSIX")) else { return nil }
         var code = symbol.flatMap { symbols[$0] }
         var typed = String(match.0)

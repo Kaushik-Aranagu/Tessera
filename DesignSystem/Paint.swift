@@ -251,6 +251,9 @@ struct PaintKey<Label: View, Meta: View>: View {
     /// completes on a double tap (docs/research/fixtures/voiceover-recipe-clock-lists.md VO19), so naming "hold" or
     /// "double tap" would be wrong or redundant. Tap keys keep "": the word already says what they do.
     var hint = ""
+    /// A key that finishes or clears something is named-action-only for VoiceOver (G229, G258): the double tap speaks
+    /// the hint and this named action completes. Voice Control and Switch Control reach the same action by its name.
+    var finishAction: String?
     let action: () -> Void
     /// Receives whether the word is being held. The word itself shouldn't change ("HOLD" lives in the meta).
     @ViewBuilder var label: (Bool) -> Label
@@ -310,7 +313,25 @@ struct PaintKey<Label: View, Meta: View>: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(hint)
-        .accessibilityAction { complete() }
+        .accessibilityAction {
+            if finishAction == nil {
+                complete()
+            } else {
+                UIAccessibility.post(notification: .announcement, argument: hint)
+            }
+        }
+        .accessibilityActions {
+            if let finishAction {
+                Button(finishAction) { complete() }
+            }
+        }
+    }
+
+    /// The same key, finishing by a named action only for VoiceOver (G229).
+    func finishing(by name: String) -> Self {
+        var copy = self
+        copy.finishAction = name
+        return copy
     }
 
     @State private var completionsSnapshot = 0

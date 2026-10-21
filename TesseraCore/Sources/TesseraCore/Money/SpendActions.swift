@@ -67,8 +67,8 @@ public struct LogSpend: EngineAction {
         Self.title(typed: typed ?? MoneyAmount.format(Decimal(amount)), note: note ?? "")
     }
 
-    public func receipt(in _: ObjectStore, output spend: ObjectRecord) -> String? {
-        "\(spend.title), logged."
+    public func receipt(in store: ObjectStore, output spend: ObjectRecord) -> String? {
+        SpendLedger.receiptLine(for: spend, in: store)
     }
 
     public func summary(in _: ObjectStore, output spend: ObjectRecord) -> String {

@@ -9,12 +9,16 @@ import Foundation
 public enum DayNames {
     /// The Review switch "Tess names training days", default On.
     public static let reviewKey = "trainingAutoName"
+    /// `autoNameKey` after he took a name from "Suggest a name": auto-naming never touches that routine again.
+    static let chosenMark = "chosen"
     static let placeholders: Set = ["", "new routine", "untitled", "routine", "new day", "workout"]
 
     /// What a naming call may carry: exercise names and muscle words, nothing else.
     public struct Pack: Equatable, Sendable {
         public let exercises: [String]
         public let muscles: [String]
+        /// The rule names for this day, best first (from what its exercises really work).
+        public let ruleNames: [String]
         /// Changes when the exercises do, so an unchanged routine is not asked again.
         public var key: String {
             exercises.map { $0.lowercased() }.sorted().joined(separator: "|")
@@ -38,7 +42,10 @@ public enum DayNames {
             }
         }
         guard !names.isEmpty else { return nil }
-        return Pack(exercises: names, muscles: MuscleSummary.topWords(of: routine, store: store, limit: 5))
+        let muscles = MuscleSummary.topWords(of: routine, store: store, limit: 5)
+        let rules = DayRuleNames.choices(DayRuleNames.shape(of: routine, store: store))
+        return Pack(exercises: names, muscles: muscles,
+                    ruleNames: rules.isEmpty ? localChoices(muscles: muscles) : rules)
     }
 
     static let legs: Set = ["quads", "glutes", "hamstrings", "calves", "inner thighs", "outer hips"]
@@ -105,14 +112,51 @@ public enum DayNames {
         }
     }
 
+    /// The stock day titles the app itself made ("Push A", "Pull B", "Legs A", the demo's "Push Day A") and plain
+    /// stock patterns of the same kind ("Push day", "Legs"): not a name he chose, so Tess may replace one once.
+    static func isStockTitle(_ title: String) -> Bool {
+        title.lowercased().firstMatch(of: /^(?:push|pull|legs?)(?: day)?(?: [a-z])?$/) != nil
+    }
+
     /// Whether Tess may name this routine now: never a private one; only while the title is empty, a placeholder,
-    /// or still the name Tess gave it.
+    /// a stock title never yet renamed by Tess, or still the name Tess gave it. Any other name is his.
     @MainActor
     public static func mayAutoName(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
         guard pack(of: routine, store: store) != nil else { return false }
         let title = routine.title.trimmingCharacters(in: .whitespacesAndNewlines)
         let given = store.value("autoName", of: routine)?.stringValue ?? ""
-        return placeholders.contains(title.lowercased()) || (!given.isEmpty && title == given)
+        // A name taken from "Suggest a name" is his choice for good, even if it looks like a stock title.
+        if store.value("autoNameKey", of: routine)?.stringValue == chosenMark {
+            return false
+        }
+        if !given.isEmpty {
+            return title == given
+        }
+        // Never named by Tess (or taken from Suggest, which clears the mark): a placeholder or stock title is fair.
+        return placeholders.contains(title.lowercased()) || isStockTitle(title)
+    }
+
+    /// `autoNameBy`: who made the name Tess gave. A rule name may be improved once by a model; a model's name and
+    /// any name he typed never are.
+    public static let byRules = "rules", byModel = "model"
+
+    /// Whether the name on this routine is one Tess made from rules (and is still on it).
+    @MainActor
+    public static func isRuleNamed(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
+        let given = store.value("autoName", of: routine)?.stringValue ?? ""
+        guard !given.isEmpty, routine.title == given else { return false }
+        // A day Tess named before the marker existed (release 30 and earlier) had only rule names: it counts as
+        // rule-named too, and gets the new rule name once.
+        let by = store.value("autoNameBy", of: routine)?.stringValue ?? ""
+        return by == byRules || by.isEmpty
+    }
+
+    /// Named by Tess before the "named by" marker existed: it is given the new rule name once.
+    @MainActor
+    public static func isUnmarked(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
+        let given = store.value("autoName", of: routine)?.stringValue ?? ""
+        return !given.isEmpty && routine.title == given
+            && (store.value("autoNameBy", of: routine)?.stringValue ?? "").isEmpty
     }
 
     /// The name last given and the exercises it was given for.
@@ -123,10 +167,18 @@ public enum DayNames {
     }
 
     /// Whether the routine's exercises changed since it was named (or it was never named): time to ask again.
+    /// A rule-made name also waits for one better name (the pass only applies it if a model has one).
     @MainActor
     public static func needsName(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
         guard mayAutoName(routine, store: store), let pack = pack(of: routine, store: store) else { return false }
-        return given(to: routine, store: store)?.key != pack.key
+        return given(to: routine, store: store)?.key != pack.key || isRuleNamed(routine, store: store)
+    }
+
+    /// Whether the routine's rule name is for its current exercises, so only a model's name would improve it.
+    @MainActor
+    public static func isUpgradeOnly(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
+        guard isRuleNamed(routine, store: store), let pack = pack(of: routine, store: store) else { return false }
+        return given(to: routine, store: store)?.key == pack.key
     }
 }
 
@@ -146,11 +198,14 @@ public struct ApplyDayName: EngineAction {
     public var routine: UUID
     public var name: String
     public var force: Bool?
+    /// "rules" or "model"; nil works it out (a name among the day's rule names was made by rules).
+    public var source: String?
 
-    public init(routine: UUID, name: String, force: Bool? = nil) {
+    public init(routine: UUID, name: String, force: Bool? = nil, source: String? = nil) {
         self.routine = routine
         self.name = name
         self.force = force
+        self.source = source
     }
 
     public func apply(_ transaction: inout Transaction) throws {
@@ -172,7 +227,9 @@ public struct ApplyDayName: EngineAction {
         transaction.setTitle(clean, on: target)
         // A name he takes from "Suggest a name" is his choice: auto-naming stops (nothing remembered as Tess's).
         try transaction.set("autoName", to: .text(force == true ? "" : clean), on: target)
-        try transaction.set("autoNameKey", to: .text(pack.key), on: target)
+        try transaction.set("autoNameKey", to: .text(force == true ? DayNames.chosenMark : pack.key), on: target)
+        let by = source ?? (pack.ruleNames.contains(clean) ? DayNames.byRules : DayNames.byModel)
+        try transaction.set("autoNameBy", to: .text(force == true ? DayNames.byModel : by), on: target)
     }
 
     public func summary(in store: ObjectStore) -> String {

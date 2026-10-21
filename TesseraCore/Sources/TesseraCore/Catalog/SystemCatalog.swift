@@ -185,6 +185,10 @@ public enum SystemCatalog {
                       // Tess may rename it as the exercises change; once he types another, it never does.
                       FieldSpec(key: "autoName", name: "Name from Tess", kind: .text),
                       FieldSpec(key: "autoNameKey", name: "Named for", kind: .text),
+                      // "rules" or "model": a rule-made name may be improved once by a model, nothing else may.
+                      FieldSpec(key: "autoNameBy", name: "Named by", kind: .text),
+                      // The last time a model was asked to improve this day's rule name (at most once a day).
+                      FieldSpec(key: "autoNameTriedAt", name: "Model asked", kind: .date),
                   ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [
@@ -345,6 +349,7 @@ public enum SystemCatalog {
             FieldSpec(key: "backupFolderName", name: "Backup folder", kind: .text),
             FieldSpec(key: "backupFolderPickedAt", name: "Folder picked", kind: .date),
             FieldSpec(key: "restWeekday", name: "Rest day", kind: .number),
+            FieldSpec(key: "displayUnits", name: "Units", kind: .text),
         ]),
         // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
         // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.

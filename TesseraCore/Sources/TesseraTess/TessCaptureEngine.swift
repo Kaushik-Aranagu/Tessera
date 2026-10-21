@@ -219,6 +219,10 @@ public final class TessCaptureEngine: TessCapturing {
         if kit == .bodyweight {
             return kilograms == 0 ? "bodyweight" : "+\(TessVoice.number(kilograms))"
         }
+        // His chosen weight unit wins over the unit it was said in; stored kilograms never change.
+        if let chosen = SettingsStore(engine: engine).read().displayUnits.weight(kilograms: kilograms) {
+            return chosen.unit == "kg" ? TessVoice.number(kilograms) : chosen.formatted
+        }
         return unit == .kilograms ? TessVoice.number(kilograms) : unit.format(kilograms: kilograms)
     }
 
@@ -354,6 +358,23 @@ public final class TessCaptureEngine: TessCapturing {
                 }
             }
             return (record, links > 0 ? "Noted, linked." : "Noted.")
+        case let .spend(amount, note, on):
+            let made = try engine.perform(
+                LogSpend(amount: NSDecimalNumber(decimal: amount.amount).doubleValue, typed: amount.typed,
+                         currency: amount.currency, note: note.isEmpty ? nil : note, spentAt: on ?? context.now),
+                by: .tess, pending: pending
+            )
+            return (made.record, made.record.receipt ?? SpendLedger.receiptLine(for: made.output, in: engine.store))
+        case let .shopTotal(amount):
+            let made = try engine.perform(
+                LogShopTotal(amount: NSDecimalNumber(decimal: amount.amount).doubleValue, typed: amount.typed,
+                             currency: amount.currency, time: context.now),
+                by: .tess, pending: pending
+            )
+            return (made.record, made.record.receipt ?? SpendLedger.receiptLine(for: made.output, in: engine.store))
+        case .skipShopTotal:
+            let record = try engine.perform(SkipShopTotal(time: context.now), by: .tess, pending: pending).record
+            return (record, "Groceries total, skipped.")
         default:
             return try performKitchen(parse, pending: pending, context: context)
         }

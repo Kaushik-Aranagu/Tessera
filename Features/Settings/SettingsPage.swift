@@ -150,12 +150,10 @@ struct ReviewSection: View {
                 let turn = PageTurnStyle.current
                 PeekTabs(tabs: pages.map(\.word), selection: $page, turns: turn) { index in
                     if turn == .today {
-                        VStack(alignment: .leading, spacing: 0) {
-                            ForEach(Array(pages[index].rows.enumerated()), id: \.element.id) { offset, choice in
+                        // No lines between rows (Kaushik's rule): space alone separates them.
+                        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                            ForEach(pages[index].rows) { choice in
                                 row(choice)
-                                if offset < pages[index].rows.count - 1 {
-                                    RowSeparator()
-                                }
                             }
                         }
                     } else {
