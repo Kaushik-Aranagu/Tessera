@@ -499,6 +499,12 @@ public struct HomeFacts {
         engine.store
     }
 
+    /// "about 330 kcal" for a finished workout's Home done line, or nil. Apart from the fact and the line on purpose:
+    /// HomeFact, HomeLine, the widgets and the Claude pack never carry a calorie number; the screen asks for it here.
+    public func calories(forDone summary: WorkoutSummary, options: CaloriesOptions) -> String? {
+        CaloriesBurned.line(forWorkout: summary.workout, store: store, classes: engine.classes, options: options)
+    }
+
     /// A workout finished today, from Core's summary (counts and records; never the weights).
     public func fact(done summary: WorkoutSummary) -> HomeFact {
         let routine = store.linkedObjects("routine", of: summary.workout).first
