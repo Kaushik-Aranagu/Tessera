@@ -154,4 +154,38 @@ struct DayNamingTests {
         #expect(DayNamingPrompt.pick(["Chest and arms"], muscles: ["chest", "triceps"]) == "Chest and arms")
         #expect(DayNamingPrompt.pick(["The ultimate monster pump day!"], muscles: legs) == nil)
     }
+
+    /// Days with a session waiting are named first, so tonight's row reads its new name soonest.
+    @Test func tonightsDayIsNamedFirst() throws {
+        let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext)
+        try ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: model.store,
+                                             classes: model.classes)
+        try StarterContent.installIfNeeded(store: model.store, classes: model.classes)
+        let plan = try #require(model.store.object(id: StarterContent.planID))
+        let routines = model.store.linkedObjects("routines", of: plan)
+        let last = try #require(routines.last)
+        let ordered = DayNamingSwitch.tonightFirst(routines, waiting: [last.id])
+        #expect(ordered.first?.id == last.id && ordered.count == routines.count)
+    }
+
+    /// QA on #1179: drive the follow step itself. A session waiting on a renamed day takes the new name; a started
+    /// one keeps its own.
+    @Test func aWaitingSessionFollowsItsDay() throws {
+        let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext)
+        try ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: model.store,
+                                             classes: model.classes)
+        try StarterContent.installIfNeeded(store: model.store, classes: model.classes)
+        let plan = try #require(model.store.object(id: StarterContent.planID))
+        let routine = try #require(model.store.linkedObjects("routines", of: plan).first { $0.title == "Push A" })
+        let workoutClass = try #require(model.classes[.workout])
+        let waiting = model.store.create(workoutClass, title: "Push A")
+        try model.store.setLinks("routine", on: waiting, to: [routine])
+        let started = model.store.create(workoutClass, title: "Push A")
+        try model.store.setLinks("routine", on: started, to: [routine])
+        try model.store.set("startedAt", to: .date(.now), on: started)
+        routine.title = "Heavy chest"
+        #expect(model.followRoutineTitles() == 1)
+        #expect(waiting.title == "Heavy chest" && started.title == "Push A")
+        #expect(model.followRoutineTitles() == 0)
+    }
 }
