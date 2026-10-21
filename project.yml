@@ -19,6 +19,8 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     TARGETED_DEVICE_FAMILY: "1"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
+    # The short git SHA of the build, stamped by the release scripts (TESSERA_BUILD_SHA=abc1234); "dev" otherwise.
+    TESSERA_BUILD_SHA: dev
 targets:
   Tessera:
     type: application

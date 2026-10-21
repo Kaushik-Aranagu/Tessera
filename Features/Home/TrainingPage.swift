@@ -55,13 +55,16 @@ struct TrainingLane: Identifiable, Equatable {
     var scheme = ""
     /// Today's weight with its unit ("82.5 kg"); none when there is no weight yet.
     var weight: String?
+    /// The same weight in kilograms (stored), so the row can draw it as a measure with a swipeable unit.
+    var weightKilograms: Double?
     /// What the exercise works, for the lane's figure.
     var muscles: [(name: String, role: MuscleRole)] = []
     /// The sets logged so far as ink-drop marks (the circles that replace the dashed strokes).
     var marks: [SetMarkSpec] = []
 
     static func == (lhs: TrainingLane, rhs: TrainingLane) -> Bool {
-        lhs.id == rhs.id && lhs.name == rhs.name && lhs.target == rhs.target && lhs.sets == rhs.sets
+        lhs.id == rhs.id && lhs.name == rhs.name && lhs.weightKilograms == rhs.weightKilograms && lhs.target == rhs
+            .target && lhs.sets == rhs.sets
             && lhs.logged == rhs.logged && lhs.scheme == rhs.scheme && lhs.weight == rhs.weight && lhs.marks == rhs
             .marks
     }
@@ -355,6 +358,7 @@ private struct TrainingAtRest: View {
         let target = last.map { "\(Format.kilograms($0.weight)) × \(Int($0.reps.rounded()))" } ?? scheme
         return TrainingLane(id: slot.id, exercise: exercise, name: exercise.name, target: target, sets: sets,
                             logged: 0, scheme: scheme, weight: last.map { Self.weightText($0.weight) },
+                            weightKilograms: last?.weight,
                             muscles: MuscleReading.muscles(of: exercise, store: model.store))
     }
 
@@ -368,6 +372,7 @@ private struct TrainingAtRest: View {
                             sets: max(sets ?? planned, logged, 1), logged: logged,
                             scheme: scheme,
                             weight: prefill.weight.map { Self.weightText($0) },
+                            weightKilograms: prefill.weight,
                             muscles: MuscleReading.muscles(of: exercise, store: model.store),
                             marks: marks(of: entry))
     }
@@ -719,7 +724,9 @@ private struct LaneRow: View {
                 if !typeSize.isAccessibilitySize {
                     Spacer(minLength: Theme.Spacing.s)
                 }
-                if let weight = lane.weight {
+                if let kilograms = lane.weightKilograms {
+                    MeasureView(measure: Measure(kilograms, "kg"), controls: [.unit])
+                } else if let weight = lane.weight {
                     Text(weight)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Theme.Colors.ink)
