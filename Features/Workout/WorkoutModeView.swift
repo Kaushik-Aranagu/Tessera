@@ -389,9 +389,10 @@ extension WorkoutContent {
     /// strip says which exercise this is. Tap or pull down for the running order.
     private func header(phase: WorkoutSession.Phase) -> some View {
         let line = WorkoutLines.context(session, phase: phase)
+        // The kicker style (Design item 115): small, caps, ink secondary; it wraps, never cut.
         return Text(line)
-            .font(Theme.voice)
-            .foregroundStyle(Theme.Colors.context)
+            .kicker()
+            .fixedSize(horizontal: false, vertical: true)
             .contentTransition(.opacity)
             .tesseraAnimation(value: line)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)

@@ -107,9 +107,7 @@ private struct TrainingAtRest: View {
                 }
                 .padding(.bottom, tight ? Theme.Spacing.m : Theme.Spacing.l)
 
-            Text(context(lanes))
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
+            kickerRow(lanes)
                 .contentTransition(.opacity)
                 .padding(.bottom, tight ? Theme.Spacing.xs : Theme.Spacing.s)
                 .entrance(0)
@@ -412,18 +410,17 @@ private struct TrainingAtRest: View {
         "\(Format.kilograms(value)) \(Format.unit.symbol)"
     }
 
-    /// "today, 5 exercises, about 55 min"; done: "done this afternoon".
-    private func context(_ lanes: [TrainingLane]) -> String {
+    /// The kicker row above the title (Design item 115): the day word at the left ("Today"; a finished or running
+    /// workout says so), "5 exercises, about 40 min" at the right for a plan still to do.
+    @ViewBuilder
+    private func kickerRow(_ lanes: [TrainingLane]) -> some View {
         if case let .done(summary) = plan {
-            guard let end = summary.endedAt else { return "done today" }
-            return TrainingPage.doneWhen(end)
+            KickerRow(left: summary.endedAt.map { TrainingPage.doneWhen($0).capitalizedFirst } ?? "Done today")
+        } else if case .running = plan {
+            KickerRow(left: "Running now")
+        } else {
+            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes))
         }
-        if case .running = plan {
-            return "running now"
-        }
-        let count = lanes.count
-        let sets = lanes.map(\.sets).reduce(0, +)
-        return "today, \(count) \(count == 1 ? "exercise" : "exercises"), \(TrainingPage.about(sets: sets))"
     }
 
     private func tessLine(_ lanes: [TrainingLane]) -> String? {
@@ -798,6 +795,13 @@ extension TrainingPage {
     }
 
     /// "about 55 min": each set about two and a half minutes with its rest, to the nearest five.
+    /// "5 exercises, about 40 min".
+    static func planPhrase(lanes: [TrainingLane]) -> String {
+        let count = lanes.count
+        let sets = lanes.map(\.sets).reduce(0, +)
+        return "\(count) \(count == 1 ? "exercise" : "exercises"), \(about(sets: sets))"
+    }
+
     static func about(sets: Int) -> String {
         let minutes = max(5, Int((Double(sets) * 2.5 / 5).rounded()) * 5)
         return minutes >= 60 && minutes % 60 == 0 ? "about \(minutes / 60) h" : "about \(minutes) min"
@@ -845,5 +849,11 @@ private struct EmptyTraining: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private extension String {
+    var capitalizedFirst: String {
+        prefix(1).uppercased() + dropFirst()
     }
 }
