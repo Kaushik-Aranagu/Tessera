@@ -192,9 +192,12 @@ struct DayNamingTests {
     }
 
     /// QA on #1181: only today's session counts as waiting; a future day or an old one never started does not.
-    @Test func onlyTodaysSessionCountsAsWaiting() {
-        let day = TesseraDay()
-        let now = Date(timeIntervalSinceReferenceDate: 800_000_000)
+    @Test func onlyTodaysSessionCountsAsWaiting() throws {
+        // A pinned zone, so the day boundary is the same on every Mac and phone (QA on #1189).
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        let day = TesseraDay(calendar: calendar)
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 21, hour: 12)))
         #expect(DayNamingSwitch.isToday(now.addingTimeInterval(3600), day: day, now: now))
         #expect(!DayNamingSwitch.isToday(now.addingTimeInterval(3 * 86400), day: day, now: now))
         #expect(!DayNamingSwitch.isToday(now.addingTimeInterval(-9 * 86400), day: day, now: now))
