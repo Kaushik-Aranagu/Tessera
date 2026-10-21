@@ -527,11 +527,14 @@ final class AppModel {
         classes[key]
     }
 
-    func touch() {
+    /// Saves and redraws. `naming: false` is for the naming pass's own writes, which must not restart the pass.
+    func touch(naming: Bool = true) {
         try? context.save()
         revision += 1
         reconcileTimerAlerts()
-        nameTrainingDaysSoon()
+        if naming {
+            nameTrainingDaysSoon()
+        }
     }
 
     /// One local notification per running kitchen timer, kept in step after every change (G217): Stop, Finish and an

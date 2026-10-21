@@ -18,8 +18,17 @@ struct ReviewZonesTests {
         var there = home
         there.timeZone = Self.newYork
         let when = try #require(there.date(from: DateComponents(year: 2026, month: 10, day: 21, hour: 6, minute: 30)))
+        // Review hides the days before his first use, and the plan's first-use stamp comes from the real clock when
+        // the store is made: pin it a week before, so the test is fixed in time (it went red at 4 am PT Oct 21, when
+        // the real day passed the hotel Wednesday).
+        let firstUse = try #require(home.date(from: DateComponents(year: 2026, month: 10, day: 12, hour: 9)))
+        let plan = try #require(model.plan)
+        plan.createdAt = firstUse
         model.engine.zone = { Self.newYork }
-        let task = try model.engine.perform(CreateTask(title: "call the hotel"), by: .user).output
+        let made = try model.engine.perform(CreateTask(title: "call the hotel"), by: .user)
+        // Its op is stamped from the real clock too: pin it to the hotel morning (QA on #1187).
+        made.record.createdAt = when
+        let task = made.output
         let done = try model.engine.perform(SetTaskDone(task: task.id, time: when), by: .user)
         done.record.createdAt = when
         model.engine.zone = { Self.la }
