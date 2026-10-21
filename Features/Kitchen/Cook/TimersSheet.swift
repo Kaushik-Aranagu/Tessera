@@ -3,7 +3,7 @@ import TesseraCore
 
 /// Every timer of the cook in one sheet, the parallel-steps list: step timers and the ones he started, soonest first,
 /// each on its own labelled line with what is left and when it ends, a Stop word, and the quick words that start a new
-/// one. A sheet on the dark ground, no cards, no pills: ink words and hairlines.
+/// one. A sheet on the dark ground, no cards, no pills: ink words, no lines.
 struct TimersSheet: View {
     let session: CookClockSession
     let calm: Bool
@@ -36,9 +36,8 @@ struct TimersSheet: View {
                 } else {
                     ForEach(lines) { line in
                         row(line)
-                        Rectangle().fill(Theme.Colors.Workout.hairline).frame(height: Theme.Stroke.hairline)
+                            .padding(.bottom, Theme.Spacing.m)
                     }
-                    .padding(.top, 0)
                 }
                 Text("Start one")
                     .textRole(.label)

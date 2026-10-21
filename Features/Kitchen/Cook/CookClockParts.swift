@@ -24,7 +24,6 @@ struct StepStack: View {
                 Text(session.text(of: before))
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.Workout.inkTertiary)
-                    .lineLimit(2)
                     .accessibilityHidden(true)
             }
             VStack(alignment: .leading, spacing: Theme.Spacing.s) {
@@ -49,7 +48,6 @@ struct StepStack: View {
                 Text(session.text(of: index))
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.Workout.inkTertiary)
-                    .lineLimit(2)
                     .accessibilityHidden(true)
             }
             if hintsLeft > 0 {
@@ -283,7 +281,6 @@ struct CookHorizons: View {
                                 : (lead ? Theme.Colors.Workout.signal : Theme.Colors.Workout.ink.opacity(0.45)))
                             .frame(width: max(2, proxy.size.width * fraction), height: lead ? 4 : 2)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .animation(calm ? .easeOut(duration: 0.15) : nil, value: fraction)
                     }
                     .frame(height: 4)
                 }
@@ -385,9 +382,6 @@ struct FlareBand: View {
                     }
                 }
                 .padding(.vertical, Theme.Spacing.m)
-                .background(alignment: .bottom) {
-                    Rectangle().fill(Theme.Colors.Workout.signal.opacity(0.6)).frame(height: 1)
-                }
                 .background(Theme.Colors.Workout.ground.opacity(0.94))
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("\(line.label) timer")
@@ -524,7 +518,9 @@ struct ListeningMark: View {
         .tesseraFeedback(controller.cue)
         .onAppear {
             guard !calm else { return }
-            withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) { breathe = true }
+            withTesseraAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true), reduceMotion: calm) {
+                breathe = true
+            }
         }
     }
 }

@@ -98,11 +98,12 @@ struct ReviewChoicesTests {
         #expect(Set(ReviewChoices.all.map(\.id)).count == ReviewChoices.all.count)
     }
 
-    /// The cook clock page ships hands-free cooking, parallel steps and cook notes: their rows are live, Off by default,
+    /// The cook clock page ships the timer voice, hands-free cooking, parallel steps and cook notes: their rows are
+    /// live, Off by default,
     /// and flip through the same keys the page reads.
     @Test func theCookClockSwitchesAreLive() throws {
         let (choices, defaults) = try fresh()
-        for id in ["handsFreeCook", "parallelSteps", "cookNotes"] {
+        for id in ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes"] {
             let row = try choice(id)
             #expect(row.readiness == .live && row.defaultValue == "Off", "\(id)")
             choices.step(row)

@@ -142,7 +142,6 @@ struct CookClockPage: View {
             Text(session.recipeName)
                 .textRole(.label)
                 .foregroundStyle(Theme.Colors.Workout.inkSecondary)
-                .lineLimit(1)
             if session.tracks.count == 1 {
                 Text(CookModeCopy.step(session.current, of: session.steps.count))
                     .textRole(.data)
@@ -195,7 +194,6 @@ struct CookClockPage: View {
                         withTesseraAnimation(Theme.Motion.house, reduceMotion: calm) { session.lead(1 - session.lead) }
                     } label: {
                         Text(session.text(of: other))
-                            .lineLimit(2)
                             .multilineTextAlignment(.leading)
                             .textRole(.body)
                             .foregroundStyle(Theme.Colors.Workout.inkSecondary)
