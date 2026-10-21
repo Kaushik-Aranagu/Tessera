@@ -142,7 +142,8 @@ struct PeekTabs<Content: View>: View {
         content(selection)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
-            .gesture(DragGesture(minimumDistance: 24).onEnded { value in
+            // Outranks the page's own back swipe: on a turning page a side swipe moves a tab, never leaves Settings.
+            .highPriorityGesture(DragGesture(minimumDistance: 24).onEnded { value in
                 guard abs(value.translation.width) > abs(value.translation.height),
                       abs(value.translation.width) > 40 else { return }
                 step(value.translation.width < 0 ? 1 : -1)

@@ -21,7 +21,7 @@ struct SettingsPageTests {
     @Test func reviewRowsSayWhatTheyWaitFor() throws {
         #expect(try ReviewSwitchCopy.mark(choice("planMyDay")) == "Needs Claude")
         #expect(try ReviewSwitchCopy.mark(choice("calendar")) == "Later")
-        #expect(try ReviewSwitchCopy.mark(choice("pageTurn")) == "Soon")
+        #expect(try ReviewSwitchCopy.mark(choice("pantryState")) == "Soon")
         var live = try choice("pageTurn")
         live.readiness = .live
         #expect(ReviewSwitchCopy.mark(live) == nil)
