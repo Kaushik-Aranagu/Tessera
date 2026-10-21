@@ -62,7 +62,8 @@ struct MoneyFront {
                         return Line(id: entry.object.id, word: word,
                                     amount: typed.isEmpty ? MoneyCopy.drawn(entry.amount, currency: entry.currency)
                                         : typed,
-                                    measure: .money(entry.amount, currency: entry.currency),
+                                    measure: .money(NSDecimalNumber(decimal: entry.amount).doubleValue,
+                                                    currency: entry.currency),
                                     title: entry.object.title,
                                     spoken: MoneyCopy.spokenLine(day: day, word: word, amount: entry.amount,
                                                                  currency: entry.currency, calendar: calendar))

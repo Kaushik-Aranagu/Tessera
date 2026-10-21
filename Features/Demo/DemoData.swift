@@ -27,6 +27,10 @@ enum DemoData {
         if model.schedule().isEmpty {
             seedToday(model)
         }
+        // `-areasAll` walks Money: a few spends this month, one in euros, so the amounts and the currency swipe show.
+        if LaunchFlags.has("-areasAll", in: arguments), !model.objects(of: .spend).contains(where: { !$0.isDeleted }) {
+            seedSpends(model)
+        }
         seedRecipes(model)
         model.touch()
     }
@@ -87,6 +91,21 @@ enum DemoData {
         ]
         for text in texts {
             _ = try? model.engine.perform(CreateRecipe(text: text), by: .system)
+        }
+    }
+
+    private static func seedSpends(_ model: AppModel) {
+        let now = AppClock.now
+        for (amount, typed, currency, note, daysAgo) in [(12.40, "12.40", nil, "lunch", 0.0),
+                                                         (4.50, "4.50", nil, "coffee", 1),
+                                                         (38.20, "€38.20", "EUR", "dinner", 2),
+                                                         (61.75, "61.75", nil, "groceries", 4)] as [(Double, String,
+                                                                                                     String?,
+                                                                                                     String,
+                                                                                                     Double)]
+        {
+            _ = try? model.engine.perform(LogSpend(amount: amount, typed: typed, currency: currency, note: note,
+                                                   spentAt: now.addingTimeInterval(-daysAgo * 86400)), by: .system)
         }
     }
 

@@ -121,7 +121,7 @@ enum MoneyCopy {
     // MARK: The groceries total
 
     /// The quiet line under a finished shop, and Now's slot while it waits: Core's "Groceries total?".
-    static var totalPrompt: String {
+    @MainActor static var totalPrompt: String {
         ShopReceipt.prompt
     }
 

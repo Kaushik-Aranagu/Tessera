@@ -51,10 +51,13 @@ struct SpendPage: View {
                 BackWord(title: "Money") { dismiss() }
                     .entrance(0)
                 // The amount as the hero, its currency a small word that swipes to an "about" estimate (sheet 115).
-                MeasureView(measure: .money(amount, currency: currency), size: Theme.concept.scale.hero.size,
-                            weight: .medium)
-                    .accessibilityAddTraits(.isHeader)
-                    .entrance(0, hero: true)
+                MeasureView(
+                    measure: .money(NSDecimalNumber(decimal: amount).doubleValue, currency: currency),
+                    size: Theme.concept.scale.hero.size,
+                    weight: .medium
+                )
+                .accessibilityAddTraits(.isHeader)
+                .entrance(0, hero: true)
                 wordLine(note: note, spentAt: spentAt)
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1)
