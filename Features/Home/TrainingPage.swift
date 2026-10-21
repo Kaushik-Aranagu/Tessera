@@ -142,7 +142,9 @@ private struct TrainingAtRest: View {
                     LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
                             isPrivate: isPrivateDay,
                             showsStrokes: isRunning || isDone || lane.logged > 0)
-                        .frame(height: 72, alignment: .top)
+                        // Rows are 72 pt; at large text a row grows with its wrapped name instead of printing over
+                        // the next one.
+                        .frame(height: typeSize.isAccessibilitySize ? nil : 72, alignment: .top)
                         // Live mode rises out of the first lane; the others sink away.
                         .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
                                              namespace: namespace))
@@ -257,15 +259,21 @@ private struct TrainingAtRest: View {
     @ViewBuilder
     private var planLine: some View {
         if let planObject = model.plan {
-            HStack(alignment: .firstTextBaseline) {
+            // At large text the plan line and ROUTINES stack and the line wraps instead of cutting.
+            let large = typeSize.isAccessibilitySize
+            let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+            layout {
                 let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
                 Text("\(planObject.title), \(fixed ? "fixed days" : "rolls on")")
                     .textRole(.label)
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(1)
+                    .lineLimit(large ? nil : 1)
                     .minimumScaleFactor(0.8)
-                Spacer(minLength: Theme.Spacing.s)
+                if !large {
+                    Spacer(minLength: Theme.Spacing.s)
+                }
                 Button("Routines") { model.open(.routines(planObject.id)) }
                     .buttonStyle(InkLabelWordStyle())
             }
@@ -613,6 +621,7 @@ struct StartMark: View {
     let state: State
     /// The START flight: the word fades to 35% while the line leaves it.
     var lift: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -623,7 +632,8 @@ struct StartMark: View {
                 .contentTransition(.opacity)
             line
         }
-        .fixedSize()
+        // At large text the key wraps to a second line instead of running off the screen.
+        .fixedSize(horizontal: !typeSize.isAccessibilitySize, vertical: true)
         .frame(minHeight: 44, alignment: .bottom)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
@@ -691,7 +701,8 @@ private struct LaneRow: View {
                 Text(lane.name)
                     .font(Theme.voice(size: 21).weight(.medium))
                     .foregroundStyle(Theme.Colors.ink)
-                    .lineLimit(1)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                    .fixedSize(horizontal: false, vertical: typeSize.isAccessibilitySize)
                     .padding(.top, 6)
                 secondLine
                     .padding(.top, typeSize.isAccessibilitySize ? 4 : 10)
