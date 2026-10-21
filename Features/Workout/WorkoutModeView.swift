@@ -222,7 +222,20 @@ private struct WorkoutContent: View {
         .tesseraFeedback(moment)
     }
 
+    /// At accessibility sizes the screen is taller than the phone: it scrolls instead of printing rows over each other.
+    @ViewBuilder
     private func live(phase actual: WorkoutSession.Phase, now: Date) -> some View {
+        if typeSize.isAccessibilitySize {
+            ScrollView {
+                liveStack(phase: actual, now: now)
+            }
+            .scrollIndicators(.hidden)
+        } else {
+            liveStack(phase: actual, now: now)
+        }
+    }
+
+    private func liveStack(phase actual: WorkoutSession.Phase, now: Date) -> some View {
         // Editing a logged set takes the set block over (dial, drum, key), even during rest.
         let phase = session.isEditing ? .set : actual
         return VStack(alignment: .leading, spacing: 0) {
@@ -596,7 +609,8 @@ extension WorkoutContent {
                 .textRole(.label)
                 .foregroundStyle(Paint.tess)
                 .frame(maxWidth: .infinity, alignment: .leading)
-        } else if let plates = session.platesPerSide {
+        } else if let plates = session.platesPerSide, !typeSize.isAccessibilitySize {
+            // (Large text has no room for the drawing: it would print over the reps.)
             PlateStack(weight: session.weight, perSide: plates, drawsPlates: true, large: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .transition(.opacity)
@@ -678,7 +692,11 @@ extension WorkoutContent {
     // MARK: The key
 
     private func keyRow(phase: WorkoutSession.Phase) -> some View {
-        HStack(spacing: Theme.Spacing.l) {
+        // At accessibility sizes the key and PAUSE stack, so the row is never wider than the screen.
+        let large = typeSize.isAccessibilitySize
+        let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
+            : AnyLayout(HStackLayout(spacing: Theme.Spacing.l))
+        return layout {
             if session.isEditing {
                 EditSetKeys(session: session) { saveHaptic += 1 }
             } else {
@@ -696,7 +714,7 @@ extension WorkoutContent {
                         }
                     } label: { _ in
                         Text(
-                            "Log \(Format.kilograms(session.weight)) × \(Int(session.reps))\(finishes ? " and finish" : "")"
+                            "Log \(Format.kilograms(session.weight))\u{00A0}×\u{00A0}\(Int(session.reps))\(finishes ? " and finish" : "")"
                         )
                         .textRole(.labelStrong)
                         .textCase(.uppercase)
@@ -740,7 +758,9 @@ extension WorkoutContent {
                     .accessibilityAction(named: "Finish workout") { finish() }
                 }
             }
-            Spacer(minLength: 0)
+            if !large {
+                Spacer(minLength: 0)
+            }
             if session.finishedAt == nil {
                 // PAUSE leaves to Home, where the key reads RESUME with the progress line.
                 Button("Pause") { model.isWorkoutPresented = false }
@@ -753,7 +773,7 @@ extension WorkoutContent {
                     .accessibilityLabel("Pause the workout")
             }
         }
-        .frame(height: 62)
+        .frame(height: large ? nil : 62)
     }
 
     // MARK: Finish
