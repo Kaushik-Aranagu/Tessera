@@ -15,7 +15,6 @@ public final class CurrencyRatesFetch {
     public let session: URLSession
     public var now: () -> Date = { .now }
     public var timeout: TimeInterval = 8
-    private var lastAttempt: Date?
 
     public init(cache: RatesCache = RatesCache(), session: URLSession = URLSession(configuration: .ephemeral)) {
         self.cache = cache
@@ -27,11 +26,9 @@ public final class CurrencyRatesFetch {
     /// saved: the money wheel stops.
     public func refreshIfNeeded() async -> CurrencyRates? {
         let moment = now()
-        let due = cache
-            .isFetchDue(now: moment) &&
-            (lastAttempt.map { moment.timeIntervalSince($0) >= RatesCache.minimumInterval } ?? true)
-        if due {
-            lastAttempt = moment
+        if cache.isFetchDue(now: moment) {
+            // The try is noted first, so a failing network is not retried on every page open or launch.
+            cache.noteAttempt(at: moment)
             if let table = await fetch() {
                 cache.write(table, fetchedAt: moment)
                 return table
