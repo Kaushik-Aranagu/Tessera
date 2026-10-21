@@ -137,14 +137,20 @@ struct DayNamingTests {
         #expect(!DayNamingSwitch.followsRoutine(isDeleted: true, started: false, ended: false))
     }
 
-    /// The model offers three names; a specific one that fits the day beats a plain split, an unusable one is
-    /// skipped, and a sample name copied onto the wrong day is refused.
+    /// The model offers three names; only a specific one that fits the day is taken. Plain splits, unusable names
+    /// and a sample name copied onto the wrong day are refused.
     @Test func aSpecificCandidateBeatsAPlainSplit() {
         let back = ["back", "biceps"], legs = ["quads", "glutes", "hamstrings"]
         #expect(DayNamingPrompt.pick(["Upper body", "Heavy pull", "Back and biceps"], muscles: back) == "Heavy pull")
         #expect(DayNamingPrompt.pick(["Push Pull Leg day", "Leg day", "Long legs"], muscles: legs) == "Long legs")
         #expect(DayNamingPrompt.pick(["Heavy chest", "Back and biceps", "Long legs"], muscles: legs) == "Long legs")
-        #expect(DayNamingPrompt.pick(["Heavy chest", "Leg day"], muscles: legs) == "Leg day")
+        #expect(DayNamingPrompt.pick(["Heavy chest", "Leg day"], muscles: legs) == nil)
+        // An exercise's own name is refused; so is a muscle-plus-day split.
+        #expect(DayNamingPrompt.pick(["Overhead press", "Press day"], muscles: ["shoulders"],
+                                     exercises: ["Overhead Press", "Lateral Raise"]) == "Press day")
+        #expect(DayNamingPrompt.pick(["Back day", "Chest day", "Arms day"], muscles: back) == nil)
+        // Three plain splits: nothing, so the rule name stands.
+        #expect(DayNamingPrompt.pick(["Leg day", "Upper body", "Push"], muscles: legs) == nil)
         #expect(DayNamingPrompt.pick(["Chest and arms"], muscles: ["chest", "triceps"]) == "Chest and arms")
         #expect(DayNamingPrompt.pick(["The ultimate monster pump day!"], muscles: legs) == nil)
     }

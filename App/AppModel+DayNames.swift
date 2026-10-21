@@ -160,8 +160,9 @@ enum DayNamingPrompt {
     }
 
     /// The plain splits he is tired of (Product on #1174): taken only when the model offers nothing more specific.
-    static let plainSplits: Set = ["push", "pull", "push day", "pull day", "leg day", "legs", "upper body",
-                                   "lower body", "full body"]
+    static let plainSplits: Set = ["push", "pull", "push day", "pull day", "leg day", "legs", "legs day", "upper body",
+                                   "lower body", "full body", "back day", "chest day", "arm day", "arms day",
+                                   "core day"]
 
     /// The instructions' sample names and the muscles each one means. A copied sample is taken only when the day
     /// works one of its muscles (simulator run: a leg day came back "Heavy chest", straight from the samples).
@@ -176,15 +177,19 @@ enum DayNamingPrompt {
         ],
     ]
 
-    /// The first usable candidate that fits the day and isn't a plain split, else the first usable one that fits
-    /// (simulator run: the phone's model leans on "Upper body" and "Leg day" when asked for one name).
-    static func pick(_ candidates: [String], muscles: [String]) -> String? {
+    /// The first usable candidate that fits the day and isn't a plain split, or nil (simulator run: the phone's model
+    /// leans on "Upper body" and "Leg day").
+    static func pick(_ candidates: [String], muscles: [String], exercises: [String] = []) -> String? {
         let worked = Set(muscles.map { $0.lowercased() })
-        let usable = candidates.compactMap(cleaned).filter { name in
+        // An exercise is not a day's name: "Overhead press" would read "Start Overhead press" (Design on #1179).
+        let lifts = Set(exercises.map { $0.lowercased() })
+        let usable = candidates.compactMap(cleaned).filter { !lifts.contains($0.lowercased()) }.filter { name in
             guard let means = sampleMuscles[name.lowercased()] else { return true }
             return !means.isDisjoint(with: worked)
         }
-        return usable.first { !plainSplits.contains($0.lowercased()) } ?? usable.first
+        // Never a plain split: with nothing specific that fits, the rule name stands (QA on #1179), and a rule name
+        // stays open to a better one later, where a model-made "Leg day" never would be.
+        return usable.first { !plainSplits.contains($0.lowercased()) }
     }
 
     static func onDeviceName(_ pack: DayNames.Pack, avoid: [String]) async -> String? {
@@ -193,7 +198,7 @@ enum DayNamingPrompt {
         do {
             // Guided generation: the answer is one name field, never prose or JSON (simulator run, release 30).
             let reply = try await session.respond(to: prompt(pack, avoid: avoid), generating: DayNameReply.self)
-            return pick(reply.content.names, muscles: pack.muscles)
+            return pick(reply.content.names, muscles: pack.muscles, exercises: pack.exercises)
         } catch {
             return nil
         }
