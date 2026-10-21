@@ -31,6 +31,8 @@ targets:
         UILaunchScreen:
           UIColorName: LaunchBackground
         NSSupportsLiveActivities: true
+        # The release scripts pass TESSERA_BUILD_SHA=<short sha>; Settings reads it (BuildStamp).
+        TesseraBuildSHA: $(TESSERA_BUILD_SHA)
         # Backups show in Files (On My iPhone > Tessera) and open from there.
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true

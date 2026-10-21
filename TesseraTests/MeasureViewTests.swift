@@ -89,6 +89,14 @@ struct MeasureViewTests {
         #expect(BuildStamp.normalised(nil) == "dev")
     }
 
+    @Test func theBuiltPlistCarriesTheStampKey() {
+        // The key must reach the built Info.plist, or the line would read "dev" on every build. A build made with
+        // TESSERA_BUILD_SHA=abc1234 shows it; one made without shows "dev"; either way the key exists and is a string.
+        let value = Bundle.main.object(forInfoDictionaryKey: "TesseraBuildSHA")
+        #expect(value is String, "TesseraBuildSHA missing from the app's Info.plist")
+        #expect(BuildStamp.short == BuildStamp.normalised(value as? String))
+    }
+
     // MARK: The rates call site
 
     @Test func theRatesAreFetchedOnceAnHourNoMatterHowManyPagesOpen() async {

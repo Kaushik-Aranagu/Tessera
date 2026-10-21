@@ -83,7 +83,6 @@ struct MeasureView: View {
             }
         }
         .contentShape(Rectangle().inset(by: -8))
-        .gesture(swipes && !reduceMotion ? swipe : nil)
         .onTapGesture(perform: tap)
         .tesseraFeedback(.selection, trigger: ticks)
         .tesseraAnimation(.easeOut(duration: 0.15), value: unit)
@@ -109,32 +108,61 @@ struct MeasureView: View {
                     .font(MeasureStyle.unit)
                     .tracking(MeasureStyle.unitTracking)
                     .foregroundStyle(Theme.Colors.inkSecondary)
+                    // Only a drag that begins on the unit word is the wheel's; one that begins on the number is the
+                    // page's scroll, so a list of measures still scrolls from anywhere but this small word.
+                    .contentShape(Rectangle().inset(by: -10))
+                    .gesture(unitGesture)
             }
         }
     }
 
     // MARK: Gestures
 
+    /// Nothing when the unit does not swipe; a plain drag by default; at accessibility sizes (where the screen
+    /// scrolls) a 0.2 s press first, so a scroll that starts on a number never flips the unit.
+    private var unitGesture: AnyGesture<Void>? {
+        guard swipes, !reduceMotion else { return nil }
+        if typeSize.isAccessibilitySize {
+            return AnyGesture(grabbedSwipe.map { _ in () })
+        }
+        return AnyGesture(swipe.map { _ in () })
+    }
+
     private var swipe: some Gesture {
         DragGesture(minimumDistance: 8)
+            .onChanged { unitSwipeChanged($0) }
+            .onEnded { _ in unitSwipeEnded() }
+    }
+
+    private var grabbedSwipe: some Gesture {
+        LongPressGesture(minimumDuration: 0.2, maximumDistance: 8)
+            .sequenced(before: DragGesture(minimumDistance: 0))
             .onChanged { value in
-                guard abs(value.translation.height) > abs(value.translation.width) else { return }
-                let start = swipeFrom ?? unit
-                swipeFrom = start
-                let steps = Int((-value.translation.height / MeasureStyle.stepLength).rounded(.towardZero))
-                let target = MeasureParts.step(wheel, from: start, by: steps)
-                if target != swiping {
-                    swiping = target
-                    ticks += 1
+                if case let .second(true, drag?) = value {
+                    unitSwipeChanged(drag)
                 }
             }
-            .onEnded { _ in
-                if let target = swiping {
-                    choose(target)
-                }
-                swiping = nil
-                swipeFrom = nil
-            }
+            .onEnded { _ in unitSwipeEnded() }
+    }
+
+    private func unitSwipeChanged(_ value: DragGesture.Value) {
+        guard abs(value.translation.height) > abs(value.translation.width) else { return }
+        let start = swipeFrom ?? unit
+        swipeFrom = start
+        let steps = Int((-value.translation.height / MeasureStyle.stepLength).rounded(.towardZero))
+        let target = MeasureParts.step(wheel, from: start, by: steps)
+        if target != swiping {
+            swiping = target
+            ticks += 1
+        }
+    }
+
+    private func unitSwipeEnded() {
+        if let target = swiping {
+            choose(target)
+        }
+        swiping = nil
+        swipeFrom = nil
     }
 
     /// A tap: under Reduce Motion it cycles the unit; otherwise it shows the stored value for a second.
