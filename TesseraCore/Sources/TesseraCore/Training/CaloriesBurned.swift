@@ -1,5 +1,16 @@
 import Foundation
 
+/// Whether calories show, and the Health weight the app passes in for this call (held in memory, never stored).
+public struct CaloriesOptions: Equatable, Sendable {
+    public var on: Bool
+    public var healthKg: Double?
+
+    public init(on: Bool, healthKg: Double? = nil) {
+        self.on = on
+        self.healthKg = healthKg
+    }
+}
+
 /// Calories, as an estimate: MET x body mass (kg) x hours, rounded to the nearest 10 and always said "about N kcal".
 /// Behind the `caloriesBurned` Review switch, default Off. Per exercise and per workout; there is no daily budget.
 /// METs are the 2024 Adult Compendium's, unchanged and never averaged (docs/research/reference-library-met-mapping.md).
@@ -24,6 +35,18 @@ public enum CaloriesBurned {
 
     public static func line(_ kcal: Int) -> String {
         "about \(kcal) kcal"
+    }
+
+    /// The line for a finished workout, or nil: the switch is off, the workout is private, it is unfinished, or no
+    /// weight is known. Only the two in-app places (the Day line and Home's done line) ask for it.
+    @MainActor
+    public static func line(forWorkout workout: ObjectRecord, store: ObjectStore,
+                            classes: [SystemCatalog.Key: ClassDef], options: CaloriesOptions) -> String?
+    {
+        guard options.on, ObjectPrivacy.shownLabel(of: workout, in: store, classes: classes) == nil,
+              let weight = MeProfile.weightKg(in: store, healthKg: options.healthKg),
+              let kcal = forWorkout(workout, store: store, weightKg: weight) else { return nil }
+        return line(kcal)
     }
 
     /// The estimate for a finished workout, from its length and each exercise's MET weighted by its working sets.
