@@ -18,16 +18,8 @@ struct ExerciseLane: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.zoomNamespace) private var zoomNamespace
-    @Environment(\.dynamicTypeSize) private var typeSize
 
-    /// The workout's routine kind (else what its exercises work) picks the figures' colour.
-    private var figureTint: Color {
-        let routine = model.store.linkedObjects("routine", of: session.workout).first
-        let day = MuscleReading.union(session.entries.map {
-            MuscleReading.muscles(of: session.exerciseClass(of: $0), store: model.store)
-        })
-        return MuscleTint.colour(kind: routine.flatMap { RoutineKind.of($0, in: model.store) }, muscles: day)
-    }
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         ScrollView(.horizontal) {
@@ -42,36 +34,17 @@ struct ExerciseLane: View {
                             model.open(.classDef(exercise.id), .deeper)
                         }
                     } label: {
-                        // Title 44 on one line, else 34 on one line, else two lines of 34. Never cut. While the figure
-                        // shows, the name keeps 56 pt clear on the right of it.
+                        // Title 44 on one line, else 34 on one line, else two lines of 34. Never cut, and never drawn
+                        // past its own page.
                         ViewThatFits(in: .horizontal) {
                             Text(name).textRole(.title).lineLimit(1).fixedSize()
                             Text(name).font(Self.title34).lineLimit(1).fixedSize()
-                            Text(name).font(Self.title34).lineLimit(2)
+                            Text(name).font(Self.title34).lineLimit(nil)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
-                        .padding(.trailing, muscles.isEmpty || typeSize.isAccessibilitySize ? 0 : 56)
                         .foregroundStyle(Paint.cream)
                         .opacity(isCurrent ? 1 : 0)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .overlay(alignment: .topTrailing) {
-                            if !muscles.isEmpty, !typeSize.isAccessibilitySize {
-                                // One figure, the exercise's side, that slides in and out with the name.
-                                let back = MuscleSide.showsBack(muscles)
-                                // A private workout lights nothing.
-                                let lit = MuscleReading.lit(
-                                    muscles,
-                                    isPrivate: session.shownTitle != session.workout.title
-                                )
-                                MuscleFigure(back: back, roles: MuscleFigureMap.roles(lit, back: back),
-                                             tint: figureTint,
-                                             lineOpacity: 0.45, lineColor: Paint.cream, lineWidth: 2.2)
-                                    .frame(height: 92)
-                                    .offset(y: -20)
-                                    .accessibilityHidden(true)
-                                    .allowsHitTesting(false)
-                            }
-                        }
                         .id(name)
                         .transition(reduceMotion ? .opacity
                             : .asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -81,6 +54,8 @@ struct ExerciseLane: View {
                     .buttonStyle(.plain)
                     .modifier(ZoomSource(id: exercise.map { Route.classDef($0.id) }, namespace: zoomNamespace))
                     .containerRelativeFrame(.horizontal)
+                    // Nothing draws past the page's left or right edge; the height is left alone (large text wraps).
+                    .mask { Rectangle().padding(.vertical, -2000) }
                     .id(index)
                     .offset(y: isCurrent ? Self.rubberBand(namePull) : 0)
                     .contextMenu {
@@ -108,7 +83,8 @@ struct ExerciseLane: View {
         .scrollTargetBehavior(.viewAligned(limitBehavior: .alwaysByOne))
         .scrollPosition(id: $laneIndex, anchor: .leading)
         .scrollIndicators(.hidden)
-        .frame(minHeight: 64)
+        // Large text wraps the name to three lines: the pager keeps room for them (it measures one page at a time).
+        .frame(minHeight: typeSize.isAccessibilitySize ? 210 : 64)
         .fixedSize(horizontal: false, vertical: true)
         // Pull down on the name for alternatives; the pager keeps horizontal.
         .simultaneousGesture(

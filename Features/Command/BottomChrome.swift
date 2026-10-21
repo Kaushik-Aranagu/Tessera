@@ -513,9 +513,12 @@ extension BottomChrome {
                 TextField("Ask", text: $model.commandDraft,
                           prompt: Text("Write anything").foregroundStyle(Theme.Colors.inkSecondary),
                           axis: .vertical)
-                    .lineLimit(1 ... 5)
-                    // His typing sits one step under her voice: Field 18 (calm-capture.md addendum).
-                    .textRole(.field)
+                    .lineLimit(1 ... AskDraft.maxLines(at: typeSize))
+                    // His typing sits one step under her voice: Field 18 (calm-capture.md addendum). The face and size
+                    // of the field role, at the font's own line height: a growing field sizes its lines from the font,
+                    // so a set line height left the top line cut once it scrolled (Design on #1170).
+                    .font(Theme.Typography.font(Theme.concept.scale.field))
+                    .tracking(Theme.concept.scale.field.tracking * Theme.concept.scale.field.size)
                     // The drying ghost reads in inkSecondary (calm-capture.md).
                     .foregroundStyle(ghost == nil ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                     .tint(Theme.Colors.tess)

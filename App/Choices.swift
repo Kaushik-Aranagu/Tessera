@@ -28,6 +28,29 @@ enum Choice {
         value("restTimer", options: ["On", "Off"], default: "On", defaults: defaults) == "On"
     }
 
+    /// Cook timer voice: "Off" (default) ends a cook timer with its alert alone; "On" has Tess say the timer's name
+    /// ("Simmer is done.") when the app is in front.
+    static func cookTimerVoiceIsOn(defaults: UserDefaults = .standard) -> Bool {
+        value("cookTimerVoice", options: ["Off", "On"], default: "Off", defaults: defaults) == "On"
+    }
+
+    /// Hands-free cook mode: "Off" (default) moves steps on a touch; "On" adds a tap-opened listening window for
+    /// "next", "back" and "timer".
+    static func handsFreeCookIsOn(defaults: UserDefaults = .standard) -> Bool {
+        value("handsFreeCook", options: ["Off", "On"], default: "Off", defaults: defaults) == "On"
+    }
+
+    /// Steps run in parallel: "Off" (default) is one lane; "On" lets a "meanwhile" step run beside a timed one.
+    static func parallelStepsIsOn(defaults: UserDefaults = .standard) -> Bool {
+        value("parallelSteps", options: ["Off", "On"], default: "Off", defaults: defaults) == "On"
+    }
+
+    /// Cook notes on the recipe: "Off" (default) keeps notes in COOKS; "On" asks for a note on Finish and shows the
+    /// newest on the recipe page.
+    static func cookNotesIsOn(defaults: UserDefaults = .standard) -> Bool {
+        value("cookNotes", options: ["Off", "On"], default: "Off", defaults: defaults) == "On"
+    }
+
     /// Tess's face: "Off" (default) is the plain mark, "Eyes" gives her eyes. Only what is drawn is offered; the mouth
     /// comes back as a third option in the change that draws it. A stored "Eyes and mouth" from an earlier build still
     /// reads as eyes.
