@@ -53,6 +53,15 @@ final class ReviewChoices {
                says: ["Off": "A workout left open waits quietly.",
                       "On": "One quiet nudge when a workout was left open."],
                readiness: .live),
+        Choice(
+            id: "lockScreenLook",
+            name: "Lock Screen look",
+            values: ["Cobalt sky", "Follows the look"],
+            defaultValue: "Cobalt sky",
+            says: ["Cobalt sky": "The rest card on the Lock Screen is Cobalt sky in every look.",
+                   "Follows the look": "The rest card takes your day or night look. The Island stays Obsidian."],
+            readiness: .live
+        ),
         Choice(id: "pageTurn", name: "Page turn", values: ["Today", "Slide", "Turn", "Soften", "Rotate"],
                defaultValue: "Today",
                says: ["Today": "Pages change as they do now.",
@@ -60,11 +69,23 @@ final class ReviewChoices {
                       "Turn": "Pages turn like paper.",
                       "Soften": "Pages soften into each other.",
                       "Rotate": "Pages rotate on their edge."],
-               readiness: .arrivesWith("page turns")),
-        Choice(id: "tessFace", name: "Tess has eyes", values: ["Off", "Eyes", "Eyes and mouth"], defaultValue: "Off",
-               says: ["Off": "Tess is a plain mark, as now.", "Eyes": "Tess has eyes.",
-                      "Eyes and mouth": "Tess has eyes and a small mouth."],
-               readiness: .arrivesWith("Tess's mouth")),
+               readiness: .live),
+        // Core's #1160 (Kaushik, Oct 19, 7:12 PM): the phone's own model first, Claude only with "Tess asks Claude";
+        // a private routine stays "Private workout"; his own name stops it. Off leaves every name to him.
+        Choice(id: "trainingAutoName", name: "Tess names training days", values: ["On", "Off"], defaultValue: "On",
+               says: ["On": "A new training day gets a short name from its exercises until you name it.",
+                      "Off": "Training days keep the name you give them."],
+               // It can send exercise names to Claude when "Tess asks Claude" is on and the phone has no model of
+               // its own (QA on #1170); the switch never turns Claude on.
+               needsClaude: true, readiness: .live),
+        Choice(id: "tabs.neighbours", name: "Tab neighbours", values: ["Blurred", "Crisp"], defaultValue: "Blurred",
+               says: ["Crisp": "The tabs beside the current one read crisp and faint.",
+                      "Blurred": "The tabs beside the current one soften into a blur."],
+               readiness: .live),
+        // Off and Eyes only until the mouth is drawn (Builder A's #1125 reads it).
+        Choice(id: "tessFace", name: "Tess has eyes", values: ["Off", "Eyes"], defaultValue: "Off",
+               says: ["Off": "Tess is a plain mark, as now.", "Eyes": "Tess has eyes."],
+               readiness: .live),
         Choice(id: "planMyDay", name: "Plan my day, Claude wording", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The morning plan in Tess's own words, as now.",
                       "On": "The same plan, worded by Claude."],
@@ -93,7 +114,7 @@ final class ReviewChoices {
                needsClaude: true, readiness: .arrivesWith("link reading")),
         Choice(id: "cookTimerVoice", name: "Cook timer voice", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "A cook timer ends with its alert.", "On": "Tess says the timer's name when it ends."],
-               readiness: .arrivesWith("the timer voice")),
+               readiness: .live),
         Choice(id: "pantryState", name: "Pantry state", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The pantry lists what you have.", "On": "Each pantry item shows how much is left."],
                readiness: .arrivesWith("pantry state")),
@@ -102,10 +123,83 @@ final class ReviewChoices {
                readiness: .arrivesWith("the CAN COOK shelf")),
         Choice(id: "handsFreeCook", name: "Hands-free cook mode", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Steps move on a tap.", "On": "Steps move by voice while you cook."],
-               readiness: .arrivesWith("hands-free cooking")),
+               readiness: .live),
+        // Kitchen v2 (kitchen-v2-build-ready-rows-oct19.md): each its own switch, default Off.
+        Choice(id: "weekStrip", name: "Week strip", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Plans show on the week side only.",
+                      "On": "A Mon to Sun strip with one key to add the week to Groceries."],
+               readiness: .arrivesWith("the week strip")),
+        Choice(id: "repeatItems", name: "Repeat items", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "A bought item leaves with the shop.",
+                      "On": "An item marked every week comes back after the shop ends."],
+               readiness: .arrivesWith("repeat items")),
+        Choice(id: "cookDouble", name: "Cook double", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "\"Cook double\" is not understood.",
+                      "On": "It doubles the cook and puts a leftovers task on Later."],
+               readiness: .arrivesWith("cook double")),
+        Choice(id: "parallelSteps", name: "Parallel steps", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "One lane, steps one after another.",
+                      "On": "Meanwhile steps run on a second lane with their own timer."],
+               readiness: .live),
+        Choice(id: "cookNotes", name: "Cook notes on the recipe", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Notes live with each cook.", "On": "The newest note shows on the recipe page."],
+               readiness: .live),
+        Choice(id: "fixRecipe", name: "Fix a recipe", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Paste again to change a recipe.",
+                      "On": "FIX opens the recipe to change lines and steps."],
+               readiness: .arrivesWith("recipe fixing")),
+        Choice(id: "usuallyLine", name: "Usually line", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Groceries and Pantry end with no usually line.",
+                      "On": "Up to 4 things you buy on a rhythm show at the foot."],
+               readiness: .arrivesWith("the usually line")),
+        Choice(id: "aisleOrder", name: "Learned aisle order", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Aisles in the fixed walk order.", "On": "Aisles in the order you walked last shop."],
+               readiness: .arrivesWith("aisle order")),
+        Choice(id: "classInspector", name: "Class inspector", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "A class shows its objects.", "On": "A class also shows its fields, to shape it."],
+               readiness: .arrivesWith("the class inspector")),
+        // Design 110: on, the kcal line shows on a finished workout; it needs weight and height under Me.
+        Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
+               readiness: .arrivesWith("calories burned")),
     ]
 
-    /// The rows in pages of at most six, for the side swipe (Design sheet 100).
+    /// Review's tabs by facet, named in PeekTabs (Design sheets 100 and 108), six rows at most.
+    nonisolated static let facets: [(word: String, ids: [String])] = [
+        ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace", "lockScreenLook"]),
+        // Design 110: Calories burned and Energy check-in sit with the workout; Class inspector with Shown.
+        // Tess names training days joins Workout; Quiet interrupts (notices) moves to Connected to keep six a page.
+        (
+            "Workout",
+            ["restTimer", "swapExercise", "finishNudge", "trainingAutoName", "caloriesBurned", "energyCheckIn"]
+        ),
+        // Kitchen v2 adds eight rows: what is in the house and the shop on Kitchen, the cook itself on Cooking.
+        ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
+        ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
+        ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
+        ("Shown", ["areasShown", "classInspector"]),
+    ]
+
+    /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
+    /// The pages Settings draws: only rows whose feature ships in this build (Product, Oct 20; sheet 110). A waiting
+    /// row is not drawn at all, and a tab with nothing live goes with it.
+    nonisolated static func drawnPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
+        facetPages(choices.filter { $0.readiness == .live })
+    }
+
+    nonisolated static func facetPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
+        var pages = facets.map { facet in
+            (word: facet.word, rows: facet.ids.compactMap { id in choices.first { $0.id == id } })
+        }.filter { !$0.rows.isEmpty }
+        let named = Set(facets.flatMap(\.ids))
+        let rest = choices.filter { !named.contains($0.id) }
+        if !rest.isEmpty {
+            pages.append((word: "More", rows: rest))
+        }
+        return pages
+    }
+
+    /// The rows in pages of at most six, in order, for any caller that pages without facets.
     nonisolated static func pages(_ choices: [Choice] = all, size: Int = 6) -> [[Choice]] {
         stride(from: 0, to: choices.count, by: size).map { Array(choices[$0 ..< min($0 + size, choices.count)]) }
     }

@@ -18,6 +18,8 @@
 
 **Working follow-ups (Design on #453, passed 0d5cd07), one small PR:** in Low Power the working constellation ticks at 30 fps (tess-motion.md §13); Reduce Motion's working grade uses §5's faded values (saturation 0.62, opacity 90%, not 60%). Later: the readers via Mode.working(reading:) once a page reports its rows.
 
+**Superseded (Oct 19, Product 2:23 PM block in product/decisions.md, following Kaushik's never-diffused ruling):** the Reduce Motion working grade at 90% opacity and the 0.35 saturation drop while asleep no longer apply. Sleep and Reduce Motion keep Tess at full opacity, and while asleep she keeps Idle's pigment (closed eyes carry sleep). The line above stays as written for history.
+
 **Parked:** 60 (Money and Reading screens) waits on Core's MU1 + reading slices; read Design's `money-reading-first.md` on Design's branch meanwhile. Working (§5) fires from the Settings key check until Core's askClaude routing and Builder B's emitters land.
 
 **Design 71, LAST TIMES (`docs/design/swipe-more.md`, 08b3549; 11:42 AM PT Oct 16):** a side page on the routine editor with his last 4 runs of the routine (the day, "5 of 5, 1,072 kg moved.", a best, anything left out); the word sits at the right of the context line; a left swipe that starts on an exercise row stays DROP. Done when UI tests show a row swipe never opens the side page, a context-line swipe opens it, and the word opens it. Needs Core's `lastTimes(of:limit:)`.

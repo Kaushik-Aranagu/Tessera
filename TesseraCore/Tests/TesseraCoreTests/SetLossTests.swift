@@ -32,6 +32,7 @@ struct SetLossTests {
         case let .askDatedLift(ask)?: "ask \(ask.line)"
         case let .ask(line)?: "ask \(line)"
         case let .askSetCount(ask)?: "ask \(ask.line)"
+        case let .spend(amount, note, on)?: "spend \(amount.typed)\(note.isEmpty ? "" : " - \(note)")\(on == nil ? "" : " @")"
         case let parse?: "\(parse)"
         }
     }
@@ -81,9 +82,10 @@ struct SetLossTests {
         // Normal sets that must still log (merge check on #289).
         ("KEEP4", "curls 12x10 at 12", "lift Dumbbell Curl 12x12x10"),
         ("KEEP5", "bench 3x8 at 80", "lift Bench Press 3x80x8"),
-        // Research's US shop check: money is never groceries or a task; a unit price is a price, not a spend.
-        ("US1", "spent $1,250 on rent", "nil"),
-        ("US2", "spent $23.47 at trader joe's sat", "nil"),
+        // Research's US shop check: money is never groceries or a task (now a spend, on the phone); a unit price is a
+        // price, not a spend.
+        ("US1", "spent $1,250 on rent", "spend $1,250 - rent"),
+        ("US2", "spent $23.47 at trader joe's sat", "spend $23.47 - trader joe's @"),
         ("US3", "chicken $1.29/lb, rice", "groceries chicken $1.29/lb, rice"),
         // Research's 113 re-trace and Design's Speak review.
         ("R113b", "Bench 80 kg, 8 reps only.", "lift Bench Press 80x8"),
@@ -125,7 +127,8 @@ struct SetLossTests {
 
     @Test func theMissLineOffersAnExampleOnlyWhereItFits() async throws {
         let tess = TessCaptureEngine(engine: engine)
-        #expect(await tess.capture("what is a plate?", context: context).line == "Didn't catch that.")
+        #expect(await tess.capture("what is a plate?", context: context)
+            .line == "what is a plate?, kept to sort later.")
         let workout = try store.create(#require(classes[.workout]), title: "Push")
         let entry = try engine.perform(AddExercise(workout: workout.id, exercise: #require(classes[.benchPress]).id),
                                        by: .user).output

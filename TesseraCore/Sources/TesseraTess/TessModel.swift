@@ -123,7 +123,8 @@ public struct TessRouter {
             case .missed: break
             }
         }
-        if let asked {
+        // Over the cap counts as no Claude (Product ruling, Oct 19): idle, the phrase is kept to sort later.
+        if let asked, !asked.claudeAtCap {
             return asked
         }
         // A phrase past the cap that nobody on the phone read is too long to send, cook or timer or not (Product, LEN-2
@@ -143,7 +144,48 @@ public struct TessRouter {
         } else {
             ""
         }
+        // Nothing on the phone read it and Claude is not there to (no key, asking off, or no answer yet to the key
+        // question): the phrase is kept as a note he can sort later, rather than dropped. Idle only (a live set or a
+        // shop keeps its own "Try ..." line), never a cook or timer phrase, and never a Claude key (refused above).
+        // Over the cap reads the same as Claude not there (Product ruling, 6:10 PM PT Oct 19).
+        // A money phrase nobody could read is kept too, even with Claude there: the money actions are not offered to
+        // Claude, so it cannot log a spend, and an unread sum is never dropped (Product, Oct 19).
+        let unreadMoney = request.use == .capture && asked == nil && PrivateFacts.isMoneyShaped(request.text)
+        if example.isEmpty, request.use == .capture, !stayHome,
+           unreadMoney || asked?.claudeAtCap == true
+           || !models.contains(where: { $0.route == .claude && $0.isAvailable(for: .capture) }),
+           let kept = keepToSort(request)
+        {
+            return kept
+        }
+        if let asked {
+            return asked
+        }
         return TessCapture(records: [], line: "Didn't catch that.\(example)", source: .none)
+    }
+
+    /// "<phrase>, kept to sort later.": a note, as a ghost row with one UNDO (committed at once for Siri). A phrase
+    /// with a secret word, money or a body fact becomes a private note and reads "Private note, kept to sort later."
+    static let keptLine = "kept to sort later."
+
+    private func keepToSort(_ request: TessRequest) -> TessCapture? {
+        let phrase = request.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !phrase.isEmpty, !looksLikeClaudeKey(phrase) else { return nil }
+        engine.attribution = (.grammar, nil)
+        defer { engine.attribution = nil }
+        guard let made = try? engine.perform(CreateNote(body: phrase, toSort: true), by: .tess,
+                                             pending: !request.context.commitImmediately)
+        else { return nil }
+        // A private note (a walled phrase) never echoes the phrase, nor even its own "Private note" title.
+        let lastKg = BodyWeight.lastKg(in: engine.store)
+        let isPrivate = ObjectPrivacy.label(of: made.output, in: engine.store, classes: engine.classes) != nil
+            || SecretWords.mentions(phrase) || PrivateFacts.isWalled(phrase, lastWeightKg: lastKg)
+            || ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: lastKg)
+        let line = isPrivate ? "Kept to sort later." : "\(made.output.title), \(Self.keptLine)"
+        made.record.receipt = line
+        var kept = TessCapture(records: [made.record], line: line, source: .grammar)
+        kept.keptToSort = true
+        return kept
     }
 }
 

@@ -10,7 +10,7 @@ import TesseraCore
 /// text and cook history; swipe the ingredient column left to send it to Groceries.
 struct RecipePage: View {
     /// Turned on in the PR that lands cook mode (screen 12): until then there is no Cook key (G55).
-    static let cookModeReady = false
+    static let cookModeReady = true
     let recipeID: UUID
     /// What Cook opens. Until cook mode (screen 12) lands, the page starts the cook itself and shows it running.
     var onCook: ((UUID, Int?) -> Void)?
@@ -33,6 +33,8 @@ struct RecipePage: View {
     @State private var columnWidth: CGFloat = 260
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var away = false
+    /// The cook the clock page is showing (it rises as a full-screen cover, like the workout).
+    @State private var cooking: CookCover?
 
     var body: some View {
         // At accessibility sizes the whole page is one scroll, so nothing is clipped (G69).
@@ -89,6 +91,9 @@ struct RecipePage: View {
                     .foregroundStyle(Theme.Colors.context)
                     .padding(.top, Theme.Spacing.s)
                     .entrance(2)
+                // "Last time: less salt." from the newest cook note, behind the Cook notes switch.
+                CookNoteLine(recipeID: recipeID)
+                    .padding(.top, Theme.Spacing.xs)
 
                 ZStack(alignment: .topLeading) {
                     let column = IngredientColumn(lines: lines, zoom: zoom, isPrivate: masked) {
@@ -193,6 +198,9 @@ struct RecipePage: View {
                 RecipeDepth(route: route)
                     .navigationTransition(.zoom(sourceID: routeID(route), in: zoom))
             }
+            .fullScreenCover(item: $cooking) { cover in
+                CookClockPage(cookID: cover.id)
+            }
             .tesseraFeedback(.made, trigger: sent?.line)
             // The one soft warning for a write that didn't save, once per failure (Product and Design 12:45).
             .tesseraFeedback(.notSaved, trigger: notSaved)
@@ -239,8 +247,11 @@ struct RecipePage: View {
             onCook(recipe, serves)
             return
         }
+        var started: UUID?
         let refusal = RecipeCopy.startCook {
-            try model.engine.perform(StartCooking(recipe: recipe, serves: serves), by: .user)
+            let result = try model.engine.perform(StartCooking(recipe: recipe, serves: serves), by: .user)
+            started = result.output.id
+            return result
         }
         // Refused (a workout running, G56): no cook starts, the workout is untouched, and Tess says why.
         if let refusal {
@@ -248,6 +259,10 @@ struct RecipePage: View {
             return
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        // The clock page IS the cook (G228): it rises over this page and the cook keeps running when it closes.
+        if let started {
+            cooking = CookCover(id: started)
+        }
     }
 
     private func routeID(_ route: Route) -> UUID {
@@ -339,6 +354,11 @@ struct RecipePage: View {
             model.touch()
         }
     }
+}
+
+/// The cook the clock page opens on.
+private struct CookCover: Identifiable {
+    let id: UUID
 }
 
 /// "Tacos, 7 added." where the column was, with Undo (K34.7, K37.6).

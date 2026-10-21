@@ -27,6 +27,12 @@ Product. One ReviewChoices type app-side; not in the catalog, not in backups. De
 Settings becomes its own page: Review, LookSentence, RestDaySentence and the Claude section move into it. Copy rules: plain words, no "at" before a clock time, one before/after line per row.
 
 
+Planned (Oct 19, 4:25 PM PT): caloriesBurned "Calories burned" (Off | On, Off). Shows "about N kcal" in the exercise long-press detail and per workout, from MET x weight from the Me profile x time, rounded to 10. Not built yet.
+
 ## As built (#1096 ReviewChoices ids, Oct 19)
 
 readingLayout (Today | Sheet 99, Today); restTimer (On | Off, On); swapExercise (Two taps | One tap, Two taps); finishNudge (Off | On, Off); pageTurn (Slide | Turn | Soften | Rotate, Slide); tessFace "Tess has eyes" (Off | Eyes | Eyes and mouth, Off); planMyDay, shutdown, energyCheckIn, linkFetch (Off | On, Off, need Claude); quietInterrupts (Off | On, Off); calendar, health (Off | On, Off, later); areasShown (Today's | All, Today's; one switch, not six); cookTimerVoice, pantryState, canCookShelf, handsFreeCook (Off | On, Off). Rows 6 to 9 and 11 stay removed (decided).
+
+## Switch count (Oct 19, 1:45 PM PT)
+
+This file's first table (14 live rows after the removals) is the planning list. 18 ids exist as built in #1096 (the As built list above). Design's Review pages (design/review-rows-2-103.md and the 100 sheet) show 27 rows in all because they include the batch 9 and batch 10 switches (Tess reads the screen, Tess experts, Build with Tess, Automations, Watch, Leftovers, Link reader v2 and the Claude-job rows). The count to quote is: 18 built now, 27 planned.

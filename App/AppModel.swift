@@ -86,30 +86,14 @@ final class AppModel {
         ["-demo", "-resetDemo", "-theme", "-fakeClaudeKey"].contains(where: { LaunchFlags.has($0) })
     }
 
-    /// Home's done job through Claude (board 0al): one instance, so its per-workout cache holds.
-    var homeDone: ClaudeHomeDone {
-        if let job = homeDoneStore {
-            return job
-        }
-        let job = ClaudeHomeDone(keys: SystemKeychain(), ledger: TessUsageLedger(store: store, classes: classes),
-                                 cacheURL: Self.isDemo ? nil : ClaudeHomeDone.defaultCacheURL)
-        {
-            [weak self] in self?.asksClaude ?? false
-        }
-        homeDoneStore = job
-        return job
-    }
-
     @ObservationIgnored private var homeDoneStore: ClaudeHomeDone?
-
-    /// Claude's words for a finished workout's Home slots, or nil: the rules words stand (Kaushik's "Sonnet on
-    /// Home", 2:41 PM PT Oct 16). Show the rules line first; a returned slot replaces its rules words.
-    func homeDoneWords(for line: HomeLine) async -> HomeDoneWords? {
-        guard !Self.isDemo, line.fact.kind == .workout, line.fact.state == .done, let ended = line.fact.endedAt
-        else { return nil }
-        let label = HomeDonePack.dayLabel(finish: ended, calendar: homeDone.calendar)
-        return await homeDone.words(for: line, dayLabel: label, store: store)
-    }
+    /// Names training days (Core's DayNamer): one instance; see AppModel+DayNames.swift.
+    @ObservationIgnored var dayNamerStore: DayNamer?
+    @ObservationIgnored var dayNaming: Task<Void, Never>?
+    /// The one rates fetch for the money wheel (a single instance, so its once-an-hour cap holds app-wide); see
+    /// AppModel+Measure.swift. `ratesTable` is what the wheel reads: the live table or the last saved one.
+    @ObservationIgnored var currencyFetchStore: CurrencyRatesFetch?
+    var ratesTable: CurrencyRates?
 
     /// Bumped after writes so views re-read derived data.
     private(set) var revision = 0
@@ -216,11 +200,13 @@ final class AppModel {
         case .recoveredWithBackup: "Started fresh; your old data is saved in Backups."
         case .inMemoryFallback: "Couldn't open your data, so nothing will be saved this time."
         }
-        launchNote = TesseraSchema.launchNote ?? outcome
+        // Both are read, oldest first, one at a time (hunt 28 CALL 3 B); a restore says its copy's date (sheet 111).
+        launchNotes = LaunchNoteQueue([TesseraSchema.launchNote.map(RestoreOffer.dated), outcome])
     }
 
-    /// One calm line in Tess's voice when launch didn't go normally (a failed migration). Shown in the Ask bar.
-    var launchNote: String?
+    /// The notes waiting for this launch (LaunchNoteQueue): one shows at a time, never stacked.
+    var launchNotes = LaunchNoteQueue()
+
     /// Claude's flags, kept so Cancel can reach the call in flight.
     @ObservationIgnored let claudeFlags = ClaudeMissFlags()
     /// A capture is on its way to Claude right now: the Ask says "Asking Claude." with Cancel until it answers, fails
@@ -293,6 +279,14 @@ final class AppModel {
     /// `captureDryTime` unless tapped or dropped. Returns Tess's one line.
     func ask(_ phrase: String) async -> String {
         commitCapture()
+        #if DEBUG
+            // `-askingClaudeDemo` (simulator only, for recordings): the line shows for 3 s as if a request had left,
+            // through the same flag Core's willSend sets. Nothing is sent; no key is involved.
+            if LaunchFlags.has("-askingClaudeDemo") {
+                isAskingClaude = true
+                try? await Task.sleep(for: .seconds(3))
+            }
+        #endif
         let result = await runtime.tess.capture(phrase, context: TessContext(now: AppClock.now,
                                                                              entry: session?.currentEntry?.id))
         isAskingClaude = false
@@ -325,8 +319,12 @@ final class AppModel {
         return land(result)
     }
 
+    /// The last capture asked to keep his words in the Ask for a retry (Core's `TessCapture.keepsWords`).
+    private(set) var lastKeepsWords = false
+
     /// Pending records become ghost rows that dry after `captureDryTime`; returns Tess's line.
     private func land(_ result: TessCapture) -> String {
+        lastKeepsWords = result.keepsWords
         let pending = result.records.filter { $0.state == .pending }
         if let first = pending.first {
             pendingCaptures = pending
@@ -529,10 +527,14 @@ final class AppModel {
         classes[key]
     }
 
-    func touch() {
+    /// Saves and redraws. `naming: false` is for the naming pass's own writes, which must not restart the pass.
+    func touch(naming: Bool = true) {
         try? context.save()
         revision += 1
         reconcileTimerAlerts()
+        if naming {
+            nameTrainingDaysSoon()
+        }
     }
 
     /// One local notification per running kitchen timer, kept in step after every change (G217): Stop, Finish and an
@@ -789,5 +791,48 @@ extension AppModel {
         keyQuestionDue = false
         touch()
         return answer ? ClaudeKeyQuestionCopy.yesReceipt : ClaudeKeyQuestionCopy.noReceipt
+    }
+}
+
+// MARK: - Launch notes (G694)
+
+extension AppModel {
+    /// One calm line in Tess's voice when launch didn't go normally (a failed migration). Shown in the Ask bar.
+    /// Letting it go (nil) brings the next waiting note, if any.
+    var launchNote: String? {
+        get { launchNotes.current }
+        set {
+            if let newValue {
+                launchNotes.enqueue(newValue)
+            } else {
+                launchNotes.advance()
+            }
+        }
+    }
+}
+
+/// Home's done job, kept out of the class body.
+extension AppModel {
+    /// Home's done job through Claude (board 0al): one instance, so its per-workout cache holds.
+    var homeDone: ClaudeHomeDone {
+        if let job = homeDoneStore {
+            return job
+        }
+        let job = ClaudeHomeDone(keys: SystemKeychain(), ledger: TessUsageLedger(store: store, classes: classes),
+                                 cacheURL: Self.isDemo ? nil : ClaudeHomeDone.defaultCacheURL)
+        {
+            [weak self] in self?.asksClaude ?? false
+        }
+        homeDoneStore = job
+        return job
+    }
+
+    /// Claude's words for a finished workout's Home slots, or nil: the rules words stand (Kaushik's "Sonnet on
+    /// Home", 2:41 PM PT Oct 16). Show the rules line first; a returned slot replaces its rules words.
+    func homeDoneWords(for line: HomeLine) async -> HomeDoneWords? {
+        guard !Self.isDemo, line.fact.kind == .workout, line.fact.state == .done, let ended = line.fact.endedAt
+        else { return nil }
+        let label = HomeDonePack.dayLabel(finish: ended, calendar: homeDone.calendar)
+        return await homeDone.words(for: line, dayLabel: label, store: store)
     }
 }

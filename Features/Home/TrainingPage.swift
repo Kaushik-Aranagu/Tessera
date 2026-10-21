@@ -55,12 +55,18 @@ struct TrainingLane: Identifiable, Equatable {
     var scheme = ""
     /// Today's weight with its unit ("82.5 kg"); none when there is no weight yet.
     var weight: String?
+    /// The same weight in kilograms (stored), so the row can draw it as a measure with a swipeable unit.
+    var weightKilograms: Double?
     /// What the exercise works, for the lane's figure.
     var muscles: [(name: String, role: MuscleRole)] = []
+    /// The sets logged so far as ink-drop marks (the circles that replace the dashed strokes).
+    var marks: [SetMarkSpec] = []
 
     static func == (lhs: TrainingLane, rhs: TrainingLane) -> Bool {
-        lhs.id == rhs.id && lhs.name == rhs.name && lhs.target == rhs.target && lhs.sets == rhs.sets
-            && lhs.logged == rhs.logged && lhs.scheme == rhs.scheme && lhs.weight == rhs.weight
+        lhs.id == rhs.id && lhs.name == rhs.name && lhs.weightKilograms == rhs.weightKilograms && lhs.target == rhs
+            .target && lhs.sets == rhs.sets
+            && lhs.logged == rhs.logged && lhs.scheme == rhs.scheme && lhs.weight == rhs.weight && lhs.marks == rhs
+            .marks
     }
 }
 
@@ -121,9 +127,6 @@ private struct TrainingAtRest: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .topTrailing) {
-                dayPair(day)
-            }
             .padding(.bottom, tight ? Theme.Spacing.s : Theme.Spacing.l)
             .entrance(1, hero: true)
 
@@ -139,11 +142,12 @@ private struct TrainingAtRest: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
-                    LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone, tint: figureTint(day),
+                    LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
                             isPrivate: isPrivateDay,
-                            showsStrokes: isRunning || isDone || lane.logged > 0,
-                            isLast: index == min(lanes.count, 5) - 1)
-                        .frame(height: 72, alignment: .top)
+                            showsStrokes: isRunning || isDone || lane.logged > 0)
+                        // Rows are 72 pt; at large text a row grows with its wrapped name instead of printing over
+                        // the next one.
+                        .frame(height: typeSize.isAccessibilitySize ? nil : 72, alignment: .top)
                         // Live mode rises out of the first lane; the others sink away.
                         .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
                                              namespace: namespace))
@@ -221,27 +225,6 @@ private struct TrainingAtRest: View {
         titleAndRoute.0 == ObjectPrivacy.routineLabel
     }
 
-    /// The day's pair of figures, 112 pt tall at the right: the union of the day's muscles, primary if primary
-    /// anywhere, in the routine's colour. Info only.
-    @ViewBuilder
-    private func dayPair(_ day: MuscleReading.Muscles) -> some View {
-        if !day.isEmpty, !typeSize.isAccessibilitySize {
-            HStack(spacing: 0) {
-                ForEach([false, true], id: \.self) { back in
-                    MuscleFigure(back: back,
-                                 roles: MuscleFigureMap.roles(MuscleReading.lit(day, isPrivate: isPrivateDay),
-                                                              back: back),
-                                 tint: figureTint(day),
-                                 lineOpacity: 0.4, lineWidth: 1.4)
-                        .frame(height: 112)
-                }
-            }
-            .offset(x: 20, y: -4)
-            .accessibilityHidden(true)
-            .allowsHitTesting(false)
-        }
-    }
-
     @ViewBuilder
     private var titleButton: some View {
         let (title, route) = titleAndRoute
@@ -249,6 +232,11 @@ private struct TrainingAtRest: View {
             Text(title)
                 .textRole(.title)
                 .foregroundStyle(Theme.Colors.ink)
+                // The day's name wraps to a second line and, if that is still too long, scales a little: never "...".
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
@@ -274,15 +262,21 @@ private struct TrainingAtRest: View {
     @ViewBuilder
     private var planLine: some View {
         if let planObject = model.plan {
-            HStack(alignment: .firstTextBaseline) {
+            // At large text the plan line and ROUTINES stack and the line wraps instead of cutting.
+            let large = typeSize.isAccessibilitySize
+            let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+            layout {
                 let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
                 Text("\(planObject.title), \(fixed ? "fixed days" : "rolls on")")
                     .textRole(.label)
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(1)
+                    .lineLimit(large ? nil : 1)
                     .minimumScaleFactor(0.8)
-                Spacer(minLength: Theme.Spacing.s)
+                if !large {
+                    Spacer(minLength: Theme.Spacing.s)
+                }
                 Button("Routines") { model.open(.routines(planObject.id)) }
                     .buttonStyle(InkLabelWordStyle())
             }
@@ -377,6 +371,7 @@ private struct TrainingAtRest: View {
         let target = last.map { "\(Format.kilograms($0.weight)) × \(Int($0.reps.rounded()))" } ?? scheme
         return TrainingLane(id: slot.id, exercise: exercise, name: exercise.name, target: target, sets: sets,
                             logged: 0, scheme: scheme, weight: last.map { Self.weightText($0.weight) },
+                            weightKilograms: last?.weight,
                             muscles: MuscleReading.muscles(of: exercise, store: model.store))
     }
 
@@ -390,24 +385,31 @@ private struct TrainingAtRest: View {
                             sets: max(sets ?? planned, logged, 1), logged: logged,
                             scheme: scheme,
                             weight: prefill.weight.map { Self.weightText($0) },
-                            muscles: MuscleReading.muscles(of: exercise, store: model.store))
+                            weightKilograms: prefill.weight,
+                            muscles: MuscleReading.muscles(of: exercise, store: model.store),
+                            marks: marks(of: entry))
+    }
+
+    /// The entry's logged sets as marks (target reps from the entry; a best from the running session).
+    private func marks(of entry: ObjectRecord) -> [SetMarkSpec] {
+        let rows = entry.orderedChildren.compactMap { set -> (UUID, Double, Double)? in
+            guard let weight = model.store.number("weight", of: set), let reps = model.store.number("reps", of: set)
+            else { return nil }
+            return (set.id, weight, reps)
+        }
+        guard !rows.isEmpty else { return [] }
+        let target = Int(model.store.number("targetReps", of: entry) ?? 8)
+        let heaviest = rows.map(\.1).max() ?? 0
+        let bests = Set(model.session?.bests.map(\.setID) ?? [])
+        return rows.enumerated().map { index, row in
+            SetMarkSpec(id: row.0, number: index + 1, reps: Int(row.2.rounded()), target: target, weight: row.1,
+                        heaviest: heaviest, isBest: bests.contains(row.0), isPrivate: isPrivateDay)
+        }
     }
 
     /// "82.5 kg": a weight with its unit.
     private static func weightText(_ value: Double) -> String {
         "\(Format.kilograms(value)) \(Format.unit.symbol)"
-    }
-
-    /// The routine's colour for the figures: Push vermilion, Pull cobalt, Legs cadmium, else Training; the routine's
-    /// kind decides, and the day's muscles when it has none.
-    private func figureTint(_ day: MuscleReading.Muscles) -> Color {
-        let routine: ObjectRecord? = switch plan {
-        case let .routine(routine): routine
-        case let .scheduled(workout): model.store.linkedObjects("routine", of: workout).first
-        case let .running(session): model.store.linkedObjects("routine", of: session.workout).first
-        case let .done(summary): model.store.linkedObjects("routine", of: summary.workout).first
-        }
-        return MuscleTint.colour(kind: routine.flatMap { RoutineKind.of($0, in: model.store) }, muscles: day)
     }
 
     /// "today, 5 exercises, about 55 min"; done: "done this afternoon".
@@ -624,6 +626,7 @@ struct StartMark: View {
     let state: State
     /// The START flight: the word fades to 35% while the line leaves it.
     var lift: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -634,7 +637,8 @@ struct StartMark: View {
                 .contentTransition(.opacity)
             line
         }
-        .fixedSize()
+        // At large text the key wraps to a second line instead of running off the screen.
+        .fixedSize(horizontal: !typeSize.isAccessibilitySize, vertical: true)
         .frame(minHeight: 44, alignment: .bottom)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
@@ -680,54 +684,37 @@ struct StartMark: View {
 
 // MARK: - Lanes
 
-/// One exercise (Design brief 1, sheet 107): a 62 pt figure of what it works at the left (28 wide, top inset 3), the
-/// name at x 44 (21 medium, one line, top 6) and under it, at top 38, the scheme ("4 × 5–8") with today's weight at
+/// One exercise (Design brief 1, sheet 107; Kaushik, Oct 20: no figure beside the name): the
+/// name (21 medium, one line, top 6) and under it, at top 38, the scheme ("4 × 5–8") with today's weight at
 /// the right edge ("82.5 kg", none when there is none). Once the workout is running the second line is the set
-/// strokes live mode draws: logged ones painted in the rest tint, the rest dashed guides. A hairline at 12% ink runs
-/// between rows from x 44.
+/// strokes live mode draws: logged ones painted in the rest tint, the rest dashed guides. No lines between rows
+/// (Kaushik, Oct 20).
 private struct LaneRow: View {
     let lane: TrainingLane
     /// The first guide wakes when START lands: 22% to 90%, breathing.
     var wakes = false
     var dried = false
-    var tint: Color = Theme.Colors.training
-    /// A private workout's figure is the plain outline: nothing lit, and no muscle words either.
+    /// A private workout names no muscles.
     var isPrivate = false
     var showsStrokes = false
-    var isLast = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            if !lane.muscles.isEmpty {
-                // The side comes from the muscles, but a private workout lights none of them.
-                let back = MuscleSide.showsBack(lane.muscles)
-                let lit = MuscleReading.lit(lane.muscles, isPrivate: isPrivate)
-                MuscleFigure(back: back, roles: MuscleFigureMap.roles(lit, back: back),
-                             tint: tint, lineOpacity: 0.5, lineWidth: 2.6)
-                    .frame(height: 62)
-                    .padding(.top, 3)
-                    .accessibilityHidden(true)
-            }
             VStack(alignment: .leading, spacing: 0) {
                 Text(lane.name)
                     .font(Theme.voice(size: 21).weight(.medium))
                     .foregroundStyle(Theme.Colors.ink)
-                    .lineLimit(1)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                    .fixedSize(horizontal: false, vertical: typeSize.isAccessibilitySize)
                     .padding(.top, 6)
                 secondLine
                     .padding(.top, typeSize.isAccessibilitySize ? 4 : 10)
             }
-            .padding(.leading, 44)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .exerciseSheet(lane.exercise, isPrivate: isPrivate)
-        .overlay(alignment: .bottomLeading) {
-            if !isLast {
-                Rectangle().fill(Theme.Colors.ink.opacity(0.12)).frame(height: 1).padding(.leading, 44)
-            }
-        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
     }
@@ -738,7 +725,7 @@ private struct LaneRow: View {
             HStack(spacing: 8) {
                 ForEach(0 ..< lane.sets, id: \.self) { index in
                     stroke(index)
-                        .frame(width: 40, height: 12)
+                        .frame(width: 26, height: 22)
                 }
             }
             .frame(height: 24, alignment: .leading)
@@ -754,7 +741,9 @@ private struct LaneRow: View {
                 if !typeSize.isAccessibilitySize {
                     Spacer(minLength: Theme.Spacing.s)
                 }
-                if let weight = lane.weight {
+                if let kilograms = lane.weightKilograms {
+                    MeasureView(measure: Measure(kilograms, "kg"), controls: [.unit])
+                } else if let weight = lane.weight {
                     Text(weight)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Theme.Colors.ink)
@@ -770,26 +759,25 @@ private struct LaneRow: View {
         return ([lane.name, lane.target, sets] + (works.isEmpty ? [] : [works])).joined(separator: ", ")
     }
 
+    /// A logged set is its brush circle (22 pt); the ones to come are faint rings, the next one breathing when START
+    /// has landed.
     @ViewBuilder
     private func stroke(_ index: Int) -> some View {
-        if index < lane.logged {
-            Brushstroke()
-                .stroke(Theme.Colors.restTint(WorkoutPaint.set(index + 1)),
-                        style: StrokeStyle(lineWidth: 5, lineCap: .round))
-        } else if wakes, index == lane.logged {
+        if index < lane.marks.count {
+            SetMarkCircle(spec: lane.marks[index], side: 22)
+        } else if wakes, index == lane.marks.count {
             TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion)) { context in
                 let breath = (sin(context.date.timeIntervalSinceReferenceDate / 2.4 * 2 * .pi) + 1) / 2
-                guide.opacity(reduceMotion ? 0.9 : 0.6 + 0.3 * breath)
+                ring.opacity(reduceMotion ? 0.9 : 0.6 + 0.3 * breath)
             }
             .transition(.opacity)
         } else {
-            guide.opacity(dried ? 0.12 : 0.22)
+            ring.opacity(dried ? 0.12 : 0.22)
         }
     }
 
-    private var guide: some View {
-        Brushstroke()
-            .stroke(Theme.Colors.ink, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 5]))
+    private var ring: some View {
+        Circle().stroke(Theme.Colors.ink, lineWidth: 1.4).frame(width: 16, height: 16)
     }
 }
 

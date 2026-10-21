@@ -23,12 +23,16 @@ public struct DayLine: Equatable, Sendable {
     /// What a tap opens (the first).
     public let objectIDs: [UUID]
     public let kind: Kind
+    /// "about 330 kcal" for a finished workout, only when he turned calories on (`CaloriesOptions`). Kept apart from
+    /// `text` on purpose: the words of the line feed memory, Home and Claude, and a calorie number never goes there.
+    public var calories: String?
 
-    public init(time: Date?, text: String, objectIDs: [UUID], kind: Kind) {
+    public init(time: Date?, text: String, objectIDs: [UUID], kind: Kind, calories: String? = nil) {
         self.time = time
         self.text = text
         self.objectIDs = objectIDs
         self.kind = kind
+        self.calories = calories
     }
 
     /// "07:10": the column, 24 h, zero padded, in the calendar's zone (the zone he's in now).
@@ -64,6 +68,20 @@ public protocol DayLookup {
     func topSet(inWorkout id: UUID) -> (text: String, isPR: Bool)?
     /// A field's key ("isDone"), for reading a record's values.
     func fieldKey(_ id: UUID) -> String?
+    /// A spend's amount as typed, its currency and its one word (nil word when the word is walled).
+    func spend(_ id: UUID) -> (amount: Decimal, currency: String?, word: String?)?
+    /// "about 330 kcal" for a finished workout, or nil (off, private, unfinished, no weight).
+    func caloriesLine(forWorkout id: UUID) -> String?
+}
+
+public extension DayLookup {
+    func caloriesLine(forWorkout _: UUID) -> String? {
+        nil
+    }
+
+    func spend(_: UUID) -> (amount: Decimal, currency: String?, word: String?)? {
+        nil
+    }
 }
 
 /// Folds the op log into a day's story: records by action, by his 4 AM day, groups by their root's start, loose things
@@ -101,13 +119,17 @@ public enum DayStory {
         "removeRecipeFromGroceries", "moveTask", "keepPlannedTask", "rollForwardTasks", "waitOnTask", "startTask",
         "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
-        "endProcess", "writeSettings", "createClass", "setRoutineKind", "syncCalendar", "syncHealth", "closeDay", "startFocusBlock", "focusCheckIn", "acceptFirstStep",
-        "holdNotice", "releaseHeldNotices",
+        "endProcess", "writeSettings", "createClass", "setRoutineKind", "applyDayName", "syncCalendar", "syncHealth",
+        "closeDay", "setMeProfile", "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice",
+        "releaseHeldNotices",
+        "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading", "setBookAside",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).
     static let folded: Set = ["startCooking", "finishCooking", "startShop", "finishShop", "createTask", "addGroceries",
-                              "addRecipeToGroceries", "addListItem", "setTaskDone", "checkListItem", "createNote"]
+                              "addRecipeToGroceries", "addListItem", "setTaskDone", "checkListItem", "createNote",
+                              "logSpend",
+                              "setBookPage", "finishBook"]
 
     /// Whether an action has a rule here (a test fails when a new action has none).
     public static func hasRule(for action: String) -> Bool {
@@ -211,7 +233,10 @@ public enum DayStory {
             var objects: [UUID] = []
             var titles: [String] = []
         }
-        var tasks: Count?, groceries: Count?, dones: Count?, notes: Count?
+        var tasks: Count?, groceries: Count?, dones: Count?, notes: Count?, spends: Count?
+        // Reading: the page he started the day on and ended it on, per book; a finish takes the book's one line.
+        var pages: [UUID: (from: Int, to: Int, time: Date)] = [:]
+        var finishedBooks: [UUID: Date] = [:]
         var ticks: [UUID: Count] = [:]
         func add(_ count: inout Count?, at time: Date, objects: [UUID], titles: [String] = []) {
             if count == nil {
@@ -305,6 +330,27 @@ public enum DayStory {
                     add(&count, at: record.createdAt, objects: [item])
                     ticks[list] = count
                 }
+            case "logSpend":
+                guard onDay(record.createdAt, zone: zone(of: record)) else { continue }
+                let made = created(record, kind: "spend").filter { !deletedToday.contains($0) }
+                guard !made.isEmpty else { continue }
+                add(&spends, at: record.createdAt, objects: made)
+            case "setBookPage":
+                guard onDay(record.createdAt, zone: zone(of: record)) else { continue }
+                for op in record.ops {
+                    guard case let .setValue(object, id, old, new) = op, lookup.fieldKey(id) == "page",
+                          case let .number(to) = new else { continue }
+                    var from = 0
+                    if let old, case let .number(value) = old {
+                        from = Int(value)
+                    }
+                    pages[object] = (pages[object]?.from ?? from, Int(to), pages[object]?.time ?? record.createdAt)
+                }
+            case "finishBook":
+                guard onDay(record.createdAt, zone: zone(of: record)) else { continue }
+                for book in record.objectIDs where lookup.kind(of: book) == "book" {
+                    finishedBooks[book] = finishedBooks[book] ?? record.createdAt
+                }
             case "createNote":
                 // A note said afterwards lands on the day it's about (its own createdAt), in its record's zone.
                 for note in created(record, kind: "note") where !deletedToday.contains(note) {
@@ -328,6 +374,20 @@ public enum DayStory {
             }
         }
 
+        for (book, time) in finishedBooks.sorted(by: { $0.value < $1.value }) {
+            lines.append((DayLine(time: time, text: "Finished \(lookup.title(of: book) ?? "a book")", objectIDs: [book],
+                                  kind: .finished), false))
+        }
+        for (book, moved) in pages.sorted(by: { $0.value.time < $1.value.time })
+            where finishedBooks[book] == nil && moved.to > moved.from
+        {
+            let title = lookup.title(of: book) ?? "a book"
+            // No earlier page: "Read Dune to p 142"; a real start page: "Read Dune, p 120 to 142".
+            let span = moved.from == 0 ? "to p \(moved.to)" : "p \(moved.from) to \(moved.to)"
+            lines.append((DayLine(time: moved.time, text: "Read \(title)\(moved.from == 0 ? " " : ", ")\(span)",
+                                  objectIDs: [book], kind: .finished), false))
+        }
+
         // The loose counts, each one line at its first time.
         struct Loose {
             let line: DayLine
@@ -349,6 +409,10 @@ public enum DayStory {
                                              objectIDs: (tasks?.objects ?? []) + (groceries?.objects ?? []),
                                              kind: .finished),
                                size: size, tail: parts.joined(separator: ", ")))
+        }
+        if let spends, let line = spendLine(spends.objects, at: spends.time, lookup: lookup) {
+            loose.append(Loose(line: line, size: spends.objects.count,
+                               tail: "\(spends.objects.count) \(spends.objects.count == 1 ? "spend" : "spends")"))
         }
         if let dones, !dones.objects.isEmpty {
             let text = dones.objects.count <= 2 ? "Done: \(dones.titles.joined(separator: ", "))"
@@ -403,10 +467,48 @@ public enum DayStory {
             default: false
             }
         }
+        // Calories ride beside a finished workout's line, never in its words.
+        drawn = drawn.map { line in
+            guard line.kind == .finished, let id = line.objectIDs.first, lookup.kind(of: id) == "workout",
+                  let text = lookup.caloriesLine(forWorkout: id) else { return line }
+            var withCalories = line
+            withCalories.calories = text
+            return withCalories
+        }
         if isRestDay {
             drawn.insert(DayLine(time: nil, text: "Rest day", objectIDs: [], kind: .rest), at: 0)
         }
         return drawn
+    }
+}
+
+extension DayStory {
+    /// "Spent 12.40, lunch" for one; "Spent 3 times, 26.90 (lunch, coffee, taxi)" for several. The total is shown only
+    /// when every spend has the same currency (never converted); words are lowercased, deduplicated, at most 3.
+    @MainActor
+    static func spendLine(_ ids: [UUID], at time: Date, lookup: any DayLookup) -> DayLine? {
+        let facts = ids.compactMap { id in lookup.spend(id).map { (id, $0) } }
+        guard !facts.isEmpty else { return nil }
+        let currencies = Set(facts.map { $0.1.currency ?? "" })
+        let total: String? = currencies.count == 1
+            ? (facts[0].1.currency.flatMap { SpendLedger.symbols[$0] } ?? "") + MoneyAmount
+            .format(facts.reduce(Decimal(0)) { $0 + $1.1.amount })
+            : nil
+        var words: [String] = []
+        for fact in facts {
+            if let word = fact.1.word, !word.isEmpty, !words.contains(word) {
+                words.append(word)
+            }
+        }
+        let shown = words.prefix(3).joined(separator: ", ")
+        let text: String
+        if facts.count == 1 {
+            text = "Spent " + [total, shown.isEmpty ? nil : shown].compactMap(\.self).joined(separator: ", ")
+        } else {
+            let lead = "Spent \(facts.count) times"
+            text = [lead, total].compactMap(\.self).joined(separator: ", ") + (shown.isEmpty ? "" : " (\(shown))")
+        }
+        return DayLine(time: time, text: text, objectIDs: facts.map(\.0), kind: .finished)
     }
 }
 
@@ -437,6 +539,8 @@ extension DayStory {
 public struct StoreDayLookup: DayLookup {
     public let store: ObjectStore
     public let classes: [SystemCatalog.Key: ClassDef]
+    /// Calories for finished workouts, when he turned them on; nil (the default) shows none.
+    public var calories: CaloriesOptions?
     let fields: [UUID: String]
     /// Each root's zone, read once: the record that started it, else the one that created it (QA S1 on #318).
     let zones: [UUID: TimeZone]
@@ -480,11 +584,32 @@ public struct StoreDayLookup: DayLookup {
         {
             return ObjectPrivacy.cookTitle(object, in: store)
         }
+        if let book = classes[.book], let classDef = object.classDef, ClassResolver.isSubclass(classDef, of: book) {
+            // Bare words wall a book here, as everywhere a title can reach a memory line: when unsure, wall.
+            if let label = ObjectPrivacy.label(of: object, in: store, classes: classes) {
+                return label
+            }
+            return PrivateWords.isPrivateTitle(object.title, lastWeightKg: BodyWeight.lastKg(in: store))
+                ? ObjectPrivacy.bookLabel : object.title
+        }
         // A list with a walled name reads "Private list" in the story, as it does everywhere else (G75).
         if let list = classes[.list], let classDef = object.classDef, ClassResolver.isSubclass(classDef, of: list) {
             return ListContents.shownName(of: object, in: store)
         }
         return object.title
+    }
+
+    public func spend(_ id: UUID) -> (amount: Decimal, currency: String?, word: String?)? {
+        guard kind(of: id) == "spend", let object = store.object(id: id) else { return nil }
+        let typed = store.value("typed", of: object)?.stringValue ?? ""
+        let amount = MoneyAmount.parse(typed)?.amount
+            ?? store.number("amount", of: object).flatMap { Decimal(string: String($0)) } ?? 0
+        let currency = store.value("currency", of: object)?.stringValue.flatMap { $0.isEmpty ? nil : $0 }
+        // A walled word never reaches the line (the amount may; the word may not).
+        let word = store.value("category", of: object)?.stringValue.flatMap {
+            PrivateWords.isPrivateTitle($0, lastWeightKg: nil) ? nil : $0
+        }
+        return (amount, currency, word)
     }
 
     public func kind(of id: UUID) -> String? {
@@ -548,7 +673,7 @@ public struct StoreDayLookup: DayLookup {
                 }
                 let e1rm = weight * (1 + reps / 30)
                 if best == nil || e1rm > best!.e1rm { // swiftlint:disable:this force_unwrapping
-                    best = Best(e1rm: e1rm, text: "\(name) \(Self.number(weight)) × \(Self.number(reps))",
+                    best = Best(e1rm: e1rm, text: "\(name) \(shownWeight(weight)) × \(Self.number(reps))",
                                 exercise: exercise, weight: weight, reps: reps,
                                 flag: store.value("wasRecord", of: set).map { $0 == .bool(true) })
                 }
@@ -571,6 +696,25 @@ public struct StoreDayLookup: DayLookup {
         fields[id]
     }
 
+    public func caloriesLine(forWorkout id: UUID) -> String? {
+        guard let calories, let workout = store.object(id: id) else { return nil }
+        return CaloriesBurned.line(forWorkout: workout, store: store, classes: classes, options: calories)
+    }
+
+    /// A stored load (kilograms) as he chose to see weights: bare kilograms by default, "181.9 lb" when he picked
+    /// pounds. Stored values never change.
+    func shownWeight(_ kilograms: Double) -> String {
+        let units = displayUnits
+        guard let measure = units.weight(kilograms: kilograms),
+              measure.unit != "kg" else { return Self.number(kilograms) }
+        return measure.formatted
+    }
+
+    var displayUnits: DisplayUnits {
+        guard let object = store.object(id: SettingsStore.objectID), !object.isDeleted else { return DisplayUnits() }
+        return DisplayUnits(encoded: store.value("displayUnits", of: object)?.stringValue)
+    }
+
     static func shortName(_ name: String) -> String {
         ExerciseWords.short(name)
     }
@@ -584,7 +728,7 @@ public struct StoreDayLookup: DayLookup {
 public extension DayStory {
     /// The app's call: one of his days from a window of the engine's history around it (never the whole log).
     static func lines(engine: ActionEngine, on day: Date, calendar: Calendar = .current, now: Date = .now,
-                      isRestDay: Bool = false) -> [DayLine]
+                      isRestDay: Bool = false, calories: CaloriesOptions? = nil) -> [DayLine]
     {
         let start = dayStart(for: day, calendar: calendar)
         let end = dayStart(for: start.addingTimeInterval(30 * 3600), calendar: calendar)
@@ -595,8 +739,9 @@ public extension DayStory {
             to: after.addingTimeInterval(notesAfter)
         )
         .filter { $0.createdAt < after || $0.action == "createNote" }
-        return lines(store: engine.store, classes: engine.classes, records: records, on: day, calendar: calendar,
-                     now: now, isRestDay: isRestDay)
+        var lookup = StoreDayLookup(store: engine.store, classes: engine.classes, records: records)
+        lookup.calories = calories
+        return lines(for: records, on: day, calendar: calendar, lookup: lookup, now: now, isRestDay: isRestDay)
     }
 
     /// The store's committed history for one of his days, from records the caller already has.

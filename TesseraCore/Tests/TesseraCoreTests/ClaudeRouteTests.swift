@@ -258,10 +258,11 @@ struct ClaudeRouteTests {
     }
 
     @Test func switchedOffPausedOrKeylessNothingIsSent() async {
-        #expect(await tess(sends: false).capture(miss, context: context).line.hasPrefix("Didn't catch that."))
-        #expect(await tess(key: nil).capture(miss, context: context).records.isEmpty)
+        // Claude is not there: the phrase is kept as a note to sort later, and nothing is sent.
+        #expect(await tess(sends: false).capture(miss, context: context).keptToSort)
+        #expect(await tess(key: nil).capture(miss, context: context).keptToSort)
         flags.pauseUntilTomorrow(now: context.now, calendar: TesseraDayTests.calendar)
-        #expect(await tess().capture(miss, context: context).records.isEmpty)
+        #expect(await tess().capture(miss, context: context).keptToSort)
         #expect(RouteStub.requests.isEmpty)
         // "Not today" ends at his next 04:00.
         #expect(flags.pausedUntil(now: context.now) == TesseraDayTests.at(10, 16, 4))
@@ -270,13 +271,49 @@ struct ClaudeRouteTests {
         #expect(!flags.isPaused(now: context.now))
     }
 
-    @Test func atTheCapNothingIsSentAndTessSaysUntilWhen() async {
+    @Test func atTheCapNothingIsSentAndThePhraseIsKeptToSort() async throws {
+        // Product ruling, 6:10 PM PT Oct 19: over the cap reads like no Claude, so the phrase is kept, not dropped.
         ledger.record(use: .capture, model: ClaudeTessModel.model, input: 0, output: 0,
                       costNano: TessUsageLedger.capNano, latency: 0, outcome: "works", requestID: nil,
                       at: context.now)
         let capture = await tess().capture(miss, context: context)
-        #expect(capture.records.isEmpty && capture.line == "Claude paused until Nov 1.")
+        #expect(capture.keptToSort && capture.records.count == 1 && capture.line == "\(miss), kept to sort later.",
+                "\(capture.line)")
+        let note = try #require(capture.records.first?.objectIDs.first.flatMap(store.object(id:)))
+        #expect(store.isKeptToSort(note))
+        // A walled phrase over the cap is kept without an echo.
+        let walled = await tess().capture("could you log that I paid 40 for gas earlier?", context: context)
+        #expect(walled.keptToSort && walled.line == "Kept to sort later.", "\(walled.line)")
         #expect(RouteStub.requests.isEmpty)
+    }
+
+    @Test func atTheCapALiveSetStillSaysUntilWhen() async throws {
+        // Only an idle phrase is kept: a live set keeps Claude's own line, and nothing becomes a note.
+        ledger.record(use: .capture, model: ClaudeTessModel.model, input: 0, output: 0,
+                      costNano: TessUsageLedger.capNano, latency: 0, outcome: "works", requestID: nil,
+                      at: context.now)
+        let workout = try store.create(#require(classes[.workout]), title: "Push")
+        let entry = try engine.perform(
+            AddExercise(workout: workout.id, exercise: #require(classes[.benchPress]).id), by: .user
+        ).output
+        var live = context
+        live.entry = entry.id
+        let capture = await tess().capture(miss, context: live)
+        #expect(!capture.keptToSort && capture.records.isEmpty && capture.line == "Claude paused until Nov 1.",
+                "\(capture.line)")
+        #expect(try store.objects(of: #require(classes[.note])).isEmpty)
+    }
+
+    @Test func offlineAndNotSavedSaysCouldntReachClaudeAndKeepsTheWords() async {
+        // The phrase already waits for Claude, so the second offline try isn't saved again: it can only be retried.
+        RouteStub.failure = .notConnectedToInternet
+        let tess = tess()
+        _ = await tess.capture(miss, context: context)
+        let again = await tess.capture(miss, context: context)
+        #expect(again.line == ClaudeTessModel.unreachedLine && again.keepsWords && !again.keptToSort,
+                "\(again.line)")
+        #expect(ClaudeTessModel.unreachedLine == "Couldn't reach Claude. Try again.")
+        #expect(again.records.isEmpty && tess.waitingCount == 1)
     }
 
     @Test func offlineOrSlowSaysSoAndWritesNothing() async {
@@ -284,9 +321,43 @@ struct ClaudeRouteTests {
         let offline = await tess().capture(miss, context: context)
         #expect(offline.records.isEmpty && offline.line == "No connection. Saved it for Claude.")
         RouteStub.failure = .timedOut
-        #expect(await tess().capture(miss, context: context).line == "Claude didn't answer in time.")
+        let slow = await tess().capture(miss, context: context)
+        #expect(slow.line == "Claude didn't answer in time." && slow.keepsWords)
         // The offline attempt never left, so it wrote no row; the timeout did leave, so it kept its one.
         #expect(ledger.calls().count == 1)
+    }
+
+    @Test func anUnreadableMoneyPhraseIsKeptOnThePhoneNotLoggedByClaude() async throws {
+        // The route is unchanged (#860: it goes whole); Claude has no money action to call, so nothing is logged
+        // and the phrase is kept to sort later, private, never echoed.
+        let phrase = "lunch with sam was about 23 quid I think"
+        RouteStub.queue = [(200, Self.answer("I can't log that."))]
+        let capture = await tess().capture(phrase, context: context)
+        #expect(capture.keptToSort && capture.line == "Kept to sort later.", "\(capture.line)")
+        #expect(!capture.line.contains("23") && capture.records.map(\.action) == ["createNote"])
+        let tools = String(decoding: RouteStub.bodies.last ?? Data(), as: UTF8.self)
+        #expect(!tools.contains("logSpend") && !tools.contains("logShopTotal") && !tools.contains("editSpend"))
+        #expect(try store.objects(of: #require(classes[.spend])).isEmpty)
+    }
+
+    @Test func aRefusedKeyKeepsHisWordsAndCancelledDoesNot() async {
+        RouteStub.failure = nil
+        RouteStub.reply = (401, "{}")
+        let refused = await tess().capture(miss, context: context)
+        #expect(refused.keepsWords && !refused.keptToSort && refused.line.contains("Settings: Claude"))
+        // His own stop clears the box: cancelled keeps nothing.
+        RouteStub.reply = (200, "{}")
+        RouteStub.failure = .cancelled
+        let cancelled = await tess().capture(miss, context: context)
+        #expect(cancelled.line == "Cancelled." && !cancelled.keepsWords && !cancelled.keptToSort)
+        RouteStub.failure = nil
+    }
+
+    @Test func aBusyReplyKeepsHisWordsToo() async {
+        RouteStub.failure = nil
+        RouteStub.reply = (429, "{}")
+        let busy = await tess().capture(miss, context: context)
+        #expect(busy.line == "Claude is busy right now." && busy.keepsWords && !busy.keptToSort)
     }
 
     @Test(arguments: [
@@ -301,7 +372,7 @@ struct ClaudeRouteTests {
         let capture = await tess().capture(phrase, context: context)
         #expect(capture.records.isEmpty && capture.line == "Couldn't read that offline. Try again online.",
                 "\(capture.line)")
-        #expect(capture.isRefusal)
+        #expect(capture.isRefusal && capture.keepsWords && !capture.keptToSort)
         #expect(TessInbox(store: store, classes: classes).waiting().isEmpty)
         // A plain miss offline still waits for Claude.
         let plain = await tess().capture(miss, context: context)
@@ -363,7 +434,9 @@ struct ClaudeRouteTests {
             RouteStub.queue = [(200, Self.logBench.replacingOccurrences(of: "\"tool_use\",\"usage\"",
                                                                         with: "\"\(reason)\",\"usage\""))]
             let capture = await tess().capture(miss, context: context)
-            #expect(capture.records.isEmpty && capture.line == "Didn't catch that.", "\(reason)")
+            // Product ruling, Oct 19: Claude was on and failed, so the words stay for the retry and nothing is kept.
+            #expect(capture.records.isEmpty && capture.line == "Couldn't reach Claude. Try again.", "\(reason)")
+            #expect(capture.keepsWords && !capture.keptToSort, "\(reason)")
         }
     }
 

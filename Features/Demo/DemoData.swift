@@ -27,7 +27,67 @@ enum DemoData {
         if model.schedule().isEmpty {
             seedToday(model)
         }
+        seedRecipes(model)
         model.touch()
+    }
+
+    /// Three recipes for the cook's clock page: one with a lane to open (a "meanwhile" step), one with a range and a
+    /// "while", and a one-minute boil so a timer ends inside a recording.
+    private static func seedRecipes(_ model: AppModel) {
+        guard let recipeClass = model.classDef(.recipe), model.store.objects(of: recipeClass).isEmpty else { return }
+        let texts = [
+            """
+            Paprika chicken
+            Serves 4
+            1½ lb chicken thighs
+            1 tbsp smoked paprika
+            1 lemon
+            3 cloves garlic
+            1 lb baby potatoes
+            1 red onion
+            ½ cup Greek yogurt
+            2 tbsp olive oil
+            1 tsp kosher salt
+            2 tbsp fresh parsley
+            Method
+            1. Heat the oven to 425°F. Halve the potatoes and toss with oil and salt.
+            2. Roast the potatoes for 15 minutes.
+            3. Meanwhile, rub the chicken with paprika, garlic and lemon zest.
+            4. Add the chicken and onion to the pan and roast for 20 minutes, until the skin is crisp.
+            5. Stir the yogurt with lemon juice and a pinch of salt.
+            6. Rest the chicken for 4 minutes, then serve with the yogurt.
+            """,
+            """
+            Garlic butter shrimp pasta
+            Serves 2
+            8 oz spaghetti
+            1 lb shrimp, peeled
+            4 cloves garlic
+            4 tbsp butter
+            1 lemon
+            ¼ cup parsley, chopped
+            Salt
+            Method
+            1. Bring a large pot of salted water to the boil.
+            2. Cook the spaghetti for 8-10 minutes, until al dente.
+            3. While the pasta cooks, melt the butter and cook the garlic until golden, about 2 minutes.
+            4. Add the shrimp and sear 1 minute a side.
+            5. Toss in the drained pasta with the parsley and lemon juice and cook until glossy.
+            """,
+            """
+            Soft eggs
+            Serves 2
+            4 eggs
+            Salt
+            Method
+            1. Lower the eggs into boiling water.
+            2. Boil for 1 minute.
+            3. Peel and serve with salt.
+            """,
+        ]
+        for text in texts {
+            _ = try? model.engine.perform(CreateRecipe(text: text), by: .system)
+        }
     }
 
     private static func reset(_ model: AppModel) {
@@ -207,14 +267,18 @@ enum DemoData {
             try? store.set("isDone", to: .bool(false), on: task)
         }
 
-        let workout = store.create(workoutClass, title: "Push Day A")
+        // The plan's push day by its place, not its title: Tess may have renamed it already (release 32).
+        let push = model.objects(of: .plan).first { $0.id != StarterContent.planID && $0.title == "Push Pull Legs" }
+            .flatMap { store.linkedObjects("routines", of: $0).first }
+            ?? model.objects(of: .routine).first { $0.title == "Push Day A" }
+        let workout = store.create(workoutClass, title: push?.title ?? "Push Day A")
         // Today's workout stays inside his day: from 03:10 to 04:00 "in 50 minutes" would land past 04:00, on
         // tomorrow, and Home would have no workout tonight (tonightWorkout() was nil 03:00 to 04:00).
         let dayEnd = TesseraDay().end(of: now)
         let scheduled = min(anchor.addingTimeInterval(50 * 60), dayEnd.addingTimeInterval(-5 * 60))
         try? store.set("scheduledFor", to: .date(scheduled), on: workout)
         // Today's workout is the plan's Push routine (the plan rolls on to it after yesterday's legs).
-        if let push = model.objects(of: .routine).first(where: { $0.title == "Push Day A" }) {
+        if let push {
             try? store.setLinks("routine", on: workout, to: [push])
         }
         let lineup: [(String, Double, Double, Double)] = [

@@ -19,9 +19,10 @@ public enum SystemCatalog {
         case process
         case slot, plan
         case tessCall
-        case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice
+        case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend, book
         case tessSent
         case settings
+        case meProfile
         case tessWaiting
         case tessMemory
 
@@ -181,6 +182,15 @@ public enum SystemCatalog {
                       // Which kind of day it is, so its colour and muscles do not depend on the title ("Bench day").
                       // Optional: a routine of his own may have none.
                       FieldSpec(key: "kind", name: "Kind", kind: .choice, options: ["push", "pull", "legs"]),
+                      // The name Tess gave the day, and the exercises it was given for: while the title is still this,
+                      // Tess may rename it as the exercises change; once he types another, it never does.
+                      FieldSpec(key: "autoName", name: "Name from Tess", kind: .text),
+                      FieldSpec(key: "autoNameKey", name: "Named for", kind: .text),
+                      // "rules" or "model": a rule-made name may be improved once by a model, nothing else may.
+                      FieldSpec(key: "autoNameBy", name: "Named by", kind: .text),
+                      // The last time a model was asked to improve this day's rule name (at most once a day).
+                      FieldSpec(key: "autoNameTriedAt", name: "Model asked", kind: .date),
+                      FieldSpec(key: "autoNameTriedKey", name: "Asked for", kind: .text),
                   ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [
@@ -223,6 +233,9 @@ public enum SystemCatalog {
             // A private note (secret words, Research 134 SW4): titled "Private note" everywhere outside its page,
             // never in memory, packs or the miss log; in his backups (Q1).
             FieldSpec(key: "isPrivate", name: "Private", kind: .bool),
+            // A phrase Tess couldn't read, kept to sort later (Product ruling, Oct 19): the inbox shows "To sort".
+            // Added without a version bump: seeding adds a missing field to a class seeded earlier.
+            FieldSpec(key: "toSort", name: "To sort", kind: .bool),
         ]),
         // The calendar and Health mounts (M4 slices 1 and 2): read-only mirrors, written by the system, never by him.
         ClassSpec(key: .event, name: "Event", parent: .thing, symbol: "calendar", colorRole: "neutral", fields: [
@@ -261,6 +274,29 @@ public enum SystemCatalog {
                       FieldSpec(key: "priority", name: "Priority", kind: .text),
                       FieldSpec(key: "dueAt", name: "Due", kind: .date),
                   ]),
+        // One spend (Money, M5): an amount logged like a set. Stored as typed ("12.40", "€8", "20 eur"); nothing is
+        // converted and nothing is summed across currencies. Private everywhere except its own page and the Month.
+        ClassSpec(key: .spend, name: "Spend", parent: .thing, symbol: "banknote", colorRole: "neutral", fields: [
+            FieldSpec(key: "amount", name: "Amount", kind: .number),
+            FieldSpec(key: "typed", name: "As typed", kind: .text),
+            FieldSpec(key: "currency", name: "Currency", kind: .text),
+            FieldSpec(key: "note", name: "Note", kind: .text),
+            FieldSpec(key: "category", name: "Category", kind: .text),
+            FieldSpec(key: "spentAt", name: "Spent", kind: .date),
+            FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+        ]),
+        // One book (Reading, M5): the page he is on is its resume point. Queued, reading, finished or dropped.
+        ClassSpec(key: .book, name: "Book", parent: .thing, symbol: "book", colorRole: "neutral", fields: [
+            FieldSpec(key: "author", name: "Author", kind: .text),
+            FieldSpec(key: "pages", name: "Pages", kind: .number),
+            FieldSpec(key: "isbn", name: "ISBN", kind: .text),
+            FieldSpec(key: "state", name: "State", kind: .choice, defaultValue: .choice("queued"),
+                      options: ["queued", "reading", "finished", "dropped"]),
+            FieldSpec(key: "page", name: "Page", kind: .number, defaultValue: .number(0)),
+            FieldSpec(key: "review", name: "Review", kind: .text),
+            FieldSpec(key: "finishedAt", name: "Finished", kind: .date),
+            FieldSpec(key: "isPrivate", name: "Private", kind: .bool, defaultValue: .bool(false)),
+        ]),
         ClassSpec(key: .sleepNight, name: "Sleep Night", parent: .thing, symbol: "bed.double", colorRole: "neutral",
                   fields: [
                       FieldSpec(key: "date", name: "Night ending", kind: .date),
@@ -307,6 +343,12 @@ public enum SystemCatalog {
         ]),
         // His preferences that travel with a restore (docs/research/settings-object.md): one object, a fixed id, every
         // field optional (empty = never set; readers apply defaults). Never the Claude key or the folder bookmark.
+        // Him (height, birth year, sex), optional and always private: it follows a weigh-in note's rules.
+        ClassSpec(key: .meProfile, name: "Me", parent: .thing, symbol: "person", colorRole: "neutral", fields: [
+            FieldSpec(key: "heightCm", name: "Height", kind: .number),
+            FieldSpec(key: "birthYear", name: "Birth year", kind: .number),
+            FieldSpec(key: "sex", name: "Sex", kind: .text),
+        ]),
         ClassSpec(key: .settings, name: "Settings", parent: .thing, symbol: "gearshape", colorRole: "neutral", fields: [
             FieldSpec(key: "lookDay", name: "Look by day", kind: .text),
             FieldSpec(key: "lookNight", name: "Look by night", kind: .text),
@@ -315,6 +357,7 @@ public enum SystemCatalog {
             FieldSpec(key: "backupFolderName", name: "Backup folder", kind: .text),
             FieldSpec(key: "backupFolderPickedAt", name: "Folder picked", kind: .date),
             FieldSpec(key: "restWeekday", name: "Rest day", kind: .number),
+            FieldSpec(key: "displayUnits", name: "Units", kind: .text),
         ]),
         // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
         // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.

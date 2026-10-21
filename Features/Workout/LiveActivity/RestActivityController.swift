@@ -11,6 +11,8 @@ final class RestActivityController {
 
     private var activity: Activity<RestActivityAttributes>?
     private var workoutID: UUID?
+    /// Activities this controller has ended and the system may still list: never adopted again.
+    private var endedIDs: Set<String> = []
     private var lastState: State?
     /// Serialises the async ActivityKit calls so they land in order.
     private var queue: Task<Void, Never>?
@@ -43,14 +45,24 @@ final class RestActivityController {
         if lastState?.phase == .closing {
             activity = nil
             lastState = nil
-            enqueue { await Self.endAll() }
+            // Only the activities listed now: one requested later in this update must survive the queued end.
+            let ids = Set(Activity<RestActivityAttributes>.activities.map(\.id))
+            endedIDs.formUnion(ids)
+            enqueue { await Self.end(ids: ids) }
         }
         if workoutID != nil, workoutID != session.workout.id {
             end()
         }
+        // The attributes' title is fixed when the activity starts: a workout that turns private (or public) mid-session
+        // ends the activity so the next rest starts one with the right title.
+        if Self.needsRestart(shownPrivate: lastState?.isPrivate, nowPrivate: session.isPrivate) {
+            end()
+        }
         let realNow = Date.now
-        let state = Self.contentState(planned: planned, restEndsAt: session.restEndsAt,
-                                      restTotal: session.restTotal, appNow: AppClock.adjust(realNow), realNow: realNow)
+        // Masked at the source: a private workout's exercise, weight, reps and set number never reach the activity.
+        let state = Self.contentState(planned: session.isPrivate ? Self.maskedSet : planned,
+                                      restEndsAt: session.restEndsAt, restTotal: session.restTotal,
+                                      appNow: AppClock.adjust(realNow), realNow: realNow, isPrivate: session.isPrivate)
         scheduleReadyFlip(for: state, session: session)
         // The rest-end alert is one local notification when the switch is On; Off keeps the activity's own alert.
         RestAlerts.shared.sync(fireAt: RestAlertPlan.fireAt(
@@ -66,7 +78,11 @@ final class RestActivityController {
             activity = nil
         }
         if activity == nil {
-            activity = Activity<RestActivityAttributes>.activities.first { $0.activityState == .active }
+            // An activity this controller already ended (a privacy flip) can still be listed for a moment: not it.
+            let listed = Activity<RestActivityAttributes>.activities
+            endedIDs.formIntersection(listed.map(\.id))
+            let pick = Self.adoptable(listed.map { ($0.id, $0.activityState == .active) }, excluding: endedIDs)
+            activity = listed.first { $0.id == pick }
             if activity != nil {
                 workoutID = session.workout.id
             }
@@ -91,6 +107,17 @@ final class RestActivityController {
 
     // MARK: Mapping
 
+    /// The first active activity that was not ended by this controller (the id of the one to adopt, if any).
+    static func adoptable(_ listed: [(id: String, isActive: Bool)], excluding ended: Set<String>) -> String? {
+        listed.first { $0.isActive && !ended.contains($0.id) }?.id
+    }
+
+    /// Whether the running activity was started under the other privacy: it must end so the title is remade.
+    static func needsRestart(shownPrivate: Bool?, nowPrivate: Bool) -> Bool {
+        guard let shownPrivate else { return false }
+        return shownPrivate != nowPrivate
+    }
+
     /// The Live Activity's fixed attributes. The title is masked: the Lock Screen and Dynamic Island show it without
     /// unlocking, so a private routine reads "Private workout" there.
     static func attributes(for session: WorkoutSession) -> RestActivityAttributes {
@@ -105,6 +132,9 @@ final class RestActivityController {
         var weight: Double
         var reps: Int
     }
+
+    /// What a private workout's activity carries in place of the planned set: nothing.
+    static let maskedSet = PlannedSet(exercise: "", setNumber: 0, weight: 0, reps: 0)
 
     static func plannedSet(of session: WorkoutSession) -> PlannedSet? {
         switch session.phase() {
@@ -128,7 +158,8 @@ final class RestActivityController {
     /// counts down in real time, so it is moved onto the real clock (rounded to the second so repeated calls map to
     /// an identical state). Once ready, the end is pinned to `.distantPast` for the same reason.
     static func contentState(planned: PlannedSet, restEndsAt: Date?, restTotal: TimeInterval, appNow: Date,
-                             realNow: Date) -> State
+                             realNow: Date, followsLook: Bool = Choice.lockScreenFollowsLook(),
+                             isPrivate: Bool = false) -> State
     {
         let shift = realNow.timeIntervalSince(appNow)
         let isResting = restEndsAt.map { $0 > appNow } ?? false
@@ -137,7 +168,9 @@ final class RestActivityController {
                      reps: planned.reps,
                      restEndsAt: isResting ? Date(timeIntervalSinceReferenceDate: endsAt) : .distantPast,
                      restTotal: restTotal, phase: isResting ? .resting : .ready,
-                     lookDay: ThemeStore.shared.pair.day.name, lookNight: ThemeStore.shared.pair.night.name)
+                     lookDay: followsLook ? ThemeStore.shared.pair.day.name : nil,
+                     lookNight: followsLook ? ThemeStore.shared.pair.night.name : nil,
+                     isPrivate: isPrivate)
     }
 
     /// While resting the content goes stale when the rest ends, so the Lock Screen flips to "ready" on its own even
@@ -218,12 +251,15 @@ final class RestActivityController {
         closingEnd?.cancel()
         closingEnd = nil
         RestAlerts.shared.sync(fireAt: nil)
-        let hadActivities = !Activity<RestActivityAttributes>.activities.isEmpty
+        let listed = Activity<RestActivityAttributes>.activities
+        let hadActivities = !listed.isEmpty
+        endedIDs.formUnion(listed.map(\.id))
         activity = nil
         workoutID = nil
         lastState = nil
         guard hadActivities else { return }
-        enqueue { await Self.endAll() }
+        let ids = Set(listed.map(\.id))
+        enqueue { await Self.end(ids: ids) }
     }
 
     /// `Activity` isn't Sendable: the ActivityKit calls run off the main actor on activities looked up there.
@@ -239,10 +275,18 @@ final class RestActivityController {
         await activity.end(content, dismissalPolicy: .after(dismissAt))
     }
 
-    private nonisolated static func endAll() async {
-        for activity in Activity<RestActivityAttributes>.activities {
+    /// Ends exactly the activities that were listed when the end was asked for, never one requested after.
+    private nonisolated static func end(ids: Set<String>) async {
+        let listed = Activity<RestActivityAttributes>.activities
+        let doomed = Set(idsToEnd(listed: listed.map(\.id), captured: ids))
+        for activity in listed where doomed.contains(activity.id) {
             await activity.end(nil, dismissalPolicy: .immediate)
         }
+    }
+
+    /// Of the activities listed now, those captured when the end was queued (a later request is not among them).
+    nonisolated static func idsToEnd(listed: [String], captured: Set<String>) -> [String] {
+        listed.filter { captured.contains($0) }
     }
 
     private func enqueue(_ work: @escaping @Sendable () async -> Void) {

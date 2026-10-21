@@ -54,6 +54,10 @@ private struct WorkoutContent: View {
     @State private var soul = SoulRouter(page: .live)
     /// Workout-level moments: a set seated, a new best, rest up on screen, the workout finished.
     @State private var moment = HapticCue()
+    /// The set's haptic, held until its circle closes (played at once under Reduce Motion or Low Power).
+    @State private var deferredCues: [Haptic] = []
+    @Environment(\.lowPowerMotion) private var lowPower
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// The subline whose cadmium has dried.
     @State private var sublineDried: String?
     @State private var undoHaptic = 0
@@ -199,8 +203,17 @@ private struct WorkoutContent: View {
             guard let seated, session.finishedAt == nil else { return }
             // One haptic per set, played here so it survives the key leaving (Reduce Motion, VoiceOver's action):
             // the set's tap, or .success in its place for a new best.
-            moment.play(seated.records.isEmpty ? .setLogged : .newBest)
-            soul.handle(seated.records.isEmpty ? .setLogged : .newBest)
+            // With the ink drops the one haptic waits for the circle to close (LiveSetMarks tells us); without them
+            // (Reduce Motion, Low Power) it plays now.
+            // A private workout never announces a best: the same plain tap for every set.
+            let isPrivate = session.shownTitle != session.workout.title
+            let cue: Haptic = seated.records.isEmpty || isPrivate ? .setLogged : .newBest
+            if reduceMotion || lowPower {
+                moment.play(cue)
+            } else {
+                deferredCues.append(cue)
+            }
+            soul.handle(seated.records.isEmpty || isPrivate ? .setLogged : .newBest)
         }
         .tesseraFeedback(.undo, trigger: undoHaptic)
         .tesseraFeedback(.selection, trigger: editHaptic)
@@ -209,7 +222,20 @@ private struct WorkoutContent: View {
         .tesseraFeedback(moment)
     }
 
+    /// At accessibility sizes the screen is taller than the phone: it scrolls instead of printing rows over each other.
+    @ViewBuilder
     private func live(phase actual: WorkoutSession.Phase, now: Date) -> some View {
+        if typeSize.isAccessibilitySize {
+            ScrollView {
+                liveStack(phase: actual, now: now)
+            }
+            .scrollIndicators(.hidden)
+        } else {
+            liveStack(phase: actual, now: now)
+        }
+    }
+
+    private func liveStack(phase actual: WorkoutSession.Phase, now: Date) -> some View {
         // Editing a logged set takes the set block over (dial, drum, key), even during rest.
         let phase = session.isEditing ? .set : actual
         return VStack(alignment: .leading, spacing: 0) {
@@ -221,7 +247,7 @@ private struct WorkoutContent: View {
                 .overlay(alignment: .topLeading) { swapPanel }
                 .overlay(alignment: .bottomLeading) { oneTapSwapWord }
                 .zIndex(2)
-            LiveSetStrokes(session: session, phase: actual) { id in
+            LiveSetMarks(session: session, phase: actual, onEdit: { id in
                 // Tap a stroke to edit it, the same one again to leave, another to switch.
                 let isSame = session.isEditing && session.editingSetID == id
                 if !isSame {
@@ -234,7 +260,16 @@ private struct WorkoutContent: View {
                         session.beginEditing(setID: id)
                     }
                 }
-            }
+            }, onClosed: { _ in
+                if !deferredCues.isEmpty {
+                    moment.play(deferredCues.removeFirst())
+                }
+            }, onCancelled: {
+                // The set was undone before its circle closed: its haptic goes with it.
+                if !deferredCues.isEmpty {
+                    deferredCues.removeLast()
+                }
+            })
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
             .opacity(isSwapOpen ? 0 : 1)
@@ -447,14 +482,18 @@ extension WorkoutContent {
                     sublineDried = text
                 }
             }
-            .lineLimit(1)
+            .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
             .minimumScaleFactor(0.8)
             .contentTransition(.opacity)
             .tesseraAnimation(value: text)
     }
 
     private func numberRow(phase: WorkoutSession.Phase, now: Date) -> some View {
-        HStack(alignment: .top) {
+        // At accessibility sizes the weight and the reps stack, so the row is never wider than the screen.
+        let large = typeSize.isAccessibilitySize
+        let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.m))
+            : AnyLayout(HStackLayout(alignment: .top))
+        return layout {
             if case let .rest(end) = phase {
                 let remaining = max(0, end.timeIntervalSince(now)).rounded(.up)
                 VStack(alignment: .leading, spacing: Theme.Spacing.m) {
@@ -518,8 +557,10 @@ extension WorkoutContent {
                             .transition(.opacity)
                     }
                 }
-                Spacer(minLength: Theme.Spacing.s)
-                VStack(alignment: .trailing, spacing: 2) {
+                if !large {
+                    Spacer(minLength: Theme.Spacing.s)
+                }
+                VStack(alignment: large ? .leading : .trailing, spacing: 2) {
                     RepsRow(reps: repsBinding, ghost: lastReps, isLocked: phase != .set, onBeat: {
                         // "One more than last time.", once per set, only while Tess isn't saying anything else.
                         guard askReply == nil else { return }
@@ -536,7 +577,8 @@ extension WorkoutContent {
                 .transition(.opacity)
             }
         }
-        .frame(height: 196, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(minHeight: 196, maxHeight: large ? nil : 196, alignment: .top)
         .tesseraAnimation(.easeOut(duration: 0.32), value: phase == .set)
         .tesseraAnimation(.easeOut(duration: 0.32), value: showsGo)
     }
@@ -567,7 +609,8 @@ extension WorkoutContent {
                 .textRole(.label)
                 .foregroundStyle(Paint.tess)
                 .frame(maxWidth: .infinity, alignment: .leading)
-        } else if let plates = session.platesPerSide {
+        } else if let plates = session.platesPerSide, !typeSize.isAccessibilitySize {
+            // (Large text has no room for the drawing: it would print over the reps.)
             PlateStack(weight: session.weight, perSide: plates, drawsPlates: true, large: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .transition(.opacity)
@@ -649,7 +692,11 @@ extension WorkoutContent {
     // MARK: The key
 
     private func keyRow(phase: WorkoutSession.Phase) -> some View {
-        HStack(spacing: Theme.Spacing.l) {
+        // At accessibility sizes the key and PAUSE stack, so the row is never wider than the screen.
+        let large = typeSize.isAccessibilitySize
+        let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
+            : AnyLayout(HStackLayout(spacing: Theme.Spacing.l))
+        return layout {
             if session.isEditing {
                 EditSetKeys(session: session) { saveHaptic += 1 }
             } else {
@@ -667,7 +714,7 @@ extension WorkoutContent {
                         }
                     } label: { _ in
                         Text(
-                            "Log \(Format.kilograms(session.weight)) × \(Int(session.reps))\(finishes ? " and finish" : "")"
+                            "Log \(Format.kilograms(session.weight))\u{00A0}×\u{00A0}\(Int(session.reps))\(finishes ? " and finish" : "")"
                         )
                         .textRole(.labelStrong)
                         .textCase(.uppercase)
@@ -711,7 +758,9 @@ extension WorkoutContent {
                     .accessibilityAction(named: "Finish workout") { finish() }
                 }
             }
-            Spacer(minLength: 0)
+            if !large {
+                Spacer(minLength: 0)
+            }
             if session.finishedAt == nil {
                 // PAUSE leaves to Home, where the key reads RESUME with the progress line.
                 Button("Pause") { model.isWorkoutPresented = false }
@@ -724,7 +773,7 @@ extension WorkoutContent {
                     .accessibilityLabel("Pause the workout")
             }
         }
-        .frame(height: 62)
+        .frame(height: large ? nil : 62)
     }
 
     // MARK: Finish
@@ -735,7 +784,8 @@ extension WorkoutContent {
 
     /// One haptic for the moment: done, or .success when the set it finished with was a best.
     private func finish(early: Bool = false, withSet: Bool = false) {
-        let best = withSet && session.lastSeated?.records.isEmpty == false
+        let isPrivate = session.shownTitle != session.workout.title
+        let best = withSet && !isPrivate && session.lastSeated?.records.isEmpty == false
         moment.play(best ? .newBest : .done)
         isSwapOpen = false
         isOrderOpen = false

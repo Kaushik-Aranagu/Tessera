@@ -32,6 +32,11 @@ struct SettingsPage: View {
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1, hero: true)
 
+                // His own page: weight, height, age, sex, and what the app knows of his training (Design 108 s3).
+                MeDoor()
+                    .padding(.top, Theme.Spacing.m)
+                    .entrance(2)
+
                 // "Porcelain by day, Obsidian by night", each name a value word.
                 LookSentence()
                     .padding(.top, Theme.Spacing.xxl)
@@ -52,9 +57,12 @@ struct SettingsPage: View {
                     .padding(.top, Theme.Spacing.xxl)
                     .entrance(4)
 
-                ReviewSection()
-                    .padding(.top, Theme.Spacing.section)
-                    .entrance(5)
+                // Drawn only while some switch ships in this build (Product, Oct 20).
+                if !ReviewChoices.drawnPages().isEmpty {
+                    ReviewSection()
+                        .padding(.top, Theme.Spacing.section)
+                        .entrance(5)
+                }
 
                 NavigationLink {
                     BackupView()
@@ -74,6 +82,13 @@ struct SettingsPage: View {
                 .buttonStyle(.labelWord)
                 .padding(.top, Theme.Spacing.l)
                 .accessibilityHint("Credits for the pictures and sources")
+
+                // Which release this is: the git SHA the build was made from, one quiet line at the foot.
+                Text("Build \(BuildStamp.short)")
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .padding(.top, Theme.Spacing.section)
+                    .accessibilityLabel("Build \(BuildStamp.short)")
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
@@ -101,16 +116,23 @@ private struct TessKnowsDoor: View {
                 .textRole(.label)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .accessibilityAddTraits(.isHeader)
-            NavigationLink {
-                TessKnowsPage()
-            } label: {
-                Text(TessKnowsCopy.door(count))
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .multilineTextAlignment(.leading)
+            // Only the count is the value word: "Tess remembers 12 things." (Design on #1127).
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
+                Text(TessKnowsCopy.doorLead(count))
+                NavigationLink {
+                    TessKnowsPage()
+                } label: {
+                    Text(TessKnowsCopy.doorCount(count)).fontWeight(.semibold)
+                }
+                .buttonStyle(.valueWash)
+                Text(".")
             }
-            .buttonStyle(.valueWash)
+            .textRole(.body)
+            .foregroundStyle(Theme.Colors.ink)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(TessKnowsCopy.door(count))
             .accessibilityHint("Opens what Tess knows")
+            .accessibilityAddTraits(.isButton)
         }
     }
 }
@@ -122,61 +144,42 @@ private struct TessKnowsDoor: View {
 /// after. A switch whose feature hasn't landed shows today's value, quietly, and doesn't move.
 struct ReviewSection: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var page: Int? = 0
+    @State private var page = 0
     /// The switch he touched last and its value before the touch.
     @State private var touched: (id: String, before: String)?
     @State private var resetLine: String?
     @State private var flips = 0
 
-    private let pages = ReviewChoices.pages()
+    private let pages = ReviewChoices.drawnPages()
 
     var body: some View {
         let choices = ReviewChoices.shared
         MarginSection(label: "Review") {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Try a new way; today's stays one tap away.")
-                        .textRole(.body)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: Theme.Spacing.s)
-                    if pages.count > 1 {
-                        Text(ReviewSwitchCopy.pageOf((page ?? 0) + 1, pages.count))
-                            .textRole(.data)
-                            .foregroundStyle(Theme.Colors.inkSecondary)
-                            .contentTransition(.numericText())
-                            .accessibilityHidden(true)
-                    }
-                }
+                Text("Try a new way; today's stays one tap away.")
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                ScrollView(.horizontal) {
-                    LazyHStack(alignment: .top, spacing: 0) {
-                        ForEach(pages.indices, id: \.self) { index in
-                            VStack(alignment: .leading, spacing: 0) {
-                                ForEach(Array(pages[index].enumerated()), id: \.element.id) { offset, choice in
-                                    row(choice)
-                                    if offset < pages[index].count - 1 {
-                                        RowSeparator()
-                                    }
-                                }
+                // Named pages with their neighbours peeking (Design sheet 108): Looks and day, Workout, Kitchen,
+                // Connected, Shown.
+                // The Page turn switch turns Review's own pages, so he feels his pick right here (Product, Oct 20).
+                let turn = PageTurnStyle.current
+                PeekTabs(tabs: pages.map(\.word), selection: $page, turns: turn) { index in
+                    if turn == .today {
+                        // No lines between rows (Kaushik's rule): space alone separates them.
+                        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                            ForEach(pages[index].rows) { choice in
+                                row(choice)
                             }
-                            .containerRelativeFrame(.horizontal)
-                            // The flip: the page leaving fades as the next comes in; with Reduce Motion it's
-                            // opacity only, which this already is.
-                            .scrollTransition(.interactive, axis: .horizontal) { content, phase in
-                                content.opacity(phase.isIdentity ? 1 : 0.25)
-                            }
-                            .accessibilityElement(children: .contain)
-                            .accessibilityLabel(ReviewSwitchCopy.pageOf(index + 1, pages.count))
-                            .id(index)
+                        }
+                    } else {
+                        PageTurnRows(items: pages[index].rows, page: index, style: turn) { choice in
+                            row(choice)
+                                .padding(.vertical, Theme.Spacing.s)
                         }
                     }
-                    .scrollTargetLayout()
                 }
-                .scrollTargetBehavior(.paging)
-                .scrollPosition(id: $page)
-                .scrollIndicators(.hidden)
-                .tesseraFeedback(.selection, trigger: page)
 
                 if choices.anyTrying() || resetLine != nil {
                     VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
@@ -214,11 +217,15 @@ struct ReviewSection: View {
             HStack(alignment: .firstTextBaseline, spacing: 0) {
                 Text("\(choice.name): ")
                     .foregroundStyle(live ? Theme.Colors.ink : Theme.Colors.inkSecondary)
-                Button(value) { flip(choice, forward: true) }
-                    .buttonStyle(.valueWash)
-                    .fontWeight(.semibold)
-                    .contentTransition(.opacity)
-                    .disabled(!live)
+                Button { flip(choice, forward: true) } label: {
+                    Text(value)
+                        .fontWeight(.semibold)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.valueWash)
+                .contentTransition(.opacity)
+                .disabled(!live)
                 Text(".")
                 Spacer(minLength: Theme.Spacing.s)
                 if let mark = ReviewSwitchCopy.mark(choice) {
@@ -235,6 +242,12 @@ struct ReviewSection: View {
             .accessibilityAddTraits(live ? .isButton : [])
             .accessibilityAdjustableAction { direction in
                 flip(choice, forward: direction != .decrement)
+            }
+            // A double tap flips it too, as a tap on the value word does (Design on #1127).
+            .accessibilityAction { flip(choice, forward: true) }
+            // Page turn plays its pick once on a two-line mini page (sheet 93).
+            if choice.id == "pageTurn" {
+                PageTurnPreview(style: PageTurnStyle(rawValue: value) ?? .today)
             }
             if let touched, touched.id == choice.id {
                 Text(choices.beforeAfter(choice, before: touched.before))
@@ -273,6 +286,11 @@ enum ReviewSwitchCopy {
     /// "2 of 3".
     static func pageOf(_ page: Int, _ count: Int) -> String {
         "\(page) of \(count)"
+    }
+
+    /// "Workout, 2 of 5": the page's facet beside the counter (Design sheet 100).
+    static func facetPage(_ facet: String, _ page: Int, _ count: Int) -> String {
+        "\(facet), \(pageOf(page, count))"
     }
 
     /// The quiet mark beside a row: Needs Claude wins (it never turns Claude on by itself), then Later for an

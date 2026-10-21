@@ -70,7 +70,12 @@ struct SiriParityTests {
     @Test func money() async throws {
         for phrase in ["pay rent $1,800", "paid 40 for gas"] {
             let ask = await say(phrase)
-            #expect(!ask.line.contains("1,800") && !ask.line.contains("40"), "\(phrase): \(ask.line)")
+            // "paid 40 for gas" is a spend now: said back on the phone, thing first.
+            if phrase.hasPrefix("paid") {
+                #expect(ask.line == "Gas, 40.00." && ask.records.map(\.action) == ["logSpend"], "\(ask.line)")
+            } else {
+                #expect(!ask.line.contains("1,800") && !ask.line.contains("40"), "\(phrase): \(ask.line)")
+            }
             #expect(try add(phrase) == "Private note, kept.", "\(phrase)")
         }
         let ask = await say("pay rent 1800 friday")
@@ -86,32 +91,35 @@ struct SiriParityTests {
         #expect(!refill.lowercased().contains("lexapro") && !refill.contains("40"), "\(refill)")
         // His "yes, all but the key": a Bar phrase the grammar cannot read goes whole to Claude, sums included. Siri
         // and Shortcuts never do (they commit at once), and what the grammar claimed stays on the phone.
-        #expect(claude.heard == ["pay rent $1,800", "paid 40 for gas"], "\(claude.heard)")
+        #expect(claude.heard == ["pay rent $1,800"], "\(claude.heard)")
     }
 
     @Test func paidWithADayIsAPrivateDatedNoteEverywhere() async throws {
-        // Product 1:15 PM PT: "paid rent 2100 fri" is a private note on Friday on the Bar, from Tess and from Siri.
+        // Product 1:15 PM PT: "paid rent 2100 fri" is a private note on Friday from Siri. On the Bar, Money exists
+        // now: it is a spend on that Friday, logged on the phone.
         // Said on Thursday Oct 15 in the past tense, "fri" is last Friday, Oct 9.
         let friday = try #require(Self.calendar.date(from: DateComponents(year: 2026, month: 10, day: 9, hour: 12)))
         for capture in await [say("paid rent 2100 fri"), say("paid rent 2100 fri", tell: true)] {
-            #expect(capture.line == "Private note, kept." && capture.records.map(\.action) == ["createNote"])
+            #expect(capture.line == "Rent, 2,100.00." && capture.records.map(\.action) == ["logSpend"])
         }
         #expect(try add("paid rent 2100 fri") == "Private note, kept.")
         let notes = store.context.objects.values.filter { $0.title == SecretWords.title }
-        #expect(notes.count == 3 && notes.allSatisfy { store.value("isPrivate", of: $0) == .bool(true) })
+        #expect(notes.count == 1 && notes.allSatisfy { store.value("isPrivate", of: $0) == .bool(true) })
         // Dated on that day, on the Bar and for Siri alike.
         let grammar = TessGrammar(store: store, classes: engine.classes)
         let context = TessContext(now: Self.now, calendar: Self.calendar)
-        for parse in [grammar.parse("paid rent 2100 fri", context: context),
-                      grammar.privateParse("paid rent 2100 fri", context: context)]
-        {
-            guard case let .privateNote(_, _, on)? = parse, let on else {
-                Issue.record("not a dated private note")
-                continue
-            }
-            #expect(TesseraDay(calendar: Self.calendar).isSameDay(on, friday), "\(on.formatted(.iso8601))")
+        guard case let .spend(_, _, on?)? = grammar.parse("paid rent 2100 fri", context: context) else {
+            Issue.record("not a dated spend")
+            return
         }
-        #expect(nothingHolds("2100") && claude.heard.isEmpty)
+        #expect(TesseraDay(calendar: Self.calendar).isSameDay(on, friday), "\(on.formatted(.iso8601))")
+        guard case let .privateNote(_, _, siriOn?)? = grammar.privateParse("paid rent 2100 fri", context: context)
+        else {
+            Issue.record("not a dated private note")
+            return
+        }
+        #expect(TesseraDay(calendar: Self.calendar).isSameDay(siriOn, friday))
+        #expect(claude.heard.isEmpty)
     }
 
     /// S22, S24 to S26, S32 to S33, S35: ordinary things stay as they were; a task with a secret word is said back

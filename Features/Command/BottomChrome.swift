@@ -25,6 +25,10 @@ struct BottomChrome: View {
     @State private var replyCount = 0
     /// The capture the reply on show reported (still wet or dried), the only one its UNDO may take back.
     @State private var replyCapture: UUID?
+    /// The writing field's one-line height, and how far it has grown above that: "Asking Claude." rides on top.
+    @State private var fieldBase: CGFloat?
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var fieldGrowth: CGFloat = 0
     @State private var ghost: String?
     @State private var drying: CGFloat = 0
     @State private var dryTask: Task<Void, Never>?
@@ -53,14 +57,20 @@ struct BottomChrome: View {
     /// The soul's centre sits this far above the bottom of the chrome; the mode column starts above it.
     static let soulLift: CGFloat = 54
 
+    private var holdHintWords: String {
+        model.session != nil ? "Hold me to tell me a set." : "Hold me to talk."
+    }
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             if model.isCommandExpanded {
                 // The page recedes behind a veil of blurred ground (z); a tap on it closes Tess.
-                // Calmer: the page blurs a little and drops to 50% (calm-capture.md).
+                // Calmer: the page blurs a little and drops to 50% (calm-capture.md). While he writes, the flat paper
+                // rises to 94% so the page's words don't show through his own (Design on #1143's AX5 shot).
                 ZStack {
                     Rectangle().fill(.ultraThinMaterial).opacity(0.35)
-                    Theme.Colors.paper.opacity(0.5)
+                    Theme.Colors.paper.opacity(CommandVeil.paperOpacity(writing: layer == .write))
+                        .tesseraAnimation(.easeInOut(duration: 0.25), value: layer == .write)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
@@ -94,7 +104,9 @@ struct BottomChrome: View {
             if model.isAskingClaude {
                 AskingClaudeLine { model.cancelAskingClaude() }
                     .padding(.horizontal, Theme.Spacing.gutter)
-                    .padding(.bottom, Self.soulLift + Self.rowHeight)
+                    // 8 pt clear of the writing line and its drying ghost while the surface is open (Design on #1123).
+                    .padding(.bottom, Self.soulLift + Self.rowHeight
+                        + (model.isCommandExpanded ? Theme.Spacing.s + fieldGrowth : 0))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -172,8 +184,9 @@ struct BottomChrome: View {
                             Button("Not now") { answerLift(.notNow) }
                         }
                         .buttonStyle(.labelWord)
-                    } else if setAsk == nil, line == nil, !canUndo, holdHint == 1 {
-                        Text(model.session != nil ? "Hold me to tell me a set." : "Hold me to talk.")
+                    } else if setAsk == nil, line == nil, !canUndo, holdHint == 1, !typeSize.isAccessibilitySize {
+                        // At accessibility sizes the hint would sit over the page; it stays the soul's spoken hint.
+                        Text(holdHintWords)
                             .font(Theme.voice)
                             .foregroundStyle(Theme.Colors.tess)
                     }
@@ -280,7 +293,8 @@ struct BottomChrome: View {
             .animation(.easeOut(duration: 0.12), value: listener.level)
             .accessibilityElement()
             .accessibilityLabel("Tess")
-            .accessibilityHint("Opens Tess.")
+            .accessibilityHint(holdHint == 1 && typeSize
+                .isAccessibilitySize ? "Opens Tess. \(holdHintWords)" : "Opens Tess.")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { toggle() }
             .accessibilityAction(named: "Go home") { onSoulDoubleTap() }
@@ -468,9 +482,9 @@ struct BottomChrome: View {
         let lift = isQuestion ? nil : model.pendingDatedLift
         ghost = nil
         drying = 0
-        // Offline, a capture the walls stopped can't be read yet: his words stay in the Ask for the retry online
-        // (Product ruling), and Tess's line says so.
-        model.commandDraft = AskCopy.keepsDraft(answer) ? model.commandDraft : ""
+        // When the engine says to keep them (Claude unreachable, a walled phrase offline, Core's `keepsWords`), his
+        // words stay in the Ask for the retry, and Tess's line says why. A question answered here never keeps them.
+        model.commandDraft = AskCopy.keepsDraft(isQuestion ? false : model.lastKeepsWords) ? model.commandDraft : ""
         withTesseraAnimation(.spring(response: 0.42, dampingFraction: 0.9), reduceMotion: reduceMotion) {
             model.isCommandExpanded = false
             // At rest the soul is small: `.done` would multiply its dabs into mud, so it brightens instead.
@@ -494,10 +508,17 @@ extension BottomChrome {
         @Bindable var model = model
         return VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             ZStack(alignment: .bottomLeading) {
+                // The field grows upward with what he writes, up to five lines, so nothing hides behind the bar
+                // or needs a scroll (Kaushik on the #1123 clip); past five it scrolls inside itself.
                 TextField("Ask", text: $model.commandDraft,
-                          prompt: Text("Write anything").foregroundStyle(Theme.Colors.inkSecondary))
-                    // His typing sits one step under her voice: Field 18 (calm-capture.md addendum).
-                    .textRole(.field)
+                          prompt: Text("Write anything").foregroundStyle(Theme.Colors.inkSecondary),
+                          axis: .vertical)
+                    .lineLimit(1 ... AskDraft.maxLines(at: typeSize))
+                    // His typing sits one step under her voice: Field 18 (calm-capture.md addendum). The face and size
+                    // of the field role, at the font's own line height: a growing field sizes its lines from the font,
+                    // so a set line height left the top line cut once it scrolled (Design on #1170).
+                    .font(Theme.Typography.font(Theme.concept.scale.field))
+                    .tracking(Theme.concept.scale.field.tracking * Theme.concept.scale.field.size)
                     // The drying ghost reads in inkSecondary (calm-capture.md).
                     .foregroundStyle(ghost == nil ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                     .tint(Theme.Colors.tess)
@@ -513,7 +534,23 @@ extension BottomChrome {
                         close()
                         return .handled
                     }
-                    .onChange(of: model.commandDraft) { _, draft in
+                    // A new text size measures the one-line height again (Design on #1143).
+                    .onChange(of: typeSize) { _, _ in fieldBase = nil }
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                        fieldBase = fieldBase ?? height
+                        fieldGrowth = max(0, height - (fieldBase ?? height))
+                    }
+                    .onChange(of: model.commandDraft) { old, draft in
+                        // A grown field takes Return as a newline. Only Return's own trailing newline sends; a
+                        // pasted line break becomes a space and nothing sends (Design on #1143).
+                        if draft.contains("\n") {
+                            let read = AskDraft.read(old: old, new: draft)
+                            model.commandDraft = read.text
+                            if read.send {
+                                dry()
+                            }
+                            return
+                        }
                         // A Claude key never stays in Ask: not on screen, not as a ghost, not as a task. Cleared the
                         // moment it lands, before any interpreter can see it.
                         if Self.looksLikeClaudeKey(draft) {
@@ -830,11 +867,19 @@ enum AskSlot {
 
 /// The Ask's own rules for a reply.
 enum AskCopy {
-    /// Core's offline line for a capture the walls stopped (Product ruling): the typed words are kept for the retry.
-    static let offlineRetry = "Couldn't read that offline. Try again online."
+    /// Whether the Ask keeps what he typed after this reply: only when the engine flagged the capture
+    /// (`TessCapture.keepsWords`), never by matching Tess's words.
+    static func keepsDraft(_ keepsWords: Bool) -> Bool {
+        keepsWords
+    }
+}
 
-    /// Whether the Ask keeps what he typed after this reply.
-    static func keepsDraft(_ answer: String) -> Bool {
-        answer == offlineRetry
+/// The paper over the page while Tess is open: 50% for the modes and Speak, 94% under the Write field.
+enum CommandVeil {
+    static let recede = 0.5
+    static let writing = 0.94
+
+    static func paperOpacity(writing isWriting: Bool) -> Double {
+        isWriting ? writing : recede
     }
 }

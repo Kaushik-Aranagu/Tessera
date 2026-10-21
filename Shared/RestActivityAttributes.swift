@@ -36,6 +36,14 @@ struct RestActivityAttributes: ActivityAttributes {
         var lookNight: String?
         /// The closing face's line, "Push A, ready to finish" (masked for a private workout). Set only in `.closing`.
         var closingLine: String?
+        /// A private workout: the Lock Screen and Island show only "Private workout" and the rest timer, never the
+        /// exercise, the weight, the reps or the set number. Optional: older states decode without it.
+        var isPrivate: Bool?
+
+        /// Whether the face may show the exercise, the planned set and the set number.
+        var showsSet: Bool {
+            isPrivate != true
+        }
 
         /// The rest as a range for `Text(timerInterval:)` and `ProgressView(timerInterval:)`.
         var restInterval: ClosedRange<Date> {

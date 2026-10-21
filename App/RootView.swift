@@ -11,6 +11,9 @@ struct RootView: View {
     @State private var flooding = false
     /// Low Power, read through `PowerState` only; the system's change notice just says when to ask it again.
     @State private var lowPower = PowerState.isLowPower
+    /// `-openCook "Paprika chicken"` (simulator only, read through LaunchFlags): starts that cook and opens its clock
+    /// page, for recordings.
+    @State private var demoCook: DemoCookCover?
 
     var body: some View {
         @Bindable var model = model
@@ -70,6 +73,22 @@ struct RootView: View {
                     .environment(\.animateEntrance, true)
             }
         }
+        .fullScreenCover(item: $demoCook) { CookClockPage(cookID: $0.id) }
+        .task {
+            guard let title = LaunchFlags.value(after: "-openCook"),
+                  let recipe = model.objects(of: .recipe).first(where: { $0.title == title }),
+                  let cook = try? model.engine.perform(StartCooking(recipe: recipe.id), by: .user).output
+            else { return }
+            try? await Task.sleep(for: .milliseconds(600))
+            demoCook = DemoCookCover(id: cook.id)
+        }
+        .task {
+            // Simulator only (LaunchFlags): opens the first routine's workout, for the large-text swipe test.
+            guard LaunchFlags.has("-openWorkout"),
+                  let routine = model.objects(of: .routine).first(where: { !$0.isDeleted }) else { return }
+            try? await Task.sleep(for: .milliseconds(800))
+            model.startRoutine(routine)
+        }
         .background { ThemedBackground() }
         .modifier(RestReceipt())
         .environment(\.lowPowerMotion, lowPower)
@@ -109,4 +128,8 @@ struct RootView: View {
     DemoData.prepare(model)
     return RootView()
         .environment(model)
+}
+
+private struct DemoCookCover: Identifiable {
+    let id: UUID
 }

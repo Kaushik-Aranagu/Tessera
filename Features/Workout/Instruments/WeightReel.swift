@@ -19,6 +19,7 @@ struct WeightReel: View {
     var onType: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var touching = false
     @State private var axis: ScrubFeel.Axis?
     @State private var drag = ScrubFeel.Drag()
@@ -63,7 +64,13 @@ struct WeightReel: View {
                 .foregroundStyle(Paint.secondary)
         }
         .contentShape(Rectangle().inset(by: -16))
-        .gesture(isLocked ? nil : scrub)
+        .gesture(dialGesture)
+        // At large text the screen scrolls: a plain tap still types (the hold-and-drag below turns the dial).
+        .onTapGesture {
+            if typeSize.isAccessibilitySize, !isLocked {
+                onType()
+            }
+        }
         .tesseraFeedback(haptic)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Weight")
@@ -95,40 +102,74 @@ struct WeightReel: View {
 
     // MARK: The gesture
 
+    /// Nothing while locked; the immediate scrub by default; the press-first scrub at accessibility sizes.
+    private var dialGesture: AnyGesture<Void>? {
+        if isLocked {
+            return nil
+        }
+        if typeSize.isAccessibilitySize {
+            return AnyGesture(grabbedScrub.map { _ in () })
+        }
+        return AnyGesture(scrub.map { _ in () })
+    }
+
     private var scrub: some Gesture {
         DragGesture(minimumDistance: 0)
+            .onChanged { scrubChanged($0) }
+            .onEnded { scrubEnded($0) }
+    }
+
+    /// At accessibility sizes the screen scrolls, so the dial takes a press first (0.2 s without moving, the same grab
+    /// as the Home queue rows); then the drag turns it. A plain drag scrolls the screen.
+    private var grabbedScrub: some Gesture {
+        LongPressGesture(minimumDuration: 0.2, maximumDistance: 8)
+            .sequenced(before: DragGesture(minimumDistance: 0))
             .onChanged { value in
-                if !touching {
-                    begin()
+                if case let .second(true, drag?) = value {
+                    scrubChanged(drag)
                 }
-                if axis == nil {
-                    axis = ScrubFeel.axis(dx: value.translation.width, dy: value.translation.height)
-                }
-                // Sideways belongs to the exercise lane, decided once.
-                guard axis == .vertical else { return }
-                let delta = value.translation.height - lastTranslation
-                lastTranslation = value.translation.height
-                drag.add(up: -delta, speed: abs(value.velocity.height))
-                show(drag.steps, overflowing: -value.translation.height)
             }
             .onEnded { value in
-                defer { axis = nil }
-                guard axis == .vertical else {
-                    if axis == nil, hypot(value.translation.width, value.translation.height) < 10 {
-                        end()
-                        onType()
-                    } else {
-                        end()
-                    }
-                    return
+                if case let .second(true, drag?) = value {
+                    scrubEnded(drag)
+                } else {
+                    end()
                 }
-                let extra = -(value.predictedEndTranslation.height - value.translation.height)
-                let coastSteps = ScrubFeel.coast(predictedExtra: extra)
-                withTesseraAnimation(.spring(response: 0.3, dampingFraction: 0.7), reduceMotion: reduceMotion) {
-                    band = 0
-                }
-                play(coast: coastSteps)
             }
+    }
+
+    private func scrubChanged(_ value: DragGesture.Value) {
+        if !touching {
+            begin()
+        }
+        if axis == nil {
+            axis = ScrubFeel.axis(dx: value.translation.width, dy: value.translation.height)
+        }
+        // Sideways belongs to the exercise lane, decided once.
+        guard axis == .vertical else { return }
+        let delta = value.translation.height - lastTranslation
+        lastTranslation = value.translation.height
+        drag.add(up: -delta, speed: abs(value.velocity.height))
+        show(drag.steps, overflowing: -value.translation.height)
+    }
+
+    private func scrubEnded(_ value: DragGesture.Value) {
+        defer { axis = nil }
+        guard axis == .vertical else {
+            if axis == nil, hypot(value.translation.width, value.translation.height) < 10 {
+                end()
+                onType()
+            } else {
+                end()
+            }
+            return
+        }
+        let extra = -(value.predictedEndTranslation.height - value.translation.height)
+        let coastSteps = ScrubFeel.coast(predictedExtra: extra)
+        withTesseraAnimation(.spring(response: 0.3, dampingFraction: 0.7), reduceMotion: reduceMotion) {
+            band = 0
+        }
+        play(coast: coastSteps)
     }
 
     private func begin() {

@@ -24,6 +24,9 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
     /// His rest weekday, 1 to 7 with Sunday as 1 (Calendar numbering). Nil means the engine decides (the floating
     /// rest day); Sunday is only the pre-filled answer he's shown, written when he answers (Product, Oct 15).
     public var restWeekday: Int?
+    /// The unit he last picked for each kind of measure (weight, distance, ...). A preference only: stored values
+    /// never change with it, and it is never sent anywhere.
+    public var displayUnits = DisplayUnits()
 
     public init(lookDay: String? = nil, lookNight: String? = nil, lookPinned: String? = nil,
                 missesGoToClaude: Bool? = nil, backupFolderName: String? = nil, backupFolderPickedAt: Date? = nil,
@@ -84,6 +87,7 @@ public struct SettingsStore {
         if case let .bool(value)? = store.value("missesGoToClaude", of: object) {
             settings.missesGoToClaude = value
         }
+        settings.displayUnits = DisplayUnits(encoded: text("displayUnits"))
         return settings
     }
 
@@ -162,6 +166,7 @@ public struct WriteSettings: EngineAction {
         try transaction.set("backupFolderName", to: settings.backupFolderName.map(FieldValue.text), on: object)
         try transaction.set("backupFolderPickedAt", to: settings.backupFolderPickedAt.map(FieldValue.date), on: object)
         try transaction.set("restWeekday", to: settings.restWeekday.map { .number(Double($0)) }, on: object)
+        try transaction.set("displayUnits", to: settings.displayUnits.encoded.map(FieldValue.text), on: object)
         return object
     }
 

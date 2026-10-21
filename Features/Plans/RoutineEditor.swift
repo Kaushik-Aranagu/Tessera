@@ -44,7 +44,6 @@ struct RoutineEditor: View {
                                 perform: perform,
                                 onSwap: { setLibrary(.swap(slot.id)) },
                                 index: index,
-                                tint: figureTint(slots: slots),
                                 isPrivate: isPrivateRoutine
                             )
                         }
@@ -268,8 +267,7 @@ private struct SlotEditorRow: View {
     var perform: (any EngineAction) -> Void
     var onSwap: () -> Void
     let index: Int
-    var tint: Color = Theme.Colors.training
-    /// A private routine's row figure is the plain outline.
+    /// A private routine's row names no muscles.
     var isPrivate = false
     @Environment(AppModel.self) private var model
 
@@ -282,16 +280,6 @@ private struct SlotEditorRow: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
             Button(action: onToggle) {
                 HStack(alignment: .center) {
-                    if !muscles.isEmpty {
-                        // The row's figure, 22 pt wide, at the left (the exercise's own side); info only.
-                        let back = MuscleSide.showsBack(muscles)
-                        MuscleFigure(back: back,
-                                     roles: MuscleFigureMap.roles(MuscleReading.lit(muscles, isPrivate: isPrivate),
-                                                                  back: back),
-                                     tint: tint, lineOpacity: 0.5, lineWidth: 2.6)
-                            .frame(width: 22)
-                            .accessibilityHidden(true)
-                    }
                     Text(exercise?.name ?? "Exercise")
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)

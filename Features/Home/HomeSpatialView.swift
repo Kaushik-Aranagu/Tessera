@@ -75,21 +75,14 @@ struct HomeSpatialView: View {
     @State private var pagerIdle = true
     @State private var rowGrabbed = false
     @Namespace private var linkZoom
-    /// The area index (sheet 73 A): 0 closed … 1 open; the row under the finger; whether a pull (not a tap) is open.
+    /// The area index (sheet 73 A): 0 closed … 1 open; the row under the finger. It opens only by a tap on the area
+    /// name (a pull-down just scrolls).
     @State private var indexProgress = 0.0
     /// Whether the sheet is in the view tree at all: only while it is open or animating, so its rows are never in the
     /// accessibility tree (nor under a tap) while it is closed.
     @State private var indexMounted = false
     @State private var indexClosing = false
     @State private var picked: Int?
-    @State private var pulling = false
-    @State private var pullAxisDown: Bool?
-    @State private var pullState = AreaIndexPull()
-    /// True only while a finger is down on the pull; the system resets it to false when the drag is cancelled.
-    @GestureState private var pullTouching = false
-    /// A page's vertical scroll is away from its top: pulling then scrolls it back and never opens the index.
-    @State private var pageScrolled = false
-    @State private var pickTicks = 0
     @State private var arrivals = 0
     @Namespace private var areaWord
     @AccessibilityFocusState private var nameFocused: Bool
@@ -102,7 +95,6 @@ struct HomeSpatialView: View {
                 .accessibilityFocused($nameFocused)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.s)
-                .tesseraFeedback(.selection, trigger: pickTicks)
                 .tesseraFeedback(.areaLands, trigger: arrivals)
 
             ScrollView(.horizontal) {
@@ -135,9 +127,7 @@ struct HomeSpatialView: View {
             .scaleEffect(calm ? 1 : 1 - 0.1 * indexProgress)
             .blur(radius: calm ? 0 : 6 * indexProgress)
             .offset(y: calm ? 0 : 40 * indexProgress)
-            .simultaneousGesture(pull)
             .environment(\.homePagerIdle, pagerIdle)
-            .environment(\.homePageScrolled) { pageScrolled = $0 }
             .environment(\.homeRowGrabbed, rowGrabbed)
             .environment(\.homeRowGrab) { rowGrabbed = $0 }
             // Opens where Home was left (TODAY the first time) without a visible jump.
@@ -166,7 +156,6 @@ struct HomeSpatialView: View {
                 progress = new
             }
             .onChange(of: position.viewID(type: Int.self)) { _, new in
-                pageScrolled = false
                 if let new {
                     Self.remembered = new
                 }
@@ -210,21 +199,9 @@ struct HomeSpatialView: View {
             if indexMounted {
                 AreaIndexSheet(titles: Page.allCases.map(\.title), lines: indexLines,
                                current: Int(progress.rounded()), progress: indexProgress, picked: picked,
-                               pulling: pulling, calm: calm, namespace: areaWord, onPick: pick, onClose: closeIndex)
+                               calm: calm, namespace: areaWord, onPick: pick, onClose: closeIndex)
                     .ignoresSafeArea(edges: .top)
                     .transition(.opacity)
-            }
-        }
-        .onChange(of: pullTouching) { _, touching in
-            // A drag the system cancelled (Notification Center, a call) never reaches onEnded. The finger-up flag flips
-            // before onEnded runs for a normal lift, so look again a beat later: still mid-pull means it was cancelled.
-            guard !touching, pullAxisDown != nil else { return }
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(150))
-                guard pullAxisDown != nil else { return }
-                pullAxisDown = nil
-                pullState = AreaIndexPull()
-                closeIndex()
             }
         }
         .onChange(of: indexProgress) { _, new in
@@ -261,12 +238,20 @@ struct HomeSpatialView: View {
             .padding(.bottom, Self.dockClearance)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         if typeSize.isAccessibilitySize {
-            ScrollView(.vertical) { padded }
-                .scrollIndicators(.hidden)
-                .scrollDisabled(false)
-                .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y > 1 } action: { _, new in
-                    pageScrolled = new
-                }
+            // The content takes the page's width less its gutters, so a long line wraps instead of widening the
+            // page and clipping both edges (AX5 on #1143's shot).
+            ScrollView(.vertical) {
+                page
+                    .containerRelativeFrame(.horizontal, alignment: .leading) { length, _ in
+                        max(length - 2 * Theme.Spacing.gutter, 0)
+                    }
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                    .padding(.top, Theme.Spacing.s)
+                    .padding(.bottom, Self.dockClearance)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
+            .scrollIndicators(.hidden)
+            .scrollDisabled(false)
         } else {
             padded
         }
@@ -291,7 +276,6 @@ struct HomeSpatialView: View {
     /// A tap on the name opens the index without a finger.
     private func openIndex() {
         guard !model.isCommandExpanded, !model.soul.refusesLens else { return }
-        pulling = false
         picked = nil
         // Mounted at rest first, then opened on the next turn, so the glass and the rows form as they should.
         indexMounted = true
@@ -302,7 +286,6 @@ struct HomeSpatialView: View {
 
     private func closeIndex() {
         guard indexProgress > 0 else { return }
-        pulling = false
         picked = nil
         nameFocused = true
         indexClosing = true
@@ -327,7 +310,6 @@ struct HomeSpatialView: View {
         }
         Self.remembered = index
         picked = index
-        pulling = false
         indexClosing = true
         withAnimation(indexCurve) {
             indexProgress = 0
@@ -340,57 +322,6 @@ struct HomeSpatialView: View {
             // the first element of the new screen is that heading.
             UIAccessibility.post(notification: .screenChanged, argument: nil)
         }
-    }
-
-    /// Pull a tab page down past its top: from 20 pt to 90 pt the index forms and then stays open; from there the row
-    /// follows the finger up or down (one selection tick per row, the area you are in first); let go on a row to open
-    /// it, on your own area to close, or short of forming to cancel.
-    private var pull: some Gesture {
-        DragGesture(minimumDistance: 12, coordinateSpace: .global)
-            .updating($pullTouching) { _, touching, _ in touching = true }
-            .onChanged { value in
-                guard !rowGrabbed, !pageScrolled, !model.isCommandExpanded, !model.soul.refusesLens,
-                      !typeSize.isAccessibilitySize else { return }
-                if pullAxisDown == nil {
-                    // A new pull never inherits the last one's anchor (a cancelled drag may not reach onEnded).
-                    pullState = AreaIndexPull()
-                    pullAxisDown = value.translation.height > 0
-                        && abs(value.translation.height) > abs(value.translation.width) * 1.5
-                }
-                guard pullAxisDown == true else { return }
-                let drag = value.translation.height
-                indexProgress = pullState.progress(translation: drag)
-                // The sheet only mounts while the index is open or forming; a pull has to mount it too.
-                if indexProgress > 0 {
-                    indexMounted = true
-                }
-                pulling = pullState.isFormed
-                guard pullState.isFormed else {
-                    picked = nil
-                    return
-                }
-                let target = pullState.picked(translation: drag, current: Int(progress.rounded()),
-                                              count: Page.allCases.count)
-                if picked != target {
-                    picked = target
-                    if target != nil {
-                        pickTicks += 1
-                    }
-                }
-            }
-            .onEnded { _ in
-                defer {
-                    pullAxisDown = nil
-                    pullState = AreaIndexPull()
-                }
-                guard pullAxisDown == true else { return }
-                // Letting go on the area you are in, or above the first row, closes the index.
-                if indexProgress >= 1, let picked, picked != Int(progress.rounded()) {
-                    pick(picked)
-                } else {
-                    closeIndex()
-                }
-            }
     }
 
     private func show(_ index: Int) {

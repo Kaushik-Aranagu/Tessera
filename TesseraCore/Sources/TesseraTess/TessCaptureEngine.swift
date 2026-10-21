@@ -56,10 +56,12 @@ public final class TessCaptureEngine: TessCapturing {
         // Never log a pasted Claude key, even as a miss (the router refuses it, and the miss log is a file).
         // Nor a line with a secret word (Research 134): the miss log is a file.
         // Nor money or a body fact (Product P14, 12:30 PM PT).
-        if !result.understood, !result.isRefusal, !looksLikeClaudeKey(phrase), !SecretWords.mentions(phrase),
+        if !result.understood || result.keptToSort, !result.isRefusal, !looksLikeClaudeKey(phrase),
+           !SecretWords.mentions(phrase),
            !PrivateFacts.isWalled(phrase, lastWeightKg: TessRequest.lastWeightKg(context, engine: engine))
         {
-            missLog?.record(phrase, at: context.now, route: result.source.rawValue, source: source)
+            missLog?.record(phrase, at: context.now, route: result.keptToSort ? "none" : result.source.rawValue,
+                            source: source)
         }
         return result
     }
@@ -212,10 +214,21 @@ public final class TessCaptureEngine: TessCapturing {
     }
 
     /// How a set's load reads: "80", "180 lb", and on a bodyweight lift "bodyweight" or "+10".
-    private func load(_ kilograms: Double, unit: MassUnit, entry: ObjectRecord) -> String {
+    func load(_ kilograms: Double, unit: MassUnit, entry: ObjectRecord) -> String {
         let kit = engine.store.linkedClass("exercise", of: entry).flatMap { engine.store.equipmentKind(of: $0) }
         if kit == .bodyweight {
+            // His chosen weight unit applies to the added load too ("+22 lb"); stored kilograms never change.
+            if kilograms != 0,
+               let chosen = SettingsStore(engine: engine).read().displayUnits.weight(kilograms: kilograms),
+               chosen.unit != "kg"
+            {
+                return "+\(chosen.formatted)"
+            }
             return kilograms == 0 ? "bodyweight" : "+\(TessVoice.number(kilograms))"
+        }
+        // His chosen weight unit wins over the unit it was said in; stored kilograms never change.
+        if let chosen = SettingsStore(engine: engine).read().displayUnits.weight(kilograms: kilograms) {
+            return chosen.unit == "kg" ? TessVoice.number(kilograms) : chosen.formatted
         }
         return unit == .kilograms ? TessVoice.number(kilograms) : unit.format(kilograms: kilograms)
     }
@@ -352,6 +365,23 @@ public final class TessCaptureEngine: TessCapturing {
                 }
             }
             return (record, links > 0 ? "Noted, linked." : "Noted.")
+        case let .spend(amount, note, on):
+            let made = try engine.perform(
+                LogSpend(amount: NSDecimalNumber(decimal: amount.amount).doubleValue, typed: amount.typed,
+                         currency: amount.currency, note: note.isEmpty ? nil : note, spentAt: on ?? context.now),
+                by: .tess, pending: pending
+            )
+            return (made.record, made.record.receipt ?? SpendLedger.receiptLine(for: made.output, in: engine.store))
+        case let .shopTotal(amount):
+            let made = try engine.perform(
+                LogShopTotal(amount: NSDecimalNumber(decimal: amount.amount).doubleValue, typed: amount.typed,
+                             currency: amount.currency, time: context.now),
+                by: .tess, pending: pending
+            )
+            return (made.record, made.record.receipt ?? SpendLedger.receiptLine(for: made.output, in: engine.store))
+        case .skipShopTotal:
+            let record = try engine.perform(SkipShopTotal(time: context.now), by: .tess, pending: pending).record
+            return (record, "Groceries total, skipped.")
         default:
             return try performKitchen(parse, pending: pending, context: context)
         }
