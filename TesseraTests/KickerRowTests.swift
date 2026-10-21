@@ -10,7 +10,7 @@ struct KickerRowTests {
         }
         #expect(TrainingPage.planPhrase(lanes: [lane(4), lane(3), lane(3), lane(3), lane(3)])
             == "5 exercises, about 40 min")
-        #expect(TrainingPage.planPhrase(lanes: [lane(3)]) == "1 exercise, about 5 min")
+        #expect(TrainingPage.planPhrase(lanes: [lane(3)]) == "1 exercise, about 10 min")
     }
 
     @MainActor @Test func theKickerTokenIsSmallSemiboldUppercaseWithWideTracking() {
