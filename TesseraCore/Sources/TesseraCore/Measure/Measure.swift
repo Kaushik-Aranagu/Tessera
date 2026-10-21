@@ -20,7 +20,7 @@ public enum MeasureKind: String, Codable, Sendable, CaseIterable {
         case .length: ["cm", "in"]
         case .temperature: ["°C", "°F"]
         case .kitchenMass: ["g", "kg", "oz", "lb"]
-        case .kitchenVolume: ["ml", "l", "tsp", "tbsp", "cup", "fl oz"]
+        case .kitchenVolume: ["ml", "l", "tsp", "tbsp", "cup", "fl oz", "pt", "qt"]
         case .money: []
         }
     }
@@ -51,10 +51,13 @@ public struct Measure: Equatable, Sendable {
     public let isEstimate: Bool
     /// The date of the rate used to estimate it.
     public let rateDate: Date?
+    /// True when this came from `converted(to:)` into another unit: the view puts "about" before it (`aboutFormatted`).
+    public let isConverted: Bool
 
     public init(_ value: Double, _ unit: String, kind: MeasureKind? = nil, isEstimate: Bool = false,
-                rateDate: Date? = nil)
+                rateDate: Date? = nil, isConverted: Bool = false)
     {
+        self.isConverted = isConverted
         self.kind = kind ?? MeasureKind.kind(ofUnit: unit) ?? .money
         self.value = value
         self.unit = unit
@@ -77,7 +80,12 @@ public struct Measure: Equatable, Sendable {
         }
         guard kind.units.contains(target), let moved = UnitConverter.convert(value, from: unit, to: target, kind: kind)
         else { return nil }
-        return Measure(moved, target, kind: kind)
+        return Measure(moved, target, kind: kind, isConverted: target != unit)
+    }
+
+    /// "about 1 cup" for a converted amount, the plain form otherwise. Money keeps its own "about" form.
+    public var aboutFormatted: String {
+        isConverted && kind != .money && !formatted.hasPrefix("less than") ? "about \(formatted)" : formatted
     }
 
     /// "181.9 lb", "5.6 km"; money as typed ("€12.40", "12.40") or, estimated, "about 24.80 EUR".
@@ -115,7 +123,7 @@ public enum UnitConverter {
     static let kitchenFactors: [String: Double] = [
         "g": 1, "kg": 1000, "oz": 28.349_523_125, "lb": 453.592_37,
         "ml": 1, "l": 1000, "tsp": 4.928_921_593_75, "tbsp": 14.786_764_781_25, "cup": 236.588_236_5,
-        "fl oz": 29.573_529_562_5,
+        "fl oz": 29.573_529_562_5, "pt": 473.176_473, "qt": 946.352_946,
     ]
 
     private static func toBase(_ value: Double, unit: String) -> Double {
@@ -160,9 +168,19 @@ public enum MeasureFormat {
         return formatter.string(from: NSNumber(value: rounded == 0 ? 0 : rounded)) ?? String(value)
     }
 
+    static func places3(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 3
+        formatter.usesGroupingSeparator = false
+        return formatter.string(from: NSNumber(value: (value * 1000).rounded() / 1000)) ?? String(value)
+    }
+
     static let signs = ["EUR": "€", "GBP": "£", "USD": "$", "INR": "₹"]
 
-    static let spoonAndCupUnits: Set = ["tsp", "tbsp", "cup", "fl oz"]
+    /// Units a cook reads in fractions: spoons, cups, fluid ounces, pints and quarts, ounces and pounds.
+    static let spoonAndCupUnits: Set = ["tsp", "tbsp", "cup", "fl oz", "pt", "qt", "oz", "lb"]
     static let fractionGlyphs: [(Double, String)] = [
         (0, ""), (1.0 / 8, "⅛"), (1.0 / 4, "¼"), (1.0 / 3, "⅓"), (3.0 / 8, "⅜"), (1.0 / 2, "½"), (5.0 / 8, "⅝"),
         (2.0 / 3, "⅔"), (3.0 / 4, "¾"), (7.0 / 8, "⅞"), (1, ""),
@@ -173,16 +191,27 @@ public enum MeasureFormat {
     static func kitchen(_ value: Double, unit: String) -> String {
         guard value.isFinite, value >= 0 else { return "\(value) \(unit)" }
         guard spoonAndCupUnits.contains(unit) else {
-            // Under one gram or millilitre one decimal keeps it from reading "0 g".
-            if value < 1, value > 0, unit == "g" || unit == "ml" {
-                return "\(number(value, unit: "kg")) \(unit)"
+            if unit == "g" || unit == "ml" {
+                // Under 0.05 it is "less than 1 g", not "0 g"; under one, one decimal.
+                if value > 0, value < 0.05 {
+                    return "less than 1 \(unit)"
+                }
+                if value < 1, value > 0 {
+                    return "\(number(value, unit: "kg")) \(unit)"
+                }
+            }
+            // Kitchen kilograms and litres need three places (250 g is 0.25 kg, 5 ml is 0.005 l).
+            if unit == "kg" || unit == "l" {
+                return "\(places3(value)) \(unit)"
             }
             return "\(number(value, unit: unit)) \(unit)"
         }
         let whole = value.rounded(.down)
         let rest = value - whole
         let snapped = fractionGlyphs.min { abs($0.0 - rest) < abs($1.0 - rest) } ?? (0, "")
-        guard abs(snapped.0 - rest) <= 0.02 else {
+        // Cups snap a little wider (250 ml reads "1 cup"); everything else stays within a hair.
+        let tolerance = unit == "cup" ? 0.06 : 0.02
+        guard abs(snapped.0 - rest) <= tolerance else {
             return "\(number(value, unit: unit)) \(unit == "cup" && value > 1 ? "cups" : unit)"
         }
         let carried = snapped.0 == 1 ? whole + 1 : whole
