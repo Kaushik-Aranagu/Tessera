@@ -41,9 +41,13 @@ extension AppModel {
     func nameTrainingDays() async -> [String] {
         guard let routineClass = classes[.routine] else { return [] }
         // Days with a session waiting go first, so tonight's row reads its new name soonest.
+        let today = TesseraDay()
+        let tonight = unstartedSessions().filter { session in
+            DayNamingSwitch.isToday(store.value("scheduledFor", of: session)?.dateValue, day: today, now: AppClock.now)
+        }
         let waiting = DayNamingSwitch.tonightFirst(store.objects(of: routineClass).filter {
             !$0.isDeleted && DayNames.needsName($0, store: store)
-        }, waiting: Set(unstartedSessions().compactMap { store.linkedObjects("routine", of: $0).first?.id }))
+        }, waiting: Set(tonight.compactMap { store.linkedObjects("routine", of: $0).first?.id }))
         var named: [String] = []
         for routine in waiting {
             if let name = await nameOne(routine) {
@@ -67,7 +71,7 @@ extension AppModel {
     @discardableResult
     func followRoutineTitles() -> Int {
         var followed = 0
-        for workout in unstartedSessions() {
+        for workout in unstartedSessions() where !DayNamingSwitch.retitling.contains(workout.id) {
             guard let routine = store.linkedObjects("routine", of: workout).first, !routine.isDeleted,
                   !routine.title.isEmpty, routine.title != workout.title,
                   (try? engine.perform(RenameObject(object: workout.id, title: routine.title), by: .tess)) != nil
@@ -94,7 +98,9 @@ extension AppModel {
               let suggestion = await dayNamer.suggest(for: routine, engine: engine) else { return nil }
         guard DayNamingSwitch.mayApply(cancelled: Task.isCancelled),
               DayNames.mayAutoName(routine, store: store),
-              (try? engine.perform(ApplyDayName(routine: routine.id, name: suggestion.name), by: .tess)) != nil
+              (try? engine.perform(ApplyDayName(routine: routine.id, name: suggestion.name,
+                                                source: DayNamingSwitch.source(of: suggestion.source)),
+                                   by: .tess)) != nil
         else { return nil }
         return suggestion.name
     }
@@ -104,6 +110,21 @@ extension AppModel {
 enum DayNamingSwitch {
     static func isOn(_ value: String?) -> Bool {
         value != "Off"
+    }
+
+    /// Sessions whose title he is editing right now: the follow step leaves them alone, so a name he is typing is
+    /// never overwritten (QA on #1179). A retitle screen adds its session on appear and removes it on leave.
+    @MainActor static var retitling: Set<UUID> = []
+
+    /// Core's name source (#1178): a rule name stays open to a better one later; the model's and Claude's do not.
+    static func source(of source: DayNamer.Source) -> String {
+        source == .rules ? DayNames.byRules : DayNames.byModel
+    }
+
+    /// Only today's session counts as waiting (QA on #1181): future days and old sessions never started do not.
+    static func isToday(_ date: Date?, day: TesseraDay, now: Date) -> Bool {
+        guard let date else { return false }
+        return day.isSameDay(date, now)
     }
 
     /// Routines with a session waiting first, the rest in their order.

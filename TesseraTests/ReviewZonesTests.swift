@@ -25,7 +25,10 @@ struct ReviewZonesTests {
         let plan = try #require(model.plan)
         plan.createdAt = firstUse
         model.engine.zone = { Self.newYork }
-        let task = try model.engine.perform(CreateTask(title: "call the hotel"), by: .user).output
+        let made = try model.engine.perform(CreateTask(title: "call the hotel"), by: .user)
+        // Its op is stamped from the real clock too: pin it to the hotel morning (QA on #1187).
+        made.record.createdAt = when
+        let task = made.output
         let done = try model.engine.perform(SetTaskDone(task: task.id, time: when), by: .user)
         done.record.createdAt = when
         model.engine.zone = { Self.la }
