@@ -5,20 +5,29 @@ import Testing
 
 /// Calories show only on the finished workout's Day line and Home done line, behind the switch; units follow his pick.
 extension DayStoryTests {
+    /// A weigh-in dated well before the day under test, so nothing here depends on the real clock (a note made
+    /// "now" lands on whatever day the machine is on, and the story's first line would be the note).
+    func weighIn(_ kilograms: Int) throws {
+        try run(CreateNote(body: "weighed \(kilograms) kg this morning", isPrivate: true), at: Self.at(5, 9))
+    }
+
     func sixtyMinuteBench(_ title: String = "Push Day B") throws {
         try workout(title, start: Self.at(21, 18), sets: [(Self.at(21, 18, 10), 80, 8), (Self.at(21, 18, 20), 80, 8)],
                     end: Self.at(21, 19))
     }
 
+    /// The workout's own line, found by its object and not by position.
     func line(_ calories: CaloriesOptions?) throws -> DayLine {
         let day = Self.at(21, 12)
         let all = DayStory.lines(engine: engine, on: day, calendar: Self.calendar(), now: Self.at(22, 12),
                                  calories: calories)
-        return try #require(all.first)
+        let workoutClass = try #require(classes[.workout])
+        let ids = Set(store.objects(of: workoutClass).map(\.id))
+        return try #require(all.first { line in line.objectIDs.contains { ids.contains($0) } })
     }
 
     @Test func aFinishedWorkoutsDayLineCarriesCaloriesOnlyWhenTheSwitchIsOn() throws {
-        try engine.perform(CreateNote(body: "weighed 80 kg this morning", isPrivate: true), by: .user)
+        try weighIn(80)
         try sixtyMinuteBench()
         // 6.0 x 80 kg x 1 h = 480.
         #expect(try line(CaloriesOptions(on: true)).calories == "about 480 kcal")
@@ -36,14 +45,13 @@ extension DayStoryTests {
     }
 
     @Test func aPrivateWorkoutsLinesShowNoCalories() throws {
-        try engine.perform(CreateNote(body: "weighed 80 kg this morning", isPrivate: true), by: .user)
+        try weighIn(80)
         try sixtyMinuteBench("Knee rehab day")
-        let shown = try line(CaloriesOptions(on: true))
-        #expect(shown.calories == nil)
+        #expect(try line(CaloriesOptions(on: true)).calories == nil)
     }
 
     @Test func caloriesNeverReachAMemoryLine() throws {
-        try engine.perform(CreateNote(body: "weighed 80 kg this morning", isPrivate: true), by: .user)
+        try weighIn(80)
         try sixtyMinuteBench()
         let memory = TessMemoryStore(engine: engine, calendar: Self.calendar(), forgetLogURL: nil)
         let text = memory.recentLine(for: Self.at(21, 12), now: Self.at(22, 12)) ?? ""
@@ -51,17 +59,31 @@ extension DayStoryTests {
     }
 
     @Test func theWorkoutsOwnTotalIsShownNotASumOfRoundedParts() throws {
-        try engine.perform(CreateNote(body: "weighed 77 kg this morning", isPrivate: true), by: .user)
-        let workout = try workout("Mixed", start: Self.at(21, 18), sets: [(Self.at(21, 18, 10), 80, 8)],
-                                  end: Self.at(21, 18, 50))
-        let curl = try #require(classes[.benchPress])
-        _ = curl
-        let weight = try #require(BodyWeight.lastKg(in: store))
-        let minutes = 50.0
-        let total = try #require(CaloriesBurned.forWorkout(workout, store: store, weightKg: weight))
-        #expect(total == Int(((6.0 * weight * minutes / 60) / 10).rounded()) * 10)
-        let shown = try line(CaloriesOptions(on: true))
-        #expect(shown.calories == CaloriesBurned.line(total))
+        try weighIn(60)
+        // Bench (6.0, 3 sets) and squat (5.0, 1 set) in 30 minutes at 60 kg: the parts round to 140 and 40, which
+        // add to 180, but the workout's own figure is 170 (6.0 x 60 x 22.5/60 + 5.0 x 60 x 7.5/60 = 172.5).
+        let start = Self.at(21, 18), end = Self.at(21, 18, 30)
+        let workout = try store.create(#require(classes[.workout]), title: "Mixed")
+        try run(StartWorkout(workout: workout.id, time: start), at: start)
+        try ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: store,
+                                             classes: classes)
+        let benchClass = try #require(store.allClasses().first { $0.name == "Bench Press" })
+        let squatClass = try #require(store.allClasses().first { $0.name == "Back Squat" })
+        let bench = try run(AddExercise(workout: workout.id, exercise: benchClass.id), at: start).output
+        let squat = try run(AddExercise(workout: workout.id, exercise: squatClass.id), at: start).output
+        for minute in [2, 4, 6] {
+            let time = Self.at(21, 18, minute)
+            try run(LogSet(entry: bench.id, weight: 80, reps: 8, time: time), at: time)
+        }
+        try run(LogSet(entry: squat.id, weight: 100, reps: 5, time: Self.at(21, 18, 10)), at: Self.at(21, 18, 10))
+        try run(FinishWorkout(workout: workout.id, time: end), at: end)
+        let parts = try [bench, squat].map {
+            try #require(CaloriesBurned.forExercise($0, in: workout, store: store, weightKg: 60))
+        }
+        let total = try #require(CaloriesBurned.forWorkout(workout, store: store, weightKg: 60))
+        #expect(parts == [140, 40] && total == 170 && parts.reduce(0, +) != total)
+        // The Day line says the workout's own figure.
+        #expect(try line(CaloriesOptions(on: true)).calories == "about 170 kcal")
     }
 }
 
