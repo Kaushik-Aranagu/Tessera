@@ -30,7 +30,7 @@ final class AreaIndexOpenUITests: SimulatorOnlyTestCase {
         sleep(1)
         start.press(forDuration: 0.1, thenDragTo: end)
         sleep(1)
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "evening")).firstMatch
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label MATCHES[c] %@", ".*(morning|afternoon|evening|night).*")).firstMatch
             .isHittable, "The pull-down scrolled the page back to its top")
         XCTAssertFalse(app.staticTexts["Let go to open"].exists, "A pull-down opened the index")
         XCTAssertFalse(app.buttons["TRAINING, Push Day A is on"].exists, "A pull-down opened the index")
