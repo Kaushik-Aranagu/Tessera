@@ -168,6 +168,22 @@ public enum MeasureFormat {
         return formatter.string(from: NSNumber(value: rounded == 0 ? 0 : rounded)) ?? String(value)
     }
 
+    /// A kitchen amount as a plain decimal: two places for cups, spoons and pounds (1 oz is 0.06 lb), one for ounces;
+    /// a positive amount below that reads "less than 0.01".
+    static func kitchenDecimal(_ value: Double, unit: String) -> String {
+        let digits = unit == "oz" ? 1 : 2
+        let step = pow(10, -Double(digits))
+        if value > 0, value < step / 2 {
+            return "less than \(places3(step))"
+        }
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = digits
+        formatter.usesGroupingSeparator = false
+        return formatter.string(from: NSNumber(value: (value / step).rounded() * step)) ?? String(value)
+    }
+
     static func places3(_ value: Double) -> String {
         let formatter = NumberFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -211,8 +227,9 @@ public enum MeasureFormat {
         let snapped = fractionGlyphs.min { abs($0.0 - rest) < abs($1.0 - rest) } ?? (0, "")
         // Cups snap a little wider (250 ml reads "1 cup"); everything else stays within a hair.
         let tolerance = unit == "cup" ? 0.06 : 0.02
-        guard abs(snapped.0 - rest) <= tolerance else {
-            return "\(number(value, unit: unit)) \(unit == "cup" && value > 1 ? "cups" : unit)"
+        // A positive amount that snaps to nothing is never "0 cup": it reads as a decimal instead.
+        guard abs(snapped.0 - rest) <= tolerance, !(whole == 0 && snapped.0 == 0 && value > 0) else {
+            return "\(kitchenDecimal(value, unit: unit)) \(unit == "cup" && value > 1 ? "cups" : unit)"
         }
         let carried = snapped.0 == 1 ? whole + 1 : whole
         let fraction = snapped.0 == 1 ? "" : snapped.1

@@ -87,6 +87,30 @@ struct KitchenMeasureTests {
         #expect(volume(1.05, "tbsp").formatted == "1.05 tbsp" && volume(1.05, "cup").formatted == "1 cup")
     }
 
+    @Test func aPositiveAmountNeverReadsAsZero() {
+        #expect(volume(0.02, "cup").formatted == "0.02 cup" && volume(0.05, "cup").formatted == "0.05 cup")
+        #expect(volume(1, "tsp").converted(to: "cup")?.formatted == "0.02 cup")
+        #expect(volume(2, "tsp").converted(to: "cup")?.formatted == "0.04 cup")
+        #expect(volume(0.003, "cup").formatted == "less than 0.01 cup")
+        #expect(volume(0.003, "cup").converted(to: "cup")?.aboutFormatted == "less than 0.01 cup")
+        #expect(volume(0.01, "tsp").formatted == "0.01 tsp" && volume(0, "cup").formatted == "0 cup")
+        for value in [0.001, 0.004, 0.01, 0.02, 0.05, 0.06, 0.07, 0.1] {
+            for unit in ["tsp", "tbsp", "cup", "fl oz", "pt", "qt"] {
+                let text = volume(value, unit).formatted
+                #expect(!text.hasPrefix("0 "), "\(value) \(unit): \(text)")
+            }
+            for unit in ["oz", "lb"] {
+                #expect(!mass(value, unit).formatted.hasPrefix("0 "), "\(value) \(unit)")
+            }
+        }
+    }
+
+    @Test func kitchenPoundsKeepTwoPlacesBelowAFraction() {
+        #expect(mass(1, "oz").converted(to: "lb")?.formatted == "0.06 lb")
+        #expect(mass(0.0625, "lb").formatted == "0.06 lb" && mass(0.1, "lb").formatted == "0.1 lb")
+        #expect(Measure(80, "kg").converted(to: "lb")?.formatted == "176.4 lb")
+    }
+
     @Test func pintsAndQuartsAreOnTheVolumeWheel() throws {
         #expect(MeasureKind.kitchenVolume.units.suffix(2) == ["pt", "qt"])
         #expect(try abs(#require(volume(1, "pt").converted(to: "cup")?.value) - 2) < 0.001)
