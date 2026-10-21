@@ -153,11 +153,20 @@ struct ReviewSection: View {
 
                 // Named pages with their neighbours peeking (Design sheet 108): Looks and day, Workout, Kitchen,
                 // Connected, Shown.
-                PeekTabs(tabs: pages.map(\.word), selection: $page) { index in
-                    // No lines between rows (Kaushik's rule): space alone separates them.
-                    VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                        ForEach(pages[index].rows) { choice in
+                // The Page turn switch turns Review's own pages, so he feels his pick right here (Product, Oct 20).
+                let turn = PageTurnStyle.current
+                PeekTabs(tabs: pages.map(\.word), selection: $page, turns: turn) { index in
+                    if turn == .today {
+                        // No lines between rows (Kaushik's rule): space alone separates them.
+                        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                            ForEach(pages[index].rows) { choice in
+                                row(choice)
+                            }
+                        }
+                    } else {
+                        PageTurnRows(items: pages[index].rows, page: index, style: turn) { choice in
                             row(choice)
+                                .padding(.vertical, Theme.Spacing.s)
                         }
                     }
                 }
@@ -226,6 +235,10 @@ struct ReviewSection: View {
             }
             // A double tap flips it too, as a tap on the value word does (Design on #1127).
             .accessibilityAction { flip(choice, forward: true) }
+            // Page turn plays its pick once on a two-line mini page (sheet 93).
+            if choice.id == "pageTurn" {
+                PageTurnPreview(style: PageTurnStyle(rawValue: value) ?? .today)
+            }
             if let touched, touched.id == choice.id {
                 Text(choices.beforeAfter(choice, before: touched.before))
                     .textRole(.body)

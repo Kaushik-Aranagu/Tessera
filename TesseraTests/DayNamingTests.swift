@@ -29,6 +29,8 @@ struct DayNamingTests {
         try StarterContent.installIfNeeded(store: model.store, classes: model.classes)
         let plan = try #require(model.store.object(id: StarterContent.planID))
         let routine = try #require(model.store.linkedObjects("routines", of: plan).first { $0.title == "Push A" })
+        // Rule names only: the simulator's own model answers differently run to run, which made this flaky.
+        model.dayNamer.onDevice = { _, _ in nil }
         // A name of his own: never touched.
         routine.title = "Bench day"
         _ = await model.nameTrainingDays()
