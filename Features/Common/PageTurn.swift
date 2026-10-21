@@ -135,12 +135,16 @@ struct PageTurnRows<Item: Identifiable, Row: View>: View {
     @State private var shownPage = 0
     @State private var forward = true
 
+    private var reduced: Bool {
+        reduceMotion || PowerState.isLowPower
+    }
+
     var body: some View {
         Group {
-            if style.isWholePage || reduceMotion {
+            if style.isWholePage || reduced {
                 rows(stagger: false)
                     .id(shownPage)
-                    .transition(.pageTurn(style, reduceMotion: reduceMotion))
+                    .transition(.pageTurn(style, reduceMotion: reduced))
             } else {
                 rows(stagger: true)
             }
@@ -150,10 +154,11 @@ struct PageTurnRows<Item: Identifiable, Row: View>: View {
         .onChange(of: page) { old, new in
             forward = new >= old
             // Today keeps the swap as it was: no motion of its own.
-            if style == .today, !reduceMotion {
+            if style == .today, !reduced {
                 shownPage = new
             } else {
-                withAnimation(reduceMotion ? PageTurnTiming.reduced : PageTurnTiming.curve(0.52)) {
+                // Through MotionPolicy; Low Power counts as Reduce Motion: the 150 ms crossfade (QA on #1184).
+                withTesseraAnimation(PageTurnTiming.curve(0.52), reduceMotion: reduced) {
                     shownPage = new
                 }
             }
@@ -166,7 +171,7 @@ struct PageTurnRows<Item: Identifiable, Row: View>: View {
                 let order = forward ? index : items.count - 1 - index
                 row(item)
                     .id(stagger ? AnyHashable("\(shownPage)-\(index)") : AnyHashable(item.id))
-                    .transition(stagger ? .pageTurnRow(style, order: order, reduceMotion: reduceMotion) : .identity)
+                    .transition(stagger ? .pageTurnRow(style, order: order, reduceMotion: reduced) : .identity)
             }
         }
     }
@@ -179,6 +184,7 @@ struct PageTurnPreview: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var page = 0
+    @State private var playing: Task<Void, Never>?
 
     private struct Line: Identifiable {
         let id: Int
@@ -199,10 +205,17 @@ struct PageTurnPreview: View {
     }
 
     private func play() {
+        // Today has no turn of its own: nothing to play (QA on #1184). A quick second pick cancels the first.
+        playing?.cancel()
+        guard style != .today else {
+            page = 0
+            return
+        }
         page = 1
-        Task { @MainActor in
-            let turn = PageTurnTiming.total(style, rows: 2, reduceMotion: reduceMotion)
+        playing = Task { @MainActor in
+            let turn = PageTurnTiming.total(style, rows: 2, reduceMotion: reduceMotion || PowerState.isLowPower)
             try? await Task.sleep(for: .seconds(turn + 1))
+            guard !Task.isCancelled else { return }
             page = 0
         }
     }

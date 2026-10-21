@@ -124,31 +124,43 @@ struct PeekTabs<Content: View>: View {
     // MARK: The pages
 
     @ViewBuilder private var pages: some View {
-        if reduceMotion {
-            // Reduce Motion: the page cuts with a 150 ms crossfade, never slides (Design on #1137).
-            content(selection)
+        if reduceMotion || PowerState.isLowPower {
+            // Reduce Motion or Low Power: the page cuts with a 150 ms crossfade, never slides (Design on #1137), and a
+            // side swipe still steps a tab (QA on #1184).
+            inPlace(content(selection)
                 .id(selection)
-                .transition(.opacity.animation(PageTurnTiming.reduced))
-                .accessibilityElement(children: .contain)
+                .transition(.opacity.animation(PageTurnTiming.reduced)))
         } else if let turns, turns != .today {
-            turningPage
+            // One page at a time, turning in place: the content sees the new index and plays the turn.
+            inPlace(content(selection))
         } else {
             slidingPages
         }
     }
 
-    /// One page at a time, turning in place: the content sees the new index and plays the turn; a side swipe steps.
-    private var turningPage: some View {
-        content(selection)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            // Outranks the page's own back swipe: on a turning page a side swipe moves a tab, never leaves Settings.
-            .highPriorityGesture(DragGesture(minimumDistance: 24).onEnded { value in
-                guard abs(value.translation.width) > abs(value.translation.height),
-                      abs(value.translation.width) > 40 else { return }
-                step(value.translation.width < 0 ? 1 : -1)
-            })
-            .accessibilityElement(children: .contain)
+    /// A page that stays put while a side swipe steps the tab. The swipe runs alongside the scroll, so a vertical drag
+    /// from a row still scrolls Settings (Design on #1184).
+    private func inPlace(_ page: some View) -> some View {
+        ScrollView(.horizontal) {
+            page
+                .containerRelativeFrame(.horizontal)
+                .contentShape(Rectangle())
+        }
+        .scrollBounceBehavior(.always, axes: .horizontal)
+        .scrollIndicators(.hidden)
+        .simultaneousGesture(sideSwipe)
+        // The zoomed cover Review sits in closes on a pan in any direction; while pages turn in place, a side swipe
+        // is the tab's, so the cover closes by its Close word (#1184).
+        .interactiveDismissDisabled()
+        .accessibilityElement(children: .contain)
+    }
+
+    /// A clearly sideways drag steps one tab; anything more vertical is left to the scroll.
+    private var sideSwipe: some Gesture {
+        DragGesture(minimumDistance: 24).onEnded { value in
+            guard PeekTabsLayout.isSideSwipe(value.translation) else { return }
+            step(value.translation.width < 0 ? 1 : -1)
+        }
     }
 
     private var slidingPages: some View {
@@ -197,6 +209,11 @@ enum PeekTabsLayout {
         spec.size = Theme.concept.scale.label.size
         spec.weight = .regular
         return spec
+    }
+
+    /// A drag that steps a tab: more than 40 pt sideways and at least twice as wide as it is tall.
+    static func isSideSwipe(_ translation: CGSize) -> Bool {
+        abs(translation.width) > 40 && abs(translation.width) >= 2 * abs(translation.height)
     }
 
     /// The space between two tab words.

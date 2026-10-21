@@ -129,4 +129,13 @@ struct SettingsPageTests {
         #expect(looks.rows.contains { $0.id == "pageTurn" })
         #expect(PageTurnStyle(rawValue: row.defaultValue) == .today)
     }
+
+    /// QA on #1184: only a clearly sideways drag steps a tab; a vertical one is the scroll's.
+    @Test func onlyAClearlySidewaysDragStepsATab() {
+        #expect(PeekTabsLayout.isSideSwipe(CGSize(width: -120, height: 10)))
+        #expect(PeekTabsLayout.isSideSwipe(CGSize(width: 90, height: -30)))
+        #expect(!PeekTabsLayout.isSideSwipe(CGSize(width: 30, height: 2)))
+        #expect(!PeekTabsLayout.isSideSwipe(CGSize(width: 60, height: -200)))
+        #expect(!PeekTabsLayout.isSideSwipe(CGSize(width: 80, height: 50)))
+    }
 }
