@@ -145,18 +145,26 @@ public enum DayNames {
     public static func isRuleNamed(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
         let given = store.value("autoName", of: routine)?.stringValue ?? ""
         guard !given.isEmpty, routine.title == given else { return false }
-        // A day Tess named before the marker existed (release 30 and earlier) had only rule names: it counts as
-        // rule-named too, and gets the new rule name once.
         let by = store.value("autoNameBy", of: routine)?.stringValue ?? ""
-        return by == byRules || by.isEmpty
+        return by == byRules || isUnmarked(routine, store: store)
     }
 
     /// Named by Tess before the "named by" marker existed: it is given the new rule name once.
+    /// Only a name the old rules could have made counts: an older name that Claude or the phone's model made is
+    /// left alone, as it would be today.
     @MainActor
     public static func isUnmarked(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
         let given = store.value("autoName", of: routine)?.stringValue ?? ""
-        return !given.isEmpty && routine.title == given
-            && (store.value("autoNameBy", of: routine)?.stringValue ?? "").isEmpty
+        guard !given.isEmpty, routine.title == given,
+              (store.value("autoNameBy", of: routine)?.stringValue ?? "").isEmpty else { return false }
+        let muscles = MuscleSummary.topWords(of: routine, store: store, limit: 5)
+        let choices = localChoices(muscles: muscles)
+        if choices.contains(given) {
+            return true
+        }
+        // The old code made "Push day heavy", "Pull day two" and the like when a plain name was taken.
+        guard let base = choices.first else { return false }
+        return ["heavy", "light", "two", "three"].contains { given == "\(base) \($0)" }
     }
 
     /// The name last given and the exercises it was given for.
