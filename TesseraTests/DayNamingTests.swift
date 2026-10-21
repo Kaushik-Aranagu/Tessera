@@ -110,4 +110,13 @@ struct DayNamingTests {
         let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext)
         #expect(model.dayNamer.onDevice != nil)
     }
+
+    /// Product on #1174: the instructions lead with specific names; the plain split comes last, as a fallback.
+    @Test func specificNamesComeBeforeThePlainSplit() throws {
+        let words = DayNamingPrompt.instructions
+        let specific = try #require(words.range(of: "Heavy chest"))
+        let plain = try #require(words.range(of: "fall back to a plain split"))
+        #expect(specific.lowerBound < plain.lowerBound)
+        #expect(words.contains("1 to 3 words, 22 characters or fewer"))
+    }
 }
