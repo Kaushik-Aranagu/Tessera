@@ -89,8 +89,8 @@ public struct LogShopTotal: EngineAction {
         spend.title
     }
 
-    public func receipt(in _: ObjectStore, output spend: ObjectRecord) -> String? {
-        "Groceries total, \(spend.title.split(separator: " ").first.map(String.init) ?? ""), logged."
+    public func receipt(in store: ObjectStore, output spend: ObjectRecord) -> String? {
+        SpendLedger.receiptLine(for: spend, in: store)
     }
 }
 
