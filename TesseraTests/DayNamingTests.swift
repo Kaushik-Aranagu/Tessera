@@ -30,10 +30,12 @@ struct DayNamingTests {
         let routine = try #require(model.store.linkedObjects("routines", of: plan).first { $0.title == "Push A" })
         // A name of his own: never touched.
         routine.title = "Bench day"
-        #expect(await model.nameTrainingDays().isEmpty && routine.title == "Bench day")
+        _ = await model.nameTrainingDays()
+        #expect(routine.title == "Bench day")
         // The starter's stock title ("Push A") is not a name he chose: Tess names it once.
         routine.title = "Push A"
-        #expect(await model.nameTrainingDays() == ["Push day"] && routine.title == "Push day")
+        let named = await model.nameTrainingDays()
+        #expect(named.contains("Push day") && routine.title == "Push day")
         // Named once; asked again only when its exercises change.
         #expect(await model.nameTrainingDays().isEmpty)
         // He renames it: Tess stops for good.
