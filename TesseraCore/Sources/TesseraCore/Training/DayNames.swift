@@ -144,8 +144,19 @@ public enum DayNames {
     @MainActor
     public static func isRuleNamed(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
         let given = store.value("autoName", of: routine)?.stringValue ?? ""
+        guard !given.isEmpty, routine.title == given else { return false }
+        // A day Tess named before the marker existed (release 30 and earlier) had only rule names: it counts as
+        // rule-named too, and gets the new rule name once.
+        let by = store.value("autoNameBy", of: routine)?.stringValue ?? ""
+        return by == byRules || by.isEmpty
+    }
+
+    /// Named by Tess before the "named by" marker existed: it is given the new rule name once.
+    @MainActor
+    public static func isUnmarked(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
+        let given = store.value("autoName", of: routine)?.stringValue ?? ""
         return !given.isEmpty && routine.title == given
-            && store.value("autoNameBy", of: routine)?.stringValue == byRules
+            && (store.value("autoNameBy", of: routine)?.stringValue ?? "").isEmpty
     }
 
     /// The name last given and the exercises it was given for.

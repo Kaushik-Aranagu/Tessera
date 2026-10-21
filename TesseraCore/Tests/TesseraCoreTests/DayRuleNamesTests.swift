@@ -111,11 +111,13 @@ struct DayRuleNamesTests {
         #expect(await maker.autoName(day, engine: engine) == nil && day.title == "Chest and tris")
     }
 
-    @Test func aFailedUpgradeIsTriedOncePerSession() async throws {
+    @Test func aFailedUpgradeIsTriedOncePerDay() async throws {
         let day = try #require(starters()["Pull A"])
         day.title = "New routine"
+        var clock = Date(timeIntervalSince1970: 1_792_000_000)
         let maker = DayNamer(keys: InMemoryKeychain(), ledger: TessUsageLedger(store: store, classes: engine.classes),
                              allowed: { false })
+        maker.now = { clock }
         _ = await maker.autoName(day, engine: engine)
         var asked = 0
         maker.onDeviceAvailable = { true }
@@ -126,5 +128,52 @@ struct DayRuleNamesTests {
         _ = await maker.autoName(day, engine: engine)
         _ = await maker.autoName(day, engine: engine)
         #expect(asked == 1)
+        // The next day, one more try (and it is kept on the routine, not just in this session).
+        clock = clock.addingTimeInterval(26 * 3600)
+        let again = DayNamer(keys: InMemoryKeychain(), ledger: TessUsageLedger(store: store, classes: engine.classes),
+                             allowed: { false })
+        again.now = { clock }
+        again.onDeviceAvailable = { true }
+        again.onDevice = { _, _ in
+            asked += 1
+            return nil
+        }
+        _ = await again.autoName(day, engine: engine)
+        _ = await again.autoName(day, engine: engine)
+        #expect(asked == 2)
+    }
+
+    @Test func aDayNamedBeforeTheMarkerGetsTheNewRuleNameOnceButATypedOneDoesNot() async throws {
+        let all = try starters()
+        let pullB = try #require(all["Pull B"]), pushA = try #require(all["Push A"])
+        let maker = DayNamer(keys: InMemoryKeychain(), ledger: TessUsageLedger(store: store, classes: engine.classes),
+                             allowed: { false })
+        // A release-30 day: Tess's weak name, the exercises it was for, and no "named by" marker.
+        let pack = try #require(DayNames.pack(of: pullB, store: store))
+        pullB.title = "Push and pull"
+        try store.set("autoName", to: .text("Push and pull"), on: pullB)
+        try store.set("autoNameKey", to: .text(pack.key), on: pullB)
+        #expect(DayNames.isUnmarked(pullB, store: store) && DayNames.needsName(pullB, store: store))
+        #expect(await maker.autoName(pullB, engine: engine) == "Back and biceps")
+        #expect(pullB.title == "Back and biceps" && DayNames.isRuleNamed(pullB, store: store))
+        #expect(!DayNames.isUnmarked(pullB, store: store))
+        // Once only: the next pass changes nothing.
+        #expect(await maker.autoName(pullB, engine: engine) == nil && pullB.title == "Back and biceps")
+        // His own name with no marker: untouched, even beside an old Tess mark.
+        pushA.title = "Bench day"
+        #expect(await maker.autoName(pushA, engine: engine) == nil && pushA.title == "Bench day")
+        let pushPack = try #require(DayNames.pack(of: pushA, store: store))
+        try store.set("autoName", to: .text("Push and pull"), on: pushA)
+        try store.set("autoNameKey", to: .text(pushPack.key), on: pushA)
+        #expect(await maker.autoName(pushA, engine: engine) == nil && pushA.title == "Bench day")
+    }
+
+    @Test func everyMuscleInTheLibraryLandsInOneOfTheFourSplits() throws {
+        let known = DayRuleNames.pushMuscles.union(DayRuleNames.pullMuscles).union(DayRuleNames.legMuscles)
+            .union(DayRuleNames.trunkMuscles)
+        let muscleClass = try #require(engine.classes[.muscle])
+        let words = store.objects(of: muscleClass).filter { !$0.isDeleted }.map { $0.title.lowercased() }
+        #expect(!words.isEmpty)
+        #expect(words.filter { !known.contains($0) }.isEmpty, "\(words.filter { !known.contains($0) })")
     }
 }
