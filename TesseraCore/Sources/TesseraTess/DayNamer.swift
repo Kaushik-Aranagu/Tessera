@@ -35,6 +35,8 @@ public final class DayNamer {
     public var onDeviceAvailable: () -> Bool = { false }
     public var now: () -> Date = { .now }
     public var calendar: Calendar = .current
+    /// Routines whose one model upgrade of a rule name was tried this session and gave nothing usable.
+    private var upgradeTried: Set<UUID> = []
 
     public init(keys: any TessKeychain, ledger: TessUsageLedger,
                 session: URLSession = URLSession(configuration: .ephemeral), allowed: @escaping () -> Bool,
@@ -63,13 +65,30 @@ public final class DayNamer {
         // Only names Tess offered herself this session go out. Other routines' titles (private ones, his typed ones)
         // stay here for de-duplication: a colliding name is refused and the rule name stands.
         let avoid = Array(Set(avoiding.map { $0.lowercased() }).sorted().prefix(12))
-        if onDeviceAvailable(), let onDevice, let name = await usable(onDevice(pack, avoid)) {
-            return Suggestion(name: name, source: .onDevice)
+        // A rule-made name for these exercises waits for one better name, once: only a model's name replaces it.
+        let upgradeOnly = DayNames.isUpgradeOnly(routine, store: store)
+        if upgradeOnly, upgradeTried.contains(routine.id) {
+            return nil
         }
-        if !onDeviceAvailable(), allowed(), let name = await usable(askClaude(pack, avoid: avoid)) {
-            return Suggestion(name: name, source: .claude)
+        if onDeviceAvailable(), let onDevice {
+            if let name = await usable(onDevice(pack, avoid)) {
+                return Suggestion(name: name, source: .onDevice)
+            }
+            if upgradeOnly {
+                upgradeTried.insert(routine.id)
+            }
+        } else if !onDeviceAvailable(), allowed(), keys.read() != nil {
+            if let name = await usable(askClaude(pack, avoid: avoid)) {
+                return Suggestion(name: name, source: .claude)
+            }
+            if upgradeOnly {
+                upgradeTried.insert(routine.id)
+            }
         }
-        let rules = DayNames.localChoices(muscles: pack.muscles)
+        if upgradeOnly {
+            return nil
+        }
+        let rules = pack.ruleNames
         if let name = rules.first(where: { !taken.contains($0.lowercased()) }) {
             return Suggestion(name: name, source: .rules)
         }
@@ -94,7 +113,9 @@ public final class DayNamer {
               let suggestion = await suggest(for: routine, engine: engine) else { return nil }
         // The routine may have been renamed by him while the call was out: check again.
         guard DayNames.mayAutoName(routine, store: engine.store),
-              (try? engine.perform(ApplyDayName(routine: routine.id, name: suggestion.name), by: .tess)) != nil
+              (try? engine.perform(ApplyDayName(routine: routine.id, name: suggestion.name,
+                                                source: suggestion.source == .rules ? DayNames.byRules
+                                                    : DayNames.byModel), by: .tess)) != nil
         else { return nil }
         return suggestion.name
     }
