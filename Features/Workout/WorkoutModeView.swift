@@ -57,6 +57,7 @@ private struct WorkoutContent: View {
     /// The set's haptic, held until its circle closes (played at once under Reduce Motion or Low Power).
     @State private var deferredCues: [Haptic] = []
     @Environment(\.lowPowerMotion) private var lowPower
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// The subline whose cadmium has dried.
     @State private var sublineDried: String?
     @State private var undoHaptic = 0
@@ -468,14 +469,18 @@ extension WorkoutContent {
                     sublineDried = text
                 }
             }
-            .lineLimit(1)
+            .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
             .minimumScaleFactor(0.8)
             .contentTransition(.opacity)
             .tesseraAnimation(value: text)
     }
 
     private func numberRow(phase: WorkoutSession.Phase, now: Date) -> some View {
-        HStack(alignment: .top) {
+        // At accessibility sizes the weight and the reps stack, so the row is never wider than the screen.
+        let large = typeSize.isAccessibilitySize
+        let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.m))
+            : AnyLayout(HStackLayout(alignment: .top))
+        return layout {
             if case let .rest(end) = phase {
                 let remaining = max(0, end.timeIntervalSince(now)).rounded(.up)
                 VStack(alignment: .leading, spacing: Theme.Spacing.m) {
@@ -539,8 +544,10 @@ extension WorkoutContent {
                             .transition(.opacity)
                     }
                 }
-                Spacer(minLength: Theme.Spacing.s)
-                VStack(alignment: .trailing, spacing: 2) {
+                if !large {
+                    Spacer(minLength: Theme.Spacing.s)
+                }
+                VStack(alignment: large ? .leading : .trailing, spacing: 2) {
                     RepsRow(reps: repsBinding, ghost: lastReps, isLocked: phase != .set, onBeat: {
                         // "One more than last time.", once per set, only while Tess isn't saying anything else.
                         guard askReply == nil else { return }
@@ -557,7 +564,8 @@ extension WorkoutContent {
                 .transition(.opacity)
             }
         }
-        .frame(height: 196, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(minHeight: 196, maxHeight: large ? nil : 196, alignment: .top)
         .tesseraAnimation(.easeOut(duration: 0.32), value: phase == .set)
         .tesseraAnimation(.easeOut(duration: 0.32), value: showsGo)
     }
