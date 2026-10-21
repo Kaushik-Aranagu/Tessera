@@ -147,12 +147,10 @@ struct ReviewSection: View {
                 // Named pages with their neighbours peeking (Design sheet 108): Looks and day, Workout, Kitchen,
                 // Connected, Shown.
                 PeekTabs(tabs: pages.map(\.word), selection: $page) { index in
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(pages[index].rows.enumerated()), id: \.element.id) { offset, choice in
+                    // No lines between rows (Kaushik's rule): space alone separates them.
+                    VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                        ForEach(pages[index].rows) { choice in
                             row(choice)
-                            if offset < pages[index].rows.count - 1 {
-                                RowSeparator()
-                            }
                         }
                     }
                 }
