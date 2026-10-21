@@ -652,7 +652,7 @@ public struct StoreDayLookup: DayLookup {
                 }
                 let e1rm = weight * (1 + reps / 30)
                 if best == nil || e1rm > best!.e1rm { // swiftlint:disable:this force_unwrapping
-                    best = Best(e1rm: e1rm, text: "\(name) \(Self.number(weight)) × \(Self.number(reps))",
+                    best = Best(e1rm: e1rm, text: "\(name) \(shownWeight(weight)) × \(Self.number(reps))",
                                 exercise: exercise, weight: weight, reps: reps,
                                 flag: store.value("wasRecord", of: set).map { $0 == .bool(true) })
                 }
@@ -673,6 +673,19 @@ public struct StoreDayLookup: DayLookup {
 
     public func fieldKey(_ id: UUID) -> String? {
         fields[id]
+    }
+
+    /// A stored load (kilograms) as he chose to see weights: bare kilograms by default, "181.9 lb" when he picked
+    /// pounds. Stored values never change.
+    func shownWeight(_ kilograms: Double) -> String {
+        let units = displayUnits
+        guard let measure = units.weight(kilograms: kilograms), measure.unit != "kg" else { return Self.number(kilograms) }
+        return measure.formatted
+    }
+
+    var displayUnits: DisplayUnits {
+        guard let object = store.object(id: SettingsStore.objectID), !object.isDeleted else { return DisplayUnits() }
+        return DisplayUnits(encoded: store.value("displayUnits", of: object)?.stringValue)
     }
 
     static func shortName(_ name: String) -> String {
