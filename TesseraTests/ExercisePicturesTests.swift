@@ -48,7 +48,7 @@ struct ExercisePicturesTests {
     @Test func theGymVisualSetNamesOnlySeededExercisesAndEveryOneBundledHasItsFile() {
         let seeded = Set(ExerciseLibrary.seeds.map(\.name))
         #expect(GymVisualSource.files.keys.allSatisfy { seeded.contains($0) })
-        #expect(GymVisualSource.files.count == 70)
+        #expect(GymVisualSource.files.count == 71)
         // The files are git-ignored: a build without the folder falls back to Workout Guide for every exercise.
         let source = GymVisualSource()
         for name in GymVisualSource.files.keys {
