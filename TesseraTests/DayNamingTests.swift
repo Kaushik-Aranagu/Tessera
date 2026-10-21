@@ -63,6 +63,8 @@ struct DayNamingTests {
             return true
         }
         namer.onDeviceAvailable = { true }
+        // The phone's model gives nothing usable this time: the rule name stands and Claude is still never asked.
+        namer.onDevice = { _, _ in nil }
         let suggestion = try #require(await namer.suggest(for: routine, engine: model.engine))
         #expect(suggestion.source == .rules && suggestion.name == "Push day")
         #expect(!claudeAsked, "Claude's gate was read on a phone with its own model")
@@ -104,11 +106,12 @@ struct DayNamingTests {
         let plan = try #require(model.store.object(id: StarterContent.planID))
         let routine = try #require(model.store.linkedObjects("routines", of: plan).first { $0.title == "Push A" })
         let pack = try #require(DayNames.pack(of: routine, store: model.store))
-        let facts = DayNamingPrompt.facts(pack, avoid: ["Push day"])
-        let data = try #require(facts.dropFirst("<facts>".count).dropLast("</facts>".count).data(using: .utf8))
-        let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
-        #expect(Set(object.keys) == ["avoid", "exercises", "muscles"])
-        #expect(object["exercises"] as? [String] == pack.exercises)
+        let prompt = DayNamingPrompt.prompt(pack, avoid: ["Push day"])
+        let lines = prompt.split(separator: "\n").map(String.init)
+        #expect(lines.map { $0.prefix { $0 != ":" } } == ["Exercises", "Muscles", "Avoid"])
+        #expect(lines[0] == "Exercises: " + pack.exercises.joined(separator: ", "))
+        #expect(lines[2] == "Avoid: Push day")
+        #expect(!prompt.contains("{"), "plain lines, never JSON")
     }
 
     @Test func theAppPlugsTheOnDeviceNamer() {
@@ -123,5 +126,26 @@ struct DayNamingTests {
         let plain = try #require(words.range(of: "fall back to a plain split"))
         #expect(specific.lowerBound < plain.lowerBound)
         #expect(words.contains("1 to 3 words, 22 characters or fewer"))
+    }
+
+    /// Builder A's run on release 30: a session not yet started takes its routine's new name; one started or
+    /// finished keeps its own.
+    @Test func onlyAnUnstartedSessionFollowsItsRoutine() {
+        #expect(DayNamingSwitch.followsRoutine(isDeleted: false, started: false, ended: false))
+        #expect(!DayNamingSwitch.followsRoutine(isDeleted: false, started: true, ended: false))
+        #expect(!DayNamingSwitch.followsRoutine(isDeleted: false, started: true, ended: true))
+        #expect(!DayNamingSwitch.followsRoutine(isDeleted: true, started: false, ended: false))
+    }
+
+    /// The model offers three names; a specific one that fits the day beats a plain split, an unusable one is
+    /// skipped, and a sample name copied onto the wrong day is refused.
+    @Test func aSpecificCandidateBeatsAPlainSplit() {
+        let back = ["back", "biceps"], legs = ["quads", "glutes", "hamstrings"]
+        #expect(DayNamingPrompt.pick(["Upper body", "Heavy pull", "Back and biceps"], muscles: back) == "Heavy pull")
+        #expect(DayNamingPrompt.pick(["Push Pull Leg day", "Leg day", "Long legs"], muscles: legs) == "Long legs")
+        #expect(DayNamingPrompt.pick(["Heavy chest", "Back and biceps", "Long legs"], muscles: legs) == "Long legs")
+        #expect(DayNamingPrompt.pick(["Heavy chest", "Leg day"], muscles: legs) == "Leg day")
+        #expect(DayNamingPrompt.pick(["Chest and arms"], muscles: ["chest", "triceps"]) == "Chest and arms")
+        #expect(DayNamingPrompt.pick(["The ultimate monster pump day!"], muscles: legs) == nil)
     }
 }
