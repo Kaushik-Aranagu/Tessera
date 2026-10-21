@@ -43,7 +43,7 @@ struct DayRuleNamesTests {
 
     @Test(arguments: [
         ("Push A", "push", "Heavy chest"), ("Push B", "push", "Press day"), ("Pull A", "pull", "Heavy pull"),
-        ("Pull B", "pull", "Back and biceps"), ("Legs A", "legs", "Heavy legs"), ("Legs B", "legs", "Heavy legs"),
+        ("Pull B", "pull", "Back and biceps"), ("Legs A", "legs", "Squat day"), ("Legs B", "legs", "Heavy legs"),
     ])
     func eachStarterDayIsNamedForItsSplit(_ title: String, _ split: String, _ first: String) throws {
         let day = try #require(starters()[title])

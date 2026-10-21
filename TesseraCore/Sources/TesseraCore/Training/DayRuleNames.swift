@@ -91,10 +91,12 @@ public enum DayRuleNames {
         } else if legs >= 0.6 {
             if shape.share(shape.glutesHams) >= 0.5, shape.quads * 3 <= shape.glutesHams, !lead.contains("squat") {
                 ["Glutes and hamstrings", "Leg day", "Long legs"]
+            } else if lead.contains("squat") {
+                ["Squat day", "Heavy legs", "Long legs", "Leg day", "Lower body"]
             } else if shape.leadIsBarbell {
-                ["Heavy legs", "Leg day", "Long legs", "Lower body"]
+                ["Heavy legs", "Long legs", "Leg day", "Lower body"]
             } else {
-                ["Leg day", "Long legs", "Lower body", "Legs"]
+                ["Long legs", "Leg day", "Lower body", "Legs"]
             }
         } else if legs >= 0.25, push + pull >= 0.3 {
             ["Full body", "Full body day"]
