@@ -43,6 +43,12 @@ public struct DisplayUnits: Equatable, Codable, Sendable {
         unit(for: .weight).flatMap { Measure(kilograms, "kg").converted(to: $0) }
     }
 
+    /// His chosen weight unit as the app's `MassUnit` (kg or lb), or nil when he has not picked one. The app's
+    /// weight format (`Format.unit`) reads this, so widgets and the Island say weights in the same unit.
+    public var massUnit: MassUnit? {
+        unit(for: .weight).flatMap(MassUnit.init(parsing:))
+    }
+
     /// A quantity expressed in his chosen unit for its kind; unchanged when he has not picked one (or for money).
     public func shown(_ measure: Measure) -> Measure {
         guard measure.kind != .money, let unit = unit(for: measure.kind) else { return measure }

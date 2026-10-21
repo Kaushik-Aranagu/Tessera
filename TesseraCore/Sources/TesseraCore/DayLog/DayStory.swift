@@ -23,12 +23,16 @@ public struct DayLine: Equatable, Sendable {
     /// What a tap opens (the first).
     public let objectIDs: [UUID]
     public let kind: Kind
+    /// "about 330 kcal" for a finished workout, only when he turned calories on (`CaloriesOptions`). Kept apart from
+    /// `text` on purpose: the words of the line feed memory, Home and Claude, and a calorie number never goes there.
+    public var calories: String?
 
-    public init(time: Date?, text: String, objectIDs: [UUID], kind: Kind) {
+    public init(time: Date?, text: String, objectIDs: [UUID], kind: Kind, calories: String? = nil) {
         self.time = time
         self.text = text
         self.objectIDs = objectIDs
         self.kind = kind
+        self.calories = calories
     }
 
     /// "07:10": the column, 24 h, zero padded, in the calendar's zone (the zone he's in now).
@@ -66,9 +70,15 @@ public protocol DayLookup {
     func fieldKey(_ id: UUID) -> String?
     /// A spend's amount as typed, its currency and its one word (nil word when the word is walled).
     func spend(_ id: UUID) -> (amount: Decimal, currency: String?, word: String?)?
+    /// "about 330 kcal" for a finished workout, or nil (off, private, unfinished, no weight).
+    func caloriesLine(forWorkout id: UUID) -> String?
 }
 
 public extension DayLookup {
+    func caloriesLine(forWorkout _: UUID) -> String? {
+        nil
+    }
+
     func spend(_: UUID) -> (amount: Decimal, currency: String?, word: String?)? {
         nil
     }
@@ -110,7 +120,8 @@ public enum DayStory {
         "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
         "endProcess", "writeSettings", "createClass", "setRoutineKind", "applyDayName", "syncCalendar", "syncHealth",
-        "closeDay", "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice", "releaseHeldNotices",
+        "closeDay", "setMeProfile", "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice",
+        "releaseHeldNotices",
         "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading", "setBookAside",
     ]
 
@@ -456,6 +467,14 @@ public enum DayStory {
             default: false
             }
         }
+        // Calories ride beside a finished workout's line, never in its words.
+        drawn = drawn.map { line in
+            guard line.kind == .finished, let id = line.objectIDs.first, lookup.kind(of: id) == "workout",
+                  let text = lookup.caloriesLine(forWorkout: id) else { return line }
+            var withCalories = line
+            withCalories.calories = text
+            return withCalories
+        }
         if isRestDay {
             drawn.insert(DayLine(time: nil, text: "Rest day", objectIDs: [], kind: .rest), at: 0)
         }
@@ -520,6 +539,8 @@ extension DayStory {
 public struct StoreDayLookup: DayLookup {
     public let store: ObjectStore
     public let classes: [SystemCatalog.Key: ClassDef]
+    /// Calories for finished workouts, when he turned them on; nil (the default) shows none.
+    public var calories: CaloriesOptions?
     let fields: [UUID: String]
     /// Each root's zone, read once: the record that started it, else the one that created it (QA S1 on #318).
     let zones: [UUID: TimeZone]
@@ -675,11 +696,17 @@ public struct StoreDayLookup: DayLookup {
         fields[id]
     }
 
+    public func caloriesLine(forWorkout id: UUID) -> String? {
+        guard let calories, let workout = store.object(id: id) else { return nil }
+        return CaloriesBurned.line(forWorkout: workout, store: store, classes: classes, options: calories)
+    }
+
     /// A stored load (kilograms) as he chose to see weights: bare kilograms by default, "181.9 lb" when he picked
     /// pounds. Stored values never change.
     func shownWeight(_ kilograms: Double) -> String {
         let units = displayUnits
-        guard let measure = units.weight(kilograms: kilograms), measure.unit != "kg" else { return Self.number(kilograms) }
+        guard let measure = units.weight(kilograms: kilograms),
+              measure.unit != "kg" else { return Self.number(kilograms) }
         return measure.formatted
     }
 
@@ -701,7 +728,7 @@ public struct StoreDayLookup: DayLookup {
 public extension DayStory {
     /// The app's call: one of his days from a window of the engine's history around it (never the whole log).
     static func lines(engine: ActionEngine, on day: Date, calendar: Calendar = .current, now: Date = .now,
-                      isRestDay: Bool = false) -> [DayLine]
+                      isRestDay: Bool = false, calories: CaloriesOptions? = nil) -> [DayLine]
     {
         let start = dayStart(for: day, calendar: calendar)
         let end = dayStart(for: start.addingTimeInterval(30 * 3600), calendar: calendar)
@@ -712,8 +739,9 @@ public extension DayStory {
             to: after.addingTimeInterval(notesAfter)
         )
         .filter { $0.createdAt < after || $0.action == "createNote" }
-        return lines(store: engine.store, classes: engine.classes, records: records, on: day, calendar: calendar,
-                     now: now, isRestDay: isRestDay)
+        var lookup = StoreDayLookup(store: engine.store, classes: engine.classes, records: records)
+        lookup.calories = calories
+        return lines(for: records, on: day, calendar: calendar, lookup: lookup, now: now, isRestDay: isRestDay)
     }
 
     /// The store's committed history for one of his days, from records the caller already has.
