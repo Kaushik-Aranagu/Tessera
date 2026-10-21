@@ -40,7 +40,7 @@ struct ExerciseSheet: View {
                 if let picture = ExercisePictures.picture(forExerciseNamed: exercise.name) {
                     PlayingPicture(picture: picture)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 240)
+                        .frame(height: picture.gifURL == nil ? 240 : 180)
                         .accessibilityHidden(true)
                 }
                 if let cue = ExerciseSheetContent.cue(forExerciseNamed: exercise.name) {
@@ -100,7 +100,11 @@ struct PlayingPicture: View {
     }
 
     var body: some View {
-        if reduceMotion || picture.frames.count < 2 {
+        if let gif = picture.gifURL {
+            // Never drawn past its own 180 points (Gym visual's terms).
+            GifView(url: gif, isStill: reduceMotion)
+                .frame(maxWidth: 180, maxHeight: 180)
+        } else if reduceMotion || picture.frames.count < 2 {
             frames(showing: picture.frames.count > 1 ? 1 : 0)
         } else {
             TimelineView(.periodic(from: .now, by: Self.hold)) { context in

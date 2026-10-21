@@ -11,6 +11,8 @@ struct ExercisePicture: Equatable {
     let source: String
     /// A sibling (a near-identical motion with the same muscles), not the exercise's own picture.
     var isSibling = false
+    /// A bundled animated GIF (Gym visual); when set it is played instead of `frames`.
+    var gifURL: URL?
 }
 
 protocol ExercisePictureSource {
@@ -80,9 +82,9 @@ struct WorkoutGuideSource: ExercisePictureSource {
     }
 }
 
-/// The pictures the app plays, first match wins. A richer set goes in front of Workout Guide when it is approved.
+/// The pictures the app plays, first match wins. Gym visual's GIFs go in front of Workout Guide's frames.
 enum ExercisePictures {
-    nonisolated(unsafe) static var sources: [any ExercisePictureSource] = [WorkoutGuideSource()]
+    nonisolated(unsafe) static var sources: [any ExercisePictureSource] = [GymVisualSource(), WorkoutGuideSource()]
 
     static func picture(forExerciseNamed name: String) -> ExercisePicture? {
         for source in sources {
@@ -97,6 +99,8 @@ enum ExercisePictures {
 /// The About page's picture credit, one plain line (Product's ruling): the source's licence, the upstream art's
 /// licence and what was changed here.
 enum ExerciseCredits {
+    static let gymVisualLine = "(c) Gym visual - https://gymvisual.com/"
+    static let gymVisualURL = URL(string: "https://gymvisual.com/")!
     static let line = "Exercise pictures: Workout Guide by Bryl Lim (bryllim.com), CC BY-SA 4.0. Artwork by "
         + "Everkinetic / Greg Priday, CC BY-SA 4.0. Changes: recolored and resized."
     static let licenseURL = URL(string: "https://creativecommons.org/licenses/by-sa/4.0/")!

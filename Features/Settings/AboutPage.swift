@@ -36,6 +36,11 @@ struct AboutPage: View {
                 .textRole(.label)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .padding(.top, Theme.Spacing.m)
+                Link(ExerciseCredits.gymVisualLine, destination: ExerciseCredits.gymVisualURL)
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, Theme.Spacing.l)
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.s)

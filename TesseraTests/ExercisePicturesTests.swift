@@ -10,7 +10,7 @@ import UIKit
 struct ExercisePicturesTests {
     @Test func everySeededExerciseHasAPictureFromTheBundledSet() {
         for seed in ExerciseLibrary.seeds {
-            let picture = ExercisePictures.picture(forExerciseNamed: seed.name)
+            let picture = WorkoutGuideSource().picture(forExerciseNamed: seed.name)
             #expect(picture != nil, "\(seed.name) has no picture")
             #expect(picture?.frames.count == 3, "\(seed.name) should have three frames")
             #expect(picture?.source == "Workout Guide")
@@ -25,8 +25,9 @@ struct ExercisePicturesTests {
     }
 
     @Test func siblingsAreMarkedAndExactMatchesAreNot() {
-        #expect(ExercisePictures.picture(forExerciseNamed: "Bench Press")?.isSibling == false)
-        #expect(ExercisePictures.picture(forExerciseNamed: "Back Squat")?.isSibling == true)
+        let guide = WorkoutGuideSource()
+        #expect(guide.picture(forExerciseNamed: "Bench Press")?.isSibling == false)
+        #expect(guide.picture(forExerciseNamed: "Back Squat")?.isSibling == true)
         #expect(ExercisePictures.picture(forExerciseNamed: "Not An Exercise") == nil)
     }
 
@@ -42,6 +43,20 @@ struct ExercisePicturesTests {
         ExercisePictures.sources = [Fixed(), WorkoutGuideSource()]
         #expect(ExercisePictures.picture(forExerciseNamed: "Bench Press")?.source == "Fixed")
         #expect(ExercisePictures.picture(forExerciseNamed: "Deadlift")?.source == "Workout Guide")
+    }
+
+    @Test func theGymVisualSetNamesOnlySeededExercisesAndEveryOneBundledHasItsFile() {
+        let seeded = Set(ExerciseLibrary.seeds.map(\.name))
+        #expect(GymVisualSource.files.keys.allSatisfy { seeded.contains($0) })
+        #expect(GymVisualSource.files.count == 70)
+        // The files are git-ignored: a build without the folder falls back to Workout Guide for every exercise.
+        let source = GymVisualSource()
+        for name in GymVisualSource.files.keys {
+            if let picture = source.picture(forExerciseNamed: name) {
+                #expect(picture.gifURL != nil && picture.source == "Gym visual")
+            }
+        }
+        #expect(ExerciseCredits.gymVisualLine == "(c) Gym visual - https://gymvisual.com/")
     }
 
     @Test func theFramesLoopOutAndBack() {
