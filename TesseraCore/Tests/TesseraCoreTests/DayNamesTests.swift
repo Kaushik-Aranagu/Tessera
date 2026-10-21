@@ -81,7 +81,7 @@ struct DayNamesTests {
         routine.title = "New routine"
         #expect(DayNames.mayAutoName(routine, store: store) && DayNames.needsName(routine, store: store))
         try engine.perform(ApplyDayName(routine: routine.id, name: "Push day"), by: .tess)
-        #expect(routine.title == "Push day" && !DayNames.needsName(routine, store: store))
+        #expect(routine.title == "Push day" && DayNames.isUpgradeOnly(routine, store: store))
         // The exercises change: time again.
         let slot = try #require(routine.orderedChildren.last)
         try engine.perform(DeleteObject(object: slot.id), by: .user)
@@ -154,7 +154,7 @@ struct DayNamesTests {
         #expect(await bad.suggest(for: routine, engine: engine)?.source == .rules)
         // Nothing on the phone, no key: the rule name.
         let rules = namer(engine, claude: true)
-        #expect(await rules.suggest(for: routine, engine: engine) == .init(name: "Push day", source: .rules))
+        #expect(await rules.suggest(for: routine, engine: engine) == .init(name: "Heavy chest", source: .rules))
     }
 
     @Test func suggestAgainOffersADifferentNameAndAPrivateDayGetsNone() async throws {
@@ -177,9 +177,9 @@ struct DayNamesTests {
         maker.enabled = { false }
         #expect(await maker.autoName(routine, engine: engine) == nil && routine.title == "New routine")
         maker.enabled = { true }
-        #expect(await maker.autoName(routine, engine: engine) == "Push day")
+        #expect(await maker.autoName(routine, engine: engine) == "Heavy chest")
         #expect(await maker.autoName(routine, engine: engine) == nil)
-        #expect(!DayNames.needsName(routine, store: store))
+        #expect(DayNames.isUpgradeOnly(routine, store: store))
     }
 }
 

@@ -185,6 +185,10 @@ public enum SystemCatalog {
                       // Tess may rename it as the exercises change; once he types another, it never does.
                       FieldSpec(key: "autoName", name: "Name from Tess", kind: .text),
                       FieldSpec(key: "autoNameKey", name: "Named for", kind: .text),
+                      // "rules" or "model": a rule-made name may be improved once by a model, nothing else may.
+                      FieldSpec(key: "autoNameBy", name: "Named by", kind: .text),
+                      // The last time a model was asked to improve this day's rule name (at most once a day).
+                      FieldSpec(key: "autoNameTriedAt", name: "Model asked", kind: .date),
                   ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [

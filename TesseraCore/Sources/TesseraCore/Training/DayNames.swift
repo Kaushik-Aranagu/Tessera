@@ -17,6 +17,8 @@ public enum DayNames {
     public struct Pack: Equatable, Sendable {
         public let exercises: [String]
         public let muscles: [String]
+        /// The rule names for this day, best first (from what its exercises really work).
+        public let ruleNames: [String]
         /// Changes when the exercises do, so an unchanged routine is not asked again.
         public var key: String {
             exercises.map { $0.lowercased() }.sorted().joined(separator: "|")
@@ -40,7 +42,10 @@ public enum DayNames {
             }
         }
         guard !names.isEmpty else { return nil }
-        return Pack(exercises: names, muscles: MuscleSummary.topWords(of: routine, store: store, limit: 5))
+        let muscles = MuscleSummary.topWords(of: routine, store: store, limit: 5)
+        let rules = DayRuleNames.choices(DayRuleNames.shape(of: routine, store: store))
+        return Pack(exercises: names, muscles: muscles,
+                    ruleNames: rules.isEmpty ? localChoices(muscles: muscles) : rules)
     }
 
     static let legs: Set = ["quads", "glutes", "hamstrings", "calves", "inner thighs", "outer hips"]
@@ -131,6 +136,29 @@ public enum DayNames {
         return placeholders.contains(title.lowercased()) || isStockTitle(title)
     }
 
+    /// `autoNameBy`: who made the name Tess gave. A rule name may be improved once by a model; a model's name and
+    /// any name he typed never are.
+    public static let byRules = "rules", byModel = "model"
+
+    /// Whether the name on this routine is one Tess made from rules (and is still on it).
+    @MainActor
+    public static func isRuleNamed(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
+        let given = store.value("autoName", of: routine)?.stringValue ?? ""
+        guard !given.isEmpty, routine.title == given else { return false }
+        // A day Tess named before the marker existed (release 30 and earlier) had only rule names: it counts as
+        // rule-named too, and gets the new rule name once.
+        let by = store.value("autoNameBy", of: routine)?.stringValue ?? ""
+        return by == byRules || by.isEmpty
+    }
+
+    /// Named by Tess before the "named by" marker existed: it is given the new rule name once.
+    @MainActor
+    public static func isUnmarked(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
+        let given = store.value("autoName", of: routine)?.stringValue ?? ""
+        return !given.isEmpty && routine.title == given
+            && (store.value("autoNameBy", of: routine)?.stringValue ?? "").isEmpty
+    }
+
     /// The name last given and the exercises it was given for.
     @MainActor
     public static func given(to routine: ObjectRecord, store: ObjectStore) -> (name: String, key: String)? {
@@ -139,10 +167,18 @@ public enum DayNames {
     }
 
     /// Whether the routine's exercises changed since it was named (or it was never named): time to ask again.
+    /// A rule-made name also waits for one better name (the pass only applies it if a model has one).
     @MainActor
     public static func needsName(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
         guard mayAutoName(routine, store: store), let pack = pack(of: routine, store: store) else { return false }
-        return given(to: routine, store: store)?.key != pack.key
+        return given(to: routine, store: store)?.key != pack.key || isRuleNamed(routine, store: store)
+    }
+
+    /// Whether the routine's rule name is for its current exercises, so only a model's name would improve it.
+    @MainActor
+    public static func isUpgradeOnly(_ routine: ObjectRecord, store: ObjectStore) -> Bool {
+        guard isRuleNamed(routine, store: store), let pack = pack(of: routine, store: store) else { return false }
+        return given(to: routine, store: store)?.key == pack.key
     }
 }
 
@@ -162,11 +198,14 @@ public struct ApplyDayName: EngineAction {
     public var routine: UUID
     public var name: String
     public var force: Bool?
+    /// "rules" or "model"; nil works it out (a name among the day's rule names was made by rules).
+    public var source: String?
 
-    public init(routine: UUID, name: String, force: Bool? = nil) {
+    public init(routine: UUID, name: String, force: Bool? = nil, source: String? = nil) {
         self.routine = routine
         self.name = name
         self.force = force
+        self.source = source
     }
 
     public func apply(_ transaction: inout Transaction) throws {
@@ -189,6 +228,8 @@ public struct ApplyDayName: EngineAction {
         // A name he takes from "Suggest a name" is his choice: auto-naming stops (nothing remembered as Tess's).
         try transaction.set("autoName", to: .text(force == true ? "" : clean), on: target)
         try transaction.set("autoNameKey", to: .text(force == true ? DayNames.chosenMark : pack.key), on: target)
+        let by = source ?? (pack.ruleNames.contains(clean) ? DayNames.byRules : DayNames.byModel)
+        try transaction.set("autoNameBy", to: .text(force == true ? DayNames.byModel : by), on: target)
     }
 
     public func summary(in store: ObjectStore) -> String {
