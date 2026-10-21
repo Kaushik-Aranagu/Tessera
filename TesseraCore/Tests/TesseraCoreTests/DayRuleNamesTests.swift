@@ -176,4 +176,69 @@ struct DayRuleNamesTests {
         #expect(!words.isEmpty)
         #expect(words.filter { !known.contains($0) }.isEmpty, "\(words.filter { !known.contains($0) })")
     }
+
+    @Test func anOldModelMadeNameBeforeTheMarkerIsLeftAlone() async throws {
+        let pullB = try #require(starters()["Pull B"])
+        let pack = try #require(DayNames.pack(of: pullB, store: store))
+        pullB.title = "Back and arms and more"
+        try store.set("autoName", to: .text("Back and arms and more"), on: pullB)
+        try store.set("autoNameKey", to: .text(pack.key), on: pullB)
+        #expect(!DayNames.isUnmarked(pullB, store: store) && !DayNames.isRuleNamed(pullB, store: store))
+        let maker = DayNamer(keys: InMemoryKeychain(), ledger: TessUsageLedger(store: store, classes: engine.classes),
+                             allowed: { false })
+        #expect(await maker.autoName(pullB, engine: engine) == nil && pullB.title == "Back and arms and more")
+    }
+
+    @Test func aCancelledPassAppliesNothing() async throws {
+        let pushA = try #require(starters()["Push A"])
+        pushA.title = "New routine"
+        let maker = DayNamer(keys: InMemoryKeychain(), ledger: TessUsageLedger(store: store, classes: engine.classes),
+                             allowed: { false })
+        let work = Task { @MainActor in
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                continuation.resume()
+            }
+            return await maker.autoName(pushA, engine: engine)
+        }
+        work.cancel()
+        #expect(await work.value == nil && pushA.title == "New routine")
+    }
+
+    @Test func aDayWithNothingToApplyDoesNotAskAModelOnEveryPass() async throws {
+        let day = try #require(starters()["Pull A"])
+        day.title = "New routine"
+        let maker = DayNamer(keys: InMemoryKeychain(), ledger: TessUsageLedger(store: store, classes: engine.classes),
+                             allowed: { false })
+        maker.onDeviceAvailable = { true }
+        var asked = 0
+        maker.onDevice = { _, _ in
+            asked += 1
+            return nil
+        }
+        // Everything the rules could offer is taken by other days, so there is nothing to apply.
+        for other in try starters().values where other.id != day.id {
+            other.title = "Heavy pull"
+        }
+        _ = await maker.autoName(day, engine: engine)
+        _ = await maker.autoName(day, engine: engine)
+        _ = await maker.autoName(day, engine: engine)
+        #expect(asked == 1)
+    }
+
+    @Test(arguments: ["heavy", "light", "two", "three"])
+    func anOldRuleNameWithATailIsRecognisedAndMoved(_ tail: String) async throws {
+        let pushB = try #require(starters()["Push B"])
+        let pack = try #require(DayNames.pack(of: pushB, store: store))
+        let old = "Push day \(tail)"
+        pushB.title = old
+        try store.set("autoName", to: .text(old), on: pushB)
+        try store.set("autoNameKey", to: .text(pack.key), on: pushB)
+        // Only if the old rules would have made "Push day" first for this day's muscles.
+        let muscles = MuscleSummary.topWords(of: pushB, store: store, limit: 5)
+        #expect(DayNames.localChoices(muscles: muscles).first == "Push day")
+        #expect(DayNames.isUnmarked(pushB, store: store))
+        let maker = DayNamer(keys: InMemoryKeychain(), ledger: TessUsageLedger(store: store, classes: engine.classes),
+                             allowed: { false })
+        #expect(await maker.autoName(pushB, engine: engine) != nil && pushB.title != old)
+    }
 }

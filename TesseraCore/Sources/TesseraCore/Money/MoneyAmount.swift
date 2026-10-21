@@ -48,8 +48,8 @@ public struct MoneyAmount: Equatable, Sendable {
         return String(trimmed.dropFirst(amount.typed.count)).trimmingCharacters(in: .whitespaces)
     }
 
-    /// Two decimal places, no grouping: "312.40".
-    public static func format(_ value: Decimal) -> String {
+    /// Two decimal places, no grouping: "312.40". `grouped` adds thousands commas: "2,100.00".
+    public static func format(_ value: Decimal, grouped: Bool = false) -> String {
         var rounded = Decimal()
         var copy = value
         NSDecimalRound(&rounded, &copy, 2, .plain)
@@ -58,7 +58,9 @@ public struct MoneyAmount: Equatable, Sendable {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
-        formatter.usesGroupingSeparator = false
+        formatter.usesGroupingSeparator = grouped
+        formatter.groupingSeparator = ","
+        formatter.groupingSize = 3
         return formatter.string(from: number) ?? number.stringValue
     }
 }
