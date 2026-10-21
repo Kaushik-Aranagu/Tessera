@@ -18,12 +18,16 @@ enum MeasureParts {
         }
         if measure.kind == .money {
             // As typed (sign against the number) or, estimated, the bare amount: the view puts "about" before it.
-            let amount = measure.isEstimate
-                ? String(format: "%.2f", locale: Locale(identifier: "en_US_POSIX"), measure.value)
-                : measure.formatted
+            let amount = measure.isEstimate ? estimate(measure.value) : measure.formatted
             return [Part(number: amount, unit: measure.unit)]
         }
         return [Part(number: MeasureFormat.number(measure.value, unit: measure.unit), unit: measure.unit)]
+    }
+
+    /// An estimated amount (Design on Measure): whole units from 10 up, two decimals under 10. A typed amount is
+    /// never rounded: it reads as he typed it.
+    static func estimate(_ value: Double) -> String {
+        String(format: abs(value) >= 10 ? "%.0f" : "%.2f", locale: Locale(identifier: "en_US_POSIX"), value)
     }
 
     /// 95 min is 1 hr 35 min; under an hour (or whole hours already chosen as hr) is left to the single pair.

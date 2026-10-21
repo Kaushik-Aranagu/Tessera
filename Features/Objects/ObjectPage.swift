@@ -42,6 +42,9 @@ struct ObjectPage: View {
         {
             // A note opens as itself, as from Notes, never as a property list of its text (PN-MENTION).
             NoteEditor(noteID: note.id)
+        } else if case let .object(id) = route, let object = model.object(id), Self.is(object, .spend, model) {
+            // A spend's own page shows its amount (Money amendment 2).
+            SpendPage(spendID: id)
         } else {
             generic
         }
@@ -52,6 +55,12 @@ struct ObjectPage: View {
     static func opensAsNote(_ note: ObjectRecord, model: AppModel) -> Bool {
         note.classDef?.id == model.classDef(.note)?.id
             && ObjectMask.label(of: note, in: model.store, classes: model.classes) == nil
+    }
+
+    /// Whether the object is of a built-in class (or one under it).
+    static func `is`(_ object: ObjectRecord, _ key: SystemCatalog.Key, _ model: AppModel) -> Bool {
+        guard let def = object.classDef, let target = model.classDef(key) else { return false }
+        return ClassResolver.isSubclass(def, of: target)
     }
 
     /// The object a link opens, or nil when it is deleted or not on this phone (OL28, OL29).
