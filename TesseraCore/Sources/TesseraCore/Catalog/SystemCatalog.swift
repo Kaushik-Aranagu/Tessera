@@ -189,6 +189,7 @@ public enum SystemCatalog {
                       FieldSpec(key: "autoNameBy", name: "Named by", kind: .text),
                       // The last time a model was asked to improve this day's rule name (at most once a day).
                       FieldSpec(key: "autoNameTriedAt", name: "Model asked", kind: .date),
+                      FieldSpec(key: "autoNameTriedKey", name: "Asked for", kind: .text),
                   ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [

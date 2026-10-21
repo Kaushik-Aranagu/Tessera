@@ -214,9 +214,16 @@ public final class TessCaptureEngine: TessCapturing {
     }
 
     /// How a set's load reads: "80", "180 lb", and on a bodyweight lift "bodyweight" or "+10".
-    private func load(_ kilograms: Double, unit: MassUnit, entry: ObjectRecord) -> String {
+    func load(_ kilograms: Double, unit: MassUnit, entry: ObjectRecord) -> String {
         let kit = engine.store.linkedClass("exercise", of: entry).flatMap { engine.store.equipmentKind(of: $0) }
         if kit == .bodyweight {
+            // His chosen weight unit applies to the added load too ("+22 lb"); stored kilograms never change.
+            if kilograms != 0,
+               let chosen = SettingsStore(engine: engine).read().displayUnits.weight(kilograms: kilograms),
+               chosen.unit != "kg"
+            {
+                return "+\(chosen.formatted)"
+            }
             return kilograms == 0 ? "bodyweight" : "+\(TessVoice.number(kilograms))"
         }
         // His chosen weight unit wins over the unit it was said in; stored kilograms never change.

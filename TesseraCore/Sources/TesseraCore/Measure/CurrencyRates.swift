@@ -62,10 +62,35 @@ public struct RatesCache: Sendable {
         try? excluded.setResourceValues(values)
     }
 
-    /// Whether a fetch is due: nothing saved, or the last one is over an hour old.
+    /// The attempt file beside the table: the time of the last try, success or not, so a failing network is not
+    /// retried on every page open, nor on every launch.
+    var attemptURL: URL? {
+        url.map { $0.deletingPathExtension().appendingPathExtension("attempt") }
+    }
+
+    public func lastAttempt() -> Date? {
+        guard let attemptURL, let data = try? Data(contentsOf: attemptURL),
+              let seconds = try? JSONDecoder().decode(Double.self, from: data) else { return nil }
+        return Date(timeIntervalSince1970: seconds)
+    }
+
+    public func noteAttempt(at date: Date) {
+        guard let attemptURL, let data = try? JSONEncoder().encode(date.timeIntervalSince1970) else { return }
+        try? FileManager.default.createDirectory(at: attemptURL.deletingLastPathComponent(),
+                                                 withIntermediateDirectories: true)
+        try? data.write(to: attemptURL, options: [.atomic])
+        var excluded = attemptURL
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? excluded.setResourceValues(values)
+    }
+
+    /// Whether a fetch is due: nothing tried or saved in the last hour.
     public func isFetchDue(now: Date) -> Bool {
-        guard let saved = read() else { return true }
-        return now.timeIntervalSince(saved.fetchedAt) >= Self.minimumInterval
+        // A time in the future (the clock was set back) counts as no try at all.
+        let last = [read()?.fetchedAt, lastAttempt()].compactMap(\.self).filter { $0 <= now }.max()
+        guard let last else { return true }
+        return now.timeIntervalSince(last) >= Self.minimumInterval
     }
 
     /// The table to use now: whatever is saved (live or old), with its date. Nil when nothing was ever saved: the
