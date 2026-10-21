@@ -50,6 +50,7 @@ public enum TesseraIntentsCatalog {
         "syncCalendar": "system: the calendar mount on foreground",
         "syncHealth": "system: the Health mount on foreground",
         "closeDay": "in-app only: Shutdown's close",
+        "setMeProfile": "in-app only: the You page",
         "startFocusBlock": "in-app only: the focus block",
         "focusCheckIn": "in-app only: the focus block's one check-in",
         "acceptFirstStep": "in-app only: the offered first step",
