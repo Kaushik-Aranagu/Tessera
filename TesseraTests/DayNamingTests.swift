@@ -35,7 +35,9 @@ struct DayNamingTests {
         // The starter's stock title ("Push A") is not a name he chose: Tess names it once.
         routine.title = "Push A"
         let named = await model.nameTrainingDays()
-        #expect(named.contains("Push day") && routine.title == "Push day")
+        // Push B is stock too and asks for the same plain name; whichever goes first has it, the other gets another.
+        #expect(named.contains(routine.title) && routine.title != "Push A" && DayNames.isUsable(routine.title),
+                "\(routine.title) \(named)")
         // Named once; asked again only when its exercises change.
         #expect(await model.nameTrainingDays().isEmpty)
         // He renames it: Tess stops for good.
