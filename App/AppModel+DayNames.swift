@@ -40,19 +40,22 @@ extension AppModel {
     @discardableResult
     func nameTrainingDays() async -> [String] {
         guard let routineClass = classes[.routine] else { return [] }
-        let waiting = store.objects(of: routineClass).filter {
+        // Days with a session waiting go first, so tonight's row reads its new name soonest.
+        let waiting = DayNamingSwitch.tonightFirst(store.objects(of: routineClass).filter {
             !$0.isDeleted && DayNames.needsName($0, store: store)
-        }
+        }, waiting: Set(unstartedSessions().compactMap { store.linkedObjects("routine", of: $0).first?.id }))
         var named: [String] = []
         for routine in waiting {
             if let name = await nameOne(routine) {
                 named.append(name)
+                // Each new name reaches its waiting session at once, not after the whole pass (Builder A's stills
+                // on release 32: Training had the new name while Today's Next row still read "Push Day A").
+                followRoutineTitles()
+                touch(naming: false)
             }
         }
-        let followed = followRoutineTitles()
-        if !named.isEmpty || followed > 0 {
-            // Saves and redraws; the pass it schedules finds nothing waiting, so this never loops.
-            touch()
+        if followRoutineTitles() > 0 {
+            touch(naming: false)
         }
         return named
     }
@@ -63,12 +66,8 @@ extension AppModel {
     /// Returns how many were brought in line.
     @discardableResult
     func followRoutineTitles() -> Int {
-        guard let workoutClass = classes[.workout] else { return 0 }
         var followed = 0
-        for workout in store.objects(of: workoutClass) where DayNamingSwitch.followsRoutine(
-            isDeleted: workout.isDeleted, started: store.value("startedAt", of: workout) != nil,
-            ended: store.value("endedAt", of: workout) != nil
-        ) {
+        for workout in unstartedSessions() {
             guard let routine = store.linkedObjects("routine", of: workout).first, !routine.isDeleted,
                   !routine.title.isEmpty, routine.title != workout.title,
                   (try? engine.perform(RenameObject(object: workout.id, title: routine.title), by: .tess)) != nil
@@ -76,6 +75,16 @@ extension AppModel {
             followed += 1
         }
         return followed
+    }
+
+    /// Sessions made but not yet started or finished.
+    func unstartedSessions() -> [ObjectRecord] {
+        guard let workoutClass = classes[.workout] else { return [] }
+        return store.objects(of: workoutClass).filter { workout in
+            DayNamingSwitch.followsRoutine(isDeleted: workout.isDeleted,
+                                           started: store.value("startedAt", of: workout) != nil,
+                                           ended: store.value("endedAt", of: workout) != nil)
+        }
     }
 
     /// `DayNamer.autoName`'s steps, with one more check: a pass cancelled while its call was out (a newer change
@@ -95,6 +104,12 @@ extension AppModel {
 enum DayNamingSwitch {
     static func isOn(_ value: String?) -> Bool {
         value != "Off"
+    }
+
+    /// Routines with a session waiting first, the rest in their order.
+    @MainActor
+    static func tonightFirst(_ routines: [ObjectRecord], waiting: Set<UUID>) -> [ObjectRecord] {
+        routines.filter { waiting.contains($0.id) } + routines.filter { !waiting.contains($0.id) }
     }
 
     /// Only a session not yet started takes its routine's new name.
