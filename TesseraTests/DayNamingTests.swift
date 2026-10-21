@@ -1,3 +1,4 @@
+import Foundation
 @testable import Tessera
 import TesseraCore
 import TesseraTess
@@ -10,7 +11,7 @@ struct DayNamingTests {
         let row = try #require(ReviewChoices.all.first { $0.id == DayNames.reviewKey })
         #expect(row.name == "Tess names training days")
         #expect(row.defaultValue == "On" && row.values == ["On", "Off"])
-        #expect(row.readiness == .live && !row.needsClaude)
+        #expect(row.readiness == .live && row.needsClaude)
         let workout = try #require(ReviewChoices.drawnPages().first { $0.word == "Workout" })
         #expect(workout.rows.contains { $0.id == DayNames.reviewKey })
     }
@@ -60,5 +61,62 @@ struct DayNamingTests {
         let suggestion = try #require(await namer.suggest(for: routine, engine: model.engine))
         #expect(suggestion.source == .rules && suggestion.name == "Push day")
         #expect(!claudeAsked, "Claude's gate was read on a phone with its own model")
+    }
+
+    /// QA on #1170: a pass cancelled while its call was out applies nothing.
+    @Test func aCancelledPassAppliesNothing() async throws {
+        #expect(DayNamingSwitch.mayApply(cancelled: false))
+        #expect(!DayNamingSwitch.mayApply(cancelled: true))
+        let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext)
+        try ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: model.store,
+                                             classes: model.classes)
+        try StarterContent.installIfNeeded(store: model.store, classes: model.classes)
+        let plan = try #require(model.store.object(id: StarterContent.planID))
+        let routine = try #require(model.store.linkedObjects("routines", of: plan).first { $0.title == "Push A" })
+        routine.title = "New routine"
+        let pass = Task { @MainActor in
+            withUnsafeCurrentTask { $0?.cancel() }
+            return await model.nameTrainingDays()
+        }
+        #expect(await pass.value.isEmpty)
+        #expect(routine.title == "New routine")
+    }
+
+    /// The on-device reply is tidied to the name, and anything Core's checks refuse falls back (nil).
+    @Test func theOnDeviceReplyIsCheckedLikeClaudes() {
+        #expect(DayNamingPrompt.cleaned("Heavy pull.\n") == "Heavy pull")
+        #expect(DayNamingPrompt.cleaned("\"Back and biceps\"") == "Back and biceps")
+        #expect(DayNamingPrompt.cleaned("The ultimate monster pump day!") == nil)
+        #expect(DayNamingPrompt.cleaned("") == nil)
+    }
+
+    /// Only exercise names, muscle words and names to avoid go to the model.
+    @Test func theFactsCarryOnlyThePack() throws {
+        let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext)
+        try ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: model.store,
+                                             classes: model.classes)
+        try StarterContent.installIfNeeded(store: model.store, classes: model.classes)
+        let plan = try #require(model.store.object(id: StarterContent.planID))
+        let routine = try #require(model.store.linkedObjects("routines", of: plan).first { $0.title == "Push A" })
+        let pack = try #require(DayNames.pack(of: routine, store: model.store))
+        let facts = DayNamingPrompt.facts(pack, avoid: ["Push day"])
+        let data = try #require(facts.dropFirst("<facts>".count).dropLast("</facts>".count).data(using: .utf8))
+        let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        #expect(Set(object.keys) == ["avoid", "exercises", "muscles"])
+        #expect(object["exercises"] as? [String] == pack.exercises)
+    }
+
+    @Test func theAppPlugsTheOnDeviceNamer() {
+        let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext)
+        #expect(model.dayNamer.onDevice != nil)
+    }
+
+    /// Product on #1174: the instructions lead with specific names; the plain split comes last, as a fallback.
+    @Test func specificNamesComeBeforeThePlainSplit() throws {
+        let words = DayNamingPrompt.instructions
+        let specific = try #require(words.range(of: "Heavy chest"))
+        let plain = try #require(words.range(of: "fall back to a plain split"))
+        #expect(specific.lowerBound < plain.lowerBound)
+        #expect(words.contains("1 to 3 words, 22 characters or fewer"))
     }
 }
