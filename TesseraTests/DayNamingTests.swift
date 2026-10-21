@@ -28,12 +28,13 @@ struct DayNamingTests {
         try StarterContent.installIfNeeded(store: model.store, classes: model.classes)
         let plan = try #require(model.store.object(id: StarterContent.planID))
         let routine = try #require(model.store.linkedObjects("routines", of: plan).first { $0.title == "Push A" })
-        // His own name: never touched.
-        #expect(await model.nameTrainingDays().isEmpty && routine.title == "Push A")
-        // A placeholder title: Tess names it once from its exercises (no Claude on a throwaway store).
-        routine.title = "New routine"
-        #expect(await model.nameTrainingDays() == ["Push day"])
-        #expect(routine.title == "Push day")
+        // A name of his own: never touched.
+        routine.title = "Bench day"
+        #expect(await model.nameTrainingDays().isEmpty && routine.title == "Bench day")
+        // The starter's stock title ("Push A") is not a name he chose: Tess names it once.
+        routine.title = "Push A"
+        #expect(await model.nameTrainingDays() == ["Push day"] && routine.title == "Push day")
+        // Named once; asked again only when its exercises change.
         #expect(await model.nameTrainingDays().isEmpty)
         // He renames it: Tess stops for good.
         routine.title = "Chest and shoulders"
