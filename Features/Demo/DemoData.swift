@@ -267,14 +267,18 @@ enum DemoData {
             try? store.set("isDone", to: .bool(false), on: task)
         }
 
-        let workout = store.create(workoutClass, title: "Push Day A")
+        // The plan's push day by its place, not its title: Tess may have renamed it already (release 32).
+        let push = model.objects(of: .plan).first { $0.id != StarterContent.planID && $0.title == "Push Pull Legs" }
+            .flatMap { store.linkedObjects("routines", of: $0).first }
+            ?? model.objects(of: .routine).first { $0.title == "Push Day A" }
+        let workout = store.create(workoutClass, title: push?.title ?? "Push Day A")
         // Today's workout stays inside his day: from 03:10 to 04:00 "in 50 minutes" would land past 04:00, on
         // tomorrow, and Home would have no workout tonight (tonightWorkout() was nil 03:00 to 04:00).
         let dayEnd = TesseraDay().end(of: now)
         let scheduled = min(anchor.addingTimeInterval(50 * 60), dayEnd.addingTimeInterval(-5 * 60))
         try? store.set("scheduledFor", to: .date(scheduled), on: workout)
         // Today's workout is the plan's Push routine (the plan rolls on to it after yesterday's legs).
-        if let push = model.objects(of: .routine).first(where: { $0.title == "Push Day A" }) {
+        if let push {
             try? store.setLinks("routine", on: workout, to: [push])
         }
         let lineup: [(String, Double, Double, Double)] = [

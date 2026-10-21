@@ -361,6 +361,9 @@ private struct QueueRow: View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
             Text(entry.title)
                 .font(Theme.Typography.font(Theme.concept.scale.body, weight: isNext ? .medium : .regular))
+                // A day's new name settles in with a quiet fade, never a pop (Design on #1181).
+                .contentTransition(.opacity)
+                .tesseraAnimation(.easeOut(duration: 0.24), value: entry.title)
                 .foregroundStyle(Theme.Colors.ink.opacity(struck ? 0.45 : ink))
                 // A long title wraps; it never ends in "…" (41.2).
                 .fixedSize(horizontal: false, vertical: true)
