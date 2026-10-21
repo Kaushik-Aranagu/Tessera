@@ -83,7 +83,8 @@ struct MeasureView: View {
             }
         }
         .contentShape(Rectangle().inset(by: -8))
-        .onTapGesture(perform: tap)
+        // A simultaneous tap, so a drag that starts on the number is still the page's scroll.
+        .simultaneousGesture(TapGesture().onEnded { tap() })
         .tesseraFeedback(.selection, trigger: ticks)
         .tesseraAnimation(.easeOut(duration: 0.15), value: unit)
         .accessibilityElement(children: .ignore)
@@ -118,30 +119,17 @@ struct MeasureView: View {
 
     // MARK: Gestures
 
-    /// Nothing when the unit does not swipe; a plain drag by default; at accessibility sizes (where the screen
-    /// scrolls) a 0.2 s press first, so a scroll that starts on a number never flips the unit.
+    /// The unit's drag. None when the unit does not swipe, under Reduce Motion, and at accessibility sizes: there the
+    /// screen scrolls, and any drag the unit claimed (even one that waits for a press) held the scroll back when it
+    /// began on a row's number, so a tap cycles the unit instead, as under Reduce Motion.
     private var unitGesture: AnyGesture<Void>? {
-        guard swipes, !reduceMotion else { return nil }
-        if typeSize.isAccessibilitySize {
-            return AnyGesture(grabbedSwipe.map { _ in () })
-        }
+        guard swipes, !reduceMotion, !typeSize.isAccessibilitySize else { return nil }
         return AnyGesture(swipe.map { _ in () })
     }
 
     private var swipe: some Gesture {
         DragGesture(minimumDistance: 8)
             .onChanged { unitSwipeChanged($0) }
-            .onEnded { _ in unitSwipeEnded() }
-    }
-
-    private var grabbedSwipe: some Gesture {
-        LongPressGesture(minimumDuration: 0.2, maximumDistance: 8)
-            .sequenced(before: DragGesture(minimumDistance: 0))
-            .onChanged { value in
-                if case let .second(true, drag?) = value {
-                    unitSwipeChanged(drag)
-                }
-            }
             .onEnded { _ in unitSwipeEnded() }
     }
 
@@ -165,9 +153,10 @@ struct MeasureView: View {
         swipeFrom = nil
     }
 
-    /// A tap: under Reduce Motion it cycles the unit; otherwise it shows the stored value for a second.
+    /// A tap: under Reduce Motion or at accessibility sizes it cycles the unit; otherwise it shows the stored value for
+    /// a second.
     private func tap() {
-        if reduceMotion, swipes {
+        if reduceMotion || typeSize.isAccessibilitySize, swipes {
             choose(MeasureParts.cycle(wheel, from: unit))
             return
         }
