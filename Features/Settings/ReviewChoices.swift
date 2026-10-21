@@ -75,7 +75,9 @@ final class ReviewChoices {
         Choice(id: "trainingAutoName", name: "Tess names training days", values: ["On", "Off"], defaultValue: "On",
                says: ["On": "A new training day gets a short name from its exercises until you name it.",
                       "Off": "Training days keep the name you give them."],
-               readiness: .live),
+               // It can send exercise names to Claude when "Tess asks Claude" is on and the phone has no model of
+               // its own (QA on #1170); the switch never turns Claude on.
+               needsClaude: true, readiness: .live),
         Choice(id: "tabs.neighbours", name: "Tab neighbours", values: ["Blurred", "Crisp"], defaultValue: "Blurred",
                says: ["Crisp": "The tabs beside the current one read crisp and faint.",
                       "Blurred": "The tabs beside the current one soften into a blur."],

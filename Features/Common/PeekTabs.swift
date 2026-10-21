@@ -120,7 +120,9 @@ struct PeekTabs<Content: View>: View {
 
     private var pages: some View {
         ScrollView(.horizontal) {
-            LazyHStack(alignment: .top, spacing: 0) {
+            // A plain stack (a handful of pages): the pager is as tall as its tallest page, so every tab shows all
+            // its rows (Builder A's clip on #1173: Cook notes was cut under a three-row first page).
+            HStack(alignment: .top, spacing: 0) {
                 ForEach(tabs.indices, id: \.self) { index in
                     content(index)
                         .containerRelativeFrame(.horizontal)

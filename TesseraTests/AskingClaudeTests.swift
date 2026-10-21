@@ -1,3 +1,4 @@
+import SwiftUI
 @testable import Tessera
 import TesseraCore
 import TesseraTess
@@ -37,5 +38,12 @@ struct AskingClaudeTests {
         #expect(AskDraft.read(old: "buy milk", new: "buy milk\n") == ("buy milk", true))
         #expect(AskDraft.read(old: "", new: "milk\neggs") == ("milk eggs", false))
         #expect(AskDraft.read(old: "buy", new: "buy milk\nand eggs").send == false)
+    }
+
+    /// Design on #1170: five lines, four at the largest size, so only whole lines ever show.
+    @Test func theFieldShowsWholeLinesOnly() {
+        #expect(AskDraft.maxLines(at: .large) == 5)
+        #expect(AskDraft.maxLines(at: .accessibility4) == 5)
+        #expect(AskDraft.maxLines(at: .accessibility5) == 4)
     }
 }
