@@ -15,4 +15,10 @@ struct UnitsSentenceTests {
         #expect(UnitsCopy.next(after: "lb", in: .weight) == "kg")
         #expect(UnitsCopy.next(after: "°C", in: .temperature) == "°F")
     }
+
+    /// QA on #1193: VoiceOver reads each clause on its unit word: "Weights in, kilograms".
+    @Test func voiceOverReadsEachClauseOnItsUnit() {
+        #expect(UnitsCopy.spokenLead(.weight) == "Weights in")
+        #expect(UnitsCopy.spokenLead(.temperature) == "Temperatures in")
+    }
 }

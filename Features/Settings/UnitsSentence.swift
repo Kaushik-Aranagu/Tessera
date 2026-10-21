@@ -15,15 +15,19 @@ struct UnitsSentence: View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(UnitsCopy.kinds.enumerated()), id: \.element) { index, kind in
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    // VoiceOver stops once per clause, on the unit word, which carries the words around it: no
+                    // separate stops for "Weights in" or the commas (QA on #1193).
                     Text(UnitsCopy.lead(kind, first: index == 0))
+                        .accessibilityHidden(true)
                     Button(unit(kind)) { step(kind) }
                         .buttonStyle(.valueWash)
                         .fontWeight(.semibold)
                         .contentTransition(.opacity)
-                        .accessibilityLabel(UnitsCopy.name(kind))
+                        .accessibilityLabel(UnitsCopy.spokenLead(kind))
                         .accessibilityValue(MeasureParts.spokenUnit(unit(kind)))
                         .accessibilityHint("Changes the unit everywhere this shows")
                     Text(index == UnitsCopy.kinds.count - 1 ? "." : ",")
+                        .accessibilityHidden(true)
                 }
                 .frame(minHeight: 44, alignment: .leading)
             }
@@ -38,7 +42,8 @@ struct UnitsSentence: View {
 
     private func step(_ kind: MeasureKind) {
         let next = UnitsCopy.next(after: unit(kind), in: kind)
-        withTesseraAnimation(.easeOut(duration: 0.15), reduceMotion: reduceMotion) {
+        // Low Power counts as Reduce Motion (QA on #1193).
+        withTesseraAnimation(.easeOut(duration: 0.15), reduceMotion: reduceMotion || PowerState.isLowPower) {
             if AppModel.isDemo {
                 demoPicks[kind] = next
             } else {
@@ -61,17 +66,13 @@ enum UnitsCopy {
         case .temperature: "temperatures"
         default: kind.rawValue
         }
-        return (first ? word.prefix(1).uppercased() + word.dropFirst() : " " + word) + " in "
+        // Each clause is its own line, so none starts with a space: the left edges line up (Design on #1193).
+        return (first ? word.prefix(1).uppercased() + word.dropFirst() : word) + " in "
     }
 
-    static func name(_ kind: MeasureKind) -> String {
-        switch kind {
-        case .weight: "Weight unit"
-        case .distance: "Distance unit"
-        case .length: "Length unit"
-        case .temperature: "Temperature unit"
-        default: "Unit"
-        }
+    /// What VoiceOver reads before the unit: "Weights in", "distances in".
+    static func spokenLead(_ kind: MeasureKind) -> String {
+        lead(kind, first: true).trimmingCharacters(in: .whitespaces)
     }
 
     /// The unit a kind reads in before he picks one.
