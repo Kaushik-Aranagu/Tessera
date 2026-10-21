@@ -238,7 +238,7 @@ struct DayNamerPayloadTests {
                              session: URLSession(configuration: configuration), allowed: { true })
         // The suite runs beside many main-actor tests; heavy tests hog the main actor for minutes; no deadline may trip
         // here.
-        namer.timeout = 600
+        namer.timeout = 3600
         NamingStub.bodies = []
         let result = await namer.suggest(for: routine, engine: engine, avoiding: ["Heavy push"])
         #expect(result?.source == .claude)

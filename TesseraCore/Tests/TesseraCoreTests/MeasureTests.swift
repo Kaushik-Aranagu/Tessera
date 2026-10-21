@@ -26,7 +26,10 @@ struct MeasureTests {
         #expect(UnitConverter.convert(100, from: "°C", to: "°F") == 212)
         #expect(Measure(37, "°C").converted(to: "°F")?.formatted == "98.6°F")
         #expect(Measure(5, "km").converted(to: "mi")?.formatted == "3.11 mi")
-        #expect(Measure(90, "min").converted(to: "hr")?.formatted == "1.5 hr")
+        #expect(Measure(90, "min").converted(to: "hr")?.formatted == "1 hr 30 min")
+        #expect(Measure(95, "min").converted(to: "hr")?.formatted == "1 hr 35 min")
+        #expect(Measure(120, "min").converted(to: "hr")?.formatted == "2 hr")
+        #expect(Measure(35, "min").converted(to: "hr")?.formatted == "35 min")
         #expect(Measure(2.54, "cm").converted(to: "in")?.formatted == "1 in")
         #expect(UnitConverter.convert(1, from: "kg", to: "km") == nil)
         #expect(Measure(1, "kg").converted(to: "km") == nil)
@@ -201,12 +204,74 @@ struct CurrencyRatesTests {
     @Test func offlineKeepsTheLastSavedTableWithItsDateAndNothingSavedStopsTheWheel() async throws {
         let store = cache()
         Stub.reply = nil
-        #expect(await fetcher(.now, cache: store).refreshIfNeeded() == nil)
-        Stub.reply = Data(Self.xml.utf8)
         let start = Date(timeIntervalSince1970: 1_792_000_000)
+        #expect(await fetcher(start.addingTimeInterval(-7200), cache: store).refreshIfNeeded() == nil)
+        Stub.reply = Data(Self.xml.utf8)
         _ = await fetcher(start, cache: store).refreshIfNeeded()
         Stub.reply = nil
         let kept = try #require(await fetcher(start.addingTimeInterval(7200), cache: store).refreshIfNeeded())
         #expect(kept.rates["USD"] == 1.167 && kept.date == CurrencyRatesFetch.parse(Data(Self.xml.utf8))?.date)
+    }
+}
+
+/// The lows from #1176.
+@MainActor
+struct MeasureLowsTests {
+    @Test func theRatesFilesAreExcludedFromBackup() throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "rates-\(UUID().uuidString).json")
+        let cache = RatesCache(url: url)
+        cache.write(CurrencyRates(rates: ["USD": 1.2], date: .now), fetchedAt: .now)
+        cache.noteAttempt(at: .now)
+        for file in try [url, #require(cache.attemptURL)] {
+            let values = try file.resourceValues(forKeys: [.isExcludedFromBackupKey])
+            #expect(values.isExcludedFromBackup == true, "\(file.lastPathComponent)")
+        }
+    }
+
+    @Test func aFailedTryIsNotRetriedWithinTheHourEvenByANewFetcher() async {
+        let url = FileManager.default.temporaryDirectory.appending(path: "rates-\(UUID().uuidString).json")
+        CurrencyRatesTests.Stub.requests = []
+        CurrencyRatesTests.Stub.reply = nil
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [CurrencyRatesTests.Stub.self]
+        let start = Date(timeIntervalSince1970: 1_792_000_000)
+        func fetcher(_ moment: Date) -> CurrencyRatesFetch {
+            let fetch = CurrencyRatesFetch(cache: RatesCache(url: url),
+                                           session: URLSession(configuration: configuration))
+            fetch.now = { moment }
+            return fetch
+        }
+        #expect(await fetcher(start).refreshIfNeeded() == nil)
+        #expect(await fetcher(start.addingTimeInterval(600)).refreshIfNeeded() == nil)
+        #expect(CurrencyRatesTests.Stub.requests.count == 1)
+        _ = await fetcher(start.addingTimeInterval(3700)).refreshIfNeeded()
+        #expect(CurrencyRatesTests.Stub.requests.count == 2)
+    }
+
+    @Test func addedLoadOnABodyweightLiftFollowsTheChosenUnit() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        try ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: store,
+                                             classes: classes)
+        let engine = ActionEngine(store: store, classes: classes)
+        let pullUp = try #require(store.allClasses().first { $0.name == "Pull-Up" })
+        try engine.perform(LogExercise(exercise: pullUp.id, weight: 10, reps: 5, sets: 1), by: .user)
+        let entryClass = try #require(classes[.exerciseEntry])
+        let entry = try #require(store.objects(of: entryClass).first)
+        let tess = TessCaptureEngine(engine: engine)
+        #expect(tess.load(10, unit: .kilograms, entry: entry) == "+10")
+        try SettingsStore(engine: engine).update { $0.displayUnits.choose("lb", for: .weight) }
+        #expect(tess.load(10, unit: .kilograms, entry: entry) == "+22 lb")
+        #expect(tess.load(0, unit: .kilograms, entry: entry) == "bodyweight")
+    }
+
+    @Test func anAttemptTimeInTheFutureDoesNotBlockTheFetch() {
+        let url = FileManager.default.temporaryDirectory.appending(path: "rates-\(UUID().uuidString).json")
+        let cache = RatesCache(url: url)
+        let now = Date(timeIntervalSince1970: 1_792_000_000)
+        cache.noteAttempt(at: now.addingTimeInterval(86400))
+        #expect(cache.isFetchDue(now: now))
+        cache.noteAttempt(at: now.addingTimeInterval(-600))
+        #expect(!cache.isFetchDue(now: now))
     }
 }

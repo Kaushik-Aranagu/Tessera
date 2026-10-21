@@ -143,4 +143,45 @@ struct MoneyPhrasesTests {
             .amount == Decimal(string: "1234.5"))
         #expect(MoneyAmount.parse("12,40")?.amount == Decimal(string: "12.4"))
     }
+
+    @Test func onlyAMoneyQuestionIsAnsweredWithTheMonthLine() {
+        #expect(read("how much did I lift this month") != "ask October: nothing logged yet")
+        #expect(!read("how much did I lift this month").hasPrefix("ask October"))
+        #expect(!read("how much did I run so far this month").hasPrefix("ask October"))
+        #expect(read("how much this month").hasPrefix("ask October"))
+        #expect(read("how much did I pay this month").hasPrefix("ask October"))
+        #expect(read("how much did I spend this month").hasPrefix("ask October"))
+    }
+
+    @Test func theTotalIsAskedOnlyInsideTheTwoHourWindow() throws {
+        let finish = context.now.addingTimeInterval(-3 * 3600)
+        try finishedShop(at: finish)
+        #expect(read("38.20").hasPrefix("privateNote"))
+        #expect(read("skip") != "skip")
+        try finishedShop(at: context.now.addingTimeInterval(-3600))
+        #expect(read("38.20") == "total 38.20")
+    }
+
+    @Test func aDayPassIsASpendButHoursAreNot() {
+        #expect(read("spent 12.00 day pass") == "spend 12.00 [day pass]")
+        #expect(read("spent 12.00 week pass") == "spend 12.00 [week pass]")
+        #expect(read("spent 1.50 hours on taxes") == "nil")
+        for phrase in ["spent 1 hour on taxes", "spent 1 day at the beach", "spent 1 week in Rome",
+                       "spent 1 mile on foot"]
+        {
+            #expect(read(phrase) == "nil", "\(phrase)")
+        }
+    }
+
+    @Test func receiptsGroupThousandsAndTheMonthLineShowsTheTopTwo() async throws {
+        let tess = TessCaptureEngine(engine: engine)
+        let rent = await tess.capture("paid rent 2100", context: context)
+        #expect(rent.line == "Rent, 2,100.00.")
+        try engine.perform(LogSpend(amount: 80, typed: "80", note: "groceries", spentAt: context.now), by: .user)
+        try engine.perform(LogSpend(amount: 20, typed: "20", note: "lunch", spentAt: context.now), by: .user)
+        try engine.perform(LogSpend(amount: 5, typed: "5", note: "coffee", spentAt: context.now), by: .user)
+        let line = await tess.capture("how much this month", context: context).line
+        #expect(line.components(separatedBy: " · ").count == 3, "\(line)")
+        #expect(line.contains("rent") && line.contains("groceries") && !line.contains("coffee"), "\(line)")
+    }
 }
