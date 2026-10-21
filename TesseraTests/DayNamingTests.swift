@@ -64,7 +64,7 @@ struct DayNamingTests {
         }
         namer.onDeviceAvailable = { true }
         let suggestion = try #require(await namer.suggest(for: routine, engine: model.engine))
-        #expect(suggestion.source == .rules && suggestion.name == "Push day")
+        #expect(suggestion.source == .rules && suggestion.name == "Heavy chest")
         #expect(!claudeAsked, "Claude's gate was read on a phone with its own model")
     }
 
