@@ -61,7 +61,8 @@ struct MoneyPhrasesTests {
     @Test(arguments: [
         ("bench 82.50 x 8", "lift"), ("pay rent 650 fri", "task Pay rent 650"), ("milk, eggs, 2 lemons", "groceries"),
         ("spent the day at the beach sat", "task"), ("spent 2 hours on taxes", "nil"), ("38.20", "privateNote"),
-        ("450 groceries", "nil"), ("12.40 lunch tomorrow", "task"),
+        ("450 groceries", "nil"), ("12.40 lunch tomorrow", "task"), ("82.50 kg", "privateNote"),
+        ("5.00 km", "nil"), ("1.50 hours", "nil"), ("spent 1.50 hours on taxes", "nil"), ("squat 100.00 kg", "nil"),
     ])
     func notMoney(_ phrase: String, _ expected: String) {
         let got = read(phrase)

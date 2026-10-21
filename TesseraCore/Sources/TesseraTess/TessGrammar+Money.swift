@@ -80,9 +80,10 @@ extension TessGrammar {
         if let amount = MoneyAmount.parse(rest) {
             let shaped = verb || Self.hasMoneyShape(amount)
             var note = MoneyAmount.note(after: rest)
-            // "spent 2 hours on taxes": a quantity, not a sum.
+            // "spent 2 hours on taxes", "82.50 kg", "5.00 km", "1.50 hours": a quantity, not a sum, unless a currency
+            // sign or code says otherwise (cents do not make a number money).
             if let first = note.split(separator: " ").first?.lowercased(), Self.quantityWords.contains(first),
-               !Self.hasMoneyShape(amount)
+               amount.currency == nil
             {
                 return nil
             }
