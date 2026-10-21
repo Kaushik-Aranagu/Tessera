@@ -25,8 +25,13 @@ final class AreaIndexOpenUITests: SimulatorOnlyTestCase {
         let window = app.windows.firstMatch
         let start = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
         let end = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
+        // Scroll the page up first, then pull down: the page itself moves back (the greeting is on screen again).
+        end.press(forDuration: 0.1, thenDragTo: start)
+        sleep(1)
         start.press(forDuration: 0.1, thenDragTo: end)
         sleep(1)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "evening")).firstMatch
+            .isHittable, "The pull-down scrolled the page back to its top")
         XCTAssertFalse(app.staticTexts["Let go to open"].exists, "A pull-down opened the index")
         XCTAssertFalse(app.buttons["TRAINING, Push Day A is on"].exists, "A pull-down opened the index")
         XCTAssertTrue(app.buttons["Today, area"].exists, "The page is still Today")

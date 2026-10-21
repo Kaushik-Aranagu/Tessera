@@ -227,6 +227,11 @@ private struct TrainingAtRest: View {
             Text(title)
                 .textRole(.title)
                 .foregroundStyle(Theme.Colors.ink)
+                // The day's name wraps to a second line and, if that is still too long, scales a little: never "...".
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())

@@ -106,7 +106,8 @@ struct AreaName: View {
             }
             .frame(height: height, alignment: .leading)
             .clipped()
-            .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+            // A thumb-sized target around the small word, with no visible change.
+            .frame(minWidth: 160, minHeight: 44)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -133,43 +134,6 @@ struct AreaName: View {
     }
 }
 
-/// The pull-down's selection. The index forms over the first 90 pt of drag; once formed it stays open and the row
-/// follows the finger relative to where it formed (the area you are in is under the finger then), one row per 60 pt
-/// either way. The old rule read the finger's absolute position, so a thumb that started low could only land on
-/// Kitchen and dragging back up closed the index.
-struct AreaIndexPull: Equatable {
-    static let startAt: CGFloat = 20
-    static let formedAt: CGFloat = 90
-    static let rowStep: CGFloat = 60
-
-    /// The drag distance at which the index formed; nil while it is still forming.
-    private(set) var anchor: CGFloat?
-
-    /// How open the index is for a drag of `translation`: 0…1 while forming, 1 once formed (it never un-forms).
-    mutating func progress(translation: CGFloat) -> Double {
-        if anchor != nil {
-            return 1
-        }
-        let formed = Double(min(max((translation - Self.startAt) / (Self.formedAt - Self.startAt), 0), 1))
-        if formed >= 1 {
-            // Where the index forms (90 pt), not the first event past it: a fast flick still steps its rows.
-            anchor = Self.formedAt
-        }
-        return formed
-    }
-
-    /// The row the finger is on: the current area at the moment of forming, then a row per `rowStep` of travel.
-    func picked(translation: CGFloat, current: Int, count: Int) -> Int? {
-        guard let anchor else { return nil }
-        let steps = Int(((translation - anchor) / Self.rowStep).rounded())
-        return min(max(current + steps, 0), count - 1)
-    }
-
-    var isFormed: Bool {
-        anchor != nil
-    }
-}
-
 /// The glass sheet: from the top to 580 with 40 pt bottom corners, rows from 96, 104 pt apart, REVIEW, TODAY,
 /// TRAINING, KITCHEN. The area you are in is ink, the others 42% ink, the one under the finger takes its area's
 /// colour (72% mix, Today ink at weight 700) and scales to 1.06.
@@ -180,7 +144,6 @@ struct AreaIndexSheet: View {
     /// 0 closed … 1 open.
     let progress: Double
     let picked: Int?
-    let pulling: Bool
     /// Reduce Motion or Low Power: a 150 ms crossfade, with no drop, stagger or flight.
     let calm: Bool
     let namespace: Namespace.ID
@@ -211,7 +174,7 @@ struct AreaIndexSheet: View {
                         .opacity(rowOpacity(index))
                 }
                 Spacer(minLength: 0)
-                Text(pulling ? "Let go to open" : "Tap one to open")
+                Text("Tap one to open")
                     .font(PageType.small)
                     .foregroundStyle(Theme.Colors.ink.opacity(restInk))
                     .frame(height: 52)
