@@ -714,7 +714,7 @@ extension WorkoutContent {
                         }
                     } label: { _ in
                         Text(
-                            "Log \(Format.kilograms(session.weight)) × \(Int(session.reps))\(finishes ? " and finish" : "")"
+                            "Log \(Format.kilograms(session.weight))\u{00A0}×\u{00A0}\(Int(session.reps))\(finishes ? " and finish" : "")"
                         )
                         .textRole(.labelStrong)
                         .textCase(.uppercase)
