@@ -62,6 +62,15 @@ struct PrivacyFollowupTests {
         #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
     }
 
+    /// Money the grammar now reads (a spend) is logged on the phone and never reaches Claude.
+    @Test(arguments: ["$212.37 at Costco", "paid rent 2100", "paid 40 for gas", "spent 12.40 on coffee"])
+    func moneyTheGrammarReadsNeverReachesClaude(_ phrase: String) async {
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
+        let capture = await run(phrase)
+        #expect(claude.heard.isEmpty, "\(phrase)")
+        #expect(capture.records.map(\.action) == ["logSpend"], "\(phrase): \(capture.line)")
+    }
+
     /// Body facts the grammar itself reads stay on the phone; the wall never had to stop them.
     @Test(arguments: ["182.4 lb this morning", "weighed in at 83 kg", "bp 128/82", "slept 5 hours", "took 2 advil"])
     func bodyFactsTheGrammarReadsNeverReachClaude(_ phrase: String) async {
@@ -70,8 +79,8 @@ struct PrivacyFollowupTests {
         #expect(claude.heard.isEmpty, "\(phrase)")
     }
 
-    @Test(arguments: ["paid 20 for 2 tickets", "spent 40 for 2 of us", "$212.37 at Costco", "paid rent 2100",
-                      "venmo sam 25 for pizza", "checking is at 3,412"])
+    @Test(arguments: ["paid 20 for 2 tickets", "spent 40 for 2 of us", "venmo sam 25 for pizza",
+                      "checking is at 3,412"])
     func theV9WallRowsReachClaudeAsMisses(_ phrase: String) async {
         #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
         _ = await run(phrase)

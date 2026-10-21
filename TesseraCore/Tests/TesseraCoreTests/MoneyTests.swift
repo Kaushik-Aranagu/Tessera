@@ -48,7 +48,7 @@ struct MoneyTests {
         )
         let spend = made.output
         #expect(spend.title == "12.40 lunch with sam" && made.record.summary == "12.40 lunch with sam")
-        #expect(made.record.receipt == "12.40 lunch with sam, logged.")
+        #expect(made.record.receipt == "Lunch with sam, 12.40.")
         #expect(store.value("category", of: spend)?.stringValue == "lunch")
         #expect(store.value("currency", of: spend)?.stringValue == "")
         engine.undo(made.record)
@@ -143,7 +143,7 @@ struct MoneyTests {
             LogShopTotal(amount: 38.20, typed: "38.20", time: finish.addingTimeInterval(300)),
             by: .user
         )
-        #expect(logged.output.title == "38.20 Groceries" && logged.record.receipt == "Groceries total, 38.20, logged.")
+        #expect(logged.output.title == "38.20 Groceries" && logged.record.receipt == "Groceries, 38.20.")
         #expect(store.value("category", of: logged.output)?.stringValue == "groceries")
         let receipt = ShopReceipt(store: store, classes: engine.classes)
         #expect(receipt.awaiting(at: finish.addingTimeInterval(400)) == nil)

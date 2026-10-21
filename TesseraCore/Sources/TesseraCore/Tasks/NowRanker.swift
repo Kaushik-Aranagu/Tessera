@@ -126,9 +126,21 @@ public extension NowPicker {
                                startsAt: nil, endsAt: nil, nextStep: nil),
                  score: .max, why: "\(RestDay.line). \(rest.next.title) is a tap away", isAsk: false)
         }
-        if soon != nil || restPick != nil {
-            let lead = [soon, restPick].compactMap(\.self)
-            return lead + scored.filter { $0.id != soon?.id }
+        // The groceries total, asked once after a shop (Money slice 3): outside quiet hours, until it is given or
+        // skipped. A timed task or a rest day still goes first; the Shop offer gives way to it.
+        let receipt = ShopReceipt(store: store, classes: engine.classes)
+        let totalPick: Pick? = context.declined.contains("shopTotal") ? nil
+            : receipt.nowPrompt(at: now, calendar: calendar, somethingRuns: false).flatMap { prompt in
+                receipt.awaiting(at: now).map { shop in
+                    Pick(item: NowItem(id: shop.id, kind: .offer, object: shop, title: prompt, startsAt: nil,
+                                       endsAt: nil, nextStep: nil),
+                         score: .max, why: "Shop finished", isAsk: true)
+                }
+            }
+        if soon != nil || restPick != nil || totalPick != nil {
+            let lead = [soon, restPick, totalPick].compactMap(\.self)
+            let leadIDs = Set(lead.map(\.id))
+            return lead + scored.filter { !leadIDs.contains($0.id) && !(totalPick != nil && $0.isAsk) }
         }
         // 4. Re-entry: the smallest thing that fits now, and nothing else.
         if context.daysAway >= Weight.reentryDays,

@@ -32,9 +32,15 @@ struct MemoryReadingMoneyTests {
     }
 
     @Test func aSpendLineNeverBecomesAMemoryLine() throws {
-        try engine.perform(LogSpend(amount: 12.4, typed: "12.40", note: "lunch"), by: .user)
-        let text = recent()
-        #expect(try text == nil || (!(#require(text?.lowercased().contains("spent"))) && !text!.contains("12.40")))
+        // Two currencies give "Spent 2 times (lunch, cab)": no amount in it, so only the "Spent" guard stops it.
+        try engine.perform(LogSpend(amount: 8, typed: "€8", currency: "EUR", note: "lunch"), by: .user)
+        try engine.perform(LogSpend(amount: 4.5, typed: "£4.50", currency: "GBP", note: "cab"), by: .user)
+        let today = Date()
+        let day = DayStory.lines(engine: engine, on: today, calendar: Self.calendar, now: today).map(\.text)
+        #expect(day.contains { $0.hasPrefix("Spent 2 times") })
+        // The whole day is money, so nothing is left to remember. (The "Spent" guard backs up the money wall; the
+        // two together keep this nil, and a leak of either shows as a line.)
+        #expect(recent() == nil)
     }
 
     @Test func aSpendWithAWalledWordNextToABookWithAWalledTitleLeavesNeitherInMemory() throws {
@@ -47,5 +53,17 @@ struct MemoryReadingMoneyTests {
         #expect(!day.contains { $0.lowercased().contains("lexapro") || $0.lowercased().contains("therapy") })
         let text = recent()?.lowercased() ?? ""
         #expect(!text.contains("lexapro") && !text.contains("therapy") && !text.contains("private book"))
+    }
+
+    @Test func theGuardRefusesSpendsAndPrivateBooksAndNothingElse() {
+        // The guard on its own, so no other layer can hide it going missing.
+        for line in ["Spent 12.40, lunch", "Spent 2 times (lunch, cab)", "Read Private book to p 30",
+                     "Finished Private book"]
+        {
+            #expect(TessMemoryStore.staysOutOfMemory(line), "\(line)")
+        }
+        for line in ["Read Dune to p 142", "Finished Dune", "Push A, 50 min", "Cooked chili, 40 min"] {
+            #expect(!TessMemoryStore.staysOutOfMemory(line), "\(line)")
+        }
     }
 }
