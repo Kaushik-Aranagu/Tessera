@@ -100,7 +100,7 @@ struct SiriParityTests {
         // Said on Thursday Oct 15 in the past tense, "fri" is last Friday, Oct 9.
         let friday = try #require(Self.calendar.date(from: DateComponents(year: 2026, month: 10, day: 9, hour: 12)))
         for capture in await [say("paid rent 2100 fri"), say("paid rent 2100 fri", tell: true)] {
-            #expect(capture.line == "Rent, 2100.00." && capture.records.map(\.action) == ["logSpend"])
+            #expect(capture.line == "Rent, 2,100.00." && capture.records.map(\.action) == ["logSpend"])
         }
         #expect(try add("paid rent 2100 fri") == "Private note, kept.")
         let notes = store.context.objects.values.filter { $0.title == SecretWords.title }
