@@ -35,6 +35,12 @@ enum AskingClaudeCopy {
 /// What a newline in the Ask's draft means: Return's own (one character added, at the end) sends; any other line break,
 /// as from a paste, is a space and sends nothing.
 enum AskDraft {
+    /// Lines the field grows to before it scrolls inside: five, or four at the largest size, where five would not fit
+    /// above the keyboard and the top line would show cut (Design on #1170). Whole lines only, no fade.
+    static func maxLines(at size: DynamicTypeSize) -> Int {
+        size >= .accessibility5 ? 4 : 5
+    }
+
     static func read(old: String, new: String) -> (text: String, send: Bool) {
         let typedReturn = new.count == old.count + 1 && new.hasSuffix("\n") && new.dropLast() == Substring(old)
         let text = new.replacingOccurrences(of: "\n", with: " ")

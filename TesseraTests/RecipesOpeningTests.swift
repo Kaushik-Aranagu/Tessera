@@ -41,7 +41,7 @@ struct RecipesOpeningTests {
         #expect(RecipeCopy.stepCount(4) == "4 steps")
     }
 
-    @Test func noCookKeyUntilCookMode() {
-        #expect(!RecipePage.cookModeReady)
+    @Test func cookKeyShipsWithTheClockPage() {
+        #expect(RecipePage.cookModeReady)
     }
 }
