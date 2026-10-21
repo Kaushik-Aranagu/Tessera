@@ -219,6 +219,10 @@ public final class TessCaptureEngine: TessCapturing {
         if kit == .bodyweight {
             return kilograms == 0 ? "bodyweight" : "+\(TessVoice.number(kilograms))"
         }
+        // His chosen weight unit wins over the unit it was said in; stored kilograms never change.
+        if let chosen = SettingsStore(engine: engine).read().displayUnits.weight(kilograms: kilograms) {
+            return chosen.unit == "kg" ? TessVoice.number(kilograms) : chosen.formatted
+        }
         return unit == .kilograms ? TessVoice.number(kilograms) : unit.format(kilograms: kilograms)
     }
 
