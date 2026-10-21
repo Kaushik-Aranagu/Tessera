@@ -10,6 +10,11 @@ extension TessGrammar {
         "hours", "hr", "hrs", "minutes", "min", "mins", "days", "weeks", "months", "years", "times", "kg", "lb",
         "lbs", "reps", "sets", "miles", "km", "people", "items", "x",
     ]
+    /// Singular quantity words are a quantity only after exactly 1 ("spent 1 hour on taxes"); "spent 12.00 day pass"
+    /// is a spend.
+    static let singularQuantityWords: Set = [
+        "hour", "minute", "day", "week", "month", "year", "time", "mile", "set", "rep", "item", "person",
+    ]
 
     /// "how much this month", "how much did I spend this month": the month line, from the log.
     func parseMonthQuestion(_ text: String, context: TessContext) -> Parse? {
@@ -85,7 +90,8 @@ extension TessGrammar {
             var note = MoneyAmount.note(after: rest)
             // "spent 2 hours on taxes", "82.50 kg", "5.00 km", "1.50 hours": a quantity, not a sum, unless a currency
             // sign or code says otherwise (cents do not make a number money).
-            if let first = note.split(separator: " ").first?.lowercased(), Self.quantityWords.contains(first),
+            if let first = note.split(separator: " ").first?.lowercased(),
+               Self.quantityWords.contains(first) || (amount.amount == 1 && Self.singularQuantityWords.contains(first)),
                amount.currency == nil
             {
                 return nil

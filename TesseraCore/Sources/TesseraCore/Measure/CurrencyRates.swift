@@ -87,7 +87,8 @@ public struct RatesCache: Sendable {
 
     /// Whether a fetch is due: nothing tried or saved in the last hour.
     public func isFetchDue(now: Date) -> Bool {
-        let last = [read()?.fetchedAt, lastAttempt()].compactMap(\.self).max()
+        // A time in the future (the clock was set back) counts as no try at all.
+        let last = [read()?.fetchedAt, lastAttempt()].compactMap(\.self).filter { $0 <= now }.max()
         guard let last else { return true }
         return now.timeIntervalSince(last) >= Self.minimumInterval
     }

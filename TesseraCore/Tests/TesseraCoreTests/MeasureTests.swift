@@ -264,4 +264,14 @@ struct MeasureLowsTests {
         #expect(tess.load(10, unit: .kilograms, entry: entry) == "+22 lb")
         #expect(tess.load(0, unit: .kilograms, entry: entry) == "bodyweight")
     }
+
+    @Test func anAttemptTimeInTheFutureDoesNotBlockTheFetch() {
+        let url = FileManager.default.temporaryDirectory.appending(path: "rates-\(UUID().uuidString).json")
+        let cache = RatesCache(url: url)
+        let now = Date(timeIntervalSince1970: 1_792_000_000)
+        cache.noteAttempt(at: now.addingTimeInterval(86400))
+        #expect(cache.isFetchDue(now: now))
+        cache.noteAttempt(at: now.addingTimeInterval(-600))
+        #expect(!cache.isFetchDue(now: now))
+    }
 }

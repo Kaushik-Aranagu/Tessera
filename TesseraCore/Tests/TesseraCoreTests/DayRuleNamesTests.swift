@@ -224,4 +224,21 @@ struct DayRuleNamesTests {
         _ = await maker.autoName(day, engine: engine)
         #expect(asked == 1)
     }
+
+    @Test(arguments: ["heavy", "light", "two", "three"])
+    func anOldRuleNameWithATailIsRecognisedAndMoved(_ tail: String) async throws {
+        let pushB = try #require(starters()["Push B"])
+        let pack = try #require(DayNames.pack(of: pushB, store: store))
+        let old = "Push day \(tail)"
+        pushB.title = old
+        try store.set("autoName", to: .text(old), on: pushB)
+        try store.set("autoNameKey", to: .text(pack.key), on: pushB)
+        // Only if the old rules would have made "Push day" first for this day's muscles.
+        let muscles = MuscleSummary.topWords(of: pushB, store: store, limit: 5)
+        #expect(DayNames.localChoices(muscles: muscles).first == "Push day")
+        #expect(DayNames.isUnmarked(pushB, store: store))
+        let maker = DayNamer(keys: InMemoryKeychain(), ledger: TessUsageLedger(store: store, classes: engine.classes),
+                             allowed: { false })
+        #expect(await maker.autoName(pushB, engine: engine) != nil && pushB.title != old)
+    }
 }

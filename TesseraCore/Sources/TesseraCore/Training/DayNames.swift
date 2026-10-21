@@ -158,7 +158,13 @@ public enum DayNames {
         guard !given.isEmpty, routine.title == given,
               (store.value("autoNameBy", of: routine)?.stringValue ?? "").isEmpty else { return false }
         let muscles = MuscleSummary.topWords(of: routine, store: store, limit: 5)
-        return localChoices(muscles: muscles).contains(given)
+        let choices = localChoices(muscles: muscles)
+        if choices.contains(given) {
+            return true
+        }
+        // The old code made "Push day heavy", "Pull day two" and the like when a plain name was taken.
+        guard let base = choices.first else { return false }
+        return ["heavy", "light", "two", "three"].contains { given == "\(base) \($0)" }
     }
 
     /// The name last given and the exercises it was given for.

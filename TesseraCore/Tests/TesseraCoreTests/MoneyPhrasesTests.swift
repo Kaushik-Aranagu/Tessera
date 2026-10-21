@@ -149,6 +149,7 @@ struct MoneyPhrasesTests {
         #expect(!read("how much did I lift this month").hasPrefix("ask October"))
         #expect(!read("how much did I run so far this month").hasPrefix("ask October"))
         #expect(read("how much this month").hasPrefix("ask October"))
+        #expect(read("how much did I pay this month").hasPrefix("ask October"))
         #expect(read("how much did I spend this month").hasPrefix("ask October"))
     }
 
@@ -165,6 +166,11 @@ struct MoneyPhrasesTests {
         #expect(read("spent 12.00 day pass") == "spend 12.00 [day pass]")
         #expect(read("spent 12.00 week pass") == "spend 12.00 [week pass]")
         #expect(read("spent 1.50 hours on taxes") == "nil")
+        for phrase in ["spent 1 hour on taxes", "spent 1 day at the beach", "spent 1 week in Rome",
+                       "spent 1 mile on foot"]
+        {
+            #expect(read(phrase) == "nil", "\(phrase)")
+        }
     }
 
     @Test func receiptsGroupThousandsAndTheMonthLineShowsTheTopTwo() async throws {
