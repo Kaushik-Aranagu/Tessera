@@ -95,6 +95,8 @@ struct GymVisualSource: ExercisePictureSource {
 struct GifView: UIViewRepresentable {
     let url: URL
     let isStill: Bool
+    /// Dark looks: light and dark swap, the hues stay (DarkPlate), so the white plate becomes a dark one.
+    var isDarkPlate = false
 
     func makeUIView(context _: Context) -> UIImageView {
         let view = UIImageView()
@@ -105,7 +107,7 @@ struct GifView: UIViewRepresentable {
     }
 
     func updateUIView(_ view: UIImageView, context _: Context) {
-        let loaded = Self.frames(at: url)
+        let loaded = Self.frames(at: url, darkPlate: isDarkPlate)
         if isStill {
             view.stopAnimating()
             view.animationImages = nil
@@ -119,8 +121,9 @@ struct GifView: UIViewRepresentable {
     }
 
     /// Decoded once per file and kept: 71 GIFs at 180 x 180 are small.
-    private static func frames(at url: URL) -> (images: [UIImage], duration: TimeInterval) {
-        if let cached = cache.object(forKey: url as NSURL) {
+    private static func frames(at url: URL, darkPlate: Bool) -> (images: [UIImage], duration: TimeInterval) {
+        let key = "\(url.absoluteString)|\(darkPlate ? "dark" : "light")" as NSString
+        if let cached = cache.object(forKey: key) {
             return (cached.images, cached.duration)
         }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return ([], 1) }
@@ -128,13 +131,14 @@ struct GifView: UIViewRepresentable {
         var duration = 0.0
         for index in 0 ..< CGImageSourceGetCount(source) {
             guard let image = CGImageSourceCreateImageAtIndex(source, index, nil) else { continue }
-            images.append(UIImage(cgImage: image))
+            let frame = UIImage(cgImage: image)
+            images.append(darkPlate ? DarkPlate.invert(frame) : frame)
             let properties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any]
             let gif = properties?[kCGImagePropertyGIFDictionary] as? [CFString: Any]
             duration += (gif?[kCGImagePropertyGIFUnclampedDelayTime] as? Double)
                 ?? (gif?[kCGImagePropertyGIFDelayTime] as? Double) ?? 0.1
         }
-        cache.setObject(GifFrames(images: images, duration: max(duration, 0.1)), forKey: url as NSURL)
+        cache.setObject(GifFrames(images: images, duration: max(duration, 0.1)), forKey: key)
         return (images, max(duration, 0.1))
     }
 
@@ -147,5 +151,24 @@ struct GifView: UIViewRepresentable {
         }
     }
 
-    private static let cache = NSCache<NSURL, GifFrames>()
+    private static let cache = NSCache<NSString, GifFrames>()
+}
+
+/// The Gym visual on a dark look (Design's dark plate, Kaushik's OK on Oct 22): light and dark swap and the hues stay,
+/// so the white plate reads as a dark one and the red muscles stay red. Light looks are untouched.
+enum DarkPlate {
+    private static let context = CIContext()
+
+    static func invert(_ image: UIImage) -> UIImage {
+        guard let input = CIImage(image: image),
+              let invert = CIFilter(name: "CIColorInvert"),
+              let hue = CIFilter(name: "CIHueAdjust") else { return image }
+        invert.setValue(input, forKey: kCIInputImageKey)
+        // Inverting turns every hue to its opposite; half a turn brings it back.
+        hue.setValue(invert.outputImage, forKey: kCIInputImageKey)
+        hue.setValue(Float.pi, forKey: kCIInputAngleKey)
+        guard let output = hue.outputImage,
+              let cgImage = context.createCGImage(output, from: input.extent) else { return image }
+        return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
+    }
 }
