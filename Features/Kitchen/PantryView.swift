@@ -1,15 +1,11 @@
 import SwiftUI
 import TesseraCore
 
-/// Pantry's front (sheet 78; pantry-acceptance.md): what is out and what is low, and nothing else. The page frame
-/// (Title 44, then the context, then the hero in digits) until Product rules the area entry. OUT, then LOW, each
-/// thing one plain line with its state word at the right; out lines carry the recipe page's faint ring. A thing that
-/// becomes in leaves the page. A name opens its ingredient (a private one opens nothing); a left swipe on a line
-/// adds it to Groceries. Tess's band carries what the last cook used up. Never a badge, a notification or a total,
-/// and nothing leaves the phone.
-///
-/// Waiting on Core: USUALLY HAVE (Research R), the tap-to-cycle state words (a stored `Ingredient.state`), and the
-/// OUT AND LOW side (SideHost).
+/// Pantry by places (Design 118 §1–3 and §7, Kaushik's layout C, Oct 22): one page, the first user of RailPage. To
+/// get (the Groceries list) is pinned above the dial in the hot colour; Fridge, Freezer, Shelf and Counter turn
+/// through it. The open place fills the right half under its section words. A To get row taps off into the basket,
+/// like Groceries; a place's row opens its ingredient (a private one opens nothing). The item sheet and the swipes
+/// come next (118 §4, §2–3).
 struct PantryView: View {
     var body: some View {
         NavigationStack {
@@ -22,163 +18,89 @@ struct PantryView: View {
 
 private struct PantryPage: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private var ledger: PantryLedger {
-        PantryLedger(store: model.store, classes: model.classes)
-    }
+    /// To get opens first while it has things on it; else the fridge.
+    @State private var open: String?
+    @State private var trip = ShopTrip()
+    @State private var landed = 0
 
     var body: some View {
         let _ = model.revision
-        let front = PantryFront(ledger: ledger, now: AppClock.now)
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Pantry")
-                    .textRole(.title)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .accessibilityAddTraits(.isHeader)
-                    .entrance(0)
-                if let context = front.context {
-                    Text(context)
-                        .font(Theme.voice(size: 21))
-                        .foregroundStyle(Theme.Colors.context)
-                        .padding(.top, Theme.Spacing.s)
-                        .entrance(1)
-                }
-                Text(front.hero)
-                    .textRole(.hero)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .contentTransition(.identity)
-                    .padding(.top, Theme.Spacing.xs)
-                    .entrance(1)
-                if front.isEmpty {
-                    Text(PantryCopy.emptyBody)
-                        .font(Theme.voice)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, Theme.Spacing.l)
-                        .entrance(2)
-                }
-                ForEach([(PantryLedger.State.out, front.out), (.low, front.low)], id: \.0) { state, lines in
-                    if !lines.isEmpty {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(state.word.uppercased())
-                                .textRole(.labelStrong)
-                                .foregroundStyle(Theme.Colors.inkSecondary)
-                                .accessibilityAddTraits(.isHeader)
-                                .padding(.bottom, Theme.Spacing.s)
-                            ForEach(lines) { entry in
-                                PantryLine(entry: entry, onAdd: { add(entry) })
-                            }
-                        }
-                        .padding(.top, Theme.Spacing.xxl)
-                        .entrance(2)
-                    }
-                }
-            }
-            .padding(.horizontal, Theme.Spacing.gutter)
-            .padding(.vertical, Theme.Spacing.l)
-            .tesseraAnimation(value: (front.out + front.low).map(\.id))
+        let board = PantryBoard(store: model.store, classes: model.classes) { item in
+            trip.label(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
         }
-        .scrollIndicators(.hidden)
+        let pinned = RailPlace(id: PantryPlaces.toGet, name: PantryPlaces.toGet, count: board.toGetCount)
+        let places = board.places.map { RailPlace(id: $0.id.uuidString, name: $0.name, count: $0.count) }
+        let current = open ?? (board.toGetCount > 0 || places.isEmpty ? pinned.id : places[0].id)
+        RailPage(title: "Pantry", subtitle: board.subtitle(for:), back: (title: "Kitchen", action: { dismiss() }),
+                 pinned: pinned, places: places,
+                 open: Binding(get: { current }, set: { open = $0 }),
+                 sections: { id in
+                     if id == PantryPlaces.toGet {
+                         return board.toGet.map { RailPage<PantryBoard.Row, PantryRow>.Section(label: $0.label,
+                                                                                               rows: $0.rows) }
+                     }
+                     let place = board.places.first { $0.id.uuidString == id }
+                     return (place?.groups ?? []).map { .init(label: $0.label, rows: $0.rows) }
+                 },
+                 empty: board.empty(for:))
+        { row in
+            PantryRow(row: row, onTick: tick)
+        }
         .background { ThemedBackground() }
         .background { EdgeSwipeBack() }
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear { speak(front) }
+        .tesseraFeedback(.notNow, trigger: landed)
     }
 
-    /// Her band: what the last cook used up.
-    private func speak(_ front: PantryFront) {
-        // Never over an open UNDO: that line keeps its window (QA L2 on #727).
-        if let note = TessVoice.shared.note, note.undo != nil || note.takeBack != nil {
-            return
+    /// A To get row tapped: in the basket, as on Groceries (Done on Groceries clears the basket into the Pantry).
+    private func tick(_ item: ListContents.Item) {
+        let checked = try? model.engine.perform(CheckListItem(item: item.id, time: AppClock.now), by: .user)
+        withTesseraAnimation(RailMetrics.crossfade, reduceMotion: reduceMotion) { model.touch() }
+        if checked == nil {
+            GroceriesCopy.sayDidntSave()
+        } else {
+            landed += 1
         }
-        // An empty page has no Tess line until Core's grammar reads "out of milk" (Product).
-        if let tess = front.tess {
-            TessVoice.shared.say(tess)
-        }
-    }
-
-    /// A left swipe: onto Groceries as a new line, "Milk, on Groceries." with UNDO 4 s (a new add; 10 s under
-    /// VoiceOver). The line stays on the page: buying it is what makes it in.
-    /// Whether it landed: the swipe's haptic plays only for a real add (Design on #727).
-    @discardableResult
-    private func add(_ entry: PantryLedger.Entry) -> Bool {
-        let groceries = Groceries(store: model.store, classes: model.classes)
-        // Already there: no second row and no UNDO (S10).
-        if case let .already(receipt) = PantryFront.swipe(entry, groceries: groceries, store: model.store) {
-            TessVoice.shared.say(receipt)
-            return false
-        }
-        let name = model.store.displayTitle(of: entry.ingredient)
-        guard let record = try? model.engine.perform(AddGroceries(lines: [name]), by: .user).record else {
-            TessVoice.shared.say("Didn't save that. Try again.")
-            return false
-        }
-        model.touch()
-        TessVoice.shared.say(PantryCopy.added(entry.label), undo: record, holds: .seconds(4))
-        return true
     }
 }
 
-/// One thing: the name in ink, its state word at the right (out heavier than low), the faint ring on out lines.
-struct PantryLine: View {
-    let entry: PantryLedger.Entry
-    var onAdd: () -> Bool = { false }
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+/// One row on the right half: the name left, one value right. To get shows its quantity; a place shows "low" or "out"
+/// in the hot colour when the ledger knows it, and nothing when it is simply in (no amounts are guessed).
+private struct PantryRow: View {
+    let row: PantryBoard.Row
+    let onTick: (ListContents.Item) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var pull: CGFloat = 0
-    @State private var added = 0
-
-    /// A private row opens nothing: its page would show the name (pantry-acceptance S15, K26.16; QA on #724).
-    static func opens(_ entry: PantryLedger.Entry) -> Bool {
-        !entry.isPrivate
-    }
 
     var body: some View {
-        // Never the name of a walled thing: "Private item" (QA M1 on #722).
-        let name = entry.label
-        Group {
-            if Self.opens(entry) {
-                NavigationLink(value: Route.object(entry.ingredient.id)) { row(name) }
-                    .buttonStyle(HandleButtonStyle())
-                    .accessibilityHint("Opens \(name)")
-            } else {
-                row(name)
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(name), \(entry.state.word)")
-        .accessibilityAction(named: "Add to Groceries") { _ = onAdd() }
-        .offset(x: pull)
-        // The ghost row behind the swipe: where the line is going (Design on #727).
-        .background(alignment: .trailing) {
-            Text("Groceries")
-                .textRole(.labelStrong)
-                .foregroundStyle(Theme.Colors.ink.opacity(min(abs(pull) / 72, 1) * 0.42))
-                .accessibilityHidden(true)
-        }
-        .tesseraFeedback(.made, trigger: added)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 24)
-                .onChanged { value in
-                    guard value.translation.width < 0, abs(value.translation.width) > abs(value.translation.height)
-                    else { return }
-                    pull = max(value.translation.width, -96)
-                }
-                .onEnded { _ in
-                    if pull <= -72 {
-                        if onAdd() {
-                            added += 1
-                        }
+        switch row {
+        case let .toGet(item, label):
+            Button { onTick(item) } label: { line(label, value: item.quantity, hot: false) }
+                .buttonStyle(HandleButtonStyle())
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(item.quantity.map { "\(label), \($0)" } ?? label)
+                .accessibilityHint("Puts it in the basket")
+        case let .stock(entry):
+            let state = entry.state == .low || entry.state == .out ? entry.state.word : nil
+            Group {
+                if PantryLine.opens(entry) {
+                    NavigationLink(value: Route.object(entry.ingredient.id)) {
+                        line(entry.label, value: state, hot: true)
                     }
-                    withTesseraAnimation(reduceMotion: reduceMotion) { pull = 0 }
+                    .buttonStyle(HandleButtonStyle())
+                    .accessibilityHint("Opens \(entry.label)")
+                } else {
+                    line(entry.label, value: state, hot: true)
                 }
-        )
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(state.map { "\(entry.label), \($0)" } ?? entry.label)
+        }
     }
 
-    private func row(_ name: String) -> some View {
-        // At accessibility sizes the state word goes under the name, one column, nothing clipped (S16).
+    private func line(_ name: String, value: String?, hot: Bool) -> some View {
+        // At accessibility sizes the value goes under the name, nothing clipped.
         let layout = typeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.xs))
             : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Spacing.s))
@@ -188,25 +110,23 @@ struct PantryLine: View {
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
             if !typeSize.isAccessibilitySize {
-                Spacer(minLength: Theme.Spacing.m)
+                Spacer(minLength: Theme.Spacing.s)
             }
-            Text(entry.state.word)
-                .textRole(.body)
-                .fontWeight(entry.state == .out ? .bold : .semibold)
-                // Ink, no ochre (Design sheet 99): out reads heavier than low by weight alone.
-                .foregroundStyle(Theme.Colors.ink)
-        }
-        .padding(.leading, 24)
-        .overlay(alignment: .leading) {
-            if entry.state == .out {
-                Circle()
-                    .stroke(Theme.Colors.ink.opacity(0.42), lineWidth: 1.3)
-                    .frame(width: 11, height: 11)
-                    .padding(.leading, 6)
-                    .accessibilityHidden(true)
+            if let value {
+                Text(value)
+                    .textRole(.data)
+                    .foregroundStyle(hot ? Theme.Colors.now : Theme.Colors.inkSecondary)
             }
         }
-        .frame(minHeight: 40)
+        .frame(maxWidth: .infinity, minHeight: 37, alignment: .leading)
         .contentShape(Rectangle())
+    }
+}
+
+/// What a place's line may do.
+enum PantryLine {
+    /// A private row opens nothing: its page would show the name (pantry-acceptance S15, K26.16; QA on #724).
+    static func opens(_ entry: PantryLedger.Entry) -> Bool {
+        !entry.isPrivate
     }
 }
