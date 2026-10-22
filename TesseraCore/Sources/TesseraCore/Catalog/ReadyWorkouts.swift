@@ -129,22 +129,52 @@ public enum ReadyWorkouts {
         return try LibraryAdopter.adopt(extra, store: store, classes: classes)
     }
 
+    public enum AddError: Error, Equatable {
+        case unknownExercise(String)
+    }
+
+    /// What adding a workout made: the routine, and the log records, newest last, that undo it step by step.
+    public struct Added {
+        public let routine: ObjectRecord
+        public let records: [OpRecord]
+    }
+
     /// Makes a routine from the workout with the actions you already have, so each step undoes: a routine, then one
-    /// slot per exercise. Returns the routine.
+    /// slot per exercise. Nothing is made if an exercise does not resolve. After an undo, `LibraryAdopter.removeUnused`
+    /// takes back copies nothing uses.
     @MainActor
     @discardableResult
     public static func add(_ workout: ReadyWorkout, using engine: ActionEngine) throws -> ObjectRecord {
+        try addWithRecords(workout, using: engine).routine
+    }
+
+    @MainActor
+    public static func addWithRecords(_ workout: ReadyWorkout, using engine: ActionEngine) throws -> Added {
+        for slot in workout.slots where details(of: slot.exercise) == nil {
+            throw AddError.unknownExercise(slot.exercise)
+        }
         try ExerciseLibraryInstaller.installIfNeeded(store: engine.store, classes: engine.classes)
-        let routine: ObjectRecord = try engine.perform(CreateRoutine(
-            title: workout.title, kind: workout.routineKind?.rawValue
-        ), by: .user).output
+        LibraryAdopter.removeUnused(store: engine.store)
+        var classes: [ClassDef] = []
         for slot in workout.slots {
             guard let exerciseClass = try exerciseClass(named: slot.exercise, store: engine.store,
-                                                        classes: engine.classes) else { continue }
-            _ = try engine.perform(AddSlot(routine: routine.id, exercise: exerciseClass.id, sets: Double(slot.sets),
-                                           repMin: Double(slot.repMin), repMax: Double(slot.repMax)), by: .user)
+                                                        classes: engine.classes)
+            else {
+                throw AddError.unknownExercise(slot.exercise)
+            }
+            classes.append(exerciseClass)
         }
-        return routine
+        let made = try engine.perform(CreateRoutine(
+            title: workout.title, kind: workout.routineKind?.rawValue
+        ), by: .user)
+        var records = [made.record]
+        for (slot, exerciseClass) in zip(workout.slots, classes) {
+            try records.append(engine.perform(AddSlot(
+                routine: made.output.id, exercise: exerciseClass.id, sets: Double(slot.sets),
+                repMin: Double(slot.repMin), repMax: Double(slot.repMax)
+            ), by: .user).record)
+        }
+        return Added(routine: made.output, records: records)
     }
 
     private static func parse() -> [ReadyWorkout] {

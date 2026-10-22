@@ -152,6 +152,9 @@ struct DayNamesTests {
         // A bad on-device name falls to the rule name, never to Claude while the phone's model is there.
         let bad = namer(engine, onDevice: { _, _ in "Chest Day 2!" }, available: true, claude: true)
         #expect(await bad.suggest(for: routine, engine: engine)?.source == .rules)
+        // Words run together come back spaced, never as one lump.
+        let joined = namer(engine, onDevice: { _, _ in "BackSquat" }, available: true, claude: true)
+        #expect(await joined.suggest(for: routine, engine: engine, avoiding: ["Zzz"]) == .init(name: "Back Squat", source: .onDevice))
         // Nothing on the phone, no key: the rule name.
         let rules = namer(engine, claude: true)
         #expect(await rules.suggest(for: routine, engine: engine) == .init(name: "Heavy chest", source: .rules))
@@ -247,5 +250,23 @@ struct DayNamerPayloadTests {
             #expect(!body.contains(hidden), "\(hidden)")
         }
         #expect(body.lowercased().contains("heavy push"))
+    }
+}
+
+@MainActor
+struct DayNameSpacingTests {
+    @Test func wordsRunTogetherAreSplitAndSingleLettersRefused() {
+        #expect(DayNames.spaced("BackSquat") == "Back Squat")
+        #expect(DayNames.spaced("  Heavy   pull ") == "Heavy pull")
+        #expect(DayNames.spaced("back_squat") == "back squat")
+        #expect(DayNames.spaced("Long legs") == "Long legs")
+        #expect(DayNames.isUsable(DayNames.spaced("BackSquat")))
+        // Raw joined words are never usable; they must be spaced first.
+        #expect(!DayNames.isUsable("BackSquat"))
+        // No "A" or "B" letter names.
+        #expect(!DayNames.isUsable("Push A"))
+        #expect(!DayNames.isUsable("Legs B"))
+        #expect(DayNames.isUsable("Heavy chest"))
+        #expect(!DayNames.isUsable("Back Squat Heavy Day Long"))
     }
 }

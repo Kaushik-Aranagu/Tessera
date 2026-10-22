@@ -71,6 +71,8 @@ private struct ListsShelfPage: View {
                     .padding(.top, Theme.Spacing.xxl)
                 }
             }
+            // Held to the leading edge, so a short page is never centred (Kaushik, Oct 21).
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.vertical, Theme.Spacing.l)
         }
