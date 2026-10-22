@@ -258,7 +258,7 @@ struct NowPage: View {
     /// The hold that finishes a timed task, with its time left.
     private func finishKey(_ task: ScheduleItem) -> some View {
         PaintKey(duration: 0.7, hint: "Finishes the task", action: { finish(task) }, label: { _ in
-            Text("Finish").textRole(.labelStrong)
+            Text("Finish").textRole(.keyWord)
         }, meta: {
             TimelineView(.periodic(from: .now, by: 30)) { context in
                 let lines = Self.timeLeft(task, now: AppClock.adjust(context.date))
@@ -703,6 +703,7 @@ private struct PlanHeroText: View {
             Text(long).textRole(.title).fixedSize(horizontal: false, vertical: true)
         }
         .environment(\.heroLadder, true)
+        .wordFit(long)
         .foregroundStyle(Theme.Colors.ink)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityAddTraits(.isHeader)

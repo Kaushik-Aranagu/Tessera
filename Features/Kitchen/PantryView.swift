@@ -47,6 +47,7 @@ private struct PantryPage: View {
                 }
                 Text(front.hero)
                     .textRole(.hero)
+                    .wordFit(front.hero)
                     .foregroundStyle(Theme.Colors.ink)
                     .contentTransition(.identity)
                     .padding(.top, Theme.Spacing.xs)

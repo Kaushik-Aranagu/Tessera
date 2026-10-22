@@ -245,6 +245,7 @@ private struct TrainingAtRest: View {
                 }
             }
             .environment(\.heroLadder, true)
+            .wordFit(title)
             .foregroundStyle(Theme.Colors.ink)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)

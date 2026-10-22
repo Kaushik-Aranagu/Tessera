@@ -13,7 +13,7 @@ enum MeasureStyle {
     static func number(size: CGFloat, weight: Font.Weight) -> Font {
         if Choice.fontIsNew() {
             return Theme.Typography.face(Theme.activeFonts.mono, size: size, relativeTo: .body, serif: false)
-                .weight(Theme.numeralWeight(size: size, asked: weight))
+                .weight(Theme.numeralWeight(size: size))
         }
         return .system(size: size, weight: weight)
     }

@@ -549,7 +549,7 @@ enum Theme {
         static func number(_ spec: ThemeConcept.TypeSpec, weight: Font.Weight) -> Font {
             if Choice.fontIsNew() {
                 return Font.custom(Theme.activeFonts.mono, size: spec.size, relativeTo: spec.textStyle)
-                    .weight(Theme.numeralWeight(size: spec.size, asked: weight))
+                    .weight(Theme.numeralWeight(size: spec.size))
             }
             return Font.custom(concept.fonts.mono, size: spec.size, relativeTo: spec.textStyle).weight(weight)
                 .width(.condensed)

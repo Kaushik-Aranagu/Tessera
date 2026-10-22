@@ -62,11 +62,14 @@ private struct GroceriesPage: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text(GroceriesCopy.context(open: open, aisles: aisles.count, shopping: shopping))
-                    .font(Theme.voice)
-                    .foregroundStyle(Theme.Colors.context)
-                    .contentTransition(.numericText())
-                    .entrance(0)
+                // An empty list says "Nothing to get." below, so the kicker would only repeat it.
+                if open > 0 || shopping || !Choice.fontIsNew() {
+                    Text(GroceriesCopy.context(open: open, aisles: aisles.count, shopping: shopping))
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.context)
+                        .contentTransition(.numericText())
+                        .entrance(0)
+                }
 
                 // Shop and list share one slot: the outgoing layout folds back as the incoming one rises (never a
                 // cross-fade of two whole layouts).
@@ -348,6 +351,7 @@ private struct ShopTitle: View {
     var body: some View {
         Text("Groceries")
             .textRole(.hero)
+            .wordFit("Groceries")
             .foregroundStyle(Theme.Colors.ink)
             .overlay(alignment: .leading) {
                 Text("Groceries")
@@ -526,6 +530,7 @@ private struct AtTheShop: View {
                     VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                         Text(current.aisle)
                             .textRole(.hero)
+                            .wordFit(current.aisle)
                             .foregroundStyle(Theme.Colors.ink)
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityAddTraits(.isHeader)

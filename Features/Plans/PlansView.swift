@@ -122,6 +122,7 @@ struct PlanHeading: View {
                 .entrance(1)
             Text(headline)
                 .textRole(.hero)
+                .wordFit(headline)
                 .foregroundStyle(Theme.Colors.ink)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)

@@ -239,8 +239,11 @@ struct AreaIndexSheet: View {
     @ViewBuilder
     private func word(_ index: Int, picked: Bool, current: Bool) -> some View {
         let color: Color = picked ? Self.areaColour(index) : Theme.Colors.ink.opacity(current ? 1 : restInk)
-        let text = Text(titles[index].uppercased())
-            .font(.system(size: 40, weight: picked && index == 1 ? .bold : .semibold))
+        let text = Text(Choice.fontIsNew() ? titles[index] : titles[index].uppercased())
+            .font(Choice.fontIsNew()
+                ? Theme.Typography.face(Theme.activeFonts.ui, size: 40, relativeTo: .largeTitle, serif: false)
+                .weight(picked ? .semibold : .medium)
+                : .system(size: 40, weight: picked && index == 1 ? .bold : .semibold))
             .tracking(-0.8)
             .foregroundStyle(color)
             .scaleEffect(picked ? 1.06 : 1, anchor: .leading)

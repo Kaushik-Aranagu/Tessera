@@ -100,7 +100,7 @@ private struct ListsShelfPage: View {
                 .fontWeight(.medium)
                 .foregroundStyle(Theme.Colors.ink.opacity(row.tier == .body ? 0.75 : 1))
                 .multilineTextAlignment(.leading)
-            Text(row.state)
+            Text(Choice.fontIsNew() ? ListsCopy.sentence(row.state) : row.state)
                 .textRole(.label)
                 // A run's state word is vermilion, the live colour (9.3).
                 .foregroundStyle(row.isRunning ? Theme.Colors.live : Theme.Colors.inkSecondary)
@@ -195,6 +195,7 @@ private struct ListPage: View {
                     }
                     Text(name)
                         .textRole(.hero)
+                        .wordFit(name)
                         .foregroundStyle(Theme.Colors.ink)
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, Theme.Spacing.xs)

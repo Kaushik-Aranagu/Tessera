@@ -5,6 +5,8 @@ import SwiftUI
 /// The four sizes of the active concept (plus numbers set at those sizes in the mono face).
 enum TextRole {
     case hero, heroNumber, title, titleNumber, body, bodyStrong, label, labelStrong
+    /// A key word in sentence case in the Figtree pair (Finish), the old capitals otherwise.
+    case keyWord
     /// His typing: Field 18/400, one step under Tess's voice.
     case field
     /// Label size and face, case preserved: times, numbers, units, class lines, paths in code.
@@ -16,10 +18,9 @@ private struct TextRoleModifier: ViewModifier {
     /// True inside a caller that already steps the hero down itself (HeroText, the Home title ladders).
     @Environment(\.heroLadder) private var heroLadder
 
-    /// The hero is capped around 80 pt; in the 1.5x pair the title (48) is capped too, so a long name wraps by words
-    /// at any text size instead of running off the screen.
+    /// The hero is capped around 80 pt; the title scales with the reader's text size and wraps by words.
     private func capsAtLarge(_ role: TextRole) -> Bool {
-        role == .hero || (Choice.fontIsNew() && (role == .title || role == .titleNumber))
+        role == .hero
     }
 
     func body(content: Content) -> some View {
@@ -28,8 +29,11 @@ private struct TextRoleModifier: ViewModifier {
         case .hero, .heroNumber: scale.hero
         case .title, .titleNumber: scale.title
         case .body, .bodyStrong: scale.body
-        case .label, .labelStrong, .data: scale.label
+        case .label, .labelStrong, .keyWord, .data: scale.label
         case .field: scale.field
+        }
+        if role == .keyWord, !Choice.fontIsNew() {
+            spec.uppercase = true
         }
         if Choice.fontIsNew() {
             // The 1.5x steps (Design 116): a page title is 72, or 48 when the name does not fit one line (the
@@ -39,6 +43,8 @@ private struct TextRoleModifier: ViewModifier {
                 // Kickers (BACK, TODAY, EACH SIDE): Figtree 500 in sentence case, not wide capitals.
                 spec.weight = .medium
                 spec.tracking = 0.02
+                spec.uppercase = false
+            case .keyWord:
                 spec.uppercase = false
             case .data:
                 // Times and the like (8:30 pm): Outfit 300, tabular, no extra tracking.
@@ -51,7 +57,7 @@ private struct TextRoleModifier: ViewModifier {
         case .heroNumber: Theme.Typography.number(spec, weight: scale.heroNumberWeight)
         case .titleNumber: Theme.Typography.number(spec, weight: .regular)
         case .bodyStrong: Theme.Typography.font(spec, weight: .medium)
-        case .labelStrong: Theme.Typography.font(spec, weight: .bold)
+        case .labelStrong, .keyWord: Theme.Typography.font(spec, weight: .bold)
         default: Theme.Typography.font(spec)
         }
         let isNumber = role == .heroNumber || role == .titleNumber || role == .data
@@ -73,7 +79,7 @@ private struct TextRoleModifier: ViewModifier {
                 .font(Theme.Typography.font(small))
                 .tracking(small.tracking * small.size)
                 .lineHeight(.multiple(factor: small.lineHeight))
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility5)
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
         })
@@ -228,6 +234,7 @@ struct HeroText<Rendered: View>: View {
             }
         }
         .environment(\.heroLadder, true)
+        .wordFit(text)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }

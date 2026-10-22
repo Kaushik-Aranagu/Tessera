@@ -234,6 +234,7 @@ struct RecipePage: View {
     private func heroTitle(_ text: String) -> some View {
         Text(text)
             .textRole(.hero)
+            .wordFit(text)
             .foregroundStyle(Theme.Colors.ink)
             .multilineTextAlignment(.leading)
             // At accessibility sizes the name wraps in full rather than shrinking (G69).
