@@ -275,7 +275,10 @@ private struct TrainingAtRest: View {
                 if !large {
                     Spacer(minLength: Theme.Spacing.s)
                 }
-                Button("Routines") { model.open(.routines(planObject.id)) }
+                Button("Routines") {
+                    // With Landing pages On, Routines opens on its landing; Off keeps the plan's routines page.
+                    model.open(LandingSwitch.isOn ? .routinesLanding : .routines(planObject.id))
+                }
                     .buttonStyle(InkLabelWordStyle())
             }
         }
