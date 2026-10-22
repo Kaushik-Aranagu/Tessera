@@ -1,7 +1,7 @@
 import Foundation
 
 /// A recipe or grocery amount as the Measure view can draw it. A mass or volume in a unit that has a wheel is a
-/// `Measure`; a count ("3 eggs", "2 cloves") or a unit with no wheel (a pint, a can, "to taste") is a plain number
+/// `Measure`; a count ("3 eggs", "2 cloves") or a unit with no wheel (a can, a jar, "to taste") is a plain number
 /// and gets no wheel. Volume never converts to mass: a cup of flour is not a number of grams without a density.
 public enum KitchenReading: Equatable, Sendable {
     /// A measure, and the top of a range ("2-3 tbsp") when there is one.
@@ -22,7 +22,7 @@ public enum KitchenReading: Equatable, Sendable {
 }
 
 public extension KitchenUnit {
-    /// The Measure kind and unit symbol this unit swipes through, or nil: counts and packs, and pints and quarts.
+    /// The Measure kind and unit symbol this unit swipes through, or nil: counts and packs.
     var measureUnit: (kind: MeasureKind, unit: String)? {
         switch self {
         case .gram: (.kitchenMass, "g")
@@ -35,6 +35,8 @@ public extension KitchenUnit {
         case .tablespoon: (.kitchenVolume, "tbsp")
         case .cup: (.kitchenVolume, "cup")
         case .fluidOunce: (.kitchenVolume, "fl oz")
+        case .pint: (.kitchenVolume, "pt")
+        case .quart: (.kitchenVolume, "qt")
         default: nil
         }
     }
