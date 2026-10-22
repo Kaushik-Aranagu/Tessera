@@ -269,6 +269,7 @@ struct RecipePage: View {
     private func routeID(_ route: Route) -> UUID {
         switch route {
         case let .object(id), let .classDef(id), let .routines(id): id
+        case .routinesLanding, .routinesBrowse: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
         }
     }
 
