@@ -7,10 +7,17 @@ extension Theme.Typography {
         var spec = Theme.concept.scale.label
         spec.family = .ui
         spec.size = 14
-        spec.weight = .semibold
-        spec.tracking = 0.12
         spec.condensed = false
-        spec.uppercase = true
+        if Choice.fontIsNew() {
+            // Figtree 500 in sentence case, +0.02 em (Design 116).
+            spec.weight = .medium
+            spec.tracking = 0.02
+            spec.uppercase = false
+        } else {
+            spec.weight = .semibold
+            spec.tracking = 0.12
+            spec.uppercase = true
+        }
         return spec
     }
 }
@@ -22,7 +29,7 @@ private struct KickerStyle: ViewModifier {
         content
             .font(Theme.Typography.font(spec))
             .tracking(spec.tracking * spec.size)
-            .textCase(.uppercase)
+            .textCase(spec.uppercase ? .uppercase : nil)
             .foregroundStyle(Theme.Colors.inkSecondary)
     }
 }

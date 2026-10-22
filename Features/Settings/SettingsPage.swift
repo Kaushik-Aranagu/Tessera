@@ -29,6 +29,7 @@ struct SettingsPage: View {
                         .entrance(0)
                     Text("Settings")
                         .textRole(.hero)
+                        .wordFit("Settings")
                         .foregroundStyle(Theme.Colors.ink)
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, Theme.Spacing.s)

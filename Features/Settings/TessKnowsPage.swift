@@ -38,6 +38,7 @@ struct TessKnowsPage: View {
                     .entrance(0)
                 Text("What Tess knows")
                     .textRole(.hero)
+                    .wordFit("What Tess knows")
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)

@@ -16,14 +16,20 @@ public struct KitchenLanding {
         Groceries(store: store, classes: classes).aisles().reduce(0) { $0 + $1.items.count }
     }
 
-    /// Recipes whose every needed ingredient is already in a place of the pantry. A needed line is one that is not
+    /// Recipes whose every needed ingredient is already in a place of the pantry and none of whose ingredients is open
+    /// on To get: covered without a shop (Design). A needed line is one that is not
     /// optional, not "to taste" and not a staple; a line with no ingredient behind it cannot be confirmed, so that
     /// recipe is not counted. A recipe with nothing needed is not counted either.
     public func dinnersCovered() -> Int {
         let book = RecipeBook(store: store, classes: classes)
         let places = PantryPlaces(store: store, classes: classes)
+        let groceries = Groceries(store: store, classes: classes)
         return book.recipes().count { recipe in
-            let needed = book.lines(of: recipe).filter { !$0.line.optional && !$0.line.toTaste && !$0.isStaple }
+            let all = book.lines(of: recipe)
+            guard !all.contains(where: { line in line.ingredient.map { groceries.isOn($0.title) } ?? false }) else {
+                return false
+            }
+            let needed = all.filter { !$0.line.optional && !$0.line.toTaste && !$0.isStaple }
             guard !needed.isEmpty else { return false }
             return needed.allSatisfy { line in
                 line.ingredient.map { places.place(of: $0) != nil } ?? false

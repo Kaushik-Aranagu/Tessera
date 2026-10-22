@@ -135,7 +135,7 @@ private struct HistoryList: View {
             SetMarks(marks: row.marks)
             Spacer(minLength: Theme.Spacing.s)
             Text(row.topSet)
-                .font(Theme.numeral(21, weight: .regular))
+                .numeral(21, weight: .regular)
                 .foregroundStyle(Theme.Colors.ink)
                 .glintOnce(row.isRecord)
         }
@@ -184,7 +184,7 @@ private struct RepMaxGrid: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(reps)RM").textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
                         Text(ObjectCopy.cell(maxes[reps].map { Format.kilograms($0) }))
-                            .font(Theme.numeral(24, weight: .regular))
+                            .numeral(24, weight: .regular)
                             .foregroundStyle(maxes[reps] == nil ? Theme.Colors.inkTertiary : Theme.Colors.ink)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
