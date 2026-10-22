@@ -137,8 +137,16 @@ public struct RunPlane: Codable, Sendable, Hashable {
 
     /// Timers still counting, soonest end first.
     public func runningTimers(at now: Date) -> [RunTimer] {
-        timers.filter { !$0.hasEnded || $0.remaining(at: now) > 0 }
-            .sorted { $0.remaining(at: now) < $1.remaining(at: now) }
+        timers.filter { !$0.hasEnded }.sorted { $0.remaining(at: now) < $1.remaining(at: now) }
+    }
+
+    /// Countdowns that ran out and are waiting to be dismissed (shown at zero until then).
+    public var endedTimers: [RunTimer] {
+        timers.filter(\.hasEnded)
+    }
+
+    public mutating func dismissEnded() {
+        timers.removeAll(where: \.hasEnded)
     }
 
     public func activity(at _: Date) -> RunActivity? {
@@ -173,17 +181,18 @@ public struct RunPlane: Codable, Sendable, Hashable {
     }
 
     /// Back, without stopping anything: the step before this one is now again and this one waits. Timers keep running.
-    /// Coming back to a step that was done reopens it.
+    /// Coming back to a step that was done reopens it. A parallel step is never gone back to (it runs beside the next
+    /// one and is not a screen of its own).
     public mutating func back(at now: Date) {
-        guard let index = currentIndex ?? steps.indices.last, index > 0 || currentIndex == nil else { return }
-        let target = currentIndex == nil ? index : index - 1
+        let from = currentIndex ?? steps.count
+        guard let target = steps[..<from].lastIndex(where: { $0.kind != .parallel }) else { return }
         go(to: target, at: now)
     }
 
     /// Land on any step (the strip, or coming back to where he was). Returning to the step that is already now changes
-    /// nothing.
+    /// nothing, and a parallel step cannot be landed on.
     public mutating func go(to target: Int, at now: Date) {
-        guard steps.indices.contains(target), currentIndex != target else { return }
+        guard steps.indices.contains(target), currentIndex != target, steps[target].kind != .parallel else { return }
         if let index = currentIndex {
             steps[index].state = .ahead
         }
@@ -193,24 +202,31 @@ public struct RunPlane: Codable, Sendable, Hashable {
         steps[target].state = .now
     }
 
+    /// The next step ahead after `index`; when none is left past it, the first one still ahead before it (a step passed
+    /// over by a jump from the strip), so a run is only finished when nothing is ahead.
     private mutating func advance(from index: Int, at now: Date) {
         var cursor = index + 1
-        while cursor < steps.count {
-            switch steps[cursor].state {
-            case .ahead:
-                if steps[cursor].kind == .parallel {
-                    // Beside the next step: start its clock and move on; it is done as far as the run goes.
-                    startTimer(for: cursor, at: now)
-                    steps[cursor].state = .done
-                    log.append(RunLogEntry(step: steps[cursor].id, outcome: .done, when: now))
-                    cursor += 1
-                    continue
-                }
-                steps[cursor].state = .now
-                return
-            default:
-                cursor += 1
+        var wrapped = false
+        while true {
+            if cursor >= steps.count {
+                guard !wrapped else { return }
+                wrapped = true
+                cursor = 0
             }
+            if wrapped, cursor >= index {
+                return
+            }
+            if steps[cursor].state == .ahead {
+                guard steps[cursor].kind == .parallel else {
+                    steps[cursor].state = .now
+                    return
+                }
+                // Beside the next step: start its clock and move on; it is done as far as the run goes.
+                startTimer(for: cursor, at: now)
+                steps[cursor].state = .done
+                log.append(RunLogEntry(step: steps[cursor].id, outcome: .done, when: now))
+            }
+            cursor += 1
         }
     }
 

@@ -5,18 +5,23 @@ import Foundation
 @MainActor
 public enum RunSources {
     /// A workout: one counted step per planned set of every exercise, in order. Logged working sets are done; the
-    /// first one not logged is now, exactly where `WorkoutProgress` points.
-    public static func workout(_ workout: ObjectRecord, store: ObjectStore) -> [RunStep] {
+    /// first one not logged is now, exactly where `WorkoutProgress` points. A private workout's steps all read
+    /// "Private workout", so nothing built on this (a Live Activity on the Lock Screen) can show its exercises.
+    public static func workout(_ workout: ObjectRecord, store: ObjectStore,
+                               classes: [SystemCatalog.Key: ClassDef]) -> [RunStep]
+    {
+        let mask = ObjectPrivacy.shownLabel(of: workout, in: store, classes: classes)
         var steps: [RunStep] = []
         var foundNow = false
         for entry in workout.orderedChildren {
             let name = store.linkedClass("exercise", of: entry)?.name ?? entry.title
-            let logged = entry.orderedChildren.count { store.value("isWarmup", of: $0) != .bool(true) }
+            let logged = entry.orderedChildren.count { store.setKind(of: $0) != .warmup }
             let planned = Int(store.number("targetSets", of: entry) ?? 3)
             // A set past the plan (an extra set) is a done step of its own, so the count never shrinks.
             for index in 0 ..< max(planned, logged) {
                 let done = index < logged
-                var step = RunStep(title: "\(name), set \(index + 1)", kind: .counted, state: done ? .done : .ahead)
+                var step = RunStep(title: mask ?? "\(name), set \(index + 1)", kind: .counted,
+                                   state: done ? .done : .ahead)
                 if !done, !foundNow {
                     step.state = .now
                     foundNow = true
