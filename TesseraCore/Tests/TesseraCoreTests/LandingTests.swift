@@ -123,7 +123,7 @@ struct LandingTests {
             == "Evening, 7 days, usually 6:45, 1 hr 5 min")
         let hour = runs(Array(1 ... 7), hour: 12, minute: 2, length: 60)
         #expect(RoutineUsual.line(name: "Lunch", runs: hour, calendar: calendar)
-            == "Lunch, 7 days, usually 12:00, 1 hr")
+            == "Lunch, 7 days, usually 12:00 pm, 1 hr")
     }
 
     @Test func aRunAfterMidnightSitsBesideOneBefore() {

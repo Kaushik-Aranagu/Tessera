@@ -27,13 +27,15 @@ public enum RoutineUsual {
         let finished = runs.filter { $0.end > $0.start }
         guard finished.count >= runsNeeded else { return nil }
         let days = Set(finished.map { tesseraDay.day(of: $0.start) }).count
+        // The usual start and length are the median of the last 14 runs.
+        let lastFourteen = finished.sorted { $0.start > $1.start }.prefix(14)
         // Wall-clock minutes after 04:00 (a run after midnight sits beside one before it, and a daylight-saving day
         // moves nothing).
-        let starts = finished.map { run -> Int in
+        let starts = lastFourteen.map { run -> Int in
             let parts = tesseraDay.calendar.dateComponents([.hour, .minute], from: run.start)
             return ((parts.hour ?? 0) * 60 + (parts.minute ?? 0) - TesseraDay.startHour * 60 + 1440) % 1440
         }
-        let lengths = finished.map { Int($0.end.timeIntervalSince($0.start) / 60) }
+        let lengths = lastFourteen.map { Int($0.end.timeIntervalSince($0.start) / 60) }
         let usual = (median(starts) / 5) * 5 + (median(starts) % 5 >= 3 ? 5 : 0)
         return Counts(days: days, startMinutes: usual, lengthMinutes: max(1, median(lengths)))
     }
@@ -52,9 +54,15 @@ public enum RoutineUsual {
         return sorted.count.isMultiple(of: 2) ? (sorted[middle - 1] + sorted[middle] + 1) / 2 : sorted[middle]
     }
 
-    /// 6:40, 12:05, 11:30: the twelve-hour clock with no am or pm.
+    /// The house clock for a minute of the logical day, mornings unmarked: "6:40", "6:35 pm", "12:05 pm".
     static func clockWords(minuteOfDay: Int) -> String {
-        let hour = minuteOfDay / 60 % 12 == 0 ? 12 : minuteOfDay / 60 % 12
-        return "\(hour):" + String(format: "%02d", minuteOfDay % 60)
+        let hour = minuteOfDay / 60, minute = minuteOfDay % 60
+        let twelve = hour % 12 == 0 ? 12 : hour % 12
+        return "\(twelve):" + String(format: "%02d", minute) + (hour >= 12 ? " pm" : "")
+    }
+
+    /// A house time with its morning "am" left off ("6:58 am" reads "6:58"); afternoon and evening keep "pm".
+    static func unmarked(_ time: String) -> String {
+        time.hasSuffix(" am") ? String(time.dropLast(3)) : time
     }
 }
