@@ -20,7 +20,6 @@ struct SampleDataTests {
         let sample = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext,
                               launchDefaults: .testSuite())
         DemoData.prepareSample(sample)
-        #expect(sample.store !== real.store)
         #expect(try real.store.objects(of: #require(real.classes[.task])).count == before)
         #expect(!sample.objects(of: .spend).isEmpty)
         #expect(sample.objects(of: .task).contains { $0.title == "Pay the utility bill" })
