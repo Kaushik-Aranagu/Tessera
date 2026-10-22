@@ -132,6 +132,19 @@ final class ReviewChoices {
                says: ["Off": "The running list, else the one touched last, leads.",
                       "On": "With nothing running, the list due soonest leads."],
                readiness: .live),
+        // Training Stats (Product build sheet, Oct 22): a page of numbers behind the Training landing's Stats door.
+        Choice(id: "trainingStats", name: "Stats", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Training has no Stats page.",
+                      "On": "Training gets a Stats door: your best, your lifts, your sets, your weeks."],
+               readiness: .live),
+        Choice(id: "statsBalance", name: "Balance words", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Stats says nothing about push, pull, upper and lower.",
+                      "On": "Stats adds a few words on how your sets are shared."],
+               readiness: .live),
+        Choice(id: "trainingLightWeeks", name: "Lighter weeks", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "A week is just a week.",
+                      "On": "A week with fewer sets than usual says so, once, when you tap it."],
+               readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
                       "All": "Body weight, Habits, Money, Reading, People and Upkeep show too."],
@@ -217,6 +230,7 @@ final class ReviewChoices {
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
         ("Shown", ["sampleData", "landingPages", "areasShown", "classInspector"]),
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
+        ("Training stats", ["trainingStats", "statsBalance", "trainingLightWeeks"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
