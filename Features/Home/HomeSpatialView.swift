@@ -399,6 +399,7 @@ private struct KitchenPage: View {
                     // The words alone, in ink (no-dots.md).
                     Text(link.title)
                         .textRole(.title)
+                        .wordFit(link.title)
                         .foregroundStyle(Theme.Colors.ink)
                         .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
                         .contentShape(Rectangle())

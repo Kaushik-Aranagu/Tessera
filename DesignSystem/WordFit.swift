@@ -9,45 +9,28 @@ private struct WordFitModifier: ViewModifier {
     /// The type the title is drawn in when it wraps (the Title step).
     var points: CGFloat = 48
     @Environment(\.dynamicTypeSize) private var size
+    @Environment(\.multilineTextAlignment) private var textAlignment
     /// The width the container actually proposes; the screen's gutters until it is known.
     @State private var container: CGFloat?
+
+    private var alignment: Alignment {
+        switch textAlignment {
+        case .center: .center
+        case .trailing: .trailing
+        default: .leading
+        }
+    }
 
     func body(content: Content) -> some View {
         guard Choice.fontIsNew() else { return AnyView(content) }
         let fitted = WordFit.largest(fitting: text, points: points, from: size, available: container)
-        return AnyView(WidthProbe { width in
-            DispatchQueue.main.async {
+        // The room is read from the final size of a full-width box (not while sizing): no feedback during layout.
+        return AnyView(content
+            .dynamicTypeSize(...fitted)
+            .frame(maxWidth: .infinity, alignment: alignment)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
                 if abs((container ?? 0) - width) > 0.5 { container = width }
-            }
-        } content: {
-            content.dynamicTypeSize(...fitted)
-        })
-    }
-}
-
-/// Passes its child the proposal untouched and reports the width it was offered, so a title is fitted to the room it
-/// really has (a title inside a padded or narrower container) and not to the screen.
-private struct WidthProbe<Content: View>: View {
-    let report: (CGFloat) -> Void
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        ProbeLayout(report: report) { content }
-    }
-
-    private struct ProbeLayout: Layout {
-        let report: (CGFloat) -> Void
-
-        func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
-            if let width = proposal.width, width.isFinite, width > 0 {
-                report(width)
-            }
-            return subviews.first?.sizeThatFits(proposal) ?? .zero
-        }
-
-        func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
-            subviews.first?.place(at: bounds.origin, proposal: ProposedViewSize(width: bounds.width, height: bounds.height))
-        }
+            })
     }
 }
 

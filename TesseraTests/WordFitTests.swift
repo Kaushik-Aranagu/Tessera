@@ -12,7 +12,7 @@ struct WordFitTests {
             let points = WordFit.points(48, at: fitted)
             let start = WordFit.points(48, at: .accessibility5)
             let fits = WordFit.widestWord(title, points: points) * 1.08 <= room
-            #expect(fits || points < 0.65 * start || fitted <= .xxxLarge,
+            #expect(fits || points < 0.6 * start || fitted <= .xxxLarge,
                     "\(title) must fit at the stepped size or be at the floor")
         }
     }
@@ -29,7 +29,7 @@ struct WordFitTests {
 
     @Test func aNarrowerContainerStepsFurtherThanTheScreen() {
         let wide = WordFit.largest(fitting: "Groceries", points: 48, from: .accessibility5, available: 354)
-        let narrow = WordFit.largest(fitting: "Groceries", points: 48, from: .accessibility5, available: 250)
-        #expect(narrow <= wide)
+        let narrow = WordFit.largest(fitting: "Groceries", points: 48, from: .accessibility5, available: 280)
+        #expect(narrow < wide, "a narrower container steps strictly further down")
     }
 }

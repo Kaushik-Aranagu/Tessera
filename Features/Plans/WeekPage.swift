@@ -22,6 +22,7 @@ struct WeekPage: View {
 
             Text("Sets per muscle")
                 .textRole(.title)
+                .wordFit("Sets per muscle")
                 .foregroundStyle(Theme.Colors.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)

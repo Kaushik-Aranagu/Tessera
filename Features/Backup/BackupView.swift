@@ -228,6 +228,7 @@ struct BackupView: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                 Text("A restore is waiting")
                     .textRole(.title)
+                    .wordFit("A restore is waiting")
                     .foregroundStyle(Theme.Colors.ink)
                 Text("The copy from \(BackupCopy.fileDay(staged.createdAt)) replaces everything the next time "
                     + "Tessera opens. Close Tessera from the app switcher to restore now.")
