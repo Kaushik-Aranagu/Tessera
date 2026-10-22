@@ -113,12 +113,40 @@ enum DemoData {
         for body in SampleText.notes {
             _ = try? model.engine.perform(CreateNote(body: body), by: .system)
         }
+        var recipes: [ObjectRecord] = []
         for text in SampleText.recipes {
             if let recipe = try? model.engine.perform(CreateRecipe(text: text), by: .system).output {
                 _ = try? model.engine.perform(AddRecipeToGroceries(recipe: recipe.id), by: .system)
+                recipes.append(recipe)
+            }
+        }
+        // Dinners planned: tacos tonight at 6:45 pm, the sheet pan in two days, so Kitchen has a week to show.
+        let today = TesseraDay().today(now)
+        for (recipe, (days, minute)) in zip(recipes.reversed(), [(0, 45), (2, 0)]) {
+            guard let day = Calendar.current.date(byAdding: .day, value: days, to: today),
+                  let start = Calendar.current.date(bySettingHour: minute == 45 ? 18 : 19, minute: minute, second: 0,
+                                                    of: day) else { continue }
+            if let task = try? model.engine.perform(CreateTask(title: recipe.title), by: .system).output {
+                try? model.store.set("startsAt", to: .date(start), on: task)
+                try? model.store.set("length", to: .duration(45 * 60), on: task)
+                try? model.store.setLinks("about", on: task, to: [recipe])
             }
         }
         _ = try? model.engine.perform(AddGroceries(lines: SampleText.groceries), by: .system)
+        // Last Saturday's shop, cleared: what it bought is in the pantry, so its places have something in them.
+        let groceries = Groceries(store: model.store, classes: model.classes)
+        if let list = groceries.list {
+            let bought = Set(SampleText.groceries)
+            for aisle in groceries.aisles() {
+                for item in aisle.items where bought.contains(item.text.lowercased()) {
+                    _ = try? model.engine.perform(
+                        CheckListItem(item: item.id, time: now.addingTimeInterval(-4 * 86400)),
+                        by: .system
+                    )
+                }
+            }
+            _ = try? model.engine.perform(ClearDoneItems(list: list.id), by: .system)
+        }
         model.store.save()
         model.touch(naming: false)
     }
