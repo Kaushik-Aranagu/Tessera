@@ -176,24 +176,22 @@ public struct CookPlan: Sendable, Equatable {
         let criticalFirst = running.isEmpty
         for (index, dish) in waiting.enumerated() {
             let anchor = serve.addingTimeInterval(-dish.length)
-            // The critical path (the first one placed with nothing running) never moves.
-            if (criticalFirst && index == 0) || dish.finish == .last {
-                place(dish, start: anchor, held: 0)
-                continue
+            // The critical path (the first one placed with nothing running) never moves earlier, and a "last" dish
+            // is never held.
+            let pinned = (criticalFirst && index == 0) || dish.finish == .last
+            let delta = pinned ? 0 : fit(dish, anchor: anchor, occupied: occupied, skipping: dish.skippedFits)
+            var start = anchor.addingTimeInterval(-delta)
+            var held = delta
+            // Nothing starts in the past: a dish that would is placed at the first moment from now when its hands
+            // are clear of every dish already placed (a late add is checked against the running dishes' hands).
+            if start < now {
+                start = laterFit(dish, notBefore: now, occupied: occupied)
+                held = 0
             }
-            let delta = fit(dish, anchor: anchor, occupied: occupied, skipping: dish.skippedFits)
-            place(dish, start: anchor.addingTimeInterval(-delta), held: delta)
+            place(dish, start: start, held: held)
         }
 
-        // A dish that cannot start before now moves the whole not-yet-started plan later: nothing starts in the past.
-        var result = placed.sorted { $0.dish.order < $1.dish.order }
-        let late = result.filter { $0.dish.startedAt == nil }.map(\.start).min()
-            .flatMap { $0 < now ? now.timeIntervalSince($0) : nil }
-        if let late {
-            result = result.map { place in
-                place.dish.startedAt == nil ? shift(place, by: late) : place
-            }
-        }
+        let result = placed.sorted { $0.dish.order < $1.dish.order }
         let finish = result.map(\.end).max() ?? serve
         let projected = finish > serve ? finish : nil
         return CookPlan(placements: result, serveAt: serve, projectedServe: projected, now: now)
@@ -207,10 +205,28 @@ public struct CookPlan: Sendable, Equatable {
         }
     }
 
-    private static func shift(_ place: Placement, by seconds: TimeInterval) -> Placement {
-        Placement(dish: place.dish, start: place.start.addingTimeInterval(seconds),
-                  end: place.end.addingTimeInterval(seconds), heldSec: place.heldSec, overHold: place.overHold,
-                  segs: place.segs.map { $0.shifted(by: seconds) })
+    /// The first start at or after `notBefore` with none of the dish's hands over an occupied stretch. Candidates are
+    /// `notBefore` itself and every start that makes a stretch begin where an occupied one ends, or end where one
+    /// begins.
+    static func laterFit(_ dish: Dish, notBefore: Date, occupied: [DateInterval]) -> Date {
+        let hands = dish.local.filter { $0.kind == .hands && $0.end > $0.start }
+        func clear(_ start: Date) -> Bool {
+            hands.allSatisfy { local in
+                let from = start.addingTimeInterval(local.start), to = start.addingTimeInterval(local.end)
+                return occupied.allSatisfy { to <= $0.start || from >= $0.end }
+            }
+        }
+        var candidates: Set<Date> = [notBefore]
+        for local in hands {
+            for block in occupied {
+                for start in [block.end.addingTimeInterval(-local.start), block.start.addingTimeInterval(-local.end)]
+                    where start >= notBefore
+                {
+                    candidates.insert(start)
+                }
+            }
+        }
+        return candidates.sorted().first(where: clear) ?? notBefore
     }
 
     /// The smallest move earlier (seconds, 0 or more) with none of the dish's hands over an occupied stretch.
@@ -263,7 +279,7 @@ public struct CookPlan: Sendable, Equatable {
         guard !placements.isEmpty else { return "Nothing planned for tonight." }
         let ordered = placements.sorted { $0.dish.order < $1.dish.order }.map(\.dish.name)
         let start = placements.map(\.start).min() ?? serveAt
-        return "\(Self.names(ordered)) tonight, start at \(Self.clock(start, calendar))."
+        return "\(Self.names(ordered)) tonight, start at \(HouseTime.clock(start, calendar: calendar))."
     }
 
     /// "Cooking A and B, 12 min left."
@@ -279,7 +295,7 @@ public struct CookPlan: Sendable, Equatable {
     /// "Serve at 7:00. Start Chicken at 6:17." The dish to start first is the earliest start.
     public func serveLine(calendar: Calendar = .current) -> String {
         guard let first = placements.min(by: { $0.start < $1.start }) else { return "" }
-        return "Serve at \(Self.clock(serveAt, calendar)). Start \(first.dish.name) at \(Self.clock(first.start, calendar))."
+        return "Serve at \(HouseTime.clock(serveAt, calendar: calendar)). Start \(first.dish.name) at \(HouseTime.clock(first.start, calendar: calendar))."
     }
 
     /// One line for each dish that has to wait or move, in the order the dishes were added.
@@ -299,24 +315,11 @@ public struct CookPlan: Sendable, Equatable {
 
     /// "Serving about 7:02." only when the plan runs late.
     public func lateLine(calendar: Calendar = .current) -> String? {
-        projectedServe.map { "Serving about \(Self.clock($0, calendar))." }
+        projectedServe.map { "Serving about \(HouseTime.clock($0, calendar: calendar))." }
     }
 
-    /// "Beans", "Potatoes" agree as plurals; "Rice", "Hummus", "Couscous", "Asparagus", "Grass" do not. An explicit
-    /// flag on the dish wins.
+    /// An explicit flag on the dish wins over the house rule.
     static func isPlural(_ dish: Dish) -> Bool {
-        if let flag = dish.isPlural {
-            return flag
-        }
-        let last = dish.name.split(separator: " ").last.map { $0.lowercased() } ?? ""
-        guard last.hasSuffix("s"), !["ss", "us", "is"].contains(where: last.hasSuffix) else { return false }
-        return last.count > 2
-    }
-
-    /// 6:05, 12:40: the twelve-hour clock with no am or pm.
-    static func clock(_ date: Date, _ calendar: Calendar) -> String {
-        let parts = calendar.dateComponents([.hour, .minute], from: date)
-        let hour = (parts.hour ?? 0) % 12 == 0 ? 12 : (parts.hour ?? 0) % 12
-        return "\(hour):" + String(format: "%02d", parts.minute ?? 0)
+        dish.isPlural ?? HouseWords.isPlural(dish.name)
     }
 }

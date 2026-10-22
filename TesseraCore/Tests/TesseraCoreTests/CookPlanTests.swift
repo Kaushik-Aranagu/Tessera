@@ -104,7 +104,7 @@ struct CookPlanTests {
         let plan = CookPlan.make(dishes: [chicken(startedAt: at(18, 17), extra: 2), spaghetti()],
                                  serveAt: at(19, 0), now: at(18, 30))
         #expect(plan.projectedServe == at(19, 2))
-        #expect(plan.lateLine(calendar: calendar) == "Serving about 7:02.")
+        #expect(plan.lateLine(calendar: calendar) == "Serving about 7:02 pm.")
         // Running timers never move.
         #expect(start(of: "Chicken", in: plan) == at(18, 17))
     }
@@ -133,6 +133,19 @@ struct CookPlanTests {
         let tooLate = CookPlan.make(dishes: [chicken(startedAt: at(18, 17)), spaghetti()], serveAt: at(19, 0),
                                     now: at(18, 55))
         #expect((start(of: "Spaghetti", in: tooLate) ?? .distantPast) >= at(18, 55) && tooLate.isLate)
+    }
+
+    @Test func aLateAddNeverPutsHandsOnTheRunningDishes() {
+        let tooLate = CookPlan.make(dishes: [chicken(startedAt: at(18, 17)), spaghetti()], serveAt: at(19, 0),
+                                    now: at(18, 55))
+        let chickenHands = tooLate.segs.filter { $0.kind == .hands && $0.dish == tooLate.placements[0].dish.id }
+        let spaghettiHands = tooLate.segs.filter { $0.kind == .hands && $0.dish == tooLate.placements[1].dish.id }
+        for lhs in chickenHands {
+            for rhs in spaghettiHands {
+                #expect(lhs.end <= rhs.start || rhs.end <= lhs.start)
+            }
+        }
+        #expect(tooLate.placements[1].start >= at(18, 55) && tooLate.isLate)
     }
 
     @Test func oneDishEqualsTodaysClock() {
@@ -185,9 +198,9 @@ struct CookPlanTests {
 
     @Test func landingAndRunningSentences() {
         let plan = CookPlan.make(dishes: [chicken(), spaghetti()], serveAt: at(19, 0), now: at(17, 0))
-        #expect(plan.landing(calendar: calendar) == "Chicken and Spaghetti tonight, start at 6:17.")
+        #expect(plan.landing(calendar: calendar) == "Chicken and Spaghetti tonight, start at 6:17 pm.")
         #expect(plan.running(minutesLeft: 12) == "Cooking Chicken and Spaghetti, 12 min left.")
-        #expect(plan.serveLine(calendar: calendar) == "Serve at 7:00. Start Chicken at 6:17.")
+        #expect(plan.serveLine(calendar: calendar) == "Serve at 7 pm. Start Chicken at 6:17 pm.")
         #expect(CookPlan.names(["A", "B", "C"]) == "A, B and C")
         #expect(CookPlan.names(["A", "B", "C", "D", "E"]) == "A, B and 3 more")
         #expect(CookPlan.names(["A", "B", "C", "D"]) == "A, B and 2 more")
