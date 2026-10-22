@@ -87,6 +87,7 @@ struct ExerciseSheet: View {
 struct PlayingPicture: View {
     let picture: ExercisePicture
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
 
     /// Seconds each frame holds.
     static let hold = 0.55
@@ -102,7 +103,7 @@ struct PlayingPicture: View {
     var body: some View {
         if let gif = picture.gifURL {
             // Never drawn past its own 180 points (Gym visual's terms).
-            GifView(url: gif, isStill: reduceMotion)
+            GifView(url: gif, isStill: reduceMotion, isDarkPlate: colorScheme == .dark)
                 .frame(maxWidth: 180, maxHeight: 180)
         } else if reduceMotion || picture.frames.count < 2 {
             frames(showing: picture.frames.count > 1 ? 1 : 0)
