@@ -91,15 +91,18 @@ public enum RecipeStock {
         RecipeMath.round(need - have, unit: unit)
     }
 
-    /// The names of the lines that are short, in order ("lemon", "rice").
-    public static func shortNames(_ rows: [Row]) -> [String] {
+    /// The names of the lines that are short, in order ("lemon", "rice"). A walled line (a medicine, a body fact,
+    /// money)
+    /// reads "Private item", whatever recipe it sits in: it is masked before the sentence is built.
+    public static func shortNames(_ rows: [Row], isPrivateWord: (String) -> Bool = { _ in false }) -> [String] {
         rows.compactMap { row in
-            if case .short = row.verdict {
-                return row.line.name.lowercased()
-            }
-            return nil
+            guard case .short = row.verdict else { return nil }
+            return isPrivateWord(row.line.name) || isPrivateWord(row.line.original) ? privateItem
+                : row.line.name.lowercased()
         }
     }
+
+    public static let privateItem = "Private item"
 
     /// "a and b", "a, b and c", "a, b and 2 more".
     static func join(_ names: [String]) -> String {
@@ -113,11 +116,21 @@ public enum RecipeStock {
     }
 
     /// One line a screen or Tess may say. A private recipe says only "Private recipe".
-    public static func speech(_ rows: [Row], recipeIsPrivate: Bool) -> String {
+    public static func speech(_ rows: [Row], recipeIsPrivate: Bool, isPrivateWord: (String) -> Bool = { _ in false })
+        -> String
+    {
         if recipeIsPrivate {
             return "Private recipe"
         }
-        let names = shortNames(rows)
+        let names = shortNames(rows, isPrivateWord: isPrivateWord)
         return names.isEmpty ? "Nothing is short." : "Short on \(join(names))."
+    }
+}
+
+public extension RecipeStock {
+    /// `speech` with the store's own private-word rule.
+    @MainActor
+    static func speech(_ rows: [Row], recipeIsPrivate: Bool, in store: ObjectStore) -> String {
+        speech(rows, recipeIsPrivate: recipeIsPrivate) { ObjectPrivacy.isPrivateWord($0, in: store) }
     }
 }

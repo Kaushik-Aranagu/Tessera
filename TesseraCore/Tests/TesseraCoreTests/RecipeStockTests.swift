@@ -92,6 +92,24 @@ struct RecipeStockTests {
         #expect(RecipeStock.speech(result, recipeIsPrivate: false) == "Short on lemon, lime and 3 more.")
     }
 
+    @MainActor
+    @Test func aWalledLineInAPlainRecipeIsNeverNamed() {
+        let store = ObjectStore.open(inMemory: true)
+        let result = rows(["1 lemon", "1 Ozempic dose"], stock: ["lemon": .init(.out), "ozempic dose": .init(.out)])
+        let speech = RecipeStock.speech(result, recipeIsPrivate: false, in: store)
+        #expect(speech == "Short on lemon and Private item." && !speech.lowercased().contains("ozempic"))
+        // The names alone carry the mask too.
+        #expect(RecipeStock.shortNames(result).contains("ozempic dose"))
+        #expect(RecipeStock.shortNames(result) { ObjectPrivacy.isPrivateWord($0, in: store) }.contains("Private item"))
+    }
+
+    @Test func aCountWithNoUnitIsAlwaysHave() {
+        let result = rows(["3 apples", "2 onions"], stock: [
+            "apple": .init(.inStock, amount: 1), "onion": .init(.inStock, amount: 1, unit: .piece),
+        ])
+        #expect(verdicts(result) == [.have, .have])
+    }
+
     @Test func nothingHereIsEverAClaudeJob() throws {
         let sources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().appending(path: "Sources/TesseraTess")
