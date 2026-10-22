@@ -274,9 +274,6 @@ public struct TrainingLedger {
 
     /// The set's kind; the older warm-up flag still counts.
     public func setKind(_ set: ObjectRecord) -> SetKind {
-        if store.value("isWarmup", of: set) == .bool(true) {
-            return .warmup
-        }
-        return store.value("kind", of: set)?.stringValue.flatMap(SetKind.init(rawValue:)) ?? .working
+        store.setKind(of: set)
     }
 }

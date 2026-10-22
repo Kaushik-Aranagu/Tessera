@@ -54,7 +54,8 @@ struct MeProfileTests {
         defer { try? FileManager.default.removeItem(at: dir) }
         let disk = try ObjectStore(context: TesseraContext(url: dir.appending(path: "tessera.sqlite")))
         let diskEngine = try ActionEngine(store: disk, classes: disk.prepareCatalog())
-        try diskEngine.perform(SetMeProfile(heightCm: 187.25, birthYear: 1973, sex: "male"), by: .user)
+        // A height with five significant digits cannot turn up by chance in ids and timestamps.
+        try diskEngine.perform(SetMeProfile(heightCm: 187.3719, birthYear: 1973, sex: "male"), by: .user)
         disk.save()
         let object = try #require(disk.object(id: MeProfile.objectID))
         #expect(ObjectPrivacy.label(of: object, in: disk, classes: diskEngine.classes) == "Private profile")
@@ -62,10 +63,10 @@ struct MeProfileTests {
         // Read as values, not characters: a random id or a timestamp can hold "1973" (the Money test had the same
         // flake).
         let shared = try TesseraExport(context: disk.context).encoded()
-        #expect(try ExportLeaks.found(["male"], numbers: [187.25, 1973], in: shared).isEmpty)
+        #expect(try ExportLeaks.found(["male"], numbers: [187.3719, 1973], in: shared).isEmpty)
         // And the helper does catch a real leak.
         let leaked = try TesseraExport(context: disk.context, maskingPrivate: false).encoded()
-        #expect(try !ExportLeaks.found(["male"], numbers: [187.25, 1973], in: leaked).isEmpty)
+        #expect(try !ExportLeaks.found(["male"], numbers: [187.3719, 1973], in: leaked).isEmpty)
         // The local backup keeps every word; the iCloud copy leaves the object and its ops out.
         let local = dir.appending(path: "local.sqlite"), icloud = dir.appending(path: "icloud.sqlite")
         try TesseraBackup.write(from: disk.context, to: local)

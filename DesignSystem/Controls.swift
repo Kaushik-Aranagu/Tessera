@@ -13,9 +13,19 @@ struct Eyebrow: View {
     let text: String
     var color: Color = Theme.Colors.inkSecondary
     var body: some View {
-        Text(text.uppercased())
+        Text(Choice.fontIsNew() ? text : text.uppercased())
             .textRole(.label)
-            .tracking(1.2)
+            .tracking(Choice.fontIsNew() ? 0 : 1.2)
             .foregroundStyle(color)
+    }
+}
+
+/// The soft Close word: ink secondary at rest, full ink on press with a short ease (the press response `.plain` loses).
+struct CloseWordStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 1 : 0.8)
+            .foregroundStyle(configuration.isPressed ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+            .tesseraAnimation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }

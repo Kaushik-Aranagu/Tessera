@@ -534,6 +534,7 @@ struct ClaudeReceipts: View {
                 .accessibilityLabel("Back to Settings")
                 Text("Receipts")
                     .textRole(.title)
+                    .wordFit("Receipts")
                     .foregroundStyle(Theme.Colors.ink)
                 Text(
                     "This month \(Text(ClaudeKeyWords.dollars(ledger.monthTotal(now: AppClock.now))).fontWeight(.semibold)) of $\(TessUsageLedger.capDollars)."
