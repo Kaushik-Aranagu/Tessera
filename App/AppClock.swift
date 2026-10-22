@@ -40,6 +40,11 @@ enum Format {
         unit.format(kilograms: kilograms)
     }
 
+    /// A stored kilogram value as a bare number in the chosen unit ("82.5", "182"): the unit is named beside it.
+    static func shown(_ kilograms: Double, unit: MassUnit = Format.unit) -> String {
+        Self.kilograms(unit.fromKilograms(kilograms))
+    }
+
     static func kilograms(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0 ... 2)))
     }

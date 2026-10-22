@@ -46,6 +46,7 @@ private struct TextRoleModifier: ViewModifier {
                 spec.uppercase = false
             case .keyWord:
                 spec.uppercase = false
+                spec.tracking = 0.02
             case .data:
                 // Times and the like (8:30 pm): Outfit 300, tabular, no extra tracking.
                 spec.tracking = 0
@@ -101,6 +102,9 @@ extension EnvironmentValues {
 
     /// True on a page's first visit this session; revisits and back-navigation appear instantly.
     @Entry var animateEntrance = false
+
+    /// The word the back arrow of a pushed page carries ("Library", "Today"): where he came from.
+    @Entry var pageBackTitle = "Today"
 }
 
 /// First visit only: the first few elements enter in reading order — 25 ms stagger, ~14 pt rise,
