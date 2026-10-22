@@ -111,6 +111,26 @@ struct NotesListsLandingTests {
         #expect(after.hasPrivate && after.things.first?.weight == 4)
     }
 
+    @Test func aNoteMadePrivateByItsWordsAloneIsPrivateEverywhere() throws {
+        try seedThree()
+        // No flag: the words alone (a secret, money, a body fact) make it private.
+        let words = try engine.perform(CreateNote(body: "Landlord said my password is hunter2"), by: .user).output
+        let money = try engine.perform(CreateNote(body: "Paid @Landlord 1200 dollars rent"), by: .user).output
+        // CreateNote flags such a note itself; clear the flag so only the words make it private.
+        try store.set("isPrivate", to: .bool(false), on: words)
+        try store.set("isPrivate", to: .bool(false), on: money)
+        #expect(store.value("isPrivate", of: words) == .bool(false) && store
+            .value("isPrivate", of: money) == .bool(false))
+        let facts = notes.facts(.init(lastSeen: at(1)))
+        #expect(facts.hasPrivate)
+        #expect(facts.things.first?.name == "Landlord" && facts.things.first?.weight == 4)
+        let all = facts.margin.map(\.sentence.text).joined(separator: " ")
+        #expect(!all.contains("hunter2") && !all.lowercased().contains("password") && !all.contains("1200"))
+        // The new-notes line counts only the plain ones (the seven plain notes are new).
+        let line = try #require(facts.margin.first { $0.kind == .new })
+        #expect(line.sentence.text.hasPrefix("New notes about ") && !line.sentence.text.contains("1200"))
+    }
+
     @Test func looseNotesAreFlagged() throws {
         try note("Just a thought")
         #expect(notes.facts().hasLoose)
