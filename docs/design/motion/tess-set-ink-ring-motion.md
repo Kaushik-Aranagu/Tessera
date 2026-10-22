@@ -40,5 +40,6 @@ The soul never plays a haptic of her own here. Only `withTesseraAnimation` and `
 
 ## 5. Asks
 - Builder A: a `SetRing` view replacing the set circles in live mode, the Training row and History, following sections 1 to 4. No review switch; this is the only mark.
+- Builder A: attach two real simulator stills at 1x (Porcelain, default text size) to the build PR, one with 4 sets and one with 8. Design accepts the 4 pt live drop only if both count cleanly; if either is hard to count, the drop goes to 5 pt and the swell is capped at 1.5x so neighbours never touch (Design, Oct 21 PT).
 - Design: tune the rest-state numbers against the v2 study if they read too busy on the phone; confirm the 36 pt live ring fits the live page.
 - Ships in the release after Oct 21's.
