@@ -35,6 +35,7 @@ private struct PantryPage: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Pantry")
                     .textRole(.title)
+                    .wordFit("Pantry")
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .entrance(0)
@@ -47,6 +48,7 @@ private struct PantryPage: View {
                 }
                 Text(front.hero)
                     .textRole(.hero)
+                    .wordFit(front.hero)
                     .foregroundStyle(Theme.Colors.ink)
                     .contentTransition(.identity)
                     .padding(.top, Theme.Spacing.xs)

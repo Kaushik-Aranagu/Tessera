@@ -129,8 +129,7 @@ struct InkLabelWordStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .textRole(.labelStrong)
-            .textCase(.uppercase)
+            .textRole(.keyWord)
             .foregroundStyle(configuration.isPressed || keepsColor ? color : Theme.Colors.ink)
             .overlay(alignment: .bottom) {
                 Rectangle().fill(color).frame(height: 1.5)

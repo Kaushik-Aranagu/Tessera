@@ -158,6 +158,16 @@ final class ReviewChoices {
         Choice(id: "classInspector", name: "Class inspector", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "A class shows its objects.", "On": "A class also shows its fields, to shape it."],
                readiness: .arrivesWith("the class inspector")),
+        // Design 116: the type pair. Default is the new pair; "As before" is the Inter Tight look.
+        Choice(
+            id: "font",
+            name: "Font",
+            values: ["Figtree and Outfit", "As before"],
+            defaultValue: "Figtree and Outfit",
+            says: ["Figtree and Outfit": "Figtree for words, Outfit for numbers.",
+                   "As before": "Inter Tight for everything."],
+            readiness: .live
+        ),
         // Design 110: on, the kcal line shows on a finished workout; it needs weight and height under Me.
         Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
@@ -166,7 +176,7 @@ final class ReviewChoices {
 
     /// Review's tabs by facet, named in PeekTabs (Design sheets 100 and 108), six rows at most.
     nonisolated static let facets: [(word: String, ids: [String])] = [
-        ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace", "lockScreenLook"]),
+        ("Looks and day", ["readingLayout", "pageTurn", "tabs.neighbours", "tessFace", "lockScreenLook", "font"]),
         // Design 110: Calories burned and Energy check-in sit with the workout; Class inspector with Shown.
         // Tess names training days joins Workout; Quiet interrupts (notices) moves to Connected to keep six a page.
         (

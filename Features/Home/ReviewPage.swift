@@ -365,6 +365,7 @@ struct ReviewHeadline: View {
             }
         }
         .textRole(.hero)
+        .wordFit(text)
         .foregroundStyle(Theme.Colors.ink)
         .id(text)
         .transition(reduceMotion ? .opacity : .asymmetric(

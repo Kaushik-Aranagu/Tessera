@@ -22,6 +22,10 @@ struct TrainingPage: View {
             // Running (or paused under Home): the plan with what's done, RESUME.
             return .running(session)
         }
+        // "Try today": a ready workout stands in for today's, scheduled or planned (the Plan is never rewritten).
+        if let tried = model.triedRoutine() {
+            return .routine(tried)
+        }
         if let workout = model.tonightWorkout() {
             return .scheduled(workout)
         }
@@ -84,12 +88,17 @@ private struct TrainingAtRest: View {
     @State private var liftTaps = 0
     @State private var markLine: CGRect = .zero
     @State private var firstSegment: CGRect = .zero
+    /// The Library rises over Training (Exercises | Workouts, Try today).
+    @State private var libraryOpen = false
+    @State private var place = TrainingPlace.current()
     /// The START sequence, cancelled if he leaves the page inside it.
     @State private var startTask: Task<Void, Never>?
     /// As live mode rises out of the first lane, the rest of the plan sinks to 0.96 and fades.
     @State private var sinking = false
 
     private static let space = "training"
+    /// A lane row's height at normal text sizes.
+    private static let laneRow: CGFloat = 72
 
     var body: some View {
         let lanes = lanes
@@ -113,48 +122,73 @@ private struct TrainingAtRest: View {
                 .modifier(ZoomSource(id: titleAndRoute.1, namespace: namespace))
                 .entrance(1, hero: true)
 
-            // A private workout says nothing about what it works (its figure still draws).
-            if let works = worksLine(day) {
-                Text(works)
-                    .font(Theme.voice(size: 21))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: 220, alignment: .leading)
-                    .padding(.bottom, Theme.Spacing.s)
-            }
-
-            StartMark(state: markState, lift: lift)
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
-                    markLine = CGRect(x: frame.minX, y: frame.maxY - 6, width: frame.width, height: 6)
+            VStack(alignment: .leading, spacing: 0) {
+                if let tried = model.triedToday() {
+                    TriedTodayLine(tried: tried) { model.undoTryToday() }
+                        .padding(.bottom, Theme.Spacing.xs)
                 }
-                .onTapGesture { tapMark() }
-                .accessibilityAddTraits(markState.isAction ? .isButton : [])
-                .accessibilityAction { tapMark() }
-                .padding(.bottom, Theme.Spacing.m)
-                .entrance(2)
+                // A private workout says nothing about what it works (its figure still draws).
+                if let works = worksLine(day) {
+                    Text(works)
+                        .font(Theme.voice(size: 21))
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: 220, alignment: .leading)
+                        .padding(.bottom, Theme.Spacing.s)
+                }
+            }
+            .fullScreenCover(isPresented: $libraryOpen) {
+                LibraryPage(close: { libraryOpen = false })
+            }
+            .task { model.purgeStaleTried() }
 
-            // The lanes are the page's one bounded window: they take the room the week and the doors leave.
-            ScrollView(.vertical) {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
-                        LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
-                                isPrivate: isPrivateDay,
-                                showsStrokes: isRunning || isDone || lane.logged > 0)
-                            // Rows are 72 pt; at large text a row grows with its wrapped name instead of printing over
-                            // the next one.
-                            .frame(height: typeSize.isAccessibilitySize ? nil : 72, alignment: .top)
-                            // Live mode rises out of the first lane; the others sink away.
-                            .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
-                                                 namespace: namespace))
-                            .modifier(Sinking(isOn: sinking && index > 0))
+            HStack(alignment: .bottom, spacing: Theme.Spacing.m) {
+                StartMark(state: markState, lift: lift)
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
+                        markLine = CGRect(x: frame.minX, y: frame.maxY - 6, width: frame.width, height: 6)
                     }
-                }
-                .accessibilityElement(children: .contain)
+                    .onTapGesture { tapMark() }
+                    .accessibilityAddTraits(markState.isAction ? .isButton : [])
+                    .accessibilityAction { tapMark() }
+
+                Spacer(minLength: Theme.Spacing.s)
+                // Where he trains today: the same knob the library turns.
+                KnobWords(values: TrainingPlace.allCases, selection: $place, word: \.rawValue,
+                          spoken: "Place, \(place.rawValue), adjustable")
+                    .onChange(of: place) { _, new in TrainingPlace.set(new) }
             }
-            .scrollIndicators(.hidden)
-            .scrollBounceBehavior(.basedOnSize)
-            .frame(maxHeight: typeSize.isAccessibilitySize ? nil : .infinity, alignment: .top)
+            .padding(.bottom, Theme.Spacing.m)
+            .entrance(2)
+
+            // The lanes are the page's one bounded window: it takes whole rows of the room the week and the doors
+            // leave, so a hard edge never slices a name.
+            GeometryReader { proxy in
+                let rows = max(1, Int(proxy.size.height / Self.laneRow))
+                ScrollView(.vertical) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
+                            LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
+                                    isPrivate: isPrivateDay,
+                                    showsStrokes: isRunning || isDone || lane.logged > 0)
+                                // Rows are 72 pt; at large text a row grows with its wrapped name instead of printing
+                                // over
+                                // the next one.
+                                .frame(height: typeSize.isAccessibilitySize ? nil : 72, alignment: .top)
+                                // Live mode rises out of the first lane; the others sink away.
+                                .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
+                                                     namespace: namespace))
+                                .modifier(Sinking(isOn: sinking && index > 0))
+                        }
+                    }
+                    .accessibilityElement(children: .contain)
+                }
+
+                .scrollIndicators(.hidden)
+                .scrollBounceBehavior(.basedOnSize)
+                .frame(height: typeSize.isAccessibilitySize ? nil : CGFloat(rows) * Self.laneRow, alignment: .top)
+            }
+            .frame(maxHeight: typeSize.isAccessibilitySize ? nil : .infinity)
             .entrance(3)
 
             TrainingWeekMarks(dots: TrainingWeek.dots(model, now: AppClock.now, hasSessionToday: hasSessionToday))
@@ -231,15 +265,30 @@ private struct TrainingAtRest: View {
     private var titleButton: some View {
         let (title, route) = titleAndRoute
         Button { model.open(route) } label: {
-            Text(title)
-                .textRole(.title)
-                .foregroundStyle(Theme.Colors.ink)
-                // The day's name wraps to a second line and, if that is still too long, scales a little: never "...".
-                .lineLimit(2)
-                .minimumScaleFactor(0.7)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+            Group {
+                if Choice.fontIsNew() {
+                    // 72 if the name fits one line in the gutter, else 48 on two lines: never a size between, never
+                    // "...".
+                    ViewThatFits(in: .horizontal) {
+                        Text(title).textRole(.hero).lineLimit(1)
+                        Text(title).textRole(.title).fixedSize(horizontal: false, vertical: true)
+                    }
+                } else {
+                    Text(title)
+                        .textRole(.title)
+                        .wordFit(title)
+                        // The day's name wraps to a second line and, if that is still too long, scales a little: never
+                        // "...".
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.7)
+                }
+            }
+            .environment(\.heroLadder, true)
+            .wordFit(title)
+            .foregroundStyle(Theme.Colors.ink)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
         .modifier(ZoomSource(id: route, namespace: namespace))
@@ -412,9 +461,11 @@ private struct TrainingAtRest: View {
             let opener = isPrivateDay ? nil : lanes.first.flatMap { lane in
                 lane.weightKilograms.map { (exercise: lane.name, weight: Format.mass($0)) }
             }
+            // A workout he is trying today reads its own time.
+            let minutes = model.triedToday()?.minutes ?? (sets > 0 ? TrainingPage.estimatedMinutes(sets: sets) : nil)
             return TrainingPage.sentence(
                 session: title,
-                minutes: sets > 0 ? TrainingPage.estimatedMinutes(sets: sets) : nil,
+                minutes: minutes,
                 opener: opener
             )
         }
@@ -427,18 +478,18 @@ private struct TrainingAtRest: View {
             let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
             doors.append(TrainingDoor(id: "plan", word: "Plan",
                                       value: "\(planObject.title), \(fixed ? "fixed days" : "rolls on")",
-                                      route: .routines(planObject.id)))
+                                      open: { model.open(.routines(planObject.id)) }))
         }
         if let exercise = model.classDef(.exercise) {
             let count = ExerciseLibraryList.groups(model).reduce(0) { $0 + $1.exercises.count }
             doors.append(TrainingDoor(id: "library", word: "Library",
                                       value: count > 0 ? "\(count) \(count == 1 ? "exercise" : "exercises")" : nil,
-                                      route: .classDef(exercise.id)))
+                                      open: { libraryOpen = true }))
         }
         if let workout = model.classDef(.workout) {
             let done = TrainingWeek.doneThisWeek(model, now: AppClock.now)
             doors.append(TrainingDoor(id: "log", word: "Log", value: done > 0 ? "\(done) this week" : nil,
-                                      route: .classDef(workout.id)))
+                                      open: { model.open(.classDef(workout.id)) }))
         }
         return doors
     }
@@ -648,7 +699,7 @@ struct StartMark: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(word)
-                .textRole(.bodyStrong)
+                .textRole(.keyWord)
                 .foregroundStyle(Theme.Colors.ink.opacity(wordOpacity))
                 .contentTransition(.opacity)
             line
@@ -849,6 +900,7 @@ private struct EmptyTraining: View {
                 .foregroundStyle(Theme.Colors.context)
             Text("A rest day. It counts too.")
                 .textRole(.title)
+                .wordFit("A rest day. It counts too.")
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .siblingParallax()

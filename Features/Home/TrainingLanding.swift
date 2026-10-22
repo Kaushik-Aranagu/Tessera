@@ -149,18 +149,17 @@ struct TrainingDoor: Identifiable {
     let id: String
     let word: String
     let value: String?
-    let route: Route
+    let open: () -> Void
 }
 
 struct TrainingDoors: View {
     let doors: [TrainingDoor]
-    @Environment(AppModel.self) private var model
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(doors) { door in
-                Button { model.open(door.route) } label: {
+                Button { door.open() } label: {
                     let layout = typeSize.isAccessibilitySize
                         ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
                         : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Spacing.s))
