@@ -99,7 +99,8 @@ enum FontChoice {
     private final class Watcher: Sendable {
         init() {
             NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil,
-                                                   queue: nil) { _ in
+                                                   queue: nil)
+            { _ in
                 FontChoice.cache.withLock { $0 = nil }
             }
         }
@@ -107,7 +108,9 @@ enum FontChoice {
 
     static var isNew: Bool {
         _ = watcher
-        if let cached = cache.withLock({ $0 }) { return cached }
+        if let cached = cache.withLock({ $0 }) {
+            return cached
+        }
         let value = Choice.value("font", options: Choice.fontOffered, default: "Figtree and Outfit") == "Figtree and Outfit"
         cache.withLock { $0 = value }
         return value

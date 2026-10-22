@@ -108,7 +108,7 @@ struct TrainingWeekMarks: View {
                     mark(dot.state)
                         .frame(width: 18, height: 18)
                     Text(dot.label)
-                        .font(.system(size: 11))
+                        .textRole(.label)
                         .foregroundStyle(dot.state == .today ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
@@ -172,7 +172,7 @@ struct TrainingDoors: View {
                         }
                         if let value = door.value {
                             Text(value)
-                                .font(.system(size: 14))
+                                .textRole(.data)
                                 .foregroundStyle(Theme.Colors.inkSecondary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)

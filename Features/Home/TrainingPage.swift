@@ -503,7 +503,7 @@ private struct TrainingAtRest: View {
             guard let slot = routine.orderedChildren.first,
                   let exercise = model.store.linkedClass("exercise", of: slot) else { return nil }
             guard model.ledger.sessions(of: exercise).first?.sets.first != nil else {
-                return "First time on \(exercise.name.lowercased()). Start light."
+                return TrainingPage.firstTimeLine(exercise, store: model.store)
             }
             // The target is last time's: nothing to say (56 addendum).
             return nil
@@ -512,7 +512,7 @@ private struct TrainingAtRest: View {
                   let exercise = model.store.linkedClass("exercise", of: entry) else { return nil }
             let prefill = model.ledger.prefill(for: entry)
             if prefill.isFirstTime {
-                return "First time on \(exercise.name.lowercased()). Start light."
+                return TrainingPage.firstTimeLine(exercise, store: model.store)
             }
             // Only from the plan's own target (raised by progression, or a weight set in the plan); opening at last
             // time's weight is silence.
@@ -862,7 +862,23 @@ extension TrainingPage {
     static func target(sets: Double?, reps: Double?, weight: Double? = nil) -> String {
         let scheme = "\(Int(sets ?? 0)) × \(Int(reps ?? 0))"
         guard let weight, weight > 0 else { return scheme }
-        return "\(scheme) · \(Format.mass(weight))"
+        return "\(scheme), \(Format.mass(weight))"
+    }
+
+    /// Tess's first-time line for an exercise he has not logged: a bodyweight move starts easy, anything else light.
+    static func firstTimeLine(_ exercise: ClassDef, store: ObjectStore) -> String {
+        if store.equipmentKind(of: exercise) == .bodyweight {
+            return "First time on \(plural(exercise.name.lowercased())). Keep the first set easy."
+        }
+        return "First time on \(exercise.name.lowercased()). Start light."
+    }
+
+    /// "push-up" is "push-ups": the bodyweight moves that count in reps take an s.
+    private static func plural(_ name: String) -> String {
+        let counted = ["up", "dip", "squat", "lunge", "crunch", "row", "raise", "bridge", "extension", "twist"]
+        guard let last = name.split(whereSeparator: { $0 == " " || $0 == "-" }).last?.lowercased(),
+              counted.contains(String(last)) else { return name }
+        return name + "s"
     }
 
     /// "about 55 min": each set about two and a half minutes with its rest, to the nearest five.

@@ -1,61 +1,97 @@
 import SwiftUI
 import TesseraCore
 
-/// An exercise as an object (docs/design/exercise-page.md): path, the name, what it works, best e1RM and best set,
-/// a painted 90-day trend, then three sibling views of the same object on x (HISTORY · REP MAXES · MUSCLES) in one
-/// bounded window, the methods, and Tess's forward line. One screen tall; only the window scrolls.
+/// An exercise as one plain page (docs/design/training-app-124.md, sheets 124 and 125): the name and what it works with
+/// its best, the Gym visual, the best set with "about N kg for 1", the climb (sessions down the page, weight across),
+/// the exercise's notes, Similar, and the two keys. Not a rail: the data here is one long list, so it scrolls.
 struct ExercisePage: View {
     let exercise: ClassDef
 
     @Environment(AppModel.self) private var model
     @Environment(\.dynamicTypeSize) private var typeSize
-    @Environment(\.animateEntrance) private var animateEntrance
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.pageBackTitle) private var backTitle
+    @State private var isSimilarOpen = false
 
     var body: some View {
         let _ = model.revision
         let digest = ExerciseDigest(exercise: exercise, ledger: model.ledger, store: model.store, now: AppClock.now)
-        Group {
-            if typeSize.isAccessibilitySize {
-                // Reflow wins over one-screen at accessibility sizes: the page scrolls, the window grows.
-                ScrollView(.vertical) { content(digest, windowHeight: 360) }
-                    .scrollIndicators(.hidden)
-            } else {
-                content(digest, windowHeight: nil)
-            }
+        ScrollView(.vertical) {
+            content(digest)
         }
+        .scrollIndicators(.hidden)
         .background { ThemedBackground() }
         .toolbarTitleDisplayMode(.inline)
+        // The plain back word, not the round glass button (Design on #1219); the edge swipe stays.
+        .navigationBarBackButtonHidden(true)
+        .toolbarVisibility(.hidden, for: .navigationBar)
+        .background { EdgeSwipeBack() }
+        .sheet(isPresented: $isSimilarOpen) {
+            SimilarExercisesSheet(exercise: exercise)
+        }
     }
 
-    private func content(_ digest: ExerciseDigest, windowHeight: CGFloat?) -> some View {
+    /// "Similar, 4 to try", or just "Similar" when nothing is close.
+    private var similarWord: String {
+        let count = ExerciseSwaps(store: model.store, ledger: model.ledger)
+            .options(for: exercise, from: 0, excludingWorkout: nil).count
+        return count > 0 ? "Similar, \(count) to try" : "Similar"
+    }
+
+    private func content(_ digest: ExerciseDigest) -> some View {
         VStack(alignment: .leading, spacing: 0) {
+            BackWord(title: backTitle) { dismiss() }
             ExerciseHeader(digest: digest)
                 .padding(.bottom, Theme.Spacing.l)
 
-            ExerciseSummary(digest: digest, isPrivate: MuscleReading.openedFromPrivate(model))
-                .entrance(3)
-                .padding(.bottom, Theme.Spacing.l)
-
-            if let trend = digest.trend {
-                TrendStrip(trend: trend, animate: animateEntrance)
-                    .entrance(4)
+            if let picture = ExercisePictures.picture(forExerciseNamed: exercise.name) {
+                PlayingPicture(picture: picture)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: picture.gifURL == nil ? 200 : 180)
+                    .accessibilityHidden(true)
+                    .entrance(2)
                     .padding(.bottom, Theme.Spacing.l)
             }
 
-            ExerciseViews(digest: digest)
-                .frame(minHeight: 140, maxHeight: windowHeight ?? 236)
-                .layoutPriority(-1)
-                .entrance(5)
+            ExerciseBest(digest: digest)
+                .entrance(3)
+                .padding(.bottom, Theme.Spacing.xl)
 
-            Spacer(minLength: Theme.Spacing.s)
+            if !digest.climb.isEmpty {
+                TheClimb(sessions: digest.climb, total: digest.sessionCount)
+                    .padding(.bottom, Theme.Spacing.xl)
+            }
 
-            if let line = digest.nextTime {
+            if let notes = digest.notes {
+                VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                    Text("Notes").textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
+                    Text(notes)
+                        .font(Theme.voice(size: 21))
+                        .foregroundStyle(Theme.Colors.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .accessibilityElement(children: .combine)
+                .padding(.bottom, Theme.Spacing.xl)
+            }
+
+            // A door, not a label: ink, with how many there are to try.
+            Button { isSimilarOpen = true } label: {
+                Text(similarWord)
+                    .textRole(.keyWord)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(HandleButtonStyle())
+            .accessibilityHint("Shows exercises close to \(exercise.name)")
+            .padding(.bottom, Theme.Spacing.l)
+
+            if let line = digest.nextLine {
                 Text(line)
-                    .font(PageType.voice)
-                    .foregroundStyle(Theme.Colors.tess)
+                    .font(Theme.voice(size: 21))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.bottom, Theme.Spacing.m)
-                    .accessibilityLabel("Tess: \(line)")
             }
 
             ExerciseMethods(exercise: exercise)
@@ -64,7 +100,24 @@ struct ExercisePage: View {
         .padding(.top, Theme.Spacing.xs)
         // The dock (Ask Tess) floats over pushed pages too.
         .padding(.bottom, HomeSpatialView.dockClearance)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+}
+
+/// "Best set 85 × 5. About 104 kg for 1." in words, or the first-time line.
+private struct ExerciseBest: View {
+    let digest: ExerciseDigest
+
+    var body: some View {
+        Text(line)
+            .font(Theme.voice(size: 21))
+            .foregroundStyle(Theme.Colors.inkSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var line: String {
+        ExerciseWords.bestLine(bestSet: digest.bestSet, aboutKilograms: digest.aboutOneRep)
     }
 }
 
@@ -76,116 +129,23 @@ private struct ExerciseHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if !digest.path.isEmpty {
-                HStack(spacing: Theme.Spacing.s) {
-                    ForEach(Array(digest.path.enumerated()), id: \.element.id) { index, part in
-                        if index > 0 {
-                            Text("›").textRole(.label).foregroundStyle(Theme.Colors.muted)
-                                .accessibilityHidden(true)
-                        }
-                        Button { model.open(.classDef(part.id), .up) } label: {
-                            Text(part.title)
-                                .textRole(.label)
-                                .foregroundStyle(Theme.Colors.inkSecondary)
-                                .lineLimit(1)
-                                .frame(minHeight: 44)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(HandleButtonStyle())
-                        .accessibilityHint("Goes up to \(part.title)")
-                    }
-                }
-                .padding(.bottom, -Theme.Spacing.xs)
-                .entrance(0)
-            }
-
-            HeroText(text: digest.name) { $0 }
+            Text(digest.name)
+                .textRole(.title)
                 .foregroundStyle(Theme.Colors.ink)
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
                 .arrivesFromRight()
                 .padding(.bottom, Theme.Spacing.s)
 
-            if let context = digest.context {
-                Text(context)
+            if let subtitle = digest.subtitle {
+                Text(subtitle)
                     .font(PageType.voice)
                     .foregroundStyle(Theme.Colors.context)
                     .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityLabel("Works \(context)")
+                    .accessibilityLabel(subtitle)
                     .entrance(2)
             }
         }
-    }
-}
-
-// MARK: - Summary
-
-private struct ExerciseSummary: View {
-    let digest: ExerciseDigest
-    /// Opened from a private workout or routine: the figures draw the plain outline.
-    var isPrivate = false
-    @Environment(\.dynamicTypeSize) private var typeSize
-
-    var body: some View {
-        if digest.bestSet == nil {
-            // Zero history: one plain line instead of two empty numbers.
-            Text("No best yet. The first logged set sets one.")
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        } else {
-            stats
-                .frame(maxWidth: .infinity, alignment: .leading)
-                // The pair of figures stands beside the two numbers (Design brief 1): 100 pt tall, the back one at the
-                // right edge, drawn a little into the gutter, and hidden from VoiceOver.
-                .overlay(alignment: .topTrailing) {
-                    if !typeSize.isAccessibilitySize {
-                        ExerciseFigures(muscles: digest.muscles.map { (name: $0.name, role: MuscleRole($0.role)) },
-                                        isPrivate: isPrivate)
-                            .offset(x: 20, y: -16)
-                    }
-                }
-        }
-    }
-
-    private var stats: some View {
-        let layout = typeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.m))
-            : AnyLayout(HStackLayout(alignment: .top, spacing: 0))
-        return layout {
-            // An empty value drops out; no lone dash (decisions 5:57).
-            if let best = digest.bestE1RM {
-                stat(Format.kilograms(best), label: "Best e1RM, kg",
-                     spoken: "Best estimated one-rep max, \(Format.kilograms(best)) kilograms")
-                    // The second number starts at x 152 (the first at 24); its label wraps rather than touch the next
-                    // one.
-                    .frame(width: typeSize.isAccessibilitySize || digest.bestSet == nil ? nil : 120)
-            }
-            if let set = digest.bestSet {
-                stat(set, label: "Best set", spoken: "Best set, \(set.replacingOccurrences(of: "×", with: "by"))")
-                    // Stays clear of the figures at the right (they begin at x 296; this starts at x 152).
-                    .frame(width: typeSize.isAccessibilitySize || digest.bestE1RM == nil ? nil : 136)
-                    .padding(.leading, typeSize.isAccessibilitySize || digest.bestE1RM == nil ? 0 : 8)
-            }
-        }
-    }
-
-    private func stat(_ value: String, label: String, spoken: String?) -> some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-            Text(value)
-                .numeral(44)
-                .foregroundStyle(Theme.Colors.ink)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                // One height whether or not the numeral shrank, so both labels sit on one line.
-                .frame(height: 54, alignment: .leading)
-            Text(label).textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(spoken ?? "\(label), none yet")
     }
 }
 
@@ -211,30 +171,6 @@ struct ExerciseFigures: View {
     }
 }
 
-// MARK: - Trend
-
-private struct TrendStrip: View {
-    let trend: ExerciseDigest.Trend
-    let animate: Bool
-
-    var body: some View {
-        VStack(spacing: Theme.Spacing.s) {
-            PaintedTrend(points: trend.points, animate: animate)
-                .frame(height: 56)
-            HStack {
-                Text(trend.span).textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
-                Spacer(minLength: Theme.Spacing.m)
-                if let change = trend.change {
-                    Text(change).textRole(.label)
-                        .foregroundStyle(trend.isRise ? Theme.Colors.tess : Theme.Colors.inkSecondary)
-                }
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Estimated one-rep max over \(trend.span)" + (trend.change.map { ", \($0)" } ?? ""))
-    }
-}
-
 // MARK: - Methods
 
 private struct ExerciseMethods: View {
@@ -250,7 +186,7 @@ private struct ExerciseMethods: View {
             : AnyLayout(HStackLayout(alignment: .center, spacing: Theme.Spacing.l))
         layout {
             PaintKey(isTap: true, height: 64, action: logASet) { _ in
-                Text("Log a set")
+                Text("Log a set").textRole(.keyWord)
             }
 
             addToRoutine
@@ -276,8 +212,8 @@ private struct ExerciseMethods: View {
             }
         } label: {
             Text("Add to routine")
-                .textRole(.bodyStrong)
-                .foregroundStyle(Theme.Colors.ink)
+                .textRole(.keyWord)
+                .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(minHeight: 56)
                 .contentShape(Rectangle())
         }

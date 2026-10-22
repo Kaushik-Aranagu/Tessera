@@ -218,4 +218,82 @@ struct ExerciseAndPlansTests {
         #expect(push.exercises.contains { $0.name == "Bench Press" })
         #expect(groups.allSatisfy { !$0.exercises.isEmpty })
     }
+
+    // MARK: The climb
+
+    @Test func theClimbRunsOldestFirstWithTheBestAsTheRing() throws {
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let bench = try #require(model.classDef(.benchPress))
+        let now = Date.now
+        log(model, bench, daysAgo: 7, sets: [(80, 8), (80, 7)], now: now)
+        log(model, bench, daysAgo: 3, sets: [(82.5, 7), (80, 8)], now: now)
+        log(model, bench, daysAgo: 1, sets: [(77.5, 8)], now: now)
+
+        let digest = ExerciseDigest(exercise: bench, ledger: model.ledger, store: model.store, now: now)
+        #expect(digest.climb.map(\.weight) == [80, 82.5, 77.5])
+        #expect(digest.climb.map(\.isBest) == [false, true, false])
+        #expect(digest.climb.map(\.setText) == ["80 × 8", "82.5 × 7", "77.5 × 8"])
+        #expect(digest.sessionCount == 3)
+        #expect(digest.aboutOneRep == 101.8)
+        #expect(digest.subtitle?.contains("Best") == false, "the subtitle is the muscles; the best is the line below")
+        #expect(digest.nextLine?.hasPrefix("Next time ") == true)
+        #expect(digest.nextLine?.hasSuffix("Last time 77.5 × 8.") == true)
+    }
+
+    @Test func theClimbShowsTheLastTwelveSessions() throws {
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let bench = try #require(model.classDef(.benchPress))
+        let now = Date.now
+        for day in 1 ... 15 {
+            log(model, bench, daysAgo: Double(day), sets: [(60 + Double(day), 8)], now: now)
+        }
+        let digest = ExerciseDigest(exercise: bench, ledger: model.ledger, store: model.store, now: now)
+        #expect(digest.sessionCount == 15)
+        #expect(digest.climb.count == ClimbSession.limit)
+        #expect(digest.climb.first?.weight == 72, "the twelfth most recent is 12 days ago")
+        #expect(digest.climb.last?.weight == 61, "and the newest is yesterday")
+    }
+
+    @Test func theAxisRoundsOutToFiveKiloLinesAndNeverGoesFlat() throws {
+        let axis = try #require(ClimbAxis(weights: [77.5, 82.5, 80]))
+        #expect(axis.low == 75)
+        #expect(axis.high == 85)
+        #expect(axis.gridlines == [75, 80, 85])
+        #expect(axis.unit(80) == 0.5)
+        let flat = try #require(ClimbAxis(weights: [80, 80]))
+        #expect(flat.high - flat.low == 10, "a flat climb still has room to move")
+        #expect(ClimbAxis(weights: [0, 0]) == nil, "bodyweight work has no weight to climb")
+        #expect(ClimbAxis(weights: []) == nil)
+    }
+
+    @Test func everyClimbDateUsesOneForm() throws {
+        let zone = try #require(TimeZone(identifier: "UTC"))
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        for (month, day, expected) in [(9, 29, "Sep 29"), (10, 5, "Oct 5"), (10, 10, "Oct 10")] {
+            let date = try #require(calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: 12)))
+            #expect(TheClimb.dateWord(date, zone: zone, calendar: calendar) == expected)
+        }
+    }
+
+    // MARK: Units (QA on #1219: he is in the US, so pounds matter)
+
+    @Test func theExercisePageWordsFollowThePoundUnit() {
+        #expect(ExerciseWords.set(weight: 82.5, reps: 7, unit: .pounds) == "182 × 7")
+        #expect(ExerciseWords.set(weight: 82.5, reps: 7, unit: .kilograms) == "82.5 × 7")
+        #expect(Format.shown(80, unit: .pounds) == "176.5")
+        #expect(ExerciseWords.bestLine(bestSet: "182 × 7", aboutKilograms: 101.8, unit: .pounds)
+            == "Best set 182 × 7. About 224 lb for 1.")
+        #expect(ExerciseWords.bestLine(bestSet: "82.5 × 7", aboutKilograms: 101.8, unit: .kilograms)
+            == "Best set 82.5 × 7. About 102 kg for 1.")
+        #expect(ExerciseWords.bestLine(bestSet: nil, aboutKilograms: nil).hasPrefix("No best yet"))
+    }
+
+    @Test func theClimbGridStepFollowsTheUnit() throws {
+        #expect(ClimbAxis.step(for: .kilograms) == 5)
+        #expect(ClimbAxis.step(for: .pounds) == 10)
+        let axis = try #require(ClimbAxis(weights: [175, 182, 180], step: ClimbAxis.step(for: .pounds)))
+        #expect(axis.gridlines == [170, 180, 190])
+        #expect(axis.unit(180) == 0.5)
+    }
 }
