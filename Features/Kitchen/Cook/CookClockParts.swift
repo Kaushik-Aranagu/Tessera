@@ -29,6 +29,7 @@ struct StepStack: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                 Text(session.text(of: current))
                     .textRole(.title)
+                    .wordFit(session.text(of: current))
                     .foregroundStyle(Theme.Colors.Workout.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -362,6 +363,7 @@ struct FlareBand: View {
                     HStack(alignment: .firstTextBaseline) {
                         Text(CookModeCopy.timerDoneLine(line.label))
                             .textRole(.title)
+                            .wordFit(CookModeCopy.timerDoneLine(line.label))
                             .foregroundStyle(Theme.Colors.Workout.signal)
                             .fixedSize(horizontal: false, vertical: true)
                         if ended.count > 1 {

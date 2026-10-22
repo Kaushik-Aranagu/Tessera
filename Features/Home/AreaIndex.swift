@@ -121,11 +121,15 @@ struct AreaName: View {
 
     @ViewBuilder
     private func word(_ title: String, index: Int) -> some View {
-        let text = Text(title.uppercased())
-            .textRole(.labelStrong)
-            .tracking(1.2)
-            .foregroundStyle(Theme.Colors.ink)
-            .fixedSize()
+        // The page's kicker: Figtree sentence case in the new pair, the old wide capitals otherwise.
+        let text = Group {
+            if Choice.fontIsNew() {
+                Text(title).textRole(.label).foregroundStyle(Theme.Colors.ink)
+            } else {
+                Text(title.uppercased()).textRole(.labelStrong).tracking(1.2).foregroundStyle(Theme.Colors.ink)
+            }
+        }
+        .fixedSize()
         if index == current, flies {
             text.matchedGeometryEffect(id: "areaWord", in: namespace, isSource: !indexShown)
         } else {
@@ -235,8 +239,11 @@ struct AreaIndexSheet: View {
     @ViewBuilder
     private func word(_ index: Int, picked: Bool, current: Bool) -> some View {
         let color: Color = picked ? Self.areaColour(index) : Theme.Colors.ink.opacity(current ? 1 : restInk)
-        let text = Text(titles[index].uppercased())
-            .font(.system(size: 40, weight: picked && index == 1 ? .bold : .semibold))
+        let text = Text(Choice.fontIsNew() ? titles[index] : titles[index].uppercased())
+            .font(Choice.fontIsNew()
+                ? Theme.Typography.face(Theme.activeFonts.ui, size: 40, relativeTo: .largeTitle, serif: false)
+                .weight(picked ? .semibold : .medium)
+                : .system(size: 40, weight: picked && index == 1 ? .bold : .semibold))
             .tracking(-0.8)
             .foregroundStyle(color)
             .scaleEffect(picked ? 1.06 : 1, anchor: .leading)

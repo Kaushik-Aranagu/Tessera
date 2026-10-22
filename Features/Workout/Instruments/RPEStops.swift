@@ -112,7 +112,7 @@ struct RPEStops: View {
         let value = Self.stops[index]
         let isChosen = value == rpe
         return Text(Self.formatted(value))
-            .font(isChosen ? Theme.numeral(26, weight: .medium) : Theme.numeral(21, weight: .light))
+            .numeral(isChosen ? 26 : 21, weight: isChosen ? .medium : .light)
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
             .foregroundStyle(isChosen ? Paint.cream : Paint.whole)
             .fixedSize()

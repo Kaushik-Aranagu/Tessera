@@ -38,6 +38,7 @@ struct MePage: View {
                     .entrance(0)
                 Text(MeCopy.title)
                     .textRole(.hero)
+                    .wordFit(MeCopy.title)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .padding(.top, Theme.Spacing.s)

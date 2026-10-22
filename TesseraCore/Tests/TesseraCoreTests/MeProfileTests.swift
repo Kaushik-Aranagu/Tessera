@@ -54,13 +54,29 @@ struct MeProfileTests {
         defer { try? FileManager.default.removeItem(at: dir) }
         let disk = try ObjectStore(context: TesseraContext(url: dir.appending(path: "tessera.sqlite")))
         let diskEngine = try ActionEngine(store: disk, classes: disk.prepareCatalog())
-        try diskEngine.perform(SetMeProfile(heightCm: 187.25, birthYear: 1973, sex: "male"), by: .user)
+        // A height with five significant digits cannot turn up by chance in ids and timestamps.
+        try diskEngine.perform(SetMeProfile(heightCm: 187.3719, birthYear: 1973, sex: "male"), by: .user)
         disk.save()
         let object = try #require(disk.object(id: MeProfile.objectID))
         #expect(ObjectPrivacy.label(of: object, in: disk, classes: diskEngine.classes) == "Private profile")
         // The shared export shows only the label.
         let json = try String(decoding: TesseraExport(context: disk.context).encoded(), as: UTF8.self)
-        #expect(!json.contains("187.25") && !json.contains("1973") && !json.contains("\"male\""))
+        #expect(!json.contains("187.3719") && !json.contains("\"male\""))
+        // A year is four digits and can sit inside a timestamp or id, so look for it as a value, not as text.
+        let tree = try JSONSerialization.jsonObject(with: Data(json.utf8))
+        func holdsYear(_ node: Any) -> Bool {
+            if let number = node as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID() {
+                return number.doubleValue == 1973
+            }
+            if let list = node as? [Any] {
+                return list.contains(where: holdsYear)
+            }
+            if let map = node as? [String: Any] {
+                return map.values.contains(where: holdsYear)
+            }
+            return false
+        }
+        #expect(!holdsYear(tree))
         // The local backup keeps every word; the iCloud copy leaves the object and its ops out.
         let local = dir.appending(path: "local.sqlite"), icloud = dir.appending(path: "icloud.sqlite")
         try TesseraBackup.write(from: disk.context, to: local)
