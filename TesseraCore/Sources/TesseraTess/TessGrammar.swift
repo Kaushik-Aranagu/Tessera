@@ -51,6 +51,10 @@ public struct TessGrammar {
         case ask(String)
         /// "spent 12.40 on coffee", "paid rent 1200": a spend, dated `on` (a past day) or now.
         case spend(MoneyAmount, note: String, on: Date?)
+        /// Money pools: "got 3200 paycheck", "got 500 rupees". Read only with the switch on, on the phone.
+        case inflow(MoneyAmount, source: String, pool: UUID?, note: String)
+        /// Money pools: "moved 1000 to India, got 82650, fee 5".
+        case poolMove(from: UUID, to: UUID, sent: MoneyAmount, arrived: MoneyAmount, fee: MoneyAmount?)
         /// The groceries total after a shop.
         case shopTotal(MoneyAmount)
         /// "skip" while a groceries total is awaited.
@@ -118,6 +122,10 @@ public struct TessGrammar {
         let entry = context.entry.flatMap { store.object(id: $0) }
         if let entry, let live = parseInFocus(phrase, text: text, context: context, entry: entry) {
             return live.parse
+        }
+        // Money pools (switch On): after the secret words and the process in front, before generic money.
+        if let pooled = parsePools(phrase, context: context) {
+            return pooled
         }
         // Money (slice 4): after the relative sets above, before comma sets and lifts, so "80 x5" and
         // "bench 82.50 x 8" stay training and "6.50 cab" is a spend.
