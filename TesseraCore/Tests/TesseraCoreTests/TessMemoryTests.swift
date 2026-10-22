@@ -113,7 +113,7 @@ struct TessMemoryTests {
         #expect(memory.lines(of: .told).count == 5)
         // After the UNDO window the words leave history for good.
         try run(ForgetMemory(memory: line.id), at: Self.at(12))
-        memory.redact(line.id)
+        memory.redact(line.id, now: Self.at(12))
         #expect(memory.lines(of: .told).count == 4)
         let history = store.context.operations.values
         #expect(!history.contains { $0.ops.contains { op in
@@ -234,7 +234,7 @@ struct TessMemoryTests {
         memory.turnover(now: Self.at(11, 5)) // a Sunday
         let hours = try #require(memory.lines(of: .noticed).first { $0.text.hasPrefix("You usually") })
         try run(ForgetMemory(memory: hours.id), at: Self.at(11, 9))
-        memory.redact(hours.id)
+        memory.redact(hours.id, now: Self.at(11, 9))
         memory.turnover(now: Self.at(18, 5)) // next Sunday
         #expect(!memory.lines(of: .noticed).contains { $0.text.hasPrefix("You usually") })
         #expect(memory.lines(of: .noticed).contains { $0.text.hasPrefix("You train about") })
@@ -252,7 +252,7 @@ struct TessMemoryTests {
         try run(RememberFact(text: "I train after work"), at: Self.at(20))
         let told = try #require(memory.lines(of: .told).first)
         try run(ForgetMemory(memory: told.id), at: Self.at(20, 13))
-        memory.redact(told.id)
+        memory.redact(told.id, now: Self.at(20, 13))
         let memoryClass = try #require(classes[.tessMemory])
         let restored = store.create(memoryClass, title: "You train after work.")
         try store.set("kind", to: .choice("told"), on: restored)
