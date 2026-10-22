@@ -135,6 +135,7 @@ private struct WorkoutContent: View {
                     .transition(.opacity)
                 } else {
                     live(phase: phase, now: now)
+                        .simultaneousGesture(edgeBack)
                 }
             }
             .onChange(of: phase == .set) { wasSet, isSet in
@@ -389,22 +390,56 @@ extension WorkoutContent {
     /// strip says which exercise this is. Tap or pull down for the running order.
     private func header(phase: WorkoutSession.Phase) -> some View {
         let line = WorkoutLines.context(session, phase: phase)
-        // The kicker style (Design item 115): small, caps, ink secondary; it wraps, never cut.
-        return Text(line)
-            .kicker()
-            .fixedSize(horizontal: false, vertical: true)
-            .contentTransition(.opacity)
-            .tesseraAnimation(value: line)
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            .contentShape(Rectangle())
-            .onTapGesture { setOrder(open: true) }
-            .gesture(DragGesture(minimumDistance: 12).onEnded { drag in
-                if drag.translation.height > 30 {
-                    setOrder(open: true)
-                }
-            })
-            .accessibilityAddTraits(.isButton)
-            .accessibilityHint("Shows the running order")
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: Theme.Spacing.m) { backWord; contextLine(line) }
+            VStack(alignment: .leading, spacing: 0) { backWord; contextLine(line) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// A swipe in from the left edge leaves the same way Back does.
+    private var edgeBack: some Gesture {
+        DragGesture(minimumDistance: 24).onEnded { drag in
+            if drag.startLocation.x < 24, drag.translation.width > 70, abs(drag.translation.height) < 60 {
+                model.isWorkoutPresented = false
+            }
+        }
+    }
+
+    /// The way out is always at the top left: the session keeps running and the key on Home reads RESUME.
+    /// Ending the workout stays a separate, deliberate action.
+    private var backWord: some View {
+        Button { model.isWorkoutPresented = false } label: {
+            Text("Back")
+                .textRole(.label)
+                .foregroundStyle(Paint.secondary)
+                .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Back to Training")
+        .accessibilityHint("The workout keeps running")
+    }
+
+    private func contextLine(_ line: String) -> some View {
+        Group {
+            // The kicker style (Design item 115): small, caps, ink secondary; it wraps, never cut.
+            Text(line)
+                .kicker()
+                .fixedSize(horizontal: false, vertical: true)
+                .contentTransition(.opacity)
+                .tesseraAnimation(value: line)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture { setOrder(open: true) }
+                .gesture(DragGesture(minimumDistance: 12).onEnded { drag in
+                    if drag.translation.height > 30 {
+                        setOrder(open: true)
+                    }
+                })
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint("Shows the running order")
+        }
     }
 
     @ViewBuilder
