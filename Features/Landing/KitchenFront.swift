@@ -7,7 +7,7 @@ import TesseraCore
 @MainActor
 struct KitchenFront {
     /// Kitchen's one accent, ochre (131 table: #E0A458 dark, #A8701F light).
-    static let accent = Color(light: 0xA8701F, dark: 0xE0A458)
+    static let accent = Theme.Colors.Accent.kitchen
 
     struct Meal {
         let title: String
