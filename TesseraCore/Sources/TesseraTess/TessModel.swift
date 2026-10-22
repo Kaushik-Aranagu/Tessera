@@ -148,6 +148,9 @@ public struct TessRouter {
         // question): the phrase is kept as a note he can sort later, rather than dropped. Idle only (a live set or a
         // shop keeps its own "Try ..." line), never a cook or timer phrase, and never a Claude key (refused above).
         // Over the cap reads the same as Claude not there (Product ruling, 6:10 PM PT Oct 19).
+        // Money notes the phone cannot read go in this order (Kaushik, Oct 21): the phone first (grammar, then the
+        // on-device model), then Claude to read only if asking Claude is on (it has no money action), else kept on the
+        // phone to sort later.
         // A money phrase nobody could read is kept too, even with Claude there: the money actions are not offered to
         // Claude, so it cannot log a spend, and an unread sum is never dropped (Product, Oct 19).
         let unreadMoney = request.use == .capture && asked == nil && PrivateFacts.isMoneyShaped(request.text)
