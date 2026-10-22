@@ -123,6 +123,8 @@ public enum DayStory {
         "closeDay", "createPlace", "renamePlace", "setPlaceSections", "movePlace", "removePlace", "setItemPlace", "setMeProfile", "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice",
         "releaseHeldNotices",
         "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading", "setBookAside",
+        // Money pools: amounts and pool names never reach the Day log.
+        "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).
