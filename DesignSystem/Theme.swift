@@ -275,7 +275,18 @@ enum Theme {
 
     /// The active concept: the chosen looks (ThemeStore), read inside `body` so every view redraws on a switch.
     static var concept: ThemeConcept {
-        retired ?? ThemeStore.shared.concept
+        var concept = retired ?? ThemeStore.shared.concept
+        if Choice.fontIsNew() {
+            // The 1.5x steps (Design 116): a page title is 72, or 48 when the name does not fit one line; Figtree
+            // 500 at -0.03 em. Every measured fit (HeroText, HomeLineHero) reads these sizes, so they agree.
+            concept.scale.hero.size = 72
+            concept.scale.hero.tracking = -0.03
+            concept.scale.hero.weight = .medium
+            concept.scale.title.size = 48
+            concept.scale.title.tracking = -0.03
+            concept.scale.title.weight = .medium
+        }
+        return concept
     }
 
     /// `-theme <name>` pins a look in memory for demos and recordings, on the simulator only (like the demo data).

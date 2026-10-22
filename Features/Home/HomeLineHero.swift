@@ -116,6 +116,7 @@ struct HomeHeroText: View {
                 }
             }
         }
+        .environment(\.heroLadder, true)
         .foregroundStyle(Theme.Colors.ink)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)

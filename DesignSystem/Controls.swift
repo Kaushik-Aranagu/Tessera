@@ -13,9 +13,9 @@ struct Eyebrow: View {
     let text: String
     var color: Color = Theme.Colors.inkSecondary
     var body: some View {
-        Text(text.uppercased())
+        Text(Choice.fontIsNew() ? text : text.uppercased())
             .textRole(.label)
-            .tracking(1.2)
+            .tracking(Choice.fontIsNew() ? 0 : 1.2)
             .foregroundStyle(color)
     }
 }
