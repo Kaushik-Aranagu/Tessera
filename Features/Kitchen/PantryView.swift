@@ -46,12 +46,31 @@ private struct PantryPage: View {
                  },
                  empty: board.empty(for:))
         { row in
-            PantryRow(row: row, onTick: tick)
+            PantryRow(row: row, onTick: tick, onAdd: add)
         }
         .background { ThemedBackground() }
         .background { EdgeSwipeBack() }
         .toolbar(.hidden, for: .navigationBar)
         .tesseraFeedback(.notNow, trigger: landed)
+    }
+
+    /// The old Pantry's left swipe, carried over (131 §2b): onto To get as a new line, "Milk, on Groceries." with
+    /// UNDO 4 s; already there says so, with no second row and no UNDO.
+    @discardableResult
+    private func add(_ entry: PantryLedger.Entry) -> Bool {
+        let groceries = Groceries(store: model.store, classes: model.classes)
+        if case let .already(receipt) = PantryFront.swipe(entry, groceries: groceries, store: model.store) {
+            TessVoice.shared.say(receipt)
+            return false
+        }
+        let name = model.store.displayTitle(of: entry.ingredient)
+        guard let record = try? model.engine.perform(AddGroceries(lines: [name]), by: .user).record else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return false
+        }
+        withTesseraAnimation(RailMetrics.crossfade, reduceMotion: reduceMotion) { model.touch() }
+        TessVoice.shared.say(PantryCopy.added(entry.label), undo: record, holds: .seconds(4))
+        return true
     }
 
     /// A To get row tapped: in the basket, as on Groceries (Done on Groceries clears the basket into the Pantry).
@@ -71,7 +90,11 @@ private struct PantryPage: View {
 private struct PantryRow: View {
     let row: PantryBoard.Row
     let onTick: (ListContents.Item) -> Void
+    let onAdd: (PantryLedger.Entry) -> Bool
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pull: CGFloat = 0
+    @State private var added = 0
 
     var body: some View {
         switch row {
@@ -96,6 +119,30 @@ private struct PantryRow: View {
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(state.map { "\(entry.label), \($0)" } ?? entry.label)
+            .accessibilityAction(named: "Add to Groceries") { _ = onAdd(entry) }
+            .offset(x: pull)
+            // The ghost word behind the swipe: where the line is going (Design on #727).
+            .background(alignment: .trailing) {
+                Text("To get")
+                    .textRole(.data)
+                    .foregroundStyle(Theme.Colors.ink.opacity(min(abs(pull) / 72, 1) * 0.42))
+                    .accessibilityHidden(true)
+            }
+            .tesseraFeedback(.made, trigger: added)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 24)
+                    .onChanged { value in
+                        guard value.translation.width < 0, abs(value.translation.width) > abs(value.translation.height)
+                        else { return }
+                        pull = max(value.translation.width, -96)
+                    }
+                    .onEnded { _ in
+                        if pull <= -72, onAdd(entry) {
+                            added += 1
+                        }
+                        withTesseraAnimation(reduceMotion: reduceMotion) { pull = 0 }
+                    }
+            )
         }
     }
 
