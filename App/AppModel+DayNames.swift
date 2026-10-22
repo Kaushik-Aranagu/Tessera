@@ -192,7 +192,8 @@ enum DayNamingPrompt {
     static func cleaned(_ reply: String) -> String? {
         let name = reply.trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: CharacterSet(charactersIn: "\"'.“”‘’"))
-        return DayNames.isUsable(name) ? name : nil
+        let spaced = DayNames.spaced(name)
+        return DayNames.isUsable(spaced) ? spaced : nil
     }
 
     /// The plain splits he is tired of (Product on #1174): taken only when the model offers nothing more specific.
