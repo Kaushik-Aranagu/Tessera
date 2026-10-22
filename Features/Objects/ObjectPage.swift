@@ -28,6 +28,10 @@ struct ObjectPage: View {
            ExerciseRouting.isExercise(classDef, classes: model.classes)
         {
             ExercisePage(exercise: classDef)
+        } else if case .routinesLanding = route {
+            RoutinesLandingPage()
+        } else if case .routinesBrowse = route {
+            RoutinesBrowsePage()
         } else if case let .routines(id) = route, let plan = model.object(id) {
             RoutinesPage(plan: plan)
         } else if let plan = ExerciseRouting.plan(for: route, model: model) {
@@ -82,7 +86,7 @@ struct ObjectPage: View {
                     } else {
                         GoneBody()
                     }
-                case .routines:
+                case .routines, .routinesLanding, .routinesBrowse:
                     EmptyView()
                 }
             }
