@@ -85,9 +85,6 @@ private struct WorkoutContent: View {
     @State private var isAsking = false
     @State private var isSimilarOpen = false
     @State private var askReply: String?
-    /// A receipt ("Bench Press, later.", "X, swapped in.") with ten seconds of Undo, in the workout's own Tess corner:
-    /// TessVoice's bubble sits on Home, under this cover.
-    @State private var receipt: WorkoutReceipt?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -209,8 +206,6 @@ private struct WorkoutContent: View {
         .onChange(of: session.lastSeated) { _, seated in
             // A set that finished the workout plays its haptic in finish(), once.
             guard let seated, session.finishedAt == nil else { return }
-            // A logged set ends the receipt: its Undo must take back the set, not the Busy or swap before it.
-            receipt = nil
             // One haptic per set, played here so it survives the key leaving (Reduce Motion, VoiceOver's action):
             // the set's tap, or .success in its place for a new best.
             // With the ink drops the one haptic waits for the circle to close (LiveSetMarks tells us); without them
@@ -300,16 +295,16 @@ private struct WorkoutContent: View {
             Spacer(minLength: Theme.Spacing.m)
             keyRow(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
-            LiveTessCorner(line: askReply ?? receipt?.text
+            LiveTessCorner(line: askReply ?? session.receipt?.text
                 ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
                 mode: soul.mode,
-                canUndo: receipt?.takeBack != nil || (session.canUndoLast && !session.isEditing),
+                canUndo: session.receipt?.takeBack != nil || (session.canUndoLast && !session.isEditing),
                 eyes: model.tessHasEyes, wear: soul.wear(at:),
-                holdsLine: askReply == nil && (phase == .workoutDone || receipt != nil),
+                holdsLine: askReply == nil && (phase == .workoutDone || session.receipt != nil),
                 onUndo: {
-                    if let takeBack = receipt?.takeBack {
+                    if let takeBack = session.receipt?.takeBack {
                         withTesseraAnimation(reduceMotion: reduceMotion) { takeBack() }
-                        receipt = nil
+                        session.receipt = nil
                     } else {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
                     }
@@ -653,8 +648,8 @@ extension WorkoutContent {
                         restHintsLeft = max(restHintsLeft - 1, 0)
                     }
                 }
-        } else if session.isEstimatedLoad, let from = session.swappedFrom {
-            Text("About \(Format.kilograms(session.weight)), from your \(from.lowercased())")
+        } else if let estimate = session.estimateShown, let from = session.swappedFrom {
+            Text("About \(Format.kilograms(estimate)), from your \(from.lowercased())")
                 .textRole(.label)
                 .foregroundStyle(Paint.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -849,11 +844,11 @@ extension WorkoutContent {
     /// Puts `text` in the Tess corner; with something to take back it holds ten seconds with Undo, else four.
     private func showReceipt(_ text: String, takeBack: (() -> Void)?) {
         let shown = WorkoutReceipt(text: text, takeBack: takeBack)
-        withTesseraAnimation(reduceMotion: reduceMotion) { receipt = shown }
+        withTesseraAnimation(reduceMotion: reduceMotion) { session.receipt = shown }
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(takeBack == nil ? 4 : 10))
-            if receipt?.id == shown.id {
-                withTesseraAnimation(reduceMotion: reduceMotion) { receipt = nil }
+            if session.receipt?.id == shown.id {
+                withTesseraAnimation(reduceMotion: reduceMotion) { session.receipt = nil }
             }
         }
     }

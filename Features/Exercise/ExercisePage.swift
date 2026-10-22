@@ -1,53 +1,71 @@
 import SwiftUI
 import TesseraCore
 
-/// An exercise as an object (docs/design/exercise-page.md): path, the name, what it works, best e1RM and best set,
-/// a painted 90-day trend, then three sibling views of the same object on x (HISTORY · REP MAXES · MUSCLES) in one
-/// bounded window, the methods, and Tess's forward line. One screen tall; only the window scrolls.
+/// An exercise as one plain page (docs/design/training-app-124.md, sheets 124 and 125): the name and what it works with
+/// its best, the Gym visual, the best set with "about N kg for 1", the climb (sessions down the page, weight across),
+/// the exercise's notes, Similar, and the two keys. Not a rail: the data here is one long list, so it scrolls.
 struct ExercisePage: View {
     let exercise: ClassDef
 
     @Environment(AppModel.self) private var model
     @Environment(\.dynamicTypeSize) private var typeSize
-    @Environment(\.animateEntrance) private var animateEntrance
+    @State private var isSimilarOpen = false
 
     var body: some View {
         let _ = model.revision
         let digest = ExerciseDigest(exercise: exercise, ledger: model.ledger, store: model.store, now: AppClock.now)
-        Group {
-            if typeSize.isAccessibilitySize {
-                // Reflow wins over one-screen at accessibility sizes: the page scrolls, the window grows.
-                ScrollView(.vertical) { content(digest, windowHeight: 360) }
-                    .scrollIndicators(.hidden)
-            } else {
-                content(digest, windowHeight: nil)
-            }
+        ScrollView(.vertical) {
+            content(digest)
         }
+        .scrollIndicators(.hidden)
         .background { ThemedBackground() }
         .toolbarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isSimilarOpen) {
+            SimilarExercisesSheet(exercise: exercise)
+        }
     }
 
-    private func content(_ digest: ExerciseDigest, windowHeight: CGFloat?) -> some View {
+    private func content(_ digest: ExerciseDigest) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             ExerciseHeader(digest: digest)
                 .padding(.bottom, Theme.Spacing.l)
 
-            ExerciseSummary(digest: digest, isPrivate: MuscleReading.openedFromPrivate(model))
-                .entrance(3)
-                .padding(.bottom, Theme.Spacing.l)
-
-            if let trend = digest.trend {
-                TrendStrip(trend: trend, animate: animateEntrance)
-                    .entrance(4)
+            if let picture = ExercisePictures.picture(forExerciseNamed: exercise.name) {
+                PlayingPicture(picture: picture)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: picture.gifURL == nil ? 200 : 180)
+                    .accessibilityHidden(true)
+                    .entrance(2)
                     .padding(.bottom, Theme.Spacing.l)
             }
 
-            ExerciseViews(digest: digest)
-                .frame(minHeight: 140, maxHeight: windowHeight ?? 236)
-                .layoutPriority(-1)
-                .entrance(5)
+            ExerciseBest(digest: digest)
+                .entrance(3)
+                .padding(.bottom, Theme.Spacing.xl)
 
-            Spacer(minLength: Theme.Spacing.s)
+            if !digest.climb.isEmpty {
+                TheClimb(sessions: digest.climb, total: digest.sessionCount)
+                    .padding(.bottom, Theme.Spacing.xl)
+            }
+
+            if let notes = digest.notes {
+                VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                    Text("Notes").textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
+                    Text(notes)
+                        .font(Theme.voice(size: 21))
+                        .foregroundStyle(Theme.Colors.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .accessibilityElement(children: .combine)
+                .padding(.bottom, Theme.Spacing.xl)
+            }
+
+            Button { isSimilarOpen = true } label: {
+                Text("Similar").textRole(.keyWord).frame(minHeight: 44)
+            }
+            .buttonStyle(.labelWord(Theme.Colors.inkSecondary))
+            .accessibilityHint("Shows exercises close to \(exercise.name)")
+            .padding(.bottom, Theme.Spacing.l)
 
             if let line = digest.nextTime {
                 Text(line)
@@ -64,7 +82,26 @@ struct ExercisePage: View {
         .padding(.top, Theme.Spacing.xs)
         // The dock (Ask Tess) floats over pushed pages too.
         .padding(.bottom, HomeSpatialView.dockClearance)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+}
+
+/// "Best set 85 × 5. About 104 kg for 1." in words, or the first-time line.
+private struct ExerciseBest: View {
+    let digest: ExerciseDigest
+
+    var body: some View {
+        Text(line)
+            .font(Theme.voice(size: 21))
+            .foregroundStyle(Theme.Colors.inkSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var line: String {
+        guard let set = digest.bestSet else { return "No best yet. The first logged set sets one." }
+        guard let about = digest.aboutOneRep else { return "Best set \(set)." }
+        return "Best set \(set). About \(Format.kilograms(about.rounded())) kg for 1."
     }
 }
 
@@ -99,18 +136,20 @@ private struct ExerciseHeader: View {
                 .entrance(0)
             }
 
-            HeroText(text: digest.name) { $0 }
+            Text(digest.name)
+                .textRole(.title)
                 .foregroundStyle(Theme.Colors.ink)
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
                 .arrivesFromRight()
                 .padding(.bottom, Theme.Spacing.s)
 
-            if let context = digest.context {
-                Text(context)
+            if let subtitle = digest.subtitle {
+                Text(subtitle)
                     .font(PageType.voice)
                     .foregroundStyle(Theme.Colors.context)
                     .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityLabel("Works \(context)")
+                    .accessibilityLabel(subtitle)
                     .entrance(2)
             }
         }

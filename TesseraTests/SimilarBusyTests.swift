@@ -72,4 +72,35 @@ struct SimilarBusyTests {
         session2.swap(to: option2)
         #expect(session2.swapHint == "Just today, for \(from2)")
     }
+
+    /// QA on #1214: Busy, then a logged set within the 10 s, then Undo must take back the set, not the Busy.
+    @Test func aLoggedSetClearsTheReceiptSoUndoTakesBackTheSet() throws {
+        let (model, session) = try started()
+        defer { model.endWorkout() }
+        let busy = try #require(session.markBusy())
+        session.receipt = WorkoutReceipt(
+            text: "\(busy.name), later.",
+            takeBack: { [session] in session.undoBusy(busy) }
+        )
+        let entry = try #require(session.currentEntry)
+        let onScreen = try #require(session.currentExercise?.name)
+        session.logSet()
+        #expect(session.receipt == nil, "a logged set ends the receipt")
+        #expect(session.setRows(of: entry).count == 1)
+        session.undoLast()
+        #expect(session.setRows(of: entry).isEmpty, "Undo took back the set")
+        #expect(session.currentExercise?.name == onScreen, "and left the Busy order alone")
+        #expect(session.busyExerciseIDs.count == 1)
+    }
+
+    /// QA on #1214: the estimate line prints the guess made at the swap, not the dialled weight.
+    @Test func theEstimateLineKeepsTheGuessWhenTheDialMoves() throws {
+        let (model, session) = try started()
+        defer { model.endWorkout() }
+        let option = try #require(session.swapOptions().first { $0.isEstimate && $0.load != nil })
+        session.swap(to: option)
+        let guess = try #require(session.estimateShown)
+        session.adjustWeight(by: 5)
+        #expect(session.estimateShown == guess)
+    }
 }

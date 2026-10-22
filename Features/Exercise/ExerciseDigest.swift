@@ -54,6 +54,26 @@ struct ExerciseDigest {
     let repMaxes: [Int: Double]
     let muscles: [MuscleRow]
     let nextTime: String?
+    /// The climb (docs/design/training-app-124.md): the last sessions, oldest first, each by its heaviest set.
+    let climb: [ClimbSession]
+    /// How many sessions the exercise has in all ("The climb, 12 sessions").
+    let sessionCount: Int
+    /// "About 104 kg for 1": the best set's estimated one-rep max.
+    let aboutOneRep: Double?
+    /// "Chest, triceps. Best 85 × 5": what it works, then its best set.
+    var subtitle: String? {
+        let lead = muscles.filter { $0.role == .primary }.map { $0.name.lowercased() }
+        let works = ExerciseWords.list(lead).map { $0.prefix(1).uppercased() + $0.dropFirst() }
+        switch (works, bestSet) {
+        case let (works?, best?): return "\(works). Best \(best)"
+        case let (works?, nil): return works
+        case let (nil, best?): return "Best \(best)"
+        default: return nil
+        }
+    }
+
+    /// What the exercise's own notes say (the library's cue until he writes his own).
+    let notes: String?
 
     init(exercise: ClassDef, ledger: TrainingLedger, store: ObjectStore, now: Date, calendar: Calendar = .current) {
         self.exercise = exercise
@@ -89,6 +109,15 @@ struct ExerciseDigest {
                                       == ObjectPrivacy.routineLabel)
             )
         }
+
+        let sessions = ledger.sessions(of: exercise)
+        sessionCount = sessions.count
+        climb = ClimbSession.recent(sessions, bestID: best?.id)
+        aboutOneRep = bestE1RM
+        notes = store.classObject(of: exercise)
+            .flatMap { store.value("notes", of: $0)?.stringValue }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .flatMap { $0.isEmpty ? nil : $0 }
 
         trend = Self.trend(overview.trend.map { ($0.date, $0.bestE1RM) }, now: now, calendar: calendar)
         nextTime = Self.nextTime(for: exercise, ledger: ledger, store: store)

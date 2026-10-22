@@ -218,4 +218,49 @@ struct ExerciseAndPlansTests {
         #expect(push.exercises.contains { $0.name == "Bench Press" })
         #expect(groups.allSatisfy { !$0.exercises.isEmpty })
     }
+
+    // MARK: The climb
+
+    @Test func theClimbRunsOldestFirstWithTheBestAsTheRing() throws {
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let bench = try #require(model.classDef(.benchPress))
+        let now = Date.now
+        log(model, bench, daysAgo: 7, sets: [(80, 8), (80, 7)], now: now)
+        log(model, bench, daysAgo: 3, sets: [(82.5, 7), (80, 8)], now: now)
+        log(model, bench, daysAgo: 1, sets: [(77.5, 8)], now: now)
+
+        let digest = ExerciseDigest(exercise: bench, ledger: model.ledger, store: model.store, now: now)
+        #expect(digest.climb.map(\.weight) == [80, 82.5, 77.5])
+        #expect(digest.climb.map(\.isBest) == [false, true, false])
+        #expect(digest.climb.map(\.setText) == ["80 × 8", "82.5 × 7", "77.5 × 8"])
+        #expect(digest.sessionCount == 3)
+        #expect(digest.aboutOneRep == 101.8)
+        #expect(digest.subtitle?.hasSuffix("Best 82.5 × 7") == true)
+    }
+
+    @Test func theClimbShowsTheLastTwelveSessions() throws {
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let bench = try #require(model.classDef(.benchPress))
+        let now = Date.now
+        for day in 1 ... 15 {
+            log(model, bench, daysAgo: Double(day), sets: [(60 + Double(day), 8)], now: now)
+        }
+        let digest = ExerciseDigest(exercise: bench, ledger: model.ledger, store: model.store, now: now)
+        #expect(digest.sessionCount == 15)
+        #expect(digest.climb.count == ClimbSession.limit)
+        #expect(digest.climb.first?.weight == 72, "the twelfth most recent is 12 days ago")
+        #expect(digest.climb.last?.weight == 61, "and the newest is yesterday")
+    }
+
+    @Test func theAxisRoundsOutToFiveKiloLinesAndNeverGoesFlat() throws {
+        let axis = try #require(ClimbAxis(weights: [77.5, 82.5, 80]))
+        #expect(axis.low == 75)
+        #expect(axis.high == 85)
+        #expect(axis.gridlines == [75, 80, 85])
+        #expect(axis.unit(80) == 0.5)
+        let flat = try #require(ClimbAxis(weights: [80, 80]))
+        #expect(flat.high - flat.low == 10, "a flat climb still has room to move")
+        #expect(ClimbAxis(weights: [0, 0]) == nil, "bodyweight work has no weight to climb")
+        #expect(ClimbAxis(weights: []) == nil)
+    }
 }
