@@ -62,6 +62,7 @@ private struct GroceriesPage: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                SampleDataWord()
                 // An empty list says "Nothing to get." below, so the kicker would only repeat it.
                 if open > 0 || shopping || !Choice.fontIsNew() {
                     Text(GroceriesCopy.context(open: open, aisles: aisles.count, shopping: shopping))

@@ -45,37 +45,51 @@ struct TesseraApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                #if DEBUG
-                    if LaunchFlags.has("-soulGallery") {
-                        SoulGallery()
-                    } else if LaunchFlags.has("-measureGallery") {
-                        MeasureGallery().environment(model)
-                    } else if LaunchFlags.has("-notes") {
-                        NotesView()
-                    } else if LaunchFlags.has("-review") {
-                        ReviewView()
-                    } else if LaunchFlags.has("-groceries") {
-                        GroceriesView()
-                    } else if LaunchFlags.has("-looks") {
-                        LookSentence()
-                            .padding(Theme.Spacing.gutter)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background { ThemedBackground() }
-                    } else if LaunchFlags.has("-backup") {
-                        BackupView()
-                    } else if LaunchFlags.has("-recipe") {
-                        RecipeView(recipeID: nil)
-                    } else if LaunchFlags.has("-pasteRecipe") {
-                        PasteRecipeView()
-                    } else {
+            // The Sample data flip crossfades the two trees, 150 ms (Design on #1199), never a jump.
+            ZStack {
+                Group {
+                    #if DEBUG
+                        if LaunchFlags.has("-soulGallery") {
+                            SoulGallery()
+                        } else if LaunchFlags.has("-measureGallery") {
+                            MeasureGallery().environment(model)
+                        } else if LaunchFlags.has("-notes") {
+                            NotesView()
+                        } else if LaunchFlags.has("-review") {
+                            ReviewView()
+                        } else if LaunchFlags.has("-groceries") {
+                            GroceriesView()
+                        } else if LaunchFlags.has("-looks") {
+                            LookSentence()
+                                .padding(Theme.Spacing.gutter)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .background { ThemedBackground() }
+                        } else if LaunchFlags.has("-backup") {
+                            BackupView()
+                        } else if LaunchFlags.has("-recipe") {
+                            RecipeView(recipeID: nil)
+                        } else if LaunchFlags.has("-pasteRecipe") {
+                            PasteRecipeView()
+                        } else {
+                            RootView()
+                        }
+                    #else
                         RootView()
-                    }
-                #else
-                    RootView()
-                #endif
+                    #endif
+                }
+                // Sample data swaps every screen onto its own in-memory store; his model keeps running underneath
+                // (backups, Health, the Watch, Siri and the Live Activity stay on his data).
+                .environment(SampleData.shared.model(over: model))
+                .environment(\.realModel, model)
+                .id(SampleData.isOn)
+                .transition(.opacity)
             }
-            .environment(model)
+            .animation(MotionPolicy.reducedMotionFade, value: SampleData.isOn)
+            .onChange(of: SampleData.isOn) { _, on in
+                if !on {
+                    SampleData.shared.release()
+                }
+            }
             // A pinned look holds the appearance too ("Obsidian always" on a light phone gets a light status bar
             // on black otherwise).
             .preferredColorScheme(ThemeStore.shared.pin.map { $0.isDark ? .dark : .light })
