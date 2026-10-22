@@ -106,7 +106,7 @@ struct LandingTests {
         #expect(RoutineUsual.line(name: "Morning", runs: six, calendar: calendar) == nil)
         let seven = runs(Array(1 ... 7), hour: 6, minute: 40, length: 22)
         #expect(RoutineUsual.line(name: "Morning", runs: seven, calendar: calendar)
-            == "Morning, 7 days, usually 6:40, 22 min")
+            == "Morning, 7 days, usually 6:40 am, 22 min")
     }
 
     @Test func daysAreDistinctDaysAndTheMedianIgnoresAnOddRun() {
@@ -114,16 +114,16 @@ struct LandingTests {
         all.append(contentsOf: runs([14], hour: 22, minute: 0, length: 5)) // a second run the same day
         all.append(contentsOf: runs([15], hour: 12, minute: 0, length: 90)) // one odd day
         let line = RoutineUsual.line(name: "Morning", runs: all, calendar: calendar)
-        #expect(line == "Morning, 15 days, usually 6:40, 22 min", "\(line ?? "nil")")
+        #expect(line == "Morning, 15 days, usually 6:40 am, 22 min", "\(line ?? "nil")")
     }
 
     @Test func startsRoundToFiveAndLongRunsReadInHours() {
         let odd = runs(Array(1 ... 7), hour: 6, minute: 43, length: 65)
         #expect(RoutineUsual.line(name: "Evening", runs: odd, calendar: calendar)
-            == "Evening, 7 days, usually 6:45, 1 hr 5 min")
+            == "Evening, 7 days, usually 6:45 am, 1 hr 5 min")
         let hour = runs(Array(1 ... 7), hour: 12, minute: 2, length: 60)
         #expect(RoutineUsual.line(name: "Lunch", runs: hour, calendar: calendar)
-            == "Lunch, 7 days, usually 12:00 pm, 1 hr")
+            == "Lunch, 7 days, usually 12 pm, 1 hr")
     }
 
     @Test func aRunAfterMidnightSitsBesideOneBefore() {
@@ -134,7 +134,7 @@ struct LandingTests {
         #expect(counts != nil)
         // Day 4's evening and day 5's after-midnight run are the same logical day, so eight runs span seven days.
         let line = RoutineUsual.line(name: "Night", runs: late, calendar: calendar)
-        #expect(line == "Night, 7 days, usually 12:05, 30 min", "\(line ?? "nil")")
+        #expect(line == "Night, 7 days, usually 12:05 am, 30 min", "\(line ?? "nil")")
     }
 
     @Test func noRunEverCountsAStreakOrAMiss() {
@@ -278,7 +278,7 @@ struct LandingTests {
         // The clocks go back on Oct 25: a run at 06:40 that morning is 06:40, not 05:40 or 07:40.
         let all = runs([22, 23, 24, 25, 26, 27, 28], hour: 6, minute: 40, length: 22)
         #expect(RoutineUsual.line(name: "Morning", runs: all, calendar: calendar)
-            == "Morning, 7 days, usually 6:40, 22 min")
+            == "Morning, 7 days, usually 6:40 am, 22 min")
         let onTheDay = runs([25], hour: 6, minute: 40, length: 22) + runs(
             [20, 21, 22, 23, 24, 26],
             hour: 6,

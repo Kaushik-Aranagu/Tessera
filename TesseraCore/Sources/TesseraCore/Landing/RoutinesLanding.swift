@@ -136,7 +136,7 @@ public enum RoutinesLanding {
             return privateRoutine
         }
         if let done = item.doneToday {
-            return "\(item.name), done at \(RoutineUsual.unmarked(HouseTime.clock(done, calendar: calendar)))"
+            return "\(item.name), done at \(HouseTime.clock(done, calendar: calendar))"
         }
         if let usual = RoutineUsual.line(name: item.name, runs: item.runs, calendar: calendar) {
             return usual

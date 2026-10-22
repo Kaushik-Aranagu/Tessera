@@ -44,7 +44,7 @@ public enum RoutineUsual {
     public static func line(name: String, runs: [RoutineRun], calendar: Calendar = .current) -> String? {
         guard let counts = counts(of: runs, calendar: calendar) else { return nil }
         let start = TesseraDay.startHour * 60 + counts.startMinutes
-        let clock = clockWords(minuteOfDay: start % (24 * 60))
+        let clock = HouseTime.clock(minuteOfDay: start % (24 * 60))
         return "\(name), \(counts.days) \(counts.days == 1 ? "day" : "days"), usually \(clock), \(HouseTime.minutes(counts.lengthMinutes))"
     }
 
@@ -52,17 +52,5 @@ public enum RoutineUsual {
         let sorted = values.sorted()
         let middle = sorted.count / 2
         return sorted.count.isMultiple(of: 2) ? (sorted[middle - 1] + sorted[middle] + 1) / 2 : sorted[middle]
-    }
-
-    /// The house clock for a minute of the logical day, mornings unmarked: "6:40", "6:35 pm", "12:05 pm".
-    static func clockWords(minuteOfDay: Int) -> String {
-        let hour = minuteOfDay / 60, minute = minuteOfDay % 60
-        let twelve = hour % 12 == 0 ? 12 : hour % 12
-        return "\(twelve):" + String(format: "%02d", minute) + (hour >= 12 ? " pm" : "")
-    }
-
-    /// A house time with its morning "am" left off ("6:58 am" reads "6:58"); afternoon and evening keep "pm".
-    static func unmarked(_ time: String) -> String {
-        time.hasSuffix(" am") ? String(time.dropLast(3)) : time
     }
 }

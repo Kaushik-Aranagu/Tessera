@@ -57,7 +57,7 @@ struct RoutinesLandingTests {
             count: 6,
             runs: runs(Array(1 ... 14), hour: 6, minute: 40, length: 22)
         )
-        #expect(facts([morning]).lines == ["Morning, 14 days, usually 6:40, 22 min"])
+        #expect(facts([morning]).lines == ["Morning, 14 days, usually 6:40 am, 22 min"])
     }
 
     @Test func lr5SixRunsStillSayTheSteps() {
@@ -83,7 +83,7 @@ struct RoutinesLandingTests {
         let early = runs(Array(1 ... 3), hour: 5, minute: 0, length: 30) // older, outside the last 14
         let recent = runs(Array(5 ... 18), hour: 6, minute: 43, length: 20)
         let item = RoutinesLanding.Item(name: "Morning", count: 6, runs: early + recent)
-        #expect(facts([item]).lines == ["Morning, 17 days, usually 6:45, 20 min"])
+        #expect(facts([item]).lines == ["Morning, 17 days, usually 6:45 am, 20 min"])
     }
 
     @Test func lr8Running() {
@@ -105,7 +105,7 @@ struct RoutinesLandingTests {
         let other = RoutinesLanding.Item(name: "Evening", count: 4)
         let result = facts([done, other])
         #expect(result.subtitle.text == "2 routines, 1 done today.")
-        #expect(result.lines == ["Evening, 4 steps", "Morning, done at 6:58"])
+        #expect(result.lines == ["Evening, 4 steps", "Morning, done at 6:58 am"])
     }
 
     @Test func lr11EverythingDone() {
