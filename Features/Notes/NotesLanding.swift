@@ -99,13 +99,13 @@ struct NotesLandingFacts {
     /// The book being read, by last touched: its id and the name a page may show.
     var reading: (id: UUID, title: String)?
 
-    @MainActor
     /// A note any surface would mask: the private flag, or words that are walled (ObjectPrivacy's label).
-    static func isPrivate(_ note: ObjectRecord, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
+    @MainActor static func isPrivate(_ note: ObjectRecord, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
         store.value("isPrivate", of: note) == .bool(true)
             || ObjectPrivacy.shownLabel(of: note, in: store, classes: classes) != nil
     }
 
+    @MainActor
     static func load(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], lastSeen: Date?,
                      linkSuggest: Bool) -> NotesLandingFacts
     {
