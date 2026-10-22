@@ -1,13 +1,10 @@
 import SwiftUI
 import TesseraCore
 
-// CLOUD-WRITTEN, NOT COMPILED (see the PR). The Lists landing, design 131 section 2 and 2d, and the build sheet
+// The Lists landing, design 131 section 2 and 2d, and the build sheet
 // product/notes-lists-landing-build-sheet-oct22.md section 2B. Behind Review switch "Landing pages" (Builder B's
 // `LandingSwitch`), with `listsLeadByDue` and `listsMargin` as the sheet's own switches (default Off).
-//
-// Core's `ListsLanding.facts` (Core PR 1) is not on master, so `ListsLandingFacts` below computes the same facts from
-// APIs that exist today. List items carry no due date in the catalog, so the "due" forms (T-L3, T-L11, the
-// `listsLeadByDue` lead) have no source yet and are not drawn; see the PR.
+// Which list leads, the lines, the margin and the subtitle come from Core's `ListsLanding` (#1230).
 
 // MARK: - Facts
 
@@ -31,6 +28,8 @@ struct ListsLandingFacts {
         var touched = Date.distantPast
         /// Picks: the last pick, as the item's shown words and its day.
         var lastPick: (text: String, on: Date)?
+        /// Core's one short line for it (T-L6 to T-L10), when Core gave one.
+        var coreLine: String?
 
         static func == (lhs: Line, rhs: Line) -> Bool {
             lhs.id == rhs.id && lhs.left == rhs.left && lhs.total == rhs.total && lhs.isRunning == rhs.isRunning
@@ -43,6 +42,9 @@ struct ListsLandingFacts {
 
         /// T-L6 to T-L10: the one short line under a name.
         var line: String {
+            if let coreLine {
+                return coreLine
+            }
             if total == 0 {
                 return "Empty"
             }
@@ -74,10 +76,12 @@ struct ListsLandingFacts {
     var new: [Margin] = []
     var hasReusable = false
     var hasPicks = false
+    /// Core's subtitle (T-L1 to T-L5).
+    var subtitle: LandingSentence?
 
     @MainActor
     static func load(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], engine: ActionEngine?,
-                     lastSeen: Date?, margin: Bool) -> ListsLandingFacts
+                     lastSeen: Date?, margin: Bool, leadByDue: Bool = false) -> ListsLandingFacts
     {
         let contents = ListContents(store: store, classes: classes)
         let lists = contents.shelf().filter { !$0.isDeleted }
@@ -106,7 +110,10 @@ struct ListsLandingFacts {
             }
             if line.isPickOne {
                 line.lastPick = items.compactMap { item in
-                    contents.pickedAt(item.object).map { (ObjectPrivacy.isPrivateWord(item.text, in: store) ? "Private item" : item.text, $0) }
+                    contents.pickedAt(item.object).map { (
+                        ObjectPrivacy.isPrivateWord(item.text, in: store) ? "Private item" : item.text,
+                        $0
+                    ) }
                 }.max { $0.1 < $1.1 }.map { (text: $0.0, on: $0.1) }
             }
             if let lastSeen {
@@ -133,24 +140,35 @@ struct ListsLandingFacts {
             }
         }
 
+        // Which list leads, the others in order, their lines, the margin and the subtitle: Core's `ListsLanding`
+        // (#1230), the single source. The per-list flags the page draws (reusable, pick one, new) stay as read above.
         var facts = ListsLandingFacts()
-        // The lead: running (newest), else the last touched. A "due soonest" lead waits for a date on items.
-        facts.lead = lines.first
-        facts.others = Array(lines.dropFirst().prefix(6))
         facts.hasReusable = lines.contains { $0.isReusable }
         facts.hasPicks = lines.contains { $0.isPickOne }
-
-        if margin {
-            // T-L12: a reusable list fully done.
-            for line in lines where line.isReusable && line.total > 0 && line.left == 0 {
-                facts.waiting.append(Margin(id: "reset-\(line.id)", text: "\(line.name) is done.",
-                                            word: "Reset it for next time", act: .reset(line.id)))
-            }
-            // T-L13: items added since last looked.
-            for line in lines where line.newCount > 0 {
-                let text = line.newSource.map { "\(line.name) has \(line.newCount) new, from \($0)." }
-                    ?? "\(line.name) has \(line.newCount) new."
-                facts.new.append(Margin(id: "new-\(line.id)", text: text, word: nil, act: .open(line.id)))
+        guard let engine else {
+            facts.lead = lines.first
+            facts.others = Array(lines.dropFirst().prefix(6))
+            return facts
+        }
+        let core = ListsLanding(engine: engine)
+            .facts(ListsLanding.Options(margin: margin, leadByDue: leadByDue, lastSeen: lastSeen, now: AppClock.now))
+        let byID = Dictionary(lines.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        facts.subtitle = core.subtitle
+        if let lead = core.lead, var line = byID[lead.list] {
+            line.nextItems = lead.nextItems.map { ($0, $0 == "Private item") }
+            facts.lead = line
+        }
+        facts.others = core.others.compactMap { other in
+            guard var line = byID[other.list] else { return nil }
+            line.coreLine = other.line
+            return line
+        }
+        for (index, entry) in core.margin.enumerated() {
+            let act: Margin.Act = entry.action == "Reset it for next time" ? .reset(entry.list) : .open(entry.list)
+            let line = Margin(id: "\(entry.kind)-\(index)", text: entry.sentence.text, word: entry.action, act: act)
+            switch entry.kind {
+            case .waiting: facts.waiting.append(line)
+            case .new: facts.new.append(line)
             }
         }
         return facts
@@ -158,6 +176,9 @@ struct ListsLandingFacts {
 
     /// T-L1 to T-L5 (the due form has no source yet): the subtitle. The key word is the list's name.
     func sentence() -> AccentedSentence {
+        if let subtitle {
+            return AccentedSentence(text: subtitle.text, key: subtitle.key)
+        }
         guard let lead else { return AccentedSentence(text: "Start one with a few words.", key: nil) }
         if lead.isRunning {
             return AccentedSentence(text: "\(lead.name) is running, \(lead.left) left.", key: lead.name)
@@ -193,7 +214,9 @@ struct ListsLandingPage: View {
     var body: some View {
         let _ = model.revision
         let facts = ListsLandingFacts.load(store: model.store, classes: model.classes, engine: model.engine,
-                                           lastSeen: seenAtOpen, margin: margin)
+                                           lastSeen: seenAtOpen, margin: margin,
+                                           leadByDue: Choice.value("listsLeadByDue", options: ["Off", "On"],
+                                                                   default: "Off") == "On")
         let accent = LandingAccent.lists
         LandingPage(back: (title: "Home", action: { dismiss() }),
                     title: "Lists",
@@ -217,15 +240,15 @@ struct ListsLandingPage: View {
                     action: LandingAction(word: "New list", hint: "Tess makes a list from a few words") {
                         TessVoice.shared.say("Say \"list: films\" and I'll make it.")
                     })
-            .background { ThemedBackground() }
-            .toolbar(.hidden, for: .navigationBar)
-            .tesseraFeedback(.selection, trigger: ticked)
-            .onAppear {
-                if seenAtOpen == nil {
-                    seenAtOpen = LandingSeen.date("lists")
-                }
-                LandingSeen.mark("lists", at: AppClock.now)
-            }
+                    .background { ThemedBackground() }
+                    .toolbar(.hidden, for: .navigationBar)
+                    .tesseraFeedback(.selection, trigger: ticked)
+                    .onAppear {
+                        if seenAtOpen == nil {
+                            seenAtOpen = LandingSeen.date("lists")
+                        }
+                        LandingSeen.mark("lists", at: AppClock.now)
+                    }
     }
 
     // MARK: Doors and bands
@@ -308,7 +331,8 @@ struct ListsLandingPage: View {
 
 // MARK: - The lead list (L3)
 
-/// The lead list: its name large, its next items left as large words, "6 left of 24" small in olive, and Resume.
+/// The lead list: its name large, its next items left as large words, "6 left of 24" small in ink-secondary, and
+/// Resume.
 private struct LeadList: View {
     let line: ListsLandingFacts.Line
     let accent: Color
@@ -514,7 +538,8 @@ private struct KindRow: View {
                     tick: door == .reusable ? reset : open, filled: door == .reusable, valueText: value)
     }
 
-    /// Reusable: "6 left of 24", or "all done. Reset it for next time". Picks: "12 to pick from, picked Dune on Oct 18".
+    /// Reusable: "6 left of 24", or "all done. Reset it for next time". Picks: "12 to pick from, picked Dune on Oct
+    /// 18".
     private var value: String {
         if door == .reusable {
             if line.total > 0, line.left == 0 {

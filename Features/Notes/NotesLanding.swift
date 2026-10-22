@@ -1,11 +1,8 @@
 import SwiftUI
 import TesseraCore
 
-// CLOUD-WRITTEN, NOT COMPILED (see the PR). The Notes landing, design 131 section 2 and the build sheet
-// product/notes-lists-landing-build-sheet-oct22.md section 2A. Behind Review switch `notesLanding` (default Off).
-//
-// Core's `NotesLanding.facts` (Core PR 1) is not on master, so `NotesLandingFacts` below computes the same facts from
-// APIs that exist today. When Core's facts land, delete `NotesLandingFacts.load` and map Core's struct onto this one.
+// The Notes landing, design 131 section 2 and the build sheet product/notes-lists-landing-build-sheet-oct22.md
+// section 2A. Behind Review switch "Landing pages" (default Off). Its facts are Core's `NotesLanding` (#1230).
 
 // MARK: - Words (build sheet section 3, T-N1 to T-N10)
 
@@ -80,6 +77,7 @@ struct NotesLandingFacts {
     struct Margin: Identifiable, Equatable {
         enum Act: Equatable {
             case openNote(UUID)
+            case openThing(Route)
             case none
         }
 
@@ -100,102 +98,50 @@ struct NotesLandingFacts {
     var reading: (id: UUID, title: String)?
 
     /// A note any surface would mask: the private flag, or words that are walled (ObjectPrivacy's label).
-    @MainActor static func isPrivate(_ note: ObjectRecord, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
+    @MainActor static func isPrivate(_ note: ObjectRecord, store: ObjectStore,
+                                     classes: [SystemCatalog.Key: ClassDef]) -> Bool
+    {
         store.value("isPrivate", of: note) == .bool(true)
             || ObjectPrivacy.shownLabel(of: note, in: store, classes: classes) != nil
     }
 
+    /// The landing's facts from Core's `NotesLanding` (#1230), the single source: things by weight, Loose, Private
+    /// (by the flag or by walled words, N-A7) and the margin lines with their targets. The book being read stays here
+    /// (Core gives its name only; the page needs its id to open it).
     @MainActor
     static func load(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], lastSeen: Date?,
                      linkSuggest: Bool) -> NotesLandingFacts
     {
+        let core = NotesLanding(store: store, classes: classes)
+            .facts(NotesLanding.Options(margin: true, linkSuggest: linkSuggest, lastSeen: lastSeen, now: AppClock.now))
         var facts = NotesLandingFacts()
-        let notes = NoteList(store: store, classes: classes).recent(limit: 500)
-        facts.hasNotes = !notes.isEmpty
-
-        struct Tally {
-            var route: Route
-            var name: String
-            var weight = 0
-            var latest = Date.distantPast
+        facts.hasNotes = core.hasNotes
+        facts.hasLoose = core.hasLoose
+        facts.hasPrivate = core.hasPrivate
+        let routes = Dictionary(core.things.map { thing in
+            (thing.id, thing.classID.map(Route.classDef) ?? .object(thing.id))
+        }, uniquingKeysWith: { first, _ in first })
+        facts.things = core.things.map { thing in
+            Thing(id: thing.id, route: routes[thing.id] ?? .object(thing.id), name: thing.name, weight: thing.weight,
+                  latest: .distantPast)
         }
-        var tallies: [UUID: Tally] = [:]
-        var linkedIDs: [UUID: Set<UUID>] = [:]
-        var newTallies: [UUID: Int] = [:]
-        var newLoose = 0
-        var newNotes = 0
-
-        for note in notes {
-            // A private note adds nothing: no thing, no weight, no sentence (build sheet 2A, N-A7). Private by the flag
-            // or by its words (QA on #1226): whatever any surface would mask.
-            if Self.isPrivate(note, store: store, classes: classes) {
-                facts.hasPrivate = true
-                continue
+        for (index, entry) in core.margin.enumerated() {
+            let act: Margin.Act = switch entry.target {
+            case let .link(note, _): .openNote(note)
+            case let .about(thing?): .openThing(routes[thing] ?? .object(thing))
+            case .about(nil), .makeThing: .none
             }
-            let isNew = lastSeen.map { note.createdAt > $0 } ?? false
-            var linked = false
-            for link in note.outgoingLinks ?? [] {
-                let key: UUID, route: Route, name: String
-                if let target = link.toObject, !target.isDeleted {
-                    // A walled thing contributes nothing, as its note would not.
-                    guard ObjectPrivacy.shownLabel(of: target, in: store, classes: classes) == nil else { continue }
-                    key = target.id
-                    route = .object(target.id)
-                    name = store.displayTitle(of: target)
-                } else if let classDef = link.toClass {
-                    key = classDef.id
-                    route = .classDef(classDef.id)
-                    name = classDef.name
-                } else {
-                    continue
-                }
-                linked = true
-                linkedIDs[note.id, default: []].insert(key)
-                var tally = tallies[key] ?? Tally(route: route, name: name)
-                tally.weight += 1
-                tally.latest = max(tally.latest, note.updatedAt)
-                tallies[key] = tally
-                if isNew {
-                    newTallies[key, default: 0] += 1
-                }
-            }
-            if !linked {
-                facts.hasLoose = true
-            }
-            if isNew {
-                newNotes += 1
-                newLoose += linked ? 0 : 1
+            let margin = Margin(
+                id: "\(entry.kind)-\(index)",
+                text: entry.sentence.text,
+                word: entry.action ?? "",
+                act: act
+            )
+            switch entry.kind {
+            case .waiting: facts.waiting.append(margin)
+            case .new: facts.new.append(margin)
             }
         }
-
-        facts.things = tallies.map { Thing(id: $0.key, route: $0.value.route, name: $0.value.name,
-                                           weight: $0.value.weight, latest: $0.value.latest) }
-            .sorted { ($0.weight, $0.latest) > ($1.weight, $1.latest) }
-            .prefix(12).map { $0 }
-
-        // Waiting: a note names a thing in words without linking it (switch notesLinkSuggest).
-        if linkSuggest {
-            outer: for note in notes.prefix(60) where !Self.isPrivate(note, store: store, classes: classes) {
-                let body = store.value("body", of: note)?.stringValue ?? ""
-                for thing in facts.things where thing.name.count >= 3 && !(linkedIDs[note.id]?.contains(thing.id) ?? false)
-                    && body.range(of: thing.name, options: [.caseInsensitive, .diacriticInsensitive]) != nil
-                {
-                    let weekday = note.updatedAt.formatted(.dateTime.weekday(.abbreviated))
-                    facts.waiting.append(Margin(id: "link-\(note.id)",
-                                                text: NotesLandingWords.names(weekday: weekday, thing: thing.name),
-                                                word: LandingSentences.linkThem, act: .openNote(note.id)))
-                    break outer
-                }
-            }
-        }
-
-        // New: since he last looked.
-        let newNames = newTallies.sorted { $0.value > $1.value }
-            .compactMap { tallies[$0.key]?.name }
-        if let line = NotesLandingWords.newNotes(things: newNames, loose: newLoose > 0, notes: newNotes) {
-            facts.new.append(Margin(id: "new", text: line, word: "", act: .none))
-        }
-
         // Reading: only when a book is being read.
         if let book = Bookshelf(store: store, classes: classes).lastTouchedReading(), !book.isDeleted {
             let shown = ObjectPrivacy.shownLabel(of: book, in: store, classes: classes) ?? book.title
@@ -265,26 +211,28 @@ struct NotesLandingPage: View {
                     action: facts.reading.map { book in
                         LandingAction(word: "Read", hint: "Opens \(book.title)") { openThing(.object(book.id)) }
                     })
-            .background { ThemedBackground() }
-            .toolbar(.hidden, for: .navigationBar)
-            .onAppear {
-                if seenAtOpen == nil {
-                    seenAtOpen = LandingSeen.date("notes")
-                }
-                LandingSeen.mark("notes", at: AppClock.now)
-                // Empty first use: Tess's own line, once, and no "Nothing written yet." band.
-                if !facts.hasNotes, !spoke {
-                    spoke = true
-                    TessVoice.shared.say("Say \"note: bar felt heavy\" and I'll keep it here.")
-                }
-            }
+                    .background { ThemedBackground() }
+                    .toolbar(.hidden, for: .navigationBar)
+                    .onAppear {
+                        if seenAtOpen == nil {
+                            seenAtOpen = LandingSeen.date("notes")
+                        }
+                        LandingSeen.mark("notes", at: AppClock.now)
+                        // Empty first use: Tess's own line, once, and no "Nothing written yet." band.
+                        if !facts.hasNotes, !spoke {
+                            spoke = true
+                            TessVoice.shared.say("Say \"note: bar felt heavy\" and I'll keep it here.")
+                        }
+                    }
     }
 
     private func line(_ entry: NotesLandingFacts.Margin) -> LandingLine {
         guard !entry.word.isEmpty else { return LandingLine(text: entry.text) }
         return LandingLine(text: entry.text, link: (word: entry.word, action: {
-            if case let .openNote(id) = entry.act {
-                openNote(id)
+            switch entry.act {
+            case let .openNote(id): openNote(id)
+            case let .openThing(route): openThing(route)
+            case .none: break
             }
         }))
     }
@@ -439,7 +387,8 @@ struct NotesDoorPage: View {
             let isPrivate = NotesLandingFacts.isPrivate(note, store: store, classes: model.classes)
             switch door {
             case .privates: return isPrivate
-            case .loose: return !isPrivate && (note.outgoingLinks ?? []).allSatisfy { $0.toObject == nil && $0.toClass == nil }
+            case .loose: return !isPrivate && (note.outgoingLinks ?? [])
+                .allSatisfy { $0.toObject == nil && $0.toClass == nil }
             case .all: return true
             }
         }

@@ -113,7 +113,8 @@ final class ReviewChoices {
                says: ["Off": "Each app opens on its list of ways in.",
                       "On": "Each app opens on a page that tells you where things stand."],
                readiness: .live),
-        // Notes and Lists landings (notes-lists-landing-build-sheet-oct22.md section 5): the pages ride "Landing pages";
+        // Notes and Lists landings (notes-lists-landing-build-sheet-oct22.md section 5): the pages ride "Landing
+        // pages";
         // these are the sheet's own opinions, default Off.
         Choice(id: "notesMargin", name: "Notes margin", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The Notes landing has no Waiting or New lines.",
@@ -126,6 +127,10 @@ final class ReviewChoices {
         Choice(id: "listsMargin", name: "Lists margin", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The Lists landing has no Waiting or New lines.",
                       "On": "The Lists landing says what is done and what is new."],
+               readiness: .live),
+        Choice(id: "listsLeadByDue", name: "Lead list by due date", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The running list, else the one touched last, leads.",
+                      "On": "With nothing running, the list due soonest leads."],
                readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
@@ -211,7 +216,7 @@ final class ReviewChoices {
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
         ("Shown", ["sampleData", "landingPages", "areasShown", "classInspector"]),
-        ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin"]),
+        ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
