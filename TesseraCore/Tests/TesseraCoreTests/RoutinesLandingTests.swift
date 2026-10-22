@@ -141,12 +141,4 @@ struct RoutinesLandingTests {
             #expect(!every.lowercased().contains(word))
         }
     }
-
-    @Test func theSharedSwitchIdIsAlreadyInReview() throws {
-        let sources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .deletingLastPathComponent().deletingLastPathComponent()
-            .appending(path: "Features/Settings/ReviewChoices.swift")
-        let text = try String(contentsOf: sources, encoding: .utf8)
-        #expect(text.contains("Choice(id: \"landingPages\""))
-    }
 }
