@@ -6,6 +6,9 @@ import Foundation
 /// in another unit.
 public enum MeasureKind: String, Codable, Sendable, CaseIterable {
     case weight, distance, time, length, temperature, money
+    /// Kitchen amounts (recipes, groceries): small mass and volume, US customary for volume. Never converted to each
+    /// other: a cup of flour is not a number of grams without a density.
+    case kitchenMass, kitchenVolume
 
     /// The units that fit this kind, in the order the unit wheel swipes through them. Money has none of its own: its
     /// wheel is the currencies the rates table knows.
@@ -16,6 +19,8 @@ public enum MeasureKind: String, Codable, Sendable, CaseIterable {
         case .time: ["min", "hr"]
         case .length: ["cm", "in"]
         case .temperature: ["°C", "°F"]
+        case .kitchenMass: ["g", "kg", "oz", "lb"]
+        case .kitchenVolume: ["ml", "l", "tsp", "tbsp", "cup", "fl oz"]
         case .money: []
         }
     }
@@ -70,7 +75,8 @@ public struct Measure: Equatable, Sendable {
             }
             return unit == target ? self : Measure(moved, target, kind: .money, isEstimate: true, rateDate: rates.date)
         }
-        guard let moved = UnitConverter.convert(value, from: unit, to: target) else { return nil }
+        guard kind.units.contains(target), let moved = UnitConverter.convert(value, from: unit, to: target, kind: kind)
+        else { return nil }
         return Measure(moved, target, kind: kind)
     }
 
@@ -89,11 +95,28 @@ public enum UnitConverter {
     /// The value in the target unit, or nil when the two units are not of the same convertible kind.
     public static func convert(_ value: Double, from: String, to: String) -> Double? {
         guard let kind = MeasureKind.kind(ofUnit: from), kind == MeasureKind.kind(ofUnit: to) else { return nil }
+        return convert(value, from: from, to: to, kind: kind)
+    }
+
+    /// The value in the target unit of a known kind ("kg" is in both weight and kitchen mass, so the kind says which).
+    public static func convert(_ value: Double, from: String, to: String, kind: MeasureKind) -> Double? {
+        guard kind != .money, kind.units.contains(from), kind.units.contains(to) else { return nil }
         if from == to {
             return value
         }
+        if kind == .kitchenMass || kind == .kitchenVolume {
+            guard let source = kitchenFactors[from], let target = kitchenFactors[to] else { return nil }
+            return value * source / target
+        }
         return fromBase(toBase(value, unit: from), unit: to)
     }
+
+    /// Grams per unit, and millilitres per unit (US customary), for the kitchen kinds.
+    static let kitchenFactors: [String: Double] = [
+        "g": 1, "kg": 1000, "oz": 28.349_523_125, "lb": 453.592_37,
+        "ml": 1, "l": 1000, "tsp": 4.928_921_593_75, "tbsp": 14.786_764_781_25, "cup": 236.588_236_5,
+        "fl oz": 29.573_529_562_5,
+    ]
 
     private static func toBase(_ value: Double, unit: String) -> Double {
         switch unit {
@@ -123,6 +146,7 @@ public enum MeasureFormat {
     /// Decimal places shown at most; trailing zeros are dropped.
     static let places: [String: Int] = [
         "kg": 1, "lb": 1, "km": 2, "mi": 2, "min": 0, "hr": 2, "cm": 0, "in": 1, "°C": 1, "°F": 1,
+        "g": 0, "ml": 0, "l": 2, "oz": 1, "tsp": 2, "tbsp": 2, "cup": 2, "fl oz": 1,
     ]
 
     public static func number(_ value: Double, unit: String) -> String {
@@ -150,6 +174,36 @@ public enum MeasureFormat {
 
     static let signs = ["EUR": "€", "GBP": "£", "USD": "$", "INR": "₹"]
 
+    static let spoonAndCupUnits: Set = ["tsp", "tbsp", "cup", "fl oz"]
+    static let fractionGlyphs: [(Double, String)] = [
+        (0, ""), (1.0 / 8, "⅛"), (1.0 / 4, "¼"), (1.0 / 3, "⅓"), (3.0 / 8, "⅜"), (1.0 / 2, "½"), (5.0 / 8, "⅝"),
+        (2.0 / 3, "⅔"), (3.0 / 4, "¾"), (7.0 / 8, "⅞"), (1, ""),
+    ]
+
+    /// "1½ cups", "¼ tsp", "2 tbsp", "250 g", "1.5 kg", "5 ml": whole grams and millilitres; spoons and cups snap to
+    /// ⅛ ¼ ⅓ ⅜ ½ ⅝ ⅔ ¾ ⅞ when within a hair of one, else two decimals.
+    static func kitchen(_ value: Double, unit: String) -> String {
+        guard value.isFinite, value >= 0 else { return "\(value) \(unit)" }
+        guard spoonAndCupUnits.contains(unit) else {
+            // Under one gram or millilitre one decimal keeps it from reading "0 g".
+            if value < 1, value > 0, unit == "g" || unit == "ml" {
+                return "\(number(value, unit: "kg")) \(unit)"
+            }
+            return "\(number(value, unit: unit)) \(unit)"
+        }
+        let whole = value.rounded(.down)
+        let rest = value - whole
+        let snapped = fractionGlyphs.min { abs($0.0 - rest) < abs($1.0 - rest) } ?? (0, "")
+        guard abs(snapped.0 - rest) <= 0.02 else {
+            return "\(number(value, unit: unit)) \(unit == "cup" && value > 1 ? "cups" : unit)"
+        }
+        let carried = snapped.0 == 1 ? whole + 1 : whole
+        let fraction = snapped.0 == 1 ? "" : snapped.1
+        let text = (carried > 0 ? "\(Int(carried))" : "") + fraction
+        let shown = carried + (snapped.0 == 1 ? 0 : snapped.0)
+        return "\(text.isEmpty ? "0" : text) \(unit == "cup" && shown > 1.0001 ? "cups" : unit)"
+    }
+
     public static func string(_ measure: Measure) -> String {
         if measure.kind == .money {
             let amount = String(format: "%.2f", locale: Locale(identifier: "en_US_POSIX"), measure.value)
@@ -158,6 +212,10 @@ public enum MeasureFormat {
             }
             // As typed: the sign against the number when the currency has one, the bare number otherwise.
             return signs[measure.unit].map { $0 + amount } ?? amount
+        }
+        // Kitchen amounts: spoons and cups in the fractions a cook reads, grams and millilitres whole.
+        if measure.kind == .kitchenMass || measure.kind == .kitchenVolume {
+            return kitchen(measure.value, unit: measure.unit)
         }
         // Hours read as the cook clock does, "1 hr 35 min", so the app has one way to say time.
         if measure.unit == "hr", let text = hoursAndMinutes(measure.value) {
