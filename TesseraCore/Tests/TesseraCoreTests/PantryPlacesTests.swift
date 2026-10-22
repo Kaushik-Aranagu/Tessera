@@ -143,3 +143,59 @@ struct PantryPlacesTests {
         #expect(checked >= 5)
     }
 }
+
+extension PantryPlacesTests {
+    @Test func theReceiptAndTheSummaryReadPrivateForWalledWords() throws {
+        let made = try engine.perform(CreatePlace(name: "Lexapro shelf"), by: .user)
+        #expect(made.record.receipt == "Private place, new place.")
+        #expect(!made.record.summary.lowercased().contains("lexapro"))
+        let item = try ingredient("lexapro")
+        let put = try engine.perform(SetItemPlace(item: item.id, place: made.output.id), by: .user)
+        #expect(put.record.summary == "Put Private item in a place")
+        // A plain one says its words.
+        let plain = try engine.perform(CreatePlace(name: "Garage"), by: .user)
+        #expect(plain.record.receipt == "Garage, new place.")
+        let milk = try ingredient("milk")
+        #expect(try engine.perform(SetItemPlace(item: milk.id, place: plain.output.id), by: .user).record.summary
+            == "Put milk in a place")
+        // And no op summary anywhere holds the walled words.
+        #expect(!store.context.operations.values.contains { $0.summary.lowercased().contains("lexapro") })
+    }
+
+    @Test func sectionWordsAreMaskedForAWalledPlaceAndForAWalledWord() throws {
+        let hidden = try engine.perform(CreatePlace(name: "Lexapro shelf", sections: "Top, Bottom"), by: .user).output
+        #expect(places.shownSections(of: hidden) == ["Private section", "Private section"])
+        let mixed = try engine.perform(CreatePlace(name: "Garage", sections: "Left, Lexapro box"), by: .user).output
+        #expect(places.shownSections(of: mixed) == ["Left", "Private section"])
+        #expect(places.entries().first { $0.place.id == mixed.id }?.sections == ["Left", "Private section"])
+        let item = try ingredient("rope")
+        try engine.perform(SetItemPlace(item: item.id, place: mixed.id, section: "Lexapro box"), by: .user)
+        let groups = places.grouped(in: mixed)
+        #expect(groups.map(\.section) == ["Lexapro box"] && groups.map(\.label) == ["Private section"])
+    }
+
+    @Test func aPrivatePlaceLeftOutOfTheICloudCopyLeavesNoDanglingLink() throws {
+        let dir = FileManager.default.temporaryDirectory.appending(path: "places-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let disk = try ObjectStore(context: TesseraContext(url: dir.appending(path: "tessera.sqlite")))
+        let classes = try disk.prepareCatalog()
+        let diskEngine = ActionEngine(store: disk, classes: classes)
+        let diskPlaces = PantryPlaces(store: disk, classes: classes)
+        let secret = try diskEngine.perform(CreatePlace(name: "Lexapro shelf", sections: "Top"), by: .user).output
+        let item = try disk.create(#require(classes[.ingredient]), title: "oats")
+        try diskEngine.perform(SetItemPlace(item: item.id, place: secret.id, section: "Top"), by: .user)
+        disk.save()
+        let icloud = dir.appending(path: "icloud.sqlite")
+        try TesseraBackup.write(from: disk.context, to: icloud, leavingOutPrivate: true)
+        let copy = try ObjectStore(context: TesseraContext(url: icloud))
+        let copyClasses = try copy.prepareCatalog()
+        let copyPlaces = PantryPlaces(store: copy, classes: copyClasses)
+        let restored = try #require(copy.object(id: item.id))
+        // The private place is gone from the copy and the item simply has no place: it asks once again.
+        #expect(copy.object(id: secret.id) == nil)
+        #expect(copyPlaces.place(of: restored) == nil && copyPlaces.section(of: restored) == nil)
+        #expect(copyPlaces.unplaced([restored]).map(\.title) == ["oats"])
+        #expect(copyPlaces.places().isEmpty && diskPlaces.places().count == 1)
+    }
+}

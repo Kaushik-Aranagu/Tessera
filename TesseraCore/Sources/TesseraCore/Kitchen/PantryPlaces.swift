@@ -31,13 +31,32 @@ public struct PantryPlaces {
         self.classes = classes
     }
 
-    /// One place for a screen: the object, its words, its sections and how many ingredients are in it.
+    /// One place for a screen: the object, its words, its sections as shown and how many ingredients are in it.
     public struct Entry {
         public let place: ObjectRecord
         /// The name as shown: "Private place" when the name holds a walled word.
         public let name: String
+        /// The section words as shown ("Private section" for a walled word, or for every section of a walled place).
         public let sections: [String]
         public let count: Int
+    }
+
+    /// What a title is called in a sentence or a log line: its real words, or "Private place" / "Private item".
+    /// Works from the store alone (no class map in hand), as receipts and op summaries need.
+    public static func shown(_ object: ObjectRecord, in store: ObjectStore) -> String {
+        let classes = PrivateWords.systemClasses(in: store.context)
+        return ObjectPrivacy.shownLabel(of: object, in: store, classes: classes) ?? object.title
+    }
+
+    /// "Private section" for a walled section word, or for any word of a walled place.
+    public func shownSection(_ word: String, in place: ObjectRecord) -> String {
+        let walled = PrivateWords.isPrivateTitle(word, lastWeightKg: BodyWeight.lastKg(in: store))
+        return walled || ObjectPrivacy.label(of: place, in: store, classes: classes) != nil ? "Private section" : word
+    }
+
+    /// A place's section words as a screen shows them.
+    public func shownSections(of place: ObjectRecord) -> [String] {
+        sections(of: place).map { shownSection($0, in: place) }
     }
 
     /// Seeds Fridge, Freezer, Shelf and Counter once, each only if its object (live or removed) was never made.
@@ -67,7 +86,7 @@ public struct PantryPlaces {
             Entry(
                 place: place,
                 name: name(of: place),
-                sections: sections(of: place),
+                sections: shownSections(of: place),
                 count: ingredients(in: place).count
             )
         }
@@ -106,16 +125,16 @@ public struct PantryPlaces {
 
     /// A place's contents under its section words (the place's own order, then "no section" last): the right half of
     /// the page. A place with no sections lists directly (one group with a nil section).
-    public func grouped(in place: ObjectRecord) -> [(section: String?, ingredients: [ObjectRecord])] {
+    public func grouped(in place: ObjectRecord) -> [(section: String?, label: String?, ingredients: [ObjectRecord])] {
         let items = ingredients(in: place)
         let words = sections(of: place)
-        var groups: [(section: String?, ingredients: [ObjectRecord])] = words.compactMap { word in
+        var groups: [(section: String?, label: String?, ingredients: [ObjectRecord])] = words.compactMap { word in
             let inside = items.filter { section(of: $0) == word }
-            return inside.isEmpty ? nil : (word, inside)
+            return inside.isEmpty ? nil : (word, shownSection(word, in: place), inside)
         }
         let loose = items.filter { section(of: $0) == nil }
         if !loose.isEmpty {
-            groups.append((nil, loose))
+            groups.append((nil, nil, loose))
         }
         return groups
     }
@@ -169,8 +188,7 @@ public struct CreatePlace: EngineAction {
     }
 
     public func receipt(in store: ObjectStore, output place: ObjectRecord) -> String? {
-        let shown = ObjectPrivacy.label(of: place, in: store, classes: [:]) ?? place.title
-        return "\(shown), new place."
+        "\(PantryPlaces.shown(place, in: store)), new place."
     }
 }
 
@@ -350,6 +368,6 @@ public struct SetItemPlace: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Put \(store.object(id: item).map { ObjectPrivacy.label(of: $0, in: store, classes: [:]) ?? $0.title } ?? "an item") in a place"
+        "Put \(store.object(id: item).map { PantryPlaces.shown($0, in: store) } ?? "an item") in a place"
     }
 }
