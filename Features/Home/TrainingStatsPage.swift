@@ -94,7 +94,7 @@ struct TrainingStatsPage: View {
         VStack(alignment: .leading, spacing: 0) {
             Button(action: close) {
                 Text("‹ Training")
-                    .textRole(.data)
+                    .textRole(.label)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .frame(minHeight: 44, alignment: .leading)
             }
@@ -105,7 +105,7 @@ struct TrainingStatsPage: View {
                 .foregroundStyle(Theme.Colors.ink)
                 .accessibilityAddTraits(.isHeader)
             Text(subtitle(reading))
-                .font(Theme.voice(size: 21))
+                .textRole(.body)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, Theme.Spacing.xs)
@@ -149,7 +149,7 @@ struct TrainingStatsPage: View {
 
     private func kicker(_ text: String) -> some View {
         Text(text)
-            .textRole(.data)
+            .textRole(.label)
             .foregroundStyle(Theme.Colors.inkSecondary)
             .accessibilityAddTraits(.isHeader)
     }
@@ -162,8 +162,7 @@ struct TrainingStatsPage: View {
             Text(StatsMass.estimate(kg: best.e1RM, unit: unit))
                 .textRole(.heroNumber)
                 .foregroundStyle(Theme.Colors.ink)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, Theme.Spacing.s)
             Text(TrainingSentences.best(best, unit: unit))
                 .textRole(.body)
@@ -318,9 +317,8 @@ private struct StrengthRow: View {
                     Text(StatsMass.estimate(kg: now, unit: unit))
                         .textRole(.titleNumber)
                         .foregroundStyle(Theme.Colors.ink)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                        .frame(minWidth: 96, alignment: .trailing)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(minWidth: typeSize.isAccessibilitySize ? 0 : 96, alignment: .trailing)
                 }
             }
             .frame(minHeight: 44)
@@ -365,7 +363,7 @@ private struct TrendLine: View {
             if let top = points.firstIndex(of: best) {
                 let centre = position(top, best)
                 context.stroke(Path(ellipseIn: CGRect(x: centre.x - 4, y: centre.y - 4, width: 8, height: 8)),
-                               with: .color(Theme.Colors.live), lineWidth: 1.4)
+                               with: .color(Theme.Colors.Accent.training), lineWidth: 1.4)
             }
         }
     }
@@ -446,24 +444,30 @@ private struct HabitMarks: View {
     let narrow: Bool
     @Binding var picked: Date?
 
+    /// A session is a closed brush ring in dried ink; this week's are the open, wet ring in the accent (the same marks
+    /// as the landing's week).
+    private static let doneMark = SetMarkSpec(id: UUID(), number: 1, reps: 8, target: 8, weight: 1, heaviest: 1,
+                                              isBest: false)
+    private static let nowMark = SetMarkSpec(id: UUID(), number: 1, reps: 7, target: 8, weight: 1, heaviest: 1,
+                                             isBest: false)
+
     var body: some View {
-        let mark: CGFloat = narrow ? 3 : 8
-        HStack(alignment: .bottom, spacing: narrow ? 1 : 4) {
+        let mark: CGFloat = narrow ? 5 : 12
+        HStack(alignment: .bottom, spacing: narrow ? 1 : 3) {
             ForEach(weeks.indices, id: \.self) { index in
                 let week = weeks[index]
                 let isCurrent = index == weeks.count - 1
-                VStack(spacing: narrow ? 1 : 3) {
+                VStack(spacing: narrow ? 0 : 1) {
                     if week.isEmpty {
                         Rectangle().fill(Theme.Colors.ink.opacity(0.22)).frame(height: 1)
                     } else {
                         ForEach(0 ..< min(week.sessions, 7), id: \.self) { _ in
-                            Circle()
-                                .fill(isCurrent ? Theme.Colors.live : Theme.Colors.ink)
-                                .frame(width: mark, height: mark)
+                            SetMarkCircle(spec: isCurrent ? Self.nowMark : Self.doneMark, side: mark,
+                                          age: isCurrent ? 0 : 99)
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, minHeight: 64, alignment: .bottom)
+                .frame(maxWidth: .infinity, minHeight: narrow ? 40 : 96, alignment: .bottom)
                 .contentShape(Rectangle())
                 .onTapGesture { picked = week.start }
                 .accessibilityElement(children: .ignore)

@@ -97,17 +97,13 @@ struct NotesLandingFacts {
     /// The book being read, by last touched: its id and the name a page may show.
     var reading: (id: UUID, title: String)?
 
-    /// A note any surface would mask: the private flag, or words that are walled (ObjectPrivacy's label).
+    /// A note any surface would mask: Core's one rule (NotesLanding.isPrivate, #1230), the flag or walled words.
     @MainActor static func isPrivate(_ note: ObjectRecord, store: ObjectStore,
                                      classes: [SystemCatalog.Key: ClassDef]) -> Bool
     {
-        store.value("isPrivate", of: note) == .bool(true)
-            || ObjectPrivacy.shownLabel(of: note, in: store, classes: classes) != nil
+        NotesLanding(store: store, classes: classes).isPrivate(note)
     }
 
-    /// The landing's facts from Core's `NotesLanding` (#1230), the single source: things by weight, Loose, Private
-    /// (by the flag or by walled words, N-A7) and the margin lines with their targets. The book being read stays here
-    /// (Core gives its name only; the page needs its id to open it).
     @MainActor
     static func load(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], lastSeen: Date?,
                      linkSuggest: Bool) -> NotesLandingFacts
