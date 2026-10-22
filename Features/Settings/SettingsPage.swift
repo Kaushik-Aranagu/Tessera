@@ -47,6 +47,11 @@ struct SettingsPage: View {
                     .padding(.top, Theme.Spacing.xxl)
                     .entrance(3)
 
+                // The units every measure reads in (Design sheet 115): the same pick a swipe on a unit word makes.
+                UnitsSentence()
+                    .padding(.top, Theme.Spacing.xxl)
+                    .entrance(3)
+
                 // What Tess keeps about him, in ink, the count the door to the page (AI-9).
                 TessKnowsDoor()
                     .padding(.top, Theme.Spacing.xxl)
@@ -72,6 +77,13 @@ struct SettingsPage: View {
                 .buttonStyle(.labelWord)
                 .padding(.top, Theme.Spacing.xxl)
                 .accessibilityHint("Where your history is kept")
+
+                // Which release this is: the git SHA the build was made from, one quiet line at the foot.
+                Text("Build \(BuildStamp.short)")
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .padding(.top, Theme.Spacing.section)
+                    .accessibilityLabel("Build \(BuildStamp.short)")
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
@@ -146,11 +158,20 @@ struct ReviewSection: View {
 
                 // Named pages with their neighbours peeking (Design sheet 108): Looks and day, Workout, Kitchen,
                 // Connected, Shown.
-                PeekTabs(tabs: pages.map(\.word), selection: $page) { index in
-                    // No lines between rows (Kaushik's rule): space alone separates them.
-                    VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                        ForEach(pages[index].rows) { choice in
+                // The Page turn switch turns Review's own pages, so he feels his pick right here (Product, Oct 20).
+                let turn = PageTurnStyle.current
+                PeekTabs(tabs: pages.map(\.word), selection: $page, turns: turn) { index in
+                    if turn == .today {
+                        // No lines between rows (Kaushik's rule): space alone separates them.
+                        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                            ForEach(pages[index].rows) { choice in
+                                row(choice)
+                            }
+                        }
+                    } else {
+                        PageTurnRows(items: pages[index].rows, page: index, style: turn) { choice in
                             row(choice)
+                                .padding(.vertical, Theme.Spacing.s)
                         }
                     }
                 }
@@ -201,17 +222,13 @@ struct ReviewSection: View {
                 .contentTransition(.opacity)
                 .disabled(!live)
                 Text(".")
-                Spacer(minLength: Theme.Spacing.s)
-                if let mark = ReviewSwitchCopy.mark(choice) {
-                    Text(mark)
-                        .textRole(.label)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                }
+                Spacer(minLength: 0)
             }
             .textRole(.body)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(choice.name)
-            .accessibilityValue(value)
+            // The mark below is drawn apart, so VoiceOver hears it with the value: "On, Needs Claude".
+            .accessibilityValue(ReviewSwitchCopy.spokenValue(choice, value: value))
             .accessibilityHint(ReviewSwitchCopy.hint(choice, value: value))
             .accessibilityAddTraits(live ? .isButton : [])
             .accessibilityAdjustableAction { direction in
@@ -219,6 +236,18 @@ struct ReviewSection: View {
             }
             // A double tap flips it too, as a tap on the value word does (Design on #1127).
             .accessibilityAction { flip(choice, forward: true) }
+            // The mark sits under the sentence, so a long name never wraps beside its value (the clip on #1184:
+            // "Tess names / training days: On." squeezed by NEEDS CLAUDE).
+            if let mark = ReviewSwitchCopy.mark(choice) {
+                Text(mark)
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .accessibilityHidden(true)
+            }
+            // Page turn plays its pick once on a two-line mini page (sheet 93).
+            if choice.id == "pageTurn" {
+                PageTurnPreview(style: PageTurnStyle(rawValue: value) ?? .today)
+            }
             if let touched, touched.id == choice.id {
                 Text(choices.beforeAfter(choice, before: touched.before))
                     .textRole(.body)
@@ -251,6 +280,12 @@ enum ReviewSwitchCopy {
     static let everythingAsBefore = "Everything as before"
     static let reset = "Everything is as before."
     static let needsClaude = "Needs Claude"
+
+    /// The value VoiceOver hears, with the row's mark when it has one: "On, Needs Claude".
+    static func spokenValue(_ choice: ReviewChoices.Choice, value: String) -> String {
+        mark(choice).map { "\(value), \($0)" } ?? value
+    }
+
     static let later = "Later"
 
     /// "2 of 3".
