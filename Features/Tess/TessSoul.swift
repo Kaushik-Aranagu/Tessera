@@ -80,7 +80,8 @@ struct TessSoul: View {
         )) { context in
             let drawn = frame(at: context.date)
             Canvas(rendersAsynchronously: true) { context, canvasSize in
-                SoulRenderer.draw(drawn.frame, in: &context, size: canvasSize, palette: palette, lights: drawn.lights)
+                SoulRenderer.draw(drawn.frame, in: &context, size: canvasSize, palette: palette, lights: drawn.lights,
+                                  blurScale: 1 / hostScale)
             }
             .saturation(drawn.frame.look.saturation)
             .contrast(drawn.frame.look.contrast)
@@ -285,7 +286,7 @@ struct SoulPalette {
 /// own live blur. The group grade (saturation, contrast) is applied by the view around the canvas.
 enum SoulRenderer {
     static func draw(_ frame: SoulFrame, in context: inout GraphicsContext, size: CGSize, palette: SoulPalette,
-                     lights: [SoulLight]? = nil)
+                     lights: [SoulLight]? = nil, blurScale: CGFloat = 1)
     {
         context.translateBy(x: size.width / 2, y: size.height / 2)
         context.scaleBy(x: frame.look.scale, y: frame.look.scale)
@@ -315,19 +316,22 @@ enum SoulRenderer {
         }
         for (index, pose) in frame.dabs.enumerated() {
             let opacity = index < 3 ? 1 : frame.look.satellites
-            dab(pose, SoulDab.all[index], opacity: opacity, in: &context, palette: palette)
+            dab(pose, SoulDab.all[index], opacity: opacity, in: &context, palette: palette, blurScale: blurScale)
         }
-        dab(frame.drip, SoulDab.drip, opacity: 1, in: &context, palette: palette)
+        dab(frame.drip, SoulDab.drip, opacity: 1, in: &context, palette: palette, blurScale: blurScale)
     }
 
+    /// `blurScale` makes up for a host that draws her smaller than built (the dock scales her to 0.72 after the
+    /// blur is drawn, which would shrink the soft edge with it): the edge is drawn wider by the inverse, so the
+    /// edge on the phone is the one in the approved clips. The core's strength is unchanged.
     private static func dab(_ pose: SoulPose, _ dab: SoulDab, opacity: CGFloat, in context: inout GraphicsContext,
-                            palette: SoulPalette)
+                            palette: SoulPalette, blurScale: CGFloat)
     {
         let alpha = pose.opacity * opacity
         guard alpha > 0.01, pose.scaleX > 0.01, pose.scaleY > 0.01 else { return }
         context.drawLayer { layer in
             layer.opacity = alpha
-            layer.addFilter(.blur(radius: pose.blur))
+            layer.addFilter(.blur(radius: pose.blur * blurScale))
             layer.translateBy(x: pose.x, y: pose.y)
             layer.scaleBy(x: dab.size.width / 2 * pose.scaleX, y: dab.size.height / 2 * pose.scaleY)
             layer.fill(shapes[dab.paint], with: .radialGradient(
