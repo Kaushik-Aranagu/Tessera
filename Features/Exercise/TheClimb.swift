@@ -130,13 +130,19 @@ struct TheClimb: View {
                 let every = max(1, Int((Self.labelRoom / max(gap, 1)).rounded(.up)))
                 for (index, line) in axis.gridlines.enumerated() where index % every == 0 {
                     let x = size.width * axis.unit(line)
-                    context.draw(Text(Format.kilograms(line)).font(.system(size: 13)).foregroundStyle(
-                        Theme.Colors.inkSecondary
-                    ), at: CGPoint(x: min(max(x, 10), size.width - 10), y: 8))
+                    let label = Text(Format.kilograms(line)).font(.system(size: 13))
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                    if index == 0 {
+                        // The first number starts at its own line, not shoved off it by a clamp.
+                        context.draw(label, at: CGPoint(x: x + 2, y: 8), anchor: .leading)
+                    } else {
+                        context.draw(label, at: CGPoint(x: min(x, size.width - 10), y: 8))
+                    }
                 }
             }
             .frame(height: 18)
-            Color.clear.frame(width: Self.setWidth, height: 1)
+            // The same right-hand room as the rows, so each number sits over its own line.
+            Color.clear.frame(width: Self.setWidth + Self.orbRoom, height: 1)
         }
         .accessibilityHidden(true)
     }

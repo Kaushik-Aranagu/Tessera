@@ -145,7 +145,8 @@ struct RunningOrderSheet: View {
         let isCurrent = index == session.currentIndex
         let isLifted = entry.id == dragging
         let name = session.exerciseClass(of: entry)?.name ?? "Exercise"
-        let done = session.isFinished(entry)
+        let isCut = session.isCut(entry)
+        let done = session.isFinished(entry) && !isCut
         return HStack(spacing: 14) {
             Paint.live
                 .frame(width: 3, height: 30)
@@ -162,11 +163,13 @@ struct RunningOrderSheet: View {
                     .textRole(.label)
                     .foregroundStyle(Paint.cream)
             } else {
-                Text(done ? "Done" : session.scheme(of: entry))
+                Text(isCut ? "Cut" : done ? "Done" : session.scheme(of: entry))
                     .textRole(.label)
                     .foregroundStyle(Paint.secondary.opacity(isCurrent ? 1 : 0.7))
             }
         }
+        // A cut row fades in place, so he sees what Short took out (Design 128).
+        .opacity(isCut ? 0.3 : 1)
         .padding(.horizontal, 10)
         .frame(height: Self.pitch)
         .background {

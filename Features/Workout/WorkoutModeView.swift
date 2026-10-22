@@ -813,6 +813,19 @@ extension WorkoutContent {
                     .buttonStyle(.plain)
                     .accessibilityHint(similar ? "Shows exercises close to this one" : "Moves this exercise to the end")
             }
+            // "Short" (Design 128): cut today to 45, 35 or 25 minutes, or back to all of it.
+            if phase == .set, !session.isEditing, session.finishedAt == nil, !isSwapOpen, session.canShorten {
+                Button(action: shortTapped) {
+                    Text(session.cutMinutes.map { "Short, \($0)" } ?? "Short")
+                        .textRole(.keyWord)
+                        .foregroundStyle(Paint.secondary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(session.cutMinutes.map { "Short, cut to \($0) minutes" } ?? "Short")
+                .accessibilityHint("Steps today's workout to 45, 35 or 25 minutes, then back to all of it")
+            }
             if !large {
                 Spacer(minLength: 0)
             }
@@ -839,6 +852,13 @@ extension WorkoutContent {
         }
         moment.play(.selection)
         showReceipt("\(receipt.name), later.") { [session] in session.undoBusy(receipt) }
+    }
+
+    /// "Short": steps the minutes (All, 45, 35, 25, All) and says what it did, with ten seconds of Undo.
+    private func shortTapped() {
+        guard let receipt = session.stepShort() else { return }
+        moment.play(.selection)
+        showReceipt(receipt.text) { [session] in session.undoShort(receipt) }
     }
 
     /// Puts `text` in the Tess corner; with something to take back it holds ten seconds with Undo, else four.

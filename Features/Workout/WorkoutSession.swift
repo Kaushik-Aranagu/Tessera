@@ -294,7 +294,7 @@ final class WorkoutSession {
     }
 
     func isFinished(_ entry: ObjectRecord) -> Bool {
-        setRows(of: entry).count >= targetSets(of: entry)
+        setRows(of: entry).count >= targetSets(of: entry) || cut.contains(entry.id)
     }
 
     /// This set's place last session: "last time 82.5 × 8".
@@ -365,6 +365,9 @@ final class WorkoutSession {
     var receipt: WorkoutReceipt?
     /// Swapped in for the routine too ("Swap in"), not just for today.
     private var swappedInRoutine: Set<UUID> = []
+    /// Short: today's time budget in minutes (nil is "All") and the exercises it cut (WorkoutSession+Short).
+    var cutMinutes: Int?
+    var cut: Set<UUID> = []
     /// What Core prefilled the current set with.
     private(set) var prefill: SetPrefill?
     /// The logged set being changed on the dial and drum (tap its stroke); nil when dialling the next set.
@@ -443,6 +446,10 @@ extension WorkoutSession {
     /// Hold to log: seats the dialled set, then the dial turns into the rest countdown.
     func logSet(source: SetSource = .hold, by actor: Actor = .user) {
         receipt = nil
+        // A set on a cut exercise brings it back.
+        if let id = currentEntry?.id {
+            cut.remove(id)
+        }
         guard let entry = currentEntry, let exercise = currentExercise else { return }
         let beaten = ledger.recordsBeaten(weight: weight, reps: reps, rpe: rpe, for: exercise,
                                           excludingWorkout: workout.id)
@@ -726,7 +733,8 @@ extension WorkoutSession {
         guard finishedAt == nil else { return }
         endEditing()
         let now = AppClock.now
-        let record: OpRecord? = if early, !entries.allSatisfy(isFinished) {
+        // A cut (Short) ends the workout the early way, so the dropped exercises are marked skipped.
+        let record: OpRecord? = if early && !entries.allSatisfy(isFinished) || !cut.isEmpty {
             try? model.engine.perform(FinishWorkoutEarly(workout: workout.id, time: now), by: .user).record
         } else {
             try? model.engine.perform(FinishWorkout(workout: workout.id, time: now), by: .user).record
