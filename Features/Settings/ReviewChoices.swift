@@ -109,6 +109,10 @@ final class ReviewChoices {
                says: ["Off": "Every screen shows your own things.",
                       "On": "Every screen shows example things; yours come back untouched when it's off."],
                readiness: .live),
+        Choice(id: "landingPages", name: "Landing pages", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Each app opens on its list of ways in.",
+                      "On": "Each app opens on a page that tells you where things stand."],
+               readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
                       "All": "Body weight, Habits, Money, Reading, People and Upkeep show too."],
@@ -192,7 +196,7 @@ final class ReviewChoices {
         ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
-        ("Shown", ["sampleData", "areasShown", "classInspector"]),
+        ("Shown", ["sampleData", "landingPages", "areasShown", "classInspector"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.

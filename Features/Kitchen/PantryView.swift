@@ -13,8 +13,15 @@ import TesseraCore
 struct PantryView: View {
     var body: some View {
         NavigationStack {
-            PantryPage()
-                .navigationDestination(for: Route.self) { ObjectPage(route: $0) }
+            Group {
+                // The places page on the dial rail while Landing pages is On (QA on #1224); else as it was.
+                if LandingSwitch.isOn {
+                    PantryRailPage()
+                } else {
+                    PantryPage()
+                }
+            }
+            .navigationDestination(for: Route.self) { ObjectPage(route: $0) }
         }
         .environment(\.animateEntrance, true)
     }

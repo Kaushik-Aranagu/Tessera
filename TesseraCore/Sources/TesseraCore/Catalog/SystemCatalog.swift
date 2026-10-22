@@ -21,6 +21,7 @@ public enum SystemCatalog {
         case slot, plan
         case tessCall
         case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend, book
+        case pool, inflow, poolMove, rateNote
         case tessSent
         case settings
         case meProfile
@@ -259,7 +260,8 @@ public enum SystemCatalog {
             FieldSpec(key: "marker", name: "Marker", kind: .bool),
             FieldSpec(key: "frozen", name: "Frozen", kind: .bool),
         ]),
-        // One closed day (Shutdown, M4 slice 7): when it closed and by whom, his line for tomorrow, and the frozen Day log
+        // One closed day (Shutdown, M4 slice 7): when it closed and by whom, his line for tomorrow, and the frozen Day
+        // log
         // line for that day.
         ClassSpec(key: .closedDay, name: "Closed Day", parent: .thing, symbol: "moon.stars", colorRole: "neutral",
                   fields: [
@@ -286,6 +288,47 @@ public enum SystemCatalog {
             FieldSpec(key: "category", name: "Category", kind: .text),
             FieldSpec(key: "spentAt", name: "Spent", kind: .date),
             FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+            // Money pools: the pool it came out of. Unmarked spends read as an Unassigned bucket; nothing is rewritten.
+            FieldSpec(key: "pool", name: "Pool", kind: .ref, target: .pool),
+        ]),
+        // A pool: where money sits, in one currency. Amounts are typed digits (Decimal, never Double). Private pools
+        // read "Private pool" everywhere outside their own page.
+        ClassSpec(key: .pool, name: "Pool", parent: .thing, symbol: "tray.full", colorRole: "neutral", fields: [
+            FieldSpec(key: "currency", name: "Currency", kind: .text),
+            FieldSpec(key: "source", name: "Source", kind: .text),
+            FieldSpec(key: "poolKind", name: "Kind", kind: .choice, defaultValue: .choice("account"),
+                      options: ["account", "cash", "saving"]),
+            FieldSpec(key: "openingTyped", name: "Opening", kind: .text, defaultValue: .text("0.00")),
+            FieldSpec(key: "isPrivate", name: "Private", kind: .bool),
+            FieldSpec(key: "archivedAt", name: "Archived", kind: .date),
+        ]),
+        // Money in: a paycheck, a gift, a refund. Typed digits in the pool's currency.
+        ClassSpec(key: .inflow, name: "Inflow", parent: .thing, symbol: "arrow.down.circle", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "pool", name: "Pool", kind: .ref, target: .pool),
+                      FieldSpec(key: "amountTyped", name: "Amount", kind: .text),
+                      FieldSpec(key: "source", name: "Source", kind: .choice, defaultValue: .choice("paycheck"),
+                                options: ["paycheck", "freelance", "gift", "refund", "sale"]),
+                      FieldSpec(key: "at", name: "At", kind: .date),
+                      FieldSpec(key: "note", name: "Note", kind: .text),
+                  ]),
+        // A move between two pools: what left (sent and fee, in the from currency) and what arrived (to currency).
+        ClassSpec(key: .poolMove, name: "Move", parent: .thing, symbol: "arrow.left.arrow.right", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "fromPool", name: "From", kind: .ref, target: .pool),
+                      FieldSpec(key: "toPool", name: "To", kind: .ref, target: .pool),
+                      FieldSpec(key: "sentTyped", name: "Sent", kind: .text),
+                      FieldSpec(key: "feeTyped", name: "Fee", kind: .text, defaultValue: .text("0")),
+                      FieldSpec(key: "arrivedTyped", name: "Arrived", kind: .text),
+                      FieldSpec(key: "at", name: "At", kind: .date),
+                  ]),
+        // A rate he noted or a move implied: how many of the second currency one of the first buys ("USD/INR").
+        ClassSpec(key: .rateNote, name: "Rate", parent: .thing, symbol: "percent", colorRole: "neutral", fields: [
+            FieldSpec(key: "pair", name: "Pair", kind: .text),
+            FieldSpec(key: "valueTyped", name: "Value", kind: .text),
+            FieldSpec(key: "at", name: "At", kind: .date),
+            FieldSpec(key: "origin", name: "Origin", kind: .choice, defaultValue: .choice("typed"),
+                      options: ["move", "typed"]),
         ]),
         // One book (Reading, M5): the page he is on is its resume point. Queued, reading, finished or dropped.
         ClassSpec(key: .book, name: "Book", parent: .thing, symbol: "book", colorRole: "neutral", fields: [
