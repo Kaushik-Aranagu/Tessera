@@ -104,6 +104,11 @@ final class ReviewChoices {
                says: ["Off": "Your calendar stays out.", "On": "Busy times show on Now."], readiness: .later),
         Choice(id: "health", name: "Health", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Health stays out.", "On": "Workouts and weight sync with Health."], readiness: .later),
+        // Kaushik, Oct 21: example content on every screen, kept apart from his own; Off is his data, untouched.
+        Choice(id: "sampleData", name: "Sample data", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Every screen shows your own things.",
+                      "On": "Every screen shows example things; yours come back untouched when it's off."],
+               readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
                       "All": "Body weight, Habits, Money, Reading, People and Upkeep show too."],
@@ -177,7 +182,7 @@ final class ReviewChoices {
         ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
-        ("Shown", ["areasShown", "classInspector"]),
+        ("Shown", ["sampleData", "areasShown", "classInspector"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.

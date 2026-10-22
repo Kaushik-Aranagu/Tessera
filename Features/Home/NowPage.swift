@@ -38,6 +38,8 @@ struct NowPage: View {
             && (!(current.map { $0.start.timeIntervalSince(now) < 15 * 60 } ?? false) || Self.pullsPlan)
 
         VStack(alignment: .leading, spacing: 0) {
+            // While Sample data is on, the plain words above the day say so (Design on #1199).
+            SampleDataWord()
             // The only day word on Home (41.4): the painted stroke lives one tap down now.
             DayLabel(now: now)
                 .entrance(0)

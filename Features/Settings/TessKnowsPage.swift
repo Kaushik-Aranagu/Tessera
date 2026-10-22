@@ -12,7 +12,7 @@ struct TessKnowsPage: View {
     @Environment(\.isPresented) private var isPresented
 
     private var memory: TessMemoryStore {
-        TessMemoryStore(engine: model.engine)
+        TessMemoryStore(engine: model.engine, forgetLogURL: model.forgetLogURL)
     }
 
     var body: some View {
