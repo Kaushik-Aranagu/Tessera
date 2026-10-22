@@ -42,34 +42,10 @@ enum PoolRules {
 }
 
 public extension Transaction {
-    /// The pool a new row defaults to for a currency: the one used last (an inflow, a spend or an arrival), else the
-    /// only pool of that currency, else nil. Archived and deleted pools are not offered.
+    /// The pool a new row defaults to for a currency (see `PoolBook.lastUsedPool`).
     @MainActor
     func lastUsedPool(currency: String) -> ObjectRecord? {
-        let book = PoolBook(store: store, classes: classes)
-        let live = book.pools().filter {
-            store.value("archivedAt", of: $0)?.dateValue == nil && book.currency(of: $0) == currency
-        }
-        guard !live.isEmpty else { return nil }
-        var latest: [UUID: Date] = [:]
-        func touch(_ pool: ObjectRecord?, _ at: Date) {
-            if let pool {
-                latest[pool.id] = max(latest[pool.id] ?? .distantPast, at)
-            }
-        }
-        for key in [SystemCatalog.Key.inflow, .spend] {
-            guard let classDef = classes[key] else { continue }
-            for row in store.objects(of: classDef) where !row.isDeleted {
-                touch(store.linkedObjects("pool", of: row).first, row.createdAt)
-            }
-        }
-        for move in book.moves() {
-            touch(store.linkedObjects("toPool", of: move).first, move.createdAt)
-        }
-        if let used = live.filter({ latest[$0.id] != nil }).max(by: { latest[$0.id]! < latest[$1.id]! }) {
-            return used
-        }
-        return live.count == 1 ? live[0] : nil
+        PoolBook(store: store, classes: classes).lastUsedPool(currency: currency)
     }
 
     /// "Unassigned USD": the pool a spend or inflow lands in when no pool fits. Made in the same op on first need.
