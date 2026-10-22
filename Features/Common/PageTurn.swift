@@ -195,8 +195,10 @@ struct PageTurnPreview: View {
         PageTurnRows(items: PageTurnPreviewCopy.pages[page].enumerated().map { Line(id: $0.offset, text: $0.element) },
                      page: page, style: style)
         { line in
+            // Two steps under the rows, label size, so it reads as a swatch and never as his own lists (Design on
+            // #1184).
             Text(line.text)
-                .textRole(.body)
+                .font(Theme.Typography.font(PageTurnPreviewCopy.swatchSpec))
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -222,6 +224,14 @@ struct PageTurnPreview: View {
 }
 
 enum PageTurnPreviewCopy {
+    /// The swatch's type: the rows' face at 14 pt, case kept (Design on #1184).
+    static var swatchSpec: ThemeConcept.TypeSpec {
+        var spec = Theme.concept.scale.body
+        spec.size = 14
+        spec.weight = .regular
+        return spec
+    }
+
     /// The mini page and the next one (sheet 93's sample).
     static let pages = [["Groceries, 24 to get.", "Lists, 3 open."],
                         ["Recipes, 12 kept.", "Pantry, 9 running low."]]

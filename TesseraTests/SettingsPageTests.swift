@@ -138,4 +138,10 @@ struct SettingsPageTests {
         #expect(!PeekTabsLayout.isSideSwipe(CGSize(width: 60, height: -200)))
         #expect(!PeekTabsLayout.isSideSwipe(CGSize(width: 80, height: 50)))
     }
+
+    /// QA on #1189: the mark is drawn under the sentence, and VoiceOver hears it with the value.
+    @Test func voiceOverHearsTheMarkWithTheValue() throws {
+        #expect(try ReviewSwitchCopy.spokenValue(choice("planMyDay"), value: "Off") == "Off, Needs Claude")
+        #expect(try ReviewSwitchCopy.spokenValue(choice("restTimer"), value: "On") == "On")
+    }
 }
