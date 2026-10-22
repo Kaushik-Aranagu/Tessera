@@ -38,7 +38,9 @@ struct PoolMathTests {
     }
 
     @discardableResult
-    func move(from: ObjectRecord, into: ObjectRecord, sent: String, fee: String, arrived: String) throws -> ObjectRecord {
+    func move(from: ObjectRecord, into: ObjectRecord, sent: String, fee: String,
+              arrived: String) throws -> ObjectRecord
+    {
         let object = try store.create(#require(classes[.poolMove]), title: "Move")
         try store.setLinks("fromPool", on: object, to: [from])
         try store.setLinks("toPool", on: object, to: [into])
@@ -130,5 +132,69 @@ struct PoolMathTests {
         #expect(PoolFormat.amount(12_345_678, currency: "INR", lakh: true, text: true) == "INR 1,23,45,678.00")
         #expect(PoolFormat.amount(999, currency: "INR", lakh: true, text: true) == "INR 999.00")
         #expect(PoolFormat.amount(1000, currency: "INR", lakh: true, text: true) == "INR 1,000.00")
+    }
+}
+
+/// Pools are private wherever a label is shown: the shared export, Tess lists and the one label function.
+@MainActor
+struct PoolPrivacyTests {
+    let store = ObjectStore.open(inMemory: true)
+    let classes: [SystemCatalog.Key: ClassDef]
+
+    init() throws {
+        classes = try store.prepareCatalog()
+    }
+
+    /// Every string value, key and number in the JSON, so a leak is found as a value and not as a run of characters
+    /// inside a timestamp or an id.
+    func values(in data: Data) throws -> (strings: [String], numbers: [Double]) {
+        var strings: [String] = []
+        var numbers: [Double] = []
+        func walk(_ node: Any) {
+            if let map = node as? [String: Any] {
+                for (key, value) in map {
+                    strings.append(key)
+                    walk(value)
+                }
+            } else if let list = node as? [Any] {
+                list.forEach(walk)
+            } else if let text = node as? String {
+                strings.append(text)
+            } else if let number = node as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID() {
+                numbers.append(number.doubleValue)
+            }
+        }
+        try walk(JSONSerialization.jsonObject(with: data))
+        return (strings, numbers)
+    }
+
+    @Test func eachPoolClassReadsPrivateAndTheSharedExportHoldsNoWord() throws {
+        let checking = try store.create(#require(classes[.pool]), title: "US checking")
+        let india = try store.create(#require(classes[.pool]), title: "India account")
+        try store.set("currency", to: .text("INR"), on: india)
+        try store.set("source", to: .text("Acme payroll"), on: checking)
+        let inflow = try store.create(#require(classes[.inflow]), title: "Inflow paycheck Acme")
+        try store.setLinks("pool", on: inflow, to: [checking])
+        try store.set("amountTyped", to: .text("4200.00"), on: inflow)
+        let move = try store.create(#require(classes[.poolMove]), title: "Move to India")
+        try store.set("sentTyped", to: .text("1000.00"), on: move)
+        try store.set("arrivedTyped", to: .text("82650.00"), on: move)
+        let rate = try store.create(#require(classes[.rateNote]), title: "USD/INR 83.10")
+        try store.set("valueTyped", to: .text("83.10"), on: rate)
+
+        #expect(ObjectPrivacy.label(of: checking, in: store, classes: classes) == "Private pool")
+        #expect(ObjectPrivacy.label(of: inflow, in: store, classes: classes) == "Private inflow")
+        #expect(ObjectPrivacy.label(of: move, in: store, classes: classes) == "Private move")
+        #expect(ObjectPrivacy.label(of: rate, in: store, classes: classes) == "Private rate")
+        #expect(ObjectPrivacy.shownLabel(of: india, in: store, classes: classes) == "Private pool")
+
+        let shared = try values(in: TesseraExport(context: store.context).encoded())
+        for needle in ["US checking", "India account", "Acme", "4200.00", "82650.00", "1000.00", "83.10", "INR"] {
+            #expect(!shared.strings.contains { $0.contains(needle) }, "\(needle)")
+        }
+        #expect(shared.strings.contains("Private pool"))
+        // The unmasked export, which only tests ask for, does hold them: the check can fail.
+        let full = try values(in: TesseraExport(context: store.context, maskingPrivate: false).encoded())
+        #expect(full.strings.contains { $0.contains("India account") })
     }
 }

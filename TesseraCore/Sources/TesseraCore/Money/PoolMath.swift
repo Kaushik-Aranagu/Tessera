@@ -89,8 +89,8 @@ public struct PoolBook {
                 && store.linkedObjects("pool", of: spend).first?.id == pool.id
             {
                 let typed = store.value("typed", of: spend)?.stringValue ?? ""
-                total -= MoneyAmount.parse(typed)?.amount
-                    ?? store.number("amount", of: spend).flatMap { Decimal(string: String($0)) } ?? 0
+                // The typed digits only: a spend with none reads 0 (no Double on this path).
+                total -= MoneyAmount.parse(typed)?.amount ?? 0
             }
         }
         for move in moves(from: pool) {
@@ -148,7 +148,8 @@ public enum PoolFormat {
     /// "$1,850.00", "-$120.00"; with `text` set, "INR 82,650.00": the code and a space for every currency but
     /// dollars, so a sentence never has a bare symbol it could be misread by.
     public static func amount(_ amount: Decimal, currency: String, lakh: Bool = false, text: Bool = false) -> String {
-        let sign = amount < 0 ? "-" : ""
+        // A negative that rounds to zero ("-0.004") reads "$0.00", never "-$0.00".
+        let sign = PoolMath.rounded(amount, places: 2) < 0 ? "-" : ""
         let body = digits(amount, lakh: lakh)
         if currency == "USD" {
             return "\(sign)$\(body)"
