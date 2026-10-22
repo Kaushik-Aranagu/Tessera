@@ -186,4 +186,16 @@ struct LibraryTests {
         model.purgeStaleTried()
         #expect(TriedToday.stored(scope: "tessera.sqlite") == other)
     }
+
+    @Test func aBodyweightFirstTimeLineStartsEasyAndALoadedOneStartsLight() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        let items = LibraryItems.all(model: model)
+        let pushUp = try #require(items.first { $0.name == "Push-Up" }?.classDef)
+        let bench = try #require(items.first { $0.name == "Bench Press" }?.classDef)
+        #expect(TrainingPage
+            .firstTimeLine(pushUp, store: model.store) == "First time on push-ups. Keep the first set easy.")
+        #expect(TrainingPage.firstTimeLine(bench, store: model.store) == "First time on bench press. Start light.")
+    }
 }
