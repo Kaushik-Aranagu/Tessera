@@ -17,7 +17,10 @@ enum Choice {
     static let fontOffered = ["Figtree and Outfit", "As before"]
 
     static func fontIsNew(defaults: UserDefaults = .standard) -> Bool {
-        value("font", options: fontOffered, default: "Figtree and Outfit", defaults: defaults) == "Figtree and Outfit"
+        if defaults === UserDefaults.standard {
+            return FontChoice.isNew
+        }
+        return value("font", options: fontOffered, default: "Figtree and Outfit", defaults: defaults) == "Figtree and Outfit"
     }
 
     /// The easy swap: "One tap" adds a small Swap word under the exercise name that applies the top alternative at
@@ -77,5 +80,22 @@ enum Choice {
     static func lockScreenFollowsLook(defaults: UserDefaults = .standard) -> Bool {
         value("lockScreenLook", options: lockScreenLookOffered, default: "Cobalt sky", defaults: defaults)
             == "Follows the look"
+    }
+}
+
+/// The Font key, read once and kept: every face and text role asks, many times per frame. A change to the standard
+/// defaults clears it, so a flip in Settings shows on the next draw.
+enum FontChoice {
+    nonisolated(unsafe) private static var cached: Bool?
+    nonisolated(unsafe) private static let watcher = NotificationCenter.default.addObserver(
+        forName: UserDefaults.didChangeNotification, object: nil, queue: nil
+    ) { _ in cached = nil }
+
+    static var isNew: Bool {
+        _ = watcher
+        if let cached { return cached }
+        let value = Choice.value("font", options: Choice.fontOffered, default: "Figtree and Outfit") == "Figtree and Outfit"
+        cached = value
+        return value
     }
 }

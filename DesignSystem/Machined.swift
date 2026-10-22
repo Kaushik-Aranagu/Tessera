@@ -220,7 +220,7 @@ extension Theme {
             // Outfit ExtraLight (200) is the numeral; small figures keep Light (300) so they stay readable.
             return Typography.face(activeFonts.mono, size: size, relativeTo: size > 40 ? .largeTitle : .title,
                                    serif: false)
-                .weight(numeralWeight(size: size, asked: weight))
+                .weight(numeralWeight(size: size))
                 .monospacedDigit()
         }
         return Typography.face(concept.fonts.display, size: size, relativeTo: size > 40 ? .largeTitle : .title,
@@ -238,7 +238,7 @@ extension Theme {
     }
 
     /// Outfit 200 from 28 pt up; below that 300, so a small figure in a row does not thin out.
-    static func numeralWeight(size: CGFloat, asked _: Font.Weight) -> Font.Weight {
+    static func numeralWeight(size: CGFloat) -> Font.Weight {
         size >= 28 ? .thin : .light
     }
 

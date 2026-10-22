@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// Fractions drawn as digits (Design 116). Neither Figtree nor Outfit has the one-third and two-thirds characters and
-/// Outfit lacks the eighths, so every fraction is written "1 1/2" (whole part, a thin space, numerator/denominator)
+/// Outfit lacks the eighths, so every fraction is written "1 1/2" (whole part, a narrow no-break space U+202F, numerator/denominator, so a fraction never splits from its whole across a line)
 /// and the font's diagonal-fractions feature (`frac`) sets the numerator and denominator small. The string Core
 /// writes stays as it is for VoiceOver.
 enum Fractions {
@@ -11,13 +11,13 @@ enum Fractions {
         "⅛": (1, 8), "⅜": (3, 8), "⅝": (5, 8), "⅞": (7, 8),
     ]
 
-    /// "1½" → "1 1/2" (thin space U+2009), "½" → "1/2". Text with no fraction glyph comes back unchanged.
+    /// "1½" → "1 1/2" (narrow no-break space U+202F), "½" → "1/2". Text with no fraction glyph comes back unchanged.
     static func digits(_ text: String) -> String {
         var out = ""
         for character in text {
             if let (top, bottom) = glyphs[character] {
                 if let last = out.last, last.isNumber {
-                    out.append("\u{2009}")
+                    out.append("\u{202F}")
                 }
                 out += "\(top)/\(bottom)"
             } else {

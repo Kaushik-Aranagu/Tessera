@@ -16,10 +16,9 @@ private struct TextRoleModifier: ViewModifier {
     /// True inside a caller that already steps the hero down itself (HeroText, the Home title ladders).
     @Environment(\.heroLadder) private var heroLadder
 
-    /// The hero is capped around 80 pt; in the 1.5x pair the title (48) is capped too, so a long name wraps by words
-    /// at any text size instead of running off the screen.
+    /// The hero is capped around 80 pt; the title scales with the reader's text size and wraps by words.
     private func capsAtLarge(_ role: TextRole) -> Bool {
-        role == .hero || (Choice.fontIsNew() && (role == .title || role == .titleNumber))
+        role == .hero
     }
 
     func body(content: Content) -> some View {
@@ -73,7 +72,7 @@ private struct TextRoleModifier: ViewModifier {
                 .font(Theme.Typography.font(small))
                 .tracking(small.tracking * small.size)
                 .lineHeight(.multiple(factor: small.lineHeight))
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility5)
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
         })

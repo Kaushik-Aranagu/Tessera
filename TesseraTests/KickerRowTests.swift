@@ -30,10 +30,10 @@ struct KickerRowTests {
     }
 
     @Test func fractionsAreDrawnAsDigits() {
-        #expect(Fractions.digits("1½") == "1\u{2009}1/2")
+        #expect(Fractions.digits("1½") == "1\u{202F}1/2")
         #expect(Fractions.digits("½") == "1/2")
-        #expect(Fractions.digits("2⅓ cups") == "2\u{2009}1/3 cups")
-        #expect(Fractions.digits("6½") == "6\u{2009}1/2")
+        #expect(Fractions.digits("2⅓ cups") == "2\u{202F}1/3 cups")
+        #expect(Fractions.digits("6½") == "6\u{202F}1/2")
         #expect(Fractions.digits("12") == "12")
     }
 }
