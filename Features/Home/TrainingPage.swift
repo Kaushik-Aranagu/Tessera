@@ -22,6 +22,10 @@ struct TrainingPage: View {
             // Running (or paused under Home): the plan with what's done, RESUME.
             return .running(session)
         }
+        // "Try today": a ready workout stands in for today's, scheduled or planned (the Plan is never rewritten).
+        if let tried = model.triedRoutine() {
+            return .routine(tried)
+        }
         if let workout = model.tonightWorkout() {
             return .scheduled(workout)
         }
@@ -84,6 +88,8 @@ private struct TrainingAtRest: View {
     @State private var liftTaps = 0
     @State private var markLine: CGRect = .zero
     @State private var firstSegment: CGRect = .zero
+    /// The Library rises over Training (Exercises | Workouts, Try today).
+    @State private var libraryOpen = false
     /// The START sequence, cancelled if he leaves the page inside it.
     @State private var startTask: Task<Void, Never>?
     /// As live mode rises out of the first lane, the rest of the plan sinks to 0.96 and fades.
@@ -114,6 +120,9 @@ private struct TrainingAtRest: View {
 
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 titleButton
+                if let tried = model.triedToday() {
+                    TriedTodayLine(tried: tried) { model.undoTryToday() }
+                }
                 // A private workout says nothing about what it works (its figure still draws).
                 if let works = worksLine(day) {
                     Text(works)
@@ -127,6 +136,10 @@ private struct TrainingAtRest: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, tight ? Theme.Spacing.s : Theme.Spacing.l)
             .entrance(1, hero: true)
+            .fullScreenCover(isPresented: $libraryOpen) {
+                LibraryPage(close: { libraryOpen = false })
+            }
+            .task { model.purgeStaleTried() }
 
             StartMark(state: markState, lift: lift)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
@@ -275,23 +288,20 @@ private struct TrainingAtRest: View {
     @ViewBuilder
     private var planLine: some View {
         if let planObject = model.plan {
-            // At large text the plan line and ROUTINES stack and the line wraps instead of cutting.
-            let large = typeSize.isAccessibilitySize
-            let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
-                : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
-            layout {
+            // The plan says what it is on one line; the two doors out of Training sit under it, side by side.
+            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                 let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
                 Text("\(planObject.title), \(fixed ? "fixed days" : "rolls on")")
                     .textRole(.label)
-                    .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(large ? nil : 1)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
                     .minimumScaleFactor(0.8)
-                if !large {
-                    Spacer(minLength: Theme.Spacing.s)
+                HStack(spacing: Theme.Spacing.xl) {
+                    Button("Library") { libraryOpen = true }
+                        .buttonStyle(InkLabelWordStyle())
+                    Button("Routines") { model.open(.routines(planObject.id)) }
+                        .buttonStyle(InkLabelWordStyle())
                 }
-                Button("Routines") { model.open(.routines(planObject.id)) }
-                    .buttonStyle(InkLabelWordStyle())
             }
         }
     }
@@ -427,14 +437,20 @@ private struct TrainingAtRest: View {
 
     /// The kicker row above the title (Design item 115): the day word at the left ("Today"; a finished or running
     /// workout says so), "5 exercises, about 40 min" at the right for a plan still to do.
+    /// "5 exercises, about 40 min": from the lanes, or, for a workout he is trying today, from that workout's own time.
     @ViewBuilder
+    private func trainingPhrase(_ lanes: [TrainingLane]) -> String {
+        guard let tried = model.triedToday(), !lanes.isEmpty else { return TrainingPage.planPhrase(lanes: lanes) }
+        return "\(lanes.count) \(lanes.count == 1 ? "exercise" : "exercises"), about \(tried.minutes) min"
+    }
+
     private func kickerRow(_ lanes: [TrainingLane]) -> some View {
         if case let .done(summary) = plan {
             KickerRow(left: summary.endedAt.map { TrainingPage.doneWhen($0).capitalizedFirst } ?? "Done today")
         } else if case .running = plan {
             KickerRow(left: "Running now")
         } else {
-            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes).keepingUnits)
+            KickerRow(left: "Today", right: trainingPhrase(lanes).keepingUnits)
         }
     }
 
@@ -643,8 +659,7 @@ struct StartMark: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(word)
-                .textRole(.labelStrong)
-                .textCase(.uppercase)
+                .textRole(.keyWord)
                 .foregroundStyle(Theme.Colors.ink.opacity(wordOpacity))
                 .contentTransition(.opacity)
             line
@@ -677,7 +692,9 @@ struct StartMark: View {
         switch state {
         case .ready:
             // The flight draws the moving copy; the line here empties as it leaves.
-            InkLine().fill(Theme.Colors.ink).opacity(lift > 0 ? 0 : 1).frame(height: 6)
+            // The hot underline of the Figtree pair (Design 129): the Start word's line rests in the live colour.
+            InkLine().fill(Choice.fontIsNew() ? Theme.Colors.live : Theme.Colors.ink).opacity(lift > 0 ? 0 : 1)
+                .frame(height: 6)
         case .running:
             InkLine().fill(Theme.Colors.ink).frame(width: 28, height: 6)
         case let .paused(_, done):

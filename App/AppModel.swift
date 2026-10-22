@@ -673,6 +673,10 @@ extension AppModel {
     func todaysRoutine(now: Date = AppClock.now) -> ObjectRecord? {
         guard session == nil, tonightWorkout(around: now) == nil, finishedToday(now: now).isEmpty,
               let plan else { return nil }
+        // "Try today": a ready workout stands in for the Plan's next routine for this day only.
+        if let routine = triedRoutine(now: now) {
+            return routine
+        }
         return ledger.nextRoutine(in: plan, now: now)
     }
 
