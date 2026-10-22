@@ -95,7 +95,8 @@ enum Mentions {
         return HomeApp.allCases.compactMap { app in
             guard app != home, let sources = byApp[app], !sources.isEmpty else { return nil }
             if sources.count == 1, let only = sources.first {
-                let shown = ObjectPrivacy.shownLabel(of: only, in: store, classes: classes) ?? store.displayTitle(of: only)
+                let shown = ObjectPrivacy.shownLabel(of: only, in: store, classes: classes) ?? store
+                    .displayTitle(of: only)
                 return Line(app: app, text: shown)
             }
             return Line(app: app, text: app.count(sources.count))
