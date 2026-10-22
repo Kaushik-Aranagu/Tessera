@@ -11,6 +11,15 @@ enum Choice {
         return stored
     }
 
+    /// The type pair: "Figtree and Outfit" (default) sets words in Figtree and numbers in Outfit ExtraLight; "As
+    /// before"
+    /// is the Inter Tight look. Read where a face is made, so a flip shows on the next draw.
+    static let fontOffered = ["Figtree and Outfit", "As before"]
+
+    static func fontIsNew(defaults: UserDefaults = .standard) -> Bool {
+        value("font", options: fontOffered, default: "Figtree and Outfit", defaults: defaults) == "Figtree and Outfit"
+    }
+
     /// The easy swap: "One tap" adds a small Swap word under the exercise name that applies the top alternative at
     /// once (10 s UNDO); "Two taps" (default) is today's pull-down panel.
     static func swapIsOneTap(defaults: UserDefaults = .standard) -> Bool {

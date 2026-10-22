@@ -156,7 +156,7 @@ enum AccentFont {
     private static let weightAxis = 0x7767_6874 // 'wght'
 
     static func font(_ spec: ThemeConcept.TypeSpec, weight: Double) -> Font {
-        let family = Theme.concept.fonts.display
+        let family = Theme.activeFonts.display
         let size = UIFontMetrics(forTextStyle: spec.textStyle.uiKit).scaledValue(for: spec.size)
         let descriptor = UIFontDescriptor(fontAttributes: [
             .family: family,

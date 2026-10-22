@@ -121,11 +121,15 @@ struct AreaName: View {
 
     @ViewBuilder
     private func word(_ title: String, index: Int) -> some View {
-        let text = Text(title.uppercased())
-            .textRole(.labelStrong)
-            .tracking(1.2)
-            .foregroundStyle(Theme.Colors.ink)
-            .fixedSize()
+        // The page's kicker: Figtree sentence case in the new pair, the old wide capitals otherwise.
+        let text = Group {
+            if Choice.fontIsNew() {
+                Text(title).textRole(.label).foregroundStyle(Theme.Colors.ink)
+            } else {
+                Text(title.uppercased()).textRole(.labelStrong).tracking(1.2).foregroundStyle(Theme.Colors.ink)
+            }
+        }
+        .fixedSize()
         if index == current, flies {
             text.matchedGeometryEffect(id: "areaWord", in: namespace, isSource: !indexShown)
         } else {

@@ -11,11 +11,29 @@ enum MeasureControl {
 /// The two roles a measure is drawn in. One place for both, so a new type pair drops in without moving widths twice.
 enum MeasureStyle {
     static func number(size: CGFloat, weight: Font.Weight) -> Font {
-        .system(size: size, weight: weight)
+        if Choice.fontIsNew() {
+            return Theme.Typography.face(Theme.activeFonts.mono, size: size, relativeTo: .body, serif: false)
+                .weight(Theme.numeralWeight(size: size, asked: weight))
+        }
+        return .system(size: size, weight: weight)
     }
 
-    static let unit: Font = .system(size: 10, weight: .semibold)
-    static let unitTracking: CGFloat = 1.4
+    /// Figtree 600 at 11, lowercase, +0.04 em (Design 116); before: system 10 semibold, +0.14 em, caps.
+    static var unit: Font {
+        Choice.fontIsNew()
+            ? Theme.Typography.face(Theme.activeFonts.ui, size: 11, relativeTo: .caption2, serif: false)
+            .weight(.semibold)
+            : .system(size: 10, weight: .semibold)
+    }
+
+    static var unitTracking: CGFloat {
+        Choice.fontIsNew() ? 0.44 : 1.4
+    }
+
+    static func unitText(_ unit: String) -> String {
+        Choice.fontIsNew() ? unit : unit.uppercased()
+    }
+
     /// Between the number and its unit, and between "1 hr" and "35 min".
     static let gap: CGFloat = 4
     static let pairGap: CGFloat = 8
@@ -105,7 +123,7 @@ struct MeasureView: View {
                 .foregroundStyle(color)
                 .contentTransition(.numericText())
             if !part.unit.isEmpty {
-                Text(part.unit.uppercased())
+                Text(MeasureStyle.unitText(part.unit))
                     .font(MeasureStyle.unit)
                     .tracking(MeasureStyle.unitTracking)
                     .foregroundStyle(Theme.Colors.inkSecondary)

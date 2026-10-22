@@ -13,17 +13,41 @@ enum TextRole {
 
 private struct TextRoleModifier: ViewModifier {
     let role: TextRole
+    /// True inside a caller that already steps the hero down itself (HeroText, the Home title ladders).
+    @Environment(\.heroLadder) private var heroLadder
+
+    /// The hero is capped around 80 pt; in the 1.5x pair the title (48) is capped too, so a long name wraps by words
+    /// at any text size instead of running off the screen.
+    private func capsAtLarge(_ role: TextRole) -> Bool {
+        role == .hero || (Choice.fontIsNew() && (role == .title || role == .titleNumber))
+    }
 
     func body(content: Content) -> some View {
         let scale = Theme.concept.scale
-        let spec: ThemeConcept.TypeSpec = switch role {
+        var spec: ThemeConcept.TypeSpec = switch role {
         case .hero, .heroNumber: scale.hero
         case .title, .titleNumber: scale.title
         case .body, .bodyStrong: scale.body
         case .label, .labelStrong, .data: scale.label
         case .field: scale.field
         }
+        if Choice.fontIsNew() {
+            // The 1.5x steps (Design 116): a page title is 72, or 48 when the name does not fit one line (the
+            // callers' ViewThatFits ladders walk hero then title); Figtree 500 at -0.03 em; body is 21.
+            switch role {
+            case .label:
+                // Kickers (BACK, TODAY, EACH SIDE): Figtree 500 in sentence case, not wide capitals.
+                spec.weight = .medium
+                spec.tracking = 0.02
+                spec.uppercase = false
+            case .data:
+                // Times and the like (8:30 pm): Outfit 300, tabular, no extra tracking.
+                spec.tracking = 0
+            default: break
+            }
+        }
         let font: Font = switch role {
+        case .data where Choice.fontIsNew(): Theme.Typography.number(spec, weight: .light).monospacedDigit()
         case .heroNumber: Theme.Typography.number(spec, weight: scale.heroNumberWeight)
         case .titleNumber: Theme.Typography.number(spec, weight: .regular)
         case .bodyStrong: Theme.Typography.font(spec, weight: .medium)
@@ -31,13 +55,28 @@ private struct TextRoleModifier: ViewModifier {
         default: Theme.Typography.font(spec)
         }
         let isNumber = role == .heroNumber || role == .titleNumber || role == .data
-        return content
+        let styled = content
             .font(font)
             .tracking(spec.tracking * spec.size)
             .lineHeight(.multiple(factor: spec.lineHeight))
             .textCase(spec.uppercase && !isNumber ? .uppercase : nil)
             // The hero is capped around 80 pt.
-            .dynamicTypeSize(role == .hero ? ...DynamicTypeSize.xxxLarge : ...DynamicTypeSize.accessibility5)
+            .dynamicTypeSize(capsAtLarge(role) ? ...DynamicTypeSize.xxxLarge : ...DynamicTypeSize.accessibility5)
+        guard role == .hero, Choice.fontIsNew(), !heroLadder else { return AnyView(styled) }
+        // A hero is 72 when the word fits one line in the gutter, else 48 on as many lines as it needs: a word never
+        // breaks mid-word, never ends in "..." (Design 116, QA 1200). The inner nil limit wins over a caller's.
+        var small = spec
+        small.size = 48
+        return AnyView(ViewThatFits(in: .horizontal) {
+            styled.lineLimit(1)
+            content
+                .font(Theme.Typography.font(small))
+                .tracking(small.tracking * small.size)
+                .lineHeight(.multiple(factor: small.lineHeight))
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+        })
     }
 }
 
@@ -50,6 +89,10 @@ extension View {
 // MARK: - Entrance
 
 extension EnvironmentValues {
+    /// A caller that steps a hero down itself (hero, then title, then wrapped) sets this, so the hero role does not
+    /// also step down inside it.
+    @Entry var heroLadder = false
+
     /// True on a page's first visit this session; revisits and back-navigation appear instantly.
     @Entry var animateEntrance = false
 }
@@ -184,6 +227,7 @@ struct HeroText<Rendered: View>: View {
                     .truncationMode(.tail)
             }
         }
+        .environment(\.heroLadder, true)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }

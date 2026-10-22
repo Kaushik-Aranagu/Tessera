@@ -275,7 +275,18 @@ enum Theme {
 
     /// The active concept: the chosen looks (ThemeStore), read inside `body` so every view redraws on a switch.
     static var concept: ThemeConcept {
-        retired ?? ThemeStore.shared.concept
+        var concept = retired ?? ThemeStore.shared.concept
+        if Choice.fontIsNew() {
+            // The 1.5x steps (Design 116): a page title is 72, or 48 when the name does not fit one line; Figtree
+            // 500 at -0.03 em. Every measured fit (HeroText, HomeLineHero) reads these sizes, so they agree.
+            concept.scale.hero.size = 72
+            concept.scale.hero.tracking = -0.03
+            concept.scale.hero.weight = .medium
+            concept.scale.title.size = 48
+            concept.scale.title.tracking = -0.03
+            concept.scale.title.weight = .medium
+        }
+        return concept
     }
 
     /// `-theme <name>` pins a look in memory for demos and recordings, on the simulator only (like the demo data).
@@ -511,10 +522,11 @@ enum Theme {
 
     enum Typography {
         static func font(_ spec: ThemeConcept.TypeSpec, weight: Font.Weight? = nil) -> Font {
+            let fonts = Theme.activeFonts
             let family = switch spec.family {
-            case .display: concept.fonts.display
-            case .ui: concept.fonts.ui
-            case .mono: concept.fonts.mono
+            case .display: fonts.display
+            case .ui: fonts.ui
+            case .mono: fonts.mono
             }
             let font = face(family, size: spec.size, relativeTo: spec.textStyle, serif: spec.family == .display)
                 .weight(weight ?? spec.weight)
@@ -535,7 +547,11 @@ enum Theme {
 
         /// A number set at a role's size in the mono face.
         static func number(_ spec: ThemeConcept.TypeSpec, weight: Font.Weight) -> Font {
-            Font.custom(concept.fonts.mono, size: spec.size, relativeTo: spec.textStyle).weight(weight)
+            if Choice.fontIsNew() {
+                return Font.custom(Theme.activeFonts.mono, size: spec.size, relativeTo: spec.textStyle)
+                    .weight(Theme.numeralWeight(size: spec.size, asked: weight))
+            }
+            return Font.custom(concept.fonts.mono, size: spec.size, relativeTo: spec.textStyle).weight(weight)
                 .width(.condensed)
         }
     }

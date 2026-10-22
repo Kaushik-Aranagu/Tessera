@@ -702,6 +702,7 @@ private struct PlanHeroText: View {
             Text(long).textRole(.title).lineLimit(1)
             Text(long).textRole(.title).fixedSize(horizontal: false, vertical: true)
         }
+        .environment(\.heroLadder, true)
         .foregroundStyle(Theme.Colors.ink)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityAddTraits(.isHeader)
