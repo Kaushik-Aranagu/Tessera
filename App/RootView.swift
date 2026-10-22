@@ -77,9 +77,17 @@ struct RootView: View {
         .task {
             guard let title = LaunchFlags.value(after: "-openCook"),
                   let recipe = model.objects(of: .recipe).first(where: { $0.title == title }),
-                  let cook = try? model.engine.perform(StartCooking(recipe: recipe.id), by: .user).output else { return }
+                  let cook = try? model.engine.perform(StartCooking(recipe: recipe.id), by: .user).output
+            else { return }
             try? await Task.sleep(for: .milliseconds(600))
             demoCook = DemoCookCover(id: cook.id)
+        }
+        .task {
+            // Simulator only (LaunchFlags): opens the first routine's workout, for the large-text swipe test.
+            guard LaunchFlags.has("-openWorkout"),
+                  let routine = model.objects(of: .routine).first(where: { !$0.isDeleted }) else { return }
+            try? await Task.sleep(for: .milliseconds(800))
+            model.startRoutine(routine)
         }
         .background { ThemedBackground() }
         .modifier(RestReceipt())

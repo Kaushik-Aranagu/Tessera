@@ -72,6 +72,13 @@ struct SettingsPage: View {
                 .buttonStyle(.labelWord)
                 .padding(.top, Theme.Spacing.xxl)
                 .accessibilityHint("Where your history is kept")
+
+                // Which release this is: the git SHA the build was made from, one quiet line at the foot.
+                Text("Build \(BuildStamp.short)")
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .padding(.top, Theme.Spacing.section)
+                    .accessibilityLabel("Build \(BuildStamp.short)")
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)

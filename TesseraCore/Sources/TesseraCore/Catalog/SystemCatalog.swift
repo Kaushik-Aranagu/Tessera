@@ -22,6 +22,7 @@ public enum SystemCatalog {
         case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend, book
         case tessSent
         case settings
+        case meProfile
         case tessWaiting
         case tessMemory
 
@@ -189,6 +190,7 @@ public enum SystemCatalog {
                       FieldSpec(key: "autoNameBy", name: "Named by", kind: .text),
                       // The last time a model was asked to improve this day's rule name (at most once a day).
                       FieldSpec(key: "autoNameTriedAt", name: "Model asked", kind: .date),
+                      FieldSpec(key: "autoNameTriedKey", name: "Asked for", kind: .text),
                   ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [
@@ -341,6 +343,12 @@ public enum SystemCatalog {
         ]),
         // His preferences that travel with a restore (docs/research/settings-object.md): one object, a fixed id, every
         // field optional (empty = never set; readers apply defaults). Never the Claude key or the folder bookmark.
+        // Him (height, birth year, sex), optional and always private: it follows a weigh-in note's rules.
+        ClassSpec(key: .meProfile, name: "Me", parent: .thing, symbol: "person", colorRole: "neutral", fields: [
+            FieldSpec(key: "heightCm", name: "Height", kind: .number),
+            FieldSpec(key: "birthYear", name: "Birth year", kind: .number),
+            FieldSpec(key: "sex", name: "Sex", kind: .text),
+        ]),
         ClassSpec(key: .settings, name: "Settings", parent: .thing, symbol: "gearshape", colorRole: "neutral", fields: [
             FieldSpec(key: "lookDay", name: "Look by day", kind: .text),
             FieldSpec(key: "lookNight", name: "Look by night", kind: .text),

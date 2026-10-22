@@ -55,13 +55,16 @@ struct TrainingLane: Identifiable, Equatable {
     var scheme = ""
     /// Today's weight with its unit ("82.5 kg"); none when there is no weight yet.
     var weight: String?
+    /// The same weight in kilograms (stored), so the row can draw it as a measure with a swipeable unit.
+    var weightKilograms: Double?
     /// What the exercise works, for the lane's figure.
     var muscles: [(name: String, role: MuscleRole)] = []
     /// The sets logged so far as ink-drop marks (the circles that replace the dashed strokes).
     var marks: [SetMarkSpec] = []
 
     static func == (lhs: TrainingLane, rhs: TrainingLane) -> Bool {
-        lhs.id == rhs.id && lhs.name == rhs.name && lhs.target == rhs.target && lhs.sets == rhs.sets
+        lhs.id == rhs.id && lhs.name == rhs.name && lhs.weightKilograms == rhs.weightKilograms && lhs.target == rhs
+            .target && lhs.sets == rhs.sets
             && lhs.logged == rhs.logged && lhs.scheme == rhs.scheme && lhs.weight == rhs.weight && lhs.marks == rhs
             .marks
     }
@@ -104,9 +107,7 @@ private struct TrainingAtRest: View {
                 }
                 .padding(.bottom, tight ? Theme.Spacing.m : Theme.Spacing.l)
 
-            Text(context(lanes))
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
+            kickerRow(lanes)
                 .contentTransition(.opacity)
                 .padding(.bottom, tight ? Theme.Spacing.xs : Theme.Spacing.s)
                 .entrance(0)
@@ -142,7 +143,9 @@ private struct TrainingAtRest: View {
                     LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
                             isPrivate: isPrivateDay,
                             showsStrokes: isRunning || isDone || lane.logged > 0)
-                        .frame(height: 72, alignment: .top)
+                        // Rows are 72 pt; at large text a row grows with its wrapped name instead of printing over
+                        // the next one.
+                        .frame(height: typeSize.isAccessibilitySize ? nil : 72, alignment: .top)
                         // Live mode rises out of the first lane; the others sink away.
                         .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
                                              namespace: namespace))
@@ -227,6 +230,11 @@ private struct TrainingAtRest: View {
             Text(title)
                 .textRole(.title)
                 .foregroundStyle(Theme.Colors.ink)
+                // The day's name wraps to a second line and, if that is still too long, scales a little: never "...".
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
@@ -252,15 +260,21 @@ private struct TrainingAtRest: View {
     @ViewBuilder
     private var planLine: some View {
         if let planObject = model.plan {
-            HStack(alignment: .firstTextBaseline) {
+            // At large text the plan line and ROUTINES stack and the line wraps instead of cutting.
+            let large = typeSize.isAccessibilitySize
+            let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+            layout {
                 let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
                 Text("\(planObject.title), \(fixed ? "fixed days" : "rolls on")")
                     .textRole(.label)
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(1)
+                    .lineLimit(large ? nil : 1)
                     .minimumScaleFactor(0.8)
-                Spacer(minLength: Theme.Spacing.s)
+                if !large {
+                    Spacer(minLength: Theme.Spacing.s)
+                }
                 Button("Routines") { model.open(.routines(planObject.id)) }
                     .buttonStyle(InkLabelWordStyle())
             }
@@ -355,6 +369,7 @@ private struct TrainingAtRest: View {
         let target = last.map { "\(Format.kilograms($0.weight)) × \(Int($0.reps.rounded()))" } ?? scheme
         return TrainingLane(id: slot.id, exercise: exercise, name: exercise.name, target: target, sets: sets,
                             logged: 0, scheme: scheme, weight: last.map { Self.weightText($0.weight) },
+                            weightKilograms: last?.weight,
                             muscles: MuscleReading.muscles(of: exercise, store: model.store))
     }
 
@@ -368,6 +383,7 @@ private struct TrainingAtRest: View {
                             sets: max(sets ?? planned, logged, 1), logged: logged,
                             scheme: scheme,
                             weight: prefill.weight.map { Self.weightText($0) },
+                            weightKilograms: prefill.weight,
                             muscles: MuscleReading.muscles(of: exercise, store: model.store),
                             marks: marks(of: entry))
     }
@@ -394,18 +410,17 @@ private struct TrainingAtRest: View {
         "\(Format.kilograms(value)) \(Format.unit.symbol)"
     }
 
-    /// "today, 5 exercises, about 55 min"; done: "done this afternoon".
-    private func context(_ lanes: [TrainingLane]) -> String {
+    /// The kicker row above the title (Design item 115): the day word at the left ("Today"; a finished or running
+    /// workout says so), "5 exercises, about 40 min" at the right for a plan still to do.
+    @ViewBuilder
+    private func kickerRow(_ lanes: [TrainingLane]) -> some View {
         if case let .done(summary) = plan {
-            guard let end = summary.endedAt else { return "done today" }
-            return TrainingPage.doneWhen(end)
+            KickerRow(left: summary.endedAt.map { TrainingPage.doneWhen($0).capitalizedFirst } ?? "Done today")
+        } else if case .running = plan {
+            KickerRow(left: "Running now")
+        } else {
+            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes))
         }
-        if case .running = plan {
-            return "running now"
-        }
-        let count = lanes.count
-        let sets = lanes.map(\.sets).reduce(0, +)
-        return "today, \(count) \(count == 1 ? "exercise" : "exercises"), \(TrainingPage.about(sets: sets))"
     }
 
     private func tessLine(_ lanes: [TrainingLane]) -> String? {
@@ -608,6 +623,7 @@ struct StartMark: View {
     let state: State
     /// The START flight: the word fades to 35% while the line leaves it.
     var lift: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -618,7 +634,8 @@ struct StartMark: View {
                 .contentTransition(.opacity)
             line
         }
-        .fixedSize()
+        // At large text the key wraps to a second line instead of running off the screen.
+        .fixedSize(horizontal: !typeSize.isAccessibilitySize, vertical: true)
         .frame(minHeight: 44, alignment: .bottom)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
@@ -686,7 +703,8 @@ private struct LaneRow: View {
                 Text(lane.name)
                     .font(Theme.voice(size: 21).weight(.medium))
                     .foregroundStyle(Theme.Colors.ink)
-                    .lineLimit(1)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                    .fixedSize(horizontal: false, vertical: typeSize.isAccessibilitySize)
                     .padding(.top, 6)
                 secondLine
                     .padding(.top, typeSize.isAccessibilitySize ? 4 : 10)
@@ -719,7 +737,9 @@ private struct LaneRow: View {
                 if !typeSize.isAccessibilitySize {
                     Spacer(minLength: Theme.Spacing.s)
                 }
-                if let weight = lane.weight {
+                if let kilograms = lane.weightKilograms {
+                    MeasureView(measure: Measure(kilograms, "kg"), controls: [.unit])
+                } else if let weight = lane.weight {
                     Text(weight)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Theme.Colors.ink)
@@ -775,6 +795,13 @@ extension TrainingPage {
     }
 
     /// "about 55 min": each set about two and a half minutes with its rest, to the nearest five.
+    /// "5 exercises, about 40 min".
+    static func planPhrase(lanes: [TrainingLane]) -> String {
+        let count = lanes.count
+        let sets = lanes.map(\.sets).reduce(0, +)
+        return "\(count) \(count == 1 ? "exercise" : "exercises"), \(about(sets: sets))"
+    }
+
     static func about(sets: Int) -> String {
         let minutes = max(5, Int((Double(sets) * 2.5 / 5).rounded()) * 5)
         return minutes >= 60 && minutes % 60 == 0 ? "about \(minutes / 60) h" : "about \(minutes) min"
@@ -822,5 +849,11 @@ private struct EmptyTraining: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private extension String {
+    var capitalizedFirst: String {
+        prefix(1).uppercased() + dropFirst()
     }
 }

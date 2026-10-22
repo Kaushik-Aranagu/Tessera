@@ -7,18 +7,26 @@ import TesseraCore
 extension TessGrammar {
     /// Words that follow a whole number and make it a quantity, not a sum ("spent 2 hours on taxes").
     static let quantityWords: Set = [
-        "hour", "hours", "hr", "hrs", "minute", "minutes", "min", "mins", "day", "days", "week", "weeks", "month",
-        "months", "year", "years", "time", "times", "kg", "lb", "lbs", "reps", "rep", "sets", "set", "miles", "mile",
-        "km", "people", "items", "x",
+        "hours", "hr", "hrs", "minutes", "min", "mins", "days", "weeks", "months", "years", "times", "kg", "lb",
+        "lbs", "reps", "sets", "miles", "km", "people", "items", "x",
+    ]
+    /// Singular quantity words are a quantity only after exactly 1 ("spent 1 hour on taxes"); "spent 12.00 day pass"
+    /// is a spend.
+    static let singularQuantityWords: Set = [
+        "hour", "minute", "day", "week", "month", "year", "time", "mile", "set", "rep", "item", "person",
     ]
 
     /// "how much this month", "how much did I spend this month": the month line, from the log.
     func parseMonthQuestion(_ text: String, context: TessContext) -> Parse? {
         let asked = text.firstMatch(of: /^(?:how much|what)\b.*\b(?:this month|so far)\b/) != nil
             || text.firstMatch(of: /^(?:how much|what).*\b(?:spend|spent|logged)\b.*\bmonth\b/) != nil
-        guard asked, text.contains("month"),
-              text.contains("how much") || text.contains("spend") || text.contains("spent") || text.contains("logged")
-        else { return nil }
+        guard asked, text.contains("month") else { return nil }
+        // Only a money question: a money word, or the bare "how much this month". "how much did I lift this month"
+        // is not one.
+        let moneyWord = text.firstMatch(of: /\b(?:spend|spent|spending|logged|money|paid|pay|cost|costs|expenses?)\b/)
+            != nil
+        let bare = ["how much this month", "how much so far this month", "how much so far"].contains(text)
+        guard moneyWord || bare else { return nil }
         let ledger = SpendLedger(store: store, classes: classes)
         return .ask(ledger.monthLine(for: context.now, calendar: context.calendar))
     }
@@ -82,7 +90,8 @@ extension TessGrammar {
             var note = MoneyAmount.note(after: rest)
             // "spent 2 hours on taxes", "82.50 kg", "5.00 km", "1.50 hours": a quantity, not a sum, unless a currency
             // sign or code says otherwise (cents do not make a number money).
-            if let first = note.split(separator: " ").first?.lowercased(), Self.quantityWords.contains(first),
+            if let first = note.split(separator: " ").first?.lowercased(),
+               Self.quantityWords.contains(first) || (amount.amount == 1 && Self.singularQuantityWords.contains(first)),
                amount.currency == nil
             {
                 return nil
