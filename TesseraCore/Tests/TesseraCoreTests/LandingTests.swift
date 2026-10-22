@@ -245,6 +245,70 @@ struct LandingTests {
         #expect(kitchen.toGetCount() == 2)
     }
 
+    // MARK: QA lows on #1222
+
+    @Test func durationsAreHoursAndMinutesTheHouseWay() {
+        #expect(HouseTime.minutes(45) == "45 min" && HouseTime.minutes(60) == "1 hr")
+        #expect(HouseTime.minutes(90) == "1 hr 30 min" && HouseTime.minutes(125) == "2 hr 5 min")
+        #expect(HouseTime.minutes(0) == "1 min")
+        let long = LandingSentences.training(session: "Push A", minutes: 90, opener: nil)
+        #expect(long.text == "Push A today, about 1 hr 30 min.")
+        #expect(LandingSentences.cooking(dish: "Stew", minutesLeft: 75) == "Cooking stew, 1 hr 15 min left.")
+        #expect(LandingSentences.onThisStep(seconds: 3900) == "1 hr 5 min on this step")
+    }
+
+    @Test func pluralsAgreeInTheTemplates() {
+        #expect(LandingSentences.kitchen(dish: "Tacos", start: nil, shortOf: "Eggs")
+            .text == "Tacos tonight. Eggs are short.")
+        #expect(LandingSentences.kitchen(dish: "Tacos", start: nil, shortOf: "Rice")
+            .text == "Tacos tonight. Rice is short.")
+        #expect(LandingSentences.kitchen(dish: "Tacos", start: nil, shortOf: "Hummus").text
+            .hasSuffix("Hummus is short."))
+        let one = runs([1], hour: 6, minute: 40, length: 22) + runs(Array(2 ... 7), hour: 6, minute: 40, length: 22)
+        #expect(RoutineUsual.line(name: "Morning", runs: one, calendar: calendar)?.contains("7 days") == true)
+        // A single logical day of seven runs reads "1 day".
+        let sameDay = (0 ..< 7).map { index in
+            let start = at(10, 3, 6, 40).addingTimeInterval(Double(index) * 60)
+            return RoutineRun(start: start, end: start.addingTimeInterval(600))
+        }
+        #expect(RoutineUsual.line(name: "Morning", runs: sameDay, calendar: calendar)?.contains(", 1 day,") == true)
+    }
+
+    @Test func aDaylightSavingDayMovesNoStart() {
+        // The clocks go back on Oct 25: a run at 06:40 that morning is 06:40, not 05:40 or 07:40.
+        let all = runs([22, 23, 24, 25, 26, 27, 28], hour: 6, minute: 40, length: 22)
+        #expect(RoutineUsual.line(name: "Morning", runs: all, calendar: calendar)
+            == "Morning, 7 days, usually 6:40, 22 min")
+        let onTheDay = runs([25], hour: 6, minute: 40, length: 22) + runs(
+            [20, 21, 22, 23, 24, 26],
+            hour: 6,
+            minute: 40,
+            length: 22
+        )
+        #expect(RoutineUsual.counts(of: onTheDay, calendar: calendar)?.startMinutes == 160)
+    }
+
+    @Test func theTrendClampsTheCutoffOnTheLastDayOfALongerMonth() throws {
+        try spend(40, month: 9, day: 2)
+        try spend(30, month: 9, day: 5)
+        try spend(30, month: 9, day: 9)
+        try spend(300, month: 9, day: 29)
+        try spend(1, month: 10, day: 8)
+        // October 31 against a 30-day September: all of September is the same stretch.
+        #expect(trend(now: at(10, 31, 18))?.direction == .wellUnder)
+        #expect(trend(now: at(10, 30, 18)) != nil)
+    }
+
+    @Test func aDinnerWithAnIngredientOpenOnToGetIsNotCovered() throws {
+        let tacos = try recipe("Tacos", lines: ["200 g beef mince", "4 tortillas"])
+        try stock(["beef mince", "tortillas"])
+        let kitchen = KitchenLanding(store: store, classes: engine.classes)
+        #expect(kitchen.dinnersCovered() == 1)
+        // The beef has a place, but it is open on To get: that shop is still to do.
+        try engine.perform(AddRecipeToGroceries(recipe: tacos.id, includeStaples: true), by: .user)
+        #expect(kitchen.dinnersCovered() == 0)
+    }
+
     // MARK: Walls
 
     @Test func nothingAboutALandingIsEverAClaudeJob() throws {

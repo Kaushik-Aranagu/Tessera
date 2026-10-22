@@ -11,4 +11,13 @@ public enum HouseTime {
         let half = hour < 12 ? "am" : "pm"
         return minute == 0 ? "\(twelve) \(half)" : String(format: "%d:%02d %@", twelve, minute, half)
     }
+
+    /// A length of time the house way: "45 min", "1 hr", "1 hr 30 min", never "90 min". Whole minutes, rounded down;
+    /// anything under one minute reads "1 min".
+    public static func minutes(_ total: Int) -> String {
+        let total = max(total, 1)
+        guard total >= 60 else { return "\(total) min" }
+        let rest = total % 60
+        return rest == 0 ? "\(total / 60) hr" : "\(total / 60) hr \(rest) min"
+    }
 }

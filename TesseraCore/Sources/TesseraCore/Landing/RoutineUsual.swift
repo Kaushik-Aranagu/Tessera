@@ -27,8 +27,12 @@ public enum RoutineUsual {
         let finished = runs.filter { $0.end > $0.start }
         guard finished.count >= runsNeeded else { return nil }
         let days = Set(finished.map { tesseraDay.day(of: $0.start) }).count
-        // Minutes after the day's own 04:00 start, so a run after midnight sits beside one before it.
-        let starts = finished.map { Int($0.start.timeIntervalSince(tesseraDay.start(of: $0.start)) / 60) }
+        // Wall-clock minutes after 04:00 (a run after midnight sits beside one before it, and a daylight-saving day
+        // moves nothing).
+        let starts = finished.map { run -> Int in
+            let parts = tesseraDay.calendar.dateComponents([.hour, .minute], from: run.start)
+            return ((parts.hour ?? 0) * 60 + (parts.minute ?? 0) - TesseraDay.startHour * 60 + 1440) % 1440
+        }
         let lengths = finished.map { Int($0.end.timeIntervalSince($0.start) / 60) }
         let usual = (median(starts) / 5) * 5 + (median(starts) % 5 >= 3 ? 5 : 0)
         return Counts(days: days, startMinutes: usual, lengthMinutes: max(1, median(lengths)))
@@ -39,7 +43,7 @@ public enum RoutineUsual {
         guard let counts = counts(of: runs, calendar: calendar) else { return nil }
         let start = TesseraDay.startHour * 60 + counts.startMinutes
         let clock = clockWords(minuteOfDay: start % (24 * 60))
-        return "\(name), \(counts.days) days, usually \(clock), \(lengthWords(counts.lengthMinutes))"
+        return "\(name), \(counts.days) \(counts.days == 1 ? "day" : "days"), usually \(clock), \(HouseTime.minutes(counts.lengthMinutes))"
     }
 
     static func median(_ values: [Int]) -> Int {
@@ -52,10 +56,5 @@ public enum RoutineUsual {
     static func clockWords(minuteOfDay: Int) -> String {
         let hour = minuteOfDay / 60 % 12 == 0 ? 12 : minuteOfDay / 60 % 12
         return "\(hour):" + String(format: "%02d", minuteOfDay % 60)
-    }
-
-    static func lengthWords(_ minutes: Int) -> String {
-        guard minutes >= 60 else { return "\(minutes) min" }
-        return minutes % 60 == 0 ? "\(minutes / 60) hr" : "\(minutes / 60) hr \(minutes % 60) min"
     }
 }
