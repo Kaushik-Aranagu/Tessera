@@ -51,7 +51,7 @@ struct WeightReel: View {
                     neighbour(index + 1).offset(y: Metrics.neighbourGap + 8)
                 }
                 Text(Format.kilograms(value))
-                    .font(Theme.numeral(Metrics.numeral))
+                    .numeral(Metrics.numeral)
                     .foregroundStyle(Paint.cream)
                     .monospacedDigit()
                     .contentTransition(reduceMotion ? .opacity : .numericText(countsDown: direction < 0))
@@ -90,7 +90,7 @@ struct WeightReel: View {
 
     private func neighbour(_ index: Int) -> some View {
         Text(detents.indices.contains(index) ? Format.kilograms(detents[index]) : "")
-            .font(Theme.numeral(Metrics.neighbour))
+            .numeral(Metrics.neighbour)
             .foregroundStyle(Paint.cream.opacity(0.35))
             .transition(.opacity.animation(.easeOut(duration: 0.18)))
     }

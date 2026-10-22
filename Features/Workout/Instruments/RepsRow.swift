@@ -38,12 +38,12 @@ struct RepsRow: View {
             // A fixed 10 pt after the ×; two digits grow rightward.
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text("×")
-                    .font(Theme.numeral(34))
+                    .numeral(34)
                     .foregroundStyle(Paint.cream.opacity(0.6))
                 // The number is the row's real content (so the whole of it takes the drag); the neighbours float
                 // above and below only while the finger is down.
                 Text("\(reps)")
-                    .font(Theme.numeral(56))
+                    .numeral(56)
                     .foregroundStyle(Paint.cream)
                     .monospacedDigit()
                     .contentTransition(.numericText(countsDown: direction < 0))
@@ -55,7 +55,7 @@ struct RepsRow: View {
                                 Text(reps > range.lowerBound ? "\(reps - 1)" : "").offset(y: -44)
                                 Text(reps < range.upperBound ? "\(reps + 1)" : "").offset(y: 44)
                             }
-                            .font(Theme.numeral(34))
+                            .numeral(34)
                             .foregroundStyle(Paint.cream.opacity(0.35))
                             .transition(.opacity)
                         }

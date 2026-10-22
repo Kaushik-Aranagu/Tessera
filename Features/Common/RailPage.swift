@@ -25,8 +25,13 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
     /// The line under the title, for the open place ("9 in the fridge", "7 to get").
     let subtitle: (String) -> String
     var back: (title: String, action: () -> Void)?
+    /// A word at the right of the title, on its baseline (a knob such as Kind). When both do not fit on one line it
+    /// drops under the title, left-aligned; the title never shrinks.
+    var titleTrailing: AnyView?
     /// The place above the dial, out of the loop, in the hot colour (nil for none).
     var pinned: RailPlace?
+    /// The app's one accent (131): the pinned place's colour. Never another app's, never the amber look-alike.
+    let accent: Color
     let places: [RailPlace]
     @Binding var open: String
     var sectionStyle: SectionStyle = .words
@@ -51,7 +56,7 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.l))
                 : AnyLayout(HStackLayout(alignment: .top, spacing: Theme.Spacing.m))
             if let pinned {
-                RailPinned(place: pinned, open: $open)
+                RailPinned(place: pinned, accent: accent, open: $open)
                     .padding(.horizontal, Theme.Spacing.gutter)
                     .padding(.top, Theme.Spacing.xl)
             }
@@ -94,10 +99,7 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
                 .accessibilityLabel("Back to \(back.title)")
                 .entrance(0)
             }
-            Text(title)
-                .textRole(.hero)
-                .foregroundStyle(Theme.Colors.ink)
-                .accessibilityAddTraits(.isHeader)
+            titleRow
                 .entrance(0, hero: true)
             Text(subtitle(open))
                 .font(Theme.voice(size: 21))
@@ -106,6 +108,33 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
                 .tesseraAnimation(RailMetrics.crossfade, value: open)
                 .padding(.top, Theme.Spacing.xs)
                 .entrance(1)
+        }
+    }
+
+    private var titleText: some View {
+        Text(title)
+            .textRole(.hero)
+            .foregroundStyle(Theme.Colors.ink)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    @ViewBuilder
+    private var titleRow: some View {
+        if let titleTrailing {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
+                    // Measured at its full 72: the hero steps down to 48 only on its own, never to make room.
+                    titleText.fixedSize(horizontal: true, vertical: false)
+                    Spacer(minLength: Theme.Spacing.s)
+                    titleTrailing
+                }
+                VStack(alignment: .leading, spacing: 0) {
+                    titleText
+                    titleTrailing
+                }
+            }
+        } else {
+            titleText
         }
     }
 
@@ -355,6 +384,7 @@ private struct RailDial: View {
 /// whole width so it can grow to 1.5 when open without running into the open place.
 private struct RailPinned: View {
     let place: RailPlace
+    let accent: Color
     @Binding var open: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var ticks = 0
@@ -380,7 +410,7 @@ private struct RailPinned: View {
                     .textRole(.data)
                     .contentTransition(.numericText())
             }
-            .foregroundStyle(place.count > 0 || pinnedOpen ? Theme.Colors.now : Theme.Colors.inkSecondary)
+            .foregroundStyle(place.count > 0 || pinnedOpen ? accent : Theme.Colors.inkSecondary)
             .scaleEffect(pinnedOpen && !calm ? RailMetrics.pinnedOpenScale : 1, anchor: .bottomLeading)
             .frame(maxWidth: .infinity, minHeight: pinnedOpen && !calm ? 56 : 44, alignment: .bottomLeading)
             .contentShape(Rectangle())

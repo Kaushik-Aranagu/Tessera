@@ -55,6 +55,7 @@ struct ListsShelfPage: View {
                     .entrance(0)
                 Text("Lists")
                     .textRole(.title)
+                    .wordFit("Lists")
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .entrance(0)
@@ -123,7 +124,7 @@ struct ListsShelfPage: View {
                 .fontWeight(.medium)
                 .foregroundStyle(Theme.Colors.ink.opacity(row.tier == .body ? 0.75 : 1))
                 .multilineTextAlignment(.leading)
-            Text(row.state)
+            Text(Choice.fontIsNew() ? ListsCopy.sentence(row.state) : row.state)
                 .textRole(.label)
                 // A run's state word is vermilion, the live colour (9.3).
                 .foregroundStyle(row.isRunning ? Theme.Colors.live : Theme.Colors.inkSecondary)
@@ -218,6 +219,7 @@ private struct ListPage: View {
                     }
                     Text(name)
                         .textRole(.hero)
+                        .wordFit(name)
                         .foregroundStyle(Theme.Colors.ink)
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, Theme.Spacing.xs)
@@ -268,6 +270,7 @@ private struct ListPage: View {
                                 if let title = section.name {
                                     Text(title)
                                         .textRole(.title)
+                                        .wordFit(title)
                                         .foregroundStyle(Theme.Colors.ink.opacity(0.85))
                                         .accessibilityAddTraits(.isHeader)
                                 }
@@ -785,8 +788,7 @@ struct BackWord: View {
     var body: some View {
         Button(action: action) {
             Text("‹ \(title)")
-                .textRole(.label)
-                .textCase(.uppercase)
+                .textRole(.keyWord)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(minHeight: 44)
         }
@@ -810,6 +812,7 @@ struct PutAwayShelf: Hashable {
                     BackWord(title: "Lists") { dismiss() }
                     Text("Put away")
                         .textRole(.title)
+                        .wordFit("Put away")
                         .foregroundStyle(Theme.Colors.ink)
                         .accessibilityAddTraits(.isHeader)
                     VStack(alignment: .leading, spacing: Theme.Spacing.m) {
