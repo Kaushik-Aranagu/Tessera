@@ -9,28 +9,10 @@ private struct WordFitModifier: ViewModifier {
     /// The type the title is drawn in when it wraps (the Title step).
     var points: CGFloat = 48
     @Environment(\.dynamicTypeSize) private var size
-    @Environment(\.multilineTextAlignment) private var textAlignment
-    /// The width the container actually proposes; the screen's gutters until it is known.
-    @State private var container: CGFloat?
-
-    private var alignment: Alignment {
-        switch textAlignment {
-        case .center: .center
-        case .trailing: .trailing
-        default: .leading
-        }
-    }
 
     func body(content: Content) -> some View {
         guard Choice.fontIsNew() else { return AnyView(content) }
-        let fitted = WordFit.largest(fitting: text, points: points, from: size, available: container)
-        // The room is read from the final size of a full-width box (not while sizing): no feedback during layout.
-        return AnyView(content
-            .dynamicTypeSize(...fitted)
-            .frame(maxWidth: .infinity, alignment: alignment)
-            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
-                if abs((container ?? 0) - width) > 0.5 { container = width }
-            })
+        return AnyView(content.dynamicTypeSize(...WordFit.largest(fitting: text, points: points, from: size)))
     }
 }
 
