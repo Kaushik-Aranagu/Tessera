@@ -95,6 +95,45 @@ public struct CookSessionBook {
     }
 }
 
+/// What Now and the Live Activity say about a running session (Part A PR 3). Names are masked; the Live Activity shows
+/// one cook, the soonest timer and "+N" more, never a second row per dish.
+public struct CookSessionLive: Equatable, Sendable {
+    /// "Paprika chicken and Spaghetti", or "Private recipe and Spaghetti".
+    public let title: String
+    /// The soonest timer still counting: its label ("Step 3", or "Timer" for a private cook) and when it ends.
+    public let soonestLabel: String?
+    public let soonestEndsAt: Date?
+    /// How many other timers are counting.
+    public let more: Int
+    /// "Cooking A and B, 12 min left." (the Now line) and the Live Activity's "+2".
+    public let line: String
+    public let moreWord: String?
+    public let projectedServe: Date?
+}
+
+public extension CookSessionBook {
+    /// The session as Now and the Live Activity read it. Nil unless it is running or paused.
+    func live(of session: ObjectRecord, now: Date = .now, calendar _: Calendar = .current) -> CookSessionLive? {
+        let state = status(of: session)
+        guard state == "running" || state == "paused" else { return nil }
+        let plan = plan(of: session, now: now)
+        let names = plan.placements.sorted { $0.dish.order < $1.dish.order }.map(\.dish.name)
+        let timers = timers(of: session).filter { $0.endsAt > now }
+        let soonest = timers.first
+        let label = soonest.map { timer in
+            KitchenTimerAlerts.hidesLabel(timer.label, cook: timer.cook, in: store) ? "Timer" : timer.label
+        }
+        let finish = plan.placements.map(\.end).max()
+        let minutes = finish.map { max(0, Int(($0.timeIntervalSince(now) / 60).rounded(.up))) }
+        let more = max(0, timers.count - 1)
+        return CookSessionLive(
+            title: CookPlan.names(names), soonestLabel: label, soonestEndsAt: soonest?.endsAt, more: more,
+            line: plan.running(minutesLeft: minutes), moreWord: more > 0 ? "+\(more)" : nil,
+            projectedServe: plan.projectedServe
+        )
+    }
+}
+
 @MainActor
 extension Transaction {
     /// Writes the numbers the plan cached on each dish: how long after the earliest start it begins, and how long it

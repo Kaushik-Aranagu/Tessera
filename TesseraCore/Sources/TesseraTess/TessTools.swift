@@ -36,7 +36,7 @@ public enum TessTools {
 
     public static var all: [Tool] {
         [logSet, createTask, completeTask, rescheduleTask, addGroceries, addToList, createList, createNote,
-         createRecipe, answerQuery, startShop]
+         createRecipe, answerQuery, startShop, cookTogether, setServeTime]
     }
 
     public static func tool(named name: String) -> Tool? {
@@ -262,6 +262,44 @@ public enum TessTools {
         lines.append("Method")
         lines += args["steps"] as? [String] ?? []
         return lines.joined(separator: "\n")
+    }
+
+    /// Plans several saved recipes as one cook. The model names them and may give a time to eat; it never sees an id, a
+    /// private recipe (it cannot be named) or anything the plan holds, and what it is told back is "Several dishes
+    /// planned".
+    static var cookTogether: Tool {
+        Tool(
+            name: "cookTogether",
+            description: "Plan cooking several saved recipes together, optionally for a time to eat",
+            input: .object([
+                ("recipes", .array(.string("A saved recipe, by name"))),
+                ("serveAt", .nullable(.string("When to eat, ISO 8601 date-time"))),
+            ])
+        ) { args, call in
+            let names = args["recipes"] as? [String] ?? []
+            guard names.count >= 2 else { throw TessToolError("name at least two recipes") }
+            let recipes = try names.map { name -> ObjectRecord in
+                guard let recipe = call.grammar.recipe(named: name),
+                      !isPrivateForClaude(recipe, store: call.store, classes: call.engine.classes)
+                else { throw TessToolError("no recipe called \(name)") }
+                return recipe
+            }
+            return try [call.perform(StartCookSession(recipes: recipes.map(\.id),
+                                                      serveAt: args.date("serveAt", in: call.calendar),
+                                                      time: call.now))]
+        }
+    }
+
+    /// Moves the time to eat of the cook that is planned or under way.
+    static var setServeTime: Tool {
+        Tool(name: "setServeTime", description: "Change when to eat for the cook that is planned",
+             input: .object([("serveAt", .string("When to eat, ISO 8601 date-time"))]))
+        { args, call in
+            let book = CookSessionBook(store: call.store, classes: call.engine.classes)
+            guard let session = book.current() else { throw TessToolError("no cook is planned") }
+            guard let when = args.date("serveAt", in: call.calendar) else { throw TessToolError("unreadable time") }
+            return try [call.perform(SetServeTime(session: session.id, serveAt: when, time: call.now))]
+        }
     }
 
     static var startShop: Tool {

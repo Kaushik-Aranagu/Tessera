@@ -52,7 +52,9 @@ public struct NowPicker {
     /// The running process as Now's item. Cooking: the soonest timer is Now's draining bar and its line
     /// ("Pasta, 6 min").
     func runningItem(at now: Date) -> NowItem? {
-        guard let running = ProcessTable(engine: engine).running(), let subject = running.subject else { return nil }
+        guard let running = ProcessTable(engine: engine).running(), let subject = running.subject else {
+            return sessionItem(at: now)
+        }
         let timer = CookLog(store: store, classes: engine.classes).timers()
             .first { $0.cook?.id == subject.id && $0.endsAt > now }
         // The lock screen's rule: a private word, or any timer of a private recipe's cook, is just "Timer" here.
@@ -68,5 +70,17 @@ public struct NowPicker {
             nextStep: timer.map { "\(timerName ?? $0.label), \(Int(($0.remaining(at: now) / 60).rounded(.up))) min" }
                 ?? running.nextStep
         )
+    }
+
+    /// A multi-dish cook under way is Now when no process is: "Cooking A and B, 12 min left. Go on." The soonest timer
+    /// drains the bar, as for a single cook. Private dishes read "Private recipe".
+    func sessionItem(at now: Date) -> NowItem? {
+        let book = CookSessionBook(store: store, classes: engine.classes)
+        guard let session = book.sessions().filter({ book.status(of: $0) == "running" })
+            .max(by: { $0.createdAt < $1.createdAt }),
+            let live = book.live(of: session, now: now) else { return nil }
+        return NowItem(id: session.id, kind: .process, object: session, title: live.title,
+                       startsAt: store.value("startedAt", of: session)?.dateValue, endsAt: live.soonestEndsAt,
+                       nextStep: live.line)
     }
 }
