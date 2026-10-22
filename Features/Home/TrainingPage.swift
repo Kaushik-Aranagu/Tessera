@@ -107,26 +107,22 @@ private struct TrainingAtRest: View {
                 }
                 .padding(.bottom, tight ? Theme.Spacing.m : Theme.Spacing.l)
 
-            kickerRow(lanes)
+            LandingSentenceView(sentence: sentence(lanes), opens: { model.open(titleAndRoute.1) })
                 .contentTransition(.opacity)
                 .padding(.bottom, tight ? Theme.Spacing.xs : Theme.Spacing.s)
-                .entrance(0)
+                .modifier(ZoomSource(id: titleAndRoute.1, namespace: namespace))
+                .entrance(1, hero: true)
 
-            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                titleButton
-                // A private workout says nothing about what it works (its figure still draws).
-                if let works = worksLine(day) {
-                    Text(works)
-                        .font(Theme.voice(size: 21))
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: 220, alignment: .leading)
-                }
+            // A private workout says nothing about what it works (its figure still draws).
+            if let works = worksLine(day) {
+                Text(works)
+                    .font(Theme.voice(size: 21))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 220, alignment: .leading)
+                    .padding(.bottom, Theme.Spacing.s)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.bottom, tight ? Theme.Spacing.s : Theme.Spacing.l)
-            .entrance(1, hero: true)
 
             StartMark(state: markState, lift: lift)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
@@ -135,9 +131,11 @@ private struct TrainingAtRest: View {
                 .onTapGesture { tapMark() }
                 .accessibilityAddTraits(markState.isAction ? .isButton : [])
                 .accessibilityAction { tapMark() }
-                .padding(.bottom, tight ? Theme.Spacing.s : Theme.Spacing.xl)
+                .padding(.bottom, Theme.Spacing.m)
                 .entrance(2)
 
+            // The lanes are the page's one bounded window: they take the room the week and the doors leave.
+            ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
                     LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
@@ -153,14 +151,20 @@ private struct TrainingAtRest: View {
                 }
             }
             .accessibilityElement(children: .contain)
+            }
+            .scrollIndicators(.hidden)
+            .scrollBounceBehavior(.basedOnSize)
+            .frame(maxHeight: typeSize.isAccessibilitySize ? nil : .infinity, alignment: .top)
             .entrance(3)
 
-            Spacer(minLength: Theme.Spacing.m)
+            TrainingWeekMarks(dots: TrainingWeek.dots(model, now: AppClock.now))
+                .padding(.vertical, Theme.Spacing.s)
+                .modifier(Sinking(isOn: sinking))
+
+            TrainingDoors(doors: doors)
+                .modifier(Sinking(isOn: sinking))
 
             Group {
-                planLine
-                    .entrance(4)
-
                 // Tess's slot keeps two lines' height with or without a line, so the plan line never moves.
                 ZStack(alignment: .topLeading) {
                     Text(verbatim: "Tess\nTess")
