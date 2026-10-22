@@ -78,6 +78,8 @@ enum BackupKeeper {
     /// Writes today's copies if they're not there yet. Never throws at the caller, but a copy that fails is logged
     /// and remembered, so Backups can say so quietly (a revoked folder, a full disk) instead of looking safe.
     static func runDaily(_ context: TesseraContext, now: Date = AppClock.now) {
+        // Only his store is ever backed up, never the Sample data one (QA on #1199).
+        guard !SampleData.shared.holds(context) else { return }
         do {
             _ = try TesseraBackup.writeRolling(from: context, in: localFolder, now: now)
             note(.iPhone, error: nil, now: now)
@@ -122,6 +124,7 @@ enum BackupKeeper {
 
     /// Saves the picked folder (from the folder picker's security-scoped URL) and writes a copy there now.
     static func pick(_ url: URL, context: TesseraContext, engine: ActionEngine) throws {
+        guard !SampleData.shared.holds(context) else { throw SampleRefused() }
         let accessing = url.startAccessingSecurityScopedResource()
         defer {
             if accessing {
@@ -179,6 +182,9 @@ enum BackupKeeper {
     }
 
     /// What SAVE A COPY comes to (B7, Product): the copy stays whole, so it leaves the phone only past Face ID.
+    /// A backup or a copy asked of the Sample data store: nothing is written (QA on #1199).
+    struct SampleRefused: Error {}
+
     enum SavedCopy {
         /// No passcode on the phone: nothing runs, and he's told why.
         case needsPasscode
@@ -193,6 +199,7 @@ enum BackupKeeper {
 
     /// SAVE A COPY: a passcode first, then Face ID, then the share sheet. Local backup writes never come here.
     static func savedCopy(_ context: TesseraContext) async throws -> SavedCopy {
+        guard !SampleData.shared.holds(context) else { throw SampleRefused() }
         let gate = TesseraBackup.savedCopyGate(for: context)
         if gate.requiresAuth {
             guard hasPasscode() else { return .needsPasscode }

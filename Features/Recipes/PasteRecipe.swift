@@ -118,6 +118,8 @@ struct PasteRecipe: View {
                         .entrance(1)
                 }
             }
+            // Held to the leading edge, so a short page is never centred (QA on #1198).
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
             // Room for the pinned Save bar, so the last step never sits under it.

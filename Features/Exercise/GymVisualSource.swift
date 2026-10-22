@@ -95,6 +95,8 @@ struct GymVisualSource: ExercisePictureSource {
 struct GifView: UIViewRepresentable {
     let url: URL
     let isStill: Bool
+    /// Dark looks: light and dark swap, the hues stay (DarkPlate), so the white plate becomes a dark one.
+    var isDarkPlate = false
 
     func makeUIView(context _: Context) -> UIImageView {
         let view = UIImageView()
@@ -105,7 +107,7 @@ struct GifView: UIViewRepresentable {
     }
 
     func updateUIView(_ view: UIImageView, context _: Context) {
-        let loaded = Self.frames(at: url)
+        let loaded = Self.frames(at: url, darkPlate: isDarkPlate)
         if isStill {
             view.stopAnimating()
             view.animationImages = nil
@@ -119,8 +121,9 @@ struct GifView: UIViewRepresentable {
     }
 
     /// Decoded once per file and kept: 71 GIFs at 180 x 180 are small.
-    private static func frames(at url: URL) -> (images: [UIImage], duration: TimeInterval) {
-        if let cached = cache.object(forKey: url as NSURL) {
+    private static func frames(at url: URL, darkPlate: Bool) -> (images: [UIImage], duration: TimeInterval) {
+        let key = "\(url.absoluteString)|\(darkPlate ? "dark" : "light")" as NSString
+        if let cached = cache.object(forKey: key) {
             return (cached.images, cached.duration)
         }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return ([], 1) }
@@ -128,13 +131,14 @@ struct GifView: UIViewRepresentable {
         var duration = 0.0
         for index in 0 ..< CGImageSourceGetCount(source) {
             guard let image = CGImageSourceCreateImageAtIndex(source, index, nil) else { continue }
-            images.append(UIImage(cgImage: image))
+            let frame = UIImage(cgImage: image)
+            images.append(darkPlate ? DarkPlate.invert(frame) : frame)
             let properties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any]
             let gif = properties?[kCGImagePropertyGIFDictionary] as? [CFString: Any]
             duration += (gif?[kCGImagePropertyGIFUnclampedDelayTime] as? Double)
                 ?? (gif?[kCGImagePropertyGIFDelayTime] as? Double) ?? 0.1
         }
-        cache.setObject(GifFrames(images: images, duration: max(duration, 0.1)), forKey: url as NSURL)
+        cache.setObject(GifFrames(images: images, duration: max(duration, 0.1)), forKey: key)
         return (images, max(duration, 0.1))
     }
 
@@ -147,5 +151,64 @@ struct GifView: UIViewRepresentable {
         }
     }
 
-    private static let cache = NSCache<NSURL, GifFrames>()
+    private static let cache = NSCache<NSString, GifFrames>()
+}
+
+/// The Gym visual on a dark look (Design's dark plate, Kaushik's OK on Oct 22): the white plate becomes transparent and
+/// the figure's greys turn light, so it sits on any dark ground; saturated pixels (the worked muscle) keep their own
+/// colour, so red stays red. Light looks are untouched.
+enum DarkPlate {
+    static func invert(_ image: UIImage) -> UIImage {
+        guard let cgImage = image.cgImage else { return image }
+        let width = cgImage.width, height = cgImage.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let drawn = bytes.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                                          bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard drawn else { return image }
+        for index in stride(from: 0, to: bytes.count, by: 4) {
+            let alpha = Float(bytes[index + 3]) / 255
+            guard alpha > 0 else { continue }
+            // Un-premultiply, then work in 0...1.
+            let red = Float(bytes[index]) / 255 / alpha, green = Float(bytes[index + 1]) / 255 / alpha
+            let blue = Float(bytes[index + 2]) / 255 / alpha
+            let top = max(red, green, blue), bottom = min(red, green, blue)
+            let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
+            let swapped = 1 - luminance
+            let keep = smooth((top - bottom - 0.15) / 0.2)
+            let neutralAlpha = min(1, swapped * 1.6)
+            let outAlpha = (neutralAlpha + (1 - neutralAlpha) * keep) * alpha
+            let channels = [red, green, blue].map { original -> Float in
+                let straight = swapped + (original - swapped) * keep
+                return straight * outAlpha
+            }
+            for offset in 0 ..< 3 {
+                bytes[index + offset] = UInt8(max(0, min(255, channels[offset] * 255)))
+            }
+            bytes[index + 3] = UInt8(max(0, min(255, outAlpha * 255)))
+        }
+        let output = bytes.withUnsafeMutableBytes { buffer -> CGImage? in
+            CGContext(
+                data: buffer.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )?
+                .makeImage()
+        }
+        guard let output else { return image }
+        return UIImage(cgImage: output, scale: image.scale, orientation: image.imageOrientation)
+    }
+
+    private static func smooth(_ value: Float) -> Float {
+        let clamped = max(0, min(1, value))
+        return clamped * clamped * (3 - 2 * clamped)
+    }
 }

@@ -60,23 +60,13 @@ struct MeProfileTests {
         let object = try #require(disk.object(id: MeProfile.objectID))
         #expect(ObjectPrivacy.label(of: object, in: disk, classes: diskEngine.classes) == "Private profile")
         // The shared export shows only the label.
-        let json = try String(decoding: TesseraExport(context: disk.context).encoded(), as: UTF8.self)
-        #expect(!json.contains("187.3719") && !json.contains("\"male\""))
-        // A year is four digits and can sit inside a timestamp or id, so look for it as a value, not as text.
-        let tree = try JSONSerialization.jsonObject(with: Data(json.utf8))
-        func holdsYear(_ node: Any) -> Bool {
-            if let number = node as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID() {
-                return number.doubleValue == 1973
-            }
-            if let list = node as? [Any] {
-                return list.contains(where: holdsYear)
-            }
-            if let map = node as? [String: Any] {
-                return map.values.contains(where: holdsYear)
-            }
-            return false
-        }
-        #expect(!holdsYear(tree))
+        // Read as values, not characters: a random id or a timestamp can hold "1973" (the Money test had the same
+        // flake).
+        let shared = try TesseraExport(context: disk.context).encoded()
+        #expect(try ExportLeaks.found(["male"], numbers: [187.3719, 1973], in: shared).isEmpty)
+        // And the helper does catch a real leak.
+        let leaked = try TesseraExport(context: disk.context, maskingPrivate: false).encoded()
+        #expect(try !ExportLeaks.found(["male"], numbers: [187.3719, 1973], in: leaked).isEmpty)
         // The local backup keeps every word; the iCloud copy leaves the object and its ops out.
         let local = dir.appending(path: "local.sqlite"), icloud = dir.appending(path: "icloud.sqlite")
         try TesseraBackup.write(from: disk.context, to: local)

@@ -56,6 +56,7 @@ private struct RecipesShelfPage: View {
                 .buttonStyle(HandleButtonStyle())
                 .accessibilityLabel("Back to Kitchen")
                 .entrance(0)
+                SampleDataWord()
                 Text("Recipes")
                     .textRole(.title)
                     .wordFit("Recipes")
