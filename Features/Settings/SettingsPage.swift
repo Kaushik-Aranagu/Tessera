@@ -5,107 +5,121 @@ import TesseraCore
 /// live to pick between two ways of doing something. Said in sentences like Backups, never a list of toggles: no
 /// cards, no pills, hairlines and margin labels only (Design sheets 80, 93, 100).
 struct SettingsPage: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                if isPresented {
-                    Button { dismiss() } label: {
-                        Text("‹ Review")
-                            .textRole(.label)
-                            .foregroundStyle(Theme.Colors.inkSecondary)
-                            .frame(minHeight: 44)
+        ScrollViewReader { reader in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if isPresented {
+                        Button { dismiss() } label: {
+                            Text("‹ Review")
+                                .textRole(.label)
+                                .foregroundStyle(Theme.Colors.inkSecondary)
+                                .frame(minHeight: 44)
+                        }
+                        .buttonStyle(HandleButtonStyle())
+                        .accessibilityLabel("Back to Review")
                     }
-                    .buttonStyle(HandleButtonStyle())
-                    .accessibilityLabel("Back to Review")
-                }
-                Text("how Tessera runs")
-                    .font(Theme.voice)
-                    .foregroundStyle(Theme.Colors.context)
-                    .entrance(0)
-                Text("Settings")
-                    .textRole(.hero)
-                    .wordFit("Settings")
-                    .foregroundStyle(Theme.Colors.ink)
-                    .accessibilityAddTraits(.isHeader)
-                    .padding(.top, Theme.Spacing.s)
-                    .entrance(1, hero: true)
+                    Text("how Tessera runs")
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.context)
+                        .entrance(0)
+                    Text("Settings")
+                        .textRole(.hero)
+                        .wordFit("Settings")
+                        .foregroundStyle(Theme.Colors.ink)
+                        .accessibilityAddTraits(.isHeader)
+                        .padding(.top, Theme.Spacing.s)
+                        .entrance(1, hero: true)
 
-                // His own page: weight, height, age, sex, and what the app knows of his training (Design 108 s3).
-                MeDoor()
-                    .padding(.top, Theme.Spacing.m)
-                    .entrance(2)
+                    // His own page: weight, height, age, sex, and what the app knows of his training (Design 108 s3).
+                    MeDoor()
+                        .padding(.top, Theme.Spacing.m)
+                        .entrance(2)
 
-                // "Porcelain by day, Obsidian by night", each name a value word.
-                LookSentence()
+                    // "Porcelain by day, Obsidian by night", each name a value word.
+                    LookSentence()
+                        .padding(.top, Theme.Spacing.xxl)
+                        .entrance(2)
+
+                    // His rest day (RG4).
+                    RestDaySentence()
+                        .padding(.top, Theme.Spacing.xxl)
+                        .entrance(3)
+
+                    // The units every measure reads in (Design sheet 115): the same pick a swipe on a unit word makes.
+                    UnitsSentence()
+                        .padding(.top, Theme.Spacing.xxl)
+                        .entrance(3)
+
+                    // What Tess keeps about him, in ink, the count the door to the page (AI-9).
+                    TessKnowsDoor()
+                        .padding(.top, Theme.Spacing.xxl)
+                        .entrance(4)
+
+                    // The key, the month and what Tess may send.
+                    ClaudeSection()
+                        .padding(.top, Theme.Spacing.xxl)
+                        .entrance(4)
+
+                    // Drawn only while some switch ships in this build (Product, Oct 20).
+                    if !ReviewChoices.drawnPages().isEmpty {
+                        ReviewSection()
+                            .padding(.top, Theme.Spacing.section)
+                            .entrance(5)
+                            .id(Self.reviewAnchor)
+                    }
+
+                    NavigationLink {
+                        BackupView()
+                    } label: {
+                        Text("Backups")
+                    }
+                    .buttonStyle(.labelWord)
                     .padding(.top, Theme.Spacing.xxl)
-                    .entrance(2)
+                    .accessibilityHint("Where your history is kept")
 
-                // His rest day (RG4).
-                RestDaySentence()
-                    .padding(.top, Theme.Spacing.xxl)
-                    .entrance(3)
+                    // Who made what: one line per source.
+                    NavigationLink {
+                        AboutPage()
+                    } label: {
+                        Text("About")
+                    }
+                    .buttonStyle(.labelWord)
+                    .padding(.top, Theme.Spacing.l)
+                    .accessibilityHint("Credits for the pictures and sources")
 
-                // The units every measure reads in (Design sheet 115): the same pick a swipe on a unit word makes.
-                UnitsSentence()
-                    .padding(.top, Theme.Spacing.xxl)
-                    .entrance(3)
-
-                // What Tess keeps about him, in ink, the count the door to the page (AI-9).
-                TessKnowsDoor()
-                    .padding(.top, Theme.Spacing.xxl)
-                    .entrance(4)
-
-                // The key, the month and what Tess may send.
-                ClaudeSection()
-                    .padding(.top, Theme.Spacing.xxl)
-                    .entrance(4)
-
-                // Drawn only while some switch ships in this build (Product, Oct 20).
-                if !ReviewChoices.drawnPages().isEmpty {
-                    ReviewSection()
+                    // Which release this is: the git SHA the build was made from, one quiet line at the foot.
+                    Text("Build \(BuildStamp.short)")
+                        .textRole(.label)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
                         .padding(.top, Theme.Spacing.section)
-                        .entrance(5)
+                        .accessibilityLabel("Build \(BuildStamp.short)")
                 }
-
-                NavigationLink {
-                    BackupView()
-                } label: {
-                    Text("Backups")
-                }
-                .buttonStyle(.labelWord)
-                .padding(.top, Theme.Spacing.xxl)
-                .accessibilityHint("Where your history is kept")
-
-                // Who made what: one line per source.
-                NavigationLink {
-                    AboutPage()
-                } label: {
-                    Text("About")
-                }
-                .buttonStyle(.labelWord)
+                .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.l)
-                .accessibilityHint("Credits for the pictures and sources")
-
-                // Which release this is: the git SHA the build was made from, one quiet line at the foot.
-                Text("Build \(BuildStamp.short)")
-                    .textRole(.label)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .padding(.top, Theme.Spacing.section)
-                    .accessibilityLabel("Build \(BuildStamp.short)")
+                .padding(.bottom, Theme.Spacing.section)
             }
-            .padding(.horizontal, Theme.Spacing.gutter)
-            .padding(.top, Theme.Spacing.l)
-            .padding(.bottom, Theme.Spacing.section)
+            .scrollIndicators(.hidden)
+            .task {
+                // From the "Sample data" word on Today: down to Review, whose Shown page holds the switch.
+                guard SampleData.shared.jumpsToSwitch else { return }
+                try? await Task.sleep(for: .milliseconds(350))
+                withTesseraAnimation(reduceMotion: reduceMotion) { reader.scrollTo(Self.reviewAnchor, anchor: .top) }
+                try? await Task.sleep(for: .milliseconds(400))
+                SampleData.shared.jumpsToSwitch = false
+            }
         }
-        .scrollIndicators(.hidden)
         .background { ThemedBackground() }
         .background { EdgeSwipeBack() }
         .navigationBarBackButtonHidden()
         .toolbarVisibility(.hidden, for: .navigationBar)
     }
+
+    private static let reviewAnchor = "review"
 }
 
 // MARK: - What Tess knows
@@ -116,7 +130,7 @@ private struct TessKnowsDoor: View {
 
     var body: some View {
         let _ = model.revision
-        let count = TessMemoryStore(engine: model.engine).countWord()
+        let count = TessMemoryStore(engine: model.engine, forgetLogURL: model.forgetLogURL).countWord()
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             Text("Memory")
                 .textRole(.label)
@@ -157,6 +171,11 @@ struct ReviewSection: View {
     @State private var flips = 0
 
     private let pages = ReviewChoices.drawnPages()
+
+    /// The page holding the Sample data switch, for the jump from Today.
+    private var samplePage: Int? {
+        pages.firstIndex { $0.rows.contains { $0.id == SampleData.choiceID } }
+    }
 
     var body: some View {
         let choices = ReviewChoices.shared
@@ -213,6 +232,11 @@ struct ReviewSection: View {
             .tesseraAnimation(value: choices.anyTrying())
         }
         .tesseraFeedback(.selection, trigger: flips)
+        .onAppear {
+            if SampleData.shared.jumpsToSwitch, let samplePage {
+                page = samplePage
+            }
+        }
     }
 
     private func row(_ choice: ReviewChoices.Choice) -> some View {
