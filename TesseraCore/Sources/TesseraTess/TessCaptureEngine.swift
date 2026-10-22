@@ -368,10 +368,25 @@ public final class TessCaptureEngine: TessCapturing {
         case let .spend(amount, note, on):
             let made = try engine.perform(
                 LogSpend(amount: NSDecimalNumber(decimal: amount.amount).doubleValue, typed: amount.typed,
-                         currency: amount.currency, note: note.isEmpty ? nil : note, spentAt: on ?? context.now),
+                         currency: amount.currency, note: note.isEmpty ? nil : note, spentAt: on ?? context.now,
+                         autoPool: context.moneyPools ? true : nil),
                 by: .tess, pending: pending
             )
             return (made.record, made.record.receipt ?? SpendLedger.receiptLine(for: made.output, in: engine.store))
+        case let .inflow(amount, source, pool, note):
+            let made = try engine.perform(
+                LogInflow(amount: "\(amount.amount)", pool: pool, currency: amount.currency, source: source,
+                          note: note.isEmpty ? nil : note, at: context.now),
+                by: .tess, pending: pending
+            )
+            return (made.record, made.record.receipt ?? "Money in, logged.")
+        case let .poolMove(from, destination, sent, arrived, fee):
+            let made = try engine.perform(
+                LogMove(from: from, to: destination, sent: "\(sent.amount)", arrived: "\(arrived.amount)",
+                        fee: fee.map { "\($0.amount)" }, at: context.now),
+                by: .tess, pending: pending
+            )
+            return (made.record, made.record.receipt ?? "Money moved.")
         case let .shopTotal(amount):
             let made = try engine.perform(
                 LogShopTotal(amount: NSDecimalNumber(decimal: amount.amount).doubleValue, typed: amount.typed,
