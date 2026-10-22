@@ -121,7 +121,8 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
         if let titleTrailing {
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
-                    titleText
+                    // Measured at its full 72: the hero steps down to 48 only on its own, never to make room.
+                    titleText.fixedSize(horizontal: true, vertical: false)
                     Spacer(minLength: Theme.Spacing.s)
                     titleTrailing
                 }
