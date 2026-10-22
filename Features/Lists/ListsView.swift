@@ -195,6 +195,7 @@ private struct ListPage: View {
                     }
                     Text(name)
                         .textRole(.hero)
+                        .wordFit(name)
                         .foregroundStyle(Theme.Colors.ink)
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, Theme.Spacing.xs)

@@ -70,6 +70,7 @@ private struct NotesIndex: View {
                     .entrance(0)
                 Text("Notes")
                     .textRole(.hero)
+                    .wordFit("Notes")
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .padding(.top, Theme.Spacing.s)

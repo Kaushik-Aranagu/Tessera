@@ -56,6 +56,7 @@ struct BackupView: View {
                 Text(folder == nil || failures.contains { $0.place == .folder } ? "Kept on this iPhone"
                     : "Kept in two places")
                     .textRole(.hero)
+                    .wordFit("Kept on this iPhone Kept in two places")
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)

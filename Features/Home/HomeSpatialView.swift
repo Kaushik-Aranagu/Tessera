@@ -190,7 +190,7 @@ struct HomeSpatialView: View {
                                     .frame(minWidth: 44, minHeight: 44)
                                     .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(CloseWordStyle())
                         } else {
                             Button("Close") { presented = nil }
                                 .buttonStyle(InkLabelWordStyle())

@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// Builder A's stand-in for Builder B's `ReviewChoices` (#1096) until it lands: the same storage (the UserDefaults key
 /// `review.<id>`, string values) so swapping is one line. Off means today's behaviour, so an unset key, or a stored
@@ -86,16 +87,24 @@ enum Choice {
 /// The Font key, read once and kept: every face and text role asks, many times per frame. A change to the standard
 /// defaults clears it, so a flip in Settings shows on the next draw.
 enum FontChoice {
-    nonisolated(unsafe) private static var cached: Bool?
-    nonisolated(unsafe) private static let watcher = NotificationCenter.default.addObserver(
-        forName: UserDefaults.didChangeNotification, object: nil, queue: nil
-    ) { _ in cached = nil }
+    private static let cache = OSAllocatedUnfairLock<Bool?>(initialState: nil)
+    /// The observer lives for the whole process; it only clears the cache, under the same lock.
+    private static let watcher = Watcher()
+
+    private final class Watcher: Sendable {
+        init() {
+            NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil,
+                                                   queue: nil) { _ in
+                FontChoice.cache.withLock { $0 = nil }
+            }
+        }
+    }
 
     static var isNew: Bool {
         _ = watcher
-        if let cached { return cached }
+        if let cached = cache.withLock({ $0 }) { return cached }
         let value = Choice.value("font", options: Choice.fontOffered, default: "Figtree and Outfit") == "Figtree and Outfit"
-        cached = value
+        cache.withLock { $0 = value }
         return value
     }
 }
