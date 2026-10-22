@@ -21,7 +21,7 @@ struct SettingsPageTests {
     @Test func reviewRowsSayWhatTheyWaitFor() throws {
         #expect(try ReviewSwitchCopy.mark(choice("planMyDay")) == "Needs Claude")
         #expect(try ReviewSwitchCopy.mark(choice("calendar")) == "Later")
-        #expect(try ReviewSwitchCopy.mark(choice("pageTurn")) == "Soon")
+        #expect(try ReviewSwitchCopy.mark(choice("pantryState")) == "Soon")
         var live = try choice("pageTurn")
         live.readiness = .live
         #expect(ReviewSwitchCopy.mark(live) == nil)
@@ -108,5 +108,40 @@ struct SettingsPageTests {
         let waiting = ReviewChoices.Choice(id: "pantryState", name: "Pantry state", values: ["Off", "On"],
                                            defaultValue: "Off", says: [:], readiness: .arrivesWith("pantry state"))
         #expect(ReviewChoices.drawnPages([waiting]).isEmpty)
+    }
+
+    /// The page turn's timings follow the motion spec, and Reduce Motion is one 150 ms crossfade for every style.
+    @Test func pageTurnTimingsFollowTheSpec() {
+        #expect(PageTurnStyle.allCases.map(\.rawValue) == ["Today", "Slide", "Turn", "Soften", "Rotate"])
+        #expect(abs(PageTurnTiming.total(.turn, rows: 6, reduceMotion: false) - 0.82) < 0.001)
+        #expect(abs(PageTurnTiming.total(.rotate, rows: 6, reduceMotion: false) - 0.46) < 0.001)
+        #expect(abs(PageTurnTiming.total(.rotate, rows: 3, reduceMotion: false) - 0.388) < 0.001)
+        #expect(PageTurnTiming.total(.slide, rows: 6, reduceMotion: false) == 0.52)
+        #expect(PageTurnStyle.allCases.allSatisfy { PageTurnTiming.total($0, rows: 6, reduceMotion: true) == 0.15 })
+        #expect(PageTurnStyle.slide.isWholePage && !PageTurnStyle.turn.isWholePage)
+    }
+
+    /// Page turn ships: it is live, drawn on Looks and day, and Today (the default) keeps the pages sliding as before.
+    @Test func pageTurnIsLiveOnLooksAndDay() throws {
+        let row = try #require(ReviewChoices.all.first { $0.id == "pageTurn" })
+        #expect(row.readiness == .live && row.defaultValue == "Today" && !row.needsClaude)
+        let looks = try #require(ReviewChoices.drawnPages().first { $0.word == "Looks and day" })
+        #expect(looks.rows.contains { $0.id == "pageTurn" })
+        #expect(PageTurnStyle(rawValue: row.defaultValue) == .today)
+    }
+
+    /// QA on #1184: only a clearly sideways drag steps a tab; a vertical one is the scroll's.
+    @Test func onlyAClearlySidewaysDragStepsATab() {
+        #expect(PeekTabsLayout.isSideSwipe(CGSize(width: -120, height: 10)))
+        #expect(PeekTabsLayout.isSideSwipe(CGSize(width: 90, height: -30)))
+        #expect(!PeekTabsLayout.isSideSwipe(CGSize(width: 30, height: 2)))
+        #expect(!PeekTabsLayout.isSideSwipe(CGSize(width: 60, height: -200)))
+        #expect(!PeekTabsLayout.isSideSwipe(CGSize(width: 80, height: 50)))
+    }
+
+    /// QA on #1189: the mark is drawn under the sentence, and VoiceOver hears it with the value.
+    @Test func voiceOverHearsTheMarkWithTheValue() throws {
+        #expect(try ReviewSwitchCopy.spokenValue(choice("planMyDay"), value: "Off") == "Off, Needs Claude")
+        #expect(try ReviewSwitchCopy.spokenValue(choice("restTimer"), value: "On") == "On")
     }
 }

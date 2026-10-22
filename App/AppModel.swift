@@ -90,6 +90,10 @@ final class AppModel {
     /// Names training days (Core's DayNamer): one instance; see AppModel+DayNames.swift.
     @ObservationIgnored var dayNamerStore: DayNamer?
     @ObservationIgnored var dayNaming: Task<Void, Never>?
+    /// The one rates fetch for the money wheel (a single instance, so its once-an-hour cap holds app-wide); see
+    /// AppModel+Measure.swift. `ratesTable` is what the wheel reads: the live table or the last saved one.
+    @ObservationIgnored var currencyFetchStore: CurrencyRatesFetch?
+    var ratesTable: CurrencyRates?
 
     /// Bumped after writes so views re-read derived data.
     private(set) var revision = 0
@@ -523,11 +527,14 @@ final class AppModel {
         classes[key]
     }
 
-    func touch() {
+    /// Saves and redraws. `naming: false` is for the naming pass's own writes, which must not restart the pass.
+    func touch(naming: Bool = true) {
         try? context.save()
         revision += 1
         reconcileTimerAlerts()
-        nameTrainingDaysSoon()
+        if naming {
+            nameTrainingDaysSoon()
+        }
     }
 
     /// One local notification per running kitchen timer, kept in step after every change (G217): Stop, Finish and an

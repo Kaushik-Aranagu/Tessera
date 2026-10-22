@@ -396,7 +396,7 @@ public struct TessMemoryStore {
             return now.timeIntervalSince(deletedAt) > 10
         }
         for object in due {
-            redact(object.id)
+            redact(object.id, now: now)
         }
         return due.count
     }
@@ -519,12 +519,12 @@ public struct TessMemoryStore {
 
     /// After the 10 s UNDO window: scrubs the line's words from every op that carried them, so history can't bring
     /// them back, and blanks the object itself. Idempotent.
-    public func redact(_ id: UUID) {
+    public func redact(_ id: UUID, now: Date = .now) {
         guard let object = store.object(id: id) else { return }
         let words = object.title
         guard !words.isEmpty, words != Self.redacted else { return }
         // The hash goes in the forget log, so a restored backup forgets it again (Research F2).
-        logForgotten(words)
+        logForgotten(words, now: now)
         for record in store.context.operations.values where record.objectIDs.contains(id) {
             var changed = false
             let ops = record.ops.map { op -> Op in
@@ -560,12 +560,12 @@ public struct TessMemoryStore {
 
     /// The hash of forgotten words, kept as its own quiet object (no words, never shown or packed) and in the log
     /// file outside the store.
-    func logForgotten(_ words: String) {
+    func logForgotten(_ words: String, now: Date = .now) {
         guard let memoryClass = engine.classes[.tessMemory] else { return }
         let hash = Self.hash(words)
         var log = Self.readForgetLog(forgetLogURL)
         if log.forgotten[hash] == nil {
-            log.forgotten[hash] = .now
+            log.forgotten[hash] = now
             Self.writeForgetLog(log, to: forgetLogURL, protection: fileProtection)
         }
         guard !storedForgottenHashes().contains(hash) else { return }
