@@ -7,6 +7,8 @@ import TesseraCore
 /// (with Undo) or "Just today" changes this session only. No muscle figure.
 struct SimilarSheet: View {
     let session: WorkoutSession
+    /// The workout's Tess corner takes the receipt; TessVoice's bubble is under the workout cover.
+    let onReceipt: (String, (() -> Void)?) -> Void
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var picked: UUID?
@@ -72,7 +74,7 @@ struct SimilarSheet: View {
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
 
@@ -86,21 +88,38 @@ struct SimilarSheet: View {
     private func row(_ option: ExerciseSwaps.Option, place: TrainingPlace, busy: Set<UUID>) -> some View {
         let kit = model.store.equipmentKind(of: option.exercise)
         let lacks = kit.map { !place.equipment.contains($0) } ?? false
-        let faded = lacks || busy.contains(option.exercise.id)
+        let isBusy = busy.contains(option.exercise.id)
+        let faded = lacks || isBusy
+        // Same words as the Library: "needs a cable; Home has none", or "marked busy".
+        let reason: String? = if let kit, lacks {
+            "needs \(TrainingPlace.need(kit)); \(place.rawValue) has none"
+        } else if isBusy {
+            "marked busy"
+        } else {
+            nil
+        }
         return Button {
             picked = option.id
         } label: {
-            HStack(alignment: .firstTextBaseline) {
-                Text(option.exercise.name)
-                    .font(Theme.voice(size: 21).weight(picked == option.id ? .semibold : .medium))
-                    .foregroundStyle(Theme.Colors.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: Theme.Spacing.s)
-                Text(lastWord(option))
-                    .numeral(21, weight: .light)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(option.exercise.name)
+                        .font(Theme.voice(size: 21).weight(picked == option.id ? .semibold : .medium))
+                        .foregroundStyle(Theme.Colors.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: Theme.Spacing.s)
+                    Text(lastWord(option))
+                        .numeral(21, weight: .light)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                }
+                if let reason {
+                    Text(reason)
+                        .font(Theme.voice(size: 16))
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .frame(minHeight: 50)
+            .frame(minHeight: 50, alignment: .leading)
             .opacity(faded ? 0.3 : 1)
             .contentShape(Rectangle())
         }
@@ -142,13 +161,13 @@ struct SimilarSheet: View {
             ? "\(option.exercise.name) is in for \(from.name)."
             : "\(option.exercise.name) today, instead of \(from.name)."
         model.touch()
-        TessVoice.shared.say(words, takeBack: { [model] in
+        onReceipt(words) { [model] in
             for record in records.reversed() {
                 model.engine.undo(record)
             }
             session.refreshAfterExternalWrite()
             model.touch()
-        })
+        }
         dismiss()
     }
 }

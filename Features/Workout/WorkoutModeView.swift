@@ -85,8 +85,9 @@ private struct WorkoutContent: View {
     @State private var isAsking = false
     @State private var isSimilarOpen = false
     @State private var askReply: String?
-    /// "<Name>, later." with ten seconds of Undo, in the workout's own Tess corner (TessVoice sits under this cover).
-    @State private var busyReceipt: WorkoutSession.BusyReceipt?
+    /// A receipt ("Bench Press, later.", "X, swapped in.") with ten seconds of Undo, in the workout's own Tess corner:
+    /// TessVoice's bubble sits on Home, under this cover.
+    @State private var receipt: WorkoutReceipt?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -162,7 +163,7 @@ private struct WorkoutContent: View {
         // The set block keeps its layout; the ask field rides on the keyboard in a short sheet.
         .ignoresSafeArea(.keyboard)
         .sheet(isPresented: $isSimilarOpen) {
-            SimilarSheet(session: session)
+            SimilarSheet(session: session, onReceipt: showReceipt)
         }
         .sheet(isPresented: $isAsking) {
             LiveAskField(isShown: $isAsking, onAsk: { phrase in ask(phrase) }, onRefuse: {
@@ -297,16 +298,16 @@ private struct WorkoutContent: View {
             Spacer(minLength: Theme.Spacing.m)
             keyRow(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
-            LiveTessCorner(line: askReply ?? busyReceipt.map { "\($0.name), later." }
+            LiveTessCorner(line: askReply ?? receipt?.text
                 ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
                 mode: soul.mode,
-                canUndo: busyReceipt != nil || (session.canUndoLast && !session.isEditing),
+                canUndo: receipt?.takeBack != nil || (session.canUndoLast && !session.isEditing),
                 eyes: model.tessHasEyes, wear: soul.wear(at:),
-                holdsLine: askReply == nil && (phase == .workoutDone || busyReceipt != nil),
+                holdsLine: askReply == nil && (phase == .workoutDone || receipt != nil),
                 onUndo: {
-                    if let receipt = busyReceipt {
-                        withTesseraAnimation(reduceMotion: reduceMotion) { session.undoBusy(receipt) }
-                        busyReceipt = nil
+                    if let takeBack = receipt?.takeBack {
+                        withTesseraAnimation(reduceMotion: reduceMotion) { takeBack() }
+                        receipt = nil
                     } else {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
                     }
@@ -489,7 +490,7 @@ extension WorkoutContent {
 
     private func oneTapSwap() {
         guard let top = session.swapOptions().first else {
-            TessVoice.shared.say("Nothing to swap this for.")
+            showReceipt("Nothing to swap this for.", takeBack: nil)
             return
         }
         var record: OpRecord?
@@ -499,9 +500,7 @@ extension WorkoutContent {
         soul.handle(.swapped)
         guard let record else { return }
         let name = SwapPanel.short(top.exercise.name)
-        TessVoice.shared.say("\(name), swapped in.", holds: .seconds(10), takeBack: { [session] in
-            withTesseraAnimation(reduceMotion: reduceMotion) { session.undoSwap(record) }
-        })
+        showReceipt("\(name), swapped in.") { [session] in session.undoSwap(record) }
     }
 
     private func setSwap(open: Bool) {
@@ -764,8 +763,7 @@ extension WorkoutContent {
                         Text(
                             "Log \(Format.kilograms(session.weight))\u{00A0}×\u{00A0}\(Int(session.reps))\(finishes ? " and finish" : "")"
                         )
-                        .textRole(.labelStrong)
-                        .textCase(.uppercase)
+                        .textRole(.keyWord)
                         .contentTransition(.numericText())
                     } meta: {
                         EmptyView()
@@ -782,7 +780,7 @@ extension WorkoutContent {
                     PaintKey(paint: Paint.now, isTap: true, height: 64) {
                         skipRest()
                     } label: { _ in
-                        Text("Skip rest").textRole(.labelStrong).textCase(.uppercase)
+                        Text("Skip rest").textRole(.keyWord)
                     }
                 case .exerciseDone:
                     PaintKey(paint: Paint.cobalt, isTap: true, height: 64) {
@@ -791,7 +789,7 @@ extension WorkoutContent {
                             }
                         }
                     } label: { _ in
-                        Text("Next exercise").textRole(.labelStrong).textCase(.uppercase)
+                        Text("Next exercise").textRole(.keyWord)
                     }
                 case .workoutDone:
                     PaintKey(paint: Paint.live, duration: 0.8, height: 64, isSilent: true,
@@ -799,7 +797,7 @@ extension WorkoutContent {
                     {
                         finish()
                     } label: { _ in
-                        Text("Finish").textRole(.labelStrong).textCase(.uppercase)
+                        Text("Finish").textRole(.keyWord)
                     } meta: {
                         EmptyView()
                     }
@@ -824,8 +822,7 @@ extension WorkoutContent {
             if session.finishedAt == nil {
                 // PAUSE leaves to Home, where the key reads RESUME with the progress line.
                 Button("Pause") { model.isWorkoutPresented = false }
-                    .textRole(.labelStrong)
-                    .textCase(.uppercase)
+                    .textRole(.keyWord)
                     .foregroundStyle(Paint.secondary)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
@@ -844,11 +841,17 @@ extension WorkoutContent {
             return
         }
         moment.play(.selection)
-        withTesseraAnimation(reduceMotion: reduceMotion) { busyReceipt = receipt }
+        showReceipt("\(receipt.name), later.") { [session] in session.undoBusy(receipt) }
+    }
+
+    /// Puts `text` in the Tess corner; with something to take back it holds ten seconds with Undo, else four.
+    private func showReceipt(_ text: String, takeBack: (() -> Void)?) {
+        let shown = WorkoutReceipt(text: text, takeBack: takeBack)
+        withTesseraAnimation(reduceMotion: reduceMotion) { receipt = shown }
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(10))
-            if busyReceipt?.entryID == receipt.entryID {
-                withTesseraAnimation(reduceMotion: reduceMotion) { busyReceipt = nil }
+            try? await Task.sleep(for: .seconds(takeBack == nil ? 4 : 10))
+            if receipt?.id == shown.id {
+                withTesseraAnimation(reduceMotion: reduceMotion) { receipt = nil }
             }
         }
     }
@@ -877,4 +880,11 @@ extension WorkoutContent {
         model.session = nil
         model.touch()
     }
+}
+
+/// One line in the workout's Tess corner, with what Undo runs.
+struct WorkoutReceipt: Identifiable {
+    let id = UUID()
+    let text: String
+    let takeBack: (() -> Void)?
 }
