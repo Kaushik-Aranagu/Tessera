@@ -121,6 +121,8 @@ struct ListsLandingFacts {
             }
             return line
         }
+        // Groceries is Pantry's To get now, not a list line here (Design on #1226).
+        lines.removeAll(where: \.isGroceries)
         // Running first, the newer run first; then by last touched (the shelf's own order).
         lines.sort { lhs, rhs in
             switch (runs[lhs.id], runs[rhs.id]) {
@@ -329,7 +331,7 @@ private struct LeadList: View {
                     if let left = LandingSentences.leftOf(left: line.left, total: line.total) {
                         Text(left)
                             .textRole(.data)
-                            .foregroundStyle(accent)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

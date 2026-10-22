@@ -3,11 +3,11 @@ import SwiftUI
 // CLOUD-WRITTEN, NOT COMPILED. Small helpers the Notes, Lists and Money landings share, on top of Builder B's
 // `LandingPage` frame (LandingPage.swift). Nothing here draws a frame.
 
-/// Each app's accent (design 127 table E), dark and light. Kitchen's lives in `KitchenFront.accent`.
+/// Each app's accent, from the Theme tokens (design 131 table). Kitchen's is `KitchenFront.accent`.
 enum LandingAccent {
-    static let money = Color(light: 0x3F7A62, dark: 0x8DBFA7)
-    static let notes = Color(light: 0x5B3FB8, dark: 0xB9A9E0)
-    static let lists = Color(light: 0x5E6B1F, dark: 0xB5BE7A)
+    static let money = Theme.Colors.Accent.money
+    static let notes = Theme.Colors.Accent.notes
+    static let lists = Theme.Colors.Accent.lists
 }
 
 /// A sentence with its one key word, for pages whose words come from the app (Core's `LandingSentence` cannot be

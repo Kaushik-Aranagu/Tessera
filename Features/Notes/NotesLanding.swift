@@ -100,6 +100,12 @@ struct NotesLandingFacts {
     var reading: (id: UUID, title: String)?
 
     @MainActor
+    /// A note any surface would mask: the private flag, or words that are walled (ObjectPrivacy's label).
+    static func isPrivate(_ note: ObjectRecord, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
+        store.value("isPrivate", of: note) == .bool(true)
+            || ObjectPrivacy.shownLabel(of: note, in: store, classes: classes) != nil
+    }
+
     static func load(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], lastSeen: Date?,
                      linkSuggest: Bool) -> NotesLandingFacts
     {
@@ -120,8 +126,9 @@ struct NotesLandingFacts {
         var newNotes = 0
 
         for note in notes {
-            // A private note adds nothing: no thing, no weight, no sentence (build sheet 2A, N-A7).
-            if store.value("isPrivate", of: note) == .bool(true) {
+            // A private note adds nothing: no thing, no weight, no sentence (build sheet 2A, N-A7). Private by the flag
+            // or by its words (QA on #1226): whatever any surface would mask.
+            if Self.isPrivate(note, store: store, classes: classes) {
                 facts.hasPrivate = true
                 continue
             }
@@ -168,7 +175,7 @@ struct NotesLandingFacts {
 
         // Waiting: a note names a thing in words without linking it (switch notesLinkSuggest).
         if linkSuggest {
-            outer: for note in notes.prefix(60) where store.value("isPrivate", of: note) != .bool(true) {
+            outer: for note in notes.prefix(60) where !Self.isPrivate(note, store: store, classes: classes) {
                 let body = store.value("body", of: note)?.stringValue ?? ""
                 for thing in facts.things where thing.name.count >= 3 && !(linkedIDs[note.id]?.contains(thing.id) ?? false)
                     && body.range(of: thing.name, options: [.caseInsensitive, .diacriticInsensitive]) != nil
@@ -429,7 +436,7 @@ struct NotesDoorPage: View {
         let _ = model.revision
         let store = model.store
         let notes = NoteList(store: store, classes: model.classes).recent(limit: 500).filter { note in
-            let isPrivate = store.value("isPrivate", of: note) == .bool(true)
+            let isPrivate = NotesLandingFacts.isPrivate(note, store: store, classes: model.classes)
             switch door {
             case .privates: return isPrivate
             case .loose: return !isPrivate && (note.outgoingLinks ?? []).allSatisfy { $0.toObject == nil && $0.toClass == nil }

@@ -52,17 +52,24 @@ struct MoneyLandingFacts {
         sentence = LandingSentences.money(nothingLate: false, due: nil, trend: trend?.clause)
     }
 
-    /// One dollar total across currencies, marked "about"; a spend with no currency counts as dollars. Nil when there
-    /// is a single currency, or a currency the table does not know.
+    /// One dollar total across currencies, marked "about", in whole dollars (no cents to pretend at). A spend with no
+    /// currency counts as dollars. A currency the table has no rate for is named, never silently dropped (QA on
+    /// #1226): "about $1,234, without HKD". Nil with a single currency or no table.
     private static func about(_ totals: [Total]) -> String? {
         guard totals.count > 1, let table = RatesCache().current() else { return nil }
         var dollars = 0.0
+        var missing: [String] = []
         for total in totals {
             let value = (total.amount as NSDecimalNumber).doubleValue
-            guard let converted = table.convert(value, from: total.currency ?? "USD", to: "USD") else { return nil }
+            guard let converted = table.convert(value, from: total.currency ?? "USD", to: "USD") else {
+                missing.append(total.currency ?? "USD")
+                continue
+            }
             dollars += converted
         }
-        return "about " + SpendLedger.shown(Decimal(dollars), currency: "USD", grouped: true)
+        let whole = SpendLedger.shown(Decimal(Int(dollars.rounded())), currency: "USD", grouped: true)
+        let line = "about " + (whole.hasSuffix(".00") ? String(whole.dropLast(3)) : whole)
+        return missing.isEmpty ? line : line + ", without " + missing.joined(separator: " and ")
     }
 }
 
@@ -88,8 +95,8 @@ struct MoneyLandingView: View {
     }
 }
 
-/// The signature line: "October so far", the total on the decimal line (whole part large, cents smaller, one
-/// baseline), and the rule under it in sage. Never red. Other currencies sit under it in the same figures, then the
+/// The signature line: an ink rule, "October so far", then the total on the decimal line (whole part large, cents
+/// smaller in ink-secondary, one baseline). Never sage (sage is money moving) and never red. Other currencies sit under it in the same figures, then the
 /// one "about" dollar total. Absent when nothing is logged.
 private struct TotalRule: View {
     let facts: MoneyLandingFacts
@@ -98,14 +105,14 @@ private struct TotalRule: View {
     var body: some View {
         if let first = facts.totals.first {
             VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                Rectangle()
+                    .fill(Theme.Colors.ink)
+                    .frame(height: 1.5)
+                    .accessibilityHidden(true)
                 Text("\(facts.month) so far")
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                 figure(first, large: true)
-                Rectangle()
-                    .fill(accent)
-                    .frame(height: 2)
-                    .accessibilityHidden(true)
                 ForEach(facts.totals.dropFirst()) { total in
                     figure(total, large: false)
                         .padding(.top, Theme.Spacing.xs)
@@ -128,17 +135,15 @@ private struct TotalRule: View {
         let cents = parts.count > 1 ? "." + parts[1] : ""
         return ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline, spacing: 0) {
-                Text(whole).textRole(large ? .heroNumber : .titleNumber)
-                Text(cents).textRole(.titleNumber)
+                Text(whole).textRole(large ? .heroNumber : .titleNumber).foregroundStyle(Theme.Colors.ink)
+                Text(cents).textRole(large ? .titleNumber : .data).foregroundStyle(Theme.Colors.inkSecondary)
             }
-            .foregroundStyle(Theme.Colors.ink)
             .lineLimit(1)
             // At large sizes the figure steps down rather than breaking.
             HStack(alignment: .firstTextBaseline, spacing: 0) {
-                Text(whole).textRole(.titleNumber)
-                Text(cents).textRole(.titleNumber)
+                Text(whole).textRole(.titleNumber).foregroundStyle(Theme.Colors.ink)
+                Text(cents).textRole(.data).foregroundStyle(Theme.Colors.inkSecondary)
             }
-            .foregroundStyle(Theme.Colors.ink)
         }
     }
 }
