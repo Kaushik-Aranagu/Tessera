@@ -59,6 +59,7 @@ private struct RecipesShelfPage: View {
                 SampleDataWord()
                 Text("Recipes")
                     .textRole(.title)
+                    .wordFit("Recipes")
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .entrance(0)
@@ -113,6 +114,9 @@ private struct RecipesShelfPage: View {
                         .entrance(3)
                 }
             }
+            // Held to the leading edge: a short page (an empty pantry, an empty shelf) is otherwise centred in the
+            // scroll view and reads as shifted right (Kaushik, Oct 21).
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.vertical, Theme.Spacing.l)
         }

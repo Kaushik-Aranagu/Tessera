@@ -71,6 +71,7 @@ private struct NotesIndex: View {
                     .entrance(0)
                 Text("Notes")
                     .textRole(.hero)
+                    .wordFit("Notes")
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .padding(.top, Theme.Spacing.s)
@@ -106,6 +107,8 @@ private struct NotesIndex: View {
                     .padding(.top, Theme.Spacing.xl)
                 }
             }
+            // Held to the leading edge, so a short page is never centred (Kaushik, Oct 21).
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
             .padding(.bottom, Theme.Spacing.section)
@@ -236,6 +239,7 @@ private struct NotesEmpty: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             Text("Nothing written yet.")
                 .textRole(.title)
+                .wordFit("Nothing written yet.")
                 .foregroundStyle(Theme.Colors.ink)
             Text("Write above, or tell Tess \u{201C}note: bar felt heavy\u{201D}. @ links a note to a thing.")
                 .font(Theme.voice)
