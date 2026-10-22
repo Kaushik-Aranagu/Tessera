@@ -131,6 +131,50 @@ struct RunPlaneTests {
         #expect(back.timers.first?.remaining(at: start.addingTimeInterval(9999)) == 50)
     }
 
+    @Test func aJumpFromTheStripNeverLeavesAStepAheadOfAFinishedRun() {
+        var run = plane([("A", .check, nil), ("B", .check, nil), ("C", .check, nil)])
+        run.skip(at: start) // A skipped, B now
+        run.go(to: 2, at: start) // jump to C: B is ahead again
+        run.complete(at: start) // C done: B is still ahead, so the run goes back to it
+        #expect(run.current?.title == "B" && !run.isFinished)
+        run.complete(at: start)
+        #expect(run.isFinished && run.steps.allSatisfy { $0.state != .ahead })
+    }
+
+    @Test func aParallelStepIsNeverGoneBackToSoItsTimerKeepsRunning() {
+        var run = plane([("Chop", .check, nil), ("Simmer", .parallel, 900), ("Boil", .timed, 600),
+                         ("Serve", .check, nil)])
+        run.complete(at: start)
+        run.back(at: start.addingTimeInterval(10))
+        #expect(run.current?.title == "Chop") // skipped over the parallel step
+        run.go(to: 1, at: start.addingTimeInterval(11)) // the strip cannot land on it either
+        #expect(run.current?.title == "Chop")
+        run.complete(at: start.addingTimeInterval(20))
+        #expect(run.timer(for: run.steps[1].id) != nil) // still counting from the first arrival
+        #expect(run.timer(for: run.steps[1].id)?.remaining(at: start.addingTimeInterval(20)) == 880)
+    }
+
+    @Test func anEndedTimerWaitsToBeDismissedThenGoes() {
+        var run = plane([("Rest", .timed, 30), ("Next", .check, nil)])
+        run.startTimer(for: 0, at: start)
+        run.tick(at: start.addingTimeInterval(31))
+        #expect(run.runningTimers(at: start.addingTimeInterval(31)).isEmpty && run.endedTimers.count == 1)
+        run.dismissEnded()
+        #expect(run.timers.isEmpty && run.endedTimers.isEmpty)
+    }
+
+    @Test func aPrivateWorkoutsStepsCarryNoExerciseNames() throws {
+        let routine = try engine.perform(CreateRoutine(title: "Knee rehab day"), by: .user).output
+        let bench = try #require(classes[.benchPress])
+        _ = try engine.perform(AddSlot(routine: routine.id, exercise: bench.id, sets: 2), by: .user)
+        let workout = try engine.perform(StartRoutine(routine: routine.id, time: start), by: .user).output
+        let steps = RunSources.workout(workout, store: store, classes: classes)
+        #expect(steps.count == 2 && steps.allSatisfy { $0.title == ObjectPrivacy.routineLabel })
+        #expect(steps.allSatisfy { !$0.title.lowercased().contains("bench") })
+        let run = RunPlane(steps: steps)
+        #expect(run.activity(at: start)?.title == ObjectPrivacy.routineLabel)
+    }
+
     // MARK: Parity with the workout
 
     @Test func theWorkoutPlaneIsWhereWorkoutProgressPoints() throws {
@@ -141,7 +185,7 @@ struct RunPlaneTests {
         var logged = 0
         while true {
             let progress = WorkoutProgress(of: workout, store: store)
-            let run = RunPlane(steps: RunSources.workout(workout, store: store))
+            let run = RunPlane(steps: RunSources.workout(workout, store: store, classes: classes))
             #expect(run.steps.count == planned)
             #expect(run.doneCount == logged)
             #expect(run.isFinished == progress.isComplete)
@@ -165,7 +209,7 @@ struct RunPlaneTests {
         let entry = try #require(workout.orderedChildren.first)
         _ = try engine.perform(LogSet(entry: entry.id, weight: 20, reps: 10, isWarmup: true, time: start), by: .user)
         let progress = WorkoutProgress(of: workout, store: store)
-        let run = RunPlane(steps: RunSources.workout(workout, store: store))
+        let run = RunPlane(steps: RunSources.workout(workout, store: store, classes: classes))
         #expect(run.current?.title == "\(progress.exerciseName ?? ""), set \(progress.setIndex + 1)")
     }
 
