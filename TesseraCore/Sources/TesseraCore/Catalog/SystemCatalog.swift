@@ -23,6 +23,7 @@ public enum SystemCatalog {
         case tessSent
         case settings
         case meProfile
+        case place
         case tessWaiting
         case tessMemory
 
@@ -397,6 +398,15 @@ public enum SystemCatalog {
                   fields: [
                       FieldSpec(key: "aisle", name: "Aisle", kind: .text),
                       FieldSpec(key: "isStaple", name: "Staple", kind: .bool, defaultValue: .bool(false)),
+                      // Where it lives in the Pantry (a Place) and the section inside it ("Door"); both optional.
+                      FieldSpec(key: "place", name: "Place", kind: .ref, target: .place),
+                      FieldSpec(key: "section", name: "Section", kind: .text),
+                  ]),
+        // A place in the Pantry (Fridge, Freezer, Shelf, Counter, or his own): ordered, with its sections as words.
+        ClassSpec(key: .place, name: "Place", parent: .thing, symbol: "refrigerator", colorRole: "health",
+                  fields: [
+                      FieldSpec(key: "order", name: "Order", kind: .number),
+                      FieldSpec(key: "sections", name: "Sections", kind: .text),
                   ]),
         // A recipe: its ingredient lines and steps are its children, in order. The pasted text is kept verbatim.
         ClassSpec(key: .recipe, name: "Recipe", parent: .thing, symbol: "fork.knife", colorRole: "health", fields: [

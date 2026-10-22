@@ -106,6 +106,8 @@ private struct NotesIndex: View {
                     .padding(.top, Theme.Spacing.xl)
                 }
             }
+            // Held to the leading edge, so a short page is never centred (Kaushik, Oct 21).
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
             .padding(.bottom, Theme.Spacing.section)
