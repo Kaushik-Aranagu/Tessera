@@ -6,7 +6,12 @@ import Foundation
 public enum HouseTime {
     public static func clock(_ date: Date, calendar: Calendar = .current) -> String {
         let parts = calendar.dateComponents([.hour, .minute], from: date)
-        let hour = parts.hour ?? 0, minute = parts.minute ?? 0
+        return clock(minuteOfDay: (parts.hour ?? 0) * 60 + (parts.minute ?? 0))
+    }
+
+    /// The same words for a minute of the day (0 to 1439): "6:40 am", "7 pm".
+    public static func clock(minuteOfDay: Int) -> String {
+        let hour = minuteOfDay / 60 % 24, minute = minuteOfDay % 60
         let twelve = hour % 12 == 0 ? 12 : hour % 12
         let half = hour < 12 ? "am" : "pm"
         return minute == 0 ? "\(twelve) \(half)" : String(format: "%d:%02d %@", twelve, minute, half)
