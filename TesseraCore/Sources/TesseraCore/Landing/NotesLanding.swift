@@ -83,7 +83,7 @@ public struct NotesLanding {
     }
 
     /// Private by its flag or by its words (a secret, money or a body fact): the one rule every screen uses.
-    func isPrivate(_ note: ObjectRecord) -> Bool {
+    public func isPrivate(_ note: ObjectRecord) -> Bool {
         store.value("isPrivate", of: note) == .bool(true)
             || ObjectPrivacy.shownLabel(of: note, in: store, classes: classes) != nil
     }
