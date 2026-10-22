@@ -158,7 +158,10 @@ struct RoutinesFront {
     private static func todayIDs(model: AppModel, items: [Item], now: Date, calendar: Calendar) -> [UUID] {
         guard let plan = model.plan else { return [] }
         var ids: [UUID] = []
-        if PlanSchedule.mode(of: plan, store: model.store) == .fixed, PlanSchedule.hasFixedDays(plan, store: model.store) {
+        if PlanSchedule.mode(of: plan, store: model.store) == .fixed, PlanSchedule.hasFixedDays(
+            plan,
+            store: model.store
+        ) {
             let weekday = calendar.component(.weekday, from: now)
             ids = items.filter { $0.weekdays.contains(weekday) }.map(\.id)
         } else if let next = model.ledger.nextRoutine(in: plan, now: now, calendar: calendar) {

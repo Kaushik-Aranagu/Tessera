@@ -34,6 +34,11 @@ struct RoutinesLandingPage: View {
         let accent = RoutinesFront.accent
         var subtitle = AttributedString(front.subtitle)
         subtitle.foregroundColor = accent
+        // While one runs, only its name is rose; the rest of the line is ink-secondary.
+        if let name = front.running?.name, let range = subtitle.range(of: name) {
+            subtitle.foregroundColor = Theme.Colors.inkSecondary
+            subtitle[range].foregroundColor = accent
+        }
         let browse = LandingAction(word: RoutinesLandingWords.browse, hint: "Opens the index") {
             model.open(.routinesBrowse)
         }
@@ -251,7 +256,9 @@ struct StartSwipeRow<Content: View>: View {
     @State private var cue = HapticCue()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static var arm: CGFloat { 90 }
+    private static var arm: CGFloat {
+        90
+    }
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -384,7 +391,7 @@ struct RoutineDetailSheet: View {
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
                 Text(RoutinesLandingWords.countWords(item.exercises, workout: true))
-                Text("Kind: Workouts")
+                Text("A workout routine")
                     .foregroundStyle(Theme.Colors.inkSecondary)
             }
         }

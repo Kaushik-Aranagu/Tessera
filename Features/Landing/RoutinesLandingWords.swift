@@ -60,7 +60,9 @@ enum RoutinesLandingWords {
     }
 
     /// The rail row's plain value on the right: "14 days, usually 6:40, 22 min" or "6 steps".
-    static func railValue(days: Int?, startMinuteOfDay: Int?, lengthMinutes: Int?, count: Int, workout: Bool) -> String {
+    static func railValue(days: Int?, startMinuteOfDay: Int?, lengthMinutes: Int?, count: Int,
+                          workout: Bool) -> String
+    {
         guard let days, let startMinuteOfDay, let lengthMinutes else { return countWords(count, workout: workout) }
         return "\(days) \(days == 1 ? "day" : "days"), usually \(clock(startMinuteOfDay)), "
             + HouseTime.minutes(lengthMinutes)
@@ -121,7 +123,9 @@ enum RoutinePlace: String, CaseIterable, Identifiable, Sendable {
     case night = "Night"
     case anyTime = "Any time"
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     static let dial: [RoutinePlace] = [.morning, .midday, .evening, .night, .anyTime]
 

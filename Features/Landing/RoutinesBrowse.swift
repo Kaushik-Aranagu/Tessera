@@ -61,6 +61,7 @@ private struct RoutinesRail: View {
             title: "Routines",
             subtitle: { _ in "Your routines, by the time you run them." },
             back: (title: cameFrom, action: { dismiss() }),
+            titleTrailing: AnyView(knob),
             pinned: place(.today),
             places: RoutinePlace.dial.map(place),
             open: $open,
@@ -71,7 +72,6 @@ private struct RoutinesRail: View {
             empty: { RoutinesLandingWords.nothingIn(RoutinePlace(rawValue: $0) ?? .anyTime) },
             row: row
         )
-        .overlay(alignment: .topTrailing) { knob }
         .safeAreaInset(edge: .bottom, alignment: .leading, spacing: 0) {
             Button(RoutinesLandingWords.newRoutine) {
                 // Making a routine lives on the plan's routines page today (its editor, reorder and drop).
@@ -191,8 +191,6 @@ private struct RoutinesRail: View {
                 turn(value.translation.width < 0 ? kind.next : kind.previous)
             }
         )
-        .padding(.trailing, Theme.Spacing.gutter)
-        .padding(.top, 44 + Theme.Spacing.m)
         .accessibilityLabel("Kind, \(kind.rawValue)")
         .accessibilityHint("Changes which routines show")
         .accessibilityAdjustableAction { direction in
