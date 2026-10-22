@@ -37,3 +37,13 @@ struct KickerRowTests {
         #expect(Fractions.digits("12") == "12")
     }
 }
+
+struct KeepUnitsTests {
+    @Test func aNumberAndItsUnitKeepTheirSpace() {
+        #expect("about 40 min".keepingUnits == "about 40\u{00A0}min")
+        #expect("serves 4, 39 min".keepingUnits == "serves 4, 39\u{00A0}min")
+        #expect("1 h 35 min".keepingUnits == "1\u{00A0}h 35\u{00A0}min")
+        #expect("Hold, 30 min left".keepingUnits == "Hold, 30\u{00A0}min left")
+        #expect("5 exercises".keepingUnits == "5 exercises")
+    }
+}

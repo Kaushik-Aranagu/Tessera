@@ -437,6 +437,7 @@ private struct AisleSection: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text(name)
                 .textRole(.title)
+                .wordFit(name)
                 .foregroundStyle(Theme.Colors.ink.opacity(0.85))
                 .accessibilityAddTraits(.isHeader)
             VStack(alignment: .leading, spacing: 0) {
@@ -718,6 +719,7 @@ private struct GroceriesEmpty: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             Text(basket > 0 ? "All in the basket." : "Nothing to get.")
                 .textRole(.title)
+                .wordFit(basket > 0 ? "All in the basket." : "Nothing to get.")
                 .foregroundStyle(Theme.Colors.ink)
             Text("Tell me \u{201C}milk, eggs\u{201D}, or swipe a recipe's ingredients here.")
                 .font(Theme.voice)

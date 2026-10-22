@@ -238,6 +238,7 @@ private struct TrainingAtRest: View {
                 } else {
                     Text(title)
                         .textRole(.title)
+                        .wordFit(title)
                         // The day's name wraps to a second line and, if that is still too long, scales a little: never
                         // "...".
                         .lineLimit(2)
@@ -433,7 +434,7 @@ private struct TrainingAtRest: View {
         } else if case .running = plan {
             KickerRow(left: "Running now")
         } else {
-            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes))
+            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes).keepingUnits)
         }
     }
 
@@ -846,6 +847,7 @@ private struct EmptyTraining: View {
                 .foregroundStyle(Theme.Colors.context)
             Text("A rest day. It counts too.")
                 .textRole(.title)
+                .wordFit("A rest day. It counts too.")
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .siblingParallax()

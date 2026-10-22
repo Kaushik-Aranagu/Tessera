@@ -34,6 +34,7 @@ private struct ListsShelfPage: View {
                     .entrance(0)
                 Text("Lists")
                     .textRole(.title)
+                    .wordFit("Lists")
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .entrance(0)
@@ -246,6 +247,7 @@ private struct ListPage: View {
                                 if let title = section.name {
                                     Text(title)
                                         .textRole(.title)
+                                        .wordFit(title)
                                         .foregroundStyle(Theme.Colors.ink.opacity(0.85))
                                         .accessibilityAddTraits(.isHeader)
                                 }
@@ -786,6 +788,7 @@ struct PutAwayShelf: Hashable {
                     BackWord(title: "Lists") { dismiss() }
                     Text("Put away")
                         .textRole(.title)
+                        .wordFit("Put away")
                         .foregroundStyle(Theme.Colors.ink)
                         .accessibilityAddTraits(.isHeader)
                     VStack(alignment: .leading, spacing: Theme.Spacing.m) {

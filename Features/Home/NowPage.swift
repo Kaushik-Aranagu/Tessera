@@ -264,7 +264,7 @@ struct NowPage: View {
                 let lines = Self.timeLeft(task, now: AppClock.adjust(context.date))
                 // Sentence case with no middle dot in the Figtree pair ("Hold, 30 min left"); it wraps by words.
                 Text(Choice.fontIsNew()
-                    ? "Hold, \(lines.0.lowercased()) \(lines.1.lowercased())"
+                    ? "Hold, \(lines.0.lowercased()) \(lines.1.lowercased())".keepingUnits
                     : "Hold · \(lines.0) \(lines.1)")
                     .monospacedDigit()
             }
@@ -357,6 +357,7 @@ struct NowPage: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.l) {
                 Text("Nothing else is planned today.")
                     .textRole(.title)
+                    .wordFit("Nothing else is planned today.")
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Button {
