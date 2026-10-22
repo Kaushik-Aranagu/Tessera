@@ -229,7 +229,12 @@ struct HomeSpatialView: View {
                 }
         case .today: NowPage(onShow: show)
         case .training: TrainingPage()
-        case .kitchen: KitchenPage()
+        // The landing, while Settings › Review › Landing pages is On (131).
+        case .kitchen: if LandingSwitch.isOn {
+                KitchenLanding()
+            } else {
+                KitchenPage()
+            }
         }
     }
 
