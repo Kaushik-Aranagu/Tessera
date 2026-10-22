@@ -8,13 +8,13 @@ import SwiftUI
 enum PageType {
     /// 18 pt UI face: history dates, notes under a grid, roles, keys.
     static var small: Font {
-        Theme.Typography.face(Theme.concept.fonts.ui, size: 18, relativeTo: .subheadline, serif: false)
+        Theme.Typography.face(Theme.activeFonts.ui, size: 18, relativeTo: .subheadline, serif: false)
             .weight(.medium)
     }
 
     /// 16 pt UI face, case kept: routine names under the week's dabs, day numerals.
     static var caption: Font {
-        Theme.Typography.face(Theme.concept.fonts.ui, size: 16, relativeTo: .callout, serif: false)
+        Theme.Typography.face(Theme.activeFonts.ui, size: 16, relativeTo: .callout, serif: false)
             .weight(.medium)
     }
 

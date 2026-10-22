@@ -111,6 +111,7 @@ private struct GoneBody: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.l) {
             Text(ObjectPageCopy.gone)
                 .textRole(.title)
+                .wordFit(ObjectPageCopy.gone)
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityFocused($focused)

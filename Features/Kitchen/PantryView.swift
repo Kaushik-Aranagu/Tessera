@@ -35,6 +35,7 @@ private struct PantryPage: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Pantry")
                     .textRole(.title)
+                    .wordFit("Pantry")
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .entrance(0)
@@ -47,6 +48,7 @@ private struct PantryPage: View {
                 }
                 Text(front.hero)
                     .textRole(.hero)
+                    .wordFit(front.hero)
                     .foregroundStyle(Theme.Colors.ink)
                     .contentTransition(.identity)
                     .padding(.top, Theme.Spacing.xs)
@@ -76,6 +78,9 @@ private struct PantryPage: View {
                     }
                 }
             }
+            // Held to the leading edge: a short page (an empty pantry, an empty shelf) is otherwise centred in the
+            // scroll view and reads as shifted right (Kaushik, Oct 21).
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.vertical, Theme.Spacing.l)
             .tesseraAnimation(value: (front.out + front.low).map(\.id))

@@ -114,6 +114,7 @@ private struct AccentFace: View, Animatable {
     let tint: Color?
     var progress: Double
     var dry: Double
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     nonisolated var animatableData: AnimatablePair<Double, Double> {
         get { AnimatablePair(progress, dry) }
@@ -129,7 +130,7 @@ private struct AccentFace: View, Animatable {
         let ink = Theme.Colors.ink
         let lean = tint.map { ink.mix(with: $0, by: 0.6 * live) } ?? ink
         Text(attributed(ink: ink))
-            .font(AccentFont.font(spec, weight: weight))
+            .font(AccentFont.font(spec, weight: weight, typeSize: typeSize))
             .tracking((spec.tracking - 0.012 * live) * spec.size)
             .lineHeight(.multiple(factor: spec.lineHeight))
             .foregroundStyle(lean)
@@ -145,7 +146,7 @@ private struct AccentFace: View, Animatable {
             string[lower ..< upper].foregroundColor = ink.mix(with: tint, by: 0.72 * word)
         } else {
             // Today's tasks: the word is ink at 700, no colour.
-            string[lower ..< upper].font = AccentFont.font(spec, weight: 500 + 200 * word)
+            string[lower ..< upper].font = AccentFont.font(spec, weight: 500 + 200 * word, typeSize: typeSize)
         }
         return string
     }
@@ -155,9 +156,12 @@ private struct AccentFace: View, Animatable {
 enum AccentFont {
     private static let weightAxis = 0x7767_6874 // 'wght'
 
-    static func font(_ spec: ThemeConcept.TypeSpec, weight: Double) -> Font {
-        let family = Theme.concept.fonts.display
-        let size = UIFontMetrics(forTextStyle: spec.textStyle.uiKit).scaledValue(for: spec.size)
+    /// `typeSize` is the SwiftUI environment's size, so a title that was stepped down to fit its longest word is
+    /// drawn at that size here too (UIKit's own category would ignore it).
+    static func font(_ spec: ThemeConcept.TypeSpec, weight: Double, typeSize: DynamicTypeSize? = nil) -> Font {
+        let family = Theme.activeFonts.display
+        let traits = typeSize.map { UITraitCollection(preferredContentSizeCategory: WordFit.category($0)) }
+        let size = UIFontMetrics(forTextStyle: spec.textStyle.uiKit).scaledValue(for: spec.size, compatibleWith: traits)
         let descriptor = UIFontDescriptor(fontAttributes: [
             .family: family,
             UIFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String): [weightAxis: weight],

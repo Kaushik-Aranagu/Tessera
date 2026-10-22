@@ -27,6 +27,7 @@ struct SettingsPage: View {
                     .entrance(0)
                 Text("Settings")
                     .textRole(.hero)
+                    .wordFit("Settings")
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .padding(.top, Theme.Spacing.s)
@@ -77,6 +78,16 @@ struct SettingsPage: View {
                 .buttonStyle(.labelWord)
                 .padding(.top, Theme.Spacing.xxl)
                 .accessibilityHint("Where your history is kept")
+
+                // Who made what: one line per source.
+                NavigationLink {
+                    AboutPage()
+                } label: {
+                    Text("About")
+                }
+                .buttonStyle(.labelWord)
+                .padding(.top, Theme.Spacing.l)
+                .accessibilityHint("Credits for the pictures and sources")
 
                 // Which release this is: the git SHA the build was made from, one quiet line at the foot.
                 Text("Build \(BuildStamp.short)")
