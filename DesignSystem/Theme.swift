@@ -511,10 +511,11 @@ enum Theme {
 
     enum Typography {
         static func font(_ spec: ThemeConcept.TypeSpec, weight: Font.Weight? = nil) -> Font {
+            let fonts = Theme.activeFonts
             let family = switch spec.family {
-            case .display: concept.fonts.display
-            case .ui: concept.fonts.ui
-            case .mono: concept.fonts.mono
+            case .display: fonts.display
+            case .ui: fonts.ui
+            case .mono: fonts.mono
             }
             let font = face(family, size: spec.size, relativeTo: spec.textStyle, serif: spec.family == .display)
                 .weight(weight ?? spec.weight)
@@ -535,7 +536,11 @@ enum Theme {
 
         /// A number set at a role's size in the mono face.
         static func number(_ spec: ThemeConcept.TypeSpec, weight: Font.Weight) -> Font {
-            Font.custom(concept.fonts.mono, size: spec.size, relativeTo: spec.textStyle).weight(weight)
+            if Choice.fontIsNew() {
+                return Font.custom(Theme.activeFonts.mono, size: spec.size, relativeTo: spec.textStyle)
+                    .weight(Theme.numeralWeight(size: spec.size, asked: weight))
+            }
+            return Font.custom(concept.fonts.mono, size: spec.size, relativeTo: spec.textStyle).weight(weight)
                 .width(.condensed)
         }
     }

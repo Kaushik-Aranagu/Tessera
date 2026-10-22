@@ -23,7 +23,7 @@ struct WeightField: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 TextField("", text: $text, prompt: Text(Format.kilograms(weight)).foregroundStyle(Paint.secondary))
-                    .font(Theme.numeral(80))
+                    .numeral(80)
                     .foregroundStyle(Paint.cream)
                     .tint(Paint.cobalt)
                     .keyboardType(.decimalPad)

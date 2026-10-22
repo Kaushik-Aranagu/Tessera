@@ -16,12 +16,27 @@ private struct TextRoleModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         let scale = Theme.concept.scale
-        let spec: ThemeConcept.TypeSpec = switch role {
+        var spec: ThemeConcept.TypeSpec = switch role {
         case .hero, .heroNumber: scale.hero
         case .title, .titleNumber: scale.title
         case .body, .bodyStrong: scale.body
         case .label, .labelStrong, .data: scale.label
         case .field: scale.field
+        }
+        if Choice.fontIsNew() {
+            // The 1.5x steps (Design 116): a page title is 72, or 48 when the name does not fit one line (the
+            // callers' ViewThatFits ladders walk hero then title); Figtree 500 at -0.03 em; body is 21.
+            switch role {
+            case .hero, .heroNumber:
+                spec.size = 72
+                spec.tracking = -0.03
+                spec.weight = .medium
+            case .title, .titleNumber:
+                spec.size = 48
+                spec.tracking = -0.03
+                spec.weight = .medium
+            default: break
+            }
         }
         let font: Font = switch role {
         case .heroNumber: Theme.Typography.number(spec, weight: scale.heroNumberWeight)

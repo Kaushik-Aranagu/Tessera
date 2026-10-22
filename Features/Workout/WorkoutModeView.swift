@@ -541,7 +541,7 @@ extension WorkoutContent {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             // The countdown is the one thing in colour at rest, and it moves (live-workout.md §7).
                             Text(Format.duration(remaining))
-                                .font(Theme.numeral(72))
+                                .numeral(72)
                                 .foregroundStyle(Paint.now)
                                 .contentTransition(.numericText(countsDown: true))
                                 .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
@@ -568,7 +568,7 @@ extension WorkoutContent {
                 VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                     if showsGo {
                         Text("Go")
-                            .font(Theme.numeral(72))
+                            .numeral(72)
                             .foregroundStyle(Paint.cream)
                             .transition(reduceMotion ? AnyTransition.opacity
                                 : AnyTransition.offset(y: 14).combined(with: AnyTransition(.blurReplace)))
