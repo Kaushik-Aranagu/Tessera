@@ -336,8 +336,7 @@ struct NotesLandingPage: View {
             var word = AttributedString(thing.name)
             word.font = Theme.voice(size: topIDs.contains(thing.id) ? 34 : 21)
             word.link = URL(string: "tessera-thing://\(thing.id.uuidString)")
-            word.underlineStyle = .single
-            word.underlineColor = LandingAccent.notes
+            word.underlineStyle = Text.LineStyle(pattern: .solid, color: LandingAccent.notes)
             result += word
             var glue = AttributedString(Self.glue(index: index, count: shown.count))
             glue.font = Theme.voice(size: 21)

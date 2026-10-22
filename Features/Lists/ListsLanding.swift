@@ -100,13 +100,13 @@ struct ListsLandingFacts {
             line.touched = ListsShelf.touched(list)
             if !isPrivate {
                 line.nextItems = openItems.prefix(4).map { item in
-                    let shown = AddListItem.shownTitle(item.text, store: store)
+                    let shown = ObjectPrivacy.isPrivateWord(item.text, in: store) ? "Private item" : item.text
                     return (shown, shown != item.text)
                 }
             }
             if line.isPickOne {
                 line.lastPick = items.compactMap { item in
-                    contents.pickedAt(item.object).map { (AddListItem.shownTitle(item.text, store: store), $0) }
+                    contents.pickedAt(item.object).map { (ObjectPrivacy.isPrivateWord(item.text, in: store) ? "Private item" : item.text, $0) }
                 }.max { $0.1 < $1.1 }.map { (text: $0.0, on: $0.1) }
             }
             if let lastSeen {

@@ -14,16 +14,15 @@ import TesseraCore
 @MainActor
 struct MoneyLandingFacts {
     /// A month's spends in one currency (nil: no currency typed). The exact sum of the typed digits.
-    @MainActor
     struct Total: Identifiable, Equatable {
         let currency: String?
         let amount: Decimal
 
-        var id: String {
+        nonisolated var id: String {
             currency ?? ""
         }
 
-        var shown: String {
+        @MainActor var shown: String {
             SpendLedger.shown(amount, currency: currency, grouped: true)
         }
     }
