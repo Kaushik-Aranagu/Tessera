@@ -262,7 +262,10 @@ struct NowPage: View {
         }, meta: {
             TimelineView(.periodic(from: .now, by: 30)) { context in
                 let lines = Self.timeLeft(task, now: AppClock.adjust(context.date))
-                Text("Hold · \(lines.0) \(lines.1)")
+                // Sentence case with no middle dot in the Figtree pair ("Hold, 30 min left"); it wraps by words.
+                Text(Choice.fontIsNew()
+                    ? "Hold, \(lines.0.lowercased()) \(lines.1.lowercased())"
+                    : "Hold · \(lines.0) \(lines.1)")
                     .monospacedDigit()
             }
         })

@@ -9,17 +9,51 @@ private struct WordFitModifier: ViewModifier {
     /// The type the title is drawn in when it wraps (the Title step).
     var points: CGFloat = 48
     @Environment(\.dynamicTypeSize) private var size
+    /// The width the container actually proposes; the screen's gutters until it is known.
+    @State private var container: CGFloat?
 
     func body(content: Content) -> some View {
         guard Choice.fontIsNew() else { return AnyView(content) }
-        let fitted = WordFit.largest(fitting: text, points: points, from: size)
-        return AnyView(content.dynamicTypeSize(...fitted))
+        let fitted = WordFit.largest(fitting: text, points: points, from: size, available: container)
+        return AnyView(WidthProbe { width in
+            DispatchQueue.main.async {
+                if abs((container ?? 0) - width) > 0.5 { container = width }
+            }
+        } content: {
+            content.dynamicTypeSize(...fitted)
+        })
+    }
+}
+
+/// Passes its child the proposal untouched and reports the width it was offered, so a title is fitted to the room it
+/// really has (a title inside a padded or narrower container) and not to the screen.
+private struct WidthProbe<Content: View>: View {
+    let report: (CGFloat) -> Void
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        ProbeLayout(report: report) { content }
+    }
+
+    private struct ProbeLayout: Layout {
+        let report: (CGFloat) -> Void
+
+        func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
+            if let width = proposal.width, width.isFinite, width > 0 {
+                report(width)
+            }
+            return subviews.first?.sizeThatFits(proposal) ?? .zero
+        }
+
+        func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
+            subviews.first?.place(at: bounds.origin, proposal: ProposedViewSize(width: bounds.width, height: bounds.height))
+        }
     }
 }
 
 enum WordFit {
     /// The page side margin, twice, plus a little slack for the tracking and the text's own side bearings.
-    private static var available: CGFloat {
+    static var screenAvailable: CGFloat {
         UIScreen.main.bounds.width - 2 * Theme.Spacing.gutter - 4
     }
 
@@ -39,7 +73,10 @@ enum WordFit {
     }
 
     /// The largest size at or below `current` where the longest word fits, no lower than 0.6 of the start.
-    static func largest(fitting text: String, points: CGFloat, from current: DynamicTypeSize) -> DynamicTypeSize {
+    static func largest(fitting text: String, points: CGFloat, from current: DynamicTypeSize,
+                        available: CGFloat? = nil) -> DynamicTypeSize
+    {
+        let available = available ?? screenAvailable
         let sizes = DynamicTypeSize.allCases
         guard let start = sizes.firstIndex(of: current), current > .xxxLarge else { return current }
         let startPoints = scaled(points, current)
@@ -55,6 +92,10 @@ enum WordFit {
             index -= 1
         }
         return sizes[index]
+    }
+
+    static func points(_ points: CGFloat, at size: DynamicTypeSize) -> CGFloat {
+        scaled(points, size)
     }
 
     private static func scaled(_ points: CGFloat, _ size: DynamicTypeSize) -> CGFloat {

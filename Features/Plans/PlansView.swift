@@ -124,8 +124,9 @@ struct PlanHeading: View {
                 .textRole(.hero)
                 .wordFit(headline)
                 .foregroundStyle(Theme.Colors.ink)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
+                // The Figtree pair wraps a long plan name in full, never "..."; before, two lines, then a shrink.
+                .lineLimit(Choice.fontIsNew() ? nil : 2)
+                .minimumScaleFactor(Choice.fontIsNew() ? 1 : 0.8)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityLabel(spoken ?? headline.replacingOccurrences(of: "\n", with: " "))
