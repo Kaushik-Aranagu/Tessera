@@ -178,17 +178,16 @@ enum DarkPlate {
             let blue = Float(bytes[index + 2]) / 255 / alpha
             let top = max(red, green, blue), bottom = min(red, green, blue)
             let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
+            // Ink-3: the figure's body never drops below this on a dark ground; its shape rides on the alpha.
             let swapped = 1 - luminance
-            let keep = smooth((top - bottom - 0.15) / 0.2)
             let neutralAlpha = min(1, swapped * 1.6)
+            let neutral = neutralAlpha > 0.1 ? max(swapped, inkFloor) : swapped
+            let keep = smooth((top - bottom - chromaFloor) / 0.2)
             let outAlpha = (neutralAlpha + (1 - neutralAlpha) * keep) * alpha
-            let channels = [red, green, blue].map { original -> Float in
-                let straight = swapped + (original - swapped) * keep
-                return straight * outAlpha
-            }
-            for offset in 0 ..< 3 {
-                bytes[index + offset] = UInt8(max(0, min(255, channels[offset] * 255)))
-            }
+            let scale = outAlpha * 255
+            bytes[index] = clamp((neutral + (red - neutral) * keep) * scale)
+            bytes[index + 1] = clamp((neutral + (green - neutral) * keep) * scale)
+            bytes[index + 2] = clamp((neutral + (blue - neutral) * keep) * scale)
             bytes[index + 3] = UInt8(max(0, min(255, outAlpha * 255)))
         }
         let output = bytes.withUnsafeMutableBytes { buffer -> CGImage? in
@@ -205,6 +204,13 @@ enum DarkPlate {
         }
         guard let output else { return image }
         return UIImage(cgImage: output, scale: image.scale, orientation: image.imageOrientation)
+    }
+
+    private static let inkFloor: Float = 0.62
+    private static let chromaFloor: Float = 0.2
+
+    private static func clamp(_ value: Float) -> UInt8 {
+        UInt8(max(0, min(255, value)))
     }
 
     private static func smooth(_ value: Float) -> Float {
