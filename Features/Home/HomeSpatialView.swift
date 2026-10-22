@@ -346,7 +346,7 @@ struct HomeSpatialView: View {
 
 /// The screens Home reaches that are not objects: Notes, Review, Groceries, Pantry and Recipes.
 enum HomeLink: Hashable, CaseIterable, Identifiable {
-    case groceries, lists, pantry, recipes, pasteRecipe, notes, review
+    case groceries, lists, pantry, recipes, pasteRecipe, notes, review, money
 
     var id: Self {
         self
@@ -361,6 +361,7 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .pasteRecipe: "Paste a recipe"
         case .notes: "Notes"
         case .review: "The week"
+        case .money: "Money"
         }
     }
 
@@ -375,6 +376,7 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .pasteRecipe: PasteRecipeView()
         case .notes: NotesView()
         case .review: ReviewView()
+        case .money: MoneyLandingView()
         }
     }
 }
