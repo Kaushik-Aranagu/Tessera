@@ -59,8 +59,13 @@ struct MeProfileTests {
         let object = try #require(disk.object(id: MeProfile.objectID))
         #expect(ObjectPrivacy.label(of: object, in: disk, classes: diskEngine.classes) == "Private profile")
         // The shared export shows only the label.
-        let json = try String(decoding: TesseraExport(context: disk.context).encoded(), as: UTF8.self)
-        #expect(!json.contains("187.25") && !json.contains("1973") && !json.contains("\"male\""))
+        // Read as values, not characters: a random id or a timestamp can hold "1973" (the Money test had the same
+        // flake).
+        let shared = try TesseraExport(context: disk.context).encoded()
+        #expect(try ExportLeaks.found(["male"], numbers: [187.25, 1973], in: shared).isEmpty)
+        // And the helper does catch a real leak.
+        let leaked = try TesseraExport(context: disk.context, maskingPrivate: false).encoded()
+        #expect(try !ExportLeaks.found(["male"], numbers: [187.25, 1973], in: leaked).isEmpty)
         // The local backup keeps every word; the iCloud copy leaves the object and its ops out.
         let local = dir.appending(path: "local.sqlite"), icloud = dir.appending(path: "icloud.sqlite")
         try TesseraBackup.write(from: disk.context, to: local)
