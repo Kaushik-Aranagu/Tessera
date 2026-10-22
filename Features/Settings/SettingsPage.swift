@@ -47,6 +47,11 @@ struct SettingsPage: View {
                     .padding(.top, Theme.Spacing.xxl)
                     .entrance(3)
 
+                // The units every measure reads in (Design sheet 115): the same pick a swipe on a unit word makes.
+                UnitsSentence()
+                    .padding(.top, Theme.Spacing.xxl)
+                    .entrance(3)
+
                 // What Tess keeps about him, in ink, the count the door to the page (AI-9).
                 TessKnowsDoor()
                     .padding(.top, Theme.Spacing.xxl)
@@ -222,7 +227,8 @@ struct ReviewSection: View {
             .textRole(.body)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(choice.name)
-            .accessibilityValue(value)
+            // The mark below is drawn apart, so VoiceOver hears it with the value: "On, Needs Claude".
+            .accessibilityValue(ReviewSwitchCopy.spokenValue(choice, value: value))
             .accessibilityHint(ReviewSwitchCopy.hint(choice, value: value))
             .accessibilityAddTraits(live ? .isButton : [])
             .accessibilityAdjustableAction { direction in
@@ -274,6 +280,12 @@ enum ReviewSwitchCopy {
     static let everythingAsBefore = "Everything as before"
     static let reset = "Everything is as before."
     static let needsClaude = "Needs Claude"
+
+    /// The value VoiceOver hears, with the row's mark when it has one: "On, Needs Claude".
+    static func spokenValue(_ choice: ReviewChoices.Choice, value: String) -> String {
+        mark(choice).map { "\(value), \($0)" } ?? value
+    }
+
     static let later = "Later"
 
     /// "2 of 3".
