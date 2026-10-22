@@ -75,7 +75,15 @@ struct TesseraApp: App {
                     RootView()
                 #endif
             }
-            .environment(model)
+            // Sample data swaps every screen onto its own in-memory store; his model keeps running underneath
+            // (backups, Health, the Watch, Siri and the Live Activity stay on his data).
+            .environment(SampleData.shared.model(over: model))
+            .id(SampleData.isOn)
+            .onChange(of: SampleData.isOn) { _, on in
+                if !on {
+                    SampleData.shared.release()
+                }
+            }
             // A pinned look holds the appearance too ("Obsidian always" on a light phone gets a light status bar
             // on black otherwise).
             .preferredColorScheme(ThemeStore.shared.pin.map { $0.isDark ? .dark : .light })
