@@ -38,6 +38,19 @@ struct NowPage: View {
             && (!(current.map { $0.start.timeIntervalSince(now) < 15 * 60 } ?? false) || Self.pullsPlan)
 
         VStack(alignment: .leading, spacing: 0) {
+            // While Sample data is on, the plain words above the day say so; a tap opens the switch (Design on #1199).
+            if model.isSample {
+                Button {
+                    SampleData.shared.jumpsToSwitch = true
+                    openLink(.review)
+                } label: {
+                    Text("Sample data")
+                        .kicker()
+                        .frame(minHeight: 44, alignment: .bottomLeading)
+                }
+                .buttonStyle(HandleButtonStyle())
+                .accessibilityHint("Opens the Sample data switch")
+            }
             // The only day word on Home (41.4): the painted stroke lives one tap down now.
             DayLabel(now: now)
                 .entrance(0)

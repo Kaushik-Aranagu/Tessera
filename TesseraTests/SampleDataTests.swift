@@ -27,6 +27,27 @@ struct SampleDataTests {
         #expect(!RecipeBook(store: sample.store, classes: sample.classes).recipes().isEmpty)
     }
 
+    @Test func backupsAndCopiesRefuseTheSample() async throws {
+        let real = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext,
+                            launchDefaults: .testSuite())
+        let sample = SampleData.shared.model(over: real, on: true)
+        defer { SampleData.shared.release() }
+        #expect(SampleData.shared.holds(sample.context) && !SampleData.shared.holds(real.context))
+        let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        #expect(throws: BackupKeeper.SampleRefused.self) {
+            try BackupKeeper.pick(folder, context: sample.context, engine: sample.engine)
+        }
+        await #expect(throws: BackupKeeper.SampleRefused.self) {
+            _ = try await BackupKeeper.savedCopy(sample.context)
+        }
+        #expect(try FileManager.default.contentsOfDirectory(atPath: folder.path).isEmpty)
+        // A sample "Forget" has no log file to reach, and the sample never counts as his settings.
+        #expect(sample.isSample && sample.forgetLogURL == nil && !sample.settingsAreReal)
+        #expect(!real.isSample)
+    }
+
     @Test func spendsAreInDollars() {
         #expect(SampleText.notes.allSatisfy { !$0.contains("€") && !$0.contains("£") })
     }

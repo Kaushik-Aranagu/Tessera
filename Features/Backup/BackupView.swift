@@ -10,11 +10,18 @@ import UniformTypeIdentifiers
 struct BackupView: View {
     /// Where the back word goes: Settings from Settings, or wherever else opened it (the restore offer).
     var backTo = "Settings"
-    @Environment(AppModel.self) private var model
+    @Environment(AppModel.self) private var shown
+    @Environment(\.realModel) private var realModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
     @State private var picking = false
+
+    /// His own model even while Sample data is on: a backup is only ever of his things (QA on #1199).
+    private var model: AppModel {
+        realModel ?? shown
+    }
+
     @State private var folderTaps = 0
     /// A restore staged: the Restore hold plays nothing itself, so this owner plays `.made` (Product 11:04 PM).
     @State private var restores = 0
