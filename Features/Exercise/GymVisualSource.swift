@@ -154,21 +154,61 @@ struct GifView: UIViewRepresentable {
     private static let cache = NSCache<NSString, GifFrames>()
 }
 
-/// The Gym visual on a dark look (Design's dark plate, Kaushik's OK on Oct 22): light and dark swap and the hues stay,
-/// so the white plate reads as a dark one and the red muscles stay red. Light looks are untouched.
+/// The Gym visual on a dark look (Design's dark plate, Kaushik's OK on Oct 22): the white plate becomes transparent and
+/// the figure's greys turn light, so it sits on any dark ground; saturated pixels (the worked muscle) keep their own
+/// colour, so red stays red. Light looks are untouched.
 enum DarkPlate {
-    private static let context = CIContext()
-
     static func invert(_ image: UIImage) -> UIImage {
-        guard let input = CIImage(image: image),
-              let invert = CIFilter(name: "CIColorInvert"),
-              let hue = CIFilter(name: "CIHueAdjust") else { return image }
-        invert.setValue(input, forKey: kCIInputImageKey)
-        // Inverting turns every hue to its opposite; half a turn brings it back.
-        hue.setValue(invert.outputImage, forKey: kCIInputImageKey)
-        hue.setValue(Float.pi, forKey: kCIInputAngleKey)
-        guard let output = hue.outputImage,
-              let cgImage = context.createCGImage(output, from: input.extent) else { return image }
-        return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
+        guard let cgImage = image.cgImage else { return image }
+        let width = cgImage.width, height = cgImage.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let drawn = bytes.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                                          bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard drawn else { return image }
+        for index in stride(from: 0, to: bytes.count, by: 4) {
+            let alpha = Float(bytes[index + 3]) / 255
+            guard alpha > 0 else { continue }
+            // Un-premultiply, then work in 0...1.
+            let red = Float(bytes[index]) / 255 / alpha, green = Float(bytes[index + 1]) / 255 / alpha
+            let blue = Float(bytes[index + 2]) / 255 / alpha
+            let top = max(red, green, blue), bottom = min(red, green, blue)
+            let luminance = 0.299 * red + 0.587 * green + 0.114 * blue
+            let swapped = 1 - luminance
+            let keep = smooth((top - bottom - 0.15) / 0.2)
+            let neutralAlpha = min(1, swapped * 1.6)
+            let outAlpha = (neutralAlpha + (1 - neutralAlpha) * keep) * alpha
+            let channels = [red, green, blue].map { original -> Float in
+                let straight = swapped + (original - swapped) * keep
+                return straight * outAlpha
+            }
+            for offset in 0 ..< 3 {
+                bytes[index + offset] = UInt8(max(0, min(255, channels[offset] * 255)))
+            }
+            bytes[index + 3] = UInt8(max(0, min(255, outAlpha * 255)))
+        }
+        let output = bytes.withUnsafeMutableBytes { buffer -> CGImage? in
+            CGContext(
+                data: buffer.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )?
+                .makeImage()
+        }
+        guard let output else { return image }
+        return UIImage(cgImage: output, scale: image.scale, orientation: image.imageOrientation)
+    }
+
+    private static func smooth(_ value: Float) -> Float {
+        let clamped = max(0, min(1, value))
+        return clamped * clamped * (3 - 2 * clamped)
     }
 }
