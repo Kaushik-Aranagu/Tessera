@@ -232,13 +232,14 @@ struct LibraryLowsTests {
     @Test func aFailedAdoptionLeavesNothingBehind() throws {
         let extra = try #require(LibraryExtras.exercise(named: "Dead Bug"))
         let before = store.allClasses().count
-        var broken = classes
-        broken[.equipment] = nil
-        broken[.muscle] = nil // MuscleLibrary.install returns nothing; adoption still completes
-        let dead = try LibraryAdopter.adopt(extra, store: store, classes: broken)
-        #expect(dead.name == "Dead Bug")
-        LibraryAdopter.removeUnused(store: store)
+        // A failure midway, after the class exists, takes the half-built class back.
+        struct Boom: Error {}
+        #expect(throws: Boom.self) {
+            try LibraryAdopter.adopt(extra, store: store, classes: classes, afterCreate: { throw Boom() })
+        }
         #expect(store.allClasses().count == before)
+        #expect(LibraryAdopter.adoptedClass(of: extra, store: store) == nil)
+        #expect(store.allClasses().filter { $0.name == "Dead Bug" }.isEmpty)
         // No strength class: it throws before making anything.
         var none = classes
         none[.strengthExercise] = nil
@@ -287,5 +288,20 @@ struct LibraryLowsTests {
         _ = ReadyWorkouts.search(equipment: .band)
         #expect(container.mainContext.all(ObjectRecord.self).count == objects)
         #expect(store.allClasses().count == classCount)
+    }
+
+    @Test func anEditedCopyIsHisAndStaysEvenWhenNothingUsesIt() throws {
+        let one = try #require(LibraryExtras.exercise(named: "Superman"))
+        let two = try #require(LibraryExtras.exercise(named: "Dead Bug"))
+        let three = try #require(LibraryExtras.exercise(named: "Crunch"))
+        let renamed = try LibraryAdopter.adopt(one, store: store, classes: classes)
+        let retuned = try LibraryAdopter.adopt(two, store: store, classes: classes)
+        _ = try LibraryAdopter.adopt(three, store: store, classes: classes)
+        renamed.name = "My Superman"
+        try store.set("repMax", to: .number(20), on: store.ensureClassObject(of: retuned))
+        #expect(LibraryAdopter.removeUnused(store: store) == 1) // only the untouched Crunch goes
+        #expect(LibraryAdopter.adoptedClass(of: one, store: store) != nil)
+        #expect(LibraryAdopter.adoptedClass(of: two, store: store) != nil)
+        #expect(LibraryAdopter.adoptedClass(of: three, store: store) == nil)
     }
 }
