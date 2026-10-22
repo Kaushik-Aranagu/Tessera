@@ -743,6 +743,7 @@ private struct LaneRow: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
+        .exerciseSheet(lane.exercise, isPrivate: isPrivate)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
     }
