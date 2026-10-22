@@ -83,8 +83,6 @@ struct HomeSpatialView: View {
     @State private var indexMounted = false
     @State private var indexClosing = false
     @State private var picked: Int?
-    /// A page's vertical scroll is away from its top.
-    @State private var pageScrolled = false
     @State private var arrivals = 0
     @Namespace private var areaWord
     @AccessibilityFocusState private var nameFocused: Bool
@@ -130,7 +128,6 @@ struct HomeSpatialView: View {
             .blur(radius: calm ? 0 : 6 * indexProgress)
             .offset(y: calm ? 0 : 40 * indexProgress)
             .environment(\.homePagerIdle, pagerIdle)
-            .environment(\.homePageScrolled) { pageScrolled = $0 }
             .environment(\.homeRowGrabbed, rowGrabbed)
             .environment(\.homeRowGrab) { rowGrabbed = $0 }
             // Opens where Home was left (TODAY the first time) without a visible jump.
@@ -159,7 +156,6 @@ struct HomeSpatialView: View {
                 progress = new
             }
             .onChange(of: position.viewID(type: Int.self)) { _, new in
-                pageScrolled = false
                 if let new {
                     Self.remembered = new
                 }
@@ -203,7 +199,7 @@ struct HomeSpatialView: View {
             if indexMounted {
                 AreaIndexSheet(titles: Page.allCases.map(\.title), lines: indexLines,
                                current: Int(progress.rounded()), progress: indexProgress, picked: picked,
-                               pulling: false, calm: calm, namespace: areaWord, onPick: pick, onClose: closeIndex)
+                               calm: calm, namespace: areaWord, onPick: pick, onClose: closeIndex)
                     .ignoresSafeArea(edges: .top)
                     .transition(.opacity)
             }
@@ -256,9 +252,6 @@ struct HomeSpatialView: View {
             }
             .scrollIndicators(.hidden)
             .scrollDisabled(false)
-            .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y > 1 } action: { _, new in
-                pageScrolled = new
-            }
         } else {
             padded
         }

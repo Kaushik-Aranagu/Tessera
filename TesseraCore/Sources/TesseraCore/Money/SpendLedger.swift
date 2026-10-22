@@ -41,8 +41,8 @@ public struct SpendLedger {
 
     /// An amount as the house shows it: the sign against the number when a currency is set ("€26.90"), the bare
     /// number otherwise, never a code.
-    public static func shown(_ amount: Decimal, currency: String?) -> String {
-        (currency.flatMap { symbols[$0] } ?? "") + MoneyAmount.format(amount)
+    public static func shown(_ amount: Decimal, currency: String?, grouped: Bool = false) -> String {
+        (currency.flatMap { symbols[$0] } ?? "") + MoneyAmount.format(amount, grouped: grouped)
     }
 
     /// The thing first, then the amount: "Coffee, 12.40." A walled word reads "Private spend"; no word reads
@@ -52,7 +52,7 @@ public struct SpendLedger {
         let amount = MoneyAmount.parse(typed)?.amount
             ?? store.number("amount", of: spend).flatMap { Decimal(string: String($0)) } ?? 0
         let currency = store.value("currency", of: spend)?.stringValue.flatMap { $0.isEmpty ? nil : $0 }
-        let shown = shown(amount, currency: currency)
+        let shown = shown(amount, currency: currency, grouped: true)
         let note = (store.value("note", of: spend)?.stringValue ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         if note.isEmpty {
             return "Spent \(shown)."

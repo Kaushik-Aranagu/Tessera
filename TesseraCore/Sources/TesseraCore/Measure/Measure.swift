@@ -136,6 +136,18 @@ public enum MeasureFormat {
         return formatter.string(from: NSNumber(value: rounded == 0 ? 0 : rounded)) ?? String(value)
     }
 
+    /// "1 hr 35 min", "2 hr", "35 min"; nil for a negative or absurd value.
+    static func hoursAndMinutes(_ hours: Double) -> String? {
+        guard hours >= 0, hours < 10000 else { return nil }
+        let minutes = Int((hours * 60).rounded())
+        let whole = minutes / 60, rest = minutes % 60
+        switch (whole, rest) {
+        case (0, _): return "\(rest) min"
+        case (_, 0): return "\(whole) hr"
+        default: return "\(whole) hr \(rest) min"
+        }
+    }
+
     static let signs = ["EUR": "€", "GBP": "£", "USD": "$", "INR": "₹"]
 
     public static func string(_ measure: Measure) -> String {
@@ -146,6 +158,10 @@ public enum MeasureFormat {
             }
             // As typed: the sign against the number when the currency has one, the bare number otherwise.
             return signs[measure.unit].map { $0 + amount } ?? amount
+        }
+        // Hours read as the cook clock does, "1 hr 35 min", so the app has one way to say time.
+        if measure.unit == "hr", let text = hoursAndMinutes(measure.value) {
+            return text
         }
         return "\(number(measure.value, unit: measure.unit))\(measure.unit == "°C" || measure.unit == "°F" ? "" : " ")\(measure.unit)"
     }
