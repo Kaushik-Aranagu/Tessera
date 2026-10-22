@@ -14,7 +14,7 @@ public struct PoolBook {
     }
 
     /// Typed digits as an exact amount: "1,850.00" and "82650" read; anything else is 0.
-    public static func decimal(_ typed: String?) -> Decimal {
+    public nonisolated static func decimal(_ typed: String?) -> Decimal {
         guard let typed else { return 0 }
         let clean = typed.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: "")
         guard clean.wholeMatch(of: /-?\d+(?:\.\d+)?/) != nil,
@@ -71,6 +71,20 @@ public struct PoolBook {
             let into = store.linkedObjects("toPool", of: move).first
             return (pool.map { out?.id == $0.id } ?? true) && (target.map { into?.id == $0.id } ?? true)
         }
+    }
+
+    /// Spends logged before pools, or with none: summed per currency code ("USD" for unmarked). Derived, never
+    /// written: nothing about an old spend is rewritten.
+    public func spendsWithNoPool() -> [String: Decimal] {
+        guard let spendClass = classes[.spend] else { return [:] }
+        var sums: [String: Decimal] = [:]
+        for spend in store.objects(of: spendClass)
+            where !spend.isDeleted && store.linkedObjects("pool", of: spend).isEmpty
+        {
+            let code = store.value("currency", of: spend)?.stringValue.flatMap { $0.isEmpty ? nil : $0 } ?? "USD"
+            sums[code, default: 0] += MoneyAmount.parse(store.value("typed", of: spend)?.stringValue ?? "")?.amount ?? 0
+        }
+        return sums
     }
 
     /// opening + inflows - spends - what left in moves + what arrived in moves. Archived and deleted rows count as
