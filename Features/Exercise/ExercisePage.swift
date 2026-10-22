@@ -173,7 +173,7 @@ private struct ExerciseSummary: View {
     private func stat(_ value: String, label: String, spoken: String?) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text(value)
-                .font(Theme.numeral(44))
+                .numeral(44)
                 .foregroundStyle(Theme.Colors.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)

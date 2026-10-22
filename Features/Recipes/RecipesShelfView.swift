@@ -58,6 +58,7 @@ private struct RecipesShelfPage: View {
                 .entrance(0)
                 Text("Recipes")
                     .textRole(.title)
+                    .wordFit("Recipes")
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .entrance(0)

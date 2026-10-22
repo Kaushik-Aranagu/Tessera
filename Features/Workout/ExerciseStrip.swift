@@ -152,7 +152,7 @@ struct RunningOrderSheet: View {
                 .shadow(color: Paint.live.opacity(0.8), radius: 5)
                 .opacity(isCurrent ? 1 : 0)
             Text(name)
-                .font(Theme.numeral(28, weight: .medium))
+                .numeral(28, weight: .medium)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 .foregroundStyle(Paint.cream.opacity(isCurrent || isLifted ? 1 : 0.5))
