@@ -209,6 +209,8 @@ private struct WorkoutContent: View {
         .onChange(of: session.lastSeated) { _, seated in
             // A set that finished the workout plays its haptic in finish(), once.
             guard let seated, session.finishedAt == nil else { return }
+            // A logged set ends the receipt: its Undo must take back the set, not the Busy or swap before it.
+            receipt = nil
             // One haptic per set, played here so it survives the key leaving (Reduce Motion, VoiceOver's action):
             // the set's tap, or .success in its place for a new best.
             // With the ink drops the one haptic waits for the circle to close (LiveSetMarks tells us); without them
@@ -652,9 +654,9 @@ extension WorkoutContent {
                     }
                 }
         } else if session.isEstimatedLoad, let from = session.swappedFrom {
-            Text("An estimate from \(SwapPanel.short(from).lowercased())")
+            Text("About \(Format.kilograms(session.weight)), from your \(from.lowercased())")
                 .textRole(.label)
-                .foregroundStyle(Paint.tess)
+                .foregroundStyle(Paint.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else if let plates = session.platesPerSide, !typeSize.isAccessibilitySize {
             // (Large text has no room for the drawing: it would print over the reps.)

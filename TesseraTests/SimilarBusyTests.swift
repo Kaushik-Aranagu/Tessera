@@ -56,4 +56,20 @@ struct SimilarBusyTests {
         #expect(SimilarSheet.title(.family) == "Same muscles, same pattern")
         #expect(SimilarSheet.title(.movement) == "Near")
     }
+
+    @Test func theSwapHintNamesWhatTheActionDid() throws {
+        let (model, session) = try started()
+        defer { model.endWorkout() }
+        let from = try #require(session.currentExercise?.name)
+        let option = try #require(session.swapOptions().first)
+        session.swap(to: option, forRoutine: true)
+        #expect(session.swapHint == "Swapped in for \(from)")
+
+        let (model2, session2) = try started()
+        defer { model2.endWorkout() }
+        let from2 = try #require(session2.currentExercise?.name)
+        let option2 = try #require(session2.swapOptions().first)
+        session2.swap(to: option2)
+        #expect(session2.swapHint == "Just today, for \(from2)")
+    }
 }

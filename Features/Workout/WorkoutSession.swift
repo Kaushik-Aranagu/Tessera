@@ -357,6 +357,8 @@ final class WorkoutSession {
     private var swaps: [UUID: String] = [:]
     private var presetWeight: [UUID: Double] = [:]
     private var estimated: Set<UUID> = []
+    /// Swapped in for the routine too ("Swap in"), not just for today.
+    private var swappedInRoutine: Set<UUID> = []
     /// What Core prefilled the current set with.
     private(set) var prefill: SetPrefill?
     /// The logged set being changed on the dial and drum (tap its stroke); nil when dialling the next set.
@@ -414,6 +416,12 @@ extension WorkoutSession {
     /// When the current exercise was swapped in today: the name it replaced ("Bench Press").
     var swappedFrom: String? {
         currentEntry.flatMap { swaps[$0.id] }
+    }
+
+    /// Under the set rings after a swap: "Swapped in for Bench Press" or "Just today, for Bench Press".
+    var swapHint: String? {
+        guard let entry = currentEntry, let from = swaps[entry.id] else { return nil }
+        return swappedInRoutine.contains(entry.id) ? "Swapped in for \(from)" : "Just today, for \(from)"
     }
 
     // MARK: Actions
@@ -629,7 +637,7 @@ extension WorkoutSession {
     /// Swaps the current exercise for today only, through the engine. The slot and scheme stay. Returns the op, which
     /// the easy swap hands to its UNDO.
     @discardableResult
-    func swap(to option: ExerciseSwaps.Option) -> OpRecord? {
+    func swap(to option: ExerciseSwaps.Option, forRoutine: Bool = false) -> OpRecord? {
         endEditing()
         guard let entry = currentEntry, let from = currentExercise else { return nil }
         guard let result = try? model.engine.perform(
@@ -641,6 +649,9 @@ extension WorkoutSession {
             order.insert(swappedID, at: index + 1)
         }
         swaps[swappedID] = swaps[entry.id] ?? from.name
+        if forRoutine {
+            swappedInRoutine.insert(swappedID)
+        }
         presetWeight[swappedID] = option.load
         if option.isEstimate, option.load != nil {
             estimated.insert(swappedID)

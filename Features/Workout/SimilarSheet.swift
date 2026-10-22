@@ -154,7 +154,7 @@ struct SimilarSheet: View {
         {
             records.append(result.record)
         }
-        if let record = session.swap(to: option) {
+        if let record = session.swap(to: option, forRoutine: forRoutine) {
             records.append(record)
         }
         let words = forRoutine && records.count > 1

@@ -167,8 +167,8 @@ enum WorkoutLines {
                 let previous = hint.previous.map { ", \($0)" } ?? ""
                 return ("set \(session.currentSetNumber): \(hint.text)\(previous)", Paint.secondary, false)
             }
-            if session.swappedFrom != nil, rows.isEmpty {
-                return ("swapped for today, set \(session.currentSetNumber) of \(target)", Paint.tess, false)
+            if let hint = session.swapHint, rows.isEmpty {
+                return (hint, Paint.secondary, false)
             }
             // "last time 82.5 × 8": this set's place last session.
             if let last = session.lastTime(setNumber: session.currentSetNumber) {
