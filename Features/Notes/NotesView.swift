@@ -9,19 +9,43 @@ struct NotesView: View {
     @Environment(AppModel.self) private var model
     @Namespace private var zoom
     @State private var path: [UUID] = []
+    /// The landing's pushes (design 131, Review switch "Landing pages"): a thing's page, and the doors.
+    @State private var thing: Route?
+    @State private var door: NotesDoor?
 
     var body: some View {
         NavigationStack(path: $path) {
-            NotesIndex(zoom: zoom) { path.append($0) }
+            front
                 .navigationDestination(for: UUID.self) { id in
                     NoteEditor(noteID: id)
                         .navigationTransition(.zoom(sourceID: id, in: zoom))
+                }
+                .navigationDestination(item: $thing) { ObjectPage(route: $0) }
+                .navigationDestination(item: $door) { door in
+                    if door == .all {
+                        NotesIndex(zoom: zoom) { path.append($0) }
+                    } else {
+                        NotesDoorPage(door: door, zoom: zoom) { path.append($0) }
+                    }
                 }
         }
         .environment(\.animateEntrance, true)
         #if DEBUG
             .task { NotesDemo.seedIfRequested(model) }
         #endif
+    }
+}
+
+extension NotesView {
+    /// The landing when "Landing pages" is on, else the list as it was.
+    @ViewBuilder
+    private var front: some View {
+        if LandingSwitch.isOn {
+            NotesLandingPage(zoom: zoom, openNote: { path.append($0) }, openThing: { thing = $0 },
+                             openDoor: { door = $0 })
+        } else {
+            NotesIndex(zoom: zoom) { path.append($0) }
+        }
     }
 }
 
@@ -176,7 +200,7 @@ private struct WritingLine: View {
 
 /// One note in two lines: its first line (mentions in cobalt) and one line of the rest, with when hanging right.
 /// Links show in the editor only; the cobalt mention already says what the note is about.
-private struct NoteRow: View {
+struct NoteRow: View {
     let note: ObjectRecord
     let now: Date
     let isNew: Bool

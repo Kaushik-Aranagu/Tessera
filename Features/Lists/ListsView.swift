@@ -7,18 +7,39 @@ import TesseraCore
 /// opens its page: the items as Groceries does them (tap strikes, no checkboxes, no separators), the fold "4 done"
 /// (tap to see them, hold to clear), and an Add line whose receipt names the thing first.
 struct ListsView: View {
+    /// A path, so the landing can push a list after starting it (design 131; Review switch "Landing pages").
+    @State private var path = NavigationPath()
+
     var body: some View {
-        NavigationStack {
-            ListsShelfPage()
+        NavigationStack(path: $path) {
+            front
                 .navigationDestination(for: UUID.self) { ListPage(listID: $0) }
                 .navigationDestination(for: PutAwayShelf.self) { _ in PutAwayShelf.Page() }
+                .navigationDestination(for: ListsDoor.self) { door in
+                    switch door {
+                    case .shelf: ListsShelfPage()
+                    case .reusable, .picks: ListsKindPage(door: door) { path.append($0) }
+                    }
+                }
                 .toolbar(.hidden, for: .navigationBar)
         }
         .environment(\.animateEntrance, true)
     }
 }
 
-private struct ListsShelfPage: View {
+extension ListsView {
+    /// The landing when "Landing pages" is on, else the shelf as it was.
+    @ViewBuilder
+    private var front: some View {
+        if LandingSwitch.isOn {
+            ListsLandingPage(openList: { path.append($0) }, openDoor: { path.append($0) })
+        } else {
+            ListsShelfPage()
+        }
+    }
+}
+
+struct ListsShelfPage: View {
     @Environment(AppModel.self) private var model
     @State private var spoke = false
     @Environment(\.openHomeLink) private var openLink
