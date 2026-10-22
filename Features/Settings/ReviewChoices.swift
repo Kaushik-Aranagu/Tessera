@@ -109,6 +109,13 @@ final class ReviewChoices {
                says: ["Off": "Every screen shows your own things.",
                       "On": "Every screen shows example things; yours come back untouched when it's off."],
                readiness: .live),
+        Choice(id: "moneyPools",
+               name: "Money pools",
+               values: ["Off", "On"],
+               defaultValue: "Off",
+               says: ["Off": "Money is spends only, as now.",
+                      "On": "Tell Tess what came in and where it went: \"got 3200 paycheck\", \"moved 1000 to India\"."],
+               readiness: .live),
         Choice(id: "landingPages", name: "Landing pages", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Each app opens on its list of ways in.",
                       "On": "Each app opens on a page that tells you where things stand."],
@@ -217,6 +224,7 @@ final class ReviewChoices {
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
         ("Shown", ["sampleData", "landingPages", "areasShown", "classInspector"]),
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
+        ("Money", ["moneyPools"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.

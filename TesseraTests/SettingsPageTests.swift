@@ -62,7 +62,16 @@ struct SettingsPageTests {
     /// Sheet 108: VoiceOver hears "Workout, tab 2 of 5"; at accessibility sizes the next tab reads "next: Kitchen".
     @Test func peekTabsSayWhereYouAre() {
         let tabs = ReviewChoices.facetPages().map(\.word)
-        #expect(tabs == ["Looks and day", "Workout", "Kitchen", "Cooking", "Connected", "Shown", "Notes and lists"])
+        #expect(tabs == [
+            "Looks and day",
+            "Workout",
+            "Kitchen",
+            "Cooking",
+            "Connected",
+            "Shown",
+            "Notes and lists",
+            "Money",
+        ])
         #expect(PeekTabsCopy.spoken(tabs, 1) == "Workout, tab 2 of 7")
         #expect(PeekTabsCopy.next(tabs, 1) == "next: Kitchen")
         #expect(PeekTabsCopy.next(tabs, 6) == nil)
