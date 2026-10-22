@@ -123,6 +123,9 @@ public enum DayStory {
         "closeDay", "createPlace", "renamePlace", "setPlaceSections", "movePlace", "removePlace", "setItemPlace", "setMeProfile", "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice",
         "releaseHeldNotices",
         "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading", "setBookAside",
+        // Multi-dish Cook: the session has no Day log line yet (the dishes' cooks are stamped as ever).
+        "startCookSession", "setServeTime", "addDish", "dropDish", "advanceDishStep", "pauseCook", "resumeCook",
+        "finishCookSession",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).

@@ -31,6 +31,8 @@ public enum ActionRegistry {
         LogSpend.descriptor, EditSpend.descriptor, LogShopTotal.descriptor, SkipShopTotal.descriptor,
         QueueBook.descriptor, EditBook.descriptor, StartReading.descriptor, SetBookPage.descriptor,
         FinishBook.descriptor, SetBookAside.descriptor,
+        StartCookSession.descriptor, SetServeTime.descriptor, AddDish.descriptor, DropDish.descriptor,
+        AdvanceDishStep.descriptor, PauseCook.descriptor, ResumeCook.descriptor, FinishCookSession.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
@@ -140,6 +142,14 @@ public enum ActionRegistry {
         EditSpend.descriptor.name: { try decode(EditSpend.self, EditSpend.descriptor.name, $0) },
         LogShopTotal.descriptor.name: { try decode(LogShopTotal.self, LogShopTotal.descriptor.name, $0) },
         SkipShopTotal.descriptor.name: { try decode(SkipShopTotal.self, SkipShopTotal.descriptor.name, $0) },
+        StartCookSession.descriptor.name: { try decode(StartCookSession.self, StartCookSession.descriptor.name, $0) },
+        SetServeTime.descriptor.name: { try decode(SetServeTime.self, SetServeTime.descriptor.name, $0) },
+        AddDish.descriptor.name: { try decode(AddDish.self, AddDish.descriptor.name, $0) },
+        DropDish.descriptor.name: { try decode(DropDish.self, DropDish.descriptor.name, $0) },
+        AdvanceDishStep.descriptor.name: { try decode(AdvanceDishStep.self, AdvanceDishStep.descriptor.name, $0) },
+        PauseCook.descriptor.name: { try decode(PauseCook.self, PauseCook.descriptor.name, $0) },
+        ResumeCook.descriptor.name: { try decode(ResumeCook.self, ResumeCook.descriptor.name, $0) },
+        FinishCookSession.descriptor.name: { try decode(FinishCookSession.self, FinishCookSession.descriptor.name, $0) },
         QueueBook.descriptor.name: { try decode(QueueBook.self, QueueBook.descriptor.name, $0) },
         EditBook.descriptor.name: { try decode(EditBook.self, EditBook.descriptor.name, $0) },
         StartReading.descriptor.name: { try decode(StartReading.self, StartReading.descriptor.name, $0) },

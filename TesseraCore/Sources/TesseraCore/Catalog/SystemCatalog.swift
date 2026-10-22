@@ -16,6 +16,7 @@ public enum SystemCatalog {
         case routine, task, note
         case list, listItem
         case ingredient, recipe, recipeLine, recipeStep, cook, kitchenTimer
+        case cookSession, cookDish
         case process
         case slot, plan
         case tessCall
@@ -445,6 +446,36 @@ public enum SystemCatalog {
             FieldSpec(key: "cookedAt", name: "Cooked", kind: .date),
             FieldSpec(key: "note", name: "Note", kind: .text),
         ]),
+        // Several recipes cooked in one session on one clock (multi-dish Cook, Part A). Status: planned, running,
+        // paused, done or dropped. The plan itself is never stored: it is derived from the dishes on every read.
+        ClassSpec(key: .cookSession, name: "Cook Session", parent: .thing, symbol: "flame.circle", colorRole: "health",
+                  fields: [
+                      FieldSpec(key: "status", name: "Status", kind: .choice, defaultValue: .choice("planned"),
+                                options: ["planned", "running", "paused", "done", "dropped"]),
+                      FieldSpec(key: "serveAt", name: "Serve at", kind: .date),
+                      FieldSpec(key: "startedAt", name: "Started", kind: .date),
+                      FieldSpec(key: "pausedAt", name: "Paused", kind: .date),
+                      FieldSpec(key: "pausedTotalSec", name: "Paused total", kind: .number, defaultValue: .number(0)),
+                      FieldSpec(key: "holdMaxSec", name: "Hold at most", kind: .number, defaultValue: .number(900)),
+                      FieldSpec(key: "dishes", name: "Dishes", kind: .refList, target: .cookDish),
+                  ]),
+        // One dish of a session: a recipe at a size, its own Cook, and the numbers the plan cached for it.
+        ClassSpec(key: .cookDish, name: "Cook Dish", parent: .thing, symbol: "fork.knife", colorRole: "health",
+                  fields: [
+                      FieldSpec(key: "session", name: "Session", kind: .ref, target: .cookSession),
+                      FieldSpec(key: "recipe", name: "Recipe", kind: .ref, target: .recipe),
+                      FieldSpec(key: "cook", name: "Cook", kind: .ref, target: .cook),
+                      FieldSpec(key: "servings", name: "Servings", kind: .number),
+                      FieldSpec(key: "order", name: "Order", kind: .number, defaultValue: .number(0)),
+                      FieldSpec(key: "offsetSec", name: "Starts after", kind: .number, defaultValue: .number(0)),
+                      FieldSpec(key: "heldSec", name: "Waits", kind: .number, defaultValue: .number(0)),
+                      FieldSpec(key: "stepIndex", name: "Step", kind: .number, defaultValue: .number(0)),
+                      FieldSpec(key: "startedAt", name: "Started", kind: .date),
+                      FieldSpec(key: "isDropped", name: "Dropped", kind: .bool, defaultValue: .bool(false)),
+                      FieldSpec(key: "finish", name: "Finish", kind: .choice, defaultValue: .choice("standard"),
+                                options: ["standard", "holdsWarm", "last"]),
+                      FieldSpec(key: "holdMinutes", name: "Holds warm", kind: .number),
+                  ]),
         ClassSpec(key: .kitchenTimer, name: "Kitchen Timer", parent: .thing, symbol: "timer", colorRole: "health",
                   traits: [.timed], fields: [
                       FieldSpec(key: "startedAt", name: "Started", kind: .date),
