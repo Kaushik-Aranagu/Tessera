@@ -294,6 +294,7 @@ private struct SlotEditorRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(HandleButtonStyle())
+            .exerciseSheet(exercise, isPrivate: isPrivate)
             .accessibilityLabel(
                 ["\(exercise?.name ?? "Exercise"), \(Int(sets)) sets of \(Int(low)) to \(Int(high))",
                  isPrivate ? "" : MuscleReading.spoken(muscles)].filter { !$0.isEmpty }.joined(separator: ", ")
@@ -362,7 +363,7 @@ private struct StepLine: View {
             Spacer(minLength: Theme.Spacing.m)
             key("−", enabled: value > range.lowerBound) { onChange(value - 1) }
             Text("\(value)")
-                .font(Theme.numeral(28))
+                .numeral(28)
                 .foregroundStyle(Theme.Colors.ink)
                 .monospacedDigit()
                 .frame(minWidth: 44)
@@ -388,7 +389,7 @@ private struct StepLine: View {
     private func key(_ glyph: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(glyph)
-                .font(Theme.numeral(28))
+                .numeral(28)
                 .foregroundStyle(Theme.Colors.ink.opacity(enabled ? 0.85 : 0.2))
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())

@@ -227,15 +227,30 @@ private struct TrainingAtRest: View {
     private var titleButton: some View {
         let (title, route) = titleAndRoute
         Button { model.open(route) } label: {
-            Text(title)
-                .textRole(.title)
-                .foregroundStyle(Theme.Colors.ink)
-                // The day's name wraps to a second line and, if that is still too long, scales a little: never "...".
-                .lineLimit(2)
-                .minimumScaleFactor(0.7)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+            Group {
+                if Choice.fontIsNew() {
+                    // 72 if the name fits one line in the gutter, else 48 on two lines: never a size between, never
+                    // "...".
+                    ViewThatFits(in: .horizontal) {
+                        Text(title).textRole(.hero).lineLimit(1)
+                        Text(title).textRole(.title).fixedSize(horizontal: false, vertical: true)
+                    }
+                } else {
+                    Text(title)
+                        .textRole(.title)
+                        .wordFit(title)
+                        // The day's name wraps to a second line and, if that is still too long, scales a little: never
+                        // "...".
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.7)
+                }
+            }
+            .environment(\.heroLadder, true)
+            .wordFit(title)
+            .foregroundStyle(Theme.Colors.ink)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
         .modifier(ZoomSource(id: route, namespace: namespace))
@@ -419,7 +434,7 @@ private struct TrainingAtRest: View {
         } else if case .running = plan {
             KickerRow(left: "Running now")
         } else {
-            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes))
+            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes).keepingUnits)
         }
     }
 
@@ -711,6 +726,7 @@ private struct LaneRow: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
+        .exerciseSheet(lane.exercise, isPrivate: isPrivate)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
     }
@@ -831,6 +847,7 @@ private struct EmptyTraining: View {
                 .foregroundStyle(Theme.Colors.context)
             Text("A rest day. It counts too.")
                 .textRole(.title)
+                .wordFit("A rest day. It counts too.")
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .siblingParallax()

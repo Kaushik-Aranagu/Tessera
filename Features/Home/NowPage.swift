@@ -38,19 +38,8 @@ struct NowPage: View {
             && (!(current.map { $0.start.timeIntervalSince(now) < 15 * 60 } ?? false) || Self.pullsPlan)
 
         VStack(alignment: .leading, spacing: 0) {
-            // While Sample data is on, the plain words above the day say so; a tap opens the switch (Design on #1199).
-            if model.isSample {
-                Button {
-                    SampleData.shared.jumpsToSwitch = true
-                    openLink(.review)
-                } label: {
-                    Text("Sample data")
-                        .kicker()
-                        .frame(minHeight: 44, alignment: .bottomLeading)
-                }
-                .buttonStyle(HandleButtonStyle())
-                .accessibilityHint("Opens the Sample data switch")
-            }
+            // While Sample data is on, the plain words above the day say so (Design on #1199).
+            SampleDataWord()
             // The only day word on Home (41.4): the painted stroke lives one tap down now.
             DayLabel(now: now)
                 .entrance(0)
@@ -271,11 +260,14 @@ struct NowPage: View {
     /// The hold that finishes a timed task, with its time left.
     private func finishKey(_ task: ScheduleItem) -> some View {
         PaintKey(duration: 0.7, hint: "Finishes the task", action: { finish(task) }, label: { _ in
-            Text("Finish").textRole(.labelStrong)
+            Text("Finish").textRole(.keyWord)
         }, meta: {
             TimelineView(.periodic(from: .now, by: 30)) { context in
                 let lines = Self.timeLeft(task, now: AppClock.adjust(context.date))
-                Text("Hold · \(lines.0) \(lines.1)")
+                // Sentence case with no middle dot in the Figtree pair ("Hold, 30 min left"); it wraps by words.
+                Text(Choice.fontIsNew()
+                    ? "Hold, \(lines.0.lowercased()) \(lines.1.lowercased())".keepingUnits
+                    : "Hold · \(lines.0) \(lines.1)")
                     .monospacedDigit()
             }
         })
@@ -367,6 +359,7 @@ struct NowPage: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.l) {
                 Text("Nothing else is planned today.")
                     .textRole(.title)
+                    .wordFit("Nothing else is planned today.")
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Button {
@@ -715,6 +708,8 @@ private struct PlanHeroText: View {
             Text(long).textRole(.title).lineLimit(1)
             Text(long).textRole(.title).fixedSize(horizontal: false, vertical: true)
         }
+        .environment(\.heroLadder, true)
+        .wordFit(long)
         .foregroundStyle(Theme.Colors.ink)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityAddTraits(.isHeader)

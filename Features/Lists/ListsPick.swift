@@ -74,6 +74,7 @@ struct PickMoment: View {
                 Button(action: acceptPick) {
                     Text(shown.prefix(1).uppercased() + shown.dropFirst())
                         .textRole(.hero)
+                        .wordFit(shown)
                         .foregroundStyle(Theme.Colors.ink)
                         .multilineTextAlignment(.center)
                         .padding(Theme.Spacing.l)

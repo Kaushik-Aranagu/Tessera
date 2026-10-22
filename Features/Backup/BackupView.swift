@@ -59,10 +59,19 @@ struct BackupView: View {
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.context)
                     .entrance(0)
+                if shown.isSample {
+                    // While Sample data is on, Backups still works on his own things (QA on #1199).
+                    Text("Sample data is on. Backups keep your own things, never the sample.")
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, Theme.Spacing.s)
+                }
                 // Two places only when the folder copy is actually saving.
                 Text(folder == nil || failures.contains { $0.place == .folder } ? "Kept on this iPhone"
                     : "Kept in two places")
                     .textRole(.hero)
+                    .wordFit("Kept on this iPhone Kept in two places")
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
@@ -234,6 +243,7 @@ struct BackupView: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                 Text("A restore is waiting")
                     .textRole(.title)
+                    .wordFit("A restore is waiting")
                     .foregroundStyle(Theme.Colors.ink)
                 Text("The copy from \(BackupCopy.fileDay(staged.createdAt)) replaces everything the next time "
                     + "Tessera opens. Close Tessera from the app switcher to restore now.")

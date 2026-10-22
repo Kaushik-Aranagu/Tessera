@@ -62,11 +62,15 @@ private struct GroceriesPage: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text(GroceriesCopy.context(open: open, aisles: aisles.count, shopping: shopping))
-                    .font(Theme.voice)
-                    .foregroundStyle(Theme.Colors.context)
-                    .contentTransition(.numericText())
-                    .entrance(0)
+                SampleDataWord()
+                // An empty list says "Nothing to get." below, so the kicker would only repeat it.
+                if open > 0 || shopping || !Choice.fontIsNew() {
+                    Text(GroceriesCopy.context(open: open, aisles: aisles.count, shopping: shopping))
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.context)
+                        .contentTransition(.numericText())
+                        .entrance(0)
+                }
 
                 // Shop and list share one slot: the outgoing layout folds back as the incoming one rises (never a
                 // cross-fade of two whole layouts).
@@ -107,6 +111,8 @@ private struct GroceriesPage: View {
                     }
                 }
             }
+            // Held to the leading edge, so a short page is never centred (Kaushik, Oct 21).
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
             .padding(.bottom, Theme.Spacing.section)
@@ -348,6 +354,7 @@ private struct ShopTitle: View {
     var body: some View {
         Text("Groceries")
             .textRole(.hero)
+            .wordFit("Groceries")
             .foregroundStyle(Theme.Colors.ink)
             .overlay(alignment: .leading) {
                 Text("Groceries")
@@ -433,6 +440,7 @@ private struct AisleSection: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text(name)
                 .textRole(.title)
+                .wordFit(name)
                 .foregroundStyle(Theme.Colors.ink.opacity(0.85))
                 .accessibilityAddTraits(.isHeader)
             VStack(alignment: .leading, spacing: 0) {
@@ -526,6 +534,7 @@ private struct AtTheShop: View {
                     VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                         Text(current.aisle)
                             .textRole(.hero)
+                            .wordFit(current.aisle)
                             .foregroundStyle(Theme.Colors.ink)
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityAddTraits(.isHeader)
@@ -713,6 +722,7 @@ private struct GroceriesEmpty: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             Text(basket > 0 ? "All in the basket." : "Nothing to get.")
                 .textRole(.title)
+                .wordFit(basket > 0 ? "All in the basket." : "Nothing to get.")
                 .foregroundStyle(Theme.Colors.ink)
             Text("Tell me \u{201C}milk, eggs\u{201D}, or swipe a recipe's ingredients here.")
                 .font(Theme.voice)

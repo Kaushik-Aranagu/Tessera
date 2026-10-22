@@ -14,6 +14,7 @@ public enum ObjectPrivacy {
     /// What a spend reads everywhere but its own page and the Month page (Money amendment 2).
     public static let spendLabel = "Private spend"
     public static let profileLabel = "Private profile"
+    public static let placeLabel = "Private place"
     /// What a private book reads wherever it is masked; its review shows on the book page only (Reading amendment 2).
     public static let bookLabel = "Private book"
     /// What a workout's notes read on the generic page (Product 5:20 PM PT).
@@ -67,6 +68,10 @@ public enum ObjectPrivacy {
         // (Money amendment 2).
         if isA(.spend) {
             return spendLabel
+        }
+        // A place named with a walled word reads "Private place".
+        if isA(.place) {
+            return isPrivateTitle(object.title, lastWeightKg: last) ? placeLabel : nil
         }
         // Height, birth year and sex are body facts: private like a weigh-in.
         if isA(.meProfile) {

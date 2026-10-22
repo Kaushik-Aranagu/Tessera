@@ -87,6 +87,21 @@ public enum DayNames {
                             "therapy", "workout"]
     static let articles: Set = ["a", "an", "the"]
 
+    /// A name with its words apart: "BackSquat" and "back_squat" become "Back Squat", runs of spaces become one.
+    /// Applied to
+    /// every proposed name before `isUsable`, so words run together never reach a day's title.
+    public static func spaced(_ name: String) -> String {
+        var result = ""
+        var previous: Character = " "
+        for character in name.trimmingCharacters(in: .whitespacesAndNewlines) {
+            let joined = character.isUppercase && previous.isLowercase
+            result += joined ? " " : ""
+            result.append(character == "_" ? " " : character)
+            previous = character
+        }
+        return result.split(separator: " ").joined(separator: " ")
+    }
+
     /// Whether a proposed name may be used (Design's style): one to three words, 22 characters or fewer, letters and
     /// spaces only (no digits, punctuation, emoji or quotes), no leading article, none of the hype words, nothing
     /// walled.
@@ -95,6 +110,7 @@ public enum DayNames {
         let text = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let words = text.lowercased().split(separator: " ").map(String.init)
         guard !text.isEmpty, text.count <= longest, (1 ... 3).contains(words.count),
+              words.allSatisfy({ $0.count > 1 }), spaced(text) == text,
               text.allSatisfy({ $0.isLetter || $0 == " " }), !articles.contains(words[0]),
               hype.isDisjoint(with: words), !text.contains("  "),
               !SecretWords.mentions(text), !PrivateWords.isPrivateTitle(text, lastWeightKg: nil) else { return false }
@@ -218,7 +234,7 @@ public struct ApplyDayName: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let target = try transaction.object(routine, is: .routine)
-        let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let clean = DayNames.spaced(name)
         guard DayNames.isUsable(clean) else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "that name will not fit")
         }

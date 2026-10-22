@@ -40,6 +40,7 @@ struct RoutinesPage: View {
                 .padding(.bottom, Theme.Spacing.m)
                 Text("Routines")
                     .textRole(.title)
+                    .wordFit("Routines")
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .padding(.bottom, Theme.Spacing.s)

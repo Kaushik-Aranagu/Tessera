@@ -38,6 +38,7 @@ struct MePage: View {
                     .entrance(0)
                 Text(MeCopy.title)
                     .textRole(.hero)
+                    .wordFit(MeCopy.title)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .padding(.top, Theme.Spacing.s)
@@ -231,7 +232,7 @@ struct MePage: View {
     // MARK: Tess
 
     private var tess: some View {
-        let count = TessMemoryStore(engine: model.engine).countWord()
+        let count = TessMemoryStore(engine: model.engine, forgetLogURL: model.forgetLogURL).countWord()
         return MarginSection(label: MeCopy.tessLabel) {
             Button { knowsOpen = true } label: {
                 Text(TessKnowsCopy.door(count))
