@@ -60,8 +60,10 @@ public struct MoneyTrend {
         // The days so far, counted by logical days (04:00 edges).
         let elapsed = day.calendar.dateComponents([.day], from: thisMonth.start, to: day.start(of: now)).day ?? 0
         guard elapsed + 1 >= Self.daysBeforeItSpeaks,
-              let cutoff = day.calendar.date(byAdding: .day, value: elapsed + 1, to: lastMonth.start),
-              cutoff <= lastMonth.end else { return nil }
+              let dayCutoff = day.calendar.date(byAdding: .day, value: elapsed + 1, to: lastMonth.start)
+        else { return nil }
+        // The 31st against a 30-day month: the whole of last month is the same stretch.
+        let cutoff = min(dayCutoff, lastMonth.end)
         let ledger = SpendLedger(store: store, classes: classes)
         let current = ledger.entries(inMonthOf: now, calendar: calendar).filter { $0.spentAt <= now }
         let before = ledger.entries(inMonthOf: lastStart, calendar: calendar).filter { $0.spentAt < cutoff }
@@ -70,8 +72,8 @@ public struct MoneyTrend {
         guard Set((current + before).map { $0.currency ?? "" }).count == 1 else { return nil }
         let last = before.reduce(Decimal(0)) { $0 + $1.amount }
         guard last > 0 else { return nil }
-        let now = current.reduce(Decimal(0)) { $0 + $1.amount }
-        let ratio = (now as NSDecimalNumber).doubleValue / (last as NSDecimalNumber).doubleValue
+        let sofar = current.reduce(Decimal(0)) { $0 + $1.amount }
+        let ratio = (sofar as NSDecimalNumber).doubleValue / (last as NSDecimalNumber).doubleValue
         return Result(direction: .of(ratio: ratio), month: Self.monthName(thisMonth.start, day.calendar),
                       previous: Self.monthName(lastMonth.start, day.calendar))
     }

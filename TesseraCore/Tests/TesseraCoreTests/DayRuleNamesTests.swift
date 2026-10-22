@@ -225,17 +225,24 @@ struct DayRuleNamesTests {
         #expect(asked == 1)
     }
 
-    @Test(arguments: ["heavy", "light", "two", "three"])
-    func anOldRuleNameWithATailIsRecognisedAndMoved(_ tail: String) async throws {
-        let pushB = try #require(starters()["Push B"])
+    @Test(arguments: ["Push B", "Pull B", "Legs B"], ["heavy", "light", "two", "three"])
+    func anOldRuleNameWithATailIsRecognisedAndMoved(_ starter: String, _ tail: String) async throws {
+        let pushB = try #require(starters()[starter])
         let pack = try #require(DayNames.pack(of: pushB, store: store))
-        let old = "Push day \(tail)"
+        let base = try #require(DayNames.localChoices(muscles: MuscleSummary.topWords(
+            of: pushB,
+            store: store,
+            limit: 5
+        ))
+        .first)
+        let old = "\(base) \(tail)"
         pushB.title = old
         try store.set("autoName", to: .text(old), on: pushB)
         try store.set("autoNameKey", to: .text(pack.key), on: pushB)
         // Only if the old rules would have made "Push day" first for this day's muscles.
         let muscles = MuscleSummary.topWords(of: pushB, store: store, limit: 5)
-        #expect(DayNames.localChoices(muscles: muscles).first == "Push day")
+        #expect(DayNames.localChoices(muscles: muscles).first == base)
+        #expect(base == ["Push B": "Push day", "Pull B": "Upper body", "Legs B": "Leg day"][starter])
         #expect(DayNames.isUnmarked(pushB, store: store))
         let maker = DayNamer(keys: InMemoryKeychain(), ledger: TessUsageLedger(store: store, classes: engine.classes),
                              allowed: { false })

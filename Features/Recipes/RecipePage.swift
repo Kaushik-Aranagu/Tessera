@@ -86,7 +86,7 @@ struct RecipePage: View {
                 .accessibilityAddTraits(.isHeader)
                 .entrance(1, hero: true)
 
-                Text(RecipeCopy.context(recipe, serves: size, model: model, now: AppClock.now))
+                Text(RecipeCopy.context(recipe, serves: size, model: model, now: AppClock.now).keepingUnits)
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.context)
                     .padding(.top, Theme.Spacing.s)
@@ -234,6 +234,7 @@ struct RecipePage: View {
     private func heroTitle(_ text: String) -> some View {
         Text(text)
             .textRole(.hero)
+            .wordFit(text)
             .foregroundStyle(Theme.Colors.ink)
             .multilineTextAlignment(.leading)
             // At accessibility sizes the name wraps in full rather than shrinking (G69).
@@ -514,6 +515,7 @@ private struct RecipeOriginal: View {
                 // Always masked when private; no tap shows it (G102).
                 Text(RecipeCopy.shownTitle(recipe.title, isPrivate: isPrivate))
                     .textRole(.title)
+                    .wordFit(RecipeCopy.shownTitle(recipe.title, isPrivate: isPrivate))
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                 MarginSection(label: "Cooked", color: Theme.Colors.inkSecondary) {

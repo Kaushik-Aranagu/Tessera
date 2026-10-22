@@ -1,5 +1,6 @@
 import Foundation
 @testable import Tessera
+import TesseraCore
 import Testing
 
 /// Batch 2 (docs/design/motion/tess-rest-end-alert-and-closing-face.md): one local notification for the rest end,
@@ -75,5 +76,22 @@ private final class RecordingScheduler: RestAlertScheduler {
 
     func cancel() async {
         log.append("cancel")
+    }
+}
+
+/// A sample workout never drives the Live Activity or a notification; a real one does.
+@MainActor
+struct RestActivityGuardTests {
+    @Test func aSampleSessionDrivesNothingAndARealOneDoes() throws {
+        for isSample in [true, false] {
+            let container = TesseraSchema.makeContainer(inMemory: true)
+            let model = AppModel(context: container.mainContext, launchDefaults: .testSuite(), isSample: isSample)
+            DemoData.prepare(model)
+            let workout = try #require(model.tonightWorkout())
+            model.startWorkout(workout)
+            let session = try #require(model.session)
+            #expect(RestActivityController.shouldDrive(session) == !isSample)
+            model.endWorkout()
+        }
     }
 }

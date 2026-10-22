@@ -225,6 +225,27 @@ struct TessMemoryTests {
         #expect(memory.lines(of: .told).count == 40)
     }
 
+    @Test func theForgetDateIsWhenHeForgotAndSayingItAgainAfterwardsStays() throws {
+        try run(RememberFact(text: "I train after work"), at: Self.at(20))
+        let told = try #require(memory.lines(of: .told).first)
+        try run(ForgetMemory(memory: told.id), at: Self.at(20, 13))
+        memory.redact(told.id, now: Self.at(20, 13))
+        // The log stamps the moment he forgot (the clock passed in, not today's date).
+        let hash = TessMemoryStore.hash("You train after work.")
+        #expect(memory.forgottenAt()[hash] == Self.at(20, 13))
+        // He says it again afterwards: that is his consent, the line stays through a restore's re-forget.
+        try run(RememberFact(text: "I train after work"), at: Self.at(21))
+        #expect(memory.lines(of: .told).count == 1)
+        #expect(memory.reapplyForgets() == 0)
+        #expect(memory.lines(of: .told).count == 1)
+        // And a line from before the forget is still forgotten again, so the date is what decides.
+        let memoryClass = try #require(classes[.tessMemory])
+        let older = store.create(memoryClass, title: "You train after work.")
+        try store.set("kind", to: .choice("told"), on: older)
+        older.createdAt = Self.at(1)
+        #expect(memory.reapplyForgets() == 1)
+    }
+
     @Test func forgottenLinesStayForgotten() throws {
         // Research F1: a forgotten noticed line never comes back at the Sunday recompute; forget-everything holds.
         for week in 0 ..< 6 {
