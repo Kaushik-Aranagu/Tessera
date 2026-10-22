@@ -85,6 +85,8 @@ private struct WorkoutContent: View {
     @State private var isAsking = false
     @State private var isSimilarOpen = false
     @State private var askReply: String?
+    /// "<Name>, later." with ten seconds of Undo, in the workout's own Tess corner (TessVoice sits under this cover).
+    @State private var busyReceipt: WorkoutSession.BusyReceipt?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -295,17 +297,23 @@ private struct WorkoutContent: View {
             Spacer(minLength: Theme.Spacing.m)
             keyRow(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
-            LiveTessCorner(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
-                           mode: soul.mode,
-                           canUndo: session.canUndoLast && !session.isEditing,
-                           eyes: model.tessHasEyes, wear: soul.wear(at:),
-                           holdsLine: askReply == nil && phase == .workoutDone,
-                           onUndo: {
-                               withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
-                               undoHaptic += 1
-                           },
-                           onOpen: { isAsking = true },
-                           onHome: { model.isWorkoutPresented = false })
+            LiveTessCorner(line: askReply ?? busyReceipt.map { "\($0.name), later." }
+                ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
+                mode: soul.mode,
+                canUndo: busyReceipt != nil || (session.canUndoLast && !session.isEditing),
+                eyes: model.tessHasEyes, wear: soul.wear(at:),
+                holdsLine: askReply == nil && (phase == .workoutDone || busyReceipt != nil),
+                onUndo: {
+                    if let receipt = busyReceipt {
+                        withTesseraAnimation(reduceMotion: reduceMotion) { session.undoBusy(receipt) }
+                        busyReceipt = nil
+                    } else {
+                        withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
+                    }
+                    undoHaptic += 1
+                },
+                onOpen: { isAsking = true },
+                onHome: { model.isWorkoutPresented = false })
                 .padding(.leading, Theme.Spacing.gutter)
                 .padding(.trailing, 6)
                 .padding(.top, Theme.Spacing.s)
@@ -803,8 +811,7 @@ extension WorkoutContent {
             if phase == .set, !session.isEditing, session.finishedAt == nil, !isSwapOpen {
                 let similar = session.currentIsBusy || !session.hasOtherUnfinished
                 Button(similar ? "Similar" : "Busy", action: busyTapped)
-                    .textRole(.labelStrong)
-                    .textCase(.uppercase)
+                    .textRole(.keyWord)
                     .foregroundStyle(Paint.secondary)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
@@ -837,7 +844,13 @@ extension WorkoutContent {
             return
         }
         moment.play(.selection)
-        TessVoice.shared.say("\(receipt.name), later.", takeBack: { [session] in session.undoBusy(receipt) })
+        withTesseraAnimation(reduceMotion: reduceMotion) { busyReceipt = receipt }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(10))
+            if busyReceipt?.entryID == receipt.entryID {
+                withTesseraAnimation(reduceMotion: reduceMotion) { busyReceipt = nil }
+            }
+        }
     }
 
     // MARK: Finish

@@ -194,7 +194,6 @@ final class WorkoutSession {
         currentIndex = min(index, ids.count - 1)
         lastSeated = nil
         loggedCount += 1
-        lastTouchedAt = AppClock.now
         loadDefaults()
         return BusyReceipt(name: exercise.name, entryID: entry.id, previousOrder: before, previousIndex: index)
     }
@@ -206,7 +205,6 @@ final class WorkoutSession {
         currentIndex = receipt.previousIndex
         lastSeated = nil
         loggedCount += 1
-        lastTouchedAt = AppClock.now
         loadDefaults()
     }
 
