@@ -36,7 +36,12 @@ enum HomeApp: String, CaseIterable {
     /// The app whose classes the object's class descends from; nil for a plain thing.
     @MainActor
     static func of(_ object: ObjectRecord, classes: [SystemCatalog.Key: ClassDef]) -> HomeApp? {
-        guard let classDef = object.classDef else { return nil }
+        object.classDef.flatMap { of(classDef: $0, classes: classes) }
+    }
+
+    /// The app a class belongs to (a class link, "@Bench Press"), by its ancestors.
+    @MainActor
+    static func of(classDef: ClassDef, classes: [SystemCatalog.Key: ClassDef]) -> HomeApp? {
         let homes: [(SystemCatalog.Key, HomeApp)] = [
             (.activity, .training), (.workout, .training), (.exerciseEntry, .training), (.set, .training),
             (.muscle, .training), (.equipment, .training), (.plan, .training),
@@ -94,7 +99,8 @@ enum Mentions {
         guard byApp.keys.contains(where: { $0 != home }) else { return [] }
         return HomeApp.allCases.compactMap { app in
             guard app != home, let sources = byApp[app], !sources.isEmpty else { return nil }
-            if sources.count == 1, let only = sources.first {
+            // Money is only ever a count, never a spend's words (Design on #1237).
+            if sources.count == 1, let only = sources.first, app != .money {
                 let shown = ObjectPrivacy.shownLabel(of: only, in: store, classes: classes) ?? store
                     .displayTitle(of: only)
                 return Line(app: app, text: shown)
@@ -107,18 +113,25 @@ enum Mentions {
 /// The "Mentioned in" lines above an object page's doors: what mentions it, with the app name small on the right.
 struct MentionedIn: View {
     let lines: [Mentions.Line]
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         if !lines.isEmpty {
             MarginSection(label: "Mentioned in") {
                 VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                     ForEach(lines) { line in
-                        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
+                        // At accessibility sizes the app's name goes under the line, so a long title wraps.
+                        let layout = typeSize.isAccessibilitySize
+                            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.xs))
+                            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Spacing.m))
+                        layout {
                             Text(line.text)
                                 .textRole(.body)
                                 .foregroundStyle(Theme.Colors.ink)
                                 .fixedSize(horizontal: false, vertical: true)
-                            Spacer(minLength: Theme.Spacing.s)
+                            if !typeSize.isAccessibilitySize {
+                                Spacer(minLength: Theme.Spacing.s)
+                            }
                             Text(line.app.rawValue)
                                 .textRole(.data)
                                 .foregroundStyle(Theme.Colors.inkTertiary)
@@ -158,9 +171,7 @@ enum LinkColours {
                let app = HomeApp.of(target, classes: classes)
             {
                 homes[store.displayTitle(of: target).lowercased()] = app
-            } else if let classDef = link.toClass, let prototype = store.objects(of: classDef).first,
-                      let app = HomeApp.of(prototype, classes: classes)
-            {
+            } else if let classDef = link.toClass, let app = HomeApp.of(classDef: classDef, classes: classes) {
                 homes[classDef.name.lowercased()] = app
             }
         }

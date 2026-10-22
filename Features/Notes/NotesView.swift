@@ -213,7 +213,10 @@ struct NoteRow: View {
     /// its home app's accent instead (135 §3).
     private var titleLine: AttributedString {
         var line = NotesCopy.inked(note.title)
-        if Together.isOn(Together.linkColours) {
+        // A private note keeps its plain cobalt: no app's colour says what it is about (QA on #1237).
+        if Together.isOn(Together.linkColours),
+           !NotesLanding(store: model.store, classes: model.classes).isPrivate(note)
+        {
             LinkColours.underline(&line, text: note.title,
                                   homes: LinkColours.homes(of: note, store: model.store, classes: model.classes))
         }

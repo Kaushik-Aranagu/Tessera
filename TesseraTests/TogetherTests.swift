@@ -23,6 +23,16 @@ struct TogetherTests {
         #expect(underlined == ["@Bench Press"])
     }
 
+    @Test func aPrivateNoteNamesNoHome() throws {
+        let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext,
+                             launchDefaults: .testSuite())
+        let note = try #require(try? model.engine.perform(CreateNote(body: "@Bench Press\nmore"), by: .user).output)
+        try model.store.set("isPrivate", to: .bool(true), on: note)
+        // NoteRow only colours a note Core does not call private; the private one stays as it was.
+        #expect(NotesLanding(store: model.store, classes: model.classes).isPrivate(note))
+        #expect(try HomeApp.of(classDef: #require(model.classes[.benchPress]), classes: model.classes) == .training)
+    }
+
     @Test func homeAppsByClass() throws {
         let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext,
                              launchDefaults: .testSuite())
