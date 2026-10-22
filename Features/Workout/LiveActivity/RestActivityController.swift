@@ -24,19 +24,21 @@ final class RestActivityController {
 
     private init() {}
 
+    /// Whether a session may start or change a real Live Activity or notification: not a sample workout. Guarded on the
+    /// model that owns the session (isSample), not on the sample-data flag, so a real workout keeps its Live Activity.
+    static func shouldDrive(_ session: WorkoutSession) -> Bool {
+        !session.model.isSample
+    }
+
     func update(for session: WorkoutSession?) {
         guard let session else {
             FinishNudges.shared.sync(workoutID: nil, workoutTitle: "", lastSetAt: nil, enabled: false)
             end()
             return
         }
-        // A sample workout never starts a real Live Activity, a rest alert or a Finish nudge. Guarded on the model that
-        // owns the session (isSample), not on the sample-data flag, so a real workout keeps its Live Activity.
-        guard !session.model.isSample else {
-            FinishNudges.shared.sync(workoutID: nil, workoutTitle: "", lastSetAt: nil, enabled: false)
-            end()
-            return
-        }
+        // A sample workout drives nothing here: no Live Activity, no rest alert, no Finish nudge. It returns plainly,
+        // without touching the shared activity or nudge, so a real workout that is running keeps both.
+        guard Self.shouldDrive(session) else { return }
         // The forgot-Finish nudge follows the last set (a no-op unless its switch is On).
         FinishNudges.shared.sync(workoutID: session.workout.id, workoutTitle: session.shownTitle,
                                  lastSetAt: session.lastTouchedAt, enabled: Choice.finishNudgeIsOn())
