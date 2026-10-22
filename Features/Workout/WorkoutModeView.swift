@@ -649,7 +649,7 @@ extension WorkoutContent {
                     }
                 }
         } else if let estimate = session.estimateShown, let from = session.swappedFrom {
-            Text("About \(Format.kilograms(estimate)), from your \(from.lowercased())")
+            Text("About \(Format.shown(estimate)), from your \(from.lowercased())")
                 .textRole(.label)
                 .foregroundStyle(Paint.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)

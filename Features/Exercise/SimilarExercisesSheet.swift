@@ -75,7 +75,7 @@ struct SimilarExercisesSheet: View {
                         .foregroundStyle(Theme.Colors.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: Theme.Spacing.s)
-                    Text(last.map { "last \(Format.kilograms($0))" } ?? "new")
+                    Text(last.map { "last \(Format.mass($0))" } ?? "new")
                         .numeral(21, weight: .light)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }

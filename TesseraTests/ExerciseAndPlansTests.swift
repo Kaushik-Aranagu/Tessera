@@ -235,7 +235,9 @@ struct ExerciseAndPlansTests {
         #expect(digest.climb.map(\.setText) == ["80 × 8", "82.5 × 7", "77.5 × 8"])
         #expect(digest.sessionCount == 3)
         #expect(digest.aboutOneRep == 101.8)
-        #expect(digest.subtitle?.hasSuffix("Best 82.5 × 7") == true)
+        #expect(digest.subtitle?.contains("Best") == false, "the subtitle is the muscles; the best is the line below")
+        #expect(digest.nextLine?.hasPrefix("Next time ") == true)
+        #expect(digest.nextLine?.hasSuffix("Last time 77.5 × 8.") == true)
     }
 
     @Test func theClimbShowsTheLastTwelveSessions() throws {
@@ -262,5 +264,36 @@ struct ExerciseAndPlansTests {
         #expect(flat.high - flat.low == 10, "a flat climb still has room to move")
         #expect(ClimbAxis(weights: [0, 0]) == nil, "bodyweight work has no weight to climb")
         #expect(ClimbAxis(weights: []) == nil)
+    }
+
+    @Test func everyClimbDateUsesOneForm() throws {
+        let zone = try #require(TimeZone(identifier: "UTC"))
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        for (month, day, expected) in [(9, 29, "Sep 29"), (10, 5, "Oct 5"), (10, 10, "Oct 10")] {
+            let date = try #require(calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: 12)))
+            #expect(TheClimb.dateWord(date, zone: zone, calendar: calendar) == expected)
+        }
+    }
+
+    // MARK: Units (QA on #1219: he is in the US, so pounds matter)
+
+    @Test func theExercisePageWordsFollowThePoundUnit() {
+        #expect(ExerciseWords.set(weight: 82.5, reps: 7, unit: .pounds) == "182 × 7")
+        #expect(ExerciseWords.set(weight: 82.5, reps: 7, unit: .kilograms) == "82.5 × 7")
+        #expect(Format.shown(80, unit: .pounds) == "176.5")
+        #expect(ExerciseWords.bestLine(bestSet: "182 × 7", aboutKilograms: 101.8, unit: .pounds)
+            == "Best set 182 × 7. About 224 lb for 1.")
+        #expect(ExerciseWords.bestLine(bestSet: "82.5 × 7", aboutKilograms: 101.8, unit: .kilograms)
+            == "Best set 82.5 × 7. About 102 kg for 1.")
+        #expect(ExerciseWords.bestLine(bestSet: nil, aboutKilograms: nil).hasPrefix("No best yet"))
+    }
+
+    @Test func theClimbGridStepFollowsTheUnit() throws {
+        #expect(ClimbAxis.step(for: .kilograms) == 5)
+        #expect(ClimbAxis.step(for: .pounds) == 10)
+        let axis = try #require(ClimbAxis(weights: [175, 182, 180], step: ClimbAxis.step(for: .pounds)))
+        #expect(axis.gridlines == [170, 180, 190])
+        #expect(axis.unit(180) == 0.5)
     }
 }

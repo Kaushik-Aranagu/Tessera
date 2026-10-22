@@ -31,32 +31,37 @@ struct ClimbSession: Identifiable, Hashable {
     }
 }
 
-/// Weight across, on a light grid at 5 kg steps. Pure so it can be tested.
+/// Weight across, on a light grid at 5 kg or 10 lb steps. Pure so it can be tested; the weights are in the unit shown.
 struct ClimbAxis: Equatable {
-    static let step = 5.0
+    /// The grid step in a unit: 5 kg, or 10 lb (a step a plate set can make).
+    static func step(for unit: MassUnit) -> Double {
+        unit == .pounds ? 10 : 5
+    }
 
     let low: Double
     let high: Double
+    let step: Double
 
     /// Nil when there is no weight to climb (bodyweight work: the rows go without the plot).
-    init?(weights: [Double]) {
+    init?(weights: [Double], step: Double = 5) {
         guard let max = weights.max(), let min = weights.min(), max > 0 else { return nil }
-        var low = (min / Self.step).rounded(.down) * Self.step
-        var high = (max / Self.step).rounded(.up) * Self.step
+        var low = (min / step).rounded(.down) * step
+        var high = (max / step).rounded(.up) * step
         // Never a one-step plot: a flat climb still has room to move.
-        if high - low < 2 * Self.step {
-            high = low + 2 * Self.step
+        if high - low < 2 * step {
+            high = low + 2 * step
         }
         if low < 0 {
             low = 0
         }
         self.low = low
         self.high = high
+        self.step = step
     }
 
     /// The labelled lines: 75, 80, 85.
     var gridlines: [Double] {
-        stride(from: low, through: high, by: Self.step).map(\.self)
+        stride(from: low, through: high, by: step).map(\.self)
     }
 
     /// 0 at the lowest line, 1 at the highest.
@@ -74,14 +79,29 @@ struct TheClimb: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dynamicTypeSize) private var typeSize
 
+    /// One form for every row: "Sep 29", "Oct 5".
+    static func dateWord(_ date: Date, zone: TimeZone?, calendar: Calendar = .current) -> String {
+        var style = Date.FormatStyle.dateTime.month(.abbreviated).day()
+        style.timeZone = zone ?? calendar.timeZone
+        return date.formatted(style)
+    }
+
+    /// A session's weight in the unit shown, for the plot.
+    private static func shownWeight(_ session: ClimbSession) -> Double {
+        Format.unit.fromKilograms(session.weight, rounded: false)
+    }
+
     private static let rowHeight: CGFloat = 46
     private static let dateWidth: CGFloat = 78
     private static let setWidth: CGFloat = 104
+    private static let orbRoom: CGFloat = 36
     /// Points one axis number needs.
     private static let labelRoom: CGFloat = 40
 
     var body: some View {
-        let axis = ClimbAxis(weights: sessions.map(\.weight))
+        let unit = Format.unit
+        let axis = ClimbAxis(weights: sessions.map { unit.fromKilograms($0.weight, rounded: false) },
+                             step: ClimbAxis.step(for: unit))
         let plots = axis != nil && !typeSize.isAccessibilitySize
         VStack(alignment: .leading, spacing: 0) {
             Text("The climb, \(total) \(total == 1 ? "session" : "sessions")")
@@ -121,8 +141,7 @@ struct TheClimb: View {
     }
 
     private func row(_ session: ClimbSession, at index: Int, axis: ClimbAxis?) -> some View {
-        let date = ExerciseWords.historyDate(session.date, now: AppClock.now, calendar: .current,
-                                             zone: OpZones(store: model.store).zone(of: session.workoutID))
+        let date = Self.dateWord(session.date, zone: OpZones(store: model.store).zone(of: session.workoutID))
         let ink = session.isBest ? Theme.Colors.live : Theme.Colors.ink
         return Button { model.open(.object(session.workoutID)) } label: {
             let layout = axis == nil
@@ -135,8 +154,9 @@ struct TheClimb: View {
                     .frame(width: axis == nil ? nil : Self.dateWidth, alignment: .leading)
                     .fixedSize(horizontal: axis == nil, vertical: false)
                 if let axis {
-                    ClimbTrack(axis: axis, previous: sessions[safe: index - 1]?.weight, weight: session.weight,
-                               next: sessions[safe: index + 1]?.weight, isBest: session.isBest)
+                    ClimbTrack(axis: axis, previous: sessions[safe: index - 1].map(Self.shownWeight),
+                               weight: Self.shownWeight(session), next: sessions[safe: index + 1].map(Self.shownWeight),
+                               isBest: session.isBest)
                         .frame(height: Self.rowHeight)
                 } else {
                     Spacer(minLength: 0)
@@ -145,13 +165,16 @@ struct TheClimb: View {
                     .numeral(21, weight: .light)
                     .foregroundStyle(ink)
                     .frame(width: axis == nil ? nil : Self.setWidth, alignment: .trailing)
+                    // Clear of the Tess orb that floats at the lower right.
+                    .padding(.trailing, Self.orbRoom)
             }
             .frame(minHeight: Self.rowHeight)
             .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(date), \(session.setText.replacingOccurrences(of: "×", with: "by"))"
+        .accessibilityLabel("\(date), \(session.setText.replacingOccurrences(of: "×", with: "by")) "
+            + (Format.unit == .pounds ? "pounds" : "kilograms")
             + (session.isBest ? ", your best" : ""))
         .accessibilityHint("Opens that session")
     }

@@ -60,17 +60,14 @@ struct ExerciseDigest {
     let sessionCount: Int
     /// "About 104 kg for 1": the best set's estimated one-rep max.
     let aboutOneRep: Double?
-    /// "Chest, triceps. Best 85 × 5": what it works, then its best set.
+    /// "Quads and glutes": what it works, and nothing else (the best is the line below).
     var subtitle: String? {
         let lead = muscles.filter { $0.role == .primary }.map { $0.name.lowercased() }
-        let works = ExerciseWords.list(lead).map { $0.prefix(1).uppercased() + $0.dropFirst() }
-        switch (works, bestSet) {
-        case let (works?, best?): return "\(works). Best \(best)"
-        case let (works?, nil): return works
-        case let (nil, best?): return "Best \(best)"
-        default: return nil
-        }
+        return ExerciseWords.list(lead).map { $0.prefix(1).uppercased() + $0.dropFirst() }
     }
+
+    /// "Next time 82.5 × 7. Last time 80 × 8." (sheet 128's form), or the first-time line.
+    let nextLine: String?
 
     /// What the exercise's own notes say (the library's cue until he writes his own).
     let notes: String?
@@ -121,6 +118,7 @@ struct ExerciseDigest {
 
         trend = Self.trend(overview.trend.map { ($0.date, $0.bestE1RM) }, now: now, calendar: calendar)
         nextTime = Self.nextTime(for: exercise, ledger: ledger, store: store)
+        nextLine = Self.nextLine(for: exercise, ledger: ledger)
     }
 
     /// A session's sets as marks. History has no plan to compare with, so a set is "on target" when it matches the
@@ -163,6 +161,22 @@ struct ExerciseDigest {
                      isRise: delta >= 0)
     }
 
+    /// "Next time 82.5 × 7. Last time 80 × 8." The target is Core's next set; the last is the top set of the last
+    /// session.
+    static func nextLine(for exercise: ClassDef, ledger: TrainingLedger) -> String? {
+        let target = ledger.nextTarget(for: exercise)
+        guard let weight = target.weight else {
+            return ledger.sessions(of: exercise).isEmpty ? "First time. Start light, \(target.reps) reps." : nil
+        }
+        var line = "Next time \(ExerciseWords.set(weight: weight, reps: Double(target.reps)))."
+        if let top = ledger.sessions(of: exercise).first?.sets
+            .max(by: { ($0.weight, $0.reps) < ($1.weight, $1.reps) })
+        {
+            line += " Last time \(ExerciseWords.set(weight: top.weight, reps: top.reps))."
+        }
+        return line
+    }
+
     /// Tess's forward line: "Next time: 82.5 for 9, then 85." Follows the same rule Core prefills the set with.
     static func nextTime(for exercise: ClassDef, ledger: TrainingLedger, store: ObjectStore) -> String? {
         let target = ledger.nextTarget(for: exercise)
@@ -186,8 +200,16 @@ struct ExerciseDigest {
 /// How the Exercise page says things. Plain words, numbers as lifters write them.
 enum ExerciseWords {
     /// "85 × 6"
-    static func set(weight: Double, reps: Double) -> String {
-        "\(Format.kilograms(weight)) × \(Int(reps.rounded()))"
+    static func set(weight: Double, reps: Double, unit: MassUnit = Format.unit) -> String {
+        "\(Format.shown(weight, unit: unit)) × \(Int(reps.rounded()))"
+    }
+
+    /// "Best set 85 × 5. About 104 kg for 1." in the chosen unit, or the first-time line.
+    static func bestLine(bestSet: String?, aboutKilograms: Double?, unit: MassUnit = Format.unit) -> String {
+        guard let bestSet else { return "No best yet. The first logged set sets one." }
+        guard let aboutKilograms else { return "Best set \(bestSet)." }
+        let about = unit.fromKilograms(aboutKilograms, rounded: false).rounded()
+        return "Best set \(bestSet). About \(Format.kilograms(about)) \(unit.symbol) for 1."
     }
 
     /// "chest, with triceps and front delts": what it works, in words.
@@ -226,7 +248,7 @@ enum ExerciseWords {
 
     /// "+6.5", "−2.5", "+0"
     static func signed(_ value: Double) -> String {
-        value < 0 ? "−\(Format.kilograms(-value))" : "+\(Format.kilograms(value))"
+        value < 0 ? "−\(Format.shown(-value))" : "+\(Format.shown(value))"
     }
 
     /// "July" when the first session is in an earlier month, else "Oct 1".
@@ -258,8 +280,8 @@ enum ExerciseWords {
 
     /// "Next time: 82.5 for 9, then 85."
     static func nextTime(weight: Double, reps: Int, then: Double?) -> String {
-        let base = "Next time: \(Format.kilograms(weight)) for \(reps)"
-        return then.map { "\(base), then \(Format.kilograms($0))." } ?? "\(base)."
+        let base = "Next time: \(Format.shown(weight)) for \(reps)"
+        return then.map { "\(base), then \(Format.shown($0))." } ?? "\(base)."
     }
 
     /// "primary", "half a set each"

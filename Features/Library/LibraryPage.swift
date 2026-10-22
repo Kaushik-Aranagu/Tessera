@@ -73,6 +73,7 @@ struct LibraryPage: View {
                 case let .exercise(id):
                     if let classDef = model.classDef(id: id) {
                         ExercisePage(exercise: classDef)
+                            .environment(\.pageBackTitle, "Library")
                     }
                 case let .workout(id):
                     if let workout = ReadyWorkouts.workout(id: id) {
