@@ -13,7 +13,8 @@ struct SampleDataWord: View {
                 openLink(.review)
             } label: {
                 Text("Sample data")
-                    .textRole(.label)
+                    // Label size with its case kept: sentence case, never caps (Design on #1199).
+                    .textRole(.data)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .frame(minHeight: 44, alignment: .bottomLeading)
             }
