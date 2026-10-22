@@ -14,6 +14,12 @@ public enum ObjectPrivacy {
     /// What a spend reads everywhere but its own page and the Month page (Money amendment 2).
     public static let spendLabel = "Private spend"
     public static let profileLabel = "Private profile"
+    /// Money pools: a pool, an inflow, a move between pools and a noted rate carry names, amounts, balances and rates,
+    /// so each reads private everywhere but its own page, like a spend (Money pools B2).
+    public static let poolLabel = "Private pool"
+    public static let inflowLabel = "Private inflow"
+    public static let moveLabel = "Private move"
+    public static let rateLabel = "Private rate"
     public static let placeLabel = "Private place"
     /// What a private book reads wherever it is masked; its review shows on the book page only (Reading amendment 2).
     public static let bookLabel = "Private book"
@@ -72,6 +78,18 @@ public enum ObjectPrivacy {
         // A place named with a walled word reads "Private place".
         if isA(.place) {
             return isPrivateTitle(object.title, lastWeightKg: last) ? placeLabel : nil
+        }
+        if isA(.pool) {
+            return poolLabel
+        }
+        if isA(.inflow) {
+            return inflowLabel
+        }
+        if isA(.poolMove) {
+            return moveLabel
+        }
+        if isA(.rateNote) {
+            return rateLabel
         }
         // Height, birth year and sex are body facts: private like a weigh-in.
         if isA(.meProfile) {
