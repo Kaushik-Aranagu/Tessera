@@ -428,14 +428,14 @@ private struct DialSlot: ViewModifier, Animatable {
     /// The signed distance round the loop, in places: in −count/2 ..< count/2.
     static func distance(index: Int, turn: Double, count: Int) -> Double {
         guard count > 0 else { return 0 }
-        let n = Double(count)
-        var d = (Double(index) - turn).truncatingRemainder(dividingBy: n)
-        if d < -n / 2 {
-            d += n
+        let size = Double(count)
+        var gap = (Double(index) - turn).truncatingRemainder(dividingBy: size)
+        if gap < -size / 2 {
+            gap += size
         }
-        if d >= n / 2 {
-            d -= n
+        if gap >= size / 2 {
+            gap -= size
         }
-        return d
+        return gap
     }
 }
