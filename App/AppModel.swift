@@ -674,7 +674,7 @@ extension AppModel {
         guard session == nil, tonightWorkout(around: now) == nil, finishedToday(now: now).isEmpty,
               let plan else { return nil }
         // "Try today": a ready workout stands in for the Plan's next routine for this day only.
-        if let tried = TriedToday.current(now: now), let routine = object(tried.routineID), !routine.isDeleted {
+        if let routine = triedRoutine(now: now) {
             return routine
         }
         return ledger.nextRoutine(in: plan, now: now)

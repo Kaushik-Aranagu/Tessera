@@ -97,4 +97,74 @@ struct LibraryTests {
         #expect(sections.first?.equipment == .barbell)
         #expect(sections.flatMap(\.items).count == items.count)
     }
+
+    private func routines(titled title: String, in model: AppModel) -> Int {
+        model.objects(of: .routine).filter { $0.title == title && !$0.isDeleted }.count
+    }
+
+    @Test func aSecondTryTheSameDayTakesTheFirstOnesPlaceAndKeepsWhatItReplaced() throws {
+        clean()
+        defer { clean() }
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        #expect(try model.tryToday(#require(ReadyWorkouts.workout(id: "W02"))))
+        let first = try #require(model.triedToday())
+        #expect(try model.tryToday(#require(ReadyWorkouts.workout(id: "W03"))))
+        let second = try #require(model.triedToday())
+        #expect(second.title == "Push at Home")
+        #expect(second.replacedTitle == first.replacedTitle, "the line still names what the Plan had")
+        #expect(routines(titled: "Machine Push", in: model) == 0, "the first try's routine is gone")
+        #expect(routines(titled: "Push at Home", in: model) == 1)
+    }
+
+    @Test func savingWhatHeIsTryingKeepsThatRoutineInsteadOfMakingASecond() throws {
+        clean()
+        defer { clean() }
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        let workout = try #require(ReadyWorkouts.workout(id: "W02"))
+        #expect(model.tryToday(workout))
+        #expect(model.saveReadyWorkout(workout))
+        #expect(routines(titled: "Machine Push", in: model) == 1)
+        #expect(TriedToday.current()?.kept == true)
+        model.undoTryToday()
+        #expect(routines(titled: "Machine Push", in: model) == 1, "a saved workout stays when the try is undone")
+    }
+
+    @Test func aTriedRoutineNobodySavedGoesWhenItsDayIsOver() throws {
+        clean()
+        defer { clean() }
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        let now = AppClock.now
+        #expect(try model.tryToday(#require(ReadyWorkouts.workout(id: "W02")), now: now))
+        #expect(routines(titled: "Machine Push", in: model) == 1)
+        model.purgeStaleTried(now: now.addingTimeInterval(86400 * 2))
+        #expect(routines(titled: "Machine Push", in: model) == 0)
+        #expect(TriedToday.stored() == nil)
+    }
+
+    @Test func aTriedLineNeedsItsRoutineInThisStore() {
+        clean()
+        defer { clean() }
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        let now = AppClock.now
+        TriedToday.set(TriedToday(routineID: UUID(), title: "Upper", replacedTitle: nil, minutes: 25,
+                                  day: TriedToday.dayKey(now), triedAt: now))
+        #expect(model.triedToday() == nil, "another store's try never shows here")
+    }
+
+    @Test func triedWorkoutsAreRemembered() throws {
+        let defaults = try #require(UserDefaults(suiteName: "LibraryTests.history"))
+        defaults.removePersistentDomain(forName: "LibraryTests.history")
+        TriedHistory.add("W02", defaults: defaults)
+        TriedHistory.add("W05", defaults: defaults)
+        TriedHistory.add("W02", defaults: defaults)
+        #expect(TriedHistory.ids(defaults: defaults) == ["W02", "W05"])
+    }
 }

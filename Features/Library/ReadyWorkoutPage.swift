@@ -64,7 +64,7 @@ struct ReadyWorkoutPage: View {
                                 .fixedSize(horizontal: false, vertical: true)
                             Spacer(minLength: Theme.Spacing.s)
                             Text(workout.setsWord(slot))
-                                .font(Theme.numeral(21, weight: .regular))
+                                .numeral(21, weight: .regular)
                                 .foregroundStyle(Theme.Colors.inkSecondary)
                         }
                         .frame(minHeight: 50)
@@ -75,6 +75,11 @@ struct ReadyWorkoutPage: View {
 
                 if canTry {
                     // What the move does, in words, so "Try today" is never a surprise (rolling plan rule).
+                    Text(todays.map { "Instead of today's \($0)" } ?? "Today")
+                        .textRole(.label)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .padding(.bottom, Theme.Spacing.xs)
+                        .accessibilityAddTraits(.isHeader)
                     Text(insteadLine(todays))
                         .font(Theme.voice(size: 21))
                         .foregroundStyle(Theme.Colors.inkSecondary)
@@ -112,8 +117,13 @@ struct ReadyWorkoutPage: View {
         .toolbarVisibility(.hidden, for: .navigationBar)
     }
 
+    /// "Push A stays on the Plan; it moves to Thursday." The Plan is never rewritten (the rolling plan rule); the day
+    /// it
+    /// moves to is the next day.
     private func insteadLine(_ todays: String?) -> String {
-        guard let todays else { return "Today has nothing planned, so this is today's workout." }
-        return "Instead of today's \(todays): it stays on the Plan and moves to the next day."
+        guard let todays else { return "Nothing was planned for today, so this is today's workout." }
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: AppClock.now) ?? AppClock.now
+        let weekday = tomorrow.formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "en_US")))
+        return "\(todays) stays on the Plan; it moves to \(weekday)."
     }
 }

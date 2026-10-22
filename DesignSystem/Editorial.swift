@@ -46,6 +46,7 @@ private struct TextRoleModifier: ViewModifier {
                 spec.uppercase = false
             case .keyWord:
                 spec.uppercase = false
+                spec.tracking = 0.02
             case .data:
                 // Times and the like (8:30 pm): Outfit 300, tabular, no extra tracking.
                 spec.tracking = 0

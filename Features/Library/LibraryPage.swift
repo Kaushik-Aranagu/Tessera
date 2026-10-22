@@ -23,6 +23,7 @@ struct LibraryPage: View {
     @State private var muscle: MuscleGroupWord?
     @State private var mineOnly = false
     @State private var group: ReadyWorkout.Group?
+    @State private var triedOnly = false
     @State private var path: [Route] = []
 
     var body: some View {
@@ -66,6 +67,7 @@ struct LibraryPage: View {
             .scrollIndicators(.hidden)
             .background { ThemedBackground() }
             .toolbarVisibility(.hidden, for: .navigationBar)
+            .onAppear { model.purgeStaleTried() }
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case let .exercise(id):
@@ -98,30 +100,31 @@ struct LibraryPage: View {
     }
 
     private var filters: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Theme.Spacing.l) {
-                switch kind {
-                case .exercises:
-                    filterWord("Mine", isOn: mineOnly) { mineOnly.toggle() }
-                    filterWord("All", isOn: muscle == nil && !mineOnly) { muscle = nil; mineOnly = false }
-                    ForEach(MuscleGroupWord.allCases, id: \.self) { word in
-                        filterWord(word.rawValue, isOn: muscle == word) { muscle = muscle == word ? nil : word }
-                    }
-                case .workouts:
-                    filterWord("All", isOn: group == nil) { group = nil }
-                    ForEach(ReadyWorkout.Group.allCases, id: \.self) { word in
-                        filterWord(word.name, isOn: group == word) { group = group == word ? nil : word }
-                    }
+        WordFlow(spacing: Theme.Spacing.l) {
+            switch kind {
+            case .exercises:
+                filterWord("Mine", isOn: mineOnly) { mineOnly.toggle() }
+                filterWord("All", isOn: muscle == nil && !mineOnly) { muscle = nil; mineOnly = false }
+                ForEach(MuscleGroupWord.allCases, id: \.self) { word in
+                    filterWord(word.rawValue, isOn: muscle == word) { muscle = muscle == word ? nil : word }
+                }
+            case .workouts:
+                // "Tried" is pinned first, in the hot colour: the ones he has tried before.
+                filterWord("Tried", isOn: triedOnly, hot: true) { triedOnly.toggle() }
+                filterWord("All", isOn: group == nil && !triedOnly) { group = nil; triedOnly = false }
+                ForEach(ReadyWorkout.Group.allCases, id: \.self) { word in
+                    filterWord(word.name, isOn: group == word) { group = group == word ? nil : word }
                 }
             }
         }
     }
 
-    private func filterWord(_ word: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+    private func filterWord(_ word: String, isOn: Bool, hot: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(word)
                 .textRole(.label)
-                .foregroundStyle(Theme.Colors.ink.opacity(isOn ? 1 : 0.5))
+                .foregroundStyle(hot ? Theme.Colors.live.opacity(isOn ? 1 : 0.7) : Theme.Colors.ink
+                    .opacity(isOn ? 1 : 0.5))
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
         }
@@ -157,7 +160,7 @@ struct LibraryPage: View {
                                 .fixedSize(horizontal: false, vertical: true)
                             Spacer(minLength: Theme.Spacing.s)
                             Text(item.lastWeight.map { "last \(Format.kilograms($0))" } ?? "new")
-                                .font(Theme.voice(size: 21))
+                                .numeral(21, weight: .light)
                                 .foregroundStyle(Theme.Colors.inkSecondary)
                         }
                         .frame(minHeight: 50)
@@ -186,7 +189,13 @@ struct LibraryPage: View {
 
     @ViewBuilder
     private var workouts: some View {
-        let list = ReadyWorkouts.search(group: group)
+        let tried = Set(TriedHistory.ids())
+        let list = ReadyWorkouts.search(group: group).filter { !triedOnly || tried.contains($0.id) }
+        if list.isEmpty {
+            Text("Nothing tried yet. Try one today and it shows here.")
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.inkSecondary)
+        }
         ForEach(list, id: \.id) { workout in
             let reason = place.reason(for: workout)
             Button { path.append(.workout(workout.id)) } label: {
@@ -197,8 +206,8 @@ struct LibraryPage: View {
                             .foregroundStyle(Theme.Colors.ink)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: Theme.Spacing.s)
-                        Text("\(workout.minutes) min")
-                            .font(Theme.numeral(21, weight: .regular))
+                        Text("\(workout.minutes) min".keepingUnits)
+                            .numeral(21, weight: .regular)
                             .foregroundStyle(Theme.Colors.inkSecondary)
                     }
                     if let reason {

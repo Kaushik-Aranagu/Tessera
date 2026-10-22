@@ -120,7 +120,7 @@ private struct TrainingAtRest: View {
 
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 titleButton
-                if let tried = TriedToday.current() {
+                if let tried = model.triedToday() {
                     TriedTodayLine(tried: tried) { model.undoTryToday() }
                 }
                 // A private workout says nothing about what it works (its figure still draws).
@@ -139,6 +139,7 @@ private struct TrainingAtRest: View {
             .fullScreenCover(isPresented: $libraryOpen) {
                 LibraryPage(close: { libraryOpen = false })
             }
+            .task { model.purgeStaleTried() }
 
             StartMark(state: markState, lift: lift)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
@@ -292,7 +293,6 @@ private struct TrainingAtRest: View {
                 let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
                 Text("\(planObject.title), \(fixed ? "fixed days" : "rolls on")")
                     .textRole(.label)
-                    .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
                     .minimumScaleFactor(0.8)
@@ -653,8 +653,7 @@ struct StartMark: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(word)
-                .textRole(.labelStrong)
-                .textCase(.uppercase)
+                .textRole(.keyWord)
                 .foregroundStyle(Theme.Colors.ink.opacity(wordOpacity))
                 .contentTransition(.opacity)
             line
@@ -687,7 +686,9 @@ struct StartMark: View {
         switch state {
         case .ready:
             // The flight draws the moving copy; the line here empties as it leaves.
-            InkLine().fill(Theme.Colors.ink).opacity(lift > 0 ? 0 : 1).frame(height: 6)
+            // The hot underline of the Figtree pair (Design 129): the Start word's line rests in the live colour.
+            InkLine().fill(Choice.fontIsNew() ? Theme.Colors.live : Theme.Colors.ink).opacity(lift > 0 ? 0 : 1)
+                .frame(height: 6)
         case .running:
             InkLine().fill(Theme.Colors.ink).frame(width: 28, height: 6)
         case let .paused(_, done):
