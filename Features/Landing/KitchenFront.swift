@@ -35,8 +35,8 @@ struct KitchenFront {
     let places: [(name: String, level: Double)]
     let toGet: Int
     let saved: Int
-    /// A thing running low, by name (never a private one).
-    let low: String?
+    /// Dinners the pantry already covers (Core's count).
+    let covers: Int
     let cooking: Cooking?
 
     init(model: AppModel, now: Date, calendar: Calendar = .current, days: Int = 4) {
@@ -47,7 +47,9 @@ struct KitchenFront {
         tonight = meals.first { house.isSameDay($0.start, now) }
         week = (0 ..< days).compactMap { offset in
             guard let day = calendar.date(byAdding: .day, value: offset, to: today) else { return nil }
-            let meal = meals.first { house.isSameDay($0.start, day) }
+            // Midday, so the house day (04:00 to 04:00) is the calendar day's own.
+            let midday = day.addingTimeInterval(12 * 3600)
+            let meal = meals.first { house.isSameDay($0.start, midday) }
             let weekday = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: day) - 1]
             let when: String? = meal.flatMap { meal in
                 offset == 0 ? "start \(HouseTime.clock(meal.start))" : meal.minutes.map { "\(Int($0)) min" }
@@ -67,24 +69,19 @@ struct KitchenFront {
         }
         toGet = board.toGetCount
         saved = book.recipes().count
-        low = board.places.lazy.compactMap(\.low).first
-        cooking = Self.cooking(model)
+        covers = TesseraCore.KitchenLanding(store: model.store, classes: model.classes).dinnersCovered()
+        cooking = Self.cooking(model, now: now)
     }
 
-    /// The sentence: tonight's meal and its start, then one more clause (what is low, else how much is to get).
-    /// "Tacos tonight, start at 6:05. Lemon is low." / "Nothing planned tonight. 7 to get."
-    var sentence: [LandingSentence.Piece] {
-        var pieces: [LandingSentence.Piece] = if let tonight {
-            [.key(tonight.title), .plain(" tonight, start at \(HouseTime.clock(tonight.start)).")]
-        } else {
-            [.plain("Nothing planned tonight.")]
-        }
-        if let low {
-            pieces += [.plain(" "), .key(low.prefix(1).uppercased() + low.dropFirst()), .plain(" is low.")]
-        } else if toGet > 0 {
-            pieces += [.plain(" \(toGet) to get.")]
-        }
-        return pieces
+    /// "Tacos tonight, start at 6:05." from Core's template (#1222); the short thing waits on RecipeStock.
+    var sentence: LandingSentence {
+        LandingSentences.kitchen(dish: tonight?.title, start: tonight.map { HouseTime.clock($0.start) }, shortOf: nil)
+    }
+
+    /// Beside the Pantry door: "7 to get, covers 4 dinners", each part only when it answers.
+    var pantryValue: String? {
+        let parts = [LandingSentences.toGet(toGet), LandingSentences.covers(dinners: covers)].compactMap(\.self)
+        return parts.isEmpty ? nil : parts.joined(separator: ", ")
     }
 
     /// "full", "most", "half", "low", "empty": what VoiceOver says for a level line.
@@ -118,8 +115,8 @@ struct KitchenFront {
         .sorted { $0.start < $1.start }
     }
 
-    /// The cook running now, if one is: "Cooking tacos." with Go on.
-    private static func cooking(_ model: AppModel) -> Cooking? {
+    /// The cook running now, if one is: "Cooking tacos, 8 min left." with Go on.
+    private static func cooking(_ model: AppModel, now: Date) -> Cooking? {
         guard let process = model.processes.running(), let cookClass = model.classDef(.cook),
               let cook = process.subject, cook.classDef.map({ ClassResolver.isSubclass($0, of: cookClass) }) == true
         else { return nil }
@@ -127,7 +124,8 @@ struct KitchenFront {
         let title = recipe
             .map { RecipeCopy.shownTitle($0.title, isPrivate: RecipeCopy.isPrivate($0.title, model: model)) }
             ?? "Private recipe"
-        let named = title == "Private recipe" ? "a private recipe" : title.lowercased()
-        return Cooking(id: cook.id, line: "Cooking \(named).")
+        let timer = CookLog(store: model.store, classes: model.classes).timers(at: now).first { $0.cook?.id == cook.id }
+        let left = timer.map { Int(($0.remaining(at: now) / 60).rounded(.up)) }
+        return Cooking(id: cook.id, line: LandingSentences.cooking(dish: title, minutesLeft: left))
     }
 }

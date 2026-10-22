@@ -50,6 +50,11 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
             let layout = accessible
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.l))
                 : AnyLayout(HStackLayout(alignment: .top, spacing: Theme.Spacing.m))
+            if let pinned {
+                RailPinned(place: pinned, open: $open)
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                    .padding(.top, Theme.Spacing.xl)
+            }
             layout {
                 RailDial(pinned: pinned, places: places, open: $open, compact: accessible)
                     .frame(width: accessible ? nil : RailMetrics.columnWidth, alignment: .leading)
@@ -66,7 +71,7 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
             }
             .padding(.leading, Theme.Spacing.gutter)
             .padding(.trailing, Theme.Spacing.gutter)
-            .padding(.top, Theme.Spacing.xxl)
+            .padding(.top, pinned == nil ? Theme.Spacing.xxl : Theme.Spacing.m)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
@@ -80,8 +85,8 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
             if let back {
                 Button(action: back.action) {
                     Text("‹ \(back.title)")
-                        .textRole(.label)
-                        .textCase(.uppercase)
+                        // Label size, sentence case (131 §1: no caps).
+                        .textRole(.data)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .frame(minHeight: 44)
                 }
@@ -119,7 +124,7 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
                 VStack(alignment: .leading, spacing: 0) {
                     if sectionStyle == .words, let label = section.label {
                         Text(label)
-                            .textRole(.label)
+                            .textRole(.data)
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .accessibilityAddTraits(.isHeader)
                             .padding(.bottom, Theme.Spacing.xs)
@@ -132,7 +137,7 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
             }
             if let foot = foot(place) {
                 Text(foot)
-                    .textRole(.label)
+                    .textRole(.data)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, Theme.Spacing.xl)
@@ -198,9 +203,6 @@ private struct RailDial: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            if let pinned {
-                pinnedWord(pinned)
-            }
             if compact {
                 compactWords
             } else {
@@ -210,32 +212,6 @@ private struct RailDial: View {
         .tesseraFeedback(.selection, trigger: ticks)
         .onAppear(perform: alignTurn)
         .onChange(of: places) { alignTurn() }
-    }
-
-    // MARK: Pinned
-
-    private func pinnedWord(_ place: RailPlace) -> some View {
-        Button {
-            guard !pinnedOpen else { return }
-            ticks += 1
-            withTesseraAnimation(RailMetrics.snap, reduceMotion: calm) { open = place.id }
-        } label: {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(place.name)
-                    .font(Theme.voice(size: RailMetrics.pinnedSize))
-                Text("\(place.count)")
-                    .textRole(.data)
-                    .contentTransition(.numericText())
-            }
-            .foregroundStyle(place.count > 0 || pinnedOpen ? Theme.Colors.now : Theme.Colors.inkSecondary)
-            .scaleEffect(pinnedOpen && !calm ? RailMetrics.pinnedOpenScale : 1, anchor: .leading)
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(HandleButtonStyle())
-        .padding(.bottom, pinnedOpen && !calm ? 14 : 0)
-        .accessibilityLabel("\(place.name), \(place.count)")
-        .accessibilityAddTraits(pinnedOpen ? .isSelected : [])
     }
 
     // MARK: The dial
@@ -372,6 +348,48 @@ private struct RailDial: View {
                 .accessibilityAddTraits(open == place.id ? .isSelected : [])
             }
         }
+    }
+}
+
+/// The pinned place above the dial (To get, Today): out of the loop, in the hot colour with its count, across the
+/// whole width so it can grow to 1.5 when open without running into the open place.
+private struct RailPinned: View {
+    let place: RailPlace
+    @Binding var open: String
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var ticks = 0
+
+    private var calm: Bool {
+        reduceMotion || PowerState.isLowPower
+    }
+
+    private var pinnedOpen: Bool {
+        place.id == open
+    }
+
+    var body: some View {
+        Button {
+            guard !pinnedOpen else { return }
+            ticks += 1
+            withTesseraAnimation(RailMetrics.snap, reduceMotion: calm) { open = place.id }
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(place.name)
+                    .font(Theme.voice(size: RailMetrics.pinnedSize))
+                Text("\(place.count)")
+                    .textRole(.data)
+                    .contentTransition(.numericText())
+            }
+            .foregroundStyle(place.count > 0 || pinnedOpen ? Theme.Colors.now : Theme.Colors.inkSecondary)
+            .scaleEffect(pinnedOpen && !calm ? RailMetrics.pinnedOpenScale : 1, anchor: .bottomLeading)
+            .frame(maxWidth: .infinity, minHeight: pinnedOpen && !calm ? 56 : 44, alignment: .bottomLeading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(HandleButtonStyle())
+        .tesseraAnimation(RailMetrics.snap, value: pinnedOpen)
+        .tesseraFeedback(.selection, trigger: ticks)
+        .accessibilityLabel("\(place.name), \(place.count)")
+        .accessibilityAddTraits(pinnedOpen ? .isSelected : [])
     }
 }
 

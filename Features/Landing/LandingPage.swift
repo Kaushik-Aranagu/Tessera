@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// The shared landing frame (Design 131 §1, Kaushik's v2, Oct 22): every app's first page talks to him. A back word,
 /// the title (a tap opens the app index), one sentence computed on the phone with its key words in the app's accent,
@@ -76,7 +77,7 @@ struct LandingPage<Lead: View>: View {
         if let back {
             Button(action: back.action) {
                 Text("‹ \(back.title)")
-                    .textRole(.label)
+                    .textRole(.data)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .frame(minHeight: 44)
             }
@@ -109,7 +110,7 @@ struct LandingPage<Lead: View>: View {
         if !lines.isEmpty {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
                 Text(label)
-                    .textRole(.label)
+                    .textRole(.data)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .frame(width: 64, alignment: .leading)
                     .accessibilityAddTraits(.isHeader)
@@ -265,37 +266,14 @@ struct LandingWrap: Layout {
     }
 }
 
-/// The landing sentence: fixed templates on the phone, key words in the app's accent (131 §1). Never a model call.
-enum LandingSentence {
-    /// Joins plain and accented pieces into one sentence: `.plain("Tacos")` stays ink, `.key("Tacos")` takes the
-    /// accent.
-    enum Piece {
-        case plain(String)
-        case key(String)
-    }
-
-    static func build(_ pieces: [Piece], accent: Color) -> AttributedString {
-        var sentence = AttributedString()
-        for piece in pieces {
-            switch piece {
-            case let .plain(text):
-                sentence += AttributedString(text)
-            case let .key(text):
-                var key = AttributedString(text)
-                key.foregroundColor = accent
-                sentence += key
-            }
+/// Draws Core's landing sentence (LandingSentences, #1222): its words in ink, its key word in the app's accent.
+enum LandingText {
+    static func build(_ sentence: LandingSentence, accent: Color) -> AttributedString {
+        var text = AttributedString(sentence.text)
+        if let key = sentence.key, let range = text.range(of: key) {
+            text[range].foregroundColor = accent
         }
-        return sentence
-    }
-
-    /// The words alone, for tests and VoiceOver.
-    static func words(_ pieces: [Piece]) -> String {
-        pieces.map { piece in
-            switch piece {
-            case let .plain(text), let .key(text): text
-            }
-        }.joined()
+        return text
     }
 }
 

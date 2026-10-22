@@ -5,7 +5,7 @@ import TesseraCore
 /// level line per place and what is to get; Recipes, with this week as plain rows, today in full ink with its start,
 /// open days faint. A running cook gets one line above both, "Go on" into its clock. The foot: Cook when a meal is
 /// planned tonight, else Plan a meal. Behind Settings › Review › "Landing pages" (default Off).
-struct KitchenLanding: View {
+struct KitchenLandingPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openHomeLink) private var open
     @Environment(\.colorScheme) private var scheme
@@ -16,7 +16,7 @@ struct KitchenLanding: View {
         let front = KitchenFront(model: model, now: AppClock.now)
         let accent = KitchenFront.accent
         LandingPage(title: "Kitchen",
-                    sentence: LandingSentence.build(front.sentence, accent: accent),
+                    sentence: LandingText.build(front.sentence, accent: accent),
                     accent: accent,
                     running: front.cooking.map { cook in
                         [LandingLine(
@@ -61,10 +61,11 @@ struct KitchenCookCover: Identifiable {
 private struct KitchenDoors: View {
     let front: KitchenFront
     let open: (HomeLink) -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
-            door("Pantry", value: front.toGet > 0 ? "\(front.toGet) to get" : nil, link: .pantry) {
+            door("Pantry", value: front.pantryValue, link: .pantry) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                     ForEach(front.places, id: \.name) { place in
                         LevelLine(name: place.name, level: place.level)
@@ -86,11 +87,18 @@ private struct KitchenDoors: View {
     {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             Button { open(link) } label: {
-                HStack(alignment: .firstTextBaseline) {
+                // At accessibility sizes the value goes under the word, so the word never breaks.
+                let layout = typeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.xs))
+                    : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+                layout {
                     Text(word)
                         .textRole(.title)
                         .foregroundStyle(Theme.Colors.ink)
-                    Spacer(minLength: Theme.Spacing.m)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if !typeSize.isAccessibilitySize {
+                        Spacer(minLength: Theme.Spacing.m)
+                    }
                     if let value {
                         Text(value)
                             .textRole(.data)
@@ -113,13 +121,17 @@ private struct KitchenDoors: View {
 private struct LevelLine: View {
     let name: String
     let level: Double
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(alignment: .center, spacing: Theme.Spacing.m) {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.xs))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: Theme.Spacing.m))
+        layout {
             Text(name)
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.inkSecondary)
-                .frame(width: 84, alignment: .leading)
+                .frame(width: typeSize.isAccessibilitySize ? nil : 84, alignment: .leading)
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Theme.Colors.ink.opacity(0.12)).frame(height: 1.5)
@@ -139,18 +151,24 @@ private struct LevelLine: View {
 /// One day of the week: its short name, the meal, its time; an open day faint.
 private struct WeekRow: View {
     let day: KitchenFront.Day
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Spacing.m))
+        layout {
             Text(day.weekday)
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.inkSecondary)
-                .frame(width: 44, alignment: .leading)
+                .frame(width: typeSize.isAccessibilitySize ? nil : 44, alignment: .leading)
             Text(day.meal?.title ?? "Open")
                 .textRole(day.isToday ? .bodyStrong : .body)
                 .foregroundStyle(day.meal == nil ? Theme.Colors.ink.opacity(0.4) : Theme.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: Theme.Spacing.s)
+            if !typeSize.isAccessibilitySize {
+                Spacer(minLength: Theme.Spacing.s)
+            }
             if let when = day.when {
                 Text(when)
                     .textRole(.data)
