@@ -7,6 +7,8 @@ enum ListNoteTags {
     static let reusable = "#reusable"
     static let pickOne = "#pick-one"
     static let pickedPrefix = "picked: "
+    /// When an item is due: `due: 2026-10-23T09:00:00Z`, one stamp line (Lists landing, design 131).
+    static let duePrefix = "due: "
 
     @MainActor static func isReusable(_ list: ObjectRecord, in store: ObjectStore) -> Bool {
         has(reusable, in: store.value("notes", of: list)?.stringValue)
