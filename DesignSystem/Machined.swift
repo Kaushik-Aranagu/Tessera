@@ -216,17 +216,48 @@ struct ProcessSeam: View {
 extension Theme {
     /// The display face with tabular lining numerals: weights, reps, rest. (Fraunces in Plein.)
     static func numeral(_ size: CGFloat, weight: Font.Weight = .light) -> Font {
-        Typography.face(concept.fonts.display, size: size, relativeTo: size > 40 ? .largeTitle : .title, serif: true)
+        if Choice.fontIsNew() {
+            // Outfit ExtraLight (200) is the numeral; small figures keep Light (300) so they stay readable.
+            return Typography.face(activeFonts.mono, size: size, relativeTo: size > 40 ? .largeTitle : .title,
+                                   serif: false)
+                .weight(numeralWeight(size: size))
+                .monospacedDigit()
+        }
+        return Typography.face(concept.fonts.display, size: size, relativeTo: size > 40 ? .largeTitle : .title,
+                               serif: true)
             .weight(weight)
             .monospacedDigit()
     }
 
+    /// The type pair that is drawn now: Figtree words and Outfit numbers (Design 116), or the concept's own faces
+    /// when the Review key "Font" is "As before".
+    static var activeFonts: ThemeConcept.FontPairing {
+        Choice.fontIsNew()
+            ? ThemeConcept.FontPairing(display: "Figtree", ui: "Figtree", mono: "Outfit", voice: "Figtree")
+            : concept.fonts
+    }
+
+    /// Outfit 200 from 28 pt up; below that 300, so a small figure in a row does not thin out.
+    static func numeralWeight(size: CGFloat) -> Font.Weight {
+        size >= 28 ? .thin : .light
+    }
+
     /// Tess and context lines speak in the serif voice. Upright: Kaushik ruled out italics everywhere (2026-10-15).
     static func voice(size: CGFloat) -> Font {
-        Typography.face(concept.fonts.voice, size: size, relativeTo: .body, serif: false).weight(.regular)
+        Typography.face(activeFonts.voice, size: size, relativeTo: .body, serif: false).weight(.regular)
     }
 
     static var voice: Font {
         voice(size: 21)
+    }
+}
+
+// MARK: - Numerals
+
+extension View {
+    /// A numeral at `size`: the numeral face, tabular, with the pair's tracking (-0.02 em in Outfit).
+    func numeral(_ size: CGFloat, weight: Font.Weight = .light) -> some View {
+        font(Theme.numeral(size, weight: weight))
+            .tracking(Choice.fontIsNew() ? -0.02 * size : 0)
     }
 }

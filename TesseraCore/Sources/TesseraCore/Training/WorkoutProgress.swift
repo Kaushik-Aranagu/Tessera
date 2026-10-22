@@ -32,7 +32,8 @@ public struct WorkoutProgress {
 
     public init(of workout: ObjectRecord, store: ObjectStore) {
         let entries = workout.orderedChildren
-        let isWorking = { (set: ObjectRecord) in store.value("isWarmup", of: set) != .bool(true) }
+        // A warm-up never moves the next working set along (it is a kind, as the ledger reads it).
+        let isWorking = { (set: ObjectRecord) in store.setKind(of: set) != .warmup }
         entryCount = entries.count
         entriesStarted = entries.count { $0.orderedChildren.contains(where: isWorking) }
         let next = entries.lazy.compactMap { entry -> (ObjectRecord, [ObjectRecord])? in

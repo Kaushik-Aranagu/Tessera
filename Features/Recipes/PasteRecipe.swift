@@ -459,6 +459,7 @@ private struct PaintedLine: View {
         case .title:
             Text(line)
                 .textRole(.title)
+                .wordFit(line)
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
         case .heading:
