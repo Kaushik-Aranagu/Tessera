@@ -1,0 +1,100 @@
+import Foundation
+@testable import Tessera
+import TesseraCore
+import Testing
+
+/// The Training library (Design 124, 128, 129): place, the rows, Try today with its ten seconds.
+@MainActor
+struct LibraryTests {
+    private func clean() {
+        TriedToday.set(nil)
+    }
+
+    @Test func aWorkoutThePlaceLacksTheKitForSaysWhyAndIsNotHidden() throws {
+        let push = try #require(ReadyWorkouts.workout(id: "W01"))
+        #expect(TrainingPlace.gym.reason(for: push) == nil)
+        #expect(TrainingPlace.home.reason(for: push) == "needs a barbell and a cable; Home has none")
+        let machines = try #require(ReadyWorkouts.workout(id: "W02"))
+        #expect(TrainingPlace.home.reason(for: machines) == "needs a cable and a machine; Home has none")
+        let home = try #require(ReadyWorkouts.workout(id: "W03"))
+        #expect(TrainingPlace.home.reason(for: home) == nil)
+        // Every workout stays in the list for either place.
+        #expect(ReadyWorkouts.all.count == 14)
+    }
+
+    @Test func aWorkoutLineSaysTheSetsAndRepsPlainly() throws {
+        let push = try #require(ReadyWorkouts.workout(id: "W01"))
+        #expect(push.setsWord(push.slots[0]) == "4 × 6-8")
+        #expect(push.setsWord(push.slots[1]) == "3 × 8")
+        #expect(push.subtitle == "6 exercises, about 55 min")
+    }
+
+    @Test func triedTodayNamesWhatItReplacedAndTakesTenSecondsToUndo() throws {
+        let noon = try #require(Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 21, hour: 12)))
+        let tried = TriedToday(routineID: UUID(), title: "Upper", replacedTitle: "Push A", minutes: 25,
+                               day: TriedToday.dayKey(noon), triedAt: noon)
+        #expect(tried.line(now: noon) == "Trying Upper in 25 today. Push A on Thursday.")
+        #expect(tried.undoIsOpen(now: noon.addingTimeInterval(9)))
+        #expect(!tried.undoIsOpen(now: noon.addingTimeInterval(10.5)))
+        let alone = TriedToday(routineID: UUID(), title: "Upper", replacedTitle: nil, minutes: 25,
+                               day: TriedToday.dayKey(noon), triedAt: noon)
+        #expect(alone.line(now: noon) == "Trying Upper in 25 today.")
+    }
+
+    @Test func triedTodayIsOnlyForItsOwnDay() throws {
+        defer { clean() }
+        let noon = try #require(Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 21, hour: 12)))
+        TriedToday.set(TriedToday(routineID: UUID(), title: "Upper", replacedTitle: nil, minutes: 25,
+                                  day: TriedToday.dayKey(noon), triedAt: noon))
+        #expect(TriedToday.current(now: noon) != nil)
+        #expect(TriedToday.current(now: noon.addingTimeInterval(86400 * 2)) == nil)
+    }
+
+    @Test func tryTodayStandsInForTodayAndUndoPutsThePlanBack() throws {
+        clean()
+        defer { clean() }
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        let workout = try #require(ReadyWorkouts.workout(id: "W02"))
+        #expect(model.canTryToday())
+        #expect(model.tryToday(workout))
+        let tried = try #require(model.triedRoutine())
+        #expect(tried.title == "Machine Push")
+        #expect(model.triedRoutine()?.orderedChildren.count == 6)
+        model.undoTryToday()
+        #expect(model.triedRoutine() == nil)
+        #expect(TriedToday.current() == nil)
+        // Nothing of the Plan was written: its routines are the ones the demo made.
+        #expect(model.plan
+            .map { model.store.linkedObjects("routines", of: $0).contains { $0.title == "Machine Push" } } == false)
+    }
+
+    @Test func tryTodayDoesNothingWhileAWorkoutRuns() throws {
+        clean()
+        defer { clean() }
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        let workout = try #require(model.tonightWorkout())
+        model.startWorkout(workout)
+        #expect(!model.canTryToday())
+        #expect(try !model.tryToday(#require(ReadyWorkouts.workout(id: "W02"))))
+        model.endWorkout()
+    }
+
+    @Test func theLibraryHasTheBuiltInsAndTheExtrasGroupedByEquipment() {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        let items = LibraryItems.all(model: model)
+        #expect(items.count == ExerciseLibrary.seeds.count + LibraryExtras.all.count)
+        let bench = items.first { $0.name == "Bench Press" }
+        #expect(bench?.classDef != nil)
+        #expect(bench?.matches(.chest) == true && bench?.matches(.legs) == false)
+        #expect(bench?.matches(nil) == true)
+        let sections = LibraryItems.sections(items)
+        #expect(sections.first?.equipment == .barbell)
+        #expect(sections.flatMap(\.items).count == items.count)
+    }
+}

@@ -22,6 +22,10 @@ struct TrainingPage: View {
             // Running (or paused under Home): the plan with what's done, RESUME.
             return .running(session)
         }
+        // "Try today": a ready workout stands in for today's, scheduled or planned (the Plan is never rewritten).
+        if let tried = model.triedRoutine() {
+            return .routine(tried)
+        }
         if let workout = model.tonightWorkout() {
             return .scheduled(workout)
         }
@@ -84,6 +88,8 @@ private struct TrainingAtRest: View {
     @State private var liftTaps = 0
     @State private var markLine: CGRect = .zero
     @State private var firstSegment: CGRect = .zero
+    /// The Library rises over Training (Exercises | Workouts, Try today).
+    @State private var libraryOpen = false
     /// The START sequence, cancelled if he leaves the page inside it.
     @State private var startTask: Task<Void, Never>?
     /// As live mode rises out of the first lane, the rest of the plan sinks to 0.96 and fades.
@@ -114,6 +120,9 @@ private struct TrainingAtRest: View {
 
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 titleButton
+                if let tried = TriedToday.current() {
+                    TriedTodayLine(tried: tried) { model.undoTryToday() }
+                }
                 // A private workout says nothing about what it works (its figure still draws).
                 if let works = worksLine(day) {
                     Text(works)
@@ -127,6 +136,9 @@ private struct TrainingAtRest: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, tight ? Theme.Spacing.s : Theme.Spacing.l)
             .entrance(1, hero: true)
+            .fullScreenCover(isPresented: $libraryOpen) {
+                LibraryPage(close: { libraryOpen = false })
+            }
 
             StartMark(state: markState, lift: lift)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
@@ -260,23 +272,21 @@ private struct TrainingAtRest: View {
     @ViewBuilder
     private var planLine: some View {
         if let planObject = model.plan {
-            // At large text the plan line and ROUTINES stack and the line wraps instead of cutting.
-            let large = typeSize.isAccessibilitySize
-            let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
-                : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
-            layout {
+            // The plan says what it is on one line; the two doors out of Training sit under it, side by side.
+            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                 let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
                 Text("\(planObject.title), \(fixed ? "fixed days" : "rolls on")")
                     .textRole(.label)
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(large ? nil : 1)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
                     .minimumScaleFactor(0.8)
-                if !large {
-                    Spacer(minLength: Theme.Spacing.s)
+                HStack(spacing: Theme.Spacing.xl) {
+                    Button("Library") { libraryOpen = true }
+                        .buttonStyle(InkLabelWordStyle())
+                    Button("Routines") { model.open(.routines(planObject.id)) }
+                        .buttonStyle(InkLabelWordStyle())
                 }
-                Button("Routines") { model.open(.routines(planObject.id)) }
-                    .buttonStyle(InkLabelWordStyle())
             }
         }
     }
