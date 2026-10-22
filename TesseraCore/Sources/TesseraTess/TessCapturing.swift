@@ -19,10 +19,14 @@ public struct TessContext: Sendable {
     /// The subject of the process running in Now (a workout, cook or the groceries list being shopped). The
     /// capture engine fills it in when it's not given.
     public var process: UUID?
+    /// The Money pools Review switch (default Off): "got 3200 paycheck" and "moved 1000 to India, got 82650" are
+    /// read, and a spend lands in a pool. Off, none of it is read.
+    public var moneyPools: Bool
 
     public init(now: Date = .now, calendar: Calendar = .current, entry: UUID? = nil, commitImmediately: Bool = false,
-                process: UUID? = nil)
+                process: UUID? = nil, moneyPools: Bool = false)
     {
+        self.moneyPools = moneyPools
         self.now = now
         self.calendar = calendar
         self.entry = entry

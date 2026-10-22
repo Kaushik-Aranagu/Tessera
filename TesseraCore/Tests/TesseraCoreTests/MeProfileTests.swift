@@ -63,10 +63,10 @@ struct MeProfileTests {
         // Read as values, not characters: a random id or a timestamp can hold "1973" (the Money test had the same
         // flake).
         let shared = try TesseraExport(context: disk.context).encoded()
-        #expect(try ExportLeaks.found(["male"], numbers: [187.3719, 1973], in: shared).isEmpty)
+        #expect(try ExportLeaks.found(["male", "187.3719"], numbers: [187.3719, 1973], in: shared).isEmpty)
         // And the helper does catch a real leak.
         let leaked = try TesseraExport(context: disk.context, maskingPrivate: false).encoded()
-        #expect(try !ExportLeaks.found(["male"], numbers: [187.3719, 1973], in: leaked).isEmpty)
+        #expect(try !ExportLeaks.found(["male", "187.3719"], numbers: [187.3719, 1973], in: leaked).isEmpty)
         // The local backup keeps every word; the iCloud copy leaves the object and its ops out.
         let local = dir.appending(path: "local.sqlite"), icloud = dir.appending(path: "icloud.sqlite")
         try TesseraBackup.write(from: disk.context, to: local)
