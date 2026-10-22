@@ -36,6 +36,8 @@ struct SpendPage: View {
         .background { EdgeSwipeBack() }
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom, spacing: 0) { AreaTessLine() }
+        // Opened on its own (from an object link), the page asks for the day's rates itself.
+        .refreshesRates()
     }
 
     private func page(_ spend: ObjectRecord) -> some View {

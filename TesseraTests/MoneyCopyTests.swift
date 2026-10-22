@@ -130,7 +130,7 @@ struct MoneyCopyTests {
         // On the Month page the amount is the screen's data.
         #expect(AreaPrivacy.spendLine(done.record.receipt ?? "", onMoneyPage: true) == "12.40 lunch, logged.")
         // The groceries total on Groceries and Now carries no amount, and neither does its UNDO key.
-        #expect(!AreaPrivacy.shopTotalLogged.contains(where: \.isNumber))
+        #expect(AreaPrivacy.shopTotalLogged.allSatisfy { !$0.isNumber })
         #expect(AreaUndo.label(AreaPrivacy.shopTotalLogged) == "Undo Groceries total")
     }
 

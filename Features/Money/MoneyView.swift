@@ -14,6 +14,8 @@ struct MoneyView: View {
     var body: some View {
         NavigationStack {
             MoneyPage(back: back)
+                // The page asks for the day's rates once on opening, so a currency swipes to an estimate.
+                .refreshesRates()
                 .navigationDestination(for: Route.self) { ObjectPage(route: $0) }
                 .toolbar(.hidden, for: .navigationBar)
         }
