@@ -91,6 +91,10 @@ struct RootView: View {
         }
         .task {
             // Simulator only (LaunchFlags): `-openExercise "Bench Press"` opens that exercise's page, for stills.
+            // `-massUnit lb` shows weights in pounds, the way the Measure choice will.
+            if LaunchFlags.value(after: "-massUnit") == "lb" {
+                Format.unit = .pounds
+            }
             guard let name = LaunchFlags.value(after: "-openExercise"), let root = model.classDef(.exercise),
                   let target = ClassResolver.descendants(of: root).first(where: { $0.name == name }) else { return }
             try? await Task.sleep(for: .milliseconds(1500))

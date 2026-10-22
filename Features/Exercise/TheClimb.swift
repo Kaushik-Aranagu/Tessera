@@ -94,7 +94,8 @@ struct TheClimb: View {
     private static let rowHeight: CGFloat = 46
     private static let dateWidth: CGFloat = 78
     private static let setWidth: CGFloat = 104
-    private static let orbRoom: CGFloat = 36
+    /// The Tess orb's width and glow at the lower right: no set text runs under it, at any text size.
+    private static let orbRoom: CGFloat = 68
     /// Points one axis number needs.
     private static let labelRoom: CGFloat = 40
 
@@ -144,7 +145,11 @@ struct TheClimb: View {
         let date = Self.dateWord(session.date, zone: OpZones(store: model.store).zone(of: session.workoutID))
         let ink = session.isBest ? Theme.Colors.live : Theme.Colors.ink
         return Button { model.open(.object(session.workoutID)) } label: {
-            let layout = axis == nil
+            // At accessibility sizes the set drops under the date: nothing wraps and nothing runs under the orb.
+            let stacked = typeSize.isAccessibilitySize
+            let layout = stacked
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+                : axis == nil
                 ? AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Spacing.m))
                 : AnyLayout(HStackLayout(alignment: .center, spacing: 0))
             layout {
@@ -158,16 +163,17 @@ struct TheClimb: View {
                                weight: Self.shownWeight(session), next: sessions[safe: index + 1].map(Self.shownWeight),
                                isBest: session.isBest)
                         .frame(height: Self.rowHeight)
-                } else {
+                } else if !stacked {
                     Spacer(minLength: 0)
                 }
                 Text(session.setText.keepingUnits)
                     .numeral(21, weight: .light)
                     .foregroundStyle(ink)
-                    .frame(width: axis == nil ? nil : Self.setWidth, alignment: .trailing)
+                    .frame(width: axis == nil ? nil : Self.setWidth, alignment: stacked ? .leading : .trailing)
                     // Clear of the Tess orb that floats at the lower right.
-                    .padding(.trailing, Self.orbRoom)
+                    .padding(.trailing, stacked ? 0 : Self.orbRoom)
             }
+            .padding(.vertical, stacked ? Theme.Spacing.xs : 0)
             .frame(minHeight: Self.rowHeight)
             .contentShape(Rectangle())
         }
