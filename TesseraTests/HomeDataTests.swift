@@ -210,7 +210,7 @@ struct HomeDataTests {
 
     @Test func trainingTargetsReadLikeTheMockup() {
         #expect(TrainingPage.target(sets: 4, reps: 8) == "4 × 8")
-        #expect(TrainingPage.target(sets: 4, reps: 8, weight: 82.5) == "4 × 8 · 82.5")
+        #expect(TrainingPage.target(sets: 4, reps: 8, weight: 82.5) == "4 × 8, 82.5 kg")
     }
 
     @Test func nowDrainsFromFullToEmptyAcrossTheItem() {
