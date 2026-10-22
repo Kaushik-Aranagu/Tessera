@@ -73,6 +73,11 @@ enum Choice {
         value("tessFace", options: tessFaceOffered + ["Eyes and mouth"], default: "Off", defaults: defaults) != "Off"
     }
 
+    /// The calorie line on an exercise's sheet: Off by default.
+    static func caloriesBurnedIsOn(defaults: UserDefaults = .standard) -> Bool {
+        value("caloriesBurned", options: ["Off", "On"], default: "Off", defaults: defaults) == "On"
+    }
+
     /// The Lock Screen rest card's colours: "Cobalt sky" (default, Kaushik's pick of 2026-10-15) in every look, or
     /// "Follows the look", where the card takes the day or night look like the app. The Island stays Obsidian either
     /// way.
