@@ -200,17 +200,20 @@ struct RunPlaneTests {
     }
 
     @Test func aWarmupIsReadTheWayWorkoutProgressReadsIt() throws {
-        // Parity, quirk included: WorkoutProgress looks at the older isWarmup flag, which a warm-up logged today does
-        // not set (it sets kind), so a warm-up moves the next set along there and therefore here. The run plane must
-        // not change what the screen shows; whether warm-ups should count is a separate decision.
+        // Both read a set's kind through the one shared rule, so a warm-up moves nothing on the plane or in the
+        // workout.
         let plan = try #require(store.object(id: StarterContent.planID))
         let routine = try #require(store.linkedObjects("routines", of: plan).first)
         let workout = try engine.perform(StartRoutine(routine: routine.id, time: start), by: .user).output
         let entry = try #require(workout.orderedChildren.first)
+        let before = RunSources.workout(workout, store: store, classes: classes)
         _ = try engine.perform(LogSet(entry: entry.id, weight: 20, reps: 10, isWarmup: true, time: start), by: .user)
         let progress = WorkoutProgress(of: workout, store: store)
-        let run = RunPlane(steps: RunSources.workout(workout, store: store, classes: classes))
+        let steps = RunSources.workout(workout, store: store, classes: classes)
+        #expect(steps.map(\.state) == before.map(\.state))
+        let run = RunPlane(steps: steps)
         #expect(run.current?.title == "\(progress.exerciseName ?? ""), set \(progress.setIndex + 1)")
+        #expect(progress.setIndex == 0 && run.doneCount == 0)
     }
 
     // MARK: Parity with the cook

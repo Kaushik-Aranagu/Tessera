@@ -180,7 +180,7 @@ struct MuscleVolume: Identifiable, Equatable {
             for entry in workout.orderedChildren {
                 guard let exercise = model.store.linkedClass("exercise", of: entry) else { continue }
                 let sets = entry.orderedChildren.count(where: { set in
-                    model.store.number("reps", of: set) != nil && model.store.value("isWarmup", of: set) != .bool(true)
+                    model.store.number("reps", of: set) != nil && model.store.setKind(of: set) != .warmup
                 })
                 guard sets > 0 else { continue }
                 for muscle in muscles(of: exercise, model: model) {

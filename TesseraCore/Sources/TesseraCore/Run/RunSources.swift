@@ -15,7 +15,7 @@ public enum RunSources {
         var foundNow = false
         for entry in workout.orderedChildren {
             let name = store.linkedClass("exercise", of: entry)?.name ?? entry.title
-            let logged = entry.orderedChildren.count { store.value("isWarmup", of: $0) != .bool(true) }
+            let logged = entry.orderedChildren.count { store.setKind(of: $0) != .warmup }
             let planned = Int(store.number("targetSets", of: entry) ?? 3)
             // A set past the plan (an extra set) is a done step of its own, so the count never shrinks.
             for index in 0 ..< max(planned, logged) {
