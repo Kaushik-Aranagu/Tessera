@@ -18,13 +18,15 @@ struct SentenceParts: Equatable {
 struct LandingSentenceView: View {
     let sentence: SentenceParts
     let opens: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         Text(attributed)
             .font(Theme.voice(size: 28))
             .foregroundStyle(Theme.Colors.ink)
-            .lineLimit(5)
-            .minimumScaleFactor(0.8)
+            // Never cut with "...": at accessibility sizes the sentence takes the lines it needs.
+            .lineLimit(typeSize.isAccessibilitySize ? nil : 5)
+            .minimumScaleFactor(typeSize.isAccessibilitySize ? 1 : 0.8)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
             .environment(\.openURL, OpenURLAction { _ in
