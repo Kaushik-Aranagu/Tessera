@@ -340,6 +340,32 @@ struct ClaudeRouteTests {
         #expect(try store.objects(of: #require(classes[.spend])).isEmpty)
     }
 
+    @Test func moneyNotesGoPhoneFirstThenClaudeToReadThenKeptOnThePhone() async {
+        // Kaushik, Oct 21: the phone tries first; only if it cannot read the note and asking Claude is on does Claude
+        // see it (and only to read); if nothing works the note is kept on the phone to sort later.
+        let readable = "spent 12.50 on lunch"
+        let unreadable = "lunch with sam was about 23 quid I think"
+        // 1. The grammar reads it: nothing is sent, a spend is logged.
+        let read = await tess().capture(readable, context: context)
+        #expect(read.source == .grammar && !read.keptToSort)
+        #expect(RouteStub.requests.isEmpty)
+        // 2. The phone cannot read it and asking Claude is on: Claude is asked exactly once, read-only.
+        RouteStub.queue = [(200, Self.answer("I can't log that."))]
+        let asked = await tess().capture(unreadable, context: context)
+        #expect(RouteStub.requests.count == 1)
+        let tools = String(decoding: RouteStub.bodies.last ?? Data(), as: UTF8.self)
+        #expect(!tools.contains("logSpend") && !tools.contains("logShopTotal") && !tools.contains("skipShopTotal"))
+        // 3. Claude had nothing to add: kept on the phone.
+        #expect(asked.keptToSort && asked.line == "Kept to sort later.")
+        // 4. Asking Claude is off: Claude is never asked, the note is kept.
+        RouteStub.requests = []
+        let off = await tess(sends: false).capture(unreadable, context: context)
+        #expect(RouteStub.requests.isEmpty && off.keptToSort && off.line == "Kept to sort later.")
+        // 5. No key: the same.
+        let keyless = await tess(key: nil).capture(unreadable, context: context)
+        #expect(RouteStub.requests.isEmpty && keyless.keptToSort)
+    }
+
     @Test func aRefusedKeyKeepsHisWordsAndCancelledDoesNot() async {
         RouteStub.failure = nil
         RouteStub.reply = (401, "{}")

@@ -22,6 +22,7 @@ struct WeekPage: View {
 
             Text("Sets per muscle")
                 .textRole(.title)
+                .wordFit("Sets per muscle")
                 .foregroundStyle(Theme.Colors.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -216,8 +217,7 @@ private struct MuscleFillRow: View {
                 .frame(height: proxy.size.height)
             }
             .frame(height: 20)
-            Text(row.count)
-                .font(Theme.numeral(21, weight: .regular))
+            FractionText(row.count, size: 21, weight: .regular)
                 .foregroundStyle(Theme.Colors.ink)
                 .frame(minWidth: 40, alignment: .trailing)
         }
