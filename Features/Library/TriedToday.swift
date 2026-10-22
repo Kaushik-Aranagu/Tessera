@@ -16,7 +16,12 @@ struct TriedToday: Codable, Equatable {
 
     /// Ten seconds to take it back, then the word leaves.
     static let undoWindow: TimeInterval = 10
-    private static let key = "training.triedToday"
+    private static let baseKey = "training.triedToday"
+
+    /// One key per store: Sample mode keeps its own, so a try there never overwrites a real one.
+    private static func key(_ scope: String) -> String {
+        scope.isEmpty ? baseKey : "\(baseKey).\(scope)"
+    }
 
     static func dayKey(_ now: Date) -> String {
         let formatter = DateFormatter()
@@ -26,20 +31,22 @@ struct TriedToday: Codable, Equatable {
     }
 
     /// What is stored, whatever day it is for.
-    static func stored(defaults: UserDefaults = .standard) -> TriedToday? {
-        defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(TriedToday.self, from: $0) }
+    static func stored(scope: String = "", defaults: UserDefaults = .standard) -> TriedToday? {
+        defaults.data(forKey: key(scope)).flatMap { try? JSONDecoder().decode(TriedToday.self, from: $0) }
     }
 
-    static func current(now: Date = AppClock.now, defaults: UserDefaults = .standard) -> TriedToday? {
-        guard let tried = stored(defaults: defaults), tried.day == dayKey(now) else { return nil }
+    static func current(now: Date = AppClock.now, scope: String = "",
+                        defaults: UserDefaults = .standard) -> TriedToday?
+    {
+        guard let tried = stored(scope: scope, defaults: defaults), tried.day == dayKey(now) else { return nil }
         return tried
     }
 
-    static func set(_ tried: TriedToday?, defaults: UserDefaults = .standard) {
+    static func set(_ tried: TriedToday?, scope: String = "", defaults: UserDefaults = .standard) {
         if let tried, let data = try? JSONEncoder().encode(tried) {
-            defaults.set(data, forKey: key)
+            defaults.set(data, forKey: key(scope))
         } else {
-            defaults.removeObject(forKey: key)
+            defaults.removeObject(forKey: key(scope))
         }
     }
 
@@ -73,10 +80,17 @@ enum TriedHistory {
 }
 
 extension AppModel {
+    /// One record per store (its file name; "memory" when there is no file): Sample mode and a restored copy keep their
+    /// own try and never overwrite the real one.
+    var triedScope: String {
+        context.url?.lastPathComponent ?? "memory"
+    }
+
     /// Today's tried workout, only while its routine is still in this store (a Sample store, or another phone's, has
     /// none, so its "Trying ..." never shows on the real page).
     func triedToday(now: Date = AppClock.now) -> TriedToday? {
-        guard let tried = TriedToday.current(now: now), let routine = object(tried.routineID), !routine.isDeleted
+        guard let tried = TriedToday.current(now: now, scope: triedScope), let routine = object(tried.routineID),
+              !routine.isDeleted
         else { return nil }
         return tried
     }
@@ -114,7 +128,8 @@ extension AppModel {
             _ = try? engine.perform(DeleteObject(object: earlier.routineID), by: .user)
         }
         TriedToday.set(TriedToday(routineID: routine.id, title: workout.title, replacedTitle: replaced,
-                                  minutes: workout.minutes, day: TriedToday.dayKey(now), triedAt: now))
+                                  minutes: workout.minutes, day: TriedToday.dayKey(now), triedAt: now),
+                       scope: triedScope)
         TriedHistory.add(workout.id)
         touch()
         return true
@@ -122,8 +137,8 @@ extension AppModel {
 
     /// Takes "Try today" back: the routine it made goes (unless he saved it), and today's place is the Plan's again.
     func undoTryToday() {
-        guard let tried = TriedToday.current() else { return }
-        TriedToday.set(nil)
+        guard let tried = TriedToday.current(scope: triedScope) else { return }
+        TriedToday.set(nil, scope: triedScope)
         if !tried.kept {
             _ = try? engine.perform(DeleteObject(object: tried.routineID), by: .user)
         }
@@ -132,8 +147,8 @@ extension AppModel {
 
     /// A tried routine nobody saved goes when its day is over, so Routines never fills with them.
     func purgeStaleTried(now: Date = AppClock.now) {
-        guard let stored = TriedToday.stored(), stored.day != TriedToday.dayKey(now) else { return }
-        TriedToday.set(nil)
+        guard let stored = TriedToday.stored(scope: triedScope), stored.day != TriedToday.dayKey(now) else { return }
+        TriedToday.set(nil, scope: triedScope)
         if !stored.kept, let routine = object(stored.routineID), !routine.isDeleted {
             _ = try? engine.perform(DeleteObject(object: stored.routineID), by: .user)
             touch()
@@ -146,7 +161,7 @@ extension AppModel {
     func saveReadyWorkout(_ workout: ReadyWorkout) -> Bool {
         if var tried = triedToday(), tried.title == workout.title {
             tried.kept = true
-            TriedToday.set(tried)
+            TriedToday.set(tried, scope: triedScope)
             touch()
             return true
         }

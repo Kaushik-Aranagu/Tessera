@@ -437,14 +437,20 @@ private struct TrainingAtRest: View {
 
     /// The kicker row above the title (Design item 115): the day word at the left ("Today"; a finished or running
     /// workout says so), "5 exercises, about 40 min" at the right for a plan still to do.
+    /// "5 exercises, about 40 min": from the lanes, or, for a workout he is trying today, from that workout's own time.
     @ViewBuilder
+    private func trainingPhrase(_ lanes: [TrainingLane]) -> String {
+        guard let tried = model.triedToday(), !lanes.isEmpty else { return TrainingPage.planPhrase(lanes: lanes) }
+        return "\(lanes.count) \(lanes.count == 1 ? "exercise" : "exercises"), about \(tried.minutes) min"
+    }
+
     private func kickerRow(_ lanes: [TrainingLane]) -> some View {
         if case let .done(summary) = plan {
             KickerRow(left: summary.endedAt.map { TrainingPage.doneWhen($0).capitalizedFirst } ?? "Done today")
         } else if case .running = plan {
             KickerRow(left: "Running now")
         } else {
-            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes).keepingUnits)
+            KickerRow(left: "Today", right: trainingPhrase(lanes).keepingUnits)
         }
     }
 

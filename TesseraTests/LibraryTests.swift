@@ -8,6 +8,7 @@ import Testing
 struct LibraryTests {
     private func clean() {
         TriedToday.set(nil)
+        TriedToday.set(nil, scope: "memory")
     }
 
     @Test func aWorkoutThePlaceLacksTheKitForSaysWhyAndIsNotHidden() throws {
@@ -24,7 +25,7 @@ struct LibraryTests {
 
     @Test func aWorkoutLineSaysTheSetsAndRepsPlainly() throws {
         let push = try #require(ReadyWorkouts.workout(id: "W01"))
-        #expect(push.setsWord(push.slots[0]) == "4 × 6-8")
+        #expect(push.setsWord(push.slots[0]) == "4 × 6–8")
         #expect(push.setsWord(push.slots[1]) == "3 × 8")
         #expect(push.subtitle == "6 exercises, about 55 min")
     }
@@ -64,7 +65,7 @@ struct LibraryTests {
         #expect(model.triedRoutine()?.orderedChildren.count == 6)
         model.undoTryToday()
         #expect(model.triedRoutine() == nil)
-        #expect(TriedToday.current() == nil)
+        #expect(TriedToday.current(scope: "memory") == nil)
         // Nothing of the Plan was written: its routines are the ones the demo made.
         #expect(model.plan
             .map { model.store.linkedObjects("routines", of: $0).contains { $0.title == "Machine Push" } } == false)
@@ -128,7 +129,7 @@ struct LibraryTests {
         #expect(model.tryToday(workout))
         #expect(model.saveReadyWorkout(workout))
         #expect(routines(titled: "Machine Push", in: model) == 1)
-        #expect(TriedToday.current()?.kept == true)
+        #expect(TriedToday.current(scope: "memory")?.kept == true)
         model.undoTryToday()
         #expect(routines(titled: "Machine Push", in: model) == 1, "a saved workout stays when the try is undone")
     }
@@ -144,7 +145,7 @@ struct LibraryTests {
         #expect(routines(titled: "Machine Push", in: model) == 1)
         model.purgeStaleTried(now: now.addingTimeInterval(86400 * 2))
         #expect(routines(titled: "Machine Push", in: model) == 0)
-        #expect(TriedToday.stored() == nil)
+        #expect(TriedToday.stored(scope: "memory") == nil)
     }
 
     @Test func aTriedLineNeedsItsRoutineInThisStore() {
@@ -155,7 +156,7 @@ struct LibraryTests {
         DemoData.prepare(model)
         let now = AppClock.now
         TriedToday.set(TriedToday(routineID: UUID(), title: "Upper", replacedTitle: nil, minutes: 25,
-                                  day: TriedToday.dayKey(now), triedAt: now))
+                                  day: TriedToday.dayKey(now), triedAt: now), scope: "memory")
         #expect(model.triedToday() == nil, "another store's try never shows here")
     }
 
@@ -166,5 +167,23 @@ struct LibraryTests {
         TriedHistory.add("W05", defaults: defaults)
         TriedHistory.add("W02", defaults: defaults)
         #expect(TriedHistory.ids(defaults: defaults) == ["W02", "W05"])
+    }
+
+    @Test func theTryIsKeptPerStoreSoAnotherStoreNeverOverwritesIt() throws {
+        clean()
+        defer { clean() }
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        #expect(model.triedScope == "memory")
+        #expect(try model.tryToday(#require(ReadyWorkouts.workout(id: "W02"))))
+        // A record under another store's key is left alone by this store's undo and purge.
+        let other = TriedToday(routineID: UUID(), title: "Elsewhere", replacedTitle: nil, minutes: 20,
+                               day: TriedToday.dayKey(AppClock.now), triedAt: AppClock.now)
+        TriedToday.set(other, scope: "tessera.sqlite")
+        defer { TriedToday.set(nil, scope: "tessera.sqlite") }
+        model.undoTryToday()
+        model.purgeStaleTried()
+        #expect(TriedToday.stored(scope: "tessera.sqlite") == other)
     }
 }

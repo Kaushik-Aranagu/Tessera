@@ -116,7 +116,7 @@ extension ReadyWorkout {
 
     /// "4 x 6-8", "3 x 10", "2 x 45 s": the sets and reps of a slot as a line says them.
     func setsWord(_ slot: Slot) -> String {
-        let reps = slot.repMin == slot.repMax ? "\(slot.repMax)" : "\(slot.repMin)-\(slot.repMax)"
+        let reps = slot.repMin == slot.repMax ? "\(slot.repMax)" : "\(slot.repMin)–\(slot.repMax)"
         return "\(slot.sets) × \(reps)"
     }
 }
