@@ -76,6 +76,9 @@ private struct PantryPage: View {
                     }
                 }
             }
+            // Held to the leading edge: a short page (an empty pantry, an empty shelf) is otherwise centred in the
+            // scroll view and reads as shifted right (Kaushik, Oct 21).
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.vertical, Theme.Spacing.l)
             .tesseraAnimation(value: (front.out + front.low).map(\.id))
