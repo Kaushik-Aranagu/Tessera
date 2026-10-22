@@ -12,6 +12,9 @@ enum Route: Hashable {
     case classDef(UUID)
     /// A plan's routines (docs/design/training-mode.md, "Routines").
     case routines(UUID)
+    /// The Routines landing and its Browse rail (Design 131, behind Review › Landing pages).
+    case routinesLanding
+    case routinesBrowse
 }
 
 /// One row of the day's schedule.
@@ -183,6 +186,7 @@ final class AppModel {
         if isSample, seedsStarterLists {
             _ = try? StarterLists.installIfNeeded(store: store, classes: classes)
         }
+        PantryPlaces(store: store, classes: classes).ensureDefaults() // Fridge, Freezer, Shelf, Counter, once (118)
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()
         // A cold launch is a foreground too: told now, so her first frame already has her eyes shut if she wakes.
@@ -529,7 +533,7 @@ final class AppModel {
         switch route {
         case let .object(id): object(id)?.title ?? "Object"
         case let .classDef(id): classDef(id: id)?.name ?? "Class"
-        case .routines: "Routines"
+        case .routines, .routinesLanding, .routinesBrowse: "Routines"
         }
     }
 
