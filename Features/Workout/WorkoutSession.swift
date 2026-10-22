@@ -150,6 +150,64 @@ final class WorkoutSession {
         lastTouchedAt = AppClock.now
     }
 
+    // MARK: Busy (Design 128)
+
+    /// Exercises marked busy today (a machine taken): they go to the end of the order and come round again.
+    private(set) var busy: Set<UUID> = []
+
+    /// What "Busy" moved and where it was, for the receipt's Undo.
+    struct BusyReceipt {
+        let name: String
+        let entryID: UUID
+        let previousOrder: [UUID]
+        let previousIndex: Int
+    }
+
+    var currentIsBusy: Bool {
+        currentEntry.map { busy.contains($0.id) } ?? false
+    }
+
+    /// The exercise classes marked busy, so a list can fade them.
+    var busyExerciseIDs: Set<UUID> {
+        Set(entries.filter { busy.contains($0.id) }.compactMap { exerciseClass(of: $0)?.id })
+    }
+
+    /// Whether any other exercise still has sets to do (Busy has somewhere to go).
+    var hasOtherUnfinished: Bool {
+        guard let current = currentEntry else { return false }
+        return entries.contains { $0.id != current.id && !isFinished($0) }
+    }
+
+    /// "Busy": the exercise moves to the end of today's order and the next one slides up. Nil when there is nothing
+    /// to slide up (the page then offers Similar).
+    func markBusy() -> BusyReceipt? {
+        guard finishedAt == nil, let entry = currentEntry, let exercise = currentExercise, !isFinished(entry),
+              !busy.contains(entry.id), hasOtherUnfinished else { return nil }
+        endEditing()
+        let before = entries.map(\.id)
+        let index = currentIndex
+        busy.insert(entry.id)
+        var ids = before
+        ids.remove(at: index)
+        ids.append(entry.id)
+        order = ids
+        currentIndex = min(index, ids.count - 1)
+        lastSeated = nil
+        loggedCount += 1
+        loadDefaults()
+        return BusyReceipt(name: exercise.name, entryID: entry.id, previousOrder: before, previousIndex: index)
+    }
+
+    /// Takes "Busy" back: the order and the exercise on screen are as they were.
+    func undoBusy(_ receipt: BusyReceipt) {
+        busy.remove(receipt.entryID)
+        order = receipt.previousOrder
+        currentIndex = receipt.previousIndex
+        lastSeated = nil
+        loggedCount += 1
+        loadDefaults()
+    }
+
     func exerciseClass(of entry: ObjectRecord) -> ClassDef? {
         model.store.linkedClass("exercise", of: entry)
     }
@@ -299,6 +357,14 @@ final class WorkoutSession {
     private var swaps: [UUID: String] = [:]
     private var presetWeight: [UUID: Double] = [:]
     private var estimated: Set<UUID> = []
+    /// The load Similar guessed for a swapped-in exercise nobody has lifted yet: the estimate line prints this, not the
+    /// dial, so it stays put when the dial moves.
+    private var estimatedLoad: [UUID: Double] = [:]
+    /// The line in the workout's Tess corner (a Busy or swap receipt) and what its Undo runs. A logged set clears it,
+    /// so Undo can only ever take back that set.
+    var receipt: WorkoutReceipt?
+    /// Swapped in for the routine too ("Swap in"), not just for today.
+    private var swappedInRoutine: Set<UUID> = []
     /// What Core prefilled the current set with.
     private(set) var prefill: SetPrefill?
     /// The logged set being changed on the dial and drum (tap its stroke); nil when dialling the next set.
@@ -358,6 +424,12 @@ extension WorkoutSession {
         currentEntry.flatMap { swaps[$0.id] }
     }
 
+    /// Under the set rings after a swap: "Swapped in for Bench Press" or "Just today, for Bench Press".
+    var swapHint: String? {
+        guard let entry = currentEntry, let from = swaps[entry.id] else { return nil }
+        return swappedInRoutine.contains(entry.id) ? "Swapped in for \(from)" : "Just today, for \(from)"
+    }
+
     // MARK: Actions
 
     func adjustWeight(by delta: Double) {
@@ -370,6 +442,7 @@ extension WorkoutSession {
 
     /// Hold to log: seats the dialled set, then the dial turns into the rest countdown.
     func logSet(source: SetSource = .hold, by actor: Actor = .user) {
+        receipt = nil
         guard let entry = currentEntry, let exercise = currentExercise else { return }
         let beaten = ledger.recordsBeaten(weight: weight, reps: reps, rpe: rpe, for: exercise,
                                           excludingWorkout: workout.id)
@@ -557,6 +630,12 @@ extension WorkoutSession {
     // MARK: Swap
 
     /// The dial holds a converted load nobody has lifted yet (until the swapped exercise's first set).
+    /// What the estimate line prints: "About 32", the guess made at the swap.
+    var estimateShown: Double? {
+        guard isEstimatedLoad, let entry = currentEntry else { return nil }
+        return estimatedLoad[entry.id]
+    }
+
     var isEstimatedLoad: Bool {
         guard let entry = currentEntry, estimated.contains(entry.id) else { return false }
         return setRows(of: entry).isEmpty
@@ -571,7 +650,7 @@ extension WorkoutSession {
     /// Swaps the current exercise for today only, through the engine. The slot and scheme stay. Returns the op, which
     /// the easy swap hands to its UNDO.
     @discardableResult
-    func swap(to option: ExerciseSwaps.Option) -> OpRecord? {
+    func swap(to option: ExerciseSwaps.Option, forRoutine: Bool = false) -> OpRecord? {
         endEditing()
         guard let entry = currentEntry, let from = currentExercise else { return nil }
         guard let result = try? model.engine.perform(
@@ -583,9 +662,13 @@ extension WorkoutSession {
             order.insert(swappedID, at: index + 1)
         }
         swaps[swappedID] = swaps[entry.id] ?? from.name
+        if forRoutine {
+            swappedInRoutine.insert(swappedID)
+        }
         presetWeight[swappedID] = option.load
-        if option.isEstimate, option.load != nil {
+        if option.isEstimate, let load = option.load {
             estimated.insert(swappedID)
+            estimatedLoad[swappedID] = load
         }
         if topSetCheck?.entryID == entry.id {
             topSetCheck = nil

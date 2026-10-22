@@ -180,8 +180,21 @@ struct HomeSpatialView: View {
                 .safeAreaInset(edge: .top, spacing: 0) {
                     HStack {
                         Spacer()
-                        Button("Close") { presented = nil }
-                            .buttonStyle(InkLabelWordStyle())
+                        if Choice.fontIsNew() {
+                            Button { presented = nil } label: {
+                                Text("Close")
+                                    .textRole(.label)
+                                    .foregroundStyle(Theme.Colors.inkSecondary)
+                                    // Never so large that it crowds the title below it.
+                                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                                    .frame(minWidth: 44, minHeight: 44)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(CloseWordStyle())
+                        } else {
+                            Button("Close") { presented = nil }
+                                .buttonStyle(InkLabelWordStyle())
+                        }
                     }
                     .padding(.horizontal, Theme.Spacing.gutter - 8)
                 }
@@ -386,6 +399,7 @@ private struct KitchenPage: View {
                     // The words alone, in ink (no-dots.md).
                     Text(link.title)
                         .textRole(.title)
+                        .wordFit(link.title)
                         .foregroundStyle(Theme.Colors.ink)
                         .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
                         .contentShape(Rectangle())

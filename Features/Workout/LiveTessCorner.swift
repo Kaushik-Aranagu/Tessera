@@ -68,7 +68,7 @@ struct LiveTessCorner: View {
             }
             // UNDO leaves with its line, never alone (Design #297 follow-up).
             if canUndo, shownLine?.isEmpty == false {
-                Button("Undo", action: onUndo)
+                Button(action: onUndo) { Text("Undo").textRole(.keyWord) }
                     .buttonStyle(.labelWord(Theme.Colors.liveInk, silent: true))
                     .accessibilityLabel("Undo the last change")
                     // Clear of the soul's done splash, which spreads about 60 pt on dark looks (Design A2).
@@ -82,7 +82,10 @@ struct LiveTessCorner: View {
     private var slotTemplate: some View {
         VStack(alignment: .trailing, spacing: 6) {
             Text(verbatim: "Tess\nTess").font(Theme.voice).lineLimit(2)
-            Button("Undo") {}.buttonStyle(.labelWord(Theme.Colors.liveInk, silent: true))
+            Button {} label: { Text("Undo").textRole(.keyWord) }.buttonStyle(.labelWord(
+                Theme.Colors.liveInk,
+                silent: true
+            ))
         }
         .hidden()
         .accessibilityHidden(true)

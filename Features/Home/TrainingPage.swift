@@ -22,6 +22,10 @@ struct TrainingPage: View {
             // Running (or paused under Home): the plan with what's done, RESUME.
             return .running(session)
         }
+        // "Try today": a ready workout stands in for today's, scheduled or planned (the Plan is never rewritten).
+        if let tried = model.triedRoutine() {
+            return .routine(tried)
+        }
         if let workout = model.tonightWorkout() {
             return .scheduled(workout)
         }
@@ -84,6 +88,8 @@ private struct TrainingAtRest: View {
     @State private var liftTaps = 0
     @State private var markLine: CGRect = .zero
     @State private var firstSegment: CGRect = .zero
+    /// The Library rises over Training (Exercises | Workouts, Try today).
+    @State private var libraryOpen = false
     /// The START sequence, cancelled if he leaves the page inside it.
     @State private var startTask: Task<Void, Never>?
     /// As live mode rises out of the first lane, the rest of the plan sinks to 0.96 and fades.
@@ -114,6 +120,9 @@ private struct TrainingAtRest: View {
 
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 titleButton
+                if let tried = model.triedToday() {
+                    TriedTodayLine(tried: tried) { model.undoTryToday() }
+                }
                 // A private workout says nothing about what it works (its figure still draws).
                 if let works = worksLine(day) {
                     Text(works)
@@ -127,6 +136,10 @@ private struct TrainingAtRest: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, tight ? Theme.Spacing.s : Theme.Spacing.l)
             .entrance(1, hero: true)
+            .fullScreenCover(isPresented: $libraryOpen) {
+                LibraryPage(close: { libraryOpen = false })
+            }
+            .task { model.purgeStaleTried() }
 
             StartMark(state: markState, lift: lift)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
@@ -227,15 +240,30 @@ private struct TrainingAtRest: View {
     private var titleButton: some View {
         let (title, route) = titleAndRoute
         Button { model.open(route) } label: {
-            Text(title)
-                .textRole(.title)
-                .foregroundStyle(Theme.Colors.ink)
-                // The day's name wraps to a second line and, if that is still too long, scales a little: never "...".
-                .lineLimit(2)
-                .minimumScaleFactor(0.7)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+            Group {
+                if Choice.fontIsNew() {
+                    // 72 if the name fits one line in the gutter, else 48 on two lines: never a size between, never
+                    // "...".
+                    ViewThatFits(in: .horizontal) {
+                        Text(title).textRole(.hero).lineLimit(1)
+                        Text(title).textRole(.title).fixedSize(horizontal: false, vertical: true)
+                    }
+                } else {
+                    Text(title)
+                        .textRole(.title)
+                        .wordFit(title)
+                        // The day's name wraps to a second line and, if that is still too long, scales a little: never
+                        // "...".
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.7)
+                }
+            }
+            .environment(\.heroLadder, true)
+            .wordFit(title)
+            .foregroundStyle(Theme.Colors.ink)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
         .modifier(ZoomSource(id: route, namespace: namespace))
@@ -260,23 +288,20 @@ private struct TrainingAtRest: View {
     @ViewBuilder
     private var planLine: some View {
         if let planObject = model.plan {
-            // At large text the plan line and ROUTINES stack and the line wraps instead of cutting.
-            let large = typeSize.isAccessibilitySize
-            let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
-                : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
-            layout {
+            // The plan says what it is on one line; the two doors out of Training sit under it, side by side.
+            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                 let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
                 Text("\(planObject.title), \(fixed ? "fixed days" : "rolls on")")
                     .textRole(.label)
-                    .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(large ? nil : 1)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
                     .minimumScaleFactor(0.8)
-                if !large {
-                    Spacer(minLength: Theme.Spacing.s)
+                HStack(spacing: Theme.Spacing.xl) {
+                    Button("Library") { libraryOpen = true }
+                        .buttonStyle(InkLabelWordStyle())
+                    Button("Routines") { model.open(.routines(planObject.id)) }
+                        .buttonStyle(InkLabelWordStyle())
                 }
-                Button("Routines") { model.open(.routines(planObject.id)) }
-                    .buttonStyle(InkLabelWordStyle())
             }
         }
     }
@@ -410,6 +435,12 @@ private struct TrainingAtRest: View {
         "\(Format.kilograms(value)) \(Format.unit.symbol)"
     }
 
+    /// "5 exercises, about 40 min": from the lanes, or, for a workout he is trying today, from that workout's own time.
+    private func trainingPhrase(_ lanes: [TrainingLane]) -> String {
+        guard let tried = model.triedToday(), !lanes.isEmpty else { return TrainingPage.planPhrase(lanes: lanes) }
+        return "\(lanes.count) \(lanes.count == 1 ? "exercise" : "exercises"), about \(tried.minutes) min"
+    }
+
     /// The kicker row above the title (Design item 115): the day word at the left ("Today"; a finished or running
     /// workout says so), "5 exercises, about 40 min" at the right for a plan still to do.
     @ViewBuilder
@@ -419,7 +450,7 @@ private struct TrainingAtRest: View {
         } else if case .running = plan {
             KickerRow(left: "Running now")
         } else {
-            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes))
+            KickerRow(left: "Today", right: trainingPhrase(lanes).keepingUnits)
         }
     }
 
@@ -432,7 +463,7 @@ private struct TrainingAtRest: View {
             guard let slot = routine.orderedChildren.first,
                   let exercise = model.store.linkedClass("exercise", of: slot) else { return nil }
             guard model.ledger.sessions(of: exercise).first?.sets.first != nil else {
-                return "First time on \(exercise.name.lowercased()). Start light."
+                return TrainingPage.firstTimeLine(exercise, store: model.store)
             }
             // The target is last time's: nothing to say (56 addendum).
             return nil
@@ -441,7 +472,7 @@ private struct TrainingAtRest: View {
                   let exercise = model.store.linkedClass("exercise", of: entry) else { return nil }
             let prefill = model.ledger.prefill(for: entry)
             if prefill.isFirstTime {
-                return "First time on \(exercise.name.lowercased()). Start light."
+                return TrainingPage.firstTimeLine(exercise, store: model.store)
             }
             // Only from the plan's own target (raised by progression, or a weight set in the plan); opening at last
             // time's weight is silence.
@@ -628,8 +659,7 @@ struct StartMark: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(word)
-                .textRole(.labelStrong)
-                .textCase(.uppercase)
+                .textRole(.keyWord)
                 .foregroundStyle(Theme.Colors.ink.opacity(wordOpacity))
                 .contentTransition(.opacity)
             line
@@ -662,7 +692,9 @@ struct StartMark: View {
         switch state {
         case .ready:
             // The flight draws the moving copy; the line here empties as it leaves.
-            InkLine().fill(Theme.Colors.ink).opacity(lift > 0 ? 0 : 1).frame(height: 6)
+            // The hot underline of the Figtree pair (Design 129): the Start word's line rests in the live colour.
+            InkLine().fill(Choice.fontIsNew() ? Theme.Colors.live : Theme.Colors.ink).opacity(lift > 0 ? 0 : 1)
+                .frame(height: 6)
         case .running:
             InkLine().fill(Theme.Colors.ink).frame(width: 28, height: 6)
         case let .paused(_, done):
@@ -795,6 +827,22 @@ extension TrainingPage {
         return "\(scheme) · \(Format.kilograms(weight))"
     }
 
+    /// Tess's first-time line for an exercise he has not logged: a bodyweight move starts easy, anything else light.
+    static func firstTimeLine(_ exercise: ClassDef, store: ObjectStore) -> String {
+        if store.equipmentKind(of: exercise) == .bodyweight {
+            return "First time on \(plural(exercise.name.lowercased())). Keep the first set easy."
+        }
+        return "First time on \(exercise.name.lowercased()). Start light."
+    }
+
+    /// "push-up" is "push-ups": the bodyweight moves that count in reps take an s.
+    private static func plural(_ name: String) -> String {
+        let counted = ["up", "dip", "squat", "lunge", "crunch", "row", "raise", "bridge", "extension", "twist"]
+        guard let last = name.split(whereSeparator: { $0 == " " || $0 == "-" }).last?.lowercased(),
+              counted.contains(String(last)) else { return name }
+        return name + "s"
+    }
+
     /// "about 55 min": each set about two and a half minutes with its rest, to the nearest five.
     /// "5 exercises, about 40 min".
     static func planPhrase(lanes: [TrainingLane]) -> String {
@@ -832,6 +880,7 @@ private struct EmptyTraining: View {
                 .foregroundStyle(Theme.Colors.context)
             Text("A rest day. It counts too.")
                 .textRole(.title)
+                .wordFit("A rest day. It counts too.")
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .siblingParallax()
