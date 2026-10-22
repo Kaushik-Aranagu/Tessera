@@ -106,7 +106,7 @@ struct TrainingWeekMarks: View {
             ForEach(dots) { dot in
                 VStack(spacing: 6) {
                     mark(dot.state)
-                        .frame(width: 18, height: 18)
+                        .frame(width: 24, height: 24)
                     Text(dot.label)
                         .textRole(.label)
                         .foregroundStyle(dot.state == .today ? Theme.Colors.ink : Theme.Colors.inkSecondary)
@@ -121,13 +121,20 @@ struct TrainingWeekMarks: View {
         .accessibilityLabel(spoken)
     }
 
+    /// A day done is a closed brush circle in dried ink; today is an open one, still wet in the accent (the week
+    /// uses the set marks, the page's one drawn thing).
+    private static let doneMark = SetMarkSpec(id: UUID(), number: 1, reps: 8, target: 8, weight: 1, heaviest: 1,
+                                              isBest: false)
+    private static let todayMark = SetMarkSpec(id: UUID(), number: 1, reps: 7, target: 8, weight: 1, heaviest: 1,
+                                               isBest: false)
+
     @ViewBuilder
     private func mark(_ state: WeekDot.State) -> some View {
         switch state {
         case .done:
-            Circle().fill(Theme.Colors.ink)
+            SetMarkCircle(spec: Self.doneMark, side: 24)
         case .today:
-            Circle().stroke(Theme.Colors.live, lineWidth: 1.8)
+            SetMarkCircle(spec: Self.todayMark, side: 24, age: 0)
         case .rest:
             Capsule().fill(Theme.Colors.ink.opacity(0.22)).frame(width: 10, height: 1.4)
         case .ahead:
