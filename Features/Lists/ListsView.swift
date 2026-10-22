@@ -270,6 +270,8 @@ private struct ListPage: View {
                     .padding(.top, Theme.Spacing.xxl)
                     .entrance(3)
                 }
+                // Held to the leading edge, so a short page is never centred (QA on #1198).
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.vertical, Theme.Spacing.l)
             }
@@ -765,8 +767,7 @@ struct BackWord: View {
     var body: some View {
         Button(action: action) {
             Text("‹ \(title)")
-                .textRole(.label)
-                .textCase(.uppercase)
+                .textRole(.keyWord)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(minHeight: 44)
         }

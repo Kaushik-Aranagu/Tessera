@@ -73,8 +73,22 @@ struct MoneyTests {
         let engine = try engine()
         let spend = try engine.perform(LogSpend(amount: 12.40, typed: "12.40", note: "lunch"), by: .user).output
         #expect(ObjectPrivacy.label(of: spend, in: store, classes: engine.classes) == "Private spend")
-        let json = try String(decoding: TesseraExport(context: store.context).encoded(), as: UTF8.self)
-        #expect(!json.contains("12.40") && !json.contains("lunch"))
+        let data = try TesseraExport(context: store.context).encoded()
+        #expect(try ExportLeaks.found(["12.40", "lunch"], numbers: [12.4], in: data).isEmpty)
+    }
+
+    @Test func aTimestampThatReadsLikeTheAmountIsNotALeak() throws {
+        // The export's dates carry fractional seconds, so "...:12.404Z" contains the characters "12.40". That made the
+        // masking test above fail about once in a hundred runs although nothing leaked (Oct 22). Pin it.
+        let engine = try engine()
+        let spend = try engine.perform(LogSpend(amount: 12.40, typed: "12.40", note: "lunch"), by: .user).output
+        spend.createdAt = Date(timeIntervalSince1970: 1_792_685_412.405) // 16:10:12.405 UTC
+        let data = try TesseraExport(context: store.context).encoded()
+        #expect(String(decoding: data, as: UTF8.self).contains("12.40")) // the characters are there, in a date
+        #expect(try ExportLeaks.found(["12.40", "lunch"], numbers: [12.4], in: data).isEmpty)
+        // And the helper does catch a real leak.
+        let leaked = try TesseraExport(context: store.context, maskingPrivate: false).encoded()
+        #expect(try !ExportLeaks.found(["12.40"], in: leaked).isEmpty)
     }
 
     // MARK: Ledger

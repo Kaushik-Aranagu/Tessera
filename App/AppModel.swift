@@ -143,8 +143,11 @@ final class AppModel {
 
     /// `launchDefaults`: where once-per-install launch decisions are kept; the app tests pass a throwaway suite (QA on
     /// #665), so a test run never decides for an install.
-    init(context: TesseraContext, launchDefaults: UserDefaults = .standard, seedsStarterLists: Bool = false) {
+    init(context: TesseraContext, launchDefaults: UserDefaults = .standard, seedsStarterLists: Bool = false,
+         isSample: Bool = false)
+    {
         self.context = context
+        self.isSample = isSample
         store = ObjectStore(context: context)
         do {
             // Built-in classes, the 72-exercise library and Kaushik's starter plan (cheap after the first run).
@@ -159,10 +162,11 @@ final class AppModel {
         // QA F1: only his real store holds his settings. On a throwaway store (memory fallback, a failed seed) the
         // settings read as empty, which would mean "yes": skip the migrate (it would delete his old "no") and keep
         // Claude off.
-        settingsAreReal = TesseraSchema.lastOpenOutcome == .opened && classes[.settings] != nil
+        // The sample's store is never his (QA on #1199): no settings migrate, no Claude, no first-launch writes.
+        settingsAreReal = !isSample && TesseraSchema.lastOpenOutcome == .opened && classes[.settings] != nil
         // The release that adds the settings object: the old keys move in once, as system (settings-object.md).
         // Never while a demo flag is on, so a demo can't freeze a look into his data.
-        let demo = Self.isDemo
+        let demo = Self.isDemo || isSample
         if !demo, settingsAreReal {
             SettingsStore(engine: engine).migrateAtLaunch(looks: ThemeStore.sharedDefaults, standard: .standard,
                                                           folderName: BackupKeeper.pickedFolder
@@ -175,6 +179,9 @@ final class AppModel {
             if seedsStarterLists {
                 _ = try? StarterLists.installIfNeeded(store: store, classes: classes)
             }
+        }
+        if isSample, seedsStarterLists {
+            _ = try? StarterLists.installIfNeeded(store: store, classes: classes)
         }
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()
@@ -203,6 +210,9 @@ final class AppModel {
         // Both are read, oldest first, one at a time (hunt 28 CALL 3 B); a restore says its copy's date (sheet 111).
         launchNotes = LaunchNoteQueue([TesseraSchema.launchNote.map(RestoreOffer.dated), outcome])
     }
+
+    /// The Sample data model (SampleData): its own in-memory store, nothing written beside his.
+    let isSample: Bool
 
     /// The notes waiting for this launch (LaunchNoteQueue): one shows at a time, never stacked.
     var launchNotes = LaunchNoteQueue()
@@ -422,7 +432,7 @@ final class AppModel {
             processNotes.append(rolled)
         }
         // Tess's memory turnover: yesterday's day line, the 14-day cut, Sunday's noticed lines (AI-7).
-        let memory = TessMemoryStore(engine: engine)
+        let memory = TessMemoryStore(engine: engine, forgetLogURL: forgetLogURL)
         memory.reapplyForgetsIfRestored(now: now) // the first launch after a restore forgets again (QA F2b, F6)
         memory.turnover(now: now)
         pickUpRunningWorkout(table)
@@ -673,6 +683,10 @@ extension AppModel {
     func todaysRoutine(now: Date = AppClock.now) -> ObjectRecord? {
         guard session == nil, tonightWorkout(around: now) == nil, finishedToday(now: now).isEmpty,
               let plan else { return nil }
+        // "Try today": a ready workout stands in for the Plan's next routine for this day only.
+        if let routine = triedRoutine(now: now) {
+            return routine
+        }
         return ledger.nextRoutine(in: plan, now: now)
     }
 
