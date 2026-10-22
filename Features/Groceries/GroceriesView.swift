@@ -62,6 +62,7 @@ private struct GroceriesPage: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                SampleDataWord()
                 Text(GroceriesCopy.context(open: open, aisles: aisles.count, shopping: shopping))
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.context)

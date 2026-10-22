@@ -234,10 +234,11 @@ private struct ReviewPageBody: View {
             .padding(.bottom, Theme.Spacing.section)
         }
         .navigationDestination(isPresented: $settingsOpen) { SettingsPage() }
-        .onAppear {
-            if SampleData.shared.jumpsToSwitch {
-                settingsOpen = true
-            }
+        .task {
+            // After the zoom lands, so the push isn't dropped mid-presentation.
+            guard SampleData.shared.jumpsToSwitch else { return }
+            try? await Task.sleep(for: .milliseconds(450))
+            settingsOpen = true
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }

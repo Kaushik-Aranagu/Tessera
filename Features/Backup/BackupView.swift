@@ -59,6 +59,14 @@ struct BackupView: View {
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.context)
                     .entrance(0)
+                if shown.isSample {
+                    // While Sample data is on, Backups still works on his own things (QA on #1199).
+                    Text("Sample data is on. Backups keep your own things, never the sample.")
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, Theme.Spacing.s)
+                }
                 // Two places only when the folder copy is actually saving.
                 Text(folder == nil || failures.contains { $0.place == .folder } ? "Kept on this iPhone"
                     : "Kept in two places")

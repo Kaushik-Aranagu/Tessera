@@ -51,6 +51,8 @@ struct HomeSpatialView: View {
     static let footLift: CGFloat = 56
 
     /// Where Home was left this session (spatial memory).
+    /// `-openLink` has opened its screen this launch (simulator only).
+    @MainActor private static var openedLaunchLink = false
     @MainActor private static var remembered: Int = {
         #if DEBUG
             // `-homePage review|today|training|kitchen` opens Home on that page (for recordings).
@@ -136,9 +138,11 @@ struct HomeSpatialView: View {
                 position.scrollTo(id: Self.remembered)
                 #if DEBUG
                     // `-openLink notes|recipes|groceries|review` opens that screen the way its Home word does.
-                    if let value = LaunchFlags.value(after: "-openLink"),
+                    // Once per launch: a rebuilt Home (the Sample data flip) doesn't open it again.
+                    if !Self.openedLaunchLink, let value = LaunchFlags.value(after: "-openLink"),
                        let link = HomeLink.allCases.first(where: { value == "\($0)" })
                     {
+                        Self.openedLaunchLink = true
                         Task { @MainActor in
                             try? await Task.sleep(for: .seconds(1.5))
                             presented = link

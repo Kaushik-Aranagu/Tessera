@@ -119,7 +119,7 @@ private struct TessKnowsDoor: View {
 
     var body: some View {
         let _ = model.revision
-        let count = TessMemoryStore(engine: model.engine).countWord()
+        let count = TessMemoryStore(engine: model.engine, forgetLogURL: model.forgetLogURL).countWord()
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             Text("Memory")
                 .textRole(.label)

@@ -62,6 +62,7 @@ private struct NotesIndex: View {
         let notes = NoteList(store: model.store, classes: model.classes).recent(limit: 200)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                SampleDataWord()
                 Text(refusedKey ? claudeKeyLine
                     : NotesCopy.context(count: notes.count, latest: notes.first?.updatedAt, now: AppClock.now))
                     .font(Theme.voice)
