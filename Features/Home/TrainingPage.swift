@@ -136,28 +136,28 @@ private struct TrainingAtRest: View {
 
             // The lanes are the page's one bounded window: they take the room the week and the doors leave.
             ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
-                    LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
-                            isPrivate: isPrivateDay,
-                            showsStrokes: isRunning || isDone || lane.logged > 0)
-                        // Rows are 72 pt; at large text a row grows with its wrapped name instead of printing over
-                        // the next one.
-                        .frame(height: typeSize.isAccessibilitySize ? nil : 72, alignment: .top)
-                        // Live mode rises out of the first lane; the others sink away.
-                        .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
-                                             namespace: namespace))
-                        .modifier(Sinking(isOn: sinking && index > 0))
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
+                        LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
+                                isPrivate: isPrivateDay,
+                                showsStrokes: isRunning || isDone || lane.logged > 0)
+                            // Rows are 72 pt; at large text a row grows with its wrapped name instead of printing over
+                            // the next one.
+                            .frame(height: typeSize.isAccessibilitySize ? nil : 72, alignment: .top)
+                            // Live mode rises out of the first lane; the others sink away.
+                            .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
+                                                 namespace: namespace))
+                            .modifier(Sinking(isOn: sinking && index > 0))
+                    }
                 }
-            }
-            .accessibilityElement(children: .contain)
+                .accessibilityElement(children: .contain)
             }
             .scrollIndicators(.hidden)
             .scrollBounceBehavior(.basedOnSize)
             .frame(maxHeight: typeSize.isAccessibilitySize ? nil : .infinity, alignment: .top)
             .entrance(3)
 
-            TrainingWeekMarks(dots: TrainingWeek.dots(model, now: AppClock.now))
+            TrainingWeekMarks(dots: TrainingWeek.dots(model, now: AppClock.now, hasSessionToday: hasSessionToday))
                 .padding(.vertical, Theme.Spacing.s)
                 .modifier(Sinking(isOn: sinking))
 
@@ -260,31 +260,6 @@ private struct TrainingAtRest: View {
         }
     }
 
-    /// "PUSH PULL LEGS, ROLLS ON" and ROUTINES.
-    @ViewBuilder
-    private var planLine: some View {
-        if let planObject = model.plan {
-            // At large text the plan line and ROUTINES stack and the line wraps instead of cutting.
-            let large = typeSize.isAccessibilitySize
-            let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
-                : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
-            layout {
-                let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
-                Text("\(planObject.title), \(fixed ? "fixed days" : "rolls on")")
-                    .textRole(.label)
-                    .textCase(.uppercase)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(large ? nil : 1)
-                    .minimumScaleFactor(0.8)
-                if !large {
-                    Spacer(minLength: Theme.Spacing.s)
-                }
-                Button("Routines") { model.open(.routines(planObject.id)) }
-                    .buttonStyle(InkLabelWordStyle())
-            }
-        }
-    }
-
     // MARK: State
 
     private var isDone: Bool {
@@ -292,6 +267,14 @@ private struct TrainingAtRest: View {
             return true
         }
         return false
+    }
+
+    /// A session still to do (or running) today: the week's today mark stays open.
+    private var hasSessionToday: Bool {
+        if case .done = plan {
+            return false
+        }
+        return true
     }
 
     private var isRunning: Bool {
@@ -370,7 +353,7 @@ private struct TrainingAtRest: View {
         let last = model.ledger.sessions(of: exercise).first?.sets.first
         let scheme = TrainingPage.scheme(sets: Double(sets), repMin: model.store.number("repMin", of: slot),
                                          repMax: model.store.number("repMax", of: slot))
-        let target = last.map { "\(Format.kilograms($0.weight)) × \(Int($0.reps.rounded()))" } ?? scheme
+        let target = last.map { "\(Format.mass($0.weight)) × \(Int($0.reps.rounded()))" } ?? scheme
         return TrainingLane(id: slot.id, exercise: exercise, name: exercise.name, target: target, sets: sets,
                             logged: 0, scheme: scheme, weight: last.map { Self.weightText($0.weight) },
                             weightKilograms: last?.weight,
@@ -382,7 +365,7 @@ private struct TrainingAtRest: View {
         let planned = Int(model.store.number("targetSets", of: entry) ?? 3)
         let prefill = model.ledger.prefill(for: entry)
         let scheme = TrainingPage.target(sets: Double(planned), reps: model.store.number("targetReps", of: entry))
-        let target = prefill.weight.map { "\(Format.kilograms($0)) × \(prefill.reps)" } ?? scheme
+        let target = prefill.weight.map { "\(Format.mass($0)) × \(prefill.reps)" } ?? scheme
         return TrainingLane(id: entry.id, exercise: exercise, name: exercise.name, target: target,
                             sets: max(sets ?? planned, logged, 1), logged: logged,
                             scheme: scheme,
@@ -411,20 +394,53 @@ private struct TrainingAtRest: View {
 
     /// "82.5 kg": a weight with its unit.
     private static func weightText(_ value: Double) -> String {
-        "\(Format.kilograms(value)) \(Format.unit.symbol)"
+        Format.mass(value)
     }
 
-    /// The kicker row above the title (Design item 115): the day word at the left ("Today"; a finished or running
-    /// workout says so), "5 exercises, about 40 min" at the right for a plan still to do.
-    @ViewBuilder
-    private func kickerRow(_ lanes: [TrainingLane]) -> some View {
-        if case let .done(summary) = plan {
-            KickerRow(left: summary.endedAt.map { TrainingPage.doneWhen($0).capitalizedFirst } ?? "Done today")
-        } else if case .running = plan {
-            KickerRow(left: "Running now")
-        } else {
-            KickerRow(left: "Today", right: TrainingPage.planPhrase(lanes: lanes))
+    /// The page's sentence: Core's template for a day still to do; a running or finished workout says so.
+    private func sentence(_ lanes: [TrainingLane]) -> SentenceParts {
+        let title = titleAndRoute.0
+        switch plan {
+        case .running:
+            return SentenceParts(text: "\(title) is running.", key: title)
+        case let .done(summary):
+            let when = summary.endedAt.map { TrainingPage.doneWhen($0) } ?? "done today"
+            return SentenceParts(text: "\(shown(summary.title)) \(when).", key: shown(summary.title))
+        case .routine, .scheduled:
+            let sets = lanes.map(\.sets).reduce(0, +)
+            // A private workout names no lift and no weight.
+            let opener = isPrivateDay ? nil : lanes.first.flatMap { lane in
+                lane.weightKilograms.map { (exercise: lane.name, weight: Format.mass($0)) }
+            }
+            return TrainingPage.sentence(
+                session: title,
+                minutes: sets > 0 ? TrainingPage.estimatedMinutes(sets: sets) : nil,
+                opener: opener
+            )
         }
+    }
+
+    /// Plan, Library and Log as ink words with a short value each. The Plan word keeps "fixed days" or "rolls on".
+    private var doors: [TrainingDoor] {
+        var doors: [TrainingDoor] = []
+        if let planObject = model.plan {
+            let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
+            doors.append(TrainingDoor(id: "plan", word: "Plan",
+                                      value: "\(planObject.title), \(fixed ? "fixed days" : "rolls on")",
+                                      route: .routines(planObject.id)))
+        }
+        if let exercise = model.classDef(.exercise) {
+            let count = ExerciseLibraryList.groups(model).reduce(0) { $0 + $1.exercises.count }
+            doors.append(TrainingDoor(id: "library", word: "Library",
+                                      value: count > 0 ? "\(count) \(count == 1 ? "exercise" : "exercises")" : nil,
+                                      route: .classDef(exercise.id)))
+        }
+        if let workout = model.classDef(.workout) {
+            let done = TrainingWeek.doneThisWeek(model, now: AppClock.now)
+            doors.append(TrainingDoor(id: "log", word: "Log", value: done > 0 ? "\(done) this week" : nil,
+                                      route: .classDef(workout.id)))
+        }
+        return doors
     }
 
     private func tessLine(_ lanes: [TrainingLane]) -> String? {
@@ -450,7 +466,7 @@ private struct TrainingAtRest: View {
             // Only from the plan's own target (raised by progression, or a weight set in the plan); opening at last
             // time's weight is silence.
             guard prefill.source == .target, let weight = prefill.weight, weight > 0 else { return nil }
-            return "\(exercise.name) is ready for \(Format.kilograms(weight)) today."
+            return "\(exercise.name) is ready for \(Format.mass(weight)) today."
         case .running:
             return nil
         case let .done(summary):
@@ -596,7 +612,7 @@ private struct LiftingLine: View, Animatable {
         let width = from.width + (target.width - from.width) * progress
         let height = 4 - progress
         ZStack {
-            InkLine(thickness: height).fill(Theme.Colors.ink).opacity(1 - Double(progress))
+            InkLine(thickness: height).fill(Theme.Colors.live).opacity(1 - Double(progress))
             InkLine(thickness: height).fill(Theme.Colors.live).opacity(Double(progress))
         }
         .frame(width: max(width, 1), height: 6)
@@ -632,8 +648,7 @@ struct StartMark: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(word)
-                .textRole(.labelStrong)
-                .textCase(.uppercase)
+                .textRole(.bodyStrong)
                 .foregroundStyle(Theme.Colors.ink.opacity(wordOpacity))
                 .contentTransition(.opacity)
             line
@@ -666,7 +681,7 @@ struct StartMark: View {
         switch state {
         case .ready:
             // The flight draws the moving copy; the line here empties as it leaves.
-            InkLine().fill(Theme.Colors.ink).opacity(lift > 0 ? 0 : 1).frame(height: 6)
+            InkLine().fill(Theme.Colors.live).opacity(lift > 0 ? 0 : 1).frame(height: 6)
         case .running:
             InkLine().fill(Theme.Colors.ink).frame(width: 28, height: 6)
         case let .paused(_, done):
@@ -795,7 +810,7 @@ extension TrainingPage {
     static func target(sets: Double?, reps: Double?, weight: Double? = nil) -> String {
         let scheme = "\(Int(sets ?? 0)) × \(Int(reps ?? 0))"
         guard let weight, weight > 0 else { return scheme }
-        return "\(scheme) · \(Format.kilograms(weight))"
+        return "\(scheme) · \(Format.mass(weight))"
     }
 
     /// "about 55 min": each set about two and a half minutes with its rest, to the nearest five.
@@ -807,8 +822,7 @@ extension TrainingPage {
     }
 
     static func about(sets: Int) -> String {
-        let minutes = max(5, Int((Double(sets) * 2.5 / 5).rounded()) * 5)
-        return minutes >= 60 && minutes % 60 == 0 ? "about \(minutes / 60) h" : "about \(minutes) min"
+        "about \(HouseTime.minutes(estimatedMinutes(sets: sets)))"
     }
 
     /// The finished workout's context word (docs/research/time-words-sweep.md TW5; decisions 12:35 PM PT Oct 16):

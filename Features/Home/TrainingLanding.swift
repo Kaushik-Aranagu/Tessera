@@ -21,9 +21,10 @@ struct LandingSentenceView: View {
 
     var body: some View {
         Text(attributed)
-            .textRole(.title)
+            .font(Theme.voice(size: 28))
             .foregroundStyle(Theme.Colors.ink)
-            .lineLimit(nil)
+            .lineLimit(5)
+            .minimumScaleFactor(0.8)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
             .environment(\.openURL, OpenURLAction { _ in
@@ -40,7 +41,6 @@ struct LandingSentenceView: View {
         guard let key = sentence.key, let range = text.range(of: key) else { return text }
         text[range].foregroundColor = Theme.Colors.liveInk
         text[range].link = URL(string: "tessera://open")
-        text[range].underlineStyle = .single
         return text
     }
 }
@@ -59,7 +59,7 @@ struct WeekDot: Identifiable, Equatable {
 enum TrainingWeek {
     /// Monday to Sunday from the same plan week Review reads, so the two never disagree.
     @MainActor
-    static func dots(_ model: AppModel, now: Date, calendar: Calendar = .current) -> [WeekDot] {
+    static func dots(_ model: AppModel, now: Date, hasSessionToday: Bool, calendar: Calendar = .current) -> [WeekDot] {
         let tesseraDay = TesseraDay(calendar: calendar)
         let plan = model.plan
         let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan)
@@ -68,20 +68,32 @@ enum TrainingWeek {
         let firstUse = ReviewPage.firstUse(model)
         let restToday = NowPicker(engine: model.engine).restDay(plan: plan, at: now, sessionsPerWeek: perWeek,
                                                                 calendar: calendar) != nil
-        let marks = ReviewPage.WeekReview.marks(week.map(ReviewPage.WeekReview.Slot.init), firstUse: firstUse,
-                                                restToday: restToday, now: now, calendar: calendar)
+        let marks = WeekReview.marks(week.map(WeekReview.Slot.init), firstUse: firstUse,
+                                     restToday: restToday, now: now, calendar: calendar)
         let today = tesseraDay.today(now)
         let symbols = calendar.shortWeekdaySymbols
         return zip(week, marks).map { slot, mark in
             let isToday = slot.day == today
+            // Today is open in the accent whenever there is a session to do; trained days fill.
             let state: WeekDot.State = switch mark {
             case .trained: .done
-            case .rest: .rest
+            case .rest: isToday && hasSessionToday ? .today : .rest
             default: isToday ? .today : .ahead
             }
             let weekday = symbols[calendar.component(.weekday, from: slot.day) - 1]
             return WeekDot(id: slot.day, label: isToday ? "Today" : weekday, state: state)
         }
+    }
+}
+
+extension TrainingWeek {
+    /// Sessions done in the plan's week so far.
+    @MainActor
+    static func doneThisWeek(_ model: AppModel, now: Date, calendar: Calendar = .current) -> Int {
+        let plan = model.plan
+        let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan)
+        return model.ledger.week(containing: now, plan: plan, now: now, sessionsPerWeek: perWeek, calendar: calendar)
+            .reduce(0) { $0 + $1.done.count }
     }
 }
 
@@ -115,7 +127,7 @@ struct TrainingWeekMarks: View {
         case .done:
             Circle().fill(Theme.Colors.ink)
         case .today:
-            Circle().stroke(Theme.Colors.training, lineWidth: 1.8)
+            Circle().stroke(Theme.Colors.live, lineWidth: 1.8)
         case .rest:
             Capsule().fill(Theme.Colors.ink.opacity(0.22)).frame(width: 10, height: 1.4)
         case .ahead:
@@ -180,27 +192,16 @@ struct TrainingDoors: View {
 // MARK: - Words
 
 extension TrainingPage {
-    /// "35 min", "1 hr 35 min", "2 hr": the one house length (a minute count under an hour says min).
-    static func lengthWords(minutes: Int) -> String {
-        guard minutes >= 60 else { return "\(minutes) min" }
-        return minutes % 60 == 0 ? "\(minutes / 60) hr" : "\(minutes / 60) hr \(minutes % 60) min"
-    }
-
     /// Each set about two and a half minutes with its rest, to the nearest five. The one estimate every line reads.
     static func estimatedMinutes(sets: Int) -> Int {
         max(5, Int((Double(sets) * 2.5 / 5).rounded()) * 5)
     }
 
-    /// The Training sentence from Core's template; a length of an hour or more is spliced in with the house words,
-    /// so it never reads "about 90 min".
+    /// The Training sentence from Core's template (its lengths read the house way: "1 hr 30 min").
     static func sentence(session: String?, minutes: Int?, opener: (exercise: String, weight: String)?)
         -> SentenceParts
     {
-        let short = minutes.flatMap { $0 < 60 ? $0 : nil }
-        let base = LandingSentences.training(session: session, minutes: short, opener: opener)
-        guard let minutes, minutes >= 60 else { return SentenceParts(text: base.text, key: base.key) }
-        let spliced = base.text.replacingOccurrences(of: " today.",
-                                                     with: " today, about \(lengthWords(minutes: minutes)).")
-        return SentenceParts(text: spliced, key: base.key)
+        let base = LandingSentences.training(session: session, minutes: minutes, opener: opener)
+        return SentenceParts(text: base.text, key: base.key)
     }
 }
