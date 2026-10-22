@@ -357,6 +357,12 @@ final class WorkoutSession {
     private var swaps: [UUID: String] = [:]
     private var presetWeight: [UUID: Double] = [:]
     private var estimated: Set<UUID> = []
+    /// The load Similar guessed for a swapped-in exercise nobody has lifted yet: the estimate line prints this, not the
+    /// dial, so it stays put when the dial moves.
+    private var estimatedLoad: [UUID: Double] = [:]
+    /// The line in the workout's Tess corner (a Busy or swap receipt) and what its Undo runs. A logged set clears it,
+    /// so Undo can only ever take back that set.
+    var receipt: WorkoutReceipt?
     /// Swapped in for the routine too ("Swap in"), not just for today.
     private var swappedInRoutine: Set<UUID> = []
     /// What Core prefilled the current set with.
@@ -436,6 +442,7 @@ extension WorkoutSession {
 
     /// Hold to log: seats the dialled set, then the dial turns into the rest countdown.
     func logSet(source: SetSource = .hold, by actor: Actor = .user) {
+        receipt = nil
         guard let entry = currentEntry, let exercise = currentExercise else { return }
         let beaten = ledger.recordsBeaten(weight: weight, reps: reps, rpe: rpe, for: exercise,
                                           excludingWorkout: workout.id)
@@ -623,6 +630,12 @@ extension WorkoutSession {
     // MARK: Swap
 
     /// The dial holds a converted load nobody has lifted yet (until the swapped exercise's first set).
+    /// What the estimate line prints: "About 32", the guess made at the swap.
+    var estimateShown: Double? {
+        guard isEstimatedLoad, let entry = currentEntry else { return nil }
+        return estimatedLoad[entry.id]
+    }
+
     var isEstimatedLoad: Bool {
         guard let entry = currentEntry, estimated.contains(entry.id) else { return false }
         return setRows(of: entry).isEmpty
@@ -653,8 +666,9 @@ extension WorkoutSession {
             swappedInRoutine.insert(swappedID)
         }
         presetWeight[swappedID] = option.load
-        if option.isEstimate, option.load != nil {
+        if option.isEstimate, let load = option.load {
             estimated.insert(swappedID)
+            estimatedLoad[swappedID] = load
         }
         if topSetCheck?.entryID == entry.id {
             topSetCheck = nil

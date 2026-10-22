@@ -131,15 +131,15 @@ struct SimilarSheet: View {
     /// "last 30", or "new" when he has never done it.
     private func lastWord(_ option: ExerciseSwaps.Option) -> String {
         let last = model.ledger.sessions(of: option.exercise).first.flatMap { $0.sets.map(\.weight).max() }
-        return last.map { "last \(Format.kilograms($0))" } ?? "new"
+        return last.map { "last \(Format.mass($0))" } ?? "new"
     }
 
     /// Where the swapped exercise starts: its own last weight, or a light guess marked "about".
     private func startLine(_ option: ExerciseSwaps.Option) -> String {
         guard let load = option.load else { return "\(option.exercise.name) starts where you set it." }
         return option.isEstimate
-            ? "Starts at about \(Format.kilograms(load))."
-            : "Starts at \(Format.kilograms(load)), where you left it."
+            ? "Starts at about \(Format.mass(load))."
+            : "Starts at \(Format.mass(load)), where you left it."
     }
 
     /// "Swap in" changes the routine's slot as well as today (one Undo takes back both); "Just today" is this

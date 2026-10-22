@@ -765,8 +765,7 @@ struct BackWord: View {
     var body: some View {
         Button(action: action) {
             Text("‹ \(title)")
-                .textRole(.label)
-                .textCase(.uppercase)
+                .textRole(.keyWord)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(minHeight: 44)
         }
