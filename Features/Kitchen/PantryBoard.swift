@@ -75,14 +75,14 @@ struct PantryBoard {
         }
     }
 
-    /// "7 to get"; "9 in the fridge · eggs running low"; "14 on the shelf".
+    /// "7 to get"; "9 in the fridge, eggs running low"; "14 on the shelf".
     func subtitle(for open: String) -> String {
         if open == PantryPlaces.toGet {
             return toGetCount == 0 ? "nothing to get" : "\(toGetCount) to get"
         }
         guard let place = places.first(where: { $0.id.uuidString == open }) else { return "" }
         let line = "\(place.count) \(Self.where(place.name))"
-        return place.low.map { "\(line) · \($0) running low" } ?? line
+        return place.low.map { "\(line), \($0) running low" } ?? line
     }
 
     /// "in the fridge", "on the shelf", "on the counter", "in the cupboard".

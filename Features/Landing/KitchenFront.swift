@@ -7,7 +7,7 @@ import TesseraCore
 @MainActor
 struct KitchenFront {
     /// Kitchen's one accent, ochre (131 table: #E0A458 dark, #A8701F light).
-    static let accent = Color(light: 0xA8701F, dark: 0xE0A458)
+    static let accent = Theme.Colors.Accent.kitchen
 
     struct Meal {
         let title: String
@@ -52,7 +52,7 @@ struct KitchenFront {
             let meal = meals.first { house.isSameDay($0.start, midday) }
             let weekday = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: day) - 1]
             let when: String? = meal.flatMap { meal in
-                offset == 0 ? "start \(HouseTime.clock(meal.start))" : meal.minutes.map { "\(Int($0)) min" }
+                offset == 0 ? "start \(HouseTime.clock(meal.start))" : meal.minutes.map { HouseTime.minutes(Int($0)) }
             }
             return Day(id: day, weekday: weekday, isToday: offset == 0, meal: meal, when: when)
         }

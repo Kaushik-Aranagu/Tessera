@@ -30,6 +30,8 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
     var titleTrailing: AnyView?
     /// The place above the dial, out of the loop, in the hot colour (nil for none).
     var pinned: RailPlace?
+    /// The app's one accent (131): the pinned place's colour. Never another app's, never the amber look-alike.
+    let accent: Color
     let places: [RailPlace]
     @Binding var open: String
     var sectionStyle: SectionStyle = .words
@@ -54,7 +56,7 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.l))
                 : AnyLayout(HStackLayout(alignment: .top, spacing: Theme.Spacing.m))
             if let pinned {
-                RailPinned(place: pinned, open: $open)
+                RailPinned(place: pinned, accent: accent, open: $open)
                     .padding(.horizontal, Theme.Spacing.gutter)
                     .padding(.top, Theme.Spacing.xl)
             }
@@ -382,6 +384,7 @@ private struct RailDial: View {
 /// whole width so it can grow to 1.5 when open without running into the open place.
 private struct RailPinned: View {
     let place: RailPlace
+    let accent: Color
     @Binding var open: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var ticks = 0
@@ -407,7 +410,7 @@ private struct RailPinned: View {
                     .textRole(.data)
                     .contentTransition(.numericText())
             }
-            .foregroundStyle(place.count > 0 || pinnedOpen ? Theme.Colors.now : Theme.Colors.inkSecondary)
+            .foregroundStyle(place.count > 0 || pinnedOpen ? accent : Theme.Colors.inkSecondary)
             .scaleEffect(pinnedOpen && !calm ? RailMetrics.pinnedOpenScale : 1, anchor: .bottomLeading)
             .frame(maxWidth: .infinity, minHeight: pinnedOpen && !calm ? 56 : 44, alignment: .bottomLeading)
             .contentShape(Rectangle())
@@ -455,14 +458,14 @@ private struct DialSlot: ViewModifier, Animatable {
     /// The signed distance round the loop, in places: in −count/2 ..< count/2.
     static func distance(index: Int, turn: Double, count: Int) -> Double {
         guard count > 0 else { return 0 }
-        let n = Double(count)
-        var d = (Double(index) - turn).truncatingRemainder(dividingBy: n)
-        if d < -n / 2 {
-            d += n
+        let size = Double(count)
+        var gap = (Double(index) - turn).truncatingRemainder(dividingBy: size)
+        if gap < -size / 2 {
+            gap += size
         }
-        if d >= n / 2 {
-            d -= n
+        if gap >= size / 2 {
+            gap -= size
         }
-        return d
+        return gap
     }
 }

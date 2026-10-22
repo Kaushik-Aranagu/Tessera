@@ -25,13 +25,17 @@ struct KitchenLandingPage: View {
                         )]
                     } ?? [],
                     lead: { KitchenDoors(front: front, open: open) },
-                    doors: [LandingDoor(word: "Groceries") { open(.groceries) },
-                            LandingDoor(word: "Lists") { open(.lists) },
+                    // Groceries lives in Pantry as To get (Design on #1224). Lists stays: Kitchen is its only door
+                    // until
+                    // the Lists landing has its own place in Home.
+                    doors: [LandingDoor(word: "Lists") { open(.lists) },
                             LandingDoor(word: "Paste a recipe") { open(.pasteRecipe) }],
+                    // Cook when a meal is planned tonight, else Plan a meal takes the one underline.
                     action: front.tonight.map { meal in
                         LandingAction(word: "Cook", hint: "Starts \(meal.title)") { cook(meal) }
-                    },
-                    secondary: LandingAction(word: "Plan a meal", hint: "Opens Recipes") { open(.recipes) },
+                    } ?? LandingAction(word: "Plan a meal", hint: "Opens Recipes") { open(.recipes) },
+                    secondary: front.tonight == nil ? nil
+                        : LandingAction(word: "Plan a meal", hint: "Opens Recipes") { open(.recipes) },
                     standalone: false)
             .fullScreenCover(item: $cookCover) { CookClockPage(cookID: $0.id) }
             .accessibilityElement(children: .contain)
@@ -72,7 +76,7 @@ private struct KitchenDoors: View {
                     }
                 }
             }
-            door("Recipes", value: front.saved > 0 ? "\(front.saved) saved" : nil, link: .recipes) {
+            door("Recipes", value: nil, link: .recipes) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                     ForEach(front.week) { day in
                         WeekRow(day: day)
