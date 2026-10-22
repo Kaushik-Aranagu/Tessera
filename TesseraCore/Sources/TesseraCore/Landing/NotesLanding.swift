@@ -6,6 +6,10 @@ import Foundation
 @MainActor
 public struct NotesLanding {
     public struct Thing: Equatable, Sendable {
+        /// The object's id, for opening it. A name never rides an id.
+        public let id: UUID
+        /// Set when the thing is a class (a class object): the class it stands for, so a tap routes to the class.
+        public let classID: UUID?
         public let name: String
         /// Notes about the thing: the size it is drawn at, never shown as a number.
         public let weight: Int
@@ -19,6 +23,17 @@ public struct NotesLanding {
         public let sentence: LandingSentence
         /// The underlined link word of a waiting line ("Link them", "Make it a thing").
         public let action: String?
+        /// Where a tap goes. Ids and the typed word only; never a private name.
+        public let target: Target
+    }
+
+    public enum Target: Equatable, Sendable {
+        /// "Link them": the note, and the thing it names.
+        case link(note: UUID, thing: UUID)
+        /// "Make it a thing": the word as typed after the @.
+        case makeThing(word: String)
+        /// A "New" line: the first thing the new notes are about (nil for a loose note).
+        case about(thing: UUID?)
     }
 
     public struct Facts: Equatable, Sendable {
@@ -107,13 +122,19 @@ public struct NotesLanding {
                 weights[object.id] = entry
             }
         }
-        let ordered = weights.values.compactMap { entry -> (name: String, weight: Int, latest: Date)? in
-            shown(entry.object).map { ($0, entry.weight, entry.latest) }
+        let ordered = weights.values.compactMap { entry -> (
+            object: ObjectRecord,
+            name: String,
+            weight: Int,
+            latest: Date
+        )? in
+            shown(entry.object).map { (entry.object, $0, entry.weight, entry.latest) }
         }
         .sorted { $0.weight != $1.weight ? $0.weight > $1.weight : $0.latest > $1.latest }
         .prefix(Self.maxThings)
         let things = ordered.enumerated().map { index, entry in
-            Thing(name: entry.name, weight: entry.weight, isLarge: index < Self.largeThings)
+            Thing(id: entry.object.id, classID: entry.object.isClassObject ? entry.object.classDef?.id : nil,
+                  name: entry.name, weight: entry.weight, isLarge: index < Self.largeThings)
         }
         let margin = options.margin ? marginLines(open: open, things: things, options: options) : []
         let book = classes[.book].flatMap { _ in
@@ -141,38 +162,42 @@ public struct NotesLanding {
         weekday.dateFormat = "EEE"
         let newestFirst = open.sorted { $0.createdAt > $1.createdAt }
         if options.linkSuggest {
-            let names = things.map(\.name)
             for note in newestFirst {
                 let text = body(note).lowercased()
-                let linkedNames = Set(linked(note).map { $0.title.lowercased() })
-                guard let name = names.first(where: { name in
-                    !linkedNames.contains(name.lowercased()) && Self.contains(text, word: name.lowercased())
+                let linkedIDs = Set(linked(note).map(\.id))
+                guard let thing = things.first(where: { thing in
+                    !linkedIDs.contains(thing.id) && Self.contains(text, word: thing.name.lowercased())
                 }) else { continue }
-                waiting.append(Margin(kind: .waiting, sentence: LandingSentences.notesNames(
-                    day: weekday.string(from: note.createdAt), thing: name
-                ), action: LandingSentences.linkThem))
+                waiting.append(Margin(
+                    kind: .waiting,
+                    sentence: LandingSentences.notesNames(day: weekday.string(from: note.createdAt), thing: thing.name),
+                    action: LandingSentences.linkThem, target: .link(note: note.id, thing: thing.id)
+                ))
                 break
             }
         }
         if let word = unknownMention(in: newestFirst) {
             waiting.append(Margin(kind: .waiting, sentence: LandingSentences.notThingYet(word),
-                                  action: LandingSentences.makeAThing))
+                                  action: LandingSentences.makeAThing, target: .makeThing(word: word)))
         }
         if let seen = options.lastSeen {
             let newNotes = newestFirst.filter { $0.createdAt > seen }
             if !newNotes.isEmpty {
                 var names: [String] = []
+                var firstID: UUID?
                 for note in newNotes {
                     for object in linked(note) {
                         if let name = shown(object), !names.contains(name) {
                             names.append(name)
+                            firstID = firstID ?? object.id
                         }
                     }
                 }
                 fresh.append(Margin(
                     kind: .new,
                     sentence: LandingSentences.newNotes(count: newNotes.count, about: names),
-                    action: nil
+                    action: nil,
+                    target: .about(thing: firstID)
                 ))
             }
         }
