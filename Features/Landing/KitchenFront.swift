@@ -52,7 +52,7 @@ struct KitchenFront {
             let meal = meals.first { house.isSameDay($0.start, midday) }
             let weekday = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: day) - 1]
             let when: String? = meal.flatMap { meal in
-                offset == 0 ? "start \(HouseTime.clock(meal.start))" : meal.minutes.map { "\(Int($0)) min" }
+                offset == 0 ? "start \(HouseTime.clock(meal.start))" : meal.minutes.map { HouseTime.minutes(Int($0)) }
             }
             return Day(id: day, weekday: weekday, isToday: offset == 0, meal: meal, when: when)
         }

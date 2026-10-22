@@ -24,7 +24,7 @@ struct PantryRailPage: View {
         let places = board.places.map { RailPlace(id: $0.id.uuidString, name: $0.name, count: $0.count) }
         let current = open ?? (board.toGetCount > 0 || places.isEmpty ? pinned.id : places[0].id)
         RailPage(title: "Pantry", subtitle: board.subtitle(for:), back: (title: "Kitchen", action: { dismiss() }),
-                 pinned: pinned, places: places,
+                 pinned: pinned, accent: KitchenFront.accent, places: places,
                  open: Binding(get: { current }, set: { open = $0 }),
                  sections: { id in
                      if id == PantryPlaces.toGet {
@@ -164,11 +164,10 @@ private struct PantryRow: View {
             if let value {
                 Text(value)
                     .textRole(.data)
-                    .foregroundStyle(hot ? Theme.Colors.now : Theme.Colors.inkSecondary)
+                    .foregroundStyle(hot ? KitchenFront.accent : Theme.Colors.inkSecondary)
             }
         }
         .frame(maxWidth: .infinity, minHeight: 37, alignment: .leading)
         .contentShape(Rectangle())
     }
 }
-

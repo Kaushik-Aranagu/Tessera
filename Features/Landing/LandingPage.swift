@@ -122,8 +122,9 @@ struct LandingPage<Lead: View>: View {
                                 .foregroundStyle(Theme.Colors.ink)
                                 .fixedSize(horizontal: false, vertical: true)
                             if let link = line.link {
+                                // A band's link is an ink word: the accent line is the foot action's alone (131 §1).
                                 Button(link.word, action: link.action)
-                                    .buttonStyle(LandingLinkStyle(accent: accent))
+                                    .buttonStyle(LandingInkLinkStyle())
                             }
                         }
                     }
@@ -203,6 +204,18 @@ struct LandingLinkStyle: ButtonStyle {
                     .fill(accent)
                     .frame(height: 2)
             }
+            .opacity(configuration.isPressed ? 0.6 : 1)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+    }
+}
+
+/// A band's link word: ink at body weight, no line under it, so the page keeps one accent underline.
+struct LandingInkLinkStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .textRole(.bodyStrong)
+            .foregroundStyle(Theme.Colors.ink)
             .opacity(configuration.isPressed ? 0.6 : 1)
             .frame(minHeight: 44)
             .contentShape(Rectangle())
