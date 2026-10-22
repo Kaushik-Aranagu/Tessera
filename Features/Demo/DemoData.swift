@@ -90,6 +90,39 @@ enum DemoData {
         }
     }
 
+    /// Sample data (Settings › Review): the same lived-in day as the demo, plus spends, notes, recipes and groceries,
+    /// in US words and dollars. Only ever called on `SampleData`'s in-memory store, never his.
+    static func prepareSample(_ model: AppModel) {
+        seedLibrary(model)
+        seedToday(model)
+        for (title, minutes) in [("Pay the utility bill", 10.0), ("Take out the trash", 5.0),
+                                 ("Call the apartment office about the dishwasher", 15.0)]
+        {
+            if let task = try? model.engine.perform(CreateTask(title: title), by: .system).output {
+                try? model.store.set("length", to: .duration(minutes * 60), on: task)
+            }
+        }
+        let now = AppClock.now
+        for (amount, typed, note, daysAgo) in [(12.40, "$12.40", "lunch", 0.0), (5.25, "$5.25", "coffee", 1),
+                                               (86.17, "$86.17", "groceries", 2), (64.00, "$64", "electric bill", 4),
+                                               (18.99, "$18.99", "gas", 6)]
+        {
+            _ = try? model.engine.perform(LogSpend(amount: amount, typed: typed, currency: "USD", note: note,
+                                                   spentAt: now.addingTimeInterval(-daysAgo * 86400)), by: .system)
+        }
+        for body in SampleText.notes {
+            _ = try? model.engine.perform(CreateNote(body: body), by: .system)
+        }
+        for text in SampleText.recipes {
+            if let recipe = try? model.engine.perform(CreateRecipe(text: text), by: .system).output {
+                _ = try? model.engine.perform(AddRecipeToGroceries(recipe: recipe.id), by: .system)
+            }
+        }
+        _ = try? model.engine.perform(AddGroceries(lines: SampleText.groceries), by: .system)
+        model.store.save()
+        model.touch(naming: false)
+    }
+
     private static func reset(_ model: AppModel) {
         model.store.resetUserData()
         // The links kept for later go with the rest of his data (G65): the shelf file sits beside the store.

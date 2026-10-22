@@ -148,6 +148,8 @@ enum ReviewCopy {
 
 private struct ReviewPageBody: View {
     @Environment(AppModel.self) private var model
+    /// Opened from the "Sample data" word on Today: straight on to Settings at the switch.
+    @State private var settingsOpen = false
 
     var body: some View {
         let _ = model.revision
@@ -230,6 +232,13 @@ private struct ReviewPageBody: View {
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
             .padding(.bottom, Theme.Spacing.section)
+        }
+        .navigationDestination(isPresented: $settingsOpen) { SettingsPage() }
+        .task {
+            // After the zoom lands, so the push isn't dropped mid-presentation.
+            guard SampleData.shared.jumpsToSwitch else { return }
+            try? await Task.sleep(for: .milliseconds(450))
+            settingsOpen = true
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
