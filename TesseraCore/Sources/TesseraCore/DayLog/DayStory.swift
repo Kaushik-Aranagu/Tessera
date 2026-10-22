@@ -120,7 +120,7 @@ public enum DayStory {
         "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
         "endProcess", "writeSettings", "createClass", "setRoutineKind", "applyDayName", "syncCalendar", "syncHealth",
-        "closeDay", "setMeProfile", "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice",
+        "closeDay", "createPlace", "renamePlace", "setPlaceSections", "movePlace", "removePlace", "setItemPlace", "setMeProfile", "startFocusBlock", "focusCheckIn", "acceptFirstStep", "holdNotice",
         "releaseHeldNotices",
         "editSpend", "logShopTotal", "skipShopTotal", "queueBook", "editBook", "startReading", "setBookAside",
     ]
