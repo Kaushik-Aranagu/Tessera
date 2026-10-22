@@ -74,13 +74,13 @@ struct SwapPanel: View {
         } label: {
             HStack(alignment: .firstTextBaseline) {
                 Text(option.exercise.name)
-                    .font(Theme.numeral(24, weight: .medium))
+                    .numeral(24, weight: .medium)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                     .foregroundStyle(Paint.cream)
                 Spacer(minLength: Theme.Spacing.s)
                 Text(loadText(option))
-                    .font(Theme.numeral(21, weight: .regular))
+                    .numeral(21, weight: .regular)
                     .foregroundStyle(Paint.cream.opacity(0.8))
             }
             .padding(.horizontal, 10)

@@ -20,6 +20,7 @@ struct TimersSheet: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text("Timers")
                         .textRole(.title)
+                        .wordFit("Timers")
                         .foregroundStyle(Theme.Colors.Workout.ink)
                         .accessibilityAddTraits(.isHeader)
                     Spacer()

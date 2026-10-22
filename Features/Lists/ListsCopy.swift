@@ -139,3 +139,10 @@ enum ListsCopy {
         return ("", nil, record)
     }
 }
+
+extension ListsCopy {
+    /// A shelf state word as a sentence ("NOTHING TO GET" becomes "Nothing to get") for the Figtree pair.
+    static func sentence(_ word: String) -> String {
+        word.prefix(1).uppercased() + word.dropFirst().lowercased()
+    }
+}

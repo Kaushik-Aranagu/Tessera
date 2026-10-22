@@ -37,7 +37,7 @@ struct WorkoutFinishView: View {
                     .font(Theme.voice)
                     .foregroundStyle(Paint.secondary)
                 Text(Self.heroText(title: title))
-                    .font(Theme.numeral(56, weight: .medium))
+                    .numeral(56, weight: .medium)
                     .foregroundStyle(Paint.cream)
                     .lineLimit(2)
                     .minimumScaleFactor(0.6)
