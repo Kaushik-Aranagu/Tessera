@@ -32,6 +32,9 @@ public struct ListsLanding {
         public let kind: Kind
         public let sentence: LandingSentence
         public let action: String?
+        /// The list the line is about, and the item when it is about one. Ids only; never a private name.
+        public let list: UUID
+        public let item: UUID?
     }
 
     public struct Doors: Equatable, Sendable {
@@ -260,7 +263,7 @@ public struct ListsLanding {
                 if let due = dueDate(item), day.day(of: due) == tomorrow {
                     waiting.append(Margin(kind: .waiting, sentence: LandingSentences.itemDueTomorrow(
                         itemName(item), on: row.name
-                    ), action: nil))
+                    ), action: nil, list: row.list.id, item: item.id))
                     break outer
                 }
             }
@@ -270,7 +273,7 @@ public struct ListsLanding {
             $0.total > 0 && $0.left == 0 && ListNoteTags.isReusable($0.list, in: store)
         }) {
             waiting.append(Margin(kind: .waiting, sentence: LandingSentences.listDoneReset(done.name),
-                                  action: LandingSentences.resetIt))
+                                  action: LandingSentences.resetIt, list: done.list.id, item: nil))
         }
         if let seen = options.lastSeen {
             let counted = all.compactMap { row -> (Row, Int)? in
@@ -280,7 +283,8 @@ public struct ListsLanding {
             if let top = counted.first {
                 let source = top.0.list.id == groceries ? newSource(top.0, options) : nil
                 fresh.append(Margin(kind: .new, sentence: LandingSentences.listHasNew(top.0.name, count: top.1,
-                                                                                      from: source), action: nil))
+                                                                                      from: source),
+                                    action: nil, list: top.0.list.id, item: nil))
             }
         }
         return Array((waiting + fresh).prefix(Self.maxMargin))

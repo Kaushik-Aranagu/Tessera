@@ -327,6 +327,57 @@ struct NotesListsLandingTests {
         #expect(facts.others.count == 6 && facts.lead != nil)
     }
 
+    @Test func idsRideTheFactsAndCarryNoNames() throws {
+        try seedThree()
+        let facts = notes.facts(.init(linkSuggest: true, now: at(22), calendar: calendar))
+        // Every thing has an id; a class thing (Squat day resolves to nothing here) says which class it is.
+        #expect(Set(facts.things.map(\.id)).count == facts.things.count)
+        let landlord = try #require(facts.things.first { $0.name == "Landlord" })
+        #expect(landlord.classID == nil)
+        // A thing that is a class (an exercise) carries its class id.
+        try note("Felt strong on @Bench Press today")
+        let withClass = notes.facts()
+        let bench = try #require(withClass.things.first { $0.name.lowercased() == "bench press" })
+        #expect(bench.classID == engine.classes[.benchPress]?.id)
+        // Margin targets: link, make-a-thing and about carry ids and the typed word only.
+        let squat = try #require(facts.things.first { $0.name == "Squat day" })
+        let linked = try note("squat day was heavy", on: 20)
+        let target = notes.facts(.init(linkSuggest: true, now: at(22), calendar: calendar)).margin.first?.target
+        #expect(target == .link(note: linked.id, thing: squat.id))
+        try note("Ask @Zebra about it")
+        let make = notes.facts(.init(now: at(22), calendar: calendar)).margin.first { $0.action == "Make it a thing" }
+        #expect(make?.target == .makeThing(word: "Zebra"))
+        let fresh = notes.facts(.init(lastSeen: at(1), now: at(22), calendar: calendar)).margin
+            .first { $0.kind == .new }
+        guard case let .about(thing)? = fresh?.target else {
+            Issue.record("no about target")
+            return
+        }
+        #expect(thing != nil)
+    }
+
+    @Test func idsFromPrivateThingsAndItemsCarryNoNames() throws {
+        // A walled thing is not a Thing at all, so no id leads to its name; a new note about it names nothing.
+        let walled = try thing("my password hunter2")
+        try note("About @[my password hunter2] again")
+        try note("About @Landlord again")
+        let facts = notes.facts(.init(lastSeen: at(1)))
+        #expect(!facts.things.contains { $0.id == walled.id })
+        let rendered = String(describing: facts)
+        #expect(!rendered.contains("hunter2") && !rendered.lowercased().contains("password"))
+        let new = try #require(facts.margin.first { $0.kind == .new })
+        #expect(!new.sentence.text.contains("hunter2"))
+        // Lists: a private item's margin line carries the list and item ids and no name.
+        let packing = try list("Packing", items: ["Ozempic dose", "Socks"])
+        let item = try #require(ListContents(store: store, classes: engine.classes).open(in: packing).first)
+        try store.set("notes", to: .richText("due: " + at(23).formatted(.iso8601)), on: item.object)
+        try list("Movies", items: ["Dune"])
+        let line = try #require(lists.facts(.init(now: at(22), calendar: calendar)).margin.first)
+        #expect(line.list == packing.id && line.item == item.id)
+        #expect(line.sentence.text == "Private item is due tomorrow on Packing.")
+        #expect(!String(describing: line).lowercased().contains("ozempic"))
+    }
+
     @Test func nothingHereIsAClaudeJob() throws {
         let sources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().appending(path: "Sources/TesseraTess")
