@@ -180,3 +180,112 @@ struct LibraryExtrasTests {
         #expect(store.linkedClass("exercise", of: first)?.id == classes[.benchPress]?.id)
     }
 }
+
+@MainActor
+struct LibraryLowsTests {
+    let container = TesseraSchema.makeContainer(inMemory: true)
+    let classes: [SystemCatalog.Key: ClassDef]
+    let store: ObjectStore
+    let engine: ActionEngine
+
+    init() throws {
+        store = ObjectStore(context: container.mainContext)
+        classes = try SystemCatalog.seed(in: container.mainContext)
+        engine = ActionEngine(store: store, classes: classes)
+    }
+
+    private func adopted() -> [ClassDef] {
+        store.allClasses().filter { $0.packageID == LibraryAdopter.packageID }
+    }
+
+    @Test func undoingAWorkoutLetsTheUnusedCopiesGo() throws {
+        let workout = try #require(ReadyWorkouts.workout(id: "W06"))
+        let added = try ReadyWorkouts.addWithRecords(workout, using: engine)
+        let count = adopted().count
+        #expect(count > 0)
+        // Still in use: nothing is removed.
+        #expect(LibraryAdopter.removeUnused(store: store) == 0)
+        for record in added.records.reversed() {
+            engine.undo(record)
+        }
+        #expect(LibraryAdopter.removeUnused(store: store) == count)
+        #expect(adopted().isEmpty)
+        // Adding it again works from a clean start.
+        _ = try ReadyWorkouts.add(workout, using: engine)
+        #expect(adopted().count == count)
+    }
+
+    @Test func aCopyThatIsStillScheduledStays() throws {
+        let one = try #require(ReadyWorkouts.workout(id: "W06"))
+        let two = try #require(ReadyWorkouts.workout(id: "W14"))
+        let first = try ReadyWorkouts.addWithRecords(one, using: engine)
+        _ = try ReadyWorkouts.add(two, using: engine)
+        for record in first.records.reversed() {
+            engine.undo(record)
+        }
+        LibraryAdopter.removeUnused(store: store)
+        let names = Set(adopted().map(\.name))
+        #expect(names.contains("Superman")) // both workouts use it
+        #expect(!names.contains("Band Pull-Apart")) // only the first did
+    }
+
+    @Test func aFailedAdoptionLeavesNothingBehind() throws {
+        let extra = try #require(LibraryExtras.exercise(named: "Dead Bug"))
+        let before = store.allClasses().count
+        var broken = classes
+        broken[.equipment] = nil
+        broken[.muscle] = nil // MuscleLibrary.install returns nothing; adoption still completes
+        let dead = try LibraryAdopter.adopt(extra, store: store, classes: broken)
+        #expect(dead.name == "Dead Bug")
+        LibraryAdopter.removeUnused(store: store)
+        #expect(store.allClasses().count == before)
+        // No strength class: it throws before making anything.
+        var none = classes
+        none[.strengthExercise] = nil
+        #expect(throws: (any Error).self) { try LibraryAdopter.adopt(extra, store: store, classes: none) }
+        #expect(store.allClasses().count == before)
+        #expect(LibraryAdopter.adoptedClass(of: extra, store: store) == nil)
+    }
+
+    @Test func aWorkoutWithAnUnknownExerciseMakesNothing() throws {
+        let real = try #require(ReadyWorkouts.workout(id: "W06"))
+        let bad = ReadyWorkout(id: "X", title: "Broken", group: .short, place: .home, level: .beginner, minutes: 10,
+                               about: "", slots: real.slots + [.init(
+                                   exercise: "Nonesuch",
+                                   sets: 3,
+                                   repMin: 8,
+                                   repMax: 8
+                               )])
+        let routines = try store.objects(of: #require(classes[.routine])).count
+        #expect(throws: ReadyWorkouts.AddError.unknownExercise("Nonesuch")) {
+            try ReadyWorkouts.add(bad, using: engine)
+        }
+        #expect(try store.objects(of: #require(classes[.routine])).count == routines)
+        #expect(adopted().isEmpty)
+    }
+
+    @Test func theCatalogUpgradeLeavesTheCopiesAlone() throws {
+        let extra = try #require(LibraryExtras.exercise(named: "Superman"))
+        let copy = try LibraryAdopter.adopt(extra, store: store, classes: classes)
+        let parent = copy.parent?.id
+        _ = try SystemCatalog.seed(in: container.mainContext)
+        try ExerciseLibraryInstaller.installIfNeeded(store: store, classes: classes)
+        let again = try #require(LibraryAdopter.adoptedClass(of: extra, store: store))
+        #expect(again.packageID == LibraryAdopter.packageID)
+        #expect(again.parent?.id == parent)
+        #expect(store.allClasses().filter { $0.id == copy.id }.count == 1)
+    }
+
+    @Test func readingTheLibraryChangesNothing() {
+        let objects = container.mainContext.all(ObjectRecord.self).count
+        let classCount = store.allClasses().count
+        _ = LibraryExtras.all
+        _ = LibraryExtras.search("curl")
+        _ = LibraryExtras.search(muscle: .chest, equipment: .dumbbell, place: .gym)
+        _ = ReadyWorkouts.all.map(\.muscles)
+        _ = ReadyWorkouts.search("legs")
+        _ = ReadyWorkouts.search(equipment: .band)
+        #expect(container.mainContext.all(ObjectRecord.self).count == objects)
+        #expect(store.allClasses().count == classCount)
+    }
+}
