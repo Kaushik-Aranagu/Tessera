@@ -350,15 +350,37 @@ enum RoutinesStarter {
         model.session = WorkoutSession(workout: workout, model: model)
         model.touch()
         let name = item.name
+        let record = result.record
         TessVoice.shared.say("\(name) is running", takeBack: { [model] in
-            // Only the fresh run: if the workout has moved on or been put down, UNDO leaves it alone.
-            guard model.session?.workout.id == workout.id else { return }
-            model.engine.undo(result.record)
-            model.session = nil
-            model.isWorkoutPresented = false
-            model.touch()
-            Task { @MainActor in TessVoice.shared.say(Receipt.takenBack(name)) }
+            if takeBack(workout: workout, record: record, model: model) {
+                Task { @MainActor in TessVoice.shared.say(Receipt.takenBack(name)) }
+            } else if model.session?.workout.id == workout.id {
+                // A set is logged (or the undo would not fully apply): the run stays.
+                Task { @MainActor in TessVoice.shared.say("\(name) has a set in, so it stays.") }
+            }
         })
+        return true
+    }
+
+    /// A set under the workout: UNDO of the start never takes a logged set with it.
+    static func hasLoggedSets(_ workout: ObjectRecord) -> Bool {
+        workout.orderedChildren.filter { !$0.isDeleted }.contains { entry in
+            entry.orderedChildren.contains { !$0.isDeleted }
+        }
+    }
+
+    /// Ends the fresh run the start made and logs nothing. Refused (and the session kept) when any set exists under
+    /// the workout, or when the undo does not fully apply (it is put back).
+    @discardableResult
+    static func takeBack(workout: ObjectRecord, record: OpRecord, model: AppModel) -> Bool {
+        guard model.session?.workout.id == workout.id, !hasLoggedSets(workout) else { return false }
+        guard model.engine.undo(record) == .applied else {
+            model.engine.redo(record)
+            return false
+        }
+        model.session = nil
+        model.isWorkoutPresented = false
+        model.touch()
         return true
     }
 
@@ -390,7 +412,9 @@ struct RoutineDetailSheet: View {
                     Text("Usual start and length show after 7 runs.")
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
-                Text(RoutinesLandingWords.countWords(item.exercises, workout: true))
+                if !item.isPrivate {
+                    Text(RoutinesLandingWords.countWords(item.exercises, workout: true))
+                }
                 Text("A workout routine")
                     .foregroundStyle(Theme.Colors.inkSecondary)
             }

@@ -45,12 +45,17 @@ struct RoutinesFront {
                                                       startMinuteOfDay: usual.startMinuteOfDay,
                                                       lengthMinutes: usual.lengthMinutes)
             }
+            // A private routine says nothing about what is in it.
+            if isPrivate {
+                return name
+            }
             return RoutinesLandingWords.stepsLine(name: name, count: exercises, workout: true)
         }
 
         var railValue: String {
-            RoutinesLandingWords.railValue(days: usual?.days, startMinuteOfDay: usual?.startMinuteOfDay,
-                                           lengthMinutes: usual?.lengthMinutes, count: exercises, workout: true)
+            guard !isPrivate else { return "" }
+            return RoutinesLandingWords.railValue(days: usual?.days, startMinuteOfDay: usual?.startMinuteOfDay,
+                                                  lengthMinutes: usual?.lengthMinutes, count: exercises, workout: true)
         }
 
         var spokenLine: String {
