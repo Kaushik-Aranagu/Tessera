@@ -62,10 +62,22 @@ struct SettingsPageTests {
     /// Sheet 108: VoiceOver hears "Workout, tab 2 of 5"; at accessibility sizes the next tab reads "next: Kitchen".
     @Test func peekTabsSayWhereYouAre() {
         let tabs = ReviewChoices.facetPages().map(\.word)
-        #expect(tabs == ["Looks and day", "Workout", "Kitchen", "Cooking", "Connected", "Shown", "Notes and lists"])
-        #expect(PeekTabsCopy.spoken(tabs, 1) == "Workout, tab 2 of 7")
+        #expect(tabs == [
+            "Looks and day",
+            "Workout",
+            "Kitchen",
+            "Cooking",
+            "Connected",
+            "Shown",
+            "Notes and lists",
+            "Money",
+            "Together",
+        ])
+        #expect(PeekTabsCopy.spoken(tabs, 1) == "Workout, tab 2 of 9")
         #expect(PeekTabsCopy.next(tabs, 1) == "next: Kitchen")
-        #expect(PeekTabsCopy.next(tabs, 6) == nil)
+        #expect(PeekTabsCopy.next(tabs, 6) == "next: Money")
+        #expect(PeekTabsCopy.next(tabs, 7) == "next: Together")
+        #expect(PeekTabsCopy.next(tabs, 8) == nil)
         // Every row is on a named page (no "More"), six at most.
         #expect(ReviewChoices.facetPages().allSatisfy { $0.rows.count <= 6 })
         // Measured: words never overlap, whatever their widths, and the current one is centred.
