@@ -63,6 +63,7 @@ private struct RoutinesRail: View {
             back: (title: cameFrom, action: { dismiss() }),
             titleTrailing: AnyView(knob),
             pinned: place(.today),
+            accent: RoutinesFront.accent,
             places: RoutinePlace.dial.map(place),
             open: $open,
             sectionStyle: .none,
