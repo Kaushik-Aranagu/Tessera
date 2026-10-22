@@ -478,7 +478,11 @@ private struct TrainingAtRest: View {
             let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
             doors.append(TrainingDoor(id: "plan", word: "Plan",
                                       value: "\(planObject.title), \(fixed ? "fixed days" : "rolls on")",
-                                      open: { model.open(.routines(planObject.id)) }))
+                                      open: {
+                                          // With Landing pages On, Routines opens on its landing; Off keeps the plan's
+                                          // routines page.
+                                          model.open(LandingSwitch.isOn ? .routinesLanding : .routines(planObject.id))
+                                      }))
         }
         if let exercise = model.classDef(.exercise) {
             let count = ExerciseLibraryList.groups(model).reduce(0) { $0 + $1.exercises.count }
