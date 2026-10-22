@@ -58,7 +58,7 @@ public final class DayNamer {
         let unmarked = DayNames.isUnmarked(routine, store: store)
         let taken = Set((others + avoiding + (unmarked ? [] : [routine.title])).map { $0.lowercased() })
         func usable(_ name: String?) -> String? {
-            guard let name = name?.trimmingCharacters(in: .whitespacesAndNewlines), DayNames.isUsable(name),
+            guard let name = name.map(DayNames.spaced), DayNames.isUsable(name),
                   !taken.contains(name.lowercased()) else { return nil }
             return name
         }
