@@ -143,7 +143,11 @@ private struct TrainingAtRest: View {
             }
             .task { model.purgeStaleTried() }
 
-            HStack(alignment: .bottom, spacing: Theme.Spacing.m) {
+            // At accessibility sizes the place knob sits under Start, so neither wraps letter by letter.
+            (typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
+                : AnyLayout(HStackLayout(alignment: .bottom, spacing: Theme.Spacing.m)))
+            {
                 StartMark(state: markState, lift: lift)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
                         markLine = CGRect(x: frame.minX, y: frame.maxY - 6, width: frame.width, height: 6)
@@ -152,7 +156,9 @@ private struct TrainingAtRest: View {
                     .accessibilityAddTraits(markState.isAction ? .isButton : [])
                     .accessibilityAction { tapMark() }
 
-                Spacer(minLength: Theme.Spacing.s)
+                if !typeSize.isAccessibilitySize {
+                    Spacer(minLength: Theme.Spacing.s)
+                }
                 // Where he trains today: the same knob the library turns.
                 KnobWords(values: TrainingPlace.allCases, selection: $place, word: \.rawValue,
                           spoken: "Place, \(place.rawValue), adjustable")
