@@ -435,15 +435,15 @@ private struct TrainingAtRest: View {
         "\(Format.kilograms(value)) \(Format.unit.symbol)"
     }
 
-    /// The kicker row above the title (Design item 115): the day word at the left ("Today"; a finished or running
-    /// workout says so), "5 exercises, about 40 min" at the right for a plan still to do.
     /// "5 exercises, about 40 min": from the lanes, or, for a workout he is trying today, from that workout's own time.
-    @ViewBuilder
     private func trainingPhrase(_ lanes: [TrainingLane]) -> String {
         guard let tried = model.triedToday(), !lanes.isEmpty else { return TrainingPage.planPhrase(lanes: lanes) }
         return "\(lanes.count) \(lanes.count == 1 ? "exercise" : "exercises"), about \(tried.minutes) min"
     }
 
+    /// The kicker row above the title (Design item 115): the day word at the left ("Today"; a finished or running
+    /// workout says so), "5 exercises, about 40 min" at the right for a plan still to do.
+    @ViewBuilder
     private func kickerRow(_ lanes: [TrainingLane]) -> some View {
         if case let .done(summary) = plan {
             KickerRow(left: summary.endedAt.map { TrainingPage.doneWhen($0).capitalizedFirst } ?? "Done today")
@@ -463,7 +463,7 @@ private struct TrainingAtRest: View {
             guard let slot = routine.orderedChildren.first,
                   let exercise = model.store.linkedClass("exercise", of: slot) else { return nil }
             guard model.ledger.sessions(of: exercise).first?.sets.first != nil else {
-                return "First time on \(exercise.name.lowercased()). Start light."
+                return TrainingPage.firstTimeLine(exercise, store: model.store)
             }
             // The target is last time's: nothing to say (56 addendum).
             return nil
@@ -472,7 +472,7 @@ private struct TrainingAtRest: View {
                   let exercise = model.store.linkedClass("exercise", of: entry) else { return nil }
             let prefill = model.ledger.prefill(for: entry)
             if prefill.isFirstTime {
-                return "First time on \(exercise.name.lowercased()). Start light."
+                return TrainingPage.firstTimeLine(exercise, store: model.store)
             }
             // Only from the plan's own target (raised by progression, or a weight set in the plan); opening at last
             // time's weight is silence.
@@ -824,6 +824,22 @@ extension TrainingPage {
         let scheme = "\(Int(sets ?? 0)) × \(Int(reps ?? 0))"
         guard let weight, weight > 0 else { return scheme }
         return "\(scheme) · \(Format.kilograms(weight))"
+    }
+
+    /// Tess's first-time line for an exercise he has not logged: a bodyweight move starts easy, anything else light.
+    static func firstTimeLine(_ exercise: ClassDef, store: ObjectStore) -> String {
+        if store.equipmentKind(of: exercise) == .bodyweight {
+            return "First time on \(plural(exercise.name.lowercased())). Keep the first set easy."
+        }
+        return "First time on \(exercise.name.lowercased()). Start light."
+    }
+
+    /// "push-up" is "push-ups": the bodyweight moves that count in reps take an s.
+    private static func plural(_ name: String) -> String {
+        let counted = ["up", "dip", "squat", "lunge", "crunch", "row", "raise", "bridge", "extension", "twist"]
+        guard let last = name.split(whereSeparator: { $0 == " " || $0 == "-" }).last?.lowercased(),
+              counted.contains(String(last)) else { return name }
+        return name + "s"
     }
 
     /// "about 55 min": each set about two and a half minutes with its rest, to the nearest five.

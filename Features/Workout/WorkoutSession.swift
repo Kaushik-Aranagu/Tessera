@@ -150,6 +150,66 @@ final class WorkoutSession {
         lastTouchedAt = AppClock.now
     }
 
+    // MARK: Busy (Design 128)
+
+    /// Exercises marked busy today (a machine taken): they go to the end of the order and come round again.
+    private(set) var busy: Set<UUID> = []
+
+    /// What "Busy" moved and where it was, for the receipt's Undo.
+    struct BusyReceipt {
+        let name: String
+        let entryID: UUID
+        let previousOrder: [UUID]
+        let previousIndex: Int
+    }
+
+    var currentIsBusy: Bool {
+        currentEntry.map { busy.contains($0.id) } ?? false
+    }
+
+    /// The exercise classes marked busy, so a list can fade them.
+    var busyExerciseIDs: Set<UUID> {
+        Set(entries.filter { busy.contains($0.id) }.compactMap { exerciseClass(of: $0)?.id })
+    }
+
+    /// Whether any other exercise still has sets to do (Busy has somewhere to go).
+    var hasOtherUnfinished: Bool {
+        guard let current = currentEntry else { return false }
+        return entries.contains { $0.id != current.id && !isFinished($0) }
+    }
+
+    /// "Busy": the exercise moves to the end of today's order and the next one slides up. Nil when there is nothing
+    /// to slide up (the page then offers Similar).
+    func markBusy() -> BusyReceipt? {
+        guard finishedAt == nil, let entry = currentEntry, let exercise = currentExercise, !isFinished(entry),
+              !busy.contains(entry.id), hasOtherUnfinished else { return nil }
+        endEditing()
+        let before = entries.map(\.id)
+        let index = currentIndex
+        busy.insert(entry.id)
+        var ids = before
+        ids.remove(at: index)
+        ids.append(entry.id)
+        order = ids
+        currentIndex = min(index, ids.count - 1)
+        lastSeated = nil
+        loggedCount += 1
+        lastTouchedAt = AppClock.now
+        loadDefaults()
+        return BusyReceipt(name: exercise.name, entryID: entry.id, previousOrder: before, previousIndex: index)
+    }
+
+    /// Takes "Busy" back: the order and the exercise on screen are as they were.
+    func undoBusy(_ receipt: BusyReceipt) {
+        busy.remove(receipt.entryID)
+        order = receipt.previousOrder
+        currentIndex = receipt.previousIndex
+        lastSeated = nil
+        loggedCount += 1
+        lastTouchedAt = AppClock.now
+        loadDefaults()
+    }
+
     func exerciseClass(of entry: ObjectRecord) -> ClassDef? {
         model.store.linkedClass("exercise", of: entry)
     }

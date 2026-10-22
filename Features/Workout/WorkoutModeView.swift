@@ -83,6 +83,7 @@ private struct WorkoutContent: View {
     @State private var summaryLine: String?
     /// Typing to Tess (LiveAskField) and her reply, shown in the bar for a few seconds.
     @State private var isAsking = false
+    @State private var isSimilarOpen = false
     @State private var askReply: String?
 
     var body: some View {
@@ -158,6 +159,9 @@ private struct WorkoutContent: View {
         .overlay(alignment: .top) { runningOrder }
         // The set block keeps its layout; the ask field rides on the keyboard in a short sheet.
         .ignoresSafeArea(.keyboard)
+        .sheet(isPresented: $isSimilarOpen) {
+            SimilarSheet(session: session)
+        }
         .sheet(isPresented: $isAsking) {
             LiveAskField(isShown: $isAsking, onAsk: { phrase in ask(phrase) }, onRefuse: {
                 askReply = claudeKeyLine
@@ -794,6 +798,19 @@ extension WorkoutContent {
                     .accessibilityAction(named: "Finish workout") { finish() }
                 }
             }
+            // "Busy" (Design 128): the machine is taken, so the exercise goes to the end and the next one slides up.
+            // Come back to a busy one, or with nothing else left, and the word is "Similar".
+            if phase == .set, !session.isEditing, session.finishedAt == nil, !isSwapOpen {
+                let similar = session.currentIsBusy || !session.hasOtherUnfinished
+                Button(similar ? "Similar" : "Busy", action: busyTapped)
+                    .textRole(.labelStrong)
+                    .textCase(.uppercase)
+                    .foregroundStyle(Paint.secondary)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
+                    .accessibilityHint(similar ? "Shows exercises close to this one" : "Moves this exercise to the end")
+            }
             if !large {
                 Spacer(minLength: 0)
             }
@@ -810,6 +827,17 @@ extension WorkoutContent {
             }
         }
         .frame(height: large ? nil : 62)
+    }
+
+    /// "Busy": the exercise goes to the end with a receipt and ten seconds of Undo; with nothing to slide up, or on a
+    /// busy one coming round again, the page offers Similar instead.
+    private func busyTapped() {
+        guard !session.currentIsBusy, session.hasOtherUnfinished, let receipt = session.markBusy() else {
+            isSimilarOpen = true
+            return
+        }
+        moment.play(.selection)
+        TessVoice.shared.say("\(receipt.name), later.", takeBack: { [session] in session.undoBusy(receipt) })
     }
 
     // MARK: Finish

@@ -172,8 +172,11 @@ enum WorkoutLines {
             }
             // "last time 82.5 × 8": this set's place last session.
             if let last = session.lastTime(setNumber: session.currentSetNumber) {
-                return ("last time \(Format.kilograms(last.weight))\u{00A0}×\u{00A0}\(Int(last.reps.rounded()))", Paint.secondary,
-                        false)
+                return (
+                    "last time \(Format.kilograms(last.weight))\u{00A0}×\u{00A0}\(Int(last.reps.rounded()))",
+                    Paint.secondary,
+                    false
+                )
             }
             return ("first time on this one", Paint.secondary, false)
         }

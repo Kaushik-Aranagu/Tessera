@@ -16,7 +16,10 @@ struct KickerRowTests {
     @MainActor @Test func theKickerTokenFollowsTheFontChoice() {
         let defaults = UserDefaults.standard
         let before = defaults.object(forKey: "review.font")
-        defer { before == nil ? defaults.removeObject(forKey: "review.font") : defaults.set(before, forKey: "review.font") }
+        defer { before == nil ? defaults.removeObject(forKey: "review.font") : defaults.set(
+            before,
+            forKey: "review.font"
+        ) }
 
         defaults.set("As before", forKey: "review.font")
         let old = Theme.Typography.kickerSpec
