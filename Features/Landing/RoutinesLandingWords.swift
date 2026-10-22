@@ -139,17 +139,17 @@ enum RoutinePlace: String, CaseIterable, Identifiable, Sendable {
 }
 
 /// The rail's knob: Kind. All is the default and is remembered. A routine may sit in All and in its kind.
-enum RoutineKind: String, CaseIterable, Sendable {
+enum BrowseKind: String, CaseIterable, Sendable {
     case all = "All"
     case daily = "Daily"
     case workouts = "Workouts"
 
-    var next: RoutineKind {
+    var next: BrowseKind {
         let all = Self.allCases
         return all[((all.firstIndex(of: self) ?? 0) + 1) % all.count]
     }
 
-    var previous: RoutineKind {
+    var previous: BrowseKind {
         let all = Self.allCases
         return all[((all.firstIndex(of: self) ?? 0) + all.count - 1) % all.count]
     }

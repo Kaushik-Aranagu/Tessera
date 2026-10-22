@@ -19,7 +19,7 @@ struct RoutinesBrowsePage: View {
     }
 }
 
-private extension RoutineKind {
+private extension BrowseKind {
     /// Daily is a routine with a usual time; Workouts is Training's routines (every routine today). A routine may sit
     /// in All and in its kind; the kind never holds places.
     func includes(_ item: RoutinesFront.Item) -> Bool {
@@ -36,7 +36,7 @@ private struct RoutinesRail: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @AppStorage("routines.browse.kind") private var kindRaw = RoutineKind.all.rawValue
+    @AppStorage("routines.browse.kind") private var kindRaw = BrowseKind.all.rawValue
     @State private var open: String
     @State private var haptic = HapticCue()
     @State private var detail: RoutineDetailTarget?
@@ -44,12 +44,12 @@ private struct RoutinesRail: View {
     init(front: RoutinesFront) {
         self.front = front
         // Opens on Today when anything is left today, else on the place of the next usual start.
-        let kind = RoutineKind(rawValue: UserDefaults.standard.string(forKey: "routines.browse.kind") ?? "") ?? .all
+        let kind = BrowseKind(rawValue: UserDefaults.standard.string(forKey: "routines.browse.kind") ?? "") ?? .all
         _open = State(initialValue: Self.opening(front, kind: kind).rawValue)
     }
 
-    private var kind: RoutineKind {
-        RoutineKind(rawValue: kindRaw) ?? .all
+    private var kind: BrowseKind {
+        BrowseKind(rawValue: kindRaw) ?? .all
     }
 
     private var shown: [RoutinesFront.Item] {
@@ -105,7 +105,7 @@ private struct RoutinesRail: View {
         }
     }
 
-    private static func opening(_ front: RoutinesFront, kind: RoutineKind) -> RoutinePlace {
+    private static func opening(_ front: RoutinesFront, kind: BrowseKind) -> RoutinePlace {
         let shown = front.items.filter { kind.includes($0) }
         if front.todayIDs.contains(where: { id in shown.contains { $0.id == id } }) {
             return .today
@@ -204,7 +204,7 @@ private struct RoutinesRail: View {
         }
     }
 
-    private func turn(_ next: RoutineKind) {
+    private func turn(_ next: BrowseKind) {
         haptic.play(.selection)
         withTesseraAnimation(reduceMotion: reduceMotion) { kindRaw = next.rawValue }
     }

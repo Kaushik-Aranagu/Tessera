@@ -74,7 +74,7 @@ struct RoutinesLandingWordsTests {
     }
 
     @Test func theKnobTurnsAroundTheKinds() {
-        #expect(RoutineKind.all.next == .daily && RoutineKind.workouts.next == .all)
-        #expect(RoutineKind.all.previous == .workouts)
+        #expect(BrowseKind.all.next == .daily && BrowseKind.workouts.next == .all)
+        #expect(BrowseKind.all.previous == .workouts)
     }
 }
