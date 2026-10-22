@@ -210,6 +210,14 @@ struct TrainingStatsPage: View {
                 .textRole(.titleNumber)
                 .foregroundStyle(Theme.Colors.ink)
                 .padding(.top, Theme.Spacing.xs)
+                .padding(.bottom, Theme.Spacing.s)
+            if let lead = volume.rows.first {
+                Text(TrainingSentences.volume(lead))
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, Theme.Spacing.s)
+            }
             ForEach(volume.rows, id: \.name) { row in
                 VolumeRow(row: row)
             }
