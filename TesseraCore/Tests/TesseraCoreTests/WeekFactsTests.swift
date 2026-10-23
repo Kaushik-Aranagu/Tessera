@@ -2,149 +2,269 @@ import Foundation
 @testable import TesseraCore
 import Testing
 
-/// The week lens (Design 46's bands, AI-11's pack): counts from the phone, planned from first use, never body or money.
+/// Week facts (design sheet 159): next week's sentence per app, forward-looking, no scores, no amounts.
 @MainActor
 struct WeekFactsTests {
-    static let la = TimeZone(identifier: "America/Los_Angeles")!
-
-    static var calendar: Calendar {
+    let store = ObjectStore.open(inMemory: true)
+    let engine: ActionEngine
+    var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = la
-        calendar.firstWeekday = 2
+        calendar.timeZone = TimeZone(identifier: "UTC")!
         return calendar
     }
 
-    /// October 2026 in Los Angeles: the 12th is a Monday.
-    static func at(_ day: Int, _ hour: Int = 12, _ minute: Int = 0) -> Date {
-        calendar.date(from: DateComponents(year: 2026, month: 10, day: day, hour: hour, minute: minute))!
-    }
-
-    let store = ObjectStore.open(inMemory: true)
-    let classes: [SystemCatalog.Key: ClassDef]
-    let engine: ActionEngine
-    let plan: ObjectRecord
-    let routines: [ObjectRecord]
-
     init() throws {
-        let classes = try store.prepareCatalog()
-        let engine = ActionEngine(store: store, classes: classes)
-        self.classes = classes
-        self.engine = engine
-        engine.zone = { Self.la }
-        plan = try #require(store.object(id: StarterContent.planID))
-        routines = store.linkedObjects("routines", of: plan)
+        engine = try ActionEngine(store: store, classes: store.prepareCatalog())
     }
 
-    /// Performs and dates the record (the engine stamps "now").
-    @discardableResult
-    func run<A: EngineAction>(_ action: A, at time: Date) throws -> A.Output {
-        let result = try engine.perform(action, by: .user)
-        result.record.createdAt = time
-        if let object = result.output as? ObjectRecord {
-            object.createdAt = time
+    /// October 2026: the 22nd is a Thursday, next week is Monday the 26th to Sunday the 1st.
+    func at(_ hour: Int, _ minute: Int = 0, day: Int = 22, month: Int = 10) -> Date {
+        calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: hour, minute: minute))!
+    }
+
+    var now: Date {
+        at(19, day: 25)
+    }
+
+    func lines(plan: ObjectRecord? = nil, routines: [RoutinesLanding.Item] = [],
+               bills: [HomeSentence.MoneyDue] = []) -> [WeekFacts.NextLine]
+    {
+        WeekFacts.next(engine: engine, plan: plan, routines: routines, bills: bills, now: now, calendar: calendar)
+    }
+
+    func line(_ app: AppID, _ all: [WeekFacts.NextLine]) -> WeekFacts.NextLine? {
+        all.first { $0.app == app }
+    }
+
+    func makePlan(_ names: [String]) throws -> ObjectRecord {
+        let routines = try names.map { try engine.perform(CreateRoutine(title: $0), by: .user).output.id }
+        return try engine.perform(CreatePlan(title: "Plan", routines: routines), by: .user).output
+    }
+
+    // MARK: Each app
+
+    @Test func trainingNamesNextWeeksSessionsInRollingOrder() throws {
+        let plan = try makePlan(["Push A", "Pull A", "Legs"])
+        let training = try #require(line(.training, lines(plan: plan)))
+        #expect(training.text == "Push A, Pull A and Legs next week.")
+        #expect(training.opens == .app(.training))
+    }
+
+    @Test func kitchenNamesTheDishesAndOnlyCountsWhatIsToGet() throws {
+        let tacos = try engine.perform(
+            CreateRecipe(text: "Tacos\nIngredients\n1 onion\nMethod\n1. Cook it."),
+            by: .user
+        )
+        .output
+        let chili = try engine.perform(
+            CreateRecipe(text: "Chili\nIngredients\n1 onion\nMethod\n1. Cook it."),
+            by: .user
+        )
+        .output
+        try engine.perform(CreateTask(title: "Cook tacos", startsAt: at(18, day: 27), about: [tacos.id]), by: .user)
+        try engine.perform(CreateTask(title: "Cook chili", startsAt: at(18, day: 29), about: [chili.id]), by: .user)
+        // This week's dish and one beyond next week say nothing here.
+        try engine.perform(CreateTask(title: "Cook now", startsAt: at(18, day: 23), about: [chili.id]), by: .user)
+        let kitchen = try #require(line(.kitchen, lines()))
+        #expect(kitchen.text.hasPrefix("Tacos and Chili are planned"))
+        #expect(kitchen.opens == .app(.kitchen))
+        let toGet = KitchenLanding(store: store, classes: engine.classes).toGetCount()
+        #expect(kitchen
+            .text == (toGet > 0 ? "Tacos and Chili are planned, \(toGet) to get." : "Tacos and Chili are planned."))
+        // One dish opens the dish.
+        let solo = try engine.perform(CreateRecipe(text: "Soup\nIngredients\n1 onion\nMethod\n1. Cook it."), by: .user)
+            .output
+        try engine.perform(CreateTask(title: "Cook soup", startsAt: at(18, day: 28), about: [solo.id]), by: .user)
+    }
+
+    @Test func moneyGivesNamesAndWeekdaysNeverAnAmount() throws {
+        let one = try #require(line(.money, lines(bills: [.init(name: "Rent", at: at(9, day: 30))])))
+        #expect(one.text == "Rent is due Friday." && one.opens == .app(.money))
+        let two = try #require(line(.money, lines(bills: [
+            .init(name: "Phone", at: at(9, day: 31)),
+            .init(name: "Rent", at: at(9, day: 30)),
+        ])))
+        #expect(two.text == "Rent is due Friday and Phone Saturday.")
+        // A bill this week or the week after is not next week's.
+        #expect(line(.money, lines(bills: [.init(name: "Gym", at: at(9, day: 24))])) == nil)
+        #expect(line(.money, lines(bills: [.init(name: "Gym", at: at(9, day: 2, month: 11))])) == nil)
+    }
+
+    @Test func notesSayTheirFirstWaitingLineOrNothing() throws {
+        #expect(line(.notes, lines()) == nil)
+        try engine.perform(CreateNote(body: "Ask @Zebra about it"), by: .user)
+        let notes = try #require(line(.notes, lines()))
+        #expect(notes.text == "@Zebra is not a thing yet." && notes.opens == .app(.notes))
+    }
+
+    @Test func listsSayWhatIsDueNextWeekOrRunning() throws {
+        let packing = try engine.perform(CreateList(name: "Packing"), by: .user).output
+        try engine.perform(AddListItem(list: packing.id, text: "Passport"), by: .user)
+        #expect(line(.lists, lines()) == nil)
+        let item = try #require(ListContents(store: store, classes: engine.classes).open(in: packing).first)
+        try store.set("notes", to: .richText("due: " + at(9, day: 30).formatted(.iso8601)), on: item.object)
+        let lists = try #require(line(.lists, lines()))
+        #expect(lists.text == "Packing is due Fri." && lists.opens == .object(packing.id))
+        // Due this week: not next week's.
+        try store.set("notes", to: .richText("due: " + at(9, day: 24).formatted(.iso8601)), on: item.object)
+        #expect(line(.lists, lines()) == nil)
+        try engine.perform(StartListRun(list: packing.id), by: .user)
+        #expect(line(.lists, lines())?.text == "Packing is running, 1 left.")
+    }
+
+    @Test func routinesSayHowOftenTheyRunAsACountOfDays() {
+        let runs = (1 ... 28).map { back in
+            RoutineRun(start: at(6, 40, day: 25).addingTimeInterval(-86400 * Double(back)),
+                       end: at(7, 2, day: 25).addingTimeInterval(-86400 * Double(back)))
         }
-        return result.output
+        let daily = RoutinesLanding.Item(name: "Morning", count: 6, runs: runs)
+        #expect(line(.routines, lines(routines: [daily]))?.text == "Morning runs daily.")
+        let some = RoutinesLanding.Item(name: "Stretch", count: 4, runs: Array(runs.filter {
+            calendar.component(.weekday, from: $0.start) % 2 == 0
+        }))
+        let text = line(.routines, lines(routines: [some]))?.text
+        #expect(text?.hasPrefix("Stretch runs about ") == true && text?.hasSuffix(" a week.") == true, "\(text ?? "")")
+        // Fewer than seven runs: no usual, no line. A workout day belongs to Training.
+        let few = RoutinesLanding.Item(name: "Evening", count: 3, runs: Array(runs.prefix(3)))
+        let workout = RoutinesLanding.Item(name: "Push A", isWorkout: true, count: 5, runs: runs)
+        #expect(line(.routines, lines(routines: [few, workout])) == nil)
     }
 
-    func train(_ routine: ObjectRecord, at time: Date, weight: Double) throws {
-        let workout = try run(StartRoutine(routine: routine.id, time: time), at: time)
-        let entry = try #require(workout.orderedChildren.first)
-        try run(LogSet(entry: entry.id, weight: weight, reps: 5, time: time.addingTimeInterval(300)),
-                at: time.addingTimeInterval(300))
-        try run(FinishWorkout(workout: workout.id, time: time.addingTimeInterval(2400)),
-                at: time.addingTimeInterval(2400))
+    // MARK: Nothing
+
+    @Test func anAppWithNothingGivesNoLineAndAnEmptyWeekGivesNone() throws {
+        #expect(lines().isEmpty)
+        let plan = try makePlan(["Push A"])
+        let all = lines(plan: plan, bills: [.init(name: "Rent", at: at(9, day: 30))])
+        #expect(all.map(\.app) == [.training, .money])
     }
 
-    var builder: WeekFactsBuilder {
-        WeekFactsBuilder(engine: engine, calendar: Self.calendar)
+    // MARK: Privacy
+
+    @Test func privateThingsReadTheirLabels() throws {
+        let plan = try makePlan(["Knee rehab day"])
+        #expect(line(.training, lines(plan: plan))?.text == "Private workout next week.")
+        let secret = try engine.perform(
+            CreateRecipe(text: "Lexapro cake\nIngredients\n1 egg\nMethod\n1. Bake."), by: .user
+        ).output
+        try engine.perform(CreateTask(title: "Bake it", startsAt: at(17, day: 28), about: [secret.id]), by: .user)
+        #expect(line(.kitchen, lines())?.text.hasPrefix("Private recipe is planned") == true)
+        let bills = [HomeSentence.MoneyDue(name: "Ozempic dose", at: at(9, day: 30))]
+        #expect(line(.money, lines(bills: bills))?.text == "Private bill is due Friday.")
+        // A bill name that carries digits or a currency sign could be an amount.
+        let amount = [HomeSentence.MoneyDue(name: "Rent 1200", at: at(9, day: 30))]
+        #expect(line(.money, lines(bills: amount))?.text == "Private bill is due Friday.")
+        let list = try engine.perform(CreateList(name: "Lexapro refills"), by: .user).output
+        try engine.perform(AddListItem(list: list.id, text: "Pick up"), by: .user)
+        let item = try #require(ListContents(store: store, classes: engine.classes).open(in: list).first)
+        try store.set("notes", to: .richText("due: " + at(9, day: 30).formatted(.iso8601)), on: item.object)
+        #expect(line(.lists, lines())?.text == "Private list is due Fri.")
+        let routine = RoutinesLanding.Item(name: "Ozempic shot", count: 2, isPrivate: true, runs: (1 ... 28).map {
+            RoutineRun(start: at(6, 40, day: 25).addingTimeInterval(-86400 * Double($0)),
+                       end: at(7, 0, day: 25).addingTimeInterval(-86400 * Double($0)))
+        })
+        #expect(line(.routines, lines(routines: [routine]))?.text == "Private routine runs daily.")
     }
 
-    @Test func countsTheWeekFromFirstUse() throws {
-        // First use Tuesday (a task), trained Tuesday and Thursday; Thursday's bench beats Tuesday's.
-        let bank = try run(CreateTask(title: "call the bank"), at: Self.at(13, 9))
-        try run(SetTaskDone(task: bank.id, time: Self.at(13, 9, 30)), at: Self.at(13, 9, 30))
-        try train(routines[0], at: Self.at(13, 18), weight: 60)
-        try train(routines[1], at: Self.at(15, 18), weight: 70)
-        try train(routines[0], at: Self.at(15, 19), weight: 70)
-        let recipe = try run(CreateRecipe(text: RecipeParserTests.carbonara), at: Self.at(14, 17))
-        let cook = try run(StartCooking(recipe: recipe.id, time: Self.at(14, 18)), at: Self.at(14, 18))
-        try run(FinishCooking(cook: cook.id, time: Self.at(14, 18, 40)), at: Self.at(14, 18, 40))
-
-        let now = Self.at(16, 12) // Friday noon
-        let facts = builder.facts(weekContaining: now, plan: plan, now: now)
-        #expect(facts.days.count == 7 && facts.days[0].weekday == 2 && facts.days[4].isToday)
-        // Monday is before first use: not planned, not due, so planned counts run from Tuesday.
-        #expect(facts.days[0].beforeFirstUse && facts.days[0].planned == nil && !facts.days[0].wasDue)
-        #expect(!facts.days[1].beforeFirstUse)
-        #expect(facts.trainedDays == 2 && facts.routinesDone.count == 3 && Set(facts.routinesDone) == [
-            "Push A",
-            "Pull A",
-        ])
-        // Planned days are the week's own count from Tuesday on: Monday is never in it.
-        let week = TrainingLedger(store: store, classes: classes).week(containing: now, plan: plan, now: now,
-                                                                       calendar: Self.calendar)
-        let expected = week.dropFirst()
-            .count { !$0.done.isEmpty || $0.wasDue || ($0.state != .past && $0.planned != nil) }
-        #expect(facts.plannedDays == expected && expected >= 2)
-        #expect(facts.tasksDone == 1 && facts.days[1].tasksDone == 1)
-        #expect(facts.cookedDays == 1 && facts.recipesCooked == ["Spaghetti carbonara"] && facts.days[2].cooked
-            .count == 1)
-        // Thursday's bench beats Tuesday's: one best for the lift, however many kinds it beat (Research R1).
-        #expect(facts.records.count == 1 && facts.records.first?.exercise == "Bench")
-        #expect(facts.next?.title == "Pull A") // rolls on from Thursday's Push A
-        // Nothing about body, money or notes exists on the lens.
-        let mirror = Mirror(reflecting: facts).children.compactMap(\.label)
-        #expect(!mirror.contains { $0.lowercased().contains("weight") || $0.lowercased().contains("money") })
+    @Test func moneyLinesHaveNoCurrencySignAndNoDigits() throws {
+        let bills = [
+            HomeSentence.MoneyDue(name: "Rent", at: at(9, day: 30)), .init(name: "Phone $40", at: at(9, day: 27)),
+            .init(name: "Gym", at: at(9, day: 28)), .init(name: "Water", at: at(9, day: 29)),
+            .init(name: "Power", at: at(9, day: 31)),
+        ]
+        let money = try #require(line(.money, lines(bills: bills)))
+        #expect(!money.text.contains(where: { $0.isNumber || $0.isCurrencySymbol }), "\(money.text)")
+        #expect(money.text.hasSuffix(" and more."))
     }
 
-    @Test func bestLinesPutARecordFirstAndOnePerDay() throws {
-        try train(routines[0], at: Self.at(12, 18), weight: 60)
-        try train(routines[0], at: Self.at(14, 18), weight: 70) // beats Monday: ", best."
-        for index in 0 ..< 3 {
-            try run(CreateTask(title: "task \(index)"), at: Self.at(13, 9))
+    @Test func noLineHasAScoreAMissOrAComparison() throws {
+        let plan = try makePlan(["Push A", "Pull A", "Legs"])
+        let tacos = try engine.perform(
+            CreateRecipe(text: "Tacos\nIngredients\n1 onion\nMethod\n1. Cook it."),
+            by: .user
+        )
+        .output
+        try engine.perform(CreateTask(title: "Cook tacos", startsAt: at(18, day: 27), about: [tacos.id]), by: .user)
+        try engine.perform(CreateNote(body: "Ask @Zebra about it"), by: .user)
+        let list = try engine.perform(CreateList(name: "Packing"), by: .user).output
+        try engine.perform(AddListItem(list: list.id, text: "Passport"), by: .user)
+        try engine.perform(StartListRun(list: list.id), by: .user)
+        let runs = (1 ... 28).map { back in
+            RoutineRun(start: at(6, 40, day: 25).addingTimeInterval(-86400 * Double(back)),
+                       end: at(7, 2, day: 25).addingTimeInterval(-86400 * Double(back)))
         }
-        let now = Self.at(16, 12)
-        let facts = builder.facts(weekContaining: now, plan: plan, now: now)
-        #expect(facts.bestLines.count == 3)
-        #expect(facts.bestLines[0].line.text.hasSuffix(", best."))
-        #expect(facts.bestLines[0].day == facts.days[2].date) // Wednesday's
-        #expect(Set(facts.bestLines.map(\.day)).count == 3)
-        // A day's own lines come from the Day log.
-        #expect(builder.lines(on: Self.at(13), now: now).map(\.text) == ["Added 3 tasks"])
-        #expect(builder.lines(onDay: facts.days[1].date, now: now).map(\.text) == ["Added 3 tasks"])
+        let all = lines(plan: plan, routines: [.init(name: "Morning", count: 6, runs: runs)],
+                        bills: [.init(name: "Rent", at: at(9, day: 30))])
+        #expect(all.count == 6)
+        let banned: Set = [
+            "streak",
+            "streaks",
+            "missed",
+            "miss",
+            "misses",
+            "behind",
+            "late",
+            "didn't",
+            "didn’t",
+            "didnt",
+            "skipped",
+            "overdue",
+            "score",
+            "scores",
+            "lost",
+            "broke",
+            "worse",
+            "better",
+            "than",
+            "last",
+            "failed",
+            "fell",
+            "down",
+        ]
+        for entry in all {
+            let words = entry.text.lowercased().split { !($0.isLetter || $0 == "'" || $0 == "’") }.map(String.init)
+            #expect(banned.isDisjoint(with: words), "\(entry.text)")
+            for health in ["calorie", "kcal", "weight", "body", "kg"] {
+                #expect(!entry.text.lowercased().contains(health), "\(entry.text)")
+            }
+        }
     }
 
-    @Test func nextDayLooksIntoNextWeek() throws {
-        // Research R2: Sunday trained, Sunday night: the next routine's day is Monday, in the week after.
-        try train(routines[0], at: Self.at(18, 9), weight: 60)
-        let now = Self.at(18, 21) // Sunday
-        let facts = builder.facts(weekContaining: now, plan: plan, now: now)
-        let next = try #require(facts.next)
-        let day = try #require(next.day)
-        #expect(Self.calendar.component(.weekday, from: day) == 2 && day > now)
+    // MARK: Window
+
+    @Test func nextWeekIsMondayToSundayWithTheFourAMEdge() {
+        // From any day of this week, next week starts Monday 04:00 and ends the Monday after, 04:00.
+        for start in [at(10, day: 19), at(2, day: 20), at(3, 59, day: 26), at(23, day: 25)] {
+            let week = WeekFacts.nextWeek(after: start, calendar: calendar)
+            #expect(week.start == at(4, day: 26) && week.end == at(4, day: 2, month: 11), "\(start)")
+        }
+        // 03:59 on Monday the 26th is still Sunday's: this week; 04:00 is next week's.
+        #expect(WeekFacts.nextWeek(after: at(3, 59, day: 26), calendar: calendar).start == at(4, day: 26))
+        #expect(WeekFacts.nextWeek(after: at(4, day: 26), calendar: calendar).start == at(4, day: 2, month: 11))
     }
 
-    @Test func aLateFirstUseIsNotDueUnlessHeTrained() throws {
-        // Product 3113e2f (Research R5): first use Wednesday 18:30 with only a task leaves Wednesday not due.
-        try run(CreateTask(title: "unpack"), at: Self.at(14, 18, 30))
-        let now = Self.at(16, 12)
-        let quiet = builder.facts(weekContaining: now, plan: plan, now: now)
-        #expect(quiet.days[2].beforeFirstUse && !quiet.days[2].wasDue && quiet.days[2].planned == nil)
-        #expect(!quiet.days[3].beforeFirstUse)
-        // Trained that evening anyway: the session counts and the day is due.
-        try train(routines[0], at: Self.at(14, 19), weight: 60)
-        let trained = builder.facts(weekContaining: now, plan: plan, now: now)
-        #expect(!trained.days[2].beforeFirstUse && trained.days[2].trained == ["Push A"] && trained.trainedDays == 1)
-        #expect(trained.plannedDays >= trained.trainedDays)
+    @Test func aBillAtThreeInTheMorningMondayBelongsToTheWeekBefore() {
+        let edge = [HomeSentence.MoneyDue(name: "Rent", at: at(3, 59, day: 26))]
+        #expect(line(.money, lines(bills: edge)) == nil)
+        let inside = [HomeSentence.MoneyDue(name: "Rent", at: at(4, day: 26))]
+        #expect(line(.money, lines(bills: inside))?.text == "Rent is due Monday.")
+        let last = [HomeSentence.MoneyDue(name: "Rent", at: at(3, 59, day: 2, month: 11))]
+        #expect(line(.money, lines(bills: last))?.text == "Rent is due Sunday.")
+        let after = [HomeSentence.MoneyDue(name: "Rent", at: at(4, day: 2, month: 11))]
+        #expect(line(.money, lines(bills: after)) == nil)
     }
 
-    @Test func nextIsNilOnceThePlanHasEnded() throws {
-        try store.set("startsOn", to: .date(Self.at(1)), on: plan)
-        try store.set("weeks", to: .number(1), on: plan)
-        let now = Self.at(16, 12)
-        #expect(builder.facts(weekContaining: now, plan: plan, now: now).next == nil)
-        try store.set("weeks", to: .number(4), on: plan)
-        #expect(builder.facts(weekContaining: now, plan: plan, now: now).next != nil)
-        #expect(builder.facts(weekContaining: now, plan: nil, now: now).next == nil)
+    // MARK: Nothing is sent
+
+    @Test func tessNeverSeesWeekFacts() throws {
+        let tess = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("Sources/TesseraTess")
+        let files = try FileManager.default.contentsOfDirectory(at: tess, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "swift" }
+        #expect(!files.isEmpty)
+        for file in files {
+            let text = try String(contentsOf: file, encoding: .utf8)
+            #expect(!text.contains("WeekFacts"), "\(file.lastPathComponent)")
+        }
     }
 }
