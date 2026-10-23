@@ -61,6 +61,8 @@ public struct KindOffer: Equatable, Sendable {
 enum KindRules {
     static let maxFields = 6
     static let maxFieldNameLength = 40
+    /// The reference field every new kind carries, pointing at the note an object was kept from.
+    static let sourceNoteKey = "sourceNote"
 
     /// A word or field name that is a secret, money, a body fact or a key: it never becomes a name.
     @MainActor
@@ -132,7 +134,7 @@ public struct MakeKind: EngineAction {
             let field = raw.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !field.isEmpty else { throw refuse("a field needs a name") }
             guard field.count <= KindRules.maxFieldNameLength, !KindRules.isWalled(field, in: store),
-                  !KindRules.key(for: field).isEmpty
+                  !KindRules.key(for: field).isEmpty, KindRules.key(for: field) != KindRules.sourceNoteKey
             else { throw refuse("that can't be a field") }
             if !names.contains(where: { $0.lowercased() == field.lowercased() }) {
                 names.append(field)
@@ -155,6 +157,11 @@ public struct MakeKind: EngineAction {
             def.owner = classDef
             store.context.insert(def)
         }
+        // Additive, outside the 6-field limit: where an object kept from a note points back to it.
+        let source = FieldDef(name: "Source note", key: KindRules.sourceNoteKey, kind: .ref, sortIndex: names.count)
+        source.targetClassID = try transaction.classDef(.note).id
+        source.owner = classDef
+        store.context.insert(source)
         store.invalidateCaches()
         return classDef
     }
@@ -174,7 +181,7 @@ public struct MakeKind: EngineAction {
 }
 
 /// Turns one note into an object of a kind: titled from its first line, its text in the kind's first text field, and
-/// linked to the note so it shows in the note's links. The note's words and title are untouched. Refuses a private
+/// pointing back at the note through its `sourceNote` field. The note is not touched at all. Refuses a private
 /// or deleted note.
 public struct KeepNoteAsObject: EngineAction {
     public static let descriptor = ActionDescriptor(
@@ -214,9 +221,11 @@ public struct KeepNoteAsObject: EngineAction {
         if let field = KindRules.firstTextField(of: classDef, in: store) {
             try transaction.set(field, to: .text(text), on: object)
         }
-        // The note points at the object (its `about` links), so the object lists the note as a backlink.
-        let existing = store.linkedObjects("about", of: record)
-        try transaction.setLinks("about", on: record, to: existing + [object])
+        // The object points at its note; the note is never edited. A kind made before `sourceNote` existed has no
+        // such field, and then nothing is linked at all (the object is still made).
+        if ClassResolver.field(KindRules.sourceNoteKey, of: classDef) != nil {
+            try transaction.setLinks(KindRules.sourceNoteKey, on: object, to: [record])
+        }
         return object
     }
 

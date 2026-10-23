@@ -110,8 +110,12 @@ struct MakeAKindTests {
         let kind = result.output
         #expect(kind.name == "Landlord" && kind.parent?.id == engine.classes[.thing]?.id)
         let own = (kind.ownFields ?? []).sorted { $0.sortIndex < $1.sortIndex }
-        #expect(own.map(\.name) == ["Phone", "Due date"] && own.map(\.key) == ["phone", "dueDate"])
-        #expect(own.allSatisfy { $0.kind == .text })
+        #expect(own.map(\.key) == ["phone", "dueDate", "sourceNote"] && own.map(\.name).prefix(2) == [
+            "Phone",
+            "Due date",
+        ])
+        let textKinds = own.dropLast().map(\.kind)
+        #expect(textKinds == [.text, .text] && own.last?.kind == .ref)
         #expect(result.record.summary == "Kind made" && result.record.receipt == "Landlord, made.")
         #expect(result.record.ops.count == 1 || result.record.ops
             .allSatisfy {
@@ -136,7 +140,11 @@ struct MakeAKindTests {
         #expect(throws: ActionError.self) { try engine.perform(MakeKind(word: "Boss", fields: seven), by: .user) }
         #expect(store.allClasses().first { $0.name == "Boss" } == nil)
         let six = try engine.perform(MakeKind(word: "Boss", fields: Array(seven.prefix(6))), by: .user).output
-        #expect(six.ownFields?.count == 6)
+        #expect(six.ownFields?.count == 7)
+        #expect(throws: ActionError.self) { try engine.perform(
+            MakeKind(word: "Boss2", fields: ["Source note"]),
+            by: .user
+        ) }
     }
 
     // MARK: Keeping notes
@@ -146,16 +154,30 @@ struct MakeAKindTests {
         let kind = try engine.perform(MakeKind(word: "Landlord", fields: ["Details"]), by: .user).output
         let source = try note("Heat is out again\nCalled twice this week")
         let before = (source.title, store.value("body", of: source))
+        let aboutBefore = store.linkedObjects("about", of: source).map(\.id)
         let result = try engine.perform(KeepNoteAsObject(note: source.id, kind: kind.id), by: .user)
         let object = result.output
         #expect(object.classDef?.id == kind.id && object.title == "Heat is out again")
         #expect(store.value("details", of: object)?.stringValue == "Heat is out again\nCalled twice this week")
-        #expect(store.linkedObjects("about", of: source).contains { $0.id == object.id })
+        #expect(store.linkedObjects("sourceNote", of: object).map(\.id) == [source.id])
+        #expect(store.linkedObjects("about", of: source).map(\.id) == aboutBefore)
         #expect(source.title == before.0 && store.value("body", of: source) == before.1)
         #expect(!source.isDeleted)
         #expect(result.record.summary == "Note kept")
         engine.undo(result.record)
-        #expect(object.isDeleted && !store.linkedObjects("about", of: source).contains { $0.id == object.id })
+        #expect(object.isDeleted)
+    }
+
+    @Test func aKindWithoutSourceNoteStillKeepsAndTheNoteIsUntouched() throws {
+        let kind = try engine.perform(MakeKind(word: "Old", fields: ["Details"]), by: .user).output
+        for field in kind.ownFields ?? [] where field.key == "sourceNote" {
+            store.context.delete(field)
+        }
+        store.invalidateCaches()
+        let source = try note("Legacy note")
+        let aboutBefore = store.linkedObjects("about", of: source).map(\.id)
+        let object = try engine.perform(KeepNoteAsObject(note: source.id, kind: kind.id), by: .user).output
+        #expect(object.classDef?.id == kind.id && store.linkedObjects("about", of: source).map(\.id) == aboutBefore)
     }
 
     @Test func keepAllSkipsPrivateAndDeletedAndReportsTheCount() throws {
@@ -177,7 +199,7 @@ struct MakeAKindTests {
             by: .user
         ) }
         engine.undo(result.record)
-        #expect(store.objects(of: kind).allSatisfy(\.isDeleted))
+        #expect(store.objects(of: kind).filter { !$0.isDeleted }.isEmpty)
     }
 
     @Test func summariesHoldNoNoteTextAndNothingGoesToTheModel() throws {
