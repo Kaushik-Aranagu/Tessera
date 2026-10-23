@@ -46,11 +46,14 @@ struct TodayRoomView: View {
         .onAppear(perform: load)
     }
 
-    /// The name, then each shorter form with a trailing word dropped (at least one word stays).
+    /// The name, then each shorter form with a trailing word dropped (at least one word stays), none ending on a stop
+    /// word.
     static func forms(of name: String) -> [String] {
         let words = name.split(separator: " ").map(String.init)
         guard words.count > 1 else { return [name] }
-        return (1 ... words.count).reversed().map { words.prefix($0).joined(separator: " ") }
+        let all = (1 ... words.count).reversed().map { words.prefix($0).joined(separator: " ") }
+        // A shorter form never ends on a stop word ("at", "to", "for", ...).
+        return all.enumerated().filter { $0.offset == 0 || !HomeBoard.endsOnStopWord($0.element) }.map(\.element)
     }
 
     private func row(_ line: TodayLine) -> some View {
