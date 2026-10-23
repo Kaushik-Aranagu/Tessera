@@ -95,19 +95,31 @@ struct UndoLogTests {
         #expect(entry.sentence == "Updated you." && !entry.sentence.contains("181"))
     }
 
-    /// One batch of two ops where the second no longer fits: the first, which did fit, is put back as it was.
-    @Test func aBatchWithOneStaleOpIsLeftWhole() throws {
+    /// One batch of two ops: the stale one comes first, so undo (newest op first) puts the second back and only then
+    /// meets the stale one. The second must be restored.
+    @Test func aBatchWithOneStaleOpIsRolledBackWhole() throws {
         let one = try engine.perform(CreateTask(title: "First"), by: .user).output
         let two = try engine.perform(CreateTask(title: "Second"), by: .user).output
         let record = OpRecord(
             action: "batch", actor: .user, summary: "Renamed two things",
-            ops: [.setTitle(object: one.id, old: "Before", new: "First"),
-                  .setTitle(object: two.id, old: "Before", new: "Not what it is now")],
+            ops: [.setTitle(object: one.id, old: "Before", new: "Not what it is now"),
+                  .setTitle(object: two.id, old: "Before", new: "Second")],
             state: .committed
         )
         store.context.insert(record)
-        // Undo replays newest-first: `two` does not match (its title is "Second"), `one` would match.
         #expect(UndoLog.undo(record.id, engine: engine) == .blocked(line: "Can't put that back."))
         #expect(one.title == "First" && two.title == "Second" && record.state == .committed)
+    }
+
+    @Test func aCalorieOrCalendarRecordReadsGeneric() throws {
+        let made = try engine.perform(CreateNote(body: "Logged 600 calories at lunch"), by: .user)
+        let entry = try #require(UndoLog.recent(engine: engine, now: .now).first { $0.id == made.record.id })
+        #expect(!entry.sentence.contains("600") && !entry.sentence.lowercased().contains("calor"))
+        let sync = OpRecord(action: "syncCalendar", actor: .user, summary: "Calendar mirrored",
+                            ops: [.setTitle(object: made.output.id, old: "x", new: "x")], state: .committed)
+        sync.receipt = "Dentist at 3 pm."
+        store.context.insert(sync)
+        let line = try #require(UndoLog.recent(engine: engine, now: .now).first { $0.id == sync.id })
+        #expect(line.sentence == "Calendar mirrored.")
     }
 }
