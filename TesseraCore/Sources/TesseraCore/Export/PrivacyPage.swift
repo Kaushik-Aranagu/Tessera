@@ -20,16 +20,21 @@ public enum PrivacyPage {
         (.routine, "routine", "routines"), (.workout, "workout", "workouts"), (.note, "note", "notes"),
         (.task, "task", "tasks"), (.recipe, "recipe", "recipes"), (.list, "list", "lists"),
         (.listItem, "item", "items"), (.pool, "pool", "pools"), (.tessMemory, "memory", "memories"),
-        (.book, "book", "books"),
+        (.book, "book", "books"), (.spend, "spend", "spends"), (.inflow, "deposit", "deposits"),
+        (.poolMove, "move", "moves"), (.rateNote, "rate", "rates"), (.cookSession, "cook", "cooks"),
+        (.cookDish, "dish", "dishes"), (.place, "place", "places"),
     ]
 
     public static func facts(engine: ActionEngine) -> Facts {
         let store = engine.store, classes = engine.classes
         var counts: [Count] = []
+        var counted = Set<UUID>()
         for (key, singular, plural) in kinds {
             guard let classDef = classes[key] else { continue }
-            let count = store.objects(of: classDef, includingSubclasses: false).count {
+            // Subclasses count too, and a thing is counted once, under the first kind that claims it.
+            let count = store.objects(of: classDef, includingSubclasses: true).count {
                 !$0.isDeleted && ObjectPrivacy.shownLabel(of: $0, in: store, classes: classes) != nil
+                    && counted.insert($0.id).inserted
             }
             if count > 0 {
                 counts.append(Count(noun: count == 1 ? singular : plural, count: count))
@@ -48,9 +53,9 @@ public enum PrivacyPage {
 
     public static let neverLeaves = "Never leaves this phone: health, calendar, body, calories, money amounts."
 
+    /// What Claude is sent varies by job, so the page claims no more than the switch itself.
     public static func askClaudeLine(on: Bool) -> String {
-        on ? "Tess asks Claude: On. It sends titles and counts only, never private things."
-            : "Tess asks Claude: Off."
+        on ? "Tess asks Claude: On." : "Tess asks Claude: Off."
     }
 
     /// The whole page, top to bottom. `backupLine` comes from `BackupWords.lastLine`.
