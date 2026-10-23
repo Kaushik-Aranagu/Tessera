@@ -59,6 +59,7 @@ struct HomeMosaicPage: View {
                     // Until the first refresh has read Core's loaders the sentence waits (no flicker between the
                     // fallback and the real lines).
                     .opacity(dayClauses == nil ? 0 : 1)
+                    .accessibilityHidden(dayClauses == nil)
                     .mosaicShield()
                 VStack(alignment: .leading, spacing: 0) {
                     MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption)
@@ -119,7 +120,7 @@ struct HomeMosaicPage: View {
                 let mosaic = CGRect(x: pageWidth - HomeMosaic.gutter - size.width, y: top,
                                     width: size.width, height: size.height)
                 if layerOn, MosaicPager.accepts(start: value.startLocation, translation: value.translation,
-                                                mosaic: mosaic),
+                                                mosaic: mosaic, reach: pager.count > 1 ? 0 : MosaicPager.reach),
                     pager.swipe(dx: value.translation.width)
                 {
                     pageTicks += 1

@@ -221,6 +221,9 @@ struct QueueRow: View {
     var finished: (() -> Void)?
     /// The strike is drawn in ink, with no class colour (the mosaic page keeps colour to its own words).
     var strikesInInk = false
+    /// Next, by hand (sheet 207): the row follows the finger at 0.9x, a strike grows with the drag, 90 pt does it,
+    /// the why sits at the right, and Done lands with one rigid haptic. nil is Home's own row.
+    var hand: HandStyle?
 
     @Environment(AppModel.self) private var model
     private let voice = TessVoice.shared
@@ -241,6 +244,24 @@ struct QueueRow: View {
     @Environment(\.homePagerIdle) private var pagerIdle
     @Environment(\.homeRowGrab) private var grab
 
+    /// Sheet 207's numbers for the mosaic page's rows.
+    struct HandStyle: Equatable {
+        /// Core's reason for the pick, shown at the right in place of the time.
+        var why: String?
+    }
+
+    private var strikeSpan: CGFloat {
+        hand == nil ? Self.strikeSpan : 110
+    }
+
+    private var finishDistance: CGFloat {
+        hand == nil ? Self.finishDistance : 90
+    }
+
+    private var moveThreshold: CGFloat {
+        hand == nil ? Self.moveThreshold : 90
+    }
+
     private static let strikeSpan: CGFloat = 250
     /// Past this the row is done (and armed, with a `.selection`).
     private static let finishDistance: CGFloat = 140
@@ -260,7 +281,7 @@ struct QueueRow: View {
                 .offset(y: drag < -110 ? 0 : 6)
                 .accessibilityHidden(true)
             content
-                .offset(x: drag < 0 ? leftOffset : 0)
+                .offset(x: drag < 0 ? leftOffset : (hand != nil && !reduceMotion && !struck ? drag * 0.9 : 0))
                 // Lifted while held: a soft shadow on the text itself and a slight scale, no highlight shape.
                 .scaleEffect(holding && !struck ? 1.03 : 1, anchor: .leading)
                 // The shadow lifts on light looks only; on dark ones ink would glow (B14). Scale and haptic carry it
@@ -301,7 +322,8 @@ struct QueueRow: View {
                 settle()
             }
         }
-        .tesseraFeedback(.done, trigger: finishes)
+        // By hand, Done's one haptic is the rigid one when the tile lands, played by the list (sheet 207, rule 175).
+        .tesseraFeedback(.done, trigger: hand == nil ? finishes : 0)
         .tesseraFeedback(.notNow, trigger: moves)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(entry.time.map { "\(entry.title), \(Format.clock($0))" } ?? entry.title)
@@ -343,15 +365,15 @@ struct QueueRow: View {
             if first {
                 for step in 1 ... 38 {
                     drag = CGFloat(step) * 4
-                    strike = min(Double(drag / Self.strikeSpan), 1)
-                    armed = drag >= Self.finishDistance
+                    strike = min(Double(drag / strikeSpan), 1)
+                    armed = drag >= finishDistance
                     try? await Task.sleep(for: .milliseconds(16))
                 }
                 finish()
             } else {
                 for step in 1 ... 34 {
                     drag = -CGFloat(step) * 4
-                    armed = -drag >= Self.moveThreshold
+                    armed = -drag >= moveThreshold
                     try? await Task.sleep(for: .milliseconds(16))
                 }
                 try? await Task.sleep(for: .milliseconds(250))
@@ -376,7 +398,8 @@ struct QueueRow: View {
                 // A day's new name settles in with a quiet fade, never a pop (Design on #1181).
                 .contentTransition(.opacity)
                 .tesseraAnimation(.easeOut(duration: 0.24), value: entry.title)
-                .foregroundStyle(Theme.Colors.ink.opacity(struck ? 0.45 : ink))
+                .foregroundStyle(hand != nil && drag < 0 && !struck ? Theme.Colors.inkTertiary
+                    : Theme.Colors.ink.opacity(struck ? 0.45 : ink))
                 // A long title wraps; it never ends in "…" (41.2).
                 .fixedSize(horizontal: false, vertical: true)
                 // Finishing paints the strike wet in the row's pigment, then it dries to ink with the name.
@@ -392,7 +415,14 @@ struct QueueRow: View {
                         .allowsHitTesting(false)
                 }
             Spacer(minLength: Theme.Spacing.s)
-            if let time = entry.time {
+            if let why = hand?.why {
+                // Next, by hand: Core's reason at the right, in place of the time.
+                Text(why)
+                    .textRole(.data)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .multilineTextAlignment(.trailing)
+                    .opacity(struck ? 0 : Double(max(0, 1 - abs(drag) / 40)))
+            } else if let time = entry.time {
                 // Lowercase like the sentences and the hero: "8:30 pm" (Design picked .data over .label).
                 Text(Format.clock(time))
                     .textRole(.data)
@@ -414,9 +444,9 @@ struct QueueRow: View {
 
     private func commit(_ distance: CGFloat) {
         holding = false
-        if distance >= Self.finishDistance {
+        if distance >= finishDistance {
             finish()
-        } else if -distance >= Self.moveThreshold {
+        } else if -distance >= moveThreshold {
             move()
         } else {
             settle()
@@ -426,11 +456,11 @@ struct QueueRow: View {
     private func track(_ distance: CGFloat) {
         drag = distance
         if distance > 0 {
-            strike = min(Double(distance / Self.strikeSpan), 1)
-            armed = distance >= Self.finishDistance
+            strike = min(Double(distance / strikeSpan), 1)
+            armed = distance >= finishDistance
         } else {
             strike = 0
-            armed = -distance >= Self.moveThreshold
+            armed = -distance >= moveThreshold
         }
     }
 
@@ -474,12 +504,15 @@ struct QueueRow: View {
                 dried = true
                 struck = true
             }
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 900))
+            // By hand the strike has had its 420 ms: the op lands now and the row closes up in 260 ms.
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : hand == nil ? 900 : 0))
             let record = try? model.engine.perform(SetTaskDone(task: entry.id, done: true), by: .user).record
-            withTesseraAnimation(.spring(Spring(duration: 0.42, bounce: 0.12)), reduceMotion: reduceMotion) {
+            withTesseraAnimation(hand == nil ? .spring(Spring(duration: 0.42, bounce: 0.12))
+                : .easeInOut(duration: 0.26), reduceMotion: reduceMotion)
+            {
                 model.touch()
             }
-            voice.say("\(entry.title), done.", undo: record)
+            voice.say("\(entry.title), done.", undo: record, holds: hand == nil ? nil : .seconds(5))
             finished?()
         }
     }
@@ -493,9 +526,10 @@ struct QueueRow: View {
             ? tesseraDay.adding(days: 7, to: tesseraDay.start(of: AppClock.now)).addingTimeInterval(5 * 3600)
             : nil
         away = true
-        withTesseraAnimation(.easeIn(duration: 0.2), reduceMotion: reduceMotion) { drag = -420 }
+        let slide = hand == nil ? 0.2 : 0.26
+        withTesseraAnimation(.easeIn(duration: slide), reduceMotion: reduceMotion) { drag = -420 }
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(200))
+            try? await Task.sleep(for: .milliseconds(Int(slide * 1000)))
             let record = try? model.engine.perform(MoveTask(task: entry.id, to: target, time: AppClock.now), by: .user)
                 .record
             withTesseraAnimation(.spring(Spring(duration: 0.42, bounce: 0.12)), reduceMotion: reduceMotion) {
@@ -505,7 +539,7 @@ struct QueueRow: View {
             let moved = model.store.object(id: entry.id).flatMap { model.store.value("startsAt", of: $0)?.dateValue }
             let when = entry.time == nil ? "next week"
                 : moved.map { TessCaptureEngine.when($0, context: TessContext(now: AppClock.now)) } ?? "tomorrow"
-            voice.say("\(entry.title), \(when).", undo: record)
+            voice.say("\(entry.title), \(when).", undo: record, holds: hand == nil ? nil : .seconds(5))
         }
     }
 }

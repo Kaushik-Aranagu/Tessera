@@ -141,6 +141,7 @@ struct AppsListSlot: View {
             ))
         }
         .accessibilityElement(children: .contain)
+        .accessibilityLabel("Apps")
         .accessibilityAdjustableAction { direction in
             settle(by: direction == .increment ? 1 : -1, count: rows.count)
         }
