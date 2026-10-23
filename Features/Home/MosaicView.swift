@@ -149,6 +149,9 @@ struct MosaicView: View {
     /// The departure mosaic's mood (sheet 200), from Core's `MosaicMoodPicker`; nil is the plain 199 day.
     var mood: MosaicMood?
     var moodContext = MosaicMoodContext()
+    /// When the host draws the caption itself (the Home page's slot does), the view writes its one line here and
+    /// draws no caption of its own, so the tiles take the whole frame.
+    var caption: Binding<String>?
 
     @State private var owned: MosaicController
     @State private var reading: String?
@@ -168,8 +171,10 @@ struct MosaicView: View {
         scene: Binding<MosaicScene>,
         controller: MosaicController? = nil,
         mood: MosaicMood? = nil,
-        moodContext: MosaicMoodContext = MosaicMoodContext()
+        moodContext: MosaicMoodContext = MosaicMoodContext(),
+        caption: Binding<String>? = nil
     ) {
+        self.caption = caption
         self.facts = facts
         _scene = scene
         self.controller = controller
@@ -182,14 +187,23 @@ struct MosaicView: View {
         controller ?? owned
     }
 
+    private var captionText: String {
+        reading ?? facts.caption(for: scene)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             tiles
-            Text(reading ?? facts.caption(for: scene))
-                .textRole(.data)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
+            if caption == nil {
+                Text(captionText)
+                    .textRole(.data)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .onChange(of: captionText, initial: true) { _, text in
+            caption?.wrappedValue = text
         }
         .task {
             // Opening Home: the time for 2.6 s, then the day.
