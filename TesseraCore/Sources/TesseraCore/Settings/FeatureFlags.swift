@@ -52,7 +52,7 @@ public enum FeatureFlags {
         .init("weekStrip", "Week strip", .kitchen), .init("cookDouble", "Cook double", .kitchen),
         .init("parallelSteps", "Parallel steps", .kitchen), .init("cookNotes", "Cook notes on the recipe", .kitchen),
         .init("fixRecipe", "Fix a recipe", .kitchen), .init("usuallyLine", "Usually line", .kitchen),
-        .init("aisleOrder", "Learned aisle order", .kitchen, claude: true),
+        .init("aisleOrder", "Learned aisle order", .kitchen),
         .init("pantryLevelsV2", "Pantry levels", .kitchen), .init("shopV2", "Shop run", .kitchen),
         .init("linkFetch", "Link reader v2", .kitchen, claude: true),
         // Notes and lists
