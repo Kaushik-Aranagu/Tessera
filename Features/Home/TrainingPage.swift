@@ -97,9 +97,6 @@ private struct TrainingAtRest: View {
     @State private var startTask: Task<Void, Never>?
     /// As live mode rises out of the first lane, the rest of the plan sinks to 0.96 and fades.
     @State private var sinking = false
-    /// Sheet 210: the lift whose ridge the lintel shows (nil: the lead lift), and its haptic.
-    @State private var pickedLane: UUID?
-    @State private var pickTicks = 0
 
     private static let space = "training"
     /// A lane row's height at normal text sizes.
@@ -112,26 +109,14 @@ private struct TrainingAtRest: View {
         // above never moves.
         let tight = worksLine(day) != nil
         VStack(alignment: .leading, spacing: 0) {
-            if isRunning || isDone {
-                TrainingStrip(sets: lanes.map(\.sets), state: stripState(lanes))
-                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
-                        let total = max(lanes.map(\.sets).reduce(0, +), 1)
-                        let spacing = 4 * CGFloat(max(lanes.count - 1, 0))
-                        let width = (frame.width - spacing) * CGFloat(lanes.first?.sets ?? 0) / CGFloat(total)
-                        firstSegment = CGRect(x: frame.minX, y: frame.minY, width: width, height: frame.height)
-                    }
-                    .padding(.bottom, tight ? Theme.Spacing.m : Theme.Spacing.l)
-            } else {
-                // Sheet 210: at rest the strip is the lintel, twelve weeks of the lift's best as a pixel ridge.
-                lintelBlock(lanes)
-                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
-                        let total = max(lanes.map(\.sets).reduce(0, +), 1)
-                        let spacing = 4 * CGFloat(max(lanes.count - 1, 0))
-                        let width = (frame.width - spacing) * CGFloat(lanes.first?.sets ?? 0) / CGFloat(total)
-                        firstSegment = CGRect(x: frame.minX, y: frame.minY, width: width, height: frame.height)
-                    }
-                    .padding(.bottom, tight ? Theme.Spacing.m : Theme.Spacing.l)
-            }
+            TrainingStrip(sets: lanes.map(\.sets), state: stripState(lanes))
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
+                    let total = max(lanes.map(\.sets).reduce(0, +), 1)
+                    let spacing = 4 * CGFloat(max(lanes.count - 1, 0))
+                    let width = (frame.width - spacing) * CGFloat(lanes.first?.sets ?? 0) / CGFloat(total)
+                    firstSegment = CGRect(x: frame.minX, y: frame.minY, width: width, height: frame.height)
+                }
+                .padding(.bottom, tight ? Theme.Spacing.m : Theme.Spacing.l)
 
             LandingSentenceView(sentence: sentence(lanes), opens: { model.open(titleAndRoute.1) })
                 .contentTransition(.opacity)
@@ -216,8 +201,6 @@ private struct TrainingAtRest: View {
                                     .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
                                                          namespace: namespace))
                                     .modifier(Sinking(isOn: sinking && index > 0))
-                                    .contentShape(Rectangle())
-                                    .simultaneousGesture(TapGesture().onEnded { pick(lane) })
                             }
                         }
                         .accessibilityElement(children: .contain)
@@ -300,8 +283,6 @@ private struct TrainingAtRest: View {
                         namespace: namespace
                     ))
                     .modifier(Sinking(isOn: sinking && index > 0))
-                    .contentShape(Rectangle())
-                    .simultaneousGesture(TapGesture().onEnded { pick(lane) })
             }
         }
         .accessibilityElement(children: .contain)
@@ -382,45 +363,6 @@ private struct TrainingAtRest: View {
             return false
         }
         return true
-    }
-
-    /// The lintel and its one plain best line (sheet 210).
-    @ViewBuilder
-    private func lintelBlock(_ lanes: [TrainingLane]) -> some View {
-        let lane = lanes.first { $0.id == pickedLane } ?? lanes.first
-        let bests = lane?.exercise.map { model.ledger.weeklyBests(of: $0, now: AppClock.now) }
-        VStack(alignment: .trailing, spacing: Theme.Spacing.xs) {
-            if let bests {
-                TrainingLintel(
-                    bests: bests.bests,
-                    bestIndex: bests.bestIndex,
-                    accent: HomeApp.training.accent,
-                    key: lane?.id.uuidString ?? ""
-                )
-                .padding(.horizontal, -Theme.Spacing.gutter)
-                if let weight = bests.bestWeight, let when = bests.whenWords {
-                    // "Bench best 205 lb, three weeks ago": best, never record; a private workout names no lift.
-                    HStack(spacing: 0) {
-                        Text(isPrivateDay ? "Best " : "\(lane?.name ?? "") best ")
-                            .foregroundStyle(Theme.Colors.inkSecondary)
-                        Text(Format.mass(weight).replacingOccurrences(of: " ", with: "\u{00A0}"))
-                            .font(Theme.numeral(17))
-                            .foregroundStyle(Theme.Colors.ink)
-                        Text(", \(when)").foregroundStyle(Theme.Colors.inkSecondary)
-                    }
-                    .font(Theme.voice(size: 16))
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-            }
-        }
-        .tesseraFeedback(.selection, trigger: pickTicks)
-    }
-
-    /// A tap on a lift: it takes the ridge (the lead lift again on a second tap of the same one).
-    private func pick(_ lane: TrainingLane) {
-        guard !isRunning, !isDone else { return }
-        pickedLane = pickedLane == lane.id ? nil : lane.id
-        pickTicks += 1
     }
 
     private var isRunning: Bool {
