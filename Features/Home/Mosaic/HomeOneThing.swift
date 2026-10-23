@@ -236,20 +236,23 @@ struct HomeOneThing: View {
 
     // MARK: Gestures
 
+    /// A swipe in any of the four directions (sheet 220): left or up goes to the next thing, right or down to the
+    /// previous. The dominant axis wins; it commits past 50 pt or on a flick faster than 300 pt/s.
     private var swipe: some Gesture {
         DragGesture(minimumDistance: 12)
-            .onChanged { value in
-                // A sideways drag is a swipe, not a hold: the strike retracts.
-                if abs(value.translation.width) > abs(value.translation.height) {
-                    cancelHold()
-                }
+            .onChanged { _ in
+                // A drag in any direction is a swipe, not a hold: the strike retracts.
+                cancelHold()
             }
             .onEnded { value in
-                let across = value.translation.width
-                guard abs(across) > Self.swipeDistance, abs(across) > abs(value.translation.height) else { return }
+                let sideways = abs(value.translation.width) >= abs(value.translation.height)
+                // `turn` reads a negative value as next: left (negative) and up (negative) are both next.
+                let across = sideways ? value.translation.width : value.translation.height
+                let speed = sideways ? abs(value.velocity.width) : abs(value.velocity.height)
+                guard abs(across) > Self.swipeDistance || (speed > 300 && abs(across) > 12) else { return }
                 // The tiers' own transitions carry the animation; this only lets them run.
                 withTesseraAnimation(.linear(duration: 0.01), reduceMotion: reduceMotion) {
-                    if turn(across) {
+                    if turn(across < 0 ? -(Self.swipeDistance + 1) : Self.swipeDistance + 1) {
                         turns += 1
                     }
                 }
