@@ -18,8 +18,8 @@ enum SoulCloud {
         var spin = 0.0
         var level = 0.0
         var quiet = false
-        /// How far a colour's chroma may be held up in the mix (1.5, lower on Black).
-        var chroma = 1.5
+        /// How far a colour's chroma may be held up in the mix (1.6, lower on Black).
+        var chroma = 1.6
         /// Reduce Transparency: a flat body with no blending.
         var flat = false
     }
@@ -127,7 +127,7 @@ enum SoulCloud {
         guard lab.count == 3 else { return nil }
         let centres = centres(input)
         let radius = radius(input)
-        let sigma2 = 2 * pow(radius * 0.63, 2)
+        let sigma2 = 2 * pow(radius * 0.70, 2)
         let cap = (input.dark ? 235.0 : 225.0) / 255
         var flatColour: (Double, Double, Double)?
         if input.flat {

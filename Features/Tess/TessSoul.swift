@@ -165,7 +165,7 @@ struct TessSoul: View {
         let look = onWorkoutGround ? store.workoutLook : (colorScheme == .dark ? store.pair.night : store.pair.day)
         // On Black the chroma is held lower so cobalt does not blow out.
         if look.isDark, look.ground == 0x000000 {
-            input.chroma = 1.2
+            input.chroma = 1.25
         }
         return input
     }
