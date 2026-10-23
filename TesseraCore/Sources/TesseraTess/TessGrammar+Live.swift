@@ -127,8 +127,8 @@ extension TessGrammar {
             } ?? "Say the set, like 80 × 8."))
         }
         // "81 kg": a weight with no reps.
-        if let match = raw.firstMatch(of: /^(\d+(?:\.\d+)?) ?(?:kg|lb)$/), let weight = Double(match.1) {
-            return Live(parse: .ask("\(TessVoice.number(weight)) \(TessUnits.symbol) for how many reps?"))
+        if let match = raw.firstMatch(of: /^(\d+(?:\.\d+)?) ?(kg|lb)$/), let weight = Double(match.1) {
+            return Live(parse: .ask("\(TessVoice.number(weight)) \(match.2) for how many reps?"))
         }
         // S705: "fail at 6" is unclear (rep 6, or 6 reps).
         if let match = raw.firstMatch(of: /^fail(?:ed)?(?: at)? (\d+)$/) {

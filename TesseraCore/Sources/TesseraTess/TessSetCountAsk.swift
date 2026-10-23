@@ -9,6 +9,13 @@ public struct TessSetCountAsk: Sendable, Equatable {
         case sets
         /// One set of N kg (added load on a bodyweight lift) x M, snapped to the kit.
         case kilograms
+        /// One set of N lb x M: the pounds he said, stored as kilograms.
+        case pounds
+    }
+
+    /// The weight answer that the tapped ghost row stands for: in the unit she asked in.
+    public var weightChoice: Choice {
+        unit == .pounds ? .pounds : .kilograms
     }
 
     /// The exercise entry in focus when he said it.
@@ -60,9 +67,12 @@ public struct TessSetCountAsk: Sendable, Equatable {
         if said == "sets" || said == "\(count) sets" {
             return .sets
         }
-        let symbol = unit.symbol
-        if said == symbol || said == "\(count) \(symbol)" || said == "kg" || said == "\(count) kg" {
+        // The unit he says is the unit he gets, whichever unit she asked in.
+        if said == "kg" || said == "\(count) kg" {
             return .kilograms
+        }
+        if said == "lb" || said == "\(count) lb" {
+            return .pounds
         }
         return nil
     }
