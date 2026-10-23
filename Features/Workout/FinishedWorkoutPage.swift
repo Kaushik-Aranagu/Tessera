@@ -34,8 +34,13 @@ enum FinishedWorkoutWords {
 
     /// "80 for 8, 80 for 8, 82.5 for 6": the weight in the display unit without its symbol.
     static func dataLine(_ sets: [(weightKg: Double, reps: Int)], unit: MassUnit) -> String {
-        sets.map { "\(StatsMass.trimmed(StatsMass.inDisplay($0.weightKg, unit))) for \($0.reps)" }
+        sets.map { "\(trimmed(StatsMass.inDisplay($0.weightKg, unit))) for \($0.reps)" }
             .joined(separator: ", ")
+    }
+
+    /// 80 for 80.0, 82.5 for 82.5.
+    static func trimmed(_ value: Double) -> String {
+        value == value.rounded() ? String(Int(value)) : String(format: "%g", value)
     }
 
     /// The set with the highest estimated max (Epley), or nil with no sets.
@@ -127,7 +132,7 @@ struct FinishedWorkoutPage: View {
     /// "Repeat this": starts today's workout from the same routine, when the workout came from one.
     @ViewBuilder
     private var repeatAction: some View {
-        if let routine = model.store.links("routine", of: workout).first, model.session == nil,
+        if let routine = model.store.linkedObjects("routine", of: workout).first, model.session == nil,
            model.canStart(routine)
         {
             Button("Repeat this") { model.startRoutine(routine) }
