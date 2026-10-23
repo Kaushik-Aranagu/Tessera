@@ -27,6 +27,28 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
     /// The unit he last picked for each kind of measure (weight, distance, ...). A preference only: stored values
     /// never change with it, and it is never sent anywhere.
     public var displayUnits = DisplayUnits()
+    /// His quiet hours as minutes of the clock day; nil is today's 11 pm to 7 am.
+    public var quietStartMinute: Int?
+    public var quietEndMinute: Int?
+    /// The hour his day turns over, 0 to 8; nil is today's 4 am.
+    public var dayStartHour: Int?
+
+    /// The quiet hours in force.
+    public var quietHours: QuietHours {
+        QuietHours(startMinute: quietStartMinute ?? QuietHours.standard.startMinute,
+                   endMinute: quietEndMinute ?? QuietHours.standard.endMinute)
+    }
+
+    /// The hour his day turns over, in force.
+    public var dayTurnsAtHour: Int {
+        min(max(dayStartHour ?? 4, 0), 8)
+    }
+
+    /// Puts the settings in force for the few places with no store. Called at launch and after a change.
+    public func applyProcessWide() {
+        QuietHours.current = quietHours
+        TesseraDay.configuredStartHour = dayTurnsAtHour
+    }
 
     public init(lookDay: String? = nil, lookNight: String? = nil, lookPinned: String? = nil,
                 missesGoToClaude: Bool? = nil, backupFolderName: String? = nil, backupFolderPickedAt: Date? = nil,
@@ -68,6 +90,17 @@ public struct SettingsStore {
         self.engine = engine
     }
 
+    /// The quiet hours in force, read straight from the store (for code that has a store but no engine). 11 pm to 7 am
+    /// with nothing set.
+    public static func quietHours(in store: ObjectStore) -> QuietHours {
+        guard let object = store.object(id: objectID), !object.isDeleted else { return .standard }
+        func minute(_ key: String, _ fallback: Int) -> Int {
+            store.number(key, of: object).map { Int($0) }.flatMap { (0 ..< 1440).contains($0) ? $0 : nil } ?? fallback
+        }
+        return QuietHours(startMinute: minute("quietStartMinute", QuietHours.standard.startMinute),
+                          endMinute: minute("quietEndMinute", QuietHours.standard.endMinute))
+    }
+
     /// All nil until the first write; creates nothing.
     public func read() -> TesseraSettings {
         guard let object = engine.store.object(id: Self.objectID), !object.isDeleted else { return TesseraSettings() }
@@ -88,6 +121,12 @@ public struct SettingsStore {
             settings.missesGoToClaude = value
         }
         settings.displayUnits = DisplayUnits(encoded: text("displayUnits"))
+        settings.quietStartMinute = store.number("quietStartMinute", of: object).map { Int($0) }
+            .flatMap { (0 ..< 1440).contains($0) ? $0 : nil }
+        settings.quietEndMinute = store.number("quietEndMinute", of: object).map { Int($0) }
+            .flatMap { (0 ..< 1440).contains($0) ? $0 : nil }
+        settings.dayStartHour = store.number("dayStartHour", of: object).map { Int($0) }
+            .flatMap { (0 ... 8).contains($0) ? $0 : nil }
         return settings
     }
 
@@ -167,6 +206,9 @@ public struct WriteSettings: EngineAction {
         try transaction.set("backupFolderPickedAt", to: settings.backupFolderPickedAt.map(FieldValue.date), on: object)
         try transaction.set("restWeekday", to: settings.restWeekday.map { .number(Double($0)) }, on: object)
         try transaction.set("displayUnits", to: settings.displayUnits.encoded.map(FieldValue.text), on: object)
+        try transaction.set("quietStartMinute", to: settings.quietStartMinute.map { .number(Double($0)) }, on: object)
+        try transaction.set("quietEndMinute", to: settings.quietEndMinute.map { .number(Double($0)) }, on: object)
+        try transaction.set("dayStartHour", to: settings.dayStartHour.map { .number(Double($0)) }, on: object)
         return object
     }
 
