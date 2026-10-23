@@ -20,4 +20,11 @@ struct AppsListTests {
     @Test func theAppsListShipsOn() {
         #expect(FeatureFlagStore.shippedOff.contains("homeAppsList") == false)
     }
+
+    @Test func aLongFactIsCutAtAWordEdgeWithNoEllipsis() {
+        let cut = AppsListRows.fit("Push A at 6:15 pm, bench first, then rows and curls", limit: 30)
+        #expect(!cut.contains("…") && !cut.hasSuffix("..."))
+        #expect(cut.count <= 30 && "Push A at 6:15 pm, bench first, then rows".hasPrefix(cut))
+        #expect(AppsListRows.fit("Rent is due Friday") == "Rent is due Friday")
+    }
 }
