@@ -44,6 +44,26 @@ struct PantryRailPage: View {
         .toolbar(.hidden, for: .navigationBar)
         .tesseraFeedback(.notNow, trigger: landed)
         .onAppear(perform: speak)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            // Sheet 201: his own "arrived" mark for a grocery delivery; the mosaic shows the parcel at the door.
+            if MosaicMomentsSwitch.isOn, current == PantryPlaces.toGet, board.toGetCount > 0 {
+                Button("Arrived") { markArrived() }
+                    .buttonStyle(InkLabelWordStyle())
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.horizontal, Theme.Spacing.gutter - 8)
+                    .accessibilityHint("Marks the groceries as here")
+            }
+        }
+    }
+
+    /// The groceries are at the door: one op-log change with the one Undo.
+    private func markArrived() {
+        guard let record = try? model.engine.perform(MarkArrived(what: MarkArrived.groceries), by: .user).record else {
+            GroceriesCopy.sayDidntSave()
+            return
+        }
+        model.touch()
+        TessVoice.shared.say("Groceries are here.", undo: record, holds: .seconds(4))
     }
 
     /// Her band, as on the old page: what the last cook used up; never over an open UNDO (QA L2 on #727).
