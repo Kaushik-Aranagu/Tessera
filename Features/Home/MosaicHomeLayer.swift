@@ -108,6 +108,8 @@ final class MosaicScreenController {
         var sign: MosaicSignRequest?
         /// Changes when the thing (and so its wash) changes: the mosaic wipes to the new wash.
         var washToken = 0
+        /// The scene the mosaic shows (sheet 214), chosen by Core's picker; nil keeps the mood stripes.
+        var scenery: MosaicScenery?
     }
 
     /// Makes the engine for this size and re-reads the scene's colours when anything they depend on changed.
@@ -202,7 +204,13 @@ final class MosaicScreenController {
                 let clampedRow = min(max(place.row, 0), window.rows - 1)
                 return base[clampedColumn * window.rows + clampedRow]
             }
-            var colour: MosaicTriple = if let mood = moodField ?? (moment != nil ? .day : nil) {
+            var colour: MosaicTriple = if let scenery = inputs.scenery {
+                MosaicSceneArt.tinted(
+                    MosaicSceneArt.colour(scenery, column: place.column, row: place.row, columns: window.columns,
+                                          rows: window.rows, time: 0),
+                    ground: ground, dark: inputs.dark
+                )
+            } else if let mood = moodField ?? (moment != nil ? .day : nil) {
                 MosaicMoodField.colour(mood, column: place.column, row: place.row, geometry: local,
                                        input: input, ground: ground, context: context,
                                        jitterIndex: jitterIndex)
@@ -240,8 +248,30 @@ final class MosaicScreenController {
                                     ground: ground, context: context, facts: inputs.pageFacts,
                                     still: inputs.reduceMotion)
             : nil
-        let light = sparkled(plan?.overlay ?? pageLight ?? moodLight, engine: engine, moment: moment, input: input,
-                             local: local, context: context, reduceMotion: inputs.reduceMotion)
+        // A scene's one slow life: only the tiles that differ from the still scene are drawn live (still under Reduce
+        // Motion and in Low Power).
+        let sceneLight: MosaicMoodField.Overlay? = inputs.scenery.flatMap { scenery in
+            guard !inputs.reduceMotion, !ProcessInfo.processInfo.isLowPowerModeEnabled else { return nil }
+            return { column, row, time, colour in
+                let live = MosaicSceneArt.colour(scenery, column: column, row: row, columns: window.columns,
+                                                 rows: window.rows, time: time)
+                let still = MosaicSceneArt.colour(scenery, column: column, row: row, columns: window.columns,
+                                                  rows: window.rows, time: 0)
+                guard live.red != still.red || live.green != still.green || live.blue != still.blue else {
+                    return colour
+                }
+                return MosaicSceneArt.tinted(live, ground: ground, dark: inputs.dark)
+            }
+        }
+        let light = sparkled(
+            plan?.overlay ?? pageLight ?? sceneLight ?? moodLight,
+            engine: engine,
+            moment: moment,
+            input: input,
+            local: local,
+            context: context,
+            reduceMotion: inputs.reduceMotion
+        )
         // During an announcement the rim samples the background, never the words.
         var signOnly = pageLight != nil
         switch moment?.moment {
@@ -401,6 +431,7 @@ struct MosaicHomeLayer: View {
     var pageFacts: MosaicPageFacts?
     /// The sign the mosaic lends its tiles to and the accent it washes toward (sheet 213), from the page's thing.
     var signSpec: MosaicSignSpec?
+    var scenery: MosaicScenery?
 
     /// Whether this process has opened Home yet (a cold launch plays its own reaction once).
     @MainActor private static var launched = false
@@ -544,7 +575,7 @@ struct MosaicHomeLayer: View {
                                            page: page, pageDirection: pageDirection, pageFacts: pageFacts,
                                            washAccent: resolved?.washes == true ? resolved?.accent : nil,
                                            sign: resolved?.request,
-                                           washToken: resolved?.token.hashValue ?? 0))
+                                           washToken: resolved?.token.hashValue ?? 0, scenery: scenery))
         engine.step(to: time)
         if engine.consumeLandings() > 0 {
             DispatchQueue.main.async { cue.play(.fleckReachesNow) }

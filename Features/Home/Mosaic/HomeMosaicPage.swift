@@ -53,6 +53,8 @@ struct HomeMosaicPage: View {
     @State private var roomEntries: [RoomLogEntry] = []
     /// The 72 pt sign slot's global frame (from the thing space) and the sign the mosaic builds in it.
     @State private var signSlot: CGRect = .zero
+    /// Sheet 214: the scene Core's picker chose for now (nil: the mood stripes). Weather and place are not read yet.
+    @State private var scenery: MosaicScenery?
     @State private var shield: [CGRect] = []
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager(count: MosaicPage.count)
@@ -124,7 +126,8 @@ struct HomeMosaicPage: View {
                     caption: $caption,
                     page: MosaicPage(rawValue: pager.index) ?? .mood,
                     pageDirection: pageDirection,
-                    signSpec: signSpec
+                    signSpec: signSpec,
+                    scenery: scenery
                 )
             }
         }
@@ -224,6 +227,8 @@ struct HomeMosaicPage: View {
             now: at
         )
         things = HomeThings.standIn(model: model, lines: summary, now: at)
+        let backdrop = model.settingsAreReal ? SettingsStore(engine: model.engine).read().backdrop : .tessPicks
+        scenery = facts.flatMap { MosaicScenePicker.pick(backdrop, facts: $0, place: nil, weather: nil) }
         thingIndex = min(thingIndex, max(things.count - 1, 0))
         dayClauses = HomeMosaic.firstThree(HomeSentence.compose(HomeSentence.inputs(
             engine: model.engine, plan: model.plan, moneyDue: .next(engine: model.engine, now: at),
@@ -553,6 +558,7 @@ private struct HomeLayerHost: View {
     var page: MosaicPage = .mood
     var pageDirection = 1
     var signSpec: MosaicSignSpec?
+    var scenery: MosaicScenery?
 
     var body: some View {
         MosaicHomeLayer(
@@ -567,7 +573,8 @@ private struct HomeLayerHost: View {
             caption: $caption,
             page: page,
             pageDirection: pageDirection,
-            signSpec: signSpec
+            signSpec: signSpec,
+            scenery: scenery
         )
     }
 }
