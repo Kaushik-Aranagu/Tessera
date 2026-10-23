@@ -43,6 +43,9 @@ struct RestLiveActivity: Widget {
                         .closingLine ?? "\(context.attributes.workoutTitle), ready to finish")
                 } else if RestFace.isSetAside(context) {
                     SetAsideFace(title: context.attributes.workoutTitle)
+                } else if context.state.showsMarks {
+                    // Surfaces v2 (Design 142): set marks beside the countdown. Only when the app sets the marks.
+                    TrainingMarksFace(state: context.state, isGo: RestFace.isGoTime(context))
                 } else {
                     RestLockScreenView(state: context.state, isGo: RestFace.isGoTime(context))
                 }
@@ -351,7 +354,7 @@ private struct PlannedSetButton: View {
 }
 
 /// "+15" | "Skip", split by a hairline. Once rest is over +15 dims and Skip skips the set.
-private struct BottomKeys: View {
+struct BottomKeys: View {
     @Environment(\.restPalette) private var palette
     let isGo: Bool
 

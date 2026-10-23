@@ -69,9 +69,14 @@ final class RestActivityController {
         }
         let realNow = Date.now
         // Masked at the source: a private workout's exercise, weight, reps and set number never reach the activity.
-        let state = Self.contentState(planned: session.isPrivate ? Self.maskedSet : planned,
+        var state = Self.contentState(planned: session.isPrivate ? Self.maskedSet : planned,
                                       restEndsAt: session.restEndsAt, restTotal: session.restTotal,
                                       appNow: AppClock.adjust(realNow), realNow: realNow, isPrivate: session.isPrivate)
+        // Surfaces v2 (Design 142): set marks beside the countdown, only with the Review switch On.
+        if SurfacesWriter.isOn, !session.isPrivate, let marks = SurfaceActivityDrivers.marks(for: session) {
+            state.setsDone = marks.done
+            state.setsTotal = marks.total
+        }
         scheduleReadyFlip(for: state, session: session)
         // The rest-end alert is one local notification when the switch is On; Off keeps the activity's own alert.
         RestAlerts.shared.sync(fireAt: RestAlertPlan.fireAt(
