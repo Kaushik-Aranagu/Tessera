@@ -191,7 +191,7 @@ struct OneThingsTests {
         let mom = OneThingBirthday(name: "Mom", month: 10, day: 25, year: 1966)
         let first = try #require(things(at(12), birthdays: [mom]).first { $0.kind == .birthday })
         let again = try #require(things(at(12), birthdays: [mom]).first { $0.kind == .birthday })
-        #expect(first.target == .today && first.id == again.id && first.id.hasPrefix("birthday-10-25-"))
+        #expect(first.target == .today && first.id == again.id && first.id == "birthday-10-25-0")
         #expect(!first.id.contains("Mom"))
         let weather = try #require(things(at(12), weather: OneThingWeather(degrees: 64, summary: "Clear"))
             .first { $0.kind == .weather })
