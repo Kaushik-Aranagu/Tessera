@@ -29,6 +29,8 @@ public struct MosaicMoodInputs: Sendable {
     public var running: Bool
     /// The words for what is running, already masked ("Private workout"), for the sentence only.
     public var runningLabel: String?
+    /// The app the running thing belongs to, nil when it is masked (then its words are plain).
+    public var runningApp: AppID?
     public var isRestDay: Bool
     /// Whole days since he last did anything by hand.
     public var daysAway: Int
@@ -43,11 +45,12 @@ public struct MosaicMoodInputs: Sendable {
 
     public init(facts: MosaicFacts, running: Bool = false, runningLabel: String? = nil, isRestDay: Bool = false,
                 daysAway: Int = 0, backShown: Bool = false, dueToday: Int = 0, doneToday: Int = 0,
-                raining: Bool = false, previous: (mood: MosaicMood, since: Date)? = nil)
+                raining: Bool = false, runningApp: AppID? = nil, previous: (mood: MosaicMood, since: Date)? = nil)
     {
         self.facts = facts
         self.running = running
         self.runningLabel = runningLabel
+        self.runningApp = runningApp
         self.isRestDay = isRestDay
         self.daysAway = daysAway
         self.backShown = backShown
@@ -62,8 +65,14 @@ public struct MosaicMoodInputs: Sendable {
 public struct MosaicPick: Equatable, Sendable {
     public let mood: MosaicMood
     public let transition: MosaicTransition
-    public let lines: [String]
+    /// The three lines as the day sentence's own clauses: an app word carries its app and key word, a masked or private
+    /// thing is plain text with no key word, and Tess's own words are never an app word.
+    public let clauses: [HomeSentence.Clause]
     public let since: Date
+
+    public var lines: [String] {
+        clauses.map(\.text)
+    }
 }
 
 /// Tess picks the mood (sheet 200). On the phone only: it has no model call and no asksClaude, and no mood cue, health,
@@ -88,7 +97,7 @@ public enum MosaicMoodPicker {
                 since = input.facts.now
             }
         }
-        return MosaicPick(mood: mood, transition: .standard(for: mood), lines: lines(for: mood, input),
+        return MosaicPick(mood: mood, transition: .standard(for: mood), clauses: lines(for: mood, input),
                           since: since)
     }
 
@@ -126,29 +135,48 @@ public enum MosaicMoodPicker {
     }
 
     /// Three lines, one clause each, from words already on the phone. Titles are masked before they get here.
-    static func lines(for mood: MosaicMood, _ input: MosaicMoodInputs) -> [String] {
+    static func lines(for mood: MosaicMood, _ input: MosaicMoodInputs) -> [HomeSentence.Clause] {
         let facts = input.facts
-        let time = facts.caption(for: .time)
+        let plain = MosaicMomentSource.plain
+        let time = plain(facts.caption(for: .time))
         switch mood {
         case .running:
-            return [time, "\(input.runningLabel ?? "Something") is running.", facts.caption(for: .next)]
+            let words = "\(input.runningLabel ?? "Something") is running."
+            let line = input.runningLabel.flatMap { label in
+                input.runningApp.map { MosaicMomentSource.accented(words, key: label, app: $0) }
+            } ?? plain(words)
+            return [time, line, nextClause(facts)]
         case .done:
-            return [time, "Everything due today is done.", facts.caption(for: .done)]
+            return [time, plain("Everything due today is done."), plain(facts.caption(for: .done))]
         case .back:
-            return [time, "Welcome back.", facts.caption(for: .day)]
+            return [time, plain("Welcome back."), dayClause(facts)]
         case .rest:
-            return [time, "Today is a rest day.", facts.caption(for: .day)]
-        case .night:
-            return [time, facts.caption(for: .sky), facts.caption(for: .done)]
-        case .golden:
-            return [time, facts.caption(for: .sky), facts.caption(for: .done)]
+            return [time, plain("Today is a rest day."), dayClause(facts)]
+        case .night, .golden:
+            return [time, plain(facts.caption(for: .sky)), plain(facts.caption(for: .done))]
         case .morning:
-            return [time, facts.caption(for: .sky), facts.caption(for: .day)]
+            return [time, plain(facts.caption(for: .sky)), dayClause(facts)]
         case .rain:
-            return [time, "Rain is on its way.", facts.caption(for: .day)]
+            return [time, plain("Rain is on its way."), dayClause(facts)]
         case .day:
-            return [time, facts.caption(for: .day), facts.caption(for: .done)]
+            return [time, dayClause(facts), plain(facts.caption(for: .done))]
         }
+    }
+
+    private static func dayClause(_ facts: MosaicFacts) -> HomeSentence.Clause {
+        appClause(facts.caption(for: .day), facts)
+    }
+
+    private static func nextClause(_ facts: MosaicFacts) -> HomeSentence.Clause {
+        appClause(facts.caption(for: .next), facts)
+    }
+
+    /// The caption with the next thing's name as an app word when it belongs to an app and is not masked.
+    private static func appClause(_ text: String, _ facts: MosaicFacts) -> HomeSentence.Clause {
+        guard let next = facts.nextTimed, let app = next.app, text.contains(next.title) else {
+            return MosaicMomentSource.plain(text)
+        }
+        return MosaicMomentSource.accented(text, key: next.title, app: app)
     }
 }
 
@@ -163,6 +191,7 @@ public extension MosaicMoodInputs {
         let calendar = facts.calendarForPicker
         let running = ProcessTable(engine: engine).running()
         var label: String?
+        var runningApp: AppID?
         if let running {
             let subject = running.subject
             let masked = subject.flatMap { ObjectPrivacy.shownLabel(of: $0, in: store, classes: classes) }
@@ -172,6 +201,8 @@ public extension MosaicMoodInputs {
                     || PrivateFacts.isWalled($0, lastWeightKg: BodyWeight.lastKg(in: store))
             } ?? true
             label = hidden ? MosaicMoodInputs.privateLabel(of: running, store: store) : words
+            // An app word only for a thing that is shown as itself.
+            runningApp = hidden || masked != nil ? nil : subject?.classDef.flatMap { ClassResolver.app(for: $0) }
         }
         let stats = TrainingStats(store: store, classes: classes)
         let rest = plan.map { stats.landingFacts(plan: $0, now: facts.now, calendar: calendar).isRestDay } ?? false
@@ -191,7 +222,7 @@ public extension MosaicMoodInputs {
         return MosaicMoodInputs(
             facts: facts, running: running != nil, runningLabel: label, isRestDay: rest,
             daysAway: NowPicker(engine: engine).daysAway(at: facts.now, calendar: calendar), backShown: backShown,
-            dueToday: due, doneToday: done, raining: raining, previous: previous
+            dueToday: due, doneToday: done, raining: raining, runningApp: runningApp, previous: previous
         )
     }
 
