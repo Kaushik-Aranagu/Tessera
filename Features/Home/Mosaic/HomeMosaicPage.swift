@@ -55,7 +55,8 @@ struct HomeMosaicPage: View {
                     // Moods: 64 pt from the safe area to the sentence in all, so the row's gap is what is left.
                     .padding(.bottom, HomeMosaic.moodsIsOn
                         ? HomeMosaic.moodsTopInset - HomeMosaic.headerHeight - HomeMosaic.sectionGap : 0)
-                MosaicSentence(pickedClauses: momentClause.map { [$0] } ?? pick?.clauses, dayClauses: dayClauses)
+                MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses, facts: facts,
+                               paused: scenePhase != .active || link != nil)
                     // Until the first refresh has read Core's loaders the sentence waits (no flicker between the
                     // fallback and the real lines).
                     .opacity(dayClauses == nil ? 0 : 1)
@@ -70,8 +71,6 @@ struct HomeMosaicPage: View {
                 MosaicNextList { rowFrame in mosaicLay?(rowFrame) ?? false }
                     .mosaicShield()
                 if HomeMosaic.appsListIsOn {
-                    // Room for Tess above the list (her own layer draws there, sheet 209).
-                    Color.clear.frame(height: HomeMosaic.tessRoom).accessibilityHidden(true)
                     AppsListSlot()
                         .mosaicShield()
                 }
@@ -83,6 +82,10 @@ struct HomeMosaicPage: View {
         }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
+        // Sheet 212: an 80 pt clear band at the bottom for Tess's corner; everything else sits above it.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: HomeMosaic.tessRoom).accessibilityHidden(true)
+        }
         // Sheet 202: the mosaic is the page's own pixels, edge to edge, behind everything; every touch leans it.
         .background {
             if layerOn, let facts, let mood = pick?.mood {

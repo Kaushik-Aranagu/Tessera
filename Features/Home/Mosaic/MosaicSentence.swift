@@ -15,6 +15,18 @@ struct MosaicSentence: View {
     /// Builder A's doorway (sheet 206): when set, a tapped door hands over its clause and the word's frame in window
     /// space (the wave starts there) instead of opening the page directly.
     var onDoor: ((HomeSentence.Clause, CGRect) -> Void)?
+    /// "Sunset" swipes the mosaic to its weather page and washes it to dusk (Builder A); nil opens Today meanwhile.
+    var onSky: (() -> Void)?
+    /// The facts the sunset notice reads.
+    var facts: MosaicFacts?
+    /// The rotation stops in the background and during a doorway.
+    var paused = false
+    @State private var rotation = 0
+
+    private struct RotationKey: Hashable {
+        let paused: Bool
+        let count: Int
+    }
 
     static let size: CGFloat = 23
     static let lineGap: CGFloat = 4
@@ -25,18 +37,35 @@ struct MosaicSentence: View {
                                                                                                    plan: model.plan,
                                                                                                    now: AppClock.now)))
         if HomeMosaic.moodsIsOn {
-            // Sheet 200: the same clauses as a departure board (Core's MosaicMoodPicker lines replace them when it
-            // lands).
-            let shown = pickedClauses ?? clauses
-            let lines = shown.isEmpty
-                ? [[DepartureSegment(text: HomeSentence.quietDay, kind: .plain)]]
-                : shown.map(DepartureLines.segments(of:))
-            DepartureBoard(lines: lines) { index, frame in
-                guard index < shown.count else { return }
-                if let onDoor {
-                    onDoor(shown[index], frame)
-                } else {
-                    DaySentence.open(shown[index], model: model, openLink: openLink)
+            // Sheet 212: the date, then two notices that roll every 6 s; every change letter-flips on the board.
+            let notices = HomeBoard.notices(clauses: clauses, sunset: facts?.sunset, now: AppClock.now)
+            let board = HomeBoard.lines(date: HomeBoard.date(now: AppClock.now), notices: notices, rotation: rotation,
+                                        moment: pickedClauses?.first)
+            DepartureBoard(lines: board.map(\.segments)) { index, frame in
+                guard index < board.count else { return }
+                switch board[index].target {
+                case .today:
+                    openLink(.review)
+                case let .clause(clause):
+                    if let onDoor {
+                        onDoor(clause, frame)
+                    } else {
+                        DaySentence.open(clause, model: model, openLink: openLink)
+                    }
+                case .sky:
+                    if let onSky {
+                        onSky()
+                    } else {
+                        openLink(.review)
+                    }
+                }
+            }
+            .task(id: RotationKey(paused: paused, count: notices.count)) {
+                guard !paused, notices.count > 1 else { return }
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(HomeBoard.rotationSeconds))
+                    guard !Task.isCancelled else { return }
+                    rotation += 1
                 }
             }
         } else {
