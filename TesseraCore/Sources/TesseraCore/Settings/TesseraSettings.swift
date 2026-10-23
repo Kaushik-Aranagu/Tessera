@@ -32,6 +32,13 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
     public var quietEndMinute: Int?
     /// The hour his day turns over, 0 to 8; nil is today's 4 am.
     public var dayStartHour: Int?
+    /// What the mosaic shows: nil is "Tess picks" (the default), a scene's name pins it, "stripes" keeps the mood
+    /// stripes.
+    public var mosaicBackdrop: String?
+
+    public var backdrop: MosaicBackdrop {
+        MosaicBackdrop(encoded: mosaicBackdrop)
+    }
 
     /// The quiet hours in force.
     public var quietHours: QuietHours {
@@ -125,6 +132,7 @@ public struct SettingsStore {
             .flatMap { (0 ..< 1440).contains($0) ? $0 : nil }
         settings.quietEndMinute = store.number("quietEndMinute", of: object).map { Int($0) }
             .flatMap { (0 ..< 1440).contains($0) ? $0 : nil }
+        settings.mosaicBackdrop = text("mosaicBackdrop")
         settings.dayStartHour = store.number("dayStartHour", of: object).map { Int($0) }
             .flatMap { (0 ... 8).contains($0) ? $0 : nil }
         return settings
@@ -208,6 +216,7 @@ public struct WriteSettings: EngineAction {
         try transaction.set("displayUnits", to: settings.displayUnits.encoded.map(FieldValue.text), on: object)
         try transaction.set("quietStartMinute", to: settings.quietStartMinute.map { .number(Double($0)) }, on: object)
         try transaction.set("quietEndMinute", to: settings.quietEndMinute.map { .number(Double($0)) }, on: object)
+        try transaction.set("mosaicBackdrop", to: settings.mosaicBackdrop.map(FieldValue.text), on: object)
         try transaction.set("dayStartHour", to: settings.dayStartHour.map { .number(Double($0)) }, on: object)
         return object
     }

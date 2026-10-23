@@ -317,8 +317,16 @@ enum Theme {
 
         /// 66% on light looks, 72% on dark (themes.md, second addendum: contrast).
         static var inkSecondary: Color {
-            Color(light: concept.palette.ink.0, dark: concept.palette.ink.1,
-                  lightAlpha: tier(0.66, 0.72).day, darkAlpha: tier(0.66, 0.72).night)
+            tinted(\.ink2, light: 0.66, dark: 0.72)
+        }
+
+        /// Ink 2 or 3: a look's exact solid where it sets one (White's warm greys), else the ink at the tier's alpha.
+        private static func tinted(_ solid: KeyPath<Look, UInt32?>, light: CGFloat, dark: CGFloat) -> Color {
+            let alpha = tier(light, dark)
+            let pair = retired == nil ? ThemeStore.shared.pair : nil
+            let day = pair?.day[keyPath: solid], night = pair?.night[keyPath: solid]
+            return Color(light: day ?? concept.palette.ink.0, dark: night ?? concept.palette.ink.1,
+                         lightAlpha: day == nil ? alpha.day : 1, darkAlpha: night == nil ? alpha.night : 1)
         }
 
         /// A tier's alpha by each half's own look (a pinned light look stays light-tiered on a dark-mode phone).
@@ -336,8 +344,7 @@ enum Theme {
 
         /// Text only at 34 pt and up; below that it's for marks. 51% light, 38% dark.
         static var inkTertiary: Color {
-            Color(light: concept.palette.ink.0, dark: concept.palette.ink.1,
-                  lightAlpha: tier(0.51, 0.38).day, darkAlpha: tier(0.51, 0.38).night)
+            tinted(\.ink3, light: 0.51, dark: 0.38)
         }
 
         /// Veils, held rows, the Write layer.

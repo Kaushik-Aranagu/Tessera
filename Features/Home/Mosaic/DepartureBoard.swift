@@ -345,8 +345,13 @@ struct DepartureBoard: View {
 /// The "Sunset" word: the mosaic's own sky as a two-stop text gradient (C9772E to B0466A by day, F0A35A to E07A9A at
 /// night), with a 1 pt underline at 5 pt in the second stop.
 struct SkyWordStyle: ButtonStyle {
-    static let first = Color(light: 0xC9772E, dark: 0xF0A35A)
-    static let second = Color(light: 0xB0466A, dark: 0xE07A9A)
+    static var first: Color {
+        Theme.Colors.Accent.skyFrom
+    }
+
+    static var second: Color {
+        Theme.Colors.Accent.skyTo
+    }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
