@@ -49,7 +49,29 @@ struct MosaicConfig: Equatable {
     /// The rows a laid tile may land in (the middle of the now column).
     var layRows = 4 ... 20
 
+    /// A fixed tile side in points (sheet 200: step 6, tile 5); nil derives the side from the width.
+    var fixedSide: CGFloat?
+    /// Edges dither, never blur or fade (sheet 200): tiles less than 4 from an edge are kept with probability (e + 1) /
+    /// 5.
+    var ditheredEdges = false
+
     static let home = MosaicConfig()
+
+    /// The departure mosaic (sheet 200): 52 x 33 tiles, step 6 pt, tile 5, corner 1.1, dithered edges.
+    static let moods: MosaicConfig = {
+        var config = MosaicConfig()
+        config.columns = 52
+        config.rows = 33
+        config.gap = 1
+        config.corner = 1.1
+        config.rippleRadius = 120
+        config.leanRadius = 36
+        config.leanMax = 5
+        config.layRows = 6 ... 26
+        config.fixedSide = 5
+        config.ditheredEdges = true
+        return config
+    }()
 
     var count: Int {
         columns * rows
@@ -63,7 +85,10 @@ struct MosaicGeometry: Equatable {
 
     /// floor((width - 33 x 2) / 34): about 8 pt on a phone.
     var side: CGFloat {
-        max(1, ((width - config.gap * CGFloat(config.columns - 1)) / CGFloat(config.columns)).rounded(.down))
+        if let fixed = config.fixedSide {
+            return fixed
+        }
+        return max(1, ((width - config.gap * CGFloat(config.columns - 1)) / CGFloat(config.columns)).rounded(.down))
     }
 
     var pitch: CGFloat {
@@ -154,6 +179,13 @@ final class MosaicEngine {
     private var delays: [TimeInterval]
     private var morphStart: TimeInterval = -10
     private var morphLength: TimeInterval
+    private var lengths: [TimeInterval]
+    private let edges: [EdgeKind]
+    private var transition: MosaicTransition = .wave
+    /// The page ground the future, the dithered edges and the moods mix toward.
+    var ground: MosaicTriple = (1, 1, 1)
+    /// A mood's moving light: sparkle, drops, stars, a current. Called per tile per frame with the colour so far.
+    var overlay: ((_ column: Int, _ row: Int, _ time: TimeInterval, _ colour: MosaicTriple) -> MosaicTriple)?
 
     // The finger.
     private(set) var touchPoint: CGPoint?
@@ -172,6 +204,8 @@ final class MosaicEngine {
         to = rest
         delays = Array(repeating: 0, count: config.count)
         morphLength = config.morphDuration
+        lengths = Array(repeating: config.morphDuration, count: config.count)
+        edges = Self.edgeKinds(config: config)
         lean = Array(repeating: .zero, count: config.count)
         leanVelocity = Array(repeating: .zero, count: config.count)
     }
@@ -220,12 +254,60 @@ final class MosaicEngine {
         pops[index] = clock + delay
     }
 
+    // MARK: - Edges
+
+    /// A tile near an edge of a dithered grid: dropped, or kept dimmer and smaller (sheet 200).
+    struct EdgeRule: Equatable {
+        let mixToGround: Double
+        let scale: Double
+    }
+
+    enum EdgeKind: Equatable {
+        case full
+        case dropped
+        case kept(EdgeRule)
+    }
+
+    /// The edge rule for every tile, worked out once: a tile less than 4 from an edge is kept with probability
+    /// (e + 1) / 5 (fixed by hash, never random per frame), dimmer and smaller toward the edge.
+    static func edgeKinds(config: MosaicConfig) -> [EdgeKind] {
+        var kinds = [EdgeKind](repeating: .full, count: config.count)
+        guard config.ditheredEdges else { return kinds }
+        for column in 0 ..< config.columns {
+            for row in 0 ..< config.rows {
+                let edge = min(column, config.columns - 1 - column, row, config.rows - 1 - row)
+                guard edge < 4 else { continue }
+                let index = column * config.rows + row
+                if MosaicColour.unit(index, salt: 7) < Double(edge + 1) / 5 {
+                    let keep = 0.55 + Double(edge) * 0.1
+                    kinds[index] = .kept(EdgeRule(mixToGround: (1 - keep) * 0.8, scale: 0.6 + 0.4 * keep))
+                } else {
+                    kinds[index] = .dropped
+                }
+            }
+        }
+        return kinds
+    }
+
+    func edgeKind(column: Int, row: Int) -> EdgeKind {
+        edges[geometry.index(column: column, row: row)]
+    }
+
+    func isDropped(column: Int, row: Int) -> Bool {
+        edgeKind(column: column, row: row) == .dropped
+    }
+
     // MARK: - Per-tile reads
 
     /// The tile's scale: the travelling swell, a pop, and the bump while its colour changes.
     func scale(column: Int, row: Int) -> CGFloat {
-        guard !reduceMotion else { return 1 }
         let index = geometry.index(column: column, row: row)
+        guard !reduceMotion else {
+            if case let .kept(rule) = edgeKind(column: column, row: row) {
+                return CGFloat(rule.scale)
+            }
+            return 1
+        }
         var value = 1.0
         let phase = 0.8 * Double(column) / Double(config.columns) + 0.2 * Double(row) / Double(config.rows)
         let wave = 0.5 + 0.5 * sin(2 * Double.pi * (clock / config.swellSeconds - phase))
@@ -233,8 +315,11 @@ final class MosaicEngine {
         if let progress = popProgress(index) {
             value += config.popScale * sin(Double.pi * progress)
         }
-        if let progress = morphProgress(index), progress > 0, progress < 1 {
+        if transition == .wave, let progress = morphProgress(index), progress > 0, progress < 1 {
             value += config.morphBump * sin(Double.pi * progress)
+        }
+        if case let .kept(rule) = edgeKind(column: column, row: row) {
+            value *= rule.scale
         }
         return CGFloat(value)
     }
@@ -246,13 +331,30 @@ final class MosaicEngine {
     }
 
     func offset(column: Int, row: Int) -> CGPoint {
-        leaning ? lean[geometry.index(column: column, row: row)] : .zero
+        let index = geometry.index(column: column, row: row)
+        var point = leaning ? lean[index] : .zero
+        guard !reduceMotion, let progress = morphProgress(index), progress < 1 else { return point }
+        switch transition {
+        case .fall where progress > 0:
+            // Drops in over 360 ms with ease-in.
+            point.y -= CGFloat((1 - progress * progress) * 48)
+        case .gather:
+            // Scattered, then gathered: ease-out toward its place.
+            let ease = 1 - pow(1 - progress, 3)
+            point.x += CGFloat((MosaicColour.unit(index, salt: 3) - 0.5) * 80 * (1 - ease))
+            point.y += CGFloat((MosaicColour.unit(index, salt: 5) - 0.5) * 80 * (1 - ease))
+        default: break
+        }
+        return point
     }
 
     /// The tile's colour now: its morph, jittered, the now column's breath and the pop's shade.
     func colour(column: Int, row: Int, nowColumn: Int?) -> MosaicTriple {
         let index = geometry.index(column: column, row: row)
         var rgb = MosaicColour.mix(from[index], to[index], morphEased(index))
+        if let overlay {
+            rgb = overlay(column, row, clock, rgb)
+        }
         if column == nowColumn, !reduceMotion {
             let breath = sin(clock / config.breatheSeconds + Double(row) * 0.5) * config.breatheAmplitude
             rgb = MosaicColour.lightened(rgb, by: breath)
@@ -260,11 +362,14 @@ final class MosaicEngine {
         if let progress = popProgress(index) {
             rgb = MosaicColour.scaled(rgb, 1 - (1 - config.popShade) * sin(Double.pi * progress))
         }
+        if case let .kept(rule) = edgeKind(column: column, row: row) {
+            rgb = MosaicColour.mix(rgb, ground, rule.mixToGround)
+        }
         return rgb
     }
 
     func morphProgress(_ index: Int) -> Double? {
-        let progress = (clock - morphStart - delays[index]) / morphLength
+        let progress = (clock - morphStart - delays[index]) / max(lengths[index], 0.0001)
         return min(max(progress, 0), 1)
     }
 
@@ -273,32 +378,39 @@ final class MosaicEngine {
         if reduceMotion {
             return progress
         }
-        return 1 - pow(1 - progress, 3)
+        switch transition {
+        case .wave: return 1 - pow(1 - progress, 3)
+        // Fall, wipe, dissolve and gather swap the colour at their start: the tile arrives as the new colour.
+        default: return progress > 0 ? 1 : 0
+        }
     }
 
     // MARK: - Scenes
 
-    /// Eases every tile to `targets`, each starting after its grid distance from `origin` x 22 ms. Under Reduce Motion
-    /// it
-    /// is one 150 ms crossfade with no delay.
-    func morph(to targets: [MosaicTriple], origin: (column: Int, row: Int)) {
+    /// Changes every tile to `targets` with a transition (sheet 200): wave eases outward from `origin`; fall, wipe,
+    /// dissolve and gather swap tile by tile. Under Reduce Motion every transition is one 150 ms crossfade.
+    func morph(
+        to targets: [MosaicTriple],
+        origin: (column: Int, row: Int),
+        transition: MosaicTransition = .wave
+    ) {
         guard targets.count == config.count else { return }
         let nowColour = (0 ..< config.count).map { MosaicColour.mix(from[$0], to[$0], morphEased($0)) }
         from = nowColour
         to = targets
         morphStart = clock
         if reduceMotion {
+            self.transition = .wave
             morphLength = 0.15
+            lengths = Array(repeating: 0.15, count: config.count)
             delays = Array(repeating: 0, count: config.count)
             return
         }
-        morphLength = config.morphDuration
-        for column in 0 ..< config.columns {
-            for row in 0 ..< config.rows {
-                let distance = hypot(Double(column - origin.column), Double(row - origin.row))
-                delays[geometry.index(column: column, row: row)] = distance * config.morphDelayPerTile
-            }
-        }
+        self.transition = transition
+        let plan = transition.plan(geometry: geometry, origin: origin, wave: config.morphDelayPerTile)
+        delays = plan.delays
+        lengths = plan.lengths
+        morphLength = plan.lengths.max() ?? config.morphDuration
     }
 
     /// Sets the colours with no morph (the first frame, a resize of the day).
@@ -527,6 +639,14 @@ enum MosaicColour {
     static func triple(_ sky: MosaicRGB, dark: Bool) -> MosaicTriple {
         let scale = dark ? 0.72 : 1
         return (Double(sky.red) / 255 * scale, Double(sky.green) / 255 * scale, Double(sky.blue) / 255 * scale)
+    }
+
+    /// A steady 0 to 1 value from a tile's index and a salt, so each use draws from its own sequence.
+    static func unit(_ index: Int, salt: Int) -> Double {
+        var hash = UInt64(truncatingIfNeeded: index &* 31 &+ salt &* 977) &* 0x9E37_79B9_7F4A_7C15
+        hash = (hash ^ (hash >> 31)) &* 0xBF58_476D_1CE4_E5B9
+        hash ^= hash >> 29
+        return Double(hash & 0xFFFFFF) / Double(0x1000000)
     }
 
     static func hex(_ value: UInt32) -> MosaicTriple {

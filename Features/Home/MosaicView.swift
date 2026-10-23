@@ -10,7 +10,12 @@ import TesseraCore
 /// Holds one mosaic's engine so a host (Next, an app's finish) can lay a tile without owning the drawing.
 @MainActor
 final class MosaicController {
-    let engine = MosaicEngine()
+    let engine: MosaicEngine
+
+    init(config: MosaicConfig = .home) {
+        engine = MosaicEngine(config: config)
+    }
+
     /// The mosaic's frame in the window, kept by the view, so a struck row's frame can be turned into its space.
     var globalFrame: CGRect = .zero
 
@@ -21,7 +26,12 @@ final class MosaicController {
         var nowColumn: Int?
         var text: String?
         var ground: [Double]
+        var mood: MosaicMood?
+        var accents: Int
+        var sets: Int
     }
+
+    private var lastMood: MosaicMood?
 
     private var key: Key?
     private var restored = false
@@ -57,7 +67,9 @@ final class MosaicController {
         dark: Bool,
         ground: MosaicTriple,
         width: CGFloat,
-        reduceMotion: Bool
+        reduceMotion: Bool,
+        mood: MosaicMood? = nil,
+        moodContext: MosaicMoodContext = MosaicMoodContext()
     ) {
         engine.reduceMotion = reduceMotion
         engine.resize(width: width)
@@ -85,15 +97,28 @@ final class MosaicController {
                            ground.red,
                            ground.green,
                            ground.blue,
-                       ])
+                       ], mood: mood, accents: moodContext.doneAccents.count,
+                       sets: moodContext.doneSets * 100 + moodContext.remainingSets)
         guard next != key else { return }
-        let targets = MosaicScenes.targets(scene, geometry: engine.geometry, input: input, ground: ground)
+        var context = moodContext
+        context.nowColumn = MosaicReadout.nowColumn(facts.now, config: config)
+        context.dark = dark
+        let moodField = scene == .day ? mood : nil
+        let targets = moodField.map {
+            MosaicMoodField.base($0, geometry: engine.geometry, input: input, ground: ground, context: context)
+        } ?? MosaicScenes.targets(scene, geometry: engine.geometry, input: input, ground: ground)
+        engine.ground = ground
+        engine.overlay = moodField.flatMap {
+            MosaicMoodField.overlay($0, geometry: engine.geometry, context: context, reduceMotion: reduceMotion)
+        }
         if key == nil {
             engine.settle(to: targets)
         } else {
             let origin = MosaicScenes.origin(scene, geometry: engine.geometry, input: input, firstLaid: firstLaidIndex)
-            engine.morph(to: targets, origin: origin)
+            let transition = (moodField != nil && moodField != lastMood) ? moodField?.transition ?? .wave : .wave
+            engine.morph(to: targets, origin: origin, transition: transition)
         }
+        lastMood = moodField
         key = next
     }
 }
@@ -102,8 +127,11 @@ struct MosaicView: View {
     let facts: MosaicFacts
     @Binding var scene: MosaicScene
     var controller: MosaicController?
+    /// The departure mosaic's mood (sheet 200), from Core's `MosaicMoodPicker`; nil is the plain 199 day.
+    var mood: MosaicMood?
+    var moodContext = MosaicMoodContext()
 
-    @State private var owned = MosaicController()
+    @State private var owned: MosaicController
     @State private var reading: String?
     @State private var cue = HapticCue()
     @State private var didOpen = false
@@ -115,6 +143,21 @@ struct MosaicView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var typeSize
+
+    init(
+        facts: MosaicFacts,
+        scene: Binding<MosaicScene>,
+        controller: MosaicController? = nil,
+        mood: MosaicMood? = nil,
+        moodContext: MosaicMoodContext = MosaicMoodContext()
+    ) {
+        self.facts = facts
+        _scene = scene
+        self.controller = controller
+        self.mood = mood
+        self.moodContext = moodContext
+        _owned = State(initialValue: MosaicController(config: mood == nil ? .home : .moods))
+    }
 
     private var live: MosaicController {
         controller ?? owned
@@ -167,7 +210,7 @@ struct MosaicView: View {
                 draw(&context, size: size, time: timeline.date.timeIntervalSinceReferenceDate)
             }
         }
-        .aspectRatio(CGFloat(MosaicConfig.home.columns) / CGFloat(MosaicConfig.home.rows), contentMode: .fit)
+        .aspectRatio(CGFloat(live.engine.config.columns) / CGFloat(live.engine.config.rows), contentMode: .fit)
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { live.globalFrame = $0 }
         .contentShape(Rectangle())
         .simultaneousGesture(
@@ -226,7 +269,7 @@ struct MosaicView: View {
         let dark = colorScheme == .dark
         let ground = rgb(Theme.Colors.paper, environment)
         controller.sync(scene: scene, facts: facts, dark: dark, ground: ground, width: size.width,
-                        reduceMotion: reduceMotion)
+                        reduceMotion: reduceMotion, mood: mood, moodContext: moodContext)
         engine.step(to: time)
         if engine.consumeLandings() > 0 {
             DispatchQueue.main.async { cue.play(.fleckReachesNow) }
@@ -239,7 +282,7 @@ struct MosaicView: View {
         for column in 0 ..< config.columns {
             for row in 0 ..< config.rows {
                 let index = geometry.index(column: column, row: row)
-                if engine.isLaid(index) {
+                if engine.isLaid(index) || engine.isDropped(column: column, row: row) {
                     continue
                 }
                 if engine.popProgress(index) != nil {
