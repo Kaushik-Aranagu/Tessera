@@ -127,6 +127,41 @@ struct SoulCloudTests {
         }
     }
 
+    @Test func burstsComeEveryTwoPointTwoToFivePointSevenSecondsAndSwellOneColourWithoutTouchingAlpha() throws {
+        let lively = SoulCloud.bursts(quiet: false)
+        #expect(lively.count > 400)
+        #expect(lively.allSatisfy { $0.length >= 1.4 && $0.length <= 2.2 && $0.distance <= 0.45 })
+        let gaps = zip(lively.dropFirst(), lively).map { $0.start - ($1.start + $1.length) }
+        #expect(gaps.allSatisfy { $0 >= 2.2 - 1e-9 && $0 <= 5.7 + 1e-9 })
+        let quiet = SoulCloud.bursts(quiet: true)
+        let quietGaps = zip(quiet.dropFirst(), quiet).map { $0.start - ($1.start + $1.length) }
+        #expect(quietGaps.allSatisfy { $0 >= 5 - 1e-9 && $0 <= 11 + 1e-9 })
+        let burst = try #require(lively.first)
+        let middle = burst.start + burst.length / 2
+        let under = try #require(SoulCloud.burst(at: middle, quiet: false))
+        #expect(abs(under.envelope - 1) < 1e-9)
+        #expect(SoulCloud.burst(at: burst.start - 0.1, quiet: false) == nil || lively[0].start != burst.start)
+        // At the peak the burst colour's weight is 2.3x and its spread 0.18 R wider; alpha does not move.
+        var peak = input(time: middle), still = input(time: middle)
+        still.bursts = false
+        peak.bursts = true
+        let withBurst = SoulCloud.centres(peak)[burst.colour], without = SoulCloud.centres(still)[burst.colour]
+        #expect(abs(withBurst.weight / without.weight - 2.3) < 1e-9)
+        #expect(abs(withBurst.sigma - without.sigma - SoulCloud.radius(peak) * 0.18) < 1e-9)
+        #expect(SoulCloud.alpha(across: 0.05, down: 0.02, input: peak) == SoulCloud.alpha(
+            across: 0.05,
+            down: 0.02,
+            input: still
+        ))
+    }
+
+    @Test func underReduceMotionThereAreNoBursts() {
+        var value = input(time: 0)
+        value.bursts = false
+        let moved = SoulCloud.centres(value)
+        #expect(moved.allSatisfy { abs($0.sigma - SoulCloud.radius(value) * 0.76) < 1e-12 })
+    }
+
     @Test func oklabRoundTripsAHex() {
         let lab = SoulCloud.oklab(0x3561C8)
         let back = SoulCloud.rgb(lightness: lab.lightness, greenRed: lab.greenRed, blueYellow: lab.blueYellow)

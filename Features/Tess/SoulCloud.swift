@@ -18,10 +18,12 @@ enum SoulCloud {
         var spin = 0.0
         var level = 0.0
         var quiet = false
-        /// How far a colour's chroma may be held up in the mix (1.6, lower on Black).
-        var chroma = 1.6
+        /// How far a colour's chroma may be held up in the mix (1.7, lower on Black).
+        var chroma = 1.7
         /// Reduce Transparency: a flat body with no blending.
         var flat = false
+        /// Bursts of colour; off under Reduce Motion.
+        var bursts = true
     }
 
     /// The image covers `span` of the reference square, so her fade never meets the edge (see `clipIsSafe`).
@@ -30,10 +32,10 @@ enum SoulCloud {
     static let paintsDark: [UInt32] = [0xFF5B3A, 0x5E8BFF, 0xFFC23D]
     static let paintsLight: [UInt32] = [0xD2502F, 0x3561C8, 0xE0A21E]
 
-    /// The body's largest radius is 0.19 R at its fullest breath and spread, and her edge reaches out 11% more; the
+    /// The body's largest radius is 0.175 R at its fullest breath and spread, and her edge reaches out 11% more; the
     /// canvas is never tighter than 2.2 of that from her centre.
     static var clipIsSafe: Bool {
-        let radiusMax = 0.19 * (0.96 + 0.08 + 0.08) * 1.1 * 1.11
+        let radiusMax = 0.175 * (0.96 + 0.08 + 0.08) * 1.1 * 1.11
         return span / 2 >= 2.2 * radiusMax
     }
 
@@ -41,7 +43,7 @@ enum SoulCloud {
     static func radius(_ input: Input) -> Double {
         let phase = input.time * (input.quiet ? 0.35 : 1)
         let breath = 0.96 + (input.quiet ? 0.03 : 0.08) * sin(phase * 0.98) + 0.08 * input.level
-        return 0.19 * breath * (1 + 0.1 * input.spread)
+        return 0.175 * breath * (1 + 0.1 * input.spread)
     }
 
     // MARK: Colour
@@ -120,16 +122,99 @@ enum SoulCloud {
 
     // MARK: Field
 
-    /// The three colour fields' centres and weights at this moment, in the reference square's units.
-    static func centres(_ input: Input) -> [(x: Double, y: Double, weight: Double)] {
+    /// A burst: at a random moment one of her three colours swells from a random point near her middle.
+    struct Burst: Equatable {
+        let start: Double
+        let length: Double
+        let colour: Int
+        /// The point, in R's units from her centre: within 0.45 R.
+        let angle: Double
+        let distance: Double
+    }
+
+    static let burstPeriod = SoulBlink.period
+
+    /// Bursts over one hour: gaps of 2.2 to 5.7 s (5 to 11 s while she is quiet), each lasting 1.4 to 2.2 s.
+    static func bursts(quiet: Bool) -> [Burst] {
+        quiet ? quietBursts : livelyBursts
+    }
+
+    private static let livelyBursts = makeBursts(quiet: false)
+    private static let quietBursts = makeBursts(quiet: true)
+
+    private static func makeBursts(quiet: Bool) -> [Burst] {
+        var result: [Burst] = []
+        var time = 1.5
+        var index: UInt64 = quiet ? 5000 : 900
+        while true {
+            let length = 1.4 + 0.8 * seeded(index)
+            guard time + length < burstPeriod - 3 else { break }
+            result.append(Burst(start: time, length: length, colour: Int(seeded(index &+ 3) * 3) % 3,
+                                angle: 2 * Double.pi * seeded(index &+ 7), distance: 0.45 * seeded(index &+ 11)))
+            let gap = quiet ? 5 + 6 * seeded(index &+ 13) : 2.2 + 3.5 * seeded(index &+ 13)
+            time += length + gap
+            index &+= 1
+        }
+        return result
+    }
+
+    /// The burst under way at `time` and its envelope (sin squared over its length), if any.
+    static func burst(at time: Double, quiet: Bool) -> (burst: Burst, envelope: Double)? {
+        let schedule = bursts(quiet: quiet)
+        let local = time.truncatingRemainder(dividingBy: burstPeriod)
+        let wrapped = local < 0 ? local + burstPeriod : local
+        var low = 0, high = schedule.count - 1, found = -1
+        while low <= high {
+            let mid = (low + high) / 2
+            if schedule[mid].start <= wrapped {
+                found = mid
+                low = mid + 1
+            } else {
+                high = mid - 1
+            }
+        }
+        guard found >= 0 else { return nil }
+        let burst = schedule[found]
+        let unit = (wrapped - burst.start) / burst.length
+        guard unit >= 0, unit <= 1 else { return nil }
+        return (burst, pow(sin(Double.pi * unit), 2))
+    }
+
+    private static func seeded(_ seed: UInt64) -> Double {
+        var value = seed &* 0x9E37_79B9_7F4A_7C15 &+ 0x1234_5678
+        value ^= value >> 30
+        value &*= 0xBF58_476D_1CE4_E5B9
+        value ^= value >> 27
+        value &*= 0x94D0_49BB_1331_11EB
+        value ^= value >> 31
+        return Double(value % 1_000_000) / 1_000_000
+    }
+
+    /// The three colour fields' centres, weights and spreads at this moment, in the reference square's units. A burst
+    /// moves its colour's centre 55% of the way toward its point, raises its weight by up to 2.3x and widens it by
+    /// 0.18 R; it changes colour only, never her alpha.
+    static func centres(_ input: Input) -> [(x: Double, y: Double, weight: Double, sigma: Double)] {
         let phase = input.time * (input.quiet ? 0.35 : 1)
         let radius = radius(input)
         let angle = 0.6 + phase * 0.16 + input.spin
+        let active = input.bursts ? burst(at: input.time, quiet: input.quiet) : nil
         return (0 ..< 3).map { index in
             let step = Double(index)
             let around = angle + step * 2.094 + 0.35 * sin(phase * (0.23 + 0.04 * step) + step * 1.7)
             let distance = radius * ((index == 0 ? 0.4 : 0.56) + 0.08 * sin(phase * (0.31 + 0.05 * step) + step))
-            return (distance * cos(around), distance * sin(around), index == 0 ? 1.08 : 1)
+            var centre = (x: distance * cos(around), y: distance * sin(around))
+            var weight = index == 0 ? 1.08 : 1.0
+            var sigma = radius * 0.76
+            if let active, active.burst.colour == index {
+                let envelope = active.envelope
+                let target = (x: radius * active.burst.distance * cos(active.burst.angle),
+                              y: radius * active.burst.distance * sin(active.burst.angle))
+                centre.x += (target.x - centre.x) * 0.55 * envelope
+                centre.y += (target.y - centre.y) * 0.55 * envelope
+                weight *= 1 + 1.3 * envelope
+                sigma += radius * 0.18 * envelope
+            }
+            return (centre.x, centre.y, weight, sigma)
         }
     }
 
@@ -167,7 +252,6 @@ enum SoulCloud {
         guard lab.count == 3 else { return nil }
         let centres = centres(input)
         let radius = radius(input)
-        let sigma2 = 2 * pow(radius * 0.70, 2)
         let cap = (input.dark ? 235.0 : 225.0) / 255
         var flatColour: (Double, Double, Double)?
         if input.flat {
@@ -202,7 +286,7 @@ enum SoulCloud {
                 for index in 0 ..< 3 {
                     let centre = centres[index]
                     let dx = bent.across - centre.x, dy = bent.down - centre.y
-                    let weight = centre.weight * exp(-(dx * dx + dy * dy) / sigma2)
+                    let weight = centre.weight * exp(-(dx * dx + dy * dy) / (2 * centre.sigma * centre.sigma))
                     weights += weight
                     lightness += weight * lab[index].lightness
                     redGreen += weight * lab[index].greenRed
