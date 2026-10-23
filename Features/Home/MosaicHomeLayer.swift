@@ -100,8 +100,11 @@ final class MosaicScreenController {
         var page: MosaicPage = .mood
         var pageDirection = 1
         var pageFacts: MosaicPageFacts?
-        /// The accent of the one thing Home shows (sheet 213): the mosaic takes 20% of it, sweeping in with the page change.
+        /// The accent of the one thing Home shows (sheet 213): the mosaic takes 20% of it, sweeping in with the page
+        /// change.
         var washAccent: MosaicTriple?
+        /// The sign the mosaic lends its tiles to (sheet 213); nil when the page has none.
+        var sign: MosaicSignRequest?
     }
 
     /// Makes the engine for this size and re-reads the scene's colours when anything they depend on changed.
@@ -111,6 +114,7 @@ final class MosaicScreenController {
         self.engine = engine
         engine.reduceMotion = inputs.reduceMotion
         engine.configure(size: inputs.size, coreTop: inputs.coreTop, dark: inputs.dark, ground: inputs.ground)
+        engine.showSign(inputs.sign)
         let facts = inputs.facts
         if let lastDay, lastDay != facts.day {
             engine.reset()
@@ -566,6 +570,7 @@ struct MosaicHomeLayer: View {
             cg.setFillColor(red: tone.red, green: tone.green, blue: tone.blue, alpha: engine.laidOpacity(item))
             cg.fill(rect.insetBy(dx: -0.4, dy: -0.4))
         }
+        drawSign(cg, engine: engine, nowColumn: nowColumn)
         if let flight = engine.flight, let state = engine.flightState() {
             let tone = laidColour(
                 flight.tone,
@@ -580,6 +585,60 @@ struct MosaicHomeLayer: View {
             cg.setFillColor(red: tone.red, green: tone.green, blue: tone.blue, alpha: 1)
             cg.fill(CGRect(x: -state.side / 2, y: -state.side / 2, width: state.side, height: state.side))
             cg.restoreGState()
+        }
+    }
+
+    /// Sheet 213: the old sign collapsing where it stood, the new one's tiles flying out of the mosaic, then the sign
+    /// itself, drawn for real once every tile has landed.
+    private func drawSign(_ cg: CGContext, engine: MosaicScreenEngine, nowColumn: Int?) {
+        guard let request = engine.signRequest else { return }
+        let grid = engine.grid
+        let ground = engine.ground
+        func colour(_ cell: ThingSignCell) -> MosaicTriple {
+            let base = cell.alt ? (request.alt ?? request.accent) : request.accent
+            return MosaicColour.mix(ground, base, ThingSignArt.stepped(cell.strength))
+        }
+        func fill(_ rect: CGRect, _ tone: MosaicTriple) {
+            cg.setFillColor(red: tone.red, green: tone.green, blue: tone.blue, alpha: 1)
+            cg.fill(rect)
+        }
+        for item in engine.collapsingSign() {
+            let rect = grid.rect(column: item.tile.column, row: item.tile.row)
+            let side = rect.width * item.scale
+            fill(CGRect(x: rect.midX - side / 2, y: rect.midY - side / 2 + item.sink, width: side, height: side),
+                 colour(item.tile.cell))
+        }
+        guard let lend = engine.signLend else { return }
+        let time = engine.clock
+        if time >= lend.landedAt {
+            let cells = ThingSignArt.cells(request.kind, elapsed: time - lend.landedAt, share: request.share,
+                                           still: engine.reduceMotion)
+            for cell in cells {
+                let tile = MosaicSignTile(cell: cell, column: request.column + cell.column,
+                                          row: request.row + cell.row, sourceColumn: 0, sourceRow: 0)
+                guard grid.contains(column: tile.column, row: tile.row) else { continue }
+                fill(grid.rect(column: tile.column, row: tile.row), colour(cell))
+            }
+            return
+        }
+        for (index, tile) in lend.tiles.enumerated() where grid.contains(column: tile.column, row: tile.row) {
+            let progress = lend.progress(index, at: time)
+            guard time >= lend.launch(index) else { continue }
+            let target = grid.center(column: tile.column, row: tile.row)
+            let signColour = colour(tile.cell)
+            if progress >= 1 {
+                fill(grid.rect(column: tile.column, row: tile.row), signColour)
+                continue
+            }
+            let source = grid.center(column: tile.sourceColumn, row: tile.sourceRow)
+            let seen = engine.tile(column: tile.sourceColumn, row: tile.sourceRow, nowColumn: nowColumn,
+                                   ignoringGap: true)?.colour ?? ground
+            let arc = MosaicSignLend.arc(progress)
+            let centre = CGPoint(x: source.x + (target.x - source.x) * progress,
+                                 y: source.y + (target.y - source.y) * progress - arc.lift)
+            let side = MosaicScreenGrid.side * arc.scale
+            fill(CGRect(x: centre.x - side / 2, y: centre.y - side / 2, width: side, height: side),
+                 MosaicColour.mix(seen, signColour, progress))
         }
     }
 
