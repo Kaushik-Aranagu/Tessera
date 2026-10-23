@@ -123,6 +123,10 @@ struct DepartureBoard: View {
     struct Cell: Equatable {
         var shown: Character
         var squash: Bool = false
+        /// The cell's own fixed width: the width of the letter it will end on, in its face. The letters that walk
+        /// through
+        /// it are drawn centred in it, so nothing on the row moves while they flip (sheet 216, r28).
+        var width: CGFloat?
     }
 
     private var finalText: String {
@@ -189,6 +193,20 @@ struct DepartureBoard: View {
                     unitView(unit, cells: lineCells, li: li)
                         .fixedSize()
                 }
+                // Letters the new line no longer has flip to spaces and collapse once the pass is over.
+                let kept = DepartureSteps.flat(line).count
+                if lineCells.count > kept {
+                    HStack(spacing: 0) {
+                        ForEach(kept ..< lineCells.count, id: \.self) { k in
+                            Text(String(lineCells[k].shown))
+                                .font(Theme.voice(size: Self.size))
+                                .foregroundStyle(Theme.Colors.ink)
+                                .fixedSize()
+                                .frame(width: lineCells[k].width)
+                                .scaleEffect(x: 1, y: lineCells[k].squash ? 0.08 : 1, anchor: .center)
+                        }
+                    }
+                }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
@@ -235,6 +253,8 @@ struct DepartureBoard: View {
                         let cell = word.start + k < cells.count ? cells[word.start + k] : Cell(shown: " ")
                         Text(String(cell.shown))
                             .font(font(for: seg.kind))
+                            .fixedSize()
+                            .frame(width: cell.width)
                             .scaleEffect(x: 1, y: cell.squash ? 0.08 : 1, anchor: .center)
                     }
                 }
@@ -308,8 +328,16 @@ struct DepartureBoard: View {
     }
 
     /// One cell per character of the line, in order, with a space between runs.
+    @MainActor
     private static func cells(_ line: [DepartureSegment]) -> [Cell] {
-        DepartureSteps.flat(line).map { Cell(shown: $0) }
+        var out: [Cell] = []
+        for (index, seg) in line.enumerated() {
+            if index > 0 {
+                out.append(Cell(shown: " "))
+            }
+            out += seg.text.map { Cell(shown: $0, width: CellMetrics.width(of: $0, kind: seg.kind)) }
+        }
+        return out
     }
 
     private func transition(from _: [[DepartureSegment]], to new: [[DepartureSegment]]) {
@@ -329,17 +357,29 @@ struct DepartureBoard: View {
         while current.count < target.count {
             current.append([])
         }
-        cells = current
         var longest = 0
-        for (li, line) in target.enumerated() {
-            let before = li < current.count ? current[li] : []
-            for (k, cell) in line.enumerated() {
-                let was = k < before.count ? before[k].shown : " "
-                let steps = DepartureSteps.sequence(from: was, to: cell.shown)
+        var longestByLine: [Int: Int] = [:]
+        for (li, want) in target.enumerated() {
+            var old = current[li]
+            // Added letters flip in from a space; kept ones now own their final widths; dropped ones keep theirs.
+            while old.count < want.count {
+                old.append(Cell(shown: " "))
+            }
+            for k in want.indices {
+                old[k].width = want[k].width
+            }
+            current[li] = old
+            let span = max(old.count, want.count)
+            for k in 0 ..< span {
+                let was = old[k].shown
+                let final = k < want.count ? want[k].shown : " "
+                let steps = DepartureSteps.sequence(from: was, to: final)
                 if steps.isEmpty {
                     continue
                 }
-                longest = max(longest, DepartureSteps.delay(line: li, index: k) + steps.count * DepartureSteps.stepMS)
+                let finish = DepartureSteps.delay(line: li, index: k) + steps.count * DepartureSteps.stepMS
+                longest = max(longest, finish)
+                longestByLine[li] = max(longestByLine[li] ?? 0, finish)
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(DepartureSteps.delay(line: li, index: k)))
                     for step in steps {
@@ -354,8 +394,17 @@ struct DepartureBoard: View {
                         try? await Task.sleep(for: .milliseconds(DepartureSteps.stepMS - 16))
                     }
                     guard gen == generation else { return }
-                    set(li, k, shown: cell.shown, squash: false)
+                    set(li, k, shown: final, squash: false)
                 }
+            }
+        }
+        cells = current
+        // Dropped letters collapse only after the whole pass, so the row never shifts while it runs.
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(longest + DepartureSteps.flipMS + 20))
+            guard gen == generation else { return }
+            for (li, want) in target.enumerated() where li < cells.count && cells[li].count > want.count {
+                cells[li] = Array(cells[li].prefix(want.count))
             }
         }
         // One soft tap when the last letter lands, only while Home is on screen.
@@ -372,7 +421,7 @@ struct DepartureBoard: View {
         if k >= cells[li].count {
             cells[li] += Array(repeating: Cell(shown: " "), count: k - cells[li].count + 1)
         }
-        cells[li][k] = Cell(shown: shown, squash: squash)
+        cells[li][k] = Cell(shown: shown, squash: squash, width: cells[li][k].width)
     }
 }
 
@@ -432,5 +481,41 @@ enum DateSky {
         let s = stops(band(at: date))
         return LinearGradient(colors: [Color(light: s.0, dark: s.2), Color(light: s.1, dark: s.3)],
                               startPoint: .leading, endPoint: .trailing)
+    }
+}
+
+/// The width a letter takes in its own face, so each cell can be fixed to the letter it will end on. A face that cannot
+/// be
+/// found leaves the cell at its natural width.
+@MainActor
+enum CellMetrics {
+    private static var cache: [String: CGFloat] = [:]
+
+    static func width(of character: Character, kind: DepartureSegment.Kind) -> CGFloat? {
+        guard character != " " else { return nil }
+        let isNumber = if case .number = kind {
+            true
+        } else {
+            false
+        }
+        let key = "\(character)-\(kind)"
+        if let cached = cache[key] {
+            return cached
+        }
+        let family = isNumber ? "Outfit" : "Figtree"
+        guard !UIFont.fontNames(forFamilyName: family).isEmpty else { return nil }
+        let (size, weight): (CGFloat, UIFont.Weight) = switch kind {
+        case .number: (DepartureBoard.size, .light)
+        case .app, .sky: (DepartureBoard.size * 1.12, .bold)
+        case .day: (DepartureBoard.size, .medium)
+        case .plain: (DepartureBoard.size, .regular)
+        }
+        let descriptor = UIFontDescriptor(fontAttributes: [.family: family])
+            .addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
+        let width = NSAttributedString(string: String(character), attributes: [.font: UIFont(descriptor: descriptor,
+                                                                                             size: size)])
+            .size().width.rounded(.up)
+        cache[key] = width
+        return width
     }
 }
