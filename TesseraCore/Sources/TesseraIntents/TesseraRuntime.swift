@@ -89,6 +89,7 @@ public enum TesseraIntentsCatalog {
         "createOccasion": "in-app only: Occasions",
         "linkToOccasion": "in-app only: Occasions",
         "setAway": "in-app only: Occasions",
+        "markArrived": "in-app only: Home mosaic",
         "joinTwins": "in-app only: Twins",
         "keepTwinsApart": "in-app only: Twins",
         "unlinkFromOccasion": "in-app only: Occasions",
