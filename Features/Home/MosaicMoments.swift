@@ -225,7 +225,7 @@ enum MosaicMomentField {
             if row >= rows - min(5, Int(elapsed / 1.5)) {
                 return MosaicColour.mix(colour, white, 0.9)
             }
-            for neighbour in max(column - 1, 0) ... min(column + 1, cols - 1) {
+            for neighbour in max(column - 1, 0) ... max(min(column + 1, cols - 1), max(column - 1, 0)) {
                 for flake in 0 ..< 2 {
                     let seed = neighbour * 2 + flake
                     let x = Double(neighbour) + 0.8 * sin(elapsed * 0.9 + MosaicColour.unit(seed, salt: 51) * 6.28)

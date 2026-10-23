@@ -279,6 +279,42 @@ struct MosaicMomentTests {
         #expect(engine.meltGhost(column: 5, row: 39) == nil)
     }
 
+    /// The per-tile work of a frame (colour, scale, offset on every tile of the full 62 x 40 grid) for the heaviest
+    /// moments, so a slow closure shows up here before it shows up on the phone.
+    @Test func aFrameOfTheHeaviestMomentsCostsLittle() {
+        let engine = MosaicEngine(config: .moods, width: 248)
+        engine.snapWindow()
+        let config = engine.config
+        for moment in [MosaicMoment.storm, .wind, .snow, .fog, .heat] {
+            let window = moment.window ?? (50, 28)
+            let plan = MosaicMomentField.plan(moment, under: under(window.columns, window.rows), window: window,
+                                              ground: ground, context: MosaicMoodContext(), start: 0,
+                                              reduceMotion: false)
+            let started = ContinuousClock.now
+            let frames = 30
+            for frame in 0 ..< frames {
+                engine.step(to: Double(frame) / 60)
+                var sum = 0.0
+                for column in 0 ..< config.columns {
+                    for row in 0 ..< config.rows {
+                        // The moment's closures see window-local tiles (the controller clamps), so drive them with
+                        // the window's own coordinates.
+                        let local = (min(column, window.columns - 1), min(row, window.rows - 1))
+                        sum += (plan.overlay?(local.0, local.1, Double(frame) / 60, (0.5, 0.5, 0.5)).red ?? 0)
+                        sum += engine.colour(column: column, row: row, nowColumn: 20).red
+                        sum += Double(engine.scale(column: column, row: row))
+                        sum += Double(engine.offset(column: column, row: row).x)
+                    }
+                }
+                #expect(sum.isFinite)
+            }
+            let elapsed = started.duration(to: ContinuousClock.now)
+            let milliseconds = Double(elapsed.components.seconds) * 1000 + Double(elapsed.components.attoseconds) / 1e15
+            // 60 fps leaves 16 ms a frame for everything; the tile work alone must stay well inside that.
+            #expect(milliseconds / Double(frames) < 12, "\(moment) took \(milliseconds / Double(frames)) ms a frame")
+        }
+    }
+
     @Test func aFinishedMomentKeepsTheMoodField() {
         let finished = plan(.finished(tone: .glaze))
         #expect(finished.base == nil)
