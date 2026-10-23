@@ -143,8 +143,8 @@ struct SoulCloudTests {
         #expect(SoulCloud.burst(at: burst.start - 0.1, quiet: false) == nil || lively[0].start != burst.start)
         // At the peak the burst colour's weight is 2.3x and its spread 0.18 R wider; alpha does not move.
         var peak = input(time: middle), still = input(time: middle)
-        still.bursts = false
-        peak.bursts = true
+        still.activeBurst = nil
+        peak.activeBurst = SoulCloud.burst(at: middle, quiet: false)
         let withBurst = SoulCloud.centres(peak)[burst.colour], without = SoulCloud.centres(still)[burst.colour]
         #expect(abs(withBurst.weight / without.weight - 2.3) < 1e-9)
         #expect(abs(withBurst.sigma - without.sigma - SoulCloud.radius(peak) * 0.18) < 1e-9)
@@ -153,6 +153,37 @@ struct SoulCloudTests {
             down: 0.02,
             input: still
         ))
+    }
+
+    @Test func theDirectorIsASeamTheRulesFillToday() {
+        let director: any SoulDirecting = SoulRuleDirector()
+        #expect(director.paints(dark: false, pageAccent: nil) == SoulCloud.paintsLight)
+        #expect(director.paints(dark: true, pageAccent: nil) == SoulCloud.paintsDark)
+        let burst = SoulCloud.bursts(quiet: false)[0]
+        let mid = burst.start + burst.length / 2
+        #expect(director.burst(at: mid, quiet: false) == SoulCloud.burst(at: mid, quiet: false))
+    }
+
+    @Test func hearingRunsSmallWavesRoundHerEdgeAndAHeardWordGathersHer() {
+        var quiet = input(time: 5), talking = input(time: 5)
+        talking.voice = 1
+        let radius = SoulCloud.radius(quiet)
+        var differs = false
+        for step in 0 ..< 24 {
+            let angle = Double(step) / 24 * 2 * Double.pi
+            let a = SoulCloud.alpha(across: radius * 1.5 * cos(angle), down: radius * 1.5 * sin(angle), input: quiet)
+            let b = SoulCloud.alpha(across: radius * 1.5 * cos(angle), down: radius * 1.5 * sin(angle), input: talking)
+            differs = differs || a != b
+        }
+        #expect(differs)
+        // Only her edge: the middle is the same.
+        #expect(SoulCloud.alpha(across: 0, down: 0, input: quiet) == SoulCloud.alpha(
+            across: 0,
+            down: 0,
+            input: talking
+        ))
+        quiet.gather = 1
+        #expect(SoulCloud.radius(quiet) < SoulCloud.radius(input(time: 5)))
     }
 
     @Test func inLowPowerThereIsNoSwayAndNoWarp() {
@@ -165,8 +196,7 @@ struct SoulCloudTests {
     }
 
     @Test func underReduceMotionThereAreNoBursts() {
-        var value = input(time: 0)
-        value.bursts = false
+        let value = input(time: 0)
         let moved = SoulCloud.centres(value)
         #expect(moved.allSatisfy { abs($0.sigma - SoulCloud.radius(value) * 0.76) < 1e-12 })
     }

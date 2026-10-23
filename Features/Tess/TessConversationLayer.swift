@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 // Sheet 215 rev 5 to 16: Tess's own layer. A tap or a hold on her brings her into focus: Home sits under an 18 pt
 // blur (saturation 1.15, a 52% page tint; with Reduce Transparency a 92% page colour), and she moves to the bottom
@@ -51,7 +52,10 @@ struct TessFlow: Layout {
     func placeSubviews(in bounds: CGRect, proposal _: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
         let placed = arrange(width: bounds.width, subviews: subviews)
         for (index, origin) in placed.origins.enumerated() {
-            subviews[index].place(at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y), proposal: .unspecified)
+            subviews[index].place(
+                at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
+                proposal: .unspecified
+            )
         }
     }
 
@@ -121,7 +125,9 @@ struct TessLineView: View {
                 }
             }
             .onChange(of: elapsed >= TessWords.total(line.text)) { _, done in
-                if done, arriving { onArrived() }
+                if done, arriving {
+                    onArrived()
+                }
             }
         }
         // VoiceOver reads the whole line at once, and never re-announces the echo.
@@ -134,7 +140,9 @@ struct TessLineView: View {
         var delay = 0.0
         for earlier in units.prefix(index) {
             delay += TessWords.perWord
-            if let last = earlier.text.last, ".,?!:;".contains(last) { delay += TessWords.afterPunctuation }
+            if let last = earlier.text.last, ".,?!:;".contains(last) {
+                delay += TessWords.afterPunctuation
+            }
         }
         return delay
     }
@@ -160,14 +168,14 @@ struct TessConversationLayer: View {
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 18) {
                 Text(model.stateLine)
-                    .font(Theme.font(15))
+                    .font(Theme.voice(size: 15))
                     .foregroundStyle(Theme.Colors.inkTertiary)
                     .frame(minHeight: 22, alignment: .leading)
                     .accessibilityHidden(model.stateLine.isEmpty)
                 conversation
                 if !model.liveSpeech.isEmpty {
                     Text(model.liveSpeech)
-                        .font(Theme.font(28, weight: .light))
+                        .font(Theme.voice(size: 28).weight(.light))
                         .foregroundStyle(Theme.Colors.ink)
                 }
                 replies
@@ -178,7 +186,9 @@ struct TessConversationLayer: View {
             .padding(.bottom, 206)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .gesture(DragGesture(minimumDistance: 30).onEnded { value in
-                if value.translation.height > 70, abs(value.translation.width) < value.translation.height { close() }
+                if value.translation.height > 70, abs(value.translation.width) < value.translation.height {
+                    close()
+                }
             })
             // Masked in the app switcher: the layer's words never sit in a snapshot.
             if scenePhase != .active {
@@ -186,7 +196,11 @@ struct TessConversationLayer: View {
             }
         }
         .ignoresSafeArea()
-        .onExitCommand { close() }
+        .focusable()
+        .onKeyPress(.escape) {
+            close()
+            return .handled
+        }
         .accessibilityAddTraits(.isModal)
         .accessibilityLabel("Tess")
     }
@@ -210,7 +224,7 @@ struct TessConversationLayer: View {
 
     private func timeMarker(_ text: String) -> some View {
         Text(text)
-            .font(Theme.numeral(12, weight: .ultraLight))
+            .font(Font.custom("Outfit", size: 12, relativeTo: .caption).weight(.ultraLight))
             .tracking(0.72)
             .foregroundStyle(Theme.Colors.inkSecondary)
             .padding(.top, 10)
@@ -228,7 +242,7 @@ struct TessConversationLayer: View {
                          onArrived: { model.arrived(line.id) })
         case .user:
             Text(line.text)
-                .font(Theme.font(newest ? 17 : 16))
+                .font(Theme.voice(size: newest ? 17 : 16))
                 .foregroundStyle(newest ? Theme.Colors.inkSecondary : Theme.Colors.inkTertiary)
         }
     }
@@ -236,27 +250,55 @@ struct TessConversationLayer: View {
     private var replies: some View {
         FlowReplies(replies: model.replies, picked: model.picked) { reply in
             Task {
-                if await model.choose(reply, answer: answer) { close() }
+                if await model.choose(reply, answer: answer) {
+                    close()
+                }
             }
         }
     }
 
+    /// The field is multi-line (rev 19 F6): Enter sends and Shift-Enter adds a line on a hardware keyboard; on the
+    /// phone
+    /// keyboard return adds a line and the arrow sends. It is transient: it exists only while her layer is open.
     private var field: some View {
-        TextField("", text: $model.draft, prompt: Text("Type to Tess").foregroundStyle(Theme.Colors.inkTertiary))
-            .font(Theme.font(18))
-            .foregroundStyle(Theme.Colors.ink)
-            .tint(Theme.Colors.tess)
-            .focused($typing)
-            .submitLabel(.send)
-            .onSubmit {
-                let text = model.draft
-                guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                model.hear(text)
-                send(text)
+        HStack(alignment: .bottom, spacing: 10) {
+            TextField("", text: $model.draft, prompt: Text("Type to Tess").foregroundStyle(Theme.Colors.inkTertiary),
+                      axis: .vertical)
+                .font(Theme.voice(size: 18))
+                .foregroundStyle(Theme.Colors.ink)
+                .tint(Theme.Colors.tess)
+                .lineLimit(1 ... 4)
+                .focused($typing)
+                .onKeyPress(.return, phases: .down) { press in
+                    if press.modifiers.contains(.shift) {
+                        model.draft += "\n"
+                        return .handled
+                    }
+                    submit()
+                    return .handled
+                }
+                .accessibilityLabel("Type to Tess")
+            if !model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Button { submit() } label: {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundStyle(Theme.Colors.ink)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Send")
             }
-            .padding(.bottom, 8)
-            .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.hairline).frame(height: 1) }
-            .accessibilityLabel("Type to Tess")
+        }
+        .padding(.bottom, 8)
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.hairline).frame(height: 1) }
+    }
+
+    private func submit() {
+        let text = model.draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        model.hear(text)
+        send(text)
     }
 }
 
@@ -271,7 +313,7 @@ private struct FlowReplies: View {
             ForEach(replies, id: \.self) { reply in
                 Button { choose(reply) } label: {
                     Text(reply)
-                        .font(Theme.font(17))
+                        .font(Theme.voice(size: 17))
                         .foregroundStyle(picked == reply ? Theme.Colors.tess : Theme.Colors.ink)
                         .fixedSize()
                 }

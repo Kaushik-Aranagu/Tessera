@@ -45,6 +45,19 @@ struct TessSoul: View {
     /// A finger or drag near her, as a direction her eyes follow, and her reaction to touch, a line or a deed.
     var attention: CGPoint?
     var reaction: (kind: SoulLife.Reaction, start: Date)?
+    /// Hearing (rev 19 F4): while he holds to talk, his voice's level (0 ... 1), and when the last word was heard.
+    /// On-device
+    /// speech only; no audio is kept. Off under Reduce Motion and in Low Power.
+    var voice: Double = 0
+    var heardAt: Date?
+    /// The one clear accent of the screen she is on (an app room's colour); nil on Home or with several: she keeps
+    /// Ember.
+    var pageAccent: UInt32?
+    /// Who decides how she looks and changes: the burst's timing and choice and the palette. Rule-based now; Core's
+    /// director takes this seat later.
+    var director: any SoulDirecting = SoulRuleDirector()
+    /// Her mouth (rev 19 F5): nil while she speaks or listens.
+    var mouth: (kind: SoulMouth, start: Date)?
     /// When she began waking with him (idea 2, `SoulRouter.wake`).
     var wake: Date?
     /// A stroke's ripple and the blink after it (idea 3, `SoulRouter.stroke` / `strokeBlink`).
@@ -61,6 +74,7 @@ struct TessSoul: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.onWorkoutGround) private var onWorkoutGround
     @State private var layers: [SoulLayer] = []
+    @State private var glider = SoulPaletteGlider()
     /// The working overlay, from its split to a second after its gather.
     @State private var work: SoulWorkTimes?
     /// Working ticks at 60 fps, then 30 after 20 s (the frame budget).
@@ -156,13 +170,23 @@ struct TessSoul: View {
         let mains = frame.dabs.prefix(3)
         let home = 9.5
         let mean = mains.reduce(0) { $0 + Double(hypot($1.x, $1.y)) } / Double(max(mains.count, 1))
-        var input = SoulCloud.Input(paints: dark ? SoulCloud.paintsDark : SoulCloud.paintsLight, dark: dark,
-                                    time: reduceMotion ? 0 : date.timeIntervalSinceReferenceDate)
+        let time = reduceMotion ? 0 : date.timeIntervalSinceReferenceDate
+        let target = director.paints(dark: dark, pageAccent: pageAccent)
+        var input = SoulCloud.Input(paints: glider.paints(target: target, at: time, instant: reduceMotion || lowPower),
+                                    dark: dark, time: time)
         input.spread = min(max(mean / home - 1, 0), 1)
         input.quiet = mode == .resting
         input.flat = reduceTransparency
-        input.bursts = !reduceMotion && !lowPower
+        input.activeBurst = reduceMotion || lowPower ? nil : director.burst(at: time, quiet: input.quiet)
         input.sway = !reduceMotion && !lowPower
+        if !reduceMotion, !lowPower {
+            input.voice = voice
+            // A heard word gathers her for 220 ms.
+            if let heardAt {
+                let unit = date.timeIntervalSince(heardAt) / 0.22
+                input.gather = unit >= 0 && unit <= 1 ? sin(Double.pi * unit) : 0
+            }
+        }
         let store = ThemeStore.shared
         let look = onWorkoutGround ? store.workoutLook : (colorScheme == .dark ? store.pair.night : store.pair.day)
         // On Black the chroma is held lower so cobalt does not blow out.
@@ -181,7 +205,17 @@ struct TessSoul: View {
         if let reaction, reaction.kind != .did {
             scale = SoulLife.breath(reaction.kind, since: time - reaction.start.timeIntervalSinceReferenceDate)
         }
-        return (CGSize(width: lean.width, height: lean.height + SoulLife.float(at: time)), scale)
+        // While he talks she leans 1.6 pt toward him (his finger, else straight down).
+        var toward = CGSize.zero
+        if voice > 0, !lowPower {
+            let direction = attention ?? CGPoint(x: 0, y: 1)
+            let length = max(hypot(direction.x, direction.y), 0.001)
+            toward = CGSize(width: direction.x / length * 1.6, height: direction.y / length * 1.6)
+        }
+        return (
+            CGSize(width: lean.width + toward.width, height: lean.height + toward.height + SoulLife.float(at: time)),
+            scale
+        )
     }
 
     /// The frame at `date`, and the twelve lights when she works (nil draws the six dabs as built).
@@ -244,7 +278,8 @@ struct TessSoul: View {
             SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
                      still: reduceMotion, lid: lid, attention: attention,
                      reaction: reaction.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) },
-                     solid: !look.isDark)
+                     solid: !look.isDark,
+                     mouth: mouth.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) })
         }
         .opacity(eyesShown ? 1 : 0)
     }

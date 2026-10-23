@@ -29,6 +29,23 @@ enum TessLayerShape {
         CGPoint(x: screenWidth - trailing - canvas, y: screenHeight - bottom - canvas)
     }
 
+    /// On the phone she is about 30% smaller than on the design board (Kaushik, 1:25 PM): the sheet's numbers times
+    /// this.
+    static let phoneScale: CGFloat = 0.7
+
+    /// Her layer open (sheet 215 rev 4): 1.35x, down from 1.7x, and 1.2x during a hold.
+    static let openScale: CGFloat = 1.35
+    static let holdScale: CGFloat = 1.2
+    /// Where she goes: the bottom middle, 112 pt up (centre), from her corner's centre (14 pt in, half her canvas).
+    static let openRise: CGFloat = 112
+
+    /// The offset from her corner to the bottom middle, in points.
+    static func openOffset(width: CGFloat) -> CGSize {
+        let cornerX = width - trailing - canvas / 2
+        let cornerFromBottom = bottom + canvas / 2
+        return CGSize(width: width / 2 - cornerX, height: -(openRise - cornerFromBottom))
+    }
+
     /// The thought after `index`, wrapping.
     static func next(after index: Int, count: Int) -> Int {
         count > 0 ? (index + 1) % count : 0
@@ -45,6 +62,17 @@ struct TessLayer: View {
     /// Her resting mode.
     var rest: TessSoul.Mode = .idle
     var eyes = true
+    /// Her own layer is open (sheet 215): she moves to the bottom middle, 112 pt up, at 1.35x (1.2x while he holds).
+    var open = false
+    var holding = false
+    /// While he holds to talk: his voice's level, when the last word was heard, and a finger near her.
+    var voice: Double = 0
+    var heardAt: Date?
+    var attention: CGPoint?
+    /// Her mouth, when she has one (never while she speaks or listens).
+    var mouth: (kind: SoulMouth, start: Date)?
+    /// Her reaction to touch, a line or a deed.
+    var reaction: (kind: SoulLife.Reaction, start: Date)?
 
     @State private var index = -1
     @State private var pooling = false
@@ -61,7 +89,7 @@ struct TessLayer: View {
     }
 
     var body: some View {
-        GeometryReader { _ in
+        GeometryReader { geometry in
             // Everything on this layer lets touches through except Tess herself (and her line, while it is up).
             HStack(alignment: .center, spacing: Theme.Spacing.s) {
                 Text(line)
@@ -77,8 +105,14 @@ struct TessLayer: View {
                     }
                     .accessibilityHidden(shown == nil)
                     .accessibilityLabel(line)
-                TessSoul(mode: pooling ? .done : rest, eyes: eyes, gaze: gaze)
+                TessSoul(mode: pooling ? .done : rest, eyes: eyes, gaze: gaze, attention: attention, reaction: reaction,
+                         voice: voice, heardAt: heardAt, mouth: mouth)
                     .frame(width: TessLayerShape.canvas, height: TessLayerShape.canvas)
+                    .scaleEffect(TessLayerShape
+                        .phoneScale * (open ? (holding ? TessLayerShape.holdScale : TessLayerShape.openScale) : 1))
+                    .offset(open ? TessLayerShape.openOffset(width: geometry.size.width) : .zero)
+                    .tesseraAnimation(Theme.Motion.house, value: open)
+                    .tesseraAnimation(Theme.Motion.house, value: holding)
                     .contentShape(Circle().inset(by: 16))
                     .onTapGesture { tap() }
                     .accessibilityElement()

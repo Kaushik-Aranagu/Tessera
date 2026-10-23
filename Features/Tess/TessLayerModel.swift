@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import TesseraCore
+import TesseraTess
 
 /// The running conversation in Tess's layer (sheet 215 rev 5 to 16). The turns persist through Core's
 /// `TessConversation` (on this phone only, seven days, never in a backup); what this model holds in memory (the lines
@@ -107,9 +108,16 @@ final class TessLayerModel {
         }
     }
 
+    /// At most three plain replies under her newest line.
+    func offer(_ options: [String]) {
+        replies = Array(options.prefix(3))
+    }
+
     /// Her line has finished arriving.
     func arrived(_ id: UUID) {
-        if arriving == id { arriving = nil }
+        if arriving == id {
+            arriving = nil
+        }
     }
 
     // MARK: Replies
@@ -121,7 +129,9 @@ final class TessLayerModel {
         try? await Task.sleep(for: .seconds(Self.pickFlashSeconds))
         picked = nil
         hear(reply)
-        if Self.closes(reply) { return true }
+        if Self.closes(reply) {
+            return true
+        }
         if let line = answer(reply) {
             say(line, names: [])
         }

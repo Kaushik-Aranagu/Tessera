@@ -22,17 +22,26 @@ enum SoulCloud {
         var chroma = 1.7
         /// Reduce Transparency: a flat body with no blending.
         var flat = false
-        /// Bursts of colour; off under Reduce Motion.
-        var bursts = true
+        /// The burst of colour under way, from her director (nil under Reduce Motion and in Low Power).
+        var activeBurst: ActiveBurst?
+        /// While he holds to talk (rev 19 F4): his voice's level (0 ... 1) runs round her edge as small waves; a heard
+        /// word
+        /// gathers her (0 ... 1) for a moment. Both are 0 when he is not talking, under Reduce Motion and in Low Power.
+        var voice = 0.0
+        var gather = 0.0
         /// The colour fields' own sway and the warp; off in Low Power.
         var sway = true
     }
 
+    /// The look scale at which her body is the board's size (Home idle): her drawing is normalised to it, so a bigger
+    /// mode makes her bigger and the sheet's numbers hold at rest.
+    static let referenceScale: CGFloat = 0.62
+
     /// The image covers `span` of the reference square, so her fade never meets the edge (see `clipIsSafe`).
     static let span = 1.2
     static let side = 112
-    static let paintsDark: [UInt32] = [0xFF5B3A, 0x5E8BFF, 0xFFC23D]
-    static let paintsLight: [UInt32] = [0xD2502F, 0x3561C8, 0xE0A21E]
+    static let paintsDark: [UInt32] = [0xFF6B3D, 0xFF4A33, 0xFFC23D]
+    static let paintsLight: [UInt32] = [0xFF5A26, 0xE5341C, 0xFFA90F]
 
     /// The body's largest radius is 0.16 R at its fullest breath and spread, and her edge reaches out 11% more; the
     /// canvas is never tighter than 2.2 of that from her centre.
@@ -45,7 +54,7 @@ enum SoulCloud {
     static func radius(_ input: Input) -> Double {
         let phase = input.time * (input.quiet ? 0.35 : 1)
         let breath = 0.96 + (input.quiet ? 0.03 : 0.08) * sin(phase * 0.98) + 0.08 * input.level
-        return 0.16 * breath * (1 + 0.1 * input.spread)
+        return 0.16 * breath * (1 + 0.1 * input.spread) * (1 - 0.06 * input.gather)
     }
 
     // MARK: Colour
@@ -134,6 +143,12 @@ enum SoulCloud {
         let distance: Double
     }
 
+    /// A burst and how far into it she is (the envelope, 0 ... 1).
+    struct ActiveBurst: Equatable {
+        let burst: Burst
+        let envelope: Double
+    }
+
     static let burstPeriod = SoulBlink.period
 
     /// Bursts over one hour: gaps of 2.2 to 5.7 s (5 to 11 s while she is quiet), each lasting 1.4 to 2.2 s.
@@ -161,7 +176,7 @@ enum SoulCloud {
     }
 
     /// The burst under way at `time` and its envelope (sin squared over its length), if any.
-    static func burst(at time: Double, quiet: Bool) -> (burst: Burst, envelope: Double)? {
+    static func burst(at time: Double, quiet: Bool) -> ActiveBurst? {
         let schedule = bursts(quiet: quiet)
         let local = time.truncatingRemainder(dividingBy: burstPeriod)
         let wrapped = local < 0 ? local + burstPeriod : local
@@ -179,7 +194,7 @@ enum SoulCloud {
         let burst = schedule[found]
         let unit = (wrapped - burst.start) / burst.length
         guard unit >= 0, unit <= 1 else { return nil }
-        return (burst, pow(sin(Double.pi * unit), 2))
+        return ActiveBurst(burst: burst, envelope: pow(sin(Double.pi * unit), 2))
     }
 
     private static func seeded(_ seed: UInt64) -> Double {
@@ -199,7 +214,7 @@ enum SoulCloud {
         let phase = input.time * (input.quiet ? 0.35 : 1)
         let radius = radius(input)
         let angle = 0.6 + phase * 0.16 + input.spin
-        let active = input.bursts ? burst(at: input.time, quiet: input.quiet) : nil
+        let active = input.activeBurst
         return (0 ..< 3).map { index in
             let step = Double(index)
             let swaying = input.sway ? 0.35 * sin(phase * (0.23 + 0.04 * step) + step * 1.7) : 0
@@ -239,8 +254,10 @@ enum SoulCloud {
     static func alpha(across: Double, down: Double, input: Input) -> Double {
         let phase = input.time * (input.quiet ? 0.35 : 1)
         let theta = atan2(down, across)
+        // His voice runs round her edge as small waves (only her edge: the texture and the colours stay as they are).
+        let waves = input.voice * (0.05 * sin(7 * theta - input.time * 9) + 0.035 * sin(11 * theta + input.time * 13))
         let reach = 1 + 0.045 * sin(2 * theta + phase * 0.42) + 0.03 * sin(3 * theta - phase * 0.33 + 1.1)
-            + 0.035 * sin(theta - phase * 0.19)
+            + 0.035 * sin(theta - phase * 0.19) + waves
         let ratio = hypot(across, down) / (radius(input) * reach)
         if ratio > 2.3 {
             return 0

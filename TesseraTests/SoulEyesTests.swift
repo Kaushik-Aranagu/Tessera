@@ -47,11 +47,12 @@ struct SoulEyesTests {
             var frame = SoulFrame.sample(.idle, time: 4.2, elapsed: 0)
             frame.look.scale = scale
             let mains = frame.dabs.prefix(3)
-            let meanX = mains.reduce(0) { $0 + $1.x } / 3 * scale
-            let meanY = mains.reduce(0) { $0 + $1.y } / 3 * scale
+            let unit = scale / SoulCloud.referenceScale
+            let meanX = mains.reduce(0) { $0 + $1.x } / 3 * unit
+            let meanY = mains.reduce(0) { $0 + $1.y } / 3 * unit
             let centre = SoulEyes.centre(of: frame)
             #expect(abs(centre.x - meanX) < 0.001)
-            #expect(abs(centre.y - (meanY - 3 * scale)) < 0.001)
+            #expect(abs(centre.y - (meanY - 3 * unit)) < 0.001)
         }
     }
 

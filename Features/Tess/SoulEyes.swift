@@ -116,6 +116,57 @@ enum SoulBlink {
     }
 }
 
+/// Her mouth (sheet 215 rev 19, F5): only three meanings. A smile when she did what he asked, a gentle slant while she
+/// waits on his answer, a small "oh" when something new arrives beside her on Home. One fine line in her eye ink; it
+/// draws out from its middle, never fades, never while she speaks or listens, and no lip sync.
+enum SoulMouth: Equatable {
+    case smile, slant, oh
+
+    /// How long it stays: a slant stays until she is answered (nil).
+    var seconds: Double? {
+        switch self {
+        case .smile: 1.1
+        case .oh: 0.8
+        case .slant: nil
+        }
+    }
+
+    /// How far it is drawn out (0 ... 1): out from the middle in 150 ms, back in over the last 150 ms.
+    func drawn(since: Double) -> Double {
+        guard since >= 0 else { return 0 }
+        let out = min(since / 0.15, 1)
+        guard let seconds else { return out }
+        guard since < seconds else { return 0 }
+        return min(out, (seconds - since) / 0.15, 1)
+    }
+}
+
+/// The mouth's line: a smile's arc, a slant's gentle tilt (up to the right, never a frown), an "oh"'s small ring.
+struct SoulMouthShape: Shape {
+    var kind: SoulMouth
+    var drawn: Double
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let mid = CGPoint(x: rect.midX, y: rect.midY)
+        // Out from the middle: both ends start at the centre.
+        let half = rect.width / 2 * drawn
+        switch kind {
+        case .smile:
+            path.move(to: CGPoint(x: mid.x - half, y: mid.y - 0.3 * drawn))
+            path.addQuadCurve(to: CGPoint(x: mid.x + half, y: mid.y - 0.3 * drawn),
+                              control: CGPoint(x: mid.x, y: mid.y + 2.4 * drawn))
+        case .slant:
+            path.move(to: CGPoint(x: mid.x - half * 0.8, y: mid.y + 0.7 * drawn))
+            path.addLine(to: CGPoint(x: mid.x + half * 0.8, y: mid.y - 0.5 * drawn))
+        case .oh:
+            let width = 2.4 * drawn, height = 2.9 * drawn
+            path.addEllipse(in: CGRect(x: mid.x - width / 2, y: mid.y - height / 2, width: width, height: height))
+        }
+        return path
+    }
+}
+
 /// Two ink dots on the soul (§1): 4.2 × 4.6 pt ovals (1.3x), 8.4 pt apart, 3 pt above the mean of the three main dabs,
 /// in the look's dark colour (ink on light looks, ground on dark ones), normal blend, over the soul. Her life (sheet
 /// 215 rev 6) moves them: glances, blinks, the lean and float of her body, a finger's pull, a touch's widening and the
@@ -135,17 +186,32 @@ struct SoulEyes: View {
     var reaction: (kind: SoulLife.Reaction, start: Double)?
     /// Light looks draw the eyes as one solid tone; dark ones keep them a little soft.
     var solid = true
+    /// Her mouth, when she has one (never while she speaks or listens: the host leaves it nil then).
+    var mouth: (kind: SoulMouth, start: Double)?
 
     static let size = CGSize(width: 3.2 * 1.3, height: 3.5 * 1.3)
+    /// How much the host draws her (0.7 of the board on the phone, sheet 215 rev 21): the eyes stay at least 3 pt
+    /// across and
+    /// the mouth's line at least 1 pt on screen.
+    var displayScale: CGFloat = 0.7
+
+    func eyeSize(unit: CGFloat) -> CGSize {
+        let width = max(Self.size.width, 3 / max(unit * displayScale, 0.01))
+        return CGSize(width: width, height: width * Self.size.height / Self.size.width)
+    }
+
+    func mouthWidth(unit: CGFloat) -> CGFloat {
+        max(1.05 * 1.3, 1 / max(unit * displayScale, 0.01))
+    }
 
     /// Where the pair sits, in the canvas's points from its centre: the main dabs' mean, 3 pt above it, both scaled
     /// by the soul's drawn scale (the same transform `SoulRenderer` applies to the dabs).
     static func centre(of frame: SoulFrame) -> CGPoint {
         let mains = frame.dabs.prefix(3)
         let count = CGFloat(max(mains.count, 1))
-        let scale = frame.look.scale
-        return CGPoint(x: mains.reduce(0) { $0 + $1.x } / count * scale,
-                       y: (mains.reduce(0) { $0 + $1.y } / count - 3) * scale)
+        let unit = frame.look.scale / SoulCloud.referenceScale
+        return CGPoint(x: mains.reduce(0) { $0 + $1.x } / count * unit,
+                       y: (mains.reduce(0) { $0 + $1.y } / count - 3) * unit)
     }
 
     /// The offset of the pair for a scripted gaze, a finger, or her own glances when she looks straight ahead.
@@ -158,7 +224,7 @@ struct SoulEyes: View {
 
     var body: some View {
         let centre = Self.centre(of: frame)
-        let scale = frame.look.scale
+        let scale = frame.look.scale / SoulCloud.referenceScale
         let lid = lid ?? (still ? SoulBlink.lid(at: time) : SoulLife.lid(at: time))
         let glance = still ? .zero : Self.glance(gaze: gaze, attention: attention, time: time)
         let body = still ? .zero : SoulLife.lean(at: time)
@@ -166,9 +232,21 @@ struct SoulEyes: View {
         let since = reaction.map { time - $0.start }
         let widen = !still && reaction?.kind == .touch ? SoulLife.widen(since: since ?? 99) : 1
         let smile = reaction?.kind == .did ? SoulLife.smile(since: since ?? 99) : 0
-        HStack(spacing: 8.4 - Self.size.width) {
-            eye(lid, widen: widen, smile: smile)
-            eye(lid, widen: widen, smile: smile)
+        let eyes = eyeSize(unit: scale)
+        let mouthDrawn = mouth.map { $0.kind.drawn(since: still ? 99 : time - $0.start) } ?? 0
+        let stillMouth = still ? (mouth != nil ? 1.0 : 0) : mouthDrawn
+        ZStack {
+            HStack(spacing: 8.4 - eyes.width) {
+                eye(lid, widen: widen, smile: smile, size: eyes)
+                eye(lid, widen: widen, smile: smile, size: eyes)
+            }
+            if let mouth, stillMouth > 0.001 {
+                // 2.6 pt below her centre (the eyes sit 3 pt above it); 1.05 pt at 1.3x.
+                SoulMouthShape(kind: mouth.kind, drawn: stillMouth)
+                    .stroke(color, style: StrokeStyle(lineWidth: mouthWidth(unit: scale), lineCap: .round))
+                    .frame(width: 8, height: 4)
+                    .offset(y: 5.6)
+            }
         }
         // Scaled first, then placed: the offset is already in screen points (no second scale).
         .scaleEffect(scale)
@@ -179,8 +257,8 @@ struct SoulEyes: View {
         .accessibilityHidden(true)
     }
 
-    private func eye(_ lid: CGFloat, widen: CGFloat, smile: Double) -> some View {
-        let width = Self.size.width * widen, height = Self.size.height * widen
+    private func eye(_ lid: CGFloat, widen: CGFloat, smile: Double, size: CGSize) -> some View {
+        let width = size.width * widen, height = size.height * widen
         let tone = color.opacity(solid ? 1 : 0.82)
         return ZStack {
             Ellipse()
@@ -193,7 +271,7 @@ struct SoulEyes: View {
                     .opacity(smile)
             }
         }
-        .frame(width: Self.size.width * 1.25, height: Self.size.height * 1.25)
+        .frame(width: size.width * 1.25, height: size.height * 1.25)
     }
 }
 

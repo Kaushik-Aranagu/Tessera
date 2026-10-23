@@ -68,7 +68,8 @@ enum TessTimeMarker {
 
     /// "Now, 1:31 pm" when the layer opens and her last turn was 20 minutes or more ago; else nil.
     static func openingMarker(last: Date?, now: Date, calendar: Calendar = .current, locale: Locale = .current)
-        -> String? {
+        -> String?
+    {
         guard let last, now.timeIntervalSince(last) >= gap else { return nil }
         return "Now, \(clock(now, calendar: calendar, locale: locale))"
     }

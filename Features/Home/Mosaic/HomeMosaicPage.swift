@@ -42,6 +42,9 @@ struct HomeMosaicPage: View {
     @State private var notices: [HomeNotice] = []
     /// Sheet 213: the things that take turns in the space under the mosaic (Core's ranking when its feed lands).
     @State private var things: [HomeThing] = []
+    /// Sheet 215: her layer is open, and the conversation in it.
+    @State private var tessOpen = false
+    @State private var tessModel = TessLayerModel()
     @State private var shield: [CGRect] = []
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager(count: MosaicPage.count)
@@ -152,15 +155,11 @@ struct HomeMosaicPage: View {
             }
         }
         .mosaicTouchFeed(controller, enabled: layerOn)
-        // Sheet 209: Tess on her own layer above all of Home; touches pass through except on her.
-        .overlay {
-            if layerOn, HomeMosaic.appsListIsOn {
-                TessLayer(
-                    thoughts: TessThoughts.lines(facts: facts, asksClaude: model.asksClaude),
-                    onTap: { playTess() }
-                )
-            }
-        }
+        // Sheet 215: Home sits under her blur (hers alone) while her layer is open.
+        .tessBackdrop(open: tessOpen)
+        // Sheet 209 and 215: Tess on her own layer above all of Home; touches pass through except on her. Her
+        // conversation opens over Home, and she moves to the bottom middle.
+        .overlay { tessOverlay }
         // Sheet 203: a pull down from the top 40 pt also opens Settings.
         .simultaneousGesture(
             DragGesture(minimumDistance: 24).onEnded { value in
@@ -306,6 +305,55 @@ struct HomeMosaicPage: View {
     }
 
     /// Sheet 209: Tess was tapped, so the mosaic plays the Tess moment (the sentence does not change).
+    /// Sheet 209 and 215: Tess on her own layer above all of Home; touches pass through except on her. Her
+    /// conversation opens over Home, and she moves to the bottom middle.
+    @ViewBuilder private var tessOverlay: some View {
+        if layerOn, HomeMosaic.appsListIsOn {
+            ZStack {
+                if tessOpen {
+                    TessConversationLayer(model: tessModel, close: { closeTess() },
+                                          answer: { tessAnswer($0) }, send: { tessHeard($0) })
+                }
+                TessLayer(
+                    thoughts: TessThoughts.lines(facts: facts, asksClaude: model.asksClaude),
+                    onTap: { tessTapped() },
+                    open: tessOpen
+                )
+            }
+        }
+    }
+
+    /// A tap on her: opens her layer (closes it if it is open).
+    private func tessTapped() {
+        guard layerOn, scenePhase == .active else { return }
+        if tessOpen {
+            closeTess()
+        } else {
+            tessModel.open(engine: model.engine, classes: model.classes, facts: facts)
+            tessOpen = true
+        }
+    }
+
+    private func closeTess() {
+        tessModel.close()
+        tessOpen = false
+    }
+
+    /// What she says to a reply he picked (the phone's own answers; nothing leaves the phone here).
+    private func tessAnswer(_ reply: String) -> String? {
+        switch reply {
+        case "Show me": "Here it is."
+        case "Not now", "Leave it", "Fine as it is": "Okay."
+        default: "Okay."
+        }
+    }
+
+    /// Typed words: she answers on the phone, with one plain reply to end it.
+    private func tessHeard(_: String) {
+        tessModel.say("Got it. Anything else?", names: [])
+        tessModel.offer(["That's all"])
+    }
+
     private func playTess() {
         guard layerOn, scenePhase == .active, moment == nil else { return }
         let played = MosaicMomentEvent(.tess)

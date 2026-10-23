@@ -19,17 +19,38 @@ struct TessWordsTests {
         #expect(!TessWords.isShown(elapsed: 0.05, delay: 0.1) && TessWords.isShown(elapsed: 0.1, delay: 0.1))
     }
 
-    @Test func aTimeMarkerAppearsOnlyAfterAGapOfTwentyMinutesOrMore() {
+    @Test func aTimeMarkerAppearsOnlyAfterAGapOfTwentyMinutesOrMore() throws {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "America/Los_Angeles")!
+        calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
         let locale = Locale(identifier: "en_US")
-        let base = calendar.date(from: DateComponents(year: 2026, month: 10, day: 23, hour: 12, minute: 0))!
-        let times = [base, base.addingTimeInterval(5 * 60), base.addingTimeInterval(31 * 60), base.addingTimeInterval(51 * 60)]
+        let base = try #require(calendar.date(from: DateComponents(
+            year: 2026,
+            month: 10,
+            day: 23,
+            hour: 12,
+            minute: 0
+        )))
+        let times = [
+            base,
+            base.addingTimeInterval(5 * 60),
+            base.addingTimeInterval(31 * 60),
+            base.addingTimeInterval(51 * 60),
+        ]
         let markers = TessTimeMarker.markers(for: times, calendar: calendar, locale: locale)
         #expect(markers == [nil, nil, "12:31 pm", "12:51 pm"])
-        let opening = TessTimeMarker.openingMarker(last: times[3], now: times[3].addingTimeInterval(40 * 60), calendar: calendar, locale: locale)
+        let opening = TessTimeMarker.openingMarker(
+            last: times[3],
+            now: times[3].addingTimeInterval(40 * 60),
+            calendar: calendar,
+            locale: locale
+        )
         #expect(opening == "Now, 1:31 pm")
-        #expect(TessTimeMarker.openingMarker(last: times[3], now: times[3].addingTimeInterval(5 * 60), calendar: calendar, locale: locale) == nil)
+        #expect(TessTimeMarker.openingMarker(
+            last: times[3],
+            now: times[3].addingTimeInterval(5 * 60),
+            calendar: calendar,
+            locale: locale
+        ) == nil)
     }
 
     @Test func theEchoFindsTheLatestEarlierMentionByShownLabel() {
