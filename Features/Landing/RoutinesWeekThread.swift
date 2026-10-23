@@ -31,9 +31,9 @@ enum RoutinesWeekThreadData {
     /// "Ran on Monday, Wednesday and Thursday." Names only the days that ran.
     static func spoken(_ days: [Day], calendar: Calendar = .current) -> String {
         let names = days.filter(\.ran).map { TesseraDay.weekdayName(of: $0.date, calendar: calendar) }
+        // The thread is hidden when no day ran, so there is never a "nothing ran" line to say.
         switch names.count {
-        case 0: return "Nothing ran this week."
-        case 1: return "Ran on \(names[0])."
+        case 0, 1: return names.first.map { "Ran on \($0)." } ?? ""
         default: return "Ran on \(names.dropLast().joined(separator: ", ")) and \(names[names.count - 1])."
         }
     }
