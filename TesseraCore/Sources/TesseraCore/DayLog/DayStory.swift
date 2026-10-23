@@ -128,6 +128,7 @@ public enum DayStory {
         "finishCookSession",
         // Money pools: amounts and pool names never reach the Day log.
         "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool",
+        "makeKind", "keepNoteAsObject", "keepAllNotes",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).
