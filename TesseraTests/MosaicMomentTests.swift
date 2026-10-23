@@ -316,6 +316,132 @@ struct MosaicMomentTests {
         }
     }
 
+    // MARK: - A new best, a reminder, a parcel
+
+    @Test func theThreeMoreMomentsHaveTheirWindowsTransitionsAndDurations() {
+        #expect(MosaicMoment.best.window?.columns == 44 && MosaicMoment.best.window?.rows == 30)
+        #expect(MosaicMoment.best.transition == .wave && MosaicMoment.best.returnChangeover == .melt)
+        #expect(MosaicMoment.best.duration == 4.6 && MosaicMoment.best.stepBack == 0.40)
+        #expect(MosaicMoment.reminder(app: .training).window == nil)
+        #expect(MosaicMoment.reminder(app: .training).transition == .dissolve)
+        #expect(MosaicMoment.reminder(app: .training).duration == 3)
+        let delivery = MosaicMoment.delivery(app: .kitchen)
+        #expect(delivery.window?.columns == 50 && delivery.window?.rows == 26)
+        #expect(delivery.transition == .wave && delivery.duration == 4.4)
+    }
+
+    @Test func sevenStepsRiseThreeRowsEveryFiveColumnsAndShowOnePer120Ms() {
+        for step in 0 ..< 7 {
+            let area = MosaicMomentField.bestStep(step, cols: 44, rows: 30)
+            #expect(area.columns.count == 5 && area.rows.count == 2)
+            if step > 0 {
+                let before = MosaicMomentField.bestStep(step - 1, cols: 44, rows: 30)
+                #expect(area.columns.lowerBound - before.columns.lowerBound == 5)
+                #expect(before.rows.lowerBound - area.rows.lowerBound == 3)
+            }
+        }
+        #expect(MosaicMomentField.bestSteps(at: -1) == 0)
+        #expect(MosaicMomentField.bestSteps(at: 0) == 1)
+        #expect(MosaicMomentField.bestSteps(at: 0.13) == 2)
+        #expect(MosaicMomentField.bestSteps(at: 0.9) == 7)
+        // The whole staircase fits the window.
+        let last = MosaicMomentField.bestStep(6, cols: 44, rows: 30)
+        #expect(last.columns.upperBound <= 44 && last.rows.lowerBound >= 3)
+    }
+
+    @Test func theStarBlinksOneEightyOnOneEightyOffAfterTheSteps() {
+        #expect(!MosaicMomentField.bestStarOn(at: 0.5))
+        #expect(MosaicMomentField.bestStarOn(at: 0.84 + 0.05))
+        #expect(!MosaicMomentField.bestStarOn(at: 0.84 + 0.2))
+        #expect(MosaicMomentField.bestStarOn(at: 0.84 + 0.4))
+    }
+
+    @Test func aBestDrawsTrainingStepsAndAWarmWhiteStarWithPlusArms() throws {
+        var context = MosaicMoodContext()
+        context.trainingAccent = (0.8, 0.2, 0.1)
+        let best = plan(.best, context: context)
+        let overlay = try #require(best.overlay)
+        let field: MosaicTriple = (0.5, 0.5, 0.5)
+        let first = MosaicMomentField.bestStep(0, cols: 44, rows: 30)
+        // Step one is there at once, step seven is not until 720 ms.
+        #expect(overlay(first.columns.lowerBound, first.rows.lowerBound, 0.01, field).red == 0.8)
+        let last = MosaicMomentField.bestStep(6, cols: 44, rows: 30)
+        #expect(overlay(last.columns.lowerBound, last.rows.lowerBound, 0.3, field).red == 0.5)
+        #expect(overlay(last.columns.lowerBound, last.rows.lowerBound, 1.0, field).red == 0.8)
+        // The star: warm white centre, four arms, nothing at the corners.
+        let star = MosaicMomentField.bestStarCentre(cols: 44, rows: 30)
+        #expect(overlay(star.column, star.row, 0.9, field).blue > 0.8)
+        #expect(overlay(star.column + 1, star.row, 0.9, field).red != 0.5)
+        #expect(overlay(star.column + 1, star.row + 1, 0.9, field).red == 0.5)
+    }
+
+    @Test func aReminderKnocksThreeTimesAndTheEdgeLightsThenHolds() throws {
+        let shake = MosaicMomentField.reminderShake
+        #expect(shake(0.1) == 0 && shake(0.2) == 0)
+        #expect(shake(0.30 + 0.055) > 1.9 && shake(0.30 + 0.055) <= 2)
+        #expect(shake(0.56 + 0.055) > 1.9)
+        #expect(shake(0.82 + 0.055) > 1.9)
+        #expect(shake(0.45) == 0 && shake(1.2) == 0)
+        #expect(MosaicMomentField.reminderBand(at: 0.1) == 0)
+        #expect(MosaicMomentField.reminderBand(at: 0.33) == 1)
+        #expect(MosaicMomentField.reminderBand(at: 0.45) == 0)
+        #expect(MosaicMomentField.reminderBand(at: 1.5) == 0.7)
+        var context = MosaicMoodContext()
+        context.accents[.training] = (1, 0, 0)
+        let reminder = plan(.reminder(app: .training), context: context)
+        let overlay = try #require(reminder.overlay)
+        let field: MosaicTriple = (0, 0, 0)
+        // Two columns just inside the right edge, not the edge itself or the rest.
+        let columns = 50
+        #expect(overlay(columns - 3, 5, 1.5, field).red > 0.6)
+        #expect(overlay(columns - 2, 5, 1.5, field).red > 0.6)
+        #expect(overlay(columns - 1, 5, 1.5, field).red == 0)
+        #expect(overlay(columns - 4, 5, 1.5, field).red == 0)
+        #expect(reminder.offset != nil)
+    }
+
+    @Test func aParcelSlidesInOverNineHundredMillisecondsEaseOutAndBumpsOneRow() {
+        let rest = 50 - 9 - 6
+        #expect(MosaicMomentField.parcelLeft(at: 0, cols: 50) == 50)
+        #expect(MosaicMomentField.parcelLeft(at: 0.9, cols: 50) == rest)
+        #expect(MosaicMomentField.parcelLeft(at: 5, cols: 50) == rest)
+        // Ease-out: more than half the way by the midpoint.
+        #expect(MosaicMomentField.parcelLeft(at: 0.45, cols: 50) < rest + (50 - rest) / 2)
+        #expect(MosaicMomentField.parcelBump(at: 0.5) == 0)
+        #expect(MosaicMomentField.parcelBump(at: 0.95) == 1)
+        #expect(MosaicMomentField.parcelBump(at: 1.2) == 0)
+    }
+
+    @Test func aParcelIsNineBySevenWithAnOutlineATapeColumnAndAPaleFill() throws {
+        var context = MosaicMoodContext()
+        context.accents[.kitchen] = (0, 0.5, 0)
+        let delivery = plan(.delivery(app: .kitchen), context: context)
+        let overlay = try #require(delivery.overlay)
+        let field: MosaicTriple = (1, 1, 1)
+        let left = 50 - 9 - 6, top = 26 - 4 - 7
+        // Settled (3 s): the outline and tape take the accent, the inside is pale.
+        #expect(overlay(left, top + 3, 3, field).green == 0.5)
+        #expect(overlay(left + 4, top + 3, 3, field).green == 0.5)
+        let inside = overlay(left + 2, top + 3, 3, field)
+        #expect(inside.green > 0.5 && inside.green < 1)
+        #expect(overlay(left + 9, top + 3, 3, field).green == 1)
+        #expect(overlay(left, top + 7, 3, field).green == 1)
+        // Two dust tiles by the landing, gone by 2 s.
+        #expect(overlay(left - 1, top + 6, 1.0, field).green < 1)
+        #expect(overlay(left - 1, top + 6, 2.0, field).green == 1)
+    }
+
+    @Test func theThreeMoreMomentsHoldStillUnderReduceMotion() {
+        var context = MosaicMoodContext()
+        context.accents[.kitchen] = (0, 0.5, 0)
+        context.accents[.training] = (1, 0, 0)
+        for moment in [MosaicMoment.best, .reminder(app: .training), .delivery(app: .kitchen)] {
+            let still = plan(moment, reduceMotion: true, context: context)
+            #expect(still.offset == nil && still.scale == nil)
+            #expect(still.overlay != nil)
+        }
+    }
+
     @Test func aFinishedMomentKeepsTheMoodField() {
         let finished = plan(.finished(tone: .glaze))
         #expect(finished.base == nil)

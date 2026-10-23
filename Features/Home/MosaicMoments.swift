@@ -19,6 +19,12 @@ enum MosaicMoment: Equatable {
     case tess
     case timer
     case finished(tone: MosaicTone)
+    /// A new best: seven Training steps and a blinking star.
+    case best
+    /// A reminder knocks: the window shakes three times and the right edge lights in the app's accent.
+    case reminder(app: AppID?)
+    /// A parcel at the door (Kitchen for groceries).
+    case delivery(app: AppID?)
 }
 
 /// A moment the host asks for. A new event replaces a running one; a mood change cancels it.
@@ -44,7 +50,9 @@ extension MosaicMoment {
         case .announce: (62, 22)
         case .tess: (40, 24)
         case .timer: (32, 32)
-        case .finished: nil
+        case .finished, .reminder: nil
+        case .best: (44, 30)
+        case .delivery: (50, 26)
         }
     }
 
@@ -54,9 +62,10 @@ extension MosaicMoment {
         case .snow, .storm: .fall
         case .fog: .dissolve
         case .wind, .announce: .wipe
-        case .heat, .timer: .wave
+        case .heat, .timer, .best, .delivery: .wave
         case .tess: .gather
         case .finished: .wave
+        case .reminder: .dissolve
         }
     }
 
@@ -64,10 +73,10 @@ extension MosaicMoment {
     /// timer and finished dissolve, heat waves back, Tess gathers back.
     var returnChangeover: MosaicChangeover {
         switch self {
-        case .snow, .storm, .announce: .melt
+        case .snow, .storm, .announce, .best: .melt
         case .heat: .transition(.wave)
         case .tess: .transition(.gather)
-        case .fog, .wind, .timer, .finished: .transition(.dissolve)
+        case .fog, .wind, .timer, .finished, .reminder, .delivery: .transition(.dissolve)
         }
     }
 
@@ -84,6 +93,9 @@ extension MosaicMoment {
         case .tess: 6.5
         case .timer: 4.2
         case .finished: 3.2
+        case .best: 4.6
+        case .reminder: 3
+        case .delivery: 4.4
         }
     }
 
@@ -93,6 +105,7 @@ extension MosaicMoment {
         case .announce: 0.55
         case .tess: 0.50
         case .timer: 0.50
+        case .best: 0.40
         default: 0
         }
     }
@@ -193,6 +206,14 @@ enum MosaicMomentField {
             plan.overlay = timerLight(cols: cols, rows: rows, start: start, context: context)
         case .finished:
             break
+        case .best:
+            plan.overlay = bestLight(cols: cols, rows: rows, start: start, context: context, still: false)
+        case let .reminder(app):
+            plan.overlay = reminderLight(cols: cols, start: start, accent: accent(app, context), still: false)
+            plan.offset = { _, _, time in CGPoint(x: reminderShake(time: time - start), y: 0) }
+        case let .delivery(app):
+            plan.overlay = deliveryLight(cols: cols, rows: rows, start: start, ground: ground,
+                                         accent: accent(app, context), still: false)
         }
         return plan
     }
@@ -413,6 +434,13 @@ enum MosaicMomentField {
         case .tess:
             let tiles = eyeTiles(cols: cols, rows: rows, time: 1.0)
             return { column, row, _, colour in tiles.contains(column * rows + row) ? context.tess : colour }
+        case .best:
+            return bestLight(cols: cols, rows: rows, start: 0, context: context, still: true)
+        case let .reminder(app):
+            return reminderLight(cols: cols, start: 0, accent: accent(app, context), still: true)
+        case let .delivery(app):
+            return deliveryLight(cols: cols, rows: rows, start: 0, ground: (1, 1, 1), accent: accent(app, context),
+                                 still: true)
         default:
             return nil
         }
