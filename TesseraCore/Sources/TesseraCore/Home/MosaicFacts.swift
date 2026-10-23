@@ -25,7 +25,9 @@ public struct MosaicNext: Equatable, Sendable {
     public let start: Date
 }
 
-/// One thing finished today: when, and which app. Never a title; private things count.
+/// One thing finished today: when, and which app. Never a title; private things count. The app is for drawing a tile in
+/// the app on screen only: it never reaches the Lock Screen, a widget, a Live Activity or an intent (a test scans for
+/// it).
 public struct MosaicFinish: Equatable, Sendable {
     public let time: Date
     public let app: AppID?
@@ -186,8 +188,19 @@ public extension MosaicFacts {
     {
         let store = engine.store, classes = engine.classes
         let end = calendar.date(byAdding: .day, value: 1, to: day) ?? day.addingTimeInterval(86400)
+        // An event label gets the same check as a task's title: a cook's dish names especially. Anything private,
+        // walled
+        // or secret reads its app's private label instead.
+        let weight = BodyWeight.lastKg(in: store)
+        func masked(_ event: HandsEvent) -> String {
+            guard !event.isPrivate else { return event.label }
+            let hidden = ObjectPrivacy.isPrivateWord(event.label, in: store) || SecretWords.mentions(event.label)
+                || PrivateFacts.isWalled(event.label, lastWeightKg: weight)
+            guard hidden else { return event.label }
+            return event.app == .kitchen ? ObjectPrivacy.recipeLabel : ObjectPrivacy.routineLabel
+        }
         var candidates: [MosaicNext] = events.filter { $0.start > now && $0.start < end }
-            .map { MosaicNext(title: $0.label, start: $0.start) }
+            .map { MosaicNext(title: masked($0), start: $0.start) }
         if let taskClass = classes[.task] {
             for task in store.objects(of: taskClass) where !task.isDeleted {
                 guard store.value("isDone", of: task) != .bool(true),

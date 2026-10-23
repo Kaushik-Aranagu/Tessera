@@ -14,6 +14,11 @@ public struct HandsEvent: Equatable, Sendable {
     public let hands: [DateInterval]
     /// Running or anchored to a serve time: it does not move.
     public let isFixed: Bool
+
+    /// Its label is already a private one ("Private workout", "Private recipe"), never its words.
+    public var isPrivate: Bool {
+        label.hasPrefix("Private ")
+    }
 }
 
 public struct HandsShift: Equatable, Sendable {
