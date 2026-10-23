@@ -318,7 +318,6 @@ struct HomeMosaicPage: View {
         }
     }
 
-    /// The moment is over (its time, a mood change, or leaving Home): the sentence turns back to the mood's lines.
     /// The hold finished a task: the op lands, the one Undo line speaks its shown label, and the next thing comes in.
     /// Returns whether the task was marked done (the one rigid tap plays only then).
     private func finishThing(_ thing: HomeThing) -> Bool {
@@ -353,6 +352,7 @@ struct HomeMosaicPage: View {
         }
     }
 
+    /// The moment is over (its time, a mood change, or leaving Home): the sentence turns back to the mood's lines.
     private func endMoment() {
         momentTask?.cancel()
         momentTask = nil
