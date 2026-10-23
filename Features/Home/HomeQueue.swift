@@ -209,10 +209,18 @@ struct QueueWindow: View {
 /// Dab, name and time. Press for a beat, then drag right: the strike follows the finger and past 140 pt the row
 /// is done. Drag left: the row slides to reveal TOMORROW (or NEXT WEEK for an undated row); past 120 pt it moves.
 /// Tap opens it.
-private struct QueueRow: View {
+struct QueueRow: View {
     let entry: QueueEntry
     let isNext: Bool
     let ink: Double
+    /// The mosaic page draws the same row in its own face and size; nil is Home's own.
+    var titleFont: Font?
+    /// Replaces the tap that opens the object (the mosaic's rows open and close instead).
+    var tapped: (() -> Void)?
+    /// Runs once the done op has landed (the mosaic lays the row's colour into its picture).
+    var finished: (() -> Void)?
+    /// The strike is drawn in ink, with no class colour (the mosaic page keeps colour to its own words).
+    var strikesInInk = false
 
     @Environment(AppModel.self) private var model
     private let voice = TessVoice.shared
@@ -271,7 +279,13 @@ private struct QueueRow: View {
             ended: { commit($0) },
             cancelled: { holding = false }
         ))
-        .onTapGesture { model.open(.object(entry.id)) }
+        .onTapGesture {
+            if let tapped {
+                tapped()
+            } else {
+                model.open(.object(entry.id))
+            }
+        }
         .modifier(ZoomSource(id: Route.object(entry.id), namespace: namespace))
         .tesseraFeedback(trigger: armed) { _, now in now ? .selection : nil }
         .tesseraFeedback(trigger: holding) { _, now in now ? .pickedUp : nil }
@@ -350,7 +364,7 @@ private struct QueueRow: View {
 
     /// The row's class pigment, for its moments only (no dot ever sits beside the name: no-dots.md).
     private var pigment: Color {
-        entry.isWorkout ? Theme.Colors.live : Theme.Colors.context
+        strikesInInk ? Theme.Colors.ink : entry.isWorkout ? Theme.Colors.live : Theme.Colors.context
     }
 
     private var content: some View {
@@ -358,7 +372,7 @@ private struct QueueRow: View {
         // wraps beside it: nothing cut, nothing under it (Design on #507).
         HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
             Text(entry.title)
-                .font(Theme.Typography.font(Theme.concept.scale.body, weight: isNext ? .medium : .regular))
+                .font(titleFont ?? Theme.Typography.font(Theme.concept.scale.body, weight: isNext ? .medium : .regular))
                 // A day's new name settles in with a quiet fade, never a pop (Design on #1181).
                 .contentTransition(.opacity)
                 .tesseraAnimation(.easeOut(duration: 0.24), value: entry.title)
@@ -466,6 +480,7 @@ private struct QueueRow: View {
                 model.touch()
             }
             voice.say("\(entry.title), done.", undo: record)
+            finished?()
         }
     }
 
