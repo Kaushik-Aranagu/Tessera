@@ -204,6 +204,11 @@ final class ReviewChoices {
                says: ["Off": "A finished workout's page is as before.",
                       "On": "A finished workout's page is one sentence, its set marks and its numbers."],
                readiness: .live),
+        // Design 154: Settings in sentence case, a line under the title, value words in ink 2.
+        Choice(id: "settingsV2", name: "Settings v2", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Settings reads as it does now.",
+                      "On": "Settings opens with a line under its title, in sentence case, with values in grey."],
+               readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
                       "All": "Body weight, Habits, Money, Reading, People and Upkeep show too."],
@@ -293,7 +298,7 @@ final class ReviewChoices {
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
-        ("Rooms", ["numberRules", "roomMotion", "pagesV2"]),
+        ("Rooms", ["numberRules", "roomMotion", "pagesV2", "settingsV2"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
