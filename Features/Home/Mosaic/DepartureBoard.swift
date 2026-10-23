@@ -131,9 +131,12 @@ struct DepartureBoard: View {
         .accessibilityActions {
             // Each door is a button: "Push day, opens Training".
             ForEach(Array(lines.enumerated()), id: \.offset) { li, line in
-                ForEach(Array(line.enumerated()), id: \.offset) { _, seg in
+                let starts = DepartureSteps.starts(line)
+                ForEach(Array(line.enumerated()), id: \.offset) { k, seg in
                     if seg.opens, case let .app(app) = seg.kind {
-                        Button("\(seg.text), opens \(app.rawValue)") { open(li, .zero) }
+                        Button("\(seg.text), opens \(app.rawValue)") {
+                            open(li, frames.byKey["\(li)-\(starts[k])"] ?? .zero)
+                        }
                     }
                 }
             }
@@ -215,7 +218,7 @@ struct DepartureBoard: View {
             Button {
                 taps += 1
                 open(li, frames.byKey[key] ?? .zero)
-            } label: { door.foregroundStyle(Theme.Colors.ink) }
+            } label: { door.foregroundStyle(Theme.Colors.ink).contentShape(.interaction, Rectangle().inset(by: -8)) }
                 .buttonStyle(.plain)
         case .number:
             content.foregroundStyle(Theme.Colors.ink)

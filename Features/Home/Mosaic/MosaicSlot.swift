@@ -21,10 +21,11 @@ struct MosaicSlot: View {
                     coreTop = $0
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                .accessibilityHidden(true)
+                .modifier(MosaicWords(words: caption))
         } else if let facts {
             MosaicView(facts: facts, scene: $scene, caption: $caption)
                 .frame(height: HomeMosaic.mosaicHeight)
+                .modifier(MosaicWords(words: caption))
         } else {
             Color.clear.frame(height: HomeMosaic.mosaicHeight).accessibilityHidden(true)
         }
