@@ -87,7 +87,7 @@ struct DepartureBoard: View {
     let lines: [[DepartureSegment]]
     let open: (Int) -> Void
 
-    static let size: CGFloat = 21
+    static let size: CGFloat = 23
     static let lineGap: CGFloat = 3
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -192,7 +192,7 @@ struct DepartureBoard: View {
     private func font(for kind: DepartureSegment.Kind) -> Font {
         switch kind {
         case .number: Theme.numeral(Self.size, weight: .light)
-        case .app: Theme.voice(size: Self.size).weight(.medium)
+        case .app: Theme.voice(size: Self.size * 1.12).weight(.semibold)
         case .plain: Theme.voice(size: Self.size)
         }
     }

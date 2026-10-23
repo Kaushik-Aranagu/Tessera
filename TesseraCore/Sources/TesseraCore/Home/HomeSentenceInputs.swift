@@ -36,10 +36,11 @@ public extension HomeSentence {
         let stats = TrainingStats(store: store, classes: classes)
         let facts = stats.landingFacts(plan: plan, now: now, calendar: calendar)
         if let routine = facts.routine, !facts.isRestDay {
-            let opener = facts.opener.map { (
-                exercise: $0.exercise,
-                weight: StatsMass.number(kg: $0.weightKg, unit: unit)
-            ) }
+            // The lift's name is checked like any title; a private or walled one is left out of the sentence.
+            let opener = facts.opener.flatMap { opener -> (exercise: String, weight: String)? in
+                AppSummaryLines.shown(opener.exercise, in: store, classes: classes).isPrivate ? nil
+                    : (exercise: opener.exercise, weight: StatsMass.number(kg: opener.weightKg, unit: unit))
+            }
             let sentence = TrainingSentences.today(routine: routine, minutes: facts.minutes, opener: opener)
             let planned = plan.flatMap { stats.ledger.week(containing: now, plan: $0, now: now, calendar: calendar) }?
                 .first { $0.state == .today }?.planned

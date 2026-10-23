@@ -164,26 +164,42 @@ enum MosaicMoodField {
     ) -> [MosaicTriple] {
         let config = geometry.config
         var colours = [MosaicTriple](repeating: ground, count: config.count)
-        let rows = config.rows, columns = config.columns
-        for column in 0 ..< columns {
-            for row in 0 ..< rows {
+        for column in 0 ..< config.columns {
+            for row in 0 ..< config.rows {
                 let index = geometry.index(column: column, row: row)
-                let jitter = MosaicColour.jitter(index: index) * 0.05
-                let colour: RGB = switch mood {
-                case .morning: morning(column, row, geometry)
-                case .day: dayField(column, row, geometry, input, ground, context)
-                case .golden: golden(column, row, geometry)
-                case .running: dayField(column, row, geometry, input, ground, context)
-                case .rest: rest(column, row, geometry)
-                case .back: dusty(column, row, geometry)
-                case .done: evening(column, row, geometry)
-                case .rain: rainy(column, row, geometry)
-                case .night: night(column, row, geometry, context)
-                }
-                colours[index] = MosaicColour.lightened(colour, by: jitter)
+                colours[index] = colour(mood, column: column, row: row, geometry: geometry, input: input,
+                                        ground: ground, context: context, jitterIndex: index)
             }
         }
         return colours
+    }
+
+    /// One tile of a mood's field, for any column and row, inside the window or beyond it (the screen mosaic
+    /// evaluates the scene at its own coordinates all the way out). `jitterIndex` fixes the tile's small lightness
+    /// variation.
+    static func colour(
+        _ mood: MosaicMood,
+        column: Int,
+        row: Int,
+        geometry: MosaicGeometry,
+        input: MosaicSceneInput,
+        ground: MosaicTriple,
+        context: MosaicMoodContext,
+        jitterIndex: Int
+    ) -> MosaicTriple {
+        let jitter = MosaicColour.jitter(index: jitterIndex) * 0.05
+        let colour: RGB = switch mood {
+        case .morning: morning(column, row, geometry)
+        case .day: dayField(column, row, geometry, input, ground, context)
+        case .golden: golden(column, row, geometry)
+        case .running: dayField(column, row, geometry, input, ground, context)
+        case .rest: rest(column, row, geometry)
+        case .back: dusty(column, row, geometry)
+        case .done: evening(column, row, geometry)
+        case .rain: rainy(column, row, geometry)
+        case .night: night(column, row, geometry, context)
+        }
+        return MosaicColour.lightened(colour, by: jitter)
     }
 
     // MARK: Fields

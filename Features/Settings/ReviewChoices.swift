@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import TesseraCore
 
 /// Switches Kaushik flips live to pick between two ways of doing something (batch mode, Oct 19). Each choice's
 /// default is today's behavior; once he picks a winner it becomes the real default and the switch goes. Kept on this
@@ -162,7 +163,10 @@ final class ReviewChoices {
                says: ["Off": "Home is as it is now.",
                       "On": "Home is three lines about your day, a mosaic of it, and what's next. It wins over Home v2 when both are On."],
                readiness: .live),
-        Choice(id: "homeMosaicMoments", name: "Mosaic moments", values: ["Off", "On"], defaultValue: "Off",
+        Choice(id: "homeMosaicMoments",
+               name: "Mosaic moments",
+               values: ["Off", "On"],
+               defaultValue: "Off",
                says: ["Off": "The mosaic keeps to its mood.",
                       "On": "Now and then the mosaic shows snow, a word about what is next, Tess, or a finished tile. Needs Mosaic moods."],
                readiness: .live),
@@ -399,7 +403,8 @@ final class ReviewChoices {
     /// The pages Settings draws: only rows whose feature ships in this build (Product, Oct 20; sheet 110). A waiting
     /// row is not drawn at all, and a tab with nothing live goes with it.
     nonisolated static func drawnPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
-        facetPages(choices.filter { $0.readiness == .live })
+        // Sample data is simulator-only: the switch is never offered on a device, whichever page draws the rows.
+        facetPages(choices.filter { $0.readiness == .live && ($0.id != "sampleData" || LaunchFlags.allowed) })
     }
 
     nonisolated static func facetPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
@@ -421,9 +426,15 @@ final class ReviewChoices {
 
     private let defaults: UserDefaults
     private let writes: Bool
+    /// Whether the approved feature flags (stored as the few turned Off) are in force. A unit-test host keeps the older
+    /// per-switch behaviour so tests of it do not drift; the flag tests ask for the real thing.
+    private let usesFlags: Bool
     private var picked: [String: String] = [:]
 
-    init(defaults: UserDefaults = .standard, writes: Bool = !LaunchFlags.has("-demo")) {
+    init(defaults: UserDefaults = .standard, writes: Bool = !LaunchFlags.has("-demo"),
+         usesFlags: Bool = FeatureFlagStore.usesFlags)
+    {
+        self.usesFlags = usesFlags
         self.defaults = defaults
         self.writes = writes
     }
@@ -439,15 +450,26 @@ final class ReviewChoices {
         if let value = picked[choice.id] {
             return value
         }
+        // An approved feature flag ships On and is stored as the few he turned Off (sheet 203).
+        if writes, usesFlags, let on = FeatureFlagStore.isOn(choice.id, defaults: defaults) {
+            return on ? "On" : "Off"
+        }
         if writes, let kept = defaults.string(forKey: Self.key(choice.id)), choice.values.contains(kept) {
             return kept
         }
         return choice.defaultValue
     }
 
-    /// Whether a choice is off its default.
+    /// What a choice reads as shipped: a feature flag is On (the Home v2 layout is the one Off, Mosaic wins), else
+    /// today's default.
+    func shippedValue(of choice: Choice) -> String {
+        guard usesFlags, FeatureFlagStore.isFlag(choice.id) else { return choice.defaultValue }
+        return FeatureFlagStore.shippedOff.contains(choice.id) ? "Off" : "On"
+    }
+
+    /// Whether a choice is off what shipped. A switch that isn't live yet reads its own default and is never "off".
     func isTrying(_ choice: Choice) -> Bool {
-        value(of: choice) != choice.defaultValue
+        choice.readiness == .live && value(of: choice) != shippedValue(of: choice)
     }
 
     /// The next value in the cycle (or the one before), wrapping round.
@@ -467,6 +489,10 @@ final class ReviewChoices {
             SurfacesV2.mirrorFlag(SurfacesV2.isOn(value: value))
         }
         guard writes else { return }
+        if usesFlags, FeatureFlagStore.isFlag(choice.id) {
+            FeatureFlagStore.set(choice.id, on: value == "On", defaults: defaults)
+            return
+        }
         if value == choice.defaultValue {
             defaults.removeObject(forKey: Self.key(choice.id))
         } else {
@@ -476,8 +502,9 @@ final class ReviewChoices {
 
     /// Every switch back to today's behavior ("Everything as before").
     func resetAll(_ choices: [Choice] = ReviewChoices.all) {
-        for choice in choices {
-            set(choice, to: choice.defaultValue)
+        // Only switches that are live: a flag whose feature isn't here yet must stay as shipped (On) for when it is.
+        for choice in choices where choice.readiness == .live {
+            set(choice, to: shippedValue(of: choice))
         }
     }
 

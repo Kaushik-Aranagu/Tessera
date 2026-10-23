@@ -36,6 +36,13 @@ struct TesseraApp: App {
         _model = State(initialValue: model)
         LiveWorkout.model = model
         HomeV2.resetOnce()
+        // Approved features ship On (Kaushik, Oct 23); he asks for one to be turned off.
+        if FeatureFlagStore.isRealLaunch {
+            FeatureFlagStore.migrateOnce()
+            if let surfaces = ReviewChoices.all.first(where: { $0.id == SurfacesV2.choiceID }) {
+                SurfacesV2.mirrorFlag(SurfacesV2.isOn(value: ReviewChoices.shared.value(of: surfaces)))
+            }
+        }
         WatchBridge.shared.start(model: model)
         // App Intents (Shortcuts, Siri, the Action button) run against the same engine as the UI.
         if let runtime = model.runtime {

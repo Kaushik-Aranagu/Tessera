@@ -26,6 +26,23 @@ struct HomeMosaicPage: View {
     @State private var rigidBeats = 0
     @State private var onScreen = false
     @Environment(\.scenePhase) private var scenePhase
+    /// Sheet 202: A's full-screen layer, its scene, where the core frame sits and the text it must stay clear of.
+    @State private var controller = MosaicScreenController()
+    @State private var scene: MosaicScene = .day
+    @State private var coreTop: CGFloat = 0
+    /// The scroll view's top in the window: content-space frames plus this are screen points at rest.
+    @State private var scrollMinY: CGFloat = 0
+    /// The scroll view's top inset (the safe area) and how far it is scrolled, both from the scroll view itself.
+    @State private var insetTop: CGFloat = 0
+    /// Held in an object only the layer reads, so a scroll frame redraws the layer and not the whole page.
+    @State private var scroll = HomeScrollOffset()
+    /// The day's clauses with Core's loaders, read once per refresh and not on every body.
+    @State private var dayClauses: [HomeSentence.Clause]?
+    @State private var shield: [CGRect] = []
+
+    private var layerOn: Bool {
+        HomeMosaic.moodsIsOn && facts != nil && pick != nil
+    }
 
     var body: some View {
         ScrollView {
@@ -34,21 +51,25 @@ struct HomeMosaicPage: View {
                     // Moods: 64 pt from the safe area to the sentence in all, so the row's gap is what is left.
                     .padding(.bottom, HomeMosaic.moodsIsOn
                         ? HomeMosaic.moodsTopInset - HomeMosaic.headerHeight - HomeMosaic.sectionGap : 0)
-                MosaicSentence(pickedClauses: momentClause.map { [$0] } ?? pick?.clauses)
+                MosaicSentence(pickedClauses: momentClause.map { [$0] } ?? pick?.clauses, dayClauses: dayClauses)
+                    .mosaicShield()
                 VStack(alignment: .leading, spacing: 0) {
-                    MosaicSlot(lay: $mosaicLay, caption: $caption, facts: facts, mood: pick?.mood, moment: moment)
+                    MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption)
                         .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
                     if !caption.isEmpty {
                         Text(caption)
                             .font(Theme.voice(size: 16))
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .padding(.top, Theme.Spacing.s)
+                            .mosaicShield()
                     }
                 }
                 // The call site that becomes `mosaic.lay(from: rowFrame, tone: .glaze)` with A's view.
                 MosaicNextList { rowFrame in mosaicLay?(rowFrame) }
+                    .mosaicShield()
                 if HomeMosaic.appsListIsOn {
                     AppsListSlot()
+                        .mosaicShield()
                 }
             }
             .padding(.horizontal, HomeMosaic.gutter)
@@ -58,6 +79,40 @@ struct HomeMosaicPage: View {
         }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
+        // Sheet 202: the mosaic is the page's own pixels, edge to edge, behind everything; every touch leans it.
+        .background {
+            if layerOn, let facts, let mood = pick?.mood {
+                HomeLayerHost(
+                    scroll: scroll,
+                    scrollMinY: scrollMinY,
+                    facts: facts,
+                    scene: $scene,
+                    controller: controller,
+                    // The core sits where it does at rest, whatever the scroll, in whole tiles.
+                    coreTop: ((scrollMinY + insetTop + coreTop) / 4).rounded() * 4,
+                    shield: shield,
+                    mood: mood,
+                    moment: moment,
+                    caption: $caption
+                )
+            }
+        }
+        .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { scrollMinY = $0 }
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentInsets.top } action: { _, new in insetTop = new }
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in scroll.value = new }
+        .onPreferenceChange(MosaicShieldKey.self) { shield = $0 }
+        .mosaicTouchFeed(controller, enabled: layerOn)
+        .onAppear { mosaicLay = { controller.lay(from: $0, tone: .glaze) } }
+        // Sheet 203: a pull down from the top 40 pt also opens Settings.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 24).onEnded { value in
+                if value.startLocation.y < 40, value.translation.height > 60,
+                   abs(value.translation.width) < value.translation.height
+                {
+                    link = .settings
+                }
+            }
+        )
         .task(id: Int(AppClock.now.timeIntervalSince1970 / 60) &+ model.revision) { refreshPick() }
         .onAppear { onScreen = true }
         .onDisappear {
@@ -71,15 +126,20 @@ struct HomeMosaicPage: View {
         .tesseraFeedback(.setLogged, trigger: rigidBeats)
         .environment(\.openHomeLink) { link = $0 }
         .fullScreenCover(item: $link) { link in
-            link.destination
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    HStack {
-                        Spacer()
-                        Button("Close") { self.link = nil }
-                            .buttonStyle(InkLabelWordStyle())
+            // Settings has its own back word ("‹ Home"), so it gets no Close.
+            if link == .settings {
+                link.destination
+            } else {
+                link.destination
+                    .safeAreaInset(edge: .top, spacing: 0) {
+                        HStack {
+                            Spacer()
+                            Button("Close") { self.link = nil }
+                                .buttonStyle(InkLabelWordStyle())
+                        }
+                        .padding(.horizontal, Theme.Spacing.gutter - 8)
                     }
-                    .padding(.horizontal, Theme.Spacing.gutter - 8)
-                }
+            }
         }
     }
 
@@ -87,8 +147,15 @@ struct HomeMosaicPage: View {
 
     /// Asks Core's picker what the day looks like now; "Welcome back" shows once per absence.
     private func refreshPick() {
+        let at = AppClock.now
+        dayClauses = HomeMosaic.firstThree(HomeSentence.compose(HomeSentence.inputs(
+            engine: model.engine, plan: model.plan, moneyDue: .next(engine: model.engine, now: at),
+            routines: .make(engine: model.engine, now: at), now: at
+        )))
         guard HomeMosaic.moodsIsOn else {
             pick = nil
+            // The plain 199 mosaic still needs the day's facts.
+            facts = HomeMosaic.isOn ? MosaicFacts.make(engine: model.engine, now: AppClock.now) : nil
             return
         }
         let now = AppClock.now
@@ -157,16 +224,43 @@ struct HomeMosaicPage: View {
                 .font(Theme.voice(size: 16))
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            SettingsKnob()
-            Button { link = .settings } label: {
-                Text("Settings")
-                    .font(Theme.voice(size: 16))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityHint("Opens Settings")
+            SettingsEntry { link = .settings }
         }
+    }
+}
+
+/// The scroll offset, in an object so only the views that read `value` redraw when it changes.
+@MainActor
+@Observable
+final class HomeScrollOffset {
+    var value: CGFloat = 0
+}
+
+/// A's layer with the shields moved by the scroll: the words move with the page, so their rectangles do too. Reading
+/// the offset here keeps the page itself from redrawing on every scroll frame.
+private struct HomeLayerHost: View {
+    let scroll: HomeScrollOffset
+    let scrollMinY: CGFloat
+    let facts: MosaicFacts
+    @Binding var scene: MosaicScene
+    let controller: MosaicScreenController
+    let coreTop: CGFloat
+    let shield: [CGRect]
+    let mood: MosaicMood
+    let moment: MosaicMomentEvent?
+    @Binding var caption: String
+
+    var body: some View {
+        MosaicHomeLayer(
+            facts: facts,
+            scene: $scene,
+            controller: controller,
+            coreTop: coreTop,
+            // Content origin is the scroll view's top less its offset.
+            shield: shield.map { $0.offsetBy(dx: 0, dy: scrollMinY - scroll.value) },
+            mood: mood,
+            moment: moment,
+            caption: $caption
+        )
     }
 }

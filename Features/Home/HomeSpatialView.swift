@@ -429,7 +429,7 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .review: ReviewView()
         case .money: MoneyLandingView()
         // Settings as its own page from Home's top row, with Close above it (Kaushik, Oct 22: he couldn't find it).
-        case .settings: NavigationStack { SettingsPage() }.environment(\.animateEntrance, true)
+        case .settings: NavigationStack { SettingsPage(cameFrom: "Home") }.environment(\.animateEntrance, true)
         }
     }
 }
