@@ -101,6 +101,18 @@ struct DescribeTests {
         #expect(!text.contains("!") && !text.contains("\u{2014}"))
     }
 
+    @Test func aWorkoutOfAPrivateRoutineIsPrivateEvenWithAPlainTitle() throws {
+        let routine = try make(.routine, "Knee rehab day")
+        let workout = try make(.workout, "Session")
+        try store.setLinks("routine", on: workout, to: [routine])
+        let text = try #require(sentence(workout))
+        #expect(text == "Private workout" && !text.contains("Knee"))
+        try store.set("endedAt", to: .date(Date()), on: workout)
+        #expect(sentence(workout) == "Private workout")
+        // Its story is empty and the name never prints.
+        #expect(Describe.sentence(routine, in: store, classes: engine.classes) == "Private workout")
+    }
+
     @Test func otherClassesGiveNil() throws {
         #expect(try sentence(make(.place, "Fridge")) == nil)
         #expect(try sentence(make(.note, "plain note")) == nil)

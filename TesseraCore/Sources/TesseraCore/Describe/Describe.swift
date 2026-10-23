@@ -55,6 +55,10 @@ public enum Describe {
                                         classes: [SystemCatalog.Key: ClassDef]) -> String
     {
         let routine = store.linkedObjects("routine", of: workout).first
+        // A workout of a private routine is private even when its own title is plain: its words never print.
+        if let routine, ObjectPrivacy.shownLabel(of: routine, in: store, classes: classes) != nil {
+            return ObjectPrivacy.routineLabel
+        }
         let title = clean(routine?.title ?? workout.title, fallback: "Workout")
         guard store.value("startedAt", of: workout)?.dateValue != nil else { return "\(title), planned." }
         guard store.value("endedAt", of: workout)?.dateValue != nil else { return "\(title), under way." }
