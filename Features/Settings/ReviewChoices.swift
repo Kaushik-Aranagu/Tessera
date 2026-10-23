@@ -163,7 +163,10 @@ final class ReviewChoices {
                says: ["Off": "Home is as it is now.",
                       "On": "Home is three lines about your day, a mosaic of it, and what's next. It wins over Home v2 when both are On."],
                readiness: .live),
-        Choice(id: "homeMosaicMoments", name: "Mosaic moments", values: ["Off", "On"], defaultValue: "Off",
+        Choice(id: "homeMosaicMoments",
+               name: "Mosaic moments",
+               values: ["Off", "On"],
+               defaultValue: "Off",
                says: ["Off": "The mosaic keeps to its mood.",
                       "On": "Now and then the mosaic shows snow, a word about what is next, Tess, or a finished tile. Needs Mosaic moods."],
                readiness: .live),
@@ -400,7 +403,8 @@ final class ReviewChoices {
     /// The pages Settings draws: only rows whose feature ships in this build (Product, Oct 20; sheet 110). A waiting
     /// row is not drawn at all, and a tab with nothing live goes with it.
     nonisolated static func drawnPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
-        facetPages(choices.filter { $0.readiness == .live })
+        // Sample data is simulator-only: the switch is never offered on a device, whichever page draws the rows.
+        facetPages(choices.filter { $0.readiness == .live && ($0.id != "sampleData" || LaunchFlags.allowed) })
     }
 
     nonisolated static func facetPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {

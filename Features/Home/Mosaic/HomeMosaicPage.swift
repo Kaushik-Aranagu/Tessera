@@ -167,16 +167,7 @@ struct HomeMosaicPage: View {
                 .font(Theme.voice(size: 16))
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            SettingsKnob()
-            Button { link = .settings } label: {
-                Text("Settings")
-                    .font(Theme.voice(size: 16))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityHint("Opens Settings")
+            SettingsEntry { link = .settings }
         }
     }
 }

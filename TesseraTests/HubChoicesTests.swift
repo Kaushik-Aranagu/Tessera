@@ -9,7 +9,7 @@ struct HubChoicesTests {
         let name = "hub.test.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: name)!
         defaults.removePersistentDomain(forName: name)
-        return ReviewChoices(defaults: defaults, writes: true)
+        return ReviewChoices(defaults: defaults, writes: true, usesFlags: true)
     }
 
     @Test func aFreshPhoneReadsTheMosaicHomeAndTodaysPageTurn() {

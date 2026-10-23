@@ -14,6 +14,8 @@ struct RootView: View {
     /// `-openCook "Paprika chicken"` (simulator only, read through LaunchFlags): starts that cook and opens its clock
     /// page, for recordings.
     @State private var demoCook: DemoCookCover?
+    /// Settings, opened from the entry at the top right of any page below Home.
+    @State private var settingsOpen = false
 
     var body: some View {
         @Bindable var model = model
@@ -47,6 +49,12 @@ struct RootView: View {
                 // Room for Tess's soul (a 64 pt corner overlay), so the last row of any page can scroll clear of it.
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     Color.clear.frame(height: 56).allowsHitTesting(false)
+                }
+                // Sheet 203: "Settings" and the knob at the top right of every page below Home (Home has its own).
+                if SettingsV2.isOn, !model.path.isEmpty {
+                    SettingsEntry { settingsOpen = true }
+                        .padding(.trailing, Theme.Spacing.gutter - 8)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                 }
                 BottomChrome(onSoulDoubleTap: goHome)
                     .environment(\.zoomNamespace, zoom)
@@ -83,6 +91,10 @@ struct RootView: View {
             }
         }
         .fullScreenCover(item: $demoCook) { CookClockPage(cookID: $0.id) }
+        .fullScreenCover(isPresented: $settingsOpen) {
+            NavigationStack { SettingsPage(cameFrom: "Back") }
+                .environment(\.animateEntrance, true)
+        }
         .task {
             guard let title = LaunchFlags.value(after: "-openCook"),
                   let recipe = model.objects(of: .recipe).first(where: { $0.title == title }),
