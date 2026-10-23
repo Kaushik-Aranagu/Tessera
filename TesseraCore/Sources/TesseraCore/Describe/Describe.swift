@@ -127,7 +127,7 @@ public enum Describe {
 
     /// The one private rule for a sentence, a story and a count: the object is private by its label, or it is a workout
     /// of a private routine (even when its own title is plain).
-    static func isPrivate(_ object: ObjectRecord, in store: ObjectStore,
+    public static func isPrivate(_ object: ObjectRecord, in store: ObjectStore,
                           classes: [SystemCatalog.Key: ClassDef]) -> Bool
     {
         if ObjectPrivacy.shownLabel(of: object, in: store, classes: classes) != nil {
