@@ -17,7 +17,11 @@ struct MosaicPager: Equatable {
 
     /// Whether a drag is a page swipe: it began on the mosaic or within `reach` of it, went across more than `travel`,
     /// and more across than down.
-    static func accepts(start: CGPoint, translation: CGSize, mosaic: CGRect) -> Bool {
+    /// With more than one page the swipe must start on the mosaic itself (`reach` 0), so a Done swipe on a Next row can
+    /// never turn the page.
+    static func accepts(start: CGPoint, translation: CGSize, mosaic: CGRect,
+                        reach: CGFloat = MosaicPager.reach) -> Bool
+    {
         mosaic.insetBy(dx: -reach, dy: -reach).contains(start)
             && abs(translation.width) > travel && abs(translation.width) > abs(translation.height)
     }
