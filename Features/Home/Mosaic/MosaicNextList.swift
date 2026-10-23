@@ -5,12 +5,12 @@ import TesseraCore
 /// queue rows (swipe right strikes in ink and finishes the task, swipe left is Not now; the Tess line with Undo is
 /// unchanged). The why sits at the right of each row (sheet 207); a tap opens the thing.
 struct MosaicNextList: View {
-    /// Called with the finished row's frame in window space.
-    let finished: (CGRect) -> Void
+    /// Called with the finished row's frame in window space; true when a tile is laid or flies for it.
+    let finished: (CGRect) -> Bool
 
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// One rigid haptic when a done tile lands in the mosaic (sheet 207).
+    /// The one rigid tap for a Done that has no tile to land (sheet 207).
     @State private var landings = 0
 
     var body: some View {
@@ -35,10 +35,9 @@ struct MosaicNextList: View {
                                   ink: index == 2 ? 0.62 : 1,
                                   why: why(of: entry, in: picks).map { AppsListRows.fit($0, limit: 30) },
                                   finished: { frame in
-                                      finished(frame)
-                                      // The tile flies for 700 ms, then lands: the finished moment's rigid tap.
-                                      Task { @MainActor in
-                                          try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 700))
+                                      // The layer plays the one landing tap when its tile lands. With no tile (the
+                                      // moods off, or one already in flight) the row plays it itself, straight away.
+                                      if !finished(frame) {
                                           landings += 1
                                       }
                                   })

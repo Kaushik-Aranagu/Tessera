@@ -11,7 +11,7 @@ struct HomeMosaicPage: View {
     @Environment(AppModel.self) private var model
     @State private var link: HomeLink?
     /// Set by the mosaic when it is on the page: lays a finished row's colour into the picture.
-    @State private var mosaicLay: ((CGRect) -> Void)?
+    @State private var mosaicLay: ((CGRect) -> Bool)?
     /// The mosaic's one caption line.
     @State private var caption = ""
     /// Sheet 200: Tess's pick (mood, its three lines) and the facts it read, refreshed each minute and on a change.
@@ -73,7 +73,7 @@ struct HomeMosaicPage: View {
                     }
                 }
                 // The call site that becomes `mosaic.lay(from: rowFrame, tone: .glaze)` with A's view.
-                MosaicNextList { rowFrame in mosaicLay?(rowFrame) }
+                MosaicNextList { rowFrame in mosaicLay?(rowFrame) ?? false }
                     .mosaicShield()
                 if HomeMosaic.appsListIsOn {
                     // Room for Tess above the list (her own layer draws there, sheet 209).
@@ -136,7 +136,12 @@ struct HomeMosaicPage: View {
             }
         }
         .mosaicTouchFeed(controller, enabled: layerOn)
-        .onAppear { mosaicLay = { controller.lay(from: $0, tone: .glaze) } }
+        .onAppear {
+            mosaicLay = { rect in
+                MomentMemory.handDoneAt = AppClock.now
+                return controller.lay(from: rect, tone: .glaze)
+            }
+        }
         // Sheet 203: a pull down from the top 40 pt also opens Settings.
         .simultaneousGesture(
             DragGesture(minimumDistance: 24).onEnded { value in
@@ -223,6 +228,19 @@ struct HomeMosaicPage: View {
         guard let next = MosaicMomentSource.next(inputs) else { return }
         MomentMemory.played.insert(next.key)
         MomentMemory.last = (next.kind, facts.now)
+        // A Done from a Next row already flew its tile and played its tap: only the sentence clause follows.
+        if next.kind == .finished, let done = MomentMemory.handDoneAt,
+           AppClock.now.timeIntervalSince(done) < MomentMemory.handWindow
+        {
+            momentClause = next.clause
+            momentTask?.cancel()
+            momentTask = Task { @MainActor in
+                try? await Task.sleep(for: .seconds(3.2))
+                guard !Task.isCancelled else { return }
+                momentClause = nil
+            }
+            return
+        }
         let played = MosaicMomentEvent(MosaicMomentMapping.moment(for: next))
         moment = played
         momentClause = next.clause

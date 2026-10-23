@@ -281,7 +281,8 @@ struct QueueRow: View {
                 .offset(y: drag < -110 ? 0 : 6)
                 .accessibilityHidden(true)
             content
-                .offset(x: drag < 0 ? leftOffset : (hand != nil && !reduceMotion && !struck ? drag * 0.9 : 0))
+                .offset(x: hand != nil && reduceMotion ? 0
+                    : drag < 0 ? leftOffset : (hand != nil && !struck ? drag * 0.9 : 0))
                 // Lifted while held: a soft shadow on the text itself and a slight scale, no highlight shape.
                 .scaleEffect(holding && !struck ? 1.03 : 1, anchor: .leading)
                 // The shadow lifts on light looks only; on dark ones ink would glow (B14). Scale and haptic carry it
@@ -308,8 +309,9 @@ struct QueueRow: View {
             }
         }
         .modifier(ZoomSource(id: Route.object(entry.id), namespace: namespace))
-        .tesseraFeedback(trigger: armed) { _, now in now ? .selection : nil }
-        .tesseraFeedback(trigger: holding) { _, now in now ? .pickedUp : nil }
+        // By hand each gesture has one haptic: no pick-up and no armed tick (sheet 207, QA).
+        .tesseraFeedback(trigger: armed) { _, now in now && hand == nil ? .selection : nil }
+        .tesseraFeedback(trigger: holding) { _, now in now && hand == nil ? .pickedUp : nil }
         // A held row that leaves the tree (it finished, or the page changed) must give the pager back.
         .onDisappear {
             if holding {
@@ -326,8 +328,9 @@ struct QueueRow: View {
         .tesseraFeedback(.done, trigger: hand == nil ? finishes : 0)
         .tesseraFeedback(.notNow, trigger: moves)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(entry.time.map { "\(entry.title), \(Format.clock($0))" } ?? entry.title)
-        .accessibilityHint("Opens \(entry.title)")
+        .accessibilityLabel(hand != nil ? [entry.title, hand?.why].compactMap(\.self).joined(separator: ", ")
+            : entry.time.map { "\(entry.title), \(Format.clock($0))" } ?? entry.title)
+        .accessibilityHint(hand?.why.map { "\($0). Opens \(entry.title)" } ?? "Opens \(entry.title)")
         .accessibilityAction(named: "Done") {
             if !entry.isWorkout {
                 finish()
@@ -396,7 +399,7 @@ struct QueueRow: View {
             Text(entry.title)
                 .font(titleFont ?? Theme.Typography.font(Theme.concept.scale.body, weight: isNext ? .medium : .regular))
                 // A day's new name settles in with a quiet fade, never a pop (Design on #1181).
-                .contentTransition(.opacity)
+                .contentTransition(hand == nil ? .opacity : .identity)
                 .tesseraAnimation(.easeOut(duration: 0.24), value: entry.title)
                 .foregroundStyle(hand != nil && drag < 0 && !struck ? Theme.Colors.inkTertiary
                     : Theme.Colors.ink.opacity(struck ? 0.45 : ink))
