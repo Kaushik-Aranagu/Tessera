@@ -101,4 +101,23 @@ struct AwayTests {
         try engine.perform(SetAway(occasion: occasion.id, on: true), by: .user)
         #expect(line(day(27)) == "Trip, day 2 of 3.")
     }
+
+    /// A phone that already has Occasions gets the new field on the next launch, off, and keeps its trips.
+    @Test func reseedingAddsAwayToAnInstallWithOccasionsAndItStartsOff() throws {
+        let occasion = try trip()
+        let classDef = try #require(engine.classes[.occasion])
+        let field = try #require(classDef.ownFields?.first { $0.key == "away" })
+        store.context.delete(field)
+        try store.context.save()
+        #expect(ClassResolver.field("away", of: classDef) == nil)
+
+        try SystemCatalog.seed(in: store.context)
+        let added = try #require(ClassResolver.field("away", of: classDef))
+        #expect(added.id == SystemCatalog.stableID("system.occasion.away"))
+        #expect(added.defaultValue == .bool(false))
+        #expect(Away.current(engine: engine, now: day(27), calendar: calendar) == nil)
+        #expect(store.value("start", of: occasion)?.dateValue != nil)
+        try engine.perform(SetAway(occasion: occasion.id, on: true), by: .user)
+        #expect(line(day(27)) == "Trip, day 2 of 3.")
+    }
 }
