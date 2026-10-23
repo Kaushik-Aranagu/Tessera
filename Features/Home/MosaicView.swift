@@ -10,7 +10,12 @@ import TesseraCore
 /// Holds one mosaic's engine so a host (Next, an app's finish) can lay a tile without owning the drawing.
 @MainActor
 final class MosaicController {
-    let engine = MosaicEngine()
+    let engine: MosaicEngine
+
+    init(config: MosaicConfig = .home) {
+        engine = MosaicEngine(config: config)
+    }
+
     /// The mosaic's frame in the window, kept by the view, so a struck row's frame can be turned into its space.
     var globalFrame: CGRect = .zero
 
@@ -21,7 +26,12 @@ final class MosaicController {
         var nowColumn: Int?
         var text: String?
         var ground: [Double]
+        var mood: MosaicMood?
+        var accents: Int
+        var sets: Int
     }
+
+    private var lastMood: MosaicMood?
 
     private var key: Key?
     private var restored = false
@@ -30,8 +40,7 @@ final class MosaicController {
     /// A tile flies from the struck row's frame (window space) to a free tile in the now column and is laid there:
     /// glazed for a Next line, an app's accent for a thing finished in its app.
     func lay(from rect: CGRect, tone: MosaicTone, now: Date = AppClock.now) {
-        let config = engine.config
-        let column = MosaicReadout.nowColumn(now, config: config) ?? 0
+        let column = engine.nowColumn(now) ?? engine.targetLeft
         let point = CGPoint(x: rect.midX - globalFrame.minX, y: rect.midY - globalFrame.minY)
         engine.lay(from: point, side: min(max(rect.height, 8), 18), column: column, tone: tone)
         if firstLaidIndex == nil {
@@ -57,7 +66,9 @@ final class MosaicController {
         dark: Bool,
         ground: MosaicTriple,
         width: CGFloat,
-        reduceMotion: Bool
+        reduceMotion: Bool,
+        mood: MosaicMood? = nil,
+        moodContext: MosaicMoodContext = MosaicMoodContext()
     ) {
         engine.reduceMotion = reduceMotion
         engine.resize(width: width)
@@ -74,26 +85,59 @@ final class MosaicController {
             for item in facts.finishedToday {
                 let hour = item.time.timeIntervalSince(facts.day) / 3600
                 let tone: MosaicTone = item.app.map { .accent($0) } ?? .glaze
-                engine.restore(column: engine.geometry.column(ofHour: hour), tone: tone)
+                let local = MosaicGeometry(config: engine.windowConfig, width: width).column(ofHour: hour)
+                engine.restore(column: engine.targetLeft + local, tone: tone)
             }
             firstLaidIndex = engine.laid.first?.index
         }
         let input = Self.input(facts, dark: dark)
-        let next = Key(scene: scene, dark: dark, width: width,
-                       nowColumn: MosaicReadout.nowColumn(facts.now, config: config),
+        let moodField = scene == .day ? mood : nil
+        // The mood's own window of the grid, anchored top-right; fields are drawn in the window's own coordinates.
+        let size = moodField?.window ?? MosaicWindows.scene
+        if config.windowed {
+            engine.setWindow(columns: size.columns, rows: size.rows)
+        }
+        if key == nil {
+            engine.snapWindow()
+        }
+        let window = engine.windowConfig
+        let local = MosaicGeometry(config: window, width: width)
+        let next = Key(scene: scene, dark: dark, width: width, nowColumn: engine.nowColumn(facts.now),
                        text: MosaicScenes.text(for: scene, input: input), ground: [
                            ground.red,
                            ground.green,
                            ground.blue,
-                       ])
+                       ], mood: mood, accents: moodContext.doneAccents.count,
+                       sets: moodContext.doneSets * 100 + moodContext.remainingSets)
         guard next != key else { return }
-        let targets = MosaicScenes.targets(scene, geometry: engine.geometry, input: input, ground: ground)
+        var context = moodContext
+        context.nowColumn = MosaicReadout.nowColumn(facts.now, config: window)
+        context.dark = dark
+        let fieldColours = moodField.map {
+            MosaicMoodField.base($0, geometry: local, input: input, ground: ground, context: context)
+        } ?? MosaicScenes.targets(scene, geometry: local, input: input, ground: ground)
+        let targets = MosaicWindows.expand(fieldColours, window: (window.columns, window.rows), config: config)
+        engine.ground = ground
+        let left = engine.targetLeft
+        engine.overlay = moodField.flatMap {
+            MosaicMoodField.overlay($0, geometry: local, context: context, reduceMotion: reduceMotion)
+        }.map { inner in
+            { column, row, time, colour in
+                inner(min(max(column - left, 0), window.columns - 1), min(row, window.rows - 1), time, colour)
+            }
+        }
         if key == nil {
             engine.settle(to: targets)
         } else {
-            let origin = MosaicScenes.origin(scene, geometry: engine.geometry, input: input, firstLaid: firstLaidIndex)
-            engine.morph(to: targets, origin: origin)
+            var origin = MosaicScenes.origin(scene, geometry: local, input: input, firstLaid: nil)
+            origin = (left + origin.column, origin.row)
+            if scene == .done, let first = firstLaidIndex {
+                origin = (first / config.rows, first % config.rows)
+            }
+            let transition = (moodField != nil && moodField != lastMood) ? moodField?.transition ?? .wave : .wave
+            engine.morph(to: targets, origin: origin, transition: transition)
         }
+        lastMood = moodField
         key = next
     }
 }
@@ -102,8 +146,14 @@ struct MosaicView: View {
     let facts: MosaicFacts
     @Binding var scene: MosaicScene
     var controller: MosaicController?
+    /// The departure mosaic's mood (sheet 200), from Core's `MosaicMoodPicker`; nil is the plain 199 day.
+    var mood: MosaicMood?
+    var moodContext = MosaicMoodContext()
+    /// When the host draws the caption itself (the Home page's slot does), the view writes its one line here and
+    /// draws no caption of its own, so the tiles take the whole frame.
+    var caption: Binding<String>?
 
-    @State private var owned = MosaicController()
+    @State private var owned: MosaicController
     @State private var reading: String?
     @State private var cue = HapticCue()
     @State private var didOpen = false
@@ -116,18 +166,44 @@ struct MosaicView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var typeSize
 
+    init(
+        facts: MosaicFacts,
+        scene: Binding<MosaicScene>,
+        controller: MosaicController? = nil,
+        mood: MosaicMood? = nil,
+        moodContext: MosaicMoodContext = MosaicMoodContext(),
+        caption: Binding<String>? = nil
+    ) {
+        self.caption = caption
+        self.facts = facts
+        _scene = scene
+        self.controller = controller
+        self.mood = mood
+        self.moodContext = moodContext
+        _owned = State(initialValue: MosaicController(config: mood == nil ? .home : .moods))
+    }
+
     private var live: MosaicController {
         controller ?? owned
+    }
+
+    private var captionText: String {
+        reading ?? facts.caption(for: scene)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             tiles
-            Text(reading ?? facts.caption(for: scene))
-                .textRole(.data)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
+            if caption == nil {
+                Text(captionText)
+                    .textRole(.data)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .onChange(of: captionText, initial: true) { _, text in
+            caption?.wrappedValue = text
         }
         .task {
             // Opening Home: the time for 2.6 s, then the day.
@@ -167,7 +243,7 @@ struct MosaicView: View {
                 draw(&context, size: size, time: timeline.date.timeIntervalSinceReferenceDate)
             }
         }
-        .aspectRatio(CGFloat(MosaicConfig.home.columns) / CGFloat(MosaicConfig.home.rows), contentMode: .fit)
+        .aspectRatio(CGFloat(live.engine.config.columns) / CGFloat(live.engine.config.rows), contentMode: .fit)
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { live.globalFrame = $0 }
         .contentShape(Rectangle())
         .simultaneousGesture(
@@ -182,9 +258,9 @@ struct MosaicView: View {
         .accessibilityLabel("Today, as a mosaic of its hours")
         .accessibilityValue(reading ?? facts.caption(for: scene))
         .accessibilityAdjustableAction { direction in
-            let config = live.engine.config
-            a11yColumn = min(max(a11yColumn + (direction == .increment ? 2 : -2), 0), config.columns - 1)
-            reading = MosaicReadout.text(column: a11yColumn, config: config, event: event(forColumn: a11yColumn))
+            let window = live.engine.windowConfig
+            a11yColumn = min(max(a11yColumn + (direction == .increment ? 2 : -2), 0), window.columns - 1)
+            reading = MosaicReadout.text(column: a11yColumn, config: window, event: event(forColumn: a11yColumn))
         }
     }
 
@@ -195,7 +271,7 @@ struct MosaicView: View {
     private func touch(at point: CGPoint) {
         let engine = live.engine
         let result = engine.touch(at: point)
-        let config = engine.config
+        let window = engine.windowConfig
         if result.down {
             cue.play(.soulStroke)
         }
@@ -203,8 +279,9 @@ struct MosaicView: View {
             cue.play(.selection)
         }
         if let column = engine.touchedColumn {
-            reading = MosaicReadout.text(column: column, config: config, event: event(forColumn: column))
-            a11yColumn = column
+            let local = engine.localColumn(column)
+            reading = MosaicReadout.text(column: local, config: window, event: event(forColumn: local))
+            a11yColumn = local
         }
     }
 
@@ -226,7 +303,7 @@ struct MosaicView: View {
         let dark = colorScheme == .dark
         let ground = rgb(Theme.Colors.paper, environment)
         controller.sync(scene: scene, facts: facts, dark: dark, ground: ground, width: size.width,
-                        reduceMotion: reduceMotion)
+                        reduceMotion: reduceMotion, mood: mood, moodContext: moodContext)
         engine.step(to: time)
         if engine.consumeLandings() > 0 {
             DispatchQueue.main.async { cue.play(.fleckReachesNow) }
@@ -234,12 +311,12 @@ struct MosaicView: View {
 
         let geometry = engine.geometry
         let config = engine.config
-        let nowColumn = MosaicReadout.nowColumn(facts.now, config: config)
+        let nowColumn = engine.nowColumn(facts.now)
         var big: [(column: Int, row: Int)] = []
         for column in 0 ..< config.columns {
             for row in 0 ..< config.rows {
                 let index = geometry.index(column: column, row: row)
-                if engine.isLaid(index) {
+                if engine.isLaid(index) || engine.isDropped(column: column, row: row) {
                     continue
                 }
                 if engine.popProgress(index) != nil {
@@ -257,7 +334,7 @@ struct MosaicView: View {
             let value = laidColour(
                 item.tone,
                 column: item.column,
-                geometry: geometry,
+                engine: engine,
                 dark: dark,
                 environment: environment
             )
@@ -266,7 +343,7 @@ struct MosaicView: View {
                  colour: swiftColor(value, opacity: engine.laidOpacity(item)))
         }
         if let flight = engine.flight, let state = engine.flightState() {
-            let value = laidColour(flight.tone, column: flight.to / config.rows, geometry: geometry, dark: dark,
+            let value = laidColour(flight.tone, column: flight.to / config.rows, engine: engine, dark: dark,
                                    environment: environment)
             var rotated = context
             rotated.translateBy(x: state.center.x, y: state.center.y)
@@ -295,16 +372,17 @@ struct MosaicView: View {
     private func laidColour(
         _ tone: MosaicTone,
         column: Int,
-        geometry: MosaicGeometry,
+        engine: MosaicEngine,
         dark: Bool,
         environment: EnvironmentValues
     ) -> MosaicTriple {
         switch tone {
         case .glaze:
-            MosaicColour.scaled(MosaicColour.triple(facts.sky(atHour: geometry.hour(ofColumn: column)), dark: dark),
-                                geometry.config.glaze)
+            let hour = MosaicGeometry(config: engine.windowConfig, width: engine.geometry.width)
+                .hour(ofColumn: engine.localColumn(column))
+            return MosaicColour.scaled(MosaicColour.triple(facts.sky(atHour: hour), dark: dark), engine.config.glaze)
         case let .accent(app):
-            rgb((HomeApp(rawValue: app.name) ?? .tasks).accent, environment)
+            return rgb((HomeApp(rawValue: app.name) ?? .tasks).accent, environment)
         }
     }
 }

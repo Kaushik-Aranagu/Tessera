@@ -49,7 +49,38 @@ struct MosaicConfig: Equatable {
     /// The rows a laid tile may land in (the middle of the now column).
     var layRows = 4 ... 20
 
+    /// A fixed tile side in points (sheet 200: step 6, tile 5); nil derives the side from the width.
+    var fixedSide: CGFloat?
+    /// Edges dither, never blur or fade (sheet 200): tiles less than 4 from an edge are kept with probability (e + 1) /
+    /// 5.
+    var ditheredEdges = false
+    /// The visible grid is a window of `columns x rows`, anchored top-right, sized per mood (sheet 200).
+    var windowed = false
+    /// The window eases to its target by this much a 60 Hz frame (about a second) and breathes a little.
+    var windowEase = 0.06
+    var windowBreathColumns = 1.4
+    var windowBreathColumnsSeconds: TimeInterval = 27
+    var windowBreathRows = 1.2
+    var windowBreathRowsSeconds: TimeInterval = 37
+
     static let home = MosaicConfig()
+
+    /// The departure mosaic (sheet 200): at most 62 x 40 tiles, step 4 pt, tile 3.2, corner 0.7, dithered edges. What
+    /// shows is a window of it anchored top-right whose size is the mood's own (the engine eases and breathes it).
+    static let moods: MosaicConfig = {
+        var config = MosaicConfig()
+        config.columns = 62
+        config.rows = 40
+        config.gap = 0.8
+        config.corner = 0.7
+        config.rippleRadius = 120
+        config.leanRadius = 36
+        config.leanMax = 5
+        config.fixedSide = 3.2
+        config.ditheredEdges = true
+        config.windowed = true
+        return config
+    }()
 
     var count: Int {
         columns * rows
@@ -63,20 +94,24 @@ struct MosaicGeometry: Equatable {
 
     /// floor((width - 33 x 2) / 34): about 8 pt on a phone.
     var side: CGFloat {
-        max(1, ((width - config.gap * CGFloat(config.columns - 1)) / CGFloat(config.columns)).rounded(.down))
+        if let fixed = config.fixedSide {
+            return fixed
+        }
+        return max(1, ((width - config.gap * CGFloat(config.columns - 1)) / CGFloat(config.columns)).rounded(.down))
     }
 
     var pitch: CGFloat {
         side + config.gap
     }
 
-    /// The grid is centred in the width the tiles leave over.
+    /// The tiles are packed to the right.
     var gridWidth: CGFloat {
         pitch * CGFloat(config.columns) - config.gap
     }
 
+    /// Anchored to the right gutter and the top: the leftover width falls on the left, the leftover height below.
     var inset: CGFloat {
-        max(0, (width - gridWidth) / 2)
+        max(0, width - gridWidth)
     }
 
     var height: CGFloat {
@@ -154,6 +189,19 @@ final class MosaicEngine {
     private var delays: [TimeInterval]
     private var morphStart: TimeInterval = -10
     private var morphLength: TimeInterval
+    private var lengths: [TimeInterval]
+    private var edges: [EdgeKind]
+    /// The window: its target, the eased size, and the whole tiles showing now.
+    private(set) var windowTarget: (columns: Int, rows: Int)
+    private var windowColumns: Double
+    private var windowRows: Double
+    private(set) var visibleColumns: Int
+    private(set) var visibleRows: Int
+    private var transition: MosaicTransition = .wave
+    /// The page ground the future, the dithered edges and the moods mix toward.
+    var ground: MosaicTriple = (1, 1, 1)
+    /// A mood's moving light: sparkle, drops, stars, a current. Called per tile per frame with the colour so far.
+    var overlay: ((_ column: Int, _ row: Int, _ time: TimeInterval, _ colour: MosaicTriple) -> MosaicTriple)?
 
     // The finger.
     private(set) var touchPoint: CGPoint?
@@ -172,6 +220,13 @@ final class MosaicEngine {
         to = rest
         delays = Array(repeating: 0, count: config.count)
         morphLength = config.morphDuration
+        lengths = Array(repeating: config.morphDuration, count: config.count)
+        edges = Self.edgeKinds(config: config)
+        windowTarget = (config.columns, config.rows)
+        windowColumns = Double(config.columns)
+        windowRows = Double(config.rows)
+        visibleColumns = config.columns
+        visibleRows = config.rows
         lean = Array(repeating: .zero, count: config.count)
         leanVelocity = Array(repeating: .zero, count: config.count)
     }
@@ -198,6 +253,7 @@ final class MosaicEngine {
             pop(random.int(config.count))
             nextPop = time + config.popInterval
         }
+        easeWindow(dt: dt)
         springLean(dt: dt)
         if let flight, time - flight.start >= config.flightDuration {
             land(flight, at: time)
@@ -220,12 +276,90 @@ final class MosaicEngine {
         pops[index] = clock + delay
     }
 
+    // MARK: - Edges
+
+    /// A tile near an edge of a dithered grid: dropped, or kept dimmer and smaller (sheet 200).
+    struct EdgeRule: Equatable {
+        let mixToGround: Double
+        let scale: Double
+    }
+
+    enum EdgeKind: Equatable {
+        case full
+        /// Outside the visible window.
+        case hidden
+        case dropped
+        case kept(EdgeRule)
+    }
+
+    /// The edge rule for every tile, worked out once: a tile less than 4 from an edge is kept with probability
+    /// (e + 1) / 5 (fixed by hash, never random per frame), dimmer and smaller toward the edge.
+    static func edgeKinds(config: MosaicConfig) -> [EdgeKind] {
+        var kinds = [EdgeKind](repeating: .full, count: config.count)
+        guard config.ditheredEdges else { return kinds }
+        for column in 0 ..< config.columns {
+            for row in 0 ..< config.rows {
+                let edge = min(column, config.columns - 1 - column, row, config.rows - 1 - row)
+                guard edge < 4 else { continue }
+                let index = column * config.rows + row
+                if MosaicColour.unit(index, salt: 7) < Double(edge + 1) / 5 {
+                    let keep = 0.55 + Double(edge) * 0.1
+                    kinds[index] = .kept(EdgeRule(mixToGround: (1 - keep) * 0.8, scale: 0.6 + 0.4 * keep))
+                } else {
+                    kinds[index] = .dropped
+                }
+            }
+        }
+        return kinds
+    }
+
+    func edgeKind(column: Int, row: Int) -> EdgeKind {
+        edges[geometry.index(column: column, row: row)]
+    }
+
+    func isDropped(column: Int, row: Int) -> Bool {
+        let kind = edgeKind(column: column, row: row)
+        return kind == .dropped || kind == .hidden
+    }
+
+    /// The edge rule worked out on the live window (hash on the absolute tile, so it stays stable as the window
+    /// moves): tiles outside are hidden; within 4 of a window edge they dither.
+    func refreshEdges() {
+        guard config.ditheredEdges else { return }
+        var kinds = [EdgeKind](repeating: .full, count: config.count)
+        let left = config.columns - visibleColumns
+        for column in 0 ..< config.columns {
+            for row in 0 ..< config.rows {
+                let index = column * config.rows + row
+                let local = column - left
+                guard local >= 0, row < visibleRows else {
+                    kinds[index] = .hidden
+                    continue
+                }
+                let edge = min(local, visibleColumns - 1 - local, row, visibleRows - 1 - row)
+                guard edge < 4 else { continue }
+                if MosaicColour.unit(index, salt: 7) < Double(edge + 1) / 5 {
+                    let keep = 0.55 + Double(edge) * 0.1
+                    kinds[index] = .kept(EdgeRule(mixToGround: (1 - keep) * 0.8, scale: 0.6 + 0.4 * keep))
+                } else {
+                    kinds[index] = .dropped
+                }
+            }
+        }
+        edges = kinds
+    }
+
     // MARK: - Per-tile reads
 
     /// The tile's scale: the travelling swell, a pop, and the bump while its colour changes.
     func scale(column: Int, row: Int) -> CGFloat {
-        guard !reduceMotion else { return 1 }
         let index = geometry.index(column: column, row: row)
+        guard !reduceMotion else {
+            if case let .kept(rule) = edgeKind(column: column, row: row) {
+                return CGFloat(rule.scale)
+            }
+            return 1
+        }
         var value = 1.0
         let phase = 0.8 * Double(column) / Double(config.columns) + 0.2 * Double(row) / Double(config.rows)
         let wave = 0.5 + 0.5 * sin(2 * Double.pi * (clock / config.swellSeconds - phase))
@@ -233,8 +367,11 @@ final class MosaicEngine {
         if let progress = popProgress(index) {
             value += config.popScale * sin(Double.pi * progress)
         }
-        if let progress = morphProgress(index), progress > 0, progress < 1 {
+        if transition == .wave, let progress = morphProgress(index), progress > 0, progress < 1 {
             value += config.morphBump * sin(Double.pi * progress)
+        }
+        if case let .kept(rule) = edgeKind(column: column, row: row) {
+            value *= rule.scale
         }
         return CGFloat(value)
     }
@@ -246,13 +383,30 @@ final class MosaicEngine {
     }
 
     func offset(column: Int, row: Int) -> CGPoint {
-        leaning ? lean[geometry.index(column: column, row: row)] : .zero
+        let index = geometry.index(column: column, row: row)
+        var point = leaning ? lean[index] : .zero
+        guard !reduceMotion, let progress = morphProgress(index), progress < 1 else { return point }
+        switch transition {
+        case .fall where progress > 0:
+            // Drops in over 360 ms with ease-in.
+            point.y -= CGFloat((1 - progress * progress) * 48)
+        case .gather:
+            // Scattered, then gathered: ease-out toward its place.
+            let ease = 1 - pow(1 - progress, 3)
+            point.x += CGFloat((MosaicColour.unit(index, salt: 3) - 0.5) * 80 * (1 - ease))
+            point.y += CGFloat((MosaicColour.unit(index, salt: 5) - 0.5) * 80 * (1 - ease))
+        default: break
+        }
+        return point
     }
 
     /// The tile's colour now: its morph, jittered, the now column's breath and the pop's shade.
     func colour(column: Int, row: Int, nowColumn: Int?) -> MosaicTriple {
         let index = geometry.index(column: column, row: row)
         var rgb = MosaicColour.mix(from[index], to[index], morphEased(index))
+        if let overlay {
+            rgb = overlay(column, row, clock, rgb)
+        }
         if column == nowColumn, !reduceMotion {
             let breath = sin(clock / config.breatheSeconds + Double(row) * 0.5) * config.breatheAmplitude
             rgb = MosaicColour.lightened(rgb, by: breath)
@@ -260,11 +414,14 @@ final class MosaicEngine {
         if let progress = popProgress(index) {
             rgb = MosaicColour.scaled(rgb, 1 - (1 - config.popShade) * sin(Double.pi * progress))
         }
+        if case let .kept(rule) = edgeKind(column: column, row: row) {
+            rgb = MosaicColour.mix(rgb, ground, rule.mixToGround)
+        }
         return rgb
     }
 
     func morphProgress(_ index: Int) -> Double? {
-        let progress = (clock - morphStart - delays[index]) / morphLength
+        let progress = (clock - morphStart - delays[index]) / max(lengths[index], 0.0001)
         return min(max(progress, 0), 1)
     }
 
@@ -273,32 +430,39 @@ final class MosaicEngine {
         if reduceMotion {
             return progress
         }
-        return 1 - pow(1 - progress, 3)
+        switch transition {
+        case .wave: return 1 - pow(1 - progress, 3)
+        // Fall, wipe, dissolve and gather swap the colour at their start: the tile arrives as the new colour.
+        default: return progress > 0 ? 1 : 0
+        }
     }
 
     // MARK: - Scenes
 
-    /// Eases every tile to `targets`, each starting after its grid distance from `origin` x 22 ms. Under Reduce Motion
-    /// it
-    /// is one 150 ms crossfade with no delay.
-    func morph(to targets: [MosaicTriple], origin: (column: Int, row: Int)) {
+    /// Changes every tile to `targets` with a transition (sheet 200): wave eases outward from `origin`; fall, wipe,
+    /// dissolve and gather swap tile by tile. Under Reduce Motion every transition is one 150 ms crossfade.
+    func morph(
+        to targets: [MosaicTriple],
+        origin: (column: Int, row: Int),
+        transition: MosaicTransition = .wave
+    ) {
         guard targets.count == config.count else { return }
         let nowColour = (0 ..< config.count).map { MosaicColour.mix(from[$0], to[$0], morphEased($0)) }
         from = nowColour
         to = targets
         morphStart = clock
         if reduceMotion {
+            self.transition = .wave
             morphLength = 0.15
+            lengths = Array(repeating: 0.15, count: config.count)
             delays = Array(repeating: 0, count: config.count)
             return
         }
-        morphLength = config.morphDuration
-        for column in 0 ..< config.columns {
-            for row in 0 ..< config.rows {
-                let distance = hypot(Double(column - origin.column), Double(row - origin.row))
-                delays[geometry.index(column: column, row: row)] = distance * config.morphDelayPerTile
-            }
-        }
+        self.transition = transition
+        let plan = transition.plan(geometry: geometry, origin: origin, wave: config.morphDelayPerTile)
+        delays = plan.delays
+        lengths = plan.lengths
+        morphLength = plan.lengths.max() ?? config.morphDuration
     }
 
     /// Sets the colours with no morph (the first frame, a resize of the day).
@@ -420,7 +584,9 @@ final class MosaicEngine {
 
     /// A free tile in the now column's middle rows, chosen with the engine's seeded random so a day lays the same way.
     func freeTile(inColumn column: Int) -> Int? {
-        let free = config.layRows.map { geometry.index(column: column, row: $0) }.filter { !isLaid($0) }
+        let rows = config.windowed ? windowTarget.rows : config.rows
+        let band = config.windowed ? Int(Double(rows) * 0.2) ... Int(Double(rows) * 0.8) : config.layRows
+        let free = band.map { geometry.index(column: column, row: $0) }.filter { !isLaid($0) }
         guard !free.isEmpty else { return nil }
         return free[random.int(free.count)]
     }
@@ -496,6 +662,72 @@ final class MosaicEngine {
     }
 }
 
+// MARK: - Window
+
+extension MosaicEngine {
+    /// The window the mood wants: the engine eases toward it and keeps it anchored top-right.
+    func setWindow(columns: Int, rows: Int) {
+        windowTarget = (min(max(columns, 1), config.columns), min(max(rows, 1), config.rows))
+    }
+
+    /// The target window as a config, for fields drawn in window-local coordinates.
+    var windowConfig: MosaicConfig {
+        var window = config
+        window.columns = windowTarget.columns
+        window.rows = windowTarget.rows
+        return window
+    }
+
+    /// The absolute column the target window's first column sits in.
+    var targetLeft: Int {
+        config.columns - windowTarget.columns
+    }
+
+    /// The column "now" falls in, in absolute grid columns, or nil before the first hour.
+    func nowColumn(_ date: Date) -> Int? {
+        MosaicReadout.nowColumn(date, config: windowConfig).map { targetLeft + $0 }
+    }
+
+    /// Puts the window at its target at once (the first frame, a Reduce Motion change).
+    func snapWindow() {
+        windowColumns = Double(windowTarget.columns)
+        windowRows = Double(windowTarget.rows)
+        guard config.windowed else { return }
+        visibleColumns = windowTarget.columns
+        visibleRows = windowTarget.rows
+        refreshEdges()
+    }
+
+    /// An absolute column as a column of the target window, clamped (for fields, readouts and hours).
+    func localColumn(_ column: Int) -> Int {
+        min(max(column - targetLeft, 0), windowTarget.columns - 1)
+    }
+
+    func easeWindow(dt: TimeInterval) {
+        guard config.windowed else { return }
+        let targetColumns = Double(windowTarget.columns), targetRows = Double(windowTarget.rows)
+        if reduceMotion {
+            windowColumns = targetColumns
+            windowRows = targetRows
+        } else {
+            let ease = 1 - pow(1 - config.windowEase, dt * 60)
+            windowColumns += (targetColumns - windowColumns) * ease
+            windowRows += (targetRows - windowRows) * ease
+        }
+        let breathColumns = reduceMotion ? 0 : config.windowBreathColumns
+            * sin(2 * Double.pi * clock / config.windowBreathColumnsSeconds)
+        let breathRows = reduceMotion ? 0 : config.windowBreathRows
+            * sin(2 * Double.pi * clock / config.windowBreathRowsSeconds)
+        let columns = min(max(Int((windowColumns + breathColumns).rounded()), 1), config.columns)
+        let rows = min(max(Int((windowRows + breathRows).rounded()), 1), config.rows)
+        if columns != visibleColumns || rows != visibleRows {
+            visibleColumns = columns
+            visibleRows = rows
+            refreshEdges()
+        }
+    }
+}
+
 // MARK: - Colour
 
 enum MosaicColour {
@@ -527,6 +759,14 @@ enum MosaicColour {
     static func triple(_ sky: MosaicRGB, dark: Bool) -> MosaicTriple {
         let scale = dark ? 0.72 : 1
         return (Double(sky.red) / 255 * scale, Double(sky.green) / 255 * scale, Double(sky.blue) / 255 * scale)
+    }
+
+    /// A steady 0 to 1 value from a tile's index and a salt, so each use draws from its own sequence.
+    static func unit(_ index: Int, salt: Int) -> Double {
+        var hash = UInt64(truncatingIfNeeded: index &* 31 &+ salt &* 977) &* 0x9E37_79B9_7F4A_7C15
+        hash = (hash ^ (hash >> 31)) &* 0xBF58_476D_1CE4_E5B9
+        hash ^= hash >> 29
+        return Double(hash & 0xFFFFFF) / Double(0x1000000)
     }
 
     static func hex(_ value: UInt32) -> MosaicTriple {
