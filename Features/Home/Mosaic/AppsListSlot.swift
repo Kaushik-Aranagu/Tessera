@@ -9,7 +9,7 @@ enum AppsListRows {
     struct Row: Identifiable, Equatable {
         let app: HomeApp
         let summary: String
-        let opens: HomeSentence.Opens
+        let opens: HomeSentence.Opens?
         var id: HomeApp {
             app
         }
@@ -29,14 +29,13 @@ enum AppsListRows {
         }
     }
 
-    /// One row per app from Core's lines, in Core's order. A private top item already reads "Private" there.
+    /// One row per app, in Core's order. An app whose line is missing (Core omits Money and Routines when it did not
+    /// read their source) still has its row, name only, and still opens. A private top item already reads "Private".
     static func make(_ lines: [AppSummaryLine]) -> [Row] {
-        lines.map { line in
-            // Money and Routines have no loader in the app yet (Core's MoneyDue.next and RoutinesPart.make are asked
-            // for), so their lines would read "Nothing is due" or "Nothing planned" falsely: they show the name only.
-            let waits = line.app == .money || line.app == .routines
-            return Row(app: home(line.app), summary: waits ? "" : (line.text.isEmpty ? quiet : line.text),
-                       opens: line.opens)
+        AppSummaryApp.allCases.map { app in
+            let line = lines.first { $0.app == app }
+            return Row(app: home(app), summary: line.map { $0.text.isEmpty ? quiet : $0.text } ?? "",
+                       opens: line?.opens)
         }
     }
 
@@ -106,7 +105,12 @@ struct AppsListSlot: View {
         .tesseraFeedback(.selection, trigger: ticks)
         // Read again when the model changes and when the day turns over.
         .task(id: "\(model.revision)-\(Calendar.current.startOfDay(for: AppClock.now).timeIntervalSince1970)") {
-            rows = AppsListRows.make(AppSummaryLines.lines(engine: model.engine, plan: model.plan, now: AppClock.now))
+            // The loaders run on this refresh only (a change in the model or the day), never per frame.
+            let now = AppClock.now
+            rows = AppsListRows.make(AppSummaryLines.lines(
+                engine: model.engine, plan: model.plan, moneyDue: .next(engine: model.engine, now: now),
+                routines: .make(engine: model.engine, now: now), now: now
+            ))
         }
         .accessibilityElement(children: .contain)
         .accessibilityAdjustableAction { direction in
@@ -161,7 +165,7 @@ struct AppsListSlot: View {
 
     /// A tap on the middle row: the object its line names, else the app.
     private func open(_ row: AppsListRows.Row) {
-        if case let .object(id) = row.opens {
+        if case let .object(id)? = row.opens {
             model.path.append(Route.object(id))
         } else {
             door = .app(row.app)
