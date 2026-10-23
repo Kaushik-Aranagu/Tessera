@@ -1,6 +1,7 @@
+import Foundation
 @testable import Tessera
-import Testing
 import TesseraCore
+import Testing
 
 struct MosaicMomentHostTests {
     @Test func announcementTicksTimerIsRigidTheRestAreSoft() {
@@ -11,11 +12,11 @@ struct MosaicMomentHostTests {
         #expect(MosaicMomentMapping.beat(.finished) == .soft)
     }
 
-    @Test func nightIsQuietAndTheDayIsNot() {
+    @Test func nightIsQuietAndTheDayIsNot() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .gmt
-        let night = calendar.date(from: DateComponents(year: 2026, month: 10, day: 23, hour: 23))!
-        let noon = calendar.date(from: DateComponents(year: 2026, month: 10, day: 23, hour: 12))!
+        let night = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 23, hour: 23)))
+        let noon = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 23, hour: 12)))
         #expect(MosaicMomentMapping.isQuiet(night, calendar: calendar))
         #expect(!MosaicMomentMapping.isQuiet(noon, calendar: calendar))
     }
