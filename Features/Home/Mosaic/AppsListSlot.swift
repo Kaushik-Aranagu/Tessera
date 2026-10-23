@@ -49,6 +49,16 @@ enum AppsListRows {
         return head
     }
 
+    /// How far row `index` sits from the middle in the ring, in -count/2 ..< count/2 (the nearer way round).
+    static func relative(_ index: Int, middle: Int, count: Int) -> Int {
+        guard count > 0 else { return 0 }
+        var offset = ((index - middle) % count + count) % count
+        if offset > count / 2 {
+            offset -= count
+        }
+        return offset
+    }
+
     /// The app that sits `offset` rows from `index` in a ring: the list wraps round.
     static func wrapped(_ index: Int, _ offset: Int, count: Int) -> Int {
         guard count > 0 else { return 0 }
@@ -65,6 +75,7 @@ enum AppsListRows {
 struct AppsListSlot: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var door: HomeV2Door?
     @State private var middle = 0
     @State private var drag: CGFloat = 0
@@ -82,10 +93,12 @@ struct AppsListSlot: View {
                 .accessibilityAddTraits(.isHeader)
             ZStack(alignment: .top) {
                 // Five rows are laid out so the ring has a row to bring in on each side while it moves.
-                if !rows.isEmpty {
-                    ForEach(-2 ... 2, id: \.self) { offset in
-                        let row = rows[AppsListRows.wrapped(middle, offset, count: rows.count)]
-                        line(row, isMiddle: offset == 0, offset: offset)
+                // Rows keep their identity as the ring turns, so a settle rolls instead of hopping; the ones two or
+                // more away wait outside the frame.
+                ForEach(rows.indices, id: \.self) { index in
+                    let offset = AppsListRows.relative(index, middle: middle, count: rows.count)
+                    if abs(offset) <= 2 {
+                        line(rows[index], isMiddle: offset == 0, offset: offset)
                             .offset(y: (CGFloat(offset) + 1) * rowHeight + drag)
                     }
                 }
@@ -139,13 +152,15 @@ struct AppsListSlot: View {
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
                 Text(row.app.rawValue)
-                    .font(Theme.voice(size: isMiddle && !reduceMotion ? 18 * 1.3 : 18)
-                        .weight(isMiddle ? .semibold : .regular))
+                    // Laid out at the swelled size always, so the width is reserved; the others sit scaled down and
+                    // the pick springs up to full size.
+                    .font(Theme.voice(size: reduceMotion ? 18 : 18 * 1.3).weight(isMiddle ? .semibold : .regular))
+                    .scaleEffect(isMiddle || reduceMotion ? 1 : 1 / 1.3, anchor: .leading)
                     .foregroundStyle(isMiddle ? row.app.accent : Theme.Colors.inkTertiary)
                     .fixedSize()
                 if isMiddle, !row.summary.isEmpty {
                     Spacer(minLength: Theme.Spacing.s)
-                    Text(AppsListRows.fit(row.summary))
+                    Text(AppsListRows.fit(row.summary, limit: typeSize.isAccessibilitySize ? 22 : 38))
                         .textRole(.data)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .lineLimit(2)

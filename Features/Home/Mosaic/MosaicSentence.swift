@@ -10,15 +10,17 @@ struct MosaicSentence: View {
 
     /// Core's picked lines as clauses (sheets 200 and 201: accents, masked words plain); nil draws the day sentence.
     var pickedClauses: [HomeSentence.Clause]?
+    /// The day's clauses, read once per refresh by the page (with Core's loaders).
+    var dayClauses: [HomeSentence.Clause]?
 
     static let size: CGFloat = 23
     static let lineGap: CGFloat = 4
 
     var body: some View {
         let _ = model.revision
-        let clauses = HomeMosaic.firstThree(HomeSentence.compose(HomeSentence.inputs(engine: model.engine,
-                                                                                     plan: model.plan,
-                                                                                     now: AppClock.now)))
+        let clauses = dayClauses ?? HomeMosaic.firstThree(HomeSentence.compose(HomeSentence.inputs(engine: model.engine,
+                                                                                                   plan: model.plan,
+                                                                                                   now: AppClock.now)))
         if HomeMosaic.moodsIsOn {
             // Sheet 200: the same clauses as a departure board (Core's MosaicMoodPicker lines replace them when it
             // lands).
