@@ -175,35 +175,44 @@ private struct TrainingAtRest: View {
             .padding(.bottom, Theme.Spacing.m)
             .entrance(2)
 
-            // The lanes are the page's one bounded window: it takes whole rows of the room the week and the doors
-            // leave, so a hard edge never slices a name.
-            GeometryReader { proxy in
-                let rows = max(1, Int(proxy.size.height / Self.laneRow))
-                ScrollView(.vertical) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
-                            LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
-                                    isPrivate: isPrivateDay,
-                                    showsStrokes: isRunning || isDone || lane.logged > 0)
-                                // Rows are 72 pt; at large text a row grows with its wrapped name instead of printing
-                                // over
-                                // the next one.
-                                .frame(height: typeSize.isAccessibilitySize ? nil : 72, alignment: .top)
-                                // Live mode rises out of the first lane; the others sink away.
-                                .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
-                                                     namespace: namespace))
-                                .modifier(Sinking(isOn: sinking && index > 0))
+            // At accessibility sizes the page itself scrolls, so the lanes are plain rows (no inner window): the week
+            // and
+            // the doors below them are reachable. Otherwise the lanes are the page's one bounded window.
+            if typeSize.isAccessibilitySize {
+                lanesColumn
+                    .entrance(3)
+            } else {
+                // The lanes are the page's one bounded window: it takes whole rows of the room the week and the doors
+                // leave, so a hard edge never slices a name.
+                GeometryReader { proxy in
+                    let rows = max(1, Int(proxy.size.height / Self.laneRow))
+                    ScrollView(.vertical) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
+                                LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone,
+                                        isPrivate: isPrivateDay,
+                                        showsStrokes: isRunning || isDone || lane.logged > 0)
+                                    // Rows are 72 pt; at large text a row grows with its wrapped name instead of
+                                    // printing
+                                    // over
+                                    // the next one.
+                                    .frame(height: typeSize.isAccessibilitySize ? nil : 72, alignment: .top)
+                                    // Live mode rises out of the first lane; the others sink away.
+                                    .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
+                                                         namespace: namespace))
+                                    .modifier(Sinking(isOn: sinking && index > 0))
+                            }
                         }
+                        .accessibilityElement(children: .contain)
                     }
-                    .accessibilityElement(children: .contain)
-                }
 
-                .scrollIndicators(.hidden)
-                .scrollBounceBehavior(.basedOnSize)
-                .frame(height: typeSize.isAccessibilitySize ? nil : CGFloat(rows) * Self.laneRow, alignment: .top)
+                    .scrollIndicators(.hidden)
+                    .scrollBounceBehavior(.basedOnSize)
+                    .frame(height: typeSize.isAccessibilitySize ? nil : CGFloat(rows) * Self.laneRow, alignment: .top)
+                }
+                .frame(maxHeight: typeSize.isAccessibilitySize ? nil : .infinity)
+                .entrance(3)
             }
-            .frame(maxHeight: typeSize.isAccessibilitySize ? nil : .infinity)
-            .entrance(3)
 
             TrainingWeekMarks(dots: TrainingWeek.dots(model, now: AppClock.now, hasSessionToday: hasSessionToday))
                 .padding(.vertical, Theme.Spacing.s)
@@ -262,6 +271,22 @@ private struct TrainingAtRest: View {
     }
 
     // MARK: Parts
+
+    /// The lanes as plain rows, every one drawn (accessibility sizes).
+    private var lanesColumn: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
+                LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone, isPrivate: isPrivateDay,
+                        showsStrokes: isRunning || isDone || lane.logged > 0)
+                    .modifier(ZoomSource(
+                        id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
+                        namespace: namespace
+                    ))
+                    .modifier(Sinking(isOn: sinking && index > 0))
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
 
     /// "Works chest, shoulders and triceps" (the day's primary muscles); none for a private workout or when nothing
     /// is stored.
@@ -473,7 +498,9 @@ private struct TrainingAtRest: View {
             let sets = lanes.map(\.sets).reduce(0, +)
             // A private workout names no lift and no weight.
             let opener = isPrivateDay ? nil : lanes.first.flatMap { lane in
-                lane.weightKilograms.map { (exercise: lane.name, weight: Format.mass($0)) }
+                lane.weightKilograms.map {
+                    (exercise: lane.name, weight: Format.mass($0).replacingOccurrences(of: " ", with: "\u{00A0}"))
+                }
             }
             // A workout he is trying today reads its own time.
             let minutes = model.triedToday()?.minutes ?? (sets > 0 ? TrainingPage.estimatedMinutes(sets: sets) : nil)
@@ -557,7 +584,9 @@ private struct TrainingAtRest: View {
             guard !isLifting, startTask == nil else { return }
             liftTaps += 1
             // Reduce Motion: nothing flies, so nothing waits; live mode crossfades in.
-            guard !reduceMotion else {
+            // Reduce Motion: nothing flies. At accessibility sizes the rule is the text's own underline, with no line
+            // to lift, so nothing flies there either.
+            guard !reduceMotion, !typeSize.isAccessibilitySize else {
                 start()
                 return
             }
@@ -724,9 +753,15 @@ struct StartMark: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(word)
                 .textRole(.keyWord)
+                .underline(typeSize.isAccessibilitySize && isReady, color: Theme.Colors.Accent.training)
                 .foregroundStyle(Theme.Colors.ink.opacity(wordOpacity))
                 .contentTransition(.opacity)
-            line
+            // At accessibility sizes the word wraps, so its rule is the text's own underline: it ends at the last word.
+            if typeSize.isAccessibilitySize, case .ready = state {
+                EmptyView()
+            } else {
+                line
+            }
         }
         // At large text the key wraps to a second line instead of running off the screen.
         .fixedSize(horizontal: !typeSize.isAccessibilitySize, vertical: true)
@@ -734,6 +769,13 @@ struct StartMark: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(word.capitalized)
+    }
+
+    private var isReady: Bool {
+        if case .ready = state {
+            return true
+        }
+        return false
     }
 
     private var word: String {

@@ -19,6 +19,7 @@ struct UnitsSentence: View {
                     Button(unit(kind)) { step(kind) }
                         .buttonStyle(.valueWash)
                         .fontWeight(.semibold)
+                        .foregroundStyle(SettingsV2.valueInk)
                         .contentTransition(.opacity)
                         .accessibilityLabel(UnitsCopy.name(kind))
                         .accessibilityValue(MeasureParts.spokenUnit(unit(kind)))

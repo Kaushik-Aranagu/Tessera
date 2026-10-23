@@ -33,6 +33,9 @@ struct RoutinesLandingPage: View {
     private func page(_ front: RoutinesFront) -> some View {
         let accent = RoutinesFront.accent
         var subtitle = AttributedString(front.subtitle)
+        if RoutinesDaySwitch.isOn {
+            subtitle = AttributedString(Self.daySentence(front))
+        }
         subtitle.foregroundColor = accent
         // While one runs, only its name is rose; the rest of the line is ink-secondary.
         if let name = front.running?.name, let range = subtitle.range(of: name) {
@@ -51,10 +54,38 @@ struct RoutinesLandingPage: View {
             sentence: subtitle,
             accent: accent,
             lead: {
-                RoutinesThread(front: front, accent: accent, actions: actions(front))
+                VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
+                    RoutinesThread(front: front, accent: accent, actions: actions(front))
+                    if RoutinesDaySwitch.isOn, RoutinesDayWords.showsPauseBusy, front.running != nil {
+                        // Routines have no pause or busy yet, so the words stay hidden (dead words don't ship).
+                        HStack(spacing: Theme.Spacing.xl) {
+                            Button(RoutinesDayWords.pause) {}
+                                .buttonStyle(LandingWordStyle())
+                            Button(RoutinesDayWords.busy) {}
+                                .buttonStyle(LandingWordStyle())
+                        }
+                    }
+                    if WeekThreadSwitch.isOn {
+                        RoutinesWeekThread(
+                            days: RoutinesWeekThreadData.days(runs: RoutinesWeekThreadData.runStarts(model: model),
+                                                              now: front.now),
+                            accent: accent
+                        )
+                    }
+                }
             },
             action: browseIsUnderlined ? browse : nil,
             secondary: browseIsUnderlined ? nil : browse
+        )
+    }
+
+    /// Routines day v2: the day as one sentence, from the facts the front already holds.
+    private static func daySentence(_ front: RoutinesFront) -> String {
+        let next = front.ordered.first { $0.doneAt == nil && $0.id != front.running?.routineID }
+        return RoutinesDayWords.sentence(
+            running: front.running?.name,
+            next: next.map { RoutinesDayWords.Next(name: $0.name, startMinuteOfDay: $0.usual?.startMinuteOfDay) },
+            total: front.items.count
         )
     }
 

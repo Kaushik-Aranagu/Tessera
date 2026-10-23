@@ -125,6 +125,14 @@ final class ReviewChoices {
                says: ["Off": "Home's write line keeps to tasks and logs, as now.",
                       "On": "Write anything on Home and it goes to the right app, with Undo."],
                readiness: .live),
+        // Sheet 139: a finished list, task and day each write a result in words.
+        Choice(id: "finishMoments",
+               name: "Finish moments",
+               values: ["Off", "On"],
+               defaultValue: "Off",
+               says: ["Off": "A finished list, task or day just stays as it is.",
+                      "On": "A finished list says so in words, Home counts tasks done today, and a past day reads as a sentence."],
+               readiness: .live),
         Choice(id: "oneHands", name: "One pair of hands", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "As now.", "On": "When two things need you at once, Tess offers one fix."],
                readiness: .arrivesWith("its Core facts")),
@@ -142,9 +150,17 @@ final class ReviewChoices {
                says: ["Off": "Money is spends only, as now.",
                       "On": "Tell Tess what came in and where it went: \"got 3200 paycheck\", \"moved 1000 to India\"."],
                readiness: .live),
+        Choice(id: "awayV2", name: "Away", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Home is the same on a trip.",
+                      "On": "Mark a trip away and Home shows only that trip on its days."],
+               readiness: .live),
         Choice(id: "homeV2", name: "Home v2", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Home pages sideways: Review, Today, Training.",
                       "On": "One Home page, with your apps as thin lines along the bottom."],
+               readiness: .live),
+        Choice(id: "tasksApp", name: "Tasks app", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Tasks live on Home and in lists, as now.",
+                      "On": "Tasks is an app of its own: one thing at a time, with Today, Soon and Later."],
                readiness: .live),
         Choice(id: "landingPages", name: "Landing pages", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Each app opens on its list of ways in.",
@@ -204,6 +220,11 @@ final class ReviewChoices {
                says: ["Off": "A finished workout's page is as before.",
                       "On": "A finished workout's page is one sentence, its set marks and its numbers."],
                readiness: .live),
+        // Design 154: Settings in sentence case, a line under the title, value words in ink 2.
+        Choice(id: "settingsV2", name: "Settings v2", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Settings reads as it does now.",
+                      "On": "Settings opens with a line under its title, in sentence case, with values in grey."],
+               readiness: .live),
         // Design round 2 and 3 (137, 139, 142, 153): each piece behind its own switch, all default Off.
         Choice(id: "finishV2", name: "Finishing marks", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Finishing a session, a cook or a routine ends as before.",
@@ -216,6 +237,19 @@ final class ReviewChoices {
         Choice(id: "liveV2", name: "Live workout v2", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The live workout looks as before.",
                       "On": "The live workout is sentence case with one hot action."],
+               readiness: .live),
+        // Design 166: press a page's title and Tess answers one question about it, from Describe, on the phone only.
+        Choice(id: "askPageV2", name: "Ask the page", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "A page's title does nothing when pressed.",
+                      "On": "Press a page's title and Tess says what it is and what changed, on this phone only."],
+               readiness: .live),
+        Choice(id: "routinesDayV2", name: "Routines day", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The Routines landing's top reads as before.",
+                      "On": "The Routines landing's top is one plain sentence about the day."],
+               readiness: .live),
+        Choice(id: "weekThreadV2", name: "Week thread", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The Routines landing shows no week line.",
+                      "On": "The Routines week is a rose thread, solid where a routine ran and a gap where not."],
                readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
@@ -309,14 +343,14 @@ final class ReviewChoices {
         ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
-        ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector"]),
+        ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector", "tasksApp"]),
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
-        ("Rooms", ["numberRules", "roomMotion", "pagesV2"]),
-        ("Home and live", ["finishV2", "surfacesV2", "liveV2"]),
+        ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2", "finishMoments", "settingsV2"]),
+        ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
         ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
     ]
@@ -388,6 +422,10 @@ final class ReviewChoices {
     func set(_ choice: Choice, to value: String) {
         guard choice.values.contains(value), choice.readiness == .live || value == choice.defaultValue else { return }
         picked[choice.id] = value
+        // Surfaces v2: the widgets cannot read this store, so the flag is mirrored to the App Group (Off clears it).
+        if choice.id == SurfacesV2.choiceID, writes {
+            SurfacesV2.mirrorFlag(SurfacesV2.isOn(value: value))
+        }
         guard writes else { return }
         if value == choice.defaultValue {
             defaults.removeObject(forKey: Self.key(choice.id))

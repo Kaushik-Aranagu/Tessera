@@ -20,7 +20,7 @@ enum Together {
 /// The app an object lives in, by its class: its name and its one accent (Theme.Colors.Accent, 131 table).
 enum HomeApp: String, CaseIterable {
     case training = "Training", kitchen = "Kitchen", money = "Money", notes = "Notes", lists = "Lists"
-    case routines = "Routines"
+    case routines = "Routines", tasks = "Tasks"
 
     var accent: Color {
         switch self {
@@ -30,6 +30,7 @@ enum HomeApp: String, CaseIterable {
         case .notes: Theme.Colors.Accent.notes
         case .lists: Theme.Colors.Accent.lists
         case .routines: Theme.Colors.Accent.routines
+        case .tasks: Theme.Colors.ink
         }
     }
 
@@ -65,6 +66,7 @@ enum HomeApp: String, CaseIterable {
         case .notes: number == 1 ? "note" : "notes"
         case .lists: number == 1 ? "list" : "lists"
         case .routines: number == 1 ? "routine" : "routines"
+        case .tasks: number == 1 ? "task" : "tasks"
         }
         return "\(number) \(noun)"
     }
