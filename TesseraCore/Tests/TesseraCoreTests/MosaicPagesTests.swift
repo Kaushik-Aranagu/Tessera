@@ -89,7 +89,7 @@ struct MosaicPagesTests {
         #expect(facts(now).pageFacts(engine: engine, plan: nil).nextTitle == nil)
         #expect(facts(now).nextTimed?.title == "Cook tacos")
         let event = try store.create(#require(engine.classes[.event]), title: "Dentist")
-        try? store.set("startsAt", to: .date(at(12, 20)), on: event)
+        try store.set("start", to: .date(at(12, 20)), on: event)
         #expect(facts(now).pageFacts(engine: engine, plan: nil).nextTitle == nil)
     }
 
@@ -111,15 +111,27 @@ struct MosaicPagesTests {
     // MARK: Week page
 
     @Test func theWeekPageCountsDoneOfPlannedTrainingDays() throws {
-        let none = facts(at(12)).pageFacts(engine: engine, plan: nil)
-        #expect(none.weekCaption == nil || none.weekPlanned > 0)
         let routine = try engine.perform(CreateRoutine(title: "Push A"), by: .user).output
         let plan = try engine.perform(CreatePlan(title: "PPL", routines: [routine.id]), by: .user).output
-        let page = facts(at(12)).pageFacts(engine: engine, plan: plan)
-        #expect(page.weekMarks.count == 7)
-        #expect(page.weekPlanned == page.weekMarks.count { $0 != .rest } && page.weekDone <= page.weekPlanned)
-        if page.weekPlanned > 0 {
-            #expect(page.weekCaption == "This week, \(page.weekDone) of \(page.weekPlanned) training days")
+        let before = facts(at(12)).pageFacts(engine: engine, plan: plan)
+        #expect(before.weekMarks.count == 7 && before.weekDone == before.weekMarks.count { $0 == .done })
+        #expect(before.weekPlanned == before.weekMarks.count { $0 != .rest })
+        // A workout finished from the routine this week moves the count by exactly one.
+        let workout = try store.create(#require(engine.classes[.workout]), title: "Push A")
+        try store.setLinks("routine", on: workout, to: [routine])
+        try store.set("startedAt", to: .date(at(8)), on: workout)
+        try store.set("endedAt", to: .date(at(9)), on: workout)
+        let entry = try store.create(#require(engine.classes[.exerciseEntry]), parent: workout)
+        try store.setClassLink("exercise", on: entry, to: #require(engine.classes[.benchPress]))
+        _ = try TrainingLedger(store: store, classes: engine.classes).logSet(weight: 80, reps: 5, in: entry)
+        let after = facts(at(12)).pageFacts(engine: engine, plan: plan)
+        #expect(after.weekDone >= before.weekDone && after.weekPlanned == before.weekPlanned)
+        if after.weekPlanned > 0 {
+            #expect(after.weekCaption == "This week, \(after.weekDone) of \(after.weekPlanned) training days")
+        } else {
+            #expect(after.weekCaption == nil)
         }
+        #expect(facts(at(12)).pageFacts(engine: engine, plan: nil).weekCaption == nil
+            || facts(at(12)).pageFacts(engine: engine, plan: nil).weekPlanned > 0)
     }
 }

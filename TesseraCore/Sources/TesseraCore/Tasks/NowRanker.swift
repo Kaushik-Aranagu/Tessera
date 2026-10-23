@@ -15,6 +15,25 @@ public struct Pick: Identifiable {
     public let why: String
     /// An offer (Shop): only one survives in a ranking.
     public let isAsk: Bool
+
+    /// `why` as a whole phrase of 30 characters or fewer, so a row never has to cut it mid-thought: the reasons in
+    /// order while they fit ("At 6:30 pm, due today"), the first alone when two do not.
+    public var shortWhy: String {
+        Self.shortened(why)
+    }
+
+    static func shortened(_ why: String, limit: Int = 30) -> String {
+        let reasons = why.components(separatedBy: ", ")
+        var phrase = ""
+        for reason in reasons {
+            let next = phrase.isEmpty ? reason : phrase + ", " + reason
+            if next.count > limit {
+                break
+            }
+            phrase = next
+        }
+        return phrase
+    }
 }
 
 /// Where in the app something lives, for "you were just in Groceries".
