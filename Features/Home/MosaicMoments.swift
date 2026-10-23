@@ -25,6 +25,8 @@ enum MosaicMoment: Equatable {
     case reminder(app: AppID?)
     /// A parcel at the door (Kitchen for groceries).
     case delivery(app: AppID?)
+    /// A quiet glance at an app, from the apps dial (sheet 206): its own sign in its own colour.
+    case glance(app: HomeApp)
 }
 
 /// A moment the host asks for. A new event replaces a running one; a mood change cancels it.
@@ -53,6 +55,7 @@ extension MosaicMoment {
         case .finished, .reminder: nil
         case .best: (44, 30)
         case .delivery: (50, 26)
+        case .glance: (44, 24)
         }
     }
 
@@ -63,6 +66,7 @@ extension MosaicMoment {
         case .fog: .dissolve
         case .wind, .announce: .wipe
         case .heat, .timer, .best, .delivery: .wave
+        case .glance: .gather
         case .tess: .gather
         case .finished: .wave
         case .reminder: .dissolve
@@ -76,7 +80,7 @@ extension MosaicMoment {
         case .snow, .storm, .announce, .best: .melt
         case .heat: .transition(.wave)
         case .tess: .transition(.gather)
-        case .fog, .wind, .timer, .finished, .reminder, .delivery: .transition(.dissolve)
+        case .fog, .wind, .timer, .finished, .reminder, .delivery, .glance: .transition(.dissolve)
         }
     }
 
@@ -96,6 +100,7 @@ extension MosaicMoment {
         case .best: 4.6
         case .reminder: 3
         case .delivery: 4.4
+        case .glance: 3.4
         }
     }
 
@@ -214,6 +219,9 @@ enum MosaicMomentField {
         case let .delivery(app):
             plan.overlay = deliveryLight(cols: cols, rows: rows, start: start, ground: ground,
                                          accent: accent(app, context), still: false)
+        case let .glance(app):
+            plan.overlay = glanceLight(app, cols: cols, rows: rows, start: start, ground: ground, context: context,
+                                       still: false)
         }
         return plan
     }
@@ -441,6 +449,8 @@ enum MosaicMomentField {
         case let .delivery(app):
             return deliveryLight(cols: cols, rows: rows, start: 0, ground: (1, 1, 1), accent: accent(app, context),
                                  still: true)
+        case let .glance(app):
+            return glanceLight(app, cols: cols, rows: rows, start: 0, ground: (1, 1, 1), context: context, still: true)
         default:
             return nil
         }
@@ -506,8 +516,17 @@ enum MosaicText {
         return UIFont(descriptor: descriptor, size: 12.5)
     }
 
-    static func raster(words: [MosaicAnnounceWord]) -> Raster {
-        let font = font()
+    /// One piece of text in any face, for a page's own words (the weather's temperature in Outfit).
+    static func raster(text: String, family: String, weight: CGFloat, size: CGFloat = 12.5) -> Raster {
+        let descriptor = UIFontDescriptor(fontAttributes: [
+            .family: family,
+            .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight(weight)],
+        ])
+        return raster(words: [MosaicAnnounceWord(text: text, app: nil)], font: UIFont(descriptor: descriptor, size: size))
+    }
+
+    static func raster(words: [MosaicAnnounceWord], font fontOverride: UIFont? = nil) -> Raster {
+        let font = fontOverride ?? font()
         var starts: [Int] = []
         var attributed = NSMutableAttributedString()
         var cursor: CGFloat = 0

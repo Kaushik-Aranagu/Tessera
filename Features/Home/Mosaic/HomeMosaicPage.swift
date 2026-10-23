@@ -40,7 +40,8 @@ struct HomeMosaicPage: View {
     @State private var dayClauses: [HomeSentence.Clause]?
     @State private var shield: [CGRect] = []
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
-    @State private var pager = MosaicPager()
+    @State private var pager = MosaicPager(count: MosaicPage.count)
+    @State private var pageDirection = 1
     @State private var pageTicks = 0
     @State private var pageWidth: CGFloat = 0
 
@@ -77,7 +78,7 @@ struct HomeMosaicPage: View {
                 if HomeMosaic.appsListIsOn {
                     // Room for Tess above the list (her own layer draws there, sheet 209).
                     Color.clear.frame(height: HomeMosaic.tessRoom).accessibilityHidden(true)
-                    AppsListSlot()
+                    AppsListSlot(onGlance: { playGlance($0) })
                         .mosaicShield()
                 }
             }
@@ -102,7 +103,9 @@ struct HomeMosaicPage: View {
                     shield: shield,
                     mood: mood,
                     moment: moment,
-                    caption: $caption
+                    caption: $caption,
+                    page: MosaicPage(rawValue: pager.index) ?? .mood,
+                    pageDirection: pageDirection
                 )
             }
         }
@@ -122,6 +125,7 @@ struct HomeMosaicPage: View {
                                                 mosaic: mosaic),
                     pager.swipe(dx: value.translation.width)
                 {
+                    pageDirection = value.translation.width < 0 ? 1 : -1
                     pageTicks += 1
                 }
             }
@@ -135,6 +139,12 @@ struct HomeMosaicPage: View {
             }
         }
         .mosaicTouchFeed(controller, enabled: layerOn)
+        // Sheet 209: Tess on her own layer above all of Home; touches pass through except on her.
+        .overlay {
+            if layerOn, HomeMosaic.appsListIsOn {
+                TessLayer(thoughts: TessThoughts.lines(facts: facts), onTap: { playTess() })
+            }
+        }
         .onAppear { mosaicLay = { controller.lay(from: $0, tone: .glaze) } }
         // Sheet 203: a pull down from the top 40 pt also opens Settings.
         .simultaneousGesture(
@@ -238,6 +248,36 @@ struct HomeMosaicPage: View {
         }
     }
 
+    /// Sheet 206: the apps list settled on an app, so the mosaic plays that app's glance (a new pick restarts it; a
+    /// moment already playing, other than a glance, wins). The sentence does not change.
+    private func playGlance(_ app: HomeApp) {
+        guard layerOn, scenePhase == .active else { return }
+        if let moment, case .glance = moment.moment {} else if moment != nil {
+            return
+        }
+        let played = MosaicMomentEvent(.glance(app: app))
+        moment = played
+        momentTask?.cancel()
+        momentTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(played.moment.duration))
+            guard !Task.isCancelled, moment?.id == played.id else { return }
+            endMoment()
+        }
+    }
+
+    /// Sheet 209: Tess was tapped, so the mosaic plays the Tess moment (the sentence does not change).
+    private func playTess() {
+        guard layerOn, scenePhase == .active, moment == nil else { return }
+        let played = MosaicMomentEvent(.tess)
+        moment = played
+        momentTask?.cancel()
+        momentTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(played.moment.duration))
+            guard !Task.isCancelled, moment?.id == played.id else { return }
+            endMoment()
+        }
+    }
+
     /// The moment is over (its time, a mood change, or leaving Home): the sentence turns back to the mood's lines.
     private func endMoment() {
         momentTask?.cancel()
@@ -282,6 +322,8 @@ private struct HomeLayerHost: View {
     let mood: MosaicMood
     let moment: MosaicMomentEvent?
     @Binding var caption: String
+    var page: MosaicPage = .mood
+    var pageDirection = 1
 
     var body: some View {
         MosaicHomeLayer(
@@ -293,7 +335,9 @@ private struct HomeLayerHost: View {
             shield: shield.map { $0.offsetBy(dx: 0, dy: scrollMinY - scroll.value) },
             mood: mood,
             moment: moment,
-            caption: $caption
+            caption: $caption,
+            page: page,
+            pageDirection: pageDirection
         )
     }
 }

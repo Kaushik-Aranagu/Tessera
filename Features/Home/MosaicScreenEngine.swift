@@ -301,7 +301,9 @@ final class MosaicScreenEngine {
         case let .wipeColumns(reverse):
             planWipeColumns(reverse: reverse)
         }
-        if let total { stretch(to: total) }
+        if let total {
+            stretch(to: total)
+        }
     }
 
     /// Stretches or squeezes the delays so the whole changeover takes `total` seconds (the last tile ends then).
@@ -580,6 +582,26 @@ extension MosaicScreenEngine {
                 let index = grid.index(column: column, row: row)
                 if pops[index] == nil {
                     pop(index, after: delay)
+                }
+            }
+        }
+    }
+
+    /// A reopen's ripple from the middle of the mosaic: tiles pop outward over `seconds`.
+    func rippleFromCentre(seconds: TimeInterval) {
+        guard !reduceMotion else { return }
+        let target = targetCore
+        let centre = grid.center(column: target.left + target.width / 2, row: target.top + target.height / 2)
+        let radius = CGFloat(max(target.width, target.height)) * MosaicScreenGrid.step / 2 + 24
+        let travel = max(seconds - 0.38, 0.05)
+        for column in region.left ... region.right {
+            for row in region.top ... region.bottom where grid.contains(column: column, row: row) {
+                let distance = hypot(grid.center(column: column, row: row).x - centre.x,
+                                     grid.center(column: column, row: row).y - centre.y)
+                guard distance <= radius else { continue }
+                let index = grid.index(column: column, row: row)
+                if pops[index] == nil {
+                    pop(index, after: TimeInterval(distance / radius) * travel)
                 }
             }
         }
