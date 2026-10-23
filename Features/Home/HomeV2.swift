@@ -101,6 +101,7 @@ private struct HomeV2DoorPage: View {
             case .app(.money): MoneyLandingView()
             case .app(.notes): NotesView()
             case .app(.lists): ListsView()
+            case .app(.tasks): TasksLandingPage()
             case .app(.routines):
                 // Routines' landing is Builder A's (sheet 131 L4); until then its plans.
                 ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
@@ -129,7 +130,11 @@ private struct HomeV2DoorPage: View {
 struct AppEdges: View {
     let open: (HomeApp) -> Void
 
-    static let order: [HomeApp] = [.training, .kitchen, .money, .notes, .lists, .routines]
+    /// Tasks joins as an ink stroke once its Review switch is on.
+    @MainActor static var order: [HomeApp] {
+        [.training, .kitchen, .money, .notes, .lists, .routines] + (TasksApp.isOn ? [.tasks] : [])
+    }
+
     static let stroke: CGFloat = 3
     static let gap: CGFloat = 3
 
