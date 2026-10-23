@@ -23,6 +23,8 @@ public struct MosaicNext: Equatable, Sendable {
     /// A private or walled thing is "Private task" or "Private workout", never its words.
     public let title: String
     public let start: Date
+    /// The app it belongs to, for the app word's accent; nil when its title is masked.
+    public let app: AppID?
 }
 
 /// One thing finished today: when, and which app. Never a title; private things count. The app is for drawing a tile in
@@ -209,7 +211,10 @@ public extension MosaicFacts {
             }
         }
         var candidates: [MosaicNext] = events.filter { $0.start > now && $0.start < end }
-            .map { MosaicNext(title: masked($0), start: $0.start) }
+            .map { event in
+                let title = masked(event)
+                return MosaicNext(title: title, start: event.start, app: title == event.label ? event.app : nil)
+            }
         if let taskClass = classes[.task] {
             for task in store.objects(of: taskClass) where !task.isDeleted {
                 guard store.value("isDone", of: task) != .bool(true),
@@ -218,7 +223,9 @@ public extension MosaicFacts {
                 let masked = ObjectPrivacy.shownLabel(of: task, in: store, classes: classes)
                     ?? (PrivateFacts.isWalled(task.title, lastWeightKg: BodyWeight.lastKg(in: store))
                         || SecretWords.mentions(task.title) ? ObjectPrivacy.taskLabel : nil)
-                candidates.append(MosaicNext(title: masked ?? task.title, start: start))
+                candidates.append(MosaicNext(title: masked ?? task.title, start: start,
+                                             app: masked == nil ? task.classDef
+                                                 .flatMap { ClassResolver.app(for: $0) } : nil))
             }
         }
         return candidates.min { $0.start < $1.start }

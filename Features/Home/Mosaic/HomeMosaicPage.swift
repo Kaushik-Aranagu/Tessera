@@ -17,6 +17,15 @@ struct HomeMosaicPage: View {
     /// Sheet 200: Tess's pick (mood, its three lines) and the facts it read, refreshed each minute and on a change.
     @State private var pick: MosaicPick?
     @State private var facts: MosaicFacts?
+    /// Sheet 201: the moment on the mosaic, its one sentence line, and the beat counters for the entrance haptic.
+    @State private var moment: MosaicMomentEvent?
+    @State private var momentClause: HomeSentence.Clause?
+    @State private var momentTask: Task<Void, Never>?
+    @State private var softBeats = 0
+    @State private var tickBeats = 0
+    @State private var rigidBeats = 0
+    @State private var onScreen = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ScrollView {
@@ -25,9 +34,9 @@ struct HomeMosaicPage: View {
                     // Moods: 64 pt from the safe area to the sentence in all, so the row's gap is what is left.
                     .padding(.bottom, HomeMosaic.moodsIsOn
                         ? HomeMosaic.moodsTopInset - HomeMosaic.headerHeight - HomeMosaic.sectionGap : 0)
-                MosaicSentence(pickedLines: pick?.lines)
+                MosaicSentence(pickedClauses: momentClause.map { [$0] } ?? pick?.clauses)
                 VStack(alignment: .leading, spacing: 0) {
-                    MosaicSlot(lay: $mosaicLay, caption: $caption, facts: facts, mood: pick?.mood)
+                    MosaicSlot(lay: $mosaicLay, caption: $caption, facts: facts, mood: pick?.mood, moment: moment)
                         .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
                     if !caption.isEmpty {
                         Text(caption)
@@ -50,6 +59,16 @@ struct HomeMosaicPage: View {
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
         .task(id: Int(AppClock.now.timeIntervalSince1970 / 60) &+ model.revision) { refreshPick() }
+        .onAppear { onScreen = true }
+        .onDisappear {
+            onScreen = false
+            endMoment()
+        }
+        // A mood change cancels the moment, and the sentence turns back with it.
+        .onChange(of: pick?.mood) { _, _ in endMoment() }
+        .tesseraFeedback(.made, trigger: softBeats)
+        .tesseraFeedback(.selection, trigger: tickBeats)
+        .tesseraFeedback(.setLogged, trigger: rigidBeats)
         .environment(\.openHomeLink) { link = $0 }
         .fullScreenCover(item: $link) { link in
             link.destination
@@ -78,6 +97,10 @@ struct HomeMosaicPage: View {
         let inputs = MosaicMoodInputs.make(engine: model.engine, facts: read, plan: model.plan,
                                            backShown: defaults.bool(forKey: Self.backShownKey),
                                            previous: pick.map { ($0.mood, $0.since) })
+        // A second absence says "Welcome back" again: the flag clears once he has been about for a day or two.
+        if inputs.daysAway < 3, defaults.bool(forKey: Self.backShownKey), !model.isSample {
+            defaults.removeObject(forKey: Self.backShownKey)
+        }
         let next = MosaicMoodPicker.pick(inputs)
         if next.mood == .back, !model.isSample {
             defaults.set(true, forKey: Self.backShownKey)
@@ -85,6 +108,45 @@ struct HomeMosaicPage: View {
         facts = read
         if next != pick {
             pick = next
+        }
+        playMoment(read)
+    }
+
+    /// Sheet 201: asks Core whether a moment is ready, and plays it. What has played and when stay in memory only;
+    /// the Tess slot stays empty until an on-device suggestion exists that never quoted calendar or health text.
+    private func playMoment(_ facts: MosaicFacts) {
+        guard HomeMosaic.momentsIsOn, moment == nil, onScreen, scenePhase == .active else { return }
+        let inputs = MosaicMomentInputs.make(engine: model.engine, facts: facts,
+                                             quiet: MosaicMomentMapping.isQuiet(facts.now),
+                                             last: MomentMemory.last, played: MomentMemory.played)
+        guard let next = MosaicMomentSource.next(inputs) else { return }
+        MomentMemory.played.insert(next.key)
+        MomentMemory.last = (next.kind, facts.now)
+        let played = MosaicMomentEvent(MosaicMomentMapping.moment(for: next))
+        moment = played
+        momentClause = next.clause
+        switch MosaicMomentMapping.beat(next.kind) {
+        case .soft: softBeats += 1
+        case .tick: tickBeats += 1
+        case .rigid: rigidBeats += 1
+        }
+        momentTask?.cancel()
+        momentTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(played.moment.duration))
+            guard !Task.isCancelled, moment?.id == played.id else { return }
+            endMoment()
+        }
+    }
+
+    /// The moment is over (its time, a mood change, or leaving Home): the sentence turns back to the mood's lines.
+    private func endMoment() {
+        momentTask?.cancel()
+        momentTask = nil
+        if moment != nil {
+            moment = nil
+        }
+        if momentClause != nil {
+            momentClause = nil
         }
     }
 

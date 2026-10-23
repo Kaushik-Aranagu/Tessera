@@ -137,4 +137,24 @@ struct MosaicMoodPickerTests {
         #expect(try label(for: .routine, title: "Morning", owner: "Routines") == RoutinesLanding.privateRoutine)
         #expect(try label(for: .list, title: "Trip", owner: "Lists") == ListContents.privateListLabel)
     }
+
+    @Test func theLinesAreDaySentenceClausesWithAppWordsOnlyForPlainThings() {
+        let cook = HandsEvent(app: .kitchen, label: "Tacos", start: at(14, 23), end: at(15), hands: [], isFixed: true)
+        let facts = MosaicFacts.make(engine: engine, now: at(14), calendar: calendar, place: (37.8, -122.4),
+                                     events: [cook])
+        let pick = MosaicMoodPicker.pick(MosaicMoodInputs(facts: facts))
+        #expect(pick.mood == .day && pick.lines[1] == "Free 23 min, then Tacos.")
+        #expect(pick.clauses[0].keyWord == nil && pick.clauses[0].app == nil)
+        #expect(pick.clauses[1].app == .kitchen && pick.clauses[1].keyWord == 18 ..< 23)
+        // A masked running thing is plain; Tess's words never carry an app word.
+        let plain = MosaicMoodPicker.pick(MosaicMoodInputs(
+            facts: facts,
+            running: true,
+            runningLabel: "Private workout"
+        ))
+        #expect(plain.clauses[1].text == "Private workout is running." && plain.clauses[1].keyWord == nil)
+        let shown = MosaicMoodPicker.pick(MosaicMoodInputs(facts: facts, running: true, runningLabel: "Push A",
+                                                           runningApp: .training))
+        #expect(shown.clauses[1].app == .training && shown.clauses[1].keyWord == 0 ..< 6)
+    }
 }
