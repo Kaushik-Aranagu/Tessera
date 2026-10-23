@@ -209,13 +209,27 @@ struct NoteRow: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// The first line, @ mentions in cobalt; with Together's link colours on, each mention in ink under a 1 pt line in
+    /// its home app's accent instead (135 §3).
+    private var titleLine: AttributedString {
+        var line = NotesCopy.inked(note.title)
+        // A private note keeps its plain cobalt: no app's colour says what it is about (QA on #1237).
+        if Together.isOn(Together.linkColours),
+           !NotesLanding(store: model.store, classes: model.classes).isPrivate(note)
+        {
+            LinkColours.underline(&line, text: note.title,
+                                  homes: LinkColours.homes(of: note, store: model.store, classes: model.classes))
+        }
+        return line
+    }
+
     var body: some View {
         let body = model.store.value("body", of: note)?.stringValue ?? ""
         let rest = NotesCopy.preview(of: body, isPrivate: model.store.value("isPrivate", of: note) == .bool(true))
         Button(action: open) {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.l) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                    Text(NotesCopy.inked(note.title))
+                    Text(titleLine)
                         .textRole(.bodyStrong)
                         .foregroundStyle(Theme.Colors.ink)
                         .lineLimit(1)

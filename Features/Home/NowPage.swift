@@ -6,6 +6,8 @@ import TesseraCore
 struct NowPage: View {
     /// Pages Home to a sibling (used by the empty state).
     var onShow: (HomeSpatialView.Page) -> Void = { _ in }
+    /// Home v2 always leads with the day sentence; Today does when Together's switch is On (135 part 1).
+    var daySentence = false
 
     @Environment(AppModel.self) private var model
     @Environment(\.zoomNamespace) private var namespace
@@ -74,6 +76,9 @@ struct NowPage: View {
                                  })
                                  .accessibilityLabel("Resume \(resumeName(process))")
                     }
+                } else if daySentence || Together.isOn(Together.daySentence), !planNow {
+                    // The day across the apps, in place of the hero; Now above still leads while something runs.
+                    DaySentence()
                 } else if let top, top.item.kind == .rest {
                     let next = top.item.object
                     if let fact = facts.rest(next: next, now: now) {

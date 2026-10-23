@@ -20,18 +20,25 @@ struct RootView: View {
         GeometryReader { proxy in
             ZStack {
                 NavigationStack(path: $model.path) {
-                    HomeSpatialView()
-                        .environment(\.animateEntrance, model.consumeFirstVisit(nil))
-                        .toolbarVisibility(.hidden, for: .navigationBar)
-                        .navigationDestination(for: Route.self) { route in
-                            ObjectPage(route: route)
-                                .environment(\.animateEntrance, model.consumeFirstVisit(route))
-                                .modifier(ArrivalTransition(
-                                    id: route,
-                                    arrival: model.arrivals[route] ?? .crossFade,
-                                    namespace: zoom
-                                ))
+                    Group {
+                        // Home v2 (sheet 137) while its Review switch is On; else Home as it was.
+                        if HomeV2.isOn {
+                            HomeV2View()
+                        } else {
+                            HomeSpatialView()
                         }
+                    }
+                    .environment(\.animateEntrance, model.consumeFirstVisit(nil))
+                    .toolbarVisibility(.hidden, for: .navigationBar)
+                    .navigationDestination(for: Route.self) { route in
+                        ObjectPage(route: route)
+                            .environment(\.animateEntrance, model.consumeFirstVisit(route))
+                            .modifier(ArrivalTransition(
+                                id: route,
+                                arrival: model.arrivals[route] ?? .crossFade,
+                                namespace: zoom
+                            ))
+                    }
                 }
                 .tint(Theme.Colors.ink)
                 .environment(\.zoomNamespace, zoom)
