@@ -63,7 +63,13 @@ final class TessLayerModel {
             replies = []
             return
         }
-        say(opening.line, names: [], at: now)
+        // She never repeats a line of hers: if the last thing she said is this very line and he has not answered, it is
+        // already there.
+        if lines.last?.role == .tess, lines.last?.text == opening.line {
+            arriving = nil
+        } else {
+            say(opening.line, names: [], at: now)
+        }
         replies = opening.replies
     }
 
