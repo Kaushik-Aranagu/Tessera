@@ -113,6 +113,30 @@ struct OneHandsTests {
         #expect(fix.app == .routines && fix.newStart == at(19))
     }
 
+    @Test func aChainOfThreeOverlapsIsThreeCollisionsEachWithItsOwnFix() throws {
+        let plan = try pushPlan()
+        func runs(_ hour: Int, _ minute: Int, minutes: Int) -> [RoutineRun] {
+            (1 ... 8).map { day in
+                let start = at(hour, minute, day: 22 - day)
+                return RoutineRun(start: start, end: start.addingTimeInterval(Double(minutes) * 60))
+            }
+        }
+        let routines = [
+            RoutinesLanding.Item(name: "Stretch", count: 8, runs: runs(18, 30, minutes: 30)),
+            RoutinesLanding.Item(name: "Journal", count: 8, runs: runs(18, 45, minutes: 30)),
+        ]
+        let found = table.collisions(on: at(9), plan: plan, routines: routines, calendar: calendar)
+        // Workout 18:00-19:00, Stretch 18:30-19:00, Journal 18:45-19:15: all three pairs overlap, earliest first.
+        #expect(found.count == 3)
+        #expect(found.map(\.at) == [at(18, 30), at(18, 45), at(18, 45)])
+        #expect(found.map(\.overlap).sorted() == [900, 900, 1800])
+        // The later starter of each pair moves, past the other's hands; no fix chains onto another.
+        let fixes = found.compactMap(\.fix)
+        #expect(fixes.count == 3)
+        #expect(fixes.filter { $0.label == "Stretch" }.map(\.newStart) == [at(19)])
+        #expect(fixes.filter { $0.label == "Journal" }.map(\.newStart).sorted() == [at(19), at(19)])
+    }
+
     @Test func nothingOverlappingIsNoCollision() throws {
         let plan = try pushPlan(startHour: 7)
         let runs = (1 ... 8).map { day in RoutineRun(start: at(20, 0, day: 22 - day), end: at(20, 20, day: 22 - day)) }

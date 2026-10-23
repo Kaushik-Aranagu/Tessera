@@ -18,10 +18,16 @@ public struct WorkoutProgress {
 
     /// "Bench press, set 3: 80 kg × 8". Nil once every planned set is logged.
     public var nextStep: String? {
+        nextStep(unit: .kilograms)
+    }
+
+    /// The same line with the weight in his unit (stored kilograms read through `MassUnit`): "Bench press, set 3: 176.5
+    /// lb × 8". Nothing stored changes.
+    public func nextStep(unit: MassUnit) -> String? {
         guard let exerciseName else { return nil }
         var line = "\(exerciseName), set \(setIndex + 1)"
         if let weight, let reps {
-            line += ": \(Self.format(weight)) kg × \(Self.format(reps))"
+            line += ": \(unit.text(kilograms: weight)) \(unit.symbol) × \(Self.format(reps))"
         }
         return line
     }
@@ -67,5 +73,16 @@ extension Transaction {
         }
         let progress = WorkoutProgress(of: workout, store: store)
         try saveContext(process, resumePoint: progress.resumePoint, nextStep: progress.nextStep, at: now)
+    }
+}
+
+extension MassUnit {
+    /// Stored kilograms as a number in a sentence, through Measure so the same weight reads the same on the Units page
+    /// and on every line (82.5 kg is 181.9 lb). Kilograms stay as stored.
+    func text(kilograms: Double) -> String {
+        guard self != .kilograms, let moved = Measure(kilograms, "kg").converted(to: symbol) else {
+            return WorkoutProgress.format(kilograms)
+        }
+        return MeasureFormat.number(moved.value, unit: symbol)
     }
 }
