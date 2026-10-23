@@ -69,7 +69,7 @@ struct ExplainTests {
             "80: your last Bench Press, 80 for 6, the same weight until every set reaches the top of the range.")
     }
 
-    @Test func sessionLengthNamesTheRoutineOrItsLabel() throws {
+    @Test func sessionLengthNamesThePlainRoutineAndSaysNothingOfAPrivateOne() throws {
         let routine = try engine.perform(CreateRoutine(title: "Push A"), by: .user).output
         for day in [9.0, 6.0, 3.0] {
             try session(daysAgo: day, sets: [(60, 5), (60, 5)], routine: routine, minutes: 45)
@@ -79,8 +79,7 @@ struct ExplainTests {
         for day in [9.0, 6.0] {
             try session(daysAgo: day, sets: [(60, 5), (60, 5)], title: "Knee rehab day", routine: secret, minutes: 30)
         }
-        let masked = try #require(explain(.sessionLength(routine: secret.id)))
-        #expect(masked == "about 30 min: your last 2 Private workout sessions." && !masked.contains("Knee"))
+        #expect(explain(.sessionLength(routine: secret.id)) == nil)
         #expect(explain(.sessionLength(routine: UUID())) == nil)
     }
 
@@ -140,6 +139,17 @@ struct ExplainTests {
         let rateDay = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 18, hour: 12)))
         try engine.perform(RecordRate(pair: "USD/INR", value: "83", at: rateDay), by: .user)
         #expect(explain(.moneyAboutTotal) == "1,100: dollars plus rupees at the Oct 18 rate.")
+    }
+
+    @Test func aNegativeAboutTotalKeepsItsSign() throws {
+        let card = try engine.perform(CreatePool(name: "Card", opening: "10"), by: .user).output
+        try engine.perform(LogSpend(amount: 310, typed: "310", spentAt: now, pool: card.id), by: .user)
+        try engine.perform(CreatePool(name: "India account", currency: "INR", opening: "8300"), by: .user)
+        let rateDay = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 18, hour: 12)))
+        try engine.perform(RecordRate(pair: "USD/INR", value: "83", at: rateDay), by: .user)
+        // -300 dollars plus 8300 rupees at 83 is -200: the sign stays.
+        #expect(explain(.moneyAboutTotal) == "-200: dollars plus rupees at the Oct 18 rate.")
+        #expect(PoolFormat.wholeNumber(-40) == "-40" && PoolFormat.wholeNumber(1100) == "1,100")
     }
 
     @Test func aPoolBalanceUsesTheLabelNeverTheName() throws {

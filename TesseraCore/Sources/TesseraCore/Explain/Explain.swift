@@ -73,9 +73,11 @@ public enum Explain {
     {
         guard let routine = store.object(id: id), !routine.isDeleted else { return nil }
         let stats = TrainingStats(store: store, classes: classes)
-        guard let minutes = stats.usualMinutes(of: routine) else { return nil }
+        // The landing hides a private routine's minutes, so the number has nothing to explain.
+        guard ObjectPrivacy.shownLabel(of: routine, in: store, classes: classes) == nil,
+              let minutes = stats.usualMinutes(of: routine) else { return nil }
         let count = stats.finishedCount(of: routine, limit: 3)
-        let name = ObjectPrivacy.shownLabel(of: routine, in: store, classes: classes) ?? routine.title
+        let name = routine.title
         return "about \(HouseTime.minutes(minutes)): your last \(count) \(name) \(count == 1 ? "session" : "sessions")."
     }
 
@@ -135,7 +137,7 @@ public enum Explain {
         let words = (["dollars"] + converted.map { PoolReport.word($0.currency).lowercased() })
         let list = words.count == 2 ? "\(words[0]) plus \(words[1])" : words.dropLast()
             .joined(separator: ", ") + " plus " + words[words.count - 1]
-        return "\(PoolFormat.wholeDollars(Decimal(dollars), lakh: lakh).dropFirst()): \(list) at the \(PoolReport.day(from, calendar)) rate."
+        return "\(PoolFormat.wholeNumber(Decimal(dollars), lakh: lakh)): \(list) at the \(PoolReport.day(from, calendar)) rate."
     }
 
     private static func poolBalance(_ id: UUID, _ store: ObjectStore,
