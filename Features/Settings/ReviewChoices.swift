@@ -147,6 +147,11 @@ final class ReviewChoices {
                says: ["Off": "Numbers are drawn as before.",
                       "On": "Fractions hang small, an estimate is lighter than an exact value, and the unit stays with its number."],
                readiness: .live),
+        // Design 138: the shared room motions (word to title, receipts, paper sheets, room shift).
+        Choice(id: "roomMotion", name: "Room motion", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Pages and receipts move as before.",
+                      "On": "A word grows into its page's title, receipts travel and dry, and rooms shift tint."],
+               readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
                       "All": "Body weight, Habits, Money, Reading, People and Upkeep show too."],
@@ -230,7 +235,7 @@ final class ReviewChoices {
         ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
-        ("Shown", ["sampleData", "landingPages", "numberRules", "areasShown", "classInspector"]),
+        ("Shown", ["sampleData", "landingPages", "numberRules", "roomMotion", "areasShown", "classInspector"]),
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
         ("Money", ["moneyPools"]),
     ]
