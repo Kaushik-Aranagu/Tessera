@@ -5,28 +5,33 @@ import TesseraCore
 /// live to pick between two ways of doing something. Said in sentences like Backups, never a list of toggles: no
 /// cards, no pills, hairlines and margin labels only (Design sheets 80, 93, 100).
 struct SettingsPage: View {
+    /// The page this was opened from, for the back word ("‹ Review" from Review; "‹ Home" when opened from Home).
+    var cameFrom = "Review"
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
 
     var body: some View {
-        ScrollViewReader { reader in
+        let v2 = SettingsV2.isOn
+        return ScrollViewReader { reader in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if isPresented {
                         Button { dismiss() } label: {
-                            Text("‹ Review")
-                                .textRole(.label)
+                            Text(v2 ? "‹ \(cameFrom)" : "‹ Review")
+                                .textRole(v2 ? .data : .label)
                                 .foregroundStyle(Theme.Colors.inkSecondary)
                                 .frame(minHeight: 44)
                         }
                         .buttonStyle(HandleButtonStyle())
-                        .accessibilityLabel("Back to Review")
+                        .accessibilityLabel("Back to \(v2 ? cameFrom : "Review")")
                     }
-                    Text("how Tessera runs")
-                        .font(Theme.voice)
-                        .foregroundStyle(Theme.Colors.context)
-                        .entrance(0)
+                    if !v2 {
+                        Text("how Tessera runs")
+                            .font(Theme.voice)
+                            .foregroundStyle(Theme.Colors.context)
+                            .entrance(0)
+                    }
                     Text("Settings")
                         .textRole(.hero)
                         .wordFit("Settings")
@@ -34,6 +39,14 @@ struct SettingsPage: View {
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, Theme.Spacing.s)
                         .entrance(1, hero: true)
+                    if v2 {
+                        // One sentence under the title, ink 2 (sheet 154).
+                        Text(SettingsV2.sentence)
+                            .font(Theme.voice)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                            .padding(.top, Theme.Spacing.xs)
+                            .entrance(1)
+                    }
 
                     // His own page: weight, height, age, sex, and what the app knows of his training (Design 108 s3).
                     MeDoor()
@@ -78,7 +91,7 @@ struct SettingsPage: View {
                     } label: {
                         Text("Backups")
                     }
-                    .buttonStyle(.labelWord)
+                    .settingsWordStyle()
                     .padding(.top, Theme.Spacing.xxl)
                     .accessibilityHint("Where your history is kept")
 
@@ -101,13 +114,13 @@ struct SettingsPage: View {
                     } label: {
                         Text("About")
                     }
-                    .buttonStyle(.labelWord)
+                    .settingsWordStyle()
                     .padding(.top, Theme.Spacing.l)
                     .accessibilityHint("Credits for the pictures and sources")
 
                     // Which release this is: the git SHA the build was made from, one quiet line at the foot.
                     Text("Build \(BuildStamp.short)")
-                        .textRole(.label)
+                        .textRole(v2 ? .data : .label)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .padding(.top, Theme.Spacing.section)
                         .accessibilityLabel("Build \(BuildStamp.short)")
@@ -145,10 +158,14 @@ private struct TessKnowsDoor: View {
         let _ = model.revision
         let count = TessMemoryStore(engine: model.engine, forgetLogURL: model.forgetLogURL).countWord()
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-            Text("Memory")
-                .textRole(.label)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .accessibilityAddTraits(.isHeader)
+            if SettingsV2.isOn {
+                SettingsV2Label(text: "Memory")
+            } else {
+                Text("Memory")
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .accessibilityAddTraits(.isHeader)
+            }
             // Only the count is the value word: "Tess remembers 12 things." (Design on #1127).
             HStack(alignment: .firstTextBaseline, spacing: 0) {
                 Text(TessKnowsCopy.doorLead(count))
@@ -156,6 +173,7 @@ private struct TessKnowsDoor: View {
                     TessKnowsPage()
                 } label: {
                     Text(TessKnowsCopy.doorCount(count)).fontWeight(.semibold)
+                        .foregroundStyle(SettingsV2.valueInk)
                 }
                 .buttonStyle(.valueWash)
                 Text(".")
@@ -192,7 +210,7 @@ struct ReviewSection: View {
 
     var body: some View {
         let choices = ReviewChoices.shared
-        MarginSection(label: "Review") {
+        return reviewFrame(SettingsV2.isOn) {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 Text("Try a new way; today's stays one tap away.")
                     .textRole(.body)
@@ -241,7 +259,7 @@ struct ReviewSection: View {
                                 }
                                 AccessibilityNotification.Announcement(ReviewSwitchCopy.reset).post()
                             }
-                            .buttonStyle(.labelWord)
+                            .settingsWordStyle()
                             .frame(minHeight: 44)
                         }
                         if let resetLine {
@@ -263,6 +281,19 @@ struct ReviewSection: View {
         }
     }
 
+    /// Today's margin label, or v2's sentence-case one above the rows.
+    @ViewBuilder
+    private func reviewFrame(_ v2: Bool, @ViewBuilder content: () -> some View) -> some View {
+        if v2 {
+            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                SettingsV2Label(text: "Review")
+                content()
+            }
+        } else {
+            MarginSection(label: "Review", content: content)
+        }
+    }
+
     private func row(_ choice: ReviewChoices.Choice) -> some View {
         let choices = ReviewChoices.shared
         let value = choices.value(of: choice)
@@ -274,6 +305,7 @@ struct ReviewSection: View {
                 Button { flip(choice, forward: true) } label: {
                     Text(value)
                         .fontWeight(.semibold)
+                        .foregroundStyle(live ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                         .frame(minHeight: 44)
                         .contentShape(Rectangle())
                 }
@@ -299,7 +331,7 @@ struct ReviewSection: View {
             // "Tess names / training days: On." squeezed by NEEDS CLAUDE).
             if let mark = ReviewSwitchCopy.mark(choice) {
                 Text(mark)
-                    .textRole(.label)
+                    .textRole(SettingsV2.isOn ? .data : .label)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .accessibilityHidden(true)
             }

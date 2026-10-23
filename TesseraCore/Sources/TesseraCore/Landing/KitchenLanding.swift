@@ -21,10 +21,15 @@ public struct KitchenLanding {
     /// optional, not "to taste" and not a staple; a line with no ingredient behind it cannot be confirmed, so that
     /// recipe is not counted. A recipe with nothing needed is not counted either.
     public func dinnersCovered() -> Int {
+        coveredRecipes().count
+    }
+
+    /// The recipes behind `dinnersCovered`, in recipe order.
+    public func coveredRecipes() -> [ObjectRecord] {
         let book = RecipeBook(store: store, classes: classes)
         let places = PantryPlaces(store: store, classes: classes)
         let groceries = Groceries(store: store, classes: classes)
-        return book.recipes().count { recipe in
+        return book.recipes().filter { recipe in
             let all = book.lines(of: recipe)
             guard !all.contains(where: { line in line.ingredient.map { groceries.isOn($0.title) } ?? false }) else {
                 return false

@@ -28,6 +28,8 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>InterTight-Variable.ttf</string>
+		<string>Figtree-Variable.ttf</string>
+		<string>Outfit-Variable.ttf</string>
 	</array>
 </dict>
 </plist>

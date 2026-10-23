@@ -201,6 +201,57 @@ struct PoolReportTests {
         #expect(report.sentence(nothingLate: false).text == "Private pool has $150.00.")
     }
 
+    @Test func aPrivateWordNextToPunctuationIsStillMasked() throws {
+        let checking = try pool("US checking", opening: "100")
+        for note in ["ozempic, pharmacy", "ozempic-run", "(ozempic)"] {
+            let punctuated = try engine.perform(
+                LogSpend(amount: 5, typed: "5", note: note, pool: checking.id), by: .user
+            ).output
+            let shown = try #require(report().newLine(for: punctuated))
+            #expect(shown == "Private spend $5.00, US checking." && !shown.lowercased().contains("ozempic"))
+        }
+    }
+
+    @Test func aSpendLineMasksWordByWordAndAnArchivedPoolIsSaidToCount() throws {
+        let checking = try pool("US checking", opening: "100")
+        let spend = try engine.perform(
+            LogSpend(amount: 80, typed: "80", note: "ozempic pharmacy run", pool: checking.id),
+            by: .user
+        ).output
+        let line = try #require(report().newLine(for: spend))
+        #expect(line == "Private spend $80.00, US checking." && !line.lowercased().contains("ozempic"))
+        #expect(report().archivedNote() == nil)
+        try engine.perform(ArchivePool(pool: checking.id), by: .user)
+        #expect(report().archivedNote() == "Archived pools are still counted.")
+        #expect(report().totals().map(\.text) == ["Dollars $20.00"])
+    }
+
+    @Test func wholeDollarsAreFormattedDirectly() throws {
+        #expect(try PoolFormat.wholeDollars(#require(Decimal(string: "1136.33"))) == "$1,136")
+        #expect(try PoolFormat.wholeDollars(#require(Decimal(string: "1136.5"))) == "$1,137")
+        #expect(PoolFormat.wholeDollars(-40) == "-$40" && PoolFormat.wholeDollars(0) == "$0")
+        #expect(PoolFormat.wholeDollars(826_500, lakh: true) == "$8,26,500")
+    }
+
+    @Test func theMonthsMovesAreNewestFirstAndOnlyThisMonths() throws {
+        let checking = try pool("US checking", opening: "5000")
+        let india = try pool("India account", "INR")
+        let first = try engine.perform(
+            LogMove(from: checking.id, to: india.id, sent: "100", arrived: "8300", at: at(10, 3)),
+            by: .user
+        ).output
+        let second = try engine.perform(
+            LogMove(from: checking.id, to: india.id, sent: "100", arrived: "8300", at: at(10, 9)),
+            by: .user
+        ).output
+        try engine.perform(
+            LogMove(from: checking.id, to: india.id, sent: "100", arrived: "8300", at: at(9, 20)),
+            by: .user
+        )
+        #expect(report().monthMoves(calendar: calendar).map(\.id) == [second.id, first.id])
+        #expect(report(now: at(9, 25)).monthMoves(calendar: calendar).count == 1)
+    }
+
     // MARK: Walls
 
     @Test func widgetsAndLiveActivitiesNeverMentionAPool() throws {

@@ -34,7 +34,8 @@ struct PantryRailPage: View {
                      let place = board.places.first { $0.id.uuidString == id }
                      return (place?.groups ?? []).map { .init(label: $0.label, rows: $0.rows) }
                  },
-                 empty: board.empty(for:))
+                 empty: board.empty(for:),
+                 level: { PantryShopSwitch.levelsOn ? board.level(for: $0) : nil })
         { row in
             PantryRow(row: row, onTick: tick, onAdd: add)
         }

@@ -11,6 +11,17 @@ enum HomeV2 {
     @MainActor static var isOn: Bool {
         ReviewChoices.shared.value(of: choiceID) == "On"
     }
+
+    /// Once, on the first launch of the build that adds the Settings word to Home: Home v2 goes back to Off, so a phone
+    /// that turned it on while Settings was out of reach is never stuck (Kaushik, Oct 22). He can turn it on again.
+    @MainActor static func resetOnce(defaults: UserDefaults = .standard) {
+        let key = "homeV2.resetOnce.oct22"
+        guard !defaults.bool(forKey: key) else { return }
+        defaults.set(true, forKey: key)
+        if let choice = ReviewChoices.all.first(where: { $0.id == choiceID }), isOn {
+            ReviewChoices.shared.set(choice, to: "Off")
+        }
+    }
 }
 
 /// What the edges and the Review word open, each as its own full-screen page with Close.
@@ -28,7 +39,6 @@ enum HomeV2Door: Identifiable, Hashable {
 
 struct HomeV2View: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var door: HomeV2Door?
     @State private var link: HomeLink?
 
@@ -39,22 +49,38 @@ struct HomeV2View: View {
                 // plan all kept). REVIEW is a door word on the day's line now; the day stroke lives on its page.
                 NowPage(daySentence: true)
                     .overlay(alignment: .topTrailing) {
-                        Button("Review") { door = .review }
-                            .buttonStyle(LandingWordStyle())
-                            .accessibilityHint("Opens your day and week")
+                        // Two plain door words: Review, and Settings always in sight (Kaushik, Oct 22).
+                        HStack(spacing: Theme.Spacing.l) {
+                            Button("Review") { door = .review }
+                                .buttonStyle(LandingWordStyle())
+                                .accessibilityHint("Opens your day and week")
+                            Button("Settings") { link = .settings }
+                                .buttonStyle(LandingWordStyle())
+                                .accessibilityHint("Opens Settings")
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Theme.Spacing.gutter)
                     .padding(.top, Theme.Spacing.s)
             }
             .scrollIndicators(.hidden)
-            // At default sizes it fits one screen; it scrolls only when type needs it (137 §1).
-            .scrollDisabled(!typeSize.isAccessibilitySize)
+            // It scrolls only when its content is taller than the screen (a long day sentence on a real phone ran off
+            // the bottom with scrolling off: Kaushik, Oct 22).
+            .scrollBounceBehavior(.basedOnSize)
 
             AppEdges { door = .app($0) }
                 .padding(.bottom, HomeSpatialView.dockClearance)
         }
         .environment(\.openHomeLink) { link = $0 }
+        .task {
+            // `-openApp tasks|kitchen|...` (simulator only, through LaunchFlags): opens that app's door, for stills.
+            if let value = LaunchFlags.value(after: "-openApp"), let app = HomeApp.allCases.first(where: {
+                $0.rawValue.lowercased() == value
+            }) {
+                try? await Task.sleep(for: .seconds(1))
+                door = .app(app)
+            }
+        }
         .fullScreenCover(item: $door) { door in
             HomeV2DoorPage(door: door)
                 .safeAreaInset(edge: .top, spacing: 0) {
@@ -101,6 +127,7 @@ private struct HomeV2DoorPage: View {
             case .app(.money): MoneyLandingView()
             case .app(.notes): NotesView()
             case .app(.lists): ListsView()
+            case .app(.tasks): TasksLandingPage()
             case .app(.routines):
                 // Routines' landing is Builder A's (sheet 131 L4); until then its plans.
                 ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
@@ -129,7 +156,11 @@ private struct HomeV2DoorPage: View {
 struct AppEdges: View {
     let open: (HomeApp) -> Void
 
-    static let order: [HomeApp] = [.training, .kitchen, .money, .notes, .lists, .routines]
+    /// Tasks joins as an ink stroke once its Review switch is on.
+    @MainActor static var order: [HomeApp] {
+        [.training, .kitchen, .money, .notes, .lists, .routines] + (TasksApp.isOn ? [.tasks] : [])
+    }
+
     static let stroke: CGFloat = 3
     static let gap: CGFloat = 3
 

@@ -4,11 +4,53 @@ import Foundation
 import Testing
 
 final class HomeStub: URLProtocol, @unchecked Sendable {
-    nonisolated(unsafe) static var reply: (status: Int, body: String) = (200, "{}")
-    nonisolated(unsafe) static var failure: URLError.Code?
-    nonisolated(unsafe) static var redirect: String?
-    nonisolated(unsafe) static var requests: [URLRequest] = []
-    nonisolated(unsafe) static var bodies: [Data] = []
+    /// URLSession calls startLoading from its own threads while the test reads and resets these, so every access goes
+    /// through one lock and a test starts with `reset()` as a barrier.
+    private struct State {
+        var reply: (status: Int, body: String) = (200, "{}")
+        var failure: URLError.Code?
+        var redirect: String?
+        var requests: [URLRequest] = []
+        var bodies: [Data] = []
+    }
+
+    private nonisolated(unsafe) static var state = State()
+    private static let lock = NSLock()
+
+    private static func locked<T>(_ body: (inout State) -> T) -> T {
+        lock.lock()
+        defer { lock.unlock() }
+        return body(&state)
+    }
+
+    static var reply: (status: Int, body: String) {
+        get { locked { $0.reply } }
+        set { locked { $0.reply = newValue } }
+    }
+
+    static var failure: URLError.Code? {
+        get { locked { $0.failure } }
+        set { locked { $0.failure = newValue } }
+    }
+
+    static var redirect: String? {
+        get { locked { $0.redirect } }
+        set { locked { $0.redirect = newValue } }
+    }
+
+    static var requests: [URLRequest] {
+        get { locked { $0.requests } }
+        set { locked { $0.requests = newValue } }
+    }
+
+    static var bodies: [Data] {
+        get { locked { $0.bodies } }
+        set { locked { $0.bodies = newValue } }
+    }
+
+    static func reset() {
+        locked { $0 = State() }
+    }
 
     static func session() -> URLSession {
         let configuration = URLSessionConfiguration.ephemeral
@@ -25,7 +67,6 @@ final class HomeStub: URLProtocol, @unchecked Sendable {
     }
 
     override func startLoading() {
-        Self.requests.append(request)
         var data = Data()
         if let stream = request.httpBodyStream {
             stream.open()
@@ -37,12 +78,13 @@ final class HomeStub: URLProtocol, @unchecked Sendable {
             }
             stream.close()
         }
-        Self.bodies.append(data)
-        if let failure = Self.failure {
+        Self.locked { $0.requests.append(request); $0.bodies.append(data) }
+        let (failure, redirect, reply) = Self.locked { ($0.failure, $0.redirect, $0.reply) }
+        if let failure {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
             return
         }
-        if let target = Self.redirect, let url = URL(string: target), request.url?.host() != url.host() {
+        if let target = redirect, let url = URL(string: target), request.url?.host() != url.host() {
             let hop = HTTPURLResponse(url: request.url!, statusCode: 301, httpVersion: nil,
                                       headerFields: ["Location": target])!
             client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: url), redirectResponse: hop)
@@ -50,10 +92,10 @@ final class HomeStub: URLProtocol, @unchecked Sendable {
             client?.urlProtocolDidFinishLoading(self)
             return
         }
-        let response = HTTPURLResponse(url: request.url!, statusCode: Self.reply.status, httpVersion: nil,
+        let response = HTTPURLResponse(url: request.url!, statusCode: reply.status, httpVersion: nil,
                                        headerFields: ["request-id": "req_test"])!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: Data(Self.reply.body.utf8))
+        client?.urlProtocol(self, didLoad: Data(reply.body.utf8))
         client?.urlProtocolDidFinishLoading(self)
     }
 
@@ -81,11 +123,7 @@ struct HomeDoneWordingTests {
 
     init() throws {
         classes = try store.prepareCatalog()
-        HomeStub.reply = (200, "{}")
-        HomeStub.failure = nil
-        HomeStub.redirect = nil
-        HomeStub.requests = []
-        HomeStub.bodies = []
+        HomeStub.reset()
     }
 
     static func reply(context: String?, detail: String?) -> String {
