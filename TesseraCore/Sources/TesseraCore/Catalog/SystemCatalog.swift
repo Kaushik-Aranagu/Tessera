@@ -310,6 +310,7 @@ public enum SystemCatalog {
                       FieldSpec(key: "start", name: "Start", kind: .date),
                       FieldSpec(key: "end", name: "End", kind: .date),
                       FieldSpec(key: "links", name: "Links", kind: .refList, target: .thing),
+                      FieldSpec(key: "away", name: "Away", kind: .bool, defaultValue: .bool(false)),
                   ]),
         // Money in: a paycheck, a gift, a refund. Typed digits in the pool's currency.
         ClassSpec(key: .inflow, name: "Inflow", parent: .thing, symbol: "arrow.down.circle", colorRole: "neutral",

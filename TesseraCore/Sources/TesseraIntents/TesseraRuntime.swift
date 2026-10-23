@@ -88,6 +88,7 @@ public enum TesseraIntentsCatalog {
         "keepAllNotes": "in-app only: Make a kind",
         "createOccasion": "in-app only: Occasions",
         "linkToOccasion": "in-app only: Occasions",
+        "setAway": "in-app only: Occasions",
         "unlinkFromOccasion": "in-app only: Occasions",
         "logShopTotal": "in-app only: the groceries total",
         "skipShopTotal": "in-app only: the groceries total",
