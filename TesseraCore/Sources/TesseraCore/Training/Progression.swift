@@ -36,7 +36,7 @@ public extension TrainingLedger {
     /// Next session's target for an exercise: from the rule when one applies, else last time's weight and reps,
     /// else the bottom of the rep range with no weight. The increment snaps to what the gym can load.
     func nextTarget(for exercise: ClassDef, slot: ObjectRecord? = nil,
-                    excludingWorkout excludedID: UUID? = nil) -> SetTarget
+                    excludingWorkout excludedID: UUID? = nil, unit: MassUnit = .kilograms) -> SetTarget
     {
         // With no slot given (the exercise page), use the plan's slot for this exercise, so its rep range counts.
         let slot = slot ?? store.planSlot(for: exercise)
@@ -65,7 +65,7 @@ public extension TrainingLedger {
             let raised = profile.nearest(to: top.weight + increment)
             let next = raised > top.weight + 0.001 ? raised : profile.next(above: top.weight) ?? top.weight + increment
             return SetTarget(weight: next, reps: low,
-                             reason: "Up \(WorkoutProgress.format(next - top.weight)) kg from last time")
+                             reason: "Up \(WorkoutProgress.format(unit.shown(kilograms: next - top.weight))) \(unit.symbol) from last time")
         }
         let target = min((reps.min() ?? low) + 1, high)
         return SetTarget(weight: top.weight, reps: max(target, low),

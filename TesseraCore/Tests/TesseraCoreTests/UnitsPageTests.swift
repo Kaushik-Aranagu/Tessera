@@ -48,3 +48,29 @@ struct UnitsPageTests {
         #expect(UnitsPage.rows(units)[2].text == "Food, grams")
     }
 }
+
+/// The lines that used to say "kg" whatever he chose.
+@MainActor
+struct UnitAwareLinesTests {
+    @Test func theNextStepReadsInHisUnitAndKilogramsStayTheDefault() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let workout = try store.create(#require(classes[.workout]), title: "Push A")
+        let entry = try store.create(#require(classes[.exerciseEntry]), parent: workout)
+        try store.setClassLink("exercise", on: entry, to: #require(classes[.benchPress]))
+        try store.set("targetSets", to: .number(3), on: entry)
+        try store.set("targetWeight", to: .mass(80), on: entry)
+        try store.set("targetReps", to: .number(8), on: entry)
+        let progress = WorkoutProgress(of: workout, store: store)
+        #expect(progress.nextStep == "Bench Press, set 1: 80 kg × 8")
+        #expect(progress.nextStep(unit: .kilograms) == progress.nextStep)
+        #expect(progress.nextStep(unit: .pounds) == "Bench Press, set 1: 176.5 lb × 8")
+        // Nothing stored changed.
+        #expect(store.number("targetWeight", of: entry) == 80)
+    }
+
+    @Test func aMassFieldReadsInHisUnit() {
+        #expect(SideFacts.describe(.mass(82.5)) == "82.5 kg")
+        #expect(SideFacts.describe(.mass(82.5), unit: .pounds) == "182 lb")
+    }
+}
