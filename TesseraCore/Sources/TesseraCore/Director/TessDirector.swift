@@ -129,6 +129,13 @@ public enum TessPalette {
         ]
     }
 
+    /// Whether two palettes are the same colours, to within 1e-6.
+    public static func matches(_ a: [OKLCH], _ b: [OKLCH]) -> Bool {
+        a.count == b.count && zip(a, b).allSatisfy { x, y in
+            abs(x.lightness - y.lightness) < 1e-6 && abs(x.chroma - y.chroma) < 1e-6 && abs(x.hue - y.hue) < 1e-6
+        }
+    }
+
     /// Whether three colours are exactly the palette `derive` would make from some accent.
     public static func isDerived(_ colors: [OKLCH], dark: Bool) -> Bool {
         guard colors.count == 3, colors.allSatisfy({ $0.chroma >= minChroma - 1e-9 }) else { return false }
@@ -291,10 +298,13 @@ public enum TessDirection {
     /// rebuilt from the accent's own colour; an accent whose colour isn't known falls back to Ember.
     private static func clampTess(_ palette: TessPaletteChoice, context: DirectorContext) -> TessPaletteChoice {
         guard let accent = palette.accent, let own = context.accents[accent] else { return .ember }
-        if TessPalette.isDerived(palette.colors, dark: context.dark) {
+        // Kept only when it is exactly the palette derived from this accent's own colour: the right pattern in the
+        // wrong hue is rebuilt.
+        let derived = TessPalette.derive(from: own, dark: context.dark)
+        if TessPalette.matches(palette.colors, derived) {
             return palette
         }
-        return TessPaletteChoice(accent: accent, colors: TessPalette.derive(from: own, dark: context.dark))
+        return TessPaletteChoice(accent: accent, colors: derived)
     }
 }
 

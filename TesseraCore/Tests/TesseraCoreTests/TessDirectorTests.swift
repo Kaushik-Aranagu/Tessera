@@ -3,8 +3,17 @@ import Foundation
 import Testing
 
 /// A director that asks for everything it shouldn't, to prove the clamps run after it.
+private final class AskLog: @unchecked Sendable {
+    var sawScene = false
+}
+
 private struct WildDirector: TessDirector {
+    var log = AskLog()
+
     func decide(_ ask: DirectorAsk, context _: DirectorContext) -> DirectorDecision {
+        if case .scene = ask {
+            log.sawScene = true
+        }
         let wild: DirectorChoice = switch ask {
         case .burst, .tessBurst:
             .burst(BurstChoice(shape: .spray, count: 5000, duration: 99, tone: .glaze))
@@ -125,11 +134,31 @@ struct TessDirectorTests {
         #expect(!TessPalette.isDerived([OKLCH(lightness: 0.5, chroma: 0.3, hue: 5)], dark: false))
     }
 
+    /// The right pattern (L, chroma, 18 degree sides) in the wrong hue is rebuilt from the accent's own colour.
+    @Test func anOnPatternPaletteInTheWrongHueIsRebuilt() {
+        struct OffHue: TessDirector {
+            func decide(_: DirectorAsk, context: DirectorContext) -> DirectorDecision {
+                let wrong = TessPalette.derive(from: OKLCH(lightness: 0.5, chroma: 0.2, hue: 200), dark: context.dark)
+                return DirectorDecision(choice: .tessPalette(TessPaletteChoice(accent: .training, colors: wrong)),
+                                        why: "off hue", key: "x")
+            }
+        }
+        let ctx = context()
+        guard case let .tessPalette(choice) = TessDirection.decide(OffHue(), .tessPalette(pageAccents: [.training]),
+                                                                   context: ctx).choice
+        else { Issue.record("not a tess palette"); return }
+        let own = ctx.accents[.training] ?? OKLCH(lightness: 0, chroma: 0, hue: 0)
+        #expect(TessPalette.matches(choice.colors, TessPalette.derive(from: own, dark: false)))
+        #expect(TessPalette.isDerived(choice.colors, dark: false))
+    }
+
     @Test func aSceneAskIsAnsweredByTheRulesWhateverDirectorIsAsked() throws {
         let ask = try DirectorAsk.scene(.pinned(.snow), facts: facts(), place: nil, weather: nil, calendar: .current)
-        guard case let .scene(scene) = TessDirection.decide(WildDirector(), ask, context: context()).choice
+        let wild = WildDirector()
+        guard case let .scene(scene) = TessDirection.decide(wild, ask, context: context()).choice
         else { Issue.record("not a scene"); return }
         #expect(scene.scene == .snow)
+        #expect(!wild.log.sawScene, "the hostile director was handed a scene ask")
     }
 
     @Test func quietHoursKeepTheMoodHeAlreadyHad() {
