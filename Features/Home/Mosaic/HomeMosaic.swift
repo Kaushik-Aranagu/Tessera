@@ -5,11 +5,18 @@ import Foundation
 enum HomeMosaic {
     nonisolated static let choiceID = "homeMosaic"
     nonisolated static let appsListID = "homeAppsList"
+    nonisolated static let moodsID = "homeMosaicMoods"
 
     /// The page side margin on this page. Theme.Spacing.gutter is 22; this page is 24.
     static let gutter: CGFloat = 24
     static let sectionGap: CGFloat = 16
     static let mosaicHeight: CGFloat = 250
+    /// Sheet 200: the narrower block (248x160, the mosaic changes size by mood inside it), 14 pt under the sentence.
+    static let moodsMosaicSize = CGSize(width: 248, height: 160)
+    static let moodsMosaicGap: CGFloat = 14
+    /// Sheet 200: from the top of the safe area to the top of the sentence; the 44 pt date row sits inside it.
+    static let moodsTopInset: CGFloat = 64
+    static let headerHeight: CGFloat = 44
     static let rowHeight: CGFloat = 40
     /// A row open on its why line.
     static let openRowHeight: CGFloat = 78
@@ -20,6 +27,11 @@ enum HomeMosaic {
 
     @MainActor static var appsListIsOn: Bool {
         ReviewChoices.shared.value(of: appsListID) == "On"
+    }
+
+    /// Sheet 200: the departure board over the sentence. It rides on the Mosaic, so it needs both On.
+    @MainActor static var moodsIsOn: Bool {
+        isOn && ReviewChoices.shared.value(of: moodsID) == "On"
     }
 
     /// The sentence shows at most three lines, one clause each; with more, the first three.

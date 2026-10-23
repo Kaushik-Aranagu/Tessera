@@ -14,14 +14,21 @@ struct HomeMosaicPage: View {
     @State private var mosaicLay: ((CGRect) -> Void)?
     /// The mosaic's one caption line.
     @State private var caption = ""
+    /// Sheet 200: Tess's pick (mood, its three lines) and the facts it read, refreshed each minute and on a change.
+    @State private var pick: MosaicPick?
+    @State private var facts: MosaicFacts?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: HomeMosaic.sectionGap) {
                 header
-                MosaicSentence()
+                    // Moods: 64 pt from the safe area to the sentence in all, so the row's gap is what is left.
+                    .padding(.bottom, HomeMosaic.moodsIsOn
+                        ? HomeMosaic.moodsTopInset - HomeMosaic.headerHeight - HomeMosaic.sectionGap : 0)
+                MosaicSentence(pickedLines: pick?.lines)
                 VStack(alignment: .leading, spacing: 0) {
-                    MosaicSlot(lay: $mosaicLay, caption: $caption)
+                    MosaicSlot(lay: $mosaicLay, caption: $caption, facts: facts, mood: pick?.mood)
+                        .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
                     if !caption.isEmpty {
                         Text(caption)
                             .font(Theme.voice(size: 16))
@@ -36,12 +43,13 @@ struct HomeMosaicPage: View {
                 }
             }
             .padding(.horizontal, HomeMosaic.gutter)
-            .padding(.top, Theme.Spacing.s)
+            .padding(.top, HomeMosaic.moodsIsOn ? 0 : Theme.Spacing.s)
             .padding(.bottom, Theme.Spacing.xl)
             .coordinateSpace(.named(Self.space))
         }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
+        .task(id: Int(AppClock.now.timeIntervalSince1970 / 60) &+ model.revision) { refreshPick() }
         .environment(\.openHomeLink) { link = $0 }
         .fullScreenCover(item: $link) { link in
             link.destination
@@ -53,6 +61,30 @@ struct HomeMosaicPage: View {
                     }
                     .padding(.horizontal, Theme.Spacing.gutter - 8)
                 }
+        }
+    }
+
+    private static let backShownKey = "homeMosaic.backShown"
+
+    /// Asks Core's picker what the day looks like now; "Welcome back" shows once per absence.
+    private func refreshPick() {
+        guard HomeMosaic.moodsIsOn else {
+            pick = nil
+            return
+        }
+        let now = AppClock.now
+        let read = MosaicFacts.make(engine: model.engine, now: now)
+        let defaults = UserDefaults.standard
+        let inputs = MosaicMoodInputs.make(engine: model.engine, facts: read, plan: model.plan,
+                                           backShown: defaults.bool(forKey: Self.backShownKey),
+                                           previous: pick.map { ($0.mood, $0.since) })
+        let next = MosaicMoodPicker.pick(inputs)
+        if next.mood == .back, !model.isSample {
+            defaults.set(true, forKey: Self.backShownKey)
+        }
+        facts = read
+        if next != pick {
+            pick = next
         }
     }
 
