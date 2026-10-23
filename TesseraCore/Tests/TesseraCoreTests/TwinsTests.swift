@@ -85,4 +85,21 @@ struct TwinsTests {
         _ = try engine.perform(AddListItem(list: one.id, text: "milk"), by: .user)
         #expect(Twins.next(engine: engine) == nil)
     }
+
+    @Test func aThingFlaggedPrivateWithAPlainNameIsNeverOfferedOrJoined() throws {
+        for key in [SystemCatalog.Key.recipe, .list, .task, .note] {
+            let one = try make(key, "Tacos")
+            let two = try make(key, "Tacos")
+            // Only Note declares the flag today (Recipe, List and Task do not, so the store refuses it for them); the
+            // guard reads the value whatever the class, so a class that gains the field is covered at once.
+            guard (try? store.set("isPrivate", to: .bool(true), on: one)) != nil else {
+                continue
+            }
+            try store.set("isPrivate", to: .bool(true), on: two)
+            #expect(Twins.offers(engine: engine).isEmpty)
+            #expect(throws: (any Error).self) { try engine.perform(JoinTwins(keep: one.id, other: two.id), by: .user) }
+            store.softDelete(one)
+            store.softDelete(two)
+        }
+    }
 }

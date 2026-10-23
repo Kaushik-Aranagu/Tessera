@@ -45,7 +45,10 @@ public enum Twins {
     }
 
     static func isOffered(_ object: ObjectRecord, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
+        // The flag counts for every kind, even one whose class does not declare it yet: shownLabel reads title words
+        // only for recipes and lists.
         guard !object.isDeleted, object.orderedChildren.isEmpty, !normalized(object.title).isEmpty,
+              store.value("isPrivate", of: object) != .bool(true),
               ObjectPrivacy.shownLabel(of: object, in: store, classes: classes) == nil,
               !ObjectPrivacy.isPrivateWord(object.title, in: store) else { return false }
         return true
