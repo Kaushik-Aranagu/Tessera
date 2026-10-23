@@ -5,6 +5,8 @@ import TesseraCore
 /// live to pick between two ways of doing something. Said in sentences like Backups, never a list of toggles: no
 /// cards, no pills, hairlines and margin labels only (Design sheets 80, 93, 100).
 struct SettingsPage: View {
+    /// The page this was opened from, for the back word ("‹ Review" from Review; "‹ Home" when opened from Home).
+    var cameFrom = "Review"
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
@@ -16,18 +18,20 @@ struct SettingsPage: View {
                 VStack(alignment: .leading, spacing: 0) {
                     if isPresented {
                         Button { dismiss() } label: {
-                            Text(v2 ? SettingsV2.backWord : "‹ Review")
+                            Text(v2 ? "‹ \(cameFrom)" : "‹ Review")
                                 .textRole(v2 ? .data : .label)
                                 .foregroundStyle(Theme.Colors.inkSecondary)
                                 .frame(minHeight: 44)
                         }
                         .buttonStyle(HandleButtonStyle())
-                        .accessibilityLabel(v2 ? SettingsV2.backLabel : "Back to Review")
+                        .accessibilityLabel("Back to \(v2 ? cameFrom : "Review")")
                     }
-                    Text(v2 ? SettingsV2.sentence : "how Tessera runs")
-                        .font(Theme.voice)
-                        .foregroundStyle(v2 ? Theme.Colors.inkSecondary : Theme.Colors.context)
-                        .entrance(0)
+                    if !v2 {
+                        Text("how Tessera runs")
+                            .font(Theme.voice)
+                            .foregroundStyle(Theme.Colors.context)
+                            .entrance(0)
+                    }
                     Text("Settings")
                         .textRole(.hero)
                         .wordFit("Settings")
@@ -35,6 +39,14 @@ struct SettingsPage: View {
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, Theme.Spacing.s)
                         .entrance(1, hero: true)
+                    if v2 {
+                        // One sentence under the title, ink 2 (sheet 154).
+                        Text(SettingsV2.sentence)
+                            .font(Theme.voice)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                            .padding(.top, Theme.Spacing.xs)
+                            .entrance(1)
+                    }
 
                     // His own page: weight, height, age, sex, and what the app knows of his training (Design 108 s3).
                     MeDoor()
@@ -269,7 +281,7 @@ struct ReviewSection: View {
                 Button { flip(choice, forward: true) } label: {
                     Text(value)
                         .fontWeight(.semibold)
-                        .foregroundStyle(live ? SettingsV2.valueInk : Theme.Colors.inkSecondary)
+                        .foregroundStyle(live ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                         .frame(minHeight: 44)
                         .contentShape(Rectangle())
                 }

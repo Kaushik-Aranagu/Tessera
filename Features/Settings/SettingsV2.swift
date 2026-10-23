@@ -6,8 +6,6 @@ import SwiftUI
 enum SettingsV2 {
     static let choiceID = "settingsV2"
 
-    static let backWord = "‹ Home"
-    static let backLabel = "Back to Home"
     static let sentence = "How Tessera works for you."
     static let title = "Settings"
 
