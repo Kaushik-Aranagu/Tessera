@@ -18,8 +18,11 @@ struct WeightReel: View {
     var platesPerSide: (Double) -> [Double]? = { _ in nil }
     var onType: () -> Void = {}
 
+    @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// Live v2: how far the finger has pulled the numeral, 0 to 1, fed to HouseNumber.
+    @State private var pull: CGFloat = 0
     @State private var touching = false
     @State private var axis: ScrubFeel.Axis?
     @State private var drag = ScrubFeel.Drag()
@@ -44,24 +47,32 @@ struct WeightReel: View {
     var body: some View {
         let index = shownIndex ?? currentIndex
         let value = detents.indices.contains(index) ? detents[index] : weight
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            ZStack {
-                if touching, !reduceMotion {
-                    neighbour(index - 1).offset(y: -Metrics.neighbourGap - 8)
-                    neighbour(index + 1).offset(y: Metrics.neighbourGap + 8)
-                }
-                Text(Format.kilograms(value))
-                    .numeral(Metrics.numeral)
-                    .foregroundStyle(Paint.cream)
-                    .monospacedDigit()
-                    .contentTransition(reduceMotion ? .opacity : .numericText(countsDown: direction < 0))
-                    .tesseraAnimation(.spring(response: 0.3, dampingFraction: 0.8), value: value)
+        Group {
+            if LiveV2.isOn {
+                let _ = model.revision
+                LiveV2WeightNumber(value: value, unit: unit, pull: pull, onUnitTap: { LiveV2.turnUnit(model: model) })
                     .offset(y: band)
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    ZStack {
+                        if touching, !reduceMotion {
+                            neighbour(index - 1).offset(y: -Metrics.neighbourGap - 8)
+                            neighbour(index + 1).offset(y: Metrics.neighbourGap + 8)
+                        }
+                        Text(Format.kilograms(value))
+                            .numeral(Metrics.numeral)
+                            .foregroundStyle(Paint.cream)
+                            .monospacedDigit()
+                            .contentTransition(reduceMotion ? .opacity : .numericText(countsDown: direction < 0))
+                            .tesseraAnimation(.spring(response: 0.3, dampingFraction: 0.8), value: value)
+                            .offset(y: band)
+                    }
+                    .fixedSize()
+                    Text(unit)
+                        .font(Theme.voice)
+                        .foregroundStyle(Paint.secondary)
+                }
             }
-            .fixedSize()
-            Text(unit)
-                .font(Theme.voice)
-                .foregroundStyle(Paint.secondary)
         }
         .contentShape(Rectangle().inset(by: -16))
         .gesture(dialGesture)
@@ -142,6 +153,7 @@ struct WeightReel: View {
         if !touching {
             begin()
         }
+        pull = LiveV2.pressure(translation: value.translation.height)
         if axis == nil {
             axis = ScrubFeel.axis(dx: value.translation.width, dy: value.translation.height)
         }
@@ -186,6 +198,7 @@ struct WeightReel: View {
     }
 
     private func end() {
+        pull = 0
         withTesseraAnimation(.easeOut(duration: 0.22), reduceMotion: reduceMotion) {
             touching = false
             band = 0
