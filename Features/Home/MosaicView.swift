@@ -111,6 +111,7 @@ struct MosaicView: View {
     @State private var firedNext = false
     @State private var firedSky = false
     @State private var a11yColumn = 0
+    @State private var lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -127,8 +128,6 @@ struct MosaicView: View {
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
-                .contentTransition(.opacity)
-                .tesseraAnimation(Theme.Motion.snappy, value: reading ?? facts.caption(for: scene))
         }
         .task {
             // Opening Home: the time for 2.6 s, then the day.
@@ -157,6 +156,9 @@ struct MosaicView: View {
             }
         }
         .tesseraFeedback(cue)
+        .onReceive(NotificationCenter.default.publisher(for: .NSProcessInfoPowerStateDidChange)) { _ in
+            lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
+        }
     }
 
     private var tiles: some View {
@@ -184,10 +186,6 @@ struct MosaicView: View {
             a11yColumn = min(max(a11yColumn + (direction == .increment ? 2 : -2), 0), config.columns - 1)
             reading = MosaicReadout.text(column: a11yColumn, config: config, event: event(forColumn: a11yColumn))
         }
-    }
-
-    private var lowPower: Bool {
-        ProcessInfo.processInfo.isLowPowerModeEnabled
     }
 
     private func event(forColumn _: Int) -> String? {

@@ -481,8 +481,10 @@ final class MosaicEngine {
         return 1 - decay * (cos(damped * progress) + zeta * omega / damped * sin(damped * progress))
     }
 
+    /// A laid tile lands at full strength; only Reduce Motion fades it in, over 150 ms.
     func laidOpacity(_ item: MosaicLaid) -> Double {
-        min(max((clock - item.at) / 0.15, 0), 1)
+        guard reduceMotion else { return 1 }
+        return min(max((clock - item.at) / 0.15, 0), 1)
     }
 
     /// The mosaic resets at midnight: nothing laid carries into the next day.

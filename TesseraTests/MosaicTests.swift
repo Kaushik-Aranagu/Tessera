@@ -319,6 +319,14 @@ struct MosaicTests {
         #expect(mosaic.laidOpacity(mosaic.laid[0]) == 1)
     }
 
+    @Test func aLaidTileLandsAtFullStrengthOutsideReduceMotion() {
+        let mosaic = engine()
+        mosaic.lay(from: .zero, side: 14, column: 8, tone: .glaze)
+        mosaic.step(to: 0.8)
+        #expect(mosaic.laid.count == 1)
+        #expect(mosaic.laidOpacity(mosaic.laid[0]) == 1)
+    }
+
     @Test func midnightClearsTheTiles() {
         let mosaic = engine()
         mosaic.restore(column: 3, tone: .glaze)
