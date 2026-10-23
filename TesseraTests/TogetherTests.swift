@@ -41,3 +41,17 @@ struct TogetherTests {
         #expect(Mentions.lines(of: note, store: model.store, classes: model.classes).isEmpty)
     }
 }
+
+/// Write anywhere steps aside while Tess is in the middle of something (QA on #1245).
+@MainActor
+struct WriteAnywhereTests {
+    @Test func aLiveWorkoutKeepsItsOwnReading() throws {
+        let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext,
+                             launchDefaults: .testSuite())
+        #expect(model.routedWrite("80 x 5", enabled: false) == nil)
+        let routine = try #require(model.objects(of: .routine).first { !$0.isDeleted })
+        model.startRoutine(routine)
+        #expect(model.session != nil)
+        #expect(model.routedWrite("80 x 5", enabled: true) == nil)
+    }
+}

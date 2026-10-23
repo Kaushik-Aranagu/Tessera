@@ -70,9 +70,8 @@ enum HomeApp: String, CaseIterable {
     }
 }
 
-/// "Mentioned in" (135 §3): what links to an object, one line per app other than its own. Read from the store's
-/// backlinks until Core's `ObjectStore.mentions(of:)` lands; then this reads that. A private or walled object has no
-/// Mentioned in at all, and a walled source counts but is never named.
+/// "Mentioned in" (135 §3): what links to an object, one line per app other than its own, from Core's
+/// `ObjectStore.mentions(of:classes:)`. A private or walled object has no Mentioned in at all.
 @MainActor
 enum Mentions {
     struct Line: Identifiable, Equatable {
@@ -88,24 +87,21 @@ enum Mentions {
     static func lines(of object: ObjectRecord, store: ObjectStore,
                       classes: [SystemCatalog.Key: ClassDef]) -> [Line]
     {
-        guard ObjectPrivacy.shownLabel(of: object, in: store, classes: classes) == nil else { return [] }
+        // Core's mentions (sheet 135 §3): private and deleted sources never count; a private thing has none.
         let home = HomeApp.of(object, classes: classes)
-        var byApp: [HomeApp: [ObjectRecord]] = [:]
-        for source in store.backlinks(to: object) where !source.isDeleted {
-            guard let app = HomeApp.of(source, classes: classes) else { continue }
-            byApp[app, default: []].append(source)
-        }
-        // Only its own app mentions it: nothing to say.
-        guard byApp.keys.contains(where: { $0 != home }) else { return [] }
-        return HomeApp.allCases.compactMap { app in
-            guard app != home, let sources = byApp[app], !sources.isEmpty else { return nil }
-            // Money is only ever a count, never a spend's words (Design on #1237).
-            if sources.count == 1, let only = sources.first, app != .money {
+        let mentions = store.mentions(of: object, classes: classes)
+        guard mentions.contains(where: { HomeApp(appID: $0.app) != home }) else { return [] }
+        return mentions.compactMap { mention in
+            guard let app = HomeApp(appID: mention.app), app != home else { return nil }
+            // One source names itself, except Money, which is only ever a count (Design on #1237).
+            if mention.count == 1, case let .object(id) = mention.opens, app != .money,
+               let only = store.object(id: id)
+            {
                 let shown = ObjectPrivacy.shownLabel(of: only, in: store, classes: classes) ?? store
                     .displayTitle(of: only)
                 return Line(app: app, text: shown)
             }
-            return Line(app: app, text: app.count(sources.count))
+            return Line(app: app, text: app.count(mention.count))
         }
     }
 }
