@@ -8,7 +8,7 @@ import Testing
 struct TogetherTests {
     @Test func theSwitchesSitOnTheirOwnPageAndStartOff() throws {
         let page = try #require(ReviewChoices.facets.first { $0.word == "Together" })
-        #expect(page.ids == [Together.daySentence, Together.linkColours, Together.writeAnywhere, FinishMoments.switchID,
+        #expect(page.ids == [Together.daySentence, Together.linkColours, Together.writeAnywhere,
                              Together.oneHands, Together.occasions, Together.makeAKind])
         for id in page.ids {
             #expect(ReviewChoices.all.first { $0.id == id }?.defaultValue == "Off")

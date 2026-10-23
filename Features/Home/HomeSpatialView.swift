@@ -228,6 +228,15 @@ struct HomeSpatialView: View {
             }
         }
         .environment(\.homeLinkZoom, linkZoom)
+        .appFan(enabled: indexProgress < 0.001, entries: fanEntries, onPick: pick, onOpenIndex: openIndex)
+    }
+
+    /// Design 137: the apps the fan lists, each with its live line (Review switch `homeV2`, Off by default).
+    private var fanEntries: [AppFanEntry] {
+        let lines = indexLines
+        return Page.allCases.map { page in
+            AppFanEntry(id: page.rawValue, title: page.title, line: lines[page.rawValue], accent: page.fanAccent)
+        }
     }
 
     @ViewBuilder
@@ -352,6 +361,17 @@ struct HomeSpatialView: View {
 
     private func show(_ sibling: Page) {
         show(sibling.rawValue)
+    }
+}
+
+extension HomeSpatialView.Page {
+    /// The fan's colour for the title under the finger: the app's accent, ink where it has none.
+    var fanAccent: Color {
+        switch self {
+        case .training: Theme.Colors.Accent.training
+        case .kitchen: Theme.Colors.Accent.kitchen
+        case .review, .today: Theme.Colors.ink
+        }
     }
 }
 

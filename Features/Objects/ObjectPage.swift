@@ -28,6 +28,10 @@ struct ObjectPage: View {
            ExerciseRouting.isExercise(classDef, classes: model.classes)
         {
             ExercisePage(exercise: classDef)
+        } else if PagesV2Switch.isOn, case let .object(id) = route, let workout = model.object(id),
+                  Self.isFinishedWorkout(workout, model: model)
+        {
+            FinishedWorkoutPage(workout: workout)
         } else if case .routinesLanding = route {
             RoutinesLandingPage()
         } else if case .routinesBrowse = route {
@@ -56,6 +60,13 @@ struct ObjectPage: View {
     static func opensAsNote(_ note: ObjectRecord, model: AppModel) -> Bool {
         note.classDef?.id == model.classDef(.note)?.id
             && ObjectMask.label(of: note, in: model.store, classes: model.classes) == nil
+    }
+
+    /// A workout that has ended: its page is the finished workout's page when Pages v2 is on.
+    static func isFinishedWorkout(_ object: ObjectRecord, model: AppModel) -> Bool {
+        guard let workoutClass = model.classDef(.workout), let objectClass = object.classDef,
+              ClassResolver.isSubclass(objectClass, of: workoutClass) else { return false }
+        return model.store.value("endedAt", of: object) != nil
     }
 
     /// The object a link opens, or nil when it is deleted or not on this phone (OL28, OL29).

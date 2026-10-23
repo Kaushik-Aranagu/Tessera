@@ -18,13 +18,15 @@ struct SentenceParts: Equatable {
 struct LandingSentenceView: View {
     let sentence: SentenceParts
     let opens: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         Text(attributed)
             .font(Theme.voice(size: 28))
             .foregroundStyle(Theme.Colors.ink)
-            .lineLimit(5)
-            .minimumScaleFactor(0.8)
+            // Never cut with "...": at accessibility sizes the sentence takes the lines it needs.
+            .lineLimit(typeSize.isAccessibilitySize ? nil : 5)
+            .minimumScaleFactor(typeSize.isAccessibilitySize ? 1 : 0.8)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
             .environment(\.openURL, OpenURLAction { _ in
@@ -105,7 +107,7 @@ struct TrainingWeekMarks: View {
         HStack(alignment: .top, spacing: 0) {
             ForEach(dots) { dot in
                 VStack(spacing: 6) {
-                    mark(dot.state)
+                    mark(dot)
                         .frame(width: 24, height: 24)
                     Text(dot.label)
                         .textRole(.label)
@@ -129,7 +131,19 @@ struct TrainingWeekMarks: View {
                                                isBest: false)
 
     @ViewBuilder
-    private func mark(_ state: WeekDot.State) -> some View {
+    private func mark(_ dot: WeekDot) -> some View {
+        // Finishing marks (139): a session just finished, so today's mark gathers its sets and closes.
+        if FinishWords.isOn, dot.id == TesseraDay().today(AppClock.now), dot.state == .today || dot.state == .done,
+           FinishMoment.shared.current != nil
+        {
+            FinishingTodayMark(side: 24, open: Self.todayMark, closed: Self.doneMark)
+        } else {
+            plainMark(dot.state)
+        }
+    }
+
+    @ViewBuilder
+    private func plainMark(_ state: WeekDot.State) -> some View {
         switch state {
         case .done:
             SetMarkCircle(spec: Self.doneMark, side: 24)
