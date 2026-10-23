@@ -22,7 +22,7 @@ struct ObjectModelTests {
         #expect(ClassResolver.lineage(of: bench).map(\.name) ==
             ["Thing", "Activity", "Exercise", "Strength Exercise", "Barbell Lift", "Bench Press"])
         #expect(ClassResolver.effectiveFields(of: bench).map(\.key) ==
-            ["notes", "primaryMuscles", "secondaryMuscles", "equipment", "restSeconds", "repMin", "repMax",
+            ["notes", "notTwins", "primaryMuscles", "secondaryMuscles", "equipment", "restSeconds", "repMin", "repMax",
              "progression", "variantOf", "pattern", "family", "mechanic", "logType", "aliases"])
         #expect(try ClassResolver.isSubclass(bench, of: #require(classes[.exercise])))
         #expect(try !ClassResolver.isSubclass(#require(classes[.exercise]), of: bench))

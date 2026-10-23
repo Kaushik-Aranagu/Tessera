@@ -327,6 +327,7 @@ private struct InstanceBody: View {
                 + Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
                 : Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
         )
+        .modifier(AskPageHook(object: object))
 
         // A workout's notes are a body fact: they read "Note kept private" (Product 5:20 PM PT).
         // The list engine's flag lines ("#reusable", "#pick-one", "picked: …") are the engine's, never shown (QA, K88).
@@ -371,6 +372,13 @@ private struct InstanceBody: View {
                 }
             }
             .entrance(7)
+        }
+
+        // Away (187): an occasion's page can quiet Home for its days.
+        if privateLabel == nil, AwayHome.isOn, let occasionClass = model.classDef(.occasion),
+           let objectClass = object.classDef, ClassResolver.isSubclass(objectClass, of: occasionClass)
+        {
+            AwayWord(occasion: object).entrance(7)
         }
 
         // Together (135 §3): what mentions it from other apps, above the doors; none for a private object.

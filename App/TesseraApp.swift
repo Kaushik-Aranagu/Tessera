@@ -35,6 +35,7 @@ struct TesseraApp: App {
         }
         _model = State(initialValue: model)
         LiveWorkout.model = model
+        HomeV2.resetOnce()
         WatchBridge.shared.start(model: model)
         // App Intents (Shortcuts, Siri, the Action button) run against the same engine as the UI.
         if let runtime = model.runtime {
@@ -109,6 +110,10 @@ struct TesseraApp: App {
                 }
                 if phase == .background {
                     model.soul.handle(.backgrounded)
+                }
+                // Surfaces v2: the widgets' day sentence follows the app in and out (a no-op clear while Off).
+                if phase == .active || phase == .background {
+                    SurfacesWriter.refresh(model: model)
                 }
                 if phase == .active {
                     model.soul.handle(.foregrounded(underLive: model.isWorkoutPresented))

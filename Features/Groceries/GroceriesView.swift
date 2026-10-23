@@ -39,6 +39,10 @@ private struct GroceriesPage: View {
     @State private var landed = 0
     /// SHOP mode's rows: a private one is always masked (G102).
     @State private var trip = ShopTrip()
+    /// Shop run v2 (155): Done shopping was tapped, and the about-basket prices (this phone only).
+    @State private var shopSummary = false
+    @State private var shopTick = 0
+    @State private var prices = ShopPrices()
     @FocusState private var writing: Bool
 
     private var groceries: Groceries {
@@ -59,6 +63,7 @@ private struct GroceriesPage: View {
         let basket = groceries.list.map { ListContents(store: model.store, classes: model.classes).done(in: $0) } ?? []
         let shop = groceries.shop(in: model.engine)
         let shopping = shop?.state == .running
+        let shopV2 = shopping && PantryShopSwitch.shopOn
 
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -75,7 +80,13 @@ private struct GroceriesPage: View {
                 // Shop and list share one slot: the outgoing layout folds back as the incoming one rises (never a
                 // cross-fade of two whole layouts).
                 ZStack(alignment: .topLeading) {
-                    if shopping {
+                    if shopV2 {
+                        ShopRunV2(aisles: aisles, striking: striking, recipes: recipes(for:), label: rowLabel,
+                                  onStrike: shopTap, basketCount: basket.count, basketIDs: Set(basket.map(\.id)),
+                                  shopID: shop?.id ?? Groceries.listID, summary: shopSummary, prices: $prices)
+                            .padding(.top, Theme.Spacing.m)
+                            .transition(AisleHandoff.transition(reduceMotion: reduceMotion))
+                    } else if shopping {
                         AtTheShop(aisles: aisles, striking: striking, recipes: recipes(for:),
                                   label: rowLabel,
                                   onTap: shopTap)
@@ -138,8 +149,27 @@ private struct GroceriesPage: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
-                if shopping {
-                    PaintKey(paint: Theme.Colors.health, hint: "Finishes the shop", action: finishShop) { _ in
+                if shopV2 {
+                    // 155: Done shopping, in ochre, is the one action; then Put away finishes the shop.
+                    PaintKey(paint: KitchenFront.accent, isTap: true,
+                             hint: shopSummary ? "Puts the basket away and ends the shop" : "Ends the shop",
+                             action: {
+                                 if shopSummary {
+                                     finishShop(putAway: basket)
+                                 } else {
+                                     withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+                                         shopSummary = true
+                                     }
+                                     shopTick += 1
+                                 }
+                             }) { _ in
+                        Text(shopSummary ? "Put away" : "Done shopping")
+                    } meta: {
+                        EmptyView()
+                    }
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                } else if shopping {
+                    PaintKey(paint: Theme.Colors.health, hint: "Finishes the shop", action: { finishShop() }) { _ in
                         Text("Done")
                     } meta: {
                         Text("Hold")
@@ -198,9 +228,16 @@ private struct GroceriesPage: View {
             }
         }
         .onPreferenceChange(RowCenters.self) { rowCenters = $0 }
-        .tesseraFeedback(.notNow, trigger: landed)
+        // A strike in the v2 shop run is the soft tap (one haptic for the moment); elsewhere the light one.
+        .tesseraFeedback(trigger: landed) { _, _ in shopV2 ? Haptic.made : Haptic.notNow }
+        .tesseraFeedback(.selection, trigger: shopTick)
         // The shop finished is .done in the house map; never a raw sensoryFeedback (Haptics.swift).
         .tesseraFeedback(.done, trigger: finished)
+        .onChange(of: shopping) {
+            if !shopping {
+                shopSummary = false
+            }
+        }
     }
 
     @State private var rowCenters: [UUID: CGPoint] = [:]
@@ -315,12 +352,18 @@ private struct GroceriesPage: View {
 
     /// "Shopping, finished." with a 10 s UNDO that brings the basket and the shop back (G43). A failed write keeps
     /// the basket open, says so, and plays no finish haptic.
-    private func finishShop() {
+    private func finishShop(putAway basket: [ListContents.Item] = []) {
+        // 155: each got item walks to its Pantry place first, then the shop ends as it always does.
+        if !basket.isEmpty {
+            _ = ShopPutAway.walk(basket: basket, model: model)
+        }
         let outcome = GroceriesCopy.finish(engine: model.engine)
         guard let record = outcome.undo else {
             TessVoice.shared.say(outcome.line)
             return
         }
+        prices.clear()
+        shopSummary = false
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
             basketOpen = false
             model.touch()
@@ -459,7 +502,7 @@ private struct AisleSection: View {
 
 /// One item on one line: the amount in 600, the name in 400 (the name truncates, never the amount), and a sage dab at
 /// the end when it's for a recipe. Tap strikes it; a long press says which recipes.
-private struct GroceryRow: View {
+struct GroceryRow: View {
     let item: ListContents.Item
     let isStriking: Bool
     let recipes: [String]

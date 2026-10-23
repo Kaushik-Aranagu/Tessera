@@ -6,6 +6,12 @@ import TesseraCore
 struct NowPage: View {
     /// Pages Home to a sibling (used by the empty state).
     var onShow: (HomeSpatialView.Page) -> Void = { _ in }
+    /// While a trip is away (the awayV2 switch On and an occasion marked away today): its line, else nil.
+    private var awayLine: String? {
+        guard AwayHome.isOn else { return nil }
+        return Away.line(engine: model.engine, now: AppClock.now)
+    }
+
     /// Home v2 always leads with the day sentence; Today does when Together's switch is On (135 part 1).
     var daySentence = false
 
@@ -76,6 +82,14 @@ struct NowPage: View {
                                  })
                                  .accessibilityLabel("Resume \(resumeName(process))")
                     }
+                } else if let away = awayLine {
+                    // Away (sheet 187): the trip's own line, words only; Home is quiet under it.
+                    Text(away)
+                        .textRole(.title)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityAddTraits(.isHeader)
                 } else if daySentence || Together.isOn(Together.daySentence), !planNow {
                     // The day across the apps, in place of the hero; Now above still leads while something runs.
                     DaySentence()
@@ -133,7 +147,10 @@ struct NowPage: View {
                     .transition(.offset(y: 10).combined(with: .opacity))
             }
 
-            if planNow {
+            if awayLine != nil {
+                // Quiet for the trip: no plan and no Next under the line.
+                EmptyView()
+            } else if planNow {
                 PlanRows(model: planModel)
                     .entrance(4)
             } else {
