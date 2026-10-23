@@ -101,7 +101,9 @@ public enum OneThings {
         things += [training(engine, plan, now, unit, calendar), groceries(engine, now, calendar),
                    task(engine, now, calendar), list(engine, now, calendar),
                    routine(engine, routines, now, calendar)].compactMap(\.self)
-        things += birthdays.compactMap { birthday($0, engine: engine, now: now, calendar: calendar) }
+        things += birthdays.enumerated().compactMap {
+            birthday($0.element, index: $0.offset, engine: engine, now: now, calendar: calendar)
+        }
         if let weather {
             things.append(Self.weather(weather, facts: facts, calendar: calendar))
         }
@@ -306,7 +308,7 @@ public enum OneThings {
                         done: nil, isPrivate: name.1, target: .room(.routines), urgency: gap)
     }
 
-    private static func birthday(_ birthday: OneThingBirthday, engine: ActionEngine, now: Date,
+    private static func birthday(_ birthday: OneThingBirthday, index: Int, engine: ActionEngine, now: Date,
                                  calendar: Calendar) -> OneThing?
     {
         let today = TesseraDay(calendar: calendar).day(of: now)
@@ -331,7 +333,8 @@ public enum OneThings {
             }
         let small = note ?? (days == 0 ? "Today." : days == 1 ? "One day." : "\(word(days).capitalized) days.")
         return OneThing(
-            id: "birthday-\(birthday.month)-\(birthday.day)-\(MosaicMomentSource.hashed(birthday.name))",
+            // Month, day and the place in the list: nothing of the name, not even a hash.
+            id: "birthday-\(birthday.month)-\(birthday.day)-\(index)",
             kind: .birthday,
             big: big,
             mid: mid,
