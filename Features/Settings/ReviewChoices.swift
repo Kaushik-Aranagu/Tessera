@@ -422,9 +422,15 @@ final class ReviewChoices {
 
     private let defaults: UserDefaults
     private let writes: Bool
+    /// Whether the approved feature flags (stored as the few turned Off) are in force. A unit-test host keeps the older
+    /// per-switch behaviour so tests of it do not drift; the flag tests ask for the real thing.
+    private let usesFlags: Bool
     private var picked: [String: String] = [:]
 
-    init(defaults: UserDefaults = .standard, writes: Bool = !LaunchFlags.has("-demo")) {
+    init(defaults: UserDefaults = .standard, writes: Bool = !LaunchFlags.has("-demo"),
+         usesFlags: Bool = FeatureFlagStore.usesFlags)
+    {
+        self.usesFlags = usesFlags
         self.defaults = defaults
         self.writes = writes
     }
@@ -441,7 +447,7 @@ final class ReviewChoices {
             return value
         }
         // An approved feature flag ships On and is stored as the few he turned Off (sheet 203).
-        if writes, let on = FeatureFlagStore.isOn(choice.id, defaults: defaults) {
+        if writes, usesFlags, let on = FeatureFlagStore.isOn(choice.id, defaults: defaults) {
             return on ? "On" : "Off"
         }
         if writes, let kept = defaults.string(forKey: Self.key(choice.id)), choice.values.contains(kept) {
@@ -453,8 +459,8 @@ final class ReviewChoices {
     /// What a choice reads as shipped: a feature flag is On (the Home v2 layout is the one Off, Mosaic wins), else
     /// today's default.
     func shippedValue(of choice: Choice) -> String {
-        guard FeatureFlagStore.isFlag(choice.id) else { return choice.defaultValue }
-        return FeatureChoices.shipped.off.contains(choice.id) ? "Off" : "On"
+        guard usesFlags, FeatureFlagStore.isFlag(choice.id) else { return choice.defaultValue }
+        return FeatureFlagStore.shippedOff.contains(choice.id) ? "Off" : "On"
     }
 
     /// Whether a choice is off what shipped. A switch that isn't live yet reads its own default and is never "off".
@@ -479,7 +485,7 @@ final class ReviewChoices {
             SurfacesV2.mirrorFlag(SurfacesV2.isOn(value: value))
         }
         guard writes else { return }
-        if FeatureFlagStore.isFlag(choice.id) {
+        if usesFlags, FeatureFlagStore.isFlag(choice.id) {
             FeatureFlagStore.set(choice.id, on: value == "On", defaults: defaults)
             return
         }

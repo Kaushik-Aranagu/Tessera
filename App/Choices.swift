@@ -9,7 +9,8 @@ enum Choice {
                       defaults: UserDefaults = .standard) -> String
     {
         // An approved feature flag reads the Off-ids store on the phone (sheet 203); a demo keeps today's defaults.
-        if defaults === UserDefaults.standard, !LaunchFlags.has("-demo"), options.contains("On"),
+        if defaults === UserDefaults.standard, FeatureFlagStore.usesFlags, !LaunchFlags.has("-demo"),
+           options.contains("On"),
            options.contains("Off"), let on = FeatureFlagStore.isOn(id)
         {
             return on ? "On" : "Off"

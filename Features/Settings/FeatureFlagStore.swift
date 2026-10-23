@@ -10,10 +10,16 @@ enum FeatureFlagStore {
     static let offKey = "featureFlags.off"
     static let migratedKey = "featureFlags.migrated.oct23"
 
+    /// What a fresh phone starts from: Core's shipped Off ids (the losing Home layout), plus the apps list, whose view
+    /// is not drawn yet (it stays Off until it is).
+    nonisolated static var shippedOff: Set<String> {
+        FeatureChoices.shipped.off.union(["homeAppsList"])
+    }
+
     /// The flags that are Off now.
     nonisolated static func off(defaults: UserDefaults = .standard) -> Set<String> {
         guard let stored = defaults.string(forKey: offKey) else {
-            return FeatureChoices.shipped.off
+            return shippedOff
         }
         return FeatureFlags.off(encoded: stored)
     }
@@ -47,8 +53,18 @@ enum FeatureFlagStore {
         defaults.set(true, forKey: migratedKey)
     }
 
-    /// Not a demo and not a unit-test host (XCTest is loaded in a test host).
+    /// Whether the code is running inside a unit-test host (XCTest is loaded there).
+    nonisolated static var isTestHost: Bool {
+        NSClassFromString("XCTestCase") != nil
+    }
+
+    /// The flags are in force on the real app, not in a unit-test host (which keeps the older per-switch reads).
+    nonisolated static var usesFlags: Bool {
+        !isTestHost
+    }
+
+    /// Not a demo and not a unit-test host.
     nonisolated static var isRealLaunch: Bool {
-        !LaunchFlags.has("-demo") && !LaunchFlags.has("-resetDemo") && NSClassFromString("XCTestCase") == nil
+        !LaunchFlags.has("-demo") && !LaunchFlags.has("-resetDemo") && !isTestHost
     }
 }

@@ -16,6 +16,8 @@ struct FeatureFlagStoreTests {
         #expect(FeatureFlagStore.isOn("homeMosaic", defaults: defaults) == true)
         #expect(FeatureFlagStore.isOn("tasksApp", defaults: defaults) == true)
         #expect(FeatureFlagStore.isOn("homeV2", defaults: defaults) == false)
+        // The apps list view is not drawn yet, so it stays Off until it is.
+        #expect(FeatureFlagStore.isOn("homeAppsList", defaults: defaults) == false)
         #expect(FeatureFlagStore.isOn("calendar", defaults: defaults) == nil)
     }
 
@@ -43,7 +45,7 @@ struct FeatureFlagStoreTests {
 
     @Test func theReviewChoicesFacadeReadsAndWritesTheSameStore() throws {
         let defaults = fresh()
-        let choices = ReviewChoices(defaults: defaults, writes: true)
+        let choices = ReviewChoices(defaults: defaults, writes: true, usesFlags: true)
         let mosaic = try #require(ReviewChoices.all.first { $0.id == "homeMosaic" })
         #expect(choices.value(of: mosaic) == "On")
         choices.set(mosaic, to: "Off")
