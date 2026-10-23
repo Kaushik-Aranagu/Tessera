@@ -22,6 +22,8 @@ enum FanMath {
     static let focusedSize: CGFloat = 40
     static let rise: CGFloat = 30
     static let stagger: Double = 0.035
+    /// The page's words while the fan is open: ink at about 30%, ink 3.
+    static let pageDim: Double = 0.3
 
     static func isOpen(pull: CGFloat) -> Bool {
         pull > threshold
@@ -57,39 +59,117 @@ struct AppFanEntry: Identifiable {
     let accent: Color
 }
 
-/// The fan's layer: the bottom strip that takes the pull, the dim and the rising titles.
-struct AppFan: View {
-    let entries: [AppFanEntry]
-    let onPick: (Int) -> Void
-    let onOpenIndex: () -> Void
+/// What the pull is doing. The gesture lives on the page (so the dock, the write line and Tess's corner keep every
+/// tap);
+/// the layer only draws this.
+@Observable
+@MainActor
+final class FanState {
+    var pull: CGFloat = 0
+    var sticky = false
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var pull: CGFloat = 0
-    @State private var sticky = false
-
-    private var open: Bool {
+    var open: Bool {
         FanMath.isOpen(pull: pull) || sticky
     }
 
+    func close() {
+        sticky = false
+        pull = 0
+    }
+}
+
+/// Puts the fan on a page: a pull that begins in the bottom strip draws the layer; nothing is laid over the strip, so
+/// taps still reach what is under it. The identity with the switch Off.
+struct FanHost: ViewModifier {
+    let entries: [AppFanEntry]
+    let onPick: (Int) -> Void
+    let onOpenIndex: () -> Void
+    @State private var state = FanState()
+    @State private var height: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func body(content: Content) -> some View {
+        if FanSwitch.isOn {
+            content
+                // The page's own words go to ink 3 while the fan is open (no veil over it), on the house spring.
+                .opacity(state.open ? FanMath.pageDim : 1)
+                .tesseraAnimation(Theme.Motion.house, value: state.open)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 8, coordinateSpace: .local)
+                        .onChanged { value in
+                            guard !state.sticky,
+                                  FanMath.begins(atDistanceFromBottom: height - value.startLocation.y) else { return }
+                            state.pull = max(0, -value.translation.height)
+                        }
+                        .onEnded { value in
+                            guard !state.sticky,
+                                  FanMath.begins(atDistanceFromBottom: height - value.startLocation.y) else { return }
+                            let final = max(0, -value.translation.height)
+                            if typeSize.isAccessibilitySize {
+                                // A scroll of label-size titles: it stays open for a tap.
+                                state.sticky = FanMath.isOpen(pull: final)
+                                state.pull = 0
+                            } else if let index = FanMath.release(pull: final, count: entries.count) {
+                                state.pull = 0
+                                onPick(index)
+                            } else {
+                                state.close()
+                            }
+                        }
+                )
+                .overlay(alignment: .bottom) {
+                    AppFan(entries: entries, state: state, onPick: onPick)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("Apps")
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityAction { onOpenIndex() }
+                }
+        } else {
+            content
+        }
+    }
+}
+
+extension View {
+    /// Design 137, the fan, behind the Review switch `homeV2` (Off: nothing changes).
+    func appFan(entries: [AppFanEntry], onPick: @escaping (Int) -> Void,
+                onOpenIndex: @escaping () -> Void) -> some View
+    {
+        modifier(FanHost(entries: entries, onPick: onPick, onOpenIndex: onOpenIndex))
+    }
+}
+
+/// The fan's layer: the dim and the rising titles. It takes no touch unless it is held open (accessibility sizes).
+struct AppFan: View {
+    let entries: [AppFanEntry]
+    let state: FanState
+    let onPick: (Int) -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    private var open: Bool {
+        state.open
+    }
+
     private var focused: Int? {
-        sticky ? nil : FanMath.index(under: pull, count: entries.count)
+        state.sticky ? nil : FanMath.index(under: state.pull, count: entries.count)
     }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // The page dims toward ink 3.
-            Theme.Colors.paper
-                .opacity(open ? 0.9 : 0)
+            // Held open (accessibility sizes), a tap anywhere else closes it; there is no veil.
+            Color.clear
                 .ignoresSafeArea()
-                .allowsHitTesting(sticky)
-                .onTapGesture { close() }
-                .accessibilityHidden(true)
+                .contentShape(Rectangle())
+                .allowsHitTesting(state.sticky)
+                .onTapGesture { state.close() }
             list
-            strip
         }
         .tesseraAnimation(value: open)
-        .sensoryFeedback(.selection, trigger: focused)
+        // A selection tick when the finger moves onto a title; none when the fan closes.
+        .sensoryFeedback(.selection, trigger: focused) { _, new in new != nil }
     }
 
     @ViewBuilder
@@ -106,7 +186,7 @@ struct AppFan: View {
             ScrollView { rows.padding(.top, Theme.Spacing.xl) }
                 .scrollIndicators(.hidden)
                 .opacity(open ? 1 : 0)
-                .allowsHitTesting(sticky)
+                .allowsHitTesting(state.sticky)
         } else {
             rows.allowsHitTesting(false)
         }
@@ -126,7 +206,9 @@ struct AppFan: View {
                                                     size: isFocused ? FanMath.focusedSize : FanMath.titleSize,
                                                     relativeTo: .title, serif: false)
                                 .weight(.medium))
-                        .foregroundStyle(isFocused ? entry.accent : Theme.Colors.ink)
+                        // The one under the finger takes its accent; the others drop to ink 3.
+                        .foregroundStyle(isFocused ? entry
+                            .accent : (focused == nil ? Theme.Colors.ink : Theme.Colors.inkTertiary))
                         .lineLimit(1)
                 }
                 Text(entry.line)
@@ -140,51 +222,13 @@ struct AppFan: View {
         .buttonStyle(.plain)
         .opacity(shown ? 1 : 0)
         .offset(y: shown || reduceMotion ? 0 : FanMath.rise)
-        .animation(reduceMotion ? MotionPolicy.reducedMotionFade
-            : Theme.Motion.house.delay(shown ? delay : 0), value: shown)
+        .tesseraAnimation(Theme.Motion.house.delay(shown ? delay : 0), value: shown)
         .tesseraAnimation(.snappy(duration: 0.18), value: isFocused)
         .accessibilityHidden(true)
     }
 
-    /// The bottom 40 pt: the only place a pull can begin, so it never fights the pager or a page's own scroll.
-    private var strip: some View {
-        Color.clear
-            .frame(height: FanMath.startZone)
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 8)
-                    .onChanged { value in
-                        guard !sticky else { return }
-                        pull = max(0, -value.translation.height)
-                    }
-                    .onEnded { value in
-                        let final = max(0, -value.translation.height)
-                        if typeSize.isAccessibilitySize {
-                            // A scroll of label-size titles: it stays open for a tap.
-                            sticky = FanMath.isOpen(pull: final)
-                            pull = 0
-                        } else if let index = FanMath.release(pull: final, count: entries.count) {
-                            pull = 0
-                            onPick(index)
-                        } else {
-                            close()
-                        }
-                    }
-            )
-            .accessibilityElement()
-            .accessibilityLabel("Apps")
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction { onOpenIndex() }
-    }
-
     private func pick(_ index: Int) {
-        sticky = false
-        pull = 0
+        state.close()
         onPick(index)
-    }
-
-    private func close() {
-        sticky = false
-        pull = 0
     }
 }

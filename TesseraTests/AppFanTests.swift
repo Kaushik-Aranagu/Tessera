@@ -3,6 +3,10 @@ import Testing
 
 @MainActor
 struct AppFanTests {
+    @Test func thePageDimsToInkThreeNotAVeil() {
+        #expect(FanMath.pageDim == 0.3)
+    }
+
     @Test func opensOnlyPastTwentyFourPoints() {
         #expect(!FanMath.isOpen(pull: 0))
         #expect(!FanMath.isOpen(pull: 24))

@@ -228,18 +228,14 @@ struct HomeSpatialView: View {
             }
         }
         .environment(\.homeLinkZoom, linkZoom)
-        .overlay(alignment: .bottom) { fan }
+        .appFan(entries: fanEntries, onPick: pick, onOpenIndex: openIndex)
     }
 
-    /// Design 137: pull up from the bottom edge to fan the apps (Review switch `homeV2`, Off by default).
-    @ViewBuilder
-    private var fan: some View {
-        if FanSwitch.isOn, indexProgress < 0.001 {
-            let lines = indexLines
-            AppFan(entries: Page.allCases.map { page in
-                AppFanEntry(id: page.rawValue, title: page.title, line: lines[page.rawValue],
-                            accent: page.fanAccent)
-            }, onPick: pick, onOpenIndex: openIndex)
+    /// Design 137: the apps the fan lists, each with its live line (Review switch `homeV2`, Off by default).
+    private var fanEntries: [AppFanEntry] {
+        let lines = indexLines
+        return Page.allCases.map { page in
+            AppFanEntry(id: page.rawValue, title: page.title, line: lines[page.rawValue], accent: page.fanAccent)
         }
     }
 
