@@ -155,6 +155,15 @@ struct SoulCloudTests {
         ))
     }
 
+    @Test func inLowPowerThereIsNoSwayAndNoWarp() {
+        var value = input(time: 6)
+        value.sway = false
+        #expect(SoulCloud.warped(across: 0.07, down: 0.03, input: value) == (0.07, 0.03))
+        var swaying = value
+        swaying.sway = true
+        #expect(SoulCloud.warped(across: 0.07, down: 0.03, input: swaying) != (0.07, 0.03))
+    }
+
     @Test func underReduceMotionThereAreNoBursts() {
         var value = input(time: 0)
         value.bursts = false

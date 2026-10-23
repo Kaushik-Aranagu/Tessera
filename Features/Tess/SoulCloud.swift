@@ -24,6 +24,8 @@ enum SoulCloud {
         var flat = false
         /// Bursts of colour; off under Reduce Motion.
         var bursts = true
+        /// The colour fields' own sway and the warp; off in Low Power.
+        var sway = true
     }
 
     /// The image covers `span` of the reference square, so her fade never meets the edge (see `clipIsSafe`).
@@ -200,7 +202,8 @@ enum SoulCloud {
         let active = input.bursts ? burst(at: input.time, quiet: input.quiet) : nil
         return (0 ..< 3).map { index in
             let step = Double(index)
-            let around = angle + step * 2.094 + 0.35 * sin(phase * (0.23 + 0.04 * step) + step * 1.7)
+            let swaying = input.sway ? 0.35 * sin(phase * (0.23 + 0.04 * step) + step * 1.7) : 0
+            let around = angle + step * 2.094 + swaying
             let distance = radius * ((index == 0 ? 0.4 : 0.56) + 0.08 * sin(phase * (0.31 + 0.05 * step) + step))
             var centre = (x: distance * cos(around), y: distance * sin(around))
             var weight = index == 0 ? 1.08 : 1.0
@@ -222,6 +225,7 @@ enum SoulCloud {
     /// places her colours meet curve and drift like brush sweeps. The waves are wider than she is, they bend colour
     /// only, and her texture and her shape stay as they were.
     static func warped(across: Double, down: Double, input: Input) -> (across: Double, down: Double) {
+        guard input.sway else { return (across, down) }
         let phase = input.time * (input.quiet ? 0.35 : 1)
         let radius = radius(input)
         let first = radius * 0.55 * sin(down / radius * 2 + phase * 0.21)

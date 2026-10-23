@@ -161,7 +161,8 @@ struct TessSoul: View {
         input.spread = min(max(mean / home - 1, 0), 1)
         input.quiet = mode == .resting
         input.flat = reduceTransparency
-        input.bursts = !reduceMotion
+        input.bursts = !reduceMotion && !lowPower
+        input.sway = !reduceMotion && !lowPower
         let store = ThemeStore.shared
         let look = onWorkoutGround ? store.workoutLook : (colorScheme == .dark ? store.pair.night : store.pair.day)
         // On Black the chroma is held lower so cobalt does not blow out.
