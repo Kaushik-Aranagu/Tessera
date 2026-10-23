@@ -137,9 +137,8 @@ final class SoulRouter {
     /// Idle, or resting from 23:00 to 06:00 (as built). The workout's corner always rests at idle.
     var rest: TessSoul.Mode {
         guard page == .home else { return .idle }
-        let hour = Calendar.current.component(.hour, from: clock())
-        // Quiet hours end at 07:00 (decisions 2:00 PM PT Oct 16, Research EQ32).
-        return Self.isQuietHour(hour) ? .resting : .idle
+        // Her rest follows his quiet hours (Settings; 11 pm to 7 am until he changes them).
+        return Self.isQuietHour(at: clock()) ? .resting : .idle
     }
 
     /// The whole contract is this one switch (§14's table): one case per event, read top to bottom.
@@ -293,7 +292,7 @@ final class SoulRouter {
         guard page == .home else { return }
         let now = clock()
         // The wake comes with the first open outside quiet hours (motion lab on #558).
-        guard !Self.isQuietHour(Calendar.current.component(.hour, from: now)) else { return }
+        guard !Self.isQuietHour(at: now) else { return }
         let today = TesseraDay().day(of: now)
         // `-freshDay` (simulator only, for recordings): every launch is the first open of the day.
         if !LaunchFlags.has("-freshDay"), let last = wakeStore.object(forKey: Self.wokeOnKey) as? Date, last == today {
@@ -311,9 +310,9 @@ final class SoulRouter {
         }
     }
 
-    /// 23:00 to 07:00.
-    static func isQuietHour(_ hour: Int) -> Bool {
-        hour >= 23 || hour < 7
+    /// His quiet hours (Settings > Quiet hours): 23:00 to 07:00 until he changes them.
+    static func isQuietHour(at date: Date) -> Bool {
+        QuietHours.current.contains(date, calendar: .current)
     }
 
     /// Her centre on screen, from the view that draws her at the dock.
