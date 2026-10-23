@@ -154,6 +154,14 @@ final class ReviewChoices {
                says: ["Off": "Home is the same on a trip.",
                       "On": "Mark a trip away and Home shows only that trip on its days."],
                readiness: .live),
+        // Sheet 199: Home as a sentence, a picture of the day and three rows. Off leaves Home as it is.
+        Choice(id: "homeMosaic", name: "Mosaic", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Home is as it is now.",
+                      "On": "Home is three lines about your day, a mosaic of it, and what's next."],
+               readiness: .live),
+        Choice(id: "homeAppsList", name: "Apps list", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "No apps list under Next.", "On": "Your apps list under Next on the Mosaic Home."],
+               readiness: .live),
         Choice(id: "homeV2", name: "Home v2", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Home pages sideways: Review, Today, Training.",
                       "On": "One Home page, with your apps as thin lines along the bottom."],
@@ -353,6 +361,7 @@ final class ReviewChoices {
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
         ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
+        ("Home mosaic", ["homeMosaic", "homeAppsList"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
