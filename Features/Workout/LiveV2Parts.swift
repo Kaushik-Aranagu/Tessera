@@ -63,6 +63,16 @@ enum LiveV2 {
         return min(abs(translation) / 120, 1)
     }
 
+    /// The weight as the dial draws it, in the display unit: the one number the Log key and its spoken label use too.
+    @MainActor static func weightText(kg: Double) -> String {
+        HouseNumberText.line(Format.unit.fromKilograms(kg), unit: nil)
+    }
+
+    /// "kilograms" or "pounds", for the spoken label.
+    @MainActor static var spokenUnit: String {
+        Format.unit == .kilograms ? "kilograms" : "pounds"
+    }
+
     /// Turns the display unit exactly as the Measure unit swipe does: his pick for the weight kind is saved
     /// (`AppModel.chooseUnit`), and the dial's own unit follows.
     @MainActor static func turnUnit(model: AppModel) {
@@ -166,7 +176,7 @@ struct LiveV2Header<Back: View>: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .opens(Route.classDef(exercise.id), namespace: zoomNamespace)
+                .opens("live-header-\(exercise.id.uuidString)", namespace: zoomNamespace)
                 .accessibilityHint("Opens the exercise page")
                 orderWord(parts.rest)
             }

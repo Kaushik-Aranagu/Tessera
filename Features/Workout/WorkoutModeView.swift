@@ -635,6 +635,10 @@ extension WorkoutContent {
     /// "kg", or "kg each" for dumbbells.
     private var unit: String {
         let perHand = session.currentExercise.map { ExerciseSwaps.isPerHand($0, store: model.store) } ?? false
+        // Liv v2 says the unit he chose (never a hard-coded "kg").
+        if LiveV2.isOn {
+            return LiveV2.unitWord(Format.unit, perHand: perHand)
+        }
         return perHand ? "kg each" : "kg"
     }
 
@@ -717,6 +721,9 @@ extension WorkoutContent {
 
 extension WorkoutContent {
     private var logLabel: String {
+        if LiveV2.isOn {
+            return "Hold to log set \(session.currentSetNumber), \(LiveV2.weightText(kg: session.weight)) \(LiveV2.spokenUnit) for \(Int(session.reps)) reps"
+        }
         let weight = Format.kilograms(session.weight)
         return "Hold to log set \(session.currentSetNumber), \(weight) kilograms for \(Int(session.reps)) reps"
     }
@@ -763,7 +770,7 @@ extension WorkoutContent {
                         }
                     } label: { _ in
                         Text(
-                            "Log \(Format.kilograms(session.weight))\u{00A0}×\u{00A0}\(Int(session.reps))\(finishes ? " and finish" : "")"
+                            "Log \(LiveV2.isOn ? LiveV2.weightText(kg: session.weight) : Format.kilograms(session.weight))\u{00A0}×\u{00A0}\(Int(session.reps))\(finishes ? " and finish" : "")"
                         )
                         .liveKeyWord()
                         .contentTransition(.numericText())

@@ -75,7 +75,7 @@ struct WeightReel: View {
             }
         }
         .contentShape(Rectangle().inset(by: -16))
-        .gesture(dialGesture)
+        .modifier(DialGestureHost(gesture: dialGesture))
         // At large text the screen scrolls: a plain tap still types (the hold-and-drag below turns the dial).
         .onTapGesture {
             if typeSize.isAccessibilitySize, !isLocked {
@@ -275,5 +275,19 @@ struct WeightReel: View {
         guard let before = platesPerSide(old), let after = platesPerSide(new) else { return false }
         let heavy = { (plates: [Double]) in plates.filter { $0 >= 5 }.sorted() }
         return heavy(before) != heavy(after)
+    }
+}
+
+/// Puts the dial's gesture on the reel. With live v2 on it runs alongside the unit word's tap (a tap on the unit is not
+/// swallowed by a zero-distance drag); Off, it is the plain `.gesture` it always was.
+private struct DialGestureHost: ViewModifier {
+    let gesture: AnyGesture<Void>?
+
+    func body(content: Content) -> some View {
+        if LiveV2.isOn {
+            content.simultaneousGesture(gesture)
+        } else {
+            content.gesture(gesture)
+        }
     }
 }
