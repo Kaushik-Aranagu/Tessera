@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The five looks' base colours (ground, ink, live, now, tess, context) for the rest Live Activity: the Lock Screen
+/// The seven looks' base colours (ground, ink, live, now, tess, context) for the rest Live Activity: the Lock Screen
 /// follows the day or night look like the app; the Dynamic Island stays Obsidian (themes.md, fourth addendum).
 /// Compiled into the app and the widget extension, so the extension draws the right look from the names in the
 /// activity's content state, with no App Group.
@@ -27,7 +27,7 @@ struct RestPalette: Hashable {
     static let celadon = RestPalette(ground: 0xE0EAE2, ink: 0x0C1E19, signal: 0xD94B2E, rest: 0xCF9418,
                                      tess: 0x2C59BE, context: 0x3A6584)
     static let white = RestPalette(ground: 0xFFFFFF, ink: 0x121212, signal: 0xE2432A, rest: 0xF0A500,
-                                   tess: 0x2450D8, context: 0x5A3DAF)
+                                   tess: 0x2450D8, context: 0x623AA4)
     static let black = RestPalette(ground: 0x000000, ink: 0xF4F1EC, signal: 0xFF5B3A, rest: 0xFFC23D,
                                    tess: 0x86B4FF, context: 0xB7A6E0)
 

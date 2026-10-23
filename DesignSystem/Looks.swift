@@ -4,8 +4,6 @@ import UIKit
 
 // MARK: - Looks
 
-/// One theme as single values (docs/design/themes.md). A theme changes only the ground with its field, the ink and
-/// the pigments; type, ink actions, dabs, the soul, motion and layout are the same in every look.
 /// A look's own app accents and sky (sheet 213): the looks tune the accents, not only the ground. Single values, not a
 /// light and a dark pair: a look is one or the other.
 struct LookAccents: Sendable, Equatable {
@@ -20,6 +18,8 @@ struct LookAccents: Sendable, Equatable {
     var skyTo: UInt32
 }
 
+/// One theme as single values (docs/design/themes.md). A theme changes only the ground with its field, the ink and
+/// the pigments; type, ink actions, dabs, the soul, motion and layout are the same in every look.
 struct Look: Sendable, Identifiable, Equatable {
     enum Field: Sendable, Equatable {
         /// Porcelain: flat white; the pigment pools as a watercolour bloom behind the action of the moment.
@@ -55,9 +55,13 @@ struct Look: Sendable, Identifiable, Equatable {
     /// light passing over everything else (plus-lighter).
     var sheen: UInt32 = 0xFFE2A8
     var sheenOnLetters = false
-    /// Lacquer's field: the shade it deepens to and its specular band.
     /// The accents this look tunes; nil leaves the app's own pair.
     var accents: LookAccents?
+    /// Exact solids for ink 2 and ink 3 where the derived tints would come out cold (the warm greys of White and
+    /// Black); nil derives them from ink at the usual alphas.
+    var ink2: UInt32?
+    var ink3: UInt32?
+    /// Lacquer's field: the shade it deepens to and its specular band.
     var fieldShade: UInt32 = 0x06030A
     var fieldSpecular: UInt32 = 0xFFF4E6
 
@@ -107,12 +111,13 @@ struct Look: Sendable, Identifiable, Equatable {
     /// White (sheet 213): a pure white page with accents tuned dark enough to read on it.
     static let white = Look(
         name: "White", isDark: false, field: .pigmentBloom,
-        ground: 0xFFFFFF, raised: 0xECECEC, ink: 0x121212, context: 0x5A3DAF, muted: 0xB9B3C3, tess: 0x2450D8,
+        ground: 0xFFFFFF, raised: 0xECECEC, ink: 0x121212, context: 0x623AA4, muted: 0xB9B3C3, tess: 0x2450D8,
         live: 0xE2432A, liveInk: 0xC23A22, now: 0xF0A500, health: 0x12936A, training: 0xCC3F68, neutral: 0x9C95A8,
         sky: 0x7FB6E0,
         sheen: 0xF0A500, sheenOnLetters: true,
         accents: LookAccents(training: 0xC03C20, kitchen: 0x9A6212, routines: 0x9A4255, lists: 0x536016,
-                             notes: 0x5335B0, money: 0x357059, skyFrom: 0xBF6A22, skyTo: 0xA33C62)
+                             notes: 0x5E2EA8, money: 0x357059, skyFrom: 0xA85A18, skyTo: 0xA33C62),
+        ink2: 0x54514D, ink3: 0x86827C
     )
 
     /// Black (sheet 213): true black with accents tuned bright enough to glow.
@@ -120,9 +125,10 @@ struct Look: Sendable, Identifiable, Equatable {
         name: "Black", isDark: true, field: .emissive,
         ground: 0x000000, raised: 0x0F0E12, ink: 0xF4F1EC, context: 0xB7A6E0, muted: 0x5C5765, tess: 0x86B4FF,
         live: 0xFF5B3A, liveInk: 0xFF7A5C, now: 0xFFC23D, health: 0x3FD49A, training: 0xFF6B92, neutral: 0x8E879A,
-        sky: 0x7CC4F0,
+        sky: 0x7FD6E8,
         accents: LookAccents(training: 0xFF6F52, kitchen: 0xF4B25E, routines: 0xEBA2B2, lists: 0xC6CF82,
-                             notes: 0xC6B7EE, money: 0x97CBB2, skyFrom: 0xFFB062, skyTo: 0xF286A6)
+                             notes: 0xC6B7EE, money: 0x97CBB2, skyFrom: 0xFFB062, skyTo: 0xF286A6),
+        ink2: 0xA3A09B, ink3: 0x6E6B67
     )
 
     static let all: [Look] = [.porcelain, .obsidian, .plein, .lacquer, .celadon, .white, .black]
@@ -282,7 +288,7 @@ final class ThemeStore {
         save()
     }
 
-    /// A pinned name steps through all five looks, light and dark.
+    /// A pinned name steps through all seven looks, light and dark.
     func cyclePinned(forward: Bool = true) {
         if let demoPin {
             self.demoPin = Self.next(after: demoPin, in: forward ? Look.all : Look.all.reversed())
