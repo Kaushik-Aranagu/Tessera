@@ -217,6 +217,11 @@ final class ReviewChoices {
                says: ["Off": "The live workout looks as before.",
                       "On": "The live workout is sentence case with one hot action."],
                readiness: .live),
+        // Design 166: press a page's title and Tess answers one question about it, from Describe, on the phone only.
+        Choice(id: "askPageV2", name: "Ask the page", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "A page's title does nothing when pressed.",
+                      "On": "Press a page's title and Tess says what it is and what changed, on this phone only."],
+               readiness: .live),
         Choice(id: "routinesDayV2", name: "Routines day", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The Routines landing's top reads as before.",
                       "On": "The Routines landing's top is one plain sentence about the day."],
@@ -314,7 +319,7 @@ final class ReviewChoices {
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
-        ("Rooms", ["numberRules", "roomMotion", "pagesV2"]),
+        ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2"]),
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2"]),
     ]
 
