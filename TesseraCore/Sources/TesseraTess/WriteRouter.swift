@@ -142,14 +142,12 @@ public struct WriteRouter {
     /// beside the word, or a logging verb. "low calorie yogurt" and "add calories to the recipe" are not walled.
     static func isCalorieShaped(_ phrase: String) -> Bool {
         let lower = phrase.lowercased()
-        let word = #"(?:calories|calorie|kcal|cals|cal)"#
-        if lower.firstMatch(of: try! Regex(#"\b\d[\d,.]*\s*"# + word + #"\b"#)) != nil
-            || lower.firstMatch(of: try! Regex(#"\b"# + word + #"\s*(?:of\s+|:\s*|=\s*|is\s+|was\s+)?\d"#)) != nil
-        {
-            return true
-        }
-        return lower
-            .firstMatch(of: try! Regex(#"\b(?:burned|burnt|ate|eaten|logged|tracked|consumed)\b.*\b"# + word + #"\b"#))
+        return lower.firstMatch(of: /\b\d[\d,.]*\s*(?:calories|calorie|kcal|cals|cal)\b/) != nil
+            || lower.firstMatch(of: /\b(?:calories|calorie|kcal|cals|cal)\s*(?:of\s+|:\s*|=\s*|is\s+|was\s+)?\d/) != nil
+            || lower
+            .firstMatch(
+                of: /\b(?:burned|burnt|ate|eaten|logged|tracked|consumed)\b.*\b(?:calories|calorie|kcal|cals|cal)\b/
+            )
             != nil
     }
 
