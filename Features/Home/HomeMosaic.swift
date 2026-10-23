@@ -41,20 +41,31 @@ final class MosaicController {
         let column = MosaicReadout.nowColumn(now, config: config) ?? 0
         let point = CGPoint(x: rect.midX - globalFrame.minX, y: rect.midY - globalFrame.minY)
         engine.lay(from: point, side: min(max(rect.height, 8), 18), column: column, tone: tone)
-        if firstLaidIndex == nil { firstLaidIndex = engine.laid.first?.index }
+        if firstLaidIndex == nil {
+            firstLaidIndex = engine.laid.first?.index
+        }
     }
 
     private var lastDay: Date?
 
-    /// The scenes' input from Core's facts: the moment, the sky at an hour matched to the look, minutes to the next thing.
+    /// The scenes' input from Core's facts: the moment, the sky at an hour matched to the look, minutes to the next
+    /// thing.
     static func input(_ facts: MosaicFacts, dark: Bool) -> MosaicSceneInput {
         MosaicSceneInput(now: facts.now, nextMinutes: facts.freeMinutes) { hour in
             MosaicColour.triple(facts.sky(atHour: hour), dark: dark)
         }
     }
 
-    /// Re-reads the scene's colours when anything they depend on changed, easing the tiles there from the scene's origin.
-    func sync(scene: MosaicScene, facts: MosaicFacts, dark: Bool, ground: MosaicTriple, width: CGFloat, reduceMotion: Bool) {
+    /// Re-reads the scene's colours when anything they depend on changed, easing the tiles there from the scene's
+    /// origin.
+    func sync(
+        scene: MosaicScene,
+        facts: MosaicFacts,
+        dark: Bool,
+        ground: MosaicTriple,
+        width: CGFloat,
+        reduceMotion: Bool
+    ) {
         engine.reduceMotion = reduceMotion
         engine.resize(width: width)
         let config = engine.config
@@ -77,7 +88,11 @@ final class MosaicController {
         let input = Self.input(facts, dark: dark)
         let next = Key(scene: scene, dark: dark, width: width,
                        nowColumn: MosaicReadout.nowColumn(facts.now, config: config),
-                       text: MosaicScenes.text(for: scene, input: input), ground: [ground.red, ground.green, ground.blue])
+                       text: MosaicScenes.text(for: scene, input: input), ground: [
+                           ground.red,
+                           ground.green,
+                           ground.blue,
+                       ])
         guard next != key else { return }
         let targets = MosaicScenes.targets(scene, geometry: engine.geometry, input: input, ground: ground)
         if key == nil {
@@ -107,7 +122,9 @@ struct MosaicView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var typeSize
 
-    private var live: MosaicController { controller ?? owned }
+    private var live: MosaicController {
+        controller ?? owned
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
@@ -176,18 +193,24 @@ struct MosaicView: View {
         }
     }
 
-    private var lowPower: Bool { ProcessInfo.processInfo.isLowPowerModeEnabled }
+    private var lowPower: Bool {
+        ProcessInfo.processInfo.isLowPowerModeEnabled
+    }
 
     private func event(forColumn _: Int) -> String? {
-        return nil
+        nil
     }
 
     private func touch(at point: CGPoint) {
         let engine = live.engine
         let result = engine.touch(at: point)
         let config = engine.config
-        if result.down { cue.play(.soulStroke) }
-        if result.spanChanged { cue.play(.selection) }
+        if result.down {
+            cue.play(.soulStroke)
+        }
+        if result.spanChanged {
+            cue.play(.selection)
+        }
         if let column = engine.touchedColumn {
             reading = MosaicReadout.text(column: column, config: config, event: event(forColumn: column))
             a11yColumn = column
@@ -214,7 +237,9 @@ struct MosaicView: View {
         controller.sync(scene: scene, facts: facts, dark: dark, ground: ground, width: size.width,
                         reduceMotion: reduceMotion)
         engine.step(to: time)
-        if engine.consumeLandings() > 0 { DispatchQueue.main.async { cue.play(.fleckReachesNow) } }
+        if engine.consumeLandings() > 0 {
+            DispatchQueue.main.async { cue.play(.fleckReachesNow) }
+        }
 
         let geometry = engine.geometry
         let config = engine.config
@@ -223,8 +248,12 @@ struct MosaicView: View {
         for column in 0 ..< config.columns {
             for row in 0 ..< config.rows {
                 let index = geometry.index(column: column, row: row)
-                if engine.isLaid(index) { continue }
-                if engine.popProgress(index) != nil { big.append((column, row)) }
+                if engine.isLaid(index) {
+                    continue
+                }
+                if engine.popProgress(index) != nil {
+                    big.append((column, row))
+                }
                 let value = engine.colour(column: column, row: row, nowColumn: nowColumn)
                 fill(&context, engine: engine, column: column, row: row, colour: swiftColor(value))
             }
@@ -234,7 +263,13 @@ struct MosaicView: View {
             fill(&context, engine: engine, column: tile.column, row: tile.row, colour: swiftColor(value))
         }
         for item in engine.laid {
-            let value = laidColour(item.tone, column: item.column, geometry: geometry, dark: dark, environment: environment)
+            let value = laidColour(
+                item.tone,
+                column: item.column,
+                geometry: geometry,
+                dark: dark,
+                environment: environment
+            )
             let column = item.index / config.rows
             fill(&context, engine: engine, column: column, row: item.index % config.rows,
                  colour: swiftColor(value, opacity: engine.laidOpacity(item)))
@@ -256,7 +291,12 @@ struct MosaicView: View {
         let scale = engine.scale(column: column, row: row)
         let offset = engine.offset(column: column, row: row)
         let side = rect.width * scale
-        let frame = CGRect(x: rect.midX - side / 2 + offset.x, y: rect.midY - side / 2 + offset.y, width: side, height: side)
+        let frame = CGRect(
+            x: rect.midX - side / 2 + offset.x,
+            y: rect.midY - side / 2 + offset.y,
+            width: side,
+            height: side
+        )
         context.fill(Path(roundedRect: frame, cornerRadius: config.corner * scale), with: .color(colour))
     }
 

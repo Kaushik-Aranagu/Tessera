@@ -51,7 +51,9 @@ struct MosaicConfig: Equatable {
 
     static let home = MosaicConfig()
 
-    var count: Int { columns * rows }
+    var count: Int {
+        columns * rows
+    }
 }
 
 /// Where tiles sit for a width: the side, the tile rects and the column a point falls in.
@@ -64,14 +66,26 @@ struct MosaicGeometry: Equatable {
         max(1, ((width - config.gap * CGFloat(config.columns - 1)) / CGFloat(config.columns)).rounded(.down))
     }
 
-    var pitch: CGFloat { side + config.gap }
+    var pitch: CGFloat {
+        side + config.gap
+    }
 
     /// The grid is centred in the width the tiles leave over.
-    var gridWidth: CGFloat { pitch * CGFloat(config.columns) - config.gap }
-    var inset: CGFloat { max(0, (width - gridWidth) / 2) }
-    var height: CGFloat { pitch * CGFloat(config.rows) - config.gap }
+    var gridWidth: CGFloat {
+        pitch * CGFloat(config.columns) - config.gap
+    }
 
-    func index(column: Int, row: Int) -> Int { column * config.rows + row }
+    var inset: CGFloat {
+        max(0, (width - gridWidth) / 2)
+    }
+
+    var height: CGFloat {
+        pitch * CGFloat(config.rows) - config.gap
+    }
+
+    func index(column: Int, row: Int) -> Int {
+        column * config.rows + row
+    }
 
     func rect(column: Int, row: Int) -> CGRect {
         CGRect(x: inset + CGFloat(column) * pitch, y: CGFloat(row) * pitch, width: side, height: side)
@@ -148,7 +162,7 @@ final class MosaicEngine {
     private var leanVelocity: [CGPoint]
     private var leaning = false
 
-    init(config: MosaicConfig = .home, width: CGFloat = 340, seed: UInt64 = 0x7E55_E2A) {
+    init(config: MosaicConfig = .home, width: CGFloat = 340, seed: UInt64 = 0x7E55E2A) {
         self.config = config
         geometry = MosaicGeometry(config: config, width: width)
         random = SplitMix(seed: seed)
@@ -167,7 +181,9 @@ final class MosaicEngine {
         geometry = MosaicGeometry(config: config, width: width)
     }
 
-    var currentClock: TimeInterval { clock }
+    var currentClock: TimeInterval {
+        clock
+    }
 
     // MARK: - Time
 
@@ -254,13 +270,16 @@ final class MosaicEngine {
 
     private func morphEased(_ index: Int) -> Double {
         guard let progress = morphProgress(index) else { return 1 }
-        if reduceMotion { return progress }
+        if reduceMotion {
+            return progress
+        }
         return 1 - pow(1 - progress, 3)
     }
 
     // MARK: - Scenes
 
-    /// Eases every tile to `targets`, each starting after its grid distance from `origin` x 22 ms. Under Reduce Motion it
+    /// Eases every tile to `targets`, each starting after its grid distance from `origin` x 22 ms. Under Reduce Motion
+    /// it
     /// is one 150 ms crossfade with no delay.
     func morph(to targets: [MosaicTriple], origin: (column: Int, row: Int)) {
         guard targets.count == config.count else { return }
@@ -307,9 +326,13 @@ final class MosaicEngine {
         let isDown = touchPoint == nil
         if isDown {
             result.down = true
-            if !reduceMotion { ripple(from: point) }
+            if !reduceMotion {
+                ripple(from: point)
+            }
         }
-        if touchedColumn.map({ $0 / 2 }) != column / 2 { result.spanChanged = !isDown }
+        if touchedColumn.map({ $0 / 2 }) != column / 2 {
+            result.spanChanged = !isDown
+        }
         touchedColumn = column
         touchPoint = point
         return result
@@ -333,7 +356,9 @@ final class MosaicEngine {
                 let center = geometry.center(column: column, row: row)
                 guard let delay = rippleDelay(center: center, from: point) else { continue }
                 let index = geometry.index(column: column, row: row)
-                if pops[index] == nil { pop(index, after: delay) }
+                if pops[index] == nil {
+                    pop(index, after: delay)
+                }
             }
         }
     }
@@ -352,7 +377,9 @@ final class MosaicEngine {
     /// Springs every tile toward its lean target: stiffness 0.22 and damping 0.28 per 60 Hz frame.
     private func springLean(dt: TimeInterval) {
         guard !reduceMotion else {
-            if leaning { lean = lean.map { _ in .zero }; leaning = false }
+            if leaning {
+                lean = lean.map { _ in .zero }; leaning = false
+            }
             return
         }
         guard dt > 0 else { return }
@@ -387,7 +414,9 @@ final class MosaicEngine {
 
     // MARK: - Laying
 
-    func isLaid(_ index: Int) -> Bool { laidIndexes.contains(index) || flight?.to == index }
+    func isLaid(_ index: Int) -> Bool {
+        laidIndexes.contains(index) || flight?.to == index
+    }
 
     /// A free tile in the now column's middle rows, chosen with the engine's seeded random so a day lays the same way.
     func freeTile(inColumn column: Int) -> Int? {
@@ -431,8 +460,8 @@ final class MosaicEngine {
     /// The flying tile now: its centre, side and rotation. The house spring, stretched to the flight's 700 ms.
     func flightState() -> (center: CGPoint, side: CGFloat, angle: Double)? {
         guard let flight else { return nil }
-        let t = min(max((clock - flight.start) / config.flightDuration, 0), 1)
-        let eased = Self.houseSpring(t)
+        let progress = min(max((clock - flight.start) / config.flightDuration, 0), 1)
+        let eased = Self.houseSpring(progress)
         let column = flight.to / config.rows
         let target = geometry.center(column: column, row: flight.to % config.rows)
         let center = CGPoint(x: flight.from.x + (target.x - flight.from.x) * eased,
@@ -442,14 +471,14 @@ final class MosaicEngine {
     }
 
     /// The house spring's step response (a little bounce) for t in 0 to 1 of its duration.
-    static func houseSpring(_ t: Double) -> Double {
-        guard t > 0 else { return 0 }
-        guard t < 1 else { return 1 }
+    static func houseSpring(_ progress: Double) -> Double {
+        guard progress > 0 else { return 0 }
+        guard progress < 1 else { return 1 }
         let zeta = 0.78
         let omega = 2 * Double.pi * 1.3
         let damped = omega * sqrt(1 - zeta * zeta)
-        let decay = exp(-zeta * omega * t)
-        return 1 - decay * (cos(damped * t) + zeta * omega / damped * sin(damped * t))
+        let decay = exp(-zeta * omega * progress)
+        return 1 - decay * (cos(damped * progress) + zeta * omega / damped * sin(damped * progress))
     }
 
     func laidOpacity(_ item: MosaicLaid) -> Double {
@@ -468,17 +497,18 @@ final class MosaicEngine {
 // MARK: - Colour
 
 enum MosaicColour {
-    static func mix(_ a: MosaicTriple, _ b: MosaicTriple, _ t: Double) -> MosaicTriple {
-        (a.red + (b.red - a.red) * t, a.green + (b.green - a.green) * t, a.blue + (b.blue - a.blue) * t)
+    static func mix(_ from: MosaicTriple, _ target: MosaicTriple, _ amount: Double) -> MosaicTriple {
+        (from.red + (target.red - from.red) * amount, from.green + (target.green - from.green) * amount,
+         from.blue + (target.blue - from.blue) * amount)
     }
 
-    static func scaled(_ a: MosaicTriple, _ factor: Double) -> MosaicTriple {
-        (min(a.red * factor, 1), min(a.green * factor, 1), min(a.blue * factor, 1))
+    static func scaled(_ from: MosaicTriple, _ factor: Double) -> MosaicTriple {
+        (min(from.red * factor, 1), min(from.green * factor, 1), min(from.blue * factor, 1))
     }
 
     /// Lightness pushed toward white (positive) or black (negative) by `amount`.
-    static func lightened(_ a: MosaicTriple, by amount: Double) -> MosaicTriple {
-        amount >= 0 ? mix(a, (1, 1, 1), amount) : mix(a, (0, 0, 0), -amount)
+    static func lightened(_ from: MosaicTriple, by amount: Double) -> MosaicTriple {
+        amount >= 0 ? mix(from, (1, 1, 1), amount) : mix(from, (0, 0, 0), -amount)
     }
 
     /// A tile's fixed jitter, -1 to 1, from its index: the same tile every frame, so nothing shimmers.
@@ -489,7 +519,8 @@ enum MosaicColour {
         return Double(hash & 0xFFFF) / 32767.5 - 1
     }
 
-    /// Core's sky colour (0 to 255 a channel) as unit floats; a dark look takes the same hues at 72% so the sky does not
+    /// Core's sky colour (0 to 255 a channel) as unit floats; a dark look takes the same hues at 72% so the sky does
+    /// not
     /// glare on a dark page.
     static func triple(_ sky: MosaicRGB, dark: Bool) -> MosaicTriple {
         let scale = dark ? 0.72 : 1
@@ -506,7 +537,8 @@ enum MosaicColour {
 enum MosaicReadout {
     /// "1:00 pm to 2:00 pm." for the two-column span a finger is over, with what is there if anything is.
     static func text(column: Int, config: MosaicConfig, event: String? = nil) -> String {
-        let hour = config.firstHour + Int((Double(column / 2 * 2) * Double(config.hours) / Double(config.columns)).rounded())
+        let hour = config
+            .firstHour + Int((Double(column / 2 * 2) * Double(config.hours) / Double(config.columns)).rounded())
         let from = HouseTime.clock(minuteOfDay: (hour % 24) * 60)
         let to = HouseTime.clock(minuteOfDay: ((hour + 1) % 24) * 60)
         guard let event, !event.isEmpty else { return "\(from) to \(to)." }
@@ -527,14 +559,16 @@ enum MosaicReadout {
 struct SplitMix {
     private var state: UInt64
 
-    init(seed: UInt64) { state = seed }
+    init(seed: UInt64) {
+        state = seed
+    }
 
     mutating func next() -> UInt64 {
         state &+= 0x9E37_79B9_7F4A_7C15
-        var z = state
-        z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
-        z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
-        return z ^ (z >> 31)
+        var mixed = state
+        mixed = (mixed ^ (mixed >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        mixed = (mixed ^ (mixed >> 27)) &* 0x94D0_49BB_1331_11EB
+        return mixed ^ (mixed >> 31)
     }
 
     mutating func int(_ bound: Int) -> Int {

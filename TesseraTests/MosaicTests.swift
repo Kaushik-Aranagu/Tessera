@@ -1,13 +1,15 @@
 import Foundation
 @testable import Tessera
-import Testing
 import TesseraCore
+import Testing
 
 /// The Home mosaic's engine, scenes and words (sheet 199), tested without drawing.
 @MainActor
 struct MosaicTests {
     private let config = MosaicConfig.home
-    private var geometry: MosaicGeometry { MosaicGeometry(config: config, width: 340) }
+    private var geometry: MosaicGeometry {
+        MosaicGeometry(config: config, width: 340)
+    }
 
     private func engine(width: CGFloat = 340) -> MosaicEngine {
         MosaicEngine(config: config, width: width)
@@ -65,11 +67,11 @@ struct MosaicTests {
     }
 
     @Test func aTouchRipplesOnlyInsideTheRadiusAndLaterFartherOut() {
-        let e = engine()
-        let finger = e.geometry.center(column: 10, row: 10)
-        let near = e.rippleDelay(center: e.geometry.center(column: 11, row: 10), from: finger)
-        let far = e.rippleDelay(center: e.geometry.center(column: 20, row: 10), from: finger)
-        let out = e.rippleDelay(center: e.geometry.center(column: 30, row: 10), from: finger)
+        let mosaic = engine()
+        let finger = mosaic.geometry.center(column: 10, row: 10)
+        let near = mosaic.rippleDelay(center: mosaic.geometry.center(column: 11, row: 10), from: finger)
+        let far = mosaic.rippleDelay(center: mosaic.geometry.center(column: 20, row: 10), from: finger)
+        let out = mosaic.rippleDelay(center: mosaic.geometry.center(column: 30, row: 10), from: finger)
         #expect(near != nil && far != nil && out == nil)
         #expect((near ?? 9) < (far ?? 0))
         // 2.6 ms a point.
@@ -77,95 +79,95 @@ struct MosaicTests {
     }
 
     @Test func fingerDownRipplesAndTheSecondTouchDoesNot() {
-        let e = engine()
-        let down = e.touch(at: CGPoint(x: 100, y: 100))
+        let mosaic = engine()
+        let down = mosaic.touch(at: CGPoint(x: 100, y: 100))
         #expect(down.down)
-        #expect(!e.pops.isEmpty)
-        let moved = e.touch(at: CGPoint(x: 104, y: 100))
+        #expect(!mosaic.pops.isEmpty)
+        let moved = mosaic.touch(at: CGPoint(x: 104, y: 100))
         #expect(!moved.down)
     }
 
     @Test func draggingAcrossTwoColumnSpansTicksOncePerSpan() {
-        let e = engine()
-        e.touch(at: CGPoint(x: geometry.center(column: 0, row: 5).x, y: 50))
-        let sameSpan = e.touch(at: CGPoint(x: geometry.center(column: 1, row: 5).x, y: 50))
+        let mosaic = engine()
+        mosaic.touch(at: CGPoint(x: geometry.center(column: 0, row: 5).x, y: 50))
+        let sameSpan = mosaic.touch(at: CGPoint(x: geometry.center(column: 1, row: 5).x, y: 50))
         #expect(!sameSpan.spanChanged)
-        let nextSpan = e.touch(at: CGPoint(x: geometry.center(column: 2, row: 5).x, y: 50))
+        let nextSpan = mosaic.touch(at: CGPoint(x: geometry.center(column: 2, row: 5).x, y: 50))
         #expect(nextSpan.spanChanged)
     }
 
     @Test func tilesLeanAwayFromAFingerAndNotPastTheRadius() {
-        let e = engine()
+        let mosaic = engine()
         let finger = CGPoint(x: 100, y: 100)
-        let right = e.leanTarget(center: CGPoint(x: 110, y: 100), from: finger)
+        let right = mosaic.leanTarget(center: CGPoint(x: 110, y: 100), from: finger)
         #expect(right.x > 0 && abs(right.y) < 1e-9)
         #expect(right.x <= 7)
-        let under = e.leanTarget(center: finger, from: finger)
+        let under = mosaic.leanTarget(center: finger, from: finger)
         #expect(abs(under.x) <= 7)
-        #expect(e.leanTarget(center: CGPoint(x: 100 + 47, y: 100), from: finger) == .zero)
+        #expect(mosaic.leanTarget(center: CGPoint(x: 100 + 47, y: 100), from: finger) == .zero)
     }
 
     @Test func leanSpringsBackAfterTheFingerLifts() {
-        let e = engine()
-        e.touch(at: e.geometry.center(column: 10, row: 10))
+        let mosaic = engine()
+        mosaic.touch(at: mosaic.geometry.center(column: 10, row: 10))
         var time = 0.0
         for _ in 0 ..< 30 {
             time += 1.0 / 60
-            e.step(to: time)
+            mosaic.step(to: time)
         }
-        let leaned = e.offset(column: 11, row: 10)
+        let leaned = mosaic.offset(column: 11, row: 10)
         #expect(leaned.x > 0.5)
-        e.endTouch()
+        mosaic.endTouch()
         for _ in 0 ..< 240 {
             time += 1.0 / 60
-            e.step(to: time)
+            mosaic.step(to: time)
         }
-        #expect(abs(e.offset(column: 11, row: 10).x) < 0.02)
+        #expect(abs(mosaic.offset(column: 11, row: 10).x) < 0.02)
     }
 
     @Test func aTilePopsEverySeventyMillisecondsTenth() {
-        let e = engine()
+        let mosaic = engine()
         var time = 0.0
         var seen = 0
         for _ in 0 ..< 120 {
             time += 1.0 / 60
-            e.step(to: time)
-            seen = max(seen, e.pops.count)
+            mosaic.step(to: time)
+            seen = max(seen, mosaic.pops.count)
         }
         #expect(seen >= 1)
         // Same seed, same pops.
         let other = engine()
-        var t2 = 0.0
+        var later = 0.0
         for _ in 0 ..< 120 {
-            t2 += 1.0 / 60
-            other.step(to: t2)
+            later += 1.0 / 60
+            other.step(to: later)
         }
-        #expect(Set(e.pops.keys) == Set(other.pops.keys))
+        #expect(Set(mosaic.pops.keys) == Set(other.pops.keys))
     }
 
     @Test func reduceMotionKeepsTheMosaicStill() {
-        let e = engine()
-        e.reduceMotion = true
+        let mosaic = engine()
+        mosaic.reduceMotion = true
         var time = 0.0
         for _ in 0 ..< 240 {
             time += 1.0 / 60
-            e.step(to: time)
+            mosaic.step(to: time)
         }
-        #expect(e.pops.isEmpty)
-        e.touch(at: CGPoint(x: 100, y: 100))
-        #expect(e.pops.isEmpty)
-        #expect(e.scale(column: 3, row: 3) == 1)
-        #expect(e.offset(column: 4, row: 3) == .zero)
+        #expect(mosaic.pops.isEmpty)
+        mosaic.touch(at: CGPoint(x: 100, y: 100))
+        #expect(mosaic.pops.isEmpty)
+        #expect(mosaic.scale(column: 3, row: 3) == 1)
+        #expect(mosaic.offset(column: 4, row: 3) == .zero)
     }
 
     @Test func swellTravelsAndStaysUnderItsAmplitude() {
-        let e = engine()
+        let mosaic = engine()
         var peak: CGFloat = 1
         var time = 0.0
         for _ in 0 ..< 420 {
             time += 1.0 / 60
-            e.step(to: time)
-            peak = max(peak, e.scale(column: 17, row: 12))
+            mosaic.step(to: time)
+            peak = max(peak, mosaic.scale(column: 17, row: 12))
         }
         #expect(peak > 1.1 && peak <= 1.22 + 0.5 + 0.45 + 1e-6)
     }
@@ -234,92 +236,95 @@ struct MosaicTests {
     }
 
     @Test func morphDelaysByDistanceFromTheOrigin() {
-        let e = engine()
-        let targets = MosaicScenes.targets(.time, geometry: e.geometry, input: input(), ground: (1, 1, 1))
-        e.settle(to: MosaicScenes.targets(.day, geometry: e.geometry, input: input(), ground: (1, 1, 1)))
-        e.morph(to: targets, origin: (0, 12))
+        let mosaic = engine()
+        let targets = MosaicScenes.targets(.time, geometry: mosaic.geometry, input: input(), ground: (1, 1, 1))
+        mosaic.settle(to: MosaicScenes.targets(.day, geometry: mosaic.geometry, input: input(), ground: (1, 1, 1)))
+        mosaic.morph(to: targets, origin: (0, 12))
         // Just after the start, the origin's neighbours have moved and the far right has not.
-        e.step(to: 0.05)
-        let near = e.morphProgress(e.geometry.index(column: 1, row: 12)) ?? 0
-        let far = e.morphProgress(e.geometry.index(column: 33, row: 12)) ?? 0
+        mosaic.step(to: 0.05)
+        let near = mosaic.morphProgress(mosaic.geometry.index(column: 1, row: 12)) ?? 0
+        let far = mosaic.morphProgress(mosaic.geometry.index(column: 33, row: 12)) ?? 0
         #expect(near > 0)
         #expect(far == 0)
         // 520 ms after its own delay, every tile has arrived.
-        e.step(to: 0.05 + 0.1)
-        e.step(to: 0.05 + 0.2)
-        e.step(to: 2)
-        #expect((e.morphProgress(e.geometry.index(column: 33, row: 24)) ?? 0) == 1)
+        mosaic.step(to: 0.05 + 0.1)
+        mosaic.step(to: 0.05 + 0.2)
+        mosaic.step(to: 2)
+        #expect((mosaic.morphProgress(mosaic.geometry.index(column: 33, row: 24)) ?? 0) == 1)
     }
 
     @Test func reduceMotionMorphIsOneCrossfade() {
-        let e = engine()
-        e.reduceMotion = true
-        e.settle(to: MosaicScenes.targets(.day, geometry: e.geometry, input: input(), ground: (1, 1, 1)))
-        e.morph(to: MosaicScenes.targets(.time, geometry: e.geometry, input: input(), ground: (1, 1, 1)), origin: (0, 0))
-        e.step(to: 0.16)
-        #expect((e.morphProgress(e.geometry.index(column: 33, row: 24)) ?? 0) == 1)
+        let mosaic = engine()
+        mosaic.reduceMotion = true
+        mosaic.settle(to: MosaicScenes.targets(.day, geometry: mosaic.geometry, input: input(), ground: (1, 1, 1)))
+        mosaic.morph(
+            to: MosaicScenes.targets(.time, geometry: mosaic.geometry, input: input(), ground: (1, 1, 1)),
+            origin: (0, 0)
+        )
+        mosaic.step(to: 0.16)
+        #expect((mosaic.morphProgress(mosaic.geometry.index(column: 33, row: 24)) ?? 0) == 1)
     }
 
     // MARK: - Laying
 
     @Test func aFlyingTileLandsInTheNowColumnAfterSevenHundredMilliseconds() {
-        let e = engine()
-        let started = e.lay(from: CGPoint(x: 200, y: -40), side: 14, column: 17, tone: .glaze)
+        let mosaic = engine()
+        let started = mosaic.lay(from: CGPoint(x: 200, y: -40), side: 14, column: 17, tone: .glaze)
         #expect(started)
-        #expect(e.flight != nil)
-        e.step(to: 0.35)
-        #expect(e.laid.isEmpty)
-        #expect(e.flightState() != nil)
-        e.step(to: 0.71)
-        #expect(e.flight == nil)
-        #expect(e.laid.count == 1)
-        let tile = e.laid[0]
+        #expect(mosaic.flight != nil)
+        mosaic.step(to: 0.35)
+        #expect(mosaic.laid.isEmpty)
+        #expect(mosaic.flightState() != nil)
+        mosaic.step(to: 0.71)
+        #expect(mosaic.flight == nil)
+        #expect(mosaic.laid.count == 1)
+        let tile = mosaic.laid[0]
         #expect(tile.column == 17)
         #expect(config.layRows.contains(tile.index % config.rows))
-        #expect(e.consumeLandings() == 1)
-        #expect(e.consumeLandings() == 0)
+        #expect(mosaic.consumeLandings() == 1)
+        #expect(mosaic.consumeLandings() == 0)
     }
 
     @Test func aTileIsNeverLaidTwiceOnTheSameSpot() {
-        let e = engine()
+        let mosaic = engine()
         var time = 0.0
         for _ in 0 ..< 10 {
-            e.lay(from: .zero, side: 14, column: 5, tone: .accent(.training))
+            mosaic.lay(from: .zero, side: 14, column: 5, tone: .accent(.training))
             time += 0.8
-            e.step(to: time)
+            mosaic.step(to: time)
         }
-        let spots = e.laid.map(\.index)
+        let spots = mosaic.laid.map(\.index)
         #expect(Set(spots).count == spots.count)
         #expect(spots.count == 10)
     }
 
     @Test func aFullColumnLaysNothingMore() {
-        let e = engine()
+        let mosaic = engine()
         for _ in config.layRows {
-            e.restore(column: 3, tone: .glaze)
+            mosaic.restore(column: 3, tone: .glaze)
         }
-        #expect(e.freeTile(inColumn: 3) == nil)
-        #expect(!e.lay(from: .zero, side: 14, column: 3, tone: .glaze))
+        #expect(mosaic.freeTile(inColumn: 3) == nil)
+        #expect(!mosaic.lay(from: .zero, side: 14, column: 3, tone: .glaze))
     }
 
     @Test func reduceMotionLaysAtOnceAndFadesIn() {
-        let e = engine()
-        e.reduceMotion = true
-        e.lay(from: .zero, side: 14, column: 8, tone: .glaze)
-        #expect(e.flight == nil)
-        #expect(e.laid.count == 1)
-        e.step(to: 0.0)
-        #expect(e.laidOpacity(e.laid[0]) == 0)
-        e.step(to: 0.15)
-        #expect(e.laidOpacity(e.laid[0]) == 1)
+        let mosaic = engine()
+        mosaic.reduceMotion = true
+        mosaic.lay(from: .zero, side: 14, column: 8, tone: .glaze)
+        #expect(mosaic.flight == nil)
+        #expect(mosaic.laid.count == 1)
+        mosaic.step(to: 0.0)
+        #expect(mosaic.laidOpacity(mosaic.laid[0]) == 0)
+        mosaic.step(to: 0.15)
+        #expect(mosaic.laidOpacity(mosaic.laid[0]) == 1)
     }
 
     @Test func midnightClearsTheTiles() {
-        let e = engine()
-        e.restore(column: 3, tone: .glaze)
-        e.reset()
-        #expect(e.laid.isEmpty)
-        #expect(e.freeTile(inColumn: 3) != nil)
+        let mosaic = engine()
+        mosaic.restore(column: 3, tone: .glaze)
+        mosaic.reset()
+        #expect(mosaic.laid.isEmpty)
+        #expect(mosaic.freeTile(inColumn: 3) != nil)
     }
 
     @Test func houseSpringStartsAtZeroAndSettlesAtOne() {

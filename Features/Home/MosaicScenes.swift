@@ -82,7 +82,8 @@ enum MosaicScenes {
 
     // MARK: - Sky
 
-    /// The sun as a disc of radius 4.2 tiles at (0.71 W, 0.58 H), a 1.8-tile ring blending into the sky, and dusk ground
+    /// The sun as a disc of radius 4.2 tiles at (0.71 W, 0.58 H), a 1.8-tile ring blending into the sky, and dusk
+    /// ground
     /// below 72% of the height: the sky mixed 55% to #5A4650, x 0.9.
     static func skyScene(column: Int, row: Int, sky: MosaicTriple, geometry: MosaicGeometry) -> MosaicTriple {
         let config = geometry.config
@@ -93,10 +94,12 @@ enum MosaicScenes {
         if Double(row) >= 0.72 * Double(config.rows) {
             colour = MosaicColour.scaled(MosaicColour.mix(sky, duskGround, 0.55), 0.9)
         }
-        if distance <= 4.2 { return sun }
+        if distance <= 4.2 {
+            return sun
+        }
         if distance <= 6.0 {
-            let t = (distance - 4.2) / 1.8
-            let eased = t * t * (3 - 2 * t)
+            let blend = (distance - 4.2) / 1.8
+            let eased = blend * blend * (3 - 2 * blend)
             return MosaicColour.mix(sun, colour, eased)
         }
         return colour
@@ -132,7 +135,8 @@ enum MosaicScenes {
         }
     }
 
-    /// The tiles a text covers: the face drawn at 2x (a digit is 6 x 10 tiles, a colon 2 wide), digits 2 apart, the line
+    /// The tiles a text covers: the face drawn at 2x (a digit is 6 x 10 tiles, a colon 2 wide), digits 2 apart, the
+    /// line
     /// centred in the grid.
     static func digitTiles(for scene: MosaicScene, input: MosaicSceneInput, geometry: MosaicGeometry) -> Set<Int> {
         guard let text = text(for: scene, input: input) else { return [] }
@@ -149,7 +153,9 @@ enum MosaicScenes {
         for (character, width) in zip(text, widths) {
             if character == ":" {
                 for dy in [2, 3, 6, 7] {
-                    for dx in 0 ..< 2 { tiles.insert(geometry.index(column: x + dx, row: top + dy)) }
+                    for dx in 0 ..< 2 {
+                        tiles.insert(geometry.index(column: x + dx, row: top + dy))
+                    }
                 }
             } else if let face = faces[character] {
                 for (rowIndex, line) in face.enumerated() {
