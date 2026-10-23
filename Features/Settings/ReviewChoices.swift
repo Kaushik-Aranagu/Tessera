@@ -453,13 +453,13 @@ final class ReviewChoices {
     /// What a choice reads as shipped: a feature flag is On (the Home v2 layout is the one Off, Mosaic wins), else
     /// today's default.
     func shippedValue(of choice: Choice) -> String {
-        guard FeatureFlagStore.isFlag(choice.id), choice.readiness == .live else { return choice.defaultValue }
+        guard FeatureFlagStore.isFlag(choice.id) else { return choice.defaultValue }
         return FeatureChoices.shipped.off.contains(choice.id) ? "Off" : "On"
     }
 
-    /// Whether a choice is off what shipped.
+    /// Whether a choice is off what shipped. A switch that isn't live yet reads its own default and is never "off".
     func isTrying(_ choice: Choice) -> Bool {
-        value(of: choice) != shippedValue(of: choice)
+        choice.readiness == .live && value(of: choice) != shippedValue(of: choice)
     }
 
     /// The next value in the cycle (or the one before), wrapping round.
@@ -492,7 +492,8 @@ final class ReviewChoices {
 
     /// Every switch back to today's behavior ("Everything as before").
     func resetAll(_ choices: [Choice] = ReviewChoices.all) {
-        for choice in choices {
+        // Only switches that are live: a flag whose feature isn't here yet must stay as shipped (On) for when it is.
+        for choice in choices where choice.readiness == .live {
             set(choice, to: shippedValue(of: choice))
         }
     }
