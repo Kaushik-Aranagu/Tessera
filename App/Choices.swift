@@ -8,6 +8,12 @@ enum Choice {
     static func value(_ id: String, options: [String], default fallback: String,
                       defaults: UserDefaults = .standard) -> String
     {
+        // An approved feature flag reads the Off-ids store on the phone (sheet 203); a demo keeps today's defaults.
+        if defaults === UserDefaults.standard, !LaunchFlags.has("-demo"), options.contains("On"),
+           options.contains("Off"), let on = FeatureFlagStore.isOn(id)
+        {
+            return on ? "On" : "Off"
+        }
         guard let stored = defaults.string(forKey: "review.\(id)"), options.contains(stored) else { return fallback }
         return stored
     }

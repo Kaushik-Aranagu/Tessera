@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import TesseraCore
 
 /// Switches Kaushik flips live to pick between two ways of doing something (batch mode, Oct 19). Each choice's
 /// default is today's behavior; once he picks a winner it becomes the real default and the switch goes. Kept on this
@@ -439,15 +440,26 @@ final class ReviewChoices {
         if let value = picked[choice.id] {
             return value
         }
+        // An approved feature flag ships On and is stored as the few he turned Off (sheet 203).
+        if writes, let on = FeatureFlagStore.isOn(choice.id, defaults: defaults) {
+            return on ? "On" : "Off"
+        }
         if writes, let kept = defaults.string(forKey: Self.key(choice.id)), choice.values.contains(kept) {
             return kept
         }
         return choice.defaultValue
     }
 
-    /// Whether a choice is off its default.
+    /// What a choice reads as shipped: a feature flag is On (the Home v2 layout is the one Off, Mosaic wins), else
+    /// today's default.
+    func shippedValue(of choice: Choice) -> String {
+        guard FeatureFlagStore.isFlag(choice.id), choice.readiness == .live else { return choice.defaultValue }
+        return FeatureChoices.shipped.off.contains(choice.id) ? "Off" : "On"
+    }
+
+    /// Whether a choice is off what shipped.
     func isTrying(_ choice: Choice) -> Bool {
-        value(of: choice) != choice.defaultValue
+        value(of: choice) != shippedValue(of: choice)
     }
 
     /// The next value in the cycle (or the one before), wrapping round.
@@ -467,6 +479,10 @@ final class ReviewChoices {
             SurfacesV2.mirrorFlag(SurfacesV2.isOn(value: value))
         }
         guard writes else { return }
+        if FeatureFlagStore.isFlag(choice.id) {
+            FeatureFlagStore.set(choice.id, on: value == "On", defaults: defaults)
+            return
+        }
         if value == choice.defaultValue {
             defaults.removeObject(forKey: Self.key(choice.id))
         } else {
@@ -477,7 +493,7 @@ final class ReviewChoices {
     /// Every switch back to today's behavior ("Everything as before").
     func resetAll(_ choices: [Choice] = ReviewChoices.all) {
         for choice in choices {
-            set(choice, to: choice.defaultValue)
+            set(choice, to: shippedValue(of: choice))
         }
     }
 
