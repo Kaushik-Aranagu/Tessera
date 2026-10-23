@@ -186,6 +186,8 @@ struct SoulEyes: View {
     var reaction: (kind: SoulLife.Reaction, start: Double)?
     /// Light looks draw the eyes as one solid tone; dark ones keep them a little soft.
     var solid = true
+    /// Quiet: her eyes are closed (a soft downward curve each).
+    var closed = false
     /// Her mouth, when she has one (never while she speaks or listens: the host leaves it nil then).
     var mouth: (kind: SoulMouth, start: Double)?
 
@@ -261,9 +263,15 @@ struct SoulEyes: View {
         let width = size.width * widen, height = size.height * widen
         let tone = color.opacity(solid ? 1 : 0.82)
         return ZStack {
+            if closed {
+                SleepArc()
+                    .stroke(tone, style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
+                    .frame(width: width, height: height * 0.4)
+            }
             Ellipse()
                 .fill(tone)
                 .frame(width: width, height: height * lid * (1 - smile))
+                .opacity(closed ? 0 : 1)
             if smile > 0 {
                 SmileArc()
                     .stroke(tone, style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
@@ -284,6 +292,16 @@ struct SmileArc: Shape {
             to: CGPoint(x: rect.maxX, y: rect.maxY),
             control: CGPoint(x: rect.midX, y: rect.minY - rect.height * 0.6)
         )
+        return path
+    }
+}
+
+/// A closed eye: a soft curve, downward in the middle.
+struct SleepArc: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY), control: CGPoint(x: rect.midX, y: rect.maxY * 1.6))
         return path
     }
 }

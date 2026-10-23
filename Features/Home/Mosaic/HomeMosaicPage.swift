@@ -45,6 +45,12 @@ struct HomeMosaicPage: View {
     /// Sheet 215: her layer is open, and the conversation in it.
     @State private var tessOpen = false
     @State private var tessModel = TessLayerModel()
+    @State private var listener = SpeechListener()
+    @State private var tessHolding = false
+    @State private var tessVoice = 0.0
+    @State private var tessHeardAt: Date?
+    @State private var roomOpen = false
+    @State private var roomEntries: [RoomLogEntry] = []
     @State private var shield: [CGRect] = []
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager(count: MosaicPage.count)
@@ -310,6 +316,15 @@ struct HomeMosaicPage: View {
     @ViewBuilder private var tessOverlay: some View {
         if layerOn, HomeMosaic.appsListIsOn {
             ZStack {
+                if roomOpen {
+                    TessRoom(entries: roomEntries, watching: "Watching today.", undo: { entry in
+                        switch TessRoomLog.undo(entry, engine: model.engine) {
+                        case let .putBack(line): line
+                        default: nil
+                        }
+                    }, close: { roomOpen = false })
+                        .transition(.identity)
+                }
                 if tessOpen {
                     TessConversationLayer(model: tessModel, close: { closeTess() },
                                           answer: { tessAnswer($0) }, send: { tessHeard($0) })
@@ -317,10 +332,78 @@ struct HomeMosaicPage: View {
                 TessLayer(
                     thoughts: TessThoughts.lines(facts: facts, asksClaude: model.asksClaude),
                     onTap: { tessTapped() },
-                    open: tessOpen
+                    open: tessOpen,
+                    holding: tessHolding,
+                    voice: tessVoice,
+                    heardAt: tessHeardAt,
+                    quiet: tessModel.isQuiet(),
+                    onHold: { holdBegan() },
+                    onHoldEnd: { holdEnded(cancelled: $0) },
+                    onDoubleTap: { tessQuiet() },
+                    onSwipeUp: { openRoom() }
                 )
             }
+            .onChange(of: listener.heard) { _, words in
+                tessModel.liveSpeech = words
+                tessHeardAt = Date()
+            }
+            .onChange(of: listener.level) { _, level in
+                tessVoice = tessHolding ? level : 0
+            }
         }
+    }
+
+    /// Hold: her layer opens at once and she listens, on this phone only, until he lets go (the speech listener
+    /// keeps no audio; its on-device recognition is always required). If listening cannot start, the Ask field is
+    /// there with one plain line.
+    private func holdBegan() {
+        guard layerOn, scenePhase == .active else { return }
+        if !tessOpen {
+            tessTapped()
+        }
+        tessHolding = true
+        tessModel.stateLine = "Listening. Slide left to let it go"
+        listener.onFinish = { text in
+            if let text {
+                tessSpoke(text)
+            }
+        }
+        Task {
+            if let refusal = await listener.start(hold: true) {
+                tessHolding = false
+                tessModel.stateLine = refusal.line
+            }
+        }
+    }
+
+    private func holdEnded(cancelled: Bool) {
+        guard tessHolding else { return }
+        tessHolding = false
+        tessVoice = 0
+        listener.stop(send: !cancelled)
+        tessModel.liveSpeech = ""
+        tessModel.stateLine = ""
+    }
+
+    /// What he said: a line of his, and she answers on the phone.
+    private func tessSpoke(_ text: String) {
+        tessModel.hear(text)
+        tessHeard(text)
+    }
+
+    /// Double tap: quiet for an hour (a tap wakes her).
+    private func tessQuiet() {
+        if tessModel.isQuiet() {
+            tessModel.wake()
+        } else {
+            tessModel.quietForAnHour()
+        }
+    }
+
+    /// Swipe up: her room, from her corner.
+    private func openRoom() {
+        roomEntries = TessRoomLog.today(engine: model.engine, now: AppClock.now)
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: false) { roomOpen = true }
     }
 
     /// A tap on her: opens her layer (closes it if it is open).

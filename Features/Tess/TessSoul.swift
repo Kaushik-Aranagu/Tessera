@@ -50,6 +50,8 @@ struct TessSoul: View {
     /// speech only; no audio is kept. Off under Reduce Motion and in Low Power.
     var voice: Double = 0
     var heardAt: Date?
+    /// Quiet for an hour: her eyes are closed.
+    var quiet = false
     /// The one clear accent of the screen she is on (an app room's colour); nil on Home or with several: she keeps
     /// Ember.
     var pageAccent: UInt32?
@@ -175,7 +177,7 @@ struct TessSoul: View {
         var input = SoulCloud.Input(paints: glider.paints(target: target, at: time, instant: reduceMotion || lowPower),
                                     dark: dark, time: time)
         input.spread = min(max(mean / home - 1, 0), 1)
-        input.quiet = mode == .resting
+        input.quiet = mode == .resting || quiet
         input.flat = reduceTransparency
         input.activeBurst = reduceMotion || lowPower ? nil : director.burst(at: time, quiet: input.quiet)
         input.sway = !reduceMotion && !lowPower
@@ -278,7 +280,7 @@ struct TessSoul: View {
             SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
                      still: reduceMotion, lid: lid, attention: attention,
                      reaction: reaction.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) },
-                     solid: !look.isDark,
+                     solid: !look.isDark, closed: quiet,
                      mouth: mouth.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) })
         }
         .opacity(eyesShown ? 1 : 0)
