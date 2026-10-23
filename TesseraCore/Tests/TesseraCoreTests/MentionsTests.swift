@@ -22,7 +22,6 @@ struct MentionsTests {
             .exercise,
             .benchPress,
             .barbellLift,
-            .routine,
             .plan,
             .set,
             .muscle,
