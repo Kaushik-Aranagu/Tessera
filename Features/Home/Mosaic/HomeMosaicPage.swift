@@ -34,9 +34,10 @@ struct HomeMosaicPage: View {
     @State private var scrollMinY: CGFloat = 0
     /// The scroll view's top inset (the safe area) and how far it is scrolled, both from the scroll view itself.
     @State private var insetTop: CGFloat = 0
-    @State private var offsetY: CGFloat = 0
+    /// Held in an object only the layer reads, so a scroll frame redraws the layer and not the whole page.
+    @State private var scroll = HomeScrollOffset()
     /// The day's clauses with Core's loaders, read once per refresh and not on every body.
-    @State private var dayClauses: [HomeSentence.Clause] = []
+    @State private var dayClauses: [HomeSentence.Clause]?
     @State private var shield: [CGRect] = []
 
     private var layerOn: Bool {
@@ -81,15 +82,15 @@ struct HomeMosaicPage: View {
         // Sheet 202: the mosaic is the page's own pixels, edge to edge, behind everything; every touch leans it.
         .background {
             if layerOn, let facts, let mood = pick?.mood {
-                MosaicHomeLayer(
+                HomeLayerHost(
+                    scroll: scroll,
+                    scrollMinY: scrollMinY,
                     facts: facts,
                     scene: $scene,
                     controller: controller,
                     // The core sits where it does at rest, whatever the scroll, in whole tiles.
                     coreTop: ((scrollMinY + insetTop + coreTop) / 4).rounded() * 4,
-                    // The shields follow the words as they scroll: content origin is the scroll view's top less its
-                    // offset.
-                    shield: shield.map { $0.offsetBy(dx: 0, dy: scrollMinY - offsetY) },
+                    shield: shield,
                     mood: mood,
                     moment: moment,
                     caption: $caption
@@ -98,7 +99,7 @@ struct HomeMosaicPage: View {
         }
         .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { scrollMinY = $0 }
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentInsets.top } action: { _, new in insetTop = new }
-        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in offsetY = new }
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in scroll.value = new }
         .onPreferenceChange(MosaicShieldKey.self) { shield = $0 }
         .mosaicTouchFeed(controller, enabled: layerOn)
         .onAppear { mosaicLay = { controller.lay(from: $0, tone: .glaze) } }
@@ -225,5 +226,41 @@ struct HomeMosaicPage: View {
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             SettingsEntry { link = .settings }
         }
+    }
+}
+
+/// The scroll offset, in an object so only the views that read `value` redraw when it changes.
+@MainActor
+@Observable
+final class HomeScrollOffset {
+    var value: CGFloat = 0
+}
+
+/// A's layer with the shields moved by the scroll: the words move with the page, so their rectangles do too. Reading
+/// the offset here keeps the page itself from redrawing on every scroll frame.
+private struct HomeLayerHost: View {
+    let scroll: HomeScrollOffset
+    let scrollMinY: CGFloat
+    let facts: MosaicFacts
+    @Binding var scene: MosaicScene
+    let controller: MosaicScreenController
+    let coreTop: CGFloat
+    let shield: [CGRect]
+    let mood: MosaicMood
+    let moment: MosaicMomentEvent?
+    @Binding var caption: String
+
+    var body: some View {
+        MosaicHomeLayer(
+            facts: facts,
+            scene: $scene,
+            controller: controller,
+            coreTop: coreTop,
+            // Content origin is the scroll view's top less its offset.
+            shield: shield.map { $0.offsetBy(dx: 0, dy: scrollMinY - scroll.value) },
+            mood: mood,
+            moment: moment,
+            caption: $caption
+        )
     }
 }
