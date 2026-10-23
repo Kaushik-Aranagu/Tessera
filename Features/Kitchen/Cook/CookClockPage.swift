@@ -44,6 +44,9 @@ struct CookClockPage: View {
         .preferredColorScheme(.dark)
         .statusBarHidden(false)
         .onAppear(perform: begin)
+        // Surfaces v2: the Cook Live Activity follows the cook's timers and step (a no-op with the switch Off).
+        .onChange(of: session?.timers) { CookActivityDriver.shared.update(for: session) }
+        .onChange(of: session?.current) { CookActivityDriver.shared.update(for: session) }
         .onDisappear(perform: leave)
         .onReceive(PowerState.changes) { _ in lowPower = PowerState.isLowPower }
         .onChange(of: scenePhase) { _, phase in

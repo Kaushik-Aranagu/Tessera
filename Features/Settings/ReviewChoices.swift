@@ -377,6 +377,10 @@ final class ReviewChoices {
     func set(_ choice: Choice, to value: String) {
         guard choice.values.contains(value), choice.readiness == .live || value == choice.defaultValue else { return }
         picked[choice.id] = value
+        // Surfaces v2: the widgets cannot read this store, so the flag is mirrored to the App Group (Off clears it).
+        if choice.id == SurfacesV2.choiceID, writes {
+            SurfacesV2.mirrorFlag(SurfacesV2.isOn(value: value))
+        }
         guard writes else { return }
         if value == choice.defaultValue {
             defaults.removeObject(forKey: Self.key(choice.id))
