@@ -81,8 +81,11 @@ extension AppModel {
 }
 
 extension AppModel {
-    /// A cook is the running process.
+    /// A cook is the running process, or a multi-dish cook session is open (QA on #1245).
     var isCooking: Bool {
+        if CookSessionBook(store: store, classes: classes).current() != nil {
+            return true
+        }
         guard let subject = processes.running()?.subject, let cookClass = classDef(.cook),
               let classDef = subject.classDef else { return false }
         return ClassResolver.isSubclass(classDef, of: cookClass)
@@ -93,7 +96,17 @@ extension AppModel {
 /// both readings and asks "Money or Kitchen?"; the next line naming one of them settles it.
 @MainActor
 enum WriteTie {
-    static var waiting: [WriteRouter.Candidate] = []
+    /// How long "Money or Kitchen?" stays open; after it, a bare app word is just a line again (QA on #1245).
+    static let window: TimeInterval = 60
+    private static var asked: (candidates: [WriteRouter.Candidate], at: Date)?
+
+    static var waiting: [WriteRouter.Candidate] {
+        get {
+            guard let asked, AppClock.now.timeIntervalSince(asked.at) < window else { return [] }
+            return asked.candidates
+        }
+        set { asked = newValue.isEmpty ? nil : (newValue, AppClock.now) }
+    }
 }
 
 extension AppModel {
