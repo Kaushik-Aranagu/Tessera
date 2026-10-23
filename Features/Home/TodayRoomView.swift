@@ -46,14 +46,24 @@ struct TodayRoomView: View {
         .onAppear(perform: load)
     }
 
+    /// The name, then each shorter form with a trailing word dropped (at least one word stays).
+    static func forms(of name: String) -> [String] {
+        let words = name.split(separator: " ").map(String.init)
+        guard words.count > 1 else { return [name] }
+        return (1 ... words.count).reversed().map { words.prefix($0).joined(separator: " ") }
+    }
+
     private func row(_ line: TodayLine) -> some View {
         let sun = line.kind == .sunrise || line.kind == .sunset
         let tint = sun || line.isPast ? Theme.Colors.inkTertiary : Theme.Colors.ink
         return HStack(alignment: .firstTextBaseline, spacing: 12) {
-            // Never an ellipsis: one line at 19, else two lines at 15 inside the same 40 pt row.
+            // Never an ellipsis and never a smaller face: the longest form that fits one line at 19 (words cut from the
+            // end), else the whole name wrapped at 19 so the row grows past 40 pt.
             ViewThatFits(in: .horizontal) {
-                Text(line.name).font(Theme.voice(size: 19)).lineLimit(1).fixedSize()
-                Text(line.name).font(Theme.voice(size: 15)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                ForEach(Self.forms(of: line.name), id: \.self) { form in
+                    Text(form).font(Theme.voice(size: 19)).lineLimit(1).fixedSize()
+                }
+                Text(line.name).font(Theme.voice(size: 19)).fixedSize(horizontal: false, vertical: true)
             }
             .foregroundStyle(tint)
             Spacer(minLength: 8)
