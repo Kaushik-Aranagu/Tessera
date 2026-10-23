@@ -7,6 +7,7 @@ import TesseraCore
 struct TodayRoomView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.playDoorway) private var playDoorway
     @State private var today: TodayFacts?
 
     static let rowHeight: CGFloat = 40
@@ -14,7 +15,8 @@ struct TodayRoomView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Button { dismiss() } label: {
+                // Back into the mosaic through the doorway, in reverse (sheet 211).
+                Button { playDoorway(Theme.Colors.ink, true) { dismiss() } } label: {
                     Text("‹ Home")
                         .font(Theme.voice(size: 17))
                         .foregroundStyle(Theme.Colors.inkSecondary)
