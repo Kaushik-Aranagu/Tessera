@@ -57,6 +57,9 @@ struct HomeMosaicPage: View {
     @State private var signSlot: CGRect = .zero
     /// Sheet 214: the scene Core's picker chose for now (nil: the mood stripes). Weather and place are not read yet.
     @State private var scenery: MosaicScenery?
+    /// "Sunset" washes the mosaic to dusk for a few seconds.
+    @State private var dusk = false
+    @State private var duskTask: Task<Void, Never>?
     @State private var shield: [CGRect] = []
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager(count: MosaicPage.count)
@@ -82,6 +85,7 @@ struct HomeMosaicPage: View {
                                },
                                noticeList: notices,
                                onRoom: { app, frame in doorwayFrom(frame) { present(linkFor(app)) } },
+                               onSky: { playDusk() },
                                facts: facts,
                                paused: scenePhase != .active || link != nil)
                     // Until the first refresh has read Core's loaders the sentence waits (no flicker between the
@@ -138,7 +142,8 @@ struct HomeMosaicPage: View {
                     page: MosaicPage(rawValue: pager.index) ?? .mood,
                     pageDirection: pageDirection,
                     signSpec: signSpec,
-                    scenery: scenery
+                    scenery: scenery,
+                    dusk: dusk
                 )
             }
         }
@@ -213,19 +218,33 @@ struct HomeMosaicPage: View {
             doorwayOrigin = nil
         }
         .fullScreenCover(item: $link) { link in
-            // Settings and Today have their own back word ("‹ Home"), so it gets no Close.
-            if link == .settings || link == .today {
-                link.destination
-            } else {
-                link.destination
-                    .safeAreaInset(edge: .top, spacing: 0) {
-                        HStack {
-                            Spacer()
-                            Button("Close") { dismissLink() }
-                                .buttonStyle(InkLabelWordStyle())
+            // Settings and Today have no Close word of their own; a room has Close at the top right.
+            Group {
+                if link == .settings || link == .today {
+                    link.destination
+                } else {
+                    link.destination
+                        .safeAreaInset(edge: .top, spacing: 0) {
+                            HStack {
+                                Spacer()
+                                Button("Close") { dismissLink() }
+                                    .buttonStyle(InkLabelWordStyle())
+                            }
+                            .padding(.horizontal, Theme.Spacing.gutter - 8)
                         }
-                        .padding(.horizontal, Theme.Spacing.gutter - 8)
-                    }
+                }
+            }
+            // The edge swipe back runs the doorway in reverse, into the mosaic (no "‹ Home" word on a room).
+            .overlay(alignment: .leading) {
+                Color.clear
+                    .frame(width: 20)
+                    .contentShape(Rectangle())
+                    .gesture(DragGesture(minimumDistance: 12).onEnded { value in
+                        if value.translation.width > 60, abs(value.translation.height) < value.translation.width {
+                            dismissLink()
+                        }
+                    })
+                    .accessibilityHidden(true)
             }
         }
     }
@@ -528,6 +547,18 @@ struct HomeMosaicPage: View {
         }
     }
 
+    /// "Sunset": the mosaic washes to dusk, holds for five seconds, and comes back.
+    private func playDusk() {
+        guard layerOn, scenePhase == .active else { return }
+        dusk = true
+        duskTask?.cancel()
+        duskTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(5))
+            guard !Task.isCancelled else { return }
+            dusk = false
+        }
+    }
+
     private func withoutAnimation(_ body: () -> Void) {
         var transaction = Transaction()
         transaction.disablesAnimations = true
@@ -609,6 +640,7 @@ private struct HomeLayerHost: View {
     var pageDirection = 1
     var signSpec: MosaicSignSpec?
     var scenery: MosaicScenery?
+    var dusk = false
 
     var body: some View {
         MosaicHomeLayer(
@@ -624,7 +656,8 @@ private struct HomeLayerHost: View {
             page: page,
             pageDirection: pageDirection,
             signSpec: signSpec,
-            scenery: scenery
+            scenery: scenery,
+            dusk: dusk
         )
     }
 }

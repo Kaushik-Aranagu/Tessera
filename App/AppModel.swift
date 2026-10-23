@@ -162,6 +162,8 @@ final class AppModel {
         }
         engine = ActionEngine(store: store, classes: classes)
         ledger = TrainingLedger(store: store, classes: classes)
+        // Her conversation keeps seven days: turns older than that go at launch (and before every write).
+        TessConversation(store: store, classes: classes).expire()
         // QA F1: only his real store holds his settings. On a throwaway store (memory fallback, a failed seed) the
         // settings read as empty, which would mean "yes": skip the migrate (it would delete his old "no") and keep
         // Claude off.
