@@ -94,6 +94,19 @@ public struct PoolReport {
         return sums.filter { $0.value > 0 }
     }
 
+    /// The month's moves between pools, newest first (the 4 AM month the ledger uses). Phone only.
+    public func monthMoves(calendar: Calendar = .current) -> [ObjectRecord] {
+        let month = TesseraDay(calendar: calendar).month(containing: now)
+        return book.moves().filter { move in
+            let at = store.value("at", of: move)?.dateValue ?? move.createdAt
+            return at >= month.start && at < month.end
+        }
+        .sorted {
+            (store.value("at", of: $0)?.dateValue ?? $0.createdAt) >
+                (store.value("at", of: $1)?.dateValue ?? $1.createdAt)
+        }
+    }
+
     // MARK: Rates
 
     /// Dollars for one of a currency: the ECB table first, else the newest rate he noted or a move implied.
