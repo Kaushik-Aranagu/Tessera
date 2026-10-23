@@ -420,15 +420,15 @@ struct QueueRow: View {
             Spacer(minLength: Theme.Spacing.s)
             if let why = hand?.why {
                 // Next, by hand: Core's reason at the right, in place of the time.
-                Text(why)
-                    .textRole(.data)
+                NumberedText(text: why, size: 16)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .multilineTextAlignment(.trailing)
                     .opacity(struck ? 0 : Double(max(0, 1 - abs(drag) / 40)))
             } else if let time = entry.time {
                 // Lowercase like the sentences and the hero: "8:30 pm" (Design picked .data over .label).
                 Text(Format.clock(time))
-                    .textRole(.data)
+                    // Outfit 300 for the figures, never the heavy data face (sheet 211).
+                    .font(Theme.numeral(16, weight: .light))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .monospacedDigit()
                     .fixedSize()
