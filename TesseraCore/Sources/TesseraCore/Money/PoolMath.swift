@@ -188,6 +188,13 @@ public enum PoolFormat {
         return (chunks + [last3]).joined(separator: ",")
     }
 
+    /// The same whole number without the currency symbol, sign kept: "-40", "1,100".
+    public static func wholeNumber(_ value: Decimal, lakh: Bool = false) -> String {
+        let rounded = PoolMath.rounded(value, places: 0)
+        let digits = NSDecimalNumber(decimal: abs(rounded)).stringValue
+        return (rounded < 0 ? "-" : "") + group(digits, lakh: lakh)
+    }
+
     /// Whole dollars for a line that says "about": "$1,136", "-$40", with no cents to cut off.
     public static func wholeDollars(_ value: Decimal, lakh: Bool = false) -> String {
         let rounded = PoolMath.rounded(value, places: 0)
