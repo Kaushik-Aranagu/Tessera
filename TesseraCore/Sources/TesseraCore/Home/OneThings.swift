@@ -101,8 +101,14 @@ public enum OneThings {
         things += [training(engine, plan, now, unit, calendar), groceries(engine, now, calendar),
                    task(engine, now, calendar), list(engine, now, calendar),
                    routine(engine, routines, now, calendar)].compactMap(\.self)
-        things += birthdays.enumerated().compactMap {
-            birthday($0.element, index: $0.offset, engine: engine, now: now, calendar: calendar)
+        // The index counts entries sharing the same month and day, in the host's entry order, so adding or removing
+        // someone with another date never shifts an id.
+        var perDate: [String: Int] = [:]
+        things += birthdays.compactMap { entry in
+            let date = "\(entry.month)-\(entry.day)"
+            let index = perDate[date, default: 0]
+            perDate[date] = index + 1
+            return birthday(entry, index: index, engine: engine, now: now, calendar: calendar)
         }
         if let weather {
             things.append(Self.weather(weather, facts: facts, calendar: calendar))
