@@ -34,10 +34,10 @@ enum SoulCloud {
     static let paintsDark: [UInt32] = [0xFF5B3A, 0x5E8BFF, 0xFFC23D]
     static let paintsLight: [UInt32] = [0xD2502F, 0x3561C8, 0xE0A21E]
 
-    /// The body's largest radius is 0.175 R at its fullest breath and spread, and her edge reaches out 11% more; the
+    /// The body's largest radius is 0.16 R at its fullest breath and spread, and her edge reaches out 11% more; the
     /// canvas is never tighter than 2.2 of that from her centre.
     static var clipIsSafe: Bool {
-        let radiusMax = 0.175 * (0.96 + 0.08 + 0.08) * 1.1 * 1.11
+        let radiusMax = 0.16 * (0.96 + 0.08 + 0.08) * 1.1 * 1.11
         return span / 2 >= 2.2 * radiusMax
     }
 
@@ -45,7 +45,7 @@ enum SoulCloud {
     static func radius(_ input: Input) -> Double {
         let phase = input.time * (input.quiet ? 0.35 : 1)
         let breath = 0.96 + (input.quiet ? 0.03 : 0.08) * sin(phase * 0.98) + 0.08 * input.level
-        return 0.175 * breath * (1 + 0.1 * input.spread)
+        return 0.16 * breath * (1 + 0.1 * input.spread)
     }
 
     // MARK: Colour
