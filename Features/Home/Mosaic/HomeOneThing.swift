@@ -1,85 +1,79 @@
 import SwiftUI
 import TesseraCore
 
-/// One thing on Home (sheet 213): a name or number in three tiers, no card and no frame. Core ranks them; until its
-/// feed
-/// lands the stand-in below reads the ranker's picks and the apps' own lines.
+/// One thing on Home (sheet 213): a name or number in three tiers, no card and no frame. Core ranks them
+/// (`OneThings.ranked`, on the phone, at most seven); this is the host's copy of one, with its accent as a colour.
 struct HomeThing: Identifiable, Equatable {
-    enum Kind: Equatable {
-        case task, app(HomeApp)
+    enum Accent: Equatable {
+        /// Ink: a task.
+        case ink
+        case app(HomeApp)
+        /// The rose family, never cobalt.
+        case birthday
+        /// The sky: the weather.
+        case sky
     }
 
     let id: String
-    let kind: Kind
-    /// Outfit 200 at 66 pt when a number (a time, a count), else Figtree 500 at 36 pt.
     var big: String
+    /// Outfit 200 at 60 pt for a short value (a time, a count, degrees), at 44 pt for words.
     var bigIsNumber: Bool
-    /// The accent of the big line; ink for a task.
-    var accent: HomeApp?
+    var accent: Accent
     var mid: String
-    /// The app word in the mid line (a 205 keyword), if it names one.
+    /// The thing's own word in the mid line, highlighted; nil for a plain or private one.
     var keyword: String?
     var small: String
-    /// The task a hold on the big line finishes.
+    /// The task a hold on the big line finishes (only a task can be struck through).
     var taskID: UUID?
-    var opens: HomeSentence.Opens?
+    var target: OneThing.Target
+    /// "Pack the charger, done." or "Private, done.": the one Undo line.
+    var undoLine: String?
+
+    var accentColor: Color {
+        switch accent {
+        case .ink: Theme.Colors.ink
+        case let .app(app): app.accent
+        case .birthday: Color(light: 0xB0466A, dark: 0xE07A9A)
+        case .sky: Theme.Colors.Accent.skyTo
+        }
+    }
 
     var spoken: String {
         [big, mid, small].filter { !$0.isEmpty }.joined(separator: ", ")
+    }
+
+    init(_ thing: OneThing) {
+        id = thing.id
+        big = thing.big
+        bigIsNumber = thing.big.count <= 8 && thing.big.contains(where: \.isNumber)
+        accent = switch thing.accent {
+        case .ink: .ink
+        case let .app(app): HomeApp(appID: app).map(Accent.app) ?? .ink
+        case .birthday: .birthday
+        case .sky: .sky
+        }
+        mid = thing.mid
+        keyword = thing.midKeyword
+        small = thing.small
+        taskID = if case let .task(id)? = thing.done {
+            id
+        } else {
+            nil
+        }
+        target = thing.target
+        undoLine = thing.undoLine
     }
 }
 
 @MainActor
 enum HomeThings {
-    static let maxThings = 7
-    static let holdHint = "Hold to strike it through"
-
-    /// The thing's own word in a line: its first one or two words, up to a connecting word, a comma or a figure
-    /// ("Push day" in "Push day at 6:30 pm", "Groceries" in "Groceries, 4 to get").
-    static func keyword(in text: String) -> String? {
-        // A private thing reads "Private" and has no keyword to underline.
-        guard !text.hasPrefix("Private") else { return nil }
-        let stops: Set = ["at", "is", "on", "in", "turns", "to", "for", "and", "of"]
-        var words: [String] = []
-        for raw in text.split(separator: " ") {
-            let word = String(raw)
-            let bare = word.trimmingCharacters(in: .punctuationCharacters)
-            if stops.contains(bare.lowercased()) || bare.contains(where: \.isNumber) {
-                break
-            }
-            words.append(bare)
-            if word.last == "," || word.last == "." || words.count == 2 {
-                break
-            }
-        }
-        let joined = words.joined(separator: " ")
-        return joined.isEmpty ? nil : joined
-    }
-
-    /// The stand-in feed: the ranker's task picks first (a private one reads by its shown label), then each app's own
-    /// line, up to seven.
-    static func standIn(model: AppModel, lines: [AppSummaryLine], now: Date) -> [HomeThing] {
-        var out: [HomeThing] = []
-        let picks = NowPage.rank(model: model, now: now, incumbent: nil)
-        for pick in picks where pick.item.kind == .task && out.count < 3 {
-            let shown = ObjectPrivacy.shownLabel(of: pick.item.object, in: model.store, classes: model.classes)
-                ?? pick.item.title
-            let private_ = ObjectPrivacy
-                .shownLabel(of: pick.item.object, in: model.store, classes: model.classes) != nil
-            out.append(HomeThing(id: pick.item.id.uuidString, kind: .task, big: shown, bigIsNumber: false,
-                                 accent: nil, mid: private_ || pick.why.isEmpty ? "Today" : pick.why,
-                                 keyword: private_ || pick.why.isEmpty ? nil : keyword(in: pick.why),
-                                 small: holdHint, taskID: pick.item.id, opens: .object(pick.item.id)))
-        }
-        for line in lines where out.count < maxThings && line.text != AppSummaryLines.nothingPlanned {
-            let app = AppsListRows.home(line.app)
-            let time = line.text.split(separator: " ").first { $0.contains(":") }.map(String.init)
-            out.append(HomeThing(id: "app-\(app.rawValue)", kind: .app(app), big: time ?? app.rawValue,
-                                 bigIsNumber: time != nil, accent: app, mid: line.text, keyword: keyword(in: line.text),
-                                 small: "",
-                                 taskID: nil, opens: line.opens))
-        }
-        return Array(out.prefix(maxThings))
+    /// Core's ranked things for the space. The weather stays out until it is real (Apple weather is not entitled yet,
+    /// and
+    /// a sample would read as a fact); birthdays have no source on the phone yet.
+    static func make(model: AppModel, facts: MosaicFacts, routines: HomeSentence.RoutinesPart) -> [HomeThing] {
+        let unit = MassUnit(rawValue: model.displayUnits.unit(for: .weight) ?? "") ?? .kilograms
+        return OneThings.ranked(engine: model.engine, facts: facts, plan: model.plan, routines: routines, unit: unit)
+            .map(HomeThing.init)
     }
 }
 
@@ -197,7 +191,7 @@ struct HomeOneThing: View {
 
     @ViewBuilder
     private func big(_ thing: HomeThing) -> some View {
-        let colour = thing.accent?.accent ?? Theme.Colors.ink
+        let colour = thing.accentColor
         let text = Text(thing.bigIsNumber ? thing.big : AppsListRows.fit(thing.big, limit: 28))
             // Always Outfit 200: 60 pt for a short value, 44 pt for words (which may wrap to two lines).
             .font(Theme.numeral(thing.bigIsNumber ? 60 : 44))
@@ -229,7 +223,7 @@ struct HomeOneThing: View {
         text.font = Theme.voice(size: 20)
         text.foregroundColor = Theme.Colors.ink
         if let keyword = thing.keyword, let range = text.range(of: keyword) {
-            let accent = thing.accent?.accent ?? Theme.Colors.ink
+            let accent = thing.accentColor
             text[range].font = Theme.voice(size: 22).weight(.semibold)
             text[range].foregroundColor = accent
             text[range].underlineStyle = Text.LineStyle(pattern: .solid, color: accent)

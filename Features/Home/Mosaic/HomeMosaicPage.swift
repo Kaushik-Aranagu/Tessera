@@ -72,10 +72,6 @@ struct HomeMosaicPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: HomeMosaic.sectionGap) {
-                header
-                    // Moods: 64 pt from the safe area to the sentence in all, so the row's gap is what is left.
-                    .padding(.bottom, HomeMosaic.moodsIsOn
-                        ? HomeMosaic.moodsTopInset - HomeMosaic.headerHeight - HomeMosaic.sectionGap : 0)
                 MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses, noticeList: notices,
                                facts: facts,
                                paused: scenePhase != .active || link != nil)
@@ -99,12 +95,18 @@ struct HomeMosaicPage: View {
                 }
             }
             .padding(.horizontal, HomeMosaic.gutter)
-            .padding(.top, HomeMosaic.moodsIsOn ? 0 : Theme.Spacing.s)
+            .padding(.top, HomeMosaic.moodsIsOn ? 16 : Theme.Spacing.s)
             .padding(.bottom, Theme.Spacing.xl)
             .coordinateSpace(.named(Self.space))
         }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
+        // Sheet 216: the date is the board's first line, so the Settings entry sits at the top left, clear of the
+        // right-aligned rows (the date row is short and begins well to its right).
+        .overlay(alignment: .topLeading) {
+            SettingsEntry { link = .settings }
+                .padding(.leading, HomeMosaic.gutter - 8)
+        }
         // Sheet 212: an 80 pt clear band at the bottom for Tess's corner; everything else sits above it.
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Color.clear.frame(height: HomeMosaic.tessRoom).accessibilityHidden(true)
@@ -197,8 +199,8 @@ struct HomeMosaicPage: View {
         .tesseraFeedback(.setLogged, trigger: rigidBeats)
         .environment(\.openHomeLink) { link = $0 }
         .fullScreenCover(item: $link) { link in
-            // Settings has its own back word ("‹ Home"), so it gets no Close.
-            if link == .settings {
+            // Settings and Today have their own back word ("‹ Home"), so it gets no Close.
+            if link == .settings || link == .today {
                 link.destination
             } else {
                 link.destination
@@ -219,29 +221,23 @@ struct HomeMosaicPage: View {
     /// Asks Core's picker what the day looks like now; "Welcome back" shows once per absence.
     private func refreshPick() {
         let at = AppClock.now
-        let summary = AppSummaryLines.lines(
-            engine: model.engine,
-            plan: model.plan,
-            moneyDue: .next(engine: model.engine, now: at),
-            routines: .make(engine: model.engine, now: at),
-            now: at
-        )
-        things = HomeThings.standIn(model: model, lines: summary, now: at)
+        let routinesPart = HomeSentence.RoutinesPart.make(engine: model.engine, now: at)
+        let read = MosaicFacts.make(engine: model.engine, now: at)
+        things = HomeThings.make(model: model, facts: read, routines: routinesPart)
         let backdrop = model.settingsAreReal ? SettingsStore(engine: model.engine).read().backdrop : .tessPicks
         scenery = facts.flatMap { MosaicScenePicker.pick(backdrop, facts: $0, place: nil, weather: nil) }
         thingIndex = min(thingIndex, max(things.count - 1, 0))
         dayClauses = HomeMosaic.firstThree(HomeSentence.compose(HomeSentence.inputs(
             engine: model.engine, plan: model.plan, moneyDue: .next(engine: model.engine, now: at),
-            routines: .make(engine: model.engine, now: at), now: at
+            routines: routinesPart, now: at
         )))
         guard HomeMosaic.moodsIsOn else {
             pick = nil
             // The plain 199 mosaic still needs the day's facts.
-            facts = HomeMosaic.isOn ? MosaicFacts.make(engine: model.engine, now: AppClock.now) : nil
+            facts = HomeMosaic.isOn ? read : nil
             return
         }
         let now = AppClock.now
-        let read = MosaicFacts.make(engine: model.engine, now: now)
         let defaults = UserDefaults.standard
         let inputs = MosaicMoodInputs.make(engine: model.engine, facts: read, plan: model.plan,
                                            backShown: defaults.bool(forKey: Self.backShownKey),
@@ -468,7 +464,7 @@ struct HomeMosaicPage: View {
         // The op-log "finished" moment that follows shows its clause only: no second tile and no second tap.
         MomentMemory.handDoneAt = AppClock.now
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
-        TessVoice.shared.say("\(thing.big), done.", undo: record, holds: .seconds(5))
+        TessVoice.shared.say(thing.undoLine ?? "Done.", undo: record, holds: .seconds(5))
         return true
     }
 
@@ -497,17 +493,22 @@ struct HomeMosaicPage: View {
         return true
     }
 
+    /// A tap goes to the thing's own target: its object, its app's room, Today, or the weather.
     private func openThing(_ thing: HomeThing) {
-        if case let .object(id)? = thing.opens {
+        switch thing.target {
+        case let .object(id):
             model.path.append(Route.object(id))
-        } else if case let .app(app) = thing.kind {
-            switch app {
+        case let .room(app):
+            switch HomeApp(appID: app) {
             case .kitchen: link = .recipes
             case .money: link = .money
             case .notes: link = .notes
             case .lists: link = .lists
-            default: break
+            case .training: link = .training
+            default: link = .review
             }
+        case .today, .weather:
+            link = .today
         }
     }
 
@@ -520,17 +521,6 @@ struct HomeMosaicPage: View {
         }
         if momentClause != nil {
             momentClause = nil
-        }
-    }
-
-    /// The date at the left, the Settings word at the right (a 44 pt target).
-    private var header: some View {
-        HStack(alignment: .center, spacing: Theme.Spacing.m) {
-            Text(AppClock.now.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
-                .font(Theme.voice(size: 16))
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            SettingsEntry { link = .settings }
         }
     }
 }
