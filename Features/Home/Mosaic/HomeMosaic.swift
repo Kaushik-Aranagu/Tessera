@@ -17,8 +17,9 @@ enum HomeMosaic {
     /// Sheet 200: from the top of the safe area to the top of the sentence; the 44 pt date row sits inside it.
     static let moodsTopInset: CGFloat = 64
     static let headerHeight: CGFloat = 44
-    /// Sheet 209: empty room for Tess above the apps list; her own layer draws there.
+    /// Sheet 212: the clear band at the bottom of the page for Tess's corner.
     static let tessRoom: CGFloat = 80
+
     static let rowHeight: CGFloat = 40
     /// A row open on its why line.
     static let openRowHeight: CGFloat = 78

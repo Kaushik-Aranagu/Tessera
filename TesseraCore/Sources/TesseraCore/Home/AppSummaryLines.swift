@@ -15,6 +15,8 @@ public struct AppSummaryLine: Equatable, Sendable {
     public let opens: HomeSentence.Opens
     /// The top item was private or walled, so the line shows no title.
     public let isPrivate: Bool
+    /// When it happens today, for ranking: the usual start, the dish's time, the next usual start, the bill's day.
+    public var time: Date?
 }
 
 @MainActor
@@ -82,7 +84,8 @@ public enum AppSummaryLines {
         let planned = plan.flatMap { stats.ledger.week(containing: now, plan: $0, now: now, calendar: calendar) }?
             .first { $0.state == .today }?.planned
         var text = name.0
-        if !name.1, let planned, let start = stats.usualStart(of: planned, on: now, calendar: calendar) {
+        let start = planned.flatMap { stats.usualStart(of: $0, on: now, calendar: calendar) }
+        if !name.1, let start {
             text += " at \(HouseTime.clock(start, calendar: calendar))"
         }
         // The lift it opens with only for a plain routine; a private one shows nothing but "Private".
@@ -93,7 +96,7 @@ public enum AppSummaryLines {
             }
         }
         return AppSummaryLine(app: .training, text: text, opens: planned.map { .object($0.id) } ?? .app(.training),
-                              isPrivate: name.1)
+                              isPrivate: name.1, time: name.1 ? nil : start)
     }
 
     private static func kitchen(_ engine: ActionEngine, _ now: Date, _ calendar: Calendar) -> AppSummaryLine {
@@ -116,7 +119,7 @@ public enum AppSummaryLines {
                 let tail = toGet > 0 ? ", \(toGet) to get" : ""
                 let words = name.1 ? name.text : "\(name.text) \(when)"
                 return AppSummaryLine(app: .kitchen, text: words + tail,
-                                      opens: .object(next.1.id), isPrivate: name.1)
+                                      opens: .object(next.1.id), isPrivate: name.1, time: next.2)
             }
         }
         let open = groceries.shoppingOrder().count
@@ -141,12 +144,15 @@ public enum AppSummaryLines {
         guard let line = part.facts.lines.first else {
             return AppSummaryLine(app: .routines, text: nothingPlanned, opens: .app(.routines), isPrivate: false)
         }
-        let name = shown(line.split(separator: ",").first.map(String.init) ?? line, in: store, classes: classes)
+        // The name and the time come from the same routine.
+        let name = shown(part.nextRoutine ?? line.split(separator: ",").first.map(String.init) ?? line, in: store,
+                         classes: classes)
         var text = name.text
         if !name.1, let next = part.nextUsualStart {
             text += " at \(HouseTime.clock(next, calendar: calendar))"
         }
-        return AppSummaryLine(app: .routines, text: text, opens: .app(.routines), isPrivate: name.1)
+        return AppSummaryLine(app: .routines, text: text, opens: .app(.routines), isPrivate: name.1,
+                              time: name.1 ? nil : part.nextUsualStart)
     }
 
     private static func tasks(_ engine: ActionEngine, _ now: Date, _ calendar: Calendar) -> AppSummaryLine {
@@ -202,6 +208,7 @@ public enum AppSummaryLines {
         let name = shown(due.name, in: engine.store, classes: engine.classes)
         // Words only: when a bill is due, never what it costs.
         return AppSummaryLine(app: .money, text: name.1 ? "Private bill is due \(day)" : "\(name.text) is due \(day)",
-                              opens: .app(.money), isPrivate: name.1)
+                              opens: .app(.money), isPrivate: name.1,
+                              time: calendar.date(bySettingHour: 9, minute: 0, second: 0, of: due.at))
     }
 }
