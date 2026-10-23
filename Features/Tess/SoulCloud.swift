@@ -78,6 +78,46 @@ enum SoulCloud {
                 encoded(-0.0041960863 * lms.l - 0.7034186147 * lms.m + 1.707614701 * lms.s))
     }
 
+    /// Linear channels of an OKLab colour, unclamped.
+    private static func linearChannels(_ lightness: Double, _ greenRed: Double, _ blueYellow: Double)
+        -> (red: Double, green: Double, blue: Double)
+    {
+        let lCube = pow(lightness + 0.3963377774 * greenRed + 0.2158037573 * blueYellow, 3)
+        let mCube = pow(lightness - 0.1055613458 * greenRed - 0.0638541728 * blueYellow, 3)
+        let sCube = pow(lightness - 0.0894841775 * greenRed - 1.291485548 * blueYellow, 3)
+        return (4.0767416621 * lCube - 3.3077115913 * mCube + 0.2309699292 * sCube,
+                -1.2684380046 * lCube + 2.6097574011 * mCube - 0.3413193965 * sCube,
+                -0.0041960863 * lCube - 0.7034186147 * mCube + 1.707614701 * sCube)
+    }
+
+    /// Whether an OKLab colour is inside the sRGB gamut.
+    static func inGamut(lightness: Double, greenRed: Double, blueYellow: Double) -> Bool {
+        let value = linearChannels(lightness, greenRed, blueYellow)
+        let slack = -0.0005, top = 1.0005
+        return [value.red, value.green, value.blue].allSatisfy { $0 >= slack && $0 <= top }
+    }
+
+    /// The colour with its chroma pulled in, at the same lightness and hue, until it fits the gamut: the chroma
+    /// never clips in RGB, which would shift its hue.
+    static func rgbInGamut(lightness: Double, greenRed: Double, blueYellow: Double)
+        -> (red: Double, green: Double, blue: Double)
+    {
+        let light = min(max(lightness, 0), 1)
+        if inGamut(lightness: light, greenRed: greenRed, blueYellow: blueYellow) {
+            return rgb(lightness: light, greenRed: greenRed, blueYellow: blueYellow)
+        }
+        var low = 0.0, high = 1.0
+        for _ in 0 ..< 9 {
+            let mid = (low + high) / 2
+            if inGamut(lightness: light, greenRed: greenRed * mid, blueYellow: blueYellow * mid) {
+                low = mid
+            } else {
+                high = mid
+            }
+        }
+        return rgb(lightness: light, greenRed: greenRed * low, blueYellow: blueYellow * low)
+    }
+
     // MARK: Field
 
     /// The three colour fields' centres and weights at this moment, in the reference square's units.
@@ -176,7 +216,11 @@ enum SoulCloud {
                 let held = max(hypot(redGreen, blueYellow), 1e-6)
                 let keep = min(input.chroma, chroma / held)
                 let shade = -0.03 * (down / radius) * exp(-pow(hypot(across, down) / radius, 2)) + 0.012
-                let tone = rgb(lightness: lightness + shade, greenRed: redGreen * keep, blueYellow: blueYellow * keep)
+                let tone = rgbInGamut(
+                    lightness: lightness + shade,
+                    greenRed: redGreen * keep,
+                    blueYellow: blueYellow * keep
+                )
                 store(&pixels, at: (row * count + column) * 4, tone, alpha: cover * cap)
             }
         }

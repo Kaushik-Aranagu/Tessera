@@ -109,6 +109,24 @@ struct SoulCloudTests {
         ))
     }
 
+    @Test func chromaIsPulledInToTheGamutInOKLabNeverClippedInRGB() {
+        // A colour far outside sRGB comes back at the same lightness and hue with less chroma.
+        let loud = SoulCloud.rgbInGamut(lightness: 0.6, greenRed: 0.45, blueYellow: 0.3)
+        #expect((0 ... 1).contains(loud.red) && (0 ... 1).contains(loud.green) && (0 ... 1).contains(loud.blue))
+        let back = SoulCloud
+            .oklab(UInt32(loud.red * 255) << 16 | UInt32(loud.green * 255) << 8 | UInt32(loud.blue * 255))
+        let hueBefore = atan2(0.3, 0.45), hueAfter = atan2(back.blueYellow, back.greenRed)
+        #expect(abs(hueBefore - hueAfter) < 0.08)
+        #expect(hypot(back.greenRed, back.blueYellow) < hypot(0.45, 0.3))
+        // Her own paints at the held chroma stay in gamut.
+        for paints in [SoulCloud.paintsLight, SoulCloud.paintsDark] {
+            for hex in paints {
+                let lab = SoulCloud.oklab(hex)
+                #expect(SoulCloud.inGamut(lightness: lab.lightness, greenRed: lab.greenRed, blueYellow: lab.blueYellow))
+            }
+        }
+    }
+
     @Test func oklabRoundTripsAHex() {
         let lab = SoulCloud.oklab(0x3561C8)
         let back = SoulCloud.rgb(lightness: lab.lightness, greenRed: lab.greenRed, blueYellow: lab.blueYellow)
