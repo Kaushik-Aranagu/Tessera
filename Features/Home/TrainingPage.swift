@@ -516,6 +516,9 @@ private struct TrainingAtRest: View {
     }
 
     private func tessLine(_ lanes: [TrainingLane]) -> String? {
+        if FinishWords.isOn, let finished = FinishMoment.shared.current {
+            return finished.trainingLine
+        }
         if landed, let first = lanes.first {
             return "\(titleAndRoute.0) running. \(first.name) first."
         }

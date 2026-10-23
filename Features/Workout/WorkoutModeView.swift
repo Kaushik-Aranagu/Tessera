@@ -873,6 +873,16 @@ extension WorkoutContent {
 
     /// The workout is already finished (FinishWorkout ran on the hold); leaving drops it into today on Home.
     private func leaveFinished() {
+        if FinishWords.isOn, let finished = session.finishedAt {
+            let label = ObjectPrivacy.shownLabel(of: session.workout, in: model.store, classes: model.classes)
+            FinishMoment.shared.record(
+                name: session.workout.title,
+                privateLabel: label ?? (session.isPrivate ? session.shownTitle : nil),
+                setCount: session.summary.sets,
+                duration: finished.timeIntervalSince(session.startedAt),
+                routineID: model.store.linkedObjects("routine", of: session.workout).first?.id
+            )
+        }
         model.isWorkoutPresented = false
         model.session = nil
         model.touch()
