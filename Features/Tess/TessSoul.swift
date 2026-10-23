@@ -186,7 +186,7 @@ struct TessSoul: View {
     private func eyesLayer(palette _: SoulPalette, slow: Bool) -> some View {
         // The workout corner stands on the workout's look (one base); everywhere else, the paint look.
         let look = onWorkoutGround ? ThemeStore.shared.workoutLook : ThemeStore.shared.paintLook
-        let dark = Color(hex: look.isDark ? look.ground : look.ink)
+        let dark = Color(hex: look.isDark ? look.ground : look.ink).opacity(look.isDark ? 1 : 0.86)
         return TimelineView(.animation(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60)) { context in
             let frame = baseFrame(at: context.date)
             // Waking: shut, then open, then one blink (a 200 ms crossfade under Reduce Motion or Low Power).
@@ -238,21 +238,29 @@ struct SoulPalette {
     var washes: [Gradient]
     var halo: Gradient
     var ring: Gradient
+    /// Light looks paint the dabs into one layer in normal blend and composite it once normally, then once as multiply
+    /// at 30%: the colours stay colours instead of burning to brown-black where they overlap.
+    var layered = false
 
     /// The look's live, tess and now; halo from live and context, the ring in context at 60%. Multiply on light
     /// looks, screen (and a fuller halo) on dark ones.
     static func look(_ look: Look) -> SoulPalette {
         let glow = look.isDark
-        // Only on Porcelain and Celadon's pale grounds: three multiplied washes at 0.8 burn to a dark hole, so
-        // lighter stops and a fainter halo leave the warm mixing he knows from Plein. Every other look is unchanged.
+        // Only on Porcelain and Celadon's pale grounds a fainter halo leaves the warm mixing he knows from Plein.
         let pale = look.field == .pigmentBloom || look.field == .glaze
-        return SoulPalette(
+        // Plein's paints inside Tess only (the Theme tokens stay as they are).
+        let paints: [UInt32] = look.name == "Plein"
+            ? [0xD2502F, 0x3561C8, 0xE0A21E]
+            : [look.live, look.tess, look.now]
+        var palette = SoulPalette(
             blend: glow ? .screen : .multiply,
-            washes: [look.live, look.tess, look.now].map { pale ? wash($0, core: 0.58, mid: 0.42) : wash($0) },
+            washes: paints.map { glow ? wash($0) : wash($0, core: 0.80, mid: 0.52) },
             halo: halo(Color(hex: look.live).opacity(glow ? 0.22 : pale ? 0.08 : 0.16),
                        Color(hex: look.context).opacity(glow ? 0.14 : pale ? 0.05 : 0.10)),
             ring: ring(Color(hex: look.context).opacity(0.6))
         )
+        palette.layered = !glow
+        return palette
     }
 
     private static func wash(_ hex: UInt32, core: Double = 0.8, mid: Double = 0.6) -> Gradient {
@@ -306,6 +314,28 @@ enum SoulRenderer {
                       with: .radialGradient(palette.ring, center: .zero, startRadius: 0, endRadius: radius))
         }
 
+        if palette.layered, lights == nil {
+            // Light looks: blue first, then vermilion, then cadmium, the satellites after the mains.
+            let order = [1, 0, 2, 3, 4, 5]
+            let paint: (inout GraphicsContext) -> Void = { layer in
+                layer.blendMode = .normal
+                layer.opacity = 1
+                for index in order {
+                    let opacity = index < 3 ? 1 : frame.look.satellites
+                    dab(frame.dabs[index], SoulDab.all[index], opacity: opacity, in: &layer, palette: palette,
+                        blurScale: blurScale)
+                }
+                dab(frame.drip, SoulDab.drip, opacity: 1, in: &layer, palette: palette, blurScale: blurScale)
+            }
+            var normal = context
+            normal.blendMode = .normal
+            normal.drawLayer { paint(&$0) }
+            var multiply = context
+            multiply.blendMode = .multiply
+            multiply.opacity = 0.3
+            multiply.drawLayer { paint(&$0) }
+            return
+        }
         context.blendMode = palette.blend
         if let lights {
             // Working: the twelve lights instead of the six dabs (the drip and ring never show while she works).
