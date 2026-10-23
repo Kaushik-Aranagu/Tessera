@@ -39,6 +39,7 @@ public enum ActionRegistry {
         CreatePool.descriptor, LogInflow.descriptor, ReassignSpend.descriptor, LogMove.descriptor,
         RecordRate.descriptor, ArchivePool.descriptor,
         MakeKind.descriptor, KeepNoteAsObject.descriptor, KeepAllNotes.descriptor,
+        RecordRate.descriptor, ArchivePool.descriptor, RepeatWorkout.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
@@ -166,6 +167,7 @@ public enum ActionRegistry {
         MakeKind.descriptor.name: { try decode(MakeKind.self, MakeKind.descriptor.name, $0) },
         KeepNoteAsObject.descriptor.name: { try decode(KeepNoteAsObject.self, KeepNoteAsObject.descriptor.name, $0) },
         KeepAllNotes.descriptor.name: { try decode(KeepAllNotes.self, KeepAllNotes.descriptor.name, $0) },
+        RepeatWorkout.descriptor.name: { try decode(RepeatWorkout.self, RepeatWorkout.descriptor.name, $0) },
         QueueBook.descriptor.name: { try decode(QueueBook.self, QueueBook.descriptor.name, $0) },
         EditBook.descriptor.name: { try decode(EditBook.self, EditBook.descriptor.name, $0) },
         StartReading.descriptor.name: { try decode(StartReading.self, StartReading.descriptor.name, $0) },
