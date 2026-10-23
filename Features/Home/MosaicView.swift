@@ -3,16 +3,9 @@ import TesseraCore
 
 // Home's mosaic (Design 199): today as a grid of flat sky-coloured tiles, 6 am on the left to midnight on the right.
 // Past hours are set, the hours ahead are pale, the current column breathes and a tile pops now and then. A touch
-// ripples the tiles and reads the hour; a finished thing flies in and is laid in this hour's column. Behind Settings ›
-// Review › "Home mosaic" (default Off). Builder B places it on Home; Core feeds `MosaicFacts`.
-
-enum HomeMosaicSwitch {
-    nonisolated static let choiceID = "homeMosaic"
-
-    @MainActor static var isOn: Bool {
-        ReviewChoices.shared.value(of: choiceID) == "On"
-    }
-}
+// ripples the tiles and reads the hour; a finished thing flies in and is laid in this hour's column. Builder B places
+// it
+// on Home behind their `homeMosaic` switch (default Off); Core feeds `MosaicFacts`.
 
 /// Holds one mosaic's engine so a host (Next, an app's finish) can lay a tile without owning the drawing.
 @MainActor
