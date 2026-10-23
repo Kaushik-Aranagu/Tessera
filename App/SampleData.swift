@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 /// Kaushik, Oct 21: "fill in model data so I can understand how things would look". The Review switch "Sample data"
 /// swaps the whole app onto a second store, in memory only, filled with example content (US words, dollars, his
@@ -67,5 +68,14 @@ extension AppModel {
     /// Where Tess's forget log lives; none for the sample, so a sample "Forget" never reaches his log (QA on #1199).
     var forgetLogURL: URL? {
         isSample ? nil : TessMemoryStore.defaultForgetLogURL
+    }
+}
+
+extension AppModel {
+    /// What Tess reads with a phrase: the clock, the set being logged, and the Money pools switch (Core #1233), which
+    /// lets "got 3200 paycheck" land in a pool. Off by default; Off reads every phrase as before.
+    func captureContext() -> TessContext {
+        TessContext(now: AppClock.now, entry: session?.currentEntry?.id,
+                    moneyPools: ReviewChoices.shared.value(of: "moneyPools") == "On")
     }
 }
