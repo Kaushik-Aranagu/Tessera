@@ -36,10 +36,34 @@ struct MosaicSlot: View {
     }
 }
 
-/// The line knob beside the Settings word (a later piece). Draws nothing yet.
+/// The knob beside the Settings word (sheet 203): nine of the screen's own pixels, Builder A's `PixelKnob`. A press
+/// turns it and opens Settings.
 struct SettingsKnob: View {
+    var open: () -> Void = {}
+
     var body: some View {
-        EmptyView()
+        PixelKnob(action: open)
+            .accessibilityLabel("Settings")
+    }
+}
+
+/// "Settings" at the top right of a page, in ink 2, beside the knob (sheet 203). A 44 pt target each.
+struct SettingsEntry: View {
+    var open: () -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Button(action: open) {
+                Text("Settings")
+                    .font(Theme.voice(size: 16))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens Settings")
+            SettingsKnob(open: open)
+        }
     }
 }
 

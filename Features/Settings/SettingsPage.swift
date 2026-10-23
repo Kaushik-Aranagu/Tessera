@@ -12,6 +12,15 @@ struct SettingsPage: View {
     @Environment(\.isPresented) private var isPresented
 
     var body: some View {
+        // Sheet 203: with Settings v2 On (the default) the overhauled page; Off keeps the older stack of sections.
+        if SettingsV2.isOn {
+            SettingsHub(cameFrom: cameFrom == "Review" ? "Home" : cameFrom)
+        } else {
+            legacy
+        }
+    }
+
+    private var legacy: some View {
         let v2 = SettingsV2.isOn
         return ScrollViewReader { reader in
             ScrollView {
