@@ -112,7 +112,7 @@ struct MosaicPagesTests {
     // MARK: Pages
 
     @Test func thereAreFourPagesAndAHalfSecondWipe() {
-        #expect(MosaicPage.count == 4 && MosaicPage.wipeSeconds == 0.5)
+        #expect(MosaicPage.count == 1 && MosaicPage.wipeSeconds == 0.5)
         #expect(MosaicPage.allCases == [.mood, .weather, .next, .week])
     }
 

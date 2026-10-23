@@ -433,7 +433,10 @@ struct MosaicHomeLayer: View {
                 tracker.recordBackground()
             } else if phase == .active {
                 // A reopen reacts once, by how long he was away; a moment already playing wins; no haptic.
-                guard !reduceMotion, active == nil, scene == .day else { return }
+                guard !reduceMotion, active == nil, scene == .day else {
+                    tracker.recordOpen()
+                    return
+                }
                 let cue = facts.openCue(lastBackground: tracker.lastBackground, lastOpen: tracker.lastOpen,
                                         coldLaunch: false)
                 controller.react(cue.reaction)

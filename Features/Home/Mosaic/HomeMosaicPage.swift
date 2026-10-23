@@ -137,7 +137,10 @@ struct HomeMosaicPage: View {
         // Sheet 209: Tess on her own layer above all of Home; touches pass through except on her.
         .overlay {
             if layerOn, HomeMosaic.appsListIsOn {
-                TessLayer(thoughts: TessThoughts.lines(facts: facts), onTap: { playTess() })
+                TessLayer(
+                    thoughts: TessThoughts.lines(facts: facts, asksClaude: model.asksClaude),
+                    onTap: { playTess() }
+                )
             }
         }
         .onAppear {
