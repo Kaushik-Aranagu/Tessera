@@ -12,6 +12,9 @@ struct MosaicSentence: View {
     var pickedClauses: [HomeSentence.Clause]?
     /// The day's clauses, read once per refresh by the page (with Core's loaders).
     var dayClauses: [HomeSentence.Clause]?
+    /// Builder A's doorway (sheet 206): when set, a tapped door hands over its clause and the word's frame in window
+    /// space (the wave starts there) instead of opening the page directly.
+    var onDoor: ((HomeSentence.Clause, CGRect) -> Void)?
 
     static let size: CGFloat = 23
     static let lineGap: CGFloat = 4
@@ -28,8 +31,11 @@ struct MosaicSentence: View {
             let lines = shown.isEmpty
                 ? [[DepartureSegment(text: HomeSentence.quietDay, kind: .plain)]]
                 : shown.map(DepartureLines.segments(of:))
-            DepartureBoard(lines: lines) { index in
-                if index < shown.count {
+            DepartureBoard(lines: lines) { index, frame in
+                guard index < shown.count else { return }
+                if let onDoor {
+                    onDoor(shown[index], frame)
+                } else {
                     DaySentence.open(shown[index], model: model, openLink: openLink)
                 }
             }

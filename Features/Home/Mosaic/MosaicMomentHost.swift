@@ -7,6 +7,10 @@ import TesseraCore
 enum MomentMemory {
     static var played: Set<String> = []
     static var last: (kind: MosaicMomentKind, at: Date)?
+    /// When a Done from a Next row last landed its own tile: the op-log "finished" moment that follows within two
+    /// seconds shows its sentence clause only, so one gesture gives one tile and one haptic.
+    static var handDoneAt: Date?
+    static let handWindow: TimeInterval = 2
 }
 
 /// Core's pick, turned into what A's view plays and what the host feels (sheet 201).

@@ -111,8 +111,8 @@ struct MosaicPagesTests {
 
     // MARK: Pages
 
-    @Test func thereAreFourPagesAndAHalfSecondWipe() {
-        #expect(MosaicPage.count == 4 && MosaicPage.wipeSeconds == 0.6 && MosaicPage.thingWash == 0.20)
+    @Test func onlyTheMoodPageIsReachableAndTheWipeIsSixTenthsOfASecond() {
+        #expect(MosaicPage.count == 1 && MosaicPage.wipeSeconds == 0.6 && MosaicPage.thingWash == 0.20)
         #expect(MosaicPage.allCases == [.mood, .weather, .next, .week])
     }
 

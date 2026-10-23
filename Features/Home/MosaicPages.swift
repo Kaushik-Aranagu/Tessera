@@ -10,10 +10,9 @@ import TesseraCore
 enum MosaicPage: Int, CaseIterable, Equatable {
     case mood, weather, next, week
 
-    /// How many pages B's pager has.
-    static var count: Int {
-        allCases.count
-    }
+    /// How many pages B's pager has. Only the mood until sheet 213's one-thing pages replace these: the weather,
+    /// next and week pages stay built but unreachable (no made-up weather, no empty Next).
+    static let count = 1
 
     /// The wipe between pages: 0.6 s, in the swipe's direction.
     static let wipeSeconds: TimeInterval = 0.6
