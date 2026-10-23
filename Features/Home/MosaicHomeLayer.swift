@@ -394,6 +394,9 @@ struct MosaicHomeLayer: View {
     var page: MosaicPage = .mood
     var pageDirection = 1
     var pageFacts: MosaicPageFacts?
+    /// The sign the mosaic lends its tiles to and the accent it washes toward (sheet 213), from the page's thing.
+    var sign: MosaicSignRequest?
+    var washAccent: MosaicTriple?
 
     /// Whether this process has opened Home yet (a cold launch plays its own reaction once).
     @MainActor private static var launched = false
@@ -519,7 +522,8 @@ struct MosaicHomeLayer: View {
                                            moodContext: momentContext, moment: active,
                                            shield: shield.map { $0.offsetBy(dx: -controller.globalOrigin.x,
                                                                             dy: -controller.globalOrigin.y) },
-                                           page: page, pageDirection: pageDirection, pageFacts: pageFacts))
+                                           page: page, pageDirection: pageDirection, pageFacts: pageFacts,
+                                           washAccent: washAccent, sign: sign))
         engine.step(to: time)
         if engine.consumeLandings() > 0 {
             DispatchQueue.main.async { cue.play(.fleckReachesNow) }

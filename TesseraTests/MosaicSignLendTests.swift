@@ -51,3 +51,53 @@ struct MosaicSignLendTests {
         #expect(MosaicSignLend.feedDelay == 0.14)
     }
 }
+
+@MainActor
+struct MosaicSignEngineTests {
+    private func engine(reduceMotion: Bool = false) -> MosaicScreenEngine {
+        let size = CGSize(width: 402, height: 874)
+        let engine = MosaicScreenEngine(size: size, coreTop: 480)
+        engine.reduceMotion = reduceMotion
+        engine.configure(size: size, coreTop: 480, dark: false, ground: (1, 1, 1))
+        engine.snapWindow()
+        return engine
+    }
+
+    private func request(_ kind: ThingSignKind) -> MosaicSignRequest {
+        MosaicSignRequest(kind: kind, column: 70, row: 100, accent: (0.75, 0.27, 0.17))
+    }
+
+    @Test func aRequestLendsTilesAndTheirSourcesBecomeGaps() throws {
+        let engine = engine()
+        engine.step(to: 1)
+        engine.showSign(request(.training))
+        let lend = try #require(engine.signLend)
+        #expect(lend.tiles.count == ThingSignArt.cells(.training, elapsed: 0, still: true).count)
+        engine.step(to: 1.2)
+        let source = try #require(lend.tiles.first)
+        let gap = engine.signGap(at: engine.grid.index(column: source.sourceColumn, row: source.sourceRow))
+        #expect(gap != nil && gap! > 0.5)
+        #expect(engine.signIsMoving)
+    }
+
+    @Test func aNewSignCollapsesTheOldOneAndFeedsTheNextAfterOneHundredFortyMilliseconds() throws {
+        let engine = engine()
+        engine.step(to: 1)
+        engine.showSign(request(.training))
+        engine.step(to: 4)
+        engine.showSign(request(.groceries))
+        #expect(engine.signOld?.start == engine.clock)
+        #expect(try #require(engine.signLend).start == engine.clock + 0.14)
+        #expect(!engine.collapsingSign().isEmpty)
+        engine.step(to: 5)
+        #expect(engine.collapsingSign().isEmpty)
+    }
+
+    @Test func underReduceMotionTheSignIsSimplyThere() throws {
+        let engine = engine(reduceMotion: true)
+        engine.showSign(request(.weather))
+        let lend = try #require(engine.signLend)
+        #expect(engine.clock >= lend.landedAt)
+        #expect(engine.signOld == nil && !engine.signIsMoving)
+    }
+}
