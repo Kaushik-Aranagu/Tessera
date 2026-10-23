@@ -47,6 +47,7 @@ final class MosaicScreenController {
 
     private var key: Key?
     private var lastPage = MosaicPage.mood
+    private var lastWashToken = 0
     private var pendingReaction: MosaicOpenReaction?
     private var reactionToken = 0
 
@@ -100,6 +101,13 @@ final class MosaicScreenController {
         var page: MosaicPage = .mood
         var pageDirection = 1
         var pageFacts: MosaicPageFacts?
+        /// The accent of the one thing Home shows (sheet 213): the mosaic takes 20% of it, sweeping in with the page
+        /// change.
+        var washAccent: MosaicTriple?
+        /// The sign the mosaic lends its tiles to (sheet 213); nil when the page has none.
+        var sign: MosaicSignRequest?
+        /// Changes when the thing (and so its wash) changes: the mosaic wipes to the new wash.
+        var washToken = 0
     }
 
     /// Makes the engine for this size and re-reads the scene's colours when anything they depend on changed.
@@ -109,6 +117,7 @@ final class MosaicScreenController {
         self.engine = engine
         engine.reduceMotion = inputs.reduceMotion
         engine.configure(size: inputs.size, coreTop: inputs.coreTop, dark: inputs.dark, ground: inputs.ground)
+        engine.showSign(inputs.sign)
         let facts = inputs.facts
         if let lastDay, lastDay != facts.day {
             engine.reset()
@@ -212,6 +221,9 @@ final class MosaicScreenController {
                     MosaicMomentField.glanceWash
                 )
             }
+            if let accent = inputs.washAccent, moment == nil {
+                colour = MosaicColour.mix(colour, accent, MosaicPage.thingWash)
+            }
             return colour
         }
         let left = engine.targetCore.left, top = engine.targetCore.top
@@ -278,6 +290,7 @@ final class MosaicScreenController {
                 engine.settle(colourAt: colourAt)
             }
             lastPage = inputs.page
+            lastWashToken = inputs.washToken
             return
         }
         switch reaction {
@@ -299,12 +312,13 @@ final class MosaicScreenController {
         }
         var kind = changeover(plan: plan, moment: moment, moodField: moodField)
         var total: TimeInterval?
-        if inputs.page != lastPage {
+        if inputs.page != lastPage || inputs.washToken != lastWashToken {
             // A page wipes in the swipe's direction in 0.5 s.
             kind = .wipeColumns(reverse: inputs.pageDirection < 0)
             total = MosaicPage.wipeSeconds
         }
         lastPage = inputs.page
+        lastWashToken = inputs.washToken
         engine.morph(kind, origin: origin, total: total, colourAt: colourAt)
     }
 
@@ -385,6 +399,8 @@ struct MosaicHomeLayer: View {
     var page: MosaicPage = .mood
     var pageDirection = 1
     var pageFacts: MosaicPageFacts?
+    /// The sign the mosaic lends its tiles to and the accent it washes toward (sheet 213), from the page's thing.
+    var signSpec: MosaicSignSpec?
 
     /// Whether this process has opened Home yet (a cold launch plays its own reaction once).
     @MainActor private static var launched = false
@@ -495,6 +511,20 @@ struct MosaicHomeLayer: View {
         return (Double(resolved.red), Double(resolved.green), Double(resolved.blue))
     }
 
+    /// The sign request for the page's thing, on the screen grid: its slot is a global frame, the grid starts at this
+    /// layer's own origin.
+    private func signRequest(environment: EnvironmentValues)
+        -> (request: MosaicSignRequest, accent: MosaicTriple, token: String)?
+    {
+        guard let spec = signSpec, !spec.slot.isEmpty else { return nil }
+        let accent = rgb(spec.accent, environment)
+        let column = Int(((spec.slot.minX - controller.globalOrigin.x) / MosaicScreenGrid.step).rounded())
+        let row = Int(((spec.slot.minY - controller.globalOrigin.y) / MosaicScreenGrid.step).rounded())
+        let request = MosaicSignRequest(kind: spec.kind, share: spec.share, column: column, row: row, accent: accent,
+                                        alt: spec.alt.map { rgb($0, environment) }, token: spec.token)
+        return (request, accent, spec.token, spec.washes)
+    }
+
     private func draw(_ context: inout GraphicsContext, size: CGSize, time: TimeInterval) {
         let environment = context.environment
         let dark = colorScheme == .dark
@@ -505,12 +535,16 @@ struct MosaicHomeLayer: View {
         for app in AppID.allCases {
             momentContext.accents[app] = rgb((HomeApp(rawValue: app.name) ?? .tasks).accent, environment)
         }
+        let resolved = signRequest(environment: environment)
         let engine = controller.sync(.init(scene: scene, facts: facts, dark: dark, ground: ground, size: size,
                                            coreTop: coreTop, reduceMotion: reduceMotion, mood: mood,
                                            moodContext: momentContext, moment: active,
                                            shield: shield.map { $0.offsetBy(dx: -controller.globalOrigin.x,
                                                                             dy: -controller.globalOrigin.y) },
-                                           page: page, pageDirection: pageDirection, pageFacts: pageFacts))
+                                           page: page, pageDirection: pageDirection, pageFacts: pageFacts,
+                                           washAccent: resolved?.washes == true ? resolved?.accent : nil,
+                                           sign: resolved?.request,
+                                           washToken: resolved?.token.hashValue ?? 0))
         engine.step(to: time)
         if engine.consumeLandings() > 0 {
             DispatchQueue.main.async { cue.play(.fleckReachesNow) }
@@ -561,6 +595,7 @@ struct MosaicHomeLayer: View {
             cg.setFillColor(red: tone.red, green: tone.green, blue: tone.blue, alpha: engine.laidOpacity(item))
             cg.fill(rect.insetBy(dx: -0.4, dy: -0.4))
         }
+        drawSign(cg, engine: engine, nowColumn: nowColumn)
         if let flight = engine.flight, let state = engine.flightState() {
             let tone = laidColour(
                 flight.tone,
@@ -575,6 +610,60 @@ struct MosaicHomeLayer: View {
             cg.setFillColor(red: tone.red, green: tone.green, blue: tone.blue, alpha: 1)
             cg.fill(CGRect(x: -state.side / 2, y: -state.side / 2, width: state.side, height: state.side))
             cg.restoreGState()
+        }
+    }
+
+    /// Sheet 213: the old sign collapsing where it stood, the new one's tiles flying out of the mosaic, then the sign
+    /// itself, drawn for real once every tile has landed.
+    private func drawSign(_ cg: CGContext, engine: MosaicScreenEngine, nowColumn: Int?) {
+        guard let request = engine.signRequest else { return }
+        let grid = engine.grid
+        let ground = engine.ground
+        func colour(_ cell: ThingSignCell) -> MosaicTriple {
+            let base = cell.alt ? (request.alt ?? request.accent) : request.accent
+            return MosaicColour.mix(ground, base, ThingSignArt.stepped(cell.strength))
+        }
+        func fill(_ rect: CGRect, _ tone: MosaicTriple) {
+            cg.setFillColor(red: tone.red, green: tone.green, blue: tone.blue, alpha: 1)
+            cg.fill(rect)
+        }
+        for item in engine.collapsingSign() {
+            let rect = grid.rect(column: item.tile.column, row: item.tile.row)
+            let side = rect.width * item.scale
+            fill(CGRect(x: rect.midX - side / 2, y: rect.midY - side / 2 + item.sink, width: side, height: side),
+                 colour(item.tile.cell))
+        }
+        guard let lend = engine.signLend else { return }
+        let time = engine.clock
+        if time >= lend.landedAt {
+            let cells = ThingSignArt.cells(request.kind, elapsed: time - lend.landedAt, share: request.share,
+                                           still: engine.reduceMotion)
+            for cell in cells {
+                let tile = MosaicSignTile(cell: cell, column: request.column + cell.column,
+                                          row: request.row + cell.row, sourceColumn: 0, sourceRow: 0)
+                guard grid.contains(column: tile.column, row: tile.row) else { continue }
+                fill(grid.rect(column: tile.column, row: tile.row), colour(cell))
+            }
+            return
+        }
+        for (index, tile) in lend.tiles.enumerated() where grid.contains(column: tile.column, row: tile.row) {
+            let progress = lend.progress(index, at: time)
+            guard time >= lend.launch(index) else { continue }
+            let target = grid.center(column: tile.column, row: tile.row)
+            let signColour = colour(tile.cell)
+            if progress >= 1 {
+                fill(grid.rect(column: tile.column, row: tile.row), signColour)
+                continue
+            }
+            let source = grid.center(column: tile.sourceColumn, row: tile.sourceRow)
+            let seen = engine.tile(column: tile.sourceColumn, row: tile.sourceRow, nowColumn: nowColumn,
+                                   ignoringGap: true)?.colour ?? ground
+            let arc = MosaicSignLend.arc(progress)
+            let centre = CGPoint(x: source.x + (target.x - source.x) * progress,
+                                 y: source.y + (target.y - source.y) * progress - arc.lift)
+            let side = MosaicScreenGrid.side * arc.scale
+            fill(CGRect(x: centre.x - side / 2, y: centre.y - side / 2, width: side, height: side),
+                 MosaicColour.mix(seen, signColour, progress))
         }
     }
 

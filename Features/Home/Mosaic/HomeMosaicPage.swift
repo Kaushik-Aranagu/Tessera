@@ -51,6 +51,8 @@ struct HomeMosaicPage: View {
     @State private var tessHeardAt: Date?
     @State private var roomOpen = false
     @State private var roomEntries: [RoomLogEntry] = []
+    /// The 72 pt sign slot's global frame (from the thing space) and the sign the mosaic builds in it.
+    @State private var signSlot: CGRect = .zero
     @State private var shield: [CGRect] = []
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager(count: MosaicPage.count)
@@ -87,7 +89,7 @@ struct HomeMosaicPage: View {
                 }
                 // Sheet 213: one thing at a time, no Next list.
                 HomeOneThing(things: things, index: $thingIndex, turn: { turnThing($0) },
-                             done: { finishThing($0) }, open: { openThing($0) })
+                             done: { finishThing($0) }, open: { openThing($0) }, onSlot: { signSlot = $0 })
                     .mosaicShield()
                 if HomeMosaic.appsListIsOn {
                     AppsListSlot(onGlance: { playGlance($0) })
@@ -121,7 +123,8 @@ struct HomeMosaicPage: View {
                     moment: moment,
                     caption: $caption,
                     page: MosaicPage(rawValue: pager.index) ?? .mood,
-                    pageDirection: pageDirection
+                    pageDirection: pageDirection,
+                    signSpec: signSpec
                 )
             }
         }
@@ -465,6 +468,24 @@ struct HomeMosaicPage: View {
     }
 
     /// A swipe on the space: the next thing (left) or the previous (right), wrapping; whether the page turned.
+    /// Sheet 213: the sign for the thing now showing, or none (money has none, and no thing has none).
+    private var signSpec: MosaicSignSpec? {
+        guard things.indices.contains(thingIndex), case let .app(app) = things[thingIndex].kind,
+              let kind = ThingSignKind(app: app)
+        else {
+            return things.indices.contains(thingIndex) && things[thingIndex].kind == .task
+                ? MosaicSignSpec(
+                    kind: .task,
+                    accent: Theme.Colors.ink,
+                    washes: false,
+                    slot: signSlot,
+                    token: things[thingIndex].id
+                )
+                : nil
+        }
+        return MosaicSignSpec(kind: kind, accent: app.accent, slot: signSlot, token: things[thingIndex].id)
+    }
+
     private func turnThing(_ dx: CGFloat) -> Bool {
         guard things.count > 1, abs(dx) > 50 else { return false }
         thingIndex = ((thingIndex + (dx < 0 ? 1 : -1)) % things.count + things.count) % things.count
@@ -531,6 +552,7 @@ private struct HomeLayerHost: View {
     @Binding var caption: String
     var page: MosaicPage = .mood
     var pageDirection = 1
+    var signSpec: MosaicSignSpec?
 
     var body: some View {
         MosaicHomeLayer(
@@ -544,7 +566,8 @@ private struct HomeLayerHost: View {
             moment: moment,
             caption: $caption,
             page: page,
-            pageDirection: pageDirection
+            pageDirection: pageDirection,
+            signSpec: signSpec
         )
     }
 }

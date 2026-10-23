@@ -99,6 +99,8 @@ struct HomeOneThing: View {
     /// The hold finished this task: whether it was marked done.
     let done: (HomeThing) -> Bool
     let open: (HomeThing) -> Void
+    /// The sign slot's global frame, for the mosaic to build the sign in (sheet 213).
+    var onSlot: (CGRect) -> Void = { _ in }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var strike: Double = 0
@@ -119,6 +121,7 @@ struct HomeOneThing: View {
                 page(thing)
                 // A's 72 pt pixel sign sits at the top right; its slot is left clear here.
                 Color.clear.frame(width: 72, height: 72)
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { onSlot($0) }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                     .accessibilityHidden(true)
                 Text("\(index + 1) of \(things.count)")
