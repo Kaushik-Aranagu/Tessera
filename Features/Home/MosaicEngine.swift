@@ -54,23 +54,31 @@ struct MosaicConfig: Equatable {
     /// Edges dither, never blur or fade (sheet 200): tiles less than 4 from an edge are kept with probability (e + 1) /
     /// 5.
     var ditheredEdges = false
+    /// The visible grid is a window of `columns x rows`, anchored top-right, sized per mood (sheet 200).
+    var windowed = false
+    /// The window eases to its target by this much a 60 Hz frame (about a second) and breathes a little.
+    var windowEase = 0.06
+    var windowBreathColumns = 1.4
+    var windowBreathColumnsSeconds: TimeInterval = 27
+    var windowBreathRows = 1.2
+    var windowBreathRowsSeconds: TimeInterval = 37
 
     static let home = MosaicConfig()
 
-    /// The departure mosaic (sheet 200, smaller pixels): 60 x 44 tiles, step 4 pt, tile 3.2, corner 0.7, dithered
-    /// edges.
+    /// The departure mosaic (sheet 200): at most 62 x 40 tiles, step 4 pt, tile 3.2, corner 0.7, dithered edges. What
+    /// shows is a window of it anchored top-right whose size is the mood's own (the engine eases and breathes it).
     static let moods: MosaicConfig = {
         var config = MosaicConfig()
-        config.columns = 60
-        config.rows = 44
+        config.columns = 62
+        config.rows = 40
         config.gap = 0.8
         config.corner = 0.7
         config.rippleRadius = 120
         config.leanRadius = 36
         config.leanMax = 5
-        config.layRows = 8 ... 36
         config.fixedSide = 3.2
         config.ditheredEdges = true
+        config.windowed = true
         return config
     }()
 
@@ -96,13 +104,14 @@ struct MosaicGeometry: Equatable {
         side + config.gap
     }
 
-    /// The grid is centred in the width the tiles leave over.
+    /// The tiles are packed to the right.
     var gridWidth: CGFloat {
         pitch * CGFloat(config.columns) - config.gap
     }
 
+    /// Anchored to the right gutter and the top: the leftover width falls on the left, the leftover height below.
     var inset: CGFloat {
-        max(0, (width - gridWidth) / 2)
+        max(0, width - gridWidth)
     }
 
     var height: CGFloat {
@@ -181,7 +190,13 @@ final class MosaicEngine {
     private var morphStart: TimeInterval = -10
     private var morphLength: TimeInterval
     private var lengths: [TimeInterval]
-    private let edges: [EdgeKind]
+    private var edges: [EdgeKind]
+    /// The window: its target, the eased size, and the whole tiles showing now.
+    private(set) var windowTarget: (columns: Int, rows: Int)
+    private var windowColumns: Double
+    private var windowRows: Double
+    private(set) var visibleColumns: Int
+    private(set) var visibleRows: Int
     private var transition: MosaicTransition = .wave
     /// The page ground the future, the dithered edges and the moods mix toward.
     var ground: MosaicTriple = (1, 1, 1)
@@ -207,6 +222,11 @@ final class MosaicEngine {
         morphLength = config.morphDuration
         lengths = Array(repeating: config.morphDuration, count: config.count)
         edges = Self.edgeKinds(config: config)
+        windowTarget = (config.columns, config.rows)
+        windowColumns = Double(config.columns)
+        windowRows = Double(config.rows)
+        visibleColumns = config.columns
+        visibleRows = config.rows
         lean = Array(repeating: .zero, count: config.count)
         leanVelocity = Array(repeating: .zero, count: config.count)
     }
@@ -233,6 +253,7 @@ final class MosaicEngine {
             pop(random.int(config.count))
             nextPop = time + config.popInterval
         }
+        easeWindow(dt: dt)
         springLean(dt: dt)
         if let flight, time - flight.start >= config.flightDuration {
             land(flight, at: time)
@@ -265,6 +286,8 @@ final class MosaicEngine {
 
     enum EdgeKind: Equatable {
         case full
+        /// Outside the visible window.
+        case hidden
         case dropped
         case kept(EdgeRule)
     }
@@ -295,7 +318,35 @@ final class MosaicEngine {
     }
 
     func isDropped(column: Int, row: Int) -> Bool {
-        edgeKind(column: column, row: row) == .dropped
+        let kind = edgeKind(column: column, row: row)
+        return kind == .dropped || kind == .hidden
+    }
+
+    /// The edge rule worked out on the live window (hash on the absolute tile, so it stays stable as the window
+    /// moves): tiles outside are hidden; within 4 of a window edge they dither.
+    func refreshEdges() {
+        guard config.ditheredEdges else { return }
+        var kinds = [EdgeKind](repeating: .full, count: config.count)
+        let left = config.columns - visibleColumns
+        for column in 0 ..< config.columns {
+            for row in 0 ..< config.rows {
+                let index = column * config.rows + row
+                let local = column - left
+                guard local >= 0, row < visibleRows else {
+                    kinds[index] = .hidden
+                    continue
+                }
+                let edge = min(local, visibleColumns - 1 - local, row, visibleRows - 1 - row)
+                guard edge < 4 else { continue }
+                if MosaicColour.unit(index, salt: 7) < Double(edge + 1) / 5 {
+                    let keep = 0.55 + Double(edge) * 0.1
+                    kinds[index] = .kept(EdgeRule(mixToGround: (1 - keep) * 0.8, scale: 0.6 + 0.4 * keep))
+                } else {
+                    kinds[index] = .dropped
+                }
+            }
+        }
+        edges = kinds
     }
 
     // MARK: - Per-tile reads
@@ -533,7 +584,9 @@ final class MosaicEngine {
 
     /// A free tile in the now column's middle rows, chosen with the engine's seeded random so a day lays the same way.
     func freeTile(inColumn column: Int) -> Int? {
-        let free = config.layRows.map { geometry.index(column: column, row: $0) }.filter { !isLaid($0) }
+        let rows = config.windowed ? windowTarget.rows : config.rows
+        let band = config.windowed ? Int(Double(rows) * 0.2) ... Int(Double(rows) * 0.8) : config.layRows
+        let free = band.map { geometry.index(column: column, row: $0) }.filter { !isLaid($0) }
         guard !free.isEmpty else { return nil }
         return free[random.int(free.count)]
     }
@@ -606,6 +659,72 @@ final class MosaicEngine {
         laidIndexes = []
         flight = nil
         pops = [:]
+    }
+}
+
+// MARK: - Window
+
+extension MosaicEngine {
+    /// The window the mood wants: the engine eases toward it and keeps it anchored top-right.
+    func setWindow(columns: Int, rows: Int) {
+        windowTarget = (min(max(columns, 1), config.columns), min(max(rows, 1), config.rows))
+    }
+
+    /// The target window as a config, for fields drawn in window-local coordinates.
+    var windowConfig: MosaicConfig {
+        var window = config
+        window.columns = windowTarget.columns
+        window.rows = windowTarget.rows
+        return window
+    }
+
+    /// The absolute column the target window's first column sits in.
+    var targetLeft: Int {
+        config.columns - windowTarget.columns
+    }
+
+    /// The column "now" falls in, in absolute grid columns, or nil before the first hour.
+    func nowColumn(_ date: Date) -> Int? {
+        MosaicReadout.nowColumn(date, config: windowConfig).map { targetLeft + $0 }
+    }
+
+    /// Puts the window at its target at once (the first frame, a Reduce Motion change).
+    func snapWindow() {
+        windowColumns = Double(windowTarget.columns)
+        windowRows = Double(windowTarget.rows)
+        guard config.windowed else { return }
+        visibleColumns = windowTarget.columns
+        visibleRows = windowTarget.rows
+        refreshEdges()
+    }
+
+    /// An absolute column as a column of the target window, clamped (for fields, readouts and hours).
+    func localColumn(_ column: Int) -> Int {
+        min(max(column - targetLeft, 0), windowTarget.columns - 1)
+    }
+
+    func easeWindow(dt: TimeInterval) {
+        guard config.windowed else { return }
+        let targetColumns = Double(windowTarget.columns), targetRows = Double(windowTarget.rows)
+        if reduceMotion {
+            windowColumns = targetColumns
+            windowRows = targetRows
+        } else {
+            let ease = 1 - pow(1 - config.windowEase, dt * 60)
+            windowColumns += (targetColumns - windowColumns) * ease
+            windowRows += (targetRows - windowRows) * ease
+        }
+        let breathColumns = reduceMotion ? 0 : config.windowBreathColumns
+            * sin(2 * Double.pi * clock / config.windowBreathColumnsSeconds)
+        let breathRows = reduceMotion ? 0 : config.windowBreathRows
+            * sin(2 * Double.pi * clock / config.windowBreathRowsSeconds)
+        let columns = min(max(Int((windowColumns + breathColumns).rounded()), 1), config.columns)
+        let rows = min(max(Int((windowRows + breathRows).rounded()), 1), config.rows)
+        if columns != visibleColumns || rows != visibleRows {
+            visibleColumns = columns
+            visibleRows = rows
+            refreshEdges()
+        }
     }
 }
 

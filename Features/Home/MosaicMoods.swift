@@ -83,6 +83,48 @@ extension MosaicMood {
     }
 }
 
+extension MosaicMood {
+    /// The window of the 62 x 40 grid the mood shows (sheet 200): columns x rows, anchored top-right.
+    var window: (columns: Int, rows: Int) {
+        switch self {
+        case .morning: (50, 28)
+        case .day: (48, 24)
+        case .golden: (60, 30)
+        case .running: (40, 28)
+        case .rest: (62, 20)
+        case .back: (36, 22)
+        case .done: (56, 36)
+        case .rain: (50, 30)
+        case .night: (62, 38)
+        }
+    }
+}
+
+enum MosaicWindows {
+    /// The window while a scene (the time, the sky, the next thing, done) shows instead of a mood.
+    static let scene: (columns: Int, rows: Int) = (50, 28)
+
+    /// A window-local field laid into the whole grid, anchored top-right; tiles beyond the window take the nearest
+    /// local tile so a window that eases wider has colour to show.
+    static func expand(
+        _ local: [MosaicTriple],
+        window: (columns: Int, rows: Int),
+        config: MosaicConfig
+    ) -> [MosaicTriple] {
+        guard local.count == window.columns * window.rows else { return [] }
+        let left = config.columns - window.columns
+        var full = [MosaicTriple](repeating: (0, 0, 0), count: config.count)
+        for column in 0 ..< config.columns {
+            let localColumn = min(max(column - left, 0), window.columns - 1)
+            for row in 0 ..< config.rows {
+                let localRow = min(row, window.rows - 1)
+                full[column * config.rows + row] = local[localColumn * window.rows + localRow]
+            }
+        }
+        return full
+    }
+}
+
 /// What a mood draws from beyond the clock: the finished apps' accents (one pixel firework each), the workout's sets,
 /// and how many things are done today.
 struct MosaicMoodContext {

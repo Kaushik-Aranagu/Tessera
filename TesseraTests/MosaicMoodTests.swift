@@ -8,7 +8,7 @@ import Testing
 struct MosaicMoodTests {
     private let config = MosaicConfig.moods
     private var geometry: MosaicGeometry {
-        MosaicGeometry(config: config, width: 240)
+        MosaicGeometry(config: config, width: 248)
     }
 
     private func input() -> MosaicSceneInput {
@@ -18,18 +18,111 @@ struct MosaicMoodTests {
     }
 
     private func engine() -> MosaicEngine {
-        MosaicEngine(config: config, width: 240)
+        MosaicEngine(config: config, width: 248)
     }
 
-    @Test func gridIsSixtyByFortyFourAtStepFour() {
-        #expect(config.columns == 60 && config.rows == 44)
+    @Test func gridIsAtMostSixtyTwoByFortyAtStepFour() {
+        #expect(config.columns == 62 && config.rows == 40)
         #expect(geometry.side == 3.2)
         #expect(abs(geometry.pitch - 4) < 1e-9)
         #expect(config.corner == 0.7)
         #expect(config.leanRadius == 36 && config.leanMax == 5 && config.rippleRadius == 120)
-        // The grid fits and is centred.
-        #expect(abs(geometry.gridWidth - 239.2) < 1e-9)
-        #expect(geometry.inset >= 0 && geometry.height < 176)
+        // The grid fits the 248 x 160 frame.
+        #expect(abs(geometry.gridWidth - 247.2) < 1e-9)
+        #expect(geometry.inset >= 0 && geometry.height < 160)
+    }
+
+    @Test func tilesAreAnchoredToTheRightGutterAndTheTop() {
+        let wide = MosaicGeometry(config: config, width: 250)
+        #expect(abs(wide.rect(column: config.columns - 1, row: 0).maxX - 250) < 1e-9)
+        #expect(wide.rect(column: 0, row: 0).minY == 0)
+        // The leftover width falls on the left.
+        #expect(abs(wide.inset - (250 - 247.2)) < 1e-9)
+    }
+
+    @Test func eachMoodHasItsOwnWindowFromTheTable() {
+        let table: [MosaicMood: (Int, Int)] = [
+            .morning: (50, 28), .day: (48, 24), .golden: (60, 30), .running: (40, 28), .rest: (62, 20),
+            .back: (36, 22), .done: (56, 36), .rain: (50, 30), .night: (62, 38),
+        ]
+        for mood in MosaicMood.allCases {
+            #expect(mood.window.columns == table[mood]?.0 && mood.window.rows == table[mood]?.1)
+            #expect(mood.window.columns <= config.columns && mood.window.rows <= config.rows)
+        }
+    }
+
+    @Test func theWindowEasesToItsTargetInAboutASecondAndBreathes() {
+        let mosaic = engine()
+        mosaic.setWindow(columns: 36, rows: 22)
+        mosaic.step(to: 0.05)
+        #expect(mosaic.visibleColumns > 45)
+        var time = 0.05
+        for _ in 0 ..< 90 {
+            time += 1.0 / 60
+            mosaic.step(to: time)
+        }
+        #expect(abs(mosaic.visibleColumns - 36) <= 5)
+        #expect(abs(mosaic.visibleRows - 22) <= 4)
+        var seen = Set<Int>()
+        for _ in 0 ..< 1800 {
+            time += 1.0 / 20
+            mosaic.step(to: time)
+            seen.insert(mosaic.visibleColumns)
+        }
+        #expect(seen.count >= 2 && seen.count <= 4)
+        #expect(seen.allSatisfy { abs($0 - 36) <= 2 })
+    }
+
+    @Test func reduceMotionSnapsTheWindowAndDoesNotBreathe() {
+        let mosaic = engine()
+        mosaic.reduceMotion = true
+        mosaic.setWindow(columns: 40, rows: 28)
+        mosaic.step(to: 0.02)
+        #expect(mosaic.visibleColumns == 40 && mosaic.visibleRows == 28)
+        for index in 1 ... 400 {
+            mosaic.step(to: 0.02 + Double(index) * 0.1)
+            #expect(mosaic.visibleColumns == 40)
+        }
+    }
+
+    @Test func theWindowIsAnchoredTopRightAndTilesOutsideAreHidden() {
+        let mosaic = engine()
+        mosaic.setWindow(columns: 36, rows: 22)
+        mosaic.snapWindow()
+        #expect(mosaic.edgeKind(column: 0, row: 39) == .hidden)
+        #expect(mosaic.isDropped(column: 0, row: 39))
+        #expect(mosaic.edgeKind(column: 10, row: 5) == .hidden)
+        #expect(mosaic.edgeKind(column: 61 - 18, row: 11) == .full)
+        #expect(mosaic.targetLeft == 62 - 36)
+    }
+
+    @Test func theDitherIsComputedOnTheLiveWindow() {
+        let mosaic = engine()
+        mosaic.setWindow(columns: 36, rows: 22)
+        mosaic.snapWindow()
+        let left = mosaic.targetLeft
+        var kept = 0, dropped = 0
+        for row in 0 ..< 22 {
+            switch mosaic.edgeKind(column: left, row: row) {
+            case .kept: kept += 1
+            case .dropped: dropped += 1
+            default: break
+            }
+        }
+        #expect(kept > 0 && dropped > 0)
+    }
+
+    @Test func aLocalFieldExpandsIntoTheGridAnchoredTopRight() {
+        let window = (columns: 4, rows: 3)
+        var small = MosaicConfig.moods
+        small.columns = 6
+        small.rows = 5
+        let local = (0 ..< 12).map { MosaicTriple(Double($0), 0, 0) }
+        let full = MosaicWindows.expand(local, window: window, config: small)
+        #expect(full.count == 30)
+        #expect(full[2 * 5 + 0].red == 0)
+        #expect(full[5 * 5 + 2].red == 11)
+        #expect(full[0 * 5 + 4].red == full[2 * 5 + 2].red)
     }
 
     @Test func edgesDitherByHashAndNeverBlur() {
@@ -167,7 +260,7 @@ struct MosaicMoodTests {
             mosaic.morph(to: MosaicMoodField.base(.night, geometry: mosaic.geometry, input: input(), ground: (1, 1, 1),
                                                   context: MosaicMoodContext()), origin: (0, 0), transition: transition)
             mosaic.step(to: 0.16)
-            #expect((mosaic.morphProgress(mosaic.geometry.index(column: 59, row: 43)) ?? 0) == 1)
+            #expect((mosaic.morphProgress(mosaic.geometry.index(column: 61, row: 39)) ?? 0) == 1)
             #expect(mosaic.offset(column: 10, row: 10) == .zero)
         }
     }
