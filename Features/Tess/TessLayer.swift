@@ -106,7 +106,7 @@ struct TessLayer: View {
         GeometryReader { geometry in
             // Everything on this layer lets touches through except Tess herself (and her line, while it is up).
             HStack(alignment: .center, spacing: Theme.Spacing.s) {
-                Text(line)
+                Text(open ? "" : line)
                     .font(TessFont.beside)
                     .foregroundStyle(Theme.Colors.ink)
                     .multilineTextAlignment(.trailing)
@@ -128,6 +128,12 @@ struct TessLayer: View {
         }
         .ignoresSafeArea()
         .tesseraFeedback(feel)
+        .onChange(of: open) { _, isOpen in
+            if isOpen {
+                lineTask?.cancel()
+                shown = nil
+            }
+        }
         .onChange(of: message) { _, text in
             if let text, !text.isEmpty {
                 say(text)

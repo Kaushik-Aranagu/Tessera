@@ -166,6 +166,8 @@ struct HomeMosaicPage: View {
         // Sheet 209 and 215: Tess on her own layer above all of Home; touches pass through except on her. Her
         // conversation opens over Home, and she moves to the bottom middle.
         .overlay { tessOverlay }
+        .onChange(of: layerOn, initial: true) { _, on in model.homeTessLayerActive = on && HomeMosaic.appsListIsOn }
+        .onDisappear { model.homeTessLayerActive = false }
         // Sheet 203: a pull down from the top 40 pt also opens Settings.
         .simultaneousGesture(
             DragGesture(minimumDistance: 24).onEnded { value in
