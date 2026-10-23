@@ -35,6 +35,7 @@ struct TesseraApp: App {
         }
         _model = State(initialValue: model)
         LiveWorkout.model = model
+        HomeV2.resetOnce()
         WatchBridge.shared.start(model: model)
         // App Intents (Shortcuts, Siri, the Action button) run against the same engine as the UI.
         if let runtime = model.runtime {
