@@ -139,6 +139,14 @@ final class ReviewChoices {
                says: ["Off": "The running list, else the one touched last, leads.",
                       "On": "With nothing running, the list due soonest leads."],
                readiness: .live),
+        // Design 138: one shared number view for every app.
+        Choice(id: "numberRules",
+               name: "Number rules",
+               values: ["Off", "On"],
+               defaultValue: "Off",
+               says: ["Off": "Numbers are drawn as before.",
+                      "On": "Fractions hang small, an estimate is lighter than an exact value, and the unit stays with its number."],
+               readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
                       "All": "Body weight, Habits, Money, Reading, People and Upkeep show too."],
@@ -222,7 +230,7 @@ final class ReviewChoices {
         ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
-        ("Shown", ["sampleData", "landingPages", "areasShown", "classInspector"]),
+        ("Shown", ["sampleData", "landingPages", "numberRules", "areasShown", "classInspector"]),
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
         ("Money", ["moneyPools"]),
     ]
