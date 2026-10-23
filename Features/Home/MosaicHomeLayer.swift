@@ -66,11 +66,13 @@ final class MosaicScreenController {
     // MARK: Hosting
 
     /// A tile flies from the struck row's frame (window space) to a free tile in the now column and is laid there.
-    func lay(from rect: CGRect, tone: MosaicTone, now: Date = AppClock.now) {
-        guard let engine else { return }
+    /// Returns whether a tile was laid or is flying (false when none could be: no layer, or one already in flight).
+    @discardableResult
+    func lay(from rect: CGRect, tone: MosaicTone, now: Date = AppClock.now) -> Bool {
+        guard let engine else { return false }
         let column = engine.nowColumn(now) ?? engine.targetCore.left
         let point = CGPoint(x: rect.midX - globalOrigin.x, y: rect.midY - globalOrigin.y)
-        engine.lay(from: point, side: min(max(rect.height, 8), 18), column: column, tone: tone)
+        return engine.lay(from: point, side: min(max(rect.height, 8), 18), column: column, tone: tone)
     }
 
     func touch(atGlobal point: CGPoint) -> Bool {
