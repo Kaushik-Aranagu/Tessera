@@ -8,8 +8,18 @@ struct MosaicSlot: View {
     @Binding var caption: String
 
     var body: some View {
-        Color.clear.frame(height: HomeMosaic.mosaicHeight)
-            .accessibilityHidden(true)
+        // Sheet 200 (mosaic moods On): 240x176 pt, right-aligned to the gutter; A's picture draws inside this frame.
+        // Otherwise full width, 250 pt tall as before.
+        Group {
+            if HomeMosaic.moodsIsOn {
+                Color.clear
+                    .frame(width: HomeMosaic.moodsMosaicSize.width, height: HomeMosaic.moodsMosaicSize.height)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            } else {
+                Color.clear.frame(height: HomeMosaic.mosaicHeight)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 
