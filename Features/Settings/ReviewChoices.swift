@@ -142,6 +142,10 @@ final class ReviewChoices {
                says: ["Off": "Money is spends only, as now.",
                       "On": "Tell Tess what came in and where it went: \"got 3200 paycheck\", \"moved 1000 to India\"."],
                readiness: .live),
+        Choice(id: "awayV2", name: "Away", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Home is the same on a trip.",
+                      "On": "Mark a trip away and Home shows only that trip on its days."],
+               readiness: .live),
         Choice(id: "homeV2", name: "Home v2", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Home pages sideways: Review, Today, Training.",
                       "On": "One Home page, with your apps as thin lines along the bottom."],
@@ -307,7 +311,7 @@ final class ReviewChoices {
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
         ("Rooms", ["numberRules", "roomMotion", "pagesV2"]),
-        ("Home and live", ["finishV2", "surfacesV2", "liveV2"]),
+        ("Home and live", ["finishV2", "surfacesV2", "liveV2", "awayV2"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
