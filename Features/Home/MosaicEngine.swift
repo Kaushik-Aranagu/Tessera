@@ -57,18 +57,19 @@ struct MosaicConfig: Equatable {
 
     static let home = MosaicConfig()
 
-    /// The departure mosaic (sheet 200): 52 x 33 tiles, step 6 pt, tile 5, corner 1.1, dithered edges.
+    /// The departure mosaic (sheet 200, smaller pixels): 60 x 44 tiles, step 4 pt, tile 3.2, corner 0.7, dithered
+    /// edges.
     static let moods: MosaicConfig = {
         var config = MosaicConfig()
-        config.columns = 52
-        config.rows = 33
-        config.gap = 1
-        config.corner = 1.1
+        config.columns = 60
+        config.rows = 44
+        config.gap = 0.8
+        config.corner = 0.7
         config.rippleRadius = 120
         config.leanRadius = 36
         config.leanMax = 5
-        config.layRows = 6 ... 26
-        config.fixedSide = 5
+        config.layRows = 8 ... 36
+        config.fixedSide = 3.2
         config.ditheredEdges = true
         return config
     }()

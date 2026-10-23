@@ -146,7 +146,7 @@ enum MosaicMoodField {
         hypot(Double(column) + 0.5 - centre.0, Double(row) + 0.5 - centre.1) - radius
     }
 
-    /// Lilac to peach sky, horizon at 66%, a gold pixel sun that rises, water below.
+    /// Lilac to peach sky, horizon at 66%, a gold pixel sun (radius 4.6) that rises, water below.
     private static func morning(_ column: Int, _ row: Int, _ geometry: MosaicGeometry) -> MosaicTriple {
         let rows = geometry.config.rows
         let horizon = Int(Double(rows) * 0.66)
@@ -174,14 +174,14 @@ enum MosaicMoodField {
         return isFuture ? MosaicColour.mix(sky, ground, geometry.config.futureMix) : sky
     }
 
-    /// Amber to rose to plum, a sun of radius 3.6 at 78% across and 62% down.
+    /// Amber to rose to plum, a sun of radius 5.2 at 78% across and 62% down.
     private static func golden(_ column: Int, _ row: Int, _ geometry: MosaicGeometry) -> MosaicTriple {
         let config = geometry.config
         let amber = hex(0xF2A65A), rose = hex(0xD9758B), plum = hex(0x5E3A63)
         let fraction = Double(row) / Double(config.rows - 1)
         let sky = fraction < 0.62 ? MosaicColour.mix(plum, rose, fraction / 0.62)
             : MosaicColour.mix(rose, amber, (fraction - 0.62) / 0.38)
-        let sun = disc(column, row, centre: (Double(config.columns) * 0.78, Double(config.rows) * 0.62), radius: 3.6)
+        let sun = disc(column, row, centre: (Double(config.columns) * 0.78, Double(config.rows) * 0.62), radius: 5.2)
         return sun <= 0 ? hex(0xFFD27A) : sky
     }
 
@@ -208,16 +208,16 @@ enum MosaicMoodField {
         vertical(row, geometry.config.rows, hex(0x6E7F8F), hex(0x93A3B0))
     }
 
-    /// Deep indigo, a crescent moon of radius 3.4.
+    /// Deep indigo, a crescent moon of radius 4.8 cut by a disc of radius 4.5.
     private static func night(_ column: Int, _ row: Int, _ geometry: MosaicGeometry,
                               _: MosaicMoodContext) -> MosaicTriple
     {
         let config = geometry.config
         let sky = vertical(row, config.rows, hex(0x1B1F4D), hex(0x0B0E2A))
         let centre = (Double(config.columns) * 0.82, Double(config.rows) * 0.18)
-        let moon = disc(column, row, centre: centre, radius: 3.4)
-        // The crescent: the moon's disc minus a second disc nudged right and up.
-        let bite = disc(column, row, centre: (centre.0 + 1.9, centre.1 - 0.8), radius: 3.0)
+        let moon = disc(column, row, centre: centre, radius: 4.8)
+        // The crescent: the moon's disc minus a second disc (radius 4.5) nudged right and up.
+        let bite = disc(column, row, centre: (centre.0 + 2.3, centre.1 - 1.4), radius: 4.5)
         return moon <= 0 && bite > 0 ? hex(0xF1ECD0) : sky
     }
 
@@ -308,7 +308,7 @@ enum MosaicMoodField {
                 guard age >= 0, age < 2.2 else { continue }
                 let centre = (Double(columns) * (0.2 + 0.6 * MosaicColour.unit(number, salt: 29)),
                               Double(rows) * (0.25 + 0.3 * MosaicColour.unit(number, salt: 31)))
-                let radius = 1 + 8 * (age / 2.2)
+                let radius = 1 + 12 * (age / 2.2)
                 let distance = hypot(Double(column) + 0.5 - centre.0, Double(row) + 0.5 - centre.1)
                 if abs(distance - radius) < 0.9 {
                     result = MosaicColour.mix(result, accent, 1 - age / 2.2)

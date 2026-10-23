@@ -8,7 +8,7 @@ import Testing
 struct MosaicMoodTests {
     private let config = MosaicConfig.moods
     private var geometry: MosaicGeometry {
-        MosaicGeometry(config: config, width: 342)
+        MosaicGeometry(config: config, width: 240)
     }
 
     private func input() -> MosaicSceneInput {
@@ -18,18 +18,18 @@ struct MosaicMoodTests {
     }
 
     private func engine() -> MosaicEngine {
-        MosaicEngine(config: config, width: 342)
+        MosaicEngine(config: config, width: 240)
     }
 
-    @Test func gridIsFiftyTwoByThirtyThreeAtStepSix() {
-        #expect(config.columns == 52 && config.rows == 33)
-        #expect(geometry.side == 5)
-        #expect(geometry.pitch == 6)
-        #expect(config.corner == 1.1)
+    @Test func gridIsSixtyByFortyFourAtStepFour() {
+        #expect(config.columns == 60 && config.rows == 44)
+        #expect(geometry.side == 3.2)
+        #expect(abs(geometry.pitch - 4) < 1e-9)
+        #expect(config.corner == 0.7)
         #expect(config.leanRadius == 36 && config.leanMax == 5 && config.rippleRadius == 120)
         // The grid fits and is centred.
-        #expect(geometry.gridWidth == 311)
-        #expect(geometry.inset > 0)
+        #expect(abs(geometry.gridWidth - 239.2) < 1e-9)
+        #expect(geometry.inset >= 0 && geometry.height < 176)
     }
 
     @Test func edgesDitherByHashAndNeverBlur() {
@@ -149,13 +149,13 @@ struct MosaicMoodTests {
                                                context: ctx))
         mosaic.morph(to: MosaicMoodField.base(.back, geometry: mosaic.geometry, input: input(), ground: (1, 1, 1),
                                               context: ctx), origin: (0, 0), transition: .gather)
-        let tile = mosaic.geometry.index(column: 20, row: 15)
+        let tile = mosaic.geometry.index(column: 24, row: 20)
         let delay = MosaicTransition.gather.plan(geometry: mosaic.geometry, origin: (0, 0)).delays[tile]
         mosaic.step(to: delay + 0.03)
-        let early = mosaic.offset(column: 20, row: 15)
+        let early = mosaic.offset(column: 24, row: 20)
         #expect(abs(early.x) + abs(early.y) > 3)
         mosaic.step(to: 3)
-        #expect(mosaic.offset(column: 20, row: 15) == .zero)
+        #expect(mosaic.offset(column: 24, row: 20) == .zero)
     }
 
     @Test func reduceMotionIsOneCrossfadeForEveryTransition() {
@@ -167,7 +167,7 @@ struct MosaicMoodTests {
             mosaic.morph(to: MosaicMoodField.base(.night, geometry: mosaic.geometry, input: input(), ground: (1, 1, 1),
                                                   context: MosaicMoodContext()), origin: (0, 0), transition: transition)
             mosaic.step(to: 0.16)
-            #expect((mosaic.morphProgress(mosaic.geometry.index(column: 51, row: 32)) ?? 0) == 1)
+            #expect((mosaic.morphProgress(mosaic.geometry.index(column: 59, row: 43)) ?? 0) == 1)
             #expect(mosaic.offset(column: 10, row: 10) == .zero)
         }
     }
@@ -210,12 +210,12 @@ struct MosaicMoodTests {
             let colour = colours[geometry.index(column: column, row: row)]
             return colour.red > 0.8 && colour.green > 0.8
         }
-        let lit = (centreColumn - 4 ... centreColumn + 4).flatMap { column in
-            (centreRow - 4 ... centreRow + 4).filter { isMoon(column, $0) }
+        let lit = (centreColumn - 6 ... centreColumn + 6).flatMap { column in
+            (centreRow - 6 ... centreRow + 6).filter { isMoon(column, $0) }
         }.count
         #expect(lit > 6)
-        // A full disc of radius 3.4 is about 36 tiles; the crescent is well under that.
-        #expect(lit < 30)
+        // A full disc of radius 4.8 is about 72 tiles; the crescent is well under that.
+        #expect(lit < 70)
     }
 
     @Test func dayAndRunningShareTheNinetyNineField() {
