@@ -153,7 +153,51 @@ struct OneThingsTests {
         let pick = Pick(item: NowItem(id: task.id, kind: .task, object: task, title: "x", startsAt: nil, endsAt: nil,
                                       nextStep: nil),
                         score: 1, why: "Averyveryveryveryveryveryverylongword", isAsk: false)
-        #expect(pick.shortWhy == "Averyveryveryveryveryveryvery…" && pick.shortWhy.count <= 30)
+        #expect(pick.shortWhy == String("Averyveryveryveryveryveryverylongword".prefix(30)) && pick.shortWhy
+            .count == 30)
+        #expect(!pick.shortWhy.contains("…"))
+    }
+
+    @Test func aPrivateTrainingThingShowsNoCountdown() throws {
+        let secret = try engine.perform(CreateRoutine(title: "Knee rehab day"), by: .user).output
+        let plan = try engine.perform(CreatePlan(title: "Rehab", routines: [secret.id]), by: .user).output
+        let hidden = try #require(things(at(9), plan: plan).first { $0.kind == .training })
+        #expect(hidden.big == "Today" && hidden.isPrivate)
+    }
+
+    @Test func aRoutinesNameAndTimeComeFromTheSameRoutine() throws {
+        /// Many runs of Journal at 9 pm make it the first line; Stretch at 8 pm is the next one to start.
+        func routineWithRuns(_ title: String, hour: Int, runs count: Int) throws {
+            let routine = try engine.perform(CreateRoutine(title: title), by: .user).output
+            for day in 1 ... count {
+                let workout = try store.create(#require(engine.classes[.workout]), title: title)
+                try store.setLinks("routine", on: workout, to: [routine])
+                try store.set("startedAt", to: .date(at(hour, day: 22 - day)), on: workout)
+                try store.set("endedAt", to: .date(at(hour, 20, day: 22 - day)), on: workout)
+            }
+        }
+        try routineWithRuns("Journal", hour: 21, runs: 12)
+        try routineWithRuns("Stretch", hour: 20, runs: 8)
+        let part = HomeSentence.RoutinesPart.make(engine: engine, now: at(12), calendar: calendar)
+        #expect(part.nextRoutine == "Stretch" && part.nextUsualStart == at(20))
+        let thing = try #require(things(at(12), routines: part).first { $0.kind == .routine })
+        #expect(thing.mid == "Stretch" && thing.big == "8 pm")
+        let line = AppSummaryLines.lines(engine: engine, plan: nil, routines: part, now: at(12), calendar: calendar)
+            .first { $0.app == .routines }
+        #expect(line?.text == "Stretch at 8 pm")
+    }
+
+    @Test func birthdayAndWeatherHaveRealTargetsAndBirthdayIdsAreStable() throws {
+        let mom = OneThingBirthday(name: "Mom", month: 10, day: 25, year: 1966)
+        let first = try #require(things(at(12), birthdays: [mom]).first { $0.kind == .birthday })
+        let again = try #require(things(at(12), birthdays: [mom]).first { $0.kind == .birthday })
+        #expect(first.target == .today && first.id == again.id && first.id.hasPrefix("birthday-10-25-"))
+        #expect(!first.id.contains("Mom"))
+        let weather = try #require(things(at(12), weather: OneThingWeather(degrees: 64, summary: "Clear"))
+            .first { $0.kind == .weather })
+        #expect(weather.target == .weather)
+        try engine.perform(AddGroceries(lines: ["milk"]), by: .user)
+        #expect(try #require(things(at(12)).first { $0.kind == .groceries }).target == .room(.kitchen))
     }
 
     // MARK: Order and walls

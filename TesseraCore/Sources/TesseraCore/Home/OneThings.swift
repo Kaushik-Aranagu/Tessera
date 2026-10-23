@@ -1,7 +1,8 @@
 import Foundation
 
 /// A birthday Home may say. Local only: it comes from the phone (Contacts later, never a service), is never stored by
-/// Core, and appears in no backup, log, widget or Claude line (a test scans for the type).
+/// Core, and appears in no backup, log, widget or Claude line (a test scans for the type). The host must never fill
+/// these from the Calendar app's birthday calendar: calendar text stays out of everything but the Today screen.
 public struct OneThingBirthday: Sendable {
     public let name: String
     public let month: Int
@@ -46,6 +47,13 @@ public struct OneThing: Equatable, Sendable, Identifiable {
         case training, groceries, birthday, task, list, weather, routine
     }
 
+    public enum Target: Equatable, Sendable {
+        case room(AppID)
+        case object(UUID)
+        case today
+        case weather
+    }
+
     public enum Accent: Equatable, Sendable {
         case app(AppID)
         /// Ink: a task.
@@ -67,7 +75,8 @@ public struct OneThing: Equatable, Sendable, Identifiable {
     public let accent: Accent
     public let done: OneThingDone?
     public let isPrivate: Bool
-    public let opens: HomeSentence.Opens
+    /// Where a tap goes: an app's room, one object, Today or the weather page.
+    public let target: Target
     /// Lower is more important: minutes until it matters.
     let urgency: Int
 
@@ -166,9 +175,19 @@ public enum OneThings {
             }
         }
         let gap = start.map { Int(max(0, $0.timeIntervalSince(now)) / 60) } ?? 600
-        return OneThing(id: "training", kind: .training, big: start.map { clockGap(from: now, to: $0) } ?? "Today",
-                        mid: mid, midKeyword: name.1 ? nil : name.0, small: small, accent: .app(.training), done: nil,
-                        isPrivate: name.1, opens: planned.map { .object($0.id) } ?? .app(.training), urgency: gap)
+        return OneThing(
+            id: "training",
+            kind: .training,
+            big: name.1 ? "Today" : (start.map { clockGap(from: now, to: $0) } ?? "Today"),
+            mid: mid,
+            midKeyword: name.1 ? nil : name.0,
+            small: small,
+            accent: .app(.training),
+            done: nil,
+            isPrivate: name.1,
+            target: planned.map { .object($0.id) } ?? .room(.training),
+            urgency: gap
+        )
     }
 
     /// "Bench best 205 lb, three weeks ago": his heaviest estimated set and when it was.
@@ -228,7 +247,7 @@ public enum OneThings {
             accent: .app(.kitchen),
             done: nil,
             isPrivate: false,
-            opens: .app(.kitchen),
+            target: .room(.kitchen),
             urgency: gap
         )
     }
@@ -254,7 +273,7 @@ public enum OneThings {
             : "Since \(weekday)"
         return OneThing(id: "task-\(top.0.id)", kind: .task, big: name.text, mid: mid, midKeyword: nil,
                         small: "Hold to strike it through", accent: .ink, done: .task(top.0.id), isPrivate: name.1,
-                        opens: .object(top.0.id), urgency: max(0, Int(top.1.timeIntervalSince(now) / 60)))
+                        target: .object(top.0.id), urgency: max(0, Int(top.1.timeIntervalSince(now) / 60)))
     }
 
     private static func list(_ engine: ActionEngine, _ now: Date, _ calendar: Calendar) -> OneThing? {
@@ -267,19 +286,24 @@ public enum OneThings {
         return OneThing(id: "list-\(lead.list)", kind: .list, big: "\(lead.total - lead.left) of \(lead.total)",
                         mid: name.text, midKeyword: name.1 ? nil : name.text,
                         small: name.1 || items.isEmpty ? "" : "Next up: " + items.prefix(3).joined(separator: ", "),
-                        accent: .app(.lists), done: nil, isPrivate: name.1, opens: .object(lead.list), urgency: 700)
+                        accent: .app(.lists), done: nil, isPrivate: name.1, target: .object(lead.list), urgency: 700)
     }
 
     private static func routine(_ engine: ActionEngine, _ part: HomeSentence.RoutinesPart?, _ now: Date,
                                 _ calendar: Calendar) -> OneThing?
     {
-        guard let part, let next = part.nextUsualStart, let first = part.facts.lines.first else { return nil }
-        let name = AppSummaryLines.shown(first.split(separator: ",").first.map(String.init) ?? first,
-                                         in: engine.store, classes: engine.classes)
+        // The name and the time come from the same routine; with only a time handed in, the first line's name.
+        guard let part, let next = part.nextUsualStart,
+              let first = part.nextRoutine ?? part.facts.lines.first else { return nil }
+        let name = AppSummaryLines.shown(
+            part.nextRoutine ?? first.split(separator: ",").first.map(String.init) ?? first,
+            in: engine.store,
+            classes: engine.classes
+        )
         let gap = Int(max(0, next.timeIntervalSince(now)) / 60)
         return OneThing(id: "routine", kind: .routine, big: HouseTime.clock(next, calendar: calendar),
                         mid: name.text, midKeyword: name.1 ? nil : name.text, small: "", accent: .app(.routines),
-                        done: nil, isPrivate: name.1, opens: .app(.routines), urgency: gap)
+                        done: nil, isPrivate: name.1, target: .room(.routines), urgency: gap)
     }
 
     private static func birthday(_ birthday: OneThingBirthday, engine: ActionEngine, now: Date,
@@ -306,9 +330,19 @@ public enum OneThings {
                 ? nil : $0
             }
         let small = note ?? (days == 0 ? "Today." : days == 1 ? "One day." : "\(word(days).capitalized) days.")
-        return OneThing(id: "birthday-\(birthday.month)-\(birthday.day)-\(birthday.name.hashValue)", kind: .birthday,
-                        big: big, mid: mid, midKeyword: name.text, small: small, accent: .birthday, done: nil,
-                        isPrivate: false, opens: .app(.notes), urgency: days * 1440)
+        return OneThing(
+            id: "birthday-\(birthday.month)-\(birthday.day)-\(MosaicMomentSource.hashed(birthday.name))",
+            kind: .birthday,
+            big: big,
+            mid: mid,
+            midKeyword: name.text,
+            small: small,
+            accent: .birthday,
+            done: nil,
+            isPrivate: false,
+            target: .today,
+            urgency: days * 1440
+        )
     }
 
     private static func weather(_ weather: OneThingWeather, facts: MosaicFacts, calendar: Calendar) -> OneThing {
@@ -321,6 +355,6 @@ public enum OneThings {
         }
         return OneThing(id: "weather", kind: .weather, big: "\(weather.degrees)°", mid: weather.summary,
                         midKeyword: nil, small: weather.isSample ? "\(sun). A sample until Apple weather" : sun,
-                        accent: .sky, done: nil, isPrivate: false, opens: .app(.notes), urgency: 5000)
+                        accent: .sky, done: nil, isPrivate: false, target: .weather, urgency: 5000)
     }
 }

@@ -21,8 +21,8 @@ public struct Pick: Identifiable {
     public var shortWhy: String {
         let phrase = Self.shortened(why)
         guard phrase.isEmpty, let word = why.split(separator: " ").first else { return phrase }
-        // One word longer than 30 characters: an ellipsis, rather than a row with nothing in it.
-        return String(word.prefix(29)) + "…"
+        // One word longer than 30 characters: cut at 30 with no ellipsis, rather than a row with nothing in it.
+        return String(word.prefix(30))
     }
 
     static func shortened(_ why: String, limit: Int = 30) -> String {
