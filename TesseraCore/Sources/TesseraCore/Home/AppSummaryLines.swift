@@ -144,7 +144,9 @@ public enum AppSummaryLines {
         guard let line = part.facts.lines.first else {
             return AppSummaryLine(app: .routines, text: nothingPlanned, opens: .app(.routines), isPrivate: false)
         }
-        let name = shown(line.split(separator: ",").first.map(String.init) ?? line, in: store, classes: classes)
+        // The name and the time come from the same routine.
+        let name = shown(part.nextRoutine ?? line.split(separator: ",").first.map(String.init) ?? line, in: store,
+                         classes: classes)
         var text = name.text
         if !name.1, let next = part.nextUsualStart {
             text += " at \(HouseTime.clock(next, calendar: calendar))"

@@ -19,7 +19,10 @@ public struct Pick: Identifiable {
     /// `why` as a whole phrase of 30 characters or fewer, so a row never has to cut it mid-thought: the reasons in
     /// order while they fit ("At 6:30 pm, due today"), the first alone when two do not.
     public var shortWhy: String {
-        Self.shortened(why)
+        let phrase = Self.shortened(why)
+        guard phrase.isEmpty, let word = why.split(separator: " ").first else { return phrase }
+        // One word longer than 30 characters: cut at 30 with no ellipsis, rather than a row with nothing in it.
+        return String(word.prefix(30))
     }
 
     static func shortened(_ why: String, limit: Int = 30) -> String {
