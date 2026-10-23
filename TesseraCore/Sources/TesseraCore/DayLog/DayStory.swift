@@ -130,7 +130,7 @@ public enum DayStory {
         "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool",
         "makeKind", "keepNoteAsObject", "keepAllNotes",
         // Occasions: links and dates only; the page reads them, the Day log does not.
-        "createOccasion", "linkToOccasion", "unlinkFromOccasion",
+        "createOccasion", "linkToOccasion", "unlinkFromOccasion", "setAway",
         "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool", "repeatWorkout",
     ]
 

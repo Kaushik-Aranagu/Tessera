@@ -39,7 +39,7 @@ public enum ActionRegistry {
         CreatePool.descriptor, LogInflow.descriptor, ReassignSpend.descriptor, LogMove.descriptor,
         RecordRate.descriptor, ArchivePool.descriptor,
         MakeKind.descriptor, KeepNoteAsObject.descriptor, KeepAllNotes.descriptor,
-        CreateOccasion.descriptor, LinkToOccasion.descriptor, UnlinkFromOccasion.descriptor,
+        CreateOccasion.descriptor, LinkToOccasion.descriptor, UnlinkFromOccasion.descriptor, SetAway.descriptor,
         RecordRate.descriptor, ArchivePool.descriptor, RepeatWorkout.descriptor,
     ]
 
@@ -169,6 +169,7 @@ public enum ActionRegistry {
         KeepNoteAsObject.descriptor.name: { try decode(KeepNoteAsObject.self, KeepNoteAsObject.descriptor.name, $0) },
         KeepAllNotes.descriptor.name: { try decode(KeepAllNotes.self, KeepAllNotes.descriptor.name, $0) },
         CreateOccasion.descriptor.name: { try decode(CreateOccasion.self, CreateOccasion.descriptor.name, $0) },
+        SetAway.descriptor.name: { try decode(SetAway.self, SetAway.descriptor.name, $0) },
         LinkToOccasion.descriptor.name: { try decode(LinkToOccasion.self, LinkToOccasion.descriptor.name, $0) },
         UnlinkFromOccasion.descriptor.name: { try decode(UnlinkFromOccasion.self, UnlinkFromOccasion.descriptor.name, $0) },
         RepeatWorkout.descriptor.name: { try decode(RepeatWorkout.self, RepeatWorkout.descriptor.name, $0) },
