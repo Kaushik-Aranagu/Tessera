@@ -170,6 +170,10 @@ final class ReviewChoices {
                says: ["Off": "Training has no Stats page.",
                       "On": "Training gets a Stats door: your best, your lifts, your sets, your weeks."],
                readiness: .live),
+        Choice(id: "trainingLog", name: "Log", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The Log door opens the list of workouts as before.",
+                      "On": "The Log door opens your sessions by month."],
+               readiness: .live),
         Choice(id: "statsBalance", name: "Balance words", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Stats says nothing about push, pull, upper and lower.",
                       "On": "Stats adds a few words on how your sets are shared."],
@@ -286,7 +290,7 @@ final class ReviewChoices {
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
-        ("Training stats", ["trainingStats", "statsBalance", "trainingLightWeeks"]),
+        ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
