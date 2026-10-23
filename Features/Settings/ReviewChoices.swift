@@ -158,6 +158,10 @@ final class ReviewChoices {
                says: ["Off": "Home pages sideways: Review, Today, Training.",
                       "On": "One Home page, with your apps as thin lines along the bottom."],
                readiness: .live),
+        Choice(id: "homeMosaic", name: "Home mosaic", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Home has no mosaic.",
+                      "On": "Today as a mosaic of sky-coloured tiles: the hours behind you set, the hours ahead pale."],
+               readiness: .live),
         Choice(id: "tasksApp", name: "Tasks app", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Tasks live on Home and in lists, as now.",
                       "On": "Tasks is an app of its own: one thing at a time, with Today, Soon and Later."],
@@ -353,6 +357,7 @@ final class ReviewChoices {
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
         ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
+        ("Home mosaic", ["homeMosaic"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
