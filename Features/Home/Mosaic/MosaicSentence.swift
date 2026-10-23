@@ -16,17 +16,30 @@ struct MosaicSentence: View {
         let clauses = HomeMosaic.firstThree(HomeSentence.compose(HomeSentence.inputs(engine: model.engine,
                                                                                      plan: model.plan,
                                                                                      now: AppClock.now)))
-        VStack(alignment: .trailing, spacing: Self.lineGap) {
-            if clauses.isEmpty {
-                MosaicSentenceLine(text: HomeSentence.quietDay, words: DaySentence.words([]), clause: nil) {}
-            }
-            ForEach(Array(clauses.enumerated()), id: \.offset) { _, clause in
-                MosaicSentenceLine(text: clause.text, words: DaySentence.words([clause]), clause: clause) {
-                    DaySentence.open(clause, model: model, openLink: openLink)
+        if HomeMosaic.moodsIsOn {
+            // Sheet 200: the same clauses as a departure board (Core's MosaicMoodPicker lines replace them when it
+            // lands).
+            let lines = clauses.isEmpty
+                ? [[DepartureSegment(text: HomeSentence.quietDay, kind: .plain)]]
+                : clauses.map(DepartureLines.segments(of:))
+            DepartureBoard(lines: lines) { index in
+                if index < clauses.count {
+                    DaySentence.open(clauses[index], model: model, openLink: openLink)
                 }
             }
+        } else {
+            VStack(alignment: .trailing, spacing: Self.lineGap) {
+                if clauses.isEmpty {
+                    MosaicSentenceLine(text: HomeSentence.quietDay, words: DaySentence.words([]), clause: nil) {}
+                }
+                ForEach(Array(clauses.enumerated()), id: \.offset) { _, clause in
+                    MosaicSentenceLine(text: clause.text, words: DaySentence.words([clause]), clause: clause) {
+                        DaySentence.open(clause, model: model, openLink: openLink)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 }
 
