@@ -56,17 +56,31 @@ struct TodayRoomView: View {
         return all.enumerated().filter { $0.offset == 0 || !HomeBoard.endsOnStopWord($0.element) }.map(\.element)
     }
 
+    /// What a line is, for the row where its name will not fit.
+    static func classWord(of line: TodayLine) -> String {
+        if line.isCalendar {
+            return "Event"
+        }
+        return switch line.kind {
+        case .sunrise: "Sunrise"
+        case .sunset: "Sunset"
+        case .item(.training?): "Workout"
+        case .item(.routines?): "Routine"
+        case .item: "Task"
+        }
+    }
+
     private func row(_ line: TodayLine) -> some View {
         let sun = line.kind == .sunrise || line.kind == .sunset
         let tint = sun || line.isPast ? Theme.Colors.inkTertiary : Theme.Colors.ink
         return HStack(alignment: .firstTextBaseline, spacing: 12) {
-            // Never an ellipsis and never a smaller face: the longest form that fits one line at 19 (words cut from the
-            // end), else the whole name wrapped at 19 so the row grows past 40 pt.
+            // Fixed layout: never an ellipsis, a smaller face, a wrap or a taller row. The longest form that fits one
+            // line at 19 (words cut from the end); when not even one word fits, the line's class word.
             ViewThatFits(in: .horizontal) {
                 ForEach(Self.forms(of: line.name), id: \.self) { form in
                     Text(form).font(Theme.voice(size: 19)).lineLimit(1).fixedSize()
                 }
-                Text(line.name).font(Theme.voice(size: 19)).fixedSize(horizontal: false, vertical: true)
+                Text(Self.classWord(of: line)).font(Theme.voice(size: 19)).lineLimit(1).fixedSize()
             }
             .foregroundStyle(tint)
             Spacer(minLength: 8)
