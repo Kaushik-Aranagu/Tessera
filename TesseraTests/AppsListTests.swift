@@ -27,4 +27,12 @@ struct AppsListTests {
         #expect(cut.count <= 30 && "Push A at 6:15 pm, bench first, then rows".hasPrefix(cut))
         #expect(AppsListRows.fit("Rent is due Friday") == "Rent is due Friday")
     }
+
+    @Test func aRowKeepsItsPlaceInTheRingAsTheMiddleMoves() {
+        #expect(AppsListRows.relative(3, middle: 3, count: 7) == 0)
+        #expect(AppsListRows.relative(4, middle: 3, count: 7) == 1)
+        #expect(AppsListRows.relative(2, middle: 3, count: 7) == -1)
+        #expect(AppsListRows.relative(0, middle: 6, count: 7) == 1)
+        #expect(AppsListRows.relative(6, middle: 0, count: 7) == -1)
+    }
 }
