@@ -39,6 +39,8 @@ struct HomeMosaicPage: View {
     @State private var scroll = HomeScrollOffset()
     /// The day's clauses with Core's loaders, read once per refresh and not on every body.
     @State private var dayClauses: [HomeSentence.Clause]?
+    /// Core's ranked notices for the board's lines two and three.
+    @State private var notices: [HomeNotice] = []
     /// Sheet 213: the things that take turns in the space under the mosaic (Core's ranking when its feed lands).
     @State private var things: [HomeThing] = []
     @State private var shield: [CGRect] = []
@@ -58,7 +60,8 @@ struct HomeMosaicPage: View {
                     // Moods: 64 pt from the safe area to the sentence in all, so the row's gap is what is left.
                     .padding(.bottom, HomeMosaic.moodsIsOn
                         ? HomeMosaic.moodsTopInset - HomeMosaic.headerHeight - HomeMosaic.sectionGap : 0)
-                MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses, facts: facts,
+                MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses, noticeList: notices,
+                               facts: facts,
                                paused: scenePhase != .active || link != nil)
                     // Until the first refresh has read Core's loaders the sentence waits (no flicker between the
                     // fallback and the real lines).
@@ -219,6 +222,9 @@ struct HomeMosaicPage: View {
             defaults.set(true, forKey: Self.backShownKey)
         }
         facts = read
+        notices = HomeNotices.ranked(engine: model.engine, facts: read, plan: model.plan,
+                                     moneyDue: .next(engine: model.engine, now: now),
+                                     routines: .make(engine: model.engine, now: now))
         if next != pick {
             pick = next
         }

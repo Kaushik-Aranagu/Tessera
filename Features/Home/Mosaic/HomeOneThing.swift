@@ -34,6 +34,26 @@ enum HomeThings {
     static let maxThings = 7
     static let holdHint = "Hold to strike it through"
 
+    /// The thing's own word in a line: its first one or two words, up to a connecting word, a comma or a figure
+    /// ("Push day" in "Push day at 6:30 pm", "Groceries" in "Groceries, 4 to get").
+    static func keyword(in text: String) -> String? {
+        let stops: Set = ["at", "is", "on", "in", "turns", "to", "for", "and", "of"]
+        var words: [String] = []
+        for raw in text.split(separator: " ") {
+            let word = String(raw)
+            let bare = word.trimmingCharacters(in: .punctuationCharacters)
+            if stops.contains(bare.lowercased()) || bare.contains(where: \.isNumber) {
+                break
+            }
+            words.append(bare)
+            if word.last == "," || word.last == "." || words.count == 2 {
+                break
+            }
+        }
+        let joined = words.joined(separator: " ")
+        return joined.isEmpty ? nil : joined
+    }
+
     /// The stand-in feed: the ranker's task picks first (a private one reads by its shown label), then each app's own
     /// line, up to seven.
     static func standIn(model: AppModel, lines: [AppSummaryLine], now: Date) -> [HomeThing] {
@@ -45,14 +65,16 @@ enum HomeThings {
             let private_ = ObjectPrivacy
                 .shownLabel(of: pick.item.object, in: model.store, classes: model.classes) != nil
             out.append(HomeThing(id: pick.item.id.uuidString, kind: .task, big: shown, bigIsNumber: false,
-                                 accent: nil, mid: private_ || pick.why.isEmpty ? "Today" : pick.why, keyword: nil,
+                                 accent: nil, mid: private_ || pick.why.isEmpty ? "Today" : pick.why,
+                                 keyword: private_ || pick.why.isEmpty ? nil : keyword(in: pick.why),
                                  small: holdHint, taskID: pick.item.id, opens: .object(pick.item.id)))
         }
         for line in lines where out.count < maxThings && line.text != AppSummaryLines.nothingPlanned {
             let app = AppsListRows.home(line.app)
             let time = line.text.split(separator: " ").first { $0.contains(":") }.map(String.init)
             out.append(HomeThing(id: "app-\(app.rawValue)", kind: .app(app), big: time ?? app.rawValue,
-                                 bigIsNumber: time != nil, accent: app, mid: line.text, keyword: nil, small: "",
+                                 bigIsNumber: time != nil, accent: app, mid: line.text, keyword: keyword(in: line.text),
+                                 small: "",
                                  taskID: nil, opens: line.opens))
         }
         return Array(out.prefix(maxThings))
@@ -167,7 +189,8 @@ struct HomeOneThing: View {
     private func big(_ thing: HomeThing) -> some View {
         let colour = thing.accent?.accent ?? Theme.Colors.ink
         let text = Text(thing.big)
-            .font(thing.bigIsNumber ? Theme.numeral(66) : Theme.voice(size: 36).weight(.medium))
+            // Always Outfit 200: 60 pt for a short value, 44 pt for words (which may wrap to two lines).
+            .font(Theme.numeral(thing.bigIsNumber ? 60 : 44))
             .foregroundStyle(colour)
             .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink))
             .lineLimit(2)
@@ -190,15 +213,18 @@ struct HomeOneThing: View {
         .buttonStyle(.plain)
     }
 
-    /// Figtree 20 in ink; the app word, when it names one, is a 205 keyword (600 in its accent, underlined).
+    /// Figtree 20 in ink with exactly one keyword, the thing's own word: 600 at 1.1x with an underline in its accent
+    /// (ink
+    /// for tasks).
     static func midText(_ thing: HomeThing) -> AttributedString {
         var text = AttributedString(thing.mid)
         text.font = Theme.voice(size: 20)
         text.foregroundColor = Theme.Colors.ink
-        if let keyword = thing.keyword, case let .app(app) = thing.kind, let range = text.range(of: keyword) {
-            text[range].font = Theme.voice(size: 20).weight(.semibold)
-            text[range].foregroundColor = app.accent
-            text[range].underlineStyle = .single
+        if let keyword = thing.keyword, let range = text.range(of: keyword) {
+            let accent = thing.accent?.accent ?? Theme.Colors.ink
+            text[range].font = Theme.voice(size: 22).weight(.semibold)
+            text[range].foregroundColor = accent
+            text[range].underlineStyle = Text.LineStyle(pattern: .solid, color: accent)
         }
         return text
     }

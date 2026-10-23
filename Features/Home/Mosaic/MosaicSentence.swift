@@ -15,6 +15,10 @@ struct MosaicSentence: View {
     /// Builder A's doorway (sheet 206): when set, a tapped door hands over its clause and the word's frame in window
     /// space (the wave starts there) instead of opening the page directly.
     var onDoor: ((HomeSentence.Clause, CGRect) -> Void)?
+    /// Core's ranked notices (sheet 212): lines two and three of the board.
+    var noticeList: [HomeNotice] = []
+    /// Builder A's doorway for a room (sheet 206): the word's frame in window space; nil opens the page directly.
+    var onRoom: ((AppID, CGRect) -> Void)?
     /// "Sunset" swipes the mosaic to its weather page and washes it to dusk (Builder A); nil opens Today meanwhile.
     var onSky: (() -> Void)?
     /// The facts the sunset notice reads.
@@ -38,7 +42,7 @@ struct MosaicSentence: View {
                                                                                                    now: AppClock.now)))
         if HomeMosaic.moodsIsOn {
             // Sheet 212: the date, then two notices that roll every 6 s; every change letter-flips on the board.
-            let notices = HomeBoard.notices(clauses: clauses, sunset: facts?.sunset, now: AppClock.now)
+            let notices = HomeBoard.notices(from: noticeList)
             let board = HomeBoard.lines(date: HomeBoard.date(now: AppClock.now), notices: notices, rotation: rotation,
                                         moment: pickedClauses?.first)
             DepartureBoard(lines: board.map(\.segments)) { index, frame in
@@ -52,7 +56,21 @@ struct MosaicSentence: View {
                     } else {
                         DaySentence.open(clause, model: model, openLink: openLink)
                     }
-                case .sky:
+                case let .room(app):
+                    // The notice's own target, never `clause.opens` (Core marks it unused).
+                    if let onRoom {
+                        onRoom(app, frame)
+                    } else {
+                        switch HomeApp(appID: app) {
+                        case .kitchen: openLink(.recipes)
+                        case .money: openLink(.money)
+                        case .notes: openLink(.notes)
+                        case .lists: openLink(.lists)
+                        default: openLink(.review)
+                        }
+                    }
+                case .weather:
+                    // The mosaic's weather page and a dusk wash are Builder A's; Today until they are hooked up.
                     if let onSky {
                         onSky()
                     } else {

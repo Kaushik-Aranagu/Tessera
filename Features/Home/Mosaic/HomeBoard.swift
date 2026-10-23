@@ -5,8 +5,10 @@ import TesseraCore
 /// "Sunset" goes to the mosaic's weather page (or Today until weather exists).
 enum BoardTarget: Equatable {
     case today
+    case room(AppID)
+    case weather
+    /// A moment's own clause (its `opens` is the one link).
     case clause(HomeSentence.Clause)
-    case sky
 }
 
 /// One line of the board: its words and where they lead.
@@ -30,18 +32,30 @@ enum HomeBoard {
         return BoardLine(segments: [DepartureSegment(text: text, kind: .plain, opens: true)], target: .today)
     }
 
-    /// The stand-in notices: each day clause, then "Sunset at 6:34 pm." while the sun has yet to set.
-    static func notices(clauses: [HomeSentence.Clause], sunset: Date?, now: Date) -> [BoardLine] {
-        var out = clauses.map { BoardLine(segments: DepartureLines.segments(of: $0), target: .clause($0)) }
-        if let sunset, sunset > now {
-            out.append(BoardLine(segments: [
-                DepartureSegment(text: "Sunset", kind: .sky, opens: true),
-                DepartureSegment(text: "at", kind: .plain),
-                DepartureSegment(text: Format.clock(sunset).replacingOccurrences(of: " pm", with: ""), kind: .number),
-                DepartureSegment(text: Format.clock(sunset).hasSuffix("pm") ? "pm." : "am.", kind: .plain),
-            ], target: .sky))
+    /// Core's ranked notices as board lines. A notice goes to its own `target` (never `clause.opens`, which Core marks
+    /// unused); the app word opens its room, and "Sunset" is painted with the sky and goes to the weather.
+    static func notices(from list: [HomeNotice]) -> [BoardLine] {
+        list.prefix(maxNotices).map { notice in
+            let target: BoardTarget = switch notice.target {
+            case let .room(app): .room(app)
+            case .today: .today
+            case .weather: .weather
+            }
+            if notice.target == .weather, let source = notice.sourceWord, notice.text.hasPrefix(source) {
+                let rest = String(notice.text.dropFirst(source.count)).trimmingCharacters(in: .whitespaces)
+                var segments = [DepartureSegment(text: source, kind: .sky, opens: true)]
+                for word in rest.split(separator: " ") {
+                    let kind: DepartureSegment.Kind = word.contains(where: \.isNumber) ? .number : .plain
+                    if let last = segments.last, last.kind == kind, segments.count > 1 {
+                        segments[segments.count - 1].text += " " + word
+                    } else {
+                        segments.append(DepartureSegment(text: String(word), kind: kind))
+                    }
+                }
+                return BoardLine(segments: segments, target: target)
+            }
+            return BoardLine(segments: DepartureLines.segments(of: notice.clause), target: target)
         }
-        return Array(out.prefix(maxNotices))
     }
 
     /// The three lines at `rotation`: the date; the notice at `rotation` and the one after it (wrapping). A moment's
