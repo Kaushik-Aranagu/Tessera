@@ -62,6 +62,7 @@ public enum SystemCatalog {
     private static let specs: [ClassSpec] = [
         ClassSpec(key: .thing, name: "Thing", symbol: "circle", colorRole: "neutral", fields: [
             FieldSpec(key: "notes", name: "Notes", kind: .richText),
+            FieldSpec(key: "notTwins", name: "Not the same as", kind: .refList, target: .thing),
         ]),
         ClassSpec(key: .muscle, name: "Muscle", parent: .thing, symbol: "figure.arms.open", colorRole: "training",
                   traits: [.measurable], fields: [
