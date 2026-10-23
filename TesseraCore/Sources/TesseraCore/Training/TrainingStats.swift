@@ -511,4 +511,14 @@ public struct TrainingStats {
         }
         return months
     }
+
+    /// How many finished workouts of a routine there are, up to `limit` (what "your last 3" counts).
+    public func finishedCount(of routine: ObjectRecord, limit: Int) -> Int {
+        guard let workoutClass = classes[.workout] else { return 0 }
+        let finished = store.objects(of: workoutClass).filter { workout in
+            !workout.isDeleted && store.value("endedAt", of: workout) != nil
+                && store.linkedObjects("routine", of: workout).first?.id == routine.id
+        }
+        return min(finished.count, limit)
+    }
 }
