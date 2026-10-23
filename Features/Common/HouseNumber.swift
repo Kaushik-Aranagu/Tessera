@@ -64,18 +64,18 @@ enum HouseNumberText {
         return number + noBreakSpace + unit
     }
 
-    /// The number's weight: an estimate is Outfit 200 from 28 pt up and 300 below; an exact value is one step
+    /// The number's weight: an estimate is Outfit 200 (thin) from 28 pt up and 300 below; an exact value is one step
     /// heavier (200 to 300, 300 to 400).
     static func weight(estimate: Bool, size: CGFloat) -> Font.Weight {
         if size >= 28 {
-            return estimate ? .ultraLight : .light
+            return estimate ? .thin : .light
         }
         return estimate ? .light : .regular
     }
 
     /// The weight after a pull (0 to 1) adds up to 200: two steps of 100.
     static func weight(_ base: Font.Weight, pressure: CGFloat) -> Font.Weight {
-        let steps: [Font.Weight] = [.thin, .ultraLight, .light, .regular, .medium, .semibold]
+        let steps: [Font.Weight] = [.ultraLight, .thin, .light, .regular, .medium, .semibold]
         let start = steps.firstIndex(of: base) ?? 2
         let added = Int((min(max(pressure, 0), 1) * 2).rounded())
         return steps[min(start + added, steps.count - 1)]
@@ -163,11 +163,9 @@ struct HouseNumber: View {
             hideTask = Task { @MainActor in
                 try? await Task.sleep(for: .seconds(2))
                 guard !Task.isCancelled else { return }
-                if reduceMotion {
-                    withTesseraAnimation(.easeOut(duration: 0.15), reduceMotion: true) { showsWas = false }
-                } else {
-                    withAnimation(Theme.Motion.dry(reduceMotion: false)) { showsWas = false }
-                }
+                // The fade-out dries on its own curve; Reduce Motion is the 150 ms fade (MotionPolicy decides).
+                withTesseraAnimation(Theme.Motion.dry(reduceMotion: false) ?? .easeOut(duration: 1),
+                                     reduceMotion: reduceMotion) { showsWas = false }
             }
         }
         .onDisappear { hideTask?.cancel() }
