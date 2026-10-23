@@ -118,10 +118,12 @@ struct DepartureBoard: View {
         .accessibilityLabel(finalText)
         .tesseraFeedback(.made, trigger: landed)
         .onAppear {
+            onScreen = true
             if cells.isEmpty {
                 cells = lines.map { Self.cells($0) }
             }
         }
+        .onDisappear { onScreen = false }
         .onChange(of: lines) { old, new in transition(from: old, to: new) }
     }
 
@@ -241,7 +243,7 @@ struct DepartureBoard: View {
         // One soft tap when the last letter lands, only while Home is on screen.
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(longest + DepartureSteps.flipMS))
-            if gen == generation, scenePhase == .active {
+            if gen == generation, scenePhase == .active, onScreen {
                 landed += 1
             }
         }
