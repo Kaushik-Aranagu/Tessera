@@ -26,6 +26,10 @@ struct RestPalette: Hashable {
                                      tess: 0x8FB5FF, context: 0xD9A6B8)
     static let celadon = RestPalette(ground: 0xE0EAE2, ink: 0x0C1E19, signal: 0xD94B2E, rest: 0xCF9418,
                                      tess: 0x2C59BE, context: 0x3A6584)
+    static let white = RestPalette(ground: 0xFFFFFF, ink: 0x121212, signal: 0xE2432A, rest: 0xF0A500,
+                                   tess: 0x2450D8, context: 0x5A3DAF)
+    static let black = RestPalette(ground: 0x000000, ink: 0xF4F1EC, signal: 0xFF5B3A, rest: 0xFFC23D,
+                                   tess: 0x86B4FF, context: 0xB7A6E0)
 
     /// Kaushik's Lock Screen pick (2026-10-15, live-activity.md): Cobalt sky, in every look.
     static let cobaltSky = RestPalette(ground: 0x120E1A, ink: 0xF6EFE4, signal: 0xE2603F, rest: 0xE8BD4C,
@@ -39,6 +43,8 @@ struct RestPalette: Hashable {
         case "plein": .plein
         case "lacquer": .lacquer
         case "celadon": .celadon
+        case "white": .white
+        case "black": .black
         default: nil
         }
     }
