@@ -23,6 +23,7 @@ struct RestDaySentence: View {
                 }
                 .buttonStyle(.valueWash)
                 .fontWeight(.semibold)
+                .foregroundStyle(SettingsV2.valueInk)
                 .contentTransition(.opacity)
                 .accessibilityLabel("Rest day")
                 .accessibilityValue(Self.word(rest))
@@ -60,7 +61,7 @@ struct RestDaySentence: View {
                         }
                     }
                 }
-                .buttonStyle(.labelWord)
+                .settingsWordStyle()
                 .transition(.opacity)
             }
         }

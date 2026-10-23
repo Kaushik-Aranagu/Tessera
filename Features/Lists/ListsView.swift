@@ -252,6 +252,7 @@ private struct ListPage: View {
                             }
                         }
                         .entrance(1)
+                    FinishedListLine(list: list, name: name, contents: contents) { reset(name: name) }
                     if resetAsk != nil {
                         resetAskView(name: name)
                             .padding(.top, Theme.Spacing.l)

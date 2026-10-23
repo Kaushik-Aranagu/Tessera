@@ -125,6 +125,14 @@ final class ReviewChoices {
                says: ["Off": "Home's write line keeps to tasks and logs, as now.",
                       "On": "Write anything on Home and it goes to the right app, with Undo."],
                readiness: .live),
+        // Sheet 139: a finished list, task and day each write a result in words.
+        Choice(id: "finishMoments",
+               name: "Finish moments",
+               values: ["Off", "On"],
+               defaultValue: "Off",
+               says: ["Off": "A finished list, task or day just stays as it is.",
+                      "On": "A finished list says so in words, Home counts tasks done today, and a past day reads as a sentence."],
+               readiness: .live),
         Choice(id: "oneHands", name: "One pair of hands", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "As now.", "On": "When two things need you at once, Tess offers one fix."],
                readiness: .arrivesWith("its Core facts")),
@@ -142,9 +150,17 @@ final class ReviewChoices {
                says: ["Off": "Money is spends only, as now.",
                       "On": "Tell Tess what came in and where it went: \"got 3200 paycheck\", \"moved 1000 to India\"."],
                readiness: .live),
+        Choice(id: "awayV2", name: "Away", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Home is the same on a trip.",
+                      "On": "Mark a trip away and Home shows only that trip on its days."],
+               readiness: .live),
         Choice(id: "homeV2", name: "Home v2", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Home pages sideways: Review, Today, Training.",
                       "On": "One Home page, with your apps as thin lines along the bottom."],
+               readiness: .live),
+        Choice(id: "tasksApp", name: "Tasks app", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Tasks live on Home and in lists, as now.",
+                      "On": "Tasks is an app of its own: one thing at a time, with Today, Soon and Later."],
                readiness: .live),
         Choice(id: "landingPages", name: "Landing pages", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Each app opens on its list of ways in.",
@@ -203,6 +219,11 @@ final class ReviewChoices {
         Choice(id: "pagesV2", name: "Pages v2", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "A finished workout's page is as before.",
                       "On": "A finished workout's page is one sentence, its set marks and its numbers."],
+               readiness: .live),
+        // Design 154: Settings in sentence case, a line under the title, value words in ink 2.
+        Choice(id: "settingsV2", name: "Settings v2", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Settings reads as it does now.",
+                      "On": "Settings opens with a line under its title, in sentence case, with values in grey."],
                readiness: .live),
         // Design round 2 and 3 (137, 139, 142, 153): each piece behind its own switch, all default Off.
         Choice(id: "finishV2", name: "Finishing marks", values: ["Off", "On"], defaultValue: "Off",
@@ -294,6 +315,15 @@ final class ReviewChoices {
                    "As before": "Inter Tight for everything."],
             readiness: .live
         ),
+        // Design 161 and 155: Pantry's levels and the shop run, each its own switch, default Off.
+        Choice(id: "pantryLevelsV2", name: "Pantry levels", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Pantry places list their things; the count sits by the Pantry word.",
+                      "On": "Each place shows a level line, and what's to get sits after the places."],
+               readiness: .live),
+        Choice(id: "shopV2", name: "Shop run", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The shop shows the aisle and its items.",
+                      "On": "The next item leads; swipe right to strike it; Done shopping puts it all away."],
+               readiness: .live),
         // Design 110: on, the kcal line shows on a finished workout; it needs weight and height under Me.
         Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
@@ -313,14 +343,16 @@ final class ReviewChoices {
         ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
-        ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector"]),
+        ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector", "tasksApp"]),
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
-        ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2"]),
-        ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2"]),
+        ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2", "finishMoments", "settingsV2"]),
+        ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
+        // Kitchen is full at six, so Pantry levels and the shop run get their own page.
+        ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.

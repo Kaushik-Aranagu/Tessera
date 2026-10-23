@@ -28,6 +28,7 @@ public enum SystemCatalog {
         case place
         case tessWaiting
         case tessMemory
+        case occasion
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -61,6 +62,7 @@ public enum SystemCatalog {
     private static let specs: [ClassSpec] = [
         ClassSpec(key: .thing, name: "Thing", symbol: "circle", colorRole: "neutral", fields: [
             FieldSpec(key: "notes", name: "Notes", kind: .richText),
+            FieldSpec(key: "notTwins", name: "Not the same as", kind: .refList, target: .thing),
         ]),
         ClassSpec(key: .muscle, name: "Muscle", parent: .thing, symbol: "figure.arms.open", colorRole: "training",
                   traits: [.measurable], fields: [
@@ -302,6 +304,15 @@ public enum SystemCatalog {
             FieldSpec(key: "isPrivate", name: "Private", kind: .bool),
             FieldSpec(key: "archivedAt", name: "Archived", kind: .date),
         ]),
+        // An occasion: a trip, a move, a wedding week. Dates and links to things of any app; what it says about each
+        // linked app is derived on read (OccasionFacts), never stored.
+        ClassSpec(key: .occasion, name: "Occasion", parent: .thing, symbol: "calendar.badge.clock", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "start", name: "Start", kind: .date),
+                      FieldSpec(key: "end", name: "End", kind: .date),
+                      FieldSpec(key: "links", name: "Links", kind: .refList, target: .thing),
+                      FieldSpec(key: "away", name: "Away", kind: .bool, defaultValue: .bool(false)),
+                  ]),
         // Money in: a paycheck, a gift, a refund. Typed digits in the pool's currency.
         ClassSpec(key: .inflow, name: "Inflow", parent: .thing, symbol: "arrow.down.circle", colorRole: "neutral",
                   fields: [

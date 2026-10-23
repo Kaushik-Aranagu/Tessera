@@ -32,6 +32,8 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
     var pinned: RailPlace?
     /// The app's one accent (131): the pinned place's colour. Never another app's, never the amber look-alike.
     let accent: Color
+    /// The subtitle's colour: Tess's context violet by default; an app with no hue (Tasks) passes ink 2.
+    var subtitleColor: Color = Theme.Colors.context
     let places: [RailPlace]
     @Binding var open: String
     var sectionStyle: SectionStyle = .words
@@ -41,6 +43,8 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
     var foot: (String) -> String? = { _ in nil }
     /// What an empty place says.
     var empty: (String) -> String = { _ in "Nothing here yet." }
+    /// A thin level line under the subtitle for the open place (nil draws none).
+    var level: (String) -> Double? = { _ in nil }
     @ViewBuilder let row: (Row) -> RowView
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -103,11 +107,15 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
                 .entrance(0, hero: true)
             Text(subtitle(open))
                 .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
+                .foregroundStyle(subtitleColor)
                 .contentTransition(.numericText())
                 .tesseraAnimation(RailMetrics.crossfade, value: open)
                 .padding(.top, Theme.Spacing.xs)
                 .entrance(1)
+            if let level = level(open) {
+                PlaceLevelLine(level: level)
+                    .padding(.top, Theme.Spacing.xs)
+            }
         }
     }
 

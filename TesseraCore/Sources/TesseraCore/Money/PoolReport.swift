@@ -94,6 +94,19 @@ public struct PoolReport {
         return sums.filter { $0.value > 0 }
     }
 
+    /// The month's moves between pools, newest first (the 4 AM month the ledger uses). Phone only.
+    public func monthMoves(calendar: Calendar = .current) -> [ObjectRecord] {
+        let month = TesseraDay(calendar: calendar).month(containing: now)
+        return book.moves().filter { move in
+            let at = store.value("at", of: move)?.dateValue ?? move.createdAt
+            return at >= month.start && at < month.end
+        }
+        .sorted {
+            (store.value("at", of: $0)?.dateValue ?? $0.createdAt) >
+                (store.value("at", of: $1)?.dateValue ?? $1.createdAt)
+        }
+    }
+
     // MARK: Rates
 
     /// Dollars for one of a currency: the ECB table first, else the newest rate he noted or a move implied.
@@ -101,6 +114,8 @@ public struct PoolReport {
         if code == "USD" {
             return Rate(dollars: 1, date: now)
         }
+        // The one place a Double meets the money: the ECB table is published and cached as Double. It is turned into a
+        // Decimal at once and rounded to 8 places; every amount of his stays Decimal from its typed digits.
         if let ecb, let usd = ecb.rates["USD"], let other = ecb.rates[code], usd > 0, other > 0 {
             return Rate(dollars: PoolMath.rounded(Decimal(usd) / Decimal(other), places: 8), date: ecb.date)
         }
@@ -166,10 +181,7 @@ public struct PoolReport {
         let total = about()
         var lines: [String] = []
         if let dollars = total.dollars {
-            lines
-                .append(
-                    "In dollars, about \(PoolFormat.amount(Decimal(dollars), currency: "USD", lakh: lakh, text: true).dropLast(3))"
-                )
+            lines.append("In dollars, about \(PoolFormat.wholeDollars(Decimal(dollars), lakh: lakh))")
             if let from = total.ratesFrom {
                 lines.append("Rates from \(Self.day(from, calendar)).")
             }
@@ -203,6 +215,14 @@ public struct PoolReport {
             text: true
         ) }
         return "Fees this month: \(parts.joined(separator: " and "))."
+    }
+
+    /// "Archived pools are still counted." when an archived pool holds money that the totals include; nil otherwise.
+    public func archivedNote() -> String? {
+        let counted = book.pools().contains {
+            store.value("archivedAt", of: $0)?.dateValue != nil && book.balance(of: $0) != 0
+        }
+        return counted ? "Archived pools are still counted." : nil
     }
 
     /// The Money landing's pool sentence: "US checking has $1,345.00." / "$1,345.00 in US checking, INR 82,650.00 in
@@ -251,7 +271,9 @@ public struct PoolReport {
             let word = note.isEmpty ? "Spent" : note.prefix(1).uppercased() + note.dropFirst()
             let typed = MoneyAmount.parse(store.value("typed", of: row)?.stringValue ?? "")?.amount ?? 0
             let amount = PoolFormat.amount(typed, currency: book.currency(of: pool), lakh: lakh, text: true)
-            let shownWord = ObjectPrivacy.isPrivateWord(note, in: store) ? "Private spend" : word
+            // Word by word, as the past sentence does: "ozempic pharmacy run" never shows its first word.
+            let hidden = ObjectPrivacy.containsPrivateWord(note, in: store)
+            let shownWord = hidden ? "Private spend" : word
             return "\(shownWord) \(amount), \(name(of: pool))."
         default: return nil
         }

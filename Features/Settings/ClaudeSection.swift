@@ -525,8 +525,8 @@ struct ClaudeReceipts: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 Button { dismiss() } label: {
                     Text("‹ Settings")
-                        .textRole(.label)
-                        .textCase(.uppercase)
+                        .textRole(SettingsV2.isOn ? .data : .label)
+                        .textCase(SettingsV2.isOn ? nil : .uppercase)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .frame(minHeight: 44)
                 }

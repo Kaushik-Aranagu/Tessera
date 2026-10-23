@@ -127,7 +127,11 @@ public enum DayStory {
         "startCookSession", "setServeTime", "addDish", "dropDish", "advanceDishStep", "pauseCook", "resumeCook",
         "finishCookSession",
         // Money pools: amounts and pool names never reach the Day log.
-        "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool", "repeatWorkout",
+        "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool",
+        "makeKind", "keepNoteAsObject", "keepAllNotes",
+        // Occasions: links and dates only; the page reads them, the Day log does not.
+        "createOccasion", "linkToOccasion", "unlinkFromOccasion", "setAway",
+        "repeatWorkout", "joinTwins", "keepTwinsApart",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).

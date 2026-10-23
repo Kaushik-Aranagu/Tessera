@@ -374,6 +374,13 @@ private struct InstanceBody: View {
             .entrance(7)
         }
 
+        // Away (187): an occasion's page can quiet Home for its days.
+        if privateLabel == nil, AwayHome.isOn, let occasionClass = model.classDef(.occasion),
+           let objectClass = object.classDef, ClassResolver.isSubclass(objectClass, of: occasionClass)
+        {
+            AwayWord(occasion: object).entrance(7)
+        }
+
         // Together (135 §3): what mentions it from other apps, above the doors; none for a private object.
         if privateLabel == nil, Together.isOn(Together.linkColours) {
             MentionedIn(lines: Mentions.lines(of: object, store: model.store, classes: model.classes))

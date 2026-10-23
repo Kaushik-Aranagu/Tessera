@@ -66,13 +66,22 @@ private struct KitchenDoors: View {
     let front: KitchenFront
     let open: (HomeLink) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
+    private let inline = PantryShopSwitch.levelsOn
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
-            door("Pantry", value: front.pantryValue, link: .pantry) {
+            door("Pantry", value: inline ? nil : front.pantryValue, link: .pantry) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                     ForEach(front.places, id: \.name) { place in
                         LevelLine(name: place.name, level: place.level)
+                    }
+                    // 161: "7 to get, covers 4 dinners" sits after the place lines, plain ink.
+                    if inline, let value = front.pantryValue {
+                        Text(value)
+                            .textRole(.data)
+                            .foregroundStyle(Theme.Colors.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, Theme.Spacing.xs)
                     }
                 }
             }
