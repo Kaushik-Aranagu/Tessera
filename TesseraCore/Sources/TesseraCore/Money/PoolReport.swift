@@ -47,7 +47,9 @@ public struct PoolReport {
         self.lakh = lakh
     }
 
-    var book: PoolBook { PoolBook(store: store, classes: classes) }
+    var book: PoolBook {
+        PoolBook(store: store, classes: classes)
+    }
 
     public static let words = ["USD": "Dollars", "INR": "Rupees", "EUR": "Euros", "GBP": "Pounds"]
 
@@ -84,7 +86,8 @@ public struct PoolReport {
         let month = TesseraDay(calendar: calendar).month(containing: now)
         var sums: [String: Decimal] = [:]
         for move in book.moves() {
-            guard let at = store.value("at", of: move)?.dateValue ?? Optional(move.createdAt), at >= month.start, at < month.end,
+            guard let at = store.value("at", of: move)?.dateValue ?? Optional(move.createdAt), at >= month.start,
+                  at < month.end,
                   let source = store.linkedObjects("fromPool", of: move).first else { continue }
             sums[book.currency(of: source), default: 0] += book.figures(of: move).fee
         }
@@ -95,7 +98,9 @@ public struct PoolReport {
 
     /// Dollars for one of a currency: the ECB table first, else the newest rate he noted or a move implied.
     public func rate(to code: String) -> Rate? {
-        if code == "USD" { return Rate(dollars: 1, date: now) }
+        if code == "USD" {
+            return Rate(dollars: 1, date: now)
+        }
         if let ecb, let usd = ecb.rates["USD"], let other = ecb.rates[code], usd > 0, other > 0 {
             return Rate(dollars: PoolMath.rounded(Decimal(usd) / Decimal(other), places: 8), date: ecb.date)
         }
@@ -161,7 +166,10 @@ public struct PoolReport {
         let total = about()
         var lines: [String] = []
         if let dollars = total.dollars {
-            lines.append("In dollars, about \(PoolFormat.amount(Decimal(dollars), currency: "USD", lakh: lakh, text: true).dropLast(3))")
+            lines
+                .append(
+                    "In dollars, about \(PoolFormat.amount(Decimal(dollars), currency: "USD", lakh: lakh, text: true).dropLast(3))"
+                )
             if let from = total.ratesFrom {
                 lines.append("Rates from \(Self.day(from, calendar)).")
             }
@@ -188,7 +196,12 @@ public struct PoolReport {
     public func feesLine(calendar: Calendar = .current) -> String? {
         let fees = monthFees(calendar: calendar)
         guard !fees.isEmpty else { return nil }
-        let parts = fees.keys.sorted().map { PoolFormat.amount(fees[$0] ?? 0, currency: $0, lakh: lakh, text: true) }
+        let parts = fees.keys.sorted { $0 == "USD" ? true : ($1 == "USD" ? false : $0 < $1) }.map { PoolFormat.amount(
+            fees[$0] ?? 0,
+            currency: $0,
+            lakh: lakh,
+            text: true
+        ) }
         return "Fees this month: \(parts.joined(separator: " and "))."
     }
 
@@ -198,15 +211,22 @@ public struct PoolReport {
         let pools = book.pools().filter { store.value("archivedAt", of: $0)?.dateValue == nil }
         let shown = pools.prefix(2).map { pool in
             (name: name(of: pool),
-             amount: PoolFormat.amount(book.balance(of: pool), currency: book.currency(of: pool), lakh: lakh, text: true))
+             amount: PoolFormat.amount(
+                 book.balance(of: pool),
+                 currency: book.currency(of: pool),
+                 lakh: lakh,
+                 text: true
+             ))
         }
         let lead = nothingLate ? "Nothing is late. " : ""
         switch shown.count {
         case 0: return LandingSentence(text: nothingLate ? "Nothing is late." : "No pools yet.", key: nil)
         case 1: return LandingSentence(text: "\(lead)\(shown[0].name) has \(shown[0].amount).", key: shown[0].name)
         default:
-            return LandingSentence(text: "\(shown[0].amount) in \(shown[0].name), \(shown[1].amount) in \(shown[1].name).",
-                                   key: shown[0].name)
+            return LandingSentence(
+                text: "\(shown[0].amount) in \(shown[0].name), \(shown[1].amount) in \(shown[1].name).",
+                key: shown[0].name
+            )
         }
     }
 
@@ -221,7 +241,8 @@ public struct PoolReport {
             return "\(name(of: pool)) got \(amount), \(store.value("source", of: row)?.stringValue ?? "paycheck")."
         case classes[.poolMove]?.id:
             let figures = book.figures(of: row)
-            let from = store.linkedObjects("fromPool", of: row).first, into = store.linkedObjects("toPool", of: row).first
+            let from = store.linkedObjects("fromPool", of: row).first,
+                into = store.linkedObjects("toPool", of: row).first
             return "Moved \(PoolFormat.amount(figures.sent, currency: from.map(book.currency(of:)) ?? "USD", lakh: lakh, text: true)), got "
                 + "\(PoolFormat.amount(figures.arrived, currency: into.map(book.currency(of:)) ?? "USD", lakh: lakh, text: true))."
         case classes[.spend]?.id:
