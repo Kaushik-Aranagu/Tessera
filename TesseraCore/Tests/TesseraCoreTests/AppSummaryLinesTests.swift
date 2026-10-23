@@ -118,7 +118,53 @@ struct AppSummaryLinesTests {
         #expect(hidden?.isPrivate == true && hidden?.text.hasPrefix("Private") == true)
     }
 
-    @Test func trainingWithHistorySaysItsUsualStart() throws {
+    // MARK: QA on #1323
+
+    @Test func aNoteWithNoTitleIsCheckedWholeBeforeItIsCutAtAWordEdge() throws {
+        _ = try engine.perform(
+            CreateNote(body: "Remember to pick up the dry cleaning before the weekend starts"),
+            by: .user
+        )
+        let plain = try #require(lines(at(12))[.notes])
+        // Cut at 30 characters on a word edge: the word that would be split is dropped.
+        #expect(plain.text.hasPrefix("Remember to pick up the dry, edited at "), "\(plain.text)")
+        // The private word sits past where a cut would have been: the whole body is checked first.
+        _ = try engine.perform(
+            CreateNote(body: "Remember to pick up the dry cleaning and the Lexapro refill on Friday"), by: .user
+        )
+        let hidden = try #require(lines(.now.addingTimeInterval(5))[.notes])
+        #expect(hidden.text == "Private" && hidden.isPrivate)
+    }
+
+    @Test func aBillWithADigitInItsNameSaysOnlyThatABillIsDue() {
+        for name in ["Rent 1850", "Visa ending 4417", "Gym 2"] {
+            let line = lines(at(12), due: .init(name: name, at: at(9, day: 23)))[.money]
+            #expect(line?.text == "A bill is due Friday", "\(name)")
+        }
+    }
+
+    @Test func aRoutineNameIsMaskedByTheMaskResultNotAStringTest() {
+        let runs = (1 ... 8).map { day in RoutineRun(start: at(20, day: 22 - day), end: at(20, 20, day: 22 - day)) }
+        func line(_ name: String, isPrivate: Bool = false) -> AppSummaryLine? {
+            let facts = RoutinesLanding.facts(items: [.init(name: name, count: 4, isPrivate: isPrivate, runs: runs)],
+                                              running: nil, now: at(12), calendar: calendar)
+            return lines(at(12), routines: .init(facts: facts, nextUsualStart: at(20)))[.routines]
+        }
+        // A real name that merely starts with "Private" is checked like any other (and a plain one passes).
+        #expect(line("Private yoga")?.isPrivate == true)
+        #expect(line("Lexapro morning")?.isPrivate == true && line("Lexapro morning")?.text == "Private")
+        #expect(line("Stretch")?.text == "Stretch at 8 pm" && line("Stretch")?.isPrivate == false)
+        #expect(line("Knee rehab", isPrivate: true)?.text == "Private")
+    }
+
+    @Test func aListWithAPrivateWordIsPrivate() throws {
+        let list = try store.create(#require(engine.classes[.list]), title: "Lexapro refills")
+        _ = try engine.perform(AddListItem(list: list.id, text: "pharmacy"), by: .user)
+        let line = try #require(lines(at(12))[.lists])
+        #expect(line.text == "Private" && line.isPrivate)
+    }
+
+    @Test func trainingSaysWhatItOpensWith() throws {
         let routine = try engine.perform(CreateRoutine(title: "Push A"), by: .user).output
         let plan = try engine.perform(CreatePlan(title: "PPL", routines: [routine.id]), by: .user).output
         try ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: store,
@@ -138,7 +184,6 @@ struct AppSummaryLinesTests {
             try store.set("loggedAt", to: .date(at(19, day: 22 - week)), on: last)
         }
         let line = try #require(lines(at(9), plan: plan)[.training])
-        // The opener ("bench press first") joins the line when the landing facts have one (TrainingLanding tests).
-        #expect(line.text == "Push A at 6:15 pm", "\(line.text)")
+        #expect(line.text == "Push A at 6:15 pm, bench press first", "\(line.text)")
     }
 }
