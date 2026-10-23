@@ -31,6 +31,11 @@ enum FanMath {
         pull > threshold
     }
 
+    /// A pull counts only when its travel is more up than sideways, so a pager swipe never opens the fan.
+    static func isVertical(_ translation: CGSize) -> Bool {
+        abs(translation.height) > abs(translation.width)
+    }
+
     static func begins(atDistanceFromBottom distance: CGFloat) -> Bool {
         distance >= 0 && distance <= startZone
     }
@@ -83,6 +88,8 @@ final class FanState {
 /// Puts the fan on a page: a pull that begins in the bottom strip draws the layer; nothing is laid over the strip, so
 /// taps still reach what is under it. The identity with the switch Off.
 struct FanHost: ViewModifier {
+    /// False while the area index is open: the fan never opens over it.
+    let enabled: Bool
     let entries: [AppFanEntry]
     let onPick: (Int) -> Void
     let onOpenIndex: () -> Void
@@ -90,24 +97,33 @@ struct FanHost: ViewModifier {
     @State private var height: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
-        if FanSwitch.isOn {
+        if FanSwitch.isOn, enabled {
             content
                 // The page's own words go to ink 3 while the fan is open (no veil over it), on the house spring.
                 .opacity(state.open ? FanMath.pageDim(isDark: scheme == .dark) : 1)
                 .tesseraAnimation(Theme.Motion.house, value: state.open)
+                // Reduce Motion: the dim appears at once.
+                .transaction {
+                    if reduceMotion {
+                        $0.animation = nil
+                    }
+                }
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
                 .simultaneousGesture(
                     DragGesture(minimumDistance: 8, coordinateSpace: .local)
                         .onChanged { value in
                             guard !state.sticky,
-                                  FanMath.begins(atDistanceFromBottom: height - value.startLocation.y) else { return }
+                                  FanMath.begins(atDistanceFromBottom: height - value.startLocation.y),
+                                  FanMath.isVertical(value.translation) else { return }
                             state.pull = max(0, -value.translation.height)
                         }
                         .onEnded { value in
                             guard !state.sticky,
-                                  FanMath.begins(atDistanceFromBottom: height - value.startLocation.y) else { return }
+                                  FanMath.begins(atDistanceFromBottom: height - value.startLocation.y),
+                                  FanMath.isVertical(value.translation) else { state.close(); return }
                             let final = max(0, -value.translation.height)
                             if typeSize.isAccessibilitySize {
                                 // A scroll of label-size titles: it stays open for a tap.
@@ -123,7 +139,14 @@ struct FanHost: ViewModifier {
                 )
                 .overlay(alignment: .bottom) {
                     AppFan(entries: entries, state: state, onPick: onPick)
-                        .accessibilityElement(children: .ignore)
+                        .accessibilityHidden(true)
+                }
+                // The one "Apps" element is the bottom strip alone, so VoiceOver reaches the page's own elements first.
+                .overlay(alignment: .bottom) {
+                    Color.clear
+                        .frame(height: FanMath.startZone)
+                        .allowsHitTesting(false)
+                        .accessibilityElement()
                         .accessibilityLabel("Apps")
                         .accessibilityAddTraits(.isButton)
                         .accessibilityAction { onOpenIndex() }
@@ -136,10 +159,10 @@ struct FanHost: ViewModifier {
 
 extension View {
     /// Design 137, the fan, behind the Review switch `homeV2` (Off: nothing changes).
-    func appFan(entries: [AppFanEntry], onPick: @escaping (Int) -> Void,
+    func appFan(enabled: Bool = true, entries: [AppFanEntry], onPick: @escaping (Int) -> Void,
                 onOpenIndex: @escaping () -> Void) -> some View
     {
-        modifier(FanHost(entries: entries, onPick: onPick, onOpenIndex: onOpenIndex))
+        modifier(FanHost(enabled: enabled, entries: entries, onPick: onPick, onOpenIndex: onOpenIndex))
     }
 }
 

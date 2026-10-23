@@ -228,7 +228,7 @@ struct HomeSpatialView: View {
             }
         }
         .environment(\.homeLinkZoom, linkZoom)
-        .appFan(entries: fanEntries, onPick: pick, onOpenIndex: openIndex)
+        .appFan(enabled: indexProgress < 0.001, entries: fanEntries, onPick: pick, onOpenIndex: openIndex)
     }
 
     /// Design 137: the apps the fan lists, each with its live line (Review switch `homeV2`, Off by default).

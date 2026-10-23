@@ -1,3 +1,4 @@
+import CoreGraphics
 @testable import Tessera
 import Testing
 
@@ -6,6 +7,11 @@ struct AppFanTests {
     @MainActor @Test func thePageDimsToInkThreesOwnAlpha() {
         #expect(FanMath.pageDim(isDark: false) == Theme.Colors.inkTertiaryAlpha(isDark: false))
         #expect(FanMath.pageDim(isDark: true) == Theme.Colors.inkTertiaryAlpha(isDark: true))
+    }
+
+    @Test func aPagerSwipeIsNotAPull() {
+        #expect(FanMath.isVertical(CGSize(width: 10, height: -60)))
+        #expect(!FanMath.isVertical(CGSize(width: -80, height: -30)))
     }
 
     @Test func opensOnlyPastTwentyFourPoints() {
