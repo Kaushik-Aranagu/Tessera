@@ -26,11 +26,18 @@ public enum AppSummaryLines {
                              routines: HomeSentence.RoutinesPart? = nil, now: Date = .now,
                              calendar: Calendar = .current) -> [AppSummaryLine]
     {
-        [
-            training(engine, plan, now, calendar), kitchen(engine, now, calendar),
-            routinesLine(engine, routines, now, calendar), tasks(engine, now, calendar), notes(engine, now, calendar),
-            lists(engine, now, calendar), money(engine, moneyDue, calendar),
-        ]
+        // Money and Routines are only claimed about when their source was read: with none handed in there is no line,
+        // so
+        // the list never says "Nothing is due" or "Nothing planned" about something it did not look at.
+        var all = [training(engine, plan, now, calendar), kitchen(engine, now, calendar)]
+        if let routines {
+            all.append(routinesLine(engine, routines, calendar))
+        }
+        all += [tasks(engine, now, calendar), notes(engine, now, calendar), lists(engine, now, calendar)]
+        if let moneyDue {
+            all.append(money(engine, moneyDue, calendar))
+        }
+        return all
     }
 
     // MARK: Words
@@ -117,12 +124,9 @@ public enum AppSummaryLines {
                               opens: .app(.kitchen), isPrivate: false)
     }
 
-    private static func routinesLine(_ engine: ActionEngine, _ part: HomeSentence.RoutinesPart?, _: Date,
+    private static func routinesLine(_ engine: ActionEngine, _ part: HomeSentence.RoutinesPart,
                                      _ calendar: Calendar) -> AppSummaryLine
     {
-        guard let part else {
-            return AppSummaryLine(app: .routines, text: nothingPlanned, opens: .app(.routines), isPrivate: false)
-        }
         let store = engine.store, classes = engine.classes
         if part.facts.top.step != nil {
             // Running: its own words ("Morning is running"); the name is its key word, checked like any title.
@@ -187,12 +191,9 @@ public enum AppSummaryLines {
         return AppSummaryLine(app: .lists, text: text, opens: .object(lead.list), isPrivate: name.1)
     }
 
-    private static func money(_ engine: ActionEngine, _ due: HomeSentence.MoneyDue?, _ calendar: Calendar)
+    private static func money(_ engine: ActionEngine, _ due: HomeSentence.MoneyDue, _ calendar: Calendar)
         -> AppSummaryLine
     {
-        guard let due else {
-            return AppSummaryLine(app: .money, text: "Nothing is due", opens: .app(.money), isPrivate: false)
-        }
         let day = TesseraDay.weekdayName(of: due.at, calendar: calendar)
         // A digit in a bill's name could be an amount or a card's last digits, and no amount reaches Home.
         guard !due.name.contains(where: \.isNumber) else {
