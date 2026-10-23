@@ -80,4 +80,36 @@ struct WeeklyBestsTests {
         try lift(daysAgo: 2, [(200, 5)], warmup: true)
         #expect(try bests().isEmpty)
     }
+
+    /// A heavy warm-up next to a lighter working set in the same session: only the working set counts.
+    @Test func aHeavyWarmupDoesNotBeatTheWorkingSet() throws {
+        let ended = now.addingTimeInterval(-86400)
+        let workout = try store.create(#require(classes[.workout]), title: "Push")
+        try store.set("endedAt", to: .date(ended), on: workout)
+        let entry = try store.create(#require(classes[.exerciseEntry]), parent: workout)
+        try store.setClassLink("exercise", on: entry, to: #require(classes[.benchPress]))
+        for (weight, warmup) in [(180.0, true), (80.0, false)] {
+            let made = try ledger.logSet(weight: weight, reps: 5, isWarmup: warmup, in: entry)
+            try store.set("loggedAt", to: .date(ended), on: made)
+        }
+        let result = try bests()
+        #expect(result.bestWeight == 80 && result.bests.compactMap(\.self).count == 1)
+    }
+
+    /// His day turns over at 4 am: a set at 2 am on Monday is Sunday's, so it belongs to the week before.
+    @Test func theWeekIsCutAtHisDayBoundaryNotMidnight() throws {
+        // Monday, October 19, 2026, 02:00 UTC is Sunday's logical day (the week before).
+        let mondayTwo = Date(timeIntervalSince1970: 1_792_375_200)
+        let monday = calendar.component(.weekday, from: mondayTwo)
+        #expect(monday == 2)
+        let workout = try store.create(#require(classes[.workout]), title: "Late")
+        try store.set("endedAt", to: .date(mondayTwo), on: workout)
+        let entry = try store.create(#require(classes[.exerciseEntry]), parent: workout)
+        try store.setClassLink("exercise", on: entry, to: #require(classes[.benchPress]))
+        let made = try ledger.logSet(weight: 100, reps: 5, in: entry)
+        try store.set("loggedAt", to: .date(mondayTwo), on: made)
+        let result = try bests()
+        // now is Thursday October 22: this week began Monday the 19th; a 2 am set that day is last week's.
+        #expect(result.weeksAgo == 1)
+    }
 }
