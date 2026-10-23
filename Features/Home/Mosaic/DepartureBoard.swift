@@ -54,24 +54,28 @@ struct DepartureSegment: Equatable {
 
     var text: String
     var kind: Kind
+    /// A door (sheet 211): an app word, or a number that belongs to a clause with an app word, opens its thing.
+    var opens = false
 }
 
 /// Turns a clause into segments, using the same word split as the day sentence.
 enum DepartureLines {
     static func segments(of clause: HomeSentence.Clause) -> [DepartureSegment] {
         var out: [DepartureSegment] = []
-        func add(_ text: String, _ kind: DepartureSegment.Kind) {
+        let words = DaySentence.words([clause])
+        let hasDoor = words.contains { $0.app != nil }
+        func add(_ text: String, _ kind: DepartureSegment.Kind, opens: Bool = false) {
             if let last = out.last, last.kind == kind {
                 out[out.count - 1].text += " " + text
             } else {
-                out.append(DepartureSegment(text: text, kind: kind))
+                out.append(DepartureSegment(text: text, kind: kind, opens: opens))
             }
         }
-        for word in DaySentence.words([clause]) {
+        for word in words {
             if let app = word.app {
-                add(word.text, .app(app))
+                add(word.text, .app(app), opens: true)
             } else if word.text.contains(where: \.isNumber) {
-                add(word.text, .number)
+                add(word.text, .number, opens: hasDoor)
             } else {
                 add(word.text, .plain)
             }
@@ -85,7 +89,8 @@ enum DepartureLines {
 /// the whole line crossfades in 150 ms and nothing flips. VoiceOver reads the final sentence once.
 struct DepartureBoard: View {
     let lines: [[DepartureSegment]]
-    let open: (Int) -> Void
+    /// A door was tapped: the line it is on, and the word's frame in window space (the doorway's wave starts there).
+    let open: (Int, CGRect) -> Void
 
     static let size: CGFloat = 23
     static let lineGap: CGFloat = 3
@@ -97,6 +102,13 @@ struct DepartureBoard: View {
     @State private var generation = 0
     @State private var landed = 0
     @State private var onScreen = false
+    @State private var taps = 0
+    /// Where each door word sits, kept outside the view state so a layout pass does not redraw the board.
+    @State private var frames = DoorFrames()
+
+    final class DoorFrames {
+        var byKey: [String: CGRect] = [:]
+    }
 
     struct Cell: Equatable {
         var shown: Character
@@ -116,7 +128,21 @@ struct DepartureBoard: View {
         .frame(maxWidth: .infinity, alignment: .trailing)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(finalText)
+        .accessibilityActions {
+            // Each door is a button: "Push day, opens Training".
+            ForEach(Array(lines.enumerated()), id: \.offset) { li, line in
+                let starts = DepartureSteps.starts(line)
+                ForEach(Array(line.enumerated()), id: \.offset) { k, seg in
+                    if seg.opens, case let .app(app) = seg.kind {
+                        Button("\(seg.text), opens \(app.rawValue)") {
+                            open(li, frames.byKey["\(li)-\(starts[k])"] ?? .zero)
+                        }
+                    }
+                }
+            }
+        }
         .tesseraFeedback(.made, trigger: landed)
+        .tesseraFeedback(.made, trigger: taps)
         .onAppear {
             onScreen = true
             if cells.isEmpty {
@@ -178,10 +204,22 @@ struct DepartureBoard: View {
                 Text(seg.text).font(font(for: seg.kind))
             }
         }
+        let key = "\(li)-\(from)"
+        let door = content
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frames.byKey[key] = $0 }
         switch seg.kind {
         case let .app(app):
-            Button { open(li) } label: { content }
+            Button {
+                taps += 1
+                open(li, frames.byKey[key] ?? .zero)
+            } label: { door }
                 .buttonStyle(MosaicWordStyle(accent: app.accent))
+        case .number where seg.opens:
+            Button {
+                taps += 1
+                open(li, frames.byKey[key] ?? .zero)
+            } label: { door.foregroundStyle(Theme.Colors.ink).contentShape(.interaction, Rectangle().inset(by: -8)) }
+                .buttonStyle(.plain)
         case .number:
             content.foregroundStyle(Theme.Colors.ink)
         case .plain:
