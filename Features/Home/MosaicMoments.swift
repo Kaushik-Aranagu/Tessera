@@ -522,7 +522,10 @@ enum MosaicText {
             .family: family,
             .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight(weight)],
         ])
-        return raster(words: [MosaicAnnounceWord(text: text, app: nil)], font: UIFont(descriptor: descriptor, size: size))
+        return raster(
+            words: [MosaicAnnounceWord(text: text, app: nil)],
+            font: UIFont(descriptor: descriptor, size: size)
+        )
     }
 
     static func raster(words: [MosaicAnnounceWord], font fontOverride: UIFont? = nil) -> Raster {

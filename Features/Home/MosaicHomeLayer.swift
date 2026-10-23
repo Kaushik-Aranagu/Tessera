@@ -40,7 +40,8 @@ final class MosaicScreenController {
         var sets: Int
         var moment: UUID?
         var page: MosaicPage
-        var pageFacts: MosaicPageFacts
+        var nextClock: String?
+        var weekDone: Int
         var reaction: Int
     }
 
@@ -96,7 +97,7 @@ final class MosaicScreenController {
         var shield: [CGRect]
         var page: MosaicPage = .mood
         var pageDirection = 1
-        var pageFacts = MosaicPageFacts.sample
+        var pageFacts: MosaicPageFacts?
     }
 
     /// Makes the engine for this size and re-reads the scene's colours when anything they depend on changed.
@@ -130,7 +131,9 @@ final class MosaicScreenController {
                        ground: [inputs.ground.red, inputs.ground.green, inputs.ground.blue], mood: inputs.mood,
                        accents: inputs.moodContext.doneAccents.count,
                        sets: inputs.moodContext.doneSets * 100 + inputs.moodContext.remainingSets, moment: moment?.id,
-                       page: inputs.page, pageFacts: inputs.pageFacts, reaction: reactionToken)
+                       page: inputs.page, nextClock: inputs.pageFacts?.nextClock,
+                       weekDone: inputs.pageFacts?.weekDone ?? 0,
+                       reaction: reactionToken)
         guard next != key else { return engine }
         if let moment, moment.id != lastMoment?.id {
             momentStart = engine.clock
@@ -157,6 +160,7 @@ final class MosaicScreenController {
         }
     }
 
+    // swiftlint:disable:next function_body_length
     private func retarget(
         _ engine: MosaicScreenEngine,
         inputs: Inputs,
@@ -263,10 +267,10 @@ final class MosaicScreenController {
         let reaction = inputs.reduceMotion || moment != nil ? nil : pendingReaction
         pendingReaction = nil
         if key == nil {
-            if reaction == .coldLaunch {
+            if reaction == .gather {
                 // A cold launch: night first, then gather into now after 500 ms, 1.8 s.
                 engine.settle(colourAt: nightAt)
-                engine.morph(.standard(.gather), origin: origin, total: reaction?.seconds, after: reaction?.delay ?? 0,
+                engine.morph(.standard(.gather), origin: origin, total: reaction?.duration, after: reaction?.delay ?? 0,
                              colourAt: colourAt)
             } else {
                 engine.settle(colourAt: colourAt)
@@ -276,17 +280,17 @@ final class MosaicScreenController {
         }
         switch reaction {
         case .ripple?:
-            engine.rippleFromCentre(seconds: MosaicOpenReaction.ripple.seconds)
+            engine.rippleFromCentre(seconds: MosaicOpenReaction.ripple.duration)
             return
-        case .flipRows?:
-            engine.morph(.flipRows, origin: origin, total: MosaicOpenReaction.flipRows.seconds, colourAt: colourAt)
+        case .flip?:
+            engine.morph(.flipRows, origin: origin, total: MosaicOpenReaction.flip.duration, colourAt: colourAt)
             return
-        case .nightIntoDay?:
-            engine.morph(.standard(.fall), origin: origin, total: MosaicOpenReaction.nightIntoDay.seconds,
+        case .nightToDay?:
+            engine.morph(.standard(.fall), origin: origin, total: MosaicOpenReaction.nightToDay.duration,
                          from: nightAt, colourAt: colourAt)
             return
-        case .dustyGather?:
-            engine.morph(.standard(.gather), origin: origin, total: MosaicOpenReaction.dustyGather.seconds,
+        case .back?:
+            engine.morph(.standard(.gather), origin: origin, total: MosaicOpenReaction.back.duration,
                          from: dustyAt, colourAt: colourAt)
             return
         default: break
@@ -378,7 +382,7 @@ struct MosaicHomeLayer: View {
     /// The mosaic's page (sheet 209 C), from B's pager, the swipe's direction and what the pages read.
     var page: MosaicPage = .mood
     var pageDirection = 1
-    var pageFacts = MosaicPageFacts.sample
+    var pageFacts: MosaicPageFacts?
 
     /// Whether this process has opened Home yet (a cold launch plays its own reaction once).
     @MainActor private static var launched = false
@@ -416,8 +420,9 @@ struct MosaicHomeLayer: View {
             if !Self.launched {
                 Self.launched = true
                 if !reduceMotion, active == nil {
-                    controller.react(.coldLaunch)
+                    controller.react(.gather)
                 }
+                tracker.recordOpen()
             }
         }
         .onDisappear { visible = false }
@@ -427,11 +432,10 @@ struct MosaicHomeLayer: View {
             } else if phase == .active {
                 // A reopen reacts once, by how long he was away; a moment already playing wins; no haptic.
                 guard !reduceMotion, active == nil, scene == .day else { return }
-                if let reaction = MosaicOpenReaction.choose(now: AppClock.now, lastActive: tracker.lastActive,
-                                                            coldLaunch: false)
-                {
-                    controller.react(reaction)
-                }
+                let cue = facts.openCue(lastBackground: tracker.lastBackground, lastOpen: tracker.lastOpen,
+                                        coldLaunch: false)
+                controller.react(cue.reaction)
+                tracker.recordOpen()
             }
         }
         .onChange(of: captionText, initial: true) { _, text in

@@ -18,6 +18,7 @@ extension MosaicMomentField {
     // MARK: Pixel signs
 
     /// The tiles a motif lights at `elapsed` seconds, each as (column, row) in the window's own coordinates.
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
     static func glanceTiles(_ app: HomeApp, cols: Int, rows: Int, elapsed: TimeInterval) -> Set<Int> {
         let centreColumn = cols / 2, centreRow = rows / 2
         var tiles = Set<Int>()

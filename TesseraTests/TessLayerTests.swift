@@ -4,10 +4,13 @@ import Testing
 
 /// Tess on her own layer (sheet 209): where she sits, how long she pools, how her thoughts advance.
 struct TessLayerTests {
-    @Test func sheDrawsInA96PointCanvasAtTheTopOfAnEightyPointRoomTwentyTwoFromTheEdge() {
-        #expect(TessLayerShape.canvas == 96 && TessLayerShape.roomHeight == 80 && TessLayerShape.leading == 22)
-        let origin = TessLayerShape.origin(screenHeight: 874, bottomInset: 34)
-        #expect(origin.x == 22 && origin.y == 874 - 34 - 80)
+    @Test func sheSitsInTheBottomRightCornerInA96PointCanvasWithNoStandingLine() {
+        #expect(TessLayerShape.canvas == 96 && TessLayerShape.roomHeight == 80)
+        #expect(TessLayerShape.trailing == 14 && TessLayerShape.bottom == 14)
+        let origin = TessLayerShape.origin(screenWidth: 402, screenHeight: 874)
+        #expect(origin.x == 402 - 14 - 96 && origin.y == 874 - 14 - 96)
+        // A line stays up six seconds and goes back in.
+        #expect(TessLayerShape.lineSeconds == 6)
     }
 
     @Test func aTapPoolsHerOverOnePointEightSecondsAndMovesToTheNextThought() {

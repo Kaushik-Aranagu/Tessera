@@ -19,43 +19,19 @@ enum MosaicPage: Int, CaseIterable, Equatable {
     static let wipeSeconds: TimeInterval = 0.5
 }
 
-/// What the pages read. Until Core's MosaicFacts carries these, `sample` stands in; it lives in memory only.
-struct MosaicPageFacts: Equatable {
-    /// The weather's temperature (a sample) and its label.
-    var temperature = 58
-    var isSample = true
-    /// Minutes to the next thing (nil when nothing is timed) and the app whose accent shows it.
-    var nextMinutes: Int?
-    var nextApp: AppID? = .training
-    /// The training week: which of Monday to Sunday are done, today's index and how many days are planned.
-    var weekDone = [true, true, false, true, false, false, false]
-    var today = 3
-    var planned = 5
-
-    static let sample = MosaicPageFacts(nextMinutes: 130)
-
-    /// "2:10" for the next thing's minutes.
-    var nextText: String? {
-        nextMinutes.map { "\($0 / 60):" + String(format: "%02d", $0 % 60) }
-    }
-
-    var doneCount: Int {
-        weekDone.filter(\.self).count
-    }
+/// The weather page's sample (never stored, logged or backed up: in memory only) until Apple weather is entitled.
+enum MosaicWeatherSample {
+    static let temperature = 58
 }
 
 extension MosaicPage {
-    /// The caption under the mosaic for a page.
-    func caption(facts: MosaicFacts, page pageFacts: MosaicPageFacts) -> String {
+    /// The caption under the mosaic for a page (Core's own words where it has them).
+    func caption(facts: MosaicFacts?, page pageFacts: MosaicPageFacts?) -> String {
         switch self {
-        case .mood: return facts.caption(for: .day)
-        case .weather: return "Weather, sample until Apple weather"
-        case .next:
-            guard let minutes = pageFacts.nextMinutes else { return "Nothing timed next." }
-            let title = facts.nextTimed?.title ?? "Next"
-            return "\(title) in \(HouseTime.minutes(minutes))."
-        case .week:
-            return "This week, \(pageFacts.doneCount) of \(pageFacts.planned) training days"
+        case .mood: facts?.caption(for: .day) ?? ""
+        case .weather: "Weather, sample until Apple weather"
+        case .next: pageFacts?.nextCaption ?? "Nothing timed next."
+        case .week: pageFacts?.weekCaption ?? "No training days planned this week."
         }
     }
 }
@@ -137,7 +113,7 @@ enum MosaicPageField {
         start: TimeInterval,
         ground: MosaicTriple,
         context: MosaicMoodContext,
-        facts: MosaicPageFacts,
+        facts: MosaicPageFacts?,
         now: @escaping () -> Date = { AppClock.now },
         still: Bool
     ) -> MosaicMoodField.Overlay? {
@@ -146,7 +122,12 @@ enum MosaicPageField {
             return nil
         case .weather:
             let warm: MosaicTriple = (1, 0.72, 0.35)
-            let text = MosaicText.raster(text: "\(facts.temperature)°", family: "Outfit", weight: -0.2, size: 12.5)
+            let text = MosaicText.raster(
+                text: "\(MosaicWeatherSample.temperature)°",
+                family: "Outfit",
+                weight: -0.2,
+                size: 12.5
+            )
             let left = cols / 2 + 2, top = rows / 2 - MosaicText.rows / 2
             return { column, row, time, colour in
                 if MosaicPageField.sunTiles(cols: cols, rows: rows, elapsed: still ? 0 : time - start)
@@ -161,12 +142,12 @@ enum MosaicPageField {
                 return colour
             }
         case .next:
-            guard let digits = facts.nextText else { return nil }
+            guard let digits = facts?.nextClock else { return nil }
             var config = MosaicConfig.moods
             config.columns = cols
             config.rows = rows
             let tiles = MosaicScenes.numeral(digits, geometry: MosaicGeometry(config: config, width: 0))
-            let accent = facts.nextApp.flatMap { context.accents[$0] } ?? context.ink
+            let accent = facts?.nextApp.flatMap { context.accents[$0] } ?? context.ink
             return { column, row, _, colour in
                 guard tiles.contains(column * rows + row) else { return colour }
                 let seconds = Double(Calendar.current.component(.second, from: now()))
@@ -175,15 +156,16 @@ enum MosaicPageField {
             }
         case .week:
             let tiles = weekTiles(cols: cols, rows: rows)
+            let marks = facts?.weekMarks ?? []
             let training = context.accents[.training] ?? context.ink
             return { column, row, _, colour in
                 guard let tile = tiles[column * rows + row] else { return colour }
-                let done = facts.weekDone.indices.contains(tile.day) && facts.weekDone[tile.day]
+                let mark = marks.indices.contains(tile.day) ? marks[tile.day] : .rest
                 if tile.isMark {
-                    return done ? training : colour
+                    return mark == .done ? training : colour
                 }
                 // Done days and today in full ink; the others 42% toward the ground, in a solid colour.
-                return done || tile.day == facts.today ? context.ink : MosaicColour.mix(context.ink, ground, 0.42)
+                return mark == .done || mark == .today ? context.ink : MosaicColour.mix(context.ink, ground, 0.42)
             }
         }
     }
