@@ -58,6 +58,16 @@ struct HomeMosaicPage: View {
         }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
+        // Sheet 203: a pull down from the top 40 pt also opens Settings.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 24).onEnded { value in
+                if value.startLocation.y < 40, value.translation.height > 60,
+                   abs(value.translation.width) < value.translation.height
+                {
+                    link = .settings
+                }
+            }
+        )
         .task(id: Int(AppClock.now.timeIntervalSince1970 / 60) &+ model.revision) { refreshPick() }
         .onAppear { onScreen = true }
         .onDisappear {
