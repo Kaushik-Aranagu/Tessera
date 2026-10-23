@@ -90,6 +90,7 @@ private struct TrainingAtRest: View {
     @State private var firstSegment: CGRect = .zero
     /// The Library rises over Training (Exercises | Workouts, Try today).
     @State private var libraryOpen = false
+    @State private var statsOpen = false
     @State private var place = TrainingPlace.current()
     /// The START sequence, cancelled if he leaves the page inside it.
     @State private var startTask: Task<Void, Never>?
@@ -140,6 +141,9 @@ private struct TrainingAtRest: View {
             }
             .fullScreenCover(isPresented: $libraryOpen) {
                 LibraryPage(close: { libraryOpen = false })
+            }
+            .fullScreenCover(isPresented: $statsOpen) {
+                TrainingStatsPage(close: { statsOpen = false })
             }
             .task { model.purgeStaleTried() }
 
@@ -495,6 +499,9 @@ private struct TrainingAtRest: View {
             doors.append(TrainingDoor(id: "library", word: "Library",
                                       value: count > 0 ? "\(count) \(count == 1 ? "exercise" : "exercises")" : nil,
                                       open: { libraryOpen = true }))
+        }
+        if StatsSwitch.isOn {
+            doors.append(TrainingDoor(id: "stats", word: "Stats", value: nil, open: { statsOpen = true }))
         }
         if let workout = model.classDef(.workout) {
             let done = TrainingWeek.doneThisWeek(model, now: AppClock.now)
