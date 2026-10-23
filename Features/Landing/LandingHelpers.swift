@@ -5,9 +5,17 @@ import SwiftUI
 
 /// Each app's accent, from the Theme tokens (design 131 table). Kitchen's is `KitchenFront.accent`.
 enum LandingAccent {
-    static let money = Theme.Colors.Accent.money
-    static let notes = Theme.Colors.Accent.notes
-    static let lists = Theme.Colors.Accent.lists
+    static var money: Color {
+        Theme.Colors.Accent.money
+    }
+
+    static var notes: Color {
+        Theme.Colors.Accent.notes
+    }
+
+    static var lists: Color {
+        Theme.Colors.Accent.lists
+    }
 }
 
 /// A sentence with its one key word, for pages whose words come from the app (Core's `LandingSentence` cannot be

@@ -16,8 +16,12 @@ struct LookTableTests {
                         0x86C9A0, 0xF48BA6, 0x9E8F93, 0xA6BCD6],
             "Celadon": [0xE0EAE2, 0xFFFFFF, 0x0C1E19, 0x3A6584, 0x97ABA2, 0x2C59BE, 0xD94B2E, 0xB23A1F, 0xCF9418,
                         0x1F8B6A, 0xBF4664, 0x7E918A, 0x86B8D4],
+            "White": [0xFFFFFF, 0xECECEC, 0x121212, 0x623AA4, 0xB9B3C3, 0x2450D8, 0xE2432A, 0xC23A22, 0xF0A500,
+                      0x12936A, 0xCC3F68, 0x9C95A8, 0x7FB6E0],
+            "Black": [0x000000, 0x0F0E12, 0xF4F1EC, 0xB7A6E0, 0x5C5765, 0x86B4FF, 0xFF5B3A, 0xFF7A5C, 0xFFC23D,
+                      0x3FD49A, 0xFF6B92, 0x8E879A, 0x7FD6E8],
         ]
-        #expect(Look.all.map(\.name) == ["Porcelain", "Obsidian", "Plein", "Lacquer", "Celadon"])
+        #expect(Look.all.map(\.name) == ["Porcelain", "Obsidian", "Plein", "Lacquer", "Celadon", "White", "Black"])
         for look in Look.all {
             let tokens = [look.ground, look.raised, look.ink, look.context, look.muted, look.tess, look.live,
                           look.liveInk, look.now, look.health, look.training, look.neutral, look.sky]
@@ -25,8 +29,8 @@ struct LookTableTests {
         }
         let lightModes = Look.light.map(\.isDark)
         let darkModes = Look.dark.map(\.isDark)
-        #expect(lightModes == [false, false, false])
-        #expect(darkModes == [true, true])
+        #expect(lightModes == [false, false, false, false])
+        #expect(darkModes == [true, true, true])
     }
 
     /// Design 43 recut Plein: flat (no washes or grain), earth pigments, its own training colour apart from health.
@@ -35,5 +39,12 @@ struct LookTableTests {
         #expect(plein.field == .pigmentBloom)
         #expect(plein.training != plein.health)
         #expect(plein.sheen == 0xE0B341 && !plein.sheenOnLetters)
+    }
+
+    /// White's ink 2 and ink 3 are exact warm greys, not derived tints; the other looks derive theirs.
+    @Test func whiteSetsItsInkTiersExactly() {
+        #expect(Look.white.ink2 == 0x54514D && Look.white.ink3 == 0x86827C)
+        #expect(Look.black.ink2 == 0xA3A09B && Look.black.ink3 == 0x6E6B67)
+        #expect(Look.all.filter { $0.ink2 != nil }.map(\.name) == ["White", "Black"])
     }
 }
