@@ -4,6 +4,9 @@ import Foundation
 /// and
 /// a level of the month's spend against the month before. Phone only: these figures never reach Claude, a log, a
 /// backup listing or a widget, and never Home. A pool is named the way the rest of Money names it.
+///
+/// `text` is for the Money page only: Home, the Lock Screen, widgets, intents and every model get none of it (a test
+/// scans for the type and its reader).
 public struct PoolMonthLine: Equatable, Sendable {
     public let pool: UUID
     /// "US checking, 2,100."
@@ -28,15 +31,25 @@ public extension PoolReport {
         if codes.count > 1 {
             var dollars = Decimal(0)
             var all = true
+            var oldest: Date?
             for code in codes {
                 if let rate = rate(to: code) {
                     dollars += (sums[code] ?? 0) * rate.dollars
+                    if code != "USD" {
+                        oldest = min(oldest ?? rate.date, rate.date)
+                    }
                 } else {
                     all = false
                 }
             }
             if all {
                 text += ", about \(Self.plain(PoolMath.rounded(dollars, places: 0), lakh: lakh)) in all"
+                text += "."
+                // Said once, in words, when a rate behind the "about" is more than two weeks old.
+                if let oldest, now.timeIntervalSince(oldest) > Double(Self.staleDays) * 86400 {
+                    text += " The rates are old."
+                }
+                return text
             }
         }
         return text + "."
