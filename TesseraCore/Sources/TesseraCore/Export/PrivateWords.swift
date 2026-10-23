@@ -33,6 +33,8 @@ enum PrivateWords {
         SystemCatalog.Key.event.systemKey, SystemCatalog.Key.sleepNight.systemKey,
         SystemCatalog.Key.stepsDay.systemKey, SystemCatalog.Key.restingHeartRate.systemKey,
         SystemCatalog.Key.heldNotice.systemKey,
+        // Her conversation (sheet 215 rev 5) is on the phone only, in no copy at all.
+        SystemCatalog.Key.tessTurn.systemKey,
     ]
 
     static func isMirror(_ record: ObjectRecord) -> Bool {
