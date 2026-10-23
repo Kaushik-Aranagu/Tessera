@@ -8,7 +8,7 @@ struct MosaicSlot: View {
     @Binding var caption: String
 
     var body: some View {
-        // Sheet 200 (mosaic moods On): 240x132 pt, right-aligned to the gutter; A's picture draws inside this frame.
+        // Sheet 200 (mosaic moods On): 248x160 pt, right-aligned to the gutter; A's picture draws inside this frame.
         // Otherwise full width, 250 pt tall as before.
         Group {
             if HomeMosaic.moodsIsOn {

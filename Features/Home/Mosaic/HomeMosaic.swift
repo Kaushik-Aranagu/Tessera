@@ -11,8 +11,8 @@ enum HomeMosaic {
     static let gutter: CGFloat = 24
     static let sectionGap: CGFloat = 16
     static let mosaicHeight: CGFloat = 250
-    /// Sheet 200: the narrower block (240x132), 14 pt under the sentence.
-    static let moodsMosaicSize = CGSize(width: 240, height: 132)
+    /// Sheet 200: the narrower block (248x160, the mosaic changes size by mood inside it), 14 pt under the sentence.
+    static let moodsMosaicSize = CGSize(width: 248, height: 160)
     static let moodsMosaicGap: CGFloat = 14
     /// Sheet 200: from the top of the safe area to the top of the sentence; the 44 pt date row sits inside it.
     static let moodsTopInset: CGFloat = 64
