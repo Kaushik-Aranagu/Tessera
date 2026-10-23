@@ -55,6 +55,15 @@ struct HomeV2View: View {
                 .padding(.bottom, HomeSpatialView.dockClearance)
         }
         .environment(\.openHomeLink) { link = $0 }
+        .task {
+            // `-openApp tasks|kitchen|...` (simulator only, through LaunchFlags): opens that app's door, for stills.
+            if let value = LaunchFlags.value(after: "-openApp"), let app = HomeApp.allCases.first(where: {
+                $0.rawValue.lowercased() == value
+            }) {
+                try? await Task.sleep(for: .seconds(1))
+                door = .app(app)
+            }
+        }
         .fullScreenCover(item: $door) { door in
             HomeV2DoorPage(door: door)
                 .safeAreaInset(edge: .top, spacing: 0) {

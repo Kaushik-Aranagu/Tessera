@@ -93,24 +93,36 @@ struct TasksFront {
 /// Undo.
 @MainActor
 enum TasksActions {
-    static func finish(_ line: TasksFront.Line, model: AppModel) {
-        let record = try? model.engine.perform(SetTaskDone(task: line.id, done: true), by: .user).record
+    /// Finishes it; Tess says "done" only when the engine took it (QA on #1267). Returns whether it landed.
+    @discardableResult
+    static func finish(_ line: TasksFront.Line, model: AppModel) -> Bool {
+        guard let record = try? model.engine.perform(SetTaskDone(task: line.id, done: true), by: .user).record else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return false
+        }
         model.touch()
         TessVoice.shared.say("\(line.title), done.", undo: record)
+        return true
     }
 
     /// Tomorrow for a dated task, next week for an undated one (09:00 of his day seven days on).
-    static func notNow(_ line: TasksFront.Line, model: AppModel) {
+    @discardableResult
+    static func notNow(_ line: TasksFront.Line, model: AppModel) -> Bool {
         let day = TesseraDay()
         let target: Date? = line.when == nil
             ? day.adding(days: 7, to: day.start(of: AppClock.now)).addingTimeInterval(5 * 3600)
             : nil
-        let record = try? model.engine.perform(MoveTask(task: line.id, to: target, time: AppClock.now), by: .user)
+        guard let record = try? model.engine.perform(MoveTask(task: line.id, to: target, time: AppClock.now), by: .user)
             .record
+        else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return false
+        }
         model.touch()
         let moved = model.store.object(id: line.id).flatMap { model.store.value("startsAt", of: $0)?.dateValue }
         let when = line.when == nil ? "next week"
             : moved.map { TessCaptureEngine.when($0, context: TessContext(now: AppClock.now)) } ?? "tomorrow"
         TessVoice.shared.say("\(line.title), \(when).", undo: record)
+        return true
     }
 }

@@ -31,7 +31,7 @@ struct TasksSwipeRow<Content: View>: View {
                         .frame(maxWidth: struck ? .infinity : nil, alignment: .leading)
                         .allowsHitTesting(false)
                 }
-                .opacity(struck ? 0.5 : 1)
+                .environment(\.tasksStruck, struck)
                 .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
@@ -50,11 +50,7 @@ struct TasksSwipeRow<Content: View>: View {
                 guard abs(value.translation.width) > abs(value.translation.height), !struck else { return }
                 handled = true
                 pull = value.translation.width
-                let isArmed = abs(pull) >= TasksSwipe.arm
-                if isArmed, !armed {
-                    cue.play(.selection)
-                }
-                armed = isArmed
+                armed = abs(pull) >= TasksSwipe.arm
             }
             .onEnded { _ in
                 let distance = pull
@@ -62,14 +58,17 @@ struct TasksSwipeRow<Content: View>: View {
                 if distance >= TasksSwipe.arm {
                     finish()
                 } else if -distance >= TasksSwipe.arm {
-                    withTesseraAnimation(.easeIn(duration: 0.2), reduceMotion: reduceMotion) { pull = -420 }
+                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = -420 }
                     Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(200))
-                        TasksActions.notNow(line, model: model)
-                        pull = 0
+                        try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 300))
+                        if !TasksActions.notNow(line, model: model) {
+                            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
+                        } else {
+                            pull = 0
+                        }
                     }
                 } else {
-                    withTesseraAnimation(.easeOut(duration: 0.22), reduceMotion: reduceMotion) { pull = 0 }
+                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
                 }
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(250))
@@ -78,17 +77,20 @@ struct TasksSwipeRow<Content: View>: View {
             }
     }
 
-    /// The strike runs out across the line, a soft tap, then the op lands and the page closes up.
+    /// The strike runs out across the line on the house spring and lands with one soft tap (sheet 175); then the op.
+    /// A finish that fails restores the row, and Tess says nothing about "done" (QA on #1267).
     private func finish() {
         guard !struck else { return }
-        cue.play(.selection)
-        withTesseraAnimation(.easeOut(duration: reduceMotion ? 0.15 : 0.35), reduceMotion: reduceMotion) {
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
             struck = true
             pull = 0
         }
+        cue.play(.done)
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 600))
-            TasksActions.finish(line, model: model)
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 500))
+            if !TasksActions.finish(line, model: model) {
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { struck = false }
+            }
         }
     }
 }

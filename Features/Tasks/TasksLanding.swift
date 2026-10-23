@@ -59,9 +59,7 @@ private struct TasksLead: View {
         VStack(alignment: .leading, spacing: 0) {
             if let lead = front.lead {
                 TasksSwipeRow(line: lead, onOpen: { open(lead) }) {
-                    Text(lead.title)
-                        .textRole(.title)
-                        .foregroundStyle(Theme.Colors.ink)
+                    TasksStruckText(text: lead.title, role: .title, ink: Theme.Colors.ink)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if let step = front.firstStep {
@@ -98,6 +96,7 @@ struct TasksRowText: View {
     /// On the landing only a carried task shows its word; the rail shows the time too.
     var carriedOnly = false
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.tasksStruck) private var struck
 
     var body: some View {
         let value = carriedOnly && !line.carried ? "" : line.value()
@@ -105,17 +104,14 @@ struct TasksRowText: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.xs))
             : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Spacing.m))
         layout {
-            Text(line.title)
-                .textRole(.body)
-                .foregroundStyle(Theme.Colors.ink)
-                .fixedSize(horizontal: false, vertical: true)
+            TasksStruckText(text: line.title, role: .body, ink: Theme.Colors.ink)
             if !value.isEmpty {
                 if !typeSize.isAccessibilitySize {
                     Spacer(minLength: Theme.Spacing.s)
                 }
                 Text(value)
                     .textRole(.data)
-                    .foregroundStyle(line.carried ? Theme.Colors.inkTertiary : Theme.Colors.inkSecondary)
+                    .foregroundStyle(line.carried || struck ? Theme.Colors.inkTertiary : Theme.Colors.inkSecondary)
                     .multilineTextAlignment(typeSize.isAccessibilitySize ? .leading : .trailing)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -161,4 +157,24 @@ private struct TasksRail: View {
             TasksRowText(line: line)
         }
     }
+}
+
+/// A task's words that go to ink 3 once its strike lands (Design on #1267: no fade).
+struct TasksStruckText: View {
+    let text: String
+    let role: TextRole
+    let ink: Color
+    @Environment(\.tasksStruck) private var struck
+
+    var body: some View {
+        Text(text)
+            .textRole(role)
+            .foregroundStyle(struck ? Theme.Colors.inkTertiary : ink)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+extension EnvironmentValues {
+    /// The row's strike has landed: its words are ink 3.
+    @Entry var tasksStruck = false
 }
