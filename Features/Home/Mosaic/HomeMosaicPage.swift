@@ -186,8 +186,8 @@ struct HomeMosaicPage: View {
         .tesseraFeedback(.setLogged, trigger: rigidBeats)
         .environment(\.openHomeLink) { link = $0 }
         .fullScreenCover(item: $link) { link in
-            // Settings has its own back word ("‹ Home"), so it gets no Close.
-            if link == .settings {
+            // Settings and Today have their own back word ("‹ Home"), so it gets no Close.
+            if link == .settings || link == .today {
                 link.destination
             } else {
                 link.destination
@@ -345,10 +345,11 @@ struct HomeMosaicPage: View {
             case .money: link = .money
             case .notes: link = .notes
             case .lists: link = .lists
+            case .training: link = .training
             default: link = .review
             }
         case .today, .weather:
-            link = .review
+            link = .today
         }
     }
 

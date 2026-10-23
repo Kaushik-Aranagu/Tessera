@@ -22,35 +22,51 @@ struct BoardLine: Equatable {
 /// ranked notices replace the stand-in list here when its PR lands; until then the day's clauses (and the sunset) are
 /// the
 /// notices. A moment takes the two lines for its run. Private things come through Core already masked.
+@MainActor
 enum HomeBoard {
     static let rotationSeconds: Double = 6
     static let maxNotices = 6
-    /// A line must fit its one row at Figtree 23 without shrinking: about this many letters, spaces included. Notices
-    /// that are longer are left out for now (later Tess words each one to fit, on the phone).
-    static let maxLetters = 24
+    static let defaultWidth: CGFloat = 340
+    /// The room the top-left Settings word takes from the date's row, plus a gap, so the date never runs into it.
+    static let settingsReserve: CGFloat = 104
 
-    /// "Friday, October 23" in ink at normal weight, no underline; it opens Today.
-    static func date(now: Date) -> BoardLine {
-        let text = now.formatted(.dateTime.weekday(.wide).month(.wide).day())
+    /// The date in ink-sky at normal weight; it opens Today. A long date ("Wednesday, September 30") steps down to
+    /// shorter forms until its measured width fits its row, clear of the Settings word.
+    static func date(now: Date, width: CGFloat = defaultWidth) -> BoardLine {
+        let forms: [Date.FormatStyle] = [
+            .dateTime.weekday(.wide).month(.wide).day(),
+            .dateTime.weekday(.wide).month(.abbreviated).day(),
+            .dateTime.weekday(.abbreviated).month(.abbreviated).day(),
+            .dateTime.month(.abbreviated).day(),
+        ]
+        let room = width - settingsReserve
+        var text = now.formatted(forms[0])
+        for form in forms {
+            text = now.formatted(form)
+            if CellMetrics.lineWidth([DepartureSegment(text: text, kind: .day)]) <= room {
+                break
+            }
+        }
         return BoardLine(segments: [DepartureSegment(text: text, kind: .day, opens: true)], target: .today)
     }
 
     /// Core's ranked notices as board lines. A notice goes to its own `target` (never `clause.opens`, which Core marks
     /// unused); the app word opens its room, and "Sunset" is painted with the sky and goes to the weather.
-    static func notices(from list: [HomeNotice]) -> [BoardLine] {
+    static func notices(from list: [HomeNotice], width: CGFloat = defaultWidth) -> [BoardLine] {
         // Every notice stays: it shows its longest form that fits its row (its short form drops trailing words), never
         // shrunk and never an ellipsis.
-        list.prefix(maxNotices).map(line(of:)).map(cut)
+        list.prefix(maxNotices).map(line(of:)).map { cut($0, width: width) }
     }
 
-    static func fits(_ line: BoardLine) -> Bool {
-        DepartureSteps.flat(line.segments).count <= maxLetters
+    /// Whether the line, measured in its faces (bold keywords at 1.12x included), fits its row.
+    static func fits(_ line: BoardLine, width: CGFloat = defaultWidth) -> Bool {
+        CellMetrics.lineWidth(line.segments) <= width
     }
 
     /// Drops words from the end until the line fits (at least one word stays).
-    static func cut(_ line: BoardLine) -> BoardLine {
+    static func cut(_ line: BoardLine, width: CGFloat = defaultWidth) -> BoardLine {
         var line = line
-        while !fits(line), DepartureSteps.flat(line.segments).contains(" ") {
+        while !fits(line, width: width), DepartureSteps.flat(line.segments).contains(" ") {
             var last = line.segments.removeLast()
             var words = last.text.split(separator: " ").map(String.init)
             if words.count > 1 {

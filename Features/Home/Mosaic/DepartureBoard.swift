@@ -115,6 +115,8 @@ struct DepartureBoard: View {
     @State private var lastTarget: [[Cell]] = []
     /// Where each door word sits, kept outside the view state so a layout pass does not redraw the board.
     @State private var frames = DoorFrames()
+    /// The hour's band, re-checked on a timer so the date's colour turns without a redraw.
+    @State private var band = DateSky.band(at: AppClock.now)
 
     final class DoorFrames {
         var byKey: [String: CGRect] = [:]
@@ -127,6 +129,8 @@ struct DepartureBoard: View {
         /// through
         /// it are drawn centred in it, so nothing on the row moves while they flip (sheet 216, r28).
         var width: CGFloat?
+        /// The face and colour of the run the letter came from, so a dropped letter keeps them through the pass.
+        var kind: DepartureSegment.Kind?
     }
 
     private var finalText: String {
@@ -161,12 +165,25 @@ struct DepartureBoard: View {
         .tesseraFeedback(.made, trigger: taps)
         .onAppear {
             onScreen = true
+            band = DateSky.band(at: AppClock.now)
             if cells.isEmpty {
                 cells = lines.map { Self.cells($0) }
                 lastTarget = cells
             }
         }
         .onDisappear { onScreen = false }
+        .task {
+            // The hour's band is re-checked every 30 s; when it turns, the colour eases over (MotionPolicy) and the
+            // date line flips once through itself.
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(30))
+                let now = DateSky.band(at: AppClock.now)
+                if now != band {
+                    withTesseraAnimation(.easeInOut(duration: 0.6), reduceMotion: reduceMotion) { band = now }
+                    bandPass()
+                }
+            }
+        }
         .onChange(of: lines) { old, new in transition(from: old, to: new) }
     }
 
@@ -199,8 +216,8 @@ struct DepartureBoard: View {
                     HStack(spacing: 0) {
                         ForEach(kept ..< lineCells.count, id: \.self) { k in
                             Text(String(lineCells[k].shown))
-                                .font(Theme.voice(size: Self.size))
-                                .foregroundStyle(Theme.Colors.ink)
+                                .font(font(for: lineCells[k].kind ?? .plain))
+                                .foregroundStyle(droppedStyle(lineCells[k].kind ?? .plain))
                                 .fixedSize()
                                 .frame(width: lineCells[k].width)
                                 .scaleEffect(x: 1, y: lineCells[k].squash ? 0.08 : 1, anchor: .center)
@@ -209,6 +226,16 @@ struct DepartureBoard: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+    }
+
+    private func droppedStyle(_ kind: DepartureSegment.Kind) -> AnyShapeStyle {
+        switch kind {
+        case let .app(app): AnyShapeStyle(app.accent)
+        case .sky: AnyShapeStyle(LinearGradient(colors: [SkyWordStyle.first, SkyWordStyle.second],
+                                                startPoint: .leading, endPoint: .trailing))
+        case .day: AnyShapeStyle(DateSky.gradient(band: band))
+        default: AnyShapeStyle(Theme.Colors.ink)
         }
     }
 
@@ -281,16 +308,19 @@ struct DepartureBoard: View {
                 taps += 1
                 open(li, frames.byKey[key] ?? .zero)
             } label: {
-                door.foregroundStyle(DateSky.gradient(at: AppClock.now))
-                    .animation(.easeInOut(duration: 0.6), value: DateSky.band(at: AppClock.now))
+                door.foregroundStyle(DateSky.gradient(band: band))
             }
             .buttonStyle(.plain)
         case .number where seg.opens, .plain where seg.opens:
             Button {
                 taps += 1
                 open(li, frames.byKey[key] ?? .zero)
-            } label: { door.foregroundStyle(Theme.Colors.ink).contentShape(.interaction, Rectangle().inset(by: -8)) }
-                .buttonStyle(.plain)
+            } label: {
+                door.foregroundStyle(Theme.Colors.ink)
+                    .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.ink).frame(height: 1).offset(y: 5) }
+                    .contentShape(.interaction, Rectangle().inset(by: -8))
+            }
+            .buttonStyle(.plain)
         default:
             content.foregroundStyle(Theme.Colors.ink)
         }
@@ -306,12 +336,16 @@ struct DepartureBoard: View {
         case .sky:
             Button { taps += 1; open(li, .zero) } label: { text }.buttonStyle(SkyWordStyle())
         case .day:
-            Button { taps += 1; open(li, .zero) } label: { text.foregroundStyle(DateSky.gradient(at: AppClock.now)) }
+            Button { taps += 1; open(li, .zero) } label: { text.foregroundStyle(DateSky.gradient(band: band)) }
                 .buttonStyle(.plain)
         default:
             if seg.opens {
-                Button { taps += 1; open(li, .zero) } label: { text.foregroundStyle(Theme.Colors.ink) }
-                    .buttonStyle(.plain)
+                Button { taps += 1; open(li, .zero) } label: {
+                    text.foregroundStyle(Theme.Colors.ink)
+                        .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.ink).frame(height: 1).offset(y: 5)
+                        }
+                }
+                .buttonStyle(.plain)
             } else {
                 text.foregroundStyle(Theme.Colors.ink)
             }
@@ -335,7 +369,7 @@ struct DepartureBoard: View {
             if index > 0 {
                 out.append(Cell(shown: " "))
             }
-            out += seg.text.map { Cell(shown: $0, width: CellMetrics.width(of: $0, kind: seg.kind)) }
+            out += seg.text.map { Cell(shown: $0, width: CellMetrics.width(of: $0, kind: seg.kind), kind: seg.kind) }
         }
         return out
     }
@@ -367,6 +401,7 @@ struct DepartureBoard: View {
             }
             for k in want.indices {
                 old[k].width = want[k].width
+                old[k].kind = want[k].kind
             }
             current[li] = old
             let span = max(old.count, want.count)
@@ -416,12 +451,31 @@ struct DepartureBoard: View {
         }
     }
 
+    /// The band changed: each letter of the date line squashes and settles again, left to right, on the flip curve.
+    private func bandPass() {
+        guard !reduceMotion, !typeSize.isAccessibilitySize, !cells.isEmpty else { return }
+        let gen = generation
+        for k in cells[0].indices where cells[0][k].shown != " " {
+            let shown = cells[0][k].shown
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(DepartureSteps.delay(line: 0, index: k)))
+                guard gen == generation, !cells.isEmpty, k < cells[0].count else { return }
+                set(0, k, shown: shown, squash: true)
+                try? await Task.sleep(for: .milliseconds(16))
+                withTesseraAnimation(
+                    .timingCurve(0.3, 0.7, 0.4, 1, duration: Double(DepartureSteps.flipMS) / 1000),
+                    reduceMotion: false
+                ) { set(0, k, shown: shown, squash: false) }
+            }
+        }
+    }
+
     private func set(_ li: Int, _ k: Int, shown: Character, squash: Bool) {
         guard li < cells.count else { return }
         if k >= cells[li].count {
             cells[li] += Array(repeating: Cell(shown: " "), count: k - cells[li].count + 1)
         }
-        cells[li][k] = Cell(shown: shown, squash: squash, width: cells[li][k].width)
+        cells[li][k] = Cell(shown: shown, squash: squash, width: cells[li][k].width, kind: cells[li][k].kind)
     }
 }
 
@@ -478,7 +532,11 @@ enum DateSky {
     }
 
     static func gradient(at date: Date) -> LinearGradient {
-        let s = stops(band(at: date))
+        gradient(band: band(at: date))
+    }
+
+    static func gradient(band: Band) -> LinearGradient {
+        let s = stops(band)
         return LinearGradient(colors: [Color(light: s.0, dark: s.2), Color(light: s.1, dark: s.3)],
                               startPoint: .leading, endPoint: .trailing)
     }
@@ -490,6 +548,29 @@ enum DateSky {
 @MainActor
 enum CellMetrics {
     private static var cache: [String: CGFloat] = [:]
+
+    /// The measured width of a line as the board lays it out: each letter in its own face, one 6 pt gap between
+    /// words. A face that cannot be found is estimated, so the rule holds in a test host too.
+    static func lineWidth(_ line: [DepartureSegment]) -> CGFloat {
+        var total: CGFloat = 0
+        var words = 0
+        for seg in line {
+            for word in seg.text.split(separator: " ") {
+                words += 1
+                for ch in word {
+                    total += width(of: ch, kind: seg.kind) ?? estimate(kind: seg.kind)
+                }
+            }
+        }
+        return total + CGFloat(max(words - 1, 0)) * 6
+    }
+
+    private static func estimate(kind: DepartureSegment.Kind) -> CGFloat {
+        switch kind {
+        case .app, .sky: DepartureBoard.size * 1.12 * 0.58
+        default: DepartureBoard.size * 0.53
+        }
+    }
 
     static func width(of character: Character, kind: DepartureSegment.Kind) -> CGFloat? {
         guard character != " " else { return nil }
