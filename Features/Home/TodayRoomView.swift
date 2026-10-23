@@ -50,10 +50,12 @@ struct TodayRoomView: View {
         let sun = line.kind == .sunrise || line.kind == .sunset
         let tint = sun || line.isPast ? Theme.Colors.inkTertiary : Theme.Colors.ink
         return HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(line.name)
-                .font(Theme.voice(size: 19))
-                .foregroundStyle(tint)
-                .lineLimit(1)
+            // Never an ellipsis: one line at 19, else two lines at 15 inside the same 40 pt row.
+            ViewThatFits(in: .horizontal) {
+                Text(line.name).font(Theme.voice(size: 19)).lineLimit(1).fixedSize()
+                Text(line.name).font(Theme.voice(size: 15)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            }
+            .foregroundStyle(tint)
             Spacer(minLength: 8)
             Text(HouseTime.clock(line.time))
                 .font(Theme.numeral(19, weight: .light))
