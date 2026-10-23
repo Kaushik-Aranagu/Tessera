@@ -26,6 +26,7 @@ struct HomeMosaicPage: View {
     @State private var rigidBeats = 0
     @State private var onScreen = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Sheet 202: A's full-screen layer, its scene, where the core frame sits and the text it must stay clear of.
     @State private var controller = MosaicScreenController()
     @State private var scene: MosaicScene = .day
@@ -38,6 +39,8 @@ struct HomeMosaicPage: View {
     @State private var scroll = HomeScrollOffset()
     /// The day's clauses with Core's loaders, read once per refresh and not on every body.
     @State private var dayClauses: [HomeSentence.Clause]?
+    /// Sheet 213: the things that take turns in the space under the mosaic (Core's ranking when its feed lands).
+    @State private var things: [HomeThing] = []
     @State private var shield: [CGRect] = []
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager()
@@ -67,8 +70,9 @@ struct HomeMosaicPage: View {
                         .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
                     // No caption under the mosaic (sheet 211): its words live in the slot's accessibility label.
                 }
-                // The call site that becomes `mosaic.lay(from: rowFrame, tone: .glaze)` with A's view.
-                MosaicNextList { rowFrame in mosaicLay?(rowFrame) ?? false }
+                // Sheet 213: one thing at a time, no Next list.
+                HomeOneThing(things: things, index: $pager.index, turn: { pager.swipe(dx: $0) },
+                             done: { finishThing($0) }, open: { openThing($0) })
                     .mosaicShield()
                 if HomeMosaic.appsListIsOn {
                     AppsListSlot()
@@ -82,10 +86,6 @@ struct HomeMosaicPage: View {
         }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
-        // Sheet 212: an 80 pt clear band at the bottom for Tess's corner; everything else sits above it.
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: HomeMosaic.tessRoom).accessibilityHidden(true)
-        }
         // Sheet 202: the mosaic is the page's own pixels, edge to edge, behind everything; every touch leans it.
         .background {
             if layerOn, let facts, let mood = pick?.mood {
@@ -184,6 +184,16 @@ struct HomeMosaicPage: View {
     /// Asks Core's picker what the day looks like now; "Welcome back" shows once per absence.
     private func refreshPick() {
         let at = AppClock.now
+        let summary = AppSummaryLines.lines(
+            engine: model.engine,
+            plan: model.plan,
+            moneyDue: .next(engine: model.engine, now: at),
+            routines: .make(engine: model.engine, now: at),
+            now: at
+        )
+        things = HomeThings.standIn(model: model, lines: summary, now: at)
+        pager.count = max(things.count, 1)
+        pager.index = min(pager.index, pager.count - 1)
         dayClauses = HomeMosaic.firstThree(HomeSentence.compose(HomeSentence.inputs(
             engine: model.engine, plan: model.plan, moneyDue: .next(engine: model.engine, now: at),
             routines: .make(engine: model.engine, now: at), now: at
@@ -255,6 +265,29 @@ struct HomeMosaicPage: View {
     }
 
     /// The moment is over (its time, a mood change, or leaving Home): the sentence turns back to the mood's lines.
+    /// The hold finished a task: the op lands, the one Undo line speaks its shown label, and the next thing comes in.
+    private func finishThing(_ thing: HomeThing) {
+        guard let id = thing.taskID,
+              let record = try? model.engine.perform(SetTaskDone(task: id, done: true), by: .user).record
+        else { return }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        TessVoice.shared.say("\(thing.big), done.", undo: record, holds: .seconds(5))
+    }
+
+    private func openThing(_ thing: HomeThing) {
+        if case let .object(id)? = thing.opens {
+            model.path.append(Route.object(id))
+        } else if case let .app(app) = thing.kind {
+            switch app {
+            case .kitchen: link = .recipes
+            case .money: link = .money
+            case .notes: link = .notes
+            case .lists: link = .lists
+            default: break
+            }
+        }
+    }
+
     private func endMoment() {
         momentTask?.cancel()
         momentTask = nil
