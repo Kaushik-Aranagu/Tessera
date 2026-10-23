@@ -171,7 +171,7 @@ public extension MosaicMoodInputs {
                 ObjectPrivacy.isPrivateWord($0, in: store) || SecretWords.mentions($0)
                     || PrivateFacts.isWalled($0, lastWeightKg: BodyWeight.lastKg(in: store))
             } ?? true
-            label = hidden ? "Something private" : words
+            label = hidden ? MosaicMoodInputs.privateLabel(of: running, store: store) : words
         }
         let stats = TrainingStats(store: store, classes: classes)
         let rest = plan.map { stats.landingFacts(plan: $0, now: facts.now, calendar: calendar).isRestDay } ?? false
@@ -193,5 +193,19 @@ public extension MosaicMoodInputs {
             daysAway: NowPicker(engine: engine).daysAway(at: facts.now, calendar: calendar), backShown: backShown,
             dueToday: due, doneToday: done, raining: raining, previous: previous
         )
+    }
+
+    /// The app's own private label for what is running: never a new phrase.
+    static func privateLabel(of process: ProcessSnapshot, store _: ObjectStore) -> String {
+        let app = process.subject?.classDef.flatMap { ClassResolver.app(for: $0) }
+            ?? process.ownerApp
+            .flatMap { name in AppID.allCases.first { $0.name == name || name == "Workouts" && $0 == .training } }
+        switch app {
+        case .kitchen: return ObjectPrivacy.recipeLabel
+        case .routines: return RoutinesLanding.privateRoutine
+        case .notes: return ObjectPrivacy.noteLabel
+        case .lists: return ListContents.privateListLabel
+        default: return ObjectPrivacy.routineLabel
+        }
     }
 }
