@@ -200,6 +200,23 @@ final class ReviewChoices {
                says: ["Off": "A finished workout's page is as before.",
                       "On": "A finished workout's page is one sentence, its set marks and its numbers."],
                readiness: .live),
+        // Design round 2 and 3 (137, 139, 142, 153): each piece behind its own switch, all default Off.
+        Choice(id: "homeV2", name: "Home v2", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Home opens its areas as before.",
+                      "On": "Pull up from the bottom edge to fan the apps; an edge swipe turns to the next app."],
+               readiness: .live),
+        Choice(id: "finishV2", name: "Finishing marks", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Finishing a session, a cook or a routine ends as before.",
+                      "On": "Finishing gathers its marks and says one line."],
+               readiness: .live),
+        Choice(id: "surfacesV2", name: "Surfaces v2", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Widgets, the Lock Screen and Live Activities look as before.",
+                      "On": "Widgets, the Lock Screen and Live Activities use today's look."],
+               readiness: .live),
+        Choice(id: "liveV2", name: "Live workout v2", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The live workout looks as before.",
+                      "On": "The live workout is sentence case with one hot action."],
+               readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
                       "All": "Body weight, Habits, Money, Reading, People and Upkeep show too."],
@@ -290,6 +307,7 @@ final class ReviewChoices {
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
         ("Rooms", ["numberRules", "roomMotion", "pagesV2"]),
+        ("Home and live", ["homeV2", "finishV2", "surfacesV2", "liveV2"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
