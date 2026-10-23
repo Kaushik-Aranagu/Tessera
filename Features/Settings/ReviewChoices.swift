@@ -125,6 +125,14 @@ final class ReviewChoices {
                says: ["Off": "Home's write line keeps to tasks and logs, as now.",
                       "On": "Write anything on Home and it goes to the right app, with Undo."],
                readiness: .live),
+        // Sheet 139: a finished list, task and day each write a result in words.
+        Choice(id: "finishMoments",
+               name: "Finish moments",
+               values: ["Off", "On"],
+               defaultValue: "Off",
+               says: ["Off": "A finished list, task or day just stays as it is.",
+                      "On": "A finished list says so in words, Home counts tasks done today, and a past day reads as a sentence."],
+               readiness: .live),
         Choice(id: "oneHands", name: "One pair of hands", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "As now.", "On": "When two things need you at once, Tess offers one fix."],
                readiness: .arrivesWith("its Core facts")),
@@ -255,7 +263,10 @@ final class ReviewChoices {
         ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector"]),
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
         ("Money", ["moneyPools"]),
-        ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
+        (
+            "Together",
+            ["daySentence", "linkColours", "writeAnywhere", "finishMoments", "oneHands", "occasions", "makeAKind"]
+        ),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
