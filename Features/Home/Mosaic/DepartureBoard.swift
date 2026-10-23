@@ -29,6 +29,16 @@ enum DepartureSteps {
         return out
     }
 
+    /// The line as letters: the runs joined by one space cell each (an app word never runs into the next word).
+    static func flat(_ line: [DepartureSegment]) -> [Character] {
+        Array(line.map(\.text).joined(separator: " "))
+    }
+
+    /// Where each run starts in `flat`.
+    static func starts(_ line: [DepartureSegment]) -> [Int] {
+        line.reduce(into: [0]) { $0.append($0[$0.count - 1] + $1.text.count + 1) }
+    }
+
     /// Start delay of a letter: (line x 5 + index) x 14 ms.
     static func delay(line: Int, index: Int) -> Int {
         (line * 5 + index) * delayMS
@@ -86,6 +96,7 @@ struct DepartureBoard: View {
     @State private var cells: [[Cell]] = []
     @State private var generation = 0
     @State private var landed = 0
+    @State private var onScreen = false
 
     struct Cell: Equatable {
         var shown: Character
@@ -117,24 +128,32 @@ struct DepartureBoard: View {
     @ViewBuilder
     private func lineView(_ li: Int, _ line: [DepartureSegment]) -> some View {
         let lineCells = li < cells.count ? cells[li] : Self.cells(line)
-        let starts = line.reduce(into: [0]) { $0.append($0[$0.count - 1] + $1.text.count) }
+        let starts = DepartureSteps.starts(line)
         let plain = TrailingWrap(spacing: 6, lineSpacing: 2.4) {
             ForEach(Array(line.enumerated()), id: \.offset) { _, seg in
                 segmentView(seg, cells: nil, from: 0, li: li)
             }
         }
-        if reduceMotion || typeSize.isAccessibilitySize {
-            // A plain line: it crossfades (150 ms) when its text changes, and at accessibility sizes it wraps.
+        if reduceMotion {
+            // Reduce Motion: the whole line crossfades (150 ms) and nothing flips.
             plain
                 .id(line.map(\.text).joined(separator: "|"))
                 .transition(.opacity)
-                .animation(.easeInOut(duration: 0.15), value: line)
+                .tesseraAnimation(.easeInOut(duration: 0.15), value: line)
+        } else if typeSize.isAccessibilitySize {
+            // Accessibility sizes: plain wrapping words that snap.
+            plain
         } else {
             // Letters in one row while the line fits; a long line wraps as plain words instead.
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 0) {
                     ForEach(Array(line.enumerated()), id: \.offset) { k, seg in
                         segmentView(seg, cells: lineCells, from: starts[k], li: li)
+                        if k < line.count - 1 {
+                            let at = starts[k] + seg.text.count
+                            Text(String(at < lineCells.count ? lineCells[at].shown : " "))
+                                .font(Theme.voice(size: Self.size))
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -178,7 +197,7 @@ struct DepartureBoard: View {
 
     /// One cell per character of the line, in order, with a space between runs.
     private static func cells(_ line: [DepartureSegment]) -> [Cell] {
-        line.flatMap { $0.text.map { Cell(shown: $0) } }
+        DepartureSteps.flat(line).map { Cell(shown: $0) }
     }
 
     private func transition(from _: [[DepartureSegment]], to new: [[DepartureSegment]]) {

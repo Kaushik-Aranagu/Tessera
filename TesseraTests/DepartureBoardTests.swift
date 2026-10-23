@@ -31,4 +31,12 @@ struct DepartureBoardTests {
         #expect(DepartureSteps.delay(line: 0, index: 0) == 0)
         #expect(DepartureSteps.delay(line: 2, index: 3) == 182)
     }
+
+    @Test func runsAreSeparatedByASpaceCell() {
+        let line = [DepartureSegment(text: "Training", kind: .app(.training)),
+                    DepartureSegment(text: "is", kind: .plain),
+                    DepartureSegment(text: "3", kind: .number)]
+        #expect(String(DepartureSteps.flat(line)) == "Training is 3")
+        #expect(DepartureSteps.starts(line) == [0, 9, 12, 14])
+    }
 }
