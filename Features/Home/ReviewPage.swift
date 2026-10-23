@@ -232,6 +232,12 @@ struct ReviewPage: View {
         let _ = model.revision
         let week = ReviewWeekData.compute(model, now: AppClock.now, calendar: WeekReview.mondayFirst)
         let day = reading.map { week.day($0) }
+        // Sheet 139 part 6: a finished day reads as Core's past sentence, all ink (money only as words).
+        let pastLine: String? = reading.flatMap { index in
+            guard FinishMoments.isOn, week.isPast(index) else { return nil }
+            return HomeSentence.text(HomeSentence.past(engine: model.engine, on: week.days[index],
+                                                       calendar: WeekReview.mondayFirst, now: AppClock.now))
+        }
 
         VStack(alignment: .leading, spacing: 0) {
             Text(day?.name ?? "the week so far")
@@ -244,11 +250,11 @@ struct ReviewPage: View {
             // Title 44, one line: the session count, or the day's own line in the longest form that fits.
             // Title 44 on one line, else Title 34 on one line, else 34 wrapped: it never clips and never widens
             // the column (Design on #352).
-            FittingHero(forms: day?.heroForms ?? [week.hero])
+            FittingHero(forms: pastLine.map { [$0] } ?? day?.heroForms ?? [week.hero])
                 .foregroundStyle(Theme.Colors.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityAddTraits(.isHeader)
-                .accessibilityLabel(day?.hero ?? "\(week.headline). \(week.sessionLine).")
+                .accessibilityLabel(pastLine ?? day?.hero ?? "\(week.headline). \(week.sessionLine).")
                 .contentTransition(.opacity)
                 .siblingParallax()
                 .entrance(1, hero: true)

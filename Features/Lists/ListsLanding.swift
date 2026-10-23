@@ -206,9 +206,15 @@ struct ListsLandingPage: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var seenAtOpen: Date?
     @State private var ticked = 0
+    /// Sheet 139 part 3: bumped when a swipe strikes a list's last item (its one haptic, in place of the tick).
+    @State private var finished = 0
 
     private var margin: Bool {
         Choice.value("listsMargin", options: ["Off", "On"], default: "Off") == "On"
+    }
+
+    private var finishOn: Bool {
+        FinishMoments.isOn
     }
 
     var body: some View {
@@ -228,11 +234,13 @@ struct ListsLandingPage: View {
                         VStack(alignment: .leading, spacing: Theme.Spacing.xxl) {
                             if let lead = facts.lead {
                                 LeadList(line: lead, accent: accent, open: { open(lead) },
-                                         resume: { resume(lead) })
+                                         resume: { resume(lead) }, finishOn: finishOn,
+                                         reset: { reset(lead.id) })
                             }
                             ForEach(facts.others) { other in
                                 FillingLine(line: other, accent: accent, open: { open(other) },
-                                            tick: { tickNext(other) })
+                                            tick: { tickNext(other) }, finishOn: finishOn,
+                                            reset: { reset(other.id) })
                             }
                         }
                     },
@@ -243,6 +251,7 @@ struct ListsLandingPage: View {
                     .background { ThemedBackground() }
                     .toolbar(.hidden, for: .navigationBar)
                     .tesseraFeedback(.selection, trigger: ticked)
+                    .tesseraFeedback(.done, trigger: finished)
                     .onAppear {
                         if seenAtOpen == nil {
                             seenAtOpen = LandingSeen.date("lists")
@@ -312,7 +321,11 @@ struct ListsLandingPage: View {
               let result = try? model.engine.perform(CheckListItem(item: next.id, time: AppClock.now), by: .user)
         else { return }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
-        ticked += 1
+        if finishOn, FinishMoments.listIsFinished(left: line.left - 1, total: line.total, isPickOne: line.isPickOne) {
+            finished += 1
+        } else {
+            ticked += 1
+        }
         if let receipt = result.record.receipt {
             TessVoice.shared.say(receipt, undo: result.record)
         }
@@ -338,6 +351,12 @@ private struct LeadList: View {
     let accent: Color
     let open: () -> Void
     let resume: () -> Void
+    var finishOn = false
+    var reset: () -> Void = {}
+
+    private var moment: Bool {
+        finishOn && FinishMoments.listIsFinished(left: line.left, total: line.total, isPickOne: line.isPickOne)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
@@ -352,7 +371,11 @@ private struct LeadList: View {
                             .textRole(.title)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    if let left = LandingSentences.leftOf(left: line.left, total: line.total) {
+                    if moment {
+                        Text(FinishMoments.listLine(name: line.name))
+                            .textRole(.title)
+                            .foregroundStyle(Theme.Colors.ink)
+                    } else if let left = LandingSentences.leftOf(left: line.left, total: line.total) {
                         Text(left)
                             .textRole(.data)
                             .foregroundStyle(Theme.Colors.inkSecondary)
@@ -365,9 +388,16 @@ private struct LeadList: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(spoken)
             .accessibilityHint("Opens the list")
-            Button(line.isRunning || line.isGroceries ? "Resume" : "Start", action: resume)
-                .buttonStyle(LandingWordStyle())
-                .accessibilityLabel(line.isRunning || line.isGroceries ? "Resume, button" : "Start, button")
+            if moment {
+                if line.isReusable {
+                    Button(FinishMoments.resetWord, action: reset)
+                        .buttonStyle(LandingWordStyle())
+                }
+            } else {
+                Button(line.isRunning || line.isGroceries ? "Resume" : "Start", action: resume)
+                    .buttonStyle(LandingWordStyle())
+                    .accessibilityLabel(line.isRunning || line.isGroceries ? "Resume, button" : "Start, button")
+            }
         }
     }
 
@@ -388,6 +418,9 @@ private struct LeadList: View {
     }
 
     private var spoken: String {
+        if moment {
+            return "\(line.name), \(FinishMoments.listLine(name: line.name))"
+        }
         let status = line.isRunning ? "running, " : ""
         let left = LandingSentences.leftOf(left: line.left, total: line.total).map { "\($0): " } ?? ""
         return "\(line.name), \(status)\(left)\(line.nextItems.map(\.text).joined(separator: ", "))"
@@ -408,8 +441,26 @@ struct FillingLine: View {
     var filled = true
     /// The words under the name when the page says something other than the line (Reusable, Picks).
     var valueText: String?
+    /// Sheet 139 part 3 (Review > Together > Finish moments): a finished list reads "All packed." or "All done."
+    /// and, when reusable, offers "Reset it for next time". Off leaves the line as it was.
+    var finishOn = false
+    var reset: () -> Void = {}
+
+    private var moment: Bool {
+        finishOn && FinishMoments.listIsFinished(left: line.left, total: line.total, isPickOne: line.isPickOne)
+    }
 
     var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+            row
+            if moment, line.isReusable {
+                Button(FinishMoments.resetWord, action: reset)
+                    .buttonStyle(LandingWordStyle())
+            }
+        }
+    }
+
+    private var row: some View {
         Button(action: open) {
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 nameView
@@ -431,13 +482,13 @@ struct FillingLine: View {
             }
         )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(line.name), \(line.line)")
+        .accessibilityLabel("\(line.name), \(moment ? value : line.line)")
         .accessibilityHint("Opens the list")
         .accessibilityAction(named: Text("Check off next")) { tick() }
     }
 
     private var value: String {
-        valueText ?? line.line
+        moment ? FinishMoments.listLine(name: line.name) : valueText ?? line.line
     }
 
     @ViewBuilder

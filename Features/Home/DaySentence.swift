@@ -14,9 +14,15 @@ struct DaySentence: View {
         let clauses = HomeSentence.compose(HomeSentence.inputs(engine: model.engine,
                                                                plan: model.plan,
                                                                now: AppClock.now))
+        // Sheet 139 part 5: "3 done today." in plain ink after the clauses; a quiet day gives way to it.
+        let doneToday = FinishMoments.isOn
+            ? FinishMoments.tasksClause(
+                done: TaskList(store: model.store, classes: model.classes).todayCounts(AppClock.now).done
+            ) : nil
+        let words = clauses.isEmpty && doneToday != nil ? [] : Self.words(clauses)
         // Words flow as a paragraph; a key word is its own door (a link inside one Text can only take one colour).
         LandingWrap(spacing: 7, lineSpacing: 2) {
-            ForEach(Array(Self.words(clauses).enumerated()), id: \.offset) { _, word in
+            ForEach(Array(words.enumerated()), id: \.offset) { _, word in
                 if let index = word.clause, let app = word.app {
                     Button { open(clauses[index]) } label: {
                         Text(word.text).foregroundStyle(app.accent)
@@ -26,11 +32,17 @@ struct DaySentence: View {
                     Text(word.text).foregroundStyle(Theme.Colors.ink)
                 }
             }
+            if let doneToday {
+                ForEach(Array(doneToday.split(separator: " ").enumerated()), id: \.offset) { _, word in
+                    Text(String(word)).foregroundStyle(Theme.Colors.ink)
+                }
+            }
         }
         .textRole(.title)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(HomeSentence.text(clauses))
+        .accessibilityLabel([clauses.isEmpty && doneToday != nil ? nil : HomeSentence.text(clauses), doneToday]
+            .compactMap(\.self).joined(separator: " "))
         .accessibilityActions {
             ForEach(Array(clauses.enumerated()), id: \.offset) { _, clause in
                 if let range = clause.keyWord {
