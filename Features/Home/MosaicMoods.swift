@@ -136,6 +136,10 @@ struct MosaicMoodContext {
     var remainingSets = 0
     var doneCount = 0
     var trainingAccent: MosaicTriple = (0.77, 0.28, 0.16)
+    /// Ink, Tess's cobalt and each app's accent, for the moments (the view fills them from the theme).
+    var ink: MosaicTriple = (0.07, 0.07, 0.09)
+    var tess: MosaicTriple = (0.18, 0.43, 0.64)
+    var accents: [AppID: MosaicTriple] = [:]
 }
 
 enum MosaicMoodField {
@@ -412,5 +416,14 @@ enum MosaicMoodsSwitch {
 
     @MainActor static var isOn: Bool {
         HomeMosaic.isOn && ReviewChoices.shared.value(of: choiceID) == "On"
+    }
+}
+
+/// Settings › Review › "Mosaic moments" (default Off); it needs Mosaic moods On.
+enum MosaicMomentsSwitch {
+    nonisolated static let choiceID = "homeMosaicMoments"
+
+    @MainActor static var isOn: Bool {
+        MosaicMoodsSwitch.isOn && ReviewChoices.shared.value(of: choiceID) == "On"
     }
 }
