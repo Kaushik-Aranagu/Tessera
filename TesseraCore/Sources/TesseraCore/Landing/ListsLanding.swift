@@ -241,15 +241,11 @@ public struct ListsLanding {
         for item in row.items.filter({ !$0.isDone && $0.object.createdAt > seen }) {
             let shares = GroceryShare.decode(store.value("shares", of: item.object)?.stringValue)
             if let id = shares.compactMap(\.recipe).first, let recipe = store.object(id: id), !recipe.isDeleted {
-                return ObjectPrivacy.isPrivateWord(recipe.title, in: store) || isPrivateRecipe(recipe)
-                    ? "Private recipe" : recipe.title
+                // A recipe is private by its words only: it has no flag.
+                return ObjectPrivacy.isPrivateWord(recipe.title, in: store) ? "Private recipe" : recipe.title
             }
         }
         return nil
-    }
-
-    func isPrivateRecipe(_ recipe: ObjectRecord) -> Bool {
-        store.value("isPrivate", of: recipe) == .bool(true)
     }
 
     func marginLines(_ all: [Row], groceries: UUID, options: Options) -> [Margin] {
