@@ -40,10 +40,11 @@ struct TessOpenerTests {
     }
 
     @Test func aBodyOrCalorieTitleInAPlainClassGetsNoSinceThenLine() throws {
-        for title in ["Lunch 650 kcal", "Calories 1800 today"] {
-            let task = try engine.perform(CreateTask(title: title, startsAt: at(15)), by: .user).output
+        for title in ["Lunch 650 kcal", "Calories 1800 today", "Weighed in at 82.5 kg", "Weigh-in 181 lb"] {
+            let task = try engine.perform(CreateTask(title: "Plan", startsAt: at(15)), by: .user).output
             _ = conversation.append(role: .tess, text: "Noted.", about: [task], at: Date.now.addingTimeInterval(-60))
-            try engine.perform(MoveTask(task: task.id, to: at(17, 30), calendar: calendar), by: .user)
+            // Renamed to a body or calorie fact: the new title is walled, so there is no news to give.
+            try engine.perform(RenameObject(object: task.id, title: title), by: .user)
             let line = opening(at(12))?.line ?? ""
             #expect(!line.contains("Since then"), "\(title)")
             #expect(!line.contains("Private line"), "\(title)")
