@@ -143,7 +143,9 @@ public struct WriteRouter {
     static func isCalorieShaped(_ phrase: String) -> Bool {
         let lower = phrase.lowercased()
         return lower.firstMatch(of: /\b\d[\d,.]*\s*(?:calories|calorie|kcal|cals|cal)\b/) != nil
-            || lower.firstMatch(of: /\b(?:calories|calorie|kcal|cals|cal)\s*(?:of\s+|:\s*|=\s*|is\s+|was\s+)?\d/) != nil
+            || lower
+            .firstMatch(of: /\b(?:calories|calorie|kcal|cals|cal)\s*(?:of\s+|:\s*|=\s*|is\s+|was\s+|were\s+)?\d/) !=
+            nil
             || lower
             .firstMatch(
                 of: /\b(?:burned|burnt|ate|eaten|logged|tracked|consumed)\b.*\b(?:calories|calorie|kcal|cals|cal)\b/

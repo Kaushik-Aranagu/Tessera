@@ -170,7 +170,15 @@ struct WriteRouterTests {
         }
     }
 
-    @Test(arguments: ["calories 2400 today", "burned 400 kcal", "ate 600 calories", "2400 calories", "calories: 1800"])
+    @Test(arguments: [
+        "calories 2400 today",
+        "burned 400 kcal",
+        "ate 600 calories",
+        "2400 calories",
+        "calories: 1800",
+        "calories were 2400",
+        "calories was 2100",
+    ])
     func aCalorieLineThatLogsOneIsWalled(_ line: String) {
         #expect(WriteRouter.isCalorieShaped(line), "\(line)")
     }
