@@ -283,14 +283,13 @@ final class ReviewChoices {
         ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
-        (
-            "Shown",
-            ["sampleData", "landingPages", "numberRules", "roomMotion", "pagesV2", "areasShown", "classInspector"]
-        ),
+        ("Shown", ["sampleData", "landingPages", "areasShown", "classInspector"]),
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
+        // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
+        ("Rooms", ["numberRules", "roomMotion", "pagesV2"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
