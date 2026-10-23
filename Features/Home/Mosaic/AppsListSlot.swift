@@ -82,6 +82,7 @@ enum AppsListRows {
 /// middle. Reduce Motion: no swell and no slide.
 struct AppsListSlot: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.playDoorway) private var playDoorway
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var door: HomeV2Door?
@@ -149,7 +150,7 @@ struct AppsListSlot: View {
             HomeV2DoorPage(door: door)
                 .safeAreaInset(edge: .top, spacing: 0) {
                     HStack {
-                        Button { self.door = nil } label: {
+                        Button { playDoorway(door.accent, true) { self.door = nil } } label: {
                             Text("‹ Home")
                                 .frame(minWidth: 72, minHeight: 44, alignment: .leading)
                                 .contentShape(Rectangle())
@@ -204,7 +205,7 @@ struct AppsListSlot: View {
         if case let .object(id)? = row.opens {
             model.path.append(Route.object(id))
         } else {
-            door = .app(row.app)
+            playDoorway(row.app.accent, false) { door = .app(row.app) }
         }
     }
 

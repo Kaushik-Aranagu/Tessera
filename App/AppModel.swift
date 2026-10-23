@@ -313,6 +313,8 @@ final class AppModel {
 
     /// Home's own Tess layer (sheet 215) is on screen: she is the corner Tess there, so the dock's soul steps aside.
     var homeTessLayerActive = false
+    /// The pixel doorway (sheets 206 and 211): one for the whole app, drawn over everything at the root.
+    let doorway = Doorway()
 
     /// The open set-count ask ("2 × 10: 2 sets, or 2 kg?"), if the last phrase raised one.
     var pendingSetAsk: TessSetCountAsk? {

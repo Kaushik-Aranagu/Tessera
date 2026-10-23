@@ -41,7 +41,7 @@ extension Theme.Colors {
 
         /// Routines: dusk rose.
         static var routines: Color {
-            tuned(\.routines, light: 0xA4505F, dark: 0xD79AA6)
+            tuned(\.routines, light: 0x8E4A78, dark: 0xD79AA6)
         }
 
         /// The sky word's two stops ("Sunset").
