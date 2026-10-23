@@ -35,4 +35,18 @@ struct AppsListTests {
         #expect(AppsListRows.relative(0, middle: 6, count: 7) == 1)
         #expect(AppsListRows.relative(6, middle: 0, count: 7) == -1)
     }
+
+    @Test func fitCutsAtAWordEdgeAndKeepsWholeWords() {
+        // The cut lands on a space, or after the first word.
+        #expect(AppsListRows.fit("abcde fghij", limit: 5) == "abcde")
+        #expect(AppsListRows.fit("abcde fghij", limit: 6) == "abcde")
+        // One long word: a hard cut, no ellipsis.
+        #expect(AppsListRows.fit("abcdefghijkl", limit: 5) == "abcde")
+        // Short or empty text is left alone.
+        #expect(AppsListRows.fit("abcde", limit: 5) == "abcde")
+        #expect(AppsListRows.fit("", limit: 5) == "")
+        // Whole characters, not code units.
+        #expect(AppsListRows.fit("🙂🙂🙂🙂🙂🙂🙂", limit: 5) == "🙂🙂🙂🙂🙂")
+        #expect(AppsListRows.fit("Rent is due Friday and more", limit: 22) == "Rent is due Friday and")
+    }
 }
