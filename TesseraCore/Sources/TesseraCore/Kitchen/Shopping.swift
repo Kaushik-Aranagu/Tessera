@@ -46,14 +46,36 @@ public struct StartShop: EngineAction {
     }
 }
 
-/// Finishes the shop: the basket (checked items) is cleared and the process ends.
+/// One thing put away when the shop ends: an ingredient, the place it goes and the section inside it.
+public struct ShopPutAway: Codable, Equatable, Hashable, Sendable {
+    public var item: UUID
+    public var place: UUID?
+    public var section: String?
+
+    public init(item: UUID, place: UUID?, section: String? = nil) {
+        self.item = item
+        self.place = place
+        self.section = section
+    }
+}
+
+/// Finishes the shop: the basket (checked items) is cleared and the process ends. With `putAway`, the places of what
+/// was bought are set in the same transaction: one OpRecord, so one UNDO takes back both, and a finish that fails sets
+/// no place (the engine reverses a failed action whole).
 public struct FinishShop: EngineAction {
-    public static let descriptor = ActionDescriptor(name: "finishShop", summary: "Finish shopping", parameters: [])
+    public static let descriptor = ActionDescriptor(
+        name: "finishShop", summary: "Finish shopping",
+        parameters: [
+            .init("putAway", .json, "Where things go: a list of {item, place, section}", required: false),
+        ]
+    )
 
     public var time: Date?
+    public var putAway: [ShopPutAway]?
 
-    public init(time: Date? = nil) {
+    public init(time: Date? = nil, putAway: [ShopPutAway]? = nil) {
         self.time = time
+        self.putAway = putAway
     }
 
     @discardableResult
@@ -61,6 +83,11 @@ public struct FinishShop: EngineAction {
         // No groceries list means no shop: fail and write nothing (never make a list just to finish on it).
         guard let list = transaction.store.object(id: Groceries.listID), !list.isDeleted else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "there is no shop to finish")
+        }
+        // The last entry for an item wins, so one item is never placed twice.
+        var seen = Set<UUID>()
+        for entry in (putAway ?? []).reversed() where seen.insert(entry.item).inserted {
+            try SetItemPlace(item: entry.item, place: entry.place, section: entry.section).apply(&transaction)
         }
         let cleared = try transaction.clearDone(in: list)
         if let process = transaction.openProcess(for: list) {
@@ -73,7 +100,7 @@ public struct FinishShop: EngineAction {
         "Finished shopping"
     }
 
-    /// What Tess says for it; one UNDO brings the checked rows and the running shop back.
+    /// What Tess says for it; one UNDO brings the checked rows, the places and the running shop back.
     public func receipt(in _: ObjectStore) -> String? {
         "Shopping, finished"
     }
