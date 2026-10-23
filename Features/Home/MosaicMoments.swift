@@ -295,7 +295,10 @@ enum MosaicMomentField {
         let warm = hex(0xF2A65A)
         return { column, row, time, colour in
             let elapsed = time - start
-            let sampled = min(max(Int((Double(row) + 0.8 * sin(elapsed / 0.24 + Double(row) * 0.7)).rounded()), 0), rows - 1)
+            let sampled = min(
+                max(Int((Double(row) + 0.8 * sin(elapsed / 0.24 + Double(row) * 0.7)).rounded()), 0),
+                rows - 1
+            )
             let index = column * rows + sampled
             let shimmered = index < base.count ? MosaicColour.mix(colour, base[index], min(elapsed / 0.6, 1)) : colour
             return MosaicColour.mix(shimmered, warm, 0.18)
@@ -403,6 +406,23 @@ enum MosaicMomentField {
             return { column, row, _, colour in tiles.contains(column * rows + row) ? context.tess : colour }
         default:
             return nil
+        }
+    }
+
+    /// The sparkle around a finished tile: square rings (Chebyshev distance 1, 2, 3) in its colour, growing from
+    /// `landing` 700 ms after the moment starts and fading as they spread.
+    static func sparkleLight(
+        landing: (column: Int, row: Int),
+        colour accent: MosaicTriple,
+        start: TimeInterval
+    ) -> MosaicMoodField.Overlay {
+        { column, row, time, colour in
+            let age = time - start - 0.7
+            let ring = sparkleRing(age: age)
+            guard ring > 0, age < 1.0 else { return colour }
+            let distance = max(abs(column - landing.column), abs(row - landing.row))
+            guard distance >= 1, distance <= ring else { return colour }
+            return MosaicColour.mix(colour, accent, 0.7 * (1 - Double(distance - 1) / 4) * max(0, 1 - age / 1.0))
         }
     }
 

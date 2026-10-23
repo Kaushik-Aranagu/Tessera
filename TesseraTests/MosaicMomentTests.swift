@@ -226,6 +226,22 @@ struct MosaicMomentTests {
         #expect(MosaicMomentField.sparkleRing(age: 5) == 3)
     }
 
+    @Test func theSparkleRingsSurroundTheLandedTileAndFade() {
+        let sparkle = MosaicMomentField.sparkleLight(landing: (20, 15), colour: (1, 0, 0), start: 0)
+        let field: MosaicTriple = (0, 0, 0)
+        // Before the tile lands (0.7 s) nothing; 0.1 s after, ring 1 and 2 light up but not ring 3 or the centre.
+        #expect(sparkle(21, 15, 0.5, field).red == 0)
+        #expect(sparkle(21, 15, 0.8, field).red > 0)
+        #expect(sparkle(22, 17, 0.8, field).red > 0)
+        #expect(sparkle(23, 15, 0.8, field).red == 0)
+        #expect(sparkle(20, 15, 0.8, field).red == 0)
+        // A square ring: an axis tile and a corner tile at the same Chebyshev distance light equally.
+        #expect(abs(sparkle(21, 15, 0.8, field).red - sparkle(21, 16, 0.8, field).red) < 1e-9)
+        // Three rings by 0.19 s, gone after a second.
+        #expect(sparkle(23, 15, 0.9, field).red > 0)
+        #expect(sparkle(21, 15, 1.9, field).red == 0)
+    }
+
     @Test func aFinishedMomentKeepsTheMoodField() {
         let finished = plan(.finished(tone: .glaze))
         #expect(finished.base == nil)

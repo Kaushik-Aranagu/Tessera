@@ -146,7 +146,11 @@ final class MosaicController {
             MosaicMoodField.overlay($0, geometry: local, context: context, reduceMotion: reduceMotion)
         }
         // A moment's own light replaces the mood's, except a finished tile's sparkle, which rides on it.
-        let light = plan?.overlay ?? moodLight
+        var light = plan?.overlay ?? moodLight
+        if let moment, !reduceMotion {
+            light = sparkled(light, moment: moment, input: input, local: local, window: window, left: left,
+                             context: context)
+        }
         engine.overlay = light.map { inner in
             { column, row, time, colour in
                 let place = mapped(column, row)
@@ -192,6 +196,29 @@ final class MosaicController {
         lastMoment = moment
         lastMood = moodField
         key = next
+    }
+
+    /// A finished tile's sparkle rides on whatever light the mood has.
+    private func sparkled(
+        _ light: MosaicMoodField.Overlay?,
+        moment: MosaicMomentEvent,
+        input: MosaicSceneInput,
+        local: MosaicGeometry,
+        window: MosaicConfig,
+        left: Int,
+        context: MosaicMoodContext
+    ) -> MosaicMoodField.Overlay? {
+        guard case let .finished(tone) = moment.moment else { return light }
+        let column = engine.nowColumn(input.now) ?? engine.targetLeft
+        let landing = (column: column - left, row: Int(Double(window.rows) * 0.62))
+        let accent: MosaicTriple = switch tone {
+        case .glaze: MosaicColour.scaled(input.sky(local.hour(ofColumn: landing.column)), 1.25)
+        case let .accent(app): context.accents[app] ?? context.ink
+        }
+        let sparkle = MosaicMomentField.sparkleLight(landing: landing, colour: accent, start: momentStart)
+        return { column, row, time, colour in
+            sparkle(column, row, time, light?(column, row, time, colour) ?? colour)
+        }
     }
 }
 
