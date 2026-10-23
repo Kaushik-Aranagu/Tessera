@@ -326,6 +326,11 @@ final class ReviewChoices {
                    "As before": "Inter Tight for everything."],
             readiness: .live
         ),
+        // Together round 13 (sheet 183): a quiet offer on Today to join two things that look the same.
+        Choice(id: "twinsV2", name: "Twins", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Two things that look the same stay as they are.",
+                      "On": "Today offers once to join two things that look the same, with UNDO."],
+               readiness: .live),
         // Together round 9, 10 and 12 (164, 169, 179): each its own switch, default Off.
         Choice(id: "walledPageV2", name: "Privacy page", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Settings has no Privacy page.",
@@ -368,7 +373,7 @@ final class ReviewChoices {
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
         ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector", "tasksApp"]),
-        ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
+        ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue", "twinsV2"]),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
