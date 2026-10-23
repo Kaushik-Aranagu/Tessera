@@ -91,6 +91,7 @@ private struct TrainingAtRest: View {
     /// The Library rises over Training (Exercises | Workouts, Try today).
     @State private var libraryOpen = false
     @State private var statsOpen = false
+    @State private var logOpen = false
     @State private var place = TrainingPlace.current()
     /// The START sequence, cancelled if he leaves the page inside it.
     @State private var startTask: Task<Void, Never>?
@@ -144,6 +145,9 @@ private struct TrainingAtRest: View {
             }
             .fullScreenCover(isPresented: $statsOpen) {
                 TrainingStatsPage(close: { statsOpen = false })
+            }
+            .fullScreenCover(isPresented: $logOpen) {
+                TrainingLogPage(close: { logOpen = false })
             }
             .task { model.purgeStaleTried() }
 
@@ -506,7 +510,7 @@ private struct TrainingAtRest: View {
         if let workout = model.classDef(.workout) {
             let done = TrainingWeek.doneThisWeek(model, now: AppClock.now)
             doors.append(TrainingDoor(id: "log", word: "Log", value: done > 0 ? "\(done) this week" : nil,
-                                      open: { model.open(.classDef(workout.id)) }))
+                                      open: { LogSwitch.isOn ? (logOpen = true) : model.open(.classDef(workout.id)) }))
         }
         return doors
     }
