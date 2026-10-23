@@ -59,10 +59,6 @@ struct HomeMosaicPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: HomeMosaic.sectionGap) {
-                header
-                    // Moods: 64 pt from the safe area to the sentence in all, so the row's gap is what is left.
-                    .padding(.bottom, HomeMosaic.moodsIsOn
-                        ? HomeMosaic.moodsTopInset - HomeMosaic.headerHeight - HomeMosaic.sectionGap : 0)
                 MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses, noticeList: notices,
                                facts: facts,
                                paused: scenePhase != .active || link != nil)
@@ -86,12 +82,18 @@ struct HomeMosaicPage: View {
                 }
             }
             .padding(.horizontal, HomeMosaic.gutter)
-            .padding(.top, HomeMosaic.moodsIsOn ? 0 : Theme.Spacing.s)
+            .padding(.top, HomeMosaic.moodsIsOn ? 16 : Theme.Spacing.s)
             .padding(.bottom, Theme.Spacing.xl)
             .coordinateSpace(.named(Self.space))
         }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
+        // Sheet 216: the date is the board's first line, so the Settings entry sits at the top left, clear of the
+        // right-aligned rows (the date row is short and begins well to its right).
+        .overlay(alignment: .topLeading) {
+            SettingsEntry { link = .settings }
+                .padding(.leading, HomeMosaic.gutter - 8)
+        }
         // Sheet 212: an 80 pt clear band at the bottom for Tess's corner; everything else sits above it.
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Color.clear.frame(height: HomeMosaic.tessRoom).accessibilityHidden(true)
@@ -359,17 +361,6 @@ struct HomeMosaicPage: View {
         }
         if momentClause != nil {
             momentClause = nil
-        }
-    }
-
-    /// The date at the left, the Settings word at the right (a 44 pt target).
-    private var header: some View {
-        HStack(alignment: .center, spacing: Theme.Spacing.m) {
-            Text(AppClock.now.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
-                .font(Theme.voice(size: 16))
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            SettingsEntry { link = .settings }
         }
     }
 }

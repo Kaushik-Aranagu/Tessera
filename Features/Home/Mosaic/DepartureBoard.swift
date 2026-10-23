@@ -52,6 +52,8 @@ struct DepartureSegment: Equatable {
         case app(HomeApp)
         /// "Sunset": painted with the mosaic's sky, a link to its weather page (sheet 212).
         case sky
+        /// The date (sheet 216): Figtree 500, no underline, a gradient of the hour's sky; it opens Today.
+        case day
     }
 
     var text: String
@@ -96,6 +98,10 @@ struct DepartureBoard: View {
 
     static let size: CGFloat = 23
     static let lineGap: CGFloat = 3
+    /// Each of the three lines has its own fixed row, so a flip or a longer line never moves the page (Kaushik, Oct
+    /// 23).
+    static let rowHeight: CGFloat = 30
+    static let boardHeight: CGFloat = rowHeight * 3 + lineGap * 2
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -105,6 +111,8 @@ struct DepartureBoard: View {
     @State private var landed = 0
     @State private var onScreen = false
     @State private var taps = 0
+    /// What the cells were last heading for, so a newer change can snap them there before it starts.
+    @State private var lastTarget: [[Cell]] = []
     /// Where each door word sits, kept outside the view state so a layout pass does not redraw the board.
     @State private var frames = DoorFrames()
 
@@ -125,6 +133,8 @@ struct DepartureBoard: View {
         VStack(alignment: .trailing, spacing: Self.lineGap) {
             ForEach(Array(lines.enumerated()), id: \.offset) { li, line in
                 lineView(li, line)
+                    .frame(maxWidth: .infinity, minHeight: Self.rowHeight, maxHeight: typeSize.isAccessibilitySize
+                        ? nil : Self.rowHeight, alignment: .trailing)
             }
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
@@ -149,6 +159,7 @@ struct DepartureBoard: View {
             onScreen = true
             if cells.isEmpty {
                 cells = lines.map { Self.cells($0) }
+                lastTarget = cells
             }
         }
         .onDisappear { onScreen = false }
@@ -171,10 +182,12 @@ struct DepartureBoard: View {
             // Accessibility sizes: plain wrapping words that snap.
             plain
         } else {
-            // The letters always click forward (sheet 200), a long line wrapping word by word, never crossfading.
-            TrailingWrap(spacing: 6, lineSpacing: 2.4) {
+            // The letters always click forward (sheet 200), on one line in its own row: the words are chosen to fit,
+            // never shrunk, wrapped or crossfaded.
+            HStack(spacing: 6) {
                 ForEach(units(of: line, starts: starts)) { unit in
                     unitView(unit, cells: lineCells, li: li)
+                        .fixedSize()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
@@ -243,6 +256,15 @@ struct DepartureBoard: View {
                 open(li, frames.byKey[key] ?? .zero)
             } label: { door }
                 .buttonStyle(SkyWordStyle())
+        case .day:
+            Button {
+                taps += 1
+                open(li, frames.byKey[key] ?? .zero)
+            } label: {
+                door.foregroundStyle(DateSky.gradient(at: AppClock.now))
+                    .animation(.easeInOut(duration: 0.6), value: DateSky.band(at: AppClock.now))
+            }
+            .buttonStyle(.plain)
         case .number where seg.opens, .plain where seg.opens:
             Button {
                 taps += 1
@@ -263,6 +285,9 @@ struct DepartureBoard: View {
             Button { taps += 1; open(li, .zero) } label: { text }.buttonStyle(MosaicWordStyle(accent: app.accent))
         case .sky:
             Button { taps += 1; open(li, .zero) } label: { text }.buttonStyle(SkyWordStyle())
+        case .day:
+            Button { taps += 1; open(li, .zero) } label: { text.foregroundStyle(DateSky.gradient(at: AppClock.now)) }
+                .buttonStyle(.plain)
         default:
             if seg.opens {
                 Button { taps += 1; open(li, .zero) } label: { text.foregroundStyle(Theme.Colors.ink) }
@@ -276,7 +301,8 @@ struct DepartureBoard: View {
     private func font(for kind: DepartureSegment.Kind) -> Font {
         switch kind {
         case .number: Theme.numeral(Self.size, weight: .light)
-        case .app, .sky: Theme.voice(size: Self.size * 1.12).weight(.semibold)
+        case .app, .sky: Theme.voice(size: Self.size * 1.12).weight(.bold)
+        case .day: Theme.voice(size: Self.size).weight(.medium)
         case .plain: Theme.voice(size: Self.size)
         }
     }
@@ -289,7 +315,12 @@ struct DepartureBoard: View {
     private func transition(from _: [[DepartureSegment]], to new: [[DepartureSegment]]) {
         generation += 1
         let gen = generation
+        // A newer change cancels the older one: the cells snap to what that one was heading for first.
+        if !lastTarget.isEmpty {
+            cells = lastTarget
+        }
         let target = new.map { Self.cells($0) }
+        lastTarget = target
         if reduceMotion || typeSize.isAccessibilitySize || cells.isEmpty {
             cells = target
             return
@@ -315,9 +346,12 @@ struct DepartureBoard: View {
                         guard gen == generation else { return }
                         set(li, k, shown: step, squash: true)
                         try? await Task.sleep(for: .milliseconds(16))
-                        withTesseraAnimation(.linear(duration: Double(DepartureSteps.flipMS) / 1000),
-                                             reduceMotion: false) { set(li, k, shown: step, squash: false) }
-                        try? await Task.sleep(for: .milliseconds(DepartureSteps.stepMS))
+                        // The sheet's own flip curve: scaleY 0.08 to 1 over 70 ms on cubic-bezier(.3, .7, .4, 1).
+                        withTesseraAnimation(
+                            .timingCurve(0.3, 0.7, 0.4, 1, duration: Double(DepartureSteps.flipMS) / 1000),
+                            reduceMotion: false
+                        ) { set(li, k, shown: step, squash: false) }
+                        try? await Task.sleep(for: .milliseconds(DepartureSteps.stepMS - 16))
                     }
                     guard gen == generation else { return }
                     set(li, k, shown: cell.shown, squash: false)
@@ -365,5 +399,38 @@ struct SkyWordStyle: ButtonStyle {
             }
             .contentShape(.interaction, Rectangle().inset(by: -8))
             .opacity(configuration.isPressed ? 0.7 : 1)
+    }
+}
+
+/// The date's colour (sheet 216): a left-to-right gradient of the hour's sky, drawn like the Sunset word. Light values
+/// on a light look, dark values on a dark one.
+enum DateSky {
+    enum Band: Int {
+        case morning, day, evening, night
+    }
+
+    static func band(at date: Date, calendar: Calendar = .current) -> Band {
+        switch calendar.component(.hour, from: date) {
+        case 5 ..< 11: .morning
+        case 11 ..< 17: .day
+        case 17 ..< 20: .evening
+        default: .night
+        }
+    }
+
+    /// (light from, light to, dark from, dark to) for each band.
+    static func stops(_ band: Band) -> (UInt32, UInt32, UInt32, UInt32) {
+        switch band {
+        case .morning: (0xA9621A, 0xC2507A, 0xE6A97E, 0xE07FA0)
+        case .day: (0x2F6FD0, 0x237E92, 0x6FA4FF, 0x5CC6D2)
+        case .evening: (0xBF6A22, 0xA33C62, 0xE8A06A, 0xF286A6)
+        case .night: (0x4B3FA8, 0x2D3F7A, 0xA79CF0, 0x7E95D8)
+        }
+    }
+
+    static func gradient(at date: Date) -> LinearGradient {
+        let s = stops(band(at: date))
+        return LinearGradient(colors: [Color(light: s.0, dark: s.2), Color(light: s.1, dark: s.3)],
+                              startPoint: .leading, endPoint: .trailing)
     }
 }
