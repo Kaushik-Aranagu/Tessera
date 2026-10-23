@@ -252,6 +252,9 @@ public extension MosaicMomentInputs {
                                    key: "reminder-\(label)-\(event.start.timeIntervalSince1970)",
                                    tone: hidden ? .glaze : .accent(.routines)))
         }
+        // A best never plays after its own finish: the finish that ended the same workout is dropped.
+        let bestTimes = Set(found.filter { $0.key.hasPrefix("best-") }.map(\.at))
+        found.removeAll { $0.key.hasPrefix("finish-") && bestTimes.contains($0.at) }
         return MosaicMomentInputs(now: now, quiet: quiet, last: last, played: played, candidates: found)
     }
 

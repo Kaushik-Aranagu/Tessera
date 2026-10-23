@@ -57,3 +57,4 @@ __pycache__/
 
 # Gym visual exercise GIFs/clips: licensed by Kaushik, bundled at build time, never committed (docs/research/reference-library/gif-set-plan.md)
 Resources/ExerciseGifs/
+*.log

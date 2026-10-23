@@ -173,6 +173,11 @@ struct MosaicMomentSourceTests {
         #expect(best.clause.text == "A new best." && best.clause.app == .training && !best.clause.text
             .contains("record"))
         #expect(best.tone == .accent(.training))
+        // Its own finish does not play first: the best is what plays.
+        let recent = inputs().candidates
+        let others = Set(recent.filter { $0.kind == .finished }.map(\.key))
+        #expect(MosaicMomentSource.next(inputs(played: others))?.kind == .best)
+        #expect(!recent.contains { $0.key.hasPrefix("finish-") && $0.at == best.at })
         let secret = try engine.perform(CreateRoutine(title: "Knee rehab day"), by: .user).output
         try session("Session", weight: 90, routine: secret)
         // A best from a private workout is a plain finish: no Training accent, nothing about it.
