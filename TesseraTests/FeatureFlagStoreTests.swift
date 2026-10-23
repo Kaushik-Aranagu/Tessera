@@ -16,8 +16,7 @@ struct FeatureFlagStoreTests {
         #expect(FeatureFlagStore.isOn("homeMosaic", defaults: defaults) == true)
         #expect(FeatureFlagStore.isOn("tasksApp", defaults: defaults) == true)
         #expect(FeatureFlagStore.isOn("homeV2", defaults: defaults) == false)
-        // The apps list view is not drawn yet, so it stays Off until it is.
-        #expect(FeatureFlagStore.isOn("homeAppsList", defaults: defaults) == false)
+        #expect(FeatureFlagStore.isOn("homeAppsList", defaults: defaults) == true)
         #expect(FeatureFlagStore.isOn("calendar", defaults: defaults) == nil)
     }
 

@@ -1,38 +1,33 @@
 import SwiftUI
 import TesseraCore
 
-/// The mosaic's place on Home: full width, 250 pt tall.
-/// TODO: swap for A's MosaicView(facts: MosaicFacts, scene: Binding<MosaicScene>). It will set `lay` to
-/// `{ rowFrame in mosaic.lay(from: rowFrame, tone: .glaze) }` and write its one caption line into `caption`.
+/// The mosaic's place on Home. With the moods On (sheet 202) Builder A's layer draws behind the whole page, edge to
+/// edge, and this only reserves the core's 248x160 frame, right-aligned, so the text sits clear of it; it reports where
+/// the core's top is in the page's own (content) space, so scrolling never moves the field. With the moods Off the
+/// plain
+/// 199 mosaic (A's `MosaicView`) draws here, full width and 250 pt tall, as before.
 struct MosaicSlot: View {
-    @Binding var lay: ((CGRect) -> Void)?
-    @Binding var caption: String
-    /// Sheet 200: with the moods On, A's view draws the picked mood inside the frame and writes the one caption line.
+    /// Points from the top of the page's content to this frame's top, for the layer.
+    @Binding var coreTop: CGFloat
     var facts: MosaicFacts?
-    var mood: MosaicMood?
-    /// Sheet 201: a moment to play over the mood.
-    var moment: MosaicMomentEvent?
-    @State private var scene: MosaicScene = .day
+    @Binding var scene: MosaicScene
+    @Binding var caption: String
 
     var body: some View {
-        // Sheet 200 (mosaic moods On): 248x160 pt, right-aligned to the gutter; A's picture draws inside this frame.
-        // Otherwise full width, 250 pt tall as before.
-        Group {
-            if HomeMosaic.moodsIsOn {
-                Group {
-                    if let facts, let mood {
-                        MosaicView(facts: facts, scene: $scene, mood: mood, moment: moment, caption: $caption)
-                    } else {
-                        Color.clear
-                    }
-                }
+        if HomeMosaic.moodsIsOn {
+            Color.clear
                 .frame(width: HomeMosaic.moodsMosaicSize.width, height: HomeMosaic.moodsMosaicSize.height)
+                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(HomeMosaicPage.space)).minY } action: {
+                    coreTop = $0
+                }
                 .frame(maxWidth: .infinity, alignment: .trailing)
-            } else {
-                Color.clear.frame(height: HomeMosaic.mosaicHeight)
-            }
+                .accessibilityHidden(true)
+        } else if let facts {
+            MosaicView(facts: facts, scene: $scene, caption: $caption)
+                .frame(height: HomeMosaic.mosaicHeight)
+        } else {
+            Color.clear.frame(height: HomeMosaic.mosaicHeight).accessibilityHidden(true)
         }
-        .accessibilityHidden(HomeMosaic.moodsIsOn ? false : true)
     }
 }
 
@@ -64,13 +59,5 @@ struct SettingsEntry: View {
             .accessibilityHint("Opens Settings")
             SettingsKnob(open: open)
         }
-    }
-}
-
-/// Sheet 197's three-row snapping apps list, under Next, when Settings › Home › Apps list is On. Draws nothing yet.
-/// TODO: sheet 197: the 3-row snapping apps list.
-struct AppsListSlot: View {
-    var body: some View {
-        EmptyView()
     }
 }

@@ -72,7 +72,7 @@ struct SettingsLine: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                .transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .top)))
+                .transition(reduceMotion ? .identity : .move(edge: .top))
                 if let why {
                     Text(why)
                         .textRole(.data)
@@ -80,7 +80,7 @@ struct SettingsLine: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .multilineTextAlignment(.trailing)
-                        .transition(.opacity)
+                        .transition(reduceMotion ? .identity : .move(edge: .top))
                 }
             }
         }

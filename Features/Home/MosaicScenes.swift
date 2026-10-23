@@ -32,31 +32,47 @@ enum MosaicScenes {
         ground: MosaicTriple
     ) -> [MosaicTriple] {
         let config = geometry.config
-        let nowColumn = MosaicReadout.nowColumn(input.now, config: config)
         var colours = [MosaicTriple](repeating: ground, count: config.count)
         let digits = digitTiles(for: scene, input: input, geometry: geometry)
         for column in 0 ..< config.columns {
-            let skyColour = input.sky(geometry.hour(ofColumn: column))
             for row in 0 ..< config.rows {
                 let index = geometry.index(column: column, row: row)
-                let jittered = MosaicColour.lightened(skyColour, by: MosaicColour.jitter(index: index) * config.jitter)
-                let isFuture = nowColumn.map { column > $0 } ?? true
-                let day = isFuture ? MosaicColour.mix(jittered, ground, config.futureMix) : jittered
-                switch scene {
-                case .day:
-                    colours[index] = day
-                case .time, .next:
-                    colours[index] = digits.contains(index)
-                        ? MosaicColour.scaled(jittered, 0.42)
-                        : MosaicColour.mix(jittered, ground, 0.55)
-                case .sky:
-                    colours[index] = skyScene(column: column, row: row, sky: jittered, geometry: geometry)
-                case .done:
-                    colours[index] = MosaicColour.mix(jittered, ground, 0.78)
-                }
+                colours[index] = colour(scene, column: column, row: row, geometry: geometry, input: input,
+                                        ground: ground, digits: digits, jitterIndex: index)
             }
         }
         return colours
+    }
+
+    /// One tile of a scene, for any column and row (beyond the window the sky simply goes on).
+    static func colour(
+        _ scene: MosaicScene,
+        column: Int,
+        row: Int,
+        geometry: MosaicGeometry,
+        input: MosaicSceneInput,
+        ground: MosaicTriple,
+        digits: Set<Int>,
+        jitterIndex: Int
+    ) -> MosaicTriple {
+        let config = geometry.config
+        let nowColumn = MosaicReadout.nowColumn(input.now, config: config)
+        let jittered = MosaicColour.lightened(input.sky(geometry.hour(ofColumn: column)),
+                                              by: MosaicColour.jitter(index: jitterIndex) * config.jitter)
+        let isFuture = nowColumn.map { column > $0 } ?? true
+        switch scene {
+        case .day:
+            return isFuture ? MosaicColour.mix(jittered, ground, config.futureMix) : jittered
+        case .time, .next:
+            let inside = column >= 0 && column < config.columns && row >= 0 && row < config.rows
+            return inside && digits.contains(geometry.index(column: column, row: row))
+                ? MosaicColour.scaled(jittered, 0.42)
+                : MosaicColour.mix(jittered, ground, 0.55)
+        case .sky:
+            return skyScene(column: column, row: row, sky: jittered, geometry: geometry)
+        case .done:
+            return MosaicColour.mix(jittered, ground, 0.78)
+        }
     }
 
     /// Where a scene's morph starts: the now column for the day, the left for the time, the sun for the sky, the right

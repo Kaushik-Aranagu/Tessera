@@ -29,13 +29,14 @@ struct HubChoicesTests {
         #expect(choices.value(of: mosaic) == "On")
     }
 
-    @Test func choosingARotatingPageTurnSetsBothValues() throws {
+    @Test func choosingARotatingPageTurnSetsThePageTurnAndLeavesAWaitingLayoutAlone() throws {
         let choices = fresh()
         HubChoices.choose("rotate", in: "pagesTurnBy", choices: choices)
         let turn = try #require(ReviewChoices.all.first { $0.id == "pageTurn" })
         let layout = try #require(ReviewChoices.all.first { $0.id == "readingLayout" })
         #expect(choices.value(of: turn) == "Rotate")
-        #expect(choices.value(of: layout) == "Sheet 99")
+        // The reading layout waits for the sheet 99 refit, so it keeps reading Today until that lands.
+        #expect(choices.value(of: layout) == "Today")
     }
 
     @Test func developerModeListsOnlyFlagsTheMainPageDoesNotCarry() {

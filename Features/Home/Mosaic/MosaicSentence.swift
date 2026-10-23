@@ -11,7 +11,7 @@ struct MosaicSentence: View {
     /// Core's picked lines as clauses (sheets 200 and 201: accents, masked words plain); nil draws the day sentence.
     var pickedClauses: [HomeSentence.Clause]?
 
-    static let size: CGFloat = 24
+    static let size: CGFloat = 23
     static let lineGap: CGFloat = 4
 
     var body: some View {
@@ -60,7 +60,7 @@ private struct MosaicSentenceLine: View {
                 if let app = word.app {
                     Button(action: open) {
                         Text(word.text)
-                            .font(Theme.voice(size: MosaicSentence.size).weight(.medium))
+                            .font(Theme.voice(size: MosaicSentence.size * 1.12).weight(.semibold))
                     }
                     .buttonStyle(MosaicWordStyle(accent: app.accent))
                 } else if word.text.contains(where: \.isNumber) {
@@ -98,7 +98,7 @@ struct MosaicWordStyle: ButtonStyle {
             .foregroundStyle(accent)
             .overlay(alignment: .bottom) {
                 Rectangle().fill(accent).frame(height: 1)
-                    .opacity(configuration.isPressed ? 1 : 0)
+                    .offset(y: 5)
             }
             // A touch target past the glyphs, without making the line taller.
             .contentShape(.interaction, Rectangle().inset(by: -8))
