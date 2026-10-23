@@ -47,6 +47,7 @@ final class MosaicScreenController {
 
     private var key: Key?
     private var lastPage = MosaicPage.mood
+    private var lastWashToken = 0
     private var pendingReaction: MosaicOpenReaction?
     private var reactionToken = 0
 
@@ -105,6 +106,8 @@ final class MosaicScreenController {
         var washAccent: MosaicTriple?
         /// The sign the mosaic lends its tiles to (sheet 213); nil when the page has none.
         var sign: MosaicSignRequest?
+        /// Changes when the thing (and so its wash) changes: the mosaic wipes to the new wash.
+        var washToken = 0
     }
 
     /// Makes the engine for this size and re-reads the scene's colours when anything they depend on changed.
@@ -287,6 +290,7 @@ final class MosaicScreenController {
                 engine.settle(colourAt: colourAt)
             }
             lastPage = inputs.page
+            lastWashToken = inputs.washToken
             return
         }
         switch reaction {
@@ -308,12 +312,13 @@ final class MosaicScreenController {
         }
         var kind = changeover(plan: plan, moment: moment, moodField: moodField)
         var total: TimeInterval?
-        if inputs.page != lastPage {
+        if inputs.page != lastPage || inputs.washToken != lastWashToken {
             // A page wipes in the swipe's direction in 0.5 s.
             kind = .wipeColumns(reverse: inputs.pageDirection < 0)
             total = MosaicPage.wipeSeconds
         }
         lastPage = inputs.page
+        lastWashToken = inputs.washToken
         engine.morph(kind, origin: origin, total: total, colourAt: colourAt)
     }
 
@@ -395,8 +400,7 @@ struct MosaicHomeLayer: View {
     var pageDirection = 1
     var pageFacts: MosaicPageFacts?
     /// The sign the mosaic lends its tiles to and the accent it washes toward (sheet 213), from the page's thing.
-    var sign: MosaicSignRequest?
-    var washAccent: MosaicTriple?
+    var signSpec: MosaicSignSpec?
 
     /// Whether this process has opened Home yet (a cold launch plays its own reaction once).
     @MainActor private static var launched = false
@@ -507,6 +511,20 @@ struct MosaicHomeLayer: View {
         return (Double(resolved.red), Double(resolved.green), Double(resolved.blue))
     }
 
+    /// The sign request for the page's thing, on the screen grid: its slot is a global frame, the grid starts at this
+    /// layer's own origin.
+    private func signRequest(environment: EnvironmentValues)
+        -> (request: MosaicSignRequest, accent: MosaicTriple, token: String)?
+    {
+        guard let spec = signSpec, !spec.slot.isEmpty else { return nil }
+        let accent = rgb(spec.accent, environment)
+        let column = Int(((spec.slot.minX - controller.globalOrigin.x) / MosaicScreenGrid.step).rounded())
+        let row = Int(((spec.slot.minY - controller.globalOrigin.y) / MosaicScreenGrid.step).rounded())
+        let request = MosaicSignRequest(kind: spec.kind, share: spec.share, column: column, row: row, accent: accent,
+                                        alt: spec.alt.map { rgb($0, environment) }, token: spec.token)
+        return (request, accent, spec.token)
+    }
+
     private func draw(_ context: inout GraphicsContext, size: CGSize, time: TimeInterval) {
         let environment = context.environment
         let dark = colorScheme == .dark
@@ -517,13 +535,15 @@ struct MosaicHomeLayer: View {
         for app in AppID.allCases {
             momentContext.accents[app] = rgb((HomeApp(rawValue: app.name) ?? .tasks).accent, environment)
         }
+        let resolved = signRequest(environment: environment)
         let engine = controller.sync(.init(scene: scene, facts: facts, dark: dark, ground: ground, size: size,
                                            coreTop: coreTop, reduceMotion: reduceMotion, mood: mood,
                                            moodContext: momentContext, moment: active,
                                            shield: shield.map { $0.offsetBy(dx: -controller.globalOrigin.x,
                                                                             dy: -controller.globalOrigin.y) },
                                            page: page, pageDirection: pageDirection, pageFacts: pageFacts,
-                                           washAccent: washAccent, sign: sign))
+                                           washAccent: resolved?.accent, sign: resolved?.request,
+                                           washToken: resolved?.token.hashValue ?? 0))
         engine.step(to: time)
         if engine.consumeLandings() > 0 {
             DispatchQueue.main.async { cue.play(.fleckReachesNow) }

@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import SwiftUI
 
 // Sheet 213: the mosaic lends its pixels to the sign. When a thing arrives, one fully shown mosaic tile flies out for
 // each sign tile (7 ms apart, 560 ms on an eased arc, 26 pt lift, swelling to 1.5x, its colour mixing from the
@@ -113,4 +114,30 @@ struct MosaicSignLend: Equatable {
 
     /// When a collapse has finished entirely.
     static let collapseTotal: TimeInterval = collapseSeconds + 0.012 * 9
+}
+
+/// What a page hands the mosaic layer to build the sign: the kind, the thing's colours, and the sign's slot (global
+/// frame). Carries no data: no amounts, no names.
+struct MosaicSignSpec: Equatable {
+    var kind: ThingSignKind
+    var accent: Color
+    var alt: Color?
+    var share = 0.5
+    var slot: CGRect
+    /// The thing's id, so each new thing lends again.
+    var token: String
+}
+
+extension ThingSignKind {
+    /// The sign for an app's thing (money has none: nothing of money shows on Home).
+    init?(app: HomeApp) {
+        switch app {
+        case .training: self = .training
+        case .kitchen: self = .groceries
+        case .routines: self = .routine
+        case .tasks, .notes: self = .task
+        case .lists: self = .list
+        case .money: return nil
+        }
+    }
 }

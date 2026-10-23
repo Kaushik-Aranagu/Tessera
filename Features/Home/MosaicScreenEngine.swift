@@ -778,9 +778,16 @@ struct MosaicSignRequest: Equatable {
     var row: Int
     var accent: MosaicTriple
     var alt: MosaicTriple?
+    /// Which thing this is: a new one collapses the old sign and lends again, even of the same kind.
+    var token = ""
+
+    /// The same sign: where it sits may move with the scroll without lending again.
+    func isSameSign(as other: Self) -> Bool {
+        kind == other.kind && share == other.share && token == other.token
+    }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.kind == rhs.kind && lhs.share == rhs.share && lhs.column == rhs.column && lhs.row == rhs.row
+        lhs.isSameSign(as: rhs) && lhs.column == rhs.column && lhs.row == rhs.row
     }
 }
 
@@ -789,6 +796,24 @@ extension MosaicScreenEngine {
     /// Under Reduce Motion the sign is simply there.
     func showSign(_ request: MosaicSignRequest?) {
         guard request != signRequest else { return }
+        if let request, let current = signRequest, request.isSameSign(as: current), let lend = signLend {
+            // Only its place moved (a scroll): the same sign again at once, no flight.
+            signRequest = request
+            let core = liveCore
+            let tiles = MosaicSignLend.lend(
+                cells: ThingSignArt.cells(request.kind, elapsed: 0, share: request.share, still: true),
+                originColumn: request.column, originRow: request.row, core: (
+                    core.left,
+                    core.top,
+                    core.width,
+                    core.height
+                )
+            )
+            let landed = clock >= lend.landedAt
+            signLend = MosaicSignLend(tiles: tiles, start: landed ? clock - 10 : lend.start, kind: request.kind,
+                                      share: request.share)
+            return
+        }
         let old = signLend
         signRequest = request
         lentTiles = [:]
