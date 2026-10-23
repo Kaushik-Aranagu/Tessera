@@ -5,11 +5,11 @@ import Foundation
 // reads "Private" in plain ink with nothing after it; a private thing that links to it never counts.
 
 public extension ClassResolver {
-    /// The app a class belongs to: Training (workouts, exercises, routines, plans, sets, muscles, equipment), Kitchen
+    /// The app a class belongs to: Training (workouts, exercises, plans, sets, muscles, equipment), Kitchen
     /// (recipes, ingredients, cooks, timers, pantry places, cook sessions), Money (spends, pools, inflows, moves,
-    /// rates), Notes, Lists (lists and items). Nil for anything else (tasks, books, events, settings). A class under
-    /// one of those (Bench Press under Exercise) belongs to the same app. Routines (the step routines) have no class
-    /// in Core yet, so none maps there.
+    /// rates), Notes, Lists (lists and items), Routines (routines). Nil for anything else (tasks, books, events,
+    /// settings). A class under
+    /// one of those (Bench Press under Exercise) belongs to the same app.
     static func app(for classDef: ClassDef) -> AppID? {
         for node in lineage(of: classDef).reversed() {
             guard let key = node.systemKey
@@ -49,6 +49,8 @@ public extension ClassResolver {
         for key in [SystemCatalog.Key.spend, .pool, .inflow, .poolMove, .rateNote] {
             map[key] = .money
         }
+        // A routine is a Routines thing, as the app's Home reads it; Training keeps workouts, exercises and plans.
+        map[.routine] = .routines
         map[.note] = .notes
         for key in [SystemCatalog.Key.list, .listItem] {
             map[key] = .lists
