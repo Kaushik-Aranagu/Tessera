@@ -328,6 +328,12 @@ enum Theme {
             return (pair.day.isDark ? dark : light, pair.night.isDark ? dark : light)
         }
 
+        /// Ink 3's own alpha (the same tier `inkTertiary` uses), for a page that dims all its words to ink 3 at once.
+        static func inkTertiaryAlpha(isDark: Bool) -> Double {
+            let alpha = tier(0.51, 0.38)
+            return Double(isDark ? alpha.night : alpha.day)
+        }
+
         /// Text only at 34 pt and up; below that it's for marks. 51% light, 38% dark.
         static var inkTertiary: Color {
             Color(light: concept.palette.ink.0, dark: concept.palette.ink.1,

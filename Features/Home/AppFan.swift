@@ -22,8 +22,10 @@ enum FanMath {
     static let focusedSize: CGFloat = 40
     static let rise: CGFloat = 30
     static let stagger: Double = 0.035
-    /// The page's words while the fan is open: ink at about 30%, ink 3.
-    static let pageDim: Double = 0.3
+    /// The page's words while the fan is open: ink 3's own alpha from the Theme (never a number of its own).
+    @MainActor static func pageDim(isDark: Bool) -> Double {
+        Theme.Colors.inkTertiaryAlpha(isDark: isDark)
+    }
 
     static func isOpen(pull: CGFloat) -> Bool {
         pull > threshold
@@ -87,12 +89,13 @@ struct FanHost: ViewModifier {
     @State private var state = FanState()
     @State private var height: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.colorScheme) private var scheme
 
     func body(content: Content) -> some View {
         if FanSwitch.isOn {
             content
                 // The page's own words go to ink 3 while the fan is open (no veil over it), on the house spring.
-                .opacity(state.open ? FanMath.pageDim : 1)
+                .opacity(state.open ? FanMath.pageDim(isDark: scheme == .dark) : 1)
                 .tesseraAnimation(Theme.Motion.house, value: state.open)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
                 .simultaneousGesture(

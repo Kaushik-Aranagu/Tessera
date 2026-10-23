@@ -3,8 +3,9 @@ import Testing
 
 @MainActor
 struct AppFanTests {
-    @Test func thePageDimsToInkThreeNotAVeil() {
-        #expect(FanMath.pageDim == 0.3)
+    @MainActor @Test func thePageDimsToInkThreesOwnAlpha() {
+        #expect(FanMath.pageDim(isDark: false) == Theme.Colors.inkTertiaryAlpha(isDark: false))
+        #expect(FanMath.pageDim(isDark: true) == Theme.Colors.inkTertiaryAlpha(isDark: true))
     }
 
     @Test func opensOnlyPastTwentyFourPoints() {
