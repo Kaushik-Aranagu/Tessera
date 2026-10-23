@@ -13,6 +13,10 @@ enum MosaicChangeoverKind: Equatable {
     case melt
     /// The departure board in pixels: each tile flips about its middle.
     case flip
+    /// The same flip, row by row from the top (a reopen after a while).
+    case flipRows
+    /// A hard swap sweeping across the columns, left to right or back (a page's wipe).
+    case wipeColumns(reverse: Bool)
 }
 
 /// What the view draws for one tile.
@@ -248,18 +252,28 @@ final class MosaicScreenEngine {
     func morph(
         _ kind: MosaicChangeoverKind,
         origin: (column: Int, row: Int),
+        total: TimeInterval? = nil,
+        after: TimeInterval = 0,
+        from start: ((_ column: Int, _ row: Int) -> MosaicTriple)? = nil,
         colourAt: (_ column: Int, _ row: Int) -> MosaicTriple
     ) {
         let count = region.width * region.height
         for index in 0 ..< count {
             from[index] = MosaicColour.mix(from[index], to[index], settledMix(index))
         }
+        if let start {
+            for column in 0 ..< region.width {
+                for row in 0 ..< region.height {
+                    from[column * region.height + row] = start(column + region.left, row + region.top)
+                }
+            }
+        }
         for column in 0 ..< region.width {
             for row in 0 ..< region.height {
                 to[column * region.height + row] = colourAt(column + region.left, row + region.top)
             }
         }
-        morphStart = clock
+        morphStart = clock + after
         if reduceMotion {
             changeover = .standard(.wave)
             delays = Array(repeating: 0, count: count)
@@ -282,7 +296,59 @@ final class MosaicScreenEngine {
             planMelt()
         case .flip:
             planFlip()
+        case .flipRows:
+            planFlipRows()
+        case let .wipeColumns(reverse):
+            planWipeColumns(reverse: reverse)
         }
+        if let total {
+            stretch(to: total)
+        }
+    }
+
+    /// Stretches or squeezes the delays so the whole changeover takes `total` seconds (the last tile ends then).
+    private func stretch(to total: TimeInterval) {
+        let longest = lengths.max() ?? 0
+        let latest = delays.max() ?? 0
+        guard latest > 0 else { return }
+        let factor = max(total - longest, 0) / latest
+        delays = delays.map { $0 * factor }
+    }
+
+    /// Row by row from the top: a tile flips in 300 ms, 30% of them twice.
+    private func planFlipRows() {
+        let count = region.width * region.height
+        var nextDelays = [TimeInterval](repeating: 0, count: count)
+        var nextLengths = [TimeInterval](repeating: 0.3, count: count)
+        for column in 0 ..< region.width {
+            for row in 0 ..< region.height {
+                let index = column * region.height + row
+                let absolute = grid.index(column: column + region.left, row: row + region.top)
+                nextDelays[index] = Double(row) / Double(region.height) + MosaicColour.unit(absolute, salt: 129) * 0.05
+                if MosaicColour.unit(absolute, salt: 123) < 0.3 {
+                    doubles[index] = true
+                    nextLengths[index] = 0.6
+                }
+            }
+        }
+        delays = nextDelays
+        lengths = nextLengths
+    }
+
+    /// A hard swap sweeping across the columns, with a little hash so the front is not a ruler.
+    private func planWipeColumns(reverse: Bool) {
+        let count = region.width * region.height
+        var nextDelays = [TimeInterval](repeating: 0, count: count)
+        for column in 0 ..< region.width {
+            for row in 0 ..< region.height {
+                let index = column * region.height + row
+                let absolute = grid.index(column: column + region.left, row: row + region.top)
+                let across = Double(reverse ? region.width - 1 - column : column) / Double(region.width)
+                nextDelays[index] = across + MosaicColour.unit(absolute, salt: 131) * 0.03
+            }
+        }
+        delays = nextDelays
+        lengths = Array(repeating: 0.05, count: count)
     }
 
     private var planGeometry: MosaicGeometry {
@@ -341,7 +407,8 @@ final class MosaicScreenEngine {
             return phase
         }
         switch changeover {
-        case .melt, .flip: return phase > 0 ? (phase >= 1 ? 1 : (phase < 0.5 ? 0 : 1)) : 0
+        case .melt, .flip, .flipRows: return phase > 0 ? (phase >= 1 ? 1 : (phase < 0.5 ? 0 : 1)) : 0
+        case .wipeColumns: return phase > 0 ? 1 : 0
         case let .standard(transition):
             if transition == .wave {
                 return 1 - pow(1 - phase, 3)
@@ -357,7 +424,7 @@ final class MosaicScreenEngine {
             return (MosaicColour.mix(from[index], to[index], phase), 1)
         }
         switch changeover {
-        case .flip:
+        case .flip, .flipRows:
             guard phase > 0, phase < 1 else { return (phase >= 1 ? to[index] : from[index], 1) }
             let flips = doubles[index] ? 2.0 : 1.0
             let unit = phase * flips
@@ -368,7 +435,7 @@ final class MosaicScreenEngine {
             let stages = doubles[index] ? [from[index], middle, to[index]] : [from[index], to[index]]
             let colour = fraction < 0.5 ? stages[stage] : stages[stage + 1]
             return (colour, CGFloat(max(abs(cos(Double.pi * fraction)), 0.08)))
-        case .melt:
+        case .melt, .wipeColumns:
             return (phase > 0 ? to[index] : from[index], 1)
         case let .standard(transition):
             if transition == .wave {
@@ -515,6 +582,26 @@ extension MosaicScreenEngine {
                 let index = grid.index(column: column, row: row)
                 if pops[index] == nil {
                     pop(index, after: delay)
+                }
+            }
+        }
+    }
+
+    /// A reopen's ripple from the middle of the mosaic: tiles pop outward over `seconds`.
+    func rippleFromCentre(seconds: TimeInterval) {
+        guard !reduceMotion else { return }
+        let target = targetCore
+        let centre = grid.center(column: target.left + target.width / 2, row: target.top + target.height / 2)
+        let radius = CGFloat(max(target.width, target.height)) * MosaicScreenGrid.step / 2 + 24
+        let travel = max(seconds - 0.38, 0.05)
+        for column in region.left ... region.right {
+            for row in region.top ... region.bottom where grid.contains(column: column, row: row) {
+                let distance = hypot(grid.center(column: column, row: row).x - centre.x,
+                                     grid.center(column: column, row: row).y - centre.y)
+                guard distance <= radius else { continue }
+                let index = grid.index(column: column, row: row)
+                if pops[index] == nil {
+                    pop(index, after: TimeInterval(distance / radius) * travel)
                 }
             }
         }

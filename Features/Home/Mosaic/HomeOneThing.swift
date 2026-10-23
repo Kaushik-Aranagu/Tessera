@@ -37,6 +37,8 @@ enum HomeThings {
     /// The thing's own word in a line: its first one or two words, up to a connecting word, a comma or a figure
     /// ("Push day" in "Push day at 6:30 pm", "Groceries" in "Groceries, 4 to get").
     static func keyword(in text: String) -> String? {
+        // A private thing reads "Private" and has no keyword to underline.
+        guard !text.hasPrefix("Private") else { return nil }
         let stops: Set = ["at", "is", "on", "in", "turns", "to", "for", "and", "of"]
         var words: [String] = []
         for raw in text.split(separator: " ") {
@@ -94,14 +96,16 @@ struct HomeOneThing: View {
     @Binding var index: Int
     /// A page swipe of this much sideways travel (left is next): whether the page turned.
     let turn: (CGFloat) -> Bool
-    /// The hold finished this task.
-    let done: (HomeThing) -> Void
+    /// The hold finished this task: whether it was marked done.
+    let done: (HomeThing) -> Bool
     let open: (HomeThing) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var strike: Double = 0
     @State private var holdTask: Task<Void, Never>?
     @State private var full = false
+    /// The finger moved too far during this hold: it can no longer finish anything.
+    @State private var moved = false
     @State private var turns = 0
     @State private var finishes = 0
 
@@ -124,7 +128,7 @@ struct HomeOneThing: View {
                     .accessibilityHidden(true)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: Self.height, maxHeight: Self.height, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: Self.height, alignment: .topLeading)
         .contentShape(Rectangle())
         .simultaneousGesture(swipe)
         .tesseraFeedback(.selection, trigger: turns)
@@ -159,7 +163,7 @@ struct HomeOneThing: View {
         .accessibilityAction(named: "Open") { open(thing) }
         .accessibilityActions {
             if thing.taskID != nil {
-                Button("Mark done") { done(thing) }
+                Button("Mark done") { _ = done(thing) }
             }
         }
     }
@@ -173,28 +177,29 @@ struct HomeOneThing: View {
         ZStack(alignment: .topLeading) {
             content()
                 .id(thing.id)
-                .transition(reduceMotion ? .identity : .asymmetric(
+                // Through the motion policy: under Reduce Motion each becomes the short crossfade.
+                .transition(.asymmetric(
                     insertion: AnyTransition.modifier(active: TierClip(progress: 0, fromTop: true),
                                                       identity: TierClip(progress: 1, fromTop: true))
-                        .animation(.easeOut(duration: 0.3).delay(delay)),
+                        .animation(MotionPolicy.resolve(.easeOut(duration: 0.3).delay(delay),
+                                                        reduceMotion: reduceMotion)),
                     removal: AnyTransition.modifier(active: TierClip(progress: 0, fromTop: false),
                                                     identity: TierClip(progress: 1, fromTop: false))
-                        .animation(.easeIn(duration: 0.26))
+                        .animation(MotionPolicy.resolve(.easeIn(duration: 0.26), reduceMotion: reduceMotion))
                 ))
         }
-        .frame(maxWidth: .infinity, minHeight: height, maxHeight: height, alignment: .topLeading)
+        // The tier sizes to its content (a two-line big line, large Dynamic Type); `height` is only its least.
+        .frame(maxWidth: .infinity, minHeight: height, alignment: .topLeading)
     }
 
     @ViewBuilder
     private func big(_ thing: HomeThing) -> some View {
         let colour = thing.accent?.accent ?? Theme.Colors.ink
-        let text = Text(thing.big)
+        let text = Text(thing.bigIsNumber ? thing.big : AppsListRows.fit(thing.big, limit: 28))
             // Always Outfit 200: 60 pt for a short value, 44 pt for words (which may wrap to two lines).
             .font(Theme.numeral(thing.bigIsNumber ? 60 : 44))
             .foregroundStyle(colour)
             .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink))
-            .lineLimit(2)
-            .minimumScaleFactor(0.7)
             .fixedSize(horizontal: false, vertical: true)
         if thing.taskID != nil {
             text.simultaneousGesture(hold(thing))
@@ -251,24 +256,39 @@ struct HomeOneThing: View {
             }
     }
 
-    /// 180 ms of holding, then the strike draws in 0.6 s; letting go once it is full finishes the task.
+    /// 180 ms of holding, then the strike draws in 0.6 s; letting go once it is full finishes the task. Any movement
+    /// past about 10 pt cancels it, so a scroll or a swipe never finishes anything.
     private func hold(_ thing: HomeThing) -> some Gesture {
         DragGesture(minimumDistance: 0)
-            .onChanged { _ in
-                guard holdTask == nil, !full else { return }
+            .onChanged { value in
+                if hypot(value.translation.width, value.translation.height) > 10 {
+                    cancelHold()
+                    return
+                }
+                guard holdTask == nil, !full, !moved else { return }
                 holdTask = Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(180))
                     guard !Task.isCancelled else { return }
-                    withAnimation(reduceMotion ? nil : .linear(duration: 0.6)) { strike = 1 }
-                    try? await Task.sleep(for: .milliseconds(600))
-                    guard !Task.isCancelled else { return }
+                    if reduceMotion {
+                        // Reduce Motion: the strike shows once, when the hold completes.
+                        try? await Task.sleep(for: .milliseconds(600))
+                        guard !Task.isCancelled else { return }
+                        strike = 1
+                    } else {
+                        withTesseraAnimation(.linear(duration: 0.6), reduceMotion: false) { strike = 1 }
+                        try? await Task.sleep(for: .milliseconds(600))
+                        guard !Task.isCancelled else { return }
+                    }
                     full = true
                 }
             }
             .onEnded { _ in
-                if full {
-                    finishes += 1
-                    done(thing)
+                let wasFull = full && !moved
+                moved = false
+                if wasFull {
+                    if done(thing) {
+                        finishes += 1
+                    }
                     reset()
                 } else {
                     cancelHold()
@@ -277,6 +297,7 @@ struct HomeOneThing: View {
     }
 
     private func cancelHold() {
+        moved = true
         holdTask?.cancel()
         reset(retract: true)
     }

@@ -7,6 +7,7 @@ import TesseraCore
 struct MosaicSentence: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openHomeLink) private var openLink
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Core's picked lines as clauses (sheets 200 and 201: accents, masked words plain); nil draws the day sentence.
     var pickedClauses: [HomeSentence.Clause]?
@@ -78,8 +79,9 @@ struct MosaicSentence: View {
                     }
                 }
             }
-            .task(id: RotationKey(paused: paused, count: notices.count)) {
-                guard !paused, notices.count > 1 else { return }
+            .task(id: RotationKey(paused: paused || reduceMotion, count: notices.count)) {
+                // Under Reduce Motion the rotation is paused: the board swaps plainly only when the top notice changes.
+                guard !paused, !reduceMotion, notices.count > 1 else { return }
                 while !Task.isCancelled {
                     try? await Task.sleep(for: .seconds(HomeBoard.rotationSeconds))
                     guard !Task.isCancelled else { return }
