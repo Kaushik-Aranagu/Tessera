@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// The mosaic's place on Home: full width, 250 pt tall.
 /// TODO: swap for A's MosaicView(facts: MosaicFacts, scene: Binding<MosaicScene>). It will set `lay` to
