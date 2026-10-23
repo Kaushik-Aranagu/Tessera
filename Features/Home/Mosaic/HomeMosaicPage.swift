@@ -30,7 +30,7 @@ struct HomeMosaicPage: View {
                     }
                 }
                 // The call site that becomes `mosaic.lay(from: rowFrame, tone: .glaze)` with A's view.
-                MosaicNext { rowFrame in mosaicLay?(rowFrame) }
+                MosaicNextList { rowFrame in mosaicLay?(rowFrame) }
                 if HomeMosaic.appsListIsOn {
                     AppsListSlot()
                 }
