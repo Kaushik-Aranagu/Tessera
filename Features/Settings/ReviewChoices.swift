@@ -281,6 +281,19 @@ final class ReviewChoices {
                    "As before": "Inter Tight for everything."],
             readiness: .live
         ),
+        // Together round 9, 10 and 12 (164, 169, 179): each its own switch, default Off.
+        Choice(id: "walledPageV2", name: "Privacy page", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Settings has no Privacy page.",
+                      "On": "Settings gets a Privacy word: what stays on this phone, in counts, never names."],
+               readiness: .live),
+        Choice(id: "backupsV2", name: "Backups in words", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Backups reads as before.",
+                      "On": "Backups says the last copy and its count, shows what a restore changes first, with Undo."],
+               readiness: .live),
+        Choice(id: "undoLogV2", name: "Undo log", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Undo stays on the line Tess says after a change.",
+                      "On": "Today ends with the last change and Undo for 10 minutes; Review lists recent changes."],
+               readiness: .live),
         // Design 110: on, the kcal line shows on a finished workout; it needs weight and height under Me.
         Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
@@ -308,6 +321,7 @@ final class ReviewChoices {
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
         ("Rooms", ["numberRules", "roomMotion", "pagesV2"]),
         ("Home and live", ["finishV2", "surfacesV2", "liveV2"]),
+        ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.

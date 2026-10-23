@@ -82,6 +82,19 @@ struct SettingsPage: View {
                     .padding(.top, Theme.Spacing.xxl)
                     .accessibilityHint("Where your history is kept")
 
+                    // Privacy (179, walledPageV2): what stays on this phone, in counts. Drawn only while its switch is
+                    // On.
+                    if Tier1b.walledIsOn {
+                        NavigationLink {
+                            PrivacyWordsPage()
+                        } label: {
+                            Text("Privacy")
+                        }
+                        .buttonStyle(.labelWord)
+                        .padding(.top, Theme.Spacing.l)
+                        .accessibilityHint("What stays on this phone")
+                    }
+
                     // Who made what: one line per source.
                     NavigationLink {
                         AboutPage()
@@ -204,6 +217,17 @@ struct ReviewSection: View {
                                 .padding(.vertical, Theme.Spacing.s)
                         }
                     }
+                }
+
+                // The undo log's list, with its own Undo word (164, undoLogV2).
+                if Tier1b.undoIsOn {
+                    NavigationLink {
+                        RecentChangesPage()
+                    } label: {
+                        Text(UndoWords.recentTitle)
+                    }
+                    .buttonStyle(.labelWord)
+                    .accessibilityHint("The last 20 changes, each with Undo")
                 }
 
                 if choices.anyTrying() || resetLine != nil {
