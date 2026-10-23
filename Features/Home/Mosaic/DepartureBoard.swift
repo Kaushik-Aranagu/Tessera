@@ -50,28 +50,34 @@ struct DepartureSegment: Equatable {
     enum Kind: Equatable {
         case plain, number
         case app(HomeApp)
+        /// "Sunset": painted with the mosaic's sky, a link to its weather page (sheet 212).
+        case sky
     }
 
     var text: String
     var kind: Kind
+    /// A door (sheet 211): an app word, or a number that belongs to a clause with an app word, opens its thing.
+    var opens = false
 }
 
 /// Turns a clause into segments, using the same word split as the day sentence.
 enum DepartureLines {
     static func segments(of clause: HomeSentence.Clause) -> [DepartureSegment] {
         var out: [DepartureSegment] = []
-        func add(_ text: String, _ kind: DepartureSegment.Kind) {
+        let words = DaySentence.words([clause])
+        let hasDoor = words.contains { $0.app != nil }
+        func add(_ text: String, _ kind: DepartureSegment.Kind, opens: Bool = false) {
             if let last = out.last, last.kind == kind {
                 out[out.count - 1].text += " " + text
             } else {
-                out.append(DepartureSegment(text: text, kind: kind))
+                out.append(DepartureSegment(text: text, kind: kind, opens: opens))
             }
         }
-        for word in DaySentence.words([clause]) {
+        for word in words {
             if let app = word.app {
-                add(word.text, .app(app))
+                add(word.text, .app(app), opens: true)
             } else if word.text.contains(where: \.isNumber) {
-                add(word.text, .number)
+                add(word.text, .number, opens: hasDoor)
             } else {
                 add(word.text, .plain)
             }
@@ -85,7 +91,8 @@ enum DepartureLines {
 /// the whole line crossfades in 150 ms and nothing flips. VoiceOver reads the final sentence once.
 struct DepartureBoard: View {
     let lines: [[DepartureSegment]]
-    let open: (Int) -> Void
+    /// A door was tapped: the line it is on, and the word's frame in window space (the doorway's wave starts there).
+    let open: (Int, CGRect) -> Void
 
     static let size: CGFloat = 23
     static let lineGap: CGFloat = 3
@@ -97,6 +104,13 @@ struct DepartureBoard: View {
     @State private var generation = 0
     @State private var landed = 0
     @State private var onScreen = false
+    @State private var taps = 0
+    /// Where each door word sits, kept outside the view state so a layout pass does not redraw the board.
+    @State private var frames = DoorFrames()
+
+    final class DoorFrames {
+        var byKey: [String: CGRect] = [:]
+    }
 
     struct Cell: Equatable {
         var shown: Character
@@ -116,7 +130,21 @@ struct DepartureBoard: View {
         .frame(maxWidth: .infinity, alignment: .trailing)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(finalText)
+        .accessibilityActions {
+            // Each door is a button: "Push day, opens Training".
+            ForEach(Array(lines.enumerated()), id: \.offset) { li, line in
+                let starts = DepartureSteps.starts(line)
+                ForEach(Array(line.enumerated()), id: \.offset) { k, seg in
+                    if seg.opens, case let .app(app) = seg.kind {
+                        Button("\(seg.text), opens \(app.rawValue)") {
+                            open(li, frames.byKey["\(li)-\(starts[k])"] ?? .zero)
+                        }
+                    }
+                }
+            }
+        }
         .tesseraFeedback(.made, trigger: landed)
+        .tesseraFeedback(.made, trigger: taps)
         .onAppear {
             onScreen = true
             if cells.isEmpty {
@@ -133,66 +161,122 @@ struct DepartureBoard: View {
         let starts = DepartureSteps.starts(line)
         let plain = TrailingWrap(spacing: 6, lineSpacing: 2.4) {
             ForEach(Array(line.enumerated()), id: \.offset) { _, seg in
-                segmentView(seg, cells: nil, from: 0, li: li)
+                plainSegment(seg, li: li)
             }
         }
         if reduceMotion {
-            // Reduce Motion: the whole line crossfades (150 ms) and nothing flips.
+            // Reduce Motion: a plain swap, no letters.
             plain
-                .id(line.map(\.text).joined(separator: "|"))
-                .transition(.opacity)
-                .tesseraAnimation(.easeInOut(duration: 0.15), value: line)
         } else if typeSize.isAccessibilitySize {
             // Accessibility sizes: plain wrapping words that snap.
             plain
         } else {
-            // Letters in one row while the line fits; a long line wraps as plain words instead.
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 0) {
-                    ForEach(Array(line.enumerated()), id: \.offset) { k, seg in
-                        segmentView(seg, cells: lineCells, from: starts[k], li: li)
-                        if k < line.count - 1 {
-                            let at = starts[k] + seg.text.count
-                            Text(String(at < lineCells.count ? lineCells[at].shown : " "))
-                                .font(Theme.voice(size: Self.size))
-                        }
-                    }
+            // The letters always click forward (sheet 200), a long line wrapping word by word, never crossfading.
+            TrailingWrap(spacing: 6, lineSpacing: 2.4) {
+                ForEach(units(of: line, starts: starts)) { unit in
+                    unitView(unit, cells: lineCells, li: li)
                 }
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                plain
             }
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
     }
 
-    @ViewBuilder
-    private func segmentView(_ seg: DepartureSegment, cells: [Cell]?, from: Int, li: Int) -> some View {
-        let content = HStack(spacing: 0) {
-            if let cells {
-                ForEach(0 ..< seg.text.count, id: \.self) { k in
-                    let cell = from + k < cells.count ? cells[from + k] : Cell(shown: " ")
-                    Text(String(cell.shown))
-                        .font(font(for: seg.kind))
-                        .scaleEffect(x: 1, y: cell.squash ? 0.08 : 1, anchor: .center)
-                }
+    /// The pieces a line wraps by: each plain or number word on its own, a door (an app word) whole.
+    private struct Unit: Identifiable {
+        let id: Int
+        let seg: DepartureSegment
+        let words: [(text: String, start: Int)]
+    }
+
+    private func units(of line: [DepartureSegment], starts: [Int]) -> [Unit] {
+        var out: [Unit] = []
+        for (k, seg) in line.enumerated() {
+            var words: [(text: String, start: Int)] = []
+            var offset = 0
+            for word in seg.text.split(separator: " ", omittingEmptySubsequences: false) {
+                words.append((String(word), starts[k] + offset))
+                offset += word.count + 1
+            }
+            let whole: Bool = switch seg.kind {
+            case .app, .sky: true
+            default: seg.opens
+            }
+            if whole {
+                out.append(Unit(id: out.count, seg: seg, words: words))
             } else {
-                Text(seg.text).font(font(for: seg.kind))
+                for word in words where !word.text.isEmpty {
+                    out.append(Unit(id: out.count, seg: seg, words: [word]))
+                }
             }
         }
+        return out
+    }
+
+    @ViewBuilder
+    private func unitView(_ unit: Unit, cells: [Cell], li: Int) -> some View {
+        let seg = unit.seg
+        let content = HStack(spacing: 6) {
+            ForEach(Array(unit.words.enumerated()), id: \.offset) { _, word in
+                HStack(spacing: 0) {
+                    ForEach(0 ..< word.text.count, id: \.self) { k in
+                        let cell = word.start + k < cells.count ? cells[word.start + k] : Cell(shown: " ")
+                        Text(String(cell.shown))
+                            .font(font(for: seg.kind))
+                            .scaleEffect(x: 1, y: cell.squash ? 0.08 : 1, anchor: .center)
+                    }
+                }
+            }
+        }
+        let key = "\(li)-\(unit.words.first?.start ?? 0)"
+        let door = content
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frames.byKey[key] = $0 }
         switch seg.kind {
         case let .app(app):
-            Button { open(li) } label: { content }
+            Button {
+                taps += 1
+                open(li, frames.byKey[key] ?? .zero)
+            } label: { door }
                 .buttonStyle(MosaicWordStyle(accent: app.accent))
-        case .number:
+        case .sky:
+            Button {
+                taps += 1
+                open(li, frames.byKey[key] ?? .zero)
+            } label: { door }
+                .buttonStyle(SkyWordStyle())
+        case .number where seg.opens, .plain where seg.opens:
+            Button {
+                taps += 1
+                open(li, frames.byKey[key] ?? .zero)
+            } label: { door.foregroundStyle(Theme.Colors.ink).contentShape(.interaction, Rectangle().inset(by: -8)) }
+                .buttonStyle(.plain)
+        default:
             content.foregroundStyle(Theme.Colors.ink)
-        case .plain:
-            content.foregroundStyle(Theme.Colors.ink)
+        }
+    }
+
+    /// A segment as plain text (Reduce Motion and the accessibility sizes), with its door where it has one.
+    @ViewBuilder
+    private func plainSegment(_ seg: DepartureSegment, li: Int) -> some View {
+        let text = Text(seg.text).font(font(for: seg.kind))
+        switch seg.kind {
+        case let .app(app):
+            Button { taps += 1; open(li, .zero) } label: { text }.buttonStyle(MosaicWordStyle(accent: app.accent))
+        case .sky:
+            Button { taps += 1; open(li, .zero) } label: { text }.buttonStyle(SkyWordStyle())
+        default:
+            if seg.opens {
+                Button { taps += 1; open(li, .zero) } label: { text.foregroundStyle(Theme.Colors.ink) }
+                    .buttonStyle(.plain)
+            } else {
+                text.foregroundStyle(Theme.Colors.ink)
+            }
         }
     }
 
     private func font(for kind: DepartureSegment.Kind) -> Font {
         switch kind {
         case .number: Theme.numeral(Self.size, weight: .light)
-        case .app: Theme.voice(size: Self.size * 1.12).weight(.semibold)
+        case .app, .sky: Theme.voice(size: Self.size * 1.12).weight(.semibold)
         case .plain: Theme.voice(size: Self.size)
         }
     }
@@ -255,5 +339,26 @@ struct DepartureBoard: View {
             cells[li] += Array(repeating: Cell(shown: " "), count: k - cells[li].count + 1)
         }
         cells[li][k] = Cell(shown: shown, squash: squash)
+    }
+}
+
+/// The "Sunset" word: the mosaic's own sky as a two-stop text gradient (C9772E to B0466A by day, F0A35A to E07A9A at
+/// night), with a 1 pt underline at 5 pt in the second stop.
+struct SkyWordStyle: ButtonStyle {
+    static let first = Color(light: 0xC9772E, dark: 0xF0A35A)
+    static let second = Color(light: 0xB0466A, dark: 0xE07A9A)
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(LinearGradient(
+                colors: [Self.first, Self.second],
+                startPoint: .leading,
+                endPoint: .trailing
+            ))
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(Self.second).frame(height: 1).offset(y: 5)
+            }
+            .contentShape(.interaction, Rectangle().inset(by: -8))
+            .opacity(configuration.isPressed ? 0.7 : 1)
     }
 }

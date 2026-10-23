@@ -11,7 +11,6 @@ struct HomeMosaicPage: View {
     @Environment(AppModel.self) private var model
     @State private var link: HomeLink?
     /// Set by the mosaic when it is on the page: lays a finished row's colour into the picture.
-    @State private var mosaicLay: ((CGRect) -> Bool)?
     /// The mosaic's one caption line.
     @State private var caption = ""
     /// Sheet 200: Tess's pick (mood, its three lines) and the facts it read, refreshed each minute and on a change.
@@ -26,6 +25,7 @@ struct HomeMosaicPage: View {
     @State private var rigidBeats = 0
     @State private var onScreen = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Sheet 202: A's full-screen layer, its scene, where the core frame sits and the text it must stay clear of.
     @State private var controller = MosaicScreenController()
     @State private var scene: MosaicScene = .day
@@ -38,10 +38,18 @@ struct HomeMosaicPage: View {
     @State private var scroll = HomeScrollOffset()
     /// The day's clauses with Core's loaders, read once per refresh and not on every body.
     @State private var dayClauses: [HomeSentence.Clause]?
+    /// Core's ranked notices for the board's lines two and three.
+    @State private var notices: [HomeNotice] = []
+    /// Sheet 213: the things that take turns in the space under the mosaic (Core's ranking when its feed lands).
+    @State private var things: [HomeThing] = []
     @State private var shield: [CGRect] = []
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
-    @State private var pager = MosaicPager()
+    @State private var pager = MosaicPager(count: MosaicPage.count)
+    @State private var pageDirection = 1
     @State private var pageTicks = 0
+    /// Sheet 213: the one-thing space's own page (the mosaic's pages are the pager's), and when Home was left.
+    @State private var thingIndex = 0
+    @State private var thingsLeftAt: Date?
     @State private var pageWidth: CGFloat = 0
 
     private var layerOn: Bool {
@@ -55,7 +63,9 @@ struct HomeMosaicPage: View {
                     // Moods: 64 pt from the safe area to the sentence in all, so the row's gap is what is left.
                     .padding(.bottom, HomeMosaic.moodsIsOn
                         ? HomeMosaic.moodsTopInset - HomeMosaic.headerHeight - HomeMosaic.sectionGap : 0)
-                MosaicSentence(pickedClauses: momentClause.map { [$0] } ?? pick?.clauses, dayClauses: dayClauses)
+                MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses, noticeList: notices,
+                               facts: facts,
+                               paused: scenePhase != .active || link != nil)
                     // Until the first refresh has read Core's loaders the sentence waits (no flicker between the
                     // fallback and the real lines).
                     .opacity(dayClauses == nil ? 0 : 1)
@@ -64,21 +74,14 @@ struct HomeMosaicPage: View {
                 VStack(alignment: .leading, spacing: 0) {
                     MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption)
                         .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
-                    if !caption.isEmpty {
-                        Text(caption)
-                            .font(Theme.voice(size: 16))
-                            .foregroundStyle(Theme.Colors.inkSecondary)
-                            .padding(.top, Theme.Spacing.s)
-                            .mosaicShield()
-                    }
+                    // No caption under the mosaic (sheet 211): its words live in the slot's accessibility label.
                 }
-                // The call site that becomes `mosaic.lay(from: rowFrame, tone: .glaze)` with A's view.
-                MosaicNextList { rowFrame in mosaicLay?(rowFrame) ?? false }
+                // Sheet 213: one thing at a time, no Next list.
+                HomeOneThing(things: things, index: $thingIndex, turn: { turnThing($0) },
+                             done: { finishThing($0) }, open: { openThing($0) })
                     .mosaicShield()
                 if HomeMosaic.appsListIsOn {
-                    // Room for Tess above the list (her own layer draws there, sheet 209).
-                    Color.clear.frame(height: HomeMosaic.tessRoom).accessibilityHidden(true)
-                    AppsListSlot()
+                    AppsListSlot(onGlance: { playGlance($0) })
                         .mosaicShield()
                 }
             }
@@ -89,6 +92,10 @@ struct HomeMosaicPage: View {
         }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
+        // Sheet 212: an 80 pt clear band at the bottom for Tess's corner; everything else sits above it.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: HomeMosaic.tessRoom).accessibilityHidden(true)
+        }
         // Sheet 202: the mosaic is the page's own pixels, edge to edge, behind everything; every touch leans it.
         .background {
             if layerOn, let facts, let mood = pick?.mood {
@@ -103,7 +110,9 @@ struct HomeMosaicPage: View {
                     shield: shield,
                     mood: mood,
                     moment: moment,
-                    caption: $caption
+                    caption: $caption,
+                    page: MosaicPage(rawValue: pager.index) ?? .mood,
+                    pageDirection: pageDirection
                 )
             }
         }
@@ -112,7 +121,7 @@ struct HomeMosaicPage: View {
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in scroll.value = new }
         .onPreferenceChange(MosaicShieldKey.self) { shield = $0 }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
-        // A swipe that starts on the mosaic (or within 30 pt) changes its page; A's mosaic takes `pager.index`.
+        // A swipe that starts on the mosaic itself turns the things (the mosaic's own pages are gone).
         .simultaneousGesture(
             DragGesture(minimumDistance: 24, coordinateSpace: .global).onEnded { value in
                 let size = HomeMosaic.moodsMosaicSize
@@ -120,9 +129,10 @@ struct HomeMosaicPage: View {
                 let mosaic = CGRect(x: pageWidth - HomeMosaic.gutter - size.width, y: top,
                                     width: size.width, height: size.height)
                 if layerOn, MosaicPager.accepts(start: value.startLocation, translation: value.translation,
-                                                mosaic: mosaic, reach: pager.count > 1 ? 0 : MosaicPager.reach),
-                    pager.swipe(dx: value.translation.width)
+                                                mosaic: mosaic, reach: 0),
+                    turnThing(value.translation.width)
                 {
+                    pageDirection = value.translation.width < 0 ? 1 : -1
                     pageTicks += 1
                 }
             }
@@ -130,16 +140,25 @@ struct HomeMosaicPage: View {
         .tesseraFeedback(.selection, trigger: pageTicks)
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
+                // After two minutes or more away the space is back on its first thing.
+                if let left = thingsLeftAt, Date().timeIntervalSince(left) >= MosaicPager.awaySeconds {
+                    thingIndex = 0
+                }
+                thingsLeftAt = nil
                 pager.returned(at: Date())
             } else if phase == .background {
+                thingsLeftAt = Date()
                 pager.leave(at: Date())
             }
         }
         .mosaicTouchFeed(controller, enabled: layerOn)
-        .onAppear {
-            mosaicLay = { rect in
-                MomentMemory.handDoneAt = AppClock.now
-                return controller.lay(from: rect, tone: .glaze)
+        // Sheet 209: Tess on her own layer above all of Home; touches pass through except on her.
+        .overlay {
+            if layerOn, HomeMosaic.appsListIsOn {
+                TessLayer(
+                    thoughts: TessThoughts.lines(facts: facts, asksClaude: model.asksClaude),
+                    onTap: { playTess() }
+                )
             }
         }
         // Sheet 203: a pull down from the top 40 pt also opens Settings.
@@ -187,6 +206,15 @@ struct HomeMosaicPage: View {
     /// Asks Core's picker what the day looks like now; "Welcome back" shows once per absence.
     private func refreshPick() {
         let at = AppClock.now
+        let summary = AppSummaryLines.lines(
+            engine: model.engine,
+            plan: model.plan,
+            moneyDue: .next(engine: model.engine, now: at),
+            routines: .make(engine: model.engine, now: at),
+            now: at
+        )
+        things = HomeThings.standIn(model: model, lines: summary, now: at)
+        thingIndex = min(thingIndex, max(things.count - 1, 0))
         dayClauses = HomeMosaic.firstThree(HomeSentence.compose(HomeSentence.inputs(
             engine: model.engine, plan: model.plan, moneyDue: .next(engine: model.engine, now: at),
             routines: .make(engine: model.engine, now: at), now: at
@@ -212,6 +240,9 @@ struct HomeMosaicPage: View {
             defaults.set(true, forKey: Self.backShownKey)
         }
         facts = read
+        notices = HomeNotices.ranked(engine: model.engine, facts: read, plan: model.plan,
+                                     moneyDue: .next(engine: model.engine, now: now),
+                                     routines: .make(engine: model.engine, now: now))
         if next != pick {
             pick = next
         }
@@ -254,6 +285,70 @@ struct HomeMosaicPage: View {
             try? await Task.sleep(for: .seconds(played.moment.duration))
             guard !Task.isCancelled, moment?.id == played.id else { return }
             endMoment()
+        }
+    }
+
+    /// Sheet 206: the apps list settled on an app, so the mosaic plays that app's glance (a new pick restarts it; a
+    /// moment already playing, other than a glance, wins). The sentence does not change.
+    private func playGlance(_ app: HomeApp) {
+        guard layerOn, scenePhase == .active else { return }
+        if let moment, case .glance = moment.moment {} else if moment != nil {
+            return
+        }
+        let played = MosaicMomentEvent(.glance(app: app))
+        moment = played
+        momentTask?.cancel()
+        momentTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(played.moment.duration))
+            guard !Task.isCancelled, moment?.id == played.id else { return }
+            endMoment()
+        }
+    }
+
+    /// Sheet 209: Tess was tapped, so the mosaic plays the Tess moment (the sentence does not change).
+    private func playTess() {
+        guard layerOn, scenePhase == .active, moment == nil else { return }
+        let played = MosaicMomentEvent(.tess)
+        moment = played
+        momentTask?.cancel()
+        momentTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(played.moment.duration))
+            guard !Task.isCancelled, moment?.id == played.id else { return }
+            endMoment()
+        }
+    }
+
+    /// The hold finished a task: the op lands, the one Undo line speaks its shown label, and the next thing comes in.
+    /// Returns whether the task was marked done (the one rigid tap plays only then).
+    private func finishThing(_ thing: HomeThing) -> Bool {
+        guard let id = thing.taskID,
+              let record = try? model.engine.perform(SetTaskDone(task: id, done: true), by: .user).record
+        else { return false }
+        // The op-log "finished" moment that follows shows its clause only: no second tile and no second tap.
+        MomentMemory.handDoneAt = AppClock.now
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        TessVoice.shared.say("\(thing.big), done.", undo: record, holds: .seconds(5))
+        return true
+    }
+
+    /// A swipe on the space: the next thing (left) or the previous (right), wrapping; whether the page turned.
+    private func turnThing(_ dx: CGFloat) -> Bool {
+        guard things.count > 1, abs(dx) > 50 else { return false }
+        thingIndex = ((thingIndex + (dx < 0 ? 1 : -1)) % things.count + things.count) % things.count
+        return true
+    }
+
+    private func openThing(_ thing: HomeThing) {
+        if case let .object(id)? = thing.opens {
+            model.path.append(Route.object(id))
+        } else if case let .app(app) = thing.kind {
+            switch app {
+            case .kitchen: link = .recipes
+            case .money: link = .money
+            case .notes: link = .notes
+            case .lists: link = .lists
+            default: break
+            }
         }
     }
 
@@ -301,6 +396,8 @@ private struct HomeLayerHost: View {
     let mood: MosaicMood
     let moment: MosaicMomentEvent?
     @Binding var caption: String
+    var page: MosaicPage = .mood
+    var pageDirection = 1
 
     var body: some View {
         MosaicHomeLayer(
@@ -312,7 +409,9 @@ private struct HomeLayerHost: View {
             shield: shield.map { $0.offsetBy(dx: 0, dy: scrollMinY - scroll.value) },
             mood: mood,
             moment: moment,
-            caption: $caption
+            caption: $caption,
+            page: page,
+            pageDirection: pageDirection
         )
     }
 }

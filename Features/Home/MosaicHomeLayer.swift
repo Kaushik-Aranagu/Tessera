@@ -39,9 +39,23 @@ final class MosaicScreenController {
         var accents: Int
         var sets: Int
         var moment: UUID?
+        var page: MosaicPage
+        var nextClock: String?
+        var weekDone: Int
+        var reaction: Int
     }
 
     private var key: Key?
+    private var lastPage = MosaicPage.mood
+    private var pendingReaction: MosaicOpenReaction?
+    private var reactionToken = 0
+
+    /// A reaction on open (sheet 209 B): played at the next sync, never stacked.
+    func react(_ reaction: MosaicOpenReaction) {
+        pendingReaction = reaction
+        reactionToken += 1
+    }
+
     private var restored = false
     private var lastDay: Date?
     private var lastMood: MosaicMood?
@@ -83,6 +97,9 @@ final class MosaicScreenController {
         var moodContext: MosaicMoodContext
         var moment: MosaicMomentEvent?
         var shield: [CGRect]
+        var page: MosaicPage = .mood
+        var pageDirection = 1
+        var pageFacts: MosaicPageFacts?
     }
 
     /// Makes the engine for this size and re-reads the scene's colours when anything they depend on changed.
@@ -115,7 +132,10 @@ final class MosaicScreenController {
                        nowColumn: engine.nowColumn(facts.now), text: MosaicScenes.text(for: inputs.scene, input: input),
                        ground: [inputs.ground.red, inputs.ground.green, inputs.ground.blue], mood: inputs.mood,
                        accents: inputs.moodContext.doneAccents.count,
-                       sets: inputs.moodContext.doneSets * 100 + inputs.moodContext.remainingSets, moment: moment?.id)
+                       sets: inputs.moodContext.doneSets * 100 + inputs.moodContext.remainingSets, moment: moment?.id,
+                       page: inputs.page, nextClock: inputs.pageFacts?.nextClock,
+                       weekDone: inputs.pageFacts?.weekDone ?? 0,
+                       reaction: reactionToken)
         guard next != key else { return engine }
         if let moment, moment.id != lastMoment?.id {
             momentStart = engine.clock
@@ -142,6 +162,7 @@ final class MosaicScreenController {
         }
     }
 
+    // swiftlint:disable:next function_body_length
     private func retarget(
         _ engine: MosaicScreenEngine,
         inputs: Inputs,
@@ -183,6 +204,14 @@ final class MosaicScreenController {
             if let step = moment?.moment.stepBack, step > 0 {
                 colour = MosaicColour.mix(colour, ground, step)
             }
+            // A glance washes the mood behind it 18% toward the app's accent; the rim samples that, never the sign.
+            if case let .glance(app)? = moment?.moment {
+                colour = MosaicColour.mix(
+                    colour,
+                    MosaicMomentField.glanceAccent(app, context),
+                    MosaicMomentField.glanceWash
+                )
+            }
             return colour
         }
         let left = engine.targetCore.left, top = engine.targetCore.top
@@ -192,14 +221,22 @@ final class MosaicScreenController {
         let moodLight = moodField.flatMap {
             MosaicMoodField.overlay($0, geometry: local, context: context, reduceMotion: inputs.reduceMotion)
         }
-        let light = sparkled(plan?.overlay ?? moodLight, engine: engine, moment: moment, input: input, local: local,
-                             context: context, reduceMotion: inputs.reduceMotion)
+        // A page other than the mood draws its own sign in the window (never under a moment, which plays over any
+        // page).
+        let pageLight: MosaicMoodField.Overlay? = moment == nil && inputs.scene == .day && inputs.page != .mood
+            ? MosaicPageField.light(inputs.page, cols: window.columns, rows: window.rows, start: engine.clock,
+                                    ground: ground, context: context, facts: inputs.pageFacts,
+                                    still: inputs.reduceMotion)
+            : nil
+        let light = sparkled(plan?.overlay ?? pageLight ?? moodLight, engine: engine, moment: moment, input: input,
+                             local: local, context: context, reduceMotion: inputs.reduceMotion)
         // During an announcement the rim samples the background, never the words.
-        if case .announce? = moment?.moment {
-            engine.rimSamplesLight = false
-        } else {
-            engine.rimSamplesLight = true
+        var signOnly = pageLight != nil
+        switch moment?.moment {
+        case .announce?, .glance?: signOnly = true
+        default: break
         }
+        engine.rimSamplesLight = !signOnly
         engine.overlay = light.map { inner in
             { column, row, time, colour in
                 let place = mapped(column, row)
@@ -219,11 +256,56 @@ final class MosaicScreenController {
             }
         }
         let origin = (column: engine.grid.centreColumn, row: engine.grid.coreTop + window.rows / 2)
+        let nightAt: (Int, Int) -> MosaicTriple = { column, row in
+            let place = engine.local(column: column, row: row)
+            return MosaicMoodField.colour(.night, column: place.column, row: place.row, geometry: local, input: input,
+                                          ground: ground, context: context, jitterIndex: abs(column &* 7919 &+ row))
+        }
+        let dustyAt: (Int, Int) -> MosaicTriple = { column, row in
+            let place = engine.local(column: column, row: row)
+            return MosaicMoodField.colour(.back, column: place.column, row: place.row, geometry: local, input: input,
+                                          ground: ground, context: context, jitterIndex: abs(column &* 7919 &+ row))
+        }
+        let reaction = inputs.reduceMotion || moment != nil ? nil : pendingReaction
+        pendingReaction = nil
         if key == nil {
-            engine.settle(colourAt: colourAt)
+            if reaction == .gather {
+                // A cold launch: night first, then gather into now after 500 ms, 1.8 s.
+                engine.settle(colourAt: nightAt)
+                engine.morph(.standard(.gather), origin: origin, total: reaction?.duration, after: reaction?.delay ?? 0,
+                             colourAt: colourAt)
+            } else {
+                engine.settle(colourAt: colourAt)
+            }
+            lastPage = inputs.page
             return
         }
-        engine.morph(changeover(plan: plan, moment: moment, moodField: moodField), origin: origin, colourAt: colourAt)
+        switch reaction {
+        case .ripple?:
+            engine.rippleFromCentre(seconds: MosaicOpenReaction.ripple.duration)
+            return
+        case .flip?:
+            engine.morph(.flipRows, origin: origin, total: MosaicOpenReaction.flip.duration, colourAt: colourAt)
+            return
+        case .nightToDay?:
+            engine.morph(.standard(.fall), origin: origin, total: MosaicOpenReaction.nightToDay.duration,
+                         from: nightAt, colourAt: colourAt)
+            return
+        case .back?:
+            engine.morph(.standard(.gather), origin: origin, total: MosaicOpenReaction.back.duration,
+                         from: dustyAt, colourAt: colourAt)
+            return
+        default: break
+        }
+        var kind = changeover(plan: plan, moment: moment, moodField: moodField)
+        var total: TimeInterval?
+        if inputs.page != lastPage {
+            // A page wipes in the swipe's direction in 0.5 s.
+            kind = .wipeColumns(reverse: inputs.pageDirection < 0)
+            total = MosaicPage.wipeSeconds
+        }
+        lastPage = inputs.page
+        engine.morph(kind, origin: origin, total: total, colourAt: colourAt)
     }
 
     /// Which changeover to use: a moment's own way in, the hand-back of the moment that just ended, the mood's own
@@ -299,7 +381,16 @@ struct MosaicHomeLayer: View {
     var moment: MosaicMomentEvent?
     /// The view writes its one caption line here for the host to draw.
     var caption: Binding<String>?
+    /// The mosaic's page (sheet 209 C), from B's pager, the swipe's direction and what the pages read.
+    var page: MosaicPage = .mood
+    var pageDirection = 1
+    var pageFacts: MosaicPageFacts?
 
+    /// Whether this process has opened Home yet (a cold launch plays its own reaction once).
+    @MainActor private static var launched = false
+
+    @State private var tracker = MosaicOpenTracker()
+    @Environment(\.scenePhase) private var scenePhase
     @State private var cue = HapticCue()
     @State private var didOpen = false
     @State private var opening = false
@@ -312,7 +403,7 @@ struct MosaicHomeLayer: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private var captionText: String {
-        facts.caption(for: scene)
+        page == .mood || scene != .day ? facts.caption(for: scene) : page.caption(facts: facts, page: pageFacts)
     }
 
     var body: some View {
@@ -324,8 +415,34 @@ struct MosaicHomeLayer: View {
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { controller.globalOrigin = $0 }
-        .onAppear { visible = true }
+        .onAppear {
+            visible = true
+            // The first open of this process is a cold launch: gather from night. Never over a moment, never under
+            // Reduce Motion.
+            if !Self.launched {
+                Self.launched = true
+                if !reduceMotion, active == nil {
+                    controller.react(.gather)
+                }
+                tracker.recordOpen()
+            }
+        }
         .onDisappear { visible = false }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background {
+                tracker.recordBackground()
+            } else if phase == .active {
+                // A reopen reacts once, by how long he was away; a moment already playing wins; no haptic.
+                guard !reduceMotion, active == nil, scene == .day else {
+                    tracker.recordOpen()
+                    return
+                }
+                let cue = facts.openCue(lastBackground: tracker.lastBackground, lastOpen: tracker.lastOpen,
+                                        coldLaunch: false)
+                controller.react(cue.reaction)
+                tracker.recordOpen()
+            }
+        }
         .onChange(of: captionText, initial: true) { _, text in
             caption?.wrappedValue = text
         }
@@ -392,7 +509,8 @@ struct MosaicHomeLayer: View {
                                            coreTop: coreTop, reduceMotion: reduceMotion, mood: mood,
                                            moodContext: momentContext, moment: active,
                                            shield: shield.map { $0.offsetBy(dx: -controller.globalOrigin.x,
-                                                                            dy: -controller.globalOrigin.y) }))
+                                                                            dy: -controller.globalOrigin.y) },
+                                           page: page, pageDirection: pageDirection, pageFacts: pageFacts))
         engine.step(to: time)
         if engine.consumeLandings() > 0 {
             DispatchQueue.main.async { cue.play(.fleckReachesNow) }

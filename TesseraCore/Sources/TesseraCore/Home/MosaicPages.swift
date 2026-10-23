@@ -5,7 +5,8 @@ import Foundation
 public enum MosaicOpenReaction: String, CaseIterable, Sendable {
     /// Under 2 minutes away: a ripple from the middle.
     case ripple
-    /// 2 minutes to 3 hours: the tiles flip from the last scene to now.
+    /// 2 minutes to 3 hours, and any longer same-day absence that is not the first open of his day: the tiles flip
+    /// row by row from the last scene the mosaic showed (the host remembers it) to the one for now.
     case flip
     /// The first open after 4 am: night falls away into the day.
     case nightToDay

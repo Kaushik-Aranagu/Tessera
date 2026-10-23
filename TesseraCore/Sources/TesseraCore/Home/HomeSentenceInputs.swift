@@ -19,10 +19,14 @@ public extension HomeSentence {
     struct RoutinesPart: Sendable {
         public let facts: RoutinesLanding.Facts
         public let nextUsualStart: Date?
+        /// The routine that start belongs to, so a name and a time always come from the same one. Nil when only the
+        /// time was handed in.
+        public let nextRoutine: String?
 
-        public init(facts: RoutinesLanding.Facts, nextUsualStart: Date? = nil) {
+        public init(facts: RoutinesLanding.Facts, nextUsualStart: Date? = nil, nextRoutine: String? = nil) {
             self.facts = facts
             self.nextUsualStart = nextUsualStart
+            self.nextRoutine = nextRoutine
         }
     }
 

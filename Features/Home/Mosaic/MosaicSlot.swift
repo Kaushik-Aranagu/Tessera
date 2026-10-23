@@ -21,12 +21,28 @@ struct MosaicSlot: View {
                     coreTop = $0
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                .accessibilityHidden(true)
+                .modifier(MosaicWords(words: caption))
         } else if let facts {
+            // With the moods off the mosaic keeps its own accessibility element and scrub; no outer label over it.
             MosaicView(facts: facts, scene: $scene, caption: $caption)
                 .frame(height: HomeMosaic.mosaicHeight)
         } else {
             Color.clear.frame(height: HomeMosaic.mosaicHeight).accessibilityHidden(true)
+        }
+    }
+}
+
+/// The mosaic speaks for itself, so its words ride in its accessibility label (sheet 211), never as text on its edge.
+private struct MosaicWords: ViewModifier {
+    let words: String
+
+    func body(content: Content) -> some View {
+        if words.isEmpty {
+            content.accessibilityHidden(true)
+        } else {
+            content
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(words)
         }
     }
 }
