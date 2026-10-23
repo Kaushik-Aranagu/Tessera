@@ -5,7 +5,7 @@ import TesseraCore
 /// queue rows (swipe right strikes in ink and finishes the task, swipe left is Not now; the Tess line with Undo is
 /// unchanged). A tap grows a row to about 78 pt on the house spring and shows why Tess ranks it here; one open at a
 /// time. Tapping the why opens the thing.
-struct MosaicNext: View {
+struct MosaicNextList: View {
     /// Called with the finished row's frame in the page's coordinate space.
     let finished: (CGRect) -> Void
 

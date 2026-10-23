@@ -36,6 +36,9 @@ struct BackupView: View {
     @State private var confirming: Picked?
     /// The staged restore, read once and refreshed on stage or cancel (the check reads the whole file).
     @State private var pending: TesseraBackup.Info?
+    /// backupsV2: when the restore was staged, so Undo is offered for 10 minutes (then it reads Cancel restore).
+    @State private var stagedAt: Date?
+    @State private var undoTimer: Task<Void, Never>?
 
     var body: some View {
         let _ = refresh
@@ -43,6 +46,7 @@ struct BackupView: View {
         let failures = BackupKeeper.failures
         let copies = BackupKeeper.localDates
         let latest = copies.max()
+        let words = Tier1b.backupsIsOn
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 if isPresented {
@@ -78,7 +82,8 @@ struct BackupView: View {
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1, hero: true)
 
-                Text(BackupCopy.local(latest, kept: copies.count, now: AppClock.now))
+                Text(words ? BackupKeeper.lastLine(copies: BackupKeeper.localCopies(), now: AppClock.now)
+                    : BackupCopy.local(latest, kept: copies.count, now: AppClock.now))
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -146,6 +151,15 @@ struct BackupView: View {
                     .padding(.top, Theme.Spacing.s)
                     .entrance(4)
 
+                // backupsV2: what the folder copy leaves out, said only for that copy; the phone's copy stays whole.
+                if words, folder != nil {
+                    Text(BackupWords.notIncluded(leavingOutPrivate: BackupKeeper.folderCopyLeavesOutPrivate))
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, Theme.Spacing.xs)
+                }
+
                 // EXPORT sits by the folder line, apart from SAVE A COPY (G38); hidden until Core's masked export.
                 if ExportFile.ready {
                     ExportRow(onExport: {})
@@ -161,6 +175,11 @@ struct BackupView: View {
                 }
                 .padding(.top, Theme.Spacing.section)
                 .entrance(5)
+
+                if words {
+                    BackupDatesList(copies: BackupKeeper.localCopies(), onPick: { restore(from: $0) })
+                        .padding(.top, Theme.Spacing.l)
+                }
 
                 restoreSection
 
@@ -188,6 +207,7 @@ struct BackupView: View {
             pending = TesseraBackup.pendingRestore()
             refresh += 1
         }
+        .onDisappear { undoTimer?.cancel() }
         .environment(\.animateEntrance, true)
         .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
             guard case let .success(url) = result else { return }
@@ -250,10 +270,12 @@ struct BackupView: View {
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Button("Cancel restore") {
+                Button(stagedAt == nil ? "Cancel restore" : BackupDatesCopy.undo) {
                     TesseraBackup.cancelRestore()
                     RestoreOffer.forgetStaged()
                     pending = nil
+                    stagedAt = nil
+                    undoTimer?.cancel()
                     say("Cancelled. Nothing will be replaced.")
                 }
                 .buttonStyle(.labelWord)
@@ -299,8 +321,11 @@ struct BackupView: View {
             dropPicked()
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
                 line = nil
+                // backupsV2 says what the restore changes in counts; without a count the recipe line stands.
+                let preview = Tier1b.backupsIsOn ? BackupPreview.line(copyAt: copy, replacing: model.context) : nil
                 confirming = Picked(url: copy, info: info,
-                                    weight: TesseraBackup.restoreWeightLine(copyAt: copy, replacing: model.context))
+                                    weight: preview ?? TesseraBackup.restoreWeightLine(copyAt: copy,
+                                                                                       replacing: model.context))
             }
         } catch TesseraBackup.BackupError.newerSchema {
             say("That copy is from a newer Tessera. Update first.")
@@ -318,11 +343,25 @@ struct BackupView: View {
             pending = try TesseraBackup.stageRestore(from: picked.url)
             RestoreOffer.rememberStaged(picked.info.createdAt)
             restores += 1
+            if Tier1b.backupsIsOn {
+                stageUndo()
+            }
             dropPicked()
             say("What's here now is kept in Backups, so this can be undone.")
         } catch {
             dropPicked()
             say("That copy couldn't be staged. Nothing was replaced.")
+        }
+    }
+
+    /// Undo reads for 10 minutes after a restore is staged; then the same word is Cancel restore.
+    private func stageUndo() {
+        stagedAt = AppClock.now
+        undoTimer?.cancel()
+        undoTimer = Task { @MainActor in
+            try? await Task.sleep(for: BackupPreview.undoWindow)
+            guard !Task.isCancelled else { return }
+            withTesseraAnimation(reduceMotion: reduceMotion) { stagedAt = nil }
         }
     }
 

@@ -76,9 +76,10 @@ struct SettingsPageTests {
             "Rooms",
             "Home and live",
             "Kitchen v2",
+            "Safe keeping",
             "Home mosaic",
         ])
-        #expect(PeekTabsCopy.spoken(tabs, 1) == "Workout, tab 2 of 14")
+        #expect(PeekTabsCopy.spoken(tabs, 1) == "Workout, tab 2 of 15")
         #expect(PeekTabsCopy.next(tabs, 1) == "next: Kitchen")
         #expect(PeekTabsCopy.next(tabs, 6) == "next: Money")
         #expect(PeekTabsCopy.next(tabs, 7) == "next: Together")
@@ -86,8 +87,9 @@ struct SettingsPageTests {
         #expect(PeekTabsCopy.next(tabs, 9) == "next: Rooms")
         #expect(PeekTabsCopy.next(tabs, 10) == "next: Home and live")
         #expect(PeekTabsCopy.next(tabs, 11) == "next: Kitchen v2")
-        #expect(PeekTabsCopy.next(tabs, 12) == "next: Home mosaic")
-        #expect(PeekTabsCopy.next(tabs, 13) == nil)
+        #expect(PeekTabsCopy.next(tabs, 12) == "next: Safe keeping")
+        #expect(PeekTabsCopy.next(tabs, 13) == "next: Home mosaic")
+        #expect(PeekTabsCopy.next(tabs, 14) == nil)
         // Every row is on a named page (no "More"), six at most.
         #expect(ReviewChoices.facetPages().allSatisfy { $0.rows.count <= 6 })
         // Measured: words never overlap, whatever their widths, and the current one is centred.

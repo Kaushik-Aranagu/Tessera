@@ -163,6 +163,9 @@ struct NowPage: View {
             }
 
             Spacer(minLength: 0)
+
+            // The last change and Undo for 10 minutes (164, undoLogV2); nothing is drawn while the switch is Off.
+            UndoFootLine()
         }
         .tesseraFeedback(.done, trigger: finishes)
         .onChange(of: top?.id, initial: true) { _, id in
