@@ -39,6 +39,18 @@ struct TessOpenerTests {
                            events: events, calendar: calendar)
     }
 
+    @Test func aBodyOrCalorieTitleInAPlainClassGetsNoSinceThenLine() throws {
+        for title in ["Lunch 650 kcal", "Calories 1800 today"] {
+            let task = try engine.perform(CreateTask(title: title, startsAt: at(15)), by: .user).output
+            _ = conversation.append(role: .tess, text: "Noted.", about: [task], at: Date.now.addingTimeInterval(-60))
+            try engine.perform(MoveTask(task: task.id, to: at(17, 30), calendar: calendar), by: .user)
+            let line = opening(at(12))?.line ?? ""
+            #expect(!line.contains("Since then"), "\(title)")
+            #expect(!line.contains("Private line"), "\(title)")
+            conversation.clear()
+        }
+    }
+
     @Test func somethingTheNamedThingChangedIsSaidWithNoValue() throws {
         let task = try engine.perform(CreateTask(title: "Mail forms", startsAt: at(15)), by: .user).output
         _ = conversation.append(

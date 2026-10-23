@@ -83,17 +83,6 @@ public struct TessConversation {
 
     // MARK: Writing
 
-    /// Whether an object is one that must never be named in her conversation: money, health, body, calendar.
-    static func isUnnameable(_ object: ObjectRecord, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
-        guard let classDef = object.classDef else { return false }
-        if ClassResolver.app(for: classDef) == .money {
-            return true
-        }
-        let blocked: [SystemCatalog.Key] = [.pool, .spend, .inflow, .poolMove, .rateNote, .sleepNight, .stepsDay,
-                                            .restingHeartRate, .meProfile, .event, .heldNotice]
-        return blocked.contains { key in classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false }
-    }
-
     /// Writes one turn. `about` is what the turn is about (an object he dragged her onto, a thing she named). Returns
     /// nil when the catalog has no turn class. The stored words are the filtered ones.
     @discardableResult
@@ -106,7 +95,7 @@ public struct TessConversation {
         // A thing that is not to be named, or a private one, holds the turn back from Claude; the words stay only if
         // they
         // are themselves plain.
-        let unnameable = about.contains { Self.isUnnameable($0, classes: classes) }
+        let unnameable = about.contains { TessAskRouter.isUnnameable($0, classes: classes) }
         let hidden = about.contains { ObjectPrivacy.shownLabel(of: $0, in: store, classes: classes) != nil }
         if unnameable || hidden {
             held = true
@@ -160,6 +149,7 @@ public struct TessConversation {
         }
         if removed > 0 {
             store.save()
+            store.context.scrubLog()
         }
         return removed
     }
@@ -171,6 +161,7 @@ public struct TessConversation {
             store.context.delete(turn)
         }
         store.save()
+        store.context.scrubLog()
         return Self.clearedLine
     }
 }

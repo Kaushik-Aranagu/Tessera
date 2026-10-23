@@ -53,7 +53,8 @@ public enum TessOpener {
         let store = engine.store, classes = engine.classes
         if let lastTurn, let changed = firstChange(since: lastTurn, engine: engine) {
             // Money, health, body, calorie and calendar: no "Since then" at all.
-            if !TessAskRouter.isUnnameable(changed, classes: classes) {
+            // The raw title is judged too: a weigh-in or a calorie line lives in an ordinary class.
+            if !TessAskRouter.isUnnameable(changed, classes: classes), passes(changed.title, store: store) {
                 let name = shownName(changed, store: store, classes: classes)
                 let conflict = conflictLine(for: name, in: events, now: now)
                 let line = (["Since then, \(name) changed."] + (conflict.map { [$0] } ?? [])).joined(separator: " ")

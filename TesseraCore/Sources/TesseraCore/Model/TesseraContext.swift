@@ -54,12 +54,20 @@ public final class TesseraContext {
         if let url {
             var configuration = Configuration()
             configuration.journalMode = .wal
+            // Deleted rows are overwritten, not just unlinked (Tess's conversation is erased for good).
+            configuration.prepareDatabase { db in try db.execute(sql: "PRAGMA secure_delete = ON") }
             database = try DatabasePool(path: url.path, configuration: configuration)
         } else {
             database = try DatabaseQueue()
         }
         try TesseraDatabaseSchema.migrator.migrate(database)
         try load()
+    }
+
+    /// Folds the write-ahead log back into the file so erased rows leave no copy behind. No-op in memory.
+    public func scrubLog() {
+        guard url != nil else { return }
+        _ = try? database.writeWithoutTransaction { try $0.execute(sql: "PRAGMA wal_checkpoint(TRUNCATE)") }
     }
 
     public var hasChanges: Bool {

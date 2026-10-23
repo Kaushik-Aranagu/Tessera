@@ -38,7 +38,7 @@ public enum TessAskRouter {
         }
         // A private or walled thing is answered by its label, on the phone, always.
         if let label = ObjectPrivacy.shownLabel(of: object, in: store, classes: classes)
-            ?? (Describe.isPrivate(object, in: store, classes: classes) ? ObjectPrivacy.routineLabel : nil)
+            ?? (Describe.isPrivate(object, in: store, classes: classes) ? classLabel(of: object) : nil)
         {
             return TessAsk(phoneAnswer: "\(label).", claudeText: nil, actions: [])
         }
@@ -67,8 +67,14 @@ public enum TessAskRouter {
         return TessAsk(phoneAnswer: answer, claudeText: asksClaude && allowed ? shown : nil, actions: actions)
     }
 
+    /// The class's own plain word ("Task", "Note"), for a private thing that has no shown label.
+    static func classLabel(of object: ObjectRecord) -> String {
+        let name = object.classDef?.name ?? ""
+        return name.isEmpty ? "Private" : "Private \(name.lowercased())"
+    }
+
     /// Money, health, body and calendar objects (the classes that are never named or sent).
-    static func isUnnameable(_ object: ObjectRecord, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
+    public static func isUnnameable(_ object: ObjectRecord, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
         guard let classDef = object.classDef else { return false }
         if ClassResolver.app(for: classDef) == .money {
             return true
