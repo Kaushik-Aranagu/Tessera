@@ -23,6 +23,30 @@ struct FinishedWorkoutTests {
         #expect(FinishedWorkoutWords.bestIndex([]) == nil)
     }
 
+    @Test @MainActor func aWorkoutFromAPrivateRoutineIsPrivate() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let routine = try #require(model.todaysRoutine())
+        try model.engine.perform(RenameObject(object: routine.id, title: "Knee rehab day"), by: .user)
+        let workout = try model.engine.perform(StartRoutine(routine: routine.id, time: AppClock.now), by: .user).output
+        #expect(FinishedWorkoutPage.privateLabel(of: workout, model: model) == ObjectPrivacy.routineLabel)
+    }
+
+    @Test @MainActor func aPlainWorkoutIsNotPrivate() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let routine = try #require(model.todaysRoutine())
+        let workout = try model.engine.perform(StartRoutine(routine: routine.id, time: AppClock.now), by: .user).output
+        #expect(FinishedWorkoutPage.privateLabel(of: workout, model: model) == nil)
+    }
+
+    @Test @MainActor func aPrivateWordInTheNotesKeepsThemOffThePage() {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        #expect(ObjectPrivacy.isPrivateWord("my therapy session went long", in: model.store))
+        #expect(!ObjectPrivacy.isPrivateWord("felt strong today", in: model.store))
+    }
+
     @Test func theSwitchShipsOff() throws {
         let choice = try #require(ReviewChoices.all.first { $0.id == "pagesV2" })
         #expect(choice.defaultValue == "Off")

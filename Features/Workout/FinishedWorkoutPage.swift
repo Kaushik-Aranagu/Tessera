@@ -60,7 +60,9 @@ struct FinishedWorkoutPage: View {
 
     var body: some View {
         let summary = model.ledger.summary(of: workout)
-        let isPrivate = ObjectPrivacy.routineTitle(summary.title, in: model.store) == ObjectPrivacy.routineLabel
+        // Core's one rule, the same Stats and Log use: a flagged workout, or one from a private routine, is private.
+        let privateLabel = Self.privateLabel(of: workout, model: model)
+        let isPrivate = privateLabel != nil
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Button { dismiss() } label: {
@@ -70,7 +72,7 @@ struct FinishedWorkoutPage: View {
                         .frame(minHeight: 44, alignment: .leading)
                 }
                 .buttonStyle(HandleButtonStyle())
-                Text(isPrivate ? ObjectPrivacy.routineLabel : summary.title)
+                Text(privateLabel ?? summary.title)
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -107,6 +109,11 @@ struct FinishedWorkoutPage: View {
         .background { ThemedBackground() }
     }
 
+    /// "Private workout" when Core says the workout is private (flagged, or made from a private routine).
+    static func privateLabel(of workout: ObjectRecord, model: AppModel) -> String? {
+        ObjectPrivacy.shownLabel(of: workout, in: model.store, classes: model.classes)
+    }
+
     private func sentence(_ summary: WorkoutSummary, isPrivate: Bool) -> String {
         if isPrivate {
             return summary.endedAt?.formatted(.dateTime.month(.abbreviated).day()) ?? ""
@@ -118,8 +125,10 @@ struct FinishedWorkoutPage: View {
 
     @ViewBuilder
     private var notes: some View {
+        // Notes that contain a private word are not shown here.
         if let text = model.store.value("notes", of: workout)?.stringValue,
-           !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+           !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           !ObjectPrivacy.isPrivateWord(text, in: model.store)
         {
             Text(text)
                 .textRole(.body)
