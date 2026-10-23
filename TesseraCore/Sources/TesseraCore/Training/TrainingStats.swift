@@ -16,6 +16,14 @@ public enum StatsMass {
         }
     }
 
+    /// The number alone, as a set weight reads inside a sentence ("82.5", "185"): kg to 0.5, lb to 5.
+    public static func number(kg: Double, unit: MassUnit) -> String {
+        switch unit {
+        case .kilograms: trimmed((kg * 2).rounded() / 2)
+        case .pounds: trimmed((kg * poundsPerKilo / 5).rounded() * 5)
+        }
+    }
+
     /// An estimate ("about 93 kg"): kg to the whole, lb to 5.
     public static func estimate(kg: Double, unit: MassUnit) -> String {
         switch unit {
