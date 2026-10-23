@@ -53,7 +53,7 @@ public enum LandingSentences {
         }
         text += "."
         if let shortOf {
-            text += " \(shortOf) \(isPlural(shortOf) ? "are" : "is") short."
+            text += " \(shortOf) \(HouseWords.isPlural(shortOf) ? "are" : "is") short."
         }
         return LandingSentence(text: text, key: dish)
     }
@@ -243,12 +243,6 @@ public enum LandingSentences {
     public static let nothingRunning = LandingSentence(text: "Nothing is running", key: nil)
 
     // MARK: Words
-
-    /// "Eggs" and "Chickpeas" take "are"; "Rice", "Hummus", "Asparagus" and "Grass" take "is".
-    static func isPlural(_ name: String) -> Bool {
-        let last = name.split(separator: " ").last.map { $0.lowercased() } ?? ""
-        return last.count > 2 && last.hasSuffix("s") && !["ss", "us", "is"].contains { last.hasSuffix($0) }
-    }
 
     /// "Tacos" reads "tacos" mid-sentence; "BLT" and "Pad Thai" keep their capitals.
     static func lowered(_ dish: String) -> String {

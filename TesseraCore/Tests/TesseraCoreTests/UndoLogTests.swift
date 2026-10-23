@@ -63,4 +63,51 @@ struct UndoLogTests {
         #expect(UndoLog.undo(gone.record.id, engine: engine) == .blocked(line: "Can't put that back."))
         #expect(task.isDeleted)
     }
+
+    @Test func aRetitledThingStillReadsGenericFromItsOldReceipt() throws {
+        let made = try engine.perform(CreateTask(title: "Lexapro refill"), by: .user)
+        try engine.perform(RenameObject(object: made.output.id, title: "Refill"), by: .user)
+        let entry = try #require(UndoLog.recent(engine: engine, now: .now).first { $0.id == made.record.id })
+        #expect(!entry.sentence.lowercased().contains("lexapro"))
+    }
+
+    @Test func aMoneyOrBodyShapedReceiptReadsGeneric() throws {
+        let made = try engine.perform(CreateTask(title: "Pay 1200 rent"), by: .user)
+        let entry = try #require(UndoLog.recent(engine: engine, now: .now).first { $0.id == made.record.id })
+        #expect(!entry.sentence.contains("1200"))
+        let body = try engine.perform(CreateNote(body: "weighed 82 kg this morning"), by: .user)
+        let note = try #require(UndoLog.recent(engine: engine, now: .now).first { $0.id == body.record.id })
+        #expect(!note.sentence.contains("82"))
+    }
+
+    @Test func aMeProfileChangeReadsGeneric() throws {
+        let me = try store.create(#require(engine.classes[.meProfile]), title: "Me")
+        let record = OpRecord(
+            action: "setMe",
+            actor: .user,
+            summary: "Updated you",
+            ops: [.setTitle(object: me.id, old: "Me", new: "Me")],
+            state: .committed
+        )
+        record.receipt = "Height 181 cm, saved."
+        store.context.insert(record)
+        let entry = try #require(UndoLog.recent(engine: engine, now: .now).first { $0.id == record.id })
+        #expect(entry.sentence == "Updated you." && !entry.sentence.contains("181"))
+    }
+
+    /// One batch of two ops where the second no longer fits: the first, which did fit, is put back as it was.
+    @Test func aBatchWithOneStaleOpIsLeftWhole() throws {
+        let one = try engine.perform(CreateTask(title: "First"), by: .user).output
+        let two = try engine.perform(CreateTask(title: "Second"), by: .user).output
+        let record = OpRecord(
+            action: "batch", actor: .user, summary: "Renamed two things",
+            ops: [.setTitle(object: one.id, old: "Before", new: "First"),
+                  .setTitle(object: two.id, old: "Before", new: "Not what it is now")],
+            state: .committed
+        )
+        store.context.insert(record)
+        // Undo replays newest-first: `two` does not match (its title is "Second"), `one` would match.
+        #expect(UndoLog.undo(record.id, engine: engine) == .blocked(line: "Can't put that back."))
+        #expect(one.title == "First" && two.title == "Second" && record.state == .committed)
+    }
 }

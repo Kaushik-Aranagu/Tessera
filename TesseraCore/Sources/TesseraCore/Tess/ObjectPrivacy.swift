@@ -244,6 +244,16 @@ public enum ObjectPrivacy {
         return isPrivateTitle(text, lastWeightKg: last)
     }
 
+    /// Whether any word in a phrase is one Tess never says back. Words split on anything that is not a letter or a
+    /// digit, so "ozempic," and "ozempic-run" are caught; the whole phrase is checked too.
+    @MainActor
+    public static func containsPrivateWord(_ text: String, in store: ObjectStore) -> Bool {
+        isPrivateWord(text, in: store)
+            || text.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).contains {
+                isPrivateWord(String($0), in: store)
+            }
+    }
+
     static func isPrivateText(_ text: String, lastWeightKg: Double?) -> Bool {
         !text.isEmpty && (SecretWords.mentions(text) || PrivateFacts.isWalled(text, lastWeightKg: lastWeightKg))
     }

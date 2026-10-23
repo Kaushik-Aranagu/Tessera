@@ -287,6 +287,16 @@ public final class TessCaptureEngine: TessCapturing {
         return nil
     }
 
+    /// Runs one reading chosen by the write router, with the same error line as a grammar capture.
+    func perform(parse: TessGrammar.Parse, context: TessContext) -> TessCapture {
+        do {
+            let (record, line) = try perform(parse, context: context)
+            return TessCapture(records: [record], line: line, source: .grammar)
+        } catch {
+            return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
+        }
+    }
+
     private func perform(_ parse: TessGrammar.Parse, context: TessContext) throws -> (OpRecord, String) {
         let pending = !context.commitImmediately
         switch parse {
