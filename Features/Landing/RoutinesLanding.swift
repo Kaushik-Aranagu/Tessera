@@ -177,6 +177,9 @@ private struct RoutinesThread: View {
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(named: "Start") { actions.start(item) }
         .accessibilityAction(named: "Details") { actions.detail(item) }
+        // Finishing marks (139): the routine just finished, so the Thread ties a loop and two lines hang from it.
+        .modifier(FinishRoutineLines(routineID: item.id, name: item.name, isPrivate: item.isPrivate,
+                                     usualStartMinuteOfDay: item.usual?.startMinuteOfDay))
     }
 }
 

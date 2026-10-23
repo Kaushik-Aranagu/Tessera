@@ -82,7 +82,9 @@ public enum PrivateFacts {
                                                 "lexapro", "zoloft", "sertraline", "prozac", "adderall", "xanax",
                                                 "melatonin",
                                                 "benadryl", "claritin", "zyrtec", "pill", "pills", "tablet", "tablets",
-                                                "capsule", "capsules", "dose", "meds", "medication"]
+                                                "capsule", "capsules", "dose", "meds", "medication", "ozempic", "wegovy", "mounjaro", "insulin",
+                                                "metformin", "omeprazole", "prednisone", "amoxicillin", "antibiotic",
+                                                "antibiotics", "ritalin", "vyvanse", "ambien", "nexium", "prilosec"]
     /// Symptoms and hurts: walled with no number (Product on QA L1): "knee hurts", "headache", "slept badly".
     static let symptoms: Set<String> = ["migraine", "nausea", "nauseous", "fever", "rash", "headache", "vomiting",
                                         "vomited", "dizzy", "diarrhea", "cramps", "insomnia", "symptoms", "hurts",
