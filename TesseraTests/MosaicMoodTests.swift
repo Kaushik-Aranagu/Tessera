@@ -1,5 +1,6 @@
 import Foundation
 @testable import Tessera
+import TesseraCore
 import Testing
 
 /// The departure mosaic (sheet 200): the grid, the dithered edges, the five transitions and the nine moods.

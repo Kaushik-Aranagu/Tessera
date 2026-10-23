@@ -1,4 +1,5 @@
 import Foundation
+import TesseraCore
 
 // The departure mosaic (Design 200, behind homeMosaicMoods, default Off, needs homeMosaic): the same grid in nine
 // moods, each a field of flat tiles and a little moving light, and five ways one mood becomes another. Pure, so a
@@ -6,10 +7,9 @@ import Foundation
 
 // MARK: - Transitions
 
-/// How one picture becomes another. Wave eases outward from an origin; the rest swap tile by tile.
-enum MosaicTransition: Equatable, CaseIterable {
-    case wave, fall, wipe, dissolve, gather
-
+/// How one picture becomes another (Core's `MosaicTransition`): wave eases outward from an origin; the rest swap tile
+/// by tile. The timings are the view's.
+extension MosaicTransition {
     struct Plan {
         let delays: [TimeInterval]
         let lengths: [TimeInterval]
@@ -61,18 +61,10 @@ enum MosaicTransition: Equatable, CaseIterable {
 
 // MARK: - Moods
 
-enum MosaicMood: String, CaseIterable, Equatable {
-    case morning, day, golden, running, rest, back, done, rain, night
-
-    /// Each mood's own way in (sheet 200).
+extension MosaicMood {
+    /// Each mood's own way in (sheet 200), from Core's table.
     var transition: MosaicTransition {
-        switch self {
-        case .morning, .rain: .fall
-        case .day, .running, .done: .wave
-        case .golden: .wipe
-        case .rest, .night: .dissolve
-        case .back: .gather
-        }
+        MosaicTransition.standard(for: self)
     }
 
     /// What VoiceOver says of the picture.
