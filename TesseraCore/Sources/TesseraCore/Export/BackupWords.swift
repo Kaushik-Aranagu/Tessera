@@ -70,8 +70,13 @@ public enum BackupWords {
             + "Today's copy stays in Backups, and you can undo this for 10 minutes."
     }
 
-    /// The one line that says what a copy leaves out.
-    public static let notIncluded = "Not included: health, body and private things."
+    /// What a copy leaves out, said only for what it really leaves out. The calendar and Health mirrors are in no copy.
+    /// Private notes, recipes, items and secret-word lines (which is where a weigh-in lives) are left out only of the
+    /// copy for the iCloud Drive folder; the copy on the phone keeps every word behind Face ID.
+    public static func notIncluded(leavingOutPrivate: Bool) -> String {
+        leavingOutPrivate ? "Not included: health, calendar, body and private things."
+            : "Not included: health and calendar."
+    }
 
     // MARK: Counts
 
