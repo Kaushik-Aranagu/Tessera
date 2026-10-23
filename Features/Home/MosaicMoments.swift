@@ -60,12 +60,15 @@ extension MosaicMoment {
         }
     }
 
-    /// How the mood comes back: a dissolve, or a fall after an announcement.
-    var returnTransition: MosaicTransition {
-        if case .announce = self {
-            return .fall
+    /// How the mood comes back: snow, storm and an announcement melt (the old tiles drip into the mood), fog and the
+    /// timer and finished dissolve, heat waves back, Tess gathers back.
+    var returnChangeover: MosaicChangeover {
+        switch self {
+        case .snow, .storm, .announce: .melt
+        case .heat: .transition(.wave)
+        case .tess: .transition(.gather)
+        case .fog, .wind, .timer, .finished: .transition(.dissolve)
         }
-        return .dissolve
     }
 
     /// Seconds it runs; an announcement runs until its text has crossed.
@@ -103,11 +106,17 @@ extension MosaicMoment {
     }
 }
 
+/// How a hand-back changes over: one of the standard transitions, or the melt of sheet 201.
+enum MosaicChangeover: Equatable {
+    case transition(MosaicTransition)
+    case melt
+}
+
 /// What a moment draws: its window, how it comes and goes, the still field and the moving light.
 struct MosaicMomentPlan {
     var window: (columns: Int, rows: Int)
     var transition: MosaicTransition
-    var returnTransition: MosaicTransition
+    var returnChangeover: MosaicChangeover
     var duration: TimeInterval
     /// The window-local field; nil keeps the mood's (finished).
     var base: [MosaicTriple]?
@@ -138,7 +147,7 @@ enum MosaicMomentField {
     ) -> MosaicMomentPlan {
         let cols = window.columns, rows = window.rows
         var plan = MosaicMomentPlan(window: window, transition: moment.transition,
-                                    returnTransition: moment.returnTransition, duration: moment.duration)
+                                    returnChangeover: moment.returnChangeover, duration: moment.duration)
         var base = under
         if moment.ownField {
             base = ownField(moment, cols: cols, rows: rows)

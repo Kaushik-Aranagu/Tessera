@@ -41,12 +41,15 @@ struct MosaicMomentTests {
         #expect(announce.transition == .wipe)
     }
 
-    @Test func anAnnouncementReturnsWithAFallAndTheOthersWithADissolve() {
+    @Test func momentsHandBackBackWithTheirOwnChangeover() {
         let announce = MosaicMoment.announce(words: [MosaicAnnounceWord(text: "Push A", app: nil)])
-        #expect(announce.returnTransition == .fall)
-        for moment in [MosaicMoment.snow, .fog, .wind, .storm, .heat, .tess, .timer] {
-            #expect(moment.returnTransition == .dissolve)
-        }
+        #expect(announce.returnChangeover == .melt)
+        #expect(MosaicMoment.snow.returnChangeover == .melt && MosaicMoment.storm.returnChangeover == .melt)
+        #expect(MosaicMoment.fog.returnChangeover == .transition(.dissolve))
+        #expect(MosaicMoment.heat.returnChangeover == .transition(.wave))
+        #expect(MosaicMoment.tess.returnChangeover == .transition(.gather))
+        #expect(MosaicMoment.timer.returnChangeover == .transition(.dissolve))
+        #expect(MosaicMoment.finished(tone: .glaze).returnChangeover == .transition(.dissolve))
     }
 
     @Test func newEventsAreDistinctSoANewOneReplacesARunningOne() {
@@ -240,6 +243,40 @@ struct MosaicMomentTests {
         // Three rings by 0.19 s, gone after a second.
         #expect(sparkle(23, 15, 0.9, field).red > 0)
         #expect(sparkle(21, 15, 1.9, field).red == 0)
+    }
+
+    @Test func aMeltDripsTheOldTileWhileTheMoodsTileGrowsUnderIt() {
+        let engine = MosaicEngine(config: .moods, width: 248)
+        engine.snapWindow()
+        let before = [MosaicTriple](repeating: (1, 0, 0), count: engine.config.count)
+        let after = [MosaicTriple](repeating: (0, 0, 1), count: engine.config.count)
+        engine.settle(to: before)
+        engine.morph(to: after, origin: (0, 0), melt: true)
+        #expect(engine.melting)
+        // Mid-melt a tile has its old colour dripping (below its place, shrunk) and the new one smaller than full.
+        let delay = MosaicColour.unit(30, salt: 91) * 0.42 + 0.018 * 10
+        engine.step(to: delay + 0.26)
+        let ghost = engine.meltGhost(column: 30, row: 10)
+        #expect(ghost != nil)
+        #expect((ghost?.colour.red ?? 0) == 1)
+        #expect((ghost?.offset.y ?? 0) > 0)
+        #expect((ghost?.scale ?? 1) < 1 && (ghost?.scale ?? 0) >= 0.3)
+        #expect(engine.scale(column: 30, row: 10) < 1.1)
+        // A column that starts later has not begun; after it all ends, no ghost is left and the mood is showing.
+        engine.step(to: 3)
+        #expect(engine.meltGhost(column: 30, row: 10) == nil)
+        #expect(engine.colour(column: 30, row: 10, nowColumn: nil).blue > 0.9)
+    }
+
+    @Test func aMeltStartsEachColumnAtHashTimesFourHundredTwentyPlusEighteenPerRow() {
+        let engine = MosaicEngine(config: .moods, width: 248)
+        engine.snapWindow()
+        let colours = [MosaicTriple](repeating: (0, 0, 0), count: engine.config.count)
+        engine.settle(to: colours)
+        engine.morph(to: colours, origin: (0, 0), melt: true)
+        engine.step(to: 0.005)
+        // Nothing has started in a column whose hash start is later than 5 ms and row 20.
+        #expect(engine.meltGhost(column: 5, row: 39) == nil)
     }
 
     @Test func aFinishedMomentKeepsTheMoodField() {

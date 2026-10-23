@@ -198,6 +198,8 @@ final class MosaicEngine {
     private(set) var visibleColumns: Int
     private(set) var visibleRows: Int
     private var transition: MosaicTransition = .wave
+    /// The hand-back changeover of sheet 201: the old tile drips away while the mood's tile grows in under it.
+    private(set) var melting = false
     /// The page ground the future, the dithered edges and the moods mix toward.
     var ground: MosaicTriple = (1, 1, 1)
     /// A moment's sway and swell, per tile per frame (nil under Reduce Motion): extra scale and an offset in points.
@@ -376,6 +378,9 @@ final class MosaicEngine {
         if let scaleHook {
             value *= scaleHook(column, row, clock)
         }
+        if melting, let progress = morphProgress(index), progress > 0, progress < 1 {
+            value *= progress
+        }
         if case let .kept(rule) = edgeKind(column: column, row: row) {
             value *= rule.scale
         }
@@ -441,6 +446,9 @@ final class MosaicEngine {
         if reduceMotion {
             return progress
         }
+        if melting {
+            return progress > 0 ? 1 : 0
+        }
         switch transition {
         case .wave: return 1 - pow(1 - progress, 3)
         // Fall, wipe, dissolve and gather swap the colour at their start: the tile arrives as the new colour.
@@ -455,13 +463,15 @@ final class MosaicEngine {
     func morph(
         to targets: [MosaicTriple],
         origin: (column: Int, row: Int),
-        transition: MosaicTransition = .wave
+        transition: MosaicTransition = .wave,
+        melt: Bool = false
     ) {
         guard targets.count == config.count else { return }
         let nowColour = (0 ..< config.count).map { MosaicColour.mix(from[$0], to[$0], morphEased($0)) }
         from = nowColour
         to = targets
         morphStart = clock
+        melting = false
         if reduceMotion {
             self.transition = .wave
             morphLength = 0.15
@@ -469,11 +479,36 @@ final class MosaicEngine {
             delays = Array(repeating: 0, count: config.count)
             return
         }
+        if melt {
+            // Each column starts at hash x 420 ms + 18 ms a row; 520 ms.
+            melting = true
+            self.transition = .dissolve
+            var delaysMelt = [TimeInterval](repeating: 0, count: config.count)
+            for column in 0 ..< config.columns {
+                for row in 0 ..< config.rows {
+                    delaysMelt[geometry.index(column: column, row: row)] = MosaicColour.unit(column, salt: 91) * 0.42
+                        + 0.018 * Double(row)
+                }
+            }
+            delays = delaysMelt
+            lengths = Array(repeating: 0.52, count: config.count)
+            morphLength = 0.42 + 0.018 * Double(config.rows) + 0.52
+            return
+        }
         self.transition = transition
         let plan = transition.plan(geometry: geometry, origin: origin, wave: config.morphDelayPerTile)
         delays = plan.delays
         lengths = plan.lengths
         morphLength = plan.lengths.max() ?? config.morphDuration
+    }
+
+    /// The old tile of a melting changeover while it drips: its colour, its drop and its shrink to 30%; nil otherwise.
+    func meltGhost(column: Int, row: Int) -> (colour: MosaicTriple, offset: CGPoint, scale: CGFloat)? {
+        guard melting, !reduceMotion else { return nil }
+        let index = geometry.index(column: column, row: row)
+        guard let progress = morphProgress(index), progress > 0, progress < 1 else { return nil }
+        let drop = progress * progress * Double(config.rows - row + 4) * Double(geometry.pitch) * 0.5
+        return (from[index], CGPoint(x: 0, y: drop), CGFloat(1 - 0.7 * progress))
     }
 
     /// Sets the colours with no morph (the first frame, a resize of the day).

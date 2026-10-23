@@ -182,20 +182,29 @@ final class MosaicController {
             if let plan, moment?.id != lastMoment?.id {
                 transition = plan.transition
             }
+            var melt = false
             if moment == nil, let previous = lastMoment {
-                transition = previous.moment.returnTransition
+                switch previous.moment.returnChangeover {
+                case .melt: melt = true
+                case let .transition(value): transition = value
+                }
             }
-            engine.morph(to: targets, origin: origin, transition: transition)
+            engine.morph(to: targets, origin: origin, transition: transition, melt: melt)
         }
-        if let moment, moment.id != lastMoment?.id, case let .finished(tone) = moment.moment {
-            // One tile flies from the top-right, under the sentence, to the now column at 62% height.
-            let column = engine.nowColumn(facts.now) ?? engine.targetLeft
-            let row = Int(Double(window.rows) * 0.62)
-            engine.lay(from: CGPoint(x: engine.geometry.width, y: -8), side: 10, column: column, tone: tone, row: row)
+        if let moment, moment.id != lastMoment?.id {
+            flyFinished(moment, facts: facts, rows: window.rows)
         }
         lastMoment = moment
         lastMood = moodField
         key = next
+    }
+
+    /// One tile flies from the top-right, under the sentence, to the now column at 62% height.
+    private func flyFinished(_ moment: MosaicMomentEvent, facts: MosaicFacts, rows: Int) {
+        guard case let .finished(tone) = moment.moment else { return }
+        let column = engine.nowColumn(facts.now) ?? engine.targetLeft
+        engine.lay(from: CGPoint(x: engine.geometry.width, y: -8), side: 10, column: column, tone: tone,
+                   row: Int(Double(rows) * 0.62))
     }
 
     /// A finished tile's sparkle rides on whatever light the mood has.
@@ -437,6 +446,21 @@ struct MosaicView: View {
         for tile in big {
             let value = engine.colour(column: tile.column, row: tile.row, nowColumn: nowColumn)
             fill(&context, engine: engine, column: tile.column, row: tile.row, colour: swiftColor(value))
+        }
+        if engine.melting {
+            // The old tiles drip away over the mood's tiles as they grow in.
+            for column in 0 ..< config.columns {
+                for row in 0 ..< config.rows {
+                    guard let ghost = engine.meltGhost(column: column, row: row),
+                          !engine.isDropped(column: column, row: row) else { continue }
+                    let rect = geometry.rect(column: column, row: row)
+                    let side = rect.width * ghost.scale
+                    let frame = CGRect(x: rect.midX - side / 2, y: rect.midY - side / 2 + ghost.offset.y, width: side,
+                                       height: side)
+                    context.fill(Path(roundedRect: frame, cornerRadius: config.corner * ghost.scale),
+                                 with: .color(swiftColor(ghost.colour)))
+                }
+            }
         }
         for item in engine.laid where !engine.isDropped(
             column: item.index / config.rows,
