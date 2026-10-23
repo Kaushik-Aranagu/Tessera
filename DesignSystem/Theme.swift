@@ -594,6 +594,8 @@ enum Theme {
     enum Motion {
         /// House spring — ~90% of all motion.
         static let house = Animation.spring(Spring(duration: 0.42, bounce: 0.12))
+        /// A list snapping to a row under the finger (sheet 220): about 0.35 s, no overshoot.
+        static let firm = Animation.spring(Spring(duration: 0.35, bounce: 0))
         /// Direct manipulation: drags, swipes, toggles under the finger.
         static let snappy = Animation.snappy(duration: 0.25)
         /// Ink drying: the colour of a moment fading back to rest, 1.1 s on the house curve after 0.4 s. Nil under

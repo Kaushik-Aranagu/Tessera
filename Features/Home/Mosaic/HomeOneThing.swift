@@ -136,8 +136,9 @@ struct HomeOneThing: View {
         }
         .frame(maxWidth: .infinity, minHeight: Self.height, alignment: .topLeading)
         .contentShape(Rectangle())
-        .simultaneousGesture(swipe)
-        .tesseraFeedback(.selection, trigger: turns)
+        // High priority: a swipe that starts on the space turns the page, and the page scrolls from anywhere else.
+        .highPriorityGesture(swipe)
+        .tesseraFeedback(.pageTurn, trigger: turns)
         .tesseraFeedback(.setLogged, trigger: finishes)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("One thing at a time")

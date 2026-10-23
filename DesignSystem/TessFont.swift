@@ -19,16 +19,29 @@ enum TessFont {
 
     /// A line of hers at `size`, scaling relative to `style`. Linked words ask for `.medium`.
     @MainActor
-    static func line(_ size: CGFloat, weight: Font.Weight = .regular, relativeTo style: Font.TextStyle = .body) -> Font {
+    static func line(_ size: CGFloat, weight: Font.Weight = .regular,
+                     relativeTo style: Font.TextStyle = .body) -> Font
+    {
         if isBundled {
             return Font.custom(family, size: size, relativeTo: style).weight(weight)
         }
         return Font.system(size: size, weight: weight, design: .serif)
     }
 
-    @MainActor static var beside: Font { line(besideSize) }
-    @MainActor static var inLayer: Font { line(layerSize) }
-    @MainActor static var newest: Font { line(newestSize, relativeTo: .title3) }
+    @MainActor static var beside: Font {
+        line(besideSize)
+    }
+
+    @MainActor static var inLayer: Font {
+        line(layerSize)
+    }
+
+    @MainActor static var newest: Font {
+        line(newestSize, relativeTo: .title3)
+    }
+
     /// A word that is a door: weight 500, never broken across lines (the caller keeps it in one `Text`).
-    @MainActor static var linked: Font { line(layerSize, weight: .medium) }
+    @MainActor static var linked: Font {
+        line(layerSize, weight: .medium)
+    }
 }

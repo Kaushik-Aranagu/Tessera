@@ -91,13 +91,13 @@ struct AppsListSlot: View {
     /// Rows the wheel has already turned during this hold.
     @State private var consumed = 0
     /// Held for scrolling (the pick sits at 1.06x), a soft haptic on pick up.
-    @State private var held = false
+    @GestureState private var held = false
     @State private var holdBeats = 0
     /// A snap is running; flicks that arrive meanwhile wait here (at most three).
     @State private var snapping = false
     @State private var queued: [Int] = []
-    /// MotionPolicy firm: about 0.35 s, no overshoot.
-    static let firm = Animation.spring(Spring(duration: 0.35, bounce: 0))
+    /// Bumped by each settle, so an older settle's unlock never clears a newer snap.
+    @State private var snapGeneration = 0
     /// Whether the list has been moved: the glance plays after a settle, not on the first draw.
     @State private var moved = false
     /// Builder A's hook (sheet 206): each pick plays that app's glance in the mosaic, 240 ms after the list settles.
@@ -131,20 +131,14 @@ struct AppsListSlot: View {
             .highPriorityGesture(
                 LongPressGesture(minimumDuration: 0.18, maximumDistance: 6)
                     .sequenced(before: DragGesture(minimumDistance: 0))
-                    .onChanged { value in
-                        switch value {
-                        case .second(true, nil):
-                            beginHold()
-                        case let .second(true, drag?):
-                            beginHold()
-                            wheel(to: drag.translation.height)
-                        default:
-                            break
+                    .updating($held) { value, state, _ in
+                        if case .second(true, _) = value {
+                            state = true
                         }
                     }
-                    .onEnded { value in
-                        if case .second(true, _) = value {
-                            finishWheel()
+                    .onChanged { value in
+                        if case let .second(true, drag?) = value {
+                            wheel(to: drag.translation.height)
                         }
                     }
             )
@@ -161,6 +155,16 @@ struct AppsListSlot: View {
         }
         .tesseraFeedback(.selection, trigger: ticks)
         .tesseraFeedback(.made, trigger: holdBeats)
+        // The hold ends however it ends (lifted or cancelled): the gesture state resets, the list snaps and the pick
+        // eases back from 1.06x.
+        .onChange(of: held) { _, isHeld in
+            if isHeld {
+                holdBeats += 1
+            } else {
+                finishWheel()
+            }
+        }
+        .animation(MotionPolicy.resolve(.easeOut(duration: 0.12), reduceMotion: reduceMotion), value: held)
         .task(id: middle) {
             guard moved, rows.indices.contains(middle) else { return }
             try? await Task.sleep(for: .milliseconds(240))
@@ -250,12 +254,6 @@ struct AppsListSlot: View {
         }
     }
 
-    private func beginHold() {
-        guard !held else { return }
-        withTesseraAnimation(.easeOut(duration: 0.12), reduceMotion: reduceMotion) { held = true }
-        holdBeats += 1
-    }
-
     /// The held finger is `translation` points from where it began: whole rows turn the ring (a tick each) and the rest
     /// follows the finger 1:1.
     private func wheel(to translation: CGFloat) {
@@ -274,7 +272,6 @@ struct AppsListSlot: View {
     private func finishWheel() {
         let nearest = drag < -rowHeight / 2 ? 1 : drag > rowHeight / 2 ? -1 : 0
         consumed = 0
-        withTesseraAnimation(.easeOut(duration: 0.12), reduceMotion: reduceMotion) { held = false }
         settle(by: nearest, count: rows.count)
     }
 
@@ -291,10 +288,13 @@ struct AppsListSlot: View {
 
     private func settle(by steps: Int, count: Int) {
         snapping = true
+        snapGeneration += 1
+        let generation = snapGeneration
         defer {
-            withTesseraAnimation(Self.firm, reduceMotion: reduceMotion) { drag = 0 }
+            withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { drag = 0 }
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(reduceMotion ? 20 : 350))
+                guard generation == snapGeneration else { return }
                 snapping = false
                 if !queued.isEmpty {
                     flick(queued.removeFirst())
@@ -303,7 +303,7 @@ struct AppsListSlot: View {
         }
         guard steps != 0, count > 0 else { return }
         moved = true
-        withTesseraAnimation(Self.firm, reduceMotion: reduceMotion) {
+        withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) {
             middle = AppsListRows.wrapped(middle, steps, count: count)
             drag = 0
         }
