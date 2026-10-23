@@ -19,6 +19,9 @@ struct HomeMosaicPage: View {
         ScrollView {
             VStack(alignment: .leading, spacing: HomeMosaic.sectionGap) {
                 header
+                    // Moods: 64 pt from the safe area to the sentence in all, so the row's gap is what is left.
+                    .padding(.bottom, HomeMosaic.moodsIsOn
+                        ? HomeMosaic.moodsTopInset - HomeMosaic.headerHeight - HomeMosaic.sectionGap : 0)
                 MosaicSentence()
                 VStack(alignment: .leading, spacing: 0) {
                     MosaicSlot(lay: $mosaicLay, caption: $caption)
@@ -37,7 +40,7 @@ struct HomeMosaicPage: View {
                 }
             }
             .padding(.horizontal, HomeMosaic.gutter)
-            .padding(.top, Theme.Spacing.s)
+            .padding(.top, HomeMosaic.moodsIsOn ? 0 : Theme.Spacing.s)
             .padding(.bottom, Theme.Spacing.xl)
             .coordinateSpace(.named(Self.space))
         }
