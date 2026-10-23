@@ -200,6 +200,9 @@ final class MosaicEngine {
     private var transition: MosaicTransition = .wave
     /// The page ground the future, the dithered edges and the moods mix toward.
     var ground: MosaicTriple = (1, 1, 1)
+    /// A moment's sway and swell, per tile per frame (nil under Reduce Motion): extra scale and an offset in points.
+    var scaleHook: ((_ column: Int, _ row: Int, _ time: TimeInterval) -> Double)?
+    var offsetHook: ((_ column: Int, _ row: Int, _ time: TimeInterval) -> CGPoint)?
     /// A mood's moving light: sparkle, drops, stars, a current. Called per tile per frame with the colour so far.
     var overlay: ((_ column: Int, _ row: Int, _ time: TimeInterval, _ colour: MosaicTriple) -> MosaicTriple)?
 
@@ -385,6 +388,11 @@ final class MosaicEngine {
     func offset(column: Int, row: Int) -> CGPoint {
         let index = geometry.index(column: column, row: row)
         var point = leaning ? lean[index] : .zero
+        if let offsetHook {
+            let sway = offsetHook(column, row, clock)
+            point.x += sway.x
+            point.y += sway.y
+        }
         guard !reduceMotion, let progress = morphProgress(index), progress < 1 else { return point }
         switch transition {
         case .fall where progress > 0:
@@ -601,8 +609,11 @@ final class MosaicEngine {
     /// A tile flies from `point` (the struck row, in the mosaic's space) to a free tile in `column`: translate and
     /// rotate 180° over 700 ms on the house spring. Under Reduce Motion it is laid at once and fades in.
     @discardableResult
-    func lay(from point: CGPoint, side: CGFloat, column: Int, tone: MosaicTone) -> Bool {
-        guard flight == nil, let index = freeTile(inColumn: column) else { return false }
+    func lay(from point: CGPoint, side: CGFloat, column: Int, tone: MosaicTone, row: Int? = nil) -> Bool {
+        let wanted = row.map { geometry.index(column: column, row: $0) }
+        guard flight == nil, let index = wanted.flatMap({ isLaid($0) ? nil : $0 }) ?? freeTile(inColumn: column) else {
+            return false
+        }
         if reduceMotion {
             laid.append(MosaicLaid(index: index, tone: tone, column: column, at: clock))
             laidIndexes.insert(index)
