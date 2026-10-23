@@ -37,7 +37,7 @@ struct HomeV2View: View {
             ScrollView {
                 // Today's page as it is: the day word, Now, the day's line and Next (queue swipes, Undo and the
                 // plan all kept). REVIEW is a door word on the day's line now; the day stroke lives on its page.
-                NowPage()
+                NowPage(daySentence: true)
                     .overlay(alignment: .topTrailing) {
                         Button("Review") { door = .review }
                             .buttonStyle(LandingWordStyle())

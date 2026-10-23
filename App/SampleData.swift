@@ -79,3 +79,45 @@ extension AppModel {
                     moneyPools: ReviewChoices.shared.value(of: "moneyPools") == "On")
     }
 }
+
+/// Write anywhere (sheet 135 part 5): the line goes through Core's WriteRouter to the app that reads it. A tie keeps
+/// both readings and asks "Money or Kitchen?"; the next line naming one of them settles it.
+@MainActor
+enum WriteTie {
+    static var waiting: [WriteRouter.Candidate] = []
+}
+
+extension AppModel {
+    /// The routed write, or nil to let Tess read the line as before (the switch Off, or no app reads it).
+    func routedWrite(_ phrase: String) -> String? {
+        guard ReviewChoices.shared.value(of: "writeAnywhere") == "On",
+              let capture = runtime.tess as? TessCaptureEngine else { return nil }
+        let context = captureContext()
+        // The answer to "Money or Kitchen?": an app's word picks its reading.
+        if !WriteTie.waiting.isEmpty {
+            let asked = WriteTie.waiting
+            WriteTie.waiting = []
+            let word = phrase.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if let pick = asked.first(where: { $0.app.name.lowercased() == word }) {
+                return land(WriteRouter(engine: engine).perform(pick, with: capture, context: context))
+            }
+        }
+        switch WriteRouter(engine: engine).route(phrase, context: context) {
+        case .nothing:
+            return nil
+        case let .one(candidate):
+            return land(WriteRouter(engine: engine).perform(candidate, with: capture, context: context))
+        case let .tie(candidates):
+            WriteTie.waiting = candidates
+            let names = candidates.prefix(2).map(\.app.name)
+            return names.count == 2 ? "\(names[0]) or \(names[1])?" : nil
+        }
+    }
+}
+
+extension AppModel {
+    /// The open dated-lift ask ("Bench 80 × 8 for Monday?"), if the last phrase raised one.
+    var pendingDatedLift: TessDatedLiftAsk? {
+        (runtime.tess as? TessCaptureEngine)?.pendingDatedLift
+    }
+}
