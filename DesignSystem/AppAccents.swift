@@ -16,7 +16,7 @@ extension Theme.Colors {
 
         /// Training: crimson (off Ember by delta E 10).
         static var training: Color {
-            tuned(\.training, light: 0xA8203F, dark: 0xCC4478)
+            tuned(\.training, light: 0xC4472A, dark: 0xEE6A4C)
         }
 
         /// Kitchen: ochre.
