@@ -514,7 +514,7 @@ struct MosaicHomeLayer: View {
     /// The sign request for the page's thing, on the screen grid: its slot is a global frame, the grid starts at this
     /// layer's own origin.
     private func signRequest(environment: EnvironmentValues)
-        -> (request: MosaicSignRequest, accent: MosaicTriple, token: String)?
+        -> (request: MosaicSignRequest, accent: MosaicTriple, token: String, washes: Bool)?
     {
         guard let spec = signSpec, !spec.slot.isEmpty else { return nil }
         let accent = rgb(spec.accent, environment)
