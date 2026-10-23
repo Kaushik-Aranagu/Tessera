@@ -50,6 +50,31 @@ public extension TrainingStats {
         return max(5, Int((Double(middle) / 5).rounded()) * 5)
     }
 
+    /// When he usually starts a routine: the median time of day of the first set of the last 3 finished workouts of it,
+    /// placed on `day`. Nil with no history. Rounded to the nearest 5 minutes.
+    func usualStart(of routine: ObjectRecord, on day: Date, calendar: Calendar = .current) -> Date? {
+        guard let workoutClass = classes[.workout] else { return nil }
+        let starts = store.objects(of: workoutClass).filter { workout in
+            !workout.isDeleted && store.value("endedAt", of: workout) != nil
+                && store.linkedObjects("routine", of: workout).first?.id == routine.id
+        }
+        .sorted { $0.updatedAt > $1.updatedAt }.prefix(3).compactMap { workout -> Int? in
+            let first = workout.orderedChildren.flatMap(\.orderedChildren)
+                .compactMap { store.value("loggedAt", of: $0)?.dateValue }.min()
+                ?? store.value("startedAt", of: workout)?.dateValue
+            return first.map { date in
+                let parts = calendar.dateComponents([.hour, .minute], from: date)
+                return (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+            }
+        }
+        .sorted()
+        guard !starts.isEmpty else { return nil }
+        let middle = starts.count.isMultiple(of: 2) ? (starts[starts.count / 2 - 1] + starts[starts.count / 2]) / 2
+            : starts[starts.count / 2]
+        let minutes = Int((Double(middle) / 5).rounded()) * 5
+        return calendar.date(bySettingHour: minutes / 60 % 24, minute: minutes % 60, second: 0, of: day)
+    }
+
     func landingFacts(plan: ObjectRecord?, now: Date, calendar: Calendar = .current) -> LandingFacts {
         let week = ledger.week(containing: now, plan: plan, now: now, calendar: calendar)
         let marks = week.map { day -> LandingFacts.Mark in

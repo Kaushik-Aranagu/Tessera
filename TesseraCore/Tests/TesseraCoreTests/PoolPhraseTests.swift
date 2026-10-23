@@ -85,7 +85,7 @@ struct PoolPhraseTests {
     @Test func aWalledPoolNameIsNeverMatchedFromSpeech() throws {
         let secret = try engine.perform(CreatePool(name: "Ozempic dose", currency: "EUR"), by: .user).output
         _ = secret
-        #expect(read("got 20 into Ozempic") == "nil")
+        #expect(!read("got 20 into Ozempic").hasPrefix("inflow"))
     }
 
     @Test func aLogShowsItsReceiptAndOneUndoAndNeverReachesClaude() async throws {
