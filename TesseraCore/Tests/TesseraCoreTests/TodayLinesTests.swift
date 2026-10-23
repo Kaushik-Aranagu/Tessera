@@ -203,10 +203,14 @@ struct TodayLinesTests {
         var checked = 0
         let places: [(String, [String])] = [
             ("../Widgets", []), ("../Watch", []), ("../Shared", []), ("Sources/TesseraIntents", []),
-            ("Sources/TesseraTess", []), ("../App", []), ("../Features", ["/Features/Home/"]),
+            ("Sources/TesseraTess", []), ("../App", []), ("../DesignSystem", []),
+            ("../Features", ["/Features/Home/"]),
         ]
         for (path, allowed) in places {
-            for file in sources(path, except: allowed) {
+            let files = sources(path, except: allowed)
+            // A scan that finds nothing in a folder would pass for the wrong reason.
+            #expect(!files.isEmpty, "no Swift files found in \(path)")
+            for file in files {
                 checked += 1
                 for word in banned {
                     // A whole word: "TriedTodayLine" is another type.

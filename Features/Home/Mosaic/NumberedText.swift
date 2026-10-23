@@ -5,11 +5,9 @@ import SwiftUI
 struct NumberedText: View {
     let text: String
     var size: CGFloat = 16
-    /// Words and figures scale together with the reader's text size, so neither outgrows the other at AX sizes.
-    @ScaledMetric(relativeTo: .body) private var scale: CGFloat = 1
-
     var body: some View {
-        Text(Self.attributed(text, size: size * scale))
+        // Both faces scale with the reader's text size on their own (Theme.voice and Theme.numeral); no second scale.
+        Text(Self.attributed(text, size: size))
     }
 
     static func attributed(_ text: String, size: CGFloat) -> AttributedString {

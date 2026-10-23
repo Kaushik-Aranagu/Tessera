@@ -67,13 +67,17 @@ public extension HomeSentence.RoutinesPart {
         let facts = RoutinesLanding.facts(items: items.map(\.item), running: running, now: now, calendar: calendar)
         // The next usual start today, among routines he has not run today and usually runs at a time still ahead.
         var next: Date?
+        var nextName: String?
         for entry in items where entry.item.doneToday == nil && !entry.item.isPrivate {
             guard let counts = RoutineUsual.counts(of: entry.item.runs, calendar: calendar) else { continue }
             let minutes = TesseraDay.startHour * 60 + counts.startMinutes
             guard let start = calendar.date(bySettingHour: minutes / 60 % 24, minute: minutes % 60, second: 0, of: now),
                   start >= now else { continue }
-            next = min(next ?? start, start)
+            if next == nil || start < next! {
+                next = start
+                nextName = entry.item.name
+            }
         }
-        return HomeSentence.RoutinesPart(facts: facts, nextUsualStart: next)
+        return HomeSentence.RoutinesPart(facts: facts, nextUsualStart: next, nextRoutine: nextName)
     }
 }

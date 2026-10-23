@@ -23,9 +23,9 @@ struct MosaicSlot: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .modifier(MosaicWords(words: caption))
         } else if let facts {
+            // With the moods off the mosaic keeps its own accessibility element and scrub; no outer label over it.
             MosaicView(facts: facts, scene: $scene, caption: $caption)
                 .frame(height: HomeMosaic.mosaicHeight)
-                .modifier(MosaicWords(words: caption))
         } else {
             Color.clear.frame(height: HomeMosaic.mosaicHeight).accessibilityHidden(true)
         }
