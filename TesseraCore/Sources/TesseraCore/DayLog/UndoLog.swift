@@ -82,7 +82,7 @@ public enum UndoLog {
 
     /// Records that read their generic summary whatever their text says: money, and the body, health and calorie
     /// records (Me, a Health sync).
-    private static let genericActions: Set<String> = ["syncHealth"]
+    private static let genericActions: Set<String> = ["syncHealth", "syncCalendar"]
 
     private static func isBodyOrHealth(_ record: OpRecord, engine: ActionEngine) -> Bool {
         if genericActions.contains(record.action) {
@@ -109,6 +109,7 @@ public enum UndoLog {
         // word, a secret, or a money or body fact reads the generic summary.
         if ObjectPrivacy.containsPrivateWord(text, in: store) || SecretWords.mentions(text)
             || PrivateFacts.isWalled(text, lastWeightKg: BodyWeight.lastKg(in: store))
+            || PrivateFacts.isCalorieShaped(text)
         {
             return generic
         }
