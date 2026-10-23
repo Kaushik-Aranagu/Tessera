@@ -197,11 +197,14 @@ struct FinishShopPutAwayTests {
         #expect(ProcessTable(engine: engine).running() == nil)
     }
 
-    @Test func theToolCallCarriesPutAway() throws {
+    @Test func aToolCallCannotSetPlaces() throws {
         let milk = try ingredient("milk"), fridge = try place("fridge")
         try startedShop()
+        #expect(!FinishShop.descriptor.parameters.contains { $0.name == "putAway" })
         let json = #"{"putAway":[{"item":"\#(milk.id.uuidString)","place":"\#(fridge.id.uuidString)"}]}"#
-        try engine.perform(named: "finishShop", arguments: Data(json.utf8), by: .user)
-        #expect(places.place(of: milk)?.id == fridge.id)
+        try engine.perform(named: "finishShop", arguments: Data(json.utf8), by: .tess)
+        // The shop finishes; the unknown key is dropped and no place is set.
+        #expect(ProcessTable(engine: engine).running() == nil)
+        #expect(places.place(of: milk) == nil)
     }
 }

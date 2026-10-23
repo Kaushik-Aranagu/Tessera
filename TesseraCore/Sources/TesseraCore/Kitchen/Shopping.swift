@@ -63,15 +63,16 @@ public struct ShopPutAway: Codable, Equatable, Hashable, Sendable {
 /// was bought are set in the same transaction: one OpRecord, so one UNDO takes back both, and a finish that fails sets
 /// no place (the engine reverses a failed action whole).
 public struct FinishShop: EngineAction {
-    public static let descriptor = ActionDescriptor(
-        name: "finishShop", summary: "Finish shopping",
-        parameters: [
-            .init("putAway", .json, "Where things go: a list of {item, place, section}", required: false),
-        ]
-    )
+    public static let descriptor = ActionDescriptor(name: "finishShop", summary: "Finish shopping", parameters: [])
 
     public var time: Date?
+    /// Only the app passes this, in process. It is not a tool parameter and never decodes from a tool call, so Claude
+    /// and Tess cannot set pantry places through the finish (SetItemPlace is kept from the model on purpose).
     public var putAway: [ShopPutAway]?
+
+    private enum CodingKeys: String, CodingKey {
+        case time
+    }
 
     public init(time: Date? = nil, putAway: [ShopPutAway]? = nil) {
         self.time = time
