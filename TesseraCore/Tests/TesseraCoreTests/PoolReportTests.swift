@@ -201,6 +201,17 @@ struct PoolReportTests {
         #expect(report.sentence(nothingLate: false).text == "Private pool has $150.00.")
     }
 
+    @Test func aPrivateWordNextToPunctuationIsStillMasked() throws {
+        let checking = try pool("US checking", opening: "100")
+        for note in ["ozempic, pharmacy", "ozempic-run", "(ozempic)"] {
+            let punctuated = try engine.perform(
+                LogSpend(amount: 5, typed: "5", note: note, pool: checking.id), by: .user
+            ).output
+            let shown = try #require(report().newLine(for: punctuated))
+            #expect(shown == "Private spend $5.00, US checking." && !shown.lowercased().contains("ozempic"))
+        }
+    }
+
     @Test func aSpendLineMasksWordByWordAndAnArchivedPoolIsSaidToCount() throws {
         let checking = try pool("US checking", opening: "100")
         let spend = try engine.perform(
