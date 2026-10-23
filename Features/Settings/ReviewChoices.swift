@@ -281,6 +281,11 @@ final class ReviewChoices {
                    "As before": "Inter Tight for everything."],
             readiness: .live
         ),
+        // Together round 13 (sheet 183): a quiet offer on Today to join two things that look the same.
+        Choice(id: "twinsV2", name: "Twins", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Two things that look the same stay as they are.",
+                      "On": "Today offers once to join two things that look the same, with UNDO."],
+               readiness: .live),
         // Design 110: on, the kcal line shows on a finished workout; it needs weight and height under Me.
         Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
@@ -301,7 +306,7 @@ final class ReviewChoices {
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
         ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector"]),
-        ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
+        ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue", "twinsV2"]),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),

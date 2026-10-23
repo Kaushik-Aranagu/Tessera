@@ -142,6 +142,7 @@ struct NowPage: View {
                 let heroID = model.processes.running()?.subject?.id ?? ledger.first?.subject?.id ?? heroWorkout?.id
                 QueueWindow(next: queue.next.filter { $0.id != heroID }, later: queue.later.filter { $0.id != heroID })
                     .entrance(4)
+                TwinsOfferLine()
             }
 
             Spacer(minLength: 0)
