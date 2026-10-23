@@ -13,18 +13,25 @@ public struct DirectorContext: Sendable {
     public var reduceMotion: Bool
     public var lowPower: Bool
     public var asksClaude: Bool
+    /// Light or dark page, for Tess's derived palette.
+    public var dark: Bool
+    /// Each app's accent in OKLCH (the app knows its colours; Core only derives from them).
+    public var accents: [AppID: OKLCH]
     /// Keys of the last choices, newest first, so a pick can vary without a random call.
     public var recent: [String]
     public var seed: UInt64
 
     public init(now: Date, quiet: Bool = false, reduceMotion: Bool = false, lowPower: Bool = false,
-                asksClaude: Bool = false, recent: [String] = [], seed: UInt64 = 0)
+                asksClaude: Bool = false, dark: Bool = false, accents: [AppID: OKLCH] = [:],
+                recent: [String] = [], seed: UInt64 = 0)
     {
         self.now = now
         self.quiet = quiet
         self.reduceMotion = reduceMotion
         self.lowPower = lowPower
         self.asksClaude = asksClaude
+        self.dark = dark
+        self.accents = accents
         self.recent = recent
         self.seed = seed
     }
@@ -48,10 +55,10 @@ public enum DirectorAsk: Sendable {
     case handBack(state: MosaicSwitchState)
     case burst(BurstKind, tone: MosaicTone)
     /// Tess's own colour burst.
-    case tessBurst
+    case tessBurst(pageAccents: Set<AppID>)
     case palette(from: MosaicTone, to: MosaicTone)
-    /// The page's accent shares (app → share of the page, 0 to 1). Ember is her base; she borrows only a clear one.
-    case tessPalette(pageAccents: [AppID: Double])
+    /// The accents on the page. Ember is her base; with exactly one accent she takes a palette built from it.
+    case tessPalette(pageAccents: Set<AppID>)
     case reaction(OpenEvent)
     case scene(MosaicBackdrop, facts: MosaicFacts, place: PlaceKind?, weather: SceneWeather?, calendar: Calendar)
 }
@@ -83,10 +90,69 @@ public struct PaletteChoice: Equatable, Sendable {
     public var curve: PaletteCurve
 }
 
-/// Tess's own colours: ember always, plus at most one page accent, mixed lightly.
+public struct OKLCH: Equatable, Sendable {
+    public var lightness: Double
+    public var chroma: Double
+    /// Degrees, 0 up to 360.
+    public var hue: Double
+
+    public init(lightness: Double, chroma: Double, hue: Double) {
+        self.lightness = lightness
+        self.chroma = chroma
+        self.hue = hue
+    }
+}
+
+/// Tess's own colours (sheet 215 G2). Ember is her base. With exactly one accent on the page she takes a palette built
+/// from it, never a mix with Ember: the middle at L 0.64 on light or 0.74 on dark (chroma at least 0.15), and the
+/// sides 18° either way in hue, a little lighter on the cooler side and a little darker on the other.
+public enum TessPalette {
+    public static let sideHue = 18.0
+    public static let sideLightness = 0.05
+    public static let minChroma = 0.15
+
+    public static func middleLightness(dark: Bool) -> Double {
+        dark ? 0.74 : 0.64
+    }
+
+    /// The three colours, cooler side first.
+    public static func derive(from accent: OKLCH, dark: Bool) -> [OKLCH] {
+        let lightness = middleLightness(dark: dark)
+        let chroma = max(accent.chroma, minChroma)
+        func wrap(_ hue: Double) -> Double {
+            (hue.truncatingRemainder(dividingBy: 360) + 360).truncatingRemainder(dividingBy: 360)
+        }
+        return [
+            OKLCH(lightness: lightness + sideLightness, chroma: chroma, hue: wrap(accent.hue - sideHue)),
+            OKLCH(lightness: lightness, chroma: chroma, hue: wrap(accent.hue)),
+            OKLCH(lightness: lightness - sideLightness, chroma: chroma, hue: wrap(accent.hue + sideHue)),
+        ]
+    }
+
+    /// Whether three colours are exactly the palette `derive` would make from some accent.
+    public static func isDerived(_ colors: [OKLCH], dark: Bool) -> Bool {
+        guard colors.count == 3, colors.allSatisfy({ $0.chroma >= minChroma - 1e-9 }) else { return false }
+        func close(_ a: Double, _ b: Double) -> Bool {
+            abs(a - b) < 1e-6
+        }
+        func apart(_ a: Double, _ b: Double, by degrees: Double) -> Bool {
+            let delta = (b - a).truncatingRemainder(dividingBy: 360)
+            return close((delta + 360).truncatingRemainder(dividingBy: 360), degrees)
+        }
+        return close(colors[1].lightness, middleLightness(dark: dark))
+            && close(colors[0].lightness, colors[1].lightness + sideLightness)
+            && close(colors[2].lightness, colors[1].lightness - sideLightness)
+            && apart(colors[0].hue, colors[1].hue, by: sideHue) && apart(colors[1].hue, colors[2].hue, by: sideHue)
+            && close(colors[0].chroma, colors[1].chroma) && close(colors[2].chroma, colors[1].chroma)
+    }
+}
+
+/// Ember (no accent, no colours), or the one page accent and the three colours derived from it.
 public struct TessPaletteChoice: Equatable, Sendable {
     public var accent: AppID?
-    public var mix: Double
+    public var colors: [OKLCH]
+
+    public static let ember = TessPaletteChoice(accent: nil, colors: [])
 }
 
 public struct TessBurstChoice: Equatable, Sendable {
@@ -139,28 +205,46 @@ public enum TessDirection {
     public static let maxBurstSeconds = 2.5
     public static let maxPaletteSeconds = 1.2
     public static let maxPaletteMix = 0.35
-    public static let maxTessMix = 0.3
     public static let maxReactionSeconds = 2.6
 
     public static func decide(_ director: any TessDirector, _ ask: DirectorAsk,
                               context: DirectorContext) -> DirectorDecision
     {
-        var decision = director.decide(ask, context: context)
-        decision.choice = clamp(decision.choice, context: context)
+        // Anything that carries his facts or the kind of place is answered by the rules, whichever director is asked,
+        // so
+        // a model director never sees them.
+        let answering: any TessDirector = carriesFacts(ask) ? RuleDirector() : director
+        var decision = answering.decide(ask, context: context)
+        decision.choice = clamp(decision.choice, ask: ask, context: context)
         return decision
     }
 
-    static func clamp(_ choice: DirectorChoice, context: DirectorContext) -> DirectorChoice {
-        let still = context.reduceMotion
+    static func carriesFacts(_ ask: DirectorAsk) -> Bool {
+        if case .scene = ask {
+            return true
+        }
+        return false
+    }
+
+    static func clamp(_ choice: DirectorChoice, ask: DirectorAsk, context: DirectorContext) -> DirectorChoice {
+        // Low Power is Reduce Motion: no bursts or reactions, and every glide is an instant swap.
+        let still = context.reduceMotion || context.lowPower
         switch choice {
         case var .mosaic(decision):
+            var before = MosaicSwitchState()
+            if case let .mosaic(_, state, _) = ask {
+                before = state
+            } else if case let .handBack(state) = ask {
+                before = state
+            }
             if let play = decision.directive.play, context.quiet, !play.name.playsInQuietHours {
                 decision.directive.play = nil
-                decision.state.playing = nil
+                decision.state.playing = before.playing
             }
+            // Quiet hours keep the mood he had; they never clear it.
             if context.quiet, let change = decision.directive.mood, change.mood != .night {
                 decision.directive.mood = nil
-                decision.state.mood = nil
+                decision.state.mood = before.mood
             }
             decision.plainSwap = still
             return .mosaic(decision)
@@ -169,14 +253,14 @@ public enum TessDirection {
             return .burst(burst)
         case var .tessBurst(burst):
             clampBurst(&burst.shape, &burst.count, &burst.duration, context: context)
-            burst.palette = clampTess(burst.palette)
+            burst.palette = clampTess(burst.palette, context: context)
             return .tessBurst(burst)
         case var .palette(palette):
             palette.mix = min(max(palette.mix, 0), maxPaletteMix)
             palette.duration = still ? 0 : min(max(palette.duration, 0), maxPaletteSeconds)
             return .palette(palette)
         case let .tessPalette(palette):
-            return .tessPalette(clampTess(palette))
+            return .tessPalette(clampTess(palette, context: context))
         case var .reaction(reaction):
             reaction.duration = min(max(reaction.duration, 0), maxReactionSeconds)
             if still || context.quiet {
@@ -184,7 +268,7 @@ public enum TessDirection {
             }
             return .reaction(reaction)
         case var .scene(scene):
-            scene.still = scene.still || still || context.lowPower
+            scene.still = scene.still || still
             return .scene(scene)
         }
     }
@@ -203,11 +287,14 @@ public enum TessDirection {
         }
     }
 
-    /// One accent at most, lightly mixed; with no accent there is nothing to mix.
-    private static func clampTess(_ palette: TessPaletteChoice) -> TessPaletteChoice {
-        palette.accent == nil
-            ? TessPaletteChoice(accent: nil, mix: 0)
-            : TessPaletteChoice(accent: palette.accent, mix: min(max(palette.mix, 0), maxTessMix))
+    /// Ember, or the one accent with exactly the palette derived from it. A palette that isn't the derived one is
+    /// rebuilt from the accent's own colour; an accent whose colour isn't known falls back to Ember.
+    private static func clampTess(_ palette: TessPaletteChoice, context: DirectorContext) -> TessPaletteChoice {
+        guard let accent = palette.accent, let own = context.accents[accent] else { return .ember }
+        if TessPalette.isDerived(palette.colors, dark: context.dark) {
+            return palette
+        }
+        return TessPaletteChoice(accent: accent, colors: TessPalette.derive(from: own, dark: context.dark))
     }
 }
 
@@ -235,9 +322,9 @@ public struct RuleDirector: TessDirector {
             return DirectorDecision(choice: .burst(BurstChoice(shape: shape, count: count, duration: 1.0, tone: tone)),
                                     why: "A \(shape.rawValue) for \(kind.rawValue), not the one before it.",
                                     key: "burst-\(shape.rawValue)")
-        case .tessBurst:
+        case let .tessBurst(accents):
             let shape = vary(from: [.ring, .rise, .scatter], context: context, prefix: "burst")
-            let palette = Self.palette(pageAccents: [:])
+            let palette = Self.palette(pageAccents: accents, context: context)
             return DirectorDecision(choice: .tessBurst(TessBurstChoice(shape: shape, count: 12, duration: 1.2,
                                                                        palette: palette)),
                                     why: "Her own colour, a \(shape.rawValue).", key: "burst-\(shape.rawValue)")
@@ -246,10 +333,10 @@ public struct RuleDirector: TessDirector {
                                                                    curve: .easeInOut)),
                                     why: "A light wash toward the page's accent.", key: "palette")
         case let .tessPalette(accents):
-            let palette = Self.palette(pageAccents: accents)
+            let palette = Self.palette(pageAccents: accents, context: context)
             return DirectorDecision(choice: .tessPalette(palette),
-                                    why: palette.accent == nil ? "Ember: no clear accent on this page."
-                                        : "Ember with a touch of the page's accent.", key: "tessPalette")
+                                    why: palette.accent == nil ? "Ember: no single accent on this page."
+                                        : "A palette built from the page's one accent.", key: "tessPalette")
         case let .reaction(event):
             return reaction(event)
         case let .scene(backdrop, facts, place, weather, calendar):
@@ -260,14 +347,12 @@ public struct RuleDirector: TessDirector {
         }
     }
 
-    /// Ember is her base. She borrows the page's accent only when one clearly leads: at least half the page and twice
-    /// the next. Everything mixed together is never done.
-    static func palette(pageAccents: [AppID: Double]) -> TessPaletteChoice {
-        let ranked = pageAccents.sorted { $0.value > $1.value }
-        guard let top = ranked.first, top.value >= 0.5, top.value >= 2 * (ranked.dropFirst().first?.value ?? 0) else {
-            return TessPaletteChoice(accent: nil, mix: 0)
+    /// Ember is her base. Exactly one accent on the page is clear; with several she stays Ember.
+    static func palette(pageAccents: Set<AppID>, context: DirectorContext) -> TessPaletteChoice {
+        guard pageAccents.count == 1, let accent = pageAccents.first, let own = context.accents[accent] else {
+            return .ember
         }
-        return TessPaletteChoice(accent: top.key, mix: 0.25)
+        return TessPaletteChoice(accent: accent, colors: TessPalette.derive(from: own, dark: context.dark))
     }
 
     private func reaction(_ event: OpenEvent) -> DirectorDecision {
