@@ -56,7 +56,11 @@ struct RepeatsTests {
         #expect(rule.next(today: day(10, 20), doneAt: date(10, 20, hour: 9), calendar: calendar) == day(10, 23))
         // Not done yet: the anchor itself, and never in the past.
         #expect(rule.next(today: day(10, 20), calendar: calendar) == day(10, 20))
-        #expect(rule.next(today: day(10, 21), calendar: calendar) == day(10, 23))
+        // Past its date it reads as overdue: it stays on its day until it is done or skipped.
+        #expect(rule.next(today: day(10, 21), calendar: calendar) == day(10, 20))
+        var skipped = rule
+        skipped.skippedThrough = day(10, 20)
+        #expect(skipped.next(today: day(10, 21), calendar: calendar) == day(10, 23))
     }
 
     @Test func aDoneOccurrenceMovesOnAndAnEndStopsTheRule() {
@@ -157,5 +161,50 @@ struct RepeatsTests {
         let line = Repeats.noticeLine(for: lunch, in: store, classes: engine.classes, now: date(10, 21),
                                       calendar: calendar)
         #expect(line?.contains("650") == false && line?.contains("kcal") == false)
+    }
+
+    // MARK: Review fixes
+
+    @Test func everyOtherMondayStartsOnTheNextMondayWithThatMondayAsAnchor() throws {
+        let chore = try task()
+        // Wednesday, October 21, 2026.
+        let set = SetRepeat(object: chore.id, kind: "weeks", every: 2, weekday: 2, from: date(10, 21),
+                            calendar: calendar)
+        #expect(set.anchor == "2026-10-26")
+        try engine.perform(set, by: .user)
+        let rule = try #require(Repeats.rule(of: chore, in: store))
+        #expect(rule.anchor == day(10, 26))
+        #expect(rule.next(today: day(10, 21), calendar: calendar) == day(10, 26))
+        #expect(rule.next(today: day(10, 27), calendar: calendar) == day(11, 9))
+        #expect(Repeats.line(for: chore, in: store, calendar: calendar) == "Every other Monday")
+    }
+
+    @Test func theWeekPhaseIsDaysFromTheAnchorWhateverTheCalendarCountsAsAWeek() {
+        let rule = RepeatRule(kind: .weeks(2, weekday: 6), anchor: day(10, 23))
+        var sunday = calendar, monday = calendar
+        sunday.firstWeekday = 1
+        monday.firstWeekday = 2
+        for today in [day(10, 24), day(11, 7), day(12, 30)] {
+            #expect(rule.next(today: today, calendar: sunday) == rule.next(today: today, calendar: monday))
+        }
+        #expect(rule.next(today: day(11, 7), calendar: sunday) == day(11, 20))
+    }
+
+    @Test func oneAMIsYesterdayAndAReplayGivesTheSameRule() throws {
+        let chore = try task()
+        // 1 AM on Thursday, October 22: still Wednesday's day.
+        let set = SetRepeat(object: chore.id, kind: "days", every: 1, from: date(10, 22, hour: 1), calendar: calendar)
+        #expect(set.anchor == "2026-10-21")
+        let replay = try JSONDecoder().decode(SetRepeat.self, from: JSONEncoder().encode(set))
+        #expect(replay.rule() == set.rule())
+        let skip = SkipRepeat(object: chore.id, time: date(10, 22, hour: 1), calendar: calendar)
+        #expect(skip.today == "2026-10-21")
+    }
+
+    @Test func aDayPastTheMonthsLengthIsRefused() {
+        #expect(RepeatRule.DayStamp(text: "2026-02-30") == nil)
+        #expect(RepeatRule.DayStamp(text: "2026-04-31") == nil)
+        #expect(RepeatRule.DayStamp(text: "2028-02-29") != nil)
+        #expect(RepeatRule(encoded: "k=days;n=1;a=2026-02-30") == nil)
     }
 }

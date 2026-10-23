@@ -44,7 +44,7 @@ public struct SetRepeat: EngineAction {
             .init("every", .integer, "Every N (days, weeks or months)"),
             .init("weekday", .integer, "1 Sunday to 7 Saturday, for weeks", required: false),
             .init("dayOfMonth", .integer, "1 to 31, for months", required: false),
-            .init("from", .date, "The first day; defaults to today", required: false),
+            .init("anchor", .string, "The first day, as 2026-10-26; set when the action is made", required: false),
         ], isOfferedToModel: false
     )
 
@@ -53,10 +53,11 @@ public struct SetRepeat: EngineAction {
     public var every: Int
     public var weekday: Int?
     public var dayOfMonth: Int?
-    public var from: Date?
-    /// The calendar the day is read in; the app passes its own.
-    public var calendarID: String?
+    /// The first day as "2026-10-26", worked out when the action is made, so a replay gives the same rule.
+    public var anchor: String?
 
+    /// The day is read once, here, through his day (1 AM still belongs to yesterday). "Every other Monday" set on a
+    /// Wednesday starts on the next Monday, and that Monday is the anchor.
     public init(object: UUID, kind: String, every: Int = 1, weekday: Int? = nil, dayOfMonth: Int? = nil,
                 from: Date? = nil, calendar: Calendar = .current)
     {
@@ -65,27 +66,25 @@ public struct SetRepeat: EngineAction {
         self.every = every
         self.weekday = weekday
         self.dayOfMonth = dayOfMonth
-        self.from = from
-        calendarID = calendar.timeZone.identifier
-    }
-
-    private var calendar: Calendar {
-        var calendar = Calendar(identifier: .gregorian)
-        if let calendarID, let zone = TimeZone(identifier: calendarID) {
-            calendar.timeZone = zone
+        let base = RepeatRule.DayStamp(TesseraDay(calendar: calendar).day(of: from ?? .now), calendar: calendar)
+        if kind == "weeks" {
+            let wanted = weekday ?? base.weekday
+            self.weekday = wanted
+            anchor = base.adding(days: (wanted - base.weekday + 7) % 7).text
+        } else {
+            anchor = base.text
         }
-        return calendar
     }
 
     /// The rule this builds, or nil when the arguments don't make one.
     func rule() -> RepeatRule? {
-        let calendar = calendar
-        let anchor = RepeatRule.DayStamp(from ?? .now, calendar: calendar)
-        guard (1 ... 365).contains(every) else { return nil }
+        guard (1 ... 365).contains(every), let anchor = anchor.flatMap({ RepeatRule.DayStamp(text: $0) }) else {
+            return nil
+        }
         switch kind {
         case "days": return RepeatRule(kind: .days(every), anchor: anchor)
         case "weeks":
-            let day = weekday ?? calendar.component(.weekday, from: anchor.date(calendar: calendar))
+            let day = weekday ?? anchor.weekday
             guard (1 ... 7).contains(day) else { return nil }
             return RepeatRule(kind: .weeks(every, weekday: day), anchor: anchor)
         case "months":
@@ -119,33 +118,33 @@ public struct SkipRepeat: EngineAction {
         name: "skipRepeat", summary: "Skip this one",
         parameters: [
             .init("object", .object, "The repeating thing"),
-            .init("time", .date, "Defaults to now", required: false),
+            .init("today", .string, "His day as 2026-10-26; set when the action is made", required: false),
         ], isOfferedToModel: false
     )
 
     public var object: UUID
-    public var time: Date?
-    public var calendarID: String?
+    /// His day, worked out when the action is made (1 AM is yesterday), so a replay gives the same result.
+    public var today: String?
+    /// The zone his day was read in, so a done time is read as the same day on a replay.
+    public var zone: String?
 
     public init(object: UUID, time: Date? = nil, calendar: Calendar = .current) {
         self.object = object
-        self.time = time
-        calendarID = calendar.timeZone.identifier
+        zone = calendar.timeZone.identifier
+        today = RepeatRule.DayStamp(TesseraDay(calendar: calendar).day(of: time ?? .now), calendar: calendar).text
     }
 
     public func apply(_ transaction: inout Transaction) throws {
         let target = try transaction.object(object)
-        var calendar = Calendar(identifier: .gregorian)
-        if let calendarID, let zone = TimeZone(identifier: calendarID) {
-            calendar.timeZone = zone
-        }
-        guard var rule = Repeats.rule(of: target, in: transaction.store) else {
+        guard var rule = Repeats.rule(of: target, in: transaction.store),
+              let day = today.flatMap({ RepeatRule.DayStamp(text: $0) })
+        else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "that does not repeat")
         }
-        let today = RepeatRule.DayStamp(TesseraDay(calendar: calendar).day(of: time ?? .now), calendar: calendar)
-        guard let next = rule.next(today: today,
-                                   doneAt: transaction.store.value("doneAt", of: target)?.dateValue,
-                                   calendar: calendar) else { return }
+        let done = transaction.store.value("doneAt", of: target)?.dateValue
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone.flatMap { TimeZone(identifier: $0) } ?? .current
+        guard let next = rule.next(today: day, doneAt: done, calendar: calendar) else { return }
         // The next one is skipped: nothing on or before it counts, so the following step is next.
         rule.skippedThrough = next
         try transaction.set("repeats", to: .text(rule.encoded), on: target)
@@ -165,31 +164,27 @@ public struct StopRepeating: EngineAction {
         name: "stopRepeating", summary: "Stop repeating",
         parameters: [
             .init("object", .object, "The repeating thing"),
-            .init("time", .date, "Defaults to now", required: false),
+            .init("through", .string, "The last day, 2026-10-26; set when the action is made", required: false),
         ], isOfferedToModel: false
     )
 
     public var object: UUID
-    public var time: Date?
-    public var calendarID: String?
+    public var through: String?
 
     public init(object: UUID, time: Date? = nil, calendar: Calendar = .current) {
         self.object = object
-        self.time = time
-        calendarID = calendar.timeZone.identifier
+        through = RepeatRule.DayStamp(TesseraDay(calendar: calendar).day(of: time ?? .now), calendar: calendar).text
     }
 
     public func apply(_ transaction: inout Transaction) throws {
         let target = try transaction.object(object)
-        var calendar = Calendar(identifier: .gregorian)
-        if let calendarID, let zone = TimeZone(identifier: calendarID) {
-            calendar.timeZone = zone
-        }
-        guard var rule = Repeats.rule(of: target, in: transaction.store) else {
+        guard var rule = Repeats.rule(of: target, in: transaction.store),
+              let day = through.flatMap({ RepeatRule.DayStamp(text: $0) })
+        else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "that does not repeat")
         }
         // Today still counts; nothing after it does.
-        rule.end = RepeatRule.DayStamp(TesseraDay(calendar: calendar).day(of: time ?? .now), calendar: calendar)
+        rule.end = day
         try transaction.set("repeats", to: .text(rule.encoded), on: target)
     }
 

@@ -15,6 +15,13 @@ public struct RepeatRule: Equatable, Sendable {
         case afterDone(Int)
     }
 
+    /// The one calendar all of a rule's day arithmetic uses.
+    static let utc: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
+        return calendar
+    }()
+
     public var kind: Kind
     /// The first day of the rule.
     public var anchor: DayStamp
@@ -51,15 +58,37 @@ public struct RepeatRule: Equatable, Sendable {
             (lhs.year, lhs.month, lhs.day) < (rhs.year, rhs.month, rhs.day)
         }
 
+        /// Noon on this day in `calendar`, for showing a weekday name or handing a date to a caller.
         public func date(calendar: Calendar) -> Date {
             calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12)) ?? .distantPast
         }
 
-        func adding(days: Int, calendar: Calendar) -> DayStamp {
-            DayStamp(
-                calendar.date(byAdding: .day, value: days, to: date(calendar: calendar)) ?? date(calendar: calendar),
-                calendar: calendar
-            )
+        /// Days since 1970-01-01 on one fixed calendar: every step of a rule is whole days on this one count, so no
+        /// zone, week numbering or daylight change can move a date.
+        var ordinal: Int {
+            let date = RepeatRule.utc.date(from: DateComponents(year: year, month: month, day: day, hour: 12))
+                ?? .distantPast
+            return Int((date.timeIntervalSince1970 / 86400).rounded(.down))
+        }
+
+        init(ordinal: Int) {
+            let date = Date(timeIntervalSince1970: Double(ordinal) * 86400 + 43200)
+            let parts = RepeatRule.utc.dateComponents([.year, .month, .day], from: date)
+            self.init(year: parts.year ?? 1970, month: parts.month ?? 1, day: parts.day ?? 1)
+        }
+
+        /// 1 Sunday to 7 Saturday.
+        var weekday: Int {
+            (ordinal + 4) % 7 + 1
+        }
+
+        func adding(days: Int) -> DayStamp {
+            DayStamp(ordinal: ordinal + days)
+        }
+
+        static func daysIn(year: Int, month: Int) -> Int {
+            let first = RepeatRule.utc.date(from: DateComponents(year: year, month: month, day: 1)) ?? .distantPast
+            return RepeatRule.utc.range(of: .day, in: .month, for: first)?.count ?? 28
         }
 
         var text: String {
@@ -68,7 +97,8 @@ public struct RepeatRule: Equatable, Sendable {
 
         init?(text: String) {
             let parts = text.split(separator: "-").compactMap { Int($0) }
-            guard parts.count == 3, (1 ... 12).contains(parts[1]), (1 ... 31).contains(parts[2]) else { return nil }
+            guard parts.count == 3, (1900 ... 2200).contains(parts[0]), (1 ... 12).contains(parts[1]),
+                  (1 ... Self.daysIn(year: parts[0], month: parts[1])).contains(parts[2]) else { return nil }
             self.init(year: parts[0], month: parts[1], day: parts[2])
         }
     }
@@ -77,27 +107,30 @@ public struct RepeatRule: Equatable, Sendable {
 
     /// The next day the rule lands on, from `today`, or nil when it has ended. `doneAt` is when it was last done: a
     /// fixed rule skips the occurrence that was done, and "after done" counts from it. A skip moves past one step.
+    /// An "after done" chore whose date has passed stays on that date (overdue) until it is done or skipped.
     public func next(today: DayStamp, doneAt: Date? = nil, calendar: Calendar) -> DayStamp? {
         let done = doneAt.map { DayStamp($0, calendar: calendar) }
-        var floor = today
-        if let skippedThrough, skippedThrough >= floor {
-            floor = skippedThrough.adding(days: 1, calendar: calendar)
-        }
         let found: DayStamp?
         switch kind {
         case let .afterDone(days):
+            let step = max(days, 1)
             // Not done yet: the first one is the anchor itself; after a completion, N days on.
-            var candidate = done.map { $0.adding(days: max(days, 1), calendar: calendar) } ?? anchor
-            while candidate < floor {
-                candidate = candidate.adding(days: max(days, 1), calendar: calendar)
+            var candidate = done.map { $0.adding(days: step) } ?? anchor
+            if let skippedThrough {
+                while candidate <= skippedThrough {
+                    candidate = candidate.adding(days: step)
+                }
             }
             found = candidate
         default:
-            var candidate = occurrence(onOrAfter: max(floor, anchor), calendar: calendar)
-            // Done today (or later): the occurrence it was done for is finished, so the following one is next.
+            var floor = today
+            if let skippedThrough, skippedThrough >= floor {
+                floor = skippedThrough.adding(days: 1)
+            }
+            var candidate = occurrence(onOrAfter: max(floor, anchor))
+            // Done on (or after) the occurrence: it is finished, so the following one is next.
             if let done, let first = candidate, done >= first {
-                candidate = occurrence(onOrAfter: max(first.adding(days: 1, calendar: calendar), floor),
-                                       calendar: calendar)
+                candidate = occurrence(onOrAfter: max(first.adding(days: 1), floor))
             }
             found = candidate
         }
@@ -108,36 +141,27 @@ public struct RepeatRule: Equatable, Sendable {
         return found
     }
 
-    /// The first occurrence of a fixed rule on or after `day`.
-    private func occurrence(onOrAfter day: DayStamp, calendar: Calendar) -> DayStamp? {
+    /// The first occurrence of a fixed rule on or after `day`, counted in whole days from the anchor.
+    private func occurrence(onOrAfter day: DayStamp) -> DayStamp? {
         switch kind {
         case let .days(count):
             let step = max(count, 1)
-            let from = anchor.date(calendar: calendar), to = day.date(calendar: calendar)
-            let gap = calendar.dateComponents([.day], from: from, to: to).day ?? 0
+            let gap = day.ordinal - anchor.ordinal
             let steps = gap <= 0 ? 0 : (gap + step - 1) / step
-            return anchor.adding(days: steps * step, calendar: calendar)
+            return anchor.adding(days: steps * step)
         case let .weeks(count, weekday):
-            let step = max(count, 1)
-            var weekStart = calendar.dateInterval(of: .weekOfYear, for: anchor.date(calendar: calendar))?.start
-                ?? anchor.date(calendar: calendar)
-            // Walk week by week from the anchor's week; rules are small, so this stays cheap.
-            for _ in 0 ..< 5000 {
-                let offset = (weekday - calendar.firstWeekday + 7) % 7
-                let candidate = calendar.date(byAdding: .day, value: offset, to: weekStart) ?? weekStart
-                let stamp = DayStamp(candidate, calendar: calendar)
-                if stamp >= day, stamp >= anchor {
-                    return stamp
-                }
-                weekStart = calendar.date(byAdding: .weekOfYear, value: step, to: weekStart) ?? weekStart
-            }
-            return nil
+            // The phase is days since the first matching weekday on or after the anchor, over seven: the same
+            // answer in any week numbering.
+            let first = anchor.adding(days: (weekday - anchor.weekday + 7) % 7)
+            let period = 7 * max(count, 1)
+            let gap = day.ordinal - first.ordinal
+            let steps = gap <= 0 ? 0 : (gap + period - 1) / period
+            return first.adding(days: steps * period)
         case let .months(count, dayOfMonth):
             let step = max(count, 1)
             var year = anchor.year, month = anchor.month
             for _ in 0 ..< 2000 {
-                let first = calendar.date(from: DateComponents(year: year, month: month, day: 1)) ?? .distantPast
-                let length = calendar.range(of: .day, in: .month, for: first)?.count ?? 28
+                let length = DayStamp.daysIn(year: year, month: month)
                 let stamp = DayStamp(year: year, month: month, day: min(max(dayOfMonth, 1), length))
                 if stamp >= day, stamp >= anchor {
                     return stamp
