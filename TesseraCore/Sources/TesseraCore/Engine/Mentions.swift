@@ -35,7 +35,6 @@ public extension ClassResolver {
             .workout,
             .exerciseEntry,
             .set,
-            .routine,
             .slot,
             .plan,
         ] {
