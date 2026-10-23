@@ -17,21 +17,30 @@ public struct TesseraDay: Sendable {
         return formatter.string(from: date)
     }
 
-    public static let startHour = 4
+    /// The hour his day turns over, 0 to 8, as the app applies it from Settings ("The day turns over at"). 4 until he
+    /// changes it, which is today's behaviour. Set once at launch and when the setting changes.
+    public nonisolated(unsafe) static var configuredStartHour = 4
+
+    public static var startHour: Int {
+        configuredStartHour
+    }
 
     public var calendar: Calendar
+    /// The hour this day turns over: the configured one unless a caller says otherwise (tests, previews).
+    public var startHour: Int
 
     /// Weeks start on Monday everywhere (the plan, Review and the set counts agree, whatever the locale; QA R5).
-    public init(calendar: Calendar = .current) {
+    public init(calendar: Calendar = .current, startHour: Int? = nil) {
         var calendar = calendar
         calendar.firstWeekday = 2
         self.calendar = calendar
+        self.startHour = min(max(startHour ?? Self.configuredStartHour, 0), 8)
     }
 
     /// The midnight of the date `date` belongs to: 00:00 to 03:59 belong to the day before.
     public func day(of date: Date) -> Date {
         let midnight = calendar.startOfDay(for: date)
-        guard calendar.component(.hour, from: date) < Self.startHour else { return midnight }
+        guard calendar.component(.hour, from: date) < startHour else { return midnight }
         return calendar.date(byAdding: .day, value: -1, to: midnight) ?? midnight
     }
 
@@ -43,13 +52,13 @@ public struct TesseraDay: Sendable {
     /// 04:00 on the day `date` belongs to.
     public func start(of date: Date) -> Date {
         let key = day(of: date)
-        return calendar.date(bySettingHour: Self.startHour, minute: 0, second: 0, of: key) ?? key
+        return calendar.date(bySettingHour: startHour, minute: 0, second: 0, of: key) ?? key
     }
 
     /// 04:00 on the next day: the end of the day `date` belongs to.
     public func end(of date: Date) -> Date {
         let next = calendar.date(byAdding: .day, value: 1, to: day(of: date)) ?? day(of: date)
-        return calendar.date(bySettingHour: Self.startHour, minute: 0, second: 0, of: next) ?? next
+        return calendar.date(bySettingHour: startHour, minute: 0, second: 0, of: next) ?? next
     }
 
     public func interval(of date: Date) -> DateInterval {
@@ -77,8 +86,8 @@ public struct TesseraDay: Sendable {
         guard let calendarWeek = calendar.dateInterval(of: .weekOfYear, for: key) else { return interval(of: date) }
         let first = calendarWeek.start
         let next = calendarWeek.end
-        let start = calendar.date(bySettingHour: Self.startHour, minute: 0, second: 0, of: first) ?? first
-        let end = calendar.date(bySettingHour: Self.startHour, minute: 0, second: 0, of: next) ?? next
+        let start = calendar.date(bySettingHour: startHour, minute: 0, second: 0, of: first) ?? first
+        let end = calendar.date(bySettingHour: startHour, minute: 0, second: 0, of: next) ?? next
         return DateInterval(start: start, end: end)
     }
 
@@ -87,9 +96,9 @@ public struct TesseraDay: Sendable {
         guard let calendarMonth = calendar.dateInterval(of: .month, for: day(of: date)) else {
             return interval(of: date)
         }
-        let start = calendar.date(bySettingHour: Self.startHour, minute: 0, second: 0, of: calendarMonth.start)
+        let start = calendar.date(bySettingHour: startHour, minute: 0, second: 0, of: calendarMonth.start)
             ?? calendarMonth.start
-        let end = calendar.date(bySettingHour: Self.startHour, minute: 0, second: 0, of: calendarMonth.end)
+        let end = calendar.date(bySettingHour: startHour, minute: 0, second: 0, of: calendarMonth.end)
             ?? calendarMonth.end
         return DateInterval(start: start, end: end)
     }
