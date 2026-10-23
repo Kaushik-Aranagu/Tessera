@@ -71,6 +71,16 @@ public struct TessConversation {
         store.linkedObjects("about", of: turn).filter { !$0.isDeleted }
     }
 
+    /// Her last turn as the opener needs it: when, and the ids of what it named (a deleted thing included, so a
+    /// deletion
+    /// counts as a change). No words leave this function.
+    public func lastTessTurn() -> TessLastTurn? {
+        guard let turn = turns().last(where: { role(of: $0) == .tess }) else { return nil }
+        let field = classes[.tessTurn].flatMap { ClassResolver.field("about", of: $0) }
+        let ids = (turn.outgoingLinks ?? []).filter { $0.fieldID == field?.id }.compactMap { $0.toObject?.id }
+        return TessLastTurn(at: turn.createdAt, about: ids)
+    }
+
     // MARK: Writing
 
     /// Whether an object is one that must never be named in her conversation: money, health, body, calendar.
