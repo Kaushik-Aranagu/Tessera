@@ -9,30 +9,6 @@ import Testing
 struct GroceryScaleTests {
     static let shops = max(20, ScaleTests.workouts * 520 / 1500)
 
-    /// How much slower than an idle Mac this one is right now (1 when idle): a fixed amount of plain work, timed three
-    /// times (the fastest counts), against what it takes idle. The budgets below scale with it, so a Mac busy with
-    /// builds and a full suite cannot fail the gate while a genuine slowdown in the reads still does.
-    static func slowdown() -> Double {
-        let clock = ContinuousClock()
-        var best = Double.infinity
-        for _ in 0 ..< 3 {
-            var total = 0
-            let took = clock.measure {
-                for value in 0 ..< 2_000_000 {
-                    total &+= value &* value
-                }
-            }
-            if total == 1 {
-                print("")
-            } // keeps the loop alive
-            best = min(best, Double(took.components.seconds) * 1000 + Double(took.components.attoseconds) / 1e15)
-        }
-        return min(max(best / idleCalibrationMs, 1), 100)
-    }
-
-    /// The calibration loop on an idle Mac in a debug build, in milliseconds (measured, rounded up).
-    static let idleCalibrationMs = 40.0
-
     @Test func groceriesAndPantryReadsStayFast() throws {
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()
@@ -60,7 +36,7 @@ struct GroceryScaleTests {
             let duration = try clock.measure(work)
             return Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
         }
-        let loadBefore = Self.slowdown()
+        let loadBefore = LoadFactor.current()
         let open = ms { _ = groceries.aisles() }
         let order = ms { _ = groceries.shoppingOrder() }
         // Best of three, each on a fresh line: a loaded Mac delays one run, never all of them.
@@ -72,7 +48,7 @@ struct GroceryScaleTests {
         }
         let add = adds.min() ?? 0, check = checks.min() ?? 0
         // The worse of the load before and after the reads: either end busy gives the reads more room.
-        let load = max(loadBefore, Self.slowdown())
+        let load = max(loadBefore, LoadFactor.current())
         let clears = ms { _ = groceries.shopClears() }
         let again = ms { _ = groceries.shopClears() } // the cached read
         print("GROCERY SCALE load x\(load) \(Self.shops) shops, \(tombstones) tombstones: build=\(ms {})ms open=\(open)ms "
@@ -82,5 +58,7 @@ struct GroceryScaleTests {
         #expect(open < budget && order < budget, "open \(open) order \(order)")
         #expect(add < budget * 2 && check < budget, "add \(add) check \(check)")
         #expect(clears < budget * 2, "shopClears \(clears)")
+        // The cached read must be the cheap one: not slower than the first, and a tenth of the budget at most.
+        #expect(again <= max(clears, 1) && again < budget / 10, "cached shopClears \(again) vs first \(clears)")
     }
 }
