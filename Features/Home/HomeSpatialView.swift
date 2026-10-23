@@ -95,9 +95,26 @@ struct HomeSpatialView: View {
                      indexShown: indexProgress > 0.001, current: Int(progress.rounded()), flies: !calm,
                      onTap: openIndex)
                 .accessibilityFocused($nameFocused)
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.s)
                 .tesseraFeedback(.areaLands, trigger: arrivals)
+                // A plain, always-visible door to Settings on every Home page (no icon, no shape), at the top right.
+                .overlay(alignment: .trailing) {
+                    Button { presented = .settings } label: {
+                        Text("Settings")
+                            .textRole(.data)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(HandleButtonStyle())
+                    .padding(.trailing, Theme.Spacing.gutter - 8)
+                    .padding(.top, Theme.Spacing.s)
+                    .opacity(indexProgress > 0.001 ? 0 : 1)
+                    .disabled(indexProgress > 0.001)
+                    .accessibilityHint("Opens Settings")
+                }
 
             ScrollView(.horizontal) {
                 HStack(spacing: 0) {
@@ -379,7 +396,7 @@ extension HomeSpatialView.Page {
 
 /// The screens Home reaches that are not objects: Notes, Review, Groceries, Pantry and Recipes.
 enum HomeLink: Hashable, CaseIterable, Identifiable {
-    case groceries, lists, pantry, recipes, pasteRecipe, notes, review, money
+    case groceries, lists, pantry, recipes, pasteRecipe, notes, review, money, settings
 
     var id: Self {
         self
@@ -395,6 +412,7 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .notes: "Notes"
         case .review: "The week"
         case .money: "Money"
+        case .settings: "Settings"
         }
     }
 
@@ -410,6 +428,8 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .notes: NotesView()
         case .review: ReviewView()
         case .money: MoneyLandingView()
+        // Settings as its own page from Home's top row, with Close above it (Kaushik, Oct 22: he couldn't find it).
+        case .settings: NavigationStack { SettingsPage() }.environment(\.animateEntrance, true)
         }
     }
 }
