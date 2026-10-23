@@ -81,6 +81,13 @@ struct MosaicPagesTests {
         #expect(facts(now, events: [cook]).pageFacts(engine: engine, plan: nil).nextTitle == nil)
         // The cook still shows in the sentence captions, just not on this page.
         #expect(facts(now, events: [cook]).nextTimed?.title == "Tacos")
+        // A task about a recipe is a cook too.
+        let recipe = try engine
+            .perform(CreateRecipe(text: "Tacos\nIngredients\n1 onion\nMethod\n1. Fry it."), by: .user).output
+        let cookTask = try engine.perform(CreateTask(title: "Cook tacos", startsAt: at(12, 40)), by: .user).output
+        try store.setLinks("about", on: cookTask, to: [recipe])
+        #expect(facts(now).pageFacts(engine: engine, plan: nil).nextTitle == nil)
+        #expect(facts(now).nextTimed?.title == "Cook tacos")
         let event = try store.create(#require(engine.classes[.event]), title: "Dentist")
         try? store.set("startsAt", to: .date(at(12, 20)), on: event)
         #expect(facts(now).pageFacts(engine: engine, plan: nil).nextTitle == nil)
