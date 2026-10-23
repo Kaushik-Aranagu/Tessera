@@ -126,8 +126,9 @@ public enum AppSummaryLines {
         let store = engine.store, classes = engine.classes
         if part.facts.top.step != nil {
             // Running: its own words ("Morning is running"); the name is its key word, checked like any title.
-            let name = part.facts.top.sentence.key.map { shown($0, in: store, classes: classes) }
-            if let name, name.1 {
+            // The name is the key word; with none, the sentence itself is what gets checked.
+            let name = shown(part.facts.top.sentence.key ?? part.facts.top.sentence.text, in: store, classes: classes)
+            if name.1 {
                 return AppSummaryLine(app: .routines, text: "Private", opens: .app(.routines), isPrivate: true)
             }
             return AppSummaryLine(app: .routines, text: part.facts.top.sentence.text, opens: .app(.routines),

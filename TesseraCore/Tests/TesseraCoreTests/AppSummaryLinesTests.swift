@@ -186,4 +186,60 @@ struct AppSummaryLinesTests {
         let line = try #require(lines(at(9), plan: plan)[.training])
         #expect(line.text == "Push A at 6:15 pm, bench press first", "\(line.text)")
     }
+
+    // MARK: Opener and running routines, masked
+
+    /// A plan whose routine opens with `exercise`, with three past sessions of it.
+    private func plan(opening exercise: ClassDef) throws -> ObjectRecord {
+        let routine = try engine.perform(CreateRoutine(title: "Push A"), by: .user).output
+        let plan = try engine.perform(CreatePlan(title: "PPL", routines: [routine.id]), by: .user).output
+        try engine.perform(AddSlot(routine: routine.id, exercise: exercise.id), by: .user)
+        for week in 1 ... 3 {
+            let workout = try store.create(#require(engine.classes[.workout]), title: "Push A")
+            try store.setLinks("routine", on: workout, to: [routine])
+            try store.set("endedAt", to: .date(at(19, day: 22 - week)), on: workout)
+            let entry = try store.create(#require(engine.classes[.exerciseEntry]), parent: workout)
+            try store.setClassLink("exercise", on: entry, to: exercise)
+            let ledger = TrainingLedger(store: store, classes: engine.classes)
+            let first = try ledger.logSet(weight: 80, reps: 5, in: entry)
+            let last = try ledger.logSet(weight: 80, reps: 5, in: entry)
+            try store.set("loggedAt", to: .date(at(18, 15, day: 22 - week)), on: first)
+            try store.set("loggedAt", to: .date(at(19, day: 22 - week)), on: last)
+        }
+        return plan
+    }
+
+    @Test func homesTrainingSentenceNamesAPlainLiftAndLeavesAPrivateOneOut() throws {
+        try ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: store,
+                                             classes: engine.classes)
+        let bench = try #require(store.allClasses().first { $0.name == "Bench Press" })
+        let plain = try HomeSentence.inputs(engine: engine, plan: plan(opening: bench), now: at(9), calendar: calendar)
+        #expect(plain.training?.text.contains("Bench Press opens at") == true, "\(plain.training?.text ?? "-")")
+    }
+
+    @Test func aLiftWithAPrivateWordInItsNameNeverReachesTheSentenceOrTheList() throws {
+        try ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: store,
+                                             classes: engine.classes)
+        let bench = try #require(store.allClasses().first { $0.name == "Bench Press" })
+        let secret = store.createClass(name: "Lexapro press", parent: bench)
+        let hiddenPlan = try plan(opening: secret)
+        let sentence = HomeSentence.inputs(engine: engine, plan: hiddenPlan, now: at(9), calendar: calendar)
+        let text = try #require(sentence.training?.text)
+        #expect(text.hasPrefix("Push A") && !text.lowercased().contains("lexapro"), "\(text)")
+        let line = try #require(lines(at(9), plan: hiddenPlan)[.training])
+        #expect(!line.text.lowercased().contains("lexapro") && line.text.hasPrefix("Push A"), "\(line.text)")
+    }
+
+    @Test func aRunningRoutineWithNoKeyWordHasItsWholeSentenceChecked() {
+        func line(_ text: String, key: String?) -> AppSummaryLine? {
+            let top = RoutinesLanding.Top(sentence: LandingSentence(text: text, key: key), step: "Shoes on",
+                                          onThisStep: nil, starts: [])
+            let facts = RoutinesLanding.Facts(subtitle: LandingSentence(text: "", key: nil), top: top, lines: [])
+            return lines(at(12), routines: .init(facts: facts, nextUsualStart: nil))[.routines]
+        }
+        #expect(line("Lexapro morning is running", key: nil)?.text == "Private")
+        #expect(line("Lexapro morning is running", key: nil)?.isPrivate == true)
+        #expect(line("Morning is running", key: "Morning")?.text == "Morning is running")
+        #expect(line("Morning is running", key: nil)?.isPrivate == false)
+    }
 }
