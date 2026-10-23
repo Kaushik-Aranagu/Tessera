@@ -21,7 +21,8 @@ struct SoulLightPaintTests {
         let size = CGSize(width: 150, height: 150)
         let view = Canvas { context, size in
             var context = context
-            SoulRenderer.draw(frame, in: &context, size: size, palette: palette)
+            SoulRenderer.draw(frame, in: &context, size: size, palette: palette,
+                              cloud: SoulCloud.image(.init(paints: SoulCloud.paintsLight, dark: false, time: 3)))
         }
         .frame(width: size.width, height: size.height)
         .background(Color(hex: look.ground))

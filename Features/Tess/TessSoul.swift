@@ -58,6 +58,7 @@ struct TessSoul: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.onWorkoutGround) private var onWorkoutGround
     @State private var layers: [SoulLayer] = []
     /// The working overlay, from its split to a second after its gather.
@@ -82,9 +83,10 @@ struct TessSoul: View {
             paused: reduceMotion && work == nil
         )) { context in
             let drawn = frame(at: context.date)
+            let cloud = SoulCloud.image(cloudInput(drawn.frame, at: context.date, dark: palette.layered == false))
             Canvas(rendersAsynchronously: true) { context, canvasSize in
                 SoulRenderer.draw(drawn.frame, in: &context, size: canvasSize, palette: palette, lights: drawn.lights,
-                                  blurScale: 1 / hostScale)
+                                  blurScale: 1 / hostScale, cloud: cloud)
             }
             .saturation(drawn.frame.look.saturation)
             .contrast(drawn.frame.look.contrast)
@@ -146,6 +148,26 @@ struct TessSoul: View {
         .accessibilityElement()
         .accessibilityLabel(accessibilityText)
         .allowsHitTesting(false)
+    }
+
+    /// What her body is made of right now: the paints for the look, her spread from the frame, slow under Reduce
+    /// Motion (a still body), flat under Reduce Transparency.
+    private func cloudInput(_ frame: SoulFrame, at date: Date, dark: Bool) -> SoulCloud.Input {
+        let mains = frame.dabs.prefix(3)
+        let home = 9.5
+        let mean = mains.reduce(0) { $0 + Double(hypot($1.x, $1.y)) } / Double(max(mains.count, 1))
+        var input = SoulCloud.Input(paints: dark ? SoulCloud.paintsDark : SoulCloud.paintsLight, dark: dark,
+                                    time: reduceMotion ? 0 : date.timeIntervalSinceReferenceDate)
+        input.spread = min(max(mean / home - 1, 0), 1)
+        input.quiet = mode == .resting
+        input.flat = reduceTransparency
+        let store = ThemeStore.shared
+        let look = onWorkoutGround ? store.workoutLook : (colorScheme == .dark ? store.pair.night : store.pair.day)
+        // On Black the chroma is held lower so cobalt does not blow out.
+        if look.isDark, look.ground == 0x000000 {
+            input.chroma = 1.2
+        }
+        return input
     }
 
     /// Her float, lean and breath at `date` (none under Reduce Motion, or without her eyes).
@@ -328,7 +350,7 @@ struct SoulPalette {
 /// own live blur. The group grade (saturation, contrast) is applied by the view around the canvas.
 enum SoulRenderer {
     static func draw(_ frame: SoulFrame, in context: inout GraphicsContext, size: CGSize, palette: SoulPalette,
-                     lights: [SoulLight]? = nil, blurScale: CGFloat = 1)
+                     lights: [SoulLight]? = nil, blurScale: CGFloat = 1, cloud: CGImage? = nil)
     {
         context.translateBy(x: size.width / 2, y: size.height / 2)
         context.scaleBy(x: frame.look.scale, y: frame.look.scale)
@@ -348,34 +370,23 @@ enum SoulRenderer {
                       with: .radialGradient(palette.ring, center: .zero, startRadius: 0, endRadius: radius))
         }
 
-        if palette.layered, lights == nil {
-            // Light looks: blue first, then vermilion, then cadmium, the satellites after the mains.
-            let order = [1, 0, 2, 3, 4, 5]
-            let paint: (inout GraphicsContext) -> Void = { layer in
-                layer.blendMode = .normal
-                layer.opacity = 1
-                for index in order {
-                    let opacity = index < 3 ? 1 : frame.look.satellites
-                    dab(frame.dabs[index], SoulDab.all[index], opacity: opacity, in: &layer, palette: palette,
-                        blurScale: blurScale)
-                }
-                dab(frame.drip, SoulDab.drip, opacity: 1, in: &layer, palette: palette, blurScale: blurScale)
-            }
-            var normal = context
-            normal.blendMode = .normal
-            normal.drawLayer { paint(&$0) }
-            var multiply = context
-            multiply.blendMode = .multiply
-            multiply.opacity = 0.3
-            multiply.drawLayer { paint(&$0) }
-            return
-        }
         context.blendMode = palette.blend
         if let lights {
             // Working: the twelve lights instead of the six dabs (the drip and ring never show while she works).
             for light in lights {
                 self.light(light, in: &context, palette: palette)
             }
+            return
+        }
+        if let cloud {
+            // Her body: one cloud, in its own compositing group (the canvas), normal blend; nothing leaks onto the
+            // page.
+            let side = 140 * SoulCloud.span
+            context.draw(
+                Image(decorative: cloud, scale: 1),
+                in: CGRect(x: -side / 2, y: -side / 2, width: side, height: side)
+            )
+            dab(frame.drip, SoulDab.drip, opacity: 1, in: &context, palette: palette, blurScale: blurScale)
             return
         }
         for (index, pose) in frame.dabs.enumerated() {
