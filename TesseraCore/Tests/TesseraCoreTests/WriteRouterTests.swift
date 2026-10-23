@@ -132,7 +132,7 @@ struct WriteRouterTests {
                 Issue.record("\(line) must have a reading")
                 continue
             }
-            #expect(candidate.isWalled && candidate.app == .notes || candidate.app == .money)
+            #expect(candidate.isWalled && (candidate.app == .notes || candidate.app == .money))
             #expect(candidate.receipt == "Private note, kept." || candidate.receipt.hasSuffix("logged."))
         }
         if case .nothing = router.route("my blood pressure 120 over 80", context: context) {
@@ -168,6 +168,22 @@ struct WriteRouterTests {
         for word in ["ClaudeTessModel", "FoundationModels", "LanguageModel", "URLSession", "TessRouter", "router.run"] {
             #expect(!text.contains(word))
         }
+    }
+
+    @Test(arguments: ["calories 2400 today", "burned 400 kcal", "ate 600 calories", "2400 calories", "calories: 1800"])
+    func aCalorieLineThatLogsOneIsWalled(_ line: String) {
+        #expect(WriteRouter.isCalorieShaped(line), "\(line)")
+    }
+
+    @Test(arguments: [
+        "low calorie yogurt",
+        "add calories to the recipe",
+        "buy low calorie bread",
+        "calorie counter app",
+        "check the calories on the label"
+    ])
+    func anOrdinaryCalorieWordIsNotWalled(_ line: String) {
+        #expect(!WriteRouter.isCalorieShaped(line), "\(line)")
     }
 
     @Test func poolPhrasesAreReadOnlyWhenThePoolsSwitchIsOn() throws {

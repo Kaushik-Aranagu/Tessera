@@ -138,10 +138,19 @@ public struct WriteRouter {
         }
     }
 
-    /// A calorie or energy line ("calories 2400 today", "burned 400 kcal"): walled with the body facts, so it never
-    /// reaches a model and never rides a receipt.
+    /// A calorie or energy line that logs one ("calories 2400 today", "burned 400 kcal", "ate 600 calories"): a number
+    /// beside the word, or a logging verb. "low calorie yogurt" and "add calories to the recipe" are not walled.
     static func isCalorieShaped(_ phrase: String) -> Bool {
-        phrase.lowercased().firstMatch(of: /\b(?:calories?|kcal|cals?)\b/) != nil
+        let lower = phrase.lowercased()
+        let word = #"(?:calories|calorie|kcal|cals|cal)"#
+        if lower.firstMatch(of: try! Regex(#"\b\d[\d,.]*\s*"# + word + #"\b"#)) != nil
+            || lower.firstMatch(of: try! Regex(#"\b"# + word + #"\s*(?:of\s+|:\s*|=\s*|is\s+|was\s+)?\d"#)) != nil
+        {
+            return true
+        }
+        return lower
+            .firstMatch(of: try! Regex(#"\b(?:burned|burnt|ate|eaten|logged|tracked|consumed)\b.*\b"# + word + #"\b"#))
+            != nil
     }
 
     private func privateNote(_ phrase: String) -> Candidate {
