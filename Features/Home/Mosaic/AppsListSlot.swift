@@ -31,7 +31,13 @@ enum AppsListRows {
 
     /// One row per app from Core's lines, in Core's order. A private top item already reads "Private" there.
     static func make(_ lines: [AppSummaryLine]) -> [Row] {
-        lines.map { Row(app: home($0.app), summary: $0.text.isEmpty ? quiet : $0.text, opens: $0.opens) }
+        lines.map { line in
+            // Money and Routines have no loader in the app yet (Core's MoneyDue.next and RoutinesPart.make are asked
+            // for), so their lines would read "Nothing is due" or "Nothing planned" falsely: they show the name only.
+            let waits = line.app == .money || line.app == .routines
+            return Row(app: home(line.app), summary: waits ? "" : (line.text.isEmpty ? quiet : line.text),
+                       opens: line.opens)
+        }
     }
 
     /// A fact that fits one short line: cut at a word edge, never with an ellipsis.
@@ -98,7 +104,8 @@ struct AppsListSlot: View {
             )
         }
         .tesseraFeedback(.selection, trigger: ticks)
-        .onChange(of: model.revision, initial: true) {
+        // Read again when the model changes and when the day turns over.
+        .task(id: "\(model.revision)-\(Calendar.current.startOfDay(for: AppClock.now).timeIntervalSince1970)") {
             rows = AppsListRows.make(AppSummaryLines.lines(engine: model.engine, plan: model.plan, now: AppClock.now))
         }
         .accessibilityElement(children: .contain)
@@ -132,7 +139,7 @@ struct AppsListSlot: View {
                         .weight(isMiddle ? .semibold : .regular))
                     .foregroundStyle(isMiddle ? row.app.accent : Theme.Colors.inkTertiary)
                     .fixedSize()
-                if isMiddle {
+                if isMiddle, !row.summary.isEmpty {
                     Spacer(minLength: Theme.Spacing.s)
                     Text(AppsListRows.fit(row.summary))
                         .textRole(.data)
@@ -148,7 +155,7 @@ struct AppsListSlot: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isMiddle ? "\(row.app.rawValue), \(row.summary)" : row.app.rawValue)
+        .accessibilityLabel(isMiddle && !row.summary.isEmpty ? "\(row.app.rawValue), \(row.summary)" : row.app.rawValue)
         .accessibilityHint(isMiddle ? "Opens \(row.app.rawValue)" : "Brings it to the middle")
     }
 

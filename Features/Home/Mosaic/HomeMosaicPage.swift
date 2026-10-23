@@ -26,6 +26,15 @@ struct HomeMosaicPage: View {
     @State private var rigidBeats = 0
     @State private var onScreen = false
     @Environment(\.scenePhase) private var scenePhase
+    /// Sheet 202: A's full-screen layer, its scene, where the core frame sits and the text it must stay clear of.
+    @State private var controller = MosaicScreenController()
+    @State private var scene: MosaicScene = .day
+    @State private var coreTop: CGFloat = 0
+    @State private var shield: [CGRect] = []
+
+    private var layerOn: Bool {
+        HomeMosaic.moodsIsOn && facts != nil && pick != nil
+    }
 
     var body: some View {
         ScrollView {
@@ -35,20 +44,24 @@ struct HomeMosaicPage: View {
                     .padding(.bottom, HomeMosaic.moodsIsOn
                         ? HomeMosaic.moodsTopInset - HomeMosaic.headerHeight - HomeMosaic.sectionGap : 0)
                 MosaicSentence(pickedClauses: momentClause.map { [$0] } ?? pick?.clauses)
+                    .mosaicShield()
                 VStack(alignment: .leading, spacing: 0) {
-                    MosaicSlot(lay: $mosaicLay, caption: $caption, facts: facts, mood: pick?.mood, moment: moment)
+                    MosaicSlot(coreTop: $coreTop)
                         .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
                     if !caption.isEmpty {
                         Text(caption)
                             .font(Theme.voice(size: 16))
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .padding(.top, Theme.Spacing.s)
+                            .mosaicShield()
                     }
                 }
                 // The call site that becomes `mosaic.lay(from: rowFrame, tone: .glaze)` with A's view.
                 MosaicNextList { rowFrame in mosaicLay?(rowFrame) }
+                    .mosaicShield()
                 if HomeMosaic.appsListIsOn {
                     AppsListSlot()
+                        .mosaicShield()
                 }
             }
             .padding(.horizontal, HomeMosaic.gutter)
@@ -58,6 +71,16 @@ struct HomeMosaicPage: View {
         }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
+        // Sheet 202: the mosaic is the page's own pixels, edge to edge, behind everything; every touch leans it.
+        .background {
+            if layerOn, let facts, let mood = pick?.mood {
+                MosaicHomeLayer(facts: facts, scene: $scene, controller: controller, coreTop: coreTop, shield: shield,
+                                mood: mood, moment: moment, caption: $caption)
+            }
+        }
+        .onPreferenceChange(MosaicShieldKey.self) { shield = $0 }
+        .mosaicTouchFeed(controller, enabled: layerOn)
+        .onAppear { mosaicLay = { controller.lay(from: $0, tone: .glaze) } }
         // Sheet 203: a pull down from the top 40 pt also opens Settings.
         .simultaneousGesture(
             DragGesture(minimumDistance: 24).onEnded { value in

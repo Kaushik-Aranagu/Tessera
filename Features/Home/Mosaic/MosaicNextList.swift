@@ -6,7 +6,7 @@ import TesseraCore
 /// unchanged). A tap grows a row to about 78 pt on the house spring and shows why Tess ranks it here; one open at a
 /// time. Tapping the why opens the thing.
 struct MosaicNextList: View {
-    /// Called with the finished row's frame in the page's coordinate space.
+    /// Called with the finished row's frame in window space.
     let finished: (CGRect) -> Void
 
     @Environment(AppModel.self) private var model
@@ -120,7 +120,7 @@ private struct MosaicNextRow: View {
                 .transition(reduceMotion ? .opacity : .offset(y: -6))
             }
         }
-        .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(HomeMosaicPage.space)) } action: { frame = $0 }
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 }
         .accessibilityAction(named: isOpen ? "Hide why" : "Show why") {
             if why != nil {
                 toggle()

@@ -1,38 +1,25 @@
 import SwiftUI
 import TesseraCore
 
-/// The mosaic's place on Home: full width, 250 pt tall.
-/// TODO: swap for A's MosaicView(facts: MosaicFacts, scene: Binding<MosaicScene>). It will set `lay` to
-/// `{ rowFrame in mosaic.lay(from: rowFrame, tone: .glaze) }` and write its one caption line into `caption`.
+/// The mosaic's place on Home. With the moods On (sheet 202) Builder A's layer draws behind the whole page, edge to
+/// edge, and this only reserves the core's 248x160 frame, right-aligned, so the text sits clear of it; it reports where
+/// the core's top is. Otherwise a full-width 250 pt gap, as before.
 struct MosaicSlot: View {
-    @Binding var lay: ((CGRect) -> Void)?
-    @Binding var caption: String
-    /// Sheet 200: with the moods On, A's view draws the picked mood inside the frame and writes the one caption line.
-    var facts: MosaicFacts?
-    var mood: MosaicMood?
-    /// Sheet 201: a moment to play over the mood.
-    var moment: MosaicMomentEvent?
-    @State private var scene: MosaicScene = .day
+    /// Points from the top of the screen to this frame's top, for the layer.
+    @Binding var coreTop: CGFloat
 
     var body: some View {
-        // Sheet 200 (mosaic moods On): 248x160 pt, right-aligned to the gutter; A's picture draws inside this frame.
-        // Otherwise full width, 250 pt tall as before.
         Group {
             if HomeMosaic.moodsIsOn {
-                Group {
-                    if let facts, let mood {
-                        MosaicView(facts: facts, scene: $scene, mood: mood, moment: moment, caption: $caption)
-                    } else {
-                        Color.clear
-                    }
-                }
-                .frame(width: HomeMosaic.moodsMosaicSize.width, height: HomeMosaic.moodsMosaicSize.height)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                Color.clear
+                    .frame(width: HomeMosaic.moodsMosaicSize.width, height: HomeMosaic.moodsMosaicSize.height)
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { coreTop = $0 }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             } else {
                 Color.clear.frame(height: HomeMosaic.mosaicHeight)
             }
         }
-        .accessibilityHidden(HomeMosaic.moodsIsOn ? false : true)
+        .accessibilityHidden(true)
     }
 }
 
