@@ -197,7 +197,11 @@ public extension MosaicFacts {
             let hidden = ObjectPrivacy.isPrivateWord(event.label, in: store) || SecretWords.mentions(event.label)
                 || PrivateFacts.isWalled(event.label, lastWeightKg: weight)
             guard hidden else { return event.label }
-            return event.app == .kitchen ? ObjectPrivacy.recipeLabel : ObjectPrivacy.routineLabel
+            switch event.app {
+            case .kitchen: return ObjectPrivacy.recipeLabel
+            case .routines: return RoutinesLanding.privateRoutine
+            default: return ObjectPrivacy.routineLabel
+            }
         }
         var candidates: [MosaicNext] = events.filter { $0.start > now && $0.start < end }
             .map { MosaicNext(title: masked($0), start: $0.start) }

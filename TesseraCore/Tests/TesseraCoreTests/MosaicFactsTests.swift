@@ -106,7 +106,7 @@ struct MosaicFactsTests {
         let money = HandsEvent(app: .routines, label: "Pay 1200 rent", start: at(18, 30), end: at(19), hands: [],
                                isFixed: false)
         #expect(facts(at(17, 42), events: [cook]).nextTimed?.title == "Private recipe")
-        #expect(facts(at(17, 42), events: [money]).nextTimed?.title == "Private workout")
+        #expect(facts(at(17, 42), events: [money]).nextTimed?.title == RoutinesLanding.privateRoutine)
         let plain = HandsEvent(
             app: .kitchen,
             label: "Tacos and rice",
@@ -116,6 +116,14 @@ struct MosaicFactsTests {
             isFixed: true
         )
         #expect(facts(at(17, 42), events: [plain]).nextTimed?.title == "Tacos and rice")
+        // A real title that starts with "Private" is not a private label: it is checked like any other.
+        let sneaky = HandsEvent(app: .kitchen, label: "Private Lexapro soup", start: at(18), end: at(19), hands: [],
+                                isFixed: true)
+        let sneakyMoney = HandsEvent(app: .routines, label: "Private rent 1200", start: at(18), end: at(19), hands: [],
+                                     isFixed: false)
+        #expect(!sneaky.isPrivate && !sneakyMoney.isPrivate)
+        #expect(facts(at(17, 42), events: [sneaky]).nextTimed?.title == "Private recipe")
+        #expect(facts(at(17, 42), events: [sneakyMoney]).nextTimed?.title == RoutinesLanding.privateRoutine)
         #expect(cook.isPrivate == false)
         #expect(HandsEvent(
             app: .training,
@@ -163,7 +171,7 @@ struct MosaicScanTests {
     }
 
     @Test func noWidgetLockScreenOrIntentPathReadsTheMosaicOrTheMonthLines() {
-        let paths = ["../Widgets", "../Watch", "Sources/TesseraIntents"]
+        let paths = ["../Widgets", "../Watch", "../Shared", "Sources/TesseraIntents"]
         let banned = ["MosaicFacts", "MosaicFinish", "finishedToday", "PoolMonthLine", "poolLines(", "monthSentence("]
         var checked = 0
         for path in paths {
