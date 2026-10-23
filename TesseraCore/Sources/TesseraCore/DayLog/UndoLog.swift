@@ -80,16 +80,38 @@ public enum UndoLog {
         }
     }
 
-    private static func sentence(for record: OpRecord, money: Bool, engine: ActionEngine) -> String {
-        let touchedPrivate = record.objectIDs.contains { id in
-            engine.store.object(id: id).map {
-                ObjectPrivacy.shownLabel(of: $0, in: engine.store, classes: engine.classes) != nil
-            } ?? false
+    /// Records that read their generic summary whatever their text says: money, and the body, health and calorie
+    /// records (Me, a Health sync).
+    private static let genericActions: Set<String> = ["syncHealth"]
+
+    private static func isBodyOrHealth(_ record: OpRecord, engine: ActionEngine) -> Bool {
+        if genericActions.contains(record.action) {
+            return true
         }
-        if money || touchedPrivate {
-            return record.summary.hasSuffix(".") ? record.summary : record.summary + "."
+        guard let me = engine.classes[.meProfile] else { return false }
+        return record.objectIDs.contains { id in
+            engine.store.object(id: id)?.classDef.map { ClassResolver.isSubclass($0, of: me) } ?? false
+        }
+    }
+
+    private static func sentence(for record: OpRecord, money: Bool, engine: ActionEngine) -> String {
+        let store = engine.store
+        let touchedPrivate = record.objectIDs.contains { id in
+            store.object(id: id).map { ObjectPrivacy.shownLabel(of: $0, in: store, classes: engine.classes) != nil }
+                ?? false
+        }
+        let generic = record.summary.hasSuffix(".") ? record.summary : record.summary + "."
+        if money || touchedPrivate || isBodyOrHealth(record, engine: engine) {
+            return generic
         }
         let text = record.receipt ?? record.summary
+        // The stored text may name something that has since been retitled, so it is checked itself too: a private
+        // word, a secret, or a money or body fact reads the generic summary.
+        if ObjectPrivacy.containsPrivateWord(text, in: store) || SecretWords.mentions(text)
+            || PrivateFacts.isWalled(text, lastWeightKg: BodyWeight.lastKg(in: store))
+        {
+            return generic
+        }
         return text.hasSuffix(".") ? text : text + "."
     }
 }
