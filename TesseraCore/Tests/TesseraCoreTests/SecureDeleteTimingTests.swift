@@ -30,8 +30,9 @@ struct SecureDeleteTimingTests {
             store.context.scrubLog()
         }
         let seconds = Double(took.components.seconds) + Double(took.components.attoseconds) / 1e18
-        // Idle Mac: well under a second. The budget scales with how busy this Mac is.
-        #expect(seconds < 10 * LoadFactor.current(), "\(seconds) s")
+        // Idle Mac: about a second; the budget is 2 s, scaled by how busy this Mac is. The budget scales with how busy
+        // this Mac is.
+        #expect(seconds < 2 * LoadFactor.current(), "\(seconds) s")
         print("secure_delete bulk delete of 3000 rows: \(seconds) s")
     }
 }

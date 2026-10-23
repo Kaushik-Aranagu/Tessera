@@ -13,7 +13,7 @@ struct MosaicSwitchboardTests {
     func step(_ cues: [MosaicCue], from state: MosaicSwitchState = .init(), quiet: Bool = false, claude: Bool = false,
               weather: Bool = false) -> (state: MosaicSwitchState, directive: MosaicDirective)
     {
-        MosaicSwitchboard.step(state, cues: cues, now: now, quiet: quiet, asksClaude: claude, weatherOn: weather)
+        MosaicSwitchboard.step(state, cues: cues, quiet: quiet, asksClaude: claude, weatherOn: weather)
     }
 
     @Test func everyCueHasExactlyOneDefaultWire() {
@@ -94,5 +94,25 @@ struct MosaicSwitchboardTests {
     @Test func existingMomentKindsMapToCues() {
         #expect(MosaicSwitchboard.cue(for: .timer, at: now, key: "k")?.kind == .timerEnds)
         #expect(MosaicSwitchboard.cue(for: .weather(.storm), at: now, key: "k")?.kind == .storm)
+    }
+}
+
+extension MosaicSwitchboardTests {
+    @Test func aCueDroppedForTheNightDoesNotReplayAtSeven() {
+        let night = step([cue(.newBest, key: "n"), cue(.workoutStarts, key: "w")], quiet: true)
+        #expect(night.state.seen.isSuperset(of: ["n", "w"]))
+        #expect(step([cue(.newBest, key: "n")], from: night.state).directive.play == nil)
+    }
+
+    @Test func aMomentAlreadyPlayingWhenTheNightStartsFinishes() {
+        let playing = step([cue(.newBest, key: "a")])
+        let night = step([], from: playing.state, quiet: true)
+        #expect(night.state.playing?.key == "a")
+        #expect(MosaicSwitchboard.handedBack(night.state, quiet: true).state.playing == nil)
+    }
+
+    @Test func twoCuesWithTheSameKeyInOneBatchCountOnce() {
+        let result = step([cue(.newBest, 1, key: "same"), cue(.newBest, 2, key: "same"), cue(.arrived, 3, key: "o")])
+        #expect(result.state.queue.count + (result.state.playing == nil ? 0 : 1) == 2)
     }
 }

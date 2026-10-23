@@ -147,6 +147,8 @@ struct MosaicScenesTests {
                                                               includingPropertiesForKeys: nil) else { continue }
             for case let url as URL in walker where url.pathExtension == "swift"
                 && (allowed.isEmpty || !url.path.contains(allowed))
+                // The director only passes the kind through to the picker; it writes nothing.
+                && !url.path.hasSuffix("/Director/TessDirector.swift")
             {
                 guard let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
                 inThisFolder += 1
