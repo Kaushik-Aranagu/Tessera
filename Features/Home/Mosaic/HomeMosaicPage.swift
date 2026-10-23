@@ -121,7 +121,7 @@ struct HomeMosaicPage: View {
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in scroll.value = new }
         .onPreferenceChange(MosaicShieldKey.self) { shield = $0 }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
-        // A swipe that starts on the mosaic (or within 30 pt) changes its page; A's mosaic takes `pager.index`.
+        // A swipe that starts on the mosaic itself turns the things (the mosaic's own pages are gone).
         .simultaneousGesture(
             DragGesture(minimumDistance: 24, coordinateSpace: .global).onEnded { value in
                 let size = HomeMosaic.moodsMosaicSize
@@ -129,8 +129,8 @@ struct HomeMosaicPage: View {
                 let mosaic = CGRect(x: pageWidth - HomeMosaic.gutter - size.width, y: top,
                                     width: size.width, height: size.height)
                 if layerOn, MosaicPager.accepts(start: value.startLocation, translation: value.translation,
-                                                mosaic: mosaic, reach: pager.count > 1 ? 0 : MosaicPager.reach),
-                    pager.swipe(dx: value.translation.width)
+                                                mosaic: mosaic, reach: 0),
+                    turnThing(value.translation.width)
                 {
                     pageDirection = value.translation.width < 0 ? 1 : -1
                     pageTicks += 1
