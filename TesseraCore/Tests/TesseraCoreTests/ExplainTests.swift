@@ -141,6 +141,17 @@ struct ExplainTests {
         #expect(explain(.moneyAboutTotal) == "1,100: dollars plus rupees at the Oct 18 rate.")
     }
 
+    @Test func aNegativeAboutTotalKeepsItsSign() throws {
+        let card = try engine.perform(CreatePool(name: "Card", opening: "10"), by: .user).output
+        try engine.perform(LogSpend(amount: 310, typed: "310", spentAt: now, pool: card.id), by: .user)
+        try engine.perform(CreatePool(name: "India account", currency: "INR", opening: "8300"), by: .user)
+        let rateDay = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 18, hour: 12)))
+        try engine.perform(RecordRate(pair: "USD/INR", value: "83", at: rateDay), by: .user)
+        // -300 dollars plus 8300 rupees at 83 is -200: the sign stays.
+        #expect(explain(.moneyAboutTotal) == "-200: dollars plus rupees at the Oct 18 rate.")
+        #expect(PoolFormat.wholeNumber(-40) == "-40" && PoolFormat.wholeNumber(1100) == "1,100")
+    }
+
     @Test func aPoolBalanceUsesTheLabelNeverTheName() throws {
         let pool = try engine.perform(CreatePool(name: "US checking", opening: "250"), by: .user).output
         let text = try #require(explain(.poolBalance(pool: pool.id)))

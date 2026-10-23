@@ -137,7 +137,7 @@ public enum Explain {
         let words = (["dollars"] + converted.map { PoolReport.word($0.currency).lowercased() })
         let list = words.count == 2 ? "\(words[0]) plus \(words[1])" : words.dropLast()
             .joined(separator: ", ") + " plus " + words[words.count - 1]
-        return "\(PoolFormat.wholeDollars(Decimal(dollars), lakh: lakh).dropFirst()): \(list) at the \(PoolReport.day(from, calendar)) rate."
+        return "\(PoolFormat.wholeNumber(Decimal(dollars), lakh: lakh)): \(list) at the \(PoolReport.day(from, calendar)) rate."
     }
 
     private static func poolBalance(_ id: UUID, _ store: ObjectStore,
