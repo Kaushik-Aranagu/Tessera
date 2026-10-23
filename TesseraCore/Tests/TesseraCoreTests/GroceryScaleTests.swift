@@ -36,6 +36,7 @@ struct GroceryScaleTests {
             let duration = try clock.measure(work)
             return Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
         }
+        let loadBefore = LoadFactor.current()
         let open = ms { _ = groceries.aisles() }
         let order = ms { _ = groceries.shoppingOrder() }
         // Best of three, each on a fresh line: a loaded Mac delays one run, never all of them.
@@ -46,14 +47,18 @@ struct GroceryScaleTests {
             try checks.append(ms { try engine.perform(CheckListItem(item: row.id, time: start), by: .user) })
         }
         let add = adds.min() ?? 0, check = checks.min() ?? 0
+        // The worse of the load before and after the reads: either end busy gives the reads more room.
+        let load = max(loadBefore, LoadFactor.current())
         let clears = ms { _ = groceries.shopClears() }
         let again = ms { _ = groceries.shopClears() } // the cached read
-        print("GROCERY SCALE \(Self.shops) shops, \(tombstones) tombstones: build=\(ms {})ms open=\(open)ms "
+        print("GROCERY SCALE load x\(load) \(Self.shops) shops, \(tombstones) tombstones: build=\(ms {})ms open=\(open)ms "
             + "order=\(order)ms add=\(add)ms check=\(check)ms shopClears=\(clears)ms cached=\(again)ms "
             + "buildTotal=\(build)")
-        let budget: Double = Self.shops > 200 ? 200 : 100
+        let budget: Double = (Self.shops > 200 ? 200 : 100) * load
         #expect(open < budget && order < budget, "open \(open) order \(order)")
         #expect(add < budget * 2 && check < budget, "add \(add) check \(check)")
         #expect(clears < budget * 2, "shopClears \(clears)")
+        // The cached read must be the cheap one: not slower than the first, and a tenth of the budget at most.
+        #expect(again <= max(clears, 1) && again < budget / 10, "cached shopClears \(again) vs first \(clears)")
     }
 }
