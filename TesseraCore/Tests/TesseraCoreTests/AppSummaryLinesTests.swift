@@ -29,14 +29,43 @@ struct AppSummaryLinesTests {
         return Dictionary(uniqueKeysWithValues: all.map { ($0.app, $0) })
     }
 
-    @Test func everyAppAlwaysHasALineEvenOnAnEmptyPhone() {
+    @Test func appsReadFromThePhoneAlwaysHaveALineAndMoneyAndRoutinesOnlyWhenTheirSourceWasRead() {
         let all = AppSummaryLines.lines(engine: engine, plan: nil, now: at(12), calendar: calendar)
-        #expect(all.map(\.app) == AppSummaryApp.allCases)
+        // Without a bills source or a routines read, the list says nothing about them: no false "Nothing is due".
+        #expect(all.map(\.app) == [.training, .kitchen, .tasks, .notes, .lists])
         #expect(all.allSatisfy { !$0.text.isEmpty && !$0.isPrivate })
         let byApp = lines(at(12))
         #expect(byApp[.training]?.text == "Nothing planned" && byApp[.tasks]?.text == "Nothing left today")
-        #expect(byApp[.money]?.text == "Nothing is due" && byApp[.lists]?.text == "No lists yet")
-        #expect(byApp[.notes]?.text == "No notes yet" && byApp[.routines]?.text == "Nothing planned")
+        #expect(byApp[.lists]?.text == "No lists yet" && byApp[.notes]?.text == "No notes yet")
+        #expect(byApp[.money] == nil && byApp[.routines] == nil)
+    }
+
+    @Test func theLoadersReadRoutinesFromThePhoneAndMoneyHasNoSourceYet() throws {
+        #expect(HomeSentence.MoneyDue.next(engine: engine, now: at(12)) == nil)
+        // The starter plan's routines are real routines: the line names one, with no start time to promise yet.
+        let starter = HomeSentence.RoutinesPart.make(engine: engine, now: at(12), calendar: calendar)
+        #expect(starter.nextUsualStart == nil && lines(at(12), routines: starter)[.routines]?.text.isEmpty == false)
+        let routine = try engine.perform(CreateRoutine(title: "Stretch"), by: .user).output
+        for day in 1 ... 8 {
+            let workout = try store.create(#require(engine.classes[.workout]), title: "Stretch")
+            try store.setLinks("routine", on: workout, to: [routine])
+            try store.set("startedAt", to: .date(at(20, day: 22 - day)), on: workout)
+            try store.set("endedAt", to: .date(at(20, 20, day: 22 - day)), on: workout)
+        }
+        let part = HomeSentence.RoutinesPart.make(engine: engine, now: at(12), calendar: calendar)
+        #expect(part.nextUsualStart == at(20))
+        #expect(lines(at(12), routines: part)[.routines]?.text == "Stretch at 8 pm")
+        // Run this morning: no next start to promise today.
+        let workoutClass = try #require(engine.classes[.workout])
+        let today = try store.create(workoutClass, title: "Stretch")
+        try store.setLinks("routine", on: today, to: [routine])
+        try store.set("startedAt", to: .date(at(8)), on: today)
+        try store.set("endedAt", to: .date(at(8, 20)), on: today)
+        #expect(HomeSentence.RoutinesPart.make(engine: engine, now: at(12), calendar: calendar).nextUsualStart == nil)
+        let secret = try engine.perform(CreateRoutine(title: "Lexapro morning"), by: .user).output
+        let masked = HomeSentence.RoutinesPart.make(engine: engine, now: at(12), calendar: calendar)
+        #expect(!masked.facts.lines.joined().lowercased().contains("lexapro"))
+        _ = secret
     }
 
     @Test func tasksCountWhatIsLeftToday() throws {
