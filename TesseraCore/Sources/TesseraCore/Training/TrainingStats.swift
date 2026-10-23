@@ -154,6 +154,8 @@ public struct TrainingStats {
     }
 
     public struct LogRow: Equatable, Sendable {
+        /// The workout's id, so a tap opens it without matching a title and a date. An id carries no name.
+        public let workout: UUID
         public let date: Date
         public let title: String
         public let setsText: String?
@@ -474,12 +476,19 @@ public struct TrainingStats {
         }
         let rows = byWorkout.values.filter { $0.date <= now }.sorted { $0.date > $1.date }.map { entry -> LogRow in
             if isPrivate(entry.workout) {
-                return LogRow(date: entry.date, title: ObjectPrivacy.routineLabel, setsText: nil, duration: nil,
-                              calories: nil, isPrivate: true)
+                return LogRow(
+                    workout: entry.workout.id,
+                    date: entry.date,
+                    title: ObjectPrivacy.routineLabel,
+                    setsText: nil,
+                    duration: nil,
+                    calories: nil,
+                    isPrivate: true
+                )
             }
             let minutes = entry.first.flatMap { first in entry.last.map { Int($0.timeIntervalSince(first) / 60) } }
             return LogRow(
-                date: entry.date, title: entry.workout.title,
+                workout: entry.workout.id, date: entry.date, title: entry.workout.title,
                 setsText: "\(entry.sets) \(entry.sets == 1 ? "set" : "sets")",
                 duration: minutes.map { HouseTime.minutes($0) },
                 calories: CaloriesBurned.line(
