@@ -5,10 +5,10 @@ import SwiftUI
 /// approved Notes violet (127).
 extension Theme.Colors {
     enum Accent {
-        /// Training: hot red.
-        static let training = Color(light: 0xC4472A, dark: 0xEE6A4C)
+        /// Training: crimson (off Ember by delta E 10, Kaushik 1:29 PM).
+        static let training = Color(light: 0xA8203F, dark: 0xD04A6A)
         /// Kitchen: ochre.
-        static let kitchen = Color(light: 0xA8701F, dark: 0xE0A458)
+        static let kitchen = Color(light: 0xA8701F, dark: 0xD49A52)
         /// Money: sage.
         static let money = Color(light: 0x3F7A62, dark: 0x8DBFA7)
         /// Notes: violet.
