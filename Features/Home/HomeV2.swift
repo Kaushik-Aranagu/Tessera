@@ -55,6 +55,15 @@ struct HomeV2View: View {
                 .padding(.bottom, HomeSpatialView.dockClearance)
         }
         .environment(\.openHomeLink) { link = $0 }
+        .task {
+            // `-openApp tasks|kitchen|...` (simulator only, through LaunchFlags): opens that app's door, for stills.
+            if let value = LaunchFlags.value(after: "-openApp"), let app = HomeApp.allCases.first(where: {
+                $0.rawValue.lowercased() == value
+            }) {
+                try? await Task.sleep(for: .seconds(1))
+                door = .app(app)
+            }
+        }
         .fullScreenCover(item: $door) { door in
             HomeV2DoorPage(door: door)
                 .safeAreaInset(edge: .top, spacing: 0) {
@@ -101,6 +110,7 @@ private struct HomeV2DoorPage: View {
             case .app(.money): MoneyLandingView()
             case .app(.notes): NotesView()
             case .app(.lists): ListsView()
+            case .app(.tasks): TasksLandingPage()
             case .app(.routines):
                 // Routines' landing is Builder A's (sheet 131 L4); until then its plans.
                 ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
@@ -129,7 +139,11 @@ private struct HomeV2DoorPage: View {
 struct AppEdges: View {
     let open: (HomeApp) -> Void
 
-    static let order: [HomeApp] = [.training, .kitchen, .money, .notes, .lists, .routines]
+    /// Tasks joins as an ink stroke once its Review switch is on.
+    @MainActor static var order: [HomeApp] {
+        [.training, .kitchen, .money, .notes, .lists, .routines] + (TasksApp.isOn ? [.tasks] : [])
+    }
+
     static let stroke: CGFloat = 3
     static let gap: CGFloat = 3
 
