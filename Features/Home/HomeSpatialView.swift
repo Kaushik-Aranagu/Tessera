@@ -228,6 +228,19 @@ struct HomeSpatialView: View {
             }
         }
         .environment(\.homeLinkZoom, linkZoom)
+        .overlay(alignment: .bottom) { fan }
+    }
+
+    /// Design 137: pull up from the bottom edge to fan the apps (Review switch `homeV2`, Off by default).
+    @ViewBuilder
+    private var fan: some View {
+        if FanSwitch.isOn, indexProgress < 0.001 {
+            let lines = indexLines
+            AppFan(entries: Page.allCases.map { page in
+                AppFanEntry(id: page.rawValue, title: page.title, line: lines[page.rawValue],
+                            accent: page.fanAccent)
+            }, onPick: pick, onOpenIndex: openIndex)
+        }
     }
 
     @ViewBuilder
@@ -352,6 +365,17 @@ struct HomeSpatialView: View {
 
     private func show(_ sibling: Page) {
         show(sibling.rawValue)
+    }
+}
+
+extension HomeSpatialView.Page {
+    /// The fan's colour for the title under the finger: the app's accent, ink where it has none.
+    var fanAccent: Color {
+        switch self {
+        case .training: Theme.Colors.Accent.training
+        case .kitchen: Theme.Colors.Accent.kitchen
+        case .review, .today: Theme.Colors.ink
+        }
     }
 }
 
