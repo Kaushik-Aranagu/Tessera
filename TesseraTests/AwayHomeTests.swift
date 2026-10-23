@@ -19,4 +19,21 @@ struct AwayHomeTests {
         #expect(Away.line(engine: model.engine, now: AppClock.now) == nil)
         #expect(!Away.isAway(engine: model.engine, now: AppClock.now))
     }
+
+    /// SetAway on gives a line on the trip's days; Undo takes it back (QA on #1279).
+    @Test func awayOnGivesALineAndUndoClearsIt() throws {
+        let model = AppModel(context: TesseraSchema.makeContainer(inMemory: true).mainContext,
+                             launchDefaults: .testSuite())
+        let now = AppClock.now
+        let day = TesseraDay().today(now)
+        let end = Calendar.current.date(byAdding: .day, value: 2, to: day) ?? day
+        let occasion = try #require(try? model.engine.perform(
+            CreateOccasion(title: "Trip", start: day, end: end), by: .user
+        ).output)
+        #expect(Away.line(engine: model.engine, now: now) == nil)
+        let record = try #require(try? model.engine.perform(SetAway(occasion: occasion.id, on: true), by: .user).record)
+        #expect(Away.line(engine: model.engine, now: now) != nil)
+        #expect(model.engine.undo(record) == .applied)
+        #expect(Away.line(engine: model.engine, now: now) == nil)
+    }
 }

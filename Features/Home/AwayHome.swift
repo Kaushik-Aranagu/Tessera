@@ -18,6 +18,7 @@ struct AwayWord: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
+        let _ = model.revision
         let isAway = model.store.value("away", of: occasion) == .bool(true)
         Button(isAway ? "Home as usual" : "Quiet Home for this trip") { set(!isAway) }
             .buttonStyle(LandingWordStyle())
