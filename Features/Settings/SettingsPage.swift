@@ -12,19 +12,28 @@ struct SettingsPage: View {
     @Environment(\.isPresented) private var isPresented
 
     var body: some View {
+        // Sheet 203: with Settings v2 On (the default) the overhauled page; Off keeps the older stack of sections.
+        if SettingsV2.isOn {
+            SettingsHub(cameFrom: cameFrom == "Review" ? "Home" : cameFrom)
+        } else {
+            legacy
+        }
+    }
+
+    private var legacy: some View {
         let v2 = SettingsV2.isOn
         return ScrollViewReader { reader in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if isPresented {
                         Button { dismiss() } label: {
-                            Text(v2 ? "‹ \(cameFrom)" : "‹ Review")
+                            Text("‹ \(cameFrom)")
                                 .textRole(v2 ? .data : .label)
                                 .foregroundStyle(Theme.Colors.inkSecondary)
                                 .frame(minHeight: 44)
                         }
                         .buttonStyle(HandleButtonStyle())
-                        .accessibilityLabel("Back to \(v2 ? cameFrom : "Review")")
+                        .accessibilityLabel("Back to \(cameFrom)")
                     }
                     if !v2 {
                         Text("how Tessera runs")

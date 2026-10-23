@@ -36,11 +36,12 @@ public struct ShopReceipt {
         }
     }
 
-    /// Nothing runs and a total is awaited, outside quiet hours (23:00 to 07:00): the Now slot's words. The question
+    /// Nothing runs and a total is awaited, outside his quiet hours (11 pm to 7 am until he changes them): the Now
+    /// slot's words. The question
     /// still shows once at the finish, which is his act (amendment 5).
     public func nowPrompt(at now: Date, calendar: Calendar = .current, somethingRuns: Bool) -> String? {
-        let hour = calendar.component(.hour, from: now)
-        guard !somethingRuns, hour >= 7, hour < 23, awaiting(at: now) != nil else { return nil }
+        guard !somethingRuns, !SettingsStore.quietHours(in: store).contains(now, calendar: calendar),
+              awaiting(at: now) != nil else { return nil }
         return Self.prompt
     }
 }

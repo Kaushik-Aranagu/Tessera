@@ -414,6 +414,9 @@ public enum SystemCatalog {
             FieldSpec(key: "backupFolderPickedAt", name: "Folder picked", kind: .date),
             FieldSpec(key: "restWeekday", name: "Rest day", kind: .number),
             FieldSpec(key: "displayUnits", name: "Units", kind: .text),
+            FieldSpec(key: "quietStartMinute", name: "Quiet hours start", kind: .number),
+            FieldSpec(key: "quietEndMinute", name: "Quiet hours end", kind: .number),
+            FieldSpec(key: "dayStartHour", name: "The day turns over at", kind: .number),
         ]),
         // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
         // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.

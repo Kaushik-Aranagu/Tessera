@@ -177,11 +177,13 @@ public struct MoveTask: EngineAction {
         // "Not now" never lands in his quiet hours, 23:00 to 07:00: it moves to the next 7 am instead (Product 0ab,
         // 2:00 PM PT). A time he picks himself (`to`) is kept.
         if to == nil {
-            let hour = calendar.component(.hour, from: target)
-            // The target itself moves to 7 am on its own calendar day (QA F1 and F2 on #553, Research EQ26): a target
-            // at 11:20 pm Friday lands at 7 am Friday, still ahead of a "Not now" said Thursday night.
-            if hour >= 23 || hour < 7 {
-                target = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: target) ?? target
+            // The target itself moves to the end of the quiet hours on its own calendar day (QA F1 and F2 on #553,
+            // Research EQ26): a target at 11:20 pm Friday lands at 7 am Friday, still ahead of a "Not now" said
+            // Thursday night. His quiet hours are the setting, 11 pm to 7 am until he changes them.
+            let quiet = SettingsStore.quietHours(in: store)
+            if quiet.contains(target, calendar: calendar) {
+                target = calendar.date(bySettingHour: quiet.endMinute / 60, minute: quiet.endMinute % 60, second: 0,
+                                       of: target) ?? target
             }
         }
         try transaction.set("startsAt", to: .date(target), on: task)

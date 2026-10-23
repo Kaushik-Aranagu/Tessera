@@ -1,0 +1,236 @@
+import SwiftUI
+import TesseraCore
+
+/// The rows of the apps list (sheet 205), pure so they test without a screen: each app in the edge order with the one
+/// line it has to say today, or a quiet line when it has nothing. Core masks private things and keeps Money to a due
+/// word before the clause gets here. Core's AppSummaryLine replaces the clause here when it lands.
+@MainActor
+enum AppsListRows {
+    struct Row: Identifiable, Equatable {
+        let app: HomeApp
+        let summary: String
+        let opens: HomeSentence.Opens?
+        var id: HomeApp {
+            app
+        }
+    }
+
+    static let quiet = "Nothing planned"
+
+    static func home(_ app: AppSummaryApp) -> HomeApp {
+        switch app {
+        case .training: .training
+        case .kitchen: .kitchen
+        case .routines: .routines
+        case .tasks: .tasks
+        case .notes: .notes
+        case .lists: .lists
+        case .money: .money
+        }
+    }
+
+    /// One row per app, in Core's order. An app whose line is missing (Core omits Money and Routines when it did not
+    /// read their source) still has its row, name only, and still opens. A private top item already reads "Private".
+    static func make(_ lines: [AppSummaryLine]) -> [Row] {
+        AppSummaryApp.allCases.map { app in
+            let line = lines.first { $0.app == app }
+            return Row(app: home(app), summary: line.map { $0.text.isEmpty ? quiet : $0.text } ?? "",
+                       opens: line?.opens)
+        }
+    }
+
+    /// A fact that fits one short line: cut at a word edge, never with an ellipsis.
+    static func fit(_ text: String, limit: Int = 38) -> String {
+        guard text.count > limit else { return text }
+        let head = String(text.prefix(limit))
+        // The cut lands on a space: every word in the head is whole.
+        let nextIndex = text.index(text.startIndex, offsetBy: limit)
+        if text[nextIndex] == " " {
+            return head.trimmingCharacters(in: CharacterSet(charactersIn: " ,.;:"))
+        }
+        if let space = head.lastIndex(of: " ") {
+            return String(head[..<space]).trimmingCharacters(in: CharacterSet(charactersIn: " ,.;:"))
+        }
+        // One long word: hard cut at the limit, no ellipsis.
+        return head
+    }
+
+    /// How far row `index` sits from the middle in the ring, the nearer way round: from -(count - 1) / 2 through count
+    /// / 2
+    /// (an even count puts its far row on the positive side).
+    static func relative(_ index: Int, middle: Int, count: Int) -> Int {
+        guard count > 0 else { return 0 }
+        var offset = ((index - middle) % count + count) % count
+        if offset > count / 2 {
+            offset -= count
+        }
+        return offset
+    }
+
+    /// The app that sits `offset` rows from `index` in a ring: the list wraps round.
+    static func wrapped(_ index: Int, _ offset: Int, count: Int) -> Int {
+        guard count > 0 else { return 0 }
+        return (((index + offset) % count) + count) % count
+    }
+}
+
+/// The apps menu under Next (sheet 205): a label "Apps" in ink 3 and a scroller of three 40 pt rows (more at large
+/// text) that snaps to the
+/// middle one and wraps round, with no ticks, dots or dividers. The middle row is the pick: its name swells 1.3x in its
+/// accent on the house spring and its one-line fact is revealed from the right with a clip, sliding 14 pt. The others
+/// show the name only, in ink 3. One tick per change. Tap the middle row to open it; tap another to bring it to the
+/// middle. Reduce Motion: no swell and no slide.
+struct AppsListSlot: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var door: HomeV2Door?
+    @State private var middle = 0
+    @State private var drag: CGFloat = 0
+    @State private var ticks = 0
+    /// The rows, read once per change in the model and not on every drag frame.
+    @State private var rows: [AppsListRows.Row] = []
+    /// 40 pt at the default size; the rows grow with the text.
+    @ScaledMetric(relativeTo: .body) private var rowHeight: CGFloat = 40
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+            Text("Apps")
+                .textRole(.label)
+                .foregroundStyle(Theme.Colors.inkTertiary)
+                .accessibilityAddTraits(.isHeader)
+            ZStack(alignment: .top) {
+                // Five rows are laid out so the ring has a row to bring in on each side while it moves.
+                // Rows keep their identity as the ring turns, so a settle rolls instead of hopping; the ones two or
+                // more away wait outside the frame.
+                ForEach(rows.indices, id: \.self) { index in
+                    let offset = AppsListRows.relative(index, middle: middle, count: rows.count)
+                    if abs(offset) <= 2 {
+                        line(rows[index], isMiddle: offset == 0, offset: offset)
+                            .offset(y: (CGFloat(offset) + 1) * rowHeight + drag)
+                            .transition(.identity)
+                    }
+                }
+            }
+            .frame(height: rowHeight * 3, alignment: .top)
+            .clipped()
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 8)
+                    .onChanged { drag = $0.translation.height.clamped(to: -rowHeight * 2 ... rowHeight * 2) }
+                    .onEnded { value in
+                        let steps = Int((-value.predictedEndTranslation.height / rowHeight).rounded())
+                        settle(by: max(-2, min(2, steps)), count: rows.count)
+                    }
+            )
+        }
+        .tesseraFeedback(.selection, trigger: ticks)
+        // Read again when the model changes and when the day turns over.
+        .task(id: "\(model.revision)-\(Calendar.current.startOfDay(for: AppClock.now).timeIntervalSince1970)") {
+            // The loaders run on this refresh only (a change in the model or the day), never per frame.
+            let now = AppClock.now
+            rows = AppsListRows.make(AppSummaryLines.lines(
+                engine: model.engine, plan: model.plan, moneyDue: .next(engine: model.engine, now: now),
+                routines: .make(engine: model.engine, now: now), now: now
+            ))
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityAdjustableAction { direction in
+            settle(by: direction == .increment ? 1 : -1, count: rows.count)
+        }
+        .fullScreenCover(item: $door) { door in
+            HomeV2DoorPage(door: door)
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    HStack {
+                        Button("‹ Home") { self.door = nil }
+                            .buttonStyle(InkLabelWordStyle())
+                            .frame(minWidth: 72, minHeight: 44, alignment: .leading)
+                        Spacer()
+                    }
+                    .padding(.horizontal, Theme.Spacing.gutter - 8)
+                }
+        }
+    }
+
+    private func line(_ row: AppsListRows.Row, isMiddle: Bool, offset: Int) -> some View {
+        Button {
+            if isMiddle {
+                open(row)
+            } else {
+                settle(by: offset, count: rows.count)
+            }
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
+                Text(row.app.rawValue)
+                    // Laid out at the swelled size always, so the width is reserved; the others sit scaled down and
+                    // the pick springs up to full size.
+                    .font(Theme.voice(size: reduceMotion ? 18 : 18 * 1.3).weight(isMiddle ? .semibold : .regular))
+                    .scaleEffect(isMiddle || reduceMotion ? 1 : 1 / 1.3, anchor: .leading)
+                    .foregroundStyle(isMiddle ? row.app.accent : Theme.Colors.inkTertiary)
+                    .fixedSize()
+                if isMiddle, !row.summary.isEmpty {
+                    Spacer(minLength: Theme.Spacing.s)
+                    Text(AppsListRows.fit(row.summary, limit: typeSize.isAccessibilitySize ? 22 : 38))
+                        .textRole(.data)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.trailing)
+                        .minimumScaleFactor(0.8)
+                        .id(row.app)
+                        .transition(reduceMotion ? .identity : .reveal)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isMiddle && !row.summary.isEmpty ? "\(row.app.rawValue), \(row.summary)" : row.app.rawValue)
+        .accessibilityHint(isMiddle ? "Opens \(row.app.rawValue)" : "Brings it to the middle")
+    }
+
+    /// A tap on the middle row: the object its line names, else the app.
+    private func open(_ row: AppsListRows.Row) {
+        if case let .object(id)? = row.opens {
+            model.path.append(Route.object(id))
+        } else {
+            door = .app(row.app)
+        }
+    }
+
+    private func settle(by steps: Int, count: Int) {
+        defer {
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { drag = 0 }
+        }
+        guard steps != 0, count > 0 else { return }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            middle = AppsListRows.wrapped(middle, steps, count: count)
+            drag = 0
+        }
+        ticks += 1
+    }
+}
+
+private extension CGFloat {
+    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
+        Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
+    }
+}
+
+/// A fact revealed from the right with a clip, sliding 14 pt (no fade).
+private struct RevealRight: ViewModifier {
+    var progress: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .offset(x: (1 - progress) * 14)
+            .mask(alignment: .trailing) {
+                Rectangle().scaleEffect(x: max(progress, 0.001), anchor: .trailing)
+            }
+    }
+}
+
+private extension AnyTransition {
+    static var reveal: AnyTransition {
+        .modifier(active: RevealRight(progress: 0), identity: RevealRight(progress: 1))
+    }
+}

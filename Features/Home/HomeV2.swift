@@ -107,7 +107,7 @@ struct HomeV2View: View {
 }
 
 /// The page a door opens: Review's page, or an app's landing (or its page where the landing isn't built yet).
-private struct HomeV2DoorPage: View {
+struct HomeV2DoorPage: View {
     let door: HomeV2Door
     @State private var link: HomeLink?
 
