@@ -168,6 +168,17 @@ struct MakeAKindTests {
         #expect(object.isDeleted)
     }
 
+    @Test func theSourceLineReadsPrivateNoteOnceTheNoteTurnsPrivate() throws {
+        let kind = try engine.perform(MakeKind(word: "Landlord", fields: ["Details"]), by: .user).output
+        let source = try note("Heat is out again\nCalled twice this week")
+        let object = try engine.perform(KeepNoteAsObject(note: source.id, kind: kind.id), by: .user).output
+        #expect(KindSource.line(of: object, store: store, classes: engine.classes) == "Heat is out again")
+        try store.set("isPrivate", to: .bool(true), on: source)
+        #expect(KindSource.line(of: object, store: store, classes: engine.classes) == "Private note")
+        store.softDelete(source)
+        #expect(KindSource.line(of: object, store: store, classes: engine.classes) == nil)
+    }
+
     @Test func aKindWithoutSourceNoteStillKeepsAndTheNoteIsUntouched() throws {
         let kind = try engine.perform(MakeKind(word: "Old", fields: ["Details"]), by: .user).output
         for field in kind.ownFields ?? [] where field.key == "sourceNote" {
