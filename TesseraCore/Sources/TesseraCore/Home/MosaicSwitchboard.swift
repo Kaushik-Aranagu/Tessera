@@ -34,7 +34,8 @@ public enum MosaicCueKind: String, CaseIterable, Sendable {
 public struct MosaicCue: Equatable, Sendable {
     public let kind: MosaicCueKind
     public let at: Date
-    /// Which event this is, so the same one never plays twice.
+    /// Which event this is, so the same one never plays twice. An id or a time key only ("timer-<id>",
+    /// "sunrise-<day>"), never a title or any of his words.
     public let key: String
     /// A cue that needs Claude is held back unless asksClaude is on ("Tess asks Claude").
     public let needsClaude: Bool
@@ -149,7 +150,7 @@ public struct MosaicSwitchState: Equatable, Sendable {
 public enum MosaicSwitchboard {
     public static let queueLimit = 3
 
-    public static func step(_ state: MosaicSwitchState, cues: [MosaicCue], now _: Date, quiet: Bool,
+    public static func step(_ state: MosaicSwitchState, cues: [MosaicCue], quiet: Bool,
                             asksClaude: Bool = false, weatherOn: Bool = false,
                             overrides: [MosaicWire] = []) -> (state: MosaicSwitchState, directive: MosaicDirective)
     {
@@ -159,21 +160,23 @@ public enum MosaicSwitchboard {
             // Only a timer and a reminder survive the night; the rest are not replayed at seven.
             next.queue.removeAll { !$0.name.playsInQuietHours }
         }
+        var batch = Set<String>()
+        // Oldest first; the first of two cues with the same key is the one that counts.
         let usable = cues
-            .filter { !next.seen.contains($0.key) }
+            .filter { !next.seen.contains($0.key) && batch.insert($0.key).inserted }
             .filter { !$0.needsClaude || asksClaude }
             .filter { $0.source != .outside || weatherOn }
-            .sorted { ($0.source.rawValue, $1.at) < ($1.source.rawValue, $0.at) }
-        // Moments queue in the order they arrived; the rank decides which queued one plays next.
+            .sorted { $0.at < $1.at }
         var moodCues: [(MosaicCue, MosaicMood, MosaicHandOver)] = []
-        for cue in usable.sorted(by: { $0.at < $1.at }) {
+        for cue in usable {
             guard let wire = MosaicWires.wire(for: cue.kind, overrides: overrides) else { continue }
             switch wire.effect {
             case let .moment(name):
+                next.seen.insert(cue.key)
+                // Dropped for the night: seen, so it does not replay at seven.
                 if quiet, !name.playsInQuietHours {
                     continue
                 }
-                next.seen.insert(cue.key)
                 let queued = MosaicQueuedMoment(name: name, handBack: wire.changeover, key: cue.key,
                                                 sourceRank: cue.source.rawValue)
                 next.queue.append(queued)
@@ -182,6 +185,7 @@ public enum MosaicSwitchboard {
                 }
             case let .mood(mood):
                 if quiet, mood != .night {
+                    next.seen.insert(cue.key)
                     continue
                 }
                 moodCues.append((cue, mood, wire.changeover))
