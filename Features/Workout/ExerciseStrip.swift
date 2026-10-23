@@ -44,8 +44,8 @@ struct ExerciseStrip: View {
                 let sweep = reduceMotion ? -1 : min(time / 0.3, 1)
                 GeometryReader { proxy in
                     ZStack(alignment: .leading) {
-                        Paint.live
-                        LinearGradient(colors: [Paint.live.opacity(0), Paint.sheen, Paint.live.opacity(0)],
+                        LiveV2.accent
+                        LinearGradient(colors: [LiveV2.accent.opacity(0), Paint.sheen, LiveV2.accent.opacity(0)],
                                        startPoint: .leading, endPoint: .trailing)
                             .frame(width: proxy.size.width * 0.5)
                             .offset(x: proxy.size.width * (1.5 * sweep) - proxy.size.width * 0.5)
@@ -54,7 +54,7 @@ struct ExerciseStrip: View {
                     .clipped()
                 }
             }
-            .shadow(color: Paint.live.opacity(0.8), radius: 5)
+            .shadow(color: LiveV2.accent.opacity(0.8), radius: 5)
         }
     }
 }
@@ -108,7 +108,7 @@ struct RunningOrderSheet: View {
             if let onFinish {
                 // Done for today with exercises left: what's logged is saved, the rest is simply not done.
                 // Silent: finish(early:) plays the done pattern, the moment's one haptic.
-                PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true,
+                PaintKey(paint: LiveV2.accent, duration: 0.7, height: 64, drift: 20, isSilent: true,
                          hint: "Finishes the workout", action: onFinish)
                 { _ in
                     Text("Finish here")
@@ -147,9 +147,9 @@ struct RunningOrderSheet: View {
         let name = session.exerciseClass(of: entry)?.name ?? "Exercise"
         let done = session.isFinished(entry)
         return HStack(spacing: 14) {
-            Paint.live
+            LiveV2.accent
                 .frame(width: 3, height: 30)
-                .shadow(color: Paint.live.opacity(0.8), radius: 5)
+                .shadow(color: LiveV2.accent.opacity(0.8), radius: 5)
                 .opacity(isCurrent ? 1 : 0)
             Text(name)
                 .numeral(28, weight: .medium)
