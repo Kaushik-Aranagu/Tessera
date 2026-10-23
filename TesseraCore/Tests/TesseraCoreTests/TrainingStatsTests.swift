@@ -371,6 +371,14 @@ struct TrainingStatsTests {
         #expect(stats.usualMinutes(of: other) == nil)
     }
 
+    @Test func aLogRowCarriesItsWorkoutIdEvenWhenPrivate() throws {
+        let plain = try session(daysAgo: 3, sets: [(60, 5)])
+        let secret = try session(daysAgo: 2, sets: [(60, 5)], title: "Knee rehab day")
+        let rows = stats.logMonths(now: now, calendar: calendar).flatMap(\.rows)
+        #expect(Set(rows.map(\.workout)) == [plain.id, secret.id])
+        #expect(rows.first { $0.workout == secret.id }?.title == "Private workout")
+    }
+
     @Test func nothingHereReachesClaude() throws {
         let sources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().appending(path: "Sources/TesseraTess")

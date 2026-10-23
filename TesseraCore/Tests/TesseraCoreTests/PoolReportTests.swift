@@ -201,6 +201,27 @@ struct PoolReportTests {
         #expect(report.sentence(nothingLate: false).text == "Private pool has $150.00.")
     }
 
+    @Test func aSpendLineMasksWordByWordAndAnArchivedPoolIsSaidToCount() throws {
+        let checking = try pool("US checking", opening: "100")
+        let spend = try engine.perform(
+            LogSpend(amount: 80, typed: "80", note: "ozempic pharmacy run", pool: checking.id),
+            by: .user
+        ).output
+        let line = try #require(report().newLine(for: spend))
+        #expect(line == "Private spend $80.00, US checking." && !line.lowercased().contains("ozempic"))
+        #expect(report().archivedNote() == nil)
+        try engine.perform(ArchivePool(pool: checking.id), by: .user)
+        #expect(report().archivedNote() == "Archived pools are still counted.")
+        #expect(report().totals().map(\.text) == ["Dollars $20.00"])
+    }
+
+    @Test func wholeDollarsAreFormattedDirectly() throws {
+        #expect(try PoolFormat.wholeDollars(#require(Decimal(string: "1136.33"))) == "$1,136")
+        #expect(try PoolFormat.wholeDollars(#require(Decimal(string: "1136.5"))) == "$1,137")
+        #expect(PoolFormat.wholeDollars(-40) == "-$40" && PoolFormat.wholeDollars(0) == "$0")
+        #expect(PoolFormat.wholeDollars(826_500, lakh: true) == "$8,26,500")
+    }
+
     // MARK: Walls
 
     @Test func widgetsAndLiveActivitiesNeverMentionAPool() throws {
