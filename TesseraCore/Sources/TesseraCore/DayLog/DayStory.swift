@@ -127,7 +127,7 @@ public enum DayStory {
         "startCookSession", "setServeTime", "addDish", "dropDish", "advanceDishStep", "pauseCook", "resumeCook",
         "finishCookSession",
         // Money pools: amounts and pool names never reach the Day log.
-        "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool",
+        "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool", "repeatWorkout",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).

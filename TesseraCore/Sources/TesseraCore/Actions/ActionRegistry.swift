@@ -37,7 +37,7 @@ public enum ActionRegistry {
         StartCookSession.descriptor, SetServeTime.descriptor, AddDish.descriptor, DropDish.descriptor,
         AdvanceDishStep.descriptor, PauseCook.descriptor, ResumeCook.descriptor, FinishCookSession.descriptor,
         CreatePool.descriptor, LogInflow.descriptor, ReassignSpend.descriptor, LogMove.descriptor,
-        RecordRate.descriptor, ArchivePool.descriptor,
+        RecordRate.descriptor, ArchivePool.descriptor, RepeatWorkout.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
@@ -162,6 +162,7 @@ public enum ActionRegistry {
         LogMove.descriptor.name: { try decode(LogMove.self, LogMove.descriptor.name, $0) },
         RecordRate.descriptor.name: { try decode(RecordRate.self, RecordRate.descriptor.name, $0) },
         ArchivePool.descriptor.name: { try decode(ArchivePool.self, ArchivePool.descriptor.name, $0) },
+        RepeatWorkout.descriptor.name: { try decode(RepeatWorkout.self, RepeatWorkout.descriptor.name, $0) },
         QueueBook.descriptor.name: { try decode(QueueBook.self, QueueBook.descriptor.name, $0) },
         EditBook.descriptor.name: { try decode(EditBook.self, EditBook.descriptor.name, $0) },
         StartReading.descriptor.name: { try decode(StartReading.self, StartReading.descriptor.name, $0) },
