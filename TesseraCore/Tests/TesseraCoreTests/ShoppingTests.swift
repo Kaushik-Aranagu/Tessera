@@ -128,3 +128,83 @@ struct ShoppingTests {
         #expect(ProcessTable(engine: engine).running() == nil)
     }
 }
+
+/// FinishShop(putAway:): the places are set and the shop finished as one change.
+@MainActor
+struct FinishShopPutAwayTests {
+    let store = ObjectStore.open(inMemory: true)
+    let engine: ActionEngine
+    let places: PantryPlaces
+
+    init() throws {
+        engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        places = PantryPlaces(store: store, classes: engine.classes)
+        places.ensureDefaults()
+    }
+
+    func ingredient(_ name: String) throws -> ObjectRecord {
+        try store.create(#require(engine.classes[.ingredient]), title: name)
+    }
+
+    func place(_ key: String) throws -> ObjectRecord {
+        try #require(store.object(id: PantryPlaces.defaultID(key)))
+    }
+
+    func startedShop() throws {
+        try engine.perform(AddGroceries(lines: ["milk", "bread"]), by: .user)
+        try engine.perform(StartShop(), by: .user)
+        let groceries = Groceries(store: store, classes: engine.classes)
+        for row in groceries.shoppingOrder() {
+            try engine.perform(CheckListItem(item: row.id), by: .user)
+        }
+    }
+
+    @Test func placesAndFinishAreOneRecordAndOneUndo() throws {
+        let milk = try ingredient("milk"), fridge = try place("fridge")
+        try startedShop()
+        let before = engine.history(limit: 500).count
+        let done = try engine.perform(
+            FinishShop(putAway: [ShopPutAway(item: milk.id, place: fridge.id, section: "Door")]), by: .user
+        )
+        #expect(engine.history(limit: 500).count == before + 1)
+        #expect(places.place(of: milk)?.id == fridge.id && places.section(of: milk) == "Door")
+        #expect(ProcessTable(engine: engine).running() == nil)
+        engine.undo(done.record)
+        #expect(places.place(of: milk) == nil)
+        #expect(ProcessTable(engine: engine).running() != nil)
+        #expect(Groceries(store: store, classes: engine.classes).shoppingOrder().isEmpty)
+    }
+
+    @Test func aFailedFinishSetsNoPlaces() throws {
+        let milk = try ingredient("milk"), fridge = try place("fridge")
+        try startedShop()
+        let before = engine.history(limit: 500).count
+        #expect(throws: (any Error).self) {
+            try engine.perform(FinishShop(putAway: [
+                ShopPutAway(item: milk.id, place: fridge.id),
+                ShopPutAway(item: UUID(), place: fridge.id),
+            ]), by: .user)
+        }
+        #expect(places.place(of: milk) == nil)
+        #expect(ProcessTable(engine: engine).running() != nil)
+        #expect(engine.history(limit: 500).count == before)
+    }
+
+    @Test func aPlainFinishAndTheToolCallStillWork() throws {
+        try startedShop()
+        let record = try engine.perform(named: "finishShop", arguments: Data("{}".utf8), by: .user)
+        #expect(record.action == "finishShop")
+        #expect(ProcessTable(engine: engine).running() == nil)
+    }
+
+    @Test func aToolCallCannotSetPlaces() throws {
+        let milk = try ingredient("milk"), fridge = try place("fridge")
+        try startedShop()
+        #expect(!FinishShop.descriptor.parameters.contains { $0.name == "putAway" })
+        let json = #"{"putAway":[{"item":"\#(milk.id.uuidString)","place":"\#(fridge.id.uuidString)"}]}"#
+        try engine.perform(named: "finishShop", arguments: Data(json.utf8), by: .tess)
+        // The shop finishes; the unknown key is dropped and no place is set.
+        #expect(ProcessTable(engine: engine).running() == nil)
+        #expect(places.place(of: milk) == nil)
+    }
+}
