@@ -30,6 +30,8 @@ struct HomeMosaicPage: View {
     @State private var controller = MosaicScreenController()
     @State private var scene: MosaicScene = .day
     @State private var coreTop: CGFloat = 0
+    /// The scroll view's top in the window: content-space frames plus this are screen points at rest.
+    @State private var scrollTop: CGFloat = 0
     @State private var shield: [CGRect] = []
 
     private var layerOn: Bool {
@@ -46,7 +48,7 @@ struct HomeMosaicPage: View {
                 MosaicSentence(pickedClauses: momentClause.map { [$0] } ?? pick?.clauses)
                     .mosaicShield()
                 VStack(alignment: .leading, spacing: 0) {
-                    MosaicSlot(coreTop: $coreTop)
+                    MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption)
                         .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
                     if !caption.isEmpty {
                         Text(caption)
@@ -74,10 +76,19 @@ struct HomeMosaicPage: View {
         // Sheet 202: the mosaic is the page's own pixels, edge to edge, behind everything; every touch leans it.
         .background {
             if layerOn, let facts, let mood = pick?.mood {
-                MosaicHomeLayer(facts: facts, scene: $scene, controller: controller, coreTop: coreTop, shield: shield,
-                                mood: mood, moment: moment, caption: $caption)
+                MosaicHomeLayer(
+                    facts: facts,
+                    scene: $scene,
+                    controller: controller,
+                    coreTop: ((scrollTop + coreTop) / 4).rounded() * 4,
+                    shield: shield.map { $0.offsetBy(dx: 0, dy: scrollTop) },
+                    mood: mood,
+                    moment: moment,
+                    caption: $caption
+                )
             }
         }
+        .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { scrollTop = $0 }
         .onPreferenceChange(MosaicShieldKey.self) { shield = $0 }
         .mosaicTouchFeed(controller, enabled: layerOn)
         .onAppear { mosaicLay = { controller.lay(from: $0, tone: .glaze) } }
@@ -122,6 +133,8 @@ struct HomeMosaicPage: View {
     private func refreshPick() {
         guard HomeMosaic.moodsIsOn else {
             pick = nil
+            // The plain 199 mosaic still needs the day's facts.
+            facts = HomeMosaic.isOn ? MosaicFacts.make(engine: model.engine, now: AppClock.now) : nil
             return
         }
         let now = AppClock.now

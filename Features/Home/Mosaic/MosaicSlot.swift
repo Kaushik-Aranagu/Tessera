@@ -3,23 +3,31 @@ import TesseraCore
 
 /// The mosaic's place on Home. With the moods On (sheet 202) Builder A's layer draws behind the whole page, edge to
 /// edge, and this only reserves the core's 248x160 frame, right-aligned, so the text sits clear of it; it reports where
-/// the core's top is. Otherwise a full-width 250 pt gap, as before.
+/// the core's top is in the page's own (content) space, so scrolling never moves the field. With the moods Off the
+/// plain
+/// 199 mosaic (A's `MosaicView`) draws here, full width and 250 pt tall, as before.
 struct MosaicSlot: View {
-    /// Points from the top of the screen to this frame's top, for the layer.
+    /// Points from the top of the page's content to this frame's top, for the layer.
     @Binding var coreTop: CGFloat
+    var facts: MosaicFacts?
+    @Binding var scene: MosaicScene
+    @Binding var caption: String
 
     var body: some View {
-        Group {
-            if HomeMosaic.moodsIsOn {
-                Color.clear
-                    .frame(width: HomeMosaic.moodsMosaicSize.width, height: HomeMosaic.moodsMosaicSize.height)
-                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { coreTop = $0 }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            } else {
-                Color.clear.frame(height: HomeMosaic.mosaicHeight)
-            }
+        if HomeMosaic.moodsIsOn {
+            Color.clear
+                .frame(width: HomeMosaic.moodsMosaicSize.width, height: HomeMosaic.moodsMosaicSize.height)
+                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(HomeMosaicPage.space)).minY } action: {
+                    coreTop = $0
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .accessibilityHidden(true)
+        } else if let facts {
+            MosaicView(facts: facts, scene: $scene, caption: $caption)
+                .frame(height: HomeMosaic.mosaicHeight)
+        } else {
+            Color.clear.frame(height: HomeMosaic.mosaicHeight).accessibilityHidden(true)
         }
-        .accessibilityHidden(true)
     }
 }
 

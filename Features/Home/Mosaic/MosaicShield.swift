@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// The frames of what must stay readable on Home (the sentence, the caption, the Next rows, the apps menu), in window
-/// space. Builder A's mosaic layer caps the field behind each so the text never sits on bright pixels (sheet 202).
+/// The frames of what must stay readable on Home (the sentence, the caption, the Next rows, the apps menu), in the
+/// page's
+/// content space (the shield stays put while the page scrolls). Builder A's mosaic layer caps the field behind each so
+/// the text never sits on bright pixels (sheet 202).
 struct MosaicShieldKey: PreferenceKey {
     static let defaultValue: [CGRect] = []
 
@@ -15,7 +17,10 @@ extension View {
     func mosaicShield() -> some View {
         background {
             GeometryReader { proxy in
-                Color.clear.preference(key: MosaicShieldKey.self, value: [proxy.frame(in: .global)])
+                Color.clear.preference(
+                    key: MosaicShieldKey.self,
+                    value: [proxy.frame(in: .named(HomeMosaicPage.space))]
+                )
             }
         }
     }
