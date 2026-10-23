@@ -69,7 +69,7 @@ struct ExplainTests {
             "80: your last Bench Press, 80 for 6, the same weight until every set reaches the top of the range.")
     }
 
-    @Test func sessionLengthNamesTheRoutineOrItsLabel() throws {
+    @Test func sessionLengthNamesThePlainRoutineAndSaysNothingOfAPrivateOne() throws {
         let routine = try engine.perform(CreateRoutine(title: "Push A"), by: .user).output
         for day in [9.0, 6.0, 3.0] {
             try session(daysAgo: day, sets: [(60, 5), (60, 5)], routine: routine, minutes: 45)
@@ -79,8 +79,7 @@ struct ExplainTests {
         for day in [9.0, 6.0] {
             try session(daysAgo: day, sets: [(60, 5), (60, 5)], title: "Knee rehab day", routine: secret, minutes: 30)
         }
-        let masked = try #require(explain(.sessionLength(routine: secret.id)))
-        #expect(masked == "about 30 min: your last 2 Private workout sessions." && !masked.contains("Knee"))
+        #expect(explain(.sessionLength(routine: secret.id)) == nil)
         #expect(explain(.sessionLength(routine: UUID())) == nil)
     }
 

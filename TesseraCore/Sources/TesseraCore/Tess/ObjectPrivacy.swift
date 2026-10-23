@@ -115,6 +115,8 @@ public enum ObjectPrivacy {
             return flagged ? bookLabel : nil
         }
         // A workout or routine (OL01): its own title, its flag, or the routine a workout was made from.
+        // The `flagged` branch is unused here for now: Workout and Routine declare no isPrivate field. Privacy is by words,
+        // through the title and the routine link (decided Oct 22).
         if isA(.routine) || isA(.workout) {
             let routine = isA(.workout) ? store.linkedObjects("routine", of: object).first : nil
             let titles = [object.title] + (routine.map { [$0.title] } ?? [])

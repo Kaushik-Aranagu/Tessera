@@ -73,9 +73,11 @@ public enum Explain {
     {
         guard let routine = store.object(id: id), !routine.isDeleted else { return nil }
         let stats = TrainingStats(store: store, classes: classes)
-        guard let minutes = stats.usualMinutes(of: routine) else { return nil }
+        // The landing hides a private routine's minutes, so the number has nothing to explain.
+        guard ObjectPrivacy.shownLabel(of: routine, in: store, classes: classes) == nil,
+              let minutes = stats.usualMinutes(of: routine) else { return nil }
         let count = stats.finishedCount(of: routine, limit: 3)
-        let name = ObjectPrivacy.shownLabel(of: routine, in: store, classes: classes) ?? routine.title
+        let name = routine.title
         return "about \(HouseTime.minutes(minutes)): your last \(count) \(name) \(count == 1 ? "session" : "sessions")."
     }
 
