@@ -59,7 +59,7 @@ struct PrivacyPageTests {
         #expect(lines.count == 4)
         #expect(lines[1] == "Never leaves this phone: health, calendar, body, calories, money amounts.")
         #expect(lines[2] == "Tess asks Claude: Off.")
-        #expect(PrivacyPage.askClaudeLine(on: true).hasPrefix("Tess asks Claude: On."))
+        #expect(PrivacyPage.askClaudeLine(on: true) == "Tess asks Claude: On.")
         #expect(!lines.joined().lowercased().contains("turn off"))
     }
 
@@ -94,5 +94,23 @@ struct PrivacyPageTests {
         _ = try make(.note, "Lexapro dose")
         let after = try #require(BackupWords.thingCount(in: store.context))
         #expect(after == before + 1)
+    }
+
+    @Test func copiesSayOnlyWhatTheyLeaveOut() {
+        #expect(BackupWords.notIncluded(leavingOutPrivate: false) == "Not included: health and calendar.")
+        #expect(BackupWords.notIncluded(leavingOutPrivate: true)
+            == "Not included: health, calendar, body and private things.")
+    }
+
+    @Test func moneyCookingAndPlacesAreCountedByKindNeverByName() throws {
+        let checking = try engine.perform(CreatePool(name: "US checking", opening: "100"), by: .user).output
+        try engine.perform(LogInflow(amount: "50", pool: checking.id), by: .user)
+        try engine.perform(LogSpend(amount: 12, typed: "12", pool: checking.id), by: .user)
+        _ = try make(.place, "Dr Lin clinic")
+        let facts = PrivacyPage.facts(engine: engine)
+        let nouns = Set(facts.counts.map(\.noun))
+        #expect(nouns.contains("pool") && nouns.contains("deposit") && nouns.contains("place"))
+        #expect(facts.total == facts.counts.reduce(0) { $0 + $1.count })
+        #expect(!PrivacyPage.countsLine(facts).contains("Lin"))
     }
 }
