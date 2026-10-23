@@ -14,7 +14,7 @@ public struct PoolBook {
     }
 
     /// Typed digits as an exact amount: "1,850.00" and "82650" read; anything else is 0.
-    public static func decimal(_ typed: String?) -> Decimal {
+    public nonisolated static func decimal(_ typed: String?) -> Decimal {
         guard let typed else { return 0 }
         let clean = typed.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: "")
         guard clean.wholeMatch(of: /-?\d+(?:\.\d+)?/) != nil,
@@ -71,6 +71,49 @@ public struct PoolBook {
             let into = store.linkedObjects("toPool", of: move).first
             return (pool.map { out?.id == $0.id } ?? true) && (target.map { into?.id == $0.id } ?? true)
         }
+    }
+
+    /// The pool a new row defaults to for a currency: the one used last (an inflow, a spend or an arrival), else the
+    /// only pool of that currency, else nil. Archived and deleted pools are not offered.
+    public func lastUsedPool(currency: String) -> ObjectRecord? {
+        let live = pools()
+            .filter { store.value("archivedAt", of: $0)?.dateValue == nil && self.currency(of: $0) == currency }
+        guard !live.isEmpty else { return nil }
+        var latest: [UUID: Date] = [:]
+        func touch(_ pool: ObjectRecord?, _ at: Date) {
+            if let pool {
+                latest[pool.id] = max(latest[pool.id] ?? .distantPast, at)
+            }
+        }
+        for key in [SystemCatalog.Key.inflow, .spend] {
+            guard let classDef = classes[key] else { continue }
+            for row in store.objects(of: classDef) where !row.isDeleted {
+                touch(store.linkedObjects("pool", of: row).first, row.createdAt)
+            }
+        }
+        for move in moves() {
+            touch(store.linkedObjects("toPool", of: move).first, move.createdAt)
+        }
+        if let used = live.filter({ latest[$0.id] != nil })
+            .max(by: { latest[$0.id] ?? .distantPast < latest[$1.id] ?? .distantPast })
+        {
+            return used
+        }
+        return live.count == 1 ? live[0] : nil
+    }
+
+    /// Spends logged before pools, or with none: summed per currency code ("USD" for unmarked). Derived, never
+    /// written: nothing about an old spend is rewritten.
+    public func spendsWithNoPool() -> [String: Decimal] {
+        guard let spendClass = classes[.spend] else { return [:] }
+        var sums: [String: Decimal] = [:]
+        for spend in store.objects(of: spendClass)
+            where !spend.isDeleted && store.linkedObjects("pool", of: spend).isEmpty
+        {
+            let code = store.value("currency", of: spend)?.stringValue.flatMap { $0.isEmpty ? nil : $0 } ?? "USD"
+            sums[code, default: 0] += MoneyAmount.parse(store.value("typed", of: spend)?.stringValue ?? "")?.amount ?? 0
+        }
+        return sums
     }
 
     /// opening + inflows - spends - what left in moves + what arrived in moves. Archived and deleted rows count as

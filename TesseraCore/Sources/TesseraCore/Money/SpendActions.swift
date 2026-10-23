@@ -12,6 +12,7 @@ public struct LogSpend: EngineAction {
             .init("currency", .string, "EUR, GBP, USD or INR, only if said", required: false),
             .init("note", .string, "What it was for, e.g. lunch with sam", required: false),
             .init("spentAt", .date, "When; defaults to now", required: false),
+            .init("pool", .object, "The money pool it came out of", required: false),
         ], isOfferedToModel: false
     )
 
@@ -21,10 +22,17 @@ public struct LogSpend: EngineAction {
     public var note: String?
     public var spentAt: Date?
     public var about: [UUID]?
+    /// The pool it came out of. Its currency must match; with none typed the spend takes the pool's.
+    public var pool: UUID?
+    /// With Money pools on: no pool given means the one used last for the currency, else "Unassigned". Off, a spend
+    /// touches no pool at all.
+    public var autoPool: Bool?
 
     public init(amount: Double, typed: String? = nil, currency: String? = nil, note: String? = nil,
-                spentAt: Date? = nil, about: [UUID]? = nil)
+                spentAt: Date? = nil, about: [UUID]? = nil, pool: UUID? = nil, autoPool: Bool? = nil)
     {
+        self.pool = pool
+        self.autoPool = autoPool
         self.amount = amount
         self.typed = typed
         self.currency = currency
@@ -50,10 +58,28 @@ public struct LogSpend: EngineAction {
         let shown = typed?.trimmingCharacters(in: .whitespaces).nilIfEmpty
             ?? MoneyAmount.format(Decimal(string: String(amount)) ?? Decimal(amount))
         let words = (note ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        // The pool comes first, so a mismatch refuses before anything is written.
+        var currencyShown = currency?.uppercased() ?? ""
+        var target: ObjectRecord?
+        if let pool {
+            let found = try transaction.object(pool, is: .pool)
+            let held = PoolRules.code(of: found, in: transaction.store)
+            if !currencyShown.isEmpty, currencyShown != held {
+                throw PoolRules.mismatch(Self.descriptor.name, holds: held)
+            }
+            currencyShown = held == "USD" && currencyShown.isEmpty ? "" : held
+            target = found
+        } else if autoPool == true {
+            let code = PoolRules.currencyCode(currencyShown)
+            target = try transaction.lastUsedPool(currency: code) ?? transaction.unassignedPool(currency: code)
+        }
         let spend = try transaction.create(transaction.classDef(.spend), title: Self.title(typed: shown, note: words))
+        if let target {
+            try transaction.setLinks("pool", on: spend, to: [target])
+        }
         try transaction.set("amount", to: .number(amount), on: spend)
         try transaction.set("typed", to: .text(shown), on: spend)
-        try transaction.set("currency", to: .text(currency?.uppercased() ?? ""), on: spend)
+        try transaction.set("currency", to: .text(currencyShown), on: spend)
         try transaction.set("note", to: .text(words), on: spend)
         try transaction.set("category", to: .text(Self.category(of: words)), on: spend)
         try transaction.set("spentAt", to: .date(spentAt ?? .now), on: spend)
