@@ -8,6 +8,9 @@ struct MosaicSentence: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openHomeLink) private var openLink
 
+    /// Core's picked lines (sheet 200); nil draws the day sentence's own clauses.
+    var pickedLines: [String]?
+
     static let size: CGFloat = 24
     static let lineGap: CGFloat = 4
 
@@ -19,9 +22,10 @@ struct MosaicSentence: View {
         if HomeMosaic.moodsIsOn {
             // Sheet 200: the same clauses as a departure board (Core's MosaicMoodPicker lines replace them when it
             // lands).
-            let lines = clauses.isEmpty
-                ? [[DepartureSegment(text: HomeSentence.quietDay, kind: .plain)]]
-                : clauses.map(DepartureLines.segments(of:))
+            let lines = pickedLines.map { $0.map { [DepartureSegment(text: $0, kind: .plain)] } }
+                ?? (clauses.isEmpty
+                    ? [[DepartureSegment(text: HomeSentence.quietDay, kind: .plain)]]
+                    : clauses.map(DepartureLines.segments(of:)))
             DepartureBoard(lines: lines) { index in
                 if index < clauses.count {
                     DaySentence.open(clauses[index], model: model, openLink: openLink)
