@@ -43,13 +43,21 @@ enum AppsListRows {
     static func fit(_ text: String, limit: Int = 38) -> String {
         guard text.count > limit else { return text }
         let head = String(text.prefix(limit))
+        // The cut lands on a space: every word in the head is whole.
+        let nextIndex = text.index(text.startIndex, offsetBy: limit)
+        if text[nextIndex] == " " {
+            return head.trimmingCharacters(in: CharacterSet(charactersIn: " ,.;:"))
+        }
         if let space = head.lastIndex(of: " ") {
             return String(head[..<space]).trimmingCharacters(in: CharacterSet(charactersIn: " ,.;:"))
         }
+        // One long word: hard cut at the limit, no ellipsis.
         return head
     }
 
-    /// How far row `index` sits from the middle in the ring, in -count/2 ..< count/2 (the nearer way round).
+    /// How far row `index` sits from the middle in the ring, the nearer way round: from -(count - 1) / 2 through count
+    /// / 2
+    /// (an even count puts its far row on the positive side).
     static func relative(_ index: Int, middle: Int, count: Int) -> Int {
         guard count > 0 else { return 0 }
         var offset = ((index - middle) % count + count) % count
@@ -100,6 +108,7 @@ struct AppsListSlot: View {
                     if abs(offset) <= 2 {
                         line(rows[index], isMiddle: offset == 0, offset: offset)
                             .offset(y: (CGFloat(offset) + 1) * rowHeight + drag)
+                            .transition(.identity)
                     }
                 }
             }
@@ -133,9 +142,10 @@ struct AppsListSlot: View {
             HomeV2DoorPage(door: door)
                 .safeAreaInset(edge: .top, spacing: 0) {
                     HStack {
-                        Spacer()
-                        Button("Close") { self.door = nil }
+                        Button("‹ Home") { self.door = nil }
                             .buttonStyle(InkLabelWordStyle())
+                            .frame(minWidth: 72, minHeight: 44, alignment: .leading)
+                        Spacer()
                     }
                     .padding(.horizontal, Theme.Spacing.gutter - 8)
                 }

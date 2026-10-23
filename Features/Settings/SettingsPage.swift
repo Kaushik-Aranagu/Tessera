@@ -27,13 +27,13 @@ struct SettingsPage: View {
                 VStack(alignment: .leading, spacing: 0) {
                     if isPresented {
                         Button { dismiss() } label: {
-                            Text(v2 ? "‹ \(cameFrom)" : "‹ Review")
+                            Text("‹ \(cameFrom)")
                                 .textRole(v2 ? .data : .label)
                                 .foregroundStyle(Theme.Colors.inkSecondary)
                                 .frame(minHeight: 44)
                         }
                         .buttonStyle(HandleButtonStyle())
-                        .accessibilityLabel("Back to \(v2 ? cameFrom : "Review")")
+                        .accessibilityLabel("Back to \(cameFrom)")
                     }
                     if !v2 {
                         Text("how Tessera runs")
