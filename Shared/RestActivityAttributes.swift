@@ -39,6 +39,15 @@ struct RestActivityAttributes: ActivityAttributes {
         /// A private workout: the Lock Screen and Island show only "Private workout" and the rest timer, never the
         /// exercise, the weight, the reps or the set number. Optional: older states decode without it.
         var isPrivate: Bool?
+        /// Surfaces v2 (Design 142): sets done and planned for the exercise, drawn as set marks beside the rest
+        /// countdown. Set only while the Review switch "Surfaces v2" is On; nil draws the face as before.
+        var setsDone: Int?
+        var setsTotal: Int?
+
+        /// Whether the face draws set marks (today's grammar) instead of the old face.
+        var showsMarks: Bool {
+            setsTotal != nil
+        }
 
         /// Whether the face may show the exercise, the planned set and the set number.
         var showsSet: Bool {
