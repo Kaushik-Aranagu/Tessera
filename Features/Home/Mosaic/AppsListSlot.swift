@@ -182,19 +182,22 @@ struct AppsListSlot: View {
             settle(by: direction == .increment ? 1 : -1, count: rows.count)
         }
         .fullScreenCover(item: $door) { door in
+            // No visible "‹ Home" (Kaushik): the edge swipe goes back, and VoiceOver has a hidden Back to Home.
             HomeV2DoorPage(door: door)
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    HStack {
-                        Button { self.door = nil } label: {
-                            Text("‹ Home")
-                                .frame(minWidth: 72, minHeight: 44, alignment: .leading)
-                                .contentShape(Rectangle())
+                .background { EdgeSwipeBack() }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 24, coordinateSpace: .global).onEnded { value in
+                        if value.startLocation.x < 28, value.translation.width > 80 {
+                            self.door = nil
                         }
-                        .buttonStyle(InkLabelWordStyle())
-                        .accessibilityLabel("Back to Home")
-                        Spacer()
                     }
-                    .padding(.horizontal, Theme.Spacing.gutter - 8)
+                )
+                .accessibilityAction(.escape) { self.door = nil }
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    Button("Back to Home") { self.door = nil }
+                        .frame(width: 1, height: 1)
+                        .opacity(0.01)
+                        .accessibilityLabel("Back to Home")
                 }
         }
     }

@@ -269,6 +269,7 @@ struct ReviewSection: View {
                             Button(ReviewSwitchCopy.everythingAsBefore) {
                                 withTesseraAnimation(reduceMotion: reduceMotion) {
                                     choices.resetAll()
+                                    model.resetMosaicSetting()
                                     touched = nil
                                     resetLine = ReviewSwitchCopy.reset
                                 }

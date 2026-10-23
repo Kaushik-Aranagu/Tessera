@@ -187,6 +187,7 @@ final class AppModel {
             _ = try? StarterLists.installIfNeeded(store: store, classes: classes)
         }
         PantryPlaces(store: store, classes: classes).ensureDefaults() // Fridge, Freezer, Shelf, Counter, once (118)
+        applySettingsProcessWide()
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()
         // A cold launch is a foreground too: told now, so her first frame already has her eyes shut if she wakes.

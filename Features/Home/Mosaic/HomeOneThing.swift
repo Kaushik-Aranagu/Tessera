@@ -110,6 +110,9 @@ struct HomeOneThing: View {
 
     static let height: CGFloat = 196
     static let swipeDistance: CGFloat = 50
+    static let signTop: CGFloat = 62
+    /// The sign's width plus the 12 pt that every tier's text stops short of it.
+    static let signRoom: CGFloat = 72 + 12
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -120,6 +123,9 @@ struct HomeOneThing: View {
                 Color.clear.frame(width: 72, height: 72)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { onSlot($0) }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    // Sheet 213: the sign's top sits 62 pt below the space's top, so it centres at 98 pt, and it never
+                    // moves with the pages.
+                    .padding(.top, Self.signTop)
                     .accessibilityHidden(true)
                 Text("\(index + 1) of \(things.count)")
                     .font(Theme.numeral(14, weight: .light))
@@ -156,6 +162,7 @@ struct HomeOneThing: View {
             Spacer(minLength: 0)
         }
         .padding(.top, 4)
+        .padding(.trailing, Self.signRoom)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(thing.spoken)

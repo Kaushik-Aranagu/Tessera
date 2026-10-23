@@ -14,18 +14,15 @@ struct TodayRoomView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Button { dismiss() } label: {
-                    Text("‹ Home")
-                        .font(Theme.voice(size: 17))
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .frame(minHeight: 44)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Back to Home")
+                // No visible "‹ Home": the edge swipe goes back, and VoiceOver has a hidden Back to Home.
+                Button("Back to Home") { dismiss() }
+                    .frame(width: 1, height: 1)
+                    .opacity(0.01)
+                    .accessibilityLabel("Back to Home")
                 Text("Today")
                     .font(Theme.voice(size: 34).weight(.semibold))
                     .foregroundStyle(Theme.Colors.ink)
-                    .padding(.top, 8)
+                    .padding(.top, 44)
                     .accessibilityAddTraits(.isHeader)
                 if let today {
                     Text(today.factLine)
@@ -43,6 +40,14 @@ struct TodayRoomView: View {
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
         .background { EdgeSwipeBack() }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 24, coordinateSpace: .global).onEnded { value in
+                if value.startLocation.x < 28, value.translation.width > 80 {
+                    dismiss()
+                }
+            }
+        )
+        .accessibilityAction(.escape) { dismiss() }
         .onAppear(perform: load)
     }
 
@@ -51,7 +56,9 @@ struct TodayRoomView: View {
     static func forms(of name: String) -> [String] {
         let words = name.split(separator: " ").map(String.init)
         guard words.count > 1 else { return [name] }
-        let all = (1 ... words.count).reversed().map { words.prefix($0).joined(separator: " ") }
+        let all = (1 ... words.count).reversed().map { count in
+            count == words.count ? name : HomeBoard.trimTail(words.prefix(count).joined(separator: " "))
+        }
         // A shorter form never ends on a stop word ("at", "to", "for", ...).
         return all.enumerated().filter { $0.offset == 0 || !HomeBoard.endsOnStopWord($0.element) }.map(\.element)
     }

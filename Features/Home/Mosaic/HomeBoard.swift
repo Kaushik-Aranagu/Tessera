@@ -63,6 +63,15 @@ enum HomeBoard {
         CellMetrics.lineWidth(line.segments) <= width
     }
 
+    /// A cut never leaves a comma, semicolon, colon or dash at its end ("Packing," becomes "Packing").
+    static func trimTail(_ text: String) -> String {
+        var out = text
+        while let last = out.last, ",;:-–—".contains(last) {
+            out.removeLast()
+        }
+        return out.trimmingCharacters(in: .whitespaces)
+    }
+
     /// Words a cut never ends on: "Stretch at" reads as broken.
     static let stopWords: Set<String> = ["at", "to", "for", "with", "about", "and", "of"]
 
@@ -82,7 +91,7 @@ enum HomeBoard {
             var words = last.text.split(separator: " ").map(String.init)
             if words.count > 1 {
                 words.removeLast()
-                last.text = words.joined(separator: " ")
+                last.text = trimTail(words.joined(separator: " "))
                 line.segments.append(last)
             }
         }
