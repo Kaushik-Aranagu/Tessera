@@ -57,8 +57,9 @@ public enum HomeNotices {
         // The next thing he has on (a task, training or a routine), unless it is already a notice.
         // "Already a notice" is by time and app, not by words: a masked title would match nothing or the wrong thing.
         if let next = facts.pageNext, !notices.contains(where: { entry in
+            // The same minute AND the same app: two different things in one minute both stay.
             let sameTime = entry.notice.time.map { abs($0.timeIntervalSince(next.start)) < 60 } ?? false
-            return sameTime || entry.notice.text.hasPrefix(next.title)
+            return (sameTime && entry.notice.clause.app == next.app) || entry.notice.text.hasPrefix(next.title)
         }) {
             let text = "\(next.title) at \(HouseTime.clock(next.start, calendar: calendar))."
             let clause = HomeSentence.Clause(
@@ -79,7 +80,14 @@ public enum HomeNotices {
         let timed = ahead.filter { $0.notice.time != nil }.sorted { ($0.notice.time ?? now) < ($1.notice.time ?? now) }
         let untimed = ahead.filter { $0.notice.time == nil }.sorted { $0.order < $1.order }
         let behind = notices.filter { ($0.notice.time ?? now) < now }.sorted { $0.order < $1.order }
-        return Array((timed + untimed + behind).map(\.notice).prefix(max(0, limit)))
+        // Several private things all read "Private.": one is enough, the rest say nothing new.
+        var seenPrivate = false
+        let ordered = (timed + untimed + behind).map(\.notice).filter { notice in
+            guard notice.text == "Private." else { return true }
+            defer { seenPrivate = true }
+            return !seenPrivate
+        }
+        return Array(ordered.prefix(max(0, limit)))
     }
 
     private static func nextSun(_ facts: MosaicFacts) -> (name: String, time: Date)? {
