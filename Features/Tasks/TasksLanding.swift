@@ -60,6 +60,7 @@ private struct TasksLead: View {
             if let lead = front.lead {
                 TasksSwipeRow(line: lead, onOpen: { open(lead) }) {
                     TasksStruckText(text: lead.title, role: .title, ink: Theme.Colors.ink)
+                        .wordFit(lead.title)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if let step = front.firstStep {
@@ -134,6 +135,7 @@ private struct TasksRail: View {
             back: (title: "Tasks", action: back),
             pinned: RailPlace(id: "now", name: "Now", count: front.lines(in: "now").count),
             accent: Theme.Colors.ink,
+            subtitleColor: Theme.Colors.inkSecondary,
             places: [place("today", "Today"), place("soon", "Soon"), place("later", "Later")],
             open: $open,
             sectionStyle: .none,
