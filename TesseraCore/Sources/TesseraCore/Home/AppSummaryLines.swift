@@ -46,6 +46,17 @@ public enum AppSummaryLines {
         return hidden ? ("Private", true) : (title, false)
     }
 
+    /// At most `limit` characters, cut at the last whole word.
+    static func wordEdge(_ text: String, _ limit: Int) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count > limit else { return trimmed }
+        let cut = String(trimmed.prefix(limit))
+        if let space = cut.lastIndex(of: " ") {
+            return String(cut[..<space])
+        }
+        return cut
+    }
+
     // MARK: Apps
 
     private static func training(_ engine: ActionEngine, _ plan: ObjectRecord?, _ now: Date, _ calendar: Calendar)
@@ -106,27 +117,32 @@ public enum AppSummaryLines {
                               opens: .app(.kitchen), isPrivate: false)
     }
 
-    private static func routinesLine(_: ActionEngine, _ part: HomeSentence.RoutinesPart?, _: Date,
+    private static func routinesLine(_ engine: ActionEngine, _ part: HomeSentence.RoutinesPart?, _: Date,
                                      _ calendar: Calendar) -> AppSummaryLine
     {
         guard let part else {
             return AppSummaryLine(app: .routines, text: nothingPlanned, opens: .app(.routines), isPrivate: false)
         }
+        let store = engine.store, classes = engine.classes
         if part.facts.top.step != nil {
-            // Running: its own words, already masked ("Morning is running").
+            // Running: its own words ("Morning is running"); the name is its key word, checked like any title.
+            // The name is the key word; with none, the sentence itself is what gets checked.
+            let name = shown(part.facts.top.sentence.key ?? part.facts.top.sentence.text, in: store, classes: classes)
+            if name.1 {
+                return AppSummaryLine(app: .routines, text: "Private", opens: .app(.routines), isPrivate: true)
+            }
             return AppSummaryLine(app: .routines, text: part.facts.top.sentence.text, opens: .app(.routines),
-                                  isPrivate: part.facts.top.sentence.text.contains("Private"))
+                                  isPrivate: false)
         }
         guard let line = part.facts.lines.first else {
             return AppSummaryLine(app: .routines, text: nothingPlanned, opens: .app(.routines), isPrivate: false)
         }
-        let name = line.split(separator: ",").first.map(String.init) ?? line
-        let hidden = name.hasPrefix("Private")
-        var text = hidden ? "Private" : name
-        if let next = part.nextUsualStart {
+        let name = shown(line.split(separator: ",").first.map(String.init) ?? line, in: store, classes: classes)
+        var text = name.text
+        if !name.1, let next = part.nextUsualStart {
             text += " at \(HouseTime.clock(next, calendar: calendar))"
         }
-        return AppSummaryLine(app: .routines, text: text, opens: .app(.routines), isPrivate: hidden)
+        return AppSummaryLine(app: .routines, text: text, opens: .app(.routines), isPrivate: name.1)
     }
 
     private static func tasks(_ engine: ActionEngine, _ now: Date, _ calendar: Calendar) -> AppSummaryLine {
@@ -149,8 +165,13 @@ public enum AppSummaryLines {
               let note = store.objects(of: noteClass).filter({ !$0.isDeleted }).max(by: { $0.updatedAt < $1.updatedAt })
         else { return AppSummaryLine(app: .notes, text: "No notes yet", opens: .app(.notes), isPrivate: false) }
         let body = store.value("body", of: note)?.stringValue ?? note.title
-        let title = note.title.isEmpty ? String(body.prefix(30)) : note.title
-        let name = shown(title, in: store, classes: classes, of: note)
+        // The mask check runs on the whole note before anything is cut from it, then the title is the first line cut at
+        // a word edge.
+        let whole = shown(body, in: store, classes: classes, of: note)
+        let first = body.split(separator: "\n", maxSplits: 1).first.map(String.init) ?? body
+        // The stored title is cut mid-word with an ellipsis, so the first line of the note is cut here instead.
+        let title = wordEdge(first.isEmpty ? note.title : first, 30)
+        let name = whole.1 ? whole : shown(title, in: store, classes: classes, of: note)
         let text = name.1 ? "Private" : "\(name.text), edited at \(HouseTime.clock(note.updatedAt, calendar: calendar))"
         return AppSummaryLine(app: .notes, text: text, opens: name.1 ? .app(.notes) : .object(note.id),
                               isPrivate: name.1)
@@ -172,8 +193,12 @@ public enum AppSummaryLines {
         guard let due else {
             return AppSummaryLine(app: .money, text: "Nothing is due", opens: .app(.money), isPrivate: false)
         }
-        let name = shown(due.name, in: engine.store, classes: engine.classes)
         let day = TesseraDay.weekdayName(of: due.at, calendar: calendar)
+        // A digit in a bill's name could be an amount or a card's last digits, and no amount reaches Home.
+        guard !due.name.contains(where: \.isNumber) else {
+            return AppSummaryLine(app: .money, text: "A bill is due \(day)", opens: .app(.money), isPrivate: false)
+        }
+        let name = shown(due.name, in: engine.store, classes: engine.classes)
         // Words only: when a bill is due, never what it costs.
         return AppSummaryLine(app: .money, text: name.1 ? "Private bill is due \(day)" : "\(name.text) is due \(day)",
                               opens: .app(.money), isPrivate: name.1)
