@@ -180,6 +180,10 @@ struct NowPage: View {
     }
 
     private func rank(now: Date) -> [Pick] {
+        Self.rank(model: model, now: now, incumbent: incumbent)
+    }
+
+    static func rank(model: AppModel, now: Date, incumbent: UUID?) -> [Pick] {
         let picker = NowPicker(engine: model.engine)
         let plan = model.plan
         return picker.rank(RankContext(
