@@ -1,11 +1,10 @@
 import CoreGraphics
 import Foundation
 
-// Home is the mosaic (Design 202): the whole screen, edge to edge and under the safe areas, is a grid of 3.2 pt square
-// tiles on a 4 pt step. At rest every tile is the page ground a shade off (the screen's own pixels). The mood's field
-// has no frame: its core is the living window, centred at 56% of the width, and its intensity falls away outward
-// until, 28 tiles out, nothing is left. This file is the pure geometry: the grid, the core, the intensity, the dither
-// and the text shield.
+// Home is the mosaic (Design 202, Revision 2, the skin edge): a grid of 3.2 pt square tiles on a 4 pt step covers the
+// screen edge to edge, but only the mosaic's own space is drawn: its core is the living window, centred at 56% of the
+// width, and a rim of 12 tiles around it is solved so the window comes out of the page's own skin. This file is the
+// pure geometry: the grid, the core, the region and the text shield.
 
 struct MosaicTileRect: Equatable {
     var left: Int
@@ -30,8 +29,8 @@ struct MosaicScreenGrid: Equatable {
     /// The 4 pt step and the 3.2 pt square tile (corner 0).
     static let step: CGFloat = 4
     static let side: CGFloat = 3.2
-    /// Tiles the field reaches beyond the core before nothing is left.
-    static let reach = 28
+    /// The rim's width: the tiles around the window the skin edge is solved over (Revision 2).
+    static let reach = MosaicRim.reach
     /// The most tiles the core can ever span (the largest mood window), and the margin the region keeps around it.
     static let maxCore = (columns: 62, rows: 40)
     static let margin = reach + 2
@@ -84,65 +83,41 @@ struct MosaicScreenGrid: Equatable {
         MosaicTileRect(left: centreColumn - width / 2, top: coreTop, width: width, height: height)
     }
 
-    /// The fixed box of tiles the field can ever touch: the largest core plus the reach and a breath around it. The
-    /// engine keeps scene colours only for these tiles and draws only these (and a touch's pops).
+    /// The fixed box of tiles the mosaic can ever touch: the largest core plus the rim and a breath around it. The
+    /// engine keeps scene colours only for these tiles and draws only these.
     var region: MosaicTileRect {
         let width = Self.maxCore.columns + 2 * Self.margin
         let height = Self.maxCore.rows + 2 * Self.margin
         return MosaicTileRect(left: centreColumn - width / 2, top: coreTop - Self.margin, width: width, height: height)
     }
 
-    // MARK: Intensity
-
-    /// Intensity I of the field at a tile: 0.62 rising to 1.0 over the 7 tiles in from the core's edge; outside,
-    /// 0.62 x (1 - d/28)^1.35 where d is the tile distance from the core, and nothing at 28.
-    func intensity(column: Int, row: Int, core: MosaicTileRect) -> Double {
-        if core.contains(column: column, row: row) {
-            let depth = min(column - core.left, core.right - column, row - core.top, core.bottom - row)
-            return 0.62 + 0.38 * min(Double(depth) / 7, 1)
-        }
-        let dx = max(core.left - column, 0, column - core.right)
-        let dy = max(core.top - row, 0, row - core.bottom)
-        let distance = hypot(Double(dx), Double(dy))
-        guard distance < Double(Self.reach) else { return 0 }
-        return 0.62 * pow(1 - distance / Double(Self.reach), 1.35)
-    }
-
-    /// Outside the core a tile is drawn only when its hash is under I x 1.9: a dither, never an alpha fade or a blur.
-    static func shows(intensity: Double, hash: Double, insideCore: Bool) -> Bool {
-        insideCore || hash < intensity * 1.9
-    }
-
-    /// Scale 0.55 + 0.45 I.
-    static func scale(intensity: Double) -> Double {
-        0.55 + 0.45 * intensity
-    }
-
     // MARK: Text shield
 
-    /// The tiles under the sentence, the caption and the Next rows, padded by one tile: there the field is capped at
-    /// I x 0.22 so the words always read.
-    func shield(for rects: [CGRect]) -> Set<Int> {
-        var tiles: Set<Int> = []
+    static let shieldCap = 0.22
+    static let shieldFeather = 5
+
+    /// The tiles under the sentence, the caption and the Next rows, padded by one tile, mapped to how much of the
+    /// mosaic they keep: a fifth under the words, feathering back to all of it over 5 tiles, so the words always read
+    /// and the shield has no edge.
+    func shield(for rects: [CGRect]) -> [Int: Double] {
+        var levels: [Int: Double] = [:]
+        let feather = Self.shieldFeather
         for rect in rects where !rect.isEmpty {
             let first = tile(at: CGPoint(x: rect.minX, y: rect.minY))
             let last = tile(at: CGPoint(x: rect.maxX, y: rect.maxY))
-            for column in max(first.column - 1, 0) ... min(last.column + 1, columns - 1) {
-                for row in max(first.row - 1, 0) ... min(last.row + 1, rows - 1) {
-                    tiles.insert(index(column: column, row: row))
+            let left = first.column - 1, right = last.column + 1, top = first.row - 1, bottom = last.row + 1
+            for column in max(left - feather, 0) ... min(right + feather, columns - 1) {
+                for row in max(top - feather, 0) ... min(bottom + feather, rows - 1) {
+                    let dx = max(left - column, 0, column - right), dy = max(top - row, 0, row - bottom)
+                    let distance = max(dx, dy)
+                    guard distance < feather else { continue }
+                    let level = Self.shieldCap + (1 - Self.shieldCap) * MosaicRim
+                        .smootherstep(Double(distance) / Double(feather))
+                    let tile = index(column: column, row: row)
+                    levels[tile] = min(levels[tile] ?? 1, level)
                 }
             }
         }
-        return tiles
-    }
-
-    static let shieldCap = 0.22
-
-    /// The screen's own pixels: a shade off the ground, light looks a touch darker (-4) and dark looks a touch lighter
-    /// (+5), with ±1.5 of jitter fixed by hash. In unit floats (0 to 1).
-    static func screenDelta(index: Int, dark: Bool) -> Double {
-        let base = dark ? 5.0 : -4.0
-        let jitter = (MosaicColour.unit(index, salt: 101) * 2 - 1) * 1.5
-        return (base + jitter) / 255
+        return levels
     }
 }

@@ -48,14 +48,6 @@ final class MosaicScreenController {
     private var lastMoment: MosaicMomentEvent?
     private var momentStart: TimeInterval = 0
     private var lastShield: [CGRect] = []
-    private var screenImage: (key: ImageKey, image: CGImage)?
-
-    private struct ImageKey: Equatable {
-        var size: CGSize
-        var scale: CGFloat
-        var dark: Bool
-        var ground: [Double]
-    }
 
     // MARK: Hosting
 
@@ -73,48 +65,6 @@ final class MosaicScreenController {
 
     func endTouch() {
         engine?.endTouch()
-    }
-
-    // MARK: Cached screen pixels
-
-    /// The screen's own pixels, drawn once: the ground with every tile a shade off it. Redrawn only when the size, the
-    /// scale, the look or the ground changes.
-    func screenLayer(size: CGSize, scale: CGFloat, dark: Bool, ground: MosaicTriple,
-                     grid: MosaicScreenGrid) -> CGImage?
-    {
-        let imageKey = ImageKey(size: size, scale: scale, dark: dark, ground: [ground.red, ground.green, ground.blue])
-        if let screenImage, screenImage.key == imageKey {
-            return screenImage.image
-        }
-        let width = Int((size.width * scale).rounded(.up)), height = Int((size.height * scale).rounded(.up))
-        guard width > 0, height > 0, let context = CGContext(
-            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
-            space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return nil }
-        // Top-left origin in points.
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: scale, y: -scale)
-        context.setFillColor(red: ground.red, green: ground.green, blue: ground.blue, alpha: 1)
-        context.fill(CGRect(
-            origin: .zero,
-            size: CGSize(width: CGFloat(width) / scale, height: CGFloat(height) / scale)
-        ))
-        for column in 0 ..< grid.columns {
-            for row in 0 ..< grid.rows {
-                let delta = MosaicScreenGrid.screenDelta(index: grid.index(column: column, row: row), dark: dark)
-                context.setFillColor(
-                    red: min(max(ground.red + delta, 0), 1),
-                    green: min(max(ground.green + delta, 0), 1),
-                    blue: min(max(ground.blue + delta, 0), 1),
-                    alpha: 1
-                )
-                context.fill(grid.rect(column: column, row: row))
-            }
-        }
-        guard let image = context.makeImage() else { return nil }
-        screenImage = (imageKey, image)
-        return image
     }
 
     // MARK: Sync
@@ -242,6 +192,12 @@ final class MosaicScreenController {
         }
         let light = sparkled(plan?.overlay ?? moodLight, engine: engine, moment: moment, input: input, local: local,
                              context: context, reduceMotion: inputs.reduceMotion)
+        // During an announcement the rim samples the background, never the words.
+        if case .announce? = moment?.moment {
+            engine.rimSamplesLight = false
+        } else {
+            engine.rimSamplesLight = true
+        }
         engine.overlay = light.map { inner in
             { column, row, time, colour in
                 let place = mapped(column, row)
@@ -352,7 +308,6 @@ struct MosaicHomeLayer: View {
     @State private var lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.displayScale) private var displayScale
 
     private var captionText: String {
         facts.caption(for: scene)
@@ -441,9 +396,6 @@ struct MosaicHomeLayer: View {
             DispatchQueue.main.async { cue.play(.fleckReachesNow) }
         }
         let grid = engine.grid
-        if let layer = controller.screenLayer(size: size, scale: displayScale, dark: dark, ground: ground, grid: grid) {
-            context.draw(Image(decorative: layer, scale: displayScale), in: CGRect(origin: .zero, size: size))
-        }
         let nowColumn = engine.nowColumn(facts.now)
         let region = engine.region
         context.withCGContext { cg in
@@ -482,17 +434,6 @@ struct MosaicHomeLayer: View {
         for ghost in ghosts {
             cg.setFillColor(red: ghost.1.red, green: ghost.1.green, blue: ghost.1.blue, alpha: 1)
             cg.fill(ghost.0)
-        }
-        for pop in engine.outsidePops() {
-            let rect = grid.rect(column: pop.column, row: pop.row)
-            let growth = 1 + 0.5 * sin(Double.pi * pop.progress)
-            let side = rect.width * CGFloat(growth)
-            let pixel = MosaicColour.scaled(
-                engine.screenPixel(index: grid.index(column: pop.column, row: pop.row)),
-                0.9
-            )
-            cg.setFillColor(red: pixel.red, green: pixel.green, blue: pixel.blue, alpha: 1)
-            cg.fill(CGRect(x: rect.midX - side / 2, y: rect.midY - side / 2, width: side, height: side))
         }
         for item in engine.laid {
             let tone = laidColour(item.tone, column: item.column, engine: engine, dark: dark, environment: environment)

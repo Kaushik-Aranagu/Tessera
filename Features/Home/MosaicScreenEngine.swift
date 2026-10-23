@@ -51,7 +51,8 @@ final class MosaicScreenEngine {
     private var doubles: [Bool]
     private(set) var changeover: MosaicChangeoverKind = .standard(.wave)
     private var morphStart: TimeInterval = -10
-    private var regionHash: [Double]
+    /// During an announcement the rim samples the background, never the words.
+    var rimSamplesLight = true
 
     // The moving light and a moment's sway and swell, in absolute tile coordinates.
     var overlay: ((_ column: Int, _ row: Int, _ time: TimeInterval, _ colour: MosaicTriple) -> MosaicTriple)?
@@ -59,7 +60,7 @@ final class MosaicScreenEngine {
     var offsetHook: ((_ column: Int, _ row: Int, _ time: TimeInterval) -> CGPoint)?
 
     /// The tiles under text, padded by one tile.
-    var shield: Set<Int> = []
+    var shield: [Int: Double] = [:]
 
     // The finger.
     private(set) var touchPoint: CGPoint?
@@ -88,21 +89,8 @@ final class MosaicScreenEngine {
         delays = Array(repeating: 0, count: count)
         lengths = Array(repeating: 0.3, count: count)
         doubles = Array(repeating: false, count: count)
-        regionHash = []
         lean = Array(repeating: .zero, count: count)
         leanVelocity = Array(repeating: .zero, count: count)
-        regionHash = makeRegionHash()
-    }
-
-    private func makeRegionHash() -> [Double] {
-        var hashes = [Double](repeating: 0, count: region.width * region.height)
-        for column in 0 ..< region.width {
-            for row in 0 ..< region.height {
-                let absolute = grid.index(column: column + region.left, row: row + region.top)
-                hashes[column * region.height + row] = MosaicColour.unit(absolute, salt: 111)
-            }
-        }
-        return hashes
     }
 
     /// A new size or core top rebuilds the region (a rotation, a layout change); nothing else does.
@@ -121,9 +109,8 @@ final class MosaicScreenEngine {
         doubles = Array(repeating: false, count: count)
         lean = Array(repeating: .zero, count: count)
         leanVelocity = Array(repeating: .zero, count: count)
-        regionHash = makeRegionHash()
         morphStart = -10
-        shield = []
+        shield = [:]
         laid = []
         laidIndexes = []
         flight = nil
@@ -210,6 +197,7 @@ final class MosaicScreenEngine {
             nextPop = time + 0.7
         }
         easeWindow(dt: dt)
+        liveCore = core
         springLean(dt: dt)
         if let flight, time - flight.start >= 0.7 {
             land(flight, at: time)
@@ -392,72 +380,82 @@ final class MosaicScreenEngine {
 
     // MARK: Per-tile reads
 
-    func screenPixel(index: Int) -> MosaicTriple {
-        let delta = MosaicScreenGrid.screenDelta(index: index, dark: dark)
-        return (min(max(ground.red + delta, 0), 1), min(max(ground.green + delta, 0), 1),
-                min(max(ground.blue + delta, 0), 1))
+    /// The core as of this frame (eased and breathing), kept so a frame reads it once.
+    private(set) var liveCore = MosaicTileRect(left: 0, top: 0, width: 1, height: 1)
+
+    /// A tile outside the window read from its mirror across the window's edge (never clamped).
+    func mirrored(column: Int, row: Int, core: MosaicTileRect) -> (column: Int, row: Int) {
+        (core.left + MosaicRim.mirror(column - core.left, count: core.width),
+         core.top + MosaicRim.mirror(row - core.top, count: core.height))
     }
 
-    func intensity(column: Int, row: Int) -> Double {
-        let value = grid.intensity(column: column, row: row, core: core)
-        return shield.contains(grid.index(column: column, row: row)) ? value * MosaicScreenGrid.shieldCap : value
-    }
-
-    /// What to draw for a tile of the region, or nil when the field shows nothing there (the screen's own pixel under
-    /// it is already in the cached layer).
+    /// What to draw for a tile of the window or its rim, or nil when nothing is there (outside the rim, or a rim tile
+    /// still at the page's own level). Every tile is full size and one solid colour.
     func tile(column: Int, row: Int, nowColumn: Int?) -> MosaicScreenTile? {
-        guard let regionIndex = regionIndex(column: column, row: row) else { return nil }
-        let absolute = grid.index(column: column, row: row)
-        let strength = intensity(column: column, row: row)
-        guard strength > 0 else { return nil }
-        let inside = core.contains(column: column, row: row)
-        guard MosaicScreenGrid.shows(intensity: strength, hash: regionHash[regionIndex], insideCore: inside) else {
-            return nil
+        let core = liveCore
+        let sd = MosaicRim.signedDistance(column: column, row: row, core: core)
+        guard sd < Double(MosaicRim.reach), let ownIndex = regionIndex(column: column, row: row) else { return nil }
+        let rimLevel = MosaicRim.level(signedDistance: sd, column: column, row: row)
+        guard rimLevel > 0 else { return nil }
+        // A tile beyond the window's edge reads the scene mirrored across it; one inside (a rounded corner's cut) its
+        // own.
+        let source = core.contains(column: column, row: row) ? (column: column, row: row)
+            : mirrored(column: column, row: row, core: core)
+        guard let sourceIndex = regionIndex(column: source.column, row: source.row) else { return nil }
+        let own = grid.index(column: column, row: row)
+        let sourceAbsolute = grid.index(column: source.column, row: source.row)
+        var (scene, scaleY) = sceneColour(sourceIndex, absolute: sourceAbsolute)
+        let isRim = sd > 0
+        if let overlay, !isRim || rimSamplesLight {
+            scene = overlay(source.column, source.row, clock, scene)
         }
-        var (scene, scaleY) = sceneColour(regionIndex, absolute: absolute)
-        if let overlay {
-            scene = overlay(column, row, clock, scene)
+        if source.column == nowColumn, !reduceMotion {
+            scene = MosaicColour.lightened(scene, by: sin(clock / 0.7 + Double(source.row) * 0.5) * 0.08)
         }
-        if column == nowColumn, !reduceMotion {
-            scene = MosaicColour.lightened(scene, by: sin(clock / 0.7 + Double(row) * 0.5) * 0.08)
-        }
-        if let progress = popProgress(absolute) {
+        if let progress = popProgress(own) {
             scene = MosaicColour.scaled(scene, 1 - 0.1 * sin(Double.pi * progress))
         }
-        let colour = MosaicColour.mix(screenPixel(index: absolute), scene, strength)
-        var scale = MosaicScreenGrid.scale(intensity: strength)
-        var offset = leaning ? lean[regionIndex] : .zero
+        // The page's colour rises into the scene's across the edge, in whole solid tiles.
+        if rimLevel < 1 {
+            scene = MosaicColour.mix(ground, scene, rimLevel)
+        }
+        // Under words the mosaic keeps a fifth of itself, feathering back over 5 tiles: the words always read.
+        if let kept = shield[own] {
+            scene = MosaicColour.mix(ground, scene, kept)
+        }
+        var scale = 1.0
+        var offset = leaning ? lean[ownIndex] : .zero
         if !reduceMotion {
             let phase = 0.8 * Double(column) / Double(grid.columns) + 0.2 * Double(row) / Double(grid.rows)
             let wave = 0.5 + 0.5 * sin(2 * Double.pi * (clock / 7 - phase))
-            scale += 0.22 * wave * wave * wave * strength
-            if let progress = popProgress(absolute) {
+            scale += 0.22 * wave * wave * wave
+            if let progress = popProgress(own) {
                 scale += 0.5 * sin(Double.pi * progress)
             }
             if let scaleHook {
-                scale *= scaleHook(column, row, clock)
+                scale *= scaleHook(source.column, source.row, clock)
             }
-            if let sway = offsetHook?(column, row, clock) {
+            if let sway = offsetHook?(source.column, source.row, clock) {
                 offset.x += sway.x
                 offset.y += sway.y
             }
-            offset = movement(regionIndex: regionIndex, row: row, offset: offset)
+            offset = movement(regionIndex: sourceIndex, row: source.row, offset: offset)
             if case .melt = changeover {
-                let phase = progress(regionIndex)
+                let phase = progress(sourceIndex)
                 if phase > 0, phase < 1 {
                     scale *= phase
                 }
             }
         }
-        var tile = MosaicScreenTile(colour: colour, scale: CGFloat(scale), scaleY: scaleY, offset: offset, ghost: nil)
+        var tile = MosaicScreenTile(colour: scene, scale: CGFloat(max(scale, 1)), scaleY: scaleY, offset: offset,
+                                    ghost: nil)
         if !reduceMotion, case .melt = changeover {
-            let phase = progress(regionIndex)
+            let phase = progress(sourceIndex)
             if phase > 0, phase < 1 {
-                let local = max(row - grid.coreTop, 0)
+                let local = max(source.row - grid.coreTop, 0)
                 let drop = phase * phase * Double(max(windowTarget.rows - local + 4, 4)) *
                     Double(MosaicScreenGrid.step) * 0.5
-                let old = MosaicColour.mix(screenPixel(index: absolute), from[regionIndex], strength)
-                tile.ghost = (old, CGPoint(x: 0, y: drop), CGFloat(1 - 0.7 * phase))
+                tile.ghost = (from[sourceIndex], CGPoint(x: 0, y: drop), CGFloat(1 - 0.7 * phase))
             }
         }
         return tile
@@ -478,16 +476,6 @@ final class MosaicScreenEngine {
         default: break
         }
         return point
-    }
-
-    /// Pops of tiles outside the region (a ripple anywhere on Home): the screen's own pixel, darker as it grows.
-    func outsidePops() -> [(column: Int, row: Int, progress: Double)] {
-        pops.compactMap { index, start in
-            let column = index / grid.rows, row = index % grid.rows
-            guard !region.contains(column: column, row: row) else { return nil }
-            let progress = (clock - start) / 0.38
-            return progress >= 0 && progress < 1 ? (column, row, progress) : nil
-        }
     }
 }
 
