@@ -272,11 +272,7 @@ public struct PoolReport {
             let typed = MoneyAmount.parse(store.value("typed", of: row)?.stringValue ?? "")?.amount ?? 0
             let amount = PoolFormat.amount(typed, currency: book.currency(of: pool), lakh: lakh, text: true)
             // Word by word, as the past sentence does: "ozempic pharmacy run" never shows its first word.
-            let hidden = ObjectPrivacy.isPrivateWord(note, in: store)
-                || note.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).contains { ObjectPrivacy.isPrivateWord(
-                    String($0),
-                    in: store
-                ) }
+            let hidden = ObjectPrivacy.containsPrivateWord(note, in: store)
             let shownWord = hidden ? "Private spend" : word
             return "\(shownWord) \(amount), \(name(of: pool))."
         default: return nil

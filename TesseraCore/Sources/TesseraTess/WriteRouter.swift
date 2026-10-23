@@ -217,12 +217,8 @@ public struct WriteRouter {
     func spendReceipt(_ note: String) -> String {
         let word = note.trimmingCharacters(in: .whitespaces)
         let weight = BodyWeight.lastKg(in: engine.store)
-        let plain = !word.isEmpty && !ObjectPrivacy.isPrivateWord(word, in: engine.store)
+        let plain = !word.isEmpty && !ObjectPrivacy.containsPrivateWord(word, in: engine.store)
             && !PrivateFacts.isWalled(word, lastWeightKg: weight) && !SecretWords.mentions(word)
-            && !word.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).contains { ObjectPrivacy.isPrivateWord(
-                String($0),
-                in: engine.store
-            ) }
         return plain ? word.prefix(1).uppercased() + word.dropFirst() + ", logged." : "Spend, logged."
     }
 
