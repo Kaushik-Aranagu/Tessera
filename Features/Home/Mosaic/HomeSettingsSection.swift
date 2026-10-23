@@ -49,7 +49,7 @@ struct HomeSettingsSection: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.valueWash)
-            .contentTransition(.opacity)
+            .contentTransition(reduceMotion ? .opacity : .identity)
             Text(".")
             Spacer(minLength: 0)
         }

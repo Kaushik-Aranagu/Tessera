@@ -51,10 +51,14 @@ struct MosaicNext: View {
         }
     }
 
-    /// A private thing reads by its label, never its title.
+    /// A private thing reads by its label, never its title: Core's one rule (the shown label, which also covers walled
+    /// and secret words in a title like "Lexapro refill", then the task label), the same everywhere.
     private func masked(_ entry: QueueEntry) -> QueueEntry {
         guard let object = model.store.object(id: entry.id),
-              let label = ObjectPrivacy.label(of: object, in: model.store, classes: model.classes) else { return entry }
+              let label = ObjectPrivacy.shownLabel(of: object, in: model.store, classes: model.classes)
+        else {
+            return entry
+        }
         return QueueEntry(id: entry.id, title: label, time: entry.time, isWorkout: entry.isWorkout)
     }
 
@@ -62,7 +66,7 @@ struct MosaicNext: View {
     private func why(of entry: QueueEntry, in picks: [Pick]) -> String? {
         guard entry.title != ObjectPrivacy.taskLabel,
               let object = model.store.object(id: entry.id),
-              ObjectPrivacy.label(of: object, in: model.store, classes: model.classes) == nil else { return nil }
+              ObjectPrivacy.shownLabel(of: object, in: model.store, classes: model.classes) == nil else { return nil }
         let why = picks.first { $0.item.id == entry.id }?.why
         return why?.isEmpty == false ? why : nil
     }
@@ -113,7 +117,7 @@ private struct MosaicNextRow: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Opens \(entry.title)")
-                .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: -6)))
+                .transition(reduceMotion ? .opacity : .offset(y: -6))
             }
         }
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(HomeMosaicPage.space)) } action: { frame = $0 }
