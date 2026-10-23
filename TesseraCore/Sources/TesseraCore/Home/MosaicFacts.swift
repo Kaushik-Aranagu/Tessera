@@ -48,6 +48,11 @@ public struct MosaicFacts: Equatable, Sendable {
     public let freeMinutes: Int?
     let calendar: Calendar
 
+    /// The calendar these facts were made with, for the mood picker.
+    var calendarForPicker: Calendar {
+        calendar
+    }
+
     // MARK: Sky
 
     private static let stops: [(name: String, rgb: (Int, Int, Int))] = [
