@@ -14,6 +14,9 @@ extension UTType {
 /// outside the app (iCloud Drive/Tessera), so it survives deleting the app. Seven of each are kept.
 @MainActor
 enum BackupKeeper {
+    /// The iCloud folder copy leaves private things out; the words about it read from this same flag.
+    static let folderCopyLeavesOutPrivate = true
+
     private static let bookmarkKey = "tessera.backupFolderBookmark"
 
     /// Where the bookmark and failures live; tests pass their own suite (QA T11).
@@ -100,7 +103,7 @@ enum BackupKeeper {
             }
         }
         do {
-            _ = try TesseraBackup.writeRolling(from: context, in: folder, now: now, leavingOutPrivate: true)
+            _ = try TesseraBackup.writeRolling(from: context, in: folder, now: now, leavingOutPrivate: folderCopyLeavesOutPrivate)
             note(.folder, error: nil, now: now)
         } catch {
             note(.folder, error: error, now: now)
@@ -132,7 +135,7 @@ enum BackupKeeper {
             }
         }
         try defaults.set(url.bookmarkData(), forKey: bookmarkKey)
-        _ = try TesseraBackup.writeRolling(from: context, in: url, now: AppClock.now, leavingOutPrivate: true)
+        _ = try TesseraBackup.writeRolling(from: context, in: url, now: AppClock.now, leavingOutPrivate: folderCopyLeavesOutPrivate)
         // The folder's display name goes in the database (Core's settings), so after a restore Backups can say
         // where the copies were kept (restore-walk 3b). Never while a demo is running.
         if !LaunchFlags.has("-demo") {
