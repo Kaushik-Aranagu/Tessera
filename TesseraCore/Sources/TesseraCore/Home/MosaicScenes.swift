@@ -152,7 +152,11 @@ public enum MosaicScenePicker {
         if phase == .night {
             return .nightSky
         }
-        let dayOfYear = calendar.ordinality(of: .day, in: .year, for: facts.now) ?? 1
+        // A day count that runs on across New Year, so the daily rotation never repeats a day at the turn of the year.
+        let dayOfYear = calendar.dateComponents(
+            [.day], from: Date(timeIntervalSinceReferenceDate: 0),
+            to: TesseraDay(calendar: calendar).day(of: facts.now)
+        ).day ?? 1
         let month = calendar.component(.month, from: facts.now)
         let autumn = (9 ... 11).contains(month)
         guard let place else {
@@ -165,7 +169,6 @@ public enum MosaicScenePicker {
         }
         switch (place, phase) {
         case (.coast, .golden): return .harbor
-        case (.coast, .dawn): return dayOfYear.isMultiple(of: 2) ? .beach : .harbor
         case (.coast, _): return dayOfYear.isMultiple(of: 2) ? .beach : .harbor
         case (.city, .golden): return .cityAtDusk
         case (.city, .dawn): return .fieldsAtSunrise
