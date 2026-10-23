@@ -115,6 +115,8 @@ public enum ObjectPrivacy {
             return flagged ? bookLabel : nil
         }
         // A workout or routine (OL01): its own title, its flag, or the routine a workout was made from.
+        // The `flagged` branch is unused here for now: Workout and Routine declare no isPrivate field. Privacy is by words,
+        // through the title and the routine link (decided Oct 22).
         if isA(.routine) || isA(.workout) {
             let routine = isA(.workout) ? store.linkedObjects("routine", of: object).first : nil
             let titles = [object.title] + (routine.map { [$0.title] } ?? [])
@@ -242,6 +244,16 @@ public enum ObjectPrivacy {
     public static func isPrivateWord(_ text: String, in store: ObjectStore) -> Bool {
         let last = BodyWeight.lastKg(in: store)
         return isPrivateTitle(text, lastWeightKg: last)
+    }
+
+    /// Whether any word in a phrase is one Tess never says back. Words split on anything that is not a letter or a
+    /// digit, so "ozempic," and "ozempic-run" are caught; the whole phrase is checked too.
+    @MainActor
+    public static func containsPrivateWord(_ text: String, in store: ObjectStore) -> Bool {
+        isPrivateWord(text, in: store)
+            || text.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).contains {
+                isPrivateWord(String($0), in: store)
+            }
     }
 
     static func isPrivateText(_ text: String, lastWeightKg: Double?) -> Bool {

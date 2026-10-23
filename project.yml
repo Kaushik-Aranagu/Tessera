@@ -92,11 +92,15 @@ targets:
         CFBundleDisplayName: Tessera
         UIAppFonts:
           - InterTight-Variable.ttf
+          - Figtree-Variable.ttf
+          - Outfit-Variable.ttf
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     sources:
       - Widgets
       - Shared
+      - path: Resources/Fonts/Figtree-Variable.ttf
+      - path: Resources/Fonts/Outfit-Variable.ttf
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera.widgets

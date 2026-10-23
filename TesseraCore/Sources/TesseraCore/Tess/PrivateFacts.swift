@@ -20,6 +20,21 @@ public enum PrivateFacts {
         isMoneyShaped(phrase) || isBodyShaped(phrase, lastWeightKg: lastWeightKg)
     }
 
+    /// A calorie or energy line that logs one ("calories 2400 today", "burned 400 kcal", "ate 600 calories"): a number
+    /// beside the word, or a logging verb. "low calorie yogurt" and "add calories to the recipe" are not walled.
+    public static func isCalorieShaped(_ phrase: String) -> Bool {
+        let lower = phrase.lowercased()
+        return lower.firstMatch(of: /\b\d[\d,.]*\s*(?:calories|calorie|kcal|cals|cal)\b/) != nil
+            || lower
+            .firstMatch(of: /\b(?:calories|calorie|kcal|cals|cal)\s*(?:of\s+|:\s*|=\s*|is\s+|was\s+|were\s+)?\d/) !=
+            nil
+            || lower
+            .firstMatch(
+                of: /\b(?:burned|burnt|ate|eaten|logged|tracked|consumed)\b.*\b(?:calories|calorie|kcal|cals|cal)\b/
+            )
+            != nil
+    }
+
     // MARK: Money (W1)
 
     /// Currency words, spend and pay words, accounts, and the memory screen's money words (one list for both walls).
@@ -82,7 +97,9 @@ public enum PrivateFacts {
                                                 "lexapro", "zoloft", "sertraline", "prozac", "adderall", "xanax",
                                                 "melatonin",
                                                 "benadryl", "claritin", "zyrtec", "pill", "pills", "tablet", "tablets",
-                                                "capsule", "capsules", "dose", "meds", "medication", "ozempic", "wegovy", "mounjaro", "insulin",
+                                                "capsule", "capsules", "dose", "meds", "medication", "ozempic",
+                                                "wegovy",
+                                                "mounjaro", "insulin",
                                                 "metformin", "omeprazole", "prednisone", "amoxicillin", "antibiotic",
                                                 "antibiotics", "ritalin", "vyvanse", "ambien", "nexium", "prilosec"]
     /// Symptoms and hurts: walled with no number (Product on QA L1): "knee hurts", "headache", "slept badly".

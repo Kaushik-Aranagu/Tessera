@@ -38,6 +38,9 @@ public enum ActionRegistry {
         AdvanceDishStep.descriptor, PauseCook.descriptor, ResumeCook.descriptor, FinishCookSession.descriptor,
         CreatePool.descriptor, LogInflow.descriptor, ReassignSpend.descriptor, LogMove.descriptor,
         RecordRate.descriptor, ArchivePool.descriptor,
+        MakeKind.descriptor, KeepNoteAsObject.descriptor, KeepAllNotes.descriptor,
+        CreateOccasion.descriptor, LinkToOccasion.descriptor, UnlinkFromOccasion.descriptor, SetAway.descriptor,
+        RepeatWorkout.descriptor, JoinTwins.descriptor, KeepTwinsApart.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
@@ -162,6 +165,16 @@ public enum ActionRegistry {
         LogMove.descriptor.name: { try decode(LogMove.self, LogMove.descriptor.name, $0) },
         RecordRate.descriptor.name: { try decode(RecordRate.self, RecordRate.descriptor.name, $0) },
         ArchivePool.descriptor.name: { try decode(ArchivePool.self, ArchivePool.descriptor.name, $0) },
+        MakeKind.descriptor.name: { try decode(MakeKind.self, MakeKind.descriptor.name, $0) },
+        KeepNoteAsObject.descriptor.name: { try decode(KeepNoteAsObject.self, KeepNoteAsObject.descriptor.name, $0) },
+        KeepAllNotes.descriptor.name: { try decode(KeepAllNotes.self, KeepAllNotes.descriptor.name, $0) },
+        CreateOccasion.descriptor.name: { try decode(CreateOccasion.self, CreateOccasion.descriptor.name, $0) },
+        SetAway.descriptor.name: { try decode(SetAway.self, SetAway.descriptor.name, $0) },
+        LinkToOccasion.descriptor.name: { try decode(LinkToOccasion.self, LinkToOccasion.descriptor.name, $0) },
+        UnlinkFromOccasion.descriptor.name: { try decode(UnlinkFromOccasion.self, UnlinkFromOccasion.descriptor.name, $0) },
+        JoinTwins.descriptor.name: { try decode(JoinTwins.self, JoinTwins.descriptor.name, $0) },
+        KeepTwinsApart.descriptor.name: { try decode(KeepTwinsApart.self, KeepTwinsApart.descriptor.name, $0) },
+        RepeatWorkout.descriptor.name: { try decode(RepeatWorkout.self, RepeatWorkout.descriptor.name, $0) },
         QueueBook.descriptor.name: { try decode(QueueBook.self, QueueBook.descriptor.name, $0) },
         EditBook.descriptor.name: { try decode(EditBook.self, EditBook.descriptor.name, $0) },
         StartReading.descriptor.name: { try decode(StartReading.self, StartReading.descriptor.name, $0) },
