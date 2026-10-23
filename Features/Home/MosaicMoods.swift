@@ -371,7 +371,8 @@ enum MosaicMoodField {
     }
 }
 
-/// Settings › Review › "Mosaic moods" (default Off); it needs Mosaic itself to be On.
+/// Settings › Review › "Mosaic moods" (default Off), the one switch sheet 200 shares with the departure board on the
+/// three lines (Builder B's #1304 defines the row); it needs Mosaic itself to be On.
 enum MosaicMoodsSwitch {
     nonisolated static let choiceID = "homeMosaicMoods"
 

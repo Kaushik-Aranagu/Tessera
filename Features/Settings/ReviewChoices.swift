@@ -162,10 +162,6 @@ final class ReviewChoices {
                says: ["Off": "Home is as it is now.",
                       "On": "Home is three lines about your day, a mosaic of it, and what's next. It wins over Home v2 when both are On."],
                readiness: .live),
-        Choice(id: "homeMosaicMoods", name: "Mosaic moods", values: ["Off", "On"], defaultValue: "Off",
-               says: ["Off": "The mosaic is the plain day.",
-                      "On": "The mosaic takes the mood of the hour: morning, golden, night, and more. Needs Mosaic."],
-               readiness: .live),
         Choice(id: "homeAppsList", name: "Apps list", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No apps list under Next.", "On": "Your apps list under Next on the Mosaic Home."],
                readiness: .live),
@@ -382,7 +378,7 @@ final class ReviewChoices {
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
         ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
-        ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeAppsList"]),
+        ("Home mosaic", ["homeMosaic", "homeAppsList"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.

@@ -319,8 +319,7 @@ struct MosaicMoodTests {
         #expect(glow.red > aside.red + 0.2)
     }
 
-    @Test func moodsSwitchNeedsMosaicOn() {
+    @Test func moodsShareTheOneHomeMosaicMoodsSwitch() {
         #expect(MosaicMoodsSwitch.choiceID == "homeMosaicMoods")
-        #expect(ReviewChoices.all.first { $0.id == "homeMosaicMoods" }?.defaultValue == "Off")
     }
 }
