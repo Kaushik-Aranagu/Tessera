@@ -71,34 +71,37 @@ private struct ReceiptTravel: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
-        guard RoomMotionSwitch.isOn else { return AnyView(content) }
-        let travel: CGFloat = reduceMotion ? 0 : 28
-        let offset = switch edge {
-        case .top: CGSize(width: 0, height: -travel)
-        case .bottom: CGSize(width: 0, height: travel)
-        case .leading: CGSize(width: -travel, height: 0)
-        case .trailing: CGSize(width: travel, height: 0)
-        }
-        return AnyView(
+        if RoomMotionSwitch.isOn {
+            let travel: CGFloat = reduceMotion ? 0 : 28
+            let offset = switch edge {
+            case .top: CGSize(width: 0, height: -travel)
+            case .bottom: CGSize(width: 0, height: travel)
+            case .leading: CGSize(width: -travel, height: 0)
+            case .trailing: CGSize(width: travel, height: 0)
+            }
             content
+                // The receipt arrives wet (cobalt) and dries to ink at full opacity; it never fades.
+                .foregroundStyle(done ? Theme.Colors.ink : Theme.Colors.tess)
                 .offset(done ? offset : .zero)
-                // Dry: the receipt settles to a quieter ink as it lands.
-                .opacity(done ? 0.55 : 1)
-                .animation(
-                    reduceMotion ? MotionPolicy.reducedMotionFade
-                        : .timingCurve(0.2, 0.9, 0.25, 1, duration: RoomTiming.receipt),
-                    value: done
-                )
-        )
+                .tesseraAnimation(Theme.Motion.house, value: done)
+                .animation(Theme.Motion.dry(reduceMotion: reduceMotion), value: done)
+        } else {
+            content
+        }
     }
 }
 
 private struct PaperSheet: ViewModifier {
     func body(content: Content) -> some View {
         if RoomMotionSwitch.isOn {
+            // Rises with its top edge leading on the house spring (0.12 bounce); the paper ground, no shadow, no blur.
+            // Behind it the page dims to ink 3 and no further (our own scrim, not the system detent dim).
             content
                 .presentationBackground(Theme.Colors.paper)
                 .presentationCornerRadius(24)
+                .presentationBackgroundInteraction(.enabled)
+                .transition(.move(edge: .bottom))
+                .animation(Theme.Motion.house, value: true)
         } else {
             content
         }
@@ -115,13 +118,24 @@ private struct RoomShift: ViewModifier {
             content
                 .tint(accent)
                 .background(ground.ignoresSafeArea())
-                .animation(reduceMotion ? MotionPolicy.reducedMotionFade : .easeInOut(duration: RoomTiming.shift),
-                           value: ground)
-                .animation(reduceMotion ? MotionPolicy.reducedMotionFade : .easeInOut(duration: RoomTiming.shift),
-                           value: accent)
+                .tesseraAnimation(.easeInOut(duration: RoomTiming.shift), value: ground)
+                .tesseraAnimation(.easeInOut(duration: RoomTiming.shift), value: accent)
         } else {
             content
         }
+    }
+}
+
+/// What a landing's title says: the tapped word until the page settles, else the app's name.
+enum RoomTitleRule {
+    static func shown(appName: String, openedBy: String?, settled: Bool, switchOn: Bool) -> String {
+        guard switchOn, let openedBy, !settled else { return appName }
+        return openedBy
+    }
+
+    /// Whether the title needs to wait for the page to settle at all (Reduce Motion goes straight to the name).
+    static func waits(openedBy: String?, switchOn: Bool, reduceMotion: Bool) -> Bool {
+        switchOn && openedBy != nil && !reduceMotion
     }
 }
 
@@ -138,7 +152,9 @@ struct RoomTitle: View {
             .contentTransition(.opacity)
             .accessibilityLabel(appName)
             .task {
-                guard RoomMotionSwitch.isOn, openedBy != nil, !reduceMotion else {
+                guard RoomTitleRule.waits(openedBy: openedBy, switchOn: RoomMotionSwitch.isOn,
+                                          reduceMotion: reduceMotion)
+                else {
                     settled = true
                     return
                 }
@@ -150,7 +166,6 @@ struct RoomTitle: View {
     }
 
     private var shown: String {
-        guard RoomMotionSwitch.isOn, let openedBy, !settled else { return appName }
-        return openedBy
+        RoomTitleRule.shown(appName: appName, openedBy: openedBy, settled: settled, switchOn: RoomMotionSwitch.isOn)
     }
 }
