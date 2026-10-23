@@ -63,10 +63,21 @@ enum HomeBoard {
         CellMetrics.lineWidth(line.segments) <= width
     }
 
-    /// Drops words from the end until the line fits (at least one word stays).
+    /// Words a cut never ends on: "Stretch at" reads as broken.
+    static let stopWords: Set<String> = ["at", "to", "for", "with", "about", "and", "of"]
+
+    /// Whether `text` ends on a stop word (trailing punctuation ignored).
+    static func endsOnStopWord(_ text: String) -> Bool {
+        guard let last = text.split(separator: " ").last else { return false }
+        return stopWords.contains(last.lowercased().trimmingCharacters(in: .punctuationCharacters))
+    }
+
+    /// Drops words from the end until the line fits (at least one word stays), then any stop word the cut left at the
+    /// end.
     static func cut(_ line: BoardLine, width: CGFloat = defaultWidth) -> BoardLine {
         var line = line
-        while !fits(line, width: width), DepartureSteps.flat(line.segments).contains(" ") {
+        var cutAny = false
+        func dropLastWord() {
             var last = line.segments.removeLast()
             var words = last.text.split(separator: " ").map(String.init)
             if words.count > 1 {
@@ -74,6 +85,15 @@ enum HomeBoard {
                 last.text = words.joined(separator: " ")
                 line.segments.append(last)
             }
+        }
+        while !fits(line, width: width), DepartureSteps.flat(line.segments).contains(" ") {
+            dropLastWord()
+            cutAny = true
+        }
+        while cutAny, let last = line.segments.last, endsOnStopWord(last.text),
+              DepartureSteps.flat(line.segments).contains(" ")
+        {
+            dropLastWord()
         }
         return line
     }
