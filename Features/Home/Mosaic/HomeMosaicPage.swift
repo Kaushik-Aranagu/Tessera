@@ -471,9 +471,14 @@ struct HomeMosaicPage: View {
     }
 
     /// Typed words: she answers on the phone, with one plain reply to end it.
-    private func tessHeard(_: String) {
-        tessModel.say("Got it. Anything else?", names: [])
-        tessModel.offer(["That's all"])
+    private func tessHeard(_ text: String) {
+        Task {
+            // The same capture as ever: her grammar or the on-device model turns the words into actions, and she
+            // answers in one line.
+            let line = await model.ask(text)
+            tessModel.say(line.isEmpty ? "Got it." : line, names: [])
+            tessModel.offer(["That's all"])
+        }
     }
 
     private func playTess() {
