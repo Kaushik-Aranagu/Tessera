@@ -14,6 +14,8 @@ public enum ObjectPrivacy {
     /// What a spend reads everywhere but its own page and the Month page (Money amendment 2).
     public static let spendLabel = "Private spend"
     public static let profileLabel = "Private profile"
+    /// A multi-dish cook with a private dish in it (the session holds no names; this stops its title and fields).
+    public static let cookLabel = "Private cook"
     /// Money pools: a pool, an inflow, a move between pools and a noted rate carry names, amounts, balances and rates,
     /// so each reads private everywhere but its own page, like a spend (Money pools B2).
     public static let poolLabel = "Private pool"
@@ -78,6 +80,19 @@ public enum ObjectPrivacy {
         // A place named with a walled word reads "Private place".
         if isA(.place) {
             return isPrivateTitle(object.title, lastWeightKg: last) ? placeLabel : nil
+        }
+        // A dish of a multi-dish cook is private when its recipe or cook is, even if the recipe was plain when the dish
+        // was made: it is read live, so retitling the recipe masks the dish (and its stored title) at once.
+        if isA(.cookDish) {
+            let recipe = store.linkedObjects("recipe", of: object).first
+            let cook = store.linkedObjects("cook", of: object).first
+            let hidden = (recipe.map { isPrivateRecipeTitle($0.title, lastWeightKg: last) } ?? false)
+                || (cook.map { isPrivateCook($0, in: store) } ?? false)
+            return hidden ? recipeLabel : nil
+        }
+        if isA(.cookSession) {
+            let dishes = store.linkedObjects("dishes", of: object).filter { !$0.isDeleted }
+            return dishes.contains(where: { label(of: $0, in: store, classes: classes) != nil }) ? cookLabel : nil
         }
         if isA(.pool) {
             return poolLabel
