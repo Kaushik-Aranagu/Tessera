@@ -51,12 +51,37 @@ struct PantryShopV2Tests {
     @Test func pricesStayInDefaultsAndClear() throws {
         let defaults = try #require(UserDefaults(suiteName: "PantryShopV2Tests.\(UUID())"))
         var prices = ShopPrices(defaults: defaults)
-        #expect(prices.total == 0)
-        prices.set(3.5, for: UUID(), defaults: defaults)
-        prices.set(4, for: UUID(), defaults: defaults)
-        #expect(ShopPrices(defaults: defaults).total == 7.5)
+        let milk = UUID(), eggs = UUID()
+        #expect(prices.total(counting: [milk, eggs]) == 0)
+        prices.set(3.5, for: milk, defaults: defaults)
+        prices.set(4, for: eggs, defaults: defaults)
+        #expect(ShopPrices(defaults: defaults).total(counting: [milk, eggs]) == 7.5)
         prices.clear(defaults: defaults)
-        #expect(ShopPrices(defaults: defaults).total == 0)
+        #expect(ShopPrices(defaults: defaults).total(counting: [milk, eggs]) == 0)
+    }
+
+    @Test func theTotalCountsOnlyStruckItems() throws {
+        let defaults = try #require(UserDefaults(suiteName: "PantryShopV2Tests.\(UUID())"))
+        var prices = ShopPrices(defaults: defaults)
+        let milk = UUID(), eggs = UUID()
+        prices.set(3.5, for: milk, defaults: defaults)
+        prices.set(4, for: eggs, defaults: defaults)
+        #expect(prices.total(counting: [milk]) == 3.5)
+        #expect(prices.total(counting: []) == 0)
+        #expect(prices.total(counting: [milk, eggs]) == 7.5)
+    }
+
+    @Test func aNewShopStartsWithNoPrices() throws {
+        let defaults = try #require(UserDefaults(suiteName: "PantryShopV2Tests.\(UUID())"))
+        var prices = ShopPrices(defaults: defaults)
+        let first = UUID(), milk = UUID()
+        prices.beginShop(first, defaults: defaults)
+        prices.set(3.5, for: milk, defaults: defaults)
+        prices.beginShop(first, defaults: defaults)
+        #expect(prices.total(counting: [milk]) == 3.5)
+        prices.beginShop(UUID(), defaults: defaults)
+        #expect(prices.total(counting: [milk]) == 0)
+        #expect(ShopPrices(defaults: defaults).byItem.isEmpty)
     }
 
     @Test func aLevelFollowsRuleA() {

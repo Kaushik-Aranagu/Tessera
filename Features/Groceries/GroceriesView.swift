@@ -82,8 +82,8 @@ private struct GroceriesPage: View {
                 ZStack(alignment: .topLeading) {
                     if shopV2 {
                         ShopRunV2(aisles: aisles, striking: striking, recipes: recipes(for:), label: rowLabel,
-                                  onStrike: shopTap, basketCount: basket.count, summary: shopSummary,
-                                  prices: $prices)
+                                  onStrike: shopTap, basketCount: basket.count, basketIDs: Set(basket.map(\.id)),
+                                  shopID: shop?.id ?? Groceries.listID, summary: shopSummary, prices: $prices)
                             .padding(.top, Theme.Spacing.m)
                             .transition(AisleHandoff.transition(reduceMotion: reduceMotion))
                     } else if shopping {

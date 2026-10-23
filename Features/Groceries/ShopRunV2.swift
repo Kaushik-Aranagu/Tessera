@@ -13,6 +13,10 @@ struct ShopRunV2: View {
     let label: (ListContents.Item) -> String
     let onStrike: (ListContents.Item) -> Void
     let basketCount: Int
+    /// The items struck (checked) in this shop: only their prices count toward the total.
+    let basketIDs: Set<UUID>
+    /// The running shop's id: a new shop starts with no prices.
+    let shopID: UUID
     /// "Done shopping" was tapped: the page says what was got and what waits.
     let summary: Bool
     @Binding var prices: ShopPrices
@@ -46,7 +50,7 @@ struct ShopRunV2: View {
             if struck != nil, !summary {
                 priceLine
             }
-            if let about = ShopV2Copy.about(prices.total) {
+            if let about = ShopV2Copy.about(prices.total(counting: basketIDs)) {
                 Text(about)
                     .textRole(.data)
                     .foregroundStyle(Theme.Colors.inkSecondary)
@@ -57,6 +61,9 @@ struct ShopRunV2: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .tesseraFeedback(.selection, trigger: priced)
+        .onChange(of: shopID, initial: true) { _, id in
+            prices.beginShop(id)
+        }
     }
 
     private func aisle(_ current: (aisle: String, items: [ListContents.Item])) -> some View {
@@ -154,6 +161,8 @@ private struct ShopLead: View {
     let onStrike: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pull: CGFloat = 0
+    @State private var cue = HapticCue()
+    private static let arm: CGFloat = 72
 
     var body: some View {
         Button(action: onStrike) {
@@ -166,12 +175,14 @@ private struct ShopLead: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
-        .offset(x: pull)
-        // The ghost word behind the swipe: what the swipe does.
-        .background(alignment: .leading) {
-            Text("Got")
-                .textRole(.data)
-                .foregroundStyle(Theme.Colors.ink.opacity(min(pull / 72, 1) * 0.42))
+        // The row stays put; a 2 pt ink line draws from the leading edge with the finger (as the Tasks app does).
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .fill(Theme.Colors.ink)
+                .frame(height: 2)
+                .scaleEffect(x: min(max(pull / Self.arm, 0), 1), anchor: .leading)
+                .opacity(isStriking ? 0 : 1)
+                .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }
         .simultaneousGesture(
@@ -180,15 +191,19 @@ private struct ShopLead: View {
                     guard value.translation.width > 0, value.translation.width > abs(value.translation.height) else {
                         return
                     }
-                    pull = min(value.translation.width, 96)
+                    pull = min(value.translation.width, Self.arm)
                 }
                 .onEnded { _ in
-                    if pull >= 72 {
+                    let armed = pull >= Self.arm
+                    if armed {
+                        // One soft tap as the strike lands, not at the arm point.
+                        cue.play(.done)
                         onStrike()
                     }
-                    withTesseraAnimation(reduceMotion: reduceMotion) { pull = 0 }
+                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
                 }
         )
+        .tesseraFeedback(cue)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel((item.quantity.map { "\($0) " } ?? "") + name)
         .accessibilityHint("Puts it in the basket")

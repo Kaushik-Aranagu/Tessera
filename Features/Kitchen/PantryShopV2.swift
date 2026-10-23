@@ -53,14 +53,24 @@ enum ShopV2Copy {
 /// struck this shop, cleared when the shop ends.
 struct ShopPrices {
     static let key = "shopV2.prices"
+    static let shopKey = "shopV2.pricesShop"
     private(set) var byItem: [String: Double]
 
     init(defaults: UserDefaults = .standard) {
         byItem = (defaults.dictionary(forKey: Self.key) as? [String: Double]) ?? [:]
     }
 
-    var total: Double {
-        byItem.values.reduce(0, +)
+    /// The sum of the prices of items struck in this shop; a price for an item that is not struck does not count.
+    func total(counting struck: Set<UUID>) -> Double {
+        byItem.reduce(0) { $0 + (struck.contains(UUID(uuidString: $1.key) ?? UUID()) ? $1.value : 0) }
+    }
+
+    /// A shop is starting (or first seen running): prices from an earlier, unfinished shop are cleared. The same
+    /// shop seen again keeps its prices.
+    mutating func beginShop(_ shop: UUID, defaults: UserDefaults = .standard) {
+        guard defaults.string(forKey: Self.shopKey) != shop.uuidString else { return }
+        clear(defaults: defaults)
+        defaults.set(shop.uuidString, forKey: Self.shopKey)
     }
 
     mutating func set(_ price: Double, for item: UUID, defaults: UserDefaults = .standard) {
