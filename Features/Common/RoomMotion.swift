@@ -84,7 +84,6 @@ private struct ReceiptTravel: ViewModifier {
                 .foregroundStyle(done ? Theme.Colors.ink : Theme.Colors.tess)
                 .offset(done ? offset : .zero)
                 .tesseraAnimation(Theme.Motion.house, value: done)
-                .animation(Theme.Motion.dry(reduceMotion: reduceMotion), value: done)
         } else {
             content
         }
@@ -94,14 +93,12 @@ private struct ReceiptTravel: ViewModifier {
 private struct PaperSheet: ViewModifier {
     func body(content: Content) -> some View {
         if RoomMotionSwitch.isOn {
-            // Rises with its top edge leading on the house spring (0.12 bounce); the paper ground, no shadow, no blur.
-            // Behind it the page dims to ink 3 and no further (our own scrim, not the system detent dim).
+            // The paper ground and a 24 pt radius, no shadow, no blur. The system's own dim behind a sheet stays as it
+            // is
+            // (a known low if it reads darker than ink 3); we add no scrim.
             content
                 .presentationBackground(Theme.Colors.paper)
                 .presentationCornerRadius(24)
-                .presentationBackgroundInteraction(.enabled)
-                .transition(.move(edge: .bottom))
-                .animation(Theme.Motion.house, value: true)
         } else {
             content
         }
