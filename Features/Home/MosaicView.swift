@@ -115,7 +115,9 @@ final class MosaicController {
                        ], mood: mood, accents: moodContext.doneAccents.count,
                        sets: moodContext.doneSets * 100 + moodContext.remainingSets, moment: moment?.id)
         guard next != key else { return }
-        if let moment, moment.id != lastMoment?.id { momentStart = engine.currentClock }
+        if let moment, moment.id != lastMoment?.id {
+            momentStart = engine.currentClock
+        }
         var context = moodContext
         context.nowColumn = MosaicReadout.nowColumn(facts.now, config: window)
         context.dark = dark
@@ -123,8 +125,15 @@ final class MosaicController {
             MosaicMoodField.base($0, geometry: local, input: input, ground: ground, context: context)
         } ?? MosaicScenes.targets(scene, geometry: local, input: input, ground: ground)
         let plan = moment.map {
-            MosaicMomentField.plan($0.moment, under: fieldColours, window: (window.columns, window.rows), ground: ground,
-                                   context: context, start: momentStart, reduceMotion: reduceMotion)
+            MosaicMomentField.plan(
+                $0.moment,
+                under: fieldColours,
+                window: (window.columns, window.rows),
+                ground: ground,
+                context: context,
+                start: momentStart,
+                reduceMotion: reduceMotion
+            )
         }
         let targets = MosaicWindows.expand(plan?.base ?? fieldColours, window: (window.columns, window.rows),
                                            config: config)
@@ -166,8 +175,12 @@ final class MosaicController {
             }
             var transition: MosaicTransition = (moodField != nil && moodField != lastMood)
                 ? moodField?.transition ?? .wave : .wave
-            if let plan, moment?.id != lastMoment?.id { transition = plan.transition }
-            if moment == nil, let previous = lastMoment { transition = previous.moment.returnTransition }
+            if let plan, moment?.id != lastMoment?.id {
+                transition = plan.transition
+            }
+            if moment == nil, let previous = lastMoment {
+                transition = previous.moment.returnTransition
+            }
             engine.morph(to: targets, origin: origin, transition: transition)
         }
         if let moment, moment.id != lastMoment?.id, case let .finished(tone) = moment.moment {
@@ -260,7 +273,9 @@ struct MosaicView: View {
         }
         .onChange(of: moment, initial: true) { _, event in
             // A new moment replaces a running one.
-            if let event { active = event }
+            if let event {
+                active = event
+            }
         }
         .onChange(of: mood) { _, _ in
             // A mood change cancels the moment.
@@ -396,7 +411,10 @@ struct MosaicView: View {
             let value = engine.colour(column: tile.column, row: tile.row, nowColumn: nowColumn)
             fill(&context, engine: engine, column: tile.column, row: tile.row, colour: swiftColor(value))
         }
-        for item in engine.laid where !engine.isDropped(column: item.index / config.rows, row: item.index % config.rows) {
+        for item in engine.laid where !engine.isDropped(
+            column: item.index / config.rows,
+            row: item.index % config.rows
+        ) {
             let value = laidColour(
                 item.tone,
                 column: item.column,

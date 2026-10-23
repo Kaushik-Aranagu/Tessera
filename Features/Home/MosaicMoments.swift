@@ -62,7 +62,9 @@ extension MosaicMoment {
 
     /// How the mood comes back: a dissolve, or a fall after an announcement.
     var returnTransition: MosaicTransition {
-        if case .announce = self { return .fall }
+        if case .announce = self {
+            return .fall
+        }
         return .dissolve
     }
 
@@ -144,7 +146,9 @@ enum MosaicMomentField {
             base = under.map { MosaicColour.mix($0, ground, moment.stepBack) }
         }
         plan.base = base
-        if case .finished = moment { plan.base = nil }
+        if case .finished = moment {
+            plan.base = nil
+        }
         guard !reduceMotion else {
             // A still frame: the field, the held centre of the timer, Tess's open eyes; no crawl, sway or flash.
             plan.overlay = stillOverlay(moment, cols: cols, rows: rows, context: context)
@@ -161,9 +165,9 @@ enum MosaicMomentField {
         case .wind:
             plan.overlay = windLight(cols: cols, rows: rows, start: start)
             plan.offset = { column, row, time in
-                let t = time - start
-                let gust = 0.65 + 0.35 * sin(t / 1.7 + 1)
-                return CGPoint(x: sin(t / 0.26 + Double(column) * 0.5 - Double(row) * 0.25) * 1.8 * gust, y: 0)
+                let elapsed = time - start
+                let gust = 0.65 + 0.35 * sin(elapsed / 1.7 + 1)
+                return CGPoint(x: sin(elapsed / 0.26 + Double(column) * 0.5 - Double(row) * 0.25) * 1.8 * gust, y: 0)
             }
         case .storm:
             plan.overlay = stormLight(cols: cols, rows: rows, start: start)
@@ -208,23 +212,27 @@ enum MosaicMomentField {
     private static func snowLight(cols: Int, rows: Int, start: TimeInterval) -> MosaicMoodField.Overlay {
         let white: MosaicTriple = (0.97, 0.98, 1)
         return { column, row, time, colour in
-            let t = time - start
-            if row >= rows - min(5, Int(t / 1.5)) { return MosaicColour.mix(colour, white, 0.9) }
+            let elapsed = time - start
+            if row >= rows - min(5, Int(elapsed / 1.5)) {
+                return MosaicColour.mix(colour, white, 0.9)
+            }
             for neighbour in max(column - 1, 0) ... min(column + 1, cols - 1) {
                 for flake in 0 ..< 2 {
                     let seed = neighbour * 2 + flake
-                    let x = Double(neighbour) + 0.8 * sin(t * 0.9 + MosaicColour.unit(seed, salt: 51) * 6.28)
+                    let x = Double(neighbour) + 0.8 * sin(elapsed * 0.9 + MosaicColour.unit(seed, salt: 51) * 6.28)
                     let speed = 2.5 + MosaicColour.unit(seed, salt: 53) * 2
-                    let y = (MosaicColour.unit(seed, salt: 55) * Double(rows) + t * speed)
+                    let y = (MosaicColour.unit(seed, salt: 55) * Double(rows) + elapsed * speed)
                         .truncatingRemainder(dividingBy: Double(rows))
-                    if Int(x.rounded()) == column, Int(y) == row { return MosaicColour.mix(colour, white, 0.95) }
+                    if Int(x.rounded()) == column, Int(y) == row {
+                        return MosaicColour.mix(colour, white, 0.95)
+                    }
                 }
             }
             return colour
         }
     }
 
-    /// The mist's level at a tile: 0.55 + 0.35 sin(j·0.13 + t/1.8 + i·0.35), in four 0.25 steps.
+    /// The mist's level at a tile: 0.55 + 0.35 sin(j·0.13 + elapsed/1.8 + i·0.35), in four 0.25 steps.
     static func fogLevel(column: Int, row: Int, time: TimeInterval) -> Double {
         let raw = 0.55 + 0.35 * sin(Double(row) * 0.13 + time / 1.8 + Double(column) * 0.35)
         return (raw / 0.25).rounded() * 0.25
@@ -238,11 +246,11 @@ enum MosaicMomentField {
     }
 
     /// 7-tile light streaks run across about a third of the rows.
-    private static func windLight(cols: Int, rows: Int, start: TimeInterval) -> MosaicMoodField.Overlay {
+    private static func windLight(cols: Int, rows _: Int, start: TimeInterval) -> MosaicMoodField.Overlay {
         { column, row, time, colour in
             guard MosaicColour.unit(row, salt: 71) < 0.34 else { return colour }
-            let t = time - start
-            let head = (t * (12 + MosaicColour.unit(row, salt: 73) * 8) + MosaicColour.unit(row, salt: 75) * 90)
+            let elapsed = time - start
+            let head = (elapsed * (12 + MosaicColour.unit(row, salt: 73) * 8) + MosaicColour.unit(row, salt: 75) * 90)
                 .truncatingRemainder(dividingBy: Double(cols + 14)) - 7
             let behind = head - Double(column)
             return behind >= 0 && behind < 7 ? MosaicColour.lightened(colour, by: 0.28 * (1 - behind / 7)) : colour
@@ -261,16 +269,20 @@ enum MosaicMomentField {
     /// Dark rain; every 3 s a pixel bolt for 260 ms and a 90 ms flash of the field at 0.55.
     private static func stormLight(cols: Int, rows: Int, start: TimeInterval) -> MosaicMoodField.Overlay {
         { column, row, time, colour in
-            let t = time - start
+            let elapsed = time - start
             var result = colour
             let speed = 9 + MosaicColour.unit(column, salt: 81) * 6
-            let head = (MosaicColour.unit(column, salt: 83) * Double(rows + 6) + t * speed)
+            let head = (MosaicColour.unit(column, salt: 83) * Double(rows + 6) + elapsed * speed)
                 .truncatingRemainder(dividingBy: Double(rows + 6))
             let behind = head - Double(row)
-            if behind >= 0, behind < 3 { result = MosaicColour.lightened(result, by: 0.2 - behind * 0.05) }
-            let cycle = Int(t / 3)
-            let phase = t - Double(cycle) * 3
-            if phase < 0.09 { result = MosaicColour.mix(result, (1, 1, 1), 0.55) }
+            if behind >= 0, behind < 3 {
+                result = MosaicColour.lightened(result, by: 0.2 - behind * 0.05)
+            }
+            let cycle = Int(elapsed / 3)
+            let phase = elapsed - Double(cycle) * 3
+            if phase < 0.09 {
+                result = MosaicColour.mix(result, (1, 1, 1), 0.55)
+            }
             if phase < 0.26, row < Int(Double(rows) * 0.9), column == boltColumn(cycle: cycle, row: row, cols: cols) {
                 result = (1, 0.98, 0.85)
             }
@@ -278,14 +290,14 @@ enum MosaicMomentField {
         }
     }
 
-    /// Rows sampled ±0.8 by sin(t/240 ms + j·0.7), a warm 18% tint.
+    /// Rows sampled ±0.8 by sin(elapsed/240 ms + j·0.7), a warm 18% tint.
     private static func heatLight(base: [MosaicTriple], rows: Int, start: TimeInterval) -> MosaicMoodField.Overlay {
         let warm = hex(0xF2A65A)
         return { column, row, time, colour in
-            let t = time - start
-            let sampled = min(max(Int((Double(row) + 0.8 * sin(t / 0.24 + Double(row) * 0.7)).rounded()), 0), rows - 1)
+            let elapsed = time - start
+            let sampled = min(max(Int((Double(row) + 0.8 * sin(elapsed / 0.24 + Double(row) * 0.7)).rounded()), 0), rows - 1)
             let index = column * rows + sampled
-            let shimmered = index < base.count ? MosaicColour.mix(colour, base[index], min(t / 0.6, 1)) : colour
+            let shimmered = index < base.count ? MosaicColour.mix(colour, base[index], min(elapsed / 0.6, 1)) : colour
             return MosaicColour.mix(shimmered, warm, 0.18)
         }
     }
@@ -345,13 +357,17 @@ enum MosaicMomentField {
     static func timerStrength(column: Int, row: Int, cols: Int, rows: Int, time: TimeInterval) -> Double {
         let centreColumn = Double(cols - 1) / 2, centreRow = Double(rows - 1) / 2
         let distance = max(abs(Double(column) - centreColumn), abs(Double(row) - centreRow))
-        if distance <= 1.5 { return 1 }
+        if distance <= 1.5 {
+            return 1
+        }
         var strongest = 0.0
         for pulse in 0 ..< 3 {
             let age = time - Double(pulse) * 0.48
             guard age >= 0, age < 1.2 else { continue }
             let radius = age / 1.2 * Double(min(cols, rows)) / 2
-            if abs(distance - radius) < 0.9 { strongest = max(strongest, 1 - age / 1.2) }
+            if abs(distance - radius) < 0.9 {
+                strongest = max(strongest, 1 - age / 1.2)
+            }
         }
         return strongest
     }
@@ -440,13 +456,16 @@ enum MosaicText {
         var cursor: CGFloat = 0
         for (index, word) in words.enumerated() {
             let piece = (index > 0 ? " " : "") + word.text
-            starts.append(Int(cursor.rounded(.up)) + (index > 0 ? Int(" ".size(withAttributes: [.font: font]).width) : 0))
+            starts
+                .append(Int(cursor.rounded(.up)) + (index > 0 ? Int(" ".size(withAttributes: [.font: font]).width) : 0))
             let part = NSAttributedString(string: piece, attributes: [.font: font, .foregroundColor: UIColor.black])
             attributed.append(part)
             cursor += part.size().width
         }
         let width = max(Int(cursor.rounded(.up)) + 1, 1)
-        if attributed.length == 0 { attributed = NSMutableAttributedString(string: " ") }
+        if attributed.length == 0 {
+            attributed = NSMutableAttributedString(string: " ")
+        }
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         format.opaque = false
@@ -456,7 +475,8 @@ enum MosaicText {
         }
         var bytes = [UInt8](repeating: 0, count: width * rows)
         if let cgImage = image.cgImage, let context = CGContext(
-            data: &bytes, width: width, height: rows, bitsPerComponent: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(),
+            data: &bytes, width: width, height: rows, bitsPerComponent: 8, bytesPerRow: width,
+            space: CGColorSpaceCreateDeviceGray(),
             bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue
         ) {
             context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: rows))

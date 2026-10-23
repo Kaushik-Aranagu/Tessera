@@ -373,6 +373,9 @@ final class MosaicEngine {
         if transition == .wave, let progress = morphProgress(index), progress > 0, progress < 1 {
             value += config.morphBump * sin(Double.pi * progress)
         }
+        if let scaleHook {
+            value *= scaleHook(column, row, clock)
+        }
         if case let .kept(rule) = edgeKind(column: column, row: row) {
             value *= rule.scale
         }
