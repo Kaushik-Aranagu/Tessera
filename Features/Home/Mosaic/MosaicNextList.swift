@@ -3,16 +3,15 @@ import TesseraCore
 
 /// Next (sheet 199): the label, then three rows at 40 pt in Figtree 20, the third in ink 2. The rows are Home's own
 /// queue rows (swipe right strikes in ink and finishes the task, swipe left is Not now; the Tess line with Undo is
-/// unchanged). A tap grows a row to about 78 pt on the house spring and shows why Tess ranks it here; one open at a
-/// time. Tapping the why opens the thing.
+/// unchanged). The why sits at the right of each row (sheet 207); a tap opens the thing.
 struct MosaicNextList: View {
-    /// Called with the finished row's frame in window space.
-    let finished: (CGRect) -> Void
+    /// Called with the finished row's frame in window space; true when a tile is laid or flies for it.
+    let finished: (CGRect) -> Bool
 
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var rows = OneOpenRow()
-    @State private var ticks = 0
+    /// The one rigid tap for a Done that has no tile to land (sheet 207).
+    @State private var landings = 0
 
     var body: some View {
         let _ = model.revision
@@ -34,21 +33,19 @@ struct MosaicNextList: View {
                 ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
                     MosaicNextRow(entry: entry,
                                   ink: index == 2 ? 0.62 : 1,
-                                  why: why(of: entry, in: picks),
-                                  isOpen: rows.isOpen(entry.id),
-                                  toggle: { toggle(entry.id) },
-                                  finished: finished)
+                                  why: why(of: entry, in: picks).map { AppsListRows.fit($0, limit: 30) },
+                                  finished: { frame in
+                                      // The layer plays the one landing tap when its tile lands. With no tile (the
+                                      // moods off, or one already in flight) the row plays it itself, straight away.
+                                      if !finished(frame) {
+                                          landings += 1
+                                      }
+                                  })
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .tesseraFeedback(.selection, trigger: ticks)
-        .onChange(of: entries.map(\.id)) { _, ids in
-            // A row that finished or moved away takes its open state with it.
-            if let open = rows.open, !ids.contains(open) {
-                rows.close()
-            }
-        }
+        .tesseraFeedback(.setLogged, trigger: landings)
     }
 
     /// A private thing reads by its label, never its title: Core's one rule (the shown label, which also covers walled
@@ -70,61 +67,25 @@ struct MosaicNextList: View {
         let why = picks.first { $0.item.id == entry.id }?.why
         return why?.isEmpty == false ? why : nil
     }
-
-    private func toggle(_ id: UUID) {
-        ticks += 1
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            rows.tap(id)
-        }
-    }
 }
 
-/// One Next row: Home's queue row at 40 pt, and under it, while open, the why.
+/// One Next row (sheet 207): Home's queue row at 40 pt with the why at its right. Swipe right is Done, left is Not now;
+/// a tap opens the thing.
 private struct MosaicNextRow: View {
     let entry: QueueEntry
     let ink: Double
     let why: String?
-    let isOpen: Bool
-    let toggle: () -> Void
     let finished: (CGRect) -> Void
 
-    @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var frame: CGRect = .zero
 
-    private var showsWhy: Bool {
-        isOpen && why != nil
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            QueueRow(entry: entry, isNext: false, ink: ink,
-                     titleFont: Theme.voice(size: 20),
-                     // With no why to show, a tap opens the thing as it does on Home.
-                     tapped: why == nil ? nil : toggle,
-                     finished: { finished(frame) },
-                     strikesInInk: true)
-                .frame(minHeight: HomeMosaic.rowHeight)
-            if showsWhy, let why {
-                Button { model.open(.object(entry.id)) } label: {
-                    Text(why)
-                        .font(Theme.voice(size: 16))
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, minHeight: HomeMosaic.openRowHeight - HomeMosaic.rowHeight,
-                               alignment: .topLeading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityHint("Opens \(entry.title)")
-                .transition(reduceMotion ? .opacity : .offset(y: -6))
-            }
-        }
-        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 }
-        .accessibilityAction(named: isOpen ? "Hide why" : "Show why") {
-            if why != nil {
-                toggle()
-            }
-        }
+        QueueRow(entry: entry, isNext: false, ink: ink,
+                 titleFont: Theme.voice(size: 20),
+                 finished: { finished(frame) },
+                 strikesInInk: true,
+                 hand: QueueRow.HandStyle(why: why))
+            .frame(minHeight: HomeMosaic.rowHeight)
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 }
     }
 }

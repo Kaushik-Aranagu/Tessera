@@ -48,6 +48,8 @@ public struct MosaicFacts: Equatable, Sendable {
     public let nextTimed: MosaicNext?
     /// Whole minutes from now to `nextTimed`, nil with none.
     public let freeMinutes: Int?
+    /// The next timed thing for the Next page: tasks, training and routines only (no cook, never a calendar event).
+    public let pageNext: MosaicNext?
     let calendar: Calendar
 
     /// The calendar these facts were made with, for the mood picker.
@@ -157,9 +159,12 @@ public extension MosaicFacts {
             ?? SunTimes.approximate(on: now, calendar: calendar)
         let next = nextTimed(engine: engine, now: now, day: day, calendar: calendar, events: events)
         let free = next.map { max(0, Int($0.start.timeIntervalSince(now) / 60)) }
+        let pageNext = nextTimed(engine: engine, now: now, day: day, calendar: calendar,
+                                 events: events.filter { $0.app == .training || $0.app == .routines },
+                                 skippingCooks: true)
         return MosaicFacts(now: now, day: day, sunrise: sun.sunrise, sunset: sun.sunset,
                            finishedToday: finished(engine: engine, since: day), nextTimed: next, freeMinutes: free,
-                           calendar: calendar)
+                           pageNext: pageNext, calendar: calendar)
     }
 
     /// Actions that finish something. The app is read from what the action touched, else from the action's own area.
@@ -191,7 +196,7 @@ public extension MosaicFacts {
     }
 
     private static func nextTimed(engine: ActionEngine, now: Date, day: Date, calendar: Calendar,
-                                  events: [HandsEvent]) -> MosaicNext?
+                                  events: [HandsEvent], skippingCooks: Bool = false) -> MosaicNext?
     {
         let store = engine.store, classes = engine.classes
         let end = calendar.date(byAdding: .day, value: 1, to: day) ?? day.addingTimeInterval(86400)
@@ -213,13 +218,23 @@ public extension MosaicFacts {
         var candidates: [MosaicNext] = events.filter { $0.start > now && $0.start < end }
             .map { event in
                 let title = masked(event)
-                return MosaicNext(title: title, start: event.start, app: title == event.label ? event.app : nil)
+                return MosaicNext(
+                    title: title,
+                    start: event.start,
+                    app: title == event.label && !event.isPrivate ? event.app : nil
+                )
             }
         if let taskClass = classes[.task] {
             for task in store.objects(of: taskClass) where !task.isDeleted {
                 guard store.value("isDone", of: task) != .bool(true),
                       let start = store.value("startsAt", of: task)?.dateValue, start > now,
                       start < end else { continue }
+                // A task about a recipe ("Cook tacos") is a cook, and the Next page carries no cook.
+                if skippingCooks, store.linkedObjects("about", of: task).contains(where: {
+                    $0.classDef?.id == classes[.recipe]?.id
+                }) {
+                    continue
+                }
                 let masked = ObjectPrivacy.shownLabel(of: task, in: store, classes: classes)
                     ?? (PrivateFacts.isWalled(task.title, lastWeightKg: BodyWeight.lastKg(in: store))
                         || SecretWords.mentions(task.title) ? ObjectPrivacy.taskLabel : nil)

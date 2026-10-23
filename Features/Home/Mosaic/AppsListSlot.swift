@@ -74,7 +74,7 @@ enum AppsListRows {
     }
 }
 
-/// The apps menu under Next (sheet 205): a label "Apps" in ink 3 and a scroller of three 40 pt rows (more at large
+/// The apps menu under Next (sheet 205, no caption since 209): a scroller of three 40 pt rows (more at large
 /// text) that snaps to the
 /// middle one and wraps round, with no ticks, dots or dividers. The middle row is the pick: its name swells 1.3x in its
 /// accent on the house spring and its one-line fact is revealed from the right with a clip, sliding 14 pt. The others
@@ -88,6 +88,10 @@ struct AppsListSlot: View {
     @State private var middle = 0
     @State private var drag: CGFloat = 0
     @State private var ticks = 0
+    /// Whether the list has been moved: the glance plays after a settle, not on the first draw.
+    @State private var moved = false
+    /// Builder A's hook (sheet 206): each pick plays that app's glance in the mosaic, 240 ms after the list settles.
+    var onGlance: ((HomeApp) -> Void)?
     /// The rows, read once per change in the model and not on every drag frame.
     @State private var rows: [AppsListRows.Row] = []
     /// 40 pt at the default size; the rows grow with the text.
@@ -95,10 +99,6 @@ struct AppsListSlot: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-            Text("Apps")
-                .textRole(.label)
-                .foregroundStyle(Theme.Colors.inkTertiary)
-                .accessibilityAddTraits(.isHeader)
             ZStack(alignment: .top) {
                 // Five rows are laid out so the ring has a row to bring in on each side while it moves.
                 // Rows keep their identity as the ring turns, so a settle rolls instead of hopping; the ones two or
@@ -125,6 +125,12 @@ struct AppsListSlot: View {
             )
         }
         .tesseraFeedback(.selection, trigger: ticks)
+        .task(id: middle) {
+            guard moved, rows.indices.contains(middle) else { return }
+            try? await Task.sleep(for: .milliseconds(240))
+            guard !Task.isCancelled else { return }
+            onGlance?(rows[middle].app)
+        }
         // Read again when the model changes and when the day turns over.
         .task(id: "\(model.revision)-\(Calendar.current.startOfDay(for: AppClock.now).timeIntervalSince1970)") {
             // The loaders run on this refresh only (a change in the model or the day), never per frame.
@@ -135,6 +141,7 @@ struct AppsListSlot: View {
             ))
         }
         .accessibilityElement(children: .contain)
+        .accessibilityLabel("Apps")
         .accessibilityAdjustableAction { direction in
             settle(by: direction == .increment ? 1 : -1, count: rows.count)
         }
@@ -142,9 +149,13 @@ struct AppsListSlot: View {
             HomeV2DoorPage(door: door)
                 .safeAreaInset(edge: .top, spacing: 0) {
                     HStack {
-                        Button("‹ Home") { self.door = nil }
-                            .buttonStyle(InkLabelWordStyle())
-                            .frame(minWidth: 72, minHeight: 44, alignment: .leading)
+                        Button { self.door = nil } label: {
+                            Text("‹ Home")
+                                .frame(minWidth: 72, minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(InkLabelWordStyle())
+                        .accessibilityLabel("Back to Home")
                         Spacer()
                     }
                     .padding(.horizontal, Theme.Spacing.gutter - 8)
@@ -202,6 +213,7 @@ struct AppsListSlot: View {
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { drag = 0 }
         }
         guard steps != 0, count > 0 else { return }
+        moved = true
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
             middle = AppsListRows.wrapped(middle, steps, count: count)
             drag = 0
