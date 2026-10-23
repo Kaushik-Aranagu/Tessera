@@ -398,13 +398,18 @@ extension WorkoutContent {
 
     /// The context line above the name (live-workout.md): "Push A, set 1 of 4", "Rest, then set 2". No count: the
     /// strip says which exercise this is. Tap or pull down for the running order.
+    @ViewBuilder
     private func header(phase: WorkoutSession.Phase) -> some View {
-        let line = WorkoutLines.context(session, phase: phase)
-        return ViewThatFits(in: .horizontal) {
-            HStack(spacing: Theme.Spacing.m) { backWord; contextLine(line) }
-            VStack(alignment: .leading, spacing: 0) { backWord; contextLine(line) }
+        if LiveV2.isOn {
+            LiveV2Header(session: session, phase: phase, onOrder: { setOrder(open: true) }) { backWord }
+        } else {
+            let line = WorkoutLines.context(session, phase: phase)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Theme.Spacing.m) { backWord; contextLine(line) }
+                VStack(alignment: .leading, spacing: 0) { backWord; contextLine(line) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// A swipe in from the left edge leaves the same way Back does.
@@ -630,6 +635,10 @@ extension WorkoutContent {
     /// "kg", or "kg each" for dumbbells.
     private var unit: String {
         let perHand = session.currentExercise.map { ExerciseSwaps.isPerHand($0, store: model.store) } ?? false
+        // Liv v2 says the unit he chose (never a hard-coded "kg").
+        if LiveV2.isOn {
+            return LiveV2.unitWord(Format.unit, perHand: perHand)
+        }
         return perHand ? "kg each" : "kg"
     }
 
@@ -712,6 +721,9 @@ extension WorkoutContent {
 
 extension WorkoutContent {
     private var logLabel: String {
+        if LiveV2.isOn {
+            return "Hold to log set \(session.currentSetNumber), \(LiveV2.weightText(kg: session.weight)) \(LiveV2.spokenUnit) for \(Int(session.reps)) reps"
+        }
         let weight = Format.kilograms(session.weight)
         return "Hold to log set \(session.currentSetNumber), \(weight) kilograms for \(Int(session.reps)) reps"
     }
@@ -749,7 +761,7 @@ extension WorkoutContent {
                     // The key says what it logs (live-workout.md): "LOG 82.5 × 8", a 0.7 s hold on the ink line; the
                     // workout's last set logs and finishes in one hold. Silent: the set's haptic plays when it seats.
                     let finishes = session.isLastSetOfWorkout
-                    PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true,
+                    PaintKey(paint: LiveV2.accent, duration: 0.7, height: 64, drift: 20, isSilent: true,
                              hint: finishes ? "Logs the set and finishes the workout" : "Logs the set")
                     {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
@@ -758,9 +770,9 @@ extension WorkoutContent {
                         }
                     } label: { _ in
                         Text(
-                            "Log \(Format.kilograms(session.weight))\u{00A0}×\u{00A0}\(Int(session.reps))\(finishes ? " and finish" : "")"
+                            "Log \(LiveV2.isOn ? LiveV2.weightText(kg: session.weight) : Format.kilograms(session.weight))\u{00A0}×\u{00A0}\(Int(session.reps))\(finishes ? " and finish" : "")"
                         )
-                        .textRole(.keyWord)
+                        .liveKeyWord()
                         .contentTransition(.numericText())
                     } meta: {
                         EmptyView()
@@ -774,27 +786,27 @@ extension WorkoutContent {
                     }
                 case .rest:
                     // The horizon above carries +15 and the fling; the key only skips.
-                    PaintKey(paint: Paint.now, isTap: true, height: 64) {
+                    PaintKey(paint: LiveV2.isOn ? Paint.secondary : Paint.now, isTap: true, height: 64) {
                         skipRest()
                     } label: { _ in
-                        Text("Skip rest").textRole(.keyWord)
+                        Text("Skip rest").liveKeyWord()
                     }
                 case .exerciseDone:
-                    PaintKey(paint: Paint.cobalt, isTap: true, height: 64) {
+                    PaintKey(paint: LiveV2.isOn ? LiveV2.accent : Paint.cobalt, isTap: true, height: 64) {
                         if let next = session.nextUnfinishedIndex {
                             withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) { laneIndex = next
                             }
                         }
                     } label: { _ in
-                        Text("Next exercise").textRole(.keyWord)
+                        Text("Next exercise").liveKeyWord()
                     }
                 case .workoutDone:
-                    PaintKey(paint: Paint.live, duration: 0.8, height: 64, isSilent: true,
+                    PaintKey(paint: LiveV2.accent, duration: 0.8, height: 64, isSilent: true,
                              hint: "Finishes the workout")
                     {
                         finish()
                     } label: { _ in
-                        Text("Finish").textRole(.keyWord)
+                        Text("Finish").liveKeyWord()
                     } meta: {
                         EmptyView()
                     }
@@ -806,7 +818,7 @@ extension WorkoutContent {
             if phase == .set, !session.isEditing, session.finishedAt == nil, !isSwapOpen {
                 let similar = session.currentIsBusy || !session.hasOtherUnfinished
                 Button(similar ? "Similar" : "Busy", action: busyTapped)
-                    .textRole(.keyWord)
+                    .liveKeyWord()
                     .foregroundStyle(Paint.secondary)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
@@ -819,7 +831,7 @@ extension WorkoutContent {
             if session.finishedAt == nil {
                 // PAUSE leaves to Home, where the key reads RESUME with the progress line.
                 Button("Pause") { model.isWorkoutPresented = false }
-                    .textRole(.keyWord)
+                    .liveKeyWord()
                     .foregroundStyle(Paint.secondary)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
@@ -883,9 +895,14 @@ extension WorkoutContent {
                 routineID: model.store.linkedObjects("routine", of: session.workout).first?.id
             )
         }
+        let finishedWorkout = session.workout
         model.isWorkoutPresented = false
         model.session = nil
         model.touch()
+        // Live v2: the workout lands on its finished page when pages v2 is on (the flourish above already ran).
+        if LiveV2.isOn, PagesV2Switch.isOn {
+            model.open(.object(finishedWorkout.id), .deeper)
+        }
     }
 }
 
