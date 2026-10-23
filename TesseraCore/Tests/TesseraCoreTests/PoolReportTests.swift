@@ -222,6 +222,25 @@ struct PoolReportTests {
         #expect(PoolFormat.wholeDollars(826_500, lakh: true) == "$8,26,500")
     }
 
+    @Test func theMonthsMovesAreNewestFirstAndOnlyThisMonths() throws {
+        let checking = try pool("US checking", opening: "5000")
+        let india = try pool("India account", "INR")
+        let first = try engine.perform(
+            LogMove(from: checking.id, to: india.id, sent: "100", arrived: "8300", at: at(10, 3)),
+            by: .user
+        ).output
+        let second = try engine.perform(
+            LogMove(from: checking.id, to: india.id, sent: "100", arrived: "8300", at: at(10, 9)),
+            by: .user
+        ).output
+        try engine.perform(
+            LogMove(from: checking.id, to: india.id, sent: "100", arrived: "8300", at: at(9, 20)),
+            by: .user
+        )
+        #expect(report().monthMoves(calendar: calendar).map(\.id) == [second.id, first.id])
+        #expect(report(now: at(9, 25)).monthMoves(calendar: calendar).count == 1)
+    }
+
     // MARK: Walls
 
     @Test func widgetsAndLiveActivitiesNeverMentionAPool() throws {
