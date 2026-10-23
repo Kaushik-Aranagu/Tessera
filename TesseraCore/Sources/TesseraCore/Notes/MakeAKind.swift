@@ -290,3 +290,17 @@ public struct KeepAllNotes: EngineAction {
         "\(kept) kept."
     }
 }
+
+/// What an object made from a note says about where it came from. Read on every look: a note that has turned private
+/// since reads "Private note", never its title.
+@MainActor
+public enum KindSource {
+    public static func line(of object: ObjectRecord, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef])
+        -> String?
+    {
+        guard let source = store.linkedObjects(KindRules.sourceNoteKey, of: object).first, !source.isDeleted else {
+            return nil
+        }
+        return ObjectPrivacy.shownLabel(of: source, in: store, classes: classes) ?? source.title
+    }
+}
