@@ -52,7 +52,7 @@ struct MoneyMonthTests {
         #expect(report().monthSentence(calendar: calendar) == "October, spent 1,240 US and 310 EUR.")
         let a = try engine.perform(CreatePool(name: "Euro card", currency: "EUR", opening: "100"), by: .user).output
         _ = a
-        try engine.perform(RecordRate(pair: "EUR/USD", value: "1.25", at: at(10, 1)), by: .user)
+        try engine.perform(RecordRate(pair: "EUR/USD", value: "1.25", at: at(10, 15)), by: .user)
         #expect(report().monthSentence(calendar: calendar)
             == "October, spent 1,240 US and 310 EUR, about 1,628 in all.")
     }
@@ -94,5 +94,17 @@ struct MoneyMonthTests {
         let range = try #require(report().monthRange(calendar: calendar))
         #expect(calendar.component(.month, from: range.lowerBound) == 7)
         #expect(calendar.component(.month, from: range.upperBound) == 10)
+    }
+
+    @Test func theAboutSaysWhenItsRatesAreOld() throws {
+        try spend(100, "100")
+        try spend(10, "10", currency: "EUR")
+        _ = try engine.perform(CreatePool(name: "Euro card", currency: "EUR", opening: "1"), by: .user)
+        try engine.perform(RecordRate(pair: "EUR/USD", value: "1.2", at: at(9, 1)), by: .user)
+        #expect(report()
+            .monthSentence(calendar: calendar) ==
+            "October, spent 100 US and 10 EUR, about 112 in all. The rates are old.")
+        try engine.perform(RecordRate(pair: "EUR/USD", value: "1.3", at: at(10, 15)), by: .user)
+        #expect(report().monthSentence(calendar: calendar) == "October, spent 100 US and 10 EUR, about 113 in all.")
     }
 }

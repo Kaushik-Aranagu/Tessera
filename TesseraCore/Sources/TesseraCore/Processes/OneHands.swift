@@ -14,6 +14,12 @@ public struct HandsEvent: Equatable, Sendable {
     public let hands: [DateInterval]
     /// Running or anchored to a serve time: it does not move.
     public let isFixed: Bool
+
+    /// Its label is exactly one of the private labels ("Private workout", "Private recipe", "Private routine"), never
+    /// its words. A real title that merely starts with "Private" is not one.
+    public var isPrivate: Bool {
+        [ObjectPrivacy.routineLabel, ObjectPrivacy.recipeLabel, RoutinesLanding.privateRoutine].contains(label)
+    }
 }
 
 public struct HandsShift: Equatable, Sendable {

@@ -29,7 +29,8 @@ struct MosaicFactsTests {
 
     @Test func sunriseAndSunsetFollowTheRealSky() throws {
         let sun = try #require(SunTimes.day(latitude: 37.77, longitude: -122.42, on: at(12), calendar: calendar))
-        // San Francisco on Oct 22 (daylight time): solar noon about 12:54 pm and a 10 h 57 min day, so about 7:25 am and
+        // San Francisco on Oct 22 (daylight time): solar noon about 12:54 pm and a 10 h 57 min day, so about 7:25 am
+        // and
         // 6:23 pm. The same algorithm gives 9:26 UT against the published 9:25 for the Almanac's own example.
         #expect(abs(sun.sunrise.timeIntervalSince(at(7, 25))) < 5 * 60)
         #expect(abs(sun.sunset.timeIntervalSince(at(18, 23))) < 5 * 60)
@@ -99,6 +100,41 @@ struct MosaicFactsTests {
         #expect(facts(at(17, 42), events: [event]).nextTimed?.title == "Private workout")
     }
 
+    @Test func anEventLabelGetsTheSameCheckAsATask() {
+        let cook = HandsEvent(app: .kitchen, label: "Lexapro soup and pasta", start: at(18), end: at(19), hands: [],
+                              isFixed: true)
+        let money = HandsEvent(app: .routines, label: "Pay 1200 rent", start: at(18, 30), end: at(19), hands: [],
+                               isFixed: false)
+        #expect(facts(at(17, 42), events: [cook]).nextTimed?.title == "Private recipe")
+        #expect(facts(at(17, 42), events: [money]).nextTimed?.title == RoutinesLanding.privateRoutine)
+        let plain = HandsEvent(
+            app: .kitchen,
+            label: "Tacos and rice",
+            start: at(18),
+            end: at(19),
+            hands: [],
+            isFixed: true
+        )
+        #expect(facts(at(17, 42), events: [plain]).nextTimed?.title == "Tacos and rice")
+        // A real title that starts with "Private" is not a private label: it is checked like any other.
+        let sneaky = HandsEvent(app: .kitchen, label: "Private Lexapro soup", start: at(18), end: at(19), hands: [],
+                                isFixed: true)
+        let sneakyMoney = HandsEvent(app: .routines, label: "Private rent 1200", start: at(18), end: at(19), hands: [],
+                                     isFixed: false)
+        #expect(!sneaky.isPrivate && !sneakyMoney.isPrivate)
+        #expect(facts(at(17, 42), events: [sneaky]).nextTimed?.title == "Private recipe")
+        #expect(facts(at(17, 42), events: [sneakyMoney]).nextTimed?.title == RoutinesLanding.privateRoutine)
+        #expect(cook.isPrivate == false)
+        #expect(HandsEvent(
+            app: .training,
+            label: "Private workout",
+            start: at(18),
+            end: at(19),
+            hands: [],
+            isFixed: false
+        ).isPrivate)
+    }
+
     // MARK: Finished
 
     @Test func finishedTodayCountsWhatEndedWithNoTitles() throws {
@@ -117,5 +153,35 @@ struct MosaicFactsTests {
         let evening = facts(at(23, 50)), morning = facts(at(0, 10, day: 23))
         #expect(morning.rolledOver(since: evening))
         #expect(!facts(at(23, 55)).rolledOver(since: evening))
+    }
+}
+
+/// Where mosaic and month facts must never appear.
+struct MosaicScanTests {
+    private func sources(in relative: String) -> [String] {
+        let package = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let folder = package.appending(path: relative)
+        guard let walker = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil)
+        else { return [] }
+        return walker.compactMap { ($0 as? URL).flatMap { $0.pathExtension == "swift" ? try? String(
+            contentsOf: $0,
+            encoding: .utf8
+        ) : nil } }
+    }
+
+    @Test func noWidgetLockScreenOrIntentPathReadsTheMosaicOrTheMonthLines() {
+        let paths = ["../Widgets", "../Watch", "../Shared", "Sources/TesseraIntents"]
+        let banned = ["MosaicFacts", "MosaicFinish", "finishedToday", "PoolMonthLine", "poolLines(", "monthSentence("]
+        var checked = 0
+        for path in paths {
+            for text in sources(in: path) {
+                checked += 1
+                for word in banned {
+                    #expect(!text.contains(word), "\(word) in \(path)")
+                }
+            }
+        }
+        #expect(checked > 0)
     }
 }
