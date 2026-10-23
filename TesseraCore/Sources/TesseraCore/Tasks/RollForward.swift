@@ -4,7 +4,9 @@ import Foundation
 /// move to today at the same time of day. After 7 rolls a task goes to Later. One action, so one undo.
 public struct RollForwardTasks: EngineAction {
     /// The day changes at 04:00, so a late-night task still belongs to "today".
-    public static let dayStartHour = TesseraDay.startHour
+    public static var dayStartHour: Int {
+        TesseraDay.startHour
+    }
     public static let rollsBeforeLater = 7
 
     public static let descriptor = ActionDescriptor(

@@ -271,4 +271,15 @@ struct AppSummaryLinesTests {
         #expect(line("Morning is running", key: "Morning")?.text == "Morning is running")
         #expect(line("Morning is running", key: nil)?.isPrivate == false)
     }
+
+    @Test func privateTrainingAndPrivateRoutinesBothDropTheirTime() throws {
+        let secret = try engine.perform(CreateRoutine(title: "Knee rehab day"), by: .user).output
+        let plan = try engine.perform(CreatePlan(title: "Rehab", routines: [secret.id]), by: .user).output
+        #expect(try #require(lines(at(9), plan: plan)[.training]).time == nil)
+        let runs = (1 ... 8).map { day in RoutineRun(start: at(20, day: 22 - day), end: at(20, 20, day: 22 - day)) }
+        let facts = RoutinesLanding.facts(items: [.init(name: "Knee", count: 4, isPrivate: true, runs: runs)],
+                                          running: nil, now: at(12), calendar: calendar)
+        let routine = lines(at(12), routines: .init(facts: facts, nextUsualStart: at(20)))[.routines]
+        #expect(routine?.isPrivate == true && routine?.time == nil)
+    }
 }

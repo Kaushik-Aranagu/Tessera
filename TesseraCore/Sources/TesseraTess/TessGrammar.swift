@@ -791,11 +791,8 @@ enum TessDates {
 
     /// The next given weekday; today counts only if it hasn't passed (it's the same day, so we keep it).
     /// 23:00 to 07:00 becomes the next 7 am.
-    static func outOfQuietHours(_ date: Date, calendar: Calendar) -> Date {
-        let hour = calendar.component(.hour, from: date)
-        guard hour >= 23 || hour < 7 else { return date }
-        let day = hour >= 23 ? calendar.date(byAdding: .day, value: 1, to: date) ?? date : date
-        return calendar.date(bySettingHour: 7, minute: 0, second: 0, of: day) ?? date
+    static func outOfQuietHours(_ date: Date, calendar: Calendar, quiet: QuietHours = .current) -> Date {
+        quiet.leaving(date, calendar: calendar)
     }
 
     /// The next date with that weekday, counted from his day: "thu" said at 1 am Friday (still his Thursday) is

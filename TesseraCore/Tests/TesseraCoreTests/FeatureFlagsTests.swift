@@ -32,6 +32,32 @@ struct FeatureFlagsTests {
         #expect(FeatureFlags.notFlags.isSubset(of: ids))
     }
 
+    /// The ids ReviewChoices marks `needsClaude: true`, read from the source.
+    private func claudeChoices() throws -> Set<String> {
+        let package = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let text = try String(contentsOf: package.appending(path: "../Features/Settings/ReviewChoices.swift"),
+                              encoding: .utf8)
+        var found = Set<String>()
+        for block in text.components(separatedBy: "Choice(").dropFirst() {
+            // A choice's own text ends where the next one starts; its id is the first thing in it.
+            guard let id = block.firstMatch(of: /^\s*id: "([A-Za-z0-9]+)"/)?.1, block.contains("needsClaude: true")
+            else { continue }
+            found.insert(String(id))
+        }
+        return found
+    }
+
+    @Test func theClaudeFlagsAreExactlyTheSwitchesThatSendSomethingToClaude() throws {
+        let fromApp = try claudeChoices()
+        #expect(!fromApp.isEmpty)
+        let flagged = Set(FeatureFlags.all.filter(\.needsClaude).map(\.id))
+        // Every Claude switch is a flag here and marked, and nothing else is: a feature that sends nothing to Claude is
+        // never held Off by the Claude switch.
+        #expect(flagged == fromApp.subtracting(FeatureFlags.notFlags), "\(flagged.symmetricDifference(fromApp))")
+        #expect(!flagged.contains("aisleOrder"))
+    }
+
     @Test func everythingShipsOnAndAClaudeFlagNeedsTheClaudeSwitchToo() {
         let state = FeatureChoices.shipped
         for flag in FeatureFlags.all where !flag.needsClaude && flag.id != "homeV2" {
