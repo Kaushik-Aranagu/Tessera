@@ -37,6 +37,8 @@ public enum ActionRegistry {
         StartCookSession.descriptor, SetServeTime.descriptor, AddDish.descriptor, DropDish.descriptor,
         AdvanceDishStep.descriptor, PauseCook.descriptor, ResumeCook.descriptor, FinishCookSession.descriptor,
         CreatePool.descriptor, LogInflow.descriptor, ReassignSpend.descriptor, LogMove.descriptor,
+        RecordRate.descriptor, ArchivePool.descriptor,
+        CreateOccasion.descriptor, LinkToOccasion.descriptor, UnlinkFromOccasion.descriptor,
         RecordRate.descriptor, ArchivePool.descriptor, RepeatWorkout.descriptor,
     ]
 
@@ -162,6 +164,9 @@ public enum ActionRegistry {
         LogMove.descriptor.name: { try decode(LogMove.self, LogMove.descriptor.name, $0) },
         RecordRate.descriptor.name: { try decode(RecordRate.self, RecordRate.descriptor.name, $0) },
         ArchivePool.descriptor.name: { try decode(ArchivePool.self, ArchivePool.descriptor.name, $0) },
+        CreateOccasion.descriptor.name: { try decode(CreateOccasion.self, CreateOccasion.descriptor.name, $0) },
+        LinkToOccasion.descriptor.name: { try decode(LinkToOccasion.self, LinkToOccasion.descriptor.name, $0) },
+        UnlinkFromOccasion.descriptor.name: { try decode(UnlinkFromOccasion.self, UnlinkFromOccasion.descriptor.name, $0) },
         RepeatWorkout.descriptor.name: { try decode(RepeatWorkout.self, RepeatWorkout.descriptor.name, $0) },
         QueueBook.descriptor.name: { try decode(QueueBook.self, QueueBook.descriptor.name, $0) },
         EditBook.descriptor.name: { try decode(EditBook.self, EditBook.descriptor.name, $0) },
