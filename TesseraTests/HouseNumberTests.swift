@@ -35,7 +35,7 @@ struct HouseNumberTests {
     }
 
     @Test func anExactValueIsOneStepHeavierThanAnEstimate() {
-        #expect(HouseNumberText.weight(estimate: true, size: 40) == .ultraLight)
+        #expect(HouseNumberText.weight(estimate: true, size: 40) == .thin)
         #expect(HouseNumberText.weight(estimate: false, size: 40) == .light)
         #expect(HouseNumberText.weight(estimate: true, size: 20) == .light)
         #expect(HouseNumberText.weight(estimate: false, size: 20) == .regular)
