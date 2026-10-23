@@ -40,7 +40,7 @@ public enum ActionRegistry {
         RecordRate.descriptor, ArchivePool.descriptor,
         MakeKind.descriptor, KeepNoteAsObject.descriptor, KeepAllNotes.descriptor,
         CreateOccasion.descriptor, LinkToOccasion.descriptor, UnlinkFromOccasion.descriptor, SetAway.descriptor,
-        RecordRate.descriptor, ArchivePool.descriptor, RepeatWorkout.descriptor,
+        RepeatWorkout.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
