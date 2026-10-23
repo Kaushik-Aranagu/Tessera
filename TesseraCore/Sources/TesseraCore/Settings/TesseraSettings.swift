@@ -32,6 +32,13 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
     public var quietEndMinute: Int?
     /// The hour his day turns over, 0 to 8; nil is today's 4 am.
     public var dayStartHour: Int?
+    /// What the mosaic shows: nil is "Tess picks" (the default), a scene's name pins it, "stripes" keeps the mood
+    /// stripes.
+    public var mosaicBackdrop: String?
+
+    public var backdrop: MosaicBackdrop {
+        MosaicBackdrop(encoded: mosaicBackdrop)
+    }
 
     /// The quiet hours in force.
     public var quietHours: QuietHours {
@@ -101,6 +108,12 @@ public struct SettingsStore {
                           endMinute: minute("quietEndMinute", QuietHours.standard.endMinute))
     }
 
+    /// "Everything as before" for the mosaic: back to Tess picks. Settings' reset calls this beside its own switches.
+    @discardableResult
+    public func resetMosaic(by actor: Actor = .user) throws -> TesseraSettings {
+        try update(by: actor) { $0.mosaicBackdrop = nil }
+    }
+
     /// All nil until the first write; creates nothing.
     public func read() -> TesseraSettings {
         guard let object = engine.store.object(id: Self.objectID), !object.isDeleted else { return TesseraSettings() }
@@ -125,6 +138,7 @@ public struct SettingsStore {
             .flatMap { (0 ..< 1440).contains($0) ? $0 : nil }
         settings.quietEndMinute = store.number("quietEndMinute", of: object).map { Int($0) }
             .flatMap { (0 ..< 1440).contains($0) ? $0 : nil }
+        settings.mosaicBackdrop = text("mosaicBackdrop")
         settings.dayStartHour = store.number("dayStartHour", of: object).map { Int($0) }
             .flatMap { (0 ... 8).contains($0) ? $0 : nil }
         return settings
@@ -208,6 +222,10 @@ public struct WriteSettings: EngineAction {
         try transaction.set("displayUnits", to: settings.displayUnits.encoded.map(FieldValue.text), on: object)
         try transaction.set("quietStartMinute", to: settings.quietStartMinute.map { .number(Double($0)) }, on: object)
         try transaction.set("quietEndMinute", to: settings.quietEndMinute.map { .number(Double($0)) }, on: object)
+        // Whatever is handed in is written as one of the three plain forms, so a stray text never lands.
+        try transaction.set("mosaicBackdrop",
+                            to: MosaicBackdrop(encoded: settings.mosaicBackdrop).encoded.map(FieldValue.text),
+                            on: object)
         try transaction.set("dayStartHour", to: settings.dayStartHour.map { .number(Double($0)) }, on: object)
         return object
     }

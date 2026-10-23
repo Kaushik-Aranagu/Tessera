@@ -181,8 +181,8 @@ struct AppsListSlot: View {
                     .fixedSize()
                 if isMiddle, !row.summary.isEmpty {
                     Spacer(minLength: Theme.Spacing.s)
-                    Text(AppsListRows.fit(row.summary, limit: typeSize.isAccessibilitySize ? 22 : 38))
-                        .textRole(.data)
+                    NumberedText(text: AppsListRows.fit(row.summary, limit: typeSize.isAccessibilitySize ? 22 : 38),
+                                 size: 16)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .lineLimit(2)
                         .multilineTextAlignment(.trailing)

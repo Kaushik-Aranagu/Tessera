@@ -55,6 +55,10 @@ final class HomeStub: URLProtocol, @unchecked Sendable {
     static func session() -> URLSession {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [HomeStub.self]
+        // The stub answers at once, but a busy suite can starve the loader for minutes, so the default 60 s request
+        // timeout is not what is under test. Ten minutes still ends a real hang.
+        configuration.timeoutIntervalForRequest = 600
+        configuration.timeoutIntervalForResource = 600
         return URLSession(configuration: configuration)
     }
 
