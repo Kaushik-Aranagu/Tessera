@@ -73,3 +73,64 @@ struct SoulLightPaintTests {
         #expect(light.washes[0].stops[0].color != SoulPalette.look(.porcelain).washes[0].stops[0].color)
     }
 }
+
+/// Her eyes against her body, on every look and at the peak of a burst (3:1 or better).
+struct SoulEyeContrastTests {
+    private func luminance(_ red: Double, _ green: Double, _ blue: Double) -> Double {
+        func channel(_ value: Double) -> Double {
+            value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * channel(red) + 0.7152 * channel(green) + 0.0722 * channel(blue)
+    }
+
+    private func components(_ hex: UInt32) -> (Double, Double, Double) {
+        (Double((hex >> 16) & 0xFF) / 255, Double((hex >> 8) & 0xFF) / 255, Double(hex & 0xFF) / 255)
+    }
+
+    /// The darkest and lightest body luminance within 0.9 R of her centre, composited over `ground`.
+    private func range(_ input: SoulCloud.Input, ground: UInt32) throws -> (low: Double, high: Double) {
+        let image = try #require(SoulCloud.image(input))
+        let data = try #require(image.dataProvider?.data as Data?)
+        let back = components(ground)
+        let radiusPixels = SoulCloud.radius(input) / SoulCloud.span * Double(image.width)
+        let centre = Double(image.width) / 2
+        var low = 1.0, high = 0.0
+        for row in 0 ..< image.height {
+            for column in 0 ..< image.width
+                where hypot(Double(column) - centre, Double(row) - centre) < radiusPixels * 0.9
+            {
+                let offset = (row * image.width + column) * 4
+                let alpha = Double(data[offset + 3]) / 255
+                // Premultiplied: the colour over the ground is the stored colour plus the ground's remainder.
+                let red = Double(data[offset]) / 255 + back.0 * (1 - alpha)
+                let green = Double(data[offset + 1]) / 255 + back.1 * (1 - alpha)
+                let blue = Double(data[offset + 2]) / 255 + back.2 * (1 - alpha)
+                let value = luminance(red, green, blue)
+                low = min(low, value)
+                high = max(high, value)
+            }
+        }
+        return (low, high)
+    }
+
+    @Test @MainActor func herEyesHaveThreeToOneAgainstHerBodyOnEveryLookAtTheBurstPeak() throws {
+        let peak = SoulCloud.bursts(quiet: false)[2]
+        let time = peak.start + peak.length / 2
+        for look in Look.all {
+            var input = SoulCloud.Input(paints: look.isDark ? SoulCloud.paintsDark : SoulCloud.paintsLight,
+                                        dark: look.isDark, time: time)
+            if look.isDark, look.ground == 0x000000 {
+                input.chroma = 1.25
+            }
+            let ink = components(look.isDark ? look.ground : look.ink)
+            let ground = components(look.ground)
+            let mix = look.isDark ? ink : (ink.0 * 0.86 + ground.0 * 0.14, ink.1 * 0.86 + ground.1 * 0.14,
+                                           ink.2 * 0.86 + ground.2 * 0.14)
+            let eyes = luminance(mix.0, mix.1, mix.2)
+            let body = try range(input, ground: look.ground)
+            let ratio = look.isDark ? (body.low + 0.05) / (eyes + 0.05) : (eyes < body.low
+                ? (body.low + 0.05) / (eyes + 0.05) : 1)
+            #expect(ratio >= 3, "\(look.name): eyes \(eyes), body from \(body.low) to \(body.high), ratio \(ratio)")
+        }
+    }
+}
