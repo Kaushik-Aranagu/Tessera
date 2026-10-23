@@ -301,6 +301,9 @@ final class AppModel {
                 try? await Task.sleep(for: .seconds(3))
             }
         #endif
+        if let routed = routedWrite(phrase) {
+            return routed
+        } // Write anywhere (135 part 5)
         let result = await runtime.tess.capture(phrase, context: captureContext())
         isAskingClaude = false
         return land(result)
@@ -320,11 +323,6 @@ final class AppModel {
         return land(result)
     }
 
-    /// The open dated-lift ask ("Bench 80 × 8 for Monday?"), if the last phrase raised one.
-    var pendingDatedLift: TessDatedLiftAsk? {
-        (runtime.tess as? TessCaptureEngine)?.pendingDatedLift
-    }
-
     /// LOG or NOT NOW on the dated-lift ask: lands like a capture and returns Tess's line.
     func answer(_ choice: TessDatedLiftAsk.Choice) -> String {
         guard let engine = runtime.tess as? TessCaptureEngine else { return "" }
@@ -336,7 +334,7 @@ final class AppModel {
     private(set) var lastKeepsWords = false
 
     /// Pending records become ghost rows that dry after `captureDryTime`; returns Tess's line.
-    private func land(_ result: TessCapture) -> String {
+    func land(_ result: TessCapture) -> String {
         lastKeepsWords = result.keepsWords
         let pending = result.records.filter { $0.state == .pending }
         if let first = pending.first {
