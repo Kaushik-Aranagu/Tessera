@@ -38,7 +38,8 @@ public extension HomeSentence {
         guard spends.count == 1, let spend = spends.first else { return "Money logged" }
         let note = (store.value("note", of: spend)?.stringValue ?? "").trimmingCharacters(in: .whitespaces)
         guard let word = note.split(separator: " ").first.map(String.init), !word.isEmpty else { return "Money logged" }
-        if ObjectPrivacy.isPrivateWord(note, in: store) {
+        // The first word is asked on its own too: "ozempic pharmacy" is private by its first word alone.
+        if ObjectPrivacy.isPrivateWord(note, in: store) || ObjectPrivacy.isPrivateWord(word, in: store) {
             return "Private spend paid"
         }
         return word.prefix(1).uppercased() + word.dropFirst().lowercased() + " paid"
