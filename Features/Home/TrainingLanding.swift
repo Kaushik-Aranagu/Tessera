@@ -107,7 +107,7 @@ struct TrainingWeekMarks: View {
         HStack(alignment: .top, spacing: 0) {
             ForEach(dots) { dot in
                 VStack(spacing: 6) {
-                    mark(dot.state)
+                    mark(dot)
                         .frame(width: 24, height: 24)
                     Text(dot.label)
                         .textRole(.label)
@@ -131,7 +131,19 @@ struct TrainingWeekMarks: View {
                                                isBest: false)
 
     @ViewBuilder
-    private func mark(_ state: WeekDot.State) -> some View {
+    private func mark(_ dot: WeekDot) -> some View {
+        // Finishing marks (139): a session just finished, so today's mark gathers its sets and closes.
+        if FinishWords.isOn, dot.id == TesseraDay().today(AppClock.now), dot.state == .today || dot.state == .done,
+           FinishMoment.shared.current != nil
+        {
+            FinishingTodayMark(side: 24, open: Self.todayMark, closed: Self.doneMark)
+        } else {
+            plainMark(dot.state)
+        }
+    }
+
+    @ViewBuilder
+    private func plainMark(_ state: WeekDot.State) -> some View {
         switch state {
         case .done:
             SetMarkCircle(spec: Self.doneMark, side: 24)

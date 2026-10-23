@@ -369,11 +369,22 @@ private struct ListPage: View {
         rows.label(for: item, name: item.text, lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
+    /// The item's words; with Together's link colours on, an item that came from another app's thing (tacos' lime)
+    /// takes a 1 pt underline in that app's accent, text in ink (135 §3). A walled item stays plain.
+    private func linked(_ item: ListContents.Item, _ shown: String) -> Text {
+        guard Together.isOn(Together.linkColours), shown == item.text,
+              let source = model.store.linkedObjects("about", of: item.object).first(where: { !$0.isDeleted }),
+              ObjectPrivacy.shownLabel(of: source, in: model.store, classes: model.classes) == nil,
+              let app = HomeApp.of(source, classes: model.classes), app != .lists
+        else { return Text(shown) }
+        return Text(shown).underline(true, color: app.accent)
+    }
+
     /// A row; with a run open it grows to 64 pt (10.7). The run is read once in `body` and passed down (QA on #814).
     private func row(_ item: ListContents.Item, running: Bool) -> some View {
         let shown = label(item)
         return Button { tap(item) } label: {
-            (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold) + Text(shown))
+            (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold) + linked(item, shown))
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
                 .lineLimit(2)

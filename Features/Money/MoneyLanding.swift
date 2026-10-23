@@ -96,7 +96,8 @@ struct MoneyLandingView: View {
 }
 
 /// The signature line: an ink rule, "October so far", then the total on the decimal line (whole part large, cents
-/// smaller in ink-secondary, one baseline). Never sage (sage is money moving) and never red. Other currencies sit under it in the same figures, then the
+/// smaller in ink-secondary, one baseline). Never sage (sage is money moving) and never red. Other currencies sit under
+/// it in the same figures, then the
 /// one "about" dollar total. Absent when nothing is logged.
 private struct TotalRule: View {
     let facts: MoneyLandingFacts
