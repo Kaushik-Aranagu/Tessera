@@ -47,8 +47,12 @@ public struct WriteRouter {
         guard !normalized.isEmpty, !looksLikeClaudeKey(phrase) else { return .nothing }
         // 1. Walled first. One deterministic reading; no tie-break of any kind.
         let weight = TessRequest.lastWeightKg(context, engine: engine)
-        if SecretWords.mentions(phrase) || PrivateFacts.isWalled(phrase, lastWeightKg: weight) {
-            return walled(phrase, text: normalized, context: context).map(Route.one) ?? .nothing
+        if SecretWords.mentions(phrase) || PrivateFacts.isWalled(phrase, lastWeightKg: weight) || Self
+            .isCalorieShaped(phrase)
+        {
+            // A walled line always has a reading: its own, or the private note. Never nothing, so no caller can hand it
+            // on to anything else.
+            return .one(walled(phrase, text: normalized, context: context) ?? privateNote(phrase))
         }
         // 2. Each app reads the line by itself.
         var found: [Candidate] = []
@@ -102,14 +106,27 @@ public struct WriteRouter {
     private func walled(_ phrase: String, text: String, context: TessContext) -> Candidate? {
         guard let parse = grammar.parseSecret(phrase, text: text, context: context)
             ?? grammar.parseRememberedMoney(phrase)
+            ?? grammar.parsePools(phrase, context: context)
             ?? grammar.parseMoney(phrase, text: text, context: context, entry: nil)
             ?? grammar.parseBodyFact(phrase, context: context)
             ?? grammar.parsePrivateLog(phrase, context: context)
         else { return nil }
         switch parse {
         case let .spend(_, note, _):
-            return Candidate(app: .money, action: "logSpend", receipt: Self.spendReceipt(note), confidence: 1,
+            return Candidate(app: .money, action: "logSpend", receipt: spendReceipt(note), confidence: 1,
                              isWalled: true, parse: parse)
+        case .inflow:
+            return Candidate(
+                app: .money,
+                action: "logInflow",
+                receipt: "Money in, logged.",
+                confidence: 1,
+                isWalled: true,
+                parse: parse
+            )
+        case .poolMove:
+            return Candidate(app: .money, action: "logMove", receipt: "Money moved.", confidence: 1, isWalled: true,
+                             parse: parse)
         case .shopTotal, .skipShopTotal:
             return Candidate(app: .money, action: "logShopTotal", receipt: "Groceries total, logged.", confidence: 1,
                              isWalled: true, parse: parse)
@@ -119,6 +136,17 @@ public struct WriteRouter {
         default:
             return nil
         }
+    }
+
+    /// A calorie or energy line ("calories 2400 today", "burned 400 kcal"): walled with the body facts, so it never
+    /// reaches a model and never rides a receipt.
+    static func isCalorieShaped(_ phrase: String) -> Bool {
+        phrase.lowercased().firstMatch(of: /\b(?:calories?|kcal|cals?)\b/) != nil
+    }
+
+    private func privateNote(_ phrase: String) -> Candidate {
+        Candidate(app: .notes, action: "createNote", receipt: "Private note, kept.", confidence: 1, isWalled: true,
+                  parse: .privateNote(body: phrase, remembered: false))
     }
 
     private func explicitNote(_ phrase: String) -> Candidate? {
@@ -156,7 +184,7 @@ public struct WriteRouter {
                               isWalled: false, parse: parse)]
         case let .spend(_, note, _):
             let verb = text.firstMatch(of: /^(?:spent|spend|paid)\b/) != nil
-            return [Candidate(app: .money, action: "logSpend", receipt: Self.spendReceipt(note),
+            return [Candidate(app: .money, action: "logSpend", receipt: spendReceipt(note),
                               confidence: verb ? 0.95 : 0.7, isWalled: false, parse: parse)]
         case .inflow:
             return [Candidate(app: .money, action: "logInflow", receipt: "Money in, logged.", confidence: 0.95,
@@ -175,10 +203,15 @@ public struct WriteRouter {
         }
     }
 
-    /// "Lemons, logged." The thing first, never the amount.
-    static func spendReceipt(_ note: String) -> String {
+    /// "Lemons, logged." The thing first, never the amount. A walled spend ("paid ozempic 80") says only "Spend,
+    /// logged." unless its words pass as plain, so a health or secret word never rides a Home receipt.
+    func spendReceipt(_ note: String) -> String {
         let word = note.trimmingCharacters(in: .whitespaces)
-        return word.isEmpty ? "Spend, logged." : word.prefix(1).uppercased() + word.dropFirst() + ", logged."
+        let weight = BodyWeight.lastKg(in: engine.store)
+        let plain = !word.isEmpty && !ObjectPrivacy.isPrivateWord(word, in: engine.store)
+            && !PrivateFacts.isWalled(word, lastWeightKg: weight) && !SecretWords.mentions(word)
+            && !word.split(separator: " ").contains { ObjectPrivacy.isPrivateWord(String($0), in: engine.store) }
+        return plain ? word.prefix(1).uppercased() + word.dropFirst() + ", logged." : "Spend, logged."
     }
 
     static func short(_ name: String) -> String {
