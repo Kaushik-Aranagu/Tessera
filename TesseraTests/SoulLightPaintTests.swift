@@ -30,12 +30,24 @@ struct SoulLightPaintTests {
         let image = try #require(renderer.cgImage)
         let data = try #require(image.dataProvider?.data as Data?)
         let bytesPerPixel = image.bitsPerPixel / 8
+        // The renderer's pixel order (BGRA on little-endian premultiplied-first, else RGBA or ARGB).
+        let alphaFirst = [CGImageAlphaInfo.premultipliedFirst, .first, .noneSkipFirst].contains(image.alphaInfo)
+        let little = image.bitmapInfo.contains(.byteOrder32Little)
+        let (redAt, greenAt, blueAt) = switch (little, alphaFirst) {
+        case (true, true): (2, 1, 0)
+        case (false, true): (1, 2, 3)
+        case (true, false): (3, 2, 1)
+        case (false, false): (0, 1, 2)
+        }
         var darkest = 1.0
         for y in 0 ..< image.height {
             for x in 0 ..< image.width {
                 let offset = y * image.bytesPerRow + x * bytesPerPixel
-                darkest = min(darkest, luminance(Double(data[offset]) / 255, Double(data[offset + 1]) / 255,
-                                                 Double(data[offset + 2]) / 255))
+                darkest = min(
+                    darkest,
+                    luminance(Double(data[offset + redAt]) / 255, Double(data[offset + greenAt]) / 255,
+                              Double(data[offset + blueAt]) / 255)
+                )
             }
         }
         return darkest

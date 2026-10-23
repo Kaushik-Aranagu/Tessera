@@ -186,7 +186,12 @@ struct TessSoul: View {
     private func eyesLayer(palette _: SoulPalette, slow: Bool) -> some View {
         // The workout corner stands on the workout's look (one base); everywhere else, the paint look.
         let look = onWorkoutGround ? ThemeStore.shared.workoutLook : ThemeStore.shared.paintLook
-        let dark = Color(hex: look.isDark ? look.ground : look.ink).opacity(look.isDark ? 1 : 0.86)
+        // Light looks: ink mixed 14% toward the ground at full opacity (a solid tone, never faded).
+        let dark = look.isDark ? Color(hex: look.ground) : Color(hex: SoulPalette.mixed(
+            look.ink,
+            toward: look.ground,
+            by: 0.14
+        ))
         return TimelineView(.animation(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60)) { context in
             let frame = baseFrame(at: context.date)
             // Waking: shut, then open, then one blink (a 200 ms crossfade under Reduce Motion or Low Power).
@@ -261,6 +266,15 @@ struct SoulPalette {
         )
         palette.layered = !glow
         return palette
+    }
+
+    /// `hex` mixed `amount` of the way toward `other`, as a hex.
+    static func mixed(_ hex: UInt32, toward other: UInt32, by amount: Double) -> UInt32 {
+        func channel(_ shift: UInt32) -> UInt32 {
+            let first = Double((hex >> shift) & 0xFF), second = Double((other >> shift) & 0xFF)
+            return UInt32((first + (second - first) * amount).rounded()) << shift
+        }
+        return channel(16) | channel(8) | channel(0)
     }
 
     private static func wash(_ hex: UInt32, core: Double = 0.8, mid: Double = 0.6) -> Gradient {
