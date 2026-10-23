@@ -113,4 +113,18 @@ struct PrivacyPageTests {
         #expect(facts.total == facts.counts.reduce(0) { $0 + $1.count })
         #expect(!PrivacyPage.countsLine(facts).contains("Lin"))
     }
+
+    @Test func aKindMadeFromNoteOrTaskIsCountedWithItsParent() throws {
+        let journal = store.createClass(name: "Journal", parent: engine.classes[.note])
+        let chores = store.createClass(name: "Chore", parent: engine.classes[.task])
+        _ = try store.create(journal, title: "Lexapro dose")
+        _ = try store.create(chores, title: "Knee rehab")
+        _ = try store.create(journal, title: "Garden ideas")
+        _ = try make(.note, "Therapy notes")
+        let facts = PrivacyPage.facts(engine: engine)
+        #expect(facts.counts.first { $0.noun == "notes" }?.count == 2)
+        #expect(facts.counts.first { $0.noun == "task" }?.count == 1)
+        #expect(facts.total == 3)
+        #expect(!PrivacyPage.countsLine(facts).contains("Garden"))
+    }
 }
