@@ -281,6 +281,15 @@ final class ReviewChoices {
                    "As before": "Inter Tight for everything."],
             readiness: .live
         ),
+        // Design 161 and 155: Pantry's levels and the shop run, each its own switch, default Off.
+        Choice(id: "pantryLevelsV2", name: "Pantry levels", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Pantry places list their things; the count sits by the Pantry word.",
+                      "On": "Each place shows a level line, and what's to get sits after the places."],
+               readiness: .live),
+        Choice(id: "shopV2", name: "Shop run", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The shop shows the aisle and its items.",
+                      "On": "The next item leads; swipe right to strike it; Done shopping puts it all away."],
+               readiness: .live),
         // Design 110: on, the kcal line shows on a finished workout; it needs weight and height under Me.
         Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
@@ -308,6 +317,8 @@ final class ReviewChoices {
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
         ("Rooms", ["numberRules", "roomMotion", "pagesV2"]),
         ("Home and live", ["finishV2", "surfacesV2", "liveV2"]),
+        // Kitchen is full at six, so Pantry levels and the shop run get their own page.
+        ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.

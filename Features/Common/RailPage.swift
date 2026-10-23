@@ -41,6 +41,8 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
     var foot: (String) -> String? = { _ in nil }
     /// What an empty place says.
     var empty: (String) -> String = { _ in "Nothing here yet." }
+    /// A thin level line under the subtitle for the open place (nil draws none).
+    var level: (String) -> Double? = { _ in nil }
     @ViewBuilder let row: (Row) -> RowView
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -108,6 +110,10 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
                 .tesseraAnimation(RailMetrics.crossfade, value: open)
                 .padding(.top, Theme.Spacing.xs)
                 .entrance(1)
+            if let level = level(open) {
+                PlaceLevelLine(level: level)
+                    .padding(.top, Theme.Spacing.xs)
+            }
         }
     }
 
