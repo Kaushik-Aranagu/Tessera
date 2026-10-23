@@ -98,6 +98,8 @@ final class MosaicScreenController {
         var page: MosaicPage = .mood
         var pageDirection = 1
         var pageFacts: MosaicPageFacts?
+        /// The accent of the one thing Home shows (sheet 213): the mosaic takes 20% of it, sweeping in with the page change.
+        var washAccent: MosaicTriple?
     }
 
     /// Makes the engine for this size and re-reads the scene's colours when anything they depend on changed.
@@ -209,6 +211,9 @@ final class MosaicScreenController {
                     MosaicMomentField.glanceAccent(app, context),
                     MosaicMomentField.glanceWash
                 )
+            }
+            if let accent = inputs.washAccent, moment == nil {
+                colour = MosaicColour.mix(colour, accent, MosaicPage.thingWash)
             }
             return colour
         }

@@ -15,8 +15,10 @@ enum MosaicPage: Int, CaseIterable, Equatable {
         allCases.count
     }
 
-    /// The wipe between pages: 0.5 s, in the swipe's direction.
-    static let wipeSeconds: TimeInterval = 0.5
+    /// The wipe between pages: 0.6 s, in the swipe's direction.
+    static let wipeSeconds: TimeInterval = 0.6
+    /// How far the mosaic washes toward the shown thing's accent (sheet 213).
+    static let thingWash = 0.20
 }
 
 /// The weather page's sample (never stored, logged or backed up: in memory only) until Apple weather is entitled.
