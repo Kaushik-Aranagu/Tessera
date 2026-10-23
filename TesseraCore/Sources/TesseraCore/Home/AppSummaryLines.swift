@@ -96,7 +96,7 @@ public enum AppSummaryLines {
             }
         }
         return AppSummaryLine(app: .training, text: text, opens: planned.map { .object($0.id) } ?? .app(.training),
-                              isPrivate: name.1, time: start)
+                              isPrivate: name.1, time: name.1 ? nil : start)
     }
 
     private static func kitchen(_ engine: ActionEngine, _ now: Date, _ calendar: Calendar) -> AppSummaryLine {

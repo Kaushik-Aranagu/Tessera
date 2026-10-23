@@ -15,6 +15,7 @@ public struct HomeNotice: Equatable, Sendable {
         case weather
     }
 
+    /// The sentence. `clause.opens` is unused for notices: a tap goes to `target`, which is the one link.
     public let clause: HomeSentence.Clause
     /// When it happens today, nil for a notice with no time.
     public let time: Date?
@@ -54,7 +55,11 @@ public enum HomeNotices {
             notices.append((notice(text, line: line), importance[line.app] ?? 9))
         }
         // The next thing he has on (a task, training or a routine), unless it is already a notice.
-        if let next = facts.pageNext, !notices.contains(where: { $0.notice.text.hasPrefix(next.title) }) {
+        // "Already a notice" is by time and app, not by words: a masked title would match nothing or the wrong thing.
+        if let next = facts.pageNext, !notices.contains(where: { entry in
+            let sameTime = entry.notice.time.map { abs($0.timeIntervalSince(next.start)) < 60 } ?? false
+            return sameTime || entry.notice.text.hasPrefix(next.title)
+        }) {
             let text = "\(next.title) at \(HouseTime.clock(next.start, calendar: calendar))."
             let clause = HomeSentence.Clause(
                 app: next.app, sentence: LandingSentence(text: text, key: next.app == nil ? nil : next.title),

@@ -162,12 +162,24 @@ struct TodayLinesTests {
             .isEmpty)
     }
 
+    @Test func aMaskedNextItemIsNotShownTwice() {
+        let secret = HandsEvent(app: .training, label: "Private workout", start: at(18), end: at(19), hands: [],
+                                isFixed: false)
+        let notices = HomeNotices.ranked(engine: engine, facts: facts(at(12), events: [secret]), plan: nil,
+                                         calendar: calendar)
+        #expect(notices.count { $0.time.map { abs($0.timeIntervalSince(at(18))) < 60 } ?? false } <= 1)
+    }
+
     // MARK: Short why and the calendar-text wall
 
     @Test func theShortWhyIsAWholePhraseOfThirtyCharactersOrFewer() {
         #expect(Pick.shortened("At 6:30 pm, due today") == "At 6:30 pm, due today")
         #expect(Pick.shortened("Carried from Wednesday, your evening slot") == "Carried from Wednesday")
         #expect(Pick.shortened("") == "")
+        // A first reason that is too long on its own is cut at a word edge, never to nothing and never mid-word.
+        let long = Pick.shortened("Carried over from the Wednesday before last, your evening slot")
+        #expect(long == "Carried over from the" && long.count <= 30)
+        #expect(Pick.shortened("Averyveryveryveryveryveryverylongword") == "")
         #expect(Pick.shortened("Carried from Wednesday, your evening slot").count <= 30)
         #expect(Pick.shortened("Welcome back. Small on purpose") == "Welcome back. Small on purpose")
     }
@@ -175,25 +187,35 @@ struct TodayLinesTests {
     @Test func calendarTextNeverReachesWidgetsWatchIntentsOrClaudeLines() throws {
         let package = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent()
-        func sources(_ relative: String) -> [String] {
+        // Every Swift file of the app target except the Home screens (which draw Today and the notices) and every other
+        // process: the types must appear nowhere else, so no writer (surfaces, logging, Tess, Claude) can carry them.
+        func sources(_ relative: String, except allowed: [String] = []) -> [(path: String, text: String)] {
             guard let walker = FileManager.default.enumerator(at: package.appending(path: relative),
                                                               includingPropertiesForKeys: nil) else { return [] }
-            return walker.compactMap { item in
-                (item as? URL)
-                    .flatMap { $0.pathExtension == "swift" ? try? String(contentsOf: $0, encoding: .utf8) : nil }
+            return walker.compactMap { item -> (String, String)? in
+                guard let url = item as? URL, url.pathExtension == "swift",
+                      !allowed.contains(where: { url.path.contains($0) }),
+                      let text = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+                return (url.path, text)
             }
         }
         let banned = ["TodayFacts", "TodayLine", "isCalendar", "HomeNotices", "HomeNotice"]
         var checked = 0
-        for path in ["../Widgets", "../Watch", "../Shared", "Sources/TesseraIntents", "Sources/TesseraTess"] {
-            for text in sources(path) {
+        let places: [(String, [String])] = [
+            ("../Widgets", []), ("../Watch", []), ("../Shared", []), ("Sources/TesseraIntents", []),
+            ("Sources/TesseraTess", []), ("../App", []), ("../Features", ["/Features/Home/"]),
+        ]
+        for (path, allowed) in places {
+            for file in sources(path, except: allowed) {
                 checked += 1
                 for word in banned {
-                    #expect(!text.contains(word), "\(word) in \(path)")
+                    // A whole word: "TriedTodayLine" is another type.
+                    let pattern = try Regex("\\b\(word)\\b")
+                    #expect(file.text.firstMatch(of: pattern) == nil, "\(word) in \(file.path)")
                 }
             }
         }
-        #expect(checked > 0)
+        #expect(checked > 100)
         // Calendar events are mirrors: in no backup copy and no export (the mirror ids are cut from every copy).
         let event = try store.create(#require(engine.classes[.event]), title: "Dentist")
         #expect(PrivateWords.mirrorIDs(in: store.context).contains(event.id))

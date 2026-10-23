@@ -32,7 +32,17 @@ public struct Pick: Identifiable {
             }
             phrase = next
         }
-        return phrase
+        guard phrase.isEmpty, !why.isEmpty else { return phrase }
+        // The first reason alone is too long: whole words of it, never a word cut in two.
+        var words = ""
+        for word in why.split(separator: " ") {
+            let next = words.isEmpty ? String(word) : words + " " + word
+            if next.count > limit {
+                break
+            }
+            words = next
+        }
+        return words
     }
 }
 

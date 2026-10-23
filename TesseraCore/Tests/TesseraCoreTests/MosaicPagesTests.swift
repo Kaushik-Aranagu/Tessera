@@ -131,7 +131,7 @@ struct MosaicPagesTests {
         } else {
             #expect(after.weekCaption == nil)
         }
-        #expect(facts(at(12)).pageFacts(engine: engine, plan: nil).weekCaption == nil
-            || facts(at(12)).pageFacts(engine: engine, plan: nil).weekPlanned > 0)
+        let none = facts(at(12)).pageFacts(engine: engine, plan: nil)
+        #expect((none.weekCaption == nil) == (none.weekPlanned == 0))
     }
 }
