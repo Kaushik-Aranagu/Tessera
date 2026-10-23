@@ -22,11 +22,12 @@ enum SoulGaze: Equatable {
     }
 }
 
-/// The blink: lids close and open over 160 ms (height to 0.25 and back, ease-in-out), one every 3 to 8 s at random,
-/// one in five a double (blink, 250 ms, blink). Pure and seeded by the interval, so a frame at any time is the same
+/// The blink: lids close and open over 130 ms (height to 0.25 and back, ease-in-out), one every 2.4 to 6.6 s at random,
+/// about one in five (18%) a double (blink, 250 ms, blink). Pure and seeded by the interval, so a frame at any time is
+/// the same
 /// frame (and testable).
 enum SoulBlink {
-    static let duration = 0.16
+    static let duration = 0.13
     static let doubleGap = 0.25
     /// The schedule repeats every hour; the last blink ends well before the wrap, so none is cut short.
     static let period = 3600.0
@@ -37,8 +38,8 @@ enum SoulBlink {
         var time = 0.0
         var index: UInt64 = 0
         while true {
-            time += 3 + 5 * unit(index)
-            let isDouble = unit(index &+ 7919) < 0.2
+            time += 2.4 + 4.2 * unit(index)
+            let isDouble = unit(index &+ 7919) < 0.18
             guard time + duration * 2 + doubleGap < period - 3 else { break }
             result.append((time, isDouble))
             time += isDouble ? duration * 2 + doubleGap : duration
@@ -115,8 +116,10 @@ enum SoulBlink {
     }
 }
 
-/// Two ink dots on the soul (§1): 3.2 × 3.5 pt ovals, 8.4 pt apart, 3 pt above the mean of the three main dabs, in
-/// the look's dark colour (ink on light looks, ground on dark ones) at 82%, normal blend, over the soul.
+/// Two ink dots on the soul (§1): 4.2 × 4.6 pt ovals (1.3x), 8.4 pt apart, 3 pt above the mean of the three main dabs,
+/// in the look's dark colour (ink on light looks, ground on dark ones), normal blend, over the soul. Her life (sheet
+/// 215 rev 6) moves them: glances, blinks, the lean and float of her body, a finger's pull, a touch's widening and the
+/// smile arcs after she has done something.
 struct SoulEyes: View {
     let frame: SoulFrame
     let time: Double
@@ -126,6 +129,14 @@ struct SoulEyes: View {
     var still = false
     /// A lid from a moment of hers (the wake) in place of the blink schedule.
     var lid: CGFloat?
+    /// A finger or drag near her, as a direction (-1 ... 1 each way) the eyes follow.
+    var attention: CGPoint?
+    /// A reaction and the reference-time second it began.
+    var reaction: (kind: SoulLife.Reaction, start: Double)?
+    /// Light looks draw the eyes as one solid tone; dark ones keep them a little soft.
+    var solid = true
+
+    static let size = CGSize(width: 3.2 * 1.3, height: 3.5 * 1.3)
 
     /// Where the pair sits, in the canvas's points from its centre: the main dabs' mean, 3 pt above it, both scaled
     /// by the soul's drawn scale (the same transform `SoulRenderer` applies to the dabs).
@@ -137,29 +148,64 @@ struct SoulEyes: View {
                        y: (mains.reduce(0) { $0 + $1.y } / count - 3) * scale)
     }
 
+    /// The offset of the pair for a scripted gaze, a finger, or her own glances when she looks straight ahead.
+    static func glance(gaze: SoulGaze, attention: CGPoint?, time: Double) -> CGSize {
+        if let attention {
+            return CGSize(width: attention.x * 3, height: attention.y * 2.2)
+        }
+        return gaze == .ahead ? SoulLife.offset(at: time) : gaze.offset
+    }
+
     var body: some View {
         let centre = Self.centre(of: frame)
         let scale = frame.look.scale
-        let lid = lid ?? SoulBlink.lid(at: time)
-        let glance = still ? .zero : gaze.offset
-        HStack(spacing: 8.4 - 3.2) {
-            eye(lid)
-            eye(lid)
+        let lid = lid ?? (still ? SoulBlink.lid(at: time) : SoulLife.lid(at: time))
+        let glance = still ? .zero : Self.glance(gaze: gaze, attention: attention, time: time)
+        let body = still ? .zero : SoulLife.lean(at: time)
+        let float = still ? 0 : SoulLife.float(at: time)
+        let since = reaction.map { time - $0.start }
+        let widen = !still && reaction?.kind == .touch ? SoulLife.widen(since: since ?? 99) : 1
+        let smile = reaction?.kind == .did ? SoulLife.smile(since: since ?? 99) : 0
+        HStack(spacing: 8.4 - Self.size.width) {
+            eye(lid, widen: widen, smile: smile)
+            eye(lid, widen: widen, smile: smile)
         }
         // Scaled first, then placed: the offset is already in screen points (no second scale).
         .scaleEffect(scale)
-        .offset(x: centre.x + glance.width * scale, y: centre.y + glance.height * scale)
+        .offset(x: centre.x + (glance.width + body.width) * scale,
+                y: centre.y + (glance.height + body.height + float) * scale)
         .opacity(frame.look.opacity)
-        // Reduce Motion: `still` already holds them ahead; the policy also drops the spring.
-        .tesseraAnimation(.spring(duration: 0.3, bounce: 0.05), value: gaze)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 
-    private func eye(_ lid: CGFloat) -> some View {
-        Ellipse()
-            .fill(color.opacity(0.82))
-            .frame(width: 3.2, height: 3.5 * lid)
-            .frame(height: 3.5)
+    private func eye(_ lid: CGFloat, widen: CGFloat, smile: Double) -> some View {
+        let width = Self.size.width * widen, height = Self.size.height * widen
+        let tone = color.opacity(solid ? 1 : 0.82)
+        return ZStack {
+            Ellipse()
+                .fill(tone)
+                .frame(width: width, height: height * lid * (1 - smile))
+            if smile > 0 {
+                SmileArc()
+                    .stroke(tone, style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
+                    .frame(width: width, height: height * 0.5)
+                    .opacity(smile)
+            }
+        }
+        .frame(width: Self.size.width * 1.25, height: Self.size.height * 1.25)
+    }
+}
+
+/// An upward arc, a closed eye smiling.
+struct SmileArc: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.addQuadCurve(
+            to: CGPoint(x: rect.maxX, y: rect.maxY),
+            control: CGPoint(x: rect.midX, y: rect.minY - rect.height * 0.6)
+        )
+        return path
     }
 }

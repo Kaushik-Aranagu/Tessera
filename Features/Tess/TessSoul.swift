@@ -42,6 +42,9 @@ struct TessSoul: View {
     /// Two ink dots (tess-motion.md §1): a setting, off by default.
     var eyes = false
     var gaze: SoulGaze = .ahead
+    /// A finger or drag near her, as a direction her eyes follow, and her reaction to touch, a line or a deed.
+    var attention: CGPoint?
+    var reaction: (kind: SoulLife.Reaction, start: Date)?
     /// When she began waking with him (idea 2, `SoulRouter.wake`).
     var wake: Date?
     /// A stroke's ripple and the blink after it (idea 3, `SoulRouter.stroke` / `strokeBlink`).
@@ -89,6 +92,9 @@ struct TessSoul: View {
             .opacity(drawn.frame.look.opacity)
             // Flattened by Metal: without this the Canvas is rasterised by Core Graphics on the CPU every frame.
             .drawingGroup()
+            // Her body follows her life: the float of her breath, a lean after her eyes, a small breath on a touch.
+            .offset(bodyMotion(at: context.date).offset)
+            .scaleEffect(bodyMotion(at: context.date).scale)
         }
         .frame(width: size.width, height: size.height)
         .overlay {
@@ -140,6 +146,18 @@ struct TessSoul: View {
         .accessibilityElement()
         .accessibilityLabel(accessibilityText)
         .allowsHitTesting(false)
+    }
+
+    /// Her float, lean and breath at `date` (none under Reduce Motion, or without her eyes).
+    private func bodyMotion(at date: Date) -> (offset: CGSize, scale: CGFloat) {
+        guard eyes, !reduceMotion else { return (.zero, 1) }
+        let time = date.timeIntervalSinceReferenceDate
+        let lean = SoulLife.lean(at: time)
+        var scale: CGFloat = 1
+        if let reaction, reaction.kind != .did {
+            scale = SoulLife.breath(reaction.kind, since: time - reaction.start.timeIntervalSinceReferenceDate)
+        }
+        return (CGSize(width: lean.width, height: lean.height + SoulLife.float(at: time)), scale)
     }
 
     /// The frame at `date`, and the twelve lights when she works (nil draws the six dabs as built).
@@ -200,7 +218,9 @@ struct TessSoul: View {
                 ?? strokeBlink.flatMap { SoulBlink.once(since: context.date.timeIntervalSince($0)) }
                 ?? wake.map { SoulWake.lid(at: context.date.timeIntervalSince($0), quiet: reduceMotion || lowPower) }
             SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
-                     still: reduceMotion, lid: lid)
+                     still: reduceMotion, lid: lid, attention: attention,
+                     reaction: reaction.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) },
+                     solid: !look.isDark)
         }
         .opacity(eyesShown ? 1 : 0)
     }
