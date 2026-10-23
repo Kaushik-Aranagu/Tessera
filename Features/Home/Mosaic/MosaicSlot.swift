@@ -66,11 +66,3 @@ struct SettingsEntry: View {
         }
     }
 }
-
-/// Sheet 197's three-row snapping apps list, under Next, when Settings › Home › Apps list is On. Draws nothing yet.
-/// TODO: sheet 197: the 3-row snapping apps list.
-struct AppsListSlot: View {
-    var body: some View {
-        EmptyView()
-    }
-}

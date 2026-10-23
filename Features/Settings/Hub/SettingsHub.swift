@@ -304,7 +304,8 @@ struct DeveloperMode: View {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
                 Text(flag.name).foregroundStyle(Theme.Colors.ink)
                 Spacer(minLength: Theme.Spacing.s)
-                Text(isOn ? "On" : "Off").foregroundStyle(Theme.Colors.inkSecondary)
+                Text(isOn ? (flag.needsClaude && !model.asksClaude ? "On, held" : "On") : "Off")
+                    .foregroundStyle(Theme.Colors.inkSecondary)
             }
             .textRole(.body)
             .frame(minHeight: 44)

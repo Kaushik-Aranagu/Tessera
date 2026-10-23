@@ -10,10 +10,9 @@ enum FeatureFlagStore {
     static let offKey = "featureFlags.off"
     static let migratedKey = "featureFlags.migrated.oct23"
 
-    /// What a fresh phone starts from: Core's shipped Off ids (the losing Home layout), plus the apps list, whose view
-    /// is not drawn yet (it stays Off until it is).
+    /// What a fresh phone starts from: Core's shipped Off ids (the losing Home layout). The apps list is On.
     nonisolated static var shippedOff: Set<String> {
-        FeatureChoices.shipped.off.union(["homeAppsList"])
+        FeatureChoices.shipped.off
     }
 
     /// The flags that are Off now.
