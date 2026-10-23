@@ -22,6 +22,7 @@ struct HomeMosaicPage: View {
                 MosaicSentence()
                 VStack(alignment: .leading, spacing: 0) {
                     MosaicSlot(lay: $mosaicLay, caption: $caption)
+                        .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
                     if !caption.isEmpty {
                         Text(caption)
                             .font(Theme.voice(size: 16))

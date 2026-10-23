@@ -11,6 +11,9 @@ enum HomeMosaic {
     static let gutter: CGFloat = 24
     static let sectionGap: CGFloat = 16
     static let mosaicHeight: CGFloat = 250
+    /// Sheet 200: the narrower block, 14 pt under the sentence.
+    static let moodsMosaicSize = CGSize(width: 240, height: 176)
+    static let moodsMosaicGap: CGFloat = 14
     static let rowHeight: CGFloat = 40
     /// A row open on its why line.
     static let openRowHeight: CGFloat = 78
