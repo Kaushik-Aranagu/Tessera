@@ -522,7 +522,7 @@ struct MosaicHomeLayer: View {
         let row = Int(((spec.slot.minY - controller.globalOrigin.y) / MosaicScreenGrid.step).rounded())
         let request = MosaicSignRequest(kind: spec.kind, share: spec.share, column: column, row: row, accent: accent,
                                         alt: spec.alt.map { rgb($0, environment) }, token: spec.token)
-        return (request, accent, spec.token)
+        return (request, accent, spec.token, spec.washes)
     }
 
     private func draw(_ context: inout GraphicsContext, size: CGSize, time: TimeInterval) {
@@ -542,7 +542,8 @@ struct MosaicHomeLayer: View {
                                            shield: shield.map { $0.offsetBy(dx: -controller.globalOrigin.x,
                                                                             dy: -controller.globalOrigin.y) },
                                            page: page, pageDirection: pageDirection, pageFacts: pageFacts,
-                                           washAccent: resolved?.accent, sign: resolved?.request,
+                                           washAccent: resolved?.washes == true ? resolved?.accent : nil,
+                                           sign: resolved?.request,
                                            washToken: resolved?.token.hashValue ?? 0))
         engine.step(to: time)
         if engine.consumeLandings() > 0 {

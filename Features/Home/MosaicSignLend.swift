@@ -123,6 +123,8 @@ struct MosaicSignSpec: Equatable {
     var accent: Color
     var alt: Color?
     var share = 0.5
+    /// Whether the mosaic washes toward the accent (a task's accent is ink: no wash, or it would only grey it).
+    var washes = true
     var slot: CGRect
     /// The thing's id, so each new thing lends again.
     var token: String

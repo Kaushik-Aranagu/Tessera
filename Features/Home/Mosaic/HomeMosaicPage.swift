@@ -341,7 +341,13 @@ struct HomeMosaicPage: View {
               let kind = ThingSignKind(app: app)
         else {
             return things.indices.contains(thingIndex) && things[thingIndex].kind == .task
-                ? MosaicSignSpec(kind: .task, accent: Theme.Colors.ink, slot: signSlot, token: things[thingIndex].id)
+                ? MosaicSignSpec(
+                    kind: .task,
+                    accent: Theme.Colors.ink,
+                    washes: false,
+                    slot: signSlot,
+                    token: things[thingIndex].id
+                )
                 : nil
         }
         return MosaicSignSpec(kind: kind, accent: app.accent, slot: signSlot, token: things[thingIndex].id)
