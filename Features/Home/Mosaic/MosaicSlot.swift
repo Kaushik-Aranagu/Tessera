@@ -31,6 +31,21 @@ struct MosaicSlot: View {
     }
 }
 
+/// The mosaic speaks for itself, so its words ride in its accessibility label (sheet 211), never as text on its edge.
+private struct MosaicWords: ViewModifier {
+    let words: String
+
+    func body(content: Content) -> some View {
+        if words.isEmpty {
+            content.accessibilityHidden(true)
+        } else {
+            content
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(words)
+        }
+    }
+}
+
 /// The knob beside the Settings word (sheet 203): nine of the screen's own pixels, Builder A's `PixelKnob`. A press
 /// turns it and opens Settings.
 struct SettingsKnob: View {

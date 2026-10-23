@@ -64,13 +64,7 @@ struct HomeMosaicPage: View {
                 VStack(alignment: .leading, spacing: 0) {
                     MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption)
                         .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
-                    if !caption.isEmpty {
-                        Text(caption)
-                            .font(Theme.voice(size: 16))
-                            .foregroundStyle(Theme.Colors.inkSecondary)
-                            .padding(.top, Theme.Spacing.s)
-                            .mosaicShield()
-                    }
+                    // No caption under the mosaic (sheet 211): its words live in the slot's accessibility label.
                 }
                 // The call site that becomes `mosaic.lay(from: rowFrame, tone: .glaze)` with A's view.
                 MosaicNextList { rowFrame in mosaicLay?(rowFrame) ?? false }
