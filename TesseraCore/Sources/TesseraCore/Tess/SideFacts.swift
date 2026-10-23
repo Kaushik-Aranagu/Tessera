@@ -112,11 +112,11 @@ public enum SideFacts {
 
     /// A value as a side prints it, in house words: a date with its day and clock ("Oct 17, 6:30 pm"), a duration in
     /// minutes or, under a minute, seconds, a mass in kg. Nil for an empty value or a zero duration.
-    static func describe(_ value: FieldValue, calendar: Calendar = .current) -> String? {
+    static func describe(_ value: FieldValue, calendar: Calendar = .current, unit: MassUnit = .kilograms) -> String? {
         switch value {
         case let .text(text), let .choice(text), let .richText(text): text.isEmpty ? nil : text
         case let .number(number): String(format: "%g", number)
-        case let .mass(number): String(format: "%g kg", number)
+        case let .mass(number): "\(unit == .kilograms ? String(format: "%g", number) : unit.text(kilograms: number)) \(unit.symbol)"
         case let .bool(flag): flag ? "Yes" : "No"
         case let .date(date): "\(day(of: date, calendar: calendar)), \(HouseTime.clock(date, calendar: calendar))"
         case let .duration(seconds):
