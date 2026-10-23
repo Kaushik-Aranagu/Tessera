@@ -194,6 +194,12 @@ struct HomeSentenceTests {
 
     // MARK: Past
 
+    @Test func aSpendWhoseFirstWordAloneIsPrivateReadsPrivateInThePastSentence() throws {
+        try engine.perform(LogSpend(amount: 80, typed: "80", note: "ozempic pharmacy run", spentAt: at(10, day: 20)), by: .user)
+        let text = HomeSentence.text(HomeSentence.past(engine: engine, on: at(12, day: 20), calendar: calendar, now: at(12)))
+        #expect(!text.lowercased().contains("ozempic") && !text.contains("80"))
+    }
+
     @Test func aPastDayIsBuiltFromTheDayLogWithMoneyAsWordsOnly() throws {
         try engine.perform(LogSpend(amount: 1200, typed: "1200", note: "rent", spentAt: at(10, day: 20)), by: .user)
         try engine.perform(CreateNote(body: "Called @Nobody"), by: .user)
