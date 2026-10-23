@@ -122,4 +122,19 @@ struct MosaicMoodPickerTests {
         #expect(pick.mood == .done && pick.lines[1] == "Everything due today is done.")
         #expect(!pick.lines.joined().lowercased().contains("lexapro"))
     }
+
+    @Test func theFallbackIsTheAppsOwnPrivateLabelNeverANewPhrase() throws {
+        func label(for key: SystemCatalog.Key, title: String, owner: String) throws -> String {
+            let subject = try store.create(#require(engine.classes[key]), title: title)
+            try engine.perform(StartProcess(subject: subject.id, ownerApp: owner, nextStep: "Step"), by: .user)
+            let running = try #require(ProcessTable(engine: engine).running())
+            let text = MosaicMoodInputs.privateLabel(of: running, store: store)
+            try engine.perform(EndProcess(process: running.id, reason: .done), by: .user)
+            return text
+        }
+        #expect(try label(for: .workout, title: "Session", owner: "Workouts") == "Private workout")
+        #expect(try label(for: .recipe, title: "Soup", owner: "Kitchen") == "Private recipe")
+        #expect(try label(for: .routine, title: "Morning", owner: "Routines") == RoutinesLanding.privateRoutine)
+        #expect(try label(for: .list, title: "Trip", owner: "Lists") == ListContents.privateListLabel)
+    }
 }
