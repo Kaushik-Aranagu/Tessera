@@ -353,11 +353,10 @@ private struct GroceriesPage: View {
     /// "Shopping, finished." with a 10 s UNDO that brings the basket and the shop back (G43). A failed write keeps
     /// the basket open, says so, and plays no finish haptic.
     private func finishShop(putAway basket: [ListContents.Item] = []) {
-        // 155: each got item walks to its Pantry place first, then the shop ends as it always does.
-        if !basket.isEmpty {
-            _ = ShopPutAway.walk(basket: basket, model: model)
-        }
-        let outcome = GroceriesCopy.finish(engine: model.engine)
+        // 155: each got item walks to its Pantry place in the same step as the finish (one Undo takes back both; a
+        // failed finish sets no place).
+        let walk = basket.isEmpty ? nil : ShopWalk.placements(basket: basket, model: model)
+        let outcome = GroceriesCopy.finish(engine: model.engine, putAway: walk)
         guard let record = outcome.undo else {
             TessVoice.shared.say(outcome.line)
             return
@@ -798,8 +797,10 @@ enum GroceriesCopy {
     }
 
     /// Finishing the shop: the engine's receipt and its record, or the failure line with nothing to undo.
-    @MainActor static func finish(engine: ActionEngine) -> (line: String, undo: OpRecord?) {
-        finish { try? engine.perform(FinishShop(), by: .user).record }
+    @MainActor static func finish(engine: ActionEngine,
+                                  putAway: [ShopPutAway]? = nil) -> (line: String, undo: OpRecord?)
+    {
+        finish { try? engine.perform(FinishShop(putAway: putAway), by: .user).record }
     }
 
     @MainActor static func finish(_ perform: () -> OpRecord?) -> (line: String, undo: OpRecord?) {

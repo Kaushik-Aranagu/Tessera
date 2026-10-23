@@ -161,7 +161,6 @@ private struct ShopLead: View {
     let onStrike: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pull: CGFloat = 0
-    @State private var cue = HapticCue()
     private static let arm: CGFloat = 72
 
     var body: some View {
@@ -196,14 +195,13 @@ private struct ShopLead: View {
                 .onEnded { _ in
                     let armed = pull >= Self.arm
                     if armed {
-                        // One soft tap as the strike lands, not at the arm point.
-                        cue.play(.done)
+                        // The strike's one soft tap is the page's own `Haptic.made` as the item is struck; no second
+                        // one here (QA on #1282, sheet 175).
                         onStrike()
                     }
                     withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
                 }
         )
-        .tesseraFeedback(cue)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel((item.quantity.map { "\($0) " } ?? "") + name)
         .accessibilityHint("Puts it in the basket")
@@ -212,25 +210,24 @@ private struct ShopLead: View {
 }
 
 /// Put away: each item in the basket goes to the Pantry place it already has, or to the one its aisle suggests
-/// (as the demo shop does). Items with neither stay unplaced. Returns how many have a place.
+/// (as the demo shop does). Items with neither stay unplaced. This only works out the places; Core's `FinishShop`
+/// sets them in the same transaction as the finish, so one Undo takes back both (Core #1287).
 @MainActor
-enum ShopPutAway {
-    static func walk(basket: [ListContents.Item], model: AppModel) -> Int {
+enum ShopWalk {
+    static func placements(basket: [ListContents.Item], model: AppModel) -> [ShopPutAway] {
         let groceries = Groceries(store: model.store, classes: model.classes)
         let places = PantryPlaces(store: model.store, classes: model.classes)
         let ledger = PantryLedger(store: model.store, classes: model.classes)
-        var placed = 0
+        var walk: [ShopPutAway] = []
         for item in basket {
             guard let ingredient = groceries.ingredient(of: item.object) else { continue }
             if places.place(of: ingredient) != nil {
-                placed += 1
-            } else if let home = PantryBoard.suggested(ledger.entry(for: ingredient).aisle),
-                      (try? model.engine.perform(SetItemPlace(item: ingredient.id, place: home.place,
-                                                              section: home.section), by: .user)) != nil
-            {
-                placed += 1
+                continue
+            }
+            if let home = PantryBoard.suggested(ledger.entry(for: ingredient).aisle) {
+                walk.append(ShopPutAway(item: ingredient.id, place: home.place, section: home.section))
             }
         }
-        return placed
+        return walk
     }
 }

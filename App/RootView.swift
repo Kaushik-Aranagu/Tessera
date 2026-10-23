@@ -22,7 +22,9 @@ struct RootView: View {
                 NavigationStack(path: $model.path) {
                     Group {
                         // Home v2 (sheet 137) while its Review switch is On; else Home as it was.
-                        if HomeV2.isOn {
+                        if HomeMosaic.isOn {
+                            HomeMosaicPage()
+                        } else if HomeV2.isOn {
                             HomeV2View()
                         } else {
                             HomeSpatialView()
