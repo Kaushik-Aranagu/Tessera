@@ -114,7 +114,7 @@ public enum Describe {
     public static func storyCount(_ object: ObjectRecord, engine: ActionEngine) -> Int {
         guard kind(of: object, classes: engine.classes) != nil else { return 0 }
         let records = committed(touching: object, engine: engine)
-        if ObjectPrivacy.shownLabel(of: object, in: engine.store, classes: engine.classes) != nil {
+        if isPrivate(object, in: engine.store, classes: engine.classes) {
             return records.count
         }
         return allLines(object, engine: engine, calendar: .current, now: .now).count
@@ -122,7 +122,20 @@ public enum Describe {
 
     private static func storyAllowed(_ object: ObjectRecord, engine: ActionEngine) -> Bool {
         kind(of: object, classes: engine.classes) != nil
-            && ObjectPrivacy.shownLabel(of: object, in: engine.store, classes: engine.classes) == nil
+            && !isPrivate(object, in: engine.store, classes: engine.classes)
+    }
+
+    /// The one private rule for a sentence, a story and a count: the object is private by its label, or it is a workout
+    /// of a private routine (even when its own title is plain).
+    public static func isPrivate(_ object: ObjectRecord, in store: ObjectStore,
+                          classes: [SystemCatalog.Key: ClassDef]) -> Bool
+    {
+        if ObjectPrivacy.shownLabel(of: object, in: store, classes: classes) != nil {
+            return true
+        }
+        guard object.classDef?.id == classes[.workout]?.id,
+              let routine = store.linkedObjects("routine", of: object).first else { return false }
+        return ObjectPrivacy.shownLabel(of: routine, in: store, classes: classes) != nil
     }
 
     private static func committed(touching object: ObjectRecord, engine: ActionEngine) -> [OpRecord] {
