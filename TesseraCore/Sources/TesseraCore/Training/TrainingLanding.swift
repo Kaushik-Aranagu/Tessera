@@ -95,7 +95,9 @@ public extension TrainingStats {
                                 marks: marks, isRestDay: false)
         }
         var opener: LandingFacts.Opener?
-        if let entry = routine.orderedChildren.first(where: { $0.classDef?.id == classes[.exerciseEntry]?.id }),
+        // A routine holds slots (the plan's exercises); a workout holds entries. Either opens the day.
+        let opening: Set<UUID> = Set([classes[.exerciseEntry]?.id, classes[.slot]?.id].compactMap(\.self))
+        if let entry = routine.orderedChildren.first(where: { $0.classDef.map { opening.contains($0.id) } ?? false }),
            let exercise = store.linkedClass("exercise", of: entry), let weight = ledger.prefill(for: entry).weight
         {
             opener = LandingFacts.Opener(exercise: exercise.name, weightKg: weight)
