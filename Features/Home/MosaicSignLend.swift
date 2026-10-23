@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import SwiftUI
+import TesseraCore
 
 // Sheet 213: the mosaic lends its pixels to the sign. When a thing arrives, one fully shown mosaic tile flies out for
 // each sign tile (7 ms apart, 560 ms on an eased arc, 26 pt lift, swelling to 1.5x, its colour mixing from the
@@ -131,15 +132,16 @@ struct MosaicSignSpec: Equatable {
 }
 
 extension ThingSignKind {
-    /// The sign for an app's thing (money has none: nothing of money shows on Home).
-    init?(app: HomeApp) {
-        switch app {
-        case .training: self = .training
-        case .kitchen: self = .groceries
-        case .routines: self = .routine
-        case .tasks, .notes: self = .task
-        case .lists: self = .list
-        case .money: return nil
+    /// The sign for a ranked thing: Core's seven kinds are the seven signs.
+    init(_ kind: OneThing.Kind) {
+        self = switch kind {
+        case .training: .training
+        case .groceries: .groceries
+        case .birthday: .birthday
+        case .task: .task
+        case .list: .list
+        case .weather: .weather
+        case .routine: .routine
         }
     }
 }

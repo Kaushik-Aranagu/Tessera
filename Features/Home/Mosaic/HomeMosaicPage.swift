@@ -468,25 +468,22 @@ struct HomeMosaicPage: View {
         return true
     }
 
-    /// A swipe on the space: the next thing (left) or the previous (right), wrapping; whether the page turned.
-    /// Sheet 213: the sign for the thing now showing, or none (money has none, and no thing has none).
+    /// Sheet 213: the sign for the thing now showing, in its accent. A task's accent is ink, so it does not wash.
     private var signSpec: MosaicSignSpec? {
-        guard things.indices.contains(thingIndex), case let .app(app) = things[thingIndex].kind,
-              let kind = ThingSignKind(app: app)
-        else {
-            return things.indices.contains(thingIndex) && things[thingIndex].kind == .task
-                ? MosaicSignSpec(
-                    kind: .task,
-                    accent: Theme.Colors.ink,
-                    washes: false,
-                    slot: signSlot,
-                    token: things[thingIndex].id
-                )
-                : nil
-        }
-        return MosaicSignSpec(kind: kind, accent: app.accent, slot: signSlot, token: things[thingIndex].id)
+        guard things.indices.contains(thingIndex) else { return nil }
+        let thing = things[thingIndex]
+        let alt: Color? = thing.accent == .birthday ? Color(light: 0xB0466A, dark: 0xE07A9A) : nil
+        return MosaicSignSpec(
+            kind: ThingSignKind(thing.kind),
+            accent: thing.accentColor,
+            alt: alt,
+            washes: thing.accent != .ink,
+            slot: signSlot,
+            token: thing.id
+        )
     }
 
+    /// A swipe on the space: the next thing (left) or the previous (right), wrapping; whether the page turned.
     private func turnThing(_ dx: CGFloat) -> Bool {
         guard things.count > 1, abs(dx) > 50 else { return false }
         thingIndex = ((thingIndex + (dx < 0 ? 1 : -1)) % things.count + things.count) % things.count

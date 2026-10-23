@@ -15,6 +15,8 @@ struct HomeThing: Identifiable, Equatable {
     }
 
     let id: String
+    /// What kind of thing this is: the sign the mosaic builds for it (sheet 213).
+    var kind: OneThing.Kind
     var big: String
     /// Outfit 200 at 60 pt for a short value (a time, a count, degrees), at 44 pt for words.
     var bigIsNumber: Bool
@@ -44,6 +46,7 @@ struct HomeThing: Identifiable, Equatable {
 
     init(_ thing: OneThing) {
         id = thing.id
+        kind = thing.kind
         big = thing.big
         bigIsNumber = thing.big.count <= 8 && thing.big.contains(where: \.isNumber)
         accent = switch thing.accent {

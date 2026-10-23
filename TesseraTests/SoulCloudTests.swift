@@ -157,8 +157,8 @@ struct SoulCloudTests {
 
     @Test func theDirectorIsASeamTheRulesFillToday() {
         let director: any SoulDirecting = SoulRuleDirector()
-        #expect(director.paints(dark: false, pageAccent: nil) == SoulCloud.paintsLight)
-        #expect(director.paints(dark: true, pageAccent: nil) == SoulCloud.paintsDark)
+        #expect(director.paints(dark: false, pageAccents: []) == SoulCloud.paintsLight)
+        #expect(director.paints(dark: true, pageAccents: []) == SoulCloud.paintsDark)
         let burst = SoulCloud.bursts(quiet: false)[0]
         let mid = burst.start + burst.length / 2
         #expect(director.burst(at: mid, quiet: false) == SoulCloud.burst(at: mid, quiet: false))

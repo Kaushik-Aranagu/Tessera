@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// Tess's living mark: three dabs of wet paint (vermilion, cobalt, cadmium) and three satellites, mixing by
 /// multiply on light grounds and screen on dark. How they move says what Tess is doing.
@@ -54,10 +55,10 @@ struct TessSoul: View {
     var quiet = false
     /// The one clear accent of the screen she is on (an app room's colour); nil on Home or with several: she keeps
     /// Ember.
-    var pageAccent: UInt32?
+    var pageAccents: Set<AppID> = []
     /// Who decides how she looks and changes: the burst's timing and choice and the palette. Rule-based now; Core's
     /// director takes this seat later.
-    var director: any SoulDirecting = SoulRuleDirector()
+    var director: any SoulDirecting = CoreSoulDirector()
     /// Her mouth (rev 19 F5): nil while she speaks or listens.
     var mouth: (kind: SoulMouth, start: Date)?
     /// When she began waking with him (idea 2, `SoulRouter.wake`).
@@ -173,13 +174,19 @@ struct TessSoul: View {
         let home = 9.5
         let mean = mains.reduce(0) { $0 + Double(hypot($1.x, $1.y)) } / Double(max(mains.count, 1))
         let time = reduceMotion ? 0 : date.timeIntervalSinceReferenceDate
-        let target = director.paints(dark: dark, pageAccent: pageAccent)
+        var active = director
+        if var core = director as? CoreSoulDirector {
+            core.reduceMotion = reduceMotion
+            core.lowPower = lowPower
+            active = core
+        }
+        let target = active.paints(dark: dark, pageAccents: pageAccents)
         var input = SoulCloud.Input(paints: glider.paints(target: target, at: time, instant: reduceMotion || lowPower),
                                     dark: dark, time: time)
         input.spread = min(max(mean / home - 1, 0), 1)
         input.quiet = mode == .resting || quiet
         input.flat = reduceTransparency
-        input.activeBurst = reduceMotion || lowPower ? nil : director.burst(at: time, quiet: input.quiet)
+        input.activeBurst = reduceMotion || lowPower ? nil : active.burst(at: time, quiet: input.quiet)
         input.sway = !reduceMotion && !lowPower
         if !reduceMotion, !lowPower {
             input.voice = voice
