@@ -113,6 +113,15 @@ struct DescribeTests {
         #expect(Describe.sentence(routine, in: store, classes: engine.classes) == "Private workout")
     }
 
+    @Test func aWorkoutOfAPrivateRoutineHasNoStoryLinesOnlyACount() throws {
+        let routine = try make(.routine, "Knee rehab day")
+        let secret = try make(.workout, "Session")
+        try store.setLinks("routine", on: secret, to: [routine])
+        try engine.perform(RenameObject(object: secret.id, title: "Session two"), by: .user)
+        #expect(story(secret).isEmpty)
+        #expect(Describe.storyCount(secret, engine: engine) >= 1)
+    }
+
     @Test func otherClassesGiveNil() throws {
         #expect(try sentence(make(.place, "Fridge")) == nil)
         #expect(try sentence(make(.note, "plain note")) == nil)
