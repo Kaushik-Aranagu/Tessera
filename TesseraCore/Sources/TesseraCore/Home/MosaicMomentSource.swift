@@ -37,6 +37,8 @@ public enum MosaicMomentKind: Equatable, Sendable {
 public struct MosaicMomentPick: Equatable, Sendable {
     public let kind: MosaicMomentKind
     public let clause: HomeSentence.Clause
+    /// Three lines, as `MosaicPick.clauses`: the moment's own line, then two lines of context (the time and the day).
+    public let clauses: [HomeSentence.Clause]
     /// What the picture takes from the item: only an app accent or the glaze, never a word about the item itself.
     public let tone: MosaicTone
     /// When it happened (the timer's end, the finish, the best, the start of a reminder), or now for the others.
@@ -66,10 +68,13 @@ public struct MosaicMomentInputs: Sendable {
     /// Keys that have played, so an event never plays twice.
     public var played: Set<String>
     public var candidates: [Candidate]
+    /// The two context lines under a moment's own line (the time, then the day), already masked.
+    public var context: [HomeSentence.Clause]
 
     public init(now: Date, quiet: Bool = false, last: (kind: MosaicMomentKind, at: Date)? = nil,
-                played: Set<String> = [], candidates: [Candidate] = [])
+                played: Set<String> = [], candidates: [Candidate] = [], context: [HomeSentence.Clause] = [])
     {
+        self.context = context
         self.now = now
         self.quiet = quiet
         self.last = last
@@ -96,7 +101,8 @@ public enum MosaicMomentSource {
             .filter { input.quiet ? $0.kind == .timer : ($0.kind.isExempt || spaced) }
             .sorted { rank($0.kind) < rank($1.kind) }
         return ready.first.map {
-            MosaicMomentPick(kind: $0.kind, clause: $0.clause, tone: $0.tone, at: $0.at, key: $0.key)
+            MosaicMomentPick(kind: $0.kind, clause: $0.clause, clauses: [$0.clause] + input.context.prefix(2),
+                             tone: $0.tone, at: $0.at, key: $0.key)
         }
     }
 
@@ -125,6 +131,15 @@ public enum MosaicMomentSource {
         -> HomeSentence.Clause
     {
         HomeSentence.Clause(app: app, sentence: LandingSentence(text: text, key: key), opens: opens ?? .app(app))
+    }
+
+    /// A key that holds no words: FNV-1a over the text, in hex. Played keys are kept, so they must not hold a line.
+    static func hashed(_ text: String) -> String {
+        var hash: UInt64 = 0xCBF2_9CE4_8422_2325
+        for byte in text.utf8 {
+            hash = (hash ^ UInt64(byte)) &* 0x0000_0100_0000_01B3
+        }
+        return String(hash, radix: 16)
     }
 
     public static func weatherLine(_ weather: MosaicWeather) -> String {
@@ -178,7 +193,7 @@ public extension MosaicMomentInputs {
         // An on-device suggestion that is ready: vetted like any line, Tess's words are never an app word.
         if let tessLine, !tessLine.isEmpty, !isWalled(tessLine, store: store, weight: weight) {
             found.append(Candidate(kind: .tess, clause: MosaicMomentSource.plain(tessLine), at: now,
-                                   key: "tess-\(tessLine)"))
+                                   key: "tess-\(MosaicMomentSource.hashed(tessLine))"))
         }
         // A kitchen timer that has just finished.
         for timer in CookLog(store: store, classes: classes).timers(at: now) where !timer.object.isDeleted
@@ -248,14 +263,23 @@ public extension MosaicMomentInputs {
             let label = hidden ? RoutinesLanding.privateRoutine : event.label
             let clause = hidden ? MosaicMomentSource.plain("\(label), now.")
                 : MosaicMomentSource.accented("\(label), now.", key: label, app: .routines)
-            found.append(Candidate(kind: .reminder, clause: clause, at: event.start,
-                                   key: "reminder-\(label)-\(event.start.timeIntervalSince1970)",
+            found.append(Candidate(kind: .reminder,
+                                   clause: clause,
+                                   at: event.start,
+                                   key: "reminder-\(MosaicMomentSource.hashed(label))-\(event.start.timeIntervalSince1970)",
                                    tone: hidden ? .glaze : .accent(.routines)))
         }
         // A best never plays after its own finish: the finish that ended the same workout is dropped.
         let bestTimes = Set(found.filter { $0.key.hasPrefix("best-") }.map(\.at))
         found.removeAll { $0.key.hasPrefix("finish-") && bestTimes.contains($0.at) }
-        return MosaicMomentInputs(now: now, quiet: quiet, last: last, played: played, candidates: found)
+        // The two lines under a moment's own: the time, then the day (the next timed thing as an app word when it has
+        // one), all masked already.
+        var day = MosaicMomentSource.plain(facts.caption(for: .day))
+        if let next = facts.nextTimed, let app = next.app, day.text.contains(next.title) {
+            day = MosaicMomentSource.accented(day.text, key: next.title, app: app)
+        }
+        return MosaicMomentInputs(now: now, quiet: quiet, last: last, played: played, candidates: found,
+                                  context: [MosaicMomentSource.plain(facts.caption(for: .time)), day])
     }
 
     private static func isWalled(_ text: String, store: ObjectStore, weight: Double?) -> Bool {
