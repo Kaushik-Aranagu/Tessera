@@ -56,8 +56,8 @@ struct RoutinesLandingPage: View {
             lead: {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                     RoutinesThread(front: front, accent: accent, actions: actions(front))
-                    if RoutinesDaySwitch.isOn, front.running != nil {
-                        // Pause and Busy are wired to nothing yet: routines have no pause or busy to act on.
+                    if RoutinesDaySwitch.isOn, RoutinesDayWords.showsPauseBusy, front.running != nil {
+                        // Routines have no pause or busy yet, so the words stay hidden (dead words don't ship).
                         HStack(spacing: Theme.Spacing.xl) {
                             Button(RoutinesDayWords.pause) {}
                                 .buttonStyle(LandingWordStyle())

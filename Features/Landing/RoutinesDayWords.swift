@@ -11,6 +11,9 @@ enum RoutinesDayWords {
         let startMinuteOfDay: Int?
     }
 
+    /// Pause and Busy show only when routines can really be paused or busy (Core and Design are deciding what each
+    /// does).
+    static let showsPauseBusy = false
     static let pause = "Pause"
     static let busy = "Busy"
 

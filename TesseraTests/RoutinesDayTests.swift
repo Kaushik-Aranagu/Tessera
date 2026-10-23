@@ -6,6 +6,10 @@ import Testing
 struct RoutinesDayTests {
     private let night = RoutinesDayWords.Next(name: "Night", startMinuteOfDay: 21 * 60 + 50)
 
+    @Test func pauseAndBusyStayHiddenUntilTheyDoSomething() {
+        #expect(!RoutinesDayWords.showsPauseBusy)
+    }
+
     @Test func runningWithANext() {
         #expect(RoutinesDayWords.sentence(running: "Morning", next: night, total: 2)
             == "Morning is running. Night is next, usually 9:50 pm.")
