@@ -90,6 +90,8 @@ private struct TrainingAtRest: View {
     @State private var firstSegment: CGRect = .zero
     /// The Library rises over Training (Exercises | Workouts, Try today).
     @State private var libraryOpen = false
+    @State private var statsOpen = false
+    @State private var logOpen = false
     @State private var place = TrainingPlace.current()
     /// The START sequence, cancelled if he leaves the page inside it.
     @State private var startTask: Task<Void, Never>?
@@ -141,9 +143,19 @@ private struct TrainingAtRest: View {
             .fullScreenCover(isPresented: $libraryOpen) {
                 LibraryPage(close: { libraryOpen = false })
             }
+            .fullScreenCover(isPresented: $statsOpen) {
+                TrainingStatsPage(close: { statsOpen = false })
+            }
+            .fullScreenCover(isPresented: $logOpen) {
+                TrainingLogPage(close: { logOpen = false })
+            }
             .task { model.purgeStaleTried() }
 
-            HStack(alignment: .bottom, spacing: Theme.Spacing.m) {
+            // At accessibility sizes the place knob sits under Start, so neither wraps letter by letter.
+            (typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
+                : AnyLayout(HStackLayout(alignment: .bottom, spacing: Theme.Spacing.m)))
+            {
                 StartMark(state: markState, lift: lift)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
                         markLine = CGRect(x: frame.minX, y: frame.maxY - 6, width: frame.width, height: 6)
@@ -152,7 +164,9 @@ private struct TrainingAtRest: View {
                     .accessibilityAddTraits(markState.isAction ? .isButton : [])
                     .accessibilityAction { tapMark() }
 
-                Spacer(minLength: Theme.Spacing.s)
+                if !typeSize.isAccessibilitySize {
+                    Spacer(minLength: Theme.Spacing.s)
+                }
                 // Where he trains today: the same knob the library turns.
                 KnobWords(values: TrainingPlace.allCases, selection: $place, word: \.rawValue,
                           spoken: "Place, \(place.rawValue), adjustable")
@@ -490,10 +504,13 @@ private struct TrainingAtRest: View {
                                       value: count > 0 ? "\(count) \(count == 1 ? "exercise" : "exercises")" : nil,
                                       open: { libraryOpen = true }))
         }
+        if StatsSwitch.isOn {
+            doors.append(TrainingDoor(id: "stats", word: "Stats", value: nil, open: { statsOpen = true }))
+        }
         if let workout = model.classDef(.workout) {
             let done = TrainingWeek.doneThisWeek(model, now: AppClock.now)
             doors.append(TrainingDoor(id: "log", word: "Log", value: done > 0 ? "\(done) this week" : nil,
-                                      open: { model.open(.classDef(workout.id)) }))
+                                      open: { LogSwitch.isOn ? (logOpen = true) : model.open(.classDef(workout.id)) }))
         }
         return doors
     }

@@ -22,7 +22,6 @@ struct MentionsTests {
             .exercise,
             .benchPress,
             .barbellLift,
-            .routine,
             .plan,
             .set,
             .muscle,
@@ -33,6 +32,7 @@ struct MentionsTests {
         for key in [SystemCatalog.Key.recipe, .ingredient, .cook, .kitchenTimer, .recipeStep, .cookSession, .cookDish] {
             #expect(try app(key) == .kitchen, "\(key)")
         }
+        #expect(try app(.routine) == .routines)
         #expect(try app(.spend) == .money && app(.note) == .notes && app(.list) == .lists && app(.listItem) == .lists)
         for key in [SystemCatalog.Key.task, .book, .event, .settings, .process, .thing] {
             #expect(try app(key) == nil, "\(key)")

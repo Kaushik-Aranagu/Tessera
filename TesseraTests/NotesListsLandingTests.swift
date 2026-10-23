@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import Tessera
+import Testing
 
 /// The Notes and Lists landings' fixed sentences (notes-lists-landing-build-sheet-oct22.md section 3 and 4).
 struct NotesListsLandingTests {
@@ -35,9 +35,11 @@ struct NotesListsLandingTests {
     @Test func notesMarginAndNewLines() {
         #expect(NotesLandingWords.names(weekday: "Tue", thing: "Bench press")
             == "Your note from Tue names Bench press.")
-        #expect(NotesLandingWords.newNotes(things: ["Landlord"], loose: false, notes: 1) == "A new note about Landlord.")
+        #expect(NotesLandingWords
+            .newNotes(things: ["Landlord"], loose: false, notes: 1) == "A new note about Landlord.")
         #expect(NotesLandingWords.newNotes(things: ["A", "B"], loose: false, notes: 1) == "A new note about A and B.")
-        #expect(NotesLandingWords.newNotes(things: ["A", "B", "C"], loose: false, notes: 3) == "New notes about A and B.")
+        #expect(NotesLandingWords
+            .newNotes(things: ["A", "B", "C"], loose: false, notes: 3) == "New notes about A and B.")
         #expect(NotesLandingWords.newNotes(things: [], loose: true, notes: 1) == "A new loose note.")
         #expect(NotesLandingWords.newNotes(things: [], loose: false, notes: 0) == nil)
     }
