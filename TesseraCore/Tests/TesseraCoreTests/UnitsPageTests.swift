@@ -64,13 +64,22 @@ struct UnitAwareLinesTests {
         let progress = WorkoutProgress(of: workout, store: store)
         #expect(progress.nextStep == "Bench Press, set 1: 80 kg × 8")
         #expect(progress.nextStep(unit: .kilograms) == progress.nextStep)
-        #expect(progress.nextStep(unit: .pounds) == "Bench Press, set 1: 176.5 lb × 8")
+        #expect(progress.nextStep(unit: .pounds) == "Bench Press, set 1: 176.4 lb × 8")
         // Nothing stored changed.
         #expect(store.number("targetWeight", of: entry) == 80)
     }
 
     @Test func aMassFieldReadsInHisUnit() {
         #expect(SideFacts.describe(.mass(82.5)) == "82.5 kg")
-        #expect(SideFacts.describe(.mass(82.5), unit: .pounds) == "182 lb")
+        #expect(SideFacts.describe(.mass(82.5), unit: .pounds) == "181.9 lb")
+    }
+
+    @Test func oneWeightReadsTheSameOnThePageAndOnEveryLine() {
+        // 82.5 kg is 181.9 lb on the Units page; the lines say the same.
+        #expect(MassUnit.pounds.text(kilograms: 82.5) == "181.9")
+        let sample = Measure(82.5, "kg").converted(to: "lb")?.formatted
+        #expect(SideFacts.describe(.mass(82.5), unit: .pounds) == sample)
+        #expect(UnitsPage.rows(DisplayUnits())[0].sample == "Bench 82.5 kg is \(sample ?? "").")
+        #expect(MassUnit.kilograms.text(kilograms: 82.5) == "82.5")
     }
 }

@@ -27,7 +27,7 @@ public struct WorkoutProgress {
         guard let exerciseName else { return nil }
         var line = "\(exerciseName), set \(setIndex + 1)"
         if let weight, let reps {
-            line += ": \(Self.format(unit.shown(kilograms: weight))) \(unit.symbol) × \(Self.format(reps))"
+            line += ": \(unit.text(kilograms: weight)) \(unit.symbol) × \(Self.format(reps))"
         }
         return line
     }
@@ -77,9 +77,12 @@ extension Transaction {
 }
 
 extension MassUnit {
-    /// Stored kilograms as this unit shows them in a sentence: kilograms exactly as stored, pounds to what a gym can
-    /// load (0.5 lb).
-    func shown(kilograms: Double) -> Double {
-        self == .kilograms ? kilograms : fromKilograms(kilograms)
+    /// Stored kilograms as a number in a sentence, through Measure so the same weight reads the same on the Units page
+    /// and on every line (82.5 kg is 181.9 lb). Kilograms stay as stored.
+    func text(kilograms: Double) -> String {
+        guard self != .kilograms, let moved = Measure(kilograms, "kg").converted(to: symbol) else {
+            return WorkoutProgress.format(kilograms)
+        }
+        return MeasureFormat.number(moved.value, unit: symbol)
     }
 }

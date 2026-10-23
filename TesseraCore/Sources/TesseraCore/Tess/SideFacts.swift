@@ -116,7 +116,7 @@ public enum SideFacts {
         switch value {
         case let .text(text), let .choice(text), let .richText(text): text.isEmpty ? nil : text
         case let .number(number): String(format: "%g", number)
-        case let .mass(number): String(format: "%g \(unit.symbol)", unit.shown(kilograms: number))
+        case let .mass(number): "\(unit == .kilograms ? String(format: "%g", number) : unit.text(kilograms: number)) \(unit.symbol)"
         case let .bool(flag): flag ? "Yes" : "No"
         case let .date(date): "\(day(of: date, calendar: calendar)), \(HouseTime.clock(date, calendar: calendar))"
         case let .duration(seconds):
