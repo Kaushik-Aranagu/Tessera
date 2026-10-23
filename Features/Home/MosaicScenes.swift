@@ -5,65 +5,38 @@ import TesseraCore
 // that is done. A scene is a set of target colours for the grid; the engine morphs between them. Pure, so each scene
 // is tested by reading its colours, not by looking at it.
 
-/// What Core knows that the mosaic draws: the sky for an hour, what finished today, the next timed thing. Core fills
-/// this from sunrise and sunset, the day's story and the plan; until then `MosaicFacts.sample` stands in.
-struct MosaicFacts {
-    struct Finished: Equatable {
-        let hour: Double
-        let tone: MosaicTone
-    }
+/// What the scenes read, worked out from Core's `MosaicFacts` by the view: the moment, the sky at an hour (already
+/// matched to the light or dark look) and the minutes to the next timed thing.
+struct MosaicSceneInput {
+    var now: Date
+    var sky: (Double) -> MosaicTriple
+    var nextMinutes: Int?
 
-    var now: Date = AppClock.now
-    /// The sky's colours at an hour of day (6 to 24), for a light and a dark look.
-    var sky: MosaicSky = .standard
-    var finishedToday: [Finished] = []
-    /// The next timed thing: its title and the minutes until it starts.
-    var nextTimed: (title: String, minutes: Int)?
-    var freeMinutes: Int?
-    /// Minutes until sunset, when it is known.
-    var minutesToSunset: Int?
-    /// Things on the day by column pair's start hour, for the caption while a finger drags.
-    var events: [Int: String] = [:]
-
-    static let sample = MosaicFacts()
-
-    /// The line under the mosaic for a scene (the day's rest caption is the free time and what is next).
-    func caption(for scene: MosaicScene) -> String {
-        switch scene {
-        case .day:
-            guard let freeMinutes, let next = nextTimed else { return "Nothing on the clock." }
-            return "Free for \(HouseTime.minutes(freeMinutes)), then \(next.title)."
-        case .time: return HouseTime.clock(now) + "."
-        case .sky:
-            guard let minutesToSunset, minutesToSunset >= 0 else { return "The sun is down." }
-            return "Sunset in \(HouseTime.minutes(minutesToSunset))."
-        case .next:
-            guard let next = nextTimed else { return "Nothing on the clock." }
-            return "\(next.title) in \(HouseTime.minutes(next.minutes))."
-        case .done: return "Everything is done."
-        }
+    init(now: Date, nextMinutes: Int? = nil, sky: @escaping (Double) -> MosaicTriple) {
+        self.now = now
+        self.nextMinutes = nextMinutes
+        self.sky = sky
     }
 }
 
 enum MosaicScenes {
     /// The sun's own colour in the sky scene.
-    static let sun: MosaicRGB = MosaicColour.hex(0xEE965C)
-    static let duskGround: MosaicRGB = MosaicColour.hex(0x5A4650)
+    static let sun: MosaicTriple = MosaicColour.hex(0xEE965C)
+    static let duskGround: MosaicTriple = MosaicColour.hex(0x5A4650)
 
     /// The target colours, indexed `column * rows + row`.
     static func targets(
         _ scene: MosaicScene,
         geometry: MosaicGeometry,
-        facts: MosaicFacts,
-        dark: Bool,
-        ground: MosaicRGB
-    ) -> [MosaicRGB] {
+        input: MosaicSceneInput,
+        ground: MosaicTriple
+    ) -> [MosaicTriple] {
         let config = geometry.config
-        let nowColumn = MosaicReadout.nowColumn(facts.now, config: config)
-        var colours = [MosaicRGB](repeating: ground, count: config.count)
-        let digits = digitTiles(for: scene, facts: facts, geometry: geometry)
+        let nowColumn = MosaicReadout.nowColumn(input.now, config: config)
+        var colours = [MosaicTriple](repeating: ground, count: config.count)
+        let digits = digitTiles(for: scene, input: input, geometry: geometry)
         for column in 0 ..< config.columns {
-            let skyColour = facts.sky.rgb(atHour: geometry.hour(ofColumn: column), dark: dark)
+            let skyColour = input.sky(geometry.hour(ofColumn: column))
             for row in 0 ..< config.rows {
                 let index = geometry.index(column: column, row: row)
                 let jittered = MosaicColour.lightened(skyColour, by: MosaicColour.jitter(index: index) * config.jitter)
@@ -91,13 +64,13 @@ enum MosaicScenes {
     static func origin(
         _ scene: MosaicScene,
         geometry: MosaicGeometry,
-        facts: MosaicFacts,
+        input: MosaicSceneInput,
         firstLaid: Int?
     ) -> (column: Int, row: Int) {
         let config = geometry.config
         switch scene {
         case .day:
-            return (MosaicReadout.nowColumn(facts.now, config: config) ?? 0, config.rows / 2)
+            return (MosaicReadout.nowColumn(input.now, config: config) ?? 0, config.rows / 2)
         case .time: return (0, config.rows / 2)
         case .sky: return (Int(0.71 * Double(config.columns)), Int(0.58 * Double(config.rows)))
         case .next: return (config.columns - 1, config.rows / 2)
@@ -111,7 +84,7 @@ enum MosaicScenes {
 
     /// The sun as a disc of radius 4.2 tiles at (0.71 W, 0.58 H), a 1.8-tile ring blending into the sky, and dusk ground
     /// below 72% of the height: the sky mixed 55% to #5A4650, x 0.9.
-    static func skyScene(column: Int, row: Int, sky: MosaicRGB, geometry: MosaicGeometry) -> MosaicRGB {
+    static func skyScene(column: Int, row: Int, sky: MosaicTriple, geometry: MosaicGeometry) -> MosaicTriple {
         let config = geometry.config
         let sunColumn = 0.71 * Double(config.columns)
         let sunRow = 0.58 * Double(config.rows)
@@ -146,14 +119,14 @@ enum MosaicScenes {
     ]
 
     /// The text a scene draws in tiles: "5:42" for the time, the minutes for the next thing, nothing otherwise.
-    static func text(for scene: MosaicScene, facts: MosaicFacts, calendar: Calendar = .current) -> String? {
+    static func text(for scene: MosaicScene, input: MosaicSceneInput, calendar: Calendar = .current) -> String? {
         switch scene {
         case .time:
-            let hour = calendar.component(.hour, from: facts.now) % 12
-            let minute = calendar.component(.minute, from: facts.now)
+            let hour = calendar.component(.hour, from: input.now) % 12
+            let minute = calendar.component(.minute, from: input.now)
             return "\(hour == 0 ? 12 : hour):" + String(format: "%02d", minute)
         case .next:
-            return facts.nextTimed.map { String(min(max($0.minutes, 0), 999)) }
+            return input.nextMinutes.map { String(min(max($0, 0), 999)) }
         default:
             return nil
         }
@@ -161,8 +134,8 @@ enum MosaicScenes {
 
     /// The tiles a text covers: the face drawn at 2x (a digit is 6 x 10 tiles, a colon 2 wide), digits 2 apart, the line
     /// centred in the grid.
-    static func digitTiles(for scene: MosaicScene, facts: MosaicFacts, geometry: MosaicGeometry) -> Set<Int> {
-        guard let text = text(for: scene, facts: facts) else { return [] }
+    static func digitTiles(for scene: MosaicScene, input: MosaicSceneInput, geometry: MosaicGeometry) -> Set<Int> {
+        guard let text = text(for: scene, input: input) else { return [] }
         return numeral(text, geometry: geometry)
     }
 

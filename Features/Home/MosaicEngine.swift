@@ -7,7 +7,7 @@ import TesseraCore
 // tested without a screen and the Canvas is only a reader. Design will add more expressive modes: a mode is a
 // `MosaicConfig`, a scene and a palette, not a fork of this file.
 
-typealias MosaicRGB = (red: Double, green: Double, blue: Double)
+typealias MosaicTriple = (red: Double, green: Double, blue: Double)
 
 /// The numbers one mosaic runs on.
 struct MosaicConfig: Equatable {
@@ -98,16 +98,6 @@ struct MosaicGeometry: Equatable {
     }
 }
 
-enum MosaicScene: String, CaseIterable, Equatable {
-    case day, time, sky, next, done
-}
-
-/// What a laid tile is made of: the hour's sky glazed, or an app's accent.
-enum MosaicTone: Equatable {
-    case glaze
-    case accent(HomeApp)
-}
-
 struct MosaicLaid: Equatable {
     let index: Int
     let tone: MosaicTone
@@ -145,8 +135,8 @@ final class MosaicEngine {
     private(set) var landings = 0
 
     // The morph: from-colours (the display when it began), to-colours (the scene), a delay per tile.
-    private var from: [MosaicRGB]
-    private var to: [MosaicRGB]
+    private var from: [MosaicTriple]
+    private var to: [MosaicTriple]
     private var delays: [TimeInterval]
     private var morphStart: TimeInterval = -10
     private var morphLength: TimeInterval
@@ -163,7 +153,7 @@ final class MosaicEngine {
         geometry = MosaicGeometry(config: config, width: width)
         random = SplitMix(seed: seed)
         nextPop = config.popInterval
-        let rest = Array(repeating: MosaicRGB(0.5, 0.5, 0.5), count: config.count)
+        let rest = Array(repeating: MosaicTriple(0.5, 0.5, 0.5), count: config.count)
         from = rest
         to = rest
         delays = Array(repeating: 0, count: config.count)
@@ -244,7 +234,7 @@ final class MosaicEngine {
     }
 
     /// The tile's colour now: its morph, jittered, the now column's breath and the pop's shade.
-    func colour(column: Int, row: Int, nowColumn: Int?) -> MosaicRGB {
+    func colour(column: Int, row: Int, nowColumn: Int?) -> MosaicTriple {
         let index = geometry.index(column: column, row: row)
         var rgb = MosaicColour.mix(from[index], to[index], morphEased(index))
         if column == nowColumn, !reduceMotion {
@@ -272,7 +262,7 @@ final class MosaicEngine {
 
     /// Eases every tile to `targets`, each starting after its grid distance from `origin` x 22 ms. Under Reduce Motion it
     /// is one 150 ms crossfade with no delay.
-    func morph(to targets: [MosaicRGB], origin: (column: Int, row: Int)) {
+    func morph(to targets: [MosaicTriple], origin: (column: Int, row: Int)) {
         guard targets.count == config.count else { return }
         let nowColour = (0 ..< config.count).map { MosaicColour.mix(from[$0], to[$0], morphEased($0)) }
         from = nowColour
@@ -293,7 +283,7 @@ final class MosaicEngine {
     }
 
     /// Sets the colours with no morph (the first frame, a resize of the day).
-    func settle(to targets: [MosaicRGB]) {
+    func settle(to targets: [MosaicTriple]) {
         guard targets.count == config.count else { return }
         from = targets
         to = targets
@@ -478,16 +468,16 @@ final class MosaicEngine {
 // MARK: - Colour
 
 enum MosaicColour {
-    static func mix(_ a: MosaicRGB, _ b: MosaicRGB, _ t: Double) -> MosaicRGB {
+    static func mix(_ a: MosaicTriple, _ b: MosaicTriple, _ t: Double) -> MosaicTriple {
         (a.red + (b.red - a.red) * t, a.green + (b.green - a.green) * t, a.blue + (b.blue - a.blue) * t)
     }
 
-    static func scaled(_ a: MosaicRGB, _ factor: Double) -> MosaicRGB {
+    static func scaled(_ a: MosaicTriple, _ factor: Double) -> MosaicTriple {
         (min(a.red * factor, 1), min(a.green * factor, 1), min(a.blue * factor, 1))
     }
 
     /// Lightness pushed toward white (positive) or black (negative) by `amount`.
-    static func lightened(_ a: MosaicRGB, by amount: Double) -> MosaicRGB {
+    static func lightened(_ a: MosaicTriple, by amount: Double) -> MosaicTriple {
         amount >= 0 ? mix(a, (1, 1, 1), amount) : mix(a, (0, 0, 0), -amount)
     }
 
@@ -499,44 +489,15 @@ enum MosaicColour {
         return Double(hash & 0xFFFF) / 32767.5 - 1
     }
 
-    static func hex(_ value: UInt32) -> MosaicRGB {
+    /// Core's sky colour (0 to 255 a channel) as unit floats; a dark look takes the same hues at 72% so the sky does not
+    /// glare on a dark page.
+    static func triple(_ sky: MosaicRGB, dark: Bool) -> MosaicTriple {
+        let scale = dark ? 0.72 : 1
+        return (Double(sky.red) / 255 * scale, Double(sky.green) / 255 * scale, Double(sky.blue) / 255 * scale)
+    }
+
+    static func hex(_ value: UInt32) -> MosaicTriple {
         (Double((value >> 16) & 0xFF) / 255, Double((value >> 8) & 0xFF) / 255, Double(value & 0xFF) / 255)
-    }
-}
-
-/// Sky colours by hour. A mosaic column takes the colour of the sky at its hour; Core feeds sunrise and sunset through
-/// `MosaicFacts`, and until then the stops sit at fixed hours. Flat colours, no gradient fills.
-struct MosaicSky: Equatable {
-    struct Stop: Equatable {
-        let hour: Double
-        let light: UInt32
-        let dark: UInt32
-    }
-
-    /// Dawn peach, noon cream, afternoon sand, dusk rose, evening violet, night indigo.
-    static let standard = MosaicSky(stops: [
-        Stop(hour: 6, light: 0xF6C7A6, dark: 0xB8704F),
-        Stop(hour: 8, light: 0xF9DDB8, dark: 0xC48E5C),
-        Stop(hour: 12, light: 0xFBF1D6, dark: 0xCDB77E),
-        Stop(hour: 15.5, light: 0xEAD3A4, dark: 0xB89A63),
-        Stop(hour: 18.5, light: 0xE9A6A0, dark: 0xB8706E),
-        Stop(hour: 20.5, light: 0x9C85C4, dark: 0x6F5A9E),
-        Stop(hour: 24, light: 0x3E3F8A, dark: 0x2B2C6B),
-    ])
-
-    let stops: [Stop]
-
-    func rgb(atHour hour: Double, dark: Bool) -> MosaicRGB {
-        let hour = min(max(hour, stops.first?.hour ?? 0), stops.last?.hour ?? 24)
-        guard let upper = stops.firstIndex(where: { $0.hour >= hour }), upper > 0 else {
-            return MosaicColour.hex(stops.first.map { dark ? $0.dark : $0.light } ?? 0)
-        }
-        let low = stops[upper - 1]
-        let high = stops[upper]
-        let span = high.hour - low.hour
-        let t = span > 0 ? (hour - low.hour) / span : 0
-        return MosaicColour.mix(MosaicColour.hex(dark ? low.dark : low.light),
-                                MosaicColour.hex(dark ? high.dark : high.light), t)
     }
 }
 

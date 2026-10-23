@@ -44,27 +44,46 @@ final class MosaicController {
         if firstLaidIndex == nil { firstLaidIndex = engine.laid.first?.index }
     }
 
+    private var lastDay: Date?
+
+    /// The scenes' input from Core's facts: the moment, the sky at an hour matched to the look, minutes to the next thing.
+    static func input(_ facts: MosaicFacts, dark: Bool) -> MosaicSceneInput {
+        MosaicSceneInput(now: facts.now, nextMinutes: facts.freeMinutes) { hour in
+            MosaicColour.triple(facts.sky(atHour: hour), dark: dark)
+        }
+    }
+
     /// Re-reads the scene's colours when anything they depend on changed, easing the tiles there from the scene's origin.
-    func sync(scene: MosaicScene, facts: MosaicFacts, dark: Bool, ground: MosaicRGB, width: CGFloat, reduceMotion: Bool) {
+    func sync(scene: MosaicScene, facts: MosaicFacts, dark: Bool, ground: MosaicTriple, width: CGFloat, reduceMotion: Bool) {
         engine.reduceMotion = reduceMotion
         engine.resize(width: width)
         let config = engine.config
+        // A new day clears yesterday's tiles; the first sync lays what finished earlier today with no flight.
+        if let lastDay, lastDay != facts.day {
+            engine.reset()
+            restored = false
+            firstLaidIndex = nil
+        }
+        lastDay = facts.day
         if !restored {
             restored = true
             for item in facts.finishedToday {
-                engine.restore(column: engine.geometry.column(ofHour: item.hour), tone: item.tone)
+                let hour = item.time.timeIntervalSince(facts.day) / 3600
+                let tone: MosaicTone = item.app.map { .accent($0) } ?? .glaze
+                engine.restore(column: engine.geometry.column(ofHour: hour), tone: tone)
             }
             firstLaidIndex = engine.laid.first?.index
         }
+        let input = Self.input(facts, dark: dark)
         let next = Key(scene: scene, dark: dark, width: width,
                        nowColumn: MosaicReadout.nowColumn(facts.now, config: config),
-                       text: MosaicScenes.text(for: scene, facts: facts), ground: [ground.red, ground.green, ground.blue])
+                       text: MosaicScenes.text(for: scene, input: input), ground: [ground.red, ground.green, ground.blue])
         guard next != key else { return }
-        let targets = MosaicScenes.targets(scene, geometry: engine.geometry, facts: facts, dark: dark, ground: ground)
+        let targets = MosaicScenes.targets(scene, geometry: engine.geometry, input: input, ground: ground)
         if key == nil {
             engine.settle(to: targets)
         } else {
-            let origin = MosaicScenes.origin(scene, geometry: engine.geometry, facts: facts, firstLaid: firstLaidIndex)
+            let origin = MosaicScenes.origin(scene, geometry: engine.geometry, input: input, firstLaid: firstLaidIndex)
             engine.morph(to: targets, origin: origin)
         }
         key = next
@@ -118,10 +137,11 @@ struct MosaicView: View {
         .task(id: Int(facts.now.timeIntervalSince1970 / 60)) {
             // Sunset within 20 minutes plays the sky once; a timed thing within 30 plays the next once.
             guard !opening else { return }
-            if let minutes = facts.minutesToSunset, (0 ... 20).contains(minutes), !firedSky {
+            let sunsetMinutes = Int(facts.sunset.timeIntervalSince(facts.now) / 60)
+            if (0 ... 20).contains(sunsetMinutes), !firedSky {
                 firedSky = true
                 scene = .sky
-            } else if let next = facts.nextTimed, (0 ... 30).contains(next.minutes), !firedNext {
+            } else if let free = facts.freeMinutes, facts.nextTimed != nil, (0 ... 30).contains(free), !firedNext {
                 firedNext = true
                 scene = .next
             }
@@ -158,10 +178,8 @@ struct MosaicView: View {
 
     private var lowPower: Bool { ProcessInfo.processInfo.isLowPowerModeEnabled }
 
-    private func event(forColumn column: Int) -> String? {
-        let config = live.engine.config
-        let hour = config.firstHour + Int((Double(column / 2 * 2) * Double(config.hours) / Double(config.columns)).rounded())
-        return facts.events[hour]
+    private func event(forColumn _: Int) -> String? {
+        return nil
     }
 
     private func touch(at point: CGPoint) {
@@ -178,12 +196,12 @@ struct MosaicView: View {
 
     // MARK: - Drawing
 
-    private func rgb(_ color: Color, _ environment: EnvironmentValues) -> MosaicRGB {
+    private func rgb(_ color: Color, _ environment: EnvironmentValues) -> MosaicTriple {
         let resolved = color.resolve(in: environment)
         return (Double(resolved.red), Double(resolved.green), Double(resolved.blue))
     }
 
-    private func swiftColor(_ value: MosaicRGB, opacity: Double = 1) -> Color {
+    private func swiftColor(_ value: MosaicTriple, opacity: Double = 1) -> Color {
         Color(.sRGB, red: value.red, green: value.green, blue: value.blue, opacity: opacity)
     }
 
@@ -249,12 +267,13 @@ struct MosaicView: View {
         geometry: MosaicGeometry,
         dark: Bool,
         environment: EnvironmentValues
-    ) -> MosaicRGB {
+    ) -> MosaicTriple {
         switch tone {
         case .glaze:
-            MosaicColour.scaled(facts.sky.rgb(atHour: geometry.hour(ofColumn: column), dark: dark), geometry.config.glaze)
+            MosaicColour.scaled(MosaicColour.triple(facts.sky(atHour: geometry.hour(ofColumn: column)), dark: dark),
+                                geometry.config.glaze)
         case let .accent(app):
-            rgb(app.accent, environment)
+            rgb((HomeApp(rawValue: app.name) ?? .tasks).accent, environment)
         }
     }
 }
