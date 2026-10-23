@@ -311,6 +311,9 @@ final class AppModel {
 
     private var isDrainingWaiting = false
 
+    /// Home's own Tess layer (sheet 215) is on screen: she is the corner Tess there, so the dock's soul steps aside.
+    var homeTessLayerActive = false
+
     /// The open set-count ask ("2 × 10: 2 sets, or 2 kg?"), if the last phrase raised one.
     var pendingSetAsk: TessSetCountAsk? {
         (runtime.tess as? TessCaptureEngine)?.pendingAsk

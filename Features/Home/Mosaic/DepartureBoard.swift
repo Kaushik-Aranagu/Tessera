@@ -342,7 +342,7 @@ struct DepartureBoard: View {
     }
 }
 
-/// The "Sunset" word: the mosaic's own sky as a two-stop text gradient (C9772E to B0466A by day, F0A35A to E07A9A at
+/// The "Sunset" word: the mosaic's own sky as a two-stop text gradient (C9772E to B0466A by day, E8A06A to E07A9A at
 /// night), with a 1 pt underline at 5 pt in the second stop.
 struct SkyWordStyle: ButtonStyle {
     static var first: Color {

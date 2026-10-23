@@ -14,14 +14,14 @@ extension Theme.Colors {
             )
         }
 
-        /// Training: hot red.
+        /// Training: crimson (off Ember by delta E 10).
         static var training: Color {
-            tuned(\.training, light: 0xC4472A, dark: 0xEE6A4C)
+            tuned(\.training, light: 0xA8203F, dark: 0xD04A6A)
         }
 
         /// Kitchen: ochre.
         static var kitchen: Color {
-            tuned(\.kitchen, light: 0xA8701F, dark: 0xE0A458)
+            tuned(\.kitchen, light: 0xA8701F, dark: 0xD49A52)
         }
 
         /// Money: sage.
@@ -46,7 +46,7 @@ extension Theme.Colors {
 
         /// The sky word's two stops ("Sunset").
         static var skyFrom: Color {
-            tuned(\.skyFrom, light: 0xC9772E, dark: 0xF0A35A)
+            tuned(\.skyFrom, light: 0xC9772E, dark: 0xE8A06A)
         }
 
         static var skyTo: Color {
