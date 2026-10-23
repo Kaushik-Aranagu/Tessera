@@ -327,6 +327,7 @@ private struct InstanceBody: View {
                 + Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
                 : Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
         )
+        .modifier(AskPageHook(object: object))
 
         // A workout's notes are a body fact: they read "Note kept private" (Product 5:20 PM PT).
         // The list engine's flag lines ("#reusable", "#pick-one", "picked: …") are the engine's, never shown (QA, K88).
