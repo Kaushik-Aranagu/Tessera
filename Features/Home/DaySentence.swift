@@ -84,6 +84,11 @@ struct DaySentence: View {
     }
 
     private func open(_ clause: HomeSentence.Clause) {
+        Self.open(clause, model: model, openLink: openLink)
+    }
+
+    /// What a clause's key word opens; shared with the mosaic page's sentence lines.
+    static func open(_ clause: HomeSentence.Clause, model: AppModel, openLink: (HomeLink) -> Void) {
         switch clause.opens {
         case let .object(id):
             model.path.append(Route.object(id))

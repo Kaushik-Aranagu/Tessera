@@ -153,7 +153,7 @@ struct BackupView: View {
 
                 // backupsV2: what the folder copy leaves out, said only for that copy; the phone's copy stays whole.
                 if words, folder != nil {
-                    Text(BackupWords.notIncluded(leavingOutPrivate: true))
+                    Text(BackupWords.notIncluded(leavingOutPrivate: BackupKeeper.folderCopyLeavesOutPrivate))
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -207,6 +207,7 @@ struct BackupView: View {
             pending = TesseraBackup.pendingRestore()
             refresh += 1
         }
+        .onDisappear { undoTimer?.cancel() }
         .environment(\.animateEntrance, true)
         .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
             guard case let .success(url) = result else { return }

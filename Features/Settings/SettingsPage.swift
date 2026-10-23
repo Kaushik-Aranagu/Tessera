@@ -78,6 +78,12 @@ struct SettingsPage: View {
                         .padding(.top, Theme.Spacing.xxl)
                         .entrance(4)
 
+                    // Sheet 199: what Home shows, only while the Mosaic Home is on. Off leaves this page as it was.
+                    if HomeMosaic.isOn {
+                        HomeSettingsSection()
+                            .padding(.top, Theme.Spacing.section)
+                    }
+
                     // Drawn only while some switch ships in this build (Product, Oct 20).
                     if !ReviewChoices.drawnPages().isEmpty {
                         ReviewSection()

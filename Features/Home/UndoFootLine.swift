@@ -29,6 +29,7 @@ enum UndoRun {
 struct UndoFootLine: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var putBacks = 0
     @State private var refusals = 0
 
@@ -39,7 +40,7 @@ struct UndoFootLine: View {
                 let _ = model.revision
                 if let entry = UndoLog.latest(engine: model.engine, now: AppClock.now) {
                     foot(entry)
-                        .transition(.opacity)
+                        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .tesseraFeedback(.undo, trigger: putBacks)
