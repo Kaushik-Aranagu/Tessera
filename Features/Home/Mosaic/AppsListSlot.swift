@@ -9,26 +9,29 @@ enum AppsListRows {
     struct Row: Identifiable, Equatable {
         let app: HomeApp
         let summary: String
+        let opens: HomeSentence.Opens
         var id: HomeApp {
             app
         }
     }
 
-    static let quiet = "Nothing today"
+    static let quiet = "Nothing planned"
 
-    static func make(_ inputs: HomeSentence.Inputs) -> [Row] {
-        AppEdges.order.map { app in
-            let clause: HomeSentence.Clause? = switch app {
-            case .training: inputs.training
-            case .kitchen: inputs.kitchen
-            case .money: inputs.money
-            case .notes: inputs.notes
-            case .lists: inputs.lists
-            case .routines: inputs.routines
-            case .tasks: nil
-            }
-            return Row(app: app, summary: clause?.text ?? quiet)
+    static func home(_ app: AppSummaryApp) -> HomeApp {
+        switch app {
+        case .training: .training
+        case .kitchen: .kitchen
+        case .routines: .routines
+        case .tasks: .tasks
+        case .notes: .notes
+        case .lists: .lists
+        case .money: .money
         }
+    }
+
+    /// One row per app from Core's lines, in Core's order. A private top item already reads "Private" there.
+    static func make(_ lines: [AppSummaryLine]) -> [Row] {
+        lines.map { Row(app: home($0.app), summary: $0.text.isEmpty ? quiet : $0.text, opens: $0.opens) }
     }
 
     /// The app that sits `offset` rows from `index` in a ring: the list wraps round.
@@ -55,7 +58,7 @@ struct AppsListSlot: View {
 
     var body: some View {
         let _ = model.revision
-        let rows = AppsListRows.make(HomeSentence.inputs(engine: model.engine, plan: model.plan, now: AppClock.now))
+        let rows = AppsListRows.make(AppSummaryLines.lines(engine: model.engine, plan: model.plan, now: AppClock.now))
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text("Apps")
                 .textRole(.label)
@@ -102,9 +105,9 @@ struct AppsListSlot: View {
     private func line(_ row: AppsListRows.Row, isMiddle: Bool, offset: Int) -> some View {
         Button {
             if isMiddle {
-                door = .app(row.app)
+                open(row)
             } else {
-                settle(by: offset, count: AppEdges.order.count)
+                settle(by: offset, count: AppSummaryApp.allCases.count)
             }
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
@@ -128,6 +131,15 @@ struct AppsListSlot: View {
         .buttonStyle(.plain)
         .accessibilityLabel(isMiddle ? "\(row.app.rawValue), \(row.summary)" : row.app.rawValue)
         .accessibilityHint(isMiddle ? "Opens \(row.app.rawValue)" : "Brings it to the middle")
+    }
+
+    /// A tap on the middle row: the object its line names, else the app.
+    private func open(_ row: AppsListRows.Row) {
+        if case let .object(id) = row.opens {
+            model.path.append(Route.object(id))
+        } else {
+            door = .app(row.app)
+        }
     }
 
     private func settle(by steps: Int, count: Int) {

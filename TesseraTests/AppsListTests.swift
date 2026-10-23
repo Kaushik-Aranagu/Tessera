@@ -1,14 +1,13 @@
 import Foundation
 @testable import Tessera
-import Testing
 import TesseraCore
+import Testing
 
 @MainActor
 struct AppsListTests {
-    @Test func everyAppInEdgeOrderWithAQuietLineWhenItHasNothing() {
-        let rows = AppsListRows.make(HomeSentence.Inputs())
-        #expect(rows.map(\.app) == AppEdges.order)
-        #expect(rows.allSatisfy { $0.summary == AppsListRows.quiet })
+    @Test func everyAppFromCoreInItsOrder() {
+        #expect(AppSummaryApp.allCases.map(AppsListRows.home) == [.training, .kitchen, .routines, .tasks, .notes,
+                                                                  .lists, .money])
     }
 
     @Test func theListWrapsRoundInBothDirections() {
