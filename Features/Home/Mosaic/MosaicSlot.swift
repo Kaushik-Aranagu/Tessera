@@ -10,6 +10,8 @@ struct MosaicSlot: View {
     /// Sheet 200: with the moods On, A's view draws the picked mood inside the frame and writes the one caption line.
     var facts: MosaicFacts?
     var mood: MosaicMood?
+    /// Sheet 201: a moment to play over the mood.
+    var moment: MosaicMomentEvent?
     @State private var scene: MosaicScene = .day
 
     var body: some View {
@@ -19,7 +21,7 @@ struct MosaicSlot: View {
             if HomeMosaic.moodsIsOn {
                 Group {
                     if let facts, let mood {
-                        MosaicView(facts: facts, scene: $scene, mood: mood, caption: $caption)
+                        MosaicView(facts: facts, scene: $scene, mood: mood, moment: moment, caption: $caption)
                     } else {
                         Color.clear
                     }

@@ -34,6 +34,11 @@ enum HomeMosaic {
         isOn && ReviewChoices.shared.value(of: moodsID) == "On"
     }
 
+    /// Sheet 201: moments (weather, an announcement, Tess, an app's event) take the mosaic for a while.
+    @MainActor static var momentsIsOn: Bool {
+        MosaicMomentsSwitch.isOn
+    }
+
     /// The sentence shows at most three lines, one clause each; with more, the first three.
     static func firstThree<T>(_ clauses: [T]) -> [T] {
         Array(clauses.prefix(3))
