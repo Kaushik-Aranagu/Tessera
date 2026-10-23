@@ -222,6 +222,14 @@ final class ReviewChoices {
                says: ["Off": "A page's title does nothing when pressed.",
                       "On": "Press a page's title and Tess says what it is and what changed, on this phone only."],
                readiness: .live),
+        Choice(id: "routinesDayV2", name: "Routines day", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The Routines landing's top reads as before.",
+                      "On": "The Routines landing's top is one plain sentence about the day."],
+               readiness: .live),
+        Choice(id: "weekThreadV2", name: "Week thread", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The Routines landing shows no week line.",
+                      "On": "The Routines week is a rose thread, solid where a routine ran and a gap where not."],
+               readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
                       "All": "Body weight, Habits, Money, Reading, People and Upkeep show too."],
@@ -312,7 +320,7 @@ final class ReviewChoices {
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
         ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2"]),
-        ("Home and live", ["finishV2", "surfacesV2", "liveV2"]),
+        ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
