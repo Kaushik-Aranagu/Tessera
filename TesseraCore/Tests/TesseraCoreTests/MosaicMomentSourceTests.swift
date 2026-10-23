@@ -202,4 +202,24 @@ struct MosaicMomentSourceTests {
             #expect(MosaicMomentSource.next(inputs(tess: walled)) == nil, "\(walled)")
         }
     }
+
+    @Test func aMomentCarriesThreeClausesAndItsKeysHoldNoWords() throws {
+        let now = Date.now
+        _ = try engine.perform(CreateTask(title: "Tacos", startsAt: now.addingTimeInterval(10 * 60)), by: .user)
+        let input = inputs(now, tess: "Limes are low.")
+        let pick = try #require(MosaicMomentSource.next(input))
+        #expect(pick.clauses.count == 3 && pick.clauses[0] == pick.clause)
+        #expect(pick.clauses[1].text.hasSuffix(".") && pick.clauses[2].text == "Free 10 min, then Tacos.")
+        // Keys can be kept: none of them holds a line or a label.
+        let plain = inputs(now, tess: "Limes are low.")
+        for candidate in plain.candidates where candidate.kind == .tess {
+            #expect(!candidate.key.contains("Limes") && !candidate.key.lowercased().contains("limes"))
+        }
+        let routine = HandsEvent(app: .routines, label: "Morning", start: now.addingTimeInterval(-10),
+                                 end: now.addingTimeInterval(1200), hands: [], isFixed: false)
+        for candidate in inputs(now, events: [routine]).candidates where candidate.kind == .reminder {
+            #expect(!candidate.key.contains("Morning"))
+        }
+        #expect(MosaicMomentSource.hashed("a") != MosaicMomentSource.hashed("b"))
+    }
 }
