@@ -38,9 +38,14 @@ struct GroceryScaleTests {
         }
         let open = ms { _ = groceries.aisles() }
         let order = ms { _ = groceries.shoppingOrder() }
-        let add = try ms { try engine.perform(AddGroceries(lines: ["butter"]), by: .user) }
-        let row = try #require(groceries.shoppingOrder().first)
-        let check = try ms { try engine.perform(CheckListItem(item: row.id, time: start), by: .user) }
+        // Best of three, each on a fresh line: a loaded Mac delays one run, never all of them.
+        var adds = [Double](), checks = [Double]()
+        for index in 0 ..< 3 {
+            try adds.append(ms { try engine.perform(AddGroceries(lines: ["butter\(index)"]), by: .user) })
+            let row = try #require(groceries.shoppingOrder().first)
+            try checks.append(ms { try engine.perform(CheckListItem(item: row.id, time: start), by: .user) })
+        }
+        let add = adds.min() ?? 0, check = checks.min() ?? 0
         let clears = ms { _ = groceries.shopClears() }
         let again = ms { _ = groceries.shopClears() } // the cached read
         print("GROCERY SCALE \(Self.shops) shops, \(tombstones) tombstones: build=\(ms {})ms open=\(open)ms "

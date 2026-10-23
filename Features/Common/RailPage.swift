@@ -32,6 +32,8 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
     var pinned: RailPlace?
     /// The app's one accent (131): the pinned place's colour. Never another app's, never the amber look-alike.
     let accent: Color
+    /// The subtitle's colour: Tess's context violet by default; an app with no hue (Tasks) passes ink 2.
+    var subtitleColor: Color = Theme.Colors.context
     let places: [RailPlace]
     @Binding var open: String
     var sectionStyle: SectionStyle = .words
@@ -103,7 +105,7 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
                 .entrance(0, hero: true)
             Text(subtitle(open))
                 .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
+                .foregroundStyle(subtitleColor)
                 .contentTransition(.numericText())
                 .tesseraAnimation(RailMetrics.crossfade, value: open)
                 .padding(.top, Theme.Spacing.xs)

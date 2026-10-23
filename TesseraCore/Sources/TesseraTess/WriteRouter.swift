@@ -138,17 +138,8 @@ public struct WriteRouter {
         }
     }
 
-    /// A calorie or energy line that logs one ("calories 2400 today", "burned 400 kcal", "ate 600 calories"): a number
-    /// beside the word, or a logging verb. "low calorie yogurt" and "add calories to the recipe" are not walled.
     static func isCalorieShaped(_ phrase: String) -> Bool {
-        let lower = phrase.lowercased()
-        return lower.firstMatch(of: /\b\d[\d,.]*\s*(?:calories|calorie|kcal|cals|cal)\b/) != nil
-            || lower.firstMatch(of: /\b(?:calories|calorie|kcal|cals|cal)\s*(?:of\s+|:\s*|=\s*|is\s+|was\s+)?\d/) != nil
-            || lower
-            .firstMatch(
-                of: /\b(?:burned|burnt|ate|eaten|logged|tracked|consumed)\b.*\b(?:calories|calorie|kcal|cals|cal)\b/
-            )
-            != nil
+        PrivateFacts.isCalorieShaped(phrase)
     }
 
     private func privateNote(_ phrase: String) -> Candidate {
@@ -215,9 +206,8 @@ public struct WriteRouter {
     func spendReceipt(_ note: String) -> String {
         let word = note.trimmingCharacters(in: .whitespaces)
         let weight = BodyWeight.lastKg(in: engine.store)
-        let plain = !word.isEmpty && !ObjectPrivacy.isPrivateWord(word, in: engine.store)
+        let plain = !word.isEmpty && !ObjectPrivacy.containsPrivateWord(word, in: engine.store)
             && !PrivateFacts.isWalled(word, lastWeightKg: weight) && !SecretWords.mentions(word)
-            && !word.split(separator: " ").contains { ObjectPrivacy.isPrivateWord(String($0), in: engine.store) }
         return plain ? word.prefix(1).uppercased() + word.dropFirst() + ", logged." : "Spend, logged."
     }
 

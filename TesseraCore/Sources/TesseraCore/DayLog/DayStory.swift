@@ -131,7 +131,7 @@ public enum DayStory {
         "makeKind", "keepNoteAsObject", "keepAllNotes",
         // Occasions: links and dates only; the page reads them, the Day log does not.
         "createOccasion", "linkToOccasion", "unlinkFromOccasion", "setAway",
-        "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool", "repeatWorkout",
+        "repeatWorkout", "joinTwins", "keepTwinsApart",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).

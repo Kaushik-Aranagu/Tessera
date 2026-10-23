@@ -150,6 +150,10 @@ final class ReviewChoices {
                says: ["Off": "Home pages sideways: Review, Today, Training.",
                       "On": "One Home page, with your apps as thin lines along the bottom."],
                readiness: .live),
+        Choice(id: "tasksApp", name: "Tasks app", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "Tasks live on Home and in lists, as now.",
+                      "On": "Tasks is an app of its own: one thing at a time, with Today, Soon and Later."],
+               readiness: .live),
         Choice(id: "landingPages", name: "Landing pages", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Each app opens on its list of ways in.",
                       "On": "Each app opens on a page that tells you where things stand."],
@@ -220,6 +224,19 @@ final class ReviewChoices {
         Choice(id: "liveV2", name: "Live workout v2", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The live workout looks as before.",
                       "On": "The live workout is sentence case with one hot action."],
+               readiness: .live),
+        // Design 166: press a page's title and Tess answers one question about it, from Describe, on the phone only.
+        Choice(id: "askPageV2", name: "Ask the page", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "A page's title does nothing when pressed.",
+                      "On": "Press a page's title and Tess says what it is and what changed, on this phone only."],
+               readiness: .live),
+        Choice(id: "routinesDayV2", name: "Routines day", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The Routines landing's top reads as before.",
+                      "On": "The Routines landing's top is one plain sentence about the day."],
+               readiness: .live),
+        Choice(id: "weekThreadV2", name: "Week thread", values: ["Off", "On"], defaultValue: "Off",
+               says: ["Off": "The Routines landing shows no week line.",
+                      "On": "The Routines week is a rose thread, solid where a routine ran and a gap where not."],
                readiness: .live),
         Choice(id: "areasShown", name: "Areas shown", values: ["Today's", "All"], defaultValue: "Today's",
                says: ["Today's": "The area index shows today's areas.",
@@ -304,14 +321,14 @@ final class ReviewChoices {
         ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
-        ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector"]),
+        ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector", "tasksApp"]),
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue"]),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
-        ("Rooms", ["numberRules", "roomMotion", "pagesV2"]),
-        ("Home and live", ["finishV2", "surfacesV2", "liveV2", "awayV2"]),
+        ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2"]),
+        ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
@@ -381,6 +398,10 @@ final class ReviewChoices {
     func set(_ choice: Choice, to value: String) {
         guard choice.values.contains(value), choice.readiness == .live || value == choice.defaultValue else { return }
         picked[choice.id] = value
+        // Surfaces v2: the widgets cannot read this store, so the flag is mirrored to the App Group (Off clears it).
+        if choice.id == SurfacesV2.choiceID, writes {
+            SurfacesV2.mirrorFlag(SurfacesV2.isOn(value: value))
+        }
         guard writes else { return }
         if value == choice.defaultValue {
             defaults.removeObject(forKey: Self.key(choice.id))
