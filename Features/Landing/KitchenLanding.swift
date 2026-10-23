@@ -120,12 +120,14 @@ private struct KitchenDoors: View {
     }
 }
 
-/// Kitchen's signature line: a place and how full it is of what it usually holds (things in, against things low or
-/// out). An ink stroke on a faint track, no colour, no box.
+/// Kitchen's signature line: a place and how full it is (KitchenFront.level). An ink stroke on a faint track, no
+/// colour, no box; no line at all when nothing in the place is known. At accessibility sizes the line sits under the
+/// word only as wide as its fill, so it never reads as a row separator (Design, release 42).
 private struct LevelLine: View {
     let name: String
-    let level: Double
+    let level: Double?
     @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var wordWidth: CGFloat = 0
 
     var body: some View {
         let layout = typeSize.isAccessibilitySize
@@ -136,19 +138,29 @@ private struct LevelLine: View {
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(width: typeSize.isAccessibilitySize ? nil : 84, alignment: .leading)
-            GeometryReader { proxy in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Theme.Colors.ink.opacity(0.12)).frame(height: 1.5)
-                    Capsule().fill(Theme.Colors.ink).frame(width: proxy.size.width * level, height: 2.5)
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { wordWidth = $0 }
+            if let level {
+                if typeSize.isAccessibilitySize {
+                    // The fill alone, under the word: a share of the word's own width (Design on #1236).
+                    Capsule().fill(Theme.Colors.ink)
+                        .frame(width: max(wordWidth * level, level > 0 ? 6 : 0), height: 2.5)
+                        .tesseraAnimation(value: level)
+                } else {
+                    GeometryReader { proxy in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Theme.Colors.ink.opacity(0.12)).frame(height: 1.5)
+                            Capsule().fill(Theme.Colors.ink).frame(width: proxy.size.width * level, height: 2.5)
+                        }
+                        .frame(maxHeight: .infinity)
+                    }
+                    .frame(height: 12)
+                    .tesseraAnimation(value: level)
                 }
-                .frame(maxHeight: .infinity)
             }
-            .frame(height: 12)
-            .tesseraAnimation(value: level)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(name)
-        .accessibilityValue(KitchenFront.levelWords(level))
+        .accessibilityValue(level.map(KitchenFront.levelWords) ?? "nothing known yet")
     }
 }
 

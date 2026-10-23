@@ -301,8 +301,7 @@ final class AppModel {
                 try? await Task.sleep(for: .seconds(3))
             }
         #endif
-        let result = await runtime.tess.capture(phrase, context: TessContext(now: AppClock.now,
-                                                                             entry: session?.currentEntry?.id))
+        let result = await runtime.tess.capture(phrase, context: captureContext())
         isAskingClaude = false
         return land(result)
     }
@@ -317,7 +316,7 @@ final class AppModel {
     /// A tap on one of the ask's answers: lands like a capture and returns Tess's line.
     func answer(_ choice: TessSetCountAsk.Choice) -> String {
         guard let engine = runtime.tess as? TessCaptureEngine else { return "" }
-        let result = engine.answer(choice, context: TessContext(now: AppClock.now, entry: session?.currentEntry?.id))
+        let result = engine.answer(choice, context: captureContext())
         return land(result)
     }
 
@@ -329,7 +328,7 @@ final class AppModel {
     /// LOG or NOT NOW on the dated-lift ask: lands like a capture and returns Tess's line.
     func answer(_ choice: TessDatedLiftAsk.Choice) -> String {
         guard let engine = runtime.tess as? TessCaptureEngine else { return "" }
-        let result = engine.answer(choice, context: TessContext(now: AppClock.now, entry: session?.currentEntry?.id))
+        let result = engine.answer(choice, context: captureContext())
         return land(result)
     }
 
@@ -769,7 +768,7 @@ extension AppModel {
               engine.waitingCount > 0 else { return }
         isDrainingWaiting = true
         defer { isDrainingWaiting = false }
-        let read = await engine.readWaiting(context: TessContext(now: AppClock.now, entry: session?.currentEntry?.id))
+        let read = await engine.readWaiting(context: captureContext())
         isAskingClaude = false
         guard let last = read.last else { return }
         // The first-send notice wins and is never dropped; else a lone phrase keeps its own line, and two or more

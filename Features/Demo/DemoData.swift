@@ -143,6 +143,13 @@ enum DemoData {
                         CheckListItem(item: item.id, time: now.addingTimeInterval(-4 * 86400)),
                         by: .system
                     )
+                    // Put away where it lives, so Pantry's places fill and French toast reads as covered.
+                    if let ingredient = groceries.ingredient(of: item.object),
+                       let home = PantryBoard.suggested(Aisle(rawValue: Aisle.shown(aisle.aisle)))
+                    {
+                        _ = try? model.engine.perform(SetItemPlace(item: ingredient.id, place: home.place,
+                                                                   section: home.section), by: .system)
+                    }
                 }
             }
             _ = try? model.engine.perform(ClearDoneItems(list: list.id), by: .system)

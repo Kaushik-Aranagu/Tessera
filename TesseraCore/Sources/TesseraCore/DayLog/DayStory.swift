@@ -130,6 +130,7 @@ public enum DayStory {
         "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool",
         // Occasions: links and dates only; the page reads them, the Day log does not.
         "createOccasion", "linkToOccasion", "unlinkFromOccasion",
+        "createPool", "logInflow", "reassignSpend", "logMove", "recordRate", "archivePool", "repeatWorkout",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).

@@ -39,6 +39,7 @@ public enum ActionRegistry {
         CreatePool.descriptor, LogInflow.descriptor, ReassignSpend.descriptor, LogMove.descriptor,
         RecordRate.descriptor, ArchivePool.descriptor,
         CreateOccasion.descriptor, LinkToOccasion.descriptor, UnlinkFromOccasion.descriptor,
+        RecordRate.descriptor, ArchivePool.descriptor, RepeatWorkout.descriptor,
     ]
 
     /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
@@ -166,6 +167,7 @@ public enum ActionRegistry {
         CreateOccasion.descriptor.name: { try decode(CreateOccasion.self, CreateOccasion.descriptor.name, $0) },
         LinkToOccasion.descriptor.name: { try decode(LinkToOccasion.self, LinkToOccasion.descriptor.name, $0) },
         UnlinkFromOccasion.descriptor.name: { try decode(UnlinkFromOccasion.self, UnlinkFromOccasion.descriptor.name, $0) },
+        RepeatWorkout.descriptor.name: { try decode(RepeatWorkout.self, RepeatWorkout.descriptor.name, $0) },
         QueueBook.descriptor.name: { try decode(QueueBook.self, QueueBook.descriptor.name, $0) },
         EditBook.descriptor.name: { try decode(EditBook.self, EditBook.descriptor.name, $0) },
         StartReading.descriptor.name: { try decode(StartReading.self, StartReading.descriptor.name, $0) },

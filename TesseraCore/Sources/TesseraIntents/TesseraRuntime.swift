@@ -68,6 +68,7 @@ public enum TesseraIntentsCatalog {
         "setBookAside": "in-app only: Reading",
         "logSpend": "in-app only: Money (Siri comes later)",
         "editSpend": "in-app only: the spend page",
+        "repeatWorkout": "in-app only: the finished workout page",
         "startCookSession": "in-app only: cooking several dishes",
         "setServeTime": "in-app only: cooking several dishes",
         "addDish": "in-app only: cooking several dishes",

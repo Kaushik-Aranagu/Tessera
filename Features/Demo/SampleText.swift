@@ -11,6 +11,19 @@ enum SampleText {
 
     static let recipes = [
         """
+        French toast
+        Serves 2
+        Total time: 15 min
+        3 eggs
+        1/2 cup milk
+        4 slices sourdough
+        1 banana, sliced
+
+        Whisk the eggs and milk.
+        Soak the bread a minute a side, then cook in a hot pan until golden.
+        Serve with the banana.
+        """,
+        """
         Sheet-pan chicken and vegetables
         Serves 4
         Total time: 40 min

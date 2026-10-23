@@ -32,7 +32,8 @@ struct KitchenFront {
 
     let tonight: Meal?
     let week: [Day]
-    let places: [(name: String, level: Double)]
+    /// Each place and its level: nil when nothing in it is known (no line is drawn).
+    let places: [(name: String, level: Double?)]
     let toGet: Int
     let saved: Int
     /// Dinners the pantry already covers (Core's count).
@@ -58,14 +59,13 @@ struct KitchenFront {
         }
         let board = PantryBoard(store: model.store, classes: model.classes) { GroceriesCopy.name($0) }
         places = board.places.map { place in
-            let rows = place.groups.flatMap(\.rows)
-            let have = rows.count { row in
+            let states = place.groups.flatMap(\.rows).compactMap { row -> PantryLedger.State? in
                 if case let .stock(entry) = row {
-                    return entry.state == .have || entry.state == .unknown
+                    return entry.state
                 }
-                return false
+                return nil
             }
-            return (place.name, rows.isEmpty ? 0 : Double(have) / Double(rows.count))
+            return (place.name, Self.level(states))
         }
         toGet = board.toGetCount
         saved = book.recipes().count
@@ -82,6 +82,17 @@ struct KitchenFront {
     var pantryValue: String? {
         let parts = [LandingSentences.toGet(toGet), LandingSentences.covers(dinners: covers)].compactMap(\.self)
         return parts.isEmpty ? nil : parts.joined(separator: ", ")
+    }
+
+    /// Design's rule (a), on #1224: in counts 1, low counts half, out counts 0, over what is known. Unknown things are
+    /// left out of both; with nothing known there is no level and no line. Core stores no amounts yet.
+    static func level(_ states: [PantryLedger.State]) -> Double? {
+        let known = states.filter { $0 != .unknown }
+        guard !known.isEmpty else { return nil }
+        let stocked = known.reduce(0.0) { sum, state in
+            sum + (state == .have ? 1 : state == .low ? 0.5 : 0)
+        }
+        return stocked / Double(known.count)
     }
 
     /// "full", "most", "half", "low", "empty": what VoiceOver says for a level line.
