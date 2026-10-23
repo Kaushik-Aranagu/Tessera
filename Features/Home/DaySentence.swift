@@ -12,7 +12,7 @@ struct DaySentence: View {
     var body: some View {
         let _ = model.revision
         let clauses = HomeSentence.compose(HomeSentence.inputs(engine: model.engine,
-                                                               plan: model.objects(of: .plan).first { !$0.isDeleted },
+                                                               plan: model.plan,
                                                                now: AppClock.now))
         // Words flow as a paragraph; a key word is its own door (a link inside one Text can only take one colour).
         LandingWrap(spacing: 7, lineSpacing: 2) {

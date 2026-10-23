@@ -80,6 +80,15 @@ extension AppModel {
     }
 }
 
+extension AppModel {
+    /// A cook is the running process.
+    var isCooking: Bool {
+        guard let subject = processes.running()?.subject, let cookClass = classDef(.cook),
+              let classDef = subject.classDef else { return false }
+        return ClassResolver.isSubclass(classDef, of: cookClass)
+    }
+}
+
 /// Write anywhere (sheet 135 part 5): the line goes through Core's WriteRouter to the app that reads it. A tie keeps
 /// both readings and asks "Money or Kitchen?"; the next line naming one of them settles it.
 @MainActor
@@ -88,9 +97,13 @@ enum WriteTie {
 }
 
 extension AppModel {
-    /// The routed write, or nil to let Tess read the line as before (the switch Off, or no app reads it).
-    func routedWrite(_ phrase: String) -> String? {
-        guard ReviewChoices.shared.value(of: "writeAnywhere") == "On",
+    /// The routed write, or nil to let Tess read the line as before: the switch Off, no app reads it, or Tess is in
+    /// the middle of something (a live workout, a set-count or dated-lift ask, a running cook), where "80 x 5" is a
+    /// set, not a new lift (QA on #1245).
+    func routedWrite(_ phrase: String,
+                     enabled: Bool = ReviewChoices.shared.value(of: "writeAnywhere") == "On") -> String?
+    {
+        guard enabled, session == nil, pendingSetAsk == nil, pendingDatedLift == nil, !isCooking,
               let capture = runtime.tess as? TessCaptureEngine else { return nil }
         let context = captureContext()
         // The answer to "Money or Kitchen?": an app's word picks its reading.
