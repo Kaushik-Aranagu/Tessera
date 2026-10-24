@@ -193,7 +193,7 @@ struct WeatherTests {
     }
 
     @Test func theSampleIsAFullWeek() async throws {
-        let forecast = try await SampleWeatherSource().forecast(
+        let forecast = try await SampleWeather().forecast(
             latitude: 0,
             longitude: 0,
             now: Date(timeIntervalSince1970: 1_792_000_000)
@@ -212,7 +212,7 @@ struct WeatherTests {
         #expect(!files.isEmpty)
         for file in files {
             let text = try String(contentsOf: file, encoding: .utf8)
-            #expect(!text.contains("WeatherForecast") && !text.contains("OpenMeteo") && !text.contains("WeatherSource"),
+            #expect(!text.contains("WeatherReport") && !text.contains("OpenMeteo") && !text.contains("WeatherSource") && !text.contains("WeatherCondition"),
                     "\(file.lastPathComponent) reads the weather")
         }
     }

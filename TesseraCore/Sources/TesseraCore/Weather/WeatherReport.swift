@@ -5,7 +5,7 @@ import Foundation
 /// place: no city, no coordinate, nothing that says where. It is never written to the store, a backup, a log or a
 /// widget;
 /// a source returns one, the host keeps it in memory.
-public struct WeatherForecast: Equatable, Sendable {
+public struct WeatherReport: Equatable, Sendable {
     public struct Now: Equatable, Sendable {
         public var condition: WeatherCondition
         public var isDay: Bool
@@ -135,7 +135,7 @@ public enum WeatherUnits {
 /// never
 /// stored by it.
 public protocol WeatherSource: Sendable {
-    func forecast(latitude: Double, longitude: Double, now: Date) async throws -> WeatherForecast
+    func forecast(latitude: Double, longitude: Double, now: Date) async throws -> WeatherReport
 }
 
 public struct WeatherError: Error, Equatable, CustomStringConvertible, Sendable {
@@ -147,14 +147,14 @@ public struct WeatherError: Error, Equatable, CustomStringConvertible, Sendable 
 }
 
 /// The on-device sample: a fixed, plausible week. The default when nothing else is on (tests, previews, no network).
-public struct SampleWeatherSource: WeatherSource {
+public struct SampleWeather: WeatherSource {
     public init() {}
 
-    public func forecast(latitude _: Double, longitude _: Double, now: Date) async throws -> WeatherForecast {
+    public func forecast(latitude _: Double, longitude _: Double, now: Date) async throws -> WeatherReport {
         Self.forecast(now: now)
     }
 
-    public static func forecast(now: Date, calendar: Calendar = .current) -> WeatherForecast {
+    public static func forecast(now: Date, calendar: Calendar = .current) -> WeatherReport {
         let start = calendar.date(bySetting: .minute, value: 0, of: now) ?? now
         let conditions: [WeatherCondition] = [
             .partlyCloudy,
@@ -165,28 +165,28 @@ public struct SampleWeatherSource: WeatherSource {
             .mainlyClear,
             .clear,
         ]
-        let hours: [WeatherForecast.Hour] = (0 ..< 48).map { index in
+        let hours: [WeatherReport.Hour] = (0 ..< 48).map { index in
             let time = start.addingTimeInterval(Double(index) * 3600)
             let hour = calendar.component(.hour, from: time)
             let condition = conditions[(index / 8) % conditions.count]
             let temp = 14 + 6 * sin(Double(hour - 9) / 24 * 2 * .pi)
-            return WeatherForecast.Hour(
+            return WeatherReport.Hour(
                 time: time, condition: condition, isDay: (7 ..< 19).contains(hour), temperatureC: temp,
                 apparentC: temp - 1, precipitationChance: condition.isPrecipitation ? 70 : 10,
                 windKph: 12 + Double(index % 5), gustKph: 22 + Double(index % 7),
                 uvIndex: (7 ..< 19).contains(hour) ? 4 : 0
             )
         }
-        let days: [WeatherForecast.Day] = (0 ..< 7).map { index in
+        let days: [WeatherReport.Day] = (0 ..< 7).map { index in
             let date = calendar.startOfDay(for: calendar.date(byAdding: .day, value: index, to: now) ?? now)
-            return WeatherForecast.Day(
+            return WeatherReport.Day(
                 date: date, condition: conditions[index % conditions.count], highC: 20 - Double(index % 3),
                 lowC: 11 - Double(index % 2), apparentHighC: 19, precipitationChance: index % 3 == 0 ? 60 : 15,
                 gustKph: 28, uvIndex: 5, sunrise: date.addingTimeInterval(6.5 * 3600),
                 sunset: date.addingTimeInterval(18.5 * 3600)
             )
         }
-        let current = WeatherForecast.Now(
+        let current = WeatherReport.Now(
             condition: .partlyCloudy,
             isDay: (7 ..< 19).contains(calendar.component(.hour, from: now)),
             temperatureC: 17,
@@ -194,7 +194,7 @@ public struct SampleWeatherSource: WeatherSource {
             windKph: 12,
             gustKph: 22
         )
-        return WeatherForecast(fetchedAt: now, now: current, hourly: hours, daily: days,
-                               air: WeatherForecast.AirQuality(usAQI: 42, pm25: 9, pm10: 14))
+        return WeatherReport(fetchedAt: now, now: current, hourly: hours, daily: days,
+                               air: WeatherReport.AirQuality(usAQI: 42, pm25: 9, pm10: 14))
     }
 }

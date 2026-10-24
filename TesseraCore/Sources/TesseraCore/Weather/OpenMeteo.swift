@@ -20,7 +20,7 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
 
     private let fetch: Fetch
     private let lock = NSLock()
-    private var cached: (key: String, at: Date, forecast: WeatherForecast)?
+    private var cached: (key: String, at: Date, forecast: WeatherReport)?
 
     public init(fetch: @escaping Fetch = OpenMeteoSource.liveFetch) {
         self.fetch = fetch
@@ -79,7 +79,7 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
 
     // MARK: WeatherSource
 
-    private func held(_ key: String, now: Date) -> WeatherForecast? {
+    private func held(_ key: String, now: Date) -> WeatherReport? {
         lock.lock()
         defer { lock.unlock() }
         guard let cached, cached.key == key, now >= cached.at,
@@ -90,13 +90,13 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
         return cached.forecast
     }
 
-    private func hold(_ forecast: WeatherForecast, key: String, now: Date) {
+    private func hold(_ forecast: WeatherReport, key: String, now: Date) {
         lock.lock()
         defer { lock.unlock() }
         cached = (key, now, forecast)
     }
 
-    public func forecast(latitude: Double, longitude: Double, now: Date) async throws -> WeatherForecast {
+    public func forecast(latitude: Double, longitude: Double, now: Date) async throws -> WeatherReport {
         let key = "\(Self.rounded(latitude)),\(Self.rounded(longitude))"
         if let hit = held(key, now: now) {
             return hit
@@ -184,7 +184,7 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
         return formatter.date(from: text)
     }
 
-    static func parse(forecast data: Data, fetchedAt: Date) throws -> WeatherForecast {
+    static func parse(forecast data: Data, fetchedAt: Date) throws -> WeatherReport {
         let response: ForecastResponse
         do {
             response = try JSONDecoder().decode(ForecastResponse.self, from: data)
@@ -195,18 +195,18 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
         guard let condition = WeatherCondition(wmo: response.current.weather_code) else {
             throw WeatherError("an unknown weather code")
         }
-        let now = WeatherForecast.Now(
+        let now = WeatherReport.Now(
             condition: condition, isDay: response.current.is_day == 1, temperatureC: response.current.temperature_2m,
             apparentC: response.current.apparent_temperature, windKph: response.current.wind_speed_10m,
             gustKph: response.current.wind_gusts_10m
         )
         let h = response.hourly
-        var hours: [WeatherForecast.Hour] = []
+        var hours: [WeatherReport.Hour] = []
         for index in h.time.indices {
             guard let time = date(h.time[index], offset: offset), let temp = h.temperature_2m[safe: index] ?? nil,
                   let code = h.weather_code[safe: index] ?? nil,
                   let kind = WeatherCondition(wmo: code) else { continue }
-            hours.append(WeatherForecast.Hour(
+            hours.append(WeatherReport.Hour(
                 time: time, condition: kind, isDay: (h.is_day[safe: index] ?? 1) == 1, temperatureC: temp,
                 apparentC: (h.apparent_temperature[safe: index] ?? nil) ?? temp,
                 precipitationChance: (h.precipitation_probability[safe: index] ?? nil) ?? 0,
@@ -216,12 +216,12 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
             ))
         }
         let d = response.daily
-        var days: [WeatherForecast.Day] = []
+        var days: [WeatherReport.Day] = []
         for index in d.time.indices {
             guard let day = date(d.time[index], offset: offset), let high = d.temperature_2m_max[safe: index] ?? nil,
                   let low = d.temperature_2m_min[safe: index] ?? nil, let code = d.weather_code[safe: index] ?? nil,
                   let kind = WeatherCondition(wmo: code) else { continue }
-            days.append(WeatherForecast.Day(
+            days.append(WeatherReport.Day(
                 date: day, condition: kind, highC: high, lowC: low,
                 apparentHighC: (d.apparent_temperature_max[safe: index] ?? nil) ?? high,
                 precipitationChance: (d.precipitation_probability_max[safe: index] ?? nil) ?? 0,
@@ -232,13 +232,13 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
             ))
         }
         guard !hours.isEmpty, !days.isEmpty else { throw WeatherError("the forecast had no hours or days") }
-        return WeatherForecast(fetchedAt: fetchedAt, now: now, hourly: hours, daily: days)
+        return WeatherReport(fetchedAt: fetchedAt, now: now, hourly: hours, daily: days)
     }
 
-    static func parse(air data: Data) -> WeatherForecast.AirQuality? {
+    static func parse(air data: Data) -> WeatherReport.AirQuality? {
         guard let response = try? JSONDecoder().decode(AirResponse.self, from: data), let aqi = response.current.us_aqi,
               aqi.isFinite else { return nil }
-        return WeatherForecast.AirQuality(usAQI: Int(aqi.rounded()), pm25: response.current.pm2_5,
+        return WeatherReport.AirQuality(usAQI: Int(aqi.rounded()), pm25: response.current.pm2_5,
                                           pm10: response.current.pm10)
     }
 }
