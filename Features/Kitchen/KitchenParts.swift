@@ -39,6 +39,29 @@ enum KitchenLoop {
     }
 }
 
+// MARK: - Names
+
+/// A name that fits its line without an ellipsis: Tess's short form past `limit` characters, cut at a word edge, and a
+/// hard cut at the limit only for one long word. Pure.
+enum KitchenText {
+    static func short(_ name: String, limit: Int = 20) -> String {
+        guard name.count > limit else { return name }
+        var words = RecipeBook.shortName(ofTitle: name).split(separator: " ").map(String.init)
+        while words.count > 1, words.joined(separator: " ").count > limit {
+            words.removeLast()
+        }
+        let joined = HomeBoard.trimTail(words.joined(separator: " "))
+        return joined.count > limit ? String(joined.prefix(limit)) : joined
+    }
+
+    /// What a surface outside the room may say of a thing: the walled label for a private name, else the short form.
+    @MainActor
+    static func shown(_ name: String, in store: ObjectStore, limit: Int = 20) -> String {
+        let walled = ObjectPrivacy.isPrivateTitle(name, lastWeightKg: BodyWeight.lastKg(in: store))
+        return walled ? "Private item" : short(name, limit: limit)
+    }
+}
+
 // MARK: - Place dial
 
 /// The headline dial (sheet 231 to 233): three 64 pt slots in a 196 pt headline. The focus is 44 pt Figtree 600 in
@@ -130,7 +153,7 @@ struct PlaceDial: View {
             }
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(place.name)
+                Text(KitchenText.short(place.name, limit: 12))
                     .font(Theme.voice(size: Self.focusSize).weight(isFocus ? .semibold : .regular))
                     .foregroundStyle(isFocus ? Theme.Colors.Accent.kitchen : Theme.Colors.inkSecondary)
                     .lineLimit(1)
@@ -357,7 +380,7 @@ struct ReceiptLine: View {
 }
 
 /// The line is revealed from its top edge down.
-private struct ReceiptClip: ViewModifier {
+struct ReceiptClip: ViewModifier {
     var progress: CGFloat
 
     func body(content: Content) -> some View {

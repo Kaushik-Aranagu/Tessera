@@ -13,6 +13,8 @@ struct PantryRoomItem: Identifiable, Equatable {
     let id: UUID
     /// The real name: a private item shows it here and nowhere outside the room.
     let name: String
+    /// What any line outside the row may say of it (the brief): the walled label for a private name, else a short form.
+    let shown: String
     let isLow: Bool
     let isPinned: Bool
     /// A quantity on To get, or nothing.
@@ -186,7 +188,7 @@ struct PantryRoomPage: View {
     private func rowView(_ item: PantryRoomItem, index: Int, page: Bool) -> some View {
         let swiping = touch?.row == index && touch?.axis == .horizontal && page
         return HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
-            Text(item.name)
+            Text(KitchenText.short(item.name))
                 .font(Theme.voice(size: 17).weight(item.isPinned ? .semibold : .regular))
                 .foregroundStyle(Theme.Colors.ink)
                 .lineLimit(1)
@@ -333,17 +335,34 @@ struct PantryRoomPage: View {
         .frame(minHeight: 44)
     }
 
+    /// Two fixed lines (22 pt each), no wrap and no fade: a line that changes is clipped in from the top. The second
+    /// has nothing to say until the Pantry knows what wants using up; its room stays.
     private func briefLines(board _: PantryBoard, place: String, items: [PantryRoomItem]) -> some View {
-        let line = place == PantryPlaces.toGet
-            ? PantryRoomCopy.toGetBrief(items.map(\.name))
-            : PantryRoomCopy.brief(low: items.filter(\.isLow).map(\.name))
-        return Text(line)
-            .font(Theme.voice(size: 17))
-            .foregroundStyle(Theme.Colors.ink)
-            .contentTransition(.opacity)
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            .padding(.horizontal, Theme.Spacing.gutter)
-            .fixedSize(horizontal: false, vertical: true)
+        let first = place == PantryPlaces.toGet
+            ? PantryRoomCopy.toGetBrief(items.map(\.shown))
+            : PantryRoomCopy.brief(low: items.filter(\.isLow).map(\.shown))
+        return VStack(alignment: .leading, spacing: 0) {
+            briefLine(first)
+            briefLine("")
+        }
+        .padding(.horizontal, Theme.Spacing.gutter)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func briefLine(_ text: String) -> some View {
+        ZStack(alignment: .leading) {
+            Text(text.isEmpty ? " " : text)
+                .font(Theme.voice(size: 17))
+                .foregroundStyle(Theme.Colors.ink)
+                .lineLimit(1)
+                .id(text)
+                .transition(reduceMotion ? .identity : .modifier(active: ReceiptClip(progress: 0),
+                                                                 identity: ReceiptClip(progress: 1)))
+        }
+        .frame(maxWidth: .infinity, minHeight: 22, maxHeight: 22, alignment: .leading)
+        .clipped()
+        .animation(MotionPolicy.resolve(.easeOut(duration: 0.3), reduceMotion: reduceMotion), value: text)
     }
 
     private func sectionLine(items: [PantryRoomItem], page: Int, pages: Int) -> some View {
@@ -403,8 +422,15 @@ struct PantryRoomPage: View {
         if place == PantryPlaces.toGet {
             return board.toGet.flatMap(\.rows).compactMap { row -> PantryRoomItem? in
                 guard case let .toGet(item, label) = row else { return nil }
-                return PantryRoomItem(id: item.id, name: label, isLow: false, isPinned: false,
-                                      amount: item.quantity, source: .toGet(item))
+                return PantryRoomItem(
+                    id: item.id,
+                    name: label,
+                    shown: KitchenText.shown(label, in: model.store),
+                    isLow: false,
+                    isPinned: false,
+                    amount: item.quantity,
+                    source: .toGet(item)
+                )
             }
         }
         guard let id = UUID(uuidString: place),
@@ -417,6 +443,7 @@ struct PantryRoomPage: View {
                 return nil
             }
             return PantryRoomItem(id: entry.id, name: model.store.displayTitle(of: entry.ingredient),
+                                  shown: KitchenText.short(entry.label),
                                   isLow: entry.state == .low || entry.state == .out,
                                   isPinned: stock.isPinned(entry.ingredient), amount: nil,
                                   source: .stock(entry.ingredient))

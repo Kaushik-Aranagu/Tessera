@@ -78,10 +78,26 @@ struct PantryRoomCopyTests {
     @Test func pinsComeFirstThenLow() {
         let a = UUID(), b = UUID(), c = UUID()
         func item(_ id: UUID, low: Bool, pinned: Bool) -> PantryRoomItem {
-            PantryRoomItem(id: id, name: "x", isLow: low, isPinned: pinned, amount: nil, source: .added)
+            PantryRoomItem(id: id, name: "x", shown: "x", isLow: low, isPinned: pinned, amount: nil, source: .added)
         }
         let out = PantryRoomCopy.ordered([item(a, low: false, pinned: false), item(b, low: true, pinned: false),
                                           item(c, low: false, pinned: true)], pinOrder: [c])
         #expect(out.map(\.id) == [c, b, a])
+    }
+}
+
+@MainActor
+struct KitchenTextTests {
+    @Test func aLongNameShortensWithoutAnEllipsis() {
+        let name = "Extra virgin cold pressed olive oil from the south"
+        let short = KitchenText.short(name)
+        #expect(short.count <= 20 && !short.contains("…") && !short.contains("..."))
+        #expect(KitchenText.short("Milk") == "Milk")
+        #expect(KitchenText.short("Supercalifragilisticexpialidocious", limit: 12).count == 12)
+    }
+
+    @Test func theBriefNeverNamesAPrivateThing() {
+        // The brief is built from shown labels, so a walled name reads as the label.
+        #expect(PantryRoomCopy.brief(low: ["Private item"]) == "Low on private item.")
     }
 }

@@ -32,6 +32,15 @@ final class PantryEngineActions: PantryActing {
         self.touch = touch
     }
 
+    private var place: (ObjectRecord) -> String? {
+        { [engine] ingredient in
+            let places = PantryPlaces(store: engine.store, classes: engine.classes)
+            guard let home = places.place(of: ingredient) else { return nil }
+            let name = PantryPlaces.shown(home, in: engine.store)
+            return "the \(name.prefix(1).lowercased() + name.dropFirst())"
+        }
+    }
+
     private static let failed = KitchenOutcome(receipt: "Didn't save that. Try again.", undo: nil, refused: true)
 
     private func run(_ action: some EngineAction, receipt: String) -> KitchenOutcome {
@@ -64,7 +73,7 @@ final class PantryEngineActions: PantryActing {
     }
 
     func gotIt(_ ingredient: ObjectRecord, name: String) -> KitchenOutcome {
-        let back = PantryStock.placeWord(of: ingredient, store: engine.store).map { "Back in \($0)." } ?? "Back in."
+        let back = place(ingredient).map { "Back in \($0)." } ?? "Back in."
         return run(GotIngredient(item: ingredient.id), receipt: "\(name), got it. \(back)")
     }
 
@@ -78,16 +87,5 @@ final class PantryEngineActions: PantryActing {
 
     func add(_ name: String, to place: UUID, placeName: String) -> KitchenOutcome {
         run(AddToPlace(name: name, place: place), receipt: "\(name), added to the \(placeName.lowercased()).")
-    }
-}
-
-extension PantryStock {
-    /// "the fridge": where an ingredient lives, for a sentence in the room.
-    @MainActor
-    static func placeWord(of ingredient: ObjectRecord, store: ObjectStore) -> String? {
-        let classes = PrivateWords.systemClasses(in: store.context)
-        guard let place = PantryPlaces(store: store, classes: classes).place(of: ingredient) else { return nil }
-        let name = PantryPlaces.shown(place, in: store)
-        return "the \(name.prefix(1).lowercased() + name.dropFirst())"
     }
 }
