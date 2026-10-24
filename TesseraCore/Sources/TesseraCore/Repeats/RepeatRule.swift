@@ -43,10 +43,13 @@ public struct RepeatRule: Equatable, Sendable {
         public var month: Int
         public var day: Int
 
+        /// A day that exists: the month is held to 1...12 and the day to the month's length, so a stamp can never be
+        /// 2026-02-30. (`init?(text:)` refuses such text instead.)
         public init(year: Int, month: Int, day: Int) {
+            let month = min(max(month, 1), 12)
             self.year = year
             self.month = month
-            self.day = day
+            self.day = min(max(day, 1), Self.daysIn(year: year, month: month))
         }
 
         public init(_ date: Date, calendar: Calendar) {

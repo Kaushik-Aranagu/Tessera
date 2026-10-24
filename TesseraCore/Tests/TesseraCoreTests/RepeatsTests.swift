@@ -207,4 +207,44 @@ struct RepeatsTests {
         #expect(RepeatRule.DayStamp(text: "2028-02-29") != nil)
         #expect(RepeatRule(encoded: "k=days;n=1;a=2026-02-30") == nil)
     }
+
+    // MARK: Review lows on #1361
+
+    @Test func everyOtherSundayLandsOnEveryOtherSunday() {
+        // October 25, 2026 is a Sunday.
+        let rule = RepeatRule(kind: .weeks(2, weekday: 1), anchor: day(10, 25))
+        #expect(rule.next(today: day(10, 25), calendar: calendar) == day(10, 25))
+        #expect(rule.next(today: day(10, 26), calendar: calendar) == day(11, 8))
+        #expect(rule.next(today: day(11, 9), calendar: calendar) == day(11, 22))
+        // The same in a calendar whose weeks start on Sunday.
+        var sunday = calendar
+        sunday.firstWeekday = 1
+        #expect(rule.next(today: day(10, 26), calendar: sunday) == day(11, 8))
+        // Set on a Wednesday, it starts the coming Sunday.
+        let set = SetRepeat(object: UUID(), kind: "weeks", every: 2, weekday: 1, from: date(10, 21), calendar: calendar)
+        #expect(set.anchor == "2026-10-25")
+    }
+
+    @Test func skippingAnOverdueChoreJumpsPastToday() throws {
+        let chore = try task()
+        // After done every 3 days, from October 10: next was October 10, long overdue on the 21st.
+        try engine.perform(SetRepeat(object: chore.id, kind: "afterDone", every: 3, from: date(10, 10),
+                                     calendar: calendar), by: .user)
+        #expect(Repeats.next(of: chore, in: store, now: date(10, 21), calendar: calendar) == day(10, 10))
+        try engine.perform(SkipRepeat(object: chore.id, time: date(10, 21), calendar: calendar), by: .user)
+        let next = try #require(Repeats.next(of: chore, in: store, now: date(10, 21), calendar: calendar))
+        #expect(next > day(10, 21), "\(next)")
+    }
+
+    @Test func aDayStampIsAlwaysARealDay() {
+        #expect(RepeatRule.DayStamp(year: 2026, month: 2, day: 30) == day(2, 28))
+        #expect(RepeatRule.DayStamp(year: 2028, month: 2, day: 30) == RepeatRule.DayStamp(
+            year: 2028,
+            month: 2,
+            day: 29
+        ))
+        #expect(RepeatRule.DayStamp(year: 2026, month: 13, day: 1) == day(12, 1))
+        #expect(RepeatRule.DayStamp(year: 2026, month: 0, day: 0) == day(1, 1))
+        #expect(RepeatRule.DayStamp(year: 2026, month: 4, day: 31) == day(4, 30))
+    }
 }
