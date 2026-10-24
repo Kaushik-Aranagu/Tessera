@@ -21,7 +21,7 @@ extension Theme.Colors {
 
         /// Kitchen: ochre.
         static var kitchen: Color {
-            tuned(\.kitchen, light: 0xA8701F, dark: 0xE0A458)
+            tuned(\.kitchen, light: 0xA8701F, dark: 0xD49A52)
         }
 
         /// Money: sage.
@@ -41,12 +41,12 @@ extension Theme.Colors {
 
         /// Routines: dusk rose.
         static var routines: Color {
-            tuned(\.routines, light: 0xA4505F, dark: 0xD79AA6)
+            tuned(\.routines, light: 0x8E4A78, dark: 0xD79AA6)
         }
 
         /// The sky word's two stops ("Sunset").
         static var skyFrom: Color {
-            tuned(\.skyFrom, light: 0xC9772E, dark: 0xF0A35A)
+            tuned(\.skyFrom, light: 0xC9772E, dark: 0xE8A06A)
         }
 
         static var skyTo: Color {

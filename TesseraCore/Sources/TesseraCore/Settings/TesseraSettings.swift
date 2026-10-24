@@ -108,6 +108,12 @@ public struct SettingsStore {
                           endMinute: minute("quietEndMinute", QuietHours.standard.endMinute))
     }
 
+    /// "Everything as before" for the mosaic: back to Tess picks. Settings' reset calls this beside its own switches.
+    @discardableResult
+    public func resetMosaic(by actor: Actor = .user) throws -> TesseraSettings {
+        try update(by: actor) { $0.mosaicBackdrop = nil }
+    }
+
     /// All nil until the first write; creates nothing.
     public func read() -> TesseraSettings {
         guard let object = engine.store.object(id: Self.objectID), !object.isDeleted else { return TesseraSettings() }
@@ -216,7 +222,10 @@ public struct WriteSettings: EngineAction {
         try transaction.set("displayUnits", to: settings.displayUnits.encoded.map(FieldValue.text), on: object)
         try transaction.set("quietStartMinute", to: settings.quietStartMinute.map { .number(Double($0)) }, on: object)
         try transaction.set("quietEndMinute", to: settings.quietEndMinute.map { .number(Double($0)) }, on: object)
-        try transaction.set("mosaicBackdrop", to: settings.mosaicBackdrop.map(FieldValue.text), on: object)
+        // Whatever is handed in is written as one of the three plain forms, so a stray text never lands.
+        try transaction.set("mosaicBackdrop",
+                            to: MosaicBackdrop(encoded: settings.mosaicBackdrop).encoded.map(FieldValue.text),
+                            on: object)
         try transaction.set("dayStartHour", to: settings.dayStartHour.map { .number(Double($0)) }, on: object)
         return object
     }

@@ -274,7 +274,7 @@ struct RoutineRow: View {
     /// A sideways drag owns the touch: the row doesn't also open on the lift (the walk showed a drop opening it).
     @State private var swiped = false
 
-    private static let arm: CGFloat = 90
+    private static let arm = CGFloat(GestureTuning.armDistance)
 
     var body: some View {
         let slots = routine.orderedChildren
@@ -314,25 +314,23 @@ struct RoutineRow: View {
                 .opacity(pull < -Self.arm ? 1 : Double(min(-pull / Self.arm, 1)) * 0.5)
                 .accessibilityHidden(true)
         }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 20)
-                .onChanged { value in
-                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                    swiped = true
-                    pull = value.translation.width
+        .rowSwipe(.trailing, arm: Self.arm) { event in
+            switch event {
+            case let .pulled(value):
+                swiped = true
+                pull = value
+            case .committed:
+                onDrop()
+            case .ended:
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { pull = 0 }
+                // After the button has seen the lift, a tap opens the row again.
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(150))
+                    swiped = false
                 }
-                .onEnded { _ in
-                    if pull < -Self.arm {
-                        onDrop()
-                    }
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { pull = 0 }
-                    // After the button has seen the lift, a tap opens the row again.
-                    Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(150))
-                        swiped = false
-                    }
-                }
-        )
+            case .cancelled, .armed, .disarmed: break
+            }
+        }
         .accessibilityElement(children: .combine)
         .accessibilityHint("Opens \(routine.title)")
         .accessibilityAction(named: "Drop from the plan", onDrop)

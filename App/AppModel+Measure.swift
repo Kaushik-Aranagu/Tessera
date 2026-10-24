@@ -15,7 +15,15 @@ extension AppModel {
     func chooseUnit(_ unit: String, for kind: MeasureKind) {
         guard settingsAreReal else { return }
         _ = try? SettingsStore(engine: engine).update { $0.displayUnits.choose(unit, for: kind) }
+        applyTessUnits()
         touch()
+    }
+
+    /// The weight unit Tess speaks in (her asks have no store to read): set at launch and when Settings > Units changes,
+    /// like `QuietHours.current`. Stored values never change, only her words. Off on a throwaway store.
+    func applyTessUnits() {
+        guard settingsAreReal else { return }
+        TessUnits.weight = displayUnits.unit(for: .weight).flatMap(MassUnit.init(rawValue:)) ?? .kilograms
     }
 
     /// The only fetch instance in the app. Its once-an-hour cap is per instance, so it must stay one.
@@ -39,5 +47,22 @@ extension AppModel {
             ratesTable = table
         }
         return table
+    }
+}
+
+extension AppModel {
+    /// Puts the settings with no store to read in force (quiet hours, the hour the day turns over): at launch and after
+    /// a change. Off on a throwaway store.
+    func applySettingsProcessWide() {
+        guard settingsAreReal else { return }
+        SettingsStore(engine: engine).read().applyProcessWide()
+    }
+
+    /// "Everything as before" for the mosaic: Tess picks again, beside the Review switches' own reset.
+    func resetMosaicSetting() {
+        guard settingsAreReal else { return }
+        _ = try? SettingsStore(engine: engine).resetMosaic()
+        applySettingsProcessWide()
+        touch()
     }
 }

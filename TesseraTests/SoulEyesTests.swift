@@ -5,7 +5,7 @@ import Testing
 /// Her eyes (docs/design/motion/tess-motion.md §1).
 @MainActor
 struct SoulEyesTests {
-    /// A blink every 3 to 8 s, about one in five a double, lids down to 0.25 and back in 160 ms.
+    /// A blink every 2.4 to 6.6 s, 18% doubles, lids down to 0.25 and back in 130 ms.
     @Test func blinkCadenceStaysInRange() {
         let starts = SoulBlink.starts(from: 0, to: 600)
         // Group a double's two closings (250 ms apart) into one event.
@@ -19,8 +19,8 @@ struct SoulEyesTests {
             events.append(start)
         }
         let gaps = zip(events.dropFirst(), events).map { $0 - $1 }
-        #expect(events.count > 60)
-        #expect(gaps.allSatisfy { $0 >= 2.9 && $0 <= 8.7 }, "\(gaps.filter { $0 < 2.9 || $0 > 8.7 })")
+        #expect(events.count > 100)
+        #expect(gaps.allSatisfy { $0 >= 2.3 && $0 <= 7.4 }, "\(gaps.filter { $0 < 2.3 || $0 > 7.4 })")
         let share = Double(doubles) / Double(events.count)
         #expect(share > 0.1 && share < 0.3, "\(share)")
         #expect(abs(SoulBlink.lid(at: 12.345) - SoulBlink.lid(at: 12.345)) < 0.0001)
@@ -47,11 +47,12 @@ struct SoulEyesTests {
             var frame = SoulFrame.sample(.idle, time: 4.2, elapsed: 0)
             frame.look.scale = scale
             let mains = frame.dabs.prefix(3)
-            let meanX = mains.reduce(0) { $0 + $1.x } / 3 * scale
-            let meanY = mains.reduce(0) { $0 + $1.y } / 3 * scale
+            let unit = scale / SoulCloud.referenceScale
+            let meanX = mains.reduce(0) { $0 + $1.x } / 3 * unit
+            let meanY = mains.reduce(0) { $0 + $1.y } / 3 * unit
             let centre = SoulEyes.centre(of: frame)
             #expect(abs(centre.x - meanX) < 0.001)
-            #expect(abs(centre.y - (meanY - 3 * scale)) < 0.001)
+            #expect(abs(centre.y - (meanY - 3 * unit)) < 0.001)
         }
     }
 
