@@ -30,7 +30,7 @@ struct WeatherRoomView: View {
             landing
             if let forecast, let openDay, forecast.days.indices.contains(openDay) {
                 WeatherDayPage(day: forecast.days[openDay], calendar: calendar, close: closeDay)
-                    .transition(reduceMotion ? .opacity : .move(edge: .trailing))
+                    .transition(reduceMotion ? .identity : .move(edge: .trailing))
                     .zIndex(1)
             }
         }
@@ -41,12 +41,15 @@ struct WeatherRoomView: View {
         }
     }
 
+    /// Reduce Motion cuts: the page is just there, with no fade and no slide.
     private func show(_ index: Int) {
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { openDay = index }
+        guard !reduceMotion else { return openDay = index }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: false) { openDay = index }
     }
 
     private func closeDay() {
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { openDay = nil }
+        guard !reduceMotion else { return openDay = nil }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: false) { openDay = nil }
     }
 
     // MARK: Landing
@@ -120,16 +123,17 @@ struct WeatherRoomView: View {
 
     private func temperature(_ forecast: WeatherForecast) -> some View {
         HStack(alignment: .top, spacing: Theme.Spacing.l) {
-            HStack(alignment: .top, spacing: 2) {
-                Text("\(forecast.temperature)")
-                    .weatherNumeral(104)
-                Text("°")
-                    .weatherNumeral(52)
-                    .padding(.top, 8)
+            WeatherStepDown(size: 104) { size in
+                HStack(alignment: .top, spacing: 2) {
+                    Text("\(forecast.temperature)")
+                        .weatherNumeral(size)
+                    Text("°")
+                        .weatherNumeral(size / 2)
+                        .padding(.top, size * 0.08)
+                }
+                .lineLimit(1)
             }
-            .foregroundStyle(forecast.kind.color)
-            .lineLimit(1)
-            .minimumScaleFactor(0.5)
+            .foregroundStyle(Theme.Colors.ink)
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 Text("feels like \(forecast.feelsLike)°")
                 Text("high \(forecast.high)°, low \(forecast.low)°")
@@ -147,8 +151,6 @@ struct WeatherRoomView: View {
     private func label(_ text: String) -> some View {
         Text(text)
             .font(WeatherType.figtree(13, .medium, relativeTo: .footnote))
-            .textCase(.uppercase)
-            .tracking(0.8)
             .foregroundStyle(Theme.Colors.inkSecondary)
             .frame(minHeight: 20, alignment: .topLeading)
             .accessibilityAddTraits(.isHeader)
@@ -157,8 +159,7 @@ struct WeatherRoomView: View {
     private func airLine(_ air: WeatherAir) -> some View {
         let line = WeatherSentences.airLine(air)
         var text = AttributedString(line.before)
-        var quality = AttributedString(line.quality)
-        quality.foregroundColor = WeatherPalette.good
+        let quality = AttributedString(line.quality)
         text += quality
         text += AttributedString(line.after)
         return Text(text)
@@ -188,7 +189,7 @@ struct WeatherRoomView: View {
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("weather.undo")
                 }
-                .transition(.opacity)
+                .transition(.identity)
             }
             HStack(alignment: .center) {
                 Button(action: toggleAlert) {
@@ -220,7 +221,6 @@ struct WeatherRoomView: View {
         .padding(.trailing, Theme.Spacing.gutter)
         .padding(.bottom, Theme.Spacing.s)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .tesseraAnimation(Theme.Motion.house, value: receipt)
     }
 
     private func toggleAlert() {

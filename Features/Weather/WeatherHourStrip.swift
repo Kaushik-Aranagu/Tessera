@@ -32,18 +32,37 @@ struct WeatherHourStrip: View {
             .frame(width: proxy.size.width, alignment: .leading)
             .clipped()
             .contentShape(Rectangle())
-            .pageSwipe { next in move(next ? 1 : -1, from: shown, last: last) }
-            .pullGesture { down in move(down ? -1 : 1, from: shown, last: last) }
-            .tesseraAnimation(Theme.Motion.house, value: shown)
+            // The strip owns a drag that starts on it, across or up and down, so it never also scrolls the page.
+            // (It has no tap targets, so a high-priority drag swallows nothing.)
+            .highPriorityGesture(
+                DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart), coordinateSpace: .global)
+                    .onEnded { value in turn(value, from: shown, last: last) }
+            )
         }
         .frame(height: Self.height)
         .accessibilityIdentifier("weather.hours")
     }
 
+    private func turn(_ value: DragGesture.Value, from shown: Int, last: Int) {
+        let dx = Double(value.translation.width), dy = Double(value.translation.height)
+        let across = GestureTuning.pageTurn(
+            startX: Double(value.startLocation.x), dx: dx, dy: dy, velocityX: Double(value.velocity.width)
+        )
+        if across != 0 {
+            return move(across > 0 ? 1 : -1, from: shown, last: last)
+        }
+        let pull = GestureTuning.pull(dx: dx, dy: dy, velocityY: Double(value.velocity.height))
+        if pull != 0 {
+            move(pull > 0 ? -1 : 1, from: shown, last: last)
+        }
+    }
+
     private func move(_ pages: Int, from shown: Int, last: Int) {
         let next = min(max(shown + pages * Self.pageSize, 0), last)
         guard next != shown else { return }
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { start = next }
+        // Reduce Motion cuts to the next page.
+        guard !reduceMotion else { return start = next }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: false) { start = next }
     }
 
     private func column(_ hour: WeatherHour, index: Int) -> some View {
@@ -59,7 +78,6 @@ struct WeatherHourStrip: View {
                 .foregroundStyle(hour.kind.color)
         }
         .lineLimit(1)
-        .minimumScaleFactor(0.7)
         .frame(width: Self.columnWidth)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(

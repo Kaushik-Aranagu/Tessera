@@ -1,24 +1,13 @@
 import SwiftUI
 
 // CLOUD-WRITTEN, NOT COMPILED. Colors and type for the Weather room (sheet 243). Every condition wears one color in
-// both rooms of the page (a word, a temperature, an hour's word). The room's title is sky amber and the go green is
-// the app-wide "done / good" green, so a page never shows more than 3 or 4 colors: amber title, the condition's color,
-// ink, and (on the landing) the rain color of its one action.
+// both rooms of the page. A page shows 3 or 4 colors: the amber title, the rain color, the dry slate, and ink.
 
 extension WeatherKind {
-    /// Light then dark. Rain, snow and wind are the sheet's own; the rest sit between them and the amber title.
+    /// Two colors for the whole room (QA on #1401): the rain color for everything that falls, one calm slate for every
+    /// other sky. The words keep their own effects; only the base colors collapse.
     var color: Color {
-        switch self {
-        case .clear: Color(light: 0x8C6F14, dark: 0xE6CB6E)
-        case .partlyCloudy: Color(light: 0x7D7566, dark: 0xC4BBA6)
-        case .cloudy: Color(light: 0x6F7C8A, dark: 0xA9B5C2)
-        case .fog: Color(light: 0x84898F, dark: 0xB9BEC4)
-        case .rain: WeatherPalette.rain
-        case .heavyRain: Color(light: 0x3F6480, dark: 0x7FA3BE)
-        case .storm: Color(light: 0x5B5578, dark: 0xA9A3CF)
-        case .snow: Color(light: 0x6E8296, dark: 0xC9D6E2)
-        case .wind: Color(light: 0x5E6E7E, dark: 0xB4C2CC)
-        }
+        isWet ? WeatherPalette.rain : WeatherPalette.dry
     }
 }
 
@@ -33,9 +22,9 @@ enum WeatherPalette {
         Color(light: 0x557A93, dark: 0x9DBACE)
     }
 
-    /// "good" in the air line: the app-wide go green.
-    static var good: Color {
-        Color(light: 0x25803D, dark: 0x8FC9A0)
+    /// Every sky that does not fall: clear, cloudy, fog, wind.
+    static var dry: Color {
+        Color(light: 0x6F7C8A, dark: 0xA9B5C2)
     }
 }
 
