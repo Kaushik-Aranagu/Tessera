@@ -415,6 +415,8 @@ final class ReviewChoices {
         ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
+        // The harness switches (lab or strict policy, the playbook director, asks) get their own page.
+        ("Tess", ["tessLabPolicy", "tessDirectorPlaybook", "tessAsks"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
