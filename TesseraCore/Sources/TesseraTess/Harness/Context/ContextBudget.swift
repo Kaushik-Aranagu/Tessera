@@ -19,23 +19,6 @@ public enum ContextSection: String, Codable, Sendable, CaseIterable, CodingKeyRe
     }
 }
 
-/// How long Anthropic keeps a cached prefix warm. The 1-hour marks must come before the 5-minute marks in a request.
-public enum CacheTTL: String, Codable, Sendable {
-    case fiveMinutes = "5m"
-    case oneHour = "1h"
-}
-
-/// A cache breakpoint after the block at `index` (counted over the pack's blocks, in order).
-public struct CacheMark: Sendable, Equatable {
-    public var index: Int
-    public var ttl: CacheTTL
-
-    public init(index: Int, ttl: CacheTTL) {
-        self.index = index
-        self.ttl = ttl
-    }
-}
-
 /// One agent's sizes on one model. `starts` is what each section always keeps when it has content: overflow never
 /// trims a section below its start until every section above its start is trimmed. Expertise is never trimmed.
 public struct BudgetRow: Codable, Sendable, Equatable {
@@ -53,6 +36,12 @@ public struct BudgetRow: Codable, Sendable, Equatable {
 
     public func start(_ section: ContextSection) -> Int {
         starts[section] ?? 0
+    }
+
+    /// The most the tuner may grow a section to on its own (faults and misses): twice the shipped start. Only the
+    /// weekly sweep, which measured a bigger setting scoring best, may set a start above it.
+    public static func ceiling(_ section: ContextSection, model: BrainID) -> Int {
+        defaults(for: model).start(section) * 2
     }
 
     /// The shipped starts (spec M3). The same for Haiku and Sonnet; only the answer room differs. The floor is 0.4 on

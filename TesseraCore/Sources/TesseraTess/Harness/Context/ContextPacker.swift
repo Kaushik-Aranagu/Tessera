@@ -2,6 +2,8 @@ import Foundation
 
 /// One thing that can go in a pack: a rule block, a belief, a summary, an object's text, a turn. `path` is its address
 /// (`/training/exercises/bench-press`), shown to the model so it can open more; it is never a UUID. Rules have none.
+/// A private object's path and text use its shown label ("Private workout"), never its walled title: the caller
+/// builds items through the walls (`ObjectPrivacy`) before they reach the packer.
 public struct ContextItem: Sendable, Equatable {
     public var path: String
     public var text: String
@@ -51,6 +53,9 @@ public struct ContextPack: Sendable, Equatable {
 
 /// Lays out one call from memory (spec M3). Pure: the same items and row always give the same bytes, so the prefix
 /// caches and a pack can be hashed.
+///
+/// Wiring (H3 and M4): each block becomes a `PackFragment`, tagged `deviceOnly` when any of its items comes from a
+/// money, health, body, calorie or calendar object, so strict policy drops that block instead of refusing the call.
 ///
 /// - Every section takes all of its content. Recall takes every candidate at or above the floor, best first.
 /// - Nothing is cut for cost. Only when the input would pass the ceiling (700K, so growth and the answer always fit in
@@ -155,13 +160,13 @@ public struct ContextPacker: Sendable {
         }
         var marks: [CacheMark] = []
         if let stable = index(.expertise) ?? index(.rules) {
-            marks.append(CacheMark(index: stable, ttl: .oneHour))
+            marks.append(CacheMark(stable, .oneHour))
         }
         if let core = index(.core) {
-            marks.append(CacheMark(index: core, ttl: .oneHour))
+            marks.append(CacheMark(core, .oneHour))
         }
         if let recall = index(.recall) {
-            marks.append(CacheMark(index: recall, ttl: .fiveMinutes))
+            marks.append(CacheMark(recall, .fiveMinutes))
         }
         return marks
     }

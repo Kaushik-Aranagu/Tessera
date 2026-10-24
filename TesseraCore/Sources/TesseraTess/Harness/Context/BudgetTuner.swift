@@ -40,8 +40,9 @@ public struct BudgetChange: Sendable, Equatable {
 
 /// Moves the sizes every Sunday at 4 am (spec M3), page-fault style, aimed at right answers rather than savings.
 ///
-/// - Faults: an agent that had to open or recall more than 0.3 times per run grows recall's start by half, and its
-///   recall floor drops by 0.05 (never under 0.3), so the pack holds more of what it keeps fetching.
+/// - Faults: an agent that had to open or recall more than 0.3 times per run grows recall's start by half, up to twice
+///   the shipped start, and its recall floor drops by 0.05 (never under 0.3), so the pack holds more of what it keeps
+///   fetching.
 /// - Misses: a nightly eval question missed because a section lacked the answer grows that section's start by half.
 /// - Sweep: when the weekly sweep ran, recall's start becomes the smallest setting that scored the best. A section
 ///   only ever shrinks this way, on an equal score, so accuracy is never traded for size.
@@ -83,11 +84,13 @@ public struct BudgetTuner: Sendable {
                 let runCount = Set(runs.map(\.runID)).count
                 let faults = runs.reduce(0) { $0 + $1.opens.count + $1.recalls }
                 if runCount >= Self.minimumRuns, Double(faults) / Double(runCount) > Self.faultRate {
-                    let grown = Self.grow(row.start(.recall))
-                    changes.append(.init(agent: key.agent, model: key.model, what: "recall start",
-                                         from: Double(row.start(.recall)), to: Double(grown),
-                                         why: "it kept fetching what the pack didn't hold"))
-                    row.starts[.recall] = grown
+                    let grown = Self.grow(row.start(.recall), ceiling: BudgetRow.ceiling(.recall, model: key.model))
+                    if grown != row.start(.recall) {
+                        changes.append(.init(agent: key.agent, model: key.model, what: "recall start",
+                                             from: Double(row.start(.recall)), to: Double(grown),
+                                             why: "it kept fetching what the pack didn't hold"))
+                        row.starts[.recall] = grown
+                    }
                     let floor = max(Self.lowestFloor, ((row.recallFloor - Self.floorStep) * 100).rounded() / 100)
                     if floor != row.recallFloor {
                         changes.append(.init(agent: key.agent, model: key.model, what: "recall floor",
@@ -102,7 +105,8 @@ public struct BudgetTuner: Sendable {
                 // Expertise is never trimmed and holds its whole pack, so a miss there is a recipe fix, not a size.
                 guard section != .expertise else { continue }
                 if section == .recall, row.start(.recall) != before.start(.recall) { continue }
-                let grown = Self.grow(row.start(section))
+                let grown = Self.grow(row.start(section), ceiling: BudgetRow.ceiling(section, model: key.model))
+                guard grown != row.start(section) else { continue }
                 changes.append(.init(agent: key.agent, model: key.model, what: "\(section.rawValue) start",
                                      from: Double(row.start(section)), to: Double(grown),
                                      why: "an eval question was missed for want of it"))
@@ -116,8 +120,9 @@ public struct BudgetTuner: Sendable {
         return (table, changes)
     }
 
-    static func grow(_ start: Int) -> Int {
-        max(1000, Int((Double(start) * growth).rounded()))
+    /// Half again, at least 1,000 tokens, never past `ceiling` (and never down, if a sweep already set it higher).
+    static func grow(_ start: Int, ceiling: Int) -> Int {
+        max(start, min(ceiling, max(1000, Int((Double(start) * growth).rounded()))))
     }
 
     private struct Key: Hashable {

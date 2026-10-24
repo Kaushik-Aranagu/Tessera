@@ -88,8 +88,7 @@ struct ContextBudgetTests {
             .rules: [item("", "Rules.")], .expertise: [item("", "Exercises.")], .core: [item("/me", "Me.")],
             .recall: [item("/r", "r", score: 0.9)], .working: [item("/ask", "Ask.")],
         ])
-        #expect(pack.cacheMarks == [CacheMark(index: 1, ttl: .oneHour), CacheMark(index: 2, ttl: .oneHour),
-                                    CacheMark(index: 3, ttl: .fiveMinutes)])
+        #expect(pack.cacheMarks == [CacheMark(1, .oneHour), CacheMark(2, .oneHour), CacheMark(3, .fiveMinutes)])
         #expect(pack.blocks.map(\.section) == [.rules, .expertise, .core, .recall, .working])
     }
 
@@ -146,6 +145,18 @@ struct ContextBudgetTests {
         #expect(table == BudgetTable() && changes.isEmpty)
         let (few, _) = BudgetTuner().tune(BudgetTable(), uses: uses(3, opens: 5))
         #expect(few == BudgetTable())
+    }
+
+    @Test func growthStopsAtTwiceTheShippedStart() {
+        var table = BudgetTable()
+        var near = row
+        near.starts[.recall] = 60000
+        table.set(near, agent: "training", model: .haiku)
+        let (once, _) = BudgetTuner().tune(table, uses: uses(10, opens: 1))
+        #expect(once.row(agent: "training", model: .haiku).start(.recall) == 72000)
+        let (twice, changes) = BudgetTuner().tune(once, uses: uses(10, opens: 1))
+        #expect(twice.row(agent: "training", model: .haiku).start(.recall) == 72000)
+        #expect(!changes.contains { $0.what == "recall start" })
     }
 
     @Test func theFloorNeverGoesUnderPointThree() {
