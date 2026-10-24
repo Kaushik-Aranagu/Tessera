@@ -95,6 +95,7 @@ struct PantryRoomPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var actions: PantryEngineActions?
     @State private var receipts = KitchenReceipts()
     @State private var focus = 0
@@ -110,6 +111,31 @@ struct PantryRoomPage: View {
         let place = places.indices.contains(index) ? places[index] : nil
         let key = place?.id ?? PantryPlaces.toGet
         let items = items(board, place: key)
+        return GeometryReader { geometry in
+            Group {
+                if typeSize >= .accessibility3 {
+                    ScrollView(.vertical) {
+                        room(board: board, places: places, place: place, key: key, items: items)
+                    }
+                } else {
+                    room(board: board, places: places, place: place, key: key, items: items)
+                        .frame(height: geometry.size.height, alignment: .top)
+                }
+            }
+            .frame(width: geometry.size.width)
+        }
+        .background { ThemedBackground() }
+        .background { EdgeSwipeBack() }
+        .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            if actions == nil {
+                actions = PantryEngineActions(engine: model.engine) { model.touch() }
+            }
+        }
+    }
+
+    private func room(board: PantryBoard, places: [PlaceDial.Place], place: PlaceDial.Place?,
+                      key: String, items: [PantryRoomItem]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             header(toGet: board.toGetCount, places: places)
             PlaceDial(places: places, focus: $focus)
@@ -123,15 +149,10 @@ struct PantryRoomPage: View {
             ReceiptLine(receipts: receipts).padding(.horizontal, Theme.Spacing.gutter)
             foot(place: place)
         }
+        // Home's full-screen room cover draws Close in its own top row. Keep this room's count below it.
+        .padding(.top, 44)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background { ThemedBackground() }
-        .background { EdgeSwipeBack() }
-        .toolbar(.hidden, for: .navigationBar)
-        .onAppear {
-            if actions == nil {
-                actions = PantryEngineActions(engine: model.engine) { model.touch() }
-            }
-        }
+        .containerRelativeFrame(.horizontal)
     }
 
     // MARK: Parts
@@ -142,12 +163,17 @@ struct PantryRoomPage: View {
     }
 
     private func header(toGet: Int, places _: [PlaceDial.Place]) -> some View {
-        HStack(alignment: .firstTextBaseline) {
+        let large = typeSize >= .accessibility3
+        let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 0))
+        return layout {
             Text("Pantry")
                 .font(Theme.voice(size: 17).weight(.semibold))
                 .foregroundStyle(Theme.Colors.ink)
                 .accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 0)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+            if !large { Spacer(minLength: 0) }
             Button {
                 withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { focus = 0 }
             } label: {
@@ -156,12 +182,15 @@ struct PantryRoomPage: View {
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .contentTransition(.numericText())
                     .frame(minHeight: 44)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
             .buttonStyle(.plain)
             .accessibilityHint("Shows what to get")
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, Theme.Spacing.gutter)
-        .frame(minHeight: 44)
+        .frame(minHeight: large ? 64 : 44)
     }
 
     /// Two fixed lines (22 pt each), no wrap and no fade: a line that changes is clipped in from the top. The second

@@ -116,36 +116,43 @@ struct PlaceDial: View {
         typeSize >= .accessibility3
     }
 
+    private var slotHeight: CGFloat {
+        large ? max(Self.slot, UIFontMetrics(forTextStyle: .body).scaledValue(for: 32) * 1.2)
+            : Self.slot
+    }
+
     var body: some View {
-        ZStack(alignment: .top) {
-            ForEach(places.indices, id: \.self) { index in
-                let rel = KitchenLoop.relative(index, focus: focus, count: places.count)
-                if abs(rel) <= 2, !large || (rel >= 0 && rel <= 1) {
-                    row(places[index], rel: rel)
-                        .offset(y: (CGFloat(rel) + (large ? 0 : 1)) * Self.slot + drag)
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                ForEach(places.indices, id: \.self) { index in
+                    let rel = KitchenLoop.relative(index, focus: focus, count: places.count)
+                    if abs(rel) <= 2, !large || (rel >= 0 && rel <= 1) {
+                        row(places[index], rel: rel, width: geometry.size.width)
+                            .offset(y: (CGFloat(rel) + (large ? 0 : 1)) * slotHeight + drag)
+                    }
                 }
             }
+            .frame(width: geometry.size.width, height: large ? slotHeight * 2 : Self.headline, alignment: .top)
+            .clipped()
         }
-        .frame(maxWidth: .infinity, minHeight: Self.headline, alignment: .top)
-        .frame(height: large ? nil : Self.headline, alignment: .top)
-        .clipped()
+        .frame(height: large ? slotHeight * 2 : Self.headline)
         .contentShape(Rectangle())
         .simultaneousGesture(
             DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
                 .onChanged { value in
                     guard places.count > 1 else { return }
                     holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
-                    let total = KitchenLoop.consumed(translation: value.translation.height, step: Self.slot)
+                    let total = KitchenLoop.consumed(translation: value.translation.height, step: slotHeight)
                     if total != turned {
                         focus = KitchenLoop.wrapped(focus, total - turned, count: places.count)
                         turned = total
                         ticks += 1
                     }
-                    drag = value.translation.height + CGFloat(turned) * Self.slot
+                    drag = value.translation.height + CGFloat(turned) * slotHeight
                 }
                 .onEnded { value in
                     holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
-                    let steps = KitchenLoop.landing(rest: drag, step: Self.slot,
+                    let steps = KitchenLoop.landing(rest: drag, step: slotHeight,
                                                     velocity: value.velocity.height,
                                                     turned: turned, travel: value.translation.height)
                     turned = 0
@@ -162,11 +169,21 @@ struct PlaceDial: View {
         }
     }
 
-    private func row(_ place: Place, rel: Int) -> some View {
+    private func row(_ place: Place, rel: Int, width: CGFloat) -> some View {
         let isFocus = rel == 0
         // Every row is laid out at the focus size and scaled down, so a place swells as it arrives and its width is
         // never a surprise.
         let scale = isFocus ? 1 : Self.neighbourSize / Self.focusSize
+        let countWidth = KitchenText.width("\(place.count)", weight: .light,
+                                           size: UIFontMetrics(forTextStyle: .title1).scaledValue(for: Self.focusSize))
+        let available = max(0, width - countWidth - 14)
+        let fullName = place.name
+        let fontSize = stride(from: Int(Self.focusSize), through: 32, by: -1).first { size in
+            KitchenText.width(fullName, weight: isFocus ? .semibold : .regular,
+                              size: UIFontMetrics(forTextStyle: .body).scaledValue(for: CGFloat(size))) <= available
+        }
+        let chosenSize = CGFloat(fontSize ?? 32)
+        let name = fontSize == nil ? KitchenText.short(fullName, limit: 12) : fullName
         return Button {
             guard holdoff.allowsTap(at: ProcessInfo.processInfo.systemUptime) else { return }
             if isFocus {
@@ -176,18 +193,18 @@ struct PlaceDial: View {
             }
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(KitchenText.short(place.name, limit: 12))
-                    .font(Theme.voice(size: Self.focusSize).weight(isFocus ? .semibold : .regular))
+                Text(name)
+                    .font(Theme.voice(size: chosenSize).weight(isFocus ? .semibold : .regular))
                     .foregroundStyle(isFocus ? Theme.Colors.Accent.kitchen : Theme.Colors.inkSecondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
                 Text("\(place.count)")
-                    .font(Theme.numeral(Self.focusSize))
+                    .font(Theme.numeral(chosenSize))
                     .foregroundStyle(isFocus ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                     .contentTransition(.numericText())
             }
-            .fixedSize()
             .scaleEffect(scale, anchor: .leading)
-            .frame(maxWidth: .infinity, minHeight: Self.slot, maxHeight: Self.slot, alignment: .leading)
+            .frame(width: width, height: slotHeight, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -460,6 +477,7 @@ struct ReceiptClip: ViewModifier {
 struct KitchenBriefLine: View {
     let text: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     static let height: CGFloat = 22
 
@@ -469,11 +487,17 @@ struct KitchenBriefLine: View {
                 .font(Theme.voice(size: 17))
                 .foregroundStyle(Theme.Colors.ink)
                 .lineLimit(1)
+                .minimumScaleFactor(0.75)
                 .id(text)
                 .transition(reduceMotion ? .identity : .modifier(active: ReceiptClip(progress: 0),
                                                                  identity: ReceiptClip(progress: 1)))
         }
-        .frame(maxWidth: .infinity, minHeight: Self.height, maxHeight: Self.height, alignment: .leading)
+        .frame(maxWidth: .infinity,
+               minHeight: typeSize >= .accessibility3
+                   ? UIFontMetrics(forTextStyle: .body).scaledValue(for: Self.height) : Self.height,
+               maxHeight: typeSize >= .accessibility3
+                   ? UIFontMetrics(forTextStyle: .body).scaledValue(for: Self.height) : Self.height,
+               alignment: .leading)
         .clipped()
         .animation(MotionPolicy.resolve(.easeOut(duration: 0.3), reduceMotion: reduceMotion), value: text)
     }

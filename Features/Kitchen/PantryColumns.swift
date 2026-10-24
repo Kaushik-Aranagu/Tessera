@@ -218,13 +218,16 @@ struct PantryColumnsView: View {
     }
 
     private func nextLine(_ packer: PantryPacker) -> some View {
-        HStack(spacing: Theme.Spacing.s) {
+        let lineHeight = typeSize >= .accessibility3
+            ? max(PantryTouch.minimum, UIFontMetrics(forTextStyle: .body).scaledValue(for: 28))
+            : PantryTouch.minimum
+        return HStack(spacing: Theme.Spacing.s) {
             Button {
                 selectedID = nil
                 showingActions = true
             } label: {
                 Text("Choose a thing")
-                    .frame(minWidth: PantryTouch.minimum, minHeight: PantryTouch.minimum, alignment: .leading)
+                    .frame(minWidth: PantryTouch.minimum, minHeight: lineHeight, alignment: .leading)
                     .contentShape(Rectangle())
             }
             .accessibilityIdentifier("pantry.chooseThing")
@@ -232,7 +235,7 @@ struct PantryColumnsView: View {
             Spacer(minLength: 0)
             Button { step(forward: true) } label: {
                 Text(packer.nextLine ?? " ")
-                    .frame(minHeight: PantryTouch.minimum, alignment: .trailing)
+                    .frame(minHeight: lineHeight, alignment: .trailing)
                     .contentShape(Rectangle())
             }
             .disabled(packer.nextLine == nil)
@@ -323,12 +326,14 @@ struct PantryColumnsView: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text(group.title)
                         .font(Theme.voice(size: 14).weight(.semibold).smallCaps())
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .tracking(0.015 * 14)
                         .foregroundStyle(Theme.Colors.Accent.kitchenSection)
                         .lineLimit(1)
                     Spacer(minLength: 4)
                     Text("\(group.items.count)")
                         .font(Theme.numeral(15, weight: .light))
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .foregroundStyle(PantrySectionMap.urgent(group) > 0 ? Theme.Colors.Accent.kitchenWarn
                             : Theme.Colors.inkSecondary)
                 }

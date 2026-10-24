@@ -9,11 +9,16 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
     private func prepareMotion() {
         continueAfterFailure = false
         guard !Self.motionPrepared else { return }
+        setMotion(true)
+        Self.motionPrepared = true
+    }
+
+    private func setMotion(_ enabled: Bool) {
         let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
         settings.launch()
         let reduce = settings.switches["Reduce Motion"]
         if !reduce.exists {
-            let motion = settings.staticTexts["Motion"]
+            let motion = settings.cells["MOTION_TITLE"]
             if !motion.exists {
                 let accessibility = settings.staticTexts["Accessibility"]
                 for _ in 0 ..< 6 where !accessibility.isHittable {
@@ -23,16 +28,17 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
                 accessibility.tap()
             }
             XCTAssertTrue(motion.waitForExistence(timeout: 5))
-            motion.tap()
+            motion.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            XCTAssertTrue(settings.navigationBars["Motion"].waitForExistence(timeout: 5))
         }
         XCTAssertTrue(reduce.waitForExistence(timeout: 5))
-        if reduce.value as? String != "1" {
+        let desired = enabled ? "1" : "0"
+        if reduce.value as? String != desired {
             // Settings exposes the whole row as the switch; target its trailing toggle, not the row's text.
             reduce.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         }
-        wait(NSPredicate(format: "value == %@", "1"), on: reduce, timeout: 5)
+        wait(NSPredicate(format: "value == %@", desired), on: reduce, timeout: 5)
         settings.terminate()
-        Self.motionPrepared = true
     }
 
     private func turn(_ dial: XCUIElement, down: Bool = false) {
@@ -40,8 +46,9 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: down ? 30 : -30)))
     }
 
-    private func launchOnFridge(largeType: Bool = false, theme: String? = nil) -> XCUIApplication {
-        prepareMotion()
+    private func launchOnFridge(largeType: Bool = false, theme: String? = nil,
+                                reduceMotion: Bool = true) -> XCUIApplication {
+        if reduceMotion { prepareMotion() } else { setMotion(false) }
         let app = XCUIApplication()
         app.launchArguments = ["-demoTime", "18:10", "-openLink", "pantry", "-review.sampleData", "On",
                                "-featureFlags.off", "homeMosaic;homeV2"]
@@ -311,5 +318,30 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
             add(image)
             app.terminate()
         }
+    }
+}
+
+extension PantryRoomTapUITests {
+    func testZVisualLayoutInPaperAndBlackAtNormalAndAX5WithMotionOnAndOff() {
+        for reduceMotion in [true, false] {
+            for largeType in [false, true] {
+                for theme in ["Plein", "Black"] {
+                    let app = launchOnFridge(largeType: largeType, theme: theme,
+                                             reduceMotion: reduceMotion)
+                    let close = app.buttons["Close"]
+                    let toGet = app.buttons.matching(NSPredicate(
+                        format: "label MATCHES[c] %@", "([0-9]+|Nothing) to get")).firstMatch
+                    XCTAssertTrue(close.waitForExistence(timeout: 5))
+                    XCTAssertTrue(toGet.waitForExistence(timeout: 5))
+                    capture("Pantry \(theme) \(largeType ? "AX5" : "normal") "
+                        + "Reduce Motion \(reduceMotion ? "on" : "off")", in: app)
+                    XCTAssertLessThanOrEqual(close.frame.maxY, toGet.frame.minY)
+                    XCTAssertGreaterThanOrEqual(toGet.frame.minX, app.frame.minX)
+                    XCTAssertLessThanOrEqual(toGet.frame.maxX, app.frame.maxX)
+                    app.terminate()
+                }
+            }
+        }
+        setMotion(true)
     }
 }
