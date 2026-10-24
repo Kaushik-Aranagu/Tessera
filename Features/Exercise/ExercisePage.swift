@@ -20,6 +20,11 @@ struct ExercisePage: View {
             content(digest)
         }
         .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if TrainingV3.isOn {
+                DoItNowFoot(exercise: exercise)
+            }
+        }
         .background { ThemedBackground() }
         .toolbarTitleDisplayMode(.inline)
         // The plain back word, not the round glass button (Design on #1219); the edge swipe stays.
@@ -51,6 +56,10 @@ struct ExercisePage: View {
                     .accessibilityHidden(true)
                     .entrance(2)
                     .padding(.bottom, Theme.Spacing.l)
+            }
+
+            if TrainingV3.isOn {
+                LiftSetsBlock(exercise: exercise)
             }
 
             ExerciseBest(digest: digest)

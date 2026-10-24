@@ -14,9 +14,9 @@ extension Theme.Colors {
             )
         }
 
-        /// Training: hot red.
+        /// Training: cobalt (sheets 226, 227, 230; the dark half is the Soft palette).
         static var training: Color {
-            tuned(\.training, light: 0xC4472A, dark: 0xEE6A4C)
+            tuned(\.training, light: 0x0B62AE, dark: 0x8FB0EE)
         }
 
         /// Kitchen: ochre.
@@ -61,7 +61,7 @@ extension Theme.Colors {
 
         /// Routines: dusk rose.
         static var routines: Color {
-            tuned(\.routines, light: 0x8E4A78, dark: 0xD79AA6)
+            tuned(\.routines, light: 0x8E4A78, dark: 0xD59AC4)
         }
 
         /// The sky word's two stops ("Sunset").

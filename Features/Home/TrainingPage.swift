@@ -6,33 +6,41 @@ import TesseraCore
 /// the first segment, then live mode rises.
 struct TrainingPage: View {
     @Environment(AppModel.self) private var model
+    /// Sheet 230: the page the new landing opens ("Today's workout"): this page one level in, without the week.
+    var inside = false
 
     var body: some View {
         let _ = model.revision
-        // One view for every state, so START's flight and the sinking plan survive the switch to running.
-        if let source {
-            TrainingAtRest(plan: source)
+        if TrainingV3.isOn, !inside {
+            TrainingLandingV2()
+        } else if let source = model.trainingSource {
+            // One view for every state, so START's flight and the sinking plan survive the switch to running.
+            TrainingAtRest(plan: source, inside: inside)
         } else {
             EmptyTraining()
         }
     }
+}
 
-    private var source: TrainingSource? {
-        if let session = model.session {
+extension AppModel {
+    /// What Training is drawn from today: the running workout (or the one paused under Home), a workout he is trying,
+    /// tonight's, today's routine from the plan, or what he finished today.
+    var trainingSource: TrainingSource? {
+        if let session {
             // Running (or paused under Home): the plan with what's done, RESUME.
             return .running(session)
         }
         // "Try today": a ready workout stands in for today's, scheduled or planned (the Plan is never rewritten).
-        if let tried = model.triedRoutine() {
+        if let tried = triedRoutine() {
             return .routine(tried)
         }
-        if let workout = model.tonightWorkout() {
+        if let workout = tonightWorkout() {
             return .scheduled(workout)
         }
-        if let routine = model.todaysRoutine() {
+        if let routine = todaysRoutine() {
             return .routine(routine)
         }
-        return model.finishedToday().first.map { .done($0) }
+        return finishedToday().first.map { .done($0) }
     }
 }
 
@@ -76,6 +84,8 @@ struct TrainingLane: Identifiable, Equatable {
 
 private struct TrainingAtRest: View {
     let plan: TrainingSource
+    /// Today's workout page (sheet 230): no week marks, and the foot reads "Pick up".
+    var inside = false
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.zoomNamespace) private var namespace
@@ -214,9 +224,11 @@ private struct TrainingAtRest: View {
                 .entrance(3)
             }
 
-            TrainingWeekMarks(dots: TrainingWeek.dots(model, now: AppClock.now, hasSessionToday: hasSessionToday))
-                .padding(.vertical, Theme.Spacing.s)
-                .modifier(Sinking(isOn: sinking))
+            if !inside {
+                TrainingWeekMarks(dots: TrainingWeek.dots(model, now: AppClock.now, hasSessionToday: hasSessionToday))
+                    .padding(.vertical, Theme.Spacing.s)
+                    .modifier(Sinking(isOn: sinking))
+            }
 
             TrainingDoors(doors: doors)
                 .modifier(Sinking(isOn: sinking))
@@ -385,7 +397,8 @@ private struct TrainingAtRest: View {
         case let .running(session):
             let total = session.entries.reduce(0) { $0 + session.targetSets(of: $1) }
             let done = session.entries.reduce(0) { $0 + session.setRows(of: $1).count }
-            return .paused("Resume \(shown(session.workout.title))", total > 0 ? Double(done) / Double(total) : 0)
+            return .paused("\(inside && TrainingV3.isOn ? "Pick up" : "Resume") \(shown(session.workout.title))",
+                           total > 0 ? Double(done) / Double(total) : 0)
         case .done:
             return .label(tomorrowLine)
         }
@@ -855,13 +868,19 @@ private struct LaneRow: View {
     @ViewBuilder
     private var secondLine: some View {
         if showsStrokes {
-            HStack(spacing: 8) {
-                ForEach(0 ..< lane.sets, id: \.self) { index in
-                    stroke(index)
-                        .frame(width: 26, height: 22)
+            if TrainingV3.isOn {
+                // Sheet 230: one weight stack per set (no ring, no circle).
+                StackRow(sets: stacks, spoken: "\(lane.sets) \(lane.sets == 1 ? "set" : "sets")")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                HStack(spacing: 8) {
+                    ForEach(0 ..< lane.sets, id: \.self) { index in
+                        stroke(index)
+                            .frame(width: 26, height: 22)
+                    }
                 }
+                .frame(height: 24, alignment: .leading)
             }
-            .frame(height: 24, alignment: .leading)
         } else {
             let layout = typeSize.isAccessibilitySize
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
@@ -883,6 +902,15 @@ private struct LaneRow: View {
                         .monospacedDigit()
                 }
             }
+        }
+    }
+
+    /// The lane's sets as stacks: the ones logged lifted to their reps, the rest resting at the planned reps.
+    private var stacks: [StackMarkSpec] {
+        let planned = lane.marks.first?.target ?? TrainingLane.plannedReps(scheme: lane.scheme)
+        return (0 ..< lane.sets).map { index in
+            StackMarkSpec(reps: planned, lifted: index < lane.marks.count ? lane.marks[index].reps : 0,
+                          isFocus: false)
         }
     }
 

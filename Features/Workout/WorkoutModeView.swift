@@ -16,18 +16,25 @@ struct WorkoutModeView: View {
         @Bindable var model = model
         if let session = model.session {
             NavigationStack(path: $model.workoutPath) {
-                WorkoutContent(session: session)
-                    .environment(\.onWorkoutGround, true)
-                    .toolbarVisibility(.hidden, for: .navigationBar)
-                    .navigationDestination(for: Route.self) { route in
-                        ObjectPage(route: route)
-                            .environment(\.animateEntrance, model.consumeFirstVisit(route))
-                            .modifier(ArrivalTransition(
-                                id: route,
-                                arrival: model.arrivals[route] ?? .crossFade,
-                                namespace: zoom
-                            ))
+                Group {
+                    // Sheet 230: the new live workout (Review > Wheels), On by default.
+                    if TrainingV3.isOn {
+                        WorkoutV2(session: session)
+                    } else {
+                        WorkoutContent(session: session)
                     }
+                }
+                .environment(\.onWorkoutGround, true)
+                .toolbarVisibility(.hidden, for: .navigationBar)
+                .navigationDestination(for: Route.self) { route in
+                    ObjectPage(route: route)
+                        .environment(\.animateEntrance, model.consumeFirstVisit(route))
+                        .modifier(ArrivalTransition(
+                            id: route,
+                            arrival: model.arrivals[route] ?? .crossFade,
+                            namespace: zoom
+                        ))
+                }
             }
             .environment(\.zoomNamespace, zoom)
             // Pages pushed inside the cover are forced dark; only the root may tell the theme the appearance.

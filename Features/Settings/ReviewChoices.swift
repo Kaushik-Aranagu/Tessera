@@ -402,6 +402,11 @@ final class ReviewChoices {
                says: ["Off": "The shop shows the aisle and its items.",
                       "On": "The next item leads; swipe right to strike it; Done shopping puts it all away."],
                readiness: .live),
+        // Sheet 230: the Training rebuild (stack-and-handle set marks, the wheels, the new landing), all On.
+        Choice(id: "trainingV3", name: "Training wheels", values: ["On", "Off"], defaultValue: "On",
+               says: ["On": "Training has the new landing, the plan wheel and set marks drawn as weight stacks.",
+                      "Off": "Training and the live workout read as before."],
+               readiness: .live),
         // Design 110: on, the kcal line shows on a finished workout; it needs weight and height under Me.
         Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
@@ -422,13 +427,11 @@ final class ReviewChoices {
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "quietHoursV2", "calendar", "health"]),
         ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector", "tasksApp"]),
-        (
-            "Notes and lists",
-            ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue", "twinsV2", "depthOnWheels"]
-        ),
+        ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue", "twinsV2"]),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),
+        ("Wheels", ["trainingV3", "depthOnWheels"]),
         // Design 138, 150 and later rounds: the shared numbers, room motion and the redrawn pages.
         ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2", "finishMoments", "settingsV2"]),
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
