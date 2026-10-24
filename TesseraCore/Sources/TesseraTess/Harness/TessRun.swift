@@ -15,6 +15,8 @@ public final class TessRun {
     public static let warmWindow: TimeInterval = 2 * 3600
     /// Most times in one run a paused turn is sent back before she gives up.
     static let maxPauses = 5
+    /// A run still marked running after this long is dropped on launch, not resumed.
+    static let resumeWindow: TimeInterval = 600
 
     public static let tooManySteps = "That needed more steps than I take. Try it in two."
     public static let cannotThink = "I can't think that through right now. The rest still works."
@@ -174,7 +176,10 @@ public final class TessRun {
             fragments.append(PackFragment("On screen: \(screen)"))
         }
         if let digest = dayDigest(), !digest.isEmpty {
-            fragments.append(PackFragment("Today: \(digest)"))
+            // Today's digest can name events and sleep, which the strict scan cannot tell from other words: deviceOnly,
+            // so
+            // it goes to Claude under lab only.
+            fragments.append(PackFragment("Today: \(digest)", taint: .deviceOnly))
         }
         for (index, object) in about.enumerated() where !object.isDeleted {
             let handle = "o\(index + 1)"
@@ -256,13 +261,13 @@ public final class TessRun {
             let request = BrainRequest(system: pack.system, messages: state.messages, tools: pack.tools,
                                        toolChoice: pack.tools.isEmpty ? .auto : plan.toolChoice,
                                        maxTokens: plan.maxTokens, effort: plan.effort, cacheAfter: pack.cacheAfter,
-                                       thinking: false, deadline: .seconds(30))
-            let estimate = TessUsageLedger.estimate(
-                text: Door.words(request) + pack.fragments.map(\.text).joined() + pack.tools.map(\.description)
-                    .joined(),
-                maxTokens: plan.maxTokens,
-                model: (plan.ladder.first == .sonnet ? ClaudeBrain.Model.sonnet : .haiku).rawValue
-            )
+                                       deadline: .seconds(30))
+            // The hold covers the dearest Claude rung on the ladder (Opus, when it is the second try).
+            let text = Door.words(request) + pack.fragments.map(\.text).joined()
+                + pack.tools.map(\.description).joined()
+            let estimate = plan.ladder.compactMap { Self.claudeModel(for: $0) }.map {
+                TessUsageLedger.estimate(text: text, maxTokens: plan.maxTokens, model: $0.rawValue)
+            }.max() ?? 0
             let job = DoorJob(name: "tess-turn", ladder: plan.ladder, request: request, fragments: pack.fragments,
                               estimateNano: estimate, hedge: plan.hedge, runID: runID)
             var roundText = ""
@@ -339,6 +344,15 @@ public final class TessRun {
         return .phone(Self.tooManySteps)
     }
 
+    static func claudeModel(for id: BrainID) -> ClaudeBrain.Model? {
+        switch id {
+        case .haiku: .haiku
+        case .sonnet: .sonnet
+        case .opus: .opus
+        default: nil
+        }
+    }
+
     static func line(for outcome: ClaudeOutcome, onlyDevice: Bool) -> String {
         if onlyDevice {
             return cannotThink
@@ -394,6 +408,12 @@ public final class TessRun {
     /// finish is not run again: the model reads that it was interrupted.
     public func resumeInterrupted() async {
         for var state in runs.all(now: now()) where state.status == .running {
+            // A run older than ten minutes is not picked up again: the moment has passed.
+            guard now().timeIntervalSince(state.startedAt) <= Self.resumeWindow else {
+                state.status = .dropped
+                runs.save(state, now: now())
+                continue
+            }
             guard let last = state.messages.last else {
                 state.status = .dropped
                 runs.save(state, now: now())

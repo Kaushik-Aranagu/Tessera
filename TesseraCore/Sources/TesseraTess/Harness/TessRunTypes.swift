@@ -22,7 +22,7 @@ public enum TessRunEvent: Sendable, Equatable {
     }
 }
 
-/// The rung an ask takes: one function, so a typed net can replace it later. No Opus.
+/// The rung an ask takes: one function, so a typed net can replace it later. Opus is only ever a later rung.
 public struct RungPlan: Equatable, Sendable {
     public var ladder: [BrainID]
     public var effort: Effort
@@ -44,7 +44,7 @@ public struct RungPlan: Equatable, Sendable {
                                        hedge: false, toolChoice: .auto)
 
     /// An open question (why, should, plan, how am I, compare, what do you think, or over 18 words) goes to Sonnet
-    /// with Haiku hedged in; everything else (lookups, counts, small actions) goes to Haiku.
+    /// with Opus as the second try; everything else (lookups, counts, small actions) goes to Haiku, then Sonnet.
     public static func pick(_ text: String) -> RungPlan {
         let lowered = text.lowercased()
         let openWords = [#"\bwhy\b"#, #"\bshould\b"#, #"\bplan\b"#, #"\bhow am i\b"#, #"\bcompare\b"#,
@@ -195,6 +195,15 @@ public struct TessRunStore: Sendable {
 
     public func save(_ state: TessRunState, now: Date = .now) {
         guard let url else { return }
+        var state = state
+        // Only a running run keeps its words: once it is finished, failed or dropped, nothing of the conversation stays
+        // in the checkpoint file (the turns live in TessConversation, with its walls).
+        if state.status != .running {
+            state.messages = []
+            state.words = ""
+            state.toolResults = [:]
+            state.askText = ""
+        }
         var runs = all(now: now).filter { $0.id != state.id }
         runs.append(state)
         if runs.count > Self.keepRuns {

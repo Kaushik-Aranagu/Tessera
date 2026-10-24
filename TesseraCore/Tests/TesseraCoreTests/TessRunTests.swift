@@ -183,6 +183,62 @@ struct TessRunTests {
         #expect(haiku.streamCount == 6 && events.last?.isTerminal == true)
     }
 
+    // MARK: Review notes from #1380
+
+    @Test func theDayDigestIsDeviceOnlyAndTheRequestThinks() async throws {
+        for policy in [DoorPolicy.lab, .strict] {
+            let haiku = ScriptedBrain(.haiku, rounds: [[.text("ok")]])
+            let r = try rig([.haiku: haiku], policy: policy)
+            r.run.dayDigest = { "Dentist at 3 pm, slept 5 hours" }
+            _ = await collect(r.run.ask("how many sets"))
+            let request = try #require(haiku.requestsSeen.first)
+            #expect(Door.words(request).contains("Dentist") == (policy == .lab), "\(policy)")
+            // Adaptive thinking is on for a Tess turn.
+            #expect(request.thinking)
+        }
+    }
+
+    @Test func aSettledCheckpointKeepsNoWordsOfTheConversation() async throws {
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Four sets.")]])
+        let r = try rig([.haiku: haiku])
+        _ = await collect(r.run.ask("how many sets today"))
+        let state = try #require(TessRunStore(url: r.url).all().first)
+        #expect(state.status == .finished && state.messages.isEmpty && state.words.isEmpty)
+        #expect(state.toolResults.isEmpty && state.askText.isEmpty)
+        let text = try String(decoding: Data(contentsOf: r.url), as: UTF8.self)
+        #expect(!text.contains("how many sets today") && !text.contains("Four sets."))
+    }
+
+    @Test func aRunOlderThanTenMinutesIsDroppedNotResumed() async throws {
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("never")]])
+        let r = try rig([.haiku: haiku])
+        let input = Data(#"{"from":"tasks","during":null}"#.utf8)
+        var state = TessRunState(startedAt: Date().addingTimeInterval(-11 * 60), askText: "how many", aboutIDs: [],
+                                 messages: [BrainMessage(.user, text: "how many"),
+                                            BrainMessage(
+                                                .assistant,
+                                                [.toolUse(id: "t1", name: "answerQuery", input: input)]
+                                            )])
+        state.doneToolIDs = ["t1"]
+        state.toolResults = ["t1": "3 tasks."]
+        TessRunStore(url: r.url).save(state)
+        await r.run.resumeInterrupted()
+        #expect(TessRunStore(url: r.url).all().first?.status == .dropped && haiku.streamCount == 0)
+    }
+
+    @Test func theHoldCoversTheDearestRungOnTheLadder() async throws {
+        let sonnet = FakeBrain(.sonnet)
+        let rig = try rig([.sonnet: sonnet])
+        let held = HeldDuringSend()
+        let ledger = rig.rig.ledger
+        sonnet.onStream = { _ in Task { @MainActor in held.value = ledger.pendingNano } }
+        _ = await collect(rig.run.ask("why is my bench stuck"))
+        try await Task.sleep(for: .milliseconds(50))
+        // Output alone at Opus's price for the 12K reserve is 240M nano-dollars; Sonnet's would be 120M.
+        #expect(held.value >= 12000 * 20000, "\(held.value)")
+        #expect(TessRun.claudeModel(for: .opus) == .opus && TessRun.claudeModel(for: .appleOnDevice) == nil)
+    }
+
     // MARK: Checkpoints
 
     @Test func aKillAfterAFinishedToolResumesWithoutRunningItAgain() async throws {
