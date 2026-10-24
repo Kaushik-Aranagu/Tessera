@@ -18,6 +18,7 @@ struct TrainingHeadline: Equatable {
     var planned: Int
     var weeksInARow: Int
     var gain: Gain?
+    var hasPlan = true
     /// A new thing to try, shown in green ("New: hill sprints"); nil when there is none. Sample until Core says.
     var newThing: String?
 }
@@ -52,28 +53,30 @@ struct LedgerTrainingStats: TrainingStatsSource {
     @MainActor
     func headline(model: AppModel, now: Date) -> TrainingHeadline {
         let perWeek = NowPage.sessionsPerWeek(model: model, plan: model.plan) ?? 0
-        let done = TrainingWeek.doneThisWeek(model, now: now)
         let stats = TrainingStats(store: model.store, classes: model.classes)
+        let eligibleDone = stats.completedThisWeekOnPlan(plan: model.plan, sessionsPerWeek: perWeek, now: now)
+        let done = eligibleDone ?? 0
         let gain = comparison.flatMap { comparison -> TrainingHeadline.Gain? in
             guard let change = stats.e1RMChange(for: comparison.exerciseID, since: comparison.since, now: now),
                   change.kilograms > 0 else { return nil }
             return TrainingHeadline.Gain(lift: change.exercise, classID: change.exerciseID,
                                          kilograms: change.kilograms, since: change.since)
         }
-        return TrainingHeadline(done: done, planned: max(perWeek, done),
-                                weeksInARow: stats.consecutiveWeeksOnPlan(plan: model.plan,
-                                                                          sessionsPerWeek: perWeek, now: now),
-                                gain: gain, newThing: nil)
+        return TrainingHeadline(done: done, planned: eligibleDone == nil ? 0 : max(perWeek, done),
+                                weeksInARow: eligibleDone == nil ? 0
+                                    : stats.consecutiveWeeksOnPlan(plan: model.plan,
+                                                                   sessionsPerWeek: perWeek, now: now),
+                                gain: gain, hasPlan: eligibleDone != nil, newThing: nil)
     }
 }
 
 extension TrainingHeadline {
     var doneLine: String {
-        "\(done) of \(planned) this week"
+        hasPlan ? "\(done) of \(planned) this week" : ""
     }
 
     var streakLine: String {
-        "\(weeksInARow) \(weeksInARow == 1 ? "week" : "weeks") in a row on plan"
+        hasPlan ? "\(weeksInARow) \(weeksInARow == 1 ? "week" : "weeks") in a row on plan" : ""
     }
 
     /// "+10 lb on bench since Oct 1": the lift in lower case after "on", the gain in the display unit.

@@ -138,6 +138,8 @@ struct TrainingSheet230Tests {
         headline.gain = .init(lift: "Bench press", classID: nil, kilograms: -5, since: since)
         #expect(headline.gainParts(unit: .kilograms) == nil)
         #expect(LedgerTrainingStats().comparison == nil)
+        headline.hasPlan = false
+        #expect(headline.doneLine.isEmpty && headline.streakLine.isEmpty)
     }
 
     @Test func theClockStopsWhilePaused() {

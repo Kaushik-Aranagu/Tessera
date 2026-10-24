@@ -74,6 +74,23 @@ struct TrainingHeadlineStatsTests {
         #expect(run(now: now, goal: 1) == 0)
     }
 
+    @Test(arguments: ["eligible", "unrelated", "privateWorkout", "privateRoutine"])
+    func currentWeekCountUsesOnlyPublicPlanWorkouts(kind: String) throws {
+        let other = try store.create(#require(classes[.routine]), title: "Other day")
+        if kind == "privateRoutine" {
+            routine.title = "Knee rehab day"
+        }
+        try session(at: date(22), routine: kind == "unrelated" ? other : routine,
+                    title: kind == "privateWorkout" ? "Knee rehab day" : "Strength day")
+        let now = try date(22, hour: 18)
+        #expect(stats.completedThisWeekOnPlan(plan: plan, sessionsPerWeek: 2, now: now,
+                                              calendar: calendar) == (kind == "eligible" ? 1 : 0))
+        #expect(stats.completedThisWeekOnPlan(plan: nil, sessionsPerWeek: 2, now: now,
+                                              calendar: calendar) == nil)
+        #expect(stats.completedThisWeekOnPlan(plan: plan, sessionsPerWeek: nil, now: now,
+                                              calendar: calendar) == nil)
+    }
+
     @Test func incompleteWeekPreservesTheCurrentRunAndMeetingGoalAddsIt() throws {
         for day in [6, 8, 13, 15, 20] {
             try session(at: date(day))

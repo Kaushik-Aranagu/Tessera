@@ -25,33 +25,48 @@ public extension TrainingStats {
     func consecutiveWeeksOnPlan(plan: ObjectRecord?, sessionsPerWeek: Int?, now: Date,
                                 calendar: Calendar = .current) -> Int
     {
-        guard let plan, !plan.isDeleted, let planClass = classes[.plan],
-              plan.classDef.map({ ClassResolver.isSubclass($0, of: planClass) }) == true,
-              ObjectPrivacy.shownLabel(of: plan, in: store, classes: classes) == nil,
-              let sessionsPerWeek, sessionsPerWeek > 0 else { return 0 }
-        let routines = Set(store.linkedObjects("routines", of: plan).filter { !$0.isDeleted }.map(\.id))
-        guard !routines.isEmpty else { return 0 }
-        let isPrivate = privateWorkouts().isPrivate
-        func metGoal(_ week: DateInterval) -> Bool {
-            let done = ledger.week(containing: week.start, plan: plan, now: now,
-                                   sessionsPerWeek: sessionsPerWeek, calendar: calendar).flatMap(\.done)
-            let counted = done.filter { summary in
-                guard let ended = summary.endedAt, ended <= now, !isPrivate(summary.workout),
-                      let routine = store.linkedObjects("routine", of: summary.workout).first else { return false }
-                return routines.contains(routine.id)
-            }
-            return Set(counted.map(\.id)).count >= sessionsPerWeek
-        }
-
         let day = TesseraDay(calendar: calendar)
         var week = day.week(containing: now)
-        var count = metGoal(week) ? 1 : 0
+        guard let current = eligiblePlanWorkouts(plan: plan, sessionsPerWeek: sessionsPerWeek,
+                                                 week: week, now: now, calendar: calendar),
+            let goal = sessionsPerWeek else { return 0 }
+        var count = current >= goal ? 1 : 0
         while let previous = calendar.date(byAdding: .weekOfYear, value: -1, to: week.start), previous < week.start {
             week = day.week(containing: previous)
-            guard metGoal(week) else { break }
+            guard let done = eligiblePlanWorkouts(plan: plan, sessionsPerWeek: sessionsPerWeek,
+                                                  week: week, now: now, calendar: calendar), done >= goal else { break }
             count += 1
         }
         return count
+    }
+
+    /// Current week's finished, public workouts belonging to this plan. Nil means no usable plan and goal.
+    func completedThisWeekOnPlan(plan: ObjectRecord?, sessionsPerWeek: Int?, now: Date,
+                                 calendar: Calendar = .current) -> Int?
+    {
+        eligiblePlanWorkouts(plan: plan, sessionsPerWeek: sessionsPerWeek,
+                             week: TesseraDay(calendar: calendar).week(containing: now), now: now,
+                             calendar: calendar)
+    }
+
+    private func eligiblePlanWorkouts(plan: ObjectRecord?, sessionsPerWeek: Int?, week: DateInterval,
+                                      now: Date, calendar: Calendar) -> Int?
+    {
+        guard let plan, !plan.isDeleted, let planClass = classes[.plan],
+              plan.classDef.map({ ClassResolver.isSubclass($0, of: planClass) }) == true,
+              ObjectPrivacy.shownLabel(of: plan, in: store, classes: classes) == nil,
+              let sessionsPerWeek, sessionsPerWeek > 0 else { return nil }
+        let routines = Set(store.linkedObjects("routines", of: plan).filter { !$0.isDeleted }.map(\.id))
+        guard !routines.isEmpty else { return nil }
+        let isPrivate = privateWorkouts().isPrivate
+        let done = ledger.week(containing: week.start, plan: plan, now: now,
+                               sessionsPerWeek: sessionsPerWeek, calendar: calendar).flatMap(\.done)
+        let counted = done.filter { summary in
+            guard let ended = summary.endedAt, ended <= now, !isPrivate(summary.workout),
+                  let routine = store.linkedObjects("routine", of: summary.workout).first else { return false }
+            return routines.contains(routine.id)
+        }
+        return Set(counted.map(\.id)).count
     }
 
     /// Latest eligible session at or before `since`, compared with the latest one in (`since`, `now`].

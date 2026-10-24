@@ -135,15 +135,17 @@ struct TrainingLandingV2: View {
         VStack(alignment: .leading, spacing: 0) {
             // Two lines (v3.2): the streak, its number in slate, and the gain in green. "3 of 6" lives on the week's
             // door.
-            statButton(
-                Text("\(headline.weeksInARow)").font(Theme.Training.number(17, weight: .regular))
-                    .foregroundStyle(Theme.Colors.Gold.label)
-                    + Text(headline.streakLine.drop(while: { $0.isNumber })).font(Theme.Training.words(
-                        17,
-                        weight: .medium
-                    )),
-                label: headline.streakLine
-            ) { open(.week) }
+            if headline.hasPlan {
+                statButton(
+                    Text("\(headline.weeksInARow)").font(Theme.Training.number(17, weight: .regular))
+                        .foregroundStyle(Theme.Colors.Gold.label)
+                        + Text(headline.streakLine.drop(while: { $0.isNumber })).font(Theme.Training.words(
+                            17,
+                            weight: .medium
+                        )),
+                    label: headline.streakLine
+                ) { open(.week) }
+            }
             if let parts = headline.gainParts(unit: Format.unit) {
                 statButton(
                     MeasureLine.text(parts.gain, size: 17, weight: .medium).foregroundStyle(Theme.Colors.Go.green)
@@ -364,6 +366,7 @@ struct TrainingLandingV2: View {
 
     /// "3 of 6 this week, Pull A next": the 3 and the name in blue (today and what is next), the rest ink.
     private func weekLine(_ headline: TrainingHeadline) -> Text {
+        guard headline.hasPlan else { return Text("") }
         let week = model.ledger.week(containing: AppClock.now, plan: model.plan, now: AppClock.now)
         let names = week.filter { $0.state == .today || $0.state == .upcoming }.compactMap { day in
             day.planned.map { ObjectPrivacy.routineTitle($0.title, in: model.store) }
