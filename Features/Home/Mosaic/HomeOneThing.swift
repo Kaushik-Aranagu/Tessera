@@ -261,22 +261,18 @@ struct HomeOneThing: View {
                 cancelHold()
             }
             .onEnded { value in
-                let sideways = abs(value.translation.width) >= abs(value.translation.height)
-                // A diagonal has no clear direction: the dominant axis must lead by 1.3x or the swipe is ignored.
-                let lead = sideways
-                    ? abs(value.translation.width) / max(abs(value.translation.height), 1)
-                    : abs(value.translation.height) / max(abs(value.translation.width), 1)
-                guard lead >= 1.3 else { return }
-                // `turn` reads a negative value as next: left (negative) and up (negative) are both next.
-                let across = sideways ? value.translation.width : value.translation.height
-                let speed = (sideways ? value.velocity.width : value.velocity.height) * (across < 0 ? -1 : 1)
-                // Past the distance, or a real flick (fast and past the flick travel); a twitch or a swipe taken back
-                // at lift turns nothing.
-                guard GestureTuning.commits(distance: Double(abs(across)), velocity: Double(speed),
-                                            arm: Double(Self.swipeDistance)) else { return }
+                // Any direction turns the single element (gesture policy): left or up is next, right or down is
+                // previous; a diagonal, a twitch or a swipe taken back at lift turns nothing.
+                let direction = GestureTuning.elementTurn(
+                    dx: Double(value.translation.width), dy: Double(value.translation.height),
+                    velocityX: Double(value.velocity.width), velocityY: Double(value.velocity.height),
+                    arm: Double(Self.swipeDistance)
+                )
+                guard direction != 0 else { return }
+                // `turn` reads a negative value as next.
                 // The tiers' own transitions carry the animation; this only lets them run.
                 withTesseraAnimation(.linear(duration: 0.01), reduceMotion: reduceMotion) {
-                    if turn(across < 0 ? -(Self.swipeDistance + 1) : Self.swipeDistance + 1) {
+                    if turn(direction > 0 ? -(Self.swipeDistance + 1) : Self.swipeDistance + 1) {
                         turns += 1
                     }
                 }
