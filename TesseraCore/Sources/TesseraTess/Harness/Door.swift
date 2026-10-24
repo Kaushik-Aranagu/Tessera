@@ -24,7 +24,7 @@ actor TaggedQueue {
 }
 
 /// The one way to Claude (harness H1b). Steps, in order: policy, pack, key-shape scan, reserve, route, stream, check,
-/// settle, trace, sent log. A Claude rung never starts unless "Tess asks Claude" is on, the $50 cap has room, and no
+/// settle, trace, sent log. A Claude rung never starts unless "Tess asks Claude" is on, the $100 cap has room, and no
 /// fragment holds a key-shaped string; the exact words of every Claude request go to "What was sent".
 ///
 /// An actor in spirit: it is main-actor isolated because the ledger and the sent log are.
@@ -188,11 +188,6 @@ public final class Door {
             continuation.yield(.failed(outcome))
             continuation.finish()
         }
-        // Opus is an escalation rung: a ladder that starts with it is refused.
-        if job.ladder.first == .opus {
-            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "opusFirst"))
-            return end(.refused)
-        }
         // 1 policy, 2 pack (per rung, below), 3 key-shape scan: always, under both policies.
         let policy = policy()
         if Self.allText(job).contains(where: { looksLikeClaudeKey($0) }) {
@@ -207,6 +202,14 @@ public final class Door {
         }
         let asks = asksClaude()
         let candidates = await router.candidates(for: job.ladder, asksClaude: asks)
+        // Opus is an escalation rung: it never answers first. The first rung that is live must not be Opus, whatever
+        // the
+        // ladder says (with Haiku down, [.haiku, .opus] would otherwise run Opus first).
+        if candidates.first?.id == .opus {
+            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "opusFirst",
+                                         runID: job.runID))
+            return end(.refused)
+        }
         guard !candidates.isEmpty else {
             let onlyClaude = job.ladder.allSatisfy(BrainRouter.isClaude)
             return end(onlyClaude && !asks ? .notAllowed : .other)
@@ -265,7 +268,7 @@ public final class Door {
                 return false
             }
             if claude {
-                // The $50 cap refuses before any network.
+                // The $100 runaway guard refuses before any network.
                 guard let held = ledger.reserve(job.estimateNano, now: now(), calendar: calendar) else {
                     failure = .capReached
                     return false

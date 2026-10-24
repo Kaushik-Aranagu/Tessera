@@ -65,9 +65,9 @@ struct TessRunTests {
     }
 
     @Test func pickRungSendsOpenQuestionsToSonnetAndLookupsToHaiku() {
-        #expect(pickRung("how am I doing on legs?").ladder == [.sonnet, .haiku, .appleOnDevice])
-        #expect(pickRung("how am I doing on legs?").hedge)
-        #expect(pickRung("how many sets today").ladder == [.haiku, .appleOnDevice])
+        #expect(pickRung("how am I doing on legs?").ladder == [.sonnet, .opus, .appleOnDevice])
+        #expect(!pickRung("how am I doing on legs?").hedge)
+        #expect(pickRung("how many sets today").ladder == [.haiku, .sonnet, .appleOnDevice])
         #expect(!pickRung("how many sets today").hedge && pickRung("how many sets today").toolChoice == .auto)
         for open in ["why is my bench stuck", "should I deload", "plan my week", "compare this week to last",
                      "what do you think about my split"]
@@ -76,7 +76,9 @@ struct TessRunTests {
         }
         let long = Array(repeating: "word", count: 19).joined(separator: " ")
         #expect(pickRung(long) == .open && pickRung("add milk to groceries") == .plain)
-        #expect(RungPlan.open.maxTokens == 400 && RungPlan.plain.maxTokens == 300 && RungPlan.open.effort == .low)
+        #expect(RungPlan.open.maxTokens == 12000 && RungPlan.plain.maxTokens == 4096 && RungPlan.open.effort == .medium)
+        // Opus is never a first rung, in any plan.
+        #expect(![RungPlan.open, .plain, .deviceOnly].contains { $0.ladder.first == .opus })
     }
 
     // MARK: Tools
@@ -125,12 +127,12 @@ struct TessRunTests {
         #expect(events.last == .finished("Added both."))
     }
 
-    @Test func aFourthRoundIsNeverSentAndThePhoneLineComesBack() async throws {
+    @Test func anEleventhRoundIsNeverSentAndThePhoneLineComesBack() async throws {
         let call = [use("t", "answerQuery", #"{"from":"tasks","during":null}"#)]
-        let haiku = ScriptedBrain(.haiku, rounds: [call, call, call, [.text("never")]])
+        let haiku = ScriptedBrain(.haiku, rounds: Array(repeating: call, count: 12) + [[.text("never")]])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("keep looking"))
-        #expect(haiku.streamCount == 3)
+        #expect(haiku.streamCount == 10 && TessRun.maxRounds == 10)
         #expect(events.last == .failed(TessRun.tooManySteps))
         #expect(!events.contains(.words("never")))
     }
@@ -171,7 +173,7 @@ struct TessRunTests {
         #expect(assistant.content == [.raw(thinking), .raw(use)])
     }
 
-    @Test func aRunKeepsGoingPastThreePausesButStopsAtFive() async throws {
+    @Test func aRunStopsAtFivePauses() async throws {
         let pause: [BrainEvent] = [.assistant([Data(#"{"type":"text","text":"."}"#.utf8)]),
                                    .done(BrainUsage(), stop: "pause_turn")]
         let haiku = ScriptedBrain(.haiku, rounds: Array(repeating: pause, count: 8))
@@ -289,8 +291,11 @@ struct TessRunTests {
         let first = r.run.ask("how many tasks")
         let joined = r.run.ask("how many tasks")
         // The same text within 10 s is one Door call.
-        try await Task.sleep(for: .milliseconds(100))
-        #expect(slow.streamCount == 1)
+        for _ in 0 ..< 1000 where slow.streamCount < 1 {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(slow.streamCount == 1, "\(slow.streamCount)")
         slow.delay = .zero
         let second = r.run.ask("something else entirely")
         let events = await collect(second)

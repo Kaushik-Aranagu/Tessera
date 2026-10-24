@@ -3,7 +3,7 @@ import TesseraCore
 
 /// The month's spend, kept outside the store (G654): one small file beside it, excluded from backup. A restore, a
 /// reset or a reinstall-and-restore brings the Tess Call rows back to an older state, but never this file, so the
-/// $50 cap cannot be spent twice. The ledger counts the higher of the two totals. Money only: no phrase, no key.
+/// $100 cap cannot be spent twice. The ledger counts the higher of the two totals. Money only: no phrase, no key.
 struct TessSpendFile {
     static let fileName = "claude-spend.json"
 

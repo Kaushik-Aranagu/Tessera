@@ -8,7 +8,8 @@ import TesseraCore
 /// block closes. Every settled step is checkpointed so a kill never repeats a write.
 @MainActor
 public final class TessRun {
-    public static let maxRounds = 3
+    /// Ten rounds (accuracy first); a paused turn does not use one.
+    public static let maxRounds = 10
     public static let sameAskWindow: TimeInterval = 10
     public static let warmSpacing: TimeInterval = 240
     public static let warmWindow: TimeInterval = 2 * 3600

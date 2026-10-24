@@ -31,13 +31,17 @@ public struct RungPlan: Equatable, Sendable {
     public var toolChoice: ToolChoice
 
     /// With the flag Off or Tess asks Claude Off: the phone's own model, no tools.
-    public static let deviceOnly = RungPlan(ladder: [.appleOnDevice], effort: .low, maxTokens: 300, hedge: false,
+    public static let deviceOnly = RungPlan(ladder: [.appleOnDevice], effort: .low, maxTokens: 1000, hedge: false,
                                             toolChoice: .none)
 
-    public static let open = RungPlan(ladder: [.sonnet, .haiku, .appleOnDevice], effort: .low, maxTokens: 400,
-                                      hedge: true, toolChoice: .auto)
-    public static let plain = RungPlan(ladder: [.haiku, .appleOnDevice], effort: .low, maxTokens: 300, hedge: false,
-                                       toolChoice: .auto)
+    /// Accuracy first: Sonnet takes an open question, Opus is the second try, and the phone's own model is the last.
+    /// No hedge: a faster answer from a smaller model is not worth a wrong one. Thinking is on, so the output
+    /// reserve (thinking included) is wide.
+    public static let open = RungPlan(ladder: [.sonnet, .opus, .appleOnDevice], effort: .medium, maxTokens: 12000,
+                                      hedge: false, toolChoice: .auto)
+    /// Haiku takes lookups, counts and small actions (a bigger model only overthinks them); Sonnet is the second try.
+    public static let plain = RungPlan(ladder: [.haiku, .sonnet, .appleOnDevice], effort: .medium, maxTokens: 4096,
+                                       hedge: false, toolChoice: .auto)
 
     /// An open question (why, should, plan, how am I, compare, what do you think, or over 18 words) goes to Sonnet
     /// with Haiku hedged in; everything else (lookups, counts, small actions) goes to Haiku.

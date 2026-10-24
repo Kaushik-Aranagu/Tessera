@@ -84,4 +84,37 @@ struct HarnessAccuracyTests {
         #expect(words.contains("Counting sets.") && words.contains("answerQuery") && words.contains("tasks"))
         #expect(words.contains("https://x.test/a"))
     }
+
+    @Test func opusIsNeverTheFirstLiveRungEvenWithTheRungsAboveItDown() async throws {
+        let haiku = FakeBrain(.haiku), opus = FakeBrain(.opus)
+        haiku.available = false
+        let rig = try DoorRig(brains: [.haiku: haiku, .opus: opus])
+        let events = await rig.events(DoorJob(name: "t", ladder: [.haiku, .opus], request: DoorTests.ask,
+                                              estimateNano: 1000))
+        #expect(events.failure == .refused && opus.streamCount == 0)
+    }
+
+    @Test func thePriceRowsMatchThePricingPage() {
+        /// Per million tokens: Opus 5.5 $4 in, $5 / $8 cache writes (5m / 1h), $0.20 reads, $20 out; Sonnet 5.5 $2, $2.50 /
+        /// $4, $0.10 reads, $10 out; Haiku 5.5 $0.10, $0.125 / $0.20, $0.01 reads, $0.50 out, and over 100K tokens $0.50,
+        /// $0.625 / $1, $0.05 reads, $2.50 out.
+        func cost(_ model: String, input: Int = 0, output: Int = 0, read: Int = 0, write: Int = 0,
+                  write1h: Int = 0) -> Int64
+        {
+            TessUsageLedger.cost(model: model, input: input, output: output, cacheRead: read, cacheWrite: write,
+                                 cacheWrite1h: write1h)
+        }
+        #expect(cost("claude-opus-5-5", input: 1_000_000) == 4_000_000_000)
+        #expect(cost("claude-opus-5-5", read: 1_000_000) == 200_000_000)
+        #expect(cost("claude-opus-5-5", write: 1_000_000) == 5_000_000_000)
+        #expect(cost("claude-opus-5-5", write: 1_000_000, write1h: 1_000_000) == 8_000_000_000)
+        #expect(cost("claude-opus-5-5", output: 1_000_000) == 20_000_000_000)
+        #expect(cost("claude-sonnet-5-5", read: 1_000_000) == 100_000_000)
+        #expect(cost("claude-sonnet-5-5", write: 1_000_000) == 2_500_000_000)
+        #expect(cost("claude-sonnet-5-5", write: 1_000_000, write1h: 1_000_000) == 4_000_000_000)
+        #expect(cost("claude-haiku-5-5", read: 90000) == 90000 * 10)
+        #expect(cost("claude-haiku-5-5", write: 90000) == 90000 * 125)
+        #expect(cost("claude-haiku-5-5", read: 120_000) == 120_000 * 50)
+        #expect(cost("claude-haiku-5-5", write: 120_000, write1h: 120_000) == 120_000 * 1000)
+    }
 }

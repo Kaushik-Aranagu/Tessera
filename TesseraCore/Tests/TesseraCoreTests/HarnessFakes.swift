@@ -214,7 +214,19 @@ final class ScriptedBrain: Brain, @unchecked Sendable {
                     guard !Task.isCancelled else { return }
                     continuation.yield(event)
                 }
-                continuation.yield(.done(BrainUsage(inTokens: 100, outTokens: 20, costNano: 20000), stop: "end_turn"))
+                // A script that ends with its own done (a paused turn) keeps its stop reason.
+                if !script.contains(where: {
+                    if case .done = $0 {
+                        true
+                    } else {
+                        false
+                    }
+                }) {
+                    continuation.yield(.done(
+                        BrainUsage(inTokens: 100, outTokens: 20, costNano: 20000),
+                        stop: "end_turn"
+                    ))
+                }
                 continuation.finish()
             }
             continuation.onTermination = { _ in work.cancel() }
