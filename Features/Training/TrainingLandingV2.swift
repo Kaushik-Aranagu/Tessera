@@ -105,7 +105,7 @@ struct TrainingLandingV2: View {
                     .font(Theme.Training.words(40, weight: .semibold, relativeTo: .largeTitle))
                     .foregroundStyle(Theme.Colors.Accent.training)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    .minimumScaleFactor(typeSize.isAccessibilitySize ? 0.35 : 0.75)
                     .accessibilityAddTraits(.isHeader)
                     .padding(.top, Theme.Spacing.s)
                 statLines(headline)
@@ -172,8 +172,9 @@ struct TrainingLandingV2: View {
             text
                 .font(Theme.Training.words(17, weight: .medium))
                 .foregroundStyle(Theme.Colors.ink)
-                .lineLimit(1)
+                .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                 .minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
                 .contentShape(Rectangle())
         }
@@ -214,11 +215,19 @@ struct TrainingLandingV2: View {
         case let .notStarted(name):
             Button { open(.today) } label: {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                    FittedTitle(text: name, color: Theme.Colors.Split.color(forName: name))
+                    if typeSize.isAccessibilitySize {
+                        Text(name)
+                            .font(Theme.Training.words(34, weight: .semibold, relativeTo: .title))
+                            .foregroundStyle(Theme.Colors.Split.color(forName: name))
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        FittedTitle(text: name, color: Theme.Colors.Split.color(forName: name))
+                    }
                     MeasureLine.text(notStartedLine, size: 17)
                         .foregroundStyle(Theme.Colors.inkSecondary)
-                        .lineLimit(1)
+                        .lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
                         .minimumScaleFactor(0.8)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
@@ -354,8 +363,9 @@ struct TrainingLandingV2: View {
                     .lineLimit(1)
                 line
                     .foregroundStyle(Theme.Colors.ink)
-                    .lineLimit(1)
+                    .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                     .minimumScaleFactor(0.8)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
             .contentShape(Rectangle())

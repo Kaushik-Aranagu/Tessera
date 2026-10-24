@@ -191,6 +191,7 @@ struct TrainingSheet230Tests {
 
     @Test func kindsFromNames() {
         #expect(LibraryKinds.kind(ofName: "Push Day A") == "Push")
+        #expect(LibraryKinds.kind(ofName: "Heavy chest") == "Push")
         #expect(LibraryKinds.kind(ofName: "Barbell row") == "Pull")
         #expect(LibraryKinds.kind(ofName: "Back squat") == "Legs")
         #expect(LibraryKinds.kind(ofName: "Easy run") == "Cardio")

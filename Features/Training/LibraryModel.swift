@@ -130,7 +130,7 @@ enum LibraryKinds {
         if has(["pull", "row", "curl", "chin", "lat ", "face pull", "shrug", "back "]) {
             return "Pull"
         }
-        if has(["push", "press", "bench", "dip", "fly", "raise", "triceps", "pushdown", "push-up"]) {
+        if has(["push", "press", "bench", "chest", "dip", "fly", "raise", "triceps", "pushdown", "push-up"]) {
             return "Push"
         }
         return "Full body"
