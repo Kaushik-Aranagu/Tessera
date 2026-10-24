@@ -39,9 +39,6 @@ final class MosaicScreenController {
         var accents: Int
         var sets: Int
         var moment: UUID?
-        var page: MosaicPage
-        var nextClock: String?
-        var weekDone: Int
         var reaction: Int
     }
 
@@ -100,7 +97,6 @@ final class MosaicScreenController {
         var shield: [CGRect]
         var page: MosaicPage = .mood
         var pageDirection = 1
-        var pageFacts: MosaicPageFacts?
         /// The accent of the one thing Home shows (sheet 213): the mosaic takes 20% of it, sweeping in with the page
         /// change.
         var washAccent: MosaicTriple?
@@ -108,6 +104,8 @@ final class MosaicScreenController {
         var sign: MosaicSignRequest?
         /// Changes when the thing (and so its wash) changes: the mosaic wipes to the new wash.
         var washToken = 0
+        /// "Sunset" was tapped: the mosaic washes toward dusk for a while (sheet 212), a wipe each way.
+        var dusk = false
         /// The scene the mosaic shows (sheet 214), chosen by Core's picker; nil keeps the mood stripes.
         var scenery: MosaicScenery?
     }
@@ -144,8 +142,6 @@ final class MosaicScreenController {
                        ground: [inputs.ground.red, inputs.ground.green, inputs.ground.blue], mood: inputs.mood,
                        accents: inputs.moodContext.doneAccents.count,
                        sets: inputs.moodContext.doneSets * 100 + inputs.moodContext.remainingSets, moment: moment?.id,
-                       page: inputs.page, nextClock: inputs.pageFacts?.nextClock,
-                       weekDone: inputs.pageFacts?.weekDone ?? 0,
                        reaction: reactionToken)
         guard next != key else { return engine }
         if let moment, moment.id != lastMoment?.id {
@@ -229,6 +225,10 @@ final class MosaicScreenController {
                     MosaicMomentField.glanceWash
                 )
             }
+            // Sunset: the mosaic takes the evening, 45% toward dusk (kept clear of Ember).
+            if inputs.dusk, moment == nil {
+                colour = MosaicColour.mix(colour, MosaicSceneArt.safe((0.86, 0.52, 0.50)), 0.45)
+            }
             if let accent = inputs.washAccent, moment == nil {
                 colour = MosaicColour.mix(colour, accent, MosaicPage.thingWash)
             }
@@ -241,13 +241,6 @@ final class MosaicScreenController {
         let moodLight = moodField.flatMap {
             MosaicMoodField.overlay($0, geometry: local, context: context, reduceMotion: inputs.reduceMotion)
         }
-        // A page other than the mood draws its own sign in the window (never under a moment, which plays over any
-        // page).
-        let pageLight: MosaicMoodField.Overlay? = moment == nil && inputs.scene == .day && inputs.page != .mood
-            ? MosaicPageField.light(inputs.page, cols: window.columns, rows: window.rows, start: engine.clock,
-                                    ground: ground, context: context, facts: inputs.pageFacts,
-                                    still: inputs.reduceMotion)
-            : nil
         // A scene's one slow life: only the tiles that differ from the still scene are drawn live (still under Reduce
         // Motion and in Low Power).
         let sceneLight: MosaicMoodField.Overlay? = inputs.scenery.flatMap { scenery in
@@ -264,7 +257,7 @@ final class MosaicScreenController {
             }
         }
         let light = sparkled(
-            plan?.overlay ?? pageLight ?? sceneLight ?? moodLight,
+            plan?.overlay ?? sceneLight ?? moodLight,
             engine: engine,
             moment: moment,
             input: input,
@@ -273,7 +266,7 @@ final class MosaicScreenController {
             reduceMotion: inputs.reduceMotion
         )
         // During an announcement the rim samples the background, never the words.
-        var signOnly = pageLight != nil
+        var signOnly = false
         switch moment?.moment {
         case .announce?, .glance?: signOnly = true
         default: break
@@ -428,10 +421,10 @@ struct MosaicHomeLayer: View {
     /// The mosaic's page (sheet 209 C), from B's pager, the swipe's direction and what the pages read.
     var page: MosaicPage = .mood
     var pageDirection = 1
-    var pageFacts: MosaicPageFacts?
     /// The sign the mosaic lends its tiles to and the accent it washes toward (sheet 213), from the page's thing.
     var signSpec: MosaicSignSpec?
     var scenery: MosaicScenery?
+    var dusk = false
 
     /// Whether this process has opened Home yet (a cold launch plays its own reaction once).
     @MainActor private static var launched = false
@@ -450,7 +443,7 @@ struct MosaicHomeLayer: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private var captionText: String {
-        page == .mood || scene != .day ? facts.caption(for: scene) : page.caption(facts: facts, page: pageFacts)
+        facts.caption(for: scene)
     }
 
     var body: some View {
@@ -549,8 +542,17 @@ struct MosaicHomeLayer: View {
     {
         guard let spec = signSpec, !spec.slot.isEmpty else { return nil }
         let accent = rgb(spec.accent, environment)
-        let column = Int(((spec.slot.minX - controller.globalOrigin.x) / MosaicScreenGrid.step).rounded())
-        let row = Int(((spec.slot.minY - controller.globalOrigin.y) / MosaicScreenGrid.step).rounded())
+        var column = Int(((spec.slot.minX - controller.globalOrigin.x) / MosaicScreenGrid.step).rounded())
+        var row = Int(((spec.slot.minY - controller.globalOrigin.y) / MosaicScreenGrid.step).rounded())
+        // The drawing sits in its 72 pt slot flush with the right edge (the text's gutter) and centred vertically,
+        // whatever the kind's own margins inside its 18 x 18 tiles.
+        let still = ThingSignArt.cells(spec.kind, elapsed: 0, share: spec.share, still: true)
+        if let right = still.map(\.column).max(), let top = still.map(\.row).min(),
+           let bottom = still.map(\.row).max()
+        {
+            column += ThingSignArt.side - 1 - right
+            row += (ThingSignArt.side - 1 - (bottom - top)) / 2 - top
+        }
         let request = MosaicSignRequest(kind: spec.kind, share: spec.share, column: column, row: row, accent: accent,
                                         alt: spec.alt.map { rgb($0, environment) }, token: spec.token)
         return (request, accent, spec.token, spec.washes)
@@ -572,10 +574,11 @@ struct MosaicHomeLayer: View {
                                            moodContext: momentContext, moment: active,
                                            shield: shield.map { $0.offsetBy(dx: -controller.globalOrigin.x,
                                                                             dy: -controller.globalOrigin.y) },
-                                           page: page, pageDirection: pageDirection, pageFacts: pageFacts,
+                                           page: page, pageDirection: pageDirection,
                                            washAccent: resolved?.washes == true ? resolved?.accent : nil,
                                            sign: resolved?.request,
-                                           washToken: resolved?.token.hashValue ?? 0, scenery: scenery))
+                                           washToken: (resolved?.token.hashValue ?? 0) &+ (dusk ? 7919 : 0), dusk: dusk,
+                                           scenery: scenery))
         engine.step(to: time)
         if engine.consumeLandings() > 0 {
             DispatchQueue.main.async { cue.play(.fleckReachesNow) }

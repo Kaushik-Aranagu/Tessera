@@ -82,6 +82,7 @@ enum AppsListRows {
 /// middle. Reduce Motion: no swell and no slide.
 struct AppsListSlot: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.playDoorway) private var playDoorway
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var door: HomeV2Door?
@@ -192,13 +193,13 @@ struct AppsListSlot: View {
                 .simultaneousGesture(
                     DragGesture(minimumDistance: 24, coordinateSpace: .global).onEnded { value in
                         if value.startLocation.x < 28, value.translation.width > 80 {
-                            self.door = nil
+                            playDoorway(door.accent, true) { self.door = nil }
                         }
                     }
                 )
-                .accessibilityAction(.escape) { self.door = nil }
+                .accessibilityAction(.escape) { playDoorway(door.accent, true) { self.door = nil } }
                 .safeAreaInset(edge: .top, spacing: 0) {
-                    Button("Back to Home") { self.door = nil }
+                    Button("Back to Home") { playDoorway(door.accent, true) { self.door = nil } }
                         .frame(width: 1, height: 1)
                         .opacity(0.01)
                         .accessibilityLabel("Back to Home")
@@ -250,7 +251,7 @@ struct AppsListSlot: View {
         if case let .object(id)? = row.opens {
             model.path.append(Route.object(id))
         } else {
-            door = .app(row.app)
+            playDoorway(row.app.accent, false) { door = .app(row.app) }
         }
     }
 

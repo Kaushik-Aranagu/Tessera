@@ -64,17 +64,22 @@ struct StepStack: View {
         .offset(y: calm ? 0 : drag * 0.25)
         .contentShape(Rectangle())
         .gesture(
-            DragGesture(minimumDistance: 24)
+            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
                 .onChanged { value in
-                    guard abs(value.translation.height) > abs(value.translation.width) else { return }
+                    let lead = CGFloat(GestureTuning.pagerBias)
+                    guard abs(value.translation.height) >= abs(value.translation.width) * lead else { return }
                     drag = value.translation.height
                 }
                 .onEnded { value in
-                    let travel = -value.translation.height
+                    let pull = GestureTuning.pull(
+                        dx: Double(value.translation.width), dy: Double(value.translation.height),
+                        velocityY: Double(value.velocity.height)
+                    )
                     withTesseraAnimation(Theme.Motion.snappy, reduceMotion: calm) { drag = 0 }
-                    if travel > 60 {
+                    // Up is the next step, down the one before.
+                    if pull < 0 {
                         move(true)
-                    } else if travel < -60 {
+                    } else if pull > 0 {
                         move(false)
                     }
                 }
@@ -332,13 +337,11 @@ struct SpokenTimerRow: View {
             .accessibilityValue(CookClockCopy.spokenTimer(remaining: line.remaining(at: now), endsAt: line.endsAt))
             .accessibilityAddTraits(.isButton)
             .accessibilityAction(named: Text(CookClockCopy.stop)) { session.stop(line) }
-            .gesture(
-                DragGesture(minimumDistance: 28).onEnded { value in
-                    if value.translation.width < -80 {
-                        session.stop(line)
-                    }
+            .rowSwipe(.trailing, arm: CGFloat(GestureTuning.armUndrawn)) { event in
+                if case .committed = event {
+                    session.stop(line)
                 }
-            )
+            }
             .onTapGesture {
                 if done {
                     session.stop(line)

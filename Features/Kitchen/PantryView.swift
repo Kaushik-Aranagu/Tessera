@@ -169,26 +169,21 @@ struct PantryLine: View {
         .background(alignment: .trailing) {
             Text("Groceries")
                 .textRole(.labelStrong)
-                .foregroundStyle(Theme.Colors.ink.opacity(min(abs(pull) / 72, 1) * 0.42))
+                .foregroundStyle(Theme.Colors.ink.opacity(min(abs(pull) / 96, 1) * 0.42))
                 .accessibilityHidden(true)
         }
         .tesseraFeedback(.made, trigger: added)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 24)
-                .onChanged { value in
-                    guard value.translation.width < 0, abs(value.translation.width) > abs(value.translation.height)
-                    else { return }
-                    pull = max(value.translation.width, -96)
+        .rowSwipe(.trailing, limit: 120) { event in
+            switch event {
+            case let .pulled(value): pull = value
+            case .committed:
+                if onAdd() {
+                    added += 1
                 }
-                .onEnded { _ in
-                    if pull <= -72 {
-                        if onAdd() {
-                            added += 1
-                        }
-                    }
-                    withTesseraAnimation(reduceMotion: reduceMotion) { pull = 0 }
-                }
-        )
+            case .ended: withTesseraAnimation(reduceMotion: reduceMotion) { pull = 0 }
+            case .cancelled, .armed, .disarmed: break
+            }
+        }
     }
 
     private func row(_ name: String) -> some View {

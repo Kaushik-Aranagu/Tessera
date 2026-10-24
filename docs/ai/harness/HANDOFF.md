@@ -1,6 +1,6 @@
 # Tess harness: handoff
 
-Last updated Oct 24, 2026 (PT). This file is for whichever agent picks this work up next: Claude in a new
+Last updated Oct 24, 2026, 1:05 AM PT (Codex handoff checkpoint, weekly limit at 97%). This file is for whichever agent picks this work up next: Claude in a new
 thread, or Codex. Read `CLAUDE.md` at the repo root first. Its rules apply to every agent. Then read this file and
 the three build specs in this folder.
 
@@ -69,7 +69,11 @@ The specs in this folder hold everything a builder needs. The pages explain it t
 |---|---|---|
 | `h0-h2-build.md` | H0 latency bench, H1a Brain seam, H1b Door and router, H2 Director playbook | Built by Core (PRs below) |
 | `h3-wiring-build.md` | App wiring for H1/H2 (Builder A), H3 `TessRun` streaming loop (Core) | Sent Oct 23, not built yet |
-| `memory-context-m0-m6.md` | M0 harness fixes, M1 Beliefs, M2 recall and fetch tools, M3 context budget and tuner, M4 persistent agents, M5 night pass, M6 nightly eval | Sent Oct 24, not built yet. M0 must land before H3 merges |
+| `memory-context-m0-m6.md` | M0 harness fixes, M1 Beliefs, M2 recall and fetch tools, M3 context budget and tuner, M4 persistent agents, M5 night pass, M6 nightly eval | M0, H3 and M1 built by Core on the `core/beliefs` chain. M3 core, M4, M5 and M6 built on the AI lane below. M2 is Core's, not built |
+
+These live on the AI lane branches, not on master yet: `m3-wiring.md` (what Core wires for M3, AnswerCheck and the
+forget path), `checks.md` (running list of checks), `test-world.md` (the test world, the stamp and the live runner)
+and `night-pass.md` (the M5 night pass and how Core calls it).
 
 ## PRs so far (Kaushik-Aranagu/Tessera)
 
@@ -82,7 +86,56 @@ These are stacked. Leads never merge; QA reviews; the coordinator merges through
 - Related seams: #1350 TessDirector (one decision seam for plays and looks), #1346 TessConversation (7-day turns,
   walled words stored as placeholders, `forClaude` gives at most 4 turns, never in backups).
 
-## Next steps, in order
+## The AI lane stack (Oct 24, 1:05 AM PT)
+
+Built in a cloud container with no Swift toolchain. Each head was checked with a tree-sitter parse and the
+120-column rule only. **Core must run `swift test` in `TesseraCore/` on each head before QA re-checks it.**
+Branches are `claude/project-thread-1kliwl-ai*`. Leads never merge; the coordinator merges.
+
+| PR | Branch | Base | Head | What | Verdict |
+|---|---|---|---|---|---|
+| #1378 | `claude/project-thread-1kliwl` | `core/harness-m0` | 01439d49 | M3 core (packer, budgets, meter, tuner) and M2 recall score | Carried inside #1394 (merged into `-ai`) |
+| #1394 | `-ai` | `core/beliefs` | d22bfac0 | AnswerCheck (C6, starts in shadow), M6 MemoryEval and its record, the test world and its answer key (~160 questions), M3 wiring note, checks | QA notes folded. Core found 2 type-check errors; fixed in d22bfac0. Needs Core's compile, then QA |
+| #1395 | `-ai-m4` | `-ai` | 7aed147f | M4: AgentSpec as data, ExpertisePack (pure render, SHA-256 hash), lab-only Body and Money | QA notes folded. Needs compile, then QA |
+| #1398 | `-ai-m5` | `-ai-m4` | e601cc3f | M5: NightPass planner (merge, revise, confirm, summaries, prune, refresh, reflect) | QA FIX FIRST fixed (never closes a told or kept belief; strict drops money, body and calendar from summaries). Needs compile, then QA |
+| #1399 | `-ai-m6` | `-ai-m5` | 7cea3319 | M5 to M6: NightRun (runs steps through actions, then the eval), NightRecord, MergeBelief, the eval's store adapter | QA PASS WITH NOTES; notes folded (MergeBelief refuses his own beliefs, private routines stay out, `ForgetBelief.chain`). Needs compile |
+| #1400 | `-ai-seed` | `-ai` | d688c8e4 | EvalWorldSeeder: writes the test world through engine actions only | QA FIX FIRST fixed (only an in-memory or temp store, only catalog rows; the forgotten line is scrubbed). Needs compile, then QA |
+
+**Merge order:** Core's `core/beliefs` chain, then #1394, #1395, #1398, #1399. #1400 can go any time after #1394.
+When a lower head changes, merge it up the stack (`-ai` into `-ai-m4` into `-ai-m5` into `-ai-m6`; `-ai` into
+`-ai-seed`). Never rebase these branches.
+
+## What Core still owes
+
+- **Compile and test** every head above (`swift test`), and send back any error with its file and line.
+- **The test store stamp** (`test-world.md` part 2): a settings field `storeKind = test`. Claude rungs are allowed
+  on a stamped store. Backups refuse a stamped store. Once the stamp exists, `EvalWorldSeeder.isTestStore` must
+  accept a stamped store too; the phone's Sample data needs that before Builder A can swap `DemoData.prepareSample`
+  for the seeder.
+- **The live runner** (`test-world.md` part 3): `scripts/tess-eval.sh --world small|big --policy lab|strict`.
+  It always starts from a fresh temp store, reads the key from the Mac keychain without printing it, and stops at
+  the smaller of $50 and ($100 minus the phone's month).
+- **M2:** the recall and fetch tools (`recall`, `remember`, `open`, web search and fetch), using `RecallScore`.
+- **Wiring:**
+  - Put the packer and the budgets into `TessRun`.
+  - Wire the meter and the Sunday tuner.
+  - Wire AnswerCheck into the Door as a trace field only (shadow). It may start retrying one rung up only after the
+    runner shows false fails under 2% and none on money.
+  - Feed `AgentSpec` and `ExpertisePack` into the run.
+  - Call `NightRun` at the 4 am turnover, with the reflect and ask closures (`night-pass.md`, "Calling it").
+  - The forget path takes `ForgetBelief.chain` before the forget, then calls `MemoryEvalRecord.forget(beliefs:)`.
+  - Add the Developer mode rows: Context, Budgets, Memory eval.
+
+## Next slices (AI lane)
+
+1. The reflect call itself: the prompt, and parsing up to 5 inferred beliefs with evidence through `remember`.
+2. Cadence ("three times a week") gets the same change-point rule as usual times, over weekly counts.
+3. Seeder gaps: leftovers (needs a class) and the exercise rename (needs a class rename action).
+4. The first runner pass on the small world, then the big world. Then tune the budgets and decide on AnswerCheck
+   leaving shadow, from the numbers.
+5. Then the harness page's later slices (below).
+
+## The original plan, in order (H3, M0 and M1 are now built on Core's branches)
 
 1. **H3 and the app wiring** (`h3-wiring-build.md`). Core builds `TessRun` in
    `TesseraCore/Sources/TesseraTess/Harness/`. Builder A builds `App/AppModel+Harness.swift` after the integ/77
@@ -124,8 +177,10 @@ These come from Kaushik and from project memory. Only he can change them.
 - **Commits.** No model ids in commits, PRs or code comments. Branch from master or the latest release. Run
   `scripts/test.sh` until it ends "All green" before opening a PR. Run `swiftformat .` and `swiftlint` before
   committing.
-- **Writing for him.** Plain words, PDT times, US words, one recommendation per question. Quiet hours are 11 PM to
-  7 AM PT.
+- **Writing for him.** Plain words, PDT times, US words, one recommendation per question. No quiet hours (his
+  call, Oct 23, 11:43 PM PT).
+- **Sample data, always (Oct 23, 9:22 PM PT).** Until he says production ready, the phone and the tests run on
+  sample data. The seeder writes only through engine actions, and only into a test store.
 
 ## Open questions and unverified facts
 

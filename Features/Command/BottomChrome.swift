@@ -89,11 +89,11 @@ struct BottomChrome: View {
                 CaptureWash(dark: colorScheme == .dark)
                     .transition(.asymmetric(insertion: .offset(y: 60).combined(with: .opacity),
                                             removal: .offset(y: 40).combined(with: .opacity)))
-                    .gesture(DragGesture(minimumDistance: 20).onEnded { value in
-                        if value.translation.height > 40 {
+                    .pullGesture { down in
+                        if down {
                             close()
                         }
-                    })
+                    }
                 surface
                     .transition(.asymmetric(insertion: .opacity,
                                             removal: .opacity.animation(.easeOut(duration: 0.16))))

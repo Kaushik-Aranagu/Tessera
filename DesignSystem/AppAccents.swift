@@ -14,7 +14,7 @@ extension Theme.Colors {
             )
         }
 
-        /// Training: crimson (off Ember by delta E 10).
+        /// Training: hot red.
         static var training: Color {
             tuned(\.training, light: 0xC4472A, dark: 0xEE6A4C)
         }
@@ -46,7 +46,7 @@ extension Theme.Colors {
 
         /// Routines: dusk rose.
         static var routines: Color {
-            tuned(\.routines, light: 0xA4505F, dark: 0xD79AA6)
+            tuned(\.routines, light: 0x8E4A78, dark: 0xD79AA6)
         }
 
         /// The sky word's two stops ("Sunset").

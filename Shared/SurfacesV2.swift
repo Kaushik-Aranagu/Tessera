@@ -170,7 +170,7 @@ enum SurfaceAccent {
         case "money": dark ? 0x8DBFA7 : 0x3F7A62
         case "notes": dark ? 0xB9A9E0 : 0x5B3FB8
         case "lists": dark ? 0xB5BE7A : 0x5E6B1F
-        case "routines": dark ? 0xD79AA6 : 0xA4505F
+        case "routines": dark ? 0xD79AA6 : 0x8E4A78
         default: dark ? 0xF5F2EC : 0x26201E
         }
     }
