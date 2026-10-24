@@ -150,7 +150,11 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         usedUp.tap()
         let receipt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@",
                                                            "used up. On To get.")).firstMatch
-        XCTAssertTrue(receipt.waitForExistence(timeout: 5), "The engine confirmed the used-up mutation")
+        let confirmed = receipt.waitForExistence(timeout: 5)
+        if !confirmed {
+            capture("Used-up swipe failure", in: app)
+        }
+        XCTAssertTrue(confirmed, "The engine confirmed the used-up mutation")
         wait(NSPredicate(format: "exists == false"), on: eggs)
         XCTAssertTrue(app.buttons["Undo"].waitForExistence(timeout: 5))
         app.buttons["Undo"].tap()
@@ -195,7 +199,11 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 120, dy: 0)))
         let receipt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@",
                                                            "used up. On To get.")).firstMatch
-        XCTAssertTrue(receipt.waitForExistence(timeout: 5), "The engine confirmed the used-up mutation")
+        let confirmed = receipt.waitForExistence(timeout: 5)
+        if !confirmed {
+            capture("Used-up swipe failure", in: app)
+        }
+        XCTAssertTrue(confirmed, "The engine confirmed the used-up mutation")
         wait(NSPredicate(format: "exists == false"), on: eggs)
         XCTAssertTrue(app.buttons["Undo"].waitForExistence(timeout: 5))
         app.buttons["Undo"].tap()
