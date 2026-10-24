@@ -274,15 +274,17 @@ extension TessGrammar {
     }
 
     /// S703: a kilogram weight snaps to the nearest load the exercise's kit can make (a tie to the lighter); outside
-    /// the kit's range, nil (the model asks). Pounds stay as said; "same" and bare reps reuse a logged weight.
+    /// the kit's range, nil (the model asks). Pounds are range-checked in kilograms the same way but stay as said
+    /// (never snapped); "same" and bare reps reuse a logged weight.
     func snap(_ parse: Parse, entry: ObjectRecord) -> Parse? {
-        guard case let .set(entry, weight, reps, kind, how, unit, rpe, _) = parse, unit == .kilograms,
+        guard case let .set(entry, weight, reps, kind, how, unit, rpe, _) = parse,
               how == .full || how == .drop,
               let exercise = store.linkedClass("exercise", of: entry) else { return parse }
         let dial = store.weightDial(for: exercise)
         // Below the lightest load ("0 x 8" on a barbell, QA Q6) or above the heaviest: the model asks.
         guard let lightest = dial.detents.first, let heaviest = dial.detents.last else { return parse }
         guard weight >= lightest - 0.001, weight <= heaviest + 0.001 else { return nil }
+        guard unit == .kilograms else { return parse }
         let snapped = dial.snap(weight)
         return .set(entry: entry, weight: snapped, reps: reps, kind: kind, phrase: how, unit: unit, rpe: rpe,
                     said: abs(snapped - weight) > 0.001 ? weight : nil)
