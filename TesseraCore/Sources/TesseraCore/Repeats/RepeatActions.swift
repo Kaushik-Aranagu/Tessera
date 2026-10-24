@@ -146,7 +146,8 @@ public struct SkipRepeat: EngineAction {
         calendar.timeZone = zone.flatMap { TimeZone(identifier: $0) } ?? .current
         guard let next = rule.next(today: day, doneAt: done, calendar: calendar) else { return }
         // The next one is skipped: nothing on or before it counts, so the following step is next.
-        rule.skippedThrough = next
+        // An overdue chore (an "after done" one past its date) jumps past today too, not just one step.
+        rule.skippedThrough = max(next, day)
         try transaction.set("repeats", to: .text(rule.encoded), on: target)
     }
 
