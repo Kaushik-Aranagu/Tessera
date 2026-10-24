@@ -63,16 +63,18 @@ extension BrainRole: Codable {}
 
 extension BrainContent: Codable {
     private enum Kind: String, Codable {
-        case text, toolUse, toolResult
+        case text, toolUse, toolResult, raw
     }
 
     private enum Key: String, CodingKey {
-        case kind, text, id, name, input, content, isError
+        case kind, text, id, name, input, content, isError, data
     }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: Key.self)
         switch try container.decode(Kind.self, forKey: .kind) {
+        case .raw:
+            self = try .raw(container.decode(Data.self, forKey: .data))
         case .text:
             self = try .text(container.decode(String.self, forKey: .text))
         case .toolUse:
@@ -89,6 +91,9 @@ extension BrainContent: Codable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: Key.self)
         switch self {
+        case let .raw(data):
+            try container.encode(Kind.raw, forKey: .kind)
+            try container.encode(data, forKey: .data)
         case let .text(text):
             try container.encode(Kind.text, forKey: .kind)
             try container.encode(text, forKey: .text)

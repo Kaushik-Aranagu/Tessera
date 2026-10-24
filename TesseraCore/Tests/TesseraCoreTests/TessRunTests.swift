@@ -12,19 +12,21 @@ struct TessRunTests {
         return dir.appendingPathComponent(TessRunStore.fileName)
     }
 
-    struct Rig {
+    @MainActor struct Rig {
         let rig: DoorRig
         let run: TessRun
         let conversation: TessConversation
         let url: URL
-        var engine: ActionEngine { run.engine }
+        var engine: ActionEngine {
+            run.engine
+        }
     }
 
     func rig(_ brains: [BrainID: any Brain], asks: Bool = true, policy: DoorPolicy = .lab,
              flag: Bool = true) throws -> Rig
     {
         let url = try tempURL()
-        let rig = try DoorRig(brains: [:], asks: asks, policy: policy, brains: brains)
+        let rig = try DoorRig(brains: brains, asks: asks, policy: policy)
         let engine = ActionEngine(store: rig.store, classes: rig.classes)
         let conversation = TessConversation(store: rig.store, classes: rig.classes)
         let run = TessRun(door: rig.door, engine: engine, conversation: conversation, runs: TessRunStore(url: url))
@@ -51,7 +53,13 @@ struct TessRunTests {
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("how many sets today"))
         #expect(events.first == .waiting)
-        let words = events.compactMap { if case let .words(piece) = $0 { piece } else { nil } }
+        let words = events.compactMap {
+            if case let .words(piece) = $0 {
+                piece
+            } else {
+                nil
+            }
+        }
         #expect(words == ["Hello ", "there."])
         #expect(events.last == .finished("Hello there."))
     }
@@ -85,7 +93,11 @@ struct TessRunTests {
         let second = try #require(haiku.requestsSeen.last)
         let lastMessage = try #require(second.messages.last)
         let results = lastMessage.content.compactMap { piece -> String? in
-            if case let .toolResult(id, _, _) = piece { id } else { nil }
+            if case let .toolResult(id, _, _) = piece {
+                id
+            } else {
+                nil
+            }
         }
         #expect(lastMessage.role == .user && results == ["t1", "t2"])
         #expect(haiku.streamCount == 2)
@@ -99,7 +111,13 @@ struct TessRunTests {
         ])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("add two tasks"))
-        let ghosts = events.compactMap { if case let .ghost(id) = $0 { id } else { nil } }
+        let ghosts = events.compactMap {
+            if case let .ghost(id) = $0 {
+                id
+            } else {
+                nil
+            }
+        }
         #expect(ghosts.count == 2)
         let pending = r.engine.history(limit: 20).filter { $0.state == .pending }
         // Oldest first: the first write is the first ghost.
@@ -117,6 +135,52 @@ struct TessRunTests {
         #expect(!events.contains(.words("never")))
     }
 
+    // MARK: M0 in the loop
+
+    @Test func aPausedTurnIsSentBackUnchangedAndDoesNotUseARound() async throws {
+        let block = Data(#"{"type":"thinking","signature":"s==","thinking":"hm"}"#.utf8)
+        let search = Data(SearchBlocks.result.utf8)
+        // Two paused turns, then three tool rounds' worth of room is still left: the final answer arrives on stream 3.
+        let haiku = ScriptedBrain(.haiku, rounds: [
+            [.assistant([block, search]), .done(BrainUsage(), stop: "pause_turn")],
+            [.assistant([block]), .done(BrainUsage(), stop: "pause_turn")],
+            [.text("Found it.")],
+        ])
+        let r = try rig([.haiku: haiku])
+        let events = await collect(r.run.ask("how many sets"))
+        #expect(events.last == .finished("Found it.") && haiku.streamCount == 3)
+        let third = try #require(haiku.requestsSeen.last)
+        let assistant = third.messages.filter { $0.role == .assistant }
+        #expect(assistant.count == 2)
+        #expect(assistant[0].content == [.raw(block), .raw(search)])
+        #expect(assistant[1].content == [.raw(block)])
+    }
+
+    @Test func aToolRoundReplaysTheAssistantMessageVerbatim() async throws {
+        let thinking = Data(#"{"type":"thinking","signature":"sig==","thinking":"let me count"}"#.utf8)
+        let use = Data(#"{"type":"tool_use","id":"t1","name":"answerQuery","input":{"from":"tasks","during":null}}"#
+            .utf8)
+        let haiku = ScriptedBrain(.haiku, rounds: [
+            [.assistant([thinking, use]), self.use("t1", "answerQuery", #"{"from":"tasks","during":null}"#)],
+            [.text("Three.")],
+        ])
+        let r = try rig([.haiku: haiku])
+        _ = await collect(r.run.ask("how many tasks"))
+        let second = try #require(haiku.requestsSeen.last)
+        let assistant = try #require(second.messages.first { $0.role == .assistant })
+        #expect(assistant.content == [.raw(thinking), .raw(use)])
+    }
+
+    @Test func aRunKeepsGoingPastThreePausesButStopsAtFive() async throws {
+        let pause: [BrainEvent] = [.assistant([Data(#"{"type":"text","text":"."}"#.utf8)]),
+                                   .done(BrainUsage(), stop: "pause_turn")]
+        let haiku = ScriptedBrain(.haiku, rounds: Array(repeating: pause, count: 8))
+        let r = try rig([.haiku: haiku])
+        let events = await collect(r.run.ask("how many sets"))
+        // Five paused turns are sent back; the sixth stream's pause is the last thing she takes.
+        #expect(haiku.streamCount == 6 && events.last?.isTerminal == true)
+    }
+
     // MARK: Checkpoints
 
     @Test func aKillAfterAFinishedToolResumesWithoutRunningItAgain() async throws {
@@ -128,7 +192,10 @@ struct TessRunTests {
         let before = r.engine.history(limit: 50).count
         var state = TessRunState(startedAt: .now, askText: "add call mom", aboutIDs: [],
                                  messages: [BrainMessage(.user, text: "add call mom"),
-                                            BrainMessage(.assistant, [.toolUse(id: "t1", name: "createTask", input: input)])])
+                                            BrainMessage(
+                                                .assistant,
+                                                [.toolUse(id: "t1", name: "createTask", input: input)]
+                                            )])
         state.doneToolIDs = ["t1"]
         state.toolResults = ["t1": "Done: 1 waiting for approval."]
         TessRunStore(url: r.url).save(state)
@@ -136,7 +203,11 @@ struct TessRunTests {
         #expect(r.engine.history(limit: 50).count == before)
         let sent = try #require(haiku.requestsSeen.first)
         #expect(sent.messages.last?.content.contains {
-            if case let .toolResult(id, content, false) = $0 { id == "t1" && content.hasPrefix("Done") } else { false }
+            if case let .toolResult(id, content, false) = $0 {
+                id == "t1" && content.hasPrefix("Done")
+            } else {
+                false
+            }
         } == true)
         #expect(TessRunStore(url: r.url).all().first?.status == .finished)
         // Her reply is stored.
@@ -172,7 +243,13 @@ struct TessRunTests {
         #expect(r.engine.history(limit: 50).count == before)
         let results = haiku.requestsSeen.first?.messages.last?.content ?? []
         #expect(results.count == 2)
-        #expect(results.contains { if case let .toolResult("w1", _, true) = $0 { true } else { false } })
+        #expect(results.contains {
+            if case let .toolResult("w1", _, true) = $0 {
+                true
+            } else {
+                false
+            }
+        })
     }
 
     @Test func checkpointsStayUnderTwentyRunsAndADay() throws {
@@ -249,7 +326,7 @@ struct TessRunTests {
             let r = try rig([.haiku: haiku], policy: policy)
             let spend = try r.rig.store.create(#require(r.rig.classes[.spend]), title: "Groceries 41.20")
             _ = await collect(r.run.ask("how many sets", about: [spend]))
-            let sentText = Door.words(try #require(haiku.requestsSeen.first))
+            let sentText = try Door.words(#require(haiku.requestsSeen.first))
             if policy == .lab {
                 #expect(sentText.contains("[o1]"))
                 #expect(r.rig.sent.entries().count == 1)
@@ -313,7 +390,7 @@ struct TessRunTests {
 
     // MARK: Open tool
 
-    @Test func openReadsAHandleAndCapsItsAnswer() async throws {
+    @Test func openReadsAHandleAndCapsItsAnswer() throws {
         let r = try rig([.haiku: ScriptedBrain(.haiku, rounds: [])])
         let task = try r.engine.perform(CreateTask(title: "Water the plants"), by: .user).output
         let ok = TessOpenTool.run(arguments: Data(#"{"handle":"o1","depth":1}"#.utf8), handles: ["o1": task.id],
@@ -327,4 +404,8 @@ struct TessRunTests {
         #expect(uuid.isError)
         #expect(ok.text.count <= TessOpenTool.maxCharacters)
     }
+}
+
+enum SearchBlocks {
+    static let result = #"{"type":"web_search_tool_result","tool_use_id":"srvtoolu_1","content":[{"type":"web_search_result","url":"https://x.test/a","title":"A","encrypted_content":"EqgfCioIAhgB/+=="}]}"#
 }

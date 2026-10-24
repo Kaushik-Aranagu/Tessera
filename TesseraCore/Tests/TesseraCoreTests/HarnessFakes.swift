@@ -106,7 +106,7 @@ struct DoorRig {
 
     /// `hedgeWait`: nil means the wait never ends (until cancelled); `.zero` means it is over at once. A fake clock:
     /// no real time decides which rung streams first.
-    init(brains: [BrainID: FakeBrain], asks: Bool = true, policy: DoorPolicy = .lab,
+    init(brains: [BrainID: any Brain], asks: Bool = true, policy: DoorPolicy = .lab,
          hedgeWait: Duration? = nil) throws
     {
         let store = ObjectStore.open(inMemory: true)
@@ -223,6 +223,10 @@ final class ScriptedBrain: Brain, @unchecked Sendable {
 
     func warm(_: BrainRequest) async -> BrainWarm? {
         lock.withLock { warmed += 1 }
-        return FakeBrain.isClaude(id) ? BrainWarm(status: 200, maxTokens: 0, usage: BrainUsage(inTokens: 500, costNano: 100)) : nil
+        return FakeBrain.isClaude(id) ? BrainWarm(
+            status: 200,
+            maxTokens: 0,
+            usage: BrainUsage(inTokens: 500, costNano: 100)
+        ) : nil
     }
 }

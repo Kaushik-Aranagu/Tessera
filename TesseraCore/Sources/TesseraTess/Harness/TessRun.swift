@@ -12,6 +12,8 @@ public final class TessRun {
     public static let sameAskWindow: TimeInterval = 10
     public static let warmSpacing: TimeInterval = 240
     public static let warmWindow: TimeInterval = 2 * 3600
+    /// Most times in one run a paused turn is sent back before she gives up.
+    static let maxPauses = 5
 
     public static let tooManySteps = "That needed more steps than I take. Try it in two."
     public static let cannotThink = "I can't think that through right now. The rest still works."
@@ -133,7 +135,7 @@ public final class TessRun {
 
     struct Pack {
         var system: [TextBlock]
-        var cacheAfter: [Int]
+        var cacheAfter: [CacheMark]
         var tools: [ToolSpec]
         var fragments: [PackFragment]
         var handles: [String: UUID]
@@ -158,11 +160,11 @@ public final class TessRun {
     /// system[0] voice (cache), tools, system[1] profile (cache); fragments ride on the ask.
     func pack(about: [ObjectRecord], screen: String?, withTools: Bool) -> Pack {
         var system = [TextBlock(Self.voice)]
-        var cache = [0]
+        var cache: [CacheMark] = [CacheMark(0, .oneHour)]
         let profile = profile()
         if !profile.isEmpty {
             system.append(TextBlock(profile))
-            cache.append(1)
+            cache.append(CacheMark(1, .oneHour))
         }
         var fragments: [PackFragment] = []
         var handles: [String: UUID] = [:]
@@ -248,6 +250,7 @@ public final class TessRun {
                 sink: (TessRunEvent) -> Void) async -> Outcome
     {
         var budget = TessTools.maxRecordsPerPhrase
+        var pauses = 0
         while state.round <= Self.maxRounds {
             let request = BrainRequest(system: pack.system, messages: state.messages, tools: pack.tools,
                                        toolChoice: pack.tools.isEmpty ? .auto : plan.toolChoice,
@@ -262,6 +265,8 @@ public final class TessRun {
             let job = DoorJob(name: "tess-turn", ladder: plan.ladder, request: request, fragments: pack.fragments,
                               estimateNano: estimate, hedge: plan.hedge, runID: runID)
             var roundText = ""
+            var roundBlocks: [Data] = []
+            var stop = "end_turn"
             var uses: [(id: String, name: String, input: Data)] = []
             var results: [String: (text: String, isError: Bool)] = [:]
             var failure: ClaudeOutcome?
@@ -283,7 +288,11 @@ public final class TessRun {
                         runs.save(state, now: now())
                     case let .failed(outcome):
                         failure = outcome
-                    case .status, .done:
+                    case let .assistant(blocks):
+                        roundBlocks = blocks
+                    case let .done(_, stop: reason):
+                        stop = reason
+                    case .status:
                         break
                     }
                 }
@@ -296,6 +305,21 @@ public final class TessRun {
             if let failure, uses.isEmpty {
                 return .phone(Self.line(for: failure, onlyDevice: plan.ladder == [.appleOnDevice]))
             }
+            // The assistant message is replayed exactly as the API sent it, never rebuilt from text deltas.
+            let assistantContent: [BrainContent] = roundBlocks.isEmpty
+                ? (roundText.isEmpty ? [] : [.text(roundText)]) + uses.map { .toolUse(
+                    id: $0.id,
+                    name: $0.name,
+                    input: $0.input
+                ) }
+                : roundBlocks.map(BrainContent.raw)
+            if stop == "pause_turn", uses.isEmpty, pauses < Self.maxPauses {
+                // The server paused a long turn: send it back unchanged. It does not use one of the three rounds.
+                pauses += 1
+                state.messages.append(BrainMessage(.assistant, assistantContent))
+                runs.save(state, now: now())
+                continue
+            }
             if uses.isEmpty {
                 return state.words.isEmpty ? .phone(Self.noAnswer) : .reply(state.words)
             }
@@ -303,9 +327,7 @@ public final class TessRun {
                 return .phone(Self.tooManySteps)
             }
             // All tool results go back together in one user message.
-            var assistant: [BrainContent] = roundText.isEmpty ? [] : [.text(roundText)]
-            assistant += uses.map { .toolUse(id: $0.id, name: $0.name, input: $0.input) }
-            state.messages.append(BrainMessage(.assistant, assistant))
+            state.messages.append(BrainMessage(.assistant, assistantContent))
             state.messages.append(BrainMessage(.user, uses.map { use in
                 let result = results[use.id] ?? ("Nothing ran.", true)
                 return .toolResult(id: use.id, content: result.text, isError: result.isError)
