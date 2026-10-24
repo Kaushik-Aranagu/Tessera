@@ -129,6 +129,17 @@ struct TrainingSheet230Tests {
         #expect(parts.rest == " on bench since Oct 1")
     }
 
+    @Test func aMissingOrUnreadableGainMakesNoClaim() {
+        let since = Date(timeIntervalSinceReferenceDate: 1000)
+        var headline = TrainingHeadline(done: 0, planned: 0, weeksInARow: 0, gain: nil)
+        #expect(headline.gainParts(unit: .pounds) == nil)
+        headline.gain = .init(lift: "Bench press", classID: nil, kilograms: 0.1, since: since)
+        #expect(headline.gainParts(unit: .pounds) == nil)
+        headline.gain = .init(lift: "Bench press", classID: nil, kilograms: -5, since: since)
+        #expect(headline.gainParts(unit: .kilograms) == nil)
+        #expect(LedgerTrainingStats().comparison == nil)
+    }
+
     @Test func theClockStopsWhilePaused() {
         let clock = TodayClock()
         let start = Date(timeIntervalSinceReferenceDate: 1000)

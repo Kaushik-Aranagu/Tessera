@@ -5,8 +5,7 @@ import TesseraCore
 
 // MARK: - The stats seam
 
-/// The three stat lines under "Training" (sheet 230). They come from Core's TrainingLedger API, which Core is adding;
-/// until it lands the headline comes through this seam, with sample values for what the ledger cannot say yet.
+/// The stat lines under "Training" (sheet 230), supplied through the ledger seam or an explicit preview source.
 struct TrainingHeadline: Equatable {
     struct Gain: Equatable {
         let lift: String
@@ -40,25 +39,31 @@ struct SampleTrainingStats: TrainingStatsSource {
     }
 }
 
-/// What the ledger can say today (the week's count from the plan's own week), with the sample for the two Core has not
-/// added (weeks in a row on plan, the gain on a lift). One line to change when Core's API lands.
+/// Reads actual plan progress. A gain needs a caller-selected lift and comparison date; neither is inferred from
+/// the sheet's example. Until the product defines that comparison, the live landing omits its gain claim.
 struct LedgerTrainingStats: TrainingStatsSource {
-    var fallback: TrainingStatsSource = SampleTrainingStats()
+    struct Comparison {
+        let exerciseID: UUID
+        let since: Date
+    }
+
+    var comparison: Comparison?
 
     @MainActor
     func headline(model: AppModel, now: Date) -> TrainingHeadline {
-        var headline = fallback.headline(model: model, now: now)
         let perWeek = NowPage.sessionsPerWeek(model: model, plan: model.plan) ?? 0
-        headline.done = TrainingWeek.doneThisWeek(model, now: now)
-        headline.planned = max(perWeek, headline.done)
-        if let bench = model.classDef(.exercise).flatMap({ root in
-            ClassResolver.descendants(of: root).first { $0.name.lowercased().hasPrefix("bench") }
-        }), headline.gain != nil {
-            headline.gain = TrainingHeadline.Gain(lift: bench.name, classID: bench.id,
-                                                  kilograms: headline.gain?.kilograms ?? 0,
-                                                  since: headline.gain?.since ?? now)
+        let done = TrainingWeek.doneThisWeek(model, now: now)
+        let stats = TrainingStats(store: model.store, classes: model.classes)
+        let gain = comparison.flatMap { comparison -> TrainingHeadline.Gain? in
+            guard let change = stats.e1RMChange(for: comparison.exerciseID, since: comparison.since, now: now),
+                  change.kilograms > 0 else { return nil }
+            return TrainingHeadline.Gain(lift: change.exercise, classID: change.exerciseID,
+                                         kilograms: change.kilograms, since: change.since)
         }
-        return headline
+        return TrainingHeadline(done: done, planned: max(perWeek, done),
+                                weeksInARow: stats.consecutiveWeeksOnPlan(plan: model.plan,
+                                                                          sessionsPerWeek: perWeek, now: now),
+                                gain: gain, newThing: nil)
     }
 }
 
@@ -74,8 +79,8 @@ extension TrainingHeadline {
     /// "+10 lb on bench since Oct 1": the lift in lower case after "on", the gain in the display unit.
     func gainParts(unit: MassUnit) -> (gain: String, rest: String)? {
         guard let gain, gain.kilograms > 0 else { return nil }
-        let shown = unit.fromKilograms(gain.kilograms)
-        let number = shown.rounded() == shown ? String(Int(shown)) : String(format: "%g", shown)
+        let number = StatsMass.number(kg: gain.kilograms, unit: unit)
+        guard let shown = Double(number), shown > 0 else { return nil }
         let name = gain.lift.split(separator: " ").first.map { String($0).lowercased() } ?? gain.lift.lowercased()
         let day = gain.since.formatted(.dateTime.month(.abbreviated).day())
         return ("+\(number) \(unit.symbol)", " on \(name) since \(day)")
