@@ -15,7 +15,15 @@ extension AppModel {
     func chooseUnit(_ unit: String, for kind: MeasureKind) {
         guard settingsAreReal else { return }
         _ = try? SettingsStore(engine: engine).update { $0.displayUnits.choose(unit, for: kind) }
+        applyTessUnits()
         touch()
+    }
+
+    /// The weight unit Tess speaks in (her asks have no store to read): set at launch and when Settings > Units changes,
+    /// like `QuietHours.current`. Stored values never change, only her words. Off on a throwaway store.
+    func applyTessUnits() {
+        guard settingsAreReal else { return }
+        TessUnits.weight = displayUnits.unit(for: .weight).flatMap(MassUnit.init(rawValue:)) ?? .kilograms
     }
 
     /// The only fetch instance in the app. Its once-an-hour cap is per instance, so it must stay one.
