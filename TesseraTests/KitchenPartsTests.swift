@@ -25,10 +25,15 @@ struct KitchenPartsTests {
         #expect(FocusWheel<TestItem, EmptyView>.height(others: 4) == 202)
         #expect(FocusWheel<TestItem, EmptyView>.height(others: 9) == 392)
         // Rows tile: a row's top plus its height is the next row's top.
-        for place in stride(from: CGFloat(-1), through: 3, by: 0.25) {
-            let end = FocusWheel<TestItem, EmptyView>.y(place) + FocusWheel<TestItem, EmptyView>.height(at: place)
-            #expect(abs(end - FocusWheel<TestItem, EmptyView>.y(place + 1)) < 0.001)
+        for focus in [CGFloat(50), 80] {
+            for place in stride(from: CGFloat(-1), through: 3, by: 0.25) {
+                let end = FocusWheel<TestItem, EmptyView>.y(place, focusHeight: focus)
+                    + FocusWheel<TestItem, EmptyView>.height(at: place, focusHeight: focus)
+                #expect(abs(end - FocusWheel<TestItem, EmptyView>.y(place + 1, focusHeight: focus)) < 0.001)
+            }
         }
+        #expect(FocusWheel<TestItem, EmptyView>.height(others: 4, focusHeight: 80) == 232)
+        #expect(FocusWheel<TestItem, EmptyView>.height(others: 9, focusHeight: 80) == 422)
     }
 
     @Test func aPlaceIsSpokenWithItsCount() {
@@ -126,6 +131,16 @@ struct RecipesRoomBoardTests {
         #expect(RecipesRoomBoard.detail(shorts: [], lows: ["milk"], uses: ["x"]) == "milk low")
         #expect(RecipesRoomBoard
             .detail(shorts: [], lows: [], uses: ["a", "b", "c", "d", "e", "f"]) == "a, b and 4 more")
+    }
+
+    @Test func aPrivateRecipeIsNeverNamedInTheBrief() {
+        let rice = item("Fried rice", minutes: 20)
+        let secret = RecipesRoomBoard.Item(id: UUID(), name: "Melatonin tea", shown: "Private recipe", isPrivate: true,
+                                           minutes: 30, isPinned: false, shorts: [], lows: ["honey"], uses: [],
+                                           plannedFor: nil)
+        let lines = RecipesRoomBoard.brief([rice, secret])
+        #expect(!lines.first.contains("Melatonin") && !lines.second.contains("Melatonin"))
+        #expect(lines.second == "")
     }
 
     @Test func theFootFollowsTheFocus() {

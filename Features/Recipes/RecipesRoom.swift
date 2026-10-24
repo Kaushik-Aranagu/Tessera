@@ -33,6 +33,10 @@ struct RecipesRoomPage: View {
     @State private var receipts = KitchenReceipts()
     @State private var cooking: CookingCover?
 
+    /// The focus slot holds the name at 28 pt and two detail lines: about 80 pt, so the band is 232 pt and a full page
+    /// 422 pt, both ending on a row boundary.
+    static let focusHeight: CGFloat = 80
+
     private struct CookingCover: Identifiable {
         let id: UUID
     }
@@ -125,7 +129,7 @@ struct RecipesRoomPage: View {
     }
 
     private func wheel(_ rows: [RecipeRow]) -> some View {
-        FocusWheel(items: rows, top: $top, others: full ? 9 : 4, onOpen: { row in
+        FocusWheel(items: rows, top: $top, others: full ? 9 : 4, focusHeight: Self.focusHeight, onOpen: { row in
             if case let .recipe(item) = row {
                 open(item.id)
             } else {
@@ -154,13 +158,17 @@ struct RecipesRoomPage: View {
                     }
                 }
                 // The two detail lines clip in as the row comes into focus.
+                // At AX3 and up one detail line.
+                let lines = typeSize >= .accessibility3 ? 1 : 2
                 VStack(alignment: .leading, spacing: 0) {
                     Text(item.detailOne).lineLimit(1)
-                    Text(item.detailTwo).lineLimit(1)
+                    if lines == 2 {
+                        Text(item.detailTwo).lineLimit(1)
+                    }
                 }
                 .font(Theme.voice(size: 15))
                 .foregroundStyle(Theme.Colors.inkSecondary)
-                .frame(height: 22 * 2 * focus, alignment: .top)
+                .frame(height: 22 * CGFloat(lines) * focus, alignment: .top)
                 .clipped()
             }
         case .new:
@@ -227,7 +235,7 @@ struct RecipesRoomPage: View {
 
     /// "Feta and mascarpone, on To get." with the one Undo.
     private func getShorts(_ item: RecipesRoomBoard.Item) {
-        guard let result = try? model.engine.perform(AddGroceries(lines: item.shorts), by: .user) else {
+        guard let result = try? model.engine.perform(AddGroceries(lines: item.shortNames), by: .user) else {
             receipts.say("Didn't save that. Try again.")
             return
         }
