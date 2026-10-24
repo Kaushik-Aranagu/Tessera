@@ -1,6 +1,6 @@
 HARNESS BUILD TEXT, H3 + APP WIRING FOR H1/H2 (Oct 23, for Core and the builders; relay word for word)
 
-Base: Core's #1364 (Brain, ClaudeBrain, AppleBrain, RunTrace, LatencyBench), #1365 (Door, DoorPolicy, BrainRouter, flag tessLabPolicy), #1367 (PlaybookDirector, PlaybookStore, PlaybookJob, flag tessDirectorPlaybook) and TessConversation from #1346. Kaushik's rules hold: everything ships On, experiments included; lab policy On; smallest model that fits; no Opus; the key never leaves ClaudeBrain.
+Base: Core's #1364 (Brain, ClaudeBrain, AppleBrain, RunTrace, LatencyBench), #1365 (Door, DoorPolicy, BrainRouter, flag tessLabPolicy), #1367 (PlaybookDirector, PlaybookStore, PlaybookJob, flag tessDirectorPlaybook) and TessConversation from #1346. Kaushik's rules hold: everything ships On, experiments included; lab policy On; the key never leaves ClaudeBrain. Changed Oct 23, 6:14 PM PT (his words: "functionally accurate... forget about cost"): models, rounds and sizes are picked for right answers, not price. See ACCURACY FIRST in memory-context-m0-m6.md, which wins where the two differ.
 
 PART A. APP WIRING FOR H1 AND H2 (Builder A, app target)
 
@@ -30,22 +30,22 @@ B1 TessRun.swift. public final class TessRun, one per ask.
   public func ask(_ text: String, about: [ObjectRecord], screen: String?) -> AsyncStream<TessRunEvent>
   .waiting fires at once, so the layer can show her hearing or thinking state. .words carries text deltas as they arrive. .ghost carries each pending row a tool made. .finished carries her whole reply. .failed carries a phone-made line, never a raw error.
 
-B2 Which brain (smallest that fits). Phone first: the capture grammar (TessCaptureEngine) gets the text first and a phrase it can do never reaches TessRun. Then a rule picks the rung:
-  open (a question with why, should, plan, how am I, compare, what do you think, or over 18 words) -> ladder [.sonnet, .haiku, .appleOnDevice], effort low, thinking off, maxTokens 400, hedge on (Haiku after 1.5 s with no first token);
-  everything else (lookups, counts, small actions) -> ladder [.haiku, .appleOnDevice], toolChoice auto, maxTokens 300, hedge off.
-  The rule is one function, pickRung(_:), so a typed net can replace it later. No Opus.
+B2 Which brain (the one that gets it right). Phone first: the capture grammar (TessCaptureEngine) gets the text first and a phrase it can do never reaches TessRun. Then a rule picks the rung:
+  open (a question with why, should, plan, how am I, compare, what do you think, or over 18 words) -> ladder [.sonnet, .opus (escalation only), .haiku, .appleOnDevice], adaptive thinking on, effort medium (high for plan and compare), maxTokens 32000, hedge off (accuracy over a fast first word);
+  everything else (lookups, counts, small actions) -> ladder [.haiku, .sonnet (escalation), .appleOnDevice], adaptive thinking on at effort medium, toolChoice auto, maxTokens 16000, hedge off.
+  The rule is one function, pickRung(_:), so a typed net can replace it later, and the eval's per-kind scores move a kind up a rung (M4). Opus (claude-opus-5-5) is an escalation rung only, never first. Add .opus to BrainID.
 
 B3 The pack (context, in this order so the prefix caches):
-  system[0] Tess's voice and rules: fixed text, cacheAfter.
+  system[0] Tess's voice and rules: fixed text, cacheAfter. (The whole pack is built by ContextCompiler from M3 once that lands; until then use this order.)
   tools: TessTools.definitionsJSON() plus one read tool, open (below). Fixed order.
   system[1] the TessMemory profile block (shape A), cacheAfter. It changes about once a day.
-  messages: TessConversation.forClaude(asksClaude:) (the last 4 turns, never a held-back turn), then the ask.
+  messages: TessConversation.forClaude(asksClaude:) (stored turns of the last 24 hours, up to 20, never a held-back turn; raise forClaude's limit from 4), then the ask.
   fragments on the ask: the screen line (Describe.sentence of what is on screen), today's digest (Home's day facts) and the about objects' shown text. A fragment from a money, health, body, calorie or calendar object (TessAskRouter.isUnnameable) is tagged deviceOnly. Under lab it goes to Claude and the sent log records it. Under strict it doesn't. A key-shaped ask is refused before the Door, under both policies.
   Stored turns don't change: TessConversation still stores placeholders for walled words. Lab changes what is sent live, not what is kept.
 
 B4 The tool: open(handle, depth). Input: a short handle that appears in the pack (never a UUID) and a depth of 1 or 2. Output: the object's Describe.sentence plus the shown names of the objects it links to (depth 2 adds their links too). At most 1,200 characters. Read only.
 
-B5 The loop. At most 3 rounds; each round is one door.run. When a toolUse arrives, start it at once. Reads (open, answerQuery) run in parallel. Writes (every other TessTools tool) run one at a time, through TessTools.run(..., pending: true), within maxRecordsPerPhrase, and each new op becomes a .ghost event. All tool results go back together in one user message. After round 3, or when a round makes no tool call, the reply is final. If round 3 still wants a tool, she says the phone line "That needed more steps than I take. Try it in two." A new ask cancels the run in flight. The same text asked again within 10 s joins the running stream.
+B5 The loop. At most 10 rounds; each round is one door.run. When a toolUse arrives, start it at once. Reads (open, answerQuery) run in parallel. Writes (every other TessTools tool) run one at a time, through TessTools.run(..., pending: true), within maxRecordsPerPhrase, and each new op becomes a .ghost event. All tool results go back together in one user message. After round 10, or when a round makes no tool call, the reply is final. If round 10 still wants a tool, she says the phone line "That needed more steps than I take. Try it in two." A new ask cancels the run in flight. The same text asked again within 10 s joins the running stream.
 
 B6 Checkpoints. After each settled step (a round's stream ends, a tool finishes), write TessRunState to Application Support/Tessera/tess-runs.json, excluded from backup, last 20 runs, nothing older than a day:
   struct TessRunState: Codable { id: UUID; startedAt: Date; round: Int; messages: [stored as the Brain message JSON]; doneToolIDs: [String]; status: running | finished | failed | dropped }
@@ -66,7 +66,7 @@ B11 Accept (swift test with HarnessFakes):
   words stream in order and .finished equals the joined words;
   pickRung sends "how am I doing on legs?" to Sonnet and "how many sets today" to Haiku;
   two parallel reads return in one tool_result message; two writes run in order and each yields a .ghost pending row;
-  a fourth round is never sent and the phone line comes back;
+  an eleventh round is never sent and the phone line comes back;
   a kill after a finished tool resumes without running it again; a kill mid-stream drops the run and stores no Tess turn;
   every span of a run carries its runID, and no span contains the ask text;
   a new ask cancels the old run, and the same ask within 10 s makes one Door call;
