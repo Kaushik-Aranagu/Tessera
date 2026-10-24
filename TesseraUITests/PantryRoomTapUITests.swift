@@ -39,13 +39,15 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: down ? 30 : -30)))
     }
 
-    private func launchOnFridge(largeType: Bool = false) -> XCUIApplication {
+    private func launchOnFridge(largeType: Bool = false, theme: String? = nil) -> XCUIApplication {
         prepareMotion()
         let app = XCUIApplication()
         app.launchArguments = ["-demoTime", "18:10", "-openLink", "pantry", "-review.sampleData", "On",
                                "-featureFlags.off", "homeMosaic;homeV2"]
-        if largeType {
-            app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName",
+                                largeType ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
+        if let theme {
+            app.launchArguments += ["-theme", theme]
         }
         app.launch()
         XCTAssertTrue(app.buttons["pantry.chooseThing"].waitForExistence(timeout: 30), "The compact Pantry is open")
@@ -103,6 +105,12 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         let app = launchOnFridge()
         let eggs = fixture("Eggs", in: app)
         let before = eggs.label
+        eggs.press(forDuration: 0.6)
+        if app.staticTexts["pantry.itemTitle"].exists {
+            expectItem("Eggs", in: app)
+            app.buttons["Done"].tap()
+        }
+        XCTAssertEqual(eggs.label, before, "A compact hold must not mutate or pin")
         let start = eggs.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 120, dy: 0)))
         XCTAssertTrue(eggs.exists)
@@ -136,10 +144,12 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         let milk = fixture("Milk", in: app)
         let originals = [eggs.label, milk.label]
         for (element, title) in [(eggs, "Eggs"), (milk, "Milk")] {
-            element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0))
-                .withOffset(CGVector(dx: 0, dy: 2)).tap()
-            expectItem(title, in: app)
-            app.buttons["Done"].tap()
+            for distance in [CGFloat(2), element.frame.height - 2] {
+                element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0))
+                    .withOffset(CGVector(dx: 0, dy: distance)).tap()
+                expectItem(title, in: app)
+                app.buttons["Done"].tap()
+            }
         }
         XCTAssertEqual(eggs.label, originals[0])
         XCTAssertEqual(milk.label, originals[1])
@@ -183,5 +193,78 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         XCTAssertTrue(recipe.waitForExistence(timeout: 8))
         recipe.tap()
         XCTAssertTrue(app.buttons["Recipes"].waitForExistence(timeout: 8), "The recipe page opened")
+    }
+
+    func testGutterAndColumnClipDoNotSelectOrMutateRows() {
+        let app = launchOnFridge()
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.row."))
+            .allElementsBoundByIndex.filter(\.isHittable)
+        XCTAssertFalse(rows.isEmpty)
+        let original = Dictionary(uniqueKeysWithValues: rows.map { ($0.identifier, $0.label) })
+        var columns: Set<Int> = []
+        for element in rows where columns.insert(Int(element.frame.minX.rounded())).inserted {
+            let frame = element.frame
+            for x in [frame.minX - 2, frame.maxX + 2] where app.frame.minX < x && x < app.frame.maxX {
+                let point = app.coordinate(withNormalizedOffset: .zero)
+                    .withOffset(CGVector(dx: x, dy: frame.midY))
+                point.tap()
+                XCTAssertFalse(app.staticTexts["pantry.itemTitle"].exists, "The clip exterior is not a row")
+            }
+        }
+        let gutter = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: app.frame.midX, dy: rows[0].frame.midY))
+        gutter.press(forDuration: 0.05, thenDragTo: gutter.withOffset(CGVector(dx: 100, dy: 0)))
+        XCTAssertFalse(app.staticTexts["pantry.itemTitle"].exists)
+        XCTAssertEqual(Dictionary(uniqueKeysWithValues: rows.map { ($0.identifier, $0.label) }), original)
+    }
+
+    func testNotNowAndToGetGotItBothUndoTheirMutation() {
+        let app = launchOnFridge()
+        let eggs = fixture("Eggs", in: app)
+        let before = eggs.label
+        eggs.tap()
+        expectItem("Eggs", in: app)
+        app.buttons["pantry.action.notNow"].tap()
+        let notNow = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "not now.")).firstMatch
+        XCTAssertTrue(notNow.waitForExistence(timeout: 5))
+        wait(NSPredicate(format: "exists == false"), on: eggs)
+        app.buttons["Undo"].tap()
+        XCTAssertTrue(eggs.waitForExistence(timeout: 5))
+        XCTAssertEqual(eggs.label, before)
+        eggs.tap()
+        expectItem("Eggs", in: app)
+        app.buttons["pantry.action.usedUp"].tap()
+        let used = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "used up.")).firstMatch
+        XCTAssertTrue(used.waitForExistence(timeout: 5))
+        wait(NSPredicate(format: "exists == false"), on: eggs)
+        let toGet = app.buttons.matching(NSPredicate(format: "label MATCHES[c] %@", "([0-9]+|Nothing) to get"))
+            .firstMatch
+        toGet.tap()
+        let dial = app.descendants(matching: .any)["Place"]
+        wait(NSPredicate(format: "value BEGINSWITH %@", "To get"), on: dial)
+        let shopping = fixture("Eggs", in: app)
+        let shoppingBefore = shopping.label
+        shopping.tap()
+        expectItem("Eggs", in: app)
+        XCTAssertEqual(app.buttons["pantry.action.usedUp"].label, "Got it")
+        app.buttons["pantry.action.usedUp"].tap()
+        let got = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "got it.")).firstMatch
+        XCTAssertTrue(got.waitForExistence(timeout: 5))
+        wait(NSPredicate(format: "exists == false"), on: shopping)
+        app.buttons["Undo"].tap()
+        XCTAssertTrue(shopping.waitForExistence(timeout: 5))
+        XCTAssertEqual(shopping.label, shoppingBefore)
+    }
+
+    func testZPaperAndBlackNormalSizeScreenshots() {
+        for theme in ["Plein", "Black"] {
+            let app = launchOnFridge(theme: theme)
+            XCTAssertTrue(fixture("Eggs", in: app).isHittable)
+            let image = XCTAttachment(screenshot: app.screenshot())
+            image.name = "Pantry \(theme == "Plein" ? "Paper-Plein" : theme) normal size Reduce Motion"
+            image.lifetime = .keepAlways
+            add(image)
+            app.terminate()
+        }
     }
 }
