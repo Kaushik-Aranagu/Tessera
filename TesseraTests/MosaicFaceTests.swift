@@ -454,12 +454,12 @@ struct MosaicFaceTests {
         engine.step(to: 0.01)
         engine.reduceMotion = true
         let core = engine.liveCore
-        let row = core.top + 14
-        // Walking out from the window's left edge the colour climbs from the scene's toward the page's in whole tiles:
+        let column = core.left + 40
+        // Walking out from the window's top edge (the left side runs off a 402 pt screen at 88 tiles) the colour climbs from the scene's toward the page's in whole tiles:
         // never an alpha ramp, always a solid colour between the two, and nothing is drawn 16 tiles out.
         var levels: [Double] = []
         for step in 0 ..< MosaicRim.reach {
-            let tile = engine.tile(column: core.left - 1 - step, row: row, nowColumn: nil)
+            let tile = engine.tile(column: column, row: core.top - 1 - step, nowColumn: nil)
             if let colour = tile?.colour {
                 let share = (ground.red - colour.red) / (ground.red - scene.red)
                 levels.append(share)
@@ -469,7 +469,7 @@ struct MosaicFaceTests {
         }
         #expect(levels.count >= 8)
         #expect(levels.first ?? 0 > levels.last ?? 1, "it climbs out of the page")
-        #expect(engine.tile(column: core.left - 1 - MosaicRim.reach, row: row, nowColumn: nil) == nil)
+        #expect(engine.tile(column: column, row: core.top - 1 - MosaicRim.reach, nowColumn: nil) == nil)
         // The ramp is 24 steps, Bayer dithered over 4 x 4.
         #expect(MosaicRim.steps == 24 && MosaicRim.bayer.count == 4 && MosaicRim.reach == 16)
     }
