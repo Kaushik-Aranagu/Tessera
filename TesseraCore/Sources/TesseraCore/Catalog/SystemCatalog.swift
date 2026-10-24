@@ -507,6 +507,14 @@ public enum SystemCatalog {
                       // Where it lives in the Pantry (a Place) and the section inside it ("Door"); both optional.
                       FieldSpec(key: "place", name: "Place", kind: .ref, target: .place),
                       FieldSpec(key: "section", name: "Section", kind: .text),
+                      // What he told the Pantry by hand (Kitchen actions): in, low or out, and when. A later buy or cook
+                      // is newer than this; the ledger takes whichever fact is later.
+                      FieldSpec(key: "stock", name: "Stock", kind: .choice, options: ["in", "low", "out"]),
+                      FieldSpec(key: "stockAt", name: "Stock set", kind: .date),
+                      // "Not now": the Pantry stops asking until this moment (the next 4 am).
+                      FieldSpec(key: "snoozedUntil", name: "Snoozed until", kind: .date),
+                      // Pinned to the top of its place (three at most per place).
+                      FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
                   ]),
         // A place in the Pantry (Fridge, Freezer, Shelf, Counter, or his own): ordered, with its sections as words.
         ClassSpec(key: .place, name: "Place", parent: .thing, symbol: "refrigerator", colorRole: "health",
@@ -522,6 +530,8 @@ public enum SystemCatalog {
             FieldSpec(key: "sourceText", name: "Original text", kind: .text),
             // Set when the recipe page opens, without an op (kitchen week one: opened but never cooked).
             FieldSpec(key: "lastOpenedAt", name: "Last opened", kind: .date),
+            // Pinned to the top of the shelf (three at most).
+            FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
         ]),
         ClassSpec(key: .recipeLine, name: "Recipe Line", parent: .thing, symbol: "list.dash", colorRole: "health",
                   fields: [
