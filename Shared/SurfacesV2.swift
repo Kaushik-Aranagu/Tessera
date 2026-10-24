@@ -166,7 +166,7 @@ enum SurfaceAccent {
     static func hex(app: String, dark: Bool) -> UInt32 {
         switch app {
         case "training": dark ? 0xEE6A4C : 0xC4472A
-        case "kitchen": dark ? 0xD49A52 : 0xA8701F
+        case "kitchen": dark ? 0xC49A5E : 0xA8701F
         case "money": dark ? 0x8DBFA7 : 0x3F7A62
         case "notes": dark ? 0xB9A9E0 : 0x5B3FB8
         case "lists": dark ? 0xB5BE7A : 0x5E6B1F
