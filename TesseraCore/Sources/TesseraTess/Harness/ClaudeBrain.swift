@@ -14,9 +14,9 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
     public static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
 
     public let model: Model
-    private let keys: any TessKeychain
-    private let session: URLSession
-    private let url: URL
+    fileprivate let keys: any TessKeychain
+    fileprivate let session: URLSession
+    fileprivate let url: URL
 
     public var id: BrainID {
         model == .haiku ? .haiku : .sonnet
@@ -49,14 +49,30 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
 
     // MARK: Request body
 
-    /// The JSON body for a request. Pure and key-free, so a test can read exactly what would be sent.
+    /// The JSON body for a request. Pure and key-free, so a test can read exactly what would be sent. A `.raw` block is
+    /// spliced in as the exact bytes the API sent. Throws when a 1-hour cache mark comes after a 5-minute one, or when
+    /// there are more than four marks.
     public static func body(for request: BrainRequest, model: Model, stream: Bool,
                             maxTokens: Int? = nil) throws -> Data
     {
+        let marks = request.cacheAfter.sorted { $0.index < $1.index }
+        guard marks.count <= 4 else { throw BrainRequestError.tooManyBreakpoints }
+        var seenShort = false
+        for mark in marks {
+            if mark.ttl == .fiveMinutes {
+                seenShort = true
+            } else if seenShort {
+                throw BrainRequestError.cacheOrder
+            }
+        }
+        var raws: [Data] = []
+        // A token no message can contain: new for every body.
+        let token = "__RAW_\(UUID().uuidString)_"
         var cacheIndex = 0
         func cacheControl() -> [String: Any]? {
             defer { cacheIndex += 1 }
-            return request.cacheAfter.contains(cacheIndex) ? ["type": "ephemeral"] : nil
+            guard let mark = marks.first(where: { $0.index == cacheIndex }) else { return nil }
+            return mark.ttl == .oneHour ? ["type": "ephemeral", "ttl": "1h"] : ["type": "ephemeral"]
         }
         var body: [String: Any] = ["model": model.rawValue, "max_tokens": maxTokens ?? request.maxTokens]
         if stream {
@@ -72,8 +88,11 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
             }
         }
         body["messages"] = try request.messages.map { message -> [String: Any] in
-            let content = try message.content.map { piece -> [String: Any] in
+            let content = try message.content.map { piece -> Any in
                 switch piece {
+                case let .raw(data):
+                    raws.append(data)
+                    return "\(token)\(raws.count - 1)__"
                 case let .text(text):
                     var item: [String: Any] = ["type": "text", "text": text]
                     if let control = cacheControl() {
@@ -82,7 +101,7 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
                     return item
                 case let .toolUse(id, name, input):
                     let object = try JSONSerialization.jsonObject(with: input.isEmpty ? Data("{}".utf8) : input)
-                    return ["type": "tool_use", "id": id, "name": name, "input": object]
+                    return ["type": "tool_use", "id": id, "name": name, "input": object] as [String: Any]
                 case let .toolResult(id, content, isError):
                     var item: [String: Any] = ["type": "tool_result", "tool_use_id": id, "content": content]
                     if isError {
@@ -123,7 +142,13 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
         if !request.thinking {
             body["thinking"] = ["type": model == .sonnet ? "between_tools" : "disabled"]
         }
-        return try JSONSerialization.data(withJSONObject: body)
+        let data = try JSONSerialization.data(withJSONObject: body)
+        guard !raws.isEmpty, var text = String(data: data, encoding: .utf8) else { return data }
+        for (index, raw) in raws.enumerated() {
+            text = text.replacingOccurrences(of: "\"\(token)\(index)__\"",
+                                             with: String(decoding: raw, as: UTF8.self))
+        }
+        return Data(text.utf8)
     }
 
     private func urlRequest(body: Data, key: String, timeout: TimeInterval) -> URLRequest {
@@ -264,17 +289,61 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
     }
 }
 
+extension ClaudeBrain {
+    /// `POST /v1/messages/count_tokens` (free): the same body as the request, minus `stream` and `max_tokens`. Used
+    /// only by the meter's weekly calibration, and only through `Door.countTokens` (which applies the switch, the key
+    /// scan, the policy scan and the sent log). Nil on any failure or with no key.
+    func countTokens(_ request: BrainRequest) async -> Int? {
+        guard let key = keys.read(),
+              var body = (try? JSONSerialization.jsonObject(with: Self.body(for: request, model: model, stream: false)))
+              as? [String: Any] else { return nil }
+        body["max_tokens"] = nil
+        body["stream"] = nil
+        guard let data = try? JSONSerialization.data(withJSONObject: body) else { return nil }
+        var http = URLRequest(url: url.deletingLastPathComponent().appendingPathComponent("messages/count_tokens"),
+                              timeoutInterval: 10)
+        http.httpMethod = "POST"
+        http.setValue(key, forHTTPHeaderField: "x-api-key")
+        http.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        http.setValue("application/json", forHTTPHeaderField: "content-type")
+        http.httpBody = data
+        guard let (reply, response) = try? await session.data(for: http, delegate: NoRedirects.shared),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let object = (try? JSONSerialization.jsonObject(with: reply)) as? [String: Any] else { return nil }
+        return object["input_tokens"] as? Int
+    }
+}
+
 /// Reads the Messages API stream: text goes out as it arrives, a tool call goes out the moment its content block
-/// closes (so its tool can start), and the end carries the usage and the stop reason.
+/// closes (so its tool can start), every content block is kept as the API sent it, and the end carries the usage and
+/// the stop reason.
 struct SSEParser {
     let model: ClaudeBrain.Model
     private var usage = BrainUsage()
     private var stop = "end_turn"
-    private var tools: [Int: (id: String, name: String, json: String)] = [:]
+    private var builders: [Int: Builder] = [:]
+    private var finished: [Int: Data] = [:]
+
+    /// One content block while it streams.
+    private struct Builder {
+        var type: String
+        var id = ""
+        var name = ""
+        var text = ""
+        var thinking = ""
+        var signature = ""
+        var json = ""
+        var citations: [Any] = []
+        /// The block's bytes from `content_block_start`, for types that arrive whole.
+        var startRaw: Data?
+    }
 
     init(model: ClaudeBrain.Model) {
         self.model = model
     }
+
+    /// Block types that stream in pieces; every other type arrives whole in `content_block_start`.
+    private static let streamed: Set<String> = ["text", "thinking", "tool_use", "server_tool_use"]
 
     mutating func feed(_ data: Data) async -> [BrainEvent] {
         guard let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
@@ -286,41 +355,87 @@ struct SSEParser {
                 usage.inTokens = used["input_tokens"] as? Int ?? 0
                 usage.cacheReadTokens = used["cache_read_input_tokens"] as? Int ?? 0
                 usage.cacheWriteTokens = used["cache_creation_input_tokens"] as? Int ?? 0
+                usage
+                    .cacheWrite1hTokens =
+                    (used["cache_creation"] as? [String: Any])?["ephemeral_1h_input_tokens"] as? Int ?? 0
                 usage.outTokens = used["output_tokens"] as? Int ?? 0
+                readSearches(used)
             }
             return []
         case "content_block_start":
             let index = object["index"] as? Int ?? 0
-            if let block = object["content_block"] as? [String: Any], block["type"] as? String == "tool_use" {
-                tools[index] = (block["id"] as? String ?? "", block["name"] as? String ?? "", "")
+            guard let block = object["content_block"] as? [String: Any], let kind = block["type"] as? String else {
+                return []
             }
+            var builder = Builder(type: kind)
+            builder.id = block["id"] as? String ?? ""
+            builder.name = block["name"] as? String ?? ""
+            builder.text = block["text"] as? String ?? ""
+            builder.thinking = block["thinking"] as? String ?? ""
+            builder.signature = block["signature"] as? String ?? ""
+            if !Self.streamed.contains(kind) {
+                builder.startRaw = Self.rawValue(of: "content_block", in: data)
+            }
+            builders[index] = builder
             return []
         case "content_block_delta":
             let index = object["index"] as? Int ?? 0
             guard let delta = object["delta"] as? [String: Any] else { return [] }
             switch delta["type"] as? String {
             case "text_delta":
-                return (delta["text"] as? String).map { [.text($0)] } ?? []
+                let piece = delta["text"] as? String ?? ""
+                builders[index]?.text += piece
+                return piece.isEmpty ? [] : [.text(piece)]
             case "input_json_delta":
-                tools[index]?.json += delta["partial_json"] as? String ?? ""
-                return []
+                builders[index]?.json += delta["partial_json"] as? String ?? ""
+            case "thinking_delta":
+                builders[index]?.thinking += delta["thinking"] as? String ?? ""
+            case "signature_delta":
+                builders[index]?.signature += delta["signature"] as? String ?? ""
+            case "citations_delta":
+                if let citation = delta["citation"] {
+                    builders[index]?.citations.append(citation)
+                }
             default:
-                return []
+                break
             }
+            return []
         case "content_block_stop":
             let index = object["index"] as? Int ?? 0
-            guard let tool = tools.removeValue(forKey: index) else { return [] }
-            let json = tool.json.isEmpty ? "{}" : tool.json
-            let valid = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any]
-            // Eager input streaming can leave a cut-off or invalid input: validated before any tool runs.
-            guard valid != nil else { return [.failed(.other)] }
-            return [.toolUse(id: tool.id, name: tool.name, input: Data(json.utf8))]
+            guard let builder = builders.removeValue(forKey: index) else { return [] }
+            let json = builder.json.isEmpty ? "{}" : builder.json
+            let input = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any]
+            switch builder.type {
+            case "tool_use", "server_tool_use":
+                // Eager input streaming can leave a cut-off or invalid input: validated before any tool runs.
+                guard let input else { return [.failed(.other)] }
+                finished[index] = Self.encode(["type": builder.type, "id": builder.id, "name": builder.name,
+                                               "input": input])
+                // A server tool (web search) runs on Anthropic's side: nothing for the phone to start.
+                return builder.type == "tool_use" ? [.toolUse(id: builder.id, name: builder.name,
+                                                              input: Data(json.utf8))] : []
+            case "text":
+                var block: [String: Any] = ["type": "text", "text": builder.text]
+                if !builder.citations.isEmpty {
+                    block["citations"] = builder.citations
+                }
+                finished[index] = Self.encode(block)
+            case "thinking":
+                finished[index] = Self.encode(["type": "thinking", "thinking": builder.thinking,
+                                               "signature": builder.signature])
+            default:
+                finished[index] = builder.startRaw
+            }
+            return []
         case "message_delta":
             if let delta = object["delta"] as? [String: Any], let reason = delta["stop_reason"] as? String {
                 stop = reason
             }
-            if let used = object["usage"] as? [String: Any], let out = used["output_tokens"] as? Int {
-                usage.outTokens = out
+            if let used = object["usage"] as? [String: Any] {
+                if let out = used["output_tokens"] as? Int {
+                    usage.outTokens = out
+                }
+                readSearches(used)
             }
             return []
         case "message_stop":
@@ -328,9 +443,14 @@ struct SSEParser {
             let used = usage
             usage.costNano = await MainActor.run {
                 TessUsageLedger.cost(model: model, input: used.inTokens, output: used.outTokens,
-                                     cacheRead: used.cacheReadTokens, cacheWrite: used.cacheWriteTokens)
+                                     cacheRead: used.cacheReadTokens, cacheWrite: used.cacheWriteTokens,
+                                     cacheWrite1h: used.cacheWrite1hTokens, webSearches: used.webSearches)
             }
-            return [stop == "refusal" ? .failed(.refused) : .done(usage, stop: stop)]
+            if stop == "refusal" {
+                return [.failed(.refused)]
+            }
+            let blocks = finished.keys.sorted().compactMap { finished[$0] }
+            return (blocks.isEmpty ? [] : [.assistant(blocks)]) + [.done(usage, stop: stop)]
         case "error":
             let error = object["error"] as? [String: Any]
             let kind = error?["type"] as? String
@@ -338,5 +458,64 @@ struct SSEParser {
         default:
             return []
         }
+    }
+
+    private mutating func readSearches(_ used: [String: Any]) {
+        if let server = used["server_tool_use"] as? [String: Any],
+           let searches = server["web_search_requests"] as? Int
+        {
+            usage.webSearches = max(usage.webSearches, searches)
+        }
+    }
+
+    /// A block rebuilt from its streamed pieces, with sorted keys so the bytes are the same every time.
+    static func encode(_ block: [String: Any]) -> Data? {
+        try? JSONSerialization.data(withJSONObject: block, options: [.sortedKeys, .withoutEscapingSlashes])
+    }
+
+    /// The exact bytes of a top-level key's value in a JSON text (an object, array or string), so a block that arrives
+    /// whole (a search result with its encrypted content) is replayed byte for byte.
+    static func rawValue(of key: String, in data: Data) -> Data? {
+        let bytes = [UInt8](data)
+        let needle = Array("\"\(key)\"".utf8)
+        var start = 0
+        // The key's first occurrence at the top level of the event: the event is a flat object whose nested values
+        // come after, and the key is unique among them.
+        guard let at = bytes.indices.first(where: { index in
+            index + needle.count <= bytes.count && Array(bytes[index ..< index + needle.count]) == needle
+        }) else { return nil }
+        start = at + needle.count
+        while start < bytes.count, bytes[start] == 0x20 || bytes[start] == 0x3A || bytes[start] == 0x0A {
+            start += 1
+        }
+        guard start < bytes.count else { return nil }
+        var depth = 0, inString = false, escaped = false
+        var end = start
+        while end < bytes.count {
+            let byte = bytes[end]
+            if inString {
+                if escaped {
+                    escaped = false
+                } else if byte == 0x5C {
+                    escaped = true
+                } else if byte == 0x22 {
+                    inString = false
+                    if depth == 0 {
+                        return Data(bytes[start ... end])
+                    }
+                }
+            } else if byte == 0x22 {
+                inString = true
+            } else if byte == 0x7B || byte == 0x5B {
+                depth += 1
+            } else if byte == 0x7D || byte == 0x5D {
+                depth -= 1
+                if depth == 0 {
+                    return Data(bytes[start ... end])
+                }
+            }
+            end += 1
+        }
+        return nil
     }
 }
