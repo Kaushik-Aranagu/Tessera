@@ -46,6 +46,8 @@ public enum FeatureFlags {
         .init("trainingStats", "Stats", .training), .init("trainingLog", "Log", .training),
         .init("statsBalance", "Balance words", .training), .init("trainingLightWeeks", "Lighter weeks", .training),
         .init("liveV2", "Live workout v2", .training), .init("caloriesBurned", "Calories burned", .training),
+        .init("trainingV3", "Training wheels", .training),
+        .init("depthOnWheels", "Depth on wheels", .training),
         // Kitchen
         .init("cookTimerVoice", "Cook timer voice", .kitchen), .init("handsFreeCook", "Hands-free cook mode", .kitchen),
         .init("pantryState", "Pantry state", .kitchen), .init("canCookShelf", "Can cook shelf", .kitchen),
@@ -55,6 +57,7 @@ public enum FeatureFlags {
         .init("aisleOrder", "Learned aisle order", .kitchen),
         .init("pantryLevelsV2", "Pantry levels", .kitchen), .init("shopV2", "Shop run", .kitchen),
         .init("linkFetch", "Link reader v2", .kitchen, claude: true),
+        .init("kitchenRoomsV2", "Kitchen rooms", .kitchen),
         // Notes and lists
         .init("notesMargin", "Notes margin", .notesAndLists), .init(
             "notesLinkSuggest",
@@ -79,6 +82,7 @@ public enum FeatureFlags {
         .init("repeatItems", "Repeat items", .tasksAndRoutines), .init("occasions", "Occasions", .tasksAndRoutines),
         .init("oneHands", "One pair of hands", .tasksAndRoutines),
         .init("quietInterrupts", "Quiet interrupts", .tasksAndRoutines),
+        .init("quietHoursV2", "Quiet hours", .tasksAndRoutines),
         .init("planMyDay", "Plan my day, Claude wording", .tasksAndRoutines, claude: true),
         .init("shutdown", "Shutdown", .tasksAndRoutines, claude: true),
         .init("energyCheckIn", "Energy check-in", .tasksAndRoutines, claude: true),
