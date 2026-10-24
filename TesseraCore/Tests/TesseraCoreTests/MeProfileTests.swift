@@ -96,7 +96,7 @@ struct MeProfileTests {
     @Test func noClaudeOrSentFileMentionsTheProfileOrCalories() throws {
         let sources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().appending(path: "Sources/TesseraTess")
-        let names = try FileManager.default.contentsOfDirectory(atPath: sources.path())
+        let names = try FileManager.default.contentsOfDirectory(atPath: sources.path(percentEncoded: false))
         var checked = 0
         for name in names where name.hasSuffix(".swift") && ["ClaudeTessModel", "PlanWording", "HomeDoneWording",
                                                              "RecipeLinkReader", "TessTools", "TessSentLog",

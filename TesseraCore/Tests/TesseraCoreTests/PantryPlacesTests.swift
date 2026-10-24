@@ -130,7 +130,7 @@ struct PantryPlacesTests {
         let sources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().appending(path: "Sources/TesseraTess")
         var checked = 0
-        for name in try FileManager.default.contentsOfDirectory(atPath: sources.path())
+        for name in try FileManager.default.contentsOfDirectory(atPath: sources.path(percentEncoded: false))
             where name.hasSuffix(".swift") && ["ClaudeTessModel", "PlanWording", "HomeDoneWording", "RecipeLinkReader",
                                                "TessTools", "TessSentLog", "DayNamer"].contains(where: name.hasPrefix)
         {
