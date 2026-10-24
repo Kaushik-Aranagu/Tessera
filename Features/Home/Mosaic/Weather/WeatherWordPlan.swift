@@ -154,7 +154,7 @@ struct WeatherCloud: Equatable, Sendable {
 /// from its top. 0.5 is level with the word (v2.6); the clouds are behind the word either way.
 struct WeatherCloudPlacement: Equatable, Sendable {
     var centre = 0.5
-    /// A cloud is 1.1x the line's height, level with the word and never above it.
+    /// A cloud is 1.1x the line's height, level with the word, clipped to its box, never wider than half of it.
     var height = 1.1
     /// The veil in front of the word, so the cloud never competes with the letters (8%).
     var veil = 0.08
@@ -166,9 +166,10 @@ struct WeatherCloudPlacement: Equatable, Sendable {
         cloud.alpha * (cloud.tone == .white ? whiteAlpha : darkAlpha)
     }
 
-    /// Rain, snow and hail start at mid-word and fall to just under the line.
-    static let fallStart = 0.5
+    /// Rain, snow and hail start at the top of the word and fall to just under the line (v2.8).
+    static let fallStart = 0.0
     static let fallEnd = 1.12
+    static let widest = 0.5
     static let standard = WeatherCloudPlacement()
 }
 
@@ -186,6 +187,8 @@ struct WeatherPlan: Equatable, Sendable {
     var glaze = false
     var bolt = false
     var hail = false
+    /// Soft wisps in the cloud's tone drift in front of the word, clipped to it, at this alpha (v2.8).
+    var wisps = 0.0
     var mist = false
     /// Soft warm shine behind a clear day's word (no rays, no moving sun) and stars on a clear night.
     var shine = false
@@ -208,25 +211,25 @@ struct WeatherPlan: Equatable, Sendable {
             plan.shine = !night
             plan.stars = night
             plan.clouds = [WeatherCloud(tone: .white, across: 0.7, size: 0.38, alpha: 0.75, drift: 0.8)]
+            plan.wisps = 0.30
         case .partlyCloudy:
             plan.clouds = [WeatherCloud(tone: .white, across: 0.3, size: 0.52, alpha: 0.7, drift: 0.7),
                            WeatherCloud(tone: .white, across: 0.78, size: 0.44, alpha: 0.78, drift: 1.0)]
+            plan.wisps = 0.34
         case .overcast:
             plan.clouds = [WeatherCloud(tone: .grey, across: 0.2, size: 0.55, alpha: 0.8, drift: 0.6),
                            WeatherCloud(tone: .grey, across: 0.55, size: 0.6, alpha: 0.85, drift: 0.9),
                            WeatherCloud(tone: .grey, across: 0.88, size: 0.5, alpha: 0.8, drift: 0.7)]
+            plan.wisps = 0.40
         case .fog:
             plan.mist = true
         case .drizzle:
-            plan.clouds = [rainCloud]
             plan.strokes = 14
             plan.strokeLength = 5
         case .rain:
-            plan.clouds = [rainCloud]
             plan.strokes = 26
             plan.strokeLength = 8
         case .heavyRain:
-            plan.clouds = [rainCloud]
             plan.strokes = 44
             plan.strokeLength = 11
             plan.slant = 4
@@ -247,7 +250,6 @@ struct WeatherPlan: Equatable, Sendable {
         case .snowGrains:
             plan.grains = 36
         case .thunderstorm:
-            plan.clouds = [WeatherCloud(tone: .storm, across: 0.5, size: 0.8, alpha: 0.9, drift: 0.5)]
             plan.bolt = true
         case .thunderstormHail:
             plan = of(.thunderstorm, night: night)
@@ -255,8 +257,6 @@ struct WeatherPlan: Equatable, Sendable {
         }
         return plan
     }
-
-    private static let rainCloud = WeatherCloud(tone: .rain, across: 0.5, size: 0.75, alpha: 0.85, drift: 0.6)
 }
 
 /// The words of the strokes and the flash, as maths a test can read.

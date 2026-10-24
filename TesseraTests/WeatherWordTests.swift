@@ -19,7 +19,7 @@ struct WeatherWordTests {
         #expect(plan(.fog).mist && plan(.fog).clouds.isEmpty)
         // Rain: a rain cloud and strokes from finer to heavier; heavy slants and splashes.
         let wet = [WeatherKind.drizzle, .rain, .heavyRain].map(plan)
-        #expect(wet.allSatisfy { $0.clouds.first?.tone == .rain })
+        #expect(wet.allSatisfy(\.clouds.isEmpty), "rain has no cloud (v2.8)")
         #expect(wet[0].strokes < wet[1].strokes && wet[1].strokes < wet[2].strokes)
         #expect(wet[0].strokeLength < wet[1].strokeLength && wet[1].strokeLength < wet[2].strokeLength)
         #expect(wet[2].slant > 0 && wet[2].splashes && !wet[1].splashes)
@@ -30,7 +30,7 @@ struct WeatherWordTests {
         #expect(plan(.snow).flakes > 0 && !plan(.snow).snowCap)
         #expect(plan(.heavySnow).flakes > plan(.snow).flakes && plan(.heavySnow).snowCap)
         #expect(plan(.snowGrains).grains > 0 && plan(.snowGrains).flakes == 0)
-        #expect(plan(.thunderstorm).bolt && plan(.thunderstorm).clouds.first?.tone == .storm)
+        #expect(plan(.thunderstorm).bolt && plan(.thunderstorm).clouds.isEmpty)
         #expect(plan(.thunderstormHail).hail && plan(.thunderstormHail).bolt && !plan(.thunderstorm).hail)
     }
 
@@ -54,18 +54,26 @@ struct WeatherWordTests {
         #expect(WeatherKind.infer(from: "Sunset at 6:34 pm") == nil)
     }
 
-    @Test func cloudsAreLevelWithTheWordBehindItWithAnEightPercentVeil() {
+    @Test func onlyThreeCasesHaveCloudsAndTheirWispsAreTheSpecifiedAlpha() {
+        for kind in WeatherKind.allCases {
+            let hasClouds = !WeatherPlan.of(kind, night: false).clouds.isEmpty
+            #expect(hasClouds == [.mainlyClear, .partlyCloudy, .overcast].contains(kind), "\(kind)")
+        }
+        #expect(WeatherPlan.of(.mainlyClear, night: false).wisps == 0.30)
+        #expect(WeatherPlan.of(.partlyCloudy, night: false).wisps == 0.34)
+        #expect(WeatherPlan.of(.overcast, night: false).wisps == 0.40)
+        #expect(WeatherPlan.of(.rain, night: false).wisps == 0 && WeatherPlan.of(.fog, night: false).wisps == 0)
+    }
+
+    @Test func cloudsAreLevelWithTheWordBehindItNeverWiderThanHalfAndPrecipitationStartsAtTheTop() {
         let placement = WeatherCloudPlacement.standard
         #expect(placement.centre == 0.5 && placement.height == 1.1 && placement.veil == 0.08)
+        #expect(WeatherCloudPlacement.widest == 0.5)
         let white = WeatherCloud(tone: .white, across: 0.5, size: 0.5, alpha: 0.8, drift: 1)
         let grey = WeatherCloud(tone: .grey, across: 0.5, size: 0.5, alpha: 0.8, drift: 1)
         #expect(abs(WeatherCloudPlacement.alpha(white) - 0.72) < 1e-9)
         #expect(abs(WeatherCloudPlacement.alpha(grey) - 0.496) < 1e-9)
-        for tone in [WeatherCloudTone.rain, .storm] {
-            let cloud = WeatherCloud(tone: tone, across: 0.5, size: 0.5, alpha: 1, drift: 1)
-            #expect(WeatherCloudPlacement.alpha(cloud) == 0.62)
-        }
-        #expect(WeatherCloudPlacement.fallStart == 0.5 && WeatherCloudPlacement.fallEnd > 1)
+        #expect(WeatherCloudPlacement.fallStart == 0 && WeatherCloudPlacement.fallEnd > 1)
     }
 
     @Test func theFogNeverTakesTheWordBelowThirtyPercentAndMovesAcrossTime() {

@@ -150,6 +150,9 @@ struct WeatherWordEffects: ViewModifier {
             context.fill(Path(rect.insetBy(dx: -effectPad, dy: -effectPad)),
                          with: .color(Theme.Colors.paper.opacity(placement.veil)))
         }
+        if plan.wisps > 0, let tone = plan.clouds.first?.tone {
+            WeatherFallDrawing.cloudWisps(&context, rect: rect, time: time, tone: tone, alpha: plan.wisps)
+        }
         let streak = plan.icy ? Theme.Colors.Weather.ice : Theme.Colors.Weather.rain
         if plan.strokes > 0 {
             WeatherFallDrawing.strokes(&context, plan: plan, rect: rect, time: time, colour: streak)
@@ -211,13 +214,15 @@ enum WeatherCloudDrawing {
     static func draw(_ context: inout GraphicsContext, cloud: WeatherCloud, in word: CGRect,
                      placement: WeatherCloudPlacement, time: TimeInterval)
     {
-        // 1.1x the line's height, level with the word; the width follows the cumulus's own proportions.
+        // Level with the word, clipped to its box, never wider than half of it (v2.8).
         let target = word.height * placement.height
-        let width = max(target * 4 * cloud.size, 36)
+        let width = min(max(target * 4 * cloud.size, 36), word.width * WeatherCloudPlacement.widest)
         let breathe = 1 + 0.03 * sin(time * 0.7 + cloud.across * 5)
-        let scale = width * breathe
-        let drift = sin(time * 0.22 * cloud.drift + cloud.across * 6) * word.width * 0.05
-        let centreX = word.minX + word.width * cloud.across + drift
+        let scale = width * 0.95 * breathe
+        let travel = max(word.width - width, 0)
+        let slow = 0.5 + 0.5 * sin(time * 0.22 * cloud.drift + cloud.across * 6)
+        let place = min(max(cloud.across * 0.6 + 0.2 * slow + 0.1, 0), 1)
+        let centreX = word.minX + width / 2 + travel * place
         let baseY = word.minY + word.height * placement.centre + scale * 0.245
         var path = Path()
         for puff in puffs {
@@ -233,6 +238,7 @@ enum WeatherCloudDrawing {
         let tones = colours(cloud.tone)
         let top = baseY - puffs.map(\.radius).max()! * scale * 1.7
         context.drawLayer { layer in
+            layer.clip(to: Path(word))
             layer.opacity = WeatherCloudPlacement.alpha(cloud)
             layer.fill(path, with: .linearGradient(Gradient(colors: [tones.top, tones.bottom]),
                                                    startPoint: CGPoint(x: centreX, y: top),
@@ -378,6 +384,25 @@ enum WeatherFallDrawing {
             with: .color(bolt.opacity(1 - phase * 0.8)),
             style: StrokeStyle(lineWidth: 1.8, lineJoin: .miter)
         )
+    }
+
+    /// Soft fog-style wisps in a cloud's tone drifting in front of the word, clipped to its box.
+    static func cloudWisps(_ context: inout GraphicsContext, rect: CGRect, time: TimeInterval, tone: WeatherCloudTone,
+                           alpha: Double)
+    {
+        let colour = WeatherCloudDrawing.colours(tone).bottom
+        context.drawLayer { layer in
+            layer.clip(to: Path(rect))
+            layer.addFilter(.blur(radius: 3))
+            for index in 0 ..< 3 {
+                let drift = (time * (0.04 + 0.015 * Double(index)) + unit(index, 81)).truncatingRemainder(dividingBy: 1)
+                let width = rect.width * (0.35 + 0.15 * unit(index, 82))
+                let x = rect.minX - width + drift * (rect.width + width * 2)
+                let y = rect.minY + rect.height * (0.2 + 0.28 * Double(index))
+                layer.fill(Path(roundedRect: CGRect(x: x, y: y, width: width, height: 6), cornerRadius: 3),
+                           with: .color(colour.opacity(alpha)))
+            }
+        }
     }
 
     /// Long soft wisps in the page colour drifting in front of the word (up to 0.8 alpha), and a few wavy lines.
