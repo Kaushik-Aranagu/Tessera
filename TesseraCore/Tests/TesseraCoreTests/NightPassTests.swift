@@ -85,7 +85,7 @@ struct NightPassTests {
     @Test func whatHeToldOrKeptIsNeverRevised() {
         let events = trained([at(10, 14, 18), at(10, 16, 18, 30), at(10, 20, 18, 30), at(10, 23, 18)])
         let told = belief(source: .told, from: at(1, 5, 6))
-        let kept = belief(from: at(1, 5, 6), kept: true, subject: .you)
+        let kept = belief(from: at(1, 5, 6), kept: true)
         #expect(!revises(pass.plan(beliefs: [told], series: events, day: [])))
         #expect(!revises(pass.plan(beliefs: [kept], series: events, day: [])))
     }
@@ -100,6 +100,13 @@ struct NightPassTests {
         // A fact needs no more confirming.
         let fact = belief(from: at(1, 5, 6), confirmations: 2)
         #expect(!pass.plan(beliefs: [fact], series: today, day: []).contains(.confirm(belief: fact.id)))
+    }
+
+    @Test func aUsualTimeAboutNoClassIsLeftAlone() {
+        let you = belief(from: at(1, 5, 6), subject: .you)
+        let events = trained([at(10, 14, 18), at(10, 16, 18, 30), at(10, 20, 18, 30), at(10, 23, 18)])
+        let steps = pass.plan(beliefs: [you], series: events, day: [])
+        #expect(!revises(steps) && !steps.contains(.confirm(belief: you.id)))
     }
 
     @Test func eventsBeforeTheBeliefDontCount() {
@@ -146,6 +153,9 @@ struct NightPassTests {
         // Friday closed, so no week summary.
         #expect(!steps.contains { if case let .summary(path, _) = $0 { path.contains("week") } else { false } })
         #expect(NightPass.lines([], empty: "A quiet day.") == "A quiet day.")
+        let notes = [NightPass.DayItem(kind: "note", name: "", at: at(10, 23, 9), room: "notes"),
+                     NightPass.DayItem(kind: "note", name: "", at: at(10, 23, 10), room: "notes")]
+        #expect(NightPass.lines(notes, empty: "") == "2 notes")
     }
 
     @Test func sundayNightAddsTheWeek() {

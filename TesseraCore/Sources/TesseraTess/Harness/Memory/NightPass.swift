@@ -217,11 +217,12 @@ public struct NightPass: Sendable {
     func usualTime(_ belief: TessBelief, series: [Event]) -> Step? {
         guard belief.key == .usualTime, belief.source != .told, !belief.kept,
               let hour = Self.hour(of: belief.value) else { return nil }
+        // A usual time is checked against the class it is about. One about him with no class (from a memory line)
+        // can't be told apart from cooks and errands, so no rule touches it.
         let events = series.filter { event in
             switch belief.subject {
-            case .you: true
             case let .classDef(id): event.classID == id
-            case .object: false
+            case .you, .object: false
             }
         }
         .filter { $0.at > belief.validFrom && $0.at < now }
@@ -272,7 +273,8 @@ public struct NightPass: Sendable {
         return steps
     }
 
-    /// One line per kind, most first: "3 workouts: Push Day, Leg Day, Private workout". At most 3 names, by time.
+    /// One line per kind, most first: "3 workouts: Push Day, Leg Day, Private workout". At most 3 names, by time; a
+    /// kind whose items carry no name is a count alone ("2 notes").
     static func lines(_ items: [DayItem], empty: String) -> String {
         guard !items.isEmpty else { return empty }
         let kinds: [String: [DayItem]] = Dictionary(grouping: items, by: \.kind)
@@ -284,11 +286,11 @@ public struct NightPass: Sendable {
         for group in ranked {
             let names: [String] = group.items.sorted { $0.at < $1.at }.map(\.name)
             var unique: [String] = []
-            for name in names where !unique.contains(name) {
+            for name in names where !name.isEmpty && !unique.contains(name) {
                 unique.append(name)
             }
             let count = group.items.count == 1 ? "1 \(group.kind)" : "\(group.items.count) \(plural(group.kind))"
-            out.append("\(count): \(unique.prefix(3).joined(separator: ", "))")
+            out.append(unique.isEmpty ? count : "\(count): \(unique.prefix(3).joined(separator: ", "))")
         }
         return out.joined(separator: "\n")
     }
