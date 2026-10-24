@@ -105,6 +105,7 @@ struct PlaceDial: View {
     @State private var drag: CGFloat = 0
     @State private var turned = 0
     @State private var ticks = 0
+    @State private var holdoff = TapHoldoff()
 
     static let slot: CGFloat = 64
     static let headline: CGFloat = 196
@@ -129,10 +130,11 @@ struct PlaceDial: View {
         .frame(height: large ? nil : Self.headline, alignment: .top)
         .clipped()
         .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 8)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
                 .onChanged { value in
                     guard places.count > 1 else { return }
+                    holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
                     let total = KitchenLoop.consumed(translation: value.translation.height, step: Self.slot)
                     if total != turned {
                         focus = KitchenLoop.wrapped(focus, total - turned, count: places.count)
@@ -142,6 +144,7 @@ struct PlaceDial: View {
                     drag = value.translation.height + CGFloat(turned) * Self.slot
                 }
                 .onEnded { value in
+                    holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
                     let steps = KitchenLoop.landing(rest: drag, step: Self.slot,
                                                     velocity: value.velocity.height,
                                                     turned: turned, travel: value.translation.height)
@@ -165,6 +168,7 @@ struct PlaceDial: View {
         // never a surprise.
         let scale = isFocus ? 1 : Self.neighbourSize / Self.focusSize
         return Button {
+            guard holdoff.allowsTap(at: ProcessInfo.processInfo.systemUptime) else { return }
             if isFocus {
                 onTapFocus()
             } else {
@@ -227,6 +231,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
     @State private var drag: CGFloat = 0
     @State private var turned = 0
     @State private var ticks = 0
+    @State private var holdoff = TapHoldoff()
     @State private var lowPower = PowerState.isLowPower
 
     static var defaultFocusHeight: CGFloat {
@@ -289,6 +294,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
                 let at = CGFloat(place) + drag / Self.rowHeight
                 if place >= -1, place <= rowsShown + 1 {
                     Button {
+                        guard holdoff.allowsTap(at: ProcessInfo.processInfo.systemUptime) else { return }
                         if rel == 0 {
                             onOpen(items[index])
                         } else {
@@ -303,7 +309,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
                     .buttonStyle(.plain)
                     .blur(radius: depth ? Self.blurRadius(at: at) : 0)
                     .offset(y: Self.y(at, focusHeight: focusHeight))
-                    .accessibilityHidden(true)
+                    .accessibilityIdentifier("kitchen.wheel.\(items[index].id)")
                 }
             }
         }
@@ -311,10 +317,11 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
         .frame(height: Self.height(others: rowsShown, focusHeight: focusHeight), alignment: .top)
         .clipped()
         .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 8)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
                 .onChanged { value in
                     guard items.count > 1 else { return }
+                    holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
                     let total = KitchenLoop.consumed(translation: value.translation.height, step: Self.rowHeight)
                     if total != turned {
                         top = KitchenLoop.wrapped(top, total - turned, count: items.count)
@@ -324,6 +331,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
                     drag = value.translation.height + CGFloat(turned) * Self.rowHeight
                 }
                 .onEnded { value in
+                    holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
                     let steps = KitchenLoop.landing(rest: drag, step: Self.rowHeight,
                                                     velocity: value.velocity.height,
                                                     turned: turned, travel: value.translation.height)
@@ -333,7 +341,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
         )
         .tesseraFeedback(.dialStep, trigger: ticks)
         .onReceive(PowerState.changes) { _ in lowPower = PowerState.isLowPower }
-        .accessibilityElement(children: .ignore)
+        .accessibilityElement(children: .contain)
         .accessibilityLabel("List")
         .accessibilityAdjustableAction { direction in
             settle(by: direction == .increment ? 1 : -1)

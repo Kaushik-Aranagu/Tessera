@@ -94,13 +94,16 @@ struct PantryRoomCopyTests {
     }
 
     @Test func pinsComeFirstThenLow() {
-        let a = UUID(), b = UUID(), c = UUID()
+        let plainID = UUID(), lowID = UUID(), pinnedID = UUID()
         func item(_ id: UUID, low: Bool, pinned: Bool) -> PantryRoomItem {
             PantryRoomItem(id: id, name: "x", shown: "x", isLow: low, isPinned: pinned, amount: nil, source: .added)
         }
-        let out = PantryRoomCopy.ordered([item(a, low: false, pinned: false), item(b, low: true, pinned: false),
-                                          item(c, low: false, pinned: true)], pinOrder: [c])
-        #expect(out.map(\.id) == [c, b, a])
+        let out = PantryRoomCopy.ordered(
+            [item(plainID, low: false, pinned: false), item(lowID, low: true, pinned: false),
+             item(pinnedID, low: false, pinned: true)],
+            pinOrder: [pinnedID]
+        )
+        #expect(out.map(\.id) == [pinnedID, lowID, plainID])
     }
 }
 
@@ -178,6 +181,27 @@ struct RecipesRoomBoardTests {
         #expect(lines.first == "Fried rice is the quickest, 20 min.")
         #expect(lines.second == "Lemon pasta uses the lemons.")
         #expect(RecipesRoomBoard.sectionLine(.ready, count: 7) == "7 you can make now, quickest first")
+    }
+
+    @Test func anUntimedPublicRecipeWinsOverThePrivateFallback() {
+        let secret = RecipesRoomBoard.Item(id: UUID(), name: "Melatonin tea", shown: "Private recipe", isPrivate: true,
+                                           minutes: 5, isPinned: true, shorts: [], lows: ["honey"], uses: [],
+                                           plannedFor: nil)
+        let lines = RecipesRoomBoard.brief([secret, item("Toast", minutes: nil)])
+        #expect(lines.first == "Toast is ready.")
+        #expect(lines.second.isEmpty)
+    }
+
+    @Test func privateLowIngredientsDoNotReplaceThePublicSecondLine() {
+        let secret = RecipesRoomBoard.Item(id: UUID(), name: "Melatonin tea", shown: "Private recipe", isPrivate: true,
+                                           minutes: nil, isPinned: true, shorts: [], lows: ["honey"], uses: [],
+                                           plannedFor: nil)
+        let lines = RecipesRoomBoard.brief([secret, item("Rice", minutes: 20),
+                                            item("Pasta", minutes: 25, lows: ["lemons"])])
+        #expect(lines.first == "Rice is the quickest, 20 min.")
+        #expect(lines.second == "Pasta uses the lemons.")
+        let empty = RecipesRoomBoard.brief([])
+        #expect(empty.first == "Nothing is ready yet." && empty.second.isEmpty)
     }
 }
 
@@ -297,17 +321,37 @@ struct PantryRowLayoutTests {
 
 @MainActor
 struct PantryTouchTests {
-    @Test func aTouchTwoPointsIntoARowIsThatRowsNotTheOneAbove() {
-        let heights: [CGFloat] = [28, 28, 28]
-        #expect(PantryTouch.row(at: 30, heights: heights, lastReach: 8) == 1)
-        #expect(PantryTouch.row(at: 27.9, heights: heights, lastReach: 8) == 0)
-        #expect(PantryTouch.row(at: 28, heights: heights, lastReach: 8) == 1)
+    private let bounds = CGRect(x: 0, y: 0, width: 160, height: 232)
+
+    @Test(arguments: [CGFloat(28), 34])
+    func overlappingCompactTargetsBothUseTheFallback(_ height: CGFloat) {
+        let rows = [CGRect(x: 0, y: 30, width: 160, height: height),
+                    CGRect(x: 0, y: 30 + height, width: 160, height: height)]
+        #expect(PantryTouch.target(for: 0, rows: rows, protected: [], bounds: bounds) == nil)
+        #expect(PantryTouch.target(for: 1, rows: rows, protected: [], bounds: bounds) == nil)
     }
 
-    @Test func onlyTheLastRowReachesPastItself() {
-        let heights: [CGFloat] = [28, 28]
-        #expect(PantryTouch.row(at: 60, heights: heights, lastReach: 8) == 1)
-        #expect(PantryTouch.row(at: 64.5, heights: heights, lastReach: 8) == nil)
-        #expect(PantryTouch.row(at: -1, heights: heights, lastReach: 8) == nil)
+    @Test func anIsolatedTargetReachesExactlyFortyFourWithoutCrossingControls() {
+        let rows = [CGRect(x: 0, y: 40, width: 160, height: 28)]
+        let target = PantryTouch.target(for: 0, rows: rows, protected: [], bounds: bounds)
+        #expect(target == CGRect(x: 0, y: 32, width: 160, height: 44))
+        let header = CGRect(x: 0, y: 14, width: 160, height: 26)
+        #expect(PantryTouch.target(for: 0, rows: rows, protected: [header], bounds: bounds) == nil)
+        let more = CGRect(x: 0, y: 68, width: 160, height: 26)
+        #expect(PantryTouch.target(for: 0, rows: rows, protected: [more], bounds: bounds) == nil)
+    }
+
+    @Test func theColumnClipCannotTruncateAReachTarget() {
+        for y in [CGFloat(0), 204] {
+            let rows = [CGRect(x: 0, y: y, width: 160, height: 28)]
+            #expect(PantryTouch.target(for: 0, rows: rows, protected: [], bounds: bounds) == nil)
+        }
+    }
+
+    @Test func fullSizedRowsKeepExactSharedBoundaries() {
+        let rows = [CGRect(x: 0, y: 26, width: 160, height: 44),
+                    CGRect(x: 0, y: 70, width: 160, height: 44)]
+        #expect(PantryTouch.target(for: 0, rows: rows, protected: [], bounds: bounds) == rows[0])
+        #expect(PantryTouch.target(for: 1, rows: rows, protected: [], bounds: bounds) == rows[1])
     }
 }
