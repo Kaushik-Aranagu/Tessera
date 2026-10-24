@@ -182,7 +182,9 @@ struct TrainingHeadlineStatsTests {
         #expect(abs(result.baselineKg - 80 * (1 + 7.0 / 30)) < 0.001)
         #expect(abs(result.latestKg - 105) < 0.001)
         #expect(abs(result.kilograms - (105 - result.baselineKg)) < 0.001)
-        #expect(abs(MassUnit.pounds.fromKilograms(result.kilograms)
+        // Display conversion rounds to half a pound; exact conversion is opt-in.
+        #expect(MassUnit.pounds.fromKilograms(result.kilograms) == 14)
+        #expect(abs(MassUnit.pounds.fromKilograms(result.kilograms, rounded: false)
                 - result.kilograms * MassUnit.poundsPerKilogram) < 0.001)
     }
 
