@@ -3,7 +3,44 @@ import XCTest
 /// Positive mutations run against the in-memory sample model on a private lane simulator, never the real store.
 @MainActor
 final class PantryRoomTapUITests: SimulatorOnlyTestCase {
+    private static var motionPrepared = false
+
+    /// System setting on this disposable simulator only. Keep the app's real ten-second Undo window intact.
+    private func prepareMotion() {
+        continueAfterFailure = false
+        guard !Self.motionPrepared else { return }
+        let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+        settings.launch()
+        let reduce = settings.switches["Reduce Motion"]
+        if !reduce.exists {
+            let motion = settings.staticTexts["Motion"]
+            if !motion.exists {
+                let accessibility = settings.staticTexts["Accessibility"]
+                for _ in 0 ..< 6 where !accessibility.isHittable {
+                    settings.swipeUp()
+                }
+                XCTAssertTrue(accessibility.waitForExistence(timeout: 5))
+                accessibility.tap()
+            }
+            XCTAssertTrue(motion.waitForExistence(timeout: 5))
+            motion.tap()
+        }
+        XCTAssertTrue(reduce.waitForExistence(timeout: 5))
+        if reduce.value as? String != "1" {
+            reduce.tap()
+        }
+        XCTAssertEqual(reduce.value as? String, "1")
+        settings.terminate()
+        Self.motionPrepared = true
+    }
+
+    private func turn(_ dial: XCUIElement, down: Bool = false) {
+        let start = dial.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: down ? 30 : -30)))
+    }
+
     private func launchOnFridge(largeType: Bool = false) -> XCUIApplication {
+        prepareMotion()
         let app = XCUIApplication()
         app.launchArguments = ["-demoTime", "18:10", "-openLink", "pantry", "-review.sampleData", "On",
                                "-featureFlags.off", "homeMosaic;homeV2"]
@@ -14,7 +51,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         XCTAssertTrue(app.buttons["pantry.chooseThing"].waitForExistence(timeout: 30), "The compact Pantry is open")
         let dial = app.descendants(matching: .any)["Place"]
         XCTAssertTrue(dial.waitForExistence(timeout: 5))
-        dial.swipeUp(velocity: .fast)
+        turn(dial)
         wait(NSPredicate(format: "value BEGINSWITH %@", "Fridge"), on: dial)
         return app
     }
@@ -29,13 +66,9 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
                                          "pantry.row.", name)).firstMatch
     }
 
-    private func add(_ name: String, in app: XCUIApplication) -> XCUIElement {
-        app.buttons["Add a thing"].tap()
-        let field = app.textFields.firstMatch
-        XCTAssertTrue(field.waitForExistence(timeout: 5))
-        field.typeText(name + "\n")
+    private func fixture(_ name: String, in app: XCUIApplication) -> XCUIElement {
         let result = row(name, in: app)
-        XCTAssertTrue(result.waitForExistence(timeout: 8))
+        XCTAssertTrue(result.waitForExistence(timeout: 8), "The sample fixture has this stock row")
         return result
     }
 
@@ -51,7 +84,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
 
     func testCompactRowTapOpensItsActionsAndLowCanBeUndone() {
         let app = launchOnFridge()
-        let eggs = add("Eggs", in: app)
+        let eggs = fixture("Eggs", in: app)
         let before = eggs.label
         let image = XCTAttachment(screenshot: app.screenshot())
         image.name = "Pantry compact columns"
@@ -68,7 +101,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
 
     func testCompactSwipeCannotMutateAndChooserUsedUpCanBeUndone() {
         let app = launchOnFridge()
-        let eggs = add("Eggs", in: app)
+        let eggs = fixture("Eggs", in: app)
         let before = eggs.label
         let start = eggs.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 120, dy: 0)))
@@ -99,8 +132,8 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
 
     func testTwoPointsInsideEachNeighbourOpensThatItemWithoutMutation() {
         let app = launchOnFridge()
-        let eggs = add("Eggs", in: app)
-        let milk = add("Milk", in: app)
+        let eggs = fixture("Eggs", in: app)
+        let milk = fixture("Milk", in: app)
         let originals = [eggs.label, milk.label]
         for (element, title) in [(eggs, "Eggs"), (milk, "Milk")] {
             element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0))
@@ -114,7 +147,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
 
     func testFullSizedRowSwipeMutatesAndUndoRestoresIt() {
         let app = launchOnFridge(largeType: true)
-        let eggs = add("Eggs", in: app)
+        let eggs = fixture("Eggs", in: app)
         let before = eggs.label
         XCTAssertGreaterThanOrEqual(eggs.frame.height, 44)
         eggs.press(forDuration: 0.6)
@@ -135,6 +168,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
     }
 
     func testFocusedRecipeTapOpensItsRecipePage() {
+        prepareMotion()
         let app = XCUIApplication()
         app.launchArguments = ["-demoTime", "18:10", "-openLink", "recipes", "-review.sampleData", "On",
                                "-featureFlags.off", "homeMosaic;homeV2"]
@@ -142,7 +176,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         let dial = app.descendants(matching: .any)["Place"]
         XCTAssertTrue(dial.waitForExistence(timeout: 30))
         // Ready now wraps back to All, so the fixture always has the full recipe book available.
-        dial.swipeDown(velocity: .fast)
+        turn(dial, down: true)
         wait(NSPredicate(format: "value BEGINSWITH %@", "All"), on: dial)
         let recipe = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier != %@",
                                                       "kitchen.wheel.", "kitchen.wheel.new")).firstMatch
