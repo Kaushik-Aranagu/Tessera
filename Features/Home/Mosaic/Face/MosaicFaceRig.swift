@@ -4,6 +4,7 @@ import TesseraCore
 /// What the layer needs of a face for one retarget: the art for the current face and its neighbours, the tint every
 /// face tile goes through (the colour rule and the look), the baked colour of a tile, the live light that redraws only
 /// what changed since the bake (a ticking numeral, a scene's one slow life), and the 1:1 slide under the finger.
+@MainActor
 struct MosaicFaceRig {
     let art: MosaicFaceArt?
     private let drag: MosaicFaceDrag?
@@ -135,24 +136,35 @@ struct MosaicFaceRig {
 }
 
 extension MosaicColour {
-    /// Home 236 v2.2: on a light page the mosaic's blend (outside its frame) lifts saturation by 30% and deepens by
-    /// 10%; inside its frame the mosaic keeps full strength, and on a dark page nothing changes.
-    static let rimSaturation = 1.3
-    static let rimDeepen = 0.10
+    /// Home 236 v2.7: on LIGHT pages only, each tile colour has its saturation x1.55 around its mean, then its
+    /// brightness
+    /// x1.08 with a 5% lift toward white. Dark pages are not graded.
+    static let lightSaturation = 1.55
+    static let lightBrightness = 1.08
+    static let lightLift = 0.05
 
     static func isLightPage(_ ground: MosaicTriple) -> Bool {
         0.2126 * ground.red + 0.7152 * ground.green + 0.0722 * ground.blue > 0.5
     }
 
     static func graded(_ colour: MosaicTriple) -> MosaicTriple {
-        let luma = 0.2126 * colour.red + 0.7152 * colour.green + 0.0722 * colour.blue
-        func lift(_ value: Double) -> Double {
-            min(max(luma + (value - luma) * rimSaturation, 0), 1) * (1 - rimDeepen)
+        let mean = (colour.red + colour.green + colour.blue) / 3
+        func grade(_ value: Double) -> Double {
+            let saturated = min(max(mean + (value - mean) * lightSaturation, 0), 1)
+            let bright = min(saturated * lightBrightness, 1)
+            return bright + (1 - bright) * lightLift
         }
-        return (lift(colour.red), lift(colour.green), lift(colour.blue))
+        return (grade(colour.red), grade(colour.green), grade(colour.blue))
     }
 
-    static func rimGrade(_ colour: MosaicTriple, ground: MosaicTriple) -> MosaicTriple {
+    static func lightGrade(_ colour: MosaicTriple, ground: MosaicTriple) -> MosaicTriple {
         isLightPage(ground) ? graded(colour) : colour
+    }
+}
+
+extension MosaicScreenEngine {
+    /// The tile's side: 3.6 pt of the 4 pt cell on a light page, 3.2 pt on a dark one.
+    var tileSide: CGFloat {
+        dark ? MosaicScreenGrid.side : MosaicScreenGrid.lightSide
     }
 }

@@ -651,9 +651,9 @@ struct MosaicHomeLayer: View {
             for row in rows {
                 guard let tile = engine.tile(column: column, row: row, nowColumn: nowColumn),
                       !engine.isLaid(grid.index(column: column, row: row)) else { continue }
-                fill(cg, grid: grid, column: column, row: row, tile: tile)
+                fill(cg, grid: grid, column: column, row: row, tile: tile, side: engine.tileSide)
                 if let ghost = tile.ghost {
-                    let rect = grid.rect(column: column, row: row)
+                    let rect = grid.rect(column: column, row: row, side: engine.tileSide)
                     let side = rect.width * ghost.scale
                     ghosts.append((
                         CGRect(x: rect.midX - side / 2, y: rect.midY - side / 2 + ghost.offset.y, width: side,
@@ -669,7 +669,7 @@ struct MosaicHomeLayer: View {
         }
         for item in engine.laid {
             let tone = laidColour(item.tone, column: item.column, engine: engine, dark: dark, environment: environment)
-            let rect = grid.rect(column: item.column, row: item.row)
+            let rect = grid.rect(column: item.column, row: item.row, side: engine.tileSide)
             cg.setFillColor(red: tone.red, green: tone.green, blue: tone.blue, alpha: engine.laidOpacity(item))
             cg.fill(rect.insetBy(dx: -0.4, dy: -0.4))
         }
@@ -706,7 +706,7 @@ struct MosaicHomeLayer: View {
             cg.fill(rect)
         }
         for item in engine.collapsingSign() {
-            let rect = grid.rect(column: item.tile.column, row: item.tile.row)
+            let rect = grid.rect(column: item.tile.column, row: item.tile.row, side: engine.tileSide)
             let side = rect.width * item.scale
             fill(CGRect(x: rect.midX - side / 2, y: rect.midY - side / 2 + item.sink, width: side, height: side),
                  colour(item.tile.cell))
@@ -745,7 +745,7 @@ struct MosaicHomeLayer: View {
                 if MosaicSignLend.isEdge(cell, in: keys) {
                     tone = MosaicColour.mix(tone, sourceColour(cell), MosaicSignLend.edgeKeep)
                 }
-                fill(grid.rect(column: tile.column, row: tile.row), tone)
+                fill(grid.rect(column: tile.column, row: tile.row, side: engine.tileSide), tone)
             }
             // The trade in the air: the sign tile out to the mosaic and the mosaic tile in, on the same arc.
             if let trade, time - trade.start < MosaicSignLend.flightSeconds {
@@ -755,7 +755,7 @@ struct MosaicHomeLayer: View {
                 let seen = engine.tile(column: trade.tile.sourceColumn, row: trade.tile.sourceRow,
                                        nowColumn: nowColumn, ignoringGap: true)?.colour ?? ground
                 let arc = MosaicSignLend.arc(progress)
-                let tileSide = MosaicScreenGrid.side * arc.scale
+                let tileSide = engine.tileSide * arc.scale
                 let signTone = colour(trade.tile.cell)
                 func fly(from: CGPoint, to: CGPoint, tone: MosaicTriple) {
                     let centre = CGPoint(x: from.x + (to.x - from.x) * progress,
@@ -780,21 +780,23 @@ struct MosaicHomeLayer: View {
                 signColour = MosaicColour.mix(signColour, seen, MosaicSignLend.edgeKeep)
             }
             if progress >= 1 {
-                fill(grid.rect(column: tile.column, row: tile.row), signColour)
+                fill(grid.rect(column: tile.column, row: tile.row, side: engine.tileSide), signColour)
                 continue
             }
             let source = grid.center(column: tile.sourceColumn, row: tile.sourceRow)
             let arc = MosaicSignLend.arc(progress)
             let centre = CGPoint(x: source.x + (target.x - source.x) * progress,
                                  y: source.y + (target.y - source.y) * progress - arc.lift)
-            let side = MosaicScreenGrid.side * arc.scale
+            let side = engine.tileSide * arc.scale
             fill(CGRect(x: centre.x - side / 2, y: centre.y - side / 2, width: side, height: side),
                  MosaicColour.mix(seen, signColour, progress))
         }
     }
 
-    private func fill(_ cg: CGContext, grid: MosaicScreenGrid, column: Int, row: Int, tile: MosaicScreenTile) {
-        let rect = grid.rect(column: column, row: row)
+    private func fill(_ cg: CGContext, grid: MosaicScreenGrid, column: Int, row: Int, tile: MosaicScreenTile,
+                      side: CGFloat)
+    {
+        let rect = grid.rect(column: column, row: row, side: side)
         let width = rect.width * tile.scale
         let height = width * tile.scaleY
         cg.setFillColor(red: tile.colour.red, green: tile.colour.green, blue: tile.colour.blue, alpha: 1)

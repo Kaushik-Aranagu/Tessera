@@ -494,43 +494,59 @@ struct Lcg: RandomNumberGenerator {
 }
 
 struct MosaicGradeTests {
-    private func luma(_ colour: MosaicTriple) -> Double {
-        0.2126 * colour.red + 0.7152 * colour.green + 0.0722 * colour.blue
+    private func mean(_ colour: MosaicTriple) -> Double {
+        (colour.red + colour.green + colour.blue) / 3
     }
 
-    private func chroma(_ colour: MosaicTriple) -> Double {
-        let value = luma(colour)
-        return abs(colour.red - value) + abs(colour.green - value) + abs(colour.blue - value)
-    }
-
-    @Test func onALightPageTheBlendLiftsSaturationByAThirdAndDeepensByATenth() {
+    @Test func onALightPageEachTileGetsSaturationOneFiftyFiveThenBrightnessAndALift() {
         let scene: MosaicTriple = (0.5, 0.4, 0.3)
         let graded = MosaicColour.graded(scene)
-        #expect(abs(chroma(graded) / (1 - MosaicColour.rimDeepen) - chroma(scene) * 1.3) < 1e-9)
-        #expect(abs(luma(graded) - luma(scene) * 0.9) < 1e-9)
+        // Saturation around the mean: the spread from the mean grows 1.55x before brightness and lift (both affine).
+        func expected(_ value: Double) -> Double {
+            let saturated = 0.4 + (value - 0.4) * 1.55
+            let bright = saturated * 1.08
+            return bright + (1 - bright) * 0.05
+        }
+        #expect(abs(graded.red - expected(0.5)) < 1e-9 && abs(graded.blue - expected(0.3)) < 1e-9)
+        #expect(graded.red - graded.blue > (scene.red - scene.blue) * 1.55)
         let light: MosaicTriple = (0.98, 0.98, 0.97)
-        #expect(MosaicColour.rimGrade(scene, ground: light) == graded)
+        #expect(MosaicColour.lightGrade(scene, ground: light) == graded)
+        // A grey stays grey, and nothing leaves the unit range.
+        let grey = MosaicColour.graded((0.5, 0.5, 0.5))
+        #expect(abs(grey.red - grey.blue) < 1e-9)
+        let loud = MosaicColour.graded((1, 0, 0))
+        #expect((0 ... 1).contains(loud.red) && (0 ... 1).contains(loud.green))
     }
 
     @Test func aDarkPageIsNotGraded() {
         let scene: MosaicTriple = (0.5, 0.4, 0.3)
-        #expect(MosaicColour.rimGrade(scene, ground: (0.05, 0.05, 0.06)) == scene)
+        #expect(MosaicColour.lightGrade(scene, ground: (0.05, 0.05, 0.06)) == scene)
     }
 
-    @MainActor @Test func insideTheFrameTheMosaicKeepsFullStrengthOnALightPage() throws {
+    @Test func lightTilesGrowToThreePointSixAndDarkOnesStayAtThreePointTwo() {
+        let grid = MosaicScreenGrid(size: CGSize(width: 402, height: 874), coreTop: 480)
+        #expect(abs(grid.rect(column: 3, row: 5, side: MosaicScreenGrid.lightSide).width - 3.6) < 1e-9)
+        #expect(abs(grid.rect(column: 3, row: 5, side: MosaicScreenGrid.lightSide).minX - (3 * 4 + 0.2)) < 1e-9)
+        #expect(abs(grid.rect(column: 3, row: 5).width - 3.2) < 1e-9)
+    }
+
+    @MainActor @Test func theEngineGradesAndSizesByThePage() throws {
         let size = CGSize(width: 402, height: 874)
-        let engine = MosaicScreenEngine(size: size, coreTop: 480)
-        engine.reduceMotion = true
-        engine.configure(size: size, coreTop: 480, dark: false, ground: (0.98, 0.98, 0.97))
-        engine.setWindow(columns: 88, rows: 28)
-        engine.snapWindow()
-        let scene: MosaicTriple = (0.5, 0.4, 0.3)
-        engine.settle { _, _ in scene }
-        engine.step(to: 0.01)
-        let core = engine.core
-        let inside = try #require(engine.tile(column: core.left + 20, row: core.top + 14, nowColumn: nil))
-        #expect(inside.colour == scene)
-        let rim = try #require(engine.tile(column: core.left - 3, row: core.top + 14, nowColumn: nil))
-        #expect(luma(rim.colour) < luma(scene) * 1.001)
+        func tile(dark: Bool, ground: MosaicTriple) throws -> (colour: MosaicTriple, side: CGFloat) {
+            let engine = MosaicScreenEngine(size: size, coreTop: 480)
+            engine.reduceMotion = true
+            engine.configure(size: size, coreTop: 480, dark: dark, ground: ground)
+            engine.setWindow(columns: 88, rows: 28)
+            engine.snapWindow()
+            engine.settle { _, _ in (0.5, 0.4, 0.3) }
+            engine.step(to: 0.01)
+            let core = engine.core
+            let made = try #require(engine.tile(column: core.left + 20, row: core.top + 14, nowColumn: nil))
+            return (made.colour, engine.tileSide)
+        }
+        let light = try tile(dark: false, ground: (0.98, 0.98, 0.97))
+        #expect(light.colour == MosaicColour.graded((0.5, 0.4, 0.3)) && light.side == 3.6)
+        let dark = try tile(dark: true, ground: (0.05, 0.05, 0.06))
+        #expect(dark.colour == (0.5, 0.4, 0.3) && dark.side == 3.2)
     }
 }

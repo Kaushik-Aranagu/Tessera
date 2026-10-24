@@ -62,11 +62,14 @@ struct MosaicScreenGrid: Equatable {
     }
 
     /// The tile's square, centred in its 4 pt cell.
-    func rect(column: Int, row: Int) -> CGRect {
-        let inset = (Self.step - Self.side) / 2
-        return CGRect(x: CGFloat(column) * Self.step + inset, y: CGFloat(row) * Self.step + inset, width: Self.side,
-                      height: Self.side)
+    func rect(column: Int, row: Int, side: CGFloat = MosaicScreenGrid.side) -> CGRect {
+        let inset = (Self.step - side) / 2
+        return CGRect(x: CGFloat(column) * Self.step + inset, y: CGFloat(row) * Self.step + inset, width: side,
+                      height: side)
     }
+
+    /// Home 236 v2.7: on a light page a tile grows to 3.6 pt of its 4 pt cell (a 0.4 pt gap); dark pages keep 3.2.
+    static let lightSide: CGFloat = 3.6
 
     func center(column: Int, row: Int) -> CGPoint {
         CGPoint(x: (CGFloat(column) + 0.5) * Self.step, y: (CGFloat(row) + 0.5) * Self.step)
