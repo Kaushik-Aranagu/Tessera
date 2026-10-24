@@ -38,7 +38,8 @@ public struct AgentSpec: Sendable, Equatable, Identifiable {
     /// Sub-agents it may start in one run (H4), and how deep the tree may go from Tess.
     public var maxChildren: Int
     public var depth: Int
-    /// Health, body, calories and sleep: only under lab mode (his pick, Oct 23). Strict has no Body agent.
+    /// Health, body, calories, sleep and money: only under lab mode (his pick, Oct 23). Strict has no Body or Money
+    /// agent.
     public var labOnly: Bool
 
     public var id: String {
@@ -92,12 +93,13 @@ public struct AgentSpec: Sendable, Equatable, Identifiable {
         maxRounds: 8, maxChildren: 3, depth: 1, labOnly: false
     )
 
-    /// Read only, always: money actions are never offered to Claude (his standing rule).
+    /// Read only, always: money actions are never offered to Claude (his standing rule). Lab only, like Body: under
+    /// strict no money detail reaches Claude, so there is nothing for it to read.
     public static let money = AgentSpec(
         name: "Money", room: AppID.money.rawValue, plain: .plain, open: .open,
         tools: reads + ["remember"],
         beliefClasses: [.spend, .pool, .inflow, .poolMove], notebook: "/memories/money", summaries: [.week, .month],
-        expertise: nil, maxRounds: 8, maxChildren: 3, depth: 1, labOnly: false
+        expertise: nil, maxRounds: 8, maxChildren: 3, depth: 1, labOnly: true
     )
 
     public static let body = AgentSpec(
@@ -109,9 +111,19 @@ public struct AgentSpec: Sendable, Equatable, Identifiable {
 
     public static let shipped: [AgentSpec] = [tess, training, kitchen, today, notes, money, body]
 
-    /// The agents a policy allows: strict has no Body agent.
+    /// The agents a policy allows: strict has no Body or Money agent.
     public static func available(under policy: DoorPolicy) -> [AgentSpec] {
         shipped.filter { !$0.labOnly || policy == .lab }
+    }
+
+    /// Belief classes only lab may send: calendar, body and money. Under strict their beliefs stay on the phone.
+    public static let labOnlyBeliefs: Set<SystemCatalog.Key> = [
+        .occasion, .sleepNight, .stepsDay, .restingHeartRate, .spend, .pool, .inflow, .poolMove,
+    ]
+
+    /// The classes its beliefs slice reads under a policy: strict drops the lab-only ones (Today's calendar).
+    public func beliefClasses(under policy: DoorPolicy) -> [SystemCatalog.Key] {
+        policy == .lab ? beliefClasses : beliefClasses.filter { !Self.labOnlyBeliefs.contains($0) }
     }
 
     public static func named(_ name: String) -> AgentSpec? {

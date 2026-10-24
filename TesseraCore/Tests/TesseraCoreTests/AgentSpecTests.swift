@@ -3,8 +3,9 @@ import Foundation
 @testable import TesseraTess
 import Testing
 
-/// Memory spec M4: every shipped agent compiles, no agent gets a money write, Opus is never first, Body exists
-/// only under lab, and an expertise pack's hash changes only when its source data changes.
+/// Memory spec M4: every shipped agent compiles, no agent gets a money write, Opus is never first, Body and Money exist
+/// only under lab, and an expertise pack's hash changes only when its source data changes (never for a private
+/// workout).
 @MainActor
 struct AgentSpecTests {
     let store = ObjectStore.open(inMemory: true)
@@ -39,9 +40,18 @@ struct AgentSpecTests {
         #expect(eager.problems().count == 2)
     }
 
-    @Test func bodyIsLabOnly() {
+    @Test func bodyAndMoneyAreLabOnly() {
         #expect(AgentSpec.available(under: .lab).count == 7)
-        #expect(!AgentSpec.available(under: .strict).contains { $0.name == "Body" })
+        #expect(AgentSpec.available(under: .strict).map(\.name) == ["Tess", "Training", "Kitchen", "Today", "Notes"])
+    }
+
+    @Test func strictDropsCalendarBeliefs() {
+        #expect(AgentSpec.today.beliefClasses(under: .lab).contains(.occasion))
+        #expect(!AgentSpec.today.beliefClasses(under: .strict).contains(.occasion))
+        #expect(AgentSpec.today.beliefClasses(under: .strict).contains(.task))
+        for spec in AgentSpec.shipped {
+            #expect(AgentSpec.labOnlyBeliefs.isDisjoint(with: spec.beliefClasses(under: .strict)))
+        }
     }
 
     @Test func subAgentsStayThreeWideAndTwoDeep() {
@@ -116,11 +126,62 @@ struct AgentSpecTests {
         #expect(ExpertisePack.build(for: .training, store: store, classes: classes)?.hash != pack.hash)
     }
 
+    func routine(_ title: String) throws -> ObjectRecord {
+        try ActionEngine(store: store, classes: classes).perform(CreateRoutine(title: title), by: .system).output
+    }
+
+    /// Logs one set of an exercise in a new workout made from this routine.
+    func log(_ exercise: ClassDef, kg: Double, reps: Double, from routine: ObjectRecord) throws {
+        let workoutClass = try #require(classes[.workout])
+        let entryClass = try #require(classes[.exerciseEntry])
+        let setClass = try #require(classes[.set])
+        let workout = store.create(workoutClass, title: routine.title)
+        try store.setLinks("routine", on: workout, to: [routine])
+        try store.set("startedAt", to: .date(.now.addingTimeInterval(-3600)), on: workout)
+        try store.set("endedAt", to: .date(.now), on: workout)
+        let entry = store.create(entryClass, parent: workout)
+        try store.setClassLink("exercise", on: entry, to: exercise)
+        let set = store.create(setClass, parent: entry)
+        try store.set("weight", to: .mass(kg), on: set)
+        try store.set("reps", to: .number(reps), on: set)
+    }
+
+    @Test func aPrivateWorkoutMovesNoBestAndNoHash() throws {
+        let bench = try #require(classes[.benchPress])
+        let rehab = try routine("Shoulder rehab")
+        try log(bench, kg: 80, reps: 5, from: routine("Push B"))
+        let before = TrainingExpertise.facts(store: store, classes: classes)
+        let pack = try #require(ExpertisePack.build(for: .training, store: store, classes: classes))
+        try log(bench, kg: 120, reps: 5, from: rehab)
+        let after = TrainingExpertise.facts(store: store, classes: classes)
+        #expect(after == before)
+        #expect(after.bests.first { $0.exercise == bench.name }?.sessions == 1)
+        #expect(ExpertisePack.build(for: .training, store: store, classes: classes) == pack)
+        // The routine shows only as its label, with no slots.
+        #expect(after.routines.contains { $0.name == ObjectPrivacy.routineLabel && $0.slots.isEmpty })
+        #expect(!pack.text.contains("rehab"))
+    }
+
+    @Test func aPrivatePlanListsNoRoutines() throws {
+        let planClass = try #require(classes[.plan])
+        let plan = store.create(planClass, title: "Knee rehab block")
+        try store.setLinks("routines", on: plan, to: [routine("Legs A")])
+        let facts = TrainingExpertise.facts(store: store, classes: classes)
+        #expect(!facts.plans.contains { $0.name.contains("rehab") })
+        let label = try #require(ObjectPrivacy.shownLabel(of: plan, in: store, classes: classes))
+        #expect(facts.plans.contains { $0.name == label && $0.routines.isEmpty })
+        #expect(!facts.plans.contains { $0.routines.contains("Legs A") })
+    }
+
     @Test func theKitchenPackListsAislesPlacesAndRecipes() throws {
         let recipeClass = try #require(classes[.recipe])
         _ = store.create(recipeClass, title: "Turkey Chili")
+        if let placeClass = classes[.place] {
+            _ = store.create(placeClass, title: "Clinic fridge")
+        }
         let pack = try #require(ExpertisePack.build(for: .kitchen, store: store, classes: classes))
         #expect(pack.text.contains("Turkey Chili"))
+        #expect(!pack.text.contains("Clinic") && pack.text.contains(ObjectPrivacy.placeLabel))
         #expect(Aisle.allCases.allSatisfy { pack.text.contains($0.rawValue) })
         #expect(ExpertisePack.build(for: .tess, store: store, classes: classes) == nil)
     }

@@ -7,9 +7,10 @@ import TesseraCore
 /// when the catalog changes, or when the night pass sees new bests). The hash goes in the trace, so a run can say
 /// which pack it used.
 ///
-/// Each pack is two steps: `facts(store:classes:)` reads the store through the walls (a private routine is its shown
-/// label, nothing more), and `render(_:)` is a pure function of those facts, so the same facts always give the same
-/// bytes and the same hash.
+/// Each pack is two steps: `facts(store:classes:)` reads the store through the walls (a private routine or plan is its
+/// shown label, nothing more; a private workout's sets count for no best; a private exercise or place name is left
+/// out), and `render(_:)` is a pure function of those facts, so the same facts always give the same bytes and the
+/// same hash. His 10:25 PM allowance covers private notes and lists, not workouts.
 public struct ExpertisePack: Sendable, Equatable {
     public var expertise: AgentSpec.Expertise
     public var text: String
@@ -149,8 +150,12 @@ public enum TrainingExpertise {
             LibraryLine(name: $0.name, equipment: $0.equipment.rawValue, pattern: $0.pattern.rawValue,
                         primary: $0.primary.map(\.name), secondary: $0.secondary.map(\.name), reps: $0.repRange)
         }
+        let lastKg = BodyWeight.lastKg(in: store)
+        func isPlain(_ name: String) -> Bool {
+            !ObjectPrivacy.isPrivateTitle(name, lastWeightKg: lastKg)
+        }
         let groups = store.exerciseGroups(root: classes[.exercise])
-        let yours = groups.first { $0.pattern == nil }?.exercises.map(\.name) ?? []
+        let yours = groups.first { $0.pattern == nil }?.exercises.map(\.name).filter(isPlain) ?? []
         let formula = classes[.set].flatMap { ClassResolver.field("e1rm", of: $0)?.expression }
 
         func shown(_ object: ObjectRecord) -> (name: String, isPrivate: Bool) {
@@ -171,7 +176,9 @@ public enum TrainingExpertise {
                 let slots = routine.orderedChildren
                     .filter { !$0.isDeleted && $0.classDef?.systemKey == SystemCatalog.Key.slot.systemKey }
                     .compactMap { slot -> (exercise: String, sets: Int?)? in
-                        guard let exercise = store.linkedClass("exercise", of: slot) else { return nil }
+                        guard let exercise = store.linkedClass("exercise", of: slot), isPlain(exercise.name) else {
+                            return nil
+                        }
                         return (exercise: exercise.name, sets: store.number("sets", of: slot).map { Int($0) })
                     }
                 routines.append(Routine(name: name.name, slots: slots))
@@ -181,20 +188,33 @@ public enum TrainingExpertise {
         var plans: [Plan] = []
         if let planClass = classes[.plan] {
             for plan in store.objects(of: planClass) where !plan.isDeleted {
-                let routineNames = store.linkedObjects("routines", of: plan).filter { !$0.isDeleted }
-                    .map { shown($0).name }
-                plans.append(Plan(name: shown(plan).name, routines: routineNames))
+                let name = shown(plan)
+                // A private plan lists nothing, not even its routines' shown names.
+                let routineNames = name.isPrivate ? [] : store.linkedObjects("routines", of: plan)
+                    .filter { !$0.isDeleted }.map { shown($0).name }
+                plans.append(Plan(name: name.name, routines: routineNames))
             }
         }
 
         let ledger = TrainingLedger(store: store, classes: classes)
-        let exercises = groups.flatMap(\.exercises)
+        let stats = TrainingStats(store: store, classes: classes)
+        let exercises = groups.flatMap(\.exercises).filter { isPlain($0.name) }
         let bests: [Best] = exercises.compactMap { exercise in
-            let sessions = ledger.sessions(of: exercise).count
-            guard sessions > 0 else { return nil }
-            let records = ledger.records(for: exercise)
-            return Best(exercise: exercise.name, e1RM: records.bestE1RM?.e1RM, repMaxes: records.bestWeightByReps,
-                        sessions: sessions)
+            // Only sets from workouts that aren't private: a rehab workout's sets move no best and no hash.
+            let sessions = stats.counted(ledger.sessions(of: exercise))
+            guard !sessions.isEmpty else { return nil }
+            var e1RM: Double?
+            var repMaxes: [Int: Double] = [:]
+            for set in sessions.flatMap(\.sets) {
+                if set.isE1RMEligible, set.e1RM > (e1RM ?? -.infinity) {
+                    e1RM = set.e1RM
+                }
+                let reps = Int(set.reps.rounded())
+                if TrainingLedger.repMaxRange.contains(reps) {
+                    repMaxes[reps] = max(repMaxes[reps] ?? 0, set.weight)
+                }
+            }
+            return Best(exercise: exercise.name, e1RM: e1RM, repMaxes: repMaxes, sessions: sessions.count)
         }
         return Facts(e1RMFormula: formula, library: library, yours: yours, plans: plans, routines: routines,
                      bests: bests)
@@ -227,7 +247,8 @@ public enum KitchenExpertise {
     @MainActor
     public static func facts(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> Facts {
         let places = classes[.place].map { placeClass in
-            store.objects(of: placeClass).filter { !$0.isDeleted }.sorted { $0.createdAt < $1.createdAt }.map(\.title)
+            store.objects(of: placeClass).filter { !$0.isDeleted }.sorted { $0.createdAt < $1.createdAt }
+                .map { ObjectPrivacy.shownLabel(of: $0, in: store, classes: classes) ?? $0.title }
         } ?? []
         let recipes = classes[.recipe].map { recipeClass in
             store.objects(of: recipeClass).filter { !$0.isDeleted }.map {
