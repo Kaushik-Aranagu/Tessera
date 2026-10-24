@@ -70,9 +70,15 @@ public struct BrainRouter: Sendable {
     public var provider: Provider
     /// How long Sonnet gets to produce a first token before Haiku is started too.
     public var hedgeAfter: Duration
+    /// The wait before a hedge. A test passes its own, so no real clock decides which rung streams first.
+    public var sleep: @Sendable (Duration) async -> Void
 
-    public init(hedgeAfter: Duration = .milliseconds(1500), provider: @escaping Provider) {
+    public init(hedgeAfter: Duration = .milliseconds(1500),
+                sleep: @escaping @Sendable (Duration) async -> Void = { try? await Task.sleep(for: $0) },
+                provider: @escaping Provider)
+    {
         self.hedgeAfter = hedgeAfter
+        self.sleep = sleep
         self.provider = provider
     }
 

@@ -104,17 +104,23 @@ struct DoorRig {
         TessSentLog(store: store, classes: classes)
     }
 
+    /// `hedgeWait`: nil means the wait never ends (until cancelled); `.zero` means it is over at once. A fake clock:
+    /// no real time decides which rung streams first.
     init(brains: [BrainID: FakeBrain], asks: Bool = true, policy: DoorPolicy = .lab,
-         hedgeAfter: Duration = .milliseconds(40)) throws
+         hedgeWait: Duration? = nil) throws
     {
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()
         self.store = store
         self.classes = classes
+        let router = BrainRouter(hedgeAfter: hedgeWait ?? .seconds(1), sleep: { _ in
+            if hedgeWait == nil {
+                try? await Task.sleep(for: .seconds(3600))
+            }
+        }) { brains[$0] }
         door = Door(ledger: TessUsageLedger(store: store, classes: classes),
-                    sentLog: TessSentLog(store: store, classes: classes), trace: trace,
-                    router: BrainRouter(hedgeAfter: hedgeAfter) { brains[$0] }, policy: { policy },
-                    asksClaude: { asks })
+                    sentLog: TessSentLog(store: store, classes: classes), trace: trace, router: router,
+                    policy: { policy }, asksClaude: { asks })
     }
 
     func events(_ job: DoorJob) async -> [BrainEvent] {

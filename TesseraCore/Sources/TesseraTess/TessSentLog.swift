@@ -44,12 +44,14 @@ public struct TessSentLog {
     /// itself is not rewritten. Builder B's Receipts list calls this, never `words(of:)`.
     public func shownWords(of entry: ObjectRecord) -> String {
         let lastKg = BodyWeight.lastKg(in: store)
+        // A lab-mode row shows what was sent, exactly: it is in no backup and no export.
+        let exact = entry.classDef?.systemKey == SystemCatalog.Key.tessSentExact.systemKey
         func walled(_ text: String) -> Bool {
             text != Self.privatePhrase && text != Self.heldBackPayload
-                && (looksLikeClaudeKey(text) || SecretWords.mentions(text) || PrivateFacts.isWalled(
+                && (looksLikeClaudeKey(text) || (!exact && (SecretWords.mentions(text) || PrivateFacts.isWalled(
                     text,
                     lastWeightKg: lastKg
-                ))
+                ))))
         }
         let lines = words(of: entry).components(separatedBy: "\n")
         guard let first = lines.first else { return Self.privatePhrase }
@@ -67,7 +69,7 @@ public struct TessSentLog {
     func record(words: String, context: [String] = [], use: TessUse, requestID: String?, at date: Date,
                 exact: Bool = false) -> ObjectRecord?
     {
-        guard let sentClass = classes[.tessSent] else { return nil }
+        guard let sentClass = classes[exact ? .tessSentExact : .tessSent] else { return nil }
         // Lab mode (`exact`) keeps the words as sent, health and money included; a key-shaped string never goes in.
         let walled = looksLikeClaudeKey(words) || (!exact && (SecretWords.mentions(words)
                 || PrivateFacts.isWalled(words, lastWeightKg: BodyWeight.lastKg(in: store))))

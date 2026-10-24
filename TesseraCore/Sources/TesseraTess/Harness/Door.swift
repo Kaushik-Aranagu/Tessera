@@ -69,14 +69,36 @@ public final class Door {
 
     /// Every word the job would carry to any rung, for the key-shape scan.
     static func allText(_ job: DoorJob) -> [String] {
-        job.request.system.map(\.text) + job.fragments.map(\.text) + job.request.messages.flatMap { message in
+        job.request.system.map(\.text) + job.fragments.map(\.text) + requestText(job.request)
+    }
+
+    /// The text of a request apart from the system blocks: messages, tool_use inputs, tool results, and the tools'
+    /// own names, descriptions and schemas.
+    static func requestText(_ request: BrainRequest) -> [String] {
+        request.messages.flatMap { message in
             message.content.compactMap { piece -> String? in
                 switch piece {
                 case let .text(text): text
                 case let .toolResult(_, content, _): content
-                case .toolUse: nil
+                case let .toolUse(_, _, input): String(decoding: input, as: UTF8.self)
                 }
             }
+        } + request.tools.flatMap { [$0.name, $0.description, String(decoding: $0.schema, as: UTF8.self)] }
+    }
+
+    /// Actions that move or record money. A model is never offered one, under either policy: money actions need his
+    /// tap.
+    static let moneyActions: Set<String> = [
+        "logSpend", "editSpend", "logShopTotal", "skipShopTotal", "createPool", "logInflow", "reassignSpend", "logMove",
+        "recordRate", "archivePool",
+    ]
+
+    /// Strict mode's own scan of everything a Claude rung would carry: the request's words, not only its fragments.
+    func strictHit(_ request: BrainRequest) -> Bool {
+        let lastKg = BodyWeight.lastKg(in: ledger.store)
+        return (request.system.map(\.text) + Self.requestText(request)).contains { text in
+            SecretWords.mentions(text) || PrivateFacts.isWalled(text, lastWeightKg: lastKg)
+                || PrivateFacts.isCalorieShaped(text)
         }
     }
 
@@ -125,6 +147,10 @@ public final class Door {
         let policy = policy()
         if Self.allText(job).contains(where: { looksLikeClaudeKey($0) }) {
             await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "keyShape"))
+            return end(.refused)
+        }
+        if job.request.tools.contains(where: { Self.moneyActions.contains($0.name) }) {
+            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "moneyAction"))
             return end(.refused)
         }
         let asks = asksClaude()
@@ -181,6 +207,11 @@ public final class Door {
             let claude = BrainRouter.isClaude(brain.id)
             let request = pack(job, policy: policy, onClaude: claude)
             var reservation: TessUsageLedger.Reservation?
+            if claude, policy == .strict, strictHit(request) {
+                // Strict: his own words in the request are judged too, not only the fragments.
+                failure = .refused
+                return false
+            }
             if claude {
                 // The $50 cap refuses before any network.
                 guard let held = ledger.reserve(job.estimateNano, now: now(), calendar: calendar) else {
@@ -189,7 +220,7 @@ public final class Door {
                 }
                 reservation = held
                 // The exact words, as sent, before they go.
-                sentLog.record(words: Self.words(request), use: .door, requestID: nil, at: now(), exact: true)
+                sentLog.record(words: Self.words(request), use: .door, requestID: nil, at: now(), exact: policy == .lab)
             }
             var rung = Rung(brain: brain, request: request, reservation: reservation, started: .now)
             let stream = brain.stream(request)
@@ -214,6 +245,8 @@ public final class Door {
             let total = LatencyBench.ms(.now - rung.started)
             if cancelled {
                 rung.outcome = .cancelled
+                // A cancelled rung may have been billed up to what was held for it: it is recorded at that estimate.
+                rung.usage.costNano = max(rung.usage.costNano, job.estimateNano)
             }
             if let held = rung.reservation {
                 ledger.settle(held)
@@ -235,7 +268,7 @@ public final class Door {
         if !hedgeStarted {
             let wait = router.hedgeAfter
             tick = Task {
-                try? await Task.sleep(for: wait)
+                await router.sleep(wait)
                 guard !Task.isCancelled else { return }
                 await queue.push(-1, .status(0))
             }

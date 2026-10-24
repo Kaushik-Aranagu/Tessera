@@ -39,18 +39,23 @@ struct DoorTests {
         slow.firstDelay = .seconds(3600)
         slow.reply = "slow"
         quick.reply = "quick"
-        let rig = try DoorRig(brains: [.sonnet: slow, .haiku: quick], hedgeAfter: .milliseconds(40))
+        let rig = try DoorRig(brains: [.sonnet: slow, .haiku: quick], hedgeWait: .zero)
         let events = await rig.events(job([.sonnet, .haiku], hedge: true))
         #expect(events.text == "quick")
         #expect(slow.streamCount == 1 && quick.streamCount == 1)
         // Both holds are released, and both calls left a row.
         #expect(rig.ledger.pendingNano == 0)
-        #expect(rig.ledger.calls().count == 2)
+        // The cancelled rung is recorded at what was held for it.
+        let rows = rig.ledger.calls()
+        #expect(rows.count == 2)
+        #expect(rows.contains { rig.store.value("outcome", of: $0)?.stringValue == "cancelled"
+                && rig.store.number("costNano", of: $0) == 100_000
+        })
     }
 
     @Test func noHedgeWhenSonnetAnswersInTime() async throws {
         let sonnet = FakeBrain(.sonnet), haiku = FakeBrain(.haiku)
-        let rig = try DoorRig(brains: [.sonnet: sonnet, .haiku: haiku], hedgeAfter: .seconds(3600))
+        let rig = try DoorRig(brains: [.sonnet: sonnet, .haiku: haiku], hedgeWait: nil)
         let events = await rig.events(job([.sonnet, .haiku], hedge: true))
         #expect(events.text == "ok" && haiku.streamCount == 0)
         #expect(rig.ledger.pendingNano == 0)
@@ -179,6 +184,68 @@ struct DoorTests {
         let json = try await String(decoding: JSONEncoder().encode(rig.trace.all()), as: UTF8.self)
         #expect(!json.contains("82.4") && !json.contains("lantern") && !json.contains("Be brief"))
         #expect(await rig.trace.all().count == 1)
+    }
+
+    @Test func strictAlsoScansTheRequestsOwnWordsAndLogsInexactRows() async throws {
+        let claude = FakeBrain(.haiku), apple = FakeBrain(.appleOnDevice)
+        apple.reply = "kept home"
+        let rig = try DoorRig(brains: [.haiku: claude, .appleOnDevice: apple], policy: .strict)
+        let own = BrainRequest(system: [TextBlock("Be brief.")],
+                               messages: [BrainMessage(.user, text: "I weighed in at 82.4 kg and ate 650 kcal")])
+        let hit = await rig.events(DoorJob(name: "t", ladder: [.haiku, .appleOnDevice], request: own,
+                                           estimateNano: 100_000))
+        #expect(hit.text == "kept home" && claude.streamCount == 0 && rig.sent.entries().isEmpty)
+        // A clean strict call is logged, as an inexact row (the normal masking applies to it).
+        let clean = await rig.events(job([.haiku]))
+        #expect(clean.text == "ok")
+        let rows = rig.sent.entries()
+        #expect(rows.count == 1 && rows[0].classDef?.systemKey == SystemCatalog.Key.tessSent.systemKey)
+    }
+
+    @Test func labRowsAreMirrorsInNoBackupAndNormalRowsAreNot() async throws {
+        let rig = try DoorRig(brains: [.haiku: FakeBrain(.haiku)], policy: .lab)
+        _ = await rig.events(job([.haiku], fragments: [PackFragment("Weight 82.4 kg", taint: .deviceOnly)]))
+        let exact = try #require(rig.sent.entries().first)
+        #expect(PrivateWords.isMirror(exact) && PrivateWords.isLocalOnly(exact))
+        #expect(PrivateWords.mirrorIDs(in: rig.store.context).contains(exact.id))
+        let plain = try #require(rig.sent.record(words: "hello", use: .door, requestID: nil, at: .now))
+        #expect(!PrivateWords.isMirror(plain))
+        // It still shows, exactly, in the sent list.
+        #expect(rig.sent.shownWords(of: exact).contains("82.4 kg"))
+    }
+
+    @Test func moneyActionsAreNeverOfferedToAModel() async throws {
+        for policy in [DoorPolicy.lab, .strict] {
+            let brain = FakeBrain(.haiku)
+            let rig = try DoorRig(brains: [.haiku: brain], policy: policy)
+            var request = Self.ask
+            request.tools = [ToolSpec(
+                name: "logSpend",
+                description: "Logs a spend",
+                schema: Data(#"{"type":"object"}"#.utf8)
+            )]
+            let events = await rig.events(DoorJob(name: "t", ladder: [.haiku], request: request, estimateNano: 1000))
+            #expect(events.failure == .refused && brain.streamCount == 0, "\(policy)")
+        }
+        for name in Door.moneyActions {
+            #expect(ActionRegistry.descriptors.contains { $0.name == name }, "\(name)")
+        }
+    }
+
+    @Test func theKeyScanAlsoCoversToolInputsAndToolDescriptions() async throws {
+        let key = "sk-" + "ant-" + "api03-" + String(repeating: "Ab3x", count: 8)
+        let brain = FakeBrain(.haiku)
+        let rig = try DoorRig(brains: [.haiku: brain])
+        var described = Self.ask
+        described.tools = [ToolSpec(name: "x", description: "use \(key)", schema: Data("{}".utf8))]
+        let first = await rig.events(DoorJob(name: "t", ladder: [.haiku], request: described, estimateNano: 1000))
+        var replay = Self.ask
+        replay.messages.append(BrainMessage(
+            .assistant,
+            [.toolUse(id: "1", name: "x", input: Data("{\"k\":\"\(key)\"}".utf8))]
+        ))
+        let second = await rig.events(DoorJob(name: "t", ladder: [.haiku], request: replay, estimateNano: 1000))
+        #expect(first.failure == .refused && second.failure == .refused && brain.streamCount == 0)
     }
 }
 
