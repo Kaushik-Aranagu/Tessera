@@ -30,6 +30,7 @@ public enum SystemCatalog {
         case tessWaiting
         case tessMemory
         case occasion
+        case tessTurn
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -393,6 +394,16 @@ public enum SystemCatalog {
         // The words of one request to Claude, exactly as sent ("Private phrase" for a walled one), beside its Tess Call
         // row and linked by requestID. On the phone only: never in a backup copy, the iCloud copy or an export, and
         // never the key. "Clear what was sent" deletes the rows; the spend stays in Tess Call (G653).
+        // One turn of her conversation, on the phone only (sheet 215 rev 5): written without ops, kept seven days, never in
+        // any backup copy (the local one included), the iCloud copy, an export, a log or a widget. Money, health, body,
+        // calorie and calendar text is never stored here, only a shown label or a placeholder.
+        ClassSpec(key: .tessTurn, name: "Tess Turn", parent: .thing, symbol: "bubble.left", colorRole: "neutral", fields: [
+            FieldSpec(key: "role", name: "Role", kind: .text),
+            FieldSpec(key: "text", name: "Text", kind: .text),
+            FieldSpec(key: "at", name: "At", kind: .date),
+            FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+            FieldSpec(key: "held", name: "Held back", kind: .bool),
+        ]),
         ClassSpec(key: .tessSent, name: "Tess Sent", parent: .thing, symbol: "paperplane", colorRole: "neutral", fields: [
             FieldSpec(key: "use", name: "Use", kind: .text),
             FieldSpec(key: "words", name: "Words", kind: .text),
