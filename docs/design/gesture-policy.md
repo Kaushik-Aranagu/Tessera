@@ -53,6 +53,15 @@ is `DesignSystem/GestureKit.swift`. A view never invents a distance, an axis rul
 on `.cancelled`. `.ended` is always last: that is where a row clears "a swipe just happened, so the tap that follows
 is not a tap". If the system takes the touch (a scroll wins), the row still gets `.cancelled` and `.ended`.
 
+## Home: each region owns its touches
+
+Kaushik, Oct 23: a swipe across the mosaic also moved the one-thing list. The cause was a page-level drag on Home
+(`HomeMosaicPage`) that turned the things whenever a swipe started inside the mosaic's rectangle (sheet 209's mosaic
+pager, left behind when the mosaic's own pages went). It is gone. Now: the mosaic only leans and ripples under a
+finger (`mosaicTouchFeed`, which feeds it and takes nothing); the one-thing space turns the things, and only inside its
+own frame; the apps list owns its rows; the page scrolls. No gesture on a parent decides for a child's region.
+`GestureStabilityUITests.testASwipeAcrossTheMosaicDoesNotMoveTheOneThing` holds the line.
+
 ## Action words, wheels and stacks (the patterns that are coming)
 
 - **Action word** (the bottom-left word): lean at 18 pt (`actionLean`), roll to the option's name past 56 pt

@@ -64,7 +64,6 @@ struct HomeMosaicPage: View {
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager(count: MosaicPage.count)
     @State private var pageDirection = 1
-    @State private var pageTicks = 0
     /// Sheet 213: the one-thing space's own page (the mosaic's pages are the pager's), and when Home was left.
     @State private var thingIndex = 0
     @State private var thingsLeftAt: Date?
@@ -153,23 +152,8 @@ struct HomeMosaicPage: View {
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in scroll.value = new }
         .onPreferenceChange(MosaicShieldKey.self) { shield = $0 }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
-        // A swipe that starts on the mosaic itself turns the things (the mosaic's own pages are gone).
-        .simultaneousGesture(
-            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart), coordinateSpace: .global).onEnded { value in
-                let size = HomeMosaic.moodsMosaicSize
-                let top = scrollMinY - scroll.value + coreTop
-                let mosaic = CGRect(x: pageWidth - HomeMosaic.gutter - size.width, y: top,
-                                    width: size.width, height: size.height)
-                if layerOn, MosaicPager.accepts(start: value.startLocation, translation: value.translation,
-                                                mosaic: mosaic, reach: 0),
-                    turnThing(value.translation.width)
-                {
-                    pageDirection = value.translation.width < 0 ? 1 : -1
-                    pageTicks += 1
-                }
-            }
-        )
-        .tesseraFeedback(.selection, trigger: pageTicks)
+        // Each region owns its touches (gesture policy): the mosaic only leans under a finger, the one-thing space
+        // alone turns the things, and a swipe that starts on the mosaic turns nothing.
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 // After two minutes or more away the space is back on its first thing.

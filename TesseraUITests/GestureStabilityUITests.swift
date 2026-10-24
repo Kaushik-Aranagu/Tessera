@@ -108,4 +108,36 @@ final class GestureStabilityUITests: SimulatorOnlyTestCase {
                    withVelocity: .slow, thenHoldForDuration: 0.1)
         XCTAssertTrue(app.buttons["UNDO"].waitForExistence(timeout: 6), "a Done swipe commits and offers UNDO")
     }
+
+    /// Kaushik, Oct 23: swiping across the Home mosaic moved the one-thing list. Each region owns its touches: a swipe
+    /// that starts on the mosaic leans it and turns nothing; only a swipe on the one-thing space turns the things.
+    func testASwipeAcrossTheMosaicDoesNotMoveTheOneThing() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-review.homeMosaic", "On",
+                               "-review.homeMosaicMoods", "On", "-review.homeAppsList", "On"]
+        app.launch()
+        let one = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", "One thing at a time")).firstMatch
+        XCTAssertTrue(one.waitForExistence(timeout: 20), "Home has the one-thing space")
+        sleep(2)
+        func current() -> String {
+            one.descendants(matching: .any).matching(NSPredicate(format: "label != %@", "One thing at a time"))
+                .firstMatch.label
+        }
+        let before = current()
+        // The mosaic sits above the one-thing space, 16 pt clear of it and 160 pt tall, on the right of the page.
+        let y = one.frame.minY - 80
+        let width = app.frame.width
+        for _ in 0 ..< 3 {
+            let from = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: width * 0.92, dy: y))
+            from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: -width * 0.45, dy: 0)),
+                       withVelocity: .default, thenHoldForDuration: 0)
+            sleep(1)
+            let back = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: width * 0.4, dy: y))
+            back.press(forDuration: 0.05, thenDragTo: back.withOffset(CGVector(dx: width * 0.45, dy: 0)),
+                       withVelocity: .default, thenHoldForDuration: 0)
+            sleep(1)
+        }
+        XCTAssertEqual(current(), before, "a swipe across the mosaic must not turn the one thing")
+    }
 }
