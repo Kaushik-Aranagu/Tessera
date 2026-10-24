@@ -87,6 +87,7 @@ Board: https://claude.ai/artifact/9JBnr8TytGTnKtnnyXjdik.
 - IN PROGRESS at handoff: round 3. It has Notes word-wall variants, wall shapes, the pile-to-tidy transition, a type
   study, and 6-8 more poster ideas. Board: https://claude.ai/artifact/HgDEZfib4Xw9BiafqyVydt (it may still be
   growing). If the round 3 section in `landing-living-242.md` is missing, continue round 3 from this brief.
+- Round 4 (his 1:05 AM correction: bricks packed TIGHT, as many colors as possible, packed but legible): https://claude.ai/artifact/M9JKaR55a6rRFdiBcH2sYU. Archivo condensed, justified rows that solve their own height, stacks of small words, 12 colors. The algorithm is in `landing-living-242.md`, "Round 4". This is the current direction.
 - Don't send landing build text to the builders until he picks.
 
 ## Other rooms

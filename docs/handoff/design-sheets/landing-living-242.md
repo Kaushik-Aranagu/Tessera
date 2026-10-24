@@ -39,3 +39,10 @@ First use: the Notes landing. Band about 354x350 pt where the mosaic sits, packe
 **What else could use the band:** Lists, Kitchen pantry, Training library, Tess's memory, Search results, a Home gallery face.
 
 **Recommendation:** band 4 Newest first, opened with the 5 pile-to-poster tidy, type 5 with ink-important color. Not sent to builders until Kaushik picks.
+
+## Round 4 word wall, packed (his 1:05-1:07 AM) — board https://claude.ai/artifact/M9JKaR55a6rRFdiBcH2sYU
+His correction: a band filled like a wall of different-sized bricks, each brick a word, packed TIGHT; as many colors as possible (the 3-4 color rule does not apply to the wall); choose weight, size and font so it is very packed but legible.
+- Packing algorithm: rows solve their own height. Single word width = a*h/0.86 (a = width per px of size); a stack of n words, each line sized to fill the brick width, is (h-(n-1)*3)/(0.86*sum(1/a_i)) wide. Each row follows a pattern (B S / S B S / B B S / S B / B S B), with big words from the top of the importance list and stacks from the bottom, words in a stack paired by length. It adds bricks until it reaches its target height's width, then solves h by bisection so the row meets both edges exactly. No horizontal scaling. Gap 3 pt all round. Min 13 px.
+- Type: Archivo condensed (wdth 75): 900 on rows above 60 px, 800 below, 700 in stacks. Line box 0.86 of the size. Figtree and Bricolage Grotesque were compared on toggles.
+- Color: every brick has its own color from a 12-color set, stepped (index*5 mod 12) so neighbors differ. Light: B5452B 1E6E77 7A5A12 5A3F8E 2F6A8F 8A4570 3F6B2A 9A2541 0F766E 92400E 1F4E8C ink. Black: F09A7E 84C3C9 E2C26A B4A3E6 8DBAD6 E3A3CB A9D48A F08E9C 5FD0C0 F0B07A 9DB8F0 ink.
+- Live: every 6 s the word set rotates and bricks glide to new places (0.6 s spring). Toss: bricks fall into a tilted heap, then tidy into the wall. Reduce Motion: cross-fade only.
