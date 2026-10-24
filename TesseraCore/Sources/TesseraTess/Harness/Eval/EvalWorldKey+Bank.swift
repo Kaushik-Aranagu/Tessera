@@ -30,7 +30,7 @@ extension EvalWorldKey {
     }
 
     func bests() -> [WorldQuestion] {
-        Self.exercises.compactMap { exercise in
+        Self.exercises.compactMap { (exercise: String) -> WorldQuestion? in
             guard let best = best(exercise) else { return nil }
             return WorldQuestion(id: "bank/best/\(exercise)", kind: .lookUp,
                                  turns: ["What's the heaviest I've done on \(exercise)?"],
@@ -63,7 +63,7 @@ extension EvalWorldKey {
     }
 
     func firstCooks() -> [WorldQuestion] {
-        world.recipes.compactMap { recipe in
+        world.recipes.compactMap { (recipe: String) -> WorldQuestion? in
             guard let first = world.cooks.filter({ $0.recipe == recipe }).map(\.day).min() else { return nil }
             return WorldQuestion(id: "bank/firstCook/\(recipe)", kind: .when,
                                  turns: ["When did I first cook \(recipe)?"], expected: .day(first), tools: ["query"])
@@ -166,11 +166,14 @@ extension EvalWorldKey {
 
     /// A count, then "and the month before?", for the five recipes cooked most in October.
     func moreFollowUps() -> [WorldQuestion] {
-        let october = Dictionary(grouping: world.cooks.filter { inMonth($0.day, 2026, 10) }, by: { $0.recipe })
-            .map { ($0.key, $0.value.count) }
-            .sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0 < $1.0 }
-            .prefix(5)
-        return october.compactMap { recipe, _ in
+        let cooked: [EvalWorld.Cook] = world.cooks.filter { inMonth($0.day, 2026, 10) }
+        let byRecipe: [String: [EvalWorld.Cook]] = Dictionary(grouping: cooked) { $0.recipe }
+        let counts: [(recipe: String, count: Int)] = byRecipe.map { (recipe: $0.key, count: $0.value.count) }
+        let ranked: [(recipe: String, count: Int)] = counts.sorted { lhs, rhs in
+            lhs.count != rhs.count ? lhs.count > rhs.count : lhs.recipe < rhs.recipe
+        }
+        let october: [String] = ranked.prefix(5).map(\.recipe)
+        return october.compactMap { (recipe: String) -> WorldQuestion? in
             let september = cooks(recipe, year: 2026, month: 9)
             guard september > 0 else { return nil }
             return WorldQuestion(id: "bank/followUp/\(recipe)", kind: .followUp,

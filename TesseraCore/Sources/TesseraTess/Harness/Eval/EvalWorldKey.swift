@@ -109,12 +109,18 @@ public struct EvalWorldKey: Sendable {
 
     /// The Monday of the week with the least sleep on average.
     func shortestSleepWeek() -> Date? {
-        let weeks = Dictionary(grouping: world.nights) { calendar.dateInterval(of: .weekOfYear, for: $0.day)?.start }
-        return weeks.compactMap { start, nights -> (Date, Double)? in
-            guard let start, nights.count == 7 else { return nil }
-            return (start, nights.map(\.hours).reduce(0, +) / 7)
+        let weeks: [Date?: [EvalWorld.Night]] = Dictionary(grouping: world.nights) { night in
+            calendar.dateInterval(of: .weekOfYear, for: night.day)?.start
         }
-        .min { $0.1 != $1.1 ? $0.1 < $1.1 : $0.0 < $1.0 }?.0
+        let averages: [(start: Date, hours: Double)] = weeks.compactMap { entry -> (start: Date, hours: Double)? in
+            guard let start = entry.key, entry.value.count == 7 else { return nil }
+            let total: Double = entry.value.map(\.hours).reduce(0, +)
+            return (start: start, hours: total / 7)
+        }
+        let shortest = averages.min { lhs, rhs in
+            lhs.hours != rhs.hours ? lhs.hours < rhs.hours : lhs.start < rhs.start
+        }
+        return shortest?.start
     }
 
     // MARK: Questions
