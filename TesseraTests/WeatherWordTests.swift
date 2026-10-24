@@ -19,7 +19,7 @@ struct WeatherWordTests {
         #expect(plan(.fog).mist && plan(.fog).clouds.isEmpty)
         // Rain: a rain cloud and strokes from finer to heavier; heavy slants and splashes.
         let wet = [WeatherKind.drizzle, .rain, .heavyRain].map { plan($0) }
-        let noClouds = wet.allSatisfy { $0.clouds.isEmpty }
+        let noClouds = wet.allSatisfy(\.clouds.isEmpty)
         #expect(noClouds, "rain has no cloud (v2.8)")
         let counts = wet.map(\.strokes), lengths = wet.map(\.strokeLength)
         #expect(counts[0] < counts[1] && counts[1] < counts[2])

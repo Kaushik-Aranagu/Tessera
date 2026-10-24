@@ -534,7 +534,12 @@ struct MosaicGradeTests {
         let size = CGSize(width: 402, height: 874)
         func side(dark: Bool) -> CGFloat {
             let engine = MosaicScreenEngine(size: size, coreTop: 480)
-            engine.configure(size: size, coreTop: 480, dark: dark, ground: dark ? (0.05, 0.05, 0.06) : (0.98, 0.98, 0.97))
+            engine.configure(
+                size: size,
+                coreTop: 480,
+                dark: dark,
+                ground: dark ? (0.05, 0.05, 0.06) : (0.98, 0.98, 0.97)
+            )
             return engine.tileSide
         }
         #expect(side(dark: false) == 3.6 && side(dark: true) == 3.2)
