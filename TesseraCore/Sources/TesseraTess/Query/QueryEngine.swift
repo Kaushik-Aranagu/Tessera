@@ -209,7 +209,7 @@ public enum QueryEngine {
                 let entry = object.classDef.flatMap { classDef in
                     classes[.exerciseEntry].map { ClassResolver.isSubclass(classDef, of: $0) } == true ? object : nil
                 } ?? object.parent
-                return (entry.flatMap { store.linkedClass("exercise", of: $0) }).map { [.classDef($0)] } ?? []
+                return visible(classDef: entry.flatMap { store.linkedClass("exercise", of: $0) }, context)
             default:
                 guard let classDef = object.classDef, let field = ClassResolver.field(segment, of: classDef) else {
                     throw QueryError("no field called \(segment)")
@@ -221,7 +221,7 @@ public enum QueryEngine {
                 case .ref, .refList:
                     return visible(store.linkedObjects(segment, of: object).map(Value.object), context)
                 case .classRef:
-                    return store.linkedClass(segment, of: object).map { [.classDef($0)] } ?? []
+                    return visible(classDef: store.linkedClass(segment, of: object), context)
                 default:
                     return store.value(segment, of: object).map(convert).map { [$0] } ?? []
                 }
@@ -260,14 +260,25 @@ public enum QueryEngine {
         return object.classDef?.name ?? "an item"
     }
 
-    /// A linked object that is private reads as no value.
+    /// A linked object reads as no value unless it is a kind the allow-list names and is not private. `about` links
+    /// can point at any class, so a note about a Spend or a sleep night must not reach its values.
     private static func visible(_ values: [Value], _ context: Context) -> [Value] {
-        values.filter { value in
-            if case let .object(object) = value {
-                return !TessTools.isPrivateForClaude(object, store: context.store, classes: context.classes)
-            }
-            return true
+        let allowed = TessTools.countable.compactMap { context.classes[$0] }
+        return values.filter { value in
+            guard case let .object(object) = value else { return true }
+            guard let classDef = object.classDef,
+                  allowed.contains(where: { ClassResolver.isSubclass(classDef, of: $0) }),
+                  !TessAskRouter.isUnnameable(object, classes: context.classes)
+            else { return false }
+            return !TessTools.isPrivateForClaude(object, store: context.store, classes: context.classes)
         }
+    }
+
+    /// A class reached by a classRef step reads as no value when its name is private.
+    private static func visible(classDef: ClassDef?, _ context: Context) -> [Value] {
+        guard let classDef else { return [] }
+        let last = BodyWeight.lastKg(in: context.store)
+        return ObjectPrivacy.isPrivateTitle(classDef.name, lastWeightKg: last) ? [] : [.classDef(classDef)]
     }
 
     private static func convert(_ field: FieldValue) -> Value {
