@@ -8,6 +8,7 @@ import TesseraCore
 // MARK: - Loop maths
 
 /// How a looping list sits around its focus, pure so it tests without a screen.
+@MainActor
 enum KitchenLoop {
     /// Steps from `focus` to `index` the nearer way round: -(count - 1) / 2 through count / 2.
     static func relative(_ index: Int, focus: Int, count: Int) -> Int {

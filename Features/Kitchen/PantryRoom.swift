@@ -25,7 +25,8 @@ struct PantryRoomItem: Identifiable, Equatable {
 
     /// What VoiceOver says: "pinned, Eggs, low".
     var spoken: String {
-        [isPinned ? "pinned" : nil, name, isLow ? "low" : amount].compactMap(\.self).joined(separator: ", ")
+        let parts: [String?] = [isPinned ? "pinned" : nil, name, isLow ? "low" : amount]
+        return parts.compactMap(\.self).joined(separator: ", ")
     }
 }
 
