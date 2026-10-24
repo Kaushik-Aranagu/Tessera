@@ -79,6 +79,8 @@ final class WorkoutSession {
     var undoable: Undoable?
     /// LOG … AND FINISH: the finish and the set it came with, taken back together for 10 s ("Push A, back on.").
     private(set) var finishedWithSet: (finish: OpRecord, set: Undoable, at: Date)?
+    /// The record of the last plain Finish and when it ran (sheet 230: Finish keeps a 10 s Undo).
+    private(set) var finishRecord: (record: OpRecord, at: Date)?
 
     enum Phase: Equatable {
         /// Dialling the next set.
@@ -217,7 +219,34 @@ final class WorkoutSession {
     }
 
     func targetSets(of entry: ObjectRecord) -> Int {
-        max(Int(model.store.number("targetSets", of: entry) ?? 3) - (skipped[entry.id] ?? 0), 0)
+        max(Int(model.store.number("targetSets", of: entry) ?? 3) + (extraSets[entry.id] ?? 0)
+            - (skipped[entry.id] ?? 0), 0)
+    }
+
+    /// Today-only changes from the lift page (sheet 230): extra sets (or fewer, as a negative), a reps target, a load.
+    /// Nothing is written to the plan; "Also the usual" is the page's own switch.
+    var extraSets: [UUID: Int] = [:]
+    var repsOverride: [UUID: Double] = [:]
+
+    /// Sets today's plan for an exercise entry: how many sets, how many reps, how heavy (kilograms).
+    func setToday(entry: ObjectRecord, sets: Int? = nil, reps: Int? = nil, weight newWeight: Double? = nil) {
+        if let sets {
+            let base = Int(model.store.number("targetSets", of: entry) ?? 3) - (skipped[entry.id] ?? 0)
+            extraSets[entry.id] = max(sets, setRows(of: entry).count, 1) - base
+        }
+        if let reps {
+            repsOverride[entry.id] = Double(reps)
+        }
+        if let newWeight {
+            presetWeight[entry.id] = newWeight
+            if entry.id == currentEntry?.id {
+                weight = newWeight
+            }
+        }
+        loggedCount += 1
+        if entry.id == currentEntry?.id, reps != nil, !isEditing {
+            self.reps = Double(reps ?? Int(self.reps))
+        }
     }
 
     /// Planned sets skipped this session, per exercise entry (nothing is written for a skipped set).
@@ -261,7 +290,7 @@ final class WorkoutSession {
     }
 
     func targetReps(of entry: ObjectRecord) -> Double {
-        model.store.number("targetReps", of: entry) ?? 8
+        repsOverride[entry.id] ?? model.store.number("targetReps", of: entry) ?? 8
     }
 
     func targetWeight(of entry: ObjectRecord) -> Double? {
@@ -517,6 +546,23 @@ extension WorkoutSession {
         loadDefaults()
     }
 
+    /// Whether a plain Finish can still be taken back (10 s).
+    func canUndoFinish(at now: Date = AppClock.now) -> Bool {
+        guard finishedAt != nil, let finishRecord, finishedWithSet == nil else { return false }
+        return now.timeIntervalSince(finishRecord.at) < 10 && finishRecord.record.state != .undone
+    }
+
+    /// Takes a plain Finish back: the workout runs again where it stopped.
+    func undoFinish() {
+        guard canUndoFinish(), let finishRecord else { return }
+        model.engine.undo(finishRecord.record)
+        self.finishRecord = nil
+        finishedAt = nil
+        loggedCount += 1
+        lastTouchedAt = AppClock.now
+        model.touch()
+    }
+
     /// The 10 s after LOG … AND FINISH.
     func canTakeBackFinish(at now: Date = AppClock.now) -> Bool {
         guard let finishedWithSet else { return false }
@@ -734,6 +780,7 @@ extension WorkoutSession {
         if withSet, let record, let undoable {
             finishedWithSet = (record, undoable, now)
         }
+        finishRecord = record.map { ($0, now) }
         finishedAt = now
         restEndsAt = nil
         undoable = nil
