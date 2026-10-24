@@ -87,6 +87,9 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         let usedUp = app.buttons["pantry.action.usedUp"]
         XCTAssertGreaterThanOrEqual(usedUp.frame.height, 44)
         usedUp.tap()
+        let receipt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@",
+                                                           "used up. On To get.")).firstMatch
+        XCTAssertTrue(receipt.waitForExistence(timeout: 5), "The engine confirmed the used-up mutation")
         wait(NSPredicate(format: "exists == false"), on: eggs)
         XCTAssertTrue(app.buttons["Undo"].waitForExistence(timeout: 5))
         app.buttons["Undo"].tap()
@@ -121,6 +124,9 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         wait(NSPredicate(format: "label == %@", before), on: eggs)
         let start = eggs.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 120, dy: 0)))
+        let receipt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@",
+                                                           "used up. On To get.")).firstMatch
+        XCTAssertTrue(receipt.waitForExistence(timeout: 5), "The engine confirmed the used-up mutation")
         wait(NSPredicate(format: "exists == false"), on: eggs)
         XCTAssertTrue(app.buttons["Undo"].waitForExistence(timeout: 5))
         app.buttons["Undo"].tap()
