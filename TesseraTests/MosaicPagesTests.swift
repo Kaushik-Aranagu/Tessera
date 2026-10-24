@@ -111,42 +111,9 @@ struct MosaicPagesTests {
 
     // MARK: Pages
 
-    @Test func onlyTheMoodPageIsReachableAndTheWipeIsSixTenthsOfASecond() {
+    @Test func onlyTheMoodPageIsLeftAndTheWipeIsSixTenthsOfASecond() {
         #expect(MosaicPage.count == 1 && MosaicPage.wipeSeconds == 0.6 && MosaicPage.thingWash == 0.20)
-        #expect(MosaicPage.allCases == [.mood, .weather, .next, .week])
-    }
-
-    @Test func theWeatherPageIsLabelledSampleAndNeverCarriesAnAmount() {
-        #expect(MosaicPage.weather.caption(facts: nil, page: nil) == "Weather, sample until Apple weather")
-        #expect(MosaicWeatherSample.temperature == 58)
-    }
-
-    @Test func theWeekPageIsSevenLettersWithAThreeTileMarkUnderEach() {
-        let tiles = MosaicPageField.weekTiles(cols: 44, rows: 24)
-        let marks = tiles.values.filter(\.isMark)
-        #expect(marks.count == 7 * 3)
-        #expect(Set(tiles.values.map(\.day)) == Set(0 ... 6))
-        #expect(tiles.keys.allSatisfy { $0 / 24 >= 0 && $0 / 24 < 44 })
-        #expect(MosaicPageField.weekLetters.count == 7 && MosaicPageField.weekLetters.map(String.init)
-            .joined() == "MTWTFSS")
-    }
-
-    @Test func theSunHasADiscAndRaysThatTurn() {
-        let start = MosaicPageField.sunTiles(cols: 44, rows: 24, elapsed: 0)
-        let turned = MosaicPageField.sunTiles(cols: 44, rows: 24, elapsed: 2)
-        #expect(start != turned)
-        // The disc stays; only the rays move.
-        #expect(start.intersection(turned).count > 25)
-    }
-
-    @Test func theNextPagePixelsStepTowardTheGroundInEighthsAsTheMinuteCountsDown() {
-        #expect(MosaicPageField.nextStep(secondsIntoMinute: 0) == 0)
-        #expect(MosaicPageField.nextStep(secondsIntoMinute: 8) == 1.0 / 8)
-        #expect(MosaicPageField.nextStep(secondsIntoMinute: 59) == 7.0 / 8)
-        for second in 0 ..< 60 {
-            let step = MosaicPageField.nextStep(secondsIntoMinute: Double(second))
-            #expect(abs(step * 8 - (step * 8).rounded()) < 1e-9)
-        }
+        #expect(MosaicPage.allCases == [.mood])
     }
 
     // MARK: Changeovers

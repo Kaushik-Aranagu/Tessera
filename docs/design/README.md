@@ -37,3 +37,6 @@ Index of the docs in `docs/design/`.
 - [energy-112.md](energy-112.md): 112. The Energy check-in (1 to 5 on the rep drum, once a day, one quiet Day log line)
 - [class-inspector-113.md](class-inspector-113.md): 113. The read-only class inspector (fields, links, views, computed fields, one Edit key)
 - [kitchen-v2-114.md](kitchen-v2-114.md): 114. Kitchen v2 looks: the week strip, the weekly word on Groceries, the listening mark, the note line, FIX and the step handle, VoiceOver for the second lane, CAN COOK and aisle re-order
+- [room-landings-layout-226.md](room-landings-layout-226.md): 226. Room landings, layout first (four bands, Training cobalt), approved Oct 23
+- [landing-elements-kt-227.md](landing-elements-kt-227.md): 227. Landing elements for Kitchen and Training (the loaded bar, the Kitchen headline), approved Oct 23
+- [landing-elements-rooms-228.md](landing-elements-rooms-228.md): 228. Landing elements for Notes, Lists, Routines and Money, in review
