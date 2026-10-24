@@ -93,6 +93,8 @@ struct AppsListSlot: View {
     @State private var consumed = 0
     /// Held for scrolling (the pick sits at 1.06x), a soft haptic on pick up.
     @GestureState private var held = false
+    /// A hold that scrolled has just ended: its lift is not a tap.
+    @State private var holdSuppress = false
     @State private var holdBeats = 0
     /// A snap is running; flicks that arrive meanwhile wait here (at most three).
     @State private var snapping = false
@@ -129,7 +131,9 @@ struct AppsListSlot: View {
             // Sheet 220. Hold 180 ms without moving more than 6 pt: a soft haptic and the pick eases to 1.06x; then a
             // vertical drag tracks 1:1 (40 pt is one row, a tick as each crosses the middle) and a release snaps to the
             // nearest row with no momentum.
-            .highPriorityGesture(
+            // Simultaneous, never high priority: a plain tap still reaches its row's button (QA plan G13). A hold that
+            // went on to scroll does not also open the app on lift: the tap is held back for a moment after it.
+            .simultaneousGesture(
                 LongPressGesture(minimumDuration: 0.18, maximumDistance: 6)
                     .sequenced(before: DragGesture(minimumDistance: 0))
                     .updating($held) { value, state, _ in
@@ -161,8 +165,13 @@ struct AppsListSlot: View {
         .onChange(of: held) { _, isHeld in
             if isHeld {
                 holdBeats += 1
+                holdSuppress = true
             } else {
                 finishWheel()
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(250))
+                    holdSuppress = false
+                }
             }
         }
         .animation(MotionPolicy.resolve(.easeOut(duration: 0.12), reduceMotion: reduceMotion), value: held)
@@ -209,6 +218,7 @@ struct AppsListSlot: View {
 
     private func line(_ row: AppsListRows.Row, isMiddle: Bool, offset: Int) -> some View {
         Button {
+            guard !holdSuppress else { return }
             if isMiddle {
                 open(row)
             } else {
