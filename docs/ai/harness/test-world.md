@@ -10,9 +10,17 @@ its answer key are code: `Harness/Eval/EvalWorld.swift` (the generator), `EvalWo
 
 `EvalWorldSeeder.seed(_ world: EvalWorld, into engine: ActionEngine)` writes the world through the app's own
 actions, with `by: .system`, so the rows look like real use. Each action gets the world's own time (`time:`,
-`spentAt:`, `on:`), so the clock never moves. It refuses a store that holds any workout, cook, spend, money in,
-note, belief, memory line or occasion, so it can never mix into his data. Its report counts rows and refusals by
-room. Not seeded yet: leftovers (no class), the Pulldown rename (`RenameObject` renames objects, not exercise
+`spentAt:`, `on:`), so the clock never moves. Two walls, checked before the first write:
+
+- **Only a test store.** In memory, or a file under the temporary folder. When the stamp below lands, a stamped
+  store passes too (the phone's Sample data needs it). The app's own store file never passes.
+- **Only an empty store.** Every live row must be one a fresh catalog installs (the starter plan and its routines,
+  the equipment, the Groceries list), matched by class and title. Any other live row of any class, one task
+  included, refuses the seed, so it can never mix into his data.
+
+The forgotten line is forgotten through `ForgetMemory`, then scrubbed with `TessBeliefStore.redact` (its forget
+log kept in the store), so its words leave the op log as they do after the app's UNDO window. Its report counts
+rows and refusals by room. Not seeded yet: leftovers (no class), the Pulldown rename (`RenameObject` renames objects, not exercise
 classes), and told lines carry the seed's time (`RememberFact` takes none). Room by room:
 
 - **Workouts:** routines from `Maker.routines`, a plan per phase, and workouts with entries and sets. Do it the way
@@ -47,7 +55,8 @@ Use the world's own dates. Set `AppClock` to `EvalWorld.now` during the seed and
 
 `scripts/tess-eval.sh --world small|big --policy lab|strict [--kinds ...]`
 
-- It makes a fresh test store in a temporary folder. It refuses any path inside the app's own data folder.
+- It always starts from a fresh test store in the temporary folder, made for that run and never reused. It refuses
+  any path inside the app's own data folder, and the seeder refuses anything else anyway.
 - It reads the key from the Mac keychain and never prints it.
 - It runs each `WorldQuestion` through TessRun, every turn in order, and records:
   - the reply and the tools called (from the trace);

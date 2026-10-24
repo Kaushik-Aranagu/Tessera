@@ -5,9 +5,11 @@ import TesseraCore
 /// rows look like real use and the op log has every one of them. Each action gets the world's own time, so nothing
 /// needs the clock moved.
 ///
-/// Walls: it refuses a store that holds anything he made (any workout, cook, spend, money in, note, belief, memory
-/// line or occasion), so it can never mix into his data. The caller stamps the store as a test store (Core's part 2)
-/// and never seeds the app's real store file.
+/// Walls, both checked before the first write:
+/// - The store must be a test store: in memory, or a file in the temporary folder (the runner always makes a fresh
+///   one there). The app's own store file is never one. When Core's test stamp lands, a stamped store passes too.
+/// - The store must hold nothing but what a fresh catalog installs (the built-in plan, equipment, the Groceries
+///   list). Any other live row of any class, one task included, means someone uses it, and the seed is refused.
 ///
 /// Not seeded yet, and named in the report: leftovers (no class yet) and the Pulldown rename (`RenameObject` renames
 /// objects, not exercise classes; the world logs "Lat Pulldown" throughout). Told lines carry the seed's time, since
@@ -17,6 +19,8 @@ public enum EvalWorldSeeder {
     public enum Refusal: Error, Equatable {
         /// The store already holds rows of this class.
         case storeHasData(String)
+        /// The store is a file outside the temporary folder: it could be his.
+        case notATestStore
     }
 
     public struct Report: Sendable, Equatable {
@@ -28,16 +32,11 @@ public enum EvalWorldSeeder {
         public var notSeeded: [String] = ["leftovers", "renames"]
     }
 
-    /// The classes whose rows mean someone already uses the store.
-    static let hisClasses: [SystemCatalog.Key] = [.workout, .cook, .spend, .inflow, .note, .belief, .tessMemory,
-                                                  .occasion]
-
     public static func seed(_ world: EvalWorld, into engine: ActionEngine) throws -> Report {
         let store = engine.store
-        for key in hisClasses {
-            if let classDef = engine.classes[key], store.objects(of: classDef).contains(where: { !$0.isDeleted }) {
-                throw Refusal.storeHasData(key.rawValue)
-            }
+        guard isTestStore(store) else { throw Refusal.notATestStore }
+        if let row = try firstRowOfHis(in: store) {
+            throw Refusal.storeHasData(row)
         }
         var seeder = Seeder(engine: engine, world: world)
         seeder.training()
@@ -50,6 +49,35 @@ public enum EvalWorldSeeder {
         seeder.memory()
         store.save()
         return seeder.report
+    }
+
+    /// In memory, or a file under the temporary folder.
+    static func isTestStore(_ store: ObjectStore) -> Bool {
+        guard let url = store.context.url else { return true }
+        let temp = FileManager.default.temporaryDirectory.resolvingSymlinksInPath().standardizedFileURL.path
+        let path = url.resolvingSymlinksInPath().standardizedFileURL.path
+        return path.hasPrefix(temp.hasSuffix("/") ? temp : temp + "/")
+    }
+
+    /// The class name of the first live row a fresh catalog would not have made, or nil when there is none. Rows are
+    /// matched by class and title, so a starter routine he renamed counts as his.
+    static func firstRowOfHis(in store: ObjectStore) throws -> String? {
+        let fresh = ObjectStore.open(inMemory: true)
+        _ = try fresh.prepareCatalog()
+        var catalog: [String: Int] = [:]
+        for object in fresh.context.objects.values where !object.isDeleted {
+            catalog[rowKey(object), default: 0] += 1
+        }
+        for object in store.context.objects.values where !object.isDeleted {
+            let key = rowKey(object)
+            guard let left = catalog[key], left > 0 else { return object.classDef?.name ?? "object" }
+            catalog[key] = left - 1
+        }
+        return nil
+    }
+
+    static func rowKey(_ object: ObjectRecord) -> String {
+        "\(object.classDef?.id.uuidString ?? "none")|\(object.title)"
     }
 }
 
@@ -284,10 +312,15 @@ private struct Seeder {
     mutating func memory() {
         // Each belief rests on the line he told it in, which has the same time.
         var lineAt: [Date: UUID] = [:]
+        // The scrub after the UNDO window, as the app runs it. Its forget log stays in this store, never the app's
+        // own file.
+        let scrub = TessBeliefStore(engine: engine, memory: TessMemoryStore(engine: engine, forgetLogURL: nil))
         for told in world.told {
             guard let line = perform(RememberFact(text: told.text), room: "memory")?.output else { continue }
-            if told.forgotten != nil {
-                perform(ForgetMemory(memory: line.id), room: "memory")
+            if let forgotten = told.forgotten {
+                if perform(ForgetMemory(memory: line.id), room: "memory") != nil {
+                    scrub.redact(line.id, now: forgotten)
+                }
             } else {
                 lineAt[told.at] = line.id
             }

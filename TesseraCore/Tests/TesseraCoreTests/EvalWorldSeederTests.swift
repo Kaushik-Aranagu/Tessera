@@ -53,6 +53,11 @@ struct EvalWorldSeederTests {
 
         // Tess's memory: the locker line was forgotten for real, and training moved to the evening.
         #expect(!live(.tessMemory).contains { $0.title.lowercased().contains("locker") })
+        // The scrub ran too: no op, summary or receipt still says it.
+        for record in store.context.operations.values {
+            let ops = record.opsData.map { String(decoding: $0, as: UTF8.self) } ?? ""
+            #expect(!(ops + record.summary + (record.receipt ?? "")).lowercased().contains("locker"))
+        }
         let beliefs = TessBeliefStore(engine: engine)
         let times = beliefs.all().filter { $0.key == .usualTime }
         #expect(times.count == 2)
@@ -62,10 +67,28 @@ struct EvalWorldSeederTests {
     @Test func aStoreWithAnythingInItIsRefused() throws {
         let noteClass = try #require(classes[.note])
         _ = store.create(noteClass, title: "His note")
-        #expect(throws: EvalWorldSeeder.Refusal.storeHasData("note")) {
+        #expect(throws: EvalWorldSeeder.Refusal.storeHasData(noteClass.name)) {
             try EvalWorldSeeder.seed(world, into: engine)
         }
         #expect(live(.workout).isEmpty)
+    }
+
+    @Test func aStoreHoldingOnlyOneTaskIsRefused() throws {
+        let taskClass = try #require(classes[.task])
+        _ = store.create(taskClass, title: "Call the bank")
+        #expect(throws: EvalWorldSeeder.Refusal.storeHasData(taskClass.name)) {
+            try EvalWorldSeeder.seed(world, into: engine)
+        }
+        #expect(live(.note).isEmpty && live(.workout).isEmpty)
+    }
+
+    @Test func aFreshCatalogIsEmptyAndInMemoryIsATestStore() throws {
+        #expect(try EvalWorldSeeder.firstRowOfHis(in: store) == nil)
+        #expect(EvalWorldSeeder.isTestStore(store))
+        // A starter routine he renamed is his.
+        let routine = try #require(live(.routine).first)
+        routine.title = "My push day"
+        #expect(try EvalWorldSeeder.firstRowOfHis(in: store) != nil)
     }
 
     @Test func seedingTwiceIsRefused() throws {
