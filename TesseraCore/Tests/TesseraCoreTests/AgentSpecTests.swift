@@ -165,12 +165,13 @@ struct AgentSpecTests {
     @Test func aPrivatePlanListsNoRoutines() throws {
         let planClass = try #require(classes[.plan])
         let plan = store.create(planClass, title: "Knee rehab block")
-        try store.setLinks("routines", on: plan, to: [routine("Legs A")])
+        // Not a starter name: the starter plan lists "Legs A" and is plain.
+        try store.setLinks("routines", on: plan, to: [routine("Squat Focus")])
         let facts = TrainingExpertise.facts(store: store, classes: classes)
         #expect(!facts.plans.contains { $0.name.contains("rehab") })
         let label = try #require(ObjectPrivacy.shownLabel(of: plan, in: store, classes: classes))
         #expect(facts.plans.contains { $0.name == label && $0.routines.isEmpty })
-        #expect(!facts.plans.contains { $0.routines.contains("Legs A") })
+        #expect(!facts.plans.contains { $0.routines.contains("Squat Focus") })
     }
 
     @Test func theKitchenPackListsAislesPlacesAndRecipes() throws {
