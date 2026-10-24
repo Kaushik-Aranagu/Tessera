@@ -172,6 +172,7 @@ struct TrainingLandingV2: View {
             text
                 .font(Theme.Training.words(17, weight: .medium))
                 .foregroundStyle(Theme.Colors.ink)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                 .minimumScaleFactor(0.8)
                 .fixedSize(horizontal: false, vertical: true)
@@ -217,10 +218,11 @@ struct TrainingLandingV2: View {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                     if typeSize.isAccessibilitySize {
                         Text(name)
-                            .font(Theme.Training.words(34, weight: .semibold, relativeTo: .title))
+                            .font(Theme.Training.words(24, weight: .semibold, relativeTo: .title))
                             .foregroundStyle(Theme.Colors.Split.color(forName: name))
                             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                             .lineLimit(2)
+                            .minimumScaleFactor(0.5)
                             .fixedSize(horizontal: false, vertical: true)
                     } else {
                         FittedTitle(text: name, color: Theme.Colors.Split.color(forName: name))
@@ -452,7 +454,9 @@ struct TrainingLandingV2: View {
         if let word = slot.actionWord {
             switch slot {
             case .notStarted:
-                ActionWord(word: word, left: ActionOption(name: "Skip today", perform: skipToday), action: start)
+                ActionWord(word: typeSize.isAccessibilitySize ? "Start" : word,
+                           left: ActionOption(name: "Skip today", perform: skipToday), action: start)
+                    .accessibilityLabel(word)
             default:
                 ActionWord(
                     word: word,
