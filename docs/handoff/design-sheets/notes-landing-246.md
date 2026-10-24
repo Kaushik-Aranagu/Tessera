@@ -6,8 +6,8 @@ Board: https://claude.ai/artifact/1mSPKcxhvQB4pFU2tmQZkx (v4). Owner: Builder B 
 ## Page (402 x 874 pt frame, 24 pt gutters)
 - "Notes" at 54 pt top, Figtree 700 40 pt, room colour. One line under it (Figtree 16, ink 2), e.g. "Three new today, one from Tess."
 - Word wall: x 24-378, y 180-400 (220 pt, a quarter of the screen, centred on the Home mosaic slot so the mosaic hands its place to the words).
-- Doors dial: y 432-624 (32 pt under the wall). No section label.
-- One line at 664: "You last wrote in <Title>, an hour ago." Figtree 15 ink 2, title ink 600. Private notes use shownLabel.
+- Doors dial: y 432-576 (32 pt under the wall). No section label.
+- One line at 612: "You last wrote in <Title>, an hour ago." Figtree 15 ink 2, title ink 600. Private notes use shownLabel.
 - "New note" action word bottom-left (28 pt from the edge, 44 pt target), Tess bottom-right. No lines, cards or fills.
 
 ## Word wall
@@ -29,8 +29,8 @@ Board: https://claude.ai/artifact/1mSPKcxhvQB4pFU2tmQZkx (v4). Owner: Builder B 
 - NO PILE (his 2:02 AM Oct 24: "not needed, remove it, forget it"). On entry the bricks glide into place, 22 ms apart. Reduce Motion: no moments, swaps cross-fade.
 
 ## Doors dial
-- The app dial: 3 places (focus plus one above and one below), 64 pt slots, loops, haptic tick per door, spring settle.
-- Focus: name Figtree 700 21 pt x1.32 in its meaning colour, count Outfit 400 at about half size, ink 2. Neighbours: smaller, ink 2, depth blur up to 1 pt (none under Reduce Motion or Low Power).
+- The app dial: 3 places (focus plus one above and one below), 48 pt slots (his 2:06 AM: tighter spacing, same type size), loops, haptic tick per door, spring settle.
+- Focus: name Figtree 700 21 pt x1.32 in its meaning colour, count Outfit 400 at about half size, ink 2. Neighbours: smaller, ink 2, depth blur up to 1.8 pt (his 2:06 AM: a little more; none under Reduce Motion or Low Power).
 - Doors in order: All notes (ink), Ideas (room), From Tess (Tess blue), Voice memos (room), Pinned (gold), Mentions (ink), Private (slate), Archive (ink 2).
 - Right half beside the focus: "Newest <when>" (13 pt ink 2), then its 3 newest titles (16 pt, the first 700), rising 6 pt into place when the focus changes. Private titles use shownLabel.
 - Drag vertically to turn. Tap the focus to open the door; tap a neighbour to turn to it.
