@@ -24,7 +24,7 @@ actor TaggedQueue {
 }
 
 /// The one way to Claude (harness H1b). Steps, in order: policy, pack, key-shape scan, reserve, route, stream, check,
-/// settle, trace, sent log. A Claude rung never starts unless "Tess asks Claude" is on, the $50 cap has room, and no
+/// settle, trace, sent log. A Claude rung never starts unless "Tess asks Claude" is on, the $100 cap has room, and no
 /// fragment holds a key-shaped string; the exact words of every Claude request go to "What was sent".
 ///
 /// An actor in spirit: it is main-actor isolated because the ledger and the sent log are.
@@ -188,23 +188,28 @@ public final class Door {
             continuation.yield(.failed(outcome))
             continuation.finish()
         }
-        // Opus is an escalation rung: a ladder that starts with it is refused.
-        if job.ladder.first == .opus {
-            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "opusFirst"))
-            return end(.refused)
-        }
         // 1 policy, 2 pack (per rung, below), 3 key-shape scan: always, under both policies.
         let policy = policy()
         if Self.allText(job).contains(where: { looksLikeClaudeKey($0) }) {
-            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "keyShape"))
+            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "keyShape",
+                                         runID: job.runID))
             return end(.refused)
         }
         if job.request.tools.contains(where: { Self.moneyActions.contains($0.name) }) {
-            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "moneyAction"))
+            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "moneyAction",
+                                         runID: job.runID))
             return end(.refused)
         }
         let asks = asksClaude()
         let candidates = await router.candidates(for: job.ladder, asksClaude: asks)
+        // Opus is an escalation rung: it never answers first. The first rung that is live must not be Opus, whatever
+        // the
+        // ladder says (with Haiku down, [.haiku, .opus] would otherwise run Opus first).
+        if candidates.first?.id == .opus {
+            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "opusFirst",
+                                         runID: job.runID))
+            return end(.refused)
+        }
         guard !candidates.isEmpty else {
             let onlyClaude = job.ladder.allSatisfy(BrainRouter.isClaude)
             return end(onlyClaude && !asks ? .notAllowed : .other)
@@ -263,7 +268,7 @@ public final class Door {
                 return false
             }
             if claude {
-                // The $50 cap refuses before any network.
+                // The $100 runaway guard refuses before any network.
                 guard let held = ledger.reserve(job.estimateNano, now: now(), calendar: calendar) else {
                     failure = .capReached
                     return false
@@ -309,7 +314,7 @@ public final class Door {
                                          model: Self.modelName(rung.brain), at: now(), ttftMs: rung.ttftMs,
                                          totalMs: total, usage: rung.usage,
                                          outcome: rung.status.map { "\(rung.outcome.rawValue) \($0)" }
-                                             ?? rung.outcome.rawValue))
+                                             ?? rung.outcome.rawValue, runID: job.runID))
         }
 
         if !start(0) {
@@ -443,7 +448,9 @@ public final class Door {
     /// Warms a rung through the same gate as a call: Claude only when allowed, a reserve before and a ledger row and
     /// a span after, so the cap sees it. Returns what the warm-up got (status and the `max_tokens` that worked).
     @discardableResult
-    public func warm(_ id: BrainID, _ prefix: BrainRequest, name: String = "warm") async -> BrainWarm? {
+    public func warm(_ id: BrainID, _ prefix: BrainRequest, name: String = "warm",
+                     runID: UUID? = nil) async -> BrainWarm?
+    {
         guard let brain = router.provider(id) else { return nil }
         let claude = BrainRouter.isClaude(id)
         guard !claude || asksClaude() else { return nil }
@@ -468,7 +475,8 @@ public final class Door {
         }
         await trace.record(TraceSpan(kind: .brain, name: name, brain: id.rawValue, model: Self.modelName(brain),
                                      at: now(), totalMs: total, usage: result?.usage ?? BrainUsage(),
-                                     outcome: result.map { "warm \($0.status) max_tokens \($0.maxTokens)" } ?? "none"))
+                                     outcome: result.map { "warm \($0.status) max_tokens \($0.maxTokens)" } ?? "none",
+                                     runID: runID))
         return result
     }
 

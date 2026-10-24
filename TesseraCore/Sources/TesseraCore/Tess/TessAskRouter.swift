@@ -73,6 +73,16 @@ public enum TessAskRouter {
         return name.isEmpty ? "Private" : "Private \(name.lowercased())"
     }
 
+    /// The object's one-line sentence as the router shows it ("Pay rent, due Friday."), or its title. This is the
+    /// sentence only, never the change story of the op log: the harness reads objects through this one door, and the
+    /// wall test keeps the story's name out of the Tess sources.
+    public static func shownSentence(_ object: ObjectRecord, in store: ObjectStore,
+                                     classes: [SystemCatalog.Key: ClassDef], calendar: Calendar = .current) -> String?
+    {
+        Describe.sentence(object, in: store, classes: classes, calendar: calendar)
+            ?? (object.title.isEmpty ? nil : object.title)
+    }
+
     /// Money, health, body and calendar objects (the classes that are never named or sent).
     public static func isUnnameable(_ object: ObjectRecord, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
         guard let classDef = object.classDef else { return false }

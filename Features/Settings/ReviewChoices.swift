@@ -365,6 +365,12 @@ final class ReviewChoices {
                says: ["Off": "Her bursts, palette and reactions follow fixed rules.",
                       "On": "Once a day Tess asks Claude to plan her looks; nothing of yours is sent."],
                needsClaude: true, readiness: .live),
+        // Harness H3: Tess answers open questions and makes small changes with tools, streamed. Off (or Tess asks
+        // Claude Off) leaves only the phone's own model, with no tools.
+        Choice(id: "tessAsks", name: "Ask Tess anything", values: ["Off", "On"], defaultValue: "On",
+               says: ["Off": "Tess answers only with the phone's own model, and makes no changes by asking.",
+                      "On": "Ask Tess a question or for a small change; Claude may answer, and changes wait for your OK."],
+               needsClaude: true, readiness: .live),
         Choice(id: "undoLogV2", name: "Undo log", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Undo stays on the line Tess says after a change.",
                       "On": "Today ends with the last change and Undo for 10 minutes; Review lists recent changes."],
