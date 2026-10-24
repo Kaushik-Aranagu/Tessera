@@ -21,3 +21,21 @@ State per word. Routines kinds: late (a routine 30+ min past start, not done) im
 - C Tide: stack sorted by importance, sizes 56/40/31/25/21/19, state lines on the top three; re-sorts with springs through the day.
 - D Standing words: waiting words stand vertical on a floor line (height 30+34·imp), late one leans 9° and wobbles in wine, next one bobs; done words tip over and lie flat under the floor at 19 pt.
 Reduce Motion: no springs, wobble or cascade; layouts snap. Recommendation: A for both rooms; D as the playful option for Routines.
+
+## Round 3: word band (board r60, https://claude.ai/artifact/HgDEZfib4Xw9BiafqyVydt)
+
+First use: the Notes landing. Band about 354x350 pt where the mosaic sits, packed edge to edge with words, poster style. No cards, pills or fills; tap a word to open; "New note" action word at the foot.
+
+**Band layouts:** 1 Poster rows (one size per row, justified). 2 Masonry. 3 Ticker (rows drift slowly, swaps flip). 4 Newest first (recency order, each word its own size, rows justified on a shared baseline). 5 Pile, then poster: the words lie jumbled like a heap and tidy into the poster on open (staggered spring cascade, subtitles appear once settled). Pull down tosses, pull up or tap the title tidies. Live: every few seconds the quietest word swaps (flip), and one word grows when it becomes relevant. Reduce Motion: no pile, swaps crossfade every 20 s.
+
+**Words as bricks:** courses justified to the shape edge in a running bond. Arch (keystone = most important, info in the corners), half arch (Tess's line in the curve), ziggurat, and a Routines wall rising with the day (done routines laid bottom up, pending pile on the side, late one in wine). Bricks fall and stack, bottom course first.
+
+**Type rules (pick: treatment 5):** Figtree in three weight steps 720 / 620 / 520 by importance; Newsreader italic 500 for Tess; Outfit 300 for numbers. Dark mode 40 lighter in weight; small words +20 on paper. Tracking by size: -0.035 em at 48 pt and up, -0.025 at 28, -0.01 at 18, 0 below. Optical sizing on. Words in one course share a baseline (from cap height, not the box); gutters 12 pt across, 10 pt between courses; subtitle 17 pt line only when it fits under its word. Alternative with more punch: Bricolage Grotesque at 75% width.
+
+**Color (pick: ink, important in color):** the top five words in their kind color, the rest ink and ink 2 by importance, so the page stays at 3 to 4 colors. Rejected: all kind colors (six at once), tonal violet (kinds stop reading).
+
+**Sketches to combine:** fan fold, flap poster, magnets, mural, letterpress, pour, drum, masthead.
+
+**What else could use the band:** Lists, Kitchen pantry, Training library, Tess's memory, Search results, a Home gallery face.
+
+**Recommendation:** band 4 Newest first, opened with the 5 pile-to-poster tidy, type 5 with ink-important color. Not sent to builders until Kaushik picks.
