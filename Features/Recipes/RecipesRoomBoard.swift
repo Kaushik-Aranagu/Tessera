@@ -40,7 +40,7 @@ struct RecipesRoomBoard {
         }
 
         /// "needs feta", "milk low", "lemons, spaghetti and 4 more".
-        var detailTwo: String {
+        @MainActor var detailTwo: String {
             RecipesRoomBoard.detail(shorts: shorts, lows: lows, uses: uses)
         }
     }
