@@ -144,3 +144,64 @@ struct RecipesRoomBoardTests {
         #expect(RecipesRoomBoard.sectionLine(.ready, count: 7) == "7 you can make now, quickest first")
     }
 }
+
+@MainActor
+struct PantryPackerTests {
+    private func sections(_ rows: [Int], urgent: [Int]? = nil) -> [PantryPacker.Section] {
+        rows.enumerated().map { index, count in
+            PantryPacker.Section(title: "S\(index)", rows: count, urgent: urgent?[index] ?? 0)
+        }
+    }
+
+    @Test func aColumnHoldsWholeSectionsThatFit() {
+        // 26 + 4 x 44 = 202 fits a column; 26 + 1 x 44 = 70 does not fit beside it (232 - 202 = 30).
+        let packer = PantryPacker(sections: sections([4, 1, 2]))
+        #expect(packer.columns[0].map(\.section) == [0])
+        #expect(packer.columns[1].map(\.section) == [1, 2])
+    }
+
+    @Test func aSectionTooBigForAColumnSplitsWithAMoreRow() {
+        // 26 + 10 x 44 is far past 232: three rows fit beside the header and the "N more" row.
+        let packer = PantryPacker(sections: sections([10]))
+        let block = packer.columns[0][0]
+        #expect(block.count == 3 && block.more == 7 && block.height == 26 + 4 * 44)
+        #expect(packer.nextLine == "Next: the rest of S0")
+    }
+
+    @Test func theEntrySectionIsTheFirstLowOne() {
+        let packer = PantryPacker(sections: sections([2, 2, 2], urgent: [0, 1, 0]))
+        #expect(packer.columns[0][0].section == 1)
+    }
+
+    @Test func swipingContinuesASplitThenPacksOnAndStopsWhenNothingIsLeft() {
+        var packer = PantryPacker(sections: sections([10, 2]))
+        #expect(packer.advance())
+        #expect(packer.columns[0][0].start == 3)
+        // Eventually nothing moves and the step reports it.
+        var moves = 0
+        while packer.advance() {
+            moves += 1; if moves > 20 {
+                break
+            }
+        }
+        #expect(moves < 20)
+        #expect(packer.advance() == false)
+    }
+
+    @Test func backGoesUpToSixSteps() {
+        var packer = PantryPacker(sections: sections([30]))
+        for _ in 0 ..< 8 {
+            packer.advance()
+        }
+        var back = 0
+        while packer.back() {
+            back += 1
+        }
+        #expect(back == 6)
+    }
+
+    @Test func aHeaderIsSpokenWithItsCountAndLow() {
+        let packer = PantryPacker(sections: [.init(title: "Dairy and eggs", rows: 5, urgent: 2)])
+        #expect(packer.spokenHeader(packer.columns[0][0]) == "Dairy and eggs, 5, 2 low")
+    }
+}
