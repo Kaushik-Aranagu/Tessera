@@ -116,6 +116,7 @@ struct EvalWorldTests {
             previous = today
         }
         #expect(longest == 23)
+        #expect(question("bank/habit/longest-reading")?.expected == .number(23, unit: nil))
     }
 
     @Test func theBeliefChangeAndTheForgottenLine() {
@@ -129,6 +130,7 @@ struct EvalWorldTests {
         #expect(Set(key.questions().map(\.kind)) == Set(WorldKind.allCases))
         let ids = key.questions().map(\.id)
         #expect(Set(ids).count == ids.count)
+        #expect(ids.count >= 150)
     }
 
     @MainActor @Test func moneyActionsMatchTheDoor() {

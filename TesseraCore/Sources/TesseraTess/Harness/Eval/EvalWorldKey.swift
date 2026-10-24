@@ -122,7 +122,7 @@ public struct EvalWorldKey: Sendable {
     public func questions() -> [WorldQuestion] {
         var out: [WorldQuestion] = []
         out += lookUps() + counts() + whens() + changes() + unknowns() + twoSteps() + acrossRooms() + math()
-        out += followUps() + actions() + webAndPrivate() + planted()
+        out += followUps() + actions() + webAndPrivate() + planted() + bank()
         return out
     }
 
