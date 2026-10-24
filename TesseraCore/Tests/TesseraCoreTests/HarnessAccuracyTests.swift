@@ -75,13 +75,13 @@ struct HarnessAccuracyTests {
     @Test func theSentLogShowsWordsNotBracesSignaturesOrBlobs() {
         let thinking = Data(#"{"type":"thinking","thinking":"Counting sets.","signature":"SIGNATUREBLOB=="}"#.utf8)
         let result = Data(HarnessM0Tests.searchResult.utf8)
-        let use = Data(#"{"type":"tool_use","id":"toolu_9","name":"answerQuery","input":{"from":"tasks"}}"#.utf8)
+        let use = Data(#"{"type":"tool_use","id":"toolu_9","name":"query","input":{"from":"tasks"}}"#.utf8)
         let request = BrainRequest(messages: [BrainMessage(.assistant, [.raw(thinking), .raw(result), .raw(use)])])
         let words = Door.words(request)
         for noise in ["{", "}", "SIGNATUREBLOB", "EqgfCioIAhgB", "toolu_9", "srvtoolu_1", "tool_use"] {
             #expect(!words.contains(noise), "\(noise)")
         }
-        #expect(words.contains("Counting sets.") && words.contains("answerQuery") && words.contains("tasks"))
+        #expect(words.contains("Counting sets.") && words.contains("query") && words.contains("tasks"))
         #expect(words.contains("https://x.test/a"))
     }
 
