@@ -93,8 +93,11 @@ struct AppsListSlot: View {
     @State private var consumed = 0
     /// Held for scrolling (the pick sits at 1.06x), a soft haptic on pick up.
     @GestureState private var held = false
-    /// A hold that scrolled has just ended: its lift is not a tap.
+    /// A hold that scrolled (it moved past the tap slop or turned a row) has just ended: its lift is not a tap. A hold
+    /// that stayed put is a slow tap and still opens the row.
     @State private var holdSuppress = false
+    /// Whether the wheel is held, so the page can stop scrolling under the same finger.
+    var onHold: (Bool) -> Void = { _ in }
     @State private var holdBeats = 0
     /// A snap is running; flicks that arrive meanwhile wait here (at most three).
     @State private var snapping = false
@@ -163,9 +166,9 @@ struct AppsListSlot: View {
         // The hold ends however it ends (lifted or cancelled): the gesture state resets, the list snaps and the pick
         // eases back from 1.06x.
         .onChange(of: held) { _, isHeld in
+            onHold(isHeld)
             if isHeld {
                 holdBeats += 1
-                holdSuppress = true
             } else {
                 finishWheel()
                 Task { @MainActor in
@@ -271,6 +274,9 @@ struct AppsListSlot: View {
         guard !rows.isEmpty else { return }
         moved = true
         let total = Int((-translation / rowHeight).rounded(.towardZero))
+        if abs(translation) > GestureTuning.tapSlop || total != consumed {
+            holdSuppress = true
+        }
         if total != consumed {
             middle = AppsListRows.wrapped(middle, total - consumed, count: rows.count)
             consumed = total

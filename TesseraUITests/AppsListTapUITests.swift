@@ -56,4 +56,16 @@ final class AppsListTapUITests: SimulatorOnlyTestCase {
         XCTAssertTrue(rowQuery(app).allElementsBoundByIndex.filter(\.isHittable).isEmpty
             || !app.buttons["Tess"].isHittable, "The app's page opened over Home")
     }
+
+    /// A slow tap (a 0.3 s press that does not move) is still a tap: it opens the app, it is not a swallowed hold.
+    func testSlowPressOnTheMiddleRowOpensTheApp() {
+        let app = launch()
+        let before = rows(app)
+        XCTAssertGreaterThanOrEqual(before.count, 3, "Three rows are on screen")
+        guard before.count >= 3 else { return }
+        before[1].press(forDuration: 0.3)
+        sleep(2)
+        XCTAssertTrue(rowQuery(app).allElementsBoundByIndex.filter(\.isHittable).isEmpty
+            || !app.buttons["Tess"].isHittable, "A slow tap opened the app's page over Home")
+    }
 }
