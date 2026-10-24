@@ -127,7 +127,10 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
             app.buttons["Done"].tap()
         }
         XCTAssertEqual(eggs.label, before, "A compact hold must not mutate or pin")
-        let start = eggs.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
+        // Freeze the screen point: the row itself follows the drag, so its relative coordinates are not a destination.
+        let frame = eggs.frame
+        let start = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: frame.minX + frame.width * 0.2, dy: frame.midY))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 120, dy: 0)))
         XCTAssertTrue(eggs.exists)
         XCTAssertEqual(eggs.label, before)
@@ -183,7 +186,10 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         XCTAssertFalse(eggs.label.contains("low"), "A pin hold must not also toggle stock")
         app.buttons["Undo"].tap()
         wait(NSPredicate(format: "label == %@", before), on: eggs)
-        let start = eggs.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
+        // Freeze the screen point: the row itself follows the drag, so its relative coordinates are not a destination.
+        let frame = eggs.frame
+        let start = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: frame.minX + frame.width * 0.2, dy: frame.midY))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 120, dy: 0)))
         let receipt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@",
                                                            "used up. On To get.")).firstMatch
