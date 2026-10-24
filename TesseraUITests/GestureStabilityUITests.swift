@@ -89,10 +89,8 @@ final class GestureStabilityUITests: SimulatorOnlyTestCase {
     /// A real swipe still commits: a Done swipe on the Tasks lead finishes it and Tess offers UNDO. The policy only
     /// ever makes swipes steadier, never dead.
     func testATasksDoneSwipeStillCommitsAndOffersUndo() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo",
-                               "-review.tasksApp", "On", "-review.landingPages", "On"]
-        app.launch()
+        let app = launchApp(["-demo", "-demoTime", "18:10", "-resetDemo",
+                             "-review.tasksApp", "On", "-review.landingPages", "On"])
         let apps = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Tasks"))
         XCTAssertTrue(apps.firstMatch.waitForExistence(timeout: 20), "the apps list has Tasks")
         let doIt = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Do it")).firstMatch
