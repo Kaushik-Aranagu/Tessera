@@ -53,3 +53,34 @@ struct KitchenPartsTests {
         let id: Int
     }
 }
+
+@MainActor
+struct PantryRoomCopyTests {
+    @Test func theBriefNamesWhatIsLow() {
+        #expect(PantryRoomCopy.brief(low: []) == "All good in here.")
+        #expect(PantryRoomCopy.brief(low: ["Milk"]) == "Low on milk.")
+        #expect(PantryRoomCopy.brief(low: ["Milk", "Eggs"]) == "Low on milk and eggs.")
+        #expect(PantryRoomCopy.brief(low: ["Milk", "Eggs", "Feta", "Rice"]) == "Low on milk, eggs and feta.")
+        #expect(PantryRoomCopy.toGetBrief(["Milk", "Eggs", "Feta", "Rice", "Oil"]) == "Milk and eggs, and 3 more.")
+        #expect(PantryRoomCopy.toGetBrief([]) == "Nothing to get.")
+    }
+
+    @Test func theSectionLineAndPagesAreCounted() {
+        #expect(PantryRoomCopy.section(low: 2, toUse: 1) == "2 low, 1 to use soon")
+        #expect(PantryRoomCopy.section(low: 0, toUse: 0) == "Nothing low")
+        #expect(PantryRoomCopy.pageCount(0) == 1)
+        #expect(PantryRoomCopy.pageCount(5) == 1)
+        #expect(PantryRoomCopy.pageCount(6) == 2)
+        #expect(PantryRoomCopy.toGetWord(5) == "5 to get")
+    }
+
+    @Test func pinsComeFirstThenLow() {
+        let a = UUID(), b = UUID(), c = UUID()
+        func item(_ id: UUID, low: Bool, pinned: Bool) -> PantryRoomItem {
+            PantryRoomItem(id: id, name: "x", isLow: low, isPinned: pinned, amount: nil, source: .added)
+        }
+        let out = PantryRoomCopy.ordered([item(a, low: false, pinned: false), item(b, low: true, pinned: false),
+                                          item(c, low: false, pinned: true)], pinOrder: [c])
+        #expect(out.map(\.id) == [c, b, a])
+    }
+}

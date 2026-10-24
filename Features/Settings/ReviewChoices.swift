@@ -358,6 +358,13 @@ final class ReviewChoices {
                says: ["On": "Settings has a Quiet hours line: drag the two ends of the day to say when notices wait.",
                       "Off": "Quiet hours keep their last setting."],
                readiness: .live),
+        // Sheets 231 to 233: the Kitchen rooms (Pantry, Recipes, the landing and cooking), On by default.
+        Choice(id: "kitchenRoomsV2", name: "Kitchen rooms", values: ["On", "Off"], defaultValue: "On",
+               says: [
+                   "On": "Pantry, Recipes, the Kitchen page and cooking are drawn as the new rooms: a dial, a wheel and a line for what just happened.",
+                   "Off": "Pantry, Recipes, the Kitchen page and cooking stay as they were.",
+               ],
+               readiness: .live),
         Choice(id: "undoLogV2", name: "Undo log", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Undo stays on the line Tess says after a change.",
                       "On": "Today ends with the last change and Undo for 10 minutes; Review lists recent changes."],
@@ -399,7 +406,7 @@ final class ReviewChoices {
         ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2", "finishMoments", "settingsV2"]),
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
-        ("Kitchen v2", ["pantryLevelsV2", "shopV2", "linkFetch"]),
+        ("Kitchen v2", ["kitchenRoomsV2", "pantryLevelsV2", "shopV2", "linkFetch"]),
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
     ]

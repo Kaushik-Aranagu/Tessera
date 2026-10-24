@@ -15,7 +15,9 @@ struct PantryView: View {
         NavigationStack {
             Group {
                 // The places page on the dial rail while Landing pages is On (QA on #1224); else as it was.
-                if LandingSwitch.isOn {
+                if Tier1b.kitchenRoomsIsOn {
+                    PantryRoomPage()
+                } else if LandingSwitch.isOn {
                     PantryRailPage()
                 } else {
                     PantryPage()
