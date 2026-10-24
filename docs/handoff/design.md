@@ -1,5 +1,9 @@
 # Design handoff (Design lead, Oct 24, 1 AM PT; updated 4:50 PM PT with the Codex-era work)
 
+
+## Design bible (`design-bible/`)
+The whole design in one place for the next agent: start at `design-bible/00-read-me-first.md` (source order, the keystone and 3-5 s rules, the status of every screen), then `01` system and learnings, `02`-`05` per room, `06` open questions.
+
 This is where design stands at the Codex handoff. The full sheet text for every item below is copied into
 `docs/handoff/design-sheets/`. Boards are claude.ai artifact pages. They are only references: the sheets are the spec.
 
