@@ -105,3 +105,9 @@ an item's text.**
 - **A stale comment.** `TessRun.rounds` says "Up to three rounds". `maxRounds` is 10.
 - **Docs low owed from #1378.** A section whose shipped start is 0 never grows, because its ceiling is twice 0. This goes in
   the BudgetTuner and ContextBudget docs in my next PR.
+- **AnswerCheck starts in shadow.** Wire C6 into the Door as a trace field first: record the result and the
+  unsupported numbers, and don't retry. It retries one rung up only after the live runner shows false fails (a fail
+  on a reply the key scores right) under 2% of replies on the big world, and none on money (test-world.md, part 3).
+- **The forget path purges the eval.** After `ForgetBelief` applies, call `MemoryEvalRecord.forget(beliefs:)` with
+  the ids of the whole chain it deleted, so no kept miss, streak or night miss outlives the belief. The file holds
+  question ids only; a kept miss is written again from the store each night, so a deleted fact can't be re-asked.

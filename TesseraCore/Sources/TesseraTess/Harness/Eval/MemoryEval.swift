@@ -69,11 +69,14 @@ public struct MemoryEvalFacts: Sendable {
         public var question: String
         public var old: String
         public var current: String
+        /// The current belief, so forgetting it purges the question from the eval's memory.
+        public var belief: UUID?
 
-        public init(question: String, old: String, current: String) {
+        public init(question: String, old: String, current: String, belief: UUID? = nil) {
             self.question = question
             self.old = old
             self.current = current
+            self.belief = belief
         }
     }
 
@@ -104,6 +107,16 @@ public struct EvalQuestion: Codable, Sendable, Equatable {
     public var kind: EvalKind
     public var text: String
     public var expected: Expected
+    /// The belief it was written from, if any. Only the id is kept between nights, with this as its source.
+    public var belief: UUID?
+
+    public init(id: String, kind: EvalKind, text: String, expected: Expected, belief: UUID? = nil) {
+        self.id = id
+        self.kind = kind
+        self.text = text
+        self.expected = expected
+        self.belief = belief
+    }
 
     /// The kind a question id names by its first part ("find/...", "count/...").
     public static func kind(ofID id: String) -> EvalKind? {
@@ -132,19 +145,22 @@ public struct MemoryEval: Sendable {
     // MARK: Questions
 
     /// Up to `count` questions, an even spread over the kinds the facts allow, kept misses first. The same facts
-    /// and night always give the same questions.
+    /// and night always give the same questions. A kept id is asked again only if tonight's facts still write it,
+    /// so a miss about something forgotten or deleted can't come back.
     public func questions(from facts: MemoryEvalFacts, night: String, count: Int = MemoryEval.perNight,
-                          keep: [EvalQuestion] = []) -> [EvalQuestion]
+                          keep: [String] = []) -> [EvalQuestion]
     {
         var pools: [EvalKind: [EvalQuestion]] = [
             .find: finds(facts), .acrossDays: counts(facts), .when: starts(facts),
             .changed: facts.changes.map(changed), .dontKnow: facts.unknowns.map(unknown),
         ]
+        let written = Dictionary(pools.values.flatMap { $0 }.map { ($0.id, $0) }) { first, _ in first }
+        let kept = keep.compactMap { written[$0] }
         var random = SplitMix(seed: Self.seed(night))
         for kind in EvalKind.allCases {
             pools[kind] = random.shuffled(pools[kind] ?? [])
         }
-        var picked = Array(keep.prefix(count))
+        var picked = Array(kept.prefix(count))
         var seen = Set(picked.map(\.id))
         while picked.count < count {
             var added = false
@@ -206,12 +222,17 @@ public struct MemoryEval: Sendable {
     }
 
     func changed(_ change: MemoryEvalFacts.Change) -> EvalQuestion {
-        EvalQuestion(id: "changed/\(change.question)", kind: .changed, text: change.question,
-                     expected: .text(change.current))
+        EvalQuestion(id: "changed/\(change.belief?.uuidString ?? Self.digest(change.question))", kind: .changed,
+                     text: change.question, expected: .text(change.current), belief: change.belief)
     }
 
     func unknown(_ question: String) -> EvalQuestion {
-        EvalQuestion(id: "unknown/\(question)", kind: .dontKnow, text: question, expected: .dontKnow)
+        EvalQuestion(id: "unknown/\(Self.digest(question))", kind: .dontKnow, text: question, expected: .dontKnow)
+    }
+
+    /// A stable id part for a question's words, so the kept file never holds the words themselves.
+    static func digest(_ text: String) -> String {
+        String(seed(text), radix: 16)
     }
 
     // MARK: Scoring
@@ -334,20 +355,54 @@ public struct EvalNight: Codable, Sendable, Equatable {
 
 /// The eval's memory, in `Application Support/Tessera/memory-eval.json` (excluded from backups): the last 60 nights,
 /// and every missed question, asked again each night until it has been right 7 nights running (checks.md I5).
-/// Questions hold shown names only, never his words or a walled title.
+/// It holds question ids only, never a question's words or its answer: a kept miss is written again from the store
+/// each night (`MemoryEval.questions(keep:)`), so forgetting the fact forgets the question. Forgetting a belief also
+/// purges every kept miss, streak and night miss that came from it (`forget(beliefs:)`).
 public struct MemoryEvalRecord: Codable, Sendable, Equatable {
     public static let fileName = "memory-eval.json"
     public static let keepNights = 60
     public static let clearAfter = 7
 
     public var nights: [EvalNight]
-    public var kept: [EvalQuestion]
+    /// Kept miss ids, oldest first.
+    public var kept: [String]
     public var streaks: [String: Int]
+    /// The belief each kept id came from, when it came from one.
+    public var sources: [String: UUID]
 
-    public init(nights: [EvalNight] = [], kept: [EvalQuestion] = [], streaks: [String: Int] = [:]) {
+    public init(nights: [EvalNight] = [], kept: [String] = [], streaks: [String: Int] = [:],
+                sources: [String: UUID] = [:])
+    {
         self.nights = nights
         self.kept = kept
         self.streaks = streaks
+        self.sources = sources
+    }
+
+    /// His forget: every kept miss, streak and night miss written from these beliefs goes. The night counts stay,
+    /// since they are only numbers.
+    public mutating func forget(beliefs: Set<UUID>) {
+        let gone = Set(sources.filter { beliefs.contains($0.value) }.keys)
+            .union(nights.flatMap(\.missed).filter { id in beliefs.contains { id.hasSuffix($0.uuidString) } })
+        guard !gone.isEmpty else { return }
+        kept.removeAll { gone.contains($0) }
+        for id in gone {
+            streaks[id] = nil
+            sources[id] = nil
+        }
+        for index in nights.indices {
+            nights[index].missed.removeAll { gone.contains($0) }
+        }
+    }
+
+    /// The same purge on the file, for the forget path (after `ForgetBelief`, with its whole chain).
+    public static func forget(beliefs: Set<UUID>, at url: URL? = defaultURL) {
+        var record = load(from: url)
+        let before = record
+        record.forget(beliefs: beliefs)
+        if record != before {
+            record.save(to: url)
+        }
     }
 
     /// Adds a night: misses join the kept list; a kept question right again moves its streak on, and leaves the list
@@ -360,15 +415,17 @@ public struct MemoryEvalRecord: Codable, Sendable, Equatable {
         let missed = Set(runs.flatMap(\.missed))
         for question in questions {
             if missed.contains(question.id) {
-                if !kept.contains(where: { $0.id == question.id }) {
-                    kept.append(question)
+                if !kept.contains(question.id) {
+                    kept.append(question.id)
                 }
                 streaks[question.id] = 0
-            } else if kept.contains(where: { $0.id == question.id }) {
+                sources[question.id] = question.belief
+            } else if kept.contains(question.id) {
                 let streak = (streaks[question.id] ?? 0) + 1
                 if streak >= Self.clearAfter {
-                    kept.removeAll { $0.id == question.id }
+                    kept.removeAll { $0 == question.id }
                     streaks[question.id] = nil
+                    sources[question.id] = nil
                 } else {
                     streaks[question.id] = streak
                 }

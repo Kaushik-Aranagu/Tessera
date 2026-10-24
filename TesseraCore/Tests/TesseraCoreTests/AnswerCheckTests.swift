@@ -58,6 +58,24 @@ struct AnswerCheckTests {
         #expect(!check.check(reply: "That's 85% of your target.", evidence: ["80%"]).passed)
     }
 
+    @Test func euroAmountsKeepTheirOwnUnit() {
+        #expect(check.check(reply: "The trip hotel was €412.", evidence: ["Hotel 412 EUR"]).passed)
+        #expect(check.check(reply: "That's 412 euros.", evidence: ["Hotel €412"]).passed)
+        #expect(!check.check(reply: "You spent $412 on the hotel.", evidence: ["Hotel €412"]).passed)
+    }
+
+    @Test func slashDatesAreNotNumbers() {
+        #expect(check.check(reply: "Your last bench was on 10/23.", evidence: []).passed)
+        #expect(check.check(reply: "Logged 10/3 at 92.5 kg.", evidence: ["92.5 kg"]).passed)
+    }
+
+    @Test func aGroupedNumberIsNeverAYear() {
+        #expect(!check.check(reply: "You walked 2,000 steps.", evidence: ["1,800 steps"]).passed)
+        #expect(check.check(reply: "You walked 2,000 steps.", evidence: ["Steps today 2,000"]).passed)
+        // A plain 2000 still reads as a year.
+        #expect(check.check(reply: "Since 2000.", evidence: []).passed)
+    }
+
     @Test func oneIsNeverChecked() {
         #expect(check.check(reply: "One thing left today.", evidence: []).passed)
     }
