@@ -156,7 +156,8 @@ public struct TessUsageLedger {
     }
 
     /// Haiku 5.5 costs more once a prompt passes 100K tokens ($0.50 in and $2.50 out per million, from $0.10 and
-    /// $0.50). Cache prices scale with it (read at a fifth of input, a 5-minute write at 1.25x).
+    /// $0.50). Cache prices scale with it (a read at a tenth of the input price, a 5-minute write at 1.25x, a 1-hour
+    /// write at 2x).
     public static let stepTokens = 100_000
     static let steppedPrices: [String: (input: Int64, output: Int64, cacheRead: Int64, cacheWrite: Int64)] = [
         "claude-haiku-5-5": (500, 2500, 50, 625),
@@ -182,12 +183,16 @@ public struct TessUsageLedger {
         return Int64(tokens) * price.input + Int64(maxTokens) * price.output
     }
 
+    /// `cacheWrite` is all tokens written to the cache; `cacheWrite1h` is the part of them written with the 1-hour
+    /// lifetime, which costs 2x the input price instead of 1.25x.
     public static func cost(model: String, input: Int, output: Int, cacheRead: Int = 0, cacheWrite: Int = 0,
-                            webSearches: Int = 0) -> Int64
+                            cacheWrite1h: Int = 0, webSearches: Int = 0) -> Int64
     {
         guard let price = price(model: model, promptTokens: input + cacheRead + cacheWrite) else { return 0 }
+        let longWrites = min(max(cacheWrite1h, 0), cacheWrite)
         return Int64(input) * price.input + Int64(output) * price.output + Int64(cacheRead) * price.cacheRead
-            + Int64(cacheWrite) * price.cacheWrite + Int64(webSearches) * webSearchNano
+            + Int64(cacheWrite - longWrites) * price.cacheWrite + Int64(longWrites) * 2 * price.input
+            + Int64(webSearches) * webSearchNano
     }
 
     /// One row per call, written straight to the store (no op: it isn't something he did, and undo shouldn't see it).

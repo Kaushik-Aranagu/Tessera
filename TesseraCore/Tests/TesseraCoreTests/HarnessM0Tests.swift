@@ -86,7 +86,7 @@ struct HarnessM0Tests {
         for block in blocks {
             #expect(body.contains(String(decoding: block, as: UTF8.self)))
         }
-        #expect(body.contains(Self.searchResult) && !body.contains("__TESSRAW_"))
+        #expect(body.contains(Self.searchResult) && !body.contains("__RAW_"))
         let parsed = try #require(JSONSerialization.jsonObject(with: Data(body.utf8)) as? [String: Any])
         #expect((parsed["messages"] as? [[String: Any]])?.count == 3)
     }

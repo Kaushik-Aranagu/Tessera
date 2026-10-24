@@ -72,20 +72,37 @@ public final class Door {
         job.request.system.map(\.text) + job.fragments.map(\.text) + requestText(job.request)
     }
 
-    /// The text of a request apart from the system blocks: messages, tool_use inputs, tool results, and the tools'
-    /// own names, descriptions and schemas.
+    /// The text of a request apart from the system blocks: messages, replayed blocks, tool_use inputs, tool results,
+    /// and
+    /// the tools' own names, descriptions and schemas. JSON is read as its decoded string values, so a scan sees the
+    /// words, not escaped JSON text.
     static func requestText(_ request: BrainRequest) -> [String] {
         request.messages.flatMap { message in
-            message.content.compactMap { piece -> String? in
+            message.content.flatMap { piece -> [String] in
                 switch piece {
-                case let .text(text): text
-                // A replayed block holds the model's own words and tool results: scanned for a key like the rest.
-                case let .raw(data): String(decoding: data, as: UTF8.self)
-                case let .toolResult(_, content, _): content
-                case let .toolUse(_, _, input): String(decoding: input, as: UTF8.self)
+                case let .text(text): [text]
+                case let .toolResult(_, content, _): [content]
+                case let .toolUse(_, _, input): jsonStrings(input)
+                case let .raw(data): jsonStrings(data)
                 }
             }
-        } + request.tools.flatMap { [$0.name, $0.description, String(decoding: $0.schema, as: UTF8.self)] }
+        } + request.tools.flatMap { [$0.name, $0.description] + jsonStrings($0.schema) }
+    }
+
+    /// Every string value in a JSON text, decoded. Text that is not JSON comes back as it is.
+    static func jsonStrings(_ data: Data) -> [String] {
+        func walk(_ value: Any) -> [String] {
+            switch value {
+            case let text as String: [text]
+            case let list as [Any]: list.flatMap(walk)
+            case let object as [String: Any]: object.values.flatMap(walk)
+            default: []
+            }
+        }
+        guard let value = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) else {
+            return [String(decoding: data, as: UTF8.self)]
+        }
+        return walk(value)
     }
 
     /// Actions that move or record money. A model is never offered one, under either policy: money actions need his
@@ -423,5 +440,36 @@ public final class Door {
                                      at: now(), totalMs: total, usage: result?.usage ?? BrainUsage(),
                                      outcome: result.map { "warm \($0.status) max_tokens \($0.maxTokens)" } ?? "none"))
         return result
+    }
+
+    // MARK: Count tokens
+
+    /// `count_tokens` is free, but it still sends the words, so it goes through the same gate as a call: "Tess asks
+    /// Claude" must be on, the key scan covers the request, strict scans its words too, money actions are refused, and
+    /// the exact words go to What was sent. It skips only the cap reserve (it costs nothing). Nil when anything stops
+    /// it.
+    public func countTokens(_ id: BrainID, _ request: BrainRequest, fragments: [PackFragment] = []) async -> Int? {
+        guard BrainRouter.isClaude(id), asksClaude(),
+              let brain = router.provider(id) as? ClaudeBrain else { return nil }
+        let policy = policy()
+        let job = DoorJob(name: "count-tokens", ladder: [id], request: request, fragments: fragments)
+        if Self.allText(job).contains(where: { looksLikeClaudeKey($0) }) {
+            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "keyShape"))
+            return nil
+        }
+        if job.request.tools.contains(where: { Self.moneyActions.contains($0.name) }) {
+            return nil
+        }
+        let packed = pack(job, policy: policy, onClaude: true)
+        if policy == .strict, strictHit(packed) {
+            return nil
+        }
+        sentLog.record(words: Self.words(packed), use: .door, requestID: nil, at: now(), exact: policy == .lab)
+        let started = ContinuousClock.now
+        let counted = await brain.countTokens(packed)
+        await trace.record(TraceSpan(kind: .brain, name: job.name, brain: id.rawValue, at: now(),
+                                     totalMs: LatencyBench.ms(.now - started),
+                                     outcome: counted == nil ? "failed" : "works"))
+        return counted
     }
 }

@@ -40,9 +40,12 @@ public enum BrainRole: String, Sendable {
 }
 
 public enum BrainContent: Sendable, Equatable {
-    /// One content block exactly as the API sent it (text, tool_use, thinking with its signature, redacted thinking,
-    /// server tool use and results). An assistant message is replayed from these, never rebuilt from text deltas, so
-    /// thinking stays valid, encrypted search results stay valid and the cache stays warm.
+    /// One content block as the API sent it (text, tool_use, thinking with its signature, redacted thinking, server
+    /// tool use and results). An assistant message is replayed from these, never rebuilt from text deltas, so thinking
+    /// stays valid, encrypted search results stay valid and the cache stays warm. Byte for byte holds for a block that
+    /// arrives whole (a search or fetch result with its encrypted content). A block that streams in pieces (text,
+    /// thinking, tool_use) is rebuilt from them with sorted keys and its citations kept: it is the same content, but a
+    /// tool_use input is re-encoded, so its bytes are not the API's.
     case raw(Data)
     case text(String)
     case toolUse(id: String, name: String, input: Data)
@@ -149,6 +152,8 @@ public struct BrainUsage: Sendable, Equatable {
     public var cacheReadTokens: Int
     public var cacheWriteTokens: Int
     public var costNano: Int64
+    /// The part of `cacheWriteTokens` written with the 1-hour lifetime (2x the input price).
+    public var cacheWrite1hTokens: Int = 0
     /// Web searches the server ran for this call ($0.01 each, in `costNano`).
     public var webSearches: Int
 

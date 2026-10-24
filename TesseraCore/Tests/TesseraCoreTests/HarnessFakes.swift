@@ -106,7 +106,7 @@ struct DoorRig {
 
     /// `hedgeWait`: nil means the wait never ends (until cancelled); `.zero` means it is over at once. A fake clock:
     /// no real time decides which rung streams first.
-    init(brains: [BrainID: FakeBrain], asks: Bool = true, policy: DoorPolicy = .lab,
+    init(brains: [BrainID: any Brain], asks: Bool = true, policy: DoorPolicy = .lab,
          hedgeWait: Duration? = nil) throws
     {
         let store = ObjectStore.open(inMemory: true)
