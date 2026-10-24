@@ -104,8 +104,9 @@ struct TrainingLandingV2: View {
                 Text("Training")
                     .font(Theme.Training.words(40, weight: .semibold, relativeTo: .largeTitle))
                     .foregroundStyle(Theme.Colors.Accent.training)
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .lineLimit(1)
-                    .minimumScaleFactor(typeSize.isAccessibilitySize ? 0.35 : 0.75)
+                    .minimumScaleFactor(0.75)
                     .accessibilityAddTraits(.isHeader)
                     .padding(.top, Theme.Spacing.s)
                 statLines(headline)
@@ -138,7 +139,7 @@ struct TrainingLandingV2: View {
             if headline.hasPlan {
                 statButton(
                     Text("\(headline.weeksInARow)").font(Theme.Training.number(17, weight: .regular))
-                        .foregroundStyle(Theme.Colors.Gold.label)
+                        .foregroundStyle(Theme.Colors.Slate.label)
                         + Text(headline.streakLine.drop(while: { $0.isNumber })).font(Theme.Training.words(
                             17,
                             weight: .medium
@@ -389,7 +390,7 @@ struct TrainingLandingV2: View {
         }
         let words = Theme.Training.words(17)
         let count = Text("\(headline.done)").font(Theme.Training.number(17, weight: .regular))
-            .foregroundStyle(Theme.Colors.Go.green)
+            .foregroundStyle(Theme.Colors.Accent.training)
         let rest = Text(" of \(headline.planned) this week").font(words)
         guard let next = names.first else { return count + rest }
         let firstIsToday = week.first { $0.state == .today || $0.state == .upcoming }?.state == .today
