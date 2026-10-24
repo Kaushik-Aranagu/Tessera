@@ -92,7 +92,7 @@ public enum Effort: String, Sendable {
     case low, medium, high
 }
 
-public enum CacheTTL: String, Sendable, Equatable {
+public enum CacheTTL: String, Codable, Sendable, Equatable {
     case fiveMinutes = "5m"
     case oneHour = "1h"
 }
