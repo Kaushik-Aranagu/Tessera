@@ -188,8 +188,10 @@ struct PantryColumnsView: View {
             nextLine(current)
             columns(current)
                 .frame(height: PantryPacker.capacity)
-                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // Measure the available room, not the fixed-width columns (which would keep feeding their 160 pt fallback).
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .sheet(isPresented: $showingActions) {
             PantryItemActions(items: groups.flatMap(\.items), selectedID: selectedID, perform: perform)
         }

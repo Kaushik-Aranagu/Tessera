@@ -123,6 +123,7 @@ struct PantryRoomPage: View {
             ReceiptLine(receipts: receipts).padding(.horizontal, Theme.Spacing.gutter)
             foot(place: place)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background { ThemedBackground() }
         .background { EdgeSwipeBack() }
         .toolbar(.hidden, for: .navigationBar)
