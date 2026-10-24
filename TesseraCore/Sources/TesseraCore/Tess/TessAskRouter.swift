@@ -91,7 +91,7 @@ public enum TessAskRouter {
         }
         let blocked: [SystemCatalog.Key] = [.pool, .spend, .inflow, .poolMove, .rateNote, .sleepNight, .stepsDay,
                                             .restingHeartRate, .meProfile, .event, .heldNotice, .tessTurn, .tessCall,
-                                            .tessSent, .tessWaiting]
+                                            .tessSent, .tessWaiting, .belief]
         return blocked.contains { key in classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false }
     }
 }
