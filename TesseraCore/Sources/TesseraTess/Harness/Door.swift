@@ -79,6 +79,8 @@ public final class Door {
             message.content.compactMap { piece -> String? in
                 switch piece {
                 case let .text(text): text
+                // A replayed block holds the model's own words and tool results: scanned for a key like the rest.
+                case let .raw(data): String(decoding: data, as: UTF8.self)
                 case let .toolResult(_, content, _): content
                 case let .toolUse(_, _, input): String(decoding: input, as: UTF8.self)
                 }
@@ -108,6 +110,8 @@ public final class Door {
             message.content.compactMap { piece -> String? in
                 switch piece {
                 case let .text(text): text
+                // A replayed block holds the model's own words and tool results: scanned for a key like the rest.
+                case let .raw(data): String(decoding: data, as: UTF8.self)
                 case let .toolResult(_, content, _): content
                 case .toolUse: nil
                 }
@@ -340,6 +344,17 @@ public final class Door {
                     tick?.cancel()
                     return .failed(.other, sentAnything: sent)
                 }
+            case .assistant:
+                if winner == nil {
+                    winner = tag
+                    tick?.cancel()
+                    for other in Array(rungs.keys) where other != tag {
+                        await finish(other, cancelled: true)
+                        alive.remove(other)
+                    }
+                }
+                sent = true
+                continuation.yield(event)
             case let .done(usage, stop: stop):
                 if winner == nil {
                     winner = tag
