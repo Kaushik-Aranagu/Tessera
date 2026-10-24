@@ -1,0 +1,4 @@
+✘ Test theHedgeReturnsTheFirstStreamerAndSettlesBoth() recorded an issue at DoorTests.swift:43:9: Expectation failed: events.text == "quick"
+✘ Test theHedgeReturnsTheFirstStreamerAndSettlesBoth() failed after 419.740 seconds with 1 issue.
+✘ Suite DoorTests failed after 421.857 seconds with 1 issue.
+✘ Test run with 1731 tests in 219 suites failed after 460.337 seconds with 1 issue.

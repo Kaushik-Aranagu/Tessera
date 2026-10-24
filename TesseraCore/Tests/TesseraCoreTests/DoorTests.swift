@@ -35,7 +35,8 @@ struct DoorTests {
 
     @Test func theHedgeReturnsTheFirstStreamerAndSettlesBoth() async throws {
         let slow = FakeBrain(.sonnet), quick = FakeBrain(.haiku)
-        slow.firstDelay = .seconds(5)
+        // Never answers on its own (until cancelled): no clock decides which one streams first.
+        slow.firstDelay = .seconds(3600)
         slow.reply = "slow"
         quick.reply = "quick"
         let rig = try DoorRig(brains: [.sonnet: slow, .haiku: quick], hedgeAfter: .milliseconds(40))
@@ -49,7 +50,7 @@ struct DoorTests {
 
     @Test func noHedgeWhenSonnetAnswersInTime() async throws {
         let sonnet = FakeBrain(.sonnet), haiku = FakeBrain(.haiku)
-        let rig = try DoorRig(brains: [.sonnet: sonnet, .haiku: haiku], hedgeAfter: .seconds(5))
+        let rig = try DoorRig(brains: [.sonnet: sonnet, .haiku: haiku], hedgeAfter: .seconds(3600))
         let events = await rig.events(job([.sonnet, .haiku], hedge: true))
         #expect(events.text == "ok" && haiku.streamCount == 0)
         #expect(rig.ledger.pendingNano == 0)
