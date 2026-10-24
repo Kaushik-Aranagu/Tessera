@@ -487,7 +487,6 @@ final class MosaicScreenEngine {
         if let overlay, !isRim || rimSamplesLight {
             scene = overlay(source.column, source.row, clock, scene)
         }
-        scene = MosaicColour.lightGrade(scene, ground: ground)
         if source.column == nowColumn, !reduceMotion {
             scene = MosaicColour.lightened(scene, by: sin(clock / 0.7 + Double(source.row) * 0.5) * 0.08)
         }

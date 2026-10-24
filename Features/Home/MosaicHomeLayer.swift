@@ -651,7 +651,7 @@ struct MosaicHomeLayer: View {
             for row in rows {
                 guard let tile = engine.tile(column: column, row: row, nowColumn: nowColumn),
                       !engine.isLaid(grid.index(column: column, row: row)) else { continue }
-                fill(cg, grid: grid, column: column, row: row, tile: tile, side: engine.tileSide)
+                fill(cg, grid: grid, column: column, row: row, tile: tile, side: engine.tileSide, ground: engine.ground)
                 if let ghost = tile.ghost {
                     let rect = grid.rect(column: column, row: row, side: engine.tileSide)
                     let side = rect.width * ghost.scale
@@ -794,12 +794,14 @@ struct MosaicHomeLayer: View {
     }
 
     private func fill(_ cg: CGContext, grid: MosaicScreenGrid, column: Int, row: Int, tile: MosaicScreenTile,
-                      side: CGFloat)
+                      side: CGFloat, ground: MosaicTriple)
     {
         let rect = grid.rect(column: column, row: row, side: side)
+        // Home 236 v2.7: on a light page each mosaic tile is graded as it is drawn.
+        let colour = MosaicColour.lightGrade(tile.colour, ground: ground)
         let width = rect.width * tile.scale
         let height = width * tile.scaleY
-        cg.setFillColor(red: tile.colour.red, green: tile.colour.green, blue: tile.colour.blue, alpha: 1)
+        cg.setFillColor(red: colour.red, green: colour.green, blue: colour.blue, alpha: 1)
         cg.fill(CGRect(
             x: rect.midX - width / 2 + tile.offset.x,
             y: rect.midY - height / 2 + tile.offset.y,

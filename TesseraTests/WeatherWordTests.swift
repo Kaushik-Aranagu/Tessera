@@ -18,10 +18,12 @@ struct WeatherWordTests {
         #expect(plan(.overcast).clouds.count == 3 && plan(.overcast).clouds.allSatisfy { $0.tone == .grey })
         #expect(plan(.fog).mist && plan(.fog).clouds.isEmpty)
         // Rain: a rain cloud and strokes from finer to heavier; heavy slants and splashes.
-        let wet = [WeatherKind.drizzle, .rain, .heavyRain].map(plan)
-        #expect(wet.allSatisfy(\.clouds.isEmpty), "rain has no cloud (v2.8)")
-        #expect(wet[0].strokes < wet[1].strokes && wet[1].strokes < wet[2].strokes)
-        #expect(wet[0].strokeLength < wet[1].strokeLength && wet[1].strokeLength < wet[2].strokeLength)
+        let wet = [WeatherKind.drizzle, .rain, .heavyRain].map { plan($0) }
+        let noClouds = wet.allSatisfy { $0.clouds.isEmpty }
+        #expect(noClouds, "rain has no cloud (v2.8)")
+        let counts = wet.map(\.strokes), lengths = wet.map(\.strokeLength)
+        #expect(counts[0] < counts[1] && counts[1] < counts[2])
+        #expect(lengths[0] < lengths[1] && lengths[1] < lengths[2])
         #expect(wet[2].slant > 0 && wet[2].splashes && !wet[1].splashes)
         // Freezing: the same in ice, plus a glaze line.
         for (freezing, plain) in [(WeatherKind.freezingDrizzle, WeatherKind.drizzle), (.freezingRain, .rain)] {

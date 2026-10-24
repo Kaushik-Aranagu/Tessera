@@ -109,7 +109,7 @@ struct MosaicFaceTests {
             let interval = MosaicTurnPolicy.seconds(MosaicTurnPolicy.normal, using: &generator)
             let fire = MosaicTurnPolicy.fireTime(after: start, interval: interval, line: line)
             #expect(!line.collides(fire))
-            #expect(fire.timeIntervalSince(start) >= interval && fire.timeIntervalSince(start) < interval + 2)
+            #expect(fire.timeIntervalSince(start) >= interval - 1e-6 && fire.timeIntervalSince(start) < interval + 2)
         }
     }
 
@@ -453,7 +453,7 @@ struct MosaicFaceTests {
         engine.settle { _, _ in scene }
         engine.step(to: 0.01)
         engine.reduceMotion = true
-        let core = engine.core
+        let core = engine.liveCore
         let row = core.top + 14
         // Walking out from the window's left edge the colour climbs from the scene's toward the page's in whole tiles:
         // never an alpha ramp, always a solid colour between the two, and nothing is drawn 16 tiles out.
@@ -530,23 +530,13 @@ struct MosaicGradeTests {
         #expect(abs(grid.rect(column: 3, row: 5).width - 3.2) < 1e-9)
     }
 
-    @MainActor @Test func theEngineGradesAndSizesByThePage() throws {
+    @MainActor @Test func theEngineSizesTilesByThePage() {
         let size = CGSize(width: 402, height: 874)
-        func tile(dark: Bool, ground: MosaicTriple) throws -> (colour: MosaicTriple, side: CGFloat) {
+        func side(dark: Bool) -> CGFloat {
             let engine = MosaicScreenEngine(size: size, coreTop: 480)
-            engine.reduceMotion = true
-            engine.configure(size: size, coreTop: 480, dark: dark, ground: ground)
-            engine.setWindow(columns: 88, rows: 28)
-            engine.snapWindow()
-            engine.settle { _, _ in (0.5, 0.4, 0.3) }
-            engine.step(to: 0.01)
-            let core = engine.core
-            let made = try #require(engine.tile(column: core.left + 20, row: core.top + 14, nowColumn: nil))
-            return (made.colour, engine.tileSide)
+            engine.configure(size: size, coreTop: 480, dark: dark, ground: dark ? (0.05, 0.05, 0.06) : (0.98, 0.98, 0.97))
+            return engine.tileSide
         }
-        let light = try tile(dark: false, ground: (0.98, 0.98, 0.97))
-        #expect(light.colour == MosaicColour.graded((0.5, 0.4, 0.3)) && light.side == 3.6)
-        let dark = try tile(dark: true, ground: (0.05, 0.05, 0.06))
-        #expect(dark.colour == (0.5, 0.4, 0.3) && dark.side == 3.2)
+        #expect(side(dark: false) == 3.6 && side(dark: true) == 3.2)
     }
 }

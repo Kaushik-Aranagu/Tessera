@@ -50,7 +50,7 @@ struct WeatherWordEffects: ViewModifier {
         let flash = plan.bolt ? WeatherMotion.flash(at: time) : 0
         let base = kind.colour(night: night)
         let warn = overlays.first { $0.colour != nil }?.colour
-        let tone = (warn ?? base).mix(with: Theme.Colors.Weather.bolt, by: Float(flash))
+        let tone = (warn ?? base).mix(with: Theme.Colors.Weather.bolt, by: flash)
         let swayed = overlays.compactMap { $0.sway > 0 ? WeatherMotion.sway($0, at: time) : nil }.reduce(0, +)
         let shiver = overlays.contains(.windWarning) ? sin(time * 38) * 0.6 : 0
         let waver = overlays.contains(.heatWarning) ? sin(time * 5 + 1) * 0.9 : 0
