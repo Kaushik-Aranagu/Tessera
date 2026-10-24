@@ -12,3 +12,8 @@ python3 build.py > food-table.json && python3 gen.py
 
 `build.py` holds the name to FDC id table (a name with no good match is left out, never guessed); `gen.py` writes
 `FoodTableData.swift`. Source line for the app: "Food facts: USDA FoodData Central (public domain, CC0 1.0)."
+
+Notes on how a line reads the table (`Nutrition.swift`):
+- A line that says cooked, boiled, roasted or canned reads the cooked row (`cooked rice`) when there is one; with none, a raw
+  or dry row is never used, so there is no number.
+- A count with no size word ("2 eggs") uses the medium portion, then large, then whole.

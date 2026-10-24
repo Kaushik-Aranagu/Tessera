@@ -46,6 +46,14 @@ M = {
 # frozen
 "frozen pea":170016,"frozen spinach":169287,"ice cream":167575,"frozen berry":168173,
 }
+# Cooked forms: a line that says cooked, boiled or roasted is read against these ("cooked rice"), never the raw row.
+M.update({
+"cooked rice":168878,"cooked basmati rice,cooked jasmine rice":168878,"cooked pasta,cooked spaghetti,cooked penne":169737,
+"cooked lentil":172421,"cooked chickpea":173757,"cooked black bean":173735,"cooked kidney bean":173740,
+"cooked pinto bean":175200,"cooked couscous":169700,"cooked quinoa":168917,"cooked bulgur":170287,
+"cooked egg":173424,"cooked chicken breast":171477,"cooked salmon":175168,"cooked oat":173905,"cooked chicken thigh":172388,"cooked potato":170438,
+"cooked sweet potato":168483,"cooked broccoli":169967,"cooked spinach":168463,"cooked carrot":170394,
+})
 IDS={'energyKcal':'1008','protein':'1003','fat':'1004','carbohydrate':'1005','fiber':'1079','sugars':'2000','sodium':'1093','saturatedFat':'1258'}
 want=set(M.values())
 food={r['fdc_id']:r for r in csv.DictReader(open(D+'food.csv'))}

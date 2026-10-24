@@ -14,6 +14,12 @@ public struct FoodFacts: Equatable, Sendable {
     /// Milligrams.
     public let sodium: Double?
     public let saturatedFat: Double?
+    /// How the entry is prepared: a raw or dry food, a cooked one, or a canned one.
+    public let form: Form
+
+    public enum Form: String, Sendable {
+        case raw, cooked, canned
+    }
 }
 
 /// One serving of a recipe: the sum of its lines' foods, divided by the servings. Rounded only for display.
@@ -41,11 +47,12 @@ public enum Nutrition {
         var map: [String: FoodFacts] = [:]
         for line in FoodTableData.foods.split(separator: "\n") {
             let parts = line.split(separator: "|", omittingEmptySubsequences: false)
-            guard parts.count == 10, let fdc = Int(parts[1]) else { continue }
+            guard parts.count == 11, let fdc = Int(parts[1]) else { continue }
             let facts = FoodFacts(
                 name: String(parts[0]), fdcId: fdc, energyKcal: number(parts[2]), protein: number(parts[3]),
                 fat: number(parts[4]), carbohydrate: number(parts[5]), fiber: number(parts[6]),
-                sugars: number(parts[7]), sodium: number(parts[8]), saturatedFat: number(parts[9])
+                sugars: number(parts[7]), sodium: number(parts[8]), saturatedFat: number(parts[9]),
+                form: FoodFacts.Form(rawValue: String(parts[10])) ?? .raw
             )
             map[IngredientLine.key(for: facts.name)] = facts
         }
@@ -113,6 +120,8 @@ public enum Nutrition {
         }
     }
 
+    /// The size word the line says, then the medium portion when it says none ("2 eggs" is two medium eggs, as FDC's
+    /// first size), then large, then whole.
     private static func sizeLabels(in original: String) -> [String] {
         let lower = original.lowercased()
         var labels: [String] = []
@@ -147,6 +156,32 @@ public enum Nutrition {
         return nil
     }
 
+    // MARK: Which food a line means
+
+    private static let cookedWords: Set<String> = [
+        "cooked", "boiled", "roasted", "steamed", "fried", "baked", "grilled", "braised", "poached", "sauteed",
+        "sautéed", "stewed",
+    ]
+    private static let cannedWords: Set<String> = ["canned", "tinned", "drained"]
+
+    /// The food a recipe line means, read against how the line says it is prepared. "2 cups cooked rice" is the cooked
+    /// row, never the dry one (a cup of cooked rice is a third of a cup of dry); a line that says cooked or canned with
+    /// no cooked or canned row for that food has no food at all.
+    static func food(named name: String, original: String, prep: String?) -> FoodFacts? {
+        let words = Set("\(original) \(prep ?? "")".lowercased().split { !$0.isLetter && $0 != "é" }.map(String.init))
+        let cooked = !words.isDisjoint(with: cookedWords)
+        let canned = !words.isDisjoint(with: cannedWords)
+        if cooked, let row = per100g("cooked \(name)") {
+            return row
+        }
+        guard let food = per100g(name) else { return nil }
+        if cooked || canned {
+            // Only a row that is itself prepared stands in for a prepared line.
+            return food.form == .raw ? nil : food
+        }
+        return food
+    }
+
     // MARK: Per serving
 
     /// One serving of a recipe, or nil when any counted line has no food or no gram weight, the recipe or an ingredient
@@ -164,7 +199,12 @@ public enum Nutrition {
         for line in lines where !line.line.optional && !line.line.toTaste {
             let target = line.ingredient ?? line.object
             guard ObjectPrivacy.label(of: target, in: store, classes: classes) == nil,
-                  let food = per100g(line.ingredient?.title ?? line.line.name) ?? per100g(line.line.name),
+                  line.ingredient != nil || !ObjectPrivacy.isPrivateTitle(
+                      line.line.name, lastWeightKg: BodyWeight.lastKg(in: store)
+                  ),
+                  let food = food(named: line.ingredient?.title ?? line.line.name, original: line.line.original,
+                                  prep: line.line.prep) ?? food(named: line.line.name, original: line.line.original,
+                                                                prep: line.line.prep),
                   let amount = line.line.amount.map({ ($0 + (line.line.amountMax ?? $0)) / 2 }),
                   let grams = grams(amount: amount, unit: line.line.unit, original: line.line.original,
                                     prep: line.line.prep, food: food),

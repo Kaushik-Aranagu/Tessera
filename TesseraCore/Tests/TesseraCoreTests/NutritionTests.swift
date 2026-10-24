@@ -55,8 +55,10 @@ struct NutritionTests {
         #expect(Nutrition.table.count > 150)
         for (key, food) in Nutrition.table {
             #expect(food.fdcId > 0 && key == IngredientLine.key(for: food.name), "\(key)")
-            #expect(AisleGuide.guide[key] != nil, "\(key) is not a known ingredient")
-            #expect(AisleGuide.guide[key] != .household, "\(key)")
+            // A cooked row ("cooked rice") belongs to the ingredient it cooks.
+            let base = key.hasPrefix("cooked ") ? String(key.dropFirst("cooked ".count)) : key
+            #expect(AisleGuide.guide[base] != nil, "\(key) is not a known ingredient")
+            #expect(AisleGuide.guide[base] != .household, "\(key)")
             #expect(food.energyKcal != nil, "\(key) has no energy")
         }
     }
@@ -180,6 +182,45 @@ struct NutritionTests {
         #expect(Nutrition.perServing(recipe: dish, store: store, classes: classes) == nil)
         let secretRecipe = try recipe(SecretWords.title, serves: 1, lines: [("Rice", 100, .gram, "100 g rice")])
         #expect(Nutrition.perServing(recipe: secretRecipe, store: store, classes: classes) == nil)
+    }
+
+    // MARK: Cooked, canned and raw
+
+    @Test func aCookedLineReadsTheCookedRowNeverTheDryOne() throws {
+        let cooked = try #require(Nutrition.food(named: "rice", original: "2 cups cooked rice", prep: nil))
+        #expect(cooked.fdcId == 168_878 && cooked.form == .cooked && cooked.energyKcal == 130)
+        let dry = try #require(Nutrition.food(named: "rice", original: "100 g rice", prep: nil))
+        #expect(dry.fdcId == 169_756 && dry.form == .raw)
+        let grams = try #require(Nutrition.grams(amount: 2, unit: .cup, original: "2 cups cooked rice", prep: nil,
+                                                 food: cooked))
+        #expect(grams == 316)
+        let dish = try recipe("Rice bowl", serves: 2, lines: [("Rice", 2, .cup, "2 cups cooked rice")])
+        let serving = try #require(Nutrition.perServing(recipe: dish, store: store, classes: classes))
+        #expect(abs(serving.energyKcal - 205.4) < 0.1)
+        // Never the dry row's calories for a cooked cup.
+        #expect(serving.energyKcal < 365)
+    }
+
+    @Test func aCookedOrCannedLineWithNoPreparedRowHasNoNumber() throws {
+        #expect(Nutrition.food(named: "onion", original: "1 cup cooked onion", prep: nil) == nil)
+        #expect(Nutrition.food(named: "chickpea", original: "200 g chickpeas, drained", prep: nil) == nil)
+        #expect(Nutrition.food(named: "tomato", original: "400 g tomatoes, canned", prep: nil) == nil)
+        #expect(Nutrition.food(named: "chickpea", original: "200 g chickpeas", prep: "boiled")?.form == .cooked)
+        // A row that is itself prepared stands in for a prepared line.
+        #expect(Nutrition.food(named: "chopped tomato", original: "400 g chopped tomatoes, canned", prep: nil)?.form
+            == .canned)
+        let dish = try recipe("Onions", serves: 1, lines: [("Onion", 1, .cup, "1 cup roasted onion")])
+        #expect(Nutrition.perServing(recipe: dish, store: store, classes: classes) == nil)
+    }
+
+    @Test func aLineWithNoIngredientLinkStillChecksItsNameForPrivateWords() throws {
+        let recipe = try store.create(#require(classes[.recipe]), title: "Plain")
+        try store.set("serves", to: .number(1), on: recipe)
+        let line = try store.create(#require(classes[.recipeLine]), title: SecretWords.title, parent: recipe)
+        try store.set("amount", to: .number(100), on: line)
+        try store.set("unit", to: .text("g"), on: line)
+        try store.set("original", to: .text("100 g rice"), on: line)
+        #expect(Nutrition.perServing(recipe: recipe, store: store, classes: classes) == nil)
     }
 
     // MARK: Walls
