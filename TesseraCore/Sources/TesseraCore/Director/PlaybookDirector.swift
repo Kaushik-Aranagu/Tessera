@@ -115,9 +115,22 @@ public struct DirectorPlaybook: Codable, Equatable, Sendable {
         return result
     }
 
-    /// One short line, no breaks: the Explain screen shows it as written.
+    /// The line the Explain screen shows when the model's own "why" fails a check.
+    public static let neutralWhy = "Chosen for today."
+
+    /// A model's "why" is shown to him, so it passes `TessLineCheck` (one sentence, 14 words, 80 characters, a stop,
+    /// no digits it was not given) and the walls (no key, secret word, money, body or calorie fact) or it is replaced
+    /// by `neutralWhy`. The choice itself stands: only the words are swapped.
     static func line(_ text: String) -> String {
-        String(text.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces).prefix(120))
+        let one = text.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces)
+        let walled = looksLikeClaudeKey(one) || SecretWords.mentions(one) || PrivateFacts.isWalled(
+            one,
+            lastWeightKg: nil
+        )
+            || PrivateFacts.isCalorieShaped(one) || PrivateFacts.isMoneyShaped(one)
+        let verdict = TessLineCheck.check(one, slot: .detail, numbers: [], names: [], rulesLine: nil, isDone: false,
+                                          dayLabel: nil, hero: nil)
+        return !walled && verdict == .pass ? one : neutralWhy
     }
 }
 
@@ -168,7 +181,11 @@ public struct PlaybookStore: Sendable {
         let kept = (playbook ?? read(day: day)?.playbook ?? DirectorPlaybook(day: day)).clamped()
         guard let data = try? JSONEncoder().encode(File(playbook: kept, runs: runs)) else { return }
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? data.write(to: url, options: [.atomic])
+        #if os(iOS)
+            try? data.write(to: url, options: [.atomic, .completeFileProtection])
+        #else
+            try? data.write(to: url, options: [.atomic])
+        #endif
         var excluded = url
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
