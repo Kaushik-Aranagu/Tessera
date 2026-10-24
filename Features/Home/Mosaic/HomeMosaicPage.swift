@@ -34,8 +34,6 @@ struct HomeMosaicPage: View {
     @State private var coreTop: CGFloat = 0
     /// The scroll view's top in the window: content-space frames plus this are screen points at rest.
     @State private var scrollMinY: CGFloat = 0
-    /// The scroll view's top inset (the safe area) and how far it is scrolled, both from the scroll view itself.
-    @State private var insetTop: CGFloat = 0
     /// Held in an object only the layer reads, so a scroll frame redraws the layer and not the whole page.
     @State private var scroll = HomeScrollOffset()
     /// The day's clauses with Core's loaders, read once per refresh and not on every body.
@@ -63,11 +61,13 @@ struct HomeMosaicPage: View {
     @State private var shield: [CGRect] = []
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager(count: MosaicPage.count)
-    @State private var pageDirection = 1
     @State private var pageTicks = 0
     /// Sheet 213: the one-thing space's own page (the mosaic's pages are the pager's), and when Home was left.
     @State private var thingIndex = 0
     @State private var thingsLeftAt: Date?
+    /// The apps wheel is held: in the large-text scroll the page does not scroll under the same finger.
+    @State private var wheelHeld = false
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var pageWidth: CGFloat = 0
 
     private var layerOn: Bool {
@@ -79,7 +79,7 @@ struct HomeMosaicPage: View {
         // foot, at the board's own heights. The screen's real height places them (402x874 and 390x844 are exact).
         GeometryReader { geo in
             let slots = HomeSlots.make(screenHeight: geo.size.height)
-            VStack(alignment: .leading, spacing: 0) {
+            let content = VStack(alignment: .leading, spacing: 0) {
                 Color.clear.frame(height: slots.boardTop)
                 MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses,
                                onDoor: { clause, frame in
@@ -110,14 +110,25 @@ struct HomeMosaicPage: View {
                     .mosaicShield()
                 Color.clear.frame(height: slots.gapThing)
                 if HomeMosaic.appsListIsOn {
-                    AppsListSlot(onGlance: { playGlance($0) })
+                    AppsListSlot(onHold: { wheelHeld = $0 }, onGlance: { playGlance($0) })
                         .frame(height: HomeSlots.appsHeight, alignment: .top)
                         .mosaicShield()
                 }
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, HomeMosaic.gutter)
-            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
+            // From the first accessibility size the slots would not fit one screen: the same stack scrolls.
+            Group {
+                if typeSize >= .accessibility1 {
+                    ScrollView {
+                        content.frame(width: geo.size.width, alignment: .topLeading)
+                    }
+                    .scrollIndicators(.hidden)
+                    .scrollDisabled(wheelHeld)
+                } else {
+                    content.frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
+                }
+            }
             .coordinateSpace(.named(Self.space))
             .overlay(alignment: .topLeading) {
                 // Sheet 216: the date is the board's first line, so the Settings entry sits at the top left, on its
@@ -138,13 +149,13 @@ struct HomeMosaicPage: View {
                     scene: $scene,
                     controller: controller,
                     // The core sits where it does at rest, whatever the scroll, in whole tiles.
-                    coreTop: ((scrollMinY + insetTop + coreTop) / 4).rounded() * 4,
+                    coreTop: ((scrollMinY + coreTop) / 4).rounded() * 4,
                     shield: shield,
                     mood: mood,
                     moment: moment,
                     caption: $caption,
                     page: MosaicPage(rawValue: pager.index) ?? .mood,
-                    pageDirection: pageDirection,
+                    pageDirection: 1,
                     signSpec: signSpec,
                     scenery: scenery,
                     dusk: dusk

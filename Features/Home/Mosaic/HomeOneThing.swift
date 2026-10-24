@@ -221,8 +221,9 @@ struct HomeOneThing: View {
     @ViewBuilder
     private func big(_ thing: HomeThing, width: CGFloat) -> some View {
         let number = thing.bigIsNumber
-        let fit = HomeFit.fit(thing.big, family: number ? "Outfit" : "Figtree", weight: number ? .regular : .bold,
-                              size: number ? 56 : 38, width: width)
+        let fit = HomeFit.fit(thing.big, family: number ? Theme.activeFonts.mono : Theme.activeFonts.display,
+                              weight: number ? .regular : .bold, size: number ? 56 : 38, width: width,
+                              style: .largeTitle)
         let font = Theme.Typography.face(number ? Theme.activeFonts.mono : Theme.activeFonts.display, size: fit.size,
                                          relativeTo: .largeTitle, serif: false)
             .weight(number ? .regular : .bold)
@@ -241,7 +242,14 @@ struct HomeOneThing: View {
 
     /// Figtree 500 at 20 in ink: one sentence, no keyword and no underline, cut at whole words.
     private func mid(_ thing: HomeThing, width: CGFloat) -> some View {
-        let fit = HomeFit.fit(thing.mid, family: "Figtree", weight: .medium, size: 20, width: width, floor: 20)
+        let fit = HomeFit.fit(
+            thing.mid,
+            family: Theme.activeFonts.voice,
+            weight: .medium,
+            size: 20,
+            width: width,
+            floor: 20
+        )
         return Button { open(thing) } label: {
             Text(fit.text)
                 .font(Theme.voice(size: 20).weight(.medium))
@@ -254,7 +262,14 @@ struct HomeOneThing: View {
 
     /// Figtree 500 at 15 in ink 2, cut at whole words at the same edge.
     private func small(_ thing: HomeThing, width: CGFloat) -> some View {
-        let fit = HomeFit.fit(thing.small, family: "Figtree", weight: .medium, size: 15, width: width, floor: 15)
+        let fit = HomeFit.fit(
+            thing.small,
+            family: Theme.activeFonts.voice,
+            weight: .medium,
+            size: 15,
+            width: width,
+            floor: 15
+        )
         return Text(fit.text)
             .font(Theme.voice(size: 15).weight(.medium))
             .foregroundStyle(Theme.Colors.inkSecondary)
@@ -382,23 +397,29 @@ enum HomeFit {
         return made
     }
 
-    static func width(_ text: String, family: String, weight: UIFont.Weight, size: CGFloat) -> CGFloat {
-        NSAttributedString(string: text, attributes: [.font: font(family, weight, size)]).size().width.rounded(.up)
+    /// The width of `text` at the size the screen will draw it: scaled with the text size (`UIFontMetrics`), so a line
+    /// that fits at the default size is measured as it will really be at a larger one.
+    static func width(_ text: String, family: String, weight: UIFont.Weight, size: CGFloat,
+                      style: UIFont.TextStyle = .body) -> CGFloat
+    {
+        let scaled = UIFontMetrics(forTextStyle: style).scaledValue(for: size)
+        return NSAttributedString(string: text, attributes: [.font: font(family, weight, scaled)]).size().width
+            .rounded(.up)
     }
 
     /// The largest size from `size` down to `floor` (default 0.75x) at which `text` fits `width`, and the text cut at
     /// whole words if it still does not fit at the floor.
     static func fit(_ text: String, family: String, weight: UIFont.Weight, size: CGFloat, width: CGFloat,
-                    floor: CGFloat? = nil) -> (size: CGFloat, text: String)
+                    floor: CGFloat? = nil, style: UIFont.TextStyle = .body) -> (size: CGFloat, text: String)
     {
         let lowest = floor ?? (size * 0.75).rounded(.up)
         var current = size
-        while current > lowest, Self.width(text, family: family, weight: weight, size: current) > width {
+        while current > lowest, Self.width(text, family: family, weight: weight, size: current, style: style) > width {
             current -= 1
         }
         var words = text.split(separator: " ").map(String.init)
         var shown = text
-        while Self.width(shown, family: family, weight: weight, size: current) > width, words.count > 1 {
+        while Self.width(shown, family: family, weight: weight, size: current, style: style) > width, words.count > 1 {
             words.removeLast()
             shown = HomeBoard.trimTail(words.joined(separator: " "))
             while HomeBoard.endsOnStopWord(shown), words.count > 1 {
