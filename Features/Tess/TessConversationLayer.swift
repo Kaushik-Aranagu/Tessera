@@ -185,11 +185,11 @@ struct TessConversationLayer: View {
             .padding(.top, 76)
             .padding(.bottom, 206)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            .gesture(DragGesture(minimumDistance: 30).onEnded { value in
-                if value.translation.height > 70, abs(value.translation.width) < value.translation.height {
+            .pullGesture { down in
+                if down {
                     close()
                 }
-            })
+            }
             // Masked in the app switcher: the layer's words never sit in a snapshot.
             if scenePhase != .active {
                 Theme.Colors.paper.ignoresSafeArea().accessibilityHidden(true)

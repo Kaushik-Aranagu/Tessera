@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// Named pages you swipe between, with the neighbours peeking (Design sheet 108). The current tab's name sits in the
 /// middle at body size, 600; up to two neighbours on each side at label size in 38% ink, blurred (or crisp) by the
@@ -71,10 +72,7 @@ struct PeekTabs<Content: View>: View {
         }
         .frame(height: 48)
         .contentShape(Rectangle())
-        .gesture(DragGesture(minimumDistance: 24).onEnded { drag in
-            guard abs(drag.translation.width) > abs(drag.translation.height) else { return }
-            step(drag.translation.width < 0 ? 1 : -1)
-        })
+        .pageSwipe { next in step(next ? 1 : -1) }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(PeekTabsCopy.spoken(tabs, selection))
         .accessibilityAddTraits(.isHeader)
@@ -148,19 +146,11 @@ struct PeekTabs<Content: View>: View {
         }
         .scrollBounceBehavior(.always, axes: .horizontal)
         .scrollIndicators(.hidden)
-        .simultaneousGesture(sideSwipe)
+        .pageSwipe { next in step(next ? 1 : -1) }
         // The zoomed cover Review sits in closes on a pan in any direction; while pages turn in place, a side swipe
         // is the tab's, so the cover closes by its Close word (#1184).
         .interactiveDismissDisabled()
         .accessibilityElement(children: .contain)
-    }
-
-    /// A clearly sideways drag steps one tab; anything more vertical is left to the scroll.
-    private var sideSwipe: some Gesture {
-        DragGesture(minimumDistance: 24).onEnded { value in
-            guard PeekTabsLayout.isSideSwipe(value.translation) else { return }
-            step(value.translation.width < 0 ? 1 : -1)
-        }
     }
 
     private var slidingPages: some View {
@@ -211,9 +201,10 @@ enum PeekTabsLayout {
         return spec
     }
 
-    /// A drag that steps a tab: more than 40 pt sideways and at least twice as wide as it is tall.
+    /// A drag that steps a tab, by the gesture policy: well past the page distance and at least twice as wide as it is
+    /// tall (a flick is judged at lift, so this is the distance rule alone).
     static func isSideSwipe(_ translation: CGSize) -> Bool {
-        abs(translation.width) > 40 && abs(translation.width) >= 2 * abs(translation.height)
+        GestureTuning.pageTurn(startX: 100, dx: translation.width, dy: translation.height, velocityX: 0) != 0
     }
 
     /// The space between two tab words.

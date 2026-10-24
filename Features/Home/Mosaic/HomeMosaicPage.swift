@@ -10,6 +10,8 @@ struct HomeMosaicPage: View {
 
     @Environment(AppModel.self) private var model
     @State private var link: HomeLink?
+    /// Where the doorway starts: the tapped word's centre (global), else the mosaic's.
+    @State private var doorwayOrigin: CGPoint?
     /// Set by the mosaic when it is on the page: lays a finished row's colour into the picture.
     /// The mosaic's one caption line.
     @State private var caption = ""
@@ -55,6 +57,9 @@ struct HomeMosaicPage: View {
     @State private var signSlot: CGRect = .zero
     /// Sheet 214: the scene Core's picker chose for now (nil: the mood stripes). Weather and place are not read yet.
     @State private var scenery: MosaicScenery?
+    /// "Sunset" washes the mosaic to dusk for a few seconds.
+    @State private var dusk = false
+    @State private var duskTask: Task<Void, Never>?
     @State private var shield: [CGRect] = []
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager(count: MosaicPage.count)
@@ -72,7 +77,15 @@ struct HomeMosaicPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: HomeMosaic.sectionGap) {
-                MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses, noticeList: notices,
+                MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses,
+                               onDoor: { clause, frame in
+                                   doorwayFrom(frame) {
+                                       DaySentence.open(clause, model: model, openLink: { present($0) })
+                                   }
+                               },
+                               noticeList: notices,
+                               onRoom: { app, frame in doorwayFrom(frame) { present(linkFor(app)) } },
+                               onSky: { playDusk() },
                                facts: facts,
                                paused: scenePhase != .active || link != nil)
                     // Until the first refresh has read Core's loaders the sentence waits (no flicker between the
@@ -130,7 +143,8 @@ struct HomeMosaicPage: View {
                     page: MosaicPage(rawValue: pager.index) ?? .mood,
                     pageDirection: pageDirection,
                     signSpec: signSpec,
-                    scenery: scenery
+                    scenery: scenery,
+                    dusk: dusk
                 )
             }
         }
@@ -141,7 +155,7 @@ struct HomeMosaicPage: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
         // A swipe that starts on the mosaic itself turns the things (the mosaic's own pages are gone).
         .simultaneousGesture(
-            DragGesture(minimumDistance: 24, coordinateSpace: .global).onEnded { value in
+            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart), coordinateSpace: .global).onEnded { value in
                 let size = HomeMosaic.moodsMosaicSize
                 let top = scrollMinY - scroll.value + coreTop
                 let mosaic = CGRect(x: pageWidth - HomeMosaic.gutter - size.width, y: top,
@@ -179,9 +193,10 @@ struct HomeMosaicPage: View {
         .onDisappear { model.homeTessLayerActive = false }
         // Sheet 203: a pull down from the top 40 pt also opens Settings.
         .simultaneousGesture(
-            DragGesture(minimumDistance: 24).onEnded { value in
-                if value.startLocation.y < 40, value.translation.height > 60,
-                   abs(value.translation.width) < value.translation.height
+            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart)).onEnded { value in
+                if value.startLocation.y < 40,
+                   GestureTuning.pull(dx: Double(value.translation.width), dy: Double(value.translation.height),
+                                      velocityY: Double(value.velocity.height)) > 0
                 {
                     link = .settings
                 }
@@ -198,21 +213,40 @@ struct HomeMosaicPage: View {
         .tesseraFeedback(.made, trigger: softBeats)
         .tesseraFeedback(.selection, trigger: tickBeats)
         .tesseraFeedback(.setLogged, trigger: rigidBeats)
-        .environment(\.openHomeLink) { link = $0 }
+        .environment(\.openHomeLink) { present($0) }
+        .environment(\.playDoorway) { accent, reverse, navigate in
+            model.doorway.play(from: doorwayOrigin ?? mosaicCentre, accent: accent, reverse: reverse,
+                               reduceMotion: reduceMotion, navigate: { withoutAnimation(navigate) })
+            doorwayOrigin = nil
+        }
         .fullScreenCover(item: $link) { link in
-            // Settings and Today have their own back word ("‹ Home"), so it gets no Close.
-            if link == .settings || link == .today {
-                link.destination
-            } else {
-                link.destination
-                    .safeAreaInset(edge: .top, spacing: 0) {
-                        HStack {
-                            Spacer()
-                            Button("Close") { self.link = nil }
-                                .buttonStyle(InkLabelWordStyle())
+            // Settings and Today have no Close word of their own; a room has Close at the top right.
+            Group {
+                if link == .settings || link == .today {
+                    link.destination
+                } else {
+                    link.destination
+                        .safeAreaInset(edge: .top, spacing: 0) {
+                            HStack {
+                                Spacer()
+                                Button("Close") { dismissLink() }
+                                    .buttonStyle(InkLabelWordStyle())
+                            }
+                            .padding(.horizontal, Theme.Spacing.gutter - 8)
                         }
-                        .padding(.horizontal, Theme.Spacing.gutter - 8)
-                    }
+                }
+            }
+            // The edge swipe back runs the doorway in reverse, into the mosaic (no "‹ Home" word on a room).
+            .overlay(alignment: .leading) {
+                Color.clear
+                    .frame(width: 20)
+                    .contentShape(Rectangle())
+                    .gesture(DragGesture(minimumDistance: 12).onEnded { value in
+                        if value.translation.width > 60, abs(value.translation.height) < value.translation.width {
+                            dismissLink()
+                        }
+                    })
+                    .accessibilityHidden(true)
             }
         }
     }
@@ -451,9 +485,14 @@ struct HomeMosaicPage: View {
     }
 
     /// Typed words: she answers on the phone, with one plain reply to end it.
-    private func tessHeard(_: String) {
-        tessModel.say("Got it. Anything else?", names: [])
-        tessModel.offer(["That's all"])
+    private func tessHeard(_ text: String) {
+        Task {
+            // The same capture as ever: her grammar or the on-device model turns the words into actions, and she
+            // answers in one line.
+            let line = await model.ask(text)
+            tessModel.say(line.isEmpty ? "Got it." : line, names: [])
+            tessModel.offer(["That's all"])
+        }
     }
 
     private func playTess() {
@@ -503,22 +542,83 @@ struct HomeMosaicPage: View {
         return true
     }
 
+    /// The mosaic's centre in global points, where a doorway starts when no word was tapped.
+    private var mosaicCentre: CGPoint {
+        let size = HomeMosaic.moodsMosaicSize
+        return CGPoint(x: pageWidth - HomeMosaic.gutter - size.width / 2,
+                       y: scrollMinY - scroll.value + coreTop + size.height / 2)
+    }
+
+    /// A word was tapped: the doorway starts from its centre.
+    private func doorwayFrom(_ frame: CGRect, _ open: () -> Void) {
+        doorwayOrigin = CGPoint(x: frame.midX, y: frame.midY)
+        open()
+    }
+
+    private func linkFor(_ app: AppID) -> HomeLink {
+        switch HomeApp(appID: app) {
+        case .kitchen: .recipes
+        case .money: .money
+        case .notes: .notes
+        case .lists: .lists
+        case .training: .training
+        default: .review
+        }
+    }
+
+    /// "Sunset": the mosaic washes to dusk, holds for five seconds, and comes back.
+    private func playDusk() {
+        guard layerOn, scenePhase == .active else { return }
+        dusk = true
+        duskTask?.cancel()
+        duskTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(5))
+            guard !Task.isCancelled else { return }
+            dusk = false
+        }
+    }
+
+    private func withoutAnimation(_ body: () -> Void) {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction, body)
+    }
+
+    /// Opens a room through the doorway: from the tapped word if there was one, else from the mosaic's centre.
+    private func present(_ target: HomeLink) {
+        model.doorway.play(from: doorwayOrigin ?? mosaicCentre, accent: doorwayAccent(target), reverse: false,
+                           reduceMotion: reduceMotion, navigate: { withoutAnimation { link = target } })
+        doorwayOrigin = nil
+    }
+
+    /// "Close" or "‹ Home": the doorway back into the mosaic.
+    private func dismissLink() {
+        let accent = link.map(doorwayAccent) ?? Theme.Colors.ink
+        model.doorway.play(from: mosaicCentre, accent: accent, reverse: true, reduceMotion: reduceMotion,
+                           navigate: { withoutAnimation { link = nil } })
+    }
+
+    private func doorwayAccent(_ target: HomeLink) -> Color {
+        switch target {
+        case .training: HomeApp.training.accent
+        case .recipes, .groceries, .pantry, .pasteRecipe: HomeApp.kitchen.accent
+        case .money: HomeApp.money.accent
+        case .notes: HomeApp.notes.accent
+        case .lists: HomeApp.lists.accent
+        case .review: HomeApp.routines.accent
+        case .today, .settings: Theme.Colors.ink
+        }
+    }
+
     /// A tap goes to the thing's own target: its object, its app's room, Today, or the weather.
     private func openThing(_ thing: HomeThing) {
         switch thing.target {
         case let .object(id):
             model.path.append(Route.object(id))
         case let .room(app):
-            switch HomeApp(appID: app) {
-            case .kitchen: link = .recipes
-            case .money: link = .money
-            case .notes: link = .notes
-            case .lists: link = .lists
-            case .training: link = .training
-            default: link = .review
-            }
+            present(linkFor(app))
         case .today, .weather:
-            link = .today
+            present(.today)
         }
     }
 
@@ -559,6 +659,7 @@ private struct HomeLayerHost: View {
     var pageDirection = 1
     var signSpec: MosaicSignSpec?
     var scenery: MosaicScenery?
+    var dusk = false
 
     var body: some View {
         MosaicHomeLayer(
@@ -574,7 +675,8 @@ private struct HomeLayerHost: View {
             page: page,
             pageDirection: pageDirection,
             signSpec: signSpec,
-            scenery: scenery
+            scenery: scenery,
+            dusk: dusk
         )
     }
 }

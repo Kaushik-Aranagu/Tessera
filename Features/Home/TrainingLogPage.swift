@@ -57,13 +57,8 @@ struct TrainingLogPage: View {
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 30).onEnded { value in
-                guard abs(value.translation.width) > abs(value.translation.height) * 1.5 else { return }
-                // A swipe left turns to the older month, right to the newer one.
-                turn(value.translation.width < 0 ? 1 : -1, count: months.count)
-            }
-        )
+        // A swipe left turns to the older month, right to the newer one.
+        .pageSwipe { next in turn(next ? 1 : -1, count: months.count) }
     }
 
     private var header: some View {

@@ -119,4 +119,12 @@ struct QuietHoursTests {
         #expect(TessDates.outOfQuietHours(at(23), calendar: calendar, quiet: .standard) == at(7, day: 23))
         #expect(TessDates.outOfQuietHours(at(12), calendar: calendar) == at(12))
     }
+
+    @Test func anInstanceKeepsTheHourItWasMadeWithAndTheWhyLineIsPlain() {
+        let made = TesseraDay(calendar: calendar, startHour: 5)
+        TesseraDay.configuredStartHour = 4
+        #expect(made.startHour == 5 && TesseraDay(calendar: calendar).startHour == 4)
+        #expect(TesseraSettings
+            .dayTurnsAtWhy == "Changing it moves late-night things between days, past days included.")
+    }
 }

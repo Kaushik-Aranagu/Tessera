@@ -3,7 +3,7 @@ import Foundation
 import TesseraCore
 import Testing
 
-/// Sheet 214: eleven scenes, each still but for one slow life; none within delta E 10 of cobalt or Ember.
+/// Sheet 214: eleven scenes, each still but for one slow life; none within delta E 10 of Ember.
 struct MosaicSceneArtTests {
     private let columns = 50, rows = 28
 
@@ -67,7 +67,7 @@ struct MosaicSceneArtTests {
         }
     }
 
-    @Test func noSceneTileSitsWithinDeltaETenOfCobaltOrEmber() {
+    @Test func noSceneTileSitsWithinDeltaETenOfEmber() {
         let reserved = MosaicSceneArt.reserved
         for scene in MosaicScenery.allCases {
             let tiles = frame(scene, time: 3.0)
@@ -75,7 +75,7 @@ struct MosaicSceneArtTests {
             // A handful of tiles in a gradient may graze it; a scene as a whole may not live there.
             #expect(
                 Double(near) / Double(tiles.count) < 0.02,
-                "\(scene): \(near) of \(tiles.count) tiles near cobalt or Ember"
+                "\(scene): \(near) of \(tiles.count) tiles near Ember"
             )
         }
     }

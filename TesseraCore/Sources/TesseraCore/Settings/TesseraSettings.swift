@@ -51,7 +51,13 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
         min(max(dayStartHour ?? 4, 0), 8)
     }
 
-    /// Puts the settings in force for the few places with no store. Called at launch and after a change.
+    /// One line for the Settings page under "The day turns over at": changing it re-buckets past days, because every
+    /// day is cut from the clock by the same rule.
+    public static let dayTurnsAtWhy = "Changing it moves late-night things between days, past days included."
+
+    /// Puts the settings in force for the few places with no store. Call it on the main actor, at launch of the app,
+    /// the widgets and the Watch before anything reads a day, and after every change.
+    @MainActor
     public func applyProcessWide() {
         QuietHours.current = quietHours
         TesseraDay.configuredStartHour = dayTurnsAtHour

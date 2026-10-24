@@ -85,11 +85,11 @@ struct WorkoutFinishView: View {
             .accessibilityHint("Drops the workout into today on Home")
         }
         .contentShape(Rectangle())
-        .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
-            if settled, drag.translation.height > 80 {
+        .pullGesture { down in
+            if settled, down {
                 onDone()
             }
-        })
+        }
         .task { await play() }
     }
 

@@ -601,14 +601,16 @@ private struct GhostRow: View {
         .opacity(arrived ? 1 - Double(min(abs(drag) / 200, 0.8)) : 0)
         .contentShape(Rectangle())
         .onTapGesture(perform: accept)
-        .gesture(DragGesture(minimumDistance: 12).onChanged { drag = min(0, $0.translation.width) }.onEnded { value in
-            if value.translation.width < -80 {
+        .rowSwipe(.trailing, limit: 200) { event in
+            switch event {
+            case let .pulled(value): drag = min(0, value)
+            case .committed:
                 withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = -400 }
                 model.discardCapture()
-            } else {
-                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = 0 }
+            case .cancelled: withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = 0 }
+            case .ended, .armed, .disarmed: break
             }
-        })
+        }
         .onAppear {
             withTesseraAnimation(.easeOut(duration: 0.42), reduceMotion: reduceMotion) { arrived = true }
             // The commit timer, as visible time: the stroke paints along under the row over exactly 2 s.
