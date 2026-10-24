@@ -40,6 +40,16 @@ struct HomeThing: Identifiable, Equatable {
         }
     }
 
+    /// The room the thing belongs to, for the small-caps header.
+    var roomName: String {
+        switch accent {
+        case let .app(app): app.rawValue
+        case .birthday: "People"
+        case .sky: "Weather"
+        case .ink: "Tasks"
+        }
+    }
+
     var spoken: String {
         [big, mid, small].filter { !$0.isEmpty }.joined(separator: ", ")
     }
@@ -111,8 +121,9 @@ struct HomeOneThing: View {
     static let height: CGFloat = 196
     static let swipeDistance: CGFloat = 50
     static let signTop: CGFloat = 62
-    /// The sign's width plus the 12 pt that every tier's text stops short of it.
-    static let signRoom: CGFloat = 72 + 12
+    /// The one hard clip edge (sheet 236 v2.3): every tier stops 92 pt from the right, the full height of the slot, so
+    /// no text runs under the sign. Lines are cut at whole words to fit.
+    static let clipEdge: CGFloat = 92
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -126,11 +137,6 @@ struct HomeOneThing: View {
                     // Sheet 213: the sign's top sits 62 pt below the space's top, so it centres at 98 pt, and it never
                     // moves with the pages.
                     .padding(.top, Self.signTop)
-                    .accessibilityHidden(true)
-                Text("\(index + 1) of \(things.count)")
-                    .font(Theme.numeral(14, weight: .light))
-                    .foregroundStyle(Theme.Colors.inkTertiary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                     .accessibilityHidden(true)
             }
         }
@@ -152,19 +158,20 @@ struct HomeOneThing: View {
     // MARK: Page
 
     private func page(_ thing: HomeThing) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            tier(thing, delay: 0.2, height: 84) { big(thing) }
-            tier(thing, delay: 0.28, height: 56) { mid(thing) }
-            tier(thing, delay: 0.36, height: 22) {
-                Text(thing.small)
-                    .font(Theme.voice(size: 15))
-                    .foregroundStyle(Theme.Colors.inkTertiary)
+        GeometryReader { geo in
+            let avail = max(geo.size.width - Self.clipEdge, 80)
+            VStack(alignment: .leading, spacing: 6) {
+                Spacer(minLength: 0)
+                tier(thing, delay: 0.12, height: 16) { header(thing) }
+                tier(thing, delay: 0.2, height: 50) { big(thing, width: avail) }
+                tier(thing, delay: 0.28, height: 26) { mid(thing, width: avail) }
+                tier(thing, delay: 0.36, height: 20) { small(thing, width: avail) }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+            // The block is centred in its slot and cut at the one edge.
+            .frame(width: avail, height: geo.size.height, alignment: .leading)
+            .clipped()
         }
-        .padding(.top, 4)
-        .padding(.trailing, Self.signRoom)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(thing.spoken)
         .accessibilityAddTraits(.isButton)
@@ -200,15 +207,31 @@ struct HomeOneThing: View {
         .frame(maxWidth: .infinity, minHeight: height, alignment: .topLeading)
     }
 
+    /// The room's name in small caps, in the room's accent.
+    private func header(_ thing: HomeThing) -> some View {
+        Text(thing.roomName)
+            .font(Theme.voice(size: 13).weight(.semibold).smallCaps())
+            .tracking(0.06 * 13)
+            .foregroundStyle(thing.accentColor)
+            .lineLimit(1)
+    }
+
+    /// Outfit 400 at 56 pt for a number, Figtree 700 at 38 pt for words: one line, stepping down 1 pt at a time to
+    /// 0.75x, then cut at whole words.
     @ViewBuilder
-    private func big(_ thing: HomeThing) -> some View {
-        let colour = thing.accentColor
-        let text = Text(thing.bigIsNumber ? thing.big : AppsListRows.fit(thing.big, limit: 28))
-            // Always Outfit 200: 60 pt for a short value, 44 pt for words (which may wrap to two lines).
-            .font(Theme.numeral(thing.bigIsNumber ? 60 : 44))
-            .foregroundStyle(colour)
+    private func big(_ thing: HomeThing, width: CGFloat) -> some View {
+        let number = thing.bigIsNumber
+        let fit = HomeFit.fit(thing.big, family: number ? "Outfit" : "Figtree", weight: number ? .regular : .bold,
+                              size: number ? 56 : 38, width: width)
+        let font = Theme.Typography.face(number ? Theme.activeFonts.mono : Theme.activeFonts.display, size: fit.size,
+                                         relativeTo: .largeTitle, serif: false)
+            .weight(number ? .regular : .bold)
+        let text = Text(fit.text)
+            .font(number ? font.monospacedDigit() : font)
+            .foregroundStyle(thing.accentColor)
             .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink))
-            .fixedSize(horizontal: false, vertical: true)
+            .lineLimit(1)
+            .fixedSize()
         if thing.taskID != nil {
             text.simultaneousGesture(hold(thing))
         } else {
@@ -216,30 +239,27 @@ struct HomeOneThing: View {
         }
     }
 
-    private func mid(_ thing: HomeThing) -> some View {
-        Button { open(thing) } label: {
-            Text(Self.midText(thing))
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
+    /// Figtree 500 at 20 in ink: one sentence, no keyword and no underline, cut at whole words.
+    private func mid(_ thing: HomeThing, width: CGFloat) -> some View {
+        let fit = HomeFit.fit(thing.mid, family: "Figtree", weight: .medium, size: 20, width: width, floor: 20)
+        return Button { open(thing) } label: {
+            Text(fit.text)
+                .font(Theme.voice(size: 20).weight(.medium))
+                .foregroundStyle(Theme.Colors.ink)
+                .lineLimit(1)
+                .fixedSize()
         }
         .buttonStyle(.plain)
     }
 
-    /// Figtree 20 in ink with exactly one keyword, the thing's own word: 600 at 1.1x with an underline in its accent
-    /// (ink
-    /// for tasks).
-    static func midText(_ thing: HomeThing) -> AttributedString {
-        var text = AttributedString(thing.mid)
-        text.font = Theme.voice(size: 20)
-        text.foregroundColor = Theme.Colors.ink
-        if let keyword = thing.keyword, let range = text.range(of: keyword) {
-            let accent = thing.accentColor
-            text[range].font = Theme.voice(size: 22).weight(.semibold)
-            text[range].foregroundColor = accent
-            text[range].underlineStyle = Text.LineStyle(pattern: .solid, color: accent)
-        }
-        return text
+    /// Figtree 500 at 15 in ink 2, cut at whole words at the same edge.
+    private func small(_ thing: HomeThing, width: CGFloat) -> some View {
+        let fit = HomeFit.fit(thing.small, family: "Figtree", weight: .medium, size: 15, width: width, floor: 15)
+        return Text(fit.text)
+            .font(Theme.voice(size: 15).weight(.medium))
+            .foregroundStyle(Theme.Colors.inkSecondary)
+            .lineLimit(1)
+            .fixedSize()
     }
 
     // MARK: Gestures
@@ -338,5 +358,54 @@ private struct TierClip: ViewModifier {
         content.mask {
             Rectangle().scaleEffect(y: max(progress, 0.001), anchor: fromTop ? .top : .bottom)
         }
+    }
+}
+
+/// Fitting a line to a width with the real face (sheet 236): a big line steps down 1 pt at a time to 0.75x, then any
+/// line is cut at whole words (never an ellipsis), the cut leaving no dangling stop word or comma.
+@MainActor
+enum HomeFit {
+    private static var cache: [String: UIFont] = [:]
+
+    private static func font(_ family: String, _ weight: UIFont.Weight, _ size: CGFloat) -> UIFont {
+        let key = "\(family)-\(weight.rawValue)-\(size)"
+        if let cached = cache[key] {
+            return cached
+        }
+        guard !UIFont.fontNames(forFamilyName: family).isEmpty else {
+            return .systemFont(ofSize: size, weight: weight)
+        }
+        let descriptor = UIFontDescriptor(fontAttributes: [.family: family])
+            .addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
+        let made = UIFont(descriptor: descriptor, size: size)
+        cache[key] = made
+        return made
+    }
+
+    static func width(_ text: String, family: String, weight: UIFont.Weight, size: CGFloat) -> CGFloat {
+        NSAttributedString(string: text, attributes: [.font: font(family, weight, size)]).size().width.rounded(.up)
+    }
+
+    /// The largest size from `size` down to `floor` (default 0.75x) at which `text` fits `width`, and the text cut at
+    /// whole words if it still does not fit at the floor.
+    static func fit(_ text: String, family: String, weight: UIFont.Weight, size: CGFloat, width: CGFloat,
+                    floor: CGFloat? = nil) -> (size: CGFloat, text: String)
+    {
+        let lowest = floor ?? (size * 0.75).rounded(.up)
+        var current = size
+        while current > lowest, Self.width(text, family: family, weight: weight, size: current) > width {
+            current -= 1
+        }
+        var words = text.split(separator: " ").map(String.init)
+        var shown = text
+        while Self.width(shown, family: family, weight: weight, size: current) > width, words.count > 1 {
+            words.removeLast()
+            shown = HomeBoard.trimTail(words.joined(separator: " "))
+            while HomeBoard.endsOnStopWord(shown), words.count > 1 {
+                words.removeLast()
+                shown = HomeBoard.trimTail(words.joined(separator: " "))
+            }
+        }
+        return (current, shown)
     }
 }

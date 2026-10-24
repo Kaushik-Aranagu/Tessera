@@ -69,16 +69,18 @@ struct HomeMosaicPage: View {
     @State private var thingIndex = 0
     @State private var thingsLeftAt: Date?
     @State private var pageWidth: CGFloat = 0
-    /// The apps wheel is held: the page does not scroll under the same finger.
-    @State private var wheelHeld = false
 
     private var layerOn: Bool {
         HomeMosaic.moodsIsOn && facts != nil && pick != nil
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: HomeMosaic.sectionGap) {
+        // Sheet 236 v2: Home is five fixed slots, not a scroll: the board, the mosaic, the one thing, the apps and the
+        // foot, at the board's own heights. The screen's real height places them (402x874 and 390x844 are exact).
+        GeometryReader { geo in
+            let slots = HomeSlots.make(screenHeight: geo.size.height)
+            VStack(alignment: .leading, spacing: 0) {
+                Color.clear.frame(height: slots.boardTop)
                 MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses,
                                onDoor: { clause, frame in
                                    doorwayFrom(frame) {
@@ -94,40 +96,38 @@ struct HomeMosaicPage: View {
                     // fallback and the real lines).
                     .opacity(dayClauses == nil ? 0 : 1)
                     .accessibilityHidden(dayClauses == nil)
+                    .frame(height: HomeSlots.boardHeight, alignment: .top)
                     .mosaicShield()
-                VStack(alignment: .leading, spacing: 0) {
-                    MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption)
-                        .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
-                    // No caption under the mosaic (sheet 211): its words live in the slot's accessibility label.
-                }
+                Color.clear.frame(height: slots.gapBoard)
+                MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption)
+                    .frame(height: HomeSlots.mosaicHeight, alignment: .top)
+                // The dead band between the mosaic and the one thing: a drag that starts in it moves nothing.
+                Color.clear.frame(height: slots.gapMosaic)
                 // Sheet 213: one thing at a time, no Next list.
                 HomeOneThing(things: things, index: $thingIndex, turn: { turnThing($0) },
                              done: { finishThing($0) }, open: { openThing($0) }, onSlot: { signSlot = $0 })
+                    .frame(height: slots.thing)
                     .mosaicShield()
+                Color.clear.frame(height: slots.gapThing)
                 if HomeMosaic.appsListIsOn {
-                    AppsListSlot(onHold: { wheelHeld = $0 }, onGlance: { playGlance($0) })
+                    AppsListSlot(onGlance: { playGlance($0) })
+                        .frame(height: HomeSlots.appsHeight, alignment: .top)
                         .mosaicShield()
                 }
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, HomeMosaic.gutter)
-            .padding(.top, HomeMosaic.moodsIsOn ? 16 : Theme.Spacing.s)
-            .padding(.bottom, Theme.Spacing.xl)
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
             .coordinateSpace(.named(Self.space))
+            .overlay(alignment: .topLeading) {
+                // Sheet 216: the date is the board's first line, so the Settings entry sits at the top left, on its
+                // baseline, clear of the right-aligned rows.
+                SettingsEntry { link = .settings }
+                    .padding(.leading, HomeMosaic.gutter - 8)
+                    .padding(.top, Self.settingsTop(boardTop: slots.boardTop))
+            }
         }
-        .scrollIndicators(.hidden)
-        .scrollBounceBehavior(.basedOnSize)
-        .scrollDisabled(wheelHeld)
-        // Sheet 216: the date is the board's first line, so the Settings entry sits at the top left, clear of the
-        // right-aligned rows (the date row is short and begins well to its right).
-        .overlay(alignment: .topLeading) {
-            SettingsEntry { link = .settings }
-                .padding(.leading, HomeMosaic.gutter - 8)
-                .padding(.top, Self.settingsTop)
-        }
-        // Sheet 212: an 80 pt clear band at the bottom for Tess's corner; everything else sits above it.
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: HomeMosaic.tessRoom).accessibilityHidden(true)
-        }
+        .ignoresSafeArea()
         // Sheet 202: the mosaic is the page's own pixels, edge to edge, behind everything; every touch leans it.
         .background {
             if layerOn, let facts, let mood = pick?.mood {
@@ -152,26 +152,10 @@ struct HomeMosaicPage: View {
             }
         }
         .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { scrollMinY = $0 }
-        .onScrollGeometryChange(for: CGFloat.self) { $0.contentInsets.top } action: { _, new in insetTop = new }
-        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in scroll.value = new }
         .onPreferenceChange(MosaicShieldKey.self) { shield = $0 }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
-        // A swipe that starts on the mosaic itself turns the things (the mosaic's own pages are gone).
-        .simultaneousGesture(
-            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart), coordinateSpace: .global).onEnded { value in
-                let size = HomeMosaic.moodsMosaicSize
-                let top = scrollMinY - scroll.value + coreTop
-                let mosaic = CGRect(x: pageWidth - HomeMosaic.gutter - size.width, y: top,
-                                    width: size.width, height: size.height)
-                if layerOn, MosaicPager.accepts(start: value.startLocation, translation: value.translation,
-                                                mosaic: mosaic, reach: 0),
-                    turnThing(value.translation.width)
-                {
-                    pageDirection = value.translation.width < 0 ? 1 : -1
-                    pageTicks += 1
-                }
-            }
-        )
+        // A drag belongs to the zone it starts in (sheet 236): the mosaic leans and swipes its face, the one thing
+        // turns its own page, and nothing on the mosaic moves the one thing.
         .tesseraFeedback(.selection, trigger: pageTicks)
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
@@ -254,17 +238,17 @@ struct HomeMosaicPage: View {
         }
     }
 
-    /// Settings sits on row 1's baseline (the date): the date row is 30 pt at Figtree 23 under a 16 pt top pad, and the
+    /// Settings sits on row 1's baseline (the date): the date row is 30 pt at Figtree 23 from the board's top, and the
     /// word is Figtree 16 centred in a 44 pt target, so the offset is the difference of the two baselines.
-    static let settingsTop: CGFloat = {
+    static func settingsTop(boardTop: CGFloat) -> CGFloat {
         func face(_ size: CGFloat) -> UIFont {
             UIFont(descriptor: UIFontDescriptor(fontAttributes: [.family: "Figtree"]), size: size)
         }
         let big = face(DepartureBoard.size), small = face(16)
-        let row = 16 + (DepartureBoard.rowHeight - big.lineHeight) / 2 + big.ascender
+        let row = boardTop + (DepartureBoard.rowHeight - big.lineHeight) / 2 + big.ascender
         let word = (44 - small.lineHeight) / 2 + small.ascender
         return max(row - word, 0)
-    }()
+    }
 
     private static let backShownKey = "homeMosaic.backShown"
 
