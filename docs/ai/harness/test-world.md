@@ -6,10 +6,14 @@ its answer key are code: `Harness/Eval/EvalWorld.swift` (the generator), `EvalWo
 `EvalWorldKey+Bank.swift` (about 160 questions in 15 kinds, answers computed from the world, scoring), and
 `EvalWorldTests.swift` (pins every planted fact).
 
-## 1. The seeder (Core)
+## 1. The seeder (written: `Harness/Eval/EvalWorldSeeder.swift`)
 
 `EvalWorldSeeder.seed(_ world: EvalWorld, into engine: ActionEngine)` writes the world through the app's own
-actions, with `by: .system`, so the rows look like real use. Go room by room in the world's order:
+actions, with `by: .system`, so the rows look like real use. Each action gets the world's own time (`time:`,
+`spentAt:`, `on:`), so the clock never moves. It refuses a store that holds any workout, cook, spend, money in,
+note, belief, memory line or occasion, so it can never mix into his data. Its report counts rows and refusals by
+room. Not seeded yet: leftovers (no class), the Pulldown rename (`RenameObject` renames objects, not exercise
+classes), and told lines carry the seed's time (`RememberFact` takes none). Room by room:
 
 - **Workouts:** routines from `Maker.routines`, a plan per phase, and workouts with entries and sets. Do it the way
   `DemoData.addWorkout` does. `isPrivate` makes a walled routine titled "Shoulder rehab", so its shown label is
