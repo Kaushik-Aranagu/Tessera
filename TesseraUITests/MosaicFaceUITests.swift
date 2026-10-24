@@ -2,7 +2,8 @@ import XCTest
 
 /// Home 236 and QA rule G13: a plain tap on the mosaic's face reaches the face and opens its room, and a swipe on the
 /// face (and only there) turns it. The faces turn by themselves in the app; these tests turn that off and pick the
-/// faces by their Settings switches so the face on screen is the one the test expects. Simulator only.
+/// faces by their Settings switches so the face on screen is the one the test expects (sample data, not -demo: the demo
+/// run keeps Review picks in memory and would ignore these arguments). Simulator only.
 @MainActor
 final class MosaicFaceUITests: SimulatorOnlyTestCase {
     override func setUp() {
@@ -11,7 +12,7 @@ final class MosaicFaceUITests: SimulatorOnlyTestCase {
 
     private func launch(faces: [String]) -> XCUIApplication {
         let app = XCUIApplication()
-        var arguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-review.homeMosaic", "On",
+        var arguments = ["-review.sampleData", "On", "-demoTime", "18:10", "-review.homeMosaic", "On",
                          "-review.homeMosaicMoods", "On", "-review.homeFaceTurn", "Off"]
         for kind in ["now", "gallery", "weather", "workout"] where !faces.contains(kind) {
             arguments += ["-review.homeFace.\(kind)", "Off"]
