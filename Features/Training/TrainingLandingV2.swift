@@ -219,12 +219,15 @@ struct TrainingLandingV2: View {
                         Text(name)
                             .font(Theme.Training.words(34, weight: .semibold, relativeTo: .title))
                             .foregroundStyle(Theme.Colors.Split.color(forName: name))
+                            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                            .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
                     } else {
                         FittedTitle(text: name, color: Theme.Colors.Split.color(forName: name))
                     }
                     MeasureLine.text(notStartedLine, size: 17)
                         .foregroundStyle(Theme.Colors.inkSecondary)
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
                         .minimumScaleFactor(0.8)
                         .fixedSize(horizontal: false, vertical: true)

@@ -430,7 +430,15 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .notes: NotesView()
         case .review: ReviewView()
         case .money: MoneyLandingView()
-        case .training: ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
+        case .training:
+            GeometryReader { viewport in
+                ScrollView {
+                    TrainingPage()
+                        .frame(width: max(viewport.size.width - 2 * Theme.Spacing.gutter, 0),
+                               alignment: .topLeading)
+                        .padding(.horizontal, Theme.Spacing.gutter)
+                }
+            }
         case .today: TodayRoomView()
         // Settings as its own page from Home's top row, with Close above it (Kaushik, Oct 22: he couldn't find it).
         case .settings: NavigationStack { SettingsPage(cameFrom: "Home") }.environment(\.animateEntrance, true)
