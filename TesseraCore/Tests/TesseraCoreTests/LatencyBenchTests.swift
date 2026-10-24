@@ -3,63 +3,8 @@ import Foundation
 @testable import TesseraTess
 import Testing
 
-/// A scripted brain: answers after a fixed delay, so the bench's numbers are known.
-final class FakeBrain: Brain, @unchecked Sendable {
-    let id: BrainID
-    var available = true
-    var outcome: ClaudeOutcome = .works
-    private let lock = NSLock()
-    private var streamed = 0
-    private var warmed = 0
-
-    init(_ id: BrainID = .haiku) {
-        self.id = id
-    }
-
-    var isAvailable: Bool {
-        get async { available }
-    }
-
-    var streamCount: Int {
-        lock.withLock { streamed }
-    }
-
-    var warmCount: Int {
-        lock.withLock { warmed }
-    }
-
-    func stream(_: BrainRequest) -> AsyncThrowingStream<BrainEvent, Error> {
-        lock.withLock { streamed += 1 }
-        let outcome = outcome
-        return AsyncThrowingStream { continuation in
-            if outcome != .works {
-                continuation.yield(.failed(outcome))
-            } else {
-                continuation.yield(.text("ok"))
-                continuation.yield(.done(BrainUsage(inTokens: 300, outTokens: 50, costNano: 40000), stop: "end_turn"))
-            }
-            continuation.finish()
-        }
-    }
-
-    func warm(_: BrainRequest) async {
-        lock.withLock { warmed += 1 }
-    }
-}
-
 @MainActor
 struct LatencyBenchTests {
-    let store = ObjectStore.open(inMemory: true)
-    let classes: [SystemCatalog.Key: ClassDef]
-
-    init() throws {
-        classes = try store.prepareCatalog()
-    }
-
-    var ledger: TessUsageLedger {
-        TessUsageLedger(store: store, classes: classes)
-    }
-
     @Test func percentilesAreNearestRank() {
         #expect(LatencyBench.percentile([], 50) == nil)
         #expect(LatencyBench.percentile([10, 50, 20, 40, 30], 50) == 30)
@@ -67,41 +12,53 @@ struct LatencyBenchTests {
         #expect(LatencyBench.percentile([7], 95) == 7)
     }
 
-    @Test func aRunMakesTheTableAndWritesLedgerRowsAndSpans() async throws {
-        let trace = RunTrace(url: nil)
+    @Test func aRunMakesTheTableAndGoesThroughTheDoor() async throws {
         let claude = FakeBrain(.haiku), apple = FakeBrain(.appleOnDevice)
-        let bench = LatencyBench(ledger: ledger, trace: trace, claude: { _, _ in claude }, apple: apple)
+        let rig = try DoorRig(brains: [:])
+        let bench = LatencyBench(door: rig.door, claude: { _, _ in claude }, apple: apple)
         let rows = await bench.run()
         // Haiku and Sonnet, four cases each, then Apple and the Mac line.
         #expect(rows.count == 10 && rows.last?.note == "not set up")
         #expect(rows.prefix(8).allSatisfy { $0.runs == LatencyBench.repeats })
-        // Every Claude call is one ledger row (the warm calls are free), and every call is one span.
-        #expect(claude.streamCount == 40 && ledger.calls().count == 40)
-        #expect(await trace.all().count == 45)
-        let table = try #require(await trace.bench())
+        // Every Claude call is a ledger row and a sent-log row; so is each warm-up (6) in the ledger and the trace.
+        #expect(claude.streamCount == 40 && rig.ledger.calls().count == 46)
+        #expect(rig.sent.entries().count == 40)
+        #expect(await rig.trace.all().count == 40 + 6 + 5)
+        let table = try #require(await rig.trace.bench())
         #expect(table.contains("Haiku 5.5, cold") && table.contains("Sonnet 5.5, effort low, cached prefix, warm"))
         #expect(table.contains("Apple on-device model") && table.contains("Mac on Wi-Fi: not set up"))
+        // The first run reports the API shape it got.
+        #expect(table.contains("HTTP 200") && table.contains("warm-up HTTP 200, max_tokens 0"))
     }
 
     @Test func spansAndTheTableCarryNoPromptWords() async throws {
-        let trace = RunTrace(url: nil)
-        let bench = LatencyBench(ledger: ledger, trace: trace, claude: { _, _ in FakeBrain() }, apple: nil)
+        let rig = try DoorRig(brains: [:])
+        let bench = LatencyBench(door: rig.door, claude: { _, _ in FakeBrain() }, apple: nil)
         _ = await bench.run()
-        let json = try await String(decoding: JSONEncoder().encode(trace.all()), as: UTF8.self)
-        let table = await trace.bench() ?? ""
+        let json = try await String(decoding: JSONEncoder().encode(rig.trace.all()), as: UTF8.self)
+        let table = await rig.trace.bench() ?? ""
         for word in ["lantern", "orchard", "latency probe", "sk-ant"] {
             #expect(!json.contains(word) && !table.contains(word), "\(word)")
         }
         #expect(table.contains("Apple on-device model: not available on this phone"))
     }
 
-    @Test func aRunStopsWhenTheKeyIsBadAndNeverRetries() async {
-        let trace = RunTrace(url: nil)
+    @Test func withTessAsksClaudeOffTheBenchSendsNothing() async throws {
+        let claude = FakeBrain()
+        let rig = try DoorRig(brains: [:], asks: false)
+        let bench = LatencyBench(door: rig.door, claude: { _, _ in claude }, apple: nil)
+        let rows = await bench.run()
+        #expect(claude.streamCount == 0 && claude.warmCount == 0)
+        #expect(rows.first?.note == "Tess asks Claude is off")
+    }
+
+    @Test func aRunStopsWhenTheKeyIsBadAndNeverRetries() async throws {
         let brain = FakeBrain()
         brain.outcome = .badKey
-        let bench = LatencyBench(ledger: ledger, trace: trace, claude: { _, _ in brain }, apple: nil)
+        let rig = try DoorRig(brains: [:])
+        let bench = LatencyBench(door: rig.door, claude: { _, _ in brain }, apple: nil)
         let rows = await bench.run()
-        #expect(rows.first?.note == "badKey" && rows.first?.runs == 0)
+        #expect(rows.first?.note?.contains("badKey") == true && rows.first?.runs == 0)
     }
 
     @Test func theTraceKeepsTheLast2000SpansOnDiskOutOfBackups() async throws {

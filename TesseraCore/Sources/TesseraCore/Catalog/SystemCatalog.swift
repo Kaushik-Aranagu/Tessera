@@ -23,6 +23,7 @@ public enum SystemCatalog {
         case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend, book
         case pool, inflow, poolMove, rateNote
         case tessSent
+        case tessSentExact
         case settings
         case meProfile
         case place
@@ -408,6 +409,10 @@ public enum SystemCatalog {
             FieldSpec(key: "words", name: "Words", kind: .text),
             FieldSpec(key: "requestID", name: "Request", kind: .text),
         ]),
+        // A Tess Sent row written in lab mode (harness H1b): the words exactly as sent, health and money included. It is
+        // a mirror: in no backup copy (the local one too), no export, no op.
+        ClassSpec(key: .tessSentExact, name: "Tess Sent (exact)", parent: .tessSent, symbol: "paperplane.fill",
+                  colorRole: "neutral", fields: []),
         // His preferences that travel with a restore (docs/research/settings-object.md): one object, a fixed id, every
         // field optional (empty = never set; readers apply defaults). Never the Claude key or the folder bookmark.
         // Him (height, birth year, sex), optional and always private: it follows a weigh-in note's rules.

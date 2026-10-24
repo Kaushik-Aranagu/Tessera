@@ -19,6 +19,8 @@ public enum TessUse: String, Sendable, CaseIterable {
     case lines
     /// The latency bench (Developer mode): fixed text, no words of his.
     case bench
+    /// A call through the harness Door (H1b): its words are in What was sent, exactly as sent.
+    case door
 }
 
 /// One request through the routes.

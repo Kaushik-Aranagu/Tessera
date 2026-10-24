@@ -89,6 +89,8 @@ public enum FeatureFlags {
         .init("pagesV2", "Pages v2", .everywhere), .init("settingsV2", "Settings v2", .everywhere),
         .init("walledPageV2", "Privacy page", .everywhere), .init("backupsV2", "Backups in words", .everywhere),
         .init("undoLogV2", "Undo log", .everywhere),
+        .init("tessLabPolicy", "Lab mode for Claude", .everywhere, claude: true),
+        .init("tessDirectorPlaybook", "Tess picks her looks", .everywhere, claude: true),
     ]
 
     /// Not flags: switches with more than two values, connections he makes by hand, and tools. A test keeps this list

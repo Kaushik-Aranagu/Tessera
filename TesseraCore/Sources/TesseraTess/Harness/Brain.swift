@@ -132,6 +132,8 @@ public struct BrainUsage: Sendable, Equatable {
 }
 
 public enum BrainEvent: Sendable {
+    /// The HTTP status of a Claude reply, as soon as the headers arrive. Other brains never send it.
+    case status(Int)
     case text(String)
     /// A tool call whose content block has closed: the input is valid JSON. Start the tool now.
     case toolUse(id: String, name: String, input: Data)
@@ -139,11 +141,19 @@ public enum BrainEvent: Sendable {
     case failed(ClaudeOutcome)
 }
 
+/// What a warm-up did: the status it got and the `max_tokens` that worked (0, or 1 when the API refused 0).
+public struct BrainWarm: Sendable, Equatable {
+    public var status: Int
+    public var maxTokens: Int
+    public var usage: BrainUsage
+}
+
 public protocol Brain: Sendable {
     var id: BrainID { get }
     var isAvailable: Bool { get async }
     func stream(_ request: BrainRequest) -> AsyncThrowingStream<BrainEvent, Error>
     /// Loads whatever makes the next call fast (a cached prefix, a loaded model). Never throws, never bills more
-    /// than a few tokens.
-    func warm(_ prefix: BrainRequest) async
+    /// than a few tokens; what it cost comes back so the caller can put it through the ledger. Nil when nothing was
+    /// sent.
+    func warm(_ prefix: BrainRequest) async -> BrainWarm?
 }

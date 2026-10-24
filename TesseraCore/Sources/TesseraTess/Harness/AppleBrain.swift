@@ -30,7 +30,14 @@ public final class AppleBrain: Brain, @unchecked Sendable {
     public func stream(_ request: BrainRequest) -> AsyncThrowingStream<BrainEvent, Error> {
         AsyncThrowingStream { continuation in
             #if canImport(FoundationModels)
+                let timer = Task {
+                    try? await Task.sleep(for: request.deadline)
+                    guard !Task.isCancelled else { return }
+                    continuation.yield(.failed(.timeout))
+                    continuation.finish()
+                }
                 let work = Task {
+                    defer { timer.cancel() }
                     do {
                         let instructions = request.system.map(\.text).joined(separator: "\n\n")
                         let session = instructions.isEmpty ? LanguageModelSession()
@@ -53,13 +60,6 @@ public final class AppleBrain: Brain, @unchecked Sendable {
                         continuation.finish()
                     }
                 }
-                let timer = Task {
-                    try? await Task.sleep(for: request.deadline)
-                    guard !work.isCancelled else { return }
-                    work.cancel()
-                    continuation.yield(.failed(.timeout))
-                    continuation.finish()
-                }
                 continuation.onTermination = { _ in
                     work.cancel()
                     timer.cancel()
@@ -71,13 +71,14 @@ public final class AppleBrain: Brain, @unchecked Sendable {
         }
     }
 
-    public func warm(_ prefix: BrainRequest) async {
+    public func warm(_ prefix: BrainRequest) async -> BrainWarm? {
         #if canImport(FoundationModels)
             let instructions = prefix.system.map(\.text).joined(separator: "\n\n")
             let session = instructions
                 .isEmpty ? LanguageModelSession() : LanguageModelSession(instructions: instructions)
             session.prewarm()
         #endif
+        return nil
     }
 
     /// The conversation as one prompt: earlier turns as plain lines, then the last user message.

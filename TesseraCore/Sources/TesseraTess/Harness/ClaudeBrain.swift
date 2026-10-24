@@ -144,15 +144,16 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
 
     public func stream(_ request: BrainRequest) -> AsyncThrowingStream<BrainEvent, Error> {
         AsyncThrowingStream { continuation in
-            let work = Task {
-                await self.run(request, continuation: continuation)
-            }
             let timer = Task {
                 try? await Task.sleep(for: request.deadline)
-                guard !work.isCancelled else { return }
-                work.cancel()
+                guard !Task.isCancelled else { return }
                 continuation.yield(.failed(.timeout))
                 continuation.finish()
+            }
+            let work = Task {
+                await self.run(request, continuation: continuation)
+                // The deadline is only for a call that hangs: once the work is done it goes.
+                timer.cancel()
             }
             continuation.onTermination = { _ in
                 work.cancel()
@@ -183,6 +184,7 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
                 continuation.finish()
                 return
             }
+            continuation.yield(.status(status))
             guard status == 200 else {
                 var data = Data()
                 for try await byte in bytes {
@@ -225,20 +227,40 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
     // MARK: Warm
 
     /// The same system, tools and effort with `max_tokens: 0`, so the prefix is cached and the connection is open
-    /// before the real call. If the API refuses 0, one token (`max_tokens: 1`).
-    public func warm(_ prefix: BrainRequest) async {
-        guard let key = keys.read() else { return }
+    /// before the real call. If the API refuses 0, one token (`max_tokens: 1`). Returns the status and what worked.
+    public func warm(_ prefix: BrainRequest) async -> BrainWarm? {
+        guard let key = keys.read() else { return nil }
+        var last: BrainWarm?
         for limit in [0, 1] {
-            guard let body = try? Self.body(for: prefix, model: model, stream: false, maxTokens: limit) else { return }
+            guard let body = try? Self.body(for: prefix, model: model, stream: false, maxTokens: limit) else {
+                return last
+            }
             let http = urlRequest(body: body, key: key, timeout: 10)
             guard let (data, response) = try? await session.data(for: http, delegate: NoRedirects.shared),
-                  let status = (response as? HTTPURLResponse)?.statusCode else { return }
-            if status == 200 || status != 400 {
-                return
+                  let status = (response as? HTTPURLResponse)?.statusCode else { return last }
+            var usage = BrainUsage()
+            if let used =
+                ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["usage"] as? [String: Any]
+            {
+                usage = BrainUsage(
+                    inTokens: used["input_tokens"] as? Int ?? 0,
+                    outTokens: used["output_tokens"] as? Int ?? 0,
+                    cacheReadTokens: used["cache_read_input_tokens"] as? Int ?? 0,
+                    cacheWriteTokens: used["cache_creation_input_tokens"] as? Int ?? 0
+                )
+                let model = model.rawValue, counted = usage
+                usage.costNano = await MainActor.run {
+                    TessUsageLedger.cost(model: model, input: counted.inTokens, output: counted.outTokens,
+                                         cacheRead: counted.cacheReadTokens, cacheWrite: counted.cacheWriteTokens)
+                }
             }
-            // A 400 for the zero: try the one-token form, once.
-            _ = data
+            last = BrainWarm(status: status, maxTokens: limit, usage: usage)
+            // Only a 400 for the zero sends the one-token form.
+            if status != 400 {
+                return last
+            }
         }
+        return last
     }
 }
 
