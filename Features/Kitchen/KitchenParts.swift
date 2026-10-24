@@ -43,6 +43,7 @@ enum KitchenLoop {
 
 /// A name that fits its line without an ellipsis: Tess's short form past `limit` characters, cut at a word edge, and a
 /// hard cut at the limit only for one long word. Pure.
+@MainActor
 enum KitchenText {
     static func short(_ name: String, limit: Int = 20) -> String {
         guard name.count > limit else { return name }
