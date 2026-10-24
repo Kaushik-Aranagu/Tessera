@@ -176,7 +176,7 @@ struct TrainingHeadlineStatsTests {
         let latest = try session(at: date(22), weight: 90)
         let since = try #require(store.value("endedAt", of: baseline)?.dateValue)
         let now = try #require(store.value("endedAt", of: latest)?.dateValue)
-        let result = try #require(change(since: since, now: now))
+        let result = try #require(try change(since: since, now: now))
         #expect(result.exerciseID == classes[.benchPress]?.id && result.exercise == "Bench Press")
         #expect(result.since == since && result.baselineDate == since && result.latestDate == now)
         #expect(abs(result.baselineKg - 80 * (1 + 7.0 / 30)) < 0.001)
@@ -214,7 +214,7 @@ struct TrainingHeadlineStatsTests {
         try session(at: date(8), weight: 90)
         #expect(try change(since: date(10), now: date(22)) == nil)
         try session(at: date(15), weight: 80)
-        let result = try #require(change(since: date(10), now: date(22)))
+        let result = try #require(try change(since: date(10), now: date(22)))
         #expect(result.kilograms < 0)
         try session(at: date(21), weight: 90)
         #expect(try change(since: date(10), now: date(22))?.kilograms == 0)
@@ -242,7 +242,7 @@ struct TrainingHeadlineStatsTests {
                 try store.set("kind", to: .choice(SetKind.warmup.rawValue), on: set)
             }
         }
-        let result = try #require(change(since: date(10), now: date(22)))
+        let result = try #require(try change(since: date(10), now: date(22)))
         #expect(abs(result.baselineKg - 80 * (1 + 5.0 / 30)) < 0.001)
         #expect(abs(result.latestKg - 105) < 0.001)
     }
