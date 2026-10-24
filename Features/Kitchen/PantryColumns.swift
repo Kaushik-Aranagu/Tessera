@@ -62,11 +62,42 @@ enum PantrySectionMap {
     }
 }
 
-/// The body of a Pantry place (sheet 234 v4): two columns, each 232 pt tall, 16 pt apart. A section is a 26 pt header
-/// and 44 pt rows; a section too tall for a column carries on in the next step. The step swipe starts only on a header
-/// or in the space under the last thing, never within 20 pt of the left edge; a row swipe is used up or not now at
-/// 70 pt, held to its column's clip. A tap flips in and low, a hold of 0.5 s pins. From the first accessibility size
-/// there is one column with the same rules.
+/// How one row lays out (sheet 234 v6 to v8), pure so it is fit-tested without a screen. A value sits beside the name
+/// when the name at 17 pt, an 8 pt gap and the value at 10.5 pt Light fit the column, else it drops under the name at
+/// 8 pt Light on a 12 pt line. A row with beside (or no) value is 28 pt, a row with the value below is 34 pt. From the
+/// first accessibility size the value is at least 11 pt Regular and the rows grow with the text.
+@MainActor
+enum PantryRowLayout {
+    static let nameSize: CGFloat = 17
+    static let besideValue: CGFloat = 10.5
+    static let belowValue: CGFloat = 8
+    static let gap: CGFloat = 8
+
+    struct Fit: Equatable {
+        let beside: Bool
+        let height: CGFloat
+    }
+
+    /// `scale` is the text-size scale (1 at the default size); `large` is the first accessibility size and up.
+    static func fit(name: String, value: String?, column: CGFloat, scale: CGFloat = 1, large: Bool = false) -> Fit {
+        let nameWidth = KitchenText.width(name, weight: .regular, size: nameSize * scale)
+        let line = max(28, 22 * scale + 6)
+        guard let value, !value.isEmpty else { return Fit(beside: true, height: line) }
+        let valueSize = (large ? max(besideValue * scale, 11) : besideValue * scale)
+        let valueWidth = KitchenText.width(value, weight: large ? .regular : .light, size: valueSize)
+        if nameWidth + gap + valueWidth <= column {
+            return Fit(beside: true, height: line)
+        }
+        let below = large ? max(belowValue * scale, 11) : belowValue * scale
+        return Fit(beside: false, height: max(34, 22 * scale + below * 1.5 + 4))
+    }
+}
+
+/// The body of a Pantry place (sheet 234 v4 to v8): columns of sections, each 232 pt tall and 16 pt apart. A section is
+/// a 26 pt header and its rows; a section too tall for a column carries on in the next step. The step swipe starts only
+/// on a header or in the space under the last thing, never within 20 pt of the left edge; a row swipe is used up or
+/// not now at 70 pt, held to its column's clip. A tap flips in and low, a hold of 0.5 s pins. A low thing shows in its
+/// name (wine, weight 500), never a word. From the first accessibility size there is one column with the same rules.
 struct PantryColumnsView: View {
     let place: String
     let groups: [PantrySectionMap.Group]
@@ -76,12 +107,12 @@ struct PantryColumnsView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// What each place was last packed as, kept for the visit.
     @State private var packers: [String: PantryPacker] = [:]
+    @State private var width: CGFloat = 0
     @State private var touch: Touch?
     @State private var rowOffset: CGFloat = 0
     @State private var nudge: CGFloat = 0
     @State private var steps = 0
     @State private var bumps = 0
-    @ScaledMetric(relativeTo: .caption) private var valueSize: CGFloat = 9
 
     static let gap: CGFloat = 16
     static let swipe: CGFloat = 70
@@ -105,49 +136,76 @@ struct PantryColumnsView: View {
         typeSize >= .accessibility1 ? 1 : 2
     }
 
+    private var scale: CGFloat {
+        UIFontMetrics(forTextStyle: .body).scaledValue(for: 1)
+    }
+
+    private var columnWidth: CGFloat {
+        guard width > 0 else { return 160 }
+        return (width - Self.gap * CGFloat(columnCount - 1)) / CGFloat(columnCount)
+    }
+
+    /// The row layouts for the current column width and text size.
+    private var fits: [[PantryRowLayout.Fit]] {
+        groups.map { group in
+            group.items.map {
+                PantryRowLayout.fit(name: KitchenText.short($0.name, limit: 18), value: $0.amount,
+                                    column: columnWidth, scale: scale, large: typeSize >= .accessibility1)
+            }
+        }
+    }
+
+    private func build() -> PantryPacker {
+        let layouts = fits
+        let sections = groups.indices.map { index in
+            PantryPacker.Section(title: groups[index].title, heights: layouts[index].map(\.height),
+                                 urgent: PantrySectionMap.urgent(groups[index]))
+        }
+        return PantryPacker(sections: sections, columnCount: columnCount)
+    }
+
     private var packer: PantryPacker {
-        packers[place] ?? PantryPacker(sections: sectionInfo, columnCount: columnCount)
+        packers[place] ?? build()
     }
 
-    private var sectionInfo: [PantryPacker.Section] {
-        groups.map { .init(title: $0.title, rows: $0.items.count, urgent: PantrySectionMap.urgent($0)) }
-    }
-
-    /// The shape of the sections; the packing is rebuilt when it changes (a thing leaves, a thing arrives).
+    /// The shape of the sections; the packing is rebuilt when it changes (a thing leaves, a thing arrives, the text
+    /// size or the width changes), and the beside-or-below choice with it.
     private var signature: String {
-        "\(columnCount)|" + groups.map { "\($0.title):\($0.items.count)" }.joined(separator: ",")
+        "\(columnCount)|\(Int(columnWidth))|\(Int(scale * 100))|"
+            + groups.map { "\($0.title):\($0.items.count)" }.joined(separator: ",")
     }
 
     var body: some View {
         let current = packer
         VStack(alignment: .leading, spacing: 0) {
             nextLine(current)
-            GeometryReader { geo in
-                let width = (geo.size.width - Self.gap * CGFloat(columnCount - 1)) / CGFloat(columnCount)
-                HStack(alignment: .top, spacing: Self.gap) {
-                    ForEach(0 ..< columnCount, id: \.self) { column in
-                        columnView(current, column: column)
-                            .frame(width: width, height: PantryPacker.capacity, alignment: .top)
-                            .clipped()
-                    }
-                }
-                .offset(x: nudge)
-                .contentShape(Rectangle())
-                .gesture(gesture(current, width: width))
-            }
-            .frame(height: PantryPacker.capacity)
+            columns(current)
+                .frame(height: PantryPacker.capacity)
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         }
-        .onAppear { rebuild() }
-        .onChange(of: signature) { rebuild() }
+        .onAppear { packers[place] = build() }
+        .onChange(of: signature) { packers[place] = build() }
         .tesseraFeedback(.dialStep, trigger: steps)
         .tesseraFeedback(.notNow, trigger: bumps)
     }
 
-    private func rebuild() {
-        packers[place] = PantryPacker(sections: sectionInfo, columnCount: columnCount)
-    }
-
     // MARK: Drawing
+
+    private func columns(_ packer: PantryPacker) -> some View {
+        let layouts = fits
+        let columnWidth = columnWidth
+        return HStack(alignment: .top, spacing: Self.gap) {
+            ForEach(0 ..< columnCount, id: \.self) { column in
+                columnView(packer, layouts: layouts, column: column)
+                    .frame(width: columnWidth, height: PantryPacker.capacity, alignment: .top)
+                    .clipped()
+            }
+        }
+        .offset(x: nudge)
+        .contentShape(Rectangle())
+        .coordinateSpace(.named("pantryColumns"))
+        .gesture(gesture(packer, layouts: layouts, width: columnWidth))
+    }
 
     private func nextLine(_ packer: PantryPacker) -> some View {
         Button { step(forward: true) } label: {
@@ -163,37 +221,37 @@ struct PantryColumnsView: View {
         .accessibilityHint("Shows the next part")
     }
 
-    private func columnView(_ packer: PantryPacker, column: Int) -> some View {
+    private func columnView(_ packer: PantryPacker, layouts: [[PantryRowLayout.Fit]], column: Int) -> some View {
         let blocks = column < packer.columns.count ? packer.columns[column] : []
+        let signature = blocks.map { "\($0.section)-\($0.start)" }
         return ZStack(alignment: .topLeading) {
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: PantryPacker.gap) {
                 ForEach(Array(blocks.enumerated()), id: \.offset) { blockIndex, block in
-                    blockView(block, blockIndex: blockIndex, column: column, packer: packer)
+                    blockView(block, blockIndex: blockIndex, column: column, packer: packer, layouts: layouts)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .id(blocks.map { "\($0.section)-\($0.start)" }.joined())
+            .id(signature.joined())
             .transition(reduceMotion ? .identity : .asymmetric(insertion: .move(edge: .trailing),
                                                                removal: .move(edge: .leading)))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .animation(MotionPolicy.resolve(Theme.Motion.firm.delay(0.06 * Double(column)), reduceMotion: reduceMotion),
-                   value: blocks.map { "\($0.section)-\($0.start)" })
+                   value: signature)
     }
 
-    private func blockView(_ block: PantryPacker.Block, blockIndex: Int, column: Int,
-                           packer: PantryPacker) -> some View
+    private func blockView(_ block: PantryPacker.Block, blockIndex: Int, column: Int, packer: PantryPacker,
+                           layouts: [[PantryRowLayout.Fit]]) -> some View
     {
         let group = groups[block.section]
-        let rows = Array(group.items[block.start ..< min(block.start + block.count, group.items.count)])
+        let end = min(block.start + block.count, group.items.count)
+        let rows = Array(group.items[block.start ..< end])
         return VStack(alignment: .leading, spacing: 0) {
-            // The name in small caps in slate, a hairline under it, the count at the right (wine when something in the
-            // section needs attention).
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(group.title)
-                        .font(Theme.voice(size: 16).weight(.semibold).smallCaps())
-                        .tracking(0.06 * 16)
+                        .font(Theme.voice(size: 14).weight(.semibold).smallCaps())
+                        .tracking(0.015 * 14)
                         .foregroundStyle(Theme.Colors.Accent.kitchenSection)
                         .lineLimit(1)
                     Spacer(minLength: 4)
@@ -210,48 +268,61 @@ struct PantryColumnsView: View {
             .accessibilityAction(named: "Next") { step(forward: true) }
             .accessibilityAction(named: "Back") { step(forward: false) }
             ForEach(Array(rows.enumerated()), id: \.element.id) { rowIndex, item in
-                rowView(item)
+                let fit = layouts[block.section][block.start + rowIndex]
+                rowView(item, fit: fit)
                     .offset(x: swiping(column: column, block: blockIndex, row: rowIndex) ? rowOffset : 0)
             }
             if block.more > 0 {
                 Text("\(block.more) more, swipe")
-                    .font(Theme.voice(size: 13))
+                    .font(Theme.voice(size: 8))
                     .foregroundStyle(Theme.Colors.inkSecondary)
-                    .frame(maxWidth: .infinity, minHeight: PantryPacker.row, alignment: .leading)
+                    .frame(maxWidth: .infinity, minHeight: PantryPacker.moreRow, alignment: .leading)
                     .accessibilityLabel("\(block.more) more")
                     .accessibilityAction(named: "Next") { step(forward: true) }
             }
         }
     }
 
-    private func rowView(_ item: PantryRoomItem) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(KitchenText.short(item.name, limit: 18))
-                .font(Theme.voice(size: 17).weight(item.isPinned ? .semibold : .regular))
-                .foregroundStyle(Theme.Colors.ink)
-                .lineLimit(1)
-                .frame(height: 22, alignment: .leading)
-            Group {
-                if item.isLow {
-                    Text("low").font(Theme.voice(size: valueSize).weight(.semibold))
-                        .foregroundStyle(Theme.Colors.Accent.kitchenWarn)
-                } else if let amount = item.amount {
-                    Text(amount).font(Theme.voice(size: valueSize)).foregroundStyle(Theme.Colors.inkSecondary)
-                } else {
-                    Text(" ").font(Theme.voice(size: valueSize))
+    /// A row: the name (wine and weight 500 when low, never a word), the value beside it or under it in ink 2 Light.
+    private func rowView(_ item: PantryRoomItem, fit: PantryRowLayout.Fit) -> some View {
+        let large = typeSize >= .accessibility1
+        let valueSize = fit.beside ? max(PantryRowLayout.besideValue * scale, large ? 11 : 0)
+            : max(PantryRowLayout.belowValue * scale, large ? 11 : 0)
+        let valueWeight: Font.Weight = large ? .regular : .light
+        return Group {
+            if fit.beside {
+                HStack(alignment: .firstTextBaseline, spacing: PantryRowLayout.gap) {
+                    name(item)
+                    Spacer(minLength: 0)
+                    if let value = item.amount {
+                        Text(value).font(Theme.voice(size: valueSize).weight(valueWeight)).tracking(0.01 * valueSize)
+                            .foregroundStyle(Theme.Colors.inkSecondary).lineLimit(1)
+                    }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 0) {
+                    name(item)
+                    if let value = item.amount {
+                        Text(value).font(Theme.voice(size: valueSize).weight(valueWeight)).tracking(0.03 * valueSize)
+                            .foregroundStyle(Theme.Colors.inkSecondary).lineLimit(1).frame(height: 12 * scale)
+                    }
                 }
             }
-            .tracking(0.02 * valueSize)
-            .lineLimit(1)
-            .frame(height: 13, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, minHeight: PantryPacker.row, maxHeight: PantryPacker.row, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: fit.height, maxHeight: fit.height, alignment: .leading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(item.spoken)
         .accessibilityAction(named: "Used up") { perform(.usedUp, item) }
         .accessibilityAction(named: "Not now") { perform(.notNow, item) }
         .accessibilityAction(named: item.isPinned ? "Unpin" : "Pin") { perform(.pin, item) }
         .accessibilityAction(named: item.isLow ? "Back in" : "Running low") { perform(.toggle, item) }
+    }
+
+    private func name(_ item: PantryRoomItem) -> some View {
+        Text(KitchenText.short(item.name, limit: 18))
+            .font(Theme.voice(size: PantryRowLayout.nameSize).weight(item.isLow || item.isPinned ? .medium : .regular))
+            .foregroundStyle(item.isLow ? Theme.Colors.Accent.kitchenWarn : Theme.Colors.ink)
+            .lineLimit(1)
     }
 
     private func swiping(column: Int, block: Int, row: Int) -> Bool {
@@ -279,28 +350,35 @@ struct PantryColumnsView: View {
         }
     }
 
-    /// Where a touch landed, from the columns' own geometry.
-    private func hit(_ point: CGPoint, packer: PantryPacker, width: CGFloat) -> Hit {
+    /// Where a touch landed, from the columns' own geometry and the rows' real heights. A touch just outside a row
+    /// (within the 44 pt target) counts for the nearest row.
+    private func hit(_ point: CGPoint, packer: PantryPacker, layouts: [[PantryRowLayout.Fit]], width: CGFloat) -> Hit {
         let column = Int(point.x / (width + Self.gap))
         guard column < columnCount, point.x - CGFloat(column) * (width + Self.gap) <= width,
               column < packer.columns.count else { return .space }
         var y: CGFloat = 0
         for (blockIndex, block) in packer.columns[column].enumerated() {
+            if blockIndex > 0 {
+                y += PantryPacker.gap
+            }
             if point.y < y + PantryPacker.header {
                 return .header
             }
             y += PantryPacker.header
-            let rows = block.count
-            let end = y + CGFloat(rows) * PantryPacker.row
-            if point.y < end {
-                return .row(column: column, block: blockIndex, row: Int((point.y - y) / PantryPacker.row))
+            for row in 0 ..< block.count {
+                let height = layouts[block.section][block.start + row].height
+                // The touch target is at least 44 pt: it reaches past a short row into the space around it.
+                let reach = max(0, (44 - height) / 2)
+                if point.y < y + height + reach {
+                    return .row(column: column, block: blockIndex, row: row)
+                }
+                y += height
             }
-            y = end
             if block.more > 0 {
-                if point.y < y + PantryPacker.row {
+                if point.y < y + PantryPacker.moreRow {
                     return .more
                 }
-                y += PantryPacker.row
+                y += PantryPacker.moreRow
             }
         }
         return .space
@@ -314,11 +392,11 @@ struct PantryColumnsView: View {
         return items.indices.contains(index) ? items[index] : nil
     }
 
-    private func gesture(_ packer: PantryPacker, width: CGFloat) -> some Gesture {
+    private func gesture(_ packer: PantryPacker, layouts: [[PantryRowLayout.Fit]], width: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0, coordinateSpace: .named("pantryColumns"))
             .onChanged { value in
                 if touch == nil {
-                    let landed = hit(value.location, packer: packer, width: width)
+                    let landed = hit(value.location, packer: packer, layouts: layouts, width: width)
                     var next = Touch(start: value.location, hit: landed)
                     if case .row = landed {
                         next.holdTask = Task { @MainActor in

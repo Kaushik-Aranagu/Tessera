@@ -63,6 +63,24 @@ enum KitchenText {
     }
 }
 
+// MARK: - Measuring
+
+extension KitchenText {
+    /// The width of `text` in a face at a size, measured with the real font (Figtree), so a line can be fitted before
+    /// it is drawn. A face that cannot be found measures with the system font.
+    static func width(_ text: String, weight: UIFont.Weight, size: CGFloat) -> CGFloat {
+        let font: UIFont
+        if UIFont.fontNames(forFamilyName: "Figtree").isEmpty {
+            font = .systemFont(ofSize: size, weight: weight)
+        } else {
+            let descriptor = UIFontDescriptor(fontAttributes: [.family: "Figtree"])
+                .addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
+            font = UIFont(descriptor: descriptor, size: size)
+        }
+        return NSAttributedString(string: text, attributes: [.font: font]).size().width.rounded(.up)
+    }
+}
+
 // MARK: - Place dial
 
 /// The headline dial (sheet 231 to 233): three 64 pt slots in a 196 pt headline. The focus is 44 pt Figtree 600 in
@@ -321,6 +339,8 @@ final class KitchenReceipts {
         let id = UUID()
         let text: String
         var undo: (() -> Void)?
+        /// A word after the text that does one more thing ("Add to To get"), kitchenText 600.
+        var action: (title: String, run: () -> Void)?
 
         static func == (lhs: Line, rhs: Line) -> Bool {
             lhs.id == rhs.id
@@ -330,8 +350,8 @@ final class KitchenReceipts {
     private(set) var line: Line?
 
     /// "Milk, used up. On To get." with the one Undo, kept 10 s.
-    func say(_ text: String, undo: (() -> Void)? = nil) {
-        let next = Line(text: text, undo: undo)
+    func say(_ text: String, undo: (() -> Void)? = nil, action: (title: String, run: () -> Void)? = nil) {
+        let next = Line(text: text, undo: undo, action: action)
         line = next
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(10))
@@ -362,6 +382,14 @@ struct ReceiptLine: View {
                         .font(Theme.voice(size: 15))
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .lineLimit(1)
+                    if let action = line.action {
+                        Button(action.title) { action.run() }
+                            .font(Theme.voice(size: 15).weight(.semibold))
+                            .foregroundStyle(Theme.Colors.Accent.kitchenText)
+                            .buttonStyle(.plain)
+                            .frame(minHeight: 26)
+                            .contentShape(Rectangle().inset(by: -10))
+                    }
                     if line.undo != nil {
                         Button("Undo") { receipts.undo() }
                             .font(Theme.voice(size: 15).weight(.semibold))

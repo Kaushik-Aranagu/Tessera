@@ -162,35 +162,42 @@ struct RecipesRoomBoardTests {
 
 @MainActor
 struct PantryPackerTests {
-    private func sections(_ rows: [Int], urgent: [Int]? = nil) -> [PantryPacker.Section] {
+    private func sections(_ rows: [Int], urgent: [Int]? = nil, height: CGFloat = 34) -> [PantryPacker.Section] {
         rows.enumerated().map { index, count in
-            PantryPacker.Section(title: "S\(index)", rows: count, urgent: urgent?[index] ?? 0)
+            PantryPacker.Section(title: "S\(index)", rows: count, height: height, urgent: urgent?[index] ?? 0)
         }
     }
 
-    @Test func aColumnHoldsWholeSectionsThatFit() {
-        // 26 + 4 x 44 = 202 fits a column; 26 + 1 x 44 = 70 does not fit beside it (232 - 202 = 30).
-        let packer = PantryPacker(sections: sections([4, 1, 2]))
+    @Test func aColumnHoldsWholeSectionsThatFitWithTheirGap() {
+        // 26 + 6 x 34 = 230 fits a column; the next section does not fit beside it.
+        let packer = PantryPacker(sections: sections([6, 1, 2]))
         #expect(packer.columns[0].map(\.section) == [0])
+        // 26 + 34 = 60, a gap of 18 and 26 + 68 = 94: 172 in all.
         #expect(packer.columns[1].map(\.section) == [1, 2])
+        #expect(packer.columns[1].reduce(0) { $0 + $1.height } + PantryPacker.gap == 172)
     }
 
     @Test func twoSectionsAlwaysTakeBothColumns() {
-        // Both would fit one column, but two sections take two columns.
         let packer = PantryPacker(sections: sections([1, 1]))
         #expect(packer.columns[0].map(\.section) == [0])
         #expect(packer.columns[1].map(\.section) == [1])
-        // One column at large type stacks as far as it fits.
         let single = PantryPacker(sections: sections([1, 1]), columnCount: 1)
         #expect(single.columns.count == 1 && single.columns[0].map(\.section) == [0, 1])
     }
 
     @Test func aSectionTooBigForAColumnSplitsWithAMoreRow() {
-        // 26 + 10 x 44 is far past 232: three rows fit beside the header and the "N more" row.
-        let packer = PantryPacker(sections: sections([10]))
+        // Header 26 + the "more" row 26 leaves 180: five rows of 34 (170) fit.
+        let packer = PantryPacker(sections: sections([20]))
         let block = packer.columns[0][0]
-        #expect(block.count == 3 && block.more == 7 && block.height == 26 + 4 * 44)
+        #expect(block.count == 5 && block.more == 15 && block.height == 26 + 5 * 34 + 26)
         #expect(packer.nextLine == "Next: the rest of S0")
+    }
+
+    @Test func rowsOfDifferentHeightsAreAddedUp() {
+        // 28 pt rows hold more of them than 34 pt rows do.
+        let tall = PantryPacker(sections: sections([20], height: 34)).columns[0][0].count
+        let short = PantryPacker(sections: sections([20], height: 28)).columns[0][0].count
+        #expect(short > tall)
     }
 
     @Test func theEntrySectionIsTheFirstLowOne() {
@@ -199,22 +206,22 @@ struct PantryPackerTests {
     }
 
     @Test func swipingContinuesASplitThenPacksOnAndStopsWhenNothingIsLeft() {
-        var packer = PantryPacker(sections: sections([10, 2]))
+        var packer = PantryPacker(sections: sections([20, 2]))
+        let first = packer.columns[0][0].count
         #expect(packer.advance())
-        #expect(packer.columns[0][0].start == 3)
-        // Eventually nothing moves and the step reports it.
+        #expect(packer.columns[0][0].start == first)
         var moves = 0
         while packer.advance() {
-            moves += 1; if moves > 20 {
+            moves += 1; if moves > 30 {
                 break
             }
         }
-        #expect(moves < 20)
+        #expect(moves < 30)
         #expect(packer.advance() == false)
     }
 
     @Test func backGoesUpToSixSteps() {
-        var packer = PantryPacker(sections: sections([30]))
+        var packer = PantryPacker(sections: sections([60]))
         for _ in 0 ..< 8 {
             packer.advance()
         }
@@ -226,7 +233,41 @@ struct PantryPackerTests {
     }
 
     @Test func aHeaderIsSpokenWithItsCountAndLow() {
-        let packer = PantryPacker(sections: [.init(title: "Dairy and eggs", rows: 5, urgent: 2)])
+        let packer = PantryPacker(sections: [.init(title: "Dairy and eggs", rows: 5, height: 34, urgent: 2)])
         #expect(packer.spokenHeader(packer.columns[0][0]) == "Dairy and eggs, 5, 2 low")
+    }
+}
+
+@MainActor
+struct PantryRowLayoutTests {
+    @Test func aShortValueSitsBesideTheNameAtTheDefaultSize() {
+        let fit = PantryRowLayout.fit(name: "Eggs", value: "half", column: 170)
+        #expect(fit.beside && fit.height == 28)
+    }
+
+    @Test func aLongValueDropsBelowAndTheRowGrowsToThirtyFour() {
+        let fit = PantryRowLayout.fit(name: "Spinach leaves", value: "2 left, by Sunday evening", column: 120)
+        #expect(!fit.beside && fit.height == 34)
+    }
+
+    @Test func aRowWithNoValueIsTwentyEight() {
+        #expect(PantryRowLayout.fit(name: "Milk", value: nil, column: 170).height == 28)
+    }
+
+    @Test func rowsGrowWithTheTextSize() {
+        let base = PantryRowLayout.fit(name: "Spinach leaves", value: "2 left, by Sunday", column: 120)
+        let ax1 = PantryRowLayout.fit(name: "Spinach leaves", value: "2 left, by Sunday", column: 120, scale: 1.6,
+                                      large: true)
+        let ax3 = PantryRowLayout.fit(name: "Spinach leaves", value: "2 left, by Sunday", column: 120, scale: 2.2,
+                                      large: true)
+        #expect(ax1.height > base.height && ax3.height > ax1.height)
+    }
+
+    @Test func aTurnedLowThingOffersTheNudge() {
+        let receipts = KitchenReceipts()
+        var asked = 0
+        receipts.say("Butter, low.", undo: nil, action: ("Add to To get", { asked += 1 }))
+        receipts.line?.action?.run()
+        #expect(asked == 1 && receipts.line?.action?.title == "Add to To get")
     }
 }

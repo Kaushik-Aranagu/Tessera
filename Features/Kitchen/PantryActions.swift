@@ -7,6 +7,8 @@ struct KitchenOutcome {
     var receipt: String
     var undo: (() -> Void)?
     var refused = false
+    /// One more thing the receipt offers beside Undo ("Add to To get").
+    var action: (title: String, run: () -> KitchenOutcome)?
 }
 
 /// Everything the Pantry room does to a thing, behind one protocol so tests and previews can stand in.
@@ -65,8 +67,24 @@ final class PantryEngineActions: PantryActing {
     }
 
     func setStock(_ ingredient: ObjectRecord, low: Bool, name: String) -> KitchenOutcome {
-        run(SetIngredientStock(item: ingredient.id, level: low ? .low : .in),
-            receipt: low ? "\(name), running low." : "\(name), back in.")
+        var outcome = run(SetIngredientStock(item: ingredient.id, level: low ? .low : .in),
+                          receipt: low ? "\(name), low." : "\(name), back in.")
+        // A thing that turns low offers a nudge: "Butter, low. Add to To get  Undo".
+        if low, !outcome.refused {
+            outcome.action = ("Add to \(PantryPlaces.toGet)", { [weak self] in
+                guard let self else { return outcome }
+                return addToGet(ingredient, name: name)
+            })
+        }
+        return outcome
+    }
+
+    /// "Butter, on To get. Undo", or "Butter, low. Already on To get." when it is already there.
+    func addToGet(_ ingredient: ObjectRecord, name: String) -> KitchenOutcome {
+        if PantryStock(store: engine.store, classes: engine.classes).openRow(for: ingredient) != nil {
+            return KitchenOutcome(receipt: "\(name), low. Already on \(PantryPlaces.toGet).")
+        }
+        return run(AddGroceries(lines: [name]), receipt: "\(name), on \(PantryPlaces.toGet).")
     }
 
     func usedUp(_ ingredient: ObjectRecord, name: String) -> KitchenOutcome {

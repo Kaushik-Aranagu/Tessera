@@ -211,7 +211,9 @@ struct PantryRoomPage: View {
     }
 
     private func say(_ outcome: KitchenOutcome) {
-        receipts.say(outcome.receipt, undo: outcome.undo)
+        receipts.say(outcome.receipt, undo: outcome.undo, action: outcome.action.map { action in
+            (action.title, { say(action.run()) })
+        })
     }
 
     private func perform(_ move: PantryMove, on item: PantryRoomItem) {
