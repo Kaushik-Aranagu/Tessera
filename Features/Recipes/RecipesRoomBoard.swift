@@ -22,13 +22,15 @@ struct RecipesRoomBoard {
         let isPrivate: Bool
         let minutes: Int?
         let isPinned: Bool
-        /// The things it lacks, as shown names ("feta").
+        /// The things it lacks, as shown names ("feta"); "private item" for a walled one.
         let shorts: [String]
         /// The ingredients it uses that are running low ("milk").
         let lows: [String]
         /// Its first ingredients, as shown names.
         let uses: [String]
         let plannedFor: Date?
+        /// The same lacks by their real names, for what goes on To get (never the shown names).
+        var shortNames: [String] = []
 
         var isReady: Bool {
             shorts.isEmpty
@@ -41,7 +43,7 @@ struct RecipesRoomBoard {
 
         /// "needs feta", "milk low", "lemons, spaghetti and 4 more".
         @MainActor var detailTwo: String {
-            RecipesRoomBoard.detail(shorts: shorts, lows: lows, uses: uses)
+            KitchenText.short(RecipesRoomBoard.detail(shorts: shorts, lows: lows, uses: uses), limit: 30)
         }
     }
 
@@ -70,15 +72,23 @@ struct RecipesRoomBoard {
             let rows = RecipeStock.rows(lines: lines.map(\.line), recipeServes: book.serves(recipe) ?? 2,
                                         serves: book.serves(recipe) ?? 2, stock: stock)
             let shorts = RecipeStock.shortNames(rows) { ObjectPrivacy.isPrivateWord($0, in: store) }
+            let shortNames: [String] = rows.compactMap { row in
+                if case .short = row.verdict {
+                    row.line.name
+                } else {
+                    nil
+                }
+            }
             let lows = rows.filter { lowKeys.contains($0.key) }.map { Self.said($0.line.name, store: store) }
             let uses = lines.prefix(3).map { Self.said($0.line.name, store: store) }
-            return Item(id: recipe.id, name: isPrivate ? ObjectPrivacy.recipeLabel : title,
+            // The real name inside the room (as Pantry does); every line outside it reads `shown`.
+            return Item(id: recipe.id, name: title,
                         shown: isPrivate ? ObjectPrivacy.recipeLabel : KitchenText
                             .short(RecipeBook.shortName(ofTitle: title)),
                         isPrivate: isPrivate, minutes: book.totalMinutes(recipe).map { Int($0.rounded()) },
                         isPinned: pins.contains(recipe.id), shorts: shorts.map { $0.lowercased() },
                         lows: lows.map { $0.lowercased() }, uses: uses.map { $0.lowercased() },
-                        plannedFor: planned[recipe.id])
+                        plannedFor: planned[recipe.id], shortNames: shortNames)
         }
         items = Self.ordered(built, pinOrder: pins)
         toGetCount = Groceries(store: store, classes: classes).aisles().reduce(0) { $0 + $1.items.count }

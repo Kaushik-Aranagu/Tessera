@@ -196,6 +196,8 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
     @Binding var top: Int
     /// Rows under the focus: 4 in a band (202 pt), 9 on a full page (392 pt).
     var others = 4
+    /// The focus slot: 50 pt for plain names, about 80 pt where it carries two detail lines.
+    var focusHeight: CGFloat = FocusWheel<Item, Content>.defaultFocusHeight
     var onOpen: (Item) -> Void = { _ in }
     /// The row at a fractional place: `focus` runs 1 on the focus down to 0 a row away, so size and weight can carry
     /// the distance; `distance` is the whole places from the top.
@@ -207,7 +209,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
     @State private var turned = 0
     @State private var ticks = 0
 
-    static var focusHeight: CGFloat {
+    static var defaultFocusHeight: CGFloat {
         50
     }
 
@@ -215,8 +217,9 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
         38
     }
 
-    /// 202 pt for a band, 392 pt for a full page: the focus plus the rows under it.
-    static func height(others: Int) -> CGFloat {
+    /// 202 pt for a band, 392 pt for a full page (with the 50 pt focus; 232 and 422 with the 80 pt one): the focus
+    /// plus the rows under it, always ending on a row boundary.
+    static func height(others: Int, focusHeight: CGFloat = defaultFocusHeight) -> CGFloat {
         focusHeight + CGFloat(others) * rowHeight
     }
 
@@ -225,7 +228,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
     }
 
     /// Where the top edge of a row `place` places from the top sits, in points (the focus row is taller).
-    static func y(_ place: CGFloat) -> CGFloat {
+    static func y(_ place: CGFloat, focusHeight: CGFloat = defaultFocusHeight) -> CGFloat {
         if place >= 1 {
             return focusHeight + (place - 1) * rowHeight
         }
@@ -233,7 +236,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
     }
 
     /// A row's height at a fractional place: the focus height at 0, the plain row height a place away.
-    static func height(at place: CGFloat) -> CGFloat {
+    static func height(at place: CGFloat, focusHeight: CGFloat = defaultFocusHeight) -> CGFloat {
         rowHeight + (focusHeight - rowHeight) * max(0, 1 - abs(place))
     }
 
@@ -254,17 +257,17 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
                     } label: {
                         content(items[index], Double(max(0, 1 - abs(at))), place)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(height: Self.height(at: at), alignment: .top)
+                            .frame(height: Self.height(at: at, focusHeight: focusHeight), alignment: .top)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .offset(y: Self.y(at))
+                    .offset(y: Self.y(at, focusHeight: focusHeight))
                     .accessibilityHidden(true)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .frame(height: Self.height(others: rowsShown), alignment: .top)
+        .frame(height: Self.height(others: rowsShown, focusHeight: focusHeight), alignment: .top)
         .clipped()
         .contentShape(Rectangle())
         .gesture(
