@@ -37,3 +37,5 @@ Index of the docs in `docs/ai/`.
 - [week-story-job.md](week-story-job.md): The week story job (AI-11), the switch copy (AI-6) and an AI-14 check
 - [what-tess-knows.md](what-tess-knows.md): What Tess knows: the data contract (ship list AI-9)
 - [what-was-sent-log.md](what-was-sent-log.md): Board item: "What was sent" log (draft for ai.md, REFILL 2)
+- [harness-build-h0-h2.md](harness-build-h0-h2.md): Harness build text, H0 to H2 (Brain seam, Door, router, lab policy, playbook director)
+- [harness-build-h3-wiring.md](harness-build-h3-wiring.md): Harness build text, H3 (Tess streaming loop) and the app wiring for H1 and H2
