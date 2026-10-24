@@ -84,6 +84,7 @@ struct SettingsHub: View {
                 group("Look") {
                     conflictLine("pagesTurnBy")
                     valueLine("font", "Font")
+                    flagLine("depthOnWheels", "Depth on wheels")
                 }
                 group("Safe keeping") {
                     SettingsPageLine(sentence: "Backups", hint: "Where your history is kept") { BackupView() }
