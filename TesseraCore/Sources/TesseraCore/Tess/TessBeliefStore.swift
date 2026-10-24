@@ -123,7 +123,11 @@ public struct TessBeliefStore {
     @discardableResult
     public func syncFromMemory(now: Date = .now) -> Int {
         guard let beliefClass = engine.classes[.belief] else { return 0 }
-        let lines = memory.all().filter { $0.kind == .told || $0.kind == .noticed }
+        // A line whose words he forgot never comes back as a belief, whatever a restore or a recompute did.
+        let forgotten = memory.forgottenHashes()
+        let lines = memory.all().filter {
+            ($0.kind == .told || $0.kind == .noticed) && !forgotten.contains(TessMemoryStore.hash($0.text))
+        }
         var byRule: [String: ObjectRecord] = [:]
         for object in records() where store.value("validUntil", of: object) == nil {
             if let rule = store.value("rule", of: object)?.stringValue, rule.hasPrefix("memory:") {
@@ -178,19 +182,58 @@ public struct TessBeliefStore {
 
     // MARK: Forgetting
 
-    /// After the UNDO window: scrubs the words of every belief deleted more than 10 s ago from the op history, like a
-    /// forgotten memory line, and logs their hash so a restored backup forgets them again.
+    /// After the UNDO window: scrubs the words of every belief deleted more than 10 s ago, from the object and from the
+    /// op history, and logs their hash so a restored backup forgets them again.
     @discardableResult
     public func sweepForgotten(now: Date = .now) -> Int {
         guard let beliefClass = engine.classes[.belief] else { return 0 }
         let due = (beliefClass.objects ?? []).filter { object in
-            guard let deletedAt = object.deletedAt, object.title != TessMemoryStore.redacted else { return false }
-            return now.timeIntervalSince(deletedAt) > 10
+            guard let deletedAt = object.deletedAt, now.timeIntervalSince(deletedAt) > 10 else { return false }
+            // Done once: title and value both scrubbed.
+            return object.title != TessMemoryStore.redacted || store.value("value", of: object)?.stringValue != "{}"
         }
         for object in due {
-            memory.redact(object.id, now: now)
+            redact(object.id, now: now)
         }
         return due.count
+    }
+
+    /// Scrubs a forgotten belief everywhere its words live: the title and the typed value on the object (the value
+    /// holds the words as JSON), the create, rename and value ops, and every receipt that said them. Idempotent.
+    public func redact(_ id: UUID, now: Date = .now) {
+        guard let object = store.object(id: id) else { return }
+        let words = object.title
+        let value = store.value("value", of: object)?.stringValue ?? ""
+        let secondPerson = String(TessMemoryStore.secondPerson(words).dropLast())
+        // The words as they sit in the value JSON ("text":"..."), and as plain text.
+        let spoken = Set([words, value, secondPerson]
+            .filter { !$0.isEmpty && $0 != TessMemoryStore.redacted && $0 != "{}" })
+        // Title, hash log, create/rename ops and summaries: the memory line's redaction does exactly this.
+        memory.redact(id, now: now)
+        for record in store.context.operations.values where record.objectIDs.contains(id) {
+            var changed = false
+            let ops = record.ops.map { op -> Op in
+                guard case let .setValue(target, field, old, new) = op, target == id else { return op }
+                func scrubbed(_ value: FieldValue?) -> FieldValue? {
+                    guard case let .text(text)? = value, spoken.contains(where: text.contains) else { return value }
+                    changed = true
+                    return .text("{}")
+                }
+                return .setValue(object: target, field: field, old: scrubbed(old), new: scrubbed(new))
+            }
+            if changed {
+                record.opsData = try? JSONEncoder().encode(ops)
+            }
+            for form in spoken where record.summary.contains(form) {
+                record.summary = record.summary.replacingOccurrences(of: form, with: TessMemoryStore.redacted)
+            }
+            if let receipt = record.receipt, spoken.contains(where: receipt.contains) {
+                record.receipt = TessMemoryStore.redacted
+            }
+        }
+        if !value.isEmpty, value != "{}" {
+            try? store.set("value", to: .text("{}"), on: object)
+        }
     }
 
     /// Forgets again every belief whose words he forgot after it was written (what a restored backup brings back).
@@ -199,10 +242,11 @@ public struct TessBeliefStore {
         let when = memory.forgottenAt()
         guard !when.isEmpty else { return 0 }
         let back = all().filter { belief in
-            when[TessMemoryStore.hash(belief.words)].map { store.object(id: belief.id)!.createdAt < $0 } ?? false
+            guard let created = store.object(id: belief.id)?.createdAt else { return false }
+            return when[TessMemoryStore.hash(belief.words)].map { created < $0 } ?? false
         }
         for belief in back {
-            memory.redact(belief.id)
+            redact(belief.id)
         }
         return back.count
     }

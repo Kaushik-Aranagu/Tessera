@@ -350,8 +350,9 @@ public struct ConfirmBelief: EngineAction {
     }
 }
 
-/// His forget gesture: the belief and the closed ones it replaced are deleted (not closed), and after the UNDO window
-/// `TessBeliefStore.redact` scrubs their words from history.
+/// His forget gesture: the whole chain the belief is part of (what it replaced, and what replaced it) and the memory
+/// line it was made from are deleted (not closed), so nothing is left linked to a deleted row and nothing is left to
+/// bring it back. After the UNDO window `TessBeliefStore.redact` scrubs the words from every field and op.
 public struct ForgetBelief: EngineAction {
     public static let descriptor = ActionDescriptor(name: "forgetBelief", summary: "Forget a belief",
                                                     parameters: [.init("belief", .object, "The belief")])
@@ -363,13 +364,30 @@ public struct ForgetBelief: EngineAction {
     }
 
     public func apply(_ transaction: inout Transaction) throws {
-        var current: ObjectRecord? = try transaction.object(belief, is: .belief)
+        let start = try transaction.object(belief, is: .belief)
+        let store = transaction.store
+        var chain: [ObjectRecord] = []
         var seen = Set<UUID>()
-        // Down the chain of what it replaced; a forgotten belief takes its history with it.
-        while let object = current, seen.insert(object.id).inserted {
-            let older = transaction.store.linkedObjects("supersedes", of: object).first
+        var queue = [start]
+        while let object = queue.popLast() {
+            guard seen.insert(object.id).inserted else { continue }
+            chain.append(object)
+            queue += store.linkedObjects("supersedes", of: object)
+            if let beliefClass = transaction.classes[.belief] {
+                queue += store.objects(of: beliefClass).filter {
+                    !$0.isDeleted && store.linkedObjects("supersedes", of: $0).contains { $0.id == object.id }
+                }
+            }
+        }
+        for object in chain {
+            // The memory line a belief was made from goes with it, or the next sync would make it again.
+            if let rule = store.value("rule", of: object)?.stringValue, rule.hasPrefix("memory:"),
+               let id = UUID(uuidString: String(rule.dropFirst("memory:".count))),
+               let line = store.object(id: id), !line.isDeleted
+            {
+                transaction.delete(line)
+            }
             transaction.delete(object)
-            current = older
         }
     }
 

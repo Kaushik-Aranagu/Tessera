@@ -179,6 +179,91 @@ struct TessBeliefTests {
         #expect(uses.count == 50 && uses.first == start.addingTimeInterval(10 * 86400))
     }
 
+    /// Everything a forgotten belief's words could still sit in: the object's title and fields, every op, every
+    /// receipt.
+    func leaks(_ needles: [String]) -> [String] {
+        var found: [String] = []
+        for object in store.objects(of: classes[.belief]!) + store.objects(of: classes[.tessMemory]!) {
+            let fields = [object.title] + object.values.storage.values.compactMap(\.stringValue)
+            for text in fields where needles.contains(where: text.contains) {
+                found.append("object: \(text)")
+            }
+        }
+        for record in store.context.operations.values {
+            for op in record.ops {
+                let text = String(describing: op)
+                if needles.contains(where: text.contains) {
+                    found.append("op: \(text)")
+                }
+            }
+            for text in [record.summary, record.receipt ?? ""] where needles.contains(where: text.contains) {
+                found.append("record: \(text)")
+            }
+        }
+        return found
+    }
+
+    @Test func forgettingScrubsTheWordsFromEveryFieldAndEveryOp() throws {
+        let words = "You train before dawn zeppelin."
+        let made = try record(words, source: .noticed)
+        let revised = try engine.perform(ReviseBelief(belief: made.id, words: "You train at midnight zeppelin."),
+                                         by: .tess).output
+        try engine.perform(ConfirmBelief(belief: revised.id), by: .tess)
+        #expect(!leaks(["zeppelin"]).isEmpty)
+        try engine.perform(ForgetBelief(belief: revised.id), by: .user)
+        beliefs.sweepForgotten(now: .now.addingTimeInterval(60))
+        memory.sweepForgotten(now: .now.addingTimeInterval(60))
+        #expect(leaks(["zeppelin"]) == [])
+        #expect(beliefs.all().isEmpty)
+    }
+
+    @Test func forgetSticksThroughSyncAndTurnover() throws {
+        try engine.perform(RememberFact(text: "You train after work"), by: .user)
+        beliefs.syncFromMemory()
+        let belief = try #require(beliefs.all().first)
+        try engine.perform(ForgetBelief(belief: belief.id), by: .user)
+        // The memory line it was made from went with it.
+        #expect(memory.all().isEmpty && beliefs.all().isEmpty)
+        memory.sweepForgotten(now: .now.addingTimeInterval(60))
+        beliefs.sweepForgotten(now: .now.addingTimeInterval(60))
+        memory.turnover(now: .now.addingTimeInterval(86400))
+        beliefs.syncFromMemory(now: .now.addingTimeInterval(86400))
+        #expect(memory.lines(of: .told).isEmpty && beliefs.all().isEmpty)
+        #expect(leaks(["after work"]) == [])
+        // Even if the line came back (a restored backup), sync refuses to make a belief of forgotten words.
+        #expect(memory.write(kind: .told, area: .about, text: "You train after work.", evidence: [], day: nil) == nil)
+        try engine.perform(RememberFact(text: "You rest on Sundays"), by: .user)
+        memory.logForgotten("You rest on Sundays.")
+        beliefs.syncFromMemory()
+        #expect(!beliefs.all().contains { $0.words == "You rest on Sundays." })
+    }
+
+    @Test func forgettingAClosedBeliefTakesTheNewerOneToo() throws {
+        let old = try record("You train after work.")
+        let revised = try engine.perform(ReviseBelief(belief: old.id, words: "You train before work."), by: .tess)
+            .output
+        try engine.perform(ForgetBelief(belief: old.id), by: .user)
+        #expect(beliefs.all().isEmpty)
+        // Nothing left pointing at a deleted row.
+        for object in try store.objects(of: #require(classes[.belief])) where !object.isDeleted {
+            #expect(store.linkedObjects("supersedes", of: object).allSatisfy { !$0.isDeleted })
+        }
+        #expect(store.object(id: revised.id)?.isDeleted == true)
+    }
+
+    @Test func aRestoredBackupForgetsAgainWithoutCrashing() throws {
+        let made = try record("You train after work.")
+        memory.logForgotten("You train after work.", now: .now.addingTimeInterval(60))
+        #expect(beliefs.reapplyForgets() == 1)
+        #expect(store.object(id: made.id)?.title == TessMemoryStore.redacted)
+        #expect(beliefs.reapplyForgets() == 0)
+    }
+
+    @Test func theAskRouterNeverNamesABelief() throws {
+        let made = try record()
+        #expect(TessAskRouter.isUnnameable(made, classes: classes))
+    }
+
     // MARK: Migration
 
     @Test func theMigrationKeepsEveryToldLinesWords() throws {
