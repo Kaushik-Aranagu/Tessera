@@ -401,8 +401,7 @@ final class ReviewChoices {
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
         ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
-        ("Time", ["quietHoursV2"]),
-        ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
+        ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList", "quietHoursV2"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
