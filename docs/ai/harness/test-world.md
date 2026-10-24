@@ -2,8 +2,9 @@
 
 Kaushik, Oct 23 9:22 PM PT: until he calls the app production ready, use sample data everywhere, and build a lot of
 simulation data to test Tess and the harness. Plan (for him): "Tess test world and question tests". The world and
-its answer key are code: `Harness/Eval/EvalWorld.swift` (the generator), `EvalWorldKey.swift` (about 40 questions
-in 15 kinds, answers computed from the world, scoring), and `EvalWorldTests.swift` (pins every planted fact).
+its answer key are code: `Harness/Eval/EvalWorld.swift` (the generator), `EvalWorldKey.swift` and
+`EvalWorldKey+Bank.swift` (about 160 questions in 15 kinds, answers computed from the world, scoring), and
+`EvalWorldTests.swift` (pins every planted fact).
 
 ## 1. The seeder (Core)
 
@@ -27,12 +28,16 @@ Use the world's own dates. Set `AppClock` to `EvalWorld.now` during the seed and
 ## 2. The test store stamp (Core)
 
 - A store made by the seeder carries a test stamp: one settings field, `storeKind = test`.
-- Claude rungs are allowed when `settingsAreReal` is true, or when the store is stamped test. Demo and Sample data
-  keep no Claude.
-- Backups refuse a test store. The test store has its own sent log, usage ledger and trace files, next to its
-  sqlite file.
-- The phone's Sample data now seeds this world (his rule): Builder A swaps `DemoData.prepareSample` for the seeder,
-  with the stamp.
+- Claude rungs are allowed when `settingsAreReal` is true, or when the store is stamped test. Demo mode
+  (`-demo`, `-resetDemo`, the screenshots) keeps no Claude.
+- The phone's Sample data IS the stamped test world (his rule, Oct 23 9:22 PM PT): Builder A swaps
+  `DemoData.prepareSample` for the seeder, with the stamp. So Sample data may call Claude, through `asksClaude`,
+  the lab or strict policy and the shared cap below, like real data. The key and the ask gate stay as they are.
+- Backups refuse a test store. The test store has its own sent log and trace files, next to its sqlite file.
+- **One monthly figure.** Every Claude call, from the phone (real or Sample data) or the Mac runner, counts against
+  the one $100 cap. The phone's cap counts the runner's ledger too (the runner writes its spend where the phone's
+  `UsageLedger` reads it; until the Mac and phone share a file, the runner's month total is entered as one row).
+  The runner stops at the smaller of $50 and ($100 minus what the phone spent this month).
 
 ## 3. The live runner (Core, on the Mac)
 
@@ -49,6 +54,9 @@ Use the world's own dates. Set `AppClock` to `EvalWorld.now` during the seed and
 - It scores with `EvalWorldKey.score`. Under strict, it also scans the run's sent log for walled words and the
   key shape.
 - It writes `eval-runs/<date>-<world>-<policy>.json`, and I build the report page from it.
-- It has a $50 a month guard of its own inside the $100 cap, and it stops the run when the guard is reached.
+- It stops at the smaller of $50 and ($100 minus the phone's spend this month), before each call, not after.
+- It records AnswerCheck's result on every reply, shadow only. A **false fail** is a fail on a reply the key
+  scores right. AnswerCheck retries only after a run on the big world shows false fails under 2% of replies, and
+  none on money; until then the trace records the result and nothing retries.
 
 The replay brain for `swift test` comes in my PR once the harness is on master.

@@ -13,7 +13,7 @@ bottom of their group.
 | C3 | Thinking and web results are replayed byte for byte (M0). | Fixture: a recorded multi-round SSE stream with thinking, `server_tool_use` and `web_search_tool_result`. Round 2's request carries round 1's blocks unchanged. On a real call, the response's `input_transformations` is empty. |
 | C4 | No clock, counter or random text in cached sections. | Test: compile the same ask twice a minute apart. Rules, expertise and core are byte-identical. On his phone, the cache-read share per agent (from `ContextUse`) stays high. |
 | C5 | Packs are deterministic. | Test (in the packer PR): same items, same bytes. Later the same for the whole compiler: same store and ask, same hash. |
-| C6 | Every number Tess says matches the store. | A Door check on replies: each number tied to a cited path must equal that object's value (sets, weights, counts, money). A mismatch fails the check and escalates one rung. |
+| C6 | Every number Tess says matches the store. | A Door check on replies: each number tied to a cited path must equal that object's value (sets, weights, counts, money). A mismatch fails the check and escalates one rung. It starts in shadow (trace only) until the live runner measures false fails under 2% (test-world.md). |
 | C7 | "I don't know" when nothing is kept. | Eval "don't know" kind: 100% abstain. Any made-up answer there is a red test. |
 | C8 | Escalation can't loop. | Test: a check that always fails. Haiku, then Sonnet, then Opus, at most once each per ask, then the phone line. |
 | C9 | The $100 cap stops a runaway. | Test: a fake brain that always asks for a tool. Calls stop at the cap and at the round limit, whichever comes first. |

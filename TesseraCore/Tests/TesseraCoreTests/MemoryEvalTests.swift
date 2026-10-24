@@ -18,6 +18,8 @@ struct MemoryEvalTests {
         MemoryEval(calendar: calendar, now: day(10, 23))
     }
 
+    static let trainsAt = UUID()
+
     var facts: MemoryEvalFacts {
         MemoryEvalFacts(
             sets: [.init(exercise: "Bench Press", day: day(10, 3), weight: 92.5, unit: "kg", reps: 5),
@@ -27,7 +29,8 @@ struct MemoryEvalTests {
                      .init(name: "Chili", verb: "cook", day: day(10, 2)),
                      .init(name: "Chili", verb: "cook", day: day(10, 16)),
                      .init(name: "Push Day", verb: "do", day: day(10, 1))],
-            changes: [.init(question: "When do I usually train?", old: "6 am", current: "evening")],
+            changes: [.init(question: "When do I usually train?", old: "6 am", current: "evening",
+                            belief: Self.trainsAt)],
             unknowns: ["What's my favorite cuisine?"]
         )
     }
@@ -55,11 +58,24 @@ struct MemoryEvalTests {
         #expect(Set(one.map(\.kind)).count == 4)
     }
 
-    @Test func keptMissesComeFirst() {
-        let kept = EvalQuestion(id: "unknown/Do I like jazz?", kind: .dontKnow, text: "Do I like jazz?",
-                                expected: .dontKnow)
-        let questions = eval.questions(from: facts, night: "2026-10-23", count: 3, keep: [kept])
-        #expect(questions.first == kept && questions.count == 3)
+    @Test func keptMissesComeFirst() throws {
+        let all = eval.questions(from: facts, night: "2026-10-23", count: 50)
+        let squat = try #require(all.first { $0.id.hasPrefix("find/Squat") })
+        let questions = eval.questions(from: facts, night: "2026-10-24", count: 3, keep: [squat.id])
+        #expect(questions.first == squat && questions.count == 3)
+    }
+
+    @Test func aKeptIdTheFactsNoLongerWriteIsNotAsked() {
+        let questions = eval.questions(from: facts, night: "2026-10-23", count: 3, keep: ["find/Deadlift/x/5"])
+        #expect(!questions.contains { $0.id.hasPrefix("find/Deadlift") } && questions.count == 3)
+    }
+
+    @Test func idsHoldNoQuestionWords() {
+        let all = eval.questions(from: facts, night: "2026-10-23", count: 50)
+        let changed = all.first { $0.kind == .changed }
+        #expect(changed?.id == "changed/\(Self.trainsAt.uuidString)" && changed?.belief == Self.trainsAt)
+        let unknown = all.first { $0.kind == .dontKnow }
+        #expect(unknown?.id.contains("cuisine") == false)
     }
 
     // MARK: Scoring
@@ -107,11 +123,11 @@ struct MemoryEvalTests {
         let question = EvalQuestion(id: "find/Squat", kind: .find, text: "", expected: .number(120, unit: "kg"))
         var record = MemoryEvalRecord()
         record.add([night("n0", missed: [question], asked: [question])], questions: [question])
-        #expect(record.kept == [question])
+        #expect(record.kept == [question.id])
         for index in 1 ... 6 {
             record.add([night("n\(index)", missed: [], asked: [question])], questions: [question])
         }
-        #expect(record.kept == [question] && record.streaks[question.id] == 6)
+        #expect(record.kept == [question.id] && record.streaks[question.id] == 6)
         record.add([night("n7", missed: [], asked: [question])], questions: [question])
         #expect(record.kept.isEmpty)
     }
@@ -125,6 +141,34 @@ struct MemoryEvalTests {
         #expect(record.nights.last?.score == 50)
         #expect(record.tunerMisses(agent: "tess", model: .haiku) == [EvalMiss(agent: "tess", model: .haiku,
                                                                               section: .recall)])
+    }
+
+    @Test func forgettingABeliefPurgesItsMisses() {
+        let belief = UUID()
+        let changed = EvalQuestion(id: "changed/\(belief.uuidString)", kind: .changed, text: "When do I train?",
+                                   expected: .text("evening"), belief: belief)
+        let other = EvalQuestion(id: "find/Squat", kind: .find, text: "", expected: .number(120, unit: "kg"))
+        var record = MemoryEvalRecord()
+        record.add([night("n0", missed: [changed, other], asked: [changed, other])], questions: [changed, other])
+        #expect(record.sources[changed.id] == belief)
+        record.forget(beliefs: [belief])
+        #expect(record.kept == [other.id] && record.streaks[changed.id] == nil && record.sources.isEmpty)
+        #expect(record.nights.allSatisfy { !$0.missed.contains(changed.id) })
+        #expect(record.nights.last?.asked[.changed] == 1)
+    }
+
+    @Test func theFileHoldsNoWordsOrAnswers() throws {
+        let url = FileManager.default.temporaryDirectory.appending(path: "eval-\(UUID().uuidString).json")
+        let question = EvalQuestion(id: "find/Squat/2026-10-06/3", kind: .find, text: "What did I squat for 3?",
+                                    expected: .number(127.5, unit: "kg"))
+        var record = MemoryEvalRecord()
+        record.add([night("n0", missed: [question], asked: [question])], questions: [question])
+        record.save(to: url)
+        let text = try String(contentsOf: url, encoding: .utf8)
+        #expect(!text.contains("squat for") && !text.contains("127.5"))
+        MemoryEvalRecord.forget(beliefs: [UUID()], at: url)
+        #expect(MemoryEvalRecord.load(from: url) == record)
+        try? FileManager.default.removeItem(at: url)
     }
 
     @Test func theRecordRoundTrips() {

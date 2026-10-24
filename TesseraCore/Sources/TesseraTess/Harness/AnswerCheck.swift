@@ -9,10 +9,15 @@ import Foundation
 /// - the same amount in the other unit (kg and lb, km and miles, minutes and hours), within rounding;
 /// - after a change word ("up 3 kg", "4 more sets", "12 in total"), the difference or sum of two evidence numbers.
 ///
-/// Not checked: clock times, dates, years, ordinals, and the word "one".
+/// Not checked: clock times, dates (10/23 too), years, ordinals, and the word "one". A grouped number ("2,000") is
+/// never a year.
+///
+/// It starts in shadow: the trace records its result and nothing retries, until the live runner has measured its
+/// false-fail rate on the test world (a fail on a reply the key scores right) and it is under 2% (test-world.md).
 public struct AnswerCheck: Sendable {
     public enum Unit: String, Sendable {
-        case kg, lb, km, miles, minutes, hours, percent, money, kcal, grams
+        /// `money` is dollars; euros keep their own unit, so $40 never supports €40.
+        case kg, lb, km, miles, minutes, hours, percent, money, euros, kcal, grams
     }
 
     /// A number as written in a reply or the evidence.
@@ -101,6 +106,7 @@ public struct AnswerCheck: Sendable {
         "h": .hours, "hr": .hours, "hrs": .hours, "hour": .hours, "hours": .hours,
         "%": .percent, "percent": .percent, "kcal": .kcal, "cal": .kcal, "cals": .kcal, "calories": .kcal,
         "g": .grams, "gram": .grams, "grams": .grams,
+        "dollar": .money, "dollars": .money, "usd": .money, "eur": .euros, "euro": .euros, "euros": .euros,
     ]
 
     static let numberWords: [String: Double] = [
@@ -123,7 +129,7 @@ public struct AnswerCheck: Sendable {
     private static let words = numberWords.keys.joined(separator: "|")
     // A digit number (not inside a word, a path or a date like 2026-10-23), or a number word; then maybe a unit.
     private nonisolated(unsafe) static let pattern = try? NSRegularExpression(
-        pattern: "(\\$\\s?)?(?:(?<![\\w.])(?<!\\d[-/])(\\d{1,3}(?:,\\d{3})+|\\d+)(\\.\\d+)?|\\b(\(words))\\b)"
+        pattern: "([$€]\\s?)?(?:(?<![\\w.])(?<!\\d[-/])(\\d{1,3}(?:,\\d{3})+|\\d+)(\\.\\d+)?|\\b(\(words))\\b)"
             + "(?:\\s?(\(units))(?![A-Za-z]))?",
         options: [.caseInsensitive]
     )
@@ -151,12 +157,16 @@ public struct AnswerCheck: Sendable {
             let after = source.substring(from: match.range.location + match.range.length)
             let before = source.substring(to: match.range.location)
             let unitText = part(5)?.lowercased()
-            if part(2) != nil, isSkipped(value: value, hasFraction: part(3) != nil, unit: unitText,
-                                         before: before, after: after)
+            if let digits = part(2), isSkipped(value: value, hasFraction: part(3) != nil, grouped: digits.contains(","),
+                                               unit: unitText, before: before, after: after)
             {
                 continue
             }
-            let unit: Unit? = part(1) != nil ? .money : unitText.flatMap { unitWords[$0] }
+            let unit: Unit? = switch part(1)?.first {
+            case "$": .money
+            case "€": .euros
+            default: unitText.flatMap { unitWords[$0] }
+            }
             claims.append(Claim(text: source.substring(with: match.range).trimmingCharacters(in: .whitespaces),
                                 value: value, unit: unit, derived: isDerived(before: before, after: after)))
         }
@@ -164,9 +174,15 @@ public struct AnswerCheck: Sendable {
     }
 
     /// Clock times, years, ordinals, dates and numbers glued to letters are not quantities.
-    static func isSkipped(value: Double, hasFraction: Bool, unit: String?, before: String, after: String) -> Bool {
+    static func isSkipped(value: Double, hasFraction: Bool, grouped: Bool = false, unit: String?, before: String,
+                          after: String) -> Bool
+    {
         let next = after.first
         if before.last == ":" || next == ":" {
+            return true
+        }
+        // "10/23": the month of a date (the 23 is already skipped by the pattern).
+        if next == "/", after.dropFirst().first?.isNumber == true {
             return true
         }
         if unit == nil, let next, next.isLetter, next != "x" {
@@ -176,7 +192,7 @@ public struct AnswerCheck: Sendable {
         if unit == nil, ["am", "pm", "a.m.", "p.m."].contains(where: { following.hasPrefix($0) }) {
             return true
         }
-        if unit == nil, !hasFraction, value >= 1900, value <= 2100 {
+        if unit == nil, !hasFraction, !grouped, value >= 1900, value <= 2100 {
             return true
         }
         let previousWord = before.lowercased().split(whereSeparator: { !$0.isLetter }).last.map(String.init)
