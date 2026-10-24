@@ -9,6 +9,12 @@ enum Tier1b {
     nonisolated static let undoID = "undoLogV2"
 
     nonisolated static let quietID = "quietHoursV2"
+    nonisolated static let kitchenID = "kitchenRoomsV2"
+
+    /// The Kitchen rooms (231 to 233): On unless he turned them Off.
+    @MainActor static var kitchenRoomsIsOn: Bool {
+        ReviewChoices.shared.value(of: kitchenID) != "Off"
+    }
 
     /// Quiet hours (167): On unless he turned it Off.
     @MainActor static var quietIsOn: Bool {
