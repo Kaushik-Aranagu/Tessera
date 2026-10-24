@@ -77,12 +77,12 @@ public extension TrainingStats {
                 if baseline.map({ session.date > $0.date }) ?? true {
                     baseline = (session.date, kg)
                 } else if session.date == baseline?.date {
-                    baseline?.kg = max(baseline?.kg ?? kg, kg)
+                    baseline = (session.date, max(baseline?.kg ?? kg, kg))
                 }
             } else if latest.map({ session.date > $0.date }) ?? true {
                 latest = (session.date, kg)
             } else if session.date == latest?.date {
-                latest?.kg = max(latest?.kg ?? kg, kg)
+                latest = (session.date, max(latest?.kg ?? kg, kg))
             }
         }
         guard let baseline, let latest else { return nil }
