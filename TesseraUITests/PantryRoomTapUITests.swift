@@ -239,6 +239,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
             fixture(name, in: app).tap()
             expectItem(name, in: app)
             app.buttons["Done"].tap()
+            wait(NSPredicate(format: "hittable == true"), on: fixture(name, in: app))
         }
         let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.row."))
             .allElementsBoundByIndex.filter(\.isHittable)
