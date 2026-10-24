@@ -64,7 +64,8 @@ public struct LatencyBench {
         }
         return BrainRequest(system: system,
                             messages: [BrainMessage(.user, text: Self.filler(words: Self.promptWords, seed: 3))],
-                            maxTokens: Self.outTokens, effort: .low, cacheAfter: cache, deadline: .seconds(30))
+                            maxTokens: Self.outTokens, effort: .low, cacheAfter: cache, thinking: false,
+                            deadline: .seconds(30))
     }
 
     private func claudeCase(_ label: String, model: ClaudeBrain.Model, prefix: Bool, fresh: Bool) async -> Row {
