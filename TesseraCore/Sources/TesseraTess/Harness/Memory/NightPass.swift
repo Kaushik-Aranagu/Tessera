@@ -11,7 +11,8 @@ import TesseraCore
 ///    one he told, then the most confirmed, then the oldest. The others close, replaced by it. A key that holds one
 ///    value at a time (`usualTime`, `cadence`) also merges two open beliefs that disagree (I7): his kept or told one
 ///    wins, then the newest. Other keys may hold several values at once (he prefers rice and beans), so only exact
-///    duplicates merge there.
+///    duplicates merge there. A belief he told or kept never closes here, and when two of his disagree nothing in
+///    that group closes: he settles it, not the night.
 /// 2. **Close what changed:** a usual time whose last 4 events have 3 off the old pattern (more than 90 minutes
 ///    away) is revised to the median of the off-pattern times, with those events as evidence.
 /// 3. **Verify noticed beliefs:** a noticed or inferred usual time, not yet a fact, with 3 of its last 4 events on
@@ -42,7 +43,9 @@ public struct NightPass: Sendable {
         }
     }
 
-    /// One thing that happened on the day, by its shown name (a private thing arrives as its label).
+    /// One thing that happened on the day. The caller passes shown names only: a private thing arrives as its label
+    /// ("Private workout"), and a kind whose title may be his own words (a note) arrives with an empty name, so it is
+    /// counted and never named. The planner writes `name` into the summary as it is and does not check it again.
     public struct DayItem: Sendable, Equatable {
         /// The class word, singular: "workout", "task done", "spend".
         public var kind: String
@@ -92,6 +95,17 @@ public struct NightPass: Sendable {
     public static let reflectLimit = 5
     /// Keys that hold one value at a time, so two open beliefs that disagree are a contradiction.
     static let singleValued: Set<TessBelief.Key> = [.usualTime, .cadence]
+    /// Day-item kinds only lab may summarize (money, body, calendar): under strict they stay out of the summary
+    /// lines and wake no agent, like the rooms of the lab-only agents.
+    public static let labOnlyKinds: Set<String> = [
+        "spend", "money in", "pool move", "sleep", "steps", "resting heart rate", "weigh-in", "event",
+    ]
+    static let labOnlyRooms: Set<String> = Set(AgentSpec.shipped.filter(\.labOnly).map(\.room))
+
+    /// What he told her or kept: the night never closes or revises it.
+    static func isHis(_ belief: TessBelief) -> Bool {
+        belief.kept || belief.source == .told
+    }
 
     public var calendar: Calendar
     public var now: Date
@@ -122,11 +136,14 @@ public struct NightPass: Sendable {
     /// - Parameters:
     ///   - packs: each pack's hash now, and the hash its cache was built with (nil when never built).
     ///   - agents: the agents the policy allows (`AgentSpec.available(under:)`).
-    public func plan(beliefs: [TessBelief], series: [Event], day: [DayItem], week: [DayItem] = [],
+    ///   - policy: the Door's policy. Strict drops the lab-only kinds from the summaries and the reflect rooms.
+    public func plan(beliefs: [TessBelief], series: [Event], day allDay: [DayItem], week allWeek: [DayItem] = [],
                      notebooks: [NotebookFile] = [], packs: [AgentSpec.Expertise: (now: String, built: String?)] = [:],
-                     agents: [AgentSpec] = [], lastNight: String? = nil) -> [Step]
+                     agents: [AgentSpec] = [], lastNight: String? = nil, policy: DoorPolicy = .strict) -> [Step]
     {
         guard lastNight != night else { return [] }
+        let day = Self.allowed(allDay, under: policy)
+        let week = Self.allowed(allWeek, under: policy)
         let open = beliefs.filter(\.isOpen)
         let merges = merged(open)
         let closing = Set(merges.compactMap { step -> UUID? in
@@ -171,11 +188,20 @@ public struct NightPass: Sendable {
                 if lhs.confirmations != rhs.confirmations { return lhs.confirmations > rhs.confirmations }
                 return lhs.validFrom < rhs.validFrom
             }
-            for other in ranked.dropFirst() {
+            // Two of his own that disagree: nothing in the group closes until he says which.
+            let his: Set<String> = Set(group.filter(Self.isHis).map { normalized($0.value) })
+            guard his.count < 2 else { continue }
+            for other in ranked.dropFirst() where !Self.isHis(other) {
                 steps.append(.merge(keep: ranked[0].id, close: other.id))
             }
         }
         return steps
+    }
+
+    /// The items a policy may summarize: lab all of them, strict none of money, body or calendar.
+    static func allowed(_ items: [DayItem], under policy: DoorPolicy) -> [DayItem] {
+        guard policy == .strict else { return items }
+        return items.filter { !labOnlyKinds.contains($0.kind) && !labOnlyRooms.contains($0.room) }
     }
 
     func subjectKey(_ subject: TessBelief.Subject) -> String {

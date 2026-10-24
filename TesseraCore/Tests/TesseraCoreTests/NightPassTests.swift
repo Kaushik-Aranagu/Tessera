@@ -139,6 +139,31 @@ struct NightPassTests {
         #expect(pass.plan(beliefs: [told, new], series: [], day: []).contains(.merge(keep: told.id, close: new.id)))
     }
 
+    func merges(_ steps: [NightPass.Step]) -> [NightPass.Step] {
+        steps.filter { if case .merge = $0 { true } else { false } }
+    }
+
+    @Test func hisKeptAndToldBeliefsThatDisagreeCloseNothing() {
+        let kept = belief(from: at(3, 1, 9), kept: true)
+        let told = belief(value: "{\"hour\":18}", source: .told, from: at(9, 1, 9))
+        let noticed = belief(value: "{\"hour\":7}", from: at(10, 1, 9))
+        #expect(merges(pass.plan(beliefs: [kept, told, noticed], series: [], day: [])).isEmpty)
+    }
+
+    @Test func twoToldBeliefsThatDisagreeCloseNothing() {
+        let morning = belief(source: .told, from: at(3, 1, 9))
+        let evening = belief(value: "{\"hour\":18}", source: .told, from: at(9, 1, 9))
+        #expect(merges(pass.plan(beliefs: [morning, evening], series: [], day: [])).isEmpty)
+    }
+
+    @Test func hisOwnDuplicatesStayOpenAndOnlyTheNoticedOneCloses() {
+        let kept = belief(.prefers, value: "{\"text\":\"rice\"}", from: at(3, 1, 9), kept: true)
+        let told = belief(.prefers, value: "{\"text\":\"rice\"}", source: .told, from: at(4, 1, 9))
+        let noticed = belief(.prefers, value: "{\"text\":\"rice\"}", from: at(5, 1, 9))
+        #expect(merges(pass.plan(beliefs: [kept, told, noticed], series: [], day: []))
+            == [.merge(keep: kept.id, close: noticed.id)])
+    }
+
     // MARK: Summaries
 
     @Test func theDaySummaryCountsByKindWithShownNames() {
@@ -156,6 +181,24 @@ struct NightPassTests {
         let notes = [NightPass.DayItem(kind: "note", name: "", at: at(10, 23, 9), room: "notes"),
                      NightPass.DayItem(kind: "note", name: "", at: at(10, 23, 10), room: "notes")]
         #expect(NightPass.lines(notes, empty: "") == "2 notes")
+    }
+
+    @Test func strictLeavesMoneyBodyAndCalendarOutOfTheSummary() {
+        let day = [
+            NightPass.DayItem(kind: "workout", name: "Push Day", at: at(10, 23, 7), room: "training"),
+            NightPass.DayItem(kind: "spend", name: "Groceries", at: at(10, 23, 12), room: "money"),
+            NightPass.DayItem(kind: "sleep", name: "", at: at(10, 23, 5), room: "body"),
+            NightPass.DayItem(kind: "event", name: "Dentist", at: at(10, 23, 15), room: "today"),
+        ]
+        let path = "/summaries/day/2026-10-23"
+        let strict = pass.plan(beliefs: [], series: [], day: day)
+        #expect(strict.contains(.summary(path: path, text: "1 workout: Push Day")))
+        let lab = pass.plan(beliefs: [], series: [], day: day, policy: .lab)
+        #expect(lab.contains { if case let .summary(_, text) = $0 { text.contains("Groceries") } else { false } })
+        // Only money moved today: under strict that wakes nobody.
+        let money = [NightPass.DayItem(kind: "spend", name: "Groceries", at: at(10, 23, 12), room: "money")]
+        let quiet = pass.plan(beliefs: [], series: [], day: money, agents: AgentSpec.shipped)
+        #expect(!quiet.contains { if case .reflect = $0 { true } else { false } })
     }
 
     @Test func sundayNightAddsTheWeek() {
