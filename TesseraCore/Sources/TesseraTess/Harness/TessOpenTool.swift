@@ -44,7 +44,7 @@ public enum TessOpenTool {
                 return "on this phone only"
             }
             return ObjectPrivacy.shownLabel(of: record, in: store, classes: classes)
-                ?? Describe.sentence(record, in: store, classes: classes, calendar: calendar)
+                ?? TessAskRouter.shownSentence(record, in: store, classes: classes, calendar: calendar)
                 ?? (record.title.isEmpty ? record.classDef?.name ?? "an object" : record.title)
         }
         var out = [line(target)]

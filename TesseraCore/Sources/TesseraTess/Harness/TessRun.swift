@@ -180,7 +180,7 @@ public final class TessRun {
             let handle = "o\(index + 1)"
             handles[handle] = object.id
             let shown = ObjectPrivacy.shownLabel(of: object, in: store, classes: classes)
-                ?? Describe.sentence(object, in: store, classes: classes, calendar: calendar)
+                ?? TessAskRouter.shownSentence(object, in: store, classes: classes, calendar: calendar)
                 ?? (object.title.isEmpty ? "an object" : object.title)
             // Money, health, body, calorie and calendar things go to Claude only under lab mode.
             let taint: Taint = TessAskRouter.isUnnameable(object, classes: classes) ? .deviceOnly : .claudeSafe
