@@ -47,6 +47,10 @@ struct SettingsHub: View {
                         HubPage(title: "Colours") { LookSentence() }
                     }
                 }
+                group("Time") {
+                    quietLine
+                    dayTurnsLine
+                }
                 group("Home") {
                     flagLine("homeAppsList", "Apps list under Next")
                     conflictLine("homeIs")
@@ -173,6 +177,31 @@ struct SettingsHub: View {
             model.chooseUnit(option.id, for: kind)
             TessVoice.shared.say("Weights in \(option.name).", takeBack: {
                 model.chooseUnit(previous, for: kind)
+            })
+        }
+    }
+
+    private var quietLine: some View {
+        let hours = model.settingsAreReal ? SettingsStore(engine: model.engine).read().quietHours : QuietHours.standard
+        return SettingsPageLine(sentence: "Quiet hours", value: hours.words,
+                                hint: "When notices wait. Timers always come through")
+        {
+            QuietHoursPage()
+        }
+    }
+
+    /// "The day turns over at 4 am": when late-night things stop belonging to yesterday.
+    private var dayTurnsLine: some View {
+        let current = model.settingsAreReal ? SettingsStore(engine: model.engine).read().dayTurnsAtHour : 4
+        let options = (0 ... 8).map { SettingsLine.Option(id: "\($0)", name: HouseTime.clock(minuteOfDay: $0 * 60)) }
+        return SettingsLine(sentence: "The day turns over at", options: options, selected: "\(current)",
+                            why: TesseraSettings.dayTurnsAtWhy)
+        { option in
+            guard let hour = Int(option.id) else { return }
+            let previous = current
+            model.updateSettings { $0.dayStartHour = hour }
+            TessVoice.shared.say("The day turns over at \(option.name).", takeBack: {
+                model.updateSettings { $0.dayStartHour = previous }
             })
         }
     }
