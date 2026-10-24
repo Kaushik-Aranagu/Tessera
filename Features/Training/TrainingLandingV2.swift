@@ -366,6 +366,7 @@ struct TrainingLandingV2: View {
                     .lineLimit(1)
                 line
                     .foregroundStyle(Theme.Colors.ink)
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                     .minimumScaleFactor(0.8)
                     .fixedSize(horizontal: false, vertical: true)
