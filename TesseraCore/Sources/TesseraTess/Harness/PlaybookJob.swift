@@ -102,9 +102,9 @@ public struct PlaybookJob {
     You choose how Tess's looks and reactions behave today, ahead of time. Reply only by calling setPlaybook. \
     Palette: for each app, say whether Tess takes that app's accent on a page where it is the only accent, or ember. \
     Burst: a shape, a count (0 to 24) and a length in seconds (0 to 2.5) for each kind of finish. Reaction: what the \
-    mosaic does when he opens the app after each length of time away, with a length (0 to 2.6 seconds). Keep it calm \
+    mosaic does when the person opens the app after each length of time away, with a length (0 to 2.6 seconds). Keep it calm \
     in the morning, quiet when quiet is on, and none of it when reduce motion is on. Vary from the recent choices. \
-    Each why is one short plain line.
+    Each why is one plain sentence of at most 14 words, ending in a full stop, with no digits.
     """
 
     // MARK: Parse
