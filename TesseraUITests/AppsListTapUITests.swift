@@ -6,9 +6,8 @@ import XCTest
 final class AppsListTapUITests: SimulatorOnlyTestCase {
     private func launch() -> XCUIApplication {
         let app = XCUIApplication()
-        // The demo skips the feature flags, so the mosaic Home and its apps list are switched on by their own keys.
-        app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-review.homeMosaic", "On",
-                               "-review.homeMosaicMoods", "On", "-review.homeAppsList", "On"]
+        // Not the demo: it skips the feature flags, and the mosaic Home with its apps list ships On.
+        app.launchArguments = ["-demoTime", "18:10"]
         app.launch()
         XCTAssertTrue(app.buttons["Tess"].waitForExistence(timeout: 15))
         sleep(2)
