@@ -86,11 +86,11 @@ struct TessRoom: View {
         .padding(.bottom, 120)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Theme.Colors.paper.ignoresSafeArea())
-        .gesture(DragGesture(minimumDistance: 30).onEnded { value in
-            if value.translation.height > 60, abs(value.translation.width) < value.translation.height {
+        .pullGesture { down in
+            if down {
                 close()
             }
-        })
+        }
         .accessibilityAddTraits(.isModal)
         .accessibilityLabel("Tess's room")
     }

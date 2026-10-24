@@ -161,7 +161,7 @@ private struct ShopLead: View {
     let onStrike: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pull: CGFloat = 0
-    private static let arm: CGFloat = 72
+    private static let arm = CGFloat(GestureTuning.armDistance)
 
     var body: some View {
         Button(action: onStrike) {
@@ -184,24 +184,17 @@ private struct ShopLead: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 24)
-                .onChanged { value in
-                    guard value.translation.width > 0, value.translation.width > abs(value.translation.height) else {
-                        return
-                    }
-                    pull = min(value.translation.width, Self.arm)
-                }
-                .onEnded { _ in
-                    let armed = pull >= Self.arm
-                    if armed {
-                        // The strike's one soft tap is the page's own `Haptic.made` as the item is struck; no second
-                        // one here (QA on #1282, sheet 175).
-                        onStrike()
-                    }
-                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
-                }
-        )
+        .rowSwipe(.leading, arm: Self.arm, limit: Self.arm) { event in
+            switch event {
+            case let .pulled(value): pull = max(value, 0)
+            case .committed:
+                // The strike's one soft tap is the page's own `Haptic.made` as the item is struck; no second
+                // one here (QA on #1282, sheet 175).
+                onStrike()
+            case .ended: withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
+            case .cancelled, .armed, .disarmed: break
+            }
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel((item.quantity.map { "\($0) " } ?? "") + name)
         .accessibilityHint("Puts it in the basket")

@@ -115,7 +115,8 @@ struct RecipePage: View {
                             ZStack(alignment: .topLeading) {
                                 column
                                     .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
-                                    .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
+                                    .rowSwipe(.trailing, arm: columnWidth * 0.4, limit: columnWidth,
+                                              onEvent: sendSwipe(recipe: recipe.id, serves: size))
                                 if let sent {
                                     SentLine(line: sent.line) { undoSend(sent.record) }
                                         .transition(.opacity)
@@ -128,7 +129,8 @@ struct RecipePage: View {
                                 .scrollIndicators(.hidden)
                                 .scrollBounceBehavior(.basedOnSize)
                                 .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
-                                .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
+                                .rowSwipe(.trailing, arm: columnWidth * 0.4, limit: columnWidth,
+                                          onEvent: sendSwipe(recipe: recipe.id, serves: size))
                             drum
                         }
                     }
@@ -275,21 +277,19 @@ struct RecipePage: View {
 
     /// Swipe the column left: past 40% of its width it slides off toward Groceries and leaves "12 to buy" behind;
     /// after 4 s it comes back.
-    private func sendGesture(recipe: UUID, serves: Int?) -> some Gesture {
-        DragGesture(minimumDistance: 24)
-            .onChanged { value in
-                guard abs(value.translation.width) > abs(value.translation.height), sent == nil else { return }
-                drag = value.translation.width
+    private func sendSwipe(recipe: UUID, serves: Int?) -> (RowSwipeEvent) -> Void {
+        { event in
+            switch event {
+            case let .pulled(value):
+                guard sent == nil else { return }
+                drag = value
+            case .committed:
+                send(recipe: recipe, serves: serves)
+            case .cancelled:
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = 0 }
+            case .ended, .armed, .disarmed: break
             }
-            .onEnded { value in
-                let send = -value.translation.width > columnWidth * 0.4
-                    || -value.predictedEndTranslation.width > columnWidth
-                guard send, sent == nil else {
-                    withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = 0 }
-                    return
-                }
-                self.send(recipe: recipe, serves: serves)
-            }
+        }
     }
 
     /// The add, from the swipe or VoiceOver's "Add all to Groceries" (G58, K87.8). Added: the column leaves and the
