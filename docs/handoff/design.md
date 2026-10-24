@@ -85,8 +85,8 @@ Board: https://claude.ai/artifact/9JBnr8TytGTnKtnnyXjdik.
   - The key work is the type study: fonts, weights, sizes and colors that look good in light and pure black, plus
     the alignment rules.
 - IN PROGRESS at handoff: round 3. It has Notes word-wall variants, wall shapes, the pile-to-tidy transition, a type
-  study, and 6-8 more poster ideas. The board is scratchpad r60, which may not have published before the limit. If
-  the round 3 section in `landing-living-242.md` is missing, start round 3 from this brief.
+  study, and 6-8 more poster ideas. Board: https://claude.ai/artifact/HgDEZfib4Xw9BiafqyVydt (it may still be
+  growing). If the round 3 section in `landing-living-242.md` is missing, continue round 3 from this brief.
 - Don't send landing build text to the builders until he picks.
 
 ## Other rooms
