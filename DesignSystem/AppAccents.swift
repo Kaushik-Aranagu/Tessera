@@ -44,6 +44,11 @@ extension Theme.Colors {
             tuned(\.routines, light: 0x8E4A78, dark: 0xD79AA6)
         }
 
+        /// Rain (Home 236 v2.1): the colour of a rain highlight, in place of the sunset wash. 557A93 light, 9DBACE dark.
+        static var rain: Color {
+            Color(light: 0x557A93, dark: 0x9DBACE)
+        }
+
         /// The sky word's two stops ("Sunset").
         static var skyFrom: Color {
             tuned(\.skyFrom, light: 0xC9772E, dark: 0xE8A06A)

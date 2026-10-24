@@ -2,8 +2,8 @@ import CoreGraphics
 import Foundation
 
 // Home is the mosaic (Design 202, Revision 2, the skin edge): a grid of 3.2 pt square tiles on a 4 pt step covers the
-// screen edge to edge, but only the mosaic's own space is drawn: its core is the living window, centred at 56% of the
-// width, and a rim of 12 tiles around it is solved so the window comes out of the page's own skin. This file is the
+// screen edge to edge, but only the mosaic's own space is drawn: its core is the living window, its right edge on the
+// right margin, and a rim of 12 tiles around it is solved so the window comes out of the page's own skin. This file is the
 // pure geometry: the grid, the core, the region and the text shield.
 
 struct MosaicTileRect: Equatable {
@@ -32,7 +32,9 @@ struct MosaicScreenGrid: Equatable {
     /// The rim's width: the tiles around the window the skin edge is solved over (Revision 2).
     static let reach = MosaicRim.reach
     /// The most tiles the core can ever span (the largest mood window), and the margin the region keeps around it.
-    static let maxCore = (columns: 62, rows: 40)
+    static let maxCore = (columns: 88, rows: 40)
+    /// The right margin in tiles (24 pt): a face grows left from here (Home 236 v2.1).
+    static let gutterTiles = 6
     static let margin = reach + 2
 
     let columns: Int
@@ -73,22 +75,29 @@ struct MosaicScreenGrid: Equatable {
         (Int((point.x / Self.step).rounded(.down)), Int((point.y / Self.step).rounded(.down)))
     }
 
-    /// The core's centre column: 56% of the width.
-    var centreColumn: Int {
-        Int((0.56 * Double(columns)).rounded())
+    /// The core's right edge: its last column sits on the page's right margin.
+    var rightEdge: Int {
+        columns - 1 - Self.gutterTiles
     }
 
-    /// The core for a window of `columns` x `rows`: centred at 56% across, its top on the old block's top.
+    /// The centre column of the widest face, for a changeover's origin.
+    var centreColumn: Int {
+        rightEdge - Self.maxCore.columns / 2 + 1
+    }
+
+    /// The core for a window of `columns` x `rows`: it grows left from the right margin, its top on the old block's
+    /// top.
     func core(columns width: Int, rows height: Int) -> MosaicTileRect {
-        MosaicTileRect(left: centreColumn - width / 2, top: coreTop, width: width, height: height)
+        MosaicTileRect(left: max(rightEdge - width + 1, 0), top: coreTop, width: width, height: height)
     }
 
     /// The fixed box of tiles the mosaic can ever touch: the largest core plus the rim and a breath around it. The
     /// engine keeps scene colours only for these tiles and draws only these.
     var region: MosaicTileRect {
-        let width = Self.maxCore.columns + 2 * Self.margin
+        // From the widest core's left edge less the margin to the screen's right edge (the rim runs off the page).
+        let left = max(rightEdge - Self.maxCore.columns + 1 - Self.margin, 0)
         let height = Self.maxCore.rows + 2 * Self.margin
-        return MosaicTileRect(left: centreColumn - width / 2, top: coreTop - Self.margin, width: width, height: height)
+        return MosaicTileRect(left: left, top: coreTop - Self.margin, width: columns - left, height: height)
     }
 
     // MARK: Text shield

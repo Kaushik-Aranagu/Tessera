@@ -40,11 +40,14 @@ final class MosaicScreenController {
         var sets: Int
         var moment: UUID?
         var reaction: Int
+        var face: MosaicFace?
+        var faceToken: Int
     }
 
     private var key: Key?
     private var lastPage = MosaicPage.mood
     private var lastWashToken = 0
+    private var lastFaceToken = 0
     private var pendingReaction: MosaicOpenReaction?
     private var reactionToken = 0
 
@@ -108,6 +111,12 @@ final class MosaicScreenController {
         var dusk = false
         /// The scene the mosaic shows (sheet 214), chosen by Core's picker; nil keeps the mood stripes.
         var scenery: MosaicScenery?
+        /// Home 236: the face the mosaic shows, how it came in, and the finger's slide between faces.
+        var face: MosaicFace?
+        var faceToken = 0
+        var faceTransition = MosaicFaceTransition.none
+        var faceNeighbours: (previous: MosaicFace?, next: MosaicFace?) = (nil, nil)
+        var faceModel: MosaicFaceModel?
     }
 
     /// Makes the engine for this size and re-reads the scene's colours when anything they depend on changed.
@@ -126,7 +135,8 @@ final class MosaicScreenController {
         lastDay = facts.day
         let moodField = inputs.scene == .day ? inputs.mood : nil
         let moment = inputs.moment
-        let size = moment?.moment.window ?? moodField?.window ?? MosaicWindows.scene
+        let size = moment?.moment.window ?? inputs.face.map { (columns: $0.width, rows: MosaicFaceArt.rowsDefault) }
+            ?? moodField?.window ?? MosaicWindows.scene
         engine.setWindow(columns: size.columns, rows: size.rows)
         if key == nil {
             engine.snapWindow()
@@ -142,7 +152,7 @@ final class MosaicScreenController {
                        ground: [inputs.ground.red, inputs.ground.green, inputs.ground.blue], mood: inputs.mood,
                        accents: inputs.moodContext.doneAccents.count,
                        sets: inputs.moodContext.doneSets * 100 + inputs.moodContext.remainingSets, moment: moment?.id,
-                       reaction: reactionToken)
+                       reaction: reactionToken, face: inputs.face, faceToken: inputs.faceToken)
         guard next != key else { return engine }
         if let moment, moment.id != lastMoment?.id {
             momentStart = engine.clock
@@ -192,6 +202,19 @@ final class MosaicScreenController {
                                           reduceMotion: inputs.reduceMotion)
         }
         let digits = MosaicScenes.digitTiles(for: inputs.scene, input: input, geometry: local)
+        let palette = MosaicFacePalette.make(accents: context.accents, dark: inputs.dark, fallback: context.ink)
+        let bake = inputs.facts.now
+        func art(_ face: MosaicFace, columns: Int) -> MosaicFaceArt {
+            MosaicFaceArt(face: face, columns: columns, rows: MosaicFaceArt.rowsDefault, palette: palette, now: bake)
+        }
+        let faceArt = inputs.face.map { art($0, columns: window.columns) }
+        let faceRows = faceArt?.rows ?? window.rows
+        let tint: (MosaicTriple) -> MosaicTriple = { MosaicSceneArt.tinted(MosaicSceneArt.safe($0), ground: ground, dark: inputs.dark) }
+        if let drag = inputs.faceModel?.drag {
+            drag.arts = .init(previous: inputs.faceNeighbours.previous.map { art($0, columns: $0.width) },
+                              current: faceArt, next: inputs.faceNeighbours.next.map { art($0, columns: $0.width) })
+            drag.width = window.columns
+        }
         let colourAt: (Int, Int) -> MosaicTriple = { column, row in
             let place = engine.local(column: column, row: row)
             let jitterIndex = abs(column &* 7919 &+ row)
@@ -200,7 +223,10 @@ final class MosaicScreenController {
                 let clampedRow = min(max(place.row, 0), window.rows - 1)
                 return base[clampedColumn * window.rows + clampedRow]
             }
-            var colour: MosaicTriple = if let scenery = inputs.scenery {
+            var colour: MosaicTriple = if let faceArt {
+                tint(faceArt.colour(column: min(place.column, faceArt.columns - 1),
+                                    row: min(place.row, faceRows - 1), animation: 0, now: bake))
+            } else if let scenery = inputs.scenery {
                 MosaicSceneArt.tinted(
                     MosaicSceneArt.colour(scenery, column: place.column, row: place.row, columns: window.columns,
                                           rows: window.rows, time: 0),
@@ -243,8 +269,21 @@ final class MosaicScreenController {
         }
         // A scene's one slow life: only the tiles that differ from the still scene are drawn live (still under Reduce
         // Motion and in Low Power).
+        let calm = inputs.reduceMotion || ProcessInfo.processInfo.isLowPowerModeEnabled
+        let faceLight: MosaicMoodField.Overlay? = faceArt.map { art in
+            let frame = FaceFrame()
+            return { column, row, time, colour in
+                let now = frame.now(at: time)
+                let still = tint(art.colour(column: column, row: row, animation: 0, now: bake))
+                let live = tint(art.colour(column: column, row: row, animation: calm ? 0 : time, now: now))
+                guard live.red != still.red || live.green != still.green || live.blue != still.blue else {
+                    return colour
+                }
+                return live
+            }
+        }
         let sceneLight: MosaicMoodField.Overlay? = inputs.scenery.flatMap { scenery in
-            guard !inputs.reduceMotion, !ProcessInfo.processInfo.isLowPowerModeEnabled else { return nil }
+            guard faceArt == nil, !inputs.reduceMotion, !ProcessInfo.processInfo.isLowPowerModeEnabled else { return nil }
             return { column, row, time, colour in
                 let live = MosaicSceneArt.colour(scenery, column: column, row: row, columns: window.columns,
                                                  rows: window.rows, time: time)
@@ -257,7 +296,7 @@ final class MosaicScreenController {
             }
         }
         let light = sparkled(
-            plan?.overlay ?? sceneLight ?? moodLight,
+            plan?.overlay ?? faceLight ?? sceneLight ?? moodLight,
             engine: engine,
             moment: moment,
             input: input,
@@ -272,11 +311,16 @@ final class MosaicScreenController {
         default: break
         }
         engine.rimSamplesLight = !signOnly
-        engine.overlay = light.map { inner in
-            { column, row, time, colour in
-                let place = mapped(column, row)
-                return inner(place.0, place.1, time, colour)
-            }
+        let slide = inputs.faceModel?.drag
+        let slideFrame = FaceFrame()
+        engine.overlay = { column, row, time, colour in
+            let place = mapped(column, row)
+            let base = light?(place.0, place.1, time, colour) ?? colour
+            guard let slide, slide.isActive, let composed = Self.slid(slide, column: place.0, row: place.1,
+                                                                      time: time, now: slideFrame.now(at: time),
+                                                                      ground: ground, tint: tint)
+            else { return base }
+            return composed
         }
         engine.scaleHook = plan?.scale.map { hook in
             { column, row, time in
@@ -314,6 +358,7 @@ final class MosaicScreenController {
             }
             lastPage = inputs.page
             lastWashToken = inputs.washToken
+            lastFaceToken = inputs.faceToken
             return
         }
         switch reaction {
@@ -335,6 +380,29 @@ final class MosaicScreenController {
         }
         var kind = changeover(plan: plan, moment: moment, moodField: moodField)
         var total: TimeInterval?
+        // Home 236: a new face comes in the way its turn says: slid by the finger (settled, no changeover), one of the
+        // 200 changeovers, the page's wipe in the swipe's direction, or a plain swap.
+        if inputs.faceToken != lastFaceToken, inputs.face != nil, moment == nil {
+            lastFaceToken = inputs.faceToken
+            switch inputs.faceTransition {
+            case .slid, .none:
+                engine.settle(colourAt: colourAt)
+                inputs.faceModel?.slideApplied()
+                return
+            case let .changeover(index):
+                kind = MosaicTurnPolicy.changeovers[index % MosaicTurnPolicy.changeovers.count]
+            case let .wipe(reverse):
+                kind = .wipeColumns(reverse: reverse)
+                total = MosaicPage.wipeSeconds
+            case .plain:
+                kind = .standard(.wave)
+            }
+            lastPage = inputs.page
+            lastWashToken = inputs.washToken
+            engine.morph(kind, origin: origin, total: total, colourAt: colourAt)
+            return
+        }
+        lastFaceToken = inputs.faceToken
         if inputs.page != lastPage || inputs.washToken != lastWashToken {
             // A page wipes in the swipe's direction in 0.5 s.
             kind = .wipeColumns(reverse: inputs.pageDirection < 0)
@@ -363,6 +431,31 @@ final class MosaicScreenController {
             return moodField.changeover
         }
         return .standard(.wave)
+    }
+
+    /// A tile while the faces slide under the finger (1:1, nothing over them): the current face moved by the travel
+    /// and its neighbour following it, both live.
+    private static func slid(_ drag: MosaicFaceDrag, column: Int, row: Int, time: TimeInterval, now: Date,
+                             ground: MosaicTriple, tint: (MosaicTriple) -> MosaicTriple) -> MosaicTriple?
+    {
+        let shift = Int(drag.shift().rounded())
+        guard shift != 0, let current = drag.arts.current else { return nil }
+        let x = column - shift
+        func colour(_ art: MosaicFaceArt, _ own: Int) -> MosaicTriple {
+            tint(art.colour(column: own, row: min(row, art.rows - 1), animation: time, now: now))
+        }
+        if (0 ..< current.columns).contains(x) {
+            return colour(current, x)
+        }
+        if shift < 0, let next = drag.arts.next {
+            let own = x - current.columns
+            return (0 ..< next.columns).contains(own) ? colour(next, own) : ground
+        }
+        if shift > 0, let previous = drag.arts.previous {
+            let own = x + previous.columns
+            return (0 ..< previous.columns).contains(own) ? colour(previous, own) : ground
+        }
+        return ground
     }
 
     private func sparkled(
@@ -425,6 +518,8 @@ struct MosaicHomeLayer: View {
     var signSpec: MosaicSignSpec?
     var scenery: MosaicScenery?
     var dusk = false
+    /// Home 236: the stack of faces; nil keeps the plain scene.
+    var faceModel: MosaicFaceModel?
 
     /// Whether this process has opened Home yet (a cold launch plays its own reaction once).
     @MainActor private static var launched = false
@@ -578,7 +673,10 @@ struct MosaicHomeLayer: View {
                                            washAccent: resolved?.washes == true ? resolved?.accent : nil,
                                            sign: resolved?.request,
                                            washToken: (resolved?.token.hashValue ?? 0) &+ (dusk ? 7919 : 0), dusk: dusk,
-                                           scenery: scenery))
+                                           scenery: scenery, face: faceModel?.current,
+                                           faceToken: faceModel?.turnToken ?? 0,
+                                           faceTransition: faceModel?.transition ?? .none,
+                                           faceNeighbours: (faceModel?.previous, faceModel?.next), faceModel: faceModel))
         engine.step(to: time)
         if engine.consumeLandings() > 0 {
             DispatchQueue.main.async { cue.play(.fleckReachesNow) }

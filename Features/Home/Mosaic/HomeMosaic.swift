@@ -6,6 +6,7 @@ enum HomeMosaic {
     nonisolated static let choiceID = "homeMosaic"
     nonisolated static let appsListID = "homeAppsList"
     nonisolated static let moodsID = "homeMosaicMoods"
+    nonisolated static let faceTurnID = "homeFaceTurn"
 
     /// The page side margin on this page. Theme.Spacing.gutter is 22; this page is 24.
     static let gutter: CGFloat = 24
@@ -35,6 +36,11 @@ enum HomeMosaic {
     /// Sheet 200: the departure board over the sentence. It rides on the Mosaic, so it needs both On.
     @MainActor static var moodsIsOn: Bool {
         isOn && ReviewChoices.shared.value(of: moodsID) == "On"
+    }
+
+    /// Home 236: whether the faces turn by themselves.
+    @MainActor static var facesTurnByThemselves: Bool {
+        ReviewChoices.shared.value(of: faceTurnID) != "Off"
     }
 
     /// Sheet 201: moments (weather, an announcement, Tess, an app's event) take the mosaic for a while.
