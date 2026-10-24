@@ -117,13 +117,11 @@ final class GestureStabilityUITests: SimulatorOnlyTestCase {
     /// Kaushik, Oct 23: swiping across the Home mosaic moved the one-thing list. Each region owns its touches: a swipe
     /// that starts on the mosaic leans it and turns nothing; only a swipe on the one-thing space turns the things.
     func testASwipeAcrossTheMosaicDoesNotMoveTheOneThing() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-review.homeMosaic", "On",
-                               "-review.homeMosaicMoods", "On", "-review.homeAppsList", "On"]
-        app.launch()
-        let one = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label == %@", "One thing at a time")).firstMatch
-        XCTAssertTrue(one.waitForExistence(timeout: 20), "Home has the one-thing space")
+        let app = launchApp(["-demo", "-demoTime", "18:10", "-resetDemo", "-review.homeMosaic", "On",
+                             "-review.homeMosaicMoods", "On", "-review.homeAppsList", "On"])
+        // A stable identifier on the space; it only exists in the tree once Home has things to show.
+        let one = app.descendants(matching: .any)["homeOneThing"]
+        XCTAssertTrue(one.waitForExistence(timeout: 40), "Home has the one-thing space")
         sleep(2)
         // The space's accessibility value is the current thing ("1 of 3, ...").
         func current() -> String {
