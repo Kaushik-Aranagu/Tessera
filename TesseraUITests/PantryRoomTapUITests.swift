@@ -27,9 +27,10 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         }
         XCTAssertTrue(reduce.waitForExistence(timeout: 5))
         if reduce.value as? String != "1" {
-            reduce.tap()
+            // Settings exposes the whole row as the switch; target its trailing toggle, not the row's text.
+            reduce.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         }
-        XCTAssertEqual(reduce.value as? String, "1")
+        wait(NSPredicate(format: "value == %@", "1"), on: reduce, timeout: 5)
         settings.terminate()
         Self.motionPrepared = true
     }
