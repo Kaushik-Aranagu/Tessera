@@ -63,17 +63,46 @@ enum HomeBoard {
         CellMetrics.lineWidth(line.segments) <= width
     }
 
-    /// Drops words from the end until the line fits (at least one word stays).
+    /// A cut never leaves a comma, semicolon, colon or dash at its end ("Packing," becomes "Packing").
+    static func trimTail(_ text: String) -> String {
+        var out = text
+        while let last = out.last, ",;:-–—".contains(last) {
+            out.removeLast()
+        }
+        return out.trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Words a cut never ends on: "Stretch at" reads as broken.
+    static let stopWords: Set<String> = ["at", "to", "for", "with", "about", "and", "of"]
+
+    /// Whether `text` ends on a stop word (trailing punctuation ignored).
+    static func endsOnStopWord(_ text: String) -> Bool {
+        guard let last = text.split(separator: " ").last else { return false }
+        return stopWords.contains(last.lowercased().trimmingCharacters(in: .punctuationCharacters))
+    }
+
+    /// Drops words from the end until the line fits (at least one word stays), then any stop word the cut left at the
+    /// end.
     static func cut(_ line: BoardLine, width: CGFloat = defaultWidth) -> BoardLine {
         var line = line
-        while !fits(line, width: width), DepartureSteps.flat(line.segments).contains(" ") {
+        var cutAny = false
+        func dropLastWord() {
             var last = line.segments.removeLast()
             var words = last.text.split(separator: " ").map(String.init)
             if words.count > 1 {
                 words.removeLast()
-                last.text = words.joined(separator: " ")
+                last.text = trimTail(words.joined(separator: " "))
                 line.segments.append(last)
             }
+        }
+        while !fits(line, width: width), DepartureSteps.flat(line.segments).contains(" ") {
+            dropLastWord()
+            cutAny = true
+        }
+        while cutAny, let last = line.segments.last, endsOnStopWord(last.text),
+              DepartureSteps.flat(line.segments).contains(" ")
+        {
+            dropLastWord()
         }
         return line
     }

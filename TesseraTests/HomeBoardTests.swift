@@ -20,6 +20,13 @@ struct HomeBoardTests {
         #expect(HomeBoard.cut(line("Supercalifragilisticexpialidocious")).segments.first?.text.isEmpty == false)
     }
 
+    @Test func aCutNeverEndsOnAStopWord() {
+        let cut = HomeBoard.cut(line("Stretch and mobility at the climbing gym tonight"), width: 270)
+        #expect(!HomeBoard.endsOnStopWord(cut.segments.map(\.text).joined(separator: " ")))
+        #expect(TodayRoomView.forms(of: "Lunch with Sam")
+            .allSatisfy { $0 == "Lunch with Sam" || !HomeBoard.endsOnStopWord($0) })
+    }
+
     @Test func theBoardAlwaysHasThreeRowsAndTheRotationWraps() {
         let notices = [line("One."), line("Two."), line("Three.")]
         let date = HomeBoard.date(now: Date())
