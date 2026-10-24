@@ -36,7 +36,7 @@ public enum TessTools {
 
     public static var all: [Tool] {
         [logSet, createTask, completeTask, rescheduleTask, addGroceries, addToList, createList, createNote,
-         createRecipe, answerQuery, startShop, cookTogether, setServeTime]
+         createRecipe, query, startShop, cookTogether, setServeTime]
     }
 
     public static func tool(named name: String) -> Tool? {
@@ -337,36 +337,53 @@ public enum TessTools {
         return false
     }
 
-    /// Read-only: counts of things over a span, answered on the phone. (The full query AST is M3 slice 4; this is
-    /// the first slice of it: count, from one class, during today / this week / this month.)
-    static var answerQuery: Tool {
-        Tool(name: "answerQuery", description: "Count things in the log; read-only",
+    /// Read-only: the query AST (docs/research/questions-eval.md), answered from the store on the phone. Counts, bests,
+    /// averages and lists come from the data, never from a model's arithmetic. It sees only `countable` classes minus
+    /// anything private for Claude, exactly as `answerQuery` did.
+    static var query: Tool {
+        Tool(name: "query", description: """
+             Look things up in the log; read only. from: classes (workouts, sets, cooks, recipes, tasks, list items, notes, \
+             lists, routines, exercises). where: field op value (ops: = != < <= > >= ~ isa has none; a field may be a path \
+             like exercise.pattern or workout.routine; value nil means empty). during: a range on a date field (default \
+             field per class). agg: list, count, sum, avg, min, max (a numeric field like weight, reps, e1rm, volume) or \
+             latest. group splits a count or sum by a field. Use this for every number: never work one out yourself.
+             """,
              input: .object([
-                 ("from", .string("What to count, e.g. workouts, tasks, notes")),
-                 ("during", .nullable(.choice(["today", "this week", "this month"], "When"))),
+                 ("from", .array(.string("Class names, e.g. sets, workouts, tasks"))),
+                 ("where", .array(.object([
+                     ("field", .string("A field or path, e.g. reps, exercise, isDone, due")),
+                     ("op", .choice(Array(Query.ops.sorted()), "Operator")),
+                     ("value", .nullable(.string("The value; nil for empty"))),
+                 ]))),
+                 ("during", .nullable(.object([
+                     (
+                         "range",
+                         .string(
+                             "today, tomorrow, thisWeek, lastWeek, thisMonth, lastMonth, thisYear, last7d, last30d, last90d, date:YYYY-MM-DD or month:YYYY-MM"
+                         )
+                     ),
+                     ("field", .nullable(.string("Date field; null for the class's own"))),
+                 ]))),
+                 ("group", .nullable(.string("Field to split by"))),
+                 ("agg", .object([
+                     ("kind", .choice(Array(Query.aggs.sorted()), "What to work out")),
+                     ("field", .nullable(.string("Numeric field for sum, avg, min, max; date field for latest"))),
+                 ])),
+                 ("sort", .nullable(.object([
+                     ("field", .string("Field to sort by")),
+                     ("descending", .boolean("Largest or latest first")),
+                 ]))),
+                 ("limit", .nullable(.integer("Most rows, 1 to 50"))),
              ])) { args, call in
-            let from = try args.string("from")
-            // Only the classes on the allow-list (Research 145 CA6): money, body and his own classes are never
-            // counted for Claude, and neither are Tess's own records.
-            let countable = Set(Self.countable.compactMap { call.engine.classes[$0]?.id })
-            guard let classDef = call.store.allClasses().first(where: {
-                countable.contains($0.id) && IngredientLine.key(for: $0.name) == IngredientLine.key(for: from)
-            }) else { throw TessToolError("nothing called \(from)") }
-            // What goes to Claude drops private objects (ruling 61): on-screen counts keep them, this count does not.
-            let objects = call.store.objects(of: classDef).filter {
-                !Self.isPrivateForClaude($0, store: call.store, classes: call.engine.classes)
+            guard let data = try? JSONSerialization.data(withJSONObject: args), let query = Query(json: data) else {
+                throw TessToolError("unreadable query")
             }
-            let calendar = Calendar.current
-            let day = TesseraDay(calendar: calendar)
-            // His day and week (04:00 edges): "coffees today" at 01:00 counts from 04:00 yesterday.
-            let window: DateInterval? = switch args["during"] as? String {
-            case "today": day.interval(of: call.now)
-            case "this week": day.week(containing: call.now)
-            case "this month": day.month(containing: call.now)
-            default: nil
+            do {
+                let result = try QueryEngine.run(query, engine: call.engine, now: call.now, calendar: call.calendar)
+                throw TessToolAnswer(line: result.line)
+            } catch let error as QueryError {
+                throw TessToolError(error.description)
             }
-            let count = window.map { window in objects.count { window.contains($0.createdAt) } } ?? objects.count
-            throw TessToolAnswer(line: "\(count) \(count == 1 ? classDef.name.lowercased() : from.lowercased()).")
         }
     }
 }

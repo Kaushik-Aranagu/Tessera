@@ -366,7 +366,7 @@ public final class TessRun {
 
     // MARK: Tools
 
-    /// Runs one tool. Reads (open, answerQuery) are read only; every other tool is a write that lands as a pending
+    /// Runs one tool. Reads (open, query) are read only; every other tool is a write that lands as a pending
     /// ghost,
     /// within the per-phrase budget. Never throws: a failure is the result the model reads.
     func runTool(id _: String, name: String, input: Data, handles: [String: UUID], budget: inout Int, runID: UUID,
@@ -455,7 +455,7 @@ public final class TessRun {
                     if state.doneToolIDs.contains(id), let text = state.toolResults[id] {
                         return .toolResult(id: id, content: text, isError: false)
                     }
-                    if name == TessOpenTool.name || name == "answerQuery" {
+                    if name == TessOpenTool.name || name == "query" {
                         return .toolResult(id: id, content: "The phone was interrupted before this ran.", isError: true)
                     }
                     return .toolResult(

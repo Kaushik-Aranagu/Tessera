@@ -16,7 +16,7 @@ struct TessToolsTests {
         let engine = ActionEngine(store: store, classes: classes)
         #expect(TessTools.all.map(\.name) == ["logSet", "createTask", "completeTask", "rescheduleTask",
                                               "addGroceries", "addToList", "createList", "createNote",
-                                              "createRecipe", "answerQuery", "startShop", "cookTogether",
+                                              "createRecipe", "query", "startShop", "cookTogether",
                                               "setServeTime"])
 
         let set = try call("logSet", #"{"exercise":"bench","weight":80,"reps":8,"sets":1,"unit":"kg"}"#, engine)
@@ -71,16 +71,16 @@ struct TessToolsTests {
 
         // Read-only: an answer, no ops.
         do {
-            _ = try call("answerQuery", #"{"from":"notes","during":"this week"}"#, engine)
-            Issue.record("answerQuery should answer, not log")
+            _ = try call("query", #"{"from":["notes"],"during":{"range":"thisWeek","field":null},"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#, engine)
+            Issue.record("query should answer, not log")
         } catch let answer as TessToolAnswer {
-            #expect(answer.line == "1 note.")
+            #expect(answer.line == "1 note this week.")
         }
         // CA6 (Research 145): only allow-listed classes count; his own classes (a spend, his weight) and Tess's never.
         store.createClass(name: "Spend", parent: nil)
         for from in ["spend", "settings", "tess memory", "tess call"] {
             #expect(throws: TessToolError.self, "\(from)") {
-                try call("answerQuery", #"{"from":"\#(from)","during":null}"#, engine)
+                try call("query", #"{"from":["\#(from)"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#, engine)
             }
         }
         #expect(throws: TessToolError.self) {
@@ -89,7 +89,7 @@ struct TessToolsTests {
         }
     }
 
-    @Test func answerQueryCountSkipsPrivateObjects() throws {
+    @Test func queryCountSkipsPrivateObjects() throws {
         let store = ObjectStore.open(inMemory: true)
         let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
         try engine.perform(CreateNote(body: "Bench felt heavy"), by: .user)
@@ -100,20 +100,20 @@ struct TessToolsTests {
         try engine.perform(CreateRecipe(text: "Melatonin lasagna\nIngredients\n2 onions\nMethod\n1. Bake."), by: .user)
         for (from, line) in [("notes", "1 note."), ("tasks", "1 task."), ("recipes", "1 recipe.")] {
             do {
-                _ = try call("answerQuery", #"{"from":"\#(from)","during":null}"#, engine)
-                Issue.record("answerQuery should answer, not log")
+                _ = try call("query", #"{"from":["\#(from)"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#, engine)
+                Issue.record("query should answer, not log")
             } catch let answer as TessToolAnswer {
                 #expect(answer.line == line, "\(from): \(answer.line)")
             }
         }
     }
 
-    @Test func answerQueryCountSkipsPrivateListsItemsRoutinesAndCooks() throws {
+    @Test func queryCountSkipsPrivateListsItemsRoutinesAndCooks() throws {
         let store = ObjectStore.open(inMemory: true)
         let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
         func count(_ from: String) throws -> Int {
             do {
-                _ = try call("answerQuery", #"{"from":"\#(from)","during":null}"#, engine)
+                _ = try call("query", #"{"from":["\#(from)"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#, engine)
             } catch let answer as TessToolAnswer {
                 return Int(answer.line.prefix { $0.isNumber }) ?? -1
             }
