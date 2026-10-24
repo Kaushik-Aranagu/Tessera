@@ -157,10 +157,12 @@ struct WeatherRoomView: View {
     private func airLine(_ air: WeatherAir) -> some View {
         let line = WeatherSentences.airLine(air)
         var text = AttributedString(line.before)
-        var quality = AttributedString(line.quality)
-        quality.foregroundColor = WeatherPalette.good
-        text += quality
-        text += AttributedString(line.after)
+        if let word = line.quality {
+            var quality = AttributedString(word)
+            quality.foregroundColor = WeatherPalette.good
+            text += quality
+            text += AttributedString(line.after)
+        }
         return Text(text)
             .font(WeatherType.figtree(15, .regular, relativeTo: .subheadline))
             .foregroundStyle(Theme.Colors.inkSecondary)

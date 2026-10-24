@@ -70,8 +70,9 @@ struct WeatherDay: Identifiable, Equatable, Sendable {
     let high: Int
     let low: Int
     let kind: WeatherKind
-    let sunrise: Date
-    let sunset: Date
+    /// Nil when the source has none (polar days).
+    let sunrise: Date?
+    let sunset: Date?
     /// The day's hours, midnight on; the Day page's columns.
     let hours: [WeatherHour]
 
@@ -81,12 +82,12 @@ struct WeatherDay: Identifiable, Equatable, Sendable {
 }
 
 struct WeatherAir: Equatable, Sendable {
-    /// "good", "fair", "poor"
-    let quality: String
+    /// "good", "moderate", "poor"; nil when the source has no air quality.
+    let quality: String?
     let uvIndex: Int
     let windMph: Int
-    /// "west", "north-east"
-    let windFrom: String
+    /// "west", "north-east"; nil when the source has no wind direction.
+    let windFrom: String?
 }
 
 struct WeatherForecast: Equatable, Sendable {

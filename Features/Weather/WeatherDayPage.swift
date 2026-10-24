@@ -44,14 +44,19 @@ struct WeatherDayPage: View {
                 .accessibilityIdentifier("weather.day.temps")
                 WeatherSentenceText(sentence: WeatherSentences.daySentence(day, calendar: calendar), size: 24)
                     .padding(.top, Theme.Spacing.xl)
-                WeatherHourStrip(hours: day.hours, firstHour: 6, calendar: calendar)
-                    .frame(minHeight: 106, alignment: .topLeading)
-                    .padding(.top, Theme.Spacing.xl)
-                Text(WeatherSentences.sunLine(day, calendar: calendar))
-                    .font(WeatherType.figtree(15, .regular, relativeTo: .subheadline))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .padding(.top, Theme.Spacing.xl)
-                    .accessibilityIdentifier("weather.day.sun")
+                // Days past the hourly window have no columns; the strip is left out rather than drawn empty.
+                if !day.hours.isEmpty {
+                    WeatherHourStrip(hours: day.hours, firstHour: day.hours.count >= 24 ? 6 : 0, calendar: calendar)
+                        .frame(minHeight: 106, alignment: .topLeading)
+                        .padding(.top, Theme.Spacing.xl)
+                }
+                if let sun = WeatherSentences.sunLine(day, calendar: calendar) {
+                    Text(sun)
+                        .font(WeatherType.figtree(15, .regular, relativeTo: .subheadline))
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .padding(.top, Theme.Spacing.xl)
+                        .accessibilityIdentifier("weather.day.sun")
+                }
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.s)

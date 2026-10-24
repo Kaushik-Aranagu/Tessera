@@ -111,8 +111,9 @@ enum WeatherSentences {
         return WeatherSentence(pieces: pieces)
     }
 
-    static func sunLine(_ day: WeatherDay, calendar: Calendar = .current) -> String {
-        "Sunrise \(clock(day.sunrise, calendar: calendar)), sunset \(clock(day.sunset, calendar: calendar))."
+    static func sunLine(_ day: WeatherDay, calendar: Calendar = .current) -> String? {
+        guard let sunrise = day.sunrise, let sunset = day.sunset else { return nil }
+        return "Sunrise \(clock(sunrise, calendar: calendar)), sunset \(clock(sunset, calendar: calendar))."
     }
 
     /// "7:25 AM"
@@ -128,8 +129,10 @@ enum WeatherSentences {
         return "\(hour % 12 == 0 ? 12 : hour % 12) \(hour < 12 ? "AM" : "PM")"
     }
 
-    /// "Air is good, UV 2, wind 9 mph from the west." The first piece after "Air is " is the quality word.
-    static func airLine(_ air: WeatherAir) -> (before: String, quality: String, after: String) {
-        ("Air is ", air.quality, ", UV \(air.uvIndex), wind \(air.windMph) mph from the \(air.windFrom).")
+    /// "Air is good, UV 2, wind 9 mph from the west." Without air quality or a wind direction those parts are left out.
+    static func airLine(_ air: WeatherAir) -> (before: String, quality: String?, after: String) {
+        let wind = "wind \(air.windMph) mph" + (air.windFrom.map { " from the \($0)" } ?? "")
+        guard let quality = air.quality else { return ("UV \(air.uvIndex), \(wind).", nil, "") }
+        return ("Air is ", quality, ", UV \(air.uvIndex), \(wind).")
     }
 }
