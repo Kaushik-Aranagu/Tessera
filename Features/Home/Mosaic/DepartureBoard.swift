@@ -547,7 +547,12 @@ enum DateSky {
 /// found leaves the cell at its natural width.
 @MainActor
 enum CellMetrics {
-    private static var cache: [String: CGFloat] = [:]
+    private struct Key: Hashable {
+        let character: Character
+        let tag: UInt8
+    }
+
+    private static var cache: [Key: CGFloat] = [:]
 
     /// The measured width of a line as the board lays it out: each letter in its own face, one 6 pt gap between
     /// words. A face that cannot be found is estimated, so the rule holds in a test host too.
@@ -579,7 +584,15 @@ enum CellMetrics {
         } else {
             false
         }
-        let key = "\(character)-\(kind)"
+        // A plain value key: building a string from the kind (an enum with a payload) cast through String(describing:)
+        // for every letter, which was slow enough on launch to trip the scene-create watchdog under load.
+        let tag: UInt8 = switch kind {
+        case .number: 0
+        case .plain: 1
+        case .app, .sky: 2
+        case .day: 3
+        }
+        let key = Key(character: character, tag: tag)
         if let cached = cache[key] {
             return cached
         }
