@@ -7,7 +7,7 @@ import TesseraCore
 // mosaic shows when no mood stripe is chosen; it never replaces a moment, a changeover or a reaction, which play on top
 // of it, and its edge is the same dithered one as always. Under Reduce Motion (or Low Power) the scene is still.
 // Looks: on Black the tiles tint 18% toward (20, 18, 26), dark looks 30%. No scene tile may sit within delta E 10 of
-// cobalt or Ember (a test scans every scene).
+// Ember (a test scans every scene).
 
 enum MosaicSceneArt {
     /// The gap between life steps, and so the slowest a tile may change.
@@ -47,8 +47,8 @@ enum MosaicSceneArt {
 
     // MARK: The colour rule
 
-    /// Cobalt (light and dark) and Ember (light and dark): nothing a scene draws may sit within delta E 10 of them.
-    static let reserved: [UInt32] = [0x2A4FA8, 0x8FB5FF, 0xFF5A26, 0xE5341C, 0xFFA90F, 0xFF6B3D, 0xFF4A33, 0xFFC23D]
+    /// Ember (light and dark): nothing a scene draws may sit within delta E 10 of it. Cobalt is free again.
+    static let reserved: [UInt32] = [0xFF5A26, 0xE5341C, 0xFFA90F, 0xFF6B3D, 0xFF4A33, 0xFFC23D]
     static let minimumDistance = 10.5
 
     private static let reservedLab: [(l: Double, a: Double, b: Double)] = reserved.map {

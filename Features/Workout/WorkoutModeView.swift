@@ -447,11 +447,11 @@ extension WorkoutContent {
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 .contentShape(Rectangle())
                 .onTapGesture { setOrder(open: true) }
-                .gesture(DragGesture(minimumDistance: 12).onEnded { drag in
-                    if drag.translation.height > 30 {
+                .pullGesture { down in
+                    if down {
                         setOrder(open: true)
                     }
-                })
+                }
                 .accessibilityAddTraits(.isButton)
                 .accessibilityHint("Shows the running order")
         }
