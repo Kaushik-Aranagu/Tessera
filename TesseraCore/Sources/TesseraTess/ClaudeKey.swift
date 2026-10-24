@@ -155,17 +155,39 @@ public struct TessUsageLedger {
         pendingNano = max(0, pendingNano - reservation.nano)
     }
 
-    /// Before a call: bytes / 4 + 10 tokens in, `maxTokens` out.
-    public static func estimate(text: String, maxTokens: Int, model: String) -> Int64 {
-        guard let price = prices[model] else { return 0 }
-        let input = Int64((text.utf8.count + 3) / 4 + 10)
-        return input * price.input + Int64(maxTokens) * price.output
+    /// Haiku 5.5 costs more once a prompt passes 100K tokens ($0.50 in and $2.50 out per million, from $0.10 and
+    /// $0.50). Cache prices scale with it (read at a fifth of input, a 5-minute write at 1.25x).
+    public static let stepTokens = 100_000
+    static let steppedPrices: [String: (input: Int64, output: Int64, cacheRead: Int64, cacheWrite: Int64)] = [
+        "claude-haiku-5-5": (500, 2500, 50, 625),
+    ]
+
+    /// $10 per 1,000 searches. A web fetch costs only its tokens.
+    public static let webSearchNano: Int64 = 10_000_000
+
+    /// The price row for a prompt of this many tokens.
+    static func price(model: String, promptTokens: Int) -> (input: Int64, output: Int64, cacheRead: Int64,
+                                                            cacheWrite: Int64)?
+    {
+        if promptTokens > stepTokens, let stepped = steppedPrices[model] {
+            return stepped
+        }
+        return prices[model]
     }
 
-    public static func cost(model: String, input: Int, output: Int, cacheRead: Int = 0, cacheWrite: Int = 0) -> Int64 {
-        guard let price = prices[model] else { return 0 }
+    /// Before a call: bytes / 4 + 10 tokens in, `maxTokens` out (at the stepped price past 100K tokens).
+    public static func estimate(text: String, maxTokens: Int, model: String) -> Int64 {
+        let tokens = (text.utf8.count + 3) / 4 + 10
+        guard let price = price(model: model, promptTokens: tokens) else { return 0 }
+        return Int64(tokens) * price.input + Int64(maxTokens) * price.output
+    }
+
+    public static func cost(model: String, input: Int, output: Int, cacheRead: Int = 0, cacheWrite: Int = 0,
+                            webSearches: Int = 0) -> Int64
+    {
+        guard let price = price(model: model, promptTokens: input + cacheRead + cacheWrite) else { return 0 }
         return Int64(input) * price.input + Int64(output) * price.output + Int64(cacheRead) * price.cacheRead
-            + Int64(cacheWrite) * price.cacheWrite
+            + Int64(cacheWrite) * price.cacheWrite + Int64(webSearches) * webSearchNano
     }
 
     /// One row per call, written straight to the store (no op: it isn't something he did, and undo shouldn't see it).

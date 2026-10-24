@@ -57,7 +57,7 @@ public struct LatencyBench {
 
     private func request(prefix: Bool) -> BrainRequest {
         var system = [TextBlock("You are a latency probe. Answer in about forty words.")]
-        var cache: [Int] = []
+        var cache: [CacheMark] = []
         if prefix {
             system.append(TextBlock(Self.filler(words: Self.prefixWords, seed: 7)))
             cache = [1]
@@ -155,7 +155,7 @@ public struct LatencyBench {
                     if measured.ttftMs == nil {
                         measured.ttftMs = Self.ms(clock.now - start)
                     }
-                case .done:
+                case .done, .assistant:
                     break
                 case let .failed(outcome):
                     measured.outcome = outcome
