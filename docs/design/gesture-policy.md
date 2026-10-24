@@ -53,6 +53,15 @@ is `DesignSystem/GestureKit.swift`. A view never invents a distance, an axis rul
 on `.cancelled`. `.ended` is always last: that is where a row clears "a swipe just happened, so the tap that follows
 is not a tap". If the system takes the touch (a scroll wins), the row still gets `.cancelled` and `.ended`.
 
+## Home: each region owns its touches
+
+Kaushik, Oct 23: a swipe across the mosaic also moved the one-thing list. The cause was a page-level drag on Home
+(`HomeMosaicPage`) that turned the things whenever a swipe started inside the mosaic's rectangle (sheet 209's mosaic
+pager, left behind when the mosaic's own pages went). It is gone. Now: the mosaic only leans and ripples under a
+finger (`mosaicTouchFeed`, which feeds it and takes nothing); the one-thing space turns the things, and only inside its
+own frame; the apps list owns its rows; the page scrolls. No gesture on a parent decides for a child's region.
+`GestureStabilityUITests.testASwipeAcrossTheMosaicDoesNotMoveTheOneThing` holds the line.
+
 ## Action words, wheels and stacks (the patterns that are coming)
 
 - **Action word** (the bottom-left word): lean at 18 pt (`actionLean`), roll to the option's name past 56 pt
@@ -102,6 +111,33 @@ and the mosaic pager's rule. `pullGesture`: the workout's running order, the eff
 close, the finished screen, Tess's room and conversation, the capture wash, the exercise strip, the cook step
 (through `GestureTuning.pull`). Also: Home's one thing (distance, flick and a diagonal ignored), the Places dial (10
 pt start, 120 ms tap hold-off) and the unit swipe (2x vertical lead, 28 pt per step).
+
+## Every distance that changed (for Design to tune)
+
+Consistency was the ask, so these stand as the policy sets them. Tune a number in `GestureTuning`, not at a site.
+
+| Where | Before | Now |
+| --- | --- | --- |
+| Tasks Done / Not now | arm 120, 20 pt start | arm 96, 10 pt start, flick |
+| Pantry and Places rail, To get | arm 72, 24 pt start | arm 96, 10 pt start |
+| Lists Remove / Forget | arm 96, 24 pt start | arm 96, 10 pt start, flick |
+| Routines Drop, Start | arm 90, 20 pt start | arm 96, 10 pt start |
+| Recipes column to Groceries | 40% of the column, 24 pt start | 40%, 10 pt start, flick |
+| Shop run strike | arm 72 | arm 96 |
+| Proposed capture drop | 80 pt, 12 pt start | arm 96, no flick (no Undo) |
+| Lists check off, Skip a pick, cook timer stop | 72, 60, 80 | 72 (undrawn), flick |
+| Pull down: running order (EffortHandle and StepStack included) | 30 pt | 56 pt or flick |
+| Pull: effort word, swap panel | 20 pt, 44 pt | 56 pt or flick |
+| Close: finished screen, Tess room, conversation, capture wash, exercise strip | 80, 60, 70, 40, 40 | 56 pt or flick |
+| Cook step (up / down) | 60 pt, 24 pt start | 56 pt or flick, 10 pt start |
+| Page turn: Settings and Review tabs | 40 pt at 2:1 | 60 pt or flick, 2:1 |
+| Page turn: Training log, Routines kind word, You door edge | 30 pt, 16 pt, 48 pt | 60 pt or flick, 2:1 |
+| Unit swipe on a number | 8 pt start, 14 pt a step, any vertical lead | 10 pt start, 28 pt a step, 2:1 lead |
+| Places dial | 4 pt start | 10 pt start, 120 ms tap hold-off |
+| Home one thing | 12 pt start, flick = 12 pt at 300 pt/s, any diagonal | 10 pt start, flick = 28 pt at 500 pt/s, diagonal ignored |
+
+Rows with an Undo (Tasks, Lists, Forget, Routines drop, cook timer stop, Recipes send) accept a flick; the capture drop
+has none, so only a full pull commits it.
 
 ## What it left alone, on purpose
 
