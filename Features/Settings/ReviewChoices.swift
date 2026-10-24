@@ -379,7 +379,8 @@ final class ReviewChoices {
         // Sheets 231 to 233: the Kitchen rooms (Pantry, Recipes, the landing and cooking), On by default.
         Choice(id: "kitchenRoomsV2", name: "Kitchen rooms", values: ["On", "Off"], defaultValue: "On",
                says: [
-                   "On": "Pantry, Recipes, the Kitchen page and cooking are drawn as the new rooms: a dial, a wheel and a line for what just happened.",
+                   "On": "Pantry, Recipes, the Kitchen page and cooking are drawn as the new rooms: "
+                       + "a dial, a wheel and a line for what just happened.",
                    "Off": "Pantry, Recipes, the Kitchen page and cooking stay as they were.",
                ],
                readiness: .live),
@@ -438,31 +439,6 @@ final class ReviewChoices {
         // The harness switches (lab or strict policy, the playbook director, asks) get their own page.
         ("Tess", ["tessLabPolicy", "tessDirectorPlaybook", "tessAsks"]),
     ]
-
-    /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
-    /// The pages Settings draws: only rows whose feature ships in this build (Product, Oct 20; sheet 110). A waiting
-    /// row is not drawn at all, and a tab with nothing live goes with it.
-    nonisolated static func drawnPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
-        // Sample data is simulator-only: the switch is never offered on a device, whichever page draws the rows.
-        facetPages(choices.filter { $0.readiness == .live && ($0.id != "sampleData" || LaunchFlags.allowed) })
-    }
-
-    nonisolated static func facetPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
-        var pages = facets.map { facet in
-            (word: facet.word, rows: facet.ids.compactMap { id in choices.first { $0.id == id } })
-        }.filter { !$0.rows.isEmpty }
-        let named = Set(facets.flatMap(\.ids))
-        let rest = choices.filter { !named.contains($0.id) }
-        if !rest.isEmpty {
-            pages.append((word: "More", rows: rest))
-        }
-        return pages
-    }
-
-    /// The rows in pages of at most six, in order, for any caller that pages without facets.
-    nonisolated static func pages(_ choices: [Choice] = all, size: Int = 6) -> [[Choice]] {
-        stride(from: 0, to: choices.count, by: size).map { Array(choices[$0 ..< min($0 + size, choices.count)]) }
-    }
 
     private let defaults: UserDefaults
     private let writes: Bool
@@ -563,5 +539,32 @@ final class ReviewChoices {
     /// A switch by id, for the feature that reads it: `ReviewChoices.shared.value(of: "restTimer")`.
     func value(of id: String) -> String? {
         Self.all.first { $0.id == id }.map { value(of: $0) }
+    }
+}
+
+extension ReviewChoices {
+    /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
+    /// The pages Settings draws: only rows whose feature ships in this build (Product, Oct 20; sheet 110). A waiting
+    /// row is not drawn at all, and a tab with nothing live goes with it.
+    nonisolated static func drawnPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
+        // Sample data is simulator-only: the switch is never offered on a device, whichever page draws the rows.
+        facetPages(choices.filter { $0.readiness == .live && ($0.id != "sampleData" || LaunchFlags.allowed) })
+    }
+
+    nonisolated static func facetPages(_ choices: [Choice] = all) -> [(word: String, rows: [Choice])] {
+        var pages = facets.map { facet in
+            (word: facet.word, rows: facet.ids.compactMap { id in choices.first { $0.id == id } })
+        }.filter { !$0.rows.isEmpty }
+        let named = Set(facets.flatMap(\.ids))
+        let rest = choices.filter { !named.contains($0.id) }
+        if !rest.isEmpty {
+            pages.append((word: "More", rows: rest))
+        }
+        return pages
+    }
+
+    /// The rows in pages of at most six, in order, for any caller that pages without facets.
+    nonisolated static func pages(_ choices: [Choice] = all, size: Int = 6) -> [[Choice]] {
+        stride(from: 0, to: choices.count, by: size).map { Array(choices[$0 ..< min($0 + size, choices.count)]) }
     }
 }
