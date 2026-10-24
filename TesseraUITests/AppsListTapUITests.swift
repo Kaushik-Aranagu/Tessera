@@ -13,11 +13,15 @@ final class AppsListTapUITests: SimulatorOnlyTestCase {
         return app
     }
 
-    /// The row buttons of the apps list; the middle one reads its fact after a comma.
+    private static let names = ["Training", "Kitchen", "Routines", "Tasks", "Notes", "Lists", "Money"]
+
+    /// The row buttons of the apps list, found by app name; the middle one reads its fact after a comma.
     private func rows(_ app: XCUIApplication) -> [XCUIElement] {
-        let list = app.otherElements["Apps"]
-        XCTAssertTrue(list.waitForExistence(timeout: 10), "The apps list is on Home")
-        return list.buttons.allElementsBoundByIndex.filter(\.isHittable)
+        let first = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Training")).firstMatch
+        XCTAssertTrue(first.waitForExistence(timeout: 10), "The apps list is on Home")
+        let predicate = NSPredicate(format: Self.names.map { _ in "label BEGINSWITH %@" }.joined(separator: " OR "),
+                                    argumentArray: Self.names)
+        return app.buttons.matching(predicate).allElementsBoundByIndex.filter { $0.exists && $0.isHittable }
     }
 
     func testTapOnASideRowBringsItToTheMiddle() {
@@ -40,7 +44,6 @@ final class AppsListTapUITests: SimulatorOnlyTestCase {
         middle?.tap()
         sleep(1)
         // The door page covers Home: the list is no longer reachable.
-        XCTAssertFalse(app.otherElements["Apps"].exists && app.otherElements["Apps"].isHittable,
-                       "The app's page opened over Home")
+        XCTAssertTrue(rows(app).isEmpty || !app.buttons["Tess"].isHittable, "The app's page opened over Home")
     }
 }
