@@ -297,8 +297,8 @@ final class MosaicFaceModel {
         }
         galleryAt = nil
         guard case let .auto(range, animated, _) = mode, !environment.paused, faces.count > 1,
-              now >= touchedUntil else
-        {
+              now >= touchedUntil
+        else {
             fireAt = nil
             return
         }

@@ -53,9 +53,13 @@ enum MosaicNowKind: String, Equatable, Sendable {
     /// The drawing for a board notice, and the room a tap on it opens. Money is never drawn; a notice with no
     /// drawing (Notes) shows no Now face.
     static func of(_ notice: HomeNotice) -> (kind: MosaicNowKind, opens: HomeLink)? {
-        switch notice.target {
+        of(target: notice.target, text: notice.text)
+    }
+
+    static func of(target: HomeNotice.Target, text: String) -> (kind: MosaicNowKind, opens: HomeLink)? {
+        switch target {
         case .weather:
-            let text = notice.text.lowercased()
+            let text = text.lowercased()
             let wet = ["rain", "snow", "shower", "storm", "drizzle"].contains { text.contains($0) }
             return (wet ? .rain : .sun, .today)
         case .today:

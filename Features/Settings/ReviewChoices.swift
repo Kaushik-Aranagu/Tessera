@@ -173,26 +173,6 @@ final class ReviewChoices {
         Choice(id: "homeAppsList", name: "Apps list", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No apps list under Next.", "On": "Your apps list under Next on the Mosaic Home."],
                readiness: .live),
-        // Home 236: the mosaic as a stack of faces. A face with nothing to show is simply not in the stack.
-        Choice(id: "homeFace.now", name: "Now face", values: ["On", "Off"], defaultValue: "On",
-               says: ["On": "The mosaic plays the board's latest line as a drawing.",
-                      "Off": "The mosaic never plays the board's line."],
-               readiness: .live),
-        Choice(id: "homeFace.gallery", name: "Gallery face", values: ["On", "Off"], defaultValue: "On",
-               says: ["On": "Pixel scenes by the hour, the weather and the place.", "Off": "No gallery scenes."],
-               readiness: .live),
-        Choice(id: "homeFace.weather", name: "Weather face", values: ["On", "Off"], defaultValue: "On",
-               says: ["On": "The weather as a scene with its numbers. Sample numbers until a source is allowed.",
-                      "Off": "No weather face."],
-               readiness: .live),
-        Choice(id: "homeFace.workout", name: "Workout face", values: ["On", "Off"], defaultValue: "On",
-               says: ["On": "While you train the mosaic shows the lift and the rest countdown.",
-                      "Off": "The mosaic stays out of your workout."],
-               readiness: .live),
-        Choice(id: "homeFaceTurn", name: "Turn by itself", values: ["On", "Off"], defaultValue: "On",
-               says: ["On": "The faces turn every few seconds. A touch pauses them for 30 seconds.",
-                      "Off": "The faces turn only when you swipe."],
-               readiness: .live),
         // Sheet 200: the three lines as a departure board. Needs Mosaic On.
         Choice(id: "homeMosaicMoods", name: "Mosaic moods", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "The three lines change at once.",
@@ -390,7 +370,7 @@ final class ReviewChoices {
         Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
                readiness: .arrivesWith("calories burned")),
-    ]
+    ] + MosaicFaceChoices.all
 
     /// Review's tabs by facet, named in PeekTabs (Design sheets 100 and 108), six rows at most.
     nonisolated static let facets: [(word: String, ids: [String])] = [

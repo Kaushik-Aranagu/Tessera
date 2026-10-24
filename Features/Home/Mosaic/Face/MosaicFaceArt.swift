@@ -99,9 +99,9 @@ struct MosaicFaceArt {
         var plate: Set<Int> = []
     }
 
+    /// The layouts of the last few seconds: the bake and the live clock are asked for alternately, tile by tile.
     private final class Cache: @unchecked Sendable {
-        var second = Int.min
-        var layout = Layout()
+        var layouts: [Int: Layout] = [:]
     }
 
     private let cache = Cache()
@@ -109,8 +109,8 @@ struct MosaicFaceArt {
     /// The ink at `now`, rebuilt once a second.
     func layout(now: Date) -> Layout {
         let second = Int(now.timeIntervalSinceReferenceDate)
-        if cache.second == second {
-            return cache.layout
+        if let found = cache.layouts[second] {
+            return found
         }
         var placed = Layout()
         for tile in inkTiles(now: now) where tile.column >= 0 && tile.column < columns && tile.row >= 0
@@ -121,16 +121,20 @@ struct MosaicFaceArt {
         for key in placed.ink {
             let column = key / 1000, row = key % 1000
             for dx in -1 ... 1 {
-                for dy in -1 ... 1 where !placed.ink.contains((column + dx) * 1000 + row + dy) {
+                for dy in -1 ... 1 {
                     let next = (column + dx) * 1000 + row + dy
-                    if column + dx >= 0, column + dx < columns, row + dy >= 0, row + dy < rows {
+                    if !placed.ink.contains(next), column + dx >= 0, column + dx < columns, row + dy >= 0,
+                       row + dy < rows
+                    {
                         placed.plate.insert(next)
                     }
                 }
             }
         }
-        cache.second = second
-        cache.layout = placed
+        if cache.layouts.count > 3 {
+            cache.layouts.removeAll()
+        }
+        cache.layouts[second] = placed
         return placed
     }
 
@@ -269,13 +273,13 @@ struct MosaicFaceArt {
         case .sun: sun(column: column, row: row, columns: columns, rows: rows, time: time)
         case .bag: bag(column: column, row: row, columns: columns, rows: rows, time: time)
         case .barbell: barbell(column: column, row: row, columns: columns, rows: rows, time: time)
-        case .suitcase: suitcase(column: column, row: row, columns: columns, rows: rows)
+        case .suitcase: suitcase(column: column, row: row, columns: columns, time: time)
         case .clock: clock(column: column, row: row, columns: columns, rows: rows, time: time)
         }
     }
 
     /// A cloud along the top and streaks that fall, a tile column each, on a slant.
-    private static func rain(column: Int, row: Int, columns: Int, rows: Int, time: Double) -> Double? {
+    private static func rain(column: Int, row: Int, columns _: Int, rows: Int, time: Double) -> Double? {
         let cloudEdge = 3 + Int((MosaicSceneArt.hash(column / 3, 71) * 4).rounded())
         if row < cloudEdge {
             return row < cloudEdge - 1 ? 0.55 : 0.3
@@ -332,7 +336,7 @@ struct MosaicFaceArt {
     }
 
     /// A case: outline, handle, and a fill that stands at a share.
-    private static func suitcase(column: Int, row: Int, columns: Int, rows: Int) -> Double? {
+    private static func suitcase(column: Int, row: Int, columns: Int, time: Double) -> Double? {
         let left = columns - 38, top = 7, width = 28, height = 18
         if (left + 9 ... left + 18).contains(column), row == top - 3 || row == top - 2 {
             return 0.7
@@ -348,6 +352,11 @@ struct MosaicFaceArt {
         let edge = column == left || column == left + width - 1 || row == top || row == top + height - 1
         if edge {
             return 1
+        }
+        // A band of light climbs the fill, a row at a time, as things go in.
+        let climb = top + height - 2 - Int(time * 5) % (height - 2)
+        if row == climb {
+            return 0.7
         }
         return row > top + height * 2 / 5 ? 0.45 : 0.18
     }

@@ -85,6 +85,9 @@ final class MosaicScreenEngine {
     private(set) var signOld: (tiles: [MosaicSignTile], start: TimeInterval)?
     private var lentTiles: [Int: Int] = [:]
     private(set) var landings = 0
+    /// Home 236: a built sign tile (index into the lend's tiles) trading places with a mosaic tile.
+    private(set) var signTrade: (index: Int, start: TimeInterval)?
+    private var nextTrade: TimeInterval = 0
 
     static let rippleRadius: CGFloat = 140
     static let leanRadius: CGFloat = 36
@@ -213,6 +216,7 @@ final class MosaicScreenEngine {
             land(flight, at: time)
             self.flight = nil
         }
+        stepTrade(at: time)
     }
 
     var isBusy: Bool {
@@ -846,6 +850,28 @@ extension MosaicScreenEngine {
         }
     }
 
+    /// Once the sign has landed, a tile trades with the mosaic every 4 to 7 s. None under Reduce Motion.
+    private func stepTrade(at time: TimeInterval) {
+        guard !reduceMotion, let lend = signLend, !lend.tiles.isEmpty, time >= lend.landedAt else {
+            signTrade = nil
+            nextTrade = 0
+            return
+        }
+        let range = MosaicSignLend.tradeRange
+        func gap() -> TimeInterval {
+            range.lowerBound + Double(random.int(1001)) / 1000 * (range.upperBound - range.lowerBound)
+        }
+        if let trade = signTrade, time - trade.start >= MosaicSignLend.flightSeconds {
+            signTrade = nil
+        }
+        if nextTrade <= lend.landedAt, signTrade == nil {
+            nextTrade = lend.landedAt + gap()
+        } else if signTrade == nil, time >= nextTrade {
+            signTrade = (random.int(lend.tiles.count), time)
+            nextTrade = time + MosaicSignLend.flightSeconds + gap()
+        }
+    }
+
     var signIsMoving: Bool {
         !reduceMotion && signLend != nil
     }
@@ -853,6 +879,10 @@ extension MosaicScreenEngine {
     /// How far toward the page a lent mosaic tile is right now, or nil when it is not lent.
     func signGap(at absoluteIndex: Int) -> Double? {
         guard let signLend, let index = lentTiles[absoluteIndex] else { return nil }
+        if let trade = signTrade, trade.index == index {
+            let gap = MosaicSignLend.tradeGap(elapsed: clock - trade.start)
+            return gap > 0.001 ? gap : nil
+        }
         let gap = signLend.gap(sourceIndex: absoluteIndex, tile: index, at: clock)
         return gap > 0.001 ? gap : nil
     }

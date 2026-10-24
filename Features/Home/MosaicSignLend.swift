@@ -20,8 +20,8 @@ struct MosaicSignTile: Equatable {
 }
 
 struct MosaicSignLend: Equatable {
-    static let stagger: TimeInterval = 0.007
-    static let flightSeconds: TimeInterval = 0.56
+    static let stagger: TimeInterval = 0.006
+    static let flightSeconds: TimeInterval = 0.42
     static let lift: CGFloat = 26
     static let swell: CGFloat = 1.5
     static let gapAmount = 0.88
@@ -30,6 +30,30 @@ struct MosaicSignLend: Equatable {
     static let collapseSeconds: TimeInterval = 0.3
     static let collapseSink: CGFloat = 4
     static let feedDelay: TimeInterval = 0.14
+    /// Home 236: an edge tile of the sign keeps a third of the colour of the mosaic tile it was lent by.
+    static let edgeKeep = 0.33
+    /// Once built, one sign tile trades places with a mosaic tile every 4 to 7 seconds (the same 420 ms arc).
+    static let tradeRange: ClosedRange<Double> = 4 ... 7
+
+    /// Whether `cell` is on the sign's edge: one of its four neighbours is not part of the sign.
+    static func isEdge(_ cell: ThingSignCell, in keys: Set<Int>) -> Bool {
+        [(1, 0), (-1, 0), (0, 1), (0, -1)].contains { dx, dy in
+            let column = cell.column + dx, row = cell.row + dy
+            return !keys.contains(row * ThingSignArt.side + column) || column < 0 || row < 0
+                || column >= ThingSignArt.side || row >= ThingSignArt.side
+        }
+    }
+
+    /// The cell keys of a sign (`row * side + column`).
+    static func keys(_ cells: [ThingSignCell]) -> Set<Int> {
+        Set(cells.map { $0.row * ThingSignArt.side + $0.column })
+    }
+
+    /// How far toward the page the mosaic tile of a trade is, `elapsed` seconds after the trade began.
+    static func tradeGap(elapsed: TimeInterval) -> Double {
+        guard elapsed >= 0 else { return 0 }
+        return gapAmount * (1 - ease((elapsed - gapDelay) / gapRefill))
+    }
 
     let tiles: [MosaicSignTile]
     let start: TimeInterval
@@ -89,12 +113,8 @@ struct MosaicSignLend: Equatable {
             }
         }
         candidates.sort { ($0.distance, $0.column, $0.row) < ($1.distance, $1.column, $1.row) }
-        // The launch order is the sign's own, nearest the mosaic first, so the sign builds outward from it.
-        let ordered = cells.sorted {
-            let first = hypot(Double(originColumn + $0.column) - centre.x, Double(originRow + $0.row) - centre.y)
-            let second = hypot(Double(originColumn + $1.column) - centre.x, Double(originRow + $1.row) - centre.y)
-            return (first, $0.row, $0.column) < (second, $1.row, $1.column)
-        }
+        // Home 236: the launch order is the sign's own, from the bottom row up, left to right along each row.
+        let ordered = cells.sorted { ($1.row, $0.column) < ($0.row, $1.column) }
         return ordered.enumerated().compactMap { index, cell in
             guard index < candidates.count else { return nil }
             let source = candidates[index]

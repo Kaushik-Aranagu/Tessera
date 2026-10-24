@@ -3,7 +3,8 @@ import Foundation
 
 // Home is the mosaic (Design 202, Revision 2, the skin edge): a grid of 3.2 pt square tiles on a 4 pt step covers the
 // screen edge to edge, but only the mosaic's own space is drawn: its core is the living window, its right edge on the
-// right margin, and a rim of 12 tiles around it is solved so the window comes out of the page's own skin. This file is the
+// right margin, and a rim of 12 tiles around it is solved so the window comes out of the page's own skin. This file is
+// the
 // pure geometry: the grid, the core, the region and the text shield.
 
 struct MosaicTileRect: Equatable {
