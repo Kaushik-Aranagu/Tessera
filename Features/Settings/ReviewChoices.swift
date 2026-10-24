@@ -353,6 +353,12 @@ final class ReviewChoices {
                says: ["Off": "Backups reads as before.",
                       "On": "Backups says the last copy and its count, shows what a restore changes first, with Undo."],
                readiness: .live),
+        // Harness H1b: Claude may be given health, body, calendar, calories and money in calls from this phone; never
+        // the key. Off keeps those on the phone. Ships On.
+        Choice(id: "tessLabPolicy", name: "Lab mode for Claude", values: ["Off", "On"], defaultValue: "On",
+               says: ["Off": "Health, body, calendar, calories and money stay on this phone.",
+                      "On": "Tess may give Claude those in a call from this phone. The key never leaves the Keychain."],
+               needsClaude: true, readiness: .live),
         Choice(id: "undoLogV2", name: "Undo log", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Undo stays on the line Tess says after a change.",
                       "On": "Today ends with the last change and Undo for 10 minutes; Review lists recent changes."],

@@ -64,12 +64,13 @@ public struct TessSentLog {
 
     /// Writes the row for one built request.
     @discardableResult
-    func record(words: String, context: [String] = [], use: TessUse, requestID: String?, at date: Date)
-        -> ObjectRecord?
+    func record(words: String, context: [String] = [], use: TessUse, requestID: String?, at date: Date,
+                exact: Bool = false) -> ObjectRecord?
     {
         guard let sentClass = classes[.tessSent] else { return nil }
-        let walled = looksLikeClaudeKey(words) || SecretWords.mentions(words)
-            || PrivateFacts.isWalled(words, lastWeightKg: BodyWeight.lastKg(in: store))
+        // Lab mode (`exact`) keeps the words as sent, health and money included; a key-shaped string never goes in.
+        let walled = looksLikeClaudeKey(words) || (!exact && (SecretWords.mentions(words)
+                || PrivateFacts.isWalled(words, lastWeightKg: BodyWeight.lastKg(in: store))))
         // The phrase, then whatever rode with it (his date, the workout and last set in focus), exactly as sent.
         let lines = context.filter { !looksLikeClaudeKey($0) }
         let stored = ([walled ? Self.privatePhrase : words] + lines).joined(separator: "\n")

@@ -131,7 +131,7 @@ public struct TessUsageLedger {
     /// ledger on the app's one store shares it, and a test's own store never sees another test's calls in flight.
     private static var pending: [ObjectIdentifier: Int64] = [:]
 
-    private var pendingNano: Int64 {
+    var pendingNano: Int64 {
         get { Self.pending[ObjectIdentifier(store.context)] ?? 0 }
         nonmutating set { Self.pending[ObjectIdentifier(store.context)] = newValue }
     }

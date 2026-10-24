@@ -304,15 +304,15 @@ struct ClaudeBrainTests {
             .init(status: 400, body: #"{"error":{"type":"invalid_request_error","message":"max_tokens"}}"#),
             .init(body: answer("")),
         ])
-        await brain().warm(request)
+        let warmed = await brain().warm(request)
         #expect(BrainStub.bodies.count == 2)
         let limits = try BrainStub.bodies.map {
             try #require((JSONSerialization.jsonObject(with: $0) as? [String: Any])?["max_tokens"] as? Int)
         }
-        #expect(limits == [0, 1])
+        #expect(limits == [0, 1] && warmed?.maxTokens == 1 && warmed?.status == 200)
         BrainStub.script([.init(body: answer(""))])
-        await brain().warm(request)
-        #expect(BrainStub.bodies.count == 1)
+        let direct = await brain().warm(request)
+        #expect(BrainStub.bodies.count == 1 && direct?.maxTokens == 0)
     }
 
     @Test func theKeyIsNeverInAnEventOrAnError() async {
