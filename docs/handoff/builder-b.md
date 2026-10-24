@@ -39,30 +39,30 @@ board link). Mac builds and tests go through `scripts/ops/mac_lanes.sh` (`docs/o
 | #1386 | Recipes room (233) | open, FIX FIRST fixes pushed on `ios/recipes-233` (4f63bbf5), not re-tested |
 | #1392 | Apps list: plain taps reach their rows again (head 488280ed) | open, QA passed; unit 1057 and UI 3 of 3 passed |
 
-## In flight (branch, head at writing, test state)
+## In flight (branch, head at writing, test state), updated Oct 24 ~02:30 AM PT
 
-- `ios/home-236` (worktree `home236`): Home 236 v2. Replaces the ScrollView with five fixed slots (`HomeSlots`), drops the
-  Tess band, gives the one thing a single 92 pt hard clip edge and the v2 type (`HomeFit`, `HomeOneThing`), removes the
-  mosaic-to-thing swipe and the "N of M" counter. **Untested** (a test run never finished: Mac overloaded). To do: the
-  vertical swipe (build on Gesture policy PR #1393 `GestureTuning.elementTurn` when it lands), translateY depths
-  .9/.72/.54, clip insets (-57 top, -29 bottom, 92 right); the foot (Undo line left, Tess right); the Home type spec
-  (date 600, rows 2-3 plain 500 + highlighted 700, Outfit 400 numerals, app names 600, no ink3 on Home); the date colour
-  rules; the highlighted-part doors and their targets; the 7 +/- 3 s flip timing. Weather word effects are Builder A's
-  (236 v2.4 to 2.8); a cloud thread builds the Weather room (#1401, #1402).
-- `ios/pantry-columns` (worktree `pcols`): Pantry columns (234 v4 to v9) on top of #1384 and Core #1383: packing engine
-  `PantryPacker` (real row heights 28/34, 18 pt gaps, stack-only-while-sections-outnumber-columns rule), `PantryColumnsView`
-  (value beside or below by fit, low shown in the name, section small caps, 44 pt touch reach), "Add to To get" nudge,
-  Depth on wheels blur (`FocusWheel.blurRadius`, Settings > Look). **Untested** (the first compile never ran). Open items
-  from QA: the used-up name arc; `PantryRefusal.line(error)` is internal to Core (ask Core to make it public) instead of
-  the string match; Pantry/Recipes bodies should move onto `.rowSwipe` (gesture policy) and get G13 UI tap tests; the
-  hit-area-vs-swipe conflict for 28 pt rows (guard: rows under 44 pt take no swipes if the extended target overlaps a
-  neighbour, their actions move to VoiceOver and an item sheet that does not exist yet).
-- `ios/recipes-233` (worktree `kwire`): Recipes room fixes for #1386 (real ingredient names go to To get; focus slot 80 pt,
-  band 232 / page 422; private recipe real name in the room; one detail line at AX3). Needs a clean test run.
-- `ios/kitchen-parts`, `ios/quiet-167`, `ios/receipt-215`, `ios/qa-77`, `ios/lows-77`: frozen QA branches above.
+- `ios/home-236`: Home 236 v2 (five fixed slots via `HomeSlots`, no scroll, no Tess band; the one thing's single 92 pt clip
+  edge and v2 type via `HomeFit`; mosaic-to-thing swipe and the "N of M" counter removed). **Unit tests pass (1057)**, no
+  PR yet. To do: the one-thing vertical swipe on top of Gesture policy #1393 (`GestureTuning.elementTurn`) with
+  translateY depths .9/.72/.54 and clip insets (-57 top, -29 bottom, 92 right); the foot (Undo line left, Tess right);
+  the Home type and top-lines spec (date 600, rows 2-3 plain 500 with the highlighted part 700, Outfit 400 numerals,
+  app names 600, no ink3 on Home); date colour rules; door targets; the 7 +/- 3 s flip timing. Weather word effects are
+  Builder A's; a cloud thread builds the Weather room (#1401, #1402).
+- `ios/pantry-columns` = **PR #1417** (head 50d41c7e, base `ios/kitchen-parts`, mergeable): Pantry columns 234 v4 to v9
+  (`PantryPacker`, `PantryRowLayout`, `PantryColumnsView`, nudge, Depth on wheels blur) plus the Recipes review fixes
+  for #1386. Full tests passed (1087) before the last clean merge. Open: the used-up name arc; `PantryRefusal.line` is
+  internal to Core (ask Core to make it public) instead of the string match in `PantryEngineActions`; move Pantry and
+  Recipes bodies onto `.rowSwipe` and add G13 UI tap tests; the swipe-vs-44 pt conflict for 28 pt rows.
+- `ios/kitchen-parts` (#1384, head 7b0980e1) and `ios/recipes-233` (#1386, 4f63bbf5): frozen QA branches; kitchen-parts
+  had master and `ios/quiet-167` merged in at 7b0980e1 (not compiled by me).
+- `ios/quiet-167` (#1381), `ios/receipt-215`, `ios/qa-77` (#1366), `ios/lows-77` (#1374), `ios/tess-units` (#1377),
+  `ios/apps-tap-hotfix` (#1392, head 488280ed, ready): see the table above.
+- Notes landing 246 (approved; sheet `docs/handoff/design-sheets/notes-landing-246.md`, algorithm in
+  `landing-living-242.md` rounds 4 to 6): **not started**. Biggest piece next: the word wall (brick packer with 8% stretch
+  limit, outline-sharpened Figtree 900 capitals, moments every 5 s / 40 s / 2 min, no pile) and the doors dial (48 pt
+  slots, blur to 1.8 pt, Private shown as one "N private notes" line). Door pages (247) are a draft: do not build yet.
 - Routines 238 levels 2 and 3 (kind page wheel, Today page, routine page, maker, From another room): **not started**.
-  The landing (level 1) was rejected twice by Kaushik; do not build any room landing until the app-wide landing round
-  arrives (see below).
+  The Routines landing (level 1) was rejected twice; do not build any room landing until the app-wide landing round.
 
 ## Specs received and not built (details and board links in `builder-b-specs.md`)
 
@@ -87,5 +87,6 @@ board link). Mac builds and tests go through `scripts/ops/mac_lanes.sh` (`docs/o
 3. Home 236 vertical swipe on top of #1393, then the foot and type work; compare with board
    https://claude.ai/artifact/DygjFLo442RxyE1kmn4rJM at 390 and 402 wide, Paper and Black.
 4. Pantry columns PR (with QA's four lows), Recipes fixes, G13 tap tests for Pantry and Recipes.
-5. Notes 235, then Lists 237 v3, then Routines 238 levels 2-3, each its own PR from master; one PR per piece.
+5. Notes landing 246 (word wall, then doors dial), then Notes 235 inner pages, Lists 237 v3, Routines 238 levels 2-3, each
+   its own PR from master; one PR per piece.
 6. Gesture-policy migration of the apps list and the Kitchen bodies once #1393 and #1389 follow-ups are on master.
