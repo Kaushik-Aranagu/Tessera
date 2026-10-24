@@ -134,7 +134,7 @@ public struct BrainRequest: Sendable {
     public var deadline: Duration
 
     public init(system: [TextBlock] = [], messages: [BrainMessage], tools: [ToolSpec] = [],
-                toolChoice: ToolChoice = .auto, maxTokens: Int = 1024, effort: Effort? = nil,
+                toolChoice: ToolChoice = .auto, maxTokens: Int = 4096, effort: Effort? = nil,
                 cacheAfter: [CacheMark] = [], thinking: Bool = true, deadline: Duration = .seconds(30))
     {
         self.system = system

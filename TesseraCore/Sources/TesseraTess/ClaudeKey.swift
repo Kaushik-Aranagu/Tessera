@@ -87,13 +87,14 @@ public struct TessUsageLedger {
     /// The month's cap: $100 (Kaushik, Oct 23: accuracy comes before cost). It exists only to stop a runaway bug, not
     /// to ration calls. Settings' spend line and the paused copy read this.
     public static let capNano: Int64 = 100_000_000_000
-    /// The cap in whole dollars, for the words ("of 50 dollars this month").
+    /// The cap in whole dollars, for the words ("of 100 dollars this month").
     public static let capDollars = Int(capNano / 1_000_000_000)
 
     /// Per-token prices in nano-dollars: (input, output, cache read, cache write).
     public static let prices: [String: (input: Int64, output: Int64, cacheRead: Int64, cacheWrite: Int64)] = [
         "claude-haiku-5-5": (100, 500, 10, 125),
-        "claude-sonnet-5-5": (2000, 10000, 200, 2500),
+        // Cache hits on Sonnet 5.5 and Opus 5.5 are 0.05x the input price (the pricing page).
+        "claude-sonnet-5-5": (2000, 10000, 100, 2500),
         // Opus 5.5 is an escalation rung only: $4 / $20 per million, reads at $0.20, 5-minute writes at 1.25x.
         "claude-opus-5-5": (4000, 20000, 200, 5000),
     ]

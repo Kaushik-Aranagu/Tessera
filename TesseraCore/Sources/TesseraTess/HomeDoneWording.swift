@@ -21,13 +21,13 @@ public struct HomeDoneWords: Codable, Equatable, Sendable {
 /// Home's done job (board 0al, docs/ai/home-lines-job.md §2b and §2c; Kaushik's "Sonnet on Home", 2:41 PM PT Oct
 /// 16). Only a finished workout with a best, or one 4 or more days after the same routine, is asked, and only once
 /// ever: the answer, or the lack of one, is kept by the workout's id. Sonnet 5.5, `SYSTEM_DONE`, a 6 s deadline, no
-/// retries, no redirects, behind "Tess asks Claude", the $50 month and its 80% step-aside. The rules line always
+/// retries, no redirects, behind "Tess asks Claude", the $100 month and its 80% step-aside. The rules line always
 /// shows first; a slot Claude words only replaces it when it passes every check.
 @MainActor
 public final class ClaudeHomeDone {
     public static let model = "claude-sonnet-5-5"
     static let maxTokens = 512
-    /// Lines jobs step aside at 80% of the month ($40 of $50; §2c item 6).
+    /// Lines jobs step aside at 80% of the month ($80 of $100; §2c item 6).
     static let stepAsideNano = TessUsageLedger.capNano * 8 / 10
     /// Home lines calls in one house day (04:00 to 04:00), counted from the ledger (architecture §5.5; injection
     /// audit). The 10-minute debounce in the same section is for the pack-changed case; this job asks once per
