@@ -66,6 +66,10 @@ enum PantrySectionMap {
 enum PantryTouch {
     static let minimum: CGFloat = 44
 
+    static func accepts(_ point: CGPoint, in size: CGSize) -> Bool {
+        point.x >= 0 && point.x < size.width && point.y >= 0 && point.y < size.height
+    }
+
     static func target(for index: Int, rows: [CGRect], protected: [CGRect], bounds: CGRect) -> CGRect? {
         guard rows.indices.contains(index) else { return nil }
         func expanded(_ row: CGRect) -> CGRect {

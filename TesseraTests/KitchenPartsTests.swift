@@ -323,6 +323,18 @@ struct PantryRowLayoutTests {
 struct PantryTouchTests {
     private let bounds = CGRect(x: 0, y: 0, width: 160, height: 232)
 
+    @Test func physicalTapOwnershipStopsAtEveryTargetEdge() {
+        let size = CGSize(width: 169, height: 28)
+        #expect(PantryTouch.accepts(CGPoint(x: 0, y: 0), in: size))
+        #expect(PantryTouch.accepts(CGPoint(x: 168.9, y: 27.9), in: size))
+        for point in [CGPoint(x: -2, y: 14), CGPoint(x: 171, y: 14),
+                      CGPoint(x: 80, y: -1), CGPoint(x: 80, y: 28)]
+        {
+            #expect(!PantryTouch.accepts(point, in: size))
+        }
+        #expect(!PantryTouch.accepts(.zero, in: .zero))
+    }
+
     @Test(arguments: [CGFloat(28), 34])
     func overlappingCompactTargetsBothUseTheFallback(_ height: CGFloat) {
         let rows = [CGRect(x: 0, y: 30, width: 160, height: height),

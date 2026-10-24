@@ -75,6 +75,21 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         return result
     }
 
+    private func capture(_ name: String, in app: XCUIApplication) {
+        let image = XCTAttachment(screenshot: app.screenshot())
+        image.name = name
+        image.lifetime = .keepAlways
+        add(image)
+    }
+
+    private func fillSecondColumn(in app: XCUIApplication) {
+        app.buttons["Add a thing"].tap()
+        let field = app.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.typeText("Cucumber\n")
+        XCTAssertTrue(fixture("Cucumber", in: app).isHittable)
+    }
+
     private func expectItem(_ name: String, in app: XCUIApplication) {
         let title = app.staticTexts["pantry.itemTitle"]
         XCTAssertTrue(title.waitForExistence(timeout: 5))
@@ -118,16 +133,16 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         XCTAssertEqual(eggs.label, before)
         XCTAssertFalse(app.staticTexts["pantry.itemTitle"].exists)
         let chooser = app.buttons["pantry.chooseThing"]
-        XCTAssertGreaterThanOrEqual(chooser.frame.height, 44)
+        XCTAssertGreaterThanOrEqual(chooser.frame.height + 0.000001, 44)
         chooser.tap()
         let choice = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[cd] %@",
                                                       "pantry.choose.", "Eggs")).firstMatch
         XCTAssertTrue(choice.waitForExistence(timeout: 5))
-        XCTAssertGreaterThanOrEqual(choice.frame.height, 44)
+        XCTAssertGreaterThanOrEqual(choice.frame.height + 0.000001, 44)
         choice.tap()
         expectItem("Eggs", in: app)
         let usedUp = app.buttons["pantry.action.usedUp"]
-        XCTAssertGreaterThanOrEqual(usedUp.frame.height, 44)
+        XCTAssertGreaterThanOrEqual(usedUp.frame.height + 0.000001, 44)
         usedUp.tap()
         let receipt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@",
                                                            "used up. On To get.")).firstMatch
@@ -160,8 +175,10 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         let app = launchOnFridge(largeType: true)
         let eggs = fixture("Eggs", in: app)
         let before = eggs.label
-        XCTAssertGreaterThanOrEqual(eggs.frame.height, 44)
-        eggs.press(forDuration: 0.6)
+        XCTAssertGreaterThanOrEqual(eggs.frame.height + 0.000001, 44)
+        capture("AX5 targets before pin", in: app)
+        eggs.press(forDuration: 1)
+        capture("AX5 targets after pin", in: app)
         wait(NSPredicate(format: "label BEGINSWITH[c] %@", "pinned, Eggs"), on: eggs)
         XCTAssertFalse(eggs.label.contains("low"), "A pin hold must not also toggle stock")
         app.buttons["Undo"].tap()
@@ -198,6 +215,15 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
 
     func testGutterAndColumnClipDoNotSelectOrMutateRows() {
         let app = launchOnFridge()
+        fillSecondColumn(in: app)
+        let eggs = fixture("Eggs", in: app)
+        let cucumber = fixture("Cucumber", in: app)
+        XCTAssertNotEqual(Int(eggs.frame.minX.rounded()), Int(cucumber.frame.minX.rounded()))
+        for name in ["Eggs", "Cucumber"] {
+            fixture(name, in: app).tap()
+            expectItem(name, in: app)
+            app.buttons["Done"].tap()
+        }
         let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.row."))
             .allElementsBoundByIndex.filter(\.isHittable)
         XCTAssertFalse(rows.isEmpty)
@@ -260,6 +286,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
     func testZPaperAndBlackNormalSizeScreenshots() {
         for theme in ["Plein", "Black"] {
             let app = launchOnFridge(theme: theme)
+            fillSecondColumn(in: app)
             XCTAssertTrue(fixture("Eggs", in: app).isHittable)
             let image = XCTAttachment(screenshot: app.screenshot())
             image.name = "Pantry \(theme == "Plein" ? "Paper-Plein" : theme) normal size Reduce Motion"

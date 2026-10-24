@@ -39,6 +39,7 @@ struct PantryRowControl<Content: View>: View {
     @State private var offset: CGFloat = 0
     @State private var holdoff = TapHoldoff()
     @State private var held = false
+    @GestureState private var pinTouch = false
 
     var body: some View {
         Group {
@@ -57,20 +58,27 @@ struct PantryRowControl<Content: View>: View {
                         default: break
                         }
                     }
-                    .onLongPressGesture(minimumDuration: GestureTuning.holdOpen,
-                                        maximumDistance: CGFloat(GestureTuning.holdSlop), perform: {
-                                            guard item.moves.contains(.pin) else { return }
-                                            held = true
-                                            holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
-                                            perform(.pin, item)
-                                        }, onPressingChanged: { pressing in
-                                            if !pressing, held {
-                                                holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
-                                                held = false
-                                            }
-                                        })
+                    .simultaneousGesture(
+                        LongPressGesture(minimumDuration: GestureTuning.holdOpen,
+                                         maximumDistance: CGFloat(GestureTuning.holdSlop))
+                            .sequenced(before: LongPressGesture(minimumDuration: .infinity,
+                                                                maximumDistance: CGFloat(GestureTuning.holdSlop)))
+                            .updating($pinTouch) { _, touching, _ in touching = true }
+                            .onChanged { phase in
+                                guard case .second(true, _) = phase, !held, item.moves.contains(.pin) else { return }
+                                held = true
+                                holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
+                                perform(.pin, item)
+                            }
+                    )
             } else {
                 button
+            }
+        }
+        .onChange(of: pinTouch) { _, touching in
+            if !touching, held {
+                held = false
+                holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
             }
         }
         .accessibilityActions {
@@ -83,7 +91,7 @@ struct PantryRowControl<Content: View>: View {
 
     private var button: some View {
         Button {
-            guard holdoff.allowsTap(at: ProcessInfo.processInfo.systemUptime) else { return }
+            guard !held, holdoff.allowsTap(at: ProcessInfo.processInfo.systemUptime) else { return }
             if direct, item.moves.contains(.toggle) {
                 perform(.toggle, item)
             } else {
@@ -95,12 +103,37 @@ struct PantryRowControl<Content: View>: View {
                 .frame(height: targetHeight)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PantryTargetButtonStyle())
         .offset(x: offset)
         .accessibilityLabel(item.spoken)
         .accessibilityHint(direct && item.moves.contains(.toggle)
             ? "Tap to change stock. Item actions are also available." : "Opens item actions")
         .accessibilityIdentifier("pantry.row.\(item.id.uuidString)")
+    }
+}
+
+/// Keep a native button's accessibility/keyboard action while checking physical taps against its actual target.
+/// SwiftUI's adaptive hit reach must not select an adjacent row or a row beyond its column clip.
+private struct PantryTargetButtonStyle: PrimitiveButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        PantryTargetButton(configuration: configuration)
+    }
+}
+
+private struct PantryTargetButton: View {
+    let configuration: PrimitiveButtonStyleConfiguration
+    @State private var size: CGSize = .zero
+
+    var body: some View {
+        configuration.label
+            .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
+            .contentShape(Rectangle())
+            .gesture(SpatialTapGesture(coordinateSpace: .local).onEnded { event in
+                guard PantryTouch.accepts(event.location, in: size) else { return }
+                configuration.trigger()
+            })
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { configuration.trigger() }
     }
 }
 
