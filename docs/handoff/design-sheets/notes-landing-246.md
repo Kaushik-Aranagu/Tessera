@@ -32,7 +32,7 @@ Board: https://claude.ai/artifact/1mSPKcxhvQB4pFU2tmQZkx (v4). Owner: Builder B 
 - The app dial: 3 places (focus plus one above and one below), 48 pt slots (his 2:06 AM: tighter spacing, same type size), loops, haptic tick per door, spring settle.
 - Focus: name Figtree 700 21 pt x1.32 in its meaning colour, count Outfit 400 at about half size, ink 2. Neighbours: smaller, ink 2, depth blur up to 1.8 pt (his 2:06 AM: a little more; none under Reduce Motion or Low Power).
 - Doors in order: All notes (ink), Ideas (room), From Tess (Tess blue), Voice memos (room), Pinned (gold), Mentions (ink), Private (slate), Archive (ink 2).
-- Right half beside the focus: "Newest <when>" (13 pt ink 2), then its 3 newest titles (16 pt, the first 700), rising 6 pt into place when the focus changes. Private titles use shownLabel.
+- Right half beside the focus: "Newest <when>" (13 pt ink 2), then its 3 newest titles (16 pt, the first 700), rising 6 pt into place when the focus changes. For Private it shows one count line, "3 private notes" (his 2:08 AM: never "Private note" repeated).
 - Drag vertically to turn. Tap the focus to open the door; tap a neighbour to turn to it.
 
 ## Next
