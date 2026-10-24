@@ -204,6 +204,7 @@ struct PantryColumnsView: View {
             ForEach(0 ..< columnCount, id: \.self) { column in
                 columnView(packer, layouts: layouts, column: column)
                     .frame(width: columnWidth, height: PantryPacker.capacity, alignment: .top)
+                    .contentShape(Rectangle())
                     .clipped()
             }
         }
