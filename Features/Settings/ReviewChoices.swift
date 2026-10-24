@@ -356,7 +356,7 @@ final class ReviewChoices {
         // Sheet 167: Settings > Quiet hours, On by default.
         Choice(id: "quietHoursV2", name: "Quiet hours", values: ["On", "Off"], defaultValue: "On",
                says: ["On": "Settings has a Quiet hours line: drag the two ends of the day to say when notices wait.",
-                      "Off": "No Quiet hours line; quiet stays 11 pm to 7 am."],
+                      "Off": "Quiet hours keep their last setting."],
                readiness: .live),
         Choice(id: "undoLogV2", name: "Undo log", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Undo stays on the line Tess says after a change.",
@@ -389,7 +389,7 @@ final class ReviewChoices {
         // Kitchen v2 adds eight rows: what is in the house and the shop on Kitchen, the cook itself on Cooking.
         ("Kitchen", ["pantryState", "canCookShelf", "weekStrip", "repeatItems", "usuallyLine", "aisleOrder"]),
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
-        ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "calendar", "health", "linkFetch"]),
+        ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "quietHoursV2", "calendar", "health"]),
         ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector", "tasksApp"]),
         ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue", "twinsV2"]),
         ("Money", ["moneyPools"]),
@@ -399,9 +399,9 @@ final class ReviewChoices {
         ("Rooms", ["numberRules", "roomMotion", "pagesV2", "askPageV2", "finishMoments", "settingsV2"]),
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
-        ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
+        ("Kitchen v2", ["pantryLevelsV2", "shopV2", "linkFetch"]),
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
-        ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList", "quietHoursV2"]),
+        ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
