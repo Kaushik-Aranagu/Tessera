@@ -4,7 +4,7 @@
 #        mac_lanes.sh device <lane> -- cmd...                  one phone install at a time (waits for the device lock)
 #        mac_lanes.sh status | slots | sim <slot>              who holds what; print (and create) a slot's simulator id
 # A slot is a directory /tmp/tessera-mac-slots.d/slot-N (mkdir is atomic). At most MAC_LANES_SLOTS (default 3) heavy jobs run at once.
-# A hold is abandoned (freed, logged) when its pid is dead, it is older than 2 h, or it has had no heartbeat for 10 min.
+# A hold is abandoned (freed, logged) only when its pid is dead or it has had no heartbeat for 10 min. A live, beating hold older than 2 h is only logged as overdue; it keeps its slot.
 # Each slot has its own DerivedData ($LANE_DERIVED), SwiftPM clone folder ($LANE_SPM), and, with --sim, its own simulator ($LANE_SIM, a clone named "Tessera Lane N").
 # Never pkill by pattern: this script stops only the process tree of the job it started.
 set -eu
@@ -16,7 +16,9 @@ now=$(date +%s)
 mkdir -p "$D" "$Q"
 field() { sed -n "s/^$2=//p" "$D/slot-$1/info" 2>/dev/null || true; }
 lastbeat() { b=$(cat "$D/slot-$1/beat" 2>/dev/null || true); echo "${b:-$(field "$1" start)}"; }
-drop() { rm -f "$D/slot-$1/info" "$D/slot-$1/beat"; rmdir "$D/slot-$1" 2>/dev/null || true; }
+drop() { rm -f "$D/slot-$1/info" "$D/slot-$1/beat" "$D/slot-$1/overdue"; rmdir "$D/slot-$1" 2>/dev/null || true; }
+# Releases a slot only if this process still holds it (a stale hold may have been taken over by another job meanwhile).
+release() { [ "$(field "$1" pid)" = "$$" ] && drop "$1" || true; }
 # True when the Mac screen is locked (simulator UI runs stall then). Same rules as lane_lock.sh.
 screen_locked() {
   case "${LANE_LOCK_SCREEN:-}" in locked) return 0;; unlocked) return 1;; file:*) [ -e "${LANE_LOCK_SCREEN#file:}" ]; return;; esac
@@ -25,12 +27,15 @@ screen_locked() {
   return 1
 }
 free_gb() { df -k "${MAC_LANES_DISK:-/System/Volumes/Data}" 2>/dev/null | awk 'NR==2 {printf "%d", $4/1048576}' || echo 999; }
-# Frees a slot whose hold is stale (dead pid, too old, or no heartbeat).
+# Frees a slot whose holder is gone: its pid is dead, or it has not beaten for 10 minutes. Age alone never frees a live holder.
 sweep() {
   i=1; while [ "$i" -le "$N" ]; do
     if [ -d "$D/slot-$i" ]; then s=$(field "$i" start); pid=$(field "$i" pid); lb=$(lastbeat "$i")
-      if [ -z "$s" ] || [ $((now - s)) -ge $MAX ] || [ $((now - lb)) -ge $BEAT ] || ! kill -0 "$pid" 2>/dev/null; then
-        echo "$(date -u +%FT%TZ) freed stale slot $i from $(field "$i" lane) (pid $pid, held $((now - ${s:-$now}))s): $(field "$i" purpose)" >> "$LOG"; drop "$i"; fi
+      if [ -z "$s" ] || [ $((now - lb)) -ge $BEAT ] || ! kill -0 "$pid" 2>/dev/null; then
+        echo "$(date -u +%FT%TZ) freed stale slot $i from $(field "$i" lane) (pid $pid, held $((now - ${s:-$now}))s): $(field "$i" purpose)" >> "$LOG"; drop "$i"
+      elif [ $((now - s)) -ge $MAX ] && [ ! -f "$D/slot-$i/overdue" ]; then
+        : > "$D/slot-$i/overdue"; echo "$(date -u +%FT%TZ) slot $i from $(field "$i" lane) is overdue (held $((now - s))s, still alive): $(field "$i" purpose)" >> "$LOG"
+      fi
     fi; i=$((i + 1)); done
 }
 # Takes the first free slot; prints its number. Returns 1 if all are busy.
@@ -48,7 +53,9 @@ sim_for() {
   if [ -z "$udid" ]; then
     base=$(xcrun simctl list devices available 2>/dev/null | grep -F "$BASE_SIM (" | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/' || true)
     [ -n "$base" ] || { echo "no simulator named $BASE_SIM to clone" >&2; return 1; }
-    udid=$(xcrun simctl clone "$base" "$name")
+    udid=$(xcrun simctl clone "$base" "$name" 2>&1) || {
+      echo "simctl clone failed: $udid" >&2
+      echo "A booted base device cannot be cloned: shut it down with  xcrun simctl shutdown $base  and run again." >&2; return 1; }
   fi
   echo "$udid"
 }
@@ -72,24 +79,28 @@ case "${1:-}" in
   rm -f "$T"
   export LANE_SLOT=$slot LANE_NAME=$lane LANE_DERIVED="$ROOT/slot-$slot/DerivedData" LANE_SPM="$ROOT/slot-$slot/SourcePackages"
   mkdir -p "$LANE_DERIVED" "$LANE_SPM"
-  if [ "$sim" = 1 ]; then LANE_SIM=$(sim_for "$slot") || { drop "$slot"; exit 1; }; export LANE_SIM; fi
+  if [ "$sim" = 1 ]; then LANE_SIM=$(sim_for "$slot") || { release "$slot"; exit 1; }; export LANE_SIM; fi
   echo "$(date -u +%FT%TZ) slot $slot taken by $lane: $purpose" >> "$LOG"
+  job=""; hb=""
+  finish() { [ -n "$hb" ] && kill "$hb" 2>/dev/null || true; release "$slot"; [ -n "${LANE_SIM:-}" ] && xcrun simctl shutdown "$LANE_SIM" >/dev/null 2>&1 || true; }
+  trap 'l=""; [ -n "$job" ] && l="$(kids "$job") $job"; [ -n "$l" ] && kill -TERM $l 2>/dev/null || true; finish; exit 130' INT TERM HUP
   "$@" & job=$!
   ( while sleep "${MAC_LANES_BEAT:-60}"; do date +%s > "$D/slot-$slot/beat" 2>/dev/null || break; done ) & hb=$!
-  trap 'l="$(kids "$job") $job"; kill -TERM $l 2>/dev/null || true; kill "$hb" 2>/dev/null || true; drop "$slot"; exit 130' INT TERM HUP
   rc=0; wait "$job" || rc=$?
-  kill "$hb" 2>/dev/null || true; drop "$slot"; echo "$(date -u +%FT%TZ) slot $slot released by $lane (rc $rc)" >> "$LOG"; exit $rc;;
+  finish; echo "$(date -u +%FT%TZ) slot $slot released by $lane (rc $rc)" >> "$LOG"; exit $rc;;
  device) [ -n "${2:-}" ] && [ "${3:-}" = "--" ] && [ -n "${4:-}" ] || { echo "usage: device <lane> -- cmd..." >&2; exit 2; }
   lane=$2; shift 3
-  # One phone install at a time. A hold is stale when its pid is dead or it is older than 30 min.
+  # One phone install at a time. A hold is stale only when its pid is dead; a live one past 30 min is logged as overdue and kept.
   end=$((now + ${MAC_LANES_WAIT:-3600}))
   while ! mkdir "$DEV" 2>/dev/null; do
    p=$(sed -n 's/^pid=//p' "$DEV/info" 2>/dev/null || true); s=$(sed -n 's/^start=//p' "$DEV/info" 2>/dev/null || true)
-   if [ -z "$p" ] || ! kill -0 "$p" 2>/dev/null || [ $(( $(date +%s) - ${s:-0} )) -ge 1800 ]; then rm -f "$DEV/info"; rmdir "$DEV" 2>/dev/null || true; continue; fi
+   if [ -z "$p" ] || ! kill -0 "$p" 2>/dev/null; then rm -f "$DEV/info" "$DEV/overdue"; rmdir "$DEV" 2>/dev/null || true; continue; fi
+   if [ $(( $(date +%s) - ${s:-0} )) -ge 1800 ] && [ ! -f "$DEV/overdue" ]; then : > "$DEV/overdue"; echo "$(date -u +%FT%TZ) device lock held by $(sed -n 's/^lane=//p' "$DEV/info") is overdue (pid $p, still alive)" >> "$LOG"; fi
    [ "$(date +%s)" -lt "$end" ] || { echo "TIMEOUT waiting for the device lock" >&2; exit 1; }
    sleep "${MAC_LANES_POLL:-15}"; done
   printf 'lane=%s\npid=%s\nstart=%s\n' "$lane" "$$" "$(date +%s)" > "$DEV/info"
-  trap 'rm -f "$DEV/info"; rmdir "$DEV" 2>/dev/null || true' EXIT INT TERM HUP
+  devdrop() { [ "$(sed -n 's/^pid=//p' "$DEV/info" 2>/dev/null)" = "$$" ] && { rm -f "$DEV/info" "$DEV/overdue"; rmdir "$DEV" 2>/dev/null || true; } || true; }
+  trap devdrop EXIT INT TERM HUP
   "$@";;
  sim) [ -n "${2:-}" ] || { echo "usage: sim <slot>" >&2; exit 2; }; sim_for "$2";;
  slots) echo "$N";;

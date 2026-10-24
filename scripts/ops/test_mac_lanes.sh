@@ -21,6 +21,13 @@ wait $p1 $p2 $p3 || true
 # A dead holder is freed.
 mkdir -p "$T/slots/slot-1"; printf 'lane=ghost\npid=999999\nstart=%s\npurpose=dead\n' "$(date +%s)" > "$T/slots/slot-1/info"; date +%s > "$T/slots/slot-1/beat"
 "$H" run d "after ghost" -- true && grep -q "freed stale slot 1" "$T/log" && ok "dead holder freed" || bad "dead holder freed"
+# A live, beating holder older than 2 h keeps its slot (it is only logged as overdue).
+"$H" run live "long job" -- sleep 6 & pl=$!
+sleep 2
+old=$(( $(date +%s) - 7300 )); sed -i.bak "s/^start=.*/start=$old/" "$T/slots/slot-1/info" "$T/slots/slot-2/info" 2>/dev/null || true
+"$H" status | grep -q "busy 1 of 2" && ok "a live holder past 2 h keeps its slot" || bad "live holder freed by age"
+grep -q "overdue" "$T/log" && ok "an old live holder is logged as overdue" || bad "overdue not logged"
+wait $pl || true
 # Exit codes pass through.
 rc=0; "$H" run e "rc" -- sh -c 'exit 7' || rc=$?; [ "$rc" = 7 ] && ok "exit code passes through" || bad "exit code ($rc)"
 # Disk guard.

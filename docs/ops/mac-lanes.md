@@ -12,9 +12,12 @@ private build folders so concurrent runs cannot collide.
 - Slot `N` has its own `$LANE_DERIVED` (`-derivedDataPath`), its own `$LANE_SPM` (`-clonedSourcePackagesDirPath`), and, with
   `--sim`, its own simulator `$LANE_SIM`, a clone of the base device named `Tessera Lane N` (`xcrun simctl clone`). Pass it as
   `-destination "id=$LANE_SIM"`. Run each lane in its own git worktree.
-- Waiting is first come, first served. A hold is freed when its pid is dead, it is older than 2 h, or it has had no
-  heartbeat for 10 minutes (same rules as `lane_lock.sh`). A simulator job does not start while the screen is locked.
+- Waiting is first come, first served. A hold is freed only when its pid is dead or it has had no heartbeat for 10 minutes. A
+  live, beating hold older than 2 h (30 min for the device lock) is logged as overdue and keeps its slot, so two jobs never share
+  one. A job releases only a hold that still carries its own pid. A simulator job does not start while the screen is locked.
 - It refuses to start (exit 3) when the data disk has less than `MAC_LANES_MIN_GB` (default 6) free. Free build folders first.
+- A lane simulator is shut down when its job ends (cloning needs the base device shut down: if `simctl clone` fails because
+  `iPhone 17` is booted, the script says so; run `xcrun simctl shutdown <id>` and retry).
 - Never `pkill` by pattern. The script stops only the process tree of the job it started.
 
 ## Use
