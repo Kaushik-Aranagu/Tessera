@@ -9,6 +9,8 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
     public enum Model: String, Sendable {
         case haiku = "claude-haiku-5-5"
         case sonnet = "claude-sonnet-5-5"
+        /// Escalation only (Opus 5.5).
+        case opus = "claude-opus-5-5"
     }
 
     public static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
@@ -19,7 +21,11 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
     fileprivate let url: URL
 
     public var id: BrainID {
-        model == .haiku ? .haiku : .sonnet
+        switch model {
+        case .haiku: .haiku
+        case .sonnet: .sonnet
+        case .opus: .opus
+        }
     }
 
     /// One session for the app run: connections stay warm between calls. Ephemeral: no cookies or disk cache.
@@ -66,6 +72,8 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
             }
         }
         var raws: [Data] = []
+        // A token no message can contain: new for every body.
+        let token = "__RAW_\(UUID().uuidString)_"
         var cacheIndex = 0
         func cacheControl() -> [String: Any]? {
             defer { cacheIndex += 1 }
@@ -90,7 +98,7 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
                 switch piece {
                 case let .raw(data):
                     raws.append(data)
-                    return "__TESSRAW_\(raws.count - 1)__"
+                    return "\(token)\(raws.count - 1)__"
                 case let .text(text):
                     var item: [String: Any] = ["type": "text", "text": text]
                     if let control = cacheControl() {
@@ -127,23 +135,34 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
             switch request.toolChoice {
             case .auto: body["tool_choice"] = ["type": "auto"]
             case .none: body["tool_choice"] = ["type": "none"]
-            // Sonnet 5.5 refuses forced tool use (a 400): auto, and the prompt names the tool.
-            case .any: body["tool_choice"] = ["type": model == .sonnet ? "auto" : "any"]
+            // Sonnet 5.5 and Opus 5.5 refuse forced tool use (a 400): auto, and the prompt names the tool.
+            case .any: body["tool_choice"] = ["type": model == .haiku ? "any" : "auto"]
             case let .tool(name):
-                body["tool_choice"] = model == .sonnet ? ["type": "auto"] : ["type": "tool", "name": name]
+                body["tool_choice"] = model == .haiku ? ["type": "tool", "name": name] : ["type": "auto"]
             }
         }
         if let effort = request.effort {
             body["output_config"] = ["effort": effort.rawValue]
         }
-        // Thinking: Haiku 5.5 may be switched off; Sonnet 5.5 refuses "disabled", and "between_tools" is its off.
-        if !request.thinking {
-            body["thinking"] = ["type": model == .sonnet ? "between_tools" : "disabled"]
+        // Thinking is adaptive and on, except for a forced tool (Haiku only: it takes "disabled" at effort high or
+        // below). Sonnet 5.5 refuses "disabled", and "between_tools" is its off; Opus 5.5 cannot switch it off at all.
+        let forced: Bool = switch request.toolChoice {
+        case .any, .tool: !request.tools.isEmpty && model == .haiku
+        default: false
+        }
+        if forced {
+            body["thinking"] = ["type": "disabled"]
+        } else if request.thinking {
+            body["thinking"] = ["type": "adaptive"]
+        } else if model == .sonnet {
+            body["thinking"] = ["type": "between_tools"]
+        } else if model == .haiku {
+            body["thinking"] = ["type": "disabled"]
         }
         let data = try JSONSerialization.data(withJSONObject: body)
         guard !raws.isEmpty, var text = String(data: data, encoding: .utf8) else { return data }
         for (index, raw) in raws.enumerated() {
-            text = text.replacingOccurrences(of: "\"__TESSRAW_\(index)__\"",
+            text = text.replacingOccurrences(of: "\"\(token)\(index)__\"",
                                              with: String(decoding: raw, as: UTF8.self))
         }
         return Data(text.utf8)
@@ -287,9 +306,10 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
     }
 }
 
-public extension ClaudeBrain {
+extension ClaudeBrain {
     /// `POST /v1/messages/count_tokens` (free): the same body as the request, minus `stream` and `max_tokens`. Used
-    /// only by the meter's weekly calibration. Nil on any failure or with no key.
+    /// only by the meter's weekly calibration, and only through `Door.countTokens` (which applies the switch, the key
+    /// scan, the policy scan and the sent log). Nil on any failure or with no key.
     func countTokens(_ request: BrainRequest) async -> Int? {
         guard let key = keys.read(),
               var body = (try? JSONSerialization.jsonObject(with: Self.body(for: request, model: model, stream: false)))
@@ -330,6 +350,7 @@ struct SSEParser {
         var thinking = ""
         var signature = ""
         var json = ""
+        var citations: [Any] = []
         /// The block's bytes from `content_block_start`, for types that arrive whole.
         var startRaw: Data?
     }
@@ -351,6 +372,9 @@ struct SSEParser {
                 usage.inTokens = used["input_tokens"] as? Int ?? 0
                 usage.cacheReadTokens = used["cache_read_input_tokens"] as? Int ?? 0
                 usage.cacheWriteTokens = used["cache_creation_input_tokens"] as? Int ?? 0
+                usage
+                    .cacheWrite1hTokens =
+                    (used["cache_creation"] as? [String: Any])?["ephemeral_1h_input_tokens"] as? Int ?? 0
                 usage.outTokens = used["output_tokens"] as? Int ?? 0
                 readSearches(used)
             }
@@ -385,6 +409,10 @@ struct SSEParser {
                 builders[index]?.thinking += delta["thinking"] as? String ?? ""
             case "signature_delta":
                 builders[index]?.signature += delta["signature"] as? String ?? ""
+            case "citations_delta":
+                if let citation = delta["citation"] {
+                    builders[index]?.citations.append(citation)
+                }
             default:
                 break
             }
@@ -404,7 +432,11 @@ struct SSEParser {
                 return builder.type == "tool_use" ? [.toolUse(id: builder.id, name: builder.name,
                                                               input: Data(json.utf8))] : []
             case "text":
-                finished[index] = Self.encode(["type": "text", "text": builder.text])
+                var block: [String: Any] = ["type": "text", "text": builder.text]
+                if !builder.citations.isEmpty {
+                    block["citations"] = builder.citations
+                }
+                finished[index] = Self.encode(block)
             case "thinking":
                 finished[index] = Self.encode(["type": "thinking", "thinking": builder.thinking,
                                                "signature": builder.signature])
@@ -429,7 +461,7 @@ struct SSEParser {
             usage.costNano = await MainActor.run {
                 TessUsageLedger.cost(model: model, input: used.inTokens, output: used.outTokens,
                                      cacheRead: used.cacheReadTokens, cacheWrite: used.cacheWriteTokens,
-                                     webSearches: used.webSearches)
+                                     cacheWrite1h: used.cacheWrite1hTokens, webSearches: used.webSearches)
             }
             if stop == "refusal" {
                 return [.failed(.refused)]

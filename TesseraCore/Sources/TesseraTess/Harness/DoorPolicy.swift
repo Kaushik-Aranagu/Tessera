@@ -86,7 +86,7 @@ public struct BrainRouter: Sendable {
     }
 
     public static func isClaude(_ id: BrainID) -> Bool {
-        id == .haiku || id == .sonnet
+        id == .haiku || id == .sonnet || id == .opus
     }
 
     /// The rungs of a ladder that exist, are available, and are allowed, in order.

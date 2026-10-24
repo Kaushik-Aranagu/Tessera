@@ -133,7 +133,7 @@ struct ClaudeBrainTests {
         let body = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
         #expect(body["model"] as? String == "claude-haiku-5-5" && body["stream"] as? Bool == true)
         #expect((body["output_config"] as? [String: Any])?["effort"] as? String == "low")
-        #expect((body["thinking"] as? [String: Any])?["type"] as? String == "disabled")
+        #expect((body["thinking"] as? [String: Any])?["type"] as? String == "adaptive")
         let system = try #require(body["system"] as? [[String: Any]])
         #expect(system[0]["cache_control"] == nil && system[1]["cache_control"] != nil)
         let sonnet = try JSONSerialization.jsonObject(with: ClaudeBrain.body(
@@ -141,7 +141,7 @@ struct ClaudeBrainTests {
             model: .sonnet,
             stream: true
         ))
-        #expect(((sonnet as? [String: Any])?["thinking"] as? [String: Any])?["type"] as? String == "between_tools")
+        #expect(((sonnet as? [String: Any])?["thinking"] as? [String: Any])?["type"] as? String == "adaptive")
     }
 
     @Test func forcedToolUseIsForSonnetOnlyAsAutoAndToolsAreStrictAndEager() throws {

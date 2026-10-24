@@ -72,20 +72,39 @@ public final class Door {
         job.request.system.map(\.text) + job.fragments.map(\.text) + requestText(job.request)
     }
 
-    /// The text of a request apart from the system blocks: messages, tool_use inputs, tool results, and the tools'
-    /// own names, descriptions and schemas.
+    /// The text of a request apart from the system blocks: messages, replayed blocks, tool_use inputs, tool results,
+    /// and
+    /// the tools' own names, descriptions and schemas. JSON is read as its decoded string values, so a scan sees the
+    /// words, not escaped JSON text.
     static func requestText(_ request: BrainRequest) -> [String] {
         request.messages.flatMap { message in
-            message.content.compactMap { piece -> String? in
+            message.content.flatMap { piece -> [String] in
                 switch piece {
-                case let .text(text): text
-                // A replayed block holds the model's own words and tool results: scanned for a key like the rest.
-                case let .raw(data): String(decoding: data, as: UTF8.self)
-                case let .toolResult(_, content, _): content
-                case let .toolUse(_, _, input): String(decoding: input, as: UTF8.self)
+                case let .text(text): [text]
+                case let .toolResult(_, content, _): [content]
+                case let .toolUse(_, _, input): jsonStrings(input)
+                case let .raw(data): jsonStrings(data)
                 }
             }
-        } + request.tools.flatMap { [$0.name, $0.description, String(decoding: $0.schema, as: UTF8.self)] }
+        } + request.tools.flatMap { [$0.name, $0.description] + jsonStrings($0.schema) }
+    }
+
+    /// Every string value and every object key in a JSON text, decoded: a key like {"lexapro": 1} is words too. Text
+    /// that
+    /// is not JSON comes back as it is.
+    static func jsonStrings(_ data: Data) -> [String] {
+        func walk(_ value: Any) -> [String] {
+            switch value {
+            case let text as String: [text]
+            case let list as [Any]: list.flatMap(walk)
+            case let object as [String: Any]: object.keys.map(\.self) + object.values.flatMap(walk)
+            default: []
+            }
+        }
+        guard let value = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) else {
+            return [String(decoding: data, as: UTF8.self)]
+        }
+        return walk(value)
     }
 
     /// Actions that move or record money. A model is never offered one, under either policy: money actions need his
@@ -104,19 +123,41 @@ public final class Door {
         }
     }
 
-    /// The words of a request as sent, for the sent log.
+    /// The words of a request as sent, for the sent log. A replayed block or a tool call shows as its decoded words,
+    /// without braces, signatures, ids or encrypted blobs.
     static func words(_ request: BrainRequest) -> String {
         (request.system.map(\.text) + request.messages.flatMap { message in
-            message.content.compactMap { piece -> String? in
+            message.content.flatMap { piece -> [String] in
                 switch piece {
-                case let .text(text): text
-                // A replayed block holds the model's own words and tool results: scanned for a key like the rest.
-                case let .raw(data): String(decoding: data, as: UTF8.self)
-                case let .toolResult(_, content, _): content
-                case .toolUse: nil
+                case let .text(text): [text]
+                // A replayed block holds the model's own words and tool results.
+                case let .raw(data): readableStrings(data)
+                case let .toolResult(_, content, _): [content]
+                case let .toolUse(_, name, input): [name] + readableStrings(input)
                 }
             }
         }).joined(separator: "\n\n")
+    }
+
+    /// Keys whose values are structure or opaque data, not words: left out of the sent log (the key scan reads them).
+    private static let opaqueKeys: Set<String> = ["type", "id", "tool_use_id", "signature", "encrypted_content",
+                                                  "encrypted_index", "data", "cache_control", "caller"]
+
+    /// The words in a JSON text, for the log: string values, minus the structural and opaque ones.
+    static func readableStrings(_ data: Data) -> [String] {
+        func walk(_ value: Any) -> [String] {
+            switch value {
+            case let text as String: [text]
+            case let list as [Any]: list.flatMap(walk)
+            case let object as [String: Any]:
+                object.keys.sorted().filter { !opaqueKeys.contains($0) }.flatMap { walk(object[$0] as Any) }
+            default: []
+            }
+        }
+        guard let value = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) else {
+            return [String(decoding: data, as: UTF8.self)]
+        }
+        return walk(value)
     }
 
     // MARK: Run
@@ -146,6 +187,11 @@ public final class Door {
         func end(_ outcome: ClaudeOutcome) {
             continuation.yield(.failed(outcome))
             continuation.finish()
+        }
+        // Opus is an escalation rung: a ladder that starts with it is refused.
+        if job.ladder.first == .opus {
+            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "opusFirst"))
+            return end(.refused)
         }
         // 1 policy, 2 pack (per rung, below), 3 key-shape scan: always, under both policies.
         let policy = policy()
@@ -389,6 +435,7 @@ public final class Door {
         switch brain.id {
         case .haiku: ClaudeBrain.Model.haiku.rawValue
         case .sonnet: ClaudeBrain.Model.sonnet.rawValue
+        case .opus: ClaudeBrain.Model.opus.rawValue
         default: nil
         }
     }
@@ -428,5 +475,36 @@ public final class Door {
                                      outcome: result.map { "warm \($0.status) max_tokens \($0.maxTokens)" } ?? "none",
                                      runID: runID))
         return result
+    }
+
+    // MARK: Count tokens
+
+    /// `count_tokens` is free, but it still sends the words, so it goes through the same gate as a call: "Tess asks
+    /// Claude" must be on, the key scan covers the request, strict scans its words too, money actions are refused, and
+    /// the exact words go to What was sent. It skips only the cap reserve (it costs nothing). Nil when anything stops
+    /// it.
+    public func countTokens(_ id: BrainID, _ request: BrainRequest, fragments: [PackFragment] = []) async -> Int? {
+        guard BrainRouter.isClaude(id), asksClaude(),
+              let brain = router.provider(id) as? ClaudeBrain else { return nil }
+        let policy = policy()
+        let job = DoorJob(name: "count-tokens", ladder: [id], request: request, fragments: fragments)
+        if Self.allText(job).contains(where: { looksLikeClaudeKey($0) }) {
+            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "keyShape"))
+            return nil
+        }
+        if job.request.tools.contains(where: { Self.moneyActions.contains($0.name) }) {
+            return nil
+        }
+        let packed = pack(job, policy: policy, onClaude: true)
+        if policy == .strict, strictHit(packed) {
+            return nil
+        }
+        sentLog.record(words: Self.words(packed), use: .door, requestID: nil, at: now(), exact: policy == .lab)
+        let started = ContinuousClock.now
+        let counted = await brain.countTokens(packed)
+        await trace.record(TraceSpan(kind: .brain, name: job.name, brain: id.rawValue, at: now(),
+                                     totalMs: LatencyBench.ms(.now - started),
+                                     outcome: counted == nil ? "failed" : "works"))
+        return counted
     }
 }
