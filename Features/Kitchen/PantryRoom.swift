@@ -92,7 +92,7 @@ struct PantryRoomPage: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var actions: PantryLocalActions?
+    @State private var actions: PantryEngineActions?
     @State private var receipts = KitchenReceipts()
     @State private var focus = 0
     @State private var page = 0
@@ -142,7 +142,7 @@ struct PantryRoomPage: View {
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             if actions == nil {
-                actions = PantryLocalActions(engine: model.engine) { model.touch() }
+                actions = PantryEngineActions(engine: model.engine) { model.touch() }
             }
         }
     }
@@ -214,19 +214,19 @@ struct PantryRoomPage: View {
 
     private enum Move { case usedUp, notNow, pin, toggle }
 
-    private func perform(_ move: Move, on item: PantryRoomItem, place: PlaceDial.Place? = nil) {
+    private func perform(_ move: Move, on item: PantryRoomItem, place _: PlaceDial.Place? = nil) {
         guard let actions else { return }
-        let placeID = place.flatMap { UUID(uuidString: $0.id) }
         switch (move, item.source) {
         case let (.usedUp, .toGet(line)):
-            say(actions.gotIt(line, name: item.name))
+            guard let ingredient = Groceries(store: model.store, classes: model.classes).ingredient(of: line.object)
+            else { return }
+            say(actions.gotIt(ingredient, name: item.name))
         case let (.usedUp, .stock(record)):
             say(actions.usedUp(record, name: item.name))
         case let (.notNow, .stock(record)):
             say(actions.notNow(record, name: item.name))
         case let (.pin, .stock(record)):
-            guard let placeID else { return }
-            say(actions.pin(record, on: !item.isPinned, in: placeID, name: item.name))
+            say(actions.pin(record, on: !item.isPinned, name: item.name))
         case let (.toggle, .stock(record)):
             say(actions.setStock(record, low: !item.isLow, name: item.name))
         default:
@@ -400,7 +400,6 @@ struct PantryRoomPage: View {
 
     private func items(_ board: PantryBoard, place: String) -> [PantryRoomItem] {
         let now = AppClock.now
-        guard let actions else { return [] }
         if place == PantryPlaces.toGet {
             return board.toGet.flatMap(\.rows).compactMap { row -> PantryRoomItem? in
                 guard case let .toGet(item, label) = row else { return nil }
@@ -410,18 +409,19 @@ struct PantryRoomPage: View {
         }
         guard let id = UUID(uuidString: place),
               let found = board.places.first(where: { $0.id == id }) else { return [] }
-        var list: [PantryRoomItem] = found.groups.flatMap(\.rows).compactMap { row in
-            guard case let .stock(entry) = row, !actions.usedUpIDs.contains(entry.id),
-                  !actions.isSnoozed(entry.id, now: now) else { return nil }
-            let low = entry.state == .low || entry.state == .out || actions.lowByHand.contains(entry.id)
-            return PantryRoomItem(id: entry.id, name: model.store.displayTitle(of: entry.ingredient), isLow: low,
-                                  isPinned: actions.isPinned(entry.id, in: id), amount: nil,
+        let stock = PantryStock(store: model.store, classes: model.classes)
+        let list: [PantryRoomItem] = found.groups.flatMap(\.rows).compactMap { row in
+            guard case let .stock(entry) = row, !stock.isSnoozed(entry.ingredient, at: now) else { return nil }
+            // Used up by hand: it left for To get.
+            if let set = stock.level(of: entry.ingredient), set.level == .out {
+                return nil
+            }
+            return PantryRoomItem(id: entry.id, name: model.store.displayTitle(of: entry.ingredient),
+                                  isLow: entry.state == .low || entry.state == .out,
+                                  isPinned: stock.isPinned(entry.ingredient), amount: nil,
                                   source: .stock(entry.ingredient))
         }
-        list += actions.added.filter { $0.place == id }.map {
-            PantryRoomItem(id: $0.id, name: $0.name, isLow: false, isPinned: false, amount: nil,
-                           source: .added)
-        }
-        return PantryRoomCopy.ordered(list, pinOrder: actions.pins[id] ?? [])
+        let place = model.store.object(id: id)
+        return PantryRoomCopy.ordered(list, pinOrder: stock.pinned(in: place).map(\.id))
     }
 }
