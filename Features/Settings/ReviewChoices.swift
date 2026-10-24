@@ -400,7 +400,8 @@ final class ReviewChoices {
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
         ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
-        ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2", "quietHoursV2"]),
+        ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
+        ("Time", ["quietHoursV2"]),
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
     ]
 
