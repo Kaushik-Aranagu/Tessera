@@ -146,11 +146,13 @@ public final class Door {
         // 1 policy, 2 pack (per rung, below), 3 key-shape scan: always, under both policies.
         let policy = policy()
         if Self.allText(job).contains(where: { looksLikeClaudeKey($0) }) {
-            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "keyShape"))
+            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "keyShape",
+                                         runID: job.runID))
             return end(.refused)
         }
         if job.request.tools.contains(where: { Self.moneyActions.contains($0.name) }) {
-            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "moneyAction"))
+            await trace.record(TraceSpan(kind: .brain, name: job.name, at: now(), totalMs: 0, outcome: "moneyAction",
+                                         runID: job.runID))
             return end(.refused)
         }
         let asks = asksClaude()
@@ -259,7 +261,7 @@ public final class Door {
                                          model: Self.modelName(rung.brain), at: now(), ttftMs: rung.ttftMs,
                                          totalMs: total, usage: rung.usage,
                                          outcome: rung.status.map { "\(rung.outcome.rawValue) \($0)" }
-                                             ?? rung.outcome.rawValue))
+                                             ?? rung.outcome.rawValue, runID: job.runID))
         }
 
         if !start(0) {
@@ -381,7 +383,9 @@ public final class Door {
     /// Warms a rung through the same gate as a call: Claude only when allowed, a reserve before and a ledger row and
     /// a span after, so the cap sees it. Returns what the warm-up got (status and the `max_tokens` that worked).
     @discardableResult
-    public func warm(_ id: BrainID, _ prefix: BrainRequest, name: String = "warm") async -> BrainWarm? {
+    public func warm(_ id: BrainID, _ prefix: BrainRequest, name: String = "warm",
+                     runID: UUID? = nil) async -> BrainWarm?
+    {
         guard let brain = router.provider(id) else { return nil }
         let claude = BrainRouter.isClaude(id)
         guard !claude || asksClaude() else { return nil }
@@ -406,7 +410,8 @@ public final class Door {
         }
         await trace.record(TraceSpan(kind: .brain, name: name, brain: id.rawValue, model: Self.modelName(brain),
                                      at: now(), totalMs: total, usage: result?.usage ?? BrainUsage(),
-                                     outcome: result.map { "warm \($0.status) max_tokens \($0.maxTokens)" } ?? "none"))
+                                     outcome: result.map { "warm \($0.status) max_tokens \($0.maxTokens)" } ?? "none",
+                                     runID: runID))
         return result
     }
 }

@@ -48,11 +48,14 @@ public struct DoorJob: Sendable {
     public var hedge: Bool
     /// Judges a tool call's input; a call it refuses is a failure of that rung.
     public var validator: @Sendable (Data) -> Bool
+    /// The Tess run this job belongs to: its spans carry the id.
+    public var runID: UUID?
 
     public init(name: String, ladder: [BrainID], request: BrainRequest, fragments: [PackFragment] = [],
-                estimateNano: Int64 = 0, hedge: Bool = false,
+                estimateNano: Int64 = 0, hedge: Bool = false, runID: UUID? = nil,
                 validator: @escaping @Sendable (Data) -> Bool = { _ in true })
     {
+        self.runID = runID
         self.name = name
         self.ladder = ladder
         self.request = request

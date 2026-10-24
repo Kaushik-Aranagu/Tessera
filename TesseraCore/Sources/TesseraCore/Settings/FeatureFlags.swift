@@ -91,6 +91,7 @@ public enum FeatureFlags {
         .init("undoLogV2", "Undo log", .everywhere),
         .init("tessLabPolicy", "Lab mode for Claude", .everywhere, claude: true),
         .init("tessDirectorPlaybook", "Tess picks her looks", .everywhere, claude: true),
+        .init("tessAsks", "Ask Tess anything", .everywhere, claude: true),
     ]
 
     /// Not flags: switches with more than two values, connections he makes by hand, and tools. A test keeps this list

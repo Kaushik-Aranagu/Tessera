@@ -165,3 +165,64 @@ extension [BrainEvent] {
         }
     }
 }
+
+/// A brain that plays a script: one array of events per round (the next round starts when the last was asked for).
+final class ScriptedBrain: Brain, @unchecked Sendable {
+    let id: BrainID
+    var available = true
+    /// Wait before the first event of every round.
+    var delay: Duration = .zero
+    private let lock = NSLock()
+    private var rounds: [[BrainEvent]]
+    private var requests: [BrainRequest] = []
+    private var warmed = 0
+
+    init(_ id: BrainID = .haiku, rounds: [[BrainEvent]]) {
+        self.id = id
+        self.rounds = rounds
+    }
+
+    var isAvailable: Bool {
+        get async { available }
+    }
+
+    var requestsSeen: [BrainRequest] {
+        lock.withLock { requests }
+    }
+
+    var streamCount: Int {
+        requestsSeen.count
+    }
+
+    var warmCount: Int {
+        lock.withLock { warmed }
+    }
+
+    func stream(_ request: BrainRequest) -> AsyncThrowingStream<BrainEvent, Error> {
+        let script: [BrainEvent] = lock.withLock {
+            requests.append(request)
+            return rounds.isEmpty ? [.text("ok")] : rounds.removeFirst()
+        }
+        let wait = delay
+        return AsyncThrowingStream { continuation in
+            let work = Task {
+                try? await Task.sleep(for: wait)
+                if FakeBrain.isClaude(self.id) {
+                    continuation.yield(.status(200))
+                }
+                for event in script {
+                    guard !Task.isCancelled else { return }
+                    continuation.yield(event)
+                }
+                continuation.yield(.done(BrainUsage(inTokens: 100, outTokens: 20, costNano: 20000), stop: "end_turn"))
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in work.cancel() }
+        }
+    }
+
+    func warm(_: BrainRequest) async -> BrainWarm? {
+        lock.withLock { warmed += 1 }
+        return FakeBrain.isClaude(id) ? BrainWarm(status: 200, maxTokens: 0, usage: BrainUsage(inTokens: 500, costNano: 100)) : nil
+    }
+}
