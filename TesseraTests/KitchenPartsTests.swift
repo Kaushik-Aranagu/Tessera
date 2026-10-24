@@ -101,3 +101,46 @@ struct KitchenTextTests {
         #expect(PantryRoomCopy.brief(low: ["Private item"]) == "Low on private item.")
     }
 }
+
+@MainActor
+struct RecipesRoomBoardTests {
+    private func item(_ name: String, minutes: Int?, shorts: [String] = [], lows: [String] = [],
+                      pinned: Bool = false) -> RecipesRoomBoard.Item
+    {
+        RecipesRoomBoard.Item(id: UUID(), name: name, shown: name, isPrivate: false, minutes: minutes,
+                              isPinned: pinned, shorts: shorts, lows: lows, uses: ["a", "b", "c", "d", "e", "f"],
+                              plannedFor: nil)
+    }
+
+    @Test func quickestFirstPinsOnTopNoTimeLast() {
+        let slow = item("Stew", minutes: 90), quick = item("Rice", minutes: 20), none = item("Toast", minutes: nil)
+        let pinned = item("Dal", minutes: 45)
+        let out = RecipesRoomBoard.ordered([slow, none, quick, pinned], pinOrder: [pinned.id])
+        #expect(out.map(\.name) == ["Dal", "Rice", "Stew", "Toast"])
+    }
+
+    @Test func theSecondDetailLineSaysWhatItNeedsFirst() {
+        #expect(RecipesRoomBoard.detail(shorts: ["feta"], lows: ["milk"], uses: []) == "needs feta")
+        #expect(RecipesRoomBoard.detail(shorts: ["feta", "oil"], lows: [], uses: []) == "needs feta and oil")
+        #expect(RecipesRoomBoard.detail(shorts: ["a", "b", "c"], lows: [], uses: []) == "needs a and 2 more")
+        #expect(RecipesRoomBoard.detail(shorts: [], lows: ["milk"], uses: ["x"]) == "milk low")
+        #expect(RecipesRoomBoard
+            .detail(shorts: [], lows: [], uses: ["a", "b", "c", "d", "e", "f"]) == "a, b and 4 more")
+    }
+
+    @Test func theFootFollowsTheFocus() {
+        #expect(RecipesRoomBoard.footWord(shorts: 0) == "Cook now")
+        #expect(RecipesRoomBoard.footWord(shorts: 1) == "Get it")
+        #expect(RecipesRoomBoard.footWord(shorts: 2) == "Get 2 things")
+        #expect(RecipesRoomBoard.getReceipt(["feta", "mascarpone"]) == "Feta and mascarpone, on To get.")
+    }
+
+    @Test func theBriefNamesTheQuickestAndWhatUsesTheLow() {
+        let rice = item("Fried rice", minutes: 20)
+        let pasta = item("Lemon pasta", minutes: 25, lows: ["lemons"])
+        let lines = RecipesRoomBoard.brief([rice, pasta])
+        #expect(lines.first == "Fried rice is the quickest, 20 min.")
+        #expect(lines.second == "Lemon pasta uses the lemons.")
+        #expect(RecipesRoomBoard.sectionLine(.ready, count: 7) == "7 you can make now, quickest first")
+    }
+}

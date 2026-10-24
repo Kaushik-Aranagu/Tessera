@@ -342,27 +342,12 @@ struct PantryRoomPage: View {
             ? PantryRoomCopy.toGetBrief(items.map(\.shown))
             : PantryRoomCopy.brief(low: items.filter(\.isLow).map(\.shown))
         return VStack(alignment: .leading, spacing: 0) {
-            briefLine(first)
-            briefLine("")
+            KitchenBriefLine(text: first)
+            KitchenBriefLine(text: "")
         }
         .padding(.horizontal, Theme.Spacing.gutter)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
-    }
-
-    private func briefLine(_ text: String) -> some View {
-        ZStack(alignment: .leading) {
-            Text(text.isEmpty ? " " : text)
-                .font(Theme.voice(size: 17))
-                .foregroundStyle(Theme.Colors.ink)
-                .lineLimit(1)
-                .id(text)
-                .transition(reduceMotion ? .identity : .modifier(active: ReceiptClip(progress: 0),
-                                                                 identity: ReceiptClip(progress: 1)))
-        }
-        .frame(maxWidth: .infinity, minHeight: 22, maxHeight: 22, alignment: .leading)
-        .clipped()
-        .animation(MotionPolicy.resolve(.easeOut(duration: 0.3), reduceMotion: reduceMotion), value: text)
     }
 
     private func sectionLine(items: [PantryRoomItem], page: Int, pages: Int) -> some View {

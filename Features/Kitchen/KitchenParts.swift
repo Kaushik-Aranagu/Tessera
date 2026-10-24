@@ -391,6 +391,31 @@ struct ReceiptClip: ViewModifier {
     }
 }
 
+// MARK: - Brief
+
+/// One brief line (22 pt, one line, no wrap): a line that changes is clipped in from the top, never faded.
+struct KitchenBriefLine: View {
+    let text: String
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    static let height: CGFloat = 22
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Text(text.isEmpty ? " " : text)
+                .font(Theme.voice(size: 17))
+                .foregroundStyle(Theme.Colors.ink)
+                .lineLimit(1)
+                .id(text)
+                .transition(reduceMotion ? .identity : .modifier(active: ReceiptClip(progress: 0),
+                                                                 identity: ReceiptClip(progress: 1)))
+        }
+        .frame(maxWidth: .infinity, minHeight: Self.height, maxHeight: Self.height, alignment: .leading)
+        .clipped()
+        .animation(MotionPolicy.resolve(.easeOut(duration: 0.3), reduceMotion: reduceMotion), value: text)
+    }
+}
+
 // MARK: - Foot
 
 /// The foot: one action word bottom-left (19 pt 600 in kitchen); Tess keeps the bottom-right corner. The left edge goes
