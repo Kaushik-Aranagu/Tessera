@@ -128,7 +128,8 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         }
         XCTAssertEqual(eggs.label, before, "A compact hold must not mutate or pin")
         // Freeze the screen point: the row itself follows the drag, so its relative coordinates are not a destination.
-        let frame = eggs.frame
+        let frame = eggs.frame.intersection(app.frame)
+        XCTAssertGreaterThan(frame.width, 160, "The gesture uses the visible row, not clipped offscreen content")
         let start = app.coordinate(withNormalizedOffset: .zero)
             .withOffset(CGVector(dx: frame.minX + frame.width * 0.2, dy: frame.midY))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 120, dy: 0)))
@@ -187,7 +188,8 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         app.buttons["Undo"].tap()
         wait(NSPredicate(format: "label == %@", before), on: eggs)
         // Freeze the screen point: the row itself follows the drag, so its relative coordinates are not a destination.
-        let frame = eggs.frame
+        let frame = eggs.frame.intersection(app.frame)
+        XCTAssertGreaterThan(frame.width, 160, "The gesture uses the visible row, not clipped offscreen content")
         let start = app.coordinate(withNormalizedOffset: .zero)
             .withOffset(CGVector(dx: frame.minX + frame.width * 0.2, dy: frame.midY))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 120, dy: 0)))
