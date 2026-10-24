@@ -155,7 +155,7 @@ struct HomeMosaicPage: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
         // A swipe that starts on the mosaic itself turns the things (the mosaic's own pages are gone).
         .simultaneousGesture(
-            DragGesture(minimumDistance: 24, coordinateSpace: .global).onEnded { value in
+            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart), coordinateSpace: .global).onEnded { value in
                 let size = HomeMosaic.moodsMosaicSize
                 let top = scrollMinY - scroll.value + coreTop
                 let mosaic = CGRect(x: pageWidth - HomeMosaic.gutter - size.width, y: top,
@@ -193,9 +193,10 @@ struct HomeMosaicPage: View {
         .onDisappear { model.homeTessLayerActive = false }
         // Sheet 203: a pull down from the top 40 pt also opens Settings.
         .simultaneousGesture(
-            DragGesture(minimumDistance: 24).onEnded { value in
-                if value.startLocation.y < 40, value.translation.height > 60,
-                   abs(value.translation.width) < value.translation.height
+            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart)).onEnded { value in
+                if value.startLocation.y < 40,
+                   GestureTuning.pull(dx: Double(value.translation.width), dy: Double(value.translation.height),
+                                      velocityY: Double(value.velocity.height)) > 0
                 {
                     link = .settings
                 }

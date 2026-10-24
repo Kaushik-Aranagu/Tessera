@@ -284,14 +284,11 @@ struct MePage: View {
         Color.clear
             .frame(width: 32)
             .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 16)
-                    .onEnded { value in
-                        if value.translation.width < -48, abs(value.translation.height) < 60 {
-                            knowsOpen = true
-                        }
-                    }
-            )
+            .pageSwipe { next in
+                if next {
+                    knowsOpen = true
+                }
+            }
             .accessibilityHidden(true)
     }
 }
