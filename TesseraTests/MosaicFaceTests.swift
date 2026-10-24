@@ -445,11 +445,11 @@ struct MosaicFaceTests {
     @MainActor @Test func theEdgeIsTheDepartureMosaicBlendInWholeDitheredTiles() {
         let size = CGSize(width: 402, height: 874)
         let engine = MosaicScreenEngine(size: size, coreTop: 480)
-        let ground: MosaicTriple = (0.98, 0.98, 0.97)
-        engine.configure(size: size, coreTop: 480, dark: false, ground: ground)
+        let ground: MosaicTriple = (0.05, 0.05, 0.06)
+        engine.configure(size: size, coreTop: 480, dark: true, ground: ground)
         engine.setWindow(columns: 88, rows: 28)
         engine.snapWindow()
-        let scene: MosaicTriple = (0.1, 0.3, 0.6)
+        let scene: MosaicTriple = (0.9, 0.5, 0.2)
         engine.settle { _, _ in scene }
         engine.step(to: 0.01)
         engine.reduceMotion = true
@@ -490,5 +490,47 @@ struct Lcg: RandomNumberGenerator {
         value = value &* 0xFF51_AFD7_ED55_8CCD
         value ^= value >> 33
         return value
+    }
+}
+
+struct MosaicGradeTests {
+    private func luma(_ colour: MosaicTriple) -> Double {
+        0.2126 * colour.red + 0.7152 * colour.green + 0.0722 * colour.blue
+    }
+
+    private func chroma(_ colour: MosaicTriple) -> Double {
+        let value = luma(colour)
+        return abs(colour.red - value) + abs(colour.green - value) + abs(colour.blue - value)
+    }
+
+    @Test func onALightPageTheBlendLiftsSaturationByAThirdAndDeepensByATenth() {
+        let scene: MosaicTriple = (0.5, 0.4, 0.3)
+        let graded = MosaicColour.graded(scene)
+        #expect(abs(chroma(graded) / (1 - MosaicColour.rimDeepen) - chroma(scene) * 1.3) < 1e-9)
+        #expect(abs(luma(graded) - luma(scene) * 0.9) < 1e-9)
+        let light: MosaicTriple = (0.98, 0.98, 0.97)
+        #expect(MosaicColour.rimGrade(scene, ground: light) == graded)
+    }
+
+    @Test func aDarkPageIsNotGraded() {
+        let scene: MosaicTriple = (0.5, 0.4, 0.3)
+        #expect(MosaicColour.rimGrade(scene, ground: (0.05, 0.05, 0.06)) == scene)
+    }
+
+    @MainActor @Test func insideTheFrameTheMosaicKeepsFullStrengthOnALightPage() throws {
+        let size = CGSize(width: 402, height: 874)
+        let engine = MosaicScreenEngine(size: size, coreTop: 480)
+        engine.reduceMotion = true
+        engine.configure(size: size, coreTop: 480, dark: false, ground: (0.98, 0.98, 0.97))
+        engine.setWindow(columns: 88, rows: 28)
+        engine.snapWindow()
+        let scene: MosaicTriple = (0.5, 0.4, 0.3)
+        engine.settle { _, _ in scene }
+        engine.step(to: 0.01)
+        let core = engine.core
+        let inside = try #require(engine.tile(column: core.left + 20, row: core.top + 14, nowColumn: nil))
+        #expect(inside.colour == scene)
+        let rim = try #require(engine.tile(column: core.left - 3, row: core.top + 14, nowColumn: nil))
+        #expect(luma(rim.colour) < luma(scene) * 1.001)
     }
 }

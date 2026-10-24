@@ -487,6 +487,7 @@ final class MosaicScreenEngine {
         if let overlay, !isRim || rimSamplesLight {
             scene = overlay(source.column, source.row, clock, scene)
         }
+        scene = isRim ? MosaicColour.rimGrade(scene, ground: ground) : scene
         if source.column == nowColumn, !reduceMotion {
             scene = MosaicColour.lightened(scene, by: sin(clock / 0.7 + Double(source.row) * 0.5) * 0.08)
         }
@@ -850,15 +851,14 @@ extension MosaicScreenEngine {
         }
     }
 
-    /// Once the sign has landed, a tile trades with the mosaic every 4 to 7 s. None under Reduce Motion.
+    /// Once the sign has landed a tile trades with the mosaic every 4 to 7 s (not under Reduce Motion).
     private func stepTrade(at time: TimeInterval) {
         guard !reduceMotion, let lend = signLend, !lend.tiles.isEmpty, time >= lend.landedAt else {
             signTrade = nil
             nextTrade = 0
             return
         }
-        let range = MosaicSignLend.tradeRange
-        func gap() -> TimeInterval {
+        let range = MosaicSignLend.tradeRange; func gap() -> TimeInterval {
             range.lowerBound + Double(random.int(1001)) / 1000 * (range.upperBound - range.lowerBound)
         }
         if let trade = signTrade, time - trade.start >= MosaicSignLend.flightSeconds {

@@ -133,3 +133,26 @@ struct MosaicFaceRig {
         }
     }
 }
+
+extension MosaicColour {
+    /// Home 236 v2.2: on a light page the mosaic's blend (outside its frame) lifts saturation by 30% and deepens by
+    /// 10%; inside its frame the mosaic keeps full strength, and on a dark page nothing changes.
+    static let rimSaturation = 1.3
+    static let rimDeepen = 0.10
+
+    static func isLightPage(_ ground: MosaicTriple) -> Bool {
+        0.2126 * ground.red + 0.7152 * ground.green + 0.0722 * ground.blue > 0.5
+    }
+
+    static func graded(_ colour: MosaicTriple) -> MosaicTriple {
+        let luma = 0.2126 * colour.red + 0.7152 * colour.green + 0.0722 * colour.blue
+        func lift(_ value: Double) -> Double {
+            min(max(luma + (value - luma) * rimSaturation, 0), 1) * (1 - rimDeepen)
+        }
+        return (lift(colour.red), lift(colour.green), lift(colour.blue))
+    }
+
+    static func rimGrade(_ colour: MosaicTriple, ground: MosaicTriple) -> MosaicTriple {
+        isLightPage(ground) ? graded(colour) : colour
+    }
+}
