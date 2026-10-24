@@ -9,6 +9,8 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
     public enum Model: String, Sendable {
         case haiku = "claude-haiku-5-5"
         case sonnet = "claude-sonnet-5-5"
+        /// Escalation only (Opus 5.5).
+        case opus = "claude-opus-5-5"
     }
 
     public static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
@@ -19,7 +21,11 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
     fileprivate let url: URL
 
     public var id: BrainID {
-        model == .haiku ? .haiku : .sonnet
+        switch model {
+        case .haiku: .haiku
+        case .sonnet: .sonnet
+        case .opus: .opus
+        }
     }
 
     /// One session for the app run: connections stay warm between calls. Ephemeral: no cookies or disk cache.
@@ -129,18 +135,29 @@ public final class ClaudeBrain: Brain, @unchecked Sendable {
             switch request.toolChoice {
             case .auto: body["tool_choice"] = ["type": "auto"]
             case .none: body["tool_choice"] = ["type": "none"]
-            // Sonnet 5.5 refuses forced tool use (a 400): auto, and the prompt names the tool.
-            case .any: body["tool_choice"] = ["type": model == .sonnet ? "auto" : "any"]
+            // Sonnet 5.5 and Opus 5.5 refuse forced tool use (a 400): auto, and the prompt names the tool.
+            case .any: body["tool_choice"] = ["type": model == .haiku ? "any" : "auto"]
             case let .tool(name):
-                body["tool_choice"] = model == .sonnet ? ["type": "auto"] : ["type": "tool", "name": name]
+                body["tool_choice"] = model == .haiku ? ["type": "tool", "name": name] : ["type": "auto"]
             }
         }
         if let effort = request.effort {
             body["output_config"] = ["effort": effort.rawValue]
         }
-        // Thinking: Haiku 5.5 may be switched off; Sonnet 5.5 refuses "disabled", and "between_tools" is its off.
-        if !request.thinking {
-            body["thinking"] = ["type": model == .sonnet ? "between_tools" : "disabled"]
+        // Thinking is adaptive and on, except for a forced tool (Haiku only: it takes "disabled" at effort high or
+        // below). Sonnet 5.5 refuses "disabled", and "between_tools" is its off; Opus 5.5 cannot switch it off at all.
+        let forced: Bool = switch request.toolChoice {
+        case .any, .tool: !request.tools.isEmpty && model == .haiku
+        default: false
+        }
+        if forced {
+            body["thinking"] = ["type": "disabled"]
+        } else if request.thinking {
+            body["thinking"] = ["type": "adaptive"]
+        } else if model == .sonnet {
+            body["thinking"] = ["type": "between_tools"]
+        } else if model == .haiku {
+            body["thinking"] = ["type": "disabled"]
         }
         let data = try JSONSerialization.data(withJSONObject: body)
         guard !raws.isEmpty, var text = String(data: data, encoding: .utf8) else { return data }
