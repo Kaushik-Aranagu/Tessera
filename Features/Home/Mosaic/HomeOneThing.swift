@@ -247,17 +247,25 @@ struct HomeOneThing: View {
     /// A swipe in any of the four directions (sheet 220): left or up goes to the next thing, right or down to the
     /// previous. The dominant axis wins; it commits past 50 pt or on a flick faster than 300 pt/s.
     private var swipe: some Gesture {
-        DragGesture(minimumDistance: 12)
+        DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
             .onChanged { _ in
                 // A drag in any direction is a swipe, not a hold: the strike retracts.
                 cancelHold()
             }
             .onEnded { value in
                 let sideways = abs(value.translation.width) >= abs(value.translation.height)
+                // A diagonal has no clear direction: the dominant axis must lead by 1.3x or the swipe is ignored.
+                let lead = sideways
+                    ? abs(value.translation.width) / max(abs(value.translation.height), 1)
+                    : abs(value.translation.height) / max(abs(value.translation.width), 1)
+                guard lead >= 1.3 else { return }
                 // `turn` reads a negative value as next: left (negative) and up (negative) are both next.
                 let across = sideways ? value.translation.width : value.translation.height
-                let speed = sideways ? abs(value.velocity.width) : abs(value.velocity.height)
-                guard abs(across) > Self.swipeDistance || (speed > 300 && abs(across) > 12) else { return }
+                let speed = (sideways ? value.velocity.width : value.velocity.height) * (across < 0 ? -1 : 1)
+                // Past the distance, or a real flick (fast and past the flick travel); a twitch or a swipe taken back
+                // at lift turns nothing.
+                guard GestureTuning.commits(distance: Double(abs(across)), velocity: Double(speed),
+                                            arm: Double(Self.swipeDistance)) else { return }
                 // The tiers' own transitions carry the animation; this only lets them run.
                 withTesseraAnimation(.linear(duration: 0.01), reduceMotion: reduceMotion) {
                     if turn(across < 0 ? -(Self.swipeDistance + 1) : Self.swipeDistance + 1) {

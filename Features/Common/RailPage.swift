@@ -1,4 +1,6 @@
+import QuartzCore
 import SwiftUI
+import TesseraCore
 
 /// The places rail (Design 118 §7 and 119 §9/§10; Kaushik, Oct 22): the template for any list with levels. PLACE is a
 /// dial on the left, SECTION a small word on the right, ROW a name with one value. The dial never travels: its places
@@ -228,6 +230,8 @@ private struct RailDial: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var turn: Double = 0
     @State private var dragStart: Double?
+    /// A tap right after the dial lets go is the finger stopping it, not a pick (gesture policy).
+    @State private var holdoff = TapHoldoff()
     @State private var ticks = 0
 
     private var calm: Bool {
@@ -302,8 +306,9 @@ private struct RailDial: View {
     }
 
     private var drag: some Gesture {
-        DragGesture(minimumDistance: 4)
+        DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
             .onChanged { value in
+                holdoff.moved(at: CACurrentMediaTime())
                 let start = dragStart ?? turn
                 dragStart = start
                 let before = Int(turn.rounded())
@@ -317,6 +322,7 @@ private struct RailDial: View {
                 }
             }
             .onEnded { value in
+                holdoff.moved(at: CACurrentMediaTime())
                 let start = dragStart ?? turn
                 dragStart = nil
                 // A flick carries on by its velocity, then rests on the nearest place.
@@ -345,7 +351,7 @@ private struct RailDial: View {
 
     /// A tap turns the dial the short way round to that place.
     private func pick(_ index: Int) {
-        guard !places.isEmpty else { return }
+        guard !places.isEmpty, holdoff.allowsTap(at: CACurrentMediaTime()) else { return }
         let count = Double(places.count)
         var delta = (Double(index) - turn).truncatingRemainder(dividingBy: count)
         if delta > count / 2 {
