@@ -119,6 +119,7 @@ struct HomeMosaicPage: View {
         .overlay(alignment: .topLeading) {
             SettingsEntry { link = .settings }
                 .padding(.leading, HomeMosaic.gutter - 8)
+                .padding(.top, Self.settingsTop)
         }
         // Sheet 212: an 80 pt clear band at the bottom for Tess's corner; everything else sits above it.
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -248,6 +249,18 @@ struct HomeMosaicPage: View {
             }
         }
     }
+
+    /// Settings sits on row 1's baseline (the date): the date row is 30 pt at Figtree 23 under a 16 pt top pad, and the
+    /// word is Figtree 16 centred in a 44 pt target, so the offset is the difference of the two baselines.
+    static let settingsTop: CGFloat = {
+        func face(_ size: CGFloat) -> UIFont {
+            UIFont(descriptor: UIFontDescriptor(fontAttributes: [.family: "Figtree"]), size: size)
+        }
+        let big = face(DepartureBoard.size), small = face(16)
+        let row = 16 + (DepartureBoard.rowHeight - big.lineHeight) / 2 + big.ascender
+        let word = (44 - small.lineHeight) / 2 + small.ascender
+        return max(row - word, 0)
+    }()
 
     private static let backShownKey = "homeMosaic.backShown"
 

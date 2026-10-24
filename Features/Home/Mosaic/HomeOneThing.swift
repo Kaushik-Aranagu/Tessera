@@ -110,6 +110,9 @@ struct HomeOneThing: View {
 
     static let height: CGFloat = 196
     static let swipeDistance: CGFloat = 50
+    static let signTop: CGFloat = 62
+    /// The sign's width plus the 12 pt that every tier's text stops short of it.
+    static let signRoom: CGFloat = 72 + 12
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -120,6 +123,9 @@ struct HomeOneThing: View {
                 Color.clear.frame(width: 72, height: 72)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { onSlot($0) }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    // Sheet 213: the sign's top sits 62 pt below the space's top, so it centres at 98 pt, and it never
+                    // moves with the pages.
+                    .padding(.top, Self.signTop)
                     .accessibilityHidden(true)
                 Text("\(index + 1) of \(things.count)")
                     .font(Theme.numeral(14, weight: .light))
@@ -130,8 +136,9 @@ struct HomeOneThing: View {
         }
         .frame(maxWidth: .infinity, minHeight: Self.height, alignment: .topLeading)
         .contentShape(Rectangle())
-        .simultaneousGesture(swipe)
-        .tesseraFeedback(.selection, trigger: turns)
+        // High priority: a swipe that starts on the space turns the page, and the page scrolls from anywhere else.
+        .highPriorityGesture(swipe)
+        .tesseraFeedback(.pageTurn, trigger: turns)
         .tesseraFeedback(.setLogged, trigger: finishes)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("One thing at a time")
@@ -156,6 +163,7 @@ struct HomeOneThing: View {
             Spacer(minLength: 0)
         }
         .padding(.top, 4)
+        .padding(.trailing, Self.signRoom)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(thing.spoken)
@@ -236,20 +244,23 @@ struct HomeOneThing: View {
 
     // MARK: Gestures
 
+    /// A swipe in any of the four directions (sheet 220): left or up goes to the next thing, right or down to the
+    /// previous. The dominant axis wins; it commits past 50 pt or on a flick faster than 300 pt/s.
     private var swipe: some Gesture {
         DragGesture(minimumDistance: 12)
-            .onChanged { value in
-                // A sideways drag is a swipe, not a hold: the strike retracts.
-                if abs(value.translation.width) > abs(value.translation.height) {
-                    cancelHold()
-                }
+            .onChanged { _ in
+                // A drag in any direction is a swipe, not a hold: the strike retracts.
+                cancelHold()
             }
             .onEnded { value in
-                let across = value.translation.width
-                guard abs(across) > Self.swipeDistance, abs(across) > abs(value.translation.height) else { return }
+                let sideways = abs(value.translation.width) >= abs(value.translation.height)
+                // `turn` reads a negative value as next: left (negative) and up (negative) are both next.
+                let across = sideways ? value.translation.width : value.translation.height
+                let speed = sideways ? abs(value.velocity.width) : abs(value.velocity.height)
+                guard abs(across) > Self.swipeDistance || (speed > 300 && abs(across) > 12) else { return }
                 // The tiers' own transitions carry the animation; this only lets them run.
                 withTesseraAnimation(.linear(duration: 0.01), reduceMotion: reduceMotion) {
-                    if turn(across) {
+                    if turn(across < 0 ? -(Self.swipeDistance + 1) : Self.swipeDistance + 1) {
                         turns += 1
                     }
                 }
