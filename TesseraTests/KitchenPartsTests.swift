@@ -221,7 +221,8 @@ struct PantryPackerTests {
     @Test func swipingContinuesASplitThenPacksOnAndStopsWhenNothingIsLeft() {
         var packer = PantryPacker(sections: sections([20, 2]))
         let first = packer.columns[0][0].count
-        #expect(packer.advance())
+        let moved = packer.advance()
+        #expect(moved)
         #expect(packer.columns[0][0].start == first)
         var moves = 0
         while packer.advance() {
@@ -230,7 +231,8 @@ struct PantryPackerTests {
             }
         }
         #expect(moves < 30)
-        #expect(packer.advance() == false)
+        let stuck = packer.advance()
+        #expect(stuck == false)
     }
 
     @Test func backGoesUpToSixSteps() {
