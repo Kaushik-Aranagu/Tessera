@@ -473,14 +473,11 @@ struct FillingLine: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 24).onEnded { drag in
-                guard drag.translation.width > 72, abs(drag.translation.width) > abs(drag.translation.height) else {
-                    return
-                }
+        .rowSwipe(.leading, arm: CGFloat(GestureTuning.armUndrawn)) { event in
+            if case .committed = event {
                 tick()
             }
-        )
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(line.name), \(moment ? value : line.line)")
         .accessibilityHint("Opens the list")

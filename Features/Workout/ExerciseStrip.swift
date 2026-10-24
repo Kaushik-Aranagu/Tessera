@@ -124,13 +124,11 @@ struct RunningOrderSheet: View {
         .padding(.bottom, 28)
         .frame(maxWidth: .infinity, alignment: .leading)
         .workoutGlass(UnevenRoundedRectangle(bottomLeadingRadius: 34, bottomTrailingRadius: 34, style: .continuous))
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 20).onEnded { drag in
-                if dragging == nil, drag.translation.height < -40 {
-                    onClose()
-                }
+        .pullGesture { down in
+            if dragging == nil, !down {
+                onClose()
             }
-        )
+        }
         .tesseraFeedback(.pickedUp, trigger: liftHaptic)
         .tesseraFeedback(.selection, trigger: slotHaptic)
         .onChange(of: destination) { _, new in

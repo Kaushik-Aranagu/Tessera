@@ -49,3 +49,20 @@ extension AppModel {
         return table
     }
 }
+
+extension AppModel {
+    /// Puts the settings with no store to read in force (quiet hours, the hour the day turns over): at launch and after
+    /// a change. Off on a throwaway store.
+    func applySettingsProcessWide() {
+        guard settingsAreReal else { return }
+        SettingsStore(engine: engine).read().applyProcessWide()
+    }
+
+    /// "Everything as before" for the mosaic: Tess picks again, beside the Review switches' own reset.
+    func resetMosaicSetting() {
+        guard settingsAreReal else { return }
+        _ = try? SettingsStore(engine: engine).resetMosaic()
+        applySettingsProcessWide()
+        touch()
+    }
+}
