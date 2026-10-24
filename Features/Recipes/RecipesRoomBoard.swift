@@ -162,9 +162,9 @@ struct RecipesRoomBoard {
             return ("Nothing is ready yet.", "")
         }
         let first = quick.minutes.map { "\(quick.shown) is the quickest, \($0) min." } ?? "\(quick.shown) is ready."
-        guard let user = ready.first(where: { !$0.lows.isEmpty && $0.id != quick.id }) ?? ready
-            .first(where: { !$0.lows.isEmpty && !$0.isPrivate }),
-            let low = user.lows.first
+        // A private recipe is never named in the brief, even by its label.
+        guard let user = ready.first(where: { !$0.lows.isEmpty && $0.id != quick.id && !$0.isPrivate }),
+              let low = user.lows.first
         else { return (first, "") }
         return (first, "\(user.shown) uses the \(low).")
     }

@@ -88,8 +88,9 @@ enum PantryRowLayout {
         if nameWidth + gap + valueWidth <= column {
             return Fit(beside: true, height: line)
         }
-        let below = large ? max(belowValue * scale, 11) : belowValue * scale
-        return Fit(beside: false, height: max(34, 22 * scale + below * 1.5 + 4))
+        // The name line (22) and the value line (12), both growing with the text; at least 11 pt value at AX1 and up.
+        let valueLine = large ? max(belowValue * scale, 11) * 1.3 : 12 * scale
+        return Fit(beside: false, height: 22 * scale + valueLine)
     }
 }
 
