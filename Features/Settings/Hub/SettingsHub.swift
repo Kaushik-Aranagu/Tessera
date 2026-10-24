@@ -48,7 +48,9 @@ struct SettingsHub: View {
                     }
                 }
                 group("Time") {
-                    quietLine
+                    if Tier1b.quietIsOn {
+                        quietLine
+                    }
                     dayTurnsLine
                 }
                 group("Home") {
@@ -184,7 +186,7 @@ struct SettingsHub: View {
     private var quietLine: some View {
         let hours = model.settingsAreReal ? SettingsStore(engine: model.engine).read().quietHours : QuietHours.standard
         return SettingsPageLine(sentence: "Quiet hours", value: hours.words,
-                                hint: "When notices wait. Timers always come through")
+                                hint: "When notices wait. Timers always come through.")
         {
             QuietHoursPage()
         }

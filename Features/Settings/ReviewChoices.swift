@@ -353,6 +353,11 @@ final class ReviewChoices {
                says: ["Off": "Backups reads as before.",
                       "On": "Backups says the last copy and its count, shows what a restore changes first, with Undo."],
                readiness: .live),
+        // Sheet 167: Settings > Quiet hours, On by default.
+        Choice(id: "quietHoursV2", name: "Quiet hours", values: ["On", "Off"], defaultValue: "On",
+               says: ["On": "Settings has a Quiet hours line: drag the two ends of the day to say when notices wait.",
+                      "Off": "No Quiet hours line; quiet stays 11 pm to 7 am."],
+               readiness: .live),
         Choice(id: "undoLogV2", name: "Undo log", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Undo stays on the line Tess says after a change.",
                       "On": "Today ends with the last change and Undo for 10 minutes; Review lists recent changes."],
@@ -395,7 +400,7 @@ final class ReviewChoices {
         ("Home and live", ["finishV2", "surfacesV2", "liveV2", "routinesDayV2", "weekThreadV2", "awayV2"]),
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
         ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
-        ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
+        ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2", "quietHoursV2"]),
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
     ]
 

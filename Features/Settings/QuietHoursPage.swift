@@ -57,45 +57,33 @@ struct QuietHoursPage: View {
             let width = geo.size.width
             let x: (Int) -> CGFloat = { CGFloat($0) / 1440 * width }
             ZStack(alignment: .topLeading) {
-                Rectangle().fill(Theme.Colors.inkTertiary).frame(width: width, height: 1).offset(y: 21)
+                Rectangle().fill(Theme.Colors.inkTertiary).frame(width: width, height: 1).offset(y: 21.5)
                 if !hours.isNone {
                     if start < end {
-                        Rectangle().fill(Theme.Colors.ink).frame(width: x(end) - x(start), height: 2)
+                        Rectangle().fill(Theme.Colors.ink).frame(width: x(end) - x(start), height: 3)
                             .offset(x: x(start), y: 20.5)
                     } else {
-                        Rectangle().fill(Theme.Colors.ink).frame(width: x(end), height: 2).offset(y: 20.5)
-                        Rectangle().fill(Theme.Colors.ink).frame(width: width - x(start), height: 2)
+                        Rectangle().fill(Theme.Colors.ink).frame(width: x(end), height: 3).offset(y: 20.5)
+                        Rectangle().fill(Theme.Colors.ink).frame(width: width - x(start), height: 3)
                             .offset(x: x(start), y: 20.5)
                     }
                 }
                 end(at: x(start), isStart: true, width: width)
                 end(at: x(end), isStart: false, width: width)
-                ForEach(Array(Self.marks.enumerated()), id: \.offset) { _, mark in
-                    Text(mark.word)
-                        .textRole(.data)
-                        .foregroundStyle(Theme.Colors.inkTertiary)
-                        .fixedSize()
-                        .position(x: min(max(x(mark.minute), 14), width - 14), y: 62)
-                }
             }
             .coordinateSpace(.named(Self.space))
         }
-        .frame(height: 76)
+        .frame(height: 44)
         .accessibilityElement(children: .contain)
     }
 
-    private static let marks: [(minute: Int, word: String)] = [
-        (0, "12 am"), (360, "6 am"), (720, "noon"), (1080, "6 pm"),
-    ]
-
-    /// One end of the quiet stretch: a thin upright bar with a 44 pt target around it.
+    /// One end of the quiet stretch: a 44 pt target on the line where its weight changes.
     private func end(at position: CGFloat, isStart: Bool, width: CGFloat) -> some View {
-        Rectangle()
-            .fill(Theme.Colors.ink)
-            .frame(width: 2, height: 28)
+        // No mark stands off the line: the end is where its weight changes. Only the 44 pt target is here.
+        Color.clear
             .frame(width: Self.handle, height: Self.handle)
             .contentShape(Rectangle())
-            .offset(x: position - Self.handle / 2, y: 7)
+            .offset(x: position - Self.handle / 2, y: 0)
             .gesture(
                 DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.space))
                     .onChanged { value in

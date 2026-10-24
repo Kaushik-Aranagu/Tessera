@@ -8,6 +8,13 @@ enum Tier1b {
     nonisolated static let backupsID = "backupsV2"
     nonisolated static let undoID = "undoLogV2"
 
+    nonisolated static let quietID = "quietHoursV2"
+
+    /// Quiet hours (167): On unless he turned it Off.
+    @MainActor static var quietIsOn: Bool {
+        ReviewChoices.shared.value(of: quietID) != "Off"
+    }
+
     @MainActor static var walledIsOn: Bool {
         ReviewChoices.shared.value(of: walledID) == "On"
     }
