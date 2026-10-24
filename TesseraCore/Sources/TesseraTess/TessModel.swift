@@ -17,6 +17,8 @@ public enum TessUse: String, Sendable, CaseIterable {
     case keyCheck
     /// Home's done job: a finished workout's two slots (board 0al).
     case lines
+    /// The latency bench (Developer mode): fixed text, no words of his.
+    case bench
 }
 
 /// One request through the routes.
