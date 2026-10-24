@@ -85,6 +85,8 @@ Rules that Kaushik and the leads set:
 | #1367 | Harness H2: PlaybookDirector, PlaybookStore, PlaybookJob | 11b2834e | #1365's branch | passed |
 | #1366 | integ/77 QA list and gestures review | 409666be | integ/77 | passed; open against integ/77 but already merged into integ/77-next (6d0f56ff) |
 
+#1368 to #1370 came after this snapshot (#1368 is the playbook lows on #1367); all three passed QA.
+
 Merge order for the stack: #1364, then #1365, then #1367. #1361 is independent.
 
 Open QA findings for the integ/77 line are in `qa/open-findings-integ77.md` and the hands-on test plan is `qa/integrated-build-test-plan.md`, both in the project folder (see section 9). Nothing installs until QA says the integrated build is clean.
@@ -95,7 +97,7 @@ Order is roughly the order Kaushik wants it.
 
 **Harness H3, Tess streaming loop (Core, `TesseraCore/Sources/TesseraTess/Harness/`).** `TessRun` (one per ask, an `AsyncStream` of waiting / words / ghost / finished / failed), a `pickRung` rule (open questions to Sonnet 5.5 with a Haiku hedge, small asks to Haiku 5.5), a fixed cache-friendly pack order, the read-only `open(handle, depth)` tool, a three-round tool loop with parallel reads and serial writes, resumable checkpoints in `tess-runs.json`, run ids on trace spans, warm-ups, conversation storage, and the `tessAsks` flag. Spec: `docs/ai/harness/h3-wiring-build.md`, Part B. It builds on #1364, #1365 and #1367. The memory and context work (M0 to M6, in `docs/ai/harness/memory-context-m0-m6.md`) follows; M0 must land before H3 merges.
 
-**Harness app wiring and the cobalt Training accent (Builder A's lane, app target).** Part A of the same spec: one harness per app run (`App/AppModel+Harness.swift`), `AppModel.director`, filling the playbook at the first foreground after 4 am, and three read-only Developer mode rows (Run latency bench, Trace, Today's playbook). Spec: `docs/ai/harness/h3-wiring-build.md`, Part A. The Training accent changes from the old crimson to cobalt (0B62AE light, 3B8CF2 dark); see sheets 226 and 227.
+**Harness app wiring and the cobalt Training accent (Builder A's lane, app target).** Part A of the same spec: one harness per app run (`App/AppModel+Harness.swift`), `AppModel.director`, filling the playbook at the first foreground after 4 am, and three read-only Developer mode rows (Run latency bench, Trace, Today's playbook). Spec: `docs/ai/harness/h3-wiring-build.md`, Part A. The Training accent moves to cobalt (0B62AE light, 3B8CF2 dark); see sheets 226 and 227. Crimson never shipped: the phone and build 77 are on C4472A, and cobalt is next.
 
 **Room landings (Design approved, then build).**
 - 226 room landings, layout first: `docs/design/room-landings-layout-226.md`. Approved by Kaushik 5:40 PM Oct 23, with reviewer fixes listed at the bottom of the sheet. Four bands per room (headline, brief, body, foot), one fine-line drawing per room, no pixel art inside rooms.
@@ -123,11 +125,13 @@ Claude calls and the walls:
 - Model choice: Haiku 5.5 and Sonnet 5.5 only, no Opus. Smallest model that fits each job. On-device first where it fits (Apple Foundation Models). No other cloud LLM.
 - Titles: `ObjectPrivacy.isPrivateTitle` is the one title check. Dentist, physio and PT titles read plain; "dr" and "dr." plus a word are walled; when unsure, wall. `SecretWords` refusal runs first in `TessRouter`. Private fixtures use lexapro and therapy.
 - The UI never claims that notes, places, health or money "never go" anywhere unless that is still true under the current policy.
+- Health, body, calendar and calorie facts never reach backups, logs or widgets. The calendar and Health mirrors, held notices, Tess's conversation and the exact "What was sent" log are in no backup copy, including the local one. Lab mode only changes what a live Claude call may carry.
 - Money has no amount on the doorway or on Home. Money undo is worded "Reversed".
 
 ## 8. Look rules
 
 - Everything visual goes through the swappable `ThemeConcept` and `Theme` tokens. Animate only through `MotionPolicy`. Liquid Glass on the navigation layer only. Reduce Motion, Low Power and Dynamic Type (through AX5) are respected; at Reduce Motion each change lands in one step.
+- Fit rule (Kaushik, 4:09 PM Oct 23): fixed layouts never wrap or shift. Use shorter words, never a smaller font or "...". No middle dots, and no cards or pills.
 - Nothing fades. Things arrive by a clip or a slide. A line keeps a fixed length and changes only colour or weight. No ticks or marks off a line. Undo lasts 10 seconds.
 - Pixel art is for the Home mosaic only, never inside a room.
 - Type: no new fonts; roughly three sizes per screen (Outfit for numbers, Figtree for words in the room sheets). Stage-coloured bolder titles, done items strike through, hairline underlines, top bar without a band at the top. Small images only where the screen is uncluttered. A recipe image is his own photo or nothing.
@@ -159,4 +163,5 @@ When you are near your own limits, write a short handoff note in `ops/rotation-h
 ## Update log
 
 - 6:05 PM PT Oct 23: first version (Ops). State and queued work as of the coordinator's 5:52 PM note.
+- 6:20 PM PT Oct 23: section 7 (health, body, calendar, calorie facts and what is in no backup), crimson never shipped, the 4:09 PM fit rule, and #1368 to #1370 noted (QA fix and lows on #1371).
 - 6:10 PM PT Oct 23: #1366 worded as open against integ/77 and merged into integ/77-next; harness specs now point to docs/ai/harness/ (one copy).
