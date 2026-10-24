@@ -74,6 +74,15 @@ struct WeatherTests {
             .scene == .clear)
     }
 
+    @Test func windComesFromTheEightPoints() {
+        let expected = [(0.0, "north"), (44, "north-east"), (90, "east"), (135, "south-east"), (180, "south"),
+                        (225, "south-west"), (270, "west"), (315, "north-west"), (359, "north"), (-45, "north-west"),
+                        (720, "north")]
+        for (degrees, word) in expected {
+            #expect(WeatherUnits.compass(degrees) == word, "\(degrees)")
+        }
+    }
+
     // MARK: Warnings
 
     @Test func warningsComeFromTheNumbers() {
@@ -96,7 +105,7 @@ struct WeatherTests {
     static let forecastJSON = """
     {"latitude":37.8,"longitude":-122.4,"utc_offset_seconds":-25200,"timezone":"America/Los_Angeles",
      "current":{"time":"2026-10-24T00:00","temperature_2m":14.2,"apparent_temperature":13.0,"weather_code":61,"is_day":0,
-                "wind_speed_10m":10.0,"wind_gusts_10m":70.0},
+                "wind_speed_10m":10.0,"wind_gusts_10m":70.0,"wind_direction_10m":268.0},
      "hourly":{"time":["2026-10-24T00:00","2026-10-24T01:00","2026-10-24T02:00"],
                "temperature_2m":[14.2,14.0,13.8],"apparent_temperature":[13.0,12.5,36.0],
                "precipitation_probability":[80,60,null],"weather_code":[61,3,0],"is_day":[0,0,0],
@@ -136,6 +145,7 @@ struct WeatherTests {
         let forecast = try await Self.source(counter).forecast(latitude: 37.77, longitude: -122.41, now: now)
         #expect(forecast.now.condition == .rain && !forecast.now.isDay && forecast.now.temperatureC == 14.2)
         #expect(forecast.now.warnings == [.windWarning])
+        #expect(forecast.now.windFrom == "west")
         #expect(forecast.hourly.count == 3 && forecast.hourly[1].condition == .overcast)
         #expect(forecast.hourly[2].precipitationChance == 0 && forecast.hourly[2].uvIndex == 0)
         #expect(forecast.daily.count == 2 && forecast.daily[0].highC == 18 && forecast.daily[1]

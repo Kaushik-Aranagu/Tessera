@@ -132,6 +132,7 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
             let is_day: Int
             let wind_speed_10m: Double
             let wind_gusts_10m: Double
+            let wind_direction_10m: Double?
         }
 
         struct Hourly: Decodable {
@@ -198,7 +199,7 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
         let now = WeatherReport.Now(
             condition: condition, isDay: response.current.is_day == 1, temperatureC: response.current.temperature_2m,
             apparentC: response.current.apparent_temperature, windKph: response.current.wind_speed_10m,
-            gustKph: response.current.wind_gusts_10m
+            gustKph: response.current.wind_gusts_10m, windFromDegrees: response.current.wind_direction_10m
         )
         let h = response.hourly
         var hours: [WeatherReport.Hour] = []

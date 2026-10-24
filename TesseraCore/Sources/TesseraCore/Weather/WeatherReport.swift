@@ -13,11 +13,19 @@ public struct WeatherReport: Equatable, Sendable {
         public var apparentC: Double
         public var windKph: Double
         public var gustKph: Double
+        /// Where the wind comes from, in degrees (0 is north, 90 east); nil when the source gave none.
+        public var windFromDegrees: Double?
         public var warnings: [WeatherWarning]
 
+        /// "west", "north-east": the air line says "from the west". Nil with no direction.
+        public var windFrom: String? {
+            windFromDegrees.map { WeatherUnits.compass($0) }
+        }
+
         public init(condition: WeatherCondition, isDay: Bool, temperatureC: Double, apparentC: Double, windKph: Double,
-                    gustKph: Double)
+                    gustKph: Double, windFromDegrees: Double? = nil)
         {
+            self.windFromDegrees = windFromDegrees
             self.condition = condition
             self.isDay = isDay
             self.temperatureC = temperatureC
@@ -120,6 +128,14 @@ public struct WeatherReport: Equatable, Sendable {
 // MARK: - Units
 
 public enum WeatherUnits {
+    /// The eight compass words for a wind direction in degrees: 0 is "north", 45 "north-east", 270 "west".
+    public static func compass(_ degrees: Double) -> String {
+        let words = ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"]
+        let wrapped = degrees.truncatingRemainder(dividingBy: 360)
+        let positive = wrapped < 0 ? wrapped + 360 : wrapped
+        return words[Int((positive / 45).rounded()) % 8]
+    }
+
     public static func fahrenheit(_ celsius: Double) -> Double {
         celsius * 9 / 5 + 32
     }
