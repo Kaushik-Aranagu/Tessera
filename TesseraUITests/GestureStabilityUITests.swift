@@ -16,8 +16,13 @@ final class GestureStabilityUITests: SimulatorOnlyTestCase {
     ]
 
     private func launch(_ link: String) -> XCUIApplication {
+        launchApp(["-review.sampleData", "On", "-demoTime", "18:10", "-openLink", link])
+    }
+
+    /// Launches with `arguments` and turns away the system permission ask if it appears.
+    private func launchApp(_ arguments: [String]) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-review.sampleData", "On", "-demoTime", "18:10", "-openLink", link]
+        app.launchArguments = arguments
         app.launch()
         let ask = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Don’t Allow"]
         if ask.waitForExistence(timeout: 6) {

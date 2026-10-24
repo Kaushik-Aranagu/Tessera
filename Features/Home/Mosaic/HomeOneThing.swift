@@ -142,6 +142,7 @@ struct HomeOneThing: View {
         .tesseraFeedback(.setLogged, trigger: finishes)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("One thing at a time")
+        .accessibilityIdentifier("homeOneThing")
         // The current thing, so VoiceOver hears it change after an adjust and a UI test can read which one is showing.
         .accessibilityValue(currentValue)
         .accessibilityAdjustableAction { direction in
