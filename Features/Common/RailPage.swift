@@ -1,3 +1,4 @@
+import QuartzCore
 import SwiftUI
 import TesseraCore
 
@@ -307,7 +308,7 @@ private struct RailDial: View {
     private var drag: some Gesture {
         DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
             .onChanged { value in
-                holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
+                holdoff.moved(at: CACurrentMediaTime())
                 let start = dragStart ?? turn
                 dragStart = start
                 let before = Int(turn.rounded())
@@ -321,7 +322,7 @@ private struct RailDial: View {
                 }
             }
             .onEnded { value in
-                holdoff.moved(at: ProcessInfo.processInfo.systemUptime)
+                holdoff.moved(at: CACurrentMediaTime())
                 let start = dragStart ?? turn
                 dragStart = nil
                 // A flick carries on by its velocity, then rests on the nearest place.
@@ -350,7 +351,7 @@ private struct RailDial: View {
 
     /// A tap turns the dial the short way round to that place.
     private func pick(_ index: Int) {
-        guard !places.isEmpty, holdoff.allowsTap(at: ProcessInfo.processInfo.systemUptime) else { return }
+        guard !places.isEmpty, holdoff.allowsTap(at: CACurrentMediaTime()) else { return }
         let count = Double(places.count)
         var delta = (Double(index) - turn).truncatingRemainder(dividingBy: count)
         if delta > count / 2 {
