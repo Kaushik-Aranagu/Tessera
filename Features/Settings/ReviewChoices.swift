@@ -359,6 +359,12 @@ final class ReviewChoices {
                says: ["Off": "Health, body, calendar, calories and money stay on this phone.",
                       "On": "Tess may give Claude those in a call from this phone. The key never leaves the Keychain."],
                needsClaude: true, readiness: .live),
+        // Harness H2: a small model fills the day's looks ahead of time (burst shapes, her palette, the open reaction).
+        // It sends no word of his. Off keeps the rules.
+        Choice(id: "tessDirectorPlaybook", name: "Tess picks her looks", values: ["Off", "On"], defaultValue: "On",
+               says: ["Off": "Her bursts, palette and reactions follow fixed rules.",
+                      "On": "Once a day Tess asks Claude to plan her looks; nothing of yours is sent."],
+               needsClaude: true, readiness: .live),
         Choice(id: "undoLogV2", name: "Undo log", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Undo stays on the line Tess says after a change.",
                       "On": "Today ends with the last change and Undo for 10 minutes; Review lists recent changes."],

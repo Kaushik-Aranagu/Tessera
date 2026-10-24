@@ -74,8 +74,8 @@ public enum BackupWords {
     /// Private notes, recipes, items and secret-word lines (which is where a weigh-in lives) are left out only of the
     /// copy for the iCloud Drive folder; the copy on the phone keeps every word behind Face ID.
     public static func notIncluded(leavingOutPrivate: Bool) -> String {
-        leavingOutPrivate ? "Not included: health, calendar, body and private things."
-            : "Not included: health and calendar."
+        leavingOutPrivate ? "Not included: health, calendar, body, private things, Tess's conversation and what lab mode sent."
+            : "Not included: health, calendar, Tess's conversation and what lab mode sent."
     }
 
     // MARK: Counts
