@@ -317,7 +317,6 @@ struct DepartureBoard: View {
                 open(li, frames.byKey[key] ?? .zero)
             } label: {
                 door.foregroundStyle(Theme.Colors.ink)
-                    .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.ink).frame(height: 1).offset(y: 5) }
                     .contentShape(.interaction, Rectangle().inset(by: -8))
             }
             .buttonStyle(.plain)
@@ -342,8 +341,6 @@ struct DepartureBoard: View {
             if seg.opens {
                 Button { taps += 1; open(li, .zero) } label: {
                     text.foregroundStyle(Theme.Colors.ink)
-                        .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.ink).frame(height: 1).offset(y: 5)
-                        }
                 }
                 .buttonStyle(.plain)
             } else {
@@ -597,7 +594,12 @@ enum CellMetrics {
             return cached
         }
         let family = isNumber ? "Outfit" : "Figtree"
-        guard !UIFont.fontNames(forFamilyName: family).isEmpty else { return nil }
+        guard !UIFont.fontNames(forFamilyName: family).isEmpty else {
+            // The fit and the fixed cells depend on these faces: a build without them must say so, loudly (a unit-test
+            // host does not load the app's fonts, so it estimates).
+            assert(FeatureFlagStore.isTestHost, "\(family) metrics not found: the board cannot be measured")
+            return nil
+        }
         let (size, weight): (CGFloat, UIFont.Weight) = switch kind {
         case .number: (DepartureBoard.size, .light)
         case .app, .sky: (DepartureBoard.size * 1.12, .bold)

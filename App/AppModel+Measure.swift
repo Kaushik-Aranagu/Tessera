@@ -50,6 +50,15 @@ extension AppModel {
         SettingsStore(engine: engine).read().applyProcessWide()
     }
 
+    /// Every write to the settings that the process-wide ones read (quiet hours, the hour the day turns over) goes
+    /// through here, so they are in force at once.
+    func updateSettings(_ change: (inout TesseraSettings) -> Void) {
+        guard settingsAreReal else { return }
+        _ = try? SettingsStore(engine: engine).update(change)
+        applySettingsProcessWide()
+        touch()
+    }
+
     /// "Everything as before" for the mosaic: Tess picks again, beside the Review switches' own reset.
     func resetMosaicSetting() {
         guard settingsAreReal else { return }
