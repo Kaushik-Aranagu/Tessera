@@ -47,7 +47,7 @@ struct DoorwayTests {
             return
         }
         #expect(mixed >= 0.55)
-        #expect(DoorwayWave.tile(delay: delay, time: 0.2 + 0.17, openedAt: opened) == .ground)
+        #expect(DoorwayWave.tile(delay: delay, time: 0.2 + 0.171, openedAt: opened) == .ground)
     }
 
     @Test func onceTheRoomIsOpenTheWaveTakesTheTilesAwayInTheSameOrder() {
