@@ -203,6 +203,7 @@ public struct TessRunStore: Sendable {
             state.words = ""
             state.toolResults = [:]
             state.askText = ""
+            state.aboutIDs = []
         }
         var runs = all(now: now).filter { $0.id != state.id }
         runs.append(state)
