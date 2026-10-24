@@ -1,4 +1,4 @@
-# Design handoff (Design lead, Oct 24, 1 AM PT)
+# Design handoff (Design lead, Oct 24, 1 AM PT; updated 4:50 PM PT with the Codex-era work)
 
 This is where design stands at the Codex handoff. The full sheet text for every item below is copied into
 `docs/handoff/design-sheets/`. Boards are claude.ai artifact pages. They are only references: the sheets are the spec.
@@ -64,8 +64,24 @@ Board: https://claude.ai/artifact/9JBnr8TytGTnKtnnyXjdik.
   - the doors list (11:39 PM);
   - the big reel headline, v4 (11:45 PM);
   - the summary plus 2-column door grid, v6 (11:52 PM: "sections and sections of lists again").
-- The Routines landing waits for the landing system.
+- The Routines landing is now the woodland (sheet 248, below).
 
+## Routines woodland 248 (`routines-woodland-248.md`): NEW, v1, awaiting his review
+Board: https://claude.ai/artifact/KZkqPY2U6VxDMBETRu3CML. Files: `design-sheets/routines-woodland-248/` (the board, the
+scene on its own, the untouched Codex prototype and screenshots).
+- It came from his Codex chat after the Claude limit ran out (2:45 to 8:35 AM PT Oct 24). He picked a living habit
+  woodland as the Routines keystone: plants are habits, they grow from sprout to tree to fruit, and wither or go bare
+  when neglected. The caretaker by the lake plants, waters and collects, 5 s at most.
+- 248 redraws everything around the scene to our rules: sentence with three big colored phrases, the woodland in the
+  Home mosaic's slot, doors on the three-place dial, an inside-a-grove focus wheel with a dimension line, and a routine
+  page with the whole life on one hairline. No tabs, pills, legend, percentage or tree icons.
+- Open: which groves (recommend Body, Mind, Home, plus Borrowed across the lake), and how withering fits the older
+  no-shame ruling (recommend soft words and Small-way protection). His verdict on 248 is owed.
+
+## Codex chat digest (`../codex-chat-oct24.md`)
+Read it for the other things he decided with Codex: Notes door pages (Folio page-curl, fixed band, areas as tags, the
+glass areas pane), the keystone idea for every app and his verdicts on three rounds of studies, and the 3 to 5 second
+effect limit. Reconcile its Notes changes with 247 v2 before building.
 ## Landings: OPEN, the main design problem
 - REJECTED:
   - `landing-system-240.md`: paragraph doors, a fine-line drawing with doors, a contents page. "Drawings are the
