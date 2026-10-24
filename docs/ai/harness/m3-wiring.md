@@ -108,6 +108,8 @@ an item's text.**
 - **AnswerCheck starts in shadow.** Wire C6 into the Door as a trace field first: record the result and the
   unsupported numbers, and don't retry. It retries one rung up only after the live runner shows false fails (a fail
   on a reply the key scores right) under 2% of replies on the big world, and none on money (test-world.md, part 3).
-- **The forget path purges the eval.** After `ForgetBelief` applies, call `MemoryEvalRecord.forget(beliefs:)` with
-  the ids of the whole chain it deleted, so no kept miss, streak or night miss outlives the belief. The file holds
+- **The forget path purges the eval.** Before `ForgetBelief` applies, take `ForgetBelief.chain(of:in:classes:)`: the
+  whole chain it deletes, every revision and every belief the night pass merged into it or it into. After it
+  applies, call `MemoryEvalRecord.forget(beliefs:)` with all of those ids, so no kept miss, streak or night miss
+  outlives any belief in the chain. The file holds
   question ids only; a kept miss is written again from the store each night, so a deleted fact can't be re-asked.

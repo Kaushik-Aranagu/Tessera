@@ -35,12 +35,12 @@ struct NightRunTests {
     }
 
     @discardableResult
-    func workout(_ start: Date, kg: Double, from routine: ObjectRecord) throws -> ObjectRecord {
+    func workout(_ start: Date, kg: Double, from routine: ObjectRecord, title: String? = nil) throws -> ObjectRecord {
         let workoutClass = try #require(classes[.workout])
         let entryClass = try #require(classes[.exerciseEntry])
         let setClass = try #require(classes[.set])
         let bench = try #require(classes[.benchPress])
-        let workout = store.create(workoutClass, title: routine.title)
+        let workout = store.create(workoutClass, title: title ?? routine.title)
         try store.setLinks("routine", on: workout, to: [routine])
         try store.set("startedAt", to: .date(start), on: workout)
         try store.set("endedAt", to: .date(start.addingTimeInterval(3600)), on: workout)
@@ -52,7 +52,7 @@ struct NightRunTests {
         return workout
     }
 
-    /// A small history: training moved from 6 am to 6:30 pm, and he told her twice that he likes rice.
+    /// A small history: training moved from 6 am to 6:30 pm, and he told her he likes rice, which she had noticed too.
     func history() throws -> (sixAM: UUID, rice: [UUID]) {
         let workoutClass = try #require(classes[.workout])
         let push = try engine.perform(CreateRoutine(title: "Push Day"), by: .system).output
@@ -65,8 +65,8 @@ struct NightRunTests {
                                                   subjectClass: workoutClass.id, evidence: [early.id],
                                                   validFrom: at(9, 1, 9)), by: .system).output
         var rice: [UUID] = []
-        for month in [3, 5] {
-            let belief = try engine.perform(RecordBelief(words: "You like rice.", key: .prefers, source: .told,
+        for (month, source) in [(3, TessBelief.Source.told), (5, .noticed)] {
+            let belief = try engine.perform(RecordBelief(words: "You like rice.", key: .prefers, source: source,
                                                          value: "{\"text\":\"rice\"}", evidence: [push.id],
                                                          validFrom: at(month, 1, 9)), by: .system).output
             rice.append(belief.id)
@@ -97,7 +97,7 @@ struct NightRunTests {
         #expect(current.value == "{\"hour\":18.5}" && current.supersedes == sixAM)
         #expect(current.words == "You usually train around 6:30 pm.")
 
-        // The two rice lines merged into the older one; the newer one is closed and is its evidence.
+        // The noticed rice line merged into the one he told; it is closed and is its evidence.
         #expect(open.filter { $0.key == .prefers }.map(\.id) == [rice[0]])
         #expect(open.first { $0.id == rice[0] }?.evidence.contains(rice[1]) == true)
 
@@ -133,6 +133,28 @@ struct NightRunTests {
         #expect(!left.contains(rice[0]) && !left.contains(rice[1]))
     }
 
+    @Test func aMergeNeverClosesWhatHeToldOrKept() throws {
+        let (sixAM, rice) = try history()
+        #expect(throws: ActionError.self) {
+            try engine.perform(MergeBelief(keep: rice[1], close: rice[0]), by: .system)
+        }
+        _ = try engine.perform(ConfirmBelief(belief: sixAM, keep: true), by: .user)
+        #expect(throws: ActionError.self) {
+            try engine.perform(MergeBelief(keep: rice[1], close: sixAM), by: .system)
+        }
+        #expect(TessBeliefStore(engine: engine).open().count == 3)
+    }
+
+    @Test func theForgetChainHoldsTheMergedBelief() async throws {
+        let (_, rice) = try history()
+        var record = NightRecord()
+        var eval = MemoryEvalRecord()
+        _ = await run.run(record: &record, eval: &eval) { _, _ in nil }
+        let kept = try #require(store.object(id: rice[0]))
+        let chain = ForgetBelief.chain(of: kept, in: store, classes: classes).map(\.id)
+        #expect(chain.contains(rice[0]) && chain.contains(rice[1]))
+    }
+
     @Test func packsRefreshOnlyWhenTheirHashMoved() async throws {
         var record = NightRecord(packHashes: ["training": "aaa", "kitchen": "bbb"])
         var eval = MemoryEvalRecord()
@@ -151,6 +173,13 @@ struct NightRunTests {
         #expect(facts.sets.map(\.weight) == [82.5])
         #expect(!facts.events.contains { $0.name.contains("rehab") })
         #expect(facts.unknowns.count == MemoryEvalFacts.unknownTopics.count)
+    }
+
+    @Test func aPrivateRoutineNeverBecomesAQuestion() throws {
+        let rehab = try engine.perform(CreateRoutine(title: "Shoulder rehab"), by: .system).output
+        try workout(at(10, 21, 18), kg: 20, from: rehab, title: "Evening session")
+        let facts = MemoryEvalFacts.from(store: store, classes: classes, calendar: calendar, now: at(10, 24, 4, 5))
+        #expect(!facts.events.contains { $0.name.contains("rehab") })
     }
 
     @Test func theRecordKeepsSixtyDaysOfSummaries() {

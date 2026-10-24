@@ -125,7 +125,7 @@ public struct NightRun {
         let steps = pass.plan(
             beliefs: TessBeliefStore(engine: engine).all(), series: series(), day: items(from: start, to: end),
             week: sunday ? items(from: weekStart, to: end) : [], notebooks: notebooks, packs: hashes,
-            agents: AgentSpec.available(under: policy), lastNight: record.lastNight
+            agents: AgentSpec.available(under: policy), lastNight: record.lastNight, policy: policy
         )
 
         var failed: [NightPass.Step] = []
@@ -305,8 +305,10 @@ public extension MemoryEvalFacts {
         }
         if let workoutClass = classes[.workout] {
             for workout in store.objects(of: workoutClass) where !workout.isDeleted && isShown(workout) {
+                // The question names the routine, so the routine must be shown too.
                 guard let day = store.value("startedAt", of: workout)?.dateValue, day < now,
-                      let routine = store.linkedObjects("routine", of: workout).first, !routine.isDeleted
+                      let routine = store.linkedObjects("routine", of: workout).first, !routine.isDeleted,
+                      isShown(routine)
                 else { continue }
                 events.append(Event(name: routine.title, verb: "do", day: day))
             }
