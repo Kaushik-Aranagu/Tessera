@@ -32,7 +32,7 @@ enum WeatherKind: String, CaseIterable, Sendable, Equatable {
         case .cloudy: "Cloudy"
         case .fog: "Fog"
         case .rain: "Rain"
-        case .heavyRain: "Downpour"
+        case .heavyRain: "Heavy"
         case .storm: "Storms"
         case .snow: "Snow"
         case .wind: "Windy"

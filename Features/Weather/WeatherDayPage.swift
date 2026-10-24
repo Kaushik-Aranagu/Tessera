@@ -29,15 +29,18 @@ struct WeatherDayPage: View {
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("weather.day.title")
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.l) {
-                    Text("\(day.high)°")
-                        .weatherNumeral(88)
-                        .foregroundStyle(day.kind.color)
-                    Text("\(day.low)°")
-                        .weatherNumeral(40)
-                        .foregroundStyle(Theme.Colors.inkTertiary)
+                    WeatherStepDown(size: 88) { size in
+                        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.l) {
+                            Text("\(day.high)°")
+                                .weatherNumeral(size)
+                                .foregroundStyle(Theme.Colors.ink)
+                            Text("\(day.low)°")
+                                .weatherNumeral(size * 40 / 88)
+                                .foregroundStyle(Theme.Colors.inkTertiary)
+                        }
+                        .lineLimit(1)
+                    }
                 }
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
                 .padding(.top, Theme.Spacing.m)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("High \(day.high), low \(day.low)")
@@ -69,10 +72,14 @@ struct WeatherDayPage: View {
         .overlay(alignment: .leading) { edgeZone }
     }
 
+    /// A little under the policy's 24 pt zone, so the first points of the back word (which starts at the gutter) stay
+    /// tappable; the swipe itself still counts a start anywhere inside the 24 pt zone.
+    private static let edgeWidth: CGFloat = 20
+
     /// The back-edge zone: a rightward swipe that starts here and goes `pageDistance` goes back.
     private var edgeZone: some View {
         Color.clear
-            .frame(width: CGFloat(GestureTuning.backEdge))
+            .frame(width: Self.edgeWidth)
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart), coordinateSpace: .global)

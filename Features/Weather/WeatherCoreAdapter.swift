@@ -23,10 +23,15 @@ enum WeatherCoreAdapter {
         Int(WeatherUnits.fahrenheit(celsius).rounded())
     }
 
+    /// The one wind rule, for now, every hour and every day: sustained wind at Core's "windy" line, or gusts at its
+    /// wind-warning line (`WeatherWarning.derive`).
+    static func isWindy(windKph: Double, gustKph: Double) -> Bool {
+        !WeatherWarning.derive(apparentC: nil, windKph: windKph, gustKph: gustKph).isEmpty
+    }
+
     static func hour(_ hour: WeatherReport.Hour) -> WeatherHour {
-        let windy = hour.windKph >= WeatherWarning.windyKph
-        return WeatherHour(time: hour.time, temperature: degrees(hour.temperatureC),
-                           kind: kind(hour.condition, windy: windy))
+        WeatherHour(time: hour.time, temperature: degrees(hour.temperatureC),
+                    kind: kind(hour.condition, windy: isWindy(windKph: hour.windKph, gustKph: hour.gustKph)))
     }
 
     /// "good", "moderate" or "poor": the US index in the room's three words.
@@ -40,15 +45,18 @@ enum WeatherCoreAdapter {
 
     static func forecast(from report: WeatherReport, calendar: Calendar = .current) -> WeatherForecast {
         let days: [WeatherDay] = report.daily.map { day in
+            let sameDay = report.hourly.filter { calendar.isDate($0.time, inSameDayAs: day.date) }
+            // A day is windy when any of its hours is, or its gusts reach a warning.
             let windy = day.warnings.contains(.windWarning)
+                || sameDay.contains { isWindy(windKph: $0.windKph, gustKph: $0.gustKph) }
             return WeatherDay(
                 date: day.date, high: degrees(day.highC), low: degrees(day.lowC),
                 kind: kind(day.condition, windy: windy), sunrise: day.sunrise, sunset: day.sunset,
-                hours: report.hourly.filter { calendar.isDate($0.time, inSameDayAs: day.date) }.map(hour)
+                hours: sameDay.map(hour)
             )
         }
         let current = report.now
-        let windy = current.warnings.contains { $0 == .windy || $0 == .windWarning }
+        let windy = isWindy(windKph: current.windKph, gustKph: current.gustKph)
         let today = report.daily.first
         let uv = today.map { Int($0.uvIndex.rounded()) } ?? Int((report.hourly.first?.uvIndex ?? 0).rounded())
         return WeatherForecast(

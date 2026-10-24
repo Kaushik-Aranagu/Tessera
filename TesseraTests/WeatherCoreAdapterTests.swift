@@ -37,4 +37,10 @@ struct WeatherCoreAdapterTests {
         #expect(forecast.air.windFrom == nil)
         #expect(forecast.days.last?.hours.isEmpty == true)
     }
+
+    @Test func oneWindRuleForNowHoursAndDays() {
+        #expect(WeatherCoreAdapter.isWindy(windKph: 32, gustKph: 40))
+        #expect(WeatherCoreAdapter.isWindy(windKph: 10, gustKph: 64))
+        #expect(!WeatherCoreAdapter.isWindy(windKph: 31, gustKph: 63))
+    }
 }

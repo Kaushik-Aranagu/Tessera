@@ -58,4 +58,33 @@ final class WeatherRoomUITests: SimulatorOnlyTestCase {
         sleep(1)
         XCTAssertLessThan(first.frame.minX, before - 100, "the columns slid three hours")
     }
+
+    func testAVerticalDragOnTheStripPagesTheHoursAndLeavesTheScrollAlone() {
+        let app = launch()
+        let strip = element(app, "weather.hours")
+        XCTAssertTrue(strip.waitForExistence(timeout: 5))
+        let temperatureTop = element(app, "weather.temperature").frame.minY
+        let first = element(app, "weather.hour.0")
+        let before = first.frame.minX
+        let from = strip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+        from.press(forDuration: 0.1, thenDragTo: strip.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.0)))
+        sleep(1)
+        XCTAssertLessThan(first.frame.minX, before - 100, "an upward drag on the strip paged the hours")
+        XCTAssertEqual(element(app, "weather.temperature").frame.minY, temperatureTop, accuracy: 1,
+                       "the room did not scroll")
+    }
+
+    func testAVerticalDragOffTheStripStillScrollsTheRoom() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "-demoTime", "10:00", "-openLink", "weather",
+                               "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"]
+        app.launch()
+        let headline = element(app, "weather.headline")
+        XCTAssertTrue(headline.waitForExistence(timeout: 30))
+        let before = element(app, "weather.temperature").frame.minY
+        let start = headline.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -200)))
+        sleep(1)
+        XCTAssertLessThan(element(app, "weather.temperature").frame.minY, before - 50, "a drag off the strip scrolled")
+    }
 }
