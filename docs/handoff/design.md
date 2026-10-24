@@ -88,7 +88,9 @@ Board: https://claude.ai/artifact/9JBnr8TytGTnKtnnyXjdik.
   study, and 6-8 more poster ideas. Board: https://claude.ai/artifact/HgDEZfib4Xw9BiafqyVydt (it may still be
   growing). If the round 3 section in `landing-living-242.md` is missing, continue round 3 from this brief.
 - Round 4 (his 1:05 AM correction: bricks packed TIGHT, as many colors as possible, packed but legible): https://claude.ai/artifact/M9JKaR55a6rRFdiBcH2sYU. Archivo condensed, justified rows that solve their own height, stacks of small words, 12 colors. The algorithm is in `landing-living-242.md`, "Round 4". This is the current direction.
-- Don't send landing build text to the builders until he picks.
+- Round 5 (capitals, stacked L/J names, mosaic-sized band, tilted packed pile): https://claude.ai/artifact/CTm3h1DfeUV3nUADP8Vf6N.
+- APPROVED Oct 24, 1:54 AM: Notes landing 246 (`notes-landing-246.md`), board https://claude.ai/artifact/1mSPKcxhvQB4pFU2tmQZkx. Quarter-screen word wall in sharpened Figtree capitals on the mosaic slot, live moments every 5 s, doors on the 3-place dial with the focused door's newest notes beside it. Rejected on the way: the spine shelf (keep the idea for another place) and plain door rows ("too basic").
+- Next: the pages behind each Notes door; then use the wall on other landings.
 
 ## Other rooms
 - Kitchen 231-234, Notes 235, Lists 237: sheets are copied. All their landings are superseded by the landing work
