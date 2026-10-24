@@ -20,7 +20,7 @@ struct PantryActionsTests {
 
     func ingredient(_ name: String) throws -> ObjectRecord {
         let made = try engine.perform(AddToPlace(name: name, place: PantryPlaces.defaultID("fridge")), by: .user)
-        return made.output
+        return made.output.ingredient
     }
 
     func receipt(_ result: ActionEngine.Result<some Any>) -> String? {
@@ -103,7 +103,7 @@ struct PantryActionsTests {
         #expect(stock.pinned(in: PantryPlaces(store: store, classes: classes).place(of: items[3])).count == 3)
         // Pins count per place: another place has its own three.
         let shelf = try #require(store.object(id: PantryPlaces.defaultID("shelf")))
-        let rice = try engine.perform(AddToPlace(name: "Rice", place: shelf.id), by: .user).output
+        let rice = try engine.perform(AddToPlace(name: "Rice", place: shelf.id), by: .user).output.ingredient
         try engine.perform(PinIngredient(item: rice.id), by: .user)
     }
 
@@ -111,12 +111,12 @@ struct PantryActionsTests {
         let fridge = PantryPlaces.defaultID("fridge")
         let added = try engine.perform(AddToPlace(name: "basil", place: fridge), by: .user)
         #expect(added.record.receipt == "Basil, added to the fridge.")
-        #expect(PantryPlaces(store: store, classes: classes).place(of: added.output)?.id == fridge)
+        #expect(PantryPlaces(store: store, classes: classes).place(of: added.output.ingredient)?.id == fridge)
         // The same name finds the same ingredient, moved.
         let shelf = PantryPlaces.defaultID("shelf")
         let again = try engine.perform(AddToPlace(name: "Basil", place: shelf), by: .user)
-        #expect(again.output.id == added.output.id)
-        #expect(again.record.receipt == "Basil, added to the shelf.")
+        #expect(again.output.ingredient.id == added.output.ingredient.id && again.output.moved)
+        #expect(again.record.receipt == "Basil, moved to the shelf." && !added.output.moved)
         #expect(throws: ActionError.self) {
             try engine.perform(AddToPlace(name: "sk-ant-api03-abcdef", place: fridge), by: .user)
         }
@@ -125,12 +125,61 @@ struct PantryActionsTests {
 
     @Test func aPrivateItemIsSaidByItsLabelInReceipts() throws {
         let fridge = PantryPlaces.defaultID("fridge")
-        let pill = try engine.perform(AddToPlace(name: "melatonin", place: fridge), by: .user).output
+        let pill = try engine.perform(AddToPlace(name: "melatonin", place: fridge), by: .user).output.ingredient
         let low = try engine.perform(SetIngredientStock(item: pill.id, level: .low), by: .user)
         #expect(low.record.receipt == "Private item, running low.")
         #expect(low.record.summary.contains("Private item") && !low.record.summary.contains("elatonin"))
         let used = try engine.perform(UseUpIngredient(item: pill.id), by: .user)
         #expect(used.record.receipt == "Private item, used up. On To get.")
+    }
+
+    @Test func gotItTicksEveryOpenRowForTheItem() throws {
+        let feta = try ingredient("Feta")
+        try engine.perform(UseUpIngredient(item: feta.id), by: .user)
+        // A second pack size of the same food on the list.
+        try engine.perform(AddGroceries(lines: ["feta 200 g"]), by: .user)
+        let rows = stock.openRows(for: feta)
+        #expect(rows.count >= 1)
+        try engine.perform(GotIngredient(item: feta.id), by: .user)
+        #expect(stock.openRows(for: feta).isEmpty)
+        for row in rows {
+            #expect(store.value("isDone", of: row) == .bool(true))
+        }
+    }
+
+    @Test func movingAnItemDropsItsPinSoNoPlaceHoldsAFourth() throws {
+        let fridge = PantryPlaces.defaultID("fridge")
+        let shelf = PantryPlaces.defaultID("shelf")
+        let items = try ["Rice", "Dal", "Pasta", "Oats"].map { name in
+            try engine.perform(AddToPlace(name: name, place: shelf), by: .user).output.ingredient
+        }
+        for item in items.prefix(3) {
+            try engine.perform(PinIngredient(item: item.id), by: .user)
+        }
+        // Rice moves to the fridge: its pin stays behind, and the shelf has room again.
+        try engine.perform(AddToPlace(name: "Rice", place: fridge), by: .user)
+        #expect(!stock.isPinned(items[0]))
+        try engine.perform(PinIngredient(item: items[3].id), by: .user)
+        // The same through the place picker.
+        try engine.perform(SetItemPlace(item: items[1].id, place: fridge), by: .user)
+        #expect(!stock.isPinned(items[1]))
+    }
+
+    @Test func theEngineClockAndCalendarDecideTheSnoozeAndThePlanDay() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "Pacific/Auckland"))
+        engine.zone = { calendar.timeZone }
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 15, hour: 21)))
+        engine.now = { now }
+        let spinach = try ingredient("Spinach")
+        try engine.perform(SnoozeIngredient(item: spinach.id), by: .user)
+        let until = try #require(store.value("snoozedUntil", of: spinach)?.dateValue)
+        #expect(calendar.component(.day, from: until) == 16 && calendar.component(.hour, from: until) == 4)
+        let shakshuka = try recipe("Shakshuka")
+        let day = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 19, hour: 1)))
+        let planned = try engine.perform(PlanRecipe(recipe: shakshuka.id, day: day), by: .user)
+        // 1 AM Monday in Auckland is before the 4 am turn: still Sunday there.
+        #expect(planned.record.receipt == "Shakshuka, planned for Sunday.")
     }
 
     func recipe(_ title: String) throws -> ObjectRecord {
@@ -156,7 +205,7 @@ struct PantryActionsTests {
         let monday = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 19, hour: 18)))
         let planned = try engine.perform(PlanRecipe(recipe: shakshuka.id, day: monday), by: .user)
         #expect(planned.record.receipt == "Shakshuka, planned for Monday.")
-        let occasion = planned.output
+        let occasion = planned.output.occasion
         #expect(store.linkedObjects("links", of: occasion).map(\.id) == [shakshuka.id])
         let again = #expect(throws: ActionError.self) {
             try engine.perform(PlanRecipe(recipe: shakshuka.id, day: monday.addingTimeInterval(3600)), by: .user)

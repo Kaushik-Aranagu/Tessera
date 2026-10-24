@@ -15,7 +15,8 @@ import GRDB
 enum PrivateWords {
     static let labels: Set<String> = [
         "Private note", "Private task", "Private item", "Private recipe", "Private memory",
-        ObjectPrivacy.noteLabel, ObjectPrivacy.taskLabel, ObjectPrivacy.memoryLabel, ObjectPrivacy.keptNoteLabel,
+        ObjectPrivacy.noteLabel, ObjectPrivacy.taskLabel, ObjectPrivacy.memoryLabel, ObjectPrivacy.mealLabel,
+        ObjectPrivacy.keptNoteLabel,
     ]
 
     /// Claude's own bookkeeping stays on the phone: the receipts (`tessCall`: what was asked, when, what it cost) and
@@ -33,6 +34,8 @@ enum PrivateWords {
         SystemCatalog.Key.event.systemKey, SystemCatalog.Key.sleepNight.systemKey,
         SystemCatalog.Key.stepsDay.systemKey, SystemCatalog.Key.restingHeartRate.systemKey,
         SystemCatalog.Key.heldNotice.systemKey,
+        // The numbers behind a meal (sheet 234): this phone only, in no copy at all.
+        SystemCatalog.Key.mealNutrition.systemKey,
     ]
 
     static func isMirror(_ record: ObjectRecord) -> Bool {
@@ -120,6 +123,9 @@ enum PrivateWords {
         }
         if isA(.task) {
             return ObjectPrivacy.taskLabel
+        }
+        if isA(.leftover) || isA(.mealEntry) {
+            return ObjectPrivacy.mealLabel
         }
         if isA(.tessMemory) {
             return ObjectPrivacy.memoryLabel

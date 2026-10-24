@@ -29,9 +29,9 @@ struct PantryPlacesTests {
         places.ensureDefaults()
         #expect(places.places().map(\.title) == ["Fridge", "Freezer", "Shelf", "Counter"])
         let fridge = try place("fridge")
-        #expect(places.sections(of: fridge) == ["Door", "Shelves", "Drawer"])
-        #expect(try places.sections(of: place("freezer")) == ["Drawers", "Ice"])
-        #expect(try places.sections(of: place("shelf")).isEmpty)
+        #expect(places.sections(of: fridge) == ["Leftovers", "Dairy and eggs", "Vegetables", "Fruit"])
+        #expect(try places.sections(of: place("freezer")) == ["Cooked", "Meat and fish", "Vegetables", "Bread"])
+        #expect(try places.sections(of: place("shelf")) == ["Dal and lentils", "Grains and pasta", "Snacks", "Spices"])
         #expect(PantryPlaces.toGet == "To get")
     }
 
@@ -73,15 +73,15 @@ struct PantryPlacesTests {
         places.ensureDefaults()
         let milk = try ingredient("milk"), peas = try ingredient("peas"), rice = try ingredient("rice")
         let fridge = try place("fridge"), freezer = try place("freezer")
-        try engine.perform(SetItemPlace(item: milk.id, place: fridge.id, section: "Door"), by: .user)
-        try engine.perform(SetItemPlace(item: peas.id, place: freezer.id, section: "Door"), by: .user)
-        #expect(places.place(of: milk)?.id == fridge.id && places.section(of: milk) == "Door")
+        try engine.perform(SetItemPlace(item: milk.id, place: fridge.id, section: "Dairy and eggs"), by: .user)
+        try engine.perform(SetItemPlace(item: peas.id, place: freezer.id, section: "Dairy and eggs"), by: .user)
+        #expect(places.place(of: milk)?.id == fridge.id && places.section(of: milk) == "Dairy and eggs")
         // A section the place does not have is dropped.
         #expect(places.place(of: peas)?.id == freezer.id && places.section(of: peas) == nil)
         #expect(places.unplaced([milk, peas, rice]).map(\.title) == ["rice"])
         #expect(places.entries().map(\.count) == [1, 1, 0, 0])
         // Moving it takes it out of the old place; nil takes it out of any.
-        try engine.perform(SetItemPlace(item: milk.id, place: freezer.id, section: "Ice"), by: .user)
+        try engine.perform(SetItemPlace(item: milk.id, place: freezer.id, section: "Meat and fish"), by: .user)
         #expect(places.ingredients(in: fridge).isEmpty && places.ingredients(in: freezer).count == 2)
         try engine.perform(SetItemPlace(item: milk.id, place: nil), by: .user)
         #expect(places.place(of: milk) == nil && places.section(of: milk) == nil)
@@ -90,29 +90,35 @@ struct PantryPlacesTests {
     @Test func aPlaceListsItsSectionsInOrderThenTheRest() throws {
         places.ensureDefaults()
         let fridge = try place("fridge")
-        for (name, section) in [("eggs", "Shelves"), ("milk", "Door"), ("butter", "Door"), ("leftovers", nil)] {
+        for (name, section) in [
+            ("eggs", "Vegetables"),
+            ("milk", "Dairy and eggs"),
+            ("butter", "Dairy and eggs"),
+            ("leftovers", nil),
+        ] {
             try engine.perform(SetItemPlace(item: ingredient(name).id, place: fridge.id, section: section), by: .user)
         }
         let groups = places.grouped(in: fridge)
-        #expect(groups.map(\.section) == ["Door", "Shelves", nil])
+        // A thing with no category goes in the last section.
+        #expect(groups.map(\.section) == ["Dairy and eggs", "Vegetables", "Fruit"])
         #expect(groups.map { $0.ingredients.map(\.title) } == [["butter", "milk"], ["eggs"], ["leftovers"]])
         // A place with no sections lists directly.
-        let shelf = try place("shelf")
-        try engine.perform(SetItemPlace(item: ingredient("rice").id, place: shelf.id), by: .user)
-        #expect(places.grouped(in: shelf).map(\.section) == [nil])
+        let garage = try engine.perform(CreatePlace(name: "Garage"), by: .user).output
+        try engine.perform(SetItemPlace(item: ingredient("rice").id, place: garage.id), by: .user)
+        #expect(places.grouped(in: garage).map(\.section) == [nil])
     }
 
     @Test func removingAPlaceUnplacesItsItemsAndUndoBringsThemBack() throws {
         places.ensureDefaults()
         let fridge = try place("fridge")
         let milk = try ingredient("milk")
-        try engine.perform(SetItemPlace(item: milk.id, place: fridge.id, section: "Door"), by: .user)
+        try engine.perform(SetItemPlace(item: milk.id, place: fridge.id, section: "Dairy and eggs"), by: .user)
         let removed = try engine.perform(RemovePlace(place: fridge.id), by: .user)
         #expect(removed.output.map(\.title) == ["milk"] && places.place(of: milk) == nil)
         #expect(places.places().map(\.title) == ["Freezer", "Shelf", "Counter"])
         #expect(places.places().map { store.number("order", of: $0) } == [0, 1, 2])
         engine.undo(removed.record)
-        #expect(places.place(of: milk)?.id == fridge.id && places.section(of: milk) == "Door")
+        #expect(places.place(of: milk)?.id == fridge.id && places.section(of: milk) == "Dairy and eggs")
         #expect(places.places().first?.title == "Fridge")
     }
 

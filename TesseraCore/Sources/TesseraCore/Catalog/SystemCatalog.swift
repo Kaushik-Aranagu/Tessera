@@ -29,6 +29,7 @@ public enum SystemCatalog {
         case tessWaiting
         case tessMemory
         case occasion
+        case leftover, mealEntry, mealNutrition
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -440,6 +441,44 @@ public enum SystemCatalog {
             FieldSpec(key: "isPrivate", name: "Stays on this phone", kind: .bool, defaultValue: .bool(false)),
             FieldSpec(key: "day", name: "Day", kind: .date),
         ]),
+        // Cooked food put away (sheet 234): how much is left, where, and when it goes. The title is the source's shown
+        // words. Reminders are the app's; the id here lets a change cancel the right one.
+        ClassSpec(key: .leftover, name: "Leftover", parent: .thing, symbol: "takeoutbag.and.cup.and.straw",
+                  colorRole: "health", fields: [
+                      FieldSpec(key: "source", name: "From", kind: .ref, target: .thing),
+                      FieldSpec(key: "madeOn", name: "Made", kind: .date),
+                      // Cooked: servings left. Outside: portion left in quarters, 1 to 4.
+                      FieldSpec(key: "servingsLeft", name: "Servings left", kind: .number),
+                      FieldSpec(key: "portionLeft", name: "Portion left", kind: .number),
+                      FieldSpec(key: "place", name: "Where", kind: .choice, defaultValue: .choice("fridge"),
+                                options: ["fridge", "freezer"]),
+                      FieldSpec(key: "throwOutOn", name: "Throw out on", kind: .date),
+                      FieldSpec(key: "reminder", name: "Remind", kind: .choice, defaultValue: .choice("morning"),
+                                options: ["morning", "dayBefore", "off"]),
+                      FieldSpec(key: "notificationId", name: "Notification", kind: .text),
+                  ]),
+        // One thing eaten: op-logged and backed up. A private title is stored as the words it is shown by.
+        ClassSpec(key: .mealEntry, name: "Meal", parent: .thing, symbol: "fork.knife.circle", colorRole: "health",
+                  fields: [
+                      FieldSpec(key: "when", name: "When", kind: .date),
+                      FieldSpec(key: "source", name: "Source", kind: .choice, defaultValue: .choice("cooked"),
+                                options: ["cooked", "outside"]),
+                      FieldSpec(key: "portionEaten", name: "Eaten", kind: .number),
+                      FieldSpec(key: "leftover", name: "Leftover", kind: .ref, target: .leftover),
+                      FieldSpec(key: "estimateSource", name: "Estimate", kind: .choice,
+                                options: ["device", "typed", "claude"]),
+                      // The sent-log row of the Claude call that made the estimate.
+                      FieldSpec(key: "sentLogId", name: "Sent row", kind: .text),
+                  ]),
+        // The numbers behind a meal: on this phone only, in no op, backup, log, widget, notice or Live Activity.
+        ClassSpec(key: .mealNutrition, name: "Meal Nutrition", parent: .thing, symbol: "flame", colorRole: "health",
+                  fields: [
+                      FieldSpec(key: "entryId", name: "Meal", kind: .text),
+                      FieldSpec(key: "cal", name: "Calories", kind: .number),
+                      FieldSpec(key: "proteinG", name: "Protein", kind: .number, unit: "g"),
+                      FieldSpec(key: "carbsG", name: "Carbs", kind: .number, unit: "g"),
+                      FieldSpec(key: "fatG", name: "Fat", kind: .number, unit: "g"),
+                  ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
         ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning"),
         ClassSpec(key: .listItem, name: "List Item", parent: .thing, symbol: "circle", colorRole: "planning",

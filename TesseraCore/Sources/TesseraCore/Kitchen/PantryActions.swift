@@ -61,12 +61,18 @@ public struct PantryStock {
             .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
     }
 
-    /// The open "To get" row for an ingredient, if one is on the list.
-    public func openRow(for ingredient: ObjectRecord) -> ObjectRecord? {
+    /// Every open "To get" row for an ingredient (the same food can be on the list more than once: two pack sizes).
+    public func openRows(for ingredient: ObjectRecord) -> [ObjectRecord] {
         let groceries = Groceries(store: store, classes: classes)
-        return groceries.list?.orderedChildren.first {
-            store.value("isDone", of: $0) != .bool(true) && groceries.ingredient(of: $0)?.id == ingredient.id
-        }
+        return groceries.list?.orderedChildren.filter {
+            !$0.isDeleted && store.value("isDone", of: $0) != .bool(true)
+                && groceries.ingredient(of: $0)?.id == ingredient.id
+        } ?? []
+    }
+
+    /// The first open "To get" row for an ingredient, if one is on the list.
+    public func openRow(for ingredient: ObjectRecord) -> ObjectRecord? {
+        openRows(for: ingredient).first
     }
 
     /// "Eggs": the name as any surface outside the room says it ("Private item" for a walled one), capitalised.
@@ -125,7 +131,7 @@ public struct SetIngredientStock: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let ingredient = try transaction.object(item, is: .ingredient)
-        try Self.set(level, on: ingredient, at: time ?? .now, in: &transaction)
+        try Self.set(level, on: ingredient, at: time ?? transaction.now, in: &transaction)
     }
 
     @MainActor static func set(_ level: PantryStock.Level, on ingredient: ObjectRecord, at time: Date,
@@ -167,11 +173,11 @@ public struct UseUpIngredient: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let ingredient = try transaction.object(item, is: .ingredient)
-        try SetIngredientStock.set(.out, on: ingredient, at: time ?? .now, in: &transaction)
+        try SetIngredientStock.set(.out, on: ingredient, at: time ?? transaction.now, in: &transaction)
         // The wall AddGroceries applies: a walled name still goes on, said as "Private item".
         let share = GroceryShare(recipe: nil, amount: nil, unit: nil, packSize: nil)
         try transaction.addGroceryShare(share, ingredient: ingredient, text: ingredient.title)
-        try transaction.refreshShopLine(at: time ?? .now)
+        try transaction.refreshShopLine(at: time ?? transaction.now)
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -205,8 +211,9 @@ public struct GotIngredient: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let ingredient = try transaction.object(item, is: .ingredient)
-        let when = time ?? .now
-        if let row = PantryStock(store: transaction.store, classes: transaction.classes).openRow(for: ingredient) {
+        let when = time ?? transaction.now
+        // Every open row for it: got it means all of it, however many packs were on the list.
+        for row in PantryStock(store: transaction.store, classes: transaction.classes).openRows(for: ingredient) {
             try transaction.set("isDone", to: .bool(true), on: row)
             try transaction.set("checkedAt", to: .date(when), on: row)
             try transaction.refreshShopLine(for: row, at: when)
@@ -251,7 +258,8 @@ public struct SnoozeIngredient: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let ingredient = try transaction.object(item, is: .ingredient)
-        try transaction.set("snoozedUntil", to: .date(Self.until(time ?? .now)), on: ingredient)
+        let until = Self.until(time ?? transaction.now, calendar: transaction.calendar)
+        try transaction.set("snoozedUntil", to: .date(until), on: ingredient)
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -307,7 +315,14 @@ public struct PinIngredient: EngineAction {
     }
 }
 
-/// Adds a thing to a place by name: the ingredient (made if it is new) lives in the place, in with nothing yet said.
+/// What `AddToPlace` did: the ingredient, and whether it was already in the Pantry (so it moved).
+public struct AddedToPlace {
+    public let ingredient: ObjectRecord
+    public let moved: Bool
+}
+
+/// Adds a thing to a place by name: the ingredient (made if it is new) lives in the place. A thing that is already in
+/// the Pantry moves, and a pin does not follow it (it is unpinned, so the new place's three are never exceeded).
 public struct AddToPlace: EngineAction {
     public static let descriptor = ActionDescriptor(
         name: "addToPlace", summary: "Add a thing to a place",
@@ -326,7 +341,7 @@ public struct AddToPlace: EngineAction {
         self.section = section
     }
 
-    public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
+    public func apply(_ transaction: inout Transaction) throws -> AddedToPlace {
         let target = try transaction.object(place, is: .place)
         // The wall every typed name passes: a price comes off, a secret or a key writes nothing.
         guard let kept = AddGroceries.kept([name], store: transaction.store).first,
@@ -334,21 +349,29 @@ public struct AddToPlace: EngineAction {
         else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: PantryRefusal.wontDo)
         }
+        let existing = IngredientBook(store: transaction.store, classes: transaction.classes).find(line.name)
         let ingredient = try transaction.ingredient(named: line.name)
+        let places = PantryPlaces(store: transaction.store, classes: transaction.classes)
+        let before = places.place(of: ingredient)
+        if before?.id != target.id, PantryStock(store: transaction.store, classes: transaction.classes)
+            .isPinned(ingredient)
+        {
+            try transaction.set("pinned", to: .bool(false), on: ingredient)
+        }
         try transaction.setLinks("place", on: ingredient, to: [target])
-        let words = PantryPlaces(store: transaction.store, classes: transaction.classes).sections(of: target)
+        let words = places.sections(of: target)
         try transaction.set("section", to: section.flatMap { words.contains($0) ? $0 : nil }.map(FieldValue.text),
                             on: ingredient)
-        return ingredient
+        return AddedToPlace(ingredient: ingredient, moved: existing != nil && before != nil)
     }
 
     public func summary(in store: ObjectStore) -> String {
         "Added a thing to \(store.object(id: place).map { PantryPlaces.shown($0, in: store) } ?? "a place")"
     }
 
-    public func receipt(in store: ObjectStore, output ingredient: ObjectRecord) -> String? {
-        let phrase = PantryStock.placePhrase(of: ingredient, in: store) ?? "the Pantry"
-        return "\(PantryStock.said(ingredient, in: store)), added to \(phrase)."
+    public func receipt(in store: ObjectStore, output: AddedToPlace) -> String? {
+        let phrase = PantryStock.placePhrase(of: output.ingredient, in: store) ?? "the Pantry"
+        return "\(PantryStock.said(output.ingredient, in: store)), \(output.moved ? "moved" : "added") to \(phrase)."
     }
 
     public func receipt(in _: ObjectStore) -> String? {
@@ -398,8 +421,14 @@ public struct PinRecipe: EngineAction {
     }
 }
 
+/// What `PlanRecipe` made: the occasion, and the weekday word the receipt says (read in the engine's calendar).
+public struct PlannedRecipe {
+    public let occasion: ObjectRecord
+    public let weekday: String
+}
+
 /// Plans a recipe for a day, as an occasion (title the recipe, one day long, linking it). A recipe already planned
-/// that day is refused, not doubled.
+/// that day is refused, not doubled. The day is read in the engine's calendar, not the device's.
 public struct PlanRecipe: EngineAction {
     public static let descriptor = ActionDescriptor(
         name: "planRecipe", summary: "Plan a recipe for a day",
@@ -416,39 +445,45 @@ public struct PlanRecipe: EngineAction {
     }
 
     /// The occasion that already plans this recipe that day, if one does.
-    @MainActor static func existing(recipe: ObjectRecord, day: Date, store: ObjectStore,
+    @MainActor static func existing(recipe: ObjectRecord, day: Date, calendar: Calendar, store: ObjectStore,
                                     classes: [SystemCatalog.Key: ClassDef]) -> ObjectRecord?
     {
         guard let occasionClass = classes[.occasion] else { return nil }
-        let tessera = TesseraDay(calendar: .current)
+        let tessera = TesseraDay(calendar: calendar)
         return store.objects(of: occasionClass).first { occasion in
             !occasion.isDeleted && store.linkedObjects("links", of: occasion).contains { $0.id == recipe.id }
                 && (store.value("start", of: occasion)?.dateValue).map { tessera.isSameDay($0, day) } == true
         }
     }
 
-    public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
+    public func apply(_ transaction: inout Transaction) throws -> PlannedRecipe {
         let target = try transaction.object(recipe, is: .recipe)
-        guard Self.existing(recipe: target, day: day, store: transaction.store, classes: transaction.classes) == nil
+        guard Self.existing(recipe: target, day: day, calendar: transaction.calendar, store: transaction.store,
+                            classes: transaction.classes) == nil
         else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: PantryRefusal.alreadyPlanned)
         }
-        let tessera = TesseraDay(calendar: .current)
+        let tessera = TesseraDay(calendar: transaction.calendar)
         let occasion = try transaction.create(transaction.classDef(.occasion),
                                               title: PantryPlaces.shown(target, in: transaction.store))
         try transaction.set("start", to: .date(tessera.start(of: day)), on: occasion)
         try transaction.set("end", to: .date(tessera.end(of: day)), on: occasion)
         try transaction.setLinks("links", on: occasion, to: [target])
-        return occasion
+        return PlannedRecipe(occasion: occasion,
+                             weekday: TesseraDay.weekdayName(of: tessera.start(of: day) + 3600,
+                                                             calendar: transaction.calendar))
     }
 
     public func summary(in store: ObjectStore) -> String {
         "Planned \(store.object(id: recipe).map { PantryPlaces.shown($0, in: store) } ?? "a recipe")"
     }
 
-    public func receipt(in store: ObjectStore) -> String? {
+    public func receipt(in store: ObjectStore, output: PlannedRecipe) -> String? {
         guard let object = store.object(id: recipe) else { return nil }
-        let weekday = TesseraDay.weekdayName(of: day, calendar: .current)
-        return "\(PantryPlaces.shown(object, in: store)), planned for \(weekday)."
+        return "\(PantryPlaces.shown(object, in: store)), planned for \(output.weekday)."
+    }
+
+    public func receipt(in _: ObjectStore) -> String? {
+        nil
     }
 }

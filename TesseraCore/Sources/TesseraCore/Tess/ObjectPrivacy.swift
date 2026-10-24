@@ -9,6 +9,7 @@ public enum ObjectPrivacy {
     public static let noteLabel = SecretWords.title
     public static let taskLabel = "Private task"
     public static let memoryLabel = "Private memory"
+    public static let mealLabel = "Private meal"
     /// A recipe has no flag on master; the title rule decides (kitchen-week-one-private-filter PF4, gap hunt G21).
     public static let recipeLabel = "Private recipe"
     /// What a spend reads everywhere but its own page and the Month page (Money amendment 2).
@@ -55,6 +56,9 @@ public enum ObjectPrivacy {
             let body = store.value("body", of: object)?.stringValue ?? ""
             return flagged || object.title == noteLabel || isPrivateText(object.title) || isPrivateText(body)
                 ? noteLabel : nil
+        }
+        if isA(.leftover) || isA(.mealEntry) {
+            return flagged || isPrivateText(object.title) ? mealLabel : nil
         }
         if isA(.tessMemory) {
             let rule = store.value("rule", of: object)?.stringValue ?? ""

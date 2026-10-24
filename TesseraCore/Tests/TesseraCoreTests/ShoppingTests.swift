@@ -164,10 +164,10 @@ struct FinishShopPutAwayTests {
         try startedShop()
         let before = engine.history(limit: 500).count
         let done = try engine.perform(
-            FinishShop(putAway: [ShopPutAway(item: milk.id, place: fridge.id, section: "Door")]), by: .user
+            FinishShop(putAway: [ShopPutAway(item: milk.id, place: fridge.id, section: "Dairy and eggs")]), by: .user
         )
         #expect(engine.history(limit: 500).count == before + 1)
-        #expect(places.place(of: milk)?.id == fridge.id && places.section(of: milk) == "Door")
+        #expect(places.place(of: milk)?.id == fridge.id && places.section(of: milk) == "Dairy and eggs")
         #expect(ProcessTable(engine: engine).running() == nil)
         engine.undo(done.record)
         #expect(places.place(of: milk) == nil)

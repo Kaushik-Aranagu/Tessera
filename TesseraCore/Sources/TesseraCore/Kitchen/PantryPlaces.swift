@@ -13,11 +13,19 @@ public struct PantryPlaces {
     /// The places seeded the first time, in order, with their sections (item 118 §2). Stable ids: removing one
     /// leaves its tombstone, so it is never put back.
     public static let defaults: [(key: String, name: String, sections: [String])] = [
-        ("fridge", "Fridge", ["Door", "Shelves", "Drawer"]),
-        ("freezer", "Freezer", ["Drawers", "Ice"]),
-        ("shelf", "Shelf", []),
-        ("counter", "Counter", []),
+        ("fridge", "Fridge", ["Leftovers", "Dairy and eggs", "Vegetables", "Fruit"]),
+        ("freezer", "Freezer", ["Cooked", "Meat and fish", "Vegetables", "Bread"]),
+        ("shelf", "Shelf", ["Dal and lentils", "Grains and pasta", "Snacks", "Spices"]),
+        ("counter", "Counter", ["Fruit", "Vegetables"]),
     ]
+
+    /// What the first version seeded (item 118): a place still holding exactly these gets the categories above (sheet 234).
+    static let firstSections: [String: [String]] = [
+        "fridge": ["Door", "Shelves", "Drawer"], "freezer": ["Drawers", "Ice"], "shelf": [], "counter": [],
+    ]
+
+    /// The categories "To get" shows (sheet 234): items added for a recipe, and items for the next shop.
+    public static let toGetSections = ["For a recipe", "Next shop"]
 
     public static func defaultID(_ key: String) -> UUID {
         SystemCatalog.stableID("place.\(key)")
@@ -67,7 +75,23 @@ public struct PantryPlaces {
             let object = store.create(placeClass, title: entry.name, id: Self.defaultID(entry.key))
             try? store.set("order", to: .number(Double(index)), on: object)
             try? store.set("sections", to: .text(entry.sections.joined(separator: ",")), on: object)
+        adoptCategories()
+    }
+    }
+
+    /// Gives a default place the sheet-234 categories when it still has the ones the first version seeded (or none).
+    /// Words he changed himself are never touched. Idempotent.
+    @discardableResult
+    public func adoptCategories() -> Int {
+        var changed = 0
+        for entry in Self.defaults {
+            guard let place = store.object(id: Self.defaultID(entry.key)), !place.isDeleted else { continue }
+            let current = sections(of: place)
+            guard current != entry.sections, current == Self.firstSections[entry.key] else { continue }
+            try? store.set("sections", to: .text(entry.sections.joined(separator: ",")), on: place)
+            changed += 1
         }
+        return changed
     }
 
     /// His places in order (not "To get"), live ones only.
@@ -128,15 +152,14 @@ public struct PantryPlaces {
     public func grouped(in place: ObjectRecord) -> [(section: String?, label: String?, ingredients: [ObjectRecord])] {
         let items = ingredients(in: place)
         let words = sections(of: place)
-        var groups: [(section: String?, label: String?, ingredients: [ObjectRecord])] = words.compactMap { word in
-            let inside = items.filter { section(of: $0) == word }
+        // A thing with no category goes in the last section (sheet 234); a place with none lists directly.
+        guard let last = words.last else {
+            return items.isEmpty ? [] : [(nil, nil, items)]
+        }
+        return words.compactMap { word in
+            let inside = items.filter { section(of: $0) == word || (word == last && section(of: $0) == nil) }
             return inside.isEmpty ? nil : (word, shownSection(word, in: place), inside)
         }
-        let loose = items.filter { section(of: $0) == nil }
-        if !loose.isEmpty {
-            groups.append((nil, nil, loose))
-        }
-        return groups
     }
 
     /// Ingredients with no place yet: the ones that ask once.
@@ -355,6 +378,11 @@ public struct SetItemPlace: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let ingredient = try transaction.object(item, is: .ingredient)
+        // A pin belongs to its place: moving the item drops it, so no place ever holds a fourth.
+        let current = PantryPlaces(store: transaction.store, classes: transaction.classes).place(of: ingredient)
+        if current?.id != place, transaction.store.value("pinned", of: ingredient) == .bool(true) {
+            try transaction.set("pinned", to: .bool(false), on: ingredient)
+        }
         guard let place else {
             try transaction.setLinks("place", on: ingredient, to: [])
             try transaction.set("section", to: nil, on: ingredient)
