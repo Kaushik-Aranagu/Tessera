@@ -39,7 +39,8 @@ public struct BudgetRow: Codable, Sendable, Equatable {
     }
 
     /// The most the tuner may grow a section to on its own (faults and misses): twice the shipped start. Only the
-    /// weekly sweep, which measured a bigger setting scoring best, may set a start above it.
+    /// weekly sweep, which measured a bigger setting scoring best, may set a start above it. A section shipped at 0
+    /// has a ceiling of 0, so it never grows on its own.
     public static func ceiling(_ section: ContextSection, model: BrainID) -> Int {
         defaults(for: model).start(section) * 2
     }

@@ -121,6 +121,7 @@ public struct BudgetTuner: Sendable {
     }
 
     /// Half again, at least 1,000 tokens, never past `ceiling` (and never down, if a sweep already set it higher).
+    /// A section that ships with a start of 0 never grows: its ceiling is twice 0. Give it a start to let it grow.
     static func grow(_ start: Int, ceiling: Int) -> Int {
         max(start, min(ceiling, max(1000, Int((Double(start) * growth).rounded()))))
     }

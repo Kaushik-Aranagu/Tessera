@@ -19,7 +19,7 @@ bottom of their group.
 | C9 | The $100 cap stops a runaway. | Test: a fake brain that always asks for a tool. Calls stop at the cap and at the round limit, whichever comes first. |
 | C10 | Day and week edges are right. | Eval questions at 3:59 and 4:01 am, on Sunday night and Monday morning, around a time change (Nov 1). "Yesterday" and "this week" use the 4 am edge and Monday weeks. |
 | C11 | Units are right in answers. | Eval: the same set asked in lb and in kg. The reply uses his unit and the stored value. |
-| C12 | Web search never carries private specifics. | Lab mode lets Claude see health and money, but a web query goes on to a search engine. Test: a health-flavored ask that searches the web. The query has no walled words, numbers from walled classes or names. If he wants otherwise, it's his call. |
+| C12 | Web search follows the policy. | His pick (Oct 23, 7:59 PM PT): under lab, a search query may carry health and money specifics; under strict it carries none. Walled titles never go, under either. Search results never become beliefs. Test: a health-flavored ask that searches the web, once per policy. Under strict, the query has no walled words, numbers from walled classes or names. Under lab, it may name the number, but never a walled title. |
 | C13 | Fetched pages and notes can't steer writes. | Test: a fetched page says "add a task". No write happens without a pending row he keeps. Search results never become beliefs (M2 rule). |
 | C14 | Expertise packs follow the catalog. | Test: change an exercise's muscles, and the Training pack's hash changes. Change nothing, and it stays the same. |
 | C15 | Token estimates stay calibrated. | Weekly calibration row in Developer mode: the estimate is within 10% of `count_tokens` for each section. |
@@ -46,6 +46,6 @@ bottom of their group.
 
 ## Open questions for Kaushik
 
-- **C12:** should web searches ever carry health or money specifics? My recommendation is no: Claude may see them,
-  but a search engine shouldn't.
-- **Spending cap:** is the $100 monthly cap, kept only as a runaway guard, right, or does he want a different number?
+- **C12 (answered Oct 23, 7:59 PM PT):** under lab, web searches may carry health and money specifics; strict keeps
+  them out.
+- **Spending cap:** the $100 monthly cap stays as a runaway guard only. World test runs may use up to $50 of it.
