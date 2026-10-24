@@ -175,6 +175,16 @@ struct PantryPackerTests {
         #expect(packer.columns[1].map(\.section) == [1, 2])
     }
 
+    @Test func twoSectionsAlwaysTakeBothColumns() {
+        // Both would fit one column, but two sections take two columns.
+        let packer = PantryPacker(sections: sections([1, 1]))
+        #expect(packer.columns[0].map(\.section) == [0])
+        #expect(packer.columns[1].map(\.section) == [1])
+        // One column at large type stacks as far as it fits.
+        let single = PantryPacker(sections: sections([1, 1]), columnCount: 1)
+        #expect(single.columns.count == 1 && single.columns[0].map(\.section) == [0, 1])
+    }
+
     @Test func aSectionTooBigForAColumnSplitsWithAMoreRow() {
         // 26 + 10 x 44 is far past 232: three rows fit beside the header and the "N more" row.
         let packer = PantryPacker(sections: sections([10]))

@@ -317,7 +317,6 @@ struct DepartureBoard: View {
                 open(li, frames.byKey[key] ?? .zero)
             } label: {
                 door.foregroundStyle(Theme.Colors.ink)
-                    .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.ink).frame(height: 1).offset(y: 5) }
                     .contentShape(.interaction, Rectangle().inset(by: -8))
             }
             .buttonStyle(.plain)
@@ -342,8 +341,6 @@ struct DepartureBoard: View {
             if seg.opens {
                 Button { taps += 1; open(li, .zero) } label: {
                     text.foregroundStyle(Theme.Colors.ink)
-                        .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.ink).frame(height: 1).offset(y: 5)
-                        }
                 }
                 .buttonStyle(.plain)
             } else {

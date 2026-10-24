@@ -18,6 +18,7 @@ protocol PantryActing: AnyObject {
     func notNow(_ ingredient: ObjectRecord, name: String) -> KitchenOutcome
     func pin(_ ingredient: ObjectRecord, on: Bool, name: String) -> KitchenOutcome
     func add(_ name: String, to place: UUID, placeName: String) -> KitchenOutcome
+    func checkOff(_ line: ListContents.Item, name: String) -> KitchenOutcome
 }
 
 /// Core's Kitchen engine actions (core/kitchen-actions). Each runs as one op with one Undo. The words are the room's
@@ -83,6 +84,10 @@ final class PantryEngineActions: PantryActing {
 
     func pin(_ ingredient: ObjectRecord, on: Bool, name: String) -> KitchenOutcome {
         run(PinIngredient(item: ingredient.id, pinned: on), receipt: "\(name), \(on ? "pinned" : "unpinned").")
+    }
+
+    func checkOff(_ line: ListContents.Item, name: String) -> KitchenOutcome {
+        run(CheckListItem(item: line.id, time: AppClock.now), receipt: "\(name), got it.")
     }
 
     func add(_ name: String, to place: UUID, placeName: String) -> KitchenOutcome {

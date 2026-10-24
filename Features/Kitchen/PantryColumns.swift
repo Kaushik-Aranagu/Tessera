@@ -181,21 +181,30 @@ struct PantryColumnsView: View {
                    value: blocks.map { "\($0.section)-\($0.start)" })
     }
 
-    private func blockView(_ block: PantryPacker.Block, blockIndex: Int, column: Int, packer: PantryPacker) -> some View {
+    private func blockView(_ block: PantryPacker.Block, blockIndex: Int, column: Int,
+                           packer: PantryPacker) -> some View
+    {
         let group = groups[block.section]
         let rows = Array(group.items[block.start ..< min(block.start + block.count, group.items.count)])
         return VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(group.title)
-                    .font(Theme.voice(size: 15).weight(.semibold))
-                    .foregroundStyle(Theme.Colors.Accent.kitchenText)
-                    .lineLimit(1)
-                Spacer(minLength: 4)
-                Text("\(group.items.count)")
-                    .font(Theme.numeral(15, weight: .light))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
+            // The name in small caps in slate, a hairline under it, the count at the right (wine when something in the
+            // section needs attention).
+            VStack(spacing: 0) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(group.title)
+                        .font(Theme.voice(size: 16).weight(.semibold).smallCaps())
+                        .tracking(0.06 * 16)
+                        .foregroundStyle(Theme.Colors.Accent.kitchenSection)
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text("\(group.items.count)")
+                        .font(Theme.numeral(15, weight: .light))
+                        .foregroundStyle(PantrySectionMap.urgent(group) > 0 ? Theme.Colors.Accent.kitchenWarn
+                            : Theme.Colors.inkSecondary)
+                }
+                .frame(height: PantryPacker.header - 1, alignment: .bottom)
+                Rectangle().fill(Theme.Colors.Accent.kitchenSection.opacity(0.5)).frame(height: 1)
             }
-            .frame(height: PantryPacker.header, alignment: .bottom)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(packer.spokenHeader(block))
             .accessibilityAction(named: "Next") { step(forward: true) }
@@ -225,7 +234,7 @@ struct PantryColumnsView: View {
             Group {
                 if item.isLow {
                     Text("low").font(Theme.voice(size: valueSize).weight(.semibold))
-                        .foregroundStyle(Theme.Colors.Accent.kitchenText)
+                        .foregroundStyle(Theme.Colors.Accent.kitchenWarn)
                 } else if let amount = item.amount {
                     Text(amount).font(Theme.voice(size: valueSize)).foregroundStyle(Theme.Colors.inkSecondary)
                 } else {

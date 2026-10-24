@@ -20,6 +20,8 @@ struct PantryRoomItem: Identifiable, Equatable {
     /// A quantity on To get, or nothing.
     let amount: String?
     let source: Source
+    /// Where it is bought; the section it sits in comes from this until Core's categories land.
+    var aisle: Aisle?
 
     static func == (lhs: PantryRoomItem, rhs: PantryRoomItem) -> Bool {
         lhs.id == rhs.id && lhs.isLow == rhs.isLow && lhs.isPinned == rhs.isPinned && lhs.name == rhs.name
@@ -84,60 +86,42 @@ enum PantryRoomCopy {
     }
 }
 
-/// Pantry (sheet 232): the place dial over To get, Fridge, Freezer, Shelf and Counter, two brief lines, a section line,
-/// five 44 pt rows a page in a fixed 220 pt slot that turns vertically, and the foot "Add a thing". Swipe right is
-/// used up (got it on To get), swipe left is not now, a tap flips in and low, and a hold of 0.5 s pins (three at most).
-/// Every change is a receipt with the one Undo. A drag belongs to the region it starts in: the body never moves the
-/// dial. Behind the Kitchen rooms switch; the older pages stay under Off.
+/// Pantry (sheets 232 and 234): the place dial over To get, Fridge, Freezer, Shelf and Counter, two brief lines, and
+/// below them the place's sections packed into two columns (a Next line steps them on). Swipe right is used up (got it
+/// on To get), swipe left is not now, a tap flips in and low, and a hold of 0.5 s pins (three at most). Every change is
+/// a receipt with the one Undo. A drag belongs to the region it starts in: the body never moves the dial. Behind the
+/// Kitchen rooms switch; the older pages stay under Off.
 struct PantryRoomPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var actions: PantryEngineActions?
     @State private var receipts = KitchenReceipts()
     @State private var focus = 0
-    @State private var page = 0
     @State private var adding = false
     @State private var draft = ""
-    @State private var trip = ShopTrip()
     @FocusState private var typing: Bool
-    // The body gesture.
-    @State private var touch: Touch?
-    @State private var rowOffset: CGFloat = 0
-    @State private var pageDrag: CGFloat = 0
-    @State private var slide = 0
-
-    private struct Touch {
-        var start: CGPoint
-        var row: Int?
-        var axis: Axis?
-        var held = false
-        var holdTask: Task<Void, Never>?
-    }
-
-    private enum Axis { case horizontal, vertical }
 
     var body: some View {
         let _ = model.revision
         let board = PantryBoard(store: model.store, classes: model.classes) { GroceriesCopy.name($0) }
         let places = dialPlaces(board)
         let index = min(focus, max(places.count - 1, 0))
-        let items = items(board, place: places.indices.contains(index) ? places[index].id : PantryPlaces.toGet)
-        let pages = PantryRoomCopy.pageCount(items.count)
-        let current = min(page, pages - 1)
+        let place = places.indices.contains(index) ? places[index] : nil
+        let key = place?.id ?? PantryPlaces.toGet
+        let items = items(board, place: key)
         VStack(alignment: .leading, spacing: 0) {
             header(toGet: board.toGetCount, places: places)
             PlaceDial(places: places, focus: $focus)
                 .padding(.horizontal, Theme.Spacing.gutter)
-                .onChange(of: focus) { page = 0 }
-            briefLines(board: board, place: places.indices.contains(index) ? places[index].id : PantryPlaces.toGet,
-                       items: items)
-            sectionLine(items: items, page: current, pages: pages)
-            bodySlot(items: items, page: current, place: places.indices.contains(index) ? places[index] : nil)
+            briefLines(place: key, items: items)
+            PantryColumnsView(place: key, groups: PantrySectionMap.groups(place: place?.name ?? "", items: items),
+                              perform: { perform($0, on: $1) })
+                .padding(.horizontal, Theme.Spacing.gutter)
+                .id(key)
             Spacer(minLength: 0)
             ReceiptLine(receipts: receipts).padding(.horizontal, Theme.Spacing.gutter)
-            foot(place: places.indices.contains(index) ? places[index] : nil)
+            foot(place: place)
         }
         .background { ThemedBackground() }
         .background { EdgeSwipeBack() }
@@ -147,162 +131,6 @@ struct PantryRoomPage: View {
                 actions = PantryEngineActions(engine: model.engine) { model.touch() }
             }
         }
-    }
-
-    // MARK: Body
-
-    /// Five rows a page in a fixed 220 pt slot; the pages are stacked and turn vertically, one per gesture.
-    private func bodySlot(items: [PantryRoomItem], page: Int, place: PlaceDial.Place?) -> some View {
-        let pages = PantryRoomCopy.pageCount(items.count)
-        return ZStack(alignment: .top) {
-            VStack(spacing: 0) {
-                ForEach(0 ..< pages, id: \.self) { number in
-                    VStack(spacing: 0) {
-                        ForEach(rows(items, page: number), id: \.element.id) { row in
-                            rowView(row.element, index: row.offset, page: number == page)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                    .frame(height: PantryRoomCopy.bodyHeight, alignment: .top)
-                }
-            }
-            .offset(y: -CGFloat(page) * PantryRoomCopy.bodyHeight + pageDrag)
-            // A row that leaves slides away and the ones under it close up.
-            .animation(MotionPolicy.resolve(Theme.Motion.firm, reduceMotion: reduceMotion), value: items.map(\.id))
-        }
-        .frame(maxWidth: .infinity, minHeight: PantryRoomCopy.bodyHeight, maxHeight: PantryRoomCopy.bodyHeight,
-               alignment: .top)
-        .clipped()
-        .contentShape(Rectangle())
-        .gesture(bodyGesture(items: items, page: page, pages: pages, place: place))
-        .tesseraFeedback(.dialStep, trigger: slide)
-        .accessibilityElement(children: .contain)
-    }
-
-    private func rows(_ items: [PantryRoomItem], page: Int) -> [EnumeratedSequence<[PantryRoomItem]>.Element] {
-        let start = page * PantryRoomCopy.rowsPerPage
-        let end = min(start + PantryRoomCopy.rowsPerPage, items.count)
-        return start < end ? Array(items[start ..< end].enumerated()) : []
-    }
-
-    private func rowView(_ item: PantryRoomItem, index: Int, page: Bool) -> some View {
-        let swiping = touch?.row == index && touch?.axis == .horizontal && page
-        return HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
-            Text(KitchenText.short(item.name))
-                .font(Theme.voice(size: 17).weight(item.isPinned ? .semibold : .regular))
-                .foregroundStyle(Theme.Colors.ink)
-                .lineLimit(1)
-            Spacer(minLength: Theme.Spacing.s)
-            if item.isLow {
-                Text("low")
-                    .font(Theme.voice(size: 15).weight(.semibold))
-                    .foregroundStyle(Theme.Colors.Accent.kitchenText)
-            } else if let amount = item.amount {
-                Text(amount)
-                    .font(Theme.voice(size: 15))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-            }
-        }
-        .padding(.horizontal, Theme.Spacing.gutter)
-        .frame(height: PantryRoomCopy.rowHeight)
-        .offset(x: swiping ? rowOffset * 0.9 : 0)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(item.spoken)
-        .accessibilityAction(named: "Used up") { perform(.usedUp, on: item) }
-        .accessibilityAction(named: "Not now") { perform(.notNow, on: item) }
-        .accessibilityAction(named: item.isPinned ? "Unpin" : "Pin") { perform(.pin, on: item) }
-        .accessibilityAction(named: item.isLow ? "Back in" : "Running low") { perform(.toggle, on: item) }
-    }
-
-    private enum Move { case usedUp, notNow, pin, toggle }
-
-    private func perform(_ move: Move, on item: PantryRoomItem, place _: PlaceDial.Place? = nil) {
-        guard let actions else { return }
-        switch (move, item.source) {
-        case let (.usedUp, .toGet(line)):
-            guard let ingredient = Groceries(store: model.store, classes: model.classes).ingredient(of: line.object)
-            else { return }
-            say(actions.gotIt(ingredient, name: item.name))
-        case let (.usedUp, .stock(record)):
-            say(actions.usedUp(record, name: item.name))
-        case let (.notNow, .stock(record)):
-            say(actions.notNow(record, name: item.name))
-        case let (.pin, .stock(record)):
-            say(actions.pin(record, on: !item.isPinned, name: item.name))
-        case let (.toggle, .stock(record)):
-            say(actions.setStock(record, low: !item.isLow, name: item.name))
-        default:
-            break
-        }
-    }
-
-    // MARK: Gesture
-
-    /// One gesture for the whole body, so a drag belongs to the region it starts in: a sideways drag moves the row it
-    /// started on, a vertical one turns the page, a touch held 0.5 s without moving 3 pt pins, and a touch that goes
-    /// nowhere is a tap.
-    private func bodyGesture(items: [PantryRoomItem], page: Int, pages: Int, place: PlaceDial.Place?) -> some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                if touch == nil {
-                    let row = Int(value.location.y / PantryRoomCopy.rowHeight)
-                    var next = Touch(start: value.location, row: row)
-                    next.holdTask = Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(500))
-                        guard !Task.isCancelled, touch?.axis == nil, let index = touch?.row else { return }
-                        touch?.held = true
-                        if let item = rows(items, page: page).first(where: { $0.offset == index })?.element {
-                            perform(.pin, on: item, place: place)
-                        }
-                    }
-                    touch = next
-                    return
-                }
-                let dx = value.translation.width, dy = value.translation.height
-                if hypot(dx, dy) > 3 {
-                    touch?.holdTask?.cancel()
-                }
-                if touch?.axis == nil, hypot(dx, dy) > 10, touch?.held == false {
-                    touch?.axis = abs(dx) > abs(dy) ? .horizontal : .vertical
-                }
-                switch touch?.axis {
-                case .horizontal: rowOffset = dx
-                case .vertical: pageDrag = max(-60, min(60, dy))
-                case nil: break
-                }
-            }
-            .onEnded { value in
-                defer {
-                    touch?.holdTask?.cancel()
-                    touch = nil
-                    withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) {
-                        rowOffset = 0
-                        pageDrag = 0
-                    }
-                }
-                guard let touch, !touch.held else { return }
-                let dx = value.translation.width, dy = value.translation.height
-                switch touch.axis {
-                case .horizontal?:
-                    guard abs(dx) >= 90, let index = touch.row,
-                          let item = rows(items, page: page).first(where: { $0.offset == index })?.element
-                    else { return }
-                    perform(dx > 0 ? .usedUp : .notNow, on: item, place: place)
-                case .vertical?:
-                    let step = (dy < 0 ? 1 : -1)
-                    guard abs(dy) > 40 || abs(value.velocity.height) > 300 else { return }
-                    let target = min(max(self.page + step, 0), pages - 1)
-                    if target != self.page {
-                        withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { self.page = target }
-                        slide += 1
-                    }
-                case nil:
-                    guard let index = touch.row,
-                          let item = rows(items, page: page).first(where: { $0.offset == index })?.element
-                    else { return }
-                    perform(.toggle, on: item, place: place)
-                }
-            }
     }
 
     // MARK: Parts
@@ -337,7 +165,7 @@ struct PantryRoomPage: View {
 
     /// Two fixed lines (22 pt each), no wrap and no fade: a line that changes is clipped in from the top. The second
     /// has nothing to say until the Pantry knows what wants using up; its room stays.
-    private func briefLines(board _: PantryBoard, place: String, items: [PantryRoomItem]) -> some View {
+    private func briefLines(place: String, items: [PantryRoomItem]) -> some View {
         let first = place == PantryPlaces.toGet
             ? PantryRoomCopy.toGetBrief(items.map(\.shown))
             : PantryRoomCopy.brief(low: items.filter(\.isLow).map(\.shown))
@@ -348,20 +176,6 @@ struct PantryRoomPage: View {
         .padding(.horizontal, Theme.Spacing.gutter)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
-    }
-
-    private func sectionLine(items: [PantryRoomItem], page: Int, pages: Int) -> some View {
-        HStack {
-            Text(PantryRoomCopy.section(low: items.filter(\.isLow).count, toUse: 0))
-            Spacer(minLength: 0)
-            if pages > 1 {
-                Text("\(page + 1) of \(pages)")
-            }
-        }
-        .font(Theme.voice(size: 13))
-        .foregroundStyle(Theme.Colors.inkSecondary)
-        .padding(.horizontal, Theme.Spacing.gutter)
-        .frame(minHeight: 28)
     }
 
     private func foot(place: PlaceDial.Place?) -> some View {
@@ -400,22 +214,41 @@ struct PantryRoomPage: View {
         receipts.say(outcome.receipt, undo: outcome.undo)
     }
 
+    private func perform(_ move: PantryMove, on item: PantryRoomItem) {
+        guard let actions else { return }
+        switch (move, item.source) {
+        case let (.usedUp, .toGet(line)):
+            // A row with an ingredient also puts it back in; a typed row is just checked off.
+            if let ingredient = Groceries(store: model.store, classes: model.classes).ingredient(of: line.object) {
+                say(actions.gotIt(ingredient, name: item.name))
+            } else {
+                say(actions.checkOff(line, name: item.name))
+            }
+        case let (.usedUp, .stock(record)):
+            say(actions.usedUp(record, name: item.name))
+        case let (.notNow, .stock(record)):
+            say(actions.notNow(record, name: item.name))
+        case let (.pin, .stock(record)):
+            say(actions.pin(record, on: !item.isPinned, name: item.name))
+        case let (.toggle, .stock(record)):
+            say(actions.setStock(record, low: !item.isLow, name: item.name))
+        default:
+            break
+        }
+    }
+
     // MARK: Data
 
     private func items(_ board: PantryBoard, place: String) -> [PantryRoomItem] {
         let now = AppClock.now
         if place == PantryPlaces.toGet {
-            return board.toGet.flatMap(\.rows).compactMap { row -> PantryRoomItem? in
-                guard case let .toGet(item, label) = row else { return nil }
-                return PantryRoomItem(
-                    id: item.id,
-                    name: label,
-                    shown: KitchenText.shown(label, in: model.store),
-                    isLow: false,
-                    isPinned: false,
-                    amount: item.quantity,
-                    source: .toGet(item)
-                )
+            return board.toGet.flatMap { group in
+                group.rows.compactMap { row -> PantryRoomItem? in
+                    guard case let .toGet(item, label) = row else { return nil }
+                    return PantryRoomItem(id: item.id, name: label, shown: KitchenText.shown(label, in: model.store),
+                                          isLow: false, isPinned: false, amount: item.quantity, source: .toGet(item),
+                                          aisle: group.label.flatMap { Aisle(rawValue: Aisle.shown($0)) })
+                }
             }
         }
         guard let id = UUID(uuidString: place),
@@ -423,17 +256,18 @@ struct PantryRoomPage: View {
         let stock = PantryStock(store: model.store, classes: model.classes)
         let list: [PantryRoomItem] = found.groups.flatMap(\.rows).compactMap { row in
             guard case let .stock(entry) = row, !stock.isSnoozed(entry.ingredient, at: now) else { return nil }
-            // Used up by hand: it left for To get.
-            if let set = stock.level(of: entry.ingredient), set.level == .out {
+            // Used up and still waiting on To get: it left the place. Once bought, the ledger's combined state (the
+            // later of its fact and the hand-set level) brings it back.
+            if entry.state == .out, stock.openRow(for: entry.ingredient) != nil {
                 return nil
             }
             return PantryRoomItem(id: entry.id, name: model.store.displayTitle(of: entry.ingredient),
                                   shown: KitchenText.short(entry.label),
                                   isLow: entry.state == .low || entry.state == .out,
                                   isPinned: stock.isPinned(entry.ingredient), amount: nil,
-                                  source: .stock(entry.ingredient))
+                                  source: .stock(entry.ingredient), aisle: entry.aisle)
         }
-        let place = model.store.object(id: id)
-        return PantryRoomCopy.ordered(list, pinOrder: stock.pinned(in: place).map(\.id))
+        let home = model.store.object(id: id)
+        return PantryRoomCopy.ordered(list, pinOrder: stock.pinned(in: home).map(\.id))
     }
 }

@@ -39,17 +39,19 @@ struct PantryPacker: Equatable {
     }
 
     let sections: [Section]
-    private(set) var columns: [Column] = [[], []]
+    private(set) var columns: [Column]
     /// Sections not yet placed, in order.
     private(set) var queue: [Int]
     private var history: [Snapshot] = []
 
-    init(sections: [Section]) {
+    /// `columnCount` is 2, or 1 from the first accessibility size (the same rules in one column).
+    init(sections: [Section], columnCount: Int = 2) {
         self.sections = sections
+        columns = Array(repeating: [], count: columnCount)
         let entry = Self.entry(of: sections)
         queue = sections.indices.map { (entry + $0) % max(sections.count, 1) }.filter { sections[$0].rows > 0 }
         for index in columns.indices {
-            columns[index] = takeColumn(continuing: nil)
+            columns[index] = takeColumn(continuing: nil, columnsLeft: columns.count - index - 1)
         }
     }
 
@@ -66,7 +68,7 @@ struct PantryPacker: Equatable {
 
     /// The column that starts with `continuing` (the rest of a split section) or else the head of the queue, then
     /// first-fits later sections that fit whole.
-    private mutating func takeColumn(continuing: (section: Int, start: Int)?) -> Column {
+    private mutating func takeColumn(continuing: (section: Int, start: Int)?, columnsLeft: Int) -> Column {
         var column: Column = []
         var used: CGFloat = 0
         var head = continuing
@@ -86,12 +88,20 @@ struct PantryPacker: Equatable {
             column.append(block)
             return column
         }
-        for entry in queue where fitsWhole(sections[entry].rows, in: Self.capacity - used) {
-            let block = Block(section: entry, start: 0, count: sections[entry].rows, more: 0)
-            column.append(block)
-            used += block.height
+        // A column stacks sections only while more are queued than columns are left to fill, so two sections always
+        // take both columns.
+        var index = 0
+        while index < queue.count, queue.count > columnsLeft {
+            let entry = queue[index]
+            if fitsWhole(sections[entry].rows, in: Self.capacity - used) {
+                let block = Block(section: entry, start: 0, count: sections[entry].rows, more: 0)
+                column.append(block)
+                used += block.height
+                queue.remove(at: index)
+            } else {
+                index += 1
+            }
         }
-        queue.removeAll { entry in column.contains { $0.section == entry && $0.start == 0 && $0.more == 0 } }
         return column
     }
 
@@ -105,9 +115,10 @@ struct PantryPacker: Equatable {
         var next = columns
         for index in columns.indices {
             if let split = columns[index].last(where: { $0.more > 0 }) {
-                next[index] = takeColumn(continuing: (split.section, split.start + split.count))
+                next[index] = takeColumn(continuing: (split.section, split.start + split.count),
+                                         columnsLeft: columns.count - index - 1)
             } else if !queue.isEmpty {
-                next[index] = takeColumn(continuing: nil)
+                next[index] = takeColumn(continuing: nil, columnsLeft: columns.count - index - 1)
             }
         }
         guard next != columns else {

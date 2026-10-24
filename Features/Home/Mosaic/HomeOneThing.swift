@@ -226,7 +226,8 @@ struct HomeOneThing: View {
         .buttonStyle(.plain)
     }
 
-    /// Figtree 20 in ink with exactly one keyword, the thing's own word: 600 at 1.1x with an underline in its accent
+    /// Figtree 20 in ink with exactly one keyword, the thing's own word: 600 at 1.1x in its accent, no underline
+    /// (Kaushik, Oct 23)
     /// (ink
     /// for tasks).
     static func midText(_ thing: HomeThing) -> AttributedString {
@@ -237,7 +238,6 @@ struct HomeOneThing: View {
             let accent = thing.accentColor
             text[range].font = Theme.voice(size: 22).weight(.semibold)
             text[range].foregroundColor = accent
-            text[range].underlineStyle = Text.LineStyle(pattern: .solid, color: accent)
         }
         return text
     }
