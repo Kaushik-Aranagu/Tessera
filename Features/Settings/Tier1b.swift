@@ -10,6 +10,12 @@ enum Tier1b {
 
     nonisolated static let quietID = "quietHoursV2"
     nonisolated static let kitchenID = "kitchenRoomsV2"
+    nonisolated static let depthID = "depthOnWheels"
+
+    /// Depth on wheels (Settings > Look): On unless he turned it Off.
+    @MainActor static var depthIsOn: Bool {
+        ReviewChoices.shared.value(of: depthID) != "Off"
+    }
 
     /// The Kitchen rooms (231 to 233): On unless he turned them Off.
     @MainActor static var kitchenRoomsIsOn: Bool {

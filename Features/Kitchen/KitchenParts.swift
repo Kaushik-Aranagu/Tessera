@@ -222,10 +222,12 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
     @ViewBuilder let content: (Item, _ focus: Double, _ distance: Int) -> Content
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var drag: CGFloat = 0
     @State private var turned = 0
     @State private var ticks = 0
+    @State private var lowPower = PowerState.isLowPower
 
     static var defaultFocusHeight: CGFloat {
         50
@@ -241,6 +243,11 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
         focusHeight + CGFloat(others) * rowHeight
     }
 
+    private var depth: Bool {
+        Self.blurs(switchOn: Tier1b.depthIsOn, reduceMotion: reduceMotion, reduceTransparency: reduceTransparency,
+                   lowPower: lowPower)
+    }
+
     private var rowsShown: Int {
         typeSize >= .accessibility3 ? min(others, 2) : others
     }
@@ -254,6 +261,21 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
     }
 
     /// A row's height at a fractional place: the focus height at 0, the plain row height a place away.
+    /// Depth blur (Kaushik, Oct 23, on every wheel): 0.65 pt one row away, 1 pt from two rows on, none on the focus.
+    static func blurRadius(at place: CGFloat) -> CGFloat {
+        let distance = abs(place)
+        if distance < 0.05 {
+            return 0
+        }
+        return distance <= 1 ? 0.65 * distance : min(0.65 + 0.35 * (distance - 1), 1)
+    }
+
+    /// Whether the wheels blur: the "Depth on wheels" switch is On, and not under Reduce Motion, Reduce Transparency
+    /// or Low Power.
+    static func blurs(switchOn: Bool, reduceMotion: Bool, reduceTransparency: Bool, lowPower: Bool) -> Bool {
+        switchOn && !reduceMotion && !reduceTransparency && !lowPower
+    }
+
     static func height(at place: CGFloat, focusHeight: CGFloat = defaultFocusHeight) -> CGFloat {
         rowHeight + (focusHeight - rowHeight) * max(0, 1 - abs(place))
     }
@@ -279,6 +301,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .blur(radius: depth ? Self.blurRadius(at: at) : 0)
                     .offset(y: Self.y(at, focusHeight: focusHeight))
                     .accessibilityHidden(true)
                 }
@@ -309,6 +332,7 @@ struct FocusWheel<Item: Identifiable, Content: View>: View where Item.ID: Hashab
                 }
         )
         .tesseraFeedback(.dialStep, trigger: ticks)
+        .onReceive(PowerState.changes) { _ in lowPower = PowerState.isLowPower }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("List")
         .accessibilityAdjustableAction { direction in

@@ -365,6 +365,11 @@ final class ReviewChoices {
                    "Off": "Pantry, Recipes, the Kitchen page and cooking stay as they were.",
                ],
                readiness: .live),
+        // Kaushik, Oct 23: any wheel blurs the rows away from its focus; this switch turns it off.
+        Choice(id: "depthOnWheels", name: "Depth on wheels", values: ["On", "Off"], defaultValue: "On",
+               says: ["On": "Rows a little way from the focus of a wheel go softly out of focus.",
+                      "Off": "Every row of a wheel is sharp."],
+               readiness: .live),
         Choice(id: "undoLogV2", name: "Undo log", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "Undo stays on the line Tess says after a change.",
                       "On": "Today ends with the last change and Undo for 10 minutes; Review lists recent changes."],
@@ -398,7 +403,10 @@ final class ReviewChoices {
         ("Cooking", ["cookTimerVoice", "handsFreeCook", "parallelSteps", "cookNotes", "cookDouble", "fixRecipe"]),
         ("Connected", ["planMyDay", "shutdown", "quietInterrupts", "quietHoursV2", "calendar", "health"]),
         ("Shown", ["sampleData", "landingPages", "homeV2", "areasShown", "classInspector", "tasksApp"]),
-        ("Notes and lists", ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue", "twinsV2"]),
+        (
+            "Notes and lists",
+            ["notesMargin", "notesLinkSuggest", "listsMargin", "listsLeadByDue", "twinsV2", "depthOnWheels"]
+        ),
         ("Money", ["moneyPools"]),
         ("Together", ["daySentence", "linkColours", "writeAnywhere", "oneHands", "occasions", "makeAKind"]),
         ("Training stats", ["trainingStats", "trainingLog", "statsBalance", "trainingLightWeeks"]),

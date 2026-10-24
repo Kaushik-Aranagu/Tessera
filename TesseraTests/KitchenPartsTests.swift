@@ -36,6 +36,19 @@ struct KitchenPartsTests {
         #expect(FocusWheel<TestItem, EmptyView>.height(others: 9, focusHeight: 80) == 422)
     }
 
+    @Test func theWheelBlursByDistanceAndNeverOnTheFocus() {
+        typealias Wheel = FocusWheel<TestItem, EmptyView>
+        #expect(Wheel.blurRadius(at: 0) == 0)
+        #expect(abs(Wheel.blurRadius(at: 1) - 0.65) < 0.001)
+        #expect(abs(Wheel.blurRadius(at: -1) - 0.65) < 0.001)
+        #expect(Wheel.blurRadius(at: 2) == 1 && Wheel.blurRadius(at: 5) == 1)
+        #expect(Wheel.blurs(switchOn: true, reduceMotion: false, reduceTransparency: false, lowPower: false))
+        #expect(!Wheel.blurs(switchOn: false, reduceMotion: false, reduceTransparency: false, lowPower: false))
+        #expect(!Wheel.blurs(switchOn: true, reduceMotion: true, reduceTransparency: false, lowPower: false))
+        #expect(!Wheel.blurs(switchOn: true, reduceMotion: false, reduceTransparency: true, lowPower: false))
+        #expect(!Wheel.blurs(switchOn: true, reduceMotion: false, reduceTransparency: false, lowPower: true))
+    }
+
     @Test func aPlaceIsSpokenWithItsCount() {
         #expect(KitchenLoop.spoken("Fridge", count: 8) == "Fridge, 8 things")
         #expect(KitchenLoop.spoken("Shelf", count: 1) == "Shelf, 1 thing")
