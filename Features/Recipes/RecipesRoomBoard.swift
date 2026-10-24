@@ -158,7 +158,9 @@ struct RecipesRoomBoard {
 
     /// "Fried rice is the quickest, 20 min." / "Lemon pasta uses the lemons."
     static func brief(_ ready: [Item]) -> (first: String, second: String) {
-        guard let quick = ready.first(where: { $0.minutes != nil && !$0.isPrivate }) ?? ready.first else {
+        // Only a recipe that is not private is ever named, even by its label.
+        let open = ready.filter { !$0.isPrivate }
+        guard let quick = open.first(where: { $0.minutes != nil }) ?? open.first else {
             return ("Nothing is ready yet.", "")
         }
         let first = quick.minutes.map { "\(quick.shown) is the quickest, \($0) min." } ?? "\(quick.shown) is ready."

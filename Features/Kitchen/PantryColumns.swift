@@ -62,6 +62,23 @@ enum PantrySectionMap {
     }
 }
 
+/// Where a touch lands among the rows of a section block (pure, so it is tested without a screen). Between two rows the
+/// boundary is exact, so a touch in the top of a row is that row's; only the last row reaches below itself (a short row
+/// is still a 44 pt target there).
+enum PantryTouch {
+    static func row(at y: CGFloat, heights: [CGFloat], lastReach: CGFloat) -> Int? {
+        var top: CGFloat = 0
+        for (index, height) in heights.enumerated() {
+            let bottom = top + height + (index == heights.count - 1 ? lastReach : 0)
+            if y >= top, y < bottom {
+                return index
+            }
+            top += height
+        }
+        return nil
+    }
+}
+
 /// How one row lays out (sheet 234 v6 to v8), pure so it is fit-tested without a screen. A value sits beside the name
 /// when the name at 17 pt, an 8 pt gap and the value at 10.5 pt Light fit the column, else it drops under the name at
 /// 8 pt Light on a 12 pt line. A row with beside (or no) value is 28 pt, a row with the value below is 34 pt. From the
@@ -109,6 +126,8 @@ struct PantryColumnsView: View {
     /// What each place was last packed as, kept for the visit.
     @State private var packers: [String: PantryPacker] = [:]
     @State private var width: CGFloat = 0
+    /// The columns' left edge on the screen, for the back-edge rule.
+    @State private var originX: CGFloat = 0
     @State private var touch: Touch?
     @State private var rowOffset: CGFloat = 0
     @State private var nudge: CGFloat = 0
@@ -116,7 +135,7 @@ struct PantryColumnsView: View {
     @State private var bumps = 0
 
     static let gap: CGFloat = 16
-    static let swipe: CGFloat = 70
+    static let swipe = CGFloat(GestureTuning.armDistance)
 
     private struct Touch {
         var start: CGPoint
@@ -183,6 +202,7 @@ struct PantryColumnsView: View {
             columns(current)
                 .frame(height: PantryPacker.capacity)
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minX } action: { originX = $0 }
         }
         .onAppear { packers[place] = build() }
         .onChange(of: signature) { packers[place] = build() }
@@ -366,15 +386,14 @@ struct PantryColumnsView: View {
                 return .header
             }
             y += PantryPacker.header
-            for row in 0 ..< block.count {
-                let height = layouts[block.section][block.start + row].height
-                // The touch target is at least 44 pt: it reaches past a short row into the space around it.
-                let reach = max(0, (44 - height) / 2)
-                if point.y < y + height + reach {
-                    return .row(column: column, block: blockIndex, row: row)
-                }
-                y += height
+            let heights = (0 ..< block.count).map { layouts[block.section][block.start + $0].height }
+            let last = heights.last ?? 0
+            // The last row reaches past itself to 44 pt, but only where nothing follows it.
+            let reach = block.more == 0 ? max(0, (44 - last) / 2) : 0
+            if let row = PantryTouch.row(at: point.y - y, heights: heights, lastReach: reach) {
+                return .row(column: column, block: blockIndex, row: row)
             }
+            y += heights.reduce(0, +)
             if block.more > 0 {
                 if point.y < y + PantryPacker.moreRow {
                     return .more
@@ -412,11 +431,11 @@ struct PantryColumnsView: View {
                     return
                 }
                 let dx = value.translation.width, dy = value.translation.height
-                if hypot(dx, dy) > 3 {
+                if hypot(dx, dy) > GestureTuning.holdSlop {
                     touch?.holdTask?.cancel()
                 }
-                if touch?.axis == nil, hypot(dx, dy) > 10, touch?.held == false {
-                    touch?.axis = abs(dx) > abs(dy) ? .horizontal : .vertical
+                if touch?.axis == nil, hypot(dx, dy) > GestureTuning.axisLock, touch?.held == false {
+                    touch?.axis = abs(dx) > abs(dy) * GestureTuning.horizontalBias ? .horizontal : .vertical
                 }
                 if touch?.axis == .horizontal, case .row = touch?.hit {
                     // Contained in the column's clip: never past its own width.
@@ -436,8 +455,9 @@ struct PantryColumnsView: View {
                     guard abs(dx) >= Self.swipe, let held = item(for: landed, packer: packer) else { return }
                     perform(dx > 0 ? .usedUp : .notNow, held)
                 case (.header, .horizontal?), (.space, .horizontal?), (.more, .horizontal?):
-                    // The step swipe never starts within 20 pt of the left edge of the screen.
-                    guard abs(dx) > 40, touch.start.x >= 0 else { return }
+                    // The step swipe never starts in the system back edge (the screen's leading 24 pt).
+                    guard abs(dx) > GestureTuning.pageDistance,
+                          touch.start.x + originX >= GestureTuning.backEdge else { return }
                     step(forward: dx < 0)
                 case (.more, nil):
                     step(forward: true)

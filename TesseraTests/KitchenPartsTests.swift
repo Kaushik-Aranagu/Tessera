@@ -163,6 +163,14 @@ struct RecipesRoomBoardTests {
         #expect(RecipesRoomBoard.getReceipt(["feta", "mascarpone"]) == "Feta and mascarpone, on To get.")
     }
 
+    @Test func aBriefOfOnlyPrivateRecipesNamesNone() {
+        let secret = RecipesRoomBoard.Item(id: UUID(), name: "Melatonin tea", shown: "Private recipe", isPrivate: true,
+                                           minutes: 30, isPinned: false, shorts: [], lows: ["honey"], uses: [],
+                                           plannedFor: nil)
+        let lines = RecipesRoomBoard.brief([secret, secret])
+        #expect(lines.first == "Nothing is ready yet." && lines.second == "")
+    }
+
     @Test func theBriefNamesTheQuickestAndWhatUsesTheLow() {
         let rice = item("Fried rice", minutes: 20)
         let pasta = item("Lemon pasta", minutes: 25, lows: ["lemons"])
@@ -284,5 +292,22 @@ struct PantryRowLayoutTests {
         receipts.say("Butter, low.", undo: nil, action: ("Add to To get", { asked += 1 }))
         receipts.line?.action?.run()
         #expect(asked == 1 && receipts.line?.action?.title == "Add to To get")
+    }
+}
+
+@MainActor
+struct PantryTouchTests {
+    @Test func aTouchTwoPointsIntoARowIsThatRowsNotTheOneAbove() {
+        let heights: [CGFloat] = [28, 28, 28]
+        #expect(PantryTouch.row(at: 30, heights: heights, lastReach: 8) == 1)
+        #expect(PantryTouch.row(at: 27.9, heights: heights, lastReach: 8) == 0)
+        #expect(PantryTouch.row(at: 28, heights: heights, lastReach: 8) == 1)
+    }
+
+    @Test func onlyTheLastRowReachesPastItself() {
+        let heights: [CGFloat] = [28, 28]
+        #expect(PantryTouch.row(at: 60, heights: heights, lastReach: 8) == 1)
+        #expect(PantryTouch.row(at: 64.5, heights: heights, lastReach: 8) == nil)
+        #expect(PantryTouch.row(at: -1, heights: heights, lastReach: 8) == nil)
     }
 }
