@@ -34,6 +34,10 @@ The team board lives at `tessera/ops/board.md` in the shared folder. A copy is o
 - [PRODUCT_VISION.md](PRODUCT_VISION.md): the product vision, captured from Kaushik. Read it before designing a feature or changing the data model.
 - [DESIGN_MOTION.md](DESIGN_MOTION.md): the design and motion playbook.
 
+## Handoff
+
+- [handoff/CODEX.md](handoff/CODEX.md): The Codex handoff: repo, build and test, branch and release rules, current state, queued work, privacy walls, look rules and where specs live. Kept current by Ops.
+
 ## Engine
 
 - [engine/grdb-migration.md](engine/grdb-migration.md): moving storage to GRDB, with the status of each stage.
