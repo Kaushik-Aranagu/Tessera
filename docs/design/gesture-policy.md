@@ -62,6 +62,21 @@ finger (`mosaicTouchFeed`, which feeds it and takes nothing); the one-thing spac
 own frame; the apps list owns its rows; the page scrolls. No gesture on a parent decides for a child's region.
 `GestureStabilityUITests.testASwipeAcrossTheMosaicDoesNotMoveTheOneThing` holds the line.
 
+## A single swiped element turns on either axis
+
+Kaushik, Oct 23: Home's one thing, and any single element that is swiped, takes a vertical swipe as well as a
+horizontal one, unless the two axes mean different things on that element. Left or up is next, right or down is
+previous (`GestureTuning.elementTurn`, `.elementSwipe`). The dominant axis must lead by 1.3x, so a diagonal turns
+nothing; it commits past the element's distance (50 pt on the one thing) or on a flick, and a swipe taken back at lift
+turns nothing. An element whose axes mean different things passes `axes: .horizontal` or `.vertical` and answers to
+that one. Dials, wheels and rails are not single elements: they scroll on their one axis and never use this.
+
+Home's one thing already did this (sheet 220); it now reads the same function as every other element will. It does not
+collide with the apps list: the two are sibling regions in a column, each owns only its own frame, and the apps list's
+hold-then-drag and one-row flick are vertical inside its 120 pt, while the one thing's vertical swipe starts inside its
+196 pt. The cost is that a vertical drag that starts on the one thing turns it instead of scrolling the page; Home's
+page scrolls from anywhere else.
+
 ## Action words, wheels and stacks (the patterns that are coming)
 
 - **Action word** (the bottom-left word): lean at 18 pt (`actionLean`), roll to the option's name past 56 pt

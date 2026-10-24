@@ -33,6 +33,8 @@ public enum GestureTuning {
     public static let pullDistance = 56.0
     /// A page swipe or a pull must lead the other axis by this ratio.
     public static let pagerBias = 2.0
+    /// A single element that turns on either axis: the dominant axis must lead by this ratio, or it is a diagonal.
+    public static let elementLead = 1.3
     /// A flick commits short of the full distance only at this speed in the swipe's own direction ...
     public static let flickVelocity = 500.0
     /// ... and only after at least this much travel, so a twitch never commits.
@@ -128,6 +130,23 @@ public enum GestureTuning {
         return dx < 0 ? 1 : -1
     }
 
+    /// A single swiped element (Home's one thing, a card of one): any direction turns it, left or up to the next, right
+    /// or down to the previous (Kaushik, Oct 23), unless the two axes mean different things on that element, which then
+    /// passes only the axis it owns. The dominant axis must lead by `elementLead`, so a diagonal turns nothing. Returns
+    /// +1 for next, -1 for previous, 0 for none. Dials and wheels are not single elements and never use this.
+    public static func elementTurn(dx: Double, dy: Double, velocityX: Double, velocityY: Double,
+                                   arm: Double = pageDistance, axes: SwipeAxes = .both) -> Int
+    {
+        guard hypot(dx, dy) >= axisLock else { return 0 }
+        let sideways = abs(dx) >= abs(dy)
+        let lead = sideways ? abs(dx) / max(abs(dy), 1) : abs(dy) / max(abs(dx), 1)
+        guard lead >= elementLead, axes.contains(sideways ? .horizontal : .vertical) else { return 0 }
+        let across = sideways ? dx : dy
+        let toward = (sideways ? velocityX : velocityY) * (across < 0 ? -1 : 1)
+        guard commits(distance: abs(across), velocity: toward, arm: arm) else { return 0 }
+        return across < 0 ? 1 : -1
+    }
+
     /// A vertical pull: +1 for a pull down, -1 for a pull up, 0 for none. It must lock vertical with `pagerBias` and
     /// go past `pullDistance` (or flick). `velocityY` is the speed at lift, positive downward.
     public static func pull(dx: Double, dy: Double, velocityY: Double) -> Int {
@@ -159,6 +178,18 @@ public struct SwipeSides: OptionSet, Sendable {
     public static let leading = SwipeSides(rawValue: 1)
     public static let trailing = SwipeSides(rawValue: 2)
     public static let both: SwipeSides = [.leading, .trailing]
+}
+
+/// The axes a single swiped element answers to.
+public struct SwipeAxes: OptionSet, Sendable {
+    public let rawValue: Int
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+
+    public static let horizontal = SwipeAxes(rawValue: 1)
+    public static let vertical = SwipeAxes(rawValue: 2)
+    public static let both: SwipeAxes = [.horizontal, .vertical]
 }
 
 public enum SwipeOutcome: Sendable, Equatable {

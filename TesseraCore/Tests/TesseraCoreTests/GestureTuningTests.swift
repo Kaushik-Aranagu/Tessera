@@ -177,6 +177,33 @@ struct GestureTuningTests {
         #expect(GestureTuning.pull(dx: 4, dy: 70, velocityY: -600) == 0)
     }
 
+    // MARK: Single elements
+
+    @Test func aSingleElementTurnsOnEitherAxis() {
+        // Left or up is next; right or down is previous.
+        #expect(GestureTuning.elementTurn(dx: -70, dy: 4, velocityX: -100, velocityY: 0, arm: 50) == 1)
+        #expect(GestureTuning.elementTurn(dx: 3, dy: -70, velocityX: 0, velocityY: -100, arm: 50) == 1)
+        #expect(GestureTuning.elementTurn(dx: 70, dy: 4, velocityX: 100, velocityY: 0, arm: 50) == -1)
+        #expect(GestureTuning.elementTurn(dx: 3, dy: 70, velocityX: 0, velocityY: 100, arm: 50) == -1)
+    }
+
+    @Test func aSingleElementIgnoresADiagonalATwitchAndATakenBackSwipe() {
+        #expect(GestureTuning.elementTurn(dx: -60, dy: 55, velocityX: -100, velocityY: 0, arm: 50) == 0)
+        #expect(GestureTuning.elementTurn(dx: -14, dy: 1, velocityX: -900, velocityY: 0, arm: 50) == 0)
+        #expect(GestureTuning.elementTurn(dx: -70, dy: 4, velocityX: 500, velocityY: 0, arm: 50) == 0)
+        // Short but a real flick turns it.
+        #expect(GestureTuning.elementTurn(dx: 3, dy: -34, velocityX: 0, velocityY: -800, arm: 50) == 1)
+    }
+
+    @Test func anElementWhoseAxesMeanDifferentThingsAnswersToOne() {
+        let across = GestureTuning.elementTurn(dx: -70, dy: 4, velocityX: -100, velocityY: 0, arm: 50, axes: .horizontal)
+        let up = GestureTuning.elementTurn(dx: 3, dy: -70, velocityX: 0, velocityY: -100, arm: 50, axes: .horizontal)
+        let down = GestureTuning.elementTurn(dx: 3, dy: 70, velocityX: 0, velocityY: 100, arm: 50, axes: .vertical)
+        #expect(across == 1)
+        #expect(up == 0)
+        #expect(down == -1)
+    }
+
     // MARK: Action words and stacks
 
     @Test func anActionWordLeansThenRollsThenCommitsOnlyWhenRolled() {

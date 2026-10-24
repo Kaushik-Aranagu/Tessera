@@ -101,6 +101,30 @@ private struct PageSwipe: ViewModifier {
     }
 }
 
+// MARK: Element swipe
+
+private struct ElementSwipe: ViewModifier {
+    let axes: SwipeAxes
+    let arm: CGFloat
+    let onTurn: (_ next: Bool) -> Void
+
+    func body(content: Content) -> some View {
+        content.simultaneousGesture(
+            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart), coordinateSpace: .global)
+                .onEnded { value in
+                    let turn = GestureTuning.elementTurn(
+                        dx: Double(value.translation.width), dy: Double(value.translation.height),
+                        velocityX: Double(value.velocity.width), velocityY: Double(value.velocity.height),
+                        arm: Double(arm), axes: axes
+                    )
+                    if turn != 0 {
+                        onTurn(turn > 0)
+                    }
+                }
+        )
+    }
+}
+
 // MARK: Pull
 
 private struct PullGesture: ViewModifier {
@@ -140,6 +164,17 @@ extension View {
     /// A side swipe that turns a page: `next` is true for a drag to the left. Runs alongside the page's own scroll.
     func pageSwipe(_ onTurn: @escaping (_ next: Bool) -> Void) -> some View {
         modifier(PageSwipe(onTurn: onTurn))
+    }
+
+    /// A single swiped element that turns on either axis: left or up is next (`next` true), right or down previous.
+    /// Pass `axes: .horizontal` or `.vertical` only when the two axes mean different things on that element. Never for a
+    /// dial or a wheel.
+    func elementSwipe(
+        axes: SwipeAxes = .both,
+        arm: CGFloat = CGFloat(GestureTuning.pageDistance),
+        onTurn: @escaping (_ next: Bool) -> Void
+    ) -> some View {
+        modifier(ElementSwipe(axes: axes, arm: arm, onTurn: onTurn))
     }
 
     /// A pull down (`down` true) or up that opens or closes something. Runs alongside the page's own scroll.
