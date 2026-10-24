@@ -56,6 +56,10 @@ public enum ObjectPrivacy {
             return flagged || object.title == noteLabel || isPrivateText(object.title) || isPrivateText(body)
                 ? noteLabel : nil
         }
+        if isA(.belief) {
+            let rule = store.value("rule", of: object)?.stringValue ?? ""
+            return flagged || isPrivateText(object.title) || isPrivateText(rule) ? memoryLabel : nil
+        }
         if isA(.tessMemory) {
             let rule = store.value("rule", of: object)?.stringValue ?? ""
             return flagged || isPrivateText(object.title) || isPrivateText(rule) ? memoryLabel : nil

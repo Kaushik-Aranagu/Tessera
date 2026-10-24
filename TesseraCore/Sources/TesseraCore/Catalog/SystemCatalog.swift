@@ -31,6 +31,7 @@ public enum SystemCatalog {
         case tessMemory
         case occasion
         case tessTurn
+        case belief
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -455,6 +456,36 @@ public enum SystemCatalog {
             FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
             FieldSpec(key: "isPrivate", name: "Stays on this phone", kind: .bool, defaultValue: .bool(false)),
             FieldSpec(key: "day", name: "Day", kind: .date),
+        ]),
+        // What Tess believes about him (docs/ai/harness/memory-context-m0-m6.md, M1). The title is the words (80
+        // characters, second person; a told belief keeps his own). A belief is closed when it changes, never deleted;
+        // deleting is his forget gesture. No evidence, no belief.
+        ClassSpec(key: .belief, name: "Belief", parent: .thing, symbol: "sparkles", colorRole: "neutral", fields: [
+            // The subject: one object, one class, or neither (him). Both set means the object.
+            FieldSpec(key: "subject", name: "About", kind: .ref, target: .thing),
+            FieldSpec(key: "subjectClass", name: "About class", kind: .classRef, target: .thing),
+            FieldSpec(key: "key", name: "Key", kind: .choice, defaultValue: .choice("fact"),
+                      options: ["usualTime", "cadence", "prefers", "avoids", "goal", "limit", "pattern", "alias",
+                                "fact"]),
+            // Typed JSON: {"text": ...} for words, {"hour": 18} for a usual time, and so on.
+            FieldSpec(key: "value", name: "Value", kind: .text),
+            FieldSpec(key: "confidence", name: "Confidence", kind: .number, defaultValue: .number(1)),
+            FieldSpec(key: "source", name: "Source", kind: .choice, defaultValue: .choice("told"),
+                      options: ["told", "noticed", "inferred", "learned"]),
+            FieldSpec(key: "evidence", name: "From", kind: .refList, target: .thing),
+            // Op ids behind it, as a JSON array of strings; an op or an object is enough.
+            FieldSpec(key: "evidenceOps", name: "From ops", kind: .text),
+            FieldSpec(key: "validFrom", name: "From", kind: .date),
+            FieldSpec(key: "validUntil", name: "Until", kind: .date),
+            FieldSpec(key: "supersedes", name: "Replaces", kind: .ref, target: .belief),
+            // The last 50 times it was used, as a JSON array of ISO dates.
+            FieldSpec(key: "uses", name: "Used", kind: .text),
+            // How many times the record has said it again; two make an inferred belief a fact.
+            FieldSpec(key: "confirmations", name: "Confirmed", kind: .number, defaultValue: .number(0)),
+            FieldSpec(key: "kept", name: "Kept", kind: .bool, defaultValue: .bool(false)),
+            // Which memory line it came from ("memory:<id>"), so a sync updates it in place and a forget follows it.
+            FieldSpec(key: "rule", name: "Rule", kind: .text),
+            FieldSpec(key: "isPrivate", name: "Stays on this phone", kind: .bool, defaultValue: .bool(false)),
         ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
         ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning"),
