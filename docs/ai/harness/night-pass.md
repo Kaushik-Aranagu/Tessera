@@ -1,8 +1,9 @@
 # Night pass (memory spec M5): the Core wiring
 
 `Harness/Memory/NightPass.swift` is the rules half, as a pure planner: it takes plain values and returns steps.
-The store side builds those values, runs each step through its action, and records the night. This file is that
-side, for Core.
+`Harness/Memory/NightRun.swift` is the store side: it builds those values, runs each step through its action,
+records the night in `night-pass.json`, then runs the M6 eval and keeps its row. What is left for Core is calling
+it at the 4 am turnover with the two Claude closures (below).
 
 ## Inputs, built at the 4 am turnover
 
@@ -26,16 +27,38 @@ side, for Core.
 
 | Step | Action | Notes |
 | --- | --- | --- |
-| `merge(keep:close:)` | `ReviseBelief` closing `close`, superseded by `keep` | Kept and told win; for usual times the newest wins otherwise. A told or kept belief never closes, and when two of his disagree nothing in that group closes. |
+| `merge(keep:close:)` | `MergeBelief` | Kept and told win; for usual times the newest wins otherwise. A told or kept belief never closes (`MergeBelief` refuses it too), and when two of his disagree nothing in that group closes. `close` ends and joins `keep`'s evidence, so a forget of either takes both. |
 | `revise(belief:words:value:evidence:)` | `ReviseBelief` with the evidence ids | `by: .system`; the receipt is the belief's own line. |
 | `confirm(belief:)` | `ConfirmBelief` | At most once a night, and only with a new event that day. |
-| `summary(path:text:)` | write the summary object at the path | `/summaries/day/2026-10-23`, `/summaries/week/2026-W43`. |
+| `summary(path:text:)` | `NightRecord.summaries[path]` | `/summaries/day/2026-10-23`, `/summaries/week/2026-W43`; 60 days, 26 weeks. |
 | `prune(path:)` | delete the notebook file | Oldest unused first, until the folder is under 32,000 bytes. |
-| `refresh(_:)` | rebuild the pack and store its hash | The 1 hour cache then misses once. |
+| `refresh(_:)` | `NightRecord.packHashes` takes the new hash | The 1 hour cache then misses once. |
 | `reflect(agent:)` | one Sonnet call (effort high) through the Door | Up to 5 inferred beliefs with evidence, through `remember`. |
 
 Run the steps in order, through the actions, so every change lands in the op log and Undo works. Then write
-`lastNight`. Then, on Sundays, the tuner; then the eval (M6).
+`lastNight`. Then the eval (M6). Then, on Sundays, the tuner reads `MemoryEvalRecord.tunerMisses`.
+
+## Calling it (Core)
+
+```swift
+var record = NightRecord.load()
+var eval = MemoryEvalRecord.load()
+let run = NightRun(engine: engine, policy: door.policy)
+let report = await run.run(record: &record, eval: &eval, packs: hashes, notebooks: files,
+                           prune: { notebooks.delete($0) },
+                           reflect: { spec in await reflectCall(spec) },  // one Sonnet call through the Door
+                           ask: { question, model in await compiledAsk(question.text, on: model) })
+record.save()
+eval.save()
+```
+
+- `ask` returns nil when the call failed. A question counts toward the kept misses only when every model answered.
+- The eval facts come from `MemoryEvalFacts.from(store:classes:calendar:now:)`: private workouts, recipes, cooks and
+  beliefs, and private exercise names, are left out.
+- **His forget takes the merge chain.** A merged belief sits in the evidence of the one that kept on, so
+  `ForgetBelief` deletes both. Take `ForgetBelief.chain(of:in:classes:)` before it applies and hand every id to
+  `MemoryEvalRecord.forget(beliefs:)` after, so a closed, merged belief's misses go too.
+- `report.failed` lists steps whose action refused (a belief closed in between). Show it in Developer mode.
 
 ## Not yet
 
