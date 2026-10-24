@@ -97,9 +97,9 @@ struct PrivacyPageTests {
     }
 
     @Test func copiesSayOnlyWhatTheyLeaveOut() {
-        #expect(BackupWords.notIncluded(leavingOutPrivate: false) == "Not included: health and calendar.")
+        #expect(BackupWords.notIncluded(leavingOutPrivate: false) == "Not included: health, calendar and Tess's conversation.")
         #expect(BackupWords.notIncluded(leavingOutPrivate: true)
-            == "Not included: health, calendar, body and private things.")
+            == "Not included: health, calendar, body, private things and Tess's conversation.")
     }
 
     @Test func moneyCookingAndPlacesAreCountedByKindNeverByName() throws {

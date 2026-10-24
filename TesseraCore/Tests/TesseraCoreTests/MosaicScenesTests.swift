@@ -45,9 +45,20 @@ struct MosaicScenesTests {
         {
             #expect(!text.contains(banned), "\(banned) in the place table")
         }
-        // Each table row is three numbers, a kind and nothing else.
-        let rows = text.split(separator: "\n").filter { $0.contains(", .coast)") || $0.contains(", .city)") }
-        #expect(!rows.isEmpty)
+        // Each table row is a latitude, a longitude and a kind, nothing else; every kind has several rows.
+        let rowPattern = /\(-?\d+\.\d, -?\d+\.\d, \.(coast|city|mountains|desert|woods|plains)\)/
+        var perKind: [String: Int] = [:]
+        for line in text.split(separator: "\n") {
+            for part in line.split(separator: ")") {
+                if let match = (String(part) + ")")
+                    .firstMatch(of: rowPattern)
+                {
+                    perKind[String(match.1), default: 0] += 1
+                }
+            }
+        }
+        #expect(Set(perKind.keys) == ["coast", "city", "mountains", "desert", "woods", "plains"])
+        #expect(perKind.values.allSatisfy { $0 >= 10 } && perKind.values.reduce(0, +) >= 90, "\(perKind)")
     }
 
     @Test func thePlaceIsReadAtMostOncePerDay() throws {
@@ -125,15 +136,19 @@ struct MosaicScenesTests {
         let package = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent()
         var checked = 0
+        // Also the engine itself: backups, the op log and every Claude prompt live in TesseraCore/Sources, and only the
+        // picker's own file may name the place kind.
         for (path, allowed) in [("../Widgets", ""), ("../Watch", ""), ("../Shared", ""), ("Sources/TesseraIntents", ""),
                                 ("Sources/TesseraTess", ""), ("../App", ""), ("../DesignSystem", ""),
-                                ("../Features", "/Features/Home/")]
+                                ("Sources/TesseraCore", "/Home/MosaicScenes.swift"), ("../Features", "/Features/Home/")]
         {
             var inThisFolder = 0
             guard let walker = FileManager.default.enumerator(at: package.appending(path: path),
                                                               includingPropertiesForKeys: nil) else { continue }
             for case let url as URL in walker where url.pathExtension == "swift"
                 && (allowed.isEmpty || !url.path.contains(allowed))
+                // The director only passes the kind through to the picker; it writes nothing.
+                && !url.path.hasSuffix("/Director/TessDirector.swift")
             {
                 guard let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
                 inThisFolder += 1
@@ -146,5 +161,26 @@ struct MosaicScenesTests {
             #expect(inThisFolder > 0, "no Swift files found in \(path)")
         }
         #expect(checked > 100)
+    }
+
+    @Test func theDailyRotationDoesNotRepeatAcrossNewYear() {
+        func scene(_ year: Int, _ month: Int, _ day: Int) -> MosaicScenery? {
+            let now = calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 13))!
+            let facts = MosaicFacts.make(engine: engine, now: now, calendar: calendar, place: (37.8, -122.4))
+            return MosaicScenePicker.pick(.tessPicks, facts: facts, calendar: calendar)
+        }
+        // Dec 31 and Jan 1 are neighbours: they must differ, as every other pair of neighbours does.
+        #expect(scene(2026, 12, 31) != scene(2027, 1, 1))
+        #expect(scene(2026, 6, 14) != scene(2026, 6, 15) && scene(2026, 6, 15) != scene(2026, 6, 16))
+    }
+
+    @Test func aStrayBackdropTextIsNormalisedOnWriteAndTheResetClearsIt() throws {
+        let settings = SettingsStore(engine: engine)
+        try settings.update { $0.mosaicBackdrop = "nonsense" }
+        #expect(settings.read().mosaicBackdrop == nil)
+        try settings.update { $0.mosaicBackdrop = MosaicBackdrop.pinned(.snow).encoded }
+        #expect(settings.read().backdrop == .pinned(.snow))
+        try settings.resetMosaic()
+        #expect(settings.read().mosaicBackdrop == nil && settings.read().backdrop == .tessPicks)
     }
 }
