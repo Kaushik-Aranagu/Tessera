@@ -6,6 +6,8 @@ import Foundation
 
 public enum BrainID: String, Sendable, CaseIterable {
     case rules, typedNet, appleOnDevice, mlx, mac, haiku, sonnet
+    /// An escalation rung only: a ladder never starts with it (the Door refuses a ladder that does).
+    case opus
 }
 
 /// How a Claude call ended, in the words the rest of the app already uses (`ClaudeKeyCheck.Outcome`).
@@ -126,13 +128,14 @@ public struct BrainRequest: Sendable {
     /// Indexes that get a cache breakpoint, counted over the system blocks and then the text blocks of the messages,
     /// in order.
     public var cacheAfter: [CacheMark]
-    /// Thinking on or off. Off by default: the jobs here are short and want the first token fast.
+    /// Adaptive thinking, on by default for accuracy. A call that forces a tool sends it off (a forced tool and
+    /// thinking don't mix); Sonnet and Opus never get a forced tool, so they think.
     public var thinking: Bool
     public var deadline: Duration
 
     public init(system: [TextBlock] = [], messages: [BrainMessage], tools: [ToolSpec] = [],
                 toolChoice: ToolChoice = .auto, maxTokens: Int = 1024, effort: Effort? = nil,
-                cacheAfter: [CacheMark] = [], thinking: Bool = false, deadline: Duration = .seconds(30))
+                cacheAfter: [CacheMark] = [], thinking: Bool = true, deadline: Duration = .seconds(30))
     {
         self.system = system
         self.messages = messages

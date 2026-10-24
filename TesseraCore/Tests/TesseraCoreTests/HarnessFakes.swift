@@ -85,7 +85,7 @@ final class FakeBrain: Brain, @unchecked Sendable {
     }
 
     static func isClaude(_ id: BrainID) -> Bool {
-        id == .haiku || id == .sonnet
+        id == .haiku || id == .sonnet || id == .opus
     }
 }
 

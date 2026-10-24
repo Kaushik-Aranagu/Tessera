@@ -4,7 +4,7 @@ import Foundation
 #endif
 import TesseraCore
 
-// The Claude key: kept in the Keychain only, checked with one free call, and counted against the $50 month
+// The Claude key: kept in the Keychain only, checked with one free call, and counted against the $100 month
 // (docs/research/claude-key-test.md). The key is read once per call into a local and put only in that request's
 // Authorization header. It never reaches UserDefaults, the op log, objects, backups, exports, logs or errors.
 
@@ -80,12 +80,13 @@ public final class InMemoryKeychain: TessKeychain, @unchecked Sendable {
 
 // MARK: - Ledger
 
-/// The $50 month, in nano-dollars (one Haiku input token is 100 n$). The month turns at 04:00 on the 1st in the
+/// The $100 month, in nano-dollars (one Haiku input token is 100 n$). The month turns at 04:00 on the 1st in the
 /// phone's calendar, his house day (Product 8:24 PM PT Oct 17), not midnight and not Anthropic's UTC.
 @MainActor
 public struct TessUsageLedger {
-    /// The month's cap: $50 (Kaushik, decisions.md Oct 16). Settings' spend line and the paused copy read this.
-    public static let capNano: Int64 = 50_000_000_000
+    /// The month's cap: $100 (Kaushik, Oct 23: accuracy comes before cost). It exists only to stop a runaway bug, not
+    /// to ration calls. Settings' spend line and the paused copy read this.
+    public static let capNano: Int64 = 100_000_000_000
     /// The cap in whole dollars, for the words ("of 50 dollars this month").
     public static let capDollars = Int(capNano / 1_000_000_000)
 
@@ -93,6 +94,8 @@ public struct TessUsageLedger {
     public static let prices: [String: (input: Int64, output: Int64, cacheRead: Int64, cacheWrite: Int64)] = [
         "claude-haiku-5-5": (100, 500, 10, 125),
         "claude-sonnet-5-5": (2000, 10000, 200, 2500),
+        // Opus 5.5 is an escalation rung only: $4 / $20 per million, reads at $0.20, 5-minute writes at 1.25x.
+        "claude-opus-5-5": (4000, 20000, 200, 5000),
     ]
 
     public let store: ObjectStore
