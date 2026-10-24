@@ -59,6 +59,8 @@ struct TesseraApp: App {
                     #if DEBUG
                         if LaunchFlags.has("-soulGallery") {
                             SoulGallery()
+                        } else if LaunchFlags.has("-wheelLab") {
+                            WheelLab()
                         } else if LaunchFlags.has("-measureGallery") {
                             MeasureGallery().environment(model)
                         } else if LaunchFlags.has("-notes") {
