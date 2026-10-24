@@ -120,9 +120,9 @@ final class GestureStabilityUITests: SimulatorOnlyTestCase {
             .matching(NSPredicate(format: "label == %@", "One thing at a time")).firstMatch
         XCTAssertTrue(one.waitForExistence(timeout: 20), "Home has the one-thing space")
         sleep(2)
+        // The space's accessibility value is the current thing ("1 of 3, ...").
         func current() -> String {
-            one.descendants(matching: .any).matching(NSPredicate(format: "label != %@", "One thing at a time"))
-                .firstMatch.label
+            one.value as? String ?? ""
         }
         let before = current()
         // The mosaic sits above the one-thing space, 16 pt clear of it and 160 pt tall, on the right of the page.
@@ -133,11 +133,13 @@ final class GestureStabilityUITests: SimulatorOnlyTestCase {
             from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: -width * 0.45, dy: 0)),
                        withVelocity: .default, thenHoldForDuration: 0)
             sleep(1)
-            let back = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: width * 0.4, dy: y))
-            back.press(forDuration: 0.05, thenDragTo: back.withOffset(CGVector(dx: width * 0.45, dy: 0)),
+            // The return swipe starts at 0.55 of the width, still on the mosaic (it spans about 0.32 to 0.94).
+            let back = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: width * 0.55, dy: y))
+            back.press(forDuration: 0.05, thenDragTo: back.withOffset(CGVector(dx: width * 0.35, dy: 0)),
                        withVelocity: .default, thenHoldForDuration: 0)
             sleep(1)
         }
+        XCTAssertFalse(before.isEmpty, "the one-thing space reports its current thing")
         XCTAssertEqual(current(), before, "a swipe across the mosaic must not turn the one thing")
     }
 }

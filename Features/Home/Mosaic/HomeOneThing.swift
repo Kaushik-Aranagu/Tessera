@@ -142,11 +142,18 @@ struct HomeOneThing: View {
         .tesseraFeedback(.setLogged, trigger: finishes)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("One thing at a time")
+        // The current thing, so VoiceOver hears it change after an adjust and a UI test can read which one is showing.
+        .accessibilityValue(currentValue)
         .accessibilityAdjustableAction { direction in
             if turn(direction == .increment ? -(Self.swipeDistance + 1) : Self.swipeDistance + 1) {
                 turns += 1
             }
         }
+    }
+
+    private var currentValue: String {
+        guard things.indices.contains(index) else { return "" }
+        return "\(index + 1) of \(things.count), \(things[index].spoken)"
     }
 
     // MARK: Page
