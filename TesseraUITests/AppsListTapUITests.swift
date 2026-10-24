@@ -4,6 +4,8 @@ import XCTest
 /// on the middle row opens the app, a tap on a side row brings it to the middle.
 @MainActor
 final class AppsListTapUITests: SimulatorOnlyTestCase {
+    private static let names = ["Training", "Kitchen", "Routines", "Tasks", "Notes", "Lists", "Money"]
+
     private func launch() -> XCUIApplication {
         let app = XCUIApplication()
         // Not the demo: it skips the feature flags, and the mosaic Home with its apps list ships On.
@@ -14,37 +16,44 @@ final class AppsListTapUITests: SimulatorOnlyTestCase {
         return app
     }
 
-    private static let names = ["Training", "Kitchen", "Routines", "Tasks", "Notes", "Lists", "Money"]
-
-    /// The row buttons of the apps list, found by app name; the middle one reads its fact after a comma.
-    private func rows(_ app: XCUIApplication) -> [XCUIElement] {
-        let first = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Training")).firstMatch
-        XCTAssertTrue(first.waitForExistence(timeout: 10), "The apps list is on Home")
+    private func rowQuery(_ app: XCUIApplication) -> XCUIElementQuery {
         let predicate = NSPredicate(format: Self.names.map { _ in "label BEGINSWITH %@" }.joined(separator: " OR "),
                                     argumentArray: Self.names)
-        return app.buttons.matching(predicate).allElementsBoundByIndex.filter { $0.exists && $0.isHittable }
+        return app.buttons.matching(predicate)
+    }
+
+    /// The row buttons of the apps list on screen, top to bottom: three, the middle one second.
+    private func rows(_ app: XCUIApplication) -> [XCUIElement] {
+        XCTAssertTrue(rowQuery(app).firstMatch.waitForExistence(timeout: 10), "The apps list is on Home")
+        return rowQuery(app).allElementsBoundByIndex.filter { $0.exists && $0.isHittable }
+            .sorted { $0.frame.minY < $1.frame.minY }
     }
 
     func testTapOnASideRowBringsItToTheMiddle() {
         let app = launch()
         let before = rows(app)
-        let side = before.first { !$0.label.contains(",") }
-        XCTAssertNotNil(side, "A side row is on screen")
-        guard let side else { return }
+        XCTAssertGreaterThanOrEqual(before.count, 3, "Three rows are on screen")
+        guard before.count >= 3 else { return }
+        let middleY = before[1].frame.minY
+        let side = before[2]
         let name = side.label
+        XCTAssertGreaterThan(abs(side.frame.minY - middleY), 20, "The side row starts away from the middle")
         side.tap()
         sleep(1)
-        let middle = rows(app).first { $0.label.hasPrefix(name) && $0.label.contains(",") }
-        XCTAssertNotNil(middle, "\(name) is now the middle row")
+        let moved = rowQuery(app).matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
+        XCTAssertTrue(moved.waitForExistence(timeout: 3))
+        XCTAssertLessThan(abs(moved.frame.minY - middleY), 6, "\(name) is now the middle row")
     }
 
     func testTapOnTheMiddleRowOpensTheApp() {
         let app = launch()
-        let middle = rows(app).first { $0.label.contains(",") }
-        XCTAssertNotNil(middle, "The middle row is on screen")
-        middle?.tap()
-        sleep(1)
-        // The door page covers Home: the list is no longer reachable.
-        XCTAssertTrue(rows(app).isEmpty || !app.buttons["Tess"].isHittable, "The app's page opened over Home")
+        let before = rows(app)
+        XCTAssertGreaterThanOrEqual(before.count, 3, "Three rows are on screen")
+        guard before.count >= 3 else { return }
+        before[1].tap()
+        sleep(2)
+        // The app's page covers Home: Tess's corner and the list are no longer both reachable.
+        XCTAssertTrue(rowQuery(app).allElementsBoundByIndex.filter(\.isHittable).isEmpty
+            || !app.buttons["Tess"].isHittable, "The app's page opened over Home")
     }
 }
