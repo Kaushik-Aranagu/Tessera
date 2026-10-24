@@ -203,6 +203,7 @@ public enum ActionRegistry {
         RecordBelief.descriptor.name: { try decode(RecordBelief.self, RecordBelief.descriptor.name, $0) },
         ReviseBelief.descriptor.name: { try decode(ReviseBelief.self, ReviseBelief.descriptor.name, $0) },
         ConfirmBelief.descriptor.name: { try decode(ConfirmBelief.self, ConfirmBelief.descriptor.name, $0) },
+        MergeBelief.descriptor.name: { try decode(MergeBelief.self, MergeBelief.descriptor.name, $0) },
         ForgetBelief.descriptor.name: { try decode(ForgetBelief.self, ForgetBelief.descriptor.name, $0) },
         LogNextSet.descriptor.name: { try decode(LogNextSet.self, LogNextSet.descriptor.name, $0) },
         MoveSlot.descriptor.name: { try decode(MoveSlot.self, MoveSlot.descriptor.name, $0) },
