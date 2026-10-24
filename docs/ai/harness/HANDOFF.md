@@ -25,8 +25,12 @@ His later asks, in order:
   (workouts, ingredients, pantry items).
 - **Lab mode (his pick, Oct 23).** Claude calls from his phone may carry health, body, calendar, calories and money.
   The key never leaves `ClaudeBrain`. Strict mode stays one switch away.
-- **Smallest model per task.** Use the smallest model that fits each task. Never a big model on a simple task. No
-  Opus in the app. Cost is otherwise fine.
+- **Don't overthink simple tasks.** Never a big model on a simple task, because bigger models overthink.
+- **Accuracy first (Oct 23, 6:14 PM PT, wins over any cost rule).** "I want us to be more functionally accurate than
+  being cost effective... Forget about cost." And: "I'm not asking you to forcefully increase the context size, but
+  we should allow it to always work at its best to whatever extent it needs." Sizes are starting points, not
+  ceilings. Models are picked by what gets the task right: Haiku for simple tasks, Sonnet for open ones, and Opus
+  only as an escalation rung. The cap is $100 a month, as a runaway guard only.
 - **Our own memory system.** Explain it in plain words, and improve it over time.
 - **Everything on.** Every feature, experiments included, ships On to his phone. Tell him when slices land.
 - **Big, persistent context (Oct 24, 12:51 AM UTC).** Use as much context as possible, with set sizes for each kind
@@ -83,16 +87,20 @@ These are stacked. Leads never merge; QA reviews; the coordinator merges through
 1. **H3 and the app wiring** (`h3-wiring-build.md`). Core builds `TessRun` in
    `TesseraCore/Sources/TesseraTess/Harness/`. Builder A builds `App/AppModel+Harness.swift` after the integ/77
    build.
-2. **M0** (`memory-context-m0-m6.md`) before H3 merges:
+2. **Accuracy-first changes to what's built.** Raise `TessUsageLedger`'s cap to $100. Add `.opus` to `BrainID`
+   (claude-opus-5-5, an escalation rung only). Turn adaptive thinking on for Claude calls, except calls that force a
+   tool. `h0-h2-build.md` still says "No Opus" and "effort low"; the ACCURACY FIRST section of
+   `memory-context-m0-m6.md` wins.
+3. **M0** (`memory-context-m0-m6.md`) before H3 merges:
    - Replay assistant content verbatim (`BrainContent.raw`, `BrainEvent.assistant`), including thinking and
      server-tool blocks.
    - Handle `pause_turn`.
    - Cost web search, and cost Haiku's price step past 100K input.
    - Cache TTL marks.
    - `countTokens`.
-3. **M1 to M6** in order. Each section ends with acceptance tests. Developer mode gets read-only rows: Harness
+4. **M1 to M6** in order. Each section ends with acceptance tests. Developer mode gets read-only rows: Harness
    (bench, trace, today's playbook), Context, Budgets, Memory eval.
-4. Later slices from the harness page:
+5. Later slices from the harness page:
    - H4 Desk and Training agent
    - H5 capture router net
    - H6 Kitchen and memory
@@ -105,7 +113,8 @@ These come from Kaushik and from project memory. Only he can change them.
 - **The key.** He has a Claude key in the Keychain. Never copy, print, log or ask for any part of it. It never
   leaves `ClaudeBrain`. A key-shaped ask is refused before the Door.
 - **Money.** Money actions are never offered to Claude. The Money agent is read-only.
-- **Spend.** The AI cap is $50 a month (`TessUsageLedger`), with a step-aside at 80%. Turning "Tess asks Claude"
+- **Spend.** The AI cap is $100 a month (`TessUsageLedger`; it was $50 until Oct 23), with a step-aside at 80%. It's
+  there to stop a runaway bug, not to shape any design choice. Turning "Tess asks Claude"
   Off means nothing is sent.
 - **What is stored.** Stored Tess turns keep their walls (placeholders for walled words). Lab mode changes what is
   sent live, not what is kept. Tess turns, lab sent rows and run checkpoints are never in backups.
@@ -123,8 +132,7 @@ These come from Kaushik and from project memory. Only he can change them.
 - His "Jev/Jeff" open model was read as Gemma. This is unconfirmed.
 - These need H0 bench numbers on his phone: real first-token latencies, Haiku 5.5's minimum cacheable prefix in
   practice, and Apple `LanguageModelSession` throughput.
-- Typical cost with the M3 sizes is estimated at about $25 a month. This is arithmetic, not measured. The meter and
-  tuner in M3 measure it.
+- Cost under accuracy-first is not estimated. The M3 meter measures it from the first day.
 
 ## How to continue from here
 
