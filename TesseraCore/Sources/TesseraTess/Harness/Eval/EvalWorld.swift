@@ -333,7 +333,8 @@ struct Maker {
 
     mutating func makeTraining() {
         for day in days where day < today {
-            if day >= Self.breakStart, day <= Self.breakEnd {
+            // By his local day: `days` start at midnight and the break's dates at noon, so Jul 6 itself is out too.
+            if day >= calendar.startOfDay(for: Self.breakStart), day <= calendar.startOfDay(for: Self.breakEnd) {
                 continue
             }
             guard let name = routine(on: day), let slots = Self.routines[name] else { continue }
