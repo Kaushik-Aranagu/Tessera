@@ -69,6 +69,8 @@ struct HomeMosaicPage: View {
     @State private var thingIndex = 0
     @State private var thingsLeftAt: Date?
     @State private var pageWidth: CGFloat = 0
+    /// The apps wheel is held: the page does not scroll under the same finger.
+    @State private var wheelHeld = false
 
     private var layerOn: Bool {
         HomeMosaic.moodsIsOn && facts != nil && pick != nil
@@ -103,7 +105,7 @@ struct HomeMosaicPage: View {
                              done: { finishThing($0) }, open: { openThing($0) }, onSlot: { signSlot = $0 })
                     .mosaicShield()
                 if HomeMosaic.appsListIsOn {
-                    AppsListSlot(onGlance: { playGlance($0) })
+                    AppsListSlot(onHold: { wheelHeld = $0 }, onGlance: { playGlance($0) })
                         .mosaicShield()
                 }
             }
@@ -114,6 +116,7 @@ struct HomeMosaicPage: View {
         }
         .scrollIndicators(.hidden)
         .scrollBounceBehavior(.basedOnSize)
+        .scrollDisabled(wheelHeld)
         // Sheet 216: the date is the board's first line, so the Settings entry sits at the top left, clear of the
         // right-aligned rows (the date row is short and begins well to its right).
         .overlay(alignment: .topLeading) {
