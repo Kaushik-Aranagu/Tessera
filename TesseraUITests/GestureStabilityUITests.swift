@@ -143,4 +143,53 @@ final class GestureStabilityUITests: SimulatorOnlyTestCase {
         XCTAssertFalse(before.isEmpty, "the one-thing space reports its current thing")
         XCTAssertEqual(current(), before, "a swipe across the mosaic must not turn the one thing")
     }
+
+    private func homeArguments() -> [String] {
+        ["-demo", "-demoTime", "18:10", "-resetDemo", "-review.homeMosaic", "On", "-review.homeMosaicMoods", "On",
+         "-review.homeAppsList", "On"]
+    }
+
+    private func launchHome() -> (app: XCUIApplication, one: XCUIElement) {
+        let app = launchApp(homeArguments())
+        let one = app.descendants(matching: .any)["homeOneThing"]
+        XCTAssertTrue(one.waitForExistence(timeout: 40), "Home has the one-thing space")
+        sleep(2)
+        return (app, one)
+    }
+
+    /// G13 on a vertical-capable element: the one thing takes swipes on both axes, and a plain tap still opens it.
+    func testATapOnTheOneThingOpensItsPage() {
+        let (app, one) = launchHome()
+        let before = one.value as? String ?? ""
+        // The mid line is a button: a tap 40 pt in and 100 pt down from the space's top.
+        one.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 40, dy: 100)).tap()
+        let gone = NSPredicate(format: "hittable == false")
+        expectation(for: gone, evaluatedWith: one)
+        waitForExpectations(timeout: 10)
+        XCTAssertFalse(app.buttons["UNDO"].exists, "a tap marked something done")
+        XCTAssertFalse(before.isEmpty, "the one thing had a value")
+    }
+
+    /// Holding a task's big line about 0.9 s marks it done with Undo. Only a task can be struck through, so this
+    /// walks the things (relaunching, since a hold on any other thing opens it) until one is a task.
+    func testHoldingATaskOnTheOneThingMarksItDoneWithUndo() {
+        for position in 0 ..< 7 {
+            let (app, one) = launchHome()
+            guard position == 0 || one.isHittable else {
+                app.terminate()
+                continue
+            }
+            for _ in 0 ..< position {
+                let from = one.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5))
+                from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: -150, dy: 0)),
+                           withVelocity: .default, thenHoldForDuration: 0)
+                sleep(1)
+            }
+            one.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 40, dy: 40)).press(forDuration: 0.9)
+            let found = app.buttons["UNDO"].waitForExistence(timeout: 3)
+            app.terminate()
+            if found { return }
+        }
+        XCTFail("no task among the things finished on a 0.9 s hold")
+    }
 }
