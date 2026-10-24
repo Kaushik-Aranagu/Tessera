@@ -83,7 +83,7 @@ Rules that Kaushik and the leads set:
 | #1364 | Harness H1a + H0: Brain seam, ClaudeBrain, AppleBrain, RunTrace, latency bench | 6454b00c | master | passed |
 | #1365 | Harness H1b: Door, router, lab/strict policy, hedge | cea320a6 | #1364's branch | passed |
 | #1367 | Harness H2: PlaybookDirector, PlaybookStore, PlaybookJob | 11b2834e | #1365's branch | passed |
-| #1366 | integ/77 QA list and gestures review | 409666be | integ/77 | passed; the coordinator says it is merged into integ/77-next (GitHub showed it open against integ/77 at 5:52 PM) |
+| #1366 | integ/77 QA list and gestures review | 409666be | integ/77 | passed; open against integ/77 but already merged into integ/77-next (6d0f56ff) |
 
 Merge order for the stack: #1364, then #1365, then #1367. #1361 is independent.
 
@@ -93,9 +93,9 @@ Open QA findings for the integ/77 line are in `qa/open-findings-integ77.md` and 
 
 Order is roughly the order Kaushik wants it.
 
-**Harness H3, Tess streaming loop (Core, `TesseraCore/Sources/TesseraTess/Harness/`).** `TessRun` (one per ask, an `AsyncStream` of waiting / words / ghost / finished / failed), a `pickRung` rule (open questions to Sonnet 5.5 with a Haiku hedge, small asks to Haiku 5.5), a fixed cache-friendly pack order, the read-only `open(handle, depth)` tool, a three-round tool loop with parallel reads and serial writes, resumable checkpoints in `tess-runs.json`, run ids on trace spans, warm-ups, conversation storage, and the `tessAsks` flag. Spec: `docs/ai/harness-build-h3-wiring.md`, Part B. It builds on #1364, #1365 and #1367.
+**Harness H3, Tess streaming loop (Core, `TesseraCore/Sources/TesseraTess/Harness/`).** `TessRun` (one per ask, an `AsyncStream` of waiting / words / ghost / finished / failed), a `pickRung` rule (open questions to Sonnet 5.5 with a Haiku hedge, small asks to Haiku 5.5), a fixed cache-friendly pack order, the read-only `open(handle, depth)` tool, a three-round tool loop with parallel reads and serial writes, resumable checkpoints in `tess-runs.json`, run ids on trace spans, warm-ups, conversation storage, and the `tessAsks` flag. Spec: `docs/ai/harness/h3-wiring-build.md`, Part B. It builds on #1364, #1365 and #1367. The memory and context work (M0 to M6, in `docs/ai/harness/memory-context-m0-m6.md`) follows; M0 must land before H3 merges.
 
-**Harness app wiring and the cobalt Training accent (Builder A's lane, app target).** Part A of the same spec: one harness per app run (`App/AppModel+Harness.swift`), `AppModel.director`, filling the playbook at the first foreground after 4 am, and three read-only Developer mode rows (Run latency bench, Trace, Today's playbook). Spec: `docs/ai/harness-build-h3-wiring.md`, Part A. The Training accent changes from the old crimson to cobalt (0B62AE light, 3B8CF2 dark); see sheets 226 and 227.
+**Harness app wiring and the cobalt Training accent (Builder A's lane, app target).** Part A of the same spec: one harness per app run (`App/AppModel+Harness.swift`), `AppModel.director`, filling the playbook at the first foreground after 4 am, and three read-only Developer mode rows (Run latency bench, Trace, Today's playbook). Spec: `docs/ai/harness/h3-wiring-build.md`, Part A. The Training accent changes from the old crimson to cobalt (0B62AE light, 3B8CF2 dark); see sheets 226 and 227.
 
 **Room landings (Design approved, then build).**
 - 226 room landings, layout first: `docs/design/room-landings-layout-226.md`. Approved by Kaushik 5:40 PM Oct 23, with reviewer fixes listed at the bottom of the sheet. Four bands per room (headline, brief, body, foot), one fine-line drawing per room, no pixel art inside rooms.
@@ -141,11 +141,11 @@ Claude calls and the walls:
 
 Two copies exist, and they should match.
 - The project folder `tessera/` (shared with the Claude project): `product/` (ship lists, decisions, build sheets), `design/` (numbered sheets 1 to 228), `ai/` (Tess and harness specs), `core.md`, `motion.md`, `product.md`, `qa/` (QA verdicts per PR, `review-<N>.md`, the test plan, open findings), `research/`, `ops/` (team addresses, board, checklists), and `handoff/CODEX.md` (this file).
-- The repo mirror under `docs/`. It is behind the project folder for the newest sheets; this PR adds the harness specs and sheets 226 to 228. Sheets 210 to 225, the Oct 22 build sheets in `product/` and the two QA files named above are still project-folder only.
+- The repo mirror under `docs/`. It is behind the project folder for the newest sheets; the harness specs are under `docs/ai/harness/` and this PR adds sheets 226 to 228. Sheets 210 to 225, the Oct 22 build sheets in `product/` and the two QA files named above are still project-folder only.
 
 Key paths:
 - Decisions log: `docs/product/decisions.md` (newest at the bottom, with Kaushik's words and times).
-- Harness: `docs/ai/harness-build-h0-h2.md`, `docs/ai/harness-build-h3-wiring.md`, `docs/ai/architecture.md`.
+- Harness (one copy, owned by the harness thread): the folder `docs/ai/harness/`. Start with `HANDOFF.md`; the build specs `h0-h2-build.md`, `h3-wiring-build.md` and `memory-context-m0-m6.md` sit beside it. Also `docs/ai/architecture.md`.
 - Room sheets: `docs/design/room-landings-layout-226.md`, `landing-elements-kt-227.md`, `landing-elements-rooms-228.md`.
 - Ops: `docs/ops/` (board, address files, checklists).
 - Product vision: `docs/PRODUCT_VISION.md`. Motion: `docs/DESIGN_MOTION.md`.
@@ -159,3 +159,4 @@ When you are near your own limits, write a short handoff note in `ops/rotation-h
 ## Update log
 
 - 6:05 PM PT Oct 23: first version (Ops). State and queued work as of the coordinator's 5:52 PM note.
+- 6:10 PM PT Oct 23: #1366 worded as open against integ/77 and merged into integ/77-next; harness specs now point to docs/ai/harness/ (one copy).
