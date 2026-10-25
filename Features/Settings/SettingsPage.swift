@@ -12,8 +12,11 @@ struct SettingsPage: View {
     @Environment(\.isPresented) private var isPresented
 
     var body: some View {
-        // Sheet 203: with Settings v2 On (the default) the overhauled page; Off keeps the older stack of sections.
-        if SettingsV2.isOn {
+        // With Landing pages On, the landing (contract §12); its title opens the hub. Sheet 203: with Settings v2 On
+        // (the default) the overhauled page; Off keeps the older stack of sections.
+        if LandingSwitch.isOn {
+            SettingsLandingPage()
+        } else if SettingsV2.isOn {
             SettingsHub(cameFrom: cameFrom == "Review" ? "Home" : cameFrom)
         } else {
             legacy

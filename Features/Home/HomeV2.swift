@@ -125,7 +125,11 @@ struct HomeV2DoorPage: View {
             case .review:
                 ScrollView { ReviewPage().padding(.horizontal, Theme.Spacing.gutter) }
             case .app(.training):
-                ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
+                if LandingSwitch.isOn {
+                    TrainingRoomView()
+                } else {
+                    ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
+                }
             case .app(.kitchen):
                 // The landing owns its whole frame (landing contract §1): no scroll, no padding around it.
                 KitchenLandingPage()

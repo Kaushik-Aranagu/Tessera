@@ -1,0 +1,372 @@
+import SwiftUI
+import TesseraCore
+
+// The facts the Training landing shows (landing contract §12, sheets 226, 230, 241): the day, the word wall of lifts
+// and routines, the five doors, the one brief line and the foot's action word. Read once per revision; nothing here
+// draws. Private routines read "Private workout" and never reach the wall.
+
+/// What today is for Training.
+enum TrainingDay: Equatable {
+    case ready(name: String, minutes: Int, lifts: Int)
+    case running(name: String, liftsDone: Int)
+    case done(name: String, next: String?)
+    case rest(next: String?, nextDay: Date?)
+    case nothing
+}
+
+/// The brief's one line: plain words around one named thing.
+struct TrainingBrief: Equatable {
+    var before = ""
+    let name: String
+    var after = ""
+    /// The split colour for a routine name (Push clay, Pull teal, Legs plum); nil draws the name in ink.
+    var split: TrainingSplit?
+
+    var text: String {
+        before + name + after
+    }
+}
+
+/// Sheet 241: the split a routine belongs to, by its name.
+enum TrainingSplit: Equatable {
+    case push, pull, legs
+
+    init?(name: String) {
+        let lower = name.lowercased()
+        if lower.hasPrefix("push") {
+            self = .push
+        } else if lower.hasPrefix("pull") {
+            self = .pull
+        } else if lower.hasPrefix("leg") {
+            self = .legs
+        } else {
+            return nil
+        }
+    }
+
+    func color(dark: Bool) -> Color {
+        switch self {
+        case .push: Color(hex: dark ? 0xE2A07F : 0x9C4B2C)
+        case .pull: Color(hex: dark ? 0x84C3C9 : 0x1E6E77)
+        case .legs: Color(hex: dark ? 0xE3A3CB : 0x8A4570)
+        }
+    }
+}
+
+/// Where a wall word or a door goes.
+enum TrainingWallTarget: Equatable {
+    case exercise(UUID)
+    case routine(UUID)
+
+    var id: String {
+        switch self {
+        case let .exercise(id): "x:\(id.uuidString)"
+        case let .routine(id): "r:\(id.uuidString)"
+        }
+    }
+
+    init?(id: String) {
+        let parts = id.split(separator: ":", maxSplits: 1).map(String.init)
+        guard parts.count == 2, let uuid = UUID(uuidString: parts[1]) else { return nil }
+        switch parts[0] {
+        case "x": self = .exercise(uuid)
+        case "r": self = .routine(uuid)
+        default: return nil
+        }
+    }
+}
+
+struct TrainingWallFacts {
+    let day: TrainingDay
+    let words: [WallWord]
+    let doors: [DialDoor]
+    let brief: TrainingBrief?
+    /// The foot's word; nil when there is nothing to do from here.
+    let action: String?
+    /// The right-drag option on a rest day: start the next routine anyway.
+    let restOption: String?
+
+    var stateLine: [String] {
+        Self.stateForms(day)
+    }
+
+    // MARK: Words
+
+    /// The state line, longest form first (FitLine shows the longest that fits; the last always fits).
+    static func stateForms(_ day: TrainingDay, calendar: Calendar = .current) -> [String] {
+        switch day {
+        case let .ready(name, minutes, lifts):
+            let liftWord = lifts == 1 ? "lift" : "lifts"
+            return ["\(name) today, about \(minutes) min, \(lifts) \(liftWord).",
+                    "\(name) today, about \(minutes) min.", "\(name) today.", "\(name)."]
+        case let .running(name, liftsDone):
+            let forms = liftsDone > 0
+                ? ["\(name) under way, \(liftsDone) \(liftsDone == 1 ? "lift" : "lifts") done."] : []
+            return forms + ["\(name) under way.", "Under way."]
+        case let .done(name, next):
+            let forms = next.map { ["\(name) done today. Next is \($0).", "\(name) done. Next is \($0)."] } ?? []
+            return forms + ["\(name) done today.", "Done today."]
+        case let .rest(next, nextDay):
+            var forms: [String] = []
+            if let nextDay {
+                let weekday = calendar.weekdaySymbols[calendar.component(.weekday, from: nextDay) - 1]
+                forms.append("Rest today. Next is \(weekday).")
+            } else if let next {
+                forms.append("Rest today. Next is \(next).")
+            }
+            return forms + ["Rest today."]
+        case .nothing:
+            return ["Nothing on the plan yet.", "No plan yet."]
+        }
+    }
+
+    static func actionWord(_ day: TrainingDay) -> String? {
+        switch day {
+        case let .ready(name, _, _): "Start \(footName(name))"
+        case let .running(name, _): "Pick up \(footName(name))"
+        case .rest: "Log a walk"
+        case .done: nil
+        case .nothing: "Pick a routine"
+        }
+    }
+
+    /// "Private workout" reads lower case inside a phrase ("Start private workout").
+    private static func footName(_ name: String) -> String {
+        name == ObjectPrivacy.routineLabel ? name.lowercased() : name
+    }
+
+    /// A wall word: cut on a whole word at 14 characters, the Notes rule.
+    static func short(_ name: String) -> String {
+        NotesLandingPage.short(name)
+    }
+
+    /// The first word of a lift ("Bench" for "Bench Press"), for the door facts' 150 pt column.
+    static func lift(_ name: String) -> String {
+        name.split(separator: " ").first.map(String.init) ?? name
+    }
+
+    /// Recency (0 to 0.7, gone after 60 days) plus 0.3 when the newest session holds the best.
+    static func weight(daysSince: Double, bestIsNewest: Bool) -> Double {
+        let recency = max(0, 1 - daysSince / 60) * 0.7
+        return min(1, recency + (bestIsNewest ? 0.3 : 0))
+    }
+}
+
+// MARK: - Loading
+
+@MainActor
+extension TrainingWallFacts {
+    private struct Lift {
+        let exercise: ClassDef
+        let last: Date
+        let best: TrainingLedger.LoggedSet?
+        let bestIsNewest: Bool
+    }
+
+    @MainActor
+    static func load(_ model: AppModel, now: Date = AppClock.now, dark: Bool = false) -> TrainingWallFacts {
+        let store = model.store
+        let plan = model.plan
+        let calendar = Calendar.current
+        func shown(_ title: String) -> String {
+            ObjectPrivacy.routineTitle(title, in: store)
+        }
+        let routines = plan.map { store.linkedObjects("routines", of: $0) }?.filter { !$0.isDeleted } ?? []
+        let day = day(model, now: now, shown: shown)
+
+        // Lifts with history, newest first. Private words never reach the wall or the doors.
+        let lifts: [Lift] = ExerciseLibraryList.groups(model).flatMap(\.exercises)
+            .compactMap { exercise -> Lift? in
+                guard !ObjectPrivacy.isPrivateWord(exercise.name, in: store) else { return nil }
+                let sessions = model.ledger.sessions(of: exercise)
+                guard let newest = sessions.first else { return nil }
+                let best = model.ledger.bestSet(of: exercise)
+                let newestHolds = best.map { best in newest.sets.contains { $0.id == best.id } } ?? false
+                return Lift(exercise: exercise, last: newest.date, best: best, bestIsNewest: newestHolds)
+            }
+            .sorted { $0.last > $1.last }
+
+        var words: [WallWord] = lifts.prefix(18).map { lift in
+            let days = max(0, now.timeIntervalSince(lift.last) / 86400)
+            return WallWord(id: TrainingWallTarget.exercise(lift.exercise.id).id, text: short(lift.exercise.name),
+                            weight: weight(daysSince: days, bestIsNewest: lift.bestIsNewest))
+        }
+        let todayName: String? = switch day {
+        case let .ready(name, _, _), let .running(name, _): name
+        default: nil
+        }
+        for routine in routines where shown(routine.title) != ObjectPrivacy.routineLabel
+            && !words.contains(where: { $0.text == short(routine.title) })
+        {
+            let isToday = routine.title == todayName
+            words.append(WallWord(id: TrainingWallTarget.routine(routine.id).id, text: short(routine.title),
+                                  weight: isToday ? 0.95 : 0.4))
+        }
+
+        let doors = doors(model, day: day, lifts: lifts, routines: routines, shown: shown, now: now,
+                          calendar: calendar, dark: dark)
+        let brief = brief(model, day: day, lifts: lifts, calendar: calendar)
+        var restOption: String?
+        if case let .rest(next, _) = day, let next {
+            restOption = "Start \(footName(next))"
+        }
+        return TrainingWallFacts(day: day, words: words, doors: doors, brief: brief, action: actionWord(day),
+                                 restOption: restOption)
+    }
+
+    /// What today is, from the same sources the old page reads: running, tried, tonight's, the plan's, done, rest.
+    @MainActor
+    private static func day(_ model: AppModel, now: Date, shown: (String) -> String) -> TrainingDay {
+        let store = model.store
+        if let session = model.session {
+            let done = session.entries.filter { !session.setRows(of: $0).isEmpty }.count
+            return .running(name: shown(session.workout.title), liftsDone: done)
+        }
+        if let workout = model.tonightWorkout(around: now) {
+            let entries = workout.orderedChildren.filter { !$0.isDeleted }
+            let sets = NowPage.plannedSets(entries, store: store)
+            return .ready(name: shown(workout.title), minutes: TrainingPage.estimatedMinutes(sets: sets),
+                          lifts: entries.count)
+        }
+        let plan = model.plan
+        let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan)
+        if let finished = model.finishedToday(now: now).first {
+            let next = plan.flatMap { model.ledger.nextRoutine(in: $0, now: now) }.map { shown($0.title) }
+            return .done(name: shown(finished.title), next: next)
+        }
+        if model.triedRoutine() == nil,
+           let rest = NowPicker(engine: model.engine).restDay(plan: plan, at: now, sessionsPerWeek: perWeek)
+        {
+            return .rest(next: shown(rest.next.title), nextDay: rest.nextDay)
+        }
+        if let routine = model.triedRoutine() ?? model.todaysRoutine(now: now) {
+            let slots = routine.orderedChildren.filter { !$0.isDeleted }
+            let sets = slots.reduce(0) { $0 + max(Int(store.number("sets", of: $1) ?? 3), 1) }
+            return .ready(name: shown(routine.title), minutes: TrainingPage.estimatedMinutes(sets: sets),
+                          lifts: slots.count)
+        }
+        return .nothing
+    }
+
+    // MARK: Doors
+
+    @MainActor
+    private static func doors(_ model: AppModel, day: TrainingDay, lifts: [Lift], routines: [ObjectRecord],
+                              shown: (String) -> String, now: Date, calendar: Calendar,
+                              dark: Bool) -> [DialDoor]
+    {
+        let store = model.store
+        let blue = Theme.Colors.Accent.training
+        let green = Color(hex: dark ? 0x8FC9A0 : 0x25803D)
+        let gold = Color(hex: dark ? 0xD9C27A : 0x7E6A1E)
+        let slate = Color(hex: dark ? 0xA7BCD6 : 0x34506F)
+        let plan = model.plan
+        let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan) ?? 0
+        // Days trained this week (a day with two sessions is one day trained).
+        let done = model.ledger.week(
+            containing: now,
+            plan: plan,
+            now: now,
+            sessionsPerWeek: perWeek > 0 ? perWeek : nil,
+            calendar: calendar
+        ).filter { !$0.done.isEmpty }.count
+        let left = max(perWeek - done, 0)
+
+        var weekLines: [String] = []
+        weekLines.append(done == 0 ? "Nothing yet" : "\(done) done")
+        if left > 0 {
+            weekLines.append("\(left) to go")
+        }
+        if case let .rest(next, nextDay) = day, let next, let nextDay {
+            let weekday = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: nextDay) - 1]
+            weekLines.append("\(lift(next)) \(weekday)")
+        }
+
+        var routineNames: [String] = []
+        for routine in routines {
+            let name = shown(routine.title)
+            if !routineNames.contains(name) {
+                routineNames.append(name)
+            }
+        }
+
+        let plans = model.objects(of: .plan)
+        var programLines: [String] = []
+        if let plan {
+            programLines.append(short(shown(plan.title)))
+            let fixed = PlanSchedule.mode(of: plan, store: store) == .fixed
+            programLines.append(fixed ? "Fixed days" : "Rolls on")
+            if perWeek > 0 {
+                programLines.append("\(perWeek) a week")
+            }
+        }
+
+        let bests = lifts.compactMap { lift in lift.best.map { (lift.exercise.name, $0) } }.prefix(3)
+        return [
+            DialDoor(id: "week", name: "This week", count: done > 0 ? "\(done)" : nil, color: blue,
+                     lines: weekLines),
+            DialDoor(id: "routines", name: "Routines", count: routines.isEmpty ? nil : "\(routines.count)",
+                     color: green, label: routineNames.isEmpty ? nil : "In the plan",
+                     lines: Array(routineNames.prefix(3).map { $0 == ObjectPrivacy.routineLabel ? $0 : short($0) })),
+            DialDoor(id: "exercises", name: "Exercises", count: lifts.isEmpty ? nil : "\(lifts.count)", color: gold,
+                     label: lifts.isEmpty ? nil : "Lately", lines: lifts.prefix(3).map { short($0.exercise.name) }),
+            DialDoor(id: "programs", name: "Programs", count: plans.count > 1 ? "\(plans.count)" : nil, color: slate,
+                     lines: programLines),
+            DialDoor(id: "goals", name: "Goals", color: blue, label: bests.isEmpty ? nil : "Bests",
+                     lines: bests.map { "\(lift($0.0)) \(Format.mass($0.1.weight))" }),
+        ]
+    }
+
+    // MARK: Brief
+
+    @MainActor
+    private static func brief(_ model: AppModel, day: TrainingDay, lifts: [Lift], calendar _: Calendar)
+        -> TrainingBrief?
+    {
+        switch day {
+        case let .ready(name, _, _):
+            // A private workout says nothing about what it works.
+            guard name != ObjectPrivacy.routineLabel else {
+                return TrainingBrief(before: "", name: name, after: " is ready when you are.")
+            }
+            if let opener = opener(model), !ObjectPrivacy.isPrivateWord(opener.name, in: model.store) {
+                if let weight = opener.weight {
+                    return TrainingBrief(name: opener.name, after: " opens at \(Format.mass(weight)).")
+                }
+                return TrainingBrief(name: opener.name, after: " comes first.")
+            }
+            return TrainingBrief(name: name, after: " is ready when you are.", split: TrainingSplit(name: name))
+        case let .running(name, _):
+            return TrainingBrief(name: name, after: " is waiting where you left it.", split: TrainingSplit(name: name))
+        case let .rest(next, _):
+            if let next {
+                return TrainingBrief(before: "Next is ", name: next, after: ".", split: TrainingSplit(name: next))
+            }
+            return bestLine(lifts)
+        case .done, .nothing:
+            return bestLine(lifts)
+        }
+    }
+
+    /// "Bench Press best 100 kg, Oct 12." from the newest lift with a best.
+    private static func bestLine(_ lifts: [Lift]) -> TrainingBrief? {
+        guard let lift = lifts.first(where: { $0.best != nil }), let best = lift.best else { return nil }
+        let day = lift.last.formatted(.dateTime.month(.abbreviated).day())
+        let when = lift.bestIsNewest ? ", \(day)" : ""
+        return TrainingBrief(name: lift.exercise.name, after: " best \(Format.mass(best.weight))\(when).")
+    }
+
+    /// Today's first lift and the weight it opened at last time.
+    @MainActor
+    private static func opener(_ model: AppModel) -> (name: String, weight: Double?)? {
+        let store = model.store
+        let first: ObjectRecord? = if let workout = model.tonightWorkout() {
+            workout.orderedChildren.first { !$0.isDeleted }
+        } else {
+            (model.triedRoutine() ?? model.todaysRoutine())?.orderedChildren.first { !$0.isDeleted }
+        }
+        guard let first, let exercise = store.linkedClass("exercise", of: first) else { return nil }
+        let weight = model.ledger.sessions(of: exercise).first?.sets.first?.weight
+        return (exercise.name, weight.flatMap { $0 > 0 ? $0 : nil })
+    }
+}
