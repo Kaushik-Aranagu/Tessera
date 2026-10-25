@@ -221,7 +221,7 @@ struct MoneyLandingView: View {
                        small: "Every spend a tick down", strikeable: false),
             WidgetItem(id: "month", header: "This month", big: Self.figure(spend.solid.last ?? 0), bigIsNumber: true,
                        middle: "spent so far", small: "The dashed line is this pace", strikeable: false),
-        ]
+        ].filter { hasIncome || $0.id != "yours" }
     }
 
     /// A whole figure with grouping, no symbol and no cents: "2,125".
