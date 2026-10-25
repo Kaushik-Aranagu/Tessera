@@ -47,7 +47,10 @@ import Testing
 
     @Test func childrenStayInsideTheirParent() {
         let masthead = LandingPlace.masthead.frame
-        for child in [LandingPlace.Masthead.title, .navWord, .switcher, .needs, .settingsWord, .departureBoard] {
+        let children: [CGRect] = [LandingPlace.Masthead.title, LandingPlace.Masthead.navWord, LandingPlace.Masthead.switcher,
+                                  LandingPlace.Masthead.needs, LandingPlace.Masthead.settingsWord,
+                                  LandingPlace.Masthead.departureBoard]
+        for child in children {
             #expect(masthead.contains(child))
         }
         #expect(LandingPlace.widget.frame.contains(LandingPlace.Widget.glyph))

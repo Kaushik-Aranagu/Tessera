@@ -233,35 +233,38 @@ struct LandingGlyph: View {
     @State private var moveStart = Date.now
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { timeline in
-            let seconds = timeline.date.timeIntervalSince(moveStart)
-            // One move on arrival, then one every 7 s: a 2 s move inside each 7 s cycle.
-            let cycle = reduceMotion ? 0 : seconds.truncatingRemainder(dividingBy: 7)
-            let t = cycle < 2 ? cycle / 2 : 0
-            ZStack {
+        ZStack {
+            TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { timeline in
+                let seconds = timeline.date.timeIntervalSince(moveStart)
+                // One move on arrival, then one every 7 s: a 2 s move inside each 7 s cycle.
+                let cycle = reduceMotion ? 0 : seconds.truncatingRemainder(dividingBy: 7)
+                let t = cycle < 2 ? cycle / 2 : 0
                 if let kind = GlyphKind.pick(header: item.header, big: item.big, middle: item.middle) {
                     GlyphDrawing(kind: kind, color: color, t: t)
                 } else {
                     GlyphCover(words: [item.big, item.middle, item.header].filter { !$0.isEmpty }, color: color)
                 }
-                Circle().fill(color).frame(width: 6, height: 6).scaleEffect(formed ? 0 : 1.4).opacity(formed ? 0 : 1)
             }
             .scaleEffect(formed ? 1 : 0.001)
             .rotationEffect(.degrees(formed ? 0 : 70))
+            Circle().fill(color).frame(width: 6, height: 6)
+                .scaleEffect(formed ? 0.001 : 1.4).opacity(formed ? 0 : 1)
         }
         .frame(width: 80, height: 80)
-        .onAppear { form() }
-        .onChange(of: item.id) { _, _ in form() }
+        // Collapse the old drawing, pulse the point, form the new one: keyed on the item so a change replays it.
+        .task(id: item.id) { await form() }
         .accessibilityHidden(true)
     }
 
-    private func form() {
+    private func form() async {
         guard !reduceMotion else {
             formed = true
             return
         }
         moveStart = .now
         withAnimation(.easeIn(duration: 0.26)) { formed = false }
-        withAnimation(.spring(duration: 0.44, bounce: 0.3).delay(0.33)) { formed = true }
+        try? await Task.sleep(for: .milliseconds(330))
+        guard !Task.isCancelled else { return }
+        withAnimation(.spring(duration: 0.44, bounce: 0.3)) { formed = true }
     }
 }

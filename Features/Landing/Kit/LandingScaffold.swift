@@ -65,6 +65,7 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                     .offset(x: 186, y: 652 * k)
                 if let action {
                     LandingActionWord(action: action, accent: accent)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                         .landingSection(.foot)
                         .offset(x: 24, y: proxy.size.height - 22 - 64)
                 }
@@ -99,6 +100,7 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                         .font(.custom("Figtree", size: 15, relativeTo: .callout).weight(.medium))
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .lineLimit(1)
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .fixedSize()
                         .frame(minWidth: 44, minHeight: 44, alignment: .trailing)
                 }

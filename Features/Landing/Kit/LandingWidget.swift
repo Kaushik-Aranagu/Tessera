@@ -112,6 +112,7 @@ struct LandingWidget<Glyph: View>: View {
         .foregroundStyle(done ? Theme.Colors.inkSecondary : color)
         .strikethrough(done, color: color)
         .lineLimit(1)
+        .minimumScaleFactor(0.5)
         .frame(width: 262, height: 64, alignment: .leading)
         .contentShape(Rectangle())
         .onLongPressGesture(minimumDuration: 0.78) {
