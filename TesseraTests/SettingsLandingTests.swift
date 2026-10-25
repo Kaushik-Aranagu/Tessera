@@ -99,11 +99,11 @@ struct SettingsLandingTests {
     }
 
     @Test func wholeWordCutsNeverEllipsize() {
-        let forms = WordCut.forms("Across the lake and back")
+        // The dial's own cut moved into the kit (FitLine.cuts) when the lead's dial replaced the lane's.
+        let forms = FitLine.cuts("Across the lake and back")
         #expect(forms.first == "Across the lake and back")
         #expect(forms.last == "Across")
-        #expect(!forms.contains("Across the"))
         #expect(!forms.contains { $0.contains("...") || $0.contains("…") })
-        #expect(WordCut.forms("Today") == ["Today"])
+        #expect(FitLine.cuts("Today") == ["Today"])
     }
 }
