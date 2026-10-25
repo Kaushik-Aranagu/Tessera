@@ -37,6 +37,12 @@ The team board lives at `tessera/ops/board.md` in the shared folder. A copy is o
 ## Handoff
 
 - [handoff/CODEX.md](handoff/CODEX.md): The Codex handoff: repo, build and test, branch and release rules, current state, queued work, privacy walls, look rules and where specs live. Kept current by Ops.
+- [handoff/TESSERA-DESIGN.md](handoff/TESSERA-DESIGN.md): the consolidated design (Oct 25): every room, global rules, keystone specs, Tess, open items. Start here for design.
+- [handoff/README.md](handoff/README.md): the Oct 25 design handoff package overview (note: its "do not push" lines are superseded, the owner now wants everything on GitHub).
+- [handoff/codex-lanes.md](handoff/codex-lanes.md), [ops/codex-build78-progress.md](ops/codex-build78-progress.md), [ops/codex-team-addresses.md](ops/codex-team-addresses.md): Codex-era lane, build 78 progress and team address notes.
+- [handoff/design-sheets/LARGE-FILES.md](handoff/design-sheets/LARGE-FILES.md): design files too large to commit.
+- Design sheets added Oct 25: inspiration-252.md, keystones-251.md, kitchen-rail-259.md, kitchen-training-257.md, kitchen-training-258.md, kitchen-weather-253.md, kitchen-weather-254.md, lists-decision-280.md, money-balance-272.md, money-charge-276.md, money-five-275.md, money-index-system-279.md, money-indices-278.md, money-liquid-274.md, money-stock-277.md, money-three-273.md, money-tiles-271.md, names-281.md, routines-cat-261.md, routines-garden-266.md, routines-garden-268.md, routines-ideas-263.md, routines-keystone-260.md, routines-loops-262.md, routines-plates/BRIEF.md, routines-sheaf-249.md, weather-inside-255.md, weather-plates-256.md, weather-plates/BRIEF-for-ChatGPT.md, weather-plates/PROMPTS.md (all under `handoff/design-sheets/`).
+- Designer memory rules: tessera-keystone-slot.md, tessera-keystones-locked.md, tessera-no-drawn-realism.md, tessera-no-github-push.md, tessera-skypiece.md (under `handoff/memory/`; the no-push rule applies only to the design agent).
 
 ## Engine
 

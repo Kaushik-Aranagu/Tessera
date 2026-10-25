@@ -129,3 +129,13 @@ the Habits grammar; the 10 s Undo; the dial blur 1.8 pt, none under Reduce Motio
   rest and the Small way protect a tree. That last point is not yet decided with him.
 - Private routines (pills, body): they grow trees on the phone only and never reach Claude, widgets or backups.
 - His verdict on all of 248. Nothing here is approved yet.
+
+## Verdicts (Kaushik, Oct 25)
+- List behind a door: **Sheaf**. Keep improving it: show more in each stack, smoother transitions, more inventive moves.
+  Continued in sheet 249.
+- One routine: **the whole life (A)** stays, but the focus moves to the routine itself: its steps (a routine can be
+  one thing or many steps) and its full details first, motion second. Trends and stats are wanted, but not the
+  strokes and weeks shown in v2: find a better way. Continued in sheet 249.
+- Groves: **Body, Mind, Home, plus Borrowed from other rooms across the lake** (Mornings and Evenings are filters on
+  Today).
+- Withering: **his thresholds, soft words, and a planned rest or the Small way keeps a tree green.**
