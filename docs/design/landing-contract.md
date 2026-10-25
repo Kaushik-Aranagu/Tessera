@@ -33,7 +33,7 @@ A landing is built from five fixed, named sections that persist across screens (
 
 Each section owns its zone and gestures and never reads another's; a room supplies content only. The same sections keep their place on level 1 and level 2 pages (the keystone stays live, the lower part changes).
 
-- **Opening effect on every landing:** the Home arrival effect. Sections arrive in order (topBar, keystone, rows, doors, action), 80 ms apart, each rising 10 pt out of a slight blur (3 pt) and a slightly smaller size (95 percent), 0.5 s on the ease-out. Reduce Motion: a 150 ms cross-fade. Implemented once as `.landingSection(_:)`.
+- **Opening effect on every landing:** the Home arrival effect. Sections arrive in order (topBar, keystone, rows, doors, action), 80 ms apart, each rising 10 pt out of a slightly smaller size (95 percent); the only blur on a landing is the doors dial's depth blur on its unfocused places, never a blur over everything, 0.5 s on the ease-out. Reduce Motion: a 150 ms cross-fade. Implemented once as `.landingSection(_:)`.
 - **From Bridge into a room:** choosing an app flips the mosaic keystone into that room's keystone (a different effect per room is allowed; the pixel doorway of 206 is the Bridge's own) and the lower doors block arrives in its own way; the top area (departure board and date on Bridge) becomes navigation plus the room title and its summary lines. Built per room on top of `LandingKeystone` and the doorway; not part of the shared kit yet.
 
 ### Doors and the switcher (Kaushik, 12:26 PM PDT Oct 25)

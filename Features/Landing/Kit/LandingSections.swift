@@ -18,15 +18,15 @@ enum LandingSection: Int, CaseIterable {
     var order: Int { rawValue }
 }
 
-/// The Home arrival effect on a section (sheet 213, Home 236): the section rises 10 pt out of a slight blur and a
-/// slightly smaller size, sections 80 ms apart, 0.5 s on the ease-out. Reduce Motion: a 150 ms cross-fade, no blur,
+/// The Home arrival effect on a section (sheet 213, Home 236): the section rises 10 pt out of a slightly smaller size, sections 80 ms apart, 0.5 s on the ease-out. Reduce Motion: a 150 ms cross-fade, no blur,
 /// no rise, no scale. Never blocks a tap.
 struct LandingArrival: ViewModifier {
     let section: LandingSection
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shown = false
 
-    static let blur: CGFloat = 3
+    /// Blur lives only in the doors dial's depth blur (Kaushik, Oct 25): sections do not blur on arrival.
+    static let blur: CGFloat = 0
     static let scale: CGFloat = 0.95
 
     func body(content: Content) -> some View {
