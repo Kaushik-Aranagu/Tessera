@@ -3,12 +3,12 @@ import Foundation
 import Testing
 
 struct ThingSignArtTests {
-    @Test func everySignDrawsInsideItsEighteenByEighteenTiles() {
+    @Test func everySignDrawsInsideItsTwentyByTwentyTiles() {
         for kind in ThingSignKind.allCases {
             for time in stride(from: 0.0, to: 3.0, by: 0.37) {
                 let cells = ThingSignArt.cells(kind, elapsed: time)
                 #expect(!cells.isEmpty, "\(kind) at \(time)")
-                #expect(cells.allSatisfy { (0 ..< 18).contains($0.column) && (0 ..< 18).contains($0.row) })
+                #expect(cells.allSatisfy { (0 ..< 20).contains($0.column) && (0 ..< 20).contains($0.row) })
                 #expect(Set(cells.map { [$0.column, $0.row] }).count == cells.count)
             }
         }
@@ -26,7 +26,7 @@ struct ThingSignArtTests {
         func full(_ share: Double) -> Int {
             ThingSignArt.cells(.list, elapsed: 0, share: share).filter { $0.strength == 1 }.count
         }
-        #expect(full(0) == 0 && full(0.5) == 60 && full(1) == 120)
+        #expect(full(0) == 0 && full(0.5) == 6 * 14 && full(1) == 12 * 14)
     }
 
     @Test func stillSignsDoNotMoveUnderReduceMotion() {

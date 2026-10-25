@@ -370,7 +370,7 @@ final class ReviewChoices {
         Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
                readiness: .arrivesWith("calories burned")),
-    ]
+    ] + MosaicFaceChoices.all
 
     /// Review's tabs by facet, named in PeekTabs (Design sheets 100 and 108), six rows at most.
     nonisolated static let facets: [(word: String, ids: [String])] = [
@@ -396,7 +396,8 @@ final class ReviewChoices {
         // Kitchen is full at six, so Pantry levels and the shop run get their own page.
         ("Kitchen v2", ["pantryLevelsV2", "shopV2"]),
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
-        ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
+        ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList", "homeFace.now",
+                         "homeFace.gallery", "homeFace.weather", "homeFace.workout", "homeFaceTurn"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.

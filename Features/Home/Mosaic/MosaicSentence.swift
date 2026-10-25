@@ -26,9 +26,16 @@ struct MosaicSentence: View {
     var facts: MosaicFacts?
     /// The rotation stops in the background and during a doorway.
     var paused = false
+    /// Home 236: the notice the board shows on its second line now, for the Now face to play as its flap turns.
+    var onAnnouncement: ((HomeNotice?) -> Void)?
     @State private var rotation = 0
     /// The row's measured width; lines and the date are chosen to fit it.
     @State private var rowWidth = HomeBoard.defaultWidth
+
+    private struct AnnounceKey: Hashable {
+        let rotation: Int
+        let count: Int
+    }
 
     private struct RotationKey: Hashable {
         let paused: Bool
@@ -87,9 +94,18 @@ struct MosaicSentence: View {
                 }
             }
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
+            .onChange(of: AnnounceKey(rotation: rotation, count: noticeList.count), initial: true) { _, _ in
+                guard !noticeList.isEmpty else {
+                    onAnnouncement?(nil)
+                    return
+                }
+                onAnnouncement?(noticeList[((rotation % noticeList.count) + noticeList.count) % noticeList.count])
+            }
             .task(id: RotationKey(paused: paused || reduceMotion, count: notices.count)) {
                 // Under Reduce Motion the rotation is paused: the board swaps plainly only when the top notice changes.
                 guard !paused, !reduceMotion, notices.count > 1 else { return }
+                // The faces read this clock so they never turn in the second a line flips.
+                MosaicLineClock.start()
                 while !Task.isCancelled {
                     try? await Task.sleep(for: .seconds(HomeBoard.rotationSeconds))
                     guard !Task.isCancelled else { return }

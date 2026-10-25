@@ -57,6 +57,10 @@ struct HomeMosaicPage: View {
     @State private var signSlot: CGRect = .zero
     /// Sheet 214: the scene Core's picker chose for now (nil: the mood stripes). Weather and place are not read yet.
     @State private var scenery: MosaicScenery?
+    /// Home 236: the stack of faces, and the board's latest line it plays as Now.
+    @State private var faces = MosaicFaceModel()
+    @State private var announcement: MosaicNowReading?
+    @State private var gallery: [MosaicScenery] = []
     /// "Sunset" washes the mosaic to dusk for a few seconds.
     @State private var dusk = false
     @State private var duskTask: Task<Void, Never>?
@@ -64,7 +68,6 @@ struct HomeMosaicPage: View {
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager(count: MosaicPage.count)
     @State private var pageDirection = 1
-    @State private var pageTicks = 0
     /// Sheet 213: the one-thing space's own page (the mosaic's pages are the pager's), and when Home was left.
     @State private var thingIndex = 0
     @State private var thingsLeftAt: Date?
@@ -89,14 +92,15 @@ struct HomeMosaicPage: View {
                                onRoom: { app, frame in doorwayFrom(frame) { present(linkFor(app)) } },
                                onSky: { playDusk() },
                                facts: facts,
-                               paused: scenePhase != .active || link != nil)
+                               paused: scenePhase != .active || link != nil,
+                               onAnnouncement: { announce($0) })
                     // Until the first refresh has read Core's loaders the sentence waits (no flicker between the
                     // fallback and the real lines).
                     .opacity(dayClauses == nil ? 0 : 1)
                     .accessibilityHidden(dayClauses == nil)
                     .mosaicShield()
                 VStack(alignment: .leading, spacing: 0) {
-                    MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption)
+                    MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption, faces: faces)
                         .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
                     // No caption under the mosaic (sheet 211): its words live in the slot's accessibility label.
                 }
@@ -147,7 +151,8 @@ struct HomeMosaicPage: View {
                     pageDirection: pageDirection,
                     signSpec: signSpec,
                     scenery: scenery,
-                    dusk: dusk
+                    dusk: dusk,
+                    faceModel: faces
                 )
             }
         }
@@ -156,23 +161,7 @@ struct HomeMosaicPage: View {
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in scroll.value = new }
         .onPreferenceChange(MosaicShieldKey.self) { shield = $0 }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
-        // A swipe that starts on the mosaic itself turns the things (the mosaic's own pages are gone).
-        .simultaneousGesture(
-            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart), coordinateSpace: .global).onEnded { value in
-                let size = HomeMosaic.moodsMosaicSize
-                let top = scrollMinY - scroll.value + coreTop
-                let mosaic = CGRect(x: pageWidth - HomeMosaic.gutter - size.width, y: top,
-                                    width: size.width, height: size.height)
-                if layerOn, MosaicPager.accepts(start: value.startLocation, translation: value.translation,
-                                                mosaic: mosaic, reach: 0),
-                    turnThing(value.translation.width)
-                {
-                    pageDirection = value.translation.width < 0 ? 1 : -1
-                    pageTicks += 1
-                }
-            }
-        )
-        .tesseraFeedback(.selection, trigger: pageTicks)
+        // The mosaic's swipe lives on MosaicSlot itself (never here: a page-level drag bled into the one-thing list).
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 // After two minutes or more away the space is back on its first thing.
@@ -206,6 +195,25 @@ struct HomeMosaicPage: View {
             }
         )
         .task(id: Int(AppClock.now.timeIntervalSince1970 / 60) &+ model.revision) { refreshPick() }
+        // Home 236: the faces turn on the line clock, a few times a second to keep time, never under a touch.
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(250))
+                let now = AppClock.now
+                faces.tick(now: now, environment: .init(
+                    reduceMotion: reduceMotion, lowPower: ProcessInfo.processInfo.isLowPowerModeEnabled,
+                    quiet: MosaicMomentMapping.isQuiet(now), turnsByItself: HomeMosaic.facesTurnByThemselves,
+                    paused: scenePhase != .active || link != nil || moment != nil || tessOpen || !onScreen
+                ))
+            }
+        }
+        .task(id: faces.faces.count > 1) {
+            // The next face leans in once, so the swipe is found.
+            guard faces.faces.count > 1, !reduceMotion else { return }
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+            faces.peekOnce()
+        }
         .onAppear { onScreen = true }
         .onDisappear {
             onScreen = false
@@ -266,6 +274,35 @@ struct HomeMosaicPage: View {
         return max(row - word, 0)
     }()
 
+    /// Home 236: what the faces draw this minute. The weather is the device's sample until Core's source is allowed;
+    /// the workout is only whether one is going, its length and its rest; Now is the board's own latest line.
+    private func updateFaces(backdrop: MosaicBackdrop, read: MosaicFacts, at now: Date) {
+        let phase = MosaicScenePicker.phase(read)
+        let pick = MosaicScenePicker.pick(backdrop, facts: read, place: nil, weather: nil)
+        gallery = MosaicGallery.sequence(backdrop: backdrop, pick: pick, phase: phase)
+        let workout = model.session.flatMap { session -> MosaicWorkoutReading? in
+            guard session.finishedAt == nil else { return nil }
+            return MosaicWorkoutReading(startedAt: session.startedAt, restEndsAt: session.restEndsAt,
+                                        restTotal: session.restTotal)
+        }
+        faces.update(
+            MosaicFaceInputs(scenery: gallery.first, announcement: announcement,
+                             weather: SampleWeatherSource().reading(now: now), workout: workout),
+            sequence: gallery, on: { MosaicFaceStack.isOn($0) }, now: now
+        )
+    }
+
+    /// The board turned to a line: Now plays it. A line with no drawing (Notes, Money) leaves Now empty.
+    private func announce(_ notice: HomeNotice?) {
+        let next = notice.flatMap(MosaicNowKind.of).map { MosaicNowReading(kind: $0.kind, opens: $0.opens) }
+        guard next != announcement else { return }
+        announcement = next
+        if let facts {
+            updateFaces(backdrop: model.settingsAreReal ? SettingsStore(engine: model.engine).read().backdrop
+                : .tessPicks, read: facts, at: AppClock.now)
+        }
+    }
+
     private static let backShownKey = "homeMosaic.backShown"
 
     /// Asks Core's picker what the day looks like now; "Welcome back" shows once per absence.
@@ -276,6 +313,7 @@ struct HomeMosaicPage: View {
         things = HomeThings.make(model: model, facts: read, routines: routinesPart)
         let backdrop = model.settingsAreReal ? SettingsStore(engine: model.engine).read().backdrop : .tessPicks
         scenery = facts.flatMap { MosaicScenePicker.pick(backdrop, facts: $0, place: nil, weather: nil) }
+        updateFaces(backdrop: backdrop, read: read, at: at)
         thingIndex = min(thingIndex, max(things.count - 1, 0))
         dayClauses = HomeMosaic.firstThree(HomeSentence.compose(HomeSentence.inputs(
             engine: model.engine, plan: model.plan, moneyDue: .next(engine: model.engine, now: at),
@@ -663,6 +701,7 @@ private struct HomeLayerHost: View {
     var signSpec: MosaicSignSpec?
     var scenery: MosaicScenery?
     var dusk = false
+    var faceModel: MosaicFaceModel?
 
     var body: some View {
         MosaicHomeLayer(
@@ -679,7 +718,8 @@ private struct HomeLayerHost: View {
             pageDirection: pageDirection,
             signSpec: signSpec,
             scenery: scenery,
-            dusk: dusk
+            dusk: dusk,
+            faceModel: faceModel
         )
     }
 }

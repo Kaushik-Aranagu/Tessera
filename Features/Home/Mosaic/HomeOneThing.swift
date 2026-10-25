@@ -110,21 +110,21 @@ struct HomeOneThing: View {
 
     static let height: CGFloat = 196
     static let swipeDistance: CGFloat = 50
-    static let signTop: CGFloat = 62
+    /// Home 236: the 80 pt sign is centred on the big and mid tiers (4 to 150 pt), so its top sits at 37.
+    static let signTop: CGFloat = 37
     /// The sign's width plus the 12 pt that every tier's text stops short of it.
-    static let signRoom: CGFloat = 72 + 12
+    static let signRoom: CGFloat = 80 + 12
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             if things.indices.contains(index) {
                 let thing = things[index]
                 page(thing)
-                // A's 72 pt pixel sign sits at the top right; its slot is left clear here.
-                Color.clear.frame(width: 72, height: 72)
+                // A's 80 pt pixel sign sits at the top right; its slot is left clear here.
+                Color.clear.frame(width: 80, height: 80)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { onSlot($0) }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                    // Sheet 213: the sign's top sits 62 pt below the space's top, so it centres at 98 pt, and it never
-                    // moves with the pages.
+                    // Home 236: the sign is centred on the big and mid tiers and never moves with the pages.
                     .padding(.top, Self.signTop)
                     .accessibilityHidden(true)
                 Text("\(index + 1) of \(things.count)")
