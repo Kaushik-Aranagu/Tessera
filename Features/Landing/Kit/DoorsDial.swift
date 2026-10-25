@@ -29,10 +29,20 @@ struct DoorsDial: View {
     @State private var drag: CGFloat = 0
     @State private var cue = HapticCue()
     @State private var settledAt = Date.distantPast
+    @Environment(\.dynamicTypeSize) private var typeSize
     @ScaledMetric(relativeTo: .title3) private var scale: CGFloat = 1
 
+    /// The largest type the dial sets: past it the three places would run out of the 432-576 band into the brief.
+    static let largestType = DynamicTypeSize.xxxLarge
+
+    /// Slots grow with the (capped) type, at most 1.2x, so the dial ends above the brief at 612.
     private var slotHeight: CGFloat {
-        Self.slot * max(1, min(scale, 1.9))
+        Self.slot * max(1, min(scale, 1.2))
+    }
+
+    /// At accessibility sizes the facts column steps aside so the door name has the whole width.
+    private var showsFacts: Bool {
+        !typeSize.isAccessibilitySize
     }
 
     private var blurOn: Bool {
@@ -46,9 +56,12 @@ struct DoorsDial: View {
                 ForEach(places(count), id: \.self) { place in
                     row(for: wrapped(focus + place), place: place)
                 }
-                facts
+                if showsFacts {
+                    facts
+                }
             }
         }
+        .dynamicTypeSize(...Self.largestType)
         .frame(height: slotHeight * 3)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
@@ -89,10 +102,9 @@ struct DoorsDial: View {
             }
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(door.name)
-                    .font(.custom("Figtree", size: 28 - 7 * distance, relativeTo: .title3).weight(.bold))
-                    .foregroundStyle(isFocus ? door.color : Theme.Colors.inkSecondary)
-                    .lineLimit(1)
+                WholeWords(text: door.name,
+                           font: .custom("Figtree", size: 28 - 7 * distance, relativeTo: .title3).weight(.bold),
+                           color: isFocus ? door.color : Theme.Colors.inkSecondary)
                 if isFocus, let count = door.count {
                     Text(count)
                         .font(.custom("Outfit", size: 14, relativeTo: .caption).weight(.regular))
@@ -104,7 +116,7 @@ struct DoorsDial: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: 190, alignment: .leading)
+        .frame(maxWidth: showsFacts ? 190 : .infinity, alignment: .leading)
         .offset(y: offset)
         .accessibilityLabel("\(door.name)\(door.count.map { ", \($0)" } ?? "")")
         .accessibilityAddTraits(place == 0 ? .isSelected : [])
@@ -117,16 +129,14 @@ struct DoorsDial: View {
         if door.label != nil || !door.lines.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
                 if let label = door.label {
-                    Text(label)
-                        .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .lineLimit(1)
+                    WholeWords(text: label, font: .custom("Figtree", size: 13, relativeTo: .caption).weight(.regular),
+                               color: Theme.Colors.inkSecondary)
                 }
                 ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
-                    Text(line)
-                        .font(.custom("Figtree", size: 16, relativeTo: .body).weight(index == 0 ? .bold : .regular))
-                        .foregroundStyle(Theme.Colors.ink)
-                        .lineLimit(1)
+                    WholeWords(text: line,
+                               font: .custom("Figtree", size: 16, relativeTo: .body)
+                                   .weight(index == 0 ? .bold : .regular),
+                               color: Theme.Colors.ink)
                 }
             }
             .frame(width: 150, alignment: .leading)
@@ -166,6 +176,49 @@ struct DoorsDial: View {
         }
         cue.play(.selection)
         settledAt = Date()
+    }
+}
+
+/// One line that never wraps and never ellipsizes: the longest whole-word cut of `text` that fits (contract §7).
+/// VoiceOver reads the full text.
+struct WholeWords: View {
+    let text: String
+    let font: Font
+    let color: Color
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            ForEach(Array(WordCut.forms(text).enumerated()), id: \.offset) { _, form in
+                Text(form).font(font).foregroundStyle(color).fixedSize()
+            }
+        }
+        .accessibilityLabel(text)
+    }
+}
+
+/// Whole-word cuts of a line, longest first: drop a word at a time, then trailing small words and punctuation.
+/// Never "...", never an empty form.
+enum WordCut {
+    private static let small: Set<String> = ["and", "the", "a", "an", "of", "to", "by", "in", "on", "or", "for",
+                                             "with", "at", "is"]
+
+    static func forms(_ text: String) -> [String] {
+        let words = text.split(separator: " ").map(String.init)
+        guard words.count > 1 else { return [text] }
+        var forms: [String] = [text]
+        for count in stride(from: words.count - 1, through: 1, by: -1) {
+            var kept = Array(words.prefix(count))
+            while kept.count > 1, let last = kept.last,
+                  small.contains(last.lowercased().trimmingCharacters(in: .punctuationCharacters))
+            {
+                kept.removeLast()
+            }
+            let form = kept.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ",;:."))
+            if !form.isEmpty, forms.last != form {
+                forms.append(form)
+            }
+        }
+        return forms
     }
 }
 
