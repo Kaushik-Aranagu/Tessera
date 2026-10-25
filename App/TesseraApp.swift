@@ -63,6 +63,8 @@ struct TesseraApp: App {
                             MeasureGallery().environment(model)
                         } else if LaunchFlags.has("-notes") {
                             NotesView()
+                        } else if LaunchFlags.has("-routinesLanding") {
+                            NavigationStack { RoutinesWoodlandLandingPage() }
                         } else if LaunchFlags.has("-review") {
                             ReviewView()
                         } else if LaunchFlags.has("-groceries") {
