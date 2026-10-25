@@ -125,3 +125,8 @@ Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v4). Owners: Builder A
   - Watch: new lines grow up from their baseline with a small sway (0.56 s); old lines fall like leaves.
   - Purse: words do not move (plain fade); only the numbers roll like a meter, digit by digit. Never red/green.
 - Reduce Motion: a plain swap. All under 1 s.
+
+## Bridge's widget sign is mosaic tiles (his 4:57 PM note)
+- The small sign in Bridge's widget (barbell, bag, moon, case, sun) is laid exactly like the keystone mosaic:
+  20 x 20 cells of 4 pt, each tile 3.6 pt with the page showing between them as grout (3.2 pt tiles on black).
+  Never one merged pixel block. Draw at the screen's scale, no pixelated upscaling.
