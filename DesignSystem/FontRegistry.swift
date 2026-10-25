@@ -12,7 +12,10 @@ enum FontRegistry {
         "Figtree-Variable",
         "Outfit-Variable",
         "Newsreader-Variable",
-        "Caveat-Variable",
+        "BarlowCondensed-SemiBold",
+        "IBMPlexSansCondensed-Regular",
+        "IBMPlexSansCondensed-Medium",
+        "IBMPlexSansCondensed-Bold",
     ]
 
     static func registerAll() {

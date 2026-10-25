@@ -201,21 +201,22 @@ struct GalleyTicketView: View {
         let pages = ticket.pages
         let shown = pages[min(page, pages.count - 1)]
         VStack(alignment: .leading, spacing: 0) {
-            Text(ticket.title)
-                .font(.custom("Caveat", fixedSize: ticket.big ? 30 : 25).weight(.bold))
+            Text(ticket.title.uppercased())
+                .font(.custom("IBMPlexSansCondensed-Bold", fixedSize: 13))
+                .tracking(13 * 0.08)
                 .foregroundStyle(titleColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             if let sub = ticket.sub {
-                Text(sub)
-                    .font(.custom("Caveat", fixedSize: 18))
+                Text(sub.uppercased())
+                    .font(.custom("IBMPlexSansCondensed-Medium", fixedSize: 10.5))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
             ForEach(Array(shown.enumerated()), id: \.offset) { _, line in
                 Text(line)
-                    .font(.custom("Caveat", fixedSize: 19))
+                    .font(.custom("IBMPlexSansCondensed-Regular", fixedSize: 12.5))
                     .foregroundStyle(Theme.Colors.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
@@ -223,7 +224,7 @@ struct GalleyTicketView: View {
             Spacer(minLength: 0)
             if pages.count > 1 {
                 Text(page < pages.count - 1 ? "over" : "back")
-                    .font(.custom("Caveat", fixedSize: 16))
+                    .font(.custom("IBMPlexSansCondensed-Regular", fixedSize: 12.5))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
@@ -459,18 +460,18 @@ struct KitchenLandingPage: View {
         var items: [WidgetItem] = []
         if let cook = front.cooking {
             items.append(WidgetItem(id: "cooking", header: "Cooking", big: "Go on", middle: cook.line,
-                                    small: "Tap for the clock", bigColor: LandingAccent.kitchen, strikeable: false, handwritten: true))
+                                    small: "Tap for the clock", bigColor: LandingAccent.kitchen, strikeable: false, face: .galley))
         }
         if let meal = front.tonight {
             items.append(WidgetItem(id: "dinner", header: "Tonight", big: NotesLandingPage.short(meal.title),
                                     middle: "start \(HouseTime.clock(meal.start))",
                                     small: meal.minutes.map { HouseTime.minutes(Int($0)) } ?? "Tap to open it",
-                                    bigColor: LandingAccent.kitchen, strikeable: false, handwritten: true))
+                                    bigColor: LandingAccent.kitchen, strikeable: false, face: .galley))
         } else {
             items.append(WidgetItem(id: "plan", header: "Tonight", big: "Tonight?", middle: "nothing planned yet",
                                     small: pass.cookable.isEmpty ? "Tap for Recipes"
                                         : "You could make \(pass.cookable.count)",
-                                    bigColor: LandingAccent.kitchen, strikeable: false, handwritten: true))
+                                    bigColor: LandingAccent.kitchen, strikeable: false, face: .galley))
         }
         if !pass.toGet.isEmpty {
             items.append(WidgetItem(id: "toget", header: "On the way", big: "\(pass.toGet.count)", bigIsNumber: true,
@@ -481,7 +482,7 @@ struct KitchenLandingPage: View {
         if let low = pass.low.first {
             items.append(WidgetItem(id: "runsout", header: "Runs out", big: NotesLandingPage.short(low),
                                     middle: pass.low.count > 1 ? "and \(pass.low.count - 1) more" : "first to go",
-                                    small: "Tap for Pantry", strikeable: false, handwritten: true))
+                                    small: "Tap for Pantry", strikeable: false, face: .galley))
         }
         return items
     }

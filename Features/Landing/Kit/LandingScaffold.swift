@@ -66,7 +66,7 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                 if let action {
                     LandingActionWord(action: action, accent: accent)
                         .landingSection(.foot)
-                        .offset(x: 28, y: 786 * k - 8)
+                        .offset(x: 24, y: proxy.size.height - 22 - 64)
                 }
                 if let onBack {
                     Color.clear.frame(width: 24, height: proxy.size.height)
