@@ -60,9 +60,9 @@ function turn(dir,axis,from){const dn=AREA||DOORS[DOOR][0],items=curItems(),page
 function nudge(P,axis){if(RM)return;const fr=P.querySelector('.folio .front');fr.animate([{transform:'none'},{transform:axis==='x'?'translateX(-6px)':'translateY(-6px)'},{transform:'none'}],{duration:260,easing:'cubic-bezier(.2,.9,.25,1)'})}
 // Drag follows the finger: the axis is chosen after 8 pt; let go past a third and the page turns, else it settles back.
 function bindFolio(P,dn,items){const fo=P.querySelector('.folio');let sx,sy,ax=null,dir=0,live=false;
-  fo.onpointerdown=e=>{if(turning)return;sx=e.clientX;sy=e.clientY;ax=null;live=false;delete fo.dataset.dragged;fo.setPointerCapture(e.pointerId)};
+  fo.onpointerdown=e=>{if(turning)return;sx=e.clientX;sy=e.clientY;ax=null;live=false;delete fo.dataset.dragged;fo._pid=e.pointerId};
   fo.onpointermove=e=>{if(sx==null||turning)return;const sc=P.getBoundingClientRect().width/402,dx=(e.clientX-sx)/sc,dy=(e.clientY-sy)/sc;
-    if(!ax){if(Math.hypot(dx,dy)<8)return;ax=Math.abs(dx)>Math.abs(dy)?'x':'y';dir=ax==='x'?(dx<0?1:-1):(dy>0?1:-1);fo.dataset.dragged=1;
+    if(!ax){if(Math.hypot(dx,dy)<8)return;ax=Math.abs(dx)>Math.abs(dy)?'x':'y';try{fo.setPointerCapture(fo._pid)}catch(_){}dir=ax==='x'?(dx<0?1:-1):(dy>0?1:-1);fo.dataset.dragged=1;
       const pages=Math.ceil(items.length/PER),np=fpage+dir;if(np<0||np>=pages){ax='none';return}
       live=true;PH.forEach(Q=>{const f=Q.querySelector('.folio'),ddn=AREA?'All notes':DOORS[DOOR][0];if(dir>0)f.querySelector('.under').innerHTML=pageHTML(ddn,items,np);else{f.querySelector('.under').innerHTML=pageHTML(ddn,items,fpage);f.querySelector('.front').innerHTML=pageHTML(ddn,items,np)}})}
     if(!live||RM)return;const S=ax==='x'?FW:FH,d=ax==='x'?-dx:dy,t=dir>0?Math.max(0,Math.min(1,d/S)):1-Math.max(0,Math.min(1,-d/S));PH.forEach(Q=>frame(Q,t,ax));fo.dataset.t=t};
@@ -92,8 +92,8 @@ function pane(P,anchor,ar){PH.forEach(Q=>{const old=Q.querySelector('.gp');if(ol
   const a=Q.querySelector('.arb');if(!a)return;const r=a.getBoundingClientRect(),pr=Q.getBoundingClientRect(),sc=pr.width/402;
   const gp=document.createElement('div');gp.className='gp';const all=Object.keys(ACOL);
   gp.innerHTML=all.map(x=>`<button class="gpi${ar.includes(x)?' on':''}" data-a="${x}"><span style="color:var(--${ACOL[x]})">${x}</span><span class="gpn">${countArea(x)}</span></button>`).join('');
-  gp.style.left='24px';gp.style.top=((r.top-pr.top)/sc-12)+'px';gp.style.transform='translateY(-100%)';Q.appendChild(gp);
-  if(!RM)gp.animate([{opacity:0,transform:'translateY(-100%) translateY(8px) scale(.97)'},{opacity:1,transform:'translateY(-100%)'}],{duration:240,easing:'cubic-bezier(.2,.9,.25,1)'});
+  gp.style.left='24px';gp.style.top=((r.bottom-pr.top)/sc+4)+'px';Q.appendChild(gp);
+  if(!RM)gp.animate([{opacity:0,transform:'translateY(-8px) scale(.97)'},{opacity:1,transform:'none'}],{duration:240,easing:'cubic-bezier(.2,.9,.25,1)'});
   gp.querySelectorAll('.gpi').forEach(b=>b.onclick=()=>{PH.forEach(R=>{const g=R.querySelector('.gp');g&&g.remove()});goArea(b.dataset.a)})})}
 function countArea(a){const s=new Set();DOORS.forEach(d=>{if(d[0]==='Private'||d[0]==='Mentions')return;DATA[d[0]].forEach(n=>{if(areasOf(n).includes(a))s.add(n.t)})});return s.size}
 function goArea(a){if(!AREA)prevDoor=DOOR;AREA=a;OPEN=null;fpage=0;if(DOOR<0)DOOR=0;H=BH;TOP=140;PH.forEach(P=>{const w=P.querySelector('.wall');w.style.opacity=1;w.style.pointerEvents='';head(P);lower(P)});compute();all('wall',true)}

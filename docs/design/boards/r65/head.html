@@ -63,24 +63,62 @@ body{background:var(--ground);color:var(--ink);font-family:var(--words);margin:0
 .pg{flex:0 0 100%;display:flex;flex-direction:column;gap:18px}.pgi .lgt span:first-child{font-size:22px;font-weight:700}
 .pgb{margin:4px 0 0;font-size:15px;line-height:22px;color:var(--t2);max-height:44px;overflow:hidden}
 .pgnext{position:absolute;right:24px;background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--room);min-height:44px;cursor:pointer}
+.lite{--back:#ECE8E1;--back2:#F7F5F1;--back3:#DDD7CE;--crease:rgba(0,0,0,.16);--card:#EFECE6}
+.blk{--back:#1A1A1C;--back2:#0B0B0C;--back3:#262629;--crease:rgba(255,255,255,.10);--card:#121214}
+.fhd{position:absolute;left:24px;right:24px;height:24px;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--t2)}
+.ttlw{background:none;border:0;padding:0 0 0 16px;font:inherit;font-size:15px;font-weight:600;color:var(--room);min-height:44px;cursor:pointer;font-variant-caps:normal;letter-spacing:0}
+.folio{position:absolute;left:24px;width:354px;touch-action:none;cursor:grab}
+.folio>div{position:absolute;inset:0}
+.under,.front{background:var(--bg)}
+.shade,.flap{pointer-events:none;opacity:0}
+.flap{box-shadow:0 0 18px rgba(0,0,0,.12)}
+.fpg{display:flex;flex-direction:column;gap:10px;height:100%}
+.cd{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:5px;padding:14px 16px;border-radius:16px;background:var(--card);cursor:pointer;min-height:124px}
+.cd:focus-visible{outline:2px solid var(--room)}
+.ct{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.cn{font-size:19px;font-weight:700;color:var(--t);white-space:nowrap;overflow:hidden}
+.cn.tq0{font-size:13px;font-weight:600;color:var(--t2)}
+.cw{font-size:13px;color:var(--t2);white-space:nowrap}
+.cs{font-size:15px;line-height:21px;color:var(--t2);white-space:nowrap;overflow:hidden}
+.cs.tq{font-family:Newsreader,Georgia,serif;font-size:18px;line-height:24px;color:var(--tess);white-space:normal;max-height:48px}
+.ca{display:flex;gap:12px;margin-top:auto}.ar{font-size:13px;font-weight:600}
+.nb{position:absolute;left:24px;right:24px;display:flex;justify-content:space-between;gap:16px}
+.nb button{background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:600;min-height:44px;cursor:pointer;max-width:48%;white-space:nowrap;overflow:hidden}
+.nbp{color:var(--t2)}.nbn{color:var(--room)}
+.tov{position:absolute;inset:0;background:var(--bg);padding:84px 24px 24px;display:flex;flex-direction:column;gap:14px;z-index:5}
+.tovh{display:flex;gap:16px;align-items:center}
+.tin{flex:1;min-width:0;background:none;border:0;outline:0;font:inherit;font-size:24px;font-weight:700;color:var(--t);caret-color:var(--room);padding:6px 0}
+.tin::placeholder{color:var(--t2);font-weight:600}
+.tcl{background:none;border:0;font:inherit;font-size:15px;font-weight:600;color:var(--room);min-height:44px;cursor:pointer}
+.tlist{display:flex;flex-direction:column;overflow:auto}
+.tli[hidden]{display:none!important}
+.tli{all:unset;display:flex;justify-content:space-between;gap:10px;align-items:baseline;min-height:44px;font-size:18px;font-weight:600;color:var(--t);cursor:pointer}
+.note{position:absolute;left:24px;right:24px;display:flex;flex-direction:column;gap:12px}
+.nb1{margin:0;font-size:17px;line-height:26px;color:var(--t)}.tessw2{font-family:Newsreader,Georgia,serif;font-size:20px;line-height:28px;color:var(--tess)}
+.nb2{margin:0;font-size:14px;color:var(--t2)}.nb2 b{color:var(--t);font-weight:600}
+.arw{display:flex;gap:14px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.arb{background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:700;color:var(--room);min-height:44px;cursor:pointer}
+.gp{position:absolute;z-index:6;display:flex;flex-direction:column;padding:8px 18px;border-radius:20px;background:color-mix(in srgb,var(--bg) 42%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5);box-shadow:0 10px 30px rgba(0,0,0,.14)}
+.gpi{all:unset;display:flex;justify-content:space-between;gap:28px;min-height:40px;align-items:center;font-size:17px;font-weight:600;cursor:pointer}
+.gpi.on span:first-child{font-weight:800}.gpn{font-family:Outfit,sans-serif;font-size:13px;color:var(--t2)}
 </style>
 
 <div class="head">
-  <p class="lab">Round 247, Oct 24</p>
+  <p class="lab">Round 247 v3, Oct 24</p>
   <h1>Notes: the pages behind the doors</h1>
-  <p class="sub">His 1:28 AM: after the landing, the deeper pages behind each door finish Notes. Each door page keeps the landing's grammar: a slim word wall of that door's notes on top, the dial under it, and the focused note opened a little beneath. Going in, the landing's words that belong to the door stay and re-pack; the rest dissolve.</p>
+  <p class="sub">Your Codex-era choices (2:45 to 8:35 AM) on top of your 2:19 AM rules. The band stays fixed on every door (354 x 124) and short doors repeat their words in other colours and sizes. Under it, the Folio: a page of small note cards that curls left when you swipe sideways and folds top to bottom when you swipe down or up, while the band stays put. The words under the page name the neighbouring notes, Titles opens a searchable list, a note opens on its own page, and its Areas open a glass pane that gathers notes across doors.</p>
   <div class="tools"><span class="tl">Open</span><button class="tr go" data-d="-1" aria-pressed="true">Landing</button></div>
-  <div class="tools"><span class="tl">List</span><button class="tr ls" data-l="ledger" aria-pressed="true">Ledger (pick)</button><button class="tr ls" data-l="pages">Pages</button></div>
+  
 </div>
 <div class="row">
  <div><div class="fit"><div class="phone lite" id="p1"></div></div><p class="cap">Paper.</p></div>
  <div><div class="fit"><div class="phone blk" id="p2"></div></div><p class="cap">Pure black.</p></div>
 </div>
 <div class="notes">
-<p><b>Going in.</b> Tap the dial's focus on the landing (or a door above). The words on the wall that live behind that door stay, glide and grow into a slimmer wall (150 to 300 pt); every other word dissolves into the page. The title changes to the door's name in its colour, and the doors dial gives way to the notes dial. Coming back (edge swipe, or the "Notes" word top-left) runs it in reverse: the door's words shrink back and the others rebuild around them.</p>
-<p><b>His 2:08 AM (supersedes the dial on door pages).</b> The dial belongs to landings only. The door wall is smaller, about 55% of the landing's (at most 124 pt), and never opens a gap: when the packing comes up short, the band shrinks to fit instead. Below it, a different list: the <b>ledger</b> (pick) or <b>pages</b>. Ledger: a left column (84 pt) names the group, written only where a group starts, in room colour small caps: Today, Yesterday, This week, Earlier (Mentions groups by kind: Exercise, Recipe, Person, Place, Routine). The right column holds each note as its title with when, and one short line under it. Tap a note to open it in place: its first lines and meta appear and the rest move down; tap the open one to open the note. Pages: four notes a page, each title big with two lines under it; turn sideways (or tap Older) to the next four, no counters. A long ledger turns pages the same way, never scrolls.</p>
-<p><b>Private (his 2:08 AM).</b> Off the private page, private notes are counted, never listed: "3 private notes", not "Private note" three times. Inside, after Face ID, the titles show.</p>
-<p><b>Every door page (first cut; its dial is superseded).</b> Door name (Figtree 700, 34 pt, its colour) and one line. A wall of the door's own notes, packed by the same rules (capitals, no gaps, even letters; repeats fill a small door). The notes dial (3 places, 48 pt): the focus in ink at 1.32 times with when it was written at the right; neighbours smaller in ink 2 with depth blur. Under it, the focused note opened a little: its first three lines and one meta line (mentions, list items, length). Tap a wall word and the dial turns to that note; tap the focus to open the note. The action word bottom-left belongs to the door.</p>
-<p><b>What each door adds.</b> <b>All notes</b>: everything, newest first. <b>Ideas</b>: notes Tess tagged as ideas; action "New idea". <b>From Tess</b>: notes Tess wrote for you, previewed in her own voice (Newsreader, Tess blue); action "Ask Tess". <b>Voice memos</b>: the focus shows its length in Outfit and the start of the transcript; action "Record". <b>Pinned</b>: only a few, so the dial holds them all. <b>Mentions</b>: the dial turns through the things your notes mention (an exercise, a recipe, a person) with how many notes mention each; the preview lists those notes. <b>Private</b>: locked until Face ID; the wall and dial appear only on the phone and lock again when you leave; off the phone they read "Private note". <b>Archive</b>: older notes by date; action "Restore".</p>
-<p><b>Moments.</b> The same as the landing, on the slimmer wall: one word every 5 s, re-pack every 40 s, a whole-wall moment every 2 minutes. Reduce Motion: none, and going in cross-fades.</p>
+<p><b>The band.</b> Every door page has the same block, 354 x 124 pt at y 140, so nothing below it moves from door to door. Each door's words are sized to fill it exactly: rows meet both edges, stacks mix big and small words, and the wall may scale 8% at most. When a door has too few notes to fill it (Pinned, Private), its titles repeat in other colours and sizes, never next to themselves. Tap a word and the Folio turns to that note.</p>
+<p><b>The Folio.</b> Under the band, a page of three small note cards: title, when, one line, and its areas in their colours. Drag sideways and the page curls left under your finger. The fold tilts as the corner lifts first, the sheet's back shows past the fold with a crease, and a soft shadow falls on the next page. Let go past a third and it turns; otherwise it settles back. Drag down or up and it folds from the top to the bottom the same way. With Reduce Motion it cross-fades. The two words under the page are the neighbouring notes' titles (no Previous or Next, no arrows); tap one to turn.</p>
+<p><b>Titles.</b> The word at the top right of the Folio opens a list of every title on this page, with a search line at the top. Pick one to turn straight to it.</p>
+<p><b>A note.</b> Tap a card and the note opens on its own page, without the band: title, "Updated an hour ago.", then the words. After the content, Areas and the note's areas. Tap Areas for the glass pane: translucent and thin, with no border and no bright rim, sized to what it holds, every area with its note count. Pick an area and its page gathers every note in it across all doors, with its own band.</p>
+<p><b>Private.</b> Locked until Face ID. Off this page, private notes are only ever counted ("3 private notes"). Private notes carry no areas, so an area never shows them.</p>
+<p><b>Still to settle with you.</b> Band height: 124 (Codex prototype) or 132 (2:19 AM board v4); this board uses 124. Small cards are an exception to "no cards" that you asked for here, so they're kept to this place.</p>
 </div>
