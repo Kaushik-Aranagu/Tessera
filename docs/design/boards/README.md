@@ -1,6 +1,6 @@
 # Boards (the HTML behind each design board)
 
-Each folder is the source of one board as the Design studio built it, in time order (r3 oldest, r65 newest). Open `index.html` in a browser to see it. The live, private copies are claude.ai artifact pages; the right column links the ones whose title matched. Later boards are built from parts (`head.html`, `eng.js`, `tail.js`, `folio.js`): `index.html` is the built page, the parts are its source.
+Each folder is the source of one board as the Design studio built it, in time order (r3 oldest, r66 newest). Open `index.html` in a browser to see it. The live, private copies are claude.ai artifact pages; the right column links the ones whose title matched. Later boards are built from parts (`head.html`, `eng.js`, `tail.js`, `folio.js`): `index.html` is the built page, the parts are its source.
 
 | Folder | Board title | Live page |
 |---|---|---|
@@ -66,6 +66,7 @@ Each folder is the source of one board as the Design studio built it, in time or
 | [r63](r63/) | Notes landing wall | https://claude.ai/artifact/1mSPKcxhvQB4pFU2tmQZkx |
 | [r64](r64/) | Notes door pages | https://claude.ai/artifact/S4dqsoynjdQMRQsV9EPW5z |
 | [r65](r65/) | Notes door pages | https://claude.ai/artifact/S4dqsoynjdQMRQsV9EPW5z |
+| [r66](r66/) | Tessera landings (283) | https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp |
 
 `bible.html` is the design bible page (https://claude.ai/artifact/RiAyDqFhdyy6XtQomCoUe6).
 
