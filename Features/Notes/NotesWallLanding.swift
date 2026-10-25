@@ -29,7 +29,7 @@ struct NotesLandingPage: View {
     var body: some View {
         let _ = model.revision
         let shown = load()
-        LandingFrame(title: "Notes", accent: LandingAccent.notes, stateLine: shown.stateLine,
+        LandingFrame(title: "Log", accent: LandingAccent.notes, stateLine: shown.stateLine,
                      keystone: {
                          LandingKeystone(label: "Your notes") {
                              WordWallView(words: shown.words) { id in
