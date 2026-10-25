@@ -16,6 +16,10 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
     let doors: [DialDoor]
     @Binding var focus: Int
     var openDoor: (DialDoor) -> Void
+    /// The caption line under the keystone (y 390), one line, never wrapped.
+    var caption: [String] = []
+    /// Where the brief or the two update rows start: 612 under the Log dial (246), 424 on the hub 282 stack.
+    var briefTop: CGFloat = 612
     @ViewBuilder let brief: Brief
     var action: LandingFootAction?
     /// The left edge (x 0-24) goes back; nil on a root.
@@ -23,15 +27,6 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
 
     static var designHeight: CGFloat {
         874
-    }
-
-    @ScaledMetric(relativeTo: .title3) private var dialScale: CGFloat = 1
-
-    /// The brief: the line at 612 under the Log's dial (moved just past it when large type grows the dial), or the
-    /// update rows at 424 above a dial at 540 (hub 282).
-    private func briefTop(_ rise: CGFloat) -> CGFloat {
-        guard doorsTop <= 432 else { return 424 * rise }
-        return max(612 * rise, doorsTop * rise + DoorsDial.slotHeight(scale: dialScale) * 3 + 8)
     }
 
     var body: some View {
@@ -50,27 +45,40 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                     }
                 }
                 .frame(height: 56, alignment: .leading)
+                .landingSection(.topBar)
                 .offset(x: 24, y: 54 * rise - 8)
 
                 FitLine(forms: stateLine, size: stateSize, color: Theme.Colors.inkSecondary,
                         weight: stateSize > 20 ? .light : .regular)
                     .frame(width: width - 48, alignment: .leading)
+                    .landingSection(.topBar)
                     .offset(x: 24, y: (stateSize > 20 ? 106 : 112) * rise)
 
                 keystone
                     .frame(width: slot.width, height: slot.height)
+                    .landingSection(.keystone)
                     .offset(x: (width - slot.width) / 2, y: LandingKeystone<EmptyView>.top * rise)
+
+                if !caption.isEmpty {
+                    FitLine(forms: caption, size: 15, color: Theme.Colors.inkSecondary)
+                        .frame(width: width - 48, alignment: .leading)
+                        .landingSection(.rows)
+                        .offset(x: 24, y: 390 * rise)
+                }
 
                 DoorsDial(doors: doors, focus: $focus, open: openDoor)
                     .frame(width: width - 48)
+                    .landingSection(.doors)
                     .offset(x: 24, y: doorsTop * rise)
 
                 brief
                     .frame(width: width - 48, alignment: .leading)
-                    .offset(x: 24, y: briefTop(rise))
+                    .landingSection(.rows)
+                    .offset(x: 24, y: briefTop * rise)
 
                 if let action {
                     LandingActionWord(action: action, accent: accent)
+                        .landingSection(.action)
                         .offset(x: 28, y: 786 * rise - 8)
                 }
             }

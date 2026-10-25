@@ -10,7 +10,7 @@ struct DialDoor: Identifiable, Equatable {
     let color: Color
     /// The small label above the facts ("Newest 2 pm"), 13 pt ink 2.
     var label: String?
-    /// Up to three short lines beside the focus, the first bold (16 pt).
+    /// Up to four short lines beside the focus, the first bold (16 pt): the door's own summary, in the room's way.
     var lines: [String] = []
 }
 
@@ -131,7 +131,7 @@ struct DoorsDial: View {
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .lineLimit(1)
                 }
-                ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
+                ForEach(Array(door.lines.prefix(4).enumerated()), id: \.offset) { index, line in
                     Text(line)
                         .font(.custom("Figtree", size: 16, relativeTo: .body).weight(index == 0 ? .bold : .regular))
                         .foregroundStyle(Theme.Colors.ink)

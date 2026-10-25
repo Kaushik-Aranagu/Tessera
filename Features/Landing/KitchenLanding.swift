@@ -325,7 +325,7 @@ struct KitchenLandingPage: View {
         LandingFrame(title: "Galley", accent: LandingAccent.kitchen, stateLine: pass.stateLine, stateSize: 26,
                      doorsTop: 540,
                      keystone: {
-                         LandingKeystone(caption: caption(pass), label: "The pass") {
+                         LandingKeystone(label: "The pass") {
                              GalleyRail(tickets: pass.tickets) { opens in go(opens) }
                          }
                      },
@@ -338,6 +338,8 @@ struct KitchenLandingPage: View {
                          default: open(.recipes)
                          }
                      },
+                     caption: caption(pass).map { [$0] } ?? [],
+                     briefTop: 424,
                      brief: { brief(front, pass) },
                      action: action(front),
                      onBack: { dismiss() })

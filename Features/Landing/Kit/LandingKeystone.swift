@@ -14,8 +14,7 @@ struct LandingKeystone<Content: View>: View {
         self.label = label
     }
 
-    /// One slot on every landing (Kaushik, Oct 25): 354 x 182 pt at top 196. More content pages inside it; it never
-    /// grows.
+    /// One slot on every landing (Kaushik, Oct 25): 354 x 182 pt at top 196. More content pages inside it; it never grows.
     static var size: CGSize {
         CGSize(width: 354, height: 182)
     }
@@ -34,14 +33,6 @@ struct LandingKeystone<Content: View>: View {
             .scaleEffect(y: arrived || reduceMotion ? 1 : 0.94, anchor: .bottom)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(label)
-            // The caption line at y 390 (12 pt under the slot): Figtree 15, ink 2, one line.
-            .overlay(alignment: .topLeading) {
-                if let caption {
-                    FitLine(forms: [caption], size: 15)
-                        .frame(width: Self.size.width, alignment: .leading)
-                        .offset(y: Self.size.height + 12)
-                }
-            }
             .onAppear {
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { arrived = true }
             }
