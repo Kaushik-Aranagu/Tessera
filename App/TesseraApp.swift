@@ -67,6 +67,8 @@ struct TesseraApp: App {
                             TrainingRoomView()
                         } else if LaunchFlags.has("-routinesLanding") {
                             NavigationStack { RoutinesWoodlandLandingPage() }
+                        } else if LaunchFlags.has("-settingsLanding") {
+                            NavigationStack { SettingsLandingPage() }
                         } else if LaunchFlags.has("-review") {
                             ReviewView()
                         } else if LaunchFlags.has("-groceries") {
