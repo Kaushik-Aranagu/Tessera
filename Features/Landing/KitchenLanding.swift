@@ -1,14 +1,56 @@
 import SwiftUI
 import TesseraCore
 
-// MARK: - The wall (landing contract §12: pantry and recipes, low and cookable first)
+// MARK: - The pass (sheet 259, landing contract v2 §2: the Galley keystone)
 
-/// Kitchen's landing words as data, so the wall, the state line and the brief have tests. Walled recipes and items
-/// never reach the wall; they are counted for the Private door.
-struct KitchenWall: Equatable {
-    enum Kind: Equatable {
-        case pantry
+/// One paper ticket on the pass. Its pages are what a flip shows; a big ticket takes 2.4 shares of the rail.
+struct GalleyTicket: Identifiable, Equatable {
+    enum Opens: Equatable {
         case recipe(UUID)
+        case recipes
+        case groceries
+        case pantry
+    }
+
+    enum Ink: Equatable {
+        case dinner, toGet, runsOut, ask
+    }
+
+    let id: String
+    let title: String
+    let sub: String?
+    /// Every line, before paging.
+    let lines: [String]
+    let big: Bool
+    let ink: Ink
+    let opens: Opens
+
+    /// Lines a page holds in the 182 pt slot (259 v2): about six on a big ticket, three on a small one.
+    var perPage: Int {
+        big ? 6 : 3
+    }
+
+    /// The ticket's pages; always at least one (an empty ticket still has its title).
+    var pages: [[String]] {
+        guard !lines.isEmpty else { return [[]] }
+        return stride(from: 0, to: lines.count, by: perPage).map { Array(lines[$0 ..< min($0 + perPage, lines.count)]) }
+    }
+
+    var share: CGFloat {
+        big ? 2.4 : 1
+    }
+}
+
+/// The landing's tickets as data, so the pass has tests: tonight's dinner, To get, what runs out. Walled recipes and
+/// items never reach a ticket; they are counted.
+struct GalleyPass: Equatable {
+    struct Dinner: Equatable {
+        let recipe: UUID?
+        /// Already "Private recipe" when walled.
+        let title: String
+        let isPrivate: Bool
+        let start: String?
+        let ingredients: [String]
     }
 
     struct Stock: Equatable {
@@ -17,92 +59,70 @@ struct KitchenWall: Equatable {
         let isPrivate: Bool
     }
 
-    struct Dish: Equatable {
-        let id: UUID
-        let title: String
-        let isPrivate: Bool
-        /// Everything for it is in the pantry.
-        let cookable: Bool
-    }
-
-    var words: [WallWord] = []
-    var opens: [String: Kind] = [:]
+    var tickets: [GalleyTicket] = []
     var stateLine: [String] = []
     var hidden = 0
-    /// Out or low, open names only, out first.
     var low: [String] = []
+    var toGet: [String] = []
     var cookable: [String] = []
 
-    static let maxWords = 14
+    static let maxTickets = 4
 
-    /// `tonight` is the planned dish's shown title (already "Private recipe" when walled), nil when nothing is planned.
-    static func build(stock: [Stock], dishes: [Dish], tonight: String?, start: String?,
-                      cooking: String?) -> KitchenWall
+    static func build(dinner: Dinner?, toGet: [String], stock: [Stock], cookable: [String],
+                      cooking: String?) -> GalleyPass
     {
-        var wall = KitchenWall()
-        func add(_ id: String, _ text: String, _ kind: Kind, _ weight: Double) {
-            guard wall.words.count < maxWords, wall.opens[id] == nil else { return }
-            wall.words.append(WallWord(id: id, text: NotesLandingPage.short(text), weight: weight))
-            wall.opens[id] = kind
-        }
+        var pass = GalleyPass()
+        let openToGet = toGet.filter { $0 != "Private item" }
         let openStock = stock.filter { !$0.isPrivate }
-        let short = openStock.filter { $0.state == .out || $0.state == .low }.sorted { $0.state < $1.state }
-        wall.low = short.map(\.name)
-        let ready = dishes.filter { $0.cookable && !$0.isPrivate }
-        wall.cookable = ready.map(\.title)
-        // Low stock and cookable dishes first, woven so both kinds sit high on the wall.
-        var rank = 0
-        for index in 0 ..< max(short.count, ready.count) {
-            if index < short.count {
-                add(
-                    "pantry:\(short[index].name.lowercased())",
-                    short[index].name,
-                    .pantry,
-                    max(0.55, 1 - 0.05 * Double(rank))
-                )
-                rank += 1
-            }
-            if index < ready.count {
-                add("recipe:\(ready[index].id.uuidString)", ready[index].title, .recipe(ready[index].id),
-                    max(0.55, 0.98 - 0.05 * Double(rank)))
-                rank += 1
-            }
+        pass.low = openStock.filter { $0.state == .out || $0.state == .low }.sorted { $0.state < $1.state }.map(\.name)
+        pass.toGet = openToGet
+        pass.cookable = cookable
+        pass.hidden = toGet.count - openToGet.count + stock.count - openStock.count
+        if let dinner {
+            // A walled dinner keeps its ticket as "Private recipe" and shows nothing of what is in it.
+            pass.tickets.append(GalleyTicket(id: "dinner", title: dinner.title, sub: dinner.start.map { "start \($0)" },
+                                             lines: dinner.isPrivate ? [] : dinner.ingredients, big: true,
+                                             ink: .dinner, opens: dinner.recipe.map { GalleyTicket.Opens.recipe($0) } ?? .recipes))
+        } else {
+            pass.tickets.append(GalleyTicket(id: "dinner", title: "Tonight?", sub: "nothing planned yet",
+                                             lines: cookable.isEmpty ? [] : ["you could make"] + cookable,
+                                             big: !cookable.isEmpty, ink: .ask, opens: .recipes))
         }
-        for (offset, dish) in dishes.enumerated() where !dish.isPrivate && !dish.cookable {
-            add("recipe:\(dish.id.uuidString)", dish.title, .recipe(dish.id), max(0.1, 0.45 - 0.03 * Double(offset)))
+        if !openToGet.isEmpty {
+            pass.tickets.append(GalleyTicket(id: "toget", title: "To get", sub: "\(openToGet.count) on the list",
+                                             lines: openToGet, big: false, ink: .toGet, opens: .groceries))
         }
-        for (offset, item) in openStock.enumerated() where item.state == .have {
-            add("pantry:\(item.name.lowercased())", item.name, .pantry, max(0.05, 0.3 - 0.02 * Double(offset)))
+        if !pass.low.isEmpty {
+            pass.tickets.append(GalleyTicket(id: "runsout", title: "Runs out", sub: "first to go", lines: pass.low,
+                                             big: false, ink: .runsOut, opens: .pantry))
         }
-        wall.hidden = stock.count(where: \.isPrivate) + dishes.count(where: \.isPrivate)
-        wall.stateLine = stateLine(tonight: tonight, start: start, cooking: cooking, cookable: ready.count)
-        return wall
+        pass.tickets = Array(pass.tickets.prefix(maxTickets))
+        pass.stateLine = stateLine(dinner: dinner, cooking: cooking, cookable: cookable.count)
+        return pass
     }
 
     /// A cook running: its own line first. Planned: "Tacos tonight, start at 6:05." then shorter. Nothing planned:
-    /// "Tonight? Nothing planned yet, you could make 4." and shorter (contract §12 empty state).
-    static func stateLine(tonight: String?, start: String?, cooking: String?, cookable: Int) -> [String] {
+    /// "Tonight? Nothing planned yet." (contract §12 empty state).
+    static func stateLine(dinner: Dinner?, cooking: String?, cookable: Int) -> [String] {
         var forms: [String] = []
         if let cooking {
             forms.append(cooking)
         }
-        if let tonight {
-            if let start {
-                forms.append("\(tonight) tonight, start at \(start).")
-                forms.append("\(tonight) tonight, \(start).")
+        if let dinner {
+            if let start = dinner.start {
+                forms.append("\(dinner.title) tonight, start at \(start).")
             }
-            forms.append("\(tonight) tonight.")
+            forms.append("\(dinner.title) tonight.")
             return forms
         }
         if cookable > 0 {
             forms.append("Tonight? Nothing planned yet, you could make \(cookable).")
         }
         forms.append("Tonight? Nothing planned yet.")
-        forms.append("Nothing planned yet.")
         return forms
     }
 
-    /// "Eggs and milk run out first." / "Eggs runs out first." Nothing low: nil.
+    /// The update row: "Eggs and milk run out first." / "Eggs runs out first." Nothing low: nil.
     var lowLine: [LandingBrief.Form]? {
         guard let first = low.first else { return nil }
         if low.count >= 2 {
@@ -114,11 +134,181 @@ struct KitchenWall: Equatable {
     }
 }
 
+/// The rail: a 1 pt line across the top of the slot, the tickets hung from it in shares (big 2.4, others 1). Swipe up
+/// on a ticket flips it over its clip to the next page, down flips back; a tap opens its thing.
+struct GalleyRail: View {
+    let tickets: [GalleyTicket]
+    var open: (GalleyTicket.Opens) -> Void
+
+    static let gap: CGFloat = 8
+    static let railY: CGFloat = 8
+
+    var body: some View {
+        GeometryReader { proxy in
+            let shares = tickets.reduce(0) { $0 + $1.share }
+            let room = proxy.size.width - Self.gap * CGFloat(max(tickets.count - 1, 0))
+            ZStack(alignment: .topLeading) {
+                Rectangle()
+                    .fill(Theme.Colors.inkSecondary.opacity(0.6))
+                    .frame(height: 1)
+                    .offset(y: Self.railY)
+                    .accessibilityHidden(true)
+                HStack(alignment: .top, spacing: Self.gap) {
+                    ForEach(tickets) { ticket in
+                        GalleyTicketView(ticket: ticket, open: open)
+                            .frame(width: room * ticket.share / max(shares, 1), height: proxy.size.height - Self.railY)
+                            .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .top)))
+                    }
+                }
+                .offset(y: Self.railY - 3)
+            }
+            .tesseraAnimation(Theme.Motion.house, value: tickets.map(\.id))
+        }
+    }
+}
+
+/// One ticket: a clip at the top, paper with a torn foot, the title in the thing's colour in the kitchen hand, a sub
+/// line, the page's lines, and "over" when there is a next page. Swipe up flips to the next page, down flips back.
+struct GalleyTicketView: View {
+    let ticket: GalleyTicket
+    var open: (GalleyTicket.Opens) -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var scheme
+    @State private var page = 0
+    @State private var turn: Double = 0
+    @State private var cue = HapticCue()
+
+    private var dark: Bool {
+        scheme == .dark
+    }
+
+    private var paper: Color {
+        dark ? Color(hex: 0x2B2722) : Color(hex: 0xF6EFDF)
+    }
+
+    private var titleColor: Color {
+        switch ticket.ink {
+        case .dinner: dark ? Color(hex: 0xE2A07F) : Color(hex: 0x9C4B2C)
+        case .toGet: dark ? Color(hex: 0xB5BE7A) : Color(hex: 0x5E6B1F)
+        case .runsOut: dark ? Color(hex: 0xEE8E9C) : Color(hex: 0x9A2541)
+        case .ask: LandingAccent.kitchen
+        }
+    }
+
+    var body: some View {
+        let pages = ticket.pages
+        let shown = pages[min(page, pages.count - 1)]
+        VStack(alignment: .leading, spacing: 0) {
+            Text(ticket.title)
+                .font(.custom("Caveat", size: ticket.big ? 30 : 25, relativeTo: .title3).weight(.bold))
+                .foregroundStyle(titleColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            if let sub = ticket.sub {
+                Text(sub)
+                    .font(.custom("Caveat", size: 18, relativeTo: .body))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            ForEach(Array(shown.enumerated()), id: \.offset) { _, line in
+                Text(line)
+                    .font(.custom("Caveat", size: 19, relativeTo: .body))
+                    .foregroundStyle(Theme.Colors.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+            Spacer(minLength: 0)
+            if pages.count > 1 {
+                Text(page < pages.count - 1 ? "over" : "back")
+                    .font(.custom("Caveat", size: 16, relativeTo: .caption))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.top, 14)
+        .padding(.bottom, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background { TornPaper().fill(paper) }
+        .overlay(alignment: .top) { clip }
+        .rotation3DEffect(.degrees(turn), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.4)
+        .contentShape(Rectangle())
+        .onTapGesture { open(ticket.opens) }
+        .gesture(DragGesture(minimumDistance: 10).onEnded { value in
+            guard abs(value.translation.height) > abs(value.translation.width), abs(value.translation.height) > 40
+            else { return }
+            flip(value.translation.height < 0 ? 1 : -1)
+        })
+        .tesseraFeedback(cue)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(([ticket.title, ticket.sub].compactMap(\.self) + shown).joined(separator: ", "))
+        .accessibilityHint("Opens it")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { open(ticket.opens) }
+        .accessibilityAdjustableAction { direction in flip(direction == .increment ? 1 : -1) }
+        .onChange(of: ticket.lines) { _, _ in page = min(page, max(ticket.pages.count - 1, 0)) }
+    }
+
+    /// The clip the ticket hangs from: a short ink stroke over the rail.
+    private var clip: some View {
+        Rectangle()
+            .fill(Theme.Colors.inkSecondary)
+            .frame(width: 18, height: 6)
+            .offset(y: -3)
+            .accessibilityHidden(true)
+    }
+
+    /// Over the clip to the next page (rotate to edge-on, swap the page, come back round), or back. At either end the
+    /// ticket only nods. Reduce Motion swaps the page in place.
+    private func flip(_ step: Int) {
+        let pages = ticket.pages.count
+        let next = page + step
+        guard next >= 0, next < pages else {
+            withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { turn = step > 0 ? -8 : 8 }
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { turn = 0 }
+            return
+        }
+        cue.play(.selection)
+        if reduceMotion {
+            withTesseraAnimation(Theme.Motion.snappy, reduceMotion: true) { page = next }
+            return
+        }
+        Task { @MainActor in
+            withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { turn = step > 0 ? -90 : 90 }
+            try? await Task.sleep(for: .milliseconds(220))
+            page = next
+            turn = step > 0 ? 90 : -90
+            withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { turn = 0 }
+        }
+    }
+}
+
+/// Paper with a torn foot: straight sides and top, a small irregular zigzag along the bottom.
+struct TornPaper: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - 4))
+        let teeth = max(Int(rect.width / 9), 4)
+        let step = rect.width / CGFloat(teeth)
+        let depths: [CGFloat] = [4, 1, 3, 0, 4, 2, 1, 3]
+        for index in (0 ..< teeth).reversed() {
+            let x = rect.minX + step * CGFloat(index)
+            path.addLine(to: CGPoint(x: x + step / 2, y: rect.maxY - depths[index % depths.count]))
+            path.addLine(to: CGPoint(x: x, y: rect.maxY - 4))
+        }
+        path.closeSubpath()
+        return path
+    }
+}
+
 // MARK: - The page
 
-/// Kitchen's landing on the shared kit (landing contract §12): the word wall of pantry and recipe words (what runs
-/// low and what you could cook first), the doors on the dial, one brief line, "Cook" (or "Plan tonight") at the foot.
-/// Behind Settings › Review › "Landing pages" (default Off).
+/// The Galley's landing (landing contract v2: hub 282, sheet 259): the sentence at 106, the pass in the keystone slot,
+/// its caption at 390, one update row at 424, the doors at 540, "Cook" (or "Plan tonight") at the foot.
 struct KitchenLandingPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openHomeLink) private var open
@@ -131,28 +321,24 @@ struct KitchenLandingPage: View {
     var body: some View {
         let _ = model.revision
         let front = KitchenFront(model: model, now: AppClock.now)
-        let wall = load(front)
-        LandingFrame(title: "Kitchen", accent: LandingAccent.kitchen, stateLine: wall.stateLine,
+        let pass = load(front)
+        LandingFrame(title: "Galley", accent: LandingAccent.kitchen, stateLine: pass.stateLine, stateSize: 26,
+                     doorsTop: 540,
                      keystone: {
-                         LandingKeystone(label: "Pantry and recipes") {
-                             WordWallView(words: wall.words) { id in
-                                 switch wall.opens[id] {
-                                 case let .recipe(uuid): recipe = .init(id: uuid)
-                                 case .pantry: open(.pantry)
-                                 case nil: break
-                                 }
-                             }
+                         LandingKeystone(caption: caption(pass), label: "The pass") {
+                             GalleyRail(tickets: pass.tickets) { opens in go(opens) }
                          }
                      },
-                     doors: doors(front, wall), focus: $focus,
+                     doors: doors(front, pass), focus: $focus,
                      openDoor: { door in
                          switch door.id {
+                         case "tonight": go(front.tonight?.recipe.map { GalleyTicket.Opens.recipe($0) } ?? .recipes)
                          case "pantry", "leftovers": open(.pantry)
-                         case "shopping": open(.groceries)
+                         case "groceries": open(.groceries)
                          default: open(.recipes)
                          }
                      },
-                     brief: { brief(front, wall) },
+                     brief: { brief(front, pass) },
                      action: action(front),
                      onBack: { dismiss() })
             .toolbar(.hidden, for: .navigationBar)
@@ -160,58 +346,76 @@ struct KitchenLandingPage: View {
             .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
     }
 
-    // MARK: Facts
-
-    private func load(_ front: KitchenFront) -> KitchenWall {
-        let ledger = PantryLedger(store: model.store, classes: model.classes)
-        let stock = ledger.entries().map { KitchenWall.Stock(name: $0.label, state: $0.state, isPrivate: $0.isPrivate) }
-        let covered = Set(TesseraCore.KitchenLanding(store: model.store, classes: model.classes).coveredRecipes()
-            .map(\.id))
-        let book = RecipeBook(store: model.store, classes: model.classes)
-        let dishes = book.recipes().filter { !$0.isDeleted }
-            .sorted { $0.updatedAt > $1.updatedAt }
-            .map { recipe in
-                KitchenWall.Dish(
-                    id: recipe.id,
-                    title: recipe.title,
-                    isPrivate: RecipeCopy.isPrivate(recipe.title, model: model),
-                    cookable: covered.contains(recipe.id)
-                )
-            }
-        return KitchenWall.build(stock: stock, dishes: dishes, tonight: front.tonight?.title,
-                                 start: front.tonight.map { HouseTime.clock($0.start) }, cooking: front.cooking?.line)
+    private func go(_ opens: GalleyTicket.Opens) {
+        switch opens {
+        case let .recipe(id): recipe = .init(id: id)
+        case .recipes: open(.recipes)
+        case .groceries: open(.groceries)
+        case .pantry: open(.pantry)
+        }
     }
 
-    /// Pantry, Recipes, Shopping, Leftovers, Meal plan (contract §12). Leftovers has no model yet and opens Pantry.
-    private func doors(_ front: KitchenFront, _ wall: KitchenWall) -> [DialDoor] {
+    // MARK: Facts
+
+    private func load(_ front: KitchenFront) -> GalleyPass {
+        let ledger = PantryLedger(store: model.store, classes: model.classes)
+        let stock = ledger.entries().map { GalleyPass.Stock(name: $0.label, state: $0.state, isPrivate: $0.isPrivate) }
+        let covered = TesseraCore.KitchenLanding(store: model.store, classes: model.classes).coveredRecipes()
+            .filter { !$0.isDeleted && !RecipeCopy.isPrivate($0.title, model: model) }
+            .map(\.title)
+        let board = PantryBoard(store: model.store, classes: model.classes) { GroceriesCopy.name($0) }
+        let toGet = board.toGet.flatMap(\.rows).compactMap { row -> String? in
+            if case let .toGet(_, label) = row {
+                return label
+            }
+            return nil
+        }
+        let dinner = front.tonight.map { meal -> GalleyPass.Dinner in
+            let isPrivate = meal.title == "Private recipe"
+            let book = RecipeBook(store: model.store, classes: model.classes)
+            let lines = meal.recipe.flatMap { model.store.object(id: $0) }
+                .map { book.lines(of: $0).map(\.line.original) } ?? []
+            return GalleyPass.Dinner(recipe: meal.recipe, title: meal.title, isPrivate: isPrivate,
+                                     start: HouseTime.clock(meal.start), ingredients: lines)
+        }
+        return GalleyPass.build(dinner: dinner, toGet: toGet, stock: stock, cookable: covered,
+                                cooking: front.cooking?.line)
+    }
+
+    private func caption(_ pass: GalleyPass) -> String? {
+        if pass.tickets.contains(where: { $0.pages.count > 1 }) {
+            return "Swipe a ticket up for its next page."
+        }
+        return pass.hidden > 0 ? "\(pass.hidden) private kept off the pass." : nil
+    }
+
+    /// Tonight, Pantry, Recipes, Groceries, Leftovers (contract v2 §12). Leftovers has no model yet and opens Pantry.
+    private func doors(_ front: KitchenFront, _ pass: GalleyPass) -> [DialDoor] {
         let dark = scheme == .dark
         let wine = dark ? Color(hex: 0xEE8E9C) : Color(hex: 0x9A2541)
         let slate = dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F)
+        let olive = dark ? Color(hex: 0xB5BE7A) : Color(hex: 0x5E6B1F)
         let planned = front.week.compactMap { day in day.meal.map { "\(day.weekday) \($0.title)" } }
-        var doors = [
-            DialDoor(id: "pantry", name: "Pantry", count: wall.low.isEmpty ? nil : "\(wall.low.count)",
-                     color: wall.low.isEmpty ? Theme.Colors.ink : wine,
-                     label: wall.low.isEmpty ? "Nothing running low" : "Running low", lines: Array(wall.low.prefix(3))),
+        return [
+            DialDoor(id: "tonight", name: "Tonight", color: slate,
+                     label: front.tonight == nil ? "Nothing planned yet" : "Next \(front.week.count) days",
+                     lines: Array(planned.prefix(3))),
+            DialDoor(id: "pantry", name: "Pantry", count: pass.low.isEmpty ? nil : "\(pass.low.count)",
+                     color: pass.low.isEmpty ? Theme.Colors.ink : wine,
+                     label: pass.low.isEmpty ? "Nothing running low" : "Running low", lines: Array(pass.low.prefix(3))),
             DialDoor(id: "recipes", name: "Recipes", count: front.saved > 0 ? "\(front.saved)" : nil,
                      color: LandingAccent.kitchen,
-                     label: wall.cookable.isEmpty ? nil : "You can make \(wall.cookable.count) now",
-                     lines: Array(wall.cookable.prefix(3))),
-            DialDoor(id: "shopping", name: "Shopping", count: front.toGet > 0 ? "\(front.toGet)" : nil,
-                     color: Theme.Colors.ink, label: front.pantryValue),
+                     label: pass.cookable.isEmpty ? nil : "You can make \(pass.cookable.count) now",
+                     lines: Array(pass.cookable.prefix(3))),
+            DialDoor(id: "groceries", name: "Groceries", count: pass.toGet.isEmpty ? nil : "\(pass.toGet.count)",
+                     color: olive, label: pass.toGet.isEmpty ? "Nothing to get" : "To get",
+                     lines: Array(pass.toGet.prefix(3))),
             DialDoor(id: "leftovers", name: "Leftovers", color: Theme.Colors.ink, label: "Kept in Pantry for now"),
-            DialDoor(id: "plan", name: "Meal plan", count: planned.isEmpty ? nil : "\(planned.count)", color: slate,
-                     label: planned.isEmpty ? "Nothing planned yet" : "Next \(front.week.count) days",
-                     lines: Array(planned.prefix(3))),
         ]
-        if wall.hidden > 0 {
-            doors.append(DialDoor(id: "private", name: "Private", count: "\(wall.hidden)", color: slate,
-                                  label: "Kept off the wall", lines: ["\(wall.hidden) kept private"]))
-        }
-        return doors
     }
 
     @ViewBuilder
-    private func brief(_ front: KitchenFront, _ wall: KitchenWall) -> some View {
+    private func brief(_ front: KitchenFront, _ pass: GalleyPass) -> some View {
         if let cook = front.cooking {
             Button { cookCover = .init(id: cook.id) } label: {
                 LandingBrief(cook.line)
@@ -220,7 +424,7 @@ struct KitchenLandingPage: View {
             }
             .buttonStyle(.plain)
             .accessibilityHint("Goes on with the cook")
-        } else if let low = wall.lowLine {
+        } else if let low = pass.lowLine {
             LandingBrief(forms: low)
         } else if let value = front.pantryValue {
             LandingBrief(value.prefix(1).uppercased() + value.dropFirst() + ".")
@@ -257,7 +461,7 @@ struct KitchenCookCover: Identifiable {
 }
 
 #if DEBUG
-    /// `-kitchen`: the Kitchen landing on its own, with its doors opening as Home would open them.
+    /// `-kitchen`: the Galley landing on its own, with its doors opening as Home would open them.
     struct KitchenLandingHost: View {
         @State private var link: HomeLink?
 

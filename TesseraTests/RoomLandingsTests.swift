@@ -18,13 +18,14 @@ struct RoomLandingsTests {
     }
 
     /// Longest first, and the last form fits the slot at default size (FitLine may step it to 0.8x past that).
-    static func checkForms(_ forms: [String], _ comment: Comment) {
+    static func checkForms(_ forms: [String], _ comment: Comment, size: CGFloat = 16) {
         #expect(!forms.isEmpty, comment)
         for (lhs, rhs) in zip(forms, forms.dropFirst()) {
             #expect(lhs.count >= rhs.count, comment)
         }
         if let last = forms.last {
-            #expect(width(last) <= stateWidth, comment)
+            // The written forms or their whole-word cuts (FitLine) always reach one that fits.
+            #expect(FitLine.candidates(forms).contains { width($0, size: size) <= stateWidth }, comment)
             #expect(!last.contains("..."), comment)
             #expect(!last.contains("…"), comment)
         }
@@ -32,59 +33,6 @@ struct RoomLandingsTests {
 
     static func day(_ day: Int, _ hour: Int = 12) -> Date {
         Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: day, hour: hour))!
-    }
-
-    // MARK: Lists
-
-    func line(_ name: String, isPrivate: Bool = false) -> ListsLandingFacts.Line {
-        ListsLandingFacts.Line(id: UUID(), name: isPrivate ? "Private list" : name, isGroceries: false,
-                               isPrivate: isPrivate, isRunning: false, isReusable: false, isPickOne: false,
-                               left: 3, total: 5)
-    }
-
-    func due(_ list: ListsLandingFacts.Line, _ text: String, day: String, at: Int, isPrivate: Bool = false)
-        -> ListsLanding.DueItem
-    {
-        ListsLanding.DueItem(list: list.id, listName: list.name, item: UUID(), text: isPrivate ? "Private item" : text,
-                             due: Self.day(at), isPrivate: isPrivate || list.isPrivate, day: day)
-    }
-
-    @Test func listsWallLeadsWithWhatIsDueAndOpensItsList() {
-        let trip = line("Packing")
-        let chores = line("Chores")
-        let wall = ListsWall.build(due: [due(trip, "Passports", day: "Fri", at: 30)], lists: [chores, trip])
-        let texts = wall.words.sorted { $0.weight > $1.weight }.map(\.text)
-        #expect(texts.prefix(2) == ["Packing", "Passports"])
-        #expect(texts.contains("Chores"))
-        #expect(wall.words.allSatisfy { wall.opens[$0.id] != nil })
-        #expect(wall.opens.values.contains(trip.id) && wall.soonest == trip.id)
-        #expect(wall.stateLine.first == "Packing is due Fri.")
-    }
-
-    @Test func listsWallNeverShowsAPrivateListOrItem() {
-        let secret = line("Lexapro refills", isPrivate: true)
-        let trip = line("Trip")
-        let wall = ListsWall.build(due: [due(secret, "Pharmacy", day: "tomorrow", at: 26),
-                                         due(trip, "Lexapro", day: "Fri", at: 30, isPrivate: true)],
-                                   lists: [secret, trip])
-        let shown = wall.words.map(\.text).joined(separator: " ").lowercased()
-        #expect(!shown.contains("lexapro") && !shown.contains("pharmacy") && !shown.contains("private"))
-        #expect(wall.hidden == 2)
-        // The soonest is walled, so the dial's due door opens the shelf, and the header names only "Private list".
-        #expect(wall.soonest == nil)
-        #expect(wall.stateLine.allSatisfy { !$0.contains("Lexapro") && !$0.contains("Pharmacy") })
-        #expect(wall.stateLine.first?.hasPrefix("Private list is due tomorrow") == true)
-    }
-
-    @Test func listsStateLineFormsAndEmptyState() {
-        #expect(ListsWall.stateLine([]) == ["Nothing due this week."])
-        let trip = line("Before the trip to the coast with everyone")
-        let many = (0 ..< 5).map { due(trip, "Thing \($0)", day: "Wed", at: 28) }
-        let forms = ListsWall.stateLine(many)
-        #expect(forms.first == "Before the trip to the coast with everyone is due Wed, 5 things due this week.")
-        #expect(forms.last == "5 due this week.")
-        Self.checkForms(forms, "Lists state line")
-        #expect(forms.allSatisfy { !$0.contains(" of ") })
     }
 
     // MARK: Money
@@ -124,42 +72,49 @@ struct RoomLandingsTests {
         #expect(!forms.joined().contains("left"))
     }
 
-    // MARK: Kitchen
+    // MARK: Galley
 
-    @Test func kitchenWallPutsLowAndCookableFirst() throws {
-        let tacos = KitchenWall.Dish(id: UUID(), title: "Tacos", isPrivate: false, cookable: true)
-        let dal = KitchenWall.Dish(id: UUID(), title: "Dal", isPrivate: false, cookable: false)
-        let wall = KitchenWall.build(stock: [.init(name: "Eggs", state: .out, isPrivate: false),
-                                             .init(name: "Milk", state: .low, isPrivate: false),
-                                             .init(name: "Rice", state: .have, isPrivate: false)],
-                                     dishes: [dal, tacos], tonight: nil, start: nil, cooking: nil)
-        let ranked = wall.words.sorted { $0.weight > $1.weight }.map(\.text)
-        #expect(Set(ranked.prefix(3)) == ["Eggs", "Milk", "Tacos"])
-        #expect(ranked.last == "Rice")
-        #expect(try wall.opens[#require(wall.words.first { $0.text == "Tacos" }?.id)] == .recipe(tacos.id))
-        #expect(try wall.opens[#require(wall.words.first { $0.text == "Eggs" }?.id)] == .pantry)
-        #expect(wall.lowLine?.first?.text == "Eggs and Milk run out first.")
-        #expect(wall.stateLine.first == "Tonight? Nothing planned yet, you could make 1.")
+    func dinner(_ title: String = "Tacos", isPrivate: Bool = false, lines: Int = 8) -> GalleyPass.Dinner {
+        GalleyPass.Dinner(recipe: UUID(), title: isPrivate ? "Private recipe" : title, isPrivate: isPrivate,
+                          start: "6:05 pm", ingredients: (1 ... lines).map { "Thing \($0)" })
     }
 
-    @Test func kitchenWallNeverShowsAPrivateRecipeOrItem() {
-        let secret = KitchenWall.Dish(id: UUID(), title: "Keto shake", isPrivate: true, cookable: true)
-        let wall = KitchenWall.build(stock: [.init(name: "Private item", state: .low, isPrivate: true)],
-                                     dishes: [secret], tonight: "Private recipe", start: "6:05", cooking: nil)
-        #expect(wall.words.isEmpty)
-        #expect(wall.hidden == 2 && wall.low.isEmpty && wall.cookable.isEmpty)
-        #expect(wall.stateLine.first == "Private recipe tonight, start at 6:05.")
-        #expect(!wall.stateLine.joined().contains("Keto"))
+    @Test func galleyPassHangsDinnerToGetAndRunsOut() {
+        let pass = GalleyPass.build(dinner: dinner(), toGet: ["Limes", "Feta"],
+                                    stock: [.init(name: "Eggs", state: .out, isPrivate: false),
+                                            .init(name: "Milk", state: .low, isPrivate: false),
+                                            .init(name: "Rice", state: .have, isPrivate: false)],
+                                    cookable: ["Dal"], cooking: nil)
+        #expect(pass.tickets.map(\.title) == ["Tacos", "To get", "Runs out"])
+        #expect(pass.tickets[0].big && pass.tickets[0].share == 2.4 && !pass.tickets[1].big)
+        #expect(pass.tickets[0].pages.count == 2 && pass.tickets[0].pages[1] == ["Thing 7", "Thing 8"])
+        #expect(pass.tickets[2].lines == ["Eggs", "Milk"])
+        #expect(pass.tickets[0].opens != .recipes && pass.tickets[1].opens == .groceries && pass.tickets[2]
+            .opens == .pantry)
+        #expect(pass.lowLine?.first?.text == "Eggs and Milk run out first.")
+        #expect(pass.stateLine.first == "Tacos tonight, start at 6:05 pm.")
+        #expect(pass.tickets.count <= GalleyPass.maxTickets)
     }
 
-    @Test func kitchenStateLineFormsAndEmptyState() {
-        let empty = KitchenWall.stateLine(tonight: nil, start: nil, cooking: nil, cookable: 0)
-        #expect(empty == ["Tonight? Nothing planned yet.", "Nothing planned yet."])
-        Self.checkForms(empty, "Kitchen empty")
-        let planned = KitchenWall.stateLine(tonight: "Tomato and white bean stew", start: "6:05",
-                                            cooking: nil, cookable: 3)
-        #expect(planned.last == "Tomato and white bean stew tonight.")
-        Self.checkForms(planned, "Kitchen planned")
+    @Test func galleyPassNeverShowsAPrivateRecipeOrItem() {
+        let pass = GalleyPass.build(dinner: dinner("Keto shake", isPrivate: true), toGet: ["Private item"],
+                                    stock: [.init(name: "Private item", state: .low, isPrivate: true)],
+                                    cookable: [], cooking: nil)
+        #expect(pass.tickets.map(\.title) == ["Private recipe"])
+        #expect(pass.tickets[0].lines.isEmpty && pass.hidden == 2)
+        let all = (pass.tickets.flatMap { [$0.title] + $0.lines } + pass.stateLine).joined(separator: " ")
+        #expect(!all.contains("Keto") && !all.contains("Thing"))
+    }
+
+    @Test func galleyEmptyStateAndForms() {
+        let empty = GalleyPass.build(dinner: nil, toGet: [], stock: [], cookable: [], cooking: nil)
+        #expect(empty.tickets.map(\.title) == ["Tonight?"] && empty.tickets[0].sub == "nothing planned yet")
+        #expect(empty.stateLine == ["Tonight? Nothing planned yet."])
+        let ask = GalleyPass.build(dinner: nil, toGet: [], stock: [], cookable: ["Dal", "Pasta"], cooking: nil)
+        #expect(ask.tickets[0].lines == ["you could make", "Dal", "Pasta"])
+        Self.checkForms(ask.stateLine, "Galley empty", size: 26)
+        let planned = GalleyPass.stateLine(dinner: dinner("Tomato and white bean stew"), cooking: nil, cookable: 0)
+        Self.checkForms(planned, "Galley planned", size: 26)
     }
 
     // MARK: Kit

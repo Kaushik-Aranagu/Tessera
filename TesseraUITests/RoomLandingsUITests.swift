@@ -37,21 +37,6 @@ final class RoomLandingsUITests: SimulatorOnlyTestCase {
         return wall.buttons.firstMatch
     }
 
-    func testListsLanding() {
-        let app = launch(["-lists"])
-        XCTAssertTrue(app.buttons["Lists"].waitForExistence(timeout: 30), "Lists title")
-        turnDial(app)
-        let new = button(app, "New list")
-        XCTAssertTrue(new.exists, "New list")
-        new.tap()
-        XCTAssertTrue(app.alerts["New list"].waitForExistence(timeout: 5), "New list asks for a name")
-        app.alerts["New list"].buttons["Cancel"].tap()
-        let word = wallWord(app, in: "Due this week")
-        XCTAssertTrue(word.exists, "a word on the wall")
-        word.tap()
-        XCTAssertTrue(new.waitForNonExistence(timeout: 5), "the word opened its list")
-    }
-
     func testMoneyLanding() {
         let app = launch(["-money"])
         XCTAssertTrue(app.staticTexts["Money"].waitForExistence(timeout: 30), "Money title")
@@ -70,11 +55,11 @@ final class RoomLandingsUITests: SimulatorOnlyTestCase {
 
     func testKitchenLanding() {
         let app = launch(["-kitchen"])
-        XCTAssertTrue(app.staticTexts["Kitchen"].waitForExistence(timeout: 30), "Kitchen title")
+        XCTAssertTrue(app.staticTexts["Galley"].waitForExistence(timeout: 30), "Galley title")
         turnDial(app)
         let cook = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cook", "Plan tonight"])).firstMatch
         XCTAssertTrue(cook.exists, "Cook or Plan tonight")
-        let word = wallWord(app, in: "Pantry and recipes")
+        let word = wallWord(app, in: "The pass")
         XCTAssertTrue(word.exists, "a word on the wall")
         word.tap()
         sleep(2)

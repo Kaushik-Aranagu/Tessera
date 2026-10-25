@@ -12,6 +12,7 @@ enum FontRegistry {
         "Figtree-Variable",
         "Outfit-Variable",
         "Newsreader-Variable",
+        "Caveat-Variable",
     ]
 
     static func registerAll() {
