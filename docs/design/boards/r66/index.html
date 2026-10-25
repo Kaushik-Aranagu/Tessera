@@ -322,7 +322,7 @@ $('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('
 .one .big .strike{position:absolute;left:0;top:55%;height:1.5px;background:var(--ink);width:0}
 .one .mid{height:28px;font-size:20px;font-weight:500;white-space:nowrap;overflow:hidden;max-width:262px;margin-top:6px}
 .one .sml{height:22px;font-size:15px;font-weight:500;color:var(--ink2);white-space:nowrap;overflow:hidden;margin-top:6px}
-.one canvas{position:absolute;right:0;top:44px;width:80px;height:80px;image-rendering:pixelated}
+.one canvas{position:absolute;right:0;top:44px;width:80px;height:80px}
 .apps{position:absolute;left:24px;right:24px;top:640px;height:120px;overflow:hidden;touch-action:none}
 .apps .ar{position:absolute;left:0;right:0;height:40px;display:flex;align-items:center;gap:14px;white-space:nowrap;cursor:pointer;transition:top .32s cubic-bezier(.3,.9,.3,1)}
 .apps .ar b{font-weight:600;font-size:20px;transform-origin:left center;transition:transform .32s cubic-bezier(.3,.9,.3,1),color .3s}
@@ -429,7 +429,8 @@ SCREENS.home={title:'Home',accent:null,tess:'Stretch at 8 may run into Push A. M
 
  // the one thing
  const one=h('div','one');el.appendChild(one);let oi=0;
- function signArt(kind){const s=document.createElement('canvas');s.width=20;s.height=20;const g=s.getContext('2d');const P=(x,y,c)=>{g.fillStyle=c;g.fillRect(x,y,1,1)};
+ // the sign is laid like the keystone: 4 pt tiles with the same grout between them (3.6 pt light, 3.2 pt on black), drawn at 2x
+ function signArt(kind){const s=document.createElement('canvas');s.width=160;s.height=160;const g=s.getContext('2d');const ts=(phone.dataset.look==='black'?3.2:3.6)*2;const P=(x,y,c)=>{g.fillStyle=c;g.fillRect(x*8,y*8,ts,ts)};
   const A={training:css('--training'),kitchen:css('--kitchen'),routines:css('--routines'),lists:css('--lists'),weather:css('--weather')};
   for(let y=0;y<20;y++)for(let x=0;x<20;x++){const e=Math.min(x,y,19-x,19-y);if(e<1)continue}
   if(kind==='barbell'){for(let x=2;x<18;x++)P(x,10,css('--ink2'));[[3,6],[5,4],[13,4],[15,6]].forEach(([x,hh])=>{for(let y=10-hh;y<=10+hh;y++){P(x,y,A.training);P(x+1,y,A.training)}})}
