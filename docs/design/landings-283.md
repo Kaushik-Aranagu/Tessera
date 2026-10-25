@@ -100,3 +100,12 @@ Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v4). Owners: Builder A
 - When one side is empty, the other side plays its half alone. When content won't carry over (a picture becoming words), it collapses to a point and forms again, as the Glyph does.
 - Show sections (board): the map drawn over any live screen, with its empty places hatched.
 - Layout mode (Settings > Layout mode, read-only): every screen as soft bubbles, one per place, in the room's colour (11% fill, 18 pt radius, a 1 pt inner line). Empty places are dashed, and the Title bubble carries the room's name. Swipe across (arrow keys on the board) to walk Bridge, Log, Lookout, Deck, Galley, Watch and Purse; each bubble moves the way its place does. Tap a bubble to read its frame, what it holds on this screen, its touch and its move, inside the Keystone bubble. Tap the Nav word bubble twice, or swipe from the left edge, to leave. Editing comes later.
+
+## v5: the shell stays, only content changes (his 4:21 and 4:22 PM notes)
+- No screen ever slides in. The places stay where they are; going anywhere hands each place new content and the
+  place changes it in its own way. Back is the same moves run the other way, with every place restored.
+- A keystone that is the same on both sides (the Galley rail, the Deck board, the Log wall) is not touched.
+- Content in no named place (door lists) leaves softly where it stands; new content settles in from the top down.
+- Layout to layout: Switcher + Needs merge into the Door title; Widget, Glyph, Dial and Door summary merge into
+  the Page. Back splits them apart. Layout mode shows it: tap the Dial bubble twice, Nav word twice to return.
+- The full contract between the UI and the content: `shell-contract-283.md`.
