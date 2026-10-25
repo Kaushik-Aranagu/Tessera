@@ -61,7 +61,7 @@ struct RoutinesWoodlandScene: View {
             }
         }
         .frame(width: Self.size.width, height: Self.size.height)
-        .mask { EdgeFade() }
+        .mask { EdgeFade(wide: scheme == .dark) }
         .contentShape(Rectangle())
         .gesture(hold(places))
         .tesseraFeedback(cue)
@@ -158,14 +158,20 @@ struct RoutinesWoodlandScene: View {
 }
 
 /// The scene dissolves into the page (268 v3): an alpha falloff of 11% at the sides, 12% at the top, 18% at the foot.
+/// On a black page a bright sky needs a longer fall (268 v2's hardest case), so the dark fade is wider.
 private struct EdgeFade: View {
+    var wide = false
+
     var body: some View {
-        LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.11),
-                               .init(color: .black, location: 0.89), .init(color: .clear, location: 1)],
+        let side = wide ? 0.2 : 0.11
+        LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: side),
+                               .init(color: .black, location: 1 - side), .init(color: .clear, location: 1)],
                        startPoint: .leading, endPoint: .trailing)
             .mask {
-                LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.12),
-                                       .init(color: .black, location: 0.82), .init(color: .clear, location: 1)],
+                LinearGradient(stops: [.init(color: .clear, location: 0),
+                                       .init(color: .black, location: wide ? 0.24 : 0.12),
+                                       .init(color: .black, location: wide ? 0.74 : 0.82),
+                                       .init(color: .clear, location: 1)],
                                startPoint: .top, endPoint: .bottom)
             }
     }
@@ -250,7 +256,7 @@ private struct WoodlandPainter {
         }
         // The whole scene leans toward the page so the dissolving edge has less to fade (268 v2).
         let rect = CGRect(origin: .zero, size: WoodlandLayout.sceneSize)
-        c.fill(Path(rect), with: .color(pageDark ? Color.black.opacity(0.22) : Color(hex: 0xFBF8F1).opacity(0.12)))
+        c.fill(Path(rect), with: .color(pageDark ? Color.black.opacity(0.32) : Color(hex: 0xFBF8F1).opacity(0.12)))
     }
 
     // MARK: Shapes

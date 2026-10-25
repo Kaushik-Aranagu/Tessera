@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import UIKit
 
 /// The Watch landing (Routines; sheet 283 on the shared scaffold): the woodland of 268 in the keystone, spanning the
 /// phone's width; the switcher across Evening, Night, Morning with the needs beside it; the widget (next, thirsty, the
@@ -37,8 +38,10 @@ struct RoutinesWoodlandLandingPage: View {
         let front = RoutinesFront(model: model, now: now)
         let today = TesseraDay().today(now)
         let facts = RoutinesWoodlandFacts(front: front, notNow: RoutinesNotNow.ids(on: today))
-        let entries = front.items.map {
-            WatchWords.Entry(name: $0.name, minute: $0.usual?.startMinuteOfDay, done: $0.doneAt != nil)
+        let entries = front.items.map { item in
+            WatchWords.Entry(name: item.name, minute: item.usual?.startMinuteOfDay, done: item.doneAt != nil,
+                             due: front.todayIDs.contains(item.id)
+                                 || WoodlandLog.isDue(today: today, daily: item.daily, weekdays: item.weekdays))
         }
         let time = WatchTime(rawValue: switcherIndex) ?? .evening
         let tapped = facts.trees.first { $0.id == selected }
@@ -183,12 +186,14 @@ enum WatchWords {
         /// Its usual start, minutes after midnight; nil when it has no usual time (it counts as evening).
         let minute: Int?
         let done: Bool
+        /// Due today (only today's routines count in the needs).
+        var due = true
     }
 
     /// The two needs lines beside the switcher (283): the next one in that part of the day, then how it stands.
     /// Never "N of M".
     static func needs(_ time: WatchTime, _ entries: [Entry]) -> [String] {
-        let mine = entries.filter { WatchTime.of(minute: $0.minute ?? 1080) == time }
+        let mine = entries.filter { ($0.due || $0.done) && WatchTime.of(minute: $0.minute ?? 1080) == time }
         let open = mine.filter { !$0.done }.sorted { ($0.minute ?? 1080) < ($1.minute ?? 1080) }
         let done = mine.count - open.count
         let first: String = if let next = open.first {
@@ -209,6 +214,17 @@ enum WatchWords {
         return [first, second]
     }
 
+    /// The widget's Big line holds 262 pt of Figtree 700 38: the longest whole-word cut of the name that fits, never
+    /// "..." (the kit draws the Big line on one line).
+    static func bigFit(_ name: String, width: CGFloat = 262) -> String {
+        let descriptor = UIFontDescriptor(fontAttributes: [
+            .family: "Figtree", .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.bold],
+        ])
+        let font = UIFont(descriptor: descriptor, size: 38)
+        let forms = FitLine.cuts(name)
+        return forms.first { ($0 as NSString).size(withAttributes: [.font: font]).width <= width } ?? forms.last ?? name
+    }
+
     /// The caption at rest: how to touch the woodland, longest first.
     static func restCaption(hasTrees: Bool) -> [String] {
         hasTrees ? ["Tap a tree to name it, hold it to water.", "Tap a tree, hold to water.", "Tap a tree."]
@@ -221,14 +237,14 @@ enum WatchWords {
         var items: [WidgetItem] = []
         if let next = facts.updates.first(where: { $0.kind == .next }) {
             let when = next.rest.components(separatedBy: ", ").dropFirst().first
-            items.append(WidgetItem(id: next.id.uuidString, header: "Next", big: next.name,
+            items.append(WidgetItem(id: next.id.uuidString, header: "Next", big: bigFit(next.name),
                                     middle: when.map { "Starts \($0)" } ?? "Any time today",
                                     small: "Tap to open it", strikeable: false))
         }
         let thirsty = facts.trees.filter { $0.health.isWithering || $0.health.isBare }
             .max { $0.health.consecutive < $1.health.consecutive }
         if let thirsty {
-            items.append(WidgetItem(id: thirsty.id.uuidString, header: "Thirsty", big: thirsty.name,
+            items.append(WidgetItem(id: thirsty.id.uuidString, header: "Thirsty", big: bigFit(thirsty.name),
                                     middle: thirsty.health.isBare ? "Could begin again" : "Needs a little care",
                                     small: "Hold its tree to water it", bigColor: wine, strikeable: false))
         }

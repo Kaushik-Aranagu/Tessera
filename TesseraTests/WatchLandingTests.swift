@@ -52,7 +52,8 @@ struct WatchLandingTests {
         let entries = [WatchWords.Entry(name: "Walk", minute: 18 * 60 + 30, done: false),
                        WatchWords.Entry(name: "Journal", minute: 20 * 60, done: false),
                        WatchWords.Entry(name: "Stretch", minute: 13 * 60, done: true),
-                       WatchWords.Entry(name: "Read", minute: 22 * 60, done: false)]
+                       WatchWords.Entry(name: "Read", minute: 22 * 60, done: false),
+                       WatchWords.Entry(name: "Swim", minute: 19 * 60, done: false, due: false)]
         let evening = WatchWords.needs(.evening, entries)
         #expect(evening[0].hasPrefix("Walk"))
         #expect(evening[1] == "2 to tend, 1 done")
@@ -98,5 +99,13 @@ struct WatchLandingTests {
         // View points map back to scene points.
         let back = RoutinesWoodlandScene.scene(CGPoint(x: 402, y: 182))
         #expect(abs(back.x - 354) < 0.5 && abs(back.y - 160.3) < 0.5)
+    }
+
+    @Test func bigLineCutsOnWholeWords() {
+        let cut = WatchWords.bigFit("Chest and shoulders with arms")
+        #expect(!cut.contains("..."))
+        #expect("Chest and shoulders with arms".hasPrefix(cut))
+        #expect(!cut.hasSuffix(" and") && !cut.hasSuffix(" with"))
+        #expect(WatchWords.bigFit("Walk") == "Walk")
     }
 }
