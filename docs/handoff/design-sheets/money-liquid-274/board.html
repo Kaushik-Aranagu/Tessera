@@ -1,0 +1,215 @@
+<title>Money Liquid Balance</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: the Money landing with the liquid balance in the standard slot (paper and black), then the balance large as a sandbox with the money moves. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#3F7A62;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin:0}
+main{max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:64ch}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer}
+button.w:hover{color:var(--fg)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--money:#3F7A62;--clay:#9C4B2C;--kitchen:#93611A;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none}
+.phone.black{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--money:#8DBFA7;--clay:#E2A07F;--kitchen:#C49A5E}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--money)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.n{font-family:var(--num);font-weight:400}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;touch-action:none;cursor:pointer}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:22px}
+.kline b{color:var(--ink);font-weight:600}
+.ups{position:absolute;left:24px;right:24px;top:424px}
+.up{height:52px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:540px;display:flex;flex-wrap:wrap;gap:0 22px}
+.door{font-size:24px;font-weight:600;color:var(--ink2);padding:6px 0}
+.door.on{color:var(--money)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--money);padding:8px 0}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phone.black .tessw{color:#C79B7C}
+.big{width:100%;max-width:1062px;aspect-ratio:354/182;display:block;touch-action:none;cursor:pointer}
+.moves{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:0 40px}
+.move{padding:14px 0;border-top:1px solid var(--line)}
+.move b{display:block;font-weight:600;margin-bottom:2px}
+.move span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 18px;align-items:center}
+.status{min-height:26px;color:var(--fg2);font-size:15px;margin-top:8px}
+.status b{color:var(--fg)}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Money / sheet 274</h2>
+<h1>The balance, in liquid.</h1>
+<p class="lede">A needle-thin beam on a point, and two bodies of liquid resting on it. Left, in sage: what came in this month. Right: what went out, one body in which every kind keeps its own colour. The beam leans toward the heavier side. Every payment is a droplet that leaves the left, arcs over the point and joins the right, and the beam swings. Hold the right body and it pulls apart into its kinds; let go and they flow back together.</p>
+</header>
+
+<section aria-label="Landing">
+<div class="phones">
+ <div><div class="slot" data-fit><div class="phone" id="ph1">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b style="color:var(--money)">In</b> still outweighs <b>out</b>, by <span class="n" data-diff>2,125</span>. <b style="color:var(--clay)">Home</b> took the most.</div>
+  <canvas class="key" data-liq="small"></canvas>
+  <div class="kline" data-cap>Hold the right side to pull it apart.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;went to&nbsp;<b style="color:var(--kitchen)">Food</b>.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;goes out Monday.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Paper, mid-month.</b> In is heavier; the beam leans left.</p></div>
+
+ <div><div class="slot" data-fit><div class="phone black" id="ph2">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b style="color:var(--money)">In</b> still outweighs <b>out</b>, by <span class="n" data-diff>2,125</span>. <b style="color:var(--clay)">Home</b> took the most.</div>
+  <canvas class="key" data-liq="small" data-split="1"></canvas>
+  <div class="kline" data-cap>Pulled apart: each kind on its own.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;went to&nbsp;<b style="color:var(--kitchen)">Food</b>.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;goes out Monday.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Black, held.</b> The right side pulled apart into its kinds.</p></div>
+</div>
+</section>
+
+<section aria-label="Sandbox">
+<h2>Weigh it</h2>
+<canvas class="big" id="big" data-liq="big"></canvas>
+<div class="status" id="status" aria-live="polite">Hold the right side to pull it apart.</div>
+<div class="ctl" style="margin-top:6px">
+<button class="w" data-act="groceries">Groceries 86</button>
+<button class="w" data-act="drinks">Drinks 42</button>
+<button class="w" data-act="save">Save 300 for Japan</button>
+<button class="w" data-act="side">Side job 180</button>
+<button class="w" data-act="laptop">Laptop 1,800</button>
+<button class="w" data-act="split">Pull apart</button>
+<button class="w" data-act="reset">Reset</button>
+</div>
+</section>
+
+<section aria-label="The moves">
+<h2>What it does</h2>
+<div class="moves">
+<div class="move"><b>The lean is the answer</b><span>Level when in and out are equal. It leans left while more has come in than gone out, and tips right the moment you spend more than you earn.</span></div>
+<div class="move"><b>A payment is a droplet</b><span>It pinches off the left body, arcs over the point and lands in the right body in its kind's colour. The beam swings and settles on a spring.</span></div>
+<div class="move"><b>Pay pours in</b><span>Salary, a side job, a refund: liquid falls into the left body and the beam swings back.</span></div>
+<div class="move"><b>Pull it apart</b><span>Hold the right body: it separates into one drop per kind (Home, Japan, Food, Going out, Body, Subscriptions), each sized by amount and named. Let go and they flow back.</span></div>
+<div class="move"><b>Last month, dashed</b><span>A dashed beam at the angle last month ended on. Under the ends, in and out; under the point, still yours.</span></div>
+<div class="move"><b>Nothing to read first</b><span>Two colours of liquid and a lean. The numbers are there, small, for when you want them.</span></div>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var Q={};try{location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var p=kv.split('=');Q[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||'')})}catch(e){}
+var TAU=Math.PI*2,D2R=Math.PI/180;
+function lerp(a,b,u){return a+(b-a)*u}
+function clamp(v,a,b){return v<a?a:v>b?b:v}
+function ease(u){u=clamp(u,0,1);return u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2}
+function hex(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]}
+function rgba(c,a){return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(a==null?1:a)+')'}
+function mixc(a,b,u){return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)]}
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+function fmt2(n){return n%1?n.toFixed(2):fmt(n)}
+var K={in:{n:'In',c:['#3F7A62','#8DBFA7']},home:{n:'Home',c:['#9C4B2C','#E2A07F']},save:{n:'Japan',c:['#7E6A1E','#D9C27A']},food:{n:'Food',c:['#93611A','#C49A5E']},out:{n:'Going out',c:['#34506F','#A7BCD6']},body:{n:'Body',c:['#0B62AE','#8FB0EE']},subs:{n:'Subscriptions',c:['#1E6E77','#84C3C9']},big:{n:'Laptop',c:['#5B3FB8','#B9A9E0']}};
+var ORDER=['home','save','food','out','body','subs','big'];
+function fresh(){return {ins:[{n:'Salary',v:4200},{n:'Side job',v:180}],outs:{home:1232,save:400,food:326,out:138,body:96,subs:63,big:0},lastIn:4200,lastOut:4110}}
+var M=fresh();
+function inT(){return M.ins.reduce(function(a,x){return a+x.v},0)}
+function outT(){return ORDER.reduce(function(a,k){return a+M.outs[k]},0)}
+function angleFor(i,o){return clamp((o-i)/Math.max(i,o,1),-1,1)*16}
+var PX=177,PY=118,ARM=96,R0=.42;   // pivot, where the bodies sit, radius per sqrt(money)
+var FW=354,FH=182;
+
+function Liq(cv){var self=this;this.cv=cv;this.g=cv.getContext('2d');this.dark=!!cv.closest('.phone.black')||(!cv.closest('.phone')&&matchMedia('(prefers-color-scheme: dark)').matches);
+ this.ang=angleFor(inT(),outT());this.av=0;this.splitT=cv.dataset.split?1:0;this.splitWant=cv.dataset.split?1:0;this.drops=[];this.show={in:inT()};ORDER.forEach(function(k){self.show[k]=M.outs[k]});
+ this.size();addEventListener('resize',function(){self.size()});
+ cv.addEventListener('pointerdown',function(e){var p=self.pt(e);if(p.x>PX+10){all(function(l){l.splitWant=1});say('Pulled apart: each kind on its own. Let go to pour it back.')}});
+ var rel=function(){if(self.cv.dataset.split)return;all(function(l){if(!l.cv.dataset.split)l.splitWant=0})};cv.addEventListener('pointerup',rel);cv.addEventListener('pointerleave',rel);cv.addEventListener('pointercancel',rel)}
+Liq.prototype.size=function(){var r=this.cv.getBoundingClientRect();var dpr=Math.max(2,window.devicePixelRatio||1);var w=Math.max(1,r.width||354);this.cv.width=Math.round(w*dpr);this.cv.height=Math.round(w*182/354*dpr);this.s=this.cv.width/354;
+ // the liquid field at (nearly) device resolution, capped so a large canvas stays smooth
+ this.fw=Math.min(760,this.cv.width);this.fh=Math.round(this.fw*182/354);this.field=document.createElement('canvas');this.field.width=this.fw;this.field.height=this.fh;this.fg=this.field.getContext('2d');this.img=this.fg.createImageData(this.fw,this.fh)};
+Liq.prototype.pt=function(e){var r=this.cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*354,y:(e.clientY-r.top)/r.height*182}};
+Liq.prototype.draw=function(dt){var g=this.g,s=this.s,self=this,t=W.t,dk=this.dark;function kc(k){return hex(K[k].c[dk?1:0])}
+ var ink=dk?[232,227,218]:[36,36,35],ink2=dk?[164,158,150]:[110,106,99],ink3=dk?[107,103,95]:[169,164,155];
+ // what is shown follows the droplets: the right only grows when a drop lands, the left only shrinks when it leaves
+ var k=Math.min(1,(dt||0)*4);var flying={},leaving=0,pouring=0;this.drops.forEach(function(d){var e=W.t-d.t0;if(d.inflow){if(e<1)pouring+=d.v}else{if(e<1.05)flying[d.k]=(flying[d.k]||0)+d.v;if(e<.2)leaving+=d.v}});
+ this.show.in+=(inT()-outT()+leaving-pouring-this.show.in)*k;ORDER.forEach(function(kk){self.show[kk]+=(M.outs[kk]-(flying[kk]||0)-self.show[kk])*k});
+ var leftV=Math.max(0,this.show.in),rightV=ORDER.reduce(function(a,kk){return a+Math.max(0,self.show[kk])},0);
+ // the beam on a spring, by what is shown (in = what is still on the left plus what went right; the lean compares still-yours against out)
+ var target=angleFor(leftV+rightV,rightV*2);   // level when what is left equals what went out
+ this.av+=((target-this.ang)*40-this.av*5.2)*(dt||0);this.ang+=this.av*(dt||0);var a=(this.ang+Math.sin(t*.8)*.1)*D2R,ca=Math.cos(a),sa=Math.sin(a);
+ function onBeam(d,up){return {x:PX+d*ca+up*sa,y:PY+d*sa-up*ca}}
+ this.splitT+=(this.splitWant-this.splitT)*Math.min(1,(dt||0)*3.2);
+ // balls: the left body (sage), the right body (a cluster, one ball per kind) or, pulled apart, a row of drops
+ var balls=[],Rl=Math.sqrt(leftV)*R0,cL=onBeam(-ARM,Rl*.92);
+ balls.push({x:cL.x,y:cL.y,r:Rl,c:kc('in')});var fl=onBeam(-ARM-Rl*.5,Rl*.42),fr=onBeam(-ARM+Rl*.5,Rl*.42);balls.push({x:fl.x,y:fl.y,r:Rl*.5,c:kc('in')},{x:fr.x,y:fr.y,r:Rl*.5,c:kc('in')});
+ var ks=ORDER.filter(function(kk){return self.show[kk]>1}).sort(function(x,y){return self.show[y]-self.show[x]});var Rr=Math.sqrt(rightV)*R0;var labels=[];
+ // packed: kinds share one body, larger ones at the bottom; apart: a row of drops along the right arm
+ var u=ease(self.splitT),rowX=PX+22;ks.forEach(function(kk,i){var r=Math.sqrt(self.show[kk])*R0;var gap=lerp(-r*.42,5,u);var px=rowX+r;rowX+=2*r+gap;
+  var c=onBeam(px-PX,r*.92);var wob=(1-u)*.5;balls.push({x:c.x+Math.sin(t*.9+i)*wob,y:c.y+Math.cos(t*1.1+i)*wob,r:r,c:kc(kk)});
+  if(u<.7&&r>4){var ft=onBeam(px-PX,r*.42);balls.push({x:ft.x,y:ft.y,r:r*.55,c:kc(kk)})}labels.push({k:kk,x:c.x,y:c.y,r:r})});
+ // droplets in flight: from the left body over the point to their kind; pay falls into the left from above
+ this.drops=this.drops.filter(function(d){var e=W.t-d.t0;if(e>1.5)return false;var r=Math.max(1.6,Math.sqrt(d.v)*R0*.85);
+  if(d.inflow){var u=clamp(e/.9,0,1);if(u>=1)return true;var x=cL.x+Math.sin(u*9)*.6,y=lerp(-10,cL.y-Rl*.4,u*u);balls.push({x:x,y:y,r:r,c:kc('in')});return true}
+  var lab=labels.filter(function(L){return L.k===d.k})[0],to=lab?{x:lab.x,y:lab.y}:onBeam(ARM,Rr*.7);var u2=ease(clamp((e-.1)/.95,0,1));if(e>1.05)return true;var from={x:cL.x+Rl*.5,y:cL.y-Rl*.5};var x2=lerp(from.x,to.x,u2),y2=lerp(from.y,to.y,u2)-Math.sin(u2*Math.PI)*34;
+  balls.push({x:x2,y:y2,r:r*(u2<.08?u2/.08:1),c:mixc(kc('in'),kc(d.k),clamp(u2*1.4,0,1))});if(!d.kicked&&e>1){d.kicked=1;self.av+=6+Math.min(40,d.v/30)}return true});
+ // field (low res), coloured by weighted contributions, alpha by threshold
+ var FW=this.fw,FH=this.fh,data=this.img.data,sx=354/FW,sy=182/FH,edge=.06*354/FW*2.2;for(var py=0;py<FH;py++){for(var px=0;px<FW;px++){var X=px*sx,Y=py*sy,f=0,cr=0,cg=0,cb=0;for(var b=0;b<balls.length;b++){var B=balls[b],dx=X-B.x,dy=Y-B.y,v=B.r*B.r/(dx*dx+dy*dy+.01);v*=v;f+=v;cr+=B.c[0]*v;cg+=B.c[1]*v;cb+=B.c[2]*v}
+   var o=(py*FW+px)*4,F=Math.sqrt(f),al=clamp((F-1+edge/2)/edge,0,1);if(al>0){data[o]=cr/f;data[o+1]=cg/f;data[o+2]=cb/f;data[o+3]=al*255}else data[o+3]=0}}
+ this.fg.putImageData(this.img,0,0);
+ g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,this.cv.width,this.cv.height);g.setTransform(s,0,0,s,0,0);
+ // last month: a dashed beam
+ var la=angleFor(M.lastIn,M.lastOut)*D2R;g.strokeStyle=rgba(ink3,.85);g.lineWidth=.55;g.setLineDash([2,2.4]);g.beginPath();g.moveTo(PX-160*Math.cos(la),PY-160*Math.sin(la));g.lineTo(PX+160*Math.cos(la),PY+160*Math.sin(la));g.stroke();g.setLineDash([]);
+ // the liquid, then a gloss on each body
+ g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(this.field,0,0,354,182);
+ [[cL.x,cL.y,Rl]].concat(labels.map(function(L){return [L.x,L.y,L.r]})).forEach(function(b){if(b[2]<3)return;var hg=g.createRadialGradient(b[0]-b[2]*.35,b[1]-b[2]*.45,0,b[0]-b[2]*.35,b[1]-b[2]*.45,b[2]*.6);hg.addColorStop(0,'rgba(255,255,255,'+(dk?.22:.38)+')');hg.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=hg;g.beginPath();g.arc(b[0],b[1],b[2],0,TAU);g.fill()});
+ if(outT()>inT()){var ro=Math.sqrt(outT()-inT())*R0,ho=onBeam(-ARM,ro);g.strokeStyle=rgba(ink2,.8);g.lineWidth=.7;g.setLineDash([2,2]);g.beginPath();g.arc(ho.x,ho.y,ro,0,TAU);g.stroke();g.setLineDash([])}
+ // the beam and the point
+ g.strokeStyle=rgba(ink);g.lineWidth=.9;g.lineCap='round';g.beginPath();g.moveTo(PX-165*ca,PY-165*sa);g.lineTo(PX+165*ca,PY+165*sa);g.stroke();
+ g.strokeStyle=rgba(ink2);g.lineWidth=.7;g.beginPath();g.moveTo(PX-6,PY+13);g.lineTo(PX,PY+1);g.lineTo(PX+6,PY+13);g.stroke();g.fillStyle=rgba(ink);g.beginPath();g.arc(PX,PY,1.5,0,TAU);g.fill();
+ // numbers, small: in and out under the ends, still yours under the point
+ var e1=onBeam(-150,0),e2=onBeam(150,0);var y1=Math.min(e1.y+12,166),y2=Math.min(e2.y+12,166);g.textAlign='left';g.fillStyle=rgba(kc('in'));g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText('IN',e1.x,y1);g.font='300 11px Outfit, Figtree, sans-serif';g.fillText(fmt(inT()-pouring),e1.x,y1+12);
+ g.textAlign='right';g.fillStyle=rgba(ink);g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText('OUT',e2.x,y2);g.font='300 11px Outfit, Figtree, sans-serif';g.fillText(fmt(rightV),e2.x,y2+12);
+ var diff=leftV,overV=outT()-inT();g.textAlign='center';g.fillStyle=rgba(overV>0?ink:kc('in'));g.font='600 5px Figtree, system-ui, sans-serif';g.fillText(inT()-outT()>=0?'STILL YOURS':'OVER BY',PX,PY+22);g.font='400 8px Outfit, Figtree, sans-serif';g.fillText(fmt(Math.abs(inT()-outT())),PX,PY+31);
+ // pulled apart: names under each drop
+ if(this.splitT>.4){var al2=(this.splitT-.4)/.6;g.globalAlpha=al2;labels.forEach(function(L,i){var c=kc(L.k);g.fillStyle=rgba(c);g.textAlign='center';var ly=L.y-L.r-(i%2?14:4);g.font='600 4.8px Figtree, system-ui, sans-serif';g.fillText(K[L.k].n.toUpperCase(),L.x,ly-6);g.font='400 6.4px Outfit, Figtree, sans-serif';g.fillText(fmt(self.show[L.k]),L.x,ly+.5)});g.globalAlpha=1}
+};
+var W={t:0},views=[];function all(f){views.forEach(f)}
+var statusEl=$('#status');function say(s){if(statusEl)statusEl.innerHTML=s;$$('[data-cap]').forEach(function(e){if(!e.closest('#ph2'))e.innerHTML=s})}
+function syncText(){$$('[data-diff]').forEach(function(e){e.textContent=fmt(Math.abs(inT()-outT()))})}
+function pay(n,k,v){M.outs[k]+=v;all(function(l){l.drops.push({k:k,v:v,t0:W.t})});var d=inT()-outT();say('<b>'+n+'</b>, '+fmt2(v)+', to '+K[k].n+'. '+(d>=0?'Still yours: '+fmt(d)+'.':'Out is heavier than in, by '+fmt(-d)+'.'));syncText()}
+function income(n,v){M.ins.push({n:n,v:v});all(function(l){l.drops.push({inflow:1,v:v,t0:W.t,k:'in'})});say('<b>'+n+'</b>, '+fmt(v)+' in.');syncText()}
+views=$$('canvas[data-liq]').map(function(cv){return new Liq(cv)});
+function fit(){var w=Math.min(402,document.documentElement.clientWidth-32),s=w/402;$$('[data-fit]').forEach(function(el){el.style.height=(874*s)+'px';el.firstElementChild.style.transform='scale('+s+')'});views.forEach(function(v){v.size()})}
+fit();addEventListener('resize',fit);
+$$('[data-act]').forEach(function(b){b.addEventListener('click',function(){var a=b.dataset.act;if(a==='groceries')pay('Groceries','food',86);if(a==='drinks')pay('Drinks','out',42);if(a==='save')pay('Japan','save',300);if(a==='side')income('Side job',180);if(a==='laptop')pay('Laptop','big',1800);
+ if(a==='split'){var on=!views[views.length-1].splitWant;all(function(l){if(!l.cv.dataset.split)l.splitWant=on?1:0})}
+ if(a==='reset'){M=fresh();views.forEach(function(v){v.drops=[];v.show={in:inT()};ORDER.forEach(function(k){v.show[k]=M.outs[k]})});syncText();say('Reset.')}})});
+(function(){var d=Q.demo;if(!d)return;if(d==='over'){pay('Laptop','big',1800);pay('Weekend away','out',600)}if(d==='pay')pay('Groceries','food',300);if(d==='side')income('Side job',600);if(d==='split')all(function(l){l.splitWant=1;l.splitT=1});
+ if(Q.instant){var back=+Q.instant;all(function(l){l.drops.forEach(function(x){x.t0-=back});if(back>=1.5){l.show={in:inT()-outT()};ORDER.forEach(function(k){l.show[k]=M.outs[k]})}})}})();
+syncText();
+var last=performance.now();
+function frame(now){var dt=clamp((now-last)/1000,0,.05);last=now;W.t+=dt;views.forEach(function(v){try{v.draw(dt)}catch(e){if(!v.err){v.err=1;console.error(e);say('Error: '+e.message)}}});requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

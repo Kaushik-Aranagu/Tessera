@@ -1,0 +1,236 @@
+<title>Routines Mechanisms</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: two live phones, both the Routines landing. Two keystones that are mechanisms for loops: an orrery and a music box. Standard slot. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#8E4A78;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+h3{font-size:20px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:62ch}
+.bar{display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:0 44px}
+.rule{padding:14px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600;margin-bottom:2px}
+.rule span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center;margin-top:8px}
+.ctl span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);margin-right:4px}
+.q{border-top:2px solid var(--fg);padding-top:16px}
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--hair:rgba(36,36,35,.16);--routines:#8E4A78;--green:#2F6450;--wine:#9A2541;--gold:#7E6A1E;--slate:#34506F;--teal:#1E6E77;--clay:#9C4B2C;--brass:#B08A4A;--brass2:#7C5E2E;--brass3:#E6C98A;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none;touch-action:none;box-shadow:0 0 0 1px var(--line)}
+.phones[data-look="black"] .phone{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--hair:rgba(232,227,218,.2);--routines:#D59AC4;--green:#8EC7AE;--wine:#EE8E9C;--gold:#D9C27A;--slate:#A7BCD6;--teal:#84C3C9;--clay:#E2A07F;--brass:#C9A25C;--brass2:#8A6A36;--brass3:#F2DBA4}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--routines)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;cursor:pointer;touch-action:none}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden}
+.ups{position:absolute;left:24px;right:24px;top:424px}
+.up{height:52px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:540px;display:flex;flex-wrap:wrap;gap:0 22px}
+.door{font-size:24px;font-weight:600;color:var(--ink2);padding:6px 0;cursor:pointer}
+.door.on{color:var(--routines)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--routines);padding:8px 0;min-width:96px;min-height:44px;text-align:left;background:none;border:0;cursor:pointer;z-index:4}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phones[data-look="black"] .tessw{color:#C79B7C}
+.receipt{position:absolute;left:24px;right:110px;bottom:84px;font-size:15px;color:var(--ink2);height:24px;white-space:nowrap;overflow:hidden;z-index:4}
+.receipt b{font-weight:600;cursor:pointer;color:var(--routines)}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Routines / sheet 262</h2>
+<h1>Loops, as mechanisms.</h1>
+<p class="lede">You defined it: a routine is a loop, a procedure that repeats on a period, daily or weekly, sometimes automated. None of the earlier rounds showed a loop, let alone loops at different speeds. The objects that embody loops and procedures are mechanisms. Two of them, each a real thing, each able to run by itself (your automated routines) or wait for your hand, each with Tess winding and writing.</p>
+<div class="bar" role="group" aria-label="Phone look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+</div>
+</header>
+
+<section aria-label="Phones">
+<div class="phones" id="phones" data-look="paper">
+
+<!-- A: the orrery -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p1">
+ <div class="sbar"><span id="clk1">5:10</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say"><b style="color:var(--green)">Three done,</b> <b style="color:var(--routines)">eight to tend,</b> <b style="color:var(--wine)">two to give a little care.</b></div>
+ <canvas id="orrery" class="key" width="708" height="364"></canvas>
+ <div class="kline" id="l1">Every routine orbits at its own period. When it comes round, it is due.</div>
+ <div class="ups"><div class="up"><b>Tidy a little</b>&nbsp;comes round at 5:30.</div><div class="up"><b>Swim</b>&nbsp;comes round Thursday.</div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Daily</span><span class="door">Weekly</span><span class="door">Body</span><span class="door">Mind</span></div>
+ <div class="receipt" id="r1"></div>
+ <button class="foot">Plant</button><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="h1"><span>Hour</span></div>
+<div class="ctl" id="e1"><span>Events</span></div>
+<p class="cap"><b>The orrery.</b> A tabletop orrery in brass. The center is now. Each routine is a small body on its own arm, orbiting at its own period: the daily ones on the inner ring go round once a day, the weekly ones (swim on Thursday, badminton on Saturday) on the outer ring go round once a week, and a monthly thing would sit further out still. A body comes to the front, under the pointer, when it is due. Done, it turns gold and polished for the rest of its orbit; passed and not done, it goes dark until it comes round again, and that is all. Steps are moons around a body. Automated routines turn by clockwork and chime when they fire; yours wait for your hand. The whole thing turns in real time, slowly, and you can spin it ahead with a finger to see what is coming.</p>
+</div>
+
+<!-- B: the music box -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p2">
+ <div class="sbar"><span id="clk2">5:10</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say"><b style="color:var(--green)">Three done,</b> <b style="color:var(--routines)">eight to tend,</b> <b style="color:var(--wine)">two to give a little care.</b></div>
+ <canvas id="box" class="key" width="708" height="364"></canvas>
+ <div class="kline" id="l2">The day is a turning drum. Each routine is a track; each step a pin.</div>
+ <div class="ups"><div class="up"><b>Tidy a little</b>&nbsp;plays at 5:30.</div><div class="up"><b>Evening stretch</b>&nbsp;has five pins. It plays at 8:10.</div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Daily</span><span class="door">Weekly</span><span class="door">Body</span><span class="door">Mind</span></div>
+ <div class="receipt" id="r2"></div>
+ <button class="foot">Plant</button><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="h2"><span>Hour</span></div>
+<div class="ctl" id="e2"><span>Events</span></div>
+<p class="cap"><b>The music box.</b> A brass drum turning once a day, with a comb of teeth beneath it. Each routine is a track along the drum, its name engraved; each step is a pin at its time. As the drum turns, a pin that reaches the comb plucks a tooth and a note rings, and the pin is polished: done. A step you skip passes the comb silent and dull. A routine with five steps is a short phrase of five notes; a one-thing routine is a single note. The weekly drum is a second, slower drum behind. Automated routines are pins the mechanism plays by itself; yours wait, and you pluck them with a tap. Tess winds the key. The procedure is literally written on the thing.</p>
+</div>
+
+</div>
+</section>
+
+<section>
+<h2>How they work</h2>
+<div class="rules">
+<div class="rule"><b>Loops at their own speed.</b><span>Both mechanisms turn in real time. The orrery’s inner arms make one turn a day, the outer one turn a week; the box’s drum makes one turn a day with a slower weekly drum behind. Nothing is a gauge: an orrery and a drum are the real objects, and the turning is the point.</span></div>
+<div class="rule"><b>Procedure visible.</b><span>Steps are moons (orrery) or pins (box). A five-step routine reads as five, at its times; a one-thing routine as one. Done steps are polished; skipped ones go dull until the next turn.</span></div>
+<div class="rule"><b>Automation built in.</b><span>Your design decision for later has a home: automated routines are clockwork, driven by the mechanism and chiming when they fire; the ones you do yourself wait for your hand (a tap, a swipe). Tess winds the key, so the AI layer’s job is literal.</span></div>
+<div class="rule"><b>Kind to a miss.</b><span>A missed routine simply passes and comes round again; it goes dark or dull, never red, and the next turn is a clean start. No streak is counted out loud. A planned rest is a body or pin set aside, marked by a small ring.</span></div>
+<div class="rule"><b>Information.</b><span>What is next and when (the body or pin nearest the pointer), how full the day is (how many bodies or pins), what is weekly (the outer ring or the second drum), what is done. Tap a body or pin to open it.</span></div>
+<div class="rule"><b>Through the app.</b><span>The mechanism stays in the slot on every Routines page. Behind a door it shows only that loop (Daily, Weekly) or that grove; on a routine’s page it shows that one orbit, or that one track, large, with its steps.</span></div>
+</div>
+</section>
+
+<section class="q">
+<h2>Where I would start</h2>
+<p><b>The orrery</b> if the thing Routines should put in your face is <i>when things come round</i>: it is the clearest picture of daily and weekly loops side by side, and brass turning slowly is as calm and alive as the skypiece. <b>The music box</b> if the thing is <i>the procedure</i>: the steps are literally pins, and playing them is the most satisfying way I know to do a routine. They could be one object: an orrery whose bodies, when they come round, play their pins.</p>
+</section>
+</main>
+
+<script>
+(function(){
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let K=1;function fit(){document.querySelectorAll('[data-fit]').forEach(s=>{const p=s.firstElementChild;K=Math.min(1,s.clientWidth/402);p.style.transform=K<1?'scale('+K+')':'';s.style.height=(874*K)+'px'})}
+addEventListener('resize',fit);fit();
+const $=id=>document.getElementById(id);const looks=()=>$('phones').dataset.look;
+function setLook(l){$('phones').dataset.look=l;$('lk-paper').setAttribute('aria-pressed',l==='paper');$('lk-black').setAttribute('aria-pressed',l==='black')}
+$('lk-paper').onclick=()=>setLook('paper');$('lk-black').onclick=()=>setLook('black');
+let rT={};function receipt(id,msg,undo){const r=$(id);r.innerHTML=msg+(undo?' <b>Undo</b>':'');if(undo)r.querySelector('b').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT[id]);rT[id]=setTimeout(()=>{r.innerHTML=''},10000)}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,ease=u=>u<0?0:u>1?1:u*u*(3-2*u),lerp=(a,b,u)=>a+(b-a)*u;
+const css=(ph,v)=>getComputedStyle($(ph)).getPropertyValue(v).trim();
+function ctl(id,items,pressed){items.forEach(([n,f],i)=>{const b=document.createElement('button');b.className='w';b.textContent=n;if(pressed!=null)b.setAttribute('aria-pressed',i===pressed);b.onclick=()=>{f();if(pressed!=null)$(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))};$(id).appendChild(b)})}
+const W=354,H=182;
+// routines: daily ones have an hour; weekly ones have a weekday (0 Mon..6 Sun) and an hour; steps count; done; auto
+const GC={Body:'teal',Mind:'routines',Home:'clay',Other:'slate'};
+const R=[{n:'Drink water',g:'Body',at:7,steps:1,done:1},{n:'Morning stretch',g:'Body',at:6.75,steps:4,done:1},{n:'Journal',g:'Mind',at:7.5,steps:3,done:1},{n:'Take screen breaks',g:'Body',at:null,steps:1,done:0,auto:1},
+ {n:'Write a little',g:'Mind',at:13.5,steps:1,done:0},{n:'Tidy a little',g:'Home',at:17.5,steps:3,done:0},{n:'Evening walk',g:'Body',at:18.5,steps:1,done:0},{n:'Evening stretch',g:'Body',at:20.17,steps:5,done:0},{n:'Read ten pages',g:'Mind',at:21.25,steps:1,done:0},{n:'Plan tomorrow',g:'Home',at:22,steps:2,done:0,auto:1},
+ {n:'Swim',g:'Body',wk:3,at:18,steps:1,done:0},{n:'Badminton',g:'Body',wk:5,at:10,steps:1,done:0},{n:'Call family',g:'Other',wk:6,at:17,steps:1,done:0},{n:'Plan the week',g:'Other',wk:6,at:20,steps:2,done:0,auto:1}];
+let hour=17.17,dow=6;// Sunday
+const HRS=[['6 am',6],['9 am',9],['Noon',12],['3 pm',15],['Now',17.17],['8 pm',20],['Midnight',24]];
+let spin1=0,spinT1=0,chimes=[],glints=[];
+
+/* ================= A: the orrery ================= */
+const oc=$('orrery').getContext('2d');oc.scale(2,2);
+const CX=177,CY=104,TILT=.42;// an ellipse: a tabletop seen from a chair
+function orb(r,a){return [CX+Math.cos(a)*r,CY+Math.sin(a)*r*TILT]}
+const dayAngle=h=>((h+spin1)/24)*Math.PI*2-Math.PI/2;// midnight at the back (top), noon at the front (bottom)
+const weekAngle=(d,h)=>(((d+h/24)+spin1/24)/7)*Math.PI*2-Math.PI/2;
+function drawOrrery(t){const dark=looks()==='black';const g=oc;g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,W,H);
+ const brass=css('p1','--brass'),brass2=css('p1','--brass2'),brass3=css('p1','--brass3');
+ spin1+=(spinT1-spin1)*.08;
+ // base plate: an ellipse of brass with a soft lift (the approved edge)
+ g.save();g.beginPath();g.ellipse(CX,CY+52,150,22,0,0,7);const bp=g.createLinearGradient(0,CY+30,0,CY+74);bp.addColorStop(0,brass);bp.addColorStop(1,brass2);g.fillStyle=bp;g.fill();g.restore();
+ // the pointer: now, at the front
+ g.strokeStyle=brass3;g.lineWidth=1.2;g.beginPath();g.moveTo(CX,CY+52);g.lineTo(CX,CY+36);g.stroke();
+ // the two rings as thin brass tracks (they are tracks on the plate, not gauges), weekly outside daily
+ [[62,'daily'],[128,'weekly']].forEach(([r,k])=>{g.strokeStyle='rgba('+(dark?'201,162,92':'124,94,46')+',.35)';g.lineWidth=1;g.beginPath();g.ellipse(CX,CY,r,r*TILT,0,0,7);g.stroke()});
+ // the central post and the sun: now
+ g.fillStyle=brass2;g.fillRect(CX-2,CY-26,4,30);const sg=g.createRadialGradient(CX,CY-28,1,CX,CY-28,10);sg.addColorStop(0,'#FFF4D6');sg.addColorStop(.5,brass3);sg.addColorStop(1,'rgba(230,201,138,0)');g.fillStyle=sg;g.beginPath();g.arc(CX,CY-28,10,0,7);g.fill();
+ // bodies: compute, then draw back to front
+ const bodies=R.map(r=>{const weekly=r.wk!=null;const a=weekly?weekAngle(r.wk,r.at):dayAngle(r.at==null?(hour-.0001):r.at);const rad=weekly?128:62;const [x,y]=orb(rad,a);
+  const nowA=weekly?weekAngle(dow,hour):dayAngle(hour);let ahead=((a-nowA)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);// 0 = due now, small = just passed? we define positive = ahead
+  const passed=ahead>Math.PI*2-.001?false:(ahead>Math.PI);// if more than half a turn "ahead" it has passed
+  return {r,x,y,a,weekly,depth:Math.sin(a),passed,rad}});
+ bodies.sort((p,q)=>p.depth-q.depth);
+ bodies.forEach(b=>{const col=css('p1','--'+GC[b.r.g]);const front=(b.depth+1)/2;const size=(b.weekly?5.5:4.5)*(0.7+front*.5);
+  // the arm from the post to the body
+  g.strokeStyle='rgba('+(dark?'201,162,92':'124,94,46')+','+(.25+front*.35)+')';g.lineWidth=.8;g.beginPath();g.moveTo(CX,CY-10);g.lineTo(b.x,b.y-size-2);g.stroke();g.fillStyle=brass2;g.fillRect(b.x-.7,b.y-size-2,1.4,size+2);
+  // the body: gold and polished when done, its grove color when ahead, dark when passed and not done, a ring when automated
+  let fill=b.r.done?brass3:(b.passed&&!b.r.auto?'rgba('+(dark?'110,100,90':'70,64,58')+',.9)':col);
+  const bg=g.createRadialGradient(b.x-size*.3,b.y-size*.35,.5,b.x,b.y,size);bg.addColorStop(0,b.r.done?'#FFFBEA':'rgba(255,255,255,.55)');bg.addColorStop(.25,fill);bg.addColorStop(1,b.r.done?brass2:'rgba(0,0,0,.35)');g.fillStyle=bg;g.beginPath();g.arc(b.x,b.y,size,0,7);g.fill();
+  if(b.r.auto){g.strokeStyle=brass3;g.lineWidth=.8;g.beginPath();g.ellipse(b.x,b.y,size+3,(size+3)*.5,0,0,7);g.stroke()}
+  // moons: the steps
+  for(let m=0;m<b.r.steps&&b.r.steps>1;m++){const ma=t*.9+m*(Math.PI*2/b.r.steps)+b.a;const mr=size+4;g.fillStyle=b.r.done?brass3:col;g.globalAlpha=.75;g.beginPath();g.arc(b.x+Math.cos(ma)*mr,b.y+Math.sin(ma)*mr*.5,1.3,0,7);g.fill();g.globalAlpha=1}
+  // the name, small, only for the bodies at the front
+  if(front>.6){g.fillStyle='rgba('+(dark?'232,227,218':'36,36,35')+','+((front-.6)*2)+')';g.font='500 9px Figtree';g.textAlign='center';g.fillText(b.r.n,b.x,b.y+size+10);g.textAlign='left'}
+  b.hit=[b.x,b.y,size+6]});
+ // chimes: a ring of light when a body fires (done or automated)
+ chimes=chimes.filter(c=>{const u=(t-c.t0)/1.2;if(u>1)return false;g.strokeStyle='rgba(242,219,164,'+(1-u)*.8+')';g.lineWidth=1;g.beginPath();g.ellipse(c.x,c.y,4+u*22,(4+u*22)*.5,0,0,7);g.stroke();return true});
+ $('orrery')._bodies=bodies}
+let ox0=null;$('orrery').onpointerdown=e=>{ox0=e.clientX};$('orrery').onpointermove=e=>{if(ox0==null)return;spinT1=clamp((e.clientX-ox0)/K/14,-12,12)};
+$('orrery').onpointerup=e=>{if(ox0==null)return;const dx=(e.clientX-ox0)/K;ox0=null;spinT1=0;if(Math.abs(dx)<6){const r=$('orrery').getBoundingClientRect();const x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;const b=($('orrery')._bodies||[]).find(b=>Math.hypot(b.hit[0]-x,b.hit[1]-y)<b.hit[2]);if(b)receipt('r1','Opens '+b.r.n+(b.weekly?', weekly':'')+'.')}};
+ctl('h1',HRS.map(([n,hh])=>[n,()=>{hour=hh;$('clk1').textContent=(Math.round(hh)%12||12)+':'+(hh%1?'10':'00')}]),4);
+ctl('e1',[['Do Tidy a little',()=>{const r=R[5];r.done=1;const b=($('orrery')._bodies||[]).find(b=>b.r===r);if(b)chimes.push({x:b.x,y:b.y,t0:performance.now()/1000-tOff});receipt('r1','Tidy a little, done. It turns gold until it comes round again.',()=>{r.done=0})}],['Clockwork fires Plan tomorrow',()=>{const r=R[9];r.done=1;const b=($('orrery')._bodies||[]).find(b=>b.r===r);if(b)chimes.push({x:b.x,y:b.y,t0:performance.now()/1000-tOff});receipt('r1','Plan tomorrow, by clockwork. Chime.')}],['Add a weekly: Yoga, Tuesday',()=>{R.push({n:'Yoga',g:'Body',wk:1,at:7,steps:3,done:0});receipt('r1','Yoga joins the weekly ring.')}],['Next day',()=>{R.forEach(r=>{if(r.wk==null)r.done=0});dow=(dow+1)%7;receipt('r1','A new turn. Every daily body is a fresh start.')}]]);
+
+/* ================= B: the music box ================= */
+const bc=$('box').getContext('2d');bc.scale(2,2);
+const DR={x:34,w:286,cy:92,r:46};// the drum: side view, axis horizontal
+let spin2=0,spinT2=0,plucks=[];
+const tracks=()=>R.filter(r=>r.wk==null);
+function drawBox(t){const dark=looks()==='black';const g=bc;g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,W,H);
+ const brass=css('p2','--brass'),brass2=css('p2','--brass2'),brass3=css('p2','--brass3');spin2+=(spinT2-spin2)*.08;
+ const T=tracks();const ang=h=>((h+spin2)/24)*Math.PI*2;// angle of a pin at hour h; the comb is at the front (angle pi/2 -> bottom front)
+ const nowA=ang(hour);
+ // the weekly drum behind, slower and fainter
+ g.save();g.globalAlpha=.35;g.fillStyle=brass2;g.beginPath();g.roundRect(DR.x+20,DR.cy-62,DR.w-40,36,18);g.fill();g.restore();
+ // the drum body: a cylinder with brass shading
+ const dg=g.createLinearGradient(0,DR.cy-DR.r,0,DR.cy+DR.r);dg.addColorStop(0,brass2);dg.addColorStop(.3,brass3);dg.addColorStop(.55,brass);dg.addColorStop(1,brass2);g.fillStyle=dg;g.beginPath();g.roundRect(DR.x,DR.cy-DR.r,DR.w,DR.r*2,6);g.fill();
+ // end caps and the axle
+ g.fillStyle=brass2;g.beginPath();g.ellipse(DR.x,DR.cy,8,DR.r,0,0,7);g.fill();g.beginPath();g.ellipse(DR.x+DR.w,DR.cy,8,DR.r,0,0,7);g.fill();g.fillStyle=brass3;g.fillRect(DR.x-18,DR.cy-2,12,4);g.fillRect(DR.x+DR.w+6,DR.cy-2,12,4);
+ // the winding key at the right
+ g.save();g.translate(DR.x+DR.w+22,DR.cy);g.rotate(Math.sin(t*.5)*.1);g.fillStyle=brass3;g.fillRect(-1.5,-14,3,28);g.fillRect(-7,-14,14,3);g.restore();
+ // track lines and engraved names (engraved: a dark line with a light line under)
+ const th=(DR.r*2-10)/T.length;
+ T.forEach((r,i)=>{const y=DR.cy-DR.r+5+th*(i+.5);g.strokeStyle='rgba(0,0,0,.18)';g.lineWidth=.6;g.beginPath();g.moveTo(DR.x+6,y+th/2);g.lineTo(DR.x+DR.w-6,y+th/2);g.stroke();
+  g.font='500 7.5px Figtree';g.fillStyle='rgba(0,0,0,.55)';g.fillText(r.n,DR.x+10,y+2.6);g.fillStyle='rgba(255,255,255,.35)';g.fillText(r.n,DR.x+10.4,y+3.2)});
+ // pins: at their hour, around the drum; we see the front half. x along the drum = hour of day? No: x is the track's step order; the angle is the hour.
+ // For the side view the angle maps to vertical position on the drum face: a pin at angle a sits at y = cy - cos(a)*r on the visible half when sin(a)>0.
+ // So we draw pins at (x by step, y by hour-angle), visible when on the near side.
+ T.forEach((r,i)=>{const x0=DR.x+110+i*0;// pins live in the right part of the drum, spaced by step
+  for(let s=0;s<r.steps;s++){const h=(r.at==null?hour+ (s-r.steps/2)*.4:r.at+s*.12);const a=ang(h);const near=Math.sin(a);if(near<=0)continue;// behind the drum
+   const y=DR.cy-Math.cos(a)*DR.r*.98;const x=DR.x+140+s*9+i*5;const done=r.done||(r.auto&&a<nowA);
+   g.fillStyle=done?brass3:(a<nowA?'rgba(60,54,48,.85)':'rgba(255,255,255,.9)');g.beginPath();g.arc(x,y,1.6+near*.6,0,7);g.fill();if(done){g.strokeStyle='rgba(255,250,230,.6)';g.lineWidth=.5;g.beginPath();g.arc(x,y,3,0,7);g.stroke()}}});
+ // the comb: teeth below the drum, one per track, plucked teeth vibrate
+ const cy=DR.cy+DR.r+10;g.fillStyle=brass2;g.fillRect(DR.x+100,cy+14,DR.w-100,6);
+ T.forEach((r,i)=>{const x=DR.x+140+i*5+ (r.steps-1)*4.5;const pl=plucks.find(p=>p.r===r);const vib=pl?Math.sin((t-pl.t0)*40)*Math.max(0,1-(t-pl.t0)/1.2)*2:0;g.strokeStyle=brass3;g.lineWidth=1.4;g.lineCap='round';g.beginPath();g.moveTo(x,cy+14);g.lineTo(x+vib,cy+2);g.stroke()});
+ // the now line: a hairline across the drum face at the hour
+ const ny=DR.cy-Math.cos(nowA)*DR.r;if(Math.sin(nowA)>0){g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=.8;g.beginPath();g.moveTo(DR.x+6,ny);g.lineTo(DR.x+DR.w-6,ny);g.stroke()}
+ // notes: when a pin plucks, a small ring floats up
+ plucks=plucks.filter(p=>{const u=(t-p.t0)/1.4;if(u>1)return false;const i=T.indexOf(p.r);const x=DR.x+140+i*5;g.strokeStyle='rgba(242,219,164,'+(1-u)*.8+')';g.lineWidth=1;g.beginPath();g.arc(x,cy-u*40,3+u*10,0,7);g.stroke();return true});
+ // the box edge, soft
+ const e=g.createLinearGradient(0,0,W,H);e.addColorStop(0,'rgba(255,255,255,'+(dark?.18:.3)+')');e.addColorStop(.5,'rgba(255,255,255,0)');e.addColorStop(1,'rgba(0,0,0,'+(dark?.14:.08)+')');g.strokeStyle=e;g.lineWidth=1;g.beginPath();g.roundRect(.5,.5,W-1,H-1,26);g.stroke()}
+let bx0=null;$('box').onpointerdown=e=>{bx0=e.clientX};$('box').onpointermove=e=>{if(bx0==null)return;spinT2=clamp(-(e.clientX-bx0)/K/14,-12,12)};
+$('box').onpointerup=e=>{if(bx0==null)return;const dx=(e.clientX-bx0)/K;bx0=null;spinT2=0;if(Math.abs(dx)<6){const r=$('box').getBoundingClientRect();const y=(e.clientY-r.top)/r.height*H;const T=tracks();const th=(DR.r*2-10)/T.length;const i=clamp(Math.floor((y-(DR.cy-DR.r+5))/th),0,T.length-1);const tr=T[i];if(!tr.done){tr.done=1;plucks.push({r:tr,t0:performance.now()/1000-tOff});receipt('r2',tr.n+', plucked. '+(tr.steps>1?tr.steps+' notes.':'One note.'),()=>{tr.done=0})}else receipt('r2','Opens '+tr.n+'.')}};
+ctl('h2',HRS.map(([n,hh])=>[n,()=>{hour=hh;$('clk2').textContent=(Math.round(hh)%12||12)+':'+(hh%1?'10':'00')}]),4);
+ctl('e2',[['Play Tidy a little',()=>{const r=R[5];r.done=1;plucks.push({r,t0:performance.now()/1000-tOff});receipt('r2','Tidy a little, three notes.',()=>{r.done=0})}],['Play Evening stretch',()=>{const r=R[7];r.done=1;plucks.push({r,t0:performance.now()/1000-tOff});receipt('r2','Evening stretch, five notes.',()=>{r.done=0})}],['Clockwork plays Plan tomorrow',()=>{const r=R[9];r.done=1;plucks.push({r,t0:performance.now()/1000-tOff});receipt('r2','Plan tomorrow, by clockwork.')}],['Tess winds the box',()=>{receipt('r2','Wound for the week. Thursday swim is on the back drum.')}],['New day',()=>{R.forEach(r=>{if(r.wk==null)r.done=0});receipt('r2','The drum comes round. Every pin is new.')}]]);
+
+let t0=performance.now(),tOff=t0/1000;function tick(now){const t=(now-t0)/1000;try{drawOrrery(t)}catch(e){console.error(e)}try{drawBox(t)}catch(e){console.error(e)}requestAnimationFrame(tick)}requestAnimationFrame(tick);
+})();
+</script>
