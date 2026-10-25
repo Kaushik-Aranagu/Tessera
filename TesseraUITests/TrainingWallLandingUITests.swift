@@ -1,7 +1,8 @@
 import XCTest
 
 /// The Training landing (landing contract §12, §14): the foot carries the day's action word, the dial turns to a
-/// tapped neighbour, and a wall word opens its page. Launched straight onto the landing with `-trainingLanding`.
+/// tapped neighbour, and a best's number on the blackboard opens its lift. Launched straight onto the landing with
+/// `-trainingLanding`.
 @MainActor
 final class TrainingWallLandingUITests: SimulatorOnlyTestCase {
     private func launch() -> XCUIApplication {
@@ -9,7 +10,7 @@ final class TrainingWallLandingUITests: SimulatorOnlyTestCase {
         app.launchArguments = ["-trainingLanding", "-demo", "-demoTime", "18:10"]
         app.launch()
         XCTAssertTrue(
-            app.descendants(matching: .any)["Training"].firstMatch.waitForExistence(timeout: 20),
+            app.descendants(matching: .any)["Deck"].firstMatch.waitForExistence(timeout: 20),
             "The landing is up"
         )
         return app
@@ -28,11 +29,11 @@ final class TrainingWallLandingUITests: SimulatorOnlyTestCase {
         XCTAssertTrue(selected.firstMatch.waitForExistence(timeout: 3), "The dial turned to Routines")
     }
 
-    func testAWallWordOpensItsPage() {
+    func testABestOnTheBoardOpensItsLift() {
         let app = launch()
-        let word = app.buttons.matching(NSPredicate(format: "label ENDSWITH ', exercise'")).firstMatch
-        XCTAssertTrue(word.waitForExistence(timeout: 5), "The wall shows a lift")
-        word.tap()
-        XCTAssertFalse(word.waitForExistence(timeout: 2) && word.isHittable, "The lift's page is open")
+        let best = app.buttons.matching(NSPredicate(format: "label CONTAINS ' best '")).firstMatch
+        XCTAssertTrue(best.waitForExistence(timeout: 5), "The board writes a best")
+        best.tap()
+        XCTAssertFalse(best.waitForExistence(timeout: 2) && best.isHittable, "The lift's page is open")
     }
 }

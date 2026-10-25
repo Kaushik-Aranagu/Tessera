@@ -56,9 +56,10 @@ enum TrainingGo {
     case log
 }
 
-/// The Training landing on the shared kit (landing contract §12): the word wall of lifts and routines in the
-/// keystone slot, This week, Routines, Exercises, Programs and Goals on the dial, one line about today, and
-/// "Start <routine>" at the foot ("Log a walk" on a rest day).
+/// Deck, the Training landing on the sheet 283 scaffold: the blackboard (258) in the keystone slot, the switcher
+/// across Today, This week, This month (up and down through the plan's routines), the widget with today, the week
+/// and yesterday, This week, Routines, Exercises, Programs and Goals on the dial, and "Start <routine>" at the foot
+/// ("Log a walk" on a rest day).
 struct TrainingWallLanding: View {
     let goTo: (TrainingGo) -> Void
 
@@ -67,22 +68,39 @@ struct TrainingWallLanding: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var focus = 0
+    @State private var switcherIndex = 0
+    @State private var switcherVerticalIndex = 0
+    @State private var widgetIndex = 0
 
     var body: some View {
         let _ = model.revision
         let facts = TrainingWallFacts.load(model, dark: scheme == .dark)
-        LandingFrame(title: "Training", accent: Theme.Colors.Accent.training, stateLine: facts.stateLine,
-                     onTitle: { goTo(.page) },
-                     keystone: {
-                         LandingKeystone(label: "Your lifts and routines") {
-                             WordWallView(words: facts.words, open: openWord, label: spoken)
-                         }
-                     },
-                     doors: facts.doors, focus: $focus, openDoor: openDoor,
-                     brief: { brief(facts.brief) },
-                     action: action(facts),
-                     onBack: { dismiss() })
+        let deck = TrainingDeckFacts.load(model, wall: facts, dark: scheme == .dark)
+        LandingScaffold(title: "Deck", accent: Theme.Colors.Accent.training, navWord: "Bridge",
+                        onBack: { dismiss() }, onTitle: { goTo(.page) },
+                        switcher: TrainingDeckFacts.across, switcherVertical: deck.routineWords,
+                        switcherIndex: $switcherIndex, switcherVerticalIndex: $switcherVerticalIndex,
+                        needs: deck.needs.indices.contains(switcherIndex) ? deck.needs[switcherIndex] : [],
+                        keystone: {
+                            LandingKeystone(label: "The board") {
+                                TrainingBlackboard(board: deck.board, openToday: { goTo(.page) },
+                                                   openLift: { goTo(.route(.classDef($0))) })
+                            }
+                        },
+                        caption: ["Tap a number to open the lift. Swipe left to wipe."],
+                        widget: deck.widget, widgetIndex: $widgetIndex,
+                        openWidget: openWidget,
+                        glyph: { _ in TallyGlyph() },
+                        doors: facts.doors, focus: $focus, openDoor: openDoor,
+                        action: action(facts))
             .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private func openWidget(_ item: WidgetItem) {
+        switch item.id {
+        case "today": goTo(.page)
+        default: goTo(LogSwitch.isOn ? .log : .page)
+        }
     }
 
     // MARK: Taps
@@ -122,25 +140,6 @@ struct TrainingWallLanding: View {
             }
         default:
             goTo(.stats)
-        }
-    }
-
-    // MARK: Brief
-
-    @ViewBuilder
-    private func brief(_ brief: TrainingBrief?) -> some View {
-        if let brief {
-            let nameColor = brief.split?.color(dark: scheme == .dark) ?? Theme.Colors.ink
-            let name = Text(brief.name).fontWeight(.semibold).foregroundStyle(nameColor)
-            // The full line when it fits, else the name alone (AX3 and up); never wrapped, never "...".
-            ViewThatFits(in: .horizontal) {
-                (Text(brief.before) + name + Text(brief.after)).fixedSize(horizontal: true, vertical: false)
-                name.lineLimit(1).minimumScaleFactor(0.5)
-            }
-            .font(.custom("Figtree", size: 15, relativeTo: .callout))
-            .foregroundStyle(Theme.Colors.inkSecondary)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(brief.text)
         }
     }
 
@@ -185,5 +184,59 @@ struct TrainingWallLanding: View {
         guard let plan = model.plan, let next = model.ledger.nextRoutine(in: plan, now: AppClock.now) else { return }
         model.workoutRisesFromLane = false
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.startRoutine(next) }
+    }
+}
+
+/// The widget's glyph: the board's ticks written stroke by stroke, once on arrival and again every 7 s. Still under
+/// Reduce Motion.
+struct TallyGlyph: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var progress: CGFloat = 0
+
+    var body: some View {
+        TallyShape(progress: reduceMotion ? 5 : progress)
+            .stroke(Theme.Colors.inkSecondary, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+            .frame(width: 64, height: 56)
+            .frame(width: 80, height: 80)
+            .accessibilityHidden(true)
+            .task {
+                guard !reduceMotion else { return }
+                while !Task.isCancelled {
+                    progress = 0
+                    for stroke in 1 ... 5 {
+                        try? await Task.sleep(for: .milliseconds(180))
+                        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
+                            progress = CGFloat(stroke)
+                        }
+                    }
+                    try? await Task.sleep(for: .seconds(7))
+                }
+            }
+    }
+}
+
+/// Four upright strokes and the fifth across them, drawn up to `progress` strokes (fractions draw part of one).
+struct TallyShape: Shape {
+    var progress: CGFloat
+
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let lines: [(CGPoint, CGPoint)] = (0 ..< 4).map { index in
+            let x = rect.minX + rect.width * (0.14 + 0.2 * CGFloat(index))
+            return (CGPoint(x: x, y: rect.minY + 6), CGPoint(x: x + 2, y: rect.maxY - 6))
+        } + [(CGPoint(x: rect.minX + 2, y: rect.maxY - 14), CGPoint(x: rect.maxX - 2, y: rect.minY + 14))]
+        for (index, line) in lines.enumerated() {
+            let amount = min(max(progress - CGFloat(index), 0), 1)
+            guard amount > 0 else { continue }
+            path.move(to: line.0)
+            path.addLine(to: CGPoint(x: line.0.x + (line.1.x - line.0.x) * amount,
+                                     y: line.0.y + (line.1.y - line.0.y) * amount))
+        }
+        return path
     }
 }

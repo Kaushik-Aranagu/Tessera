@@ -111,4 +111,54 @@ struct TrainingWallLandingTests {
         let routineLines = facts.doors.first { $0.id == "routines" }?.lines ?? []
         #expect(!routineLines.contains(SecretWords.title))
     }
+
+    // MARK: Deck (blackboard and scaffold)
+
+    @Test func boardLinesCutOnWholeWords() {
+        #expect(TrainingBoard.fitted("Push A today", limit: 18) == "Push A today")
+        let cut = TrainingBoard.fitted("Bench Press opens at 80 kg tonight after work", limit: 20)
+        #expect(cut.count <= 20)
+        #expect(!cut.contains("...") && !cut.contains("…"))
+        #expect("Bench Press opens at 80 kg tonight after work".hasPrefix(cut))
+    }
+
+    @Test func weekWordsNeverCount() {
+        #expect(TrainingDeckFacts.weekNumber(done: 1) == ("1", "day"))
+        #expect(TrainingDeckFacts.weekNumber(done: 3) == ("3", "days"))
+        #expect(TrainingDeckFacts.leftWords(done: 2, perWeek: 4) == "2 to go")
+        #expect(TrainingDeckFacts.leftWords(done: 4, perWeek: 4) == "Week done")
+        #expect(TrainingDeckFacts.leftWords(done: 0, perWeek: 0) == "No plan days")
+    }
+
+    @Test func seededDataFillsTheBoardMastheadAndWidget() {
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        let wall = TrainingWallFacts.load(model)
+        let deck = TrainingDeckFacts.load(model, wall: wall)
+        #expect(deck.board.week.count == 7)
+        #expect(deck.board.week.filter(\.isToday).count <= 1)
+        #expect(deck.board.bests.count <= 3)
+        #expect(deck.board.headline.count <= 18)
+        #expect(deck.needs.count == TrainingDeckFacts.across.count)
+        #expect(deck.needs.allSatisfy { $0.count == 2 })
+        #expect(!deck.widget.isEmpty && deck.widget.count <= 3)
+        #expect(deck.widget.allSatisfy { !$0.strikeable })
+        let shown = deck.needs.flatMap(\.self) + deck.widget.flatMap { [$0.big, $0.middle, $0.small] }
+            + [deck.board.headline, deck.board.detail]
+        #expect(shown.allSatisfy { !$0.contains(" of ") && !$0.contains("...") && !$0.contains("…") }, "\(shown)")
+    }
+
+    @Test func privateRoutinesStayOffTheBoardAndSwitcher() throws {
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        DemoData.prepare(model)
+        let plan = try #require(model.plan)
+        for routine in model.store.linkedObjects("routines", of: plan) {
+            _ = try model.engine.perform(RenameObject(object: routine.id, title: SecretWords.title), by: .user)
+        }
+        model.touch()
+        let deck = TrainingDeckFacts.load(model, wall: TrainingWallFacts.load(model))
+        let shown = deck.routineWords + deck.needs.flatMap(\.self) + [deck.board.headline, deck.board.detail]
+            + deck.widget.map(\.big)
+        #expect(!shown.contains { $0.contains(SecretWords.title) }, "\(shown)")
+    }
 }
