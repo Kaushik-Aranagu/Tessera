@@ -63,11 +63,17 @@ struct LandingActionWord: View {
                 let now = option != nil && abs(pull) >= 56 ? (pull > 0 ? 1 : -1) : 0
                 if now != armed {
                     withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { armed = now }
-                    if now != 0 { cue.play(.selection) }
+                    if now != 0 {
+                        cue.play(.selection)
+                    }
                 }
             }
             .onEnded { _ in
-                if armed > 0 { action.right?.run() } else if armed < 0 { action.left?.run() }
+                if armed > 0 {
+                    action.right?.run()
+                } else if armed < 0 {
+                    action.left?.run()
+                }
                 withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
                     pull = 0
                     armed = 0
@@ -83,8 +89,12 @@ private struct OptionActions: ViewModifier {
     func body(content: Content) -> some View {
         content
             .accessibilityActions {
-                if let left = action.left { Button(left.name, action: left.run) }
-                if let right = action.right { Button(right.name, action: right.run) }
+                if let left = action.left {
+                    Button(left.name, action: left.run)
+                }
+                if let right = action.right {
+                    Button(right.name, action: right.run)
+                }
             }
     }
 }

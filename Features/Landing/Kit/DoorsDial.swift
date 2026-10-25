@@ -31,7 +31,10 @@ struct DoorsDial: View {
     @State private var settledAt = Date.distantPast
     @ScaledMetric(relativeTo: .title3) private var scale: CGFloat = 1
 
-    private var slotHeight: CGFloat { Self.slot * max(1, min(scale, 1.9)) }
+    private var slotHeight: CGFloat {
+        Self.slot * max(1, min(scale, 1.9))
+    }
+
     private var blurOn: Bool {
         !reduceMotion && !reduceTransparency && !ProcessInfo.processInfo.isLowPowerModeEnabled
     }
@@ -79,7 +82,11 @@ struct DoorsDial: View {
         let isFocus = distance < 0.5
         return Button {
             guard Date().timeIntervalSince(settledAt) > 0.12 else { return }
-            if place == 0 { open(door) } else { move(place) }
+            if place == 0 {
+                open(door)
+            } else {
+                move(place)
+            }
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(door.name)
@@ -141,9 +148,13 @@ struct DoorsDial: View {
                 let step = (value.translation.height / slotHeight).rounded()
                 let flick = abs(value.predictedEndTranslation.height) > slotHeight * 1.2
                 var delta = Int(-step)
-                if delta == 0, flick { delta = value.translation.height < 0 ? 1 : -1 }
+                if delta == 0, flick {
+                    delta = value.translation.height < 0 ? 1 : -1
+                }
                 withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { drag = 0 }
-                if delta != 0 { move(delta) }
+                if delta != 0 {
+                    move(delta)
+                }
                 settledAt = Date()
             }
     }
@@ -159,5 +170,10 @@ struct DoorsDial: View {
 }
 
 private extension CGFloat {
-    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat { Swift.min(Swift.max(self, range.lowerBound), range.upperBound) }
+    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
+        Swift.min(
+            Swift.max(self, range.lowerBound),
+            range.upperBound
+        )
+    }
 }

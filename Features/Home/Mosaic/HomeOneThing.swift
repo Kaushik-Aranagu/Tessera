@@ -127,11 +127,6 @@ struct HomeOneThing: View {
                     // Home 236: the sign is centred on the big and mid tiers and never moves with the pages.
                     .padding(.top, Self.signTop)
                     .accessibilityHidden(true)
-                Text("\(index + 1) of \(things.count)")
-                    .font(Theme.numeral(14, weight: .light))
-                    .foregroundStyle(Theme.Colors.inkTertiary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .accessibilityHidden(true)
             }
         }
         .frame(maxWidth: .infinity, minHeight: Self.height, alignment: .topLeading)

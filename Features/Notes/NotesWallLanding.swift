@@ -33,7 +33,9 @@ struct NotesLandingPage: View {
                      keystone: {
                          LandingKeystone(label: "Your notes") {
                              WordWallView(words: shown.words) { id in
-                                 if let uuid = UUID(uuidString: id) { openNote(uuid) }
+                                 if let uuid = UUID(uuidString: id) {
+                                     openNote(uuid)
+                                 }
                              }
                          }
                      },
@@ -66,7 +68,12 @@ struct NotesLandingPage: View {
         let notes = NoteList(store: model.store, classes: model.classes).recent(limit: 60)
         let open = notes.filter { !landing.isPrivate($0) }
         let hidden = notes.count - open.count
-        let facts = NotesLandingFacts.load(store: model.store, classes: model.classes, lastSeen: nil, linkSuggest: false)
+        let facts = NotesLandingFacts.load(
+            store: model.store,
+            classes: model.classes,
+            lastSeen: nil,
+            linkSuggest: false
+        )
         let words = open.enumerated().map { index, note in
             WallWord(id: note.id.uuidString, text: Self.short(note.title),
                      weight: 1 - Double(index) / Double(max(open.count, 1)))
@@ -93,7 +100,22 @@ struct NotesLandingPage: View {
                      latestIsPrivate: latest.map { landing.isPrivate($0) } ?? false, count: notes.count)
     }
 
-    private static let small: Set<String> = ["and", "the", "a", "an", "of", "to", "by", "in", "on", "or", "for", "with", "at", "is"]
+    private static let small: Set<String> = [
+        "and",
+        "the",
+        "a",
+        "an",
+        "of",
+        "to",
+        "by",
+        "in",
+        "on",
+        "or",
+        "for",
+        "with",
+        "at",
+        "is",
+    ]
 
     /// A wall word: the title cut on a whole word at 14 characters, then stepped back past trailing small words
     /// and punctuation (228). Never "...", never an empty word.
@@ -102,7 +124,9 @@ struct NotesLandingPage: View {
         var kept: [String] = []
         for word in words {
             let next = (kept + [word]).joined(separator: " ")
-            if next.count > 14, !kept.isEmpty { break }
+            if next.count > 14, !kept.isEmpty {
+                break
+            }
             kept.append(word)
         }
         while kept.count > 1, let last = kept.last,

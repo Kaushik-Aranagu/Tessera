@@ -14,7 +14,9 @@ struct LandingKeystone<Content: View>: View {
         self.label = label
     }
 
-    static var size: CGSize { CGSize(width: 354, height: 220) }
+    static var size: CGSize {
+        CGSize(width: 354, height: 220)
+    }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var arrived = false

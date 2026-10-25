@@ -17,7 +17,9 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
     /// The left edge (x 0-24) goes back; nil on a root.
     var onBack: (() -> Void)?
 
-    static var designHeight: CGFloat { 874 }
+    static var designHeight: CGFloat {
+        874
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -63,7 +65,9 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                     Color.clear.frame(width: 24)
                         .contentShape(Rectangle())
                         .gesture(DragGesture(minimumDistance: 10).onEnded { value in
-                            if value.translation.width > 50, abs(value.translation.height) < 80 { onBack() }
+                            if value.translation.width > 50, abs(value.translation.height) < 80 {
+                                onBack()
+                            }
                         })
                 }
             }
@@ -93,7 +97,10 @@ struct FitLine: View {
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            ForEach(Array(forms.dropLast().enumerated()), id: \.offset) { _, form in text(form).fixedSize(horizontal: true, vertical: false) }
+            ForEach(Array(forms.dropLast().enumerated()), id: \.offset) { _, form in text(form).fixedSize(
+                horizontal: true,
+                vertical: false
+            ) }
             text(forms.last ?? "").lineLimit(1).minimumScaleFactor(0.8)
         }
         .accessibilityLabel(forms.first ?? "")

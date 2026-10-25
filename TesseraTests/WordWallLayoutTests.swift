@@ -1,9 +1,11 @@
 import CoreGraphics
-import Testing
 @testable import Tessera
+import Testing
 
-@Suite struct WordWallLayoutTests {
-    private func advance(_ text: String) -> CGFloat { CGFloat(text.count) * 0.68 }
+struct WordWallLayoutTests {
+    private func advance(_ text: String) -> CGFloat {
+        CGFloat(text.count) * 0.68
+    }
 
     private func words(_ names: [String]) -> [WallWord] {
         names.enumerated().map { WallWord(id: "w\($0.offset)", text: $0.element, weight: 1 - Double($0.offset) * 0.03) }
@@ -23,7 +25,7 @@ import Testing
         let rows = Dictionary(grouping: bricks) { $0.frame.minY }
         for row in rows.values {
             #expect(abs((row.map(\.frame.maxX).max() ?? 0) - size.width) < 0.5)
-            #expect(abs((row.map(\.frame.minX).min() ?? 1)) < 0.5)
+            #expect(abs(row.map(\.frame.minX).min() ?? 1) < 0.5)
         }
     }
 
@@ -46,7 +48,11 @@ import Testing
     }
 
     @Test func fewWordsStillFillTheWall() {
-        let bricks = WordWallLayout.pack(words: words(["Rent"]), size: CGSize(width: 354, height: 220), advance: advance)
+        let bricks = WordWallLayout.pack(
+            words: words(["Rent"]),
+            size: CGSize(width: 354, height: 220),
+            advance: advance
+        )
         #expect(bricks.count == 1)
         #expect(bricks[0].fontSize == WordWallLayout.maximumSize)
     }
