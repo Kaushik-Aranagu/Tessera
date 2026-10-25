@@ -257,7 +257,7 @@ function actionX(el,R){const A=R.acts,f=h('div','act');el.appendChild(f);let i=0
 
 // a room landing
 function landingV3(el,R){const stops=[];const id=el.dataset.id;
- const top=h('div');top.style.cssText='position:absolute;inset:0 0 auto 0;height:100px;z-index:6;pointer-events:none';el.appendChild(top);
+ const top=h('div','ltop');top.style.cssText='position:absolute;inset:0 0 auto 0;height:100px;z-index:6;pointer-events:none';el.appendChild(top);
  const t=h('div','ttl',R.name);t.style.color=R.color;top.appendChild(t);
  if(stack.length>1){const p=SCREENS[stack[stack.length-2].id];const nb=h('button','lnav',SHIP[p.title]||p.title);nb.style.pointerEvents='auto';nb.onclick=()=>back();top.appendChild(nb)}
  const band=h('div','lband');el.appendChild(band);
@@ -273,7 +273,7 @@ function landingV3(el,R){const stops=[];const id=el.dataset.id;
   change:d=>{sum.innerHTML=d.sum();fitAll(sum);if(!sum._on){sum._on=1;return}sum.classList.remove('rise');void sum.offsetWidth;if(!RM)sum.classList.add('rise')}});
  const f=actionX(el,R);
  fitLine(cap);document.fonts&&document.fonts.ready.then(()=>{fitAll(el)});
- opening(el._flip?[top,band,cap,mid,dh,sum,f]:[top,band,key,cap,mid,dh,sum,f],el._flip?160:0);
+ if(!el._flip)opening([top,band,key,cap,mid,dh,sum,f],0);
  setTimeout(WG.start,el._flip?420:260);
  return ()=>stops.forEach(s=>s&&s())}
 const sum=(lb,lines)=>'<div class="lb">'+lb+'</div>'+lines.map(l=>'<div class="ln">'+l+'</div>').join('');

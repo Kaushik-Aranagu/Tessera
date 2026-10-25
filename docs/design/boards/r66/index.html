@@ -50,6 +50,19 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
 .sectable b{font-weight:600}.sectable small{display:block;font-weight:400;color:var(--fg2);font-size:12px}
 .sectable span{color:var(--fg2)}
 @media (max-width:560px){.sectable [role=row]{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.sectable .sth{display:none}}
+.secgrid rect.pl{fill:none;stroke:var(--line);stroke-width:1.2}
+.secgrid rect.pl.band{stroke:var(--acc);stroke-width:1.5;stroke-dasharray:5 4;fill:color-mix(in srgb,var(--acc) 6%,transparent)}
+.secgrid rect.pl.sub{fill:color-mix(in srgb,var(--fg) 5%,transparent)}
+.secgrid rect.pl.system{fill:color-mix(in srgb,var(--fg) 10%,transparent);stroke:none}
+.secgrid rect.pl.edge{fill:color-mix(in srgb,var(--fg) 3%,transparent);stroke:none}
+.secgrid .ht,#placesov .ht{stroke:var(--line);stroke-width:2}
+#placesov rect.pl{fill:none;stroke:#C2185B;stroke-width:1.2;stroke-dasharray:4 3}
+#placesov rect.pl.band{stroke-width:1.6;stroke-dasharray:none;stroke-opacity:.6}
+#placesov rect.pl.em{fill:url(#hatcho);fill-opacity:.5}
+#placesov .ht{stroke:#C2185B;stroke-opacity:.35}
+#placesov text{font:600 11px Figtree,sans-serif;fill:#C2185B;paint-order:stroke;stroke:#fff;stroke-width:3px}
+#placesov text.n{font-size:12px;font-weight:700}#placesov .e{text-anchor:end}
+#placesov rect.pl.system,#placesov rect.pl.edge{fill:#C2185B;fill-opacity:.06;stroke:none}
 /* ---------- the phone ---------- */
 .phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--hair:rgba(36,36,35,.16);
  --green:#25803D;--wine:#9A2541;--gold:#7E6A1E;--slate:#34506F;--teal:#1E6E77;--clay:#9C4B2C;--plum:#8A4570;--steel:#2F6A8F;--lav:#6A5E8C;--tessblue:#3A5BA8;
@@ -109,10 +122,12 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
  <p class="how">Tap any highlighted word, face or door. Back is a swipe from the left edge of the phone (or Escape). Swipes and holds work as on the phone: right is Done, left is Not now, hold the one thing to strike it.</p>
 </div>
 <div>
- <p class="eyebrow">Round 283, version 3, Oct 25</p>
+ <p class="eyebrow">Round 283, version 4, Oct 25</p>
  <h1>Every landing, one layout.</h1>
  <p class="lede">Every landing now opens like Bridge and keeps Bridge’s lower half: the widget in the middle and the doors dial below it. The top holds the title, a text-only switcher and the room’s needs. Tap a room in Bridge’s apps dial (or a face, or a highlighted word) to watch the flip. Swipe from the left edge, or tap “Bridge”, to go back.</p>
  <div class="notes283">
+  <p><b>New in version 4 (his 4:11 PM note).</b> The whole screen is mapped below, with empty places kept and marked. Moving between Bridge and a room now goes place by place: the masthead flaps, the mosaic flips, the widget swipes up, the dial spins too fast to read and slows onto the new doors, the summary slides off right and back in, and the action word streams. Open a room from Bridge’s dial to watch it, and go back to see it reverse.</p>
+  <p><b>Layout mode.</b> Settings, then Layout mode, shows the app as its places only: soft bubbles in each room’s colour, empty places dashed. Swipe across (or use the arrow keys) to walk Bridge and every room, and the bubbles move the way their places do. Tap a bubble to read what it holds, how you touch it and how it moves. It is read-only for now and can become editable later.</p>
   <p><b>New in this version (his 3:57 PM notes).</b> Deck now writes in a condensed gym face (Barlow Condensed), on the board and in the widget. Galley’s tickets are printed now, in IBM Plex Sans Condensed, and Caveat is gone.</p>
   <p><b>The action word is a verb.</b> The verb sits in the room’s colour with its object small under it (“Start” over “Push A, about 45 min”). Tap does it. Swipe across for the room’s other actions: the verb’s letters stream out and the next one’s stream in. Starting a workout asks for a hold: the verb fills with colour from left to right in half a second.</p>
   <p><b>The glyph follows the widget.</b> A library of 21 small drawings is picked by rules from the item’s words, and Tess picks later. The drawing never cuts. It collapses into a point, the point pulses once, and the new drawing forms out of it. When nothing fits, the glyph is built from the item’s own words, set like the wall.</p>
@@ -121,39 +136,27 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
   <p><b>To do later:</b> polish the keystones, and a library of short videos for them.</p>
  </div>
  <section class="secmap" id="sections" aria-labelledby="sec-h">
-  <h2 id="sec-h">The sections, named</h2>
-  <p class="sl">Every landing is cut into the same seven sections, at the same heights as Bridge. Use these names when we talk about a screen. Points are on the 402 by 874 phone.</p>
+  <h2 id="sec-h">The whole screen, mapped</h2>
+  <p class="sl">Every point of the 402 by 874 phone belongs to a named place, the same on Bridge and in every room. A place with nothing in it is still kept and marked empty, so nothing ever moves into it. Turn on “Show sections” under the phone to see the map over any screen, with that screen’s empty places hatched.</p>
   <div class="secgrid">
-   <svg viewBox="0 0 430 900" role="img" aria-label="A phone cut into seven named sections">
-    <rect x="14" y="13" width="402" height="874" rx="46" class="ph"/>
-    <g class="b"><rect x="14" y="13" width="402" height="44" rx="0" class="z0"/><text x="30" y="40" class="n">1 Status bar</text></g>
-    <g class="b"><rect x="14" y="57" width="402" height="138" class="z1"/>
-     <rect x="38" y="67" width="190" height="44" class="sub"/><text x="48" y="95" class="s">Title</text>
-     <rect x="330" y="67" width="76" height="44" class="sub"/><text x="340" y="95" class="s">Nav word</text>
-     <rect x="38" y="119" width="200" height="76" class="sub"/><text x="48" y="162" class="s">Switcher</text>
-     <rect x="242" y="125" width="150" height="62" class="sub"/><text x="252" y="162" class="s">Needs</text>
-     <text x="406" y="190" class="n e">2 Masthead</text></g>
-    <g class="b"><rect x="38" y="209" width="354" height="182" class="z2"/><text x="215" y="300" class="n m">3 Keystone</text><text x="215" y="322" class="s m">354 by 182 at 196</text></g>
-    <g class="b"><rect x="38" y="401" width="354" height="22" class="z3"/><text x="48" y="417" class="s">4 Caption</text></g>
-    <g class="b"><rect x="38" y="427" width="354" height="198" class="z4"/>
-     <text x="48" y="456" class="s">Header</text><text x="48" y="500" class="n">Big line</text><text x="48" y="536" class="s">Middle line</text><text x="48" y="562" class="s">Small line</text>
-     <rect x="312" y="457" width="80" height="80" class="sub"/><text x="352" y="502" class="s m">Glyph</text>
-     <text x="382" y="612" class="n e">5 Widget</text></g>
-    <g class="b"><rect x="38" y="653" width="160" height="120" class="sub"/><text x="48" y="718" class="s">Dial</text>
-     <rect x="200" y="665" width="192" height="96" class="sub"/><text x="210" y="718" class="s">Door summary</text>
-     <rect x="38" y="653" width="354" height="120" class="z5"/><text x="382" y="768" class="n e">6 Doors</text></g>
-    <g class="b"><rect x="14" y="787" width="402" height="100" class="z6"/><text x="42" y="828" class="s">Action word</text><text x="362" y="828" class="s e">Tess</text><text x="215" y="870" class="n m">7 Foot</text></g>
-   </svg>
-   <div class="sectable" role="table" aria-label="What each section holds">
-    <div role="row" class="sth"><span role="columnheader">Section</span><span role="columnheader">On Bridge</span><span role="columnheader">In a room</span><span role="columnheader">Touch</span></div>
-    <div role="row"><b role="cell">2 Masthead<small>44 to 182</small></b><span role="cell">Settings word, departure lines</span><span role="cell">Title, Nav word, Switcher (optional), Needs</span><span role="cell">Switcher: across and up or down; tap for the next. Nav word: tap to go back.</span></div>
-    <div role="row"><b role="cell">3 Keystone<small>196 to 378</small></b><span role="cell">The mosaic (180 to 400)</span><span role="cell">The room’s centerpiece; it stays live on every page of the room</span><span role="cell">The keystone’s own, and the strips own drags that start on them</span></div>
-    <div role="row"><b role="cell">4 Caption<small>388</small></b><span role="cell">None</span><span role="cell">One line on how to touch the keystone</span><span role="cell">None</span></div>
-    <div role="row"><b role="cell">5 Widget<small>400 to 612</small></b><span role="cell">The one thing</span><span role="cell">What’s going on: Header, Big line, Middle line, Small line, Glyph (follows the item; the keystone hands it over)</span><span role="cell">Across and up or down for the next; hold the Big line to strike it (Undo 10 s); tap to open</span></div>
-    <div role="row"><b role="cell">6 Doors<small>640 to 760</small></b><span role="cell">Apps dial, fact line</span><span role="cell">Dial of the room’s doors, Door summary</span><span role="cell">Dial: up and down; tap the focus to open</span></div>
-    <div role="row"><b role="cell">7 Foot<small>776 to 874</small></b><span role="cell">Tess</span><span role="cell">Action word (verb over its object), Tess</span><span role="cell">Tap does it; swipe across for other actions; a hold for a start; hold Tess to talk</span></div>
+   <svg id="secsvg" viewBox="0 0 430 900" role="img" aria-label="The phone mapped into named places"></svg>
+   <div class="sectable" role="table" aria-label="What each place holds and how it moves">
+    <div role="row" class="sth"><span role="columnheader">Place</span><span role="columnheader">On Bridge</span><span role="columnheader">In a room</span><span role="columnheader">Moving between them</span></div>
+    <div role="row"><b role="cell">Status bar<small>0 to 44</small></b><span role="cell">System</span><span role="cell">System</span><span role="cell">Stays</span></div>
+    <div role="row"><b role="cell">Masthead<small>44 to 182</small></b><span role="cell">Settings word, departure board</span><span role="cell">Title, Nav word, Switcher, Needs (Switcher and Needs may be empty)</span><span role="cell">Flaps like the board: old rows fold away on their middle line, new rows fold open, 60 ms apart</span></div>
+    <div role="row"><b role="cell">Breath<small>182 to 196</small></b><span role="cell">Empty (the mosaic starts at 180)</span><span role="cell">Empty</span><span role="cell">Stays empty</span></div>
+    <div role="row"><b role="cell">Keystone<small>196 to 378</small></b><span role="cell">The mosaic</span><span role="cell">The room’s centerpiece</span><span role="cell">The mosaic flips tile by tile into it; back, tiles open on the mosaic</span></div>
+    <div role="row"><b role="cell">Caption<small>378 to 412</small></b><span role="cell">Empty</span><span role="cell">One line on touching the keystone</span><span role="cell">Unrolls from the keystone’s lower edge; rolls back up into it</span></div>
+    <div role="row"><b role="cell">Widget<small>412 to 612</small></b><span role="cell">The one thing</span><span role="cell">What’s going on, with its Glyph</span><span role="cell">Old item leaves upward, new one comes up from below, like a swipe up</span></div>
+    <div role="row"><b role="cell">Breath<small>612 to 640</small></b><span role="cell">Empty</span><span role="cell">Empty</span><span role="cell">Stays empty</span></div>
+    <div role="row"><b role="cell">Doors<small>640 to 760</small></b><span role="cell">Apps dial, fact line</span><span role="cell">Doors dial, Door summary</span><span role="cell">The dial spins too fast to read through both lists and slows onto the new doors. The summary slides off right, and the new one slides in from the right as the dial slows</span></div>
+    <div role="row"><b role="cell">Breath<small>760 to 776</small></b><span role="cell">Empty</span><span role="cell">Empty</span><span role="cell">Stays empty</span></div>
+    <div role="row"><b role="cell">Foot<small>776 to 852</small></b><span role="cell">Undo line, Tess; the action word is empty</span><span role="cell">Action word, Tess</span><span role="cell">The action word streams out left and in from the left; Tess stays and only changes colour</span></div>
+    <div role="row"><b role="cell">Home bar<small>852 to 874</small></b><span role="cell">System</span><span role="cell">System</span><span role="cell">Stays</span></div>
+    <div role="row"><b role="cell">Edges<small>x 0 to 24, 378 to 402</small></b><span role="cell">Left: back swipe; right: empty</span><span role="cell">The same</span><span role="cell">Stays</span></div>
    </div>
   </div>
+  <p class="sl"><b>When one side is empty.</b> The other side plays its half alone. Bridge has no caption, so the room’s caption unrolls from the keystone. Bridge has no action word, so the room’s streams in and nothing streams out. A room without a switcher keeps the slot and its title folds open over an empty row. When the content in a slot won’t carry over (a picture becoming words), it collapses into a point and the new one forms out of it, the way the Glyph does.</p>
  </section>
  <div class="bar" role="group" aria-label="Phone look">
   <button class="w" id="lk-paper" aria-pressed="true">Paper</button>
@@ -1480,7 +1483,7 @@ function actionX(el,R){const A=R.acts,f=h('div','act');el.appendChild(f);let i=0
 
 // a room landing
 function landingV3(el,R){const stops=[];const id=el.dataset.id;
- const top=h('div');top.style.cssText='position:absolute;inset:0 0 auto 0;height:100px;z-index:6;pointer-events:none';el.appendChild(top);
+ const top=h('div','ltop');top.style.cssText='position:absolute;inset:0 0 auto 0;height:100px;z-index:6;pointer-events:none';el.appendChild(top);
  const t=h('div','ttl',R.name);t.style.color=R.color;top.appendChild(t);
  if(stack.length>1){const p=SCREENS[stack[stack.length-2].id];const nb=h('button','lnav',SHIP[p.title]||p.title);nb.style.pointerEvents='auto';nb.onclick=()=>back();top.appendChild(nb)}
  const band=h('div','lband');el.appendChild(band);
@@ -1496,7 +1499,7 @@ function landingV3(el,R){const stops=[];const id=el.dataset.id;
   change:d=>{sum.innerHTML=d.sum();fitAll(sum);if(!sum._on){sum._on=1;return}sum.classList.remove('rise');void sum.offsetWidth;if(!RM)sum.classList.add('rise')}});
  const f=actionX(el,R);
  fitLine(cap);document.fonts&&document.fonts.ready.then(()=>{fitAll(el)});
- opening(el._flip?[top,band,cap,mid,dh,sum,f]:[top,band,key,cap,mid,dh,sum,f],el._flip?160:0);
+ if(!el._flip)opening([top,band,key,cap,mid,dh,sum,f],0);
  setTimeout(WG.start,el._flip?420:260);
  return ()=>stops.forEach(s=>s&&s())}
 const sum=(lb,lines)=>'<div class="lb">'+lb+'</div>'+lines.map(l=>'<div class="ln">'+l+'</div>').join('');
@@ -1647,18 +1650,138 @@ function flipTo(id){const from=current,fromC=cleanup,mos=from&&$('#mosaic',from)
  stack.push({id});const el=h('div','screen');el._flip=1;
  const S=SCREENS[id];phone.style.setProperty('--room','var(--'+(S.accent||'ink')+')');el.dataset.id=id;el.appendChild(h('div','sbar','<span>5:10</span><span></span>'));
  let c=null;try{c=S.render(el,{})}catch(e){window.__showErr&&window.__showErr('screen '+id+': '+e.message)}shipNames(el);stage.appendChild(el);current=el;cleanup=c;
- tiles(snap,id,'in',()=>{});setTimeout(()=>{from.remove();fromC&&fromC()},60);tessCue(S.accent);drawMap()}
+ tiles(snap,id,'in',()=>{});swap(from,el);from.remove();setTimeout(()=>{fromC&&fromC()},1200);tessCue(S.accent);drawMap()}
 // any door into a room landing from Bridge flips; everything else keeps its own transition
 const go0=go;go=function(id,params,opts={}){if(current&&current.dataset.id==='home'&&LANDS.includes(id)&&!params?.k)return flipTo(id);return go0(id,params,opts)};
 const back0=back;back=function(){const top=stack[stack.length-1],prev=stack[stack.length-2];
  if(!RM&&top&&prev&&prev.id==='home'&&LANDS.includes(top.id)){stack.pop();const old=current,oldC=cleanup;const {el,c}=mount('home');current=el;cleanup=c;
-  opening([...el.children].filter(x=>!x.classList.contains('sbar')&&x.id!=='mosaic'),0);old.remove();oldC&&oldC();tiles(null,top.id,'reveal');tessCue(null);drawMap();return}
+  swap(old,el);old.remove();setTimeout(()=>{oldC&&oldC()},1200);tiles(null,top.id,'reveal');tessCue(null);drawMap();return}
  back0()};
 
 
+/* ---------- moving between layouts (283 v4, his 4:11 PM note) ----------
+   Bridge and every room share the same sections in the same places, so a move between them is done section by section,
+   each in its own way, instead of one screen sliding over another. The old screen's sections are lifted into the new
+   screen, play their exit there, and are dropped.
+   Masthead: a departure board, so it flaps: the old rows fold away on their middle line, and the new rows fold open.
+   Keystone: the mosaic flip (above). Caption: unrolls from the keystone's lower edge, or rolls up into it.
+   Widget: the old item leaves upward and the new one comes up from below, as a swipe up on it would.
+   Doors: the dial spins too fast to read, through both lists, and slows onto the new doors.
+   Door summary: the old one slides off to the right, and the new one slides in from the right once the dial slows.
+   Foot: the old action word streams out to the left, the new one streams in. Tess stays where she is, and only her colour changes.
+   An empty side (Bridge has no caption and no action word) is still a slot: the other side plays its half alone. */
+const SECT={masthead:['.board','.setw','.ltop','.lband'],caption:['.lcap'],widget:['.one'],dial:['.dial'],summary:['.bfact','.lsum'],foot:['.act','.undoline']};
+const sectOf=(el,k)=>SECT[k].flatMap(s=>[...el.querySelectorAll(':scope > '+s)]);
+function dialNames(d){return [...d.querySelectorAll('.d')].map(e=>{const m=(e.style.transform||'').match(/translateY\((-?[\d.]+)px/);return {y:m?+m[1]:0,t:e.textContent.replace(/\d+$/,'').trim(),o:+(e.style.opacity||1)}}).filter(x=>x.o>0.05).sort((a,b)=>a.y-b.y).map(x=>x.t)}
+function swap(from,to){if(RM)return;const A=(e,k,o)=>e.animate(k,o);
+ // lift the old sections into the new screen, on top, so they can leave in place
+ const old={};Object.keys(SECT).forEach(k=>{old[k]=sectOf(from,k);old[k].forEach(e=>{e.style.pointerEvents='none';to.appendChild(e)})});
+ const neu={};Object.keys(SECT).forEach(k=>{neu[k]=sectOf(to,k).filter(e=>!old[k].includes(e))});
+ const drop=(e,ms)=>setTimeout(()=>e.remove(),ms);
+ // masthead: fold away and fold open, like the board's letters
+ old.masthead.forEach((e,i)=>{A(e,[{transform:'perspective(500px) rotateX(0)',opacity:1},{transform:'perspective(500px) rotateX(88deg)',opacity:.2}],{duration:200,delay:i*50,easing:'cubic-bezier(.5,0,.9,.5)',fill:'both'});drop(e,200+i*50)});
+ neu.masthead.forEach((e,i)=>A(e,[{transform:'perspective(500px) rotateX(-88deg)',opacity:.2},{transform:'perspective(500px) rotateX(6deg)',opacity:1,offset:.75},{transform:'none',opacity:1}],{duration:340,delay:180+i*60,easing:'cubic-bezier(.2,.8,.3,1)',fill:'both'}));
+ // caption: rolls up into the keystone, unrolls from it
+ old.caption.forEach(e=>{A(e,[{clipPath:'inset(0 0 0 0)'},{clipPath:'inset(0 0 100% 0)'}],{duration:160,fill:'both'});drop(e,170)});
+ neu.caption.forEach(e=>A(e,[{clipPath:'inset(0 0 100% 0)',transform:'translateY(-6px)'},{clipPath:'inset(0 0 0 0)',transform:'none'}],{duration:320,delay:520,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
+ // widget: up and out, up and in
+ old.widget.forEach(e=>{A(e,[{transform:'none',opacity:1},{transform:'translateY(-48px)',opacity:0}],{duration:260,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'});drop(e,270)});
+ neu.widget.forEach(e=>A(e,[{transform:'translateY(64px)',opacity:0,clipPath:'inset(0 0 100% 0)'},{transform:'none',opacity:1,clipPath:'inset(-20px -20px -20px -20px)'}],{duration:420,delay:200,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
+ // doors: the reel. Too fast to read through both lists, then it slows onto the new doors.
+ const od=old.dial[0],nd=neu.dial[0];
+ if(od&&nd){const a=dialNames(od),b=dialNames(nd);od.remove();const all=[...a,...b];const mix=[];for(let i=0;i<9;i++)mix.push(all[(i*5+3)%all.length]);
+  const L=[...a.slice(0,3),...mix,...b.slice(0,3)];while(L.length<6)L.unshift('');
+  const reel=h('div','reel');reel.style.cssText='position:absolute;left:24px;top:640px;width:170px;height:120px;overflow:hidden;z-index:7;pointer-events:none;-webkit-mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent)';
+  const col=h('div');col.innerHTML=L.map((t,i)=>'<div style="height:40px;line-height:40px;font:600 '+(i===L.length-2?26:21)+'px var(--sans);white-space:nowrap;color:'+(i===L.length-2?'var(--room,var(--ink))':'var(--ink2)')+'">'+t+'</div>').join('');reel.appendChild(col);to.appendChild(reel);
+  const dist=(L.length-3)*40;nd.style.opacity=0;
+  A(col,[{transform:'translateY(0)',filter:'blur(0)'},{transform:'translateY('+(-dist*.35)+'px)',filter:'blur(3px)',offset:.25},{transform:'translateY('+(-dist*.9)+'px)',filter:'blur(1.2px)',offset:.7},{transform:'translateY('+(-dist)+'px)',filter:'blur(0)'}],{duration:980,easing:'cubic-bezier(.3,.05,.2,1)',fill:'both'}).onfinish=()=>{A(nd,[{opacity:0},{opacity:1}],{duration:140,fill:'both'}).onfinish=()=>{nd.style.opacity=''};A(reel,[{opacity:1},{opacity:0}],{duration:160,fill:'both'}).onfinish=()=>reel.remove()}}
+ else if(nd)A(nd,[{opacity:0},{opacity:1}],{duration:300,delay:300,fill:'both'});
+ // door summary: off to the right, in from the right as the reel slows
+ old.summary.forEach(e=>{A(e,[{transform:'none',opacity:1},{transform:'translateX(80px)',opacity:0}],{duration:260,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'});drop(e,270)});
+ neu.summary.forEach(e=>A(e,[{transform:'translateX(90px)',opacity:0},{transform:'translateX(-3px)',opacity:1,offset:.75},{transform:'none',opacity:1}],{duration:420,delay:640,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
+ // foot: the action word streams out left, the new one streams in
+ old.foot.forEach(e=>{A(e,[{transform:'none',opacity:1},{transform:'translateX(-30px) skewX(14deg)',opacity:0,filter:'blur(2px)'}],{duration:220,fill:'both'});drop(e,230)});
+ neu.foot.forEach(e=>{const ch=[...e.querySelectorAll('.ch')];if(ch.length)ch.forEach((c,j)=>A(c,[{transform:'translateX(-24px) skewX(16deg)',opacity:0,filter:'blur(2px)'},{transform:'none',opacity:1,filter:'blur(0)'}],{duration:460,delay:420+j*24,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
+  A(e,[{opacity:0},{opacity:1}],{duration:200,delay:420,fill:'both'})})}
+
+/* ---------- the map of places, drawn from one list: the board's diagram and the "Show sections" overlay ---------- */
+const PLACES_MAP=[// [name, x, y, w, h, kind] kind: band, sub, empty, system, edge
+ ['Status bar',0,0,402,44,'system'],['Masthead',0,44,402,138,'band'],['Title',24,50,260,48,'sub','.ttl,.board'],['Nav word',300,50,94,46,'sub','.lnav,.setw'],['Switcher',24,106,200,76,'sub','.swx'],['Needs',228,118,150,58,'sub','.swn:not(:empty)'],
+ ['Breath',24,182,354,14,'empty'],['Keystone',24,196,354,182,'band'],['Caption',24,378,354,34,'band','.lcap'],['Widget',24,412,354,200,'band','.one'],['Glyph',298,444,80,80,'sub','svg.lg,.one canvas'],
+ ['Breath',24,612,354,28,'empty'],['Doors',24,640,354,120,'band'],['Dial',24,640,160,120,'sub','.dial'],['Door summary',186,640,192,120,'sub','.lsum,.bfact'],
+ ['Breath',24,760,354,16,'empty'],['Foot',0,776,402,76,'band'],['Action word',24,786,220,62,'sub','.act'],['Tess',306,776,96,96,'sub','#tess'],['Home bar',0,852,402,22,'system'],
+ ['Back edge',0,44,24,808,'edge'],['Right edge',378,44,24,808,'edge']];
+function filled(scr,sel){if(scr&&scr.querySelector(':scope > .board')&&/\.swx|\.swn/.test(sel||''))return true;if(!sel)return true;return sel.split(',').some(s=>{const e=s.trim()==='#tess'?$('#tess'):scr.querySelector(s.trim());return e&&(e.tagName==='svg'||e.tagName==='CANVAS'||e.textContent.trim().length>0)})}
+function drawPlaces(svg,scr,ox,oy){const NS='http://www.w3.org/2000/svg';svg.innerHTML='<defs><pattern id="hatch'+(scr?'o':'d')+'" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" class="ht"/></pattern></defs>'+(scr?'':'<rect x="'+ox+'" y="'+oy+'" width="402" height="874" rx="46" class="ph"/>');
+ const LIST=scr&&scr.querySelector(':scope > .board')?[...PLACES_MAP.filter(r=>!['Title','Nav word','Switcher','Needs'].includes(r[0])),['Settings word',24,74,110,44,'sub','.setw'],['Departure board',140,74,238,104,'sub','.board']]:PLACES_MAP;
+ LIST.forEach(([n,x,y,w,hh,k,sel])=>{const empty=k==='empty'||(scr&&!filled(scr,sel));const g=document.createElementNS(NS,'g');
+  g.innerHTML='<rect x="'+(x+ox)+'" y="'+(y+oy)+'" width="'+w+'" height="'+hh+'" class="pl '+k+(empty?' em':'')+'"'+(empty?' fill="url(#hatch'+(scr?'o':'d')+')"':'')+'/>'+
+   (k==='edge'?'':'<text x="'+(x+ox+(k==='band'||k==='system'?w-8:6))+'" y="'+(y+oy+(k==='band'?hh-7:Math.min(hh-5,17)))+'" class="'+(k==='band'?'n e':'s')+'">'+n+(empty&&k!=='empty'?', empty':'')+'</text>');svg.appendChild(g)})}
+{const svg=$('#secsvg');if(svg)drawPlaces(svg,null,14,13);
+ const bar=$('.bar');if(bar){const b=h('button','w');b.id='lk-map';b.setAttribute('aria-pressed','false');b.textContent='Show sections';bar.appendChild(b);
+  const ov=document.createElementNS('http://www.w3.org/2000/svg','svg');ov.setAttribute('viewBox','0 0 402 874');ov.id='placesov';ov.style.cssText='position:absolute;inset:0;width:402px;height:874px;z-index:60;pointer-events:none;display:none';phone.appendChild(ov);
+  let on=false,iv=0;const paint=()=>{if(on&&current)drawPlaces(ov,current,0,0)};
+  b.onclick=()=>{on=!on;b.setAttribute('aria-pressed',on);ov.style.display=on?'block':'none';clearInterval(iv);if(on){paint();iv=setInterval(paint,600)}}}}
+
+/* ---------- Layout mode (Settings, his 4:14 PM note): the app as its places only, no content ----------
+   Every screen is drawn as soft bubbles, one per place, in the room's colour, the way the home screen shows its
+   layout when you hold it (without the wiggle). Swipe across to walk the app: Bridge, then each room. The bubbles
+   change the way the real places do: the masthead folds, the keystone turns, the widget rises, the dial spins.
+   Tap a bubble to read what it holds on this screen, how you touch it and how it moves (in the keystone's bubble).
+   Tap the Nav word bubble twice, or swipe from the left edge, to leave. Read-only for now. */
+const LPAGES=[
+ {id:'home',name:'Bridge',col:'--ink',subs:[['Masthead',0,44,402,138,'band'],['Settings word',24,74,110,44,'sub'],['Departure board',140,74,238,104,'sub']],hold:{Masthead:'Settings word and the departure board (three rows that flip letter by letter)',Keystone:'The mosaic: gallery, weather, workout, now',Widget:'The one thing',Dial:'The apps: seven rooms',['Door summary']:'One fact for the focused room',Foot:'The undo line, and Tess'},empty:['Switcher','Needs','Caption','Action word'],title:'Settings word',nav:'Departure board'},
+ {id:'notes',name:'Log',col:'--notes',hold:{Switcher:'Newest, Due, Pinned, From Tess; up and down: Today, This week, Earlier',Keystone:'The word wall',Caption:'Tap a word to open its note',Widget:'Four notes, glyphs by kind',Dial:'The doors: All notes, Ideas, From Tess, Voice, Private',['Action word']:'Write, Speak, List'}},
+ {id:'weather',name:'Lookout',col:'--weather',hold:{Switcher:'Now, Tonight, Tomorrow, This week',Keystone:'The skypiece: real sky and raised glass',Caption:'Rain gathers on the glass from 7',Widget:'Rain, the low, the driest day (no strike)',Dial:'Hours, Tonight, This week, Air, Sky',['Action word']:'Alert, Hours, Walk'}},
+ {id:'training',name:'Deck',col:'--training',hold:{Switcher:'Today, This week, This month; up and down: Push A, Pull A, Legs',Keystone:'The blackboard',Caption:'Drag to write. Swipe fast left to wipe',Widget:'Tonight, this week, yesterday’s walk',Dial:'Today, This week, Library, Bests, Plan',['Action word']:'Start (hold), Log, Rest'}},
+ {id:'kitchen',name:'Galley',col:'--kitchenText',hold:{Switcher:'Tonight, Tomorrow, This week',Keystone:'The pass: printed tickets on a rail',Caption:'Swipe a ticket up for its next page',Widget:'Tacos, rice, the shop, dishes',Dial:'Tonight, Pantry, Recipes, Groceries, Leftovers',['Action word']:'Cook, Get, Wash'}},
+ {id:'routines',name:'Watch',col:'--routines',hold:{Switcher:'Evening, Night, Morning',Keystone:'The woodland',Caption:'Hold a tree to water it. Tap to see it',Widget:'Next, thirsty, tended',Dial:'Today, Body, Mind, Home, Weekly',['Action word']:'Plant, Water, Pause'}},
+ {id:'money',name:'Purse',col:'--purse',hold:{Switcher:'October, This year, Since May',Keystone:'The indices',Caption:'Across for a category, up and down for an index',Widget:'Still yours, next drop, today (no strike)',Dial:'This month, Kinds, Saving, Investing, Debts, Mine',['Action word']:'Log, Look, Plan'}}];
+const LTOUCH={Masthead:'Title tap opens the room index; the nav word goes back',Title:'Tap opens the room index',['Nav word']:'Tap goes back',Switcher:'Swipe across or up and down; tap for the next',Needs:'Changes with the switcher',Keystone:'Its own gestures; a drag that starts here stays here',Caption:'None',Widget:'Swipe four ways for the next; hold the big line to strike; tap opens',Glyph:'Follows the item',Dial:'Turn up and down; tap the focus',['Door summary']:'Rises when the focus changes',['Action word']:'Tap; swipe across for others; hold to start',Tess:'Tap to hear her; hold to talk',Foot:'The action word and Tess','Back edge':'Swipe from here to go back'};
+const LMOVE={Masthead:'Folds away and open like the board',Title:'Folds open',Switcher:'Folds open; its letters stream on a swipe',Needs:'Folds open',Keystone:'Flips tile by tile',Caption:'Unrolls from the keystone',Widget:'Leaves upward, rises from below',Glyph:'Collapses to a point, forms again',Dial:'Spins too fast to read, slows onto the new doors',['Door summary']:'Off to the right, in from the right',['Action word']:'Streams out left, in from the left',Tess:'Stays; only her colour changes'};
+SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Swipe across to walk the app.',render(el){let pi=0;el.classList.add('lmode');
+ const head=h('div','lmh');el.appendChild(head);const stage2=h('div','lms');el.appendChild(stage2);const info=h('div','lmi');el.appendChild(info);
+ function page(dir){const P=LPAGES[pi];phone.style.setProperty('--room','var('+P.col+')');head.innerHTML='<span>Layout</span> '+P.name;info.innerHTML='';
+  const old=[...stage2.children];const S=[];
+  const MAPX=P.subs?[...P.subs,...PLACES_MAP.filter(r=>!['Masthead','Title','Nav word','Switcher','Needs'].includes(r[0]))]:PLACES_MAP;
+  MAPX.forEach(([n,x,y,w,hh,k])=>{if(k==='system'||k==='edge')return;if(['Doors','Foot'].includes(n))return;
+   const empty=k==='empty'||(P.empty||[]).includes(n);const lab=n==='Title'?P.name:n;
+   const b=h('button','lb'+(k==='band'?' band':'')+(empty?' em':''),'<b>'+lab+'</b>'+(empty&&k!=='empty'?'<i>empty</i>':''));b.style.cssText='left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+hh+'px';
+   if(k==='empty'){b.innerHTML='';b.setAttribute('aria-label','Breath, empty')}
+   if(n==='Title')b.classList.add('ttlb');
+   b.onclick=e=>{e.stopPropagation();if(n==='Nav word'&&b.classList.contains('on')){back();return}stage2.querySelectorAll('.on').forEach(z=>z.classList.remove('on'));b.classList.add('on');
+    const holds=P.hold[n]||P.hold[lab]||(empty?'Nothing on this screen. The place is kept so nothing moves into it.':'Same as every screen');
+    info.innerHTML='<b>'+lab+'</b> <span>'+x+', '+y+', '+w+' by '+hh+'</span><p>'+holds+'</p><p><em>Touch</em> '+(LTOUCH[n]||'None')+'</p><p><em>Moves</em> '+(LMOVE[n]||'Stays')+'</p>';fitAll&&0};
+   stage2.appendChild(b);S.push([b,k,n])});
+  if(RM||!dir){old.forEach(o=>o.remove());}
+  else{old.forEach((o,i)=>{o.animate([{transform:'none',opacity:1},{transform:'translateX('+(-dir*40)+'px) scale(.92)',opacity:0}],{duration:240,delay:i*8,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'}).onfinish=()=>o.remove()})}
+  if(!RM)S.forEach(([b,k,n],i)=>{const kf=n==='Masthead'||n==='Title'||n==='Nav word'||n==='Switcher'||n==='Needs'?[{transform:'perspective(500px) rotateX(-80deg)',opacity:0},{transform:'none',opacity:1}]:n==='Keystone'?[{transform:'perspective(600px) rotateY(-70deg)',opacity:0},{transform:'none',opacity:1}]:n==='Dial'?[{transform:'translateY(-40px)',opacity:0,filter:'blur(3px)'},{transform:'none',opacity:1,filter:'blur(0)'}]:n==='Door summary'?[{transform:'translateX(60px)',opacity:0},{transform:'none',opacity:1}]:n==='Widget'||n==='Glyph'?[{transform:'translateY(40px)',opacity:0},{transform:'none',opacity:1}]:[{transform:'scale(.85)',opacity:0},{transform:'none',opacity:1}];
+   b.animate(kf,{duration:420,delay:(dir?180:0)+i*28,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'})})}
+ page(0);let x0=null,dx=0;
+ el.addEventListener('pointerdown',e=>{x0=e.clientX;dx=0});el.addEventListener('pointermove',e=>{if(x0!=null)dx=(e.clientX-x0)/K});
+ el.addEventListener('pointerup',()=>{if(x0==null)return;x0=null;if(Math.abs(dx)>50){const d=dx<0?1:-1;pi=(pi+d+LPAGES.length)%LPAGES.length;page(d)}});
+ const kd=e=>{if(e.key==='ArrowRight'){pi=(pi+1)%LPAGES.length;page(1)}if(e.key==='ArrowLeft'){pi=(pi-1+LPAGES.length)%LPAGES.length;page(-1)}};document.addEventListener('keydown',kd);
+ return ()=>document.removeEventListener('keydown',kd)}};
+{const st=document.createElement('style');st.textContent=`
+.lmode{background:color-mix(in srgb,var(--room,var(--ink)) 4%,var(--p-bg))}
+.lmh{position:absolute;left:24px;top:54px;font:700 40px/1.1 var(--sans);letter-spacing:-.02em;color:var(--room,var(--ink));z-index:8;pointer-events:none;opacity:0}
+.lms{position:absolute;inset:0}
+.lmode .lb{position:absolute;border:0;border-radius:18px;background:color-mix(in srgb,var(--room,var(--ink)) 11%,transparent);color:var(--room,var(--ink));font:600 13px var(--sans);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--room,var(--ink)) 18%,transparent);transition:box-shadow .2s,background .2s}
+.lmode .lb.band{background:color-mix(in srgb,var(--room,var(--ink)) 5%,transparent);align-items:flex-end;justify-content:flex-end;padding:0 12px 8px;font-size:12px;color:color-mix(in srgb,var(--room,var(--ink)) 70%,var(--ink2))}
+.lmode .lb.em{background:none;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--room,var(--ink)) 28%,transparent);border:0;outline:1.5px dashed color-mix(in srgb,var(--room,var(--ink)) 32%,transparent);outline-offset:-1.5px;color:var(--ink2)}
+.lmode .lb i{font:400 11px var(--sans);color:var(--ink2);font-style:normal}
+.lmode .lb.on{box-shadow:inset 0 0 0 2px var(--room,var(--ink));background:color-mix(in srgb,var(--room,var(--ink)) 18%,transparent)}
+.lmi{position:absolute;left:40px;right:40px;top:212px;height:150px;z-index:8;font:400 14px/20px var(--sans);color:var(--ink2);pointer-events:none}
+.lmode .lb.ttlb b{font-size:28px;font-weight:700;letter-spacing:-.02em}.lmi p{white-space:normal!important}
+.lmi:empty{display:none}.lmi b{color:var(--room,var(--ink));font-size:15px}.lmi span{font-family:var(--num);font-size:12px;margin-left:6px}.lmi p{margin:2px 0 0;white-space:nowrap;overflow:hidden}.lmi em{font-style:normal;color:var(--ink);font-weight:600;margin-right:4px}
+`;document.head.appendChild(st)}
+// Settings gets the way in
+{const r0=SCREENS.settings.render;SCREENS.settings.render=function(el,p){const c=r0.call(this,el,p);const box=[...el.children].find(d=>d.style.top==='116px');
+ if(box){const sc=h('div','sc','Layout');sc.style.cssText='color:var(--slate);margin-top:18px';const e=h('div','setl','<span>Layout mode</span><span>Open</span>');e.onclick=()=>go('layout');box.insertBefore(e,box.firstChild);box.insertBefore(sc,box.firstChild)}return c}}
+
 /* ---------- the map, updated ---------- */
 MAP.length=0;MAP.push(
- {app:'Bridge (Home)',state:'236 with the 283 apps dial',screens:[['home','Home'],['today','Today, from the date'],['settings','Settings']],note:'Top lines flip; the mosaic turns; the one thing swipes four ways and strikes on hold; the apps list scrolls.'},
+ {app:'Bridge (Home)',state:'236 with the 283 apps dial',screens:[['home','Home'],['today','Today, from the date'],['settings','Settings'],['layout','Layout mode (from Settings)']],note:'Top lines flip; the mosaic turns; the one thing swipes four ways and strikes on hold; the apps list scrolls.'},
  {app:'Watch (Routines)',state:'283 landing, woodland 268 v4',screens:[['routines','Landing'],['sheaf','Behind a door: the Sheaf',{mode:0,open:'Body'}],['routine','A routine',{id:'stretch'}]],note:'The woodland is the locked 268 board, shown in the slot. Hold a tree to water it; tap to see it. Doors open the Sheaf (249).'},
  {app:'Log (Notes + Lists)',state:'283 landing, word wall 246',screens:[['notes','Landing'],['door','Ideas',{k:'ideas'}],['door','From Tess',{k:'tess'}],['note','A note',{id:'n1'}],['lists','Lists (old page)'],['list','A checkable note: Before the trip']],note:'The word band stays on every door page: the centerpiece rule, already true here.'},
  {app:'Lookout (Weather)',state:'283 landing, skypiece 254 v9',screens:[['weather','Landing'],['weatherhour','An hour',{h:'7 PM',t:60,w:'Rain'}]],note:'Real sky plates behind everything; the glass stays on the hour page (the centerpiece rule). Inside: plain numbers for now.'},
