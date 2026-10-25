@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home, first review</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/home-first-review.md (Design item 41), from Kaushik's first review of the build (16 Oct, 11:58 PM PT). Home says one plain line per thing and never cuts text; the day bar goes; the Start key's ink line becomes the workout's progress; the tabs get a glass lens with hold-and-swipe live previews. Obsidian (he likes the pure black), one Porcelain phone. ?play records the tabs: hold, the lens and the previews, slide through REVIEW, TRAINING, KITCHEN, let go on TRAINING; then a plain swipe with the ink line stretching. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.66;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;background:#000;color:rgb(var(--ink))}
+.ph.por{--ink:23,20,31;--tess:#2450D8;--ctx:#6A4C9C;--liveInk:#C23A22;--live:#E2432A;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.nw{white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.ctx{color:var(--ctx)}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+.glass{position:absolute;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.06));backdrop-filter:blur(10px) saturate(1.6);-webkit-backdrop-filter:blur(10px) saturate(1.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.12),0 8px 24px rgba(0,0,0,.35);z-index:12}
+.por .glass{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.35));box-shadow:inset 0 1px 0 #fff,0 8px 24px rgba(23,20,31,.16)}
+.page{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:50% 0;overflow:hidden;background:inherit}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;transition:opacity .15s}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+// Tess's soul at 65% (soul-explore.md), Obsidian pigments by default.
+const soul=(por)=>{const P=por?['#2450D8','#E2432A','#F0A500']:['#86B4FF','#FF5B3A','#FFC23D'],f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;
+ return `<div class="soul">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+const TABS=['REVIEW','TODAY','TRAINING','KITCHEN'],TX=[22,118,199,300];
+const tabs=(on,id='')=>`<div class="abs lbl" ${id?`id="${id}"`:''} style="left:0;right:0;top:78px;height:24px;letter-spacing:.06em;z-index:13">${TABS.map((t,i)=>`<span class="abs" data-i="${i}" style="left:${TX[i]}px;top:0;color:rgba(var(--ink),${t===on?1:.38})">${t}</span>`).join('')}<svg class="abs" ${id?`id="${id}l"`:''} style="left:${TX[TABS.indexOf(on)]}px;top:24px;overflow:visible" width="80" height="12"><path d="${lens(on.length*10.6,1.2)}" fill="rgb(var(--ink))"/></svg></div>`;
+// The build as he saw it (approximate): the day bar, the paused ledger with its detail line cut by "…".
+const before=()=>`${tabs('TODAY')}
+ <div class="abs b nw" style="left:22px;top:138px">Thursday night</div>
+ <svg class="abs" style="left:0;top:182px;overflow:visible" width="390" height="20"><defs><linearGradient id="bg1" x1="30" x2="330" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7FB7D6"/><stop offset=".55" stop-color="#B49AD8"/><stop offset="1" stop-color="#E9A23B"/></linearGradient></defs><path d="M30 9 L330 9" stroke="url(#bg1)" stroke-width="6" stroke-linecap="round" opacity=".6"/><path d="M338 9 L358 9" stroke="rgba(245,242,236,.22)" stroke-width="1.5" stroke-dasharray="4 5"/></svg>
+ <div class="abs b ctx nw" style="left:22px;top:246px">running now, Push Day A</div>
+ <div class="abs hero" style="left:22px;top:282px;font-size:36px;line-height:42px">Bench Press, set 2 of 4</div>
+ <div class="abs t34" style="left:22px;top:350px;color:var(--live)">Resume</div>
+ <div class="abs" style="left:22px;right:22px;top:430px;height:1px;background:rgba(245,242,236,.3)"></div>
+ <div class="abs" style="left:22px;top:442px;font-size:21px;font-weight:600">Push Day A</div>
+ <div class="abs s2 nw" style="left:22px;top:470px;font-size:18px;width:250px;overflow:hidden;text-overflow:ellipsis">Bench Press, set 2 · 1 exercise, 2 sets, 1 rec…</div>
+ <div class="abs" style="right:22px;top:454px;font-size:21px;font-weight:600">Resume</div>
+ <div class="abs t34" style="left:22px;top:536px">Next</div>
+ ${[['Stretch & mobility','20:30'],['Read · Designing Data-Inten…','21:10']].map(([t,h],k)=>`<div class="abs b nw" style="left:22px;top:${588+46*k}px">${t}</div><div class="abs lbl s2" style="right:22px;top:${592+46*k}px">${h}</div>`).join('')}`;
+// After: no day bar. The day label, the context line, the hero as one plain sentence, the Start key whose ink line is
+// the workout's progress, then Next with titles only (wrapping, never cut).
+const startKey=(word,fill,y=296)=>`<div class="abs lbl" style="left:22px;top:${y}px">${word}<svg style="position:absolute;left:0;top:22px;overflow:visible" width="${word.length*10.8}" height="12"><path d="${lens(word.length*10.8-6,1.6)}" fill="rgba(var(--ink),.22)"/><path d="${lens((word.length*10.8-6)*fill,1.6)}" fill="rgb(var(--ink))"/></svg></div>`;
+const next=(y0,rows)=>`<div class="abs t34" style="left:22px;top:${y0}px">Next</div>${rows.map(([t,h],k,a)=>{const y=y0+52+a.slice(0,k).reduce((s,r)=>s+(r[2]?74:46),0);return `<div class="abs b" style="left:22px;top:${y}px;width:${h?280:346}px">${t}</div>${h?`<div class="abs lbl s2" style="right:22px;top:${y+4}px">${h}</div>`:''}`}).join('')}`;
+const NEXT=[['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1],['Call mom','tomorrow']];
+const paused=(por)=>`${tabs('TODAY')}
+ <div class="abs b nw" style="left:22px;top:138px">Thursday night</div>
+ <div class="abs b ctx nw" style="left:22px;top:186px">paused 21 min ago</div>
+ <div class="abs t44" style="left:22px;top:220px">Push A, paused<br>at bench</div>
+ ${startKey('RESUME PUSH A',.4,338)}
+ ${next(410,NEXT)}`;
+const done=()=>`${tabs('TODAY')}
+ <div class="abs b nw" style="left:22px;top:138px">Thursday night</div>
+ <div class="abs b ctx nw" style="left:22px;top:186px">this evening</div>
+ <div class="abs hero" style="left:22px;top:220px">Push A done</div>
+ ${next(326,NEXT)}`;
+const fresh=()=>`${tabs('TODAY')}
+ <div class="abs b nw" style="left:22px;top:138px">Thursday afternoon</div>
+ <div class="abs b ctx nw" style="left:22px;top:186px">today</div>
+ <div class="abs hero" style="left:22px;top:220px">Push A</div>
+ ${startKey('START PUSH A',1)}
+ ${next(388,[['Call the bank','15:00'],['Groceries at Trader Joe’s','17:30'],['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1]])}`;
+const detail=()=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ TODAY</div>
+ <div class="abs t44" style="left:22px;top:84px">Push A</div>
+ <div class="abs b ctx" style="left:22px;top:150px">paused 21 min ago, at bench</div>
+ <div class="abs lbl s2" style="left:22px;top:204px">SO FAR</div>
+ <div class="abs b" style="left:22px;top:232px;width:346px">1 exercise, 2 sets, 1 new best.</div>
+ <div class="abs b" style="left:22px;top:276px">Bench press</div><div class="abs b s2" style="left:22px;top:304px">82.5 × 8, 82.5 × 7</div>
+ <div class="abs lbl s2" style="left:22px;top:356px">STILL TO GO</div>
+ ${['Bench press, 2 more sets','Overhead press, 3 sets','Incline dumbbell, 3 sets','Lateral raise, 3 sets'].map((t,k)=>`<div class="abs b s2" style="left:22px;top:${384+40*k}px">${t}</div>`).join('')}
+ ${startKey('RESUME PUSH A',.4,560)}`;
+// Ask Tess, words stepped down: question 17/400 cobalt, modes 18/500 on 40pt rows, the fast path a 16/700 label.
+const ask=(big)=>`<div class="page" style="opacity:.5;filter:blur(1.5px);transform:scale(.985)">${fresh()}</div>
+ <div class="abs" style="left:0;right:0;top:464px;bottom:0;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.96) 22%)"></div>
+ ${big?`<div class="abs b nw" style="right:22px;top:528px;color:var(--tess)">What’s on your mind?</div><div class="abs lbl" style="right:22px;top:566px">START PUSH DAY A</div>${['Speak','Write','Show'].map((t,k)=>`<div class="abs nw" style="right:120px;top:${606+48*k}px;font-size:21px;font-weight:500">${t}</div>`).join('')}`
+ :`<div class="abs nw" style="right:22px;top:584px;color:var(--tess);font-size:17px;line-height:22px">What’s on your mind?</div><div class="abs lbl s2" style="right:22px;top:612px">START PUSH A</div>${['Speak','Write','Show'].map((t,k)=>`<div class="abs nw" style="right:22px;top:${648+40*k}px;font-size:18px;line-height:24px;font-weight:500">${t}</div>`).join('')}`}`;
+// The tab lens: hold the tab row, the glass lens sits under the finger, the page shrinks to show its neighbours live.
+const PAGES=[()=>`${tabs('REVIEW')}<div class="abs b ctx nw" style="left:22px;top:138px">this week</div><div class="abs t44" style="left:22px;top:172px">Three workouts</div><div class="abs b s2" style="left:22px;top:236px;width:346px">Push A, Pull A, Legs A. Rest on Sunday.</div>${next(330,[['Habits, 3 of 5',''],['Money, 214 this week',''],['Upkeep, 1 due','']])}`,
+ ()=>fresh(),
+ ()=>`${tabs('TRAINING')}<div class="abs b ctx nw" style="left:22px;top:138px">this week</div><div class="abs t44" style="left:22px;top:172px">Push A today</div>${startKey('START PUSH A',1,248)}${next(326,[['Mon, Push A',''],['Tue, Pull A',''],['Wed, Legs A',''],['Thu, Push B','']])}`,
+ ()=>`${tabs('KITCHEN')}<div class="abs b ctx nw" style="left:22px;top:138px">for this week</div><div class="abs t44" style="left:22px;top:172px">Groceries, 7</div>${next(260,[['Oat milk',''],['Eggs, a dozen',''],['Chickpeas, 2 cans',''],['Lemons','']])}`];
+const lensPill=(i,id='lp')=>`<div class="glass" id="${id}" style="left:${TX[i]-10}px;top:70px;width:${TABS[i].length*10.6+20}px;height:40px"></div>`;
+const holdStill=()=>`<div class="abs" style="inset:0;background:#0A0A0C"></div>
+ ${[0,1,2].map(j=>`<div class="page" style="left:${(j-1)*(390*.78+14)+43}px;top:150px;transform:scale(.78);transform-origin:0 0;border-radius:34px;box-shadow:0 0 0 1px rgba(255,255,255,.08);opacity:${j===1?1:.55}">${PAGES[j+1]().replace(/top:78px/,'top:-200px')}</div>`).join('')}
+ <div class="abs lbl" style="left:0;right:0;top:78px;height:24px;letter-spacing:.06em;z-index:13">${TABS.map((t,i)=>`<span class="abs" style="left:${TX[i]}px;top:0;color:rgba(var(--ink),${i===2?1:.38});${i===2?'transform:scale(1.12);transform-origin:50% 60%':''}">${t}</span>`).join('')}</div>
+ ${lensPill(2)}<div class="abs" style="left:${TX[2]+52}px;top:104px;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);z-index:30"></div>`;
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph ${opt.por?'por':''}" ${opt.id?`id="${opt.id}"`:''}>${inner}${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${soul(opt.por)}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+
+if(PLAY){
+ $('row').innerHTML=phone('HOLD THE TABS',`<div id="stage" class="abs" style="inset:0"></div><div id="tabsP"></div>`,{id:'P',fing:1});
+}else{
+ $('row').innerHTML=
+  phone('BEFORE · THE BUILD: BAR, DETAIL, “…”',before())+
+  phone('AFTER · PAUSED: THE LINE IS PROGRESS',paused())+
+  phone('AFTER · DONE: ONE LINE, NOTHING ELSE',done())+
+  phone('ONE TAP DOWN: THE DETAIL',detail())+
+  phone('TABS · HOLD: GLASS LENS, LIVE PAGES',holdStill())+
+  phone('PORCELAIN · A FRESH DAY',fresh(),{por:1});
+ $('note').innerHTML='HOME SAYS ONE PLAIN LINE PER THING AND NEVER CUTS TEXT: A LINE HAS UP TO THREE FORMS AND THE FIRST THAT FITS IS USED; A HERO STEPS 56 → 44 → TWO LINES; A ROW TITLE WRAPS TO TWO LINES. THE DAY BAR GOES (THE DONE FLECK LANDS ON THE DAY NAME), AND EVERYTHING BELOW MOVES UP 60PT. THE START KEY’S INK LINE IS THE WORKOUT’S PROGRESS: FULL BEFORE IT STARTS, FILLED TO THE SETS DONE WHILE PAUSED, GONE WHEN DONE. HOLD THE TABS: A GLASS LENS SITS UNDER THE FINGER AND THE PAGES SHRINK TO 78% SO THE NEIGHBOURS SHOW, LIVE; SLIDE TO PICK, LET GO TO OPEN.';
+}
+
+async function play(){
+ const st=$('stage'),P=$('P'),f=$('fing');
+ // the strip of four live pages, at full size; Today showing
+ st.innerHTML=`<div id="strip" class="abs" style="left:0;top:0;width:${4*390}px;height:844px">${PAGES.map((p,j)=>`<div class="page" id="pg${j}" style="left:${j*390}px">${p().replace(/<div class="abs lbl"\s+style="left:0;right:0;top:78px[\s\S]*?<\/svg><\/div>/,'')}</div>`).join('')}</div>`;
+ $('tabsP').innerHTML=tabs('TODAY','T');
+ const strip=$('strip');let cur=1;strip.style.transform='translateX(-390px)';
+ const words=[...$('T').querySelectorAll('span')],line=$('Tl');
+ const setActive=(i,anim=true)=>{words.forEach((w,k)=>w.animate([{color:getComputedStyle(w).color},{color:`rgba(245,242,236,${k===i?1:.38})`}],{duration:anim?160:0,fill:'forwards'}))};
+ await sleep(1200);
+ // 1 · a plain swipe: the page moves 1:1 and the ink line stretches between the two words, then snaps
+ const cap=document.querySelector('.cap');const setCap=t=>cap.textContent=t;
+ setCap('SWIPE: THE INK LINE STRETCHES, THEN SNAPS');
+ f.style.left='300px';f.style.top='520px';f.style.opacity=1;await sleep(200);
+ for(let s=0;s<=20;s++){const p=s/20;f.style.left=(300-200*p)+'px';strip.style.transform=`translateX(${-390*(1+p*.62)}px)`;
+  const a=TX[1],b=TX[2],w1=40,w2=86;line.style.left=(a+(b-a)*Math.max(0,p*1.6-.6))+'px';line.firstElementChild.setAttribute('d',lens(w1+ (b-a)*Math.min(1,p*1.6)*(1-Math.max(0,p*1.6-.6)) + (w2-w1)*p,1.2));await sleep(16)}
+ f.style.opacity=0;
+ strip.animate([{transform:strip.style.transform},{transform:'translateX(-780px)'}],{duration:420,easing:SET,fill:'forwards'});strip.style.transform='translateX(-780px)';
+ line.animate([{left:line.style.left},{left:TX[2]+'px'}],{duration:420,easing:SET,fill:'forwards'});line.style.left=TX[2]+'px';line.firstElementChild.setAttribute('d',lens(8*10.6,1.2));
+ setActive(2);cur=2;await sleep(1500);
+ // 2 · hold the tabs: the lens forms under the finger, the pages shrink to 78% and the neighbours show
+ setCap('HOLD THE TABS: THE LENS AND LIVE PAGES');
+ f.style.left=(TX[2]+40)+'px';f.style.top='92px';f.style.opacity=1;await sleep(260);
+ P.insertAdjacentHTML('beforeend',lensPill(2,'LP'));const lp=$('LP');
+ lp.animate([{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)'}],{duration:320,easing:SET,fill:'forwards'});
+ line.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'});
+ const S=.78,gap=14,step=390*S+gap,base=(390-390*S)/2;
+ const place=(pos,anim=0)=>{const tr=`translate(${base-pos*step}px,150px)`;
+  for(let j=0;j<4;j++){const pg=$('pg'+j);const k=[{transform:pg.style.transform||'none',left:pg.style.left},{transform:`scale(${S})`,left:(j*step)+'px'}];
+   pg.style.borderRadius='34px';pg.style.boxShadow='0 0 0 1px rgba(255,255,255,.08)';pg.style.transformOrigin='0 0';
+   if(anim)pg.animate(k,{duration:anim,easing:H,fill:'forwards'});pg.style.transform=`scale(${S})`;pg.style.left=(j*step)+'px';
+   pg.style.opacity=Math.abs(j-pos)<.5?1:.55}
+  if(anim)strip.animate([{transform:strip.style.transform},{transform:tr}],{duration:anim,easing:H,fill:'forwards'});strip.style.transform=tr};
+ P.style.background='#0A0A0C';
+ place(2,360);
+ words[2].animate([{transform:'scale(1)'},{transform:'scale(1.12)'}],{duration:240,easing:SET,fill:'forwards'});
+ await sleep(900);
+ // 3 · slide through REVIEW, then KITCHEN: the lens follows, each word swells under it with a tick; the pages slide live
+ setCap('SLIDE: THE LENS FOLLOWS, PAGES SLIDE LIVE (TICK PER WORD)');
+ const glide=async(from,to,ms)=>{const n=Math.round(ms/16);let last=from;
+  for(let s=1;s<=n;s++){const p=s/n,e=1-Math.pow(1-p,2.2),x=TX[from]+(TX[to]-TX[from])*e;f.style.left=(x+40)+'px';
+   lp.style.left=(x-10)+'px';const pos=from+(to-from)*e;strip.style.transform=`translate(${base-pos*step}px,150px)`;
+   const near=Math.round(pos);if(near!==last){words[last].animate([{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:200,fill:'forwards'});words[near].animate([{transform:'scale(1)'},{transform:'scale(1.12)'}],{duration:200,easing:SET,fill:'forwards'});setActive(near);
+    lp.animate([{width:lp.style.width||lp.offsetWidth+'px'},{width:(TABS[near].length*10.6+20)+'px'}],{duration:200,fill:'forwards'});
+    for(let j=0;j<4;j++)$('pg'+j).style.opacity=j===near?1:.55;last=near}
+   await sleep(16)}return last};
+ await glide(2,0,900);await sleep(500);await glide(0,3,1300);await sleep(400);await glide(3,2,500);await sleep(500);
+ // 4 · let go: the page under the lens grows back to full on the settle spring; the lens melts into the ink line
+ setCap('LET GO: TRAINING OPENS, THE LENS MELTS INTO THE INK LINE');
+ f.style.opacity=0;lp.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scaleY(.2) translateY(60px)'}],{duration:280,easing:H,fill:'forwards'});
+ words[2].animate([{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:280,fill:'forwards'});
+ for(let j=0;j<4;j++){const pg=$('pg'+j);pg.animate([{transform:`scale(${S})`,left:(j*step)+'px',borderRadius:'34px'},{transform:'scale(1)',left:(j*390)+'px',borderRadius:'0px'}],{duration:480,easing:H,fill:'forwards'})}
+ strip.animate([{transform:strip.style.transform},{transform:'translate(-780px,0)'}],{duration:480,easing:H,fill:'forwards'});
+ line.style.left=TX[2]+'px';line.animate([{opacity:0},{opacity:1}],{duration:240,delay:160,fill:'forwards'});
+ await sleep(700);P.style.background='#000';await sleep(1800);
+ document.body.dataset.done='1';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';if(!PLAY){document.body.dataset.done='1';return}play()});
+</script>
+</body>
+</html>

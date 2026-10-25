@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Watch W1 and W2</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/watch-quick-wins.md, redrawn (Design item 37). W2: the rest activity in the Watch Smart Stack, Cobalt sky, resting, Go with the wrist tap, after Done with UNDO, taken back. W1: the heart line on the workout finish screen in the look's ground, drawn wet in vermilion and drying to ink, absent with no Watch. Watch screens drawn at 1.8x. ?play records the finish screen. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px;width:390px;white-space:nowrap}
+.col{width:390px;height:844px;position:relative}
+.watch{position:absolute;left:17px;top:120px;width:356px;height:436px;border-radius:84px;background:#000;box-shadow:0 0 0 14px #2A2A2E,0 0 0 15px #3A3A40;overflow:hidden;color:#F6EFE4}
+.wt{position:absolute;right:34px;top:22px;font-size:27px;font-weight:600;font-variant-numeric:tabular-nums;color:rgba(246,239,228,.92)}
+.card{position:absolute;left:18px;right:18px;top:82px;height:160px;border-radius:40px;background:#1C1C1F;overflow:hidden}
+.card2{position:absolute;left:18px;right:18px;top:256px;height:140px;border-radius:40px;background:#1C1C1F;opacity:.5}
+.wash{position:absolute;border-radius:50%;filter:blur(30px);transition:background 1.4s}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff;--ink:23,20,31;color:rgb(var(--ink))}
+.abs{position:absolute}
+.b{font-size:21px;line-height:28px}
+.s2{color:rgba(23,20,31,.66)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:2100px;line-height:24px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+// the Smart Stack card (1.8x): line 1 the countdown and +15, the horizon, line 2 the set (Done) and SET 4
+function card(s){const go=s==='go',undo=s==='undo',back=s==='back';
+ const w=`<div class="wash" style="left:-60px;top:-80px;width:220px;height:170px;background:${go?'rgba(232,189,76,.6)':'rgba(63,127,192,.55)'}"></div><div class="wash" style="right:-70px;top:-90px;width:200px;height:160px;background:${go?'rgba(226,96,63,.5)':'rgba(122,92,160,.35)'}"></div>`;
+ const l1=`<div class="abs" style="left:30px;top:20px;font-size:54px;font-weight:250;letter-spacing:-.02em;line-height:58px;font-variant-numeric:tabular-nums">${go?'Go':undo?'2<span style="opacity:.55">:</span>30':'1<span style="opacity:.55">:</span>32'}</div>
+  <div class="abs lbl" style="right:30px;top:40px;font-size:29px;color:${undo?'#FF7A5C':`rgba(246,239,228,${go?.25:.7})`}">${undo?'UNDO':'+15'}</div>`;
+ const hz=`<svg class="abs" style="left:30px;top:88px;overflow:visible" width="260" height="6"><rect y="2" width="260" height="1.8" fill="rgba(246,239,228,.18)"/><rect y="1.3" width="${go?0:undo?260:160}" height="3.6" rx="1.8" fill="#F6EFE4"/></svg>`;
+ const l2=undo?`<div class="abs" style="left:30px;top:104px;font-size:29px;color:#F6EFE4">Set 3 logged.</div>`
+  :back?`<div class="abs" style="left:30px;top:104px;font-size:29px;color:#F6EFE4">Set 3 taken back.</div>`
+  :`<div class="abs" style="left:30px;top:102px;font-size:32px;font-weight:600;color:#F6EFE4">82.5 × 8<svg style="position:absolute;left:-2px;top:38px;overflow:visible" width="130" height="12"><path d="${lens(128,1.8)}" fill="rgba(246,239,228,.85)"/></svg></div><div class="abs lbl" style="right:30px;top:110px;font-size:29px;color:rgba(246,239,228,.7)">SET 4</div>`;
+ return `<div class="card">${w}${l1}${hz}${l2}</div>`}
+const watch=(time,inner)=>`<div class="watch"><div class="wt">${time}</div>${inner}</div>`;
+function wnotif(){return `<div class="abs" style="left:30px;top:90px;right:30px">
+ <div class="abs" style="left:0;top:0;width:52px;height:52px;border-radius:50%;background:#0B0B0F;overflow:hidden"><i style="position:absolute;left:8px;top:12px;width:20px;height:17px;border-radius:50%;filter:blur(1.2px);background:radial-gradient(closest-side,#86B4FF,rgba(134,180,255,.15))"></i><i style="position:absolute;left:24px;top:10px;width:20px;height:17px;border-radius:50%;filter:blur(1.2px);background:radial-gradient(closest-side,#FF5B3A,rgba(255,91,58,.15))"></i><i style="position:absolute;left:15px;top:27px;width:20px;height:17px;border-radius:50%;filter:blur(1.2px);background:radial-gradient(closest-side,#FFC23D,rgba(255,194,61,.15))"></i></div>
+ <div class="abs" style="left:0;top:72px;font-size:36px;font-weight:600;line-height:44px">Set 4 is up</div>
+ <div class="abs" style="left:0;top:120px;font-size:29px;line-height:38px;color:rgba(246,239,228,.75)">Bench, 82.5 × 8</div></div>`}
+// W1: the finish screen in the look's ground (Porcelain), the build's order, with the heart sentence and line
+const heartPath=(()=>{let d='M0 60';const pts=[60,58,52,44,40,46,50,42,30,26,34,40,36,22,14,20,30,38,34,28,18,8,14,26,36,42,40,34,30,36,44,48,46,50,52];pts.forEach((y,i)=>{d+=` L${(i+1)*346/pts.length} ${y}`});return d})();
+function finish(id,watchOn){return `<div class="ph" id="${id}">
+ <div class="abs b" style="left:22px;top:84px;color:#6A4C9C">Thursday, 18:02 to 19:03</div>
+ <div class="abs" style="left:22px;top:118px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px">Push A, done</div>
+ <svg class="abs" style="left:45px;top:236px;overflow:visible" width="300" height="48"><defs><linearGradient id="${id}g" x1="0" x2="300" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3F7FC0"/><stop offset=".5" stop-color="#CC3F68"/><stop offset="1" stop-color="#E8BD4C"/></linearGradient></defs><path d="M6 30 Q 90 14 160 22 T 294 18" fill="none" stroke="url(#${id}g)" stroke-width="16" stroke-linecap="round" opacity="${id==='B'?.16:.9}" id="${id}mk"/></svg>
+ <div class="abs lbl" style="left:22px;top:330px">61 MIN, 11,400 KG MOVED</div>
+ ${watchOn?`<div class="abs b" id="${id}hs" style="left:22px;top:366px;width:346px">Your heart averaged <b style="font-weight:600">128</b>, and peaked at <b style="font-weight:600">164</b> on squats.</div>
+ <svg class="abs" style="left:22px;top:436px;overflow:visible" width="346" height="64"><path id="${id}hl" d="${heartPath}" fill="none" stroke="${id==='A'?'rgba(226,67,42,.75)':'rgba(23,20,31,.55)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+ <div class="abs lbl s2" id="${id}hf" style="left:22px;top:512px">FROM YOUR WATCH</div>`:''}
+ <div class="abs b s2" style="left:22px;top:${watchOn?560:366}px">It drops into today on Home.</div>
+ <div class="abs" style="left:22px;top:${watchOn?620:426}px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px">Back to today<svg style="position:absolute;left:-2px;top:41px;overflow:visible" width="210" height="12"><path d="${lens(206,2.5)}" fill="rgba(23,20,31,.85)"/></svg></div>
+ <div class="abs" style="left:323px;top:759px;width:46px;height:40px"><i style="position:absolute;left:0;top:4px;width:20px;height:17px;border-radius:50%;filter:blur(1.2px);background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="position:absolute;left:22px;top:2px;width:20px;height:17px;border-radius:50%;filter:blur(1.2px);background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="position:absolute;left:12px;top:20px;width:20px;height:17px;border-radius:50%;filter:blur(1.2px);background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>
+</div>`}
+const cell=(c,h)=>`<div><div class="cap" ${c.id?`id="${c.id}"`:''}>${c.t||c}</div>${h}</div>`;
+if(PLAY){
+ $('row').innerHTML=cell({t:'W1 · PUSH A, DONE, WITH THE WATCH ON',id:'cap'},finish('P',1));
+}else{
+ $('row').innerHTML=
+  cell('W2 · RESTING, SMART STACK',`<div class="col">${watch('18:10',card('rest')+'<div class="card2"></div>')}</div>`)+
+  cell('W2 · REST IS UP: ONE WRIST TAP',`<div class="col">${watch('18:12',wnotif())}<div class="abs" style="left:17px;top:600px;width:356px;transform:scale(.6);transform-origin:0 0"></div></div>`)+
+  cell('W2 · AFTER DONE, UNTIL THE REST ENDS',`<div class="col">${watch('18:13',card('undo')+'<div class="card2"></div>')}</div>`)+
+  cell('W1 · AS IT LANDS, WATCH ON (WET)',finish('A',1))+
+  cell('W1 · AT REST, NO WATCH: DRIED, LINES ABSENT',finish('B',0));
+ $('note').innerHTML='WATCH SCREENS DRAWN AT 1.8×. W2: COBALT SKY, ONE NUMBER, ONE ACTION (THE SET, ON ITS INK LINE), SET 4 IN CREAM AT 70%, NO COLOUR AT REST; GO WARMS THE WASHES AND THE PHONE’S N2 TAPS THE WRIST ONCE. AFTER DONE, UNDO TAKES +15’S PLACE UNTIL THE REST ENDS. W1: THE MARK LANDS IN THE SESSION’S COLOURS AND DRIES TO 16% OVER 2.8S, LIKE THE SET STROKES IT GATHERED; THE HEART LINE DRAWS WET IN VERMILION AND DRIES TO INK AT 55%; WITH NO WATCH OR UNDER 3 SAMPLES THE SENTENCE, LINE AND LABEL ARE ABSENT. THE FINISH PLAYS THE DONE PATTERN (TASK-REWARD.MD).';
+}
+async function play(){
+ const hs=$('Phs'),hl=$('Phl'),hf=$('Phf');
+ [hs,hf].forEach(e=>e.style.opacity=0);hl.style.opacity=0;
+ const below=[...$('P').children].filter(e=>parseFloat(e.style.top)>=560&&e!==hs&&e!==hf);
+ below.forEach(e=>e.style.opacity=0);
+ await sleep(1500);
+ hs.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:420,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+ await sleep(120);
+ const L=hl.getTotalLength();hl.style.opacity=1;hl.style.stroke='rgba(226,67,42,.75)';hl.style.strokeDasharray=L;hl.style.strokeDashoffset=L;
+ hl.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:900,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+ await sleep(900);hf.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});
+ $('cap').textContent='W1 · THE LINE DRAWS WET, THEN DRIES TO INK';
+ await sleep(800);hl.animate([{stroke:'rgba(226,67,42,.75)'},{stroke:'rgba(23,20,31,.55)'}],{duration:1600,fill:'forwards'});
+ await sleep(300);below.forEach(e=>e.animate([{opacity:0},{opacity:1}],{duration:400,fill:'forwards'}));
+ $('cap').textContent='W1 · THE MARK DRIES TO 16%';
+ $('Pmk').animate([{opacity:.9},{opacity:.16}],{duration:2800,easing:'ease-out',fill:'forwards'});
+ await sleep(2600);document.body.dataset.done='1';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';if(!PLAY){document.body.dataset.done='1';return}play()});
+</script>
+</body>
+</html>

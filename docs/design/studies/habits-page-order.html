@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Habits page order</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/body-weight-and-habits.md §2a (Design item 18, habits-first-use.md gaps 4 and 5): the Habits page on Saturday in creation order (Read, Meditate, Train), with the rule label word under each name. ?play records Train's label cycling from COUNTS BY HAND to COUNTS WHEN A WORKOUT FINISHES: this week's two workouts paint in on their days, the count rolls 0 to 2, Tess says it once with UNDO; then UNDO takes it back. Porcelain, one base, no coloured text at rest. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:40px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff;--ink:23,20,31;--s2:.66;--tess:#2450D8;--liveInk:#C23A22;--rest:.45;color:rgb(var(--ink))}
+.ph{--ctx:#6A4C9C}
+.O{--ctx:#B7A6E0;background:#000;--ink:245,242,236;--s2:.72;--tess:#86B4FF;--liveInk:#FF7A5C;--rest:.55}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px;white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px}
+.v{display:inline-block;font-weight:600}
+.dab{position:absolute;width:30px;height:26px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(.8px)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:860px;line-height:24px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),at=(t,f)=>setTimeout(f,t);
+const X=i=>22+346/7*(i+.5);
+const soul=`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
+const PIG={P:{plan:'240,165,0',train:'204,63,104'},O:{plan:'255,194,61',train:'255,107,146'}};
+const TODAY=5;
+// one habit block: name, count, rule label word, the week row (done days at the rest tint, other days an ink dab at 10%), letters, history
+function block(L,id,y,name,n,target,rule,pig,done,hist){
+ const dabs=[...Array(7)].map((_,i)=>{const d=done.includes(i);return `<div class="dab" id="${L}${id}d${i}" style="left:${X(i)-15}px;top:${y+92}px;background:${d?`radial-gradient(closest-side,rgba(${pig},calc(var(--rest)*1.6)),rgba(${pig},0))`:`radial-gradient(closest-side,rgba(var(--ink),.1),rgba(var(--ink),0))`}"></div>`}).join('');
+ const letters='MTWTFSS'.split('').map((c,i)=>`<div class="abs lbl ${i===TODAY?'':'s2'}" style="left:${X(i)-6}px;top:${y+126}px">${c}</div>`).join('');
+ return `<div class="abs t34" style="left:22px;top:${y}px">${name}</div>
+ <div class="abs b" style="right:22px;top:${y+8}px"><span class="v" id="${L}${id}n">${n}</span> of ${target}</div>
+ <div class="abs lbl s2" id="${L}${id}r" style="left:22px;top:${y+50}px">${rule}</div>
+ ${dabs}${letters}
+ ${hist?`<div class="abs b s2" style="left:22px;top:${y+156}px">${hist}</div>`:''}`}
+function page(L){return `<div class="ph ${L}" id="${L}ph">
+ <div class="abs lbl s2" style="left:22px;top:58px">‹ TODAY</div>
+ <div class="abs" style="left:22px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px">This week</div>
+ <div class="abs b" style="left:22px;top:144px;color:var(--ctx)">Saturday, 1 day to go</div>
+ ${block(L,'a',200,'Read','3',5,'COUNTS BY HAND',PIG[L].plan,[0,2,4],'')}
+ ${block(L,'b',396,'Meditate','1',3,'COUNTS BY HAND',PIG[L].plan,[3],'Met in 1 of the last 2 weeks.')}
+ ${block(L,'c',592,'Train','0',3,'COUNTS BY HAND',PIG[L].plan,[],'')}
+ <div class="abs b" id="${L}say" style="right:71px;width:270px;text-align:right;top:750px;color:var(--tess);opacity:0"></div>
+ <div class="abs lbl" id="${L}undo" style="right:71px;top:782px;color:var(--liveInk);opacity:0">UNDO</div>
+ ${soul}<div id="fing"></div></div>`}
+if(PLAY){
+ $('row').innerHTML=`<div><div class="cap" id="cap">TRAIN · COUNTS BY HAND</div>${page('P')}</div>`;
+}else{
+ $('row').innerHTML=`<div><div class="cap">PORCELAIN · SATURDAY · CREATION ORDER</div>${page('P')}</div><div><div class="cap">OBSIDIAN · TRAIN COUNTS WORKOUTS</div>${page('O')}</div>`;
+ $('note').innerHTML='HABITS IN THE ORDER HE MADE THEM, RULE HABITS NOT LIFTED, PAUSED ONES IN PLACE. EACH NAME HAS ONE LABEL WORD FOR ITS RULE, IN INK SECONDARY, THAT CYCLES ON A TAP. THE COUNT STAYS INK. "SATURDAY, 1 DAY TO GO."';
+}
+const swap=(el,t)=>{el.animate([{filter:'blur(0)',opacity:1},{filter:'blur(3px)',opacity:0}],{duration:120,fill:'forwards'}).onfinish=()=>{el.textContent=t;el.animate([{filter:'blur(3px)',opacity:0,transform:'translateY(6px)'},{filter:'blur(0)',opacity:1,transform:'none'}],{duration:260,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'})}};
+function paint(L,i,pig,on){const d=$(L+'cd'+i);
+ if(on){d.style.background=`radial-gradient(closest-side,rgba(${pig},1),rgba(${pig},0))`;d.animate([{transform:'translateY(-26px) scale(.8)',opacity:0},{transform:'scale(1.25)',opacity:1,offset:.6},{transform:'none',opacity:1}],{duration:460,easing:'cubic-bezier(.2,.8,.2,1)'});
+  setTimeout(()=>{d.style.transition='background 1.1s';d.style.background=`radial-gradient(closest-side,rgba(${pig},calc(var(--rest)*1.6)),rgba(${pig},0))`},900)}
+ else{d.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'}).onfinish=()=>{d.style.transition='';d.style.background='radial-gradient(closest-side,rgba(var(--ink),.1),rgba(var(--ink),0))';d.animate([{opacity:0},{opacity:1}],{duration:220,fill:'forwards'})}}}
+function finger(x,y,t,hold){const f=$('fing');at(t,()=>{f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1});at(t+hold,()=>f.style.opacity=0)}
+function setTrain(L,on,quiet){const pig=PIG[L].train;
+ swap($(L+'cr'),on?'COUNTS WHEN A WORKOUT FINISHES':'COUNTS BY HAND');
+ [0,3].forEach((i,k)=>at(quiet?0:200+k*120,()=>paint(L,i,pig,on)));
+ at(quiet?0:300,()=>swap($(L+'cn'),on?'2':'0'))}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(!PLAY){ // the Obsidian board shows the rule already set
+  const pig=PIG.O.train;$('Ocr').textContent='COUNTS WHEN A WORKOUT FINISHES';$('Ocn').textContent='2';[0,3].forEach(i=>$('Ocd'+i).style.background=`radial-gradient(closest-side,rgba(${pig},calc(var(--rest)*1.6)),rgba(${pig},0))`);
+  setTimeout(()=>document.body.dataset.done='1',200);return}
+ finger(90,652,1000,220);
+ at(1100,()=>{$('cap').textContent='TAP: TRAIN COUNTS WORKOUTS';setTrain('P',true);
+  const s=$('Psay');s.textContent='Train now counts workouts.';s.animate([{opacity:0},{opacity:1}],{duration:300,delay:500,fill:'forwards'});$('Pundo').animate([{opacity:0},{opacity:1}],{duration:300,delay:600,fill:'forwards'})});
+ finger(296,792,4200,220);
+ at(4300,()=>{$('cap').textContent='UNDO: TAKEN BACK';setTrain('P',false);
+  const s=$('Psay');s.animate([{opacity:1},{opacity:0}],{duration:150,fill:'forwards'}).onfinish=()=>{s.textContent='Train rule taken back.';s.animate([{opacity:0},{opacity:1}],{duration:260,fill:'forwards'})};
+  $('Pundo').animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'})});
+ at(6600,()=>document.body.dataset.done='1');
+});
+</script>
+</body>
+</html>

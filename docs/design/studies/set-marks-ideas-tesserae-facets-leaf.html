@@ -1,0 +1,82 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#f4f1ea}canvas{display:block}</style>
+<canvas id=c width=1200 height=800></canvas>
+<script>
+const c=document.getElementById('c'),g=c.getContext('2d');
+const INK=[20,24,31],FLARE=[229,72,44],PAPER='#f4f1ea';
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));const mix=(a,b,t)=>a+(b-a)*t;
+const eob=x=>{x=clamp(x);const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)}; // easeOutBack
+const eo=x=>1-Math.pow(1-clamp(x),3), sm=x=>{x=clamp(x);return x*x*(3-2*x)};
+const rgb=(a,al=1)=>`rgba(${a[0]|0},${a[1]|0},${a[2]|0},${al})`;
+const toneOf=w=>{const k=clamp((w-70)/30);return INK.map(v=>mix(v+110,v,.35+.65*k))}; // heavier = darker ink
+const SETS=[{r:8,t:8,w:80},{r:6,t:8,w:85},{r:9,t:8,w:85},{r:6,t:6,w:95,best:true}];
+// ---- shapes: each draws centered at (0,0) in a box of side s. st={fill,seat,best,tone,flat,glint}
+function tesserae(s,st){const f=st.fill,gap=s*.07,cs=(s-gap)/2,tone=st.tone;
+ const slots=[[-1,-1],[1,-1],[-1,1],[1,1]];
+ slots.forEach((p,k)=>{const lt=f*4-k; const x=p[0]*(cs/2+gap/2),y=p[1]*(cs/2+gap/2);
+  if(lt<=0){g.fillStyle=rgb(INK,.07);rr(x-cs/2,y-cs/2,cs,cs,s*.06);g.fill();return}
+  const e=st.flat?1:eob(lt),dr=st.flat?0:(1-eo(lt*1.4))*-s*.22,rot=st.flat?0:(1-eo(lt))*(k%2?.16:-.14);
+  g.save();g.translate(x,y+dr);g.rotate(rot);const sc=st.flat?1:mix(1.3,1,clamp(e));g.scale(sc,sc);
+  const flare=st.best&&k===3;g.fillStyle=rgb(flare?FLARE:tone);rr(-cs/2,-cs/2,cs,cs,s*.06);g.fill();g.restore()});
+ const ov=clamp((f-1)*4); if(ov>0){const e=st.flat?1:eob(ov);g.save();g.translate(s*.5,-s*.5);g.rotate(.5);g.scale(.8*e+.01,.8*e+.01);
+  g.fillStyle=rgb(tone);rr(-cs*.4,-cs*.4,cs*.8,cs*.8,s*.05);g.fill();g.restore()}}
+function facets(s,st){const R=s*.52,f=st.fill,tone=st.tone,gap=s*.025;
+ for(let k=0;k<6;k++){const lt=clamp(f*6-k);const a0=-Math.PI/2+k*Math.PI/3-Math.PI/6,a1=a0+Math.PI/3;
+  const mx=Math.cos((a0+a1)/2),my=Math.sin((a0+a1)/2);g.save();g.translate(mx*gap,my*gap);
+  g.beginPath();g.moveTo(0,0);g.lineTo(Math.cos(a0)*R,Math.sin(a0)*R);g.lineTo(Math.cos(a1)*R,Math.sin(a1)*R);g.closePath();
+  if(lt<=0){g.fillStyle=rgb(INK,.07);g.fill()}else{const e=st.flat?1:eob(lt);g.save();const sc=mix(.2,1,clamp(e,0,1.15));g.scale(sc,sc);
+   // facets shade differently so the gem reads as cut
+   const shade=[1,.78,.9,.7,.95,.82][k];const base=(st.best&&k===0)?FLARE:tone.map(v=>mix(255,v,0)+0);
+   g.fillStyle=rgb((st.best&&k===0)?FLARE:tone.map(v=>mix(v,235,(1-shade)*1.1)),lt<1?.35+.65*lt:1);g.fill();g.restore()}
+  g.restore()}
+ const ov=clamp((f-1)*6);if(ov>0){const e=st.flat?1:eob(ov);g.save();g.translate(0,-R*1.02);g.scale(e,e);g.beginPath();g.moveTo(-s*.12,0);g.lineTo(0,-s*.26);g.lineTo(s*.12,0);g.closePath();g.fillStyle=rgb(tone);g.fill();g.restore()}}
+function leaf(s,st){const open=clamp(st.fill),tone=st.tone,L=s*.52;
+ // two halves hinged on the midrib; open 0 = folded bud, 1 = flat leaf
+ const ang=(1-open)*1.05; // fold angle
+ for(const side of[-1,1]){g.save();g.rotate(-Math.PI/4);g.beginPath();g.moveTo(-L,0);
+  const w=L*.62*(.28+.72*open);
+  g.bezierCurveTo(-L*.4,side*w*1.5,L*.4,side*w*1.3,L,0);g.bezierCurveTo(L*.4,side*w*.15,-L*.4,side*w*.2,-L,0);g.closePath();
+  g.fillStyle=rgb(st.best?mix3(tone,FLARE,.0):tone,side<0?1:.82);g.fill();g.restore()}
+ g.save();g.rotate(-Math.PI/4);g.strokeStyle=rgb([244,241,234],.9);g.lineWidth=Math.max(.8,s*.03);g.beginPath();g.moveTo(-L*.9,0);g.lineTo(L*.9,0);g.stroke();
+ if(st.best){g.strokeStyle=rgb(FLARE);g.lineWidth=Math.max(1,s*.055);g.beginPath();g.moveTo(-L*.7,0);g.lineTo(L*.7,0);g.stroke()}g.restore();
+ const ov=clamp((st.fill-1)*4);if(ov>0){const e=st.flat?1:eob(ov);g.save();g.translate(L*.62,-L*.62);g.rotate(-.2);g.scale(e*.9,e*.9);g.beginPath();g.moveTo(0,0);
+  g.bezierCurveTo(L*.1,-L*.35,L*.45,-L*.4,L*.5,-L*.1);g.bezierCurveTo(L*.3,-L*.0,L*.1,L*.05,0,0);g.fillStyle=rgb(tone);g.fill();g.restore()}}
+const mix3=(a,b,t)=>a.map((v,i)=>mix(v,b[i],t));
+function wrap(t,x,y,w){const ws=t.split(' ');let l='';for(const a of ws){if(g.measureText(l+a).width>w){g.fillText(l,x,y);y+=17;l=''}l+=a+' '}g.fillText(l,x,y)}
+function rr(x,y,w,h,r){g.beginPath();g.roundRect(x,y,w,h,r)}
+const IDEAS=[['Tesserae',tesserae,'a tile of four chips; missing chip = short, fifth chip on the corner = extra, flare chip = best'],
+ ['Facets',facets,'a cut gem of six facets; dark facet = short, spike on top = extra, flare facet = best'],
+ ['Leaf',leaf,'a leaf that opens; ajar = short, side sprout = extra, flare midrib = best']];
+const SCALE=3,LIVE=28*SCALE,ROW=11*SCALE,STEP=3.1,T0=.8;
+function setState(i,t,ro){const s=SETS[i],t0=T0+i*STEP,D=Math.min(2.2,.3*s.r),ur=(t-t0)/D;
+ if(ur<0)return null;const reps=clamp(ur)*s.r,fill=Math.min(reps/s.t, s.r/s.t);
+ const sinceClose=t-(t0+D);const seat=sinceClose<0?0:clamp(sinceClose/.4);
+ return{fill:ur>=1?s.r/s.t:fill,seat,closed:sinceClose>=0,sinceClose,best:!!s.best&&sinceClose>=0,tone:toneOf(s.w)}}
+function drawIdea(ix,y0,t){const [name,fn,desc]=IDEAS[ix];
+ g.fillStyle=rgb(INK,.9);g.font='600 22px -apple-system,Helvetica,Arial';g.textBaseline='alphabetic';g.fillText(name,40,y0+34);
+ g.font='13px -apple-system,Helvetica,Arial';g.fillStyle=rgb(INK,.55);wrap(desc,40,y0+56,300);
+ g.fillStyle=rgb(INK,.4);g.font='11px -apple-system,Helvetica,Arial';g.fillText('LIVE (28 pt, shown 3x)',40,y0+120);g.fillText('ROW (11 pt, 3x)',40,y0+190);
+ // live strip
+ for(let i=0;i<4;i++){const st=setState(i,t);const cx=470+i*150,cy=y0+80;
+  g.strokeStyle=rgb(INK,.08);g.lineWidth=1;g.strokeRect(cx-LIVE/2-8,cy-LIVE/2-8,LIVE+16,LIVE+16);
+  if(!st)continue;g.save();g.translate(cx,cy+(st.closed?0:0));
+  let sc=1,dy=0;if(st.closed&&st.sinceClose<.4){const e=eob(st.sinceClose/.4);sc=mix(1.1,1,clamp(e));dy=-(1-eo(st.sinceClose/.4))*3}
+  g.scale(sc,sc);g.translate(0,dy);
+  if(st.closed){g.save();g.fillStyle=rgb(INK,.10*(1-Math.min(1,st.sinceClose/.6)));g.beginPath();g.ellipse(0,LIVE*.48,LIVE*.4,3,0,0,7);g.fill();g.restore()}
+  fn(LIVE,{fill:st.fill,best:st.best,tone:st.tone,flat:false});
+  // glint on best (once)
+  if(SETS[i].best&&st.closed&&st.sinceClose<.7){const u=st.sinceClose/.7;g.save();g.beginPath();g.rect(-LIVE/2,-LIVE/2,LIVE,LIVE);g.clip();
+   g.globalCompositeOperation='lighter';g.fillStyle=`rgba(255,255,255,${.35*Math.sin(u*Math.PI)})`;g.translate(mix(-LIVE,LIVE,u),0);g.rotate(.5);g.fillRect(-6,-LIVE,12,LIVE*2);g.restore()}
+  g.restore();
+  if(st.closed&&st.sinceClose<.18){g.fillStyle=rgb(INK,.5*(1-st.sinceClose/.18));g.font='600 11px -apple-system,Helvetica';g.fillText('haptic',cx-LIVE/2,cy+LIVE/2+22)}}
+ // row strip: flat copies appear when a set closes (150 ms crossfade)
+ for(let i=0;i<4;i++){const st=setState(i,t);const cx=470+i*150,cy=y0+176;
+  g.strokeStyle=rgb(INK,.08);g.strokeRect(cx-ROW/2-8,cy-ROW/2-8,ROW+16,ROW+16);
+  if(!st||!st.closed)continue;const a=clamp(st.sinceClose/.15);g.save();g.globalAlpha=a;g.translate(cx,cy);
+  fn(ROW,{fill:SETS[i].r/SETS[i].t,best:!!SETS[i].best,tone:toneOf(SETS[i].w),flat:true});g.restore()}
+ // tap line under row after last set
+ }
+function draw(t){g.setTransform(1,0,0,1,0,0);g.fillStyle=PAPER;g.fillRect(0,0,1200,800);
+ for(let k=0;k<3;k++)drawIdea(k,10+k*258,t);
+ g.fillStyle=rgb(INK,.45);g.font='12px -apple-system,Helvetica';g.fillText('Sets: 8 of 8 at 80 kg, 6 of 8 at 85, 9 of 8 at 85, 6 of 6 at 95 (best).  One haptic per set, when the mark seats.  Reduce Motion: no build, the finished mark crossfades in 150 ms.',40,792)}
+window.sceneDuration=()=>T0+4*STEP+1.5;window.renderAt=draw;draw(0);
+</script>

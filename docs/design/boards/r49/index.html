@@ -1,0 +1,336 @@
+<title>Kitchen leftovers</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --kit:#A8701F;--kitT:#93611A;--sec:#34506F;--warn:#9A2541;--fresh:#2F6450;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--kit:#C49A5E;--kitT:#C49A5E;--sec:#A7BCD6;--warn:#EE8E9C;--fresh:#8EC7AE;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--kit:#C49A5E;--kitT:#C49A5E;--sec:#A7BCD6;--warn:#EE8E9C;--fresh:#8EC7AE;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head,.sec{max-width:1120px;margin:0 auto 40px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:0}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+.notes{flex:1 1 340px;min-width:0;max-width:540px;display:flex;flex-direction:column;gap:12px}
+.notes p{margin:0}
+.flow{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;font-size:16px;color:var(--ink3)}
+.flow b{color:var(--ink);font-weight:600}
+.try{display:grid;grid-template-columns:22px 1fr;gap:6px;font-size:16px}
+.try span:nth-child(odd){color:var(--ink3);font-family:var(--nums)}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr:hover{color:var(--ink)}
+.tap{all:unset;cursor:pointer}
+.tr:focus-visible,.tap:focus-visible,.act:focus-visible{outline:2px solid var(--ink3);outline-offset:3px}
+.phone{position:relative;width:350px;max-width:100%;height:720px;background:var(--phone);border:1px solid var(--edge);border-radius:44px;overflow:hidden;box-sizing:border-box;flex:none;user-select:none;-webkit-user-select:none}
+.scr{position:absolute;inset:0}
+.z{position:absolute;left:24px;right:24px}
+.n{font-family:var(--nums);font-weight:300}
+.big{font-family:var(--nums);font-weight:200;line-height:.86;letter-spacing:-.02em}
+.brief{text-align:right;font-size:19px;line-height:25px;height:50px;overflow:hidden}
+.l{height:26px;line-height:26px;font-size:15px;white-space:nowrap;overflow:hidden;color:var(--ink2);display:flex;justify-content:space-between;gap:10px}
+.act{all:unset;cursor:pointer;font-size:19px;font-weight:600}
+.tess{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#FFA90F,#FF5A26 55%,#E5341C)}
+.ft{bottom:24px;height:40px;display:flex;justify-content:space-between;align-items:center}
+.u{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.sc2{position:absolute;inset:0;background:var(--phone);z-index:4}
+.fl{height:44px;display:flex;justify-content:space-between;align-items:center;font-size:17px;white-space:nowrap;border:0}
+.fl .k{color:var(--ink2)}
+.fl .v{all:unset;cursor:pointer;color:var(--kitT);font-weight:600;display:inline-block;overflow:hidden;height:26px;line-height:26px;text-align:right}
+.hd{height:44px;display:flex;align-items:flex-end;padding-bottom:6px;box-sizing:border-box;font-size:13px;font-weight:600;color:var(--kitT);letter-spacing:.02em}
+.side{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+</style>
+<div class="head">
+  <p class="lab">Round 234, Oct 23</p>
+  <h1>Leftovers, sections, food from outside</h1>
+  <p class="sub">Three things for the Kitchen. When you finish cooking, whatever is left goes into the fridge with a day to eat it by, and Tess reminds you that morning. Every place is sorted into sections, so the fridge opens on Leftovers and the shelf on Dal and lentils. Food from outside is logged as a meal with an estimate, and by default it goes into the fridge.</p>
+  <div style="display:flex;gap:22px;flex-wrap:wrap"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button><button class="tr" id="reset">Start over</button></div>
+</div>
+<div class="sec">
+  <div class="row">
+    <div class="phone" id="ph">
+      <div class="scr" id="pan">
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span>Pantry</span><button class="tap" id="tg" style="color:var(--ink2)"><span class="n" id="tgN">4</span> to get</button></div>
+        <div class="z" style="top:82px;height:196px;overflow:hidden;touch-action:none;cursor:ns-resize" id="dial" role="slider" aria-label="Place" aria-valuetext="Fridge"></div>
+        <div class="z brief" style="top:292px" id="brief"></div>
+        <div class="z" style="top:372px;height:232px;display:grid;grid-template-columns:1fr 1fr;column-gap:16px" id="list"></div>
+        <button class="z tap" style="top:342px;height:30px;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-align:right;display:block" id="nextL" aria-label="Next sections"></button>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="receipt"></div>
+        <div class="z ft"><button class="act" id="act" style="color:var(--kit)">Add a thing</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+
+      <div class="sc2" id="put" hidden>
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span id="putTop">Done cooking</span><span id="putName" style="color:var(--ink2)">Dal</span></div>
+        <div class="z" style="top:82px;height:196px;display:flex;align-items:center;gap:18px">
+          <div id="drum" style="position:relative;width:110px;height:196px;overflow:hidden;touch-action:none;cursor:ns-resize;flex:none" role="slider" aria-label="Servings left" tabindex="0"></div>
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:22px;font-weight:600;line-height:1.2" id="drumW">servings left</span><span style="font-size:15px;color:var(--ink2)" id="drumOf">of 4 made</span></div>
+        </div>
+        <div class="z brief" style="top:292px" id="putBrief"></div>
+        <div class="z" style="top:360px">
+          <div class="fl"><span class="k">Goes in</span><button class="v" id="fWhere">Fridge</button></div>
+          <div class="fl"><span class="k">Good until</span><button class="v" id="fUntil">Monday</button></div>
+          <div class="fl"><span class="k">Remind me</span><button class="v" id="fRem">Monday, 10 AM</button></div>
+        </div>
+        <div class="z" style="top:500px;height:22px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden" id="putCal"></div>
+        <div class="z" style="top:526px;height:44px;font-size:13px;color:var(--ink2);line-height:20px;overflow:hidden" id="putNote"></div>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="putRc"></div>
+        <div class="z ft"><button class="act" id="putGo" style="color:var(--kit)">Put in fridge</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+
+      <div class="sc2" id="meal" hidden>
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span>From outside</span><span style="color:var(--ink2)">Friday, 8:10 PM</span></div>
+        <div class="z" style="top:82px;height:44px"><input id="mName" value="Chicken pad thai" placeholder="What was it?" aria-label="What was it" style="all:unset;width:100%;font-size:30px;font-weight:600;letter-spacing:-.02em;color:var(--kit);height:44px;line-height:44px;caret-color:var(--kit)"></div>
+        <div class="z" style="top:128px;height:26px;display:flex;justify-content:space-between;font-size:15px;white-space:nowrap"><span id="mPhoto" style="color:var(--ink2)">No photo yet</span><button class="tap" id="mPhotoB" style="color:var(--kitT);font-weight:600">Add a photo</button></div>
+        <div class="z" style="top:170px;height:84px;display:flex;align-items:baseline;gap:8px" id="mEst">
+          <span style="font-size:19px;color:var(--ink2)">about</span><button class="tap big" id="mCal" style="font-size:72px;color:var(--ink)" aria-label="Calories, tap to type your own">780</button><span style="font-size:22px;color:var(--ink2)">cal</span>
+        </div>
+        <div class="z n" style="top:258px;height:24px;font-size:16px;color:var(--ink);white-space:nowrap" id="mMac">32 g protein, 85 g carbs, 30 g fat</div>
+        <div class="z" style="top:284px;height:40px;font-size:13px;line-height:20px;color:var(--ink2);overflow:hidden" id="mSrc"></div>
+        <div class="z" style="top:350px">
+          <div class="fl"><span class="k">You ate</span><button class="v" id="mAte">None yet</button></div>
+          <div class="fl"><span class="k">The rest goes in</span><button class="v" id="mRest">Fridge, until Sunday</button></div>
+          <div class="fl"><span class="k">Counts toward today</span><span id="mToday" class="n" style="color:var(--ink2);font-size:17px">nothing yet</span></div>
+        </div>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="mRc"></div>
+        <div class="z ft"><button class="act" id="mGo" style="color:var(--kit)">Put in fridge</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h2>Try it</h2>
+      <div class="side">
+        <button class="tr u" id="doCook">Finish cooking Dal</button>
+        <button class="tr u" id="doMeal">Log food from outside</button>
+        <button class="tr" id="doClaude">Ask Claude for estimates: off</button>
+      </div>
+      <div class="try">
+        <span>1</span><span><b>Done cooking asks what's left.</b> The servings drum starts at what's likely left (4 made, 1 eaten). Drag it, or tap a neighbour. The day to eat it by starts 3 days out for the fridge, 2 months for the freezer; tap the day to roll it. Tess reminds you that morning at 10, never between 11 PM and 7 AM. "Put in fridge" files it under Leftovers.</span>
+        <span>2</span><span><b>The fridge opens on Leftovers.</b> Each one says how much is left and when to eat it. The day before, the words turn the Kitchen colour; on the day it reads "throw out today". Swipe right is always one serving eaten, logged as a meal, with Undo. Tap a leftover to change its servings or day; on its last day that page's foot reads "Throw out".</span>
+        <span>3</span><span><b>Sections packed in two columns.</b> Small sections stack in one column when they fit whole, and two sections always take both columns. Section names are set in small capitals in slate, with a hairline under them, so they never read as things. Swipe sideways on a section name, the space under the last thing, or tap the "Next" line, and the columns move on. Changing place on the dial brings the columns in from that direction.</span><span>4</span><span><b>Four colors on the page.</b> Kitchen amber for the place and the action word, slate for section names, wine for what needs you (low, eat by tomorrow, throw out today), pine for leftover days that are fine.</span>
+        <span>5</span><span><b>Food from outside.</b> Type what it was, add a photo or a menu line, and an estimate appears. It's made on the phone unless you've let Claude help, and you can tap the number to type your own. "You ate" starts at none yet, so by default it all goes in the fridge, and every serving you eat later is logged.</span>
+        <span>6</span><span><b>Calories stay in the room.</b> Not on Home, widgets, notices, the Live Activity, logs or backups. The reminder names the dish, or "Your leftovers" when it's private.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1,1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e,u);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const spring=u=>1-Math.exp(-7*u)*Math.cos(9*u);
+const $=id=>document.getElementById(id);
+const clipIn=(node,delay=0)=>{node.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>anim(.3,e=>node.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`,()=>node.style.clipPath=''),RM?0:delay)};
+// today is Friday
+const DAY=['today','tomorrow','Sunday','Monday','Tuesday','Wednesday','Thursday'];
+const FRZ=['Nov 23','Dec 23','Jan 23'];
+const QT=['nothing','a quarter','half','three quarters','all of it'];
+const PLACES=['To get','Fridge','Freezer','Shelf','Counter'];
+let D;const it=(n,v,o={})=>Object.assign({n,v},o);
+const seed=()=>({
+ 'To get':[{h:'For a recipe',a:[it('Feta','for Shakshuka',{to:'Fridge'})]},{h:'Next shop',a:[it('Bread flour','',{to:'Shelf'}),it('Dish soap',''),it('Coffee','',{to:'Shelf'})]}],
+ 'Fridge':[{h:'Leftovers',lo:1,a:[it('Fried rice','',{left:1,by:0}),it('Lasagna','',{left:2,by:2})]},
+   {h:'Dairy and eggs',a:[it('Milk','low'),it('Eggs','low'),it('Butter','half'),it('Parmesan','1 wedge'),it('Yogurt','2')]},
+   {h:'Meat and fish',a:[it('Chicken breast','2'),it('Salmon','1 fillet')]},{h:'Produce',a:[it('Spinach','by Sunday'),it('Scallions','1 bunch'),it('Berries','1 box')]}],
+ 'Freezer':[{h:'Cooked',lo:1,a:[it('Chili','',{left:2,frz:'Dec 12'})]},{h:'Meat and fish',a:[it('Chicken thighs','6')]},{h:'Vegetables',a:[it('Peas','1 bag')]},{h:'Bread',a:[it('Bread','half loaf')]}],
+ 'Shelf':[{h:'Dal and lentils',a:[it('Toor dal','low'),it('Red lentils','1 bag'),it('Chana dal','half')]},{h:'Grains and pasta',a:[it('Rice','low'),it('Spaghetti','2 packs'),it('Oats','half')]},{h:'Snacks',a:[it('Almonds','1 bag'),it('Crackers','low')]},{h:'Spices',a:[it('Cumin','full'),it('Turmeric','half'),it('Garam masala','full')]}],
+ 'Counter':[{h:'Fruit',a:[it('Bananas','5'),it('Lemons','4')]},{h:'Vegetables',a:[it('Onions','5'),it('Tomatoes','6'),it('Potatoes','2 lb'),it('Garlic','1 head')]}]});
+const all=p=>D[p].flatMap(s=>s.a);
+const cnt=p=>all(p).length;
+const isLeft=x=>x.left!=null||x.q!=null;
+const servT=x=>x.q!=null?(x.q===4?'all of it':QT[x.q]):`${x.left} serving${x.left===1?'':'s'}`;
+const byT=x=>x.frz?`good until ${x.frz}`:x.by===0?'throw out today':`eat by ${DAY[x.by]}`;
+const urgent=x=>!x.frz&&x.by!=null&&x.by<=1;
+function valOf(x){if(isLeft(x)){const a=x.q!=null?(x.q===4?'all':QT[x.q]):x.left;return{t:!x.frz&&x.by===0?'throw out today':`${a} left, ${x.frz?'until '+x.frz:'by '+DAY[x.by]}`,hot:urgent(x)}}return{t:x.v,hot:x.v==='low'}}
+function briefOf(p){const L=all(p).filter(isLeft).sort((a,b)=>(a.by??99)-(b.by??99));const lo=all(p).filter(x=>x.v==='low').map(x=>x.n.toLowerCase());
+  const lowL=lo.length?`Low on ${lo.slice(0,2).join(' and ')}.`:'Nothing low in here.';
+  if(p==='Fridge'){const a=L[0];const first=!a?'No leftovers.':a.by===0?`Throw out the ${a.n.toLowerCase()} today.`:a.by===1?`Eat the ${a.n.toLowerCase()} by tomorrow.`:`${a.n} keeps until ${DAY[a.by]}.`;return first+'<br>'+lowL}
+  if(p==='Freezer')return 'Chili, 2 servings, until Dec 12.<br>All good in here.';
+  if(p==='Shelf')return lowL+'<br>Plenty of pasta.';
+  if(p==='Counter')return 'Lemons for the pasta.<br>Tomatoes are ripe.';
+  return 'Feta makes Shakshuka work.<br>Nothing else is urgent.'}
+let pi=1,si=0,off=1,page=0,pins={},spin=0,flash=null;
+const wrap=i=>(i%5+5)%5;
+// ---------- dial (232)
+function renderDial(){const d=$('dial');d.innerHTML=[-2,-1,0,1,2].map(k=>`<button class="tap" data-k="${k}" style="position:absolute;left:0;width:100%;height:64px;display:flex;justify-content:space-between;align-items:center;white-space:nowrap"><span class="pn" style="transform-origin:left center;display:inline-block;font-size:44px;letter-spacing:-.03em"></span><span class="pc n" style="transform-origin:right center;display:inline-block;font-size:44px"></span></button>`).join('');paintDial();
+  [...d.children].forEach(b=>b.onclick=()=>{if(dragged)return;if(+b.dataset.k!==0)spinTo(Math.round(off)+(+b.dataset.k))})}
+function paintDial(){const d=$('dial'),base=Math.round(off);[...d.children].forEach(b=>{const k=+b.dataset.k,i=base+k,dd=i-off,a=Math.abs(dd),p=PLACES[wrap(i)];
+  b.style.transform=`translateY(${98-32+dd*64}px)`;b.style.visibility=a>1.6?'hidden':'';
+  const sc=1-(1-26/44)*Math.min(a,1);const pn=b.firstChild,pc=b.lastChild;pn.textContent=p;pc.textContent=cnt(p);
+  pn.style.transform=pc.style.transform=`scale(${sc})`;const f=a<.5;pn.style.color=f?'var(--kit)':'var(--ink2)';pn.style.fontWeight=f?600:400;pc.style.color=f?'var(--ink)':'var(--ink2)';pc.style.fontWeight=f?200:300;
+  b.setAttribute('aria-label',`${p}, ${cnt(p)} things`)})}
+let pdir=1;function spinTo(t,dur=.42,then){const from=off,id=++spin;pdir=t>=from?1:-1;anim(dur,(e,u)=>{if(id!==spin)return;off=from+(t-from)*spring(u);paintDial()},()=>{if(id!==spin)return;off=t;paintDial();setPlace(wrap(t));then&&then()})}
+function goPlace(i,then){const t=Math.round(off),cur=wrap(t);let d=(i-cur+5)%5;if(d>2)d-=5;if(!d){setPlace(i,true);then&&then();return}spinTo(t+d,.42,then)}
+let dragged=false;(()=>{const d=$('dial');let sy=null,so=0,vy=0,ly=0,lt=0;
+  d.onpointerdown=e=>{sy=e.clientY;so=off;dragged=false;vy=0;ly=e.clientY;lt=performance.now();spin++};
+  d.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!dragged){dragged=true;d.setPointerCapture(e.pointerId)}if(!dragged)return;const n=performance.now();vy=(e.clientY-ly)/Math.max(1,n-lt);ly=e.clientY;lt=n;off=so-dy/64;paintDial()};
+  d.onpointerup=d.onpointercancel=()=>{if(sy==null)return;sy=null;if(dragged){spinTo(Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(off),.36);setTimeout(()=>dragged=false,0)}else spinTo(Math.round(off))};
+  d.tabIndex=0;d.onkeydown=e=>{if(e.key==='ArrowDown'){spinTo(Math.round(off)+1,.36);e.preventDefault()}if(e.key==='ArrowUp'){spinTo(Math.round(off)-1,.36);e.preventDefault()}}})();
+function setPlace(i,force){$('dial').setAttribute('aria-valuetext',`${PLACES[i]}, ${cnt(PLACES[i])} things`);if(i===pi&&!force&&$('list').childElementCount)return;pi=i;ST=startST(PLACES[i]);hist=[];$('list').innerHTML='';$('brief').innerHTML=briefOf(PLACES[i]);clipIn($('brief'));renderList(0);arrive(pdir)}
+// ---------- two columns. Sections are packed: small sections stack in one column when they fit whole, in order, and any later
+// section that fits fills the space left (first fit). A section too long for a column pages inside it. A swipe moves each column on:
+// a column part-way through a section shows the rest of it, a finished column takes the next sections, and with nothing left it stays.
+const CAP=232,HH=26,RH=44,secMem={};
+const mctx=document.createElement('canvas').getContext('2d');
+function fitsSide(n,t,bold){const L=$('list'),w=(L.clientWidth-16)/2;mctx.font=`${bold?500:400} 17px Figtree, system-ui, sans-serif`;const a=mctx.measureText(n).width;mctx.font='300 10.5px Figtree, system-ui, sans-serif';return a+8+mctx.measureText(t).width<=w}let ST=null,hist=[];
+const secA=(p,S)=>{const pn=pins[p]||[];return [...S.a.filter(x=>pn.includes(S.h+x.n)),...S.a.filter(x=>!pn.includes(S.h+x.n))]};
+const lenOf=(p,si)=>D[p][si]?D[p][si].a.length:0;
+const GAP=18,MORE=26;
+function rowInfo(p,S,x){const v=valOf(x),pinned=(pins[p]||[]).includes(S.h+x.n),low=x.v==='low',warn=low||(isLeft(x)&&v.hot);const t=(pinned?'pinned'+(low?'':', '):'')+(low?'':v.t);const side=!t||fitsSide(x.n,t,warn||pinned);return{v,pinned,low,warn,t,side,h:side?28:34}}
+function fillCol(p,q,lead,reserve=0){const col=[];let space=CAP;
+  const put=(si,start,first)=>{const S=D[p][si];if(!S)return true;const it=secA(p,S).slice(start);if(!it.length)return true;const g=col.length?GAP:0;const hs=it.map(x=>rowInfo(p,S,x).h);const need=g+HH+hs.reduce((a,b)=>a+b,0);
+    if(need<=space){col.push({si,start,k:it.length});space-=need;return true}
+    if(first){let acc=g+HH,k=0;while(k<hs.length&&acc+hs[k]+MORE<=space){acc+=hs[k];k++}col.push({si,start,k:Math.max(1,k)});space=0;return true}return false};
+  if(lead)put(lead.si,lead.start,true);else if(q.length){const h=q.shift();put(h.si,h.start,true)}
+  for(let i=0;i<q.length&&space>HH+GAP&&q.length>reserve;){if(put(q[i].si,q[i].start,false))q.splice(i,1);else i++}
+  return col}
+function startST(p,lead){if(lead==null&&secMem[p])return JSON.parse(secMem[p]);const n=D[p].length;let e=lead??D[p].findIndex(S=>S.a.some(x=>urgent(x)||x.v==='low'));if(e<0)e=0;
+  const q=[...Array(n).keys()].map(i=>({si:(e+i)%n,start:0}));const cols=[fillCol(p,q,null,1),fillCol(p,q,null,0)];return{cols,q}}
+const partOf=(p,col)=>{const b=col[col.length-1];return b&&b.start+b.k<lenOf(p,b.si)?{si:b.si,start:b.start+b.k}:null};
+function stepST(dir){const p=PLACES[pi];if(dir<0){if(!hist.length)return false;const old=ST;ST=hist.pop();return old}
+  const q=JSON.parse(JSON.stringify(ST.q));const leads=ST.cols.map(col=>partOf(p,col));const cols=ST.cols.map((col,k)=>{const reserve=leads.slice(k+1).filter(l=>!l).length;if(leads[k])return fillCol(p,q,leads[k],reserve);if(q.length)return fillCol(p,q,null,reserve);return col});
+  const nx={cols,q};if(JSON.stringify(nx)===JSON.stringify(ST))return false;hist.push(ST);if(hist.length>6)hist.shift();const old=ST;ST=nx;return old}
+function colHTML(p,col){return col.map((b,bi)=>{const S=D[p][b.si];if(!S)return '';const a=secA(p,S),k=Math.min(b.k,Math.max(0,a.length-b.start)),more=a.length-b.start-k;
+  const lo=S.a.filter(x=>x.v==='low').length,ur=S.a.filter(urgent).length,al=`${S.h}, ${S.a.length}${lo?`, ${lo} low`:''}${ur?`, ${ur} to eat soon`:''}`;
+  const head=`<div class="ch" aria-label="${al}" style="height:${HH}px;margin-top:${bi?GAP:0}px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;gap:6px;white-space:nowrap;overflow:hidden;font-size:14px;line-height:18px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.015em;color:var(--sec);box-shadow:inset 0 -1px 0 var(--edge);padding-bottom:3px;box-sizing:border-box;touch-action:none;cursor:ew-resize"><span style="overflow:hidden">${S.h}</span><span class="n" style="font-variant-caps:normal;letter-spacing:0;font-size:13px;font-weight:300;color:${lo||ur?'var(--warn)':'var(--sec)'}">${S.a.length}</span></div>`;
+  const rows=a.slice(b.start,b.start+k).map(x=>{const fl=flash===x,{v,pinned,low,warn,t,side,h}=rowInfo(p,S,x),vc=v.hot&&!low?'var(--warn)':isLeft(x)?'var(--fresh)':'var(--ink2)';
+    const nm=`<span class="nm" style="font-size:17px;line-height:22px;overflow:hidden;flex:${side?'0 1 auto':'none'};color:${fl?'var(--kit)':warn?'var(--warn)':'var(--ink)'};font-weight:${pinned||fl||warn?500:400};transition:color .6s">${x.n}</span>`;
+    const vv=t?`<span class="vv" style="${side?'font-size:10.5px;line-height:16px;letter-spacing:.01em;flex:none':'font-size:8px;line-height:12px;letter-spacing:.03em'};overflow:hidden;color:var(--ink2);font-weight:300">${t}</span>`:'';
+    return `<div class="rw" data-s="${S.h}" data-n="${x.n}" aria-label="${x.n}${low?', low':t?', '+t:''}" style="position:relative;height:${h}px;flex:none;overflow:hidden"><div class="rc" role="button" tabindex="0" style="position:absolute;inset:0;display:flex;flex-direction:${side?'row':'column'};${side?'align-items:center;justify-content:space-between;gap:8px':'justify-content:center'};white-space:nowrap;touch-action:pan-y;cursor:grab;background:var(--phone)">${nm}${vv}</div></div>`}).join('');
+  return head+rows+(more>0?`<div class="tail" style="height:${MORE}px;flex:none;line-height:${MORE}px;font-size:8px;letter-spacing:.03em;color:var(--ink2);touch-action:none">${more} more, swipe</div>`:'')}).join('')+`<div class="tail" style="flex:1;touch-action:none"></div>`}
+function renderList(dir,old){const p=PLACES[pi];if(!ST)ST=startST(p);secMem[p]=JSON.stringify(ST);const cols=ST.cols;
+  const L=$('list');const body=c=>`<div class="col" style="display:flex;flex-direction:column;height:100%">${colHTML(p,c)}</div>`;
+  if(L.children.length!==cols.length)L.innerHTML=cols.map(()=>`<div class="cw" style="position:relative;overflow:hidden;min-width:0;height:100%"></div>`).join('');
+  [...L.children].forEach((w,k)=>{const c=cols[k],changed=old&&JSON.stringify(old.cols[k])!==JSON.stringify(c);
+    if(changed&&!RM){const d=dir;w.innerHTML=`<div class="pA" style="position:absolute;inset:0">${w.innerHTML}</div><div class="pB" style="position:absolute;top:0;bottom:0;left:${d*100}%;width:100%">${body(c)}</div>`;const A=w.firstChild,B=w.lastChild;
+      setTimeout(()=>anim(.42,(e,u)=>{const t=`translateX(${-d*100*spring(u)}%)`;A.style.transform=B.style.transform=t},()=>{w.innerHTML=body(c);wireRows();wireCols()}),k*60)}
+    else w.innerHTML=body(c)});
+  const left=ST.q.map(z=>D[p][z.si]&&D[p][z.si].h).filter(Boolean),parts=cols.map(c=>partOf(p,c)).filter(Boolean).map(z=>D[p][z.si].h);
+  $('nextL').textContent=left.length?`Next: ${left.join(', ')}`:parts.length?`Next: the rest of ${parts.join(' and ')}`:'';
+  wireRows();wireCols();
+  if(flash){const f=flash;setTimeout(()=>{if(flash===f){flash=null;const e=[...document.querySelectorAll('#list .nm')].find(e=>e.textContent===f.n);if(e){e.style.color='var(--ink)';e.style.fontWeight=400}}},1400)}}
+function arrive(d){if(RM)return;[...$('list').children].forEach((w,k)=>{w.style.clipPath=d>0?'inset(0 0 100% 0)':'inset(100% 0 0 0)';w.style.transform=`translateY(${d*28}px)`;setTimeout(()=>anim(.46,(e,u)=>{const k2=spring(u);w.style.transform=`translateY(${d*28*(1-k2)}px)`;w.style.clipPath=d>0?`inset(0 0 ${(1-e)*100}% 0)`:`inset(${(1-e)*100}% 0 0 0)`},()=>{w.style.clipPath='';w.style.transform=''}),60*k+80)});const n=$('nextL');clipIn(n,200)}
+function move(dir){const old=stepST(dir);if(!old){nudge(dir);return}renderList(dir,old)}
+function nudge(dir){if(RM)return;const L=$('list');anim(.3,(e,u)=>L.style.transform=`translateX(${-dir*10*Math.sin(Math.PI*u)}px)`,()=>L.style.transform='')}
+let cdrag=false;function wireCols(){document.querySelectorAll('#list .ch, #list .tail').forEach(el=>{if(el.dataset.w)return;el.dataset.w=1;let sx=null,sy=0;
+  el.onpointerdown=e=>{sx=e.clientX;sy=e.clientY;try{el.setPointerCapture(e.pointerId)}catch(_){}};el.onpointerup=e=>{if(sx==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy))move(dx<0?1:-1)};el.onpointercancel=()=>sx=null})}
+$('nextL').onclick=()=>move(1);
+$('list').addEventListener('wheel',e=>{e.preventDefault();const L=$('list');const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:0;if(Math.abs(d)>20&&!L.dataset.lock){L.dataset.lock=1;move(d>0?1:-1);setTimeout(()=>delete L.dataset.lock,500)}},{passive:false});
+document.addEventListener('keydown',e=>{if(!$('put').hidden||!$('meal').hidden||document.activeElement.tagName==='INPUT')return;if(e.key==='PageDown'||e.key==='.')move(1);if(e.key==='PageUp'||e.key===',')move(-1)});
+const find=(p,s,n)=>{const S=D[p].find(z=>z.h===s);return[S,S&&S.a.find(x=>x.n===n)]};
+function wireRows(){document.querySelectorAll('#list .rw').forEach(rw=>{const rc=rw.querySelector('.rc'),n=rw.dataset.n,s=rw.dataset.s,p=PLACES[pi];let sx=null,sy=0,dx=0,moved=false,hold=null;
+  rc.onpointerdown=e=>{sx=e.clientX;sy=e.clientY;dx=0;moved=false;hold=setTimeout(()=>{hold=null;if(!moved){sx=null;pin(p,s,n)}},520)};
+  rc.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;if(Math.abs(e.clientY-sy)>3||Math.abs(dx)>3)clearTimeout(hold);if(Math.abs(dx)>6&&Math.abs(dx)>Math.abs(e.clientY-sy)){moved=true;rc.setPointerCapture(e.pointerId);rc.style.transform=`translateX(${dx}px)`}};
+  rc.onpointerup=e=>{clearTimeout(hold);if(sx==null)return;sx=null;if(!moved){if(Math.abs(e.clientY-sy)<8)tapRow(p,s,n);return}
+    if(dx>70)right(rw,rc,p,s,n);else if(dx<-70)notNow(rc,n);else{const d0=dx;anim(.3,(e,u)=>rc.style.transform=`translateX(${d0*(1-spring(u))}px)`)}};
+  rc.onpointerleave=()=>{if(!moved){clearTimeout(hold);sx=null}};rc.onkeydown=e=>{if(e.key==='Enter')tapRow(p,s,n);if(e.key==='ArrowRight')right(rw,rc,p,s,n);if(e.key==='ArrowLeft')notNow(rc,n)}})}
+function tapRow(p,s,n){const[S,x]=find(p,s,n);if(!x||p==='To get')return;if(isLeft(x)){openPut({edit:x,place:p});return}const was=x.v;x.v=x.v==='low'?(x.was||'in'):(x.was=x.v,'low');renderList(0);const un=()=>{x.v=was;renderList(0)};if(x.v!=='low'){say(`${n}, in.`,un);return}
+  if(all('To get').some(y=>y.n===n)){say(`${n}, low. Already on To get.`,un);return}
+  say(`${n}, low.`,un,'receipt',{label:'Add to To get',fn:()=>{const T=D['To get'][1],y=it(n,'',{to:p});T.a.push(y);roll(1);paintDial();say(`${n}, on To get.`,()=>{T.a=T.a.filter(z=>z!==y);roll(-1);paintDial()})}})}
+function pin(p,s,n){const k=s+n,a=pins[p]=pins[p]||[];if(a.includes(k)){pins[p]=a.filter(y=>y!==k);renderList(0);say(`${n}, unpinned.`,()=>{pins[p].push(k);renderList(0)});return}if(a.length>=3){say('Three pins already. Unpin one first.');return}a.push(k);renderList(0);say(`${n}, pinned.`,()=>{pins[p]=pins[p].filter(y=>y!==k);renderList(0)})}
+function snapBack(rc){const d0=parseFloat(rc.style.transform.replace('translateX(',''))||0;anim(.36,(e,u)=>rc.style.transform=`translateX(${d0*(1-spring(u))}px)`)}
+function notNow(rc,n){snapBack(rc);say(`${n}, not now. Asks again tomorrow.`)}
+function collapse(rw,done){const h0=rw.offsetHeight;anim(.26,e=>rw.style.height=`${h0*(1-e)}px`,done)}
+function right(rw,rc,p,s,n){const[S,x]=find(p,s,n);if(!x)return;const idx=S.a.indexOf(x),snap=JSON.stringify(x);
+  const restore=()=>{const y=JSON.parse(snap);const i=S.a.indexOf(x);if(i>=0)S.a[i]=Object.assign(x,y);else{Object.assign(x,y);S.a.splice(idx,0,x)}renderList(0);paintDial();$('brief').innerHTML=briefOf(p)};
+  if(isLeft(x)){
+    if(x.left>1){x.left--;snapBack(rc);const v=rc.querySelector('.vv');v.innerHTML=valOf(x).t;clipIn(v);say(`${n}, one serving eaten. Logged.`,restore);return}
+    gone(rw,rc,S,x,p);say(`${n}, finished. Logged.`,restore);return}
+  if(p==='To get'){gone(rw,rc,S,x,p);if(x.to)secOf(x.to,x.n).a.push(it(n,'in'));roll(-1);say(`${n}, got it.${x.to?' Back in the '+x.to.toLowerCase()+'.':''}`,()=>{if(x.to){const T=secOf(x.to,x.n);T.a=T.a.filter(y=>y.n!==n)}restore();roll(1)});return}
+  // used up: the name arcs to "to get"
+  const sr=$('ph').getBoundingClientRect(),nm=rc.querySelector('.nm').getBoundingClientRect(),tg=$('tg').getBoundingClientRect();
+  const fl=document.createElement('div');fl.textContent=n;fl.style.cssText=`position:absolute;left:${nm.left-sr.left}px;top:${nm.top-sr.top}px;font-size:17px;color:var(--ink);white-space:nowrap;z-index:3;transform-origin:left top;pointer-events:none`;
+  const x0=nm.left-sr.left,y0=nm.top-sr.top,x1=tg.left-sr.left-6,y1=tg.top-sr.top;
+  gone(rw,rc,S,x,p);$('ph').append(fl);D['To get'][1].a.push(it(n,'',{to:p}));
+  anim(.6,(e)=>{fl.style.transform=`translate(${(x1-x0)*e}px,${(y1-y0)*e-60*Math.sin(Math.PI*e)}px) scale(${1-.25*e})`},()=>{fl.remove();roll(1);paintDial()});
+  say(`${n}, used up. On To get.`,()=>{D['To get'][1].a=D['To get'][1].a.filter(y=>y.n!==n);restore();roll(-1)})}
+function secOf(p,n){return D[p].find(s=>s.a.some(x=>x.n===n))||D[p][D[p].length-1]}
+function gone(rw,rc,S,x,p){const d0=parseFloat(rc.style.transform.replace('translateX(',''))||0;anim(.22,e=>rc.style.transform=`translateX(${d0+(170-d0)*e}px)`,()=>{S.a=S.a.filter(y=>y!==x);collapse(rw,()=>{renderList(0);paintDial();$('brief').innerHTML=briefOf(p)})})}
+function roll(d){const node=$('tgN'),v=cnt('To get');if(RM){node.textContent=v;return}const old=node.textContent;node.style.cssText='display:inline-block;height:1.2em;overflow:hidden;vertical-align:bottom';
+  node.innerHTML=d>0?`<span style="display:block;line-height:1.2em">${old}</span><span style="display:block;line-height:1.2em">${v}</span>`:`<span style="display:block;line-height:1.2em">${v}</span><span style="display:block;line-height:1.2em">${old}</span>`;
+  const a=node.firstChild,b=node.lastChild;const s0=d>0?0:-1.2;a.style.transform=b.style.transform=`translateY(${s0}em)`;anim(.42,(e,u)=>{const k=spring(u);a.style.transform=b.style.transform=`translateY(${s0+(d>0?-1.2:1.2)*k}em)`},()=>{node.textContent=v;node.removeAttribute('style')})}
+const sayT={};function say(t,undo,el='receipt',extra){const r=$(el);r.innerHTML=t+(extra?` <button class="tap ex" style="color:var(--kitT);font-weight:600;margin-left:4px">${extra.label}</button>`:'')+(undo?' <button class="tap un" style="color:var(--kitT);font-weight:600;margin-left:8px">Undo</button>':'');clipIn(r);clearTimeout(sayT[el]);sayT[el]=setTimeout(()=>r.textContent='',undo?10000:3000);if(undo)r.querySelector('.un').onclick=()=>{r.textContent='';undo()};if(extra)r.querySelector('.ex').onclick=()=>{r.textContent='';extra.fn()}}
+// a value word that rolls up when it changes
+function rollText(el,t){if(el.textContent===t)return;const old=el.textContent;if(RM){el.textContent=t;return}el.innerHTML=`<span style="display:block">${old}</span><span style="display:block">${t}</span>`;const a=el.firstChild,b=el.lastChild;anim(.36,(e,u)=>{const k=spring(u);a.style.transform=b.style.transform=`translateY(${-26*k}px)`},()=>{el.textContent=t})}
+// ---------- screens rise from the bottom
+function rise(sc){sc.hidden=false;if(RM)return;sc.style.clipPath='inset(100% 0 0 0)';anim(.42,e=>sc.style.clipPath=`inset(${(1-e)*100}% 0 0 0)`,()=>sc.style.clipPath='')}
+function sink(sc,done){if(RM){sc.hidden=true;done&&done();return}anim(.36,e=>sc.style.clipPath=`inset(${e*100}% 0 0 0)`,()=>{sc.hidden=true;sc.style.clipPath='';done&&done()})}
+// ---------- drum (servings left)
+let dv=3,dmax=4,doff=3;
+function renderDrum(){const d=$('drum');d.innerHTML=[-2,-1,0,1,2].map(k=>`<button class="tap big" data-k="${k}" style="position:absolute;left:0;right:0;height:64px;display:flex;align-items:center;justify-content:flex-end;font-size:72px;transform-origin:right center"></button>`).join('');paintDrum();
+  [...d.children].forEach(b=>b.onclick=()=>{if(ddrag)return;const t=Math.round(doff)+(+b.dataset.k);if(+b.dataset.k&&t>=0&&t<=dmax)drumTo(t)})}
+function paintDrum(){const base=Math.round(doff);[...$('drum').children].forEach(b=>{const k=+b.dataset.k,i=base+k,dd=i-doff,a=Math.abs(dd);
+  b.style.transform=`translateY(${98-32+dd*64}px) scale(${1-(1-30/72)*Math.min(a,1)})`;b.style.visibility=(i<0||i>dmax||a>1.6)?'hidden':'';b.textContent=i;b.style.color=a<.5?'var(--ink)':'var(--ink2)';b.style.fontWeight=a<.5?200:300});
+  $('drum').setAttribute('aria-valuetext',`${Math.round(doff)} servings left`)}
+let dspin=0;function drumTo(t){t=Math.max(0,Math.min(dmax,t));const from=doff,id=++dspin;anim(.36,(e,u)=>{if(id!==dspin)return;doff=from+(t-from)*spring(u);paintDrum()},()=>{if(id!==dspin)return;doff=t;paintDrum();dv=t;putWords()})}
+let ddrag=false;(()=>{const d=$('drum');let sy=null,so=0;d.onpointerdown=e=>{sy=e.clientY;so=doff;ddrag=false;dspin++};
+  d.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!ddrag){ddrag=true;d.setPointerCapture(e.pointerId)}if(ddrag){doff=Math.max(-.4,Math.min(dmax+.4,so-dy/64));paintDrum()}};
+  d.onpointerup=d.onpointercancel=()=>{if(sy==null)return;sy=null;if(ddrag){drumTo(Math.round(doff));setTimeout(()=>ddrag=false,0)}};
+  d.onkeydown=e=>{if(e.key==='ArrowUp'){drumTo(Math.round(doff)+1);e.preventDefault()}if(e.key==='ArrowDown'){drumTo(Math.round(doff)-1);e.preventDefault()}}})();
+// ---------- put leftovers away
+let PU={};
+const untilOpts=()=>PU.where==='Fridge'?[1,2,3,4,5]:[0,1,2];
+const untilT=()=>PU.where==='Fridge'?DAY[PU.by][0].toUpperCase()+DAY[PU.by].slice(1):FRZ[PU.fz];
+const REM=['That morning','The day before','Off'];
+function remT(){if(PU.rem===2)return 'Off';if(PU.where==='Fridge'){const d=PU.by-PU.rem;return d<=0?'Tonight, 8 PM':(d===1?'Tomorrow':DAY[d])+', 10 AM'}const[m,dd]=FRZ[PU.fz].split(' ');return `${m} ${+dd-PU.rem}, 10 AM`}
+function openPut(o){PU=o.edit?{edit:o.edit,place:o.place,name:o.edit.n,where:o.place==='Freezer'?'Fridge':'Fridge',by:o.edit.by??3,fz:1,rem:0}:{name:'Dal',where:'Fridge',by:3,fz:1,rem:0};
+  if(o.edit&&o.edit.frz){PU.where='Freezer';PU.fz=FRZ.indexOf(o.edit.frz)<0?1:FRZ.indexOf(o.edit.frz)}
+  $('putTop').textContent=o.edit?'Leftover':'Done cooking';$('putName').textContent=PU.name;
+  if(o.edit){dmax=Math.max(4,o.edit.left||1);dv=doff=o.edit.left??2;$('drumOf').textContent=o.edit.q!=null?'from outside':'still in there'}else{dmax=4;dv=doff=3;$('drumOf').textContent='of 4 made, 1 eaten'}
+  renderDrum();$('fWhere').textContent=PU.where;$('fUntil').textContent=untilT();$('fRem').textContent=remT();$('putRc').textContent='';putWords();rise($('put'))}
+function putWords(){const s=Math.round(dv);$('drumW').textContent=s===1?'serving left':'servings left';
+  const until=untilT(),past=PU.edit&&PU.where==='Fridge'&&PU.by===0;$('putBrief').innerHTML=past?`${PU.name} is past its day.<br>Throw it out, or give it a new day.`:s===0?'Nothing left over.<br>Pantry took 6 things.':PU.where==='Fridge'?`${PU.name} keeps ${PU.by} day${PU.by===1?'':'s'} in the fridge.<br>${PU.rem===2?'No reminder.':'Tess reminds you '+remT().split(',')[0].replace('Tonight','tonight')+'.'}`:`${PU.name} keeps for months frozen.<br>${PU.rem===2?'No reminder.':'Tess reminds you '+remT().split(',')[0]+'.'}`;
+  $('putCal').textContent=s?`about 380 cal a serving`:'';
+  $('putNote').textContent=s&&PU.rem!==2?`The notice reads "${PU.name} in the ${PU.where.toLowerCase()}, eat by ${PU.where==='Fridge'?DAY[PU.by]:FRZ[PU.fz]}." Private dishes read "Your leftovers".`:'';
+  $('putGo').textContent=past?'Throw out':PU.edit?(s?'Keep it':'Finished'):s?`Put in ${PU.where.toLowerCase()}`:'Nothing left';
+  ['fWhere','fUntil','fRem'].forEach(id=>$(id).closest('.fl').style.visibility=s&&!(past&&id==='fRem')?'':'hidden');if(past)$('putNote').textContent=''}
+$('fWhere').onclick=()=>{PU.where=PU.where==='Fridge'?'Freezer':'Fridge';rollText($('fWhere'),PU.where);rollText($('fUntil'),untilT());rollText($('fRem'),remT());putWords()};
+$('fUntil').onclick=()=>{if(PU.where==='Fridge'){const o=untilOpts();PU.by=o[(o.indexOf(PU.by)+1)%o.length]}else PU.fz=(PU.fz+1)%3;rollText($('fUntil'),untilT());rollText($('fRem'),remT());putWords()};
+$('fRem').onclick=()=>{PU.rem=(PU.rem+1)%3;rollText($('fRem'),remT());putWords()};
+$('putGo').onclick=()=>{const s=Math.round(dv);const P=PU;
+  if(P.edit&&P.where==='Fridge'&&P.by===0){const x=P.edit,S=D[P.place].find(z=>z.a.includes(x)),i=S.a.indexOf(x);S.a.splice(i,1);sink($('put'),()=>{renderList(0);paintDial();$('brief').innerHTML=briefOf(PLACES[pi]);say(`${x.n}, thrown out.`,()=>{S.a.splice(i,0,x);renderList(0);paintDial();$('brief').innerHTML=briefOf(PLACES[pi])})});return}
+  if(P.edit){const x=P.edit,before=JSON.stringify(x);if(!s){const S=D[P.place].find(z=>z.a.includes(x));S.a=S.a.filter(y=>y!==x)}else{if(x.q==null)x.left=s;if(P.where==='Fridge'){x.by=P.by;delete x.frz}else{x.frz=FRZ[P.fz];delete x.by}}
+    sink($('put'),()=>{renderList(0);paintDial();$('brief').innerHTML=briefOf(PLACES[pi]);say(s?`${x.n}, good until ${P.where==='Fridge'?DAY[P.by]:FRZ[P.fz]}.`:`${x.n}, finished. Logged.`,()=>{Object.assign(x,JSON.parse(before));if(!s){D[P.place][0].a.push(x)}renderList(0);paintDial()})});return}
+  if(!s){sink($('put'),()=>say('Dal, cooked. Nothing left over.'));return}
+  const x=it('Dal','',P.where==='Fridge'?{left:s,by:P.by}:{left:s,frz:FRZ[P.fz]});const place=P.where;
+  sink($('put'),()=>{D[place][0].a.push(x);flash=x;goPlace(PLACES.indexOf(place),()=>{delete secMem[place];ST=startST(place,0);hist=[];page=0;renderList(0);paintDial()});
+    setTimeout(()=>say(`Dal, ${s} serving${s===1?'':'s'} in the ${place.toLowerCase()}.`,()=>{D[place][0].a=D[place][0].a.filter(y=>y!==x);renderList(0);paintDial();$('brief').innerHTML=briefOf(PLACES[pi])}),RM?0:480)})};
+// ---------- food from outside
+let ME={},claude=false;const ATE=['None yet','A quarter','Half','Three quarters','All of it'];
+function openMeal(){ME={cal:780,ate:0,rest:'Fridge',photo:false,typed:false};$('mName').value='Chicken pad thai';$('mCal').textContent=780;$('mPhoto').textContent='No photo yet';$('mPhotoB').textContent='Add a photo';
+  $('mAte').textContent=ATE[0];$('mRest').textContent='Fridge, until Sunday';$('mRc').textContent='';mealWords();rise($('meal'));clipIn($('mEst'),200);clipIn($('mMac'),300)}
+function mealWords(){const q=ME.ate,eaten=Math.round(ME.cal*q/4/10)*10;
+  $('mToday').textContent=q?`about ${eaten} cal`:'nothing yet';
+  $('mSrc').textContent=ME.typed?'You typed this number.':claude?`Estimate from Claude, from the name${ME.photo?' and photo':''}. Logged in Sent.`:`Estimate made on this phone from the name${ME.photo?' and photo':''}. Tap the number to type your own.`;
+  const rest=$('mRest');rest.closest('.fl').querySelector('.k').textContent=q===4?'Left over':'The rest goes in';rollText(rest,q===4?'Nothing':ME.rest==='Fridge'?'Fridge, until Sunday':'Freezer, until Dec 23');
+  $('mGo').textContent=q===0?(ME.rest==='Fridge'?'Put in fridge':'Put in freezer'):'Log meal'}
+$('mAte').onclick=()=>{ME.ate=(ME.ate+1)%5;rollText($('mAte'),ATE[ME.ate]);mealWords()};
+$('mRest').onclick=()=>{if(ME.ate===4)return;ME.rest=ME.rest==='Fridge'?'Freezer':'Fridge';mealWords()};
+$('mPhotoB').onclick=()=>{ME.photo=!ME.photo;$('mPhoto').textContent=ME.photo?'Photo kept on this phone':'No photo yet';$('mPhotoB').textContent=ME.photo?'Remove':'Add a photo';
+  if(!ME.typed){const to=ME.photo?820:780;rollNum($('mCal'),ME.cal,to);ME.cal=to;$('mMac').textContent=ME.photo?'34 g protein, 88 g carbs, 32 g fat':'32 g protein, 85 g carbs, 30 g fat';clipIn($('mMac'))}mealWords()};
+$('mCal').onclick=()=>{const b=$('mCal');const inp=document.createElement('input');inp.type='number';inp.value=ME.cal;inp.setAttribute('aria-label','Calories');inp.style.cssText='all:unset;width:150px;font-family:var(--nums);font-weight:200;font-size:72px;line-height:.86;color:var(--ink);caret-color:var(--kit)';b.replaceWith(inp);inp.focus();inp.select();
+  const done=()=>{const v=Math.max(0,Math.round(+inp.value||ME.cal));ME.typed=v!==ME.cal||ME.typed;ME.cal=v;b.textContent=v;inp.replaceWith(b);mealWords()};inp.onblur=done;inp.onkeydown=e=>{if(e.key==='Enter')inp.blur()}};
+function rollNum(el,a,b){if(RM){el.textContent=b;return}anim(.5,(e,u)=>el.textContent=Math.round(a+(b-a)*spring(u)))}
+$('mGo').onclick=()=>{const n=($('mName').value.trim()||'Food from outside').slice(0,22),q=ME.ate,place=ME.rest;
+  if(q===4){sink($('meal'),()=>say(`${n}, logged.`,()=>{}));return}
+  const x=it(n,'',place==='Fridge'?{q:4-q,by:2,out:1}:{q:4-q,frz:'Dec 23',out:1});
+  sink($('meal'),()=>{D[place][0].a.push(x);flash=x;goPlace(PLACES.indexOf(place),()=>{delete secMem[place];ST=startST(place,0);hist=[];page=0;renderList(0);paintDial()});
+    setTimeout(()=>say(q?`${n}, logged. Rest kept.`:`${n}, in the ${place.toLowerCase()}.`,()=>{D[place][0].a=D[place][0].a.filter(y=>y!==x);renderList(0);paintDial();$('brief').innerHTML=briefOf(PLACES[pi])}),RM?0:480)})};
+// left edge goes back
+[['put'],['meal']].forEach(([id])=>{const sc=$(id);let sx=null;sc.addEventListener('pointerdown',e=>{const r=sc.getBoundingClientRect();sx=e.clientX-r.left<24?e.clientX:null});sc.addEventListener('pointerup',e=>{if(sx!=null&&e.clientX-sx>60)sink(sc);sx=null})});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['put','meal'].forEach(id=>{if(!$(id).hidden)sink($(id))})}});
+// ---------- wiring
+$('tg').onclick=()=>goPlace(0);
+$('act').onclick=()=>{const S=D.Fridge.find(z=>z.h==='Produce'),x=it('Basil','1 bunch');S.a.push(x);if(PLACES[pi]==='Fridge')renderList(0);paintDial();say('Basil, added to the fridge.',()=>{S.a=S.a.filter(y=>y!==x);renderList(0);paintDial()})};
+$('doCook').onclick=()=>{$('meal').hidden=true;openPut({})};
+$('doMeal').onclick=()=>{$('put').hidden=true;openMeal()};
+$('doClaude').onclick=()=>{claude=!claude;$('doClaude').textContent=`Ask Claude for estimates: ${claude?'on':'off'}`;if(!$('meal').hidden)mealWords()};
+function reset(){D=seed();pins={};for(const k in secMem)delete secMem[k];ST=null;hist=[];pi=1;off=1;page=0;flash=null;$('put').hidden=$('meal').hidden=true;$('tgN').textContent=cnt('To get');$('receipt').textContent='';renderDial();$('list').innerHTML='';setPlace(1,true);clipIn($('dial'))}
+$('reset').onclick=reset;$('th').onclick=()=>document.documentElement.dataset.theme='dark';$('tw').onclick=()=>document.documentElement.dataset.theme='light';
+reset();
+})();
+</script>

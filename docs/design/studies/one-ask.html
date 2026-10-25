@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>One ask</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/one-ask.md (Design item 35): one way Tess asks. Every ask sits beside the soul in her line, with two ink words under it where UNDO sits. Board: the set ask, the dated lift, a live-workout open ask, radiators, the calendar ask and the weigh-in ghost. ?play records one Home phone: an ask, an answer, a second ask, leaving. Porcelain. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px;width:390px;white-space:nowrap}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff;--ink:23,20,31;--s2:.66;--tess:#2450D8;--ctx:#6A4C9C;--liveInk:#C23A22;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px;white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.ask{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6}
+.ask .q{color:var(--tess);font-size:21px;line-height:28px}
+.ask .q b{font-weight:600}
+.ask .w{display:flex;justify-content:flex-end;gap:30px;margin-top:4px;font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em;color:rgb(var(--ink))}
+.ask .w span{position:relative}
+.ask .undo{color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.wet{color:var(--tess);animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.5}50%{opacity:.66}}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:2600px;line-height:24px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20;transition:opacity .15s}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const soul=id=>`<div class="soul" id="${id}"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
+const ask=(id,q,w)=>`<div class="ask" id="${id}"><div class="q" id="${id}q">${q}</div>${w?`<div class="w" id="${id}w">${w.map((x,i)=>`<span id="${id}w${i}">${x}</span>`).join('')}</div>`:''}</div>`;
+const tabs=on=>`<div class="abs lbl" style="left:22px;right:22px;top:78px;display:flex;justify-content:space-between;letter-spacing:.06em">${['REVIEW','TODAY','TRAINING','KITCHEN'].map(t=>`<span style="position:relative;color:${t===on?'rgb(23,20,31)':'rgba(23,20,31,.38)'}">${t}${t===on?`<svg style="position:absolute;left:0;top:24px;overflow:visible" width="56" height="12"><path d="${lens(t.length*10.5,1.2)}" fill="rgb(23,20,31)"/></svg>`:''}</span>`).join('')}</div>`;
+const dayStroke=`<svg class="abs" style="left:0;top:182px;overflow:visible" width="390" height="20"><defs><linearGradient id="dsg" x1="30" x2="262" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7FB7D6"/><stop offset=".55" stop-color="#7CC3B0"/><stop offset="1" stop-color="#E9A23B"/></linearGradient></defs><path d="M30 9 L230 9" stroke="url(#dsg)" stroke-width="6" stroke-linecap="round" opacity=".6"/><path d="M238 9 L358 9" stroke="rgba(23,20,31,.22)" stroke-width="1.5" stroke-dasharray="4 5"/></svg>`;
+const home=(id)=>`<div class="abs" id="${id}" style="inset:0">${tabs('TODAY')}
+ <div class="abs b" style="left:22px;top:138px">Thursday afternoon</div>${dayStroke}
+ <div class="abs b" style="left:22px;top:246px;color:#6A4C9C">today</div>
+ <div class="abs hero" style="left:22px;top:280px">Push A</div>
+ <div class="abs lbl" style="left:22px;top:356px">START PUSH A<svg style="position:absolute;left:0;top:22px;overflow:visible" width="130" height="12"><path d="${lens(124,1.6)}" fill="rgb(23,20,31)"/></svg></div>
+ <div class="abs t34" style="left:22px;top:448px">Next</div>
+ ${[['Call the bank','15:00'],['Groceries at Trader Joe\'s','17:30'],['Stretch and mobility','20:30']].map(([t,h],k)=>`<div class="abs b" style="left:22px;top:${500+46*k}px">${t}</div><div class="abs lbl s2" style="right:22px;top:${504+46*k}px">${h}</div>`).join('')}</div>`;
+const work=`<div class="abs b s2" style="left:22px;top:58px">Push A, 0:24</div><div class="abs lbl s2" style="right:22px;top:62px">1 / 5</div>
+ <div class="abs t34" style="left:22px;top:100px">Bench Press</div>
+ <div class="abs s2" style="left:22px;top:184px;font-size:16px">set 3 of 4</div>
+ <div class="abs" style="left:18px;top:212px;font-size:80px;font-weight:300;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums">80<span style="font-size:21px;font-weight:400;margin-left:6px">kg</span><span style="position:absolute;left:250px;top:14px;font-size:34px;opacity:.6">×</span><span style="position:absolute;left:290px;top:0;font-size:56px;line-height:80px">8</span></div>
+ <div class="abs b s2" style="left:290px;top:300px">last 8</div>
+ <div class="abs t34" style="left:22px;top:580px">Log set<svg style="position:absolute;left:-2px;top:41px;overflow:visible" width="118" height="12"><path d="${lens(118,2.5)}" fill="rgba(204,63,104,.75)"/></svg></div><div class="abs lbl s2" style="left:156px;top:592px">HOLD · 80 × 8</div>`;
+const upkeep=`<div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div><div class="abs t44" style="left:22px;top:84px">Upkeep</div>
+ <div class="abs lbl s2" style="left:22px;top:150px">NOW</div>
+ ${['Take out the trash','Change the furnace filter','Water the plants'].map((t,k)=>`<div class="abs b" style="left:22px;top:${186+46*k}px">${t}</div>`).join('')}
+ <svg class="abs" style="left:22px;top:640px" width="346" height="2"><rect width="346" height=".5" fill="rgba(23,20,31,.3)"/></svg>
+ <div class="abs lbl s2" style="left:22px;top:656px">NO RHYTHM YET</div><div class="abs b s2" style="left:22px;top:682px">Laundry · Take the car in</div>`;
+const plan=`${tabs('TODAY')}<div class="abs b" style="left:22px;top:138px">Friday morning</div>${dayStroke}
+ <div class="abs b" style="left:22px;top:246px;color:#6A4C9C">your day, planned</div>
+ <div class="abs t44" style="left:22px;top:280px">Bank call first</div>
+ <div class="abs lbl s2" style="left:22px;top:348px">START WITH</div>
+ ${[['Call the bank','09:00'],['Pull A','18:00'],['Fix the bike light','19:30']].map(([t,h],k)=>`<div class="abs b wet" style="left:22px;top:${400+46*k}px">${t}</div><div class="abs lbl s2" style="right:22px;top:${404+46*k}px">${h}</div>`).join('')}`;
+const bw=`<div class="abs lbl s2" style="left:22px;top:58px">‹ TRAINING</div><div class="abs t44" style="left:22px;top:84px">Body weight</div>
+ <div class="abs b" style="left:22px;top:150px;width:346px;white-space:normal;color:#6A4C9C">78.1 yesterday, 0.3 kg less than last week</div>
+ <div class="abs" style="left:22px;top:216px;font-size:80px;font-weight:300;letter-spacing:-.04em;line-height:1">78.2<span style="font-size:21px;font-weight:400;margin-left:6px">kg</span></div>
+ <div class="abs lbl s2" style="left:22px;top:304px">TREND</div>
+ <svg class="abs" style="left:22px;top:330px" width="346" height="230"><path d="M0 120 C60 110 120 140 180 128 S300 150 346 146" fill="none" stroke="rgba(23,20,31,.55)" stroke-width="4" stroke-linecap="round"/><rect x="338" y="118" width="8" height="6" rx="2" fill="#2450D8" opacity=".6"/></svg>
+ <div class="abs lbl s2" style="left:22px;top:572px">SEP 3</div><div class="abs lbl" style="right:22px;top:572px">TODAY</div>
+ <div class="abs t34 wet" style="left:22px;top:652px">Body weight <b style="font-weight:600">82.4</b> kg</div>
+ <div class="abs lbl s2" style="left:22px;top:700px">4.2 KG ABOVE TREND</div>`;
+const phone=(c,inner,a,L)=>`<div><div class="cap">${c}</div><div class="ph" id="${L}ph">${inner}${a}${soul(L+'s')}${L==='P'?'<div id="fing"></div>':''}</div></div>`;
+if(PLAY){
+ $('row').innerHTML=phone('HE WRITES “BENCH 2X10”',home('Phome'),`<div id="Pslot"></div>`,'P');
+}else{
+ $('row').innerHTML=
+  phone('HIS PHRASE · A CHOICE',home('A'),ask('A1','2 × 10: 2 sets, or 2 kg?',['2 SETS','2 KG']),'A')+
+  phone('HIS PHRASE · A DATED LIFT',home('B'),ask('B1','Bench 80 × 8 for Monday?',['LOG','NOT NOW']),'B')+
+  phone('LIVE WORKOUT · AN OPEN ASK, NO YES/NO',work,ask('C1','81 for how many reps?',['8','10']),'C')+
+  phone('UPKEEP · ONCE A DAY UNTIL ANSWERED',upkeep,ask('D1','Radiators to bleed this autumn?',['KEEP IT','NO RADIATORS']),'D')+
+  phone('PLAN MY DAY · FIRST TIME ONLY',plan,ask('E1','Plan around your calendar? Times and titles only.',['CONNECT','NOT NOW']),'E')+
+  phone('BODY WEIGHT · THE GHOST AND ITS ASK',bw,ask('F1','82.4 kg as today’s weight?',['LOG','NOT NOW']),'F');
+ $('note').innerHTML='ONE WAY TESS ASKS: THE QUESTION IN HER LINE BESIDE THE SOUL (COBALT, AT MOST 2 LINES), TWO INK WORDS UNDER IT WHERE UNDO SITS (16/700, INK, 30PT APART, THE LIKELIER FIRST). SAYING OR TYPING ANSWERS TOO. ONE ASK AT A TIME; LEAVING IS “NOT NOW” AND WRITES NOTHING. IN A LIVE WORKOUT, NEVER YES/NO: A CHOICE, OR AN OPEN ASK WITH THE TWO LIKELIEST ANSWERS.';
+}
+const setCap=t=>{const c=document.querySelector('.cap');c.animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'}).onfinish=()=>{c.textContent=t;c.animate([{opacity:0},{opacity:1}],{duration:200,fill:'forwards'})}};
+async function tap(x,y,hold=160){const f=$('fing');f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1;await sleep(hold);f.style.opacity=0}
+let breath=null;
+function soulWait(on){const s=$('Ps');if(breath){breath.cancel();breath=null}
+ // waiting: the soul's breath slows from 3.2s to 4.8s and leans 4pt toward her line
+ breath=s.animate(on?[{transform:'translateX(-4px) scale(1)'},{transform:'translateX(-4px) scale(1.06)'}]:[{transform:'scale(1)'},{transform:'scale(1.08)'}],{duration:on?2400:1600,iterations:Infinity,direction:'alternate',easing:'ease-in-out'})}
+async function showAsk(q,w){const sl=$('Pslot');sl.innerHTML=ask('PA',q,w);const a=$('PA');
+ a.animate([{opacity:0,transform:'translate(12px,-50%)'},{opacity:1,transform:'translate(0,-50%)'}],{duration:300,easing:H,fill:'forwards'});
+ if(w)$('PAw').animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:260,delay:160,easing:SET,fill:'backwards'});
+ soulWait(true)}
+async function pick(i,result,undo){const w=$('PAw'+i),o=$('PAw'+(1-i));
+ w.insertAdjacentHTML('beforeend',`<svg style="position:absolute;left:-2px;top:20px;overflow:visible" width="${w.offsetWidth+4}" height="12"><path d="${lens(w.offsetWidth+4,1.6)}" fill="rgb(23,20,31)"/></svg>`);
+ w.lastElementChild.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:150,easing:H,fill:'forwards'});
+ o.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});
+ await sleep(360);soulWait(false);
+ const a=$('PA');await a.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:200,fill:'forwards'}).finished;
+ $('Pslot').innerHTML=`<div class="ask" id="PA"><div class="q">${result}</div>${undo?'<div class="w"><span class="undo">UNDO</span></div>':''}</div>`;
+ $('PA').animate([{opacity:0,transform:'translate(12px,-50%)'},{opacity:1,transform:'translate(0,-50%)'}],{duration:300,easing:H,fill:'forwards'})}
+async function fold(){const a=$('PA');if(!a)return;soulWait(false);await a.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:200,fill:'forwards'}).finished;$('Pslot').innerHTML=''}
+async function play(){
+ soulWait(false);await sleep(1000);
+ // 1 · his phrase raises a choice
+ await showAsk('2 × 10: 2 sets, or 2 kg?',['2 SETS','2 KG']);
+ setCap('ONE ASK · BESIDE THE SOUL · TWO INK WORDS');await sleep(2600);
+ setCap('THE WAIT · NOTHING DRIES, THE SOUL SLOWS');await sleep(2200);
+ // 2 · a tap answers: the ink line under the word, the other fades, the answer takes the line
+ setCap('A TAP ANSWERS · THE RESULT TAKES ITS PLACE');await sleep(400);await tap(250,804);
+ await pick(0,'Logged bench 2 × 10 at 80.',true);await sleep(2600);
+ // 3 · a second ask waits for the UNDO to go
+ setCap('THE NEXT ASK WAITS FOR UNDO TO GO');await sleep(1800);await fold();await sleep(500);
+ setCap('HE WRITES “BENCH 80X8 MONDAY”');await sleep(900);
+ await showAsk('Bench 80 × 8 for Monday?',['LOG','NOT NOW']);await sleep(2400);
+ // 4 · leaving is not now
+ setCap('LEAVING IS “NOT NOW” · NOTHING WRITTEN');await sleep(500);
+ const f=$('fing');f.style.left='320px';f.style.top='420px';f.style.opacity=1;
+ f.animate([{transform:'none'},{transform:'translateX(-200px)'}],{duration:420,easing:H,fill:'forwards'});
+ const hm=$('Phome');hm.animate([{transform:'none',opacity:1},{transform:'translateX(-140px)',opacity:0}],{duration:420,easing:H,fill:'forwards'});
+ await fold();f.style.opacity=0;await sleep(300);
+ hm.animate([{transform:'translateX(140px)',opacity:0},{transform:'none',opacity:1}],{duration:420,easing:H,fill:'forwards'});
+ await sleep(1600);
+ // 5 · said, not tapped
+ setCap('SAYING IT ANSWERS TOO · “TWO SETS”');await sleep(500);
+ await showAsk('2 × 10: 2 sets, or 2 kg?',['2 SETS','2 KG']);await sleep(1400);
+ const s=$('Ps');s.animate([{transform:'scale(1)'},{transform:'scale(1.4)'},{transform:'scale(1.5)'},{transform:'scale(1)'}],{duration:1500,easing:SET});
+ await sleep(1500);await pick(0,'Logged bench 2 × 10 at 80.',true);await sleep(2400);
+ document.body.dataset.done='1';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';if(!PLAY){document.body.dataset.done='1';return}play()});
+</script>
+</body>
+</html>

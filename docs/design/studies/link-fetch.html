@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Recipe from a link</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Recording for docs/design/kitchen/link-fetch-us.md (Design item 32), redrawing kitchen-v2.md L1-L3 under today's rules: the look's ground (Porcelain), ‹ KITCHEN, the S4 title (the recipe's name takes it once read), names arriving in sage and drying to ink, Tess beside the soul, the cloud mark as three wisps, Save recipe as an ink-line word. US sites: a recipe card read (budgetbytes.com), a site that blocks (allrecipes.com), Claude reading a post with no card (a Substack), and a paywall that keeps the ingredients (cooking.nytimes.com). Add ?x2 for 2x. The board is cut from this recording's end frames. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px;white-space:nowrap}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff;--ink:23,20,31;--s2:.66;--s3:.51;--tess:#2450D8;--liveInk:#C23A22;--health:18,147,106;--paint:240,165,0;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap;color:rgba(var(--ink),var(--s2))}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.pl{position:absolute;left:34px;right:22px;font-size:21px;line-height:30px;white-space:nowrap;color:rgb(var(--ink))}
+.pl.meta{color:rgba(var(--ink),var(--s2))}
+.pl.g{color:var(--tess)}
+.wet{animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.5}50%{opacity:.66}}
+.amt{position:relative;display:inline-block;font-weight:600}
+.amt i{position:absolute;left:0;bottom:2px;height:3px;width:0;border-radius:2px;background:rgb(var(--paint));opacity:.85}
+.nm{transition:color .9s}
+.tick{color:rgb(var(--paint));font-weight:700;opacity:0;margin-left:4px}
+.num{position:absolute;left:-14px;top:0;font-size:16px;font-weight:700;color:rgba(var(--ink),var(--s2));opacity:0}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:6}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.say{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);color:var(--tess);font-size:21px;line-height:28px;z-index:6;opacity:0}
+.undo{display:block;margin-top:4px;color:var(--liveInk);font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em}
+.wisp{position:absolute;width:10px;height:8px;border-radius:50%;background:rgba(36,80,216,.55);filter:blur(1.5px);opacity:0;z-index:7}
+.caret{display:inline-block;width:2px;height:26px;vertical-align:-5px;background:var(--tess);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20;transition:opacity .15s}
+</style>
+</head>
+<body>
+<div class="cap" id="cap">PASTE A LINK</div>
+<div class="ph" id="ph">
+ <div class="abs lbl" style="left:22px;top:58px">‹ KITCHEN</div>
+ <div class="abs t44" id="title" style="left:22px;top:84px">Paste a recipe</div>
+ <section id="stage" class="abs" style="inset:0"></section>
+ <div class="say" id="say"></div>
+ <div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>
+ <div id="fing"></div>
+</div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const HOUSE='cubic-bezier(.2,.8,.2,1)';
+const anim=(el,kf,o)=>el.animate(kf,{fill:'forwards',...o}).finished;
+const stage=$('stage');const add=h=>{stage.insertAdjacentHTML('beforeend',h);return stage.lastElementChild};
+const cap=t=>$('cap').textContent=t;
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const f=$('fing');
+async function tap(x,y,hold=140){f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1;await sleep(hold);f.style.opacity=0}
+async function say(html){const s=$('say');await anim(s,[{opacity:getComputedStyle(s).opacity},{opacity:0}],{duration:150});s.innerHTML=html;if(html)anim(s,[{opacity:0,transform:'translate(12px,-50%)'},{opacity:1,transform:'translate(0,-50%)'}],{duration:300,easing:HOUSE})}
+let wispT=null;
+function wisps(on){clearInterval(wispT);if(!on)return;const go=()=>{for(let k=0;k<3;k++){const w=document.createElement('div');w.className='wisp';w.style.left=(334+k*9)+'px';w.style.top='760px';$('ph').appendChild(w);
+ w.animate([{opacity:0,transform:'translate(0,0) scale(.6)'},{opacity:.8,transform:`translate(${(k-1)*6}px,-26px) scale(1)`},{opacity:0,transform:`translate(${(k-1)*10}px,-52px) scale(1.3)`}],{duration:1300,delay:k*260,easing:'ease-out'}).onfinish=()=>w.remove()}};go();wispT=setInterval(go,1300)}
+async function setTitle(t){const e=$('title');await anim(e,[{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:160});e.textContent=t;e.style.fontSize='';e.style.letterSpacing='';if(e.scrollWidth>346){e.style.fontSize='34px';e.style.letterSpacing='-.03em'}anim(e,[{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:300,easing:HOUSE})}
+async function clear(){await say('');await anim(stage,[{opacity:1},{opacity:0}],{duration:280});stage.innerHTML='';stage.getAnimations().forEach(a=>a.cancel());stage.style.opacity=1;await setTitle('Paste a recipe');await sleep(250)}
+
+// the empty paste page: the page's frame, one quiet line, one way in
+async function pasteLink(host,path){
+ const q=add(`<div class="abs" style="left:22px;top:150px;font-size:21px;line-height:28px;color:rgba(var(--ink),var(--s2))">A recipe's text, or its link.</div>`);
+ const k=add(`<div class="abs lbl" style="left:22px;top:196px;color:rgb(var(--ink))">PASTE<svg style="position:absolute;left:-2px;top:20px;overflow:visible" width="0" height="12"><path d="${lens(66,2)}" fill="rgb(var(--ink))"/></svg></div>`);
+ anim(q,[{opacity:0},{opacity:1}],{duration:300});anim(k,[{opacity:0},{opacity:1}],{duration:300,delay:100});
+ await sleep(900);await tap(50,206,160);
+ const svg=k.querySelector('svg');svg.setAttribute('width','70');svg.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:150,fill:'forwards'});
+ await sleep(150);anim(q,[{opacity:1},{opacity:0}],{duration:200});anim(k,[{opacity:1},{opacity:0}],{duration:200});await sleep(160);
+ const link=add(`<div class="abs" style="left:22px;right:22px;top:150px;font-size:21px;line-height:30px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b style="font-weight:600">${host}</b><span style="color:rgba(var(--ink),var(--s3))">${path}</span></div>`);
+ await anim(link,[{opacity:0,transform:'translateY(10px)',filter:'blur(3px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:300,easing:HOUSE});
+ return link;
+}
+// reading: a soft cadmium wash sweeps the link line and loops; no spinner
+function reading(host){
+ const w=add(`<div class="abs" style="left:0;top:148px;width:140px;height:34px;background:linear-gradient(90deg,rgba(240,165,0,0),rgba(240,165,0,.35) 50%,rgba(240,165,0,0));mix-blend-mode:multiply;filter:blur(5px)"></div>`);
+ const a=w.animate([{transform:'translateX(-140px)'},{transform:'translateX(390px)'}],{duration:1400,easing:'cubic-bezier(.45,0,.55,1)',iterations:Infinity});
+ say(`Reading ${host}…`);
+ return async()=>{a.cancel();w.remove();await say('')};
+}
+const liftLink=l=>anim(l,[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-30px) scale(.8)'}],{duration:300,easing:HOUSE});
+const source=h=>{const s=add(`<div class="abs lbl" style="left:22px;top:150px">FROM ${h.toUpperCase()}</div>`);anim(s,[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:320,easing:HOUSE})};
+function lineHTML(l,y,g){const c=g?' g wet':'';
+ if(l.t==='head')return `<div class="pl lbl${c}" style="top:${y+4}px;font-size:16px;line-height:30px;letter-spacing:.08em${g?'':';color:rgba(var(--ink),var(--s2))'}">${l.s.toUpperCase()}</div>`;
+ if(l.t==='meta')return `<div class="pl meta${c}" style="top:${y}px">${l.s}</div>`;
+ if(l.t==='ing')return `<div class="pl${c}" style="top:${y}px"><span class="amt">${l.a}<i></i></span> <span class="nm">${l.n}</span>${l.p?`<span style="color:rgba(var(--ink),var(--s2))">${l.p}</span>`:''}</div>`;
+ return `<div class="pl${c}" style="top:${y}px"><span class="num">${l.k}</span>${l.s}${l.d?`<span class="amt" style="font-weight:400">${l.d}<i></i></span><span class="tick">✓</span>`:''}</div>`}
+function layout(lines){let y=182;return lines.map(l=>{const a=y;y+=l.t==='head'?36:30;return a})}
+async function land(lines,g,stream){const ys=layout(lines),els=[];
+ for(let k=0;k<lines.length;k++){const el=add(lineHTML(lines[k],ys[k],g));els.push(el);
+  if(stream){anim(el,[{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:300,easing:HOUSE});await sleep(150)}
+  else anim(el,[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:260,delay:k*30,easing:HOUSE})}
+ await sleep(stream?300:lines.length*30+280);return els}
+// the brush pass: amounts get the under-stroke (drying to 35%), names arrive in sage and dry to ink, durations a tick, steps their numeral
+async function brush(els,lines,g){
+ const last=parseFloat(els[els.length-1].style.top);
+ const band=add(`<div class="abs" style="left:0;right:0;top:160px;height:80px;background:linear-gradient(rgba(240,165,0,0),rgba(240,165,0,.4) 55%,rgba(240,165,0,0));mix-blend-mode:multiply;filter:blur(6px);opacity:0"></div>`);
+ anim(band,[{opacity:0},{opacity:1,offset:.12},{opacity:1,offset:.88},{opacity:0}],{duration:700});
+ anim(band,[{transform:'translateY(0)'},{transform:`translateY(${last-160}px)`}],{duration:700,easing:'linear'});
+ els.forEach((el,k)=>{const at=(parseFloat(el.style.top)-182)/Math.max(1,last-182)*640;setTimeout(()=>{
+  el.querySelectorAll('.amt i').forEach(i=>{anim(i,[{width:'0'},{width:'100%'}],{duration:180,easing:HOUSE});setTimeout(()=>anim(i,[{opacity:.85},{opacity:.35}],{duration:900}),900)});
+  if(!g)el.querySelectorAll('.nm').forEach(n=>{n.style.color='rgb(var(--health))';setTimeout(()=>n.style.color='rgb(var(--ink))',700)});
+  el.querySelectorAll('.tick').forEach(t=>anim(t,[{opacity:0},{opacity:1}],{duration:180,delay:120}));
+  el.querySelectorAll('.num').forEach(n=>anim(n,[{opacity:0},{opacity:1}],{duration:200}));
+ },at)});
+ await sleep(820);band.remove();
+}
+function saveWord(top){return add(`<div class="abs" style="left:22px;top:${top}px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;opacity:0">Save recipe<svg style="position:absolute;left:-2px;top:41px;overflow:visible" width="190" height="12"><path d="${lens(190,2.5)}" fill="rgba(18,147,106,.75)"/></svg></div>`)}
+async function tapSave(s){anim(s,[{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:380,easing:HOUSE});await sleep(1500);await tap(90,s.offsetTop+22,160);
+ const p=s.querySelector('path');anim(p,[{opacity:1},{opacity:1}],{duration:120});
+ const sh=add(`<div class="abs" style="left:${20}px;top:${s.offsetTop+44}px;width:40px;height:8px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.85),rgba(255,255,255,0))"></div>`);
+ await anim(sh,[{transform:'translateX(0)'},{transform:'translateX(170px)'}],{duration:520,easing:HOUSE});sh.remove();anim(s,[{opacity:1},{opacity:0}],{duration:220})}
+async function writingLine(top){
+ const c=add(`<div class="abs" style="left:22px;top:${top}px"><span class="caret"></span></div>`);
+ const r=add(`<div class="abs" style="left:22px;right:22px;top:${top+36}px;height:.5px;background:var(--tess);transform-origin:left"></div>`);
+ anim(r,[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:420,easing:HOUSE});anim(c,[{opacity:0},{opacity:1}],{duration:200,delay:300})}
+
+const CHILI=[{t:'meta',s:'Serves 6 · 30 min'},{t:'head',s:'Ingredients'},
+ {t:'ing',a:'1 lb',n:'ground beef'},{t:'ing',a:'1',n:'yellow onion',p:', diced'},{t:'ing',a:'2 tbsp',n:'chili powder'},{t:'ing',a:'1 can',n:'diced tomatoes',p:' · 15 oz'},{t:'ing',a:'2 cups',n:'beef broth'},{t:'ing',a:'½ lb',n:'elbow macaroni'},{t:'ing',a:'1 cup',n:'shredded cheddar'},
+ {t:'head',s:'Method'},{t:'step',k:1,s:'Brown the beef and onion, ',d:'5 min'},{t:'step',k:2,s:'Add the rest, simmer ',d:'12 min'},{t:'step',k:3,s:'Stir in the cheddar.'}];
+const LEMON=[{t:'meta',s:'Serves 2 · 20 min'},{t:'head',s:'Ingredients'},
+ {t:'ing',a:'8 oz',n:'spaghetti'},{t:'ing',a:'2',n:'lemons'},{t:'ing',a:'½ cup',n:'parmesan',p:', grated'},{t:'ing',a:'4 tbsp',n:'butter'},
+ {t:'head',s:'Method'},{t:'step',k:1,s:'Boil the pasta, ',d:'10 min'},{t:'step',k:2,s:'Melt the butter, add the zest.'},{t:'step',k:3,s:'Toss with the juice and cheese.'}];
+const SHAK=[{t:'meta',s:'Serves 4 · 35 min'},{t:'head',s:'Ingredients'},
+ {t:'ing',a:'6',n:'eggs'},{t:'ing',a:'1 can',n:'crushed tomatoes',p:' · 28 oz'},{t:'ing',a:'1',n:'red bell pepper'},{t:'ing',a:'1',n:'yellow onion'},{t:'ing',a:'2 tsp',n:'paprika'},{t:'ing',a:'1 tsp',n:'cumin'},{t:'head',s:'Preparation'}];
+
+(async()=>{
+ await document.fonts.ready;await sleep(300);document.body.dataset.start='1';await sleep(300);
+ // 1 · L1: the page has a recipe card; it lands as plain text and is read like a paste
+ cap('1 · A RECIPE CARD · BUDGETBYTES.COM');
+ let link=await pasteLink('budgetbytes.com','/one-pot-chili-mac');
+ let done=reading('budgetbytes.com');await sleep(2000);await done();
+ liftLink(link);await setTitle('One-pot chili mac');source('budgetbytes.com');
+ let els=await land(CHILI,false,false);await brush(els,CHILI,false);
+ say('7 ingredients, 3 steps, 2 timers.');
+ let s=saveWord(624);await tapSave(s);
+ say('Chili mac saved.<span class="undo">UNDO</span>');
+ await sleep(1800);await clear();
+ // 2 · a site that blocks: the link stays at full ink, a writing line opens under it
+ cap('2 · A SITE THAT BLOCKS · ALLRECIPES.COM');
+ link=await pasteLink('allrecipes.com','/recipe/24074/alysias-basic-meat-lasagna');
+ done=reading('allrecipes.com');await sleep(1700);await done();
+ say('That site won’t let me read it. Paste the text instead.');
+ await writingLine(196);await sleep(2800);await clear();
+ // 3 · L3: no recipe card; Claude reads it, streamed in as a wet cobalt ghost; save dries it to ink
+ cap('3 · NO RECIPE CARD · CLAUDE READS IT');
+ link=await pasteLink('sundaysupper.substack.com','/p/lemon-pasta-for-two');
+ done=reading('sundaysupper.substack.com');await sleep(1500);await done();
+ say('No recipe card there. Asking Claude.');wisps(true);
+ await sleep(1500);await say('');
+ liftLink(link);await setTitle('Lemon pasta');source('sundaysupper.substack.com');
+ els=await land(LEMON,true,true);await brush(els,LEMON,true);
+ say('Claude read it.<br>Check it, then save.');
+ s=saveWord(560);await tapSave(s);wisps(false);
+ els.forEach((el,k)=>setTimeout(()=>{el.classList.remove('wet','g');el.style.transition='color .52s';el.style.color='rgb(var(--ink))';el.querySelectorAll('.nm').forEach(n=>n.style.color='rgb(var(--ink))')},k*50));
+ await sleep(600);say('Lemon pasta saved.<span class="undo">UNDO</span>');
+ await sleep(1800);await clear();
+ // 4 · a paywall that ships the ingredients: they're read; the steps get a writing line
+ cap('4 · A PAYWALL · COOKING.NYTIMES.COM');
+ link=await pasteLink('cooking.nytimes.com','/recipes/1014721-shakshuka-with-feta');
+ done=reading('cooking.nytimes.com');await sleep(1500);await done();
+ liftLink(link);await setTitle('Shakshuka with feta');source('cooking.nytimes.com');
+ els=await land(SHAK,false,false);await brush(els,SHAK,false);
+ say('The steps are paywalled. Paste them below.');
+ await writingLine(470);await sleep(3000);
+ document.body.dataset.done='1';
+})();
+</script>
+</body>
+</html>

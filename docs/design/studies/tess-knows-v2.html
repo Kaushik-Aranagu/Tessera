@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>What Tess knows, redrawn</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/tess-knows.md (Design item 49): the What Tess knows page (m4-steers.md section 11) redrawn under today's rules for the AI thread's AI-9 on the TessMemory store (docs/ai/architecture.md section 4): told, noticed and recent lines, each with its source and when it was last used; swipe left to FORGET with 10 s UNDO; a new "remember that" fact arriving; FORGET EVERYTHING held; the empty page. Porcelain and Obsidian, item-43 tokens. ?play records the forget and the new fact on Porcelain. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:18,16,22;--s2:.66;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;background:#fff;color:rgb(var(--ink))}
+.ph.dark{--ink:245,242,236;--s2:.72;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7C5E;--live:#FF5B3A;--now:#FFC23D;background:#000}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.sm{font-size:16px;line-height:22px}
+.nw{white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:48px;white-space:nowrap}
+.v{font-weight:600}
+.ctx{color:var(--ctx)}
+.win{position:absolute;left:0;right:0;top:84px;height:652px;-webkit-mask-image:linear-gradient(transparent 0,#000 30px,#000 602px,transparent 652px);mask-image:linear-gradient(transparent 0,#000 30px,#000 602px,transparent 652px)}
+.win.flat{-webkit-mask-image:linear-gradient(#000 0,#000 602px,transparent 652px);mask-image:linear-gradient(#000 0,#000 602px,transparent 652px)}
+.g{position:absolute;left:22px}
+.fact{position:absolute;left:22px;width:346px}
+.fact .s{position:relative;display:inline-block;font-size:21px;line-height:28px}
+.fact .src{font-size:16px;line-height:22px;color:rgba(var(--ink),var(--s2));margin-top:2px}
+.fact .dl{position:absolute;left:0;bottom:-3px;height:1.5px;background:var(--tess);width:0}
+.fg{position:absolute;right:22px;font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--live);opacity:0}
+.day{position:absolute;left:22px;font-size:16px;line-height:22px;white-space:nowrap}
+.day b{font-weight:600;color:rgba(var(--ink),var(--s2));display:inline-block;width:42px}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7;transform-origin:50% 50%}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:multiply}
+.ph.dark .soul i{mix-blend-mode:screen}
+.fk{position:absolute;width:3px;height:3px;border-radius:50%;z-index:8}
+.fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35);z-index:30}
+.ph.dark .fing{background:rgba(255,255,255,.1);box-shadow:0 0 0 1.5px rgba(255,255,255,.5)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2960px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const PIG={light:['#2450D8','#E2432A','#F0A500'],dark:['#86B4FF','#FF5B3A','#FFC23D']};
+const soul=(dark,id='')=>{const P=dark?PIG.dark:PIG.light,f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;
+ return `<div class="soul" ${id?`id="${id}"`:''}>${C.map(([px,py],i)=>`<i style="left:${cx+(px-cx)*f-10+2}px;top:${cy+(py-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+// The facts, by group. Told facts carry value words (600); noticed facts don't. The source line names the evidence and when it was last used.
+const TRAIN=[{id:'work',t:'You train <span class="v">after work</span> on weekdays.',s:'you said so on Oct 9, used today'},
+ {id:'slot',t:'You usually train 6 to 8 pm.',s:'from 14 workouts, used today'},
+ {id:'push',t:'Push comes after a rest day.',s:'from 6 weeks'},
+ {id:'sh',t:'Your <span class="v">left shoulder</span> gets sore on <span class="v">overhead pressing</span>.',s:'you said so on Oct 12, stays on this phone',two:1}];
+const KITCH=[{id:'cook',t:'You cook on Sunday and Wednesday.',s:'from 9 cooks, used Sunday'},{id:'taco',t:'<span class="v">Tacos</span> means the sheet-pan tacos.',s:'you said so on Oct 3'}];
+const PEOPLE=[{id:'mom',t:'<span class="v">Call mom</span> means your mother.',s:'you said so on Oct 9, used Tuesday'}];
+const DAYS=['Thu  rest day, 3 tasks.','Wed  Pull A done, 2 tasks, cooked chili.','Tue  Push A done, 3 tasks.','Mon  rest day, 4 tasks.','Sun  Legs A done, cooked tacos.','Sat  Pull A done, 1 task.','Fri  Push A done, 2 tasks, cooked pasta.','Thu  rest day, 2 tasks.','Wed  Legs A done, 3 tasks, cooked chili.','Tue  Pull A done, 1 task.','Mon  Push A done, 4 tasks.','Sun  rest day, cooked tacos.','Sat  Legs A done, 2 tasks.','Fri  Pull A done, 2 tasks.'];
+const groups=(o={})=>[{g:'Training',items:o.train||TRAIN},{g:'Kitchen',items:KITCH},{g:'People',items:PEOPLE},{g:'The last 14 days',days:DAYS}];
+// Lays the page out: y of each thing in page coordinates. Title at 84, count line at 196, first group word at 250, facts 50 under their group word, pitch 72 (one line) or 100 (two).
+function layout(gs,y0=250){const out=[];let y=y0;for(const G of gs){out.push({k:'g',y,t:G.g});y+=50;
+ if(G.days){for(const d of G.days){out.push({k:'d',y,t:d});y+=26}y+=28;out.push({k:'end',y});continue}
+ for(const it of G.items){const h=it.two?80:52;out.push({k:'f',y,it,h});y+=h+20}y+=16}return out}
+const page=(o={})=>{const L=layout(groups(o),o.y0??250),off=o.scroll||0;
+ let h=`<div class="abs lbl s2" style="left:22px;top:58px">‹ ${o.back||'SETTINGS'}</div><div class="win${off?'':' flat'}" id="win"><div class="abs t44" style="left:22px;top:${0-off}px">What I know<br>about you</div><div class="abs b nw s2" id="cnt" style="left:22px;top:${112-off}px">${o.count||'12 things. 4 you told me, 8 I noticed.'}</div>`;
+ for(const e of L){const y=e.y-84-off;if(y<-60||y>700)continue;
+  if(e.k==='g')h+=`<div class="g t34" style="top:${y}px;opacity:.85">${e.t}</div>`;
+  else if(e.k==='d')h+=`<div class="day" style="top:${y}px"><b>${e.t.slice(0,3)}</b>${e.t.slice(5)}</div>`;
+  else if(e.k==='end')h+=`<div class="abs lbl s2" id="fe" style="left:22px;top:${y}px">FORGET EVERYTHING<svg class="abs" style="left:-2px;top:22px;overflow:visible" width="170" height="12"><path d="${lens(170,2.5)}" fill="rgb(var(--ink))" opacity=".22"/><path d="${lens(170,2.5)}" fill="var(--live)" style="clip-path:inset(0 ${100-(o.hold||0)}% 0 0)"/></svg></div>`;
+  else h+=`<div class="fact" id="f-${e.it.id}" data-y="${e.y}" style="top:${y}px"><div class="s">${e.it.t}<i class="dl"></i></div><div class="src">${e.it.s}</div></div>`}
+ h+=`</div>${o.tess?`<div class="tl">${o.tess}${o.undo?'<span class="u">UNDO</span>':''}</div>`:''}${soul(!!o.dark,'S')}`;return h};
+const settings=()=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div><div class="abs t44" style="left:22px;top:84px">Settings</div>
+<div class="abs lbl s2" style="left:22px;top:172px">TESS</div><div class="abs b" style="left:22px;top:196px">Tess remembers <span class="v">12 things</span>.</div><div class="abs b" style="left:22px;top:232px">Look: <span class="v">Porcelain</span> by day, <span class="v">Obsidian</span> by night.</div>
+<div class="abs lbl s2" style="left:22px;top:302px">CLAUDE</div><div class="abs b" style="left:22px;top:326px">Tess asks Claude: <span class="v">yes</span>.</div><div class="abs b" style="left:22px;top:354px;color:var(--tess)">Tess asks Claude when she's unsure, and for Plan my day.</div><div class="abs b" style="left:22px;top:410px">This month <span class="v">$0.00</span> of $10.</div>
+<div class="abs lbl s2" style="left:22px;top:480px">BACKUPS</div><div class="abs b" style="left:22px;top:504px">Today's copy saved, 7 kept.</div>${soul(0)}`;
+const flecks=(from,to,n=24,dark=0,t=1)=>{const P=dark?PIG.dark:PIG.light;let h='';for(let i=0;i<n;i++){const u=Math.min(1,t*(1-i/n*.6)+i/n*.2),x0=from[0]+(i*53%280),y0=from[1]+(i*29%56),x=x0+(to[0]-x0)*u,y=y0+(to[1]-y0)*u-Math.sin(u*Math.PI)*40;h+=`<div class="fk" style="width:4px;height:4px;left:${x.toFixed(0)}px;top:${y.toFixed(0)}px;background:${P[i%3]};opacity:${(1-u*.6).toFixed(2)}"></div>`}return h};
+if(!PLAY){
+ const P=[['SETTINGS · TESS REMEMBERS 12 THINGS, THE NUMBER IS THE DOOR',settings()],
+  ['THE PAGE · EACH LINE WITH ITS SOURCE AND WHEN IT WAS LAST USED',page()],
+  ['SWIPE LEFT · FORGET IS THE DESTINATION WORD',page()+`<div class="fg" style="top:520px;opacity:1">FORGET</div><div class="fing" style="left:54px;top:536px"></div>`],
+  ['FORGOTTEN · THE LINE BREAKS INTO HER PIGMENTS AND DRIFTS INTO THE SOUL',page({train:TRAIN.slice(0,3),count:'11 things. 3 you told me, 8 I noticed.',tess:'Left shoulder, forgotten.',undo:1})+flecks([40,520],[346,779],24,0,.4)],
+  ['A NEW FACT · “REMEMBER THAT I REST ON SUNDAYS” LANDS WITH THE DRYING LINE',page({train:[{id:'rest',t:'You <span class="v">rest on Sundays</span>.',s:'you said so just now'},...TRAIN],tess:'Kept. You rest on Sundays.',undo:1})],
+  ['OBSIDIAN · THE END OF THE PAGE, FORGET EVERYTHING HELD',page({dark:1,scroll:732,hold:62})+`<div class="fing" style="left:100px;top:660px"></div>`],
+  ['OBSIDIAN · EMPTY, AFTER FORGET EVERYTHING',`<div class="abs lbl s2" style="left:22px;top:58px">‹ SETTINGS</div><div class="abs t44" style="left:22px;top:84px">What I know<br>about you</div><div class="abs b s2" style="left:22px;top:196px">Nothing yet.</div><div class="abs b s2" style="left:22px;top:250px;width:346px">Say “remember that…” and I'll keep it here.</div><div class="tl">Everything forgotten, 12 things.<span class="u">UNDO</span></div>${soul(1)}`]];
+ $('row').innerHTML=P.map(([c,b],i)=>`<div><div class="cap">${c}</div><div class="ph${i>=5?' dark':''}">${b}</div></div>`).join('');
+ // the swipe phone: shift the shoulder block left, under the finger
+ const sh=document.querySelectorAll('#f-sh')[1];if(sh)sh.style.transform='translateX(-96px)';
+ // the new-fact phone: the drying line under the new sentence, its source still fading in
+ const nf=document.getElementById('f-rest');if(nf){nf.querySelector('.dl').style.width='62%';nf.querySelector('.src').style.opacity='.4'}
+ $('note').innerHTML='WHAT TESS KNOWS, FOR AI-9 ON THE TESSMEMORY STORE. ‹ SETTINGS AT 58 (‹ TODAY WHEN HE ASKED HER), TITLE 44 IN HER VOICE, THE COUNT LINE, THEN GROUP WORDS AT TITLE 34 WITH THE LINES UNDER THEM: BODY 21, VALUE WORDS AT 600 ON WHAT HE TOLD HER, AND UNDER EACH ITS SOURCE AT 16 WITH WHEN IT WAS LAST USED. NOTHING RESTS IN COLOUR. SWIPE LEFT: FORGET IN LIVE AT THE RIGHT, THE LINE BREAKS INTO HER THREE PIGMENTS AND DRIFTS INTO THE SOUL, TESS NAMES IT WITH UNDO 10 S. A NEW “REMEMBER THAT” LANDS GLYPH BY GLYPH WITH THE 2 S DRYING LINE. FORGET EVERYTHING IS A HOLD AT THE END OF THE PAGE. THE PAGE SENDS NOTHING ANYWHERE.';
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+}else{
+ $('row').innerHTML=`<div><div class="cap" id="cap">AT REST · WHAT SHE KNOWS, EACH LINE WITH ITS SOURCE</div><div class="ph" id="P">${page()}<div class="fing" id="fing" style="left:150px;top:536px;opacity:0"></div></div></div>`;
+ const fing=$('fing'),ph=$('P');
+ const below=(y)=>[...ph.querySelectorAll('.fact,.g,.day')].filter(e=>parseFloat(e.style.top)>y);
+ async function play(){await sleep(1400);
+  // swipe left on the shoulder line: FORGET rises at the right as the line passes 60 pt; past 96 it commits
+  $('cap').textContent='SWIPE LEFT · FORGET RISES AS THE DESTINATION WORD';
+  const sh=$('f-sh'),fg=document.createElement('div');fg.className='fg';fg.style.top='520px';ph.appendChild(fg);
+  fing.animate([{opacity:0},{opacity:1}],{duration:160,fill:'forwards'});await sleep(200);
+  fing.animate([{left:'150px'},{left:'48px'}],{duration:640,easing:H,fill:'forwards'});
+  sh.animate([{transform:'translateX(0)'},{transform:'translateX(-102px)'}],{duration:640,easing:H,fill:'forwards'});
+  fg.animate([{opacity:0,transform:'translateX(12px)'},{opacity:0,transform:'translateX(12px)',offset:.45},{opacity:1,transform:'translateX(0)'}],{duration:640,easing:H,fill:'forwards'});
+  await sleep(900);
+  // release: the sentence breaks into her pigments and drifts into the soul; the soul takes one breath
+  $('cap').textContent='FORGOTTEN · THE LINE BREAKS INTO HER PIGMENTS, THE SOUL BREATHES ONCE';
+  fing.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'});fg.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});
+  const r=sh.getBoundingClientRect(),pr=ph.getBoundingClientRect(),k=pr.width/390,x0=(r.left-pr.left)/k-102,y0=(r.top-pr.top)/k;
+  sh.style.opacity='0';const P=PIG.light;
+  for(let i=0;i<28;i++){const d=document.createElement('div');d.className='fk';d.style.background=P[i%3];const sx=x0+(i*53%270),sy=y0+(i*29%56);d.style.left=sx+'px';d.style.top=sy+'px';ph.appendChild(d);
+   const tx=346-sx,ty=779-sy;d.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${tx*.5}px,${ty*.5-44}px)`,opacity:.9,offset:.5},{transform:`translate(${tx}px,${ty}px)`,opacity:0}],{duration:760,delay:i*16,easing:H,fill:'forwards'})}
+  const S=$('S');S.animate([{transform:'scale(1)'},{transform:'scale(1.09)',offset:.45},{transform:'scale(1)'}],{duration:1300,delay:500,easing:'ease-in-out'});
+  await sleep(260);
+  // the lines under it close up 100 pt; the count rolls; Tess names it with UNDO
+  for(const e of below(parseFloat(sh.style.top)))e.animate([{transform:'translateY(0)'},{transform:'translateY(-100px)'}],{duration:320,easing:H,fill:'forwards'});
+  const cnt=$('cnt');cnt.animate([{opacity:1},{opacity:0}],{duration:140,fill:'forwards'});await sleep(150);cnt.textContent='11 things. 3 you told me, 8 I noticed.';cnt.animate([{opacity:0},{opacity:1}],{duration:220,fill:'forwards'});
+  const tl=document.createElement('div');tl.className='tl';tl.innerHTML='Left shoulder, forgotten.<span class="u">UNDO</span>';tl.style.opacity='0';ph.appendChild(tl);tl.animate([{opacity:0,transform:'translateY(-50%) translateY(4px)'},{opacity:1,transform:'translateY(-50%)'}],{duration:300,easing:H,fill:'forwards'});
+  await sleep(2600);
+  // a new told fact arrives: "remember that I rest on Sundays". The lines make room, the sentence arrives glyph by glyph under the drying line, Tess keeps it with UNDO
+  $('cap').textContent='“REMEMBER THAT I REST ON SUNDAYS” · GLYPHS UNDER THE 2 S DRYING LINE, THEN ITS SOURCE';
+  tl.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});
+  const shTop=parseFloat(sh.style.top);for(const e of below(215)){if(e===sh)continue;const cur=parseFloat(e.style.top)>shTop?-100:0;e.animate([{transform:`translateY(${cur}px)`},{transform:`translateY(${cur+72}px)`}],{duration:320,easing:H,fill:'forwards'})}
+  await sleep(330);
+  const nf=document.createElement('div');nf.className='fact';nf.id='f-rest';nf.style.top=(300-84)+'px';const txt='You rest on Sundays.';nf.innerHTML=`<div class="s">${[...txt].map((c,i)=>`<span style="opacity:0;${i>=4&&i<19?'font-weight:600':''}">${c===' '?'&nbsp;':c}</span>`).join('')}<i class="dl"></i></div><div class="src" style="opacity:0">you said so just now</div>`;$('win').appendChild(nf);
+  [...nf.querySelectorAll('.s span')].forEach((g,i)=>g.animate([{opacity:0},{opacity:1}],{duration:120,delay:i*24,fill:'forwards'}));
+  nf.querySelector('.dl').animate([{width:'0%'},{width:'100%'}],{duration:2000,delay:300,easing:'linear',fill:'forwards'});
+  await sleep(300);cnt.animate([{opacity:1},{opacity:0}],{duration:140,fill:'forwards'});await sleep(150);cnt.textContent='12 things. 4 you told me, 8 I noticed.';cnt.animate([{opacity:0},{opacity:1}],{duration:220,fill:'forwards'});
+  await sleep(1900);nf.querySelector('.dl').animate([{opacity:1},{opacity:0}],{duration:400,fill:'forwards'});nf.querySelector('.src').animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});
+  tl.innerHTML='Kept. You rest on Sundays.<span class="u">UNDO</span>';tl.animate([{opacity:0,transform:'translateY(-50%) translateY(4px)'},{opacity:1,transform:'translateY(-50%)'}],{duration:300,easing:H,fill:'forwards'});
+  await sleep(2400);document.body.dataset.done='1'}
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';play()});
+}
+</script>
+</body>
+</html>

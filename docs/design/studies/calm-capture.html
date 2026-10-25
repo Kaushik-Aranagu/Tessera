@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Calm capture</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for docs/design/calm-capture.md (Kaushik's 6:45 PM correction): the Ask Tess capture surface at a smaller, calmer scale, drawn in Porcelain. Open from the soul, Write, type, Return, Tess answers. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:23,20,31;--ctx:#6A4C9C;--cobalt:#2450D8;--verm:#E2432A;--cad:#F0A500}
+body{margin:0;background:#ddd}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:rgb(var(--ink));font-family:'Inter Tight',sans-serif;background:#FFFFFF}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.6);white-space:nowrap}
+.voice{font-size:21px;line-height:28px}
+.sw{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap;position:relative;display:inline-block}
+.sw svg{position:absolute;left:-7px;bottom:7px;z-index:-1;overflow:visible}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+.mode{position:absolute;right:0;display:flex;align-items:center;justify-content:flex-end;gap:14px;height:48px;opacity:0}
+.mode span{font-size:21px;font-weight:500;letter-spacing:-.01em}
+.mdab{width:16px;height:14px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(.8px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:30;pointer-events:none}
+.caret{display:inline-block;width:1.5px;height:24px;background:var(--cobalt);vertical-align:-5px;margin-left:1px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+  <!-- Home underneath (Porcelain) -->
+  <section id="home" class="abs" style="inset:0;transform-origin:50% 30%">
+    <div class="abs lbl" style="left:22px;right:22px;top:58px;display:flex;gap:22px"><span>REVIEW</span><span style="color:rgb(var(--ink))">TODAY</span><span>TRAINING</span><span>KITCHEN</span></div>
+    <div class="abs voice" style="left:22px;top:118px;color:var(--ctx)">Thursday evening</div>
+    <div class="abs" style="left:-30px;top:250px;width:380px;height:130px;background:radial-gradient(closest-side,rgba(226,67,42,.05) 0%,rgba(226,67,42,.05) 62%,rgba(226,67,42,.11) 88%,rgba(226,67,42,0) 100%);filter:blur(5px)"></div>
+    <div class="abs voice" style="left:22px;top:178px;color:var(--ctx)">now, until twenty to seven</div>
+    <div class="abs" style="left:20px;top:212px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;width:340px">Groceries for the week</div>
+    <div class="abs" style="left:22px;top:346px;display:flex;align-items:center;gap:18px"><div class="sw">Finish<svg width="104" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#E2432A" opacity=".88" filter="url(#rough)"/></svg></div><div class="lbl">HOLD · 30 MIN LEFT</div></div>
+    <div class="abs" style="left:22px;top:450px;font-size:34px;font-weight:500;letter-spacing:-.03em">Next</div>
+    <div class="abs voice" style="left:22px;right:22px;top:504px;display:flex;justify-content:space-between"><span>Push Day A</span><span style="color:rgba(var(--ink),.6)">19:00</span></div>
+    <div class="abs voice" style="left:22px;right:22px;top:548px;display:flex;justify-content:space-between"><span>Stretch &amp; mobility</span><span style="color:rgba(var(--ink),.6)">20:30</span></div>
+  </section>
+
+  <!-- the wash: ground at 94%, 380 pt, no top edge -->
+  <div id="wash" class="abs" style="left:0;right:0;bottom:0;height:380px;background:linear-gradient(rgba(255,255,255,0) 0%,rgba(255,255,255,.96) 22%);opacity:0"></div>
+
+  <!-- the surface -->
+  <section id="surf" class="abs" style="left:22px;right:22px;bottom:0;height:420px">
+    <div id="q" class="abs voice" style="right:0;top:118px;color:var(--cobalt);opacity:0;text-align:right">What's on your mind?</div>
+    <div id="fast" class="abs lbl" style="right:0;top:156px;opacity:0">START PUSH DAY A</div>
+    <div id="m0" class="mode" style="top:206px"><span style="color:rgba(var(--ink),.6)">Speak</span><div class="mdab" style="background:#E2432A"></div></div>
+    <div id="m1" class="mode" style="top:254px"><span>Write</span><div class="mdab" style="background:#2450D8"></div></div>
+    <div id="m2" class="mode" style="top:302px"><span style="color:rgba(var(--ink),.6)">Show</span><div class="mdab" style="background:#F0A500"></div></div>
+    <!-- Write -->
+    <div id="write" class="abs" style="left:0;right:0;top:262px;opacity:0">
+      <div id="txt" class="voice" style="min-height:30px"><span id="ph1" style="color:rgba(var(--ink),.38)">Write anything</span><span class="caret"></span></div>
+      <div id="wl" class="abs" style="left:0;right:0;top:36px;height:.5px;background:rgba(36,80,216,.6);transform-origin:right;transform:scaleX(.06)"></div>
+      <div id="dry" class="abs" style="left:0;right:0;top:35px;height:1.5px;background:#2450D8;transform-origin:left;transform:scaleX(0)"></div>
+    </div>
+  </section>
+
+  <div id="say" class="abs voice" style="right:78px;bottom:43px;width:262px;text-align:right;color:var(--cobalt);opacity:0;z-index:12"></div>
+  <div id="undo" class="abs lbl" style="right:78px;bottom:14px;color:#C23A22;opacity:0">UNDO</div>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div id="sd" style="position:absolute;transform-origin:0 0">
+      <div class="d" style="--c:226,67,42;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:36,80,216;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:240,165,0;transform:translate(0,9px) scale(.72)"></div>
+    </div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)', CALM = 'cubic-bezier(.25,1.08,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+async function say(t) { const s = $('say'); s.innerHTML = t; await anim(s, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: HOUSE }); }
+
+async function run() {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready;
+  document.body.dataset.start = '1';
+  await sleep(900);
+
+  // open: a tap on the soul. The page recedes a little, the wash rises, the three modes rise out of the soul.
+  await fingerOn(346, 790); await sleep(80); fingerOff();
+  anim($('sd'), [{ transform: 'scale(1)' }, { transform: 'scale(1.14)' }, { transform: 'scale(1.06)' }], { duration: 420, easing: CALM });
+  anim($('home'), [{ transform: 'none', opacity: 1, filter: 'blur(0)' }, { transform: 'scale(.985)', opacity: .5, filter: 'blur(1.5px)' }], { duration: 420, easing: HOUSE });
+  anim($('wash'), [{ opacity: 0 }, { opacity: 1 }], { duration: 360, easing: HOUSE });
+  ['m2', 'm1', 'm0'].forEach((id, i) => anim($(id), [{ opacity: 0, transform: `translateY(${40 + i * 48}px)` }, { opacity: 1, transform: 'none' }], { duration: 460, delay: 40 * i, easing: CALM }));
+  await sleep(220);
+  anim($('q'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: HOUSE });
+  anim($('fast'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 80, easing: HOUSE });
+  await sleep(1500);
+
+  // Write: the others fold away; the cobalt dab stretches into the writing line
+  await fingerOn(320, 844 - 420 + 278); await sleep(80); fingerOff();
+  anim($('m0'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  anim($('m2'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  anim($('fast'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  anim($('m1'), [{ opacity: 1 }, { opacity: 0 }], { duration: 220, delay: 80 });
+  anim($('q'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+  await sleep(200);
+  anim($('write'), [{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: HOUSE });
+  anim($('wl'), [{ transform: 'scaleX(.06)' }, { transform: 'scaleX(1)' }], { duration: 420, easing: HOUSE });
+  await sleep(900);
+
+  // type
+  const txt = 'bench 82.5x8';
+  $('ph1').remove();
+  const span = document.createElement('span'); $('txt').insertBefore(span, $('txt').firstChild);
+  for (const c of txt) { span.textContent += c; await sleep(85); }
+  await sleep(500);
+  // Return: the text dims to a ghost and the cobalt line dries under it for 2 s
+  document.querySelector('.caret').remove();
+  anim(span, [{ opacity: 1 }, { opacity: .45 }], { duration: 200 });
+  await anim($('dry'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 2000, easing: 'linear' });
+  // commit: the surface closes back into the soul; Tess answers beside it
+  anim($('write'), [{ opacity: 1 }, { opacity: 0 }], { duration: 220 });
+  anim($('wash'), [{ opacity: 1 }, { opacity: 0 }], { duration: 320, delay: 80 });
+  anim($('home'), [{ transform: 'scale(.985)', opacity: .5, filter: 'blur(1.5px)' }, { transform: 'none', opacity: 1, filter: 'blur(0)' }], { duration: 380, delay: 80, easing: HOUSE });
+  anim($('sd'), [{ transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 360, easing: CALM });
+  await sleep(300);
+  say('Bench 82.5 × 8, logged to today.');
+  anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 120 });
+  await sleep(2200);
+  document.body.dataset.done = '1';
+}
+run();
+</script>
+</body>
+</html>
