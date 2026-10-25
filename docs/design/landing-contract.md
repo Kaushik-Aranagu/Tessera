@@ -19,6 +19,23 @@ Sources, newest approved wins: 246 Notes landing (approved Oct 24, 1:54 AM), 236
 
 A landing is a summary plus a keystone plus doors. Never the full list.
 
+## 0. Persistent sections, opening effect and room transitions (Kaushik, 12:22 PM PDT Oct 25)
+
+A landing is built from five fixed, named sections that persist across screens (`LandingSection` in the kit):
+
+| Section | Owns | Touch zone and gestures |
+|---|---|---|
+| topBar | title and a couple of summary lines; after a transition from Home it replaces the departure board and date | title tap opens the room index; left edge x 0 - 24 goes back |
+| keystone | the room's centrepiece in the 354 x 182 slot, integrated with the page ground | its own taps and swipes; any drag that starts here stays here |
+| rows | the caption line (y 390) and the two update rows (y 424), or the Log's one line (y 612) | tap opens, swipe right Done, swipe left Not now, Undo 10 s |
+| doors | the doors: apps on Bridge, the room's own doors elsewhere (dial on the Log, door words on the others) | tap opens; the dial owns vertical drags |
+| action | the one action word, bottom-left (Tess bottom-right is global) | tap does it; drag left or right for options |
+
+Each section owns its zone and gestures and never reads another's; a room supplies content only. The same sections keep their place on level 1 and level 2 pages (the keystone stays live, the lower part changes).
+
+- **Opening effect on every landing:** the Home arrival effect. Sections arrive in order (topBar, keystone, rows, doors, action), 80 ms apart, each rising 10 pt out of a slight blur (3 pt) and a slightly smaller size (95 percent), 0.5 s on the ease-out. Reduce Motion: a 150 ms cross-fade. Implemented once as `.landingSection(_:)`.
+- **From Bridge into a room:** choosing an app flips the mosaic keystone into that room's keystone (a different effect per room is allowed; the pixel doorway of 206 is the Bridge's own) and the lower doors block arrives in its own way; the top area (departure board and date on Bridge) becomes navigation plus the room title and its summary lines. Built per room on top of `LandingKeystone` and the doorway; not part of the shared kit yet.
+
 ## 1. Frame and the four bands
 
 Frame 402 x 874 pt (iPhone 17), 24 pt gutters. Other sizes scale the gaps, never the slot sizes. No ScrollView on a landing.
