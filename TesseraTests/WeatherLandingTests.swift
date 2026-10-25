@@ -99,10 +99,25 @@ struct WeatherLandingTests {
     @Test func doorsLinesStayWithinThree() {
         let snap = Self.snapshot()
         #expect(WeatherWords.hourLines(snap, calendar: Self.calendar).count == 3)
-        #expect(WeatherWords.hourLines(snap, calendar: Self.calendar).first == "2 pm 60° partly cloudy")
+        #expect(WeatherWords.hourLines(snap, calendar: Self.calendar).first == "2 pm 60° cloudy")
         #expect(WeatherWords.weekLines(snap, calendar: Self.calendar).count <= 3)
         #expect(WeatherWords.weekLines(snap, calendar: Self.calendar).first?.hasSuffix("snow") == true)
         #expect(WeatherWords.airLines(snap) == ["Air is good", "UV 3", "Wind 9 mph"])
+    }
+
+    @Test func doorLinesFitTheFactsColumnAndTheBriefFitsAtAX5() throws {
+        // The dial's facts are 150 pt wide, first line Figtree Bold 16; never an ellipsis.
+        let bold = UIFont(name: "Figtree-Bold", size: 16) ?? .systemFont(ofSize: 16, weight: .bold)
+        for snap in [Self.snapshot(), WeatherSample.make(now: Date(), fahrenheit: true)] {
+            let lines = WeatherWords.hourLines(snap) + WeatherWords.weekLines(snap) + WeatherWords.airLines(snap)
+            for line in lines {
+                let width = (line as NSString).size(withAttributes: [.font: bold]).width
+                #expect(width <= 150, "\(line) is \(width) pt")
+            }
+        }
+        let last = try #require(WeatherWords.briefForms(Self.snapshot(sample: true)).last)
+        let big = UIFont(name: "Figtree-Bold", size: 15 * 3.1) ?? .systemFont(ofSize: 46)
+        #expect(((last.lead + last.rest) as NSString).size(withAttributes: [.font: big]).width <= 354)
     }
 
     @Test func rainAlertIsAPhoneOnlySwitch() throws {

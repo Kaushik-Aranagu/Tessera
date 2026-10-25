@@ -105,13 +105,16 @@ enum WeatherSample {
                               kind: dayKind(noon, calendar: calendar))
         }
         let temperature = reading?.temperature ?? 0
+        let todays = hours.filter { calendar.isDate($0.date, inSameDayAs: now) }
         let hour = calendar.component(.hour, from: now)
         let uvIndex = (8 ..< 18).contains(hour) ? max(1, 6 - abs(13 - hour)) : 0
         let day = calendar.ordinality(of: .day, in: .era, for: now) ?? 0
         let wind = (fahrenheit ? 5 : 8) + (day * 3) % (fahrenheit ? 9 : 14)
         return WeatherSnapshot(now: now, temperature: temperature, feelsLike: temperature - 2,
-                               high: max(week.first?.high ?? temperature, temperature),
-                               low: min(week.first?.low ?? temperature, temperature), fahrenheit: fahrenheit,
+                               high: ([week.first?.high ?? temperature, temperature] + todays.map(\.temperature)).max()
+                                   ?? temperature,
+                               low: ([week.first?.low ?? temperature, temperature] + todays.map(\.temperature)).min()
+                                   ?? temperature, fahrenheit: fahrenheit,
                                kind: kind(for: now, now: now, calendar: calendar), hours: hours, week: week,
                                air: day % 5 == 4 ? "fair" : "good", uvIndex: uvIndex, wind: wind, isSample: true,
                                fetchedAt: now)
@@ -148,7 +151,6 @@ enum WeatherSample {
 
 /// Every word and line the landing says.
 enum WeatherWords {
-    // swiftlint:disable:next cyclomatic_complexity
     /// The keystone word, longest first ("Partly cloudy", then "Cloudy").
     static func condition(_ kind: WeatherKind, night: Bool) -> [String] {
         switch kind {
@@ -172,6 +174,11 @@ enum WeatherWords {
 
     static func name(_ kind: WeatherKind, night: Bool) -> String {
         condition(kind, night: night)[0]
+    }
+
+    /// The shortest word, for the dial's 150 pt fact lines ("cloudy", "ice").
+    static func short(_ kind: WeatherKind, night: Bool) -> String {
+        condition(kind, night: night).last ?? name(kind, night: night)
     }
 
     static func isWet(_ kind: WeatherKind) -> Bool {
@@ -222,13 +229,21 @@ enum WeatherWords {
 
     /// The brief at 612: when it changes, plainly; a sample says it is one.
     static func brief(_ snapshot: WeatherSnapshot, calendar: Calendar = .current) -> (lead: String, rest: String) {
+        briefForms(snapshot, calendar: calendar)[0]
+    }
+
+    /// The brief's forms, longest first; the last always fits at AX5.
+    static func briefForms(_ snapshot: WeatherSnapshot, calendar: Calendar = .current) -> [(
+        lead: String,
+        rest: String
+    )] {
         if snapshot.isSample {
-            return ("Sample sky", " until the live forecast is on.")
+            return [("Sample sky", " until the live forecast is on."), ("Sample sky", ".")]
         }
         if let change = change(snapshot, calendar: calendar) {
-            return (change.capitalizedFirst, ".")
+            return [(change.capitalizedFirst, ".")]
         }
-        return ("Steady", " for the next 12 hours.")
+        return [("Steady", " for the next 12 hours."), ("Steady", ".")]
     }
 
     static func windUnit(_ fahrenheit: Bool) -> String {
@@ -243,7 +258,7 @@ enum WeatherWords {
     /// The Hours door: the next three hours, one line each ("4 pm 58° rain").
     static func hourLines(_ snapshot: WeatherSnapshot, calendar: Calendar = .current) -> [String] {
         snapshot.hours.prefix(3).map {
-            "\(hour($0.date, calendar: calendar)) \(degrees($0.temperature)) \(name($0.kind, night: false).lowercased())"
+            "\(hour($0.date, calendar: calendar)) \(degrees($0.temperature)) \(short($0.kind, night: false).lowercased())"
         }
     }
 
@@ -254,7 +269,7 @@ enum WeatherWords {
         let picked = (notable.isEmpty ? Array(days.prefix(2)) : Array(notable.prefix(3)))
         return picked.map { day in
             let weekday = calendar.weekdaySymbols[calendar.component(.weekday, from: day.date) - 1]
-            return "\(weekday) \(name(day.kind, night: false).lowercased())"
+            return "\(weekday) \(short(day.kind, night: false).lowercased())"
         }
     }
 

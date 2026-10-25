@@ -68,7 +68,7 @@ struct WeatherLandingPage: View {
         return [
             DialDoor(id: "hours", name: "Hours", count: nil,
                      color: snapshot.kind.colour(night: snapshot.night),
-                     label: next.map { "From \(WeatherWords.hour($0.date))" },
+                     label: next.map { _ in "Next hours" },
                      lines: WeatherWords.hourLines(snapshot)),
             DialDoor(id: "week", name: "Week", color: wet, label: "Days to note",
                      lines: WeatherWords.weekLines(snapshot)),
@@ -78,13 +78,17 @@ struct WeatherLandingPage: View {
     }
 
     private func brief(_ snapshot: WeatherSnapshot) -> some View {
-        let line = WeatherWords.brief(snapshot)
-        return (Text(line.lead).fontWeight(.semibold).foregroundStyle(Theme.Colors.ink) + Text(line.rest))
-            .font(.custom("Figtree", size: 15, relativeTo: .callout))
-            .foregroundStyle(Theme.Colors.inkSecondary)
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-            .accessibilityLabel(line.lead + line.rest)
+        let forms = WeatherWords.briefForms(snapshot)
+        return ViewThatFits(in: .horizontal) {
+            ForEach(Array(forms.enumerated()), id: \.offset) { _, form in
+                (Text(form.lead).fontWeight(.semibold).foregroundStyle(Theme.Colors.ink) + Text(form.rest))
+                    .font(.custom("Figtree", size: 15, relativeTo: .callout))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .fixedSize()
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(forms[0].lead + forms[0].rest)
     }
 
     private var action: LandingFootAction {
