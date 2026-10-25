@@ -105,39 +105,54 @@ struct MoneyLandingView: View {
     @State private var index = 0
     @State private var adding = false
     @State private var draft = ""
-    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var switcherIndex = 0
+    @State private var switcherVerticalIndex = 0
+    @State private var widgetIndex = 0
+
+    /// October, This year, Since May (283): the month by name, the year, and since the first spend.
+    private var switcher: [String] {
+        let month = AppClock.now.formatted(Date.FormatStyle().locale(Locale(identifier: "en_US")).month(.wide))
+        return [month, "This year", "Since \(firstMonth)"]
+    }
+
+    private var firstMonth: String {
+        let first = model.classes[.spend].map { model.store.objects(of: $0) }?
+            .compactMap { model.store.value("spentAt", of: $0)?.dateValue }.min() ?? AppClock.now
+        return first.formatted(Date.FormatStyle().locale(Locale(identifier: "en_US")).month(.wide))
+    }
 
     var body: some View {
         let _ = model.revision
         let wall = load()
         let categories = PurseBook(model: model, now: AppClock.now).categories()
-        LandingFrame(title: "Purse", accent: LandingAccent.money, stateLine: wall.stateLine, stateSize: 26,
-                     doorsTop: 540,
-                     keystone: {
-                         LandingKeystone(label: "You are the stock") {
-                             PurseIndexView(categories: categories, category: $category, index: $index)
-                         }
-                     },
-                     doors: doors(categories), focus: $category,
-                     openDoor: { door in
-                         TessVoice.shared.say("\(door.name) opens with the full chart soon.")
-                     },
-                     caption: typeSize.isAccessibilitySize ? [] : [caption(wall)],
-                     briefTop: 424,
-                     brief: { LandingBrief(forms: brief(wall)) },
-                     action: LandingFootAction(word: "Log", hint: "Logs a spend, like 12.40 lunch") {
-                         draft = ""
-                         adding = true
-                     },
-                     onBack: { dismiss() })
-            .toolbar(.hidden, for: .navigationBar)
-            .onChange(of: category) { _, _ in index = 0 }
-            .alert("Log a spend", isPresented: $adding) {
-                TextField("12.40 lunch", text: $draft)
-                    .keyboardType(.numbersAndPunctuation)
-                Button("Log") { log() }
-                Button("Cancel", role: .cancel) {}
-            }
+        LandingScaffold(title: "Purse", accent: LandingAccent.money, navWord: "Bridge", onBack: { dismiss() },
+                        switcher: switcher, switcherIndex: $switcherIndex,
+                        switcherVerticalIndex: $switcherVerticalIndex,
+                        needs: needs(wall),
+                        keystone: {
+                            LandingKeystone(label: "You are the stock") {
+                                PurseIndexView(categories: categories, category: $category, index: $index)
+                            }
+                        },
+                        caption: [caption(wall)],
+                        widget: widget(categories), widgetIndex: $widgetIndex,
+                        glyph: { _ in PurseGlyph() },
+                        doors: doors(categories), focus: $category,
+                        openDoor: { door in
+                            TessVoice.shared.say("\(door.name) opens with the full chart soon.")
+                        },
+                        action: LandingFootAction(word: "Log", hint: "Logs a spend, like 12.40 lunch") {
+                            draft = ""
+                            adding = true
+                        })
+                        .toolbar(.hidden, for: .navigationBar)
+                        .onChange(of: category) { _, _ in index = 0 }
+                        .alert("Log a spend", isPresented: $adding) {
+                            TextField("12.40 lunch", text: $draft)
+                                .keyboardType(.numbersAndPunctuation)
+                            Button("Log") { log() }
+                            Button("Cancel", role: .cancel) {}
+                        }
     }
 
     // MARK: Facts
@@ -176,17 +191,42 @@ struct MoneyLandingView: View {
         wall.monthCount == 0 ? "Nothing yet" : "The dashed line is where this pace ends the month."
     }
 
-    private func brief(_ wall: MoneyWall) -> [LandingBrief.Form] {
-        guard let at = wall.lastAt else { return [] }
-        let raw = NotesCopy.when(at, now: AppClock.now)
-        let when = raw == "now" ? "just now" : raw
-        if let category = wall.lastCategory {
-            return [LandingBrief.Form(text: "You last spent on \(category), \(when).", key: category),
-                    LandingBrief.Form(text: "Last spend: \(category).", key: category)]
+    /// Two lines beside the switcher: the month in words, or that the longer views come next. Never a figure.
+    private func needs(_ wall: MoneyWall) -> [String] {
+        switch switcherIndex {
+        case 1: return ["The year view comes next", "Twelve months, payday to payday"]
+        case 2: return ["Since \(firstMonth) comes next", "Every month side by side"]
+        default:
+            guard wall.monthCount > 0 else { return ["Nothing yet", "Log a spend to start the line"] }
+            let last = wall.lastCategory.map { "Last on \($0)" } ?? (wall.lastIsPrivate ? "Last spend private" : "")
+            return [wall.monthCount == 1 ? "1 spend so far" : "\(wall.monthCount) spends so far", last]
         }
-        return [LandingBrief.Form(text: wall.lastIsPrivate ? "You last logged a private spend, \(when)."
-                    : "You last logged a spend, \(when)."),
-        LandingBrief.Form(text: "Last spend, \(when).")]
+    }
+
+    /// The widget (283): still yours, spent today, spent this month. Numbers count up; no red or green; no strike.
+    private func widget(_ categories: [PurseCategory]) -> [WidgetItem] {
+        guard let month = categories.first?.indices.first, let spend = categories.first?.indices.dropFirst().first,
+              !month.isEmpty
+        else {
+            return [WidgetItem(id: "nothing", header: "This month", big: "Nothing yet", middle: "Log a spend",
+                               small: "It starts the line", strikeable: false)]
+        }
+        let today = (spend.solid.last ?? 0) - (spend.solid.dropLast().last ?? 0)
+        // "Still yours" needs money in to mean anything; with no inflow logged it steps aside.
+        let hasIncome = (month.solid.max() ?? 0) > 0
+        return [
+            WidgetItem(id: "yours", header: "Still yours", big: Self.figure(month.solid.last ?? 0), bigIsNumber: true,
+                       middle: "in minus out this month", small: "The solid line", strikeable: false),
+            WidgetItem(id: "today", header: "Today", big: Self.figure(today), bigIsNumber: true, middle: "spent today",
+                       small: "Every spend a tick down", strikeable: false),
+            WidgetItem(id: "month", header: "This month", big: Self.figure(spend.solid.last ?? 0), bigIsNumber: true,
+                       middle: "spent so far", small: "The dashed line is this pace", strikeable: false),
+        ]
+    }
+
+    /// A whole figure with grouping, no symbol and no cents: "2,125".
+    static func figure(_ value: Double) -> String {
+        value.rounded().formatted(.number.precision(.fractionLength(0)).locale(Locale(identifier: "en_US")))
     }
 
     // MARK: Adding
@@ -220,6 +260,40 @@ struct MoneyLandingView: View {
         let word = note.split(separator: " ").first.map { String($0).capitalized }
         let shown = word.map { ObjectPrivacy.isPrivateWord($0, in: model.store) ? "Private spend" : $0 } ?? "Spend"
         TessVoice.shared.say("\(shown), logged.", undo: result.record)
+    }
+}
+
+/// The widget glyph (283): the index line draws to its dot, once on arrival and every 7 s; still under Reduce Motion.
+struct PurseGlyph: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var scheme
+    @State private var drawn: CGFloat = 1
+
+    private static let points: [CGPoint] = [
+        CGPoint(x: 4, y: 20), CGPoint(x: 18, y: 24), CGPoint(x: 30, y: 38), CGPoint(x: 44, y: 42),
+        CGPoint(x: 58, y: 54), CGPoint(x: 72, y: 58),
+    ]
+
+    var body: some View {
+        let sage = scheme == .dark ? Color(hex: 0x8DBFA7) : Color(hex: 0x3F7A62)
+        ZStack(alignment: .topLeading) {
+            Path { path in path.addLines(Self.points) }
+                .trimmedPath(from: 0, to: drawn)
+                .stroke(sage, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+            Circle().fill(sage).frame(width: 7, height: 7)
+                .position(Self.points[Self.points.count - 1])
+                .opacity(drawn >= 1 ? 1 : 0)
+        }
+        .frame(width: 80, height: 80)
+        .accessibilityHidden(true)
+        .task {
+            guard !reduceMotion else { return }
+            while !Task.isCancelled {
+                drawn = 0
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { drawn = 1 }
+                try? await Task.sleep(for: .seconds(7))
+            }
+        }
     }
 }
 

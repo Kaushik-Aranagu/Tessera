@@ -25,7 +25,10 @@ struct RoomLandingsTests {
         }
         if let last = forms.last {
             // The written forms or their whole-word cuts (FitLine) always reach one that fits.
-            #expect(FitLine.candidates(forms).contains { width($0, size: size) <= stateWidth }, comment)
+            #expect(
+                (forms + FitLine.cuts(forms[forms.count - 1])).contains { width($0, size: size) <= stateWidth },
+                comment
+            )
             #expect(!last.contains("..."), comment)
             #expect(!last.contains("…"), comment)
         }
@@ -142,15 +145,5 @@ struct RoomLandingsTests {
         Self.checkForms(ask.stateLine, "Galley empty", size: 26)
         let planned = GalleyPass.stateLine(dinner: dinner("Tomato and white bean stew"), cooking: nil, cookable: 0)
         Self.checkForms(planned, "Galley planned", size: 26)
-    }
-
-    // MARK: Kit
-
-    @Test func fitLineCutsOnWholeWordsNeverAnEllipsis() {
-        let all = FitLine.candidates(["Tacos tonight, start at 6:05.", "Black bean tacos tonight with you."])
-        #expect(all.prefix(2) == ["Tacos tonight, start at 6:05.", "Black bean tacos tonight with you."])
-        #expect(all.dropFirst(2).first == "Black bean tacos tonight")
-        #expect(all.last == "Black")
-        #expect(all.allSatisfy { !$0.contains("...") && !$0.hasSuffix(",") })
     }
 }

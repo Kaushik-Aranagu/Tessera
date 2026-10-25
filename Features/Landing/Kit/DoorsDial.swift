@@ -21,8 +21,16 @@ struct DoorsDial: View {
     let doors: [DialDoor]
     @Binding var focus: Int
     var open: (DialDoor) -> Void
+    var style: Style = .notes
 
+    /// The Log's 246 dial (48 pt places, facts inside) or the landing dial of sheet 283 (Bridge's: 40 pt places,
+    /// focus 26 pt, neighbours 20 pt, 1.6 pt blur, 160 pt wide; the summary is drawn apart by `DoorSummary`).
+    enum Style { case notes, landing }
     static let slot: CGFloat = 48
+    private var placeHeight: CGFloat { style == .landing ? 40 : Self.slot }
+    private var focusSize: CGFloat { style == .landing ? 26 : 28 }
+    private var neighbourSize: CGFloat { style == .landing ? 20 : 21 }
+    private var maxBlur: CGFloat { style == .landing ? 1.6 : 1.8 }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -30,15 +38,9 @@ struct DoorsDial: View {
     @State private var cue = HapticCue()
     @State private var settledAt = Date.distantPast
     @ScaledMetric(relativeTo: .title3) private var scale: CGFloat = 1
-    @Environment(\.dynamicTypeSize) private var typeSize
-
-    /// A slot's height at a Dynamic Type scale: 48 pt, growing with the text up to 1.9x (contract §8).
-    static func slotHeight(scale: CGFloat) -> CGFloat {
-        slot * max(1, min(scale, 1.9))
-    }
 
     private var slotHeight: CGFloat {
-        Self.slotHeight(scale: scale)
+        Self.slot * max(1, min(scale, 1.9))
     }
 
     private var blurOn: Bool {
@@ -52,7 +54,7 @@ struct DoorsDial: View {
                 ForEach(places(count), id: \.self) { place in
                     row(for: wrapped(focus + place), place: place)
                 }
-                facts
+                if style == .notes { facts }
             }
         }
         .frame(height: slotHeight * 3)
@@ -96,11 +98,9 @@ struct DoorsDial: View {
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(door.name)
-                    .font(.custom("Figtree", size: 28 - 7 * distance, relativeTo: .title3).weight(.bold))
+                    .font(.custom("Figtree", size: focusSize - (focusSize - neighbourSize) * distance, relativeTo: .title3).weight(.bold))
                     .foregroundStyle(isFocus ? door.color : Theme.Colors.inkSecondary)
                     .lineLimit(1)
-                    // At accessibility sizes the name takes the dial's width and steps down rather than cutting.
-                    .minimumScaleFactor(typeSize.isAccessibilitySize ? 0.5 : 1)
                 if isFocus, let count = door.count {
                     Text(count)
                         .font(.custom("Outfit", size: 14, relativeTo: .caption).weight(.regular))
@@ -108,11 +108,11 @@ struct DoorsDial: View {
                 }
             }
             .frame(height: slotHeight, alignment: .leading)
-            .blur(radius: blurOn ? 1.8 * distance : 0)
+            .blur(radius: blurOn ? maxBlur * distance : 0)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : 190, alignment: .leading)
+        .frame(maxWidth: style == .landing ? 160 : 190, alignment: .leading)
         .offset(y: offset)
         .accessibilityLabel("\(door.name)\(door.count.map { ", \($0)" } ?? "")")
         .accessibilityAddTraits(place == 0 ? .isSelected : [])
@@ -122,8 +122,7 @@ struct DoorsDial: View {
     @ViewBuilder
     private var facts: some View {
         let door = doors[wrapped(focus)]
-        // At accessibility sizes the names need the width; the facts stay with VoiceOver on the door's page.
-        if !typeSize.isAccessibilitySize, door.label != nil || !door.lines.isEmpty {
+        if door.label != nil || !door.lines.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
                 if let label = door.label {
                     Text(label)
@@ -184,5 +183,36 @@ private extension CGFloat {
             Swift.max(self, range.lowerBound),
             range.upperBound
         )
+    }
+}
+
+/// The door summary beside the landing dial (sheet 283): x 186, top 652; a 13 pt ink 2 label and up to three
+/// 16/24 lines, the first 700. It rises 6 pt by a clip when the focus changes. Not blurred; each room fills it its way.
+struct DoorSummary: View {
+    let door: DialDoor?
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if let door, door.label != nil || !door.lines.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                if let label = door.label {
+                    Text(label)
+                        .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .lineLimit(1)
+                        .frame(height: 20, alignment: .leading)
+                }
+                ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
+                    FitLine(forms: FitLine.cuts(line), size: 16, color: Theme.Colors.ink, weight: index == 0 ? .bold : .regular)
+                        .frame(width: 192, height: 24, alignment: .leading)
+                }
+            }
+            .frame(width: 192, alignment: .leading)
+            .id(door.id)
+            .transition(.offset(y: reduceMotion ? 0 : 6))
+            .tesseraAnimation(Theme.Motion.firm, value: door.id)
+            .accessibilityElement(children: .combine)
+        }
     }
 }

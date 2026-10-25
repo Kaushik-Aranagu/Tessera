@@ -24,7 +24,7 @@ struct LandingBrief: View {
     /// ellipsis.
     private var all: [Form] {
         guard let last = forms.last else { return [] }
-        let cuts = FitLine.candidates([last.text]).dropFirst().map { cut in
+        let cuts = FitLine.cuts(last.text).dropFirst().map { cut in
             Form(text: cut, key: last.key.flatMap { cut.contains($0) ? $0 : nil })
         }
         return forms + cuts

@@ -318,35 +318,47 @@ struct KitchenLandingPage: View {
     @State private var cookCover: KitchenCookCover?
     @State private var recipe: KitchenCookCover?
     @State private var focus = 0
-    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var switcherIndex = 0
+    @State private var switcherVerticalIndex = 0
+    @State private var widgetIndex = 0
+
+    static let switcher = ["Tonight", "Tomorrow", "This week"]
 
     var body: some View {
         let _ = model.revision
         let front = KitchenFront(model: model, now: AppClock.now)
         let pass = load(front)
-        LandingFrame(title: "Galley", accent: LandingAccent.kitchen, stateLine: pass.stateLine, stateSize: 26,
-                     doorsTop: 540,
-                     keystone: {
-                         LandingKeystone(label: "The pass") {
-                             GalleyRail(tickets: pass.tickets) { opens in go(opens) }
-                         }
-                     },
-                     doors: doors(front, pass), focus: $focus,
-                     openDoor: { door in
-                         switch door.id {
-                         case "tonight": go(front.tonight?.recipe.map { GalleyTicket.Opens.recipe($0) } ?? .recipes)
-                         case "pantry", "leftovers": open(.pantry)
-                         case "groceries": open(.groceries)
-                         default: open(.recipes)
-                         }
-                     },
-                     // At accessibility sizes the rows take the room under the slot; the caption steps aside (contract
-                     // §8).
-                     caption: typeSize.isAccessibilitySize ? [] : caption(pass).map { [$0] } ?? [],
-                     briefTop: 424,
-                     brief: { brief(front, pass) },
-                     action: action(front),
-                     onBack: { dismiss() })
+        LandingScaffold(title: "Galley", accent: LandingAccent.kitchen, navWord: "Bridge", onBack: { dismiss() },
+                        switcher: Self.switcher, switcherIndex: $switcherIndex,
+                        switcherVerticalIndex: $switcherVerticalIndex,
+                        needs: needs(front, pass),
+                        keystone: {
+                            LandingKeystone(label: "The pass") {
+                                GalleyRail(tickets: pass.tickets) { opens in go(opens) }
+                            }
+                        },
+                        caption: caption(pass).map { [$0] } ?? [],
+                        widget: widget(front, pass), widgetIndex: $widgetIndex,
+                        openWidget: { item in
+                            switch item.id {
+                            case "cooking": cookCover = front.cooking.map { KitchenCookCover(id: $0.id) }
+                            case "dinner": go(front.tonight?.recipe.map { GalleyTicket.Opens.recipe($0) } ?? .recipes)
+                            case "toget": open(.groceries)
+                            case "runsout": open(.pantry)
+                            default: open(.recipes)
+                            }
+                        },
+                        glyph: { _ in GalleyGlyph() },
+                        doors: doors(front, pass), focus: $focus,
+                        openDoor: { door in
+                            switch door.id {
+                            case "tonight": go(front.tonight?.recipe.map { GalleyTicket.Opens.recipe($0) } ?? .recipes)
+                            case "pantry", "leftovers": open(.pantry)
+                            case "groceries": open(.groceries)
+                            default: open(.recipes)
+                            }
+                        },
+                        action: action(front))
             .toolbar(.hidden, for: .navigationBar)
             .fullScreenCover(item: $cookCover) { CookClockPage(cookID: $0.id) }
             .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
@@ -421,21 +433,57 @@ struct KitchenLandingPage: View {
         ]
     }
 
-    @ViewBuilder
-    private func brief(_ front: KitchenFront, _ pass: GalleyPass) -> some View {
-        if let cook = front.cooking {
-            Button { cookCover = .init(id: cook.id) } label: {
-                LandingBrief(cook.line)
-                    .frame(minHeight: 44, alignment: .topLeading)
-                    .contentShape(Rectangle())
+    /// Two lines beside the switcher, changing with it (283): tonight, tomorrow, or the week.
+    private func needs(_ front: KitchenFront, _ pass: GalleyPass) -> [String] {
+        switch switcherIndex {
+        case 1:
+            let tomorrow = front.week.dropFirst().first
+            return [tomorrow?.meal.map { "\($0.title) tomorrow" } ?? "Nothing planned tomorrow",
+                    tomorrow?.when ?? "Plan it from Recipes"]
+        case 2:
+            let planned = front.week.count { $0.meal != nil }
+            return [planned == 0 ? "Nothing planned this week" : "\(planned) dinners planned",
+                    pass.toGet.isEmpty ? "Nothing to get" : "\(pass.toGet.count) to get"]
+        default:
+            if let cook = front.cooking {
+                return [cook.line, "Tap the dish to go on"]
             }
-            .buttonStyle(.plain)
-            .accessibilityHint("Goes on with the cook")
-        } else if let low = pass.lowLine {
-            LandingBrief(forms: low)
-        } else if let value = front.pantryValue {
-            LandingBrief(value.prefix(1).uppercased() + value.dropFirst() + ".")
+            let first = front.tonight.map { "\($0.title) tonight" } ?? "Tonight?"
+            let second = front.tonight.map { "start \(HouseTime.clock($0.start))" } ?? "Nothing planned yet"
+            return [first, pass.low.first.map { "\($0) runs out first" } ?? second]
         }
+    }
+
+    /// The widget (283): tonight's dish, what is on the way, what runs out. Big lines in the kitchen hand.
+    private func widget(_ front: KitchenFront, _ pass: GalleyPass) -> [WidgetItem] {
+        var items: [WidgetItem] = []
+        if let cook = front.cooking {
+            items.append(WidgetItem(id: "cooking", header: "Cooking", big: "Go on", middle: cook.line,
+                                    small: "Tap for the clock", bigColor: LandingAccent.kitchen, strikeable: false))
+        }
+        if let meal = front.tonight {
+            items.append(WidgetItem(id: "dinner", header: "Tonight", big: NotesLandingPage.short(meal.title),
+                                    middle: "start \(HouseTime.clock(meal.start))",
+                                    small: meal.minutes.map { HouseTime.minutes(Int($0)) } ?? "Tap to open it",
+                                    bigColor: LandingAccent.kitchen, strikeable: false))
+        } else {
+            items.append(WidgetItem(id: "plan", header: "Tonight", big: "Tonight?", middle: "nothing planned yet",
+                                    small: pass.cookable.isEmpty ? "Tap for Recipes"
+                                        : "You could make \(pass.cookable.count)",
+                                    bigColor: LandingAccent.kitchen, strikeable: false))
+        }
+        if !pass.toGet.isEmpty {
+            items.append(WidgetItem(id: "toget", header: "On the way", big: "\(pass.toGet.count)", bigIsNumber: true,
+                                    unit: pass.toGet.count == 1 ? "thing" : "things",
+                                    middle: pass.toGet.prefix(2).joined(separator: ", "), small: "To get",
+                                    strikeable: false))
+        }
+        if let low = pass.low.first {
+            items.append(WidgetItem(id: "runsout", header: "Runs out", big: NotesLandingPage.short(low),
+                                    middle: pass.low.count > 1 ? "and \(pass.low.count - 1) more" : "first to go",
+                                    small: "Tap for Pantry", strikeable: false))
+        }
+        return items
     }
 
     /// Cook when a meal is planned tonight, else Plan tonight. Drag right: Paste a recipe.
@@ -460,6 +508,45 @@ struct KitchenLandingPage: View {
         }
         model.touch()
         cookCover = .init(id: cook.id)
+    }
+}
+
+/// The widget glyph (283): one ticket hung on a rail, swinging as it is hung. It moves once on arrival and every 7 s;
+/// nothing moves under Reduce Motion.
+struct GalleyGlyph: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var scheme
+    @State private var swing: Double = 0
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Rectangle().fill(Theme.Colors.inkSecondary.opacity(0.6)).frame(width: 64, height: 1)
+            TornPaper()
+                .fill(scheme == .dark ? Color(hex: 0x2B2722) : Color(hex: 0xF6EFDF))
+                .frame(width: 34, height: 46)
+                .overlay(alignment: .topLeading) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Capsule().fill(LandingAccent.kitchen).frame(width: 18, height: 2)
+                        Capsule().fill(Theme.Colors.inkSecondary).frame(width: 22, height: 1.5)
+                        Capsule().fill(Theme.Colors.inkSecondary).frame(width: 14, height: 1.5)
+                    }
+                    .padding(6)
+                }
+                .rotationEffect(.degrees(swing), anchor: .top)
+                .offset(y: 2)
+        }
+        .frame(width: 80, height: 80, alignment: .top)
+        .padding(.top, 10)
+        .accessibilityHidden(true)
+        .task {
+            guard !reduceMotion else { return }
+            while !Task.isCancelled {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { swing = 10 }
+                try? await Task.sleep(for: .milliseconds(250))
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { swing = 0 }
+                try? await Task.sleep(for: .seconds(7))
+            }
+        }
     }
 }
 

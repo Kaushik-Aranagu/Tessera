@@ -31,7 +31,7 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let rise = max(0.86, min(1.1, proxy.size.height / Self.designHeight))
+            let k = max(0.86, min(1.1, proxy.size.height / Self.designHeight))
             let width = proxy.size.width
             let slot = LandingKeystone<EmptyView>.size
             ZStack(alignment: .topLeading) {
@@ -45,45 +45,41 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                     }
                 }
                 .frame(height: 56, alignment: .leading)
-                .landingSection(.topBar)
-                .offset(x: 24, y: 54 * rise - 8)
+                .landingSection(.masthead)
+                .offset(x: 24, y: 54 * k - 8)
 
                 FitLine(forms: stateLine, size: stateSize, color: Theme.Colors.inkSecondary,
                         weight: stateSize > 20 ? .light : .regular)
                     .frame(width: width - 48, alignment: .leading)
-                    .landingSection(.topBar)
-                    .offset(x: 24, y: (stateSize > 20 ? 106 : 112) * rise)
+                    .landingSection(.masthead)
+                    .offset(x: 24, y: (stateSize > 20 ? 106 : 112) * k)
 
                 keystone
                     .frame(width: slot.width, height: slot.height)
                     .landingSection(.keystone)
-                    .offset(x: (width - slot.width) / 2, y: LandingKeystone<EmptyView>.top * rise)
+                    .offset(x: (width - slot.width) / 2, y: LandingKeystone<EmptyView>.top * k)
 
                 if !caption.isEmpty {
                     FitLine(forms: caption, size: 15, color: Theme.Colors.inkSecondary)
                         .frame(width: width - 48, alignment: .leading)
-                        .landingSection(.rows)
-                        .offset(x: 24, y: 390 * rise)
+                        .landingSection(.caption)
+                        .offset(x: 24, y: 390 * k)
                 }
 
                 DoorsDial(doors: doors, focus: $focus, open: openDoor)
-                    // A dial at 540 has 246 pt before the foot: its slots stop growing at AX1 so they never reach the
-                    // action word (contract §8: the dial keeps 3 places).
-                    .dynamicTypeSize(doorsTop > 432 ? ...DynamicTypeSize.accessibility1 : ...DynamicTypeSize
-                        .accessibility5)
                     .frame(width: width - 48)
                     .landingSection(.doors)
-                    .offset(x: 24, y: doorsTop * rise)
+                    .offset(x: 24, y: doorsTop * k)
 
                 brief
                     .frame(width: width - 48, alignment: .leading)
-                    .landingSection(.rows)
-                    .offset(x: 24, y: briefTop * rise)
+                    .landingSection(.caption)
+                    .offset(x: 24, y: briefTop * k)
 
                 if let action {
                     LandingActionWord(action: action, accent: accent)
-                        .landingSection(.action)
-                        .offset(x: 28, y: 786 * rise - 8)
+                        .landingSection(.foot)
+                        .offset(x: 28, y: 786 * k - 8)
                 }
             }
             .overlay(alignment: .leading) {
@@ -113,6 +109,27 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
     }
 }
 
+extension FitLine {
+    private static let small: Set<String> = ["and", "the", "a", "an", "of", "to", "by", "in", "on", "or", "for", "with", "at", "is"]
+
+    /// The longest form first, then every shorter whole-word cut: trailing small words, commas and full stops are
+    /// dropped, so a fixed slot shows a clean shorter line, never "...".
+    static func cuts(_ text: String) -> [String] {
+        let words = text.split(separator: " ").map(String.init)
+        guard words.count > 1 else { return [text] }
+        var forms = [text]
+        for count in stride(from: words.count - 1, through: 1, by: -1) {
+            var kept = Array(words.prefix(count))
+            while kept.count > 1, small.contains(kept[kept.count - 1].lowercased().trimmingCharacters(in: .punctuationCharacters)) {
+                kept.removeLast()
+            }
+            let form = kept.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ",;:.-"))
+            if !form.isEmpty, form != forms.last { forms.append(form) }
+        }
+        return forms
+    }
+}
+
 /// One line of fixed width: the longest of `forms` that fits, never wrapped, never ellipsized. The last form is
 /// the one the phone (or the on-device model) wrote short enough to always fit; it may step down to 0.8x.
 struct FitLine: View {
@@ -122,40 +139,14 @@ struct FitLine: View {
     var weight: Font.Weight = .regular
 
     var body: some View {
-        let all = Self.candidates(forms)
         ViewThatFits(in: .horizontal) {
-            ForEach(Array(all.enumerated()), id: \.offset) { _, form in text(form).fixedSize(
+            ForEach(Array(forms.dropLast().enumerated()), id: \.offset) { _, form in text(form).fixedSize(
                 horizontal: true,
                 vertical: false
             ) }
-            text(all.last ?? "").lineLimit(1).minimumScaleFactor(0.5)
+            text(forms.last ?? "").lineLimit(1).minimumScaleFactor(0.8)
         }
         .accessibilityLabel(forms.first ?? "")
-    }
-
-    private static let small: Set<String> = ["and", "the", "a", "an", "of", "to", "by", "in", "on", "or", "for", "with",
-                                             "at", "is", "you", "could"]
-
-    /// The written forms, then the last one cut back a whole word at a time (trailing punctuation and small words
-    /// dropped), so large type never meets an ellipsis (contract §7).
-    static func candidates(_ forms: [String]) -> [String] {
-        guard let last = forms.last else { return [] }
-        var all = forms
-        var words = last.split(separator: " ").map(String.init)
-        while words.count > 1 {
-            words.removeLast()
-            while words.count > 1,
-                  let tail = words.last?.lowercased().trimmingCharacters(in: .punctuationCharacters),
-                  small.contains(tail)
-            {
-                words.removeLast()
-            }
-            let cut = words.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ",;:"))
-            if !cut.isEmpty, !all.contains(cut) {
-                all.append(cut)
-            }
-        }
-        return all
     }
 
     private func text(_ form: String) -> Text {
