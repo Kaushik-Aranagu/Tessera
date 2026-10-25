@@ -7,6 +7,10 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
     let accent: Color
     /// One line, longest form first; the frame shows the longest that fits and never wraps or ellipsizes.
     let stateLine: [String]
+    /// 16 pt for the Log (246); the other rooms speak a 26 pt light sentence (hub 282).
+    var stateSize: CGFloat = 16
+    /// Where the doors start; 432 for the Log dial (246), 540 under a caption and two update rows (hub 282).
+    var doorsTop: CGFloat = 432
     var onTitle: (() -> Void)?
     @ViewBuilder let keystone: Keystone
     let doors: [DialDoor]
@@ -39,17 +43,18 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                 .frame(height: 56, alignment: .leading)
                 .offset(x: 24, y: 54 * k - 8)
 
-                FitLine(forms: stateLine, size: 16, color: Theme.Colors.inkSecondary)
+                FitLine(forms: stateLine, size: stateSize, color: Theme.Colors.inkSecondary,
+                        weight: stateSize > 20 ? .light : .regular)
                     .frame(width: width - 48, alignment: .leading)
-                    .offset(x: 24, y: 112 * k)
+                    .offset(x: 24, y: (stateSize > 20 ? 106 : 112) * k)
 
                 keystone
                     .frame(width: slot.width, height: slot.height)
-                    .offset(x: (width - slot.width) / 2, y: 180 * k)
+                    .offset(x: (width - slot.width) / 2, y: LandingKeystone<EmptyView>.top * k)
 
                 DoorsDial(doors: doors, focus: $focus, open: openDoor)
                     .frame(width: width - 48)
-                    .offset(x: 24, y: 432 * k)
+                    .offset(x: 24, y: doorsTop * k)
 
                 brief
                     .frame(width: width - 48, alignment: .leading)
