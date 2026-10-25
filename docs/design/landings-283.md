@@ -1,5 +1,5 @@
-# 283 Landings: one layout for every room (v2, Oct 25 3:10 PM PT; design approved 2:48 PM)
-Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v2). Owners: Builder A (Bridge, flip, Deck, Lookout), Builder B (Log, Galley, Watch, Purse). Builds on landing-contract v2 and hub 282. v2 replaces the v1 middle and doors.
+# 283 Landings: one layout for every room (v3, Oct 25 4:10 PM PT; design approved 2:48 PM)
+Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v3). Owners: Builder A (Bridge, flip, Deck, Lookout), Builder B (Log, Galley, Watch, Purse). Builds on landing-contract v2 and hub 282. v2 replaces the v1 middle and doors.
 
 ## His rules (Oct 25, PDT)
 - 12:22 PM: every landing opens like Bridge, then the doors. Sections persist across screens, and each owns its touch zone. Opening a room from Bridge flips the mosaic into that room's keystone, each room its own way. The top area holds navigation, the title and summary lines.
@@ -51,3 +51,25 @@ Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v2). Owners: Builder A
 3. The masthead gains the Switcher and Needs at 106.
 4. Lookout's flip is the cloud drift above.
 5. Names: use the seven section names above in code and talk.
+
+## v3 (his 3:57 and 4:04 PM notes)
+- Fonts: Caveat is gone. Deck writes in Barlow Condensed 600: the board's chalk at 1.04x its old size, and the widget Big line at 50 pt in caps. Galley's tickets are printed in IBM Plex Sans Condensed: titles 700 13 pt caps .08em, sub 500 10.5 caps, lines 400 12.5. The widget Big line is 700 40 caps .04em.
+- Foot, the action word: a verb (Figtree 600 24/32, room color) over its object (500 13/18 ink2), at x 24, bottom 22, 220 x 64. Never "Start Push A". Tap does it. Swiping across past 56 pt moves to the room's next action: the letters stream in leaning from the swipe side, 480 ms, 22 ms apart, and the object rises in. A start (Deck) needs a 500 ms hold that fills the verb with color from left to right; a tap shows "Hold to start." Actions: Log Write, Speak, List. Lookout Alert, Hours, Walk. Deck Start, Log, Rest. Galley Cook, Get, Wash. Watch Plant, Water, Pause. Purse Log, Look, Plan.
+- Glyph library (80 x 80, item color), picked by rules on the item's header, big and middle lines (first match wins; Tess picks later):
+  - Log: spark (Tess), bulb (repair), book (club), checklist (packing, list).
+  - Lookout: rain, moon (low, night), sun (driest, clear).
+  - Deck: steps (walk, run), ticks (week, of 6), barbell (push, pull, legs).
+  - Galley: plates (dishes), bowl with steam (rice, leftovers), ticket (tacos, cook), basket (things, get).
+  - Watch: watering can (journal, thirsty), grove (tended, of 7), bird and flower (walk, next, stretch).
+  - Purse: calendar (drop, rent), coins (today, spent), index line (still yours, pace).
+  - The cover: when nothing fits, the item's own words (up to three, Figtree 900 caps, sized to 80 pt wide, set like the wall).
+- The glyph never cuts: the old one collapses into a point (260 ms, rotating 70°), a 6 pt dot pulses, and the new one forms from it (440 ms from 330 ms, overshoot 1.08). Each drawing moves once on arrival and every 7 s.
+- The keystone hands the item over when it arrives:
+  - Log: the matching wall word lifts 14 pt and flies to the Big line (760 ms). The wall word dims while it is away, and the other lines drop in from the top.
+  - Galley: the matching ticket tears off with a torn edge, swings and falls into the glyph (900 ms).
+  - Deck: 70 grains of chalk dust fall from the board and turn blue as they land.
+  - Lookout: 26 drops fall from the glass.
+  - Watch: the bird flies down from the woods, and petals drift for the other items.
+  - Purse: a dot slides off the index on an arc.
+  - Reduce Motion: none of these.
+- To do later: polish the keystones; a library of short videos.
