@@ -17,11 +17,15 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
     /// The left edge (x 0-24) goes back; nil on a root.
     var onBack: (() -> Void)?
 
-    static var designHeight: CGFloat { 874 }
+    static var designHeight: CGFloat {
+        874
+    }
+
+    @ScaledMetric(relativeTo: .title3) private var dialScale: CGFloat = 1
 
     var body: some View {
         GeometryReader { proxy in
-            let k = max(0.86, min(1.1, proxy.size.height / Self.designHeight))
+            let rise = max(0.86, min(1.1, proxy.size.height / Self.designHeight))
             let width = proxy.size.width
             let slot = LandingKeystone<EmptyView>.size
             ZStack(alignment: .topLeading) {
@@ -35,27 +39,28 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                     }
                 }
                 .frame(height: 56, alignment: .leading)
-                .offset(x: 24, y: 54 * k - 8)
+                .offset(x: 24, y: 54 * rise - 8)
 
                 FitLine(forms: stateLine, size: 16, color: Theme.Colors.inkSecondary)
                     .frame(width: width - 48, alignment: .leading)
-                    .offset(x: 24, y: 112 * k)
+                    .offset(x: 24, y: 112 * rise)
 
                 keystone
                     .frame(width: slot.width, height: slot.height)
-                    .offset(x: (width - slot.width) / 2, y: 180 * k)
+                    .offset(x: (width - slot.width) / 2, y: 180 * rise)
 
                 DoorsDial(doors: doors, focus: $focus, open: openDoor)
                     .frame(width: width - 48)
-                    .offset(x: 24, y: 432 * k)
+                    .offset(x: 24, y: 432 * rise)
 
+                // The brief sits at 612; when large type grows the dial, it moves down just past it.
                 brief
                     .frame(width: width - 48, alignment: .leading)
-                    .offset(x: 24, y: 612 * k)
+                    .offset(x: 24, y: max(612 * rise, 432 * rise + DoorsDial.slotHeight(scale: dialScale) * 3 + 8))
 
                 if let action {
                     LandingActionWord(action: action, accent: accent)
-                        .offset(x: 28, y: 786 * k - 8)
+                        .offset(x: 28, y: 786 * rise - 8)
                 }
             }
             .overlay(alignment: .leading) {
@@ -63,7 +68,9 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                     Color.clear.frame(width: 24)
                         .contentShape(Rectangle())
                         .gesture(DragGesture(minimumDistance: 10).onEnded { value in
-                            if value.translation.width > 50, abs(value.translation.height) < 80 { onBack() }
+                            if value.translation.width > 50, abs(value.translation.height) < 80 {
+                                onBack()
+                            }
                         })
                 }
             }
@@ -92,11 +99,40 @@ struct FitLine: View {
     var weight: Font.Weight = .regular
 
     var body: some View {
+        let all = Self.candidates(forms)
         ViewThatFits(in: .horizontal) {
-            ForEach(Array(forms.dropLast().enumerated()), id: \.offset) { _, form in text(form).fixedSize(horizontal: true, vertical: false) }
-            text(forms.last ?? "").lineLimit(1).minimumScaleFactor(0.8)
+            ForEach(Array(all.enumerated()), id: \.offset) { _, form in text(form).fixedSize(
+                horizontal: true,
+                vertical: false
+            ) }
+            text(all.last ?? "").lineLimit(1).minimumScaleFactor(0.5)
         }
         .accessibilityLabel(forms.first ?? "")
+    }
+
+    private static let small: Set<String> = ["and", "the", "a", "an", "of", "to", "by", "in", "on", "or", "for", "with",
+                                             "at", "is", "you", "could"]
+
+    /// The written forms, then the last one cut back a whole word at a time (trailing punctuation and small words
+    /// dropped), so large type never meets an ellipsis (contract §7).
+    static func candidates(_ forms: [String]) -> [String] {
+        guard let last = forms.last else { return [] }
+        var all = forms
+        var words = last.split(separator: " ").map(String.init)
+        while words.count > 1 {
+            words.removeLast()
+            while words.count > 1,
+                  let tail = words.last?.lowercased().trimmingCharacters(in: .punctuationCharacters),
+                  small.contains(tail)
+            {
+                words.removeLast()
+            }
+            let cut = words.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ",;:"))
+            if !cut.isEmpty, !all.contains(cut) {
+                all.append(cut)
+            }
+        }
+        return all
     }
 
     private func text(_ form: String) -> Text {

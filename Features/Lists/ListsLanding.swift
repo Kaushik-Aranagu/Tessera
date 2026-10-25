@@ -194,236 +194,239 @@ enum ListsDoor: Hashable {
     case shelf, reusable, picks
 }
 
+// MARK: - The wall (landing contract §2, §12: what is due this week)
+
+/// The Lists landing's words as data, so the wall, the state line and the doors have tests. Walled lists and items
+/// never reach the wall: they are only counted.
+@MainActor
+struct ListsWall: Equatable {
+    /// Every word on the wall, with the list a tap opens.
+    var words: [WallWord] = []
+    var opens: [String: UUID] = [:]
+    /// The header line, longest form first (FitLine).
+    var stateLine: [String] = []
+    /// Lists or due items that are walled, counted, never named.
+    var hidden = 0
+    /// Open items due this week across every list (walled ones counted).
+    var dueCount = 0
+    /// The soonest due list a tap on "Due soon" opens; nil when it is walled or nothing is due.
+    var soonest: UUID?
+    var dueLines: [String] = []
+
+    static let maxWords = 14
+
+    static func build(due: [ListsLanding.DueItem], lists: [ListsLandingFacts.Line]) -> ListsWall {
+        var wall = ListsWall()
+        wall.dueCount = due.count
+        var seenLists: Set<UUID> = []
+        var index = 0
+        func add(_ id: String, _ text: String, list: UUID, weight: Double) {
+            guard wall.words.count < maxWords, wall.opens[id] == nil else { return }
+            wall.words.append(WallWord(id: id, text: NotesLandingPage.short(text), weight: weight))
+            wall.opens[id] = list
+        }
+        for item in due where !item.isPrivate {
+            // The list first, then its due thing: the heaviest words are the soonest.
+            if !seenLists.contains(item.list) {
+                seenLists.insert(item.list)
+                add(
+                    "list:\(item.list.uuidString)",
+                    item.listName,
+                    list: item.list,
+                    weight: max(0.55, 1 - 0.06 * Double(index))
+                )
+            }
+            add(
+                "item:\(item.item.uuidString)",
+                item.text,
+                list: item.list,
+                weight: max(0.5, 0.95 - 0.06 * Double(index))
+            )
+            wall.dueLines.append("\(item.text), \(item.day)")
+            index += 1
+        }
+        wall.soonest = due.first.flatMap { $0.isPrivate ? nil : $0.list }
+        // Then the rest of the shelf, last touched first, lighter.
+        for (offset, line) in lists.enumerated() where !line.isPrivate && !seenLists.contains(line.id) {
+            add("list:\(line.id.uuidString)", line.name, list: line.id, weight: max(0.1, 0.45 - 0.04 * Double(offset)))
+        }
+        wall.hidden = lists.count(where: \.isPrivate)
+            + due.count { $0.isPrivate && $0.listName != ListContents.privateListLabel }
+        wall.stateLine = stateLine(due)
+        return wall
+    }
+
+    /// "Trip is due Fri, 4 things due this week." / "Trip is due Fri." / "4 due this week." A walled list reads
+    /// "Private list". Nothing due: "Nothing due this week."
+    static func stateLine(_ due: [ListsLanding.DueItem]) -> [String] {
+        guard let first = due.first else { return ["Nothing due this week."] }
+        let name = first.listName
+        let lead = "\(name) is due \(first.day)"
+        if due.count == 1 {
+            return ["\(lead).", "1 due this week."]
+        }
+        return ["\(lead), \(due.count) things due this week.", "\(lead).", "\(due.count) due this week."]
+    }
+}
+
 // MARK: - The page
 
+/// The Lists landing on the shared kit (landing contract §12): the word wall of what is due this week, the doors on
+/// the dial, one line about the list in hand, "New list" at the foot. Walled lists never reach the wall.
 struct ListsLandingPage: View {
     let openList: (UUID) -> Void
     let openDoor: (ListsDoor) -> Void
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openHomeLink) private var openHomeLink
+    @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var seenAtOpen: Date?
-    @State private var ticked = 0
-    /// Sheet 139 part 3: bumped when a swipe strikes a list's last item (its one haptic, in place of the tick).
-    @State private var finished = 0
+    @State private var focus = 0
+    @State private var naming = false
+    @State private var draft = ""
 
     private var margin: Bool {
         Choice.value("listsMargin", options: ["Off", "On"], default: "Off") == "On"
     }
 
-    private var finishOn: Bool {
-        FinishMoments.isOn
+    private struct Shown {
+        let facts: ListsLandingFacts
+        let lines: [ListsLandingFacts.Line]
+        let wall: ListsWall
+        let doors: [DialDoor]
     }
 
     var body: some View {
         let _ = model.revision
+        let shown = load()
+        LandingFrame(title: "Lists", accent: LandingAccent.lists, stateLine: shown.wall.stateLine,
+                     onTitle: { openDoor(.shelf) },
+                     keystone: {
+                         LandingKeystone(label: "Due this week") {
+                             WordWallView(words: shown.wall.words) { id in
+                                 if let list = shown.wall.opens[id] {
+                                     openList(list)
+                                 }
+                             }
+                         }
+                     },
+                     doors: shown.doors, focus: $focus,
+                     openDoor: { door in open(door, shown) },
+                     brief: { LandingBrief(forms: brief(shown.facts, lines: shown.lines)) },
+                     action: LandingFootAction(word: "New list", hint: "Makes a list") {
+                         draft = ""
+                         naming = true
+                     },
+                     onBack: { dismiss() })
+            .toolbar(.hidden, for: .navigationBar)
+            .alert("New list", isPresented: $naming) {
+                TextField("", text: $draft)
+                Button("Make") { make() }
+                Button("Cancel", role: .cancel) {}
+            }
+            .onAppear {
+                if seenAtOpen == nil {
+                    seenAtOpen = LandingSeen.date("lists")
+                }
+                LandingSeen.mark("lists", at: AppClock.now)
+            }
+    }
+
+    // MARK: Facts
+
+    private func load() -> Shown {
         let facts = ListsLandingFacts.load(store: model.store, classes: model.classes, engine: model.engine,
                                            lastSeen: seenAtOpen, margin: margin,
                                            leadByDue: Choice.value("listsLeadByDue", options: ["Off", "On"],
                                                                    default: "Off") == "On")
-        let accent = LandingAccent.lists
-        LandingPage(back: (title: "Home", action: { dismiss() }),
-                    title: "Lists",
-                    sentence: facts.sentence().attributed(accent: accent),
-                    accent: accent,
-                    waiting: facts.waiting.map(line),
-                    new: facts.new.map(line),
-                    lead: {
-                        VStack(alignment: .leading, spacing: Theme.Spacing.xxl) {
-                            if let lead = facts.lead {
-                                LeadList(line: lead, accent: accent, open: { open(lead) },
-                                         resume: { resume(lead) }, finishOn: finishOn,
-                                         reset: { reset(lead.id) })
-                            }
-                            ForEach(facts.others) { other in
-                                FillingLine(line: other, accent: accent, open: { open(other) },
-                                            tick: { tickNext(other) }, finishOn: finishOn,
-                                            reset: { reset(other.id) })
-                            }
-                        }
-                    },
-                    doors: doors(facts),
-                    action: LandingAction(word: "New list", hint: "Tess makes a list from a few words") {
-                        TessVoice.shared.say("Say \"list: films\" and I'll make it.")
-                    })
-                    .background { ThemedBackground() }
-                    .toolbar(.hidden, for: .navigationBar)
-                    .tesseraFeedback(.selection, trigger: ticked)
-                    .tesseraFeedback(.done, trigger: finished)
-                    .onAppear {
-                        if seenAtOpen == nil {
-                            seenAtOpen = LandingSeen.date("lists")
-                        }
-                        LandingSeen.mark("lists", at: AppClock.now)
-                    }
+        let lines = [facts.lead].compactMap(\.self) + facts.others
+        let due = ListsLanding(engine: model.engine).dueItems(within: 7, now: AppClock.now)
+        let wall = ListsWall.build(due: due, lists: lines)
+        return Shown(facts: facts, lines: lines, wall: wall, doors: doors(lines: lines, wall: wall, facts: facts))
     }
 
-    // MARK: Doors and bands
-
-    private func doors(_ facts: ListsLandingFacts) -> [LandingDoor] {
-        guard facts.lead != nil else { return [] }
-        var doors = [LandingDoor(word: "Shelf") { openDoor(.shelf) }]
+    private func doors(lines: [ListsLandingFacts.Line], wall: ListsWall, facts: ListsLandingFacts) -> [DialDoor] {
+        let dark = scheme == .dark
+        let wine = dark ? Color(hex: 0xEE8E9C) : Color(hex: 0x9A2541)
+        let slate = dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F)
+        let open = lines.filter { !$0.isPrivate }
+        var doors = [DialDoor(id: "all", name: "All lists", count: lines.isEmpty ? nil : "\(lines.count)",
+                              color: Theme.Colors.ink, label: open.isEmpty ? nil : "Touched last",
+                              lines: open.prefix(3).map(\.name))]
+        if wall.dueCount > 0 {
+            doors.append(DialDoor(id: "due", name: "Due soon", count: "\(wall.dueCount)", color: wine,
+                                  label: "This week", lines: Array(wall.dueLines.prefix(3))))
+        }
         if facts.hasReusable {
-            doors.append(LandingDoor(word: "Reusable") { openDoor(.reusable) })
+            let reusable = open.filter(\.isReusable)
+            doors.append(DialDoor(id: "reusable", name: "Reusable", count: "\(lines.count(where: \.isReusable))",
+                                  color: LandingAccent.lists, label: "Used again and again",
+                                  lines: reusable.prefix(3).map(\.name)))
         }
         if facts.hasPicks {
-            doors.append(LandingDoor(word: "Picks") { openDoor(.picks) })
+            let picks = open.filter(\.isPickOne)
+            doors.append(DialDoor(id: "picks", name: "Picks", count: "\(lines.count(where: \.isPickOne))",
+                                  color: Theme.Colors.ink, label: "Pick one thing from",
+                                  lines: picks.prefix(3).map(\.name)))
+        }
+        if wall.hidden > 0 {
+            doors.append(DialDoor(id: "private", name: "Private", count: "\(wall.hidden)", color: slate,
+                                  label: "Kept off the wall", lines: ["\(wall.hidden) kept private"]))
         }
         return doors
     }
 
-    private func line(_ entry: ListsLandingFacts.Margin) -> LandingLine {
-        guard let word = entry.word else {
-            return LandingLine(text: entry.text, link: (word: "Open", action: { run(entry.act) }))
+    /// The list in hand, from Core's subtitle (running, due or touched last), its name in ink 600.
+    private func brief(_ facts: ListsLandingFacts, lines: [ListsLandingFacts.Line]) -> [LandingBrief.Form] {
+        // Groceries is Pantry's To get, not a list here: when Core's subtitle leads with it, the shelf's newest list
+        // speaks instead.
+        let sentence = facts.lead == nil && !lines.isEmpty
+            ? AccentedSentence(text: "\(lines[0].name) is the one you touched last.", key: lines[0].name)
+            : facts.sentence()
+        var forms = [LandingBrief.Form(text: sentence.text, key: sentence.key)]
+        if let lead = facts.lead, lead.left > 0 {
+            forms.append(LandingBrief.Form(text: "\(lead.name), \(lead.left) left.", key: lead.name))
         }
-        return LandingLine(text: entry.text, link: (word: word, action: { run(entry.act) }))
+        return forms
     }
 
-    private func run(_ act: ListsLandingFacts.Margin.Act) {
-        switch act {
-        case let .open(id): openList(id)
-        case let .reset(id): reset(id)
+    private func open(_ door: DialDoor, _ shown: Shown) {
+        switch door.id {
+        case "due":
+            if let list = shown.wall.soonest {
+                openList(list)
+            } else {
+                openDoor(.shelf)
+            }
+        case "reusable": openDoor(.reusable)
+        case "picks": openDoor(.picks)
+        default: openDoor(.shelf)
         }
     }
 
-    // MARK: Actions
+    // MARK: Making
 
-    /// Tap on the lead's words opens its page (already running when it runs).
-    private func open(_ line: ListsLandingFacts.Line) {
-        if line.isGroceries {
-            openHomeLink(.groceries)
-        } else {
-            openList(line.id)
-        }
-    }
-
-    /// Resume opens the running list; on a plain list not yet running it reads "Start" and starts the run first.
-    private func resume(_ line: ListsLandingFacts.Line) {
-        guard !line.isGroceries, !line.isRunning else { return open(line) }
-        var record: OpRecord?
-        if let refusal = RecipeCopy.startCook({
-            record = try model.engine.perform(StartListRun(list: line.id, time: AppClock.now), by: .user).record
-        }) {
-            TessVoice.shared.say(refusal)
+    private func make() {
+        let name = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        if looksLikeClaudeKey(name) {
+            draft = ""
+            TessVoice.shared.say(claudeKeyLine)
             return
         }
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
-        TessVoice.shared.say(ListsCopy.runStarted(line.name, left: line.left), undo: record, holds: .seconds(4))
-        openList(line.id)
-    }
-
-    /// Swipe right on a line ticks its next open item, with the existing strike haptic and UNDO 10 s on that row.
-    private func tickNext(_ line: ListsLandingFacts.Line) {
-        let contents = ListContents(store: model.store, classes: model.classes)
-        guard let list = model.store.object(id: line.id), let next = contents.open(in: list).first,
-              let result = try? model.engine.perform(CheckListItem(item: next.id, time: AppClock.now), by: .user)
-        else { return }
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
-        if finishOn, FinishMoments.listIsFinished(left: line.left - 1, total: line.total, isPickOne: line.isPickOne) {
-            finished += 1
-        } else {
-            ticked += 1
+        guard let result = try? model.engine.perform(CreateList(name: name), by: .user) else {
+            TessVoice.shared.say("That can't be a list name.")
+            return
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            draft = ""
+            model.touch()
         }
         if let receipt = result.record.receipt {
-            TessVoice.shared.say(receipt, undo: result.record)
+            TessVoice.shared.say(receipt, undo: CreateList.wasRepeat(result.record) ? nil : result.record)
         }
-    }
-
-    /// "Packing, reset." with UNDO 10 s: every item opens, a new run starts.
-    private func reset(_ id: UUID) {
-        guard let list = model.store.object(id: id),
-              let result = try? model.engine.perform(ResetList(list: id, time: AppClock.now), by: .user)
-        else { return }
-        let name = ListContents.shownName(of: list, in: model.store)
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
-        TessVoice.shared.say(ListsCopy.reset(name), undo: result.record)
-    }
-}
-
-// MARK: - The lead list (L3)
-
-/// The lead list: its name large, its next items left as large words, "6 left of 24" small in ink-secondary, and
-/// Resume.
-private struct LeadList: View {
-    let line: ListsLandingFacts.Line
-    let accent: Color
-    let open: () -> Void
-    let resume: () -> Void
-    var finishOn = false
-    var reset: () -> Void = {}
-
-    private var moment: Bool {
-        finishOn && FinishMoments.listIsFinished(left: line.left, total: line.total, isPickOne: line.isPickOne)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-            Button(action: open) {
-                VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-                    Text(line.name)
-                        .textRole(.title)
-                        .foregroundStyle(Theme.Colors.ink)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if !line.nextItems.isEmpty {
-                        Text(words)
-                            .textRole(.title)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    if moment {
-                        Text(FinishMoments.listLine(name: line.name))
-                            .textRole(.title)
-                            .foregroundStyle(Theme.Colors.ink)
-                    } else if let left = LandingSentences.leftOf(left: line.left, total: line.total) {
-                        Text(left)
-                            .textRole(.data)
-                            .foregroundStyle(Theme.Colors.inkSecondary)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(HandleButtonStyle())
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(spoken)
-            .accessibilityHint("Opens the list")
-            if moment {
-                if line.isReusable {
-                    Button(FinishMoments.resetWord, action: reset)
-                        .buttonStyle(LandingWordStyle())
-                }
-            } else {
-                Button(line.isRunning || line.isGroceries ? "Resume" : "Start", action: resume)
-                    .buttonStyle(LandingWordStyle())
-                    .accessibilityLabel(line.isRunning || line.isGroceries ? "Resume, button" : "Start, button")
-            }
-        }
-    }
-
-    /// "Socks, underwear, charger, passport": a private item reads "Private item" at 66% ink.
-    private var words: AttributedString {
-        var result = AttributedString()
-        for (index, item) in line.nextItems.enumerated() {
-            var word = AttributedString(item.text)
-            word.foregroundColor = Theme.Colors.ink.opacity(item.isPrivate ? 0.66 : 1)
-            result += word
-            if index < line.nextItems.count - 1 {
-                var comma = AttributedString(", ")
-                comma.foregroundColor = Theme.Colors.ink
-                result += comma
-            }
-        }
-        return result
-    }
-
-    private var spoken: String {
-        if moment {
-            return "\(line.name), \(FinishMoments.listLine(name: line.name))"
-        }
-        let status = line.isRunning ? "running, " : ""
-        let left = LandingSentences.leftOf(left: line.left, total: line.total).map { "\($0): " } ?? ""
-        return "\(line.name), \(status)\(left)\(line.nextItems.map(\.text).joined(separator: ", "))"
+        openList(result.output.id)
     }
 }
 

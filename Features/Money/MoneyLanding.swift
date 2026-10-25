@@ -1,75 +1,96 @@
 import SwiftUI
 import TesseraCore
 
-// CLOUD-WRITTEN, NOT COMPILED (see the PR). The Money landing, design 131 section 2: one sentence of clauses, one
-// total rule with the month so far on the decimal line, then the doors. Behind Review switch "Landing pages".
-//
-// There is no build sheet for Money yet, and no Bills, Saving, Cash or Owed model in Core, so this draws only what the
-// engine can answer today: the month's spends (SpendLedger), the trend clause (Core's MoneyTrend, #1222), the total
-// per currency and one "about" dollar total from the ECB table already cached on the phone (RatesCache). The doors
-// (Due, Spending, Bills, Saving, Cash, Owed) are not drawn until their pages exist.
+// The Money landing on the shared kit (landing contract §12, §11.4-5): a word wall of what the money went on, with no
+// amount anywhere on the page; the doors on the dial; one line about the last spend; "Add a spend" at the foot. Money
+// stays on this page: nothing here reaches Home, a widget, a log or Claude, and an undo reads "Reversed".
+// There is no Bills, Subscriptions, Income or Savings model in Core yet, so the wall holds spend categories only and
+// those doors say so when opened.
 
 // MARK: - Facts
 
-@MainActor
-struct MoneyLandingFacts {
-    /// A month's spends in one currency (nil: no currency typed). The exact sum of the typed digits.
-    struct Total: Identifiable, Equatable {
-        let currency: String?
-        let amount: Decimal
+/// What the Money landing shows, as data, so the no-amounts and privacy rules have tests. Words only: categories,
+/// counts of spends and days. Never a figure of money.
+struct MoneyWall: Equatable {
+    var words: [WallWord] = []
+    /// The header line, longest form first (FitLine).
+    var stateLine: [String] = []
+    /// Spends this month (a count, never a sum).
+    var monthCount = 0
+    /// Categories that are walled words, counted, never named.
+    var hidden = 0
+    /// The newest spend's category ("lunch"), or nil when it is walled or there is none.
+    var lastCategory: String?
+    var lastAt: Date?
+    var lastIsPrivate = false
+    /// The categories by use, for the dial's facts.
+    var top: [String] = []
 
-        nonisolated var id: String {
-            currency ?? ""
-        }
+    static let maxWords = 14
 
-        @MainActor var shown: String {
-            SpendLedger.shown(amount, currency: currency, grouped: true)
-        }
+    struct Spend: Equatable {
+        let category: String
+        let at: Date
+        let isPrivate: Bool
     }
 
-    /// "October".
-    let month: String
-    /// Per currency, the biggest first. Spends in two currencies never add up in one figure.
-    let totals: [Total]
-    /// "about $1,234.00" across currencies, from the ECB table on the phone; nil with one currency or no table.
-    let aboutDollars: String?
-    let sentence: LandingSentence
-
-    init(model: AppModel, now: Date, calendar: Calendar = .current) {
-        let ledger = SpendLedger(store: model.store, classes: model.classes)
-        let entries = ledger.entries(inMonthOf: now, calendar: calendar)
-        var sums: [String: Decimal] = [:]
-        for entry in entries {
-            sums[entry.currency ?? "", default: 0] += entry.amount
-        }
-        totals = sums.map { Total(currency: $0.key.isEmpty ? nil : $0.key, amount: $0.value) }
-            .sorted { $0.amount > $1.amount }
-        month = now.formatted(Date.FormatStyle().locale(Locale(identifier: "en_US")).month(.wide))
-        aboutDollars = Self.about(totals)
-        // The sentence is clauses, never figures. A late bill and the due bill need a Bills model that does not exist
-        // yet, so "Nothing is late" is not claimed: only the trend is said.
-        let trend = MoneyTrend(store: model.store, classes: model.classes).compare(now: now, calendar: calendar)
-        sentence = LandingSentences.money(nothingLate: false, due: nil, trend: trend?.clause)
-    }
-
-    /// One dollar total across currencies, marked "about", in whole dollars (no cents to pretend at). A spend with no
-    /// currency counts as dollars. A currency the table has no rate for is named, never silently dropped (QA on
-    /// #1226): "about $1,234, without HKD". Nil with a single currency or no table.
-    private static func about(_ totals: [Total]) -> String? {
-        guard totals.count > 1, let table = RatesCache().current() else { return nil }
-        var dollars = 0.0
-        var missing: [String] = []
-        for total in totals {
-            let value = (total.amount as NSDecimalNumber).doubleValue
-            guard let converted = table.convert(value, from: total.currency ?? "USD", to: "USD") else {
-                missing.append(total.currency ?? "USD")
+    /// `spends` newest first, from the last three months; `monthCount` is this month's count; `trend` is Core's
+    /// clause sentence ("October is running a little under September."), which never holds a figure.
+    static func build(spends: [Spend], monthCount: Int, monthName: String, trend: String?) -> MoneyWall {
+        var wall = MoneyWall()
+        wall.monthCount = monthCount
+        var uses: [String: (count: Int, newest: Date)] = [:]
+        var walled: Set<String> = []
+        for spend in spends {
+            let key = spend.category.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !key.isEmpty, !Self.looksLikeAmount(key) else { continue }
+            if spend.isPrivate {
+                walled.insert(key)
                 continue
             }
-            dollars += converted
+            let old = uses[key]
+            uses[key] = ((old?.count ?? 0) + 1, max(old?.newest ?? .distantPast, spend.at))
         }
-        let whole = SpendLedger.shown(Decimal(Int(dollars.rounded())), currency: "USD", grouped: true)
-        let line = "about " + (whole.hasSuffix(".00") ? String(whole.dropLast(3)) : whole)
-        return missing.isEmpty ? line : line + ", without " + missing.joined(separator: " and ")
+        wall.hidden = walled.count
+        // Ranked by how often and how lately, never by how much.
+        let ranked = uses.sorted { lhs, rhs in
+            lhs.value.count != rhs.value.count ? lhs.value.count > rhs.value.count : lhs.value.newest > rhs.value.newest
+        }
+        let most = Double(ranked.first?.value.count ?? 1)
+        wall.words = ranked.prefix(maxWords).enumerated().map { index, entry in
+            WallWord(id: "category:\(entry.key)", text: NotesLandingPage.short(entry.key.capitalized),
+                     weight: max(0.15, 0.5 * Double(entry.value.count) / most + 0.5 * (1 - Double(index) / 14)))
+        }
+        wall.top = ranked.prefix(3).map(\.key.capitalized)
+        if let newest = spends.first {
+            wall.lastAt = newest.at
+            wall.lastIsPrivate = newest.isPrivate
+            let key = newest.category.trimmingCharacters(in: .whitespacesAndNewlines)
+            wall.lastCategory = newest.isPrivate || key.isEmpty || looksLikeAmount(key) ? nil : key.lowercased()
+        }
+        wall.stateLine = stateLine(monthCount: monthCount, monthName: monthName, trend: trend)
+        return wall
+    }
+
+    /// "October is running a little under September, 12 spends so far." / the trend alone / "12 spends in October."
+    /// / "12 spends." Nothing logged this month: "Nothing yet".
+    static func stateLine(monthCount: Int, monthName: String, trend: String?) -> [String] {
+        guard monthCount > 0 else { return ["Nothing yet"] }
+        let spends = monthCount == 1 ? "1 spend" : "\(monthCount) spends"
+        var forms: [String] = []
+        if let trend {
+            let bare = trend.hasSuffix(".") ? String(trend.dropLast()) : trend
+            forms.append("\(bare), \(spends) so far.")
+            forms.append(trend)
+        }
+        forms.append("\(spends) in \(monthName).")
+        forms.append("\(spends).")
+        return forms
+    }
+
+    /// A category that is itself a figure ("12.40") is never shown: the wall holds no amounts.
+    static func looksLikeAmount(_ word: String) -> Bool {
+        word.contains { $0.isNumber } || word.contains { "$€£₹¥".contains($0) }
     }
 }
 
@@ -78,73 +99,126 @@ struct MoneyLandingFacts {
 struct MoneyLandingView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var focus = 0
+    @State private var adding = false
+    @State private var draft = ""
 
     var body: some View {
         let _ = model.revision
-        let facts = MoneyLandingFacts(model: model, now: AppClock.now)
-        let accent = LandingAccent.money
-        LandingPage(back: (title: "Home", action: { dismiss() }),
-                    title: "Money",
-                    sentence: LandingText.build(facts.sentence, accent: accent),
-                    accent: accent,
-                    lead: { TotalRule(facts: facts, accent: accent) },
-                    // Due, Spending, Bills, Saving, Cash and Owed join when their pages do.
-                    doors: [])
-            .background { ThemedBackground() }
-            .environment(\.animateEntrance, true)
-    }
-}
-
-/// The signature line: an ink rule, "October so far", then the total on the decimal line (whole part large, cents
-/// smaller in ink-secondary, one baseline). Never sage (sage is money moving) and never red. Other currencies sit under
-/// it in the same figures, then the
-/// one "about" dollar total. Absent when nothing is logged.
-private struct TotalRule: View {
-    let facts: MoneyLandingFacts
-    let accent: Color
-
-    var body: some View {
-        if let first = facts.totals.first {
-            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-                Rectangle()
-                    .fill(Theme.Colors.ink)
-                    .frame(height: 1.5)
-                    .accessibilityHidden(true)
-                Text("\(facts.month) so far")
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                figure(first, large: true)
-                ForEach(facts.totals.dropFirst()) { total in
-                    figure(total, large: false)
-                        .padding(.top, Theme.Spacing.xs)
-                }
-                if let about = facts.aboutDollars {
-                    Text(about)
-                        .textRole(.data)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .padding(.top, Theme.Spacing.xs)
-                }
+        let wall = load()
+        LandingFrame(title: "Money", accent: LandingAccent.money, stateLine: wall.stateLine,
+                     keystone: {
+                         LandingKeystone(label: "What the money went on") {
+                             WordWallView(words: wall.words, open: { _ in
+                                 TessVoice.shared.say("Spends by category come with the Spending page.")
+                             }, label: { "\($0.text.capitalized), category" })
+                         }
+                     },
+                     doors: doors(wall), focus: $focus,
+                     openDoor: { door in
+                         TessVoice.shared.say("\(door.name) isn't set up yet.")
+                     },
+                     brief: { LandingBrief(forms: brief(wall)) },
+                     action: LandingFootAction(word: "Add a spend", hint: "Logs a spend, like 12.40 lunch") {
+                         draft = ""
+                         adding = true
+                     },
+                     onBack: { dismiss() })
+            .toolbar(.hidden, for: .navigationBar)
+            .alert("Add a spend", isPresented: $adding) {
+                TextField("12.40 lunch", text: $draft)
+                    .keyboardType(.numbersAndPunctuation)
+                Button("Log") { log() }
+                Button("Cancel", role: .cancel) {}
             }
-            .accessibilityElement(children: .combine)
-        }
     }
 
-    /// "$1,234" large, ".56" smaller on the same baseline: the decimal line.
-    private func figure(_ total: MoneyLandingFacts.Total, large: Bool) -> some View {
-        let parts = total.shown.split(separator: ".", maxSplits: 1).map(String.init)
-        let whole = parts.first ?? total.shown
-        let cents = parts.count > 1 ? "." + parts[1] : ""
-        return ViewThatFits(in: .horizontal) {
-            HStack(alignment: .firstTextBaseline, spacing: 0) {
-                Text(whole).textRole(large ? .heroNumber : .titleNumber).foregroundStyle(Theme.Colors.ink)
-                Text(cents).textRole(large ? .titleNumber : .data).foregroundStyle(Theme.Colors.inkSecondary)
-            }
-            .lineLimit(1)
-            // At large sizes the figure steps down rather than breaking.
-            HStack(alignment: .firstTextBaseline, spacing: 0) {
-                Text(whole).textRole(.titleNumber).foregroundStyle(Theme.Colors.ink)
-                Text(cents).textRole(.data).foregroundStyle(Theme.Colors.inkSecondary)
-            }
+    // MARK: Facts
+
+    private func load() -> MoneyWall {
+        let now = AppClock.now
+        let calendar = Calendar.current
+        let ledger = SpendLedger(store: model.store, classes: model.classes)
+        var spends: [SpendLedger.Entry] = []
+        for back in 0 ..< 3 {
+            guard let month = calendar.date(byAdding: .month, value: -back, to: now) else { continue }
+            spends += ledger.entries(inMonthOf: month, calendar: calendar)
         }
+        let monthCount = ledger.entries(inMonthOf: now, calendar: calendar).count
+        let shown = spends.sorted { $0.spentAt > $1.spentAt }.map { entry in
+            MoneyWall.Spend(category: entry.category, at: entry.spentAt,
+                            isPrivate: ObjectPrivacy.isPrivateWord(entry.category, in: model.store))
+        }
+        let monthName = now.formatted(Date.FormatStyle().locale(Locale(identifier: "en_US")).month(.wide))
+        let trend = MoneyTrend(store: model.store, classes: model.classes).compare(now: now, calendar: calendar)
+        let sentence = trend.map { LandingSentences.money(nothingLate: false, due: nil, trend: $0.clause).text }
+        return MoneyWall.build(spends: shown, monthCount: monthCount, monthName: monthName, trend: sentence)
+    }
+
+    /// Bills, Subscriptions, Income, Savings (contract §12). None has a model yet; Bills carries the categories as
+    /// its fact so the dial still says something true.
+    private func doors(_ wall: MoneyWall) -> [DialDoor] {
+        let slate = scheme == .dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F)
+        var doors = [
+            DialDoor(id: "bills", name: "Bills", color: LandingAccent.money, label: "Not set up yet",
+                     lines: wall.top.isEmpty ? [] : ["Most spends on"] + wall.top.prefix(2)),
+            DialDoor(id: "subscriptions", name: "Subscriptions", color: Theme.Colors.ink, label: "Not set up yet"),
+            DialDoor(id: "income", name: "Income", color: Theme.Colors.ink, label: "Not set up yet"),
+            DialDoor(id: "savings", name: "Savings", color: Theme.Colors.ink, label: "Not set up yet"),
+        ]
+        if wall.hidden > 0 {
+            doors.append(DialDoor(id: "private", name: "Private", count: "\(wall.hidden)", color: slate,
+                                  label: "Kept off the wall",
+                                  lines: ["\(wall.hidden) private \(wall.hidden == 1 ? "category" : "categories")"]))
+        }
+        return doors
+    }
+
+    private func brief(_ wall: MoneyWall) -> [LandingBrief.Form] {
+        guard let at = wall.lastAt else { return [] }
+        let raw = NotesCopy.when(at, now: AppClock.now)
+        let when = raw == "now" ? "just now" : raw
+        if let category = wall.lastCategory {
+            return [LandingBrief.Form(text: "You last spent on \(category), \(when).", key: category),
+                    LandingBrief.Form(text: "Last spend: \(category).", key: category)]
+        }
+        return [LandingBrief.Form(text: wall.lastIsPrivate ? "You last logged a private spend, \(when)."
+                    : "You last logged a spend, \(when)."),
+        LandingBrief.Form(text: "Last spend, \(when).")]
+    }
+
+    // MARK: Adding
+
+    /// "12.40 lunch": the amount first, then what it was for. The receipt names the category only, never the amount,
+    /// and Undo reads "Reversed".
+    private func log() {
+        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        draft = ""
+        guard !text.isEmpty else { return }
+        if looksLikeClaudeKey(text) {
+            TessVoice.shared.say(claudeKeyLine)
+            return
+        }
+        guard let amount = MoneyAmount.parse(text) else {
+            TessVoice.shared.say("Start with the amount, like 12.40 lunch.")
+            return
+        }
+        let note = MoneyAmount.note(after: text)
+        let pools = ReviewChoices.shared.value(of: "moneyPools") == "On"
+        guard let result = try? model.engine.perform(
+            LogSpend(amount: NSDecimalNumber(decimal: amount.amount).doubleValue, typed: amount.typed,
+                     currency: amount.currency, note: note.isEmpty ? nil : note, spentAt: AppClock.now,
+                     autoPool: pools ? true : nil),
+            by: .user
+        ) else {
+            TessVoice.shared.say("Didn't log that. Try again.")
+            return
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        let word = note.split(separator: " ").first.map { String($0).capitalized }
+        let shown = word.map { ObjectPrivacy.isPrivateWord($0, in: model.store) ? "Private spend" : $0 } ?? "Spend"
+        TessVoice.shared.say("\(shown), logged.", undo: result.record)
     }
 }

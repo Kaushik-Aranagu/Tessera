@@ -30,8 +30,17 @@ struct DoorsDial: View {
     @State private var cue = HapticCue()
     @State private var settledAt = Date.distantPast
     @ScaledMetric(relativeTo: .title3) private var scale: CGFloat = 1
+    @Environment(\.dynamicTypeSize) private var typeSize
 
-    private var slotHeight: CGFloat { Self.slot * max(1, min(scale, 1.9)) }
+    /// A slot's height at a Dynamic Type scale: 48 pt, growing with the text up to 1.9x (contract §8).
+    static func slotHeight(scale: CGFloat) -> CGFloat {
+        slot * max(1, min(scale, 1.9))
+    }
+
+    private var slotHeight: CGFloat {
+        Self.slotHeight(scale: scale)
+    }
+
     private var blurOn: Bool {
         !reduceMotion && !reduceTransparency && !ProcessInfo.processInfo.isLowPowerModeEnabled
     }
@@ -79,13 +88,19 @@ struct DoorsDial: View {
         let isFocus = distance < 0.5
         return Button {
             guard Date().timeIntervalSince(settledAt) > 0.12 else { return }
-            if place == 0 { open(door) } else { move(place) }
+            if place == 0 {
+                open(door)
+            } else {
+                move(place)
+            }
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(door.name)
                     .font(.custom("Figtree", size: 28 - 7 * distance, relativeTo: .title3).weight(.bold))
                     .foregroundStyle(isFocus ? door.color : Theme.Colors.inkSecondary)
                     .lineLimit(1)
+                    // At accessibility sizes the name takes the dial's width and steps down rather than cutting.
+                    .minimumScaleFactor(typeSize.isAccessibilitySize ? 0.5 : 1)
                 if isFocus, let count = door.count {
                     Text(count)
                         .font(.custom("Outfit", size: 14, relativeTo: .caption).weight(.regular))
@@ -97,7 +112,7 @@ struct DoorsDial: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: 190, alignment: .leading)
+        .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : 190, alignment: .leading)
         .offset(y: offset)
         .accessibilityLabel("\(door.name)\(door.count.map { ", \($0)" } ?? "")")
         .accessibilityAddTraits(place == 0 ? .isSelected : [])
@@ -107,7 +122,8 @@ struct DoorsDial: View {
     @ViewBuilder
     private var facts: some View {
         let door = doors[wrapped(focus)]
-        if door.label != nil || !door.lines.isEmpty {
+        // At accessibility sizes the names need the width; the facts stay with VoiceOver on the door's page.
+        if !typeSize.isAccessibilitySize, door.label != nil || !door.lines.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
                 if let label = door.label {
                     Text(label)
@@ -141,9 +157,13 @@ struct DoorsDial: View {
                 let step = (value.translation.height / slotHeight).rounded()
                 let flick = abs(value.predictedEndTranslation.height) > slotHeight * 1.2
                 var delta = Int(-step)
-                if delta == 0, flick { delta = value.translation.height < 0 ? 1 : -1 }
+                if delta == 0, flick {
+                    delta = value.translation.height < 0 ? 1 : -1
+                }
                 withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { drag = 0 }
-                if delta != 0 { move(delta) }
+                if delta != 0 {
+                    move(delta)
+                }
                 settledAt = Date()
             }
     }
@@ -159,5 +179,10 @@ struct DoorsDial: View {
 }
 
 private extension CGFloat {
-    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat { Swift.min(Swift.max(self, range.lowerBound), range.upperBound) }
+    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
+        Swift.min(
+            Swift.max(self, range.lowerBound),
+            range.upperBound
+        )
+    }
 }

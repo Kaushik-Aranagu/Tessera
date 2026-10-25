@@ -1,0 +1,83 @@
+import XCTest
+
+/// The Lists, Money and Kitchen landings on the shared kit (landing contract §14): a wall word opens, the dial turns,
+/// the action word acts. Sample data on and "Landing pages" On, so every landing has words on its wall.
+@MainActor
+final class RoomLandingsUITests: SimulatorOnlyTestCase {
+    private func launch(_ extra: [String]) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-review.sampleData", "On", "-review.landingPages", "On", "-demoTime", "18:10"] + extra
+        app.launch()
+        let ask = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Don’t Allow"]
+        if ask.waitForExistence(timeout: 6) {
+            ask.tap()
+        }
+        return app
+    }
+
+    private func button(_ app: XCUIApplication, _ label: String) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label ==[c] %@", label)).firstMatch
+    }
+
+    /// The dial's focus is the selected button; a swipe up on the dial moves the focus to the next door.
+    private func turnDial(_ app: XCUIApplication) {
+        let focus = app.buttons.matching(NSPredicate(format: "selected == true")).firstMatch
+        XCTAssertTrue(focus.waitForExistence(timeout: 10), "dial focus")
+        let before = focus.label
+        let start = focus.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -60)))
+        sleep(1)
+        let after = app.buttons.matching(NSPredicate(format: "selected == true")).firstMatch.label
+        XCTAssertNotEqual(before, after, "the dial turned")
+    }
+
+    private func wallWord(_ app: XCUIApplication, in label: String) -> XCUIElement {
+        let wall = app.otherElements[label]
+        XCTAssertTrue(wall.waitForExistence(timeout: 20), "\(label) wall")
+        return wall.buttons.firstMatch
+    }
+
+    func testListsLanding() {
+        let app = launch(["-lists"])
+        XCTAssertTrue(app.buttons["Lists"].waitForExistence(timeout: 30), "Lists title")
+        turnDial(app)
+        let new = button(app, "New list")
+        XCTAssertTrue(new.exists, "New list")
+        new.tap()
+        XCTAssertTrue(app.alerts["New list"].waitForExistence(timeout: 5), "New list asks for a name")
+        app.alerts["New list"].buttons["Cancel"].tap()
+        let word = wallWord(app, in: "Due this week")
+        XCTAssertTrue(word.exists, "a word on the wall")
+        word.tap()
+        XCTAssertTrue(new.waitForNonExistence(timeout: 5), "the word opened its list")
+    }
+
+    func testMoneyLanding() {
+        let app = launch(["-money"])
+        XCTAssertTrue(app.staticTexts["Money"].waitForExistence(timeout: 30), "Money title")
+        let money = app.staticTexts.allElementsBoundByIndex.map(\.label)
+        XCTAssertFalse(
+            money.contains { $0.contains("$") || $0.contains("€") || $0.contains("£") },
+            "no amounts: \(money)"
+        )
+        turnDial(app)
+        let add = button(app, "Add a spend")
+        XCTAssertTrue(add.exists, "Add a spend")
+        add.tap()
+        XCTAssertTrue(app.alerts["Add a spend"].waitForExistence(timeout: 5), "Add a spend asks")
+        app.alerts["Add a spend"].buttons["Cancel"].tap()
+    }
+
+    func testKitchenLanding() {
+        let app = launch(["-kitchen"])
+        XCTAssertTrue(app.staticTexts["Kitchen"].waitForExistence(timeout: 30), "Kitchen title")
+        turnDial(app)
+        let cook = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cook", "Plan tonight"])).firstMatch
+        XCTAssertTrue(cook.exists, "Cook or Plan tonight")
+        let word = wallWord(app, in: "Pantry and recipes")
+        XCTAssertTrue(word.exists, "a word on the wall")
+        word.tap()
+        sleep(2)
+        XCTAssertFalse(cook.exists && cook.isHittable, "the word opened its page over the landing")
+    }
+}
