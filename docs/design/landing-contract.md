@@ -36,6 +36,12 @@ Each section owns its zone and gestures and never reads another's; a room suppli
 - **Opening effect on every landing:** the Home arrival effect. Sections arrive in order (topBar, keystone, rows, doors, action), 80 ms apart, each rising 10 pt out of a slight blur (3 pt) and a slightly smaller size (95 percent), 0.5 s on the ease-out. Reduce Motion: a 150 ms cross-fade. Implemented once as `.landingSection(_:)`.
 - **From Bridge into a room:** choosing an app flips the mosaic keystone into that room's keystone (a different effect per room is allowed; the pixel doorway of 206 is the Bridge's own) and the lower doors block arrives in its own way; the top area (departure board and date on Bridge) becomes navigation plus the room title and its summary lines. Built per room on top of `LandingKeystone` and the doorway; not part of the shared kit yet.
 
+### Doors and the switcher (Kaushik, 12:26 PM PDT Oct 25)
+
+- **Left of the doors:** the Home-style focus. The focused door is large and in its color, the others are smaller and softly blurred behind it (depth blur up to 1.8 pt, none under Reduce Motion, Reduce Transparency or Low Power).
+- **Right of the doors:** each room shows the focused door's summary in its own way, up to four lines (a list, a count with a line, a few titles). Home keeps one line there; the apps use the space for more.
+- **Switcher (`LandingOneThing`):** one element in the rows section that swipes up or down to the next or previous thing, for another dimension without a list. 1:1 slide with parallax, past 40 pt or a flick turns it, one light tick, no dots or counter. Bridge does not need it; rooms add it where they have more to say.
+
 ## 1. Frame and the four bands
 
 Frame 402 x 874 pt (iPhone 17), 24 pt gutters. Other sizes scale the gaps, never the slot sizes. No ScrollView on a landing.
