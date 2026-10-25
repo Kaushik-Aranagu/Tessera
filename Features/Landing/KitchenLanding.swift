@@ -459,18 +459,18 @@ struct KitchenLandingPage: View {
         var items: [WidgetItem] = []
         if let cook = front.cooking {
             items.append(WidgetItem(id: "cooking", header: "Cooking", big: "Go on", middle: cook.line,
-                                    small: "Tap for the clock", bigColor: LandingAccent.kitchen, strikeable: false))
+                                    small: "Tap for the clock", bigColor: LandingAccent.kitchen, strikeable: false, handwritten: true))
         }
         if let meal = front.tonight {
             items.append(WidgetItem(id: "dinner", header: "Tonight", big: NotesLandingPage.short(meal.title),
                                     middle: "start \(HouseTime.clock(meal.start))",
                                     small: meal.minutes.map { HouseTime.minutes(Int($0)) } ?? "Tap to open it",
-                                    bigColor: LandingAccent.kitchen, strikeable: false))
+                                    bigColor: LandingAccent.kitchen, strikeable: false, handwritten: true))
         } else {
             items.append(WidgetItem(id: "plan", header: "Tonight", big: "Tonight?", middle: "nothing planned yet",
                                     small: pass.cookable.isEmpty ? "Tap for Recipes"
                                         : "You could make \(pass.cookable.count)",
-                                    bigColor: LandingAccent.kitchen, strikeable: false))
+                                    bigColor: LandingAccent.kitchen, strikeable: false, handwritten: true))
         }
         if !pass.toGet.isEmpty {
             items.append(WidgetItem(id: "toget", header: "On the way", big: "\(pass.toGet.count)", bigIsNumber: true,
@@ -481,7 +481,7 @@ struct KitchenLandingPage: View {
         if let low = pass.low.first {
             items.append(WidgetItem(id: "runsout", header: "Runs out", big: NotesLandingPage.short(low),
                                     middle: pass.low.count > 1 ? "and \(pass.low.count - 1) more" : "first to go",
-                                    small: "Tap for Pantry", strikeable: false))
+                                    small: "Tap for Pantry", strikeable: false, handwritten: true))
         }
         return items
     }

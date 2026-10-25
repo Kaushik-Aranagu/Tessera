@@ -107,6 +107,7 @@ struct DoorsDial: View {
                     .font(.custom("Figtree", size: focusSize - (focusSize - neighbourSize) * distance, relativeTo: .title3).weight(.bold))
                     .foregroundStyle(isFocus ? door.color : Theme.Colors.inkSecondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.4)
                 if isFocus, let count = door.count {
                     Text(count)
                         .font(.custom("Outfit", size: 14, relativeTo: .caption).weight(.regular))

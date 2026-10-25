@@ -18,6 +18,8 @@ struct WidgetItem: Identifiable, Equatable {
     var bigColor: Color?
     /// Hold the Big line to strike it (Done, Undo 10 s). Lookout and Purse have no strike.
     var strikeable = true
+    /// Caveat 600 at 48 for the Big line (Galley ticket, Deck chalk; sheet 283). Numbers stay Outfit.
+    var handwritten = false
 }
 
 /// The widget section. Swipes across or up and down (past 50 / 44 pt) to the next item; hold the Big line 180 ms and
@@ -93,7 +95,9 @@ struct LandingWidget<Glyph: View>: View {
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
             } else {
-                Text(item.big).font(.custom("Figtree", size: 38, relativeTo: .largeTitle).weight(.bold))
+                Text(item.big)
+                    .font(item.handwritten ? .custom("Caveat", size: 48, relativeTo: .largeTitle).weight(.semibold)
+                        : .custom("Figtree", size: 38, relativeTo: .largeTitle).weight(.bold))
             }
         }
         .foregroundStyle(done ? Theme.Colors.inkSecondary : color)

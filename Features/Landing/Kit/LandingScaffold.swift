@@ -51,11 +51,12 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                         .offset(x: 24, y: 388 * k)
                 }
                 LandingWidget(items: widget, index: $widgetIndex, open: openWidget, strike: strikeWidget, glyph: glyph)
-                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.widget)
                     .offset(x: 24, y: LandingWidget<Glyph>.top * k)
                 DoorsDial(doors: doors, focus: $focus, open: openDoor, style: .landing)
                     .frame(width: 160)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.doors)
                     .offset(x: 24, y: 640 * k)
                 DoorSummary(door: doors.isEmpty ? nil : doors[((focus % doors.count) + doors.count) % doors.count])
