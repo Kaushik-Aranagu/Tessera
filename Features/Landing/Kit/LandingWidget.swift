@@ -34,8 +34,8 @@ struct LandingWidget<Glyph: View>: View {
     var strike: (WidgetItem) -> Void = { _ in }
     @ViewBuilder let glyph: (WidgetItem) -> Glyph
 
-    static var size: CGSize { CGSize(width: 354, height: 212) }
-    static var top: CGFloat { 400 }
+    static var size: CGSize { LandingPlace.widget.frame.size }
+    static var top: CGFloat { LandingPlace.widget.frame.minY }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var drag = CGSize.zero
@@ -70,17 +70,17 @@ struct LandingWidget<Glyph: View>: View {
                 .tracking(13 * 0.12)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .lineLimit(1)
-                .offset(y: 29)
-            bigLine(item, done: done).offset(y: 44)
+                .offset(y: 17)
+            bigLine(item, done: done).offset(y: 32)
             FitLine(forms: FitLine.cuts(item.middle), size: 20, color: Theme.Colors.ink, weight: .medium)
                 .frame(width: 262, alignment: .leading)
-                .offset(y: 122)
+                .offset(y: 110)
             FitLine(forms: FitLine.cuts(item.small), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
                 .frame(width: 262, alignment: .leading)
-                .offset(y: 154)
+                .offset(y: 142)
             glyph(item)
                 .frame(width: 80, height: 80)
-                .offset(x: 354 - 80, y: 44)
+                .offset(x: 354 - 80, y: 32)
                 .allowsHitTesting(false)
         }
         .frame(width: Self.size.width, height: Self.size.height, alignment: .topLeading)
