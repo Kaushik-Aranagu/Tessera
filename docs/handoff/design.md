@@ -79,6 +79,9 @@ scene on its own, the untouched Codex prototype and screenshots).
 - 248 redraws everything around the scene to our rules: sentence with three big colored phrases, the woodland in the
   Home mosaic's slot, doors on the three-place dial, an inside-a-grove focus wheel with a dimension line, and a routine
   page with the whole life on one hairline. No tabs, pills, legend, percentage or tree icons.
+- v2 (his 4:57 PM PT note): the landing is a summary (sentence, woodland, two updates, doors with state lines, no
+  list). The routines list behind a door is the open design problem: the board has a lab of five ways (Spoken,
+  Skyline, Map, Cloth, Sheaf) and three ways to show one routine (life, weeks, day). Pick with him next.
 - Open: which groves (recommend Body, Mind, Home, plus Borrowed across the lake), and how withering fits the older
   no-shame ruling (recommend soft words and Small-way protection). His verdict on 248 is owed.
 
