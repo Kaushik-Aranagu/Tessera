@@ -32,6 +32,7 @@ struct DoorsDial: View {
     private var neighbourSize: CGFloat { style == .landing ? 20 : 21 }
     private var maxBlur: CGFloat { style == .landing ? 1.6 : 1.8 }
 
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var drag: CGFloat = 0
@@ -39,8 +40,12 @@ struct DoorsDial: View {
     @State private var settledAt = Date.distantPast
     @ScaledMetric(relativeTo: .title3) private var scale: CGFloat = 1
 
+    private var large: Bool {
+        typeSize.isAccessibilitySize
+    }
+
     private var slotHeight: CGFloat {
-        Self.slot * max(1, min(scale, 1.9))
+        placeHeight * max(1, min(scale, large ? 1.25 : 1.9))
     }
 
     private var blurOn: Bool {
@@ -57,7 +62,7 @@ struct DoorsDial: View {
                 if style == .notes { facts }
             }
         }
-        .frame(height: slotHeight * 3)
+        .frame(height: slotHeight * CGFloat(places(count).count == 3 ? 3 : (large ? 2 : 3)))
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .highPriorityGesture(turn)
@@ -71,10 +76,11 @@ struct DoorsDial: View {
 
     /// Focus plus one above and one below; with fewer than 3 doors a door is never shown twice.
     private func places(_ count: Int) -> [Int] {
+        // At accessibility sizes the dial keeps the focus and the next door so it never runs over the foot.
         switch count {
         case 0, 1: [0]
         case 2: [0, 1]
-        default: [-1, 0, 1]
+        default: large ? [0, 1] : [-1, 0, 1]
         }
     }
 
