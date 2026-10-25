@@ -18,8 +18,7 @@ let PL=null,seed=7;const BW=354,BH=124;// door block, the same on every door pag
 function compute(){const src=DOOR<0?POOL:doorWords(DOOR);WL=src;
   if(DOOR>=0){// door walls: one fixed block (BW x BH) on every door page, filled exactly. Each note once, newest first,
     // rows justified edge to edge. Every split into rows is tried; the whole wall may then scale up or down by at most
-    // 8% (glyphs and spacing together, uniform) so the rows meet the block's bottom edge. Small doors that still can't
-    // fill it add each note's day ("TUESDAY") after its title, in ink 2.
+    // 8% (glyphs and spacing together, uniform) so the rows meet the block's bottom edge.
     const items=curItems();
     // Each gap between neighbouring notes is one of: same stack (small words stacked, each sized to the stack's width,
     // so a row mixes sizes with no notch), next brick in the row, or next row. All 3^(n-1) choices are tried.
