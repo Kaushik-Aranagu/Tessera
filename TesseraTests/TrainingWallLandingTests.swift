@@ -56,12 +56,24 @@ struct TrainingWallLandingTests {
     }
 
     @Test func footWordFollowsTheDay() {
-        #expect(TrainingWallFacts.actionWord(.ready(name: "Push A", minutes: 45, lifts: 4)) == "Start Push A")
-        #expect(TrainingWallFacts.actionWord(.running(name: "Push A", liftsDone: 1)) == "Pick up Push A")
-        #expect(TrainingWallFacts.actionWord(.rest(next: "Pull B", nextDay: nil)) == "Log a walk")
+        // Verb over object, never "Start Push A" in one word (283 v3); a start needs the hold.
+        #expect(TrainingWallFacts.actionWord(.ready(name: "Push A", minutes: 45, lifts: 4))
+            == TrainingFoot(verb: "Start", object: "Push A", hold: true))
+        #expect(TrainingWallFacts.actionWord(.running(name: "Push A", liftsDone: 1))
+            == TrainingFoot(verb: "Pick up", object: "Push A"))
+        #expect(TrainingWallFacts.actionWord(.rest(next: "Pull B", nextDay: nil)) == TrainingFoot(
+            verb: "Log",
+            object: "A walk"
+        ))
         #expect(TrainingWallFacts.actionWord(.done(name: "Push A", next: nil)) == nil)
         let hidden = TrainingDay.ready(name: ObjectPrivacy.routineLabel, minutes: 30, lifts: 3)
-        #expect(TrainingWallFacts.actionWord(hidden) == "Start private workout")
+        #expect(TrainingWallFacts.actionWord(hidden)?.object == ObjectPrivacy.routineLabel)
+        #expect(TrainingWallFacts.actionWord(hidden)?.verb.contains(" ") == false)
+    }
+
+    @Test func dustHandOverIsSeventyGrainsUnderFiveSeconds() {
+        #expect(ChalkDustHandOver.grains == 70)
+        #expect(ChalkDustHandOver.duration <= 5)
     }
 
     @Test func splitsTakeTheirColorsByName() {

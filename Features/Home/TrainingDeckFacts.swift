@@ -190,6 +190,12 @@ extension TrainingDeckFacts {
                                          middle: "Walks come in from Health", small: "", strikeable: false))
             }
         }
+        // Deck's Big line is Barlow Condensed in caps (283 v3); numbers stay Outfit.
+        widget = widget.map { item in
+            var item = item
+            item.face = .deck
+            return item
+        }
         return TrainingDeckFacts(board: board, routineWords: routineWords, needs: needs, widget: widget)
     }
 }

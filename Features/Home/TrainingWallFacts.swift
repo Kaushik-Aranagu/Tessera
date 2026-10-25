@@ -81,9 +81,9 @@ struct TrainingWallFacts {
     let words: [WallWord]
     let doors: [DialDoor]
     let brief: TrainingBrief?
-    /// The foot's word; nil when there is nothing to do from here.
-    let action: String?
-    /// The right-drag option on a rest day: start the next routine anyway.
+    /// The foot's verb over its object; nil when there is nothing to do from here.
+    let action: TrainingFoot?
+    /// A rest day's other action: start the next routine anyway (its object is the routine).
     let restOption: String?
 
     var stateLine: [String] {
@@ -120,19 +120,15 @@ struct TrainingWallFacts {
         }
     }
 
-    static func actionWord(_ day: TrainingDay) -> String? {
+    /// The foot (283 v3): a verb over its object, never one phrase ("Start" over "Push A").
+    static func actionWord(_ day: TrainingDay) -> TrainingFoot? {
         switch day {
-        case let .ready(name, _, _): "Start \(footName(name))"
-        case let .running(name, _): "Pick up \(footName(name))"
-        case .rest: "Log a walk"
+        case let .ready(name, _, _): TrainingFoot(verb: "Start", object: name, hold: true)
+        case let .running(name, _): TrainingFoot(verb: "Pick up", object: name)
+        case .rest: TrainingFoot(verb: "Log", object: "A walk")
         case .done: nil
-        case .nothing: "Pick a routine"
+        case .nothing: TrainingFoot(verb: "Pick", object: "A routine")
         }
-    }
-
-    /// "Private workout" reads lower case inside a phrase ("Start private workout").
-    private static func footName(_ name: String) -> String {
-        name == ObjectPrivacy.routineLabel ? name.lowercased() : name
     }
 
     /// A wall word: cut on a whole word at 14 characters, the Notes rule.
@@ -208,7 +204,7 @@ extension TrainingWallFacts {
         let brief = brief(model, day: day, lifts: lifts, calendar: calendar)
         var restOption: String?
         if case let .rest(next, _) = day, let next {
-            restOption = "Start \(footName(next))"
+            restOption = next
         }
         return TrainingWallFacts(day: day, words: words, doors: doors, brief: brief, action: actionWord(day),
                                  restOption: restOption)
@@ -369,4 +365,12 @@ extension TrainingWallFacts {
         let weight = model.ledger.sessions(of: exercise).first?.sets.first?.weight
         return (exercise.name, weight.flatMap { $0 > 0 ? $0 : nil })
     }
+}
+
+/// The foot's action as sheet 283 v3 draws it: the verb in the room color over its object in ink 2.
+struct TrainingFoot: Equatable {
+    let verb: String
+    var object = ""
+    /// A start needs a 500 ms hold.
+    var hold = false
 }

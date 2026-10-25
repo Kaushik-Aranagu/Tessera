@@ -143,8 +143,9 @@ struct TrainingBlackboard: View {
         }
     }
 
-    private func chalkFont(_ size: CGFloat, _ weight: Font.Weight) -> Font {
-        .custom("Figtree", fixedSize: size).weight(weight)
+    /// Barlow Condensed 600 (283 v3), 1.04x the old chalk size; the weight is the face's own.
+    private func chalkFont(_ size: CGFloat, _: Font.Weight) -> Font {
+        .custom("BarlowCondensed-SemiBold", fixedSize: size * 1.04)
     }
 
     /// Two passes: a soft, wide, faint stroke (four offset copies) under one crisp copy, each with a hair of jitter.
