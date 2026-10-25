@@ -1,2 +1,2 @@
-# r66: round 283 landings
-`index.html` is the linked prototype from Kaushik's design set (`docs/handoff/design-sheets/prototype/`, PR #1425) with the 283 layer (`v3.js`) inserted before the map. To run it, put it next to that folder's `purse.html`, `watch.html` and `weather-plates/`. Published at https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp.
+# r66: round 283 landings (v2)
+`index.html` is the linked prototype from Kaushik's design set (`docs/handoff/design-sheets/prototype/`, PR #1425) with the 283 layer (`landing.js`: masthead switcher, widget, doors dial; then the flip) inserted before the map. To run it, put it next to that folder's `purse.html`, `watch.html` and `weather-plates/`. Published at https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp. The board's "The sections, named" block is the reference for section names.
