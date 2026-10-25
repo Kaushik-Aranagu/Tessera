@@ -17,7 +17,7 @@ final class NotesLandingUITests: SimulatorOnlyTestCase {
 
     func testTheLandingShowsTitleWallDialAndAction() {
         let app = launch()
-        XCTAssertTrue(app.staticTexts["Notes"].waitForExistence(timeout: 30), "The room title is on the landing")
+        XCTAssertTrue(app.staticTexts["Log"].waitForExistence(timeout: 30), "The room title is on the landing")
         XCTAssertTrue(app.buttons["Opens it"].firstMatch.exists || app.staticTexts["New note"].exists)
         XCTAssertTrue(app.staticTexts["New note"].exists, "The action word sits at the foot")
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'All notes'")).firstMatch.exists,
@@ -26,7 +26,7 @@ final class NotesLandingUITests: SimulatorOnlyTestCase {
 
     func testTappingAWallWordOpensItsNote() {
         let app = launch()
-        XCTAssertTrue(app.staticTexts["Notes"].waitForExistence(timeout: 30))
+        XCTAssertTrue(app.staticTexts["Log"].waitForExistence(timeout: 30))
         let word = app.buttons.matching(NSPredicate(format: "label == 'Sleep' OR label == 'Ideas'")).firstMatch
         XCTAssertTrue(word.waitForExistence(timeout: 10), "A note word is on the wall")
         word.tap()

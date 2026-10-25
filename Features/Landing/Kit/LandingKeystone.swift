@@ -14,8 +14,13 @@ struct LandingKeystone<Content: View>: View {
         self.label = label
     }
 
+    /// One slot on every landing (Kaushik, Oct 25): 354 x 182 pt at top 196. More content pages inside it; it never grows.
     static var size: CGSize {
-        CGSize(width: 354, height: 220)
+        CGSize(width: 354, height: 182)
+    }
+
+    static var top: CGFloat {
+        196
     }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
