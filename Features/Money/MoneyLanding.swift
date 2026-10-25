@@ -136,15 +136,24 @@ struct MoneyLandingView: View {
                         },
                         caption: [caption(wall)],
                         widget: widget(categories), widgetIndex: $widgetIndex,
-                        glyph: { _ in PurseGlyph() },
+                        glyph: { item in LandingGlyph(item: item, color: LandingAccent.money) },
                         doors: doors(categories), focus: $category,
                         openDoor: { door in
                             TessVoice.shared.say("\(door.name) opens with the full chart soon.")
                         },
-                        action: LandingFootAction(word: "Log", hint: "Logs a spend, like 12.40 lunch") {
+                        action: LandingFootAction(
+                            word: "Log", object: "A spend", hint: "Logs a spend, like 12.40 lunch",
+                            alternates: [
+                                .init(verb: "Look", object: "The month") { look() },
+                                .init(verb: "Plan", object: "This month") {
+                                    TessVoice.shared.say("Plans for the month come with Bills.")
+                                },
+                            ]
+                        ) {
                             draft = ""
                             adding = true
                         })
+                        .overlay { KeystoneHandover(kind: .purseDot, from: CGPoint(x: 230, y: 330)) }
                         .toolbar(.hidden, for: .navigationBar)
                         .onChange(of: category) { _, _ in index = 0 }
                         .alert("Log a spend", isPresented: $adding) {
@@ -175,6 +184,15 @@ struct MoneyLandingView: View {
         let trend = MoneyTrend(store: model.store, classes: model.classes).compare(now: now, calendar: calendar)
         let sentence = trend.map { LandingSentences.money(nothingLate: false, due: nil, trend: $0.clause).text }
         return MoneyWall.build(spends: shown, monthCount: monthCount, monthName: monthName, trend: sentence)
+    }
+
+    /// Look: the chart back on this month's MONTH line.
+    private func look() {
+        withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) {
+            category = 0
+            index = 0
+            switcherIndex = 0
+        }
     }
 
     /// The categories are the doors too (contract v2 §12): turning the dial turns the chart, and the other way round.
@@ -260,40 +278,6 @@ struct MoneyLandingView: View {
         let word = note.split(separator: " ").first.map { String($0).capitalized }
         let shown = word.map { ObjectPrivacy.isPrivateWord($0, in: model.store) ? "Private spend" : $0 } ?? "Spend"
         TessVoice.shared.say("\(shown), logged.", undo: result.record)
-    }
-}
-
-/// The widget glyph (283): the index line draws to its dot, once on arrival and every 7 s; still under Reduce Motion.
-struct PurseGlyph: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.colorScheme) private var scheme
-    @State private var drawn: CGFloat = 1
-
-    private static let points: [CGPoint] = [
-        CGPoint(x: 4, y: 20), CGPoint(x: 18, y: 24), CGPoint(x: 30, y: 38), CGPoint(x: 44, y: 42),
-        CGPoint(x: 58, y: 54), CGPoint(x: 72, y: 58),
-    ]
-
-    var body: some View {
-        let sage = scheme == .dark ? Color(hex: 0x8DBFA7) : Color(hex: 0x3F7A62)
-        ZStack(alignment: .topLeading) {
-            Path { path in path.addLines(Self.points) }
-                .trimmedPath(from: 0, to: drawn)
-                .stroke(sage, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-            Circle().fill(sage).frame(width: 7, height: 7)
-                .position(Self.points[Self.points.count - 1])
-                .opacity(drawn >= 1 ? 1 : 0)
-        }
-        .frame(width: 80, height: 80)
-        .accessibilityHidden(true)
-        .task {
-            guard !reduceMotion else { return }
-            while !Task.isCancelled {
-                drawn = 0
-                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { drawn = 1 }
-                try? await Task.sleep(for: .seconds(7))
-            }
-        }
     }
 }
 
