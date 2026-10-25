@@ -8,6 +8,7 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D79BC4;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D79BC4;color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 main{max-width:1380px;margin:0 auto;display:flex;flex-direction:column;gap:64px}
 h1{font-family:var(--num);font-weight:200;font-size:clamp(40px,8vw,72px);line-height:1.02;margin:0;text-wrap:balance}
@@ -77,14 +78,57 @@ button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
 .life .st.on{color:var(--room);font-weight:600;font-size:17px}
 .life .tick{position:absolute;top:48px;width:1px;height:9px;background:var(--hair)}
 .life .you{position:absolute;top:44px;width:2px;height:17px;background:var(--room);border-radius:1px;transition:left .45s cubic-bezier(.3,.9,.3,1)}
+
+.ups{position:absolute;left:24px;right:24px;height:128px}
+.up{position:absolute;left:0;right:0;height:64px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300;cursor:grab;transition:transform .3s,opacity .3s}
+.up b{font-weight:600}
+.sum{display:flex;flex-direction:column;justify-content:center;height:100%;font-size:16px;line-height:1.5;font-weight:500}
+.sum span{display:block}
+.rows .sumwrap{position:absolute;inset:0}
+/* lab */
+.lab{position:absolute;left:24px;right:24px;top:136px;height:650px}
+.lab .sp{font-size:21px;line-height:1.4;font-weight:300;margin:0 0 14px;max-width:none}
+.lab .sp .lead{font-weight:600}
+.lab .nm{font-weight:500;cursor:pointer;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--hair)}
+.lab .nm.on{text-decoration-color:currentColor}
+.lab .det{margin:2px 0 16px;padding-left:0}
+.lab .det .big{font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.lab .det .ln2{font-size:14px;color:var(--ink2);margin-top:6px}
+.sky{position:absolute;left:0;right:0;top:0;height:380px;display:flex;align-items:flex-end;gap:3px}
+.sky .tr{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;cursor:pointer;line-height:1;transition:opacity .35s,transform .35s,font-weight .2s;padding:2px 0;text-align:left;letter-spacing:.05em}
+.sky .gap{width:12px;flex:none}
+.ground{position:absolute;left:0;right:0;height:1px;background:var(--hair)}
+.gl{position:absolute;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.map{position:absolute;left:0;width:354px;top:20px;height:430px}
+.map .mw{position:absolute;white-space:nowrap;cursor:pointer;line-height:1.1;transition:left .4s,top .4s,font-weight .2s}
+.ax{position:absolute;font-size:11px;color:var(--ink2);letter-spacing:.06em;white-space:nowrap}
+.cl{position:absolute;left:0;right:0;top:0}
+.cl .rw{display:flex;align-items:center;justify-content:space-between;height:30px;cursor:pointer}
+.cl .rw .n{font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cl .sec{height:28px;display:flex;align-items:flex-end;padding-bottom:4px;border-bottom:1px solid var(--hair);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.cl .sx{height:46px;font-size:13px;color:var(--ink2);display:flex;align-items:flex-start;justify-content:space-between;padding-top:0}
+.cl .strokes{margin:0;gap:4px}.cl .strokes i{width:14px;height:5px}
+.sh{position:absolute;left:0;right:0}
+.sh .hd{position:absolute;left:0;right:0;height:56px;display:flex;align-items:center;font-size:28px;font-weight:600;letter-spacing:-.02em;cursor:pointer;transition:color .3s,opacity .3s}
+.sh .hd i{font:300 normal 14px var(--num);color:var(--ink2);margin-left:8px;font-style:normal}
+.sh .li{position:absolute;left:0;right:0;height:40px;display:flex;align-items:center;justify-content:space-between;font-size:19px;font-weight:500;transition:transform .45s cubic-bezier(.3,.9,.3,1),opacity .35s,filter .35s;cursor:pointer;white-space:nowrap}
+.sh .li small{font-size:12px;font-weight:400}
+.lsel{position:absolute;left:24px;right:24px;font-size:14px;color:var(--ink2)}
+.labbar{margin-top:12px}
+.pager{display:flex;gap:18px;flex-wrap:wrap}
+.alt .big2{font:200 76px/1 var(--num);letter-spacing:-.02em}
+.alt .big2 small{font:300 18px var(--sans);color:var(--ink2);margin-left:6px}
+.alt .wk{display:flex;align-items:center;justify-content:space-between;height:40px;font-size:13px;color:var(--ink2)}
+.alt .wk .strokes{margin:0}
+.alt a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;cursor:pointer;color:var(--ink)}
 @media (prefers-reduced-motion:reduce){.dial .d,.row,.wh .it,.dims .dm,.life .you{transition:none}.petal{display:none}}
 </style>
 
 <main>
 <header>
 <h2>Tessera / Routines / sheet 248</h2>
-<h1>The routines woodland, in our rules.</h1>
-<p class="lede">Kaushik and Codex built a living woodland for Routines after the weekly limit ran out. The scene is his favorite part, so it stays as the landing's keystone. Everything around it is redrawn to the Tessera look: no tabs, pills, legends, percentages or tree icons, and the same wheel and dial patterns as Notes and Recipes.</p>
+<h1>The routines woodland, round two.</h1>
+<p class="lede">The landing is now a summary: how the day is going, two quick updates, and doors. Opening a door shows the routines, and that is the part still to invent, so the second phone is a lab of five ways to show them. The third phone shows three ways to show one routine.</p>
 <div class="bar" role="group" aria-label="Phone look">
 <button class="w" id="lk-paper" aria-pressed="true">Paper</button>
 <button class="w" id="lk-black" aria-pressed="false">Black</button>
@@ -103,13 +147,14 @@ button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
  <div class="say" id="say"></div>
  <div class="scene" style="top:196px;height:182px"><iframe id="sc1" title="Woodland" src="scene.html?view=scene&look=paper&count=12" loading="eager"></iframe></div>
  <div class="scenecap" id="scap" style="top:384px">Tap a tree to see what it is.</div>
- <div class="dial" id="dial" style="top:430px"></div>
- <div class="rows" id="rows" style="top:430px"></div>
- <div class="toast" id="toast1" style="top:650px"></div>
+ <div class="ups" id="ups" style="top:416px"></div>
+ <div class="dial" id="dial" style="top:552px"></div>
+ <div class="rows" id="rows" style="top:552px"></div>
+ <div class="toast" id="toast1" style="top:752px"></div>
  <button class="foot" id="plant">Plant</button>
  <div class="tessw">Tess</div><div class="home"></div>
 </div></div>
-<p class="cap"><b>Landing.</b> The woodland sits in the Home mosaic's slot. Below it, doors on the three-place dial; the focused door shows its three routines next to it and the woodland leans toward that grove. The sentence's big words each keep their own color.</p>
+<p class="cap"><b>Landing, as a summary.</b> One sentence for how the day is going, the woodland, then two updates: what is next and what needs a look. Doors sit on the dial. The focused door says how it stands in three short lines, not a list, and the woodland leans toward that grove. The list lives behind the door.</p>
 </div>
 
 <!-- 2. wheel -->
@@ -137,14 +182,31 @@ button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
  <div class="title" style="top:78px;font-size:38px;color:var(--ink)">Drink water</div>
  <div class="say" id="say3" style="top:134px;font-size:20px;font-weight:400;line-height:1.35"></div>
  <div class="life" id="life"></div>
+ <div class="alt" id="alt" style="position:absolute;left:24px;right:24px;top:240px;height:300px"></div>
  <div class="strokes" id="str3" style="position:absolute;left:24px;top:410px"></div>
  <div class="toast" id="lately" style="top:436px;font-size:14px"></div>
  <div style="position:absolute;left:24px;right:24px;top:490px;font-size:14px;color:var(--ink2);line-height:1.55" id="care"></div>
  <button class="foot" id="foot3">Done</button>
  <div class="tessw">Tess</div><div class="home"></div>
 </div></div>
-<div class="bar" style="margin-top:10px;gap:18px" id="stagebar" aria-label="Preview a stage"></div>
-<p class="cap"><b>A routine.</b> One hairline holds the whole life of a habit. The marker moves as days are kept; try the stages under the phone. Withering and bare are quiet states, shown in color and one plain sentence.</p>
+<div class="bar" style="margin-top:10px;gap:18px" id="viewbar" aria-label="Way to show a routine"></div>
+<div class="bar" style="margin-top:0;gap:18px" id="stagebar" aria-label="Preview a stage"></div>
+<p class="cap" id="cap3"><b>A routine.</b></p>
+</div>
+
+<!-- 4. lab -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p4">
+ <div class="sbar"><span>9:41</span><span></span></div>
+ <div class="back">Routines</div>
+ <div class="title" style="top:78px;font-size:38px">All routines</div>
+ <div class="lab" id="lab"></div>
+ <div class="dims" id="ldims" style="top:134px;left:24px;right:24px"></div>
+ <button class="foot" id="foot4">Plant</button>
+ <div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="bar labbar" id="labbar" aria-label="Way to show the routines"></div>
+<p class="cap" id="cap4"></p>
 </div>
 
 </div>
@@ -252,12 +314,25 @@ dial.addEventListener('pointerdown',e=>{dragY=e.clientY;dv=0;dial.setPointerCapt
 dial.addEventListener('pointermove',e=>{if(dragY===null)return;const k=window.__k1||1;dv=(e.clientY-dragY)/k;if(Math.abs(dv)>40){focus=(focus+(dv<0?1:-1)+6)%6;dragY=e.clientY;drawDial();drawRows(true);dv=0;dragY=e.clientY}});
 dial.addEventListener('pointerup',()=>{dragY=null});
 
-function drawRows(anim){rowsEl.innerHTML='';const list=rows(focus).slice(0,3);
- if(!list.length){rowsEl.innerHTML='<div class="row" style="top:64px"><div class="n" style="color:var(--ink2);font-weight:400">Nothing here today.</div></div>';return}
- list.forEach((r,i)=>{const el=document.createElement('div');el.className='row';el.style.top=(i*64)+'px';
-  const [word,cls]=SW[r.st];el.innerHTML='<div class="n">'+r.n+'</div><div class="s '+cls+'" style="color:var(--'+({g:'green',r:'room',w2:'wine',go:'gold',sl:'slate'}[cls])+')">'+word+'</div>';
-  if(anim&&!RM){el.style.opacity=0;el.style.transform='translateY(8px)';requestAnimationFrame(()=>requestAnimationFrame(()=>{el.style.opacity=1;el.style.transform='none'}))}
-  swipe(el,r,()=>{drawRows(false);drawDial();sentence()});rowsEl.appendChild(el)})}
+const AT={'Drink water':'7:00','Evening walk':'6:30','Read ten pages':'9:15','Practice guitar':'8:00','Tidy a little':'5:30','Call family':'Sunday','Plan the week':'Sunday'};
+const DAYS={'Drink water':28,'Morning stretch':42,'Take screen breaks':14,'Stretch my neck':3,'Evening walk':28,'Take the stairs':90,'Read ten pages':70,'Journal':35,'Practice guitar':84,'Write a little':7,'Tidy a little':21,'Water houseplants':28,'Plan tomorrow':49,'Call family':21,'Cook dinner':30,'Plan the week':14};
+R.forEach(r=>{r.d=DAYS[r.n];r.at=AT[r.n]});
+const CN={g:'green',r:'room',w2:'wine',go:'gold',sl:'slate'};
+const NUM=['No','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
+function drawSum(){const set=rows(focus),c=s2=>set.filter(r=>r.st===s2).length;
+ const parts=[[c('tend')+c('new'),' to tend','r'],[c('care'),(c('care')===1?' needs':' need')+' a little care','w2'],[c('begin'),' to begin again','sl'],[c('fruit'),' with fruit ready','go'],[c('done'),' done today','g'],[c('rest'),' resting','sl']].filter(p=>p[0]).slice(0,3);
+ rowsEl.innerHTML='<div class="sum">'+(parts.length?parts.map(p=>'<span style="color:var(--'+CN[p[2]]+')">'+NUM[p[0]]+p[1]+'</span>').join(''):'<span style="color:var(--ink2);font-weight:400">Nothing here today.</span>')+'</div>'}
+function drawUps(anim){const u=$('#ups');u.innerHTML='';
+ const next=R.filter(r=>r.st==='tend'&&r.at&&r.at.includes(':')).sort((a,b)=>a.at.localeCompare(b.at,undefined,{numeric:true}))[0];
+ const att=R.filter(r=>['care','begin','fruit'].includes(r.st)).sort(byUrgency)[0];
+ const items=[];
+ if(next)items.push([next,'<b>'+next.n+'</b> is next, around '+next.at+'.']);
+ if(att){const m={care:' needs a little care.',begin:' is bare. Begin again when you are ready.',fruit:' has fruit to collect.'}[att.st];const c={care:'wine',begin:'slate',fruit:'gold'}[att.st];
+  items.push([att,'<b>'+att.n+'</b><span style="color:var(--'+c+')">'+m+'</span>'])}
+ items.forEach(([r,h],i)=>{const el=document.createElement('div');el.className='up';el.style.top=(i*64)+'px';el.innerHTML='<div>'+h+'</div>';
+  if(anim&&!RM){el.style.opacity=0;requestAnimationFrame(()=>requestAnimationFrame(()=>{el.style.opacity=1}))}
+  swipe(el,r,()=>{drawRows(false);drawDial();sentence()});u.appendChild(el)})}
+function drawRows(anim){drawSum();drawUps(anim)}
 
 let undoT=null,undoFn=null;
 function toast(sel,msg,fn){const t=$(sel);t.innerHTML=msg+' <button>Undo</button>';undoFn=fn;t.querySelector('button').onclick=()=>{undoFn&&undoFn();t.innerHTML='';undoFn=null;redrawAll()};clearTimeout(undoT);undoT=setTimeout(()=>{t.innerHTML='';undoFn=null},10000)}
@@ -328,6 +403,110 @@ function drawLife(){const L=$('#life');const s=SC[sc];let pos=s.d>=35?97:s.d>=28
 $('#stagebar').innerHTML=SC.map((s,i)=>'<button class="w" data-i="'+i+'" aria-pressed="false">'+s.k+'</button>').join('');
 $('#stagebar').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sc=+b.dataset.i;drawLife()});
 
+let view3=0;const VIEWS=['The whole life','The weeks','The day'];
+const CAP3=['<b>A routine, as a life.</b> One hairline holds the whole life of a habit. The marker moves as days are kept; try the stages under the phone. Withering and bare are quiet states, shown in color and one plain sentence.','<b>A routine, as weeks.</b> The days kept as a big number with its unit at half size, then the last four weeks as rows of seven strokes. It reads like a ledger with no totals to chase.','<b>A routine, as a day.</b> A 24 hour hairline shows when it usually happens and where now is. The words it touches are links to the other rooms it borrows from.'];
+function wk(s,i){const base=s.w.slice();const rnd=(k)=>base.map((v,j)=>((j*7+k*5+s.d)%9<(s.bare?0:s.wine?3:7))?1:0);return i===0?base:rnd(i)}
+function drawAlt(){const s=SC[sc],A=$('#alt'),L=$('#life');const life=view3===0;$('#care').hidden=!life;L.hidden=!life;A.hidden=life;$('#str3').hidden=!life;$('#lately').hidden=!life;
+ if(life){drawLife();}
+ else if(view3===1){const col=s.wine?'var(--wine)':s.bare?'var(--slate)':'var(--green)';const names=['This week','Last week','Two weeks ago','Three weeks ago'];
+  A.innerHTML='<div class="big2">'+(s.bare?0:s.d)+'<small>days kept</small></div><div style="font-size:15px;color:var(--ink2);margin:6px 0 22px">'+(s.bare?'Planted again, a new cycle.':'Since the first Monday it was planted.')+'</div>'+names.map((n,i)=>'<div class="wk"><span>'+n+'</span><div class="strokes">'+strokes(wk(s,i),col)+'</div></div>').join('')+'<div style="font-size:14px;color:var(--ink2);margin-top:18px">Usually about 7:00, a minute or two.</div>';
+  }
+ else{const col=s.wine?'var(--wine)':s.bare?'var(--slate)':'var(--green)';
+  A.innerHTML='<div style="font-size:15px;color:var(--ink2)">Usually at</div><div class="big2">7:00<small>AM</small></div><div style="position:relative;height:84px;margin-top:16px"><div style="position:absolute;left:0;right:0;top:36px;height:1px;background:var(--hair)"></div>'+[0,6,12,18,24].map(h=>'<div style="position:absolute;left:'+(h/24*100)+'%;top:32px;width:1px;height:9px;background:var(--hair)"></div><div style="position:absolute;left:'+(h/24*100)+'%;top:48px;font:300 11px var(--num);color:var(--ink2);transform:translateX(-'+(h===24?100:h===0?0:50)+'%)">'+(h===0||h===24?'12a':h===12?'12p':(h%12)+(h<12?'a':'p'))+'</div>').join('')+'<div style="position:absolute;left:'+(7/24*100)+'%;top:26px;width:2px;height:21px;background:'+col+'"></div><div style="position:absolute;left:'+(16.9/24*100)+'%;top:10px;font-size:12px;color:var(--ink2);transform:translateX(-50%);white-space:nowrap">now, 4:52 PM</div><div style="position:absolute;left:'+(16.9/24*100)+'%;top:28px;width:1px;height:17px;background:var(--ink2)"></div></div><div style="font-size:15px;line-height:1.6;margin-top:30px;color:var(--ink2)">Touches <a>Body</a>, <a>Kitchen</a> and <a>the Water list</a>. Usually done within <span style="color:var(--ink)">two minutes</span> of the first sip.</div>';
+  }}
+$('#viewbar').innerHTML=VIEWS.map((v,i)=>'<button class="w" data-i="'+i+'" aria-pressed="'+(i===0)+'">'+v+'</button>').join('');
+$('#viewbar').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;view3=+b.dataset.i;document.querySelectorAll('#viewbar button').forEach((x,i)=>x.setAttribute('aria-pressed',i===view3));$('#cap3').innerHTML=CAP3[view3];drawAlt()});
+const _dl=drawLife;
+$('#stagebar').addEventListener('click',()=>{if(view3)setTimeout(drawAlt,0)});
+$('#cap3').innerHTML=CAP3[0];
+
 sentence();drawDial();drawRows(false);drawDims();drawWheel(false);drawLife();
+window.__R=R;window.__helpers={$,RM,SW,CN,byUrgency,strokes,swipe,toast,petals,sentence};
+})();
+</script>
+
+<script>
+/* ---------- lab: five ways to show the routines behind a door ---------- */
+(function(){
+const {$,RM,SW,CN,byUrgency,strokes,sentence}=window.__helpers,R=window.__R;
+const lab=$('#lab'),ldims=$('#ldims');
+const COL=st=>'var(--'+({done:'green',tend:'room',care:'wine',begin:'slate',new:'gold',fruit:'gold',rest:'slate'}[st])+')';
+let opt=0,sel=null,mode=0;
+const OPTS=[
+ {k:'Spoken',cap:'<b>Spoken.</b> The routines as short paragraphs, grouped by how they stand. Names are the links. Tap one and its detail opens under its paragraph. Best for a calm read and few taps; weak at scanning many at once.',modes:null},
+ {k:'Skyline',cap:'<b>Skyline.</b> Each routine is a word standing on the ground line, taller the older it is, in its state color. Sideways on the top line sorts the skyline by grove, age or state. It packs sixteen into one glance and is the closest cousin of the woodland.',modes:['By grove','By age','By state']},
+ {k:'Map',cap:'<b>Map.</b> A clearing seen from above. Left to right is how steadily it was kept this week, bottom to top is how old it is. Position carries two facts without a single label. Tap a name to focus it.',modes:null},
+ {k:'Cloth',cap:'<b>Cloth.</b> A ledger: each routine is a name with its seven strokes. Sideways on the top line regroups it by grove or by state. The densest of the five; tap a row to open its line in place.',modes:['By grove','By state']},
+ {k:'Sheaf',cap:'<b>Sheaf.</b> Each grove is a stack. Pull a stack down, or tap it, and it fans out into its routines while the others slide away. The pull-apart move from the Codex studies, used for something real.',modes:null}];
+const ST=r=>SW[r.st][0];
+function detail(r){return '<div class="det"><div class="big" style="color:'+COL(r.st)+'">'+r.n+'</div><div class="ln2">'+r.age+'</div><div class="strokes" style="margin-top:10px;--c:'+COL(r.st)+'">'+strokes(r.w,COL(r.st))+'</div><div class="ln2" style="color:'+COL(r.st)+';font-weight:600;margin-top:10px">'+ST(r)+'</div></div>'}
+function done(r){if(['done','rest'].includes(r.st))return;r.st='done';sentence();render()}
+function foot(){const f=$('#foot4');f.textContent=sel&&!['done','rest'].includes(sel.st)?({fruit:'Collect',begin:'Begin again'}[sel.st]||'Done'):'Plant';f.onclick=()=>{if(sel&&!['done','rest'].includes(sel.st))done(sel)}}
+
+function spoken(){const G=[['care','Needing a little care','w2'],['begin','Ready to begin again','sl'],['tend','Waiting for you today','r'],['new','Just planted','go'],['fruit','With fruit to collect','go'],['done','Tended today','g'],['rest','Resting','sl']];
+ lab.innerHTML='<div style="position:absolute;inset:0;overflow:hidden">'+G.map(([st,lead,c])=>{const it=R.filter(r=>r.st===st);if(!it.length)return '';
+  return '<p class="sp"><span class="lead" style="color:var(--'+CN[c]+')">'+lead+'.</span> '+it.map(r=>'<a class="nm'+(sel===r?' on':'')+'" data-n="'+r.n+'">'+r.n+'</a>').join(', ')+'.</p>'+(it.includes(sel)?detail(sel):'')}).join('')+'</div>';
+ lab.querySelectorAll('.nm').forEach(a=>a.onclick=()=>{const r=R.find(x=>x.n===a.dataset.n);sel=sel===r?null:r;render()})}
+
+function skyline(){const ORD={care:0,begin:1,tend:2,new:3,fruit:4,done:5,rest:6};
+ let L=R.slice();if(mode===1)L.sort((a,b)=>b.d-a.d);else if(mode===2)L.sort((a,b)=>ORD[a.st]-ORD[b.st]||b.d-a.d);
+ const groupKey=mode===0?r=>r.g:mode===2?r=>r.st:null;let html='<div class="sky" id="sky">',prev=null;const labels=[];
+ L.forEach((r,i)=>{if(groupKey&&prev!==null&&groupKey(r)!==prev)html+='<div class="gap"></div>';prev=groupKey?groupKey(r):null;
+  const size=12+Math.min(8,r.d/11),wither=r.st==='care',bare=r.st==='begin';
+  html+='<div class="tr" data-n="'+r.n+'" style="font-size:'+size.toFixed(1)+'px;color:'+COL(r.st)+';font-weight:'+(sel===r?700:bare?300:500)+';opacity:'+(sel&&sel!==r?.5:wither?.72:1)+';'+(sel===r?'transform:rotate(180deg) translateX(8px)':'')+'">'+r.n+'</div>'});
+ html+='</div><div class="ground" style="top:380px"></div>';
+ lab.innerHTML=html+'<div id="sdet" style="position:absolute;left:0;right:0;top:410px">'+(sel?detail(sel):'<div style="font-size:14px;color:var(--ink2);margin-top:8px">Taller is older. Color is how it stands. Tap one to see it.</div>')+'</div>';
+ // group labels under the ground
+ const sky=$('#sky');if(groupKey){const seen={};sky.querySelectorAll('.tr').forEach(t=>{const r=R.find(x=>x.n===t.dataset.n);const k=groupKey(r);if(!seen[k]){seen[k]=t.offsetLeft}});
+  Object.entries(seen).forEach(([k,x])=>{const g=document.createElement('div');g.className='gl';g.style.cssText='left:'+x+'px;top:386px;color:var(--ink2)';g.textContent=mode===2?SW[k][0]:(k==='Across the lake'?'Lake':k);lab.appendChild(g)})}
+ lab.querySelectorAll('.tr').forEach(t=>t.onclick=()=>{const r=R.find(x=>x.n===t.dataset.n);sel=sel===r?null:r;render()})}
+
+function themap(){const W=354,H=420;let placed=[];const est=(r,fs)=>r.n.length*fs*.52+4;
+ const L=R.slice().sort((a,b)=>b.d-a.d);let html='<div class="map">';
+ L.forEach(r=>{const kept=r.w.filter(v=>v===1).length,fs=13+Math.min(6,r.d/16),w=est(r,fs),h=fs*1.2;
+  let x=14+kept/7*(W-28-w),y=H-30-Math.log(r.d+1)/Math.log(91)*(H-70);
+  const free=(xx,yy)=>xx>=0&&xx+w<=W&&yy>=0&&yy+h<=H-16&&placed.every(p=>xx>p.x+p.w+3||xx+w+3<p.x||yy>p.y+p.h+2||yy+h+2<p.y);
+  const tries=[[0,0]];for(let k=1;k<30;k++){tries.push([0,k*h*.95],[0,-k*h*.95],[k*14,0],[-k*14,0],[k*14,k*h*.6],[-k*14,-k*h*.6])}
+  for(const [dx,dy] of tries){if(free(x+dx,y+dy)){x+=dx;y+=dy;break}}
+  placed.push({x,y,w,h});
+  html+='<div class="mw" data-n="'+r.n+'" style="left:'+x.toFixed(0)+'px;top:'+y.toFixed(0)+'px;font-size:'+fs.toFixed(1)+'px;color:'+COL(r.st)+';font-weight:'+(sel===r?700:500)+';opacity:'+(sel&&sel!==r?.45:r.st==='begin'?.7:1)+'">'+r.n+'</div>'});
+ html+='<div class="ground" style="top:'+(H-12)+'px"></div><div class="ax" style="left:0;top:'+(H-6)+'px">needs care</div><div class="ax" style="right:0;top:'+(H-6)+'px">steady</div><div class="ax" style="left:0;top:-14px">older</div><div class="ax" style="left:0;top:'+(H-40)+'px;opacity:0">.</div></div>';
+ lab.innerHTML=html+'<div style="position:absolute;left:0;right:0;top:452px">'+(sel?detail(sel):'<div style="font-size:14px;color:var(--ink2);margin-top:6px">Right is steadier this week, higher is older.</div>')+'</div>';
+ lab.querySelectorAll('.mw').forEach(t=>t.onclick=()=>{const r=R.find(x=>x.n===t.dataset.n);sel=sel===r?null:r;render()})}
+
+function cloth(){const ORD={care:0,begin:1,tend:2,new:3,fruit:4,done:5,rest:6};const key=mode===0?r=>r.g:r=>r.st;
+ const keys=[...new Set((mode===0?R.slice():R.slice().sort((a,b)=>ORD[a.st]-ORD[b.st])).map(key))];let html='<div class="cl">';
+ keys.forEach(k=>{const grp=R.filter(r=>key(r)===k).sort(byUrgency);
+  html+='<div class="sec" style="color:'+(mode===0?'var(--room)':'var(--'+(CN[SW[k][1]])+')')+'">'+(mode===0?k:SW[k][0])+'</div>';
+  grp.forEach(r=>{html+='<div class="rw" data-n="'+r.n+'"><span class="n" style="opacity:'+(r.st==='care'?.75:1)+'">'+r.n+'</span><div class="strokes">'+strokes(r.w,COL(r.st))+'</div></div>'+(sel===r?'<div class="sx"><span>'+r.age+'</span><a class="nm on" data-d="1" style="color:'+COL(r.st)+';font-weight:600">'+(r.st==='fruit'?'Collect':r.st==='begin'?'Begin again':'Done')+'</a></div>':'')})});
+ lab.innerHTML=html+'</div>';
+ lab.querySelectorAll('.rw').forEach(t=>t.onclick=()=>{const r=R.find(x=>x.n===t.dataset.n);sel=sel===r?null:r;render()});
+ lab.querySelectorAll('.sx a').forEach(a=>a.onclick=e=>{e.stopPropagation();done(sel)})}
+
+let open=0;
+function sheaf(){const G=['Body','Mind','Home','Across the lake'];let y=0,html='<div class="sh" style="top:4px">';
+ G.forEach((g,gi)=>{const it=R.filter(r=>r.g===g).sort(byUrgency),ex=gi===open;
+  html+='<div class="hd" data-g="'+gi+'" style="top:'+y+'px;color:'+(ex?'var(--room)':'var(--ink2)')+'">'+g+'<i>'+it.length+'</i></div>';
+  let yy=y+56;
+  it.forEach((r,i)=>{const isSel=sel===r;
+   if(ex){html+='<div class="li" data-n="'+r.n+'" style="top:'+(yy)+'px"><span style="color:var(--ink)">'+r.n+'</span><small style="color:'+COL(r.st)+'">'+SW[r.st][0]+'</small></div>';yy+=40;
+    if(isSel){html+='<div class="li" style="top:'+yy+'px;height:56px;cursor:default;font-size:13px;color:var(--ink2);justify-content:flex-start;gap:14px"><div class="strokes" style="margin:0;--c:'+COL(r.st)+'">'+strokes(r.w,COL(r.st))+'</div><span style="white-space:normal">'+r.age.split('.')[0]+'.</span></div>';yy+=56}}
+   else{const sh=i<3;if(i<2)html+='<div class="li" style="top:'+(y+50+i*5)+'px;height:24px;font-size:14px;opacity:'+(.45-i*.2)+';filter:blur('+(i*.7+.5)+'px);pointer-events:none"><span style="color:var(--ink2)">'+r.n+'</span></div>'}});
+  y=ex?yy+8:y+(56+36);});
+ lab.innerHTML=html+'</div><div style="position:absolute;left:0;right:0;top:612px;font-size:14px;color:var(--ink2)">Pull a stack down, or tap it, to fan it out.</div>';
+ let sy=null;
+ lab.querySelectorAll('.hd').forEach(h=>{h.onpointerdown=e=>{sy=e.clientY;h.setPointerCapture(e.pointerId)};h.onpointerup=e=>{const k=window.__k1||1,d=(e.clientY-sy)/k;const i=+h.dataset.g;if(d>24||Math.abs(d)<6){open=(open===i&&Math.abs(d)<6)?-1:i;sel=null}else if(d<-24){open=-1;sel=null}render()}});
+ lab.querySelectorAll('.li[data-n]').forEach(t=>t.onclick=()=>{const r=R.find(x=>x.n===t.dataset.n);sel=sel===r?null:r;render()})}
+
+function dimsDraw(){const m=OPTS[opt].modes;ldims.innerHTML='';lab.style.top=m?'184px':'136px';if(!m)return;
+ m.forEach((k,i)=>{const off=i-mode;if(Math.abs(off)>1)return;const el=document.createElement('div');el.className='dm';el.textContent=k;el.style.color='var(--room)';
+  const W=354;el.style.left=(off===0?W/2:off<0?0:W)+'px';el.style.transform=off===0?'translateX(-50%)':off<0?'translateX(0)':'translateX(-100%)';if(off){el.style.opacity=.5}
+  el.onclick=()=>{if(off){mode=i;render()}};ldims.appendChild(el)})}
+function render(){dimsDraw();[spoken,skyline,themap,cloth,sheaf][opt]();foot();$('#cap4').innerHTML=OPTS[opt].cap}
+$('#labbar').innerHTML=OPTS.map((o,i)=>'<button class="w" aria-pressed="'+(i===0)+'" data-i="'+i+'">'+o.k+'</button>').join('');
+$('#labbar').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;opt=+b.dataset.i;mode=0;sel=null;document.querySelectorAll('#labbar button').forEach((x,i)=>x.setAttribute('aria-pressed',i===opt));render()});
+// sideways drag on the top line turns the mode
+let x0=null;const p4=$('#p4');p4.addEventListener('pointerdown',e=>{x0=e.clientX});p4.addEventListener('pointerup',e=>{if(x0===null)return;const k=window.__k1||1,dx=(e.clientX-x0)/k;x0=null;const m=OPTS[opt].modes;const y=(e.clientY-p4.getBoundingClientRect().top)/k;if(m&&y<170&&Math.abs(dx)>50){mode=Math.max(0,Math.min(m.length-1,mode+(dx<0?1:-1)));render()}});
+render();
 })();
 </script>

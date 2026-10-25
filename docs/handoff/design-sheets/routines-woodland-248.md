@@ -1,4 +1,4 @@
-# 248 Routines woodland (v1, Oct 24 4:40 PM PT; not yet reviewed by Kaushik)
+# 248 Routines woodland (v2, Oct 24 5:20 PM PT; not yet reviewed by Kaushik)
 
 Board: https://claude.ai/artifact/KZkqPY2U6VxDMBETRu3CML. Working files are in `routines-woodland-248/`:
 `board.html` (the board; open it next to `scene.html`), `scene.html` (the woodland scene on its own, 354 x 160 pt, for
@@ -81,6 +81,44 @@ Motion: no walking caretaker, no petals, no blur, no drift; cross-fades only; th
 - Stage and health rules are in `healthMetrics` and `growthInfo`. Port the thresholds above exactly.
 - Light and Black modes both tint the scene; the scene edge fades to the page color, so keep the slot's background the
   page color.
+
+## v2 (his 4:57 PM PT note): landing is a summary; the list behind a door is the open design problem
+His words: the landing should be a summary with quick updates (what is going on, what we are doing) and doors. Behind a
+door is a list of routines, and that is where he and Codex got stuck: "we need to invent or brainstorm various ways of
+showing these routines." He also wants better ways to show one routine once it is open. What is there is "good enough";
+try these changes. Board v2 has all of it live.
+
+Landing v2 (replaces landing 1 above):
+- Title, then the sentence (three big phrases, three colors), then the woodland in the mosaic slot, then a caption line
+  for a tapped tree, then TWO updates (fixed 64 pt slots, 17 pt light, the routine's name in 600): "what is next"
+  (the earliest planned tend, "Tidy a little is next, around 5:30") and "what needs a look" (the most urgent care, bare
+  or fruit: "Take screen breaks needs a little care"). Each update is a routine row: tap opens it, swipe right Done,
+  swipe left Not now, Undo 10 s.
+- Doors on the three-place dial (64 pt slots): Today, Body, Mind, Home, Fruit, Across the lake. The focused door shows
+  up to three short state lines instead of routines ("Three to tend", "One needs a little care", "One to begin
+  again"), each in its role color. The list is behind the door. The woodland leans toward the focused grove.
+- Foot: "Plant" and Tess. Nothing else.
+
+The list behind a door: a lab of five (shown on "All routines"; none picked yet; recommend trying Skyline, Cloth and
+Sheaf in the build spike, since they scale to 24 routines, and keeping Spoken for the Tess voice):
+1. Spoken: short paragraphs grouped by state; names are the links; a tap opens the detail under its paragraph.
+2. Skyline: each routine is a word standing on a ground line, taller the older it is, state color, sorted by grove,
+   age or state on the top line (sideways turns it). Group names small caps under the ground.
+3. Map: a clearing seen from above. X is how many days it was kept this week, Y is age. Names are placed without
+   overlap. No axis labels beyond "needs care", "steady", "older".
+4. Cloth: a ledger. One row per routine, name and seven strokes; regroup by grove or by state; a tap opens its line in
+   place with its action.
+5. Sheaf: each grove is a stack of blurred names; pull a stack down (or tap) and it fans out into rows while the others
+   slide away; this is the pull-apart move he liked in the Codex studies.
+The focus wheel from round 1 (inside a grove) stays a sixth option.
+
+One routine, three ways (switch under phone 3): the whole life on a hairline (round 1); the weeks (a big Outfit
+number of days kept with its unit at half size, then the last four weeks as rows of seven strokes); the day (a 24 hour
+hairline with the usual time and now, and its links to the rooms it touches). A fourth idea to try: the routine's own
+plant shown large, and tapping a part of it opens that fact.
+
+Rules held in v2: no cards, pills, tabs, percentages, "N of M" counters or tree icons; unit at half size; strokes are
+the Habits grammar; the 10 s Undo; the dial blur 1.8 pt, none under Reduce Motion.
 
 ## Open (with recommendations)
 - Which groves: the chat used Body, Mind and Daily life; the Routines rulings used Mornings, Evenings, Body, Home, Mind
