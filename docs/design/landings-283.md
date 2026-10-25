@@ -109,3 +109,19 @@ Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v4). Owners: Builder A
 - Layout to layout: Switcher + Needs merge into the Door title; Widget, Glyph, Dial and Door summary merge into
   the Page. Back splits them apart. Layout mode shows it: tap the Dial bubble twice, Nav word twice to return.
 - The full contract between the UI and the content: `shell-contract-283.md`.
+
+## v6: back in place, and a door summary per room (his 4:47 and 4:48 PM notes)
+- Back never moves the page. An edge pull leaves the screen where it is: content blurs up to 2.4 pt and fades
+  to 60% with the pull (full at 120 pt) and the nav word scales up to 1.18. Past 80 pt the places change in place
+  (v5 rules); short of it, everything settles back in 0.28 s. No interactive pop, no screen translation.
+- Door summary (186,640 192x120) keeps its place; its lines change per room when the dial turns:
+  - Log: new lines type on (one step per letter, up to 0.42 s, 0.12 s apart); old lines backspace (0.15 s).
+  - Lookout: new lines condense out of fog (blur 8 to 0, letter spacing .22 em to normal, 0.62 s); old lines
+    evaporate upward with blur.
+  - Deck (Barlow Condensed): lines are chalked on left to right (0.3 s, 0.15 s apart); old ones are wiped off
+    with a small puff of chalk dust falling toward the foot.
+  - Galley (IBM Plex Sans Condensed): the new summary prints down in 7 steps (0.52 s); the old one tears off
+    upward on a zigzag edge.
+  - Watch: new lines grow up from their baseline with a small sway (0.56 s); old lines fall like leaves.
+  - Purse: words do not move (plain fade); only the numbers roll like a meter, digit by digit. Never red/green.
+- Reduce Motion: a plain swap. All under 1 s.

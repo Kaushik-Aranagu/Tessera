@@ -255,6 +255,40 @@ function actionX(el,R){const A=R.acts,f=h('div','act');el.appendChild(f);let i=0
   if(did)return;if(ax==='x'&&Math.abs(dx)>56&&A.length>1){const d=dx<0?1:-1;i=(i+d+A.length)%A.length;set(i,d);return}if(!ax&&!A[i].hold)A[i].f(el)};
  return f}
 
+/* ---------- the door summary, one per room (283 v6, his 4:47 PM note) ----------
+   The place stays (192 x 96 beside the dial); only its lines change, and each room changes them its own way.
+   Log types the new lines and backspaces the old. Lookout's lines condense out of fog and evaporate.
+   The Deck chalks them on and wipes them off with a little dust. The Galley prints them like a ticket and tears
+   the old one off. The Watch grows them from the ground and lets the old ones fall like leaves. The Purse keeps
+   its words calm and rolls only its numbers, like a meter. Reduce Motion: a plain swap. */
+const SUMX_FONT={training:"font-family:'Barlow Condensed',sans-serif;letter-spacing:.01em",kitchen:"font-family:'IBM Plex Sans Condensed',sans-serif"};
+const SUMX={
+ notes:{out:(e,i)=>[[{clipPath:'inset(-4px 0 -4px 0)'},{clipPath:'inset(-4px 100% -4px 0)'}],{duration:150,delay:i*30,easing:'steps(9)'}],
+  in:(e,i)=>[[{clipPath:'inset(-4px 100% -4px 0)'},{clipPath:'inset(-4px 0 -4px 0)'}],{duration:Math.min(420,e.textContent.length*16),delay:150+i*120,easing:'steps('+Math.max(4,e.textContent.length)+')'}]},
+ weather:{out:(e,i)=>[[{opacity:1,filter:'blur(0)',transform:'none'},{opacity:0,filter:'blur(7px)',transform:'translateY(-8px)'}],{duration:260,delay:i*40,easing:'ease-in'}],
+  in:(e,i)=>[[{opacity:0,filter:'blur(8px)',letterSpacing:'.22em',transform:'translateY(-3px)'},{opacity:1,filter:'blur(0)',letterSpacing:'normal',transform:'none'}],{duration:620,delay:180+i*110,easing:'cubic-bezier(.2,.7,.2,1)'}]},
+ training:{out:(e,i)=>[[{clipPath:'inset(-4px 0 -4px 0)',filter:'blur(0)',opacity:1},{clipPath:'inset(-4px 0 -4px 100%)',filter:'blur(1.5px)',opacity:.4}],{duration:200,delay:i*45,easing:'cubic-bezier(.5,0,.8,.5)'}],
+  in:(e,i)=>[[{clipPath:'inset(-4px 100% -4px 0)',opacity:.55},{clipPath:'inset(-4px 40% -4px 0)',opacity:.8,offset:.5},{clipPath:'inset(-4px 0 -4px 0)',opacity:1}],{duration:300,delay:230+i*150,easing:'cubic-bezier(.4,.1,.6,1)'}],
+  extra:(el)=>dust(el,{x:186,y:660,w:192,h:84},{x:300,y:772},{n:22,c:css('--training'),c0:'rgba(236,236,230,.9)',size:1.8,dur:620,spread:180,drop:1})},
+ kitchen:{whole:1,out:e=>[[{transform:'none',opacity:1,clipPath:'polygon(0 0,100% 0,100% 100%,0 100%)'},{transform:'translateY(-16px) rotate(-2deg)',opacity:0,clipPath:'polygon(0 0,100% 0,100% 92%,90% 100%,80% 92%,70% 100%,60% 92%,50% 100%,40% 92%,30% 100%,20% 92%,10% 100%,0 92%)'}],{duration:240,easing:'cubic-bezier(.5,0,.8,.4)'}],
+  in:e=>[[{clipPath:'inset(0 0 100% 0)',transform:'translateY(-10px)'},{clipPath:'inset(0 0 0 0)',transform:'none'}],{duration:520,delay:200,easing:'steps(7)'}]},
+ routines:{out:(e,i)=>[[{transform:'none',opacity:1},{transform:'translate('+(i%2?-10:12)+'px,22px) rotate('+(i%2?-7:6)+'deg)',opacity:0}],{duration:520,delay:i*70,easing:'cubic-bezier(.4,0,.7,.6)'}],
+  in:(e,i)=>[[{transform:'translateY(10px) scaleY(.15) rotate(-5deg)',opacity:0},{transform:'translateY(-1px) scaleY(1.06) rotate(1.2deg)',opacity:1,offset:.7},{transform:'none',opacity:1}],{duration:560,delay:220+i*120,easing:'cubic-bezier(.2,.8,.3,1)'}]},
+ money:{out:(e,i)=>[[{opacity:1},{opacity:0}],{duration:140,easing:'linear'}],
+  in:(e,i)=>[[{opacity:0},{opacity:1}],{duration:220,delay:120+i*40,easing:'linear'}],roll:1}};
+function rollDigits(box){box.querySelectorAll('.o').forEach((o,j)=>{const t=o.textContent,ht=o.closest('.lb')?20:24;
+ o.innerHTML=[...t].map((ch,k)=>{if(!/\d/.test(ch))return ch;const d=+ch,col=[];for(let s=5;s>0;s--)col.push((d+s*3+k)%10);col.push(d);
+  return '<span class="dg" style="display:inline-block;height:'+ht+'px;overflow:hidden;vertical-align:top"><span class="dc" style="display:block">'+col.map(c=>'<i style="display:block;height:'+ht+'px;line-height:'+ht+'px;font-style:normal">'+c+'</i>').join('')+'</span></span>'}).join('');
+ o.querySelectorAll('.dc').forEach((c,k)=>c.animate([{transform:'translateY(0)'},{transform:'translateY(-'+5*ht+'px)'}],{duration:620+k*70,delay:140+j*60,easing:'cubic-bezier(.25,.7,.2,1)',fill:'backwards'}).onfinish=()=>{c.parentNode.replaceWith(document.createTextNode(c.lastChild.textContent))})})}
+function sumSet(sum,html,id,el){const X=SUMX[id];const nw=h('div','sx',html);if(SUMX_FONT[id])nw.style.cssText=SUMX_FONT[id];
+ const old=sum.querySelector(':scope > .sx');sum.appendChild(nw);fitAll(nw);
+ if(!old||RM||!X){if(old)old.remove();return}
+ old.style.cssText+=';position:absolute;inset:0;pointer-events:none';
+ const parts=b=>X.whole?[b]:[...b.children];let end=0;
+ parts(old).forEach((e,i)=>{const [k,o]=X.out(e,i);end=Math.max(end,(o.delay||0)+o.duration);e.animate(k,{...o,fill:'forwards'})});setTimeout(()=>old.remove(),end+20);
+ parts(nw).forEach((e,i)=>{const [k,o]=X.in(e,i);e.animate(k,{...o,fill:'backwards'})});
+ if(X.roll)rollDigits(nw);if(X.extra)X.extra(el)}
+
 // a room landing
 function landingV3(el,R){const stops=[];const id=el.dataset.id;
  const top=h('div','ltop');top.style.cssText='position:absolute;inset:0 0 auto 0;height:100px;z-index:6;pointer-events:none';el.appendChild(top);
@@ -270,7 +304,7 @@ function landingV3(el,R){const stops=[];const id=el.dataset.id;
  const sum=h('div','lsum');el.appendChild(sum);
  dial(dh,R.doors.map(d=>({...d,color:d.color||R.color})),{start:0,slot:40,blur:1.6,label:(d,f)=>'<span style="font-size:'+(f?26:20)+'px;font-weight:'+(f?700:600)+';letter-spacing:-.01em">'+d.k+'</span>'+(d.n!=null?'<i>'+d.n+'</i>':''),
   open:d=>d.go?go(...d.go):receipt(el,d.k+' opens here. Inside pages are the next round.'),
-  change:d=>{sum.innerHTML=d.sum();fitAll(sum);if(!sum._on){sum._on=1;return}sum.classList.remove('rise');void sum.offsetWidth;if(!RM)sum.classList.add('rise')}});
+  change:d=>sumSet(sum,d.sum(),id,el)});
  const f=actionX(el,R);
  fitLine(cap);document.fonts&&document.fonts.ready.then(()=>{fitAll(el)});
  if(!el._flip&&!window.__morphing)opening([top,band,key,cap,mid,dh,sum,f],0);
