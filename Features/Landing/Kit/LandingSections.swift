@@ -4,16 +4,20 @@ import SwiftUI
 /// screens: the frame draws all of them in the same place, each owns its touch zone and gestures, and a room only
 /// supplies content. `order` is the arrival order of the Home opening effect.
 enum LandingSection: Int, CaseIterable {
-    /// Title (tap opens the index) and the summary lines; the left edge (x 0 - 24) goes back.
-    case topBar
-    /// The room's one centrepiece, its own touches and swipes, integrated with the page ground.
+    /// 0 - 44: the system status bar.
+    case statusBar
+    /// 44 - 182: title, nav word, the optional switcher and the room's needs. The left edge (x 0 - 24) goes back.
+    case masthead
+    /// 196 - 378: the room's one centrepiece, its own touches and swipes, integrated with the page ground.
     case keystone
-    /// The caption line and the two update rows (tap opens, swipe right Done, swipe left Not now).
-    case rows
-    /// The doors: the 3-place dial on the Log, door words elsewhere. On Bridge the doors are apps.
+    /// y 388: one line on how to touch the keystone.
+    case caption
+    /// 400 - 612: Bridge's one-thing box (header, big, middle, small, glyph); swipes, hold to strike, tap opens.
+    case widget
+    /// 640 - 760: the doors dial (left) and the door summary (right). On Bridge the doors are apps.
     case doors
-    /// The one action word, bottom left (tap, or drag left or right for options).
-    case action
+    /// Bottom: the one action word on the left, Tess on the right.
+    case foot
 
     var order: Int { rawValue }
 }

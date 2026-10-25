@@ -45,13 +45,13 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                     }
                 }
                 .frame(height: 56, alignment: .leading)
-                .landingSection(.topBar)
+                .landingSection(.masthead)
                 .offset(x: 24, y: 54 * k - 8)
 
                 FitLine(forms: stateLine, size: stateSize, color: Theme.Colors.inkSecondary,
                         weight: stateSize > 20 ? .light : .regular)
                     .frame(width: width - 48, alignment: .leading)
-                    .landingSection(.topBar)
+                    .landingSection(.masthead)
                     .offset(x: 24, y: (stateSize > 20 ? 106 : 112) * k)
 
                 keystone
@@ -62,7 +62,7 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                 if !caption.isEmpty {
                     FitLine(forms: caption, size: 15, color: Theme.Colors.inkSecondary)
                         .frame(width: width - 48, alignment: .leading)
-                        .landingSection(.rows)
+                        .landingSection(.caption)
                         .offset(x: 24, y: 390 * k)
                 }
 
@@ -73,12 +73,12 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
 
                 brief
                     .frame(width: width - 48, alignment: .leading)
-                    .landingSection(.rows)
+                    .landingSection(.caption)
                     .offset(x: 24, y: briefTop * k)
 
                 if let action {
                     LandingActionWord(action: action, accent: accent)
-                        .landingSection(.action)
+                        .landingSection(.foot)
                         .offset(x: 28, y: 786 * k - 8)
                 }
             }
