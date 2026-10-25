@@ -1,8 +1,8 @@
 import SwiftUI
 import TesseraCore
 
-// The Money landing on the shared kit (landing contract §12, §11.4-5): a word wall of what the money went on, with no
-// amount anywhere on the page; the doors on the dial; one line about the last spend; "Add a spend" at the foot. Money
+// The Purse (Money) landing (landing contract v2): the index system in the keystone slot (PurseChart.swift), no
+// amount anywhere on the page; the categories on the dial; one line about the last spend; "Log" at the foot. Money
 // stays on this page: nothing here reaches Home, a widget, a log or Claude, and an undo reads "Reversed".
 // There is no Bills, Subscriptions, Income or Savings model in Core yet, so the wall holds spend categories only and
 // those doors say so when opened.
@@ -101,33 +101,38 @@ struct MoneyLandingView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var focus = 0
+    @State private var category = 0
+    @State private var index = 0
     @State private var adding = false
     @State private var draft = ""
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let _ = model.revision
         let wall = load()
-        LandingFrame(title: "Money", accent: LandingAccent.money, stateLine: wall.stateLine,
+        let categories = PurseBook(model: model, now: AppClock.now).categories()
+        LandingFrame(title: "Purse", accent: LandingAccent.money, stateLine: wall.stateLine, stateSize: 26,
+                     doorsTop: 540,
                      keystone: {
-                         LandingKeystone(label: "What the money went on") {
-                             WordWallView(words: wall.words, open: { _ in
-                                 TessVoice.shared.say("Spends by category come with the Spending page.")
-                             }, label: { "\($0.text.capitalized), category" })
+                         LandingKeystone(label: "You are the stock") {
+                             PurseIndexView(categories: categories, category: $category, index: $index)
                          }
                      },
-                     doors: doors(wall), focus: $focus,
+                     doors: doors(categories), focus: $category,
                      openDoor: { door in
-                         TessVoice.shared.say("\(door.name) isn't set up yet.")
+                         TessVoice.shared.say("\(door.name) opens with the full chart soon.")
                      },
+                     caption: typeSize.isAccessibilitySize ? [] : [caption(wall)],
+                     briefTop: 424,
                      brief: { LandingBrief(forms: brief(wall)) },
-                     action: LandingFootAction(word: "Add a spend", hint: "Logs a spend, like 12.40 lunch") {
+                     action: LandingFootAction(word: "Log", hint: "Logs a spend, like 12.40 lunch") {
                          draft = ""
                          adding = true
                      },
                      onBack: { dismiss() })
             .toolbar(.hidden, for: .navigationBar)
-            .alert("Add a spend", isPresented: $adding) {
+            .onChange(of: category) { _, _ in index = 0 }
+            .alert("Log a spend", isPresented: $adding) {
                 TextField("12.40 lunch", text: $draft)
                     .keyboardType(.numbersAndPunctuation)
                 Button("Log") { log() }
@@ -157,23 +162,18 @@ struct MoneyLandingView: View {
         return MoneyWall.build(spends: shown, monthCount: monthCount, monthName: monthName, trend: sentence)
     }
 
-    /// Bills, Subscriptions, Income, Savings (contract §12). None has a model yet; Bills carries the categories as
-    /// its fact so the dial still says something true.
-    private func doors(_ wall: MoneyWall) -> [DialDoor] {
-        let slate = scheme == .dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F)
-        var doors = [
-            DialDoor(id: "bills", name: "Bills", color: LandingAccent.money, label: "Not set up yet",
-                     lines: wall.top.isEmpty ? [] : ["Most spends on"] + wall.top.prefix(2)),
-            DialDoor(id: "subscriptions", name: "Subscriptions", color: Theme.Colors.ink, label: "Not set up yet"),
-            DialDoor(id: "income", name: "Income", color: Theme.Colors.ink, label: "Not set up yet"),
-            DialDoor(id: "savings", name: "Savings", color: Theme.Colors.ink, label: "Not set up yet"),
-        ]
-        if wall.hidden > 0 {
-            doors.append(DialDoor(id: "private", name: "Private", count: "\(wall.hidden)", color: slate,
-                                  label: "Kept off the wall",
-                                  lines: ["\(wall.hidden) private \(wall.hidden == 1 ? "category" : "categories")"]))
+    /// The categories are the doors too (contract v2 §12): turning the dial turns the chart, and the other way round.
+    private func doors(_ categories: [PurseCategory]) -> [DialDoor] {
+        categories.map { item in
+            DialDoor(id: item.id, name: item.name, color: item.indices.isEmpty ? Theme.Colors.ink : LandingAccent.money,
+                     label: item.indices.isEmpty ? "Not set up yet" : "Indices",
+                     lines: Array(item.indices.prefix(4).map(\.name.capitalized)))
         }
-        return doors
+    }
+
+    /// The chart in words, never a figure: "Heading down at this pace." / "Nothing yet".
+    private func caption(_ wall: MoneyWall) -> String {
+        wall.monthCount == 0 ? "Nothing yet" : "The dashed line is where this pace ends the month."
     }
 
     private func brief(_ wall: MoneyWall) -> [LandingBrief.Form] {
@@ -220,5 +220,89 @@ struct MoneyLandingView: View {
         let word = note.split(separator: " ").first.map { String($0).capitalized }
         let shown = word.map { ObjectPrivacy.isPrivateWord($0, in: model.store) ? "Private spend" : $0 } ?? "Spend"
         TessVoice.shared.say("\(shown), logged.", undo: result.record)
+    }
+}
+
+// MARK: - The indices
+
+/// Reads the ledger into the Purse's categories and indices (279): MONTH and SPEND under This month, a flow per kind
+/// under Kinds. Saving, Investing, Debts and Mine wait for their models. One currency is drawn (the month's most used);
+/// a figure never leaves as text.
+@MainActor
+struct PurseBook {
+    let model: AppModel
+    let now: Date
+    var calendar = Calendar.current
+
+    static let names = ["This month", "Kinds", "Saving", "Investing", "Debts", "Mine"]
+
+    func categories() -> [PurseCategory] {
+        let ledger = SpendLedger(store: model.store, classes: model.classes)
+        let month = ledger.entries(inMonthOf: now, calendar: calendar)
+        let priorDate = calendar.date(byAdding: .month, value: -1, to: now) ?? now
+        let prior = ledger.entries(inMonthOf: priorDate, calendar: calendar)
+        let currency = Dictionary(grouping: month + prior) { $0.currency ?? "" }
+            .max { $0.value.count < $1.value.count }?.key ?? ""
+        let mine = month.filter { ($0.currency ?? "") == currency }
+        let mineBefore = prior.filter { ($0.currency ?? "") == currency }
+        let days = calendar.range(of: .day, in: .month, for: now)?.count ?? 30
+        let priorDays = calendar.range(of: .day, in: .month, for: priorDate)?.count ?? 30
+        let today = calendar.component(.day, from: now)
+
+        func daily(_ entries: [SpendLedger.Entry], count: Int, sign: Double) -> [Double] {
+            var values = Array(repeating: 0.0, count: count)
+            for entry in entries {
+                let day = calendar.component(.day, from: entry.spentAt) - 1
+                if values.indices.contains(day) {
+                    values[day] += sign * (entry.amount as NSDecimalNumber).doubleValue
+                }
+            }
+            return values
+        }
+        var monthIn = Array(repeating: 0.0, count: days)
+        var priorIn = Array(repeating: 0.0, count: priorDays)
+        for (date, value) in inflows(currency: currency) {
+            let day = calendar.component(.day, from: date) - 1
+            if calendar.isDate(date, equalTo: now, toGranularity: .month), monthIn.indices.contains(day) {
+                monthIn[day] += value
+            } else if calendar.isDate(date, equalTo: priorDate, toGranularity: .month), priorIn.indices.contains(day) {
+                priorIn[day] += value
+            }
+        }
+        let outNow = daily(mine, count: days, sign: 1)
+        let outBefore = daily(mineBefore, count: priorDays, sign: 1)
+        let balance = PurseSeries.build(name: "Month", shape: .balance,
+                                        daily: zip(monthIn, outNow).map { $0 - $1 }, today: today, daysInMonth: days,
+                                        priorDaily: zip(priorIn, outBefore).map { $0 - $1 })
+        let spend = PurseSeries.build(name: "Spend", shape: .flow, daily: outNow, today: today, daysInMonth: days,
+                                      priorDaily: outBefore)
+        // Kinds: the most used open categories this month, by count (never by size).
+        let open = mine.filter { !$0.category.isEmpty && !ObjectPrivacy.isPrivateWord($0.category, in: model.store) }
+        let kinds = Dictionary(grouping: open, by: \.category).sorted { $0.value.count > $1.value.count }.prefix(5)
+        let kindSeries = kinds.map { kind, entries in
+            PurseSeries.build(name: kind, shape: .flow, daily: daily(entries, count: days, sign: 1), today: today,
+                              daysInMonth: days,
+                              priorDaily: daily(mineBefore.filter { $0.category == kind }, count: priorDays, sign: 1))
+        }
+        return Self.names.enumerated().map { offset, name in
+            let indices: [PurseSeries] = switch offset {
+            case 0: [balance, spend]
+            case 1: kindSeries
+            default: []
+            }
+            return PurseCategory(id: name.lowercased(), name: name, indices: indices)
+        }
+    }
+
+    /// Money in, by day: each inflow's typed amount in the drawn currency.
+    private func inflows(currency: String) -> [(Date, Double)] {
+        guard let inflowClass = model.classes[.inflow] else { return [] }
+        return model.store.objects(of: inflowClass).compactMap { object in
+            guard !object.isDeleted, let at = model.store.value("at", of: object)?.dateValue,
+                  let typed = model.store.value("amountTyped", of: object)?.stringValue,
+                  let amount = MoneyAmount.parse(typed), (amount.currency ?? currency) == currency || currency.isEmpty
+            else { return nil }
+            return (at, (amount.amount as NSDecimalNumber).doubleValue)
+        }
     }
 }

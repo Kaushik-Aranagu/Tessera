@@ -39,18 +39,18 @@ final class RoomLandingsUITests: SimulatorOnlyTestCase {
 
     func testMoneyLanding() {
         let app = launch(["-money"])
-        XCTAssertTrue(app.staticTexts["Money"].waitForExistence(timeout: 30), "Money title")
+        XCTAssertTrue(app.staticTexts["Purse"].waitForExistence(timeout: 30), "Purse title")
         let money = app.staticTexts.allElementsBoundByIndex.map(\.label)
         XCTAssertFalse(
             money.contains { $0.contains("$") || $0.contains("€") || $0.contains("£") },
             "no amounts: \(money)"
         )
         turnDial(app)
-        let add = button(app, "Add a spend")
-        XCTAssertTrue(add.exists, "Add a spend")
+        let add = button(app, "Log")
+        XCTAssertTrue(add.exists, "Log")
         add.tap()
-        XCTAssertTrue(app.alerts["Add a spend"].waitForExistence(timeout: 5), "Add a spend asks")
-        app.alerts["Add a spend"].buttons["Cancel"].tap()
+        XCTAssertTrue(app.alerts["Log a spend"].waitForExistence(timeout: 5), "Log asks")
+        app.alerts["Log a spend"].buttons["Cancel"].tap()
     }
 
     func testKitchenLanding() {

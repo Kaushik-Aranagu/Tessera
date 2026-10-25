@@ -67,6 +67,10 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                 }
 
                 DoorsDial(doors: doors, focus: $focus, open: openDoor)
+                    // A dial at 540 has 246 pt before the foot: its slots stop growing at AX1 so they never reach the
+                    // action word (contract §8: the dial keeps 3 places).
+                    .dynamicTypeSize(doorsTop > 432 ? ...DynamicTypeSize.accessibility1 : ...DynamicTypeSize
+                        .accessibility5)
                     .frame(width: width - 48)
                     .landingSection(.doors)
                     .offset(x: 24, y: doorsTop * rise)

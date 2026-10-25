@@ -72,6 +72,33 @@ struct RoomLandingsTests {
         #expect(!forms.joined().contains("left"))
     }
 
+    // MARK: Purse
+
+    @Test func purseMonthLineForecastAndRange() {
+        // In 100 on the 1st, out 10 a day after: still yours falls, the forecast carries the pace to the 30th.
+        let daily = [100.0] + Array(repeating: -10.0, count: 9)
+        let series = PurseSeries.build(name: "Month", shape: .balance, daily: daily, today: 10, daysInMonth: 30,
+                                       priorDaily: Array(repeating: -5.0, count: 30))
+        #expect(series.solid.count == 10 && series.solid.first == 100 && series.solid.last == 10)
+        #expect(series.forecast.count == 21 && series.forecast.first == 10 && series.forecast.last! > 10)
+        #expect(series.prior.count == 30 && series.prior.last == -150)
+        #expect(series.range.contains(0) && series.range.contains(100) && series.range.contains(-150))
+        #expect(series.floor == nil && !series.isEmpty)
+    }
+
+    @Test func purseEmptyMonthHasNoForecast() {
+        let series = PurseSeries.build(
+            name: "Spend",
+            shape: .flow,
+            daily: [],
+            today: 5,
+            daysInMonth: 31,
+            priorDaily: []
+        )
+        #expect(series.isEmpty && series.forecast.isEmpty)
+        #expect(series.range.contains(0))
+    }
+
     // MARK: Galley
 
     func dinner(_ title: String = "Tacos", isPrivate: Bool = false, lines: Int = 8) -> GalleyPass.Dinner {

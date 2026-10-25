@@ -82,7 +82,8 @@ struct GalleyPass: Equatable {
             // A walled dinner keeps its ticket as "Private recipe" and shows nothing of what is in it.
             pass.tickets.append(GalleyTicket(id: "dinner", title: dinner.title, sub: dinner.start.map { "start \($0)" },
                                              lines: dinner.isPrivate ? [] : dinner.ingredients, big: true,
-                                             ink: .dinner, opens: dinner.recipe.map { GalleyTicket.Opens.recipe($0) } ?? .recipes))
+                                             ink: .dinner,
+                                             opens: dinner.recipe.map { GalleyTicket.Opens.recipe($0) } ?? .recipes))
         } else {
             pass.tickets.append(GalleyTicket(id: "dinner", title: "Tonight?", sub: "nothing planned yet",
                                              lines: cookable.isEmpty ? [] : ["you could make"] + cookable,
@@ -201,20 +202,20 @@ struct GalleyTicketView: View {
         let shown = pages[min(page, pages.count - 1)]
         VStack(alignment: .leading, spacing: 0) {
             Text(ticket.title)
-                .font(.custom("Caveat", size: ticket.big ? 30 : 25, relativeTo: .title3).weight(.bold))
+                .font(.custom("Caveat", fixedSize: ticket.big ? 30 : 25).weight(.bold))
                 .foregroundStyle(titleColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             if let sub = ticket.sub {
                 Text(sub)
-                    .font(.custom("Caveat", size: 18, relativeTo: .body))
+                    .font(.custom("Caveat", fixedSize: 18))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
             ForEach(Array(shown.enumerated()), id: \.offset) { _, line in
                 Text(line)
-                    .font(.custom("Caveat", size: 19, relativeTo: .body))
+                    .font(.custom("Caveat", fixedSize: 19))
                     .foregroundStyle(Theme.Colors.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
@@ -222,7 +223,7 @@ struct GalleyTicketView: View {
             Spacer(minLength: 0)
             if pages.count > 1 {
                 Text(page < pages.count - 1 ? "over" : "back")
-                    .font(.custom("Caveat", size: 16, relativeTo: .caption))
+                    .font(.custom("Caveat", fixedSize: 16))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
@@ -317,6 +318,7 @@ struct KitchenLandingPage: View {
     @State private var cookCover: KitchenCookCover?
     @State private var recipe: KitchenCookCover?
     @State private var focus = 0
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let _ = model.revision
@@ -338,7 +340,9 @@ struct KitchenLandingPage: View {
                          default: open(.recipes)
                          }
                      },
-                     caption: caption(pass).map { [$0] } ?? [],
+                     // At accessibility sizes the rows take the room under the slot; the caption steps aside (contract
+                     // §8).
+                     caption: typeSize.isAccessibilitySize ? [] : caption(pass).map { [$0] } ?? [],
                      briefTop: 424,
                      brief: { brief(front, pass) },
                      action: action(front),
@@ -397,7 +401,8 @@ struct KitchenLandingPage: View {
         let wine = dark ? Color(hex: 0xEE8E9C) : Color(hex: 0x9A2541)
         let slate = dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F)
         let olive = dark ? Color(hex: 0xB5BE7A) : Color(hex: 0x5E6B1F)
-        let planned = front.week.compactMap { day in day.meal.map { "\(day.weekday) \($0.title)" } }
+        let planned = front.week
+            .compactMap { day in day.meal.map { "\(day.weekday) \(NotesLandingPage.short($0.title))" } }
         return [
             DialDoor(id: "tonight", name: "Tonight", color: slate,
                      label: front.tonight == nil ? "Nothing planned yet" : "Next \(front.week.count) days",
