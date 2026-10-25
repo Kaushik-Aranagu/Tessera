@@ -34,7 +34,9 @@ enum WordWallLayout {
     private struct Row {
         var words: [WallWord]
         var fontSize: CGFloat
-        var height: CGFloat { fontSize * capRatio }
+        var height: CGFloat {
+            fontSize * capRatio
+        }
     }
 
     /// The colour slot for the nth brick: stepped by 5 so neighbours never match (246).
@@ -52,8 +54,12 @@ enum WordWallLayout {
             let used = rows.reduce(0) { $0 + $1.height } + gap * CGFloat(max(0, rows.count - 1))
             let leftover = size.height - used
             if !rows.isEmpty, leftover >= 0 {
-                if best == nil || leftover < best!.leftover { best = (rows, leftover) }
-                if leftover < leftoverLimit { break }
+                if best == nil || leftover < best!.leftover {
+                    best = (rows, leftover)
+                }
+                if leftover < leftoverLimit {
+                    break
+                }
             }
             target -= 0.5
         }
@@ -73,39 +79,53 @@ enum WordWallLayout {
         var guardCount = 0
         let repeats = ordered.count >= 4
         while guardCount < 64 {
-            if !repeats, cursor >= ordered.count { break }
+            if !repeats, cursor >= ordered.count {
+                break
+            }
             guardCount += 1
             var choice: (words: [WallWord], size: CGFloat)?
             // The heaviest words get the tallest rows (the keystone reads as a ranked wall, not a grid).
             let rowTarget = target * (0.75 + 0.7 * ordered[cursor % ordered.count].weight)
             for count in 1 ... 4 {
-                if !repeats, cursor + count > ordered.count { break }
+                if !repeats, cursor + count > ordered.count {
+                    break
+                }
                 let picked = (0 ..< count).map { ordered[(cursor + $0) % ordered.count] }
                 let total = picked.reduce(0) { $0 + advance($1.text) }
                 guard total > 0 else { continue }
                 let fit = (size.width - gap * CGFloat(count - 1)) / total
                 guard fit >= minimumSize, fit <= maximumSize else { continue }
-                if choice == nil || abs(fit - rowTarget) < abs(choice!.size - rowTarget) { choice = (picked, fit) }
+                if choice == nil || abs(fit - rowTarget) < abs(choice!.size - rowTarget) {
+                    choice = (picked, fit)
+                }
             }
             if choice == nil, !repeats {
                 // A lone short word is set at the largest size, left-aligned, instead of stretched across the wall.
                 let word = ordered[cursor]
                 let natural = size.width / max(advance(word.text), 0.01)
-                if natural > maximumSize { choice = ([word], maximumSize) }
+                if natural > maximumSize {
+                    choice = ([word], maximumSize)
+                }
             }
             guard let row = choice else { break }
             let height = row.size * capRatio
             let next = used + height + (rows.isEmpty ? 0 : gap)
-            if next > size.height { break }
+            if next > size.height {
+                break
+            }
             rows.append(Row(words: row.words, fontSize: row.size))
             used = next
             cursor += row.words.count
-            if cursor >= ordered.count, rows.count >= 2, used + target * capRatio + gap > size.height { break }
+            if cursor >= ordered.count, rows.count >= 2, used + target * capRatio + gap > size.height {
+                break
+            }
         }
         return rows
     }
 
-    private static func place(_ rows: [Row], leftover: CGFloat, size: CGSize, advance: (String) -> CGFloat) -> [WallBrick] {
+    private static func place(_ rows: [Row], leftover: CGFloat, size _: CGSize,
+                              advance: (String) -> CGFloat) -> [WallBrick]
+    {
         // A full wall spreads its small leftover into the row gaps; a sparse one (few words) sits centred.
         let sparse = leftover >= leftoverLimit * 2
         let extra = rows.count > 1 && !sparse ? leftover / CGFloat(rows.count - 1) : 0

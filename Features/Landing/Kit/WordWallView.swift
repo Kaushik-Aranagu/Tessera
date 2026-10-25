@@ -42,7 +42,11 @@ struct WordWallView: View {
                     }
                     .buttonStyle(.plain)
                     .position(x: brick.frame.midX, y: brick.frame.midY)
-                    .accessibilityLabel(label(words.first { $0.id == brick.wordID } ?? WallWord(id: "", text: brick.text, weight: 0)))
+                    .accessibilityLabel(label(words.first { $0.id == brick.wordID } ?? WallWord(
+                        id: "",
+                        text: brick.text,
+                        weight: 0
+                    )))
                     .accessibilityHint("Opens it")
                 }
             }
@@ -74,7 +78,9 @@ struct WordWallView: View {
         var tick = 0
         while !Task.isCancelled {
             try? await Task.sleep(for: .seconds(5))
-            if Task.isCancelled { return }
+            if Task.isCancelled {
+                return
+            }
             tick += 1
             if tick % 8 == 0 {
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { generation += 1 }
@@ -90,14 +96,16 @@ struct WordWallView: View {
 
 /// Width per point of font size, in Figtree Black capitals with the wall's tracking, cached.
 enum WordWallMeasure {
-    nonisolated(unsafe) private static var cache: [String: CGFloat] = [:]
+    private nonisolated(unsafe) static var cache: [String: CGFloat] = [:]
     private static let lock = NSLock()
 
     static func advance(_ text: String) -> CGFloat {
         let key = text.uppercased()
         lock.lock()
         defer { lock.unlock() }
-        if let hit = cache[key] { return hit }
+        if let hit = cache[key] {
+            return hit
+        }
         let descriptor = UIFontDescriptor(fontAttributes: [
             .family: "Figtree",
             .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.black],

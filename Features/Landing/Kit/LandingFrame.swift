@@ -7,6 +7,10 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
     let accent: Color
     /// One line, longest form first; the frame shows the longest that fits and never wraps or ellipsizes.
     let stateLine: [String]
+    /// 16 pt for the Log (246); the other rooms speak a 26 pt light sentence (hub 282).
+    var stateSize: CGFloat = 16
+    /// Where the doors start; 432 for the Log dial (246), 540 under a caption and two update rows (hub 282).
+    var doorsTop: CGFloat = 432
     var onTitle: (() -> Void)?
     @ViewBuilder let keystone: Keystone
     let doors: [DialDoor]
@@ -22,6 +26,13 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
     }
 
     @ScaledMetric(relativeTo: .title3) private var dialScale: CGFloat = 1
+
+    /// The brief: the line at 612 under the Log's dial (moved just past it when large type grows the dial), or the
+    /// update rows at 424 above a dial at 540 (hub 282).
+    private func briefTop(_ rise: CGFloat) -> CGFloat {
+        guard doorsTop <= 432 else { return 424 * rise }
+        return max(612 * rise, doorsTop * rise + DoorsDial.slotHeight(scale: dialScale) * 3 + 8)
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -41,22 +52,22 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                 .frame(height: 56, alignment: .leading)
                 .offset(x: 24, y: 54 * rise - 8)
 
-                FitLine(forms: stateLine, size: 16, color: Theme.Colors.inkSecondary)
+                FitLine(forms: stateLine, size: stateSize, color: Theme.Colors.inkSecondary,
+                        weight: stateSize > 20 ? .light : .regular)
                     .frame(width: width - 48, alignment: .leading)
-                    .offset(x: 24, y: 112 * rise)
+                    .offset(x: 24, y: (stateSize > 20 ? 106 : 112) * rise)
 
                 keystone
                     .frame(width: slot.width, height: slot.height)
-                    .offset(x: (width - slot.width) / 2, y: 180 * rise)
+                    .offset(x: (width - slot.width) / 2, y: LandingKeystone<EmptyView>.top * rise)
 
                 DoorsDial(doors: doors, focus: $focus, open: openDoor)
                     .frame(width: width - 48)
-                    .offset(x: 24, y: 432 * rise)
+                    .offset(x: 24, y: doorsTop * rise)
 
-                // The brief sits at 612; when large type grows the dial, it moves down just past it.
                 brief
                     .frame(width: width - 48, alignment: .leading)
-                    .offset(x: 24, y: max(612 * rise, 432 * rise + DoorsDial.slotHeight(scale: dialScale) * 3 + 8))
+                    .offset(x: 24, y: briefTop(rise))
 
                 if let action {
                     LandingActionWord(action: action, accent: accent)

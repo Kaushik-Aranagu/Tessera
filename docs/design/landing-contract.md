@@ -1,4 +1,17 @@
-# Landing contract (Oct 25, 2026)
+# Landing contract (Oct 25, 2026, v2: updated for Kaushik's final design set, TESS.md and tess.tar.gz, 2:13 PM PDT)
+
+> **v2 overrides, newest wins.** Where this file and the list below disagree, the list is right.
+> 1. **Slot:** the keystone is 354 x 182 pt at top 196 on 402 x 874, 24 pt side margins, the Home mosaic's slot, on every landing (not 354 x 220 at 180). More content pages inside it (the Galley tickets flip); the band never grows. A picture keystone may bleed to the full 402 pt width if its edges dissolve into the page (the Watch woodland does).
+> 2. **The centrepiece stays through the whole room:** on level 1, 2 and deeper pages it stays in the same slot, live to what the lower part shows (the Galley pass is the model).
+> 3. **Landing stack (hub 282):** title 40 pt room color; the sentence at top 106 (26 pt light, key phrases bold in role colors; the Log keeps its 16 pt ink2 line from 246); keystone at 196-378; caption line at 390; two update rows at 424 (tap opens, swipe right Done, swipe left Not now, Undo 10 s); doors at 540 (the Log's dial stays at 432); action word bottom-left; Tess bottom-right.
+> 4. **Ship names (sheet 281, his verdict):** Home = Bridge, Notes and Lists = Log, Weather = Lookout, Training = Deck, Kitchen = Galley, Routines = Watch, Money = Purse. Tessera stays the app name. Titles, doors that name rooms, Tess's lines and Home tiles take the new names.
+> 5. **Lists is not an app (sheet 280).** A list is a note whose lines can be checked; list titles and open items appear on the Log word wall (a due item in wine, a checked item struck). No Lists landing. Shopping is one object in two rooms (the Galley's "To get" ticket and a list in the Log).
+> 6. **Keystones are locked per room** (section 2 table): Bridge mosaic, Log word wall, Lookout skypiece, Deck blackboard, Galley pass rail, Watch woodland (268 v4), Purse index system (277, 278 v3, 279). The shared word wall is no longer the interim keystone for Training, Kitchen, Money or Settings.
+> 7. **Finish and function, not realism.** Keystones are real material (photo plates plus a live layer) or deliberately graphic (pixels, type, chalk, hairlines). Illustrated scenes of objects that aim at realism are rejected. The Watch woodland is flat illustration, polished, and is the one approved drawn scene.
+> 8. **Glass:** the Lookout glass is raised by light and shadow only (no refraction, frost, fill or tint). A clear glass lens appears only under a finger on a horizontal swipe control (237 v3); there is no lens or glass on ordinary swipes.
+> 9. **Colors:** no red or green for money amounts, ever; done and paid inside the Purse is sage. Kind colors: Home clay 9C4B2C / E2A07F, food (Galley) ochre 93611A / C49A5E, body (Deck) blue 0B62AE / 8FB0EE, subscriptions teal 1E6E77 / 84C3C9, going out slate 34506F / A7BCD6, saving gold 7E6A1E / D9C27A, Purse sage 3F7A62 / 8DBFA7, Watch plum 8E4A78 / D59AC4, lists olive 5E6B1F / B5BE7A (the list kind inside the Log).
+> 10. **Do not push** is the design agent's repository rule in his TESS.md; builders here push only to their own branches, as before.
+
 
 The shared rules every room landing follows: Home, Training, Kitchen, Notes, Lists, Routines, Money, Weather and the Settings landing. Builders build to this file. It does not redraw anything; it locks what the approved sheets already say and settles their conflicts (section 10).
 
@@ -13,7 +26,7 @@ Frame 402 x 874 pt (iPhone 17), 24 pt gutters. Other sizes scale the gaps, never
 | Band | y (pt) | What it holds | Fixed? |
 |---|---|---|---|
 | Header | 54 - 170 | Room title (Figtree 700 40 pt, room accent, top at 54). One state line under it (Figtree 16, ink2, one line, never wraps). | yes |
-| Keystone | 180 - 400 | The room's one expressive element, x 24 - 378 (354 x 220). See section 2. | yes |
+| Keystone | 196 - 378 | The room's one expressive element, x 24 - 378 (354 x 182). See section 2 and the v2 note. | yes |
 | Doors | 432 - 576 | The 3-place dial (section 4). | yes |
 | Brief | 612 - 740 | One line at 612 (Figtree 15, ink2, one ink 600 name). Routines may use two update rows in 64 pt slots (17 pt light, name 600). Nothing else. | slot yes, content per room |
 | Foot | 768 - 840 | Action word bottom-left, Tess bottom-right. | yes |
@@ -23,9 +36,9 @@ Frame 402 x 874 pt (iPhone 17), 24 pt gutters. Other sizes scale the gaps, never
 
 ## 2. Keystone slot (one container, every landing)
 
-- Position and size: x 24 - 378, y 180 - 400, 354 x 220 pt, on every landing. The container is one shared view (`LandingKeystone`) that owns the frame, the hit region, arrival, Reduce Motion and the caption line. Rooms supply only the content.
+- Position and size: x 24 - 378, y 196 - 378, 354 x 182 pt, on every landing. The container is one shared view (`LandingKeystone`) that owns the frame, the hit region, arrival, Reduce Motion and the caption line. Rooms supply only the content.
 - The slot background is the page color. No border, fill, card or shadow. Content blends into the page at the edge.
-- A smaller scene (Routines woodland 354 x 160) is centered vertically in the slot; the leftover 60 pt holds its caption line (Figtree 15, ink2, one line).
+- A smaller scene (Routines woodland 354 x 160) is centered vertically in the slot; the caption line sits at y 390 (Figtree 15, ink2, one line).
 - The element is built from the room's own data, reacts to what Kaushik does (add, complete, open), and moves by itself in small ways. Scenes scale with the amount of data; no per-item drawings.
 - Behavior is the same everywhere:
   - Tap an element inside it: opens that thing (one tap). In Routines a first tap names a tree in the caption, a second opens it.
@@ -34,15 +47,18 @@ Frame 402 x 874 pt (iPhone 17), 24 pt gutters. Other sizes scale the gaps, never
   - Arrival: pieces glide into place 22 ms apart on the house spring, finished in about 0.6 s. VoiceOver gets the final state at once.
   - Reduce Motion, Reduce Transparency, Low Power: one calm still frame, no moments, no blur, swaps cross-fade (150 ms). Everything stays tappable.
   - Private items never appear in the slot (word wall) or show as "Private ..." / a count; the app switcher snapshot masks private content.
-- Keystone content per room (the slot and behavior are locked; content can be replaced without touching the container):
+- Keystone content per room (locked by Kaushik, Oct 25; the slot and behavior are shared, the content is per room):
 
-| Room | Keystone | Status |
+| Room (was) | Keystone | Status |
 |---|---|---|
-| Home | the mosaic | built |
-| Notes | word wall of note titles (246) | built, approved |
-| Routines | habit woodland (248) | specified, unreviewed |
-| Training, Kitchen, Lists, Money, Settings | word wall, same engine as Notes, fed by the room's own words (lifts and routines by recency and personal best; pantry, recipes and shopping by what is low or cookable; lists by what is due; bills and categories with no amounts; setting areas by what changed) | interim choice, section 10 |
-| Weather | the condition word with its weather effect (236 v2.4-2.8, 243), cloud and fog behavior as specified | specified |
+| Bridge (Home) | the mosaic: tiles, faces, weather words (236) | built |
+| Log (Notes and Lists) | word wall of note and list titles (246) | built, approved |
+| Lookout (Weather) | the skypiece: the page is a real sky (photo plates by condition and hour), the glass raised by light and shadow (254 v9, 255, 256) | surface approved, inside open |
+| Deck (Training) | the blackboard: slate band with a chalk-dust feather edge, chalk drawn in two passes, ghosts of wiped chalk, drag writes, fast swipe left is the towel, tap a number opens the lift (258) | locked, detail open |
+| Galley (Kitchen) | the pass: a ticket rail of paper tickets, permanent on every Galley page, tickets flip up for more, big ticket takes 2.4 shares, cook mode turns the rail into the recipe and timer tickets (259) | decided, finishing gesture open |
+| Watch (Routines) | the woodland, 268 v4: flat-illustration trees lit by the real hour, hold a tree 1.5 s to water it, buds are steps, missed days wilt softly (no counter, no red), rake leaves, plant on open ground, planned rest hangs a lamp | locked |
+| Purse (Money) | the index system: category dial across the top, an index scroller at the right, one "you are the stock" chart between; swipe sideways for category, up and down for index (277, 278 v3, 279) | locked |
+| Settings | no approved keystone: the word wall of setting areas stays as the interim | interim |
 
 ## 3. Type tokens
 
@@ -78,7 +94,7 @@ Frame 402 x 874 pt (iPhone 17), 24 pt gutters. Other sizes scale the gaps, never
 | Back edge | x 0 - 24, full height | back or out; nothing else takes it (a landing's back goes home) |
 | Right margin | x 378 - 402 | pull in for the side (glance, then full side) |
 | Title | title text | tap opens the room's index |
-| Keystone | 24-378 x 180-400 | taps on its parts; any drag that starts there |
+| Keystone | 24-378 x 196-378 | taps on its parts; any drag that starts there |
 | Dial | 24-378 x 432-576 | vertical turn, tap focus or neighbor |
 | Brief | line at 612, or the update rows | rows: tap opens, swipe right Done, swipe left Not now |
 | Action word | starts at x 28, 44 pt target, y 768-840 | tap does it; drag left or right for options |
@@ -142,19 +158,18 @@ Cards, pills, buttons shapes, bars, rings, gauges, middle dots, filled dots, dec
 14. Home foot: Undo line bottom-left, no action word (236 v2). Other landings: action word bottom-left.
 15. Routines groves: Body, Mind, Home, plus Borrowed (recommended); Mornings and Evenings are filters inside Today. Withering follows 248's thresholds with soft words and no red banner.
 
-## 12. Per-room table
+## 12. Per-room table (ship names)
 
-| Room | Accent | Keystone | Doors (dial) | Action word | Empty state |
+| Room | Accent | Keystone | Doors | Action word | Empty state |
 |---|---|---|---|---|---|
-| Home | none | mosaic | n/a (apps list) | none (Undo line) | per 236 |
-| Training | 0B62AE | word wall of lifts | This week, Routines, Exercises, Programs, Goals | Start Push A (Log a walk on rest day) | "Rest today. Next is Saturday." |
-| Kitchen | 93611A | word wall of pantry and recipes | Pantry, Recipes, Shopping, Leftovers, Meal plan | Cook (Plan tonight when empty) | "Tonight?" with "nothing planned yet" |
-| Notes | 8A4570 | word wall of titles | All notes, Ideas, From Tess, Voice memos, Pinned, Mentions, Private, Archive | New note | "Write the first thing down." |
-| Lists | 5E6B1F | word wall of due lists | All, Shopping, Trips, Home, People, Watch and read | New list | "Nothing due this week." |
-| Routines | 8E4A78 | woodland | Today, Body, Mind, Home, Fruit, Across the lake | Plant | "Quiet day" |
-| Money | 3F7A62 | word wall of bills and categories, no amounts | Bills, Subscriptions, Income, Savings | Add a spend | "Nothing yet" |
-| Weather | C9772E | condition word with effect | Hours, Week, Air | Rain alert | per 243 |
-| Settings | ink | word wall of setting areas | Tess, Privacy, Units, Claude, Backups, About | none | n/a |
+| Bridge | none | mosaic | the apps list | none (Undo line) | per 236 |
+| Log | notes plum 8A4570 / E3A3CB | word wall | All notes, Lists, Ideas, From Tess, Voice memos, Pinned, Mentions, Private, Archive | New note | "Write the first thing down." |
+| Lookout | sky amber C9772E / E8A06A | skypiece | Hours, Week, Air | Rain alert | per 243 |
+| Deck | 0B62AE / 8FB0EE | blackboard | This week, Library | Start Push A (Log a walk on a rest day) | "Rest today. Next is Saturday." |
+| Galley | 93611A / C49A5E | pass rail | Tonight, Pantry, Recipes, Groceries, Leftovers | Cook (Dishes as a foot word) | "Tonight?" with "nothing planned yet" |
+| Watch | 8E4A78 / D59AC4 | woodland | Today, Body, Mind, Home, Across the lake | Plant | "Quiet day" |
+| Purse | 3F7A62 / 8DBFA7 | index system | This month, Kinds, Saving, Investing, Debts, Mine | Log (adds a spend) | "Nothing yet" |
+| Settings | ink | word wall (interim) | Tess, Privacy, Units, Claude, Backups, About | none | n/a |
 
 ## 13. Shared components to reuse
 

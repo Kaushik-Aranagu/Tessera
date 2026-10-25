@@ -115,7 +115,8 @@ enum HomeBoard {
         }
         if notice.target == .weather, let source = notice.sourceWord, notice.text.hasPrefix(source) {
             let rest = String(notice.text.dropFirst(source.count)).trimmingCharacters(in: .whitespaces)
-            var segments = [DepartureSegment(text: source, kind: .sky, opens: true)]
+            var segments = [DepartureSegment(text: source, kind: .sky, opens: true,
+                                             weather: WeatherKind.infer(from: notice.text))]
             for word in rest.split(separator: " ") {
                 let kind: DepartureSegment.Kind = word.contains(where: \.isNumber) ? .number : .plain
                 if let last = segments.last, last.kind == kind, segments.count > 1 {
