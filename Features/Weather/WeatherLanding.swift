@@ -64,13 +64,14 @@ struct WeatherLandingPage: View {
                                 openDoor(card?.opens == .week ? .week : .hours)
                             },
                             glyph: { item in
-                                LookoutCloudGlyph(wet: cards.first { $0.id == item.id }?.wet ?? false)
+                                LandingGlyph(item: item, color: item.bigColor ?? WeatherAccent.room)
                             },
                             doors: doors(snapshot), focus: $focus,
                             openDoor: { door in openDoor(WeatherDoor(rawValue: door.id) ?? .hours) },
-                            action: action,
+                            action: action(snapshot),
                             backdrop: AnyView(LookoutSkyView(kind: snapshot.kind, now: snapshot.now)))
         }
+        .overlay { LookoutDropHandover() }
         .toolbar(.hidden, for: .navigationBar)
     }
 
@@ -95,8 +96,16 @@ struct WeatherLandingPage: View {
         ]
     }
 
-    private var action: LandingFootAction {
-        LandingFootAction(word: "Rain alert", hint: alertOn ? "Turns the rain alert off" : "Tells you before rain") {
+    /// Verb over object (283 v3): Alert (rain), then Hours and Walk across. Never "Rain alert" as one word.
+    private func action(_ snapshot: WeatherSnapshot) -> LandingFootAction {
+        LandingFootAction(word: "Alert", object: WeatherWords.alertObject(on: alertOn),
+                          hint: alertOn ? "Turns the rain alert off" : "Tells you before rain",
+                          alternates: [
+                              .init(verb: "Hours", object: "Next 12 hours") { openDoor(.hours) },
+                              .init(verb: "Walk", object: "Best time today") {
+                                  TessVoice.shared.say(WeatherWords.walkLine(snapshot))
+                              },
+                          ]) {
             toggle()
         }
     }
@@ -239,60 +248,54 @@ struct LookoutSkypiece: View {
     }
 }
 
-/// The widget glyph (283): a cloud drifting with rain falling under it. It moves once on arrival and every 7 s for
-/// 1.6 s; at rest it holds one calm pose. Reduce Motion: the pose only.
-struct LookoutCloudGlyph: View {
-    let wet: Bool
-
+/// The keystone hands the widget its item on arrival (283 v3): 26 drops fall from the skypiece glass onto the
+/// widget, once, about 1.4 s. Reduce Motion: nothing falls. Never takes a touch.
+struct LookoutDropHandover: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var burst = Date.distantPast
+    @State private var start = Date.now
+    @State private var done = false
 
-    private static let length: TimeInterval = 1.6
+    static let count = 26
+    static let length: TimeInterval = 1.4
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
-            let elapsed = context.date.timeIntervalSince(burst)
-            let progress = elapsed >= 0 && elapsed < Self.length ? elapsed / Self.length : 0
-            Canvas { canvas, size in draw(&canvas, size: size, progress: progress) }
-        }
-        .task(id: reduceMotion) {
-            guard !reduceMotion else { return }
-            while !Task.isCancelled {
-                burst = .now
-                try? await Task.sleep(for: .seconds(7))
+        if !reduceMotion, !done {
+            GeometryReader { proxy in
+                let scale = max(0.86, min(1.1, proxy.size.height / 874))
+                TimelineView(.animation(minimumInterval: 1 / 60)) { context in
+                    let elapsed = context.date.timeIntervalSince(start)
+                    Canvas { canvas, size in
+                        Self.draw(&canvas, width: size.width, scale: scale, elapsed: elapsed)
+                    }
+                }
+            }
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .task {
+                start = .now
+                try? await Task.sleep(for: .seconds(Self.length + 0.4))
+                done = true
             }
         }
-        .accessibilityHidden(true)
     }
 
-    private func draw(_ canvas: inout GraphicsContext, size: CGSize, progress: Double) {
-        // The drift eases out and back (a sine over the burst), never linear.
-        let drift = CGFloat(sin(progress * .pi)) * 6
-        let cloud = Path { path in
-            let x = size.width * 0.18 + drift
-            let y = size.height * 0.22
-            path.addEllipse(in: CGRect(x: x, y: y + 10, width: 30, height: 22))
-            path.addEllipse(in: CGRect(x: x + 14, y: y, width: 30, height: 30))
-            path.addEllipse(in: CGRect(x: x + 30, y: y + 8, width: 26, height: 24))
-            path.addRoundedRect(
-                in: CGRect(x: x + 6, y: y + 18, width: 46, height: 14),
-                cornerSize: CGSize(width: 7, height: 7)
-            )
-        }
-        canvas.fill(cloud, with: .color(Theme.Colors.inkSecondary.opacity(0.55)))
-        guard wet else { return }
-        for index in 0 ..< 5 {
-            let column = size.width * 0.26 + CGFloat(index) * 8 + drift * 0.6
-            let fall = (progress * 2 + Double(index) * 0.21).truncatingRemainder(dividingBy: 1)
-            let y = size.height * 0.62 + CGFloat(fall) * 18
+    /// Each drop leaves the glass's lower edge (y about 360) a little after the last, falls with gravity's ease-in
+    /// and lands on the widget's top (y about 440), fading as it lands.
+    static func draw(_ canvas: inout GraphicsContext, width: CGFloat, scale: CGFloat, elapsed: TimeInterval) {
+        let left = (width - 354) / 2 + 12
+        for index in 0 ..< count {
+            let seed = Double((index * 37) % count) / Double(count)
+            let delay = seed * 0.6
+            let fall = (elapsed - delay) / 0.8
+            guard fall > 0, fall < 1 else { continue }
+            let x = left + CGFloat((Double(index) + 0.5) / Double(count)) * 330 + CGFloat(sin(Double(index) * 2.3)) * 4
+            let y = (352 + CGFloat(fall * fall) * 96) * scale
             var drop = Path()
-            drop.move(to: CGPoint(x: column, y: y))
-            drop.addLine(to: CGPoint(x: column - 2, y: y + 8))
-            canvas.stroke(
-                drop,
-                with: .color(Theme.Colors.Accent.rain),
-                style: StrokeStyle(lineWidth: 1.6, lineCap: .round)
-            )
+            drop.move(to: CGPoint(x: x, y: y))
+            drop.addLine(to: CGPoint(x: x - 1.5, y: y + 7))
+            canvas.stroke(drop, with: .color(Theme.Colors.Accent.rain.opacity(1 - fall * fall)),
+                          style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
         }
     }
 }

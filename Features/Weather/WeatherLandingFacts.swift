@@ -283,6 +283,30 @@ enum WeatherWords {
 
 /// The on-phone Rain alert switch (243): kept in UserDefaults on this phone only, never in a backup. The live source
 /// schedules the "30 minutes before rain" notice when it lands; until then the switch only remembers his choice.
+extension WeatherWords {
+    /// The foot's object under "Alert": what it alerts about, and whether it is on.
+    static func alertObject(on: Bool) -> String {
+        on ? "Rain, on" : "Rain"
+    }
+
+    /// Tess's walk line: the dry daylight hour nearest a comfortable temperature in the next hours. Says nothing
+    /// about a place; writes nothing.
+    static func walkLine(_ snapshot: WeatherSnapshot, calendar: Calendar = .current) -> String {
+        let comfortable = snapshot.fahrenheit ? 65 : 18
+        let daylight = snapshot.hours.filter {
+            let hour = calendar.component(.hour, from: $0.date)
+            return hour >= 6 && hour <= 20 && !isWet($0.kind)
+        }
+        guard let best = daylight.min(by: {
+            abs($0.temperature - comfortable) != abs($1.temperature - comfortable)
+                ? abs($0.temperature - comfortable) < abs($1.temperature - comfortable) : $0.date < $1.date
+        }) else {
+            return "No dry daylight hour for a walk soon."
+        }
+        return "Best walk around \(hour(best.date, calendar: calendar)), \(degrees(best.temperature)) and dry."
+    }
+}
+
 enum WeatherRainAlert {
     static let key = "weather.rainAlert"
 
