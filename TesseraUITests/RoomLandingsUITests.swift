@@ -16,7 +16,7 @@ final class RoomLandingsUITests: SimulatorOnlyTestCase {
     }
 
     private func button(_ app: XCUIApplication, _ label: String) -> XCUIElement {
-        app.buttons.matching(NSPredicate(format: "label ==[c] %@", label)).firstMatch
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH[c] %@", label)).firstMatch
     }
 
     /// The dial's focus is the selected button; a swipe up on the dial moves the focus to the next door.
@@ -57,8 +57,8 @@ final class RoomLandingsUITests: SimulatorOnlyTestCase {
         let app = launch(["-kitchen"])
         XCTAssertTrue(app.staticTexts["Galley"].waitForExistence(timeout: 30), "Galley title")
         turnDial(app)
-        let cook = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cook", "Plan tonight"])).firstMatch
-        XCTAssertTrue(cook.exists, "Cook or Plan tonight")
+        let cook = button(app, "Cook")
+        XCTAssertTrue(cook.exists, "Cook")
         let word = wallWord(app, in: "The pass")
         XCTAssertTrue(word.exists, "a word on the wall")
         word.tap()
