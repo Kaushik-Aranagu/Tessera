@@ -244,6 +244,25 @@ struct NotesListsLandingTests {
         #expect(running.sentence.text == "Chores is running, 1 left.")
     }
 
+    @Test func dueItemsAreThisWeekSoonestFirstAndMaskedWhenWalled() throws {
+        let trip = try list("Trip", items: ["Passport", "Socks"])
+        let secret = try list("Lexapro refills", items: ["Pharmacy"])
+        let contents = ListContents(store: store, classes: engine.classes)
+        func stamp(_ list: ObjectRecord, _ day: Int) throws {
+            let item = try #require(contents.open(in: list).first)
+            try store.set("notes", to: .richText(ListNoteTags.setting(stamp: ListNoteTags.duePrefix, to: at(day),
+                                                                      in: nil) ?? ""), on: item.object)
+        }
+        try stamp(trip, 24)
+        try stamp(secret, 23)
+        let far = try list("Later", items: ["Paint"])
+        try stamp(far, 30)
+        let due = lists.dueItems(within: 7, now: at(22), calendar: calendar)
+        #expect(due.map(\.listName) == ["Private list", "Trip"])
+        #expect(due.first?.isPrivate == true && due.first?.day == "tomorrow")
+        #expect(due.last?.text == "Passport" && due.last?.isPrivate == false && due.last?.day == "Sat")
+    }
+
     @Test func noListsReadsTheStartLine() {
         let facts = lists.facts()
         #expect(facts.lead == nil && facts.others.isEmpty && facts.margin.isEmpty)

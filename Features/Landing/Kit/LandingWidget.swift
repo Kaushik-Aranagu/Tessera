@@ -18,6 +18,11 @@ struct WidgetItem: Identifiable, Equatable {
     var bigColor: Color?
     /// Hold the Big line to strike it (Done, Undo 10 s). Lookout and Purse have no strike.
     var strikeable = true
+    /// The Big line's face (sheet 283 v3): Figtree 700 38, Deck's Barlow Condensed 600 at 50 in caps, or Galley's
+    /// IBM Plex Sans Condensed 700 at 40 in caps (.04 em). Numbers stay Outfit.
+    var face = BigFace.figtree
+
+    enum BigFace { case figtree, deck, galley }
 }
 
 /// The widget section. Swipes across or up and down (past 50 / 44 pt) to the next item; hold the Big line 180 ms and
@@ -93,7 +98,15 @@ struct LandingWidget<Glyph: View>: View {
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
             } else {
-                Text(item.big).font(.custom("Figtree", size: 38, relativeTo: .largeTitle).weight(.bold))
+                switch item.face {
+                case .figtree:
+                    Text(item.big).font(.custom("Figtree", size: 38, relativeTo: .largeTitle).weight(.bold))
+                case .deck:
+                    Text(item.big.uppercased()).font(.custom("BarlowCondensed-SemiBold", size: 50, relativeTo: .largeTitle))
+                case .galley:
+                    Text(item.big.uppercased()).font(.custom("IBMPlexSansCondensed-Bold", size: 40, relativeTo: .largeTitle))
+                        .tracking(40 * 0.04)
+                }
             }
         }
         .foregroundStyle(done ? Theme.Colors.inkSecondary : color)

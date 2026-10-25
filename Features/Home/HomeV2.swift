@@ -131,11 +131,8 @@ struct HomeV2DoorPage: View {
                     ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
                 }
             case .app(.kitchen):
-                ScrollView {
-                    KitchenLandingPage()
-                        .padding(.horizontal, Theme.Spacing.gutter)
-                        .padding(.top, Theme.Spacing.m)
-                }
+                // The landing owns its whole frame (landing contract §1): no scroll, no padding around it.
+                KitchenLandingPage()
             case .app(.money): MoneyLandingView()
             case .app(.notes): NotesView()
             case .app(.lists): ListsView()

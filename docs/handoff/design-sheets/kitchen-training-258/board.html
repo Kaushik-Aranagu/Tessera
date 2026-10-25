@@ -1,0 +1,319 @@
+<title>Blackboard, Sink and Rail</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&family=Caveat:wght@400;600&family=Reenie+Beanie&family=Gloria+Hallelujah&family=Shadows+Into+Light&family=Architects+Daughter&display=swap">
+<style>
+/* Layout: a review board, three live phones. Training: the blackboard, now part of the page. Kitchen: two new keystones, the sink and the ticket rail, both with Dishes. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#A8701F;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif;--hand:'Caveat','Figtree',cursive}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#C49A5E;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1380px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+h3{font-size:20px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:62ch}
+.bar{display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:0 44px}
+.rule{padding:14px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600;margin-bottom:2px}
+.rule span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center;margin-top:8px}
+.ctl span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);margin-right:4px}
+.q{border-top:2px solid var(--fg);padding-top:16px}
+
+/* ---------- phone ---------- */
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--hair:rgba(36,36,35,.16);--kitchen:#A8701F;--clay:#9C4B2C;--teal:#1E6E77;--wine:#9A2541;--slate:#34506F;--gold:#7E6A1E;--green:#25803D;--training:#0B62AE;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none;touch-action:none;box-shadow:0 0 0 1px var(--line)}
+.phones[data-look="black"] .phone{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--hair:rgba(232,227,218,.2);--kitchen:#C49A5E;--clay:#E2A07F;--teal:#84C3C9;--wine:#EE8E9C;--slate:#A7BCD6;--gold:#D9C27A;--green:#8FC9A0;--training:#8FB0EE}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;z-index:2}
+.day{position:absolute;right:24px;top:70px;font-size:15px;color:var(--ink2);z-index:2}
+.brief{position:absolute;left:24px;right:24px;top:108px;font-size:19px;line-height:1.35;z-index:2}
+.brief b{font-weight:600}
+.full{position:absolute;inset:0;width:402px;height:874px;display:block}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;cursor:pointer;touch-action:none}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden;z-index:2}
+.doors{position:absolute;left:24px;right:24px;top:424px;z-index:2}
+.door{height:58px;display:flex;align-items:baseline;gap:12px;cursor:pointer;white-space:nowrap}
+.door b{font-size:38px;font-weight:900;letter-spacing:-.02em;line-height:1}
+.door span{font:300 16px var(--num);color:var(--ink2)}
+.door span.w2{color:var(--wine)}
+.tdoor{position:absolute;left:24px;right:24px;cursor:pointer;z-index:2}
+.tdoor b{display:block;font-size:26px;font-weight:600;letter-spacing:-.01em}
+.tdoor span{font-size:15px;color:var(--ink2)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);padding:8px 0;min-width:96px;min-height:44px;text-align:left;background:none;border:0;cursor:pointer;z-index:4}
+.foot2{position:absolute;left:150px;bottom:30px;font:500 17px var(--sans);color:var(--ink2);padding:10px 0;min-height:44px;background:none;border:0;cursor:pointer;z-index:4}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phones[data-look="black"] .tessw{color:#C79B7C}
+.receipt{position:absolute;left:24px;right:110px;bottom:84px;font-size:15px;color:var(--ink2);height:24px;white-space:nowrap;overflow:hidden;z-index:4}
+.receipt b{font-weight:600;cursor:pointer}
+.sc{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Training and Kitchen / sheet 258</h2>
+<h1>A blackboard that belongs to the page. Two new kitchens.</h1>
+<p class="lede">Training: the chalkboard stays, but it is no longer a slab in a slot. The board is the page’s own ground going dark across the keystone band, its edge a chalk-dust feather, and everything the landing says there is written in chalk. Kitchen: the window is gone. Two new directions, both made of what a kitchen actually is, both with Dishes built in, because you asked.</p>
+<div class="bar" role="group" aria-label="Phone look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+</div>
+</header>
+
+<section aria-label="Phones">
+<div class="phones" id="phones" data-look="paper">
+
+<!-- Training -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p1">
+ <canvas id="board" class="full" width="804" height="1748"></canvas>
+ <div class="sbar"><span>5:10</span><span></span></div>
+ <div class="ttl" style="color:var(--training)">Training</div>
+ <div class="tdoor" style="top:430px" id="tdToday"><div class="sc" style="color:var(--slate)">Today</div><b style="font-size:46px;color:var(--clay);line-height:1.1">Push A</b><span>about 45 min, 4 lifts. Starts on the rower.</span></div>
+ <div class="tdoor" style="top:566px"><b>This week</b><span><span style="color:var(--training)">3</span> of 6 done. <span style="color:var(--teal)">Pull A</span> tomorrow.</span></div>
+ <div class="tdoor" style="top:640px"><b>Library</b><span>28 workouts in 6 kinds. <span style="color:var(--gold)">New: hill sprints.</span></span></div>
+ <div class="receipt" id="r1"></div>
+ <button class="foot" id="tfoot" style="color:var(--training)">Start Push A</button>
+ <div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="tev"><span>Events</span></div>
+<div class="ctl" id="tsay"><span>What it says</span></div>
+<div class="ctl" id="thand"><span>Chalk hand</span></div>
+<p class="cap"><b>The blackboard, in the page (v2).</b> Locked as the direction; this is the first pass at what you asked for next. Texture: the slate is uneven, with ghosts of wiped chalk and fine grain, lit softly from the top-left. Integration: the dust feather is deeper, and dust has settled on the page below the board. Hand: five chalk hands under the phone to compare. Interaction: drag on the board and you write in chalk yourself; swipe fast to the left and the towel wipes that band; tap a number and it wobbles and opens.  No slab: between the title and the doors the page itself goes to slate, and the edge of that darkness is a feather of chalk dust, so the board and the page are one surface. What the landing used to say in type (five weeks on plan, plus ten on bench) is now written on the board in chalk, with the bests, the week’s days ticked, and today’s tally. A set logged leaves a handprint and dust; a best is struck and rewritten; marks fade over the days; Monday wipes a band. Switch “What it says” to see three ways of filling the board.</p>
+</div>
+
+<!-- Kitchen A: the sink -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p2">
+ <div class="sbar"><span>5:10</span><span></span></div>
+ <div class="ttl" style="color:var(--kitchen)">Kitchen</div>
+ <div class="day">Sunday</div>
+ <div class="brief"><b style="color:var(--kitchen)">Tacos</b> tonight, 25 min, you have all 8 things. <span id="dishline" style="color:var(--ink2)">Seven dishes since lunch.</span></div>
+ <canvas id="sink" class="key" width="708" height="364"></canvas>
+ <div class="kline" id="sline">The sink. Swipe right across it when the dishes are done.</div>
+ <div class="doors" id="kdoors1"></div>
+ <div class="receipt" id="r2"></div>
+ <button class="foot" id="sfoot" style="color:var(--kitchen)">Cook</button>
+ <button class="foot2" id="sdish">Dishes</button>
+ <div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="sev"><span>Events</span></div>
+<p class="cap"><b>The sink.</b> Honest and a little funny: the keystone is the kitchen sink, and the dishes pile up in it as you cook and eat. Breakfast leaves two, dinner leaves five; a pot sticks out. The tap drips when the kitchen is quiet and a bubble pops now and then. Swipe right across the sink, or the Dishes word at the foot, and the tap runs, the sink fills with suds, and the dishes move one by one to the rack to dry. Tess keeps the count in the brief sentence. Nothing edible is drawn, only crockery, water and steel; and the sink tells you the one kitchen truth you asked to see.</p>
+</div>
+
+<!-- Kitchen B: the ticket rail -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p3">
+ <div class="sbar"><span>5:10</span><span></span></div>
+ <div class="ttl" style="color:var(--kitchen)">Kitchen</div>
+ <div class="day">Sunday</div>
+ <div class="brief"><b style="color:var(--kitchen)">Tacos</b> tonight, 25 min, you have all 8 things. Eggs and milk run out first.</div>
+ <canvas id="rail" class="key" width="708" height="364"></canvas>
+ <div class="kline" id="rline">The pass. Tap a ticket to open it; swipe it up to spike it.</div>
+ <div class="doors" id="kdoors2"></div>
+ <div class="receipt" id="r3"></div>
+ <button class="foot" id="rfoot" style="color:var(--kitchen)">Cook</button>
+ <div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="rev"><span>Events</span></div>
+<p class="cap"><b>The ticket rail.</b> Every working kitchen has a pass with tickets clipped to a rail, and that is the keystone: the kitchen’s own paper. Tess writes a ticket for whatever the kitchen needs from you: Tacos, 25 min, tonight. Get limes, cilantro, tortillas. Rice goes out today. Dishes, seven waiting. The tickets flutter in the hood’s draft, harder while you cook. Do a thing and its ticket is spiked: it jumps up onto the spike and the rest slide along. A new need slides in from the right with a clip. Tap a ticket to open it.</p>
+</div>
+
+</div>
+</section>
+
+<section>
+<h2>How they work</h2>
+<div class="rules">
+<div class="rule"><b>Blackboard integration.</b><span>The board is drawn on a canvas that covers the whole page, under the type. Between y 180 and 420 the page color crosses to slate through a feathered edge about 36 pt deep, built from noise so it looks like chalk dust rather than a gradient; on Black the slate is a shade above the page and the dust is what you see. No rounded rect, no hairline, no shadow. The chalk hand (Caveat) writes everything on it, including the two facts that used to be type.</span></div>
+<div class="rule"><b>Haptics (spec, for the build).</b><span>Chalk on slate has a feel. Writing: a continuous soft texture tick every 6 pt of finger travel (CoreHaptics continuous, low intensity, sharpness .3). Tally stroke on a logged set: one light tick. Handprint: a soft thud. New best: a rigid tap then a light flourish of three quick ticks with the dust. Towel wipe: a long soft sweep rising then falling with the hand. Tap a number: one selection tick. Monday wipe: nothing (it happens while you are away). Reduce Motion keeps the taps, drops the continuous texture.</span></div>
+<div class="rule"><b>What the board says (three options under the phone).</b><span>Plan: today’s session and time, the week’s days ticked, the bests small. Record: the bests large with dates, the streak as weeks ticked, today’s tally. Coach: one sentence in Tess’s hand (“Bench opens at 185. Last time, three fives.”) with the week ticked under it.</span></div>
+<div class="rule"><b>The sink.</b><span>Dishes are plates (ellipses with a rim), bowls, mugs and a pot, stacked with a little random tilt, the count a real number from meals cooked and eaten. Idle: a drip every 4 to 7 s with a ring on the water. Doing the dishes: the tap runs for 6 s, suds rise as 60 bubbles, dishes leave one by one (0.35 s apart) to the rack at the right, the water drains with a swirl. Swipe right = done, with a receipt and Undo. The Dishes word at the foot does the same and shows the count.</span></div>
+<div class="rule"><b>The rail.</b><span>A steel rail across the top of the slot, tickets as 70 x 110 pt paper hanging from clips, Tess’s hand on them, a tear at the foot. Flutter is a slow sine per ticket, larger while cooking. Spike: the ticket rises 60 pt onto the spike at the right and fades; the rest slide left on a spring. New: a ticket slides in from beyond the right edge. Tap opens. The Dishes ticket carries the count and spikes when the dishes are done.</span></div>
+<div class="rule"><b>Dishes, in both kitchens.</b><span>A first-class, frequent thing: a word at the foot beside Cook, a swipe on the sink, a ticket on the rail, and a count Tess keeps in the brief sentence. Done = receipt “Dishes, done.” with Undo 10 s; the count resets and grows again with meals.</span></div>
+</div>
+</section>
+
+<section class="q">
+<h2>Open, with a recommendation</h2>
+<h3>Kitchen: sink or rail?</h3>
+<p>Both are kitchen material and both carry Dishes. The sink is the one living thing you look at every day and it has the better joke; the rail carries more information. Recommendation: the sink as the keystone, and the rail’s tickets as the grammar for Tess’s kitchen notes on the Tonight page.</p>
+<h3>Blackboard: how dark on Paper?</h3>
+<p>The slate on a paper page is a strong dark band. Recommendation: keep it, since a blackboard is dark, but let the dust feather run deeper (36 pt) so it never reads as a block.</p>
+</section>
+</main>
+
+<script>
+(function(){
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let K=1;function fit(){document.querySelectorAll('[data-fit]').forEach(s=>{const p=s.firstElementChild;K=Math.min(1,s.clientWidth/402);p.style.transform=K<1?'scale('+K+')':'';s.style.height=(874*K)+'px'})}
+addEventListener('resize',fit);fit();
+const looks=()=>document.getElementById('phones').dataset.look;
+function setLook(l){document.getElementById('phones').dataset.look=l;document.getElementById('lk-paper').setAttribute('aria-pressed',l==='paper');document.getElementById('lk-black').setAttribute('aria-pressed',l==='black')}
+document.getElementById('lk-paper').onclick=()=>setLook('paper');document.getElementById('lk-black').onclick=()=>setLook('black');
+let rT={};function receipt(id,msg,undo){const r=document.getElementById(id);r.innerHTML=msg+(undo?' <b>Undo</b>':'');if(undo)r.querySelector('b').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT[id]);rT[id]=setTimeout(()=>{r.innerHTML=''},10000)}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
+function noise(x,y){const s=Math.sin(x*12.9898+y*78.233)*43758.5453;return s-Math.floor(s)}
+function vnoise(x,y){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=ease(xf),v=ease(yf);const a=noise(xi,yi),b=noise(xi+1,yi),c=noise(xi,yi+1),d=noise(xi+1,yi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+function ctlButtons(id,items,pressed){items.forEach(([n,f],i)=>{const b=document.createElement('button');b.className='w';b.textContent=n;if(pressed!=null)b.setAttribute('aria-pressed',i===pressed);b.onclick=()=>{f();if(pressed!=null)document.getElementById(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))};document.getElementById(id).appendChild(b)})}
+function chalkText(gc,txt,x,y,size,alpha,col){gc.save();gc.font='600 '+size+'px Caveat';gc.textBaseline='alphabetic';gc.strokeStyle='rgba('+col+','+(alpha*.25)+')';gc.lineWidth=size*.12;gc.lineJoin='round';gc.strokeText(txt,x+.6,y+.8);gc.fillStyle='rgba('+col+','+(alpha*.92)+')';gc.fillText(txt,x,y);
+ const w=gc.measureText(txt).width;gc.globalCompositeOperation='destination-out';for(let k=0;k<w*size*.012;k++){gc.fillStyle='rgba(0,0,0,'+(.25+noise(k,x)*.5)+')';gc.fillRect(x+noise(k,1)*w,y-size*.7+noise(k,2)*size*.8,1,1)}gc.restore();return w}
+
+/* ================= Training: the blackboard in the page (v2: texture, integration, hand, interaction) ================= */
+const bc=document.getElementById('board').getContext('2d');bc.scale(2,2);
+let marks=[],dust=[],wipe=null,say=0,HAND='Caveat',strokes=[],wobble=null;const now0=performance.now();
+const BESTS=[{lift:'Bench',v:205,old:0,t0:now0-50000},{lift:'Squat',v:275,t0:now0-30000},{lift:'Deadlift',v:315,t0:now0-70000},{lift:'Row',v:130,t0:now0-20000}];
+let tally=3;let week=[1,1,1,0,0,0];
+let chalkC=null,maskC=null,slateTex=null,slateLook='';
+const TOP=176,BOT=424,F=44;
+function handprint(){const x=50+Math.random()*(402-120),y=TOP+40+Math.random()*(BOT-TOP-80);const a=(Math.random()-.5)*1.2;marks.push({x,y,a,t0:performance.now()});for(let k=0;k<30;k++)dust.push({x:x+(Math.random()-.5)*30,y:y+(Math.random()-.5)*20,vx:(Math.random()-.5)*20,vy:10+Math.random()*30,l:1,r:.6+Math.random()*1.4})}
+ctlButtons('tev',[['Log a set',()=>{handprint();tally++;week[3]=1}],['New best on Bench',()=>{const b=BESTS[0];b.old=b.v;b.v+=5;b.t0=performance.now();for(let k=0;k<60;k++)dust.push({x:120+(Math.random()-.5)*80,y:300+(Math.random()-.5)*30,vx:(Math.random()-.5)*30,vy:10+Math.random()*40,l:1,r:.6+Math.random()*1.6});receipt('r1','Bench, 210. A best.',()=>{b.v=b.old;b.old=0})}],['A quiet week',()=>{marks.forEach(m=>m.t0-=60000);BESTS.forEach(b=>b.t0-=60000);strokes.forEach(s=>s.t0-=60000)}],['New week',()=>{wipe={t0:performance.now()}}]]);
+ctlButtons('tsay',[['Plan',()=>{say=0}],['Record',()=>{say=1}],['Coach',()=>{say=2}]],0);
+ctlButtons('thand',[['Caveat',()=>{HAND='Caveat'}],['Reenie Beanie',()=>{HAND='Reenie Beanie'}],['Gloria Hallelujah',()=>{HAND='Gloria Hallelujah'}],['Shadows Into Light',()=>{HAND='Shadows Into Light'}],['Architects Daughter',()=>{HAND='Architects Daughter'}]],0);
+// chalk: two passes with a hair of jitter (the second lighter and offset), a soft wide stroke under, grain knocked out, so it sits on the slate instead of on top of it
+function chalk(gc,txt,x,y,size,alpha,col){const sz=HAND==='Reenie Beanie'?size*1.25:HAND==='Gloria Hallelujah'?size*.88:size;gc.save();gc.font='600 '+sz+'px "'+HAND+'"';gc.textBaseline='alphabetic';
+ gc.strokeStyle='rgba('+col+','+(alpha*.22)+')';gc.lineWidth=sz*.1;gc.lineJoin='round';gc.strokeText(txt,x+.5,y+.7);
+ gc.fillStyle='rgba('+col+','+(alpha*.55)+')';gc.fillText(txt,x+.7,y+.4);gc.fillStyle='rgba('+col+','+(alpha*.85)+')';gc.fillText(txt,x,y);
+ const w=gc.measureText(txt).width;gc.globalCompositeOperation='destination-out';for(let k=0;k<w*sz*.02;k++){gc.fillStyle='rgba(0,0,0,'+(.2+noise(k,x+y)*.6)+')';gc.fillRect(x+noise(k,1)*w,y-sz*.72+noise(k,2)*sz*.86,1,1)}gc.restore();return w}
+function buildMask(){maskC=document.createElement('canvas');maskC.width=402;maskC.height=874;const m=maskC.getContext('2d');const img=m.createImageData(402,874);const d=img.data;
+ for(let y=0;y<874;y++)for(let x=0;x<402;x++){let a=0;if(y>TOP-F&&y<BOT+F){const dy=Math.min(y-(TOP-F),(BOT+F)-y);const u=clamp(dy/(2*F),0,1);const n=vnoise(x*.06,y*.06)*.55+vnoise(x*.2,y*.2)*.3+vnoise(x*.6,y*.6)*.15;a=ease(clamp(u*1.7-n*1.0+.12,0,1))}
+  const k=(y*402+x)*4;d[k]=d[k+1]=d[k+2]=0;d[k+3]=Math.round(a*255)}m.putImageData(img,0,0)}
+function buildSlate(dark){slateTex=document.createElement('canvas');slateTex.width=402;slateTex.height=874;const s2=slateTex.getContext('2d');
+ // slate: uneven darkness, a few faint ghosts of erased chalk, fine grain, a soft light from the top-left
+ const img=s2.createImageData(402,BOT-TOP+2*F);const d=img.data;const b0=dark?[20,22,23]:[44,49,51],b1=dark?[13,14,15]:[31,35,37];
+ for(let y=0;y<img.height;y++)for(let x=0;x<402;x++){const n=vnoise(x*.03,y*.03)*.5+vnoise(x*.11,y*.11)*.3+vnoise(x*.5,y*.5)*.2;const lt=clamp(1-(x/402)*.5-(y/img.height)*.5,0,1)*.12;const g=noise(x,y)*.06;
+  const k=(y*402+x)*4;for(let c=0;c<3;c++)d[k+c]=Math.round(clamp(b1[c]+(b0[c]-b1[c])*n+lt*60+g*40,0,255));d[k+3]=255}s2.putImageData(img,0,TOP-F);
+ // ghosts: wide faint smears where old chalk was wiped
+ for(let k=0;k<7;k++){s2.save();s2.translate(40+noise(k,1)*320,TOP+20+noise(k,2)*(BOT-TOP-40));s2.rotate((noise(k,3)-.5)*.5);const g=s2.createLinearGradient(-70,0,70,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,'+(dark?.05:.07)+')');g.addColorStop(1,'rgba(255,255,255,0)');s2.fillStyle=g;s2.fillRect(-70,-14,140,28);s2.restore()}
+ s2.globalCompositeOperation='destination-in';s2.drawImage(maskC,0,0)}
+function drawBoard(t){const dark=looks()==='black';const now=performance.now();const g=bc;g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,402,874);
+ if(!maskC)buildMask();if(!slateTex||slateLook!==(dark?'b':'p')){buildSlate(dark);slateLook=dark?'b':'p'}
+ g.drawImage(slateTex,0,0);
+ // chalk dust along the feather, and a sprinkle that has fallen onto the page below the board
+ for(let k=0;k<500;k++){const edgeTop=noise(k,4)<.5;const x=noise(k,3)*402,y=(edgeTop?TOP:BOT)+(noise(k,5)-.5)*70;g.fillStyle='rgba(235,235,230,'+(.04+noise(k,6)*.1)+')';g.fillRect(x,y,1,1)}
+ for(let k=0;k<120;k++){const x=noise(k,7)*402,y=BOT+F+noise(k,8)*noise(k,8)*60;g.fillStyle='rgba('+(dark?'235,235,230':'110,110,105')+','+(.08+noise(k,9)*.14)+')';g.fillRect(x,y,1,1)}
+ if(!chalkC){chalkC=document.createElement('canvas');chalkC.width=804;chalkC.height=1748}const ck=chalkC.getContext('2d');ck.setTransform(2,0,0,2,0,0);ck.clearRect(0,0,402,874);
+ const age=t0=>clamp((now-t0)/90000,0,1);const C='244,245,240',C2='220,222,216';
+ marks=marks.filter(m=>{const a=1-age(m.t0);if(a<=0)return false;ck.save();ck.translate(m.x,m.y);ck.rotate(m.a);ck.fillStyle='rgba('+C2+','+(a*.2)+')';ck.beginPath();ck.ellipse(0,0,13,10,0,0,7);ck.fill();for(let f=0;f<5;f++){const fa=-1.9+f*.55,L=18+(f===0?-6:0)+noise(f,m.x)*4;ck.strokeStyle='rgba('+C2+','+(a*.28)+')';ck.lineWidth=4;ck.lineCap='round';ck.beginPath();ck.moveTo(Math.cos(fa)*8,Math.sin(fa)*8);ck.lineTo(Math.cos(fa)*(8+L),Math.sin(fa)*(8+L));ck.stroke()}ck.restore();return true});
+ // your own chalk: whatever you drew with a finger
+ strokes=strokes.filter(s=>{const a=1-age(s.t0);if(a<=0||s.p.length<2)return false;ck.strokeStyle='rgba('+C+','+(a*.8)+')';ck.lineWidth=3.2;ck.lineCap='round';ck.lineJoin='round';ck.beginPath();s.p.forEach((q,i)=>i?ck.lineTo(q[0]+Math.sin(i*3)*.4,q[1]):ck.moveTo(q[0],q[1]));ck.stroke();ck.strokeStyle='rgba('+C+','+(a*.3)+')';ck.lineWidth=6;ck.stroke();return true});
+ const wob=(id)=>wobble&&wobble.id===id&&now-wobble.t0<500?1+Math.sin((now-wobble.t0)/500*Math.PI)*.06:1;
+ const days=['M','T','W','T','F','S'];const ticks=(y)=>days.forEach((d,i)=>{const x=26+i*30;chalk(ck,d,x,y,18,.75,C2);if(week[i]){ck.strokeStyle='rgba('+C+',.9)';ck.lineWidth=2.4;ck.lineCap='round';ck.beginPath();ck.moveTo(x-2,y+12);ck.lineTo(x+4,y+20);ck.lineTo(x+14,y+4);ck.stroke()}});
+ if(say===0){ck.save();ck.translate(26,232);ck.scale(wob('plan'),wob('plan'));chalk(ck,'Push A at 6:30, bench first',0,0,30,.95,C);ck.restore();chalk(ck,'about 45 min, 4 lifts, start on the rower',26,258,17,.7,C2);
+  ticks(318);chalk(ck,'5 weeks on plan',230,318,18,.8,C2);chalk(ck,'+10 on bench since Oct 1',230,342,18,.8,C2);
+  let x=26;BESTS.forEach(b=>{const s=wob(b.lift);ck.save();ck.translate(x,392);ck.scale(s,s);const w=chalk(ck,b.lift+' '+b.v,0,0,20,.65,C2);ck.restore();b.hx=x;b.hy=392;x+=w+18})}
+ else if(say===1){let x=26;BESTS.forEach(b=>{chalk(ck,b.lift,x,228,16,.75,C2);b.hx=x;b.hy=262;const s=wob(b.lift);ck.save();ck.translate(x,266);ck.scale(s,s);if(b.old){chalk(ck,String(b.old),0,-4,30,.55,C2);ck.strokeStyle='rgba('+C2+',.7)';ck.lineWidth=2.5;ck.beginPath();ck.moveTo(-2,-14);ck.lineTo(40,-18);ck.stroke();chalk(ck,String(b.v),46,0,40,1,C);ck.restore();x+=120}else{chalk(ck,String(b.v),0,0,38,.95,C);ck.restore();x+=92}});
+  chalk(ck,'5 weeks on plan',26,318,20,.8,C2);for(let i=0;i<5;i++){ck.strokeStyle='rgba('+C+',.85)';ck.lineWidth=2.2;ck.beginPath();ck.moveTo(176+i*10,304);ck.lineTo(177+i*10,322);ck.stroke()}
+  chalk(ck,'Sun',26,392,18,.8,C2);for(let k=0;k<tally;k++){const x=66+(k%5)*9+Math.floor(k/5)*14;ck.strokeStyle='rgba('+C+',.85)';ck.lineWidth=2.2;ck.lineCap='round';ck.beginPath();if(k%5===4){ck.moveTo(x-38,380);ck.lineTo(x-2,392)}else{ck.moveTo(x,378);ck.lineTo(x+1,394)}ck.stroke()}
+  chalk(ck,'+10 on bench since Oct 1',200,392,18,.8,C2)}
+ else{ck.save();ck.translate(26,236);ck.scale(wob('plan'),wob('plan'));chalk(ck,'Bench opens at 185 tonight.',0,0,30,.95,C);ck.restore();chalk(ck,'Last time, three fives. Go for 190 on the last set.',26,268,19,.75,C2);ticks(330);chalk(ck,'Tess',320,392,20,.6,C2)}
+ const dt=1/60;dust=dust.filter(d=>{d.l-=dt*.5;d.x+=d.vx*dt;d.y+=d.vy*dt;d.vy+=20*dt;if(d.l<=0||d.y>BOT+F+40)return false;ck.fillStyle='rgba(240,240,236,'+(d.l*.7)+')';ck.beginPath();ck.arc(d.x,d.y,d.r,0,7);ck.fill();return true});
+ if(wipe){const u=(now-wipe.t0)/1200;if(u>=1){marks=marks.filter(m=>now-m.t0<90000*.6);strokes=[];wipe=null}else{const x=-60+u*(520);ck.fillStyle='rgba(255,255,255,.06)';ck.fillRect(x-30,TOP,60,BOT-TOP);ck.globalCompositeOperation='destination-out';ck.fillStyle='rgba(0,0,0,.5)';ck.fillRect(x-90,TOP,60,BOT-TOP);ck.globalCompositeOperation='source-over'}}
+ ck.globalCompositeOperation='destination-in';ck.drawImage(maskC,0,0,402,874);ck.globalCompositeOperation='source-over';g.drawImage(chalkC,0,0,402,874)}
+// interaction on the board: drag writes in chalk; a fast swipe left is the towel; a still tap on a mark opens it (and the mark wobbles)
+const boardEl=document.getElementById('board');let bp=null;
+const bxy=e=>{const r=boardEl.getBoundingClientRect();return [(e.clientX-r.left)/r.width*402,(e.clientY-r.top)/r.height*874]};
+boardEl.onpointerdown=e=>{const [x,y]=bxy(e);if(y<TOP-10||y>BOT+10)return;bp={t0:performance.now(),p:[[x,y]],s:{t0:performance.now(),p:[[x,y]]}};boardEl.setPointerCapture(e.pointerId)};
+boardEl.onpointermove=e=>{if(!bp)return;const [x,y]=bxy(e);if(y<TOP||y>BOT)return;bp.p.push([x,y]);if(bp.p.length===3)strokes.push(bp.s);bp.s.p.push([x,y])};
+boardEl.onpointerup=e=>{if(!bp)return;const [x,y]=bxy(e);const dx=x-bp.p[0][0],dy=y-bp.p[0][1],dt=performance.now()-bp.t0,len=Math.hypot(dx,dy);
+ if(len<8){// a tap: which mark?
+  let hit=null;if(say===0||say===1){BESTS.forEach(b=>{if(b.hx!=null&&Math.abs(y-b.hy)<22&&x>b.hx-6&&x<b.hx+100)hit=b.lift})}if(!hit&&y<270)hit='plan';
+  if(hit){wobble={id:hit,t0:performance.now()};receipt('r1',hit==='plan'?'Opens today’s workout.':'Opens '+hit+'.')}}
+ else if(dx<-70&&dt<350&&Math.abs(dy)<40){// the towel: wipe what the swipe crossed
+  strokes=strokes.filter(s=>!s.p.some(q=>Math.abs(q[1]-y)<30));marks=marks.filter(m=>Math.abs(m.y-y)>34);if(bp.s===strokes[strokes.length-1])strokes.pop();for(let k=0;k<20;k++)dust.push({x:bp.p[0][0]+dx*Math.random(),y:y+(Math.random()-.5)*20,vx:(Math.random()-.5)*20,vy:10+Math.random()*20,l:1,r:.6+Math.random()*1.2});receipt('r1','Wiped.')}
+ bp=null};
+document.getElementById('tdToday').onclick=()=>receipt('r1','Opens Today’s workout (230).');
+
+/* ================= Kitchen A: the sink ================= */
+const sc=document.getElementById('sink').getContext('2d');sc.scale(2,2);
+const W=354,H=182;
+let dishes=[],washing=null,drip={t:0,ring:0},bubbles=[],dripNext=3,rack=[];
+const KIND=['plate','plate','bowl','mug','plate','pot','mug','bowl'];
+function addDishes(n){for(let i=0;i<n;i++){const k=KIND[(dishes.length+i)%KIND.length];dishes.push({k,x:70+Math.random()*180,y:120-dishes.length*5-Math.random()*8,a:(Math.random()-.5)*.5,born:performance.now()})}updateDish()}
+addDishes(7);
+function updateDish(){const n=dishes.length;document.getElementById('dishline').textContent=n?(['','One dish','Two dishes','Three dishes','Four dishes','Five dishes','Six dishes','Seven dishes','Eight dishes','Nine dishes','Ten dishes'][n]||n+' dishes')+' since lunch.':'The sink is clear.';document.getElementById('sdish').textContent=n?'Dishes '+n:'Dishes'}
+function doDishes(){if(washing||!dishes.length)return;washing={t0:performance.now(),left:dishes.slice()};const was=dishes.slice();receipt('r2','Dishes, done.',()=>{dishes=was;washing=null;rack=[];updateDish()})}
+ctlButtons('sev',[['Breakfast',()=>addDishes(2)],['Cook dinner',()=>addDishes(5)],['Do the dishes',doDishes],['Night',()=>{}]]);
+document.getElementById('sdish').onclick=doDishes;document.getElementById('sfoot').onclick=()=>receipt('r2','Recipes opens on Ready now.');
+let sx0=null;const sinkEl=document.getElementById('sink');sinkEl.onpointerdown=e=>{sx0=e.clientX};sinkEl.onpointerup=e=>{if(sx0==null)return;const dx=(e.clientX-sx0)/K;sx0=null;if(dx>56)doDishes();else if(Math.abs(dx)<6)receipt('r2','Opens Tonight: Tacos.')};
+function dish(g,d,alpha){g.save();g.translate(d.x,d.y);g.rotate(d.a);g.globalAlpha=alpha;const dark=looks()==='black';const rim=dark?'#B9B4A8':'#D9D4C8',face=dark?'#E5E1D6':'#F4F1EA',shade='rgba(0,0,0,.18)';
+ if(d.k==='plate'){g.fillStyle=shade;g.beginPath();g.ellipse(2,3,34,9,0,0,7);g.fill();g.fillStyle=rim;g.beginPath();g.ellipse(0,0,34,9,0,0,7);g.fill();g.fillStyle=face;g.beginPath();g.ellipse(0,-1,24,6,0,0,7);g.fill()}
+ else if(d.k==='bowl'){g.fillStyle=shade;g.beginPath();g.ellipse(2,4,22,8,0,0,7);g.fill();g.fillStyle=rim;g.beginPath();g.moveTo(-22,-6);g.quadraticCurveTo(0,20,22,-6);g.closePath();g.fill();g.fillStyle=face;g.beginPath();g.ellipse(0,-6,22,6,0,0,7);g.fill()}
+ else if(d.k==='mug'){g.fillStyle=shade;g.fillRect(-9,4,20,10);g.fillStyle=face;g.beginPath();g.roundRect(-10,-14,20,22,3);g.fill();g.strokeStyle=rim;g.lineWidth=3;g.beginPath();g.arc(12,-3,6,-1.2,1.2);g.stroke();g.fillStyle=rim;g.beginPath();g.ellipse(0,-14,10,3,0,0,7);g.fill()}
+ else{g.fillStyle=shade;g.beginPath();g.ellipse(3,8,30,9,0,0,7);g.fill();g.fillStyle=dark?'#6E6E70':'#8A8C8E';g.beginPath();g.roundRect(-28,-12,56,24,4);g.fill();g.fillStyle=dark?'#9C9C9E':'#B9BBBD';g.beginPath();g.ellipse(0,-12,28,6,0,0,7);g.fill();g.fillStyle=dark?'#6E6E70':'#8A8C8E';g.fillRect(28,-8,14,4);g.fillRect(-42,-8,14,4)}
+ g.restore()}
+function drawSink(t){const dark=looks()==='black';const now=performance.now();const g=sc;g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,W,H);
+ // the counter is the page; the basin is set into it with the approved soft light and shadow
+ g.save();g.shadowColor='rgba(0,0,0,'+(dark?.5:.28)+')';g.shadowBlur=18;g.shadowOffsetY=6;g.fillStyle='#000';g.beginPath();g.roundRect(18,34,W-36,H-50,22);g.fill();g.restore();
+ g.save();g.beginPath();g.roundRect(18,34,W-36,H-50,22);g.clip();
+ const steel=g.createLinearGradient(0,34,0,H);steel.addColorStop(0,dark?'#5A5E62':'#B8BDC1');steel.addColorStop(.5,dark?'#3E4245':'#9AA0A5');steel.addColorStop(1,dark?'#2E3134':'#8A9095');g.fillStyle=steel;g.fillRect(0,0,W,H);
+ for(let k=0;k<160;k++){g.strokeStyle='rgba(255,255,255,'+(.03+noise(k,2)*.05)+')';g.lineWidth=1;g.beginPath();g.moveTo(18,36+noise(k,1)*(H-54));g.lineTo(W-18,36+noise(k,1)*(H-54));g.stroke()}
+ // the drain
+ g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(W/2-20,H-34,16,6,0,0,7);g.fill();g.fillStyle='rgba(0,0,0,.6)';g.beginPath();g.ellipse(W/2-20,H-34,7,3,0,0,7);g.fill();
+ // water level while washing, with suds
+ let lvl=0;if(washing){const u=(now-washing.t0)/1000;lvl=u<2?u/2:u<7?1:Math.max(0,1-(u-7)/1.5);if(u>1.5){const i=Math.floor((u-1.5)/.35);while(washing.left.length&&dishes.length>washing.left.length-i-1&&dishes.length){const d=dishes.shift();rack.push({k:d.k,x:W-60+rack.length*9,y:70+(rack.length%3)*6,a:.9,t0:now});updateDish()}}
+  if(u>9){washing=null;bubbles=[]}}
+ if(lvl>0){const wy=H-16-lvl*70;g.fillStyle='rgba(160,195,215,.55)';g.fillRect(18,wy,W-36,H);g.fillStyle='rgba(255,255,255,.35)';g.fillRect(18,wy,W-36,2);
+  if(bubbles.length<60&&Math.random()<.5)bubbles.push({x:30+Math.random()*(W-60),y:wy-2,r:3+Math.random()*7,l:1});
+  bubbles=bubbles.filter(b=>{b.y-=.15;b.x+=Math.sin(t*2+b.r)*.2;b.l-=.004;if(b.l<=0)return false;g.strokeStyle='rgba(255,255,255,'+(b.l*.8)+')';g.lineWidth=1;g.beginPath();g.arc(b.x,b.y,b.r,0,7);g.stroke();g.fillStyle='rgba(255,255,255,'+(b.l*.25)+')';g.fill();return true})}
+ // dishes, oldest at the bottom
+ dishes.forEach(d=>dish(g,d,1));
+ // the tap: drips when quiet, runs when washing
+ g.fillStyle=dark?'#9FA4A8':'#C9CED2';g.beginPath();g.roundRect(W/2-6,0,12,40,4);g.fill();g.beginPath();g.roundRect(W/2-6,30,44,10,5);g.fill();g.fillStyle=dark?'#7C8185':'#A9AEB2';g.fillRect(W/2+30,38,8,6);
+ if(washing&&(now-washing.t0)<7000){g.fillStyle='rgba(200,225,240,.75)';g.fillRect(W/2+31,44,6,H-60-lvl*70);for(let k=0;k<8;k++){g.fillStyle='rgba(255,255,255,'+(.3+noise(k,Math.floor(t*10))*.4)+')';g.fillRect(W/2+31+noise(k,1)*6,44+((t*300+k*20)%(H-60-lvl*70)),1,4)}}
+ else{dripNext-=1/60;if(dripNext<0){drip={t:now,ring:0};dripNext=4+Math.random()*3}if(drip.t&&now-drip.t<900){const u=(now-drip.t)/900;const y=44+u*u*(H-78);g.fillStyle='rgba(220,235,245,.85)';g.beginPath();g.ellipse(W/2+34,Math.min(y,H-36),1.8,3,0,0,7);g.fill();if(y>=H-36){g.strokeStyle='rgba(255,255,255,'+(.5*(1-(u-.8)/.2))+')';g.lineWidth=.8;g.beginPath();g.ellipse(W/2+34,H-34,4+(u-.8)*60,1.5+(u-.8)*20,0,0,7);g.stroke()}}}
+ g.restore();
+ // the rack: dishes drying at the right, outside the basin
+ rack=rack.filter(r=>{const u=clamp((now-r.t0)/400,0,1);dish(g,{k:r.k,x:r.x,y:r.y+(1-u)*20,a:r.a},u*.9);return true});
+ if(rack.length&&!washing&&dishes.length===0&&Math.random()<.002)rack=[];
+ // soft light on the counter edge
+ const e=g.createLinearGradient(0,0,W,H);e.addColorStop(0,'rgba(255,255,255,'+(dark?.18:.3)+')');e.addColorStop(.5,'rgba(255,255,255,0)');e.addColorStop(1,'rgba(0,0,0,'+(dark?.14:.08)+')');g.strokeStyle=e;g.lineWidth=1;g.beginPath();g.roundRect(18.5,34.5,W-37,H-51,22);g.stroke()}
+const KD=[['Tonight','Tacos, 25 min'],['Pantry','31, milk and eggs low'],['Recipes','4 you can make'],['Groceries','4 to get'],['Leftovers','rice goes out today',1]];
+['kdoors1','kdoors2'].forEach((id,j)=>KD.forEach(([n,m,w])=>{const d=document.createElement('div');d.className='door';d.innerHTML='<b>'+n+'</b><span'+(w?' class="w2"':'')+'>'+m+'</span>';d.onclick=()=>receipt(j?'r3':'r2',n+' opens with the pull-apart layer (board 254).');document.getElementById(id).appendChild(d)}));
+
+/* ================= Kitchen B: the ticket rail ================= */
+const rc=document.getElementById('rail').getContext('2d');rc.scale(2,2);
+let tickets=[{t:'Tacos',s:'25 min, tonight',k:'cook'},{t:'Get',s:'limes, cilantro, tortillas',k:'get'},{t:'Rice',s:'goes out today',k:'left'},{t:'Dishes',s:'seven waiting',k:'dish'}].map((x,i)=>({...x,x:24+i*84,tx:24+i*84,spike:0,born:0}));
+let cookingR=0;
+function spike(i){const tk=tickets[i];if(!tk||tk.spike)return;tk.spike=performance.now();receipt('r3',tk.t+', done.');setTimeout(()=>{tickets=tickets.filter(x=>x!==tk);tickets.forEach((x,j)=>x.tx=24+j*84)},700)}
+function newTicket(t,s,k){tickets.push({t,s,k,x:W+40,tx:24+tickets.length*84,spike:0,born:performance.now()})}
+ctlButtons('rev',[['Start cooking',()=>{cookingR=1}],['Dishes done',()=>{const i=tickets.findIndex(x=>x.k==='dish');spike(i)}],['Milk ran out',()=>newTicket('Milk','ran out, get some','get')],['Tess: a note',()=>newTicket('Tess','the dal wants a day','note')],['Stove off',()=>{cookingR=0}]]);
+document.getElementById('rfoot').onclick=()=>receipt('r3','Recipes opens on Ready now.');
+let ry0=null,rx0=null;const railEl=document.getElementById('rail');railEl.onpointerdown=e=>{ry0=e.clientY;rx0=e.clientX};railEl.onpointerup=e=>{if(ry0==null)return;const dy=(e.clientY-ry0)/K;const r=railEl.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*W;ry0=null;const i=tickets.findIndex(tk=>x>tk.x-6&&x<tk.x+76);if(i<0)return;if(dy<-40)spike(i);else if(Math.abs(dy)<8)receipt('r3','Opens '+tickets[i].t+'.')};
+function drawRail(t){const dark=looks()==='black';const now=performance.now();const g=rc;g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,W,H);
+ // the rail, with the approved soft light and shadow as a bar set into the page
+ g.save();g.shadowColor='rgba(0,0,0,'+(dark?.45:.25)+')';g.shadowBlur=10;g.shadowOffsetY=4;g.fillStyle=dark?'#8E9397':'#B5BABE';g.beginPath();g.roundRect(0,14,W,8,4);g.fill();g.restore();
+ g.fillStyle='rgba(255,255,255,'+(dark?.3:.5)+')';g.fillRect(0,15,W,1.5);
+ // the spike at the right
+ g.strokeStyle=dark?'#9FA4A8':'#8A9095';g.lineWidth=2;g.beginPath();g.moveTo(W-14,30);g.lineTo(W-14,0);g.stroke();
+ tickets.forEach((tk,i)=>{tk.x+=(tk.tx-tk.x)*(RM?1:.12);const draft=(cookingR?2.6:1)*(RM?0:1);const sway=Math.sin(t*(1.2+i*.17)+i)*draft*.035;let lift=0,alpha=1;
+  if(tk.spike){const u=clamp((now-tk.spike)/700,0,1);lift=-u*70;alpha=1-u;tk.x+=(W-50-tk.x)*.15}
+  g.save();g.globalAlpha=alpha;g.translate(tk.x+36,18+lift);g.rotate(sway);
+  // clip
+  g.fillStyle=dark?'#AEB3B7':'#7D8388';g.fillRect(-5,-4,10,12);
+  // paper
+  g.shadowColor='rgba(0,0,0,'+(dark?.35:.18)+')';g.shadowBlur=6;g.shadowOffsetY=3;g.fillStyle=dark?'#E9E4D6':'#FBF8F0';g.beginPath();g.moveTo(-36,6);g.lineTo(36,6);g.lineTo(36,118);for(let z=36;z>=-36;z-=6)g.lineTo(z-3,118+(z/6%2?3:0));g.closePath();g.fill();g.shadowColor='transparent';
+  g.fillStyle='rgba(0,0,0,.06)';g.fillRect(-36,6,72,1);
+  // Tess's hand
+  const ink=tk.k==='dish'?'#2A7878':tk.k==='left'?'#9A2541':tk.k==='get'?'#5E6B1F':tk.k==='note'?'#3A5BA8':'#9C4B2C';
+  g.fillStyle=ink;g.font='600 24px Caveat';g.textAlign='center';g.fillText(tk.t,0,44);g.font='400 16px Caveat';g.fillStyle='#4A463F';
+  const words=tk.s.split(' ');let line='',y=66;words.forEach(w=>{const test=line?line+' '+w:w;if(g.measureText(test).width>64){g.fillText(line,0,y);y+=18;line=w}else line=test});g.fillText(line,0,y);
+  g.textAlign='left';g.restore()});
+ // the hood's draft, faint lines across when cooking
+ if(cookingR&&!RM)for(let k=0;k<6;k++){const y=40+k*22+Math.sin(t*.8+k)*4;g.strokeStyle='rgba(255,255,255,'+(dark?.05:.12)+')';g.lineWidth=1;g.beginPath();g.moveTo(((t*60+k*70)%(W+80))-40,y);g.lineTo(((t*60+k*70)%(W+80))-10,y-2);g.stroke()}}
+
+let t0=performance.now();function tick(now){const t=(now-t0)/1000;try{drawBoard(t)}catch(e){console.error(e)}try{drawSink(t)}catch(e){console.error(e)}try{drawRail(t)}catch(e){console.error(e)}requestAnimationFrame(tick)}requestAnimationFrame(tick);
+})();
+</script>

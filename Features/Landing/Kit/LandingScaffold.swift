@@ -34,6 +34,8 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
     /// The page behind the sections; nil is the theme's page colour. Lookout draws its sky here.
     var backdrop: AnyView?
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
         GeometryReader { proxy in
             let k = max(0.86, min(1.1, proxy.size.height / 874))
@@ -51,19 +53,22 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                         .offset(x: 24, y: 388 * k)
                 }
                 LandingWidget(items: widget, index: $widgetIndex, open: openWidget, strike: strikeWidget, glyph: glyph)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.widget)
                     .offset(x: 24, y: LandingWidget<Glyph>.top * k)
                 DoorsDial(doors: doors, focus: $focus, open: openDoor, style: .landing)
                     .frame(width: 160)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.doors)
                     .offset(x: 24, y: 640 * k)
                 DoorSummary(door: doors.isEmpty ? nil : doors[((focus % doors.count) + doors.count) % doors.count])
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.doors)
                     .offset(x: 186, y: 652 * k)
                 if let action {
                     LandingActionWord(action: action, accent: accent)
                         .landingSection(.foot)
-                        .offset(x: 28, y: 786 * k - 8)
+                        .offset(x: 24, y: proxy.size.height - 22 - 64)
                 }
                 if let onBack {
                     Color.clear.frame(width: 24, height: proxy.size.height)
@@ -103,6 +108,8 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                     Text(navWord)
                         .font(.custom("Figtree", size: 15, relativeTo: .callout).weight(.medium))
                         .foregroundStyle(Theme.Colors.inkSecondary)
+                        .lineLimit(1)
+                        .fixedSize()
                         .frame(minWidth: 44, minHeight: 44, alignment: .trailing)
                 }
                 .buttonStyle(.plain)
@@ -113,9 +120,10 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
             if !switcher.isEmpty {
                 LandingSwitcher(across: switcher, vertical: switcherVertical, acrossIndex: $switcherIndex,
                                 verticalIndex: $switcherVerticalIndex, changed: onSwitcherChange)
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .offset(x: 24, y: 106 * k)
             }
-            if !needs.isEmpty {
+            if !needs.isEmpty, !typeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(Array(needs.prefix(2).enumerated()), id: \.offset) { index, line in
                         FitLine(forms: FitLine.cuts(line), size: 15,
@@ -125,6 +133,7 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                     }
                 }
                 .frame(width: 150, alignment: .leading)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 .offset(x: 228, y: 124 * k)
                 .id(switcherIndex)
             }
@@ -138,7 +147,8 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
             .font(.custom("Figtree", size: 40, relativeTo: .largeTitle).weight(.bold))
             .foregroundStyle(accent)
             .lineLimit(1)
-            .minimumScaleFactor(0.75)
+            .minimumScaleFactor(0.5)
+            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
             .accessibilityAddTraits(.isHeader)
     }
 }

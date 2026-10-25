@@ -119,12 +119,19 @@ struct HomeSpatialView: View {
             ScrollView(.horizontal) {
                 HStack(spacing: 0) {
                     ForEach(Page.allCases) { sibling in
-                        fitted(content(for: sibling))
-                            .scrollDisabled(false)
-                            .containerRelativeFrame(.horizontal)
-                            // The hero's parallax stays inside its own page.
-                            .clipped()
-                            .id(sibling.rawValue)
+                        Group {
+                            // The Kitchen landing owns its whole frame (landing contract §1): no padding around it.
+                            if sibling == .kitchen, LandingSwitch.isOn {
+                                content(for: sibling)
+                            } else {
+                                fitted(content(for: sibling))
+                            }
+                        }
+                        .scrollDisabled(false)
+                        .containerRelativeFrame(.horizontal)
+                        // The hero's parallax stays inside its own page.
+                        .clipped()
+                        .id(sibling.rawValue)
                     }
                 }
                 .scrollTargetLayout()

@@ -71,6 +71,10 @@ struct TesseraApp: App {
                             NavigationStack { SettingsLandingPage() }
                         } else if LaunchFlags.has("-weatherLanding") {
                             WeatherLandingView()
+                        } else if LaunchFlags.has("-money") {
+                            NavigationStack { MoneyLandingView() }
+                        } else if LaunchFlags.has("-kitchen") {
+                            KitchenLandingHost()
                         } else if LaunchFlags.has("-review") {
                             ReviewView()
                         } else if LaunchFlags.has("-groceries") {

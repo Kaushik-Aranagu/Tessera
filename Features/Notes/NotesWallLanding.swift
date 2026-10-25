@@ -51,7 +51,7 @@ struct NotesLandingPage: View {
                         openWidget: { item in
                             if let uuid = UUID(uuidString: item.id) { openNote(uuid) }
                         },
-                        glyph: { _ in Color.clear },
+                        glyph: { item in LandingGlyph(item: item, color: LandingAccent.notes) },
                         doors: shown.doors, focus: $focus,
                         openDoor: { door in
                             switch door.id {
@@ -60,7 +60,11 @@ struct NotesLandingPage: View {
                             default: openDoor(.all)
                             }
                         },
-                        action: LandingFootAction(word: "New note", hint: "Writes a note") {
+                        action: LandingFootAction(word: "Write", object: "A note", hint: "Writes a note",
+                                                  alternates: [
+                                                      .init(verb: "Speak", object: "To Tess") { TessVoice.shared.say("Say \"note: ...\" and I'll keep it.") },
+                                                      .init(verb: "List", object: "A checklist") { draft = ""; writing = true },
+                                                  ]) {
                             draft = ""
                             writing = true
                         })

@@ -144,7 +144,7 @@ struct FitLine: View {
                 horizontal: true,
                 vertical: false
             ) }
-            text(forms.last ?? "").lineLimit(1).minimumScaleFactor(0.8)
+            text(forms.last ?? "").lineLimit(1).minimumScaleFactor(0.5)
         }
         .accessibilityLabel(forms.first ?? "")
     }
