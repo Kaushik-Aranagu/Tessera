@@ -1,5 +1,7 @@
 # Tessera design bible: read me first (Oct 24, 2026)
 
+Latest consolidated design (Oct 25): [TESSERA-DESIGN.md](../TESSERA-DESIGN.md).
+
 This is the whole design of Tessera as it stands on Oct 24, 2026, written so a design agent on another system or account (Codex or a fresh Claude) can pick it up and keep everything consistent. It covers every screen we designed, every effect and charm, the color, type and look rules, and what Kaushik liked and rejected.
 
 Tessera is Kaushik's private iPhone app (SwiftUI, iOS 27), an "OS inside an app" built for an ADHD brain. Its assistant is Tess. The design lead was the Claude "Design studio" thread. Builders A and B and Core build from the sheets.

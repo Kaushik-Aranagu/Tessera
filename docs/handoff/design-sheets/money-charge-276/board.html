@@ -1,0 +1,224 @@
+<title>Money Charge</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&family=Outfit:wght@200;300;400;500&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: the Money landing with the charged month word in the standard slot (paper and black), then the word large as a sandbox with the money moves. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#3F7A62;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin:0}
+main{max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:64ch}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w:hover{color:var(--fg)}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--money:#3F7A62;--clay:#9C4B2C;--kitchen:#93611A;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none}
+.phone.black{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--money:#8DBFA7;--clay:#E2A07F;--kitchen:#C49A5E}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--money)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.n{font-family:var(--num);font-weight:400}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;touch-action:none;cursor:pointer}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:22px}
+.kline b{color:var(--ink);font-weight:600}
+.ups{position:absolute;left:24px;right:24px;top:424px}
+.up{height:52px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:540px;display:flex;flex-wrap:wrap;gap:0 22px}
+.door{font-size:24px;font-weight:600;color:var(--ink2);padding:6px 0}
+.door.on{color:var(--money)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--money);padding:8px 0}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phone.black .tessw{color:#C79B7C}
+.big{width:100%;max-width:1062px;aspect-ratio:354/182;display:block;touch-action:none;cursor:pointer}
+.moves{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:0 40px}
+.move{padding:14px 0;border-top:1px solid var(--line)}
+.move b{display:block;font-weight:600;margin-bottom:2px}
+.move span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 18px;align-items:center}
+.status{min-height:26px;color:var(--fg2);font-size:15px;margin-top:8px}
+.status b{color:var(--fg)}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Money / sheet 276</h2>
+<h1>The month, charged.</h1>
+<p class="lede">The month's name is the battery. Its lit part is what is still yours; the part that has drained is striped in the colours of where it went, so one word holds in, out and where. Under it, a small mark shows how much of the month is left: if the light runs behind the mark, you are spending faster than the month is passing, and it says when the money would run out. The letters react: they flicker as they drain, hop when pay recharges them, sag when they are empty.</p>
+</header>
+
+<section aria-label="Landing">
+<div class="phones">
+ <div><div class="slot" data-fit><div class="phone" id="ph1">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b style="color:var(--money)"><span class="n" data-left>2,125</span> still yours,</b> a little ahead of the month. <b style="color:var(--clay)">Home</b> took the most.</div>
+  <canvas class="key" data-ch="small"></canvas>
+  <div class="kline" data-cap>Tap a letter to see that slice of the month.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;went to&nbsp;<b style="color:var(--kitchen)">Food</b>.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;goes out Monday.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Paper, the 14th.</b> Half lit; the drained half is striped by where it went.</p></div>
+
+ <div><div class="slot" data-fit><div class="phone black" id="ph2">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b style="color:var(--money)"><span class="n" data-left>2,125</span> still yours,</b> a little ahead of the month. <b style="color:var(--clay)">Home</b> took the most.</div>
+  <canvas class="key" data-ch="small"></canvas>
+  <div class="kline" data-cap>Tap a letter to see that slice of the month.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;went to&nbsp;<b style="color:var(--kitchen)">Food</b>.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;goes out Monday.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Black.</b> The charge glows.</p></div>
+</div>
+</section>
+
+<section aria-label="Sandbox">
+<h2>Use it</h2>
+<canvas class="big" id="big" data-ch="big"></canvas>
+<div class="status" id="status" aria-live="polite">Tap a letter to see that slice of the month. Hold the word to name every stripe.</div>
+<div class="ctl" style="margin-top:6px">
+<button class="w" data-act="groceries">Groceries 86</button>
+<button class="w" data-act="drinks">Drinks 42</button>
+<button class="w" data-act="save">Save 300 for Japan</button>
+<button class="w" data-act="laptop">Laptop 1,800</button>
+<button class="w" data-act="side">Side job 180</button>
+<button class="w" data-act="payday">Payday 4,200</button>
+<button class="w" data-act="reset">Reset</button>
+<span style="width:10px"></span>
+<button class="w mon" data-mon="OCTOBER" aria-pressed="true">October</button>
+<button class="w mon" data-mon="MAY" aria-pressed="false">May</button>
+<button class="w mon" data-mon="SEPTEMBER" aria-pressed="false">September</button>
+</div>
+</section>
+
+<section aria-label="The moves">
+<h2>What it does</h2>
+<div class="moves">
+<div class="move"><b>Lit is still yours</b><span>The word's light, in sage, is the share of this month's money you still have. It glows a little and breathes.</span></div>
+<div class="move"><b>Drained is where it went</b><span>The drained letters are not empty: they are striped in the colours of where the money went (Home clay, Japan gold, Food ochre, Going out slate...), widest where most went.</span></div>
+<div class="move"><b>The month is the yardstick</b><span>A mark under the word is how much of the month is left. Light behind the mark: spending faster than the month. It says when the money would run out at this pace.</span></div>
+<div class="move"><b>A payment drains</b><span>The edge of the light slides back with a flicker, the letter it hits jolts, a new stripe appears in its kind's colour and its name floats up.</span></div>
+<div class="move"><b>Pay recharges</b><span>A sweep of light runs left to right and the letters hop up one by one as they fill.</span></div>
+<div class="move"><b>Empty letters sag</b><span>A letter with no light left drops a little. Spend past what came in and the whole word slumps and dims, "over by" in ink. No red anywhere.</span></div>
+<div class="move"><b>Tap a letter, hold the word</b><span>Tap: what that slice of the month was. Hold: every stripe is named with its amount.</span></div>
+<div class="move"><b>Every month is a different battery</b><span>May has three cells, September nine. Same rules, different word.</span></div>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var Q={};try{location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var p=kv.split('=');Q[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||'')})}catch(e){}
+var TAU=Math.PI*2;
+function lerp(a,b,u){return a+(b-a)*u}
+function clamp(v,a,b){return v<a?a:v>b?b:v}
+function hex(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]}
+function rgba(c,a){return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(a==null?1:a)+')'}
+function mixc(a,b,u){return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)]}
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+function fmt2(n){return n%1?n.toFixed(2):fmt(n)}
+var K={in:{n:'Still yours',c:['#3F7A62','#8DBFA7']},home:{n:'Home',c:['#9C4B2C','#E2A07F']},save:{n:'Japan',c:['#7E6A1E','#D9C27A']},food:{n:'Food',c:['#93611A','#C49A5E']},out:{n:'Going out',c:['#34506F','#A7BCD6']},body:{n:'Body',c:['#0B62AE','#8FB0EE']},subs:{n:'Subscriptions',c:['#1E6E77','#84C3C9']},big:{n:'Laptop',c:['#5B3FB8','#B9A9E0']}};
+var FIRST=['home','save','food','out','body','subs','big'];   // order of first spend this month: oldest at the far right
+function fresh(){return {ins:[{n:'Salary',v:4200},{n:'Side job',v:180}],outs:{home:1232,save:400,food:326,out:138,body:96,subs:63,big:0},day:14,days:31}}
+var M=fresh(),MONTH='OCTOBER';
+function inT(){return M.ins.reduce(function(a,x){return a+x.v},0)}
+function outT(){return FIRST.reduce(function(a,k){return a+M.outs[k]},0)}
+var W={t:0};
+
+function Ch(cv){var self=this;this.cv=cv;this.g=cv.getContext('2d');this.dark=!!cv.closest('.phone.black')||(!cv.closest('.phone')&&matchMedia('(prefers-color-scheme: dark)').matches);
+ this.show={in:inT()-outT()};FIRST.forEach(function(k){self.show[k]=M.outs[k]});this.hops={};this.jolt={};this.floats=[];this.sweep=-9;this.held=false;this.tapL=-1;this.tapT=-9;
+ this.size();addEventListener('resize',function(){self.size()});
+ cv.addEventListener('pointerdown',function(e){var p=self.pt(e);self.downAt=W.t;self.downP=p;self.holdTimer=setTimeout(function(){all(function(c){c.held=true});say('Every stripe named. Let go to close.')},380)});
+ cv.addEventListener('pointerup',function(e){clearTimeout(self.holdTimer);if(self.held){all(function(c){c.held=false});say('Tap a letter to see that slice of the month.');return}self.tapLetter(self.pt(e))});
+ cv.addEventListener('pointerleave',function(){clearTimeout(self.holdTimer);if(self.held)all(function(c){c.held=false})})}
+Ch.prototype.size=function(){var r=this.cv.getBoundingClientRect();var dpr=Math.max(2,window.devicePixelRatio||1);var w=Math.max(1,r.width||354);this.cv.width=Math.round(w*dpr);this.cv.height=Math.round(w*182/354*dpr);this.s=this.cv.width/354};
+Ch.prototype.pt=function(e){var r=this.cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*354,y:(e.clientY-r.top)/r.height*182}};
+Ch.prototype.layout=function(g){var fs=MONTH.length>7?54:MONTH.length<5?96:70;g.font='900 '+fs+'px Figtree, system-ui, sans-serif';var w=g.measureText(MONTH).width;if(w>338){fs*=338/w;g.font='900 '+fs+'px Figtree, system-ui, sans-serif';w=g.measureText(MONTH).width}
+ var x0=177-w/2,base=96,xs=[],x=x0;for(var i=0;i<MONTH.length;i++){var cw=g.measureText(MONTH[i]).width;xs.push({x:x,w:cw});x+=cw}return {fs:fs,w:w,x0:x0,base:base,xs:xs}};
+Ch.prototype.tapLetter=function(p){var g=this.g,L=this.layout(g);for(var i=0;i<L.xs.length;i++){var c=L.xs[i];if(p.x>=c.x&&p.x<=c.x+c.w&&p.y>L.base-L.fs&&p.y<L.base+8){var a0=c.x-L.x0,a1=a0+c.w,inV=Math.max(inT(),outT());var v0=a0/L.w*inV,v1=a1/L.w*inV;
+  // what this slice holds: still yours, and which kinds
+  var segs=this.segments(L,inV),parts=[];segs.forEach(function(s){var o=Math.max(0,Math.min(a1,s.x1-L.x0)-Math.max(a0,s.x0-L.x0));if(o>.5)parts.push((s.k==='in'?'still yours':K[s.k].n)+' '+fmt(o/L.w*inV))});
+  var ch=MONTH[i];all(function(cc){cc.tapL=i;cc.tapT=W.t;cc.jolt[i]=W.t});say('<b>'+ch+'</b> is '+fmt(v1-v0)+' of the month: '+parts.join(', ')+'.');return}}};
+Ch.prototype.segments=function(L,inV){var self=this,left=Math.max(0,this.show.in),segs=[],x=L.x0;var wl=left/inV*L.w;segs.push({k:'in',x0:x,x1:x+wl});x+=wl;
+ // drained part: newest kinds nearest the light, oldest (first spent) at the far right
+ FIRST.slice().reverse().forEach(function(k){var v=Math.max(0,self.show[k]);if(v<=0)return;var w=v/inV*L.w;segs.push({k:k,x0:x,x1:x+w,v:v});x+=w});return segs};
+Ch.prototype.draw=function(dt){var g=this.g,s=this.s,t=W.t,self=this,dk=this.dark;function kc(k){return hex(K[k].c[dk?1:0])}
+ var ink=dk?[232,227,218]:[36,36,35],ink2=dk?[164,158,150]:[110,106,99],ink3=dk?[107,103,95]:[169,164,155],bg=dk?[0,0,0]:[247,245,241];
+ var k=Math.min(1,(dt||0)*3.2);this.show.in+=(inT()-outT()-this.show.in)*k;FIRST.forEach(function(kk){self.show[kk]+=(M.outs[kk]-self.show[kk])*k});
+ g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,this.cv.width,this.cv.height);g.setTransform(s,0,0,s,0,0);
+ var L=this.layout(g),inV=Math.max(inT(),outT()),segs=this.segments(L,inV),edge=segs[0].x1,over=outT()>inT();var leftFrac=clamp((inT()-outT())/Math.max(1,inT()),-1,1);
+ var slump=over?Math.min(1,(outT()-inT())/inT()*6):0;
+ // letters: each with its own hop, jolt, sag; filled by region
+ for(var i=0;i<MONTH.length;i++){var c=L.xs[i],ch=MONTH[i];var lit=clamp((edge-c.x)/c.w,0,1);
+  var hop=this.hops[i]!=null?W.t-this.hops[i]:9,hy=hop<.6?-Math.sin(hop/.6*Math.PI)*7:0;var jo=this.jolt[i]!=null?W.t-this.jolt[i]:9,jx=jo<.5?Math.sin(jo*40)*1.6*Math.exp(-jo*7):0;
+  var sag=(1-lit)*2.2+slump*(3+i%3*1.5),tilt=slump*((i%2?1:-1)*.04);
+  g.save();g.translate(c.x+c.w/2+jx,L.base+hy+sag);g.rotate(tilt);g.translate(-(c.x+c.w/2),-L.base);g.font='900 '+L.fs+'px Figtree, system-ui, sans-serif';g.textAlign='left';
+  // drained regions: kind colours, matte
+  segs.forEach(function(sg,j){if(sg.k==='in')return;var a=Math.max(sg.x0,c.x),b=Math.min(sg.x1,c.x+c.w);if(b<=a)return;g.save();g.beginPath();g.rect(a,L.base-L.fs,b-a+.3,L.fs*1.3);g.clip();g.fillStyle=rgba(mixc(kc(sg.k),bg,dk?.25:.18),over?.55:.92);g.fillText(ch,c.x,L.base);g.restore()});
+  // lit region: sage, with a breathing glow and a flicker at the edge
+  var a1=c.x,b1=Math.min(edge,c.x+c.w);if(b1>a1){g.save();g.beginPath();g.rect(a1,L.base-L.fs,b1-a1,L.fs*1.3);g.clip();var breathe=.92+.08*Math.sin(t*1.6);var col=kc('in');if(dk){g.shadowColor=rgba(col,.55);g.shadowBlur=10}g.fillStyle=rgba(mixc(col,[255,255,255],(.12*Math.sin(t*1.6)+.06)*(dk?1:.5)),breathe);g.fillText(ch,c.x,L.base);g.restore()}
+  // outline every letter faintly so empty ones still read
+  g.lineWidth=.6;g.strokeStyle=rgba(ink3,.6);g.strokeText(ch,c.x,L.base);
+  // the tapped letter: a hairline under it
+  if(this.tapL===i&&W.t-this.tapT<4){g.strokeStyle=rgba(ink,.7);g.lineWidth=.8;g.beginPath();g.moveTo(c.x+2,L.base+5);g.lineTo(c.x+c.w-2,L.base+5);g.stroke()}
+  g.restore()}
+ // the edge of the light: a soft vertical glow that flickers while it moves
+ var moving=Math.abs(this.show.in-(inT()-outT()))>2;if(!over&&edge>L.x0+1){var gl=g.createLinearGradient(edge-10,0,edge+6,0);gl.addColorStop(0,rgba(kc('in'),0));gl.addColorStop(.7,rgba(kc('in'),moving?.45+.25*Math.sin(t*30):.18));gl.addColorStop(1,rgba(kc('in'),0));g.fillStyle=gl;g.fillRect(edge-10,L.base-L.fs*.78,16,L.fs*.82)}
+ // the recharge sweep
+ var sw=W.t-this.sweep;if(sw<1.2){var sx=L.x0+L.w*ease2(sw/1.1);var sg2=g.createLinearGradient(sx-30,0,sx+10,0);sg2.addColorStop(0,'rgba(255,255,255,0)');sg2.addColorStop(.8,'rgba(255,255,255,'+(dk?.5:.6)+')');sg2.addColorStop(1,'rgba(255,255,255,0)');g.save();g.globalCompositeOperation=dk?'lighter':'source-over';g.fillStyle=sg2;g.fillRect(sx-30,L.base-L.fs*.8,40,L.fs*.85);g.restore()}
+ // the month: a hairline under the word, and a mark for how much of the month is left
+ var my=L.base+16,monthLeft=(M.days-M.day)/M.days,mx=L.x0+L.w*monthLeft;g.strokeStyle=rgba(ink3,.9);g.lineWidth=.6;g.beginPath();g.moveTo(L.x0,my);g.lineTo(L.x0+L.w,my);g.stroke();
+ g.fillStyle=rgba(ink);g.beginPath();g.moveTo(mx,my-1);g.lineTo(mx-3,my+4);g.lineTo(mx+3,my+4);g.closePath();g.fill();
+ // where the light ends on the same line
+ if(!over){g.strokeStyle=rgba(kc('in'));g.lineWidth=1.6;g.beginPath();g.moveTo(L.x0,my);g.lineTo(edge,my);g.stroke()}
+ // the reading: still yours, and the pace
+ var burn=outT()/Math.max(1,M.day),lastsDays=burn>0?(inT()-outT())/burn:99,runOut=Math.floor(M.day+lastsDays);var pace=over?'':(runOut>=M.days?'lasts the month at this pace':'lasts to the '+ord(runOut)+' at this pace');
+ g.textAlign='left';g.font='600 5.4px Figtree, system-ui, sans-serif';g.fillStyle=rgba(over?ink:kc('in'));g.fillText(over?'OVER BY':'STILL YOURS',L.x0,my+14);g.font='300 13px Outfit, Figtree, sans-serif';g.fillText(fmt(Math.abs(inT()-outT())),L.x0,my+27);
+ g.textAlign='right';g.font='600 5.4px Figtree, system-ui, sans-serif';g.fillStyle=rgba(ink2);g.fillText(Math.round(clamp(leftFrac,0,1)*100)+'% LEFT · '+Math.round(monthLeft*100)+'% OF THE MONTH LEFT',L.x0+L.w,my+14);g.font='400 7px Figtree, system-ui, sans-serif';g.fillText(over?'more went out than came in':pace,L.x0+L.w,my+24);
+ g.textAlign='center';g.font='500 5px Figtree, system-ui, sans-serif';g.fillStyle=rgba(ink2);g.fillText('MONTH LEFT',mx,my+-4);
+ // held: every stripe named above the word
+ if(this.held){segs.forEach(function(sg,j){var cx=(sg.x0+sg.x1)/2;if(sg.x1-sg.x0<1)return;var ly=L.base-L.fs*.9-((j%2)?14:4);g.strokeStyle=rgba(kc(sg.k),.8);g.lineWidth=.45;g.beginPath();g.moveTo(cx,L.base-L.fs*.75);g.lineTo(cx,ly+2);g.stroke();g.fillStyle=rgba(kc(sg.k));g.textAlign='center';g.font='600 4.8px Figtree, system-ui, sans-serif';g.fillText((sg.k==='in'?'STILL YOURS':K[sg.k].n.toUpperCase()),cx,ly-5);g.font='400 6px Outfit, Figtree, sans-serif';g.fillText(fmt(sg.k==='in'?Math.max(0,self.show.in):sg.v),cx,ly+1.5)})}
+ // floats: a payment's name rises from where it landed
+ this.floats=this.floats.filter(function(f){var e=W.t-f.t0;if(e>1.8)return false;var a=Math.sin(clamp(e/1.8,0,1)*Math.PI);g.save();g.globalAlpha=a;g.fillStyle=rgba(kc(f.k));g.textAlign='center';g.font='600 5.4px Figtree, system-ui, sans-serif';g.fillText(f.n.toUpperCase(),f.x,L.base-L.fs*.82-e*8);g.font='400 8px Outfit, Figtree, sans-serif';g.fillText((f.k==='in'?'+':'')+fmt2(f.v),f.x,L.base-L.fs*.82+8-e*8);g.restore();return true})};
+function ease2(u){u=clamp(u,0,1);return 1-Math.pow(1-u,3)}
+function ord(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+var views=[];function all(f){views.forEach(f)}
+var statusEl=$('#status');function say(s){if(statusEl)statusEl.innerHTML=s;$$('[data-cap]').forEach(function(e){e.innerHTML=s})}
+function syncText(){$$('[data-left]').forEach(function(e){e.textContent=fmt(Math.abs(inT()-outT()))})}
+function pay(n,k,v){M.outs[k]+=v;all(function(c){var L=c.layout(c.g),inV=Math.max(inT(),outT());var edge=L.x0+Math.max(0,inT()-outT())/inV*L.w;for(var i=0;i<L.xs.length;i++){var x=L.xs[i];if(edge>=x.x-2&&edge<=x.x+x.w+2)c.jolt[i]=W.t}c.floats.push({n:n,v:v,k:k,x:Math.min(L.x0+L.w-10,edge+12),t0:W.t})});
+ var d=inT()-outT();say('<b>'+n+'</b>, '+fmt2(v)+', to '+K[k].n+'. '+(d>=0?fmt(d)+' still yours.':'Over by '+fmt(-d)+'.'));syncText()}
+function income(n,v){var x=M.ins.filter(function(i){return i.n===n})[0];if(x)x.v+=v;else M.ins.push({n:n,v:v});all(function(c){c.sweep=W.t;for(var i=0;i<MONTH.length;i++)c.hops[i]=W.t+i*.07;var L=c.layout(c.g);c.floats.push({n:n,v:v,k:'in',x:L.x0+30,t0:W.t})});say('<b>'+n+'</b>, '+fmt(v)+' in. Recharged.');syncText()}
+views=$$('canvas[data-ch]').map(function(cv){return new Ch(cv)});
+function fit(){var w=Math.min(402,document.documentElement.clientWidth-32),s=w/402;$$('[data-fit]').forEach(function(el){el.style.height=(874*s)+'px';el.firstElementChild.style.transform='scale('+s+')'});views.forEach(function(v){v.size()})}
+fit();addEventListener('resize',fit);
+$$('[data-act]').forEach(function(b){b.addEventListener('click',function(){var a=b.dataset.act;if(a==='groceries')pay('Groceries','food',86);if(a==='drinks')pay('Drinks','out',42);if(a==='save')pay('Japan','save',300);if(a==='laptop')pay('Laptop','big',1800);if(a==='side')income('Side job',180);if(a==='payday')income('Salary',4200);
+ if(a==='reset'){M=fresh();views.forEach(function(v){v.show={in:inT()-outT()};FIRST.forEach(function(k){v.show[k]=M.outs[k]})});syncText();say('Reset.')}})});
+$$('.mon').forEach(function(b){b.addEventListener('click',function(){MONTH=b.dataset.mon;$$('.mon').forEach(function(o){o.setAttribute('aria-pressed',String(o===b))});var cells=MONTH.length;say(MONTH.charAt(0)+MONTH.slice(1).toLowerCase()+' has '+cells+' cells.')})});
+(function(){var d=Q.demo;if(Q.month)MONTH=Q.month;if(!d)return;if(d==='pay')pay('Groceries','food',300);if(d==='over'){pay('Laptop','big',1800);pay('Weekend away','out',600)}if(d==='payday')income('Salary',4200);if(d==='held')all(function(c){c.held=true});
+ if(d==='tap')all(function(c){var L=c.layout(c.g);c.tapLetter({x:L.xs[5].x+L.xs[5].w/2,y:L.base-10})});
+ if(Q.instant){var back=+Q.instant;all(function(c){Object.keys(c.jolt).forEach(function(i){c.jolt[i]-=back});Object.keys(c.hops).forEach(function(i){c.hops[i]-=back});c.sweep-=back;c.floats.forEach(function(f){f.t0-=back});if(back>=1.5){c.show={in:inT()-outT()};FIRST.forEach(function(k){c.show[k]=M.outs[k]})}})}})();
+syncText();
+var last=performance.now();
+function frame(now){var dt=clamp((now-last)/1000,0,.05);last=now;W.t+=dt;views.forEach(function(v){try{v.draw(dt)}catch(e){if(!v.err){v.err=1;console.error(e);say('Error: '+e.message)}}});requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>
