@@ -14,6 +14,8 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
     var openDoor: (DialDoor) -> Void
     @ViewBuilder let brief: Brief
     var action: LandingFootAction?
+    /// The left edge (x 0-24) goes back; nil on a root.
+    var onBack: (() -> Void)?
 
     static var designHeight: CGFloat { 874 }
 
@@ -54,6 +56,15 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
                 if let action {
                     LandingActionWord(action: action, accent: accent)
                         .offset(x: 28, y: 786 * k - 8)
+                }
+            }
+            .overlay(alignment: .leading) {
+                if let onBack {
+                    Color.clear.frame(width: 24)
+                        .contentShape(Rectangle())
+                        .gesture(DragGesture(minimumDistance: 10).onEnded { value in
+                            if value.translation.width > 50, abs(value.translation.height) < 80 { onBack() }
+                        })
                 }
             }
             .frame(width: width, height: proxy.size.height, alignment: .topLeading)

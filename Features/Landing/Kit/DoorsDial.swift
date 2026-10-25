@@ -40,7 +40,7 @@ struct DoorsDial: View {
         let count = doors.count
         ZStack(alignment: .leading) {
             if count > 0 {
-                ForEach([-1, 0, 1], id: \.self) { place in
+                ForEach(places(count), id: \.self) { place in
                     row(for: wrapped(focus + place), place: place)
                 }
                 facts
@@ -55,6 +55,15 @@ struct DoorsDial: View {
         .accessibilityAdjustableAction { direction in
             guard count > 1 else { return }
             move(direction == .increment ? 1 : -1)
+        }
+    }
+
+    /// Focus plus one above and one below; with fewer than 3 doors a door is never shown twice.
+    private func places(_ count: Int) -> [Int] {
+        switch count {
+        case 0, 1: [0]
+        case 2: [0, 1]
+        default: [-1, 0, 1]
         }
     }
 

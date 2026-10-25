@@ -4,9 +4,15 @@ import SwiftUI
 /// page colour behind it, no border, fill or shadow. Rooms supply only the content. A drag that starts here belongs
 /// here until lift, so the page, the dial and the edge zones never take it.
 struct LandingKeystone<Content: View>: View {
-    @ViewBuilder let content: Content
+    let content: Content
     var caption: String?
-    var label = "Keystone"
+    var label: String
+
+    init(caption: String? = nil, label: String = "Keystone", @ViewBuilder content: () -> Content) {
+        self.content = content()
+        self.caption = caption
+        self.label = label
+    }
 
     static var size: CGSize { CGSize(width: 354, height: 220) }
 
