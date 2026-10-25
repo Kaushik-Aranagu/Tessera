@@ -1,0 +1,51 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#888;font:600 13px -apple-system,Helvetica,Arial}
+.row{display:flex;gap:0}.p{width:300px;height:330px;position:relative;box-sizing:border-box;padding:14px}
+.l{position:absolute;left:14px;top:12px;font-size:12px;opacity:.7}.t{position:absolute;left:14px;top:34px;font-size:21px;font-weight:700}
+canvas{position:absolute;left:78px;top:150px;width:144px;height:144px}</style>
+<div class=row id=r></div>
+<script>
+const LOOKS={pale:{ground:'#FFFFFF',ink:'#121016',dark:false,live:'#E2432A',tess:'#2450D8',now:'#F0A500',core:.58,mid:.42},
+ dark:{ground:'#000000',ink:'#F5F2EC',dark:true,live:'#FF5B3A',tess:'#86B4FF',now:'#FFC23D',core:.8,mid:.6}};
+const MAIN=[76,70],SAT=[46,42],cx=0,cy=-1;
+let DABS;function mkDabs(S){const tight=(x,y)=>[cx+(x-cx)*S,cy+(y-cy)*S];DABS=[[...tight(-14,-8),MAIN,0],[...tight(14,-8),MAIN,1],[...tight(0,13),MAIN,2],[...tight(-22,10),SAT,0],[...tight(20,12),SAT,1],[...tight(4,-20),SAT,2]]}
+const SH=[[[52,48,60,40],[55,45,55,45]],[[45,55,40,60],[50,60,40,50]],[[60,40,55,45],[45,55,45,55]]];
+function shape(c,h,v){const f=a=>a/100;const x0=-1,y0=-1,w=2,H=2;const [tl,tr,br,bl]=h.map(f),[tlv,trv,brv,blv]=v.map(f);
+ // css border-radius with horizontal/vertical radii in a 2x2 box (scaled so adjacent radii fit)
+ c.beginPath();c.moveTo(x0+tl*w,y0);c.lineTo(x0+w-tr*w,y0);c.ellipse(x0+w-tr*w,y0+trv*H,tr*w,trv*H,0,-Math.PI/2,0);
+ c.lineTo(x0+w,y0+H-brv*H);c.ellipse(x0+w-br*w,y0+H-brv*H,br*w,brv*H,0,0,Math.PI/2);
+ c.lineTo(x0+bl*w,y0+H);c.ellipse(x0+bl*w,y0+H-blv*H,bl*w,blv*H,0,Math.PI/2,Math.PI);
+ c.lineTo(x0,y0+tlv*H);c.ellipse(x0+tl*w,y0+tlv*H,tl*w,tlv*H,0,Math.PI,Math.PI*1.5);c.closePath()}
+function hex(h,a){const n=parseInt(h.slice(1),16);return`rgba(${n>>16},${n>>8&255},${n&255},${a})`}
+// opts: blur (pt), hostScale, hl (specular alpha)
+function draw(cv,look,o){mkDabs(o.spread||.65);const L=LOOKS[look],dpr=3,sz=96*1.5;cv.width=cv.height=sz*dpr;const c=cv.getContext('2d');
+ c.setTransform(dpr,0,0,dpr,0,0);c.translate(sz/2,sz/2);
+ // the app draws a 96 pt canvas, then scaleEffect(hostScale): blur radius shrinks with it
+ const k=o.hostScale;c.scale(k*1.5,k*1.5);
+ c.globalCompositeOperation=L.dark?'screen':'multiply';
+ DABS.forEach(([x,y,sz2,p],i)=>{const sc=.8,al=i<3?1:.9;
+  const off=document.createElement('canvas');off.width=off.height=sz*dpr*1.5;const oc=off.getContext('2d');
+  oc.setTransform(dpr*1.5,0,0,dpr*1.5,off.width/2,off.height/2);
+  oc.translate(x,y);const rx=sz2[0]/2*sc,ry=sz2[1]/2*sc;
+  oc.save();oc.scale(rx,ry);
+  const col=[L.live,L.tess,L.now][p];const g=oc.createRadialGradient(0,0,0,0,0,1);
+  g.addColorStop(0,hex(col,L.core));g.addColorStop(.4,hex(col,L.mid));g.addColorStop(1,hex(col,0));
+  shape(oc,SH[p][0],SH[p][1]);oc.fillStyle=g;oc.fill();oc.restore();
+  const tmp=document.createElement('canvas');tmp.width=off.width;tmp.height=off.height;const tc=tmp.getContext('2d');
+  tc.filter=`blur(${o.blur*dpr*1.5}px)`;tc.drawImage(off,0,0);
+  c.save();c.setTransform(1,0,0,1,0,0);c.globalAlpha=al;c.globalCompositeOperation=L.dark?'screen':'multiply';
+  c.drawImage(tmp,sz*dpr/2-off.width/2,sz*dpr/2-off.height/2);c.restore()});
+ if(o.sheen){c.save();c.setTransform(1,0,0,1,0,0);const hc=document.createElement('canvas');hc.width=hc.height=sz*dpr;const h=hc.getContext('2d');
+  h.setTransform(dpr*1.5,0,0,dpr*1.5,hc.width/2,hc.height/2);h.translate(-8*k*1.0/k*0.0-9,-13);h.scale(22,12);h.rotate(-.35);
+  const hg=h.createRadialGradient(0,0,0,0,0,1);hg.addColorStop(0,`rgba(255,255,255,${o.sheen})`);hg.addColorStop(1,'rgba(255,255,255,0)');h.fillStyle=hg;h.beginPath();h.arc(0,0,1,0,7);h.fill();
+  const t2=document.createElement('canvas');t2.width=t2.height=hc.width;const t2c=t2.getContext('2d');t2c.filter=`blur(${4*dpr*1.5*k}px)`;t2c.drawImage(hc,0,0);
+  c.globalCompositeOperation='screen';c.drawImage(t2,0,0);c.restore()}}
+const V=[['pale','Porcelain, now (blur 4 x 0.72)',{blur:4,hostScale:.72,hl:0}],['pale','Soft: edge 6 pt, spread .85, sheen',{blur:8/.72*.72*1.0,hostScale:.72,hl:0}],
+ ['dark','Obsidian, now (blur 4 x 0.72)',{blur:4,hostScale:.72,hl:0}],['dark','Soft: edge 6 pt, spread .85, sheen',{blur:8,hostScale:.72,hl:0}]];
+// soft version: blur set so that after hostScale the effective edge is about 2x today (8 pt), plus gloss
+V[1][2]={blur:6,hostScale:.72,spread:.85,sheen:.15};V[3][2]={blur:6,hostScale:.72,spread:.85,sheen:.15};
+const r=document.getElementById('r');V.forEach(([look,label,o])=>{const L=LOOKS[look];const p=document.createElement('div');p.className='p';
+ p.style.background=L.ground;p.style.color=L.ink;p.innerHTML=`<div class=l>${label}</div><div class=t>Training</div>`;const cv=document.createElement('canvas');p.appendChild(cv);r.appendChild(p);
+ // quirk: the real renderer applies blur before scaleEffect, so effective blur = blur*hostScale
+ draw(cv,look,{...o,blur:label.startsWith('Soft')?o.blur:o.blur*o.hostScale});});
+window.ready=true;
+</script>

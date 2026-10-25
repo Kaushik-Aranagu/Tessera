@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Ink actions</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for docs/design/no-buttons.md: actions are words, paint and motion, never a shape around a word. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--cad:#E0A35C;--cream:#F3ECE0}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;background:#F4F0EC}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.scene{position:absolute;inset:0}
+.light{background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F4F0EC}
+.dark{background:radial-gradient(70% 40% at 80% 10%,#3A3150 0%,rgba(58,49,80,0) 70%),radial-gradient(70% 50% at 0% 70%,#2E2A44 0%,rgba(46,42,68,0) 70%),#1C1826;color:var(--cream)}
+.sw{position:absolute;display:inline-block}
+.sw .w{position:relative;z-index:2;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap}
+.sw svg{position:absolute;left:-7px;bottom:3px;height:19px;z-index:1;overflow:visible;transform-origin:50% 70%}
+.la{position:absolute;display:inline-block}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0);border-radius:0}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+.horizon{position:absolute;left:0;right:0;bottom:0;height:150px;z-index:8;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);-webkit-mask-image:linear-gradient(transparent,#000 55%);mask-image:linear-gradient(transparent,#000 55%)}
+.cap{position:absolute;left:22px;top:24px;font-weight:700;font-size:16px;letter-spacing:.08em;z-index:9}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="0" height="0" class="abs" aria-hidden="true">
+    <filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+    <filter id="wet" x="-10%" y="-80%" width="120%" height="260%"><feTurbulence type="fractalNoise" baseFrequency="0.6 0.2" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="5"/><feGaussianBlur stdDeviation="1.1"/></filter>
+  </svg>
+
+  <!-- scene 1: Home, light ground. The Now hold is a stroke word -->
+  <section id="s1" class="scene light">
+    <div class="cap" style="color:var(--sub)">BEFORE → AFTER · A HOLD</div>
+    <div class="abs lbl" style="left:22px;top:150px">NOW</div>
+    <div class="abs" style="left:0;right:0;top:140px;height:1px;background:linear-gradient(90deg,rgba(200,69,47,0),rgba(200,69,47,.8) 20%,rgba(200,69,47,.8) 80%,rgba(200,69,47,0))"></div>
+    <div id="hero" class="abs" style="left:20px;right:22px;top:178px;font-size:56px;font-weight:500;line-height:1;letter-spacing:-.04em">Write the<br>report</div>
+    <div class="abs" style="left:22px;top:302px;font-size:21px;color:var(--ctx)">for Priya, due at 5</div>
+    <!-- before: the key -->
+    <div id="oldKey" class="abs" style="left:22px;top:440px;width:220px;height:58px;border-radius:14px;background:var(--ink);color:var(--cream);display:flex;align-items:center;padding-left:20px;box-sizing:border-box;font-size:21px;font-weight:600;box-shadow:0 6px 18px rgba(43,36,64,.14)">Hold to finish</div>
+    <!-- after: the stroke word -->
+    <div id="finish" class="sw" style="left:22px;top:446px;opacity:0"><span class="w">Finish</span></div>
+    <div id="finishMeta" class="abs lbl" style="left:150px;top:463px;opacity:0">HOLD · 14 MIN LEFT</div>
+  </section>
+
+  <!-- scene 2: Workout rest, dark ground. Secondary actions are label words; the next step is a stroke word -->
+  <section id="s2" class="scene dark" style="opacity:0">
+    <div class="cap" style="color:rgba(243,236,224,.6)">REST · LABEL WORDS AND A TAP</div>
+    <div class="abs lbl" style="left:22px;top:150px;color:rgba(243,236,224,.6)">BENCH PRESS · SET 3 OF 4</div>
+    <div id="rest" class="abs" style="left:20px;top:182px;font-size:80px;font-weight:300;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums">1:42</div>
+    <div class="abs" style="left:22px;right:22px;top:300px;height:1px;background:rgba(243,236,224,.18)"></div>
+    <div id="restLine" class="abs" style="left:22px;width:224px;top:299.5px;height:2px;background:var(--cobalt);box-shadow:0 0 8px rgba(46,109,164,.8)"></div>
+    <div id="plus" class="la lbl" style="left:22px;top:326px;color:rgba(243,236,224,.7)">+15<span class="line" style="background:var(--cream)"></span></div>
+    <div id="skip" class="la lbl" style="left:96px;top:326px;color:rgba(243,236,224,.7)">SKIP<span class="line" style="background:var(--cream)"></span></div>
+    <div id="next" class="sw" style="left:22px;top:446px"><span class="w">Next exercise</span></div>
+  </section>
+
+  <!-- the Tess horizon: no bar, a band of glass with no edge, one writing line -->
+  <div class="horizon" id="hz"></div>
+  <div id="hzLine" class="abs" style="left:76px;right:22px;top:788px;height:.5px;background:rgba(43,36,64,.28);z-index:9;opacity:0"></div>
+  <span id="tess" class="abs" style="left:78px;top:756px;font-size:21px;color:#8A7F96;z-index:9;opacity:0">Ask Tess…</span>
+  <span id="undo" class="la lbl" style="right:22px;top:762px;color:var(--verm);opacity:0;z-index:9">UNDO<span class="line" style="background:var(--verm)"></span></span>
+  <div class="abs" style="left:36px;top:760px;width:28px;height:24px;border-radius:52% 48% 60% 40%;background:radial-gradient(closest-side,rgba(46,109,164,.7),rgba(46,109,164,0));filter:blur(2px);z-index:9"></div>
+  <!-- the old bar, shown once for the before -->
+  <div id="oldBar" class="abs" style="left:14px;right:14px;bottom:18px;height:74px;border-radius:20px;background:rgba(250,246,239,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 .5px rgba(43,36,64,.2),0 10px 28px rgba(43,36,64,.12);z-index:10"><span class="abs" style="left:64px;top:24px;font-size:21px;color:#8A7F96">Ask Tess…</span></div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+
+// a stroke word: the word sits on a dry brushstroke in the action's paint, no shape around it
+const BRUSH = 'M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z';
+let uid = 0;
+function strokeWord(el, paint) {
+  const w = el.querySelector('.w').getBoundingClientRect().width / ($('ph').getBoundingClientRect().width / 390) + 14;
+  const id = 'c' + (uid++);
+  el.insertAdjacentHTML('beforeend', `<svg width="${w}" viewBox="0 0 200 14" preserveAspectRatio="none">
+    <clipPath id="${id}"><rect class="clip" x="0" y="-10" width="200" height="34"/></clipPath>
+    <path class="trace" d="${BRUSH}" fill="${paint}" opacity="0" filter="url(#rough)"/>
+    <path class="paint" d="${BRUSH}" fill="${paint}" opacity=".82" filter="url(#rough)" clip-path="url(#${id})"/></svg>`);
+  const svg = el.querySelector('svg');
+  return { el, svg, clip: svg.querySelector('.clip'), paint: svg.querySelector('.paint'), trace: svg.querySelector('.trace'), word: el.querySelector('.w') };
+}
+// touch down on a tap word: the stroke wets (taller, darker, edges bleed) and the word sinks 1pt
+const wet = (s) => { s.paint.setAttribute('filter', 'url(#wet)'); anim(s.svg, [{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.65)' }], { duration: 120, easing: 'ease-out' }); anim(s.paint, [{ opacity: .82 }, { opacity: 1 }], { duration: 120 }); anim(s.word, [{ transform: 'none' }, { transform: 'translateY(1px)' }], { duration: 120 }); };
+const dry = async (s) => { anim(s.word, [{ transform: 'translateY(1px)' }, { transform: 'none' }], { duration: 300, easing: HOUSE }); anim(s.paint, [{ opacity: 1 }, { opacity: .82 }], { duration: 300 }); await anim(s.svg, [{ transform: 'scaleY(1.65)' }, { transform: 'scaleY(1)' }], { duration: 300, easing: HOUSE }); s.paint.setAttribute('filter', 'url(#rough)'); };
+// a label word: on touch the ink goes full and a hairline draws out from the touch point
+async function labelTap(el, colourFull) {
+  const [x, y] = centre(el); await fingerOn(x, y);
+  const line = el.querySelector('.line'); const prev = el.style.color; el.style.color = colourFull;
+  line.style.transformOrigin = '50% 50%';
+  await anim(line, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 180, easing: HOUSE });
+  await sleep(90); fingerOff();
+  anim(line, [{ opacity: 1 }, { opacity: 0 }], { duration: 300 }).then(() => { line.style.transform = 'scaleX(0)'; line.getAnimations().forEach((a) => a.cancel()); });
+  el.style.color = prev;
+}
+async function tessSay(text, colour = '#2E6DA4') {
+  const t = $('tess'); await anim(t, [{ opacity: 1 }, { opacity: 0 }], { duration: 120 });
+  t.textContent = text; t.style.color = colour;
+  anim(t, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: HOUSE });
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready;
+  const fin = strokeWord($('finish'), '#C8452F');
+  const nxt = strokeWord($('next'), '#2E6DA4');
+  await sleep(400); document.body.dataset.start = '1';
+  await sleep(1100);
+
+  // before → after: the key and the bar dissolve; the word and its stroke, and the horizon, stay
+  anim($('oldKey'), [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(6px)' }], { duration: 420 });
+  anim($('oldBar'), [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(6px)' }], { duration: 420 });
+  anim($('tess'), [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: 200, easing: HOUSE });
+  anim($('hzLine'), [{ opacity: 0, transform: 'scaleX(.2)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: 200, easing: HOUSE });
+  await sleep(200);
+  $('finish').style.opacity = 1;
+  anim(fin.word, [{ opacity: 0, transform: 'translateX(-10px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: HOUSE });
+  fin.clip.setAttribute('width', 0);
+  await tween(520, (t) => fin.clip.setAttribute('width', 200 * t));
+  anim($('finishMeta'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  await sleep(1300);
+
+  // hold: the stroke empties to a dry trace, then repaints left to right under the thumb over 700ms; the tip blooms
+  const [fx, fy] = centre(fin.word); await fingerOn(fx, fy);
+  fin.trace.setAttribute('opacity', '.2');
+  await tween(140, (t) => fin.clip.setAttribute('width', 200 * (1 - t)));
+  fin.paint.setAttribute('filter', 'url(#wet)'); fin.paint.setAttribute('opacity', '1');
+  await tween(700, (t) => fin.clip.setAttribute('width', 200 * t), (t) => 1 - Math.pow(1 - t, 1.6));
+  await anim(fin.svg, [{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.9)' }, { transform: 'scaleY(1.2)' }], { duration: 260, easing: 'ease-out' });
+  fingerOff();
+  // done: the hero strikes through, the word fades with it; Undo is a label word in the horizon
+  const mk = (top, w, d) => { const e = document.createElement('div'); Object.assign(e.style, { position: 'absolute', left: '18px', top: top + 'px', height: '5px', width: '0', background: '#C8452F', opacity: '.85' }); $('s1').appendChild(e); anim(e, [{ width: '0px' }, { width: w + 'px' }], { duration: 280, delay: d, easing: HOUSE }); return e; };
+  const s1 = mk(208, 236, 0), s2 = mk(264, 178, 160); const strike = { animate: (k, o) => { s1.animate(k, { fill: 'forwards', ...o }); return s2.animate(k, { fill: 'forwards', ...o }); } };
+  anim($('hero'), [{ opacity: 1 }, { opacity: .35 }], { duration: 500, delay: 200 });
+  anim($('finish'), [{ opacity: 1 }, { opacity: 0 }], { duration: 400, delay: 250 }); anim($('finishMeta'), [{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: 250 });
+  tessSay('Done. 3 left today.');
+  anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 200 });
+  await sleep(1300);
+  await labelTap($('undo'), '#C8452F');
+  anim($('undo'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  anim(strike, [{ opacity: .85 }, { opacity: 0 }], { duration: 300 }); anim($('hero'), [{ opacity: .35 }, { opacity: 1 }], { duration: 300 });
+  anim($('finish'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300 }); anim($('finishMeta'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  fin.paint.setAttribute('filter', 'url(#rough)'); fin.paint.setAttribute('opacity', '.82'); fin.trace.setAttribute('opacity', '0');
+  tessSay('Ask Tess…', '#8A7F96');
+  await sleep(1000);
+
+  // scene 2: dark ground, the workout rest
+  anim($('s1'), [{ opacity: 1 }, { opacity: 0 }], { duration: 360 });
+  anim($('s2'), [{ opacity: 0, transform: 'translateX(30px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: HOUSE });
+  $('hzLine').style.background = 'rgba(243,236,224,.3)'; tessSay('Rest. Bench 82.5 × 5 next.', 'rgba(243,236,224,.8)');
+  let secs = 102; const tick = setInterval(() => { secs--; $('rest').textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`; }, 1000);
+  await sleep(1200);
+  await labelTap($('plus'), '#F3ECE0');
+  secs += 15; $('rest').textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+  anim($('rest'), [{ transform: 'translateY(-6px)', opacity: .6 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: HOUSE });
+  anim($('restLine'), [{ width: '224px' }, { width: '257px' }], { duration: 300, easing: HOUSE });
+  await sleep(1300);
+  // a tap word: wet on touch down, fires on release, dries back
+  const [nx, ny] = centre(nxt.word); await fingerOn(nx, ny); wet(nxt); await sleep(220); fingerOff(); await dry(nxt);
+  clearInterval(tick);
+  anim($('s2').querySelector('#rest'), [{ opacity: 1 }, { opacity: 0, transform: 'translateX(-30px)' }], { duration: 300 });
+  tessSay('Incline dumbbell press.', 'rgba(243,236,224,.8)');
+  await sleep(1600);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

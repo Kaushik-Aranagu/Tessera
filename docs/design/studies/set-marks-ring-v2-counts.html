@@ -1,0 +1,43 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#f4f1ea}</style><canvas id=c width=1200 height=760></canvas>
+<script>
+const c=document.getElementById('c'),g=c.getContext('2d');
+const INK=[20,24,31],STAGE=[226,67,42];
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),mix=(a,b,t)=>a+(b-a)*t;
+const sm=x=>{x=clamp(x);return x*x*(3-2*x)},eob=x=>{x=clamp(x);const c1=1.7,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const rgb=(a,al=1)=>`rgba(${a[0]|0},${a[1]|0},${a[2]|0},${al})`;
+const colOf=s=>s==='best'?rgb(STAGE):s==='short'?rgb(INK,.22):rgb(INK,.9);
+const DEMO=['full','short','full','best'];
+function demo(n){const s=Array(n).fill('full');if(n>=3)s[1]='short';if(n>=4)s[n-1]='best';return s}
+// ---- shared: an arrival record {ta: time the newest element arrives (or -1e9 if settled)}
+// glide p: 0 -> 1 while existing elements move to the new layout; land: 0->1 for the new element
+function prog(t,ta){return{p:sm((t-ta-.30)/.45),u:clamp((t-ta)/.6)}}
+
+
+// Ring v2: crisp tapered tails, even spacing to 8, inner ring takes dots 9 to 12
+function slots(n){const out=n<=8?[n,0]:[8,n-8];return out}
+function ringPos(i,n,R,rot,t,live,p,ta){const[o,inn]=slots(n);let ring,k,cnt,rr;if(i<o){ring=0;k=i;cnt=o;rr=R}else{ring=1;k=i-o;cnt=inn;rr=R*.5}
+ return{a:k*2*Math.PI/cnt+rot+(ring?.5:0),r:rr}}
+function ring2(cx,cy,B,n,st,t,ta,live,opt){const{p,u}=prog(t,ta);const R=live?B*.3:(opt&&opt.R)||21,rot=live?t*.4:-Math.PI/2;
+ for(let i=0;i<n;i++){const last=i===n-1&&ta>-1e8&&live;
+  let cur=ringPos(i,n,R,rot,t,live,p,ta);
+  if(!last&&ta>-1e8&&live&&n>1){const prev=ringPos(i,n-1,R,rot,t,live,p,ta);cur={a:mix(prev.a,cur.a,p),r:mix(prev.r,cur.r,p)}}
+  let r=cur.r*(live?1+.05*Math.sin(t*1.5+i*1.9):1),a=cur.a;let x=Math.cos(a)*r,y=Math.sin(a)*r;
+  if(last){const e=eob(u/.8);x=mix(Math.cos(a+1.2)*B*.95,x,e);y=mix(Math.sin(a+1.2)*B*.95,y,e)}
+  const best=st[i]==='best',short=st[i]==='short';
+  const rad=live?B*.062*(best?1.25:1):(best?4.2:3.75);
+  const col=live?colOf(st[i]):(best?rgb(STAGE):short?rgb(INK,.42):rgb(INK,.9));
+  if(live&&!last||live&&last&&u>.8){ // crisp tapered tail, hard edge, behind the dot
+   const L=best?1.1:.75,steps=18,pts=[];const tc=best?rgb(STAGE,.55):short?rgb(INK,.18):rgb(INK,.3);
+   for(let k=0;k<=steps;k++){const f=k/steps,aa=a-f*L,w=rad*(1-f)*.95;pts.push([cx+Math.cos(aa)*(r+w),cy+Math.sin(aa)*(r+w)])}
+   for(let k=steps;k>=0;k--){const f=k/steps,aa=a-f*L,w=rad*(1-f)*.95;pts.push([cx+Math.cos(aa)*(r-w),cy+Math.sin(aa)*(r-w)])}
+   g.fillStyle=tc;g.beginPath();pts.forEach((q,j)=>j?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));g.closePath();g.fill()}
+  g.fillStyle=col;g.beginPath();g.arc(cx+x,cy+y,rad,0,7);g.fill()}}
+function demo(n){const s=Array(n).fill('full');if(n>=3)s[1]='short';if(n>=4)s[n-1]='best';return s}
+function draw(t){g.setTransform(1,0,0,1,0,0);g.fillStyle='#f4f1ea';g.fillRect(0,0,1200,560);
+ g.font='600 20px -apple-system,Helvetica,Arial';g.fillStyle=rgb(INK,.9);g.fillText('Ring v2: crisp tails, row dots 2.5 pt on a 14 pt ring, inner ring from 9 sets (shown 3x)',30,36);
+ g.font='11px -apple-system,Helvetica';g.fillStyle=rgb(INK,.5);g.fillText('LIVE, 1 to 8 (moving)',30,80);g.fillText('ROW at true size, 1 to 8 (flat, no tail)',30,230);g.fillText('ROW, 9 to 12 (inner ring takes the extras)',30,380);
+ for(let m=1;m<=8;m++){const cx=95+(m-1)*140;g.fillStyle=rgb(INK,.4);g.fillText(m+' sets',cx-18,100);ring2(cx,160,84*1.25,m,demo(m),t+m,-1e9,true);ring2(cx,300,42,m,demo(m),0,-1e9,false,{R:21})}
+ for(let m=9;m<=12;m++){const cx=95+(m-9)*140;g.fillStyle=rgb(INK,.4);g.fillText(m+' sets',cx-18,400);ring2(cx,450,42,m,demo(m),0,-1e9,false,{R:21})}
+ g.fillStyle=rgb(INK,.45);g.font='12px -apple-system,Helvetica';g.fillText('Pale = short, stage colour = best. Row: dots 2.5 pt, pale a step darker, no tail. Private: outline dots, no tail. Reduce Motion: finished ring, 150 ms crossfade.',30,540)}
+window.sceneDuration=()=>1;window.renderAt=draw;draw(0);
+</script>

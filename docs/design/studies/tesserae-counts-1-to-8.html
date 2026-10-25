@@ -1,0 +1,27 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#f4f1ea}</style><canvas id=c width=1200 height=900></canvas>
+<script>
+const c=document.getElementById('c'),g=c.getContext('2d');const INK=[20,24,31],STAGE=[226,67,42];
+const rgb=(a,al=1)=>`rgba(${a[0]},${a[1]},${a[2]},${al})`;
+const LAY={1:[1],2:[2],3:[2,2,'L'],4:[2,2],5:[3,2],6:[3,3],7:[4,4],8:[4,4]};
+function layout(n){ // returns rows array of slot counts and which slots exist
+ if(n===1)return{rows:[1],slots:1};if(n===2)return{rows:[2],slots:2};if(n===3)return{rows:[2,1],slots:3};
+ if(n===4)return{rows:[2,2],slots:4};if(n===5)return{rows:[3,2],slots:5};if(n===6)return{rows:[3,3],slots:6};
+ if(n===7)return{rows:[4,3],slots:7};return{rows:[4,4],slots:8}}
+// state per chip: 'full','short','todo','best'
+function demo(n,priv){const st=[];for(let i=0;i<n;i++)st.push('todo');if(priv)return st;
+ for(let i=0;i<n-1;i++)st[i]='full';if(n>=3)st[1]='short';if(n>=4)st[n-2]='best';if(n===2)st[0]='full';if(n===1)st[0]='best';return st}
+function tile(x,y,H,n,st,priv){const L=layout(n),R=L.rows.length,gap=H*.09,ch=Math.min((H-(R-1)*gap)/R,H*.5);let k=0;
+ L.rows.forEach((cnt,r)=>{const full=Math.max(...L.rows);for(let i=0;i<cnt;i++){
+  const cx=x+i*(ch+gap),cy=y+r*(ch+gap);const s=st[k++];
+  if(s==='todo'){g.strokeStyle=rgb(INK,.55);g.lineWidth=Math.max(1,H*.03);g.beginPath();g.roundRect(cx+.5,cy+.5,ch-1,ch-1,ch*.12);g.stroke()}
+  else{g.fillStyle=s==='short'?rgb(INK,.20):s==='best'?rgb(STAGE):rgb(INK,.88);g.beginPath();g.roundRect(cx,cy,ch,ch,ch*.12);g.fill()}}})}
+g.fillStyle='#f4f1ea';g.fillRect(0,0,1200,900);
+g.font='600 20px -apple-system,Helvetica,Arial';g.fillStyle=rgb(INK,.9);g.fillText('Tesserae: one chip per planned set, 1 to 8 sets',30,38);
+g.font='13px -apple-system,Helvetica,Arial';g.fillStyle=rgb(INK,.6);
+g.fillText('Solid ink = logged. Pale chip = short. Outline chip = not logged yet. Stage-colour chip = best. An empty corner (3 sets) is just the shape, never "short".',30,60);
+const cols=[['LIVE 28 pt (3x)',84,0],['ROW 11 pt (3x)',33,0],['PRIVATE live',84,1],['PRIVATE row',33,1]],X=[170,470,700,1000];
+cols.forEach((c2,i)=>{g.fillStyle=rgb(INK,.5);g.font='11px -apple-system,Helvetica';g.fillText(c2[0],X[i],92)});
+for(let n=1;n<=8;n++){const y=106+(n-1)*96;g.fillStyle=rgb(INK,.7);g.font='600 14px -apple-system,Helvetica';g.fillText(n+(n===1?' set':' sets'),30,y+50);
+ cols.forEach((c2,i)=>{const H=c2[1];tile(X[i],y+(84-H)/2+0,H,n,demo(n,c2[2]),c2[2])})}
+g.fillStyle=rgb(INK,.45);g.font='12px -apple-system,Helvetica';g.fillText('Live: a chip seats with one spring and one haptic. Row copy is flat. Private: outlines only, nothing lit, no stage chip. Reduce Motion: 150 ms crossfade.',30,884);
+</script>

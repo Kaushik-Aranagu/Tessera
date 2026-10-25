@@ -1,0 +1,184 @@
+<title>Tessera Pantry Room</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300;400&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;--acc:#A8701F;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E0E10;--phone:#000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--acc:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--acc:#C49A5E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;gap:56px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+.notes{flex:1 1 360px;min-width:0;max-width:520px;display:flex;flex-direction:column;gap:16px}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,56px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);font-size:19px;margin:0}.notes p{margin:0}.notes b{font-weight:600}.lab{color:var(--ink3);font-size:16px;margin:0}
+.pr{color:var(--ink3);font-size:15px}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px;padding:4px 0}.tr:focus-visible,button:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+.phone{position:relative;width:360px;max-width:100%;height:740px;background:var(--phone);border:1px solid var(--edge);border-radius:44px;overflow:hidden;
+  display:flex;flex-direction:column;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+#lin{display:block;width:100%;height:168px;flex:none;touch-action:none}
+.back{all:unset;cursor:pointer;position:absolute;top:52px;left:24px;color:var(--ink2);font-size:17px;z-index:2}
+.fact{color:var(--ink2);font-size:16px;margin:0 24px;text-align:right;min-height:24px}
+.fact .n,.amt{font-family:var(--nums);font-weight:300;color:var(--ink)}
+.tl{display:flex;justify-content:space-between;align-items:baseline;margin:6px 24px 0}
+.tl h2{font-size:30px;font-weight:600;letter-spacing:-.015em;margin:0;line-height:1.1}
+.knob{all:unset;cursor:pointer;color:var(--ink2);font-size:17px;touch-action:none}
+.pin{all:unset;cursor:pointer;margin:6px 24px 0;color:var(--acc);font-weight:600;font-size:19px;transform-origin:left center;transition:transform .32s cubic-bezier(.3,.7,.4,1)}
+.pin .amt{color:var(--acc);margin-left:6px}
+.pin.open{transform:scale(1.5)}
+.body{position:relative;flex:1;display:grid;grid-template-columns:128px 1fr;min-height:0;margin-top:8px}
+.dial{position:relative;overflow:hidden;height:192px;align-self:start;margin-top:40px;touch-action:none;cursor:ns-resize;}
+.dial.dim .pl{color:var(--ink3)!important}
+.pl{position:absolute;left:24px;top:0;height:58px;display:flex;align-items:center;white-space:nowrap;font-size:19px;transform-origin:left center;will-change:transform}
+.rows{position:relative;padding-right:24px;overflow:hidden}
+.page{position:absolute;inset:0 24px 0 0;display:flex;flex-direction:column}
+.sec{font-size:13px;color:var(--ink3);letter-spacing:.04em;margin:6px 0 0;height:20px}
+.row{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;height:46px;touch-action:pan-y;cursor:grab}
+.row .nm{font-size:17px;white-space:nowrap}
+.row .rt{display:flex;align-items:center;gap:8px}
+.row svg{width:34px;height:4px;overflow:visible}
+.row .amt{font-size:16px;min-width:46px;text-align:right;cursor:ns-resize;touch-action:none}
+.row .soon::after{content:'soon';font-size:13px;color:var(--ink2);margin-left:8px}
+.row .sk{position:absolute;left:0;top:50%;height:1.5px;background:var(--acc);width:0}
+.row.pinned .nm{font-weight:600}
+.more{font-size:15px;color:var(--ink3);margin-top:auto;padding-bottom:6px}
+.foot{display:flex;justify-content:space-between;align-items:baseline;margin:0 24px 22px;min-height:28px}
+.undo{font-size:16px;color:var(--ink2)}.undo button{all:unset;cursor:pointer;color:var(--ink);font-weight:600;margin-left:8px}
+.go{all:unset;cursor:pointer;color:var(--acc);font-size:20px;font-weight:600}
+.fly{position:absolute;font-size:17px;pointer-events:none;z-index:5;color:var(--acc)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<div class="wrap">
+<div class="phone" id="phone">
+  <canvas id="lin" aria-label="Pantry, the lintel: every place as a shelf, each thing a column as tall as how much is left"></canvas>
+  <p class="fact" id="fact" aria-live="polite"></p>
+  <div class="tl"><h2>Pantry</h2><button class="knob" id="knob" aria-label="Show">All</button></div>
+  <button class="pin" id="pin">To get<span class="amt" id="pinN">4</span></button>
+  <div class="body">
+    <div class="dial" id="dial" role="listbox" aria-label="Places"></div>
+    <div class="rows" id="rows"></div>
+  </div>
+  <div class="foot"><span class="undo" id="undo"></span><button class="go" id="go">Cook</button></div>
+</div>
+<div class="notes">
+  <p class="lab">Round 221, Oct 23</p>
+  <h1>The Pantry room</h1>
+  <p class="sub">Kitchen's Pantry door opens onto its own room, built from the layout you picked on Oct 22 (places, sheet 118 C) and the dial rail you asked to feel nice when dragging through sections.</p>
+  <p><b>The lintel is the cupboard.</b> Each place is one mound of whole pixel tiles, in dial order. How stocked a place is sets how dense its mound is: a full fridge is solid, a half-empty one goes airy, tile by tile. The place in focus stands in ochre; the others wait at half strength. Use something up and its place thins a little. Slide along it and the line under it says what is out or low there.</p>
+  <p><b>The dial.</b> Places sit on a looping dial down the left edge, three at a time in fixed 64 pt slots: the focus large and in ink, one above and one below smaller and quieter, bowed slightly like a wheel. Drag it up or down and it follows your finger 1:1, ticks once per place and springs to rest; tap a place to bring it in. The rows on the right slip sideways as the place changes. The list itself never travels up and down.</p>
+  <p><b>The pin and the knob.</b> To get sits above the dial in ochre with its count; tap it and it grows, the dial dims, and the rows become the shopping list by section. The knob on the title line (All, Low, Soon) filters every place; swipe it sideways or tap it.</p>
+  <p><b>Rows.</b> Name on the left, the level line and the amount on the right (two columns stay, as decided). Swipe a row right and it's used up: a strike follows your finger, and past 90 pt the name lifts and flies into To get while its column in the lintel drains. On To get, swipe right means bought, and it flies home to its place. Drag an amount up or down to change it. Undo stays for 10 seconds.</p>
+  <p><b>Pinned things.</b> Things you always keep, like milk and eggs, can be pinned: hold a row and choose Pin. They stay at the top of their place on every page, under one small word, in weight 600.</p>
+  <p><b>Pages, not a long scroll.</b> A place shows six things at a time. When there are more, the last line says how many, and a swipe up on the rows turns the page: the rows lift away one after another and the next six come in.</p>
+  <div style="display:flex;gap:20px;flex-wrap:wrap"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button></div>
+  <p class="pr">No food drawings: the cupboard is pixels and lines only. Reduce Motion: the dial steps plainly, rows swap, nothing flies. VoiceOver: the dial is an adjustable element, one place per swipe.</p>
+</div>
+</div>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cs=()=>getComputedStyle(document.documentElement);const hex=h=>{h=h.trim().replace('#','');if(h.length===3)h=[...h].map(c=>c+c).join('');return[0,2,4].map(k=>parseInt(h.slice(k,k+2),16))};
+const mix=(a,b,t)=>a.map((v,k)=>v+(b[k]-v)*t);const clamp=x=>Math.max(0,Math.min(1,x));
+const B4=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]].map(r=>r.map(v=>(v+.5)/16));
+const P=[
+ {nm:'Fridge',it:[['Milk',1,'½ gal',0,1],['Eggs',.5,'4',0,1],['Spinach',1,'1 bag',1],['Yogurt',1,'2 cups'],['Tortillas',1,'12'],['Cheddar',.5,'4 oz'],['Cilantro',1,'1 bunch',1],['Salsa',1,'1 jar'],['Butter',.5,'1 stick']]},
+ {nm:'Freezer',it:[['Peas',1,'1 bag'],['Chicken thighs',.5,'2 lb'],['Ice cream',1,'1 pint'],['Berries',0,'']]},
+ {nm:'Shelf',it:[['Black beans',1,'3 cans',0,1],['Rice',1,'2 lb'],['Pasta',.5,'1 box'],['Olive oil',1,'1 bottle'],['Lentils',1,'1 lb'],['Cumin',.5,'1 jar']]},
+ {nm:'Counter',it:[['Lemons',0,''],['Avocados',1,'2',1],['Onions',1,'3'],['Garlic',1,'1 head']]}];
+let TOGET=[['Lemons','Produce',3],['Limes','Produce',0],['Berries','Frozen',1],['Paper towels','Home',-1]];
+let foc=0,dialPos=0,knob=0,pinOpen=false,page=0,undoT=0,drain=[];
+const KN=['All','Low','Soon'];
+const dial=document.getElementById('dial'),rowsEl=document.getElementById('rows'),fact=document.getElementById('fact');
+// ---- dial
+const SLOT=64;
+function drawDial(){const n=P.length;dial.innerHTML='';const cy=SLOT;
+  for(let k=-2;k<=2;k++){const raw=Math.round(dialPos)+k,i=((raw%n)+n)%n,d=raw-dialPos,a=Math.abs(d);if(a>1.5)continue;
+    const el=document.createElement('div');el.className='pl';el.textContent=P[i].nm;el.dataset.i=i;el.setAttribute('role','option');el.setAttribute('aria-selected',i===foc);
+    const sc=a<1?1.2-.42*a:.78,op=a<1?1-.3*a:.7,bow=-a*a*4;
+    el.style.transform=`translateY(${cy+d*SLOT}px) translateX(${bow}px) scale(${sc})`;el.style.opacity=op;el.style.color=a<.5?'var(--ink)':'var(--ink2)';el.style.fontWeight=a<.5?600:400;dial.appendChild(el)}}
+let drag=null,lastTick=0;
+dial.addEventListener('pointerdown',e=>{dial.setPointerCapture(e.pointerId);drag={y:e.clientY,p:dialPos,moved:false,t:e.target}});
+dial.addEventListener('pointermove',e=>{if(!drag)return;const dy=e.clientY-drag.y;if(Math.abs(dy)>4)drag.moved=true;if(!drag.moved)return;dialPos=drag.p-dy/SLOT;
+  const r=Math.round(dialPos);if(r!==lastTick){lastTick=r;tick();setFoc(((r%P.length)+P.length)%P.length)}drawDial()});
+dial.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const el=e.target.closest('.pl');if(el){const target=Math.round(dialPos)+(Math.round((+el.style.transform.match(/translateY\(([-\d.]+)/)[1]-SLOT)/SLOT));springTo(target)}}else springTo(Math.round(dialPos));drag=null});
+function springTo(t){const from=dialPos,t0=performance.now();setFoc(((t%P.length)+P.length)%P.length);if(RM){dialPos=t;drawDial();return}
+  (function st(now){const u=clamp((now-t0)/340),e=1-Math.pow(1-u,3)*Math.cos(u*2.2);dialPos=from+(t-from)*Math.min(1.04,e);if(u<1)requestAnimationFrame(st);else dialPos=t;drawDial()})(t0)}
+function tick(){fact.dataset.tick=Date.now()}
+function setFoc(i){if(i===foc&&!pinOpen)return;if(pinOpen)closePin();foc=i;page=0;drawRows(1)}
+// ---- rows
+function items(){const f=KN[knob];return P[foc].it.map((x,k)=>[x[0],x[1],x[2],x[3]||0,k,x[4]||0]).filter(x=>f==='All'||(f==='Low'&&x[1]<1)||(f==='Soon'&&x[3]))}
+const lvl=v=>`<svg viewBox="0 0 34 4" aria-hidden="true">${v>0?`<line x1="1" y1="2" x2="${1+32*v}" y2="2" stroke="var(--acc)" stroke-width="1.5" stroke-linecap="round"/>`:''}</svg>`;
+function drawRows(slip){const old=rowsEl.querySelector('.page:not(.gone)');rowsEl.querySelectorAll('.page.gone').forEach(o=>o.remove());const pg=document.createElement('div');pg.className='page';
+  if(pinOpen){let last='';const SO=['Produce','Frozen','Pantry','Home'];TOGET.sort((a,b)=>SO.indexOf(a[1])-SO.indexOf(b[1]));TOGET.forEach(([nm,sec,home],k)=>{if(sec!==last){pg.insertAdjacentHTML('beforeend',`<p class="sec">${sec}</p>`);last=sec}
+      pg.insertAdjacentHTML('beforeend',`<div class="row" data-g="${k}"><span class="nm">${nm}</span><span class="rt"><span class="sm" style="color:var(--ink3);font-size:15px">${home>=0?P[home].nm:''}</span></span><span class="sk"></span></div>`)})}
+  else{const all=items(),pins=all.filter(x=>x[5]),rest0=all.filter(x=>!x[5]),per=6-pins.length,pages=Math.max(1,Math.ceil(rest0.length/per));page=Math.min(page,pages-1);
+    const row=([nm,v,amt,soon,k,pin])=>`<div class="row${pin?' pinned':''}" data-k="${k}" data-p="${foc}" aria-label="${nm}, ${v===1?'full':v>0?'low':'out'}${pin?', pinned':''}"><span class="nm${soon?' soon':''}">${nm}</span><span class="rt">${lvl(v)}<span class="amt" data-k="${k}">${v>0?amt:'out'}</span></span><span class="sk"></span></div>`;
+    // pinned things stay at the top of every page, under one small word
+    if(pins.length){pg.insertAdjacentHTML('beforeend','<p class="sec">Pinned</p>');pins.forEach(x=>pg.insertAdjacentHTML('beforeend',row(x)));pg.insertAdjacentHTML('beforeend','<p class="sec"></p>')}
+    rest0.slice(page*per,page*per+per).forEach(x=>pg.insertAdjacentHTML('beforeend',row(x)));
+    const rest=rest0.length-(page+1)*per;if(rest>0)pg.insertAdjacentHTML('beforeend',`<p class="more">${rest} more, swipe up</p>`);else if(page>0)pg.insertAdjacentHTML('beforeend',`<p class="more">swipe down for the first page</p>`);
+    if(!all.length)pg.insertAdjacentHTML('beforeend',`<p class="more" style="margin-top:8px">Nothing ${KN[knob].toLowerCase()} here.</p>`)}
+  rowsEl.querySelectorAll('.page').forEach(o=>{o.style.pointerEvents='none';o.classList.add('gone')});rowsEl.appendChild(pg);
+  if(old)old.remove();
+  if(!RM){const dir=slip||0;[...pg.children].forEach((c,q)=>c.animate([{transform:`translate(${dir>0?14:0}px,${dir<0?22:0}px)`,clipPath:dir<0?'inset(0 0 100% 0)':'inset(0 100% 0 0)'},{transform:'none',clipPath:'inset(0 0 0 0)'}],{duration:260,delay:q*(dir<0?30:12),easing:'cubic-bezier(.3,.7,.4,1)',fill:'backwards'}))}
+  setFact()}
+function setFact(){if(pinOpen){fact.innerHTML=`<span class="n">${TOGET.length}</span> to get, for tacos and the week`;return}
+  const it=P[foc].it,low=it.filter(x=>x[1]<1&&x[1]>0).length,out=it.filter(x=>!x[1]).length;fact.innerHTML=`${P[foc].nm}, `+[out?`<span class="n">${out}</span> out`:'',low?`<span class="n">${low}</span> low`:'',!out&&!low?'all stocked':''].filter(Boolean).join(', ')}
+// row swipes: right = used up (or bought on To get); amounts are instruments
+let rs=null;
+rowsEl.addEventListener('pointerdown',e=>{const a=e.target.closest('.amt');if(a&&!pinOpen){rs={amt:a,y:e.clientY,k:+a.dataset.k,base:null};a.setPointerCapture(e.pointerId);return}
+  const r=e.target.closest('.row');if(r&&r.closest('.gone'))return;rs={row:r,x:e.clientX,y:e.clientY};if(r&&!pinOpen){rs.lp=setTimeout(()=>{if(rs&&!rs.dx){const it=P[foc].it[+r.dataset.k];if(!it[4]&&P[foc].it.filter(q=>q[4]).length>=3){rs=null;say('Three pinned here already.');return}it[4]=it[4]?0:1;rs=null;drawRows(0);say(`${it[0]}, ${it[4]?'pinned':'unpinned'}.`)}},600)}rowsEl.setPointerCapture(e.pointerId)});
+rowsEl.addEventListener('pointermove',e=>{if(!rs)return;
+  if(rs.amt){const it=P[foc].it[rs.k],m=String(it[2]).match(/^([\d½]+)(.*)$/);if(!m||!it[1])return;if(rs.base==null)rs.base=m[1]==='½'?.5:+m[1];const st=Math.round((rs.y-e.clientY)/14),v=Math.max(0,rs.base+st);
+    const txt=(v===.5?'½':v)+m[2];if(txt!==it[2]){it[2]=txt;rs.amt.textContent=txt;tick()}return}
+  const dx=e.clientX-rs.x,dy=e.clientY-rs.y;if(Math.abs(dx)>6||Math.abs(dy)>6){clearTimeout(rs.lp);rs.dx=dx||.01}else return;rs.dy=dy;
+  if(rs.row&&dx>6&&Math.abs(dx)>Math.abs(dy)){const sk=rs.row.querySelector('.sk'),nm=rs.row.querySelector('.nm');sk.style.width=Math.min(nm.offsetWidth,dx*.9)+'px';rs.row.style.transform=`translateX(${Math.min(30,dx*.15)}px)`}});
+rowsEl.addEventListener('pointerup',e=>{if(!rs)return;const r=rs;rs=null;clearTimeout(r.lp);if(r.amt)return;
+  if(r.row&&r.dx>90&&Math.abs(r.dx)>Math.abs(r.dy||0))return usedUp(r.row);
+  if(r.row){r.row.style.transform='';r.row.querySelector('.sk').style.width='0'}
+  if(!pinOpen&&Math.abs(r.dy||0)>50&&Math.abs(r.dy)>Math.abs(r.dx||0)){const all=items(),pages=Math.ceil(all.length/6);const np=page+(r.dy<0?1:-1);if(np>=0&&np<pages){page=np;drawRows(-1)}}});
+function flyTo(row,target,cb){const pr=document.getElementById('phone').getBoundingClientRect(),a=row.querySelector('.nm').getBoundingClientRect(),b=target.getBoundingClientRect();
+  if(RM){cb();return}const f=document.createElement('div');f.className='fly';f.textContent=row.querySelector('.nm').textContent;f.style.left=(a.left-pr.left)+'px';f.style.top=(a.top-pr.top)+'px';document.getElementById('phone').appendChild(f);
+  row.style.opacity=0;f.animate([{transform:'none',opacity:1},{transform:`translate(${(b.left-a.left)*.5}px,${(b.top-a.top)*.5-26}px) scale(.9)`,opacity:.9,offset:.5},{transform:`translate(${b.left-a.left}px,${b.top-a.top}px) scale(.6)`,opacity:0}],{duration:620,easing:'cubic-bezier(.3,.7,.4,1)'}).onfinish=()=>{f.remove();cb()}}
+function usedUp(row){if(pinOpen){const g=+row.dataset.g,[nm,sec,home]=TOGET[g];const tgt=home>=0?dial:document.getElementById('pin');
+    flyTo(row,tgt,()=>{TOGET.splice(g,1);if(home>=0){const it=P[home].it.find(x=>x[0]===nm);if(it){it[1]=1;it[2]=it[2]||'1'}else P[home].it.push([nm,1,'1'])}pinN();drawRows(0);say(`${nm}, bought and put on the ${home>=0?P[home].nm.toLowerCase():'list'}.`)});return}
+  const k=+row.dataset.k,pi=+row.dataset.p,it=P[pi]&&P[pi].it[k];if(!it)return;drain.push({p:pi,t:performance.now(),fprev:P[pi].it.reduce((a,x)=>a+x[1],0)/P[pi].it.length});
+  flyTo(row,document.getElementById('pin'),()=>{it[1]=0;if(!TOGET.find(x=>x[0]===it[0]))TOGET.push([it[0],pi===1?'Frozen':pi===3||pi===0?'Produce':'Pantry',pi]);pinN();drawRows(0);say(`${it[0]}, used up. On To get.`)})}
+function pinN(){document.getElementById('pinN').textContent=TOGET.length;const p=document.getElementById('pin');if(!RM)p.animate([{transform:p.classList.contains('open')?'scale(1.5)':'scale(1)'},{transform:p.classList.contains('open')?'scale(1.58)':'scale(1.1)'},{transform:p.classList.contains('open')?'scale(1.5)':'scale(1)'}],{duration:260})}
+function say(t){const u=document.getElementById('undo');u.innerHTML=`${t}<button>Undo</button>`;clearTimeout(undoT);undoT=setTimeout(()=>u.innerHTML='',10000)}
+document.getElementById('undo').onclick=e=>{if(e.target.tagName==='BUTTON')e.currentTarget.innerHTML=''};
+// pin and knob
+function closePin(){pinOpen=false;document.getElementById('pin').classList.remove('open');dial.classList.remove('dim')}
+document.getElementById('pin').onclick=()=>{if(pinOpen){closePin();drawRows(1);return}pinOpen=true;document.getElementById('pin').classList.add('open');dial.classList.add('dim');drawRows(1)};
+const kn=document.getElementById('knob');let kx=null;
+kn.addEventListener('pointerdown',e=>{kx=e.clientX;kn.setPointerCapture(e.pointerId)});
+kn.addEventListener('pointerup',e=>{const dx=e.clientX-kx;knob=(knob+(dx<-20?-1:1)+3)%3;kn.textContent=KN[knob];page=0;if(pinOpen)closePin();drawRows(1);kx=null});
+// ---- lintel: the cupboard
+const cv=document.getElementById('lin'),x=cv.getContext('2d'),STEP=4,TILE=3.3;let W,H,C,R,dpr;
+function size(){dpr=devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;C=Math.ceil(W/STEP);R=Math.ceil(H/STEP)}
+let scrub=null,arrive=performance.now()+150;
+function layout(){const cols=[];let j=4;P.forEach((p,pi)=>{p.it.forEach((it,k)=>{cols.push({pi,k,j});j+=3});j+=4});const sc=(C-4)/j;return cols.map(c=>({...c,j:Math.round(c.j*sc)}))}
+function frame(now){const T=cs(),acc=hex(T.getPropertyValue('--acc')),pg=hex(T.getPropertyValue('--phone')),ink=hex(T.getPropertyValue('--ink')),i3=hex(T.getPropertyValue('--ink3'));
+  x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle=`rgb(${pg})`;x.fillRect(0,0,W,H);const base=R-4,full=14;
+  const put=(j,i,c)=>{x.fillStyle=`rgb(${c.map(Math.round)})`;x.fillRect(j*STEP+(STEP-TILE)/2,i*STEP+(STEP-TILE)/2,TILE,TILE)};
+  // each place is one mound of whole tiles; how stocked it is sets how dense the mound is (ordered dither), never a bar per thing
+  const L=layout();const groups=P.map((p,pi)=>{const cs_=L.filter(c=>c.pi===pi);return{pi,j0:cs_[0].j,j1:cs_[cs_.length-1].j+1}});
+  groups.forEach((g,gn)=>{const p=P[g.pi],on=!pinOpen&&g.pi===foc,col0=on?acc:mix(pg,acc,.5);
+    let f=p.it.reduce((a,x)=>a+x[1],0)/p.it.length;const d=drain.find(q=>q.p===g.pi);if(d){const u=clamp((now-d.t)/700);if(d.f0==null)d.f0=d.fprev;f=d.f0+(f-d.f0)*u;if(u>=1)drain=drain.filter(q=>q!==d)}
+    const w=g.j1-g.j0+1,a=RM?1:clamp((now-arrive-gn*90)/420);
+    for(let jj=g.j0;jj<=g.j1;jj++){const u=(jj-g.j0+.5)/w,h=Math.round(full*a*(.55+.45*Math.sin(u*Math.PI)));
+      for(let i=0;i<h;i++){const ii=base-1-i;const th=B4[ii&3][jj&3];if(th>f*1.02&&i>0)continue;let cc=mix(col0,pg,clamp(i/full*.3));if(scrub!=null&&Math.abs(scrub-jj)<1.5)cc=mix(cc,ink,.38);put(jj,ii,cc)}}});
+  // the shelf itself, straddling the page in 1/16 steps
+  for(let i=base;i<R;i++)for(let j=2;j<C-2;j++){const e=clamp((R-1-i)/4),q=Math.floor(e*16+B4[i&3][j&3])/16;put(j,i,mix(pg,mix(pg,acc,.55),q))}
+  requestAnimationFrame(frame)}
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);sc(e)});cv.addEventListener('pointermove',e=>{if(scrub!=null)sc(e)});
+cv.addEventListener('pointerup',()=>setTimeout(()=>{scrub=null;setFact()},1200));
+function sc(e){const r=cv.getBoundingClientRect();scrub=Math.floor((e.clientX-r.left)/STEP);const L=layout();let best=null,bd=9;L.forEach(c=>{const d=Math.abs(c.j+.5-scrub);if(d<bd){bd=d;best=c}});
+  if(best&&bd<4){const p=P[best.pi],low=p.it.filter(x=>x[1]&&x[1]<1).map(x=>x[0].toLowerCase()),out=p.it.filter(x=>!x[1]).map(x=>x[0].toLowerCase());fact.innerHTML=`${p.nm}, `+(out.length?`${out.join(' and ')} out`:low.length?`${low.slice(0,2).join(' and ')} low`:'all stocked')}}
+document.getElementById('th').onclick=()=>{document.documentElement.dataset.theme='dark'};document.getElementById('tw').onclick=()=>{document.documentElement.dataset.theme='light'};
+addEventListener('resize',()=>{size();drawDial()});size();drawDial();drawRows(0);requestAnimationFrame(frame);
+})();
+</script>

@@ -1,0 +1,47 @@
+const ex0=PUSH.ex[0];
+const INK='#14181F',PAN='#EFEEEA',TNT='216,67,42';
+const L1=52,L2=50,S={x:204,y:140},Hh={x:112,y:142};
+function ease(x){return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2}
+function state(t){const T=4.4,u=(t%T);let h,e;
+ if(u<.3){h=0;e=.15}else if(u<1.9){h=ease((u-.3)/1.6);e=.3}else if(u<2.2){h=1;e=.35}else if(u<3.6){h=1-(1-Math.pow(1-(u-2.2)/1.4,2));h=1-(1-Math.pow(1-(u-2.2)/1.4,2));h=Math.pow(1-(u-2.2)/1.4,2);h=1-ease((u-2.2)/1.4)*1;e=1}else{h=0;e=.2}
+ return {h,e}}
+function limb(a,b,w){return `<path d="M${a.x} ${a.y}L${b.x} ${b.y}" stroke="${INK}" stroke-width="${w+2.4}" stroke-linecap="round" fill="none"/><path d="M${a.x} ${a.y}L${b.x} ${b.y}" stroke="${PAN}" stroke-width="${w}" stroke-linecap="round" fill="none"/>`}
+function frame(t){const {h,e}=state(t);
+ const wx=204-8*h,wy=(S.y-101)+h*((113)-(S.y-101)),W={x:wx,y:wy};
+ const dx=W.x-S.x,dy=W.y-S.y,d=Math.hypot(dx,dy),a=(L1*L1-L2*L2+d*d)/(2*d),hh=Math.sqrt(Math.max(L1*L1-a*a,0));
+ const P={x:S.x+a*dx/d,y:S.y+a*dy/d};
+ const c1={x:P.x+(-dy)/d*hh,y:P.y+(dx)/d*hh},c2={x:P.x-(-dy)/d*hh,y:P.y-(dx)/d*hh};
+ const El=c1.x<c2.x?c1:c2;
+ const pa=.32+.5*e,sa=.22+.32*e;
+ return `<rect x="0" y="10" width="342" height="200" fill="${PAN}"/>
+ <path d="M0 200H342" stroke="${INK}" stroke-opacity=".35" stroke-width="1.5"/>
+ <path d="M294 200V52M294 94H272" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+ <rect x="86" y="154" width="150" height="12" rx="5" fill="${PAN}" stroke="${INK}" stroke-width="2.2"/><path d="M106 166V200M216 166V200M96 200H116M206 200H226" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/>
+ ${limb({x:Hh.x,y:Hh.y+2},{x:58,y:112},14)}${limb({x:58,y:112},{x:42,y:196},12)}<path d="M42 198H62" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+ ${limb(Hh,{x:S.x,y:S.y+2},24)}
+ <circle cx="238" cy="138" r="13" fill="${PAN}" stroke="${INK}" stroke-width="2.2"/>
+ <ellipse cx="${S.x-10}" cy="${S.y-4}" rx="17" ry="9" fill="rgb(${TNT})" fill-opacity="${pa}"/>
+ ${limb(S,El,11)}${limb(El,W,10)}
+ <path d="M${S.x} ${S.y}L${El.x} ${El.y}" stroke="rgb(${TNT})" stroke-opacity="${sa}" stroke-width="7" stroke-linecap="round"/>
+ <circle cx="${S.x}" cy="${S.y-2}" r="8" fill="rgb(${TNT})" fill-opacity="${sa}"/>
+ <circle cx="${W.x}" cy="${W.y}" r="18" fill="none" stroke="${INK}" stroke-width="2.6"/><circle cx="${W.x}" cy="${W.y}" r="11" fill="none" stroke="${INK}" stroke-opacity=".5" stroke-width="1.6"/><circle cx="${W.x}" cy="${W.y}" r="3.2" fill="${INK}"/>`}
+function kit(){return `<svg width="342" height="56" viewBox="0 0 342 56" fill="none" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"><path d="M6 24H150M48 6V42M56 12V36M64 18V30M108 6V42M100 12V36M92 18V30"/><rect x="186" y="14" width="136" height="11" rx="5"/><path d="M206 25V50M302 25V50M196 50H216M292 50H312"/></svg>`}
+function press2(){const tint=TC('push'),e=ex0;
+ return `<div class="ph"><div class="abs" style="inset:0;filter:blur(7px);transform:scale(.94);transform-origin:50% 40%;opacity:.85"><div class="abs" style="left:24px;top:58px;font-size:21px;font-weight:600">Training</div><div class="abs t44" style="left:24px;top:136px">Bench day</div>${PUSH.ex.map((x,i)=>`<div class="abs name" style="left:100px;top:${280+i*72}px">${x.name||''}</div>`).join('')}</div>
+ <div class="abs" style="left:0;right:0;top:0;height:690px;background:rgba(251,251,248,.88);backdrop-filter:blur(16px);border-radius:0 0 40px 40px;box-shadow:0 10px 40px rgba(20,24,31,.18)">
+  <div class="abs t44" style="left:24px;top:84px">Bench press</div>
+  <div class="abs b ctx" style="left:24px;top:140px">barbell, flat bench</div>
+  <div class="abs" style="left:24px;top:182px;width:342px;height:200px;overflow:hidden"><svg id="an" width="342" height="200" viewBox="0 10 342 200"></svg></div>
+  <div class="abs lbl s2" style="left:24px;top:390px;font-size:13px">side view, loops</div>
+  <div class="abs" style="left:24px;top:418px;width:262px"><div class="b s2" style="font-size:21px">Shoulder blades pinned, bar to lower chest, press back up.</div></div>
+  <div class="abs" style="left:306px;top:414px">${fig('front',rolesFor(e,'front'),88,tint,{line:2.2,oa:.45})}</div>
+  <div class="abs b ctx" style="left:24px;top:510px;width:340px;font-size:18px;line-height:24px">chest, with triceps and front shoulders</div>
+  <div class="abs" style="left:24px;top:546px">${kit()}</div>
+  <div class="abs d16 s2" style="left:24px;top:608px">About 6 kcal a set at your weight. An estimate.</div>
+  <div class="abs lbl" style="left:24px;top:648px;font-size:15px">Open exercise<span style="margin-left:26px" class="s2">Swap</span><span style="margin-left:26px" class="s2">Close</span></div>
+ </div>${soul()}</div>`}
+document.body.style.padding='0';document.body.style.zoom=(window.ZOOM||1);
+$('c1').innerHTML=press2();['c2','c3','c4'].forEach(i=>$(i).remove());
+const an=document.getElementById('an');
+if(window.FREEZE!==undefined){an.innerHTML=frame(window.FREEZE)}else{const t0=performance.now();(function loop(){an.innerHTML=frame((performance.now()-t0)/1000);requestAnimationFrame(loop)})()}
+</script></body></html>

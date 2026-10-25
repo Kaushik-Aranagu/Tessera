@@ -1,0 +1,62 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#f4f1ea}</style><canvas id=c width=1200 height=760></canvas>
+<script>
+const c=document.getElementById('c'),g=c.getContext('2d');
+const INK=[20,24,31],STAGE=[226,67,42];
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),mix=(a,b,t)=>a+(b-a)*t;
+const sm=x=>{x=clamp(x);return x*x*(3-2*x)},eob=x=>{x=clamp(x);const c1=1.7,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const rgb=(a,al=1)=>`rgba(${a[0]|0},${a[1]|0},${a[2]|0},${al})`;
+const colOf=s=>s==='best'?rgb(STAGE):s==='short'?rgb(INK,.22):rgb(INK,.9);
+const DEMO=['full','short','full','best'];
+function demo(n){const s=Array(n).fill('full');if(n>=3)s[1]='short';if(n>=4)s[n-1]='best';return s}
+// ---- shared: an arrival record {ta: time the newest element arrives (or -1e9 if settled)}
+// glide p: 0 -> 1 while existing elements move to the new layout; land: 0->1 for the new element
+function prog(t,ta){return{p:sm((t-ta-.30)/.45),u:clamp((t-ta)/.6)}}
+// ---------------- DROPS
+function dropPath(w,h){g.beginPath();g.moveTo(0,-h/2);g.bezierCurveTo(w*.12,-h*.22,w/2,-h*.02,w/2,h/2-w/2);g.arc(0,h/2-w/2,w/2,0,Math.PI,false);g.bezierCurveTo(-w/2,-h*.02,-w*.12,-h*.22,0,-h/2);g.closePath()}
+function dropPos(i,n,w){const per=n<=5?n:Math.ceil(n/2),row=Math.floor(i/per),cnt=row===0?per:n-per,k=i%per,sp=w*1.35;
+ return[(k-(cnt-1)/2)*sp,(row-(n>5?.5:0))*w*1.8]}
+function drops(cx,cy,B,n,st,t,ta,live){const w=B*.27,h=w*1.4;const{p,u}=prog(t,ta);
+ for(let i=0;i<n;i++){const last=i===n-1&&ta>-1e8&&live;let[x,y]=dropPos(i,n,w);
+  if(!last&&n>1&&ta>-1e8&&live){const[x0,y0]=dropPos(i,n-1,w);x=mix(x0,x,p);y=mix(y0,y,p)}
+  let sx=1,sy=1,rot=0,oy=0;
+  if(live){rot=Math.sin(t*1.3+i*1.9)*.07;const br=1+Math.sin(t*1.7+i)*.03;sy=br;sx=1/br}
+  if(last){const f=clamp(u/.58);oy=-(1-f*f)*B*.9;if(f<1){sy*=1.35;sx*=.8}else{const q=(u-.58)/.42;sy*=1-.2*Math.exp(-q*5)*Math.cos(q*14);sx*=1+.22*Math.exp(-q*5)*Math.cos(q*14)}
+   if(u>.58){const q=clamp((t-ta-.35)/.7);g.save();g.translate(cx+x,cy+y+h*.45);g.strokeStyle=rgb(i===n-1&&st[i]==='best'?STAGE:INK,.5*(1-q));g.lineWidth=1.2;g.beginPath();g.ellipse(0,0,w*(.4+1.3*q),w*(.14+.4*q),0,0,7);g.stroke();g.restore()}}
+  g.save();g.translate(cx+x,cy+y+oy);g.rotate(rot);g.scale(sx,sy);dropPath(w,h);g.fillStyle=colOf(st[i]);g.fill();
+  g.restore()}}
+// ---------------- RAYS
+function rays(cx,cy,B,n,st,t,ta,live){const{p,u}=prog(t,ta);const rot=live?t*.18:0;const L0=B*.38;
+ g.save();g.translate(cx,cy);
+ for(let i=0;i<n;i++){const last=i===n-1&&ta>-1e8&&live;
+  const a1=-Math.PI/2+i*2*Math.PI/n,a0=-Math.PI/2+i*2*Math.PI/Math.max(1,n-1);
+  let a=a1;if(!last&&ta>-1e8&&live&&n>1)a=mix(a0,a1,p);a+=rot;
+  let len=L0*(live?1+.1*Math.sin(t*1.6+i*1.3):1);if(st[i]==='best')len*=1.12;if(st[i]==='short')len*=.78;
+  if(last)len*=eob(u/.9)*clamp(u*6);
+  const r0=B*.1;g.strokeStyle=colOf(st[i]);g.lineCap='round';g.lineWidth=B*.05*(st[i]==='best'?1.25:1);
+  g.beginPath();g.moveTo(Math.cos(a)*r0,Math.sin(a)*r0);g.lineTo(Math.cos(a)*(r0+len),Math.sin(a)*(r0+len));g.stroke()}
+ g.fillStyle=rgb(INK,.9);g.beginPath();g.arc(0,0,B*.065,0,7);g.fill();g.restore()}
+// ---------------- ORBIT
+function orbit(cx,cy,B,n,st,t,ta,live){const{u}=prog(t,ta);
+ for(let i=0;i<n;i++){const last=i===n-1&&ta>-1e8&&live;const r=B*(.14+.2*((i*3)%4)/3),dir=i%2?1:-1,w=(.7+.28*((i*5)%4))*dir;
+  const ph=i*2.4,ang=live?ph+w*t:ph+i*(2*Math.PI/Math.max(n,1));
+  let x=Math.cos(ang)*r*1.15,y=Math.sin(ang)*r*.9;
+  if(last){const e=eob(u/.75);const fa=-.6+i*.5,fx=Math.cos(fa)*B*.95,fy=Math.sin(fa)*B*.7;x=mix(fx,x,e);y=mix(fy,y,e)}
+  const rad=B*.075*(st[i]==='best'?1.25:1);
+  if(live&&st[i]==='best'){for(let k=1;k<=6;k++){const a2=ang-w*.045*k;g.fillStyle=rgb(STAGE,.28*(1-k/7));g.beginPath();g.arc(cx+Math.cos(a2)*r*1.15,cy+Math.sin(a2)*r*.9,rad*(1-k*.1),0,7);g.fill()}}
+  g.fillStyle=colOf(st[i]);g.beginPath();g.arc(cx+x,cy+y,rad,0,7);g.fill()}}
+const IDEAS=[['Drops','each set is a drop that falls, lands with a ripple, and sways',drops],['Rays','each set is a ray; the burst breathes and turns',rays],['Orbit','each set is a dot in its own slow orbit',orbit]];
+const T0=1,STEP=3;
+function build(t){let n=0,ta=-1e9;for(let i=0;i<4;i++){if(t>=T0+i*STEP){n=i+1;ta=T0+i*STEP}}return{n,ta}}
+
+function draw(t){g.setTransform(1,0,0,1,0,0);g.fillStyle='#f4f1ea';g.fillRect(0,0,1200,520);
+ g.font='600 20px -apple-system,Helvetica,Arial';g.fillStyle=rgb(INK,.9);g.fillText('Drops or Rays: the set count at the real row size (11 pt, shown 3x) and live size (28 pt, 3x)',30,36);
+ g.font='13px -apple-system,Helvetica,Arial';g.fillStyle=rgb(INK,.6);g.fillText('Same states: ink = logged, pale = short, stage colour = best. Row copies are flat and still; live marks move.',30,58);
+ const cols=[1,2,3,4,5,6];
+ [['Drops',drops,87,88],['Rays',rays,34,84*.95]].forEach(([name,fn,Brow,Blive],k)=>{const y0=90+k*200;
+  g.fillStyle=rgb(INK,.9);g.font='600 18px -apple-system,Helvetica';g.fillText(name,30,y0+40);
+  g.fillStyle=rgb(INK,.4);g.font='11px -apple-system,Helvetica';g.fillText('ROW 11 pt',130,y0+8);g.fillText('LIVE 28 pt',130,y0+100);
+  cols.forEach((m,i)=>{const cx=225+i*172;g.fillStyle=rgb(INK,.4);g.font='11px -apple-system,Helvetica';g.fillText(m+' sets',cx-18,y0+8);
+   fn(cx,y0+38,Brow,m,demo(m),0,-1e9,false);fn(cx,y0+140,Blive*1.0,m,demo(m),t+m,-1e9,true)})});
+ g.fillStyle=rgb(INK,.45);g.font='12px -apple-system,Helvetica';g.fillText('Row marks are drawn at true size on a 3x screen. At 11 pt the rays are small by design; read them against the drops.',30,500)}
+window.sceneDuration=()=>1;window.renderAt=draw;draw(0);
+</script>

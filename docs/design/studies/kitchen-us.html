@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kitchen in US units</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/kitchen/us-kitchen-pages.md (Design item 28): the recipe page and cook mode redrawn in US units to us-shop.md, under the current rules (back word, S4 title, Tess beside the soul, the ink line, cook mode on the look's ground). Board: the recipe at serves 4, the same recipe turned to 6, cook mode for 6 in Porcelain, and a Trader Joe's sheet-pan step at 425°F in Obsidian. ?play records: the drum turns 4 to 6 and the amounts roll, a tap flips 2 cups to 470 ml for 3s, Cook raises the cover, a swipe to step 2, a hold on 20 minutes starts the horizon. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:40px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px;white-space:nowrap}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:rgb(var(--ink));background:var(--ground)}
+.por{--ink:23,20,31;--s2:.66;--s3:.51;--ground:#fff;--tess:#2450D8;--liveInk:#C23A22;--paint:240,165,0;--sa:#2450D8;--sb:#E2432A;--sc:#F0A500}
+.obs{--ink:245,242,236;--s2:.72;--s3:.38;--ground:#000;--tess:#86B4FF;--liveInk:#FF7A5C;--paint:255,194,61;--sa:#86B4FF;--sb:#FF5B3A;--sc:#FFC23D}
+.pg{position:absolute;inset:0;background:var(--ground)}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap;color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:39px}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px}
+.ing{position:absolute;left:22px;width:258px;top:184px;display:flex;flex-direction:column;gap:12px}
+.ln{display:grid;grid-template-columns:92px 1fr;font-size:21px;line-height:28px}
+.amt{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;position:relative}
+.amt span{display:inline-block}
+.ln.staple{color:rgba(var(--ink),var(--s3))}.ln.staple .amt{font-weight:400}
+.pk{color:rgba(var(--ink),var(--s2));white-space:nowrap}
+.drum{position:absolute;left:300px;width:68px;top:184px;height:140px;overflow:hidden;text-align:center;-webkit-mask-image:linear-gradient(#0000,#000 30%,#000 70%,#0000)}
+.drum .reel{position:absolute;left:0;right:0;top:0;transition:transform .42s var(--settle)}
+.drum .n{height:44px;line-height:44px;font-size:21px;color:rgba(var(--ink),.35);font-variant-numeric:tabular-nums}
+.drum .n.c{font-size:48px;font-weight:300;color:rgb(var(--ink))}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:5}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.say{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);color:var(--tess);font-size:21px;line-height:28px}
+.undo{display:block;margin-top:4px;color:var(--liveInk);font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em}
+.key{position:absolute;left:22px;display:flex;align-items:baseline;gap:22px}
+.key .w{position:relative;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.key svg{position:absolute;left:-2px;top:41px;overflow:visible}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20;transition:opacity .15s}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:1720px;line-height:24px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),at=(t,f)=>setTimeout(f,t);
+const soul=`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,var(--sa),rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,var(--sb),rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,var(--sc),rgba(240,165,0,.2))"></i></div>`;
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+// amounts at serves 4 and serves 6, rounded as RecipeMath.round already does (us-kitchen-pages.md §2): cups to a quarter, spoons to a half, cloves, onions and cans to a whole
+const DAL=[
+ ['1¼ cups','2 cups','red lentils','','','470 ml'],
+ ['1','2','yellow onion','yellow onions',', finely chopped'],
+ ['3 cloves','5 cloves','garlic','',', crushed'],
+ ['1 tbsp','1½ tbsp','ginger','',', grated'],
+ ['1 can','2 cans','coconut milk','',' <span class="pk">· 13.5 oz</span>'],
+ ['1 tsp','1½ tsp','turmeric',''],
+ ['3 cups','4½ cups','water','','','','staple'],
+ ['a handful','a handful','cilantro','','','','loose'],
+ ['½ tsp','1 tsp','salt','','','','staple'],
+];
+function ingLines(L,six){
+ return DAL.map((r,i)=>{const a=six?r[1]:r[0],n=(six&&r[3])?r[3]:r[2];const cls=r[6]==='staple'?'staple':'';const loose=r[6]==='loose';
+  return `<div class="ln ${cls}"><div class="amt" ${loose?'style="font-weight:400"':''}><span id="${L}a${i}">${a}</span></div><div><span id="${L}n${i}">${n}</span>${r[4]?`<span class="${r[4].startsWith(',')?'s2':''}">${r[4]}</span>`:''}</div></div>`}).join('');
+}
+function drum(L,serves){
+ const nums=[1,2,3,4,5,6,7,8];
+ return `<div class="drum"><div class="reel" id="${L}reel" style="transform:translateY(${(1-(serves-1))*44}px)">${nums.map(n=>`<div class="n ${n===serves?'c':''}" data-n="${n}">${n}</div>`).join('')}</div></div>
+ <div class="abs" style="left:300px;width:68px;top:326px;text-align:center;font-size:18px;color:rgba(var(--ink),var(--s2))">serves</div>`;
+}
+function inkKey(word,w,meta,y,paint,id){
+ return `<div class="key" style="top:${y}px" ${id?`id="${id}"`:''}><div class="w">${word}<svg width="${w+6}" height="12"><path d="${lens(w+6,2.5)}" fill="rgba(${paint},.75)"/></svg></div>${meta?`<div class="lbl">${meta}</div>`:''}</div>`;
+}
+function recipe(L,serves,look){
+ const six=serves===6;
+ return `<div class="ph ${look}" id="${L}ph"><div class="pg" id="${L}rp">
+ <div class="abs lbl" style="left:22px;top:58px">‹ RECIPES</div>
+ <div class="abs t44" style="left:22px;top:84px">Weeknight dal</div>
+ <div class="abs b s2" style="left:22px;top:140px">35 min, cooked 12 days ago</div>
+ <div class="ing">${ingLines(L,six)}</div>
+ ${drum(L,serves)}
+ <div class="abs lbl" style="left:22px;top:620px">3 STEPS</div>
+ ${inkKey('Cook',70,'35 MIN',650,'var(--paint)',L+'cook')}
+ </div>
+ <div class="say" id="${L}say" style="opacity:0"></div>
+ ${soul}${L==='P'?'<div id="fing"></div>':''}</div>`;
+}
+// cook mode: on the look's ground, no back word, no Tess bar
+const STEPS={
+ dal:[
+  {t:'Soften the onions, garlic and ginger for 8 minutes.',key:['8 minutes',138,'HOLD · SOFTEN'],ings:[['2','yellow onions'],['5 cloves','garlic'],['1½ tbsp','ginger']]},
+  {t:'Add the lentils, turmeric and <b>4½ cups</b> water and simmer for 20–25 minutes.',key:['20 minutes',162,'HOLD · UP TO 25'],ings:[['2 cups','red lentils'],['1½ tsp','turmeric'],['4½ cups','water']]},
+  {t:'Stir in the coconut milk, warm through and finish with the cilantro.',key:['Finish',88,'HOLD'],ings:[['2 cans','coconut milk <span class="pk">· 13.5 oz</span>'],['a handful','cilantro']]},
+ ],
+ gnocchi:[
+  {t:'Heat the oven to 425°F. Line a sheet pan.'},
+  {t:'Toss the gnocchi and peppers with <b>2 tbsp</b> olive oil and roast at 425°F for 20 minutes, turning once.',key:['20 minutes',162,'HOLD'],ings:[['1 bag','cauliflower gnocchi <span class="pk">· 12 oz</span>'],['1','red bell pepper, sliced'],['2 tbsp','olive oil']]},
+  {t:'Grate the parmesan over and serve.'},
+ ]};
+function stepHTML(L,which,i,n){
+ const s=STEPS[which][i];const nxt=STEPS[which][i+1];const prev=STEPS[which][i-1];
+ const fin=s.key&&s.key[0]==='Finish';
+ return `<div class="abs" id="${L}st${i}">
+ ${prev?`<div class="abs b s3" style="left:22px;top:100px;width:346px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${prev.t.replace(/<[^>]+>/g,'')}</div>`:''}
+ <div class="abs t34" style="left:22px;top:150px;width:346px">${s.t.replace(/<b>/g,'<b style="font-weight:600">')}</div>
+ ${s.ings?`<div class="abs" style="left:22px;top:430px;width:346px">${s.ings.map(([a,x])=>`<div class="b s2" style="white-space:nowrap"><b style="font-weight:600">${a}</b> ${x}</div>`).join('')}</div>`:''}
+ ${s.key?inkKey(s.key[0],s.key[1],s.key[2],590,fin?'var(--liveInk)':'var(--paint)',L+'key'+i).replace('var(--liveInk)','194,58,34'):''}
+ ${nxt?`<div class="abs b s3" style="left:22px;top:690px;width:346px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">then: ${nxt.t.replace(/<[^>]+>/g,'').replace(/\.$/,'').replace(/^./,c=>c.toLowerCase())}</div>`:''}
+ </div>`;
+}
+function horizon(L,frac,label){
+ const x0=22+346*frac;
+ return `<svg class="abs" id="${L}hz" style="left:0;top:6px;overflow:visible" width="390" height="14"><path d="M22 7 L368 7" stroke="rgba(var(--ink),.14)" stroke-width="1.5"/><path id="${L}hzs" d="M${x0} 7 L368 7" stroke="rgb(var(--ink))" stroke-width="2.5" stroke-linecap="round"/><circle id="${L}hzt" cx="${x0}" cy="7" r="2.6" fill="rgb(var(--ink))" opacity=".7"/></svg>
+ <div class="abs lbl" id="${L}hzl" style="left:22px;top:20px;font-variant-numeric:tabular-nums">${label}</div>`;
+}
+function cook(L,look,which,title,i,n,hz){
+ return `<div class="ph ${look}" id="${L}ph"><div class="pg">
+ ${hz?horizon(L,hz[0],hz[1]):''}
+ <div class="abs b s2" style="left:22px;top:56px">${title}</div>
+ <div class="abs lbl" style="right:22px;top:61px">${i+1} / ${n}</div>
+ ${stepHTML(L,which,i,n)}
+ </div>${soul}</div>`;
+}
+const cap=(t,id)=>`<div class="cap" ${id?`id="${id}"`:''}>${t}</div>`;
+if(PLAY){
+ $('row').innerHTML=`<div>${cap('WEEKNIGHT DAL · SERVES 4','cap')}${recipe('P',4,'por')}</div>`;
+}else{
+ $('row').innerHTML=
+  `<div>${cap('THE RECIPE, AS WRITTEN · SERVES 4')}${recipe('A',4,'por')}</div>`+
+  `<div>${cap('TURNED TO 6 · CUPS TO A QUARTER, WHOLE CANS')}${recipe('B',6,'por')}</div>`+
+  `<div>${cap('COOK MODE · FOR 6 · STEP 2')}${cook('C','por','dal','Weeknight dal, for 6',1,3,[.12,'SIMMER 17:36'])}</div>`+
+  `<div>${cap('OBSIDIAN · TRADER JOE\'S · 425°F')}${cook('D','obs','gnocchi','Sheet-pan gnocchi, for 2',1,3)}</div>`;
+ $('note').innerHTML='AMOUNTS AS WRITTEN, FRACTIONS AS GLYPHS, ONE 600 WORD WITH THEIR UNIT. PACK SIZE AFTER A DOT IN INK SECONDARY. °F STAYS AS WRITTEN IN STEP TEXT AND IS NEVER SCALED. THE DRUM ROUNDS AS THE BUILD DOES: CUPS TO A QUARTER, SPOONS TO A HALF, CLOVES, ONIONS AND CANS TO A WHOLE. AN AMOUNT IN THE STEP SENTENCE THAT BELONGS TO AN INGREDIENT SHOWS SCALED, AS A 600 WORD. TAP AN AMOUNT TO SEE IT IN THE OTHER SYSTEM FOR 3S.';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(!PLAY){setTimeout(()=>document.body.dataset.done='1',200);return}
+ const f=$('fing');const tap=(x,y,t,hold=180)=>{at(t,()=>{f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1});at(t+hold,()=>f.style.opacity=0)};
+ // 1 · the drum turns 4 to 6, the amounts roll down the column
+ at(900,()=>{f.style.left='334px';f.style.top='250px';f.style.opacity=1;f.animate([{transform:'translateY(0)'},{transform:'translateY(-88px)'}],{duration:520,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})});
+ at(1450,()=>{f.style.opacity=0});
+ at(1000,()=>{$('cap').textContent='TURN TO 6 · EVERY AMOUNT ROLLS';
+  const reel=$('Preel');[5,6].forEach((n,k)=>at(k*170,()=>{reel.style.transform=`translateY(${(1-(n-1))*44}px)`;reel.querySelectorAll('.n').forEach(e=>e.classList.toggle('c',+e.dataset.n===n))}));
+  DAL.forEach((r,i)=>{if(r[0]===r[1]&&!r[3])return;at(260+i*15,()=>{const a=$('Pa'+i);
+   a.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-14px)',opacity:0}],{duration:110,easing:'ease-in',fill:'forwards'}).onfinish=()=>{a.textContent=r[1];if(r[3])$('Pn'+i).textContent=r[3];a.animate([{transform:'translateY(14px)',opacity:0},{transform:'translateY(0)',opacity:1}],{duration:200,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'})}})});
+ });
+ // 2 · tap 2 cups: it flips to 470 ml for 3s, then back
+ tap(64,198,3000);
+ at(3100,()=>{$('cap').textContent='TAP AN AMOUNT · THE OTHER SYSTEM FOR 3S';const a=$('Pa0');
+  a.animate([{transform:'rotateX(0)'},{transform:'rotateX(90deg)'}],{duration:120,fill:'forwards'}).onfinish=()=>{a.textContent='470 ml';a.animate([{transform:'rotateX(-90deg)'},{transform:'rotateX(0)'}],{duration:160,fill:'forwards'})};
+  at(3000,()=>{a.animate([{transform:'rotateX(0)'},{transform:'rotateX(90deg)'}],{duration:120,fill:'forwards'}).onfinish=()=>{a.textContent='2 cups';a.animate([{transform:'rotateX(-90deg)'},{transform:'rotateX(0)'}],{duration:160,fill:'forwards'})}});
+ });
+ // 3 · tap Cook: the cover rises on the look's ground
+ tap(52,672,6900);
+ at(7000,()=>{$('cap').textContent='COOK · THE COVER RISES, FOR 6';
+  const k=$('Pcook').querySelector('path');k.animate([{opacity:.75},{opacity:1}],{duration:120,fill:'forwards'});
+  const c=document.createElement('div');c.className='pg';c.id='Pcov';c.style.cssText='transform:translateY(844px);z-index:3';
+  c.innerHTML=`<div class="abs" id="Phzw" style="left:0;right:0;top:0;height:50px"></div><div class="abs b s2" style="left:22px;top:56px">Weeknight dal, for 6</div><div class="abs lbl" id="Pcount" style="right:22px;top:61px">1 / 3</div><div id="Psteps">${stepHTML('P','dal',0,3)}</div>`;
+  $('Pph').appendChild(c);
+  at(160,()=>c.animate([{transform:'translateY(844px)'},{transform:'translateY(0)'}],{duration:460,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'}));
+ });
+ // 4 · swipe up to step 2
+ at(8700,()=>{f.style.left='200px';f.style.top='600px';f.style.opacity=1;f.animate([{transform:'translateY(0)'},{transform:'translateY(-220px)'}],{duration:360,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})});
+ at(9100,()=>{f.style.opacity=0;f.getAnimations().forEach(a=>a.cancel())});
+ at(8800,()=>{$('cap').textContent='SWIPE UP · STEP 2, AMOUNTS FOR 6';
+  const old=$('Pst0');old.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-50px)'}],{duration:380,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  const box=document.createElement('div');box.innerHTML=stepHTML('P','dal',1,3);const nw=box.firstElementChild;nw.style.opacity=0;$('Psteps').appendChild(nw);
+  nw.animate([{opacity:0,filter:'blur(4px)',transform:'translateY(40px)'},{opacity:1,filter:'blur(0)',transform:'translateY(0)'}],{duration:420,delay:120,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  $('Pcount').textContent='2 / 3';
+ });
+ // 5 · hold 20 minutes: the line empties, repaints under the thumb, and the horizon starts
+ at(10600,()=>{f.style.left='90px';f.style.top='612px';f.style.opacity=1});
+ at(10700,()=>{$('cap').textContent='HOLD 20 MINUTES · THE HORIZON STARTS';
+  const p=$('Pkey1').querySelector('path');const w=168;
+  p.animate([{opacity:.75},{opacity:.35}],{duration:140,fill:'forwards'});
+  const svg=$('Pkey1').querySelector('svg');const fill=document.createElementNS('http://www.w3.org/2000/svg','path');fill.setAttribute('d',lens(w,3.6));fill.setAttribute('fill','rgb(240,165,0)');fill.style.clipPath='inset(0 100% 0 0)';svg.appendChild(fill);
+  fill.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:600,delay:140,easing:'linear',fill:'forwards'});
+ });
+ at(11450,()=>{f.style.opacity=0;
+  const hz=$('Phzw');hz.innerHTML=horizon('P',0,'SIMMER 20:00');hz.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});
+  const s=$('Phzs');s.animate([{strokeWidth:2.5,opacity:.4},{strokeWidth:2.5,opacity:1}],{duration:400,fill:'forwards'});
+  let sec=20*60;const lbl=$('Phzl');const t0=performance.now();
+  const tick=()=>{const el=(performance.now()-t0)/1000;const left=Math.max(0,sec-el*60);const m=Math.floor(left/60),ss=Math.floor(left%60);lbl.textContent=`SIMMER ${m}:${String(ss).padStart(2,'0')}`;const x=22+346*(1-left/sec);s.setAttribute('d',`M${x} 7 L368 7`);$('Phzt').setAttribute('cx',x);if(el<4)requestAnimationFrame(tick)};requestAnimationFrame(tick);
+  $('Pkey1').animate([{opacity:1},{opacity:0}],{duration:300,delay:500,fill:'forwards'});
+ });
+ at(15400,()=>document.body.dataset.done='1');
+});
+</script>
+</body>
+</html>
