@@ -48,7 +48,10 @@ struct RoutinesWoodlandFacts {
                 doneToday: item.doneAt != nil,
                 dueToday: front.todayIDs.contains(item.id)
                     || WoodlandLog.isDue(today: today, daily: item.daily, weekdays: item.weekdays, calendar: calendar),
-                cap: WoodlandLog.cap(steps: item.exercises), species: WoodlandLog.species(item.id)
+                cap: WoodlandLog.cap(steps: item.exercises), species: WoodlandLog.species(item.id),
+                steps: item.exercises,
+                restToday: !item.daily && !item.weekdays.isEmpty && item.doneAt == nil
+                    && !item.weekdays.contains(calendar.component(.weekday, from: today))
             )
         }
         self.init(trees: all, front: front, notNow: notNow)

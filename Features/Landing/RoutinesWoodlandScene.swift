@@ -2,45 +2,121 @@
 // A port of the 248 painter: its short drawing names (x, rx, c, t) are kept so it reads against scene.html.
 import SwiftUI
 
-/// The habit woodland (sheet 248), a port of `scene.html`'s painter into one SwiftUI `Canvas` on a `TimelineView`:
-/// the sky and hills, the lake in the clearing, one plant per routine at its stage and health, flowers for done today,
-/// fruit for a kept week, a nest from day 30, a caretaker resting by the lake. 354 x 160 pt, its edges fading into the
-/// page. Reduce Motion: one still frame (no sway, no clouds, no butterfly).
+/// The habit woodland (sheets 248 and 268 v4), a port of the painter into one SwiftUI `Canvas` on a `TimelineView`:
+/// the sky lit by the real hour, the hills and the lake, one tree per routine in three rows at its stage and health,
+/// buds for its steps, flowers for done today, fruit for a kept week, a lamp on a planned rest, a caretaker by the
+/// lake. It spans the phone's full width (402 x 182, painted in the 354 x 160 scene scaled up) and its edges dissolve
+/// into the page; no frame. Hold a tree 1.5 s to water it. Reduce Motion: one still frame, no reactions drawn.
 struct RoutinesWoodlandScene: View {
     let trees: [WoodlandTree]
     let selected: UUID?
+    var hour: Double = 12
     let tap: (UUID) -> Void
+    var water: (UUID) -> Void = { _ in }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var scheme
+    @State private var press: Press?
+    @State private var watering: (id: UUID, since: Date)?
+    @State private var bloom: (id: UUID, at: Date)?
+    @State private var cue = HapticCue()
 
-    static let size = WoodlandLayout.sceneSize
+    private struct Press {
+        let start: Date
+        let location: CGPoint
+        let id: UUID?
+        var moved = false
+        var ready = false
+    }
+
+    static let size = CGSize(width: 402, height: 182)
+    /// Scene points (354 x 160) to view points.
+    static let paint: CGFloat = 402 / 354
+    /// How long a hold waters a tree (268).
+    static let holdSeconds: Double = 1.5
 
     var body: some View {
         let places = WoodlandLayout.places(count: trees.count)
         let families = WoodlandLayout.families(for: places)
         let still = reduceMotion || ProcessInfo.processInfo.isLowPowerModeEnabled
+        let light = WoodlandLight.at(hour: hour)
         TimelineView(.animation(minimumInterval: 1 / 30, paused: still)) { timeline in
-            let t = still ? 0 : timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3600)
+            let now = timeline.date
+            let t = still ? 0 : now.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3600)
             Canvas { context, _ in
-                var painter = WoodlandPainter(trees: trees, places: places, families: families, t: t,
-                                              dark: scheme == .dark, selected: selected, motion: !still)
+                context.scaleBy(x: Self.paint, y: Self.paint)
+                var painter = WoodlandPainter(
+                    trees: trees, places: places, families: families, t: t, dark: false, pageDark: scheme == .dark,
+                    selected: selected, motion: !still, light: light,
+                    watering: still ? nil : watering.map { (
+                        $0.id,
+                        min(1, now.timeIntervalSince($0.since) / Self.holdSeconds)
+                    ) },
+                    bloom: still ? nil : bloom.flatMap { now.timeIntervalSince($0.at) < 4.5 ? (
+                        $0.id,
+                        now.timeIntervalSince($0.at)
+                    ) : nil }
+                )
                 painter.paint(&context)
             }
         }
         .frame(width: Self.size.width, height: Self.size.height)
         .mask { EdgeFade() }
         .contentShape(Rectangle())
-        .gesture(SpatialTapGesture().onEnded { value in
-            if let id = Self.hit(value.location, trees: trees, places: places) {
-                tap(id)
-            }
-        })
+        .gesture(hold(places))
+        .tesseraFeedback(cue)
         .overlay { targets(places) }
         .accessibilityElement(children: .contain)
     }
 
-    /// The plant nearest a tap, within its crown and a 22 pt reach (so every visible plant has a target).
+    /// One gesture for the slot (it owns any drag that starts here): a short tap names or opens; a 1.5 s hold on a
+    /// tree waters it (a cloud gathers while held; on release it springs and blooms).
+    private func hold(_ places: [WoodlandPlace]) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                if press == nil {
+                    let id = Self.hit(Self.scene(value.startLocation), trees: trees, places: places)
+                    let started = Date()
+                    press = Press(start: started, location: value.startLocation, id: id)
+                    guard let id else { return }
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(300))
+                        guard let current = press, current.start == started, !current.moved else { return }
+                        watering = (id, started.addingTimeInterval(0.3))
+                        try? await Task.sleep(for: .milliseconds(Int((Self.holdSeconds - 0.3) * 1000)))
+                        guard let still = press, still.start == started, !still.moved else { return }
+                        press?.ready = true
+                        cue.play(.selection)
+                    }
+                } else if let current = press, !current.moved,
+                          hypot(value.location.x - current.location.x, value.location.y - current.location.y) > 10
+                {
+                    press?.moved = true
+                    watering = nil
+                }
+            }
+            .onEnded { _ in
+                defer {
+                    press = nil
+                    watering = nil
+                }
+                guard let current = press, !current.moved, let id = current.id else { return }
+                if current.ready {
+                    bloom = (id, Date())
+                    cue.play(.done)
+                    water(id)
+                } else if Date().timeIntervalSince(current.start) < 0.5 {
+                    tap(id)
+                }
+            }
+    }
+
+    /// View points to scene points.
+    static func scene(_ point: CGPoint) -> CGPoint {
+        CGPoint(x: point.x / paint, y: point.y / paint)
+    }
+
+    /// The plant nearest a tap (scene points), within its crown and a 22 pt reach (so every plant has a target).
     static func hit(_ point: CGPoint, trees: [WoodlandTree], places: [WoodlandPlace]) -> UUID? {
         var best: (UUID, CGFloat)?
         for (tree, place) in zip(trees, places) {
@@ -58,14 +134,14 @@ struct RoutinesWoodlandScene: View {
         return best?.0
     }
 
-    /// VoiceOver: one element per plant, at its crown, with its name and stage.
+    /// VoiceOver: one element per plant, at its crown, with its name and stage; Water is its own action.
     private func targets(_ places: [WoodlandPlace]) -> some View {
         ZStack(alignment: .topLeading) {
             ForEach(Array(zip(trees, places)), id: \.0.id) { tree, place in
-                let height = max(tree.height * place.scale, 30)
+                let height = max(tree.height * place.scale, 30) * Self.paint
                 Color.clear
                     .frame(width: 44, height: height)
-                    .position(x: place.x, y: place.base - height / 2)
+                    .position(x: place.x * Self.paint, y: place.base * Self.paint - height / 2)
                     .allowsHitTesting(false)
                     .accessibilityElement()
                     .accessibilityLabel(([tree.name, tree.stageWords] + [tree.stateWords].compactMap(\.self))
@@ -74,21 +150,22 @@ struct RoutinesWoodlandScene: View {
                     .accessibilityAddTraits(.isButton)
                     .accessibilityIdentifier("woodland.plant")
                     .accessibilityAction { tap(tree.id) }
+                    .accessibilityAction(named: "Water") { water(tree.id) }
             }
         }
         .frame(width: Self.size.width, height: Self.size.height, alignment: .topLeading)
     }
 }
 
-/// The scene's edges fade into the page (248: the slot background is the page colour).
+/// The scene dissolves into the page (268 v3): an alpha falloff of 11% at the sides, 12% at the top, 18% at the foot.
 private struct EdgeFade: View {
     var body: some View {
-        LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.12),
-                               .init(color: .black, location: 0.88), .init(color: .clear, location: 1)],
+        LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.11),
+                               .init(color: .black, location: 0.89), .init(color: .clear, location: 1)],
                        startPoint: .leading, endPoint: .trailing)
             .mask {
-                LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.2),
-                                       .init(color: .black, location: 0.86), .init(color: .clear, location: 1)],
+                LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.12),
+                                       .init(color: .black, location: 0.82), .init(color: .clear, location: 1)],
                                startPoint: .top, endPoint: .bottom)
             }
     }
@@ -132,8 +209,14 @@ private struct WoodlandPainter {
     let families: [WoodlandFamily]
     let t: Double
     let dark: Bool
+    let pageDark: Bool
     let selected: UUID?
     let motion: Bool
+    let light: WoodlandLight
+    /// The tree being watered and how far the hold has gone (0 to 1).
+    let watering: (UUID, Double)?
+    /// The tree that was just watered and the seconds since (the spring, petals and a bird, 4.5 s).
+    let bloom: (UUID, Double)?
 
     private static let palettes: [WoodlandFamily: [UInt32]] = [
         .blue: [0x426D92, 0x7CA6BC, 0xC4D8DD], .green: [0x62884D, 0xA3BD70, 0xDCE5B1],
@@ -159,6 +242,15 @@ private struct WoodlandPainter {
         if motion {
             butterfly(&c)
         }
+        lightPass(&c)
+        lamps(&c)
+        if motion {
+            fireflies(&c)
+            reactions(&c)
+        }
+        // The whole scene leans toward the page so the dissolving edge has less to fade (268 v2).
+        let rect = CGRect(origin: .zero, size: WoodlandLayout.sceneSize)
+        c.fill(Path(rect), with: .color(pageDark ? Color.black.opacity(0.22) : Color(hex: 0xFBF8F1).opacity(0.12)))
     }
 
     // MARK: Shapes
@@ -193,20 +285,37 @@ private struct WoodlandPainter {
 
     private func landscape(_ c: inout GraphicsContext) {
         let rect = CGRect(origin: .zero, size: WoodlandLayout.sceneSize)
-        let sky = dark ? [0x101918, 0x283832, 0x3D4735] : [0xDEE9DF, 0xF0E3C4, 0xD9D6AB]
+        let sky = light.sky
         c.fill(Path(rect), with: .linearGradient(
-            Gradient(stops: [.init(color: Color(hex: UInt32(sky[0])), location: 0),
-                             .init(color: Color(hex: UInt32(sky[1])), location: 0.62),
-                             .init(color: Color(hex: UInt32(sky[2])), location: 1)]),
+            Gradient(stops: [.init(color: Color(hex: sky[0]), location: 0),
+                             .init(color: Color(hex: sky[1]), location: 0.62),
+                             .init(color: Color(hex: sky[2]), location: 1)]),
             startPoint: .zero, endPoint: CGPoint(x: 0, y: 160)
         ))
-        // The sun and its halo.
-        let halo = Color(hex: 0xFCE2A6)
-        c.fill(Path(CGRect(x: 180, y: 0, width: 174, height: 120)), with: .radialGradient(
-            Gradient(colors: [halo.opacity(dark ? 0.2 : 0.5), halo.opacity(0)]),
-            center: CGPoint(x: 281, y: 27), startRadius: 2, endRadius: dark ? 40 : 70
-        ))
-        ell(&c, 281, 27, 10, 10, Color(hex: dark ? 0xE2E3CB : 0xF2D18C))
+        // The sun (warm, low ones redder) or the moon, with a halo; stars at night.
+        if let sun = light.sun {
+            let halo = Color(hex: light.warmth > 0.3 ? 0xF7C27E : 0xFCE2A6)
+            c.fill(Path(rect), with: .radialGradient(
+                Gradient(colors: [halo.opacity(0.5), halo.opacity(0)]),
+                center: sun, startRadius: 2, endRadius: 70
+            ))
+            ell(&c, sun.x, sun.y, 10, 10, Color(hex: light.warmth > 0.3 ? 0xF1B76E : 0xF2D18C))
+        }
+        if let moon = light.moon {
+            c.fill(Path(rect), with: .radialGradient(
+                Gradient(colors: [Color(hex: 0xDDE4EE).opacity(0.28), .clear]),
+                center: moon, startRadius: 1, endRadius: 36
+            ))
+            ell(&c, moon.x, moon.y, 7, 7, Color(hex: 0xEDEFE6))
+            ell(&c, moon.x + 3, moon.y - 1.5, 6, 6, Color(hex: sky[0]))
+        }
+        if light.isNight {
+            for j in 0 ..< 22 {
+                let x = Self.seed(Double(j + 300)) * 354, y = Self.seed(Double(j + 500)) * 70
+                let twinkle = motion ? 0.4 + 0.6 * abs(sin(t * 0.8 + Double(j))) : 0.8
+                ell(&c, x, y, 0.6, 0.6, Color.white.opacity(0.7 * twinkle * light.dim))
+            }
+        }
         // Slow clouds.
         for cloud in 0 ..< 3 {
             let speed = 0.9 + Double(cloud) * 0.12
@@ -376,11 +485,17 @@ private struct WoodlandPainter {
                        family: WoodlandFamily)
     {
         var c = g
+        let age = bloom.flatMap { $0.0 == tree.id ? $0.1 : nil }
+        let spring = age.map { 1 + exp(-$0 * 1.6) * sin($0 * 9) * 0.08 } ?? 1
         c.translateBy(x: place.x, y: place.base)
-        c.scaleBy(x: place.scale, y: place.scale)
+        c.scaleBy(x: place.scale, y: place.scale * spring)
         c.translateBy(x: -place.x, y: -143)
         let health = tree.health
-        let dry: Double = health.isBare ? 1 : health.isWithering ? 0.9 : min(0.25, Double(health.misses) * 0.08)
+        var dry: Double = health.isBare ? 1 : health.isWithering ? 0.9 : min(0.25, Double(health.misses) * 0.08)
+        // Just watered: it stands up while the moment lasts (the log itself is unchanged).
+        if let age {
+            dry *= max(0, min(1, (age - 3) / 1.5))
+        }
         let days = tree.days
         let h = tree.height
         let base: CGFloat = 143
@@ -388,13 +503,18 @@ private struct WoodlandPainter {
             CGFloat(1 - dry * 0.5) : 0
         let x = place.x + bend
         let y = base - h
-        let tones = colors(family, dry: dry)
+        // Kinds that wear their own colour (268 v4): jacaranda purple, maple orange-red.
+        let tones = switch tree.species {
+        case .jacaranda: colors(.violet, dry: dry)
+        case .maple: [0xB2553A, 0xD9804F, 0xF0B27A].map { RGB($0).calm.dried(dry * 0.9).color }
+        default: colors(family, dry: dry)
+        }
         let rx = place.x
 
         // A soft shadow and the undergrowth at its foot.
         ell(
             &c,
-            rx - 8,
+            rx - 8 * light.side,
             base + 1,
             max(7, h * 0.32),
             2 + h * 0.025,
@@ -500,10 +620,14 @@ private struct WoodlandPainter {
         case .oak: 31
         case .cherry: 30
         case .citrus: 23
+        case .poplar: 13
+        case .jacaranda: 38
         default: 26
         }
         let canopyW = (widthBase + mature * 9) * (0.72 + min(104, tree.cap) * 0.0027)
-        let canopyH = h * (kind == .willow ? 0.48 : kind == .cherry ? 0.32 : kind == .citrus ? 0.37 : 0.42)
+        let canopyH = h *
+            (kind == .willow ? 0.48 : kind == .cherry ? 0.32 : kind == .citrus ? 0.37 : kind == .poplar ? 0.72 : kind ==
+                .jacaranda ? 0.24 : 0.42)
         let trunkH = h * 0.66
         let y = base - h
         // The trunk.
@@ -588,7 +712,10 @@ private struct WoodlandPainter {
                     ell(&c, xx + sway, yy + CGFloat(k) * 5 + 4, 1.3, 2.8, tones[(j + k) % 3], -0.15)
                 }
             } else {
-                let lighting = (xx - x) / canopyW * 0.4 - (yy - cy) / canopyH * 0.8 + sqrt(max(0, 1 - rr * rr)) * 0.35
+                let lighting = (xx - x) / canopyW * 0.4 * light.side - (yy - cy) / canopyH * 0.8 + sqrt(max(
+                    0,
+                    1 - rr * rr
+                )) * 0.35
                 let tone = lighting > 0.45 ? 2 : lighting < -0.12 ? 0 : 1
                 ell(
                     &c,
@@ -625,6 +752,16 @@ private struct WoodlandPainter {
                         Color(hex: tree.species == .cherry ? 0xF0BED5 : 0xEFDEC6), b)
                 }
                 ell(&c, xx, yy, 0.6, 0.6, Color(hex: 0xC4A164))
+            }
+        }
+        // Buds are its steps (268): closed until the day is done, when they open as the flowers above.
+        if !tree.doneToday, tree.steps > 0 {
+            let count = min(tree.steps, 9)
+            for j in 0 ..< count {
+                let a = CGFloat(j) / CGFloat(count) * .pi * 2 + 0.4
+                let xx = x + cos(a) * wide * 0.72, yy = cy + sin(a) * h * (small ? 0.1 : 0.14)
+                ell(&c, xx, yy + 0.8, 1.1, 0.7, Color(hex: 0x6F8A4E))
+                ell(&c, xx, yy, 1.25, 1.5, Color(hex: tree.species == .cherry ? 0xE7A6BE : 0xE2A4A0))
             }
         }
         if tree.hasFruit {
@@ -680,6 +817,118 @@ private struct WoodlandPainter {
         let flap = max(0.5, abs(CGFloat(sin(t * 9))) * 3)
         for side: CGFloat in [-1, 1] {
             ell(&c, x + side * 3, y, flap, 3, Color(hex: dark ? 0xDFBD83 : 0xD0A371), side * 0.4)
+        }
+    }
+
+    // MARK: Light, lamps, fireflies and the watering moment (268)
+
+    /// Where a point drawn in a plant's own space lands in the scene.
+    private func world(_ place: WoodlandPlace, _ point: CGPoint) -> CGPoint {
+        CGPoint(x: place.x + (point.x - place.x) * place.scale, y: place.base + (point.y - 143) * place.scale)
+    }
+
+    /// Night dims the land toward blue; a low sun warms it.
+    private func lightPass(_ c: inout GraphicsContext) {
+        let rect = CGRect(origin: .zero, size: WoodlandLayout.sceneSize)
+        if light.dim > 0.01 {
+            var night = c
+            night.blendMode = .multiply
+            night.fill(Path(rect), with: .color(Color(hex: 0x3A4A6A).opacity(light.dim)))
+        }
+        if light.warmth > 0.01 {
+            var warm = c
+            warm.blendMode = .softLight
+            warm.fill(Path(rect), with: .color(Color(hex: 0xF3B36B).opacity(light.warmth * 0.45)))
+        }
+    }
+
+    /// A planned rest hangs a lamp in the tree; it glows once the light is low.
+    private func lamps(_ c: inout GraphicsContext) {
+        for (tree, place) in zip(trees, places) where tree.restToday && !tree.health.isBare {
+            let hang = world(place, CGPoint(x: place.x + 7 * light.side, y: 143 - tree.height * 0.5))
+            stroke(&c, Color(hex: 0x6B5B45), 0.5) { p in
+                p.move(to: CGPoint(x: hang.x, y: hang.y - 4))
+                p.addLine(to: hang)
+            }
+            if light.dim > 0.15 {
+                c.fill(Path(ellipseIn: CGRect(x: hang.x - 12, y: hang.y - 10, width: 24, height: 24)),
+                       with: .radialGradient(Gradient(colors: [Color(hex: 0xFFD58A).opacity(0.55 * light.dim + 0.2),
+                                                               .clear]),
+                                             center: CGPoint(x: hang.x, y: hang.y + 2), startRadius: 0.5,
+                                             endRadius: 12))
+            }
+            ell(&c, hang.x, hang.y + 2, 1.6, 2.2, Color(hex: light.dim > 0.15 ? 0xFFDE9A : 0xD9B26A))
+            ell(&c, hang.x, hang.y - 0.2, 1.9, 0.6, Color(hex: 0x6B5B45))
+        }
+    }
+
+    private func fireflies(_ c: inout GraphicsContext) {
+        guard light.isNight else { return }
+        for j in 0 ..< 9 {
+            let x = 30 + Self.seed(Double(j + 700)) * 294 + CGFloat(sin(t * 0.4 + Double(j))) * 8
+            let y = 110 + Self.seed(Double(j + 800)) * 36 + CGFloat(cos(t * 0.5 + Double(j) * 2)) * 4
+            let glow = 0.3 + 0.7 * abs(sin(t * 1.3 + Double(j) * 1.7))
+            c.fill(Path(ellipseIn: CGRect(x: x - 4, y: y - 4, width: 8, height: 8)),
+                   with: .radialGradient(Gradient(colors: [Color(hex: 0xE9F59A).opacity(0.6 * glow), .clear]),
+                                         center: CGPoint(x: x, y: y), startRadius: 0.2, endRadius: 4))
+            ell(&c, x, y, 0.7, 0.7, Color(hex: 0xF5FBC4).opacity(glow))
+        }
+    }
+
+    /// While held: a cloud gathers over the tree and rains on it. After release: petals scatter from the crown, a
+    /// ring spreads on the grass and a bird flies in and lands (268 v3), all inside 4.5 s.
+    private func reactions(_ c: inout GraphicsContext) {
+        if let (id, progress) = watering, let pair = zip(trees, places).first(where: { $0.0.id == id }) {
+            let (tree, place) = pair
+            let top = place.base - tree.height * place.scale
+            let cx = place.x, cy = max(14, top - 12)
+            let grow = 0.55 + 0.45 * progress
+            for k in 0 ..< 5 {
+                let px = cx + CGFloat(k - 2) * 5 * grow
+                let r = (5 + Self.seed(Double(k + 90)) * 3) * grow
+                ell(&c, px, cy + (k % 2 == 0 ? 0 : -2), r, r * 0.62, Color(hex: 0xC9D3DA).opacity(0.92))
+            }
+            stroke(&c, Color(hex: 0x8FB4CC).opacity(0.85), 0.7) { p in
+                for d in 0 ..< Int(8 + progress * 18) {
+                    let dx = cx + (Self.seed(Double(d + 40)) - 0.5) * 22 * grow
+                    let fall = CGFloat((t * 60 + Double(d) * 13).truncatingRemainder(dividingBy: 30))
+                    let y = cy + 4 + fall
+                    guard y < place.base else { continue }
+                    p.move(to: CGPoint(x: dx, y: y))
+                    p.addLine(to: CGPoint(x: dx - 0.6, y: y + 3))
+                }
+            }
+        }
+        guard let (id, age) = bloom, let pair = zip(trees, places).first(where: { $0.0.id == id }) else { return }
+        let (tree, place) = pair
+        let h = tree.height * place.scale
+        let crown = CGPoint(x: place.x, y: place.base - h * 0.7)
+        let fade = max(0, 1 - age / 3.2)
+        let petals: [UInt32] = [0xF0BED5, 0xF6E3A4, 0xFFFFFF, 0xE6A9C9]
+        for j in 0 ..< 34 {
+            let a = Self.seed(Double(j + 1000)) * .pi * 2
+            let speed = 8 + Self.seed(Double(j + 1100)) * 18
+            let x = crown.x + cos(a) * speed * CGFloat(age)
+            let y = crown.y + sin(a) * speed * CGFloat(age) * 0.6 + 6 * CGFloat(age * age)
+            ell(&c, x, y, 1.3, 0.8, Color(hex: petals[j % 4]).opacity(fade), a + CGFloat(age) * 2)
+        }
+        let ring = 4 + CGFloat(age) * 14
+        c.stroke(Path(ellipseIn: CGRect(x: place.x - ring, y: place.base - ring * 0.22, width: ring * 2,
+                                        height: ring * 0.44)),
+                 with: .color(Color.white.opacity(0.5 * max(0, 1 - age / 2))), lineWidth: 0.7)
+        // The bird: in from the open sky over 1.6 s, then it sits on the crown.
+        let land = CGPoint(x: crown.x + 5, y: place.base - h - 1)
+        let u = CGFloat(min(1, age / 1.6))
+        let ease = 1 - pow(1 - u, 3)
+        let from = CGPoint(x: land.x + 70 * light.side, y: 8)
+        let bx = from.x + (land.x - from.x) * ease, by = from.y + (land.y - from.y) * ease
+        let flap = u < 1 ? CGFloat(sin(age * 22)) * 2.2 : 0.4
+        let bird = Color(hex: 0x4E4A57)
+        ell(&c, bx, by, 2.4, 1.5, bird)
+        ell(&c, bx + 2 * light.side * -1, by - 1.2, 1.1, 1.1, bird)
+        stroke(&c, bird, 0.8) { p in
+            p.move(to: CGPoint(x: bx - 2.5, y: by - flap))
+            p.addQuadCurve(to: CGPoint(x: bx + 2.5, y: by - flap), control: CGPoint(x: bx, y: by - 1))
         }
     }
 }

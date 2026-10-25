@@ -9,7 +9,7 @@ final class RoutinesWoodlandUITests: SimulatorOnlyTestCase {
         app.launchArguments = ["-routinesLanding", "-demo", "-demoTime", "18:10"]
         app.launch()
         XCTAssertTrue(
-            app.descendants(matching: .any)["Routines"].firstMatch.waitForExistence(timeout: 20),
+            app.descendants(matching: .any)["Watch"].firstMatch.waitForExistence(timeout: 20),
             "The landing is up"
         )
         return app

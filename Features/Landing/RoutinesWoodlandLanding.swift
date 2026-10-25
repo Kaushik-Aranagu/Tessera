@@ -1,10 +1,10 @@
 import SwiftUI
 import TesseraCore
 
-/// The Routines landing on the shared kit (248 v2, landing contract): the habit woodland in the keystone slot with its
-/// caption line, the groves on the dial, two update rows in the brief (tap opens, swipe right starts it, swipe left
-/// Not now, Undo for 10 s) and "Plant" at the foot. Private routines read "Private routine" here and never leave the
-/// phone: nothing on this page reaches Claude, a widget or a backup.
+/// The Watch landing (Routines; sheet 283 on the shared scaffold): the woodland of 268 in the keystone, spanning the
+/// phone's width; the switcher across Evening, Night, Morning with the needs beside it; the widget (next, thirsty, the
+/// day's tally) with a bird-and-flower glyph; the groves on the dial; "Plant" at the foot. Private routines read
+/// "Private routine" here and never leave the phone: nothing on this page reaches Claude, a widget or a backup.
 struct RoutinesWoodlandLandingPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -14,10 +14,15 @@ struct RoutinesWoodlandLandingPage: View {
     @State private var selected: UUID?
     @State private var planting = false
     @State private var draft = ""
-    @State private var notNowTick = 0
+    @State private var switcherIndex = WatchTime.current(AppClock.now).rawValue
+    @State private var switcherVerticalIndex = 0
+    @State private var widgetIndex = 0
 
     /// Plum 8E4A78 light, D59AC4 dark (contract §9).
     static let accent = Color(light: 0x8E4A78, dark: 0xD59AC4)
+    /// Wine, for a thirsty tree (241 "needs care"): 9A2541 / EE8E9C.
+    static let wine = Color(light: 0x9A2541, dark: 0xEE8E9C)
+
     private var gold: Color {
         scheme == .dark ? Color(hex: 0xD9C27A) : Color(hex: 0x7E6A1E)
     }
@@ -28,63 +33,65 @@ struct RoutinesWoodlandLandingPage: View {
 
     var body: some View {
         let _ = model.revision
-        let _ = notNowTick
-        let front = RoutinesFront(model: model, now: AppClock.now)
-        let today = TesseraDay().today(AppClock.now)
+        let now = AppClock.now
+        let front = RoutinesFront(model: model, now: now)
+        let today = TesseraDay().today(now)
         let facts = RoutinesWoodlandFacts(front: front, notNow: RoutinesNotNow.ids(on: today))
-        LandingFrame(title: "Routines", accent: Self.accent, stateLine: facts.stateLine,
-                     onTitle: { model.open(.routinesBrowse) },
-                     keystone: { keystone(facts) },
-                     doors: doors(facts), focus: $focus,
-                     openDoor: { _ in model.open(.routinesBrowse) },
-                     brief: { brief(facts, front: front) },
-                     action: LandingFootAction(word: "Plant", hint: "Plants a new routine") {
-                         draft = ""
-                         planting = true
-                     },
-                     onBack: { dismiss() })
-            .toolbar(.hidden, for: .navigationBar)
-            .navigationBarBackButtonHidden(true)
-            .alert("Plant a routine", isPresented: $planting) {
-                TextField("Name", text: $draft)
-                Button("Plant") { plant() }
-                Button("Cancel", role: .cancel) {}
-            }
+        let entries = front.items.map {
+            WatchWords.Entry(name: $0.name, minute: $0.usual?.startMinuteOfDay, done: $0.doneAt != nil)
+        }
+        let time = WatchTime(rawValue: switcherIndex) ?? .evening
+        let tapped = facts.trees.first { $0.id == selected }
+        LandingScaffold(title: "Watch", accent: Self.accent, navWord: "Bridge", onBack: { dismiss() },
+                        onTitle: { model.open(.routinesBrowse) },
+                        switcher: WatchTime.allCases.map(\.word),
+                        switcherIndex: $switcherIndex, switcherVerticalIndex: $switcherVerticalIndex,
+                        needs: WatchWords.needs(time, entries),
+                        keystone: { keystone(facts, now: now) },
+                        caption: tapped.map { RoutinesWoodlandFacts.caption(for: $0, selected: true) }
+                            ?? WatchWords.restCaption(hasTrees: !facts.trees.isEmpty),
+                        widget: WatchWords.widget(facts, wine: Self.wine), widgetIndex: $widgetIndex,
+                        openWidget: { item in
+                            if let id = UUID(uuidString: item.id) {
+                                model.open(.object(id))
+                            } else {
+                                model.open(.routinesBrowse)
+                            }
+                        },
+                        glyph: { _ in WatchGlyph() },
+                        doors: doors(facts), focus: $focus,
+                        openDoor: { _ in model.open(.routinesBrowse) },
+                        action: LandingFootAction(word: "Plant", hint: "Plants a new routine") {
+                            draft = ""
+                            planting = true
+                        })
+                        .toolbar(.hidden, for: .navigationBar)
+                        .navigationBarBackButtonHidden(true)
+                        .alert("Plant a routine", isPresented: $planting) {
+                            TextField("Name", text: $draft)
+                            Button("Plant") { plant() }
+                            Button("Cancel", role: .cancel) {}
+                        }
     }
 
     // MARK: Keystone
 
-    private func keystone(_ facts: RoutinesWoodlandFacts) -> some View {
-        let tapped = facts.trees.first { $0.id == selected }
-        let caption = RoutinesWoodlandFacts.caption(for: tapped ?? facts.oldest, selected: tapped != nil)
-        return LandingKeystone(label: "Your woodland") {
-            VStack(spacing: 0) {
-                RoutinesWoodlandScene(trees: facts.trees, selected: selected) { id in
-                    if selected == id {
-                        model.open(.object(id))
-                    } else {
-                        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { selected = id }
-                    }
-                }
-                .offset(x: lean)
-                .tesseraAnimation(Theme.Motion.house, value: focus)
-                FitLine(forms: caption, size: 15, color: Theme.Colors.inkSecondary)
-                    .frame(width: RoutinesWoodlandScene.size.width, height: 30, alignment: .leading)
-                    .id(caption.first)
-                    .accessibilityAddTraits(.updatesFrequently)
+    /// The woodland is wider than the slot: it spans the phone (402 pt) and dissolves into the page at both edges.
+    private func keystone(_ facts: RoutinesWoodlandFacts, now: Date) -> some View {
+        let parts = Calendar.current.dateComponents([.hour, .minute], from: now)
+        let hour = Double(parts.hour ?? 12) + Double(parts.minute ?? 0) / 60
+        return RoutinesWoodlandScene(trees: facts.trees, selected: selected, hour: hour, tap: { id in
+            if selected == id {
+                model.open(.object(id))
+            } else {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { selected = id }
             }
-            .padding(.top, 30)
-            .frame(maxHeight: .infinity, alignment: .top)
-        }
-    }
-
-    /// The woodland leans a little toward the focused grove (Body to the left bank, Mind and Home to the right).
-    private var lean: CGFloat {
-        switch RoutinesWoodlandFacts.doorNames[focus % RoutinesWoodlandFacts.doorNames.count].id {
-        case "body": 8
-        case "mind", "home": -8
-        default: 0
-        }
+        }, water: { id in
+            let name = facts.trees.first { $0.id == id }?.name ?? "It"
+            TessVoice.shared.say("\(name), watered.")
+        })
+        .frame(width: LandingKeystone<EmptyView>.size.width, height: LandingKeystone<EmptyView>.size.height)
+        .accessibilityLabel("Your woodland")
     }
 
     // MARK: Doors
@@ -99,36 +106,6 @@ struct RoutinesWoodlandLandingPage: View {
             return DialDoor(id: door.id, name: door.name, count: door.count > 0 ? "\(door.count)" : nil,
                             color: color, lines: door.lines)
         }
-    }
-
-    // MARK: Brief
-
-    private func brief(_ facts: RoutinesWoodlandFacts, front: RoutinesFront) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(facts.updates) { update in
-                RoutineUpdateRow(update: update,
-                                 open: { model.open(.object(update.id)) },
-                                 done: { start(update.id, front: front) },
-                                 notNow: { notNow(update) })
-                    .frame(height: 64, alignment: .top)
-            }
-        }
-    }
-
-    /// Swipe right on a routine row: a workout routine is kept by running it, so it starts (Pick up when it runs).
-    private func start(_ id: UUID, front: RoutinesFront) {
-        guard let item = front.item(id) else { return }
-        RoutinesStarter.start(item, running: front.running, model: model)
-    }
-
-    private func notNow(_ update: RoutinesWoodlandFacts.Update) {
-        let day = TesseraDay().today(AppClock.now)
-        RoutinesNotNow.set(update.id, on: day, hidden: true)
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { notNowTick += 1 }
-        TessVoice.shared.say("\(update.name), not now.", takeBack: {
-            RoutinesNotNow.set(update.id, on: day, hidden: false)
-            notNowTick += 1
-        })
     }
 
     // MARK: Plant
@@ -162,6 +139,185 @@ struct RoutinesWoodlandLandingPage: View {
         model.open(.object(made.output.id))
     }
 }
+
+// MARK: - Words
+
+/// The switcher's three parts of the day (283): Evening (noon to 9 pm), Night (9 pm to 4 am), Morning (4 am to noon).
+enum WatchTime: Int, CaseIterable {
+    case evening, night, morning
+
+    var word: String {
+        switch self {
+        case .evening: "Evening"
+        case .night: "Night"
+        case .morning: "Morning"
+        }
+    }
+
+    /// "this evening", "tonight", "this morning".
+    var phrase: String {
+        switch self {
+        case .evening: "this evening"
+        case .night: "tonight"
+        case .morning: "this morning"
+        }
+    }
+
+    static func of(minute: Int) -> WatchTime {
+        switch minute {
+        case 240 ..< 720: .morning
+        case 720 ..< 1260: .evening
+        default: .night
+        }
+    }
+
+    static func current(_ now: Date, calendar: Calendar = .current) -> WatchTime {
+        let parts = calendar.dateComponents([.hour, .minute], from: now)
+        return of(minute: (parts.hour ?? 12) * 60 + (parts.minute ?? 0))
+    }
+}
+
+enum WatchWords {
+    struct Entry: Equatable {
+        let name: String
+        /// Its usual start, minutes after midnight; nil when it has no usual time (it counts as evening).
+        let minute: Int?
+        let done: Bool
+    }
+
+    /// The two needs lines beside the switcher (283): the next one in that part of the day, then how it stands.
+    /// Never "N of M".
+    static func needs(_ time: WatchTime, _ entries: [Entry]) -> [String] {
+        let mine = entries.filter { WatchTime.of(minute: $0.minute ?? 1080) == time }
+        let open = mine.filter { !$0.done }.sorted { ($0.minute ?? 1080) < ($1.minute ?? 1080) }
+        let done = mine.count - open.count
+        let first: String = if let next = open.first {
+            next.minute.map { "\(next.name), \(RoutinesLandingWords.clock($0))" } ?? next.name
+        } else if done > 0 {
+            "All kept \(time.phrase)"
+        } else {
+            "Nothing \(time.phrase)"
+        }
+        var parts: [String] = []
+        if !open.isEmpty {
+            parts.append("\(open.count) to tend")
+        }
+        if done > 0 {
+            parts.append("\(done) done")
+        }
+        let second = parts.isEmpty ? "A quiet \(time.word.lowercased())" : parts.joined(separator: ", ")
+        return [first, second]
+    }
+
+    /// The caption at rest: how to touch the woodland, longest first.
+    static func restCaption(hasTrees: Bool) -> [String] {
+        hasTrees ? ["Tap a tree to name it, hold it to water.", "Tap a tree, hold to water.", "Tap a tree."]
+            : ["Plant a routine and it grows here.", "Nothing planted yet."]
+    }
+
+    /// The widget items (283): what is next, the thirstiest tree in wine, and the day's tally in words. Routines here
+    /// are kept by running them, so nothing is struck from the widget (a strike would log a run that never happened).
+    static func widget(_ facts: RoutinesWoodlandFacts, wine: Color) -> [WidgetItem] {
+        var items: [WidgetItem] = []
+        if let next = facts.updates.first(where: { $0.kind == .next }) {
+            let when = next.rest.components(separatedBy: ", ").dropFirst().first
+            items.append(WidgetItem(id: next.id.uuidString, header: "Next", big: next.name,
+                                    middle: when.map { "Starts \($0)" } ?? "Any time today",
+                                    small: "Tap to open it", strikeable: false))
+        }
+        let thirsty = facts.trees.filter { $0.health.isWithering || $0.health.isBare }
+            .max { $0.health.consecutive < $1.health.consecutive }
+        if let thirsty {
+            items.append(WidgetItem(id: thirsty.id.uuidString, header: "Thirsty", big: thirsty.name,
+                                    middle: thirsty.health.isBare ? "Could begin again" : "Needs a little care",
+                                    small: "Hold its tree to water it", bigColor: wine, strikeable: false))
+        }
+        let due = facts.trees.filter { $0.dueToday || $0.doneToday }
+        if !due.isEmpty {
+            let done = due.filter(\.doneToday).count
+            let left = due.count - done
+            items.append(WidgetItem(id: "tally", header: "Today", big: "\(done)", bigIsNumber: true,
+                                    middle: "kept today",
+                                    small: left > 0 ? "\(left) still to tend" : "All kept", strikeable: false))
+        }
+        if items.isEmpty {
+            items.append(WidgetItem(id: "quiet", header: "Watch", big: "Quiet day", middle: "Plant the first one",
+                                    small: "Plant is at the foot", strikeable: false))
+        }
+        return items
+    }
+}
+
+// MARK: - The widget glyph
+
+// swiftlint:disable identifier_name -- short drawing names, as in the painter
+
+/// The widget's glyph (283, Watch): a little bird hops onto a branch and the flower under it opens. It moves once on
+/// arrival and every 7 s after; under Reduce Motion it is shown finished and still.
+struct WatchGlyph: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var scheme
+    @State private var appeared = Date()
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { timeline in
+            let elapsed = timeline.date.timeIntervalSince(appeared).truncatingRemainder(dividingBy: 7)
+            let p = reduceMotion ? 1 : min(1, elapsed / 1.8)
+            Canvas { c, size in
+                WatchGlyph.draw(&c, size: size, p: p, dark: scheme == .dark)
+            }
+        }
+        .onAppear { appeared = Date() }
+        .accessibilityHidden(true)
+    }
+
+    static func draw(_ c: inout GraphicsContext, size _: CGSize, p: Double, dark: Bool) {
+        let ink = Color(hex: dark ? 0xCBBFAE : 0x6B5B45)
+        // The branch.
+        var branch = Path()
+        branch.move(to: CGPoint(x: 6, y: 30))
+        branch.addQuadCurve(to: CGPoint(x: 70, y: 24), control: CGPoint(x: 40, y: 36))
+        c.stroke(branch, with: .color(ink), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+        for (x, y, a) in [(24.0, 31.0, -0.5), (52.0, 28.0, 0.6)] {
+            c.fill(Path(ellipseIn: CGRect(x: -5, y: -2.2, width: 10, height: 4.4))
+                .applying(CGAffineTransform(rotationAngle: a).concatenating(CGAffineTransform(translationX: x, y: y))),
+                with: .color(Color(hex: dark ? 0x9DB98A : 0x6F8A4E)))
+        }
+        // The bird: in from the right in two hops, then it settles on the branch.
+        let hop = min(1, p / 0.7)
+        let bx = 76 - 34 * hop
+        let by = 24 - abs(sin(hop * .pi * 2)) * 10 * (1 - hop * 0.3)
+        let bird = Color(hex: dark ? 0xD59AC4 : 0x8E4A78)
+        c.fill(Path(ellipseIn: CGRect(x: bx - 6, y: by - 7, width: 12, height: 8)), with: .color(bird))
+        c.fill(Path(ellipseIn: CGRect(x: bx - 9, y: by - 10, width: 6, height: 6)), with: .color(bird))
+        var beak = Path()
+        beak.move(to: CGPoint(x: bx - 9, y: by - 7.5))
+        beak.addLine(to: CGPoint(x: bx - 12, y: by - 6.5))
+        beak.addLine(to: CGPoint(x: bx - 9, y: by - 6))
+        c.fill(beak, with: .color(Color(hex: 0xD9A24A)))
+        var tail = Path()
+        tail.move(to: CGPoint(x: bx + 5, y: by - 4))
+        tail.addLine(to: CGPoint(x: bx + 11, y: by - 7))
+        c.stroke(tail, with: .color(bird), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+        // The flower under it opens once the bird has landed.
+        let open = max(0, min(1, (p - 0.6) / 0.4))
+        var stem = Path()
+        stem.move(to: CGPoint(x: 40, y: 78))
+        stem.addQuadCurve(to: CGPoint(x: 40, y: 54), control: CGPoint(x: 37, y: 66))
+        c.stroke(stem, with: .color(Color(hex: dark ? 0x9DB98A : 0x6F8A4E)), lineWidth: 1.6)
+        let petal = Color(hex: dark ? 0xF0BED5 : 0xD77FA1)
+        for k in 0 ..< 6 {
+            let a = Double(k) / 6 * .pi * 2
+            let r = 2 + 5 * open
+            let x = 40 + cos(a) * r, y = 52 + sin(a) * r
+            c.fill(Path(ellipseIn: CGRect(x: x - 3, y: y - 2.2, width: 6, height: 4.4)),
+                   with: .color(petal.opacity(0.5 + 0.5 * open)))
+        }
+        c.fill(Path(ellipseIn: CGRect(x: 37.5, y: 49.5, width: 5, height: 5)), with: .color(Color(hex: 0xE2B84E)))
+    }
+}
+
+// swiftlint:enable identifier_name
 
 /// One update row in the brief (contract §5, 64 pt slot, 17 pt light with the name in 600): tap opens, swipe right
 /// starts it, swipe left is Not now. Both swipes go through the one gesture policy (`rowSwipe`).

@@ -62,6 +62,8 @@ enum WoodlandStage: String, Equatable, Sendable {
 /// The plant species: shape only; colour is chosen separately so neighbours never share a family.
 enum WoodlandSpecies: Int, CaseIterable, Sendable {
     case willow, maple, birch, pine, oak, citrus, cherry
+    /// 268 v4: tall poplar and the flat purple jacaranda (drawn as broadleaf variants).
+    case poplar, jacaranda
 }
 
 /// The colour families of the prototype (blue only at the outer edges).
@@ -84,6 +86,10 @@ struct WoodlandTree: Identifiable, Equatable, Sendable {
     /// The size ceiling (32 small plant, 46 shrub, 68 small tree, 104 canopy tree).
     let cap: CGFloat
     let species: WoodlandSpecies
+    /// Its steps, drawn as buds (268): N buds on an N-step routine.
+    var steps = 0
+    /// A planned rest today (a fixed-days routine off today): a lamp hangs in the tree and it keeps its leaves.
+    var restToday = false
 
     var health: WoodlandHealth {
         WoodlandHealth(marks: marks)
@@ -222,20 +228,20 @@ enum WoodlandLayout {
     static let sceneSize = CGSize(width: 354, height: 160)
     static let capacity = 12
 
-    /// The prototype's spots: small beds for one to four, then the two groves either side of the lake, then the far
-    /// edges and the back of the clearing.
+    /// Three rows (268): back 0.5, mid 0.72, front about 1.0, with the lake keeping the middle clear. Small counts
+    /// stand in the near groves; nothing stands in the outer fade, so the dissolving edge never ghosts a routine.
     static func places(count: Int) -> [WoodlandPlace] {
         let small: [[CGFloat]] = switch count {
-        case 1: [[65, 135, 0.98]]
-        case 2: [[61, 116, 0.75], [109, 126, 0.86]]
-        case 3: [[61, 116, 0.75], [109, 126, 0.86], [61, 150, 0.82]]
-        case 4: [[61, 116, 0.75], [109, 126, 0.86], [61, 150, 0.82], [114, 150, 0.8]]
+        case 1: [[84, 146, 0.98]]
+        case 2: [[78, 131, 0.72], [116, 150, 0.94]]
+        case 3: [[78, 131, 0.72], [116, 150, 0.94], [262, 140, 0.86]]
+        case 4: [[78, 131, 0.72], [116, 150, 0.94], [262, 131, 0.72], [244, 150, 0.94]]
         default: []
         }
         let wide: [[CGFloat]] = [
-            [43, 112, 0.72], [77, 133, 0.83], [260, 112, 0.72], [294, 132, 0.83],
-            [50, 150, 0.96], [258, 149, 0.96], [110, 149, 0.86], [318, 148, 0.85],
-            [125, 104, 0.62], [232, 106, 0.62], [18, 128, 0.7], [338, 124, 0.66],
+            [86, 131, 0.72], [268, 131, 0.72], [62, 150, 1], [298, 149, 1],
+            [46, 129, 0.72], [312, 128, 0.72], [116, 151, 0.94], [246, 150, 0.94],
+            [70, 109, 0.5], [126, 105, 0.5], [234, 106, 0.5], [290, 110, 0.5],
         ]
         let chosen = count <= 4 ? small : Array(wide.prefix(min(count, capacity)))
         return chosen.map { WoodlandPlace(x: $0[0], base: $0[1], scale: $0[2]) }
@@ -256,5 +262,70 @@ enum WoodlandLayout {
             chosen.append(options.first { !near.contains($0) } ?? first)
         }
         return chosen
+    }
+}
+
+// MARK: - Light from the real hour (268)
+
+// swiftlint:disable identifier_name -- short drawing names, as in the painter
+
+/// The one light of the scene, keyframed by the hour: the sky's three stops, how dim the land is, how warm the light
+/// is, and where the sun or the moon stands (scene points, 354 x 160).
+struct WoodlandLight: Equatable, Sendable {
+    let sky: [UInt32]
+    let dim: Double
+    let warmth: Double
+    let sun: CGPoint?
+    let moon: CGPoint?
+
+    var isNight: Bool {
+        dim >= 0.45
+    }
+
+    /// The side the light comes from: 1 from the right, -1 from the left.
+    var side: CGFloat {
+        guard let from = sun ?? moon else { return 1 }
+        return from.x >= 177 ? 1 : -1
+    }
+
+    private static let night: [UInt32] = [0x1B2638, 0x2E3B4A, 0x3E4636]
+    private static let dawn: [UInt32] = [0xC9CFE0, 0xF2CDB0, 0xE0C9A0]
+    private static let day: [UInt32] = [0xD6E6EC, 0xEDEAD2, 0xD9D6AB]
+    private static let golden: [UInt32] = [0xE7D9C0, 0xF3C994, 0xD8B98A]
+    private static let dusk: [UInt32] = [0x6E6A8A, 0xD49A86, 0x8D7F6A]
+
+    private static let keys: [(hour: Double, sky: [UInt32], dim: Double, warmth: Double)] = [
+        (0, night, 0.6, 0), (5, night, 0.6, 0), (6.5, dawn, 0.15, 0.4), (8, day, 0, 0.05), (16, day, 0, 0.1),
+        (18, golden, 0.05, 0.6), (19.5, dusk, 0.3, 0.4), (21, night, 0.6, 0), (24, night, 0.6, 0),
+    ]
+
+    /// The light at an hour of the day (0 to 24, fractional).
+    static func at(hour raw: Double) -> WoodlandLight {
+        let hour = (raw.truncatingRemainder(dividingBy: 24) + 24).truncatingRemainder(dividingBy: 24)
+        let upper = keys.firstIndex { $0.hour > hour } ?? keys.count - 1
+        let a = keys[max(0, upper - 1)], b = keys[upper]
+        let u = b.hour > a.hour ? (hour - a.hour) / (b.hour - a.hour) : 0
+        let sky = zip(a.sky, b.sky).map { mix($0, $1, u) }
+        var sun: CGPoint?
+        if hour >= 6, hour <= 20 {
+            let v = (hour - 6) / 14
+            sun = CGPoint(x: 20 + v * 314, y: 62 - sin(.pi * v) * 46)
+        }
+        var moon: CGPoint?
+        if hour >= 19.5 || hour <= 6.5 {
+            let v = ((hour - 19.5 + 24).truncatingRemainder(dividingBy: 24)) / 11
+            moon = CGPoint(x: 20 + v * 314, y: 60 - sin(.pi * v) * 40)
+        }
+        return WoodlandLight(sky: sky, dim: a.dim + (b.dim - a.dim) * u, warmth: a.warmth + (b.warmth - a.warmth) * u,
+                             sun: sun, moon: moon)
+    }
+
+    private static func mix(_ x: UInt32, _ y: UInt32, _ u: Double) -> UInt32 {
+        var out: UInt32 = 0
+        for shift in [16, 8, 0] as [UInt32] {
+            let p = Double((x >> shift) & 0xFF), q = Double((y >> shift) & 0xFF)
+            out |= UInt32((p + (q - p) * u).rounded()) << shift
+        }
+        return out
     }
 }
