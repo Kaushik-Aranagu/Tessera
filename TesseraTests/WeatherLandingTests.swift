@@ -41,14 +41,19 @@ struct WeatherLandingTests {
         #expect(WeatherWords.isWet(.drizzle) && !WeatherWords.isWet(.snow))
     }
 
-    @Test func theConditionWordFitsTheKeystone() {
-        // Figtree Bold 64 in the 354 pt slot, the shortest form stepping down to 0.75x at most.
-        let font = UIFont(name: "Figtree-Bold", size: 64) ?? .systemFont(ofSize: 64, weight: .bold)
+    @Test func theConditionWordFitsTheSkypiece() {
+        // Figtree Bold 34 beside the Feels, High and Low column: the chosen form always fits, never smaller type.
+        let font = UIFont(name: "Figtree-Bold", size: LookoutSkypiece.wordSize) ?? .boldSystemFont(ofSize: 34)
         for kind in WeatherKind.allCases {
-            let form = WeatherWords.condition(kind, night: false).last ?? ""
-            let width = (form as NSString).size(withAttributes: [.font: font]).width
-            #expect(width * 0.75 <= 354, "\(form) is \(width) pt")
+            for night in [false, true] {
+                let forms = WeatherWords.condition(kind, night: night)
+                let form = LookoutSkypiece.fitted(forms)
+                #expect(forms.contains(form))
+                let width = (form as NSString).size(withAttributes: [.font: font]).width
+                #expect(width <= LookoutSkypiece.wordWidth, "\(form) is \(width) pt")
+            }
         }
+        #expect(LookoutSkypiece.fitted(["Mostly clear", "Clear"]) == "Mostly clear")
     }
 
     @Test func stateLineIsLongestFirstAndNamesTheChange() {
@@ -129,5 +134,57 @@ struct WeatherLandingTests {
         #expect(WeatherRainAlert.receipt(on: true).contains("30 minutes before rain"))
         WeatherRainAlert.set(false, defaults)
         #expect(!WeatherRainAlert.isOn(defaults))
+    }
+
+    // MARK: Lookout (283)
+
+    @Test func skyKeepsInkReadableInEveryHourAndCondition() {
+        let inkLight: UInt32 = 0x1D1B19
+        let inkDark: UInt32 = 0xF1EEE9
+        for kind in WeatherKind.allCases {
+            for hour in [LookoutSky.Hour.dawn, .day, .dusk, .night] {
+                let light = LookoutSky.stops(kind: kind, hour: hour, dark: false)
+                let dark = LookoutSky.stops(kind: kind, hour: hour, dark: true)
+                for stop in [light.top, light.bottom] {
+                    #expect(LookoutSky.contrast(inkLight, stop) >= 7, "\(kind) \(hour) light")
+                }
+                for stop in [dark.top, dark.bottom] {
+                    #expect(LookoutSky.contrast(inkDark, stop) >= 7, "\(kind) \(hour) dark")
+                }
+            }
+        }
+    }
+
+    @Test func skyFollowsTheHourWhenClearAndTheWeatherWhenNot() throws {
+        let night = LookoutSky.stops(kind: .clear, hour: .night, dark: true)
+        let day = LookoutSky.stops(kind: .clear, hour: .day, dark: true)
+        #expect(night != day)
+        #expect(LookoutSky.stops(kind: .rain, hour: .night, dark: false) == LookoutSky.stops(kind: .rain, hour: .day,
+                                                                                             dark: false))
+        #expect(try LookoutSky.hour(
+            #require(Self.calendar.date(from: DateComponents(year: 2026, month: 10, day: 25, hour: 6))),
+            calendar: Self.calendar
+        ) == .dawn)
+    }
+
+    @Test func switcherHasFourWordsAndEachHasTwoNeedsWithoutAPlace() {
+        #expect(WeatherWords.switcher == ["Now", "Tonight", "Tomorrow", "This week"])
+        let snapshot = Self.snapshot()
+        for index in WeatherWords.switcher.indices {
+            let needs = WeatherWords.needs(snapshot, switcher: index, calendar: Self.calendar)
+            #expect(needs.count == 2)
+            #expect(needs.allSatisfy { !$0.isEmpty && !$0.contains("...") && !$0.contains(" of ") })
+        }
+        #expect(WeatherWords.needs(snapshot, switcher: 0, calendar: Self.calendar)[1] == "Rain from 4 pm")
+    }
+
+    @Test func widgetSaysWhatIsComingTonightAndADayAndNeverStrikes() {
+        let cards = WeatherWords.cards(Self.snapshot(), alertOn: true, calendar: Self.calendar)
+        #expect(cards.map(\.id) == ["coming", "tonight", "day"])
+        #expect(cards[0].big == "Rain" && cards[0].middle == "from 4 pm" && cards[0].wet)
+        #expect(cards[1].bigIsNumber && cards[1].unit == "°")
+        #expect(cards[2].opens == .week)
+        let steady = WeatherWords.cards(Self.snapshot(wetAt: nil), alertOn: false, calendar: Self.calendar)
+        #expect(steady[0].big == "Steady")
     }
 }

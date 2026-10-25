@@ -304,3 +304,151 @@ private extension String {
         prefix(1).uppercased() + dropFirst()
     }
 }
+
+// MARK: - Lookout (sheet 283): the sky behind the page, the switcher's needs and the widget's items
+
+/// The page sky, drawn by hour and condition until the photo plates land (256). Two stops (top, then the colour it
+/// settles to by 520 pt), each in a light and a dark half, so ink stays readable on it in both looks.
+enum LookoutSky {
+    enum Hour: Equatable { case dawn, day, dusk, night }
+
+    struct Stops: Equatable {
+        let top: UInt32
+        let bottom: UInt32
+    }
+
+    /// The point down the page where the sky reaches its lower colour; below it the colour holds.
+    static let settle: CGFloat = 520
+
+    static func hour(_ date: Date, calendar: Calendar = .current) -> Hour {
+        switch calendar.component(.hour, from: date) {
+        case 5 ..< 8: .dawn
+        case 8 ..< 17: .day
+        case 17 ..< 21: .dusk
+        default: .night
+        }
+    }
+
+    /// Wet, grey or snowy skies take over from the hour; clear and broken skies wear the hour's colour.
+    static func stops(kind: WeatherKind, hour: Hour, dark: Bool) -> Stops {
+        switch kind {
+        case .overcast, .fog:
+            dark ? Stops(top: 0x2A2D33, bottom: 0x17181B) : Stops(top: 0xD9DCE0, bottom: 0xF1F2F3)
+        case .drizzle, .rain, .heavyRain, .freezingDrizzle, .freezingRain, .thunderstorm, .thunderstormHail:
+            dark ? Stops(top: 0x1F2933, bottom: 0x121519) : Stops(top: 0xC9D3DC, bottom: 0xECEFF2)
+        case .snow, .heavySnow, .snowGrains:
+            dark ? Stops(top: 0x262C36, bottom: 0x15181D) : Stops(top: 0xE3E8EE, bottom: 0xF7F8FA)
+        case .clear, .mainlyClear, .partlyCloudy:
+            switch hour {
+            case .dawn: dark ? Stops(top: 0x3A2A35, bottom: 0x1E1A22) : Stops(top: 0xF6DCCB, bottom: 0xF9EFE6)
+            case .day: dark ? Stops(top: 0x1E3550, bottom: 0x141C26) : Stops(top: 0xCFE3F5, bottom: 0xF3F7FA)
+            case .dusk: dark ? Stops(top: 0x3A2443, bottom: 0x1A1520) : Stops(top: 0xE8D3E6, bottom: 0xF8E9DC)
+            case .night: dark ? Stops(top: 0x0E1424, bottom: 0x0A0C12) : Stops(top: 0xD5DAE6, bottom: 0xEEF0F5)
+            }
+        }
+    }
+
+    /// Relative luminance of a colour, for the contrast test (WCAG).
+    static func luminance(_ hex: UInt32) -> Double {
+        func channel(_ value: UInt32) -> Double {
+            let scaled = Double(value) / 255
+            return scaled <= 0.03928 ? scaled / 12.92 : pow((scaled + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * channel(hex >> 16 & 0xFF) + 0.7152 * channel(hex >> 8 & 0xFF) + 0.0722 * channel(hex & 0xFF)
+    }
+
+    static func contrast(_ first: UInt32, _ second: UInt32) -> Double {
+        let (lighter, darker) = (max(luminance(first), luminance(second)), min(luminance(first), luminance(second)))
+        return (lighter + 0.05) / (darker + 0.05)
+    }
+}
+
+/// One widget item's words (the view adds colours).
+struct LookoutCard: Equatable {
+    enum Opens: Equatable { case hours, week }
+
+    let id: String
+    let header: String
+    let big: String
+    let bigIsNumber: Bool
+    let unit: String?
+    let middle: String
+    let small: String
+    let opens: Opens
+    let wet: Bool
+}
+
+extension WeatherWords {
+    static let switcher = ["Now", "Tonight", "Tomorrow", "This week"]
+
+    /// Tonight's temperature: the 9 pm hour when the forecast reaches it, else the day's low.
+    static func tonight(_ snapshot: WeatherSnapshot, calendar: Calendar = .current) -> Int {
+        snapshot.hours.first { calendar.component(.hour, from: $0.date) == 21 }?.temperature ?? snapshot.low
+    }
+
+    static func weekday(_ date: Date, calendar: Calendar = .current) -> String {
+        calendar.weekdaySymbols[calendar.component(.weekday, from: date) - 1]
+    }
+
+    /// The day the week card names: the first notable day after tomorrow, else three days on.
+    static func notableDay(_ snapshot: WeatherSnapshot) -> WeatherDay? {
+        let later = snapshot.week.dropFirst(2)
+        return later.first { $0.kind != snapshot.kind && $0.kind != .clear } ?? later.dropFirst().first ?? later.first
+    }
+
+    /// The two needs lines beside the switcher, for each of its words. Never a city.
+    static func needs(_ snapshot: WeatherSnapshot, switcher index: Int, calendar: Calendar = .current) -> [String] {
+        switch index {
+        case 1:
+            let night = name(snapshot.hours.first { calendar.component(.hour, from: $0.date) == 21 }?.kind
+                ?? snapshot.kind, night: true).lowercased()
+            return ["Tonight \(degrees(tonight(snapshot, calendar: calendar)))", "\(night) after dark".capitalizedFirst]
+        case 2:
+            guard snapshot.week.count > 1 else { return ["Tomorrow", "No forecast yet"] }
+            let day = snapshot.week[1]
+            return ["Tomorrow \(degrees(day.high))",
+                    "Low \(degrees(day.low)), \(short(day.kind, night: false).lowercased())"]
+        case 3:
+            let lines = weekLines(snapshot, calendar: calendar)
+            let warmest = snapshot.week.dropFirst().max { $0.high < $1.high }
+            return [lines.first?.capitalizedFirst ?? "A steady week",
+                    warmest.map { "High \(degrees($0.high)) \(weekday($0.date, calendar: calendar))" } ?? ""]
+        default:
+            let word = name(snapshot.kind, night: snapshot.night)
+            return ["\(word), \(degrees(snapshot.temperature))",
+                    change(snapshot, calendar: calendar)?.capitalizedFirst ?? "Steady for now"]
+        }
+    }
+
+    /// The widget's items (283): what is coming, tonight, and a day to note. Lookout has no strike.
+    static func cards(_ snapshot: WeatherSnapshot, alertOn: Bool, calendar: Calendar = .current) -> [LookoutCard] {
+        var cards: [LookoutCard] = []
+        let wetHour = isWet(snapshot.kind) ? nil : snapshot.hours.first { isWet($0.kind) }
+        if let wetHour {
+            cards.append(LookoutCard(id: "coming", header: "Coming", big: name(wetHour.kind, night: false),
+                                     bigIsNumber: false, unit: nil,
+                                     middle: "from \(hour(wetHour.date, calendar: calendar))",
+                                     small: alertOn ? "Rain alert is on" : "Rain alert is off",
+                                     opens: .hours, wet: true))
+        } else if let change = change(snapshot, calendar: calendar) {
+            cards.append(LookoutCard(id: "coming", header: "Coming", big: "Dry", bigIsNumber: false, unit: nil,
+                                     middle: change.replacingOccurrences(of: "dry ", with: ""),
+                                     small: "Rain until then", opens: .hours, wet: false))
+        } else {
+            cards.append(LookoutCard(id: "coming", header: "Coming", big: "Steady", bigIsNumber: false, unit: nil,
+                                     middle: "for the next 12 hours", small: "No rain in the hours ahead",
+                                     opens: .hours, wet: false))
+        }
+        let nightKind = snapshot.hours.first { calendar.component(.hour, from: $0.date) == 21 }?.kind ?? snapshot.kind
+        cards.append(LookoutCard(id: "tonight", header: "Tonight", big: "\(tonight(snapshot, calendar: calendar))",
+                                 bigIsNumber: true, unit: "°", middle: name(nightKind, night: true),
+                                 small: "Low \(degrees(snapshot.low)) before morning", opens: .hours,
+                                 wet: isWet(nightKind)))
+        if let day = notableDay(snapshot) {
+            cards.append(LookoutCard(id: "day", header: weekday(day.date, calendar: calendar), big: "\(day.high)",
+                                     bigIsNumber: true, unit: "°", middle: name(day.kind, night: false),
+                                     small: "Low \(degrees(day.low))", opens: .week, wet: isWet(day.kind)))
+        }
+        return cards
+    }
+}

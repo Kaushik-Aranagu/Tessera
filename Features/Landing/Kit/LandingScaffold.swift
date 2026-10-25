@@ -31,6 +31,8 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
     var openDoor: (DialDoor) -> Void
     var action: LandingFootAction?
     var onSwitcherChange: () -> Void = {}
+    /// The page behind the sections; nil is the theme's page colour. Lookout draws its sky here.
+    var backdrop: AnyView?
 
     var body: some View {
         GeometryReader { proxy in
@@ -67,14 +69,22 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                     Color.clear.frame(width: 24, height: proxy.size.height)
                         .contentShape(Rectangle())
                         .gesture(DragGesture(minimumDistance: 10).onEnded { value in
-                            if value.translation.width > 50, abs(value.translation.height) < 80 { onBack() }
+                            if value.translation.width > 50, abs(value.translation.height) < 80 {
+                                onBack()
+                            }
                         })
                 }
             }
             .frame(width: width, height: proxy.size.height, alignment: .topLeading)
         }
         .ignoresSafeArea(.container, edges: .top)
-        .background { ThemedBackground() }
+        .background {
+            if let backdrop {
+                backdrop.ignoresSafeArea()
+            } else {
+                ThemedBackground()
+            }
+        }
     }
 
     private func masthead(width: CGFloat, k: CGFloat) -> some View {

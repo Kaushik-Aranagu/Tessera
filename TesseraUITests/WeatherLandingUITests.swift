@@ -8,7 +8,7 @@ final class WeatherLandingUITests: SimulatorOnlyTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-weatherLanding", "-demoTime", "13:10"]
         app.launch()
-        XCTAssertTrue(app.descendants(matching: .any)["Weather"].firstMatch.waitForExistence(timeout: 20),
+        XCTAssertTrue(app.descendants(matching: .any)["Lookout"].firstMatch.waitForExistence(timeout: 20),
                       "The landing is up")
         return app
     }
