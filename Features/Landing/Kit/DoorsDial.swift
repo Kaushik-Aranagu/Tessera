@@ -204,11 +204,8 @@ struct DoorSummary: View {
                         .frame(height: 20, alignment: .leading)
                 }
                 ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
-                    Text(line)
-                        .font(.custom("Figtree", size: 16, relativeTo: .body).weight(index == 0 ? .bold : .regular))
-                        .foregroundStyle(Theme.Colors.ink)
-                        .lineLimit(1)
-                        .frame(height: 24, alignment: .leading)
+                    FitLine(forms: FitLine.cuts(line), size: 16, color: Theme.Colors.ink, weight: index == 0 ? .bold : .regular)
+                        .frame(width: 192, height: 24, alignment: .leading)
                 }
             }
             .frame(width: 192, alignment: .leading)

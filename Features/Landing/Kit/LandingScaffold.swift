@@ -108,11 +108,10 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
             if !needs.isEmpty {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(Array(needs.prefix(2).enumerated()), id: \.offset) { index, line in
-                        Text(line)
-                            .font(.custom("Figtree", size: 15, relativeTo: .callout).weight(index == 0 ? .semibold : .regular))
-                            .foregroundStyle(index == 0 ? Theme.Colors.ink : Theme.Colors.inkSecondary)
-                            .lineLimit(1)
-                            .frame(height: 24, alignment: .leading)
+                        FitLine(forms: FitLine.cuts(line), size: 15,
+                                color: index == 0 ? Theme.Colors.ink : Theme.Colors.inkSecondary,
+                                weight: index == 0 ? .semibold : .regular)
+                            .frame(width: 150, height: 24, alignment: .leading)
                     }
                 }
                 .frame(width: 150, alignment: .leading)

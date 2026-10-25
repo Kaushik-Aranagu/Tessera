@@ -109,6 +109,27 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
     }
 }
 
+extension FitLine {
+    private static let small: Set<String> = ["and", "the", "a", "an", "of", "to", "by", "in", "on", "or", "for", "with", "at", "is"]
+
+    /// The longest form first, then every shorter whole-word cut: trailing small words, commas and full stops are
+    /// dropped, so a fixed slot shows a clean shorter line, never "...".
+    static func cuts(_ text: String) -> [String] {
+        let words = text.split(separator: " ").map(String.init)
+        guard words.count > 1 else { return [text] }
+        var forms = [text]
+        for count in stride(from: words.count - 1, through: 1, by: -1) {
+            var kept = Array(words.prefix(count))
+            while kept.count > 1, small.contains(kept[kept.count - 1].lowercased().trimmingCharacters(in: .punctuationCharacters)) {
+                kept.removeLast()
+            }
+            let form = kept.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ",;:.-"))
+            if !form.isEmpty, form != forms.last { forms.append(form) }
+        }
+        return forms
+    }
+}
+
 /// One line of fixed width: the longest of `forms` that fits, never wrapped, never ellipsized. The last form is
 /// the one the phone (or the on-device model) wrote short enough to always fit; it may step down to 0.8x.
 struct FitLine: View {
