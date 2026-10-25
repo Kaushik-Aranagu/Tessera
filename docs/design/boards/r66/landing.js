@@ -273,7 +273,7 @@ function landingV3(el,R){const stops=[];const id=el.dataset.id;
   change:d=>{sum.innerHTML=d.sum();fitAll(sum);if(!sum._on){sum._on=1;return}sum.classList.remove('rise');void sum.offsetWidth;if(!RM)sum.classList.add('rise')}});
  const f=actionX(el,R);
  fitLine(cap);document.fonts&&document.fonts.ready.then(()=>{fitAll(el)});
- if(!el._flip)opening([top,band,key,cap,mid,dh,sum,f],0);
+ if(!el._flip&&!window.__morphing)opening([top,band,key,cap,mid,dh,sum,f],0);
  setTimeout(WG.start,el._flip?420:260);
  return ()=>stops.forEach(s=>s&&s())}
 const sum=(lb,lines)=>'<div class="lb">'+lb+'</div>'+lines.map(l=>'<div class="ln">'+l+'</div>').join('');
