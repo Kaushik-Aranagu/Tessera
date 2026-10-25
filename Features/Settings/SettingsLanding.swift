@@ -1,7 +1,8 @@
 import SwiftUI
 import TesseraCore
 
-/// The Settings landing on the shared kit (landing contract §12): a word wall of setting areas in the keystone slot,
+/// The Settings landing on the sheet 283 scaffold (landing contract §12): a word wall of setting areas in the keystone
+/// slot,
 /// weighted by the areas he opened last; the doors Tess, Privacy, Units, Claude, Backups and About on the dial; one
 /// line about the last backup; no action word. Ink is the accent (the title), and the doors wear kind colours so the
 /// big type never shares one: gold (Tess, About), slate (Privacy, Units, Claude), green (Backups). It only opens the
@@ -13,6 +14,9 @@ struct SettingsLandingPage: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var scheme
     @State private var focus = 0
+    @State private var switcherIndex = 0
+    @State private var switcherVerticalIndex = 0
+    @State private var widgetIndex = 0
     @State private var area: SettingsArea?
     @State private var backupLine: String?
     @State private var opened = 0
@@ -21,28 +25,39 @@ struct SettingsLandingPage: View {
         let _ = model.revision
         let _ = opened
         let facts = facts
-        LandingFrame(title: "Settings", accent: Theme.Colors.ink, stateLine: SettingsLandingWords.stateLine(facts),
-                     onTitle: { open(.everything) },
-                     keystone: {
-                         LandingKeystone(label: "Setting areas") {
-                             WordWallView(words: SettingsLandingWords.wall(opened: SettingsAreaSeen.all())) { id in
-                                 if let area = SettingsArea(rawValue: id) {
-                                     open(area)
-                                 }
-                             } label: { word in
-                                 "\(SettingsArea(rawValue: word.id)?.title ?? word.text.capitalized), setting"
-                             }
-                         }
-                     },
-                     doors: SettingsLandingWords.doors(facts, colors: colors), focus: $focus,
-                     openDoor: { door in
-                         if let area = SettingsArea(rawValue: door.id) {
-                             open(area)
-                         }
-                     },
-                     brief: { brief },
-                     action: nil,
-                     onBack: { dismiss() })
+        let seen = SettingsAreaSeen.all()
+        let cards = SettingsLandingWords.cards(facts)
+        LandingScaffold(title: "Settings", accent: Theme.Colors.ink, navWord: "Bridge", onBack: { dismiss() },
+                        onTitle: { open(.everything) },
+                        switcher: SettingsLandingWords.switcher, switcherIndex: $switcherIndex,
+                        switcherVerticalIndex: $switcherVerticalIndex,
+                        needs: SettingsLandingWords.needs(facts, switcher: switcherIndex, opened: seen),
+                        keystone: {
+                            LandingKeystone(label: "Setting areas") {
+                                WordWallView(words: SettingsLandingWords.wall(opened: seen)) { id in
+                                    if let area = SettingsArea(rawValue: id) {
+                                        open(area)
+                                    }
+                                } label: { word in
+                                    "\(SettingsArea(rawValue: word.id)?.title ?? word.text.capitalized), setting"
+                                }
+                            }
+                        },
+                        caption: ["Tap an area to open it.", "Tap an area."],
+                        widget: cards, widgetIndex: $widgetIndex,
+                        openWidget: { item in
+                            if let area = SettingsArea(rawValue: item.id) {
+                                open(area)
+                            }
+                        },
+                        glyph: { _ in Color.clear },
+                        doors: SettingsLandingWords.doors(facts, colors: colors), focus: $focus,
+                        openDoor: { door in
+                            if let area = SettingsArea(rawValue: door.id) {
+                                open(area)
+                            }
+                        },
+                        action: nil)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(item: $area) { $0.destination }
             .task {
@@ -71,26 +86,6 @@ struct SettingsLandingPage: View {
                      slate: dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F),
                      green: dark ? Color(hex: 0x8FC9A0) : Color(hex: 0x25803D),
                      gold: dark ? Color(hex: 0xD9C27A) : Color(hex: 0x7E6A1E))
-    }
-
-    @ViewBuilder
-    private var brief: some View {
-        let forms = SettingsLandingWords.brief(backupLine)
-        if let lead = forms.lead {
-            ViewThatFits(in: .horizontal) {
-                (Text(lead).fontWeight(.semibold).foregroundStyle(Theme.Colors.ink) + Text(forms.rest))
-                    .fixedSize()
-                if let when = SettingsLandingWords.briefWhen(forms.rest) {
-                    (Text("Backup").fontWeight(.semibold).foregroundStyle(Theme.Colors.ink) + Text(" \(when)"))
-                        .fixedSize()
-                }
-                Text("Backed up").fontWeight(.semibold).foregroundStyle(Theme.Colors.ink).fixedSize()
-            }
-            .font(.custom("Figtree", size: 15, relativeTo: .callout))
-            .foregroundStyle(Theme.Colors.inkSecondary)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(lead + forms.rest)
-        }
     }
 
     private func open(_ next: SettingsArea) {
@@ -239,6 +234,48 @@ enum SettingsLandingWords {
                                 lines: ["Build \(facts.build)", "Credits"])
             }
         }
+    }
+
+    static let switcher = ["Changed", "All", "Private"]
+
+    /// The two needs lines beside the switcher (283), counts and on or off only.
+    static func needs(_ facts: SettingsLandingFacts, switcher index: Int, opened: [String: Date]) -> [String] {
+        switch index {
+        case 1:
+            return ["Every setting", "Tap the title for all"]
+        case 2:
+            let kept = stateLine(facts).last ?? ""
+            return [kept, facts.asksClaude ? "Claude only with your key" : "Nothing leaves the phone"]
+        default:
+            let last = opened.max { $0.value < $1.value }.flatMap { SettingsArea(rawValue: $0.key) }
+            let backup = brief(facts.backupLine)
+            let when = briefWhen(backup.rest).map { "Backup \($0)" } ?? "No backup read yet"
+            return [last.map { "Last opened \($0.title)" } ?? "Nothing opened yet", when]
+        }
+    }
+
+    /// The widget's items: the last backup, whether Tess asks Claude (never the key), the units. No strike.
+    static func cards(_ facts: SettingsLandingFacts) -> [WidgetItem] {
+        let backup = brief(facts.backupLine)
+        let when = briefWhen(backup.rest)
+        let units = facts.units
+        return [
+            WidgetItem(id: SettingsArea.backups.rawValue, header: "Backups",
+                       big: backup.lead == nil ? "Not read yet" : "Backed up",
+                       middle: when.map { "Last one \($0)" } ?? "Open to make one",
+                       small: "Kept on this phone", strikeable: false),
+            WidgetItem(
+                id: SettingsArea.claude.rawValue,
+                header: "Tess asks Claude",
+                big: facts.asksClaude ? "On" : "Off",
+                middle: facts.asksClaude ? "Only with your key" : "Nothing leaves the phone",
+                small: "Open to change it",
+                strikeable: false
+            ),
+            WidgetItem(id: SettingsArea.units.rawValue, header: "Units", big: units.first ?? "Standard",
+                       middle: units.dropFirst().joined(separator: ", "), small: "Measures in",
+                       strikeable: false),
+        ]
     }
 
     /// The brief at 612: the backup line's first words bold ("Last backup"), the rest in ink 2; nil lead when unread.

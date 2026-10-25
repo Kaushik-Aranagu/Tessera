@@ -99,11 +99,38 @@ struct SettingsLandingTests {
     }
 
     @Test func wholeWordCutsNeverEllipsize() {
-        // The dial's own cut moved into the kit (FitLine.cuts) when the lead's dial replaced the lane's.
         let forms = FitLine.cuts("Across the lake and back")
         #expect(forms.first == "Across the lake and back")
         #expect(forms.last == "Across")
+        #expect(!forms.contains("Across the"))
         #expect(!forms.contains { $0.contains("...") || $0.contains("…") })
         #expect(FitLine.cuts("Today") == ["Today"])
+    }
+
+    // MARK: Scaffold (283)
+
+    @Test func switcherHasThreeWordsWithTwoNeedsEach() {
+        #expect(SettingsLandingWords.switcher == ["Changed", "All", "Private"])
+        let opened = ["units": Date(timeIntervalSince1970: 2), "tess": Date(timeIntervalSince1970: 1)]
+        for index in SettingsLandingWords.switcher.indices {
+            let needs = SettingsLandingWords.needs(Self.facts(), switcher: index, opened: opened)
+            #expect(needs.count == 2 && needs.allSatisfy { !$0.isEmpty && !$0.contains(" of ") })
+        }
+        #expect(SettingsLandingWords.needs(Self.facts(), switcher: 0, opened: opened)
+            == ["Last opened Units", "Backup tonight"])
+        #expect(SettingsLandingWords.needs(Self.facts(backup: nil), switcher: 0, opened: [:])
+            == ["Nothing opened yet", "No backup read yet"])
+    }
+
+    @Test func widgetCardsOpenAreasNeverStrikeAndNeverShowAKey() {
+        for claude in [true, false] {
+            let cards = SettingsLandingWords.cards(Self.facts(claude: claude))
+            #expect(cards.map(\.id) == ["backups", "claude", "units"])
+            #expect(cards.allSatisfy { !$0.strikeable && SettingsArea(rawValue: $0.id) != nil })
+            #expect(cards[1].big == (claude ? "On" : "Off"))
+            let words = cards.flatMap { [$0.header, $0.big, $0.middle, $0.small] }
+            #expect(!words.contains { $0.contains("sk-") || $0.lowercased().contains("api key") })
+        }
+        #expect(SettingsLandingWords.cards(Self.facts(backup: nil))[0].big == "Not read yet")
     }
 }
