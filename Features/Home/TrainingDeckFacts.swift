@@ -56,6 +56,12 @@ struct TrainingDeckFacts {
         ("\(done)", done == 1 ? "day" : "days")
     }
 
+    /// The longest form that fits a needs line (about 20 characters at 15 pt in 150 pt); the last form otherwise.
+    static func pick(_ forms: [String], limit: Int = 20) -> String {
+        let usable = forms.filter { !$0.isEmpty }
+        return usable.first { $0.count <= limit } ?? usable.last ?? ""
+    }
+
     /// "2 to go" or "Week done" or "No plan days": never a counter.
     static func leftWords(done: Int, perWeek: Int) -> String {
         guard perWeek > 0 else { return done > 0 ? "Trained this week" : "No plan days" }
@@ -137,14 +143,13 @@ extension TrainingDeckFacts {
         let left = leftWords(done: doneDays, perWeek: perWeek)
         let state = wall.stateLine
         let bestLine = bests.first.map { "\($0.lift) best \($0.number)" } ?? "No bests yet"
+        // Needs lines are 150 pt wide: each takes the longest of its own written forms that fits about 20
+        // characters, so a sentence is never cut mid-thought ("Rest today. Next").
+        let briefForms = wall.brief.map { [$0.text, $0.name] } ?? []
         let needs: [[String]] = [
-            [state.first ?? "", wall.brief?.text ?? left],
-            [doneDays == 0 ? "Nothing yet this week" : "\(doneDays) \(doneDays == 1 ? "day" : "days") trained", left],
-            [
-                monthCount == 0 ? "Nothing yet this month" :
-                    "\(monthCount) \(monthCount == 1 ? "session" : "sessions") this month",
-                bestLine,
-            ],
+            [pick(state), pick(briefForms + [left])],
+            [doneDays == 0 ? "Nothing yet" : "\(doneDays) \(doneDays == 1 ? "day" : "days") trained", left],
+            [monthCount == 0 ? "Nothing yet" : "\(monthCount) this month", pick([bestLine, bests.first?.lift ?? ""])],
         ]
 
         var widget: [WidgetItem] = []

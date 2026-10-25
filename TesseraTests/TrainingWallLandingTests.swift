@@ -122,6 +122,13 @@ struct TrainingWallLandingTests {
         #expect("Bench Press opens at 80 kg tonight after work".hasPrefix(cut))
     }
 
+    @Test func needsTakeAWholeShortForm() {
+        let forms = ["Rest today. Next is Saturday.", "Rest today."]
+        #expect(TrainingDeckFacts.pick(forms) == "Rest today.")
+        #expect(TrainingDeckFacts.pick(["Push A today.", "Push A."]) == "Push A today.")
+        #expect(TrainingDeckFacts.pick(["", "Week done"]) == "Week done")
+    }
+
     @Test func weekWordsNeverCount() {
         #expect(TrainingDeckFacts.weekNumber(done: 1) == ("1", "day"))
         #expect(TrainingDeckFacts.weekNumber(done: 3) == ("3", "days"))

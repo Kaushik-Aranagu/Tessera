@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 /// Deck's keystone (sheet 258 v2, locked direction): a blackboard set into the page. The slate is a precomputed
 /// texture (three octaves of noise, fine grain, a soft light from the top-left, faint ghosts of wiped chalk) whose
@@ -40,6 +39,8 @@ struct TrainingBlackboard: View {
             let size = proxy.size
             ZStack(alignment: .topLeading) {
                 BlackboardSlate(dark: dark)
+                    // Softens the noise cells into dust, so the edge never reads as pixels or tiles.
+                    .blur(radius: 1.6)
                     .drawingGroup()
                 if !reduceMotion, !ProcessInfo.processInfo.isLowPowerModeEnabled {
                     BlackboardDust(chalk: chalk)
@@ -76,18 +77,18 @@ struct TrainingBlackboard: View {
     }
 
     private var weekOrigin: CGPoint {
-        CGPoint(x: Self.margin, y: 96)
+        CGPoint(x: Self.margin, y: 90)
     }
 
     private var bestsY: CGFloat {
-        136
+        122
     }
 
     private func bestFrames(width: CGFloat) -> [CGRect] {
         let count = max(board.bests.count, 1)
         let column = (width - Self.margin * 2) / CGFloat(count)
         return board.bests.indices.map { index in
-            CGRect(x: Self.margin + CGFloat(index) * column, y: bestsY, width: column, height: 26)
+            CGRect(x: Self.margin + CGFloat(index) * column, y: bestsY, width: column, height: 36)
         }
     }
 
@@ -102,8 +103,9 @@ struct TrainingBlackboard: View {
             for (best, frame) in zip(board.bests, bestFrames(width: size.width)) {
                 chalkText(best.lift, size: 13, weight: .regular, at: CGPoint(x: frame.minX, y: frame.minY),
                           in: &layer, rng: &rng, alpha: 0.7)
+                // The lift's name small, its best under it in larger chalk: one column each, never overlapping.
                 chalkText(best.number, size: 17, weight: .semibold,
-                          at: CGPoint(x: frame.minX + chalkWidth(best.lift, size: 13) + 6, y: frame.minY - 3),
+                          at: CGPoint(x: frame.minX, y: frame.minY + 15),
                           in: &layer, rng: &rng)
             }
             // Grain knocked out of the chalk, so it sits in the slate rather than on it.
@@ -119,7 +121,7 @@ struct TrainingBlackboard: View {
     }
 
     private func drawWeek(in context: inout GraphicsContext, rng: inout ChalkRandom) {
-        let step: CGFloat = 34
+        let step: CGFloat = 40
         for day in board.week {
             let x = weekOrigin.x + CGFloat(day.id) * step
             chalkText(day.letter, size: 15, weight: day.isToday ? .bold : .regular,
@@ -127,9 +129,9 @@ struct TrainingBlackboard: View {
             if day.done {
                 // A tick beside the letter, drawn as two chalk strokes.
                 var tick = Path()
-                tick.move(to: CGPoint(x: x + 12, y: weekOrigin.y + 9))
-                tick.addLine(to: CGPoint(x: x + 16, y: weekOrigin.y + 15))
-                tick.addLine(to: CGPoint(x: x + 25, y: weekOrigin.y + 1))
+                tick.move(to: CGPoint(x: x + 17, y: weekOrigin.y + 9))
+                tick.addLine(to: CGPoint(x: x + 21, y: weekOrigin.y + 15))
+                tick.addLine(to: CGPoint(x: x + 30, y: weekOrigin.y + 1))
                 chalkStroke(tick, width: 2.2, in: &context, rng: &rng)
             }
             if day.isToday {
@@ -143,11 +145,6 @@ struct TrainingBlackboard: View {
 
     private func chalkFont(_ size: CGFloat, _ weight: Font.Weight) -> Font {
         .custom("Figtree", fixedSize: size).weight(weight)
-    }
-
-    private func chalkWidth(_ text: String, size: CGFloat) -> CGFloat {
-        let font = UIFont(name: "Figtree-Regular", size: size) ?? .systemFont(ofSize: size)
-        return (text as NSString).size(withAttributes: [.font: font]).width
     }
 
     /// Two passes: a soft, wide, faint stroke (four offset copies) under one crisp copy, each with a hair of jitter.
@@ -199,7 +196,7 @@ struct TrainingBlackboard: View {
     @ViewBuilder
     private func targets(size: CGSize) -> some View {
         Button(action: openToday) {
-            Color.clear.frame(width: size.width - Self.margin * 2, height: 44)
+            Color.clear.frame(width: size.width - Self.margin * 2, height: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .offset(x: headlineOrigin.x, y: headlineOrigin.y - 4)
@@ -207,16 +204,16 @@ struct TrainingBlackboard: View {
         .accessibilityHint("Opens today's workout")
         ForEach(Array(zip(board.bests, bestFrames(width: size.width))), id: \.0.id) { best, frame in
             Button { openLift(best.id) } label: {
-                Color.clear.frame(width: frame.width, height: 44)
+                Color.clear.frame(width: frame.width, height: 44).contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .offset(x: frame.minX, y: frame.minY - 9)
+            .offset(x: frame.minX, y: frame.minY - 4)
             .accessibilityLabel("\(best.lift) best \(best.number)")
             .accessibilityHint("Opens the lift")
         }
         // The week reads as one line to VoiceOver.
         Color.clear
-            .frame(width: 7 * 34, height: 26)
+            .frame(width: 7 * 40, height: 26)
             .offset(x: weekOrigin.x, y: weekOrigin.y)
             .allowsHitTesting(false)
             .accessibilityElement()
@@ -287,7 +284,7 @@ private struct BlackboardSlate: View {
     var body: some View {
         Canvas { context, size in
             let base = dark ? (r: 0.17, g: 0.19, b: 0.19) : (r: 0.17, g: 0.21, b: 0.20)
-            let cell: CGFloat = 3
+            let cell: CGFloat = 2
             let columns = Int(ceil(size.width / cell))
             let rows = Int(ceil(size.height / cell))
             let feather = TrainingBlackboard.feather
