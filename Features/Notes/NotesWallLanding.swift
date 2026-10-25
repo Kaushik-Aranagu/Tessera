@@ -14,6 +14,9 @@ struct NotesLandingPage: View {
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var focus = 0
+    @State private var switcherIndex = 0
+    @State private var switcherVerticalIndex = 0
+    @State private var widgetIndex = 0
     @State private var writing = false
     @State private var draft = ""
 
@@ -21,6 +24,8 @@ struct NotesLandingPage: View {
         let words: [WallWord]
         let doors: [DialDoor]
         let stateLine: [String]
+        let needs: [String]
+        let widget: [WidgetItem]
         let latest: ObjectRecord?
         let latestIsPrivate: Bool
         let count: Int
@@ -29,30 +34,36 @@ struct NotesLandingPage: View {
     var body: some View {
         let _ = model.revision
         let shown = load()
-        LandingFrame(title: "Log", accent: LandingAccent.notes, stateLine: shown.stateLine,
-                     keystone: {
-                         LandingKeystone(label: "Your notes") {
-                             WordWallView(words: shown.words) { id in
-                                 if let uuid = UUID(uuidString: id) {
-                                     openNote(uuid)
-                                 }
-                             }
-                         }
-                     },
-                     doors: shown.doors, focus: $focus,
-                     openDoor: { door in
-                         switch door.id {
-                         case "loose": openDoor(.loose)
-                         case "private": openDoor(.privates)
-                         default: openDoor(.all)
-                         }
-                     },
-                     brief: { brief(shown) },
-                     action: LandingFootAction(word: "New note", hint: "Writes a note") {
-                         draft = ""
-                         writing = true
-                     },
-                     onBack: { dismiss() })
+        LandingScaffold(title: "Log", accent: LandingAccent.notes, navWord: "Bridge", onBack: { dismiss() },
+                        switcher: ["Newest", "Due", "Pinned", "From Tess"],
+                        switcherVertical: ["Today", "This week", "Earlier"],
+                        switcherIndex: $switcherIndex, switcherVerticalIndex: $switcherVerticalIndex,
+                        needs: shown.needs,
+                        keystone: {
+                            LandingKeystone(label: "Your notes") {
+                                WordWallView(words: shown.words) { id in
+                                    if let uuid = UUID(uuidString: id) { openNote(uuid) }
+                                }
+                            }
+                        },
+                        caption: ["Tap a word to open its note."],
+                        widget: shown.widget, widgetIndex: $widgetIndex,
+                        openWidget: { item in
+                            if let uuid = UUID(uuidString: item.id) { openNote(uuid) }
+                        },
+                        glyph: { _ in Color.clear },
+                        doors: shown.doors, focus: $focus,
+                        openDoor: { door in
+                            switch door.id {
+                            case "loose": openDoor(.loose)
+                            case "private": openDoor(.privates)
+                            default: openDoor(.all)
+                            }
+                        },
+                        action: LandingFootAction(word: "New note", hint: "Writes a note") {
+                            draft = ""
+                            writing = true
+                        })
             .toolbar(.hidden, for: .navigationBar)
             .alert("New note", isPresented: $writing) {
                 TextField("", text: $draft)
@@ -96,7 +107,13 @@ struct NotesLandingPage: View {
         let sentence = NotesLandingWords.subtitle(hasNotes: facts.hasNotes, topThings: top).text
         let line = notes.isEmpty ? ["Write the first thing down."] : [sentence, "\(notes.count) notes."]
         let latest = notes.first
-        return Shown(words: words, doors: doors, stateLine: line, latest: latest,
+        let needs = notes.isEmpty ? ["Write the first thing down."] : [line[0], "\(open.count) notes here."]
+        let widget = open.prefix(4).map { note in
+            WidgetItem(id: note.id.uuidString, header: "Newest", big: Self.short(note.title).uppercased(),
+                       middle: "Written \(NotesCopy.when(note.updatedAt, now: now))",
+                       small: "Tap to open it", strikeable: false)
+        }
+        return Shown(words: words, doors: doors, stateLine: line, needs: needs, widget: widget, latest: latest,
                      latestIsPrivate: latest.map { landing.isPrivate($0) } ?? false, count: notes.count)
     }
 

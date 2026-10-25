@@ -51,7 +51,7 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                 LandingWidget(items: widget, index: $widgetIndex, open: openWidget, strike: strikeWidget, glyph: glyph)
                     .landingSection(.widget)
                     .offset(x: 24, y: LandingWidget<Glyph>.top * k)
-                DoorsDial(doors: doors, focus: $focus, style: .landing, open: openDoor)
+                DoorsDial(doors: doors, focus: $focus, open: openDoor, style: .landing)
                     .frame(width: 160)
                     .landingSection(.doors)
                     .offset(x: 24, y: 640 * k)

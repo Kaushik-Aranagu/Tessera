@@ -21,12 +21,11 @@ struct DoorsDial: View {
     let doors: [DialDoor]
     @Binding var focus: Int
     var open: (DialDoor) -> Void
+    var style: Style = .notes
 
     /// The Log's 246 dial (48 pt places, facts inside) or the landing dial of sheet 283 (Bridge's: 40 pt places,
     /// focus 26 pt, neighbours 20 pt, 1.6 pt blur, 160 pt wide; the summary is drawn apart by `DoorSummary`).
     enum Style { case notes, landing }
-    var style: Style = .notes
-
     static let slot: CGFloat = 48
     private var placeHeight: CGFloat { style == .landing ? 40 : Self.slot }
     private var focusSize: CGFloat { style == .landing ? 26 : 28 }
