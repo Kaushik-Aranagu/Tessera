@@ -1,5 +1,5 @@
-# 283 Landings: one layout for every room (v3, Oct 25 4:10 PM PT; design approved 2:48 PM)
-Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v3). Owners: Builder A (Bridge, flip, Deck, Lookout), Builder B (Log, Galley, Watch, Purse). Builds on landing-contract v2 and hub 282. v2 replaces the v1 middle and doors.
+# 283 Landings: one layout for every room (v4, Oct 25 4:25 PM PT; design approved 2:48 PM)
+Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v4). Owners: Builder A (Bridge, flip, Deck, Lookout), Builder B (Log, Galley, Watch, Purse). Builds on landing-contract v2 and hub 282. v2 replaces the v1 middle and doors.
 
 ## His rules (Oct 25, PDT)
 - 12:22 PM: every landing opens like Bridge, then the doors. Sections persist across screens, and each owns its touch zone. Opening a room from Bridge flips the mosaic into that room's keystone, each room its own way. The top area holds navigation, the title and summary lines.
@@ -73,3 +73,30 @@ Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v3). Owners: Builder A
   - Purse: a dot slides off the index on an arc.
   - Reduce Motion: none of these.
 - To do later: polish the keystones; a library of short videos.
+
+## v4: the whole screen mapped, moving place by place, Layout mode (his 4:11 and 4:14 PM notes)
+- Every point belongs to a named place; an empty place is kept and marked, never filled by its neighbour. Phone points, x, y, w by h:
+  - Status bar 0, 0, 402 by 44 (system).
+  - Masthead 0, 44, 402 by 138: Title 24, 50, 260 by 48; Nav word 300, 50, 94 by 46; Switcher 24, 106, 200 by 76; Needs 228, 118, 150 by 58. On Bridge it holds the Settings word (24, 74, 110 by 44) and the Departure board (140, 74, 238 by 104).
+  - Breath 24, 182, 354 by 14 (always empty).
+  - Keystone 24, 196, 354 by 182.
+  - Caption 24, 378, 354 by 34 (empty on Bridge).
+  - Widget 24, 412, 354 by 200 (Bridge's one-thing box; content from 429). Glyph 298, 444, 80 by 80.
+  - Breath 24, 612, 354 by 28.
+  - Doors 24, 640, 354 by 120: Dial 24, 640, 160 by 120; Door summary 186, 640, 192 by 120.
+  - Breath 24, 760, 354 by 16.
+  - Foot 0, 776, 402 by 76: Action word 24, 786, 220 by 62 (empty on Bridge, which shows the undo line); Tess 306, 776, 96 by 96.
+  - Home bar 0, 852, 402 by 22 (system).
+  - Edges: Back edge x 0 to 24 (swipe back); right edge x 378 to 402, empty.
+- Moving between Bridge and a room (and room to room through Bridge) goes place by place. The old screen's places are lifted into the new one, play their exit there and are dropped:
+  - Masthead flaps like the board: old rows rotateX 0 to 88° in 200 ms, 50 ms apart; new rows -88° to 6° to 0 in 340 ms from 180 ms, 60 ms apart.
+  - Keystone: the flip (tiles), and back, the reveal.
+  - Caption rolls up into the keystone (160 ms) and unrolls from it (320 ms at 520 ms).
+  - Widget: the old item up 48 pt and out (260 ms); the new one up from 64 pt below (420 ms at 200 ms).
+  - Dial, the reel: a 120 pt window masked at both ends shows a column of the old three places, nine mixed names from both lists, then the new three. It runs 980 ms, fast at first with 3 pt blur, then slows to rest on the new doors, and the real dial fades in under it (140 ms).
+  - Door summary slides off right 80 pt (260 ms), and the new one slides in from 90 pt right with a 3 pt overshoot (420 ms at 640 ms, as the reel slows).
+  - Action word: out left with a skew (220 ms); the new letters stream in from the left (460 ms at 420 ms, 24 ms apart). Tess stays, and only her colour changes.
+  - Reduce Motion: a 150 ms cross-fade.
+- When one side is empty, the other side plays its half alone. When content won't carry over (a picture becoming words), it collapses to a point and forms again, as the Glyph does.
+- Show sections (board): the map drawn over any live screen, with its empty places hatched.
+- Layout mode (Settings > Layout mode, read-only): every screen as soft bubbles, one per place, in the room's colour (11% fill, 18 pt radius, a 1 pt inner line). Empty places are dashed, and the Title bubble carries the room's name. Swipe across (arrow keys on the board) to walk Bridge, Log, Lookout, Deck, Galley, Watch and Purse; each bubble moves the way its place does. Tap a bubble to read its frame, what it holds on this screen, its touch and its move, inside the Keystone bubble. Tap the Nav word bubble twice, or swipe from the left edge, to leave. Editing comes later.
