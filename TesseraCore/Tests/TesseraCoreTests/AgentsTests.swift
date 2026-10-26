@@ -51,6 +51,26 @@ struct AgentsTests {
         #expect(scope.reads(book, classes: classes) && !scope.reads(classes[.task], classes: classes))
     }
 
+    @Test func aPrivateRoomsAgentNeverCarriesItsName() throws {
+        let registry = AgentRegistry(engine: engine)
+        let therapy = try registry.spawn(room: "therapy", title: "Therapy", now: now)
+        #expect(therapy.title == "Private room" && therapy.name == "Private room")
+        #expect(!therapy.persona.lowercased().contains("therapy") && !therapy.room.contains("therapy"))
+        #expect(!therapy.notebook.contains("therapy"))
+        // The same room comes back as the same agent, by its room or its shown name.
+        #expect(try registry.spawn(room: "therapy", title: "Therapy", now: now) == therapy)
+        #expect(registry.agent("therapy", under: .lab) == therapy)
+        // A second private room gets its own agent, numbered like any clash.
+        let clinic = try registry.spawn(room: "clinic", title: "Clinic", now: now)
+        #expect(clinic.name == "Private room 2" && clinic != therapy)
+        // Nothing stored on the Agent objects names either room.
+        for row in registry.rows() {
+            let fields = ["agentName", "room", "persona", "notebook"]
+            let stored = fields.compactMap { store.value($0, of: row)?.stringValue } + [row.title]
+            #expect(!stored.contains { $0.lowercased().contains("therapy") || $0.lowercased().contains("clinic") })
+        }
+    }
+
     // MARK: Notebook
 
     @Test func aNotebookIsItsAgentsOwn() throws {
