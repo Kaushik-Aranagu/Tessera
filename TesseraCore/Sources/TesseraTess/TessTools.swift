@@ -12,7 +12,20 @@ public enum TessTools {
         public let name: String
         public let description: String
         public let input: TessSchema
+        /// Money: the phone's own rungs only. Claude's tool list never carries it (money actions are never offered to
+        /// Claude).
+        public let deviceOnly: Bool
         let run: @MainActor (_ arguments: [String: Any], _ call: Call) throws -> [OpRecord]
+
+        init(name: String, description: String, input: TessSchema, deviceOnly: Bool = false,
+             run: @escaping @MainActor (_ arguments: [String: Any], _ call: Call) throws -> [OpRecord])
+        {
+            self.name = name
+            self.description = description
+            self.input = input
+            self.deviceOnly = deviceOnly
+            self.run = run
+        }
     }
 
     /// What a tool call runs against.
@@ -36,7 +49,12 @@ public enum TessTools {
 
     public static var all: [Tool] {
         [logSet, createTask, completeTask, rescheduleTask, addGroceries, addToList, createList, createNote,
-         createRecipe, query, startShop, cookTogether, setServeTime]
+         createRecipe, query, startShop, cookTogether, setServeTime, checkListItem, startWorkout, startCooking, logSpend]
+    }
+
+    /// The tools Claude may be given: everything but the device-only ones (money).
+    public static var claudeTools: [Tool] {
+        all.filter { !$0.deviceOnly }
     }
 
     public static func tool(named name: String) -> Tool? {
@@ -110,7 +128,7 @@ public enum TessTools {
 
     /// Claude's tool definitions, strict: every object closed, every field required (optional ones nullable).
     public static func definitionsJSON() throws -> Data {
-        let tools: [[String: Any]] = all.map { tool in
+        let tools: [[String: Any]] = claudeTools.map { tool in
             ["name": tool.name, "description": tool.description, "strict": true, "input_schema": tool.input.json]
         }
         return try JSONSerialization.data(withJSONObject: tools, options: [.sortedKeys])
@@ -394,6 +412,10 @@ public enum TessTools {
 extension TessTools.Call {
     /// An open task whose title matches: exactly, else the one containing every word said.
     func task(named name: String) throws -> ObjectRecord {
+        // A bound call (a place Tess was shown) names the task by id: a private one is a label, never a name.
+        if let byID = object(id: name, of: .task), store.value("isDone", of: byID) != .bool(true) {
+            return byID
+        }
         let tasks = TaskList(store: store, classes: engine.classes).all().filter { !$0.isDone }
         let query = name.lowercased()
         if let exact = tasks.first(where: { $0.title.lowercased() == query }) {

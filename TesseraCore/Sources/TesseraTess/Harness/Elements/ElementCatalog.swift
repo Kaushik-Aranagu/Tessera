@@ -43,7 +43,7 @@ public enum ElementCatalog {
                                               CallInput("pinned", from: .asked, required: false)],
                                      reaction: .keystoneTakes, kinds: ["note", "list"])
 
-    // Lookout
+    /// Lookout
     static let rainAlert = ElementCall("rainAlert", phrases: ["alert", "tell me when", "warn me"],
                                        inputs: [CallInput("on", from: .asked, required: false),
                                                 CallInput("leadMinutes", from: .asked, required: false)],
@@ -53,7 +53,7 @@ public enum ElementCatalog {
                                                CallInput("startsAt", from: .window, required: false)],
                                       reaction: .tessLine)
 
-    // Deck
+    /// Deck
     static let startWorkout = ElementCall("startWorkout", phrases: ["start", "begin", "let's go"],
                                           inputs: [CallInput("routine", from: .referent)], reaction: .keystoneTakes,
                                           kinds: ["routine"])
@@ -62,7 +62,7 @@ public enum ElementCatalog {
                                              CallInput("reps", from: .asked)], reaction: .keystoneTakes)
     static let restDay = ElementCall("restDay", phrases: ["rest", "skip today", "day off"], reaction: .reform)
 
-    // Galley
+    /// Galley
     static let startCooking = ElementCall("startCooking", phrases: ["cook", "start cooking", "make"],
                                           inputs: [CallInput("recipe", from: .referent)], reaction: .keystoneTakes,
                                           kinds: ["recipe"])
@@ -77,7 +77,7 @@ public enum ElementCatalog {
     static let createRecipe = ElementCall("createRecipe", phrases: ["save the recipe", "new recipe"],
                                           inputs: [CallInput("title", from: .asked)], reaction: .keystoneTakes)
 
-    // Watch
+    /// Watch
     static let tend = ElementCall("tendRoutine", phrases: ["done", "did it", "water", "tend"],
                                   inputs: [CallInput("routine", from: .referent)], reaction: .strike,
                                   kinds: ["routine"])
@@ -104,9 +104,11 @@ public enum ElementCatalog {
                                    inputs: [CallInput("question", from: .asked)], reaction: .tessLine)
 
     /// Tools named here that `TessTools` does not have yet. Each wraps an engine action that exists.
+    /// Added: checkListItem, startWorkout, startCooking, logSpend (device rungs only). Still waiting for an engine
+    /// action to wrap: pinNote (no pinned field on a note), rainAlert (a local notification, the app's), restDay (a
+    /// read today, not a write), and the Watch trees' tend, plant and pause (no routine-tending action yet).
     public static let proposed: Set<String> = [
-        "checkListItem", "pinNote", "rainAlert", "startWorkout", "restDay", "startCooking", "tendRoutine",
-        "plantRoutine", "pauseRoutine", "logSpend",
+        "pinNote", "rainAlert", "restDay", "tendRoutine", "plantRoutine", "pauseRoutine",
     ]
 
     /// Shell calls: they change what is shown and write nothing.
@@ -176,7 +178,7 @@ public enum ElementCatalog {
     public static var everyCall: [ElementCall] {
         var out: [ElementCall] = []
         let lists: [[ElementCall]] = rooms.values.flatMap(\.values) + Array(shared.values)
-        for call in lists.flatMap({ $0 }) where !out.contains(where: { $0.name == call.name }) {
+        for call in lists.flatMap(\.self) where !out.contains(where: { $0.name == call.name }) {
             out.append(call)
         }
         return out

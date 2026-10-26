@@ -78,8 +78,29 @@ public final class TessRun {
 
     // MARK: Ask
 
+    /// Where an ask comes from: a plain screen line (the old way), or the frame of where he is with the tool pick made
+    /// from it (docs/ai/harness/elements.md).
+    struct Context {
+        var screen: String?
+        var frame: TessFrame?
+        var pick: ToolPicker.Pick?
+    }
+
+    /// Starts a run from the frame (where he is). The picker chooses the calls and the rung; a short command about the
+    /// thing in focus ("done", "open this") is bound from the frame and runs with no model at all. The frame's
+    /// fragments replace the old "On screen" line, and its object ids become the run's handles.
+    public func ask(_ text: String, frame: TessFrame) -> AsyncStream<TessRunEvent> {
+        let pick = ToolPicker.pick(text, frame: frame)
+        let about = frame.aboutIDs.compactMap { engine.store.object(id: $0) }.filter { !$0.isDeleted }
+        return start(text, about: about, context: Context(screen: nil, frame: frame, pick: pick))
+    }
+
     /// Starts a run. The same text again within 10 s joins the running stream; any other ask cancels the one in flight.
     public func ask(_ text: String, about: [ObjectRecord] = [], screen: String? = nil) -> AsyncStream<TessRunEvent> {
+        start(text, about: about, context: Context(screen: screen))
+    }
+
+    private func start(_ text: String, about: [ObjectRecord], context: Context) -> AsyncStream<TessRunEvent> {
         if let active = current, !active.done, active.text == text,
            now().timeIntervalSince(active.startedAt) < Self.sameAskWindow
         {
@@ -97,7 +118,7 @@ public final class TessRun {
         current = active
         let stream = subscribe(active)
         active.task = Task { [weak self] in
-            await self?.execute(active, about: about, screen: screen)
+            await self?.execute(active, about: about, context: context)
         }
         return stream
     }
@@ -144,6 +165,34 @@ public final class TessRun {
         var handles: [String: UUID]
     }
 
+    /// The shell calls as tools: they change what is shown and write nothing.
+    static func shellSpecs() -> [ToolSpec] {
+        func spec(_ name: String, _ description: String, _ schema: TessSchema) -> ToolSpec {
+            let data = (try? JSONSerialization.data(withJSONObject: schema.json, options: [.sortedKeys])) ?? Data()
+            return ToolSpec(name: name, description: description, schema: data)
+        }
+        return [
+            spec(
+                "openItem",
+                "Open a thing on the screen",
+                .object([("item", .string("The thing, by its handle or name"))])
+            ),
+            spec("openDoor", "Open a door of this room", .object([("door", .string("The door's name"))])),
+            spec(
+                "showWindow",
+                "Change the screen's window (the switcher's word)",
+                .object([("window", .string("The word"))])
+            ),
+            spec("goBack", "Go back one page", .object([])),
+        ]
+    }
+
+    /// Only the tools a pick named, in its order (shell calls included); `open` rides along as a read.
+    static func toolSpecs(only names: [String]) -> [ToolSpec] {
+        let all = toolSpecs() + shellSpecs()
+        return names.compactMap { name in all.first { $0.name == name } }
+    }
+
     /// The tool definitions in a fixed order: the Tess tools, then `open`.
     static func toolSpecs() -> [ToolSpec] {
         var specs: [ToolSpec] = []
@@ -161,7 +210,9 @@ public final class TessRun {
     }
 
     /// system[0] voice (cache), tools, system[1] profile (cache); fragments ride on the ask.
-    func pack(about: [ObjectRecord], screen: String?, withTools: Bool) -> Pack {
+    func pack(about: [ObjectRecord], screen: String?, withTools: Bool, frame: TessFrame? = nil,
+              pick: ToolPicker.Pick? = nil) -> Pack
+    {
         var system = [TextBlock(Self.voice)]
         var cache: [CacheMark] = [CacheMark(0, .oneHour)]
         let profile = profile()
@@ -172,7 +223,10 @@ public final class TessRun {
         var fragments: [PackFragment] = []
         var handles: [String: UUID] = [:]
         let store = engine.store, classes = engine.classes
-        if let screen, !screen.isEmpty {
+        if let frame {
+            // Where he is, by shown names; each fragment keeps its own taint for the Door.
+            fragments.append(contentsOf: frame.fragments())
+        } else if let screen, !screen.isEmpty {
             fragments.append(PackFragment("On screen: \(screen)"))
         }
         if let digest = dayDigest(), !digest.isEmpty {
@@ -191,7 +245,9 @@ public final class TessRun {
             let taint: Taint = TessAskRouter.isUnnameable(object, classes: classes) ? .deviceOnly : .claudeSafe
             fragments.append(PackFragment("[\(handle)] \(shown)", taint: taint))
         }
-        return Pack(system: system, cacheAfter: cache, tools: withTools ? Self.toolSpecs() : [],
+        let specs = pick.map { Self.toolSpecs(only: $0.tools) }
+            ?? Self.toolSpecs()
+        return Pack(system: system, cacheAfter: cache, tools: withTools ? specs : [],
                     fragments: fragments, handles: handles)
     }
 
@@ -203,18 +259,26 @@ public final class TessRun {
 
     // MARK: Execute
 
-    private func execute(_ active: Active, about: [ObjectRecord], screen: String?) async {
+    private func execute(_ active: Active, about: [ObjectRecord], context: Context) async {
         emit(.waiting, active)
         let text = active.text
         // A key-shaped ask goes nowhere: no Door call, no stored turn.
         if looksLikeClaudeKey(text) {
             return emit(.failed(Self.keyLine), active)
         }
+        // A bound call runs with no model at all: the frame filled every input.
+        if let bound = context.pick?.bound {
+            _ = conversation.append(role: .user, text: text, about: about, at: now())
+            let line = await runBound(bound, frame: context.frame, active: active)
+            _ = conversation.append(role: .tess, text: line.reply, about: about, at: now())
+            return emit(line.failed ? .failed(line.reply) : .finished(line.reply), active)
+        }
         let claudeOn = flagOn() && door.asksClaude()
-        let plan = claudeOn ? pickRung(text) : RungPlan.deviceOnly
+        let plan = claudeOn ? (context.pick?.plan ?? pickRung(text)) : RungPlan.deviceOnly
         lastRung = plan.ladder.first
         lastAskAt = now()
-        let pack = pack(about: about, screen: screen, withTools: claudeOn)
+        let pack = pack(about: about, screen: context.screen, withTools: claudeOn, frame: context.frame,
+                        pick: context.pick)
         let messages = history() + [BrainMessage(.user, text: text)]
         _ = conversation.append(role: .user, text: text, about: about, at: now())
         var state = TessRunState(startedAt: now(), askText: text, aboutIDs: about.map(\.id), messages: messages)
@@ -378,6 +442,20 @@ public final class TessRun {
         case TessOpenTool.name:
             result = TessOpenTool.run(arguments: input, handles: handles, engine: engine, policy: door.policy(),
                                       calendar: calendar)
+        case _ where ElementCatalog.shellCalls.contains(name):
+            // A shell call writes nothing: the host plays it.
+            let args = (try? JSONSerialization.jsonObject(with: input)) as? [String: Any] ?? [:]
+            var strings: [String: String] = [:]
+            var object: UUID?
+            for (key, value) in args {
+                guard let text = value as? String else { continue }
+                strings[key] = text
+                if let id = handles[text] ?? UUID(uuidString: text) {
+                    object = id
+                }
+            }
+            sink(.shell(ShellIntent(call: name, object: object, arguments: strings)))
+            result = ("Shown.", false)
         default:
             do {
                 let records = try TessTools.run(name, arguments: input, engine: engine, pending: true, now: now(),
@@ -398,6 +476,63 @@ public final class TessRun {
         await trace.record(TraceSpan(kind: .tool, name: name, at: now(), totalMs: LatencyBench.ms(.now - started),
                                      outcome: result.isError ? "error" : "works", runID: runID))
         return result
+    }
+
+    // MARK: Bound calls
+
+    /// Runs a call the frame filled, with no model: a shell call is handed to the host; a tool call runs by object id,
+    /// pending (a ghost row with Undo 10 s). Returns the line to say.
+    private func runBound(_ bound: ToolPicker.Bound, frame _: TessFrame?,
+                          active: Active) async -> (reply: String, failed: Bool)
+    {
+        let started = ContinuousClock.now
+        let result = await performBound(bound, active: active)
+        await trace.record(TraceSpan(kind: .tool, name: bound.call, at: now(), totalMs: LatencyBench.ms(.now - started),
+                                     outcome: result.failed ? "error" : "bound", runID: active.id))
+        return result
+    }
+
+    private func performBound(_ bound: ToolPicker.Bound, active: Active) async -> (reply: String, failed: Bool) {
+        if ElementCatalog.shellCalls.contains(bound.call) {
+            emit(.shell(ShellIntent(call: bound.call, object: bound.object, arguments: bound.arguments)), active)
+            return (Self.shellLine(bound), false)
+        }
+        // The tool's arguments: each input by its name, the object by id (a label still points at the right row).
+        var arguments: [String: Any] = bound.arguments
+        if let object = bound.object, let call = ElementCatalog.everyCall.first(where: { $0.name == bound.call }),
+           let input = call.inputs.first(where: { $0.source == .referent })
+        {
+            arguments[input.name] = object.uuidString
+        }
+        do {
+            let data = try JSONSerialization.data(withJSONObject: arguments)
+            let records = try TessTools.run(bound.call, arguments: data, engine: engine, pending: true, now: now(),
+                                            calendar: calendar)
+            for record in records {
+                emit(.ghost(record.id), active)
+            }
+            let line = records.compactMap(\.receipt).first ?? records.first?.summary ?? "Done."
+            return (line, false)
+        } catch let answer as TessToolAnswer {
+            return (answer.line, false)
+        } catch let error as TessToolError {
+            return (Self.boundFailure(error.description), true)
+        } catch {
+            return ("That didn't work.", true)
+        }
+    }
+
+    static func shellLine(_ bound: ToolPicker.Bound) -> String {
+        switch bound.call {
+        case "goBack": "Back."
+        case "openDoor": bound.arguments["door"].map { "Opening \($0)." } ?? "Opening it."
+        case "showWindow": bound.arguments["window"].map { "\($0)." } ?? "Done."
+        default: bound.arguments["item"].map { "Opening \($0)." } ?? "Opening it."
+        }
+    }
+
+    static func boundFailure(_ text: String) -> String {
+        text.isEmpty ? "That didn't work." : "I couldn't do that: \(text)."
     }
 
     // MARK: Resume
