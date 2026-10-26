@@ -9,8 +9,10 @@ import Testing
 @MainActor
 struct BridgeWidgetTests {
     @Test func theWidgetSlotsMatchTheSheet() {
-        #expect(HomeOneThing.height == 212)
-        #expect(HomeOneThing.signTop == 44)
+        #expect(HomeOneThing.height == LandingPlace.widget.frame.height)
+        // The sign sits in its glyph place, 298, 444, 80 x 80.
+        #expect(LandingPlace.widget.frame.minY + HomeOneThing.signTop == LandingPlace.Widget.glyph.minY)
+        #expect(LandingPlace.widget.frame.maxX - 80 == LandingPlace.Widget.glyph.minX)
         #expect(HomeOneThing.signRoom == 92)
     }
 
@@ -38,8 +40,12 @@ struct BridgeWidgetTests {
     @Test func theDialWearsShipNamesWithListsFoldedIntoTheLog() {
         let rows = AppsListRows.make([])
         #expect(!rows.contains { $0.app == .lists })
-        let names = Set(rows.map(\.app.shipName))
+        let names = Set(rows.map(\.name))
         #expect(names.isSuperset(of: ["Deck", "Galley", "Purse", "Log", "Watch"]))
         #expect(!names.contains("Training") && !names.contains("Kitchen") && !names.contains("Money"))
+        #expect(rows.map(\.name) == ["Log", "Lookout", "Deck", "Galley", "Watch", "Purse", "To do", "Settings"])
+        #expect(rows.first { $0.name == "Lookout" }?.door == .lookout)
+        #expect(rows.first { $0.name == "Settings" }?.door == .settings)
+        #expect(rows.first { $0.name == "Galley" }?.door == .app(.kitchen))
     }
 }
