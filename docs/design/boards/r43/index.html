@@ -1,0 +1,183 @@
+<title>Landing elements, other rooms</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --notes:#5B3FB8;--lists:#5E6B1F;--routines:#8E4A78;--money:#2A7878;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--notes:#B9A9E0;--lists:#B5BE7A;--routines:#D79AA6;--money:#7BC0C4;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--notes:#B9A9E0;--lists:#B5BE7A;--routines:#D79AA6;--money:#7BC0C4;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head,.sec{max-width:1120px;margin:0 auto 44px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-size:28px;font-weight:600;letter-spacing:-.02em;margin:0}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+.notes{flex:1 1 320px;min-width:0;max-width:520px;display:flex;flex-direction:column;gap:10px}
+.notes p{margin:0}
+.spec{display:grid;grid-template-columns:110px 1fr;gap:4px 14px;font-size:15px}.spec span:nth-child(odd){color:var(--ink3)}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr:hover{color:var(--ink)}
+.tr:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+.ctl{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.stage{position:relative;width:300px;max-width:100%;height:260px;background:var(--phone);border:1px solid var(--edge);border-radius:28px;overflow:hidden;box-sizing:border-box;flex:none}
+.n{font-family:var(--nums);font-weight:300}
+.big{font-family:var(--nums);font-weight:200;line-height:.86;letter-spacing:-.02em}
+.brief{position:absolute;right:20px;left:20px;text-align:right;font-size:19px;line-height:25px;height:50px;overflow:hidden}
+textarea{font:inherit;font-size:16px;width:100%;max-width:420px;box-sizing:border-box;background:var(--phone);color:var(--ink);border:1px solid var(--edge);border-radius:10px;padding:10px 12px;resize:vertical}
+</style>
+
+<div class="head">
+  <p class="lab">Round 228, Oct 23</p>
+  <h1>Landing elements, the other four rooms</h1>
+  <p class="sub">Notes, Lists, Routines and Money, on the approved 226 bands, with the same rules as 227: type and fine lines only, lines keep a fixed length and change only colour or weight, nothing fades, Reduce Motion lands each change in one step.</p>
+  <div class="ctl"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button></div>
+</div>
+
+<div class="sec">
+  <h2>1 Notes, the pull quote</h2>
+  <div class="row">
+    <div class="stage" id="s1">
+      <div id="q" style="position:absolute;left:20px;right:20px;top:54px;height:102px;overflow:hidden;font-size:30px;font-weight:500;letter-spacing:-.02em;line-height:34px"></div>
+      <div id="qm" style="position:absolute;left:20px;top:166px;font-size:15px;color:var(--ink2)">Apartment, just now</div>
+    </div>
+    <div class="notes">
+      <p>The first words of your last note, set large. It fills three lines at most and is cut where a word ends, never with "...". Type a note and save it to see the quote change.</p>
+      <textarea id="ta" rows="3" aria-label="A note">Ask about the lease before Friday, and the parking spot by the gate, and whether the deposit comes back in full</textarea>
+      <div class="ctl"><button class="tr" id="save" style="color:var(--notes);font-weight:600">Save note</button><button class="tr" id="priv">Make it private</button></div>
+      <div class="spec">
+        <span>Fit</span><span>30 pt Figtree 500 on 34 pt lines, three lines fixed. The phone lays the words out and keeps whole words that fit; the last kept word ends the quote, stepping back past a small word such as and, the, of or to so it never ends on one. A one-line note stays one line, with the space below left empty.</span>
+        <span>Mark</span><span>An opening quote mark in the accent, 600, set as the first character.</span>
+        <span>Change</span><span>The old quote is clipped away upward (0.24 s). The new one is clipped open from the baseline line by line, 60 ms apart.</span>
+        <span>Private</span><span>A private or walled note shows its shown label ("Private note") in ink 2, never its words: the headline is a standing display, not a reading view. Open notes quote normally while "Show the last note on top" is on. The app switcher snapshot masks the headline.</span>
+        <span>Short</span><span>A one-word or small-word note shows in full; the quote is never empty.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>2 Lists, the tally</h2>
+  <div class="row">
+    <div class="stage" id="s2">
+      <div style="position:absolute;left:20px;top:50px"><div class="big" style="font-size:96px;color:var(--lists)"><span id="tn">6</span><span style="font-size:40px;color:var(--ink3)"> of 14</span></div></div>
+      <svg id="tally" width="96" height="70" viewBox="0 0 96 70" style="position:absolute;left:16px;top:118px" aria-hidden="true"></svg>
+      <div style="position:absolute;right:20px;top:160px;font-size:15px;color:var(--ink2)">Packing, for Sunday</div>
+      <div class="brief" style="bottom:20px" id="tb">Next: socks, the book.</div>
+    </div>
+    <div class="notes">
+      <p>One stroke per item, in groups of five. Packing an item turns its stroke to ink. The fifth in a group gets the strike across, drawn in once. Strokes never grow or move.</p>
+      <div class="ctl"><button class="tr" id="pack" style="color:var(--lists);font-weight:600">Pack one</button><button class="tr" id="unpack">Undo</button></div>
+      <div class="spec">
+        <span>Strokes</span><span>26 pt tall, 1.6 pt, round caps, 5 pt apart, groups 30 pt apart. Not packed: edge. Packed: ink. Up to 20 items; past that the tally hides and the number carries it.</span>
+        <span>Strike</span><span>When a group fills, a 2 pt accent stroke is drawn across it from lower left to upper right by a clip (0.3 s), with a light tick.</span>
+        <span>Number</span><span>The count changes in place. At the end it reads "14 of 14", the tally steps away, and the brief says what's next (226).</span>
+        <span>Touch</span><span>A finger on the tally reads the nearest stroke's item in the brief ("Adapter, not yet"); that stroke goes to 2.6 pt while held (weight only), holding 1.2 s after release.</span>
+        <span>Undo</span><span>10 s, from the op log. The stroke goes back to edge; a strike undraws.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>3 Routines, the tide line</h2>
+  <div class="row">
+    <div class="stage" id="s3">
+      <div style="position:absolute;left:20px;top:54px;display:flex;align-items:baseline;gap:10px"><span class="big" id="rt" style="font-size:84px;color:var(--routines)">8</span><span id="rw" style="font-size:22px;color:var(--ink2)">pm, stretch</span></div>
+      <svg id="tide" width="260" height="56" viewBox="0 0 260 56" style="position:absolute;left:20px;top:140px;touch-action:none;cursor:ew-resize" aria-label="Today's routines" role="img"></svg>
+      <div class="brief" style="bottom:16px" id="rb">Morning and lunch are done.<br>Night starts at <span class="n">10:30</span>.</div>
+    </div>
+    <div class="notes">
+      <p>One swell per routine across the day, drawn once and never moved. Passed water is ink, ahead is edge, and the next routine's swell is drawn heavier in the accent. Touch along the line to read it.</p>
+      <div class="ctl"><span style="color:var(--ink3);font-size:15px">Time</span><input type="range" id="rc" min="6" max="23.5" step=".25" value="19.5" aria-label="Time of day" style="flex:1;max-width:260px"></div>
+      <div class="spec">
+        <span>Line</span><span>6 am to midnight across the width. Each routine is a swell 18 to 40 pt wide (its length), 10 to 26 pt high (its size); a flat line between. 1.6 pt.</span>
+        <span>Colour</span><span>Passed: ink. Ahead: edge. The next routine: accent at 2.4 pt. As time passes, the ink runs forward by colour only; the line itself never changes shape.</span>
+        <span>Touch</span><span>A finger on the line reads the nearest routine in the brief slot ("Pills, 9:15 pm"), holding 1.2 s after release. The headline doesn't move.</span>
+        <span>Private</span><span>Inside the room routines read by name ("Pills, 9:15 pm"). Outside it (notices, widgets, backups) every routine is "A routine"; lab-mode Claude calls may carry the name. A swell that would start before 6 am or end after midnight is clamped to the line's ends.</span>
+        <span>Now</span><span>Now is a colour cursor only: where ink meets edge. No ring, no tick.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>4 Money, the month line</h2>
+  <div class="row">
+    <div class="stage" id="s4">
+      <div style="position:absolute;left:20px;top:50px"><div style="font-size:15px;color:var(--ink2);margin-bottom:6px">October so far</div><div class="big" style="font-size:56px;color:var(--money)">$2,418<span style="font-size:30px">.60</span></div></div>
+      <svg id="ml" width="260" height="36" viewBox="0 0 260 36" style="position:absolute;left:20px;top:150px;touch-action:none;cursor:ew-resize" aria-label="October" role="img"></svg>
+      <div class="brief" style="bottom:18px" id="mb"><b style="color:var(--money);font-weight:600">Rent</b> is due Friday.<br>Payday was the 15th.</div>
+    </div>
+    <div class="notes">
+      <p>The month as one line, a day per step. Passed days are ink, days ahead are edge, and today is where the ink stops. A bill or payday is its day's step drawn heavier. No ticks or marks off the line. Touch to read a day.</p>
+      <div class="spec">
+        <span>Line</span><span>Full width, 1.6 pt. Each day is 1/31 of it (or 1/30, 1/28). It never changes length; the ink runs forward a day at a time at midnight (colour only).</span>
+        <span>Today</span><span>Where ink meets edge. Nothing else marks it.</span>
+        <span>Bills</span><span>The bill's day drawn at 4 pt with round caps: ink once paid, accent while due in the next 7 days, ink 3 later. Payday is a 4 pt ink day too.</span>
+        <span>Touch</span><span>Reads the day in the brief: "Oct 28. Phone, due." Amounts show inside the room only, never on the doorway or Home.</span>
+        <span>Undo</span><span>Reversing a spend reads "Reversed" (engine inverse), 10 s.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const NS='http://www.w3.org/2000/svg',el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
+
+// 1 quote: keep whole words that fit three lines
+const q=document.getElementById('q');
+function fitQuote(text){const words=text.trim().split(/\s+/);const probe=document.createElement('div');probe.style.cssText='position:absolute;visibility:hidden;left:20px;top:0;font-size:30px;font-weight:500;letter-spacing:-.02em;line-height:34px;width:'+q.clientWidth+'px';
+  q.parentNode.append(probe);let lo=1,hi=words.length,best=1;while(lo<=hi){const m=(lo+hi)>>1;probe.innerHTML=mark()+esc(words.slice(0,m).join(' '));if(probe.scrollHeight<=102+1){best=m;lo=m+1}else hi=m-1}probe.remove();const STOP=/^(and|the|a|an|of|to|by|in|on|or|for|with|at|is)$/i;let k=best;while(k>1&&k<words.length&&STOP.test(words[k-1].replace(/[,;:]$/,'')))k--;return words.slice(0,k).join(' ').replace(/[,;:]$/,'')}
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const mark=()=>'<span style="color:var(--notes);font-weight:600;margin-right:.04em">“</span>';
+function showQuote(t,first){const html=mark()+esc(fitQuote(t));if(first){q.innerHTML=html;return}
+  anim(.24,u=>q.style.clipPath=`inset(0 0 ${u*100}% 0)`,()=>{q.innerHTML=html;q.style.clipPath='inset(0 0 100% 0)';anim(.42,u=>q.style.clipPath=`inset(0 0 ${(1-u)*100}% 0)`)})}
+const ta=document.getElementById('ta');showQuote(ta.value,true);let pv=false;document.getElementById('priv').onclick=e=>{pv=!pv;e.target.textContent=pv?'Make it open':'Make it private';if(pv){const h=mark()+'Private note';anim(.24,u=>q.style.clipPath=`inset(0 0 ${u*100}% 0)`,()=>{q.innerHTML=h;q.style.color='var(--ink2)';q.style.clipPath='none'})}else{q.style.color='';showQuote(ta.value)}};document.getElementById('save').onclick=()=>{if(ta.value.trim())showQuote(ta.value)};
+
+// 2 tally
+const tally=document.getElementById('tally'),TOT=14;let packed=6;const strokes=[],strikes=[];
+for(let i=0;i<TOT;i++){const g=Math.floor(i/5),x=4+g*30+(i%5)*5;const l=el('line',{x1:x,y1:22,x2:x,y2:48,stroke:'var(--edge)','stroke-width':1.6,'stroke-linecap':'round'});tally.append(l);strokes.push(l)}
+for(let g=0;g<3;g++){const x0=g*30,s=el('line',{x1:x0+1,y1:42,x2:x0+28,y2:26,stroke:'var(--lists)','stroke-width':2,'stroke-linecap':'round','stroke-dasharray':40,'stroke-dashoffset':40});tally.append(s);strikes.push(s)}
+const NEXT=['socks, the book','the book, adapter','adapter, chargers','chargers, rain jacket','rain jacket, passport','passport, sunglasses','sunglasses, snacks','snacks','',''];
+function paintT(changed,dir){strokes.forEach((l,i)=>l.setAttribute('stroke',i<packed?'var(--ink)':'var(--edge)'));document.getElementById('tn').textContent=packed;
+  strikes.forEach((s,g)=>{const full=packed>=(g+1)*5&&(g+1)*5<=TOT,on=s.dataset.on==='1';if(full&&!on){s.dataset.on='1';anim(.3,u=>s.setAttribute('stroke-dashoffset',40*(1-u)))}else if(!full&&on){s.dataset.on='0';anim(.2,u=>s.setAttribute('stroke-dashoffset',40*u))}});
+  tally.style.visibility=packed>=TOT?'hidden':'visible';document.getElementById('tb').innerHTML=packed>=TOT?'Packing is done.':`Next: ${NEXT[packed-6]||'the last few'}.`}
+strikes[0].dataset.on='0';paintT();
+const ITEMS=['Shirts','Pants','Shoes','Toothbrush','Glasses','Chargers','Socks','The book','Adapter','Rain jacket','Passport','Sunglasses','Snacks','Keys'];const tb=document.getElementById('tb');let tt=null;
+tally.style.touchAction='none';tally.style.cursor='pointer';const readT=e=>{const r=tally.getBoundingClientRect(),x=(e.clientX-r.left)*96/r.width;let bi=0,bd=1e9;strokes.forEach((l,i)=>{const d=Math.abs(+l.getAttribute('x1')-x);if(d<bd){bd=d;bi=i}});strokes.forEach((l,i)=>l.setAttribute('stroke-width',i===bi?2.6:1.6));tb.innerHTML=`${ITEMS[bi]}, ${bi<packed?'packed':'not yet'}`};
+tally.onpointerdown=e=>{tally.setPointerCapture(e.pointerId);clearTimeout(tt);readT(e);tally.dataset.d=1};tally.onpointermove=e=>{if(tally.dataset.d==='1')readT(e)};tally.onpointerup=tally.onpointercancel=()=>{tally.dataset.d=0;tt=setTimeout(()=>{strokes.forEach(l=>l.setAttribute('stroke-width',1.6));paintT()},1200)};document.getElementById('pack').onclick=()=>{if(packed<TOT){packed++;paintT()}};document.getElementById('unpack').onclick=()=>{if(packed>0){packed--;paintT()}};
+
+// 3 tide
+const RT=[['Wake',7,24,14],['Lunch walk',12.5,30,20],['Stretch',20,22,12],['Pills',21.25,16,8],['Night',22.5,40,26]],X=h=>(h-6)/18*260,BASE=44;
+const tide=document.getElementById('tide');
+function seg(a,b){// path between hours a and b
+  let d='';const N=120;for(let k=0;k<=N;k++){const h=a+(b-a)*k/N;let y=BASE;for(const r of RT){const w=r[2]/260*18,u=(h-(r[1]-w/2))/w;if(u>0&&u<1)y=Math.min(y,BASE-r[3]*Math.sin(u*Math.PI)**2)}d+=(k?'L':'M')+X(h).toFixed(1)+' '+y.toFixed(1)}return d}
+function paintR(now){tide.innerHTML='';const nx=RT.find(r=>r[1]>=now)||null;
+  tide.append(el('path',{d:seg(6,now),fill:'none',stroke:'var(--ink)','stroke-width':1.6}),el('path',{d:seg(now,24),fill:'none',stroke:'var(--edge)','stroke-width':1.6}));
+  if(nx){const w=nx[2]/260*18;tide.append(el('path',{d:seg(Math.max(now,nx[1]-w/2),nx[1]+w/2),fill:'none',stroke:'var(--routines)','stroke-width':2.4,'stroke-linecap':'round'}));
+    const hh=Math.floor(nx[1]),mm=Math.round((nx[1]-hh)*60);document.getElementById('rt').textContent=(hh%12||12)+(mm?':'+String(mm).padStart(2,'0'):'');document.getElementById('rw').textContent=(hh>=12?'pm, ':'am, ')+nx[0].toLowerCase()}
+  else{document.getElementById('rt').textContent='';document.getElementById('rw').textContent='All done for today'}}
+const rc=document.getElementById('rc');paintR(+rc.value);rc.oninput=()=>paintR(+rc.value);
+const rb=document.getElementById('rb'),rb0=rb.innerHTML;let rt=null;const fmt=h=>{const hh=Math.floor(h),mm=Math.round((h-hh)*60);return `${hh%12||12}:${String(mm).padStart(2,'0')} ${hh>=12?'pm':'am'}`};
+const readR=e=>{const r=tide.getBoundingClientRect(),h=6+(e.clientX-r.left)/r.width*18;const n=RT.reduce((a,b)=>Math.abs(b[1]-h)<Math.abs(a[1]-h)?b:a);rb.innerHTML=`${n[0]}, <span class="n">${fmt(n[1])}</span>`};
+tide.onpointerdown=e=>{tide.setPointerCapture(e.pointerId);clearTimeout(rt);readR(e);tide.dataset.d=1};tide.onpointermove=e=>{if(tide.dataset.d==='1')readR(e)};tide.onpointerup=tide.onpointercancel=()=>{tide.dataset.d=0;rt=setTimeout(()=>rb.innerHTML=rb0,1200)};
+
+// 4 month line
+const ml=document.getElementById('ml'),D=31,TODAY=23,BILLS=[[1,'Rent','paid'],[5,'Gym','paid'],[24,'Rent','due'],[28,'Phone','due'],[31,'Gym','due']],PAY=15,dx=d=>(d-.5)/D*260,Y=20;
+ml.append(el('line',{x1:0,y1:Y,x2:dx(TODAY),y2:Y,stroke:'var(--ink)','stroke-width':1.6}),el('line',{x1:dx(TODAY),y1:Y,x2:260,y2:Y,stroke:'var(--edge)','stroke-width':1.6}));
+const segm=(d,c,w)=>ml.append(el('line',{x1:(d-1)/D*260+1,y1:Y,x2:d/D*260-1,y2:Y,stroke:c,'stroke-width':w,'stroke-linecap':'round'}));
+BILLS.forEach(([d,n,st])=>segm(d,st==='paid'?'var(--ink)':(d-TODAY<=7?'var(--money)':'var(--ink3)'),4));segm(PAY,'var(--ink)',4);
+const mb=document.getElementById('mb'),mb0=mb.innerHTML;let mt=null;
+const readM=e=>{const r=ml.getBoundingClientRect(),d=Math.max(1,Math.min(D,Math.ceil((e.clientX-r.left)/r.width*D)));const b=BILLS.filter(x=>x[0]===d).map(x=>`${x[1]}, ${x[2]}`);if(d===PAY)b.push('payday');mb.innerHTML=`Oct <span class="n">${d}</span>${d===TODAY?', today':''}.${b.length?'<br>'+b.join('. ').replace(/^./,c=>c.toUpperCase())+'.':''}`};
+ml.onpointerdown=e=>{ml.setPointerCapture(e.pointerId);clearTimeout(mt);readM(e);ml.dataset.d=1};ml.onpointermove=e=>{if(ml.dataset.d==='1')readM(e)};ml.onpointerup=ml.onpointercancel=()=>{ml.dataset.d=0;mt=setTimeout(()=>mb.innerHTML=mb0,1200)};
+
+document.getElementById('th').onclick=()=>document.documentElement.dataset.theme='dark';document.getElementById('tw').onclick=()=>document.documentElement.dataset.theme='light';
+})();
+</script>

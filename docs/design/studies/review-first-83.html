@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review first week</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:22px}
+.head h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.015em;flex:none;width:420px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:1000px}
+.grid{display:grid;grid-template-columns:repeat(4,393px);gap:22px 22px;align-items:start}
+.cap{margin-top:12px}
+.cap .opt{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6674}
+.cap h2{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;border-radius:44px}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--bg0:rgba(251,250,247,0);--tess:#2450D8;--ctx:#5A3DAF;--now:#F0A500;--health:#12936A;--tint:.45}
+.obs{--ink:245,242,236;--bg:#121014;--bg0:rgba(18,16,20,0);--tess:#86B4FF;--ctx:#B8A3FF;--now:#FFC23D;--health:#52D3A3;--tint:.55}
+.abs{position:absolute}
+.body{position:absolute;inset:0}
+.name{left:22px;top:52px;font-weight:700;font-size:15px;letter-spacing:.08em}
+.sw{right:22px;top:104px;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.ctxl{left:22px;right:22px;top:146px;font-size:17px;color:var(--ctx);display:flex;justify-content:space-between}
+.ctxl b{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgb(var(--ink));padding-top:2px}
+.ttl{left:22px;top:84px;font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.02em}
+.hero{left:22px;top:176px;font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.035em;white-space:nowrap}
+.lbl{font-weight:700;font-size:13px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),.62)}
+.s3{color:rgba(var(--ink),.38)}
+.n{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;text-align:center;width:49px}
+.sm{font-size:16px;line-height:22px}
+.quiet{left:22px;font-size:21px;line-height:28px;color:rgba(var(--ink),.66)}
+.gl{position:absolute;left:150px;right:0;top:186px;bottom:96px;padding:20px 22px 0 46px;background:linear-gradient(90deg,var(--bg0),var(--bg) 34px)}
+.gl .gk{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.gl .big{font-size:56px;line-height:62px;white-space:nowrap;font-weight:500;letter-spacing:-.02em;margin-top:10px}
+.gl .big small{font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px}
+.gl .gr{font-size:19px;line-height:26px;margin-top:12px}
+.gl .gr em{font-style:normal;color:rgba(var(--ink),.62)}
+.gl .more{position:absolute;left:46px;bottom:22px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.gl .more i{display:block;height:2px;margin-top:5px;background:currentColor}
+.sf{position:absolute;left:22px;width:349px;top:200px}
+.sf .r{display:flex;justify-content:space-between;align-items:center;height:44px;font-size:21px}
+.sf .r em{font-style:normal;font-size:19px;color:rgba(var(--ink),.62);font-variant-numeric:tabular-nums}
+.sf .r.now span{font-weight:600}
+.sf .r.ah span{color:rgba(var(--ink),.38)}
+.sf .r.nt span{color:rgba(var(--ink),.62)}
+.ax .name,.ax .sw{font-size:20px}
+.ax .ctxl{font-size:24px;top:160px}
+.ax .hero{font-size:56px;line-height:62px;top:208px;white-space:normal;width:349px}
+.ax .al{left:22px;width:349px;font-size:20px;font-weight:700;letter-spacing:.08em}
+.ax .ar{left:22px;width:349px;font-size:32px;line-height:38px}
+.ax .ar small{display:block;font-size:24px;line-height:30px;color:rgba(var(--ink),.66)}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 46%);filter:blur(3px)}
+.tl{position:absolute;right:78px;width:270px;top:779px;transform:translateY(-50%);text-align:right;font-size:19px;line-height:25px;color:var(--tess)}
+.finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
+.obs .finger{background:rgba(245,242,236,.16);border-color:rgba(245,242,236,.3)}
+.vo{position:absolute;left:14px;right:14px;border:3px solid #0A64D8;border-radius:8px;pointer-events:none;z-index:8}
+.vot{position:absolute;left:14px;right:14px;bottom:100px;background:#111;color:#fff;font-size:15px;line-height:20px;padding:8px 10px;border-radius:6px;z-index:8}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+const $ = id => document.getElementById(id);
+const band = line => `<div class="abs soul"></div>${line ? `<div class="tl">${line}</div>` : ''}`;
+const DAYS = ['M','T','W','T','F','S','S'], TODAY = 4, X = i => 22 + 49.4 * i, cx = i => X(i) + 24.7;
+const dab = (x, y, pig = 'var(--health)') => `<div class="abs" style="left:${x-13}px;top:${y-11}px;width:26px;height:22px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:${pig};opacity:var(--tint)"></div>`;
+const rest = (x, y) => `<div class="abs" style="left:${x-16}px;top:${y+4}px;width:32px;height:5px;background:rgba(var(--ink),.5);border-radius:3px 1px 2px 3px/2px 3px 1px 2px;clip-path:polygon(0 20%,30% 0,70% 15%,100% 30%,96% 100%,60% 80%,25% 100%,2% 70%)"></div>`;
+const ring = (x, y) => `<div class="abs" style="left:${x-11}px;top:${y-9}px;width:22px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(var(--ink),.25)"></div>`;
+const bnd = (g, y, label, right, cells) => `<div class="abs lbl s2" style="left:22px;top:${g+y}px">${label}</div>${right ? `<div class="abs lbl" style="right:22px;top:${g+y}px">${right}</div>` : ''}${cells}`;
+const letters = (g, first) => DAYS.map((d, i) => `<div class="abs lbl" style="left:${X(i)}px;width:49px;text-align:center;top:${g}px;font-size:16px;color:rgba(var(--ink),${i === TODAY ? 1 : i < TODAY ? (i < first ? .38 : .62) : .38})">${d}</div>`).join('');
+const nums = (g, y, a) => a.map((n, i) => n === null ? '' : `<div class="abs n" style="left:${X(i)}px;top:${g+y}px">${n}</div>`).join('');
+const thread = (g, y, v) => v.map((on, i) => on ? `<div class="abs" style="left:${cx(i)-14}px;top:${g+y}px;width:${v[i+1] ? 49.4 + 28 : 28}px;height:3px;background:var(--health);opacity:var(--tint);border-radius:2px"></div>` : '').join('');
+const head = (hero, ctx) => `<div class="abs name">REVIEW</div><div class="abs sw">THE DAYS</div><div class="abs ctxl"><span>${ctx}</span></div><div class="abs hero">${hero}</div>`;
+const lines = (y, rows) => `<div class="abs lbl s2" style="left:22px;top:${y}px">THE WEEK’S LINES</div>` + rows.map(([d, t], k) => `<div class="abs sm" style="left:22px;top:${y+26+24*k}px;width:349px"><span style="font-weight:600;color:rgba(var(--ink),.62)">${d}</span>&nbsp; ${t}</div>`).join('');
+
+// 1 the full week: Friday, three sessions, five days
+const fullWeek = () => { const g = 250;
+  return head('3 sessions', 'Oct 12 to 18') + letters(g, 0) +
+    bnd(g, 28, 'TRAINING', '3 SO FAR', [dab(cx(0), g+58), dab(cx(1), g+58), dab(cx(2), g+58), rest(cx(3), g+52), ring(cx(4), g+58)].join('')) +
+    bnd(g, 86, 'TASKS DONE', '18', nums(g, 108, [3, 4, 6, 2, 3])) +
+    bnd(g, 140, 'COOK, 2 OF 4', '', thread(g, 170, [1, 0, 1, 0, 0])) +
+    bnd(g, 188, 'COOKED', '2', [dab(cx(0), g+222, 'var(--now)'), dab(cx(3), g+222, 'var(--now)')].join('')) +
+    lines(g + 250, [['Tue', 'Bench 85 × 8, a best.'], ['Wed', 'Row 70 × 10, a first.'], ['Thu', 'Chili cooked for 4.']]); };
+// 2 the first week: installed Wed, one trained day (Thu), today Fri. No rings, nothing before Wed.
+const firstWeek = (ax) => { const g = 310;
+  return head('1 session<br>in your first week', 'Oct 12 to 18') + letters(g, 2) +
+    bnd(g, 28, 'TRAINING', '1 SO FAR', dab(cx(3), g+58)) +
+    bnd(g, 86, 'TASKS DONE', '3', nums(g, 108, [null, null, null, 3])) +
+    lines(g + 150, [['Thu', 'Push Day A, the first time.']]); };
+// 3 the zero-day week: installed today
+const zeroWeek = () => { const g = 310;
+  return head('Your first week<br>starts today', 'Oct 12 to 18') + letters(g, 4) +
+    `<div class="abs quiet" style="top:${g+40}px">Nothing to count yet.</div>`; };
+const dayRows = (arr) => arr.map(([n, v, k]) => `<div class="r ${k || ''}"><span>${n}</span>${v ? `<em>${v}</em>` : ''}</div>`).join('');
+const sideFront = (rows, ctx) => `<div class="abs name">‹ REVIEW</div><div class="abs ttl">Oct 12 to 18</div><div class="abs ctxl"><span>${ctx}</span><b>THE DAYS</b></div><div class="sf">${dayRows(rows)}</div>`;
+const FULL_ROWS = [['Monday', 'Push A, 3 tasks'], ['Tuesday', 'Pull A, 4 tasks'], ['Wednesday', 'Row, 6 tasks'], ['Thursday', 'Cooked, 2 tasks'], ['Friday', '3 tasks', 'now'], ['Saturday', '', 'ah'], ['Sunday', '', 'ah']];
+const FIRST_ROWS = [['Wednesday', '', 'nt'], ['Thursday', 'Push Day A, 3 tasks'], ['Friday', '', 'now nt'], ['Saturday', '', 'ah'], ['Sunday', '', 'ah']];
+const glance = k => k === 'full'
+  ? `<div class="gl"><div class="gk">THE DAYS</div><div class="big">5<small>of 7 days</small></div><div class="gr">Wednesday, 6 tasks</div><div class="gr"><em>2 to go</em></div><div class="more">ALL DAYS<i></i></div></div>`
+  : k === 'first'
+  ? `<div class="gl"><div class="gk">THE DAYS</div><div class="big">1<small>day</small></div><div class="gr">Thursday, 3 tasks</div><div class="gr"><em>2 to go</em></div><div class="more">ALL DAYS<i></i></div></div>`
+  : `<div class="gl"><div class="gk">THE DAYS</div><div class="gr" style="font-size:19px">Nothing yet.</div></div>`;
+const axFirst = () => `<div class="abs name">REVIEW</div><div class="abs sw">THE DAYS</div><div class="abs ctxl"><span>Oct 12 to 18</span></div><div class="abs hero">1 session in your first week</div>
+  <div class="abs al s2" style="top:410px">TRAINING, 1 SO FAR</div><div class="abs ar" style="top:440px"><small>Thursday</small>Push Day A</div>
+  <div class="abs al s2" style="top:540px">TASKS DONE, 3</div><div class="abs ar" style="top:570px"><small>Thursday</small>3 tasks</div>
+  <div class="abs al s2" style="top:670px">THE WEEK’S LINES</div>`;
+const dim = h => `<div class="body" style="opacity:.3">${h}</div>`;
+const fin = (x, y) => `<div class="finger" style="left:${x}px;top:${y}px;opacity:1"></div>`;
+const ph = (cls, inner, opt, h, p) => `<div><div class="ph ${cls}">${inner}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
+const vo = (top, h, txt) => `<div class="vo" style="top:${top}px;height:${h}px"></div><div class="vot">${txt}</div>`;
+
+if (!play) {
+  let b = `<div class="head"><h1>Sheet 83: Review, the first week</h1><p>A first week is a week, not a short one. It draws the same page as a full week with only what happened: one trained day is one dab, the days before he began are nothing, no ring is ever drawn for a day that was not planned, and no past week is invented. The run stops at its left end with a rubber band and never wraps. Beside it, the full week for comparison, and THE DAYS glance and side for each.</p></div><div class="grid">`;
+  b += ph('por', fullWeek() + band(''), '1 A FULL WEEK, FOR COMPARISON', '3 sessions, 5 of 7 days', 'Review as in sheet 46 on Friday: TRAINING 3 SO FAR with a rest stroke and today\'s open ring, TASKS DONE, COOK, COOKED, the week\'s lines. Seven columns, M to S.');
+  b += ph('por', firstWeek() + band(''), '2 THE FIRST WEEK', '1 session in your first week', 'Began Wed, trained Thu, today Fri. M and T at 38%, no mark. One dab, one numeral, one line. No ring on Wed or Fri, no COOK, WEIGHT or MONEY bands: they arrive when he has them.');
+  b += ph('por', zeroWeek() + band(''), '3 THE ZERO-DAY WEEK', 'Your first week starts today', 'Installed today: letters only, today in ink, and one quiet line. No bands, no zero, no "get started". The next day with nothing reads "A quiet week so far" on this same page.');
+  b += ph('por', `<div class="body" style="transform:translateX(26px)">${firstWeek()}</div>` + fin(220, 600) + band(''), '4 THE RUN\'S LEFT END', 'No past weeks', 'A swipe toward earlier weeks moves the page 26 pt with resistance and springs back (380 ms). Nothing sits behind it: no empty week, no "no earlier weeks", no haptic. The name and context line hold still. Swiping on to a later week at the current one does the same, and it never wraps.');
+  b += ph('por', dim(firstWeek()) + glance('first') + fin(372, 420) + band(''), '5 THE DAYS, FIRST WEEK, STOP 1', '"1 day"', 'Right edge or the word. Fullest day named, "2 to go" because it is the current week. Tess says nothing.');
+  b += ph('por', sideFront(FIRST_ROWS, '1 day') + band(''), '6 THE DAYS, FIRST WEEK, STOP 2', 'Starts where he began', 'Monday and Tuesday are not listed. Wednesday and Friday are names only, Thursday carries its line, the days ahead at 38%.');
+  b += ph('por', dim(fullWeek()) + glance('full') + fin(372, 420) + band(''), '7 THE DAYS, FULL WEEK, STOP 1', '"5 of 7 days"', 'Same glance, same type, same foot word ALL DAYS. The first week is this page early.');
+  b += ph('por', sideFront(FULL_ROWS, '5 of 7 days') + band('Wednesday was the fullest day.'), '8 THE DAYS, FULL WEEK, STOP 2', 'Seven days, one line each', 'Counted days in ink, today semibold, the rest at 38%. Tess speaks on the side only, from 3 counted days.');
+  b += ph('por ax', axFirst() + band(''), '9 DYNAMIC TYPE, AX3', 'Columns become rows', 'Seven columns cannot hold 32/38 type, so from the first accessibility size each band is a label and one row per day that has something. Nothing truncates; the page scrolls and the foot keeps Tess\'s band clear.');
+  b += ph('por', firstWeek() + vo(328, 72, 'Training, 1 so far. Thursday trained.') + band(''), '10 VOICEOVER', 'One element per band', 'Training, 1 so far. Thursday trained. The days before he began are skipped, the open days are not announced as missed.');
+  b += ph('obs', firstWeek() + band(''), '11 OBSIDIAN', 'The first week', 'Ink 245,242,236 on #121014; the dab and numeral at the rest tint (55%). Nothing glows.');
+  b += ph('obs', sideFront(FIRST_ROWS, '1 day') + band(''), '12 OBSIDIAN', 'THE DAYS', 'Same side. Tess\'s #86B4FF is the only colour, and she is silent.');
+  b += `</div>`;
+  $('board').innerHTML = b;
+  document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
+} else {
+  document.body.classList.add('playing');
+  const w = $('board'); w.className = '';
+  w.innerHTML = `<div class="ph por" id="ph"><div class="body" id="fr">${firstWeek()}</div>
+    <div class="body" id="gb" style="opacity:0">${glance('first')}</div>
+    <div class="body" id="fb" style="opacity:0;background:var(--bg)">${sideFront(FIRST_ROWS, '1 day')}</div>
+    <div class="abs soul"></div><div class="finger" id="fg"></div></div>`;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const tween = (ms, f) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(ease(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  const fg = $('fg'), fr = $('fr'), gb = $('gb'), fb = $('fb');
+  const finger = (x, y, on = 1) => { fg.style.left = x + 'px'; fg.style.top = y + 'px'; fg.style.opacity = on; };
+  const inn = p => { const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1);
+    fr.style.opacity = 1 - .7 * p1 - .3 * p2; fr.style.transform = `translateX(${-44 * p2}px)`;
+    gb.style.opacity = p <= 1 ? p1 : 1 - p2; gb.style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`;
+    fb.style.opacity = p2; fb.style.transform = `translateX(${60 * (1 - p2)}px)`; };
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await wait(2000);
+    finger(120, 600);                                   // the left end: pull right, rubber band, spring back
+    await tween(420, q => { finger(120 + 90 * q, 600); fr.style.transform = `translateX(${26 * (1 - Math.pow(1 - q, 2))}px)`; });
+    await tween(380, q => { finger(210, 600, 1 - q); fr.style.transform = `translateX(${26 * (1 - q)}px)`; }); finger(0, 0, 0);
+    await wait(1800);
+    await tween(380, q => { finger(386 - 150 * q, 420); inn(q); }); finger(0, 0, 0); await wait(2300);
+    await tween(380, q => { finger(300 - 170 * q, 420); inn(1 + q); }); finger(0, 0, 0); await wait(2800);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

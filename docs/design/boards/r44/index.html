@@ -1,0 +1,217 @@
+<title>Training and Kitchen, detailed</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --training:#0B62AE;--kitchen:#A8701F;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--training:#3B8CF2;--kitchen:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--training:#3B8CF2;--kitchen:#C49A5E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head,.sec{max-width:1120px;margin:0 auto 48px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-size:30px;font-weight:600;letter-spacing:-.02em;margin:0}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+.notes{flex:1 1 340px;min-width:0;max-width:540px;display:flex;flex-direction:column;gap:10px}
+.notes p{margin:0}
+.try{display:grid;grid-template-columns:22px 1fr;gap:6px 6px;font-size:16px}
+.try span:nth-child(odd){color:var(--ink3);font-family:var(--nums)}
+.src{color:var(--ink3);font-size:14px}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr:hover{color:var(--ink)}
+.tr:focus-visible,.tap:focus-visible{outline:2px solid var(--ink3);outline-offset:3px}
+.tap{all:unset;cursor:pointer}
+#w:focus-visible{outline:none;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
+.phone{position:relative;width:340px;max-width:100%;height:700px;background:var(--phone);border:1px solid var(--edge);border-radius:42px;overflow:hidden;box-sizing:border-box;flex:none;user-select:none;-webkit-user-select:none}
+.z{position:absolute;left:22px;right:22px}
+.n{font-family:var(--nums);font-weight:300}
+.big{font-family:var(--nums);font-weight:200;line-height:.86;letter-spacing:-.02em}
+.brief{text-align:right;font-size:19px;line-height:25px;height:50px;overflow:hidden}
+.t{font-size:23px;font-weight:600;letter-spacing:-.015em;line-height:28px}
+.l{height:24px;line-height:24px;font-size:15px;white-space:nowrap;overflow:hidden;color:var(--ink2)}
+.l.i{color:var(--ink)}
+.act{all:unset;cursor:pointer;font-size:19px;font-weight:600}
+.tess{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#FFA90F,#FF5A26 55%,#E5341C)}
+.ft{bottom:24px;height:40px;display:flex;justify-content:space-between;align-items:center}
+.receipt{position:absolute;left:22px;right:22px;bottom:74px;height:24px;line-height:24px;font-size:15px;display:flex;justify-content:space-between;clip-path:inset(0 0 100% 0)}
+.lift{display:grid;grid-template-columns:1fr auto;align-items:center;height:44px}
+.lift .nm{font-size:17px;transition:color .2s}
+.marks{display:flex;gap:4px;align-items:center}
+.row2{position:relative;height:24px;touch-action:pan-y;cursor:grab}
+</style>
+
+<div class="head">
+  <p class="lab">Round 229, Oct 23</p>
+  <h1>Training and Kitchen, with the details</h1>
+  <p class="sub">The two approved landings (226, 227) with the details you asked for in earlier rounds put back in: set marks that draw themselves, numbers you can push, the unit swipe, Gym or Home, the minutes word, Busy, the swipe to To get, and cook mode with its bead and timers. Everything here is live: try the numbered list beside each phone.</p>
+  <div style="display:flex;gap:22px"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button></div>
+</div>
+
+<div class="sec">
+  <h2>Training</h2>
+  <div class="row">
+    <div class="phone" id="tp">
+      <div class="z" style="top:48px;display:flex;justify-content:flex-end;gap:14px;font-size:15px"><button class="tap" id="knob" aria-label="Where: Gym" style="color:var(--ink2)"><b style="color:var(--ink);font-weight:600">Gym</b> or Home</button></div>
+      <div class="z" style="top:84px;height:150px">
+        <div style="position:absolute;left:0;bottom:22px"><div class="big" id="w" role="slider" aria-label="Opening weight" aria-valuenow="185" tabindex="0" style="font-size:84px;color:var(--training);cursor:ns-resize;touch-action:none"><span id="wi">185</span><span id="wf" style="font-size:36px"></span></div></div>
+        <div style="position:absolute;left:0;bottom:0;font-size:15px;color:var(--ink2)"><button class="tap" id="unit" style="color:var(--ink);font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px">lb</button>, bench opens. <span id="was" style="color:var(--ink3)"></span></div>
+        <svg id="bar" width="108" height="150" viewBox="0 0 108 150" style="position:absolute;right:-10px;top:-6px" aria-hidden="true"></svg>
+      </div>
+      <div class="z brief" style="top:248px" id="tbrief">Push A today, about <button class="tap n" id="mins" style="text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px">45</button> min.<br>Last time <span class="n">185</span> for <span class="n">5</span>. Try <span class="n" id="try">190</span>?</div>
+      <div class="z" style="top:314px" id="lifts"></div>
+      <div class="z" style="top:540px"><div class="l i" id="best">Bench best <span class="n">205</span>, three weeks ago.</div><div class="l" id="best2">New bests in <span class="n">4</span> of <span class="n">12</span> weeks.</div></div>
+      <div class="receipt" id="tr" style="bottom:68px"><span id="trt"></span><button class="tap" style="color:var(--training);font-weight:600" id="tru">Undo</button></div>
+      <div class="z ft"><button class="act" id="tgo" style="color:var(--training)">Start Push A</button><span class="tess" aria-hidden="true"></span></div>
+    </div>
+    <div class="notes">
+      <div class="try">
+        <span>1</span><span><b>Set marks.</b> One ink ring per set from last time: ink when it was done, edge when it was missed. They stay still.</span>
+        <span>2</span><span><b>Push the weight.</b> Drag 185 up or down. The plates reload, "was 185" holds for 2 s, and "Try" follows.</span>
+        <span>3</span><span><b>Unit swipe.</b> Tap lb: the digits roll to the kilograms the bar actually holds (2.5 kg steps), the bar reloads in kilogram plates on a 20 kg bar, and a receipt says "185 lb loads as 85 kg."</span>
+        <span>4</span><span><b>Gym or Home.</b> Tap it: at home, lifts you can't do there go to ink 3 with their swap, and the brief says how many were swapped.</span>
+        <span>5</span><span><b>The minutes word.</b> Tap 45: it steps 25, 35, 45, All. Lifts that drop out go to ink 3; they never disappear.</span>
+        <span>6</span><span><b>Busy.</b> Swipe a lift left: "Bench press, later." with Undo for 10 s. Swipe right marks it done.</span>
+        <span>7</span><span><b>A new best.</b> Push the weight past 205: the best line gets "a new best" with one small rise and settle.</span>
+      </div>
+      <p class="src">From 108 (set marks), 138 (number motion, hung fraction, "was"), 131 §2b (instruments, unit swipe, Undo 10 s), 128 (Gym or Home, minutes, Busy), live-polish ("a new best", never "record"), 226 and 227. Exercise pictures stay the free Gym visual loops inside each lift's page; the board can't load them.</p>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>Kitchen</h2>
+  <div class="row">
+    <div class="phone" id="kp">
+      <div id="plan">
+        <div class="z" style="top:84px;height:150px;display:flex;align-items:flex-end;justify-content:space-between">
+          <div><div id="dish" style="font-size:56px;font-weight:600;letter-spacing:-.035em;line-height:.9;color:var(--kitchen)">Tacos</div><div style="font-size:15px;color:var(--ink2);margin-top:12px"><span id="when">tonight</span>, start at <span class="n">6:05</span></div></div>
+          <div class="n" id="km" style="font-size:30px;line-height:1;text-align:right">38<span style="font-size:15px;color:var(--ink2)"> min</span></div>
+        </div>
+        <div class="z brief" style="top:248px" id="kbrief"><b style="color:var(--kitchen);font-weight:600">Lemon</b> is short,<br>and so are limes.</div>
+        <div class="z" style="top:314px;display:grid;grid-template-columns:1fr 1fr;gap:0 22px">
+          <div><div class="t">Pantry</div><div id="pan"></div></div>
+          <div><div class="t">Recipes</div><div id="rec"></div></div>
+        </div>
+        <div class="z" style="top:510px"><div class="l i" id="toget"></div></div>
+      </div>
+      <div id="cook" hidden>
+        <div class="z" style="top:56px" ><div class="l i" id="crow"><b style="color:var(--kitchen);font-weight:600">Tacos</b>, step <span class="n" id="cs">3</span> of <span class="n">7</span>. Eat at <span class="n">6:45</span>.</div></div>
+        <div class="z" style="top:92px;display:flex;flex-direction:column;gap:2px" id="timers"></div>
+        <svg class="z" id="thread" style="top:250px;left:22px;width:20px;height:260px" width="20" height="260" aria-hidden="true"></svg>
+        <div class="z" style="top:250px;left:52px" id="steps"></div>
+        <div class="z" style="top:540px;display:flex;gap:16px;font-size:14px;color:var(--ink3)" id="hands">Say Next, Back, Repeat or How long</div>
+      </div>
+      <div class="receipt" id="kr"><span id="krt"></span><button class="tap" style="color:var(--kitchen);font-weight:600" id="kru">Undo</button></div>
+      <div class="z ft"><button class="act" id="kgo" style="color:var(--kitchen)">Cook</button><span class="tess" aria-hidden="true"></span></div>
+    </div>
+    <div class="notes">
+      <div class="try">
+        <span>1</span><span><b>Swipe to To get.</b> Swipe a Pantry line right to mark it used up: it slides down into the To get line, with "Lemon, used up. On To get." and Undo for 10 s. Swipe left is Not now.</span>
+        <span>2</span><span><b>Plan a day.</b> Tap a Recipes day: it becomes the headline, the brief says what's short for it, and a receipt says "Pasta on Thursday." with Undo.</span>
+        <span>3</span><span><b>Cook.</b> Tap Cook. The room turns into the stove: the step hangs from the thread with a bead that breathes along it, the next steps wait in ink 3, and the timers stack at the top (up to three, a name and a time each).</span>
+        <span>4</span><span><b>Next step.</b> Tap it: the bead slides down the thread to the next step, the old step clips away upward, and a step with a time starts its timer.</span>
+        <span>5</span><span><b>A timer ends.</b> Its time reads "done" in the accent and the line nudges once (one soft tap on the phone).</span>
+        <span>6</span><span><b>Hands free.</b> While cooking: Next, Back, Repeat, How long. "Listening" shows only while the mic is on.</span>
+      </div>
+      <p class="src">From 118 C and 221 (swipe right to To get, Undo 10 s), recipe-clock 45 C (the recipe is the cook, the bead, the lit step), 104 (stacked timers, hands-free words, one soft tap), 225 fix 2 and 227 (cook mode takes the headline, no thumb arc, start time words), 226. No food drawings.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e,u);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const spring=(a,b,dur,fn,done)=>anim(dur,e=>fn(a+(b-a)*e),done);
+const NS='http://www.w3.org/2000/svg',el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
+function receipt(id,text,undo){const r=document.getElementById(id),t=r.querySelector('span');t.textContent=text;clearTimeout(r._t);anim(.24,e=>r.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`);
+  r.querySelector('button').onclick=()=>{undo();hide()};const hide=()=>anim(.2,e=>r.style.clipPath=`inset(0 0 ${e*100}% 0)`);r._t=setTimeout(hide,10000)}
+
+// ===== Training
+let unit='lb',W=185,where='Gym',minsI=2;const MINS=[25,35,45,'All'];
+const LIFTS=[{n:'Bench press',s:'3 x 5',last:['c','c','o'],min:25,home:'Push-up, weighted'},{n:'Overhead press',s:'3 x 6',last:['c','c','c'],min:25,home:'Dumbbell press'},{n:'Dips',s:'3 x 10',last:['c','b','c'],min:35,home:null},{n:'Cable fly',s:'2 x 12',last:['c','o'],min:45,home:'Band fly'},{n:'Triceps pushdown',s:'2 x 12',last:['c','c'],min:99,home:'Band pushdown'}];
+const PL={lb:{bar:45,set:[45,35,25,10,5,2.5],big:25},kg:{bar:20,set:[25,20,15,10,5,2.5,1.25],big:10}};
+const HL={lb:[118,104,90,66,52,40],kg:[118,110,100,90,66,52,40]},WL={lb:[16,14,12,8,6,5],kg:[16,15,14,12,8,6,5]};
+const toKg=lb=>Math.round(lb*0.45359237/2.5)*2.5, plates=(w,u)=>{const P=PL[u];let s=(w-P.bar)/2;const o=[];P.set.forEach((p,i)=>{while(s>=p-1e-9){o.push(i);s-=p}});return o};
+const bar=document.getElementById('bar'),cy=75,SL=104;
+bar.append(el('line',{x1:0,y1:cy,x2:8,y2:cy,stroke:'var(--ink3)','stroke-width':2.4}),el('rect',{x:8,y:cy-8,width:5,height:16,rx:1,fill:'none',stroke:'var(--ink)','stroke-width':1.5}),el('line',{x1:13,y1:cy,x2:SL,y2:cy,stroke:'var(--ink)','stroke-width':1.5}));
+const cp=el('clipPath',{id:'slv'});cp.append(el('rect',{x:13,y:0,width:SL-13,height:150}));bar.append(cp);const G=el('g',{'clip-path':'url(#slv)'});bar.append(G);
+const collar=el('rect',{y:cy-7,width:6,height:14,rx:1,fill:'none',stroke:'var(--ink)','stroke-width':1.5,x:16});G.append(collar);
+let cur=[];function setBar(){const w=unit==='lb'?W:toKg(W);const want=plates(w,unit);let x=16;const xs=want.map(i=>{const v=x;x+=WL[unit][i]+3;return v});
+  let k=0;while(k<cur.length&&k<want.length&&cur[k].i===want[k]&&cur[k].u===unit)k++;
+  cur.slice(k).forEach(c=>{const x0=c.x;spring(x0,SL+4,.22,v=>c.node.setAttribute('x',v),()=>c.node.remove())});cur=cur.slice(0,k);
+  want.slice(k).forEach((i,q)=>{const node=el('rect',{x:SL+2,y:cy-HL[unit][i]/2,width:WL[unit][i],height:HL[unit][i],rx:3,fill:'none',stroke:PL[unit].set[i]>=PL[unit].big?'var(--training)':'var(--ink2)','stroke-width':1.8});G.append(node);cur.push({i,u:unit,node,x:xs[k+q]});setTimeout(()=>spring(SL+2,xs[k+q],.34,v=>node.setAttribute('x',v)),RM?0:120+q*70)});
+  const c0=+collar.getAttribute('x');spring(c0,x,.34,v=>collar.setAttribute('x',v))}
+const wi=document.getElementById('wi'),wf=document.getElementById('wf'),was=document.getElementById('was'),tryEl=document.getElementById('try');
+function showW(roll){const v=unit==='lb'?W:toKg(W);const i=Math.floor(v),f=v-i;
+  if(roll&&!RM){let n=0;const from=unit==='kg'?W:toKg(W);const it=setInterval(()=>{n++;const m=from+(v-from)*n/6;wi.textContent=Math.round(m);if(n>=6){clearInterval(it);wi.textContent=i;wf.textContent=f?'.'+String(f).slice(2):''}},45)}
+  else{wi.textContent=i;wf.textContent=f?'.'+String(f).slice(2):''}
+  document.getElementById('w').setAttribute('aria-valuenow',v);tryEl.textContent=unit==='lb'?W+5:toKg(W)+2.5;
+  const nb=W>205,b=document.getElementById('best');if(nb&&!b.dataset.nb){b.dataset.nb=1;b.innerHTML=`Bench <span class="n">${W}</span> today would be <b style="color:var(--training);font-weight:600">a new best</b>.`;anim(.5,(e,u)=>b.style.transform=`translateY(${-3*Math.sin(u*Math.PI)}px)`)}else if(nb){b.querySelector('.n').textContent=W}else if(!nb&&b.dataset.nb){delete b.dataset.nb;b.innerHTML='Bench best <span class="n">205</span>, three weeks ago.'}}
+const wn=document.getElementById('w');let st=null,wt=null,W0=W;
+const setW=v=>{v=Math.max(45,Math.min(405,v));if(v===W)return;W=v;showW();setBar();was.textContent=`was ${W0}`;clearTimeout(wt)};
+wn.onpointerdown=e=>{wn.setPointerCapture(e.pointerId);st={y:e.clientY,b:W};if(!was.textContent)W0=W;wn.style.transform='scale(.96)'};
+wn.onpointermove=e=>{if(st)setW(st.b+Math.round((st.y-e.clientY)/14)*5)};
+wn.onpointerup=wn.onpointercancel=()=>{st=null;wn.style.transform='';wt=setTimeout(()=>was.textContent='',2000)};
+wn.onkeydown=e=>{if(e.key==='ArrowUp'){if(!was.textContent)W0=W;setW(W+5);wt=setTimeout(()=>was.textContent='',2000);e.preventDefault()}if(e.key==='ArrowDown'){if(!was.textContent)W0=W;setW(W-5);wt=setTimeout(()=>was.textContent='',2000);e.preventDefault()}};
+document.getElementById('unit').onclick=e=>{unit=unit==='lb'?'kg':'lb';e.target.textContent=unit;showW(true);setBar();if(unit==='kg')receipt('tr',`${W} lb loads as ${toKg(W)} kg.`,()=>document.getElementById('unit').click())};
+// set marks: brush circles
+function mark(kind){const s=el('svg',{width:16,height:16,viewBox:'0 0 16 16'});s.append(el('circle',{cx:8,cy:8,r:6,fill:'none',stroke:kind==='c'?'var(--ink)':'var(--edge)','stroke-width':kind==='c'?1.7:1.3}));return s}
+const liftsEl=document.getElementById('lifts');
+function renderLifts(first){const lim=MINS[minsI]==='All'?999:MINS[minsI];liftsEl.innerHTML='';
+  LIFTS.slice(0,4+(lim>=999?1:0)).forEach((L,idx)=>{const out=L.min>lim,home=where==='Home';const name=home&&L.home?L.home:L.n;const cantHome=home&&!L.home;
+    const r=document.createElement('div');r.className='lift row2';r.style.height='44px';r.innerHTML=`<span class="nm" style="color:${out||cantHome?'var(--ink3)':'var(--ink)'}">${name}${cantHome?' <span style="font-size:13px">not at home</span>':''}</span><span class="marks"><span class="n" style="color:var(--ink2);font-size:14px;margin-right:6px">${L.s}</span></span>`;
+    const m=r.querySelector('.marks');L.last.forEach(k=>m.append(mark(k==='o'?'o':'c')));liftsEl.append(r);swipe(r,dir=>{if(dir<0){receipt('tr',`${name}, later.`,()=>{r.style.transform='';r.querySelector('.nm').style.color='var(--ink)'});r.querySelector('.nm').style.color='var(--ink3)'}else{receipt('tr',`${name}, done.`,()=>{r.querySelector('.nm').style.textDecoration=''});r.querySelector('.nm').style.textDecoration='line-through'}})})}
+function swipe(r,cb){let sx=null,dx=0;r.onpointerdown=e=>{sx=e.clientX;dx=0;r._sw=false;r.setPointerCapture(e.pointerId)};r.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;if(Math.abs(dx)>6)r._sw=true;r.style.transform=`translateX(${Math.max(-110,Math.min(110,dx))}px)`};
+  r.onpointerup=r.onpointercancel=()=>{if(sx==null)return;sx=null;const f=Math.max(-110,Math.min(110,dx));spring(f,0,.3,v=>r.style.transform=`translateX(${v}px)`);if(Math.abs(dx)>90)cb(dx>0?1:-1);setTimeout(()=>r._sw=false,0)}}
+document.getElementById('mins').onclick=e=>{minsI=(minsI+1)%4;e.target.textContent=MINS[minsI];if(MINS[minsI]!==45&&MINS[minsI]!=='All')receipt('tr',`Cut to ${MINS[minsI]} min.`,()=>{minsI=2;e.target.textContent=45;renderLifts()});renderLifts()};
+document.getElementById('knob').onclick=e=>{where=where==='Gym'?'Home':'Gym';e.target.closest('button').innerHTML=where==='Gym'?'<b style="color:var(--ink);font-weight:600">Gym</b> or Home':'Gym or <b style="color:var(--ink);font-weight:600">Home</b>';e.target.closest('button').setAttribute('aria-label','Where: '+where);
+  if(where==='Home')receipt('tr','3 swapped for home.',()=>document.getElementById('knob').click());renderLifts()};
+renderLifts(true);showW();setBar();
+
+// ===== Kitchen
+const PAN=[['Lemon','out'],['Limes','out'],['Eggs','low'],['Cheddar','low'],['Pasta','low']];let toget=['milk','tortillas'];
+const REC=[['Thu','pasta','Pasta',['Parmesan']],['Fri','tacos','Tacos',['Lemon','limes']],['Sat','out',null],['Sun','open',null],['Mon','dal','Dal',[]]];let tonight=1;
+const pan=document.getElementById('pan'),rec=document.getElementById('rec'),tg=document.getElementById('toget');
+function renderTG(){tg.innerHTML=`To get: ${toget.join(', ')}.`.replace(/^To get: (.)/,(m,c)=>'To get: '+c.toUpperCase())}
+function renderPan(){pan.innerHTML='';PAN.forEach(([n,lv],i)=>{const r=document.createElement('div');r.className='l row2 '+(lv==='out'?'i':'');r.textContent=`${n}, ${lv}`;pan.append(r);
+  swipe(r,d=>{if(d>0){const k=PAN.indexOf(PAN[i]);const item=PAN.splice(i,1)[0];toget.unshift(item[0].toLowerCase());anim(.26,e=>{r.style.transform=`translateY(${e*(510-314-28-i*24)}px)`;r.style.clipPath=`inset(0 0 0 0)`},()=>{renderPan();renderTG()});
+    receipt('kr',`${item[0]}, used up. On To get.`,()=>{PAN.splice(i,0,item);toget.shift();renderPan();renderTG()})}else{receipt('kr',`${n}, not now.`,()=>{})}})});
+  const more=document.createElement('div');more.className='l';more.style.color='var(--ink3)';more.textContent='and 38 at home';pan.append(more)}
+function renderRec(){rec.innerHTML='';REC.forEach(([d,w,dish],i)=>{const r=document.createElement('button');r.className='l tap';r.style.display='block';r.style.width='100%';r.style.textAlign='left';
+  r.innerHTML=i===tonight?`<b style="color:var(--kitchen);font-weight:600">${d} ${w}</b>`:`${d} ${w}`;if(dish)r.onclick=()=>plan(i);rec.append(r)});const m=document.createElement('div');m.className='l';m.style.color='var(--ink3)';m.textContent='6 you can cook';rec.append(m)}
+function plan(i,quiet){if(i===tonight)return;const prev=tonight;tonight=i;if(!quiet)receipt('kr',`${REC[i][2]} on ${({Thu:'Thursday',Fri:'Friday',Mon:'Monday'})[REC[i][0]]}.`,()=>plan(prev,true));const [,,dish,short]=REC[i];const dEl=document.getElementById('dish');
+  anim(.2,e=>dEl.style.clipPath=`inset(0 ${e*100}% 0 0)`,()=>{dEl.textContent=dish;anim(.36,e=>dEl.style.clipPath=`inset(0 ${(1-e)*100}% 0 0)`)});
+  const b=document.getElementById('kbrief');b.innerHTML=short.length?`<b style="color:var(--kitchen);font-weight:600">${short[0]}</b> is short${short[1]?`,<br>and so are ${short[1]}.`:'.<br>Everything else is home.'}`:'Everything for it<br>is home.';renderRec()}
+renderPan();renderRec();renderTG();
+
+// cook mode
+const STEPS=[['Brown the beef, medium heat',8],['Add the spices and a splash of water',3],['Warm the tortillas, dry pan',2],['Chop the cilantro and onion',0],['Squeeze the limes over',0],['Fill and fold',0],['Eat',0]];
+let step=2,timers=[['Beef rests',245],['Rice',612]],cooking=false;
+const tm=document.getElementById('timers'),stepsEl=document.getElementById('steps'),thread=document.getElementById('thread');
+function fmt(s){return s<=0?'done':`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}
+function renderTimers(){tm.innerHTML=timers.slice(0,3).map(([n,s])=>`<div style="display:flex;justify-content:space-between;align-items:baseline;height:36px"><span style="font-size:16px;color:var(--ink2)">${n}</span><span class="n" style="font-size:28px;${s<=0?'color:var(--kitchen)':''}">${fmt(s)}</span></div>`).join('')+(timers.length>3?`<div class="l" style="color:var(--ink3)">and ${timers.length-3} more</div>`:'')}
+let beadY=20,beadT0=performance.now();
+function renderThread(){thread.innerHTML='';thread.append(el('line',{x1:6,y1:0,x2:6,y2:260,stroke:'var(--edge)','stroke-width':1.2}));const b=el('circle',{cx:6,cy:beadY,r:4.5,fill:'var(--phone)',stroke:'var(--kitchen)','stroke-width':2,id:'bead'});thread.append(b)}
+function renderSteps(){stepsEl.innerHTML=`<div id="cur" style="font-size:30px;font-weight:600;letter-spacing:-.015em;line-height:36px;height:72px;overflow:hidden">${STEPS[step][0]}</div>`+
+  STEPS.slice(step+1,step+3).map(s=>`<div class="l" style="color:var(--ink3);font-size:16px;height:28px;line-height:28px">Then ${s[0].charAt(0).toLowerCase()+s[0].slice(1)}</div>`).join('');document.getElementById('cs').textContent=step+1}
+function breathe(n){if(!cooking)return;const b=document.getElementById('bead');if(b&&!RM){const u=((n-beadT0)/2400)%1;b.setAttribute('r',4.5+0.9*Math.sin(u*2*Math.PI))}requestAnimationFrame(breathe)}
+let tick=null;
+function enterCook(){cooking=true;document.getElementById('plan').hidden=true;document.getElementById('cook').hidden=false;document.getElementById('kgo').textContent='Next step';renderTimers();renderThread();renderSteps();beadT0=performance.now();requestAnimationFrame(breathe);
+  [...document.querySelectorAll('#cook .z')].forEach((z,i)=>{z.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>anim(.3,e=>z.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`),RM?0:i*80)});
+  clearInterval(tick);tick=setInterval(()=>{timers=timers.map(([n,s])=>{const ns=s-1;if(s>0&&ns<=0)setTimeout(()=>{const rows=tm.children;for(const r of rows)if(r.textContent.startsWith(n))anim(.4,(e,u)=>r.style.transform=`translateY(${-2*Math.sin(u*Math.PI)}px)`)},30);return[n,ns]});renderTimers()},1000)}
+function nextStep(){if(step>=STEPS.length-1){exitCook();return}const cur=document.getElementById('cur');
+  anim(.22,e=>{cur.style.clipPath=`inset(0 0 ${e*100}% 0)`;cur.style.transform=`translateY(${-10*e}px)`},()=>{step++;renderSteps();const c2=document.getElementById('cur');c2.style.clipPath='inset(100% 0 0 0)';anim(.3,e=>c2.style.clipPath=`inset(${(1-e)*100}% 0 0 0)`);
+    if(STEPS[step][1]){timers.unshift([STEPS[step][0].split(' ').slice(0,2).join(' '),STEPS[step][1]*60]);renderTimers()}});
+  // the bead runs down the thread toward the next step, then rides back up with it
+  const b=document.getElementById('bead'),y0=beadY;anim(.5,(e,u)=>b.setAttribute('cy',y0+56*Math.sin(u*Math.PI)))}
+function exitCook(){cooking=false;clearInterval(tick);document.getElementById('cook').hidden=true;document.getElementById('plan').hidden=false;document.getElementById('kgo').textContent='Cook';step=2}
+document.getElementById('kgo').onclick=()=>cooking?nextStep():enterCook();
+
+document.getElementById('th').onclick=()=>document.documentElement.dataset.theme='dark';document.getElementById('tw').onclick=()=>document.documentElement.dataset.theme='light';
+})();
+</script>

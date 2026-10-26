@@ -209,6 +209,7 @@ private struct TessKnowsDoor: View {
 /// "Rest timer: On.", whose value word cycles on a tap. The row he touched says what changed in one line, before and
 /// after. A switch whose feature hasn't landed shows today's value, quietly, and doesn't move.
 struct ReviewSection: View {
+    @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var page = 0
     /// The switch he touched last and its value before the touch.
@@ -269,6 +270,7 @@ struct ReviewSection: View {
                             Button(ReviewSwitchCopy.everythingAsBefore) {
                                 withTesseraAnimation(reduceMotion: reduceMotion) {
                                     choices.resetAll()
+                                    model.resetMosaicSetting()
                                     touched = nil
                                     resetLine = ReviewSwitchCopy.reset
                                 }

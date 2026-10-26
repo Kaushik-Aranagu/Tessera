@@ -1,0 +1,117 @@
+<title>Tessera Home Real Estate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300;400&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --training:#C4472A;--kitchen:#A8701F;--routines:#A4505F;--lists:#5E6B1F;--notes:#5B3FB8;--money:#3F7A62;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E0E10;--phone:#151517;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#EE6A4C;--kitchen:#E0A458;--routines:#D79AA6;--lists:#B5BE7A;--notes:#B9A9E0;--money:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#0E0E10;--phone:#151517;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#EE6A4C;--kitchen:#E0A458;--routines:#D79AA6;--lists:#B5BE7A;--notes:#B9A9E0;--money:#8DBFA7;color-scheme:dark}
+:root{--sky1:#C9772E;--sky2:#B0466A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sky1:#F0A35A;--sky2:#E07A9A}}
+:root[data-theme="dark"]{--sky1:#F0A35A;--sky2:#E07A9A}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.top{max-width:1180px;margin:0 auto 32px;display:flex;flex-direction:column;gap:12px}
+h1{font-weight:500;font-size:clamp(34px,6vw,52px);letter-spacing:-.03em;line-height:1.05;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:62ch}
+.row3{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:40px;justify-content:center}
+.col{display:flex;flex-direction:column;gap:14px;width:340px;max-width:100%}
+.col h2{font-size:22px;font-weight:600;margin:0}.col h2 .rec{font-weight:400;color:var(--ink3);font-size:16px;margin-left:8px}
+.col p{margin:0;color:var(--ink2);font-size:16px}
+.phone{position:relative;width:340px;max-width:100%;height:700px;background:var(--phone);border:1px solid var(--edge);border-radius:42px;overflow:hidden;
+  display:flex;flex-direction:column;padding:58px 22px 92px;box-sizing:border-box;gap:12px;user-select:none;-webkit-user-select:none}
+.sent{text-align:right;font-size:22px;line-height:1.32;min-height:88px}
+.sent .ln{display:block;white-space:nowrap}
+.sent .ln.in{animation:roll .42s cubic-bezier(.2,.8,.2,1)}
+@keyframes roll{from{transform:translateY(60%);clip-path:inset(0 0 100% 0)}to{transform:none;clip-path:inset(0)}}
+.k{font-weight:600;font-size:1.1em;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px;cursor:pointer}
+.k.sky{background:linear-gradient(90deg,var(--sky1),var(--sky2));-webkit-background-clip:text;background-clip:text;color:transparent;text-decoration-color:var(--sky2)}
+.n{font-family:var(--nums);font-weight:300}
+canvas.m{display:block;width:248px;height:150px;align-self:flex-end;margin-right:-6px}
+.lab{color:var(--ink3);font-size:15px;display:flex;align-items:center;gap:10px}
+.lab::after{content:"";flex:1;height:1px;background:var(--edge)}
+.apps{display:flex;flex-direction:column;margin-top:auto}
+.apps div{display:flex;justify-content:space-between;align-items:baseline;min-height:40px;color:var(--ink3);font-size:18px}
+.apps .p{font-size:23px;font-weight:600;color:var(--training)}
+.apps .p+span,.apps .f{color:var(--ink2);font-size:16px}
+.dep{display:grid;grid-template-columns:52px fit-content(64%) minmax(0,1fr);gap:0 10px;align-items:baseline;min-height:42px;font-size:18px}
+.dep .t{font-family:var(--nums);font-weight:300;font-size:20px}.dep .q{color:var(--ink3);font-size:15px}.dep .w{color:var(--ink3);font-size:15px;text-align:right;justify-self:end}
+.focus{display:flex;flex-direction:column;gap:2px}
+.focus .big{font-family:var(--nums);font-weight:200;font-size:64px;line-height:1;letter-spacing:-.03em;color:var(--training)}
+.focus .what{font-size:20px}.focus .why{color:var(--ink3);font-size:15px}
+.tess{position:absolute;right:10px;bottom:10px;width:76px;height:76px}
+.hint{color:var(--ink3);font-size:15px;margin:0}
+</style>
+<div class="top">
+  <p class="hint">Home, below the mosaic. Oct 23</p>
+  <h1>What earns the space under the mosaic</h1>
+  <p class="sub">Next and the notices were saying the same things twice. Three ways to spend the best real estate in the app. Every coloured word links to where it came from; sunset is painted with the mosaic's own sky and opens the weather page. Tap a phone's coloured words to try them.</p>
+</div>
+<div class="row3">
+  <div class="col"><h2>A. One board<span class="rec">recommended</span></h2>
+    <div class="phone" data-v="a"><div class="sent"></div><canvas class="m" style="width:296px;height:179px;margin:14px -10px 0 0"></canvas>
+      <div class="apps"><div><span>Notes</span></div><div><span class="p">Training</span><span class="f">Push A, bench first</span></div><div><span>Kitchen</span></div></div><canvas class="tess"></canvas></div>
+    <p>Next goes away; the departure board at the top is Next. It rolls through what is coming, and you swipe a line right for done or left for not now, right where you read it. The mosaic takes the room it frees, a fifth bigger, and under it there is only the apps list. Quietest and most "of most significance": nothing is said twice.</p></div>
+  <div class="col"><h2>B. One thing</h2>
+    <div class="phone" data-v="b"><div class="sent"></div><canvas class="m"></canvas>
+      <div class="focus"><span class="big">2:10</span><span class="what"><span class="k" style="color:var(--training)">Push day</span>, bench first</span><span class="why">Swipe right when it's done</span></div>
+      <div class="apps"><div><span>Notes</span></div><div><span class="p">Training</span><span class="f">Push A, bench first</span></div><div><span>Kitchen</span></div></div><canvas class="tess"></canvas></div>
+    <p>Under the mosaic, the single most important next thing, counting down in big light numbers. The board above keeps rolling the rest. Strong focus, good for ADHD days; less at a glance.</p></div>
+  <div class="col"><h2>C. Departures</h2>
+    <div class="phone" data-v="c"><div class="sent"></div><canvas class="m"></canvas>
+      <div class="lab">Next</div>
+      <div class="dep"><span class="t">3:30</span><span>Groceries</span><span class="w">Fits the afternoon</span></div>
+      <div class="dep"><span class="t">6:30</span><span>Push day</span><span class="w">Bench first</span></div>
+      <div class="dep"><span class="q">tonight</span><span>Pack the charger</span><span class="w">For the trip</span></div>
+      <div class="apps"><div><span>Notes</span></div><div><span class="p">Training</span><span class="f">Push A, bench first</span></div><div><span>Kitchen</span></div></div><canvas class="tess"></canvas></div>
+    <p>Today's sheet 212: a timetable under the mosaic. Clear and complete, but it repeats the board and fills the page.</p></div>
+</div>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cs=()=>getComputedStyle(document.documentElement);const hex=h=>{h=h.trim().replace('#','');return[0,2,4].map(k=>parseInt(h.slice(k,k+2),16))};
+const mix=(a,b,t)=>a.map((v,k)=>v+(b[k]-v)*t);const clamp=x=>Math.max(0,Math.min(1,x));
+const B4=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]].map(r=>r.map(v=>(v+.5)/16));
+// notices: [html]; every one names where it came from
+const N=[`<span class="k" style="color:var(--training)">Push day</span> at <span class="n">6:30</span> pm.`,
+`<span class="k" style="color:var(--kitchen)">Groceries</span>, <span class="n">4</span> to get.`,
+`<span class="k sky">Sunset</span> at <span class="n">6:34</span> pm.`,
+`<span class="k" style="color:var(--routines)">Stretch</span> at <span class="n">8</span> pm.`,
+`<span class="k" style="color:var(--lists)">Packing</span>, <span class="n">6</span> of <span class="n">14</span> done.`];
+let nk=0;const DATE='Friday, October 23';
+function paint(first){document.querySelectorAll('.sent').forEach(s=>{if(first){s.innerHTML=`<span class="ln">${DATE}</span><span class="ln a"></span><span class="ln b"></span>`}
+  const a=s.querySelector('.a'),b=s.querySelector('.b');a.innerHTML=N[nk%N.length];b.innerHTML=N[(nk+1)%N.length];if(!first&&!RM){a.classList.remove('in');b.classList.remove('in');void a.offsetWidth;a.classList.add('in');b.classList.add('in')}})}
+paint(true);setInterval(()=>{if(document.hidden)return;nk++;paint(false)},5000);
+document.addEventListener('click',e=>{const k=e.target.closest('.k');if(!k)return;const ph=k.closest('.phone');const m=ph.querySelector('canvas.m');m.dataset.flash=performance.now();m.dataset.what=k.classList.contains('sky')?'sky':'app'});
+// a small mosaic per phone: day strips with a rounded, Bayer-blended edge; the sky word washes it to dusk
+const ms=[...document.querySelectorAll('canvas.m')],dpr=devicePixelRatio||1;ms.forEach(c=>{c.width=248*dpr;c.height=150*dpr});
+const COLS=62,ROWS=37,STRIPS=[[40,44,70],[214,180,150],[236,222,196],[226,196,168],[170,160,190],[120,120,160]];
+function hsh(i,j){const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)}
+function draw(now){const T=cs(),pg=hex(T.getPropertyValue('--phone')),dark=pg[0]<80,s1=hex(T.getPropertyValue('--sky1')),s2=hex(T.getPropertyValue('--sky2'));
+  ms.forEach(c=>{const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,248,150);const f=+(c.dataset.flash||-1e9),lt=now-f,dusk=c.dataset.what==='sky'&&lt<4200?Math.sin(Math.min(1,lt/4200)*Math.PI):0;
+    for(let i=0;i<ROWS;i++)for(let j=0;j<COLS;j++){const R=7,qx=Math.max(0,Math.max(10-j,j-(COLS-11))),qy=Math.max(0,Math.max(8-i,i-(ROWS-9)));
+      const d=Math.cbrt(qx**3+qy**3);const u=clamp((10-d)/10),l=Math.floor((u*u*(3-2*u))*16+B4[i&3][j&3])/16;if(l<=0)continue;
+      const sk=Math.min(STRIPS.length-1,Math.floor(j/COLS*STRIPS.length));let col=STRIPS[sk];if(dark)col=mix(col,[30,30,40],.55);
+      col=mix(col,mix(s1,s2,i/ROWS),dusk*.7);col=mix(col,[col[0]+20,col[1]+20,col[2]+20],(hsh(i,j)-.5)*.4);
+      const fl=c.dataset.what==='app'&&!RM?Math.max(0,1-Math.abs(lt/9-(j+i*.6))/6)*(lt<900):0;
+      x.fillStyle=`rgb(${mix(pg,col,l).map(Math.round)})`;const tz=3.1*(1+fl*.4);x.fillRect(j*4+(4-tz)/2,i*4+(4-tz)/2,tz,tz)}});
+  requestAnimationFrame(draw)}
+requestAnimationFrame(draw);
+// Tess, soft dabs (TessSoul look), quiet in the corner
+const tz=[...document.querySelectorAll('canvas.tess')];tz.forEach(c=>{c.width=76*dpr;c.height=76*dpr});
+function tess(now){const t=RM?0:now/1000,dark=hex(cs().getPropertyValue('--phone'))[0]<80;const P=dark?['#FF5B3A','#86B4FF','#FFC23D']:['#B9452B','#2A4FA8','#C98E1B'],A=dark?[.8,.6]:[.58,.42];
+  tz.forEach(c=>{const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,76,76);x.globalCompositeOperation=dark?'screen':'multiply';const br=1+.06*Math.sin(t*.98);
+    [[-9,-4,0],[9,-4,1],[0,8,2],[-14,7,0],[13,8,1],[3,-13,2]].forEach(([dx,dy,p],n)=>{const r=(n<3?20:12)*br;const g=x.createRadialGradient(0,0,0,0,0,r);const hx=P[p];const rgb=hex(hx);
+      g.addColorStop(0,`rgba(${rgb},${A[0]})`);g.addColorStop(.45,`rgba(${rgb},${A[1]})`);g.addColorStop(1,`rgba(${rgb},0)`);x.save();x.filter='blur(3px)';x.translate(38+dx+(n>2?2*Math.sin(t*.7+n):0),38+dy+(n<3?-1.5*Math.max(0,Math.sin(t*.6+n)):0));x.fillStyle=g;x.beginPath();x.ellipse(0,0,r,r*.92,0,0,7);x.fill();x.restore()});
+    x.globalCompositeOperation='source-over';x.fillStyle=dark?'rgba(21,21,23,.82)':'rgba(18,16,22,.82)';const ex=1.2*Math.sin(t*.41);for(const s of[-1,1]){x.beginPath();x.ellipse(38+s*4.2+ex,34,1.6,1.75,0,0,7);x.fill()}});
+  requestAnimationFrame(tess)}
+requestAnimationFrame(tess);
+})();
+</script>

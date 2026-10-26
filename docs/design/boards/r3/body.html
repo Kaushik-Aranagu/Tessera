@@ -1,0 +1,115 @@
+<style>
+.widget{width:330px;max-width:100%;background:var(--phone);border:1px solid var(--edge);border-radius:26px;padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+.widget .big{font-size:19px;line-height:1.3;font-weight:500}
+.lock{width:330px;max-width:100%;border-radius:26px;padding:16px 20px;display:flex;flex-direction:column;gap:8px;background:var(--phone);border:1px solid var(--edge)}
+.fold{display:flex;flex-direction:column}
+.fold div{display:grid;grid-template-columns:140px 24px 1fr;gap:8px;padding-block:12px;border-top:1px solid var(--rule);align-items:baseline}
+.fold div:last-child{border-bottom:1px solid var(--rule)}
+.orbs{display:flex;gap:36px;flex-wrap:wrap}
+.orb{width:96px;height:96px;border-radius:50%;position:relative;overflow:hidden;background:radial-gradient(circle at 40% 35%,var(--tess),transparent 70%),radial-gradient(circle at 70% 70%,var(--routines),transparent 65%),radial-gradient(circle at 30% 80%,var(--kitchen),transparent 60%)}
+.orb .iris{position:absolute;inset:30%;border-radius:50%;background:radial-gradient(circle,var(--ground) 0 28%,var(--tess) 30% 60%,transparent 62%)}
+.orb .glyph{position:absolute;inset:32%;border-radius:50%;border:2.5px solid var(--ground)}
+.orbcap{display:flex;flex-direction:column;gap:10px;align-items:flex-start;max-width:180px}
+.week{display:grid;grid-template-columns:96px 1fr;gap:8px 12px}
+</style>
+<main>
+<section class="lede">
+  <h1>Tessera, round three</h1>
+  <p class="sub">Round three covers the rest of the house: the loose areas, the Lock Screen and widgets, Review, and a reason behind every number. It goes straight to the builders behind Review switches, and you'll see it on your phone after the next batch.</p>
+  <p class="sub">One thing needs your yes: folding the loose areas into the apps.</p>
+</section>
+
+<section class="concept wide">
+  <div class="text">
+    <div class="num">141</div>
+    <h2>Fold the loose areas into the apps</h2>
+    <p>Body weight, Habits, Reading, People and Upkeep sit outside the seven apps today, behind the area index. Seven is about the limit before the colours start to look alike. So each area would become a place inside the app it belongs to, on that app's rail, with nothing lost.</p>
+    <div class="fold">
+      <div><span>Body weight</span><span class="ink3">to</span><span><span class="t">Training</span>, place "Body". It stays walled as now.</span></div>
+      <div><span>Habits</span><span class="ink3">to</span><span><span class="r">Routines</span>, place "Habits". Small counts only for marked habits.</span></div>
+      <div><span>Reading</span><span class="ink3">to</span><span><span class="no">Notes</span>, as its first kind, "Books".</span></div>
+      <div><span>People</span><span class="ink3">to</span><span><span class="no">Notes</span>, place "People". "Call mom" links to her.</span></div>
+      <div><span>Upkeep</span><span class="ink3">to</span><span>Tasks, as repeating tasks, place "Upkeep".</span></div>
+    </div>
+    <p class="ink2">Builders wait for your yes on this one only.</p>
+  </div>
+</section>
+
+<section class="concept">
+  <div class="text">
+    <div class="num">142</div>
+    <h2>Lock Screen, widgets and Live Activities, redone</h2>
+    <p>The widgets still use the old look: Inter Tight, caps labels and a vermilion seam. They move to today's grammar. The day sentence becomes the medium widget, the next clause sits on the Lock Screen, and each running thing gets a Live Activity in its own app's signature.</p>
+    <p class="ink2">The walls are unchanged. Money shows only as "Rent is due Friday" words. Body, health and calories never appear, and private things stay masked.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="widget">
+      <div class="big"><span class="t">Push A</span> at 6:15. <span class="k">Tacos</span> tonight, start at 6:05. <span class="m">Rent</span> is due Friday.</div>
+    </div>
+    <div class="lock">
+      <div class="row"><span class="ink2">Black bean tacos</span><span class="ink2">+2</span></div>
+      <div class="row"><span class="hung" style="font-size:44px;color:var(--kitchen)">8:12</span><span>Rice, add water</span></div>
+    </div>
+    <div class="lock">
+      <div class="row"><span class="ink2">Push A, set 3 of 4</span><div class="rings"><div class="ring done"></div><div class="ring done"></div><div class="ring today"></div><div class="ring"></div></div></div>
+      <div class="hung" style="font-size:44px">1:24</div>
+    </div>
+  </div>
+</section>
+
+<section class="concept">
+  <div class="text">
+    <div class="num">143</div>
+    <h2>Review, the week as it was written</h2>
+    <p>Each night the day sentence rewrites itself in the past tense (139). Review becomes those sentences, newest first: one line per day, with the coloured words still working as doors. Tap a day and its story opens under it. A month reads as one line per week.</p>
+    <p class="ink2">Counts can appear, but never misses, streaks or comparisons.</p>
+  </div>
+  <div class="phone">
+    <div class="back">&lsaquo; Home</div>
+    <div class="row"><span class="title">Review</span><span class="ink2">Week</span></div>
+    <div class="s">Your week, as it went.</div>
+    <div class="gap"></div>
+    <div class="week">
+      <span class="ink2">Thursday</span><span><span class="t">Pushed</span>, cooked <span class="k">tacos</span>, <span class="l">packed</span>.</span>
+      <span class="ink2">Wednesday</span><span><span class="t">Pulled</span>. <span class="m">Rent</span> paid.</span>
+      <span class="ink2">Tuesday</span><span>A quiet day.</span>
+      <span class="ink2">Monday</span><span><span class="t">Legs</span>, 52 min. <span class="r">Morning</span> ran.</span>
+      <span class="ink2">Sunday</span><span>Cooked <span class="k">chili</span>. 4 tasks done.</span>
+    </div>
+  </div>
+</section>
+
+<section class="concept">
+  <div class="text">
+    <div class="num">144</div>
+    <h2>Why this number</h2>
+    <p>Long press any number and one sentence slides in under it, saying how it was made. The phone works this out from the same facts that made the number, so Claude never sees it.</p>
+    <div class="powers">
+      <span>"82.5: your last Bench, 80 for 8, plus one 2.5 step."</span>
+      <span>"about 45 min: your last 3 Push A sessions."</span>
+      <span>"covers 4 dinners: tacos, chili, rice bowls and soup have all they need."</span>
+    </div>
+  </div>
+  <div class="phone" style="min-height:360px">
+    <div class="back">&lsaquo; Training</div>
+    <div class="ptitle">Bench press</div>
+    <div class="gap"></div>
+    <div class="label">Opens at</div>
+    <div class="hung">82<small>.5</small></div>
+    <div class="ink2">Your last Bench, 80 for 8, plus one 2.5 step.</div>
+  </div>
+</section>
+
+<section class="concept wide">
+  <div class="text">
+    <div class="num">145</div>
+    <h2>Tess, the orb as a screen (a sketch)</h2>
+    <p>You said you'd like Tess to be like the Sphere, an orb whose skin becomes content. Here is a first sketch. She stays whole, never faded, and only in her own paints. Nothing gets built until you ask.</p>
+    <div class="orbs">
+      <div class="orbcap"><div class="orb"><div class="iris"></div></div><span class="ink2">Listening: one eye with a slow iris.</span></div>
+      <div class="orbcap"><div class="orb"></div><span class="ink2">Thinking: the swirl you have today.</span></div>
+      <div class="orbcap"><div class="orb"><div class="glyph"></div></div><span class="ink2">Knowing: her skin shows a tiny form of what she means, here a set ring, then swirls back.</span></div>
+    </div>
+  </div>
+</section>
+</main>

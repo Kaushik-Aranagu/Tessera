@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Upkeep and People on the new grammar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 61: the Upkeep page (height is staleness, one line per chore), a chore, the first-run pick, the People page (one line per person) and a person, under the one-line, no-dots and one-base rules. ?look=por|obs; ?play records Porcelain (Upkeep). -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.72;--s3:.38;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;--now:#FFC23D;--health:#3FD49A;--tint:.62;background:#000;color:rgb(var(--ink))}
+.ph.por{--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--health:#12936A;--tint:.55;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.nw{white-space:nowrap}
+.tab{font-variant-numeric:tabular-nums}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.ctx{color:var(--ctx)}
+.v{font-weight:600}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.por .soul i{mix-blend-mode:multiply}
+.fade{position:absolute;left:0;right:0;top:686px;height:158px;z-index:5;background:linear-gradient(rgba(0,0,0,0),#000 50px,#000)}
+.por .fade{background:linear-gradient(rgba(255,255,255,0),#fff 50px,#fff)}
+.hair{position:absolute;left:22px;width:346px;height:1.5px;background:rgba(var(--ink),.12)}
+.drum{position:absolute;left:22px;font-size:96px;font-weight:300;letter-spacing:-.04em;line-height:100px;font-variant-numeric:tabular-nums}
+.drum .w{font-size:34px;font-weight:300;letter-spacing:-.02em;color:rgba(var(--ink),var(--s2))}
+.drum .nb{position:absolute;left:0;font-size:96px;font-weight:300;letter-spacing:-.04em;line-height:100px;opacity:.14}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;transition:opacity .15s}
+.por #fing{background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),POR=PLAY||Q.includes('look=por'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const pigOf=por=>por?['#2450D8','#E2432A','#F0A500']:['#86B4FF','#FF5B3A','#FFC23D'];
+const soul=(por,id='S')=>{const P=pigOf(por),f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;return `<div class="soul" id="${id}">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+const back=(w)=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ ${w}</div>`;
+const inkWord=(w,x,y,id='')=>`<div class="abs lbl" ${id?`id="${id}"`:''} style="left:${x}px;top:${y}px">${w}<svg style="position:absolute;left:0;top:22px;overflow:visible" width="${w.length*10.8}" height="12"><path d="${lens(w.length*10.8-6,1.6)}" fill="rgb(var(--ink))"/></svg></div>`;
+const head=(bk,title,ctx)=>`${back(bk)}<div class="abs t44" style="left:22px;top:84px">${title}</div><div class="abs b ctx nw" id="ctxl" style="left:22px;top:146px">${ctx}</div>`;
+const line=(t,v,y,o={})=>`<div class="abs b nw${o.cls?' '+o.cls:''}" ${o.id?`id="${o.id}"`:''} style="left:22px;top:${y}px;${o.style||''}">${t}</div>${v?`<div class="abs lbl nw${o.cls?' '+o.cls:''}" style="right:22px;top:${y+5}px;font-weight:600;color:${o.wet?(o.cls==='ch'?'var(--health)':'var(--tess)'):`rgba(var(--ink),var(--s2))`}">${v}</div>`:''}`;
+// Upkeep: height is staleness. The NOW hairline at 228 is staleness 1; the foot at 580 is 0. A chore's line sits at its staleness, stalest first, never closer than 46 to its neighbours. Past 1 it stacks under the hairline; at the foot it stacks upward.
+const CHORES=[['Clean the bathroom',21,14],['Water the plants',6,7],['Pay the water bill',24,30],['Pay rent',15,30],['Clean the kitchen',0,7]];
+const age=(d)=>d===0?'TODAY':`${d} DAYS`;
+const place=(list)=>{const rows=list.map(([n,d,i,w])=>({n,d,i,w,s:d/i})).sort((a,b)=>b.s-a.s);let last=-100;for(const r of rows){let y=r.s>=1?244:Math.round(244+(1-r.s)*336);if(y<last+46)y=last+46;r.y=y;last=y}for(let k=rows.length-1;k>=0;k--){const cap=k===rows.length-1?580:rows[k+1].y-46;if(rows[k].y>cap)rows[k].y=cap}return rows};
+const upkeep=(o)=>{let h=head('REVIEW','Upkeep',o.ctx);if(o.empty)return h+`<div class="abs b s2" style="left:22px;top:200px">No chores yet.</div>`;
+ h+=`<div class="abs lbl" style="left:22px;top:200px">NOW</div><div class="hair" style="top:228px"></div>`;
+ for(const r of place(o.chores||CHORES))h+=line(r.n,age(r.d),r.y,{id:o.ids?'c'+r.n.replace(/\W/g,''):'',cls:'ch',style:r.w?'color:var(--health)':'',wet:r.w});
+ h+=`<div class="abs lbl s2" style="left:22px;top:630px">NO RHYTHM YET</div>`+line('Laundry','',662)+line('Take out the trash','',694);return h};
+// A chore, one tap down: the name at 44, the context line, the interval as a day drum, the rhythm as rules whose length is the gap, the verb as an ink-line word (a hold) with FINE beside it.
+const chore=(o)=>`${back('UPKEEP')}<div class="abs t44" style="left:22px;top:84px">${o.name}</div><div class="abs b ctx nw" style="left:22px;top:146px">${o.ctx}</div><div class="drum" style="top:264px"><span class="nb" style="top:-78px">${o.every-1}</span><span class="w">every </span>${o.every}<span class="w"> days</span><span class="nb" style="top:78px">${o.every+1}</span></div><div class="abs lbl s2" style="left:22px;top:456px">THE LAST FEW TIMES</div>${o.gaps.map((g,i)=>{const x=22+o.gaps.slice(0,i).reduce((a,b)=>a+b*1.6+10,0);return `<div class="abs" style="left:${x}px;top:492px;width:${g*1.6}px;height:6px;border-radius:3px;background:rgba(var(--ink),.55)"></div>`}).join('')}<div class="abs" style="left:${22+o.gaps.reduce((a,b)=>a+b*1.6+10,0)}px;top:494px;width:${o.open*1.6}px;height:2px;border-top:2px dashed rgba(var(--ink),.38)"></div><div class="abs lbl s2 nw" style="left:22px;top:512px">${o.gaps.join(', ')} DAYS, ${o.open} SO FAR</div>${inkWord(o.verb,22,572)}<div class="abs lbl s2" style="left:${22+o.verb.length*10.8+40}px;top:572px">FINE</div>${inkWord('DELETE CHORE',22,652)}`;
+// First run: the pick. Starters under group words, one line each with the interval as the value; picked lines in ink at 600; KEEP N as an ink-line word, SKIP a plain word. The board shows the list scrolled to its end.
+const STARTERS=[['KITCHEN',[['Clean the kitchen',7,1],['Take out the trash',4,1]]],['ROOMS',[['Vacuum the apartment',7,0],['Clean the bathroom',7,1]]],['PLANTS',[['Water the plants',7,1]]]];
+const pick=()=>{let h=`${back('REVIEW')}<div class="abs t44" style="left:22px;top:84px">Upkeep</div><div class="abs b ctx nw" style="left:22px;top:146px">First time here</div>`;let y=200;for(const [g,rows] of STARTERS){h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">${g}</div>`;y+=32;for(const [n,d,p] of rows){h+=`<div class="abs b nw" style="left:22px;top:${y}px;${p?'font-weight:600':`color:rgba(var(--ink),var(--s2))`}">${n}</div><div class="abs lbl s2 nw" style="right:22px;top:${y+5}px;font-weight:600">${d} DAYS</div>`;y+=40}y+=14}h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">9 MORE</div>`;return h+inkWord('KEEP 4',266,600)+`<div class="abs lbl s2" style="left:22px;top:600px">SKIP</div>`};
+// People: one line per person, most recently talked first, the value at the right is when (a birthday within 14 days wins). Never mentioned at the end in inkSecondary.
+const PEOPLE=[['Sam','TUE'],['Mom','BIRTHDAY SUN'],['Ben','OCT 9'],['Will','OCT 6'],['Rose','OCT 3'],['Mark','SEP 28'],['Bill','SEP 20'],['Rosemary',''],['Ravi','']];
+const people=(o)=>{let h=head('REVIEW','People',o.ctx);if(o.empty)return h+`<div class="abs b s2" style="left:22px;top:200px">No one yet.</div>`;let y=200;for(const [n,v] of (o.people||PEOPLE)){h+=line(n,v,y,{style:v?'':`color:rgba(var(--ink),var(--s2))`,wet:o.wet===n,id:'p'+n});y+=40}return h};
+// A person: the name at 44, the context line with the birthday as a value word, mentions one per line under month words with the day as the value.
+const person=(o)=>{let h=`${back('PEOPLE')}<div class="abs t44" style="left:22px;top:84px">${o.name}</div><div class="abs b ctx nw" style="left:22px;top:146px">${o.ctx}</div>`;let y=200;for(const [m,rows] of o.months){h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">${m}</div>`;y+=32;for(const [t,d,plain] of rows){h+=`<div class="abs b nw" style="left:22px;top:${y}px;${plain?`color:rgba(var(--ink),var(--s2))`:''}">${t}</div><div class="abs lbl s2 nw" style="right:22px;top:${y+5}px;font-weight:600">${d}</div>`;y+=40}y+=14}return h+inkWord('DELETE PERSON',22,y+20)};
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph${(opt.por??POR)?' por':''}" ${opt.id?`id="${opt.id}"`:''}>${inner}<div class="fade"></div>${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${opt.nosoul?'':soul(opt.por??POR,opt.id?'S':'s'+Math.random().toString(36).slice(2,6))}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+const SAM={name:'Sam',ctx:'talked Tue, birthday <span class="v" style="color:rgb(var(--ink))">Mar 12</span>',months:[['OCTOBER',[['Called <span class="v">Sam</span> about the flat','OCT 13'],['Lunch with <span class="v">Sam</span>','OCT 6'],['Asked <span class="v">Sam</span> for a plumber','OCT 2',1]]],['SEPTEMBER',[['<span class="v">Sam</span>\'s book arrived','SEP 24',1]]]]};
+if(!PLAY){
+ $('row').innerHTML=phone('UPKEEP: HEIGHT IS STALENESS, ONE LINE PER CHORE, THE AGE AS ITS VALUE',upkeep({ctx:'Thursday, 1 past its time'}),{por:1})
+  +phone('HOLD A NAME: IT FILLS IN SAGE, SINKS TO THE FOOT AND DRIES',upkeep({ctx:'Thursday, all in time',chores:[['Clean the bathroom',0,14,1],['Water the plants',6,7],['Pay the water bill',24,30],['Pay rent',15,30],['Clean the kitchen',0,7]]}),{por:1,line:'Clean the bathroom, done. Was 21 days, usually 14.',undo:1})
+  +phone('A CHORE: THE DAY DRUM, THE RHYTHM AS RULES, THE VERB AS AN INK WORD',chore({name:'Descale the kettle',ctx:'descaled 25 days ago, usually every 60',every:60,gaps:[58,62,47],open:25,verb:'DESCALED'}),{por:0})
+  +phone('PEOPLE: ONE LINE PER PERSON, WHEN AS THE VALUE, NEVER A COUNT OF THE QUIET',people({ctx:'Mom\'s birthday Sunday'}),{por:1})
+  +phone('A PERSON: BIRTHDAY AS A VALUE WORD, MENTIONS ONE PER LINE BY MONTH',person(SAM),{por:0})
+  +phone('FIRST RUN: THE PICK, ONE LINE PER STARTER, KEEP 4 AS AN INK WORD',pick(),{por:1,line:'What do you keep up with? Pick any.'});
+ $('note').innerHTML='UPKEEP AND PEOPLE UNDER THE ONE-LINE GRAMMAR: ‹ REVIEW AT 58, TITLE 44, THE CONTEXT LINE AT 146. UPKEEP KEEPS ITS ONE INVENTION, HEIGHT IS STALENESS: ONE BODY 21 LINE PER CHORE WITH ITS AGE AS THE VALUE AT THE RIGHT, PLACED BETWEEN THE NOW HAIRLINE AT 228 (STALENESS 1) AND THE FOOT (0), STALEST FIRST; NO TITLE 34 NAMES, NO INK GRADIENT, NO AGE LINE UNDER THE NAME; "USUALLY" LIVES ONE TAP DOWN WITH THE DRUM AND THE RHYTHM. PEOPLE: ONE LINE PER PERSON, MOST RECENTLY TALKED FIRST, WHEN AS THE VALUE (A BIRTHDAY WITHIN 14 DAYS WINS); THE PARAGRAPH OF NAMES GOES. A PERSON: MENTIONS ONE PER LINE UNDER MONTH WORDS. NO DOTS, NO MIDDLE DOTS, NO AVATARS, NO COUNTS.';
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+}else{
+ $('row').innerHTML=phone('UPKEEP',upkeep({ctx:'Thursday, 1 past its time',ids:1}),{id:'P',fing:1,por:1});
+ const P=$('P'),f=$('fing'),cap=document.querySelector('.cap'),setCap=t=>cap.textContent=t;
+ const tap=async(x,y,hold=170)=>{f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1;await sleep(hold);f.style.opacity=0};
+ (async()=>{document.body.dataset.start='1';await sleep(1300);
+  setCap('HOLD CLEAN THE BATHROOM: THE LINE FILLS IN SAGE OVER 0.6 S');const b=$('cCleanthebathroom');const bv=b.nextElementSibling;
+  const by=parseInt(b.style.top);f.style.left='80px';f.style.top=(by+14)+'px';f.style.opacity=1;
+  b.style.backgroundImage='linear-gradient(var(--health),var(--health))';b.style.backgroundRepeat='no-repeat';b.style.webkitBackgroundClip='text';b.style.backgroundClip='text';b.style.color='transparent';b.style.backgroundSize='0% 100%';b.style.backgroundColor='transparent';
+  const ghost=b.cloneNode(true);ghost.id='';ghost.style.backgroundImage='none';ghost.style.color='rgb(18,16,22)';ghost.style.webkitBackgroundClip='border-box';P.appendChild(ghost);b.style.zIndex=3;
+  b.animate([{backgroundSize:'0% 100%'},{backgroundSize:'100% 100%'}],{duration:600,easing:'linear',fill:'forwards'});await sleep(620);f.style.opacity=0;
+  setCap('IT SINKS TO THE FOOT ON THE SETTLE SPRING AND DRIES; THE OTHERS CLOSE UP');ghost.remove();b.style.backgroundImage='none';b.style.color='var(--health)';
+  // the foot chore makes room: Clean the kitchen moves up 46; the bathroom line sinks to the foot, TODAY as its value
+  $('cCleanthekitchen').animate([{transform:'translateY(0)'},{transform:'translateY(-46px)'}],{duration:500,easing:H,fill:'forwards'});$('cCleanthekitchen').nextElementSibling.animate([{transform:'translateY(0)'},{transform:'translateY(-46px)'}],{duration:500,easing:H,fill:'forwards'});
+  b.animate([{top:by+'px'},{top:'580px'}],{duration:760,easing:SET,fill:'forwards'});bv.animate([{top:(by+5)+'px',opacity:1},{top:(by+100)+'px',opacity:0}],{duration:300,fill:'forwards'});
+  await sleep(300);bv.textContent='TODAY';bv.style.color='var(--health)';bv.animate([{top:'585px',opacity:0},{top:'585px',opacity:1}],{duration:300,fill:'forwards'});bv.animate([{color:'#12936A'},{color:'rgba(18,16,22,.55)'}],{duration:2000,delay:800,easing:H,fill:'forwards'});
+  P.insertAdjacentHTML('beforeend',`<div class="tl" id="tl1" style="opacity:0">Clean the bathroom, done. Was 21 days, usually 14.<span class="u">UNDO</span></div>`);$('tl1').animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});
+  await sleep(500);b.animate([{color:'#12936A'},{color:'rgb(18,16,22)'}],{duration:2000,easing:H,fill:'forwards'});
+  const c=$('ctxl');c.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:180,fill:'forwards'});await sleep(180);c.textContent='Thursday, all in time';c.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:380,easing:H,fill:'forwards'});await sleep(2400);
+  setCap('TAP WATER THE PLANTS: THE CHORE GROWS OUT OF ITS LINE, ‹ UPKEEP');const w=$('cWatertheplants');const wy=parseInt(w.style.top);await tap(80,wy+14);$('tl1').remove();
+  const E=document.createElement('div');E.className='abs';E.style.cssText=`inset:0;background:#fff;opacity:0;transform-origin:22px ${wy+14}px;transform:scale(.94);z-index:8`;E.innerHTML=chore({name:'Water the plants',ctx:'watered 6 days ago, usually every 7',every:7,gaps:[7,8,6,7],open:6,verb:'WATERED'})+soul(true,'S2');P.appendChild(E);E.animate([{opacity:0,transform:'scale(.94)'},{opacity:1,transform:'scale(1)'}],{duration:420,easing:H,fill:'forwards'});await sleep(1500);
+  setCap('FLICK THE DRUM: EVERY 7 BECOMES EVERY 10, THE CONTEXT LINE FOLLOWS');await tap(120,314);const d=E.querySelector('.drum');d.animate([{transform:'translateY(0)'},{transform:'translateY(-300px)'}],{duration:700,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});await sleep(350);d.innerHTML=`<span class="nb" style="top:-78px">9</span><span class="w">every </span>10<span class="w"> days</span><span class="nb" style="top:78px">11</span>`;d.getAnimations().forEach(a=>a.cancel());d.animate([{transform:'translateY(-40px)',opacity:.6},{transform:'translateY(0)',opacity:1}],{duration:380,easing:SET,fill:'forwards'});
+  const ec=E.querySelector('.ctx');ec.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:160,fill:'forwards'});await sleep(160);ec.textContent='watered 6 days ago, usually every 10';ec.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:360,easing:H,fill:'forwards'});
+  E.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">Water the plants, every 10&nbsp;days.<span class="u">UNDO</span></div>`);E.lastElementChild.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});await sleep(2000);
+  setCap('‹ UPKEEP GOES BACK: THE PLANTS SIT LOWER, 6 OF 10 NOW');await tap(60,66);E.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.94)'}],{duration:380,easing:H,fill:'forwards'});await sleep(200);
+  // staleness 0.6 → y 378
+  w.animate([{top:wy+'px'},{top:'378px'}],{duration:520,easing:SET,fill:'forwards'});w.nextElementSibling.animate([{top:(wy+5)+'px'},{top:'383px'}],{duration:520,easing:SET,fill:'forwards'});const pr=$('cPayrent');pr.animate([{top:pr.style.top},{top:'424px'}],{duration:520,easing:SET,fill:'forwards'});pr.nextElementSibling.animate([{top:(parseInt(pr.style.top)+5)+'px'},{top:'429px'}],{duration:520,easing:SET,fill:'forwards'});await sleep(1500);document.body.dataset.done='1'})();
+}
+</script>
+</body>
+</html>

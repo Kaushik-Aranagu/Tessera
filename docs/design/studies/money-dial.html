@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Money dial</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M5 money screen 5 (receipt total instrument): whole units on one drum, cents on a smaller one, typing behind a tap. Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--sage:#6E9E6A}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#E3EAD8 0%,rgba(227,234,216,0) 70%),radial-gradient(70% 45% at 0% 35%,#DCE8D2 0%,rgba(220,232,210,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F4F0EC}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.num{font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.drum span{display:block;text-align:right}
+.cdrum span{display:block;text-align:left}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0)}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+  <!-- Now asks once, after a shop -->
+  <section id="now" class="abs" style="inset:0">
+    <div class="abs lbl" style="left:22px;top:58px;display:flex;gap:16px"><span>REVIEW</span><span style="color:var(--ink)">TODAY</span><span>TRAINING</span><span>KITCHEN</span></div>
+    <div class="abs" style="left:0;right:0;top:140px;height:1px;background:linear-gradient(90deg,rgba(110,158,106,0),rgba(110,158,106,.8) 20%,rgba(110,158,106,.8) 80%,rgba(110,158,106,0))"></div>
+    <div class="abs lbl" style="left:22px;top:150px">NOW</div>
+    <div id="q" class="abs" style="left:20px;right:22px;top:178px;font-size:56px;font-weight:500;line-height:1;letter-spacing:-.04em">Groceries<br>total?</div>
+    <div class="abs" style="left:22px;top:302px;font-size:21px;color:var(--ctx)">the shop you finished at 5:40</div>
+  </section>
+
+  <!-- the instrument -->
+  <section id="inst" class="abs" style="inset:0;opacity:0">
+    <div class="abs lbl" style="left:22px;top:58px">GROCERIES · 5:40 PM</div>
+    <div class="abs" style="left:20px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.035em">Total</div>
+    <!-- the two drums -->
+    <div class="abs" style="left:0;width:236px;top:180px;height:260px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 20%,#000 42%,#000 58%,rgba(0,0,0,.25) 80%,transparent);mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 20%,#000 42%,#000 58%,rgba(0,0,0,.25) 80%,transparent)">
+      <div id="whole" class="drum num abs" style="right:0;width:200px;font-size:96px;top:0"></div>
+    </div>
+    <div id="dot" class="abs num" style="left:236px;top:272px;font-size:96px">.</div>
+    <div class="abs" style="left:262px;width:110px;top:196px;height:228px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 22%,#000 42%,#000 58%,rgba(0,0,0,.25) 78%,transparent);mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 22%,#000 42%,#000 58%,rgba(0,0,0,.25) 78%,transparent)">
+      <div id="cents" class="cdrum num abs" style="left:0;font-size:56px;top:0"></div>
+    </div>
+    <div class="abs" style="left:22px;right:22px;top:446px;font-size:21px;line-height:30px;color:rgba(43,36,64,.75)">In <span id="cur" style="font-weight:600;color:var(--ink)">no currency</span>. Last shop was <span style="font-weight:600;color:var(--ink)">41.60</span>.</div>
+    <div id="log" class="abs" style="left:22px;top:560px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px">Log 40.00<svg class="abs" style="left:-7px;bottom:3px;z-index:-1" width="168" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#6E9E6A" opacity=".82" filter="url(#rough)"/></svg></div>
+    <span id="skip" class="abs la lbl" style="right:22px;top:576px">SKIP<span class="line" style="background:var(--sub)"></span></span>
+  </section>
+
+  <div id="say" class="abs" style="right:78px;top:775px;font-size:21px;color:var(--cobalt);text-align:right;opacity:0;z-index:12;white-space:nowrap"></div>
+  <span id="undo" class="abs la lbl" style="right:78px;top:808px;color:var(--verm);opacity:0;z-index:12">UNDO<span class="line" style="background:var(--verm)"></span></span>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+async function swapWord(el, t) { await anim(el, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 120 }); el.textContent = t; await anim(el, [{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 180, easing: HOUSE }); }
+// whole units: 96 Light, rows 100pt; cents: 56 Light, rows 60pt
+for (let w = 30; w <= 50; w++) $('whole').insertAdjacentHTML('beforeend', `<span style="height:100px;line-height:100px">${w}</span>`);
+for (let c = 0; c < 100; c++) $('cents').insertAdjacentHTML('beforeend', `<span style="height:60px;line-height:60px">${String(c).padStart(2, '0')}</span>`);
+const wholeY = (w) => 80 - (w - 30) * 100, centsY = (c) => 84 - c * 60;
+let W = 40, C = 0; $('whole').style.top = wholeY(W) + 'px'; $('cents').style.top = centsY(C) + 'px';
+const setLog = (t) => { $('log').childNodes[0].textContent = t; const r = document.createRange(); r.selectNodeContents($('log').childNodes[0]); const w = r.getBoundingClientRect().width / ($('ph').getBoundingClientRect().width / 390); $('log').querySelector('svg').setAttribute('width', w + 14); };
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; setLog('Log 40.00'); await sleep(400); document.body.dataset.start = '1';
+  await sleep(1300);
+  // tap the question: z into the instrument; the hero's word becomes the title, the drums rise in
+  const [qx, qy] = centre($('q')); await fingerOn(qx, qy); await sleep(100); fingerOff();
+  anim($('now'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(1.04)' }], { duration: 320, easing: HOUSE });
+  $('inst').style.opacity = 1;
+  [...$('inst').children].forEach((c, k) => anim(c, [{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: 120 + k * 40, easing: HOUSE }));
+  await sleep(1300);
+
+  // the whole drum: flick down two, it coasts and settles on 38 with a tick per number
+  await fingerOn(150, 300);
+  await tween(240, (t) => fingerAt(150, 300 + 70 * t)); fingerOff();
+  await tween(620, (t) => { $('whole').style.top = (wholeY(40) + 200 * t) + 'px'; }, (t) => 1 - Math.pow(1 - t, 3));
+  W = 38; setLog('Log 38.00');
+  await sleep(700);
+  // the cents drum: smaller and finer, drag up twenty
+  await fingerOn(310, 310);
+  await tween(700, (t) => { fingerAt(310, 310 - 90 * t); $('cents').style.top = (centsY(0) - 1200 * t) + 'px'; }, (t) => 1 - Math.pow(1 - t, 2.4));
+  fingerOff(); C = 20; setLog('Log 38.20');
+  await sleep(800);
+  // the currency word cycles: none → € → £ → $ (stored as said; nothing is converted)
+  const [cx, cy] = centre($('cur')); await fingerOn(cx, cy); await sleep(90); fingerOff();
+  await swapWord($('cur'), 'pounds');
+  setLog('Log £38.20');
+  await sleep(900);
+
+  // tap Log: the drums fold into one line and drop into Now's ledger; Tess says it beside her soul
+  const [lx, ly] = centre($('log')); await fingerOn(lx - 30, ly); await sleep(160); fingerOff();
+  const sv = $('log').querySelector('svg'); anim(sv, [{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.65)' }, { transform: 'scaleY(1)' }], { duration: 420, easing: 'ease-out' });
+  await sleep(200);
+  anim($('inst'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.96) translateY(-20px)' }], { duration: 360, easing: HOUSE });
+  $('q').innerHTML = 'Pay the<br>electricity bill';
+  anim($('now'), [{ opacity: 0, transform: 'translateY(20px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 200, easing: HOUSE });
+  $('now').lastElementChild.textContent = 'due Friday';
+  await sleep(400);
+  $('say').textContent = 'Groceries, £38.20. Logged.';
+  anim($('say'), [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE });
+  anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 120 });
+  await sleep(2200);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

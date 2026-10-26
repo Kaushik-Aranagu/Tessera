@@ -1,0 +1,27 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#f4f1ea}</style><canvas id=c width=1200 height=760></canvas><script>
+const c=document.getElementById('c'),g=c.getContext('2d');
+const INK=[20,24,31],STAGE=[226,67,42],BG=[244,241,234];
+const rgb=(a,al=1)=>`rgba(${a[0]|0},${a[1]|0},${a[2]|0},${al})`;
+const mixc=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
+function blob(x,y,r,t,seed,wob){g.beginPath();const N=20;for(let k=0;k<=N;k++){const a=k/N*2*Math.PI;const rr=r*(1+wob*(.07*Math.sin(2*a+t*2.3+seed)+.05*Math.sin(3*a-t*1.7+seed*2)+.03*Math.sin(5*a+t*3.1)));const px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;k?g.lineTo(px,py):g.moveTo(px,py)}g.closePath();g.fill()}
+function demo(n){const s=Array(n).fill('full');if(n>=3)s[1]='short';if(n>=4)s[n-1]='best';return s}
+// every option: evenly spaced angles ALWAYS; no drop ever leaves its slot by more than a drop width
+function ring(opt,cx,cy,R,n,t){const st=demo(n);const base=.16*t;
+ for(let i=0;i<n;i++){const a0=2*Math.PI*i/n-Math.PI/2+base;let r=R,sw=1,a=a0,rr=R,ox=0,oy=0;
+  if(opt==='A'){ // travelling swell: a soft wave of size runs round the rigid ring, ring egg-breathes
+    const w=Math.pow(.5+.5*Math.sin(a0*1-t*1.6),2);sw=.86+.5*w;rr=R*(1+.08*Math.sin(2*a0-t*.5));}
+  if(opt==='B'){ // radial ripple: neighbours alternately step in and out, then swap (breathing zig-zag)
+    const s=(i%2?1:-1)*Math.sin(t*1.1);rr=R*(1+.17*s);sw=1-.1*s*(i%2?1:-1);}
+  if(opt==='C'){ // two lanes: drops weave between an inner and outer track in a slow braid, spacing stays even
+    rr=R*(1+.16*Math.sin(i*2*Math.PI/Math.max(n,2)*2+t*.9)); a=a0+.0;}
+  if(opt==='D'){ // chasing pulse: one drop at a time swells and lifts outward, the next follows, like a slow heartbeat round the ring
+    const ph=((t*.55-i/n)%1+1)%1;const e=Math.exp(-Math.pow((ph-.0)*6,2));const e2=Math.exp(-Math.pow((ph-1)*6,2));const p=Math.max(e,e2);sw=1+.55*p;rr=R*(1+.1*p);}
+  const x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;const best=st[i]==='best',short=st[i]==='short';
+  g.fillStyle=best?rgb(STAGE):short?rgb(mixc(INK,BG,.62)):rgb(INK,.92);
+  blob(x,y,R*.2*(best?1.15:1)*sw,t,i*2.1,1)}}
+function draw(){g.fillStyle='#f4f1ea';g.fillRect(0,0,1200,760);g.fillStyle=rgb(INK,.9);g.font='600 20px -apple-system,Helvetica';g.fillText('Set mark, no gaps: drops stay evenly spaced, the life is in how they move (live mark, 3x)',30,34);
+ const names={A:'A  Swell wave: a soft size wave runs round the ring',B:'B  Zig-zag breath: neighbours step in and out, then swap',C:'C  Braid: drops weave between an inner and outer track',D:'D  Chasing pulse: one drop lifts and swells, the next follows'};
+ let ro=0;for(const o of 'ABCD'){const y=70+ro*168;g.fillStyle=rgb(INK,.75);g.font='600 13px -apple-system,Helvetica';g.fillText(names[o],30,y+6);
+  let col=0;for(const n of [4,6,8])for(const tt of [1.0,3.2]){const cx=110+col*190,cy=y+88;g.strokeStyle=rgb(INK,.06);g.strokeRect(cx-80,y+16,160,142);ring(o,cx,cy,50,n,tt+(n-4)*.3);g.fillStyle=rgb(INK,.4);g.font='11px -apple-system,Helvetica';g.fillText(n+' sets',cx-18,y+152);col++}
+  ro++}}
+window.renderAt=draw;draw();</script>

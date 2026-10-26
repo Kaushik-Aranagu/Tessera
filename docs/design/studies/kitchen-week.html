@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Kitchen week, drawn</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 67: Core's Kitchen slice (#380) on Design 47. Planned meals land their missing lines as ghost rows ("Tacos, 10 added." with UNDO), staples and optional lines stay off, same-key rows join (pack first, "1 can + 15 oz"), two pack sizes are two rows, a checked row covers a line, "nothing new to buy" says so; the recipe page in layout C with its optional lines marked. ?play records. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--health:#12936A;background:#fff;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.sm{font-size:16px;line-height:22px}
+.nw{white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.v{font-weight:600}
+.ctx{color:var(--ctx)}
+.wet{color:var(--tess)}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.tl .w{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:rgba(var(--ink),.6)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:multiply}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35);opacity:0;z-index:30;transition:opacity .15s}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const soul=()=>{const P=['#2450D8','#E2432A','#F0A500'],f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;
+ return `<div class="soul">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+const TABS=['REVIEW','TODAY','TRAINING','KITCHEN'],TX=[22,118,199,300];
+const vlens=(h,t)=>`M6 0 Q ${6-t} ${(h*.42).toFixed(1)} 5.6 ${h} Q ${6+t} ${(h*.58).toFixed(1)} 6 0 Z`;
+const tabs=on=>`<div class="abs lbl" style="left:0;right:0;top:78px;height:24px;letter-spacing:.06em;z-index:13">${TABS.map((t,i)=>`<span class="abs" style="left:${TX[i]}px;top:0;color:rgba(var(--ink),${t===on?1:.38})">${t}</span>`).join('')}<svg class="abs" style="left:${TX[TABS.indexOf(on)]}px;top:24px;overflow:visible" width="90" height="12"><path d="${lens(on.length*10.6,1.2)}" fill="rgb(var(--ink))"/></svg></div>`;
+// The week's rows. Each: aisle, amount, name, the "for" line, the meal that adds it (t tacos, f frittata, c chili; '' typed by hand), and per-state overrides.
+const WEEK=[
+ ['Produce','','onion','', ''],['Produce','2','limes','for tacos','t'],['Produce','3','bell peppers','for tacos','t'],['Produce','1 bunch','cilantro','for tacos','t'],['Produce','2','avocados','for tacos','t'],['Produce','1 bunch','green onions','for frittata','f'],['Produce','6 cups','baby spinach','for frittata','f'],
+ ['Dairy and eggs','','eggs','', ''],['Dairy and eggs','8 oz','sour cream','for tacos','t'],['Dairy and eggs','4 oz','feta','for frittata','f'],
+ ['Meat and seafood','1.5 lb','chicken thighs','for tacos','t'],
+ ['Cans and jars','15 oz','black beans','for tacos','t'],['Cans and jars','1 can','diced tomatoes','for chili · 28 oz','c'],['Cans and jars','1 can','chicken broth','for chili','c'],
+ ['Pantry','10 ct','tortillas','for tacos','t'],['Pantry','4 tbsp','chili powder','for tacos','t'],['Pantry','1 tbsp','cumin','for tacos','t']];
+const ORDER=['Produce','Dairy and eggs','Meat and seafood','Cans and jars','Pantry'];
+// state: which meals are planned (string of letters) and which just landed (wet)
+const build=(o)=>{const have=o.have||'',wet=o.wet||'';const by={};for(const [a,amt,n,sub,m] of WEEK){if(m&&!have.includes(m))continue;let A=amt,S=sub;
+  if(n==='onion'){A=have.includes('t')?'2':'';S=have.includes('t')?'for tacos':''}
+  if(n==='eggs'){A='1 dozen';S=have.includes('f')?'for frittata':''}
+  if(n==='black beans'&&have.includes('c')){A='1 can + 15 oz';S='for tacos and chili · 15 oz'}
+  if(n==='chili powder'&&have.includes('c'))S='for tacos and chili';
+  (by[a]??=[]).push([A,n,S,{ghost:m&&wet.includes(m)}])}
+ return ORDER.filter(a=>by[a]).map(a=>[a,by[a]])};
+const list=(o={})=>{let y=200,h='';for(const [a,items] of build(o)){h+=`<div class="abs t34" style="left:22px;top:${y}px;color:rgba(var(--ink),.85)">${a}</div>`;y+=48;
+ for(const [amt,name,sub,f={}] of items){const wet=f.ghost;h+=`<div class="abs b nw ${wet?'wet':''}" data-row="${name}" style="left:64px;top:${y}px"><span class="v">${amt}</span>${amt?' ':''}${name}</div>`;
+  if(sub)h+=`<div class="abs sm ${wet?'wet':'s2'}" style="left:64px;top:${y+28}px">${sub}</div>`;y+=sub?52:44}y+=10}return h};
+const fold=(n)=>n?`<div class="abs b" style="left:22px;top:648px"><span class="v">${n}</span> done</div>`:'';
+const page=(o={})=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ KITCHEN</div><div class="abs t44" style="left:22px;top:84px">Groceries</div>
+ <div class="abs b s2 nw" id="cnt" style="left:22px;top:140px">${o.count||'4 to get'}</div><div class="abs" style="left:0;top:190px;width:390px;height:${o.done?450:494}px;overflow:hidden;-webkit-mask-image:linear-gradient(${o.scroll?'transparent 0,#000 30px':'#000 0'},#000 ${o.done?400:444}px,transparent ${o.done?450:494}px);mask-image:linear-gradient(${o.scroll?'transparent 0,#000 30px':'#000 0'},#000 ${o.done?400:444}px,transparent ${o.done?450:494}px)"><div id="lst" style="position:absolute;left:0;top:${-190-(o.scroll||0)}px;width:390px">${list(o)}</div></div>${fold(o.done)}`;
+// The recipe page in layout C (recipe-layouts.md, the default while he picks): y is time; the optional lines sit on the page, marked, and never on the list.
+const STEPS=[[0,'Oven <b>425°F</b>, peppers on',['3 bell peppers, in strips','1 onion, in wedges','2 tbsp olive oil, chili powder, cumin']],[10,'Chicken in, on the pan',['1½ lb chicken thighs']],[25,'Warm the tortillas',['10 tortillas']],[35,'Build, serve',['sour cream, cilantro, 2 limes','cheddar, optional','hot sauce, for serving']]];
+const recipe=(o={})=>{const AN=[[0,236],[10,336],[25,436],[35,536]];let h=`<div class="abs lbl s2" style="left:22px;top:58px">‹ RECIPES</div><div class="abs t44" style="left:22px;top:84px;white-space:normal;width:346px;line-height:46px">Sheet-pan chicken fajita tacos</div><div class="abs b ctx nw" style="left:22px;top:186px">${o.ctx||'Thursday, 35 min, serves 4'}</div>`;
+ h+=`<svg class="abs" style="left:22px;top:236px;overflow:visible" width="12" height="330"><path d="${vlens(330,1.6)}" fill="rgb(var(--ink))"/></svg>`;
+ STEPS.forEach(([m,t,ing],i)=>{const y=AN[i][1];h+=`<div class="abs lbl s2" style="left:40px;top:${y}px">${m}</div><div class="abs b" style="left:72px;top:${y-4}px;width:296px;white-space:normal;line-height:26px">${t}</div>`;ing.forEach((g,k)=>{const opt=/optional|for serving/.test(g);h+=`<div class="abs sm ${opt?'s3':'s2'}" style="left:72px;top:${y+26+k*22}px">${g}</div>`})});
+ return h+`<div class="abs lbl" style="left:22px;top:660px">${o.word||'PLAN THURSDAY'}<svg style="position:absolute;left:0;top:22px;overflow:visible" width="150" height="12"><path d="${lens((o.word||'PLAN THURSDAY').length*10.8-6,1.6)}" fill="rgb(var(--ink))"/></svg></div><div class="abs lbl s2" style="left:200px;top:660px">COOK</div>`};
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph" ${opt.id?`id="${opt.id}"`:''}>${inner}${opt.line?`<div class="tl" id="${opt.id?'tl':''}">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${soul()}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+if(!PLAY){
+ $('row').innerHTML=
+  phone('BEFORE PLANNING: THE ROWS HE TYPED, BARE, SORTED INTO AISLES',page({have:'',count:'2 to get'}))+
+  phone('TACOS PLANNED: 10 ROWS LAND IN THEIR AISLES, STAPLES STAY OFF',page({have:'t',wet:'t',count:'12 to get, for tacos'}),{line:'Tacos, 10 added.',undo:1})+
+  phone('CHILI PLANNED: BLACK BEANS JOIN PACK FIRST, THE 28 OZ CAN IS ITS OWN ROW',page({have:'tc',wet:'c',count:'14 to get, for tacos and chili',scroll:470}),{line:'Chili, 2 added.',undo:1})+
+  phone('FRITTATA PLANNED: HIS 1 DOZEN EGGS KEEPS ITS AMOUNT, CHECKED BUTTER COVERS',page({have:'tcf',wet:'f',count:'17 to get, for tacos and 2 more',scroll:330,done:1}),{line:'Frittata, 3 added.',undo:1})+
+  phone('EVERYTHING ALREADY THERE: ONE LINE, NOTHING WRITTEN, NO UNDO',page({have:'tcf',count:'17 to get, for tacos and 2 more'}),{line:'Tacos, nothing to add.'})+
+  phone('LAYOUT C: OPTIONAL LINES ON THE PAGE, MARKED, NEVER ON THE LIST',recipe());
+ $('note').innerHTML='THE KITCHEN WEEK ON DESIGN 47, WITH CORE\'S #380 RULES (RESEARCH 123, G-R1 TO G-R16): A PLANNED MEAL\'S MISSING LINES LAND AS WET COBALT GHOST ROWS IN THEIR AISLES WITH "FOR TACOS" UNDER EACH, FLYING IN FROM TESS\'S CORNER 60 MS APART AND DRYING OVER 1.4 S; TESS: "TACOS, 10 ADDED." WITH UNDO 10 S (THE SHORT NAME, NEVER THE FULL TITLE). STAPLES, "TO TASTE" AND OPTIONAL LINES NEVER LAND. A SAME-KEY ROW JOINS SILENTLY: A BARE ROW TAKES THE RECIPE\'S AMOUNT, A TYPED AMOUNT STAYS, A PACK AND A WEIGHT JOIN PACK FIRST ("1 CAN + 15 OZ"), TWO PACK SIZES ARE TWO ROWS, A CHECKED ROW COVERS THE LINE. WHEN NOTHING IS MISSING: "TACOS, NOTHING TO ADD.", NO UNDO. THE RECIPE PAGE IS LAYOUT C (THE CLOCK) UNTIL HE PICKS; ITS OPTIONAL LINES SIT ON THE PAGE AT 38% INK AND NEVER ON THE LIST. THE COUNT LINE: "N TO GET, FOR TACOS AND 2 MORE".';
+ document.fonts.ready.then(()=>setTimeout(()=>document.body.dataset.done='1',200));
+}else{
+ $('row').innerHTML=phone('GROCERIES',page({have:'',count:'2 to get'}),{id:'P',fing:1});
+ const P=$('P'),cap=document.querySelector('.cap'),setCap=t=>cap.textContent=t;
+ const land=async(have,wet,count,line,undo)=>{const old=$('lst').innerHTML;$('lst').innerHTML=list({have,wet});const ghosts=[...P.querySelectorAll('.wet')];ghosts.forEach((g,i)=>g.animate([{opacity:0,transform:'translate(240px,420px) scale(.6)'},{opacity:1,transform:'translate(0,0) scale(1)'}],{duration:520,delay:i*60,easing:H,fill:'forwards'}));
+  const c=$('cnt');c.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(3px)'}],{duration:160,fill:'forwards'});await sleep(160);c.textContent=count;c.animate([{opacity:0,filter:'blur(3px)'},{opacity:1,filter:'blur(0)'}],{duration:320,easing:H,fill:'forwards'});
+  const t=P.querySelector('.tl');if(t)t.remove();P.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">${line}${undo?'<span class="u">UNDO</span>':''}</div>`);P.lastElementChild.animate([{opacity:0},{opacity:1}],{duration:300,delay:200,fill:'forwards'});
+  await sleep(900);ghosts.forEach(g=>g.animate([{color:'#2450D8'},{color:g.classList.contains('sm')?'rgba(18,16,22,.66)':'#121016'}],{duration:1400,delay:600,easing:H,fill:'forwards'}))};
+ (async()=>{document.body.dataset.start='1';await sleep(1200);
+  setCap('TACOS PLANNED: 10 ROWS FLY IN FROM TESS, ONION JOINS ITS ROW, STAPLES STAY OFF');await land('t','t','12 to get, for tacos','Tacos, 10 added.',1);await sleep(3000);
+  setCap('FRITTATA PLANNED: 3 ROWS; FOR FRITTATA LANDS UNDER THE EGGS HE TYPED');await land('tf','f','15 to get, for tacos and frittata','Frittata, 3 added.',1);await sleep(3000);
+  setCap('TACOS AGAIN NEXT WEEK: EVERYTHING IS THERE, ONE LINE, NOTHING WRITTEN');const t=P.querySelector('.tl');t.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});await sleep(220);t.remove();P.insertAdjacentHTML('beforeend','<div class="tl" style="opacity:0">Tacos, nothing to add.</div>');P.lastElementChild.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});await sleep(2400);document.body.dataset.done='1'})();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Notes on the new grammar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 57: the Notes page and a note under the one-line, no-dots and one-base rules with their back words. Return writes the note (#343); the row lands from the writing line and its time dries; a note is one text at Field 18 with the DONE word above the keyboard, its links as ink words and DELETE NOTE with a 10 s UNDO. ?look=por|obs; ?play records Porcelain. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.72;--s3:.38;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;--now:#FFC23D;--kb:#1C1C1E;--key:#3A3A3C;background:#000;color:rgb(var(--ink))}
+.ph.por{--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--kb:#D1D3D9;--key:#FFFFFF;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.f18{font-size:18px;line-height:24px}
+.nw{white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.ctx{color:var(--ctx)}
+.v{font-weight:600}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.por .soul i{mix-blend-mode:multiply}
+.hair{position:absolute;left:22px;width:346px;height:1.5px;background:rgba(var(--ink),.12)}
+.inkline{position:absolute;left:22px;height:1.5px;background:var(--tess);width:0}
+.kb{position:absolute;left:0;right:0;bottom:0;height:300px;background:var(--kb);z-index:9}
+.kb i{position:absolute;height:42px;border-radius:5px;background:var(--key);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.done{position:absolute;right:22px;bottom:312px;z-index:10}
+.caret{display:inline-block;width:1.5px;height:20px;background:var(--tess);vertical-align:-3px;margin-left:1px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;transition:opacity .15s}
+.por #fing{background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),POR=PLAY||Q.includes('look=por'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const pigOf=por=>por?['#2450D8','#E2432A','#F0A500']:['#86B4FF','#FF5B3A','#FFC23D'];
+const soul=(por,id='S')=>{const P=pigOf(por),f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;return `<div class="soul" id="${id}">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+const back=(w)=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ ${w}</div>`;
+const inkWord=(w,x,y,id='')=>`<div class="abs lbl" ${id?`id="${id}"`:''} style="left:${x}px;top:${y}px">${w}<svg style="position:absolute;left:0;top:22px;overflow:visible" width="${w.length*10.8}" height="12"><path d="${lens(w.length*10.8-6,1.6)}" fill="rgb(var(--ink))"/></svg></div>`;
+const NOTES=[['Sleep is training too','yesterday'],['<span class="v">Bench press</span> felt heavy on the third set','Tue'],['Ideas for the garage gym','12 Oct']];
+const rows=(list,y0=280,wet)=>{let y=y0;return list.map(([t,w],i)=>{const two=t.replace(/<[^>]+>/g,'').length>30;const h=`<div class="abs b nr" style="left:22px;top:${y}px;width:${two?270:280}px">${t}</div><div class="abs lbl nw" style="right:22px;top:${y+5}px;font-weight:600;color:${wet===i?'var(--tess)':`rgba(var(--ink),var(--s2))`}">${w}</div>`;y+=two?74:46;return h}).join('')};
+const keyboard=(done)=>`<div class="kb">${[0,1,2].map(r=>Array.from({length:r===2?7:10-r},(_,k)=>`<i style="left:${8+(r===1?20:r===2?60:0)+k*(r===2?38:38)}px;top:${44+r*52}px;width:${32}px"></i>`).join('')).join('')}<i style="left:8px;top:200px;width:84px"></i><i style="left:100px;top:200px;width:186px"></i><i style="left:294px;top:200px;width:88px;background:var(--tess)"></i></div>${done?`<div class="done lbl">DONE</div>`:''}`;
+const page=(o)=>`${back('REVIEW')}<div class="abs t44" style="left:22px;top:84px">Notes</div><div class="abs b ctx nw" id="ctxl" style="left:22px;top:146px">${o.ctx}</div><div class="abs f18" id="wl" style="left:22px;top:200px;width:346px;color:${o.typed?'rgb(var(--ink))':`rgba(var(--ink),var(--s2))`}">${o.typed||'Write something. @ links a thing.'}${o.caret?'<span class="caret"></span>':''}</div><div class="hair" style="top:232px"></div><div class="inkline" id="il" style="top:232px;width:${o.typed?346:0}px"></div>${o.empty?`<div class="abs b s2" style="left:22px;top:280px">Nothing written yet.</div>`:rows(o.rows||NOTES,280,o.wet)}`;
+const editor=(o)=>`${back('NOTES')}<div class="abs b ctx nw" style="left:22px;top:84px">${o.ctx}</div><div class="abs f18" style="left:22px;top:128px;width:346px"><div class="v">${o.first}</div><div style="margin-top:6px;color:rgba(var(--ink),.88)">${o.body}${o.caret?'<span class="caret"></span>':''}</div></div>${o.links?`<div class="abs lbl s2" style="left:22px;top:${o.ly}px">LINKS</div><div class="abs b v" style="left:22px;top:${o.ly+28}px">Bench press</div>`:''}${o.del?inkWord('DELETE NOTE',22,o.del):''}`;
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph${(opt.por??POR)?' por':''}" ${opt.id?`id="${opt.id}"`:''}>${inner}${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${opt.nosoul?'':soul(opt.por??POR,opt.id?'S':'s'+Math.random().toString(36).slice(2,6))}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+if(!PLAY){
+ $('row').innerHTML=phone('NOTES, ONE TAP DOWN FROM REVIEW: ONE LINE PER NOTE, NO SEAMS, NO DAB',page({ctx:'3 notes, the latest yesterday'}),{por:1})
+  +phone('WRITING: HIS WORDS AT 18, THE HAIRLINE INKS IN; RETURN WRITES IT',page({ctx:'3 notes, the latest yesterday',typed:'Bar felt heavy on set 3',caret:1})+keyboard(false),{por:1,nosoul:1})
+  +phone('WRITTEN: THE ROW LANDS AT THE TOP, ITS TIME ARRIVES WET AND DRIES',page({ctx:'4 notes, the latest just now',rows:[['Bar felt heavy on set 3','now'],...NOTES],wet:0}),{por:1})
+  +phone('A NOTE: ONE TEXT AT 18, ITS LINKS AS INK WORDS, DELETE WITH UNDO',editor({ctx:'edited Tuesday, about Bench press',first:'Bench press felt heavy on the third set',body:'Maybe the grip. Try a touch narrower on Thursday.',links:1,ly:260,del:340}),{por:0})
+  +phone('WRITING A NOTE: RETURN IS A NEW LINE, DONE ABOVE THE KEYBOARD ENDS IT',editor({ctx:'edited just now',first:'Bar felt heavy on set 3',body:'Grip was wide. Narrower next time and warm up the shoulder.',caret:1})+keyboard(true),{por:0,nosoul:1})
+  +phone('EMPTY: ONE PLAIN LINE, AND TESS SAYS HOW',page({ctx:'A place for loose thoughts',empty:1}),{por:1,line:'Say "note: bar felt heavy" and I’ll keep it here.'});
+ $('note').innerHTML='NOTES UNDER THE ONE-LINE GRAMMAR: ‹ REVIEW AT 58, TITLE 44, THE COUNT AS THE CONTEXT LINE, THE WRITING LINE AS A HAIRLINE THAT INKS IN (NO DAB), ONE LINE PER NOTE WITH ITS TIME AS THE VALUE WORD AND NO SEAMS BETWEEN ROWS, MENTIONS AS INK VALUE WORDS, NEVER COBALT. RETURN WRITES THE NOTE AND THE ROW LANDS FROM THE LINE. A NOTE IS ONE TEXT AT FIELD 18 WITH ‹ NOTES, ITS LINKS AS INK WORDS, DONE ABOVE THE KEYBOARD, DELETE NOTE AS AN INK WORD WITH A 10 S UNDO.';
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+}else{
+ $('row').innerHTML=phone('NOTES',page({ctx:'3 notes, the latest yesterday'}),{id:'P',fing:1,por:1});
+ const P=$('P'),f=$('fing'),cap=document.querySelector('.cap'),setCap=t=>cap.textContent=t,INK='rgb(18,16,22)';
+ const say=(t,undo)=>{const old=P.querySelector('.tl');if(old)old.remove();if(!t)return;P.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">${t}${undo?'<span class="u">UNDO</span>':''}</div>`);P.querySelector('.tl').animate([{opacity:0,transform:'translateY(-50%) translateY(4px)'},{opacity:1,transform:'translateY(-50%)'}],{duration:300,easing:H,fill:'forwards'})};
+ (async()=>{document.body.dataset.start='1';await sleep(1200);
+  setCap('TAP THE WRITING LINE: THE HAIRLINE INKS IN, THE KEYBOARD RISES');f.style.left='120px';f.style.top='212px';f.style.opacity=1;await sleep(180);f.style.opacity=0;
+  const wl=$('wl');wl.innerHTML='<span class="caret"></span>';wl.style.color=INK;$('il').animate([{width:'0px'},{width:'346px'}],{duration:320,easing:H,fill:'forwards'});
+  P.insertAdjacentHTML('beforeend',`<div id="KB" style="position:absolute;left:0;top:0;width:390px;height:844px;opacity:0">${keyboard(false)}</div>`);$('KB').animate([{opacity:0,transform:'translateY(60px)'},{opacity:1,transform:'translateY(0)'}],{duration:320,easing:H,fill:'forwards'});$('S').animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});await sleep(500);
+  setCap('TYPE: HIS WORDS AT FIELD 18');const txt='Bar felt heavy on set 3';for(let i=1;i<=txt.length;i++){wl.innerHTML=txt.slice(0,i)+'<span class="caret"></span>';await sleep(55)}await sleep(600);
+  // Return writes it (#343): the words move down into the first row slot and grow to Body 21; the rows below make room; the hairline drains; the time lands wet and dries
+  setCap('RETURN: THE ROW LANDS FROM THE LINE, ITS TIME ARRIVES WET AND DRIES');f.style.left='338px';f.style.top='760px';f.style.opacity=1;await sleep(160);f.style.opacity=0;
+  $('KB').animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(60px)'}],{duration:280,easing:H,fill:'forwards'});$('S').animate([{opacity:0},{opacity:1}],{duration:300,delay:200,fill:'forwards'});
+  [...P.querySelectorAll('.nr')].forEach(el=>{el.animate([{transform:'translateY(0)'},{transform:'translateY(46px)'}],{duration:320,easing:H,fill:'forwards'})});[...P.querySelectorAll('.lbl.nw')].forEach(el=>{el.animate([{transform:'translateY(0)'},{transform:'translateY(46px)'}],{duration:320,easing:H,fill:'forwards'})});
+  wl.innerHTML=txt;wl.classList.remove('f18');wl.animate([{top:'200px',fontSize:'18px',lineHeight:'24px'},{top:'280px',fontSize:'21px',lineHeight:'28px'}],{duration:380,easing:H,fill:'forwards'});$('il').animate([{width:'346px'},{width:'0px'}],{duration:200,fill:'forwards'});
+  P.insertAdjacentHTML('beforeend',`<div class="abs lbl nw" id="tnow" style="right:22px;top:285px;font-weight:600;color:var(--tess);opacity:0">now</div>`);$('tnow').animate([{opacity:0},{opacity:1}],{duration:200,delay:300,fill:'forwards'});await sleep(500);
+  P.insertAdjacentHTML('beforeend',`<div class="abs f18 s2" id="wl2" style="left:22px;top:200px;width:346px;opacity:0">Write something. @ links a thing.</div>`);$('wl2').animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});
+  const c=$('ctxl');c.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:180,fill:'forwards'});await sleep(180);c.textContent='4 notes, the latest just now';c.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:380,easing:H,fill:'forwards'});
+  $('tnow').animate([{color:'#2450D8'},{color:'rgba(18,16,22,.66)'}],{duration:2000,delay:400,fill:'forwards'});await sleep(2600);
+  // Open it: the row grows into the note
+  setCap('TAP THE ROW: THE NOTE GROWS OUT OF IT, ‹ NOTES');f.style.left='120px';f.style.top='292px';f.style.opacity=1;await sleep(180);f.style.opacity=0;
+  const E=document.createElement('div');E.className='abs';E.style.cssText='inset:0;background:#fff;opacity:0;transform-origin:22px 294px;transform:scale(.94);z-index:8';E.innerHTML=editor({ctx:'edited just now',first:txt,body:''});P.appendChild(E);E.animate([{opacity:0,transform:'scale(.94)'},{opacity:1,transform:'scale(1)'}],{duration:420,easing:H,fill:'forwards'});await sleep(700);
+  setCap('WRITE THE REST: RETURN IS A NEW LINE, DONE ABOVE THE KEYBOARD ENDS IT');E.insertAdjacentHTML('beforeend',`<div id="KB2" style="position:absolute;left:0;top:0;width:390px;height:844px;opacity:0">${keyboard(true)}</div>`);$('KB2').animate([{opacity:0,transform:'translateY(60px)'},{opacity:1,transform:'translateY(0)'}],{duration:320,easing:H,fill:'forwards'});
+  const body=E.querySelector('.f18 div:nth-child(2)');const t2='Grip was wide.\nNarrower next time.';let out='';for(const ch of t2){out+=ch==='\n'?'<br>':ch;body.innerHTML=out+'<span class="caret"></span>';await sleep(ch==='\n'?300:50)}await sleep(600);
+  f.style.left='338px';f.style.top='520px';f.style.opacity=1;await sleep(160);f.style.opacity=0;body.innerHTML=out;$('KB2').animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(60px)'}],{duration:280,easing:H,fill:'forwards'});
+  setCap('DONE: THE NOTE IS KEPT; ‹ NOTES GOES BACK');await sleep(1200);f.style.left='60px';f.style.top='66px';f.style.opacity=1;await sleep(160);f.style.opacity=0;E.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.94)'}],{duration:380,easing:H,fill:'forwards'});await sleep(1200);document.body.dataset.done='1'})();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<title>Tessera Keystones</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: a review board. Each app gets a row of live sketches; each sketch runs in the Home mosaic's slot (354 x 160) on the app's own page color.
+   Board tokens around the sketches; the sketches read the app's 241 palette for the chosen look. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#8E4A78;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 6px}
+h3{font-size:28px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em}
+p{margin:0 0 10px;max-width:68ch}
+.lede{font-size:19px;color:var(--fg2);max-width:64ch}
+.bar{display:flex;gap:4px 22px;flex-wrap:wrap;align-items:center;margin-top:16px}
+button.w{font:inherit;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:0 40px}
+.rule{padding:12px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600}
+.rule span{color:var(--fg2);font-size:15px}
+.app>p{color:var(--fg2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,354px),1fr));gap:36px 32px;margin-top:16px}
+.tile{min-width:0}
+.frame{--p-bg:#F7F5F1;width:100%;max-width:354px;aspect-ratio:354/160;background:var(--p-bg);border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--line);position:relative}
+body[data-look="black"] .frame{--p-bg:#000}
+.frame canvas{width:100%;height:100%;display:block;cursor:pointer;touch-action:none}
+.tile b.nm{display:block;font-size:19px;font-weight:600;margin:12px 0 2px}
+.tile .pitch{font-size:15px;color:var(--fg);margin:0 0 6px}
+.tile dl{margin:0;font-size:14px;color:var(--fg2);display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+.tile dt{font-weight:600;color:var(--fg)}
+.tile dd{margin:0}
+.acts{display:flex;flex-wrap:wrap;gap:0 16px;margin-top:6px}
+.acts button{font:inherit;font-size:14px;font-weight:600;color:var(--acc);background:none;border:0;padding:8px 0;min-height:40px;cursor:pointer}
+.cap{font-size:14px;color:var(--fg2);min-height:22px;font-style:italic}
+.pick{border-top:2px solid var(--fg);padding-top:14px}
+.pick li{margin-bottom:8px}
+</style>
+
+<main>
+<header>
+<h2>Tessera / keystones / sheet 251</h2>
+<h1>A centerpiece for every app.</h1>
+<p class="lede">Home has the mosaic, Notes has the word wall, Routines has the woodland. Each is made of the app's own material and comes alive with what you do. Here are two or three ideas for each of the other apps, drawn live in the mosaic's slot. Press the words under a sketch to make things happen. Tapping is optional: some could open a part of the app, but the point is the life in them.</p>
+<div class="bar" role="group" aria-label="Look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+</div>
+</header>
+
+<section>
+<h2>What every keystone does (your rules)</h2>
+<div class="rules">
+<div class="rule"><b>Made of the app's own stuff.</b><span>Pixels for Home, words for Notes, plants for habits. Not a picture of the app, the app's material.</span></div>
+<div class="rule"><b>Built from real data, and it scales.</b><span>Ten things or two hundred: no drawing per item that breaks at volume.</span></div>
+<div class="rule"><b>Reacts, and lives on its own.</b><span>Something happens when you log, add, finish or spend; something also drifts, decays or grows while you are away.</span></div>
+<div class="rule"><b>Alive first, a door second.</b><span>Above all it has life: fun, expressive, showing something true about the app. Tapping into the app is a bonus, never the point.</span></div>
+<div class="rule"><b>Three to five seconds.</b><span>Every reaction is over within five seconds. Reduce Motion gets a still frame.</span></div>
+<div class="rule"><b>No chart furniture.</b><span>No bars, rings as gauges, axes or percentages. Pixels stay on Home only.</span></div>
+</div>
+</section>
+
+<div id="apps"></div>
+
+<section class="pick">
+<h2>Where I would start</h2>
+<ul id="picks"></ul>
+<p style="color:var(--fg2)">These are first sketches, rough on purpose. Tell me which ones click, which to mix, and any idea of your own; the next round takes the picks to full landings.</p>
+</section>
+</main>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PAL={paper:{bg:'#F7F5F1',ink:'#242423',ink2:'#6E6A63',ink3:'#A9A49B',hair:'rgba(36,36,35,.16)',training:'#0B62AE',clay:'#9C4B2C',teal:'#1E6E77',plum:'#8A4570',gold:'#7E6A1E',green:'#25803D',wine:'#9A2541',slate:'#34506F',kitchen:'#A8701F',pine:'#2F6450',lists:'#5E6B1F',steel:'#2F6A8F',lav:'#6A5E8C',money:'#2A7878',weather:'#C9772E',rain:'#557A93',cloud:'#6B7480',paper2:'#ECE8E0'},
+ black:{bg:'#000000',ink:'#E8E3DA',ink2:'#A49E96',ink3:'#6B675F',hair:'rgba(232,227,218,.2)',training:'#8FB0EE',clay:'#E2A07F',teal:'#84C3C9',plum:'#D69CC0',gold:'#D9C27A',green:'#8FC9A0',wine:'#EE8E9C',slate:'#A7BCD6',kitchen:'#C49A5E',pine:'#8EC7AE',lists:'#B5BE7A',steel:'#8DBAD6',lav:'#B4A9D6',money:'#7BC0C4',weather:'#E8A06A',rain:'#9DBACE',cloud:'#B9C0C8',paper2:'#1A1917'}};
+let look='paper';let P=PAL.paper;
+const A=(hex,a)=>{const x=hex.replace('#','');return 'rgba('+parseInt(x.slice(0,2),16)+','+parseInt(x.slice(2,4),16)+','+parseInt(x.slice(4,6),16)+','+a+')'};
+const mixH=(a,b,u)=>{const p=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));const x=p(a),y=p(b);return 'rgb('+x.map((v,i)=>Math.round(v+(y[i]-v)*u))+')'};
+const ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
+const rnd=(s=>()=>(s=(s*16807)%2147483647)/2147483647)(42);
+function noise(x,y){const s=Math.sin(x*12.9898+y*78.233)*43758.5453;return s-Math.floor(s)}
+function vnoise(x,y){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=ease(xf),v=ease(yf);const a=noise(xi,yi),b=noise(xi+1,yi),c=noise(xi,yi+1),d=noise(xi+1,yi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+const SK=[];const add=s=>SK.push(s);
+
+/* ======================= TRAINING ======================= */
+add({app:'Training',name:'Strata',pitch:'Every week of training is a layer of rock. Thick weeks are thick layers; each session is a lens of its split’s color inside it. This week is the soft top layer, still settling.',
+ reacts:'Logging a set drops a grain onto the top layer and it thickens. Over days the top layer hardens and darkens.',opens:'Tap a layer for that week; tap a lens for that session.',scales:'Weeks stack forever; older layers press thinner.',
+ init(){this.W=Array.from({length:12},(_,i)=>({v:i===11?22:40+rnd()*60,s:Array.from({length:i===11?2:3+Math.floor(rnd()*3)},()=>['clay','teal','plum'][Math.floor(rnd()*3)])}));this.grains=[]},
+ ev:{'Log a set'(t){this.grains.push({t0:t,x:120+rnd()*120})},'Finish Push A'(t){for(let i=0;i<5;i++)this.grains.push({t0:t+i*.25,x:80+rnd()*200});this.W[11].s.push('clay')}},
+ draw(c,t){const W=this.W;let base=152;this.lay=[];
+  this.grains=this.grains.filter(g=>{const u=(t-g.t0)/1.1;if(u<0)return true;if(u>=1){W[11].v+=3;return false}c.fillStyle=P.ink2;c.fillRect(g.x,4+u*u*(base-40),2,2);return true});
+  for(let i=0;i<W.length;i++){const w=W[i],th=Math.max(3,w.v*.085*(i<6?.7:1)),top=base-th;const wav=x=>Math.sin(x*.02+i*1.7+t*.15*(i===11))*1.8;
+   c.beginPath();for(let x=0;x<=354;x+=6)c.lineTo(x,top+wav(x));for(let x=354;x>=0;x-=6)c.lineTo(x,base+wav(x+40));c.closePath();
+   c.fillStyle=i===11?A(P.ink3,.18):mixH(P.paper2,P.ink3,.15+.35*(i/12));c.fill();
+   w.s.forEach((sp,k)=>{const cx=30+(k+.5)*(294/w.s.length)+Math.sin(i*3+k)*14,cy=(top+base)/2;c.beginPath();c.ellipse(cx,cy+wav(cx)*.6,294/w.s.length*.42,Math.max(1,th*.32),0,0,7);c.fillStyle=A(P[sp],i===11?.9:.55+.03*i);c.fill()});
+   this.lay.push({top,base,i});base=top-1}
+  c.fillStyle=P.ink2;c.font='500 10px Figtree';c.fillText('this week',300,base+12)},
+ tap(x,y){const L=(this.lay||[]).find(l=>y>=l.top&&y<=l.base);if(!L)return 'Training landing';const wk=['Aug 4','Aug 11','Aug 18','Aug 25','Sep 1','Sep 8','Sep 15','Sep 22','Sep 29','Oct 6','Oct 13','this week'][L.i];return 'Opens the week of '+wk+': '+this.W[L.i].s.length+' sessions'}});
+
+add({app:'Training',name:'Plate towers',pitch:'One tower per main lift, built from every plate you moved this month. Plate width is the weight, color is the split, and a best is a gold plate. The towers sway a little, like a loaded bar.',
+ reacts:'A logged set drops a plate onto its tower with a small bounce and squash. A new best lands gold with a glint.',opens:'Tap a tower for that lift: history, best, next target.',scales:'Past 20 plates a tower folds its lower plates into a solid plinth.',
+ init(){this.L=[['Bench','clay',185],['Squat','plum',225],['Deadlift','plum',275],['Press','clay',95],['Row','teal',110]].map(([n,c,w],i)=>({n,c,w,x:46+i*65,pl:Array.from({length:8+Math.floor(rnd()*9)},(_,k)=>({w:w*(.8+rnd()*.2),g:k===5&&i!==3})),drop:null}))},
+ ev:{'Log Bench 185'(t){this.L[0].drop={t0:t,w:185,g:false}},'New best on Row'(t){this.L[4].drop={t0:t,w:130,g:true}}},
+ draw(c,t){c.fillStyle=P.hair;c.fillRect(14,150,326,1);this.L.forEach((L,i)=>{let y=149;const sway=Math.sin(t*.9+i)*.6;
+  const n=L.pl.length;L.pl.forEach((p,k)=>{const wd=12+p.w/9,lean=sway*(k/n);c.fillStyle=p.g?P.gold:A(P[L.c],.55+.45*(k/n));c.fillRect(L.x-wd/2+lean,y-4,wd,4);y-=4.6});
+  if(L.drop){const u=(t-L.drop.t0)/1.1;const wd=12+L.drop.w/9;if(u>=1){L.pl.push({w:L.drop.w,g:L.drop.g});L.glint=L.drop.g?t:0;L.drop=null}else{const yy=u<.75?(u/.75)**2*(y-4):y-4-Math.sin((u-.75)/.25*Math.PI)*5;c.fillStyle=L.drop.g?P.gold:P[L.c];c.fillRect(L.x-wd/2,yy,wd,4)}}
+  if(L.glint&&t-L.glint<1.4){const u=(t-L.glint)/1.4;c.fillStyle=A('#FFFFFF',.7*(1-u));c.fillRect(L.x-20+u*40,y+4,3,4)}
+  c.fillStyle=P.ink2;c.font='500 10px Figtree';c.textAlign='center';c.fillText(L.n,L.x,159);c.textAlign='left';L.top=y})},
+ tap(x){const L=this.L.reduce((a,b)=>Math.abs(b.x-x)<Math.abs(a.x-x)?b:a);return 'Opens '+L.n+': '+L.pl.length+' sets this month'+(L.pl.some(p=>p.g)?', a best in there':'')}});
+
+add({app:'Training',name:'Iron filings',pitch:'Each lift is a small magnet; its pull is how much you have trained it lately. Thousands of short filings settle into the field, so the whole picture of your training balance is one pattern. Neglected lifts go quiet.',
+ reacts:'A set makes its magnet surge: the filings swing toward it and settle within three seconds. Every day the pulls weaken a little on their own.',opens:'Tap a magnet for that lift.',scales:'One magnet per lift you do; the field just gets richer.',
+ init(){this.M=[['Bench','clay',.9],['Squat','plum',.7],['Deadlift','plum',.35],['Press','clay',.5],['Row','teal',.8]].map(([n,c,s],i)=>({n,c,s,x:50+i*64,y:i%2?62:98,b:0}));this.F=[];for(let y=10;y<156;y+=8)for(let x=8;x<350;x+=8)this.F.push({x:x+(noise(x,y)-.5)*4,y:y+(noise(y,x)-.5)*4,a:0})},
+ ev:{'Log a Row set'(t){this.M[4].b=t},'Skip legs a week'(t){this.M[1].s*=.4;this.M[2].s*=.4}},
+ draw(c,t){this.M.forEach(m=>{m.k=m.s*(1+(m.b&&t-m.b<3?Math.sin(Math.min(1,(t-m.b)/3)*Math.PI)*1.6:0))});
+  this.F.forEach(f=>{let fx=0,fy=0,best=null,bm=0;this.M.forEach(m=>{[[-7,1],[7,-1]].forEach(([dx,q])=>{const X=f.x-(m.x+dx),Y=f.y-m.y,r2=X*X+Y*Y+30,r=Math.sqrt(r2),k=q*m.k*900/(r2*r);fx+=X*k;fy+=Y*k});const inf=m.k/((f.x-m.x)**2+(f.y-m.y)**2+60);if(inf>bm){bm=inf;best=m}});
+   const tgt=Math.atan2(fy,fx);let d=tgt-f.a;while(d>Math.PI/2)d-=Math.PI;while(d<-Math.PI/2)d+=Math.PI;f.a+=d*(RM?1:.08);const mag=Math.min(1,Math.hypot(fx,fy)*.35);
+   c.strokeStyle=A(P[best.c],.18+.7*mag);c.lineWidth=1;c.beginPath();c.moveTo(f.x-Math.cos(f.a)*3,f.y-Math.sin(f.a)*3);c.lineTo(f.x+Math.cos(f.a)*3,f.y+Math.sin(f.a)*3);c.stroke()});
+  this.M.forEach(m=>{c.fillStyle=P[m.c];c.fillRect(m.x-8,m.y-2,16,4);c.fillStyle=P.ink2;c.font='500 10px Figtree';c.textAlign='center';c.fillText(m.n,m.x,m.y+16);c.textAlign='left'})},
+ tap(x,y){const m=this.M.reduce((a,b)=>Math.hypot(b.x-x,b.y-y)<Math.hypot(a.x-x,a.y-y)?b:a);return 'Opens '+m.n+(m.s<.45?': quiet lately, last done 9 days ago':'')}});
+
+/* ======================= KITCHEN ======================= */
+add({app:'Kitchen',name:'The loom',pitch:'The pantry is woven cloth. Each place is a band, each thing a thread. Fresh threads are pine, aging ones turn ochre, and the ones that need using now are wine. Low things are thin and frayed.',
+ reacts:'Bringing groceries in sends a shuttle across its band, weaving new threads. Using something up pulls its thread out. Day by day the colors age on their own.',opens:'Tap a band for that place; the thread under your finger names the thing.',scales:'A band holds 40 threads before it tightens the weave.',
+ init(){const mk=(n,o)=>Array.from({length:n},(_,i)=>({f:Math.min(1,rnd()*.9+(o||0)),low:rnd()<.12,in:1}));this.B=[['Fridge',mk(13,.1)],['Freezer',mk(8,-.4)],['Shelf',mk(15,-.2)],['Counter',mk(6,.2)]];this.B[0][1][3].f=.98;this.sh=null},
+ ev:{'Bring groceries'(t){this.sh={t0:t,b:0};},'Use the rice'(t){const th=this.B[0][1][3];th.out=t}},
+ draw(c,t){const age=RM?0:t*.0015;this.B.forEach(([n,T],bi)=>{const y0=14+bi*36,hh=28;c.fillStyle=P.ink2;c.font='600 9px Figtree';c.fillText(n.toUpperCase(),4,y0+hh/2+3);
+  const x0=58,x1=344;for(let k=0;k<hh;k+=3){c.fillStyle=A(P.ink3,.16);c.fillRect(x0,y0+k,x1-x0,1)}
+  T.forEach((th,i)=>{const x=x0+(i+.5)*((x1-x0)/Math.max(T.length,14));let a=th.in;if(th.out){const u=(t-th.out)/1;a=Math.max(0,1-u);if(u>1)th.gone=1}
+   const f=Math.min(1,th.f+age);const col=f<.5?mixH(P.pine,P.kitchen,f/.5):mixH(P.kitchen,P.wine,(f-.5)/.5);c.strokeStyle=A(col.startsWith('rgb')?'#000000':col,0);c.globalAlpha=a;c.strokeStyle=col;c.lineWidth=th.low?1:2.4;
+   c.beginPath();for(let k=0;k<=hh;k+=2){const over=((k/3|0)+i)%2;c.lineTo(x+Math.sin(k*.4+i)*.6,y0+k-(th.out?(t-th.out)*20:0))}c.setLineDash(th.low?[2,2]:[]);c.stroke();c.setLineDash([]);c.globalAlpha=1});
+  this.B[bi][1]=T.filter(x=>!x.gone)});
+  if(this.sh){const u=(t-this.sh.t0)/1.6,y0=14+this.sh.b*36;if(u>=1){this.B[0][1].push(...[0,1,2].map(()=>({f:0,low:false,in:1})));this.sh=null}else{const x=58+u*286;c.fillStyle=P.kitchen;c.fillRect(x-8,y0+11,16,6)}}},
+ tap(x,y){const bi=Math.max(0,Math.min(3,Math.floor((y-14)/36)));const n=this.B[bi][0];return 'Opens Pantry at '+n+(bi===0?'. Rice goes out today.':'.')}});
+
+add({app:'Kitchen',name:'Steam',pitch:'Every dish you could cook tonight is a ribbon of steam. Thick, unbroken steam means you have everything; a missing thing breaks the ribbon. The steam drifts and curls on its own.',
+ reacts:'Starting to cook makes that ribbon rise high and curl faster for the whole cook. Buying the missing thing closes its gap.',opens:'Tap a ribbon for that recipe, ready to cook.',scales:'Up to six ribbons; more dishes wait behind, like the next pot.',
+ init(){this.R=[['Tacos',1,0],['Dal',.88,0],['Shakshuka',.82,1],['Pasta',1,0],['Fried rice',.66,2]].map(([n,f,gap],i)=>({n,f,gap,x:42+i*67,cook:0}))},
+ ev:{'Start cooking Tacos'(t){this.R[0].cook=t},'Get feta'(t){const r=this.R[2];r.gap=0;r.f=1;r.fix=t}},
+ draw(c,t){c.fillStyle=P.hair;c.fillRect(14,140,326,1);this.R.forEach((r,i)=>{const hot=r.cook&&t-r.cook<12?1:0,H=hot?128:90+r.f*30;for(let s=0;s<3;s++){c.beginPath();
+   for(let y=0;y<=H;y+=3){const amp=2+y*.12*(1+hot*.6),x=r.x+Math.sin(y*.06-t*(1.4+hot*1.5)+s*2.1+i)*amp;if(r.gap&&y>40&&y<40+r.gap*14)c.moveTo(x,140-y);else c.lineTo(x,140-y)}
+   c.strokeStyle=A(hot?P.clay:P.ink2,(.55-s*.12)*r.f);c.lineWidth=(2.4-s*.6)*(.6+r.f*.6);c.stroke()}
+  c.fillStyle=hot?P.clay:P.ink2;c.font=(hot?'600 ':'500 ')+'10px Figtree';c.textAlign='center';c.fillText(r.n,r.x,154);c.textAlign='left'})},
+ tap(x){const r=this.R.reduce((a,b)=>Math.abs(b.x-x)<Math.abs(a.x-x)?b:a);return 'Opens '+r.n+(r.gap?', '+(r.n==='Shakshuka'?'feta is':'two things are')+' missing':', you have everything')}});
+
+add({app:'Kitchen',name:'Pull apart',pitch:'Tonight’s dish in big letters. Pull it apart and it opens into what it is made of: what you have in ink, what is missing in wine. The move you liked in the Codex studies, used where it means the most.',
+ reacts:'Pull down to open it; let go and it closes up. When the last missing thing is bought, the word settles a little heavier.',opens:'Tap an ingredient: missing ones go on To get, the rest open in Pantry.',scales:'One dish at a time; swipe sideways for the next one you could make.',
+ init(){this.p=0;this.goal=0;this.I=[['tortillas',1],['cilantro',1],['limes',1],['chicken',0],['onions',0],['peppers',0],['cumin',0],['sour cream',0]]},
+ ev:{'Pull apart'(t){this.goal=1;this.at=t},'Close'(t){this.goal=0}},
+ drag(dy){this.goal=dy>20?1:0},
+ draw(c,t){if(this.goal&&this.at&&t-this.at>4)this.goal=0;this.p+=(this.goal-this.p)*(RM?1:.08);const p=ease(this.p);const word='TACOS';c.font='900 64px Figtree';const w=c.measureText(word).width;let x=(354-w)/2;
+  [...word].forEach((ch,i)=>{const cw=c.measureText(ch).width,off=(i-2)*p*34,yo=p*-26;c.fillStyle=P.kitchen;c.fillText(ch,x+off,104+yo);x+=cw});
+  if(p>.05){c.font='500 13px Figtree';this.I.forEach(([n,miss],i)=>{const col=i%2,row=i>>1;const xx=60+col*150+(1-p)*(col?-40:40),yy=96+row*16*p+(1-p)*-10;c.globalAlpha=p;c.fillStyle=miss?P.wine:P.ink;c.fillText(n,xx,yy+14);c.globalAlpha=1});this.hit=1}},
+ tap(x,y){if(this.p>.5){return 'Limes go on To get. Chicken opens in Pantry.'}return 'Opens Tacos. Pull down to see what it is made of.'}});
+
+/* ======================= LISTS ======================= */
+add({app:'Lists',name:'Receipt strips',pitch:'Each list is a strip of paper hanging from a rail, as long as what is left on it. Checking a thing tears a piece off the bottom and it flutters away. A list due soon has a wine edge.',
+ reacts:'Check: a torn piece drops and spins. Add: the strip unrolls a little longer. Strips sway when you scroll past.',opens:'Tap a strip for that list.',scales:'Long lists curl at the bottom; more lists hang further back, smaller.',
+ init(){this.S=[['Before the trip',8,'steel',1],['Groceries',4,'kitchen'],['Balcony fix',3,'teal'],['Call back',2,'plum'],['To watch',5,'lav']].map(([n,k,c,due],i)=>({n,k,c,due,x:22+i*68,len:20+k*12,bits:[]}))},
+ ev:{'Check a thing'(t){const s=this.S[0];if(s.k>0){s.k--;s.bits.push({t0:t,y:s.len});s.len-=12}},'Add to Groceries'(t){const s=this.S[1];s.k++;s.grow=t}},
+ draw(c,t){c.fillStyle=P.ink3;c.fillRect(8,6,338,2);this.S.forEach((s,i)=>{const L=s.grow&&t-s.grow<.6?s.len+12*ease((t-s.grow)/.6):(s.grow?(s.len=20+s.k*12,s.len):s.len);
+  c.save();c.translate(s.x+24,8);c.rotate(Math.sin(t*.8+i)*.02);c.fillStyle=P.paper2;c.beginPath();c.moveTo(-24,0);c.lineTo(24,0);c.lineTo(24,L);for(let z=24;z>=-24;z-=6)c.lineTo(z-3,L+(z/6%2?3:0));c.closePath();c.fill();
+  c.fillStyle=P[s.c];c.font='600 8px Figtree';c.fillText(s.n.length>11?s.n.slice(0,10)+'.':s.n,-21,11);for(let k=0;k<s.k;k++){c.fillStyle=A(P.ink3,.5);c.fillRect(-20,18+k*12,28+((k*7)%14),2)}
+  if(s.due){c.fillStyle=P.wine;c.fillRect(-24,L-1,48,2)}c.restore();
+  s.bits=s.bits.filter(b=>{const u=(t-b.t0)/2;if(u>1)return false;c.save();c.translate(s.x+24+u*30,8+b.y+u*u*120);c.rotate(u*4);c.globalAlpha=1-u;c.fillStyle=P.paper2;c.fillRect(-18,-6,36,12);c.fillStyle=A(P.ink3,.6);c.fillRect(-14,-1,24,2);c.restore();c.globalAlpha=1;return true})})},
+ tap(x){const s=this.S.reduce((a,b)=>Math.abs(b.x+24-x)<Math.abs(a.x+24-x)?b:a);return 'Opens '+s.n+', '+s.k+' left'+(s.due?', due Friday':'')}});
+
+add({app:'Lists',name:'Origami',pitch:'Each list is a sheet of paper. Every thing you check folds it once more, so a list nearly done is a small, tight shape. When the last thing is checked it becomes a paper boat and sails off.',
+ reacts:'Check: one more fold, with a crease line. Finish: the boat sails out of the slot in four seconds and a new sheet slides in.',opens:'Tap a sheet for that list.',scales:'Five sheets in view; the rest wait folded flat in a stack at the right.',
+ init(){this.S=[['Before the trip',14,6,'steel'],['Groceries',6,4,'kitchen'],['Balcony fix',5,2,'teal'],['Call back',3,2,'plum']].map(([n,tot,d,c],i)=>({n,tot,d,c,x:52+i*84}))},
+ ev:{'Check a thing'(t){const s=this.S.find(s=>s.d<s.tot&&!s.sail);s.d++;if(s.d>=s.tot)s.sail=t},'Finish Call back'(t){const s=this.S[3];s.d=s.tot;s.sail=t}},
+ draw(c,t){c.strokeStyle=A(P.rain,.35);c.lineWidth=1;c.beginPath();for(let x=0;x<=354;x+=4)c.lineTo(x,138+Math.sin(x*.08+t*1.5)*1.5);c.stroke();
+  this.S.forEach(s=>{const k=s.d/s.tot,R=30*(1-k*.55);let x=s.x,y=82;
+   if(s.sail){const u=(t-s.sail)/4;if(u>1){s.d=0;s.tot=5;s.sail=0;s.n='New list'}else{x=s.x+u*u*260;y=128-Math.sin(t*3)*1.5;c.fillStyle=P[s.c];c.beginPath();c.moveTo(x-16,y);c.lineTo(x+16,y);c.lineTo(x+10,y+7);c.lineTo(x-10,y+7);c.fill();c.beginPath();c.moveTo(x,y-1);c.lineTo(x,y-18);c.lineTo(x+11,y-2);c.closePath();c.fill();return}}
+   const cut=Math.min(4,Math.floor(k*5));c.fillStyle=A(P[s.c],.18+.5*k);c.strokeStyle=P[s.c];c.lineWidth=1;c.beginPath();
+   const pts=[[0,-1],[1,0],[0,1],[-1,0]];pts.forEach(([px,py],q)=>{const cutHere=q<cut;const cx=x+px*R*(cutHere?.55:1),cy=y+py*R*(cutHere?.55:1);c.lineTo(cx,cy)});c.closePath();c.fill();c.stroke();
+   for(let q=0;q<cut;q++){const [px,py]=pts[q];c.beginPath();c.moveTo(x+px*R*.55-py*R*.45,y+py*R*.55+px*R*.45);c.lineTo(x+px*R*.55+py*R*.45,y+py*R*.55-px*R*.45);c.strokeStyle=A(P.ink,.35);c.stroke()}
+   c.fillStyle=P.ink2;c.font='500 10px Figtree';c.textAlign='center';c.fillText(s.n,x,150);c.textAlign='left'})},
+ tap(x){const s=this.S.reduce((a,b)=>Math.abs(b.x-x)<Math.abs(a.x-x)?b:a);return 'Opens '+s.n+', '+(s.tot-s.d)+' left'}});
+
+add({app:'Lists',name:'Knots',pitch:'Each list is a thread strung between two pegs, with a knot for every thing on it. A full list sags with the weight; checking things unties knots and the thread pulls tight. Due lists are wine thread.',
+ reacts:'Check: a knot slips off and the thread springs a little tighter. Add: a new knot slides on from the left peg.',opens:'Tap a thread for that list.',scales:'Knots pack closer as a list grows; five threads in view.',
+ init(){this.T=[['Before the trip',8,'wine'],['Groceries',4,'kitchen'],['Balcony fix',3,'teal'],['Call back',2,'plum'],['To watch',5,'lav']].map(([n,k,c],i)=>({n,k,c,y:24+i*27,sag:k*2.6,v:0,drop:[]}))},
+ ev:{'Check a thing'(t){const T=this.T[0];if(T.k){T.k--;T.drop.push({t0:t,x:200})}},'Add to Groceries'(t){this.T[1].k++}},
+ draw(c,t){c.fillStyle=P.ink2;c.fillRect(14,14,3,132);c.fillRect(337,14,3,132);this.T.forEach(T=>{const want=T.k*2.6;T.v+=(want-T.sag)*.08;T.v*=.85;T.sag+=RM?(want-T.sag):T.v;
+  const yy=x=>T.y+T.sag*(1-((x-177)/161)**2);c.strokeStyle=P[T.c];c.lineWidth=1.2;c.beginPath();for(let x=16;x<=338;x+=4)c.lineTo(x,yy(x));c.stroke();
+  for(let k=0;k<T.k;k++){const x=40+k*(270/Math.max(T.k,8));c.fillStyle=P[T.c];c.fillRect(x-1.5,yy(x)-3,3,6)}
+  T.drop=T.drop.filter(d=>{const u=(t-d.t0)/1.2;if(u>1)return false;c.globalAlpha=1-u;c.fillStyle=P[T.c];c.fillRect(d.x,yy(d.x)+u*u*60,3,6);c.globalAlpha=1;return true});
+  c.fillStyle=P.ink2;c.font='500 9px Figtree';c.fillText(T.n,22,T.y-3)})},
+ tap(x,y){const T=this.T.reduce((a,b)=>Math.abs(b.y+8-y)<Math.abs(a.y+8-y)?b:a);return 'Opens '+T.n+', '+T.k+' left'}});
+
+/* ======================= WEATHER ======================= */
+add({app:'Weather',name:'Horizon',pitch:'The next twelve hours as one long window, now at the left. The sky is the sky of each hour, clouds sit where it will be cloudy, rain falls where it will rain, and the sun sets where it sets. Distance is time.',
+ reacts:'When the forecast changes, the weather slides along the horizon to its new time. As the hour passes, the window drifts left on its own.',opens:'Tap a stretch of sky for that hour.',scales:'Always twelve hours; pinch for the week as a longer, thinner horizon.',
+ init(){this.rain0=7;this.rT=null;this.H=['5 PM','6','7','8','9','10','11','12 AM','1','2','3','4']},
+ ev:{'Rain comes sooner'(t){this.rT={t0:t,from:this.rain0,to:6}},'Rain moves later'(t){this.rT={t0:t,from:this.rain0,to:8}}},
+ draw(c,t){if(this.rT){const u=ease((t-this.rT.t0)/1.5);this.rain0=this.rT.from+(this.rT.to-this.rT.from)*u;if(u>=1)this.rT=null}
+  const hw=354/12,day=h=>Math.max(0,Math.min(1,(1.2-h)/1.4));
+  for(let i=0;i<12;i++){const g=c.createLinearGradient(0,0,0,140);const d=day(i);g.addColorStop(0,mixH('#1E2748',look==='black'?'#2A5C8A':'#7FA6CC',d));g.addColorStop(1,mixH('#3A3360','#F2B07A',d*(i<2?1:.3)));c.fillStyle=g;c.fillRect(i*hw,0,hw+1,140)}
+  const sx=1.1*hw,sy=60+((t*.01)%1)*0;c.fillStyle='#FFD79A';c.beginPath();c.arc(sx,96,7,0,7);c.fill();
+  c.fillStyle='#E9E6D8';c.beginPath();c.arc(9.5*hw,30,5,0,7);c.fill();c.fillStyle='#1E2748';c.beginPath();c.arc(9.5*hw+3,28,4.5,0,7);c.fill();
+  for(let k=0;k<6;k++){const cx=(k*61+t*3)%380-20;if(cx/hw>this.rain0-1.5&&cx/hw<this.rain0+5.5||k<2){c.fillStyle=A('#C9CDD3',.55);for(let p=0;p<4;p++){c.beginPath();c.ellipse(cx+p*9,34+Math.sin(k)*8+(p%2)*3,12,6,0,0,7);c.fill()}}}
+  for(let k=0;k<70;k++){const x=this.rain0*hw+((k*37)%(5*hw)),y=((k*53+t*90)%100)+40;c.strokeStyle=A('#C6D8E6',.8);c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(x-1,y+6);c.stroke()}
+  c.fillStyle=P.bg;c.fillRect(0,140,354,20);c.fillStyle=P.ink2;c.font='500 10px Figtree';this.H.forEach((h,i)=>{if(i%2===0)c.fillText(i?h+(h.length<3?' PM':''):'Now',i*hw+3,154)})},
+ tap(x){const i=Math.floor(x/(354/12));return 'Opens '+(i?this.H[i]+(this.H[i].length<3?(i<7?' PM':' AM'):''):'now')+(i>=this.rain0?': rain':': dry')}});
+
+add({app:'Weather',name:'Window numbers',pitch:'The temperature, huge, and the letters are windows. Through them you see the weather right now: clouds drift inside the 6, rain runs down the 4, fog fills them, sun warms them. The same effects as the weather words on Home, at keystone size.',
+ reacts:'When the weather turns, what you see through the numbers turns with it, over five seconds. The number rolls when the temperature changes.',opens:'Tap the number for now; the next change line opens that hour.',scales:'One number, always; it is the most important fact.',
+ init(){this.mode=0;this.T=64},
+ ev:{'It starts raining'(t){this.mode=1;this.at=t;this.T=60},'Fog rolls in'(t){this.mode=2;this.at=t;this.T=58},'Clear again'(t){this.mode=0;this.at=t;this.T=64}},
+ draw(c,t){c.save();c.font='900 150px Figtree';const txt=this.T+'°';c.beginPath();const tw=c.measureText(txt).width;
+  c.fillStyle='#000';const ox=14;
+  // clip to the glyphs: draw them into a path via text, then composite the sky into them
+  const off=this._o||(this._o=document.createElement('canvas'));off.width=354;off.height=160;const o=off.getContext('2d');o.clearRect(0,0,354,160);
+  const g=o.createLinearGradient(0,0,0,160);const m=this.mode;g.addColorStop(0,m===1?'#5D6E80':m===2?'#B8BCC0':'#6FA4E6');g.addColorStop(1,m===1?'#8C9AA8':m===2?'#D9DBDC':'#F2C38E');o.fillStyle=g;o.fillRect(0,0,354,160);
+  for(let k=0;k<5;k++){const cx=(k*90+t*(m===2?2:6))%420-40;o.fillStyle=m===1?'rgba(70,80,96,.7)':m===2?'rgba(240,240,240,.55)':'rgba(255,255,255,.75)';for(let p=0;p<5;p++){o.beginPath();o.ellipse(cx+p*10,30+(k%3)*30+(p%2)*4,16,9,0,0,7);o.fill()}}
+  if(m===1)for(let k=0;k<90;k++){const x=(k*41)%354,y=(k*57+t*140)%170-10;o.strokeStyle='rgba(220,232,244,.9)';o.lineWidth=1.2;o.beginPath();o.moveTo(x,y);o.lineTo(x-1.5,y+9);o.stroke()}
+  if(m===2){o.fillStyle='rgba(235,236,236,'+(.35+.15*Math.sin(t))+')';o.fillRect(0,0,354,160)}
+  o.globalCompositeOperation='destination-in';o.font='900 150px Figtree';o.fillStyle='#000';o.fillText(txt,ox,140);o.globalCompositeOperation='source-over';
+  c.drawImage(off,0,0);c.restore();c.fillStyle=P.ink2;c.font='500 12px Figtree';c.fillText(m===1?'Rain until midnight':m===2?'Fog until 10 AM':'Rain from 7 PM',ox+tw+10>354-110?236:ox+tw+10,150)},
+ tap(){return 'Opens Weather at now'}});
+
+add({app:'Weather',name:'Wind field',pitch:'The air itself: thousands of strands drifting the way the wind is blowing, as fast as it is blowing. Warm air is amber, cool air is slate. When rain comes, the strands turn to falling streaks.',
+ reacts:'Wind picking up makes the strands rush and stretch; a front arriving sweeps a new color across from one side in four seconds.',opens:'Tap anywhere for wind and air: speed, direction, air quality.',scales:'It is a field; it does not care how much data there is.',
+ init(){this.N=Array.from({length:260},()=>({x:rnd()*354,y:rnd()*160,a:rnd()*60}));this.sp=1;this.cool=0;this.rain=0},
+ ev:{'Wind picks up'(t){this.gust=t},'Cold front'(t){this.front=t},'Rain'(t){this.rain=this.rain?0:1}},
+ draw(c,t){const sp=this.gust&&t-this.gust<4?1+2*Math.sin((t-this.gust)/4*Math.PI):1;if(this.front){this.cool=Math.min(1,(t-this.front)/4)}
+  this.N.forEach(p=>{const ang=.15+(vnoise(p.x*.012,p.y*.02+t*.05)-.5)*1.4,v=(.6+.6*vnoise(p.y*.03,t*.1))*sp*(RM?0:1);const x0=p.x,y0=p.y;p.x+=Math.cos(ang)*v*1.4;p.y+=Math.sin(ang)*v*1.4+(this.rain?1.6:0);p.a+=1;
+   if(p.x>356||p.y>162||p.y<-2||p.a>90){p.x=rnd()*-10+ (rnd()<.5?0:rnd()*354);p.y=rnd()*160;p.a=0}
+   const warm=(p.x/354)<(1-this.cool)?P.weather:P.slate;c.strokeStyle=A(this.rain?P.rain:warm,.25+.5*Math.sin(Math.min(1,p.a/90)*Math.PI));c.lineWidth=1;c.beginPath();c.moveTo(x0-(p.x-x0)*4*sp,y0-(p.y-y0)*4*sp);c.lineTo(p.x,p.y);c.stroke()})},
+ tap(){return 'Opens wind and air: 9 mph from the west, air is good'}});
+
+/* ======================= MONEY ======================= */
+add({app:'Money',name:'Reservoirs',pitch:'Your pools as basins of water at their own heights, joined by channels. Pay pours in at the top, spending drips out at the bottom into a thin sediment of the month, and moves flow through the channels. No numbers in the scene, and no color for good or bad.',
+ reacts:'Paycheck: a stream pours in for two seconds. A spend: one drop falls. A move: water runs through the channel to the other basin. A bill due soon shows as a closed gate on its basin.',opens:'Tap a basin for that pool.',scales:'One basin per pool; four or five in view, the rest behind the hills.',
+ init(){this.B=[['US checking',70,.55],['Saving',150,.8],['Cash',230,.3],['India account',300,.6]].map(([n,x,l],i)=>({n,x,l,y:i===1?58:i===3?72:90}));this.drops=[];this.sed=0},
+ ev:{'Paycheck'(t){this.pour={t0:t,b:0}},'Coffee'(t){this.drops.push({t0:t,b:0})},'Move to India'(t){this.move={t0:t,a:0,b:3}}},
+ draw(c,t){const W=44,H=46;c.fillStyle=A(P.ink3,.4);c.fillRect(10,152,334,1+Math.min(5,this.sed));
+  if(this.pour){const u=(t-this.pour.t0)/2;if(u>1)this.pour=null;else{const b=this.B[0];b.l=Math.min(.95,b.l+.0035);c.fillStyle=A(P.money,.8);c.fillRect(b.x-2,0,4,b.y+H-b.l*H)}}
+  if(this.move){const u=(t-this.move.t0)/2.5;const a=this.B[0],b=this.B[3];if(u>1)this.move=null;else{a.l=Math.max(.1,a.l-.002);b.l=Math.min(.95,b.l+.002);c.strokeStyle=A(P.money,.8);c.lineWidth=3;c.beginPath();c.moveTo(a.x+W/2,a.y+H-6);c.quadraticCurveTo((a.x+b.x)/2,150,b.x-W/2,b.y+H-6);c.stroke()}}
+  this.B.forEach((b,i)=>{c.strokeStyle=P.ink2;c.lineWidth=1.5;c.beginPath();c.moveTo(b.x-W/2,b.y);c.lineTo(b.x-W/2,b.y+H);c.lineTo(b.x+W/2,b.y+H);c.lineTo(b.x+W/2,b.y);c.stroke();
+   const sY=b.y+H-b.l*H;c.fillStyle=A(P.money,.55);c.beginPath();c.moveTo(b.x-W/2+1,b.y+H-1);for(let x=-W/2+1;x<=W/2-1;x+=2)c.lineTo(b.x+x,sY+Math.sin(x*.3+t*2+i)*.8);c.lineTo(b.x+W/2-1,b.y+H-1);c.fill();
+   c.fillStyle=P.ink2;c.font='500 9px Figtree';c.textAlign='center';c.fillText(b.n,b.x,b.y+H+11);c.textAlign='left';
+   if(i===0){c.fillStyle=P.clay;c.fillRect(b.x+W/2+2,b.y+8,2,16);c.font='600 9px Figtree';c.fillText('Rent, Fri',b.x+W/2+6,b.y+18)}});
+  this.drops=this.drops.filter(d=>{const b=this.B[d.b],u=(t-d.t0)/1;if(u>1){this.sed+=.4;b.l-=.01;return false}c.fillStyle=P.money;c.fillRect(b.x-1,b.y+H+2+u*u*(150-b.y-H),2,4);return true})},
+ tap(x,y){const b=this.B.reduce((a,q)=>Math.abs(q.x-x)<Math.abs(a.x-x)?q:a);return 'Opens '+b.n}});
+
+add({app:'Money',name:'Engraving',pitch:'A banknote’s engraving, generated from your month. Each kind of spending is a family of fine curves in the rosette, and the more you spent there the denser its lines. It slowly turns. No amounts, no colors for good or bad.',
+ reacts:'A spend draws one new line into its family in a second and a half. At month end the whole engraving is kept as that month’s plate and a fresh one starts.',opens:'Tap a family for that kind of spending.',scales:'Line density saturates gracefully; a big month is a dense plate, not a broken one.',
+ init(){this.F=[['Groceries',9,5,3],['Lunch',5,7,2],['Coffee',3,11,4],['Transport',4,6,5],['Home',6,4,7],['Fun',3,9,6]].map(([n,k,R1,r2],i)=>({n,k,R1,r2,o:i*1.05,news:[]}))},
+ ev:{'Spend on lunch'(t){this.F[1].news.push(t);this.F[1].k++},'Groceries'(t){this.F[0].news.push(t);this.F[0].k++}},
+ draw(c,t){const cx=177,cy=80,rot=RM?0:t*.03;this.F.forEach((f,fi)=>{for(let k=0;k<f.k;k++){const isNew=f.news.length&&k===f.k-1&&t-f.news[f.news.length-1]<1.5;const prog=isNew?(t-f.news[f.news.length-1])/1.5:1;
+   c.beginPath();const steps=Math.floor(360*prog);for(let s=0;s<=steps;s++){const a=s/360*Math.PI*2,R=38+fi*6+k*1.3,r=f.R1,d=f.r2+k*.15;
+    const x=(R-r)*Math.cos(a+rot+f.o)+d*Math.cos((R-r)/r*a+f.o),y=(R-r)*Math.sin(a+rot+f.o)-d*Math.sin((R-r)/r*a+f.o);s?c.lineTo(cx+x*1.05,cy+y*.95):c.moveTo(cx+x*1.05,cy+y*.95)}
+   c.strokeStyle=A(fi%2?P.money:P.ink2,isNew?.95:.22+.02*fi);c.lineWidth=isNew?1:.6;c.stroke()}})},
+ tap(x,y){const r=Math.hypot(x-177,y-80);const fi=Math.max(0,Math.min(5,Math.round((r-38)/6)));return 'Opens '+this.F[fi].n+' this month'}});
+
+/* ======================= board ======================= */
+const ABOUT={Training:'Made of effort: weight moved, sets, the balance between lifts.',Kitchen:'Made of food over time: what is in the house, how fresh, what it could become.',Lists:'Made of things to do and the satisfaction of crossing them off.',Weather:'Made of the sky itself: light, cloud, rain and air, through time.',Money:'Made of flows and the craft of money, without ever judging it.'};
+const PICKS=['<b>Training: Plate towers</b> for the landing, with <b>Iron filings</b> as its alternative if you want something less literal. Strata could become the This week page.','<b>Kitchen: The loom</b> for the landing (it is the pantry), with <b>Pull apart</b> on the recipe page and <b>Steam</b> while cooking.','<b>Lists: Receipt strips</b>; it makes checking things off physical. Origami is the more poetic option.','<b>Weather: Horizon</b> for the landing; <b>Window numbers</b> could replace the big temperature on the same page.','<b>Money: Reservoirs</b>; it is the pools model you already have, made visible. Engraving if you want it more crafted than literal.'];
+$('#picks').innerHTML=PICKS.map(p=>'<li>'+p+'</li>').join('');
+const host=$('#apps');[...new Set(SK.map(s=>s.app))].forEach(app=>{const sec=document.createElement('section');sec.className='app';sec.innerHTML='<h3>'+app+'</h3><p>'+ABOUT[app]+'</p>';const g=document.createElement('div');g.className='grid';sec.appendChild(g);host.appendChild(sec);
+ SK.filter(s=>s.app===app).forEach(s=>{const t=document.createElement('div');t.className='tile';
+  t.innerHTML='<div class="frame"><canvas width="708" height="320" aria-label="'+s.name+' sketch"></canvas></div><b class="nm">'+s.name+'</b><p class="pitch">'+s.pitch+'</p><dl><dt>Reacts</dt><dd>'+s.reacts+'</dd><dt>Tap, if any</dt><dd>'+s.opens+'</dd><dt>Scales</dt><dd>'+s.scales+'</dd></dl><div class="acts"></div><div class="cap"></div>';
+  g.appendChild(t);s.cv=t.querySelector('canvas');s.c=s.cv.getContext('2d');s.cap=t.querySelector('.cap');s.init();
+  Object.keys(s.ev).forEach(k=>{const b=document.createElement('button');b.textContent=k;b.onclick=()=>{s.ev[k].call(s,now);s.cap.textContent=k+'.'};t.querySelector('.acts').appendChild(b)});
+  let y0=null;s.cv.addEventListener('pointerdown',e=>{y0=e.clientY});
+  s.cv.addEventListener('pointerup',e=>{const r=s.cv.getBoundingClientRect(),k=354/r.width,x=(e.clientX-r.left)*k,y=(e.clientY-r.top)*k,dy=(e.clientY-(y0??e.clientY))*k;y0=null;
+   if(s.drag&&Math.abs(dy)>20){s.drag(dy);s.cap.textContent=dy>0?'Pulled apart.':'Closed.';return}s.cap.textContent=s.tap(x,y)});
+  const io=new IntersectionObserver(es=>es.forEach(en=>{s.vis=en.isIntersecting}));io.observe(s.cv)})});
+let now=0,last=performance.now();
+function loop(ts){const dt=Math.min(.05,(ts-last)/1000);last=ts;if(!RM)now+=dt;
+ SK.forEach(s=>{if(!s.vis&&now>.5)return;const c=s.c;c.setTransform(2,0,0,2,0,0);c.clearRect(0,0,354,160);c.fillStyle=P.bg;c.fillRect(0,0,354,160);try{s.draw(c,now,dt)}catch(e){console.error(s.name,e)}});
+ requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+function setLook(l){look=l;P=PAL[l];document.body.dataset.look=l;$('#lk-paper').setAttribute('aria-pressed',l==='paper');$('#lk-black').setAttribute('aria-pressed',l==='black')}
+$('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('black');
+})();
+</script>

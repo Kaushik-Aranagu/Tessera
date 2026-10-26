@@ -1,0 +1,631 @@
+<title>Training flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300&display=swap">
+<style>
+/* a weight always shows its unit, at half the number's size (his 11:24 PM) */
+.wu{font-size:max(.5em,10px);margin-left:2px;font-family:var(--words);font-weight:400;letter-spacing:0}
+#lens{position:absolute;right:-14px;top:50%;height:34px;border-radius:17px;pointer-events:none;opacity:0;transform:translateY(-50%) scale(.9);transform-origin:right center;z-index:1;
+  transition:transform .16s cubic-bezier(.2,.8,.2,1),width .16s cubic-bezier(.2,.8,.2,1);
+  -webkit-backdrop-filter:saturate(1.5) brightness(1.03);backdrop-filter:saturate(1.5) brightness(1.03);background:transparent;
+  box-shadow:inset 0 .5px 0 color-mix(in srgb,#fff 80%,transparent),inset 0 0 0 .5px color-mix(in srgb,var(--ink) 12%,transparent)}
+@media (prefers-reduced-transparency:reduce){#lens{backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:inset 0 0 0 1px var(--ink3)}}
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --training:#0B62AE;--go:#25803D;--slate:#34506F;--gold:#7E6A1E;--push:#9C4B2C;--pull:#1E6E77;--legs:#8A4570;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#78736D;--edge:#2A2A2E;--training:#8FB0EE;--go:#8FC9A0;--slate:#A7BCD6;--gold:#D9C27A;--push:#E2A07F;--pull:#84C3C9;--legs:#D69CC0;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#78736D;--edge:#2A2A2E;--training:#8FB0EE;--go:#8FC9A0;--slate:#A7BCD6;--gold:#D9C27A;--push:#E2A07F;--pull:#84C3C9;--legs:#D69CC0;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head,.sec{max-width:1120px;margin:0 auto 40px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:0}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+.notes{flex:1 1 340px;min-width:0;max-width:540px;display:flex;flex-direction:column;gap:12px}
+.notes p{margin:0}
+.flow{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;font-size:16px;color:var(--ink3)}
+.flow b{color:var(--ink);font-weight:600}
+.try{display:grid;grid-template-columns:22px 1fr;gap:6px;font-size:16px}
+.try span:nth-child(odd){color:var(--ink3);font-family:var(--nums)}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr:hover{color:var(--ink)}
+.tap{all:unset;cursor:pointer}
+.tr:focus-visible,.tap:focus-visible,.act:focus-visible{outline:2px solid var(--ink3);outline-offset:3px}
+.phone{position:relative;width:350px;max-width:100%;height:720px;background:var(--phone);border:1px solid var(--edge);border-radius:44px;overflow:hidden;box-sizing:border-box;flex:none;user-select:none;-webkit-user-select:none}
+.scr{position:absolute;inset:0}
+.z{position:absolute;left:24px;right:24px}
+.n{font-family:var(--nums);font-weight:300}
+.big{font-family:var(--nums);font-weight:200;line-height:.86;letter-spacing:-.02em}
+.brief{text-align:right;font-size:19px;line-height:25px;height:50px;overflow:hidden}
+.l{height:26px;line-height:26px;font-size:15px;white-space:nowrap;overflow:hidden;color:var(--ink2);display:flex;justify-content:space-between;gap:10px}
+.act{all:unset;cursor:pointer;font-size:19px;font-weight:600}
+.tess{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#FFA90F,#FF5A26 55%,#E5341C)}
+.ft{bottom:24px;height:40px;display:flex;justify-content:space-between;align-items:center}
+.u{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+</style>
+
+<div class="head">
+  <p class="lab">Round 230, v2 Oct 23</p>
+  <h1>Training, one step at a time</h1>
+  <p class="sub">The Training landing is about you: three lines on how you're doing, today's session (or the one in progress, with Pause), and two doors, This week and Library. Today's workout, the plan wheel, is one tap in, and the workout's top belongs to the exercise you're on. One light second colour, a fresh green, marks moving and resting: the warm-up, rest, and a set that's just closed.</p>
+  <div class="flow" id="flow"><span>Home</span><span>then</span><span data-s="home">Training</span><span>then</span><span data-s="land">Today's workout</span><span>then</span><span data-s="warm">Warm up</span><span>then</span><span data-s="lift">each lift</span><span>then</span><span data-s="done">Done</span></div>
+  <div style="display:flex;gap:22px"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button><button class="tr" id="reset">Start over</button></div>
+  <div class="flow" id="dk" aria-label="Colors on pure black"><span>On pure black</span><button class="tr" data-p="soft">Soft</button><button class="tr" data-p="moon">Moonlight</button><button class="tr" data-p="deep">Deep</button><button class="tr" data-p="now">As it was</button></div>
+  <p class="sub" id="dkNote" style="font-size:16px">Dark now uses Soft. Pick another to compare on pure black.</p>
+</div>
+
+<div class="sec">
+  <div class="row">
+    <div class="phone" id="ph">
+      <!-- training landing (his 10:13 PM): you, today, what's going, and two doors -->
+      <div class="scr" id="home">
+        <div class="z" style="top:54px;height:44px"><div id="hTitle" style="color:var(--training);font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:44px;white-space:nowrap">Training</div></div>
+        <div class="z" style="top:112px" id="stats" aria-label="Your training"></div>
+        <div class="z" style="top:208px;height:118px" id="now"></div>
+        <button class="tap z" id="dWeek" style="top:362px;display:block;text-align:left"><div style="font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:32px">This week</div><div id="dWeekS" style="font-size:15px;color:var(--ink2);height:22px;white-space:nowrap;overflow:hidden"></div></button>
+        <button class="tap z" id="dLib" style="top:446px;display:block;text-align:left"><div style="font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:32px">Library</div><div style="font-size:15px;color:var(--ink2);height:22px;white-space:nowrap;overflow:hidden"><span class="n">28</span> workouts in <span class="n">6</span> kinds. <span style="color:var(--gold)">New: hill sprints.</span></div></button>
+        <div class="z ft"><button class="act" id="hGo" style="color:var(--training)">Start Push A</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <!-- this week -->
+      <div class="scr" id="wk" hidden style="background:var(--phone)">
+        <div class="z" style="top:54px;height:44px"><div style="color:var(--training);font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:44px;white-space:nowrap">This week</div></div>
+        <div class="z" style="top:104px;font-size:15px;color:var(--ink2)">Monday, Oct 19 to Sunday, Oct 25</div>
+        <div class="z brief" style="top:150px;text-align:left" id="wkBrief"></div>
+        <div class="z" style="top:236px;height:330px;overflow:hidden;touch-action:none;cursor:ns-resize" id="wkW" role="list" aria-label="This week's workouts"></div>
+        <div class="z ft"><button class="act" id="wkGo" style="color:var(--training)">Move Push A</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <!-- library: a grid (his 10:38 PM). Across: categories, by kind, length or day. Down: routines, exercises, programs, goals. -->
+      <div class="scr" id="lib" hidden style="background:var(--phone)">
+        <div class="z" style="top:54px;height:44px"><div id="libT" style="font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:44px;white-space:nowrap;color:var(--training)">Library</div></div>
+        <div class="z" style="top:104px;height:38px;touch-action:none;cursor:ew-resize" id="cats" role="tablist" aria-label="Categories">
+          <button class="tap" id="dimW" hidden style="display:none;position:absolute;left:0;top:0;line-height:38px;font-size:15px;color:var(--ink2);z-index:2">by kind</button>
+          <div style="position:absolute;left:90px;right:-10px;top:0;bottom:0;overflow:hidden"><div id="catR" style="position:absolute;left:0;top:0;height:38px;display:flex;white-space:nowrap;line-height:38px"></div></div>
+          <div hidden id="lens" aria-hidden="true"></div><div id="catV" aria-hidden="true" style="position:absolute;left:90px;right:-10px;top:0;bottom:0;overflow:hidden;pointer-events:none"></div></div>
+        <div class="z" style="top:150px;height:140px;overflow:hidden;touch-action:none;cursor:ns-resize" id="ldial" role="slider" aria-label="What" tabindex="0"></div>
+        <div class="z brief" style="top:296px;text-align:left" id="libBrief"></div>
+        <div class="z" style="top:356px;height:250px;overflow:hidden;touch-action:none;cursor:ns-resize" id="libW" role="list"></div>
+        <div class="z ft"><button class="act" id="libGo" style="color:var(--training)">Build a routine</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <!-- a routine: its exercises, each with its sets as stack marks -->
+      <div class="scr" id="rt" hidden style="background:var(--phone)">
+        <div class="z" style="top:54px;height:44px"><div id="rtT" style="font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:44px;white-space:nowrap;color:var(--training)"></div></div>
+        <div class="z" style="top:104px;font-size:15px;color:var(--ink2);white-space:nowrap" id="rtS"></div>
+        <div class="z brief" style="top:150px;text-align:left" id="rtBrief"></div>
+        <div class="z" style="top:236px;height:330px;overflow:hidden;touch-action:none;cursor:ns-resize" id="rtW" role="list"></div>
+        <div class="z ft"><button class="act" id="rtGo" style="color:var(--training)">Do it today</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <!-- today's workout (one level in from the landing) -->
+      <div class="scr" id="land" hidden style="background:var(--phone)">
+        <div class="z" style="top:50px;display:flex;justify-content:flex-end;font-size:15px"><button class="tap" id="knob" style="color:var(--ink2)"><b style="color:var(--ink);font-weight:600">Gym</b> or Home</button></div>
+        <div class="z" style="top:96px;height:140px;display:flex;flex-direction:column;justify-content:flex-end">
+          <div style="font-size:15px;color:var(--ink2);margin-bottom:6px" id="tLab">Today</div>
+          <div style="font-size:64px;font-weight:600;letter-spacing:-.035em;line-height:.9;color:var(--push)">Push A</div>
+          <div style="font-size:16px;color:var(--ink2);margin-top:12px">about <button class="tap n" id="mins" style="color:var(--ink)">45</button> min, <span id="nl">4</span> lifts</div>
+        </div>
+        <div class="z brief" style="top:270px" id="lbrief">Starts with <span style="color:var(--go);font-weight:600">8 min</span> on the rower.<br>Bench opens at <span class="n">185</span>.</div>
+        <div class="z" style="top:348px;height:206px;overflow:hidden;touch-action:none;cursor:ns-resize" id="plan" role="list" aria-label="Today's plan"></div>
+        <div class="z" style="top:566px"><button class="tap l" id="bestL" style="width:100%;color:var(--ink)"><span>Bench best <span class="n" style="color:var(--gold)">205<span class="wu">lb</span></span>, three weeks ago.</span><span style="color:var(--ink3)">more</span></button></div>
+        <div class="z ft"><button class="act" id="start" style="color:var(--training)">Start Push A</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <!-- workout -->
+      <div class="scr" id="work" hidden>
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span>Push A</span><span class="n" id="clock">0:00</span></div>
+        <div class="z" style="top:82px;height:190px" id="top"></div>
+        <div class="z brief" style="top:286px" id="wbrief"></div>
+        <div class="z" style="top:352px;height:96px" id="sets"></div>
+        <div class="z" style="top:460px;height:170px;overflow:hidden;touch-action:none;cursor:ns-resize" id="rest" role="list" aria-label="This session"></div>
+        <div class="z ft"><button class="act" id="go" style="color:var(--training)">Log set</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <!-- exercise page -->
+      <div class="scr" id="ex" hidden style="background:var(--phone)">
+        <div class="z" style="top:92px"><div style="font-size:15px;color:var(--ink2)" id="exMus">Works chest, shoulders and triceps</div><div style="font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1.05;color:var(--training);margin-top:6px;white-space:nowrap;overflow:hidden" id="exTitle">Bench press</div></div>
+        <div class="z" style="top:200px;height:150px;border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:15px;text-align:center">The Gym visual loop plays here<br>(a still frame under Reduce Motion and Low Power)</div>
+        <div class="z" style="top:362px" id="exSet"></div>
+        <div class="z" style="top:500px" id="exStats"></div>
+        <div class="z ft"><button class="act" id="exGo" style="color:var(--training)" hidden>Do it now</button><span></span><span class="tess" aria-hidden="true"></span></div>
+      </div>
+    </div>
+    <div class="notes">
+      <h2 id="what">The landing</h2>
+      <div class="try" id="tryH">
+        <span>1</span><span><b>You first.</b> Three lines about you: sessions this week, weeks in a row on plan, and how bench has moved (in green when it's up). Big light numbers, plain words. Tap the bench line for the lift.</span>
+        <span>2</span><span><b>Today, or what's going.</b> Before you start, today's session is the big blue word; tap it for today's workout. Mid-workout the same slot reads <i>In progress</i> in green with the clock, where you are ("Bench press, set 2 of 3"), and a <i>Pause</i> word; tap the block to go back in. Paused, the clock stops and the word reads <i>Go on</i>.</span>
+        <span>3</span><span><b>Two doors.</b> <i>This week</i> (the day letters moved here, off the workout page) and <i>Library</i>, each with one plain line under it.</span>
+        <span>4</span><span><b>The action word.</b> <i>Start Push A</i>; drag left to skip today. Mid-workout it reads <i>Resume Push A</i>: drag left to end it, right to pause.</span>
+      </div>
+      <div class="try" id="tryK" hidden>
+        <span>1</span><span><b>The week is a wheel.</b> The same depth wheel as the plan, centred on today. Today stays blue even when you scroll away from it; done days carry a thin green line and their minutes in green; the rest day sits quiet.</span>
+        <span>2</span><span><b>The brief follows the one in front.</b> What you did on a done day, what's in a coming one. Tap today to open it.</span>
+        <span>3</span><span><b>Move Push A.</b> Tap: today becomes rest and the week slides a day (Undo 10 s). Drag left: skip it.</span>
+      </div>
+      <div class="try" id="tryB" hidden>
+        <span>1</span><span><b>A grid, not a list.</b> Across the top, one category at a time on the right: Push, Pull, Legs and the rest. Swipe it sideways for the next category, 1:1 under your finger. Swipe it up or down and the sort itself rolls over: kinds, then lengths (under 20 min, 20 to 40, 40 to 60, an hour or more), then days (Monday to Sunday). There's no label for the sort; the categories say it (his 11:23 PM). <b>Units:</b> every weight shows lb or kg at half the number's size (his 11:24 PM).</span>
+        <span>2</span><span><b>Down, what it is.</b> The dial: Routines, Exercises, Programs, Goals, each with its count in this category. The neighbors sit small and far back.</span>
+        <span>3</span><span><b>The cell.</b> The wheel holds what's in that cell: Push routines, Monday's exercises, programs under an hour. The brief says what's inside the one in front.</span>
+        <span>4</span><span><b>A routine opens to its exercises,</b> each with its usual sets drawn as stack marks; tap one for its page. Push A opens today's workout. An exercise opens its own page. Programs show their week; goals show where you are.</span>
+        <span>5</span><span><b>The action word follows the dial:</b> Build a routine, Add an exercise, Start a program, Set a goal.</span>
+      </div>
+      <div class="try" id="tryL" hidden>
+        <span>1</span><span><b>Today's workout, one tap in.</b> Tap today on the landing (or today in This week) to get here. The big word is the session; the week strip that used to sit under it moved to the landing as <i>This week</i>. The brief says how it starts: 8 min on the rower, in the green. Left edge or Esc goes back.</span>
+        <span>2</span><span><b>The plan is a depth wheel.</b> The one you're on sits in front, large and in blue (green for the warm-up); the rest sit further back, smaller and softly out of focus. Before you start, the first is in front; mid-workout, the lift you're on. Drag or scroll to bring another forward; tap the one in front to open its page.</span>
+        <span>3</span><span><b>Change the day.</b> Tap 45 to step 25, 35, 45, All; tap Gym or Home. The plan shortens or swaps, and the count of lifts follows.</span>
+        <span>4</span><span><b>The action word takes gestures.</b> Tap <i>Start Push A</i> to begin. Drag it left: <i>Skip today</i>. Mid-workout (left edge or Esc from the workout comes back here) it reads <i>Resume Push A</i>: drag left to <i>End workout</i>, right to <i>Start over</i>. The word leans with your finger and rolls to the option past 56 pt; let go there to do it, with Undo for 10 s. A tick on the phone as it rolls, a firm tap when it commits.</span>
+      </div>
+      <div class="try" id="tryW" hidden>
+        <span>1</span><span><b>The warm-up.</b> Cardio leads, in the green, with its own time. Done warming up goes to the first lift.</span>
+        <span>2</span><span><b>The lift you're on owns the top.</b> Its name in blue (tap it for the exercise page), which set you're on, the weight, and the bar.</span>
+        <span>3</span><span><b>The session is a wheel.</b> At the bottom, the lift you're on sits in focus, large and in blue. Lifts around it get smaller and lighter the further they are. Drag or scroll it; it snaps one row at a time. Tap a lift in focus to open its page, where <i>Do it now</i> swaps it in (Undo for 10 s). Leave it alone and it springs back to now.</span>
+        <span>4</span><span><b>Change the weight two ways.</b> Drag the number, or drag the bar itself (sideways or up and down). The plates reload either way.</span>
+        <span>5</span><span><b>Change the unit.</b> Tap or swipe the unit word: lb, kg. The number converts to what the bar actually holds and the plates reload. Every number with a unit in the app works the same way.</span>
+        <span>7</span><span><b>Log set takes gestures too.</b> Drag left: <i>Skip this lift</i> (on the last lift, <i>End workout</i>); during the warm-up, <i>Skip warm up</i>. Drag right after a set: <i>Same again</i> logs the last count. Left edge or Esc goes back to the landing; the workout keeps running.</span>
+        <span>8</span><span><b>A set logs whole.</b> Log set takes the planned reps. For 5 s the brief confirms it, "Set 1, 5 reps." The count scrolls up or down to set it right, and a tap opens a dial; each change restarts the 5 s, then it's kept as is.</span>
+        <span>6</span><span><b>Sets as reps.</b> The strokes for a set drop in one by one on a spring. Log set inks them left to right, each with a small hop, and a green strike draws across. The strokes then gather into the number, "5", which arcs over to the trail at the right and lands with a small bounce. "Set 1" rolls to "Set 2" and the rest runs in green. To log fewer, drag the strokes first.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// fixed titles step down 1 pt at a time until they fit, never below the floor (his 9:11 PM); past the floor Tess's short form takes over
+function fitTitle(el,max,min){el.style.fontSize=max+'px';const w=el.parentElement.clientWidth;let f=max;while(el.scrollWidth>w&&f>min){f--;el.style.fontSize=f+'px'}}
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1,1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e,u);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const NS='http://www.w3.org/2000/svg',el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
+const $=id=>document.getElementById(id);
+const clipIn=(node,delay=0)=>{node.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>anim(.3,e=>node.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`),RM?0:delay)};
+
+// ---------- data
+const LIFTS=[{n:'Bench press',mus:'Works chest, shoulders and triceps',best:[205,3,'Oct 2'],hist:[['Oct 20','185 for 5, 5, 4'],['Oct 16','180 for 5, 5, 5'],['Oct 13','180 for 5, 5, 4']],sets:3,reps:5,w:185,min:25,home:'Push-up, weighted',done:[]},{n:'Overhead press',mus:'Works shoulders and triceps',best:[125,4,'Sep 28'],hist:[['Oct 20','115 for 6, 6, 5'],['Oct 16','110 for 6, 6, 6']],sets:3,reps:6,w:115,min:25,home:'Dumbbell press',done:[]},{n:'Dips',mus:'Works chest and triceps',best:[0,14,'Oct 9'],hist:[['Oct 20','10, 10, 8'],['Oct 16','10, 9, 8']],sets:3,reps:10,w:0,min:35,home:null,done:[]},{n:'Cable fly',mus:'Works chest',best:[50,12,'Oct 6'],hist:[['Oct 16','40 for 12, 12']],sets:2,reps:12,w:40,min:45,home:'Band fly',done:[]},{n:'Triceps pushdown',mus:'Works triceps',best:[60,10,'Oct 2'],hist:[['Oct 13','50 for 12, 12']],sets:2,reps:12,w:50,min:99,home:'Band pushdown',done:[]}];
+let mins=45,where='Gym';const MINS=[25,35,45,'All'];
+const inPlan=L=>(mins==='All'||L.min<=mins)&&!(where==='Home'&&!L.home);
+const nameOf=L=>where==='Home'&&L.home?L.home:L.n;
+
+// ---------- landing
+function weekStrip(){return [['M',1],['T',1],['W',0],['T',1],['F',2],['S',0],['S',0]].map(([d,v])=>`<span style="color:${v===1?'var(--ink)':v===2?'var(--training)':'var(--ink2)'};font-weight:${v===2?600:v===1?500:400};font-size:15px">${d}</span>`).join('')}
+// the plan as a depth wheel (his 9:20 PM): the lift you're on (the first, before you start) sits in focus, large and in blue;
+// the rest sit further back, smaller and softly out of focus. Drag or scroll to bring one forward; tap the one in focus to open it.
+const depthBlur=a=>RM?0:Math.min(1,.65*Math.min(a,1)+.35*Math.max(0,Math.min(a-1,1)));
+const PRH=38,PFY=62;let pOff=0,pDrag=false,pSpin=0,started=false;
+const pFocus=()=>started?curIdx():0;
+// set mark: a cable-machine stack per set (his 10:04 PM). On top, a small grip on its cable; under it the top plate (the cap),
+// the rod down the middle, and the floor. Each rep is a plate. Reps you did are lifted up under the cap in go green; reps still to do
+// rest on the floor in ink3, and the bare rod between them is what's left. A finished set closes the gap and its grip turns green.
+function rodStack(L,big,did){const H=big?28:24,w=big?12:11,gap=big?6:5,cap=7,G='var(--go)',I='var(--ink3)',el=[];let x=0;
+  const ln=(x1,y1,x2,y2,c,sw)=>el.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${sw}" stroke-linecap="round"/>`);
+  for(let s=0;s<L.sets;s++){const dn=did(s),R=L.reps,full=dn>=R&&L.done[s]!=null,cx=x+w/2,sp=Math.min(2.2,(H-cap-3)/Math.max(R,1)),k=dn>0?G:I;
+    ln(cx-2.6,1,cx+2.6,1,full?G:I,1.6);ln(cx,1,cx,cap,k,.8);ln(x,cap,x+w,cap,k,1.4);// rod (his 10:09 PM): only down to the first plate it carries, never to the floor
+    const lo=dn>0?cap+sp*Math.min(dn,R):H-sp*Math.max(R-dn,1);ln(cx,cap,cx,lo,k,.8);ln(x-.5,H,x+w+.5,H,I,1);
+    for(let r=0;r<R;r++){const on=r<dn,y=on?cap+sp*(r+1):H-sp*(R-r);ln(x+.5,y,x+w-.5,y,on?G:I,on?1.15:.8)}
+    x+=w+gap}
+  const W=x-gap+1;return `<svg width="${W}" height="${H}" viewBox="-1 0 ${W+1} ${H+1}" style="vertical-align:middle;overflow:visible" aria-hidden="true">${el.join('')}</svg>`}
+function marks(L){return `${L.w?`<span style="color:var(--ink2);font-weight:300;margin-right:9px;vertical-align:middle">${L.w}<span class="wu">lb</span></span>`:''}${rodStack(L,false,s=>L.done[s]!=null?L.done[s]:0)}`}
+const wAria=x=>x.warm?'warm-up, 8 minutes':`${x.L.sets} sets of ${x.L.reps}${x.L.w?` at ${x.L.w}`:''}${x.L.done.length?`, done ${x.L.done.join(', ')}`:''}`;
+// struck lifts (his 9:58 PM): a hairline, not a bar. Done = go green at 1 pt; skipped = ink3 at 1 pt, so the two read apart
+const crossed=x=>!x.L?'':x.L.skip?'text-decoration:line-through;text-decoration-color:var(--ink3);text-decoration-thickness:1px;':x.L.done.length>=x.L.sets?'text-decoration:line-through;text-decoration-color:var(--go);text-decoration-thickness:1px;':'';
+function pInfo(x,i){return x.warm?'8 min':marks(x.L)}
+function plan(){const P=$('plan'),it=wItems();
+  P.innerHTML=it.map((x,i)=>`<button class="tap" role="listitem" data-i="${i}" style="position:absolute;left:0;top:0;width:100%;height:${PRH}px;display:flex;justify-content:space-between;align-items:center;gap:10px;white-space:nowrap;font-size:30px;letter-spacing:-.02em"><span class="wn" style="transform-origin:left center;display:inline-block;${crossed(x)}">${x.n}</span><span class="wi n" style="transform-origin:right center;display:inline-block;font-size:15px;white-space:nowrap">${pInfo(x,i)}</span></button>`).join('')+`<div class="whd" id="pHd" aria-hidden="true" style="position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-end;white-space:nowrap;font-size:13px;line-height:16px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--slate);padding-bottom:5px"><span>The plan</span><span style="font-variant-caps:normal;letter-spacing:0;font-weight:300" class="n">${it.length-1} lifts after the warm-up</span></div>`;
+  [...P.querySelectorAll('button')].forEach((b,i)=>{b.setAttribute('aria-label',`${it[i].n}, ${wAria(it[i])}`);if(it[i].L)b.lastChild.addEventListener('click',e=>{if(pDrag)return;e.stopPropagation();openEx(it[i].L)});b.onclick=()=>{if(pDrag)return;if(Math.round(pOff)===i){if(it[i].L)openEx(it[i].L)}else pSpinTo(i)}});
+  $('nl').textContent=LIFTS.filter(inPlan).length;pOff=pFocus();paintPlan()}
+function paintPlan(){const P=$('plan'),it=wItems(),c=pFocus();[...P.querySelectorAll('button')].forEach((b,i)=>{const d=i-pOff,a=Math.abs(d);
+  const f=30-10*Math.min(a,1)-3*Math.max(0,Math.min(a-1,1))-2*Math.max(0,Math.min(a-2,1));
+  b.style.transform=`translateY(${PFY-PRH/2+d*PRH+Math.sign(d)*8*Math.min(a,1)}px)`;const bl=depthBlur(a);b.style.filter=bl>.05?`blur(${bl.toFixed(2)}px)`:'';
+  const wn=b.firstChild,wi=b.lastChild;const room=(b.clientWidth-12-wi.offsetWidth)/Math.max(1,wn.offsetWidth)*30;wn.style.transform=`scale(${Math.min(f,room)/30})`;wi.style.transform=`scale(${a<.5?1:.87})`;
+  const focus=a<.5,isCur=started&&i===c;
+  wn.style.color=focus?(it[i].warm?'var(--go)':'var(--training)'):'var(--ink2)';wn.style.fontWeight=focus?600:400;
+  wi.style.color=focus&&isCur?'var(--training)':'var(--ink2)';wi.style.fontWeight=300});hdPaint($('pHd'),-1-pOff,PFY,PRH,8)}
+function hdPaint(H,d,FY,RHh,gap){if(!H)return;const a=Math.abs(d);const y=FY-RHh/2+d*RHh+Math.sign(d)*gap*Math.min(a,1);H.style.height=RHh+'px';H.style.transform=`translateY(${y}px)`;const bl=depthBlur(a-1);H.style.filter=bl>.05?`blur(${bl.toFixed(2)}px)`:'';H.style.visibility=d>-.2?'hidden':''}
+function pSpinTo(i,dur=.42){const from=pOff,id=++pSpin;anim(dur,(e,u)=>{if(id!==pSpin)return;pOff=from+(i-from)*spring(u);paintPlan()},()=>{if(id!==pSpin)return;pOff=i;paintPlan()})}
+(()=>{const P=$('plan');let sy=null,so=0,vy=0,ly=0,lt=0;const n=()=>wItems().length;
+  P.onpointerdown=e=>{sy=e.clientY;so=pOff;vy=0;ly=e.clientY;lt=performance.now();pDrag=false;pSpin++};
+  P.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!pDrag){pDrag=true;P.setPointerCapture(e.pointerId)}if(!pDrag)return;const now=performance.now();vy=(e.clientY-ly)/Math.max(1,now-lt);ly=e.clientY;lt=now;pOff=Math.max(-.35,Math.min(n()-.65,so-dy/PRH));paintPlan()};
+  P.onpointerup=P.onpointercancel=()=>{if(sy==null)return;sy=null;if(pDrag){let t=Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(pOff);pSpinTo(Math.max(0,Math.min(n()-1,t)),.36);setTimeout(()=>pDrag=false,0)}};
+  let wt=null;P.addEventListener('wheel',e=>{e.preventDefault();pSpin++;pOff=Math.max(-.35,Math.min(n()-.65,pOff+e.deltaY/90));paintPlan();clearTimeout(wt);wt=setTimeout(()=>pSpinTo(Math.round(Math.max(0,Math.min(n()-1,pOff))),.36),120)},{passive:false});
+  P.tabIndex=0;P.onkeydown=e=>{if(e.key==='ArrowDown'){pSpinTo(Math.min(n()-1,Math.round(pOff)+1),.36);e.preventDefault()}if(e.key==='ArrowUp'){pSpinTo(Math.max(0,Math.round(pOff)-1),.36);e.preventDefault()}if(e.key==='Enter'){const x=wItems()[Math.round(pOff)];if(x.L)openEx(x.L)}}})();
+$('mins').onclick=e=>{mins=MINS[(MINS.indexOf(mins)+1)%4];e.target.textContent=mins;plan()};
+$('knob').onclick=()=>{where=where==='Gym'?'Home':'Gym';$('knob').innerHTML=where==='Gym'?'<b style="color:var(--ink);font-weight:600">Gym</b> or Home':'Gym or <b style="color:var(--ink);font-weight:600">Home</b>';plan()};
+$('bestL').onclick=()=>openEx(LIFTS[0]);plan();
+
+// numbers scroll, never step (his 10:09 PM): drag a number up or down, or use the wheel, and it rolls one value per 16 pt
+// with a light tick. While a finger is on it, the next and last values show faintly above and below. A tap opens the dial.
+const snHTML=(id,v,unit,fs)=>`<span class="sn n" id="${id}" role="spinbutton" tabindex="0" style="position:relative;display:inline-block;cursor:ns-resize;touch-action:none;font-size:${fs||'inherit'};padding:0 3px"><span class="snP" aria-hidden="true" style="visibility:hidden;position:absolute;left:0;right:0;text-align:center;top:-.52em;font-size:.42em;line-height:1;color:var(--ink3);font-weight:300"></span><span class="snV">${v}</span>${unit?`<span style="font-size:.5em;margin-left:2px;font-family:var(--words);font-weight:400">${unit}</span>`:''}<span class="snN" aria-hidden="true" style="visibility:hidden;position:absolute;left:0;right:0;text-align:center;bottom:-.48em;font-size:.42em;line-height:1;color:var(--ink3);font-weight:300"></span></span>`;
+function scrollNum(el,o){if(!el)return;const V=el.querySelector('.snV'),P=el.querySelector('.snP'),N=el.querySelector('.snN'),st=o.step||1;
+  const ghosts=()=>{const v=o.get();P.textContent=v+st<=o.max?v+st:'';N.textContent=v-st>=o.min?v-st:'';el.setAttribute('aria-valuenow',v);el.setAttribute('aria-valuetext',`${v}${o.unit?' '+o.unit:''}`);el.setAttribute('aria-label',o.label)};
+  V.style.display='inline-block';const to=v=>{v=Math.max(o.min,Math.min(o.max,v));if(v===o.get())return false;const dir=v>o.get()?1:-1;o.set(v);V.textContent=v;if(!RM)anim(.24,(e,u)=>V.style.transform=`translateY(${dir*.35*(1-spring(u))}em)`,()=>V.style.transform='');ghosts();haptic('tick');o.after&&o.after(v);return true};
+  ghosts();const show=on=>{P.style.visibility=N.style.visibility=on?'visible':'hidden'};let y0=null,base=0,moved=false;
+  el.onpointerdown=e=>{y0=e.clientY;base=o.get();moved=false;el.setPointerCapture(e.pointerId);e.stopPropagation()};
+  el.onpointermove=e=>{if(y0==null)return;const dy=y0-e.clientY;if(Math.abs(dy)>6){moved=true;show(true)}if(moved)to(base+Math.round(dy/16)*st)};
+  el.onpointerup=el.onpointercancel=e=>{if(y0==null)return;y0=null;e.stopPropagation();show(false);if(!moved)openDial(o,v=>{to(v)})};
+  el.onclick=e=>e.stopPropagation();
+  let acc=0,wT=null;el.onwheel=e=>{e.preventDefault();show(true);clearTimeout(wT);wT=setTimeout(()=>show(false),500);acc+=e.deltaY;while(Math.abs(acc)>=40){to(o.get()+(acc<0?st:-st));acc-=Math.sign(acc)*40}};
+  el.onkeydown=e=>{if(e.key==='ArrowUp'){e.preventDefault();to(o.get()+st)}if(e.key==='ArrowDown'){e.preventDefault();to(o.get()-st)}if(e.key==='Enter'||e.key===' '){e.preventDefault();openDial(o,v=>to(v))}}}
+// the dial: a depth wheel over the room (same rows, same blur rule as the plan). Spin it, tap a value or Done. Esc or a tap outside keeps the focus value.
+function openDial(o,pick){const ph=$('ph'),st=o.step||1,vals=[];for(let v=o.min;v<=o.max;v+=st)vals.push(v);let f=vals.indexOf(o.get());if(f<0)f=0;
+  const D=document.createElement('div');D.id='dial';D.setAttribute('role','dialog');D.setAttribute('aria-label',o.label);
+  D.style.cssText='position:absolute;inset:0;z-index:60;background:var(--phone);display:flex;flex-direction:column;padding:0 28px';
+  const RH2=46,FY2=150;
+  D.innerHTML=`<div style="margin-top:140px;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--slate)">${o.label}</div><div id="dW" style="position:relative;height:300px;overflow:hidden;touch-action:none;cursor:ns-resize">${vals.map(v=>`<div class="n" style="position:absolute;left:0;right:0;top:0;height:${RH2}px;line-height:${RH2}px;font-size:40px;font-weight:200;white-space:nowrap;transform-origin:left center">${v}${o.unit?`<span style="font-size:.5em;margin-left:3px;font-family:var(--words);font-weight:400">${o.unit}</span>`:''}</div>`).join('')}</div><button class="tap" id="dGo" style="position:absolute;left:28px;bottom:34px;font-size:19px;font-weight:600;color:var(--training)">Done</button>`;
+  ph.appendChild(D);const W=D.querySelector('#dW'),rows=[...W.children];let off=f;
+  const paint=()=>{rows.forEach((r,i)=>{const d=i-off,a=Math.abs(d);if(a>3.5){r.style.visibility='hidden';return}r.style.visibility='';const sc=a<.5?1-.3*a:Math.max(.42,.85-.15*(a-.5));
+    r.style.transform=`translateY(${FY2-RH2/2+d*RH2*.82}px) scale(${sc})`;r.style.color=a<.5?'var(--ink)':'var(--ink2)';const bl=depthBlur(a);r.style.filter=bl>.05?`blur(${bl.toFixed(2)}px)`:''})};
+  let last=Math.round(off);const tick=()=>{const r=Math.round(off);if(r!==last){last=r;haptic('tick')}};
+  const spinTo=i=>{i=Math.max(0,Math.min(vals.length-1,i));const a0=off;anim(RM?0:.32,(e,u)=>{off=a0+(i-a0)*spring(u);paint();tick()},()=>{off=i;paint()})};
+  let y0=null,o0=0,mv=false;W.onpointerdown=e=>{y0=e.clientY;o0=off;mv=false;W.setPointerCapture(e.pointerId)};
+  W.onpointermove=e=>{if(y0==null)return;const dy=e.clientY-y0;if(Math.abs(dy)>5)mv=true;off=Math.max(-.4,Math.min(vals.length-.6,o0-dy/(RH2*.82)));paint();tick()};
+  W.onpointerup=e=>{if(y0==null)return;y0=null;if(mv){spinTo(Math.round(off));return}const r=W.getBoundingClientRect(),d=Math.round((e.clientY-r.top-FY2)/(RH2*.82)),i=Math.round(off)+d;if(d===0)close(true);else spinTo(i)};
+  let acc=0;W.onwheel=e=>{e.preventDefault();acc+=e.deltaY;if(Math.abs(acc)>=30){spinTo(Math.round(off)+Math.sign(acc));acc=0}};
+  const close=keep=>{if(keep)pick(vals[Math.round(off)]);haptic('commit');document.removeEventListener('keydown',kd,true);anim(RM?0:.2,e=>D.style.opacity=String(1-e),()=>D.remove())};
+  const kd=e=>{if(e.key==='Escape'){e.stopPropagation();close(true)}if(e.key==='ArrowUp'){e.preventDefault();spinTo(Math.round(off)+1)}if(e.key==='ArrowDown'){e.preventDefault();spinTo(Math.round(off)-1)}if(e.key==='Enter'){e.preventDefault();close(true)}};
+  document.addEventListener('keydown',kd,true);D.querySelector('#dGo').onclick=()=>close(true);paint();clipIn&&clipIn(D);D.querySelector('#dGo').focus()}
+// ---------- exercise page (slides in from the right, out to the left edge)
+let exL=null;
+// the lift's sets, set right here (his 10:06 PM): in a workout these are today's numbers, with "Also the usual" to keep them;
+// outside a workout they are the usual numbers. Sets, reps and weight scroll (tap for the dial); the wheels follow at once.
+let alsoUsual=false;
+function renderExSet(L){const inW=!$('work').hidden||started&&stage!=='done';L.u=L.u||{sets:L.sets,reps:L.reps,w:L.w};
+  const row=(k,lab,v,u)=>`<div class="l" style="overflow:visible;height:38px;line-height:38px;font-size:17px;color:var(--ink)"><span style="color:var(--ink2)">${lab}</span>${snHTML('sn_'+k,v,u,'19px')}</div>`;
+  $('exSet').innerHTML=`<div style="height:24px;display:flex;justify-content:space-between;align-items:flex-end;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--slate)"><span>${inW?"Today's sets":'Usual sets'}</span>${inW?`<button class="tap" id="exAlso" style="font-variant-caps:normal;letter-spacing:0;font-weight:400;color:var(--ink2)">Also the usual: <b style="color:var(--training);font-weight:600">${alsoUsual?'Yes':'No'}</b></button>`:''}</div>`+row('sets','Sets',L.sets)+row('reps','Reps',L.reps)+(L.w?row('w','Weight',L.w,unit):'');
+  const LAB={sets:'Sets',reps:'Reps',w:'Weight'};
+  ['sets','reps','w'].forEach(k=>{if(k==='w'&&!L.w)return;scrollNum($('sn_'+k),{label:LAB[k],unit:k==='w'?unit:'',step:k==='w'?5:1,min:k==='sets'?Math.max(1,L.done.length):k==='w'?5:1,max:k==='sets'?10:k==='reps'?30:600,get:()=>L[k],
+    set:v=>{L[k]=v;if(!inW||alsoUsual)L.u[k]=v},after:()=>{renderRest();plan();if(k==='w'&&cur()===L&&$('w')&&stage!=='done'){try{renderLift()}catch(_){}}}})});
+  const A=$('exAlso');if(A)A.onclick=()=>{alsoUsual=!alsoUsual;if(alsoUsual){L.u={sets:L.sets,reps:L.reps,w:L.w}}renderExSet(L)}}
+function openEx(L){L=L||LIFTS[0];exL=L;const ex=$('ex');$('exTitle').textContent=nameOf(L);$('exMus').textContent=L.mus;
+  const b=L.best;$('exStats').innerHTML=`<div class="l" style="color:var(--ink)"><span>Best</span><span>${b[0]?`<span class="n">${b[0]}<span class="wu">${unit}</span></span> for `:''}<span class="n">${b[1]}</span>, ${b[2]}</span></div>`+L.hist.slice(0,2).map(([d,v])=>`<div class="l"><span>${d}</span><span class="n">${v.replace(/^(\d+) for/,`$1<span class="wu">${unit}</span> for`)}</span></div>`).join('');renderExSet(L);
+  const P=LIFTS.filter(inPlan),i=P.indexOf(L);const can=!$('work').hidden&&stage!=='done'&&i>li&&L.done.length<L.sets;$('exGo').hidden=!can;
+  ex.hidden=false;anim(.34,e=>ex.style.transform=`translateX(${(1-e)*100}%)`)}
+// Do it now: this lift moves up to now; the one you were on goes next (Undo 10 s)
+$('exGo').onclick=()=>{const P=LIFTS.filter(inPlan),was=P[li],L=exL;const order=LIFTS.slice();LIFTS.splice(LIFTS.indexOf(L),1);LIFTS.splice(LIFTS.indexOf(was),0,L);closeEx();
+  if(stage==='rest'){clearInterval(restT)}
+  const node=$('top');anim(.22,e=>node.style.clipPath=`inset(0 0 ${e*100}% 0)`,()=>{node.style.clipPath='';renderLift();clipIn($('top'));
+    $('wbrief').innerHTML=`${nameOf(L)} now, ${nameOf(was).toLowerCase()} after.<br><button class="tap" id="undoSw" style="color:var(--training);font-weight:600">Undo</button>`;let t=setTimeout(()=>{const u=$('undoSw');if(u)u.parentNode.innerHTML=`Last time <span class="n">${L.w||L.reps}</span>.<br>&nbsp;`},10000);
+    $('undoSw').onclick=()=>{clearTimeout(t);LIFTS.length=0;order.forEach(x=>LIFTS.push(x));renderLift();clipIn($('top'))}})};
+function closeEx(){const ex=$('ex');anim(.28,e=>ex.style.transform=`translateX(${e*100}%)`,()=>ex.hidden=true)}
+(()=>{const ex=$('ex');let sx=null;ex.onpointerdown=e=>{const r=ex.getBoundingClientRect();if(e.clientX-r.left<40){sx=e.clientX;ex.setPointerCapture(e.pointerId)}};ex.onpointermove=e=>{if(sx!=null)ex.style.transform=`translateX(${Math.max(0,e.clientX-sx)}px)`};ex.onpointerup=e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(dx>80)closeEx();else anim(.2,u=>ex.style.transform=`translateX(${dx*(1-u)}px)`)};document.addEventListener('keydown',k=>{if(k.key==='Escape'&&!ex.hidden)closeEx()})})();
+
+// ---------- workout
+let stage='warm',li=0,setI=0,unit='lb',reps=0,restT=null,clockT=null,t0=0;
+const PL={lb:{bar:45,set:[45,35,25,10,5,2.5],big:25,H:[118,104,90,66,52,40],W:[16,14,12,8,6,5]},kg:{bar:20,set:[25,20,15,10,5,2.5,1.25],big:10,H:[118,110,100,90,66,52,40],W:[16,15,14,12,8,6,5]}};
+const toKg=lb=>Math.round(lb*0.45359237/2.5)*2.5,toLb=kg=>Math.round(kg/0.45359237/5)*5;
+const plates=(w,u)=>{const P=PL[u];let s=(w-P.bar)/2;const o=[];P.set.forEach((p,i)=>{while(s>=p-1e-9){o.push(i);s-=p}});return o};
+const cur=()=>LIFTS.filter(inPlan)[li];
+let barG=null,collar=null,platesOn=[];
+function flow(s){document.querySelectorAll('#flow [data-s]').forEach(x=>{const on=x.dataset.s===s;x.style.color=on?'var(--ink)':'';x.style.fontWeight=on?600:400})}
+function clock(keep){clearInterval(clockT);if(!keep)t0=Date.now();clockT=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000)*6;$('clock').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`},1000)}
+function start(){paused=false;$('work').hidden=false;note('work');stage='warm';li=0;setI=0;LIFTS.forEach(L=>{L.done=[];L.skip=false});clock();renderWarm()}
+
+function renderWarm(){flow('warm');let left=480;
+  $('top').innerHTML=`<div style="font-size:15px;color:var(--ink2)">Warm up</div><div style="font-size:48px;font-weight:600;letter-spacing:-.03em;line-height:1;color:var(--go);margin-top:4px">Rower, easy</div><div class="big" id="wt" style="font-size:84px;margin-top:22px">8:00</div>`;
+  $('wbrief').innerHTML='Keep it easy, about <span class="n">22</span> strokes<br>a minute. Bench is next.';
+  $('sets').innerHTML='';renderRest();$('go').textContent='Done warming up';$('go').style.color='var(--go)';
+  [...$('work').querySelectorAll('.z')].forEach((z,i)=>clipIn(z,i*70));
+  clearInterval(restT);restT=setInterval(()=>{left=Math.max(0,left-6);const e=$('wt');if(e)e.textContent=`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;if(!left)clearInterval(restT)},100)}
+function renderLift(){flow('lift');const L=cur();if(!L){renderDone();return}stage='lift';setI=L.done.length;reps=0;
+  const w=unit==='lb'?L.w:toKg(L.w);
+  $('top').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline"><button class="tap" id="exName" style="font-size:34px;font-weight:600;letter-spacing:-.025em;line-height:1.1;color:var(--training);white-space:nowrap;max-width:100%;overflow:hidden;text-align:left">${nameOf(L)}</button></div>
+    <div style="font-size:15px;color:var(--ink2);margin-top:2px">Set <span class="n" id="sn">${setI+1}</span> of <span class="n">${L.sets}</span><span id="was" style="color:var(--ink3);margin-left:10px"></span></div>
+    ${L.w?`<div style="position:absolute;left:0;bottom:4px;display:flex;align-items:baseline;gap:8px"><div class="big" id="w" role="slider" tabindex="0" aria-label="Weight" style="font-size:80px;color:var(--ink);cursor:ns-resize;touch-action:none"><span id="wi">${Math.floor(w)}</span><span id="wf" style="font-size:34px">${w%1?'.5':''}</span></div><div style="display:flex;flex-direction:column;font-size:15px;color:var(--ink2);gap:2px"><button class="tap" id="unit" style="color:var(--training);font-weight:600;font-size:22px;touch-action:none;text-align:left" aria-label="Unit, tap or swipe to switch">${unit}</button></div></div>
+    <svg id="bar" width="120" height="150" viewBox="0 0 120 150" style="position:absolute;right:-12px;bottom:-14px;cursor:grab;touch-action:none" aria-label="The bar; drag to change the weight"></svg>`:`<div class="big" style="position:absolute;left:0;bottom:6px;font-size:80px">body</div><div style="position:absolute;left:4px;bottom:-18px;font-size:15px;color:var(--ink2)">weight</div>`}`;
+  fitTitle($('exName'),34,26);$('exName').onclick=()=>openEx(cur());
+  $('wbrief').innerHTML=L.done.length?`Last set <span class="n">${L.done[L.done.length-1]}</span>. Same again?<br>&nbsp;`:`Last time <span class="n">${L.w||''}</span>${L.w?' for ':''}<span class="n">${L.reps}</span>${L.w?'. Try <span class="n">'+(L.w+5)+'</span>?':' reps.'}<br>&nbsp;`;
+  $('go').textContent=`Log set ${setI+1}`;$('go').style.color='var(--training)';
+  if(L.w){buildBar();setBar(L.w);wireWeight(L)}renderSets(true);renderRest()}
+// the session as a wheel: the lift you're on sits in focus, large and in blue; the rest shrink with distance
+const RH=34,FY=85;let wOff=0,wHeld=false,wDragged=false,wBack=null,wSpin=0;
+const spring=u=>1-Math.exp(-7*u)*Math.cos(9*u);
+function wItems(){const P=LIFTS.filter(inPlan);return [{n:'Warm up',warm:1},...P.map(L=>({n:nameOf(L),L}))]}
+const curIdx=()=>stage==='warm'?0:stage==='done'?wItems().length-1:li+1;
+function wInfo(x,i){if(x.L)return marks(x.L);const c=curIdx();if(x.warm)return i<c||stage==='done'?'8 min':'now';const L=x.L;if(L.done.length>=L.sets)return L.done.join(' ');if(i===c&&stage!=='done')return 'now';return L.done.length?`${L.done.join(' ')}, ${L.sets-L.done.length} left`:`${L.sets} by ${L.reps}`}
+function renderRest(){const R=$('rest'),it=wItems();
+  R.innerHTML=it.map((x,i)=>`<button class="tap" role="listitem" data-i="${i}" style="position:absolute;left:0;width:100%;height:${RH}px;display:flex;justify-content:space-between;align-items:center;gap:10px;white-space:nowrap;font-size:22px;letter-spacing:-.01em"><span class="wn" style="transform-origin:left center;display:inline-block;${crossed(x)}">${x.n}</span><span class="wi n" style="transform-origin:right center;display:inline-block;font-size:15px;white-space:nowrap">${wInfo(x,i)}</span></button>`).join('')+`<div class="whd" id="wHd" aria-hidden="true" style="position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-end;white-space:nowrap;font-size:13px;line-height:16px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--slate);padding-bottom:5px"><span>This session</span><span style="font-variant-caps:normal;letter-spacing:0;font-weight:300" class="n">${it.length-1} lifts</span></div>`;
+  [...R.querySelectorAll('button')].forEach((b,i)=>{b.setAttribute('aria-label',`${it[i].n}, ${wAria(it[i])}`);if(it[i].L)b.lastChild.addEventListener('click',e=>{if(wDragged)return;e.stopPropagation();openEx(it[i].L)});b.onclick=()=>{if(wDragged)return;if(Math.round(wOff)===i){if(it[i].L)openEx(it[i].L)}else spinTo(i)}});
+  wOff=curIdx();paintWheel()}
+function paintWheel(){const R=$('rest'),it=wItems(),c=curIdx();[...R.querySelectorAll('button')].forEach((b,i)=>{const d=i-wOff,a=Math.abs(d);
+  const f=22-6*Math.min(a,1)-2*Math.max(0,Math.min(a-1,1));const sc=f/22;b.style.transform=`translateY(${FY-RH/2+d*RH}px)`;
+  const wn=b.firstChild,wi=b.lastChild;wn.style.transform=wi.style.transform=`scale(${sc})`;const bl=depthBlur(a);b.style.filter=bl>.05?`blur(${bl.toFixed(2)}px)`:'';
+  const focus=a<.5,isCur=i===c&&stage!=='done';
+  wn.style.color=focus?(isCur?'var(--training)':(it[i].warm&&stage==='warm'?'var(--go)':'var(--ink)')):'var(--ink2)';
+  wn.style.fontWeight=focus?600:400;wi.style.color=focus&&isCur?'var(--training)':'var(--ink2)';wi.style.fontWeight=300});hdPaint($('wHd'),-1-wOff,FY,RH,0)}
+function spinTo(i,dur=.42){const from=wOff,id=++wSpin;anim(dur,(e,u)=>{if(id!==wSpin)return;wOff=from+(i-from)*spring(u);paintWheel()},()=>{if(id!==wSpin)return;wOff=i;paintWheel();armBack()})}
+// after a few seconds away from the lift you're on, the wheel springs back to it
+function armBack(){clearTimeout(wBack);if(Math.round(wOff)!==curIdx())wBack=setTimeout(()=>{if(!$('ex').hidden){armBack();return}spinTo(curIdx(),.5)},6000)}
+(()=>{const R=$('rest');let sy=null,so=0,last=0,vy=0,ly=0,lt=0;
+  R.onpointerdown=e=>{sy=e.clientY;so=wOff;vy=0;ly=e.clientY;lt=performance.now();wDragged=false;wSpin++;clearTimeout(wBack)};
+  R.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!wDragged){wDragged=true;R.setPointerCapture(e.pointerId)}if(!wDragged)return;const now=performance.now();vy=(e.clientY-ly)/Math.max(1,now-lt);ly=e.clientY;lt=now;const n=wItems().length;wOff=Math.max(-.35,Math.min(n-.65,so-dy/RH));const r=Math.round(wOff);if(r!==last){last=r;/* one light tick per row on the phone */}paintWheel()};
+  R.onpointerup=R.onpointercancel=()=>{if(sy==null)return;sy=null;if(wDragged){const n=wItems().length;let t=Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(wOff);spinTo(Math.max(0,Math.min(n-1,t)),.36);setTimeout(()=>wDragged=false,0)}};
+  let wt=null;R.addEventListener('wheel',e=>{e.preventDefault();wSpin++;clearTimeout(wBack);const n=wItems().length;wOff=Math.max(-.35,Math.min(n-.65,wOff+e.deltaY/90));paintWheel();clearTimeout(wt);wt=setTimeout(()=>spinTo(Math.round(Math.max(0,Math.min(n-1,wOff))),.36),120)},{passive:false});
+  R.tabIndex=0;R.onkeydown=e=>{const n=wItems().length;if(e.key==='ArrowDown'){spinTo(Math.min(n-1,Math.round(wOff)+1),.36);e.preventDefault()}if(e.key==='ArrowUp'){spinTo(Math.max(0,Math.round(wOff)-1),.36);e.preventDefault()}if(e.key==='Enter'){const x=wItems()[Math.round(wOff)];if(x.L)openEx(x.L)}}})();
+// the set you're on: its reps as strokes (a count, never a gauge); a closed set gathers into its number and flies to the trail
+const trailHTML=L=>L.done.map(d=>`<span style="display:inline-block">${d}</span>`).join(' ');
+function renderSets(enter){const L=cur();const tgt=L.reps,n=Math.min(12,tgt),W=n*14+10;const S=$('sets');
+  S.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-end;height:60px"><svg id="st" width="${W}" height="56" viewBox="0 0 ${W} 56" style="touch-action:none;cursor:ew-resize;overflow:visible" role="slider" tabindex="0" aria-label="Reps this set" aria-valuemin="0" aria-valuemax="${tgt}" aria-valuenow="${tgt}"></svg><div id="trail" class="n" style="font-size:26px;color:var(--ink3);letter-spacing:.06em;white-space:nowrap">${trailHTML(L)}</div></div><div class="l" id="rl" style="margin-top:6px"><span id="rt">${tgt} reps to go</span><span></span></div>`;
+  const st=$('st');for(let i=0;i<n;i++){const l=el('line',{x1:8+i*14,y1:12,x2:8+i*14,y2:50,stroke:'var(--edge)','stroke-width':2,'stroke-linecap':'round'});l.style.transformBox='fill-box';l.style.transformOrigin='50% 100%';st.append(l);
+    // each stroke drops in on a spring, one after another
+    if(enter&&!RM){l.style.transform='translateY(-22px) scaleY(.2)';setTimeout(()=>anim(.5,(e,u)=>{const k=spring(u);l.style.transform=`translateY(${-22*(1-k)}px) scaleY(${.2+.8*k})`},()=>l.style.transform=''),80+i*55)}}
+  const strike=el('line',{x1:2,y1:44,x2:W-6,y2:18,stroke:'var(--go)','stroke-width':2.4,'stroke-linecap':'round','stroke-dasharray':300,'stroke-dashoffset':300});st.append(strike);
+  let sx=null;st.onpointerdown=e=>{sx=e.clientX;st.setPointerCapture(e.pointerId)};st.onpointermove=e=>{if(sx==null)return;const r=st.getBoundingClientRect();setReps(Math.max(0,Math.min(tgt,Math.round((e.clientX-r.left-2)/14))))};st.onpointerup=()=>sx=null;
+  st.onkeydown=e=>{const v=reps||tgt;if(e.key==='ArrowLeft'||e.key==='ArrowDown'){setReps(Math.max(1,v-1));e.preventDefault()}if(e.key==='ArrowRight'||e.key==='ArrowUp'){setReps(Math.min(tgt,v+1));e.preventDefault()}}}
+function setReps(n){reps=n;const L=cur();[...$('st').querySelectorAll('line')].slice(0,-1).forEach((l,i)=>l.setAttribute('stroke',i<n?'var(--ink)':'var(--edge)'));$('st').setAttribute('aria-valuenow',n||L.reps);$('rt').textContent=n>=L.reps?'All reps':n?`${n} of ${L.reps}`:`${L.reps} reps to go`;$('go').textContent=`Log set ${setI+1}${n&&n<L.reps?`, ${n} reps`:''}`}
+// "Set 2 of 3": the digit rolls up in its slot
+function rollNum(node,v){if(!node)return;if(RM){node.textContent=v;return}const old=node.textContent;node.style.display='inline-block';node.style.height='1.2em';node.style.overflow='hidden';node.style.verticalAlign='bottom';node.innerHTML=`<span style="display:block;line-height:1.2em">${old}</span><span style="display:block;line-height:1.2em">${v}</span>`;const a=node.firstChild,b=node.lastChild;anim(.42,(e,u)=>{const k=spring(u);a.style.transform=b.style.transform=`translateY(${-1.2*k}em)`},()=>{node.textContent=v;node.removeAttribute('style')})}
+let busy=false;
+// the whole set logs at its planned reps (his 10:02-10:05 PM). A confirmation, not a question, sits in the brief for 5 s:
+// "Set 1, 5 reps." The count scrolls to set it right (a tap opens the dial); each change restarts the 5 s. Then it is taken as is.
+let cfT=null;
+function confirmSet(L){const k=L.done.length-1;clearTimeout(cfT);const B=$('wbrief');
+  const draw=()=>{B.innerHTML=`Set <span class="n">${k+1}</span>, ${snHTML('cfN',L.done[k])} ${L.done[k]===1?'rep':'reps'}.<br>&nbsp;`;
+    scrollNum($('cfN'),{label:`Set ${k+1} reps`,min:0,max:L.reps+10,get:()=>L.done[k],set:v=>{L.done[k]=v},after:()=>{const t=$('rtrail')||$('trail');if(t)t.innerHTML=trailHTML(L);renderRest();arm()}})};
+  const arm=()=>{clearTimeout(cfT);cfT=setTimeout(()=>{if($('dial')){arm();return}if($('cfN'))B.innerHTML=`Set <span class="n">${k+1}</span>, <span class="n">${L.done[k]}</span> ${L.done[k]===1?'rep':'reps'}, kept.<br>&nbsp;`},5000)};
+  draw();clipIn(B);arm()}
+function logSet(){const L=cur();if(!L||busy)return;busy=true;const target=reps||L.reps;const st=$('st'),lines=[...st.querySelectorAll('line')];const strokes=lines.slice(0,-1),strike=lines[lines.length-1];
+  // 1. each stroke inks and gives a small hop, left to right
+  let k=0;const fill=()=>{if(k<Math.min(target,strokes.length)){const l=strokes[k];l.setAttribute('stroke','var(--ink)');if(!RM)anim(.3,(e,u)=>l.style.transform=`scaleY(${1+.28*Math.sin(Math.PI*u)})`,()=>l.style.transform='');k++;setTimeout(fill,RM?0:70)}else setTimeout(close,RM?0:160)};
+  // 2. the green strike draws across; 3. the strokes gather into the number
+  const close=()=>{anim(.26,e=>strike.setAttribute('stroke-dashoffset',300*(1-e)),()=>{const xs=strokes.map(l=>+l.getAttribute('x1')),cx=(xs[0]+xs[xs.length-1])/2;
+    anim(.3,e=>{strokes.forEach((l,i)=>l.style.transform=`translateX(${(cx-xs[i])*e}px) scaleY(${1-.5*e})`);strike.style.opacity=String(1-e)},()=>{st.style.visibility='hidden';fly(L,target,cx)})})};
+  fill()}
+function fly(L,target,cx){const S=$('sets'),tr=$('trail'),sr=S.getBoundingClientRect(),str=$('st').getBoundingClientRect();
+  const fl=document.createElement('div');fl.className='n';fl.textContent=target;fl.style.cssText=`position:absolute;left:${str.left-sr.left+cx-12}px;top:6px;font-size:44px;font-weight:300;color:var(--ink);line-height:1;transform-origin:left top`;S.append(fl);
+  L.done.push(target);tr.innerHTML=trailHTML(L);const dest=tr.lastChild;dest.style.visibility='hidden';const dr=dest.getBoundingClientRect();
+  const x0=str.left-sr.left+cx-12,y0=6,x1=dr.left-sr.left,y1=dr.top-sr.top+2,sc=26/44;
+  fl.style.clipPath='inset(100% 0 0 0)';anim(.18,e=>fl.style.clipPath=`inset(${(1-e)*100}% 0 0 0)`,()=>{fl.style.clipPath='';
+    anim(.46,(e,u)=>{fl.style.transform=`translate(${(x1-x0)*e}px,${(y1-y0)*e-26*Math.sin(Math.PI*e)}px) scale(${1-(1-sc)*e})`;fl.style.color=e>.6?'var(--ink3)':'var(--ink)'},()=>{fl.remove();dest.style.visibility='';
+      if(!RM)anim(.34,(e,u)=>dest.style.transform=`scale(${1+.22*Math.sin(Math.PI*u)*(1-u)})`,()=>dest.style.transform='');
+      confirmSet(L);if(L.done.length>=L.sets){nextLift()}else{busy=false;setI=L.done.length;rollNum($('sn'),setI+1);renderRest();rest(90)}})})}
+function rest(sec){let left=sec;$('go').textContent='Skip rest';$('go').style.color='var(--go)';stage='rest';
+  $('sets').innerHTML=`<div style="height:60px;display:flex;align-items:flex-end;justify-content:space-between"><div><span style="font-size:15px;color:var(--go);font-weight:600">Rest</span> <span class="big" id="rs" style="font-size:52px;color:var(--go)">1:30</span></div><div class="n" id="rtrail" style="font-size:26px;color:var(--ink3);letter-spacing:.06em">${trailHTML(cur())}</div></div><div class="l" style="margin-top:6px"><span>Set ${setI+1} is next</span><span></span></div>`;
+  clipIn($('sets'));clearInterval(restT);restT=setInterval(()=>{left=Math.max(0,left-3);const e=$('rs');if(e)e.textContent=`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;if(!left){clearInterval(restT);endRest()}},100)}
+function endRest(){clearInterval(restT);stage='lift';$('go').textContent=`Log set ${setI+1}`;$('go').style.color='var(--training)';$('wbrief').innerHTML=`Last set <span class="n">${cur().done.slice(-1)[0]}</span>. Same again?<br>&nbsp;`;renderSets(true)}
+function nextLift(){li++;busy=true;const node=$('top');anim(.22,e=>node.style.clipPath=`inset(0 0 ${e*100}% 0)`,()=>{node.style.clipPath='';busy=false;renderLift();clipIn($('top'))})}
+function renderDone(){flow('done');clearInterval(clockT);stage='done';const P=LIFTS.filter(inPlan);
+  $('top').innerHTML=`<div style="font-size:15px;color:var(--ink2)">Done</div><div style="font-size:56px;font-weight:600;letter-spacing:-.03em;line-height:1;color:var(--push);margin-top:4px">Push A</div><div style="font-size:16px;color:var(--ink2);margin-top:14px"><span class="n">${$('clock').textContent}</span>, warm-up and ${P.length} lifts</div>`;
+  $('wbrief').innerHTML='Bench held at <span class="n">185 lb</span>.<br>Next Push A is Friday.';$('sets').innerHTML='';renderRest();$('go').textContent='Finish';$('go').style.color='var(--training)';[...$('work').querySelectorAll('.z')].forEach((z,i)=>clipIn(z,i*70))}
+const goTap=()=>{if(busy)return;if(stage==='warm'){clearInterval(restT);stage='lift';li=0;const node=$('top');anim(.22,e=>node.style.clipPath=`inset(0 0 ${e*100}% 0)`,()=>{node.style.clipPath='';renderLift();clipIn($('top'))})}
+  else if(stage==='lift')logSet();else if(stage==='rest')endRest();else if(stage==='done')reset()};
+
+// ---------- the bar, dragged or by the number; the unit, tapped or swiped
+function buildBar(){const b=$('bar'),cy=75,SL=116;b.innerHTML='';b.append(el('line',{x1:0,y1:cy,x2:8,y2:cy,stroke:'var(--ink3)','stroke-width':2.4}),el('rect',{x:8,y:cy-8,width:5,height:16,rx:1,fill:'none',stroke:'var(--ink)','stroke-width':1.5}),el('line',{x1:13,y1:cy,x2:SL,y2:cy,stroke:'var(--ink)','stroke-width':1.5}));
+  const cp=el('clipPath',{id:'slv'});cp.append(el('rect',{x:13,y:0,width:SL-13,height:150}));b.append(cp);barG=el('g',{'clip-path':'url(#slv)'});b.append(barG);collar=el('rect',{y:cy-7,width:6,height:14,rx:1,fill:'none',stroke:'var(--ink)','stroke-width':1.5,x:16});barG.append(collar);platesOn=[];b.append(el('rect',{x:0,y:0,width:120,height:150,fill:'transparent'}))}
+function setBar(lb){const w=unit==='lb'?lb:toKg(lb),P=PL[unit],want=plates(w,unit),cy=75,SL=116;let x=16;const xs=want.map(i=>{const v=x;x+=P.W[i]+3;return v});
+  let k=0;while(k<platesOn.length&&k<want.length&&platesOn[k].i===want[k]&&platesOn[k].u===unit)k++;
+  platesOn.slice(k).forEach(c=>{const x0=c.x;anim(.22,e=>c.node.setAttribute('x',x0+(SL+4-x0)*e),()=>c.node.remove())});platesOn=platesOn.slice(0,k);
+  want.slice(k).forEach((i,q)=>{const node=el('rect',{x:SL+2,y:cy-P.H[i]/2,width:P.W[i],height:P.H[i],rx:3,fill:'none',stroke:P.set[i]>=P.big?'var(--training)':'var(--ink2)','stroke-width':1.8});barG.append(node);platesOn.push({i,u:unit,node,x:xs[k+q]});setTimeout(()=>anim(.34,e=>node.setAttribute('x',SL+2+(xs[k+q]-SL-2)*e)),RM?0:100+q*60)});
+  const c0=+collar.getAttribute('x');anim(.34,e=>collar.setAttribute('x',c0+(x-c0)*e))}
+function wireWeight(L){let W0=L.w,wt=null;const show=()=>{const v=unit==='lb'?L.w:toKg(L.w);$('wi').textContent=Math.floor(v);$('wf').textContent=v%1?'.5':'';};
+  const setW=v=>{v=Math.max(45,Math.min(405,v));if(v===L.w)return;if(!$('was').textContent)W0=L.w;L.w=v;show();setBar(v);$('was').textContent=`was ${unit==='lb'?W0:toKg(W0)}`;clearTimeout(wt)};
+  const release=()=>{wt=setTimeout(()=>{const e=$('was');if(e)e.textContent=''},2000)};
+  const drag=(node,fn)=>{let st=null;node.onpointerdown=e=>{node.setPointerCapture(e.pointerId);st={x:e.clientX,y:e.clientY,b:L.w}};node.onpointermove=e=>{if(st)fn(st,e)};node.onpointerup=node.onpointercancel=()=>{if(st){st=null;release()}}};
+  drag($('w'),(st,e)=>setW(st.b+Math.round((st.y-e.clientY)/14)*5));
+  drag($('bar'),(st,e)=>setW(st.b+Math.round(((e.clientX-st.x)-(e.clientY-st.y))/12)*5));
+  $('w').onkeydown=e=>{if(e.key==='ArrowUp'){setW(L.w+5);release();e.preventDefault()}if(e.key==='ArrowDown'){setW(L.w-5);release();e.preventDefault()}};
+  const u=$('unit');let ux=null;const flip=()=>{const from=unit==='lb'?L.w:toKg(L.w);unit=unit==='lb'?'kg':'lb';u.textContent=unit;const to=unit==='lb'?L.w:toKg(L.w);let n=0;const it=setInterval(()=>{n++;$('wi').textContent=Math.round(from+(to-from)*n/6);if(n>=6){clearInterval(it);show()}},RM?0:45);setBar(L.w);
+    $('was').textContent=unit==='kg'?`${L.w} lb loads as ${toKg(L.w)} kg`:'';release()};
+  u.onpointerdown=e=>{ux=e.clientX};u.onpointerup=e=>{if(ux==null)return;ux=null;flip()};u.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){flip();e.preventDefault()}}}
+
+// ---------- the action word takes gestures (his 9:20/9:21 PM, every room): tap does it; drag left or right for its other options.
+// The word leans with the finger (18 pt at most, so it never leaves its slot); past 56 pt it rolls to the option's name in its own slot (selection tick); release there commits
+// (a firm tap) with Undo for 10 s; short of that it springs home. A side with no option barely moves (rigid tick at the stop).
+const haptic=k=>{try{navigator.vibrate&&navigator.vibrate(k==='commit'?14:k==='tick'?3:5)}catch(_){}};
+function actionWord(btn,o){let sx=null,dx=0,arm=null,base='',baseC='';const set=(t,c)=>{btn.textContent=t;btn.style.color=c};
+  btn.style.touchAction='none';btn.style.display='inline-block';
+  btn.onpointerdown=e=>{if(busy)return;sx=e.clientX;dx=0;arm=null;base=btn.textContent;baseC=btn.style.color;btn.setPointerCapture(e.pointerId)};
+  btn.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;const side=dx<0?(o.left&&o.left()):(o.right&&o.right());
+    btn.style.transform=`translateX(${Math.sign(dx)*Math.min(side?18:6,Math.abs(dx)*(side?.25:.1))}px)`;
+    const want=side&&Math.abs(dx)>56?side:null;if((want&&want.label)!==(arm&&arm.label)){arm=want;want?set(want.label,want.color):set(base,baseC);clipIn(btn);haptic('tick')}};
+  btn.onpointerup=btn.onpointercancel=e=>{if(sx==null)return;sx=null;const x0=parseFloat((btn.style.transform.match(/-?[\d.]+/)||[0])[0]);
+    anim(.36,(q,u)=>btn.style.transform=`translateX(${x0*(1-spring(u))}px)`,()=>btn.style.transform='');
+    if(arm){const a=arm;arm=null;set(base,baseC);haptic('commit');a.fn()}else if(Math.abs(dx)<6&&e.type==='pointerup')o.tap()};
+  btn.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){o.tap();e.preventDefault()}const s=e.key==='ArrowLeft'?o.left&&o.left():e.key==='ArrowRight'?o.right&&o.right():null;if(s){s.fn();e.preventDefault()}}}
+const snap=()=>({stage,li,setI,t0,done:LIFTS.map(L=>L.done.slice()),skip:LIFTS.map(L=>!!L.skip)});
+function restore(S){clearInterval(restT);busy=false;stage=S.stage;li=S.li;setI=S.setI;t0=S.t0;LIFTS.forEach((L,i)=>{L.done=S.done[i];L.skip=S.skip[i]});clock(true);
+  if(stage==='warm')renderWarm();else{stage='lift';renderLift();setI=cur().done.length;$('go').textContent=`Log set ${setI+1}`}}
+function receipt(node,text,undo,after){node.innerHTML=`${text} <button class="tap" style="color:var(--training);font-weight:600">Undo</button><br>&nbsp;`;
+  const t=setTimeout(()=>{node.innerHTML=after},10000);node.querySelector('button').onclick=()=>{clearTimeout(t);undo()}}
+const lbrief0=$('lbrief').innerHTML;
+function landBrief(){if(!started){$('lbrief').innerHTML=lbrief0;return}const L=cur(),left=LIFTS.filter(inPlan).length-li;
+  $('lbrief').innerHTML=stage==='warm'?'Warming up on the rower.<br>Bench is next.':`${nameOf(L)}, set <span class="n">${setI+1}</span> of <span class="n">${L.sets}</span>.<br><span class="n">${left}</span> ${left===1?'lift':'lifts'} to go.`}
+function showWork(){const w=$('work');w.hidden=false;$('tryL').hidden=true;$('tryW').hidden=false;$('what').textContent='The workout';flow(stage==='warm'?'warm':stage==='done'?'done':'lift');
+  note('work');anim(.34,e=>w.style.transform=`translateX(${(1-e)*100}%)`,()=>{w.style.transform='';['home','wk','lib','rt','land'].forEach(x=>$(x).hidden=true);stack=['home']})}
+// back to the landing mid-workout (left edge or Esc): the workout keeps running, the word reads Resume
+function goLand(){if(stage==='done'||!$('ex').hidden)return;started=true;const w=$('work');$('home').hidden=false;$('land').hidden=true;stack=['home'];
+  $('tLab').textContent='Today, going';$('start').textContent='Resume Push A';$('start').style.color='var(--training)';landBrief();plan();renderHome();note('home');
+// units at half size, everywhere on the phone (his 11:24 PM): any "185 lb" text becomes 185 plus a small lb
+(()=>{const RX=/(\d)\s?(lb|kg)\b/;const fix=root=>{const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const hits=[];let n;while(n=w.nextNode())if(RX.test(n.nodeValue)&&!n.parentElement.closest('.wu,button.unit,#u'))hits.push(n);
+  hits.forEach(t=>{const f=document.createDocumentFragment();t.nodeValue.split(/(\d\s?(?:lb|kg)\b)/).forEach(p=>{const m=p.match(/^(\d)\s?(lb|kg)$/);if(m){f.append(m[1]);const u=document.createElement('span');u.className='wu';u.textContent=m[2];f.append(u)}else if(p)f.append(p)});t.replaceWith(f)})};
+  fix($('ph'));const O={childList:true,subtree:true,characterData:true};const mo=new MutationObserver(ms=>{mo.disconnect();ms.forEach(m=>{if(m.type==='characterData'&&m.target.parentElement)fix(m.target.parentElement);m.addedNodes.forEach(a=>{if(a.nodeType===1)fix(a);else if(a.nodeType===3&&a.parentElement)fix(a.parentElement)})});mo.observe($('ph'),O)});mo.observe($('ph'),O)})();
+  anim(.28,e=>w.style.transform=`translateX(${e*100}%)`,()=>{w.hidden=true;w.style.transform=''})}
+(()=>{const w=$('work');let sx=null;w.addEventListener('pointerdown',e=>{const r=w.getBoundingClientRect();if(e.clientX-r.left<24){sx=e.clientX;w.setPointerCapture(e.pointerId)}});
+  w.addEventListener('pointermove',e=>{if(sx!=null)w.style.transform=`translateX(${Math.max(0,e.clientX-sx)}px)`});
+  w.addEventListener('pointerup',e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(dx>80)goLand();else anim(.2,u=>w.style.transform=`translateX(${dx*(1-u)}px)`)});
+  document.addEventListener('keydown',k=>{if(k.key==='Escape'&&$('ex').hidden&&!$('work').hidden)goLand()})})();
+function skipToday(){$('tLab').textContent='Skipped today';$('start').textContent='Start anyway';$('start').style.color='var(--ink2)';
+  receipt($('lbrief'),'Push A, skipped. Pull A is tomorrow.',()=>{$('tLab').textContent='Today';$('start').textContent='Start Push A';$('start').style.color='var(--training)';landBrief()},'Pull A is tomorrow.<br>&nbsp;')}
+function endWorkout(fromLand){const S=snap();clearInterval(restT);if(fromLand)showWork();renderDone();
+  receipt($('wbrief'),'Push A, ended. Saved what you did.',()=>{restore(S);flow(stage==='warm'?'warm':'lift')},'Bench held at <span class="n">185 lb</span>.<br>Next Push A is Friday.')}
+function startOver(){const S=snap();showWork();start();receipt($('wbrief'),'Push A, started over.',()=>restore(S),'Keep it easy, about <span class="n">22</span> strokes<br>a minute. Bench is next.')}
+function skipLift(){const S=snap(),L=cur();L.skip=true;const last=li>=LIFTS.filter(inPlan).length-1;clearInterval(restT);stage='lift';
+  if(last){endWorkout(false);return}nextLift();setTimeout(()=>receipt($('wbrief'),`${nameOf(L)}, skipped.`,()=>restore(S),`Last time <span class="n">${cur().w||cur().reps}</span>.<br>&nbsp;`),260)}
+actionWord($('start'),{tap:()=>{if(started&&stage!=='done')showWork();else{started=false;showWork();start()}},
+  left:()=>started&&stage!=='done'?{label:'End workout',color:'var(--ink)',fn:()=>endWorkout(true)}:$('tLab').textContent==='Skipped today'?null:{label:'Skip today',color:'var(--ink)',fn:skipToday},
+  right:()=>started&&stage!=='done'?{label:'Start over',color:'var(--training)',fn:startOver}:null});
+actionWord($('go'),{tap:goTap,
+  left:()=>stage==='warm'?{label:'Skip warm up',color:'var(--ink)',fn:goTap}:stage==='lift'||stage==='rest'?(li>=LIFTS.filter(inPlan).length-1?{label:'End workout',color:'var(--ink)',fn:()=>endWorkout(false)}:{label:'Skip this lift',color:'var(--ink)',fn:skipLift}):null,
+  right:()=>stage==='lift'&&cur().done.length?{label:'Same again',color:'var(--training)',fn:()=>{reps=cur().done.slice(-1)[0];logSet()}}:null});
+function reset(){busy=false;started=false;$('tLab').textContent='Today';$('start').textContent='Start Push A';$('start').style.color='var(--training)';$('lbrief').innerHTML=lbrief0;clearTimeout(wBack);clearInterval(restT);clearInterval(clockT);LIFTS.forEach(L=>{L.done=[];L.skip=false});LIFTS[0].w=185;unit='lb';paused=false;$('work').hidden=true;$('ex').hidden=true;$('land').hidden=true;['wk','lib'].forEach(x=>$(x).hidden=true);$('home').hidden=false;stack=['home'];$('clock').textContent='0:00';renderHome();note('home');[...$('home').querySelectorAll('.z')].forEach((z,i)=>clipIn(z,i*60))}
+// ---------- the Training landing (his 10:13 PM): you, today (or what's going), then two doors, This week and Library.
+// Today's workout is one level in. Pages slide in from the right; the left edge or Esc goes back.
+let stack=['home'],paused=false,pausedAt=0;
+const NOTES={home:['tryH','The landing'],land:['tryL',"Today's workout"],wk:['tryK','This week'],lib:['tryB','Library'],rt:['tryB','Library']};
+function note(id){const [t,w]=NOTES[id]||['tryW','The workout'];['tryH','tryL','tryW','tryK','tryB'].forEach(x=>$(x).hidden=x!==t);$('what').textContent=w;flow(id==='home'?'home':id==='land'?'land':'')}
+function openPg(id){const P=$(id),prev=$(stack[stack.length-1]);if(prev===P)return;P.hidden=false;stack.push(id);note(id);if(id==='home')renderHome();if(id==='wk')wkW.render();if(id==='lib'){libLv=0;renderCats();libPaint()}if(id==='land')plan();
+  anim(.34,e=>P.style.transform=`translateX(${(1-e)*100}%)`,()=>{P.style.transform='';if(stack[stack.length-1]===id&&prev)prev.hidden=true})}
+function backPg(){if(stack.length<2)return;const top=$(stack.pop()),id=stack[stack.length-1],under=$(id);under.hidden=false;note(id);if(id==='home')renderHome();
+  anim(.28,e=>top.style.transform=`translateX(${e*100}%)`,()=>{top.hidden=true;top.style.transform=''})}
+['wk','lib','rt','land'].forEach(id=>{const P=$(id);let sx=null;
+  P.addEventListener('pointerdown',e=>{const r=P.getBoundingClientRect();if(e.clientX-r.left<24){sx=e.clientX;P.setPointerCapture(e.pointerId)}});
+  P.addEventListener('pointermove',e=>{if(sx!=null)P.style.transform=`translateX(${Math.max(0,e.clientX-sx)}px)`});
+  P.addEventListener('pointerup',e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(dx>80){if(id==='lib'&&libLv){libLv=0;P.style.transform='';libPaint();return}backPg()}else anim(.2,u=>P.style.transform=`translateX(${dx*(1-u)}px)`)})});
+document.addEventListener('keydown',k=>{if(k.key!=='Escape'||$('dial')||!$('ex').hidden||!$('work').hidden)return;if(stack[stack.length-1]==='lib'&&libLv){libLv=0;libPaint();return}backPg()});
+
+// you, in three lines: big light numbers, plain words. The bench line opens the lift.
+function renderHome(){const line=(num,words,c,id)=>`<button class="tap" ${id?`id="${id}"`:''} style="display:flex;align-items:baseline;gap:10px;height:40px;white-space:nowrap;width:100%"><span class="n" style="font-size:32px;font-weight:200;letter-spacing:-.02em;color:${c||'var(--ink)'};min-width:66px">${num}</span><span style="font-size:15px;color:var(--ink2)">${words}</span></button>`;
+  $('stats').innerHTML=line('5','weeks in a row on plan','var(--gold)')+line('+10<span class="wu">lb</span>','on bench since Oct 1','var(--go)','hBench');
+  $('hBench').onclick=()=>openEx(LIFTS[0]);
+  const hd=(l,lc,r)=>`<div style="height:20px;display:flex;justify-content:space-between;align-items:flex-end;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:${lc==='var(--ink2)'?'var(--slate)':lc}"><span>${l}</span>${r||''}</div>`;
+  const big=(t,c,st)=>`<div style="font-size:52px;font-weight:600;letter-spacing:-.035em;line-height:62px;color:${c};white-space:nowrap;${st||''}">${t}</div>`;
+  const sub=t=>`<div style="font-size:15px;color:var(--ink2);height:22px;white-space:nowrap;overflow:hidden">${t}</div>`;
+  const N=$('now'),skipped=$('tLab').textContent==='Skipped today',going=started&&stage!=='done';
+  if(going){const L=cur(),what=stage==='warm'?'Warming up on the rower':stage==='rest'?`Resting, then ${nameOf(L).toLowerCase()} set <span class="n">${setI+1}</span>`:`${nameOf(L)}, set <span class="n">${setI+1}</span> of <span class="n">${L.sets}</span>`;
+    N.innerHTML=hd(paused?'Paused':'In progress',paused?'var(--ink2)':'var(--go)',`<span style="font-variant-caps:normal;letter-spacing:0;font-weight:400;display:flex;gap:14px;align-items:baseline"><span class="n" id="hClock" style="font-size:15px;color:${paused?'var(--ink3)':'var(--ink2)'}">${$('clock').textContent}</span><button class="tap" id="hPause" style="color:var(--training);font-weight:600;font-size:15px">${paused?'Go on':'Pause'}</button></span>`)+`<button class="tap" id="hNow" style="display:block;text-align:left;width:100%">${big('Push A','var(--push)')}${sub(what+'.')}</button>`;
+    $('hPause').onclick=e=>{e.stopPropagation();togglePause()};$('hNow').onclick=()=>{if(paused)togglePause();showWork()}}
+  else if(stage==='done'&&started){N.innerHTML=hd('Today, done','var(--go)')+big('Push A','var(--ink2)','text-decoration:line-through;text-decoration-color:var(--go);text-decoration-thickness:1px')+sub('Saved what you did. Pull A is tomorrow.')}
+  else if(skipped){N.innerHTML=hd('Today, skipped','var(--ink2)')+big('Push A','var(--ink3)','text-decoration:line-through;text-decoration-color:var(--ink3);text-decoration-thickness:1px')+sub('Pull A is tomorrow.')}
+  else{N.innerHTML=hd('Today','var(--ink2)')+`<button class="tap" id="hNow" style="display:block;text-align:left;width:100%">${big('Push A','var(--push)')}${sub(`about <span class="n">${mins}</span> min, <span class="n">${LIFTS.filter(inPlan).length}</span> lifts. Starts on the rower.`)}</button>`;$('hNow').onclick=()=>openPg('land')}
+  $('dWeekS').innerHTML=`<span class="n" style="color:var(--go)">${DONE+(stage==='done'&&started?1:0)}</span> of <span class="n">6</span> done. ${going?'<span style="color:var(--push)">Push A</span> going now.':'<span style="color:var(--pull)">Pull A</span> tomorrow.'}`;
+  $('hGo').textContent=going?(paused?'Go on with Push A':'Resume Push A'):skipped?'Start anyway':stage==='done'&&started?'Open Push A':'Start Push A';$('hGo').style.color=skipped?'var(--ink2)':'var(--training)'}
+// pause stops the clock and the rest timer where they are; Go on picks them up
+function togglePause(){paused=!paused;haptic('commit');if(paused){clearInterval(clockT);pausedAt=Date.now()-t0}else{t0=Date.now()-pausedAt;clock(true)}renderHome()}
+setInterval(()=>{if(!$('home').hidden&&started&&stage!=='done'&&!paused){const c=$('hClock');if(c)c.textContent=$('clock').textContent}},500);
+$('dWeek').onclick=()=>openPg('wk');$('dLib').onclick=()=>openPg('lib');
+actionWord($('hGo'),{tap:()=>{if(started&&stage!=='done'){if(paused)togglePause();showWork()}else if(stage==='done'&&started)openPg('land');else{started=false;showWork();start()}},
+  left:()=>started&&stage!=='done'?{label:'End workout',color:'var(--ink)',fn:()=>{paused=false;endWorkout(true)}}:$('tLab').textContent==='Skipped today'||stage==='done'&&started?null:{label:'Skip today',color:'var(--ink)',fn:()=>{skipToday();renderHome()}},
+  right:()=>started&&stage!=='done'?{label:paused?'Go on':'Pause',color:'var(--training)',fn:togglePause}:null});
+
+// one depth wheel for every list of things (same rows, sizes and blur as the plan)
+function mkWheel(C,o){const RH=o.RH||40,FY=o.FY||70;let off=o.f0||0,drag=false,spin=0,lastF=-9;
+  const rows=()=>o.rows(),n=()=>rows().length;
+  function render(){const R=rows();if(o.f0!=null&&o.reset){off=o.f0;o.reset=false}
+    C.innerHTML=R.map((x,i)=>`<button class="tap" role="listitem" aria-label="${x.aria||''}" style="position:absolute;left:0;top:0;width:100%;height:${RH}px;display:flex;justify-content:space-between;align-items:center;gap:10px;white-space:nowrap;font-size:30px;letter-spacing:-.02em"><span class="wn" style="transform-origin:left center;display:inline-block;${x.st||''}">${x.l}</span><span class="wi n" style="transform-origin:right center;display:inline-block;font-size:15px;white-space:nowrap">${x.r||''}</span></button>`).join('')
+      +(o.hd?`<div aria-hidden="true" class="whd" style="position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-end;white-space:nowrap;font-size:13px;line-height:16px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--slate);padding-bottom:5px"><span>${o.hd[0]}</span><span style="font-variant-caps:normal;letter-spacing:0;font-weight:300" class="n">${o.hd[1]}</span></div>`:'');
+    [...C.querySelectorAll('button')].forEach((b,i)=>b.onclick=()=>{if(drag)return;if(Math.round(off)===i)o.onTap&&o.onTap(i);else spinTo(i)});lastF=-9;paint()}
+  function paint(){const R=rows();[...C.querySelectorAll('button')].forEach((b,i)=>{const d=i-off,a=Math.abs(d),x=R[i];if(a>4.5){b.style.visibility='hidden';return}b.style.visibility='';
+    const f=30-10*Math.min(a,1)-3*Math.max(0,Math.min(a-1,1))-2*Math.max(0,Math.min(a-2,1));
+    b.style.transform=`translateY(${FY-RH/2+d*RH+Math.sign(d)*8*Math.min(a,1)}px)`;const bl=depthBlur(a);b.style.filter=bl>.05?`blur(${bl.toFixed(2)}px)`:'';
+    const wn=b.firstChild,wi=b.lastChild;const room=(b.clientWidth-12-wi.offsetWidth)/Math.max(1,wn.offsetWidth)*30;wn.style.transform=`scale(${Math.min(f,room)/30})`;wi.style.transform=`scale(${a<.5?1:.87})`;
+    const focus=a<.5;wn.style.color=focus?(x.fc||'var(--training)'):(x.c||'var(--ink2)');wn.style.fontWeight=focus||x.c?600:400;wi.style.color=x.rc||'var(--ink2)'});
+    const H=C.querySelector('.whd');if(H)hdPaint(H,-1-off,FY,RH,8);
+    const r=Math.max(0,Math.min(n()-1,Math.round(off)));if(r!==lastF){if(lastF!==-9)haptic('tick');lastF=r;o.onFocus&&o.onFocus(r)}}
+  function spinTo(i,dur=.42){i=Math.max(0,Math.min(n()-1,i));const from=off,id=++spin;anim(dur,(e,u)=>{if(id!==spin)return;off=from+(i-from)*spring(u);paint()},()=>{if(id!==spin)return;off=i;paint()})}
+  let sy=null,so=0,vy=0,ly=0,lt=0;
+  C.onpointerdown=e=>{sy=e.clientY;so=off;vy=0;ly=e.clientY;lt=performance.now();drag=false;spin++};
+  C.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!drag){drag=true;C.setPointerCapture(e.pointerId)}if(!drag)return;const now=performance.now();vy=(e.clientY-ly)/Math.max(1,now-lt);ly=e.clientY;lt=now;off=Math.max(-.35,Math.min(n()-.65,so-dy/RH));paint()};
+  C.onpointerup=C.onpointercancel=()=>{if(sy==null)return;sy=null;if(drag){const t=Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(off);spinTo(t,.36);setTimeout(()=>drag=false,0)}};
+  let wt=null;C.addEventListener('wheel',e=>{e.preventDefault();spin++;off=Math.max(-.35,Math.min(n()-.65,off+e.deltaY/90));paint();clearTimeout(wt);wt=setTimeout(()=>spinTo(Math.round(off),.36),120)},{passive:false});
+  C.tabIndex=0;C.onkeydown=e=>{if(e.key==='ArrowDown'){spinTo(Math.round(off)+1,.36);e.preventDefault()}if(e.key==='ArrowUp'){spinTo(Math.round(off)-1,.36);e.preventDefault()}if(e.key==='Enter'){o.onTap&&o.onTap(Math.round(off))}};
+  return {render,spinTo,paint,get off(){return Math.round(off)},set off(v){off=v}}}
+
+// this week: the same wheel, centred on today. Today stays in the accent even when you scroll away; done days carry the green hairline.
+// big type never shares one colour (his 12:07 AM): a workout's name wears its split, Push clay, Pull teal, Legs plum
+const SP=n=>/^Push/.test(n)?'var(--push)':/^Pull/.test(n)?'var(--pull)':/^Legs/.test(n)?'var(--legs)':'var(--ink)';
+const DAYS=[['Monday','Push B','done',48,'Bench 185 lb for 5, 5, 4.'],['Tuesday','Pull B','done',52,'Rows up to 155 lb.'],['Wednesday','Legs B','done',55,'Squat 245 lb for 5, 5, 5.'],['Thursday','Rest','rest',0,''],['Friday','Push A','today',45,''],['Saturday','Pull A','plan',50,'Deadlift, rows, pull-ups, curls.'],['Sunday','Legs A','plan',55,'Squat, Romanian deadlift, lunges, calves.']];
+const DONE=DAYS.filter(d=>d[2]==='done').length;
+const wkW=mkWheel($('wkW'),{f0:4,FY:166,hd:['The week','<span class="n">6</span> sessions, <span class="n">1</span> rest'],
+  rows:()=>DAYS.map(([d,w,k,m])=>{const today=k==='today',doneT=today&&started&&stage==='done',skipT=today&&$('tLab').textContent==='Skipped today';
+    const st=k==='done'||doneT?'text-decoration:line-through;text-decoration-color:var(--go);text-decoration-thickness:1px;':skipT?'text-decoration:line-through;text-decoration-color:var(--ink3);text-decoration-thickness:1px;':'';
+    return {l:`<span style="font-size:.5em;font-weight:400;letter-spacing:0;margin-right:10px;color:var(--ink2)">${d.slice(0,3)}</span><span style="${st}">${w}</span>`,aria:`${d}, ${w}${k==='done'?', done':''}`,
+      c:today?SP(w):k==='rest'?'var(--ink3)':null,fc:k==='rest'?'var(--ink2)':today?SP(w):k==='done'?'var(--go)':'var(--slate)',
+      r:k==='done'||doneT?`<span class="n">${m}</span> min`:k==='rest'?'':`about <span class="n">${m}</span> min`,rc:k==='done'||doneT?'var(--go)':'var(--ink2)'}}),
+  onFocus:i=>{const [d,w,k,m,x]=DAYS[i];const t=k==='done'?`Done ${d} in <span class="n">${m}</span> min.<br>${x}`:k==='rest'?'Rest day. A walk counts<br>if you feel like one.':k==='today'?(started&&stage!=='done'?'Going now. Tap to open it.<br>&nbsp;':'Today. Starts with <span style="color:var(--go);font-weight:600">8 min</span><br>on the rower. Tap to open it.'):`${d}: ${x.replace(/\.$/,'').toLowerCase()}.<br>About <span class="n">${m}</span> min.`;$('wkBrief').innerHTML=t},
+  onTap:i=>{if(DAYS[i][2]==='today'){if(started&&stage!=='done')showWork();else openPg('land')}}});
+// move today's session to tomorrow (and everything after slides a day), with Undo
+actionWord($('wkGo'),{tap:()=>{const S=DAYS.map(d=>d.slice());const fri=DAYS[4],sat=DAYS[5],sun=DAYS[6];DAYS[4]=['Friday','Rest','rest',0,''];DAYS[5]=['Saturday','Push A','plan',45,'Bench, overhead press, dips, fly.'];DAYS[6]=['Sunday','Pull A','plan',50,sat[4]];wkW.render();wkW.spinTo(5);
+    receipt($('wkBrief'),'Push A, moved to Saturday. Legs A slides to Monday.',()=>{S.forEach((d,i)=>DAYS[i]=d);wkW.render();wkW.spinTo(4)},'Saturday: bench, overhead press,<br>dips, fly.')},
+  left:()=>$('tLab').textContent==='Skipped today'||started?null:{label:'Skip Push A',color:'var(--ink)',fn:()=>{skipToday();wkW.render()}},right:()=>null});
+
+// ---------- library as a grid (his 10:38 PM). Across, a category row (one at a time, on the right,;
+// "by kind" on the left turns it to by length or by day). Down, a dial of what: routines, exercises, programs, goals.
+// The wheel below holds what's in that cell of the grid. A routine opens to its exercises; an exercise to its page.
+const R_=(n,k,m,d,l)=>({t:'r',n,k,m,d:d||[],l});const E_=(n,k,w,d)=>({t:'e',n,k,m:12,w,d:d||[]});
+const PUSH=['Bench press','Overhead press','Dips','Cable fly'],PULL=['Deadlift','Barbell row','Pull-up','Curl'],LEGS=['Squat','Romanian deadlift','Lunge','Calf raise'];
+const LIB=[R_('Push A','Push',45,['Monday','Friday'],PUSH),R_('Push B','Push',48,['Monday'],['Incline press','Overhead press','Dips','Triceps pushdown']),R_('Push, short','Push',25,[],['Bench press','Push-up']),R_('Chest focus','Push',40,[],['Bench press','Incline press','Cable fly']),R_('Shoulders','Push',35,[],['Overhead press','Lateral raise','Face pull']),R_('Push at home','Push',30,[],['Push-up','Dumbbell press','Band fly']),
+ R_('Pull A','Pull',50,['Saturday'],PULL),R_('Pull B','Pull',52,['Tuesday'],['Barbell row','Lat pulldown','Face pull','Curl']),R_('Pull, short','Pull',25,[],['Pull-up','Barbell row']),R_('Back focus','Pull',45,[],['Deadlift','Barbell row','Lat pulldown']),R_('Pull at home','Pull',30,[],['Band row','Pull-up','Curl']),
+ R_('Legs A','Legs',55,['Sunday'],LEGS),R_('Legs B','Legs',55,['Wednesday'],['Leg press','Lunge','Romanian deadlift','Calf raise']),R_('Legs, short','Legs',25,[],['Squat','Lunge']),R_('Single leg','Legs',40,[],['Lunge','Step-up','Single-leg deadlift']),R_('Legs at home','Legs',30,[],['Goblet squat','Lunge','Calf raise']),
+ R_('Full body A','Full body',50,[],['Squat','Bench press','Barbell row']),R_('Full body B','Full body',50,[],['Deadlift','Overhead press','Pull-up']),R_('Travel day','Full body',30,[],['Push-up','Lunge','Band row']),R_('Twenty minutes','Full body',20,[],['Kettlebell swing','Push-up','Goblet squat']),
+ R_('Rower, easy','Cardio',25,['Monday','Wednesday','Friday'],['Rower']),R_('Hill sprints','Cardio',20,[],['Run']),R_('Zone 2 ride','Cardio',45,[],['Bike']),R_('Intervals','Cardio',30,[],['Rower','Bike']),R_('Long walk','Cardio',60,['Sunday'],['Walk']),
+ R_('Hips and spine','Mobility',20,['Thursday'],['Hip opener','Thoracic twist']),R_('Shoulder mobility','Mobility',15,[],['Band pull-apart','Wall slide']),R_('Ten minutes','Mobility',10,[],['Hamstring stretch','Hip opener']),
+ E_('Bench press','Push',185,['Monday','Friday']),E_('Overhead press','Push',115,['Monday','Friday']),E_('Dips','Push',0,['Friday']),E_('Cable fly','Push',40,['Friday']),E_('Incline press','Push',135,['Monday']),E_('Push-up','Push',0),E_('Triceps pushdown','Push',50,['Monday']),
+ E_('Deadlift','Pull',275,['Saturday']),E_('Barbell row','Pull',155,['Tuesday','Saturday']),E_('Pull-up','Pull',0,['Saturday']),E_('Curl','Pull',35,['Tuesday','Saturday']),E_('Lat pulldown','Pull',120,['Tuesday']),E_('Face pull','Pull',40,['Tuesday']),
+ E_('Squat','Legs',245,['Sunday']),E_('Romanian deadlift','Legs',185,['Sunday','Wednesday']),E_('Lunge','Legs',50,['Sunday','Wednesday']),E_('Calf raise','Legs',90,['Sunday','Wednesday']),E_('Leg press','Legs',360,['Wednesday']),
+ E_('Kettlebell swing','Full body',53),E_('Farmer carry','Full body',70),E_('Rower','Cardio',0,['Monday','Wednesday','Friday']),E_('Bike','Cardio',0),E_('Run','Cardio',0),E_('Hip opener','Mobility',0,['Thursday']),E_('Thoracic twist','Mobility',0,['Thursday']),
+ {t:'p',n:'Push, pull, legs',k:'Full body',m:50,d:['Monday','Tuesday','Wednesday','Friday','Saturday','Sunday'],wk:'Week 3 of 8',x:'Six days, two rest-free weeks a month.'},{t:'p',n:'Strength base',k:'Full body',m:45,d:[],wk:'12 weeks',x:'Five by five on the big lifts, three days a week.'},{t:'p',n:'First 10K',k:'Cardio',m:40,d:[],wk:'6 weeks',x:'Three runs a week, one long.'},{t:'p',n:'Mobility month',k:'Mobility',m:15,d:['Thursday'],wk:'Week 1 of 4',x:'Ten to twenty minutes, every other day.'},
+ {t:'g',n:'Bench 225',k:'Push',m:0,d:[],at:'205 of 225',x:'By December. Up 10 lb since Oct 1.'},{t:'g',n:'Ten pull-ups',k:'Pull',m:0,d:[],at:'7 of 10',x:'In a row, no kip.'},{t:'g',n:'Squat 1.5x bodyweight',k:'Legs',m:0,d:[],at:'245 of 255',x:'Ten pounds to go.'},{t:'g',n:'5 km under 25 min',k:'Cardio',m:0,d:[],at:'26:40',x:'Best this year, Oct 11.'},{t:'g',n:'Touch your toes',k:'Mobility',m:0,d:[],at:'Close',x:'A hand’s width away.'}];
+const DIMS=[['by kind',['Everything','Push','Pull','Legs','Full body','Cardio','Mobility']],['by length',['Any length','Under 20 min','20 to 40 min','40 to 60 min','An hour or more']],['by day',['Any day','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']]];
+const WC=['var(--go)','var(--gold)','var(--slate)','var(--training)'];
+const WHAT=[['Routines','r'],['Exercises','e'],['Programs','p'],['Goals','g']];
+let dim=0,ki=0,wi=0,libLv=0;
+const lenOf=m=>m<20?1:m<40?2:m<60?3:4;
+const inCell=(x,k)=>{if(k===0)return true;const c=DIMS[dim][1][k];if(dim===0)return x.k===c||(x.t==='p'&&c==='Full body'&&x.k==='Full body');if(dim===1)return x.m>0&&lenOf(x.m)===k;return x.d.includes(c)};
+const cell=(k,w)=>LIB.filter(x=>x.t===WHAT[w][1]&&inCell(x,k));
+// category row: one at a time, right side, sideways or up and down
+let cx=0;const CW=()=>$('cats').clientWidth-90+10;
+function catHTML(i){const n=LIB.filter(x=>x.t===WHAT[wi][1]&&inCell(x,i)).length;return `<span class="kw" style="display:inline-block;transform-origin:right 60%;font-size:17px;font-weight:600;color:var(--ink)">${DIMS[dim][1][i]}<span class="n" style="margin-left:7px;font-size:15px;color:${WC[wi]}">${n}</span></span>`}
+function renderCats(){const R=$('catR'),w=CW();R.innerHTML=DIMS[dim][1].map((k,i)=>`<button class="tap" role="tab" aria-selected="${i===ki}" style="flex:none;width:${w}px;text-align:right;padding-right:10px;box-sizing:border-box">${catHTML(i)}</button>`).join('');$('dimW').textContent=DIMS[dim][0];placeCats(true)}
+let lensOn=0,lensA=0;
+function paintCats(){const w=CW(),B=[...$('catR').children];B.forEach((b,i)=>{const d=Math.abs(i*w+cx)/w;b.firstChild.style.transform=`scale(${1+.07*lensOn*Math.max(0,1-d*2.2)})`});
+  const f=-cx/w,fr=f-ki,nI=Math.max(0,Math.min(B.length-1,Math.abs(fr)>.2?ki+Math.sign(fr):ki)),lx=Math.max(-w*.75,Math.min(0,nI*w+cx));$('lens').style.setProperty('--lx',lx+'px');if(B[nI])$('lens').style.width=(B[nI].firstChild.offsetWidth+28)+'px'}
+function placeCats(now){const R=$('catR'),to=-ki*CW();if(now||RM){cx=to;R.style.transform=`translateX(${cx}px)`;paintCats();return}const from=cx;anim(.46,(e,u)=>{cx=from+(to-from)*spring(u);R.style.transform=`translateX(${cx}px)`;paintCats()},()=>{cx=to;paintCats()})}
+function lens(on){return; // no lens anywhere (his 10:51 PM)
+const L=$('lens'),from=lensOn,id=++lensA;anim(on?.32:.4,(e,u)=>{if(id!==lensA)return;lensOn=from+((on?1:0)-from)*(on?spring(u):e);L.style.opacity=String(Math.min(1,lensOn*1.4));L.style.transform=`translate(var(--lx,0px),-50%) scale(${.9+.1*lensOn})`;paintCats()})}
+function setCat(i){i=Math.max(0,Math.min(DIMS[dim][1].length-1,i));if(i===ki){placeCats();return}ki=i;haptic('tick');placeCats();paintLDial();libPaint(true)}
+let cDrag=false;(()=>{const C=$('cats'),R=$('catR'),V=$('catV');let sx=null,sy=null,s0=0,vx=0,vy=0,lx=0,ly=0,lt0=0,ax=null;
+  const vPaint=dy=>{const nd=(dim+(dy<0?1:-1)+DIMS.length)%DIMS.length;R.style.transform=`translate(${cx}px,${dy}px)`;V.innerHTML=`<div style="position:absolute;right:10px;top:${dy+(dy<0?38:-38)}px;line-height:38px;white-space:nowrap"><span style="font-size:17px;font-weight:600;color:var(--ink)">${DIMS[nd][1][0]}</span></div>`};
+  C.onpointerdown=e=>{if(e.target.closest('#dimW'))return;sx=e.clientX;sy=e.clientY;s0=cx;cDrag=false;ax=null;vx=vy=0;lx=e.clientX;ly=e.clientY;lt0=performance.now();C.setPointerCapture(e.pointerId);lens(true)};
+  C.onpointermove=e=>{if(sx==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(!ax&&Math.hypot(dx,dy)>6){ax=Math.abs(dx)>=Math.abs(dy)?'x':'y';cDrag=true}if(!ax)return;const n=performance.now(),dt=Math.max(1,n-lt0);vx=(e.clientX-lx)/dt;vy=(e.clientY-ly)/dt;lx=e.clientX;ly=e.clientY;lt0=n;
+    if(ax==='x'){const w=CW(),min=-(DIMS[dim][1].length-1)*w;let x=s0+dx;if(x>0)x*=.3;if(x<min)x=min+(x-min)*.3;cx=x;R.style.transform=`translateX(${cx}px)`;paintCats()}else vPaint(Math.max(-38,Math.min(38,dy)))};
+  C.onpointerup=C.onpointercancel=e=>{if(sx==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;lens(false);if(!cDrag){placeCats();return}
+    if(ax==='x'){const w=CW();let t=ki;if(Math.abs(dx)>w*.22||Math.abs(vx)>.5)t=ki+((Math.abs(vx)>.5?vx:dx)<0?1:-1);setCat(t);if(t===ki)placeCats()}
+    else{const can=Math.abs(dy)>13||Math.abs(vy)>.4,dir=(Math.abs(vy)>.4?vy:dy)<0?1:-1,from=Math.max(-38,Math.min(38,dy)),to=can?-dir*38:0;
+      anim(.34,(q,u)=>vPaint(from+(to-from)*(can?q:spring(u))),()=>{V.innerHTML='';R.style.transform=`translateX(${cx}px)`;if(can){dim=(dim+dir+DIMS.length)%DIMS.length;ki=0;haptic('tick');renderCats();paintLDial();libPaint(true)}})}
+    setTimeout(()=>cDrag=false,0)};
+  C.addEventListener('wheel',e=>{e.preventDefault();if(C.dataset.lock)return;const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;if(Math.abs(d)<4)return;C.dataset.lock=1;lens(true);setCat(ki+(d>0?1:-1));setTimeout(()=>{lens(false);delete C.dataset.lock},420)},{passive:false});
+  C.tabIndex=0;C.onkeydown=e=>{if(e.target!==C)return;if(e.key==='ArrowRight'||e.key==='ArrowDown'){setCat(ki+1);e.preventDefault()}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){setCat(ki-1);e.preventDefault()}}})();
+// by kind, by length, by day: tap the word and it rolls to the next way of cutting the library
+$('dimW').onclick=()=>{dim=(dim+1)%DIMS.length;ki=0;haptic('tick');renderCats();clipIn($('dimW'));paintLDial();libPaint(true)};
+// the what dial: 46 pt rows, 40 pt focus, neighbors at 16 pt so they sit far back; it loops
+let lOff=0,lSpin=0;const md=(a,n)=>((a%n)+n)%n;
+function renderLDial(){$('ldial').innerHTML=[-2,-1,0,1,2].map(k=>`<button class="tap" data-k="${k}" style="position:absolute;left:0;width:100%;height:46px;display:flex;justify-content:space-between;align-items:center;white-space:nowrap"><span style="transform-origin:left center;display:inline-block;font-size:40px;letter-spacing:-.03em"></span><span class="n" style="transform-origin:right center;display:inline-block;font-size:40px"></span></button>`).join('');
+  [...$('ldial').children].forEach(b=>b.onclick=()=>{if(+b.dataset.k)ldSpin(Math.round(lOff)+(+b.dataset.k))});paintLDial()}
+function paintLDial(){const base=Math.round(lOff);[...$('ldial').children].forEach(b=>{const k=+b.dataset.k,i=base+k,d=i-lOff,a=Math.abs(d),w=md(i,4),c=cell(ki,w).length;
+  b.style.transform=`translateY(${70-23+d*46}px)`;b.style.visibility=a>1.6?'hidden':'';const sc=1-(1-16/40)*Math.min(a,1);b.firstChild.textContent=WHAT[w][0];b.lastChild.textContent=c;b.firstChild.style.transform=b.lastChild.style.transform=`scale(${sc})`;
+  const f=a<.5;b.firstChild.style.color=f?WC[w]:'var(--ink2)';b.firstChild.style.fontWeight=f?600:400;b.lastChild.style.color=f?'var(--ink)':'var(--ink2)';b.lastChild.style.fontWeight=f?200:300;const bl=f?0:depthBlur(a);b.style.filter=bl>.05?`blur(${bl.toFixed(2)}px)`:''})}
+function ldSpin(t){const from=lOff,id=++lSpin;anim(.42,(e,u)=>{if(id!==lSpin)return;lOff=from+(t-from)*spring(u);paintLDial()},()=>{if(id!==lSpin)return;lOff=t;paintLDial();const w=md(t,4);if(w!==wi){wi=w;haptic('tick');renderCats();libPaint(true)}})}
+(()=>{const d=$('ldial');let sy=null,so=0,dr=false;d.onpointerdown=e=>{sy=e.clientY;so=lOff;dr=false;lSpin++};d.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!dr){dr=true;d.setPointerCapture(e.pointerId)}if(dr){lOff=so-dy/46;paintLDial()}};
+  d.onpointerup=d.onpointercancel=()=>{if(sy==null)return;sy=null;if(dr)ldSpin(Math.round(lOff))};let wt=null;d.addEventListener('wheel',e=>{e.preventDefault();lSpin++;lOff+=e.deltaY/120;paintLDial();clearTimeout(wt);wt=setTimeout(()=>ldSpin(Math.round(lOff)),120)},{passive:false});
+  d.onkeydown=e=>{if(e.key==='ArrowDown'){ldSpin(Math.round(lOff)+1);e.preventDefault()}if(e.key==='ArrowUp'){ldSpin(Math.round(lOff)-1);e.preventDefault()}}})();
+// the cell's things on the shared wheel
+const rOf=x=>x.t==='r'?`<span class="n">${x.l.length}</span> ${x.l.length===1?'exercise':'exercises'}, <span class="n">${x.m}</span> min`:x.t==='e'?(x.w?`best <span class="n" style="color:var(--gold)">${x.w}<span class="wu">lb</span></span>`:''):x.t==='p'?x.wk:x.at;
+const libW=mkWheel($('libW'),{f0:0,hd:['In here',''],
+  rows:()=>{const xs=cell(ki,wi);return xs.length?xs.map(x=>({l:x.n,aria:x.n,r:rOf(x),fc:x.t==='r'&&/^(Push|Pull|Legs)/.test(x.n)?SP(x.n):WC[wi]})):[{l:'Nothing here yet',c:'var(--ink3)',fc:'var(--ink3)'}]},
+  onFocus:i=>{const x=cell(ki,wi)[i];if(!x){$('libBrief').innerHTML='Nothing in this cell yet.<br>&nbsp;';return}
+    $('libBrief').innerHTML=x.t==='r'?`${x.l.slice(0,3).join(', ')}${x.l.length>3?` and <span class="n">${x.l.length-3}</span> more`:''}.<br>${x.d.length?`On ${x.d.length>2?`${x.d.length} days`:x.d.join(' and ')}.`:'Not on the week yet.'}`:x.t==='e'?`${x.k}${x.w?`, best <span class="n" style="color:var(--gold)">${x.w}<span class="wu">lb</span></span>`:''}.<br>${x.d.length?`In ${LIB.filter(r=>r.t==='r'&&r.l.includes(x.n)).map(r=>r.n).slice(0,2).join(' and ')}.`:'Not in a routine yet.'}`:x.t==='p'?`${x.x}<br>${x.wk}.`:`${x.x}<br>Now: ${x.at}.`},
+  onTap:i=>{const x=cell(ki,wi)[i];if(!x)return;if(x.t==='r'){if(x.n==='Push A'){openPg('land');return}openRt(x)}else if(x.t==='e')openEx(liftOf(x.n))}});
+function libPaint(fresh){$('libGo').textContent=['Build a routine','Add an exercise','Start a program','Set a goal'][wi];libW.off=0;libW.render();if(fresh)clipIn($('libW'))}
+actionWord($('libGo'),{tap:()=>receipt($('libBrief'),['A new routine. Tess will ask what it’s for.','A new exercise, with a Gym visual if one fits.','Pick a program to start on Monday.','A goal, with a date if you like.'][wi],()=>{},'&nbsp;<br>&nbsp;'),left:()=>null,right:()=>null});
+// a routine page: its exercises with their usual sets as stack marks; tap one for its page
+function liftOf(n){return LIFTS.find(L=>L.n===n)||{n,mus:'A '+((LIB.find(x=>x.t==='e'&&x.n===n)||{k:'whole-body'}).k).toLowerCase()+' exercise',best:[0,8,'Oct 12'],hist:[['Oct 20','8, 8, 7']],sets:3,reps:8,w:(LIB.find(x=>x.t==='e'&&x.n===n)||{w:0}).w,min:25,home:null,done:[]}}
+let rtX=null;const rtW=mkWheel($('rtW'),{f0:0,hd:['Exercises','usual sets'],rows:()=>rtX?rtX.l.map(n=>{const L=liftOf(n);return {l:n,aria:n,r:marks(L)}}):[],
+  onFocus:i=>{if(!rtX)return;const L=liftOf(rtX.l[i]);$('rtBrief').innerHTML=`${L.mus}.<br>Usually <span class="n">${L.sets}</span> sets of <span class="n">${L.reps}</span>${L.w?` at <span class="n">${L.w}</span>`:''}.`},onTap:i=>openEx(liftOf(rtX.l[i]))});
+function openRt(x){rtX=x;$('rtT').textContent=x.n;$('rtS').innerHTML=`<span class="n">${x.l.length}</span> exercises, about <span class="n">${x.m}</span> min. ${x.d.length?x.d.join(' and ')+'.':'Not on the week.'}`;openPg('rt');rtW.off=0;rtW.render();fitTitle($('rtT'),40,30)}
+actionWord($('rtGo'),{tap:()=>receipt($('rtBrief'),`${rtX.n} is today's workout now.`,()=>{},'Push A moves to next Friday.<br>&nbsp;'),left:()=>null,right:()=>null});
+renderLDial();renderCats();libPaint();
+renderHome();note('home');
+// dark palette study (his 9:33 PM: blue, green and white on black isn't landing). Light stays as it is.
+const DK={now:['#3B8CF2','#3BAC56','#F1EEE9','#ABA6A0','The 230 colors: saturated cobalt and green, near-white ink.'],
+  soft:['#8FB0EE','#8FC9A0','#E8E3DA','#A49E96','Now the dark default (his 10:14 PM). The same two hues, lighter and calmer, so they glow instead of buzz; ink a warm off-white.'],
+  moon:['#B0C1E6','#A8CDB4','#DCD7CE','#9C968E','Pale steel and sage, almost one family; the quietest, closest to ink.'],
+  deep:['#5C88D8','#5FA87A','#E3DED6','#9E9890','Darker, denser hues on a dimmer ink; less glare, less pop.']};
+// the picker paints the phone itself (dark ground and all), so it works whatever theme the page is in
+let dkOn=null;const PH=()=>$('ph');
+function pickDk(k){const [t,g,i,i2,n]=DK[k];const v={'--phone':'#000000','--edge':'#2A2A2E','--ink3':'#78736D','--training':t,'--go':g,'--ink':i,'--ink2':i2};dkOn=k;
+  for(const x in v)PH().style.setProperty(x,v[x]);PH().style.colorScheme='dark';PH().style.color='var(--ink)';
+  document.querySelectorAll('#dk [data-p]').forEach(b=>{const on=b.dataset.p===k;b.style.color=on?'var(--ink)':'';b.style.fontWeight=on?600:400});$('dkNote').textContent=n}
+function clearDk(){dkOn=null;['--phone','--edge','--ink3','--training','--go','--ink','--ink2'].forEach(x=>PH().style.removeProperty(x));PH().style.colorScheme='';PH().style.color='';
+  document.querySelectorAll('#dk [data-p]').forEach(b=>{b.style.color='';b.style.fontWeight=400});$('dkNote').textContent='Dark now uses Soft. Pick another to compare on pure black.'}
+document.querySelectorAll('#dk [data-p]').forEach(b=>b.onclick=()=>pickDk(b.dataset.p));
+$('reset').onclick=reset;flow('land');plan();
+if(document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches))document.querySelectorAll('#dk [data-p]').forEach(b=>{if(b.dataset.p==='soft'){b.style.color='var(--ink)';b.style.fontWeight=600}});
+$('th').onclick=()=>{document.documentElement.dataset.theme='dark';pickDk(dkOn||'soft')};$('tw').onclick=()=>{document.documentElement.dataset.theme='light';clearDk()};
+})();
+</script>

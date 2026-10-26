@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Live mode details</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=Hanken+Grotesk:wght@400..700&family=Inter+Tight:wght@100..900&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.lv{font-family:'Inter Tight',sans-serif;color:#F3ECE0}
+.lv a{color:inherit;text-decoration:none}
+.lv *::-webkit-scrollbar{display:none}
+.lbl{font-family:'Inter Tight',sans-serif;font-weight:700;font-size:16px;letter-spacing:.08em;color:#A79FB5}
+.fr{font-family:'Inter Tight',sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.key{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 0 0 .5px rgba(0,0,0,.6),0 10px 28px rgba(0,0,0,.35)}
+.glass{background:rgba(28,24,40,.82);backdrop-filter:blur(22px) saturate(1.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 0 .5px rgba(0,0,0,.6),0 24px 60px rgba(0,0,0,.45)}
+.mo{display:grid;grid-template-columns:44px 1fr;align-items:center;height:56px;cursor:pointer;transition:color 260ms}
+@keyframes procGlint{0%{background-position:180% 0}30%,100%{background-position:-80% 0}}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-14px,10px) scale(1.08)}}
+@keyframes inR{0%{opacity:0;transform:translateX(18px);filter:blur(4px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes inR2{0%{opacity:0;transform:translateX(18px);filter:blur(4px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes up1{0%{opacity:0;transform:translateY(14px);filter:blur(6px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes up2{0%{opacity:0;transform:translateY(14px);filter:blur(6px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes sheetIn{0%{transform:translateY(-100%)}100%{transform:none}}
+@keyframes dropIn{0%{opacity:0;transform:translateY(-16px);filter:blur(6px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes wetLine{0%,100%{opacity:.78}50%{opacity:1}}
+@keyframes underPaint{0%{stroke-dashoffset:260}100%{stroke-dashoffset:0}}
+@keyframes slideOut{0%{opacity:0;transform:translateY(-10px);clip-path:inset(0 100% 0 0)}100%{opacity:1;transform:none;clip-path:inset(0 0 0 0)}}
+@keyframes holdFill{0%{transform:scale(0)}100%{transform:scale(1.5)}}
+@keyframes gather{0%,22%{transform:translate(var(--sx),var(--sy)) rotate(var(--r)) scale(1);opacity:.95}70%{transform:translate(0,0) rotate(0) scale(.5);opacity:.6}82%,100%{transform:translate(0,0) rotate(0) scale(.3);opacity:0}}
+@keyframes bigPaint{0%{stroke-dashoffset:330}100%{stroke-dashoffset:0}}
+@keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+@keyframes curSeg{0%,100%{opacity:.75}50%{opacity:1}}
+@keyframes sweep{0%{background-position:150% 0}100%{background-position:-50% 0}}
+@keyframes wetEdge{0%,100%{transform:scale(1);filter:blur(3px)}50%{transform:scale(1.35);filter:blur(5px)}}
+@keyframes glow{0%,100%{transform:scale(.9)}50%{transform:scale(1.15)}}
+.act{position:absolute;left:12px;right:12px;top:560px;height:150px;border-radius:26px;overflow:hidden;background:rgba(18,14,26,.46);backdrop-filter:blur(26px) saturate(1.5)}
+.num{font-size:48px;font-weight:250;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.hair{position:absolute;background:rgba(246,239,228,.16)}
+/* Tess's soul v2: every state is wet paint. Soft radial dabs, live blur, multiply mixing */
+.d{position:absolute;width:76px;height:70px;margin:-35px 0 0 -38px;border-radius:52% 48% 60% 40% / 55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.8) 0%,rgba(var(--c),.6) 40%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(4px)}
+.r{--c:200,69,47;--x:-14px;--y:-8px;--mx:18px;--my:-10px}
+.b{--c:46,109,164;--x:14px;--y:-8px;--mx:-16px;--my:-12px;border-radius:45% 55% 40% 60% / 50% 60% 40% 50%}
+.y{--c:224,179,65;--x:0px;--y:13px;--mx:0px;--my:18px;border-radius:60% 40% 55% 45% / 45% 55% 45% 55%}
+.halo{position:absolute;width:150px;height:140px;margin:-70px 0 0 -75px;border-radius:50%;background:radial-gradient(closest-side,rgba(214,96,70,.16),rgba(122,92,142,.10) 55%,rgba(224,179,65,0) 100%);filter:blur(10px);animation:halo 7s ease-in-out infinite;pointer-events:none}
+.ring{position:absolute;width:100px;height:100px;margin:-50px 0 0 -50px;border-radius:50%;background:radial-gradient(closest-side,rgba(122,74,58,0) 52%,rgba(122,74,58,.5) 72%,rgba(122,74,58,0) 100%);filter:blur(3px);opacity:0;pointer-events:none}
+@keyframes halo{0%,100%{transform:scale(.8);opacity:.6}50%{transform:scale(1);opacity:1}}
+@keyframes idle{0%,100%{transform:translate(var(--x),calc(var(--y) - 6px)) scale(.78);filter:blur(3px)}25%{transform:translate(calc(var(--x) + 6px),var(--y)) scale(.9);filter:blur(5px)}50%{transform:translate(var(--x),calc(var(--y) + 6px)) scale(.8);filter:blur(4px)}75%{transform:translate(calc(var(--x) - 6px),var(--y)) scale(.92);filter:blur(6px)}}
+@keyframes listen{0%,100%{transform:translate(calc(var(--x)*.6),calc(var(--y)*.6)) scale(.72);filter:blur(3px);opacity:.85}30%{transform:translate(calc(var(--x)*1.3),calc(var(--y)*1.3)) scale(1.06);filter:blur(7px);opacity:1}60%{transform:translate(calc(var(--x)*.9),calc(var(--y)*.9)) scale(.84);filter:blur(4px);opacity:.92}}
+@keyframes bloom{0%,100%{transform:translate(0,0) scale(.55);filter:blur(2px)}40%{transform:translate(var(--mx),var(--my)) scale(1.15);filter:blur(6px)}70%{transform:translate(0,0) scale(.9);filter:blur(3px)}}
+@keyframes stir{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes smear{0%,100%{transform:translate(calc(var(--x)*.8),calc(var(--y)*.8)) scale(.85,.7);filter:blur(5px)}50%{transform:translate(calc(var(--x)*1.5),calc(var(--y)*1.5)) scale(1.1,.66);filter:blur(8px)}}
+@keyframes merge{0%{transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}30%{transform:translate(0,0) scale(.9);filter:blur(5px)}45%{transform:translate(0,0) scale(1.35);filter:blur(9px)}60%,72%{transform:translate(0,0) scale(1);filter:blur(6px)}100%{transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}}
+@keyframes splash{0%,30%{transform:scale(.4);opacity:0}42%{transform:scale(.75);opacity:1}88%,100%{transform:scale(2.6);opacity:0}}
+@keyframes nudge{0%,100%{transform:translate(var(--x),var(--y)) scale(.85);filter:blur(4px)}35%{transform:translate(calc(var(--x) + 12px),calc(var(--y) - 16px)) scale(1.06);filter:blur(7px)}50%{transform:translate(calc(var(--x) + 15px),calc(var(--y) - 12px)) scale(.98);filter:blur(5px)}65%{transform:translate(calc(var(--x) + 12px),calc(var(--y) - 16px)) scale(1.06);filter:blur(7px)}}
+@keyframes drip{0%,40%{transform:translate(-2px,-12px) scale(.2);opacity:0}52%{transform:translate(0,-4px) scale(.38);opacity:.85}92%,100%{transform:translate(0,34px) scale(.16);opacity:0}}
+@keyframes carry{0%,8%{transform:translate(var(--x),var(--y)) scale(.8);opacity:1;filter:blur(4px)}38%{transform:translate(132px,-66px) scale(.55);filter:blur(5px);opacity:1}50%{transform:translate(132px,-66px) scale(2.8,.75);filter:blur(10px);opacity:.6}78%{transform:translate(132px,-66px) scale(2.8,.75);filter:blur(12px);opacity:.45}90%{opacity:0;transform:translate(var(--x),var(--y)) scale(.3);filter:blur(4px)}100%{opacity:1;transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}}
+@keyframes rest{0%,100%{transform:translate(calc(var(--x)*.7),calc(var(--y)*.7 - 3px)) scale(.62);filter:blur(6px)}50%{transform:translate(calc(var(--x)*.8 + 3px),calc(var(--y)*.8)) scale(.68);filter:blur(8px)}}
+.d.s{width:46px;height:42px;margin:-21px 0 0 -23px}
+.r.s{--x:-22px;--y:10px;--mx:-20px;--my:14px}.b.s{--x:20px;--y:12px;--mx:22px;--my:10px}.y.s{--x:4px;--y:-20px;--mx:6px;--my:-22px}
+
+.soulmix{filter:saturate(1.45) contrast(1.04)}
+
+/* on a dark ground the paint glows instead of staining */
+.wk .d{mix-blend-mode:screen}
+.wk .r{--c:217,86,63}.wk .b{--c:63,127,192}.wk .y{--c:232,189,76}
+.wk .halo{background:radial-gradient(closest-side,rgba(217,86,63,.22),rgba(63,127,192,.14) 55%,rgba(232,189,76,0) 100%)}
+.wk .ring{background:radial-gradient(closest-side,rgba(232,189,76,0) 52%,rgba(232,189,76,.55) 72%,rgba(232,189,76,0) 100%)}
+
+</style>
+</helmet>
+<div class="lv" style="position: relative; width: 1250px; height: 900px; overflow: hidden; background: radial-gradient(50% 50% at 15% 30%, #2C2340 0%, rgba(44,35,64,0) 70%), radial-gradient(50% 60% at 90% 80%, #1B3340 0%, rgba(27,51,64,0) 70%), #14111C">
+
+  <!-- the phone -->
+  <div class="wk" style="position: absolute; left: 40px; top: 28px; width: 390px; height: 844px; border-radius: 44px; overflow: hidden; background: radial-gradient(70% 45% at 0% 10%, #3B2D57 0%, rgba(59,45,87,0) 70%), radial-gradient(70% 50% at 100% 55%, #1E3D4A 0%, rgba(30,61,74,0) 70%), radial-gradient(70% 40% at 10% 100%, #4A2E22 0%, rgba(74,46,34,0) 70%), #1C1828; box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 30px 80px rgba(0,0,0,.5)">
+    <div style="position: absolute; right: -80px; top: 220px; width: 300px; height: 240px; border-radius: 50%; background: radial-gradient(closest-side, rgba(122,92,142,.35), rgba(122,92,142,0)); animation: drift 16s ease-in-out infinite"></div>
+    <svg width="390" height="844" style="position: absolute; inset: 0; mix-blend-mode: soft-light; opacity: .35; pointer-events: none" aria-hidden="true">
+      <filter id="lvGrain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="11"/><feColorMatrix values="0 0 0 0 .9  0 0 0 0 .85  0 0 0 0 .8  0 0 0 .5 0"/></filter>
+      <rect width="390" height="844" filter="url(#lvGrain)"/>
+    </svg>
+
+    <sc-if value="{{notLock}}" hint-placeholder-val="{{true}}">
+    <div>
+    <!-- the process seam IS the exercise strip: one segment per exercise -->
+    <div onClick="{{stripTap}}" style="position: absolute; left: 0; right: 0; top: 0; height: 14px; z-index: 8; cursor: pointer">
+      <div style="display: flex; gap: 4px; height: 3px">
+        <sc-for list="{{segs}}" as="g" hint-placeholder-count="6">
+          <span style="flex: 1; height: 3px; background: {{g.bg}}; background-size: 300% 100%; box-shadow: {{g.sh}}; animation: {{g.anim}}; transition: background 400ms"></span>
+        </sc-for>
+      </div>
+    </div>
+
+    <sc-if value="{{notFin}}" hint-placeholder-val="{{true}}">
+    <div>
+      <div style="position: absolute; left: 22px; right: 22px; top: 56px; display: flex; justify-content: space-between; align-items: baseline">
+        <span style="font-size: 21px; color: #A79FB5">{{hdr}}</span>
+        <span class="lbl">{{exCount}}</span>
+      </div>
+      <div onClick="{{nameTap}}" class="fr" style="position: absolute; left: 22px; right: 10px; top: 92px; height: 64px; display: flex; align-items: center; font-weight: 500; font-size: {{nameFs}}; letter-spacing: -0.035em; white-space: nowrap; transform: translateY({{nameY}}); transition: transform 420ms cubic-bezier(.2,.9,.25,1); cursor: pointer">
+        <span style="animation: inR{{nk}} 340ms cubic-bezier(.2,.8,.2,1) both">{{exName}}</span>
+      </div>
+      <div style="position: absolute; left: 22px; top: 176px; display: flex; gap: 10px; opacity: {{marksOp}}; transition: opacity 260ms">
+        <sc-for list="{{marks}}" as="m" hint-placeholder-count="4">
+          <svg width="64" height="20" viewBox="0 0 64 20" aria-hidden="true" style="overflow: visible">
+            <path d="M4 12 C 18 5, 40 15, 60 7" fill="none" stroke="{{m.c}}" stroke-width="{{m.w}}" stroke-linecap="round" stroke-dasharray="{{m.dash}}" style="opacity: {{m.op}}"/>
+          </svg>
+        </sc-for>
+      </div>
+      <div style="position: absolute; left: 22px; right: 22px; top: 210px; font-size: 21px; color: {{subC}}; transition: color 300ms">{{sub}}</div>
+
+      <sc-if value="{{isSetV}}" hint-placeholder-val="{{true}}">
+      <div>
+        <div style="position: absolute; left: 20px; top: 270px; display: flex; align-items: baseline; gap: 8px; animation: {{wAnim}}">
+          <span class="fr" style="font-weight: 300; font-size: 80px; line-height: 1; letter-spacing: -0.04em; background: {{numBg}}; background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: {{numAnim}}">{{weight}}</span>
+          <span style="font-size: 21px; color: #A79FB5">{{unit}}</span>
+        </div>
+        <div class="lbl" style="position: absolute; left: 22px; top: 356px; color: {{plateC}}">{{plate}}</div>
+        <div style="position: absolute; right: 22px; top: 252px; width: 92px; text-align: right">
+          <div class="fr" style="height: 44px; line-height: 44px; font-weight: 300; font-size: 30px; color: rgba(243,236,224,.28)">{{rPrev}}</div>
+          <div class="fr" style="height: 44px; line-height: 44px; font-weight: 300; font-size: 56px; color: #F3ECE0">{{reps}}</div>
+          <div class="fr" style="height: 44px; line-height: 44px; font-weight: 300; font-size: 30px; color: rgba(243,236,224,.28)">{{rNext}}</div>
+        </div>
+        <div style="position: absolute; right: 22px; top: 384px; font-size: 18px; color: rgba(243,236,224,.55); opacity: {{repsOp}}; transition: opacity 200ms">reps</div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{isRestV}}" hint-placeholder-val="{{false}}">
+      <div>
+        <div style="position: absolute; left: 20px; top: 270px; display: flex; align-items: baseline; gap: 10px">
+          <span class="fr" style="font-weight: 300; font-size: 80px; line-height: 1; letter-spacing: -0.04em; color: {{restC}}; animation: {{restAnim}}">{{restText}}</span>
+          <span style="font-size: 21px; color: #A79FB5">{{restUnit}}</span>
+        </div>
+        <div style="position: absolute; left: 22px; right: 22px; top: 356px; font-size: 21px; line-height: 1.3; color: #9DBFE6">{{restNote}}</div>
+      </div>
+      </sc-if>
+
+      <!-- top-set check: one quiet line from Tess inside the set area -->
+      <sc-if value="{{checkOn}}" hint-placeholder-val="{{false}}">
+        <div onClick="{{checkTap}}" style="position: absolute; left: 22px; width: 250px; top: 394px; cursor: pointer; animation: up1 420ms cubic-bezier(.2,.8,.2,1) both">
+          <div style="font-size: 21px; line-height: 1.25; color: #9DBFE6; animation: {{checkAnim}}">{{checkText}}</div>
+          <svg width="250" height="10" viewBox="0 0 250 10" style="position: absolute; left: 0; top: 52px; overflow: visible; opacity: {{checkUL}}; transition: opacity 300ms" aria-hidden="true"><path d="M2 5 C 60 2, 140 8, 200 4" fill="none" stroke="#3F7FC0" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="260" style="animation: underPaint 700ms 300ms ease-out both"/></svg>
+        </div>
+      </sc-if>
+
+      <!-- effort: a stop-slider pulled out from under the reps; hidden until pulled -->
+      <sc-if value="{{rpeOn}}" hint-placeholder-val="{{false}}">
+        <div style="position: absolute; left: 22px; right: 22px; top: 404px; height: 60px; animation: slideOut 520ms cubic-bezier(.2,.9,.25,1) both">
+          <svg width="346" height="12" viewBox="0 0 346 12" style="position: absolute; left: 0; top: 40px; overflow: visible" aria-hidden="true"><path d="M2 6 C 90 4, 250 8, 344 5" fill="none" stroke="rgba(243,236,224,.22)" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <sc-for list="{{stops}}" as="p" hint-placeholder-count="9">
+            <div onClick="{{p.go}}" style="position: absolute; left: {{p.x}}; top: 0; width: 38px; height: 60px; margin-left: -19px; cursor: pointer; text-align: center">
+              <div class="fr" style="height: 30px; font-size: {{p.fs}}; font-weight: {{p.fw}}; color: {{p.c}}; transition: color 200ms, font-size 200ms">{{p.t}}</div>
+              <span style="position: absolute; left: 50%; top: 46px; width: {{p.d}}; height: {{p.d}}; transform: translate(-50%,-50%) rotate(-12deg); border-radius: 55% 45% 60% 40% / 50% 60% 40% 50%; background: {{p.bg}}; box-shadow: {{p.sh}}; filter: blur(.5px); transition: width 200ms, height 200ms, background 200ms"></span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- the dial: weight, or draining rest. +15 and skip are drags on it -->
+      <div style="position: absolute; left: 0; right: 0; top: 470px; height: 80px">
+        <div style="position: absolute; inset: 0; overflow: hidden; opacity: {{dialOp}}; transition: opacity 300ms; -webkit-mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent); mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent)">
+          <div style="display: flex; align-items: flex-start; width: max-content; height: 100%; transform: translateX({{dialX}}); transition: transform 520ms cubic-bezier(.2,.9,.25,1)">
+            <sc-for list="{{ticks}}" as="t" hint-placeholder-count="40">
+              <div style="flex: none; width: 14px; height: 100%; position: relative">
+                <span style="position: absolute; left: 6.5px; top: 6px; width: {{t.w}}; height: {{t.h}}; background: {{t.c}}"></span>
+                <span class="lbl" style="position: absolute; left: 7px; top: 50px; transform: translateX(-50%); white-space: nowrap; font-weight: 600">{{t.lab}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <span style="position: absolute; left: 0; top: 4px; height: 36px; width: {{restFill}}; background: linear-gradient(90deg, rgba(232,189,76,0), rgba(232,189,76,.28)); border-right: 2px solid {{fillB}}; transition: {{fillTr}}; pointer-events: none"></span>
+        <sc-if value="{{plusOn}}" hint-placeholder-val="{{false}}">
+          <span class="lbl" style="position: absolute; left: {{restFill}}; top: -26px; transform: translateX(-50%); color: #E8BD4C; animation: up2 360ms ease-out both">+15</span>
+        </sc-if>
+        <span style="position: absolute; left: 50%; top: 0; width: 2px; height: 44px; margin-left: -1px; background: #D9563F; box-shadow: 0 0 10px 1px rgba(217,86,63,.7); opacity: {{needleOp}}"></span>
+      </div>
+
+      <!-- the key -->
+      <div class="key" style="position: absolute; left: 22px; width: 240px; top: 624px; height: 62px; overflow: hidden; background: #F3ECE0; color: #1C1828">
+        <span style="position: absolute; inset: -24px; background: radial-gradient(closest-side, #D9563F 0%, #D9563F 70%, rgba(217,86,63,0) 100%); transform-origin: 12% 50%; transform: scale(0); animation: {{keyFill}}; filter: blur(4px)"></span>
+        <span style="position: relative; display: flex; height: 100%; align-items: center; padding: 0 20px; font-size: 21px; font-weight: 600; color: {{keyFg}}; transition: color 300ms">{{keyText}}</span>
+      </div>
+      <span class="lbl" style="position: absolute; left: 280px; top: 636px; line-height: 1.35; color: #F3ECE0">{{keyMeta}}</span>
+
+      <!-- strip, pulled down: the running order -->
+      <sc-if value="{{stripOpen}}" hint-placeholder-val="{{false}}">
+        <div class="glass" style="position: absolute; left: 0; right: 0; top: 0; height: 590px; border-radius: 0 0 34px 34px; z-index: 6; animation: sheetIn 460ms cubic-bezier(.2,.9,.25,1) both">
+          <div class="lbl" style="position: absolute; left: 22px; top: 62px">RUNNING ORDER</div>
+          <sc-for list="{{order}}" as="o" hint-placeholder-count="6">
+            <div style="position: absolute; left: 10px; right: 10px; top: {{o.top}}; height: 58px; display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 0 12px; border-radius: 14px; background: {{o.bg}}; box-shadow: {{o.sh}}; transform: scale({{o.s}}); transition: top 420ms cubic-bezier(.2,.9,.25,1), transform 260ms, background 260ms, box-shadow 260ms; z-index: {{o.z}}">
+              <span style="position: absolute; left: 0; top: 14px; width: 3px; height: 30px; background: #D9563F; box-shadow: 0 0 8px rgba(217,86,63,.7); display: {{o.cur}}"></span>
+              <span style="font-size: 28px; font-weight: 500; letter-spacing: -0.02em; color: {{o.c}}">{{o.n}}</span>
+              <span class="lbl" style="color: {{o.c2}}">{{o.sch}}</span>
+            </div>
+          </sc-for>
+          <div style="position: absolute; left: 22px; right: 22px; top: 488px; font-size: 18px; line-height: 1.35; color: #A79FB5">Hold a name and drag. Today only; the plan keeps its order.</div>
+        </div>
+      </sc-if>
+
+      <!-- swap: pull down on the name; siblings by family, then movement -->
+      <sc-if value="{{swapOpen}}" hint-placeholder-val="{{false}}">
+        <div class="glass" style="position: absolute; left: 10px; right: 10px; top: 172px; height: 420px; border-radius: 26px; z-index: 6; animation: dropIn 420ms cubic-bezier(.2,.9,.25,1) both">
+          <sc-for list="{{alts}}" as="a" hint-placeholder-count="6">
+            <div style="position: absolute; left: 0; right: 0; top: {{a.top}}">
+              <div class="lbl" style="position: absolute; left: 18px; top: 0; display: {{a.hd}}">{{a.h}}</div>
+              <div style="position: absolute; left: 6px; right: 6px; top: {{a.rt}}; height: 56px; display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 0 12px; border-radius: 14px; background: {{a.bg}}; transition: background 300ms; display: {{a.rd}}">
+                <span style="font-size: 24px; font-weight: 500; letter-spacing: -0.015em">{{a.n}}</span>
+                <span style="font-size: 21px; color: #A79FB5; font-variant-numeric: tabular-nums">{{a.w}}</span>
+              </div>
+            </div>
+          </sc-for>
+          <div style="position: absolute; left: 18px; right: 18px; top: 360px; font-size: 18px; line-height: 1.35; color: #A79FB5">≈ is an estimate. Bench stays in the plan.</div>
+        </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- finish: the session's strokes gather into one mark -->
+    <sc-if value="{{isFin}}" hint-placeholder-val="{{false}}">
+    <div>
+      <div style="position: absolute; left: 22px; top: 70px; font-size: 21px; color: #A79FB5; animation: fadeIn 400ms both">Thursday, 18:10 to 19:08</div>
+      <div class="fr" style="position: absolute; left: 20px; right: 20px; top: 104px; font-size: 56px; font-weight: 500; line-height: 1; letter-spacing: -0.04em; animation: up1 520ms 200ms cubic-bezier(.2,.8,.2,1) both">Push Day A,<br>done</div>
+      <div style="position: absolute; left: 22px; top: 250px; width: 346px; height: 260px">
+        <sc-for list="{{strokes}}" as="k" hint-placeholder-count="22">
+          <svg width="44" height="16" viewBox="0 0 44 16" aria-hidden="true" style="position: absolute; left: 151px; top: 122px; overflow: visible; --sx: {{k.x}}; --sy: {{k.y}}; --r: {{k.r}}; animation: gather 1.9s {{k.dl}} cubic-bezier(.5,0,.2,1) both">
+            <path d="M3 10 C 12 4, 28 13, 41 6" fill="none" stroke="{{k.c}}" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+        </sc-for>
+        <svg width="320" height="60" viewBox="0 0 320 60" aria-hidden="true" style="position: absolute; left: 13px; top: 100px; overflow: visible">
+          <defs><linearGradient id="lvMark" x1="0" x2="1"><stop offset="0" stop-color="#D9563F"/><stop offset=".3" stop-color="#E8BD4C"/><stop offset=".55" stop-color="#3F7FC0"/><stop offset=".8" stop-color="#9C7CC0"/><stop offset="1" stop-color="#8DB38A"/></linearGradient>
+          <filter id="lvWet"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="6"/></filter></defs>
+          <path d="M8 34 C 70 14, 150 46, 230 26 S 300 22, 312 24" fill="none" stroke="url(#lvMark)" stroke-opacity=".35" stroke-width="30" stroke-linecap="round" stroke-dasharray="330" style="filter: blur(6px); animation: bigPaint 900ms 1.25s cubic-bezier(.3,0,.2,1) both"/>
+          <path d="M8 34 C 70 14, 150 46, 230 26 S 300 22, 312 24" fill="none" stroke="url(#lvMark)" stroke-width="16" stroke-linecap="round" stroke-dasharray="330" filter="url(#lvWet)" style="animation: bigPaint 900ms 1.25s cubic-bezier(.3,0,.2,1) both"/>
+        </svg>
+      </div>
+      <div class="lbl" style="position: absolute; left: 22px; top: 476px; color: #F3ECE0; animation: fadeIn 500ms 2.1s both">58 MIN, 9,840 KG MOVED</div>
+      <div style="position: absolute; left: 22px; right: 22px; top: 506px; font-size: 21px; color: #A79FB5; animation: fadeIn 500ms 2.4s both">It drops into today on Home.</div>
+    </div>
+    </sc-if>
+
+    <!-- Tess -->
+    <div style="position: absolute; left: 14px; right: 14px; top: 756px; height: 66px; border-radius: 18px; background: rgba(255,255,255,.07); backdrop-filter: blur(16px); box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 0 0 .5px rgba(0,0,0,.6); display: flex; align-items: center; padding-left: 78px; padding-right: 16px">
+      <span style="font-size: 21px; line-height: 1.2; color: #C9D9EE; animation: {{tessAnim}}">{{tess}}</span>
+    </div>
+    <div class="soulmix" style="position: absolute; left: 50px; top: 789px; width: 0; height: 0; transform: scale(.5)">
+      <span class="halo"></span>
+      <span class="ring" style="animation: {{splash}}"></span>
+      <span class="d r" style="animation: {{a1}}"></span><span class="d b" style="animation: {{a2}}"></span><span class="d y" style="animation: {{a3}}"></span>
+      <span class="d r s" style="animation: {{a4}}"></span><span class="d b s" style="animation: {{a5}}"></span><span class="d y s" style="animation: {{a6}}"></span>
+    </div>
+    </div>
+    </sc-if>
+
+    <!-- the lock screen: Done shows its own Undo until the rest ends -->
+    <sc-if value="{{isLock}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: radial-gradient(60% 35% at 80% 18%,#F2C38A 0%,rgba(242,195,138,0) 70%),radial-gradient(70% 40% at 10% 30%,#B9708A 0%,rgba(185,112,138,0) 70%),radial-gradient(90% 45% at 50% 62%,#5C4E86 0%,rgba(92,78,134,0) 70%),radial-gradient(80% 40% at 30% 100%,#203A5E 0%,rgba(32,58,94,0) 70%),#2A2546; animation: fadeIn 300ms both">
+      <div style="position: absolute; left: 0; right: 0; top: 72px; text-align: center; font-size: 21px; font-weight: 500; color: rgba(246,239,228,.9)">Thursday 15 October</div>
+      <div style="position: absolute; left: 0; right: 0; top: 94px; text-align: center; font-size: 100px; font-weight: 300; letter-spacing: -.03em; line-height: 1; color: rgba(246,239,228,.95)">18:42</div>
+      <div class="act" style="color: #F6EFE4">
+        <span style="position:absolute;left:-40px;top:-60px;width:270px;height:150px;background:radial-gradient(closest-side,{{wash1}},transparent);filter:blur(8px);transition:background 1.4s ease"></span>
+        <span style="position:absolute;right:-50px;top:-40px;width:220px;height:130px;background:radial-gradient(closest-side,{{wash2}},transparent);filter:blur(10px);transition:background 1.4s ease"></span>
+        <div class="num" style="position:absolute;left:22px;top:24px;animation:{{lnAnim}}">{{lNum}}</div>
+        <div class="hair" style="left:206px;top:20px;height:60px;width:1px"></div>
+        <div onClick="{{lockTap}}" style="position:absolute;left:222px;right:16px;top:20px;height:62px;cursor:pointer">
+          <div style="animation:{{lcAnim}}">
+            <div style="font-size:17px;font-weight:400;color:rgba(246,239,228,.62)">{{lTop}}</div>
+            <div style="font-size:24px;font-weight:400;margin-top:3px;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:{{lMainC}}">{{lMain}}</div>
+          </div>
+          <span style="position:absolute;right:-10px;top:-6px;width:44px;height:40px;border-radius:50%;background:radial-gradient(closest-side,rgba(226,96,63,.55),rgba(226,96,63,0));opacity:{{tickGlow}};transition:opacity .6s;animation:glow 2.2s ease-in-out infinite"></span>
+          <svg width="22" height="18" viewBox="0 0 26 20" style="position:absolute;right:0;top:4px;overflow:visible;display:{{tickD}}" aria-hidden="true"><path d="M2 11 C 6 13, 8 16, 10 18 C 14 10, 19 5, 24 2" fill="none" stroke="#E2603F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="22" height="20" viewBox="0 0 24 22" style="position:absolute;right:0;top:2px;overflow:visible;display:{{undoD}}" aria-hidden="true"><path d="M20 18 C 22 10, 16 4, 9 5 L 4 6 M 8 1 L 3 6 L 8 10" fill="none" stroke="#FFB896" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <svg width="334" height="12" viewBox="0 0 334 12" style="position:absolute;left:16px;top:94px;overflow:visible" aria-hidden="true">
+          <path d="M2 6 C 90 3, 200 9, 332 5" fill="none" stroke="rgba(246,239,228,.14)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M2 6 C 90 3, 200 9, 332 5" fill="none" stroke="#F6EFE4" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="336" stroke-dashoffset="{{drain}}" style="transition:stroke-dashoffset 1s ease-out"/>
+        </svg>
+        <div style="position:absolute;left:22px;top:112px;height:30px;display:flex;align-items:center;font-size:17px;font-weight:400;color:rgba(246,239,228,.58)">{{lSub}}</div>
+        <div style="position:absolute;left:206px;right:14px;top:110px;height:34px;display:grid;grid-template-columns:1fr 1px 1fr;align-items:center;text-align:center;font-size:18px;font-weight:500">
+          <span style="opacity:{{plusOp}};transition:opacity .6s">+15</span><span class="hair" style="position:static;width:1px;height:18px"></span><span>Skip</span>
+        </div>
+      </div>
+      <div style="position: absolute; left: 0; right: 0; top: 740px; text-align: center; font-size: 18px; color: rgba(246,239,228,.7)">{{lockNote}}</div>
+    </div>
+    </sc-if>
+  </div>
+
+  <!-- the moments -->
+  <div style="position: absolute; left: 500px; top: 52px; width: 700px">
+    <div style="font-size: 48px; font-weight: 500; letter-spacing: -0.035em; line-height: 1">Live mode, the details</div>
+    <div style="margin-top: 14px; font-size: 21px; color: #A79FB5">Tap a moment. It plays on the phone.</div>
+  </div>
+  <div style="position: absolute; left: 500px; top: 186px; width: 700px">
+    <sc-for list="{{moments}}" as="o" hint-placeholder-count="7">
+      <div class="mo" onClick="{{o.go}}" style="color: {{o.c}}">
+        <span class="lbl" style="color: {{o.c2}}">{{o.i}}</span>
+        <span style="position: relative; font-size: 28px; font-weight: 500; letter-spacing: -0.02em">{{o.n}}
+          <svg width="120" height="10" viewBox="0 0 120 10" style="position: absolute; left: 0; top: 34px; overflow: visible; display: {{o.ud}}" aria-hidden="true"><path d="M2 6 C 30 2, 70 9, 116 4" fill="none" stroke="#D9563F" stroke-width="3" stroke-linecap="round" stroke-dasharray="130" style="animation: underPaint 500ms ease-out both"/></svg>
+        </span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="position: absolute; left: 544px; top: 606px; width: 600px; font-size: 21px; line-height: 1.45; color: #CFC6DA; animation: inR{{dk}} 360ms cubic-bezier(.2,.8,.2,1) both">{{desc}}</div>
+  <div onClick="{{replay}}" style="position: absolute; left: 544px; top: 790px; font-size: 21px; font-weight: 600; color: #E2603F; cursor: pointer">Play it again</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1250,"height":900}}'>
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { m: 'strip', step: 0, run: 0, rpe: 8, lifted: false };
+    this.timers = [];
+    this.schedule(this.state.m);
+  }
+  play(m) {
+    this.setState({ m, step: 0, run: this.state.run + 1, rpe: 8 });
+    this.schedule(m);
+  }
+  schedule(m) {
+    this.timers.forEach(clearTimeout); this.timers = [];
+    const plan = { strip: [900, 2300, 3400], swap: [900, 2500, 3500], check: [700, 2900], rpe: [900], rest: [1500, 3100, 4600], fin: [1500], lock: [1300, 3900] }[m] || [];
+    plan.forEach((t, i) => this.timers.push(setTimeout(() => this.setState({ step: i + 1 }), t)));
+  }
+  renderVals() {
+    const s = this.state, m = s.m, st = s.step, E = 'cubic-bezier(.45,0,.55,1)';
+    const list = [['strip', 'The strip'], ['swap', 'Swap within the movement'], ['check', 'Top-set check'], ['rpe', 'Effort, when you want it'], ['rest', 'Rest on the dial'], ['fin', 'Finish'], ['lock', 'Undo on the lock screen']];
+    const desc = {
+      strip: 'The process seam on the top edge is the running order: one segment per exercise, done in cream, the current one lit, the rest faint. Pull down on it to see the order; hold a name and drag to change it for today.',
+      swap: 'Pull down on the exercise name. Same family first, then the same movement, ranked by muscle overlap and the kit your gym has. Loads convert as estimates. The slot, scheme and rule stay; only today changes.',
+      check: 'If the first working set lands 2 or more RPE above the target, Tess offers one quiet line inside the set area. One tap takes it and every remaining set re-presets. Nothing else ever interrupts between sets.',
+      rpe: 'RPE is optional, so it stays hidden. Pull up on the reps and a stop-slider slides out in half steps. Whatever it says rides along with the set, and the honest e1RM uses it.',
+      rest: 'Rest drains on the same dial that set the weight. Drag past the needle for +15, fling it left to skip. Each drag has a one-tap twin: tap the time for +15, double-tap to skip. When it empties, the next set rises, already set.',
+      fin: 'Hold to finish (0.8s). Every set of the session was one brushstroke; they gather into a single mark that drops into today on Home, and Tess sums it up in one line.',
+      lock: 'Tapping the set on the lock screen logs it and starts the next rest. Undo takes the set’s place until that rest ends, so a pocket tap is never final. After that, Undo lives in the workout’s history.'
+    }[m];
+    const fmt = (v) => Math.floor(v / 60) + ':' + String(v % 60).padStart(2, '0');
+    const ex = ['Bench press', 'Incline press', 'Overhead press', 'Cable fly', 'Lateral raise', 'Triceps pushdown'];
+    const sch = ['4 × 8', '3 × 10', '3 × 6', '3 × 12', '4 × 15', '3 × 12'];
+    const fin = m === 'fin', lock = m === 'lock';
+    const curIdx = fin ? 5 : 0;
+    const segs = ex.map((_, i) => i < curIdx ? { bg: 'rgba(243,236,224,.82)', sh: 'none', anim: 'none' }
+      : i === curIdx ? { bg: 'linear-gradient(90deg, #D9563F 0%, #D9563F 40%, #FFE2A8 50%, #D9563F 60%, #D9563F 100%)', sh: '0 0 10px rgba(217,86,63,.8)', anim: 'procGlint 4.5s ease-in-out infinite' }
+      : { bg: 'rgba(243,236,224,.2)', sh: 'none', anim: 'none' });
+    if (fin && st >= 1) segs.forEach(g => { g.bg = 'rgba(243,236,224,.82)'; g.sh = 'none'; g.anim = 'none'; });
+
+    // defaults: bench, set 3 of 4
+    let exName = 'Bench press', nameFs = '44px', nk = '', nameY = '0px', hdr = 'Push Day A, 24:10', exCount = '1 / 6';
+    let doneSets = 2, total = 4, sub = 'set 3 of 4, last was 82.5 × 8', subC = '#A79FB5';
+    let isSetV = true, weight = '82.5', unit = 'kg', plate = '31.25 KG A SIDE', plateC = '#A79FB5', reps = 8, wAnim = 'none', numBg = 'linear-gradient(#F3ECE0, #F3ECE0)', numAnim = 'none';
+    let isRestV = false, restText = '1:42', restC = '#E8BD4C', restUnit = 'rest', restNote = '', restAnim = 'none';
+    let rest = 102, restMax = 150, plusOn = false, fillTr = 'width 1s linear', dialX = '-286px', dialOp = 1, needleOp = 1;
+    let keyText = 'Hold to log', keyMeta = '82.5 × 8', keyFg = '#1C1828', keyFill = 'none';
+    let tess = 'Bench is ready for 82.5 today.', tessAnim = 'none', soul = 'idle';
+    let checkOn = false, checkText = '', checkUL = 1, checkAnim = 'none', rpeOn = false;
+    let stripOpen = false, swapOpen = false, order = [], alts = [];
+
+    if (m === 'strip') {
+      stripOpen = st >= 1;
+      const ord = st >= 2 ? [0, 3, 1, 2, 4, 5] : [0, 1, 2, 3, 4, 5];
+      order = ord.map((ei, pos) => {
+        const lift = st === 2 && ei === 3;
+        return { n: ex[ei], sch: ei === 0 ? 'SET 3 OF 4' : sch[ei], top: (96 + pos * 64) + 'px', cur: ei === 0 ? 'block' : 'none',
+          c: ei === 0 || lift ? '#F3ECE0' : 'rgba(243,236,224,.5)', c2: ei === 0 ? '#E8BD4C' : '#A79FB5',
+          bg: lift ? 'rgba(243,236,224,.1)' : 'transparent', sh: lift ? '0 14px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.12)' : 'none', s: lift ? 1.03 : 1, z: lift ? 3 : 1 };
+      });
+      if (st >= 3) segs[1] = { bg: 'rgba(243,236,224,.36)', sh: 'none', anim: 'none' };
+      tess = st >= 2 ? 'Cable fly moved up.' : tess;
+    }
+    if (m === 'swap') {
+      swapOpen = st === 1 || st === 2; nameY = swapOpen ? '10px' : '0px';
+      const pick = st === 2;
+      alts = [
+        { h: 'SAME FAMILY', hd: 'block', top: '20px', rt: '26px', n: 'Dumbbell bench press', w: '≈ 32 each', bg: pick ? 'rgba(63,127,192,.32)' : 'transparent', rd: 'grid' },
+        { h: '', hd: 'none', top: '82px', rt: '26px', n: 'Close-grip bench', w: '75', bg: 'transparent', rd: 'grid' },
+        { h: 'SAME MOVEMENT', hd: 'block', top: '170px', rt: '26px', n: 'Machine chest press', w: '≈ 70', bg: 'transparent', rd: 'grid' },
+        { h: '', hd: 'none', top: '232px', rt: '26px', n: 'Weighted push-up', w: '+10', bg: 'transparent', rd: 'grid' }
+      ];
+      if (st >= 3) { exName = 'Dumbbell bench press'; nameFs = '34px'; nk = '2'; weight = '32'; unit = 'kg each'; plate = 'AN ESTIMATE FROM BENCH'; plateC = '#9DBFE6'; sub = 'swapped for today, set 3 of 4'; subC = '#9DBFE6'; keyMeta = '32 × 8'; wAnim = 'up2 420ms cubic-bezier(.2,.8,.2,1) both'; tess = 'Bench stays in the plan.'; }
+    }
+    if (m === 'check') {
+      doneSets = 1; sub = 'set 2 of 4, the first one felt like 9.5'; reps = 8;
+      checkOn = st >= 1;
+      checkText = st >= 2 ? 'Done. 77.5 for sets 2 to 4.' : 'That was heavy. Drop to 77.5 for the rest?';
+      checkUL = st >= 2 ? 0 : 1; checkAnim = st >= 2 ? 'none' : 'wetLine 1.6s ease-in-out infinite';
+      if (st >= 2) { weight = '77.5'; plate = '28.75 KG A SIDE'; keyMeta = '77.5 × 8'; wAnim = 'up2 420ms cubic-bezier(.2,.8,.2,1) both'; dialX = '-258px'; soul = 'done'; }
+      tess = st >= 2 ? 'Sets 2 to 4 now at 77.5.' : 'Bench is ready for 82.5 today.';
+    }
+    if (m === 'rpe') {
+      rpeOn = st >= 1;
+      const tank = { 6: 'four left in the tank', 6.5: 'three or four left', 7: 'three left in the tank', 7.5: 'two or three left', 8: 'two left in the tank', 8.5: 'one or two left', 9: 'one left in the tank', 9.5: 'maybe one left', 10: 'nothing left' };
+      if (rpeOn) { sub = 'RPE ' + s.rpe + ', ' + tank[s.rpe]; subC = '#E8BD4C'; }
+    }
+    if (m === 'rest') {
+      isSetV = st >= 3; isRestV = !isSetV; doneSets = st >= 3 ? 3 : 3;
+      rest = st === 0 ? 102 : st === 1 ? 117 : 0; plusOn = st === 1;
+      fillTr = st === 2 ? 'width 420ms cubic-bezier(.5,0,.2,1)' : 'width 520ms cubic-bezier(.2,.9,.25,1)';
+      dialOp = isRestV ? 0.35 : 1; needleOp = isRestV ? 0.35 : 1;
+      dialX = st === 1 ? '-246px' : st === 2 ? '-326px' : '-286px';
+      restText = st === 2 ? 'Go' : fmt(rest); restUnit = st === 2 ? '' : 'rest'; restC = st === 2 ? '#F3ECE0' : '#E8BD4C';
+      restAnim = st === 1 ? 'up1 300ms ease-out both' : st === 2 ? 'up2 500ms cubic-bezier(.2,.8,.2,1) both' : 'none';
+      restNote = st === 0 ? 'Drag past the needle for +15. Fling it left to skip.' : st === 1 ? '+15. Drag again for more.' : 'Skipped. Set 4 is up.';
+      sub = st >= 3 ? 'set 4 of 4, last was 82.5 × 8' : 'set 3 done, 82.5 × 8';
+      keyText = isRestV ? 'Skip rest' : 'Hold to log'; keyMeta = isRestV ? '' : '82.5 × 8';
+      if (st >= 3) { wAnim = 'up1 520ms cubic-bezier(.2,.8,.2,1) both'; numBg = 'linear-gradient(105deg, #F3ECE0 0%, #F3ECE0 40%, #FFE2A8 50%, #F3ECE0 60%, #F3ECE0 100%)'; numAnim = 'sweep 1.2s ease-out 1 both'; }
+      tess = st === 2 ? 'Go when you’re ready.' : tess;
+    }
+    if (fin) {
+      exName = 'Triceps pushdown'; nameFs = '38px'; exCount = '6 / 6'; hdr = 'Push Day A, 57:40'; doneSets = 3; total = 3; sub = 'all sets done'; weight = '27.5'; reps = 12; plate = 'STACK, PIN AT 6'; dialX = '-188px';
+      keyText = 'Keep holding'; keyFg = '#FFF6EA'; tess = 'Last one. Hold to finish.'; keyFill = 'holdFill 800ms 300ms cubic-bezier(.3,.6,.4,1) both'; keyMeta = '';
+      if (st >= 1) { soul = 'doneLate'; tess = '6 exercises, 22 sets. New best: 85 × 5.'; tessAnim = 'up1 500ms 1.8s cubic-bezier(.2,.8,.2,1) both'; }
+    }
+    const wNum = parseFloat(weight) || 0, dialBase = 188 - (wNum / 2.5) * 14;
+    if (m === 'rest') dialX = (dialBase + (st === 1 ? 40 : st === 2 ? -40 : 0)) + 'px'; else dialX = dialBase + 'px';
+    const marks = Array.from({ length: total }, (_, i) => i < doneSets
+      ? { c: '#F3ECE0', w: 5, dash: 'none', op: .9 }
+      : i === doneSets ? { c: '#D9563F', w: 5, dash: 'none', op: .95 } : { c: 'rgba(243,236,224,.35)', w: 2, dash: '3 6', op: 1 });
+
+    const ticks = Array.from({ length: 64 }, (_, i) => {
+      const big = i % 4 === 0;
+      return { w: big ? '1.5px' : '1px', h: big ? '30px' : '16px', c: big ? 'rgba(243,236,224,.7)' : 'rgba(243,236,224,.32)', lab: big ? String(i * 2.5) : '' };
+    });
+    const rv = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10];
+    const stops = rv.map((v, i) => {
+      const on = v === s.rpe, whole = v % 1 === 0;
+      return { x: (16 + i * 39) + 'px', t: whole ? String(v) : '', fs: on ? '26px' : '21px', fw: on ? 500 : 300, c: on ? '#F3ECE0' : 'rgba(243,236,224,.45)',
+        d: on ? '18px' : whole ? '10px' : '6px', bg: on ? '#E8BD4C' : 'rgba(243,236,224,.5)', sh: on ? '0 0 12px rgba(232,189,76,.8)' : 'none',
+        go: () => this.setState({ rpe: v }) };
+    });
+    const cols = ['#D9563F', '#D9563F', '#D9563F', '#D9563F', '#E8BD4C', '#E8BD4C', '#E8BD4C', '#3F7FC0', '#3F7FC0', '#3F7FC0', '#9C7CC0', '#9C7CC0', '#9C7CC0', '#8DB38A', '#8DB38A', '#8DB38A', '#8DB38A', '#F3ECE0', '#F3ECE0', '#F3ECE0', '#D9563F', '#E8BD4C'];
+    const strokes = cols.map((c, i) => {
+      const col = i % 5, row = Math.floor(i / 5);
+      const x = -150 + col * 72 + ((i * 37) % 17) - 8, y = -118 + row * 58 + ((i * 53) % 21) - 10;
+      return { c, x: x + 'px', y: y + 'px', r: (((i * 47) % 50) - 25) + 'deg', dl: (i * 22) + 'ms' };
+    });
+
+    const A = {
+      idle: [`idle 7s ${E} infinite`, `idle 8.5s ${E} -3s infinite`, `idle 10s ${E} -6s infinite`, `idle 9s ${E} -4s infinite`, `idle 11s ${E} -1s infinite`, `idle 7.5s ${E} -5s infinite`],
+      done: Array(6).fill('merge 1.8s cubic-bezier(.4,0,.2,1) 1 both'),
+      doneLate: ['merge 1.8s cubic-bezier(.4,0,.2,1) 1.6s 1 both', 'merge 1.8s cubic-bezier(.4,0,.2,1) 1.6s 1 both', 'merge 1.8s cubic-bezier(.4,0,.2,1) 1.6s 1 both', 'merge 1.8s cubic-bezier(.4,0,.2,1) 1.68s 1 both', 'merge 1.8s cubic-bezier(.4,0,.2,1) 1.76s 1 both', 'merge 1.8s cubic-bezier(.4,0,.2,1) 1.84s 1 both']
+    }[soul];
+
+    // lock screen
+    const lk = { lNum: '1:42', lTop: 'Bench', lMain: '82.5 × 8', lMainC: '#F6EFE4', lSub: 'Rest, then set 3', drain: 134, tickGlow: 0, tickD: 'block', undoD: 'none', plusOp: 1,
+      wash1: 'rgba(63,127,192,.75)', wash2: 'rgba(122,92,160,.45)', lnAnim: 'none', lcAnim: 'none', lockNote: 'Rest is over. Tap the set when it’s done.' };
+    if (lock) {
+      if (st === 0) Object.assign(lk, { lNum: 'Go', lSub: 'Rested 2:30', drain: 336, tickGlow: 1, plusOp: .25, wash1: 'rgba(232,189,76,.75)', wash2: 'rgba(226,96,63,.6)' });
+      if (st === 1) Object.assign(lk, { lNum: '2:30', lTop: 'Set 3 logged', lMain: 'Undo', lMainC: '#FFB896', lSub: 'Rest, then set 4', drain: 0, tickD: 'none', undoD: 'block', lnAnim: 'up1 500ms cubic-bezier(.2,.8,.2,1) both', lcAnim: 'up2 420ms cubic-bezier(.2,.8,.2,1) both', lockNote: 'Undo stays until this rest ends.' });
+      if (st === 2) Object.assign(lk, { lNum: 'Go', lSub: 'Set 3 taken back', drain: 336, tickGlow: 1, plusOp: .25, wash1: 'rgba(232,189,76,.75)', wash2: 'rgba(226,96,63,.6)', lnAnim: 'up2 500ms cubic-bezier(.2,.8,.2,1) both', lcAnim: 'up1 420ms cubic-bezier(.2,.8,.2,1) both', lockNote: 'Undone. Nothing was written.' });
+    }
+
+    return Object.assign({
+      moments: list.map(([k, n], i) => ({ i: String(i + 1).padStart(2, '0'), n, c: k === m ? '#F3ECE0' : 'rgba(243,236,224,.42)', c2: k === m ? '#E2603F' : 'rgba(167,159,181,.6)', ud: k === m ? 'block' : 'none', go: () => this.play(k) })),
+      desc, dk: s.run % 2 ? '' : '2', replay: () => this.play(m),
+      notLock: !lock, isLock: lock, notFin: !(fin && st >= 1), isFin: fin && st >= 1,
+      marksOp: swapOpen ? 0 : 1, repsOp: rpeOn ? 0 : 1, segs, hdr, exCount, exName, nameFs, nk, nameY, marks, sub, subC,
+      isSetV, isRestV, weight, unit, plate, plateC, reps, rPrev: reps - 1, rNext: reps + 1, wAnim, numBg, numAnim,
+      restText, restC, restUnit, restNote, restAnim,
+      checkOn, checkText, checkUL, checkAnim, rpeOn, stops,
+      ticks, dialX, dialOp, needleOp, fillB: isRestV && rest > 0 ? '#E8BD4C' : 'transparent', restFill: (isRestV ? (rest / restMax) * 100 : 0).toFixed(1) + '%', fillTr, plusOn,
+      keyText, keyMeta, keyFg, keyFill,
+      stripOpen, order, swapOpen, alts, strokes,
+      tess, tessAnim, splash: soul === 'done' ? 'splash 1.8s ease-out 1 both' : soul === 'doneLate' ? 'splash 1.8s ease-out 1.6s 1 both' : 'none',
+      a1: A[0], a2: A[1], a3: A[2], a4: A[3], a5: A[4], a6: A[5],
+      stripTap: () => this.play('strip'), nameTap: () => this.play('swap'), checkTap: () => { if (this.state.m === 'check') this.setState({ step: 2 }); },
+      lockTap: () => { if (this.state.m === 'lock') this.setState({ step: this.state.step === 1 ? 2 : 1 }); }
+    }, lk);
+  }
+}
+
+</script>
+</body>
+</html>

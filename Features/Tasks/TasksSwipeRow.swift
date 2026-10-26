@@ -12,7 +12,6 @@ struct TasksSwipeRow<Content: View>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pull: CGFloat = 0
     @State private var handled = false
-    @State private var armed = false
     @State private var struck = false
     @State private var cue = HapticCue()
 
@@ -36,7 +35,7 @@ struct TasksSwipeRow<Content: View>: View {
         }
         .buttonStyle(HandleButtonStyle())
         .offset(x: pull < 0 ? max(pull, -150) : 0)
-        .simultaneousGesture(swipe)
+        .rowSwipe(.both, limit: TasksSwipe.span, onEvent: swiped)
         .tesseraFeedback(cue)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
@@ -44,37 +43,42 @@ struct TasksSwipeRow<Content: View>: View {
         .accessibilityAction(named: "Not now") { TasksActions.notNow(line, model: model) }
     }
 
-    private var swipe: some Gesture {
-        DragGesture(minimumDistance: 20)
-            .onChanged { value in
-                guard abs(value.translation.width) > abs(value.translation.height), !struck else { return }
-                handled = true
-                pull = value.translation.width
-                armed = abs(pull) >= TasksSwipe.arm
+    /// Right is Done (the strike follows the finger), left is Not now. Both go through the one gesture policy.
+    private func swiped(_ event: RowSwipeEvent) {
+        switch event {
+        case let .pulled(value):
+            guard !struck else { return }
+            handled = true
+            pull = value
+        case let .committed(side):
+            if side == .leading {
+                finish()
+            } else {
+                notNow()
             }
-            .onEnded { _ in
-                let distance = pull
-                armed = false
-                if distance >= TasksSwipe.arm {
-                    finish()
-                } else if -distance >= TasksSwipe.arm {
-                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = -420 }
-                    Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 300))
-                        if !TasksActions.notNow(line, model: model) {
-                            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
-                        } else {
-                            pull = 0
-                        }
-                    }
-                } else {
-                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
-                }
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(250))
-                    handled = false
-                }
+        case .cancelled:
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
+        case .ended:
+            // After the button has seen the lift, a tap opens the row again.
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(250))
+                handled = false
             }
+        case .armed, .disarmed:
+            break
+        }
+    }
+
+    private func notNow() {
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = -420 }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 300))
+            if !TasksActions.notNow(line, model: model) {
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { pull = 0 }
+            } else {
+                pull = 0
+            }
+        }
     }
 
     /// The strike runs out across the line on the house spring and lands with one soft tap (sheet 175); then the op.
@@ -97,5 +101,4 @@ struct TasksSwipeRow<Content: View>: View {
 
 private enum TasksSwipe {
     static let span: CGFloat = 250
-    static let arm: CGFloat = 120
 }

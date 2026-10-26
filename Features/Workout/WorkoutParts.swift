@@ -88,19 +88,23 @@ struct ExerciseLane: View {
         .fixedSize(horizontal: false, vertical: true)
         // Pull down on the name for alternatives; the pager keeps horizontal.
         .simultaneousGesture(
-            DragGesture(minimumDistance: 14)
+            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
                 .onChanged { drag in
-                    guard session.finishedAt == nil, drag.translation.height > abs(drag.translation.width) else {
-                        return
-                    }
+                    guard session.finishedAt == nil, drag.translation.height > 0,
+                          GestureTuning.axis(dx: Double(drag.translation.width), dy: Double(drag.translation.height),
+                                             bias: GestureTuning.pagerBias) == .vertical
+                    else { return }
                     namePull = drag.translation.height
                 }
                 .onEnded { drag in
-                    let pulled = drag.translation.height > 44 && drag.translation.height > abs(drag.translation.width)
+                    let pull = GestureTuning.pull(
+                        dx: Double(drag.translation.width), dy: Double(drag.translation.height),
+                        velocityY: Double(drag.velocity.height)
+                    )
                     withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { namePull = 0 }
-                    if pulled {
+                    if pull > 0 {
                         setSwap(!isSwapOpen)
-                    } else if drag.translation.height < -30, isSwapOpen {
+                    } else if pull < 0, isSwapOpen {
                         setSwap(false)
                     }
                 }
@@ -303,14 +307,10 @@ struct EffortHandle: View {
                 setShown(!isShown)
             }
         }
-        .gesture(DragGesture(minimumDistance: 10).onEnded { drag in
+        .pullGesture { down in
             guard enabled else { return }
-            if drag.translation.height < -20 {
-                setShown(true)
-            } else if drag.translation.height > 20 {
-                setShown(false)
-            }
-        })
+            setShown(!down)
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(isShown ? "Hide effort" : "Add effort")
         .accessibilityAddTraits(.isButton)

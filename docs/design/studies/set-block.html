@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Set block</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for docs/design/set-block.md (Kaushik's 6:45 PM corrections): the weight dial strip is gone; the weight numeral itself rolls in place, the reps number is smaller and lands with more drama, and the freed space draws the plates. Add ?x2 to render at 2x. -->
+<style>
+:root{--cream:243,236,224;--sig:#D9563F;--rest:#E8BD4C;--cobalt:#7FA9D9}
+body{margin:0;background:#111}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:rgb(var(--cream));font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(70% 40% at 90% 0%,#2C2442 0%,rgba(44,36,66,0) 70%),radial-gradient(80% 50% at 0% 100%,#251E35 0%,rgba(37,30,53,0) 70%),#1C1828}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--cream),.6);white-space:nowrap}
+.voice{font-size:21px;line-height:28px}
+.num{font-variant-numeric:tabular-nums;font-weight:300;letter-spacing:-.04em}
+.reel{position:absolute;overflow:visible}
+.reel .v{position:absolute;left:0;white-space:nowrap}
+.nb{position:absolute;left:0;font-size:34px;color:rgba(var(--cream),.35);opacity:0;white-space:nowrap}
+.sw{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap;position:relative;display:inline-block}
+.sw svg{position:absolute;left:-7px;bottom:7px;z-index:-1;overflow:visible}
+.strk{position:absolute;height:9px;border-radius:5px 3px 6px 2px;filter:url(#rough)}
+.drop{position:absolute;width:5px;height:4px;border-radius:50%;background:rgba(var(--cream),.55)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(243,236,224,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.5);opacity:0;z-index:30;pointer-events:none}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.95) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:screen;filter:blur(2.5px)}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+
+  <div class="abs voice" style="left:22px;top:52px;color:rgba(var(--cream),.6)">Push day A, 24:10</div>
+  <div class="abs lbl" style="right:22px;top:58px">2 / 5</div>
+  <div class="abs" style="left:22px;top:104px;font-size:34px;font-weight:500;letter-spacing:-.035em">Bench press</div>
+  <div class="abs" style="left:262px;top:104px;font-size:34px;font-weight:500;letter-spacing:-.035em;color:rgba(var(--cream),.22)">Overhead</div>
+
+  <!-- sets as strokes -->
+  <div id="strokes" class="abs" style="left:22px;top:172px;width:346px;height:12px">
+    <div class="strk" style="left:0;width:70px;background:var(--sig);opacity:.9"></div>
+    <div class="strk" style="left:84px;width:70px;background:#E08A3C;opacity:.9"></div>
+    <div id="cur" class="strk" style="left:168px;width:70px;border:1.5px dashed rgba(var(--cream),.7);background:none;height:6px;filter:none"></div>
+    <div class="strk" style="left:252px;width:70px;background:rgba(var(--cream),.12)"></div>
+  </div>
+  <div id="sub" class="abs voice" style="left:22px;top:206px;color:rgba(var(--cream),.6)">Set 3 of 4 · last time 80 × 8</div>
+
+  <!-- the number row: weight rolls in place, reps beside it -->
+  <div id="wrow" class="abs" style="left:18px;top:262px;width:360px;height:110px">
+    <div id="wprev" class="nb num" style="top:-48px">77.5</div>
+    <div id="wreel" class="reel num" style="left:0;top:0;height:84px;width:170px;font-size:80px;line-height:84px"><span class="v" id="wv">80</span></div>
+    <div id="wnext" class="nb num" style="top:100px">82.5</div>
+    <div id="kg" class="abs voice" style="left:96px;top:46px;color:rgba(var(--cream),.6)">kg</div>
+    <div class="abs" style="left:196px;top:30px;font-size:34px;color:rgba(var(--cream),.6)">×</div>
+    <div id="rprev" class="nb num" style="left:236px;top:-20px">7</div>
+    <div id="rreel" class="reel num" style="left:234px;top:12px;height:60px;width:80px;font-size:56px;line-height:60px"><span class="v" id="rv">8</span></div>
+    <div id="rnext" class="nb num" style="left:236px;top:84px">9</div>
+    <svg id="beat" class="abs" style="left:226px;top:74px;overflow:visible" width="58" height="12" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#E8BD4C" filter="url(#rough)" style="clip-path:inset(0 100% 0 0)"/></svg>
+    <div id="rghost" class="abs lbl" style="left:236px;top:94px;font-size:16px">LAST 8</div>
+  </div>
+  <div id="rest" class="abs" style="left:22px;top:262px;opacity:0"><span class="num" style="font-size:80px;line-height:84px;color:var(--rest)" id="rt">1:30</span><span class="voice" style="margin-left:10px;color:rgba(var(--cream),.6)">rest</span></div>
+
+  <!-- freed space: the plates, drawn -->
+  <svg id="bar" class="abs" style="left:0;top:420px;overflow:visible" width="390" height="190">
+    <g filter="url(#rough)">
+      <rect x="22" y="92" width="150" height="6" fill="rgba(243,236,224,.55)"/>
+      <rect x="172" y="80" width="10" height="30" fill="rgba(243,236,224,.7)"/>
+      <rect x="182" y="91" width="190" height="8" fill="rgba(243,236,224,.4)"/>
+    </g>
+    <g id="plates" filter="url(#rough)"></g>
+  </svg>
+  <div id="pcap" class="abs lbl" style="left:22px;top:620px">25 + 5 EACH SIDE</div>
+  <!-- rest horizon (takes the plates' place while resting) -->
+  <div id="hz" class="abs" style="left:22px;right:22px;top:510px;height:3px;background:var(--rest);transform-origin:left;transform:scaleX(0);opacity:.9;filter:url(#rough)"></div>
+  <div id="hzcap" class="abs lbl" style="left:22px;top:532px;opacity:0">DRAG RIGHT +15 · FLING LEFT TO GO</div>
+
+  <div id="key" class="abs" style="left:22px;top:688px;display:flex;align-items:center;gap:18px">
+    <div class="sw"><span id="kw">Log set</span><svg id="ksv" width="128" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#D9563F" opacity=".9" filter="url(#rough)"/></svg></div>
+    <div id="km" class="lbl">HOLD · 80 × 8</div>
+  </div>
+
+  <div id="say" class="abs voice" style="right:78px;bottom:43px;width:262px;text-align:right;color:var(--cobalt);opacity:0;z-index:12"></div>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:217,86,63;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:127,169,217;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:232,189,76;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)', SETTLE = 'cubic-bezier(.3,1.3,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const fingerTo = (x0, y0, x1, y1, d) => tween(d, (t) => fingerAt(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t));
+async function say(t) { const s = $('say'); s.getAnimations().forEach((a) => a.cancel()); s.innerHTML = t; await anim(s, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: HOUSE }); }
+const hush = () => anim($('say'), [{ opacity: 1 }, { opacity: 0 }], { duration: 220 });
+
+// plates per side, drawn outward from the collar
+const PLATE = { 25: [150, 22, '#D9563F'], 20: [150, 20, '#4F7FB8'], 10: [112, 16, '#6E9E6A'], 5: [86, 12, 'rgba(243,236,224,.85)'], 2.5: [70, 9, '#4A4458'], 1.25: [58, 7, '#B8B2C2'] };
+function perSide(w) { let r = (w - 20) / 2; const out = []; for (const p of [25, 20, 10, 5, 2.5, 1.25]) while (r >= p - 1e-6) { out.push(p); r -= p; } return out; }
+let shown = [];
+function drawPlates(w, animate = true) {
+  const g = $('plates'), list = perSide(w);
+  let x = 184; const els = [];
+  list.forEach((p, i) => { const [h, wd, c] = PLATE[p]; els.push({ p, x, h, wd, c }); x += wd + 2; });
+  // keep the ones that stay, drop new ones on, lift removed ones off
+  const keep = Math.min(shown.length, els.length);
+  let same = 0; while (same < keep && shown[same].p === els[same].p) same++;
+  shown.slice(same).forEach((s) => { const n = s.node; anim(n, [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-26px)', opacity: 0 }], { duration: 220, easing: HOUSE }).then(() => n.remove()); });
+  els.slice(same).forEach((e, i) => {
+    const n = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    n.setAttribute('x', e.x); n.setAttribute('y', 95 - e.h / 2); n.setAttribute('width', e.wd); n.setAttribute('height', e.h); n.setAttribute('rx', 2); n.setAttribute('fill', e.c);
+    g.appendChild(n); e.node = n;
+    if (animate) { n.style.transformBox = 'fill-box'; anim(n, [{ transform: 'translateY(-30px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, delay: 60 * i, easing: SETTLE }); }
+  });
+  shown = shown.slice(0, same).concat(els.slice(same));
+  $('pcap').textContent = list.length ? list.join(' + ') + ' EACH SIDE' : 'THE BAR';
+}
+
+// roll a reel: the old value leaves the way the finger moves, the new one arrives with a settle overshoot
+async function roll(reel, value, up, size) {
+  const old = reel.querySelector('.v:last-child');
+  const nv = document.createElement('span'); nv.className = 'v'; nv.textContent = value; reel.appendChild(nv);
+  const d = up ? -1 : 1, dist = size * 0.62;
+  anim(old, [{ transform: 'none', opacity: 1, filter: 'blur(0)' }, { transform: `translateY(${d * dist}px) scale(.82)`, opacity: 0, filter: 'blur(3px)' }], { duration: 200, easing: HOUSE }).then(() => old.remove());
+  await anim(nv, [{ transform: `translateY(${-d * dist}px) scale(.82)`, opacity: 0, filter: 'blur(3px)' }, { transform: 'none', opacity: 1, filter: 'blur(0)' }], { duration: 300, easing: SETTLE });
+}
+const neighbours = (a, b, on) => [a, b].forEach((n) => anim(n, [{ opacity: on ? 0 : 1 }, { opacity: on ? 1 : 0 }], { duration: on ? 180 : 220 }));
+// the reps landing: a pop, and droplets flicked off the way it moved
+function splash(x, y, up) {
+  for (let i = 0; i < 5; i++) {
+    const dp = document.createElement('div'); dp.className = 'drop'; dp.style.left = x + 'px'; dp.style.top = y + 'px'; $('ph').appendChild(dp);
+    const a = (up ? -1 : 1) * (40 + Math.random() * 40), b = (Math.random() - .5) * 60;
+    anim(dp, [{ transform: 'translate(0,0) scale(1)', opacity: .9 }, { transform: `translate(${b}px,${a}px) scale(.4)`, opacity: 0 }], { duration: 300 + i * 30, easing: 'cubic-bezier(.1,.7,.3,1)' }).then(() => dp.remove());
+  }
+}
+
+let weight = 80, reps = 8;
+async function stepWeight(up) {
+  weight += up ? 2.5 : -2.5;
+  $('wprev').textContent = String(weight - 2.5).replace('.0', ''); $('wnext').textContent = String(weight + 2.5);
+  $('kg').style.left = (weight % 1 ? 166 : 96) + 'px';
+  drawPlates(weight);
+  $('km').textContent = `HOLD · ${weight} × ${reps}`;
+  await roll($('wreel'), weight, up, 84);
+}
+async function stepReps(up) {
+  reps += up ? 1 : -1;
+  $('rprev').textContent = reps - 1; $('rnext').textContent = reps + 1;
+  $('km').textContent = `HOLD · ${weight} × ${reps}`;
+  splash(262, 300, up);
+  const p = roll($('rreel'), reps, up, 60);
+  anim($('rreel'), [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], { duration: 320, easing: SETTLE });
+  const beat = $('beat').querySelector('path');
+  if (reps > 8) { beat.style.clipPath = 'inset(0 100% 0 0)'; anim(beat, [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 260, easing: HOUSE }); anim($('rghost'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }); }
+  else { anim(beat, [{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 100% 0 0)' }], { duration: 200 }); anim($('rghost'), [{ opacity: 0 }, { opacity: 1 }], { duration: 200 }); }
+  await p;
+}
+
+async function run() {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready;
+  drawPlates(80, false);
+  document.body.dataset.start = '1';
+  await sleep(900);
+
+  // 1 · the weight numeral rolls in place: drag up = heavier, one load per 12 pt
+  await fingerOn(60, 310);
+  neighbours($('wprev'), $('wnext'), true);
+  await sleep(160);
+  await fingerTo(60, 310, 60, 298, 140); await stepWeight(true);
+  await fingerTo(60, 298, 60, 286, 140); await stepWeight(true);
+  await sleep(250);
+  await fingerTo(60, 286, 60, 298, 160); await stepWeight(false);
+  await sleep(300);
+  neighbours($('wprev'), $('wnext'), false);
+  await fingerOff();
+  await sleep(500);
+
+  // 2 · reps: smaller, and it lands with drama; passing last time paints a cadmium stroke under it
+  await fingerOn(262, 300);
+  neighbours($('rprev'), $('rnext'), true);
+  await sleep(150);
+  await fingerTo(262, 300, 262, 288, 140); await stepReps(true);
+  await sleep(500);
+  neighbours($('rprev'), $('rnext'), false);
+  await fingerOff();
+  await say('One more than last time.');
+  await sleep(900);
+
+  // 3 · hold Log set: the set's stroke paints, rest takes the number row and the horizon takes the plates' place
+  await hush();
+  await fingerOn(70, 708);
+  await anim($('ksv'), [{ transform: 'scaleX(1)' }, { transform: 'scaleX(1.06)' }], { duration: 600, easing: 'linear' });
+  await fingerOff();
+  const cur = $('cur'); cur.style.border = 'none'; cur.style.height = '9px'; cur.style.background = '#E8BD4C'; cur.style.filter = 'url(#rough)';
+  anim(cur, [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 700, easing: HOUSE });
+  $('sub').textContent = 'Set 4 of 4 next';
+  anim($('wrow'), [{ opacity: 1 }, { opacity: 0, filter: 'blur(4px)' }], { duration: 200 });
+  anim($('bar'), [{ opacity: 1 }, { opacity: 0 }], { duration: 220 }); anim($('pcap'), [{ opacity: 1 }, { opacity: 0 }], { duration: 220 });
+  await sleep(200);
+  anim($('rest'), [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: HOUSE });
+  anim($('hz'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 500, easing: HOUSE });
+  anim($('hzcap'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 300 });
+  $('kw').textContent = 'Skip rest'; $('km').textContent = '';
+  $('ksv').querySelector('path').setAttribute('fill', '#E8BD4C');
+  say('Bench 82.5 × 9. Set 3 in.');
+  let left = 90;
+  const tick = setInterval(() => { left--; $('rt').textContent = `1:${String(left - 60).padStart(2, '0')}`; $('hz').style.transform = `scaleX(${left / 90})`; }, 1000);
+  await sleep(1600);
+  // drag the horizon right: +15
+  await fingerOn(250, 512);
+  await fingerTo(250, 512, 340, 512, 360);
+  left += 15; $('rt').textContent = `1:${String(left - 60).padStart(2, '0')}`;
+  anim($('hz'), [{ transform: `scaleX(${(left - 15) / 90})` }, { transform: `scaleX(${Math.min(1, left / 90)})` }], { duration: 300, easing: SETTLE });
+  await fingerOff();
+  await sleep(1800);
+  clearInterval(tick);
+  document.body.dataset.done = '1';
+}
+run();
+</script>
+</body>
+</html>
