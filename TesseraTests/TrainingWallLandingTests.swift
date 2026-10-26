@@ -110,7 +110,9 @@ struct TrainingWallLandingTests {
         let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         DemoData.prepare(model)
         let facts = TrainingWallFacts.load(model)
-        #expect(facts.doors.map(\.name) == ["This week", "Routines", "Exercises", "Programs", "Goals"])
+        // Board r66: Today, This week, Library, Bests, Plan, each with a label over its summary.
+        #expect(facts.doors.map(\.name) == ["Today", "This week", "Library", "Bests", "Plan"])
+        #expect(facts.doors.allSatisfy { $0.label != nil })
         #expect(!facts.words.isEmpty)
         #expect(facts.doors.allSatisfy { $0.lines.count <= 3 })
         #expect(facts.doors.flatMap(\.lines).allSatisfy { !$0.contains(" of ") })
@@ -126,8 +128,8 @@ struct TrainingWallLandingTests {
         let facts = TrainingWallFacts.load(model)
         #expect(!facts.words.contains { $0.id == TrainingWallTarget.routine(routine.id).id })
         #expect(!facts.words.contains { $0.text == ObjectPrivacy.routineLabel })
-        let routineLines = facts.doors.first { $0.id == "routines" }?.lines ?? []
-        #expect(!routineLines.contains(SecretWords.title))
+        let doorWords = facts.doors.flatMap { $0.lines + [$0.label ?? ""] }
+        #expect(!doorWords.contains { $0.contains(SecretWords.title) })
     }
 
     // MARK: Deck (blackboard and scaffold)
@@ -168,6 +170,8 @@ struct TrainingWallLandingTests {
         #expect(deck.needs.allSatisfy { $0.count == 2 })
         #expect(!deck.widget.isEmpty && deck.widget.count <= 3)
         #expect(deck.widget.allSatisfy { !$0.strikeable })
+        // Every Big line wears a colour: Deck blue, or its split's colour (241); never plain ink or rust.
+        #expect(deck.widget.allSatisfy { $0.bigColor != nil })
         let shown = deck.needs.flatMap(\.self) + deck.widget.flatMap { [$0.big, $0.middle, $0.small] }
             + [deck.board.headline, deck.board.detail]
         #expect(shown.allSatisfy { !$0.contains(" of ") && !$0.contains("...") && !$0.contains("…") }, "\(shown)")

@@ -210,6 +210,10 @@ extension TrainingDeckFacts {
         widget = widget.map { item in
             var item = item
             item.face = .deck
+            // Deck blue unless the item is a split (241: Push clay, Pull teal, Legs plum).
+            if item.bigColor == nil {
+                item.bigColor = Theme.Colors.Accent.training
+            }
             if !item.bigIsNumber {
                 item.big = Self.deckBig(item.big)
             }
