@@ -117,7 +117,7 @@ struct ElementsTests {
 
     @Test func moneyPrivateAndPurseItemsAreDeviceOnlyWhateverTheNavigatorSet() {
         // None of these carries a taint of its own.
-        let spend = ElementItem(kind: "spend", name: "Lunch", facts: [ElementFact("12")])
+        let spend = ElementItem(kind: "Spend", name: "Lunch", facts: [ElementFact("12")])
         let hidden = ElementItem(id: UUID(), kind: "note", name: "Private note", isPrivate: true)
         let inPurse = ElementItem(kind: "door", name: "Month")
         let plain = ElementItem(kind: "task", name: "Call the bank")

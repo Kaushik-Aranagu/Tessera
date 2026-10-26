@@ -145,7 +145,7 @@ public struct TessFrame: Sendable, Equatable {
     /// when it sits in the Purse: the wall holds even if the navigator forgot to set a taint.
     func taint(of item: ElementItem) -> Taint {
         let own = item.taint == .deviceOnly || item.facts.contains { $0.taint == .deviceOnly }
-        return own || item.isPrivate || room == "purse" || Self.moneyKinds
-            .contains(item.kind) ? .deviceOnly : .claudeSafe
+        let money = Self.moneyKinds.contains(item.kind.lowercased())
+        return own || item.isPrivate || room == "purse" || money ? .deviceOnly : .claudeSafe
     }
 }
