@@ -4,16 +4,14 @@ import XCTest
 /// body gestures never starve the buttons under them. Runs without `-demo` (which skips the feature flags).
 @MainActor
 final class PantryRoomTapUITests: SimulatorOnlyTestCase {
-    private func launchOnFridge() -> XCUIApplication {
+    /// The room remembers its place between launches, so the test cannot count on where the dial starts: it adds the
+    /// thing, then turns the dial until the row is on the page.
+    private func launchOnPantry() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-demoTime", "18:10", "-openLink", "pantry"]
         app.launch()
         XCTAssertTrue(app.buttons["Add a thing"].waitForExistence(timeout: 20), "The Pantry room is open")
-        // One flick turns the dial one place: To get to Fridge.
-        let dial = app.descendants(matching: .any)["Place"]
-        XCTAssertTrue(dial.waitForExistence(timeout: 5))
-        dial.swipeUp(velocity: .fast)
-        sleep(3)
+        XCTAssertTrue(app.descendants(matching: .any)["Place"].waitForExistence(timeout: 5))
         return app
     }
 
@@ -26,12 +24,17 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         field.typeText("\(thing)\n")
         let row = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", thing)).firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 8), "The new thing is a row")
+        var turns = 0
+        while !row.waitForExistence(timeout: 3), turns < 4 {
+            app.descendants(matching: .any)["Place"].swipeUp(velocity: .fast)
+            turns += 1
+        }
+        XCTAssertTrue(row.exists, "The new thing is a row")
         return row
     }
 
     func testTapOnARowFlipsItLow() {
-        let app = launchOnFridge()
+        let app = launchOnPantry()
         let row = addEggs(app)
         row.tap()
         let low = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "\(thing), low"))
@@ -43,7 +46,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
     }
 
     func testSwipeRightUsesTheRowUp() {
-        let app = launchOnFridge()
+        let app = launchOnPantry()
         let row = addEggs(app)
         let start = row.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5))
         let end = row.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5)).withOffset(CGVector(dx: 140, dy: 0))
