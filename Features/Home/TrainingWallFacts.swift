@@ -76,7 +76,7 @@ enum TrainingWallTarget: Equatable {
     }
 }
 
-struct TrainingWallFacts {
+struct TrainingWallFacts: Equatable {
     let day: TrainingDay
     let words: [WallWord]
     let doors: [DialDoor]

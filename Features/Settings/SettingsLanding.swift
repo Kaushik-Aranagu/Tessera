@@ -27,65 +27,59 @@ struct SettingsLandingPage: View {
         let facts = facts
         let seen = SettingsAreaSeen.all()
         let cards = SettingsLandingWords.cards(facts)
-        LandingScaffold(title: "Settings", accent: Theme.Colors.ink, navWord: "Bridge", onBack: { dismiss() },
-                        onTitle: { open(.everything) },
-                        switcher: SettingsLandingWords.switcher, switcherIndex: $switcherIndex,
-                        switcherVerticalIndex: $switcherVerticalIndex,
-                        needs: SettingsLandingWords.needs(facts, switcher: switcherIndex, opened: seen),
-                        keystone: {
-                            LandingKeystone(label: "Setting areas") {
-                                WordWallView(words: SettingsLandingWords.wall(opened: seen)) { id in
-                                    if let area = SettingsArea(rawValue: id) {
-                                        open(area)
-                                    }
-                                } label: { word in
-                                    "\(SettingsArea(rawValue: word.id)?.title ?? word.text.capitalized), setting"
-                                }
-                            }
-                        },
-                        caption: ["Tap an area to open it.", "Tap an area."],
-                        widget: cards, widgetIndex: $widgetIndex,
-                        openWidget: { item in
-                            if let area = SettingsArea(rawValue: item.id) {
-                                open(area)
-                            }
-                        },
-                        glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? Theme.Colors.ink, room: .log) },
-                        doors: SettingsLandingWords.doors(facts, colors: colors), focus: $focus,
-                        openDoor: { door in
-                            if let area = SettingsArea(rawValue: door.id) {
-                                open(area)
-                            }
-                        },
-                        action: nil)
-            .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(item: $area) { $0.destination }
-            .task {
-                // Read once, from the copies' own files; nothing is written.
-                backupLine = BackupKeeper.lastLine(copies: BackupKeeper.localCopies(), now: AppClock.now)
-            }
+        LandingScaffold(
+            title: SettingsRoomContent.title,
+            accent: Theme.Colors.ink,
+            navWord: "Bridge",
+            onBack: { dismiss() },
+            onTitle: { open(.everything) },
+            switcher: SettingsLandingWords.switcher,
+            switcherIndex: $switcherIndex,
+            switcherVerticalIndex: $switcherVerticalIndex,
+            needs: SettingsLandingWords.needs(facts, switcher: switcherIndex, opened: seen),
+            keystone: {
+                LandingKeystone(label: SettingsRoomContent.wallLabel) {
+                    WordWallView(words: SettingsLandingWords.wall(opened: seen)) { id in
+                        if let area = SettingsArea(rawValue: id) {
+                            open(area)
+                        }
+                    } label: { word in
+                        "\(SettingsArea(rawValue: word.id)?.title ?? word.text.capitalized), setting"
+                    }
+                }
+            },
+            caption: SettingsRoomContent.caption,
+            widget: cards,
+            widgetIndex: $widgetIndex,
+            openWidget: { item in
+                if let area = SettingsArea(rawValue: item.id) {
+                    open(area)
+                }
+            },
+            glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? Theme.Colors.ink, room: .log) },
+            doors: SettingsLandingWords.doors(facts, colors: colors),
+            focus: $focus,
+            openDoor: { door in
+                if let area = SettingsArea(rawValue: door.id) {
+                    open(area)
+                }
+            },
+            action: nil
+        )
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationDestination(item: $area) { $0.destination }
+        .task {
+            // Read once, from the copies' own files; nothing is written.
+            backupLine = BackupKeeper.lastLine(copies: BackupKeeper.localCopies(), now: AppClock.now)
+        }
     }
 
     private var facts: SettingsLandingFacts {
-        let memory = TessMemoryStore(engine: model.engine, forgetLogURL: model.forgetLogURL)
-        let units = UnitsCopy.kinds.map { model.displayUnits.unit(for: $0) ?? UnitsCopy.standard($0) }
-        return SettingsLandingFacts(remembers: memory.countWord(), asksClaude: model.asksClaude, units: units,
-                                    backupLine: backupLine, build: BuildStamp.short,
-                                    privacyLines: privacyLines)
-    }
-
-    /// Core's privacy sentences, counts only, from his own store even while Sample data is on (as the Privacy page).
-    private var privacyLines: [String] {
-        let real = realModel ?? model
-        return PrivacyPage.lines(engine: real.engine, claudeOn: real.asksClaude, backupLine: backupLine ?? "")
+        SettingsLandingFacts.read(model: model, realModel: realModel, backupLine: backupLine)
     }
 
     private var colors: SettingsLandingWords.Colors {
-        let dark = scheme == .dark
-        return .init(ink: Theme.Colors.ink,
-                     slate: dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F),
-                     green: dark ? Color(hex: 0x8FC9A0) : Color(hex: 0x25803D),
-                     gold: dark ? Color(hex: 0xD9C27A) : Color(hex: 0x7E6A1E))
+        SettingsLandingWords.colors(scheme)
     }
 
     private func open(_ next: SettingsArea) {
@@ -172,12 +166,36 @@ struct SettingsLandingFacts: Equatable {
 }
 
 /// The landing's words, pure so tests can read them.
+extension SettingsLandingFacts {
+    /// The landing's facts from the store (one source for the scaffold and the shell). The privacy sentences come
+    /// from his own store even while Sample data is on, counts only, as the Privacy page. Nothing reads the Claude
+    /// key: only whether Tess asks Claude.
+    @MainActor
+    static func read(model: AppModel, realModel: AppModel?, backupLine: String?) -> Self {
+        let memory = TessMemoryStore(engine: model.engine, forgetLogURL: model.forgetLogURL)
+        let units = UnitsCopy.kinds.map { model.displayUnits.unit(for: $0) ?? UnitsCopy.standard($0) }
+        let real = realModel ?? model
+        let privacy = PrivacyPage.lines(engine: real.engine, claudeOn: real.asksClaude, backupLine: backupLine ?? "")
+        return Self(remembers: memory.countWord(), asksClaude: model.asksClaude, units: units,
+                    backupLine: backupLine, build: BuildStamp.short, privacyLines: privacy)
+    }
+}
+
 enum SettingsLandingWords {
-    struct Colors {
+    struct Colors: Equatable {
         let ink: Color
         let slate: Color
         let green: Color
         var gold: Color = .yellow
+    }
+
+    /// The kind colours for a scheme: slate, green and gold (241), ink for the rest.
+    static func colors(_ scheme: ColorScheme) -> Colors {
+        let dark = scheme == .dark
+        return Colors(ink: Theme.Colors.ink,
+                      slate: dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F),
+                      green: dark ? Color(hex: 0x8FC9A0) : Color(hex: 0x25803D),
+                      gold: dark ? Color(hex: 0xD9C27A) : Color(hex: 0x7E6A1E))
     }
 
     /// The header line, longest first; the last always fits (FitLine never wraps or ellipsizes).

@@ -36,6 +36,7 @@ private struct PlaceRenderer: View {
     let act: (ShellIntent) -> Void
 
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.shellGlyphRoom) private var glyphRoom
 
     var body: some View {
         switch content.payload {
@@ -67,12 +68,14 @@ private struct PlaceRenderer: View {
                 .accessibilityIdentifier("shell.switcher")
         case let .wall(words, label):
             ShellKeystone(words: words, label: label, act: act)
+        case let .scene(key, label):
+            ShellSceneKeystone(key: key, label: label)
         case let .widget(items):
             LandingWidget(items: items, index: navigator.binding(\.widgetIndex),
                           open: { act(.openItem($0.id)) }, glyph: { _ in Color.clear })
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         case let .glyph(item, color):
-            LandingGlyph(item: item, color: color, formDelay: style.context == .merge ? 0.05 : 0.33)
+            LandingGlyph(item: item, color: color, formDelay: style.context == .merge ? 0.05 : 0.33, room: glyphRoom)
         case let .dial(doors):
             ShellDial(doors: doors, reelFrom: reduceMotion ? [] : style.reelFrom, navigator: navigator, act: act)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
@@ -154,6 +157,32 @@ private struct ShellKeystone: View {
     var body: some View {
         LandingKeystone(label: label) {
             WordWallView(words: words) { act(.openItem($0)) }
+        }
+        .overlay(alignment: .topLeading) {
+            if ShellProbe.enabled {
+                Text(token)
+                    .font(.system(size: 1))
+                    .opacity(0.02)
+                    .frame(width: 2, height: 2)
+                    .accessibilityIdentifier("shell.keystone.token")
+                    .accessibilityLabel(token)
+            }
+        }
+    }
+}
+
+/// The keystone place holding a room's own drawing: the room's host renders `key` through `shellScene`. The same
+/// key on both sides keeps the view (and its state), as the word wall does. A probe token, as on `ShellKeystone`.
+private struct ShellSceneKeystone: View {
+    let key: String
+    let label: String
+
+    @Environment(\.shellScene) private var scene
+    @State private var token = String(UUID().uuidString.prefix(8))
+
+    var body: some View {
+        LandingKeystone(label: label) {
+            scene(key)
         }
         .overlay(alignment: .topLeading) {
             if ShellProbe.enabled {
