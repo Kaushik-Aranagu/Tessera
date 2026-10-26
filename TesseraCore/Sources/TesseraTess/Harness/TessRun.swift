@@ -94,7 +94,7 @@ public final class TessRun {
     /// thing in focus ("done", "open this") is bound from the frame and runs with no model at all. The frame's
     /// fragments replace the old "On screen" line, and its object ids become the run's handles.
     public func ask(_ text: String, frame: TessFrame) -> AsyncStream<TessRunEvent> {
-        let pick = ToolPicker.pick(text, frame: frame)
+        let pick = ToolPicker.pick(text, frame: frame, agent: agent)
         let about = frame.aboutIDs.compactMap { engine.store.object(id: $0) }.filter { !$0.isDeleted }
         return start(text, about: about, context: Context(screen: nil, frame: frame, pick: pick))
     }
@@ -210,7 +210,7 @@ public final class TessRun {
                 specs.append(ToolSpec(name: name, description: item["description"] as? String ?? "", schema: json))
             }
         }
-        return specs + [TessOpenTool.spec] + TessRecallTools.specs + [AgentNotebook.spec]
+        return specs + [TessOpenTool.spec] + TessRecallTools.specs + [AgentNotebook.spec, askAgentSpec]
     }
 
     /// The agent's memory slice for this run (M2), built once per run so recall's paths stay the same across rounds.
@@ -467,6 +467,13 @@ public final class TessRun {
                 .flatMap { $0 as? String }?.hasPrefix("/") == true
             result = TessOpenTool.run(arguments: input, handles: handles, engine: engine, policy: door.policy(),
                                       calendar: calendar, index: isPath ? memoryIndex(for: runID) : nil)
+        case Self.askAgent:
+            // Tess asks her rooms; each runs as itself, in parallel, and its writes land as ghost rows.
+            let answer = await askAgents(input, handles: handles, onDevice: onDevice)
+            for ghost in answer.ghosts {
+                sink(.ghost(ghost))
+            }
+            result = (answer.text, answer.isError)
         case AgentNotebook.name:
             // Its own notebook only: the scope's folder, the policy's pages.
             result = AgentNotebook(engine: engine, scope: MemoryScope(agent, policy: door.policy()), now: now())

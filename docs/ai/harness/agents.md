@@ -82,11 +82,29 @@ memory.
   `AgentEpisodes.expire()` with the turns' expiry. The make-a-kind flow (a new room or app) calls
   `spawn(room:title:classIDs:)`.
 
-## 6. Next
+## 6. Tess coordinates (`ask_agent`)
 
-- **Tess coordinates (`ask_agent`).** She runs one or more room agents in parallel, each from its `AgentContext`, its
-  own scope and its own tools. Each report is kept as an episode, and she answers him.
+Code: `TessRun+Agents.swift`. Tests: `AgentDeskTests.swift`.
+
+- **Who asks.** Only Tess, at the top of the tree. A room agent that tries is told "Only Tess asks the rooms."
+- **The call.** Tess calls `ask_agent(agents, question)` with 1 to 3 rooms, by room name, agent name or a room he
+  made. Unknown rooms come back as the list of rooms there are, under the policy.
+- **Each child run:**
+  - Runs in parallel, as itself: its `AgentContext` blocks, its own scope (recall, open and its notebook), and its own
+    tools minus `ask_agent`.
+  - Uses its own rung: plain or open by the question, or the phone's model when Tess is on it.
+  - Sees no history and no screen. Its episodes are its history, and the question must stand alone.
+  - Its words never stream to him.
+  - Its writes land as ghost rows like hers. Each child has its own phrase budget.
+- **Results.** Each report (600 characters at most) goes back to Tess as "Deck: ...". It is kept as that agent's
+  episode, so its next run starts from it. A failed run keeps no episode.
+- **The picker.** `ToolPicker` now gets Tess's own tools on a frame ask, so `ask_agent`, `recall` and `remember` are
+  offered next to the screen's calls.
+
+## 7. Next
+
 - **Test-world checks:**
   - Continuity: "what did we decide last week" answered from an episode.
   - Scope: Galley can't reach the Deck's notebook.
   - Spawn: a new room makes one agent, and only one.
+- **Reflect at 4 am.** It goes through `remember` per agent.

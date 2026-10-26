@@ -65,8 +65,8 @@ public struct AgentSpec: Sendable, Equatable, Identifiable {
 
     public static let tess = AgentSpec(
         name: "Tess", title: "Tess", persona: Persona.tess, room: "tess", plain: .plain, open: .open,
-        tools: reads + web + ["remember", "ask_agent", "createTask", "completeTask", "rescheduleTask", "createNote",
-                              "addToList", "addGroceries", "logSet"],
+        tools: reads + ["ask_agent", "remember"] + web + ["createTask", "completeTask", "rescheduleTask",
+                                                          "createNote", "addToList", "addGroceries", "logSet"],
         beliefClasses: [], notebook: "/memories/tess", summaries: Summary.allCases, expertise: nil,
         maxRounds: 10, maxChildren: 3, depth: 0, labOnly: false
     )
