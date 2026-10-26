@@ -102,6 +102,13 @@ reads as the screen's own life, not an overlay:
 Tess's soul does `handOff(target:)` to the reacting place's frame first (tess-soul.md), then the place plays. A
 bound call that the engine refuses moves nothing: her line says why.
 
+The look of a change Tess makes is sheet 285 (`docs/design/tess-hand-285.md`, board v12 "Tess acts"):
+- The place's own move plays, starting at 0.5 of the carry track.
+- What she changed stays in her blue for the 10 s Undo window, then dries into the room's ink.
+- The wash goes behind the place on keystones with gaps (Galley rail, Log wall, Watch woods). On full-bleed
+  keystones (Deck, Lookout, Purse) it lies over the keystone in screen blend.
+- On a refusal, the dab stops short and goes home.
+
 ## 6. Walls (unchanged, now by construction)
 
 - A private item reaches Tess by its label only. Calls carry its `id`, so "done" on a "Private item" still checks the
@@ -156,8 +163,6 @@ row as they do on the widget.
   - Have the navigator keep the last touch and build the `TessFrame` when Tess opens.
   - When a ghost row lands, the shell plays the call's `Reaction` on the offering place. Tess's soul hands off to
     that place's frame first.
-- **Design studio:** one look per reaction when Tess, not his finger, makes the change. Recommended: the same move,
-  preceded by the soul's hand-off wash behind the place. Check that this reads clearly on the Deck board and the
-  Galley rail.
+- **Design studio:** done in sheet 285 (section 5).
 - **AI lane (this thread):** the test world gets frame questions ("done" on each room's widget, "open this", "move
   it to tomorrow" with the switcher on Tomorrow), so the runner scores the picker as well as the answers.

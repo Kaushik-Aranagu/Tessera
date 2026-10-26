@@ -38,12 +38,15 @@ public enum ElementCatalog {
                                         inputs: [CallInput("title", from: .asked),
                                                  CallInput("startsAt", from: .window, required: false)],
                                         reaction: .keystoneTakes)
-    static let pinNote = ElementCall("pinNote", phrases: ["pin"], inputs: [CallInput("note", from: .referent)],
-                                     reaction: .keystoneTakes, kinds: ["note"])
+    static let pinNote = ElementCall("pinNote", phrases: ["pin", "unpin"],
+                                     inputs: [CallInput("note", from: .referent),
+                                              CallInput("pinned", from: .asked, required: false)],
+                                     reaction: .keystoneTakes, kinds: ["note", "list"])
 
     // Lookout
     static let rainAlert = ElementCall("rainAlert", phrases: ["alert", "tell me when", "warn me"],
-                                       inputs: [CallInput("window", from: .window, required: false)],
+                                       inputs: [CallInput("on", from: .asked, required: false),
+                                                CallInput("leadMinutes", from: .asked, required: false)],
                                        reaction: .tessLine)
     static let planWalk = ElementCall("createTask", phrases: ["walk", "go out"],
                                       inputs: [CallInput("title", from: .asked, required: false),
@@ -79,9 +82,15 @@ public enum ElementCatalog {
                                   inputs: [CallInput("routine", from: .referent)], reaction: .strike,
                                   kinds: ["routine"])
     static let plant = ElementCall("plantRoutine", phrases: ["plant", "new habit", "start doing"],
-                                   inputs: [CallInput("name", from: .asked)], reaction: .keystoneTakes)
-    static let pause = ElementCall("pauseRoutine", phrases: ["pause", "rest", "skip"],
-                                   inputs: [CallInput("routine", from: .referent)], reaction: .reform,
+                                   inputs: [CallInput("name", from: .asked),
+                                            CallInput("cadence", from: .asked, required: false),
+                                            CallInput("weekdays", from: .asked, required: false)],
+                                   reaction: .keystoneTakes)
+    static let pause = ElementCall("pauseRoutine", phrases: ["pause", "rest", "skip", "resume"],
+                                   inputs: [CallInput("routine", from: .referent),
+                                            CallInput("days", from: .asked, required: false),
+                                            CallInput("resume", from: .asked, required: false)],
+                                   reaction: .reform,
                                    kinds: ["routine"])
 
     // Purse: the phone's own rungs only (money actions are never offered to Claude).
