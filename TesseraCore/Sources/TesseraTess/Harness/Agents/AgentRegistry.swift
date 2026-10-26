@@ -1,5 +1,8 @@
 import CryptoKit
 import Foundation
+#if canImport(Security)
+    import Security
+#endif
 import TesseraCore
 
 /// Tess's agents as objects he can see (docs/ai/harness/agents.md). The shipped ones mirror `AgentSpec`, which stays
@@ -9,8 +12,8 @@ import TesseraCore
 @MainActor
 public struct AgentRegistry {
     public let engine: ActionEngine
-    /// This install's salt for private room keys. It lives in the app's own defaults, never in the store, so a backup
-    /// or export can't be used to confirm a guessed room name.
+    /// This install's salt for private room keys. It lives in the Keychain, this device only, never in the store or a
+    /// device backup, so neither a Tessera backup nor a full phone backup can be used to confirm a guessed room name.
     let roomSalt: Data
 
     public init(engine: ActionEngine, roomSalt: Data = AgentRegistry.installSalt()) {
@@ -18,16 +21,29 @@ public struct AgentRegistry {
         self.roomSalt = roomSalt
     }
 
-    static let saltKey = "tessera.agentRoomSalt"
+    /// The install's room salt: 32 random bytes made on first use and kept in the Keychain. When the Keychain can't
+    /// be read (before first unlock, or no Keychain), this launch uses a salt of its own and never overwrites the kept
+    /// one; a private room spawned then is found again only in that launch.
+    public static func installSalt() -> Data {
+        #if canImport(Security)
+            switch RoomSaltKeychain.read() {
+            case let .found(salt):
+                return salt
+            case .missing:
+                let salt = freshSalt()
+                return RoomSaltKeychain.save(salt) ? salt : launchSalt
+            case .unreadable:
+                return launchSalt
+            }
+        #else
+            return launchSalt
+        #endif
+    }
 
-    /// The install's room salt: 32 random bytes made on first use.
-    public static func installSalt(defaults: UserDefaults = .standard) -> Data {
-        if let salt = defaults.data(forKey: saltKey), salt.count == 32 {
-            return salt
-        }
-        let salt = SymmetricKey(size: .bits256).withUnsafeBytes { Data($0) }
-        defaults.set(salt, forKey: saltKey)
-        return salt
+    static let launchSalt = freshSalt()
+
+    static func freshSalt() -> Data {
+        SymmetricKey(size: .bits256).withUnsafeBytes { Data($0) }
     }
 
     var store: ObjectStore {
@@ -192,3 +208,45 @@ public struct AgentRegistry {
         ((try? JSONDecoder().decode([String].self, from: Data(text.utf8))) ?? []).compactMap(UUID.init(uuidString:))
     }
 }
+
+#if canImport(Security)
+    /// The room salt's Keychain item: a generic password, available after first unlock (the 4 am pass runs locked),
+    /// this device only, never synced.
+    enum RoomSaltKeychain {
+        enum Read {
+            case found(Data)
+            case missing
+            case unreadable
+        }
+
+        static let service = "com.kaushikaranagu.tessera.agentRoomSalt"
+
+        static var query: [String: Any] {
+            [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
+             kSecAttrAccount as String: "salt", kSecAttrSynchronizable as String: false]
+        }
+
+        static func read() -> Read {
+            var lookup = query
+            lookup[kSecReturnData as String] = true
+            lookup[kSecMatchLimit as String] = kSecMatchLimitOne
+            var item: CFTypeRef?
+            switch SecItemCopyMatching(lookup as CFDictionary, &item) {
+            case errSecSuccess:
+                guard let data = item as? Data, data.count == 32 else { return .unreadable }
+                return .found(data)
+            case errSecItemNotFound:
+                return .missing
+            default:
+                return .unreadable
+            }
+        }
+
+        static func save(_ salt: Data) -> Bool {
+            var item = query
+            item[kSecValueData as String] = salt
+            item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+            return SecItemAdd(item as CFDictionary, nil) == errSecSuccess
+        }
+    }
+#endif
