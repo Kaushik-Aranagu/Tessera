@@ -148,3 +148,23 @@ Settings > Layout mode. Places only, no content; read-only for now (editable lat
   "Back up") rules, straight from shell-contract-283.md. Tap the background: where you are ("Galley, the
   landing, 5 of 7") and the three gestures. Leave: Nav word twice, or the left-edge pull.
 - Reduce Motion: bubbles jump to their frames; labels change without motion.
+
+## v8: Layout mode in glass (his Oct 25 7:27-7:28 PM notes: "neat, smooth, right spaces, glass-like, mixing and splitting")
+Replaces the v7 bubbles.
+- Panes: each place is a glass pane at its exact frame, inset 2 pt (every seam reads as a 4 pt gap). Radius
+  min(22, max(10, 0.3 x shorter side)). Glass = room tint 13% + white sheen gradient (52% to 16%), 16 pt
+  background blur with 1.7 saturation, 1 pt inner rim, 1.5 pt top highlight, soft room-coloured drop shadow.
+  Black look: white 10% to 3%, rim 22%. In the app this is Liquid Glass (`glassEffect`) on a debug surface only.
+- Masthead is a frosted plate (5% tint, 6 pt blur) the title panes sit on. Empty places are hollow hatched glass.
+- Breaths are not panes: a measured gap with end ticks and its height (14, 28, 16 pt). The 24 pt side margins
+  are dashed guides labelled 24. Behind everything, three soft room-tinted glows so the glass has light to bend.
+- Title pane carries the room name (24 pt bold) and "the landing, 3 of 7" / "a door page, 3 of 7".
+- Next room: no pane moves. Tint crossfades (0.45 s), a sheen sweeps every pane left to right, top to bottom
+  (0.9 s), labels change per place (title flaps, keystone turns, dial spins and slows, summary from the right).
+- Depth and Bridge to room: panes that change shape go liquid. They become metaballs (blur 7, alpha threshold,
+  26% room tint), spring to their new frames (720 ms, damped, staggered by distance), merging into the Door
+  title and the Page or pulling apart on the way back, then set into glass (300 ms blur-in). Bridge's Settings
+  word becomes the Title; its Departure board splits into Switcher, Needs and Nav word.
+- Tap a pane: a glass card (26 pt radius, 22 pt blur) with frame, holds, touch, next room and door page rules.
+  It docks over the keystone for lower panes and above the foot for upper panes. Tap outside to close.
+- Reduce Motion: no liquid, no sheen; panes change in place.
