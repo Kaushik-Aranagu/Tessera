@@ -212,38 +212,75 @@ private extension CGFloat {
 
 /// The door summary beside the landing dial (sheet 283): x 186, top 652; a 13 pt ink 2 label and up to three
 /// 16/24 lines, the first 700. It rises 6 pt by a clip when the focus changes. Not blurred; each room fills it its way.
+/// How a room's door summary changes when the dial turns (283 v6). Plain is the rise every room had; a room picks its
+/// own through the environment, so the scaffold needs no new parameter.
+enum DoorSummaryStyle {
+    /// A 6 pt rise (the default).
+    case plain
+    /// Galley: the new summary comes down like a printed ticket; the old one lifts away.
+    case ticket
+    /// Purse: words hold still (a plain fade); only the numbers roll like a meter, digit by digit.
+    case meter
+}
+
+extension EnvironmentValues {
+    @Entry var doorSummaryStyle: DoorSummaryStyle = .plain
+}
+
 struct DoorSummary: View {
     let door: DialDoor?
     /// The summary's own rise on a focus change. The standing shell turns it off: there the place plays the move.
     var ownMove = true
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.doorSummaryStyle) private var style
 
     var body: some View {
         if let door, door.label != nil || !door.lines.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
-                if let label = door.label {
-                    Text(label)
-                        .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .lineLimit(1)
-                        .frame(height: 20, alignment: .leading)
-                }
-                ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
-                    FitLine(
-                        forms: FitLine.cuts(line),
-                        size: 16,
-                        color: Theme.Colors.ink,
-                        weight: index == 0 ? .bold : .regular
-                    )
-                    .frame(width: 192, height: 24, alignment: .leading)
-                }
+            switch style {
+            case .plain:
+                // The standing shell plays the move itself (`ownMove` false): then the summary keeps one identity.
+                lines(door)
+                    .id(ownMove ? door.id : "summary")
+                    .transition(.offset(y: reduceMotion || !ownMove ? 0 : 6))
+                    .tesseraAnimation(Theme.Motion.firm, value: ownMove ? door.id : "summary")
+            case .ticket:
+                // Galley: the new summary comes down like a ticket out of the printer; the old one lifts away.
+                lines(door)
+                    .id(door.id)
+                    .transition(reduceMotion ? .identity
+                        : .asymmetric(insertion: .push(from: .top),
+                                      removal: .offset(y: -14).combined(with: .opacity)))
+                    .tesseraAnimation(Theme.Motion.firm, value: door.id)
+            case .meter:
+                // One identity across doors: the digits roll, the words cross-fade in place.
+                lines(door)
+                    .contentTransition(reduceMotion ? .identity : .numericText())
+                    .tesseraAnimation(Theme.Motion.firm, value: door.id)
             }
-            .frame(width: 192, alignment: .leading)
-            .id(ownMove ? door.id : "summary")
-            .transition(.offset(y: reduceMotion || !ownMove ? 0 : 6))
-            .tesseraAnimation(Theme.Motion.firm, value: ownMove ? door.id : "summary")
-            .accessibilityElement(children: .combine)
         }
+    }
+
+    private func lines(_ door: DialDoor) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let label = door.label {
+                Text(label)
+                    .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(1)
+                    .frame(height: 20, alignment: .leading)
+            }
+            ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
+                FitLine(
+                    forms: FitLine.cuts(line),
+                    size: 16,
+                    color: Theme.Colors.ink,
+                    weight: index == 0 ? .bold : .regular
+                )
+                .frame(width: 192, height: 24, alignment: .leading)
+            }
+        }
+        .frame(width: 192, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }
