@@ -22,41 +22,21 @@ struct RoutinesWoodlandLandingPage: View {
     /// The keystone hands the widget its item: the bird on arrival, petals when the item changes.
     @State private var handOver = WatchHandOver.Moment(kind: .bird, at: Date())
 
-    /// Plum 8E4A78 light, D59AC4 dark (contract §9).
-    static let accent = Color(light: 0x8E4A78, dark: 0xD59AC4)
-    /// Wine, for a thirsty tree (241 "needs care"): 9A2541 / EE8E9C.
-    static let wine = Color(light: 0x9A2541, dark: 0xEE8E9C)
-
-    private var gold: Color {
-        scheme == .dark ? Color(hex: 0xD9C27A) : Color(hex: 0x7E6A1E)
-    }
-
-    private var slate: Color {
-        scheme == .dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F)
-    }
+    static let accent = WatchRoomContent.accent
+    static let wine = WatchRoomContent.wine
 
     var body: some View {
         let _ = model.revision
-        let now = AppClock.now
-        let front = RoutinesFront(model: model, now: now)
-        let today = TesseraDay().today(now)
-        let facts = RoutinesWoodlandFacts(front: front, notNow: RoutinesNotNow.ids(on: today))
-        let entries = front.items.map { item in
-            WatchWords.Entry(name: item.name, minute: item.usual?.startMinuteOfDay, done: item.doneAt != nil,
-                             due: front.todayIDs.contains(item.id)
-                                 || WoodlandLog.isDue(today: today, daily: item.daily, weekdays: item.weekdays))
-        }
+        let facts = WatchRoomContent.Facts.load(model: model, scheme: scheme, selected: selected)
         let time = WatchTime(rawValue: switcherIndex) ?? .evening
-        let tapped = facts.trees.first { $0.id == selected }
         LandingScaffold(title: "Watch", accent: Self.accent, navWord: "Bridge", onBack: { dismiss() },
                         onTitle: { model.open(.routinesBrowse) },
                         switcher: WatchTime.allCases.map(\.word),
                         switcherIndex: $switcherIndex, switcherVerticalIndex: $switcherVerticalIndex,
-                        needs: WatchWords.needs(time, entries),
-                        keystone: { keystone(facts, now: now) },
-                        caption: tapped.map { RoutinesWoodlandFacts.caption(for: $0, selected: true) }
-                            ?? WatchWords.restCaption(hasTrees: !facts.trees.isEmpty),
-                        widget: WatchWords.widget(facts, wine: Self.wine), widgetIndex: $widgetIndex,
+                        needs: facts.needs(time),
+                        keystone: { keystone(facts) },
+                        caption: facts.caption,
+                        widget: facts.widget, widgetIndex: $widgetIndex,
                         openWidget: { item in
                             if let id = UUID(uuidString: item.id) {
                                 model.open(.object(id))
@@ -65,7 +45,7 @@ struct RoutinesWoodlandLandingPage: View {
                             }
                         },
                         glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? Self.accent, room: .watch) },
-                        doors: doors(facts), focus: $focus,
+                        doors: facts.doors, focus: $focus,
                         openDoor: { _ in model.open(.routinesBrowse) },
                         action: footAction(facts), summaryStyle: .grow)
             .overlay { WatchHandOver(moment: handOver) }
@@ -77,7 +57,12 @@ struct RoutinesWoodlandLandingPage: View {
             .navigationBarBackButtonHidden(true)
             .alert("Plant a routine", isPresented: $planting) {
                 TextField("Name", text: $draft)
-                Button("Plant") { plant() }
+                Button("Plant") {
+                    if let id = WatchActions.plant(draft, model: model) {
+                        model.open(.object(id))
+                    }
+                    draft = ""
+                }
                 Button("Cancel", role: .cancel) {}
             }
     }
@@ -85,18 +70,15 @@ struct RoutinesWoodlandLandingPage: View {
     // MARK: Keystone
 
     /// The woodland is wider than the slot: it spans the phone (402 pt) and dissolves into the page at both edges.
-    private func keystone(_ facts: RoutinesWoodlandFacts, now: Date) -> some View {
-        let parts = Calendar.current.dateComponents([.hour, .minute], from: now)
-        let hour = Double(parts.hour ?? 12) + Double(parts.minute ?? 0) / 60
-        return RoutinesWoodlandScene(trees: facts.trees, selected: selected, hour: hour, tap: { id in
+    private func keystone(_ facts: WatchRoomContent.Facts) -> some View {
+        RoutinesWoodlandScene(trees: facts.trees, selected: selected, hour: WatchActions.hour(facts.now), tap: { id in
             if selected == id {
                 model.open(.object(id))
             } else {
                 withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { selected = id }
             }
         }, water: { id in
-            let name = facts.trees.first { $0.id == id }?.name ?? "It"
-            TessVoice.shared.say("\(name), watered.")
+            WatchActions.watered(facts.trees.first { $0.id == id }?.name ?? "It")
         }, waterRequest: waterRequest)
             .frame(width: LandingKeystone<EmptyView>.size.width, height: LandingKeystone<EmptyView>.size.height)
             .accessibilityLabel("Your woodland")
@@ -104,80 +86,25 @@ struct RoutinesWoodlandLandingPage: View {
 
     // MARK: Foot
 
-    /// Verb over object (283 v3): Plant a routine; swipe across for Water (the thirstiest tree, as a hold does, nothing
-    /// written to the log) and Pause (today is set aside on this phone, nothing marked missed).
-    private func footAction(_ facts: RoutinesWoodlandFacts) -> LandingFootAction {
-        let target = WatchWords.waterTarget(facts, selected: selected)
-        var alternates: [LandingFootAction.Step] = []
-        if let target {
-            alternates.append(.init(verb: "Water", object: target.name) {
-                waterRequest = WoodlandWaterRequest(id: target.id, at: Date())
-                TessVoice.shared.say("\(target.name), watered.")
-            })
+    /// Verb over object (283 v3), from the shared steps: Plant a routine; across, Water and Pause.
+    private func footAction(_ facts: WatchRoomContent.Facts) -> LandingFootAction {
+        let target = facts.waterTarget
+        let alternates: [LandingFootAction.Step] = facts.steps.dropFirst().map { step in
+            .init(verb: step.verb, object: step.object) {
+                if step.id == "water", let target {
+                    waterRequest = WoodlandWaterRequest(id: target.id, at: Date())
+                    WatchActions.watered(target.name)
+                } else if step.id == "pause" {
+                    WatchActions.togglePause(model: model)
+                }
+            }
         }
-        let paused = WatchPause.isPaused(on: TesseraDay().today(AppClock.now))
-        alternates.append(.init(verb: paused ? "Resume" : "Pause", object: "today") {
-            let day = TesseraDay().today(AppClock.now)
-            let was = WatchPause.isPaused(on: day)
-            WatchPause.set(!was, on: day)
-            model.touch()
-            TessVoice.shared.say(was ? "Watch back on for today." : "Watch paused for today. Nothing is marked missed.",
-                                 takeBack: { [model] in
-                                     WatchPause.set(was, on: day)
-                                     model.touch()
-                                 })
-        })
         return LandingFootAction(word: "Plant", object: "a routine", hint: "Plants a new routine",
                                  alternates: alternates)
         {
             draft = ""
             planting = true
         }
-    }
-
-    // MARK: Doors
-
-    private func doors(_ facts: RoutinesWoodlandFacts) -> [DialDoor] {
-        facts.doors.map { door in
-            let color: Color = switch door.id {
-            case "fruit": gold
-            case "lake": slate
-            default: Self.accent
-            }
-            return DialDoor(id: door.id, name: door.name, count: door.count > 0 ? "\(door.count)" : nil,
-                            color: color, lines: door.lines)
-        }
-    }
-
-    // MARK: Plant
-
-    /// "Plant" makes the routine (and adds it to the plan), then opens it to add its first step; Undo takes both.
-    private func plant() {
-        let title = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        draft = ""
-        guard !title.isEmpty else { return }
-        if looksLikeClaudeKey(title) {
-            TessVoice.shared.say(claudeKeyLine)
-            return
-        }
-        guard let made = try? model.engine.perform(CreateRoutine(title: title), by: .user) else {
-            TessVoice.shared.say("Didn't save that. Try again.")
-            return
-        }
-        var records = [made.record]
-        if let plan = model.plan,
-           let added = try? model.engine.perform(AddRoutineToPlan(plan: plan.id, routine: made.output.id), by: .user)
-        {
-            records.append(added.record)
-        }
-        model.touch()
-        TessVoice.shared.say("\(title) planted.", takeBack: { [model] in
-            for record in records.reversed() {
-                model.engine.undo(record)
-            }
-            model.touch()
-        })
-        model.open(.object(made.output.id))
     }
 }
 

@@ -58,7 +58,7 @@ struct ShellView<Room: RoomContent>: View {
             .coordinateSpace(.named(HomeMosaicPage.space))
         }
         .ignoresSafeArea()
-        .background { backdrop ?? AnyView(ThemedBackground()) }
+        .background { (backdrop ?? AnyView(ThemedBackground())).ignoresSafeArea() }
         .onChange(of: next, initial: true) { _, screen in apply(screen) }
         .onDisappear { driver?.cancel() }
     }

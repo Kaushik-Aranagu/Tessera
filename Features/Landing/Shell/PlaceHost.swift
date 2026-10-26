@@ -36,6 +36,7 @@ private struct PlaceRenderer: View {
     let act: (ShellIntent) -> Void
 
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.shellGlyphRoom) private var glyphRoom
 
     var body: some View {
         switch content.payload {
@@ -80,7 +81,7 @@ private struct PlaceRenderer: View {
                           open: { act(.openItem($0.id)) }, glyph: { _ in Color.clear })
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         case let .glyph(item, color):
-            LandingGlyph(item: item, color: color, formDelay: style.context == .merge ? 0.05 : 0.33)
+            LandingGlyph(item: item, color: color, formDelay: style.context == .merge ? 0.05 : 0.33, room: glyphRoom)
         case let .dial(doors):
             ShellDial(doors: doors, reelFrom: reduceMotion ? [] : style.reelFrom, navigator: navigator, act: act)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
