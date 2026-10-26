@@ -151,7 +151,10 @@ Settings > Layout mode. Places only, no content; read-only for now (editable lat
 
 ## v8: Layout mode in glass (his Oct 25 7:27-7:28 PM notes: "neat, smooth, right spaces, glass-like, mixing and splitting")
 Replaces the v7 bubbles.
-- Panes: each place is a pane at its exact frame, inset 2 pt (every seam reads as a 4 pt gap). Radius
+- Panes: each place is a pane at its exact frame, and every seam is an even 4 pt. The frames stay as they are.
+  Frames that touch inset 2 pt on each facing side. Switcher and Needs are already 4 pt apart (224 and 228), so they
+  get no inset on the sides that face each other. Dial and Door summary are 2 pt apart (184 and 186), so they get
+  1 pt on those sides. Every other side insets 2 pt. Radius
   min(22, max(10, 0.3 x shorter side)). The glass is the Lookout's raised glass (his 7:41 PM note: the glossy
   v8 look was "too artificial"): clear inside (room tint 3%, black 7%), no blur, no gloss; light from the top
   left (white glow -4,-4 blur 14 at 90%, black look 9%), shadow to the bottom right (5,8 blur 20 at 13%, black
