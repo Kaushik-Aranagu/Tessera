@@ -122,11 +122,12 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
  <p class="how">Tap any highlighted word, face or door. Back is a swipe from the left edge of the phone (or Escape). Swipes and holds work as on the phone: right is Done, left is Not now, hold the one thing to strike it.</p>
 </div>
 <div>
- <p class="eyebrow">Round 283, version 10, with sheets 284 and 285, Oct 25</p>
+ <p class="eyebrow">Round 283, with sheets 284 to 287, Oct 26</p>
  <h1>Every landing, one layout.</h1>
  <p class="lede">Every landing now opens like Bridge and keeps Bridge’s lower half: the widget in the middle and the doors dial below it. The top holds the title, a text-only switcher and the room’s needs. Tap a room in Bridge’s apps dial (or a face, or a highlighted word) to watch the flip. Swipe from the left edge, or tap “Bridge”, to go back.</p>
  <div class="notes283">
-  <p><b>New: living looks and coming back into view (sheet 286, Oct 26).</b> Every place can be shown more than one way, and Tess can change it. Try the third row of buttons. The Deck’s doors can be a Reel (the wheel), a Column (every door at once) or a Sentence (the doors as one line of words). The frame never moves; the door words travel from where they were to where they go. The look is kept per room. “Leave, change, come back” takes you to Bridge, changes the Galley’s data while you are away, and brings you back: the rail shows now, then only the two tickets that changed reprint, once, after the room has settled. Nothing replays.</p>
+  <p><b>New: reshape by hand (sheet 287).</b> Press “Deck: hold the Nav word to reshape”, or hold “Bridge” at the top right of any room yourself. The screen loosens: every place gets a glass outline, the Nav word becomes Done, and the foot becomes the shape line. Tap the doors, then swipe across inside them, or tap Reel, Index or Sentence. Each form is drawn from the room’s own doors, with the glass lens under your finger. Tap Done to keep it, with Undo for 10 s. Sheet 287 also maps every kind of change to its move, by who made it (you, Tess or the app), and adds a quiet stage where Tess can test a change without showing it.</p>
+  <p><b>New: living looks and coming back into view (sheet 286, Oct 26).</b> Every place can be shown more than one way, and Tess can change it. Try the third row of buttons. The Deck’s doors can be a Reel (the wheel), an Index (every door at once) or a Sentence (the doors as one line of words). The frame never moves; the door words travel from where they were to where they go. The look is kept per room. “Leave, change, come back” takes you to Bridge, changes the Galley’s data while you are away, and brings you back: the rail shows now, then only the two tickets that changed reprint, once, after the room has settled. Nothing replays.</p>
   <p><b>New: when Tess makes the change (sheet 285).</b> Use the “Tess acts” buttons under the phone. Her dab flies from her to the place on an arc, spreads into a blue wash, and the place plays its own move inside it, the same move your finger makes, only a little slower. What she changed stays in her blue until the 10 s Undo window closes, then it dries into the room’s own ink: blue chalk turns white on the Deck, the blue clip on a new Galley ticket turns steel, and her blue strike turns ink. On the rail the wash sits behind the tickets. The board has no gaps, so there the wash lies over it in light. When the engine refuses, her dab stops short, waits, and goes home. Nothing moves, and only her line says why. While Undo holds the foot, the action word steps aside. “Tess sets a rest day” shows the Deck’s rest: the board wipes tonight’s line and chalks the rest, today’s letter in the week takes the word “rest” under it (never a cross), the needs flap, the widget says it in type, and the barbell sets its plates down.</p>
   <p><b>New: level 1 and level 2 in every room (sheet 284, his 7:44 PM note).</b> Turn any room’s dial and tap the focused door. The page does not slide: the title and the keystone stay exactly where they were (the Galley rail keeps its tickets, the Deck keeps its board), the switcher and needs become the door’s title, and the widget, dial and summary make way for the door’s list. The list fills its block exactly, biggest first, so there is never a gap or a run of equal rows. Swipe the door title across for the next door. Tap a row for its item page: the same frame again, with the item’s title, three facts, and its body (Trip packing is a checklist, the Run plan is Tess’s note, 7 PM is the hours around it, Bench is its sets, Tacos are the steps, Walk is the week, Food is the ledger in “about” amounts). Swipe the item title across for the next item. Back undoes each step in place.</p>
   <p><b>New in version 6 (his 4:47 and 4:48 PM notes).</b> Back no longer moves the page. Pull from the left edge and the screen stays put: the content loosens and blurs a little and the nav word grows; let go past a short pull and every place changes in place, short of it everything settles back. The door summary beside the dial now changes in each room’s own way as you turn the dial. Log types its lines and backspaces the old ones. Lookout’s lines condense out of fog. The Deck chalks them on and wipes them off with a puff of dust. The Galley prints them like a ticket and tears the old one off. The Watch grows them from the ground and the old ones fall like leaves. The Purse keeps its words still and rolls only the numbers.</p>
@@ -179,11 +180,12 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
   <button class="w" data-th="galley-dish">Galley: Tess does the dishes</button>
  </div>
  <div class="bar" role="group" aria-label="Looks and coming back into view (sheet 286)">
-  <button class="w" data-th="look-column">Deck doors: Column</button>
+  <button class="w" data-th="look-index">Deck doors: Index</button>
   <button class="w" data-th="look-sentence">Deck doors: Sentence</button>
   <button class="w" data-th="look-reel">Deck doors: Reel</button>
-  <button class="w" data-th="look-tess">Galley: Tess shows the doors as a column</button>
+  <button class="w" data-th="look-tess">Galley: Tess shows the doors as an index</button>
   <button class="w" data-th="away-galley">Galley: leave, change, come back</button>
+  <button class="w" data-th="shape-deck">Deck: hold the Nav word to reshape</button>
  </div>
  <nav class="map" id="map" aria-label="Every screen"></nav>
 </div>
@@ -1143,7 +1145,15 @@ MAP.push(
 .clip.tess{background:var(--tessblue)}
 .thstrike{position:absolute;left:0;top:55%;height:1.5px;width:0;background:#2E2A24;transition:background .7s ease;pointer-events:none}
 .thstrike.tess{background:var(--tessblue)}
-.dlook .dw{cursor:pointer;font-weight:500;color:var(--ink);white-space:nowrap;letter-spacing:-.01em}.dlook .dw.f{font-weight:700}.dlook.column .dw{display:block}
+.shp{position:absolute;z-index:8;cursor:pointer;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--room,var(--ink)) 34%,transparent),0 6px 18px -12px color-mix(in srgb,var(--room,var(--ink)) 50%,transparent);transition:box-shadow .2s,transform .2s;touch-action:none}
+.shp.on{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--room,var(--ink)) 80%,transparent),inset 0 1.5px 0 rgba(255,255,255,.5),0 12px 26px -12px color-mix(in srgb,var(--room,var(--ink)) 70%,transparent);transform:translateY(-1px)}
+.shaping > *:not(.shp):not(.shapebar):not(.lnav):not(.dial):not(.dlook):not(.sbar){filter:saturate(.85)}
+.shapebar{position:absolute;left:24px;bottom:22px;width:290px;height:64px;z-index:9;display:flex;flex-direction:column;gap:2px;font:500 13px/18px var(--sans);color:var(--ink2)}
+.shapebar b{font:600 15px/20px var(--sans);color:var(--ink)}.shapebar i{font-style:normal;color:var(--ink)}
+.shapebar .fw{display:flex;gap:16px}.shapebar .fw button{font:600 20px/28px var(--sans);color:var(--ink2);background:none;border:0;padding:0;cursor:pointer}.shapebar .fw button.on{color:var(--room,var(--ink))}
+.shlens{position:absolute;width:60px;height:60px;border-radius:50%;z-index:10;pointer-events:none;background:color-mix(in srgb,var(--paper,#fff) 8%,transparent);-webkit-backdrop-filter:blur(1px) saturate(1.2);backdrop-filter:blur(1px) saturate(1.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),inset -4px -6px 12px rgba(0,0,0,.08),-3px -3px 10px rgba(255,255,255,.6),4px 7px 16px rgba(0,0,0,.14)}
+
+.dlook .dw{cursor:pointer;font-weight:500;color:var(--ink);white-space:nowrap;letter-spacing:-.01em}.dlook .dw.f{font-weight:700}.dlook.index .dw{display:block}
 .tix.n5{gap:8px}.tix.n5 .face{padding:11px 6px 9px}.tix.n5 .face .ttk{letter-spacing:.02em;font-size:12px}.tix.n5 .face .sub{letter-spacing:.02em}
 #tessline span{margin-right:.27em}
 </style>
@@ -2329,16 +2339,16 @@ window.__th=k=>{const [room,f]=TH_DEMOS[k];const tl=$('#tessline');if(tl)tl.inne
 document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
 
 /* ================= 286: living UI. A place keeps its frame and its meaning; only its look changes.
-   The doors dial has three looks: Reel (the wheel), Column (every door at once), Sentence (the doors as one line of
+   The doors dial has three looks: Reel (the wheel), Index (every door at once), Sentence (the doors as one line of
    words). A swap moves the words that both looks share from where they were to where they go, and fades the rest. */
-const LOOKS=window.__looks={};const LOOK_NAMES={reel:'Reel',column:'Column',sentence:'Sentence'};
+const LOOKS=window.__looks={};const LOOK_NAMES={reel:'Reel',index:'Index',sentence:'Sentence'};
 function doorList(el,room){const L=LV[room];const d=el.querySelector(':scope > .dial');let focus=0;
  if(d){const f=[...d.querySelectorAll('.d')].find(e=>/translateY\(40px\)/.test(e.style.transform||''));if(f){const t=f.textContent.replace(/\d+$/,'').trim();const i=L.doors.findIndex(x=>x.k===t);if(i>=0)focus=i}}
  return {doors:L.doors.map(x=>x.k),focus}}
 function lookEl(el,room,look){const {doors,focus}=doorList(el,room);const f0=[...el.querySelectorAll(':scope > .dial .d')].find(e=>/translateY\(40px\)/.test(e.style.transform||''));const color=(f0&&f0.style.color)||'var(--ink)';
  const w=h('div','dlook '+look);w.style.cssText='position:absolute;left:24px;top:640px;width:160px;height:120px;z-index:6';
  const word=(t,i)=>{const s=h('span','dw',t);s.dataset.t=t;if(i===focus){s.classList.add('f');s.style.color=color}s.onclick=()=>go('l1_'+room,{door:i});return s};
- if(look==='column'){const two=doors.length>5,rows=two?Math.ceil(doors.length/2):doors.length,lh=120/rows;
+ if(look==='index'){const two=doors.length>5,rows=two?Math.ceil(doors.length/2):doors.length,lh=120/rows;
   doors.forEach((t,i)=>{const s=word(t,i);const c=two?Math.floor(i/rows):0,r=two?i%rows:i;s.style.cssText+='position:absolute;left:'+(c*84)+'px;top:'+(r*lh)+'px;height:'+lh+'px;line-height:'+lh+'px;font-size:'+(two?14:Math.min(20,lh*.72))+'px';w.appendChild(s)})}
  else{w.style.cssText+=';display:block;font-size:19px;line-height:26px';doors.forEach((t,i)=>{w.appendChild(word(t,i));w.appendChild(document.createTextNode(i===doors.length-1?'.':i===doors.length-2?' and ':', '))})}
  return w}
@@ -2356,7 +2366,7 @@ function setDoorLook(el,room,look,anim){const dl=el.querySelector(':scope > .dia
 ['notes','weather','training','kitchen','routines','money'].forEach(room=>{const S=SCREENS[room];if(!S||S._looked)return;const r=S.render;S._looked=1;
  S.render=function(el,P){const c=r.call(this,el,P);if(LOOKS[room]&&el.querySelector(':scope > .dial'))setDoorLook(el,room,LOOKS[room],false);return c}});
 function lookBy(room,look,byTess){const el=current;if(!el)return;const was=LOOKS[room]||'reel';if(was===look)return;
- const play=()=>{LOOKS[room]=look;setDoorLook(el,room,look,true);thUndo(el,byTess,(byTess?'showed':'Showing')+' the doors as a '+LOOK_NAMES[look].toLowerCase()+'.',()=>{LOOKS[room]=was;setDoorLook(el,room,was,true)},null)};
+ const play=()=>{LOOKS[room]=look;setDoorLook(el,room,look,true);thUndo(el,byTess,(byTess?'showed':'Showing')+' the doors as '+(look==='index'?'an index':'a '+LOOK_NAMES[look].toLowerCase())+'.',()=>{LOOKS[room]=was;setDoorLook(el,room,was,true)},null)};
  if(byTess)tessHand({x:24,y:640,w:160,h:120},{hold:900}).then(play);else play()}
 
 /* ================= 286: back into view. Show now, then play only what changed while away, once (600 ms at most).
@@ -2374,8 +2384,44 @@ function galleyAway(){const go2=()=>{const el=current;SEEN.kitchen=railSnap(el);
    go('kitchen');setTimeout(()=>{railReturn(current,SEEN.kitchen)},0)},1400)};
  const top=stack.length?stack[stack.length-1].id:null;if(top==='kitchen')go2();else{reset('home');go('kitchen');setTimeout(go2,1500)}}
 
-Object.assign(TH_DEMOS,{'look-column':['training',()=>lookBy('training','column',false)],'look-sentence':['training',()=>lookBy('training','sentence',false)],
- 'look-reel':['training',()=>lookBy('training','reel',false)],'look-tess':['kitchen',()=>lookBy('kitchen','column',true)],'away-galley':['kitchen',galleyAway]});
+Object.assign(TH_DEMOS,{'look-index':['training',()=>lookBy('training','index',false)],'look-sentence':['training',()=>lookBy('training','sentence',false)],
+ 'look-reel':['training',()=>lookBy('training','reel',false)],'look-tess':['kitchen',()=>lookBy('kitchen','index',true)],'away-galley':['kitchen',galleyAway]});
+document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
+
+/* ================= 287: reshape by hand. Hold the Nav word: the screen loosens into shape mode, over the live
+   screen (Layout mode's map, made live). Tap a place to pick it. Swipe across inside it (the glass lens under the
+   finger), or tap a form word in the foot, to flip its forms drawn from his own data. Tap Done to keep, Undo 10 s. */
+const FORMS={dial:['reel','index','sentence']};const FORM_WORD={reel:'Reel',index:'Index',sentence:'Sentence'};
+const SH_PLACES=[['keystone',24,196,354,182,['the room’s own material','calmer, as drawn']],['switcher',24,106,200,76,['type, roll','next round']],['needs',228,118,150,58,['type','one line, two lines']],
+ ['widget',24,412,354,200,['rise, stack, rows','more detail, just names']],['dial',24,640,160,120,null],['summary',186,640,192,120,['type, sentence','numbers only']]];
+function shapeBind(el,room){const nav=el.querySelector('.lnav');if(!nav||nav._sb)return;nav._sb=1;let t=null;
+ nav.addEventListener('pointerdown',()=>{t=setTimeout(()=>{nav._held=1;shapeOn(el,room)},450)});['pointerup','pointerleave','pointercancel'].forEach(k=>nav.addEventListener(k,()=>clearTimeout(t)));
+ nav.addEventListener('click',e=>{if(nav._held||el.classList.contains('shaping')){e.stopImmediatePropagation();e.preventDefault();if(nav._held){nav._held=0;return}shapeOff(el,room)}},true)}
+function shapeOn(el,room){if(el.classList.contains('shaping')||!el.querySelector(':scope > .dial'))return;el.classList.add('shaping');const nav=el.querySelector('.lnav');nav._was=nav.textContent;nav.textContent='Done';thAside(el,1);
+ const ul=el.querySelector('.undoline');if(ul)ul.innerHTML='';el._shapeFrom=LOOKS[room]||'reel';
+ const bar=h('div','shapebar','<b>Shape</b><span>Tap a place to reshape it.</span>');el.appendChild(bar);
+ SH_PLACES.forEach(([k,x,y,w,hh],i)=>{const p=h('div','shp');p.dataset.k=k;p.style.cssText='left:'+(x+2)+'px;top:'+(y+2)+'px;width:'+(w-4)+'px;height:'+(hh-4)+'px;border-radius:'+Math.min(22,Math.max(10,.3*Math.min(w,hh)))+'px';el.appendChild(p);
+  if(!RM)p.animate([{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'none'}],{duration:320,delay:i*30,easing:'cubic-bezier(.2,.8,.3,1)',fill:'backwards'});
+  p.onclick=e=>{e.stopPropagation();shapePick(el,room,k)};if(k==='dial')shapeSwipe(el,room,p)})}
+function shapeBar(el,room,k){const bar=el.querySelector(':scope > .shapebar');if(!bar)return;const P=SH_PLACES.find(x=>x[0]===k);
+ if(k==='dial'){const cur=LOOKS[room]||'reel';bar.innerHTML='<b>Doors</b><span class="fw">'+FORMS.dial.map(f=>'<button data-f="'+f+'"'+(f===cur?' class="on"':'')+'>'+FORM_WORD[f]+'</button>').join('')+'</span>';
+  bar.querySelectorAll('[data-f]').forEach(b=>b.onclick=e=>{e.stopPropagation();shapeTo(el,room,b.dataset.f)})}
+ else bar.innerHTML='<b>'+k[0].toUpperCase()+k.slice(1)+'</b><span>'+P[5][0]+'. <i>'+P[5][1]+'</i>. Drawn next round.</span>'}
+function shapePick(el,room,k){el.querySelectorAll(':scope > .shp').forEach(p=>p.classList.toggle('on',p.dataset.k===k));shapeBar(el,room,k)}
+function shapeTo(el,room,f){if((LOOKS[room]||'reel')===f)return;LOOKS[room]=f;setDoorLook(el,room,f,true);shapeBar(el,room,'dial')}
+function shapeSwipe(el,room,p){let x0=null,lens=null;
+ p.addEventListener('pointerdown',e=>{if(!p.classList.contains('on'))return;x0=e.clientX;p.setPointerCapture(e.pointerId)});
+ p.addEventListener('pointermove',e=>{if(x0==null)return;const dx=(e.clientX-x0)/K;if(Math.abs(dx)>8&&!lens){lens=h('i','shlens');el.appendChild(lens)}
+  if(lens){const [x,y]=localXY(e,el);lens.style.left=(x-30)+'px';lens.style.top=(y-30)+'px'}});
+ p.addEventListener('pointerup',e=>{if(x0==null)return;const dx=(e.clientX-x0)/K;x0=null;if(lens){const l=lens;lens=null;l.animate([{opacity:1},{opacity:0,transform:'scale(.8)'}],{duration:180}).onfinish=()=>l.remove()}
+  if(Math.abs(dx)<40)return;const L=FORMS.dial,i=L.indexOf(LOOKS[room]||'reel');shapeTo(el,room,L[(i+(dx<0?1:L.length-1))%L.length])})}
+function shapeOff(el,room){el.classList.remove('shaping');const nav=el.querySelector('.lnav');if(nav&&nav._was)nav.textContent=nav._was;
+ el.querySelectorAll(':scope > .shp,:scope > .shapebar').forEach(e=>{if(RM)return e.remove();e.animate([{opacity:1},{opacity:0}],{duration:200}).onfinish=()=>e.remove()});
+ const was=el._shapeFrom,now=LOOKS[room]||'reel';thAside(el,0);
+ if(was!==now)thUndo(el,false,'Doors as '+(now==='index'?'an index':'a '+FORM_WORD[now].toLowerCase())+'.',()=>{LOOKS[room]=was;setDoorLook(el,room,was,true)},null)}
+['notes','weather','training','kitchen','routines','money'].forEach(room=>{const S=SCREENS[room];if(!S||S._shaped)return;const r=S.render;S._shaped=1;
+ S.render=function(el,P){const c=r.call(this,el,P);if(el.querySelector(':scope > .dial'))shapeBind(el,room);return c}});
+TH_DEMOS['shape-deck']=['training',()=>{shapeOn(current,'training');setTimeout(()=>shapePick(current,'training','dial'),500)}];
 document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
 
 })();

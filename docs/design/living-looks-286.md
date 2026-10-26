@@ -5,6 +5,9 @@ modified... if I don't like... how a list is being shown, like how a dial is bei
 customizable... co-built for AI." And: "UI part should only work when the user is actually seeing that part of the
 screen... otherwise we should only update the data layer."
 
+> Updated by sheet 287 (`transitions-287.md`): the looks now use #1449's names (forms and traits). The Column look
+> is now the **index** form, and the gesture is holding the Nav word, not swiping inside a pane in Layout mode.
+
 Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp. The third row of buttons has the Deck's door looks, Tess
 changing a look, and "leave, change, come back" on the Galley. This sheet builds on the shell contract
 (`shell-contract-283.md`), the element contract (`docs/ai/harness/elements.md`, #1434), Tess's hand (sheet 285)
