@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 @testable import Tessera
 import TesseraCore
 import Testing
@@ -30,10 +31,7 @@ struct BridgeWidgetTests {
     }
 
     @Test func theMiddleLinesKeyWordHasNoUnderline() {
-        let thing = HomeThing(id: "t", kind: .list, big: "2 left", bigIsNumber: false, accent: .app(.lists),
-                              mid: "Packing", keyword: "Packing", small: "", taskID: nil,
-                              target: .room(.lists), undoLine: nil)
-        let text = HomeOneThing.midText(thing)
+        let text = HomeOneThing.midText("Packing, 2 left", keyword: "Packing", accent: .green)
         #expect(text.runs.allSatisfy { $0.underlineStyle == nil })
     }
 

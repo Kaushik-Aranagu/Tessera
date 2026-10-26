@@ -246,7 +246,7 @@ struct AppsListSlot: View {
                         .frame(width: 192, alignment: .leading)
                         .offset(x: 162)
                         .id(row.app)
-                        .transition(reduceMotion ? .identity : .reveal)
+                        .transition(.offset(y: reduceMotion ? 0 : 6))
                 }
             }
             .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)

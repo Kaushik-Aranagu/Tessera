@@ -239,11 +239,14 @@ struct HomeOneThing: View {
     /// (ink
     /// for tasks).
     static func midText(_ thing: HomeThing) -> AttributedString {
-        var text = AttributedString(thing.mid)
+        midText(thing.mid, keyword: thing.keyword, accent: thing.accentColor)
+    }
+
+    static func midText(_ mid: String, keyword: String?, accent: Color) -> AttributedString {
+        var text = AttributedString(mid)
         text.font = Theme.voice(size: 20)
         text.foregroundColor = Theme.Colors.ink
-        if let keyword = thing.keyword, let range = text.range(of: keyword) {
-            let accent = thing.accentColor
+        if let keyword, let range = text.range(of: keyword) {
             // Sheet 283: no decorative underline; the key word is 600 in its accent at the line's own size.
             text[range].font = Theme.voice(size: 20).weight(.semibold)
             text[range].foregroundColor = accent
