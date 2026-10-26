@@ -129,7 +129,23 @@ public struct TessFrame: Sendable, Equatable {
         return facts.isEmpty ? head : "\(head), \(facts.joined(separator: ", "))"
     }
 
+    /// What kinds of thing are money, whichever room shows them.
+    static let moneyKinds: Set<String> = [
+        "spend",
+        "paycheck",
+        "inflow",
+        "pool",
+        "pool move",
+        "move",
+        "rate note",
+        "bill",
+    ]
+
+    /// A thing is device-only when it says so, when any of its facts do, when it is private, when it is money, or
+    /// when it sits in the Purse: the wall holds even if the navigator forgot to set a taint.
     func taint(of item: ElementItem) -> Taint {
-        item.taint == .deviceOnly || item.facts.contains { $0.taint == .deviceOnly } ? .deviceOnly : .claudeSafe
+        let own = item.taint == .deviceOnly || item.facts.contains { $0.taint == .deviceOnly }
+        let money = Self.moneyKinds.contains(item.kind.lowercased())
+        return own || item.isPrivate || room == "purse" || money ? .deviceOnly : .claudeSafe
     }
 }

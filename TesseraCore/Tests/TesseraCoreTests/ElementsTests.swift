@@ -115,6 +115,25 @@ struct ElementsTests {
         #expect(!amounts.isEmpty && amounts.allSatisfy { !DoorPolicy.strict.allows($0, onClaude: true) })
     }
 
+    @Test func moneyPrivateAndPurseItemsAreDeviceOnlyWhateverTheNavigatorSet() {
+        // None of these carries a taint of its own.
+        let spend = ElementItem(kind: "Spend", name: "Lunch", facts: [ElementFact("12")])
+        let hidden = ElementItem(id: UUID(), kind: "note", name: "Private note", isPrivate: true)
+        let inPurse = ElementItem(kind: "door", name: "Month")
+        let plain = ElementItem(kind: "task", name: "Call the bank")
+        let log = frame("log", items: [spend, hidden, plain])
+        let purse = frame("purse", items: [inPurse])
+        for line in log.fragments().filter({ $0.text.contains("Lunch") || $0.text.contains("Private note") })
+            + purse.fragments().filter({ $0.text.contains("Month") })
+        {
+            #expect(!DoorPolicy.strict.allows(line, onClaude: true), "\(line.text)")
+        }
+        #expect(log.fragments().contains { $0.text.contains("Call the bank") && DoorPolicy.strict.allows(
+            $0,
+            onClaude: true
+        ) })
+    }
+
     // MARK: Open asks
 
     @MainActor
