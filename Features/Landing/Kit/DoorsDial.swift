@@ -217,7 +217,7 @@ private extension CGFloat {
 enum DoorSummaryStyle {
     /// A 6 pt rise (the default).
     case plain
-    /// Galley: the new summary prints down in 7 steps (0.52 s); the old one tears off upward on a zigzag edge.
+    /// Galley: the new summary comes down like a printed ticket; the old one lifts away.
     case ticket
     /// Purse: words hold still (a plain fade); only the numbers roll like a meter, digit by digit.
     case meter
@@ -242,13 +242,12 @@ struct DoorSummary: View {
                     .transition(.offset(y: reduceMotion ? 0 : 6))
                     .tesseraAnimation(Theme.Motion.firm, value: door.id)
             case .ticket:
-                TicketPrint(id: door.id) { lines(door) }
+                // Galley: the new summary comes down like a ticket out of the printer; the old one lifts away.
+                lines(door)
                     .id(door.id)
-                    .transition(.asymmetric(insertion: .identity,
-                                            removal: reduceMotion ? .identity : .modifier(active: TearOff(gone: true),
-                                                                                          identity: TearOff(
-                                                                                              gone: false
-                                                                                          ))))
+                    .transition(reduceMotion ? .identity
+                        : .asymmetric(insertion: .push(from: .top),
+                                      removal: .offset(y: -14).combined(with: .opacity)))
                     .tesseraAnimation(Theme.Motion.firm, value: door.id)
             case .meter:
                 // One identity across doors: the digits roll, the words cross-fade in place.
@@ -280,76 +279,5 @@ struct DoorSummary: View {
         }
         .frame(width: 192, alignment: .leading)
         .accessibilityElement(children: .combine)
-    }
-}
-
-/// Prints its content down in 7 steps over 0.52 s, like a ticket out of the printer. Reduce Motion: shown at once.
-private struct TicketPrint<Content: View>: View {
-    let id: String
-    @ViewBuilder let content: Content
-
-    static var steps: Int {
-        7
-    }
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var printed = Self.steps
-
-    var body: some View {
-        content
-            .mask(alignment: .top) {
-                GeometryReader { proxy in
-                    Rectangle().frame(height: proxy.size.height * CGFloat(printed) / CGFloat(Self.steps))
-                }
-            }
-            .task(id: id) {
-                guard !reduceMotion else {
-                    printed = Self.steps
-                    return
-                }
-                printed = 0
-                for step in 1 ... Self.steps {
-                    try? await Task.sleep(for: .milliseconds(74))
-                    printed = step
-                }
-            }
-    }
-}
-
-/// The old summary tearing off: it lifts and fades, its foot cut on a zigzag edge.
-private struct TearOff: ViewModifier {
-    let gone: Bool
-
-    func body(content: Content) -> some View {
-        content
-            .mask { ZigzagFoot(depth: gone ? 6 : 0) }
-            .offset(y: gone ? -14 : 0)
-            .opacity(gone ? 0 : 1)
-    }
-}
-
-/// A rectangle whose bottom edge is a zigzag `depth` deep (0 is a straight edge).
-private struct ZigzagFoot: Shape {
-    var depth: CGFloat
-
-    var animatableData: CGFloat {
-        get { depth }
-        set { depth = newValue }
-    }
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - depth))
-        let teeth = max(Int(rect.width / 10), 2)
-        let step = rect.width / CGFloat(teeth)
-        for index in (0 ..< teeth).reversed() {
-            let x = rect.minX + step * CGFloat(index)
-            path.addLine(to: CGPoint(x: x + step / 2, y: rect.maxY))
-            path.addLine(to: CGPoint(x: x, y: rect.maxY - depth))
-        }
-        path.closeSubpath()
-        return path
     }
 }
