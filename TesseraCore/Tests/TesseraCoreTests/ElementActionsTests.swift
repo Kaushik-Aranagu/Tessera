@@ -147,7 +147,7 @@ struct ElementActionsTests {
 
     @Test func aPrivateRoutineNameIsPlantedAsPrivateRoutine() throws {
         let made = try engine.perform(PlantRoutine(name: "weigh in at 82 kg"), by: .tess)
-        #expect(made.output.title == ObjectPrivacy.routineLabel && made.record.receipt == "Private routine, planted.")
+        #expect(made.output.title == PlantRoutine.privateName && made.record.receipt == "Private routine, planted.")
     }
 
     @Test func pausingForDaysEndsByItselfAndResumeEndsItEarly() throws {
@@ -183,10 +183,25 @@ struct ElementActionsTests {
             calendar: calendar
         ))
         // Seven days is today plus six.
-        #expect(store.value("until", of: pause)?.dateValue == TesseraDay(calendar: calendar).day(of: at(26)))
+        #expect(store.value("until", of: pause)?.dateValue == TesseraDay(calendar: calendar).start(of: at(26)))
         _ = try TessTools.run("pauseRoutine", arguments: Data(#"{"routine":"journal","days":null,"resume":true}"#.utf8),
                               engine: engine, now: at(21), calendar: calendar)
         #expect(RestBook(store: store, classes: classes).pause(of: journal.id, on: at(21), calendar: calendar) == nil)
+    }
+
+    /// The strict scan reads every tool's name, description and schema words; none of them may trip it.
+    @Test func noToolTextTripsTheStrictScan() throws {
+        let lastKg = BodyWeight.lastKg(in: store)
+        for tool in TessTools.claudeTools {
+            var texts = [tool.name, tool.description]
+            try texts += Door.jsonStrings(Data(JSONSerialization.data(withJSONObject: tool.input.json)))
+            for text in texts {
+                #expect(!SecretWords.mentions(text), "\(tool.name): \(text)")
+                #expect(!PrivateFacts.isWalled(text, lastWeightKg: lastKg), "\(tool.name): \(text)")
+                #expect(!PrivateFacts.isCalorieShaped(text), "\(tool.name): \(text)")
+                #expect(!looksLikeClaudeKey(text), "\(tool.name): \(text)")
+            }
+        }
     }
 
     @Test func everyActionDecodesFromItsName() throws {

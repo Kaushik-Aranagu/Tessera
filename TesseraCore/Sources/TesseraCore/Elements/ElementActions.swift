@@ -203,21 +203,23 @@ public struct TakeRest: EngineAction {
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         let name = Self.descriptor.name
         let tessera = TesseraDay(calendar: transaction.calendar)
-        let first = tessera.day(of: from ?? transaction.now)
+        // Stored days are the 4 am start of the logical day, so reading one back (`day(of:)`) gives the same day.
+        let moment = from ?? transaction.now
+        let first = tessera.start(of: moment)
         let book = RestBook(store: transaction.store, classes: transaction.classes)
         var target: ObjectRecord?
         switch scope {
         case .training:
             // A day with a workout going is not a rest day.
             let ledger = TrainingLedger(store: transaction.store, classes: transaction.classes)
-            if ledger.hasWorkoutUnderway(on: first, calendar: transaction.calendar) {
+            if ledger.hasWorkoutUnderway(on: moment, calendar: transaction.calendar) {
                 throw ActionError.invalidArguments(action: name, reason: "refused: workoutGoing")
             }
         case .routine:
             guard let routine else { throw ActionError.invalidArguments(action: name, reason: "refused: noRoutine") }
             target = try transaction.object(routine, is: .routine)
         }
-        if let until, tessera.day(of: until) < first {
+        if let until, tessera.start(of: until) < first {
             throw ActionError.invalidArguments(action: name, reason: "refused: backwards")
         }
         // Resting again while a rest holds changes nothing: the same row comes back.
@@ -236,7 +238,7 @@ public struct TakeRest: EngineAction {
         let rest = try transaction.create(transaction.classDef(.rest), title: scope == .training ? "Rest" : "Pause")
         try transaction.set("scope", to: .choice(scope.rawValue), on: rest)
         try transaction.set("from", to: .date(first), on: rest)
-        try transaction.set("until", to: until.map { FieldValue.date(tessera.day(of: $0)) }, on: rest)
+        try transaction.set("until", to: until.map { FieldValue.date(tessera.start(of: $0)) }, on: rest)
         if let target {
             try transaction.setLinks("routine", on: rest, to: [target])
         }
@@ -332,9 +334,9 @@ public struct TendRoutine: EngineAction {
         let target = try transaction.object(routine, is: .routine)
         let when = at ?? transaction.now
         let tessera = TesseraDay(calendar: transaction.calendar)
-        let day = tessera.day(of: when)
+        let day = tessera.start(of: when)
         let book = RestBook(store: transaction.store, classes: transaction.classes)
-        if book.tendedDays(of: target.id, calendar: transaction.calendar).contains(day) {
+        if book.tendedDays(of: target.id, calendar: transaction.calendar).contains(tessera.day(of: when)) {
             return false
         }
         let run = try transaction.create(transaction.classDef(.routineRun), title: "Tended")
@@ -387,6 +389,9 @@ public struct PlantRoutine: EngineAction {
         self.weekdays = weekdays
     }
 
+    /// What a routine with a private name is planted as.
+    public static let privateName = "Private routine"
+
     static let groves: [(grove: String, words: [String])] = [
         ("mind", ["journal", "read", "reading", "meditate", "meditation", "study", "write", "writing", "pray"]),
         ("home", ["tidy", "clean", "water plants", "laundry", "dishes", "declutter", "vacuum"]),
@@ -409,7 +414,7 @@ public struct PlantRoutine: EngineAction {
         }
         let isPrivate = ObjectPrivacy.isPrivateTitle(trimmed, lastWeightKg: BodyWeight.lastKg(in: transaction.store))
         let routine = try transaction.create(transaction.classDef(.routine),
-                                             title: isPrivate ? ObjectPrivacy.routineLabel : trimmed)
+                                             title: isPrivate ? Self.privateName : trimmed)
         let days = (weekdays ?? "").split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
             .filter { (1 ... 7).contains($0) }
         let rhythm = ["day", "week", "month"].contains(cadence ?? "") ? cadence! : "day"
