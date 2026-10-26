@@ -49,7 +49,8 @@ public enum TessTools {
 
     public static var all: [Tool] {
         [logSet, createTask, completeTask, rescheduleTask, addGroceries, addToList, createList, createNote,
-         createRecipe, query, startShop, cookTogether, setServeTime, checkListItem, startWorkout, startCooking, logSpend]
+         createRecipe, query, startShop, cookTogether, setServeTime, checkListItem, startWorkout, startCooking, logSpend, pinNote, rainAlert, restDay, tendRoutine,
+         plantRoutine, pauseRoutine]
     }
 
     /// The tools Claude may be given: everything but the device-only ones (money).

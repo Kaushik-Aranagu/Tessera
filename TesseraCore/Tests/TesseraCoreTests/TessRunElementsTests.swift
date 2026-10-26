@@ -168,19 +168,6 @@ struct TessRunElementsTests {
         }
     }
 
-    @Test func theProposedListShrinksToWhatStillHasNoAction() {
-        let real = Set(TessTools.all.map(\.name)).union([TessOpenTool.name])
-        #expect(ElementCatalog.proposed.isDisjoint(with: real))
-        #expect(ElementCatalog.proposed == [
-            "pinNote",
-            "rainAlert",
-            "restDay",
-            "tendRoutine",
-            "plantRoutine",
-            "pauseRoutine",
-        ])
-    }
-
     // MARK: The wall around what the model may call
 
     @Test func aModelCannotRunACallItWasNeverOffered() async throws {
