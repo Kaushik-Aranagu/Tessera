@@ -203,7 +203,7 @@ struct HomeDoneWordingTests {
         let detail = "3 exercises, 12 sets, 1 new bench best"
         HomeStub.reply = (200, Self.reply(context: nil, detail: detail))
         #expect(await job().words(for: line, dayLabel: "Thursday evening", store: store)
-            == HomeDoneWords(detail: detail), "\(line.detail ?? "-")")
+            == HomeDoneWords(detail: "3 exercises, 12 sets, 1 new bench best"), "\(line.detail ?? "-")")
     }
 
     @Test func aLineThatFailsLeavesTheRulesAndIsNeverAskedAgain() async {

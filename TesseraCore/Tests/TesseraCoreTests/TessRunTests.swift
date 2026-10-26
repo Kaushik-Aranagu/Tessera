@@ -60,8 +60,29 @@ struct TessRunTests {
                 nil
             }
         }
+<<<<<<< HEAD
         #expect(words == ["Hello ", "there"])
         #expect(events.last == .finished("Hello there"))
+=======
+        // The closing stop never shows, live or finished, so nothing flickers when the reply lands.
+        #expect(words == ["Hello ", "there"])
+        #expect(events.last == .finished("Hello there"))
+    }
+
+    @Test func aStopHeldFromTheLiveWordsComesBackWhenMoreFollow() async throws {
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("It is 2."), .text("5 km.")]])
+        let r = try rig([.haiku: haiku])
+        let events = await collect(r.run.ask("how far was it"))
+        let words = events.compactMap {
+            if case let .words(piece) = $0 {
+                piece
+            } else {
+                nil
+            }
+        }
+        #expect(words == ["It is 2", ".5 km"] && words.joined() == "It is 2.5 km")
+        #expect(events.last == .finished("It is 2.5 km"))
+>>>>>>> origin/master
     }
 
     @Test func pickRungSendsOpenQuestionsToSonnetAndLookupsToHaiku() {

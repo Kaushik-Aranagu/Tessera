@@ -46,12 +46,21 @@ var eval = MemoryEvalRecord.load()
 let run = NightRun(engine: engine, policy: door.policy)
 let report = await run.run(record: &record, eval: &eval, packs: hashes, notebooks: files,
                            prune: { notebooks.delete($0) },
-                           reflect: { spec in await reflectCall(spec) },  // one Sonnet call through the Door
+                           reflect: { spec in
+                               let kept = await tessRun.reflect(spec, items: run.dayItems(for: spec), cap: left)
+                               left -= kept.kept.count  // starts at TessRun.reflectCap: five maybes a night in all
+                           },
                            ask: { question, model in await compiledAsk(question.text, on: model) })
 record.save()
 eval.save()
 ```
 
+- `reflect` is `TessRun.reflect(_:items:cap:)`: the room agent runs as itself (its personality, notebook, beliefs and
+  last episodes, from `AgentContext`) on its open ladder; high effort waits for the memory eval. It reads the closing
+  day's things in its room through its own scope and keeps at most `cap` maybes through `remember`, each with the
+  paths that show it. Its line is kept as its episode. No call when Tess's AI flag is off or the Door keeps Claude
+  closed, for a lab-only room (Purse, Body) under strict, or for a room with fewer than three things it may see that
+  day (`TessRun.reflectMinItems`).
 - `ask` returns nil when the call failed. A question counts toward the kept misses only when every model answered.
 - The eval facts come from `MemoryEvalFacts.from(store:classes:calendar:now:)`: private workouts, recipes, cooks and
   beliefs, and private exercise names, are left out.

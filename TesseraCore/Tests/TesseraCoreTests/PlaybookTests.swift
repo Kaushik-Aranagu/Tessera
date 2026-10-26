@@ -14,6 +14,7 @@ struct PlaybookTests {
         DirectorContext(now: now, quiet: quiet, reduceMotion: reduce, accents: accents, seed: 3)
     }
 
+    /// Whys as they show (no closing stop), so a stored playbook reads back equal after the clamp.
     func playbook() -> DirectorPlaybook {
         var book = DirectorPlaybook(day: "2026-10-24")
         book.burst[.done] = PlaybookEntry(
@@ -324,7 +325,11 @@ struct PlaybookTests {
             "Lunch 650 kcal means a big burst", // calories
             "sk-" + "ant-" + "api03-" + String(repeating: "Ab3x", count: 8) + ".", // key-shaped
             "Two sentences. Too many", // not one sentence
+<<<<<<< HEAD
             "This sentence runs on far too long for the small space it has to fit into today", // too long
+=======
+            "This sentence runs on far too long for the small space it has to fit into today.", // too long
+>>>>>>> origin/master
         ]
         for why in bad {
             var book = DirectorPlaybook(day: "d")
