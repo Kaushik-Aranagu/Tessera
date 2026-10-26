@@ -32,7 +32,7 @@ enum PrivateWords {
     static let mirrorClassKeys: Set<String> = [
         SystemCatalog.Key.event.systemKey, SystemCatalog.Key.sleepNight.systemKey,
         SystemCatalog.Key.stepsDay.systemKey, SystemCatalog.Key.restingHeartRate.systemKey,
-        SystemCatalog.Key.heldNotice.systemKey,
+        SystemCatalog.Key.heldNotice.systemKey, SystemCatalog.Key.tessSentExact.systemKey,
         // Her conversation (sheet 215 rev 5) is on the phone only, in no copy at all.
         SystemCatalog.Key.tessTurn.systemKey,
     ]
@@ -123,7 +123,7 @@ enum PrivateWords {
         if isA(.task) {
             return ObjectPrivacy.taskLabel
         }
-        if isA(.tessMemory) {
+        if isA(.tessMemory) || isA(.belief) {
             return ObjectPrivacy.memoryLabel
         }
         return SecretWords.title

@@ -29,6 +29,7 @@ public extension TessMemoryStore {
         let yesterdayKey = Self.dayLabel(yesterday, calendar: calendar)
         let recent = lines(of: .recent)
         sweepForgotten(now: now)
+        TessBeliefStore(engine: engine, memory: self).sweepForgotten(now: now)
         let written = recent.contains { $0.day.map { Self.dayLabel($0, calendar: calendar) } == yesterdayKey }
         if !written, let text = recentLine(for: yesterday, now: now) {
             let rule = "recent.\(yesterdayKey)"
@@ -43,6 +44,7 @@ public extension TessMemoryStore {
             recomputeNoticed(now: now)
             result.recomputedNoticed = true
         }
+        TessBeliefStore(engine: engine, memory: self).syncFromMemory(now: now)
         return result
     }
 

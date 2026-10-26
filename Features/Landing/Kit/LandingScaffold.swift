@@ -5,7 +5,7 @@ import SwiftUI
 /// keep their size and only the gaps scale on other screens.
 ///
 /// Status bar 0-44 (the system's) · Masthead 44-182 · Keystone 196-378 · Caption 388 · Widget 400-612 · Doors 640
-/// (dial x 24-184, summary x 186) · Foot (action word left, Tess right).
+/// (summary x 24-216, dial x 218-378 on the right) · Foot (action word left, Tess right).
 struct LandingScaffold<Keystone: View, Glyph: View>: View {
     let title: String
     let accent: Color
@@ -64,12 +64,12 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                     .frame(width: 160)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.doors)
-                    .offset(x: 24, y: 640 * k)
+                    .offset(x: LandingPlace.Doors.dial.minX, y: 640 * k)
                 DoorSummary(door: doors.isEmpty ? nil : doors[((focus % doors.count) + doors.count) % doors.count])
                     .modifier(SummaryStyleOverride(style: summaryStyle))
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.doors)
-                    .offset(x: 186, y: 652 * k)
+                    .offset(x: LandingPlace.Doors.summary.minX, y: 652 * k)
                 if let action {
                     LandingActionWord(action: action, accent: accent)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
