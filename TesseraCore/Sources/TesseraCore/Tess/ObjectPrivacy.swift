@@ -58,7 +58,12 @@ public enum ObjectPrivacy {
                 ? noteLabel : nil
         }
         if isA(.leftover) || isA(.mealEntry) {
-            return flagged || isPrivateText(object.title) ? mealLabel : nil
+            // Private by its own words (a doctor's name, a medicine), by its flag, or by what it was made from.
+            let sources = store.linkedObjects("source", of: object) + store.linkedObjects("leftover", of: object)
+            let fromPrivate = sources.contains {
+                isPrivateRecipeTitle($0.title, lastWeightKg: last) || label(of: $0, in: store, classes: classes) != nil
+            }
+            return flagged || isPrivateTitle(object.title, lastWeightKg: last) || fromPrivate ? mealLabel : nil
         }
         if isA(.tessMemory) {
             let rule = store.value("rule", of: object)?.stringValue ?? ""
@@ -119,7 +124,8 @@ public enum ObjectPrivacy {
             return flagged ? bookLabel : nil
         }
         // A workout or routine (OL01): its own title, its flag, or the routine a workout was made from.
-        // The `flagged` branch is unused here for now: Workout and Routine declare no isPrivate field. Privacy is by words,
+        // The `flagged` branch is unused here for now: Workout and Routine declare no isPrivate field. Privacy is by
+        // words,
         // through the title and the routine link (decided Oct 22).
         if isA(.routine) || isA(.workout) {
             let routine = isA(.workout) ? store.linkedObjects("routine", of: object).first : nil

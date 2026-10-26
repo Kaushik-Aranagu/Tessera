@@ -75,8 +75,8 @@ public struct PantryPlaces {
             let object = store.create(placeClass, title: entry.name, id: Self.defaultID(entry.key))
             try? store.set("order", to: .number(Double(index)), on: object)
             try? store.set("sections", to: .text(entry.sections.joined(separator: ",")), on: object)
+        }
         adoptCategories()
-    }
     }
 
     /// Gives a default place the sheet-234 categories when it still has the ones the first version seeded (or none).

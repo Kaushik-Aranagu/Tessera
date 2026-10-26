@@ -35,6 +35,18 @@ struct PantryPlacesTests {
         #expect(PantryPlaces.toGet == "To get")
     }
 
+    @Test func aPlaceKeepingTheFirstVersionsSectionsIsUpgradedOnTheNextEnsure() throws {
+        places.ensureDefaults()
+        let fridge = try place("fridge")
+        try store.set("sections", to: .text("Door,Shelves,Drawer"), on: fridge)
+        let freezer = try place("freezer")
+        try store.set("sections", to: .text("My own box"), on: freezer)
+        places.ensureDefaults()
+        #expect(places.sections(of: fridge) == ["Leftovers", "Dairy and eggs", "Vegetables", "Fruit"])
+        // Words he chose himself are never touched.
+        #expect(places.sections(of: freezer) == ["My own box"])
+    }
+
     @Test func aRemovedDefaultStaysRemoved() throws {
         places.ensureDefaults()
         try engine.perform(RemovePlace(place: place("counter").id), by: .user)

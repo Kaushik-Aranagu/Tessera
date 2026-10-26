@@ -59,6 +59,7 @@ public final class ActionEngine {
             output = try action.apply(&transaction)
         } catch {
             _ = replay(transaction.ops.reversed().map(\.inverse), guarded: false)
+            LeftoverWrites.purgeNumbers(forCreatedIn: transaction.ops, store: store, classes: classes)
             throw error
         }
         let record = OpRecord(
@@ -127,7 +128,10 @@ public final class ActionEngine {
     @discardableResult
     public func discard(_ record: OpRecord) throws -> ReplayOutcome {
         guard record.state == .pending else { throw ActionError.notPending(record.id) }
-        return undo(record)
+        let outcome = undo(record)
+        // A dismissed meal leaves no numbers behind: they sit outside the log, so nothing else would clear them.
+        LeftoverWrites.purgeNumbers(forCreatedIn: record.ops, store: store, classes: classes)
+        return outcome
     }
 
     /// Commits every preview older than the grace period. Call it from a timer or on the next interaction.

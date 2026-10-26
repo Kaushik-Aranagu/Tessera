@@ -133,6 +133,27 @@ struct LeftoverTests {
         #expect(book.all().map(\.id) == [ice.id])
     }
 
+    @Test func aLeftoverFromAPrivateRecipeReadsPrivateMeal() throws {
+        let doctor = try recipe("Dr Lin's broth")
+        let put = try engine.perform(PutAwayLeftover(recipe: doctor.id, servings: 2), by: .user)
+        #expect(put.record.receipt == "Private meal, put away in the fridge.")
+        #expect(book.read(put.output.leftover).title == ObjectPrivacy.mealLabel)
+        let eaten = try engine.perform(EatServing(leftover: put.output.leftover.id, time: at(19)), by: .user)
+        #expect(ObjectPrivacy.label(of: eaten.output.meal, in: store, classes: classes) == ObjectPrivacy.mealLabel)
+        #expect(eaten.record.receipt?.contains("Lin") != true)
+    }
+
+    @Test func aDismissedMealLeavesNoNumbersBehind() throws {
+        let rice = try recipe("Plain rice")
+        let put = try engine.perform(PutAwayLeftover(recipe: rice.id, servings: 2), by: .user)
+        let eaten = try engine.perform(EatServing(leftover: put.output.leftover.id, time: at(19)), by: .user,
+                                       pending: true)
+        #expect(book.nutrition(of: eaten.output.meal) != nil)
+        try engine.discard(eaten.record)
+        let rows = try store.objects(of: #require(classes[.mealNutrition])).filter { !$0.isDeleted }
+        #expect(rows.isEmpty)
+    }
+
     @Test func eatingServesOneAndWritesTheMealWithItsNumbersOnThisPhone() throws {
         let rice = try recipe("Plain rice", lines: [("Rice", 200, .gram, "200 g rice")], serves: 2)
         let put = try engine.perform(PutAwayLeftover(recipe: rice.id, servings: 2), by: .user)
@@ -237,7 +258,8 @@ struct LeftoverTests {
     // MARK: Privacy
 
     @Test func aPrivateMealReadsPrivateAndTheNumbersAreInNoCopy() throws {
-        let meal = try engine.perform(LogOutsideMeal(title: "Dinner paid $60 cash", calories: 500), by: .user).output.meal
+        let meal = try engine.perform(LogOutsideMeal(title: "Dinner paid $60 cash", calories: 500), by: .user).output
+            .meal
         #expect(ObjectPrivacy.label(of: meal, in: store, classes: classes) == ObjectPrivacy.mealLabel)
         let rows = try store.objects(of: #require(classes[.mealNutrition]))
         #expect(rows.count == 1 && rows.allSatisfy { PrivateWords.isMirror($0) })

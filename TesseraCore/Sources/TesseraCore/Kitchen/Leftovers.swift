@@ -157,6 +157,27 @@ enum LeftoverWrites {
         }
     }
 
+    /// Clears the numbers of meals an action made and then lost (it threw, or its preview was dismissed). Undo keeps
+    /// them, because redo shows the meal again; a meal that can never come back keeps nothing.
+    @MainActor
+    static func purgeNumbers(forCreatedIn ops: [Op], store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) {
+        guard let nutritionClass = classes[.mealNutrition] else { return }
+        let gone = Set(ops.compactMap { op -> String? in
+            if case let .create(object, _, _, _) = op {
+                return object.uuidString
+            }
+            return nil
+        })
+        guard !gone.isEmpty else { return }
+        for row in store.objects(of: nutritionClass) where !row.isDeleted {
+            guard let entry = store.value("entryId", of: row)?.stringValue, gone.contains(entry) else { continue }
+            for key in ["cal", "proteinG", "carbsG", "fatG"] {
+                try? store.set(key, to: nil, on: row)
+            }
+            store.softDelete(row)
+        }
+    }
+
     /// A fresh id for the app's notification request.
     static func newNotificationId() -> String {
         "leftover-\(UUID().uuidString)"
