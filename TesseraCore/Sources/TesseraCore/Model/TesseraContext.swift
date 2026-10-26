@@ -49,8 +49,8 @@ public final class TesseraContext {
     public let url: URL?
 
     /// Opens (creating and migrating if needed) the database at `url`, or an in-memory one, and loads the graph.
-    public init(url: URL?) throws {
-        self.url = url
+    public convenience init(url: URL?) throws {
+        let database: any DatabaseWriter
         if let url {
             var configuration = Configuration()
             configuration.journalMode = .wal
@@ -60,8 +60,33 @@ public final class TesseraContext {
         } else {
             database = try DatabaseQueue()
         }
+        try self.init(database: database, url: url)
+    }
+
+    init(database: any DatabaseWriter, url: URL?) throws {
+        self.url = url
+        self.database = database
         try TesseraDatabaseSchema.migrator.migrate(database)
         try load()
+    }
+
+    /// A copy of the whole graph in a fresh in-memory database (Tess's rehearsal, docs/ai/harness/rehearsal.md). It is
+    /// built from what is in memory, so unsaved changes come along and the real database is never read or written.
+    /// The copy has no autosave and nothing observes it.
+    public func fork() throws -> TesseraContext {
+        let models: [any TesseraModel] = Array(classes.values) + Array(fields.values) + Array(objects.values)
+            + Array(links.values) + Array(views.values) + Array(operations.values)
+        let rows = models.map(TesseraDatabaseSchema.Row.init)
+        let queue = try DatabaseQueue()
+        try TesseraDatabaseSchema.migrator.migrate(queue)
+        try queue.write { db in
+            for row in rows {
+                try row.save(db)
+            }
+        }
+        let copy = try TesseraContext(database: queue, url: nil)
+        copy.autosaveEnabled = false
+        return copy
     }
 
     /// Folds the write-ahead log back into the file so erased rows leave no copy behind. No-op in memory.
