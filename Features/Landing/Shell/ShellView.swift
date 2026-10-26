@@ -19,6 +19,8 @@ struct ShellView<Room: RoomContent>: View {
     @State private var busy: Set<Place> = []
     @State private var appliedRoute: ShellRoute?
     @State private var driver: Task<Void, Never>?
+    /// The back edge's pull in points (sheet 283 v6): the screen never moves; content softens as it grows.
+    @State private var pull: CGFloat = 0
 
     private var reduceMotion: Bool {
         systemReduceMotion || ShellProbe.reduceMotion
@@ -40,6 +42,7 @@ struct ShellView<Room: RoomContent>: View {
                               reduceMotion: reduceMotion, navigator: navigator, act: act)
                         .background(alignment: .topLeading) { wash(place) }
                         .offset(x: rect.minX + dx, y: rect.minY * scale)
+                        .modifier(BackPull(place: place, amount: pullAmount, reduceMotion: reduceMotion))
                         .allowsHitTesting(shown[place] != nil && !busy.contains(place))
                         .zIndex(place == .glyph ? 1 : 0)
                 }
@@ -68,16 +71,29 @@ struct ShellView<Room: RoomContent>: View {
         }
     }
 
-    /// The back edge, x 0 to 24: a swipe right goes back.
+    /// How far the pull has gone, 0 to 1 (full at 120 pt).
+    private var pullAmount: CGFloat {
+        min(max(pull, 0) / ShellBack.full, 1)
+    }
+
+    /// The back edge, x 0 to 24 (sheet 283 v6). The pull never drags the page: content blurs and fades with it and
+    /// the nav word grows. Past 80 pt every place changes in place; a shorter pull settles back in 0.28 s.
     private func backEdge(height: CGFloat) -> some View {
         Color.clear
             .frame(width: 24, height: height)
             .contentShape(Rectangle())
-            .gesture(DragGesture(minimumDistance: 10).onEnded { value in
-                if value.translation.width > 50, abs(value.translation.height) < 80 {
-                    act(.back)
+            .gesture(DragGesture(minimumDistance: 6)
+                .onChanged { value in
+                    guard abs(value.translation.height) < 120 else { return }
+                    pull = value.translation.width
                 }
-            })
+                .onEnded { value in
+                    let commit = ShellBack.commits(value.translation)
+                    withTesseraAnimation(.easeOut(duration: ShellBack.settle), reduceMotion: reduceMotion) { pull = 0 }
+                    if commit {
+                        act(.back)
+                    }
+                })
             .accessibilityHidden(true)
     }
 
@@ -313,5 +329,38 @@ struct ShellPlan {
             style.reelFrom = old.map(\.name)
         }
         return style
+    }
+}
+
+/// The back pull's numbers (sheet 283 v6).
+enum ShellBack {
+    /// The pull is full here: 2.4 pt blur, 60% opacity, the nav word at 1.18.
+    static let full: CGFloat = 120
+    /// Past this the places change in place.
+    static let commit: CGFloat = 80
+    static let settle = 0.28
+    static let blur: CGFloat = 2.4
+    static let fade = 0.4
+    static let grow: CGFloat = 0.18
+
+    static func commits(_ translation: CGSize) -> Bool {
+        translation.width > commit && abs(translation.height) < 120
+    }
+}
+
+/// One place under the back pull: content softens; the nav word grows from its right edge instead.
+private struct BackPull: ViewModifier {
+    let place: Place
+    let amount: CGFloat
+    let reduceMotion: Bool
+
+    func body(content: Content) -> some View {
+        if place == .navWord {
+            content.scaleEffect(1 + ShellBack.grow * amount, anchor: .trailing)
+        } else {
+            content
+                .blur(radius: reduceMotion ? 0 : ShellBack.blur * amount)
+                .opacity(1 - ShellBack.fade * amount)
+        }
     }
 }

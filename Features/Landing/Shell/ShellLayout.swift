@@ -51,8 +51,12 @@ enum ShellLayout {
         }
     }
 
-    /// A merge target's rect: the union of its sources (and, for the Page, the two breaths it takes in).
+    /// A merge target's rect: the Door title's v7 frame, or the Page: the union of its sources and the two breaths.
     static func mergedFrame(_ target: Place) -> CGRect {
+        // Sheet 283 v7 sets the Door title at 24, 106, 354 by 70 (inside the union of the Switcher and Needs).
+        if target == .doorTitle {
+            return CGRect(x: 24, y: 106, width: 354, height: 70)
+        }
         var rect = (merges[target] ?? []).map(ownFrame).reduce(CGRect.null) { $0.union($1) }
         if target == .page {
             for breath in pageBreaths {
