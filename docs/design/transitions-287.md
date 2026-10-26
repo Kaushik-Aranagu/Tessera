@@ -139,8 +139,8 @@ This replaces sheet 286, section 2, and uses the forms in `ElementForms`.
 
 The new forms each need a row in `ElementForms`:
 - `roll`: draws words, in the switcher.
-- `sentence`: draws doors and words, in the dial, door summary and needs. Its trait is count.
-- `columns`: draws many and doors, in the page and the dial.
+- `sentence`: draws doors and words, in the dial and the door summary. Its trait is count. (Needs stays `type`.)
+- `columns`: draws many, in the page only. (On the dial, two columns is the index form's density trait.)
 
 ## 7. Interface changes
 
