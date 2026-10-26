@@ -30,16 +30,28 @@ over the edge of a drum:
 | Place | What crosses the edge |
 |---|---|
 | Widget (one thing), every landing | The card going across or up, and the next one coming in. Built on the board. |
-| Page rows (level 1) | The rows when a door's list turns or scrolls. |
+| Page rows (level 1) | The rows when a door's list turns or scrolls. Built on the board for the Watch's routine list (297). |
+| Switcher word (every landing) | The word under his finger when he drags it across. Built on the board (297): it fades through the edge only, with no lean, because the drag already skews it. |
 | Doors dial (reel) | It already has this: neighbours get smaller and blurred, which is the same roll. The reel's spin uses the same fade. |
 | Day strip, week fold | The hours or days scrolling across. |
 | Lookout hours | The hour columns going left. |
 | Log wall | Words leaving the wall on a page change. |
 | Departure board | No. It flaps in place and never scrolls. |
 
+### Per place (297)
+
+| Place | Fade depth | Lean | Shrink | Blur and fade |
+|---|---|---|---|---|
+| Widget card | 28 pt | 16° | 4% | yes |
+| Rows | 18 pt | 10° | 3% | no: the mask is the fade, the row's own opacity stays its screen's |
+| Switcher word | 22 pt | none | none | no |
+
+A row parked half past the bottom of a list at rest is past the edge, so it shows rolled away. That is right: it
+reads as "more below" instead of a cut line.
+
 ## 3. For the builders
 
-- One modifier, `.edgeRoll(axis:)`. It reads each child's frame against the clip with `onGeometryChange` (or
+- One modifier, `.edgeRoll(axis:depth:lean:shrink:)`, with the three presets in the table above. It reads each child's frame against the clip with `onGeometryChange` (or
   `visualEffect` with `GeometryProxy`) and applies `rotation3DEffect`, `scaleEffect`, `blur` and `opacity` from the
   overflow fraction. It goes through `MotionPolicy`, so Reduce Motion turns it off.
 - The fade is a `mask` on the moving view: a linear gradient from clear at the clip edge to opaque 28 pt inside,

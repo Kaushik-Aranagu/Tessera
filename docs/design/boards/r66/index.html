@@ -529,7 +529,7 @@ SCREENS.home={title:'Home',accent:null,tess:'Stretch at 8 may run into Push A. M
 .hd.open .qs{display:none}
 .hd.wait{right:0;display:flex;align-items:baseline;justify-content:space-between;gap:12px;height:40px;padding-top:8px}
 .hd.wait .ln{display:none}
-.listclip{position:absolute;left:24px;right:24px;overflow:hidden;touch-action:none}
+.listclip{position:absolute;left:24px;right:24px;overflow:hidden;touch-action:none;perspective:720px}
 .sh{position:absolute;left:0;right:0;height:48px;display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;touch-action:none;transform-origin:left bottom;transition:top .5s cubic-bezier(.3,.9,.3,1),opacity .35s,filter .35s,transform .35s}
 .sh .lf{min-width:0}
 .sh .n{display:block;font-size:18px;font-weight:500;line-height:22px;white-space:nowrap;overflow:hidden;position:relative;width:fit-content;max-width:100%}
@@ -2498,22 +2498,25 @@ document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.da
    soft gradient on the card itself, 28 pt deep, ending exactly at the edge, so nothing is ever sliced and nothing at
    rest is touched. As more of it leaves, it tilts away a little and shrinks a little. No blur boxes: the blur is on the
    card only, and light. Driven by position, so a drag and a release look the same. */
-(function(){const F=28;
+/* 297: the same roll in every place that scrolls past an edge. Each place says which children cross it, how deep the
+   fade is, and how much they may roll. Rows and the switcher word only fade and lean: their own opacity and filter
+   belong to their screens, so the roll leaves those alone. */
+(function(){const PL=[['.one',':scope > .blk',{F:28,deg:16,sc:.04,soft:1}],['.listclip',':scope > .sh',{F:18,deg:10,sc:.03}],['.swx',':scope > .sw',{F:22,deg:0,sc:0}]];
  const roll=()=>{requestAnimationFrame(roll);if(RM||!current)return;
-  current.querySelectorAll('.one').forEach(host=>{const H=host.getBoundingClientRect();if(!H.width)return;
-   host.querySelectorAll(':scope > .blk').forEach(b=>{const r=b.getBoundingClientRect();if(!r.width)return;
+  PL.forEach(([hs,cs,O])=>current.querySelectorAll(hs).forEach(host=>{const H=host.getBoundingClientRect();if(!H.width)return;const F=O.F;
+   host.querySelectorAll(cs).forEach(b=>{const r=b.getBoundingClientRect();if(!r.width)return;
     const ox=Math.max(0,H.left-r.left,r.right-H.right)/r.width,oy=Math.max(0,H.top-r.top,r.bottom-H.bottom)/r.height;
     const ax=ox>=oy?'x':'y',o=ax==='x'?ox:oy,f=ax==='x'?(r.left<H.left?-1:1):(r.top<H.top?-1:1);
     const p=Math.min(1,o/.75),k=Math.round(p*200)/200;if(b._rk===k&&b._ra===ax)return;b._rk=k;b._ra=ax;
-    if(!k){b.style.scale=b.style.rotate=b.style.filter=b.style.opacity=b.style.webkitMaskImage=b.style.maskImage='';return}
+    if(!k){b.style.scale=b.style.rotate=b.style.transformOrigin=b.style.webkitMaskImage=b.style.maskImage='';if(O.soft)b.style.filter=b.style.opacity='';return}
     const e=p*p*(3-2*p),sz=ax==='x'?r.width:r.height;
     /* where the host's two edges fall inside the card, in the card's own pixels (K scales the phone) */
     const L=ax==='x'?b.offsetWidth:b.offsetHeight,a=(ax==='x'?H.left-r.left:H.top-r.top)/sz*L,z=(ax==='x'?H.right-r.left:H.bottom-r.top)/sz*L;
     const dir=ax==='x'?'to right':'to bottom',m='linear-gradient('+dir+',transparent '+a.toFixed(1)+'px,#000 '+(a+F).toFixed(1)+'px,#000 '+(z-F).toFixed(1)+'px,transparent '+z.toFixed(1)+'px)';
     b.style.webkitMaskImage=b.style.maskImage=m;
     b.style.transformOrigin=ax==='x'?(f<0?'right center':'left center'):(f<0?'center bottom':'center top');
-    b.style.scale=String(1-.04*e);b.style.rotate=(ax==='x'?'y ':'x ')+((ax==='x'?1:-1)*f*16*e).toFixed(2)+'deg';
-    b.style.filter=e>.05?'blur('+(1.2*e).toFixed(2)+'px)':'';b.style.opacity=String(1-.92*e)})})};
+    if(O.sc)b.style.scale=String(1-O.sc*e);if(O.deg)b.style.rotate=(ax==='x'?'y ':'x ')+((ax==='x'?1:-1)*f*O.deg*e).toFixed(2)+'deg';
+    if(O.soft){b.style.filter=e>.05?'blur('+(1.2*e).toFixed(2)+'px)':'';b.style.opacity=String(1-.92*e)}})}))};
  requestAnimationFrame(roll)})();
 
 })();
