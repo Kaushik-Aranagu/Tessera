@@ -207,7 +207,7 @@ struct ShellView<Room: RoomContent>: View {
                 }
             }
             for place in plan.sources {
-                washes[place] = 0.09
+                washes[place] = plan.wash(place)
             }
         }
         try? await clock.sleep(until: start + .seconds(ShellTiming.travelStart))
@@ -294,6 +294,13 @@ struct ShellPlan {
         affected.map { place in
             (place, ShellTiming.entryEnd(place, move: moves[place] ?? .none, merging: merging, splitting: splitting))
         }.sorted { $0.1 < $1.1 }
+    }
+
+    /// How strong a flowing place's wash starts. The glyph sits inside the widget, so it leaves none; on a split the
+    /// sources start stacked in the merged rect, so each starts lighter and the stack thins as they spread.
+    func wash(_ place: Place) -> Double {
+        guard place != .glyph else { return 0 }
+        return splitting ? 0.06 : 0.07
     }
 
     func style(_ place: Place, dial: SlotContent?) -> PlaceStyle {

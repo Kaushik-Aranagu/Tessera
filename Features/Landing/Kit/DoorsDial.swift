@@ -27,10 +27,21 @@ struct DoorsDial: View {
     /// focus 26 pt, neighbours 20 pt, 1.6 pt blur, 160 pt wide; the summary is drawn apart by `DoorSummary`).
     enum Style { case notes, landing }
     static let slot: CGFloat = 48
-    private var placeHeight: CGFloat { style == .landing ? 40 : Self.slot }
-    private var focusSize: CGFloat { style == .landing ? 26 : 28 }
-    private var neighbourSize: CGFloat { style == .landing ? 20 : 21 }
-    private var maxBlur: CGFloat { style == .landing ? 1.6 : 1.8 }
+    private var placeHeight: CGFloat {
+        style == .landing ? 40 : Self.slot
+    }
+
+    private var focusSize: CGFloat {
+        style == .landing ? 26 : 28
+    }
+
+    private var neighbourSize: CGFloat {
+        style == .landing ? 20 : 21
+    }
+
+    private var maxBlur: CGFloat {
+        style == .landing ? 1.6 : 1.8
+    }
 
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -59,7 +70,9 @@ struct DoorsDial: View {
                 ForEach(places(count), id: \.self) { place in
                     row(for: wrapped(focus + place), place: place)
                 }
-                if style == .notes { facts }
+                if style == .notes {
+                    facts
+                }
             }
         }
         .frame(height: slotHeight * CGFloat(places(count).count == 3 ? 3 : (large ? 2 : 3)))
@@ -104,7 +117,11 @@ struct DoorsDial: View {
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(door.name)
-                    .font(.custom("Figtree", size: focusSize - (focusSize - neighbourSize) * distance, relativeTo: .title3).weight(.bold))
+                    .font(.custom(
+                        "Figtree",
+                        size: focusSize - (focusSize - neighbourSize) * distance,
+                        relativeTo: .title3
+                    ).weight(.bold))
                     .foregroundStyle(isFocus ? door.color : Theme.Colors.inkSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.4)
@@ -197,6 +214,8 @@ private extension CGFloat {
 /// 16/24 lines, the first 700. It rises 6 pt by a clip when the focus changes. Not blurred; each room fills it its way.
 struct DoorSummary: View {
     let door: DialDoor?
+    /// The summary's own rise on a focus change. The standing shell turns it off: there the place plays the move.
+    var ownMove = true
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -211,14 +230,19 @@ struct DoorSummary: View {
                         .frame(height: 20, alignment: .leading)
                 }
                 ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
-                    FitLine(forms: FitLine.cuts(line), size: 16, color: Theme.Colors.ink, weight: index == 0 ? .bold : .regular)
-                        .frame(width: 192, height: 24, alignment: .leading)
+                    FitLine(
+                        forms: FitLine.cuts(line),
+                        size: 16,
+                        color: Theme.Colors.ink,
+                        weight: index == 0 ? .bold : .regular
+                    )
+                    .frame(width: 192, height: 24, alignment: .leading)
                 }
             }
             .frame(width: 192, alignment: .leading)
-            .id(door.id)
-            .transition(.offset(y: reduceMotion ? 0 : 6))
-            .tesseraAnimation(Theme.Motion.firm, value: door.id)
+            .id(ownMove ? door.id : "summary")
+            .transition(.offset(y: reduceMotion || !ownMove ? 0 : 6))
+            .tesseraAnimation(Theme.Motion.firm, value: ownMove ? door.id : "summary")
             .accessibilityElement(children: .combine)
         }
     }
