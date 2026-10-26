@@ -60,17 +60,13 @@ struct TessRunTests {
                 nil
             }
         }
-<<<<<<< HEAD
-        #expect(words == ["Hello ", "there"])
-        #expect(events.last == .finished("Hello there"))
-=======
         // The closing stop never shows, live or finished, so nothing flickers when the reply lands.
         #expect(words == ["Hello ", "there"])
         #expect(events.last == .finished("Hello there"))
     }
 
     @Test func aStopHeldFromTheLiveWordsComesBackWhenMoreFollow() async throws {
-        let haiku = ScriptedBrain(.haiku, rounds: [[.text("It is 2."), .text("5 km.")]])
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("It is 2"), .text("5 km")]])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("how far was it"))
         let words = events.compactMap {
@@ -82,7 +78,6 @@ struct TessRunTests {
         }
         #expect(words == ["It is 2", ".5 km"] && words.joined() == "It is 2.5 km")
         #expect(events.last == .finished("It is 2.5 km"))
->>>>>>> origin/master
     }
 
     @Test func pickRungSendsOpenQuestionsToSonnetAndLookupsToHaiku() {
@@ -106,18 +101,8 @@ struct TessRunTests {
 
     @Test func twoReadsReturnInOneToolResultMessage() async throws {
         let haiku = ScriptedBrain(.haiku, rounds: [
-            [
-                use(
-                    "t1",
-                    "query",
-                    #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
-                ),
-                use(
-                    "t2",
-                    "query",
-                    #"{"from":["notes"],"during":{"range":"today","field":null},"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
-                ),
-            ],
+            [use("t1", "query", #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#),
+             use("t2", "query", #"{"from":["notes"],"during":{"range":"today","field":null},"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#)],
             [.text("Two answers")],
         ])
         let r = try rig([.haiku: haiku])
@@ -159,11 +144,7 @@ struct TessRunTests {
     }
 
     @Test func anEleventhRoundIsNeverSentAndThePhoneLineComesBack() async throws {
-        let call = [use(
-            "t",
-            "query",
-            #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
-        )]
+        let call = [use("t", "query", #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#)]
         let haiku = ScriptedBrain(.haiku, rounds: Array(repeating: call, count: 12) + [[.text("never")]])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("keep looking"))
@@ -198,14 +179,7 @@ struct TessRunTests {
         let use = Data(#"{"type":"tool_use","id":"t1","name":"query","input":{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}}"#
             .utf8)
         let haiku = ScriptedBrain(.haiku, rounds: [
-            [
-                .assistant([thinking, use]),
-                self.use(
-                    "t1",
-                    "query",
-                    #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
-                ),
-            ],
+            [.assistant([thinking, use]), self.use("t1", "query", #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#)],
             [.text("Three")],
         ])
         let r = try rig([.haiku: haiku])
@@ -254,8 +228,7 @@ struct TessRunTests {
     @Test func aRunOlderThanTenMinutesIsDroppedNotResumed() async throws {
         let haiku = ScriptedBrain(.haiku, rounds: [[.text("never")]])
         let r = try rig([.haiku: haiku])
-        let input = Data(#"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
-            .utf8)
+        let input = Data(#"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#.utf8)
         var state = TessRunState(startedAt: Date().addingTimeInterval(-11 * 60), askText: "how many", aboutIDs: [],
                                  messages: [BrainMessage(.user, text: "how many"),
                                             BrainMessage(
@@ -330,8 +303,7 @@ struct TessRunTests {
         let haiku = ScriptedBrain(.haiku, rounds: [[.text("Sorry about that")]])
         let r = try rig([.haiku: haiku])
         let write = Data(#"{"title":"Call mom","startsAt":null,"about":[]}"#.utf8)
-        let read = Data(#"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
-            .utf8)
+        let read = Data(#"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#.utf8)
         var state = TessRunState(startedAt: .now, askText: "do it", aboutIDs: [], messages: [
             BrainMessage(.user, text: "do it"),
             BrainMessage(.assistant, [.toolUse(id: "r1", name: "query", input: read),
@@ -371,11 +343,7 @@ struct TessRunTests {
 
     @Test func everySpanOfARunCarriesItsRunIDAndNoSpanHoldsTheAsk() async throws {
         let haiku = ScriptedBrain(.haiku, rounds: [
-            [use(
-                "t1",
-                "query",
-                #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
-            )], [.text("Fine")],
+            [use("t1", "query", #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#)], [.text("Fine")],
         ])
         let r = try rig([.haiku: haiku])
         let secret = "zebra-lantern-question"

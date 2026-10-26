@@ -18,17 +18,10 @@ public final class TessRun {
     /// A run still marked running after this long is dropped on launch, not resumed.
     static let resumeWindow: TimeInterval = 600
 
-<<<<<<< HEAD
-    public static let tooManySteps = "That needed more steps than I take. Try it in two"
-    public static let cannotThink = "I can't think that through right now. The rest still works"
-    public static let keyLine = "That looks like a key, so I won't send it"
-    public static let noAnswer = "I couldn't get an answer just now. Try again in a moment"
-=======
     public static let tooManySteps = "That needed more steps than I take, try it in two"
     public static let cannotThink = "I can't think that through right now, the rest still works"
     public static let keyLine = "That looks like a key, so I won't send it"
     public static let noAnswer = "I couldn't get an answer just now, try again in a moment"
->>>>>>> origin/master
 
     /// Her voice and rules: fixed text, so the prefix caches (cache breakpoint after it).
     public static let voice = """
@@ -525,7 +518,7 @@ public final class TessRun {
                 .run(arguments: input)
         case _ where TessRecallTools.names.contains(name):
             if name == TessRecallTools.remember, budget <= 0 || (remembersLeft.map { $0 <= 0 } ?? false) {
-                result = (budget <= 0 ? TessTools.capLine : "That's enough for tonight.", true)
+                result = (budget <= 0 ? TessTools.capLine : "That's enough for tonight", true)
                 break
             }
             let answer = TessRecallTools.run(name, arguments: input, index: memoryIndex(for: runID), engine: engine,
@@ -585,7 +578,7 @@ public final class TessRun {
         guard let key = arguments["place"], let place = ElementPlace(rawValue: key),
               let change = LookWords.change(arguments), LookWords.isKnown(change, place: key)
         else {
-            return ("That place has no such look. Use one from its look line.", true)
+            return ("That place has no such look. Use one from its look line", true)
         }
         guard let stage else { return nil }
         let report = await stage(place, change)
@@ -639,19 +632,12 @@ public final class TessRun {
 
     static func shellLine(_ bound: ToolPicker.Bound) -> String {
         switch bound.call {
-<<<<<<< HEAD
         case "goBack": "Back"
         case "openDoor": bound.arguments["door"].map { "Opening \($0)" } ?? "Opening it"
-        case "showWindow": bound.arguments["window"].map { "\($0)." } ?? "Done"
-        default: bound.arguments["item"].map { "Opening \($0)" } ?? "Opening it"
-=======
-        case "goBack": "Back."
-        case "openDoor": bound.arguments["door"].map { "Opening \($0)." } ?? "Opening it."
-        case "showWindow": bound.arguments["window"].map { "\($0)." } ?? "Done."
+        case "showWindow": bound.arguments["window"].map { "\($0)" } ?? "Done"
         case "setLook": lookLine(bound.arguments)
         case "showLooks": "Here are its looks"
-        default: bound.arguments["item"].map { "Opening \($0)." } ?? "Opening it."
->>>>>>> origin/master
+        default: bound.arguments["item"].map { "Opening \($0)" } ?? "Opening it"
         }
     }
 

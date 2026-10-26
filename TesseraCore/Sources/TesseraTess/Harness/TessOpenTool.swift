@@ -14,14 +14,10 @@ public enum TessOpenTool {
         let schema: [String: Any] = [
             "type": "object", "additionalProperties": false, "required": ["handle", "depth"],
             "properties": [
-<<<<<<< HEAD
-                "handle": ["type": "string", "description": "A short handle from the pack, like o1"],
-=======
                 "handle": [
                     "type": "string",
-                    "description": "A short handle from the pack, like o1, or a path from recall.",
+                    "description": "A short handle from the pack, like o1, or a path from recall",
                 ],
->>>>>>> origin/master
                 "depth": [
                     "type": "integer",
                     "enum": [1, 2],
@@ -29,11 +25,7 @@ public enum TessOpenTool {
                 ],
             ],
         ]
-<<<<<<< HEAD
-        return ToolSpec(name: name, description: "Read an object from the pack by its handle; read only",
-=======
-        return ToolSpec(name: name, description: "Read an object by its handle or its path; read only.",
->>>>>>> origin/master
+        return ToolSpec(name: name, description: "Read an object by its handle or its path; read only",
                         schema: (try? JSONSerialization.data(withJSONObject: schema, options: [.sortedKeys]))
                             ?? Data("{}".utf8))
     }
