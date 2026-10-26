@@ -25,12 +25,34 @@ enum ShellRooms {
     struct Entry {
         let id: String
         let host: @MainActor () -> AnyView
+        /// The room as the root shell holds it beside Bridge (`ShellRoomDriver`); nil keeps the room on its own page
+        /// when it is opened from Bridge.
+        var driver: (@MainActor () -> any ShellRoomDriver)?
+
+        init(id: String, driver: (@MainActor () -> any ShellRoomDriver)? = nil,
+             host: @escaping @MainActor () -> AnyView)
+        {
+            self.id = id
+            self.driver = driver
+            self.host = host
+        }
     }
 
     static var all: [Entry] {
         [
-            Entry(id: NotesRoomContent.room) { AnyView(NotesShellHost()) },
+            Entry(id: NotesRoomContent.room, driver: { NotesRoomDriver() }) { AnyView(NotesShellHost()) },
         ]
+    }
+
+    /// One driver per room that has one, for the root shell.
+    static func drivers() -> [String: any ShellRoomDriver] {
+        var drivers: [String: any ShellRoomDriver] = [:]
+        for entry in all {
+            if let make = entry.driver {
+                drivers[entry.id] = make()
+            }
+        }
+        return drivers
     }
 
     static var ids: [String] {

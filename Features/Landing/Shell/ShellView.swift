@@ -54,6 +54,8 @@ struct ShellView<Room: RoomContent>: View {
                 }
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
+            // Bridge's mosaic measures its core and its shields in this space (its origin is the screen's top).
+            .coordinateSpace(.named(HomeMosaicPage.space))
         }
         .ignoresSafeArea()
         .background { backdrop ?? AnyView(ThemedBackground()) }
@@ -273,19 +275,39 @@ struct ShellPlan {
     let oldLayout: LayoutKind
     let newLayout: LayoutKind
     let moves: [Place: PlaceMove]
+    /// Going between Bridge and a room: the room's keystone flip (nil otherwise).
+    let flip: KeystoneFlip?
+    /// True when a room's keystone comes in from Bridge; false when it goes back to Bridge's mosaic.
+    let flipIn: Bool
+    private let newSlots: [Place: SlotContent]
+
+    /// Bridge's apps, for the dial's reel when a room's doors come in from Bridge's dial.
+    static let bridgeApps = ["Log", "Lookout", "Deck", "Galley", "Watch", "Purse", "Settings"]
 
     init(from old: Screen, to new: Screen) {
         oldLayout = old.layout
         newLayout = new.layout
-        moves = PlaceMove.plan(from: old, to: new)
+        newSlots = new.slots
+        let bridgeChange = (old.layout == .bridge) != (new.layout == .bridge)
+        flipIn = old.layout == .bridge
+        flip = bridgeChange ? (old.layout == .bridge ? new.flip : old.flip) : nil
+        var moves = PlaceMove.plan(from: old, to: new)
+        if bridgeChange {
+            // Between Bridge and a room every place plays its own move (sheet 283 v4), whatever its content's kind:
+            // the masthead flaps, the widget rises, the dial reels, the action word streams; only the keystone flips.
+            for (place, move) in moves where move == .collapseAndForm && place != .keystone && place != .glyph {
+                moves[place] = .move
+            }
+        }
+        self.moves = moves
     }
 
     var merging: Bool {
-        oldLayout == .landing && newLayout == .door
+        newLayout == .door && oldLayout != .door
     }
 
     var splitting: Bool {
-        oldLayout == .door && newLayout == .landing
+        oldLayout != newLayout && !merging
     }
 
     /// The places whose content changes (they wait for their entry before taking touches).
@@ -327,8 +349,16 @@ struct ShellPlan {
         case .merge, .split, .form, .dissolve: style.context = .merge
         case .glide, .absent: break
         }
-        if place == .dial, style.move == .move, case let .dial(old)? = dial?.payload {
-            style.reelFrom = old.map(\.name)
+        if place == .dial, style.move == .move, case .dial? = newSlots[.dial]?.payload {
+            switch dial?.payload {
+            case let .dial(old)?: style.reelFrom = old.map(\.name)
+            case .scene?: style.reelFrom = Self.bridgeApps
+            default: break
+            }
+        }
+        if place == .keystone, let flip, style.move != .untouched {
+            style.flip = flip
+            style.flipIn = flipIn
         }
         return style
     }

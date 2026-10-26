@@ -15,10 +15,29 @@ enum Place: String, CaseIterable, Hashable {
 /// Level 0 is the landing; level 1 is a door page (more levels later).
 enum LayoutKind: Equatable {
     case landing, door
+    /// Bridge's own masthead and doors band (sheet 283 v4): Settings word and Departure board, the apps dial.
+    case bridge
 
     init(level: Int) {
         self = level == 0 ? .landing : .door
     }
+}
+
+/// How a room's keystone comes in from Bridge's mosaic, and goes back to it (sheet 283 v4, the flip): the mosaic is
+/// cut into 16 x 8 tiles that turn away in the room's order; Lookout's blows apart like cloud.
+enum KeystoneFlip: String, Equatable, CaseIterable {
+    /// Log: row by row.
+    case rows
+    /// Deck: a left-to-right sweep.
+    case sweep
+    /// Galley: column by column.
+    case columns
+    /// Watch: from the ground up.
+    case groundUp
+    /// Purse: left to right.
+    case leftToRight
+    /// Lookout: the tiles drift outward with the wind, grow, turn and blur, with a warm glint (700 ms).
+    case cloud
 }
 
 /// Identity of a place's content: the same id on both sides of a change means "nothing changed", so the place is
@@ -96,10 +115,13 @@ struct SlotContent: Identifiable, Equatable {
 struct Screen: Equatable {
     let layout: LayoutKind
     var slots: [Place: SlotContent]
+    /// How this room's keystone arrives from Bridge (and leaves back to it); nil on Bridge itself.
+    var flip: KeystoneFlip?
 
-    init(layout: LayoutKind, slots: [Place: SlotContent?]) {
+    init(layout: LayoutKind, flip: KeystoneFlip? = nil, slots: [Place: SlotContent?]) {
         self.layout = layout
         self.slots = slots.compactMapValues { $0 }
+        self.flip = flip
     }
 
     subscript(place: Place) -> SlotContent? {

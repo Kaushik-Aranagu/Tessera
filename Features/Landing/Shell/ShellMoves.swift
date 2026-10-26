@@ -14,6 +14,9 @@ struct PlaceStyle: Equatable {
     var context: MoveContext = .state
     /// The dial reel: the old doors' names, when the dial plays its reel.
     var reelFrom: [String] = []
+    /// The keystone's flip between Bridge's mosaic and a room (and which way).
+    var flip: KeystoneFlip?
+    var flipIn = true
 
     static let rest = PlaceStyle()
 }
@@ -24,6 +27,9 @@ enum PlaceTransition {
     static func make(_ place: Place, _ style: PlaceStyle, reduceMotion: Bool) -> AnyTransition {
         guard !reduceMotion else {
             return .opacity.animation(MotionPolicy.reducedMotionFade)
+        }
+        if place == .keystone, let flip = style.flip {
+            return TileFlipTransition.make(flip)
         }
         return .asymmetric(insertion: insertion(place, style), removal: removal(place, style))
     }

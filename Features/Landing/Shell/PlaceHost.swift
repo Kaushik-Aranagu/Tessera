@@ -68,7 +68,13 @@ private struct PlaceRenderer: View {
         case let .wall(words, label):
             ShellKeystone(words: words, label: label, act: act)
         case let .scene(key, label):
-            ShellSceneKeystone(key: key, label: label)
+            if place == .keystone {
+                ShellSceneKeystone(key: key, label: label)
+            } else {
+                // Any other place drawn by the room itself (Bridge's board, one-thing box, apps dial, undo line).
+                ShellScenePlace(key: key)
+                    .frame(width: size.width, height: size.height, alignment: .topLeading)
+            }
         case let .widget(items):
             LandingWidget(items: items, index: navigator.binding(\.widgetIndex),
                           open: { act(.openItem($0.id)) }, glyph: { _ in Color.clear })
@@ -285,4 +291,16 @@ enum ShellProbe {
     static let enabled = LaunchFlags.has("-shellProbe")
     /// `-shellReduceMotion` plays the shell's Reduce Motion path without changing the simulator's settings.
     static let reduceMotion = LaunchFlags.has("-shellReduceMotion")
+}
+
+/// A place drawn by its room through `shellScene`, at the place's origin (not clipped: Bridge's board rides above its
+/// place, as on the page).
+private struct ShellScenePlace: View {
+    let key: String
+
+    @Environment(\.shellScene) private var scene
+
+    var body: some View {
+        scene(key)
+    }
 }

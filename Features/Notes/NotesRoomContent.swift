@@ -40,7 +40,7 @@ struct NotesRoomContent: RoomContent {
         let focused = facts.doors.isEmpty ? nil
             : facts.doors[((state.dialFocus % facts.doors.count) + facts.doors.count) % facts.doors.count]
         let window = Self.vertical.indices.contains(state.switcherVerticalIndex) ? state.switcherVerticalIndex : 0
-        return Screen(layout: .landing, slots: [
+        return Screen(layout: .landing, flip: .rows, slots: [
             .title: title,
             .navWord: SlotContent(id: "log.nav.bridge", kind: .text, payload: .navWord("Bridge")),
             .switcher: SlotContent(id: "log.switcher", kind: .switcher,
@@ -88,7 +88,7 @@ struct NotesRoomContent: RoomContent {
         let rows = facts.rows[id] ?? []
         let name = door?.name ?? "All notes"
         let line = rows.isEmpty ? "Nothing here yet." : "\(rows.count) \(rows.count == 1 ? "note" : "notes"), newest first."
-        return Screen(layout: .door, slots: [
+        return Screen(layout: .door, flip: .rows, slots: [
             .title: title,
             .navWord: SlotContent(id: "log.nav.log", kind: .text, payload: .navWord("Log")),
             .doorTitle: SlotContent(id: ContentID("log.door.\(id).title"), kind: .text,
@@ -190,60 +190,39 @@ extension NotesRoomContent.Facts {
     }
 }
 
-/// The Log opened through the standing shell (`-shell` on the simulator). Taps come back as intents: a door pushes
-/// its route, a word or row opens its note, the action word writes, and back pops (restoring every place).
-struct NotesShellHost: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.colorScheme) private var scheme
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var navigator = ShellNavigator(root: .landing(NotesRoomContent.room))
-    @State private var opened: OpenNote?
-    @State private var writing = false
-    @State private var draft = ""
+/// The Log as a room the standing shell holds (sheet 283 v5): its content, its intents and what it presents (the
+/// note editor, the New note ask). Taps come back as intents: a door pushes its route, a word or row opens its
+/// note, the action word writes, and back pops (restoring every place).
+@MainActor
+@Observable
+final class NotesRoomDriver: ShellRoomDriver {
+    let room = NotesRoomContent.room
+    var accent: Color {
+        LandingAccent.notes
+    }
 
-    private struct OpenNote: Identifiable {
+    let tessRoom: AppID? = .notes
+
+    struct OpenNote: Identifiable {
         let id: UUID
     }
 
-    var body: some View {
-        let _ = model.revision
-        let content = NotesRoomContent(facts: .load(model: model, scheme: scheme))
-        ShellView(room: content, navigator: navigator, accent: LandingAccent.notes, act: handle)
-            .sheet(item: $opened) { note in
-                NavigationStack { NoteEditor(noteID: note.id) }
-            }
-            .alert("New note", isPresented: $writing) {
-                TextField("", text: $draft)
-                Button("Keep") { write() }
-                Button("Cancel", role: .cancel) {}
-            }
-        #if DEBUG
-            .task {
-                NotesDemo.seedIfRequested(model)
-                await walkForStills()
-            }
-        #endif
+    var opened: OpenNote?
+    var writing = false
+    var draft = ""
+    @ObservationIgnored weak var model: AppModel?
+
+    func content(model: AppModel, scheme: ColorScheme) -> any RoomContent {
+        self.model = model
+        return NotesRoomContent(facts: .load(model: model, scheme: scheme))
     }
 
-    #if DEBUG
-        /// `-shellDoor all` (simulator only, LaunchFlags): opens that door 2 s after launch and, with `-shellBack`,
-        /// comes back 3 s later, so stills and recordings can catch the merge and the split.
-        private func walkForStills() async {
-            guard let door = LaunchFlags.value(after: "-shellDoor") else { return }
-            try? await Task.sleep(for: .seconds(2))
-            navigator.push(.door(NotesRoomContent.room, door))
-            guard LaunchFlags.has("-shellBack") else { return }
-            try? await Task.sleep(for: .seconds(3))
-            navigator.pop()
-        }
-    #endif
-
-    private func handle(_ intent: ShellIntent) {
+    func handle(_ intent: ShellIntent, navigator: ShellNavigator) -> Bool {
         switch intent {
         case .back:
-            navigator.pop()
+            return false
         case let .openDoor(id):
-            navigator.push(.door(NotesRoomContent.room, id))
+            navigator.push(.door(room, id))
         case let .openItem(id):
             if let uuid = UUID(uuidString: id) {
                 opened = OpenNote(id: uuid)
@@ -256,9 +235,15 @@ struct NotesShellHost: View {
                 writing = true
             }
         }
+        return true
     }
 
-    private func write() {
+    func presenter() -> AnyView {
+        AnyView(NotesRoomPresenter(driver: self))
+    }
+
+    func write(reduceMotion: Bool) {
+        guard let model else { return }
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         if looksLikeClaudeKey(text) {
@@ -278,3 +263,83 @@ struct NotesShellHost: View {
         TessVoice.shared.say(isPrivate ? "Private note, kept." : "Note kept.", undo: result.record)
     }
 }
+
+/// The Log's presentations: the note editor and the New note ask.
+private struct NotesRoomPresenter: View {
+    @Bindable var driver: NotesRoomDriver
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Color.clear
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .sheet(item: $driver.opened) { note in
+                NavigationStack { NoteEditor(noteID: note.id) }
+            }
+            .alert("New note", isPresented: $driver.writing) {
+                TextField("", text: $driver.draft)
+                Button("Keep") { driver.write(reduceMotion: reduceMotion) }
+                Button("Cancel", role: .cancel) {}
+            }
+    }
+}
+
+/// The Log alone in the standing shell (`-shell` on the simulator, and the registry's Log entry).
+struct NotesShellHost: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.colorScheme) private var scheme
+    @State private var navigator = ShellNavigator(root: .landing(NotesRoomContent.room))
+    @State private var driver = NotesRoomDriver()
+
+    var body: some View {
+        let _ = model.revision
+        ShellView(room: AnyRoomContent(base: driver.content(model: model, scheme: scheme)), navigator: navigator,
+                  accent: driver.accent, act: handle)
+            .background { driver.presenter() }
+        #if DEBUG
+            .task {
+                NotesDemo.seedIfRequested(model)
+                await ShellStills.walk(navigator, room: NotesRoomContent.room)
+            }
+        #endif
+    }
+
+    private func handle(_ intent: ShellIntent) {
+        if !driver.handle(intent, navigator: navigator), intent == .back {
+            navigator.pop()
+        }
+    }
+}
+
+#if DEBUG
+    /// `-shellDoor all` (simulator only, LaunchFlags): opens that door 2 s after launch and, with `-shellBack`,
+    /// comes back 3 s later, so stills and recordings can catch the merge and the split.
+    @MainActor
+    enum ShellStills {
+        static func walk(_ navigator: ShellNavigator, room: String) async {
+            guard let door = LaunchFlags.value(after: "-shellDoor") else { return }
+            try? await Task.sleep(for: .seconds(2))
+            navigator.push(.door(room, door))
+            guard LaunchFlags.has("-shellBack") else { return }
+            try? await Task.sleep(for: .seconds(3))
+            navigator.pop()
+        }
+
+        /// `-shellWalk log` (simulator only): from Bridge into that room 3 s after launch, its All notes door 2.5 s
+        /// later, back up, and back to Bridge, 2.5 s apart; for recordings of every move.
+        static func walkRoot(_ navigator: ShellNavigator) async {
+            guard let room = LaunchFlags.value(after: "-shellWalk") else { return }
+            try? await Task.sleep(for: .seconds(3))
+            navigator.push(.landing(room))
+            if let door = LaunchFlags.value(after: "-shellDoor") {
+                try? await Task.sleep(for: .seconds(2.5))
+                navigator.push(.door(room, door))
+                try? await Task.sleep(for: .seconds(2.5))
+                navigator.pop()
+            }
+            guard LaunchFlags.has("-shellBack") else { return }
+            try? await Task.sleep(for: .seconds(2.5))
+            navigator.pop()
+        }
+    }
+#endif

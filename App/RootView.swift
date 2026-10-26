@@ -29,7 +29,12 @@ struct RootView: View {
                     Group {
                         // Home v2 (sheet 137) while its Review switch is On; else Home as it was.
                         if HomeMosaic.isOn {
-                            HomeMosaicPage()
+                            // Sheet 283 v5: Bridge and its rooms in the one standing shell.
+                            if ShellHome.isOn {
+                                RootShellHost()
+                            } else {
+                                HomeMosaicPage()
+                            }
                         } else if HomeV2.isOn {
                             HomeV2View()
                         } else {
