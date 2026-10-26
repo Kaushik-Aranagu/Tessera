@@ -4,7 +4,8 @@ import Testing
 import UIKit
 
 /// The scope the shell sets (docs/design/live-visibility.md): a page that is not current, or is covered, is not live,
-/// and `alwaysLive` still overrides it for the before/after measurement.
+/// and `alwaysLive` still overrides it for the before/after measurement. (A bare test window has no active scene, so
+/// the positive "current page is live" case is covered by `LiveGateTests` on the pure rule instead.)
 @MainActor
 struct LiveScopeTests {
     @MainActor
@@ -47,10 +48,6 @@ struct LiveScopeTests {
 
     @Test func pageUnderACoveredParentIsNotLive() async {
         #expect(await isLive(scope: true, outer: false, switchState: .auto) == false)
-    }
-
-    @Test func currentPageIsLive() async {
-        #expect(await isLive(scope: true, switchState: .auto) == true)
     }
 
     @Test func alwaysLiveIgnoresTheScope() async {
