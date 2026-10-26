@@ -60,6 +60,23 @@ When data changes while a feature is not live, it just stores the new state. On 
 directly, with no replay of missed changes. Entrance moves still play on arrival (the keystone's 0.94 settle), and
 should key off `isLive` going true, not `onAppear`.
 
+## Coming back (sheet 286, sections 4 and 5)
+
+On return a region shows the current state, then plays only what changed while he was away, once, 650 ms after the
+room settles, within 600 ms. Never a replay of missed motion. More than six changes, or more than an hour away:
+show now only (with the keystone's 0.94 settle).
+
+- `.liveRegion(feature, snapshot:, onReturn:)`. `snapshot` returns a `LiveSnapshot` (id to fingerprint: ticket ids
+  and texts, tile faces, chalk lines). The region calls it when it stops being live and again on return,
+  and `LiveReturn.plan` makes the decision. `onReturn(diff)` gets added and changed ids (sorted; removed ones are
+  simply gone and not played), at most six in all.
+- Per keystone, what `onReturn` plays is in sheet 286 section 4 (mosaic flips changed tiles 40 ms apart, wall sets
+  new words, Deck chalk at 2x, Galley hangs half-swing and reprints changed, Watch one growth step per grown tree,
+  Purse draws only the new piece; the Lookout sky and the widget row take no diff).
+- `LiveSwitch.quiet`: still live when seen and draws on change, but no idle loops. `LiveTimeline(idle: true)` (the
+  default) stops under Quiet; use `idle: false` for change-driven timelines. It is the one switch for a keystone's
+  Quiet and "stop animating the sky". Read `\.liveQuiet` for non-timeline idle loops.
+
 ## Compatibility with the element contract (PR #1434, `docs/ai/harness/elements.md`)
 
 - A place's `ElementMeaning` stays truthful whether or not the place is live. "On screen" in `TessFrame` means

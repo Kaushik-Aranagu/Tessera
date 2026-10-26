@@ -4,6 +4,10 @@ private struct LiveScopeKey: EnvironmentKey {
     static let defaultValue = true
 }
 
+private struct LiveQuietKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
 private struct IsLiveKey: EnvironmentKey {
     static let defaultValue = true
 }
@@ -13,6 +17,12 @@ extension EnvironmentValues {
     var liveScope: Bool {
         get { self[LiveScopeKey.self] }
         set { self[LiveScopeKey.self] = newValue }
+    }
+
+    /// True when the nearest region's switch is Quiet: change-driven moves play, idle loops do not.
+    var liveQuiet: Bool {
+        get { self[LiveQuietKey.self] }
+        set { self[LiveQuietKey.self] = newValue }
     }
 
     /// Whether the nearest `liveRegion` above is live. Defaults to true outside any region, so un-adopted views
@@ -34,24 +44,49 @@ private struct LiveScopeModifier: ViewModifier {
 
 private struct LiveRegionModifier: ViewModifier {
     let feature: LiveFeature
+    var snapshot: (() -> LiveSnapshot)?
+    var onReturn: ((LiveDiff) -> Void)?
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.liveScope) private var scope
     @State private var visible = false
+    @State private var seen: LiveSnapshot?
+    @State private var leftAt: Date?
 
     func body(content: Content) -> some View {
+        let switchState = LiveRegistry.shared.switchState(for: feature)
         let live = LiveGate.isLive(
             mode: feature.mode,
-            switchState: LiveRegistry.shared.switchState(for: feature),
+            switchState: switchState,
             inputs: .init(sceneActive: scenePhase == .active, visible: visible, scopeOn: scope)
         )
         content
             .environment(\.isLive, live)
+            .environment(\.liveQuiet, switchState == .quiet)
             .onAppear { visible = true }
             .onDisappear { visible = false }
             .onChange(of: live, initial: true) { _, now in
                 LiveRegistry.shared.record(feature, live: now)
+                handle(live: now)
             }
+    }
+
+    /// Remember what was drawn when it stops; on return, plan the differences (sheet 286, section 4).
+    private func handle(live: Bool) {
+        guard let snapshot, let onReturn else { return }
+        if !live {
+            seen = snapshot()
+            leftAt = .now
+        } else if let before = seen, let left = leftAt {
+            seen = nil
+            leftAt = nil
+            if case let .play(diff, delay, _) = LiveReturn.plan(seen: before, now: snapshot(), away: Date.now.timeIntervalSince(left)) {
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(delay))
+                    onReturn(diff)
+                }
+            }
+        }
     }
 }
 
@@ -65,6 +100,14 @@ extension View {
     /// Declares this view as a live feature. Descendants read `\.isLive`, or use `LiveTimeline` / `liveTask`.
     func liveRegion(_ feature: LiveFeature) -> some View {
         modifier(LiveRegionModifier(feature: feature))
+    }
+
+    /// A live feature that also plays what changed while he was away. `snapshot` fingerprints what is drawn (called
+    /// when the region stops being live and again when it returns). `onReturn` gets at most six differences, once,
+    /// 650 ms after return; with more changes or an hour away nothing plays and the view just shows now.
+    func liveRegion(_ feature: LiveFeature, snapshot: @escaping () -> LiveSnapshot,
+                    onReturn: @escaping (LiveDiff) -> Void) -> some View {
+        modifier(LiveRegionModifier(feature: feature, snapshot: snapshot, onReturn: onReturn))
     }
 
     /// Runs `action` only while the nearest region is live, cancels it when it stops, restarts it on return.
@@ -93,17 +136,23 @@ struct LiveTimeline<Content: View>: View {
     private let interval: TimeInterval
     private let content: (TimelineViewDefaultContext) -> Content
 
+    private let idle: Bool
+
     @Environment(\.isLive) private var live
+    @Environment(\.liveQuiet) private var quiet
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// `minimumInterval` as `TimelineView(.animation)`. With Reduce Motion on, it never ticks.
-    init(minimumInterval: TimeInterval = 1 / 30, @ViewBuilder content: @escaping (TimelineViewDefaultContext) -> Content) {
+    /// `minimumInterval` as `TimelineView(.animation)`. With Reduce Motion on, it never ticks. `idle` marks a loop
+    /// with no cause (drift, breathing); Quiet stops those but not change-driven timelines (`idle: false`).
+    init(minimumInterval: TimeInterval = 1 / 30, idle: Bool = true,
+         @ViewBuilder content: @escaping (TimelineViewDefaultContext) -> Content) {
         interval = minimumInterval
+        self.idle = idle
         self.content = content
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: interval, paused: !live || reduceMotion), content: content)
+        TimelineView(.animation(minimumInterval: interval, paused: !live || reduceMotion || (idle && quiet)), content: content)
     }
 }
 

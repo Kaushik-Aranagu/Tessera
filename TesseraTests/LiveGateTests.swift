@@ -49,4 +49,31 @@ struct LiveGateTests {
     @Test func featureIdsAreUnique() {
         #expect(Set(LiveFeatures.all.map(\.id)).count == LiveFeatures.all.count)
     }
+
+    @Test func quietStillDrawsWhenSeenButHasNoIdle() {
+        #expect(LiveGate.isLive(mode: .uiRead, switchState: .quiet, inputs: seen))
+        #expect(!LiveGate.runsIdle(live: true, switchState: .quiet))
+        #expect(LiveGate.runsIdle(live: true, switchState: .auto))
+        let hidden = LiveGate.Inputs(sceneActive: true, visible: false, scopeOn: true)
+        #expect(!LiveGate.isLive(mode: .uiRead, switchState: .quiet, inputs: hidden))
+    }
+
+    @Test func returnPlaysOnlyTheDifferencesOnce() {
+        let before: LiveSnapshot = ["a": "1", "b": "1", "c": "1"]
+        let now: LiveSnapshot = ["a": "1", "b": "2", "d": "1"]
+        let diff = LiveReturn.diff(seen: before, now: now)
+        #expect(diff == LiveDiff(added: ["d"], changed: ["b"], removed: ["c"]))
+        #expect(LiveReturn.plan(seen: before, now: now, away: 60)
+            == .play(diff: diff, delay: 0.65, window: 0.6))
+        #expect(LiveReturn.plan(seen: before, now: before, away: 60) == .showNow)
+    }
+
+    @Test func tooManyChangesOrTooLongAwayJustShowsNow() {
+        let before: LiveSnapshot = [:]
+        let many = Dictionary(uniqueKeysWithValues: (0 ..< 7).map { ("t\($0)", "x") })
+        #expect(LiveReturn.plan(seen: before, now: many, away: 10) == .showNow)
+        let few = Dictionary(uniqueKeysWithValues: (0 ..< 6).map { ("t\($0)", "x") })
+        #expect(LiveReturn.plan(seen: before, now: few, away: 10) != .showNow)
+        #expect(LiveReturn.plan(seen: before, now: few, away: 3601) == .showNow)
+    }
 }
