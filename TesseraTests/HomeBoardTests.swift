@@ -41,10 +41,23 @@ struct HomeBoardTests {
     /// The page caps type at AX1, so the one-thing cut at AX1 and AX3 is the same, and a larger size never cuts less.
     @Test func oneThingCutStopsGrowingAtAX1() {
         let line = "Bench best 205 lb, 3 weeks ago with a long tail"
-        let ax1 = HomeOneThing.cut(line, size: 38, width: 262, typeSize: .accessibility1)
-        #expect(HomeOneThing.cut(line, size: 38, width: 262, typeSize: .accessibility3) == ax1)
-        #expect(HomeOneThing.cut(line, size: 38, width: 262, typeSize: .accessibility5) == ax1)
-        let large = HomeOneThing.cut(line, size: 38, width: 262, typeSize: .large)
+        let ax1 = HomeOneThing.cut(line, width: 262, typeSize: .accessibility1)
+        #expect(HomeOneThing.cut(line, width: 262, typeSize: .accessibility3) == ax1)
+        #expect(HomeOneThing.cut(line, width: 262, typeSize: .accessibility5) == ax1)
+        let large = HomeOneThing.cut(line, width: 262, typeSize: .large)
         #expect(large.count >= ax1.count)
+    }
+
+    /// No overlap: the Big word's line always fits its 64 pt slot, at every text size.
+    @Test func bigWordFitsItsSlotAtEverySize() {
+        let sizes: [DynamicTypeSize] = [.xSmall, .large, .xxxLarge, .accessibility1, .accessibility3, .accessibility5]
+        for typeSize in sizes {
+            let size = HomeOneThing.bigSize(typeSize)
+            let descriptor = UIFontDescriptor(fontAttributes: [
+                .family: "Figtree", .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.bold],
+            ])
+            #expect(UIFont(descriptor: descriptor, size: size).lineHeight <= HomeOneThing.bigSlot)
+            #expect(size >= 38)
+        }
     }
 }
