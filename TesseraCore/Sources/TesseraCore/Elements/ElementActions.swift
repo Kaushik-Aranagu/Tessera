@@ -447,7 +447,9 @@ public struct PlantRoutine: EngineAction {
     }
 
     public func receipt(in store: ObjectStore, output routine: ObjectRecord) -> String? {
-        "\(ElementActionLine.shown(routine, in: store)), planted."
+        // The stored name is the real one; the receipt says the private label when either privacy rule calls it private.
+        let hidden = ObjectPrivacy.isPrivateTitle(routine.title, lastWeightKg: BodyWeight.lastKg(in: store))
+        return "\(hidden ? Self.privateName : ElementActionLine.shown(routine, in: store)), planted."
     }
 
     public func receipt(in _: ObjectStore) -> String? {

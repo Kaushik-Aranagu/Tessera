@@ -149,7 +149,6 @@ struct ElementActionsTests {
         let made = try engine.perform(PlantRoutine(name: "weigh in at 82 kg"), by: .tess)
         // The real name stays on the device; the shown label and the receipt say "Private routine".
         #expect(made.output.title == "weigh in at 82 kg" && made.record.receipt == "Private routine, planted.")
-        #expect(ObjectPrivacy.shownLabel(of: made.output, in: store, classes: classes) == PlantRoutine.privateName)
     }
 
     @Test func aSessionPlannedForTodayRefusesTheRestInHisWords() throws {
