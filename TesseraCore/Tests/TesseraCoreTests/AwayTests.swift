@@ -52,18 +52,18 @@ struct AwayTests {
         let list = try packing(items: 3, done: 3)
         let occasion = try trip(links: [list])
         try engine.perform(SetAway(occasion: occasion.id, on: true), by: .user)
-        #expect(line(day(27)) == "Trip, day 2 of 3. Packing is done.")
+        #expect(line(day(27)) == "Trip, day 2. Packing is done.")
         #expect(Away.day(of: occasion, store: store, now: day(26), calendar: calendar)?.day == 1)
         let open = try packing(items: 4, done: 1)
         try engine.perform(LinkToOccasion(occasion: occasion.id, thing: open.id), by: .user)
-        #expect(line(day(28))?.hasPrefix("Trip, day 3 of 3.") == true)
+        #expect(line(day(28))?.hasPrefix("Trip, the last day.") == true)
     }
 
     @Test func itIsQuietOnlyOnTheTripsOwnDays() throws {
         let occasion = try trip()
         try engine.perform(SetAway(occasion: occasion.id, on: true), by: .user)
         #expect(line(day(25)) == nil)
-        #expect(line(day(26)) == "Trip, day 1 of 3.")
+        #expect(line(day(26)) == "Trip, day 1.")
         #expect(line(day(29)) == nil)
     }
 
@@ -74,9 +74,9 @@ struct AwayTests {
         ).output
         try engine.perform(SetAway(occasion: first.id, on: true), by: .user)
         let made = try engine.perform(SetAway(occasion: second.id, on: true), by: .user)
-        #expect(line(day(26)) == "Second, day 1 of 2.")
+        #expect(line(day(26)) == "Second, day 1.")
         try engine.undo(made.record)
-        #expect(line(day(26)) == "First, day 1 of 3.")
+        #expect(line(day(26)) == "First, day 1.")
         try engine.perform(SetAway(occasion: first.id, on: false), by: .user)
         #expect(line(day(26)) == nil)
     }
@@ -89,7 +89,7 @@ struct AwayTests {
         #expect(!text.contains("$") && !text.contains("500") && !text.lowercased().contains("fund"))
         // A title that later names a pool reads "Away" and the summary says nothing of it.
         try engine.perform(RenameObject(object: occasion.id, title: "Trip fund"), by: .user)
-        #expect(line(day(27)) == "Away, day 2 of 3.")
+        #expect(line(day(27)) == "Away, day 2.")
         let made = try engine.perform(SetAway(occasion: occasion.id, on: true), by: .user)
         #expect(made.record.summary == "Away on")
     }
@@ -99,7 +99,7 @@ struct AwayTests {
         try engine.perform(RenameObject(object: list.id, title: "Packing Lexapro"), by: .user)
         let occasion = try trip(links: [list])
         try engine.perform(SetAway(occasion: occasion.id, on: true), by: .user)
-        #expect(line(day(27)) == "Trip, day 2 of 3.")
+        #expect(line(day(27)) == "Trip, day 2.")
     }
 
     /// A phone that already has Occasions gets the new field on the next launch, off, and keeps its trips.
@@ -118,6 +118,6 @@ struct AwayTests {
         #expect(Away.current(engine: engine, now: day(27), calendar: calendar) == nil)
         #expect(store.value("start", of: occasion)?.dateValue != nil)
         try engine.perform(SetAway(occasion: occasion.id, on: true), by: .user)
-        #expect(line(day(27)) == "Trip, day 2 of 3.")
+        #expect(line(day(27)) == "Trip, day 2.")
     }
 }

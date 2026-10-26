@@ -327,7 +327,6 @@ struct DepartureBoard: View {
                 open(li, frames.byKey[key] ?? .zero)
             } label: {
                 door.foregroundStyle(Theme.Colors.ink)
-                    .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.ink).frame(height: 1).offset(y: 5) }
                     .contentShape(.interaction, Rectangle().inset(by: -8))
             }
             .buttonStyle(.plain)
@@ -357,8 +356,6 @@ struct DepartureBoard: View {
             if seg.opens {
                 Button { taps += 1; open(li, .zero) } label: {
                     text.foregroundStyle(Theme.Colors.ink)
-                        .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.ink).frame(height: 1).offset(y: 5)
-                        }
                 }
                 .buttonStyle(.plain)
             } else {
@@ -515,8 +512,10 @@ struct SkyWordStyle: ButtonStyle {
                 startPoint: .leading,
                 endPoint: .trailing
             ))
+            // No decorative underline at rest (landing contract §10, QA on 283): a 1 pt line only while pressed.
             .overlay(alignment: .bottom) {
                 Rectangle().fill(underline ?? Self.second).frame(height: 1).offset(y: 5)
+                    .opacity(configuration.isPressed ? 1 : 0)
             }
             .contentShape(.interaction, Rectangle().inset(by: -8))
             .opacity(configuration.isPressed ? 0.7 : 1)

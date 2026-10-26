@@ -280,7 +280,7 @@ public enum OneThings {
         let mid = day.isSameDay(top.1, now) ? "Today at \(HouseTime.clock(top.1, calendar: calendar))"
             : "Since \(weekday)"
         return OneThing(id: "task-\(top.0.id)", kind: .task, big: name.text, mid: mid, midKeyword: nil,
-                        small: "Hold to strike it through", accent: .ink, done: .task(top.0.id), isPrivate: name.1,
+                        small: "", accent: .ink, done: .task(top.0.id), isPrivate: name.1,
                         target: .object(top.0.id), urgency: max(0, Int(top.1.timeIntervalSince(now) / 60)))
     }
 
@@ -291,7 +291,7 @@ public enum OneThings {
         let items = lead.nextItems.map { AppSummaryLines.shown($0, in: engine.store, classes: engine.classes).isPrivate
             ? "a private item" : $0
         }
-        return OneThing(id: "list-\(lead.list)", kind: .list, big: "\(lead.total - lead.left) of \(lead.total)",
+        return OneThing(id: "list-\(lead.list)", kind: .list, big: lead.left == 0 ? "All done" : "\(lead.left) left",
                         mid: name.text, midKeyword: name.1 ? nil : name.text,
                         small: name.1 || items.isEmpty ? "" : "Next up: " + items.prefix(3).joined(separator: ", "),
                         accent: .app(.lists), done: nil, isPrivate: name.1, target: .object(lead.list), urgency: 700)

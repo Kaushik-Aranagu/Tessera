@@ -110,7 +110,8 @@ public extension MosaicFacts {
         return MosaicPageFacts(
             nextTitle: title, nextApp: app, nextIn: interval, nextClock: clock, nextCaption: caption,
             weekMarks: marks, weekDone: done, weekPlanned: planned,
-            weekCaption: planned > 0 ? "This week, \(done) of \(planned) training days" : nil
+            weekCaption: planned > 0 ? (done >= planned ? "This week's training is done"
+                : "This week, \(planned - done) training \(planned - done == 1 ? "day" : "days") to go") : nil
         )
     }
 }
