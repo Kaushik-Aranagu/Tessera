@@ -40,10 +40,12 @@ public struct MemoryIndex {
             guard let beliefClass, let classDef = record.classDef else { return false }
             return ClassResolver.isSubclass(classDef, of: beliefClass)
         }
-        // Beliefs come in below, as beliefs; here only his things.
+        // Beliefs come in below, as beliefs; here only his things. Under strict, nothing the pack would taint
+        // phone-only (money, health, body, calendar) enters: a tool result carries no taint for the Door to act on.
         let objects = store.objects(of: thing).filter { record in
             !record.isDeleted && !record.isClassObject && !isBelief(record)
                 && scope.reads(record.classDef, classes: classes)
+                && !(scope.policy == .strict && TessAskRouter.isUnnameable(record, classes: classes))
         }
         .sorted { ($0.createdAt, $0.id.uuidString) < ($1.createdAt, $1.id.uuidString) }
 
