@@ -203,7 +203,21 @@ struct HomeMosaicPage: View {
             }
         )
         .task(id: Int(AppClock.now.timeIntervalSince1970 / 60) &+ model.revision) { refreshPick() }
-        .onAppear { onScreen = true }
+        .onAppear {
+            onScreen = true
+            #if DEBUG
+                // `-openLink pantry|recipes|notes|...` opens that screen once per launch (simulator only, for UI tests).
+                if !Self.openedLaunchLink, let value = LaunchFlags.value(after: "-openLink"),
+                   let target = HomeLink.allCases.first(where: { value == "\($0)" })
+                {
+                    Self.openedLaunchLink = true
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(1.5))
+                        link = target
+                    }
+                }
+            #endif
+        }
         .onDisappear {
             onScreen = false
             endMoment()
@@ -262,6 +276,8 @@ struct HomeMosaicPage: View {
         let word = (44 - small.lineHeight) / 2 + small.ascender
         return max(row - word, 0)
     }()
+
+    @MainActor private static var openedLaunchLink = false
 
     private static let backShownKey = "homeMosaic.backShown"
 
