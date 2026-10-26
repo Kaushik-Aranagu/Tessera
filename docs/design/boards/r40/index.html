@@ -1,0 +1,192 @@
+<title>Kitchen and Training v2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300;400&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --training:#A8203F;--kitchen:#A8701F;--trweek:#C87586;--steam:#C9C3BA;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--training:#CC4478;--kitchen:#C49A5E;--trweek:#7A2948;--steam:#5A5650;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--training:#CC4478;--kitchen:#C49A5E;--trweek:#7A2948;--steam:#5A5650;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head{max-width:1120px;margin:0 auto 30px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:64ch}
+.pair{max-width:1120px;margin:0 auto 64px;display:flex;gap:44px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.notes{flex:1 1 340px;min-width:0;max-width:500px;display:flex;flex-direction:column;gap:14px}
+.notes h2{font-size:30px;font-weight:600;letter-spacing:-.02em;margin:0}
+.notes p{margin:0}.notes b{font-weight:600}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{display:flex;gap:16px;flex-wrap:wrap;align-items:baseline}
+.opt .k{color:var(--ink3);font-size:15px;min-width:76px}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr[aria-pressed="true"]{color:var(--ink);font-weight:600}
+.tr:focus-visible,button:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+.pr{color:var(--ink3);font-size:15px}
+.phone{position:relative;width:360px;max-width:100%;height:740px;background:var(--phone);border:1px solid var(--edge);border-radius:44px;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+.back{all:unset;cursor:pointer;position:absolute;top:52px;left:24px;color:var(--ink2);font-size:17px;z-index:2}
+canvas.lin{display:block;width:100%;height:150px;flex:none}
+.in{padding:0 24px;display:flex;flex-direction:column;flex:1;min-height:0}
+.sent{text-align:right;font-size:23px;line-height:30px;height:60px;overflow:hidden;letter-spacing:-.005em;margin:2px 0 10px}
+.sent .w{font-weight:600;font-size:1.12em}
+.n{font-family:var(--nums);font-weight:300}
+.door{all:unset;cursor:pointer;font-size:28px;font-weight:600;letter-spacing:-.015em;line-height:34px;height:34px;display:flex;justify-content:space-between;align-items:baseline}
+.door small{font-size:15px;font-weight:400;color:var(--ink2);letter-spacing:0}
+.disp{position:relative;height:104px;margin:4px 0 14px;overflow:hidden}
+.disp canvas{position:absolute;inset:0;width:100%;height:100%}
+.foot{all:unset;position:absolute;left:24px;bottom:30px;font-size:20px;font-weight:600;cursor:pointer;font-family:inherit}
+.tess{position:absolute;right:22px;bottom:18px;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#FFA90F,#FF5A26 55%,#E5341C)}
+.lw{font-size:20px;line-height:28px;height:56px;overflow:hidden}
+.wk{display:flex;justify-content:space-between}
+.wk span{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--ink3)}
+.row1{height:26px;line-height:26px;white-space:nowrap;overflow:hidden;font-size:16px;color:var(--ink2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<div class="head">
+  <p class="lab">Round 225, Oct 23</p>
+  <h1>Kitchen and Training, again</h1>
+  <p class="sub">Your two everyday rooms, rebuilt around one brief sentence and a few fun displays you can choose between. Every line sits in a fixed slot (sheet 224): nothing wraps, nothing moves when it changes. One action word bottom left, Tess bottom right, no menus.</p>
+  <div style="display:flex;gap:22px"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button></div>
+</div>
+
+<div class="pair">
+<div class="phone" id="kph">
+  <canvas class="lin" id="klin" aria-label="Kitchen, the lintel: the week's dinners as a pixel skyline"></canvas>
+  <div class="in" id="kin"></div>
+  <button class="foot" id="kgo" style="color:var(--kitchen)">Cook</button><span class="tess" aria-hidden="true"></span>
+</div>
+<div class="notes">
+  <h2>Kitchen</h2>
+  <p>The brief leads, in a two-line slot: what's tonight and what's short. Then three doors, Pantry, Recipes and To get, each with a small fixed display instead of a list, so Recipes no longer takes the page. No back word: swipe from the left edge to go Home. Pick a display for each to compare.</p>
+  <div class="opts">
+    <div class="opt"><span class="k">Pantry</span><button class="tr" data-g="p" data-v="0" aria-pressed="true">Mounds</button><button class="tr" data-g="p" data-v="1">Weighted words</button><button class="tr" data-g="p" data-v="2">Punch card</button></div>
+    <div class="opt"><span class="k">Recipes</span><button class="tr" data-g="r" data-v="0" aria-pressed="true">Week strip</button><button class="tr" data-g="r" data-v="1">Can cook now</button><button class="tr" data-g="r" data-v="2">Tonight, then</button></div>
+    <div class="opt"><span class="k">State</span><button class="tr" data-g="c" data-v="0" aria-pressed="true">Planning</button><button class="tr" data-g="c" data-v="1">While cooking</button></div>
+  </div>
+  <p><b>Mounds:</b> each place as one pixel mound, as dense as it's stocked (the Pantry room's lintel, small). <b>Weighted words:</b> the places as words whose weight is how full they are, with what's out said plainly. <b>Punch card:</b> every thing you keep is one tile; a gap is something that's out, a pale tile something low, so one glance shows the holes.</p>
+  <p><b>Week strip:</b> the kit's word strip, today in the middle, drag for the week. <b>Can cook now:</b> the recipes you can make from what's home, as one sentence, the ones a thing short quieter. <b>Tonight, then:</b> tonight in large type, the next two dinners small.</p>
+  <p><b>While cooking</b> the room becomes the stove: the step you're on hangs from the thread, the timer takes the sentence slot (no thumb arc while cooking), and the foot word is Next step.</p>
+</div>
+</div>
+
+<div class="pair">
+<div class="phone" id="tph">
+  <canvas class="lin" id="tlin" aria-label="Training, the lintel: your bench best over twelve weeks as a pixel ridge"></canvas>
+  <div class="in" id="tin"></div>
+  <button class="foot" id="tgo" style="color:var(--training)">Start Push A</button><span class="tess" aria-hidden="true"></span>
+</div>
+<div class="notes">
+  <h2>Training</h2>
+  <p>The brief leads: the session, how long, and the one number that matters today. Under it one display of the session, then Bests, then the week as set marks. Pick a display to compare.</p>
+  <div class="opts">
+    <div class="opt"><span class="k">Session</span><button class="tr" data-g="t" data-v="0" aria-pressed="true">The plates</button><button class="tr" data-g="t" data-v="1">Muscle map</button><button class="tr" data-g="t" data-v="2">Set ladder</button></div>
+  </div>
+  <p><b>The plates:</b> the bar for today's opening weight, loaded in pixels: what to put on each side, biggest plate first, read straight off the screen at the rack. Drag the number up or down and the plates change. <b>Muscle map:</b> a small pixel figure; today's muscles in red, what you've already worked this week in a lighter red, the rest pale. Presence only, never a heat scale. <b>Set ladder:</b> each lift with its set rings, done ones in ink.</p>
+  <p><b>Beat last time:</b> the line under the display says what last time was and offers one step more ("Last time 185 for 5. Try 190?"), and the number is a pressed number you can push up.</p>
+  <p class="pr">All three use whole tiles and ink only. The muscle figure is the approved Oct 18 figure, drawn in tiles. No food drawings in Kitchen.</p>
+</div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cs=()=>getComputedStyle(document.documentElement);const hex=h=>{h=h.trim().replace('#','');return[0,2,4].map(k=>parseInt(h.slice(k,k+2),16))};
+const mix=(a,b,t)=>a.map((v,k)=>v+(b[k]-v)*t);const clamp=x=>Math.max(0,Math.min(1,x));
+const B4=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]].map(r=>r.map(v=>(v+.5)/16));
+const ST=4,TL=3.3;
+function cvs(c){const dpr=devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;if(c.width!==Math.round(W*dpr)){c.width=W*dpr;c.height=H*dpr}const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);
+  const T=cs(),pg=hex(T.getPropertyValue('--phone'));x.fillStyle=`rgb(${pg})`;x.fillRect(0,0,W,H);return{x,W,H,C:Math.ceil(W/ST),R:Math.ceil(H/ST),pg,T,put:(j,i,c)=>{x.fillStyle=`rgb(${c.map(Math.round)})`;x.fillRect(j*ST+(ST-TL)/2,i*ST+(ST-TL)/2,TL,TL)}}}
+const opt={p:0,r:0,c:0,t:0};
+document.querySelectorAll('.tr[data-g]').forEach(b=>b.onclick=()=>{opt[b.dataset.g]=+b.dataset.v;document.querySelectorAll(`.tr[data-g="${b.dataset.g}"]`).forEach(o=>o.setAttribute('aria-pressed',o===b));t0=performance.now();b.dataset.g==='t'?drawT():drawK()});
+let t0=performance.now();
+
+// ================= Kitchen
+const PL=[['Fridge',.8],['Freezer',.75],['Shelf',.55],['Counter',.35]];
+const THINGS=[[0,1],[0,.5],[0,1],[0,1],[0,1],[0,.5],[0,1],[0,1],[0,.5],[1,1],[1,.5],[1,1],[1,0],[2,1],[2,1],[2,.5],[2,1],[2,1],[2,.5],[3,0],[3,1],[3,1],[3,1],[3,0]];
+const WEEK=[['Mon','Lentil soup'],['Tue','Leftovers'],['Wed','Stir fry'],['Thu','Pasta'],['Fri','Tacos'],['Sat','Out'],['Sun','Roast vegetables']];
+let wpos=4;
+function drawK(){const kin=document.getElementById('kin');const go=document.getElementById('kgo');
+  if(opt.c===1){go.textContent='Next step';kin.innerHTML=`<div class="sent" style="display:flex;justify-content:flex-end;align-items:baseline;gap:10px"><span style="color:var(--ink2);font-size:17px">left on the pan</span><span style="font-family:var(--nums);font-weight:200;font-size:56px;line-height:60px" id="ktm">8:00</span></div>
+    <div style="position:relative;height:250px"><svg style="position:absolute;left:0;top:0" width="20" height="250"><line x1="4" y1="0" x2="4" y2="250" stroke="var(--edge)" stroke-width="1.2"/><line x1="4" y1="40" x2="4" y2="78" stroke="var(--kitchen)" stroke-width="3" stroke-linecap="round"/></svg>
+    <div style="margin-left:22px"><div class="row1"><span style="color:var(--kitchen);font-weight:600">Tacos</span>, step <span class="n">3</span> of <span class="n">7</span>. Eat at <span class="n">6:45</span>.</div><div style="font-size:32px;font-weight:500;line-height:38px;height:76px;overflow:hidden;margin-top:8px">Warm the tortillas, dry pan</div>
+    <div class="row1" style="color:var(--ink3)">Then the beans, low heat</div><div class="row1" style="color:var(--ink3)">Then chop the cilantro</div></div></div>`;
+    let s=480;clearInterval(window._kt);window._kt=setInterval(()=>{s=Math.max(0,s-1);const e=document.getElementById('ktm');if(e)e.textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`},1000);return}
+  clearInterval(window._kt);go.textContent='Cook';
+  kin.innerHTML=`<div class="sent"><span class="w" style="color:var(--kitchen)">Tacos</span> tonight, start at <span class="n">6:05</span>.<br>Lemon is short.</div>
+   <button class="door">Pantry<small>${['<span class="n">2</span> out, <span class="n">5</span> low','',' <span class="n">2</span> out, <span class="n">5</span> low'][opt.p]}</small></button><div class="disp" id="pd"></div>
+   <button class="door">Recipes<small>${['this week','<span class="n">6</span> you can cook','this week'][opt.r]}</small></button><div class="disp" id="rd"></div>
+   <button class="door">To get<small><span class="n">4</span> things</small></button><div class="disp" style="height:56px"><div class="row1" style="color:var(--ink)">Lemon, limes, milk, tortillas.</div><div class="row1">On the way home, for tacos.</div></div>`;
+  const pd=document.getElementById('pd'),rd=document.getElementById('rd');
+  if(opt.p===1){pd.innerHTML=`<div style="display:flex;gap:6px 18px;flex-wrap:wrap;align-items:baseline;height:40px;overflow:hidden">${PL.map(([n,v])=>`<span style="font-size:24px;font-weight:${v>.7?600:v>.5?500:300};color:${v>.7?'var(--ink)':v>.5?'var(--ink2)':'var(--ink3)'}">${n}</span>`).join('')}</div><div class="row1" style="color:var(--ink)">Lemons and limes are out.</div><div class="row1">Eggs, cheddar and pasta are low.</div>`}
+  else pd.innerHTML='<canvas></canvas>';
+  if(opt.r===0){rd.innerHTML='<div id="ws" style="position:absolute;inset:0;touch-action:none;cursor:grab"></div>';buildStrip()}
+  else if(opt.r===1){rd.innerHTML=`<div class="lw"><span>Tacos</span>, <span>dal</span>, <span>fried rice</span>, <span>chili</span>, <span>shakshuka</span>, <span>rice bowls</span>, <span style="color:var(--ink3)">pancakes</span></div><div class="row1">Pancakes is one short, milk.</div>`}
+  else rd.innerHTML=`<div style="display:flex;align-items:baseline;gap:10px;height:44px"><span style="color:var(--ink2);font-size:16px">Tonight</span><span style="font-size:36px;font-weight:500;letter-spacing:-.02em;color:var(--kitchen)">Tacos</span></div><div class="row1">Then pasta on Thursday, out on Saturday.</div><div class="row1">Sunday is open.</div>`}
+function buildStrip(){const el=document.getElementById('ws');if(!el)return;const GAP=96;el.innerHTML='';const items=WEEK.map(([d,m],i)=>{const a=document.createElement('div');a.style.cssText='position:absolute;left:50%;top:6px;text-align:center;white-space:nowrap';a.innerHTML=`<div class="d"></div><div class="m" style="font-size:15px;color:var(--ink2)">${m}</div>`;a.firstChild.textContent=d;el.appendChild(a);return a});
+  const draw=()=>items.forEach((a,i)=>{const k=clamp(1-Math.abs(i-wpos));a.firstChild.style.cssText=`font-size:${16+6*k}px;font-weight:${k>.5?600:400};color:${k>.5?(i===4?'var(--kitchen)':'var(--ink)'):'var(--ink3)'}`;a.style.transform=`translateX(calc(${(i-wpos)*GAP}px - 50%))`;a.lastChild.style.visibility=k>.5?'visible':'hidden'});
+  let st=null;el.onpointerdown=e=>{el.setPointerCapture(e.pointerId);st={x:e.clientX,p:wpos}};el.onpointermove=e=>{if(!st)return;wpos=Math.max(-.3,Math.min(6.3,st.p-(e.clientX-st.x)/GAP));draw()};
+  el.onpointerup=()=>{if(!st)return;st=null;const t=Math.round(Math.max(0,Math.min(6,wpos))),f=wpos,s0=performance.now();(function a(n){const u=RM?1:clamp((n-s0)/320),e=1-Math.pow(1-u,3);wpos=f+(t-f)*e;draw();if(u<1)requestAnimationFrame(a)})(s0)};draw()}
+const KW=[13,11,14,13,13,11,15],KS=KW.map((w,k)=>KW.slice(0,k).reduce((a,b)=>a+b,0));const dome=u=>Math.sqrt(Math.max(0,1-(2*u-1)**2));
+const ROOF=[u=>dome(u),u=>(u>.3&&u<.7)?1:.35,(u,j,w)=>(j===0||j===w-1)?.7:.3,u=>1-Math.abs(2*u-1),u=>Math.min(1,1.4*dome(u)),u=>(u>.44&&u<.56)?1:.3,u=>Math.abs(Math.sin(u*Math.PI*3))];
+// every building stands the same height; only its roofline differs, so height never reads as a quantity
+const PROF=ROOF.map(f=>(u,j,w)=>.42+.34*f(u,j,w));
+function kframe(now){const g=cvs(document.getElementById('klin')),acc=hex(g.T.getPropertyValue('--kitchen')),ink=hex(g.T.getPropertyValue('--ink'));const base=g.R-1,span=base-19-7,sc=g.C/90;
+  for(let j=0;j<g.C;j++){const jj=j/sc;let k=0;while(k<6&&jj>=KS[k+1])k++;const w=KW[k],u=(jj-KS[k]+.5)/w,h=PROF[k](u,Math.floor(jj-KS[k]),w);
+    const settle=RM?0:Math.round(6*Math.pow(1-clamp((now-t0-k*70)/520),3)),hy=base-6-Math.round(h*span)-settle;
+    for(let i=hy;i<g.R;i++){let c=mix(acc,g.pg,clamp(.42+(i-hy)/(base-hy+.001)*.58));if(i-hy<1.2)c=acc;const e=clamp((g.R-1-i)/9),q=Math.floor(e*16+B4[i&3][j&3])/16;c=mix(g.pg,c,q);
+      if(k===4&&!RM&&i<hy+3){const gl=(now-t0-600-(jj-KS[4])*22)/700;if(gl>0&&gl<1)c=mix(c,ink,Math.sin(gl*Math.PI)*.5)}g.put(j,i,c)}
+    // steam over tonight's building while cooking
+    if(opt.c===1&&k===4&&Math.abs(jj-(KS[4]+6))<.6&&!RM)for(let n=0;n<6;n++){const ph=((now/2200)+n/6)%1,row=Math.round(hy-2-ph*10),col=j+Math.round(Math.sin(ph*5+n*2.1)*2);if(ph<.8)g.put(col,row,hex(g.T.getPropertyValue('--steam')))}}
+  // pantry display
+  const pc=document.querySelector('#pd canvas');if(pc&&opt.c===0){const p=cvs(pc),a2=hex(p.T.getPropertyValue('--kitchen')),i3=hex(p.T.getPropertyValue('--ink3')),i2=hex(p.T.getPropertyValue('--ink2'));
+    if(opt.p===0){const w=Math.floor((p.C-6)/4);PL.forEach(([n,f],k)=>{const j0=k*(w+2)+1;for(let jj=0;jj<w;jj++){const u=(jj+.5)/w,h=Math.round(13*(RM?1:clamp((now-t0-k*90)/420))*(.55+.45*Math.sin(u*Math.PI)));for(let i=0;i<h;i++){const ii=p.R-6-i;if(B4[ii&3][(j0+jj)&3]>f*1.02&&i>0)continue;p.put(j0+jj,ii,mix(a2,p.pg,clamp(i/13*.3)))}}
+        p.x.fillStyle=`rgb(${i2})`;p.x.font='13px Figtree, system-ui';p.x.textAlign='center';p.x.fillText(n,(j0+w/2)*ST,p.H-4)})}
+    else if(opt.p===2){const ed=hex(p.T.getPropertyValue('--edge'));p.x.font='14px Figtree, system-ui';p.x.textAlign='left';
+      PL.forEach(([nm,f],pi)=>{const row=THINGS.filter(t=>t[0]===pi),y0=1+pi*6;p.x.fillStyle=`rgb(${i2})`;p.x.fillText(nm,0,(y0+3.4)*ST);
+        row.forEach(([_,v],n)=>{const j0=19+n*4,a=RM?1:clamp((now-t0-(pi*9+n)*30)/220);if(a<=0)return;for(let dj=0;dj<3;dj++)for(let di=0;di<4;di++){const c=v===1?a2:v>0?(di<2?ed:i3):ed;p.put(j0+dj,y0+di,c)}})});}}
+  requestAnimationFrame(kframe)}
+
+// ================= Training
+const W12=[180,182,186,190,192,195,199,205,201,198,200,202];let open=185,was=185;
+function plates(w){let side=(w-45)/2;const out=[];for(const p of [45,35,25,10,5,2.5])while(side>=p-1e-9){out.push(p);side-=p}return out}
+function drawT(){const tin=document.getElementById('tin');
+  tin.innerHTML=`<div class="sent">Push A today, about <span class="n">45</span> min.<br><span class="w" style="color:var(--training)">Bench</span> opens at <span class="n" id="tw8" style="cursor:ns-resize;touch-action:none">${open}</span>.</div>
+   <div class="disp" id="td" style="height:180px;margin-bottom:8px"></div>
+   <div class="row1" id="tl" style="color:var(--ink)">${opt.t===0?`Each side: ${plates(open).join(', ')}.`:opt.t===1?'Chest, shoulders and triceps today.':'Bench, then overhead, dips and fly.'}</div>
+   <div class="row1">Last time <span class="n">185</span> for <span class="n">5</span>. Try <span class="n">190</span>?</div>
+   <button class="door" style="margin-top:22px">Bests<small><span class="n">4</span> in <span class="n">12</span> weeks</small></button><div class="disp" style="height:56px;margin-bottom:10px"><div class="row1" style="color:var(--ink)">Bench <span class="n">205</span>, three weeks ago.</div><div class="row1">Overhead is <span class="n">5</span> lb from a best.</div></div>
+   <div class="wk" aria-label="This week">${[['M',1],['T',1],['W',0],['T',1],['F',2],['S',0],['S',0]].map(([d,v])=>`<span><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.3" fill="none" stroke="${v===1?'var(--ink)':v===2?'var(--training)':'var(--edge)'}" stroke-width="${v?1.7:1.2}"/></svg>${d}</span>`).join('')}</div>`;
+  const td=document.getElementById('td');if(opt.t===2){td.innerHTML=[['Bench press','3 x 5',2,3],['Overhead press','3 x 6',0,3],['Dips','3 x 10',0,3],['Cable fly','2 x 12',0,2]].map(([n,s,d,k])=>`<div style="display:flex;justify-content:space-between;align-items:center;height:44px"><span style="font-size:18px">${n}</span><span style="display:flex;gap:6px;align-items:center"><span style="color:var(--ink2);font-size:15px;margin-right:6px">${s}</span>${Array.from({length:k},(_,q)=>`<svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="${q<d?'var(--ink)':'var(--edge)'}" stroke-width="${q<d?1.6:1.2}"/></svg>`).join('')}</span></div>`).join('')}
+  else td.innerHTML='<canvas></canvas>';
+  // the opening weight is a pressed number: drag it up or down
+  const n=document.getElementById('tw8');let st=null;n.onpointerdown=e=>{n.setPointerCapture(e.pointerId);st={y:e.clientY,b:open}};n.onpointermove=e=>{if(!st)return;const v=Math.max(45,st.b+Math.round((st.y-e.clientY)/14)*5);if(v!==open){open=v;n.textContent=v;const l=document.getElementById('tl');if(l&&opt.t===0)l.textContent=`Each side: ${plates(open).join(', ')}.`;t0=performance.now()-400}};n.onpointerup=()=>st=null}
+// a tiny figure in tiles: rows of [from,to] column spans per region
+const FIG=(()=>{const m=[];const add=(r,c0,c1,reg)=>{for(let c=c0;c<=c1;c++)m.push([r,c,reg])};
+  for(let r=0;r<4;r++)add(r,7-(r>0&&r<3?1:0),8+(r>0&&r<3?1:0),'h');
+  add(4,7,8,'n');for(let r=5;r<7;r++){add(r,3,4,'s');add(r,11,12,'s');add(r,5,10,'c')}
+  for(let r=7;r<9;r++){add(r,5,10,'c');add(r,2,3,'t');add(r,12,13,'t')}
+  for(let r=9;r<13;r++){add(r,5,10,'a');add(r,1,2,'f');add(r,13,14,'f')}
+  for(let r=13;r<15;r++){add(r,5,10,'a');add(r,1,1,'f');add(r,14,14,'f')}
+  for(let r=15;r<22;r++){add(r,5,7,'q');add(r,8,10,'q')}for(let r=22;r<28;r++){add(r,5,6,'l');add(r,9,10,'l')}return m})();
+function tframe(now){const g=cvs(document.getElementById('tlin')),acc=hex(g.T.getPropertyValue('--training')),ink=hex(g.T.getPropertyValue('--ink'));const base=g.R-1,span=base-19-7;
+  const mn=Math.min(...W12)-(Math.max(...W12)-Math.min(...W12))*.45,mx=Math.max(...W12),bc=Math.round(7/11*(g.C-1));
+  for(let j=0;j<g.C;j++){const d=RM?1:clamp((now-t0-j*9)/260);const u=j/(g.C-1)*11,a=Math.floor(u),b=Math.min(11,a+1),f=u-a,s=f*f*(3-2*f),v=(W12[a]+(W12[b]-W12[a])*s-mn)/(mx-mn);const hy=base-6-v*span*(.3+.7*d);
+    for(let i=0;i<g.R;i++){if(i<hy)continue;let c=mix(acc,g.pg,clamp(.42+(i-hy)/(base-hy+.001)*.58));if(i-hy<1.2)c=acc;const e=clamp((g.R-1-i)/9),q=Math.floor(e*16+B4[i&3][j&3])/16;c=mix(g.pg,c,q);
+      if(j===bc&&!RM&&i<hy+3){const gl=(now-t0-1200)/700;if(gl>0&&gl<1)c=mix(c,ink,Math.sin(gl*Math.PI)*.55)}g.put(j,i,c)}}
+  const dc=document.querySelector('#td canvas');if(dc){const p=cvs(dc),a2=hex(p.T.getPropertyValue('--training')),i3=hex(p.T.getPropertyValue('--ink3')),inkc=hex(p.T.getPropertyValue('--ink')),edge=hex(p.T.getPropertyValue('--edge'));
+    if(opt.t===0){// the bar, loaded for today's opening weight, in whole tiles
+      const cy=Math.floor(p.R/2),ps=plates(open),H={45:15,35:13,25:11,10:8,5:6,2.5:5},Wd={45:3,35:3,25:2,10:2,5:1,2.5:1};const mid=Math.floor(p.C/2);
+      for(let j=4;j<p.C-4;j++)p.put(j,cy,mix(p.pg,inkc,.55));
+      const sleeve=14;[-1,1].forEach(sd=>{let x=mid+sd*sleeve;p.put(x,cy-1,inkc);p.put(x,cy+1,inkc);p.put(x,cy-2,inkc);p.put(x,cy+2,inkc);x+=sd*2;
+        ps.forEach((pl,k)=>{const a=RM?1:clamp((now-t0-k*110)/300),h=Math.round(H[pl]*a),w=Wd[pl];for(let q=0;q<w;q++){for(let i=-Math.floor(h/2);i<=Math.floor(h/2);i++)p.put(x+sd*q,cy+i,pl>=25?a2:mix(a2,p.pg,.45))}x+=sd*(w+1)})})}
+    else if(opt.t===1){const P=6,T5=5,ox=40,oy=4;p.x.font='15px Figtree, system-ui';p.x.textAlign='left';p.x.font='600 17px Figtree, system-ui';[['Today',a2],['Earlier this week',hex(p.T.getPropertyValue('--trweek'))],['Rested',i3]].forEach(([w,c],k)=>{p.x.fillStyle=`rgb(${c.map(Math.round)})`;p.x.fillText(w,150,60+k*32)});const today=new Set(['c','s','t']),week=new Set(['q','l','a']);
+      FIG.forEach(([r,c,reg],n)=>{const a=RM?1:clamp((now-t0-r*22)/240);if(a<=0)return;const col=today.has(reg)?a2:week.has(reg)?hex(p.T.getPropertyValue('--trweek')):reg==='h'||reg==='n'?mix(p.pg,i3,.6):edge;p.x.fillStyle=`rgb(${col.map(Math.round)})`;p.x.fillRect(ox+c*P,oy+r*P,T5,T5)})}}
+  requestAnimationFrame(tframe)}
+document.getElementById('th').onclick=()=>document.documentElement.dataset.theme='dark';document.getElementById('tw').onclick=()=>document.documentElement.dataset.theme='light';
+document.getElementById('kgo').onclick=()=>{};
+drawK();drawT();requestAnimationFrame(kframe);requestAnimationFrame(tframe);
+})();
+</script>

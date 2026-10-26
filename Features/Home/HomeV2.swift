@@ -29,6 +29,14 @@ enum HomeV2Door: Identifiable, Hashable {
     case review
     case app(HomeApp)
 
+    /// The doorway's colour for this room.
+    var accent: Color {
+        switch self {
+        case .review: HomeApp.routines.accent
+        case let .app(app): app.accent
+        }
+    }
+
     var id: String {
         switch self {
         case .review: "review"

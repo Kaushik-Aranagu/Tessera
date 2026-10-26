@@ -82,12 +82,28 @@ enum AppsListRows {
 /// middle. Reduce Motion: no swell and no slide.
 struct AppsListSlot: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.playDoorway) private var playDoorway
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var door: HomeV2Door?
     @State private var middle = 0
     @State private var drag: CGFloat = 0
     @State private var ticks = 0
+    /// Rows the wheel has already turned during this hold.
+    @State private var consumed = 0
+    /// Held for scrolling (the pick sits at 1.06x), a soft haptic on pick up.
+    @GestureState private var held = false
+    /// A hold that scrolled (it moved past the tap slop or turned a row) has just ended: its lift is not a tap. A hold
+    /// that stayed put is a slow tap and still opens the row.
+    @State private var holdSuppress = false
+    /// Whether the wheel is held, so the page can stop scrolling under the same finger.
+    var onHold: (Bool) -> Void = { _ in }
+    @State private var holdBeats = 0
+    /// A snap is running; flicks that arrive meanwhile wait here (at most three).
+    @State private var snapping = false
+    @State private var queued: [Int] = []
+    /// Bumped by each settle, so an older settle's unlock never clears a newer snap.
+    @State private var snapGeneration = 0
     /// Whether the list has been moved: the glance plays after a settle, not on the first draw.
     @State private var moved = false
     /// Builder A's hook (sheet 206): each pick plays that app's glance in the mosaic, 240 ms after the list settles.
@@ -115,16 +131,53 @@ struct AppsListSlot: View {
             .frame(height: rowHeight * 3, alignment: .top)
             .clipped()
             .contentShape(Rectangle())
+            // Sheet 220. Hold 180 ms without moving more than 6 pt: a soft haptic and the pick eases to 1.06x; then a
+            // vertical drag tracks 1:1 (40 pt is one row, a tick as each crosses the middle) and a release snaps to the
+            // nearest row with no momentum.
+            // Simultaneous, never high priority: a plain tap still reaches its row's button (QA plan G13). A hold that
+            // went on to scroll does not also open the app on lift: the tap is held back for a moment after it.
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.18, maximumDistance: 6)
+                    .sequenced(before: DragGesture(minimumDistance: 0))
+                    .updating($held) { value, state, _ in
+                        if case .second(true, _) = value {
+                            state = true
+                        }
+                    }
+                    .onChanged { value in
+                        if case let .second(true, drag?) = value {
+                            wheel(to: drag.translation.height)
+                        }
+                    }
+            )
+            // A flick with no hold moves exactly one row (up shows the next, down the previous), with the same snap and
+            // one tick. At most three wait while a snap runs.
             .gesture(
                 DragGesture(minimumDistance: 8)
-                    .onChanged { drag = $0.translation.height.clamped(to: -rowHeight * 2 ... rowHeight * 2) }
                     .onEnded { value in
-                        let steps = Int((-value.predictedEndTranslation.height / rowHeight).rounded())
-                        settle(by: max(-2, min(2, steps)), count: rows.count)
+                        let travel = abs(value.translation.height) > 20 || abs(value.velocity.height) > 300
+                        guard travel, abs(value.translation.height) >= abs(value.translation.width) else { return }
+                        flick(value.translation.height < 0 ? 1 : -1)
                     }
             )
         }
         .tesseraFeedback(.selection, trigger: ticks)
+        .tesseraFeedback(.made, trigger: holdBeats)
+        // The hold ends however it ends (lifted or cancelled): the gesture state resets, the list snaps and the pick
+        // eases back from 1.06x.
+        .onChange(of: held) { _, isHeld in
+            onHold(isHeld)
+            if isHeld {
+                holdBeats += 1
+            } else {
+                finishWheel()
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(250))
+                    holdSuppress = false
+                }
+            }
+        }
+        .animation(MotionPolicy.resolve(.easeOut(duration: 0.12), reduceMotion: reduceMotion), value: held)
         .task(id: middle) {
             guard moved, rows.indices.contains(middle) else { return }
             try? await Task.sleep(for: .milliseconds(240))
@@ -146,25 +199,29 @@ struct AppsListSlot: View {
             settle(by: direction == .increment ? 1 : -1, count: rows.count)
         }
         .fullScreenCover(item: $door) { door in
+            // No visible "‹ Home" (Kaushik): the edge swipe goes back, and VoiceOver has a hidden Back to Home.
             HomeV2DoorPage(door: door)
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    HStack {
-                        Button { self.door = nil } label: {
-                            Text("‹ Home")
-                                .frame(minWidth: 72, minHeight: 44, alignment: .leading)
-                                .contentShape(Rectangle())
+                .background { EdgeSwipeBack() }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 24, coordinateSpace: .global).onEnded { value in
+                        if value.startLocation.x < 28, value.translation.width > 80 {
+                            playDoorway(door.accent, true) { self.door = nil }
                         }
-                        .buttonStyle(InkLabelWordStyle())
-                        .accessibilityLabel("Back to Home")
-                        Spacer()
                     }
-                    .padding(.horizontal, Theme.Spacing.gutter - 8)
+                )
+                .accessibilityAction(.escape) { playDoorway(door.accent, true) { self.door = nil } }
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    Button("Back to Home") { playDoorway(door.accent, true) { self.door = nil } }
+                        .frame(width: 1, height: 1)
+                        .opacity(0.01)
+                        .accessibilityLabel("Back to Home")
                 }
         }
     }
 
     private func line(_ row: AppsListRows.Row, isMiddle: Bool, offset: Int) -> some View {
         Button {
+            guard !holdSuppress else { return }
             if isMiddle {
                 open(row)
             } else {
@@ -176,7 +233,10 @@ struct AppsListSlot: View {
                     // Laid out at the swelled size always, so the width is reserved; the others sit scaled down and
                     // the pick springs up to full size.
                     .font(Theme.voice(size: reduceMotion ? 18 : 18 * 1.3).weight(isMiddle ? .semibold : .regular))
-                    .scaleEffect(isMiddle || reduceMotion ? 1 : 1 / 1.3, anchor: .leading)
+                    .scaleEffect(
+                        (isMiddle || reduceMotion ? 1 : 1 / 1.3) * (isMiddle && held && !reduceMotion ? 1.06 : 1),
+                        anchor: .leading
+                    )
                     .foregroundStyle(isMiddle ? row.app.accent : Theme.Colors.inkTertiary)
                     .fixedSize()
                 if isMiddle, !row.summary.isEmpty {
@@ -204,17 +264,63 @@ struct AppsListSlot: View {
         if case let .object(id)? = row.opens {
             model.path.append(Route.object(id))
         } else {
-            door = .app(row.app)
+            playDoorway(row.app.accent, false) { door = .app(row.app) }
         }
     }
 
+    /// The held finger is `translation` points from where it began: whole rows turn the ring (a tick each) and the rest
+    /// follows the finger 1:1.
+    private func wheel(to translation: CGFloat) {
+        guard !rows.isEmpty else { return }
+        moved = true
+        let total = Int((-translation / rowHeight).rounded(.towardZero))
+        if abs(translation) > GestureTuning.tapSlop || total != consumed {
+            holdSuppress = true
+        }
+        if total != consumed {
+            middle = AppsListRows.wrapped(middle, total - consumed, count: rows.count)
+            consumed = total
+            ticks += 1
+        }
+        drag = translation + CGFloat(consumed) * rowHeight
+    }
+
+    /// The finger lifted: spring-snap to the nearest row, no momentum.
+    private func finishWheel() {
+        let nearest = drag < -rowHeight / 2 ? 1 : drag > rowHeight / 2 ? -1 : 0
+        consumed = 0
+        settle(by: nearest, count: rows.count)
+    }
+
+    private func flick(_ direction: Int) {
+        guard !rows.isEmpty else { return }
+        if snapping {
+            if queued.count < 3 {
+                queued.append(direction)
+            }
+            return
+        }
+        settle(by: direction, count: rows.count)
+    }
+
     private func settle(by steps: Int, count: Int) {
+        snapping = true
+        snapGeneration += 1
+        let generation = snapGeneration
         defer {
-            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { drag = 0 }
+            withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { drag = 0 }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(reduceMotion ? 20 : 350))
+                guard generation == snapGeneration else { return }
+                snapping = false
+                if !queued.isEmpty {
+                    flick(queued.removeFirst())
+                }
+            }
         }
         guard steps != 0, count > 0 else { return }
         moved = true
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+        withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) {
             middle = AppsListRows.wrapped(middle, steps, count: count)
             drag = 0
         }

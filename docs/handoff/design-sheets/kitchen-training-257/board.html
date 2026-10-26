@@ -1,0 +1,249 @@
+<title>Kitchen Window and Chalk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&family=Caveat:wght@400;600&display=swap">
+<style>
+/* Layout: a review board, two live phones: the Kitchen landing with its window keystone, the Training landing with its chalk keystone.
+   Both keystones follow the skypiece pattern: a real surface in the slot, lifted by the approved soft light and shadow, where what you do leaves traces. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#A8701F;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif;--hand:'Caveat','Figtree',cursive}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#C49A5E;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+h3{font-size:20px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:62ch}
+.bar{display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:0 44px}
+.rule{padding:14px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600;margin-bottom:2px}
+.rule span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center;margin-top:8px}
+.ctl span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);margin-right:4px}
+.q{border-top:2px solid var(--fg);padding-top:16px}
+
+/* ---------- phone ---------- */
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--hair:rgba(36,36,35,.16);--kitchen:#A8701F;--ktext:#93611A;--clay:#9C4B2C;--teal:#1E6E77;--plum:#8A4570;--wine:#9A2541;--slate:#34506F;--gold:#7E6A1E;--green:#25803D;--training:#0B62AE;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none;touch-action:none;box-shadow:0 0 0 1px var(--line)}
+.phones[data-look="black"] .phone{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--hair:rgba(232,227,218,.2);--kitchen:#C49A5E;--ktext:#C49A5E;--clay:#E2A07F;--teal:#84C3C9;--plum:#D69CC0;--wine:#EE8E9C;--slate:#A7BCD6;--gold:#D9C27A;--green:#8FC9A0;--training:#8FB0EE}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.day{position:absolute;right:24px;top:70px;font-size:15px;color:var(--ink2)}
+.brief{position:absolute;left:24px;right:24px;top:108px;font-size:19px;line-height:1.35}
+.brief b{font-weight:600}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;border-radius:26px;cursor:pointer;touch-action:none}
+.keyov{position:absolute;left:24px;top:196px;width:354px;height:182px;pointer-events:none;border-radius:26px;overflow:hidden}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden}
+.doors{position:absolute;left:24px;right:24px;top:424px}
+.door{height:62px;display:flex;align-items:baseline;gap:12px;cursor:pointer;white-space:nowrap}
+.door b{font-size:40px;font-weight:900;letter-spacing:-.02em;line-height:1}
+.door span{font:300 16px var(--num);color:var(--ink2)}
+.door span.w2{color:var(--wine)}
+.stat{position:absolute;left:24px;right:24px;height:40px;display:flex;align-items:baseline;gap:10px;font-size:17px;white-space:nowrap}
+.stat .o{font-family:var(--num);font-weight:200;font-size:32px}
+.tdoor{position:absolute;left:24px;right:24px;cursor:pointer}
+.tdoor b{display:block;font-size:26px;font-weight:600;letter-spacing:-.01em}
+.tdoor span{font-size:15px;color:var(--ink2)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);padding:8px 0;min-width:96px;min-height:44px;text-align:left;background:none;border:0;cursor:pointer;z-index:4}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phones[data-look="black"] .tessw{color:#C79B7C}
+.receipt{position:absolute;left:24px;right:110px;bottom:84px;font-size:15px;color:var(--ink2);height:24px;white-space:nowrap;overflow:hidden;z-index:4}
+.receipt b{font-weight:600;cursor:pointer}
+.sc{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Kitchen and Training / sheet 257</h2>
+<h1>A window, and a chalk slate.</h1>
+<p class="lede">Two landing keystones built the way the skypiece is built: a real surface in the slot, lifted by the approved soft light and shadow, where what you do leaves traces and life goes on by itself. Kitchen gets the window over the sink. Training gets the chalk slate by the rack. Press the events under each phone.</p>
+<div class="bar" role="group" aria-label="Phone look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+</div>
+</header>
+
+<section aria-label="Phones">
+<div class="phones" id="phones" data-look="paper">
+
+<!-- Kitchen -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p1">
+ <div class="sbar"><span id="kclock">5:10</span><span></span></div>
+ <div class="ttl" style="color:var(--kitchen)">Kitchen</div>
+ <div class="day">Sunday</div>
+ <div class="brief"><b style="color:var(--kitchen)">Tacos</b> tonight, 25 min, you have all 8 things. Eggs and milk run out first.</div>
+ <canvas id="win" class="key" width="708" height="364"></canvas>
+ <div class="kline" id="kline">The window over the sink. Rain outside, the kitchen quiet.</div>
+ <div class="doors" id="kdoors"></div>
+ <div class="receipt" id="r1"></div>
+ <button class="foot" id="kfoot" style="color:var(--kitchen)">Cook</button>
+ <div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="khour"><span>Hour</span></div>
+<div class="ctl" id="kev"><span>Events</span></div>
+<p class="cap"><b>The kitchen window.</b> The slot is the window over the sink, and outside it is the real sky from the Weather room, at this hour, in this weather, drifting. Start cooking and the pane steams up from the bottom over half a minute; drops gather and run. Tess writes in the steam with a finger: what ran out, how long the pot has left. The writing fogs over again as the kitchen cools. On a cold morning the corners frost; put the kettle on and a breath of steam crosses the glass. Rain outside beads on the far side of the pane. Nothing is drawn but the kitchen's own air on its own glass.</p>
+</div>
+
+<!-- Training -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p2">
+ <div class="sbar"><span>5:10</span><span></span></div>
+ <div class="ttl" style="color:var(--training)">Training</div>
+ <div class="stat" style="top:112px"><span class="o" style="color:var(--gold)">5</span><span>weeks in a row on plan</span></div>
+ <div class="stat" style="top:152px"><span class="o" style="color:var(--green)">+10<span style="font:400 16px var(--sans);margin-left:2px">lb</span></span><span>on bench since Oct 1</span></div>
+ <canvas id="slate" class="key" width="708" height="364"></canvas>
+ <div class="kline" id="tline" style="top:390px">Today’s chalk. Tap a number to open the lift.</div>
+ <div class="tdoor" style="top:424px" id="tdToday"><div class="sc" style="color:var(--slate)">Today</div><b style="font-size:46px;color:var(--clay);line-height:1.1">Push A</b><span>about 45 min, 4 lifts. Starts on the rower.</span></div>
+ <div class="tdoor" style="top:560px"><b>This week</b><span><span style="color:var(--training)">3</span> of 6 done. <span style="color:var(--teal)">Pull A</span> tomorrow.</span></div>
+ <div class="tdoor" style="top:634px"><b>Library</b><span>28 workouts in 6 kinds. <span style="color:var(--gold)">New: hill sprints.</span></span></div>
+ <div class="receipt" id="r2"></div>
+ <button class="foot" id="tfoot" style="color:var(--training)">Start Push A</button>
+ <div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="tev"><span>Events</span></div>
+<p class="cap"><b>The chalk slate.</b> The slot is the slate by the rack, where your numbers are written in chalk by hand: the bests, large; today’s sets as tally strokes under the date. Every set you log leaves a chalk handprint somewhere on the slate and a puff of dust that drifts down. A new best gets the old number struck and the new one written bigger, with more dust. Marks fade over the days; on Monday a towel wipes a band clean for the new week. The slate is never empty for long if you train, and it goes grey and quiet if you don’t.</p>
+</div>
+
+</div>
+</section>
+
+<section>
+<h2>How they work</h2>
+<div class="rules">
+<div class="rule"><b>The same surface rule as the skypiece.</b><span>Both slots are lifted by the approved cues only: a soft light off the top-left edge, a soft shadow off the bottom-right, a hairline inside the edge. No frames, frost or tint on the surface itself; the window’s steam and the slate’s chalk are contents, not treatments.</span></div>
+<div class="rule"><b>The window shares the Weather plates.</b><span>Outside the pane is the same plate the Weather room would show for this hour and condition, drifting at the same slow rate. Two rooms, one sky. Rain beads on the outside; the kitchen’s steam is on the inside.</span></div>
+<div class="rule"><b>Steam is a state.</b><span>Cooking raises a steam level over 30 s (from the bottom, denser low); it falls over two minutes after the stove is off. Drops form where the steam is dense and run. Tess’s finger writing clears the fog along the stroke (Caveat, 28 pt, revealed 60 ms a letter) and fogs back over 40 s. What she writes: what ran out, the pot’s minutes left, a note for the morning.</span></div>
+<div class="rule"><b>Chalk is a state.</b><span>Each mark has a time; alpha fades with age (demo: 90 s = a week). Bests are written with a two-stroke chalk look (a soft wide stroke under a crisp one, both with grain). A handprint is five short strokes and a palm smudge at a random place and angle. Dust is 30 particles that fall and fade in 2 s. The Monday wipe is a towel band moving across in 1.2 s that clears marks older than a week.</span></div>
+<div class="rule"><b>Information in both.</b><span>Window: tonight’s dish and time, what ran out, the timer. Slate: every best by lift with its date, today’s tally, the streak as weeks ticked. Tap a number to open that lift; tap the window to open Tonight.</span></div>
+<div class="rule"><b>Reactions, all under five seconds.</b><span>Start cooking: steam begins. Ran out: Tess writes. Kettle: a breath. Log a set: handprint and dust. New best: strike, rewrite, dust. New week: wipe. Reduce Motion: states apply at once, no drift or dust.</span></div>
+</div>
+</section>
+
+<section class="q">
+<h2>Open, with a recommendation</h2>
+<h3>Kitchen: window or fridge?</h3>
+<p>You hinted at the refrigerator. The window carries the same help (what ran out is written on the glass by Tess) and ties Kitchen to Weather. Recommendation: the window, with the fridge’s job (what goes out when) living on the Leftovers door behind it.</p>
+<h3>Training: whose handwriting?</h3>
+<p>The chalk is in one hand throughout. Recommendation: it is Tess’s hand (she keeps the slate), so the same hand can appear in the kitchen steam. If you would rather the slate feel like yours, a second hand is a day’s work.</p>
+</section>
+</main>
+
+<script>
+(function(){
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let K=1;function fit(){document.querySelectorAll('[data-fit]').forEach(s=>{const p=s.firstElementChild;K=Math.min(1,s.clientWidth/402);p.style.transform=K<1?'scale('+K+')':'';s.style.height=(874*K)+'px'})}
+addEventListener('resize',fit);fit();
+const looks=()=>document.getElementById('phones').dataset.look;
+function setLook(l){document.getElementById('phones').dataset.look=l;document.getElementById('lk-paper').setAttribute('aria-pressed',l==='paper');document.getElementById('lk-black').setAttribute('aria-pressed',l==='black')}
+document.getElementById('lk-paper').onclick=()=>setLook('paper');document.getElementById('lk-black').onclick=()=>setLook('black');
+let rT={};function receipt(id,msg,undo){const r=document.getElementById(id);r.innerHTML=msg+(undo?' <b>Undo</b>':'');if(undo)r.querySelector('b').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT[id]);rT[id]=setTimeout(()=>{r.innerHTML=''},10000)}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
+function noise(x,y){const s=Math.sin(x*12.9898+y*78.233)*43758.5453;return s-Math.floor(s)}
+const rnd=(s=>()=>(s=(s*16807)%2147483647)/2147483647)(31);
+// the approved surface: soft light top-left, soft shadow bottom-right, a hairline inside the edge
+function surface(gc,W,H,R,dark){gc.save();gc.shadowColor='rgba(255,255,255,'+(dark?.22:.38)+')';gc.shadowBlur=14;gc.shadowOffsetX=-4;gc.shadowOffsetY=-4;gc.fillStyle='#000';gc.beginPath();gc.roundRect(0,0,W,H,R);gc.fill();gc.restore();
+ gc.save();gc.shadowColor='rgba(0,0,0,'+(dark?.36:.24)+')';gc.shadowBlur=20;gc.shadowOffsetX=5;gc.shadowOffsetY=8;gc.fillStyle='#000';gc.beginPath();gc.roundRect(0,0,W,H,R);gc.fill();gc.restore();
+ gc.save();gc.shadowColor='rgba(0,0,0,'+(dark?.16:.09)+')';gc.shadowBlur=34;gc.shadowOffsetX=2;gc.shadowOffsetY=14;gc.fillStyle='#000';gc.beginPath();gc.roundRect(0,0,W,H,R);gc.fill();gc.restore()}
+function hairline(gc,W,H,R,dark){const e=gc.createLinearGradient(0,0,W,H);e.addColorStop(0,'rgba(255,255,255,'+(dark?.18:.3)+')');e.addColorStop(.5,'rgba(255,255,255,0)');e.addColorStop(1,'rgba(0,0,0,'+(dark?.14:.08)+')');gc.strokeStyle=e;gc.lineWidth=1;gc.beginPath();gc.roundRect(.5,.5,W-1,H-1,R);gc.stroke()}
+
+/* ================= Kitchen: the window ================= */
+const W=354,H=182,R=26,M=0;
+const wc=document.getElementById('win').getContext('2d');wc.scale(2,2);
+const PL={};['broken-day-1','clear-dusk-1','clear-night-1','overcast-day-1'].forEach(n=>{const im=new Image();im.src='weather-plates/'+n+'.jpg';im.onload=()=>{PL[n]=im}});
+let khour=17.2,kcond='rain';const KH=[['Morning',7.5],['Day',12],['Evening',17.2],['Night',22]];
+KH.forEach(([n,h])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.setAttribute('aria-pressed',h===khour);b.onclick=()=>{khour=h;document.getElementById('khour').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));document.getElementById('kclock').textContent=(Math.round(h)%12||12)+':'+(h%1?'30':'00')};document.getElementById('khour').appendChild(b)});
+let fogC=null,steam=0,cooking=0,cookAt=0,kettleAt=0,frostK=0,coldAt=0,writes=[],drops=[],outside=[];
+const KEV=[['Start cooking',()=>{cooking=1;cookAt=performance.now();write('Tacos, 25 min',40,70)}],['Milk ran out',()=>{write('milk',60,120);write('eggs',150,124)}],['Kettle on',()=>{kettleAt=performance.now()}],['Done cooking',()=>{cooking=0}],['Cold morning',()=>{khour=7.5;coldAt=performance.now();kcond='clear'}],['Rain outside',()=>{kcond=kcond==='rain'?'clear':'rain'}]];
+KEV.forEach(([n,f])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.onclick=()=>{f();kline()};document.getElementById('kev').appendChild(b)});
+function write(text,x,y){writes.push({text,x,y,t0:performance.now()})}
+function kline(){const L=document.getElementById('kline');L.textContent=cooking?'The pot is on. Tess keeps the time on the glass.':kcond==='rain'?'The window over the sink. Rain outside, the kitchen quiet.':'The window over the sink. Clear outside.';document.getElementById('kfoot').textContent=cooking?'Next step':'Cook'}
+function plateFor(h,cond){if(cond==='rain')return 'overcast-day-1';if(h<6||h>19.5)return 'clear-night-1';if(h<8.5||h>17)return 'clear-dusk-1';return 'broken-day-1'}
+function drawWindow(t){const dark=looks()==='black';const now=performance.now();wc.setTransform(2,0,0,2,0,0);wc.clearRect(0,0,W,H);
+ // surface, then the sky outside, clipped to the pane
+ surface(wc,W,H,R,dark);wc.save();wc.beginPath();wc.roundRect(0,0,W,H,R);wc.clip();
+ const im=PL[plateFor(khour,kcond)];if(im){const sc=H/im.height*1.25,w=im.width*sc,h=im.height*sc;const pan=Math.sin(t*.012)*(w-W)/2;wc.drawImage(im,(W-w)/2+pan,(H-h)/2+Math.sin(t*.009)*(h-H)/2,w,h)}else{wc.fillStyle=dark?'#1A2233':'#B9CFE2';wc.fillRect(0,0,W,H)}
+ const darkOut=khour<6||khour>19.5?.45:khour<8.5||khour>17?.1:0;if(darkOut>0){wc.fillStyle='rgba(8,12,24,'+darkOut+')';wc.fillRect(0,0,W,H)}
+ // rain on the outside of the pane
+ if(kcond==='rain'){if(outside.length<70&&Math.random()<.3)outside.push({x:Math.random()*W,y:Math.random()*H,r:.8+Math.random()*2,v:0});
+  outside=outside.filter(d=>{if(d.r>2.2&&Math.random()<.02&&!d.v)d.v=.6;if(d.v){d.y+=d.v;d.v*=1.02;if(d.y>H)return false}else if(Math.random()<.02)d.r=Math.min(3,d.r+.1);
+   wc.fillStyle='rgba(255,255,255,.22)';wc.beginPath();wc.arc(d.x,d.y,d.r,0,7);wc.fill();wc.fillStyle='rgba(0,0,0,.08)';wc.beginPath();wc.arc(d.x+d.r*.3,d.y+d.r*.4,d.r*.5,0,7);wc.fill();if(d.v){wc.strokeStyle='rgba(255,255,255,.1)';wc.lineWidth=d.r;wc.beginPath();wc.moveTo(d.x,d.y-d.v*14);wc.lineTo(d.x,d.y);wc.stroke()}return true})}
+ // steam: a state that rises while cooking and falls after
+ const want=cooking?1:0;steam+=(want-steam)*(RM?1:cooking?.0012:.0005);
+ // the kettle: a breath of steam that crosses the pane for 5 s
+ const kb=kettleAt&&now-kettleAt<5000?Math.sin((now-kettleAt)/5000*Math.PI):0;
+ const fogA=Math.max(steam,kb*.55);
+ if(fogA>.01){if(!fogC){fogC=document.createElement('canvas');fogC.width=W*2;fogC.height=H*2}const fc=fogC.getContext('2d');fc.setTransform(2,0,0,2,0,0);fc.clearRect(0,0,W,H);const fg=fc.createLinearGradient(0,0,0,H);fg.addColorStop(0,'rgba(236,240,242,'+(fogA*.55)+')');fg.addColorStop(.5,'rgba(236,240,242,'+(fogA*.8)+')');fg.addColorStop(1,'rgba(236,240,242,'+(fogA*.95)+')');fc.fillStyle=fg;fc.fillRect(0,0,W,H);
+  // a little texture in the fog
+  for(let k=0;k<60;k++){const x=noise(k,1)*W,y=noise(k,2)*H,r=20+noise(k,3)*40;const g=fc.createRadialGradient(x+Math.sin(t*.2+k)*4,y,1,x,y,r);g.addColorStop(0,'rgba(255,255,255,'+(fogA*.08)+')');g.addColorStop(1,'rgba(255,255,255,0)');fc.fillStyle=g;fc.fillRect(x-r,y-r,2*r,2*r)}
+  // drops run where the steam is dense
+  if(steam>.5&&drops.length<40&&Math.random()<.15)drops.push({x:Math.random()*W,y:Math.random()*H*.7,v:.3+Math.random()*.6});
+  drops=drops.filter(d=>{d.y+=d.v;d.v*=1.01;if(d.y>H)return false;fc.save();fc.globalCompositeOperation='destination-out';fc.fillStyle='rgba(0,0,0,'+(.55*fogA)+')';fc.beginPath();fc.ellipse(d.x,d.y,1.6,2.4,0,0,7);fc.fill();fc.fillRect(d.x-.6,d.y-d.v*22,1.2,d.v*22);fc.restore();return true});
+  // Tess writes in the steam: the stroke clears the fog, then it fogs back over 40 s
+  writes=writes.filter(w=>{const age=(now-w.t0)/1000;if(age>60)return false;const reveal=clamp(age/(w.text.length*.06),0,1),refog=clamp((age-20)/40,0,1);fc.save();fc.globalCompositeOperation='destination-out';fc.font='600 30px Caveat';fc.textBaseline='alphabetic';const full=fc.measureText(w.text).width;fc.beginPath();fc.rect(w.x-6,w.y-32,full*reveal+12,46);fc.clip();fc.fillStyle='rgba(0,0,0,'+((1-refog)*fogA*.9)+')';fc.fillText(w.text,w.x,w.y);fc.lineWidth=4;fc.strokeStyle='rgba(0,0,0,'+((1-refog)*fogA*.6)+')';fc.strokeText(w.text,w.x,w.y);fc.restore();return true});
+  // the timer while cooking, written in the steam too
+  if(cooking&&steam>.3){const left=Math.max(0,25*60-Math.floor((now-cookAt)/1000)*10);const txt=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');fc.save();fc.globalCompositeOperation='destination-out';fc.font='600 44px Caveat';fc.fillStyle='rgba(0,0,0,'+(steam*.9)+')';fc.fillText(txt,W-120,H-28);fc.restore()} wc.drawImage(fogC,0,0,W,H)}
+ // frost in the corners on a cold morning
+ const wantF=coldAt&&now-coldAt<40000&&!cooking?1:0;frostK+=(wantF-frostK)*(RM?1:.01);
+ if(frostK>.01){[[0,0,1,1],[W,0,-1,1],[0,H,1,-1],[W,H,-1,-1]].forEach(([ox,oy,sx,sy],ci)=>{for(let k=0;k<6;k++){const a=(k/6)*Math.PI/2,L=(22+noise(k,ci)*26)*frostK;const ex=ox+Math.cos(a)*L*sx,ey=oy+Math.sin(a)*L*sy;wc.strokeStyle='rgba(255,255,255,'+(.55*frostK)+')';wc.lineWidth=.8;wc.beginPath();wc.moveTo(ox,oy);wc.lineTo(ex,ey);wc.stroke();for(let q=1;q<4;q++){const u=q/4,px=ox+(ex-ox)*u,py=oy+(ey-oy)*u,l=(1-u)*6*frostK;wc.beginPath();wc.moveTo(px,py);wc.lineTo(px+Math.cos(a+1)*l*sx,py+Math.sin(a+1)*l*sy);wc.moveTo(px,py);wc.lineTo(px+Math.cos(a-1)*l*sx,py+Math.sin(a-1)*l*sy);wc.stroke()}}})}
+ hairline(wc,W,H,R,dark);wc.restore()}
+// doors on the Kitchen landing: the big words of the pull-apart app, as doors here
+const KD=[['Tonight','Tacos, 25 min'],['Pantry','31, milk and eggs low'],['Recipes','4 you can make'],['Groceries','4 to get'],['Leftovers','rice goes out today',1]];
+KD.forEach(([n,m,w])=>{const d=document.createElement('div');d.className='door';d.innerHTML='<b>'+n+'</b><span'+(w?' class="w2"':'')+'>'+m+'</span>';d.onclick=()=>receipt('r1',n+' opens with the pull-apart layer (board 254).');document.getElementById('kdoors').appendChild(d)});
+document.getElementById('win').onclick=()=>receipt('r1','Opens Tonight: Tacos.');document.getElementById('kfoot').onclick=()=>{if(!cooking){cooking=1;cookAt=performance.now();write('Tacos, 25 min',40,70)}kline()};
+kline();
+
+/* ================= Training: the chalk slate ================= */
+const sc2=document.getElementById('slate').getContext('2d');sc2.scale(2,2);
+let marks=[],dust=[],wipe=null,chalkC=null;const now0=performance.now();
+const BESTS=[{lift:'Bench',v:205,x:26,y:64,s:1,t0:now0-50000},{lift:'Squat',v:275,x:150,y:64,s:1,t0:now0-30000},{lift:'Deadlift',v:315,x:26,y:122,s:1,t0:now0-70000},{lift:'Row',v:130,x:196,y:122,s:.9,t0:now0-20000}];
+let tally=3;const tallyAt=now0-5000;
+function handprint(){const x=40+Math.random()*(W-110),y=20+Math.random()*(H-60),a=(Math.random()-.5)*1.2;marks.push({kind:'hand',x,y,a,t0:performance.now()});for(let k=0;k<30;k++)dust.push({x:x+(Math.random()-.5)*30,y:y+(Math.random()-.5)*20,vx:(Math.random()-.5)*20,vy:10+Math.random()*30,l:1,r:.6+Math.random()*1.4})}
+const TEV=[['Log a set',()=>{handprint();tally++}],['New best on Bench',()=>{const b=BESTS[0];b.old=b.v;b.v+=5;b.t0=performance.now();b.s=1.18;for(let k=0;k<60;k++)dust.push({x:b.x+50+(Math.random()-.5)*60,y:b.y-10+(Math.random()-.5)*30,vx:(Math.random()-.5)*30,vy:10+Math.random()*40,l:1,r:.6+Math.random()*1.6});receipt('r2','Bench, 210. A best.',()=>{b.v=b.old;b.s=1})}],['A quiet week',()=>{marks.forEach(m=>m.t0-=60000);BESTS.forEach(b=>b.t0-=60000)}],['New week',()=>{wipe={t0:performance.now()}}]];
+TEV.forEach(([n,f])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.onclick=f;document.getElementById('tev').appendChild(b)});
+function chalkText(gc,txt,x,y,size,alpha,col){gc.save();gc.font='600 '+size+'px Caveat';gc.textBaseline='alphabetic';
+ gc.strokeStyle='rgba('+col+','+(alpha*.25)+')';gc.lineWidth=size*.12;gc.lineJoin='round';gc.strokeText(txt,x+.6,y+.8);
+ gc.fillStyle='rgba('+col+','+(alpha*.92)+')';gc.fillText(txt,x,y);
+ // grain: knock small holes in the chalk
+ const w=gc.measureText(txt).width;gc.globalCompositeOperation='destination-out';for(let k=0;k<w*size*.015;k++){gc.fillStyle='rgba(0,0,0,'+(.25+noise(k,x)*.5)+')';gc.fillRect(x+noise(k,1)*w,y-size*.7+noise(k,2)*size*.8,1,1)}gc.restore()}
+function drawSlate(t){const dark=looks()==='black';const now=performance.now();const g=sc2;g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,W,H);
+ surface(g,W,H,R,dark);g.save();g.beginPath();g.roundRect(0,0,W,H,R);g.clip();
+ // the slate: dark matte with a slight texture and a soft light from the top-left
+ const base=g.createLinearGradient(0,0,W,H);base.addColorStop(0,dark?'#2A2D2E':'#3A3F41');base.addColorStop(1,dark?'#1B1D1E':'#2A2E30');g.fillStyle=base;g.fillRect(0,0,W,H);
+ for(let k=0;k<1400;k++){g.fillStyle='rgba(255,255,255,'+(.015+noise(k,9)*.03)+')';g.fillRect(noise(k,1)*W,noise(k,2)*H,1,1)}
+ // old chalk haze: the ghost of wiped marks
+ g.fillStyle='rgba(255,255,255,.03)';g.fillRect(0,0,W,H);
+ const age=t0=>clamp((now-t0)/90000,0,1);// 90 s on the board = a week
+ if(!chalkC){chalkC=document.createElement('canvas');chalkC.width=W*2;chalkC.height=H*2}const ck=chalkC.getContext('2d');ck.setTransform(2,0,0,2,0,0);ck.clearRect(0,0,W,H);
+ // handprints: five short strokes and a palm smudge, fading with age
+ marks=marks.filter(m=>{const a=1-age(m.t0);if(a<=0)return false;ck.save();ck.translate(m.x,m.y);ck.rotate(m.a);const col='236,236,230';
+  ck.fillStyle='rgba('+col+','+(a*.22)+')';ck.beginPath();ck.ellipse(0,0,13,10,0,0,7);ck.fill();for(let f=0;f<5;f++){const fa=-1.9+f*.55,L=18+ (f===0?-6:0)+noise(f,m.x)*4;ck.strokeStyle='rgba('+col+','+(a*.3)+')';ck.lineWidth=4;ck.lineCap='round';ck.beginPath();ck.moveTo(Math.cos(fa)*8,Math.sin(fa)*8);ck.lineTo(Math.cos(fa)*(8+L),Math.sin(fa)*(8+L));ck.stroke()}
+  for(let k=0;k<40;k++){ck.fillStyle='rgba(0,0,0,'+(.3*noise(k,m.y))+')';ck.globalCompositeOperation='destination-out';ck.fillRect((noise(k,1)-.5)*40,(noise(k,2)-.5)*30,1.5,1.5);ck.globalCompositeOperation='source-over'}ck.restore();return true});
+ // the bests, by hand, with their dates
+ BESTS.forEach(b=>{const a=.55+.45*(1-age(b.t0)*.6);chalkText(ck,b.lift,b.x,b.y-22,15,a*.8,'222,224,218');
+  if(b.old&&now-b.t0<90000){chalkText(ck,String(b.old),b.x,b.y+2,30,a*.6,'222,224,218');ck.strokeStyle='rgba(222,224,218,'+(a*.7)+')';ck.lineWidth=2.5;ck.beginPath();ck.moveTo(b.x-2,b.y-8);ck.lineTo(b.x+42,b.y-12);ck.stroke();chalkText(ck,String(b.v),b.x+52,b.y+6,36*b.s,a,'245,246,240')}
+  else chalkText(ck,String(b.v),b.x,b.y+6,36*b.s,a,'245,246,240')});
+ // today's tally
+ chalkText(ck,'Sun',W-78,H-34,15,.75,'222,224,218');for(let k=0;k<tally;k++){const x=W-80+(k%5)*9+Math.floor(k/5)*14,y=H-28;ck.strokeStyle='rgba(245,246,240,.85)';ck.lineWidth=2.2;ck.lineCap='round';ck.beginPath();if(k%5===4){ck.moveTo(x-38,y+2);ck.lineTo(x-2,y+14)}else{ck.moveTo(x,y);ck.lineTo(x+1,y+16)}ck.stroke()}
+ // dust
+ const dt=1/60;dust=dust.filter(d=>{d.l-=dt*.5;d.x+=d.vx*dt;d.y+=d.vy*dt;d.vy+=20*dt;if(d.l<=0||d.y>H)return false;ck.fillStyle='rgba(240,240,236,'+(d.l*.7)+')';ck.beginPath();ck.arc(d.x,d.y,d.r,0,7);ck.fill();return true});
+ g.drawImage(chalkC,0,0,W,H);
+ // the Monday wipe: a towel band crossing in 1.2 s, clearing what is older than a week
+ if(wipe){const u=(now-wipe.t0)/1200;if(u>=1){marks=marks.filter(m=>now-m.t0<90000*.6);wipe=null}else{const x=-60+u*(W+120);g.fillStyle='rgba(255,255,255,.06)';g.fillRect(x-30,0,60,H);g.fillStyle='rgba(0,0,0,.25)';g.fillRect(x-80,0,50,H)}}
+ hairline(g,W,H,R,dark);g.restore()}
+document.getElementById('slate').onclick=e=>{const r=e.target.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;const b=BESTS.reduce((p,q)=>Math.hypot(q.x+30-x,q.y-y)<Math.hypot(p.x+30-x,p.y-y)?q:p);receipt('r2','Opens '+b.lift+': best '+b.v+' lb.')};
+document.getElementById('tdToday').onclick=()=>receipt('r2','Opens Today’s workout (230).');
+let t0=performance.now();function tick(now){const t=(now-t0)/1000;try{drawWindow(t)}catch(e){console.error(e)}try{drawSlate(t)}catch(e){console.error(e)}requestAnimationFrame(tick)}requestAnimationFrame(tick);
+})();
+</script>

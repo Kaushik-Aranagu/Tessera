@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Training reorganized</title>
+<style>
+:root{--ink:20,24,31;--s2:.66;--ctx:#5B3FB8;--tess:#2F5BD0;--push:#D8432A;--pull:#2F5BD0;--legs:#C98A12;--live:#E5482C}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight','Inter',sans-serif;padding:28px 30px 30px;width:max-content}
+.board{display:flex;gap:36px;margin-bottom:40px}
+.cell{width:390px}
+.cap{font-weight:700;font-size:15px;letter-spacing:.07em;color:rgba(23,20,31,.66);height:58px;line-height:21px;text-transform:uppercase}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#FBFBF8;color:rgb(var(--ink));border-radius:0}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap;text-transform:uppercase}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),.38)}
+.b{font-size:21px;line-height:28px}
+.ctx{color:var(--ctx)}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.t56{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.name{font-size:21px;font-weight:500;line-height:26px;letter-spacing:-.01em}
+.d16{font-size:16px;line-height:20px}
+.num{font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.hr{position:absolute;height:1px;background:rgba(var(--ink),.12)}
+.key{position:absolute;white-space:nowrap}
+.key i{display:block;height:6px;margin-top:8px;background:rgb(var(--ink));border-radius:3px 3px 3px 3px/3px 3px 3px 3px}
+.tess{position:absolute;right:71px;width:270px;text-align:right;color:var(--tess);font-size:21px;line-height:28px}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{width:1900px;font-weight:600;font-size:15px;letter-spacing:.04em;color:rgba(23,20,31,.7);line-height:22px;text-transform:uppercase}
+.names{display:flex;gap:36px}
+.opt{width:610px;background:#FBFBF8;padding:34px 36px 38px;box-sizing:border-box;color:rgb(var(--ink))}
+.opt h3{margin:0 0 4px;font-size:21px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.opt .why{font-size:21px;line-height:28px;color:rgba(var(--ink),.66);margin-bottom:22px}
+.opt .six{border-top:1px solid rgba(var(--ink),.12)}
+.opt .six div{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid rgba(var(--ink),.12)}
+.opt .six b{font-size:28px;font-weight:500;letter-spacing:-.02em}
+.opt .six span{font-size:16px;color:rgba(var(--ink),.66)}
+.opt .reads{margin-top:20px;font-size:16px;line-height:24px;color:rgba(var(--ink),.66)}
+.opt .reads b{color:rgb(var(--ink));font-weight:600}
+.pick{display:inline-block;margin-bottom:10px;font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--push)}
+</style></head><body>
+<div class="board" id="b1"></div>
+<div class="board" id="b2"></div>
+<div class="names" id="b3"></div>
+<script src="muscle-figure.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+// ---- the figure: SVG from Design's path data, left half drawn and mirrored ----
+const FIG={front:FRONT,back:BACK};
+const TINT={push:'#D8432A',pull:'#2F5BD0',legs:'#C98A12'};
+function fig(side,roles,h,tint,opt={}){
+  const d=FIG[side],w=h*200/440,dim=opt.dim||{};
+  const half=(m)=>`<g transform="${m}">`+
+    Object.entries(d.regions).map(([id,p])=>roles[id]?`<path d="${p}" fill="${tint}" fill-opacity="${roles[id]==='p'?1:.7}"/>`:'').join('')+
+    d.outline.concat(d.lines).map(p=>`<path d="${p}" fill="none" stroke="rgb(20,24,31)" stroke-opacity="${opt.oa||.24}" stroke-width="${opt.line||1.4}" stroke-linecap="round" stroke-linejoin="round"/>`).join('')+`</g>`;
+  return `<svg viewBox="0 0 200 440" width="${w}" height="${h}" style="${opt.style||''}">${half('')}${half('translate(200 0) scale(-1 1)')}</svg>`;
+}
+// stored muscle -> region id per side
+const REG=(m,side)=>({chest:'Chest',frontDelts:'FrontDelts',sideDelts:side==='back'?'RearDelts':'FrontDelts',rearDelts:'RearDelts',triceps:'Triceps',biceps:'Biceps',forearms:'Forearms',lats:'Lats',upperBack:'UpperBack',lowerBack:'LowerBack',abs:'Abs',obliques:'Obliques',glutes:'Glutes',quads:'Quads',hamstrings:'Hamstrings',adductors:'Adductors',abductors:'Abductors',calves:'Calves'})[m];
+const hasRegion=(m,side)=>{const r=REG(m,side);return r&&FIG[side].regions[r]};
+function rolesFor(ex,side){const o={};(ex.s||[]).forEach(m=>{if(hasRegion(m,side))o[REG(m,side)]='s'});(ex.p||[]).forEach(m=>{if(hasRegion(m,side))o[REG(m,side)]='p'});return o}
+function sideFor(ex){const pf=(ex.p||[]).filter(m=>hasRegion(m,'front')&&!['sideDelts'].includes(m)).length,pb=(ex.p||[]).filter(m=>hasRegion(m,'back')&&!['sideDelts','frontDelts'].includes(m)&&REG(m,'back')!=='Calves'&&m!=='forearms').length;return pb>pf?'back':'front'}
+function union(list,side){const o={};list.forEach(ex=>{(ex.s||[]).forEach(m=>{if(hasRegion(m,side)&&!o[REG(m,side)])o[REG(m,side)]='s'});});list.forEach(ex=>(ex.p||[]).forEach(m=>{if(hasRegion(m,side))o[REG(m,side)]='p'}));return o}
+
+const PUSH={name:'Bench day',cls:'push',time:'about 55 min',works:'Works chest, shoulders and triceps',tess:'Bench press is ready for 82.5 today.',plan:'Push Pull Legs, rolls on',ex:[
+ {n:'Bench press',t:'4 \u00d7 5\u20138',w:'82.5',p:['chest'],s:['triceps','frontDelts']},
+ {n:'Overhead press',t:'3 \u00d7 6\u201310',w:'47.5',p:['frontDelts'],s:['triceps','sideDelts']},
+ {n:'Incline dumbbell press',t:'3 \u00d7 8\u201312',w:'28',p:['chest','frontDelts'],s:['triceps']},
+ {n:'Dumbbell lateral raise',t:'3 \u00d7 12\u201315',w:'10',p:['sideDelts']},
+ {n:'Rope pushdown',t:'3 \u00d7 10\u201315',w:'30',p:['triceps']}]};
+const PULL={name:'Row day',cls:'pull',time:'about 50 min',works:'Works back, shoulders and biceps',tess:'Barbell row is ready for 70 today.',plan:'Push Pull Legs, rolls on',ex:[
+ {n:'Barbell row',t:'4 \u00d7 6\u201310',w:'70',p:['upperBack','lats'],s:['biceps','rearDelts','lowerBack']},
+ {n:'Lat pulldown',t:'3 \u00d7 8\u201312',w:'62.5',p:['lats'],s:['biceps','upperBack']},
+ {n:'Seated cable row',t:'3 \u00d7 10\u201312',w:'55',p:['upperBack','lats'],s:['biceps','rearDelts']},
+ {n:'Face pull',t:'3 \u00d7 12\u201315',w:'27.5',p:['rearDelts'],s:['upperBack']},
+ {n:'Dumbbell curl',t:'3 \u00d7 10\u201312',w:'14',p:['biceps'],s:['forearms']}]};
+const TC=c=>TINT[c];
+const soul=()=>{const P=['#86B4FF','#FF5B3A','#FFC23D'];return `<div class="soul"><i style="left:0;top:8px;background:${P[0]}"></i><i style="left:16px;top:0;background:${P[1]}"></i><i style="left:10px;top:18px;background:${P[2]}"></i></div>`};
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const strip=(P,lit=-1,part=0)=>{const total=P.ex.reduce((s,e)=>s+parseInt(e.t),0);let x=24;return `<div class="abs" style="left:0;right:0;top:0;height:3px">${P.ex.map((e,i)=>{const w=(342-4*(P.ex.length-1))*parseInt(e.t)/total;const h=`<div class="abs" style="top:0;height:3px;left:${x}px;width:${w}px;background:rgba(var(--ink),${i<lit?.9:.14})"></div>${i===lit?`<div class="abs" style="top:0;height:3px;left:${x}px;width:${w*part}px;background:var(--live)"></div>`:''}`;x+=w+4;return h}).join('')}</div>`};
+const startKey=(txt,y)=>`<div class="key lbl" style="left:24px;top:${y}px">${txt}<i style="width:${txt.length*10.4}px"></i></div>`;
+const area=(y=58)=>`<div class="abs" style="left:24px;top:${y}px;font-size:21px;font-weight:600;letter-spacing:-.01em">Training</div>`;
+function words(P){return `<div class="abs b ctx" style="left:24px;top:100px">today, ${P.ex.length} exercises, ${P.time}</div>`}
+
+// ---- BEFORE: release 21 ----
+function before(){
+ const ex=[['Bench press','82.5 \u00d7 8'],['Overhead press','47.5 \u00d7 8'],['Incline dumbbell','28 \u00d7 10'],['Lateral raise','10 \u00d7 12'],['Triceps pushdown','30 \u00d7 12']];
+ const sets=[4,3,3,3,3];
+ return `<div class="ph">${strip(PUSH)}${area()}
+ <div class="abs b ctx" style="left:24px;top:100px">today, 5 exercises, about 55 min</div>
+ <div class="abs t44" style="left:24px;top:136px">Push A</div>
+ <div class="key lbl" style="left:24px;top:214px">Start Push A<i style="width:130px"></i></div>
+ ${ex.map((e,i)=>`<div class="abs" style="left:24px;right:24px;top:${290+i*72}px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="name">${e[0]}</span><span class="d16 s2" style="font-weight:600">${e[1]}</span></div><div style="display:flex;gap:8px;margin-top:12px">${Array(sets[i]).fill(`<svg width="40" height="12"><path d="M1 6H39" stroke="rgba(20,24,31,.22)" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round"/></svg>`).join('')}</div></div>`).join('')}
+ <div class="abs lbl s2" style="left:24px;top:688px;font-size:15px">Push Pull Legs, rolls on</div><div class="abs lbl" style="left:290px;top:688px;font-size:15px">Routines</div>
+ <div class="tess" style="top:765px">Bench press is ready for 82.5 today.</div>${soul()}</div>`;
+}
+
+// ---- AFTER, recommended: the list first, a figure on every row ----
+function front(P,opts={}){
+ const tint=TC(P.cls),all=union(P.ex,'front'),allB=union(P.ex,'back');
+ const rows=P.ex.map((e,i)=>{const side=sideFor(e),y=268+i*72;
+  return `<div class="abs" style="left:24px;right:24px;top:${y}px;height:70px">
+   <div class="abs" style="left:0;top:3px">${fig(side,rolesFor(e,side),62,tint,{line:2.6,oa:.5})}</div>
+   <div class="abs name" style="left:44px;top:6px;right:0;white-space:nowrap">${e.n}</div>
+   <div class="abs d16 s2" style="left:44px;top:38px">${e.t}</div>
+   <div class="abs d16" style="right:0;top:38px;font-weight:600">${e.w} kg</div>
+   ${i<P.ex.length-1?'<div class="hr" style="left:44px;right:0;bottom:0"></div>':''}</div>`}).join('');
+ return `<div class="ph">${strip(P)}${area()}${words(P)}
+ <div class="abs t44" style="left:24px;top:136px">${P.name}</div>
+ <div class="abs b s2" style="left:24px;top:198px;width:220px">${P.works}</div>
+ <div class="abs" style="left:268px;top:134px">${fig('front',all,112,tint,{oa:.4})}</div>
+ <div class="abs" style="left:320px;top:134px">${fig('back',allB,112,tint,{oa:.4})}</div>
+ ${rows}
+ ${startKey('Start '+P.name,642)}
+ <div class="abs lbl s2" style="left:24px;top:700px;font-size:15px">${P.plan}</div><div class="abs lbl" style="left:290px;top:700px;font-size:15px">Routines</div>
+ <div class="tess" style="top:765px">${P.tess}</div>${soul()}</div>`;
+}
+
+// ---- LIVE mode with the figure ----
+function live(){
+ const e=PUSH.ex[0],side=sideFor(e);
+ return `<div class="ph">${strip(PUSH,0,.25)}
+ <div class="abs b ctx" style="left:24px;top:56px">Bench day, set 2 of 4</div>
+ <div class="abs" style="left:326px;top:40px">${fig(side,rolesFor(e,side),92,TC('push'),{line:2.2,oa:.45})}</div>
+ <div class="abs t44" style="left:24px;top:92px">Bench press</div>
+ <div class="abs" style="left:24px;top:176px;display:flex;gap:8px"><svg width="40" height="12"><path d="${lens(40,3.2)}" fill="#E8A090"/></svg><svg width="40" height="12"><path d="M1 6H39" stroke="rgba(20,24,31,.9)" stroke-width="2" stroke-dasharray="3 5"/></svg><svg width="40" height="12"><path d="M1 6H39" stroke="rgba(20,24,31,.22)" stroke-width="2" stroke-dasharray="3 5"/></svg><svg width="40" height="12"><path d="M1 6H39" stroke="rgba(20,24,31,.22)" stroke-width="2" stroke-dasharray="3 5"/></svg></div>
+ <div class="abs b s2" style="left:24px;top:210px">set 1, 82.5 \u00d7 8</div>
+ <div class="abs num" style="left:24px;top:290px;font-size:80px">82.5<span style="font-size:21px;font-weight:400;margin-left:6px;letter-spacing:0">kg</span><span style="font-size:34px;font-weight:400;margin:0 14px;color:rgba(20,24,31,.6)">\u00d7</span><span style="font-size:56px">8</span></div>
+ <div class="abs" style="left:24px;right:24px;top:410px;height:12px;background:rgba(20,24,31,.28);border-radius:6px;top:456px"></div>
+ <div class="abs" style="left:176px;top:392px;width:14px;height:92px;background:#C8412C"></div><div class="abs" style="left:192px;top:416px;width:8px;height:68px;background:#E4DCC4"></div>
+ <div class="abs lbl s2" style="left:24px;top:536px;font-size:15px">25 + 5 + 1.25 each side</div>
+ ${startKey('Log 82.5 \u00d7 8',580)}<div class="abs lbl s2" style="right:24px;top:580px;font-size:15px">Pause</div>
+ <div class="tess" style="top:765px">Set 1 logged. 82.5 \u00d7 8.</div>${soul()}</div>`;
+}
+
+// ---- EXERCISE PAGE with the figure ----
+function exercise(){
+ const e=PUSH.ex[0];
+ const pts='M0 120 C40 112 80 118 120 96 C160 80 200 90 240 62 C280 44 310 40 342 18';
+ return `<div class="ph">
+ <div class="abs lbl s2" style="left:24px;top:58px;font-size:15px">Exercises  \u203a  Barbell lifts</div>
+ <div class="abs t56" style="left:24px;top:90px">Bench press</div>
+ <div class="abs b ctx" style="left:24px;top:156px;width:300px">chest, with triceps and front shoulders</div>
+ <div class="abs" style="left:24px;top:232px"><div class="num" style="font-size:44px;font-weight:300">104.5</div><div class="lbl s2" style="font-size:15px;margin-top:6px">e1RM, kg</div></div>
+ <div class="abs" style="left:152px;top:232px"><div class="num" style="font-size:44px;font-weight:300">85 \u00d7 6</div><div class="lbl s2" style="font-size:15px;margin-top:6px">Best set</div></div>
+ <div class="abs" style="left:296px;top:216px">${fig('front',rolesFor(e,'front'),100,TC('push'),{line:2.2,oa:.45})}</div><div class="abs" style="left:340px;top:216px">${fig('back',rolesFor(e,'back'),100,TC('push'),{line:2.2,oa:.45})}</div>
+ <svg class="abs" style="left:24px;top:330px" width="342" height="120"><path d="${pts}" fill="none" stroke="#2F5BD0" stroke-width="4" stroke-linecap="round"/></svg>
+ <div class="abs lbl s2" style="left:24px;top:462px;font-size:15px">90 days</div><div class="abs lbl" style="right:24px;top:462px;font-size:15px;color:#2F5BD0">+6.5 since July</div>
+ <div class="abs lbl" style="left:24px;top:520px;font-size:15px">History  <span class="s3">Rep maxes  Muscles</span></div>
+ ${[['Oct 17','82.5 \u00d7 8'],['Oct 13','82.5 \u00d7 7'],['Oct 10','80 \u00d7 8']].map((r,i)=>`<div class="abs" style="left:24px;right:24px;top:${566+i*56}px;display:flex;justify-content:space-between"><span class="b s2" style="font-size:18px">${r[0]}</span><span class="b" style="font-weight:600">${r[1]}</span></div>`).join('')}
+ ${startKey('Log a set',724)}
+ </div>`;
+}
+
+// ---- ALTERNATIVE: the body first ----
+function bodyFirst(P,sel){
+ const tint=TC(P.cls);
+ const chosen=sel==null?null:P.ex[sel];
+ const roles=chosen?rolesFor(chosen,'front'):union(P.ex,'front');
+ const figH=320,figW=figH*200/440,fx=16,fy=236;
+ const rows=P.ex.map((e,i)=>{const y=236+i*66,on=sel==null||sel===i;
+  return `<div class="abs" style="left:176px;right:22px;top:${y}px;height:62px;opacity:${on?1:.38}">
+   <div class="abs name" style="left:0;top:2px;right:0;white-space:nowrap">${e.n.replace('Dumbbell ','DB ').replace('Incline DB press','Incline DB press').replace('Incline dumbbell press','Incline DB press')}</div>
+   <div class="abs d16 s2" style="left:0;top:32px">${e.t} \u00b7 <b style="font-weight:600;color:rgb(20,24,31)">${e.w}</b> kg</div></div>`}).join('');
+ let leader='';
+ if(sel===1){leader=`<svg class="abs" style="left:0;top:0" width="390" height="844"><path d="M170 ${236+66+15} L150 ${236+66+15} L${fx+figW*0.18} 318" fill="none" stroke="rgb(20,24,31)" stroke-opacity=".5" stroke-width="1.2"/></svg>`;}
+ return `<div class="ph">${strip(P)}${area()}${words(P)}
+ <div class="abs t44" style="left:24px;top:136px">${P.name}</div>
+ <div class="abs b s2" style="left:24px;top:192px">${P.works}</div>
+ <div class="abs" style="left:${fx}px;top:${fy}px">${fig('front',roles,figH,tint,{line:1.6})}</div>
+ <div class="abs lbl" style="left:${fx+8}px;top:${fy+figH+10}px;font-size:15px">Front <span class="s3">Back</span></div>
+ ${rows}
+ ${leader}
+ ${startKey('Start '+P.name,626)}
+ <div class="abs lbl s2" style="left:24px;top:690px;font-size:15px">${P.plan}</div><div class="abs lbl" style="left:290px;top:690px;font-size:15px">Routines</div>
+ <div class="tess" style="top:765px">${sel==null?P.tess:'Overhead press works front shoulders.'}</div>${soul()}</div>`;
+}
+
+const cell=(cap,html)=>`<div class="cell"><div class="cap">${cap}</div>${html}</div>`;
+$('b1').innerHTML=
+ cell('Before, release 21: Push A, a strip, dashed strokes, no muscles',before())+
+ cell('After, recommended: Bench day. What it works, each exercise with its muscles',front(PUSH))+
+ cell('A back day reads the same: Row day, back figures where the work is',front(PULL))+
+ cell('Live: the figure rides with the exercise',live())+
+ cell('Exercise page: the figure sits by the numbers',exercise());
+$('b2').innerHTML=
+ cell('Alternative: the body first. All of today lit on one big figure',bodyFirst(PUSH,null))+
+ cell('Tap an exercise and only its muscles stay lit',bodyFirst(PUSH,1));
+
+const OPTS=[
+ {pick:'RECOMMENDED',h:'1 \u00b7 By the lift it starts with',why:'Short enough to travel to Home, the Live Activity, Siri and the closing face. The muscles come right under it, in your words, with the figure.',six:[['Bench day','Works chest, shoulders and triceps'],['Overhead day','Works shoulders, chest and triceps'],['Row day','Works back, shoulders and biceps'],['Pull-up day','Works back, biceps and shoulders'],['Squat day','Works quads, glutes and hamstrings'],['Deadlift day','Works hamstrings, glutes and back']],reads:['<b>Home:</b> Bench day, 6 pm','<b>Closing face:</b> Bench day, ready to finish','<b>Siri:</b> Bench day finished. 5 of 5 exercises, 17 sets.','<b>Tomorrow:</b> Row day tomorrow']},
+ {pick:'',h:'2 \u00b7 By the muscles',why:'Says what you train and nothing else. Long, and two days start alike, so a glance at Push A and Push B still takes a second look.',six:[['Chest, shoulders and triceps','bench first'],['Shoulders, chest and triceps','overhead press first'],['Back, shoulders and biceps','row first'],['Back, biceps and shoulders','pull-up first'],['Quads, glutes and hamstrings','squat first'],['Hamstrings, glutes and back','deadlift first']],reads:['<b>Home:</b> Chest, shoulders and triceps, 6 pm','<b>Closing face:</b> two lines on the Island','<b>Tomorrow:</b> Back, shoulders and biceps tomorrow']},
+ {pick:'',h:'3 \u00b7 Push, Pull, Legs, plus the first lift',why:'Keeps the words you already know and drops the letter. Shorter than option 2, and it still says where the day starts.',six:[['Push, bench first','Works chest, shoulders and triceps'],['Push, overhead first','Works shoulders, chest and triceps'],['Pull, rows first','Works back, shoulders and biceps'],['Pull, pull-ups first','Works back, biceps and shoulders'],['Legs, squats first','Works quads, glutes and hamstrings'],['Legs, deadlifts first','Works hamstrings, glutes and back']],reads:['<b>Home:</b> Push, bench first, 6 pm','<b>Closing face:</b> Push, bench first, ready to finish','<b>Tomorrow:</b> Pull, rows first tomorrow']}
+];
+$('b3').innerHTML=OPTS.map(o=>`<div class="opt">${o.pick?`<div class="pick">${o.pick}</div>`:'<div class="pick" style="visibility:hidden">.</div>'}<h3>${o.h}</h3><div class="why">${o.why}</div><div class="six">${o.six.map(s=>`<div><b>${s[0]}</b><span>${s[1]}</span></div>`).join('')}</div><div class="reads">${o.reads.join('<br>')}</div></div>`).join('');
+</script></body></html>

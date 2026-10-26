@@ -1,0 +1,287 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tessera themes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<style>
+/* Layout: a theme picker over one theme at a time (character, proportions, tokens, four phones), then all five Home screens side by side. */
+:root{
+  --bg:#FAFAF9; --fg:#18161D; --fg2:#6B6773; --rule:rgba(24,22,29,.12); --mark:#18161D;
+  --display:'Inter Tight',-apple-system,'Helvetica Neue',Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0E0D10;--fg:#F2EFEA;--fg2:#9C97A3;--rule:rgba(242,239,234,.14);--mark:#F2EFEA;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E0D10;--fg:#F2EFEA;--fg2:#9C97A3;--rule:rgba(242,239,234,.14);--mark:#F2EFEA;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+h1{font-size:clamp(36px,6vw,56px);font-weight:500;letter-spacing:-.04em;line-height:1;margin:0 0 14px}
+.lede{font-size:19px;line-height:1.45;color:var(--fg2);max-width:62ch;margin:0}
+.lbl{font-weight:700;font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:var(--fg2)}
+/* the picker: words with a painted carriage, no pills */
+.pick{display:flex;flex-wrap:wrap;gap:8px 28px;margin:36px 0 8px;position:relative}
+.pick button{all:unset;cursor:pointer;font-size:clamp(24px,3.4vw,34px);font-weight:500;letter-spacing:-.03em;color:var(--fg2);position:relative;padding-bottom:10px;transition:color .25s}
+.pick button[aria-pressed="true"]{color:var(--fg)}
+.pick button:focus-visible{outline:2px solid var(--fg);outline-offset:4px}
+.pick button .car{position:absolute;left:0;right:0;bottom:0;height:5px;border-radius:2px 6px 3px 5px;background:var(--car,#E2432A);transform:scaleX(0);transform-origin:left;transition:transform .42s cubic-bezier(.2,.8,.2,1)}
+.pick button[aria-pressed="true"] .car{transform:scaleX(1)}
+.pick button small{font-size:13px;font-weight:700;letter-spacing:.09em;color:var(--fg2);margin-left:8px;vertical-align:middle}
+.about{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px 48px;margin:28px 0 30px}
+@media (max-width:820px){.about{grid-template-columns:minmax(0,1fr)}}
+.about h2{font-size:28px;font-weight:500;letter-spacing:-.03em;margin:0 0 8px}
+.about p{font-size:17px;line-height:1.5;margin:0 0 10px;max-width:60ch}
+.about p b{font-weight:600}
+.prop{display:flex;height:26px;border-radius:3px;overflow:hidden;margin:10px 0 6px;box-shadow:0 0 0 1px var(--rule)}
+.prop span{display:block;height:100%}
+.propkey{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;color:var(--fg2);font-variant-numeric:tabular-nums}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px 14px;margin-top:16px}
+.sw div{font-size:13px;line-height:1.3;color:var(--fg2);font-variant-numeric:tabular-nums}
+.sw i{display:block;height:34px;border-radius:3px;margin-bottom:6px;box-shadow:inset 0 0 0 1px var(--rule)}
+.sw b{display:block;font-weight:600;color:var(--fg);font-size:14px}
+/* phones */
+.strip{display:flex;gap:22px;overflow-x:auto;padding:6px 2px 18px;scroll-snap-type:x mandatory}
+.cell{flex:0 0 auto;scroll-snap-align:start}
+.cell .lbl{display:block;margin-bottom:10px}
+.frame{width:234px;height:506px;border-radius:30px;overflow:hidden;position:relative;box-shadow:0 0 0 1px var(--rule),0 18px 40px rgba(0,0,0,.12)}
+.frame.sm{width:176px;height:381px;border-radius:24px}
+.ph{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:0 0;overflow:hidden;font-family:var(--display);color:var(--ink);background:var(--ground)}
+.frame .ph{transform:scale(.6)} .frame.sm .ph{transform:scale(.4513)}
+.flood{position:absolute;inset:0;pointer-events:none}
+.compare{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px;margin-top:14px}
+@media (max-width:1000px){.compare{display:flex;overflow-x:auto;padding-bottom:14px}}
+.compare .cell .lbl{font-size:12px}
+.sec{margin-top:44px;border-top:1px solid var(--rule);padding-top:22px}
+.sec h3{font-size:22px;font-weight:500;letter-spacing:-.02em;margin:0 0 4px}
+.sec p{font-size:16px;line-height:1.5;color:var(--fg2);margin:0;max-width:70ch}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- inside a phone: everything reads the theme's own tokens ---------- */
+.ph .a{position:absolute}
+.ph .L{font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
+.ph .ctx{font-size:21px;color:var(--context);white-space:nowrap}
+.ph .hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:1}
+.ph .ttl{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:1.04}
+.ph .t34{font-size:34px;font-weight:500;letter-spacing:-.03em}
+.ph .st{position:relative;display:inline-block;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap;color:var(--ink)}
+.ph .st svg{position:absolute;left:-7px;bottom:7px;z-index:0;overflow:visible}
+.ph .st span{position:relative;z-index:1}
+.ph .rail{left:22px;right:22px;top:58px;display:flex;gap:22px}
+.ph .rail span{color:var(--muted)}
+.ph .rail span.on{color:var(--ink);position:relative}
+.ph .rail span.on:after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:4px;border-radius:2px 6px 3px 5px;background:var(--live)}
+.ph .row{position:absolute;left:22px;right:22px;display:flex;align-items:center;gap:14px;font-size:21px;white-space:nowrap}
+.ph .row .dab{width:14px;height:12px;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;flex:none}
+.ph .row .tm{margin-left:auto;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.ph .soul{position:absolute;left:346px;top:788px;width:0;height:0}
+.ph .soul i{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(2.5px);mix-blend-mode:var(--blend)}
+.ph .tess{right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;text-align:right;color:var(--tess)}
+.ph .bloom{position:absolute;pointer-events:none;border-radius:58% 42% 55% 45%/48% 58% 42% 52%}
+.ph .num{font-variant-numeric:tabular-nums}
+</style>
+
+<div class="wrap">
+  <h1>Tessera themes</h1>
+  <p class="lede">Five looks for the same app. Every screen keeps the ink actions, Inter Tight and the painterly marks; only the ground, the ink and the pigments change. Pick a name to see Home, Now, a workout and Review in it.</p>
+
+  <div class="pick" id="pick" role="group" aria-label="Theme"></div>
+
+  <div class="about">
+    <div>
+      <h2 id="tName"></h2>
+      <p id="tChar"></p>
+      <p id="tField"></p>
+    </div>
+    <div>
+      <span class="lbl">How much of each</span>
+      <div class="prop" id="prop"></div>
+      <div class="propkey" id="propkey"></div>
+      <div class="sw" id="sw"></div>
+    </div>
+  </div>
+
+  <div class="strip" id="strip"></div>
+
+  <div class="sec">
+    <h3>All five, side by side</h3>
+    <p>Home at the same moment in every theme: a task running, the next three waiting.</p>
+    <div class="compare" id="compare"></div>
+  </div>
+
+  <div class="sec">
+    <h3>Switching</h3>
+    <p>In Settings, "Look" holds one sentence: "<b>Porcelain</b> by day, <b>Obsidian</b> by night". Each name is a word that cycles through the light or dark themes, and the app follows the system's appearance between them. Saying "Obsidian always" pins one. The change paints in from Tess's soul as a flood of the new ground, over 700 ms. Live Activities and widgets follow on their next update.</p>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter></svg>
+
+<script>
+const THEMES = [
+  { key:'porcelain', name:'Porcelain', mode:'light', tag:'DEFAULT',
+    char:'Pure white with deep aubergine ink and four saturated pigments used sparingly. It reads like a well-printed page: almost all white, with colour arriving only where something matters.',
+    field:'<b>The ground</b> is flat white, with no grain and no wash. Colour pools only behind the action of the moment, as a watercolour bloom: 5% in the middle with a 10% dried edge, irregular, never moving. When nothing is running, the page is just white.',
+    t:{ ground:'#FFFFFF', raised:'#F5F4F8', ink:'#17141F', context:'#6A4C9C', muted:'#B9B3C3', tess:'#2450D8', live:'#E2432A', now:'#F0A500', health:'#12936A', training:'#CC3F68', neutral:'#9C95A8',
+        wGround:'#FFFFFF', wRaised:'#F5F4F8', wInk:'#17141F', wSignal:'#E2432A', wRest:'#F0A500' },
+    prop:[['ground',86],['raised',3],['ink',8],['accent',3]], blend:'multiply', bloom:'pigment' },
+  { key:'obsidian', name:'Obsidian', mode:'dark', tag:'',
+    char:'True black for the OLED screen, warm white ink, and pigments that glow. Black pixels are off, so the colour floats on nothing.',
+    field:'<b>The ground</b> is #000000. Pigment becomes light: strokes and dabs carry a soft halo, and the bloom behind the action is an emitted glow (screen blend, 14%) instead of a stain. There are no gradients or textures anywhere else.',
+    t:{ ground:'#000000', raised:'#0F0E12', ink:'#F5F2EC', context:'#B7A6E0', muted:'#5C5765', tess:'#6FA4FF', live:'#FF5B3A', now:'#FFC23D', health:'#3FD49A', training:'#FF6B92', neutral:'#8E879A',
+        wGround:'#000000', wRaised:'#0F0E12', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
+    prop:[['ground',88],['raised',2],['ink',8],['accent',2]], blend:'screen', bloom:'glow' },
+  { key:'plein', name:'Plein', mode:'light', tag:'TODAY',
+    char:'The current look, kept as approved: warm paper, soft impressionist washes and grain, plum ink.',
+    field:'<b>The ground</b> is cream paper with three soft washes and a fine grain. It is the most painterly of the five and the one the app ships with today.',
+    t:{ ground:'#F2ECE3', raised:'#FAF6EF', ink:'#2B2440', context:'#7A5C8E', muted:'#A39AAE', tess:'#2E6DA4', live:'#C8452F', now:'#E0B341', health:'#6E9E6A', training:'#C8452F', neutral:'#A39AAE',
+        wGround:'#F2ECE3', wRaised:'#FAF6EF', wInk:'#2B2440', wSignal:'#C8452F', wRest:'#E0B341' },
+    prop:[['ground',80],['raised',2],['ink',10],['accent',8]], blend:'multiply', bloom:'wash' },
+  { key:'lacquer', name:'Lacquer', mode:'dark', tag:'',
+    char:'Deep plum-black lacquer, parchment ink and brass. It is dark like Obsidian, but warmer and with depth, for evenings.',
+    field:'<b>The ground</b> is layered: plum-black that deepens toward the bottom, with one wide specular band lying across it at 3%, the way light sits on a lacquered tray. On the phone the band can follow the tilt by a few degrees; with Reduce Motion it stays still.',
+    t:{ ground:'#140F1B', raised:'#221A2D', ink:'#F1E7D6', context:'#C3A6DE', muted:'#6C6078', tess:'#8DB2FF', live:'#F06A4C', now:'#E8B54A', health:'#8FCB9E', training:'#F07FA0', neutral:'#9A8FA6',
+        wGround:'#140F1B', wRaised:'#221A2D', wInk:'#F1E7D6', wSignal:'#F06A4C', wRest:'#E8B54A' },
+    prop:[['ground',84],['raised',4],['ink',9],['accent',3]], blend:'screen', bloom:'glow' },
+  { key:'celadon', name:'Celadon', mode:'light', tag:'',
+    char:'A pale green-grey glaze with deep forest ink and white surfaces. It is calm and cool, a light theme that is not white.',
+    field:'<b>The ground</b> is a flat celadon glaze. Anything lifted (a veil, a held row, the Write layer) is pure white slip on top of it. The glaze pools slightly darker at the bottom edge, the way glaze collects at the foot of a pot.',
+    t:{ ground:'#E7EEE9', raised:'#FFFFFF', ink:'#0F231D', context:'#4C6B85', muted:'#97ABA2', tess:'#2C59BE', live:'#D8462C', now:'#D99A1C', health:'#23866A', training:'#C24766', neutral:'#7E918A',
+        wGround:'#E7EEE9', wRaised:'#FFFFFF', wInk:'#0F231D', wSignal:'#D8462C', wRest:'#D99A1C' },
+    prop:[['ground',82],['raised',6],['ink',9],['accent',3]], blend:'multiply', bloom:'pigment' },
+];
+const STROKE = 'M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z';
+const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+const isDark = (T) => T.mode === 'dark';
+function vars(T, work) {
+  const t = T.t, dark = isDark(T);
+  const ink = work ? t.wInk : t.ink;
+  return `--ground:${work ? t.wGround : t.ground};--ink:${ink};--ink2:${hexA(ink, .6)};--context:${t.context};--muted:${t.muted};--tess:${t.tess};--live:${work ? t.wSignal : t.live};--blend:${dark ? 'screen' : 'multiply'}`;
+}
+function stroke(T, word, col, w, work) {
+  const glow = isDark(T) ? `filter:drop-shadow(0 0 6px ${hexA(col, .55)})` : '';
+  return `<span class="st"><svg width="${w}" height="19" viewBox="0 0 200 14" preserveAspectRatio="none" style="${glow}"><path d="${STROKE}" fill="${col}" opacity=".88" filter="url(#rough)"/></svg><span>${word}</span></span>`;
+}
+function soul(T, work) {
+  const t = T.t, op = isDark(T) ? .95 : .85;
+  return `<div class="soul">${[[t.live, -10, -6], [t.tess, 10, -6], [t.now, 0, 9]].map(([c, x, y]) => `<i style="background:radial-gradient(closest-side,${hexA(c, op)} 0%,${hexA(c, .6)} 42%,${hexA(c, 0)} 100%);transform:translate(${x}px,${y}px) scale(.72)"></i>`).join('')}</div>`;
+}
+function field(T, work) {
+  const t = T.t;
+  
+  if (T.key === 'plein') return `<div class="a" style="inset:0;background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 75%,#BFD8E2 0%,rgba(191,216,226,0) 70%)"></div><svg class="a" width="390" height="844" style="inset:0;mix-blend-mode:multiply;opacity:.3"><rect width="390" height="844" filter="url(#grain)"/></svg>`;
+  if (T.key === 'lacquer') return `<div class="a" style="inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(6,3,10,.75) 100%)"></div><div class="a" style="left:-200px;top:120px;width:820px;height:150px;transform:rotate(-24deg);background:linear-gradient(180deg,rgba(255,240,220,0),rgba(255,240,220,.035) 45%,rgba(255,240,220,.05) 52%,rgba(255,240,220,0));filter:blur(14px)"></div>`;
+  if (T.key === 'celadon') return `<div class="a" style="left:0;right:0;bottom:0;height:260px;background:linear-gradient(180deg,rgba(15,35,29,0),rgba(15,35,29,.06))"></div>`;
+  return '';
+}
+function bloom(T, col, x, y, w, h) {
+  if (T.bloom === 'wash') return '';
+  if (T.bloom === 'glow') return `<div class="bloom" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:radial-gradient(closest-side,${hexA(col, .16)},${hexA(col, 0)});mix-blend-mode:screen;filter:blur(18px)"></div>`;
+  return `<div class="bloom" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:radial-gradient(closest-side,${hexA(col, .05)} 0%,${hexA(col, .05)} 62%,${hexA(col, .11)} 88%,${hexA(col, 0)} 100%);filter:blur(5px)"></div>`;
+}
+function dab(c, op = 1, T) { const glow = T && isDark(T) ? `box-shadow:0 0 8px ${hexA(c, .5)}` : ''; return `<span class="dab" style="background:${hexA(c, op)};${glow}"></span>`; }
+
+const SCREENS = {
+  home(T) {
+    const t = T.t;
+    return `${field(T)}${bloom(T, t.live, -10, 270, 300, 120)}
+      <div class="a L rail"><span>Review</span><span class="on">Today</span><span>Training</span><span>Kitchen</span></div>
+      <div class="a ctx" style="left:22px;top:120px">Thursday evening</div>
+      <div class="a ctx" style="left:22px;top:186px">now, until twenty to seven</div>
+      <div class="a ttl" style="left:20px;top:218px">Groceries for<br>the week</div>
+      <div class="a" style="left:22px;top:330px;display:flex;align-items:center;gap:22px">${stroke(T, 'Finish', t.live, 112)}<span class="L">Hold · 30 min left</span></div>
+      <svg class="a" style="left:22px;top:394px" width="200" height="8"><path d="M0 4 C 60 2, 120 5, 150 3.5" stroke="${t.now}" stroke-width="3.5" fill="none" stroke-linecap="round" filter="url(#rough)"/></svg>
+      <div class="a t34" style="left:22px;top:440px">Next</div>
+      <div class="row" style="top:500px">Push Day A<span class="tm">19:00</span></div>
+      <div class="row" style="top:544px">Stretch &amp; mobility<span class="tm">20:30</span></div>
+      <div class="row" style="top:588px">Read · Designing Data…<span class="tm">21:10</span></div>
+      ${soul(T)}`;
+  },
+  now(T) {
+    const t = T.t;
+    return `${field(T)}${bloom(T, t.live, -10, 250, 280, 130)}
+      <div class="a L rail"><span>Review</span><span class="on">Today</span><span>Training</span><span>Kitchen</span></div>
+      <div class="a ctx" style="left:22px;top:150px">today's training</div>
+      <div class="a hero" style="left:20px;top:184px">Push day A</div>
+      <div class="a" style="left:22px;top:270px;display:flex;align-items:center;gap:22px">${stroke(T, 'Start', t.live, 92)}<span class="L" style="line-height:20px">5 exercises<br>18 sets</span></div>
+      <div class="a" style="left:22px;top:358px;font-size:21px;color:var(--ink2)">Slept 6h 50m. Lighter is fine today</div>
+      <div class="a L" style="left:22px;top:470px">Waiting</div>
+      <span class="a" style="left:22px;right:22px;top:504px;height:2px;background:${hexA(t.live, .45)};box-shadow:0 0 8px ${hexA(t.live, .35)}"></span>
+      <div class="row" style="top:516px;font-weight:600">Weeknight dal<span class="L" style="margin-left:auto;color:var(--live)">Resume</span></div>
+      <div class="a" style="left:22px;top:552px;font-size:18px;color:var(--ink2)">step 3 of 4, simmer 12:40 left</div>
+      <div class="a tess">Bench 82.5 × 8 last time.</div>
+      ${soul(T)}`;
+  },
+  work(T) {
+    const t = T.t;
+    return `<span class="a" style="left:0;right:0;top:0;height:2px;background:var(--live)"></span>
+      <svg class="a" style="left:0;top:14px" width="390" height="10"><line x1="22" x2="368" y1="5" y2="5" stroke="${hexA(t.wInk, .14)}" stroke-width="1.5"/><line x1="22" x2="210" y1="5" y2="5" stroke="${t.wRest}" stroke-width="2.5" stroke-linecap="round" style="filter:drop-shadow(0 0 5px ${hexA(t.wRest, .7)})"/></svg>
+      <div class="a L" style="left:22px;top:30px">Rest 1:22</div>
+      <div class="a" style="left:22px;top:76px;font-size:21px;color:var(--ink2)">Push day A</div>
+      <div class="a L" style="right:22px;top:80px">2 / 5</div>
+      <div class="a ttl" style="left:20px;top:150px">Bench press</div>
+      <div class="a L" style="left:22px;top:214px">Set 2 of 4</div>
+      <div class="a num" style="left:18px;top:262px;font-size:80px;font-weight:300;letter-spacing:-.04em;line-height:1">80<span style="font-size:21px;font-weight:400;margin:0 14px 0 6px">kg</span>× 8</div>
+      <div class="a" style="left:22px;top:372px;font-size:21px;color:var(--ink2)">last time 80 × 8, RPE 8</div>
+      <div class="a" style="left:22px;top:470px;display:flex;align-items:center;gap:22px">${stroke(T, 'Same again', t.wSignal, 186, true)}<span class="L">Tap</span></div>
+      <div class="a" style="left:22px;top:560px;font-size:21px;line-height:1.6;color:var(--ink2)"><b style="font-weight:600;color:var(--ink)">80</b> × 8 &nbsp;<span style="color:var(--ink2)">done</span><br><b style="font-weight:600;color:var(--ink)">80</b> × 8 &nbsp;next</div>
+      <div class="a" style="left:22px;right:22px;top:690px;font-size:21px;color:${hexA(t.wInk, .3)};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">then: overhead press, 3 × 10</div>
+      ${soul(T, true)}`;
+  },
+  review(T) {
+    const t = T.t;
+    const days = 'FSSMTWT'.split('');
+    const on = [1, 1, 2, 1, 1, 1, 1];
+    return `${field(T)}${bloom(T, t.health, -30, 290, 360, 120)}
+      <div class="a L rail"><span class="on">Review</span><span>Today</span><span>Training</span><span>Kitchen</span></div>
+      <div class="a ctx" style="left:22px;top:120px">the week so far</div>
+      <div class="a hero" style="left:20px;top:152px;line-height:1.02">All six<br>sessions in</div>
+      <div class="a" style="left:22px;top:300px;display:flex;gap:22px">${days.map((d, i) => `<div style="text-align:center;width:28px"><div style="width:26px;height:24px;margin:0 auto 8px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;${on[i] === 1 ? `background:${hexA(t.health, .9)};${isDark(T) ? `box-shadow:0 0 10px ${hexA(t.health, .5)}` : ''}` : on[i] === 2 ? `background:linear-gradient(transparent 58%,${hexA(t.ink, .5)} 58%,${hexA(t.ink, .5)} 76%,transparent 76%);border-radius:40% 60% 50% 50%/50%;filter:url(#rough)` : `box-shadow:inset 0 0 0 1.5px ${hexA(t.ink, .18)}`}"></div><span class="L" style="font-size:14px">${d}</span></div>`).join('')}</div>
+      <div class="a" style="left:22px;right:22px;top:392px;font-size:21px;line-height:28px;color:var(--tess)">Two records this week: Bench Press and Squat.</div>
+      <div class="a t34" style="left:22px;top:480px">Bench 82.5 × 8</div>
+      <div class="a L" style="left:22px;top:528px">Best this month, Tuesday</div>
+      <div class="a" style="left:22px;top:660px;font-size:21px;font-weight:600">The week<span style="color:var(--ink2);font-weight:400"> · </span>Day log<span style="color:var(--ink2);font-weight:400"> · </span>Notes</div>
+      ${soul(T)}`;
+  },
+};
+const NAMES = { home: 'Home', now: 'Now', work: 'A workout', review: 'Review' };
+function phone(T, which, sm) {
+  const work = which === 'work';
+  return `<div class="frame${sm ? ' sm' : ''}"><div class="ph" style="${vars(T, work)}">${SCREENS[which](T)}</div><div class="flood"></div></div>`;
+}
+
+const pick = document.getElementById('pick');
+let current = 0;
+try { const s = localStorage.getItem('tessera-theme'); if (s) current = Math.max(0, THEMES.findIndex((x) => x.key === s)); } catch (e) {}
+THEMES.forEach((T, i) => {
+  const b = document.createElement('button'); b.type = 'button'; b.id = 'pick-' + T.key;
+  b.innerHTML = `${T.name}${T.tag ? `<small>${T.tag}</small>` : ''}<span class="car" style="background:${T.t.live}"></span>`;
+  b.addEventListener('click', () => show(i, true));
+  pick.appendChild(b);
+});
+function show(i, animate) {
+  current = i; const T = THEMES[i];
+  try { localStorage.setItem('tessera-theme', T.key); } catch (e) {}
+  [...pick.children].forEach((b, k) => b.setAttribute('aria-pressed', k === i ? 'true' : 'false'));
+  document.getElementById('tName').textContent = T.name + (T.mode === 'dark' ? ', dark' : ', light');
+  document.getElementById('tChar').textContent = T.char;
+  document.getElementById('tField').innerHTML = T.field;
+  const t = T.t;
+  const PC = { ground: t.ground, raised: t.raised, ink: t.ink, accent: t.live };
+  document.getElementById('prop').innerHTML = T.prop.map(([k, v]) => `<span title="${k} ${v}%" style="width:${v}%;background:${k === 'accent' ? `linear-gradient(90deg,${t.live} 0 34%,${t.tess} 34% 58%,${t.now} 58% 80%,${t.health} 80%)` : PC[k]}"></span>`).join('');
+  document.getElementById('propkey').innerHTML = T.prop.map(([k, v]) => `<span>${k} ${v}%</span>`).join('');
+  const SW = [['Ground', t.ground], ['Raised', t.raised], ['Ink', t.ink], ['Context', t.context], ['Muted', t.muted], ['Tess', t.tess], ['Running, UNDO', t.live], ['Now, rest', t.now], ['Health, kitchen', t.health], ['Training', t.training], ['Workout ground', t.wGround], ['Workout signal', t.wSignal]];
+  document.getElementById('sw').innerHTML = SW.map(([n, c]) => `<div><i style="background:${c}"></i><b>${n}</b>${c}</div>`).join('');
+  const strip = document.getElementById('strip');
+  const html = ['home', 'now', 'work', 'review'].map((w) => `<div class="cell"><span class="lbl">${NAMES[w]}</span>${phone(T, w)}</div>`).join('');
+  if (!animate || matchMedia('(prefers-reduced-motion: reduce)').matches) { strip.innerHTML = html; return; }
+  // the new ground floods in from Tess's soul (bottom right of each phone)
+  const next = document.createElement('div'); next.innerHTML = html;
+  [...strip.querySelectorAll('.frame')].forEach((f, k) => {
+    const nf = next.querySelectorAll('.frame')[k]; const ph = nf.querySelector('.ph');
+    const fl = f.querySelector('.flood'); fl.innerHTML = ''; fl.appendChild(ph);
+    ph.animate([{ clipPath: 'circle(0px at 346px 788px)' }, { clipPath: 'circle(1000px at 346px 788px)' }], { duration: 700, delay: k * 60, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+  });
+  setTimeout(() => { strip.innerHTML = html; }, 700 + 3 * 60 + 40);
+}
+document.getElementById('compare').innerHTML = THEMES.map((T) => `<div class="cell"><span class="lbl">${T.name}</span>${phone(T, 'home', true)}</div>`).join('');
+show(current, false);
+</script>

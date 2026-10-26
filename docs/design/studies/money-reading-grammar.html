@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Money and Reading on the new grammar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 60: the Money month page, a spend, the Reading shelf and a book under the one-line, no-dots and one-base rules. One line per spend (word, amount) under its day label; one line per book (title, where it is) under its group word; the month sentence and the page drum stay as the instruments. ?look=por|obs; ?play records Porcelain (Money). -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.72;--s3:.38;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;--now:#FFC23D;--health:#3FD49A;--sheen:#FFE2A8;--tint:.62;background:#000;color:rgb(var(--ink))}
+.ph.por{--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--health:#12936A;--sheen:#F0A500;--tint:.55;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.f18{font-size:18px;line-height:24px}
+.nw{white-space:nowrap}
+.tab{font-variant-numeric:tabular-nums}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px}
+.ctx{color:var(--ctx)}
+.v{font-weight:600}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.por .soul i{mix-blend-mode:multiply}
+.fade{position:absolute;left:0;right:0;top:686px;height:158px;z-index:5;background:linear-gradient(rgba(0,0,0,0),#000 50px,#000)}
+.por .fade{background:linear-gradient(rgba(255,255,255,0),#fff 50px,#fff)}
+.hair{position:absolute;left:22px;width:346px;height:1.5px;background:rgba(var(--ink),.12)}
+.drum{position:absolute;left:22px;font-size:96px;font-weight:300;letter-spacing:-.04em;line-height:100px;font-variant-numeric:tabular-nums}
+.drum .of{font-size:34px;font-weight:300;letter-spacing:-.02em;margin-left:14px;vertical-align:baseline}
+.drum .nb{position:absolute;left:0;font-size:96px;font-weight:300;letter-spacing:-.04em;line-height:100px;opacity:.14}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;transition:opacity .15s}
+.por #fing{background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),POR=PLAY||Q.includes('look=por'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const pigOf=por=>por?['#2450D8','#E2432A','#F0A500']:['#86B4FF','#FF5B3A','#FFC23D'];
+const soul=(por,id='S')=>{const P=pigOf(por),f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;return `<div class="soul" id="${id}">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+const back=(w)=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ ${w}</div>`;
+const inkWord=(w,x,y,id='')=>`<div class="abs lbl" ${id?`id="${id}"`:''} style="left:${x}px;top:${y}px">${w}<svg style="position:absolute;left:0;top:22px;overflow:visible" width="${w.length*10.8}" height="12"><path d="${lens(w.length*10.8-6,1.6)}" fill="rgb(var(--ink))"/></svg></div>`;
+const head=(bk,title,ctx)=>`${back(bk)}<div class="abs t44" style="left:22px;top:84px">${title}</div><div class="abs b ctx nw" id="ctxl" style="left:22px;top:146px">${ctx}</div>`;
+// Money: the month sentence at 200 (numbers 600), other currencies as lines under it, then one line per spend under its day label: the word in ink, the amount at the right at 600, tabular, as typed.
+const SPENDS=[['15 OCT',[['lunch','12.40'],['coffee','4.50'],['cab','6.50']]],['14 OCT',[['parking','€8.00'],['coffee','4.50']]]];
+const DOLLARS=[['14 OCT',[['groceries','$38.20']]]];
+const ledger=(days,y0,wet)=>{let y=y0,h='';for(const [d,rows] of days){h+=`<div class="abs lbl s2 lg" style="left:22px;top:${y}px">${d}</div>`;y+=32;for(const [w,a] of rows){const isWet=wet&&wet[0]===d&&wet[1]===w;h+=`<div class="abs b lg" style="left:22px;top:${y}px">${w}</div><div class="abs b v tab nw lg" style="right:22px;top:${y}px;color:${isWet?'var(--tess)':'rgb(var(--ink))'}">${a}</div>`;y+=40}y+=16}return [h,y]};
+const month=(o)=>{let h=head('REVIEW','Money',o.ctx);if(o.empty){return h+`<div class="abs b s2" style="left:22px;top:200px">Nothing logged yet.</div>`}
+ h+=`<div class="abs b" id="sent" style="left:22px;top:200px;width:346px"><span class="v" id="cnt">${o.n}</span> spends. Most went to lunch, <span class="v">24.80</span>, and coffee, <span class="v">9.00</span>.</div>`;
+ h+=`<div class="abs b s2" style="left:22px;top:272px">Also <span class="v">$38.20</span> in 1 spend.</div>`;
+ let [l,y]=ledger(o.spends||SPENDS,330,o.wet);h+=l;h+=`<div class="abs lbl s2 lg" style="left:22px;top:${y+6}px">IN DOLLARS</div>`;h+=ledger(DOLLARS,y+38)[0];return h};
+// A spend one tap down: the amount as the hero (fitting form), the word and the time as the context line, the rest as sentences with value words, DELETE SPEND as an ink-line word.
+const spend=(o)=>`${back('MONEY')}<div class="abs" style="left:22px;top:84px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px" class="tab">${o.amount}</div><div class="abs b ctx nw" style="left:22px;top:156px"><span class="v" style="color:rgb(var(--ink))">${o.word}</span>, ${o.when}</div><div class="abs b" style="left:22px;top:220px;width:346px">Typed as <span class="v">spent ${o.amount} ${o.word}</span>.</div><div class="abs b" style="left:22px;top:260px">In <span class="v">no currency</span>.</div><div class="abs b" style="left:22px;top:300px">A note? <span class="v">Add one</span>.</div>${inkWord('DELETE SPEND',22,372)}`;
+// Reading: one line per book under its group word, the title in ink (reading books at 600), where it is as the value at the right.
+const SHELF=[['READING',[['Dune','P 120 OF 612',1],['Project Hail Mary','P 88 OF 476',1]]],['NEXT',[['Dune Messiah',''],['It',''],['Atomic Habits',''],['1984',''],['The Sun Also Rises','']]],['FINISHED',[['Educated','OCT 3']]],['SET ASIDE',[['Catch-22','AT P 88']]]];
+const shelf=(o)=>{let h=head('REVIEW','Reading',o.ctx);if(o.empty)return h+`<div class="abs b s2" style="left:22px;top:200px">No books yet.</div>`;let y=200;for(const [g,rows] of SHELF){h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">${g}</div>`;y+=32;for(const [t,p,r] of rows){h+=`<div class="abs b nw${r?' v':''}" style="left:22px;top:${y}px">${t}</div>${p?`<div class="abs lbl s2 nw" style="right:22px;top:${y+5}px;font-weight:600">${p}</div>`:''}`;y+=40}y+=16}return h};
+// A book: the title at 44 (fitting form), the context line, the page drum as the instrument with the neighbours faint, FINISHED and SET ASIDE as ink-line words.
+const book=(o)=>`${back('READING')}<div class="abs t44" style="left:22px;top:84px">${o.title}</div><div class="abs b ctx nw" style="left:22px;top:146px">${o.ctx}</div><div class="drum" style="top:220px"><span class="nb" style="top:-100px">${o.page-1}</span>${o.page}<span class="of">of ${o.pages}</span><span class="nb" style="top:100px">${o.page+1}</span></div>${inkWord('FINISHED',22,480)}${inkWord('SET ASIDE',200,480)}`;
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph${(opt.por??POR)?' por':''}" ${opt.id?`id="${opt.id}"`:''}>${inner}<div class="fade"></div>${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${opt.nosoul?'':soul(opt.por??POR,opt.id?'S':'s'+Math.random().toString(36).slice(2,6))}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+if(!PLAY){
+ $('row').innerHTML=phone('MONEY: THE MONTH SENTENCE, THEN ONE LINE PER SPEND UNDER ITS DAY',month({ctx:'October, 16 days in',n:7}),{por:1})
+  +phone('A SPEND LOGGED: THE LINE LANDS, THE AMOUNT ARRIVES WET AND DRIES',month({ctx:'October, 16 days in',n:8,spends:[['15 OCT',[['dinner','18.90'],['lunch','12.40'],['coffee','4.50'],['cab','6.50']]],...SPENDS.slice(1)],wet:['15 OCT','dinner']}),{por:1,line:'Logged 18.90, dinner.',undo:1})
+  +phone('A SPEND: THE AMOUNT AS THE HERO, THE WORD A VALUE WORD, DELETE',spend({amount:'12.40',word:'lunch',when:'Thursday 1:10 pm'}),{por:1})
+  +phone('READING: ONE LINE PER BOOK UNDER ITS GROUP WORD, NO COVERS, NO COUNTS',shelf({ctx:'2 going, Dune last night'}),{por:0})
+  +phone('A BOOK: THE PAGE DRUM, FINISHED AND SET ASIDE AS INK WORDS',book({title:'Dune',ctx:'p 142 of 612, started 9 days ago',page:142,pages:612}),{por:0})
+  +phone('EMPTY: ONE PLAIN LINE, AND TESS SAYS HOW',shelf({ctx:'Nothing on the go',empty:1}),{por:1,line:'Tell me what you’re reading. Try: reading Dune.'});
+ $('note').innerHTML='MONEY AND READING UNDER THE ONE-LINE GRAMMAR: ‹ REVIEW AT 58, TITLE 44, THE CONTEXT LINE AT 146. MONEY: THE MONTH SENTENCE AT 200 WITH ITS NUMBERS AT 600, OTHER CURRENCIES AS LINES UNDER IT, THEN ONE LINE PER SPEND UNDER A DAY LABEL (THE WORD IN INK, THE AMOUNT AT THE RIGHT AT 600, TABULAR, AS TYPED, NEVER RED); NO SWIPE-UP LEDGER STATE, NO PEEK, NO MARGIN NUMERALS. READING: ONE LINE PER BOOK UNDER READING, NEXT, FINISHED, SET ASIDE, WHERE IT IS AS THE VALUE AT THE RIGHT; NO TITLE 44 ROWS, NO COVERS, NO COUNTS. ONE TAP DOWN: A SPEND\'S AMOUNT AS THE HERO; A BOOK\'S PAGE DRUM; DELETE, FINISHED AND SET ASIDE AS INK-LINE WORDS.';
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+}else{
+ $('row').innerHTML=phone('MONEY',month({ctx:'October, 16 days in',n:7}),{id:'P',fing:1,por:1});
+ const P=$('P'),f=$('fing'),cap=document.querySelector('.cap'),setCap=t=>cap.textContent=t;
+ const tap=async(x,y)=>{f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1;await sleep(170);f.style.opacity=0};
+ (async()=>{document.body.dataset.start='1';await sleep(1300);
+  setCap('"SPENT 18.90 DINNER": THE LINE LANDS, THE AMOUNT ARRIVES WET AND DRIES');
+  // the rows under today's label make room; the new line rises in; the count rolls
+  const movers=[...P.querySelectorAll('.lg')].filter(el=>parseInt(el.style.top)>=362);movers.forEach(el=>el.animate([{transform:'translateY(0)'},{transform:'translateY(40px)'}],{duration:360,easing:H,fill:'forwards'}));
+  P.insertAdjacentHTML('beforeend',`<div class="abs b" id="nw1" style="left:22px;top:362px;opacity:0">dinner</div><div class="abs b v tab nw" id="nw2" style="right:22px;top:362px;color:var(--tess);opacity:0">18.90</div>`);
+  for(const id of ['nw1','nw2'])$(id).animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:380,delay:120,easing:H,fill:'forwards'});
+  await sleep(300);const c=$('cnt');c.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-10px)',opacity:0}],{duration:160,fill:'forwards'});await sleep(160);c.textContent='8';c.animate([{transform:'translateY(10px)',opacity:0},{transform:'translateY(0)',opacity:1}],{duration:380,easing:H,fill:'forwards'});
+  P.insertAdjacentHTML('beforeend',`<div class="tl" id="tl1" style="opacity:0">Logged 18.90, dinner.<span class="u">UNDO</span></div>`);$('tl1').animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});
+  await sleep(500);$('nw2').animate([{color:'#2450D8'},{color:'rgb(18,16,22)'}],{duration:2000,easing:H,fill:'forwards'});await sleep(2400);
+  setCap('TAP THE LINE: THE SPEND GROWS OUT OF IT, ‹ MONEY');await tap(60,376);$('tl1').remove();
+  const E=document.createElement('div');E.className='abs';E.style.cssText='inset:0;background:#fff;opacity:0;transform-origin:22px 376px;transform:scale(.94);z-index:8';E.innerHTML=spend({amount:'18.90',word:'dinner',when:'Thursday 7:48 pm'})+soul(true,'S2');P.appendChild(E);E.animate([{opacity:0,transform:'scale(.94)'},{opacity:1,transform:'scale(1)'}],{duration:420,easing:H,fill:'forwards'});await sleep(1600);
+  setCap('TAP THE WORD: RECENT WORDS SLIDE IN ON THE LINE BELOW; ONE TAP RETAGS');await tap(60,172);
+  E.insertAdjacentHTML('beforeend',`<div class="abs b s2" id="rw" style="left:22px;top:190px;opacity:0;white-space:nowrap">lunch&nbsp;&nbsp;&nbsp;&nbsp;coffee&nbsp;&nbsp;&nbsp;&nbsp;takeout&nbsp;&nbsp;&nbsp;&nbsp;cab</div>`);$('rw').animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:300,easing:H,fill:'forwards'});
+  [...E.querySelectorAll('.b')].filter(el=>parseInt(el.style.top)>=220).forEach(el=>el.animate([{transform:'translateY(0)'},{transform:'translateY(36px)'}],{duration:300,easing:H,fill:'forwards'}));E.querySelector('.lbl[style*="top:372px"]').animate([{transform:'translateY(0)'},{transform:'translateY(36px)'}],{duration:300,easing:H,fill:'forwards'});
+  await sleep(900);await tap(190,204);const wv=E.querySelector('.ctx .v');wv.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(3px)'}],{duration:120,fill:'forwards'});await sleep(120);wv.textContent='takeout';wv.animate([{opacity:0,filter:'blur(3px)'},{opacity:1,filter:'blur(0)'}],{duration:320,easing:SET,fill:'forwards'});$('rw').animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});
+  [...E.querySelectorAll('.b')].filter(el=>parseInt(el.style.top)>=220).forEach(el=>el.animate([{transform:'translateY(36px)'},{transform:'translateY(0)'}],{duration:300,easing:H,fill:'forwards'}));E.querySelector('.lbl[style*="top:372px"]').animate([{transform:'translateY(36px)'},{transform:'translateY(0)'}],{duration:300,easing:H,fill:'forwards'});
+  E.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">18.90, now takeout.<span class="u">UNDO</span></div>`);E.lastElementChild.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});await sleep(2000);
+  setCap('‹ MONEY GOES BACK: THE LINE READS ITS NEW WORD');await tap(60,66);E.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.94)'}],{duration:380,easing:H,fill:'forwards'});await sleep(200);$('nw1').textContent='takeout';await sleep(1400);document.body.dataset.done='1'})();
+}
+</script>
+</body>
+</html>

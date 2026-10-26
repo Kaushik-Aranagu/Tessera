@@ -1,0 +1,246 @@
+<title>Routines Keystones</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: a review board, three live phones, each a Routines landing with a different keystone made of repetition itself. Standard slot, same lower page. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#8E4A78;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1380px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+h3{font-size:20px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:62ch}
+.bar{display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:0 44px}
+.rule{padding:14px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600;margin-bottom:2px}
+.rule span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center;margin-top:8px}
+.ctl span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);margin-right:4px}
+.q{border-top:2px solid var(--fg);padding-top:16px}
+
+/* ---------- phone ---------- */
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--hair:rgba(36,36,35,.16);--routines:#8E4A78;--green:#2F6450;--wine:#9A2541;--gold:#7E6A1E;--slate:#34506F;--teal:#1E6E77;--clay:#9C4B2C;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none;touch-action:none;box-shadow:0 0 0 1px var(--line)}
+.phones[data-look="black"] .phone{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--hair:rgba(232,227,218,.2);--routines:#D59AC4;--green:#8EC7AE;--wine:#EE8E9C;--gold:#D9C27A;--slate:#A7BCD6;--teal:#84C3C9;--clay:#E2A07F}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--routines)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;cursor:pointer;touch-action:none}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden}
+.ups{position:absolute;left:24px;right:24px;top:424px}
+.up{height:56px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:548px;display:flex;flex-wrap:wrap;gap:0 22px}
+.door{font-size:24px;font-weight:600;color:var(--ink2);padding:6px 0;cursor:pointer}
+.door.on{color:var(--routines)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--routines);padding:8px 0;min-width:96px;min-height:44px;text-align:left;background:none;border:0;cursor:pointer;z-index:4}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phones[data-look="black"] .tessw{color:#C79B7C}
+.receipt{position:absolute;left:24px;right:110px;bottom:84px;font-size:15px;color:var(--ink2);height:24px;white-space:nowrap;overflow:hidden;z-index:4}
+.receipt b{font-weight:600;cursor:pointer;color:var(--routines)}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Routines / sheet 260</h2>
+<h1>Routines, made of repetition.</h1>
+<p class="lede">You called the woodland the weakest keystone, and I think the reason is that it is a picture of habits rather than the stuff of them. Chalk came from the gym, tickets from the kitchen, the sky from the weather. Routines are made of repetition: a thing done again and again until it leaves a mark. Three keystones built from that, each in the standard slot, each able to stay through the app, each with a kinder answer to missing a day than withering. Press the events.</p>
+<div class="bar" role="group" aria-label="Phone look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+</div>
+</header>
+
+<section aria-label="Phones">
+<div class="phones" id="phones" data-look="paper">
+
+<!-- A: worn paths -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p1">
+ <div class="sbar"><span>5:10</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say"><b style="color:var(--green)">Three done,</b> <b style="color:var(--routines)">eight to tend,</b> <b style="color:var(--wine)">two to give a little care.</b></div>
+ <canvas id="paths" class="key" width="708" height="364"></canvas>
+ <div class="kline" id="l1">A field. Every path across it is a routine you have walked.</div>
+ <div class="ups"><div class="up"><b>Tidy a little</b>&nbsp;is next, around 5:30.</div><div class="up"><b>Take screen breaks</b>&nbsp;<span style="color:var(--wine)">has grassed over a little.</span></div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Body</span><span class="door">Mind</span><span class="door">Home</span><span class="door">Across the lake</span></div>
+ <div class="receipt" id="r1"></div>
+ <button class="foot">Plant</button><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="ev1"><span>Events</span></div>
+<p class="cap"><b>Worn paths.</b> A field seen from above. Every routine is a path across it, worn by walking: the more days you keep it, the clearer and wider the path, down to bare earth for the old ones. Miss a while and the grass starts to grow back over it; it never vanishes, it just softens, and the next walk reopens it. When you do a routine, a small figure walks its path end to end in three seconds. Tap a path to open the routine. Behind a door, the field tilts to show only that grove’s paths. Paths are the kindest record there is: nothing dies, grass just grows.</p>
+</div>
+
+<!-- B: the sampler -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p2">
+ <div class="sbar"><span>5:10</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say"><b style="color:var(--green)">Three done,</b> <b style="color:var(--routines)">eight to tend,</b> <b style="color:var(--wine)">two to give a little care.</b></div>
+ <canvas id="cloth" class="key" width="708" height="364"></canvas>
+ <div class="kline" id="l2">This week’s row is being sewn. Each thread is a routine.</div>
+ <div class="ups"><div class="up"><b>Tidy a little</b>&nbsp;is next, around 5:30.</div><div class="up"><b>Take screen breaks</b>&nbsp;<span style="color:var(--wine)">has two bare stitches this week.</span></div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Body</span><span class="door">Mind</span><span class="door">Home</span><span class="door">Across the lake</span></div>
+ <div class="receipt" id="r2"></div>
+ <button class="foot">Plant</button><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="ev2"><span>Events</span></div>
+<p class="cap"><b>The sampler.</b> A piece of linen being embroidered, one row a day, one stitch per routine in its grove’s color. Done is a cross stitch; a planned rest is a small knot; a day not done is bare cloth, and bare cloth is just cloth, not a wound. Over weeks a pattern appears that is yours alone: the Tuesday you always skip, the month everything held. When you finish a routine the needle comes through and pulls the thread tight in a second and a half. Scroll the cloth back through the months with a finger. Behind a door, only that grove’s threads stay in color.</p>
+</div>
+
+<!-- C: the string of beads -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p3">
+ <div class="sbar"><span>5:10</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say"><b style="color:var(--green)">Three done,</b> <b style="color:var(--routines)">eight to tend,</b> <b style="color:var(--wine)">two to give a little care.</b></div>
+ <canvas id="beads" class="key" width="708" height="364"></canvas>
+ <div class="kline" id="l3">Today’s string. Move a bead when a thing is done.</div>
+ <div class="ups"><div class="up"><b>Tidy a little</b>&nbsp;is next, around 5:30.</div><div class="up"><b>Take screen breaks</b>&nbsp;<span style="color:var(--wine)">has sat still a few days.</span></div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Body</span><span class="door">Mind</span><span class="door">Home</span><span class="door">Across the lake</span></div>
+ <div class="receipt" id="r3"></div>
+ <button class="foot">Plant</button><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="ev3"><span>Events</span></div>
+<p class="cap"><b>The string of beads.</b> A counting string, the oldest way people kept a repetition. Today’s routines are the beads; you move one across the knot when it is done, and it clicks home with a haptic you can feel. Done beads sit on the right, glossy; the rest wait on the left, matte, in their grove’s color. Each full day ties a small knot at the end, so the string carries the month as a row of knots. A routine left for days goes dull, never red. The string hangs with real weight and sways when you tilt the phone. Behind a door, the string shows only that grove’s beads.</p>
+</div>
+
+</div>
+</section>
+
+<section>
+<h2>How they work</h2>
+<div class="rules">
+<div class="rule"><b>All three keep the 248 landing.</b><span>Title, the three-colored sentence, the keystone in the standard slot, the two updates, and the doors. Only the keystone changes; the Sheaf stays behind the doors (approved).</span></div>
+<div class="rule"><b>All three stay through the app.</b><span>Behind a door the keystone filters to that grove (paths tilt, threads stay colored, beads thin out). On a routine’s page it focuses: its one path, its one thread’s column, its one bead large.</span></div>
+<div class="rule"><b>Missing a day, three kindnesses.</b><span>Paths: grass grows back a little, nothing dies. Sampler: a bare stitch is just cloth. Beads: a bead goes dull. None uses red, none counts a streak out loud, and a planned rest is honored in each (a path kept clear by a marker, a knot stitch, a bead set aside).</span></div>
+<div class="rule"><b>What they show without a number.</b><span>Paths: how established each habit is (width and clarity) and which are fading. Sampler: the shape of your weeks and months at a glance, with the pattern as the reward. Beads: how today is going (left vs right) and how many full days this month (knots).</span></div>
+<div class="rule"><b>Reactions, all under five seconds.</b><span>Paths: a figure walks the path (3 s). Sampler: the needle pulls the stitch (1.5 s). Beads: a bead slides and clicks (0.6 s), a knot ties at day’s end (2 s). New routine: a faint new path, a new thread color, a new bead on the left.</span></div>
+<div class="rule"><b>Material.</b><span>Paths: a real grass plate from above (procedural here), paths as worn earth. Sampler: real linen texture (procedural here), thread as two-tone stitches. Beads: wood or stone beads with a highlight, a cotton string that bows.</span></div>
+</div>
+</section>
+
+<section class="q">
+<h2>Where I would start</h2>
+<p><b>The sampler.</b> It is the only one that gets more beautiful the longer you use it, it carries real information (your weeks as a pattern) without a chart, it scales to years, and bare cloth is the gentlest possible way to show a day not done. The beads are the best to touch and the best haptic in the app; they could be the Today door’s keystone rather than the landing’s. The paths are the loveliest idea and the hardest to make look real.</p>
+</section>
+</main>
+
+<script>
+(function(){
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let K=1;function fit(){document.querySelectorAll('[data-fit]').forEach(s=>{const p=s.firstElementChild;K=Math.min(1,s.clientWidth/402);p.style.transform=K<1?'scale('+K+')':'';s.style.height=(874*K)+'px'})}
+addEventListener('resize',fit);fit();
+const looks=()=>document.getElementById('phones').dataset.look;
+function setLook(l){document.getElementById('phones').dataset.look=l;document.getElementById('lk-paper').setAttribute('aria-pressed',l==='paper');document.getElementById('lk-black').setAttribute('aria-pressed',l==='black')}
+document.getElementById('lk-paper').onclick=()=>setLook('paper');document.getElementById('lk-black').onclick=()=>setLook('black');
+let rT={};function receipt(id,msg,undo){const r=document.getElementById(id);r.innerHTML=msg+(undo?' <b>Undo</b>':'');if(undo)r.querySelector('b').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT[id]);rT[id]=setTimeout(()=>{r.innerHTML=''},10000)}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
+function noise(x,y){const s=Math.sin(x*12.9898+y*78.233)*43758.5453;return s-Math.floor(s)}
+function vnoise(x,y){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=ease(xf),v=ease(yf);const a=noise(xi,yi),b=noise(xi+1,yi),c=noise(xi,yi+1),d=noise(xi+1,yi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+function ctl(id,items){items.forEach(([n,f])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.onclick=f;document.getElementById(id).appendChild(b)})}
+const W=354,H=182;
+// the routines, shared by all three: grove color, days kept (how established), done today, days since last (fading), rest today
+const GC={Body:'#1E6E77',Mind:'#8A4570',Home:'#9C4B2C','Across the lake':'#34506F'};
+const R=[{n:'Drink water',g:'Body',d:28,done:1,since:0},{n:'Morning stretch',g:'Body',d:42,done:1,since:0},{n:'Take screen breaks',g:'Body',d:14,done:0,since:4},{n:'Stretch my neck',g:'Body',d:3,done:0,since:0},{n:'Evening walk',g:'Body',d:28,done:0,since:0},
+ {n:'Read ten pages',g:'Mind',d:70,done:0,since:0},{n:'Journal',g:'Mind',d:35,done:1,done:1,since:0},{n:'Practice guitar',g:'Mind',d:84,done:0,since:1},{n:'Write a little',g:'Mind',d:7,done:0,since:0},
+ {n:'Tidy a little',g:'Home',d:21,done:0,since:0},{n:'Water houseplants',g:'Home',d:28,done:0,since:5},{n:'Plan tomorrow',g:'Home',d:49,done:0,since:0},{n:'Call family',g:'Across the lake',d:21,done:0,since:0}];
+
+/* ================= A: worn paths ================= */
+const pc=document.getElementById('paths').getContext('2d');pc.scale(2,2);
+let grassTex=null,grassLook='';const walkers=[];
+R.forEach((r,i)=>{const s=noise(i,1),e=noise(i,2);r.path={x0:-10,y0:14+s*154,x1:W+10,y1:14+e*154,c1x:W*.33,c1y:14+noise(i,3)*154,c2x:W*.66,c2y:14+noise(i,4)*154}});
+function pathPt(p,u){const v=1-u;return [v*v*v*p.x0+3*v*v*u*p.c1x+3*v*u*u*p.c2x+u*u*u*p.x1,v*v*v*p.y0+3*v*v*u*p.c1y+3*v*u*u*p.c2y+u*u*u*p.y1]}
+function grass(dark){grassTex=document.createElement('canvas');grassTex.width=W;grassTex.height=H;const g=grassTex.getContext('2d');const img=g.createImageData(W,H);const d=img.data;
+ const a=dark?[36,58,40]:[118,146,86],b=dark?[22,38,26]:[88,118,62];for(let y=0;y<H;y++)for(let x=0;x<W;x++){const n=vnoise(x*.05,y*.05)*.5+vnoise(x*.2,y*.2)*.3+noise(x,y)*.2;const k=(y*W+x)*4;for(let c=0;c<3;c++)d[k+c]=Math.round(b[c]+(a[c]-b[c])*n);d[k+3]=255}g.putImageData(img,0,0);
+ for(let k=0;k<2600;k++){const x=noise(k,7)*W,y=noise(k,8)*H;g.strokeStyle='rgba('+(dark?'70,100,66':'150,176,110')+','+(.25+noise(k,9)*.4)+')';g.lineWidth=.8;g.beginPath();g.moveTo(x,y);g.lineTo(x+(noise(k,3)-.5)*2,y-2-noise(k,4)*3);g.stroke()}grassLook=dark?'b':'p'}
+function drawPaths(t){const dark=looks()==='black';if(!grassTex||grassLook!==(dark?'b':'p'))grass(dark);const g=pc;g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,W,H);
+ g.save();g.beginPath();g.roundRect(0,0,W,H,26);g.clip();g.drawImage(grassTex,0,0);
+ // paths: width and clarity from days kept; grass grows back with days since; soft earth under, a lighter worn center
+ R.forEach(r=>{const wear=clamp(r.d/60,.15,1),regrow=clamp(r.since/10,0,.85);const wd=(2+wear*9)*(1-regrow*.6),alpha=(.35+wear*.6)*(1-regrow);const p=r.path;
+  g.lineCap='round';g.lineJoin='round';
+  g.strokeStyle='rgba('+(dark?'70,56,38':'120,96,62')+','+(alpha*.55)+')';g.lineWidth=wd+6;g.beginPath();g.moveTo(p.x0,p.y0);g.bezierCurveTo(p.c1x,p.c1y,p.c2x,p.c2y,p.x1,p.y1);g.stroke();
+  g.strokeStyle='rgba('+(dark?'92,74,50':'150,122,82')+','+alpha+')';g.lineWidth=wd;g.stroke();
+  g.strokeStyle='rgba('+(dark?'120,100,70':'184,156,110')+','+(alpha*.7)+')';g.lineWidth=Math.max(.6,wd*.35);g.stroke();
+  // grass tufts creeping back over a fading path
+  if(regrow>0)for(let k=0;k<regrow*40;k++){const [x,y]=pathPt(p,noise(k,r.d)); g.fillStyle='rgba('+(dark?'60,92,58':'130,160,96')+',.8)';g.beginPath();g.ellipse(x+(noise(k,2)-.5)*wd,y+(noise(k,3)-.5)*wd,2.2,1.2,noise(k,4)*3,0,7);g.fill()}
+  r.hit=p});
+ // walkers: a small figure walks the path of a routine just done
+ for(let i=walkers.length-1;i>=0;i--){const w=walkers[i],u=(t-w.t0)/3;if(u>=1){walkers.splice(i,1);continue}const [x,y]=pathPt(w.r.path,ease(u));const step=Math.sin(t*14)*.8;g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(x,y+3,5,1.6,0,0,7);g.fill();g.strokeStyle=dark?'#DDD':'#3A3A3A';g.lineWidth=1.6;g.lineCap='round';g.beginPath();g.moveTo(x,y-3);g.lineTo(x-2-step,y+2);g.moveTo(x,y-3);g.lineTo(x+2+step,y+2);g.stroke();g.fillStyle=GC[w.r.g];g.beginPath();g.roundRect(x-2.6,y-10,5.2,7,2);g.fill();g.fillStyle='#E0AE86';g.beginPath();g.arc(x,y-12.5,2.2,0,7);g.fill()}
+ // a hairline of light on the field's edge, the approved soft lift
+ const e=g.createLinearGradient(0,0,W,H);e.addColorStop(0,'rgba(255,255,255,'+(dark?.18:.3)+')');e.addColorStop(.5,'rgba(255,255,255,0)');e.addColorStop(1,'rgba(0,0,0,'+(dark?.14:.08)+')');g.strokeStyle=e;g.lineWidth=1;g.beginPath();g.roundRect(.5,.5,W-1,H-1,26);g.stroke();g.restore()}
+ctl('ev1',[['Do Evening walk',()=>{const r=R[4];r.done=1;r.since=0;walkers.push({r,t0:performance.now()/1000-tOff});receipt('r1','Evening walk, done.',()=>{r.done=0})}],['Leave screen breaks a week',()=>{R[2].since=Math.min(10,R[2].since+7);receipt('r1','The grass is growing back over it.')}],['Walk it again',()=>{const r=R[2];r.since=0;r.d+=1;walkers.push({r,t0:performance.now()/1000-tOff});receipt('r1','Screen breaks, back on the path.')}],['New routine',()=>{R.push({n:'Meditate',g:'Mind',d:1,done:0,since:0,path:{x0:-10,y0:160,x1:W+10,y1:30,c1x:120,c1y:150,c2x:240,c2y:40}});receipt('r1','Meditate, planted. A faint new path.')}]]);
+document.getElementById('paths').onclick=e=>{const r=e.target.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;let best=null,bd=99;R.forEach(rt=>{for(let u=0;u<=1;u+=.05){const [px,py]=pathPt(rt.path,u);const d=Math.hypot(px-x,py-y);if(d<bd){bd=d;best=rt}}});if(best&&bd<16)receipt('r1','Opens '+best.n+', '+best.d+' days walked.')};
+
+/* ================= B: the sampler ================= */
+const cc=document.getElementById('cloth').getContext('2d');cc.scale(2,2);
+let linenTex=null,linenLook='';const ROWS=22;// weeks shown as rows of days? no: rows are days, newest at the bottom
+// history: 26 days x routines; 1 done, 0 bare, 2 rest
+const HIST=R.map((r,i)=>Array.from({length:26},(_,d)=>{const x=noise(i*31+d,5);if(d===9)return 2;if(r.since&&d>=26-r.since)return 0;return x<.12?0:1}));
+let needle=null,scrollC=0;
+function linen(dark){linenTex=document.createElement('canvas');linenTex.width=W;linenTex.height=H;const g=linenTex.getContext('2d');g.fillStyle=dark?'#2A2622':'#EFE7D6';g.fillRect(0,0,W,H);
+ for(let y=0;y<H;y+=2){g.fillStyle='rgba('+(dark?'255,255,255':'0,0,0')+','+(.025+noise(y,1)*.03)+')';g.fillRect(0,y,W,1)}for(let x=0;x<W;x+=2){g.fillStyle='rgba('+(dark?'255,255,255':'0,0,0')+','+(.02+noise(x,2)*.03)+')';g.fillRect(x,0,1,H)}
+ for(let k=0;k<900;k++){g.fillStyle='rgba('+(dark?'255,250,240':'120,100,70')+','+(.05+noise(k,3)*.08)+')';g.fillRect(noise(k,4)*W,noise(k,5)*H,1,1)}linenLook=dark?'b':'p'}
+function stitch(g,x,y,s,col,a){g.strokeStyle=col;g.globalAlpha=a;g.lineWidth=1.8;g.lineCap='round';g.beginPath();g.moveTo(x-s,y-s);g.lineTo(x+s,y+s);g.stroke();g.strokeStyle=col;g.globalAlpha=a*.85;g.beginPath();g.moveTo(x-s,y+s);g.lineTo(x+s,y-s);g.stroke();g.globalAlpha=a*.5;g.strokeStyle='#FFF';g.lineWidth=.6;g.beginPath();g.moveTo(x-s*.6,y-s*.6);g.lineTo(x+s*.4,y+s*.4);g.stroke();g.globalAlpha=1}
+function drawCloth(t){const dark=looks()==='black';if(!linenTex||linenLook!==(dark?'b':'p'))linen(dark);const g=cc;g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,W,H);
+ g.save();g.beginPath();g.roundRect(0,0,W,H,26);g.clip();g.drawImage(linenTex,0,0);
+ const cols=R.length,cw=(W-40)/cols,rh=11;const base=H-16+scrollC;// newest row at the bottom; scroll back in time with a drag
+ for(let d=0;d<26;d++){const y=base-(25-d)*rh;if(y<-8||y>H+8)continue;const isToday=d===25;
+  // the day's tick at the left edge: Mondays a little longer
+  g.fillStyle='rgba('+(dark?'220,215,205':'110,96,80')+','+((d+3)%7===0?.5:.2)+')';g.fillRect(10,y,(d+3)%7===0?10:5,1);
+  R.forEach((r,i)=>{const x=24+cw*(i+.5);const v=isToday?(r.done?1:3):HIST[i][d];const col=GC[r.g];
+   if(v===1)stitch(g,x,y,3.6,col,.95);else if(v===2){g.fillStyle=col;g.globalAlpha=.8;g.beginPath();g.arc(x,y,1.6,0,7);g.fill();g.globalAlpha=1}
+   else if(v===3){g.strokeStyle=col;g.globalAlpha=.25;g.lineWidth=1;g.beginPath();g.arc(x,y,3,0,7);g.stroke();g.globalAlpha=1}})}
+ // the needle pulling a stitch tight
+ if(needle){const u=(t-needle.t0)/1.5;if(u>=1)needle=null;else{const x=24+cw*(needle.i+.5),y=base;const e=ease(u);const ny=y-30*(1-e)-Math.sin(e*Math.PI)*12,nx=x+18*(1-e);g.strokeStyle=GC[R[needle.i].g];g.lineWidth=1.4;g.beginPath();g.moveTo(x-3.6,y+3.6);g.lineTo(nx,ny);g.stroke();g.strokeStyle=dark?'#DDD':'#777';g.lineWidth=1.6;g.lineCap='round';g.beginPath();g.moveTo(nx,ny);g.lineTo(nx+10*(1-e)+2,ny-12*(1-e)-3);g.stroke();stitch(g,x,y,3.6*e,GC[R[needle.i].g],e)}}
+ const e=g.createLinearGradient(0,0,W,H);e.addColorStop(0,'rgba(255,255,255,'+(dark?.18:.4)+')');e.addColorStop(.5,'rgba(255,255,255,0)');e.addColorStop(1,'rgba(0,0,0,'+(dark?.14:.06)+')');g.strokeStyle=e;g.lineWidth=1;g.beginPath();g.roundRect(.5,.5,W-1,H-1,26);g.stroke();g.restore()}
+ctl('ev2',[['Do Evening walk',()=>{const i=4;R[i].done=1;needle={i,t0:performance.now()/1000-tOff};receipt('r2','Evening walk, sewn.',()=>{R[i].done=0})}],['Do Read ten pages',()=>{const i=5;R[i].done=1;needle={i,t0:performance.now()/1000-tOff};receipt('r2','Read ten pages, sewn.',()=>{R[i].done=0})}],['A day passes',()=>{R.forEach((r,i)=>{HIST[i].shift();HIST[i].push(r.done?1:0);r.done=0});receipt('r2','A new row of cloth.')}],['New routine',()=>{R.push({n:'Meditate',g:'Mind',d:1,done:0,since:0,path:R[0].path});HIST.push(Array(26).fill(0));receipt('r2','Meditate, a new thread.')}]]);
+let cy0=null,sc0=0;const clothEl=document.getElementById('cloth');clothEl.onpointerdown=e=>{cy0=e.clientY;sc0=scrollC;clothEl.setPointerCapture(e.pointerId)};clothEl.onpointermove=e=>{if(cy0==null)return;scrollC=clamp(sc0+(e.clientY-cy0)/K,0,120)};clothEl.onpointerup=e=>{if(cy0==null)return;const dy=(e.clientY-cy0)/K;cy0=null;if(Math.abs(dy)<6){const r=clothEl.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*W;const i=clamp(Math.floor((x-24)/((W-40)/R.length)),0,R.length-1);receipt('r2','Opens '+R[i].n+': its thread, '+R[i].d+' stitches long.')}};
+
+/* ================= C: the string of beads ================= */
+const bc=document.getElementById('beads').getContext('2d');bc.scale(2,2);
+let tilt=0,tiltT=0;const KNOTS=17;// full days this month
+const TODAY=R.filter(r=>r.g!=='Across the lake').slice(0,11).map(r=>({r,x:0,v:0}));
+function stringY(x){return 86+Math.sin((x/W)*Math.PI)*34+tilt*(x-W/2)*.12}
+function drawBeads(t){const dark=looks()==='black';const g=bc;g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,W,H);tilt+=(tiltT-tilt)*.08;
+ g.save();g.beginPath();g.roundRect(0,0,W,H,26);g.clip();
+ // the string, bowing under the beads
+ g.strokeStyle=dark?'#B8AE98':'#7A6E5A';g.lineWidth=1.6;g.beginPath();for(let x=0;x<=W;x+=4)g.lineTo(x,stringY(x));g.stroke();
+ // the knot in the middle: done beads go to the right of it
+ const kx=W*.56;g.fillStyle=dark?'#B8AE98':'#6E6250';g.beginPath();g.arc(kx,stringY(kx),4,0,7);g.fill();
+ // targets: waiting beads pack from the left, done beads pack from the right of the knot
+ const BW=20;let li=0,ri=0;TODAY.forEach(b=>{b.tx=b.r.done?(kx+16+BW/2+(ri++)*(BW+3)):(14+BW/2+(li++)*(BW+3))});
+ TODAY.forEach(b=>{if(!b.x)b.x=b.tx;const d=b.tx-b.x;b.v+=d*40/60;b.v*=.7;b.x+=b.v/60;if(Math.abs(d)<.3&&Math.abs(b.v)<2){b.x=b.tx;b.v=0}
+  const y=stringY(b.x),col=GC[b.r.g],dull=!b.r.done&&b.r.since>=3;g.save();g.translate(b.x,y);
+  g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(1,BW/2+2,BW/2,3,0,0,7);g.fill();
+  const grad=g.createRadialGradient(-BW*.18,-BW*.2,1,0,0,BW/2);grad.addColorStop(0,b.r.done?'#FFFFFF':dull?'#9A948A':col);grad.addColorStop(.15,b.r.done?col:dull?'#8A847A':col);grad.addColorStop(1,b.r.done?'#1E1A1A':dull?'#5A554C':'rgba(0,0,0,.35)');g.fillStyle=grad;g.globalAlpha=dull?.75:1;g.beginPath();g.arc(0,0,BW/2,0,7);g.fill();
+  if(!b.r.done&&!dull){g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.arc(0,0,BW/2,0,7);g.fill()}
+  if(b.r.done){g.fillStyle='rgba(255,255,255,.55)';g.beginPath();g.ellipse(-BW*.2,-BW*.22,BW*.14,BW*.08,-.6,0,7);g.fill()}
+  g.globalAlpha=1;g.fillStyle=dark?'#B8AE98':'#7A6E5A';g.fillRect(-1,-1,2,2);g.restore()});
+ // the month's knots along the bottom, one per full day; and the tassel
+ for(let k=0;k<KNOTS;k++){const x=20+k*18,y=H-18;g.strokeStyle=dark?'#B8AE98':'#7A6E5A';g.lineWidth=1.2;g.beginPath();g.moveTo(x-9,y);g.lineTo(x+9,y);g.stroke();g.fillStyle=dark?'#D9CDB4':'#5E5444';g.beginPath();g.arc(x,y,2.6,0,7);g.fill()}
+ g.strokeStyle=dark?'#B8AE98':'#7A6E5A';g.lineWidth=1.2;for(let k=0;k<6;k++){g.beginPath();g.moveTo(W-28,H-18);g.quadraticCurveTo(W-28+(k-2.5)*4,H-4,W-28+(k-2.5)*6+Math.sin(t*2+k)*1.5,H+6);g.stroke()}
+ const e=g.createLinearGradient(0,0,W,H);e.addColorStop(0,'rgba(255,255,255,'+(dark?.18:.3)+')');e.addColorStop(.5,'rgba(255,255,255,0)');e.addColorStop(1,'rgba(0,0,0,'+(dark?.14:.08)+')');g.strokeStyle=e;g.lineWidth=1;g.beginPath();g.roundRect(.5,.5,W-1,H-1,26);g.stroke();g.restore()}
+const beadEl=document.getElementById('beads');let bx0=null;beadEl.onpointerdown=e=>{bx0=e.clientX;beadEl.setPointerCapture(e.pointerId)};beadEl.onpointermove=e=>{if(bx0==null)return;tiltT=clamp((e.clientX-bx0)/K/120,-1,1)};
+beadEl.onpointerup=e=>{if(bx0==null)return;const dx=(e.clientX-bx0)/K;bx0=null;tiltT=0;const r=beadEl.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;const b=TODAY.reduce((p,q)=>Math.hypot(q.x-x,stringY(q.x)-y)<Math.hypot(p.x-x,stringY(p.x)-y)?q:p);
+ if(Math.hypot(b.x-x,stringY(b.x)-y)<16){if(dx>30&&!b.r.done){b.r.done=1;b.r.since=0;receipt('r3',b.r.n+', done. Click.',()=>{b.r.done=0})}else if(dx<-30&&b.r.done){b.r.done=0;receipt('r3',b.r.n+', back.')}else if(Math.abs(dx)<6)receipt('r3','Opens '+b.r.n+'.')}};
+ctl('ev3',[['Move Evening walk',()=>{const b=TODAY.find(x=>x.r.n==='Evening walk');b.r.done=1;b.r.since=0;receipt('r3','Evening walk, done. Click.',()=>{b.r.done=0})}],['Move Read ten pages',()=>{const b=TODAY.find(x=>x.r.n==='Read ten pages');b.r.done=1;receipt('r3','Read ten pages, done. Click.',()=>{b.r.done=0})}],['Day ends',()=>{receipt('r3',TODAY.every(b=>b.r.done)?'A full day. A knot is tied.':'Not a full day; the beads come back to the left.');TODAY.forEach(b=>{b.r.done=0})}],['New routine',()=>{TODAY.push({r:{n:'Meditate',g:'Mind',d:1,done:0,since:0},x:0,v:0});receipt('r3','Meditate, a new bead.')}]]);
+
+let t0=performance.now(),tOff=t0/1000;function tick(now){const t=(now-t0)/1000;try{drawPaths(t)}catch(e){console.error(e)}try{drawCloth(t)}catch(e){console.error(e)}try{drawBeads(t)}catch(e){console.error(e)}requestAnimationFrame(tick)}requestAnimationFrame(tick);
+})();
+</script>

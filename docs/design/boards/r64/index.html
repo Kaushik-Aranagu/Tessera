@@ -1,0 +1,334 @@
+<title>Notes door pages</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@800&family=Urbanist:wght@900&family=Outfit:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap">
+<style>
+:root{--ground:#EFECE6;--ink:#1D1B19;--ink2:#5E5A55;--slate:#34506F;--acc:#7A5A1E;--edge:#DDD8D0;--words:"Figtree",-apple-system,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--ink:#F1EEE9;--ink2:#ABA6A0;--slate:#A7BCD6;--acc:#D9B26A;--edge:#2A2A2E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--ink:#F1EEE9;--ink2:#ABA6A0;--slate:#A7BCD6;--acc:#D9B26A;--edge:#2A2A2E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 60px}
+.head{max-width:1180px;margin:0 auto 22px;display:flex;flex-direction:column;gap:8px}h1{font-size:34px;letter-spacing:-.02em;margin:0}.sub{margin:0;max-width:72ch;color:var(--ink2);font-size:16px;line-height:1.5}
+.lab{margin:0;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--slate)}
+.tools{display:flex;gap:4px 22px;flex-wrap:wrap}.tr{background:none;border:0;font:inherit;font-size:15px;color:var(--acc);padding:10px 0;cursor:pointer;min-height:44px}.tr[aria-pressed="true"]{color:var(--ink);font-weight:700}
+.tl{font-size:13px;color:var(--ink2);align-self:center}
+.row{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;max-width:1180px;margin:0 auto}
+.row>div{width:min(402px,100%)}.fit{width:100%;aspect-ratio:402/874;position:relative}
+.lite{--c0:#B5452B;--c1:#1E6E77;--c2:#7A5A12;--c3:#5A3F8E;--c4:#2F6A8F;--c5:#8A4570;--c6:#3F6B2A;--c7:#9A2541;--c8:#0F766E;--c9:#92400E;--c10:#1F4E8C;--c11:#1D1B19;--bg:#F7F5F1;--t:#1D1B19;--t2:#5E5A55;--room:#8A4570;--tess:#2B4FB3;--gold:#8A6410;--slate2:#4A5F78}
+.blk{--c0:#F09A7E;--c1:#84C3C9;--c2:#E2C26A;--c3:#B4A3E6;--c4:#8DBAD6;--c5:#E3A3CB;--c6:#A9D48A;--c7:#F08E9C;--c8:#5FD0C0;--c9:#F0B07A;--c10:#9DB8F0;--c11:#F1EEE9;--bg:#000;--t:#F1EEE9;--t2:#ABA6A0;--room:#E3A3CB;--tess:#9DB4F5;--gold:#E2C26A;--slate2:#A7BCD6}
+.phone{position:absolute;left:0;top:0;width:402px;height:874px;transform-origin:0 0;background:var(--bg);color:var(--t);border-radius:54px;overflow:hidden;outline:1px solid var(--edge)}
+.z{position:absolute;left:24px;right:24px}
+.wall,.shelf{position:absolute;left:24px;width:354px}
+.w{position:absolute;left:0;top:0;cursor:pointer;transform-origin:50% 50%;will-change:transform;user-select:none}
+.w svg,.sp svg{display:block;overflow:visible}
+.sl{margin:0 0 8px;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--t2)}
+.dial{position:relative;height:144px;overflow:hidden;touch-action:none;cursor:grab;display:grid;grid-template-columns:52% 48%}
+.rail{position:relative}
+.dw{position:absolute;left:0;right:0;top:48px;height:48px;display:flex;align-items:center;gap:8px;transform-origin:0 50%;user-select:none;white-space:nowrap}
+.dw .nm{font-size:21px;font-weight:700;letter-spacing:-.01em}.dw .n{font-family:Outfit,sans-serif;font-size:11px;font-weight:400;color:var(--t2);align-self:center;margin-top:4px}
+.dw:not(.focus) .nm{color:var(--t2)!important}
+.peek{padding-left:14px;display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
+.peek p{margin:0;white-space:nowrap;overflow:hidden;text-overflow:clip}.pw{font-size:13px;color:var(--t2);margin-bottom:4px!important}.pt{font-size:16px;font-weight:500;color:var(--t);line-height:24px}.p0{font-weight:700}
+.rc2{position:absolute;left:24px;right:24px;font-size:15px;line-height:22px;color:var(--t2)}
+
+.act{background:none;border:0;font:inherit;font-size:20px;font-weight:700;min-height:44px;padding:0;cursor:pointer;color:var(--room)}
+.tess{position:absolute;right:24px;bottom:30px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFB36B,#E8582A 60%,#B2301C)}
+.ghost{position:absolute;left:0;right:0;pointer-events:none;outline:1px dashed var(--t2);opacity:0}
+.show .ghost{opacity:.35}
+.cap{color:var(--ink2);font-size:14px;max-width:402px;margin:12px 0 0;line-height:1.5}
+.notes{max-width:900px;margin:34px auto 0;color:var(--ink2);font-size:16px;line-height:1.55}.notes b{color:var(--ink)}.notes p{margin:0 0 14px}
+#ms{position:absolute;left:-9999px;top:0}
+.nd{position:absolute;left:24px;right:24px;height:144px;overflow:hidden;touch-action:none;cursor:grab}
+.nw{position:absolute;left:0;right:0;top:48px;height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;transform-origin:0 50%;user-select:none;white-space:nowrap}
+.nw .nm{font-size:20px;font-weight:700;letter-spacing:-.01em;color:var(--t);overflow:hidden}.nw .when{font-size:13px;color:var(--t2);transform-origin:100% 50%}
+.nw:not(.focus) .nm{color:var(--t2)}
+.pv{position:absolute;left:24px;right:24px;display:flex;flex-direction:column;gap:6px}
+.pv .body{margin:0;font-size:16px;line-height:24px;color:var(--t);max-height:72px;overflow:hidden}
+.pv .tessw{font-family:'Newsreader',Georgia,serif;font-size:18px;color:var(--tess)}
+.pv .meta{margin:0;font-size:14px;color:var(--t2)}.pv .meta b{color:var(--t);font-weight:600}
+.dur{font-family:Outfit,sans-serif;font-size:28px;font-weight:400;color:var(--room)}.dur small{font-size:14px}
+.lock{position:absolute;left:24px;right:24px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.back{position:absolute;left:24px;top:30px;background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--room);min-height:44px;cursor:pointer}
+.ttl,.sub{transition:opacity .25s}
+.ledger{position:absolute;left:24px;right:24px;display:flex;flex-direction:column}
+.lg{display:grid;grid-template-columns:84px 1fr;column-gap:12px;min-height:50px;cursor:pointer;padding-block:4px}
+.lgk{font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--room);padding-top:4px}
+.lgv{min-width:0}.lgt{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.lgt span:first-child{font-size:17px;font-weight:600;color:var(--t)}
+.lgw{font-size:13px;color:var(--t2);white-space:nowrap}
+.lgs{font-size:14px;line-height:20px;color:var(--t2);white-space:nowrap;overflow:hidden}
+.lg.open .lgt span:first-child{font-size:20px;font-weight:700}
+.tl .tab{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:13px;font-weight:600;color:var(--t2)}.tl .tab b{color:var(--t);font-weight:700}
+.tq{margin:2px 0 0;font-family:'Newsreader',Georgia,serif;line-height:1.3;color:var(--tess);text-wrap:pretty}.tl{min-height:64px}
+.lgb{display:flex;flex-direction:column;gap:4px;margin-top:4px}.lgb .body{margin:0;font-size:16px;line-height:23px;color:var(--t)}.lgb .meta{margin:0;font-size:13px;color:var(--t2)}.lgb .meta b{color:var(--t);font-weight:600}
+.dur.s{font-size:15px;color:var(--room)}.dur.s small{font-size:10px}
+.pages{position:absolute;left:24px;right:24px;overflow:hidden;height:390px}.pgtrack{display:flex;height:100%}
+.pg{flex:0 0 100%;display:flex;flex-direction:column;gap:18px}.pgi .lgt span:first-child{font-size:22px;font-weight:700}
+.pgb{margin:4px 0 0;font-size:15px;line-height:22px;color:var(--t2);max-height:44px;overflow:hidden}
+.pgnext{position:absolute;right:24px;background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--room);min-height:44px;cursor:pointer}
+</style>
+
+<div class="head">
+  <p class="lab">Round 247, Oct 24</p>
+  <h1>Notes: the pages behind the doors</h1>
+  <p class="sub">His 1:28 AM: after the landing, the deeper pages behind each door finish Notes. Each door page keeps the landing's grammar: a slim word wall of that door's notes on top, the dial under it, and the focused note opened a little beneath. Going in, the landing's words that belong to the door stay and re-pack; the rest dissolve.</p>
+  <div class="tools"><span class="tl">Open</span><button class="tr go" data-d="-1" aria-pressed="true">Landing</button></div>
+  <div class="tools"><span class="tl">List</span><button class="tr ls" data-l="ledger" aria-pressed="true">Ledger (pick)</button><button class="tr ls" data-l="pages">Pages</button></div>
+</div>
+<div class="row">
+ <div><div class="fit"><div class="phone lite" id="p1"></div></div><p class="cap">Paper.</p></div>
+ <div><div class="fit"><div class="phone blk" id="p2"></div></div><p class="cap">Pure black.</p></div>
+</div>
+<div class="notes">
+<p><b>Going in.</b> Tap the dial's focus on the landing (or a door above). The words on the wall that live behind that door stay, glide and grow into a slimmer wall (150 to 300 pt); every other word dissolves into the page. The title changes to the door's name in its colour, and the doors dial gives way to the notes dial. Coming back (edge swipe, or the "Notes" word top-left) runs it in reverse: the door's words shrink back and the others rebuild around them.</p>
+<p><b>His 2:08 AM (supersedes the dial on door pages).</b> The dial belongs to landings only. The door wall is smaller, about 55% of the landing's (at most 124 pt), and never opens a gap: when the packing comes up short, the band shrinks to fit instead. Below it, a different list: the <b>ledger</b> (pick) or <b>pages</b>. Ledger: a left column (84 pt) names the group, written only where a group starts, in room colour small caps: Today, Yesterday, This week, Earlier (Mentions groups by kind: Exercise, Recipe, Person, Place, Routine). The right column holds each note as its title with when, and one short line under it. Tap a note to open it in place: its first lines and meta appear and the rest move down; tap the open one to open the note. Pages: four notes a page, each title big with two lines under it; turn sideways (or tap Older) to the next four, no counters. A long ledger turns pages the same way, never scrolls.</p>
+<p><b>Private (his 2:08 AM).</b> Off the private page, private notes are counted, never listed: "3 private notes", not "Private note" three times. Inside, after Face ID, the titles show.</p>
+<p><b>Every door page (first cut; its dial is superseded).</b> Door name (Figtree 700, 34 pt, its colour) and one line. A wall of the door's own notes, packed by the same rules (capitals, no gaps, even letters; repeats fill a small door). The notes dial (3 places, 48 pt): the focus in ink at 1.32 times with when it was written at the right; neighbours smaller in ink 2 with depth blur. Under it, the focused note opened a little: its first three lines and one meta line (mentions, list items, length). Tap a wall word and the dial turns to that note; tap the focus to open the note. The action word bottom-left belongs to the door.</p>
+<p><b>What each door adds.</b> <b>All notes</b>: everything, newest first. <b>Ideas</b>: notes Tess tagged as ideas; action "New idea". <b>From Tess</b>: notes Tess wrote for you, previewed in her own voice (Newsreader, Tess blue); action "Ask Tess". <b>Voice memos</b>: the focus shows its length in Outfit and the start of the transcript; action "Record". <b>Pinned</b>: only a few, so the dial holds them all. <b>Mentions</b>: the dial turns through the things your notes mention (an exercise, a recipe, a person) with how many notes mention each; the preview lists those notes. <b>Private</b>: locked until Face ID; the wall and dial appear only on the phone and lock again when you leave; off the phone they read "Private note". <b>Archive</b>: older notes by date; action "Restore".</p>
+<p><b>Moments.</b> The same as the landing, on the slimmer wall: one word every 5 s, re-pack every 40 s, a whole-wall moment every 2 minutes. Reduce Motion: none, and going in cross-fades.</p>
+</div>
+<svg id="ms" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><text id="mt" x="0" y="50"></text></svg>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const POOL=[['Trip packing',9,1],['Mom’s birthday',9,6],['Tacos',8,3],['Garage',7,2],['Book ideas',8,4],['Passport',7,1],['Work notes',6,5],['Gift list',6,6],['Dreams',5,4],['Run plan',6,7],['Recipes',6,3],['Plumber',4,2],['Tess said',5,4],['Voice memo',4,5],['Wifi code',3,2],['Movies',4,4],['Sleep log',3,7],['Paint colors',4,2],['Kids’ sizes',3,6],['Coffee',3,3],['Quotes',3,4],['Bike fit',3,7],['Taxes',4,5],['Doctor',4,7],['Neighbors',2,6],['Podcasts',2,4],['Seeds',2,2],['Spices',2,3],['Shoes',2,6],['Old phone',2,2],['Jokes',2,4],['Stretch',2,7],['Wine',2,3],['Fonts',2,4],['Keys',2,2],['Hikes',2,7],['Tea',2,3],['Lamp',2,2]];
+const DOORS=[['All notes',38,'t',1],['Ideas',9,'room',.7],['From Tess',4,'tess',.6],['Voice memos',5,'room',.55],['Pinned',4,'gold',.5],['Mentions',12,'t',.5],['Private',3,'slate2',.45],['Archive',61,'t2',.4]];
+let F={f:'Figtree',w:900,k:-0.01,sh:1},start=0,H=220,TOP=180,SHT=432,SHH=192,state='wall',L=null,WL=POOL,DOOR=-1;
+const W=354,G=3,MINFS=13;
+const mt=document.getElementById('mt');
+function fontCss(wt,fam){return `font-family:'${fam||F.f}',sans-serif;font-weight:${wt};letter-spacing:${F.k}em`}
+const cache={};
+function unit(t,wt){const key=F.f+wt+t;if(cache[key])return cache[key];mt.setAttribute('style',fontCss(wt)+';font-size:100px');mt.textContent=t.toUpperCase();return cache[key]=mt.getComputedTextLength()/100}
+let C=.7;function capRatio(){const c=document.createElement('canvas').getContext('2d');c.font=`${F.w} 200px '${F.f}'`;C=c.measureText('H').actualBoundingBoxAscent/200||.7}
+const sum=(a,f)=>a.reduce((s,x)=>s+f(x),0);
+// Brick widths are linear in the row height h, so each row's height is solved for an exact full-width fit.
+function brickW(b,h){if(b.k==='one')return b.a/C*h;if(b.k==='name')return b.amax/C*(h-G)/2;const n=b.lines.length;return (h-(n-1)*G)/(C*sum(b.lines,l=>1/l.a))}
+function solveH(bs){let lo=4,hi=400;for(let i=0;i<40;i++){const m=(lo+hi)/2;if(sum(bs,b=>brickW(b,m))+G*(bs.length-1)>W)hi=m;else lo=m}return lo}
+function layoutOnce(words,mult,flat){
+  const s0=[...words].sort((a,b)=>b[1]-a[1]);const hi=s0.filter(x=>x[1]>3);const lo=s0.filter(x=>x[1]<=3).sort((a,b)=>b[0].length-a[0].length);
+  const spare=lo.splice(0,Math.min(8,Math.max(0,lo.length-6)));
+  const sc=H/300*mult,T=[64,44,56,40,60,46,50,38].map(v=>v*sc),PAT=[['B','S'],['S','B','S'],['B','B','S'],['S','B'],['B','S','B']];
+  const rows=[];let y=0,r=0,hiI=0,hiE=hi.length,nameFlip=0;const wt=F.w;
+  const one=x=>({k:'one',x,a:unit(x[0],wt)});
+  const smallFrom=()=>lo.length?lo.pop():(hiI<hiE?hi[--hiE]:null);
+  while((hiI<hiE||lo.length)&&H-y>16){
+    const rem=H-y,tgt=Math.min(T[r%T.length],rem),pat=PAT[r%PAT.length],bs=[];let p=0;
+    const last=rem-tgt<T[(r+1)%T.length]*.6;
+    for(;;){const kind=pat[p%pat.length];p++;let b=null;
+      if(kind==='B'&&hiI<hiE){const x=hi[hiI++];const sp=x[0].indexOf(' ');
+        if(sp>0&&!flat.has(x[0])&&tgt>=36&&(x[0].length>10||nameFlip++%2===0)){const l1=x[0].slice(0,sp),l2=x[0].slice(sp+1);const a1=unit(l1,wt),a2=unit(l2,wt);b={k:'name',x,l:[l1,l2],a:[a1,a2],amax:Math.max(a1,a2),side:r%2}}
+        else b=one(x)}
+      else{let n=tgt>=56?3:2;while(n>1&&(tgt-(n-1)*G)/n<MINFS*C)n--;const Ls=[];for(let q=0;q<n;q++){const x=smallFrom();if(!x)break;Ls.push({x,a:unit(x[0],wt)})}
+        if(Ls.length)b=Ls.length>1?{k:'stack',lines:Ls}:one(Ls[0].x)}
+      if(!b){if(hiI>=hiE&&!lo.length)break;continue}
+      bs.push(b);
+      if(last){if(solveH(bs)<=rem)break}else if(sum(bs,q=>brickW(q,tgt))+G*(bs.length-1)>=W*.95)break;
+      if(hiI>=hiE&&!lo.length)break}
+    if(!bs.length)break;const h=solveH(bs);if(h>rem+.5)return null;// a row that can't reach both edges is never squeezed
+    rows.push({bs,h});y+=h+G;r++;if(last)break}
+  const used=sum(rows,q=>q.h)+G*(rows.length-1);
+  if(used>H+.5)return null;
+  const gap=DOOR>=0?G:(rows.length>1?G+Math.max(0,H-used)/(rows.length-1):G);// door pages never open gaps: the band shrinks instead
+  const inWall=new Set();rows.forEach(({bs})=>bs.forEach(b=>{if(b.x)inWall.add(b.x[0]);(b.lines||[]).forEach(l=>inWall.add(l.x[0]))}));
+  const out=[],seen={};let yy=0,ci=0,bad=null;
+  const key=t=>{seen[t]=(seen[t]||0)+1;return seen[t]>1?t+'~'+seen[t]:t};
+  rows.forEach(({bs,h})=>{let x=0;bs.forEach(b=>{const bw=brickW(b,h),col=(ci++*5)%12;
+    if(b.k==='one')out.push({t:b.x[0],key:key(b.x[0]),x,y:yy,w:bw,h,fs:h/C,col});
+    else if(b.k==='stack'){let ly=yy;b.lines.forEach((l,i)=>{const fs=bw/l.a,lh=fs*C;out.push({t:l.x[0],key:key(l.x[0]),x,y:ly,w:bw,h:lh,fs,col:(col+3*(i+1))%12});ly+=lh+G})}
+    else{const lh=(h-G)/2,fs=lh/C,short=b.a[0]<b.a[1]?0:1,sw=b.a[short]*fs,d=bw-sw;
+      b.l.forEach((t,i)=>{const isS=i===short;let x0=x,w=isS?sw:bw;
+        if(isS&&bw/sw<=1.08)w=bw;// a few percent stretches the glyphs evenly, never the spacing
+        else if(isS){// fill the notch with one to three small words stacked to its exact height; repeats are allowed
+          const nw=d-G,room=lh;
+          const rep=WL.filter(q=>!spare.includes(q)&&!lo.includes(q)&&q[1]<=6&&!inWall.has(q[0]));// repeats only of words not already on the wall
+          const pool=spare.concat(lo,rep);
+          const hgt=q=>C*nw/unit(q[0],wt);let pick=null,err=.08;
+          if(nw>MINFS)for(let i1=0;i1<pool.length;i1++){const h1=hgt(pool[i1]);let e=Math.abs(h1-room)/room;if(e<err&&h1/C>=MINFS){err=e;pick=[pool[i1]]}
+            for(let i2=i1+1;i2<pool.length;i2++){const h2=hgt(pool[i2]);if(h1+h2>room*1.1)continue;e=Math.abs(h1+h2+G-room)/room;if(e<err&&Math.min(h1,h2)/C>=MINFS){err=e;pick=[pool[i1],pool[i2]]}
+              for(let i3=i2+1;i3<pool.length;i3++){const h3=hgt(pool[i3]);e=Math.abs(h1+h2+h3+2*G-room)/room;if(e<err&&Math.min(h1,h2,h3)/C>=MINFS){err=e;pick=[pool[i1],pool[i2],pool[i3]]}}}}
+          let pair=null;if(!pick&&lh/C>=MINFS){let e2=.08;const nat=q=>unit(q[0],wt)*fs;// or two small words side by side at the name's own size
+            for(let i1=0;i1<pool.length;i1++)for(let i2=i1+1;i2<pool.length;i2++){const e=Math.abs(nat(pool[i1])+nat(pool[i2])+G-nw)/nw;if(e<e2){e2=e;pair=[pool[i1],pool[i2]]}}}
+          if(!pick&&!pair){bad=b.x[0];return}
+          const take=fx=>{inWall.add(fx[0]);const si=spare.indexOf(fx);if(si>=0)spare.splice(si,1);else{const li=lo.indexOf(fx);if(li>=0)lo.splice(li,1)}};
+          if(pair){const k=(nw-G)/(unit(pair[0][0],wt)*fs+unit(pair[1][0],wt)*fs);let fx0=b.side?x:x+sw+G;x0=b.side?x+d:x;
+            pair.forEach((fx,j)=>{take(fx);const fw=unit(fx[0],wt)*fs*k;out.push({t:fx[0],key:key(fx[0]),x:fx0,y:yy+i*(lh+G),w:fw,h:lh,fs,col:(col+6+j*3)%12});fx0+=fw+G})}
+          else{
+          const tot=sum(pick,hgt),k=(room-(pick.length-1)*G)/tot;let fy=yy+i*(lh+G);const fillX=b.side?x:x+sw+G;x0=b.side?x+d:x;
+          pick.forEach((fx,j)=>{take(fx);const fh=hgt(fx)*k;out.push({t:fx[0],key:key(fx[0]),x:fillX,y:fy,w:nw,h:fh,fs:fh/C,col:(col+6+j*3)%12});fy+=fh+G})}}
+        out.push({t,key:b.x[0]+'#'+i,x:x0,y:yy+i*(lh+G),w,h:lh,fs,col})})}
+    x+=bw+G});yy+=h+gap});
+  return bad?{bad}:{out,left:H-used}}
+// Pack at 21 row-height scales and keep the one that meets the band's bottom edge closest; a stacked name whose notch
+// can't be filled within 5% goes on one line and the wall is packed again.
+function layout(words){const flat=new Set();for(let tries=0;tries<8;tries++){let best=null,badName=null;
+  for(let m=.7;m<=1.4;m+=.02){const r=layoutOnce(words,m,flat);if(!r)continue;if(r.bad){badName=badName||r.bad;continue}if(r.left<8&&(!best||best.left>=8||m>best.m))best=Object.assign(r,{m});else if(!best||(best.left>=8&&r.left<best.left))best=Object.assign(r,{m})}
+  if(best&&best.left<8)return best.out;if(badName)flat.add(badName);else if(best)return best.out}
+  return (layoutOnce(words,1,new Set(WL.map(p=>p[0])))||{}).out||[]}
+function rnd(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
+function obb(cx,cy,w,h,t){const c=Math.cos(t),s=Math.sin(t),hw=w/2+1.5,hh=h/2+1.5;const ax=[[c,s],[-s,c]];const pts=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([u,v])=>[cx+u*c-v*s,cy+u*s+v*c]);return{pts,ax,cx,cy,r:Math.hypot(hw,hh)}}
+function hit(A,B){if(Math.hypot(A.cx-B.cx,A.cy-B.cy)>A.r+B.r)return false;for(const ax of A.ax.concat(B.ax)){let a0=1e9,a1=-1e9,b0=1e9,b1=-1e9;for(const p of A.pts){const d=p[0]*ax[0]+p[1]*ax[1];a0=Math.min(a0,d);a1=Math.max(a1,d)}for(const p of B.pts){const d=p[0]*ax[0]+p[1]*ax[1];b0=Math.min(b0,d);b1=Math.max(b1,d)}if(a1<=b0||b1<=a0)return false}return true}
+const ANG=[0,0,-.12,.12,-.32,.32,-.6,.6,Math.PI/2,-Math.PI/2];
+// The pile: words drop biggest first, each tries tilts and spots, falls until it touches, keeps the lowest rest; never overlapping.
+function pile(items,seed){
+  for(let s=1;s>.3;s-=.03){const R=rnd(seed),placed=[],res=[];let ok=true;
+    const order=items.map((o,i)=>i).sort((a,b)=>items[b].w*items[b].h-items[a].w*items[a].h);
+    for(const i of order){const o=items[i],w=o.w*s,h=o.h*s;let best=null;
+      const tries=ANG.filter(()=>R()<.6);if(!tries.length)tries.push(0);
+      for(const t of tries){const ex=(w*Math.abs(Math.cos(t))+h*Math.abs(Math.sin(t)))/2,ey=(w*Math.abs(Math.sin(t))+h*Math.abs(Math.cos(t)))/2;if(ex*2>W||ey*2>H)continue;
+        for(let cx=ex;cx<=W-ex;cx+=5){let cy=ey;if(placed.some(P=>hit(obb(cx,cy,w,h,t),P)))continue;
+          while(cy+3<=H-ey&&!placed.some(P=>hit(obb(cx,cy+3,w,h,t),P)))cy+=3;
+          const sc=cy+R()*2;if(!best||sc>best.sc)best={cx,cy,t,sc}}}
+      if(!best){ok=false;break}placed.push(obb(best.cx,best.cy,w,h,best.t));res[i]={cx:best.cx,cy:best.cy,t:best.t,s}}
+    if(ok)return res}
+  return items.map(o=>({cx:o.x+o.w/2,cy:o.y+o.h/2,t:0,s:1}))}
+let fid=0;
+function svg(o){const id="dz"+(fid++),c=o.col<0?"var(--t2)":`var(--c${o.col})`,sh=F.sh?` stroke="${c}" stroke-width="${(o.fs*.035).toFixed(2)}" stroke-linejoin="miter" stroke-miterlimit="10" paint-order="stroke"`:'';
+  return `<svg width="${o.w}" height="${o.h}" viewBox="0 0 ${o.w} ${o.h}"><filter id="${id}" x="-30%" y="-60%" width="160%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="${(2.4/Math.max(10,o.h)).toFixed(3)}" numOctaves="2" seed="${fid%50}"/><feDisplacementMap in="SourceGraphic" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter><text x="0" y="${o.h}" textLength="${o.w}" lengthAdjust="spacingAndGlyphs" fill="${c}"${sh} style="${fontCss(F.w)};font-size:${o.fs}px">${o.t.toUpperCase()}</text></svg>`}
+// Door data: [title, when, first lines, meta]. Weights come from order (newest first).
+const N=(t,w,b,m)=>({t,w,b,m});
+const DATA={
+'All notes':[N('Plumber','an hour ago','Mike, 555 0142. Comes Tuesday between 8 and 10. Ask about the kitchen tap too.','Mentions <b>Kitchen</b>'),N('Trip packing','this morning','Charger, passport, the grey jacket. Snacks for the drive. Check the weather the night before.','14 items, 9 done'),N('Tacos','yesterday','Double the lime. Char the tortillas on the flame. Pickled onions the day before.','Mentions <b>Tacos</b> recipe'),N('Book ideas','yesterday','A town where every door opens somewhere else. Start with the baker.','3 pages'),N('Garage','Tuesday','Shelf for paint, hooks for bikes, throw out the old tiles.','6 items'),N('Work notes','Monday','Move the review to Thursday. Send the draft to the team first.','2 pages'),N('Gift list','Sunday','Mom: a scarf in green. Sam: the record he mentioned.','5 people'),N('Run plan','October 18','Easy 5k Monday, intervals Wednesday, long run Saturday.','Mentions <b>Run</b>')],
+'Ideas':[N('Book ideas','yesterday','A town where every door opens somewhere else. Start with the baker.','3 pages'),N('Paint colors','Thursday','Warm white for the hall, deep green for the study door.','4 colours'),N('Gift list','Sunday','Mom: a scarf in green. Sam: the record he mentioned.','5 people'),N('Dreams','October 20','Flying over a lake of glass, then the train again.','1 page'),N('Garden','October 12','Tomatoes on the south wall. Basil in pots.','2 pages')],
+'From Tess':[N('Tess said','this morning','You slept 6 hours. Your long run moved to Sunday so Saturday can be easy.','From Tess, about <b>Run plan</b>'),N('Doctor','Tuesday','Your checkup is November 3 at 9. I added the questions you asked me to keep.','From Tess, about <b>Calendar</b>'),N('Taxes','October 19','The forms you need are in Money. Two receipts are still missing.','From Tess, about <b>Money</b>'),N('Week ahead','October 18','A full week. Wednesday is the heavy day; I kept the evening clear.','From Tess')],
+'Voice memos':[N('Voice memo','Tuesday','“Remember to call the bank about the card, and pick up the dry cleaning.”','2:14'),N('Run plan','Monday','“Long run felt good, knee fine, try 10 more minutes next week.”','0:48'),N('Dreams','October 20','“Lake of glass, then the train, the same station as last time.”','1:05'),N('Song idea','October 16','“Hum, then the chorus goes up on the third line.”','0:32'),N('Kitchen','October 14','“Tap drips at night, the left one.”','0:19')],
+'Pinned':[N('Plumber','an hour ago','Mike, 555 0142. Comes Tuesday between 8 and 10.','Mentions <b>Kitchen</b>'),N('Trip packing','this morning','Charger, passport, the grey jacket. Snacks for the drive.','14 items, 9 done'),N('Mom’s birthday','Saturday','Dinner at 7. Cake from the corner bakery. Card is in the drawer.','In 3 weeks'),N('Wifi code','September 28','Network at the cabin, the long one on the router.','1 line')],
+'Mentions':[N('Bench press','4 notes','Run plan, Work notes, Tess said, Gym bag','Exercise'),N('Tacos','3 notes','Tacos, Gift list, Week ahead','Recipe'),N('Sam','5 notes','Gift list, Trip packing, Book ideas, Dreams, Plumber','Person'),N('Kitchen','2 notes','Plumber, Kitchen','Place'),N('Run','6 notes','Run plan, Tess said, Voice memo, Sleep log, Shoes, Stretch','Routine')],
+'Private':[N('Journal','last night','Long day. Better after the walk.','2 pages'),N('Letter draft','October 21','I wanted to say this in person, but','1 page'),N('Passwords hint','October 3','The blue notebook, second shelf.','1 line')],
+'Archive':[N('Old phone','October 2','Trade in by the 15th. Wipe it first.','Archived October 2'),N('Wifi code','September 28','Network at the cabin, the long one on the router.','Archived September 28'),N('Movies','September 20','The one with the lighthouse. The French one Sam liked.','Archived September 20'),N('Moving boxes','September 9','12 boxes, kitchen first, label the cables.','Archived September 9'),N('Summer trip','August 30','Lake house, the long drive, the good diner.','Archived August 30')]};
+const ACT={'All notes':'New note','Ideas':'New idea','From Tess':'Ask Tess','Voice memos':'Record','Pinned':'New note','Mentions':'New note','Private':'New private note','Archive':'Restore'};
+const SUBL={'All notes':'38 notes, the newest an hour ago.','Ideas':'9 ideas, the newest yesterday.','From Tess':'4 from Tess, one this morning.','Voice memos':'5 memos, 4 minutes in all.','Pinned':'4 pinned, the newest an hour ago.','Mentions':'5 things your notes mention.','Private':'3 private notes.','Archive':'61 archived, the oldest from June.'};
+// Door words for the wall: its notes, newest weightiest, repeated small when the door is small.
+// Door walls show each note once; the band shrinks rather than repeat.
+function doorWords(d){const L0=DATA[DOORS[d][0]].map((n,i,a)=>[n.t,Math.max(2,9-i*1.6),i]);let out=[...L0];let r=0;while(false){out.push([L0[r%L0.length][0],2,r]);r++}return out}
+let PL=null,seed=7;const BW=354,BH=132;// door block, the same on every door page
+function compute(){const src=DOOR<0?POOL:doorWords(DOOR);WL=src;
+  if(DOOR>=0){// door walls: one fixed block (BW x BH) on every door page, filled exactly. Each note once, newest first,
+    // rows justified edge to edge. Every split into rows is tried; the whole wall may then scale up or down by at most
+    // 8% (glyphs and spacing together, uniform) so the rows meet the block's bottom edge. Small doors that still can't
+    // fill it add each note's day ("TUESDAY") after its title, in ink 2.
+    const items=DATA[DOORS[DOOR][0]];
+    // Each gap between neighbouring notes is one of: same stack (small words stacked, each sized to the stack's width,
+    // so a row mixes sizes with no notch), next brick in the row, or next row. All 3^(n-1) choices are tried.
+    const tryFill=seq=>{const A=seq.map(x=>({x,a:unit(x[0],F.w)})),n=A.length;let best=null;if(n>10)return null;const N3=3**(n-1);
+      for(let code=0;code<N3;code++){const rows=[[[A[0]]]];let c=code,ok0=true;
+        for(let i=1;i<n;i++){const g=c%3;c=(c-g)/3;if(g===1&&(A[i].x[4]>0||(A[i].x[3]&&A[i-1].x[3]))){ok0=false;break}/* a name's words never sit side by side apart; two fillers never touch side by side */const row=rows[rows.length-1];if(g===0)row[row.length-1].push(A[i]);else if(g===1)row.push([A[i]]);else rows.push([[A[i]]])}
+        if(!ok0)continue;let ok=true;const hs=rows.map(r=>{if(r.length===1&&r[0].length>1){ok=false;return 0}let k1=0,k0=0;
+          r.forEach(br=>{if(br.length===1)k1+=br[0].a/C;else{if(br.length>3)ok=false;const S=br.reduce((q,b)=>q+1/b.a,0);k1+=1/(C*S);k0+=(br.length-1)*G/(C*S)}});
+          return (BW-G*(r.length-1)+k0)/k1});if(!ok)continue;
+        const tot=hs.reduce((q,h)=>q+h,0)+G*(rows.length-1),s=(BH-G*(rows.length-1))/(tot-G*(rows.length-1));if(s<1/1.08||s>1.08)continue;
+        let sc=Math.abs(s-1)*40,minfs=1e9;const out=[];
+        rows.forEach((r,ri)=>{const h=hs[ri];let x=0;const singles=r.filter(br=>br.length===1).length;
+          if(r.length>=3&&singles===r.length)sc+=14;else if(r.length===2&&singles===2)sc+=8;// his 2:22 AM: a row of equal words reads flat
+          r.forEach(br=>{if(br.length===1){const fs=h/C,w=br[0].a*fs;minfs=Math.min(minfs,fs*s);out.push({b:br[0],x,ry:0,w,h,ri});x+=w+G}
+            else{const S=br.reduce((q,b)=>q+1/b.a,0),w=(h-(br.length-1)*G)/(C*S);let yy=0;br.forEach(b=>{const fs=w/b.a,hh=fs*C;minfs=Math.min(minfs,fs*s);out.push({b,x,ry:yy,w,h:hh,ri});yy+=hh+G});x+=w+G}})});
+        if(minfs<MINFS)continue;{const tmin=Math.min(...out.filter(o=>!o.b.x[3]).map(o=>o.h));if(out.some(o=>o.b.x[3]&&o.h>tmin*.75))continue}/* fillers always read smaller than every title */const byNote={};out.forEach(o=>{if(o.b.x[4]!==undefined)(byNote[o.b.x[2]]=byNote[o.b.x[2]]||[]).push(o.h)});Object.values(byNote).forEach(v=>{const r=Math.max(...v)/Math.min(...v);if(r>1.6)sc+=(r-1.6)*25});// fillers stay small next to titles
+        for(let i=1;i<hs.length;i++){if(hs[i]>hs[i-1]*1.02)sc+=(hs[i]-hs[i-1]);const r=Math.max(hs[i],hs[i-1])/Math.min(hs[i],hs[i-1]);if(r<1.25)sc+=(1.25-r)*60}
+        if(!best||sc<best.sc)best={sc,s,hs,out}}return best};
+    const titles=items.map((n,i)=>[n.t,1,i]);let best=null;
+    for(let k=titles.length;k>=Math.min(3,titles.length)&&!best;k--)best=tryFill(titles.slice(0,k));
+    // small doors: a two-word title may break into its words (stacked or across rows), both in the note's one colour
+    if(!best){const seq=[];items.forEach((n,i)=>n.t.split(' ').forEach((w,j)=>seq.push([w,1,i,0,j])));best=tryFill(seq)}
+    // fillers only when the titles alone can't meet the block: first each note's day, then its detail line too
+    const dayOf=n=>n.w.replace(/^this /,'').replace(/^last /,'Last ').replace(/^(\w+) (\d+)$/,(m,a,b)=>a.slice(0,3)+' '+b),metaOf=n=>n.m.replace(/<[^>]+>/g,'').replace(/^From Tess, about /,'About ').replace(/^Mentions /,'');
+    for(const tier of [1,2,3,4,5]){if(best)break;const seq=[],seen=new Set();items.forEach((n,i)=>{if(tier>3)n.t.split(' ').forEach((w,j)=>seq.push([w,1,i,0,j]));else seq.push([n.t,1,i]);(tier>1&&tier!==4?[metaOf(n),dayOf(n)]:[dayOf(n)]).concat(tier===3||tier===5?n.b.split(/[.,]\s*/).filter(q=>q&&q.length<22).slice(0,2):[]).forEach(f=>{const k=f.toLowerCase();if(!seen.has(k)&&k!==n.t.toLowerCase()){seen.add(k);seq.push([f,0,i,1])}})});best=tryFill(seq)}
+    let ci=0;L=[];
+    if(best){const ys=[0];best.hs.forEach((h,i)=>ys.push(ys[i]+h*best.s+G));
+      best.out.forEach(o=>{const h=o.h*best.s;L.push({t:o.b.x[0],key:o.b.x[0]+o.b.x[2]+'.'+(o.b.x[4]||0),x:o.x,y:ys[o.ri]+o.ry*best.s,w:o.w,h,fs:h/C,col:o.b.x[3]?-1:(o.b.x[2]*5+1)%12})})}
+    H=BH;PL=RM?null:pile(L,seed++);return}
+  const vis=DOOR<0?src.slice(start).concat(src.slice(0,start)):src;L=layout(vis);if(DOOR>=0&&L.length)H=Math.round(Math.max(...L.map(o=>o.y+o.h)));PL=RM?null:pile(L,seed++)}
+function place(P,mode,stag){const band=P.querySelector('.wall');band.style.top=TOP+'px';band.style.height=H+'px';
+  const old={};band.querySelectorAll('.w').forEach(e=>{if(!e.dataset.gone)old[e.dataset.k]=e});const keep=new Set();
+  L.forEach((o,i)=>{const k=o.key;let e=old[k];if(!e){e=document.createElement('div');e.className='w';e.dataset.k=k;e.style.opacity=0;band.appendChild(e);e.onclick=()=>wordTap(o.t)}
+    keep.add(k);const sig=o.t+o.w.toFixed(1)+o.h.toFixed(1)+o.col+F.f+F.sh;if(e.dataset.sig!==sig){e.innerHTML=svg(o);e.dataset.sig=sig}e.dataset.t=o.t;e.style.width=o.w+'px';e.style.height=o.h+'px';
+    let tr=`translate(${o.x}px,${o.y}px)`;if(mode==='pile'&&PL){const p=PL[i];tr=`translate(${p.cx-o.w/2}px,${p.cy-o.h/2}px) rotate(${p.t}rad) scale(${p.s})`}
+    const d=stag?i*22:0;
+    if(RM){e.style.transition='opacity .3s';e.style.transform=tr;e.style.opacity=1}else{e.style.transition=`transform ${mode==='pile'?'.5s cubic-bezier(.5,0,.8,.4)':'.65s cubic-bezier(.2,.9,.25,1.06)'} ${d}ms,opacity .4s`;e.style.transform=tr;requestAnimationFrame(()=>e.style.opacity=1)}});
+  Object.keys(old).forEach(k=>{if(!keep.has(k)){const e=old[k];e.dataset.gone=1;(RM?Promise.resolve():fxDust(e,false,600)).then(()=>{e.style.opacity=0;setTimeout(()=>e.remove(),300)})}})}
+// Dials: 3 places, 64 pt slots, loop, drag to turn, spring settle.
+const SL=48;let dragging=false;
+function makeDial(key,count,cls){return{key,count,pos:0,cls}}
+let DD=makeDial('doors',DOORS.length,'dw'),ND=makeDial('notes',0,'nw');
+function bindDial(P,el,D,onTapFocus){let y0=0,p0=0,moved=false;
+  el.onpointerdown=e=>{dragging=true;moved=false;y0=e.clientY;p0=D.pos;el.setPointerCapture(e.pointerId);PH.forEach(Q=>Q.querySelectorAll('.'+D.cls).forEach(w=>w.style.transition='none'))};
+  el.onpointermove=e=>{if(!dragging)return;const sc=P.getBoundingClientRect().height/874,dy=(e.clientY-y0)/sc;if(Math.abs(dy)>4)moved=true;D.pos=p0-dy/SL;spinD(D)};
+  el.onpointerup=e=>{dragging=false;if(!moved){const r=e.target.closest('.'+D.cls);if(r){const i=+r.dataset.i,n=D.count,d=((i-D.pos)%n+n*1.5)%n-n/2;if(Math.abs(d)<.5)onTapFocus(i);else D.pos=Math.round(D.pos+d)}}else D.pos=Math.round(D.pos);settleD(D)}}
+const mod=(a,n)=>((a%n)+n)%n;
+function spinD(D){const n=D.count;if(!n)return;PH.forEach(P=>{P.querySelectorAll('.'+D.cls).forEach(e=>{const i=+e.dataset.i;let d=((i-D.pos)%n+n*1.5)%n-n/2;if(n<=3)d=i-Math.max(0,Math.min(n-1,D.pos));const ad=Math.abs(d),sc=1+.32*Math.max(0,1-ad),blur=RM?0:Math.min(1.8,ad*1.8);
+    e.style.transform=`translateY(${d*SL}px) scale(${sc})`;e.style.filter=blur>.02?`blur(${blur.toFixed(2)}px)`:'none';e.style.visibility=ad>1.5?'hidden':'visible';e.classList.toggle('focus',ad<.5)})});
+  const f=D.count<=3?Math.max(0,Math.min(D.count-1,Math.round(D.pos))):mod(Math.round(D.pos),n);if(D.focus!==f){D.focus=f;(D.key==='doors'?peekDoor:peekNote)(f)}}
+function settleD(D){if(D.count<=3)D.pos=Math.max(0,Math.min(D.count-1,Math.round(D.pos)));PH.forEach(P=>P.querySelectorAll('.'+D.cls).forEach(w=>w.style.transition=RM?'none':'transform .45s cubic-bezier(.2,.9,.25,1.08),filter .45s'));spinD(D)}
+const PEEK={'All notes':['Plumber','Trip packing','Tacos'],'Ideas':['Book ideas','Paint colors','Gift list'],'From Tess':['Tess said','Doctor','Taxes'],'Voice memos':['Voice memo','Run plan','Dreams'],'Pinned':['Plumber','Trip packing','Mom’s birthday'],'Mentions':['Bench press','Tacos','Sam'],'Private':['Private note','Private note','Private note'],'Archive':['Old phone','Wifi code','Movies']};
+const WHEN={'All notes':'an hour ago','Ideas':'yesterday','From Tess':'this morning','Voice memos':'Tuesday','Pinned':'an hour ago','Mentions':'yesterday','Private':'last week','Archive':'October 2'};
+// Private notes are counted, never listed as "Private note" over and over (his 2:08 AM).
+function peekDoor(f){PH.forEach(P=>{const pk=P.querySelector('.peek');if(!pk)return;const d=DOORS[f];pk.innerHTML=d[0]==='Private'?`<p class="pw">Newest ${WHEN[d[0]]}</p><p class="pt p0">${d[1]} private notes</p>`:`<p class="pw">Newest ${WHEN[d[0]]}</p>${PEEK[d[0]].map((t,j)=>`<p class="pt${j?'':' p0'}">${t}</p>`).join('')}`;if(!RM)pk.animate([{transform:'translateY(6px)',opacity:0},{transform:'none',opacity:1}],{duration:260,easing:'cubic-bezier(.2,.9,.25,1)'})})}
+function peekNote(f){if(DOOR<0)return;const dn=DOORS[DOOR][0],n=DATA[dn][f];PH.forEach(P=>{const pv=P.querySelector('.pv');if(!pv)return;
+  let body=dn==='From Tess'?`<p class="body tessw">${n.b}</p>`:`<p class="body">${n.b}</p>`;
+  if(dn==='Voice memos'){const [m,s]=n.m.split(':');body=`<span class="dur">${m}<small>m</small> ${s}<small>s</small></span>`+body}
+  pv.innerHTML=body+(dn==='Voice memos'?'':`<p class="meta">${n.m}</p>`);if(!RM)pv.animate([{transform:'translateY(6px)',opacity:0},{transform:'none',opacity:1}],{duration:260,easing:'cubic-bezier(.2,.9,.25,1)'})})}
+function wordTap(t){if(DOOR<0)return;const i=DATA[DOORS[DOOR][0]].findIndex(n=>n.t===t||n.t.split(' ').includes(t));if(i>=0){ND.pos=i;settleD(ND)}}
+function build(P){P.innerHTML=`<button class="back" hidden>Notes</button><div class="z ttl" style="top:54px;font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:44px;color:var(--room)">Notes</div><div class="z sub" style="top:102px;font-size:16px;color:var(--t2)">Three new today, one from Tess.</div><div class="wall"></div><div class="low"></div><div class="z" style="left:28px;bottom:30px;height:44px;display:flex;align-items:center"><button class="act main">New note</button></div><span class="tess"></span>`;
+  P.querySelector('.back').onclick=()=>go(-1)}
+function lower(P){const low=P.querySelector('.low');low.innerHTML='';
+  if(DOOR<0){low.innerHTML=`<div class="shelf" style="top:432px"><div class="dial"><div class="rail"></div><div class="peek"></div></div></div><div class="rc2" style="top:612px">You last wrote in <b style="color:var(--t);font-weight:600">Plumber</b>, an hour ago.</div>`;
+    const rail=low.querySelector('.rail');DOORS.forEach((d,i)=>{const e=document.createElement('div');e.className='dw';e.dataset.i=i;e.innerHTML=`<span class="nm" style="color:var(--${d[2]})">${d[0]}</span><span class="n">${d[1]}</span>`;rail.appendChild(e)});
+    bindDial(P,low.querySelector('.dial'),DD,i=>go(i))}
+  else{const dn=DOORS[DOOR][0],items=DATA[dn];
+    if(dn==='Private'&&!unlocked){low.innerHTML=`<div class="lock" style="top:340px"><p style="margin:0;font-size:22px;font-weight:700;color:var(--slate2)">Locked</p><p style="margin:0;font-size:16px;color:var(--t2)">Private notes open with Face ID and lock again when you leave.</p><button class="act unl" style="color:var(--slate2);margin-top:8px">Unlock</button></div>`;low.querySelector('.lock .unl').onclick=()=>{unlocked=true;go(DOOR,true)};return}
+    renderList(P,low,dn,items)}}
+// Door pages (his 2:08 AM: no dial below the landing). The pick, "ledger": a left column names the group (when it was
+// written, or the kind of thing for Mentions); the right column holds each note as its title plus one short line. Tap a
+// note and it opens in place, pushing the rest down. "Pages" is the alternative: four notes a page, turned sideways.
+let LIST='ledger',openI=0,page=0;
+function grp(dn,n){if(dn==='Mentions')return n.m;const w=n.w;if(/hour|morning|night|minute/.test(w))return 'Today';if(w==='yesterday')return 'Yesterday';if(/day$/.test(w)&&!/^(October|September|August)/.test(w))return 'This week';return 'Earlier'}
+function line(dn,n){if(dn==='Voice memos'){const [m,s]=n.m.split(':');return `<span class="dur s">${m}<small>m</small> ${s}<small>s</small></span>`}if(dn==='Mentions')return n.w;const f=n.b.split(/(?<=[.!?”])\s/)[0];if(f.length<=40)return f;return f.slice(0,40).replace(/[\s,]+\S*$/,'')}// a short form that ends on a whole word, never clipped mid-word
+function bodyOf(dn,n){const cls=dn==='From Tess'?'body tessw':'body';return `<p class="${cls}">${n.b}</p>${dn==='Voice memos'||dn==='Mentions'?'':`<p class="meta">${n.m}</p>`}`}
+function renderList(P,low,dn,items){const top=TOP+H+28;
+  if(LIST==='ledger'){let html='',last=null;
+    const SZ={Today:21,Yesterday:18,'This week':17,Earlier:16};// newer reads bigger: rows never all one size
+    items.forEach((n,i)=>{const g=grp(dn,n),open=i===openI,fs=dn==='Mentions'?(i<3?19:16):(SZ[g]||17);
+      if(dn==='From Tess'){// her notes read as her voice: what it's about, then her sentence in Newsreader, sized by how new it is
+        const ab=n.m.replace(/^From Tess(, about )?/,''),first=n.b.split(/(?<=[.!?])\s/)[0];
+        html+=`<div class="lg tl${open?' open':''}" data-i="${i}"><div class="lgk">${g!==last?g:''}</div><div class="lgv"><div class="tab"><span>${ab?`About ${ab}`:n.t}</span><span class="lgw">${n.w}</span></div><p class="tq" style="font-size:${open?fs+3:fs+1}px">${open?n.b:line(dn,n)}</p></div></div>`;last=g;return}
+      html+=`<div class="lg${open?' open':''}" data-i="${i}"><div class="lgk">${g!==last?g:''}</div><div class="lgv"><div class="lgt"><span style="font-size:${open?fs+3:fs}px">${n.t}</span>${dn==='Mentions'||dn==='Voice memos'?'':`<span class="lgw">${n.w}</span>`}</div>${open?`<div class="lgb">${bodyOf(dn,n)}</div>`:`<div class="lgs">${line(dn,n)}</div>`}</div></div>`;last=g});
+    low.innerHTML=`<div class="ledger" style="top:${top}px">${html}</div>`;
+    low.querySelectorAll('.lg').forEach(r=>r.onclick=()=>{const i=+r.dataset.i;if(i===openI){r.animate([{opacity:1},{opacity:.5},{opacity:1}],{duration:260});return}openI=i;PH.forEach(Q=>renderList(Q,Q.querySelector('.low'),dn,items));if(!RM)PH.forEach(Q=>{const o=Q.querySelector('.lg.open .lgb');o&&o.animate([{opacity:0,transform:'translateY(-4px)'},{opacity:1,transform:'none'}],{duration:280,easing:'cubic-bezier(.2,.9,.25,1)'})})})}
+  else{const per=4,pages=Math.ceil(items.length/per);page=Math.min(page,pages-1);
+    const pg=p=>items.slice(p*per,p*per+per).map(n=>`<div class="pgi"><div class="lgt"><span>${n.t}</span><span class="lgw">${dn==='Mentions'?'':n.w}</span></div><p class="pgb${dn==='From Tess'?' tessw':''}">${dn==='Voice memos'?line(dn,n)+' ':''}${n.b}</p></div>`).join('');
+    low.innerHTML=`<div class="pages" style="top:${top}px"><div class="pgtrack" style="transform:translateX(${-page*100}%)">${Array.from({length:pages},(_,p)=>`<div class="pg">${pg(p)}</div>`).join('')}</div></div>${pages>1?`<button class="pgnext" style="top:${top+400}px">${page<pages-1?'Older':'Newer'}</button>`:''}`;
+    const nb=low.querySelector('.pgnext');if(nb)nb.onclick=()=>{page=page<pages-1?page+1:0;PH.forEach(Q=>{const t=Q.querySelector('.pgtrack');t.style.transition=RM?'none':'transform .5s cubic-bezier(.2,.9,.25,1.04)';t.style.transform=`translateX(${-page*100}%)`;const b=Q.querySelector('.pgnext');b.textContent=page<pages-1?'Older':'Newer'})}}}
+let unlocked=false;
+function head(P){const ttl=P.querySelector('.ttl'),sub=P.querySelector('.sub'),act=P.querySelector('.act.main'),back=P.querySelector('.back');
+  if(DOOR<0){ttl.textContent='Notes';ttl.style.color='var(--room)';ttl.style.fontSize='40px';sub.style.top='102px';sub.textContent='Three new today, one from Tess.';act.textContent='New note';back.hidden=true}
+  else{const d=DOORS[DOOR];ttl.textContent=d[0];ttl.style.color=`var(--${d[2]==='t'||d[2]==='t2'?'t':d[2]})`;ttl.style.fontSize='34px';sub.style.top='98px';sub.textContent=SUBL[d[0]];act.textContent=ACT[d[0]];back.hidden=false}}
+const PH=[document.getElementById('p1'),document.getElementById('p2')];PH.forEach(build);
+function all(mode,stag){PH.forEach(P=>place(P,mode,stag));state=mode}
+let busy=false;
+function go(d,keepLock){if(busy)return;if(d!==DOOR){openI=0;page=0}if(!keepLock&&d!==DOOR)unlocked=false;DOOR=d;document.querySelectorAll('.go').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===d));
+  if(d<0){H=220;TOP=180}else{H=BH;TOP=140}
+  const hideWall=d>=0&&DOORS[d][0]==='Private'&&!unlocked;
+  PH.forEach(P=>{head(P);lower(P)});
+  if(d>=0){ND=makeDial('notes',DATA[DOORS[d][0]].length,'nw');ND.focus=-1}else{DD.focus=-1}
+  if(hideWall){WL=[];L=[];all('wall')}else{compute();all('wall',true)}
+  if(d>=0&&!hideWall)PH.forEach(lower);
+  if(d<0)settleD(DD)}
+function words(P){return [...P.querySelectorAll('.wall .w')].filter(e=>e.style.opacity!=='0'&&!e.dataset.gone)}
+function fxFlip(e){if(RM)return;const s=e.querySelector('svg');s.animate([{transform:'perspective(400px) rotateX(0)'},{transform:'perspective(400px) rotateX(-180deg)',offset:.5},{transform:'perspective(400px) rotateX(-360deg)'}],{duration:800,easing:'cubic-bezier(.4,0,.2,1)'})}
+const AZ='ABCDEFGHIJKLMNOPRSTUVWY';
+function fxJumble(e){if(RM)return;const t=e.querySelector('text'),word=e.dataset.t.toUpperCase();let n=0;const steps=14,iv=setInterval(()=>{n++;const fixed=Math.floor(word.length*n/steps);t.textContent=word.split('').map((ch,i)=>i<fixed||ch===' '||ch==='’'?ch:AZ[Math.floor(Math.random()*AZ.length)]).join('');if(n>=steps){clearInterval(iv);t.textContent=word}},55)}
+function fxDust(e,back=true,dur=1300){if(RM)return Promise.resolve();const f=e.querySelector('filter'),dm=f&&f.querySelector('feDisplacementMap'),t=e.querySelector('text');if(!t)return Promise.resolve();const H0=e.offsetHeight;t.setAttribute('filter',`url(#${f.id})`);
+  return new Promise(res=>{const t0=performance.now();(function step(now){const p=Math.min(1,(now-t0)/dur),q=back?(p<.5?p*2:2-p*2):p,ease=q*q;dm.setAttribute('scale',(ease*H0*1.6).toFixed(1));t.style.opacity=(1-ease*.95).toFixed(3);if(p<1)requestAnimationFrame(step);else{if(back){t.removeAttribute('filter');t.style.opacity=1}res()}})(t0)})}
+function fxWave(){PH.forEach(P=>words(P).forEach(e=>{const m=e.style.transform.match(/translate\(([\d.]+)px,\s*([\d.]+)px/);const d=m?(+m[1]+ +m[2]*1.4)*1.6:0;setTimeout(()=>fxFlip(e),d)}))}
+function fxMelt(){if(RM||DOOR>=0){fxWave();return}busy=true;Promise.all(PH.flatMap(P=>words(P).map((e,i)=>new Promise(r=>setTimeout(()=>fxDust(e,false,700).then(r),i*18))))).then(()=>{PH.forEach(P=>P.querySelector('.wall').innerHTML='');start=(start+5)%POOL.length;compute();all('wall',true);busy=false})}
+function cycle(){if(RM||!L.length){all('wall');return}busy=true;all('pile',true);setTimeout(()=>{all('wall',true);busy=false},1500)}
+function pickDo(fn){const ws=words(PH[0]);if(!ws.length)return;const i=Math.floor(Math.random()*ws.length),k=ws[i].dataset.k;PH.forEach(P=>{const e=P.querySelector(`.wall .w[data-k="${CSS.escape(k)}"]`);if(e&&!e.dataset.gone)fn(e)})}
+function ready(){return document.fonts?Promise.all([F.w,800,700].map(w=>document.fonts.load(`${w} 40px '${F.f}'`,'AB')).concat([document.fonts.load(`500 20px Outfit`,'12'),document.fonts.load(`400 18px Newsreader`,'Ab')])).then(()=>document.fonts.ready):Promise.resolve()}
+function fit(){document.querySelectorAll('.fit').forEach(f=>{f.firstElementChild.style.transform=`scale(${f.clientWidth/402})`})}addEventListener('resize',fit);fit();
+const tools=document.querySelector('.go').parentNode;DOORS.forEach((d,i)=>{const b=document.createElement('button');b.className='tr go';b.dataset.d=i;b.textContent=d[0];tools.appendChild(b)});
+document.querySelectorAll('.go').forEach(b=>b.onclick=()=>go(+b.dataset.d));
+document.querySelectorAll('.ls').forEach(b=>b.onclick=()=>{LIST=b.dataset.l;document.querySelectorAll('.ls').forEach(x=>x.setAttribute('aria-pressed',x===b));if(DOOR>=0)PH.forEach(lower)});
+ready().then(()=>{capRatio();go(-1);0});
+let tick=0;
+setInterval(()=>{if(dragging||RM||busy)return;if(DOOR<0){DD.pos=Math.round(DD.pos)+1;settleD(DD)}},6000);
+setInterval(()=>{if(RM||busy||state!=='wall')return;tick++;
+  if(tick%24===0){[fxWave,fxMelt][(tick/24)%2]();return}
+  if(tick%8===0&&DOOR<0){start=(start+1)%POOL.length;compute();all('wall');return}
+  [()=>pickDo(fxFlip),()=>pickDo(fxJumble),()=>pickDo(e=>fxDust(e))][tick%3]()},5000);
+})();
+</script>

@@ -197,11 +197,11 @@ struct LiveV2Header<Back: View>: View {
             .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : nil, minHeight: 44, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture { onOrder() }
-            .gesture(DragGesture(minimumDistance: 12).onEnded { drag in
-                if drag.translation.height > 30 {
+            .pullGesture { down in
+                if down {
                     onOrder()
                 }
-            })
+            }
             .accessibilityAddTraits(.isButton)
             .accessibilityHint("Shows the running order")
     }

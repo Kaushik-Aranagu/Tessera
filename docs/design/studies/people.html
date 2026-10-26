@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>People</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M5 People screens 7 (names as running text), 6 (person page: margin timeline, birthday drum) and 8 (@ in the editors: one line of names above the keyboard). Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--mute:#A39AAE;--cobalt:#2E6DA4;--verm:#C8452F}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#F0DCD2 0%,rgba(240,220,210,0) 70%),radial-gradient(70% 45% at 0% 40%,#E4DDEC 0%,rgba(228,221,236,0) 70%),radial-gradient(80% 50% at 100% 80%,#E6E4D0 0%,rgba(230,228,208,0) 70%),#F4EFE9}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.body{font-size:21px;line-height:30px;color:var(--ctx)}
+.num{font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.names{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:48px}
+.names span{display:inline-block;margin-right:16px}
+.names .q{font-weight:400;color:rgba(43,36,64,.5)}
+.vw{font-weight:600;color:var(--ink);background:linear-gradient(transparent 62%,rgba(122,92,142,.16) 62%,rgba(122,92,142,.16) 92%,transparent 92%)}
+.tl{position:absolute;left:84px;right:22px;font-size:21px;line-height:30px}
+.tl b{font-weight:650}
+.dn{position:absolute;left:22px;font-size:34px;font-weight:300;letter-spacing:-.03em;color:var(--sub);line-height:30px;font-variant-numeric:tabular-nums}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+.caret{display:inline-block;width:2px;height:26px;margin-left:1px;vertical-align:-5px;background:var(--cobalt);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.kb{position:absolute;left:0;right:0;bottom:0;height:300px;background:rgba(214,208,220,.55);backdrop-filter:blur(20px)}
+.kb i{position:absolute;height:42px;border-radius:6px;background:rgba(255,255,255,.55)}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <!-- 7 · People: names as running text, most recently talked first -->
+  <section id="people" class="abs" style="inset:0">
+    <div class="abs lbl" style="left:22px;top:58px">PEOPLE</div>
+    <div id="names" class="abs names" style="left:22px;right:70px;top:104px">
+      <span id="sam">Sam</span><span>Mom</span><span>Priya</span><span>Jonah</span><span>Aunt Meera</span><span>Leo</span><span>Dr Shah</span><span>Grace</span><span>Tom</span><span class="q">Ravi</span><span class="q">Elena</span><span class="q">Mr Okafor</span>
+    </div>
+    <div id="bday" class="abs body" style="right:22px;top:113px;text-align:right">Mom,<br>Sun</div>
+  </section>
+
+  <!-- 6 · the person page -->
+  <section id="person" class="abs" style="inset:0;opacity:0;pointer-events:none">
+    <div class="abs lbl" style="left:22px;top:58px">PEOPLE</div>
+    <div id="pctx" class="abs body" style="left:22px;top:178px">talked Tue · birthday <span id="bd" class="vw">12 Mar</span></div>
+    <div id="drums" class="abs" style="left:0;right:0;top:214px;height:150px;opacity:0;pointer-events:none">
+      <div class="abs" style="left:22px;width:90px;top:0;height:150px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 22%,#000 40%,#000 60%,rgba(0,0,0,.25) 78%,transparent);mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 22%,#000 40%,#000 60%,rgba(0,0,0,.25) 78%,transparent)"><div id="dd" class="num abs" style="left:0;width:80px;font-size:56px;top:0;text-align:right"></div></div>
+      <div class="abs" style="left:126px;width:140px;top:0;height:150px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 22%,#000 40%,#000 60%,rgba(0,0,0,.25) 78%,transparent);mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 22%,#000 40%,#000 60%,rgba(0,0,0,.25) 78%,transparent)"><div id="mm" class="num abs" style="left:0;font-size:56px;top:0"></div></div>
+    </div>
+    <div id="tline" class="abs" style="left:0;right:0;top:240px">
+      <div class="abs lbl" style="left:22px;top:0">OCTOBER</div>
+      <div class="dn" style="top:36px">14</div><div class="tl" style="top:36px;color:var(--ink)">Call <b>Sam</b> about the flat</div>
+      <div class="dn" style="top:100px">13</div><div class="tl" style="top:100px;color:var(--ink)">Lunch with <b>Sam</b></div>
+      <div class="dn" style="top:164px">9</div><div class="tl" style="top:164px;color:rgba(43,36,64,.62)">Borrow the drill from <b>Sam</b></div>
+      <div class="dn" style="top:228px">2</div><div class="tl" style="top:228px;color:rgba(43,36,64,.62)"><b>Sam</b> said to read Piranesi</div>
+      <div class="abs lbl" style="left:22px;top:300px">SEPTEMBER</div>
+      <div class="dn" style="top:336px">28</div><div class="tl" style="top:336px;color:var(--ink)">Called <b>Sam</b></div>
+    </div>
+  </section>
+
+  <!-- 8 · @ in a note -->
+  <section id="note" class="abs" style="inset:0;opacity:0;pointer-events:none">
+    <div class="abs lbl" style="left:22px;top:58px">NOTE · THU 15 OCT</div>
+    <div id="ntext" class="abs" style="left:22px;right:22px;top:104px;font-size:28px;line-height:38px;letter-spacing:-.02em"></div>
+    <div id="pick" class="abs" style="left:22px;right:0;top:494px;font-size:21px;line-height:30px;white-space:nowrap;overflow:hidden;opacity:0;-webkit-mask-image:linear-gradient(90deg,#000 80%,transparent);mask-image:linear-gradient(90deg,#000 80%,transparent)"></div>
+    <div id="pickLine" class="abs" style="left:0;right:0;top:534px;height:1px;background:rgba(43,36,64,.14);opacity:0"></div>
+    <div id="kb" class="kb"></div>
+  </section>
+
+  <div id="title" class="abs" style="left:22px;top:104px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:48px;z-index:6;opacity:0">Sam</div>
+  <div id="say" class="abs" style="right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;color:var(--cobalt);text-align:right;opacity:0;z-index:12"></div>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+async function say(t) { const s = $('say'); s.textContent = t; await anim(s, [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE }); }
+const hush = () => anim($('say'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+// birthday drums: day (rows 60) and month (rows 60), centre row at y 45..105 of the 150 window
+for (let d = 1; d <= 31; d++) $('dd').insertAdjacentHTML('beforeend', `<div style="height:60px;line-height:60px">${d}</div>`);
+'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ').forEach((m) => $('mm').insertAdjacentHTML('beforeend', `<div style="height:60px;line-height:60px">${m}</div>`));
+const dY = (d) => 45 - (d - 1) * 60, mY = (m) => 45 - (m - 1) * 60;
+$('dd').style.top = dY(12) + 'px'; $('mm').style.top = mY(3) + 'px';
+// a keyboard, only as a region
+[[6, 8], [6, 62], [6, 116], [6, 170]].forEach(([x, y], r) => { for (let k = 0; k < (r === 3 ? 1 : 10 - (r === 1 ? 1 : 0)); k++) { const i = document.createElement('i'); if (r === 3) { i.style.left = '96px'; i.style.width = '198px'; } else { i.style.left = (x + (r === 1 ? 19 : 0) + k * 38.2) + 'px'; i.style.width = '32px'; } i.style.top = y + 'px'; $('kb').appendChild(i); } });
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  // the names set in like a sentence being written
+  [...$('names').children].forEach((el, k) => anim(el, [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: k * 40, easing: HOUSE }));
+  anim($('bday'), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: 500 });
+  await sleep(2000);
+
+  // tap a name: it grows into the hero, the paragraph steps back, the timeline rises
+  const sr = rel($('sam').getBoundingClientRect());
+  const [sx, sy] = centre($('sam')); await fingerOn(sx, sy); await sleep(100); fingerOff();
+  const t = $('title'); t.style.left = sr.left + 'px'; t.style.top = sr.top + 'px'; t.style.opacity = 1; $('sam').style.visibility = 'hidden';
+  anim($('people'), [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 320, easing: HOUSE });
+  await tween(480, (k) => { t.style.top = (sr.top + (100 - sr.top) * k) + 'px'; t.style.left = (sr.left + (20 - sr.left) * k) + 'px'; t.style.fontSize = (34 + 22 * k) + 'px'; t.style.lineHeight = (48 + 8 * k) + 'px'; t.style.letterSpacing = (-.035 - .005 * k) + 'em'; }, (k) => 1 - Math.pow(1 - k, 3));
+  $('person').style.opacity = 1;
+  anim($('person').children[0], [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
+  anim($('pctx'), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 340, easing: HOUSE });
+  [...$('tline').children].forEach((el, k) => anim(el, [{ opacity: 0, transform: 'translateY(22px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 120 + k * 35, easing: HOUSE }));
+  await sleep(2000);
+
+  // the birthday is a value word: tap it and the day and month drums open in place; the timeline makes room
+  const [bx, by] = centre($('bd')); await fingerOn(bx, by); await sleep(100); fingerOff();
+  anim($('tline'), [{ transform: 'none' }, { transform: 'translateY(160px)' }], { duration: 420, easing: HOUSE });
+  anim($('drums'), [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: 80, easing: HOUSE });
+  await sleep(800);
+  await fingerOn(60, 300);
+  await tween(520, (k) => { fingerAt(60, 300 - 60 * k); $('dd').style.top = (dY(12) - 120 * k) + 'px'; $('bd').textContent = Math.round(12 + 2 * k) + ' Mar'; }, (k) => 1 - Math.pow(1 - k, 3));
+  fingerOff();
+  await sleep(500);
+  // release: the drums fold back into the words
+  anim($('drums'), [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-8px)' }], { duration: 260, easing: HOUSE });
+  anim($('tline'), [{ transform: 'translateY(160px)' }, { transform: 'none' }], { duration: 440, delay: 80, easing: HOUSE });
+  say("Sam's birthday, 14 Mar.");
+  await sleep(1800);
+
+  // 8 · @ in a note: one line of names lifts above the keyboard, filtered as you type
+  hush();
+  anim($('person'), [{ opacity: 1 }, { opacity: 0 }], { duration: 300 }); anim(t, [{ opacity: 1 }, { opacity: 0 }], { duration: 300 });
+  $('note').style.opacity = 1;
+  anim($('kb'), [{ transform: 'translateY(300px)' }, { transform: 'none' }], { duration: 420, easing: HOUSE });
+  const nt = $('ntext'); nt.innerHTML = '<span id="typed"></span><span class="caret"></span>';
+  const typed = $('typed');
+  await sleep(500);
+  for (const ch of 'Lunch with ') { typed.textContent += ch; await sleep(55); }
+  typed.textContent += '@'; await sleep(160);
+  const P = $('pick');
+  const showPick = (items) => { P.innerHTML = items.map((x, k) => `<span style="margin-right:22px;${k === 0 ? 'font-weight:600;color:#2B2440' : 'color:#6E6480'}">${x}</span>`).join(''); };
+  showPick(['Sam', 'Mom', 'Priya', 'Jonah', 'Aunt Meera']);
+  anim(P, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: HOUSE });
+  anim($('pickLine'), [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
+  await sleep(700);
+  for (const [ch, list] of [['P', ['Priya', 'Pasta night', 'Piranesi']], ['r', ['Priya', 'Priyanka (new person)']]]) { typed.textContent += ch; showPick(list); await sleep(380); }
+  await sleep(400);
+  const [px, py] = centre(P.children[0]); await fingerOn(px, py); await sleep(100); fingerOff();
+  anim(P, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }); anim($('pickLine'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  typed.innerHTML = 'Lunch with <b style="font-weight:650">Priya</b> ';
+  anim(typed.querySelector('b'), [{ opacity: .4, filter: 'blur(2px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 260, easing: HOUSE });
+  await sleep(300);
+  for (const ch of 'at the new place.') { typed.insertAdjacentText('beforeend', ch); await sleep(45); }
+  await sleep(1800);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

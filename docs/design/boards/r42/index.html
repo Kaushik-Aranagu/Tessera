@@ -1,0 +1,196 @@
+<title>Landing elements</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --training:#0B62AE;--kitchen:#A8701F;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--training:#3B8CF2;--kitchen:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--training:#3B8CF2;--kitchen:#C49A5E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head,.sec{max-width:1120px;margin:0 auto 44px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-size:28px;font-weight:600;letter-spacing:-.02em;margin:0}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+.notes{flex:1 1 320px;min-width:0;max-width:520px;display:flex;flex-direction:column;gap:10px}
+.notes p{margin:0}.notes b{font-weight:600}
+.spec{display:grid;grid-template-columns:110px 1fr;gap:4px 14px;font-size:15px}.spec span:nth-child(odd){color:var(--ink3)}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr:hover{color:var(--ink)}
+.tr:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+.ctl{display:flex;gap:20px;flex-wrap:wrap}
+.stage{position:relative;width:300px;max-width:100%;height:300px;background:var(--phone);border:1px solid var(--edge);border-radius:28px;overflow:hidden;box-sizing:border-box;flex:none}
+.n{font-family:var(--nums);font-weight:300}
+.big{font-family:var(--nums);font-weight:200;line-height:.86;letter-spacing:-.02em}
+.l{height:24px;line-height:24px;font-size:15px;white-space:nowrap;overflow:hidden;color:var(--ink2)}
+.l.i{color:var(--ink)}
+.clip{clip-path:inset(0 0 100% 0)}
+</style>
+
+<div class="head">
+  <p class="lab">Round 227, Oct 23</p>
+  <h1>Landing elements, Kitchen and Training</h1>
+  <p class="sub">The parts of the 226 layout, one at a time, with their motion. Type and fine lines only. Everything springs, nothing fades: things arrive by a clip or a slide and leave the same way. Reduce Motion: each change lands in one step.</p>
+  <div class="ctl"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button></div>
+</div>
+
+<div class="sec">
+  <h2>1 The loaded bar</h2>
+  <div class="row">
+    <div class="stage" id="s1">
+      <div style="position:absolute;left:20px;top:70px"><div class="big" id="w" style="font-size:80px;color:var(--training);cursor:ns-resize;touch-action:none;outline-offset:2px" role="slider" aria-label="Opening weight" aria-valuenow="185" tabindex="0">185</div><div style="font-size:15px;color:var(--ink2);margin-top:8px">lb, bench opens</div></div>
+      <svg id="bar" width="108" height="150" viewBox="0 0 108 150" style="position:absolute;right:8px;top:40px" aria-hidden="true"></svg>
+      <div class="l i" id="side" style="position:absolute;left:20px;bottom:22px">Each side: 45, 25.</div>
+    </div>
+    <div class="notes">
+      <p>One side of the bar, read from the centre out: the shaft, the inner collar, the plates biggest first, the outer collar, the sleeve end. It always matches the weight. Drag the number up or down (5 lb a step), or use the arrow keys.</p>
+      <div class="spec">
+        <span>Plates</span><span>45, 35, 25, 10, 5, 2.5 on a 45 lb bar. Heights 118, 104, 90, 66, 52, 40 pt; widths 16, 14, 12, 8, 6, 5 pt; 3 pt gaps. Plates 25 and up in the accent, smaller in ink 2. Outlines at 1.8 pt, no fill.</span>
+        <span>Reload</span><span>A plate that stays keeps its place. A plate that leaves slides off the sleeve end (to the right, 26 pt, clipped at the sleeve end, 0.22 s). A new plate slides on from the sleeve end to its slot (spring 0.34 s, damping 0.8). The outer collar rides to the new outermost plate. One soft tick per reload.</span>
+        <span>Number</span><span>The pressed number from 222: it dips to 0.96 while held; each 5 lb step changes the digits in place (no flip).</span>
+        <span>Line</span><span>"Each side: 45, 25." updates with the bar, in its fixed slot.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>2 Kitchen's start time</h2>
+  <div class="row">
+    <div class="stage" id="s2">
+      <div style="position:absolute;left:20px;right:20px;top:90px;display:flex;align-items:flex-end;justify-content:space-between">
+        <div><div id="kw" style="font-size:56px;font-weight:600;letter-spacing:-.035em;line-height:.9;color:var(--kitchen)">Tacos</div><div id="ks" style="font-size:15px;color:var(--ink2);margin-top:10px">tonight, start at <span class="n">6:05</span></div></div>
+        <div style="text-align:right"><div class="n" id="km" style="font-size:30px;line-height:1">38<span style="font-size:15px;color:var(--ink2)"> min</span></div></div>
+      </div>
+      <div class="l" style="position:absolute;left:20px;bottom:22px" id="kn">Scrub the clock below.</div>
+    </div>
+    <div class="notes">
+      <p>The minutes to start, as a number. No line, no ring: the number alone carries it, and its words change as start nears.</p>
+      <div class="ctl" style="align-items:center"><span style="color:var(--ink3);font-size:15px">Now</span><input type="range" id="kc" min="0" max="90" value="37" aria-label="Minutes past 4:50 pm" style="flex:1;max-width:260px"></div>
+      <div class="spec">
+        <span>Within the hour</span><span>"38 min" in Outfit 300, 30 pt. The digits change in place once a minute. Over an hour away: "at 6:05" in ink 2.</span>
+        <span>At start</span><span>"0 min" becomes "Start now" in the accent, and the action word Cook gets the 222 nudge once (a 2 pt rise and back).</span>
+        <span>Late</span><span>Past start by more than 10 min: "Started?" in ink 3.</span>
+        <span>Cooking</span><span>Cook mode takes the headline: the timer number replaces "38 min" (225 fix 2).</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>3 Arrival</h2>
+  <div class="row">
+    <div class="stage" id="s3" style="height:420px">
+      <div id="a1" style="position:absolute;left:20px;top:56px" aria-label="185 lb, bench opens"><div aria-hidden="true" class="big" style="font-size:100px;color:var(--training)">185</div></div>
+      <div id="a2" style="position:absolute;left:20px;top:150px;font-size:15px;color:var(--ink2)">lb, bench opens</div>
+      <div id="a3" style="position:absolute;right:20px;top:186px;text-align:right;font-size:19px;line-height:25px">Push A today, about <span class="n">45</span> min.<br>Last time <span class="n">185</span> for <span class="n">5</span>. Try <span class="n">190</span>?</div>
+      <div id="a4" style="position:absolute;left:20px;right:20px;top:258px">
+        <div class="l i">Bench press</div><div class="l i">Overhead press</div><div class="l i">Dips</div><div class="l i">Cable fly</div><div class="l">Bench best <span class="n">205</span>, three weeks ago.</div></div>
+    </div>
+    <div class="notes">
+      <p>When the doorway wave from Home lands (206), the room builds in reading order. Each part is revealed by a clip, never by fading in or flying.</p>
+      <div class="ctl"><button class="tr" id="replay">Replay arrival</button></div>
+      <div class="spec">
+        <span>Headline</span><span>Clipped open from the baseline up, 0.42 s spring. A number counts to its value in 6 steps (Outfit digits change in place). A word is revealed left to right, 0.36 s.</span>
+        <span>Brief</span><span>Starts 120 ms later. Each line is clipped open left to right in 4 steps (stepped, like the 213 task writing).</span>
+        <span>Body</span><span>Starts 240 ms later. Each line is clipped open from its top, 30 ms apart.</span>
+        <span>Length</span><span>The whole arrival finishes in about 0.6 s. VoiceOver reads the final number at once; the count is visual only.</span>
+        <span>Leaving</span><span>The reverse, faster (0.6x), then the doorway runs back.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>4 Two columns, paging</h2>
+  <div class="row">
+    <div class="stage" id="s4" style="height:260px;touch-action:none">
+      <div style="position:absolute;left:20px;right:20px;top:24px;display:grid;grid-template-columns:1fr 1fr;gap:0 22px">
+        <div style="font-size:23px;font-weight:600;line-height:28px">Pantry</div><div style="font-size:23px;font-weight:600;line-height:28px">Recipes</div></div>
+      <div id="pg" style="position:absolute;left:20px;right:20px;top:56px;height:150px;overflow:hidden"></div>
+      <div class="l" id="pc" style="position:absolute;left:20px;bottom:18px;color:var(--ink3)">1 of 2</div>
+    </div>
+    <div class="notes">
+      <p>Both columns page together, so their lines keep sharing baselines. Swipe up or down on the body (sideways swipes belong to rows: Done and Not now). The titles stay put; only the lines turn.</p>
+      <div class="ctl"><button class="tr" id="nx">Next page</button><button class="tr" id="pv">Previous page</button></div>
+      <div class="spec">
+        <span>Grid</span><span>24 pt lines, six per page, 22 pt gutter. Each column's last line is a summary in ink 3 ("and 38 at home", "6 you can cook").</span>
+        <span>Turn</span><span>The page turn from 222: the old lines slide 22 pt up (or down) and are clipped at the body's edge. The new lines rise in from 22 pt below, 30 ms apart, 0.26 s spring. Both columns move as one.</span>
+        <span>Count</span><span>"1 of 2" in ink 3 under the columns, only when there's more than one page. The digits change in place.</span>
+        <span>AX3</span><span>Below one column wide, the two stack and page as one list (226).</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const spring=(from,to,dur,fn,done)=>{if(RM){fn(to);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3)*Math.cos(u*1.2);fn(from+(to-from)*e);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+
+// 1 loaded bar
+const H={45:118,35:104,25:90,10:66,5:52,2.5:40},Wd={45:16,35:14,25:12,10:8,5:6,2.5:5};
+const plates=w=>{let s=(w-45)/2;const o=[];for(const p of [45,35,25,10,5,2.5])while(s>=p-1e-9){o.push(p);s-=p}return o};
+const svg=document.getElementById('bar'),NS='http://www.w3.org/2000/svg',cy=75,SLEEVE=104;
+const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
+svg.append(el('line',{x1:0,y1:cy,x2:8,y2:cy,stroke:'var(--ink3)','stroke-width':2.4}),el('rect',{x:8,y:cy-8,width:5,height:16,rx:1,fill:'none',stroke:'var(--ink)','stroke-width':1.5}),el('line',{x1:13,y1:cy,x2:SLEEVE,y2:cy,stroke:'var(--ink)','stroke-width':1.5}));
+const clipG=el('g',{});const cp=el('clipPath',{id:'sl'});cp.append(el('rect',{x:13,y:0,width:SLEEVE-13,height:150}));svg.append(cp);clipG.setAttribute('clip-path','url(#sl)');svg.append(clipG);
+const collar=el('rect',{y:cy-7,width:6,height:14,rx:1,fill:'none',stroke:'var(--ink)','stroke-width':1.5});clipG.append(collar);
+let cur=[];// [{p,node,x}]
+function layout(list){let x=16;return list.map(p=>{const r={p,x};x+=Wd[p]+3;return r}).concat([{collar:true,x}])}
+function setBar(w){const want=plates(w),lay=layout(want);
+  // keep the common prefix
+  let k=0;while(k<cur.length&&k<want.length&&cur[k].p===want[k])k++;
+  cur.slice(k).forEach(c=>{const x0=c.x;spring(0,1,.22,u=>c.node.setAttribute('x',x0+u*(SLEEVE-x0+4)),()=>c.node.remove())});
+  cur=cur.slice(0,k);
+  want.slice(k).forEach((p,q)=>{const tx=lay[k+q].x,node=el('rect',{y:cy-H[p]/2,width:Wd[p],height:H[p],rx:3,fill:'none',stroke:p>=25?'var(--training)':'var(--ink2)','stroke-width':1.8,x:SLEEVE+2});clipG.append(node);const c={p,node,x:tx};cur.push(c);setTimeout(()=>spring(SLEEVE+2,tx,.34,v=>node.setAttribute('x',v)),RM?0:120+q*70)});
+  const cx=lay[lay.length-1].x,c0=+collar.getAttribute('x')||cx;spring(c0,cx,.34,v=>collar.setAttribute('x',v));
+  document.getElementById('side').textContent=want.length?`Each side: ${want.join(', ')}.`:'The bar alone.'}
+let W=185;const wn=document.getElementById('w');setBar(W);
+const setW=v=>{v=Math.max(45,Math.min(405,v));if(v===W)return;W=v;wn.textContent=v;wn.setAttribute('aria-valuenow',v);setBar(v)};
+let st=null;wn.onpointerdown=e=>{wn.setPointerCapture(e.pointerId);st={y:e.clientY,b:W};wn.style.transform='scale(.96)'};
+wn.onpointermove=e=>{if(st)setW(st.b+Math.round((st.y-e.clientY)/14)*5)};wn.onpointerup=wn.onpointercancel=()=>{st=null;wn.style.transform=''};
+wn.onkeydown=e=>{if(e.key==='ArrowUp'||e.key==='ArrowRight'){setW(W+5);e.preventDefault()}if(e.key==='ArrowDown'||e.key==='ArrowLeft'){setW(W-5);e.preventDefault()}};
+
+// 2 kitchen line
+const kc=document.getElementById('kc'),km=document.getElementById('km'),kn=document.getElementById('kn');
+function kset(){const past=+kc.value,left=75-past;const t=new Date(2026,9,23,16,50+past);kn.innerHTML=`It's <span class="n">${t.getHours()-12}:${String(t.getMinutes()).padStart(2,'0')}</span> pm.`;
+  let to;if(left>60){km.innerHTML=`at <span class="n">6:05</span>`;km.style.color='var(--ink2)';km.style.fontSize='20px';to=0}
+  else if(left>0){km.innerHTML=`${left}<span style="font-size:15px;color:var(--ink2)"> min</span>`;km.style.color='var(--ink)';km.style.fontSize='30px';to=84*left/60}
+  else if(left>-10){km.innerHTML='Start now';km.style.color='var(--kitchen)';km.style.fontSize='22px'}
+  else {km.innerHTML='Started?';km.style.color='var(--ink3)';km.style.fontSize='22px'}}
+kc.oninput=kset;kset();
+
+// 3 arrival
+const A=['a1','a2','a3','a4'].map(i=>document.getElementById(i));
+function arrive(){A.forEach(a=>a.style.clipPath='inset(0 0 100% 0)');const big=A[0].querySelector('.big');
+  if(RM){A.forEach(a=>a.style.clipPath='none');big.textContent='185';return}
+  const s0=performance.now();
+  // headline: clip from the baseline up and count in 6 steps
+  spring(0,1,.42,u=>A[0].style.clipPath=`inset(${(1-u)*100}% 0 0 0)`);let k=0;const steps=[150,160,170,175,180,185];const iv=setInterval(()=>{big.textContent=steps[k++];if(k>=steps.length)clearInterval(iv)},60);
+  setTimeout(()=>spring(0,1,.36,u=>A[1].style.clipPath=`inset(0 ${(1-u)*100}% 0 0)`),80);
+  setTimeout(()=>{let q=0;const it=setInterval(()=>{q++;A[2].style.clipPath=`inset(0 0 0 ${100-q*25}%)`;if(q>=4)clearInterval(it)},70)},120);
+  setTimeout(()=>{A[3].style.clipPath='none';[...A[3].children].forEach((c,i)=>{c.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>spring(0,1,.24,u=>c.style.clipPath=`inset(0 0 ${(1-u)*100}% 0)`),i*30)})},240)}
+document.getElementById('replay').onclick=arrive;setTimeout(arrive,400);
+
+// 4 paging
+const P=[[['Lemon, out',1],['Limes, out',1],['Eggs, low',0],['Cheddar, low',0],['Pasta, low',0],['and 38 at home',2]],[['Thu pasta',0],['Fri tacos',3],['Sat out',0],['Sun open',0],['Mon dal',0],['6 you can cook',2]],
+         [['Milk, low',0],['Rice, low',0],['Butter',0],['Onions',0],['Garlic',0],["and 31 more",2]],[['Tue chili',0],['Wed bowls',0],['Thu stir fry',0],['Fri out',0],['Sat roast',0],['next week',2]]];
+const pg=document.getElementById('pg'),pc=document.getElementById('pc');let page=0;
+const line=([t,k])=>`<div class="l ${k===1?'i':''}" style="${k===2?'color:var(--ink3)':''}${k===3?'color:var(--kitchen);font-weight:600':''}">${t}</div>`;
+function render(p,dir){const g=document.createElement('div');g.style.cssText='position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;gap:0 22px';g.innerHTML=`<div>${P[p*2].map(line).join('')}</div><div>${P[p*2+1].map(line).join('')}</div>`;
+  const old=pg.firstChild;pg.append(g);const rows=[...g.querySelectorAll('.l')];
+  if(old&&dir){[...old.querySelectorAll('.l')].forEach((r,i)=>setTimeout(()=>spring(0,1,.22,u=>{r.style.transform=`translateY(${-dir*22*u}px)`;r.style.clipPath=`inset(${dir>0?0:0}px 0 0 0)`},()=>{}),(i%6)*30));setTimeout(()=>old.remove(),RM?0:460);
+    rows.forEach((r,i)=>{r.style.transform=`translateY(${dir*22}px)`;setTimeout(()=>spring(0,1,.26,u=>{r.style.transform=`translateY(${dir*22*(1-u)}px)`}),120+(i%6)*30)})}
+  else if(old)old.remove();pc.textContent=`${p+1} of 2`}
+render(0,0);const go=d=>{const n=Math.max(0,Math.min(1,page+d));if(n===page)return;page=n;render(page,d)};
+document.getElementById('nx').onclick=()=>go(1);document.getElementById('pv').onclick=()=>go(-1);
+let sx=null;const s4=document.getElementById('s4');s4.onpointerdown=e=>sx=e.clientY;s4.onpointerup=e=>{if(sx==null)return;const dx=e.clientY-sx;sx=null;if(Math.abs(dx)>40)go(dx<0?1:-1)};
+
+document.getElementById('th').onclick=()=>document.documentElement.dataset.theme='dark';document.getElementById('tw').onclick=()=>document.documentElement.dataset.theme='light';
+})();
+</script>
