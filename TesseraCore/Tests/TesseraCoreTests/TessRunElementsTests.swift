@@ -236,7 +236,7 @@ struct TessRunElementsTests {
             arguments: Data(#"{"recipe":"\#(recipe.id.uuidString)","serves":null}"#.utf8),
             engine: engine
         )
-        let bench = try #require(r.classes[.benchPress])
+        let bench = try #require(engine.classes[.benchPress])
         try engine.perform(AddSlot(routine: routine.id, exercise: bench.id), by: .user)
         let started = try TessTools.run(
             "startWorkout",
