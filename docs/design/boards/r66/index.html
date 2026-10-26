@@ -122,10 +122,11 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
  <p class="how">Tap any highlighted word, face or door. Back is a swipe from the left edge of the phone (or Escape). Swipes and holds work as on the phone: right is Done, left is Not now, hold the one thing to strike it.</p>
 </div>
 <div>
- <p class="eyebrow">Round 283, version 9, with sheet 284, Oct 25</p>
+ <p class="eyebrow">Round 283, version 10, with sheets 284 and 285, Oct 25</p>
  <h1>Every landing, one layout.</h1>
  <p class="lede">Every landing now opens like Bridge and keeps Bridge’s lower half: the widget in the middle and the doors dial below it. The top holds the title, a text-only switcher and the room’s needs. Tap a room in Bridge’s apps dial (or a face, or a highlighted word) to watch the flip. Swipe from the left edge, or tap “Bridge”, to go back.</p>
  <div class="notes283">
+  <p><b>New: when Tess makes the change (sheet 285).</b> Use the “Tess acts” buttons under the phone. Her dab flies from her to the place on an arc, spreads into a blue wash, and the place plays its own move inside it, the same move your finger makes, only a little slower. What she changed stays in her blue until the 10 s Undo window closes, then it dries into the room’s own ink: blue chalk turns white on the Deck, the blue clip on a new Galley ticket turns steel, and her blue strike turns ink. On the rail the wash sits behind the tickets. The board has no gaps, so there the wash lies over it in light. When the engine refuses, her dab stops short, waits, and goes home. Nothing moves, and only her line says why. While Undo holds the foot, the action word steps aside.</p>
   <p><b>New: level 1 and level 2 in every room (sheet 284, his 7:44 PM note).</b> Turn any room’s dial and tap the focused door. The page does not slide: the title and the keystone stay exactly where they were (the Galley rail keeps its tickets, the Deck keeps its board), the switcher and needs become the door’s title, and the widget, dial and summary make way for the door’s list. The list fills its block exactly, biggest first, so there is never a gap or a run of equal rows. Swipe the door title across for the next door. Tap a row for its item page: the same frame again, with the item’s title, three facts, and its body (Trip packing is a checklist, the Run plan is Tess’s note, 7 PM is the hours around it, Bench is its sets, Tacos are the steps, Walk is the week, Food is the ledger in “about” amounts). Swipe the item title across for the next item. Back undoes each step in place.</p>
   <p><b>New in version 6 (his 4:47 and 4:48 PM notes).</b> Back no longer moves the page. Pull from the left edge and the screen stays put: the content loosens and blurs a little and the nav word grows; let go past a short pull and every place changes in place, short of it everything settles back. The door summary beside the dial now changes in each room’s own way as you turn the dial. Log types its lines and backspaces the old ones. Lookout’s lines condense out of fog. The Deck chalks them on and wipes them off with a puff of dust. The Galley prints them like a ticket and tears the old one off. The Watch grows them from the ground and the old ones fall like leaves. The Purse keeps its words still and rolls only the numbers.</p>
   <p><b>New in version 5 (his 4:21 and 4:22 PM notes).</b> The screen never changes now. The places stay where they are and only what is inside them changes. Open a door and nothing slides in: the masthead flaps to the door’s name, the keystone stays (the Galley’s rail keeps its tickets), the widget and the doors leave and the door’s list settles in from the top. Back runs the same moves the other way and puts every place back as you left it. In Layout mode, tap the Dial bubble twice (or press the down arrow) to open a door: Switcher and Needs melt into one Door title, and the widget, glyph, dial and summary melt into one Page. Tap the Nav word twice (or the up arrow) and they split apart again.</p>
@@ -165,6 +166,14 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
   <button class="w" id="lk-paper" aria-pressed="true">Paper</button>
   <button class="w" id="lk-black" aria-pressed="false">Black</button>
   <button class="w" id="go-home">Back to Home</button>
+ </div>
+ <div class="bar" role="group" aria-label="Tess acts (sheet 285)">
+  <button class="w" data-th="deck-tess">Deck: Tess logs the walk</button>
+  <button class="w" data-th="deck-you">Deck: your finger logs it</button>
+  <button class="w" data-th="deck-no">Deck: Tess is refused</button>
+  <button class="w" data-th="galley-tess">Galley: Tess hangs a ticket</button>
+  <button class="w" data-th="galley-you">Galley: your finger hangs it</button>
+  <button class="w" data-th="galley-dish">Galley: Tess does the dishes</button>
  </div>
  <nav class="map" id="map" aria-label="Every screen"></nav>
 </div>
@@ -1112,6 +1121,20 @@ MAP.push(
 .kstep{display:flex;gap:12px;align-items:baseline;min-height:48px;font-size:18px;line-height:1.35;cursor:pointer}
 .kstep .n{font:300 16px var(--num);color:var(--kitchen);min-width:20px}
 .kstep.done{color:var(--ink2);text-decoration:line-through}
+
+/* 285: Tess's hand */
+.thl{position:absolute;inset:0;z-index:39;pointer-events:none;overflow:hidden}
+.thx,.thy{position:absolute;left:0;top:0}
+.thdab{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle,var(--tessblue) 0,color-mix(in srgb,var(--tessblue) 55%,transparent) 42%,transparent 72%)}
+.thwash{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,color-mix(in srgb,var(--tessblue) 60%,transparent),color-mix(in srgb,var(--tessblue) 28%,transparent) 55%,transparent);filter:blur(10px);opacity:0}
+.thwash.over{mix-blend-mode:screen}
+.phone:not([data-look="black"]) .thl .thwash:not(.over){mix-blend-mode:multiply}
+.clip{transition:background .7s ease}
+.clip.tess{background:var(--tessblue)}
+.thstrike{position:absolute;left:0;top:55%;height:1.5px;width:0;background:#2E2A24;transition:background .7s ease;pointer-events:none}
+.thstrike.tess{background:var(--tessblue)}
+.tix.n5{gap:8px}.tix.n5 .face{padding:11px 6px 9px}.tix.n5 .face .ttk{letter-spacing:.02em;font-size:12px}.tix.n5 .face .sub{letter-spacing:.02em}
+#tessline span{margin-right:.27em}
 </style>
 <script>
 /* ================= v2 screens ================= */
@@ -1166,7 +1189,7 @@ function slate(dark){if(!maskC){maskC=document.createElement('canvas');maskC.wid
   for(let k=0;k<7;k++){s2.save();s2.translate(40+noise(k,1)*320,TOP+20+noise(k,2)*(BOT-TOP-40));s2.rotate((noise(k,3)-.5)*.5);const g=s2.createLinearGradient(-70,0,70,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,'+(dark?.05:.07)+')');g.addColorStop(1,'rgba(255,255,255,0)');s2.fillStyle=g;s2.fillRect(-70,-14,140,28);s2.restore()}s2.globalCompositeOperation='destination-in';s2.drawImage(maskC,0,0);slateLook=dark?'b':'p'}}
 function boardCenter(el,fill){const cv=h('canvas','tboard');cv.width=804;cv.height=1748;el.appendChild(cv);const g=cv.getContext('2d');g.scale(2,2);let raf=0;const ck=document.createElement('canvas');ck.width=804;ck.height=1748;const c2=ck.getContext('2d');
  function draw(){const dark=phone.dataset.look==='black';slate(dark);g.clearRect(0,0,402,874);g.drawImage(slateTex,0,0);for(let k=0;k<500;k++){const x=noise(k,3)*402,y=(noise(k,4)<.5?TOP:BOT)+(noise(k,5)-.5)*70;g.fillStyle='rgba(235,235,230,'+(.04+noise(k,6)*.1)+')';g.fillRect(x,y,1,1)}
-  c2.setTransform(2,0,0,2,0,0);c2.globalCompositeOperation='source-over';c2.clearRect(0,0,402,874);fill(c2);c2.globalCompositeOperation='destination-in';c2.drawImage(maskC,0,0,402,874);g.drawImage(ck,0,0,402,874);raf=requestAnimationFrame(draw)}
+  c2.setTransform(2,0,0,2,0,0);c2.globalCompositeOperation='source-over';c2.clearRect(0,0,402,874);fill(c2);(cv._x||[]).forEach(f=>f(c2));c2.globalCompositeOperation='destination-in';c2.drawImage(maskC,0,0,402,874);g.drawImage(ck,0,0,402,874);raf=requestAnimationFrame(draw)}
  raf=requestAnimationFrame(draw);return ()=>cancelAnimationFrame(raf)}
 const C='244,245,240',C2='220,222,216';const WEEK=[1,1,1,0,0,0];
 const ticks=(ck,y)=>['M','T','W','T','F','S'].forEach((d,i)=>{const x=26+i*30;chalk(ck,d,x,y,18,.75,C2);if(WEEK[i]){ck.strokeStyle='rgba('+C+',.9)';ck.lineWidth=2.4;ck.lineCap='round';ck.beginPath();ck.moveTo(x-2,y+12);ck.lineTo(x+4,y+20);ck.lineTo(x+14,y+4);ck.stroke()}});
@@ -2187,5 +2210,78 @@ MAP.length=0;MAP.push(
  {app:'Galley (Kitchen)',state:'283 landing, the pass 259',screens:[['kitchen','Landing'],['tonight','Tonight'],['recipes','Recipes'],['groceries','Groceries'],['pantry','Pantry'],['leftovers','Leftovers'],['cook','Cooking Tacos']],note:'The pass stays through the app, live to each page; tickets flip up and down; cook mode strikes steps on the rail.'},
  {app:'Purse (Money)',state:'283 landing, indices 278 v3',screens:[['money','Landing']],note:'The indices keystone is the locked 278 board, shown in the slot: across for a category, up and down for an index.'});
 try{reset('home')}catch(e){window.__showErr&&window.__showErr('boot: '+(e&&e.message||e)+'\n'+(e&&e.stack||'').split('\n').slice(0,3).join('\n'))}
+
+/* ================= 285: Tess's hand. When Tess makes a change, the place plays its own move, after her hand-off.
+   One rule: Tess's ink is cobalt until it dries. A change she makes stays in her blue for the 10 s Undo window,
+   then dries into the room's own ink (blue chalk turns white, the blue clip turns steel, a blue strike turns ink). */
+function thRect(el){const p=phone.getBoundingClientRect(),r=el.getBoundingClientRect();return {x:(r.left-p.left)/K,y:(r.top-p.top)/K,w:r.width/K,h:r.height/K}}
+function thLayer(){let L=phone.querySelector(':scope > .thl');if(!L){L=h('div','thl');phone.appendChild(L)}return L}
+/* hand(rect, {behind, refuse, hold}): her dab flies from the soul on an arc (x and y on different curves), spreads
+   into a wash, and resolves when the place should play. behind = the host to put the wash under (the rail, the
+   wall, the woods have gaps); without it the wash lies over the keystone in screen light (the board, sky, chart). */
+function tessHand(rc,o={}){return new Promise(res=>{
+ const L=thLayer(),sx=350,sy=822,cx=rc.x+rc.w/2,cy=rc.y+rc.h/2,hold=o.hold||900;
+ const washAt=()=>{const w=h('i','thwash'),host=o.behind||L;let ox=0,oy=0;if(o.behind){const b=thRect(o.behind);ox=b.x;oy=b.y;w.style.zIndex=-1}else w.classList.add('over');
+  const W=rc.w*1.12+28,H=rc.h*1.25+24;w.style.cssText+='left:'+(cx-ox-W/2)+'px;top:'+(cy-oy-H/2)+'px;width:'+W+'px;height:'+H+'px';host.appendChild(w);
+  const end=w.classList.contains('over')?.55:.9;
+  if(RM){w.animate([{opacity:0},{opacity:end}],{duration:150,fill:'forwards'});setTimeout(()=>{w.animate([{opacity:end},{opacity:0}],{duration:150,fill:'forwards'}).onfinish=()=>w.remove()},hold);res();return}
+  w.animate([{transform:'scale(.12,.09)',opacity:end},{transform:'scale(1)',opacity:end}],{duration:260,easing:'cubic-bezier(.2,.8,.3,1)',fill:'forwards'});
+  setTimeout(res,200);setTimeout(()=>{w.animate([{transform:'scale(1)',opacity:end},{transform:'scale(1.06)',opacity:0}],{duration:600,easing:'ease-in',fill:'forwards'}).onfinish=()=>w.remove()},260+hold)};
+ if(RM){if(o.refuse){res('refused');return}washAt();return}
+ const x=h('i','thx'),y=h('i','thy'),d=h('i','thdab');y.appendChild(d);x.appendChild(y);L.appendChild(x);
+ const f=o.refuse?.72:1,tx=sx+(cx-sx)*f,ty=sy+(cy-sy)*f,dur=460;
+ const ax=x.animate([{transform:'translateX('+sx+'px)'},{transform:'translateX('+tx+'px)'}],{duration:dur,easing:'cubic-bezier(.55,0,.75,.55)',fill:'forwards'});
+ y.animate([{transform:'translateY('+sy+'px)'},{transform:'translateY('+ty+'px)'}],{duration:dur,easing:'cubic-bezier(.15,.6,.35,1)',fill:'forwards'});
+ d.animate([{transform:'scale(.8)',filter:'blur(3px)'},{transform:'scale(.55)',filter:'blur(4px)'}],{duration:dur,fill:'forwards'});
+ ax.onfinish=()=>{if(o.refuse){/* she stops short, waits a beat, goes home: nothing moves */
+   d.animate([{transform:'scale(.55)'},{transform:'scale(.7)'},{transform:'scale(.55)'}],{duration:320,easing:'ease-in-out'});
+   setTimeout(()=>{x.animate([{transform:'translateX('+tx+'px)'},{transform:'translateX('+sx+'px)'}],{duration:420,easing:'cubic-bezier(.3,.4,.4,1)',fill:'forwards'});
+    y.animate([{transform:'translateY('+ty+'px)'},{transform:'translateY('+sy+'px)'}],{duration:420,easing:'cubic-bezier(.6,0,.85,.5)',fill:'forwards'}).onfinish=()=>{x.remove();res('refused')}},340);return}
+  d.animate([{transform:'scale(.55)',opacity:1},{transform:'scale(2.4,1.8)',opacity:0}],{duration:220,fill:'forwards'}).onfinish=()=>x.remove();washAt()}})}
+/* the Undo line, said as Tess or as the room; the change dries when it ends */
+function thUndo(el,byTess,msg,undo,dry){let ul=el.querySelector('.undoline');if(!ul){ul=h('div','undoline');el.appendChild(ul)}
+ /* the action word steps aside while the Undo line holds the foot, and comes back when it ends */
+ const aside=on=>thAside(el,on);
+ /* a new change dries the one before it at once */
+ if(ul._dry){const d=ul._dry;ul._dry=null;d()}ul._dry=dry||null;
+ ul.innerHTML=(byTess?'<span style="color:var(--tessblue)">Tess</span> ':'')+msg+' <button>Undo</button>';clearTimeout(ul._t);aside(1);
+ ul.querySelector('button').onclick=()=>{clearTimeout(ul._t);ul.innerHTML='';ul._dry=null;aside(0);undo()};ul._t=setTimeout(()=>{ul.innerHTML='';aside(0);const d=ul._dry;ul._dry=null;d&&d()},10000)}
+function thAside(el,on){const act=el&&el.querySelector('.act');if(!act||!!act._aside===!!on)return;act._aside=on;act.style.pointerEvents=on?'none':'';
+ if(on)act.animate([{opacity:1},{opacity:0}],{duration:RM?0:200}).onfinish=()=>{if(act._aside)act.style.visibility='hidden'};else{act.style.visibility='';act.animate([{opacity:0},{opacity:1}],{duration:RM?0:260})}}
+const thTween=(ms,f,done)=>{const t0=performance.now();const s=now=>{const u=Math.min(1,(now-t0)/ms);f(u);if(u<1)requestAnimationFrame(s);else done&&done()};requestAnimationFrame(s)};
+const TESSCHALK='158,186,240';
+const mixRGB=(a,b,u)=>{const A=a.split(',').map(Number),B=b.split(',').map(Number);return A.map((v,i)=>Math.round(v+(B[i]-v)*u)).join(',')};
+
+/* Deck: Tess writes on the board in blue chalk; it whitens when the Undo window closes. His finger writes white. */
+function thDeckLog(byTess){const el=current,cv=el&&el.querySelector('canvas.tboard');if(!cv)return;
+ const st={p:0,dry:byTess?0:1};cv._x=(cv._x||[]).filter(f=>!f._walk);
+ const f=ck=>{if(st.p<=0)return;ck.save();ck.beginPath();ck.rect(18,300,st.p*230,40);ck.clip();chalk(ck,'Walk, 32 min, Saturday',26,326,19,.78+.17*st.dry,mixRGB(TESSCHALK,C,st.dry));ck.restore()};f._walk=1;cv._x.push(f);
+ const write=()=>thTween(byTess?1080:900,u=>{st.p=u},()=>thUndo(el,byTess,byTess?'logged yesterday’s walk, 32 min.':'Walk, 32 min, logged.',()=>thTween(320,u=>{st.p=1-u}),()=>byTess&&thTween(700,u=>{st.dry=u})));
+ if(byTess)tessHand({x:20,y:304,w:220,h:30},{hold:1100}).then(write);else write()}
+function thDeckRefuse(){if(!current)return;tessHand({x:20,y:220,w:340,h:30},{refuse:1}).then(()=>{const el=current;thAside(el,1);tessSay('Pull A is already tomorrow morning, so Push A stays tonight. Want both on one day?');setTimeout(()=>thAside(el,0),7600)})}
+
+/* Galley: Tess hangs a ticket on the rail with a blue clip; the clip turns steel when it dries. */
+function thGalleyHang(byTess){const el=current,tix=el&&el.querySelector('.tix');if(!tix)return;const pass=tix.parentNode;
+ const old=tix.querySelector('.tk.th');if(old)old.remove();
+ const tk={id:'dal2',title:'Dal',color:'clay',pages:[{sub:'tomorrow, 40 min',lines:['Soak tonight','Red lentils']}]};
+ const e=h('div','tk th');e.innerHTML='<div class="clip"></div><div class="sheet"><div class="face front">'+pageHTML(tk,0)+'</div><div class="face back"></div></div>';
+ const tr=thRect(tix);const hang=()=>{e.style.flex='0 0 0px';e.style.opacity=0;e.style.transformOrigin='50% 0';tix.appendChild(e);tix.classList.add('n5');if(byTess)e.querySelector('.clip').classList.add('tess');void e.offsetWidth;
+  e.style.flex='';e.style.opacity='';const k=byTess?1.15:1;
+  if(!RM)e.animate([{transform:'translateY(-34px) rotate(10deg)',opacity:0},{transform:'translateY(0) rotate(-6deg)',opacity:1,offset:.42},{transform:'rotate(3deg)',offset:.64},{transform:'rotate(-1.2deg)',offset:.82},{transform:'none'}],{duration:1150*k,easing:'cubic-bezier(.3,.6,.4,1)'});
+  setTimeout(()=>thUndo(el,byTess,byTess?'hung Dal for tomorrow.':'Dal, hung for tomorrow.',()=>{e.animate([{transform:'none',opacity:1},{transform:'translateY(-30px) rotate(-4deg)',opacity:0}],{duration:260,easing:'ease-in',fill:'forwards'}).onfinish=()=>{e.style.flex='0 0 0px';setTimeout(()=>{e.remove();tix.classList.remove('n5')},500)}},()=>e.querySelector('.clip').classList.remove('tess')),500)};
+ if(byTess)tessHand({x:tr.x+tr.w-70,y:tr.y-6,w:70,h:tr.h},{behind:pass,hold:1200}).then(hang);else hang()}
+function thGalleyDishes(byTess){const el=current;if(!el)return;const t=[...el.querySelectorAll('.tix .tk')].find(k=>/Dishes/.test(k.textContent));if(!t)return;
+ const li=t.querySelector('.front .li');if(!li)return;const was=li.innerHTML;
+ const play=()=>{li.innerHTML='<span style="position:relative">'+was+'</span>';const s=h('i','thstrike'+(byTess?' tess':''));li.firstChild.appendChild(s);s.animate([{width:'0%'},{width:'100%'}],{duration:RM?0:180*(byTess?1.2:1),easing:'ease-out',fill:'forwards'});
+  const dry=()=>{s.classList.remove('tess');setTimeout(()=>{li.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}).onfinish=()=>{li.innerHTML='none waiting';dishes=0;li.animate([{opacity:0},{opacity:1}],{duration:260,fill:'forwards'})}},600)};
+  thUndo(el,byTess,byTess?'did the dishes, all 7.':'Dishes, done.',()=>{s.remove();li.innerHTML=was},byTess?dry:null);if(!byTess)dry()};
+ if(byTess)tessHand(thRect(t),{behind:t.closest('.pass'),hold:1000}).then(play);else play()}
+
+/* the board's buttons: open the room if needed, then play */
+const TH_DEMOS={'deck-tess':['training',()=>thDeckLog(true)],'deck-you':['training',()=>thDeckLog(false)],'deck-no':['training',thDeckRefuse],
+ 'galley-tess':['kitchen',()=>thGalleyHang(true)],'galley-you':['kitchen',()=>thGalleyHang(false)],'galley-dish':['kitchen',()=>thGalleyDishes(true)]};
+window.__th=k=>{const [room,f]=TH_DEMOS[k];const tl=$('#tessline');if(tl)tl.innerHTML='';const top=stack.length?stack[stack.length-1].id:null;if(top===room){f();return}reset('home');go(room);setTimeout(f,1500)};
+document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
+
 })();
 </script>
