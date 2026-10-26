@@ -565,7 +565,7 @@ public final class TessRun {
         guard let stage else { return nil }
         let report = await stage(place, change)
         guard !report.passed else { return nil }
-        return ("I tried it off screen and kept his look: \(report.line) Try another form, or tell him why.", false)
+        return ("Not shown: \(report.line); his look stays. Try another form, or tell him why", false)
     }
 
     // MARK: Bound calls
@@ -618,19 +618,19 @@ public final class TessRun {
         case "openDoor": bound.arguments["door"].map { "Opening \($0)." } ?? "Opening it."
         case "showWindow": bound.arguments["window"].map { "\($0)." } ?? "Done."
         case "setLook": lookLine(bound.arguments)
-        case "showLooks": "Here are its looks."
+        case "showLooks": "Here are its looks"
         default: bound.arguments["item"].map { "Opening \($0)." } ?? "Opening it."
         }
     }
 
-    /// "The dial, as index." from a bound look; the shell's own Undo line follows.
+    /// "The dial, as index" from a bound look; the shell's own Undo line follows.
     static func lookLine(_ arguments: [String: String]) -> String {
-        guard let place = arguments["place"], let change = LookWords.change(arguments) else { return "Done." }
+        guard let place = arguments["place"], let change = LookWords.change(arguments) else { return "Done" }
         let everywhere = arguments["scope"] == "everywhere" ? ", in every room" : ""
         return switch change {
-        case let .form(id): "The \(place), as \(id)\(everywhere)."
-        case .designed: "The \(place), as drawn\(everywhere)."
-        case let .trait(name, value): "The \(place): \(name) \(value)\(everywhere)."
+        case let .form(id): "The \(place), as \(id)\(everywhere)"
+        case .designed: "The \(place), as drawn\(everywhere)"
+        case let .trait(name, value): "The \(place): \(name) \(value)\(everywhere)"
         }
     }
 

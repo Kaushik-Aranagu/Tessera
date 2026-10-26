@@ -138,7 +138,7 @@ struct ElementLooksTests {
         #expect(back.place == .dial && LookWords.change(back.arguments) == .designed)
         let browse = try #require(ToolPicker.pick("what looks can the doors have", frame: deckFrame()).bound)
         #expect(browse.call == "showLooks" && browse.place == .dial)
-        #expect(TessRun.lookLine(index.arguments) == "The dial, as index.")
+        #expect(TessRun.lookLine(index.arguments) == "The dial, as index")
         #expect(ShellIntent(call: "setLook", arguments: sky.arguments).change == .motion)
         #expect(ShellIntent(call: "setLook", arguments: index.arguments).change == .form)
     }
@@ -163,6 +163,24 @@ struct ElementLooksTests {
     }
 
     // MARK: The quiet stage
+
+    @Test func theLookCallsRideOnlyOnAnAskAboutLooks() async throws {
+        // Every living place offers them, but an ask about something else never carries them, so the model can't
+        // change a look he didn't ask about: runTool refuses a call the pick didn't offer.
+        let other = ToolPicker.pick("could you tell me something nice about my training please", frame: deckFrame())
+        #expect(!other.looks && other.tools.allSatisfy { !LookWords.calls.contains($0) })
+        let helper = TessRunTests()
+        let form = #"{"place":"dial","form":"sentence","trait":null,"value":null,"scope":null}"#
+        let haiku = ScriptedBrain(.haiku, rounds: [[helper.use("t1", "setLook", form)], [.text("Done.")]])
+        let r = try helper.rig([.haiku: haiku])
+        let events = await helper.collect(r.run.ask("could you tell me something nice about my training please",
+                                                    frame: deckFrame()))
+        #expect(!events.contains { if case .shell = $0 { true } else { false } })
+        let said = try #require(haiku.requestsSeen.last).messages.last?.content.compactMap { piece -> String? in
+            if case let .toolResult(_, content, _) = piece { content } else { nil }
+        } ?? []
+        #expect(said == ["That isn't a call I can make here."])
+    }
 
     @Test func aFormTessPicksIsStagedAndAppliedOnlyIfItPasses() async throws {
         let helper = TessRunTests()
@@ -191,12 +209,12 @@ struct ElementLooksTests {
                 let said = second.messages.last?.content.compactMap { piece -> String? in
                     if case let .toolResult(_, content, _) = piece { content } else { nil }
                 } ?? []
-                #expect(said.first?.contains("The dial fails fits, touch.") == true)
+                #expect(said.first?.contains("the dial fails fits, touch; his look stays") == true)
             }
         }
         // A form no place has never reaches the stage or the shell.
         #expect(LookWords.isKnown(.form("card"), place: "dial") == false)
-        #expect(StageReport(places: [StageFlags(place: .dial)]).line == "It passes every check.")
+        #expect(StageReport(places: [StageFlags(place: .dial)]).line == "It passes every check")
     }
 
     @Test func aReshapeTravelsWhatBothFormsShowAndCollapsesOnlyWhenNothingIsShared() {

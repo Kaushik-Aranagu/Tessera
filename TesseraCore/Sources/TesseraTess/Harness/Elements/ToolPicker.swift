@@ -77,7 +77,10 @@ public enum ToolPicker {
         let named: [String] = matched.map { $0.call.name }
         let shown: [String] = offered.map { $0.call.name }
         let candidates: [String] = named + shown + (agent?.tools ?? []) + reads
-        for name in candidates where !deviceOnly.contains(name) && !tools.contains(name) {
+        // The look calls ride only on an ask about looks, so she never changes a look he didn't ask about.
+        for name in candidates where !deviceOnly.contains(name) && !tools.contains(name)
+            && (looks || !LookWords.calls.contains(name))
+        {
             tools.append(name)
         }
         let plan = matched.isEmpty ? RungPlan.pick(ask) : small(ask)

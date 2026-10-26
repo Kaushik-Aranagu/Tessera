@@ -57,9 +57,9 @@ public struct StageReport: Sendable, Equatable {
     /// One line for Tess: the places and the checks that failed, never what they show.
     public var line: String {
         let failing = places.filter { !$0.failed.isEmpty }
-        guard !failing.isEmpty else { return "It passes every check." }
-        return failing.map { "The \($0.place.rawValue) fails \($0.failed.joined(separator: ", "))" }
-            .joined(separator: "; ") + "."
+        guard !failing.isEmpty else { return "It passes every check" }
+        return failing.map { "the \($0.place.rawValue) fails \($0.failed.joined(separator: ", "))" }
+            .joined(separator: "; ")
     }
 }
 
