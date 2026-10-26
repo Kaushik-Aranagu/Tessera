@@ -60,8 +60,24 @@ struct TessRunTests {
                 nil
             }
         }
-        #expect(words == ["Hello ", "there."])
-        #expect(events.last == .finished("Hello there."))
+        // The closing stop never shows, live or finished, so nothing flickers when the reply lands.
+        #expect(words == ["Hello ", "there"])
+        #expect(events.last == .finished("Hello there"))
+    }
+
+    @Test func aStopHeldFromTheLiveWordsComesBackWhenMoreFollow() async throws {
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("It is 2."), .text("5 km.")]])
+        let r = try rig([.haiku: haiku])
+        let events = await collect(r.run.ask("how far was it"))
+        let words = events.compactMap {
+            if case let .words(piece) = $0 {
+                piece
+            } else {
+                nil
+            }
+        }
+        #expect(words == ["It is 2", ".5 km"] && words.joined() == "It is 2.5 km")
+        #expect(events.last == .finished("It is 2.5 km"))
     }
 
     @Test func pickRungSendsOpenQuestionsToSonnetAndLookupsToHaiku() {
@@ -91,7 +107,7 @@ struct TessRunTests {
         ])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("how many tasks and notes"))
-        #expect(events.last == .finished("Two answers."))
+        #expect(events.last == .finished("Two answers"))
         let second = try #require(haiku.requestsSeen.last)
         let lastMessage = try #require(second.messages.last)
         let results = lastMessage.content.compactMap { piece -> String? in
@@ -124,7 +140,7 @@ struct TessRunTests {
         let pending = r.engine.history(limit: 20).filter { $0.state == .pending }
         // Oldest first: the first write is the first ghost.
         #expect(ghosts == pending.reversed().map(\.id))
-        #expect(events.last == .finished("Added both."))
+        #expect(events.last == .finished("Added both"))
     }
 
     @Test func anEleventhRoundIsNeverSentAndThePhoneLineComesBack() async throws {
@@ -150,7 +166,7 @@ struct TessRunTests {
         ])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("how many sets"))
-        #expect(events.last == .finished("Found it.") && haiku.streamCount == 3)
+        #expect(events.last == .finished("Found it") && haiku.streamCount == 3)
         let third = try #require(haiku.requestsSeen.last)
         let assistant = third.messages.filter { $0.role == .assistant }
         #expect(assistant.count == 2)
