@@ -85,6 +85,8 @@ public final class TessRun {
     /// The memory slice for the run in flight, built on its first recall or path read.
     private var memory: (runID: UUID, index: MemoryIndex)?
     private var tries: LookTries?
+    /// The rehearsal for the run in flight: one per ask, so its three tries are the ask's.
+    private var rehearsal: (runID: UUID, rehearsal: Rehearsal)?
     private var lastRung: BrainID?
     private var lastAskAt: Date?
     private var lastWarm: [BrainID: Date] = [:]
@@ -251,9 +253,18 @@ public final class TessRun {
             + "passes, or tell him why none fit", schema: data)
     }
 
+    /// The rehearsal as Claude reads it: the device-only tool's own input, run here, so what comes back is
+    /// what the Door lets through (`rehearsed`).
+    static var rehearseSpec: ToolSpec? {
+        guard let tool = TessTools.tool(named: RehearseFlags.tool),
+              let data = try? JSONSerialization.data(withJSONObject: tool.input.json, options: [.sortedKeys])
+        else { return nil }
+        return ToolSpec(name: tool.name, description: RehearseFlags.description, schema: data)
+    }
+
     /// Only the tools a pick named, in its order (shell calls included); `open` rides along as a read.
     static func toolSpecs(only names: [String]) -> [ToolSpec] {
-        let all = toolSpecs() + shellSpecs() + [tryLookSpec]
+        let all = toolSpecs() + shellSpecs() + [tryLookSpec] + (rehearseSpec.map { [$0] } ?? [])
         return names.compactMap { name in all.first { $0.name == name } }
     }
 
@@ -525,7 +536,9 @@ public final class TessRun {
         var result: (text: String, isError: Bool)
         // Only a call this turn was offered can run, whatever name the model returns; and a device-only tool (money)
         // never runs for a Claude rung, even if it were offered: it runs bound, or on the phone's own model.
-        let deviceOnly = TessTools.tool(named: name)?.deviceOnly == true
+        // The rehearsal is device-only as a tool, but it writes nothing: it runs here, and a Claude rung reads
+        // only what the Door lets through. A money call inside it still fails off the phone.
+        let deviceOnly = name != RehearseFlags.tool && TessTools.tool(named: name)?.deviceOnly == true
         switch name {
         case _ where !offered.contains(name) || (deviceOnly && !onDevice):
             result = ("That isn't a call I can make here.", true)
@@ -561,6 +574,8 @@ public final class TessRun {
                 sink(.ghost(ghost))
             }
             result = (answer.text, answer.isError)
+        case RehearseFlags.tool:
+            result = rehearsed(input, runID: runID, onDevice: onDevice)
         case "tryLook":
             let args = (try? JSONSerialization.jsonObject(with: input)) as? [String: Any] ?? [:]
             result = await tryLook(args.compactMapValues { $0 as? String }, runID: runID)
@@ -621,6 +636,28 @@ public final class TessRun {
         let report = await stage(place, change)
         guard !report.passed else { return nil }
         return ("Not shown: \(report.line); his look stays. Try another form, or tell him why", false)
+    }
+
+    /// Runs `rehearse` on a copy of his store with the ask's one `Rehearsal`. The phone's own model reads the whole
+    /// result; a Claude rung reads its fragments as the Door's policy allows (strict holds money, body and private
+    /// lines back and says how many), never the receipts.
+    func rehearsed(_ input: Data, runID: UUID, onDevice: Bool) -> (text: String, isError: Bool) {
+        guard let asked = RehearseFlags.calls(input) else {
+            return ("Give the calls to try, each with its name and arguments.", true)
+        }
+        let current: Rehearsal
+        if let kept = rehearsal, kept.runID == runID {
+            current = kept.rehearsal
+        } else {
+            current = Rehearsal(engine: engine)
+            rehearsal = (runID, current)
+        }
+        let result = current.try(asked.calls, expecting: asked.expecting,
+                                 scope: MemoryScope(agent, policy: door.policy()), onDevice: onDevice)
+        if onDevice {
+            return (result.text, false)
+        }
+        return (RehearseFlags.forClaude(result, policy: door.policy()), false)
     }
 
     /// A look tried off screen (`tryLook`): the place's own list, then the quiet stage. Nothing is shown or kept. At

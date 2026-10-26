@@ -71,18 +71,18 @@ phone's own rung with its one call.
 It writes nothing, so it doesn't count against the ghost budget, but it does count as a round. Then she calls the
 same tools for real, or says what went wrong and what she would do instead.
 
-The spec the model reads (AI lane; Core registers the tool, and its name is `RehearseFlags.tool`):
-- Description: "Try your writes on a copy of his things first. Give the exact calls you would make; they run on a
-  copy, nothing of his changes and nothing is shown. Returns what each call did, what would change, and any check
-  that failed. If every check passes, make the same calls for real. If any fails, change nothing and tell him".
-- Input: `calls`, an array of `{name, arguments}`. `name` is one of the tools offered this turn; `arguments` is that
-  tool's own input. `count` is optional: the number he named, which the count check uses (the pick's `count`).
-- Result, as one block of text in this order:
-  - the receipts, one line each;
-  - the diff, one line per object ("Push A: day Mon to Tue"), with a private thing shown by its label;
-  - "Checks: all pass", or "Checks failed: count (asked 6, changed 4), scope".
-  - Money and body values in the diff are `deviceOnly`, so that line reaches Claude only under lab, like any
-    fragment.
+**How each rung reads it (AI lane, wired):**
+- Core's `rehearse` tool is `deviceOnly`, because its full text can hold money, body and private values. `TessRun`
+  runs it itself, with one `Rehearsal` per ask, so the ask's 3 tries are shared across rounds.
+- **The phone's own model** reads `Result.text` whole: the receipts, the diff and the checks.
+- **A Claude rung** reads `RehearseFlags.forClaude`: the result's fragments as the Door's policy allows, and never the
+  receipts.
+  - Under strict, a money, body or private line stays on the phone, and she hears how many were held back.
+  - The last line is "All checks passed.", or "Checks failed: change nothing, and tell him why."
+- A money call inside a rehearsal on a Claude rung still fails its check (`moneyOffPhone`). The rehearsal itself writes
+  nothing, so it isn't a ghost and doesn't use the ghost budget.
+- The spec Claude sees takes the tool's own input: `calls`, an array of `{name, arguments}` with the arguments as
+  JSON text, and `expecting`, the count he named or null. Its description is `RehearseFlags.description`.
 
 ## 4. Looks: the quiet stage (sheet 287, section 5)
 
@@ -123,7 +123,7 @@ hand, so it isn't staged.
 2. **AI lane (this thread):** the stage gate on `setLook` is done (`TessRun.stage`, `StageReport`). Still to do:
    when she rehearses data (done: `RehearseFlags`), `tryLook` (done), and test-world cases scored on "rehearsed,
    then acted correctly" (done: `WorldKind.rehearse`; a case's `order` must come in that order). The `rehearse`
-   spec and the diff as fragments with taint come once Core's `Rehearsal` lands.
+   spec and the Claude route through the Door are done too (`TessRun.rehearsed`).
 3. **Builder A:** `ShellStage.render(screen:looks:) -> StageReport`, wired to `TessRun.stage`, and the
    `RenderedItem` preference on each place's item views, after the sheet 287 forms exist.
 4. **Later:** a vision check of the rendered image on the phone's own model, and rebuilding code on the Mac or an

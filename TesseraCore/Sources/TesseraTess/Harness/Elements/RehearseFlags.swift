@@ -79,6 +79,41 @@ public enum RehearseFlags {
         return nil
     }
 
+    /// What Claude reads about the rehearse tool (Core's tool is device-only; `TessRun` runs it for a Claude rung).
+    public static let description = "Try your writes on a hidden copy of his things first. Give the exact calls you "
+        + "would make: each tool's name and its arguments as JSON text, and expecting when he named a count. Nothing "
+        + "of his changes and nothing is shown. Returns what would change and any check that failed. If every check "
+        + "passes, make the same calls for real; if not, change nothing and tell him what went wrong"
+
+    /// The calls and count from `rehearse`'s input. Arguments may come as JSON text (the schema) or as an object.
+    public static func calls(_ input: Data) -> (calls: [Rehearsal.Call], expecting: Int?)? {
+        guard let arguments = (try? JSONSerialization.jsonObject(with: input)) as? [String: Any],
+              let list = arguments["calls"] as? [[String: Any]] else { return nil }
+        let calls = list.compactMap { entry -> Rehearsal.Call? in
+            guard let name = entry["name"] as? String, !name.isEmpty else { return nil }
+            if let object = entry["arguments"] as? [String: Any],
+               let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+            {
+                return Rehearsal.Call(name: name, arguments: data)
+            }
+            return Rehearsal.Call(name: name, json: entry["arguments"] as? String ?? "{}")
+        }
+        return calls.isEmpty ? nil : (calls, arguments["expecting"] as? Int)
+    }
+
+    /// A rehearsal as a Claude rung reads it: its fragments as the Door's policy allows, never the receipts. Under
+    /// strict a money, body or private line stays on the phone, and she hears how many.
+    public static func forClaude(_ result: Rehearsal.Result, policy: DoorPolicy) -> String {
+        let shown = result.fragments.filter { policy.allows($0, onClaude: true) }
+        var lines = shown.map(\.text)
+        let held = result.fragments.count - shown.count
+        if held > 0 {
+            lines.append("\(held) more held back on the phone (private, money or body)")
+        }
+        lines.append(result.passed ? "All checks passed." : "Checks failed: change nothing, and tell him why.")
+        return lines.joined(separator: "\n")
+    }
+
     /// The line the model reads when an ask is rehearsed. It holds no item of his, so it goes to Claude as is.
     public static func line(_ reason: RehearseReason, count asked: Int?) -> String {
         let why = reason == .bulk ? "This ask changes many things" : "This ask changes the shape of a plan or a list"

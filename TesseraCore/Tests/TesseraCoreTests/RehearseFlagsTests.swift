@@ -53,6 +53,49 @@ struct RehearseFlagsTests {
         #expect(RehearseFlags.line(.bulk, count: 5).contains("He named 5"))
     }
 
+    @Test func aClaudeRungReadsOnlyWhatTheDoorLetsThrough() {
+        let plain = Rehearsal.Change(kind: .made, name: "Call the bank", details: [], taint: .claudeSafe, id: UUID())
+        let walled = Rehearsal.Change(kind: .changed, name: "Private note", details: [], taint: .deviceOnly,
+                                      id: UUID())
+        let result = Rehearsal.Result(receipts: [.init(tool: "createTask", line: "a receipt", refused: false)],
+                                      diff: [plain, walled], failed: [])
+        #expect(RehearseFlags.forClaude(result, policy: .strict)
+            == "made Call the bank\n1 more held back on the phone (private, money or body)\nAll checks passed.")
+        #expect(RehearseFlags.forClaude(result, policy: .lab)
+            == "made Call the bank\nchanged Private note\nAll checks passed.")
+        let failed = Rehearsal.Result(receipts: [], diff: [plain], failed: [.count(expected: 6, got: 4)])
+        #expect(RehearseFlags.forClaude(failed, policy: .lab)
+            .hasSuffix("Expected 6 changed, got 4\nChecks failed: change nothing, and tell him why."))
+        // Arguments as JSON text (the schema) or as an object both read.
+        let input = #"{"calls":[{"name":"createTask","arguments":"{\"title\":\"A\"}"},"#
+            + #"{"name":"createTask","arguments":{"title":"B"}}],"expecting":2}"#
+        let read = RehearseFlags.calls(Data(input.utf8))
+        #expect(read?.calls.count == 2 && read?.expecting == 2)
+        #expect(RehearseFlags.calls(Data(#"{"calls":[]}"#.utf8)) == nil)
+    }
+
+    @Test func theRehearsalRunsForAClaudeRungWritesNothingAndKeepsTheAsksThreeTries() async throws {
+        let helper = TessRunTests()
+        let r = try helper.rig([:], policy: .strict)
+        let before = r.rig.store.context.objects.count
+        let task = #"{"title":"Call the bank","startsAt":null,"about":[]}"#
+        let input = try JSONSerialization.data(withJSONObject: [
+            "calls": [["name": "createTask", "arguments": task]], "expecting": 1,
+        ])
+        let runID = UUID()
+        var budget = 10
+        let first = await r.run.runTool(id: "t1", name: RehearseFlags.tool, input: input, handles: [:],
+                                        offered: [RehearseFlags.tool], onDevice: false, budget: &budget,
+                                        runID: runID, sink: { _ in })
+        #expect(!first.isError && first.text.hasSuffix("All checks passed."), "\(first.text)")
+        #expect(r.rig.store.context.objects.count == before && budget == 10)
+        _ = r.run.rehearsed(input, runID: runID, onDevice: false)
+        _ = r.run.rehearsed(input, runID: runID, onDevice: false)
+        #expect(r.run.rehearsed(input, runID: runID, onDevice: false).text.contains("three tries"))
+        // A new ask starts again.
+        #expect(r.run.rehearsed(input, runID: UUID(), onDevice: false).text.hasSuffix("All checks passed."))
+    }
+
     @Test func theWorldScoresTheRehearsalBeforeTheWrite() throws {
         let key = EvalWorldKey(EvalWorld.make())
         let chores = try #require(key.questions().first { $0.id == "rehearse/all-chores" })
