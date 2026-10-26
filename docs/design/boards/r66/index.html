@@ -122,13 +122,15 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
  <p class="how">Tap any highlighted word, face or door. Back is a swipe from the left edge of the phone (or Escape). Swipes and holds work as on the phone: right is Done, left is Not now, hold the one thing to strike it.</p>
 </div>
 <div>
- <p class="eyebrow">Round 283, version 5, Oct 25</p>
+ <p class="eyebrow">Round 283, version 9, with sheet 284, Oct 25</p>
  <h1>Every landing, one layout.</h1>
  <p class="lede">Every landing now opens like Bridge and keeps Bridge’s lower half: the widget in the middle and the doors dial below it. The top holds the title, a text-only switcher and the room’s needs. Tap a room in Bridge’s apps dial (or a face, or a highlighted word) to watch the flip. Swipe from the left edge, or tap “Bridge”, to go back.</p>
  <div class="notes283">
+  <p><b>New: level 1 and level 2 in every room (sheet 284, his 7:44 PM note).</b> Turn any room’s dial and tap the focused door. The page does not slide: the title and the keystone stay exactly where they were (the Galley rail keeps its tickets, the Deck keeps its board), the switcher and needs become the door’s title, and the widget, dial and summary make way for the door’s list. The list fills its block exactly, biggest first, so there is never a gap or a run of equal rows. Swipe the door title across for the next door. Tap a row for its item page: the same frame again, with the item’s title, three facts, and its body (Trip packing is a checklist, the Run plan is Tess’s note, 7 PM is the hours around it, Bench is its sets, Tacos are the steps, Walk is the week, Food is the ledger in “about” amounts). Swipe the item title across for the next item. Back undoes each step in place.</p>
+  <p><b>New in version 6 (his 4:47 and 4:48 PM notes).</b> Back no longer moves the page. Pull from the left edge and the screen stays put: the content loosens and blurs a little and the nav word grows; let go past a short pull and every place changes in place, short of it everything settles back. The door summary beside the dial now changes in each room’s own way as you turn the dial. Log types its lines and backspaces the old ones. Lookout’s lines condense out of fog. The Deck chalks them on and wipes them off with a puff of dust. The Galley prints them like a ticket and tears the old one off. The Watch grows them from the ground and the old ones fall like leaves. The Purse keeps its words still and rolls only the numbers.</p>
   <p><b>New in version 5 (his 4:21 and 4:22 PM notes).</b> The screen never changes now. The places stay where they are and only what is inside them changes. Open a door and nothing slides in: the masthead flaps to the door’s name, the keystone stays (the Galley’s rail keeps its tickets), the widget and the doors leave and the door’s list settles in from the top. Back runs the same moves the other way and puts every place back as you left it. In Layout mode, tap the Dial bubble twice (or press the down arrow) to open a door: Switcher and Needs melt into one Door title, and the widget, glyph, dial and summary melt into one Page. Tap the Nav word twice (or the up arrow) and they split apart again.</p>
   <p><b>New in version 4 (his 4:11 PM note).</b> The whole screen is mapped below, with empty places kept and marked. Moving between Bridge and a room now goes place by place: the masthead flaps, the mosaic flips, the widget swipes up, the dial spins too fast to read and slows onto the new doors, the summary slides off right and back in, and the action word streams. Open a room from Bridge’s dial to watch it, and go back to see it reverse.</p>
-  <p><b>Layout mode.</b> Settings, then Layout mode, shows the app as its places only: soft bubbles in each room’s colour, empty places dashed. Swipe across (or use the arrow keys) to walk Bridge and every room, and the bubbles move the way their places do. Tap a bubble to read what it holds, how you touch it and how it moves. It is read-only for now and can become editable later.</p>
+  <p><b>Layout mode, in glass (version 8).</b> Settings, then Layout mode. Every place is a pane of glass at its exact frame, set 2 pt in so every seam is an even 4 pt gap; the masthead is a frosted plate the title panes sit on; empty places are hollow, hatched glass. Breaths are measured gaps marked with their height (14, 28, 16 pt), and the 24 pt side margins are drawn as guides. Swipe across for the next room: nothing moves, the glass takes the room’s tint, a sheen crosses it, and each label changes the way its place does. Swipe up for the door page and the panes turn liquid, flow together into the Door title and the Page, and set back into glass; swipe down and they pull apart. Bridge to a room is liquid too: the settings word becomes the title, the departure board splits into the switcher, needs and nav word. Tap a pane for its glass card (frame, holds, touch, next room, door page). Black look uses darker glass.</p>
   <p><b>New in this version (his 3:57 PM notes).</b> Deck now writes in a condensed gym face (Barlow Condensed), on the board and in the widget. Galley’s tickets are printed now, in IBM Plex Sans Condensed, and Caveat is gone.</p>
   <p><b>The action word is a verb.</b> The verb sits in the room’s colour with its object small under it (“Start” over “Push A, about 45 min”). Tap does it. Swipe across for the room’s other actions: the verb’s letters stream out and the next one’s stream in. Starting a workout asks for a hold: the verb fills with colour from left to right in half a second.</p>
   <p><b>The glyph follows the widget.</b> A library of 21 small drawings is picked by rules from the item’s words, and Tess picks later. The drawing never cuts. It collapses into a point, the point pulses once, and the new drawing forms out of it. When nothing fits, the glyph is built from the item’s own words, set like the wall.</p>
@@ -213,8 +215,13 @@ function reset(id,params){stack=[];stage.innerHTML='';cleanup&&cleanup();cleanup
 addEventListener('keydown',e=>{if(e.key==='Escape')back()});
 // back: a drag that starts in the left 24 pt
 let ex=null;phone.addEventListener('pointerdown',e=>{const r=phone.getBoundingClientRect();const x=(e.clientX-r.left)/K;if(x<24&&stack.length>1){ex=e.clientX;e.stopPropagation()}},true);
-phone.addEventListener('pointermove',e=>{if(ex==null||!current)return;const dx=Math.max(0,(e.clientX-ex)/K);current.style.transition='none';current.style.transform='translateX('+dx+'px)'},true);
-phone.addEventListener('pointerup',e=>{if(ex==null)return;const dx=(e.clientX-ex)/K;ex=null;current.style.transition='';if(dx>80)back();else{current.classList.add('enter');current.style.transform='none'}},true);
+// the screen never follows the finger (283 v6): the places stay, the content loosens as you pull, and the nav word
+// grows toward the page it names. Past 80 pt it lets go and the places change in place; short of it, all settles back.
+const backFx=p=>{if(!current)return;[...current.children].forEach(c=>{if(c.classList.contains('sbar'))return;const nav=c.querySelector&&c.querySelector('.lnav,.backw');
+ if(p&&!c._bf)c._bf=[c.style.filter,c.style.opacity];if(!p&&!c._bf)return;c.style.transition=p?'none':'filter .28s,opacity .28s';c.style.filter=p?'blur('+(p*2.4).toFixed(2)+'px)':c._bf[0];c.style.opacity=p?(1-p*.4).toFixed(3):c._bf[1];if(!p)c._bf=null;
+ if(nav){nav.style.transition=p?'none':'transform .3s cubic-bezier(.2,.8,.2,1)';nav.style.transform=p?'scale('+(1+p*.18).toFixed(3)+')':'';nav.style.transformOrigin='100% 50%'}})};
+phone.addEventListener('pointermove',e=>{if(ex==null||!current)return;const dx=Math.max(0,(e.clientX-ex)/K);backFx(Math.min(1,dx/120))},true);
+phone.addEventListener('pointerup',e=>{if(ex==null)return;const dx=(e.clientX-ex)/K;ex=null;backFx(0);if(dx>80)back()},true);
 
 /* the doorway (206): a wave of room-colored tiles spreads from the touch; each tile flips and lands as the new page */
 function doorway(el,x0,y0,color,done){const cv=$('#doorway'),c=cv.getContext('2d'),T=4,cols=Math.ceil(402/T),rows=Math.ceil(874/T);
@@ -316,7 +323,7 @@ $('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('
 .one .big .strike{position:absolute;left:0;top:55%;height:1.5px;background:var(--ink);width:0}
 .one .mid{height:28px;font-size:20px;font-weight:500;white-space:nowrap;overflow:hidden;max-width:262px;margin-top:6px}
 .one .sml{height:22px;font-size:15px;font-weight:500;color:var(--ink2);white-space:nowrap;overflow:hidden;margin-top:6px}
-.one canvas{position:absolute;right:0;top:44px;width:80px;height:80px;image-rendering:pixelated}
+.one canvas{position:absolute;right:0;top:44px;width:80px;height:80px}
 .apps{position:absolute;left:24px;right:24px;top:640px;height:120px;overflow:hidden;touch-action:none}
 .apps .ar{position:absolute;left:0;right:0;height:40px;display:flex;align-items:center;gap:14px;white-space:nowrap;cursor:pointer;transition:top .32s cubic-bezier(.3,.9,.3,1)}
 .apps .ar b{font-weight:600;font-size:20px;transform-origin:left center;transition:transform .32s cubic-bezier(.3,.9,.3,1),color .3s}
@@ -423,7 +430,8 @@ SCREENS.home={title:'Home',accent:null,tess:'Stretch at 8 may run into Push A. M
 
  // the one thing
  const one=h('div','one');el.appendChild(one);let oi=0;
- function signArt(kind){const s=document.createElement('canvas');s.width=20;s.height=20;const g=s.getContext('2d');const P=(x,y,c)=>{g.fillStyle=c;g.fillRect(x,y,1,1)};
+ // the sign is laid like the keystone: 4 pt tiles with the same grout between them (3.6 pt light, 3.2 pt on black), drawn at 2x
+ function signArt(kind){const s=document.createElement('canvas');s.width=160;s.height=160;const g=s.getContext('2d');const ts=(phone.dataset.look==='black'?3.2:3.6)*2;const P=(x,y,c)=>{g.fillStyle=c;g.fillRect(x*8,y*8,ts,ts)};
   const A={training:css('--training'),kitchen:css('--kitchen'),routines:css('--routines'),lists:css('--lists'),weather:css('--weather')};
   for(let y=0;y<20;y++)for(let x=0;x<20;x++){const e=Math.min(x,y,19-x,19-y);if(e<1)continue}
   if(kind==='barbell'){for(let x=2;x<18;x++)P(x,10,css('--ink2'));[[3,6],[5,4],[13,4],[15,6]].forEach(([x,hh])=>{for(let y=10-hh;y<=10+hh;y++){P(x,y,A.training);P(x+1,y,A.training)}})}
@@ -1482,6 +1490,40 @@ function actionX(el,R){const A=R.acts,f=h('div','act');el.appendChild(f);let i=0
   if(did)return;if(ax==='x'&&Math.abs(dx)>56&&A.length>1){const d=dx<0?1:-1;i=(i+d+A.length)%A.length;set(i,d);return}if(!ax&&!A[i].hold)A[i].f(el)};
  return f}
 
+/* ---------- the door summary, one per room (283 v6, his 4:47 PM note) ----------
+   The place stays (192 x 96 beside the dial); only its lines change, and each room changes them its own way.
+   Log types the new lines and backspaces the old. Lookout's lines condense out of fog and evaporate.
+   The Deck chalks them on and wipes them off with a little dust. The Galley prints them like a ticket and tears
+   the old one off. The Watch grows them from the ground and lets the old ones fall like leaves. The Purse keeps
+   its words calm and rolls only its numbers, like a meter. Reduce Motion: a plain swap. */
+const SUMX_FONT={training:"font-family:'Barlow Condensed',sans-serif;letter-spacing:.01em",kitchen:"font-family:'IBM Plex Sans Condensed',sans-serif"};
+const SUMX={
+ notes:{out:(e,i)=>[[{clipPath:'inset(-4px 0 -4px 0)'},{clipPath:'inset(-4px 100% -4px 0)'}],{duration:150,delay:i*30,easing:'steps(9)'}],
+  in:(e,i)=>[[{clipPath:'inset(-4px 100% -4px 0)'},{clipPath:'inset(-4px 0 -4px 0)'}],{duration:Math.min(420,e.textContent.length*16),delay:150+i*120,easing:'steps('+Math.max(4,e.textContent.length)+')'}]},
+ weather:{out:(e,i)=>[[{opacity:1,filter:'blur(0)',transform:'none'},{opacity:0,filter:'blur(7px)',transform:'translateY(-8px)'}],{duration:260,delay:i*40,easing:'ease-in'}],
+  in:(e,i)=>[[{opacity:0,filter:'blur(8px)',letterSpacing:'.22em',transform:'translateY(-3px)'},{opacity:1,filter:'blur(0)',letterSpacing:'normal',transform:'none'}],{duration:620,delay:180+i*110,easing:'cubic-bezier(.2,.7,.2,1)'}]},
+ training:{out:(e,i)=>[[{clipPath:'inset(-4px 0 -4px 0)',filter:'blur(0)',opacity:1},{clipPath:'inset(-4px 0 -4px 100%)',filter:'blur(1.5px)',opacity:.4}],{duration:200,delay:i*45,easing:'cubic-bezier(.5,0,.8,.5)'}],
+  in:(e,i)=>[[{clipPath:'inset(-4px 100% -4px 0)',opacity:.55},{clipPath:'inset(-4px 40% -4px 0)',opacity:.8,offset:.5},{clipPath:'inset(-4px 0 -4px 0)',opacity:1}],{duration:300,delay:230+i*150,easing:'cubic-bezier(.4,.1,.6,1)'}],
+  extra:(el)=>dust(el,{x:186,y:660,w:192,h:84},{x:300,y:772},{n:22,c:css('--training'),c0:'rgba(236,236,230,.9)',size:1.8,dur:620,spread:180,drop:1})},
+ kitchen:{whole:1,out:e=>[[{transform:'none',opacity:1,clipPath:'polygon(0 0,100% 0,100% 100%,0 100%)'},{transform:'translateY(-16px) rotate(-2deg)',opacity:0,clipPath:'polygon(0 0,100% 0,100% 92%,90% 100%,80% 92%,70% 100%,60% 92%,50% 100%,40% 92%,30% 100%,20% 92%,10% 100%,0 92%)'}],{duration:240,easing:'cubic-bezier(.5,0,.8,.4)'}],
+  in:e=>[[{clipPath:'inset(0 0 100% 0)',transform:'translateY(-10px)'},{clipPath:'inset(0 0 0 0)',transform:'none'}],{duration:520,delay:200,easing:'steps(7)'}]},
+ routines:{out:(e,i)=>[[{transform:'none',opacity:1},{transform:'translate('+(i%2?-10:12)+'px,22px) rotate('+(i%2?-7:6)+'deg)',opacity:0}],{duration:520,delay:i*70,easing:'cubic-bezier(.4,0,.7,.6)'}],
+  in:(e,i)=>[[{transform:'translateY(10px) scaleY(.15) rotate(-5deg)',opacity:0},{transform:'translateY(-1px) scaleY(1.06) rotate(1.2deg)',opacity:1,offset:.7},{transform:'none',opacity:1}],{duration:560,delay:220+i*120,easing:'cubic-bezier(.2,.8,.3,1)'}]},
+ money:{out:(e,i)=>[[{opacity:1},{opacity:0}],{duration:140,easing:'linear'}],
+  in:(e,i)=>[[{opacity:0},{opacity:1}],{duration:220,delay:120+i*40,easing:'linear'}],roll:1}};
+function rollDigits(box){box.querySelectorAll('.o').forEach((o,j)=>{const t=o.textContent,ht=o.closest('.lb')?20:24;
+ o.innerHTML=[...t].map((ch,k)=>{if(!/\d/.test(ch))return ch;const d=+ch,col=[];for(let s=5;s>0;s--)col.push((d+s*3+k)%10);col.push(d);
+  return '<span class="dg" style="display:inline-block;height:'+ht+'px;overflow:hidden;vertical-align:top"><span class="dc" style="display:block">'+col.map(c=>'<i style="display:block;height:'+ht+'px;line-height:'+ht+'px;font-style:normal">'+c+'</i>').join('')+'</span></span>'}).join('');
+ o.querySelectorAll('.dc').forEach((c,k)=>c.animate([{transform:'translateY(0)'},{transform:'translateY(-'+5*ht+'px)'}],{duration:620+k*70,delay:140+j*60,easing:'cubic-bezier(.25,.7,.2,1)',fill:'backwards'}).onfinish=()=>{c.parentNode.replaceWith(document.createTextNode(c.lastChild.textContent))})})}
+function sumSet(sum,html,id,el){const X=SUMX[id];const nw=h('div','sx',html);if(SUMX_FONT[id])nw.style.cssText=SUMX_FONT[id];
+ const old=sum.querySelector(':scope > .sx');sum.appendChild(nw);fitAll(nw);
+ if(!old||RM||!X){if(old)old.remove();return}
+ old.style.cssText+=';position:absolute;inset:0;pointer-events:none';
+ const parts=b=>X.whole?[b]:[...b.children];let end=0;
+ parts(old).forEach((e,i)=>{const [k,o]=X.out(e,i);end=Math.max(end,(o.delay||0)+o.duration);e.animate(k,{...o,fill:'forwards'})});setTimeout(()=>old.remove(),end+20);
+ parts(nw).forEach((e,i)=>{const [k,o]=X.in(e,i);e.animate(k,{...o,fill:'backwards'})});
+ if(X.roll)rollDigits(nw);if(X.extra)X.extra(el)}
+
 // a room landing
 function landingV3(el,R){const stops=[];const id=el.dataset.id;
  const top=h('div','ltop');top.style.cssText='position:absolute;inset:0 0 auto 0;height:100px;z-index:6;pointer-events:none';el.appendChild(top);
@@ -1496,8 +1538,8 @@ function landingV3(el,R){const stops=[];const id=el.dataset.id;
  const dh=h('div','dial');dh.style.cssText+='left:24px;top:640px;width:160px;z-index:6';el.appendChild(dh);
  const sum=h('div','lsum');el.appendChild(sum);
  dial(dh,R.doors.map(d=>({...d,color:d.color||R.color})),{start:0,slot:40,blur:1.6,label:(d,f)=>'<span style="font-size:'+(f?26:20)+'px;font-weight:'+(f?700:600)+';letter-spacing:-.01em">'+d.k+'</span>'+(d.n!=null?'<i>'+d.n+'</i>':''),
-  open:d=>d.go?go(...d.go):receipt(el,d.k+' opens here. Inside pages are the next round.'),
-  change:d=>{sum.innerHTML=d.sum();fitAll(sum);if(!sum._on){sum._on=1;return}sum.classList.remove('rise');void sum.offsetWidth;if(!RM)sum.classList.add('rise')}});
+  open:d=>{const L=typeof LV!=='undefined'&&LV[id];const di=L?L.doors.findIndex(x=>x.k===d.k):-1;if(di>=0)return go('l1_'+id,{door:di});d.go?go(...d.go):receipt(el,d.k+' opens here. Inside pages are the next round.')},
+  change:d=>sumSet(sum,d.sum(),id,el)});
  const f=actionX(el,R);
  fitLine(cap);document.fonts&&document.fonts.ready.then(()=>{fitAll(el)});
  if(!el._flip&&!window.__morphing)opening([top,band,key,cap,mid,dh,sum,f],0);
@@ -1678,6 +1720,8 @@ function swap(from,to){if(RM)return;const A=(e,k,o)=>e.animate(k,o);
  // lift the old sections into the new screen, on top, so they can leave in place
  const old={};Object.keys(SECT).forEach(k=>{old[k]=sectOf(from,k);old[k].forEach(e=>{e.style.pointerEvents='none';to.appendChild(e)})});
  const neu={};Object.keys(SECT).forEach(k=>{neu[k]=sectOf(to,k).filter(e=>!old[k].includes(e))});
+ // a place whose content is the same on both sides is not touched (the contract: same identity, nothing moves)
+ ['masthead','caption'].forEach(k=>{old[k]=old[k].filter(o=>{const m=neu[k].find(n=>n.className===o.className&&n.textContent===o.textContent);if(m){neu[k]=neu[k].filter(x=>x!==m);o.remove();return false}return true})});
  const drop=(e,ms)=>setTimeout(()=>e.remove(),ms);
  // masthead: fold away and fold open, like the board's letters
  old.masthead.forEach((e,i)=>{A(e,[{transform:'perspective(500px) rotateX(0)',opacity:1},{transform:'perspective(500px) rotateX(88deg)',opacity:.2}],{duration:200,delay:i*50,easing:'cubic-bezier(.5,0,.9,.5)',fill:'both'});drop(e,200+i*50)});
@@ -1705,6 +1749,162 @@ function swap(from,to){if(RM)return;const A=(e,k,o)=>e.animate(k,o);
  old.foot.forEach(e=>{A(e,[{transform:'none',opacity:1},{transform:'translateX(-30px) skewX(14deg)',opacity:0,filter:'blur(2px)'}],{duration:220,fill:'both'});drop(e,230)});
  neu.foot.forEach(e=>{const ch=[...e.querySelectorAll('.ch')];if(ch.length)ch.forEach((c,j)=>A(c,[{transform:'translateX(-24px) skewX(16deg)',opacity:0,filter:'blur(2px)'},{transform:'none',opacity:1,filter:'blur(0)'}],{duration:460,delay:420+j*24,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
   A(e,[{opacity:0},{opacity:1}],{duration:200,delay:420,fill:'both'})})}
+
+/* ---------- Level 1 and level 2 (sheet 284, his Oct 25 7:44 PM note) ----------
+   The shell stays. A door page (level 1) keeps the room's masthead title and its keystone, and changes three places:
+   the Door title (Switcher and Needs merged, 24,106 354x70), the Caption, and the Page (widget, dial and summary
+   merged, 24,412 354x364). An item page (level 2) keeps the same frame: the Door title becomes the Item title,
+   the Page splits into Facts (24,412 354x64) and the Body (24,484 354x292). Every sibling page fills the same
+   block exactly: rows size themselves by rank so there is never a gap and never a run of equal rows.
+   Across on the Door title (or the Item title) goes to the next door (or item) and only the content moves. */
+const LVU=(n,u)=>'<span class="o">'+n+'</span>'+(u?'<span class="u">'+u+'</span>':'');
+const LV={
+ notes:{color:'var(--notes)',doors:[
+  {k:'All notes',line:'16 notes, newest first',cap:'Tap a word on the wall to jump to its note.',rows:[
+   {t:'Trip packing',s:'A list, 8 left, due Friday',v:'noon',it:'pack'},{t:'Run plan',s:'From Tess, this morning',v:'9:12',c:'var(--tessblue)',it:'run'},
+   {t:'Lamp repair',s:'Due by 6 today',v:'Mon',c:'var(--wine)'},{t:'Garden',s:'Ideas, three sketches',v:'Sun'},{t:'Book club',s:'At Sam’s, Thursday',v:'Sat'},{t:'Weekend',s:'Two plans, pick one',v:'Fri'}]},
+  {k:'Ideas',line:'10 ideas, the newest on top',cap:'Ideas glow on the wall until you use them.',rows:[
+   {t:'Garden',s:'Three sketches, raised beds',v:'Sun',it:'garden'},{t:'Lamp shade',s:'Paper, from the old map',v:'Thu'},{t:'Kitchen shelf',s:'Above the window',v:'Tue'},{t:'Cold brew',s:'Try the coarse grind',v:'Oct 18'},{t:'Bike route',s:'Along the creek',v:'Oct 12'}]},
+  {k:'From Tess',line:'2 kept for you',cap:'Tess’s notes sit in her blue.',rows:[
+   {t:'Run plan',s:'Easy 5 k, then strides',v:'9:12',c:'var(--tessblue)',it:'run'},{t:'Sleep',s:'You slept better after walks',v:'Tue',c:'var(--tessblue)'}]},
+  {k:'Voice memos',line:'3 voice notes, typed by Tess',cap:'Hold a word on the wall to hear it.',rows:[
+   {t:'Call about the lease',s:'0:42, from the car',v:'Fri'},{t:'Gift for Maya',s:'0:18',v:'Wed'},{t:'Song in the cafe',s:'0:09, a hum',v:'Oct 19'}]},
+  {k:'Pinned',line:'2 pinned, they stay on top',cap:'Pinned words sit at the top of the wall.',rows:[{t:'Trip packing',s:'Pinned Monday',v:'noon',it:'pack'},{t:'Taxes',s:'Pinned until Oct 15',v:'Oct 15',c:'var(--gold)'}]},
+  {k:'Mentions',line:'4 notes that name someone',cap:'Names on the wall are the people you wrote about.',rows:[{t:'Sam',s:'Book club, Thursday',v:'2'},{t:'Maya',s:'Gift idea',v:'1'},{t:'Mom',s:'Call on Sunday',v:'1'}]},
+  {k:'Private',line:'Locked',cap:'Private notes never leave the phone.',rows:[{t:'3 private notes',s:'Unlock to read',v:''}]},
+  {k:'Archive',line:'24 put away',cap:'Archived words leave the wall.',rows:[{t:'Summer trip',s:'Archived Sep 3',v:'Sep'},{t:'Old run plan',s:'Archived Aug 20',v:'Aug'},{t:'Moving list',s:'Archived Jul 2',v:'Jul'}]}],
+  items:{pack:{name:'Trip packing',line:'A list, due Friday',facts:[['8','','left'],['6','','done'],['Fri','','due']],body:{kind:'checks',l:[['Passports',1],['Phone charger',1],['The adapter',0],['The book',0],['Socks',0],['Rain jacket',0],['Sunglasses',1],['Camera',0]]},acts:[{v:'Check',o:'the next thing'},{v:'Add',o:'something to pack'}]},
+   run:{name:'Run plan',line:'Tess kept this for you, 9:12 am',facts:[['5','k','easy'],['4','','strides'],['Sat','','long run']],body:{kind:'tess',t:'You ran best last week when you started slow. Keep today easy for five, then four short strides on the flat by the creek. Saturday stays the long one.'},acts:[{v:'Keep',o:'as a note'},{v:'Ask',o:'Tess to change it'}]},
+   garden:{name:'Garden',line:'Idea, Sunday',facts:[['3','','sketches'],['2','','beds'],['Spring','','start']],body:{kind:'text',t:'Two raised beds along the fence, the taller one at the back so the low one gets the morning. Herbs nearest the door. Ask about cedar at the yard on Saturday.'},acts:[{v:'Write',o:'more'},{v:'Plan',o:'make it a list'}]}}},
+ weather:{color:'var(--weather)',doors:[
+  {k:'Hours',line:'Rain from 7, clear by 1 am',cap:'The glass beads up an hour before rain.',rows:[
+   {t:'7 PM',s:'Rain starts',v:LVU('60','°'),it:'h7'},{t:'8 PM',s:'Rain',v:LVU('58','°')},{t:'9 PM',s:'Rain, steady',v:LVU('57','°')},{t:'10 PM',s:'Easing',v:LVU('56','°')},{t:'11 PM',s:'Light rain',v:LVU('55','°')},{t:'Midnight',s:'Drizzle',v:LVU('54','°')}]},
+  {k:'Tonight',line:'Rain until midnight',cap:'The sky darkens with the hour.',rows:[
+   {t:'Rain',s:'From 7 until midnight',v:LVU('90','%'),it:'h7'},{t:'Low',s:'Around 3 am',v:LVU('54','°')},{t:'Clear',s:'By 1 am, stars after 2',v:'1 AM'},{t:'Wind',s:'Gusts ease after 10',v:LVU('9','mph')}]},
+  {k:'This week',line:'Driest on Thursday',cap:'Swipe the sky across for each day.',rows:[
+   {t:'Thursday',s:'Dry and bright',v:LVU('68','°')},{t:'Friday',s:'Clouds by afternoon',v:LVU('65','°')},{t:'Saturday',s:'Rain again',v:LVU('59','°')},{t:'Sunday',s:'Showers',v:LVU('60','°')},{t:'Monday',s:'Cooler, clear',v:LVU('58','°')}]},
+  {k:'Air',line:'Clean air, a light wind',cap:'The clouds move with the wind.',rows:[
+   {t:'Wind',s:'From the west, gusting',v:LVU('9','mph')},{t:'Humidity',s:'Rising toward rain',v:LVU('58','%')},{t:'Air',s:'Clean',v:LVU('21','AQI')},{t:'Pressure',s:'Falling slowly',v:LVU('29.9','in')}]},
+  {k:'Sky',line:'Sunset at 6:08',cap:'Night comes into the glass at sunset.',rows:[
+   {t:'Sunset',s:'Behind the rain',v:LVU('6:08','pm')},{t:'Moon',s:'Waxing, half',v:'Half'},{t:'Sunrise',s:'Tomorrow',v:LVU('7:24','am')},{t:'Daylight',s:'Two minutes less',v:LVU('10:44','h')}]}],
+  items:{h7:{name:'7 PM',line:'Rain starts, 60 degrees',facts:[['60','°','temp'],['90','%','rain'],['9','mph','wind']],body:{kind:'hours',l:[['6 PM','Cloudy, dry','62°'],['7 PM','Rain starts','60°'],['8 PM','Rain','58°'],['9 PM','Steady rain','57°']],note:'Take the umbrella if you go out after 6:30.'},acts:[{v:'Alert',o:'30 min before'},{v:'Walk',o:'before 6:30'}]}}},
+ training:{color:'var(--training)',doors:[
+  {k:'Today',line:'Push A, 4 lifts, about 45 min',cap:'The board keeps what you chalk on it.',rows:[
+   {t:'Bench',s:'4 sets of 5',v:LVU('185','lb'),it:'bench'},{t:'Overhead press',s:'3 sets of 8',v:LVU('95','lb')},{t:'Cable row',s:'3 sets of 10',v:LVU('110','lb')},{t:'Dips',s:'2 sets to near failure',v:'Body'}]},
+  {k:'This week',line:'3 of 5 done',cap:'Swipe fast left on the board to wipe it.',rows:[
+   {t:'Monday',s:'Push B, done',v:'50 min',c:'var(--green)'},{t:'Wednesday',s:'Pull A, done',v:'46 min',c:'var(--green)'},{t:'Thursday',s:'Legs, done',v:'55 min',c:'var(--green)'},{t:'Today',s:'Push A',v:'6:30'},{t:'Saturday',s:'Pull B',v:'Plan'}]},
+  {k:'Library',line:'28 workouts in 6 kinds',cap:'Hold a name on the board to see it.',rows:[
+   {t:'Push A',s:'Bench, press, row, dips',v:'45 min',it:'bench'},{t:'Hill sprints',s:'New, 8 rounds',v:'20 min',c:'var(--gold)'},{t:'Pull A',s:'Deadlift, pull-ups',v:'50 min'},{t:'Legs',s:'Squat, lunges',v:'55 min'},{t:'Easy run',s:'Zone 2',v:'30 min'},{t:'Private workout',s:'Kept on the phone',v:''}]},
+  {k:'Bests',line:'3 new since Oct 1',cap:'Bests are written in gold.',rows:[
+   {t:'Bench',s:'5 reps, three weeks ago',v:LVU('205','lb'),c:'var(--gold)',it:'bench'},{t:'Squat',s:'3 reps, Oct 9',v:LVU('275','lb'),c:'var(--gold)'},{t:'Deadlift',s:'1 rep, Oct 2',v:LVU('315','lb'),c:'var(--gold)'},{t:'5 k',s:'Oct 14',v:LVU('24:10','')}]},
+  {k:'Plan',line:'Week 5 of 6, then a deload',cap:'Drag on the board to write.',rows:[
+   {t:'This block',s:'Strength, 6 weeks',v:'5 of 6'},{t:'Next week',s:'Deload, lighter',v:'Nov 2'},{t:'New block',s:'Hypertrophy',v:'Nov 9'},{t:'Goal',s:'Bench 225 by spring',v:LVU('225','lb')}]}],
+  items:{bench:{name:'Bench',line:'Push A, first lift',facts:[['185','lb','today'],['205','lb','best'],['221','lb','est. 1 rep']],body:{kind:'sets',l:[['Warm-up','95 lb, 10',1],['Set 1','185 lb, 5',0],['Set 2','185 lb, 5',0],['Set 3','185 lb, 5',0],['Set 4','185 lb, 5',0]],note:'Last time: 180 lb, 4 sets of 5, easy.'},acts:[{v:'Start',o:'set 1, 185 lb',hold:1},{v:'Swap',o:'for dumbbells'}]}}},
+ kitchen:{color:'var(--kitchenText)',doors:[
+  {k:'Tonight',line:'Tacos, 25 min, you have all 8',cap:'Swipe a ticket up for its next page.',rows:[
+   {t:'Tacos',s:'25 min, char the tortillas first',v:'7:00',it:'tacos'},{t:'Rice',s:'Leftover, goes out today',v:'side',c:'var(--wine)'},{t:'Dishes',s:'7 waiting since lunch',v:'7'}]},
+  {k:'Pantry',line:'31 things, milk and eggs low',cap:'Tickets on the rail are what you can cook.',rows:[
+   {t:'Fridge',s:'Milk and eggs low',v:'12',c:'var(--wine)'},{t:'Freezer',s:'Chicken, peas, bread',v:'7'},{t:'Shelf',s:'Rice, lentils, tortillas',v:'9'},{t:'Counter',s:'Limes, onions',v:'3'}]},
+  {k:'Recipes',line:'4 you can make now',cap:'A ticket prints for each one you can make.',rows:[
+   {t:'Tacos',s:'25 min, all 8 things here',v:'25',it:'tacos'},{t:'Dal',s:'40 min, all here',v:'40'},{t:'Shakshuka',s:'30 min, need eggs',v:'30'},{t:'Fried rice',s:'15 min, use the rice',v:'15'}]},
+  {k:'Groceries',line:'3 to get on the way',cap:'Swipe right on a thing when it is in the bag.',rows:[
+   {t:'Milk',s:'The usual, 1 gallon',v:'1'},{t:'Eggs',s:'A dozen',v:'12'},{t:'Cilantro',s:'For tacos',v:'1'}]},
+  {k:'Leftovers',line:'Eat the rice today',cap:'Leftovers print on the left of the rail.',rows:[
+   {t:'Rice',s:'Goes out today',v:'Today',c:'var(--wine)'},{t:'Dal',s:'Cooked Thursday',v:'Fri'}]}],
+  items:{tacos:{name:'Tacos',line:'Tonight, 25 min, serves 2',facts:[['25','min','time'],['8','','of 8 here'],['2','','serves']],body:{kind:'steps',l:['Char the tortillas on the flame, then wrap them.','Chicken thighs in the pan, 5 minutes a side.','Slice onions and peppers while it rests.','Lime, cilantro, salt. Fill and fold.']},acts:[{v:'Cook',o:'start the 25 min'},{v:'Swap',o:'for dal'}]}}},
+ routines:{color:'var(--routines)',doors:[
+  {k:'Today',line:'3 tended, 4 to go',cap:'Hold a tree to water it.',rows:[
+   {t:'Walk',s:'Around 6, 20 min',v:'6:00',it:'walk'},{t:'Stretch',s:'Tended at 8 am',v:'done',c:'var(--green)'},{t:'Journal',s:'Thirsty since Saturday',v:'thirsty',c:'var(--wine)',it:'journal'},{t:'Read',s:'Tonight at 9',v:'9:00'},{t:'Water',s:'Tended today',v:'done',c:'var(--green)'}]},
+  {k:'Body',line:'Walk is next',cap:'Each tree is one routine.',rows:[
+   {t:'Walk',s:'Every evening',v:'6:00',it:'walk'},{t:'Stretch',s:'Mornings',v:'done',c:'var(--green)'},{t:'Swim',s:'Thursdays',v:'Thu'},{t:'Badminton',s:'Wednesdays',v:'Wed'}]},
+  {k:'Mind',line:'Journal is thirsty',cap:'Thirsty trees lean, they never wither.',rows:[
+   {t:'Journal',s:'One line is enough',v:'thirsty',c:'var(--wine)',it:'journal'},{t:'Read',s:'In fruit, 12 days',v:'9:00',c:'var(--green)'}]},
+  {k:'Home',line:'Tidy tonight',cap:'The grove by the house is Home.',rows:[
+   {t:'Water',s:'Done today',v:'done',c:'var(--green)'},{t:'Lunch',s:'Packed at noon',v:'done',c:'var(--green)'},{t:'Tidy',s:'Ten minutes tonight',v:'8:30'},{t:'Backup',s:'Ran at 4 am',v:'auto',c:'var(--slate)'}]},
+  {k:'Weekly',line:'3 this week',cap:'Weekly trees grow across the lake.',rows:[
+   {t:'Badminton',s:'Wednesday at 7',v:'Wed'},{t:'Swim',s:'Thursday at 6',v:'Thu'},{t:'Call family',s:'Sunday afternoon',v:'Sun'}]}],
+  items:{walk:{name:'Walk',line:'Body, every evening',facts:[['20','min','today'],['5','','this week'],['6:00','pm','next']],body:{kind:'week',l:[['Mon',1],['Tue',1],['Wed',0],['Thu',1],['Fri',1],['Sat',1],['Sun',2]],note:'Rain from 7 tonight. Go before 6:30.'},acts:[{v:'Water',o:'mark it walked'},{v:'Pause',o:'today, nothing is lost'}]},
+   journal:{name:'Journal',line:'Mind, one line a day',facts:[['1','','line is enough'],['4','','this week'],['Sat','','last line']],body:{kind:'week',l:[['Mon',1],['Tue',1],['Wed',1],['Thu',1],['Fri',0],['Sat',0],['Sun',2]],note:'Thirsty, not lost. One line waters it.'},acts:[{v:'Water',o:'write one line'},{v:'Pause',o:'this week'}]}}},
+ money:{color:'var(--purse)',doors:[
+  {k:'This month',line:'About $2,125 still yours',cap:'Across for a category, up and down for an index.',rows:[
+   {t:'Still yours',s:'Until the 31st',v:LVU('about 2,125','')},{t:'Pace',s:'Calm, 74',v:'74'},{t:'Closes at',s:'If it keeps this pace',v:LVU('179','')},{t:'Next drop',s:'Rent, Nov 1',v:LVU('about 1,800','')}]},
+  {k:'Kinds',line:'October so far',cap:'Each index line is one kind.',rows:[
+   {t:'Home',s:'Rent and the lamp',v:LVU('about 1,450',''),c:'var(--clay)'},{t:'Food',s:'Groceries and two dinners',v:LVU('about 412',''),c:'var(--kitchenText)',it:'food'},{t:'Going out',s:'One concert',v:LVU('about 96',''),c:'var(--slate)'},{t:'Getting around',s:'Gas and the train',v:LVU('about 74','')}]},
+  {k:'Saving',line:'On plan',cap:'Savings rise as their own index.',rows:[
+   {t:'Japan',s:'Spring trip',v:LVU('about 3,400',''),c:'var(--gold)'},{t:'Rainy day',s:'Three months',v:LVU('about 2,000','')},{t:'Next move',s:'In 6 days',v:'Oct 31'}]},
+  {k:'Investing',line:'Quiet this week',cap:'The index line is the portfolio.',rows:[{t:'Portfolio',s:'Above cost since Oct 3',v:'102.4'},{t:'Monthly add',s:'On the 1st',v:LVU('about 300','')}]},
+  {k:'Debts',line:'Ahead of schedule',cap:'Debts fall as their own index.',rows:[{t:'Car loan',s:'Paid off by May 2028',v:LVU('about 6,200','')},{t:'Card',s:'Paid in full monthly',v:'0'}]},
+  {k:'Mine',line:'Your own indices',cap:'Make one with Tess.',rows:[{t:'INDIA',s:'12 months',v:'12'},{t:'DEBTS',s:'4 children',v:'4'}]}],
+  items:{food:{name:'Food',line:'October so far',facts:[['about 412','','spent'],['about 550','','usual'],['6','','days left']],body:{kind:'ledger',l:[['Oct 24','Groceries','about 64'],['Oct 22','Dinner with Sam','about 38'],['Oct 20','Groceries','about 71'],['Oct 17','Coffee beans','about 18'],['Oct 15','Takeout','about 26']]},acts:[{v:'Log',o:'a food spend'},{v:'Look',o:'last October'}]}}}};
+// a door's rows fill the Page exactly, sized by rank: the first is the biggest, the rest step down, never all equal
+function lvRows(box,rows,color,open){const H=364,n=rows.length,W=[1.7,1.3,1.08,1,.94,.88,.84].slice(0,n);const sum=W.reduce((a,b)=>a+b,0);let y=0;
+ rows.forEach((r,i)=>{const hh=Math.round(H*W[i]/sum*100)/100,f=Math.round(Math.min(34,Math.max(17,hh*.36)));
+  const e=h('button','lvr','<span class="lt" style="font-size:'+f+'px;'+(i===0?'font-weight:700;':'')+'color:'+(r.c||(i===0?'color-mix(in srgb,'+color+' 58%,var(--ink))':'var(--ink)'))+'">'+r.t+'</span>'+(r.v?'<span class="lv" style="font-size:'+Math.round(f*.82)+'px">'+r.v+'</span>':'')+(r.s&&hh>40?'<span class="ls" style="top:'+Math.round(hh/2+f*.42)+'px">'+r.s+'</span>':''));
+  e.style.cssText='top:'+y+'px;height:'+hh+'px';y+=hh;e.onclick=()=>open(r);box.appendChild(e)});box.querySelectorAll('.lt').forEach(fitLine)}
+function lvBody(box,b,color){box.innerHTML='';const add=x=>{box.insertAdjacentHTML('beforeend',x)};
+ if(b.kind==='checks'){const rh=292/b.l.length;b.l.forEach(([t,d])=>add('<div class="lbc'+(d?' dn':'')+'" style="height:'+rh+'px;line-height:'+rh+'px"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"'+(d?'':' opacity=".18"')+'/></svg>'+t+'</div>'));
+  box.querySelectorAll('.lbc').forEach(e=>e.onclick=()=>{e.classList.toggle('dn');e.querySelector('path').setAttribute('opacity',e.classList.contains('dn')?1:.18)})}
+ else if(b.kind==='steps'){b.l.forEach((t,i)=>add('<div class="lbs'+(i===0?' on':'')+'"><b>'+(i+1)+'</b><span>'+t+'</span></div>'));box.querySelectorAll('.lbs').forEach((e,i)=>e.onclick=()=>{box.querySelectorAll('.lbs').forEach((z,j)=>z.classList.toggle('on',j===i))})}
+ else if(b.kind==='sets'){b.l.forEach(([k,v,d],i)=>add('<div class="lbk'+(d?' dn':'')+(i===1?' on':'')+'"><span>'+k+'</span><b>'+v+'</b></div>'));if(b.note)add('<p class="lbn">'+b.note+'</p>')}
+ else if(b.kind==='hours'){b.l.forEach(([t,w,v],i)=>add('<div class="lbk'+(i===1?' on':'')+'"><span>'+t+'</span><em>'+w+'</em><b>'+v+'</b></div>'));if(b.note)add('<p class="lbn">'+b.note+'</p>')}
+ else if(b.kind==='ledger'){b.l.forEach(([d,w,v])=>add('<div class="lbk"><span>'+d+'</span><em>'+w+'</em><b>'+v+'</b></div>'));add('<p class="lbn">Amounts are about, never exact. Nothing here is red or green.</p>')}
+ else if(b.kind==='week'){add('<div class="lbw">'+b.l.map(([d,s])=>'<div class="'+(s===1?'y':s===2?'t':'n')+'"><b>'+d+'</b><span>'+(s===1?'tended':s===2?'today':'rested')+'</span></div>').join('')+'</div>');if(b.note)add('<p class="lbn">'+b.note+'</p>')}
+ else if(b.kind==='sib'){b.l.forEach(([t,s2,v])=>add('<div class="lbk'+(t===b.me?' on':'')+'"><em>'+t+'<small>'+s2+'</small></em><b>'+v+'</b></div>'))}
+ else if(b.kind==='tess')add('<p class="lbt">'+b.t+'</p>');else add('<p class="lbp">'+b.t+'</p>')}
+function lvBase(el,room){const S=SCREENS[room];const own=el.dataset.id;el.dataset.id=room;const c=S.render(el,{});el.dataset.id=own;[...el.querySelectorAll(':scope > .lband,:scope > .one,:scope > .dial,:scope > .lsum,:scope > .act,:scope > .undoline')].forEach(e=>e.remove());return c}
+function lvNav(el,txt){const nb=el.querySelector('.lnav');if(nb)nb.textContent=txt}
+function lvAct(el,color,acts){const A=acts.map(a=>({...a,f:a.f||(e=>receipt(e,a.v+', '+a.o+'.'))}));return actionX(el,{color,acts:A})}
+// the Door title (or Item title): across for the next sibling; only the words inside change
+function lvTitle(el,cls,get,n,i0,onTurn){const t=h('div',cls);el.appendChild(t);let i=i0;
+ const draw=(dir)=>{const [a,b]=get(i);t.innerHTML='<b>'+a+'</b><span>'+b+'</span>';fitLine(t.querySelector('b'));if(dir&&!RM)[...t.children].forEach((c,j)=>c.animate([{transform:'perspective(500px) rotateX(-80deg)',opacity:0},{transform:'perspective(500px) rotateX(6deg)',opacity:1,offset:.75},{transform:'none'}],{duration:360,delay:j*60,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))};
+ draw(0);let x0=null;t.onpointerdown=e=>{x0=e.clientX;t.setPointerCapture(e.pointerId);e.stopPropagation()};
+ t.onpointerup=e=>{if(x0==null)return;const dx=(e.clientX-x0)/K;x0=null;if(Math.abs(dx)>40&&n>1){const d=dx<0?1:-1;i=(i+d+n)%n;draw(d);onTurn(i,d)}};return t}
+function lvSettle(box){if(RM)return;[...box.children].forEach((c,j)=>c.animate([{opacity:0,transform:'translateY(-8px)',filter:'blur(2px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:380,delay:j*45,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))}
+Object.keys(LV).forEach(room=>{const D=LV[room];const S=SCREENS[room];
+ SCREENS['l1_'+room]={title:S.title,accent:S.accent,tess:S.tess,render(el,p){const stop=lvBase(el,room);lvNav(el,'Doors');let di=p.door||0;
+  const cap=el.querySelector('.lcap');const pg=h('div','lpg');el.appendChild(pg);
+  const fill=(dir)=>{const d=D.doors[di];if(cap)cap.textContent=d.cap;pg.innerHTML='';lvRows(pg,d.rows,D.color,r=>{const it=D.items[r.it]||{name:r.t,line:d.k,facts:[[r.v?r.v.replace(/<[^>]+>/g,''):'','',d.k.toLowerCase()]],body:{kind:'text',t:r.s+'.'},acts:[{v:'Open',o:r.t}]};go('l2_'+room,{door:di,it:r.it||null,row:r.t})});if(dir)lvSettle(pg)};
+  lvTitle(el,'ldt',i=>[D.doors[i].k,D.doors[i].line],D.doors.length,di,(i,d)=>{di=i;stack[stack.length-1].params={...p,door:i};fill(d)});fill(0);
+  const f=lvAct(el,D.color,[{v:'Add',o:'to '+D.doors[di].k},{v:'Ask',o:'Tess about '+D.doors[di].k}]);return stop}};
+ SCREENS['l2_'+room]={title:S.title,accent:S.accent,tess:S.tess,render(el,p){const stop=lvBase(el,room);const d=D.doors[p.door||0];lvNav(el,d.k);
+  const rows=d.rows;let ri=Math.max(0,rows.findIndex(r=>r.t===p.row));
+  const itemOf=r=>D.items[r.it]||{name:r.t,line:r.s,facts:[[r.v?r.v.replace(/<[^>]+>/g,''):'—','',d.k.toLowerCase()],[String(rows.indexOf(r)+1),'','of '+rows.length]],body:{kind:'sib',me:r.t,l:rows.map(x=>[x.t,x.s,x.v||''])},acts:[{v:'Open',o:r.t},{v:'Ask',o:'Tess about '+r.t}]};
+  const cap=el.querySelector('.lcap');const fx=h('div','lfx');el.appendChild(fx);const bd=h('div','lbd');el.appendChild(bd);
+  const fill=(dir)=>{const it=itemOf(rows[ri]);if(cap)cap.textContent=d.cap;
+   fx.innerHTML=it.facts.map(([n,u,l])=>'<div><b>'+String(n).replace(/^about /,'<small>about </small>')+(u?'<span class="u">'+u+'</span>':'')+'</b><span>'+l+'</span></div>').join('');fx.querySelectorAll('b').forEach(fitLine);
+   lvBody(bd,it.body,D.color);if(dir){lvSettle(fx);lvSettle(bd)}};
+  lvTitle(el,'ldt lit',i=>{const it=itemOf(rows[i]);return [it.name,it.line]},rows.length,ri,(i,dd)=>{ri=i;fill(dd)});fill(0);
+  lvAct(el,D.color,itemOf(rows[ri]).acts);return stop}}});
+SECT.masthead.push('.ldt');
+{const st=document.createElement('style');st.textContent=`
+.ldt{position:absolute;left:24px;right:24px;top:106px;height:70px;z-index:6;touch-action:pan-y;cursor:grab;display:flex;flex-direction:column;justify-content:center}
+.ldt b{display:block;font:700 34px/1.05 var(--sans);letter-spacing:-.02em;color:var(--ink);white-space:nowrap;overflow:hidden}
+.ldt span{display:block;margin-top:4px;font:400 15px/1.2 var(--sans);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lpg{position:absolute;left:24px;top:412px;width:354px;height:364px;z-index:6}
+.lvr{position:absolute;left:0;right:0;border:0;background:none;padding:0;text-align:left;cursor:pointer;color:var(--ink);font-family:var(--sans)}
+.lvr .lt{position:absolute;left:0;right:110px;top:50%;transform:translateY(-62%);font-weight:600;letter-spacing:-.015em;line-height:1.05;white-space:nowrap}
+.lvr .lv{position:absolute;right:0;top:50%;transform:translateY(-62%);font-family:var(--num);font-weight:300;color:var(--ink);white-space:nowrap}
+.lvr .lv .u{font-size:.5em;margin-left:1px}
+.lvr .ls{position:absolute;left:0;right:0;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lfx{position:absolute;left:24px;top:412px;width:354px;height:64px;z-index:6;display:grid;grid-template-columns:1.2fr 1fr 1fr;align-items:center}
+.lfx div{min-width:0}.lfx b{display:block;font:300 28px/1.05 var(--num);color:var(--ink);white-space:nowrap;overflow:hidden}.lfx b .u{font-size:14px;margin-left:2px}
+.lfx div:first-child b{color:var(--room,var(--ink));font-weight:400}
+.lfx span{display:block;margin-top:3px;font:600 10.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+.lbd{position:absolute;left:24px;top:484px;width:354px;height:292px;z-index:6;overflow:hidden}
+.lbc{display:flex;align-items:center;gap:12px;font:400 18px var(--sans);color:var(--ink);cursor:pointer;white-space:nowrap}
+.lbc svg{width:18px;height:18px;flex:none;color:var(--green)}.lbc.dn{color:var(--ink2);text-decoration:line-through;text-decoration-thickness:1px}
+.lbs{display:flex;gap:14px;padding:9px 0;font:400 17px/24px var(--sans);color:var(--ink2);cursor:pointer}.lbs b{flex:none;width:22px;font:300 24px/24px var(--num);color:var(--ink3)}
+.lbs.on{color:var(--ink);font-weight:500}.lbs.on b{color:var(--room,var(--ink));font-weight:400}
+.lbk{display:flex;align-items:baseline;gap:12px;height:44px;line-height:44px;font:400 17px/44px var(--sans);color:var(--ink2)}.lbk span{width:78px;flex:none;font-size:14px}
+.lbk em{flex:1;font-style:normal;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.lbk b{margin-left:auto;font:300 20px var(--num);color:var(--ink)}
+.lbk.dn{color:var(--green)}.lbk.dn b{color:var(--green)}.lbk.on{color:var(--ink)}.lbk.on b{color:var(--room,var(--ink));font-weight:400}.lbk.on span{color:var(--room,var(--ink));font-weight:600}
+.lfx b small{font:400 12px var(--sans);color:var(--ink2);margin-right:3px}.lbk em small{margin-left:10px;font-size:13px;color:var(--ink3)}
+.lbn{margin:12px 0 0;font:400 15px/22px var(--sans);color:var(--ink2)}
+.lbt{margin:4px 0 0;font:italic 400 21px/31px Newsreader,Georgia,serif;color:var(--tessblue)}
+.lbp{margin:4px 0 0;font:400 18px/28px var(--sans);color:var(--ink)}
+.lbw{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}.lbw div{text-align:center}.lbw b{display:block;font:600 13px var(--sans);color:var(--ink2)}
+.lbw span{display:block;margin-top:6px;font:400 12px var(--sans)}.lbw .y span{color:var(--green)}.lbw .n span{color:var(--ink3)}.lbw .t b,.lbw .t span{color:var(--room,var(--ink));font-weight:600}
+`;document.head.appendChild(st)}
 
 /* ---------- the map of places, drawn from one list: the board's diagram and the "Show sections" overlay ---------- */
 const PLACES_MAP=[// [name, x, y, w, h, kind] kind: band, sub, empty, system, edge
@@ -1747,7 +1947,11 @@ const LEVEL1=[['Masthead',0,44,402,138,'band'],['Title',24,50,260,48,'sub'],['Na
 const MERGES={'Door title':['Switcher','Needs'],'Page':['Widget','Glyph','Breath@612','Dial','Door summary','Breath@760']};
 const LTOUCH1={'Door title':'Swipe across for the next door; tap to rename',Page:'The door’s own list: scroll, swipe right Done, left Not now'};
 const LMOVE1={'Door title':'Switcher and Needs melt together into it, and split apart on back',Page:'Widget, dial and summary melt into one page, and split on back'};
-SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Swipe across to walk the app. Tap the dial twice to open a door.',render(el){let pi=0,lvl=0;el.classList.add('lmode');
+// what each place does on the next move (the shell contract, shell-contract-283.md)
+const LNEXT0={Masthead:'Stays',Title:'Stays; the name flaps to the door’s',['Nav word']:'Stays; flaps to the room’s name',Switcher:'Melts into the Door title',Needs:'Melts into the Door title',Keystone:'Stays, untouched: same keystone, same content',Caption:'Stays; its line unrolls anew',Widget:'Melts into the Page',Glyph:'Melts into the Page',Dial:'Melts into the Page',['Door summary']:'Melts into the Page',['Action word']:'Stays; its letters stream to the door’s verb',Tess:'Stays; only her colour can change'};
+const LNEXT1={Masthead:'Stays',Title:'Stays; flaps back to the room’s name',['Nav word']:'Stays; flaps back to Bridge',['Door title']:'Splits back into Switcher and Needs',Keystone:'Stays, untouched',Caption:'Stays; its line unrolls anew',Page:'Splits back into Widget, Glyph, Dial and Door summary',['Action word']:'Stays; letters stream back',Tess:'Stays'};
+const LROOM={Masthead:'Stays',Title:'Stays; the name flaps to the next room’s',['Nav word']:'Stays',Switcher:'Stays; its words fold over',Needs:'Stays; its lines fold over',Keystone:'Stays; its drawing turns tile by tile into the next room’s',Caption:'Stays; its line unrolls anew',Widget:'Stays; the item leaves upward and the next rises',Glyph:'Stays; collapses to a point and forms the next',Dial:'Stays; spins too fast to read and slows onto the next doors',['Door summary']:'Stays; out to the right, the next in from the right',['Action word']:'Stays; letters stream out and in',Tess:'Stays; only her colour changes',['Door title']:'Stays; flaps to the next room’s door',Page:'Stays; the list leaves softly and the next settles from the top',['Settings word']:'Folds away; the room’s Title folds open',['Departure board']:'Folds away; the Switcher and Needs fold open'};
+SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Swipe across for the next room, up for its door page, down to come back.',render(el){let pi=0,lvl=0;el.classList.add('lmode');
  const head=h('div','lmh');el.appendChild(head);const stage2=h('div','lms');el.appendChild(stage2);const info=h('div','lmi');el.appendChild(info);
  const keyOfP=(n,y)=>n==='Breath'?'Breath@'+y:n;
  const listFor=(P,l)=>{const base=l?LEVEL1:(P.subs?[...P.subs,...PLACES_MAP.filter(r=>!['Masthead','Title','Nav word','Switcher','Needs'].includes(r[0]))]:PLACES_MAP);return base.filter(([n,,,,,k])=>k!=='system'&&k!=='edge'&&!['Doors','Foot'].includes(n))};
@@ -1755,36 +1959,48 @@ SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Sw
   const b=h('button','lb'+(k==='band'?' band':'')+(empty?' em':''),'<b>'+lab+'</b>'+(empty&&k!=='empty'?'<i>empty</i>':''));b.style.cssText='left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+hh+'px';b.dataset.k=keyOfP(n,y);
   if(k==='empty'){b.innerHTML='';b.setAttribute('aria-label','Breath, empty')}if(n==='Title')b.classList.add('ttlb');
   b.onclick=e=>{e.stopPropagation();const was=b.classList.contains('on');
-   if(was&&n==='Nav word'){if(lvl){lvl=0;relayout()}else back();return}
-   if(was&&n==='Dial'&&!lvl){lvl=1;relayout();return}
+   if(was&&n==='Nav word'){if(lvl){lvl=0;relayout('depth')}else back();return}
+   if(was&&n==='Dial'&&!lvl){if(P.id==='home'){pi=1;page(1)}else{lvl=1;relayout('depth')}return}
    stage2.querySelectorAll('.on').forEach(z=>z.classList.remove('on'));b.classList.add('on');
    const holds=(lvl?{'Door title':'The door’s name, its count and its line',Page:'The door’s own list, in the one fixed block of its depth'}[n]:null)||P.hold[n]||P.hold[lab]||(empty?'Nothing on this screen. The place is kept so nothing moves into it.':'Same as every screen');
-   const hint=n==='Dial'&&!lvl?'<p><em>Try</em> Tap again to open a door</p>':n==='Nav word'?'<p><em>Try</em> Tap again to go back</p>':'';
-   info.innerHTML='<b>'+lab+'</b> <span>'+x+', '+y+', '+w+' by '+hh+'</span><p>'+holds+'</p><p><em>Touch</em> '+((lvl&&LTOUCH1[n])||LTOUCH[n]||'None')+'</p><p><em>Moves</em> '+((lvl&&LMOVE1[n])||LMOVE[n]||'Stays')+'</p>'+hint};
+   const hint=n==='Dial'&&!lvl?'<p><em>Try</em> Tap again to open '+(P.id==='home'?'a room':'a door')+'</p>':n==='Nav word'?'<p><em>Try</em> Tap again to go back</p>':'';
+   info.innerHTML='<b>'+lab+'</b> <span>'+x+', '+y+', '+w+' by '+hh+'</span><p>'+holds+'</p><p><em>Touch</em> '+((lvl&&LTOUCH1[n])||LTOUCH[n]||'None')+'</p><p><em>Next room</em> '+(LROOM[n]||'Stays')+'</p>'+(P.id==='home'?'':'<p><em>'+(lvl?'Back up':'Door page')+'</em> '+((lvl?LNEXT1:LNEXT0)[n]||'Stays')+'</p>')+hint};
   return b}
  // a layout change: places that stay glide to their new frame; places that merge flow into the merged place; a merged place splits back into its parts
- function relayout(){const P=LPAGES[pi];info.innerHTML='';const old=[...stage2.children];const byK={};old.forEach(b=>byK[b.dataset.k]=b);const L=listFor(P,lvl);const keep=new Set();
+ function relayout(mode,dir){const P=LPAGES[pi];const old=[...stage2.children];const byK={};old.forEach(b=>byK[b.dataset.k]=b);const L=listFor(P,lvl);const keep=new Set();
   const R=(b,[,x,y,w,hh],d=0,o={})=>RM?null:b.animate([{left:b.style.left,top:b.style.top,width:b.style.width,height:b.style.height,borderRadius:'18px'},{borderRadius:o.mid||'26px',offset:.5},{left:x+'px',top:y+'px',width:w+'px',height:hh+'px',borderRadius:'18px'}],{duration:560,delay:d,easing:'cubic-bezier(.3,.8,.2,1)',fill:'both'});
-  L.forEach((p,i)=>{const k=keyOfP(p[0],p[2]);if(byK[k]){const b=byK[k];keep.add(b);const nb=mk(P,p);R(b,p,i*12);setTimeout(()=>{b.replaceWith(nb)},RM?0:580+i*12);return}
+  L.forEach((p,i)=>{const k=keyOfP(p[0],p[2]);if(byK[k]&&mode==='room'){const b=byK[k];keep.add(b);const nb=mk(P,p);b.className=nb.className;b.innerHTML=nb.innerHTML;b.onclick=nb.onclick;const al=nb.getAttribute('aria-label');al?b.setAttribute('aria-label',al):b.removeAttribute('aria-label');R(b,p);labelMove(b,p[0],dir||1,i);return}
+   if(byK[k]){const b=byK[k];keep.add(b);const nb=mk(P,p);R(b,p,i*12);setTimeout(()=>{b.replaceWith(nb)},RM?0:580+i*12);return}
    if(MERGES[p[0]]){const src=MERGES[p[0]].map(m=>byK[m]).filter(Boolean);src.forEach((b,j)=>{keep.add(b);b.querySelectorAll('b,i').forEach(t=>t.animate&&!RM&&t.animate([{opacity:1},{opacity:0}],{duration:200,fill:'both'}));R(b,p,j*40,{mid:'40px'})});
     const nb=mk(P,p);nb.style.opacity=0;stage2.appendChild(nb);setTimeout(()=>{src.forEach(b=>b.remove());nb.style.opacity='';if(!RM)nb.querySelector('b')?.animate([{opacity:0,transform:'scale(.9)'},{opacity:1,transform:'none'}],{duration:260,fill:'both'})},RM?0:620);return}
    const big=Object.keys(MERGES).find(g=>MERGES[g].includes(k)&&byK[g]);
    if(big){const g=byK[big];keep.add(g);const nb=mk(P,p);const r=g.style;nb.style.left=r.left;nb.style.top=r.top;nb.style.width=r.width;nb.style.height=r.height;stage2.appendChild(nb);nb.querySelectorAll('b,i').forEach(t=>!RM&&t.animate([{opacity:0},{opacity:0,offset:.6},{opacity:1}],{duration:600,fill:'both'}));
     const a=R(nb,p,80+i*20,{mid:'40px'});if(!RM)g.animate([{opacity:1},{opacity:0}],{duration:200,delay:60,fill:'both'});setTimeout(()=>g.remove(),RM?0:300);if(a)a.onfinish=()=>{nb.style.left=p[1]+'px';nb.style.top=p[2]+'px';nb.style.width=p[3]+'px';nb.style.height=p[4]+'px'};else{nb.style.left=p[1]+'px';nb.style.top=p[2]+'px';nb.style.width=p[3]+'px';nb.style.height=p[4]+'px'}return}
    const nb=mk(P,p);stage2.appendChild(nb);if(!RM)nb.animate([{transform:'scale(.85)',opacity:0},{transform:'none',opacity:1}],{duration:380,delay:200,fill:'both'})});
-  old.forEach(b=>{if(!keep.has(b)){if(RM)b.remove();else b.animate([{opacity:1},{opacity:0,transform:'scale(.9)'}],{duration:220,fill:'both'}).onfinish=()=>b.remove()}})}
- function page(dir){lvl=0;const P=LPAGES[pi];phone.style.setProperty('--room','var('+P.col+')');head.innerHTML='<span>Layout</span> '+P.name;info.innerHTML='';
-  const old=[...stage2.children];const S=[];
-  listFor(P,0).forEach(p=>{const b=mk(P,p);stage2.appendChild(b);S.push([b,p[5],p[0]])});
-  if(RM||!dir){old.forEach(o=>o.remove());}
-  else{old.forEach((o,i)=>{o.animate([{transform:'none',opacity:1},{transform:'translateX('+(-dir*40)+'px) scale(.92)',opacity:0}],{duration:240,delay:i*8,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'}).onfinish=()=>o.remove()})}
-  if(!RM)S.forEach(([b,k,n],i)=>{const kf=n==='Masthead'||n==='Title'||n==='Nav word'||n==='Switcher'||n==='Needs'?[{transform:'perspective(500px) rotateX(-80deg)',opacity:0},{transform:'none',opacity:1}]:n==='Keystone'?[{transform:'perspective(600px) rotateY(-70deg)',opacity:0},{transform:'none',opacity:1}]:n==='Dial'?[{transform:'translateY(-40px)',opacity:0,filter:'blur(3px)'},{transform:'none',opacity:1,filter:'blur(0)'}]:n==='Door summary'?[{transform:'translateX(60px)',opacity:0},{transform:'none',opacity:1}]:n==='Widget'||n==='Glyph'?[{transform:'translateY(40px)',opacity:0},{transform:'none',opacity:1}]:[{transform:'scale(.85)',opacity:0},{transform:'none',opacity:1}];
-   b.animate(kf,{duration:420,delay:(dir?180:0)+i*28,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'})})}
+  old.forEach(b=>{if(!keep.has(b)){if(RM)b.remove();else b.animate([{opacity:1},{opacity:0,transform:'scale(.9)'}],{duration:220,fill:'both'}).onfinish=()=>b.remove()}});where()}
+ // the bubble stays; only its label (its content) changes, the way that place changes on the phone
+ function labelMove(b,n,dir,i){if(RM)return;const t=[...b.children];if(!t.length)return;const A=(kf,o)=>t.forEach(e=>e.animate(kf,{easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards',...o}));
+  if(['Title','Nav word','Switcher','Needs','Door title','Masthead'].includes(n))A([{transform:'perspective(400px) rotateX(-88deg)',opacity:.1},{transform:'perspective(400px) rotateX(6deg)',opacity:1,offset:.75},{transform:'none'}],{duration:340,delay:180+i*20});
+  else if(n==='Keystone')A([{transform:'perspective(500px) rotateY('+(dir*-80)+'deg)',opacity:0},{transform:'none',opacity:1}],{duration:460,delay:120});
+  else if(n==='Caption')A([{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:320,delay:520});
+  else if(n==='Widget')A([{transform:'translateY(40px)',opacity:0},{transform:'none',opacity:1}],{duration:420,delay:200});
+  else if(n==='Glyph')A([{transform:'scale(.06) rotate(70deg)',opacity:0},{transform:'scale(1.15)',opacity:1,offset:.7},{transform:'none'}],{duration:440,delay:330});
+  else if(n==='Dial')A([{transform:'translateY(-60px)',filter:'blur(3px)',opacity:.3},{transform:'translateY(6px)',filter:'blur(.6px)',opacity:1,offset:.7},{transform:'none',filter:'blur(0)'}],{duration:980,easing:'cubic-bezier(.3,.05,.2,1)'});
+  else if(n==='Door summary')A([{transform:'translateX(60px)',opacity:0},{transform:'translateX(-3px)',opacity:1,offset:.75},{transform:'none'}],{duration:420,delay:640});
+  else if(n==='Page')A([{transform:'translateY(-10px)',opacity:0},{transform:'none',opacity:1}],{duration:380,delay:200});
+  else if(n==='Action word')A([{transform:'translateX(-24px) skewX(16deg)',opacity:0,filter:'blur(2px)'},{transform:'none',opacity:1,filter:'blur(0)'}],{duration:460,delay:420})}
+ function where(){const P=LPAGES[pi];info.innerHTML='<b>'+P.name+(P.id==='home'?'':lvl?', a door page':', the landing')+'</b><span>'+(pi+1)+' of '+LPAGES.length+'</span><p>'+(P.id==='home'?'One level. Its dial opens the rooms.':lvl?'Swipe down to come back up.':'Swipe up for its door page.')+'</p><p>Swipe across for the next room.</p><p>Tap a place to read it.</p>'}
+ function page(dir){const P=LPAGES[pi];if(P.id==='home')lvl=0;phone.style.setProperty('--room','var('+P.col+')');head.innerHTML='<span>Layout</span> '+P.name;
+  if(dir&&stage2.children.length){relayout('room',dir);return}
+  stage2.innerHTML='';const S=[];listFor(P,lvl).forEach(p=>{const b=mk(P,p);stage2.appendChild(b);S.push([b,p[0]])});where();
+  if(!RM)S.forEach(([b,n],i)=>b.animate([{transform:'scale(.85)',opacity:0},{transform:'none',opacity:1}],{duration:420,delay:i*28,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))}
  page(0);let x0=null,dx=0;
- el.addEventListener('pointerdown',e=>{x0=e.clientX;dx=0});el.addEventListener('pointermove',e=>{if(x0!=null)dx=(e.clientX-x0)/K});
- el.addEventListener('pointerup',()=>{if(x0==null)return;x0=null;if(Math.abs(dx)>50){const d=dx<0?1:-1;pi=(pi+d+LPAGES.length)%LPAGES.length;page(d)}});
- const kd=e=>{if(e.key==='ArrowRight'){pi=(pi+1)%LPAGES.length;page(1)}if(e.key==='ArrowLeft'){pi=(pi-1+LPAGES.length)%LPAGES.length;page(-1)}if(e.key==='ArrowDown'&&!lvl){lvl=1;relayout()}if(e.key==='ArrowUp'&&lvl){lvl=0;relayout()}};document.addEventListener('keydown',kd);
- window.__layoutLvl=v=>{lvl=v;relayout()};
+ let y0=null,dy=0;el.addEventListener('pointerdown',e=>{x0=e.clientX;y0=e.clientY;dx=dy=0});el.addEventListener('pointermove',e=>{if(x0!=null){dx=(e.clientX-x0)/K;dy=(e.clientY-y0)/K}});
+ const depth=v=>{if(LPAGES[pi].id==='home'||lvl===v)return;lvl=v;relayout('depth')};
+ el.addEventListener('pointerup',()=>{if(x0==null)return;x0=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){const d=dx<0?1:-1;pi=(pi+d+LPAGES.length)%LPAGES.length;page(d)}else if(Math.abs(dy)>50)depth(dy<0?1:0)});
+ el.addEventListener('click',e=>{if(e.target===el||e.target===stage2)where()});
+ const kd=e=>{if(e.key==='ArrowRight'){pi=(pi+1)%LPAGES.length;page(1)}if(e.key==='ArrowLeft'){pi=(pi-1+LPAGES.length)%LPAGES.length;page(-1)}if(e.key==='ArrowUp')depth(1);if(e.key==='ArrowDown')depth(0)};document.addEventListener('keydown',kd);
+ window.__layoutLvl=v=>depth(v);
  return ()=>document.removeEventListener('keydown',kd)}};
 {const st=document.createElement('style');st.textContent=`
 .lmode{background:color-mix(in srgb,var(--room,var(--ink)) 4%,var(--p-bg))}
@@ -1799,6 +2015,135 @@ SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Sw
 .lmode .lb.ttlb b{font-size:28px;font-weight:700;letter-spacing:-.02em}.lmi p{white-space:normal!important}
 .lmi:empty{display:none}.lmi b{color:var(--room,var(--ink));font-size:15px}.lmi span{font-family:var(--num);font-size:12px;margin-left:6px}.lmi p{margin:2px 0 0;white-space:nowrap;overflow:hidden}.lmi em{font-style:normal;color:var(--ink);font-weight:600;margin-right:4px}
 `;document.head.appendChild(st)}
+/* ---------- Layout mode v2 (283 v8, his Oct 25 7:27 PM note): glass places, true spacing, liquid merges ----------
+   Every place is a pane of glass laid on the screen at its exact frame, 2 pt in from its edges so every seam shows
+   as an even 4 pt gap. The masthead is a frosted plate the title panes sit on. Breaths are not panes: they are
+   measured gaps, marked with their height in points, and the 24 pt side margins are drawn as faint guides.
+   Changing room: no pane moves; each takes the next room's tint, a light sheen crosses the glass, and the label
+   changes the way the place does. Changing depth or going to Bridge: panes that change shape become liquid. They
+   flow together into the merged place and pull apart into their parts (a metaball pass), then turn back into glass.
+   Tap a pane for its card (frame, what it holds, touch, and what it does next). Reduce Motion: no liquid, no sheen. */
+const LREL={'Door title':['Switcher','Needs'],Page:['Widget','Glyph','Breath@612','Dial','Door summary','Breath@760'],
+ Title:['Settings word'],Switcher:['Departure board'],Needs:['Departure board'],['Nav word']:['Departure board']};
+SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Swipe across for the next room, up for its door page, down to come back.',render(el){
+ let pi=0,lvl=0,busy=0,sel=null;el.classList.add('lm2');
+ const NS='http://www.w3.org/2000/svg';
+ const glow=h('div','lmglow');el.appendChild(glow);
+ const guides=h('div','lmguides','<i style="left:24px"></i><i style="left:378px"></i><b style="left:4px">24</b><b style="left:382px">24</b>');el.appendChild(guides);
+ const stage2=h('div','lms2');el.appendChild(stage2);
+ const goo=document.createElementNS(NS,'svg');goo.setAttribute('class','lmgoo');goo.setAttribute('viewBox','0 0 402 874');
+ goo.innerHTML='<defs><filter id="lmgooF" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" result="g"/><feComponentTransfer in="g"><feFuncA type="linear" slope=".16"/></feComponentTransfer></filter></defs><g filter="url(#lmgooF)"></g>';
+ el.appendChild(goo);const gg=goo.querySelector('g');
+ const card=h('div','lmcard');el.appendChild(card);
+ const keyOfP=(n,y)=>n==='Breath'?'Breath@'+y:n;
+ const listFor=(P,l)=>{const base=l?LEVEL1:(P.subs?[...P.subs,...PLACES_MAP.filter(r=>!['Masthead','Title','Nav word','Switcher','Needs'].includes(r[0]))]:PLACES_MAP);
+  return base.filter(([n,,,,,k])=>k!=='system'&&k!=='edge'&&!['Doors','Foot'].includes(n)).map(p=>({n:p[0],x:p[1],y:p[2],w:p[3],h:p[4],k:p[5],key:keyOfP(p[0],p[2])}))};
+ const rad=p=>Math.min(22,Math.max(10,Math.min(p.w,p.h)*.3));
+ const isPlate=p=>p.n==='Masthead';const isGap=p=>p.k==='empty'&&p.n==='Breath';
+ function label(P,p){if(p.n==='Title')return '<b class="tt">'+P.name+'</b><small>'+(P.id==='home'?'one level':lvl?'a door page':'the landing')+', '+(pi+1)+' of '+LPAGES.length+'</small>';
+  const empty=(!lvl&&(P.empty||[]).includes(p.n));return '<b>'+p.n+'</b>'+(empty?'<small>empty</small>':'')}
+ function paint(e,P,p){const empty=!lvl&&(P.empty||[]).includes(p.n);
+  e.className='pn'+(isPlate(p)?' plate':'')+(isGap(p)?' gap':'')+(empty?' em':'')+(p.n==='Title'?' ttl':'')+(sel===p.key?' on':'');
+  e.style.cssText='left:'+(p.x+2)+'px;top:'+(p.y+2)+'px;width:'+(p.w-4)+'px;height:'+(p.h-4)+'px;border-radius:'+rad(p)+'px';
+  e.innerHTML=isGap(p)?'<span>'+p.h+'</span>':isPlate(p)?'':label(P,p);e.dataset.k=p.key;
+  e.setAttribute('aria-label',isGap(p)?'Breath, '+p.h+' points':p.n+(empty?', empty':''));e._p=p;
+  e.onclick=ev=>{ev.stopPropagation();if(busy||isGap(p)||isPlate(p))return;const P2=LPAGES[pi];
+   if(sel===p.key&&p.n==='Dial'&&!lvl){P2.id==='home'?room(1):depth(1);return}
+   if(sel===p.key&&p.n==='Nav word'){lvl?depth(0):back();return}
+   if(sel===p.key){pick(null);return}pick(p.key)}}
+ function pick(k){sel=k;stage2.querySelectorAll('.pn').forEach(e=>e.classList.toggle('on',e.dataset.k===k));
+  if(!k){card.classList.remove('cu','cd');return}const P=LPAGES[pi],e=stage2.querySelector('[data-k="'+k+'"]'),p=e._p,n=p.n;
+  const empty=!lvl&&(P.empty||[]).includes(n);
+  const holds=(lvl?{'Door title':'The door’s name, its count and its line',Page:'The door’s own list, in the one fixed block of its depth'}[n]:null)||P.hold[n]||(empty?'Nothing on this screen. The place is kept so nothing moves into it.':'Same as every screen');
+  const nextD=P.id==='home'?'':'<div><em>'+(lvl?'Back up':'Door page')+'</em>'+((lvl?LNEXT1:LNEXT0)[n]||'Stays')+'</div>';
+  const tryL=n==='Dial'&&!lvl?'<div class="try">Tap again to open '+(P.id==='home'?'a room':'a door')+'</div>':n==='Nav word'?'<div class="try">Tap again to go '+(lvl?'up':'back')+'</div>':'';
+  card.innerHTML='<h4>'+n+'</h4><p class="fr">x '+p.x+', y '+p.y+', '+p.w+' by '+p.h+' pt</p><div><em>Holds</em>'+holds+'</div><div><em>Touch</em>'+((lvl&&LTOUCH1[n])||LTOUCH[n]||'None')+'</div><div><em>Next room</em>'+(LROOM[n]||'Stays')+'</div>'+nextD+tryL;
+  const low=p.y+p.h/2>440;card.classList.toggle('cd',!low);card.classList.toggle('cu',low)}
+ function build(P){stage2.innerHTML='';listFor(P,lvl).forEach(p=>{const e=h('button');paint(e,P,p);stage2.appendChild(e)})}
+ function tint(P){phone.style.setProperty('--room','var('+P.col+')')}
+ function sheen(){if(RM)return;stage2.querySelectorAll('.pn:not(.gap)').forEach(e=>{const s=h('i','sh');e.appendChild(s);const r=e._p;
+  s.animate([{transform:'translateX(-120%) skewX(-18deg)'},{transform:'translateX(260%) skewX(-18deg)'}],{duration:900,delay:60+r.y*.5+r.x*.2,easing:'cubic-bezier(.4,.1,.3,1)',fill:'both'}).onfinish=()=>s.remove()})}
+ // the label changes the way its place does on the phone
+ function flip(e,n,dir){if(RM)return;const t=[...e.children].filter(c=>c.tagName!=='I');if(!t.length)return;const A=(kf,o)=>t.forEach(c=>c.animate(kf,{easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards',...o}));
+  if(['Title','Nav word','Switcher','Needs','Door title'].includes(n))A([{transform:'perspective(400px) rotateX(-88deg)',opacity:0},{transform:'perspective(400px) rotateX(8deg)',opacity:1,offset:.75},{transform:'none'}],{duration:360,delay:160});
+  else if(n==='Keystone')A([{transform:'perspective(500px) rotateY('+(dir*-70)+'deg)',opacity:0},{transform:'none',opacity:1}],{duration:480,delay:100});
+  else if(n==='Caption')A([{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:320,delay:480});
+  else if(n==='Widget'||n==='Page')A([{transform:'translateY(18px)',opacity:0},{transform:'none',opacity:1}],{duration:420,delay:220});
+  else if(n==='Glyph')A([{transform:'scale(.1) rotate(60deg)',opacity:0},{transform:'scale(1.12)',opacity:1,offset:.7},{transform:'none'}],{duration:440,delay:330});
+  else if(n==='Dial')A([{transform:'translateY(-34px)',filter:'blur(3px)',opacity:0},{transform:'translateY(3px)',filter:'blur(.5px)',opacity:1,offset:.7},{transform:'none',filter:'blur(0)'}],{duration:900,easing:'cubic-bezier(.3,.05,.2,1)'});
+  else if(n==='Door summary')A([{transform:'translateX(40px)',opacity:0},{transform:'translateX(-2px)',opacity:1,offset:.75},{transform:'none'}],{duration:420,delay:600});
+  else if(n==='Action word')A([{transform:'translateX(-18px) skewX(14deg)',opacity:0,filter:'blur(2px)'},{transform:'none',opacity:1,filter:'blur(0)'}],{duration:440,delay:400})}
+ // the liquid pass: every pane that changes shape becomes a blob, flows to its new frame (merging or splitting), and turns back into glass
+ function change(P,dir){const old=[...stage2.querySelectorAll('.pn')],byK={};old.forEach(e=>byK[e.dataset.k]=e);const L=listFor(P,lvl),nk=new Set(L.map(p=>p.key));
+  const tracks=[],settle=[];const same=(a,b)=>a.x===b.x&&a.y===b.y&&a.w===b.w&&a.h===b.h;
+  L.forEach(p=>{const o=byK[p.key];
+   if(o&&same(o._p,p)){paint(o,P,p);if(!isGap(p)&&!isPlate(p))flip(o,p.n,dir);return}
+   const e=h('button');paint(e,P,p);e.classList.add('new');stage2.appendChild(e);settle.push(e);
+   if(isPlate(p)||isGap(p))return;
+   if(o){tracks.push([o._p,p]);return}
+   const src=(LREL[p.key]||[]).map(k=>byK[k]).filter(Boolean);if(src.length){src.forEach(s=>tracks.push([s._p,p]));return}
+   const big=old.filter(g=>(LREL[g.dataset.k]||[]).includes(p.key)&&!nk.has(g.dataset.k));if(big.length){big.forEach(g=>tracks.push([g._p,p]));return}
+   tracks.push([{x:p.x+p.w/2-6,y:p.y+p.h/2-6,w:12,h:12},p])});
+  old.forEach(o=>{if(nk.has(o.dataset.k)&&same(o._p,L.find(p=>p.key===o.dataset.k)))return;
+   const p=o._p;if(!isGap(p)&&!isPlate(p)&&!L.some(q=>(LREL[q.key]||[]).includes(p.key)||(LREL[p.key]||[]).includes(q.key)||q.key===p.key))tracks.push([p,{x:p.x+p.w/2-4,y:p.y+p.h/2-4,w:8,h:8,gone:1}]);
+   if(RM){o.remove();return}o.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'}).onfinish=()=>o.remove()});
+  if(RM||!tracks.length){settle.forEach(e=>e.classList.remove('new'));return Promise.resolve()}
+  busy=1;gg.innerHTML='';const R=tracks.map(([a,b])=>{const r=document.createElementNS(NS,'rect');r.style.fill='var(--room)';gg.appendChild(r);return {r,a:{...a,x:a.x+2,y:a.y+2,w:a.w-4,h:a.h-4},b:{...b,x:b.x+2,y:b.y+2,w:b.w-4,h:b.h-4},d:Math.min(160,Math.abs(a.y-b.y)*.25+((a.x+a.y)%7)*6)}});
+  goo.style.opacity=1;const T0=performance.now(),D=720;
+  const spring=t=>{if(t<=0)return 0;if(t>=1)return 1;return 1-Math.exp(-6.5*t)*Math.cos(7.2*t)};
+  return new Promise(done=>{function step(now){let all=1;R.forEach(o=>{const t=(now-T0-o.d)/D;if(t<1)all=0;const s=spring(Math.max(0,t));
+     const L2=(k)=>o.a[k]+(o.b[k]-o.a[k])*s;const w=Math.max(2,L2('w')),hh=Math.max(2,L2('h'));
+     o.r.setAttribute('x',L2('x'));o.r.setAttribute('y',L2('y'));o.r.setAttribute('width',w);o.r.setAttribute('height',hh);o.r.setAttribute('rx',Math.min(22,Math.min(w,hh)*.32));
+     if(o.b.gone)o.r.setAttribute('opacity',Math.max(0,1-t*1.4))});
+    if(!all){requestAnimationFrame(step);return}
+    settle.forEach((e,i)=>{e.classList.remove('new');e.animate([{opacity:0,filter:'blur(6px)',transform:'scale(.985)'},{opacity:1,filter:'blur(0)',transform:'none'}],{duration:300,delay:i*14,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'})});
+    goo.animate([{opacity:1},{opacity:0}],{duration:320,fill:'forwards'}).onfinish=()=>{goo.getAnimations().forEach(a=>a.cancel());goo.style.opacity=0;gg.innerHTML=''};busy=0;done()}
+   requestAnimationFrame(step)})}
+ function room(d){if(busy)return;pick(null);const was=LPAGES[pi];pi=(pi+d+LPAGES.length)%LPAGES.length;const P=LPAGES[pi];if(P.id==='home')lvl=0;tint(P);change(P,d).then(()=>{});sheen()}
+ function depth(v){if(busy)return;const P=LPAGES[pi];if(P.id==='home'||lvl===v)return;pick(null);lvl=v;change(P,v?1:-1)}
+ tint(LPAGES[0]);build(LPAGES[0]);
+ if(!RM)stage2.querySelectorAll('.pn').forEach((e,i)=>e.animate([{opacity:0,transform:'scale(.96)',filter:'blur(6px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:460,delay:i*22,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
+ let x0=null,y0=0,dx=0,dy=0;
+ el.addEventListener('pointerdown',e=>{x0=e.clientX;y0=e.clientY;dx=dy=0});el.addEventListener('pointermove',e=>{if(x0!=null){dx=(e.clientX-x0)/K;dy=(e.clientY-y0)/K}});
+ el.addEventListener('pointerup',()=>{if(x0==null)return;x0=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy))room(dx<0?1:-1);else if(Math.abs(dy)>50)depth(dy<0?1:0)});
+ el.addEventListener('click',e=>{if(!e.target.closest('.pn')&&!e.target.closest('.lmcard'))pick(null)});
+ const kd=e=>{if(e.key==='ArrowRight')room(1);if(e.key==='ArrowLeft')room(-1);if(e.key==='ArrowUp')depth(1);if(e.key==='ArrowDown')depth(0)};document.addEventListener('keydown',kd);
+ window.__layoutLvl=v=>depth(v);window.__layoutPick=k=>pick(k);
+ return ()=>{document.removeEventListener('keydown',kd);phone.style.removeProperty('--room')}}};
+{const st=document.createElement('style');st.textContent=`
+.lm2{background:var(--p-bg);overflow:hidden;--gl:rgba(255,255,255,.52);--gl2:rgba(255,255,255,.16);--ge:rgba(255,255,255,.75);--gs:rgba(40,30,20,.10);--gt:3%;--el:.7;--ed:.08;--sl:.9;--sd:.13;--sa:.05}
+.phone[data-look="black"] .lm2{--gl:rgba(255,255,255,.10);--gl2:rgba(255,255,255,.03);--ge:rgba(255,255,255,.22);--gs:rgba(0,0,0,.5);--gt:7%;--el:.18;--ed:.3;--sl:.09;--sd:.6;--sa:.3}
+.lmglow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 34% at 18% 22%,color-mix(in srgb,var(--room,var(--ink)) 12%,transparent),transparent 70%),radial-gradient(50% 30% at 86% 58%,color-mix(in srgb,var(--room,var(--ink)) 9%,transparent),transparent 70%),radial-gradient(70% 28% at 40% 96%,color-mix(in srgb,var(--room,var(--ink)) 14%,transparent),transparent 70%);transition:background .5s}
+.lmguides i{position:absolute;top:44px;bottom:22px;width:0;border-left:1px dashed color-mix(in srgb,var(--room,var(--ink)) 26%,transparent)}
+.lmguides b{position:absolute;top:30px;width:16px;text-align:center;font:500 9px var(--num);color:color-mix(in srgb,var(--room,var(--ink)) 60%,var(--ink2))}
+.lms2{position:absolute;inset:0}
+.lm2 .pn{position:absolute;box-sizing:border-box;margin:0;padding:0 12px;cursor:pointer;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+ /* the Lookout's raised glass: clear inside, light from the top left, shadow to the bottom right, a 1 pt edge that catches both */
+ border:1px solid transparent;background:linear-gradient(color-mix(in srgb,var(--room,var(--ink)) var(--gt),transparent),color-mix(in srgb,var(--room,var(--ink)) var(--gt),transparent)) padding-box,linear-gradient(135deg,rgba(255,255,255,var(--el)),rgba(255,255,255,0) 50%,rgba(0,0,0,var(--ed))) border-box;
+ box-shadow:-4px -4px 14px rgba(255,255,255,var(--sl)),5px 8px 20px rgba(0,0,0,var(--sd)),2px 14px 34px rgba(0,0,0,var(--sa));
+ color:color-mix(in srgb,var(--room,var(--ink)) 70%,var(--ink));font:600 12.5px/1.2 var(--sans);letter-spacing:.005em;transition:box-shadow .3s,transform .3s cubic-bezier(.2,.8,.2,1)}
+.lm2 .pn b{font-weight:600;white-space:nowrap}.lm2 .pn small{font:500 10.5px var(--sans);color:var(--ink2);white-space:nowrap}
+.lm2 .pn.ttl{align-items:flex-start}.lm2 .pn.ttl .tt{font:700 24px/1.05 var(--sans);letter-spacing:-.02em;color:var(--room,var(--ink))}
+.lm2 .pn.plate{--gt:2%;box-shadow:-2px -2px 8px rgba(255,255,255,var(--sl)),2px 4px 10px rgba(0,0,0,calc(var(--sd)*.6));cursor:default;align-items:flex-end;justify-content:flex-end;padding:0 12px 6px}
+.lm2 .pn.plate em{font:600 9.5px var(--sans);letter-spacing:.12em;text-transform:uppercase;font-style:normal;color:color-mix(in srgb,var(--room,var(--ink)) 50%,var(--ink2))}
+.lm2 .pn.gap{background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;cursor:default;overflow:visible;padding:0}
+.lm2 .pn.gap::before{content:"";position:absolute;left:50%;top:-1px;bottom:-1px;border-left:1px solid color-mix(in srgb,var(--room,var(--ink)) 35%,transparent)}
+.lm2 .pn.gap::after{content:"";position:absolute;left:calc(50% - 5px);right:calc(50% - 5px);top:-1px;bottom:-1px;border-top:1px solid color-mix(in srgb,var(--room,var(--ink)) 35%,transparent);border-bottom:1px solid color-mix(in srgb,var(--room,var(--ink)) 35%,transparent)}
+.lm2 .pn.gap span{position:absolute;left:calc(50% + 8px);top:50%;transform:translateY(-50%);font:500 9.5px var(--num);color:color-mix(in srgb,var(--room,var(--ink)) 70%,var(--ink2))}
+.lm2 .pn.em{box-shadow:inset 2px 3px 8px rgba(0,0,0,var(--sd)),inset -2px -2px 6px rgba(255,255,255,var(--sl));background:transparent;border:1px dashed color-mix(in srgb,var(--room,var(--ink)) 25%,transparent);color:var(--ink2)}
+.lm2 .pn.on{transform:translate(-1px,-2px);box-shadow:-6px -6px 18px rgba(255,255,255,var(--sl)),8px 12px 26px rgba(0,0,0,calc(var(--sd)*1.3)),3px 20px 40px rgba(0,0,0,var(--sa)),inset 0 0 0 1px color-mix(in srgb,var(--room,var(--ink)) 45%,transparent)}
+.lm2 .pn.new{opacity:0}
+.lm2 .pn .sh{position:absolute;top:-10%;bottom:-10%;left:0;width:30%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent)}
+.phone[data-look="black"] .lm2 .pn .sh{background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)}
+.lmgoo{position:absolute;inset:0;width:402px;height:874px;pointer-events:none;opacity:0;z-index:7}
+.lmcard{position:absolute;left:16px;right:16px;z-index:9;padding:14px 18px 16px;border-radius:26px;pointer-events:none;opacity:0;transform:translateY(16px) scale(.98);transition:opacity .28s,transform .42s cubic-bezier(.2,.9,.25,1.05);
+ border:1px solid transparent;background:linear-gradient(color-mix(in srgb,var(--p-bg) 78%,transparent),color-mix(in srgb,var(--p-bg) 78%,transparent)) padding-box,linear-gradient(135deg,rgba(255,255,255,var(--el)),rgba(255,255,255,0) 50%,rgba(0,0,0,var(--ed))) border-box;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+ box-shadow:-4px -4px 14px rgba(255,255,255,var(--sl)),5px 8px 20px rgba(0,0,0,var(--sd)),2px 14px 34px rgba(0,0,0,var(--sa));font:400 13.5px/19px var(--sans);color:var(--ink2)}
+.lmcard.cu{top:196px;opacity:1;transform:none;pointer-events:auto}.lmcard.cd{bottom:112px;top:auto;opacity:1;transform:none;pointer-events:auto}
+.lmcard h4{margin:0;font:700 19px/1.2 var(--sans);letter-spacing:-.01em;color:var(--room,var(--ink))}.lmcard .fr{margin:2px 0 8px;font:500 11.5px var(--num);color:var(--ink2)}
+.lmcard div{margin-top:5px}.lmcard em{display:inline-block;min-width:78px;font-style:normal;font-weight:600;color:var(--ink)}.lmcard .try{margin-top:9px;color:var(--room,var(--ink));font-weight:600}
+`;document.head.appendChild(st)}
+
 // Settings gets the way in
 {const r0=SCREENS.settings.render;SCREENS.settings.render=function(el,p){const c=r0.call(this,el,p);const box=[...el.children].find(d=>d.style.top==='116px');
  if(box){const sc=h('div','sc','Layout');sc.style.cssText='color:var(--slate);margin-top:18px';const e=h('div','setl','<span>Layout mode</span><span>Open</span>');e.onclick=()=>go('layout');box.insertBefore(e,box.firstChild);box.insertBefore(sc,box.firstChild)}return c}}
