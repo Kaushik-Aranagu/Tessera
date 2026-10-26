@@ -229,7 +229,9 @@ enum SettingsLandingWords {
                 let count = facts.remembers.split(separator: " ").first.map(String.init)
                 return DialDoor(id: area.rawValue, name: area.title,
                                 count: count.flatMap { Int($0) == nil ? nil : $0 }, color: colors.gold,
-                                label: "Tess remembers", lines: [facts.remembers.capitalizedFirst])
+                                label: "Tess remembers",
+                                lines: [facts.remembers.capitalizedFirst,
+                                        facts.asksClaude ? "Claude only with your key" : "All on this phone"])
             case .privacy:
                 return DialDoor(id: area.rawValue, name: area.title, color: colors.slate,
                                 label: "Kept on this phone", lines: Array(facts.privacyLines.prefix(2)))
@@ -255,6 +257,25 @@ enum SettingsLandingWords {
     }
 
     static let switcher = ["Changed", "All", "Private"]
+
+    /// A door page's one line under its title: the room's facts as a sentence, counts and on or off only (never the
+    /// key, never a backup's contents). The Door title cuts it on whole words.
+    static func doorLine(_ area: SettingsArea, facts: SettingsLandingFacts) -> String {
+        switch area {
+        case .tess:
+            stateLine(facts).first ?? "Tess remembers \(facts.remembers)."
+        case .privacy:
+            facts.privacyLines.first ?? "Everything stays on this phone."
+        case .units:
+            facts.units.isEmpty ? "Standard units." : "Measures in \(LandingList.joined(facts.units))."
+        case .claude:
+            facts.asksClaude ? "Tess asks Claude only with your key." : "Tess never asks Claude. Nothing leaves."
+        case .backups:
+            facts.backupLine.flatMap { sentences($0).first } ?? "No backup read yet."
+        default:
+            "Tessera, build \(facts.build)."
+        }
+    }
 
     /// The two needs lines beside the switcher (283), counts and on or off only.
     static func needs(_ facts: SettingsLandingFacts, switcher index: Int, opened: [String: Date]) -> [String] {
