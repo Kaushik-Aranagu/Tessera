@@ -75,6 +75,14 @@ memory.
 
 ## 5. For Core to review
 
+The four places, for each new class:
+
+| Class | SystemCatalog | Ops and ActionRegistry | Copies (PrivateWords) | ObjectPrivacy label |
+|---|---|---|---|---|
+| `tessAgent` | key and spec | None: written without ops, no action to decode | Copied: rides in backups and the export, so a spawned room's agent comes back with a restore. Nothing private in it (name, room, personality, notebook path) | None: not private |
+| `notebookPage` | key and spec | None: written without ops | Never copied: `mirrorClassKeys` (no op, no backup, no iCloud copy, no export) | Always the memory label |
+| `agentEpisode` | key and spec | None: written without ops | Never copied: `mirrorClassKeys` | Always the memory label |
+
 - **SystemCatalog:** `tessAgent`, `notebookPage` and `agentEpisode`.
 - **PrivateWords:** the last two join `mirrorClassKeys`.
 - **TessRun:** the `notebook` tool in `toolSpecs()` and `runTool`, run against `agent`'s scope.
