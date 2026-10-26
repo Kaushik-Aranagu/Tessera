@@ -99,7 +99,7 @@ enum ShellLayout {
             if let target = target(of: place), exists(target, in: new) {
                 return .merge(into: target)
             }
-            return .dissolve
+            return merges[place] != nil ? .form : .dissolve
         case (false, true):
             if let target = target(of: place), exists(target, in: old) {
                 return .split(from: target)

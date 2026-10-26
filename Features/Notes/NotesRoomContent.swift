@@ -174,7 +174,11 @@ extension NotesRoomContent.Facts {
             let when = NotesCopy.when(note.updatedAt, now: now)
             return landing.isPrivate(note)
                 ? ShellRow(id: note.id.uuidString, title: "Private note", detail: when, isPrivate: true)
-                : ShellRow(id: note.id.uuidString, title: note.title, detail: when)
+                : ShellRow(
+                    id: note.id.uuidString,
+                    title: note.title.replacingOccurrences(of: "@", with: ""),
+                    detail: when
+                )
         }
         facts.rows["all"] = all.map(row)
         facts.rows["private"] = all.filter { landing.isPrivate($0) }.map(row)
@@ -214,9 +218,25 @@ struct NotesShellHost: View {
                 Button("Cancel", role: .cancel) {}
             }
         #if DEBUG
-            .task { NotesDemo.seedIfRequested(model) }
+            .task {
+                NotesDemo.seedIfRequested(model)
+                await walkForStills()
+            }
         #endif
     }
+
+    #if DEBUG
+        /// `-shellDoor all` (simulator only, LaunchFlags): opens that door 2 s after launch and, with `-shellBack`,
+        /// comes back 3 s later, so stills and recordings can catch the merge and the split.
+        private func walkForStills() async {
+            guard let door = LaunchFlags.value(after: "-shellDoor") else { return }
+            try? await Task.sleep(for: .seconds(2))
+            navigator.push(.door(NotesRoomContent.room, door))
+            guard LaunchFlags.has("-shellBack") else { return }
+            try? await Task.sleep(for: .seconds(3))
+            navigator.pop()
+        }
+    #endif
 
     private func handle(_ intent: ShellIntent) {
         switch intent {
