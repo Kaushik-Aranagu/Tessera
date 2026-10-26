@@ -219,6 +219,8 @@ struct DoorSummary: View {
     /// the summary keeps one identity.
     var ownMove = true
 
+    @ScaledMetric(relativeTo: .caption) private var labelHeight: CGFloat = 20
+    @ScaledMetric(relativeTo: .body) private var lineHeight: CGFloat = 24
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.doorSummaryStyle) private var style
 
@@ -232,17 +234,20 @@ struct DoorSummary: View {
     }
 
     /// The rows of the per-row styles (chalk, fog, grow), each in its fixed place, keyed by door so a turn swaps them.
-    static func rows(_ door: DialDoor, key: String? = nil) -> [Row] {
+    /// `label` and `line` are the rows' heights (20 and 24 at the default size; they grow with Dynamic Type so a
+    /// line never sits in a box shorter than itself, which is what drew "..." at AX5).
+    static func rows(_ door: DialDoor, key: String? = nil, label labelHeight: CGFloat = 20,
+                     line lineHeight: CGFloat = 24) -> [Row] {
         let key = key ?? door.id
         var rows: [Row] = []
         var y: CGFloat = 0
         if let label = door.label {
             rows.append(Row(id: "\(key)#label", text: label, isLabel: true, isFirst: false, index: 0, y: 0))
-            y = 20
+            y = labelHeight
         }
         for (index, line) in door.lines.prefix(3).enumerated() {
             rows.append(Row(id: "\(key)#\(index)", text: line, isLabel: false, isFirst: index == 0,
-                            index: rows.count, y: y + CGFloat(index) * 24))
+                            index: rows.count, y: y + CGFloat(index) * lineHeight))
         }
         return rows
     }
@@ -279,7 +284,7 @@ struct DoorSummary: View {
         VStack(alignment: .leading, spacing: 0) {
             if let label = door.label {
                 FitLine(forms: FitLine.cuts(label), size: 13, color: Theme.Colors.inkSecondary)
-                    .frame(width: 192, height: 20, alignment: .leading)
+                    .frame(width: 192, height: labelHeight, alignment: .leading)
             }
             ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
                 FitLine(
@@ -288,7 +293,7 @@ struct DoorSummary: View {
                     color: Theme.Colors.ink,
                     weight: index == 0 ? .bold : .regular
                 )
-                .frame(width: 192, height: 24, alignment: .leading)
+                .frame(width: 192, height: lineHeight, alignment: .leading)
             }
         }
         .frame(width: 192, alignment: .leading)
@@ -298,7 +303,7 @@ struct DoorSummary: View {
     /// Deck, Lookout and Watch: each row has its own place, so the old and new rows overlap while they change and
     /// nothing moves the layout. Without its own move the rows keep one identity and change in place.
     private func staged(_ door: DialDoor) -> some View {
-        let rows = Self.rows(door, key: ownMove ? nil : "summary")
+        let rows = Self.rows(door, key: ownMove ? nil : "summary", label: labelHeight, line: lineHeight)
         return ZStack(alignment: .topLeading) {
             ForEach(rows) { row in
                 rowView(row)
@@ -308,7 +313,7 @@ struct DoorSummary: View {
                         : .identity)
             }
         }
-        .frame(width: 192, height: 92, alignment: .topLeading)
+        .frame(width: 192, height: labelHeight + 3 * lineHeight, alignment: .topLeading)
         .tesseraAnimation(style.animation(rows: rows.count), value: ownMove ? door.id : "summary")
         .accessibilityElement(children: .combine)
     }
@@ -318,11 +323,11 @@ struct DoorSummary: View {
         if row.isLabel {
             // Whole-word cuts, never "..." (contract §7).
             FitLine(forms: FitLine.cuts(row.text), size: 13, color: Theme.Colors.inkSecondary)
-                .frame(width: 192, height: 20, alignment: .leading)
+                .frame(width: 192, height: labelHeight, alignment: .leading)
         } else {
             FitLine(forms: FitLine.cuts(row.text), size: style.lineSize, color: Theme.Colors.ink,
                     weight: row.isFirst ? .bold : .regular, family: style.family)
-                .frame(width: 192, height: 24, alignment: .leading)
+                .frame(width: 192, height: lineHeight, alignment: .leading)
         }
     }
 }
