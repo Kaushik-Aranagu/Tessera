@@ -130,3 +130,21 @@ Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v4). Owners: Builder A
 - The small sign in Bridge's widget (barbell, bag, moon, case, sun) is laid exactly like the keystone mosaic:
   20 x 20 cells of 4 pt, each tile 3.6 pt with the page showing between them as grout (3.2 pt tiles on black).
   Never one merged pixel block. Draw at the screen's scale, no pixelated upscaling.
+
+## v7: Layout mode, finished (his 4:56 PM checkpoint)
+Settings > Layout mode. Places only, no content; read-only for now (editable later).
+- Bubbles never leave the screen. One bubble per place (the v4 map), tinted with the room colour; empty places
+  dashed and labelled "empty"; breaths drawn as empty strips.
+- Across (swipe or left/right arrow): Bridge, Log, Lookout, Deck, Galley, Watch, Purse, looping. Every bubble
+  stays; it takes the next room's colour (0.2 s) and its label changes the way the place does on the phone:
+  title, nav word, switcher and needs flap; keystone turns; caption unrolls; widget rises; glyph collapses and
+  forms; dial spins and slows (0.98 s); door summary in from the right; action word streams. Bridge's Settings
+  word and Departure board fold away into the room's Title, Switcher and Needs.
+- Depth (swipe up or up arrow; down to return): the room's door page. Switcher + Needs merge into the Door title
+  (24,106 354x70); Widget, Glyph, the breaths, Dial and Door summary merge into the Page (24,412 354x364).
+  Places in both glide to their new frame (0.56 s, radius bumps mid-way). Switching rooms on a door page keeps
+  the door level. Bridge has one level: its dial tapped twice walks into Log.
+- Tap a bubble: name, frame (x, y, w by h), what it holds in this room, touch, "Next room" and "Door page" (or
+  "Back up") rules, straight from shell-contract-283.md. Tap the background: where you are ("Galley, the
+  landing, 5 of 7") and the three gestures. Leave: Nav word twice, or the left-edge pull.
+- Reduce Motion: bubbles jump to their frames; labels change without motion.
