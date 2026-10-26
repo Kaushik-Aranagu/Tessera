@@ -41,13 +41,13 @@ struct RecipeTitleWallTests {
     }
 
     @Test func pastesReceiptNamesTheThingFirst() {
-        #expect(RecipeCopy.saved("Carbonara") == "Carbonara, on Recipes.")
-        #expect(RecipeCopy.saved("Sheet-pan paprika chicken with lemon") == "Sheet-pan paprika chicken, on Recipes.")
+        #expect(RecipeCopy.saved("Carbonara") == "Carbonara, on Recipes")
+        #expect(RecipeCopy.saved("Sheet-pan paprika chicken with lemon") == "Sheet-pan paprika chicken, on Recipes")
         #expect(RecipeCopy.shortName("Chili con carne") == "Chili con carne")
         #expect(RecipeCopy.shortName("Weeknight dal (instant pot)") == "Weeknight dal")
         #expect(RecipeCopy.shortName("Mac and cheese") == "Mac and cheese")
         let title = RecipeCopy.shownTitle("Rent 1200 stew", isPrivate: true)
-        #expect(RecipeCopy.saved(title) == "Private recipe, on Recipes.")
+        #expect(RecipeCopy.saved(title) == "Private recipe, on Recipes")
     }
 
     @Test func deletingTheShownRecipeKeepsItsPageWhichSaysRecipeGone() throws {

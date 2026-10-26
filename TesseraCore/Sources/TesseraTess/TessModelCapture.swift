@@ -38,10 +38,10 @@ public final class TessModelCapture: TessModelCapturing {
             // Never claim an action that wasn't called: with no tool call, the line can't say "done".
             if recorder.records.isEmpty {
                 return TessCapture(records: [], line: TessVoice.violations(in: line).isEmpty && !line.isEmpty
-                    ? line : "Didn't catch that.", source: .none)
+                    ? line : "Didn't catch that", source: .none)
             }
             let safe = TessVoice.violations(in: line).isEmpty && !line.isEmpty
-            let receipt = recorder.records.last.map { ($0.receipt ?? $0.summary) + "." } ?? ""
+            let receipt = recorder.records.last.map { $0.receipt ?? $0.summary } ?? ""
             return TessCapture(records: recorder.records, line: safe ? line : receipt,
                                source: .model)
         } catch {
@@ -49,7 +49,7 @@ public final class TessModelCapture: TessModelCapturing {
             for record in recorder.records where record.state == .pending {
                 try? engine.discard(record)
             }
-            return TessCapture(records: [], line: "Didn't catch that.", source: .none)
+            return TessCapture(records: [], line: "Didn't catch that", source: .none)
         }
     }
 

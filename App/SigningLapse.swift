@@ -49,7 +49,7 @@ enum SigningLapse {
         formatter.calendar = calendar
         formatter.timeZone = calendar.timeZone
         formatter.dateFormat = "h:mm a"
-        return "This build stops opening \(day) at \(formatter.string(from: expiry)). Your data stays on this iPhone."
+        return "This build stops opening \(day) at \(formatter.string(from: expiry)). Your data stays on this iPhone"
     }
 
     private static func weekday(_ date: Date, calendar: Calendar) -> String {

@@ -762,11 +762,11 @@ private struct GroceriesEmpty: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-            Text(basket > 0 ? "All in the basket." : "Nothing to get.")
+            Text(basket > 0 ? "All in the basket" : "Nothing to get")
                 .textRole(.title)
-                .wordFit(basket > 0 ? "All in the basket." : "Nothing to get.")
+                .wordFit(basket > 0 ? "All in the basket" : "Nothing to get")
                 .foregroundStyle(Theme.Colors.ink)
-            Text("Tell me \u{201C}milk, eggs\u{201D}, or swipe a recipe's ingredients here.")
+            Text("Tell me \u{201C}milk, eggs\u{201D}, or swipe a recipe's ingredients here")
                 .font(Theme.voice)
                 .foregroundStyle(Theme.Colors.tess)
         }
@@ -774,7 +774,7 @@ private struct GroceriesEmpty: View {
 }
 
 enum GroceriesCopy {
-    static let didntSave = "Didn't save that. Try again."
+    static let didntSave = "Didn't save that. Try again"
 
     /// Starts or sets aside the shop. A refused start says why: "Workout running." while a workout runs (QA on
     /// #792), else "Didn't save that. Try again." Nil when it went through.
@@ -793,7 +793,7 @@ enum GroceriesCopy {
     /// Clearing the basket: "Cleared 3 from the basket." with UNDO, or the failure line with nothing to undo.
     static func clear(count: Int, _ perform: () -> OpRecord?) -> (line: String, undo: OpRecord?) {
         guard let record = perform() else { return (didntSave, nil) }
-        return ("Cleared \(count) from the basket.", record)
+        return ("Cleared \(count) from the basket", record)
     }
 
     /// Finishing the shop: the engine's receipt and its record, or the failure line with nothing to undo.
@@ -808,7 +808,7 @@ enum GroceriesCopy {
             return (didntSave, nil)
         }
         let receipt = record.receipt ?? "Shopping, finished"
-        return (receipt.hasSuffix(".") ? receipt : receipt + ".", record)
+        return (receipt, record)
     }
 
     /// The name as it should read beside its amount: "3 eggs", not "3 egg" (a plain count above one, no unit).

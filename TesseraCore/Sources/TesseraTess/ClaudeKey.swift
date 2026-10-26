@@ -372,20 +372,20 @@ public struct ClaudeKeyCheck {
     /// Tess's line for each outcome (tess-voice.md: one line, under 12 words, no "!").
     static func line(_ outcome: Outcome, now: Date, calendar: Calendar) -> String {
         switch outcome {
-        case .works: return "Key saved."
+        case .works: return "Key saved"
         case .badKey: return "That key didn't work. Paste it again?"
         case .notAllowed: return "That key can't use Claude yet. Check it in the Console?"
         // No promise of a retry: nothing retries yet. The key is kept; Test again checks it.
-        case .offline: return "No connection. I kept the key; test it again later."
-        case .timeout: return "Claude didn't answer in time."
-        case .busy: return "Claude is busy right now. I kept the key."
-        case .accountPaused: return "Key saved. Your Anthropic account is paused for now."
+        case .offline: return "No connection. I kept the key; test it again later"
+        case .timeout: return "Claude didn't answer in time"
+        case .busy: return "Claude is busy right now. I kept the key"
+        case .accountPaused: return "Key saved. Your Anthropic account is paused for now"
         case .notAKey: return "That doesn't look like a Claude key. Paste it again?"
         case .notSaved: return "I couldn't save that key. Try again?"
         case .other: return "I couldn't check that key. Try again?"
         case .capReached:
             let next = TessUsageLedger.monthInterval(containing: now, calendar: calendar).end
-            return "Key saved. Claude paused until \(next.formatted(.dateTime.month(.abbreviated).day()))."
+            return "Key saved. Claude paused until \(next.formatted(.dateTime.month(.abbreviated).day()))"
         }
     }
 }

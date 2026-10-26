@@ -112,18 +112,18 @@ extension TessGrammar {
         // No yes/no questions: nothing remembers them, so "yes" would be read fresh (QA Q10). Say what to say.
         if let match = raw.firstMatch(of: /^([+-]|up |down )(\d+(?:\.\d+)?)(?: ?kg)?$/), let change = Double(match.2) {
             let sign: Double = match.1 == "-" || match.1 == "down " ? -1 : 1
-            guard let last = lastSet(in: entry) else { return Live(parse: .ask("Say the set, like 80 × 8.")) }
+            guard let last = lastSet(in: entry) else { return Live(parse: .ask("Say the set, like 80 × 8")) }
             let next = TessVoice.number(last.weight + sign * change)
-            return Live(parse: .ask("Say the set, like \(next) × \(TessVoice.number(last.reps))."))
+            return Live(parse: .ask("Say the set, like \(next) × \(TessVoice.number(last.reps))"))
         }
         if raw == "skip" {
-            return Live(parse: .ask("Skip is on the workout screen."))
+            return Live(parse: .ask("Skip is on the workout screen"))
         }
         // A bare "yes" or "ok" answers nothing here; it never becomes a task.
         if ["yes", "yeah", "yep", "no", "nope", "ok", "okay", "sure"].contains(raw) {
             return Live(parse: .ask(lastSet(in: entry).map {
-                "Say the set, like \(TessVoice.number($0.weight)) × \(TessVoice.number($0.reps))."
-            } ?? "Say the set, like 80 × 8."))
+                "Say the set, like \(TessVoice.number($0.weight)) × \(TessVoice.number($0.reps))"
+            } ?? "Say the set, like 80 × 8"))
         }
         // "81 kg": a weight with no reps.
         if let match = raw.firstMatch(of: /^(\d+(?:\.\d+)?) ?kg$/), let weight = Double(match.1) {

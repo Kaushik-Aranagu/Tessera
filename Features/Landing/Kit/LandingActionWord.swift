@@ -61,7 +61,7 @@ struct LandingActionWord: View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .leading) {
                 letters(
-                    holdHint ? "Hold to \(step.verb.lowercased())." : step.verb,
+                    holdHint ? "Hold to \(step.verb.lowercased())" : step.verb,
                     color: accent.opacity(step.hold ? 0.35 : 1)
                 )
                 if step.hold {

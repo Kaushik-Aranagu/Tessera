@@ -11,14 +11,14 @@ struct HabitsCopyTests {
     }
 
     @Test func tessLines() {
-        #expect(HabitsCopy.added("Read", target: 5) == "Read added, 5 times a week.")
-        #expect(HabitsCopy.added("Stretch", target: 1) == "Stretch added, 1 time a week.")
-        #expect(HabitsCopy.checkIn("Read", done: 3, target: 5) == "Read, 3 of 5 this week.")
-        #expect(HabitsCopy.alreadyIn("Read") == "Read is already in for today.")
-        #expect(HabitsCopy.checkIn("Read", done: 0, target: 5) == "Read, 5 a week.")
-        #expect(HabitsCopy.doneForWeek(["Read", "Stretch"]) == "Read and Stretch are done for the week.")
-        #expect(HabitsCopy.doneForWeek(["Read"]) == "Read is done for the week.")
-        #expect(HabitsCopy.doneForWeek(["A", "B", "C", "D"]) == "A, B and 2 more are done for the week.")
+        #expect(HabitsCopy.added("Read", target: 5) == "Read added, 5 times a week")
+        #expect(HabitsCopy.added("Stretch", target: 1) == "Stretch added, 1 time a week")
+        #expect(HabitsCopy.checkIn("Read", done: 3, target: 5) == "Read, 3 of 5 this week")
+        #expect(HabitsCopy.alreadyIn("Read") == "Read is already in for today")
+        #expect(HabitsCopy.checkIn("Read", done: 0, target: 5) == "Read, 5 a week")
+        #expect(HabitsCopy.doneForWeek(["Read", "Stretch"]) == "Read and Stretch are done for the week")
+        #expect(HabitsCopy.doneForWeek(["Read"]) == "Read is done for the week")
+        #expect(HabitsCopy.doneForWeek(["A", "B", "C", "D"]) == "A, B and 2 more are done for the week")
         #expect(HabitsCopy.doneForWeek([]) == nil)
     }
 
@@ -28,7 +28,7 @@ struct HabitsCopyTests {
         #expect(HabitsCopy.context(weekday: "Saturday", daysLeft: 1) == "Saturday, 1 day to go")
         #expect(HabitsCopy.context(weekday: "Sunday", daysLeft: 0) == "Sunday, the last day")
         #expect(HabitsCopy.rule(target: 5, source: "by hand") == "5 a week, by hand")
-        #expect(HabitsCopy.weekLines.contains("A day starts 4 am."))
+        #expect(HabitsCopy.weekLines.contains("A day starts 4 am"))
     }
 
     @Test func voiceOverRows() {

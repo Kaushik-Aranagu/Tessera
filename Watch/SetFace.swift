@@ -77,7 +77,7 @@ struct SetFace: View {
                 if snap.phase == .set, store.removed != nil {
                     Button("UNDO") { store.putBack() }
                         .buttonStyle(.plain).font(WatchInk.face(16)).tracking(0.6)
-                        .accessibilityLabel("Undo. Log the removed set back.")
+                        .accessibilityLabel("Undo. Log the removed set back")
                 }
             }
             .padding(.top, 2)
@@ -92,9 +92,9 @@ struct SetFace: View {
         let unit = snap.unit == "kg" ? "kilograms" : "pounds"
         let base = "\(snap.exercise), set \(snap.setNumber) of \(snap.setCount), "
         if snap.phase == .rest {
-            return base + "resting. Double tap to remove the set just logged."
+            return base + "resting. Double tap to remove the set just logged"
         }
-        return base + "weight \(WatchSnapshot.number(store.weight)) \(unit), reps \(store.reps). Done."
+        return base + "weight \(WatchSnapshot.number(store.weight)) \(unit), reps \(store.reps). Done"
     }
 
     private func defaultAction() {
@@ -193,7 +193,7 @@ struct RestRow: View {
                     } else {
                         Button("Go") { store.skipRest() }
                             .buttonStyle(.plain).font(WatchInk.face(44))
-                            .accessibilityLabel("Go. Rest is over.")
+                            .accessibilityLabel("Go. Rest is over")
                     }
                 }
                 horizon(remaining: remaining, at: context.date)

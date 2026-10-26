@@ -206,7 +206,7 @@ struct TaskStoryTests {
         let cadence = try BuyCadence(of: rice(), engine: engine, calendar: calendar)
         #expect(cadence.days.count == 4)
         #expect(cadence.everyDays == 9)
-        #expect(cadence.line == "You buy it about every 9 days.")
+        #expect(cadence.line == "You buy it about every 9 days")
     }
 
     @Test func cadenceIgnoresSystemChecksAndRounds() throws {

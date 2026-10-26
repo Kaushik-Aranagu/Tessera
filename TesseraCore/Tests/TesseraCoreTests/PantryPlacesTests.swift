@@ -46,7 +46,7 @@ struct PantryPlacesTests {
         places.ensureDefaults()
         let made = try engine.perform(CreatePlace(name: "Spice rack", sections: "Baking, Spices, baking, ,Oils"),
                                       by: .user)
-        #expect(places.places().last?.title == "Spice rack" && made.record.receipt == "Spice rack, new place.")
+        #expect(places.places().last?.title == "Spice rack" && made.record.receipt == "Spice rack, new place")
         #expect(places.sections(of: made.output) == ["Baking", "Spices", "Oils"])
         #expect(throws: (any Error).self) { try engine.perform(CreatePlace(name: "fridge"), by: .user) }
         #expect(throws: (any Error).self) { try engine.perform(CreatePlace(name: "To get"), by: .user) }
@@ -147,14 +147,14 @@ struct PantryPlacesTests {
 extension PantryPlacesTests {
     @Test func theReceiptAndTheSummaryReadPrivateForWalledWords() throws {
         let made = try engine.perform(CreatePlace(name: "Lexapro shelf"), by: .user)
-        #expect(made.record.receipt == "Private place, new place.")
+        #expect(made.record.receipt == "Private place, new place")
         #expect(!made.record.summary.lowercased().contains("lexapro"))
         let item = try ingredient("lexapro")
         let put = try engine.perform(SetItemPlace(item: item.id, place: made.output.id), by: .user)
         #expect(put.record.summary == "Put Private item in a place")
         // A plain one says its words.
         let plain = try engine.perform(CreatePlace(name: "Garage"), by: .user)
-        #expect(plain.record.receipt == "Garage, new place.")
+        #expect(plain.record.receipt == "Garage, new place")
         let milk = try ingredient("milk")
         #expect(try engine.perform(SetItemPlace(item: milk.id, place: plain.output.id), by: .user).record.summary
             == "Put milk in a place")

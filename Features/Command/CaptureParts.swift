@@ -177,10 +177,10 @@ struct CommandInterpreter {
         }
         if text.lowercased().contains("best") || text.lowercased().contains(/\bprs?\b/) {
             guard let exercise = exercise(matching: text), let best = model.bestSet(of: exercise) else {
-                return "No logged sets for that yet."
+                return "No logged sets for that yet"
             }
             return "Your best \(exercise.name.lowercased()): \(Format.kilograms(best.weight)) × \(Int(best.reps)), "
-                + "e1RM \(Format.kilograms((best.e1RM * 10).rounded() / 10)) kg."
+                + "e1RM \(Format.kilograms((best.e1RM * 10).rounded() / 10)) kg"
         }
         // Never a task titled with a key, a secret, money or a body fact (board 0ah, Research AU): a question about
         // one is answered on the phone and saves nothing; anything else is a private note, as the Bar files it.
@@ -190,19 +190,19 @@ struct CommandInterpreter {
         let secret = SecretWords.mentions(text)
         if secret || PrivateFacts.isWalled(text, lastWeightKg: BodyWeight.lastKg(in: model.store)) {
             if text.hasSuffix("?") {
-                return secret ? "It's in your private notes." : "That stays on this phone."
+                return secret ? "It's in your private notes" : "That stays on this phone"
             }
             guard (try? model.engine.perform(CreateNote(body: text, isPrivate: true), by: .user)) != nil else {
-                return "Couldn't save that."
+                return "Couldn't save that"
             }
             model.touch()
-            return "\(SecretWords.title), kept."
+            return "\(SecretWords.title), kept"
         }
         let title = text.prefix(1).uppercased() + text.dropFirst()
         guard model.capture(title: title, startsAt: AppClock.now.addingTimeInterval(4 * 3600)) != nil else {
-            return "Couldn't save that."
+            return "Couldn't save that"
         }
-        return "Drying. Swipe to drop it."
+        return "Drying. Swipe to drop it"
     }
 
     private func exercise(matching text: String) -> ClassDef? {
@@ -218,16 +218,16 @@ struct CommandInterpreter {
     }
 
     private func log(exerciseQuery: String, weight: Double, reps: Double) -> String {
-        guard let exercise = exercise(matching: exerciseQuery) else { return "I don’t know “\(exerciseQuery)” yet." }
+        guard let exercise = exercise(matching: exerciseQuery) else { return "I don’t know “\(exerciseQuery)” yet" }
         guard let workout = model.session?.workout ?? model.tonightWorkout()
-        else { return "No workout today to log into." }
+        else { return "No workout today to log into" }
         if model.session == nil {
             model.startWorkout(workout)
             model.isWorkoutPresented = false
         }
         guard let session = model.session,
               let index = session.entries.firstIndex(where: { session.exerciseClass(of: $0)?.id == exercise.id })
-        else { return "\(exercise.name) isn’t in \(ObjectPrivacy.routineTitle(workout.title, in: model.store))." }
+        else { return "\(exercise.name) isn’t in \(ObjectPrivacy.routineTitle(workout.title, in: model.store))" }
         session.select(entryAt: index)
         session.weight = weight
         session.reps = reps
@@ -241,6 +241,6 @@ struct CommandInterpreter {
     static func loggedReceipt(exercise: String, weight: Double, reps: Double, best: Bool) -> String {
         let lower = exercise.lowercased()
         let name = lower.prefix(1).uppercased() + lower.dropFirst()
-        return "\(name) \(Format.kilograms(weight)) × \(Int(reps)), logged\(best ? ", best" : "")."
+        return "\(name) \(Format.kilograms(weight)) × \(Int(reps)), logged\(best ? ", best" : "")"
     }
 }

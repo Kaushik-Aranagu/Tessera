@@ -114,10 +114,10 @@ struct TrainingStatsPage: View {
 
     private func subtitle(_ reading: StatsReading) -> String {
         if reading.isEmpty {
-            return "Your numbers start with your first session."
+            return "Your numbers start with your first session"
         }
         return TrainingSentences.strengthOpening(reading.lines, range: reading.range, unit: reading.unit)
-            ?? "Where your training stands."
+            ?? "Where your training stands"
     }
 
     // MARK: Content
@@ -177,7 +177,7 @@ struct TrainingStatsPage: View {
         let amount = StatsMass.estimate(kg: best.e1RM, unit: unit)
             .replacingOccurrences(of: " kg", with: " kilograms").replacingOccurrences(of: " lb", with: " pounds")
         let date = best.date.formatted(.dateTime.month(.wide).day())
-        return "Your best \(best.exercise.lowercased()) is about \(amount) for 1, \(date)."
+        return "Your best \(best.exercise.lowercased()) is about \(amount) for 1, \(date)"
     }
 
     // MARK: Strength

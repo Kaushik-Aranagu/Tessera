@@ -123,7 +123,7 @@ public enum RecipeStock {
             return "Private recipe"
         }
         let names = shortNames(rows, isPrivateWord: isPrivateWord)
-        return names.isEmpty ? "Nothing is short." : "Short on \(join(names))."
+        return names.isEmpty ? "Nothing is short" : "Short on \(join(names))"
     }
 }
 

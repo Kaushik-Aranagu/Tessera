@@ -18,7 +18,7 @@ public struct MeProfile: Equatable, Sendable {
     }
 
     /// The line shown beside the fields.
-    public static let privacyLine = "That stays on this phone."
+    public static let privacyLine = "That stays on this phone"
     public static let sexChoices = ["female", "male"]
     public nonisolated static let objectID = SystemCatalog.stableID("meProfile")
 

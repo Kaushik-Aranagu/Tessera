@@ -832,8 +832,8 @@ enum MosaicReadout {
             .firstHour + Int((Double(column / 2 * 2) * Double(config.hours) / Double(config.columns)).rounded())
         let from = HouseTime.clock(minuteOfDay: (hour % 24) * 60)
         let to = HouseTime.clock(minuteOfDay: ((hour + 1) % 24) * 60)
-        guard let event, !event.isEmpty else { return "\(from) to \(to)." }
-        return "\(from) to \(to), \(event)."
+        guard let event, !event.isEmpty else { return "\(from) to \(to)" }
+        return "\(from) to \(to), \(event)"
     }
 
     /// The column "now" falls in, or nil before the first hour (the whole day is still ahead).

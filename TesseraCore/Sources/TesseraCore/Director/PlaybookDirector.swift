@@ -116,9 +116,9 @@ public struct DirectorPlaybook: Codable, Equatable, Sendable {
     }
 
     /// The line the Explain screen shows when the model's own "why" fails a check.
-    public static let neutralWhy = "Chosen for today."
+    public static let neutralWhy = "Chosen for today"
 
-    /// A model's "why" is shown to him, so it passes `TessLineCheck` (one sentence, 14 words, 80 characters, a stop,
+    /// A model's "why" is shown to him, so it passes `TessLineCheck` (one sentence, 14 words, 80 characters, no stop,
     /// no digits it was not given) and the walls (no key, secret word, money, body or calorie fact) or it is replaced
     /// by `neutralWhy`. The choice itself stands: only the words are swapped.
     static func line(_ text: String) -> String {
@@ -130,7 +130,7 @@ public struct DirectorPlaybook: Codable, Equatable, Sendable {
             || PrivateFacts.isCalorieShaped(one) || PrivateFacts.isMoneyShaped(one)
         let verdict = TessLineCheck.check(one, slot: .detail, numbers: [], names: [], rulesLine: nil, isDone: false,
                                           dayLabel: nil, hero: nil)
-        return !walled && verdict == .pass ? one : neutralWhy
+        return !walled && verdict == .pass ? ShownLine.unstopped(one) : neutralWhy
     }
 }
 

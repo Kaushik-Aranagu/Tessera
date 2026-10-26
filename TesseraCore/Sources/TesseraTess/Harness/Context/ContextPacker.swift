@@ -64,8 +64,8 @@ public struct ContextPack: Sendable, Equatable {
 ///   trimmed. A trimmed recall section ends with "More is kept; open to see it."
 public struct ContextPacker: Sendable {
     public static let inputCeiling = 700_000
-    public static let nothingKeptLine = "Nothing kept on this."
-    public static let moreKeptLine = "More is kept; open to see it."
+    public static let nothingKeptLine = "Nothing kept on this"
+    public static let moreKeptLine = "More is kept; open to see it"
 
     public var row: BudgetRow
     public var ratio: TokenRatio
@@ -109,10 +109,14 @@ public struct ContextPacker: Sendable {
         for (section, keepStart) in steps {
             while total > ceiling, var list = chosen[section], !list.isEmpty {
                 let current = tokens(section)
-                if keepStart, current <= row.start(section) { break }
+                if keepStart, current <= row.start(section) {
+                    break
+                }
                 let item = section == .recall ? list.removeLast() : list.removeFirst()
                 let size = ratio.tokens(item.rendered, in: section)
-                if keepStart, current - size < row.start(section) { break }
+                if keepStart, current - size < row.start(section) {
+                    break
+                }
                 chosen[section] = list
                 total -= size
                 dropped.append(item.path)
@@ -129,8 +133,12 @@ public struct ContextPacker: Sendable {
         for section in ContextSection.allCases {
             let list = chosen[section] ?? []
             var parts = list.map(\.rendered)
-            if section == .recall, nothingKept { parts = [Self.nothingKeptLine] }
-            if section == .recall, recallTrimmed { parts.append(Self.moreKeptLine) }
+            if section == .recall, nothingKept {
+                parts = [Self.nothingKeptLine]
+            }
+            if section == .recall, recallTrimmed {
+                parts.append(Self.moreKeptLine)
+            }
             guard !parts.isEmpty else { continue }
             let text = parts.joined(separator: "\n\n")
             blocks.append(.init(section: section, text: text))

@@ -27,10 +27,10 @@ struct PantryShopV2Tests {
     }
 
     @Test func gotAndLeftReadAsOneSentence() {
-        #expect(ShopV2Copy.gotLeft(got: 12, left: 2) == "12 got, 2 left for next time.")
-        #expect(ShopV2Copy.gotLeft(got: 5, left: 0) == "5 got, nothing left.")
-        #expect(ShopV2Copy.gotLeft(got: 0, left: 3) == "Nothing got, 3 left for next time.")
-        #expect(ShopV2Copy.gotLeft(got: 0, left: 0) == "Nothing in the basket.")
+        #expect(ShopV2Copy.gotLeft(got: 12, left: 2) == "12 got, 2 left for next time")
+        #expect(ShopV2Copy.gotLeft(got: 5, left: 0) == "5 got, nothing left")
+        #expect(ShopV2Copy.gotLeft(got: 0, left: 3) == "Nothing got, 3 left for next time")
+        #expect(ShopV2Copy.gotLeft(got: 0, left: 0) == "Nothing in the basket")
     }
 
     @Test func theAboutTotalIsWholeDollars() {

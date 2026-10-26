@@ -9,32 +9,32 @@ import TesseraCore
 enum NotesLandingWords {
     /// T-N1 to T-N4: the subtitle. The key word is a thing's name, or "own".
     static func subtitle(hasNotes: Bool, topThings: [String]) -> AccentedSentence {
-        guard hasNotes else { return AccentedSentence(text: "A place for loose thoughts.", key: nil) }
+        guard hasNotes else { return AccentedSentence(text: "A place for loose thoughts", key: nil) }
         switch topThings.count {
-        case 0: return AccentedSentence(text: "Your notes are on their own.", key: "own")
-        case 1: return AccentedSentence(text: "\(topThings[0]) comes up most.", key: topThings[0])
-        default: return AccentedSentence(text: "\(topThings[0]) and \(topThings[1]) come up most.", key: topThings[0])
+        case 0: return AccentedSentence(text: "Your notes are on their own", key: "own")
+        case 1: return AccentedSentence(text: "\(topThings[0]) comes up most", key: topThings[0])
+        default: return AccentedSentence(text: "\(topThings[0]) and \(topThings[1]) come up most", key: topThings[0])
         }
     }
 
     /// T-N5: "You write about A, B, and C." (2 things: "A and B"; 1: "A"); nil with none.
     static func paragraph(_ names: [String]) -> String? {
-        names.isEmpty ? nil : "You write about \(LandingList.joined(names))."
+        names.isEmpty ? nil : "You write about \(LandingList.joined(names))"
     }
 
     /// T-N6: the filter found no thing.
     static func noMatch(_ typed: String) -> String {
-        "No thing called \u{201C}\(typed)\u{201D}. Return writes it as a note."
+        "No thing called \u{201C}\(typed)\u{201D}. Return writes it as a note"
     }
 
     /// T-N7: a book is open; the page adds the ink word "Read".
     static func reading(_ title: String) -> String {
-        "\(title) is open."
+        "\(title) is open"
     }
 
     /// T-N8: a note names a thing without linking it.
     static func names(weekday: String, thing: String) -> String {
-        "Your note from \(weekday) names \(thing)."
+        "Your note from \(weekday) names \(thing)"
     }
 
     /// T-N10: since he last looked. Several things (or notes): "New notes about A and B."
@@ -42,11 +42,11 @@ enum NotesLandingWords {
         guard notes > 0 else { return nil }
         let top = Array(things.prefix(2))
         if top.isEmpty {
-            return loose ? (notes == 1 ? "A new loose note." : "New loose notes.") : nil
+            return loose ? (notes == 1 ? "A new loose note" : "New loose notes") : nil
         }
-        return notes == 1 && top.count == 1 ? "A new note about \(top[0])."
-            : top.count == 2 && notes == 1 ? "A new note about \(LandingList.joined(top))."
-            : "New notes about \(LandingList.joined(top))."
+        return notes == 1 && top.count == 1 ? "A new note about \(top[0])"
+            : top.count == 2 && notes == 1 ? "A new note about \(LandingList.joined(top))"
+            : "New notes about \(LandingList.joined(top))"
     }
 
     /// Whether a typed filter matches a name by the start of any of its words (case and accent blind).

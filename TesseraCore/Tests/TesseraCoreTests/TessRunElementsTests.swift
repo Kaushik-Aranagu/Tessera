@@ -83,7 +83,7 @@ struct TessRunElementsTests {
             }
         }
         #expect(shells.count == 1 && shells.first?.call == "openItem" && shells.first?.object == task.id)
-        #expect(events.last == .finished("Opening Pack the charger."))
+        #expect(events.last == .finished("Opening Pack the charger"))
         #expect(r.engine.history(limit: 100).count == before && haiku.streamCount == 0)
         let back = await helper.collect(r.run.ask("go back", frame: frame("bridge", items: [item])))
         #expect(back.contains(.shell(ShellIntent(call: "goBack"))))
@@ -92,8 +92,8 @@ struct TessRunElementsTests {
     // MARK: Through the model
 
     @Test func anOpenAskGetsTheFramesFragmentsAndOnlyTheScreensTools() async throws {
-        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Two tasks.")]])
-        let sonnet = ScriptedBrain(.sonnet, rounds: [[.text("Two tasks.")]])
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Two tasks")]])
+        let sonnet = ScriptedBrain(.sonnet, rounds: [[.text("Two tasks")]])
         let r = try helper.rig([.haiku: haiku, .sonnet: sonnet])
         let task = try makeTask(r, "Call the bank")
         let item = ElementItem(id: task.id, kind: "task", name: "Call the bank",
@@ -102,7 +102,7 @@ struct TessRunElementsTests {
             "what is next for this and what else is on",
             frame: frame("bridge", items: [item])
         ))
-        #expect(events.last == .finished("Two tasks."))
+        #expect(events.last == .finished("Two tasks"))
         let seen = try #require((haiku.requestsSeen + sonnet.requestsSeen).first)
         let text = seen.messages.flatMap(\.content).compactMap { piece -> String? in
             if case let .text(text) = piece {
@@ -121,7 +121,7 @@ struct TessRunElementsTests {
 
     @Test func aShellCallFromTheModelIsHandedToTheHost() async throws {
         let haiku = ScriptedBrain(.haiku, rounds: [
-            [helper.use("t1", "openItem", #"{"item":"o1"}"#)], [.text("Opened.")],
+            [helper.use("t1", "openItem", #"{"item":"o1"}"#)], [.text("Opened")],
         ])
         let r = try helper.rig([.haiku: haiku])
         let task = try makeTask(r, "Pack the charger")
@@ -136,7 +136,7 @@ struct TessRunElementsTests {
             }
         }
         #expect(shells.first?.call == "openItem" && shells.first?.object == task.id)
-        #expect(events.last == .finished("Opened."))
+        #expect(events.last == .finished("Opened"))
     }
 
     // MARK: The new tools
@@ -174,7 +174,7 @@ struct TessRunElementsTests {
         let haiku = ScriptedBrain(.haiku, rounds: [
             [helper.use("t1", "logSpend", #"{"amount":12,"note":"lunch"}"#),
              helper.use("t2", "startCooking", #"{"recipe":"x","serves":null}"#)],
-            [.text("Could not.")],
+            [.text("Could not")],
         ])
         let r = try helper.rig([.haiku: haiku])
         let task = try makeTask(r, "Pack the charger")
@@ -183,7 +183,7 @@ struct TessRunElementsTests {
         let before = r.engine.history(limit: 100).count
         let events = await helper.collect(r.run.ask("could you bring up the thing I mean please now",
                                                     frame: frame("bridge", items: [item])))
-        #expect(events.last == .finished("Could not."))
+        #expect(events.last == .finished("Could not"))
         // Nothing was written: no spend, no cook, no op.
         #expect(try r.engine.store.objects(of: #require(r.engine.classes[.spend])).count == spends)
         #expect(r.engine.history(limit: 100).count == before)
@@ -195,13 +195,13 @@ struct TessRunElementsTests {
                 nil
             }
         } ?? []
-        #expect(results.count == 2 && results.allSatisfy { $0.1 && $0.0 == "That isn't a call I can make here." })
+        #expect(results.count == 2 && results.allSatisfy { $0.1 && $0.0 == "That isn't a call I can make here" })
     }
 
     @Test func aShellCallPointsOnlyAtAHandleOfThisPack() async throws {
         let other = UUID()
         let haiku = ScriptedBrain(.haiku, rounds: [
-            [helper.use("t1", "openItem", #"{"item":"\#(other.uuidString)"}"#)], [.text("Done.")],
+            [helper.use("t1", "openItem", #"{"item":"\#(other.uuidString)"}"#)], [.text("Done")],
         ])
         let r = try helper.rig([.haiku: haiku])
         let task = try makeTask(r, "Pack the charger")

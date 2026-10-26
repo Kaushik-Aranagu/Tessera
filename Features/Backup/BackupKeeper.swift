@@ -208,7 +208,7 @@ enum BackupKeeper {
     }
 
     /// "Set a passcode first, this copy has your private words."
-    static let passcodeLine = "Set a passcode first. This copy has your private words."
+    static let passcodeLine = "Set a passcode first. This copy has your private words"
 
     /// SAVE A COPY: a passcode first, then Face ID, then the share sheet. Local backup writes never come here.
     static func savedCopy(_ context: TesseraContext) async throws -> SavedCopy {

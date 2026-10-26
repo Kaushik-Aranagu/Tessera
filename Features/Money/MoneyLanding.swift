@@ -80,11 +80,11 @@ struct MoneyWall: Equatable {
         var forms: [String] = []
         if let trend {
             let bare = trend.hasSuffix(".") ? String(trend.dropLast()) : trend
-            forms.append("\(bare), \(spends) so far.")
+            forms.append("\(bare), \(spends) so far")
             forms.append(trend)
         }
-        forms.append("\(spends) in \(monthName).")
-        forms.append("\(spends).")
+        forms.append("\(spends) in \(monthName)")
+        forms.append("\(spends)")
         return forms
     }
 
@@ -127,14 +127,14 @@ struct MoneyLandingView: View {
                         glyph: { item in LandingGlyph(item: item, color: LandingAccent.money, room: .purse) },
                         doors: facts.doors, focus: $category,
                         openDoor: { door in
-                            TessVoice.shared.say("\(door.name) opens with the full chart soon.")
+                            TessVoice.shared.say("\(door.name) opens with the full chart soon")
                         },
                         action: LandingFootAction(
                             word: "Log", object: "A spend", hint: "Logs a spend, like 12.40 lunch",
                             alternates: [
                                 .init(verb: "Look", object: "The month") { look() },
                                 .init(verb: "Plan", object: "This month") {
-                                    TessVoice.shared.say("Plans for the month come with Bills.")
+                                    TessVoice.shared.say("Plans for the month come with Bills")
                                 },
                             ]
                         ) {
@@ -190,7 +190,7 @@ struct MoneyLandingView: View {
             return
         }
         guard let amount = MoneyAmount.parse(text) else {
-            TessVoice.shared.say("Start with the amount, like 12.40 lunch.")
+            TessVoice.shared.say("Start with the amount, like 12.40 lunch")
             return
         }
         let note = MoneyAmount.note(after: text)
@@ -201,13 +201,13 @@ struct MoneyLandingView: View {
                      autoPool: pools ? true : nil),
             by: .user
         ) else {
-            TessVoice.shared.say("Didn't log that. Try again.")
+            TessVoice.shared.say("Didn't log that. Try again")
             return
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
         let word = note.split(separator: " ").first.map { String($0).capitalized }
         let shown = word.map { ObjectPrivacy.isPrivateWord($0, in: model.store) ? "Private spend" : $0 } ?? "Spend"
-        TessVoice.shared.say("\(shown), logged.", undo: result.record)
+        TessVoice.shared.say("\(shown), logged", undo: result.record)
     }
 }
 

@@ -37,21 +37,21 @@ struct HomeSentenceTests {
 
     @Test func clausesGoByClockTimeAndTheUntimedGoLast() {
         let inputs = HomeSentence.Inputs(
-            training: clause(.training, "Push A today.", time: at(18)),
-            kitchen: clause(.kitchen, "Tacos tonight.", time: at(17, 30)),
-            money: clause(.money, "Rent is due Friday.", time: at(9)),
-            notes: clause(.notes, "A new loose note.", since: at(8))
+            training: clause(.training, "Push A today", time: at(18)),
+            kitchen: clause(.kitchen, "Tacos tonight", time: at(17, 30)),
+            money: clause(.money, "Rent is due Friday", time: at(9)),
+            notes: clause(.notes, "A new loose note", since: at(8))
         )
         let clauses = HomeSentence.compose(inputs)
         #expect(clauses.map(\.app) == [.money, .kitchen, .training, .notes])
-        #expect(HomeSentence.text(clauses) == "Rent is due Friday. Tacos tonight. Push A today. A new loose note.")
+        #expect(HomeSentence.text(clauses) == "Rent is due Friday. Tacos tonight. Push A today. A new loose note")
     }
 
     @Test func atMostFourAndTheOldestUntimedGoFirst() {
         let inputs = HomeSentence.Inputs(
-            training: clause(.training, "T.", time: at(18)), kitchen: clause(.kitchen, "K.", time: at(17)),
-            notes: clause(.notes, "N.", since: at(7)), lists: clause(.lists, "L.", since: at(8)),
-            routines: clause(.routines, "R.", time: at(6))
+            training: clause(.training, "T", time: at(18)), kitchen: clause(.kitchen, "K", time: at(17)),
+            notes: clause(.notes, "N", since: at(7)), lists: clause(.lists, "L", since: at(8)),
+            routines: clause(.routines, "R", time: at(6))
         )
         let clauses = HomeSentence.compose(inputs)
         #expect(clauses.count == 4)
@@ -61,16 +61,16 @@ struct HomeSentenceTests {
 
     @Test func nothingFromAnyAppIsAQuietDay() {
         #expect(HomeSentence.compose(HomeSentence.Inputs()).isEmpty)
-        #expect(HomeSentence.text([]) == "A quiet day.")
+        #expect(HomeSentence.text([]) == "A quiet day")
     }
 
     @Test func theKeyWordIsOffsetsIntoTheText() throws {
-        let one = clause(.money, "Rent is due Friday.", key: "Rent")
+        let one = clause(.money, "Rent is due Friday", key: "Rent")
         let range = try #require(one.keyWord)
         #expect(range == 0 ..< 4)
-        let late = clause(.kitchen, "Tacos tonight, start at 6:05 pm.", key: "Tacos")
+        let late = clause(.kitchen, "Tacos tonight, start at 6:05 pm", key: "Tacos")
         #expect(late.keyWord == 0 ..< 5)
-        #expect(clause(.notes, "Nothing.").keyWord == nil)
+        #expect(clause(.notes, "Nothing").keyWord == nil)
     }
 
     // MARK: Gathering
@@ -79,7 +79,7 @@ struct HomeSentenceTests {
         let inputs = HomeSentence.inputs(engine: engine, plan: nil, moneyDue: .init(name: "Rent", at: at(9, day: 23)),
                                          now: at(8), calendar: calendar)
         let money = inputs.money
-        #expect(money?.text == "Rent is due Friday." && money?.time == at(9, day: 23))
+        #expect(money?.text == "Rent is due Friday" && money?.time == at(9, day: 23))
         #expect(money?.text.contains(where: \.isNumber) == false)
         let walled = HomeSentence.inputs(
             engine: engine,
@@ -88,7 +88,7 @@ struct HomeSentenceTests {
             now: at(8),
             calendar: calendar
         )
-        #expect(walled.money?.text == "Private bill is due Friday.")
+        #expect(walled.money?.text == "Private bill is due Friday")
     }
 
     @Test func aDishPlannedForTonightSaysTacosAndTheStart() throws {
@@ -97,7 +97,7 @@ struct HomeSentenceTests {
         try engine.perform(CreateTask(title: "Cook tacos", startsAt: at(18, 5), about: [tacos.id]), by: .user)
         let inputs = HomeSentence.inputs(engine: engine, plan: nil, now: at(12), calendar: calendar)
         let kitchen = try #require(inputs.kitchen)
-        #expect(kitchen.text == "Tacos tonight, start at \(HouseTime.clock(at(18, 5), calendar: calendar)).")
+        #expect(kitchen.text == "Tacos tonight, start at \(HouseTime.clock(at(18, 5), calendar: calendar))")
         #expect(kitchen.time == at(18, 5) && kitchen.keyWord == 0 ..< 5)
         // A private recipe reads Private recipe, never its words.
         let secret = try engine.perform(
@@ -155,7 +155,7 @@ struct HomeSentenceTests {
         #expect(HomeSentence.inputs(engine: engine, plan: nil, now: at(12), calendar: calendar).notes == nil)
         try engine.perform(CreateNote(body: "Ask @Zebra about it"), by: .user)
         let notes = try #require(HomeSentence.inputs(engine: engine, plan: nil, now: at(12), calendar: calendar).notes)
-        #expect(notes.text == "@Zebra is not a thing yet." && notes.time == nil && notes.since != nil)
+        #expect(notes.text == "@Zebra is not a thing yet" && notes.time == nil && notes.since != nil)
         let packing = try engine.perform(CreateList(name: "Packing"), by: .user).output
         for item in ["Socks", "Charger"] {
             try engine.perform(AddListItem(list: packing.id, text: item), by: .user)
@@ -164,7 +164,7 @@ struct HomeSentenceTests {
         #expect(HomeSentence.inputs(engine: engine, plan: nil, now: at(12), calendar: calendar).lists == nil)
         try engine.perform(StartListRun(list: packing.id), by: .user)
         let lists = try #require(HomeSentence.inputs(engine: engine, plan: nil, now: at(12), calendar: calendar).lists)
-        #expect(lists.text == "Packing is running, 2 left." && lists.opens == .object(packing.id))
+        #expect(lists.text == "Packing is running, 2 left" && lists.opens == .object(packing.id))
     }
 
     @Test func routinesSayWhatIsRunningOrTheFirstLineAtItsUsualStart() {
@@ -176,7 +176,7 @@ struct HomeSentenceTests {
         )
         let part = HomeSentence.RoutinesPart(facts: facts, nextUsualStart: at(6, 40))
         let quiet = HomeSentence.inputs(engine: engine, plan: nil, routines: part, now: at(6), calendar: calendar)
-        #expect(quiet.routines?.text == "Morning, 6 steps." && quiet.routines?.time == at(6, 40))
+        #expect(quiet.routines?.text == "Morning, 6 steps" && quiet.routines?.time == at(6, 40))
         let live = RoutinesLanding.facts(items: [.init(name: "Morning", count: 6)],
                                          running: .init(name: "Morning", step: "Shoes on", secondsOnStep: 60), now: at(
                                              6,
@@ -189,14 +189,22 @@ struct HomeSentenceTests {
             now: at(6, 41),
             calendar: calendar
         )
-        #expect(running.routines?.text == "Morning is running" || running.routines?.text == "Morning is running.")
+        #expect(running.routines?.text == "Morning is running" || running.routines?.text == "Morning is running")
     }
 
     // MARK: Past
 
     @Test func aSpendWhoseFirstWordAloneIsPrivateReadsPrivateInThePastSentence() throws {
-        try engine.perform(LogSpend(amount: 80, typed: "80", note: "ozempic pharmacy run", spentAt: at(10, day: 20)), by: .user)
-        let text = HomeSentence.text(HomeSentence.past(engine: engine, on: at(12, day: 20), calendar: calendar, now: at(12)))
+        try engine.perform(
+            LogSpend(amount: 80, typed: "80", note: "ozempic pharmacy run", spentAt: at(10, day: 20)),
+            by: .user
+        )
+        let text = HomeSentence.text(HomeSentence.past(
+            engine: engine,
+            on: at(12, day: 20),
+            calendar: calendar,
+            now: at(12)
+        ))
         #expect(!text.lowercased().contains("ozempic") && !text.contains("80"))
     }
 
@@ -205,7 +213,7 @@ struct HomeSentenceTests {
         try engine.perform(CreateNote(body: "Called @Nobody"), by: .user)
         let clauses = HomeSentence.past(engine: engine, on: at(12, day: 20), calendar: calendar, now: at(12))
         let text = HomeSentence.text(clauses)
-        #expect(text.contains("Rent paid.") || text == HomeSentence.quietDay, "\(text)")
+        #expect(text.contains("Rent paid") || text == HomeSentence.quietDay, "\(text)")
         #expect(!text.contains("1200") && !text.contains("$"))
         #expect(HomeSentence.past(engine: engine, on: at(12, day: 3), calendar: calendar, now: at(12)).isEmpty)
     }

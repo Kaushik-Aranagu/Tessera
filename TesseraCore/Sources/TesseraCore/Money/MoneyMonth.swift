@@ -24,7 +24,7 @@ public extension PoolReport {
         let at = date ?? now
         let name = monthName(at, calendar)
         let sums = spends(inMonthOf: at, calendar: calendar)
-        guard !sums.isEmpty else { return "\(name), nothing spent." }
+        guard !sums.isEmpty else { return "\(name), nothing spent" }
         let codes = sums.keys.sorted { $0 == "USD" ? true : ($1 == "USD" ? false : $0 < $1) }
         let parts = codes.map { "\(Self.plain(sums[$0] ?? 0, lakh: lakh)) \($0 == "USD" ? "US" : $0)" }
         var text = "\(name), spent \(Self.joined(parts))"
@@ -44,15 +44,14 @@ public extension PoolReport {
             }
             if all {
                 text += ", about \(Self.plain(PoolMath.rounded(dollars, places: 0), lakh: lakh)) in all"
-                text += "."
                 // Said once, in words, when a rate behind the "about" is more than two weeks old.
                 if let oldest, now.timeIntervalSince(oldest) > Double(Self.staleDays) * 86400 {
-                    text += " The rates are old."
+                    text += ". The rates are old"
                 }
                 return text
             }
         }
-        return text + "."
+        return text
     }
 
     /// A line per live pool for the month: its balance now and the month's spend against last month's.
@@ -66,7 +65,7 @@ public extension PoolReport {
             let now = spent[pool.id] ?? 0, last = before[pool.id] ?? 0
             let fill: Double? = last > 0 ? min(1, max(0, NSDecimalNumber(decimal: now / last).doubleValue)) : nil
             let balance = Self.plain(book.balance(of: pool), lakh: lakh)
-            return PoolMonthLine(pool: pool.id, text: "\(name(of: pool)), \(balance).", spent: now, lastMonth: last,
+            return PoolMonthLine(pool: pool.id, text: "\(name(of: pool)), \(balance)", spent: now, lastMonth: last,
                                  fill: fill)
         }
     }

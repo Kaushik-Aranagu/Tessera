@@ -17,7 +17,7 @@ struct MeProfileTests {
     @Test func nothingIsSaidUntilHeSaysIt() {
         #expect(MeProfile.read(in: store) == MeProfile())
         #expect(store.object(id: MeProfile.objectID) == nil)
-        #expect(MeProfile.privacyLine == "That stays on this phone.")
+        #expect(MeProfile.privacyLine == "That stays on this phone")
     }
 
     @Test func eachFieldIsOptionalAndCanBeForgotten() throws {
@@ -139,7 +139,7 @@ struct CaloriesTests {
         #expect(MetTable.met(forExercise: "Dumbbell Curl") == 3.5 && MetTable.met(forExercise: "Unknown Move") == 3.5)
         #expect(CaloriesBurned.aboutLine
             .hasPrefix("Energy costs from the 2024 Adult Compendium of Physical Activities"))
-        #expect(CaloriesBurned.aboutLine.hasSuffix("2024;13(1):6-12."))
+        #expect(CaloriesBurned.aboutLine.hasSuffix("2024;13(1):6-12"))
     }
 }
 

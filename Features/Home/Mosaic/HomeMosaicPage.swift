@@ -315,6 +315,7 @@ struct HomeMosaicPage: View {
             .mosaicShield()
             .frame(width: BridgePlace.board.width, alignment: .topTrailing)
             .frame(maxHeight: BridgePlace.board.height + 18, alignment: .top)
+            .clipped()
             .padding(.leading, BridgePlace.board.minX)
             .padding(.top, BridgePlace.board.minY * rise - 8)
     }
@@ -468,7 +469,7 @@ struct HomeMosaicPage: View {
         if layerOn, HomeMosaic.appsListIsOn {
             ZStack {
                 if roomOpen {
-                    TessRoom(entries: roomEntries, watching: "Watching today.", undo: { entry in
+                    TessRoom(entries: roomEntries, watching: "Watching today", undo: { entry in
                         switch TessRoomLog.undo(entry, engine: model.engine) {
                         case let .putBack(line): line
                         default: nil
@@ -576,9 +577,9 @@ struct HomeMosaicPage: View {
     /// What she says to a reply he picked (the phone's own answers; nothing leaves the phone here).
     private func tessAnswer(_ reply: String) -> String? {
         switch reply {
-        case "Show me": "Here it is."
-        case "Not now", "Leave it", "Fine as it is": "Okay."
-        default: "Okay."
+        case "Show me": "Here it is"
+        case "Not now", "Leave it", "Fine as it is": "Okay"
+        default: "Okay"
         }
     }
 
@@ -588,7 +589,7 @@ struct HomeMosaicPage: View {
             // The same capture as ever: her grammar or the on-device model turns the words into actions, and she
             // answers in one line.
             let line = await model.ask(text)
-            tessModel.say(line.isEmpty ? "Got it." : line, names: [])
+            tessModel.say(line.isEmpty ? "Got it" : line, names: [])
             tessModel.offer(["That's all"])
         }
     }
@@ -614,7 +615,7 @@ struct HomeMosaicPage: View {
         // The op-log "finished" moment that follows shows its clause only: no second tile and no second tap.
         MomentMemory.handDoneAt = AppClock.now
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
-        TessVoice.shared.say(thing.undoLine ?? "Done.", undo: record, holds: .seconds(5))
+        TessVoice.shared.say(thing.undoLine ?? "Done", undo: record, holds: .seconds(5))
         return true
     }
 

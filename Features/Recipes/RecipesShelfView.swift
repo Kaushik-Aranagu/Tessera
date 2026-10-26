@@ -69,7 +69,7 @@ private struct RecipesShelfPage: View {
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1)
                 if shelf.rows.isEmpty {
-                    Text("No recipes yet.")
+                    Text("No recipes yet")
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.ink.opacity(0.66))
                         .padding(.top, Theme.Spacing.xxl)
@@ -216,7 +216,7 @@ enum RecipesKeptCopy {
 
     /// "seriouseats.com, removed."
     static func removed(_ link: URL) -> String {
-        "\(host(link)), removed."
+        "\(host(link)), removed"
     }
 }
 

@@ -21,7 +21,7 @@ public struct Groceries {
     }
 
     /// The receipt when strays were folded in.
-    public static let mergedReceipt = "Groceries lists, merged."
+    public static let mergedReceipt = "Groceries lists, merged"
 
     /// Makes the one groceries list with its fixed id. Called when the catalog is prepared.
     /// Exactly one built-in Groceries list after this runs (G29): a copy made while it was deleted brings it back with
@@ -565,10 +565,10 @@ public struct AddRecipeToGroceries: EngineAction {
         let made = output.added.count
         let updated = output.updated
         switch (made, updated) {
-        case (0, 0): return "\(name), nothing to add."
-        case (_, 0): return "\(name), \(made) added."
-        case (0, _): return "\(name), \(updated) updated."
-        default: return "\(name), \(made) added, \(updated) updated."
+        case (0, 0): return "\(name), nothing to add"
+        case (_, 0): return "\(name), \(made) added"
+        case (0, _): return "\(name), \(updated) updated"
+        default: return "\(name), \(made) added, \(updated) updated"
         }
     }
 }

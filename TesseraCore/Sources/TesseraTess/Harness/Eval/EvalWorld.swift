@@ -482,7 +482,7 @@ struct Maker {
 
     static let noteTemplates = [
         "Week recap: training felt %@, sleep was %@.", "Meal prep idea for Sunday: %@.",
-        "Remember to buy %@ and %@.", "Gym bag: %@ shakers, %@ bands, 1 belt.", "Idea: try %@ for breakfast.",
+        "Remember to buy %@ and %@.", "Gym bag: %@ shakers, %@ bands, 1 belt", "Idea: try %@ for breakfast",
     ]
     static let noteWords = ["good", "heavy", "easy", "rough", "steady", "short", "fine", "long", "eggs", "rice",
                             "spinach", "oats", "coffee filters", "2", "3", "4", "Shakshuka", "French Toast"]
@@ -498,10 +498,10 @@ struct Maker {
         }
         world.notes += [
             .init(at: on(at(2026, 7, 5), 20), body: "Hurt my left shoulder carrying boxes on moving day. Taking "
-                + "three weeks off lifting.", links: ["Moving day"]),
-            .init(at: on(at(2026, 9, 2), 22), body: "Note to Tess: tell him his best bench is 200 kg."),
-            .init(at: on(at(2026, 2, 14), 10), body: "Locker combo 4-27-19."),
-            .init(at: on(at(2026, 8, 30), 21), body: "Session notes from Thursday.", isPrivate: true),
+                + "three weeks off lifting", links: ["Moving day"]),
+            .init(at: on(at(2026, 9, 2), 22), body: "Note to Tess: tell him his best bench is 200 kg"),
+            .init(at: on(at(2026, 2, 14), 10), body: "Locker combo 4-27-19"),
+            .init(at: on(at(2026, 8, 30), 21), body: "Session notes from Thursday", isPrivate: true),
         ]
         world.notes.sort { $0.at < $1.at }
     }
@@ -611,12 +611,12 @@ struct Maker {
     /// Apr 9, so it must never come back.
     mutating func makeMemory() {
         world.told = [
-            .init(at: on(max(first, at(2025, 11, 10)), 20), text: "I train at 6 am before work."),
-            .init(at: on(at(2026, 2, 3), 9), text: "I take oat milk in my coffee."),
-            .init(at: on(at(2026, 3, 20), 21), text: "My goal is a 100 kg bench by spring."),
-            .init(at: on(at(2026, 4, 2), 19), text: "My old gym locker number is 112.",
+            .init(at: on(max(first, at(2025, 11, 10)), 20), text: "I train at 6 am before work"),
+            .init(at: on(at(2026, 2, 3), 9), text: "I take oat milk in my coffee"),
+            .init(at: on(at(2026, 3, 20), 21), text: "My goal is a 100 kg bench by spring"),
+            .init(at: on(at(2026, 4, 2), 19), text: "My old gym locker number is 112",
                   forgotten: on(at(2026, 4, 9), 8)),
-            .init(at: on(Self.eveningFrom, 20), text: "I've switched to training in the evening after work."),
+            .init(at: on(Self.eveningFrom, 20), text: "I've switched to training in the evening after work"),
         ]
         world.beliefs = [
             .init(key: "trainTime", value: "6 am", from: world.told[0].at, until: on(Self.eveningFrom, 20)),

@@ -277,24 +277,26 @@ struct AppsListSlot: View {
                 settle(by: offset, count: rows.count)
             }
         } label: {
-            // Sheet 283 section 6: the dial on the left (x 24-184), focus 26 pt 700 in its colour, neighbours 20 pt
-            // with a 1.6 pt depth blur; the focus's one fact at x 186, left-aligned, 15 pt ink 2, cut on whole words.
+            // Sheet 283, Kaushik Oct 26: the dial on the RIGHT (x 218-378, names right-aligned), focus 26 pt bold in
+            // its
+            // colour, neighbours 20 pt with a 1.6 pt depth blur; the focus's one fact on the LEFT (x 24-216), 15 pt
+            // ink 2, cut on whole words.
             ZStack(alignment: .leading) {
-                Text(row.name)
-                    .font(.custom("Figtree", size: isMiddle ? 26 : 20, relativeTo: .title3)
-                        .weight(isMiddle ? .bold : .regular))
-                    .scaleEffect(isMiddle && held && !reduceMotion ? 1.06 : 1, anchor: .leading)
-                    .foregroundStyle(isMiddle ? row.accent : Theme.Colors.inkSecondary)
-                    .blur(radius: isMiddle || reduceMotion ? 0 : 1.6)
-                    .lineLimit(1)
-                    .frame(width: 160, alignment: .leading)
                 if isMiddle, !row.summary.isEmpty {
                     FitLine(forms: FitLine.cuts(row.summary), size: 15, color: Theme.Colors.inkSecondary)
                         .frame(width: 192, alignment: .leading)
-                        .offset(x: 162)
                         .id(row.id)
                         .transition(.offset(y: reduceMotion ? 0 : 6))
                 }
+                Text(row.name)
+                    .font(.custom("Figtree", size: isMiddle ? 26 : 20, relativeTo: .title3)
+                        .weight(isMiddle ? .bold : .regular))
+                    .scaleEffect(isMiddle && held && !reduceMotion ? 1.06 : 1, anchor: .trailing)
+                    .foregroundStyle(isMiddle ? row.accent : Theme.Colors.inkSecondary)
+                    .blur(radius: isMiddle || reduceMotion ? 0 : 1.6)
+                    .lineLimit(1)
+                    .frame(width: 160, alignment: .trailing)
+                    .offset(x: 194)
             }
             .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
             .contentShape(Rectangle())

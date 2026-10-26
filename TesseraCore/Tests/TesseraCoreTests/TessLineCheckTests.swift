@@ -120,7 +120,7 @@ struct TessLineCheckTests {
             slot: .detail, item: .doneWithLifts, expect: "pass"),
         Row(id: "L42", line: "Bench, incline barbell press, cable crossovers: 3 exercises, 12 sets, 1 new best.",
             slot: .detail, item: .doneWithLifts, expect: "C3"),
-        Row(id: "L43", line: "3 exercises, 12 sets, 1 new best", slot: .detail, item: .done, expect: "C4"),
+        Row(id: "L43", line: "3 exercises, 12 sets, 1 new best", slot: .detail, item: .done, expect: "pass"),
         Row(id: "L44", line: "3 exercises, 12 sets. 1 new best.", slot: .detail, item: .done, expect: "C4"),
         Row(id: "L45", line: "3 exercises and 1 new best.", slot: .detail, item: .done, expect: "C7"),
         Row(id: "L46", line: "3 exercises, 12 sets, 2 new bests.", slot: .detail, item: .done, expect: "C6"),
@@ -296,7 +296,7 @@ extension TessLineCheckTests {
         // HD12: both Claude slots fail, and the rules words (the phone's own, no weekday) are what remain.
         let row = try #require(Self.doneRows.first { $0.id == "HD12" })
         let line = HomeLines.line(for: Self.fact(row), now: row.finish, calendar: Self.calendar)
-        #expect(line.context == "1:40 am" && line.detail == "6 exercises, 19 sets, 1 new best.")
+        #expect(line.context == "1:40 am" && line.detail == "6 exercises, 19 sets, 1 new best")
         let house = TessLineCheck.HouseDay(finish: row.finish, now: row.finish, calendar: Self.calendar)
         for (slot, words) in [(TessLineCheck.Slot.context, line.context), (.detail, line.detail)] {
             #expect(TessLineCheck.check(words, slot: slot, for: line, dayLabel: row.label, house: house) == .pass)

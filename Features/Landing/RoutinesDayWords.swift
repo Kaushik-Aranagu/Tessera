@@ -20,22 +20,22 @@ enum RoutinesDayWords {
     /// "Morning is running. Night is next, usually 9:50 pm." / "Nothing is running. Night is next." /
     /// "Everything is done today." / "Nothing is set up yet."
     static func sentence(running: String?, next: Next?, total: Int) -> String {
-        guard total > 0 else { return "Nothing is set up yet." }
+        guard total > 0 else { return "Nothing is set up yet" }
         let head: String
         if let running {
-            head = "\(running) is running."
+            head = "\(running) is running"
         } else if next == nil {
-            return "Everything is done today."
+            return "Everything is done today"
         } else {
-            head = "Nothing is running."
+            head = "Nothing is running"
         }
         guard let next else { return head }
-        return head + " " + nextClause(next)
+        return head + ". " + nextClause(next)
     }
 
     /// "Night is next, usually 9:50 pm." (no time before the usual start is known).
     static func nextClause(_ next: Next) -> String {
-        guard let minute = next.startMinuteOfDay else { return "\(next.name) is next." }
-        return "\(next.name) is next, usually \(RoutinesLandingWords.clock(minute))."
+        guard let minute = next.startMinuteOfDay else { return "\(next.name) is next" }
+        return "\(next.name) is next, usually \(RoutinesLandingWords.clock(minute))"
     }
 }

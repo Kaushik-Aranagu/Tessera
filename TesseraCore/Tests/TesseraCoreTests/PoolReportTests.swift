@@ -46,7 +46,7 @@ struct PoolReportTests {
         // 82650 rupees at 1005/82650 dollars each is 1005 dollars: about 4,000.
         let about = report.about()
         #expect(about.dollars == 5000 && about.leftOut.isEmpty)
-        #expect(report.aboutLines(calendar: calendar) == ["In dollars, about $5,000", "Rates from Oct 18."])
+        #expect(report.aboutLines(calendar: calendar) == ["In dollars, about $5,000", "Rates from Oct 18"])
     }
 
     @Test func theSheetsExampleAbout1136() throws {
@@ -76,11 +76,11 @@ struct PoolReportTests {
         try pool("US checking", opening: "100")
         try pool("Euro pot", "EUR", opening: "50")
         let lines = report().aboutLines(calendar: calendar)
-        #expect(lines == ["Euros are not in the total."])
+        #expect(lines == ["Euros are not in the total"])
         #expect(report().about().dollars == nil)
         // A currency with no word reads its code.
         try pool("Swiss", "CHF", opening: "5")
-        #expect(report().aboutLines(calendar: calendar).contains("CHF is not in the total."))
+        #expect(report().aboutLines(calendar: calendar).contains("CHF is not in the total"))
     }
 
     @Test func theECBTableComesFirstThenTheOwnRate() throws {
@@ -93,7 +93,7 @@ struct PoolReportTests {
         let ecb = CurrencyRates(rates: ["USD": 1.10], date: at(10, 20))
         let withECB = report(ecb: ecb)
         #expect(withECB.about().dollars == 210)
-        #expect(withECB.aboutLines(calendar: calendar) == ["In dollars, about $210", "Rates from Oct 20."])
+        #expect(withECB.aboutLines(calendar: calendar) == ["In dollars, about $210", "Rates from Oct 20"])
     }
 
     @Test func ratesOlderThanFourteenDaysSaySo() throws {
@@ -102,10 +102,10 @@ struct PoolReportTests {
         try engine.perform(RecordRate(pair: "USD/INR", value: "83", at: at(9, 8)), by: .user)
         let lines = report(now: at(10, 22)).aboutLines(calendar: calendar)
         // 44 days old.
-        #expect(lines == ["In dollars, about $200", "Rates from Sep 8.", "These rates are old."])
+        #expect(lines == ["In dollars, about $200", "Rates from Sep 8", "These rates are old"])
         // Fourteen days exactly is fine.
         let fresh = report(now: at(9, 22)).aboutLines(calendar: calendar)
-        #expect(!fresh.contains("These rates are old."))
+        #expect(!fresh.contains("These rates are old"))
     }
 
     @Test func nothingIsEverFetchedAndLakhIsOffUnlessAsked() throws {
@@ -143,7 +143,7 @@ struct PoolReportTests {
             LogMove(from: india.id, to: checking.id, sent: "8300", arrived: "100", fee: "40", at: at(10, 19)),
             by: .user
         )
-        #expect(report().feesLine(calendar: calendar) == "Fees this month: $5.00 and INR 40.00.")
+        #expect(report().feesLine(calendar: calendar) == "Fees this month: $5.00 and INR 40.00")
         #expect(report(now: at(9, 15)).feesLine(calendar: calendar) == nil)
     }
 
@@ -152,18 +152,18 @@ struct PoolReportTests {
     @Test func belowZeroIsSaidOnceWithNoRed() throws {
         let checking = try pool("US checking", opening: "100")
         try engine.perform(LogSpend(amount: 220, typed: "220", pool: checking.id), by: .user)
-        #expect(report().belowZero() == ["US checking is below zero by $120.00."])
+        #expect(report().belowZero() == ["US checking is below zero by $120.00"])
         try pool("Fine", opening: "5")
         #expect(report().belowZero().count == 1)
     }
 
     @Test func theSentenceNamesOneOrTwoPoolsAndMasksAPrivateName() throws {
-        #expect(report().sentence(nothingLate: true).text == "Nothing is late.")
+        #expect(report().sentence(nothingLate: true).text == "Nothing is late")
         let checking = try pool("US checking", opening: "1345")
-        #expect(report().sentence(nothingLate: true).text == "Nothing is late. US checking has $1,345.00.")
+        #expect(report().sentence(nothingLate: true).text == "Nothing is late. US checking has $1,345.00")
         try pool("India account", "INR", opening: "82650")
         #expect(report().sentence(nothingLate: true)
-            .text == "$1,345.00 in US checking, INR 82,650.00 in India account.")
+            .text == "$1,345.00 in US checking, INR 82,650.00 in India account")
         let secret = try pool("Ozempic dose", opening: "1")
         _ = (checking, secret)
         let text = report().sentence(nothingLate: false).text
@@ -183,12 +183,12 @@ struct PoolReportTests {
             by: .user
         ).output
         let report = report()
-        #expect(report.newLine(for: inflow) == "US checking got $3,200.00, paycheck.")
-        #expect(report.newLine(for: move) == "Moved $1,000.00, got INR 82,650.00.")
-        #expect(report.newLine(for: spend) == "Coffee $4.50, US checking.")
+        #expect(report.newLine(for: inflow) == "US checking got $3,200.00, paycheck")
+        #expect(report.newLine(for: move) == "Moved $1,000.00, got INR 82,650.00")
+        #expect(report.newLine(for: spend) == "Coffee $4.50, US checking")
         #expect(report.movePage(for: move)
             ==
-            "You sent $1,000.00 and paid $5.00 in fees. You got INR 82,650.00. Your rate was 82.24 for a dollar after fees.")
+            "You sent $1,000.00 and paid $5.00 in fees. You got INR 82,650.00. Your rate was 82.24 for a dollar after fees")
     }
 
     @Test func aPrivatePoolIsMaskedInEveryLine() throws {
@@ -197,8 +197,8 @@ struct PoolReportTests {
         let report = report()
         #expect(report.name(of: secret) == "Private pool")
         let line = try #require(report.newLine(for: inflow))
-        #expect(line == "Private pool got $50.00, paycheck." && !line.contains("Ozempic"))
-        #expect(report.sentence(nothingLate: false).text == "Private pool has $150.00.")
+        #expect(line == "Private pool got $50.00, paycheck" && !line.contains("Ozempic"))
+        #expect(report.sentence(nothingLate: false).text == "Private pool has $150.00")
     }
 
     @Test func aPrivateWordNextToPunctuationIsStillMasked() throws {
@@ -208,7 +208,7 @@ struct PoolReportTests {
                 LogSpend(amount: 5, typed: "5", note: note, pool: checking.id), by: .user
             ).output
             let shown = try #require(report().newLine(for: punctuated))
-            #expect(shown == "Private spend $5.00, US checking." && !shown.lowercased().contains("ozempic"))
+            #expect(shown == "Private spend $5.00, US checking" && !shown.lowercased().contains("ozempic"))
         }
     }
 
@@ -219,10 +219,10 @@ struct PoolReportTests {
             by: .user
         ).output
         let line = try #require(report().newLine(for: spend))
-        #expect(line == "Private spend $80.00, US checking." && !line.lowercased().contains("ozempic"))
+        #expect(line == "Private spend $80.00, US checking" && !line.lowercased().contains("ozempic"))
         #expect(report().archivedNote() == nil)
         try engine.perform(ArchivePool(pool: checking.id), by: .user)
-        #expect(report().archivedNote() == "Archived pools are still counted.")
+        #expect(report().archivedNote() == "Archived pools are still counted")
         #expect(report().totals().map(\.text) == ["Dollars $20.00"])
     }
 

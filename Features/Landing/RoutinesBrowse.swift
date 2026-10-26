@@ -59,7 +59,7 @@ private struct RoutinesRail: View {
     var body: some View {
         RailPage(
             title: "Routines",
-            subtitle: { _ in "Your routines, by the time you run them." },
+            subtitle: { _ in "Your routines, by the time you run them" },
             back: (title: cameFrom, action: { dismiss() }),
             titleTrailing: AnyView(knob),
             pinned: place(.today),

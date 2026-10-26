@@ -12,14 +12,13 @@ enum ListsCopy {
 
     /// An Add line receipt, thing first: "Rice, on Packing." (Product, decisions 10:06; lists-copy-sweep-oct17.md).
     static func added(_ thing: String, to list: String) -> String {
-        "\(thing), on \(list)."
+        "\(thing), on \(list)"
     }
 
     /// The Add line's spoken receipt is the engine's own (QA on #760): a secret or money-only line went to a private
     /// note, a price was stripped, a medicine is "Private item". With a stop, and a private list name masked.
     static func spoken(receipt: String, listTitle: String, shownList: String) -> String {
-        let named = listTitle == shownList ? receipt : receipt.replacingOccurrences(of: listTitle, with: shownList)
-        return named.hasSuffix(".") ? named : named + "."
+        listTitle == shownList ? receipt : receipt.replacingOccurrences(of: listTitle, with: shownList)
     }
 
     /// A list page's count line: "3 of 7"; with nothing on it, "nothing on it yet" (QA on #760).
@@ -30,12 +29,12 @@ enum ListsCopy {
     /// Clearing the fold: "3 done, cleared." (Design on #760).
     /// A swipe's receipt, thing first: "Rice, removed." (13.6).
     static func removed(_ thing: String) -> String {
-        "\(leading(thing)), removed."
+        "\(leading(thing)), removed"
     }
 
     /// What UNDO says after a remove: "Rice, back on Packing."
     static func backOn(_ thing: String, list: String) -> String {
-        "\(leading(thing)), back on \(list)."
+        "\(leading(thing)), back on \(list)"
     }
 
     /// A line that starts with the thing starts with a capital, whatever was stored: "rice" reads "Rice, removed."
@@ -52,7 +51,7 @@ enum ListsCopy {
 
     /// The reusable option's receipt, with the shown (maybe masked) name: "Packing, reusable."
     static func reusable(_ list: String, isOn: Bool) -> String {
-        "\(list), \(isOn ? "reusable" : "not reusable")."
+        "\(list), \(isOn ? "reusable" : "not reusable")"
     }
 
     /// The option word with its state, so it never rests on colour: "Reusable, on" / "Reusable, off".
@@ -63,7 +62,7 @@ enum ListsCopy {
     /// Put away, thing first, with the basket when there is one: "Packing put away." / "Packing put away. 3 in the
     /// basket." (G9; Product 8:40 AM).
     static func putAway(_ list: String, basket: Int) -> String {
-        basket > 0 ? "\(list) put away. \(basket) in the basket." : "\(list) put away."
+        basket > 0 ? "\(list) put away. \(basket) in the basket" : "\(list) put away"
     }
 
     /// The ask after "done" on a reusable list (10.11): "Packing, done. Reset it for next time?"
@@ -73,7 +72,7 @@ enum ListsCopy {
 
     /// A reset with nothing checked: "Packing, nothing to reset.", no UNDO (the engine's line).
     static func nothingToReset(_ list: String) -> String {
-        "\(list), nothing to reset."
+        "\(list), nothing to reset"
     }
 
     /// The Pick one option word with its state: "Pick one, on" / "Pick one, off".
@@ -83,19 +82,19 @@ enum ListsCopy {
 
     /// "Films, pick one on." / "Films, pick one off."
     static func pickOne(_ list: String, isOn: Bool) -> String {
-        "\(list), pick one \(isOn ? "on" : "off")."
+        "\(list), pick one \(isOn ? "on" : "off")"
     }
 
     /// After the last skip in a pick (12.4, G13).
-    static let allPicked = "That's all of them."
+    static let allPicked = "That's all of them"
 
     /// A reset's receipt: "Packing, reset." (10.4, 10.11).
     static func reset(_ list: String) -> String {
-        "\(list), reset."
+        "\(list), reset"
     }
 
     static func cleared(_ count: Int) -> String {
-        "\(count) done, cleared."
+        "\(count) done, cleared"
     }
 
     /// A running list's state word: "RUNNING, 2 LEFT" (comma, never a dot or " · ").
@@ -106,12 +105,12 @@ enum ListsCopy {
 
     /// A run's start, with the shown name: "Packing, 6 left." / "Packing, nothing left."
     static func runStarted(_ list: String, left: Int) -> String {
-        left == 0 ? "\(list), nothing left." : "\(list), \(left) left."
+        left == 0 ? "\(list), nothing left" : "\(list), \(left) left"
     }
 
     /// A run's finish: "Packing, done." or "Packing, done. 3 left." (Product, Oct 16 12:38 PM).
     static func runDone(_ list: String, left: Int) -> String {
-        left > 0 ? "\(list), done. \(left) left." : "\(list), done."
+        left > 0 ? "\(list), done. \(left) left" : "\(list), done"
     }
 
     static func runState(left: Int) -> String {
@@ -121,7 +120,7 @@ enum ListsCopy {
     /// Tess's line for a run, the phone's fact: "Packing has 2 left."; at none left, thing first: "Packing, nothing
     /// left." (Product, Oct 17).
     static func tess(list: String, left: Int) -> String {
-        left > 0 ? "\(list) has \(left) left." : "\(list), nothing left."
+        left > 0 ? "\(list) has \(left) left" : "\(list), nothing left"
     }
 
     /// What the Add line does with a draft. Blank clears. A Claude key is never written or kept: the field clears and
@@ -135,7 +134,7 @@ enum ListsCopy {
         if looksLikeClaudeKey(text) {
             return ("", claudeKeyLine, nil)
         }
-        guard let record = perform(text) else { return (draft, "Didn't save that. Try again.", nil) }
+        guard let record = perform(text) else { return (draft, "Didn't save that. Try again", nil) }
         return ("", nil, record)
     }
 }

@@ -155,7 +155,7 @@ struct QueryEvalTests {
     @Test func row3_workoutsThisMonth() throws {
         let query = Query(from: ["workouts"], where: [pred("endedAt", "!=", "nil")], during: .init(range: "thisMonth"),
                           agg: .init(kind: "count"))
-        #expect(try line(query) == "4 workouts this month.")
+        #expect(try line(query) == "4 workouts this month")
     }
 
     @Test func row4_theBenchPRMatchesTheLedger() throws {
@@ -248,7 +248,7 @@ struct QueryEvalTests {
         #expect(try line(carbonara) == "Spaghetti carbonara, 8 Oct")
         // "chili" finds "Chilli con carne" by name.
         let chili = Query(from: ["cooks"], where: [pred("recipe", "~", "chilli")], agg: .init(kind: "count"))
-        #expect(try line(chili) == "2 cooks.")
+        #expect(try line(chili) == "2 cooks")
     }
 
     @Test func row26_whatIsLeftOnGroceries() throws {
@@ -279,7 +279,7 @@ struct QueryEvalTests {
         #expect(try line(today).hasPrefix("1 task today: Dentist"))
         let week = Query(from: ["tasks"], where: [pred("isDone", "=", "true")],
                          during: .init(range: "thisWeek", field: "doneAt"), agg: .init(kind: "count"))
-        #expect(try line(week) == "2 tasks this week.")
+        #expect(try line(week) == "2 tasks this week")
         let tomorrow = Query(from: ["tasks"], where: [pred("isDone", "=", "false")],
                              during: .init(range: "tomorrow", field: "due"))
         #expect(try run(tomorrow).matched.count == 2)
@@ -329,7 +329,7 @@ struct QueryEvalTests {
             _ = try TessTools.run("query", arguments: Data(json.utf8), engine: engine, now: now, calendar: calendar)
             Issue.record("a query answers, it does not log")
         } catch let answer as TessToolAnswer {
-            #expect(answer.line == "4 workouts this month.")
+            #expect(answer.line == "4 workouts this month")
         }
         #expect(throws: TessToolError.self) {
             try TessTools.run(
@@ -361,7 +361,7 @@ struct QueryEvalTests {
         #expect(try run(pushed).matched.isEmpty)
         // 49: notes from last week (none yet, said plainly).
         let notes = Query(from: ["notes"], during: .init(range: "lastWeek"))
-        #expect(try line(notes) == "No notes last week.")
+        #expect(try line(notes) == "No notes last week")
         // 58: how busy was last week, each class on its own date field.
         let busy = Query(from: ["workouts", "cooks", "tasks"], during: .init(range: "lastWeek"), group: "class",
                          agg: .init(kind: "count"))

@@ -11,7 +11,7 @@ struct NotesRoomContent: RoomContent {
         var words: [WallWord] = []
         var doors: [DialDoor] = []
         /// The needs' first line (the subtitle sentence) and the open notes' dates, for the switcher's windows.
-        var sentence = "Write the first thing down."
+        var sentence = "Write the first thing down"
         var openDates: [Date] = []
         var widget: [WidgetItem] = []
         /// The rows of each door, newest first.
@@ -78,7 +78,7 @@ struct NotesRoomContent: RoomContent {
         }.count
         let span = ["today", "this week", "before this week"][window]
         let noun = count == 1 ? "note" : "notes"
-        return [facts.sentence, count == 0 ? "No notes \(span)." : "\(count) \(noun) \(span)."]
+        return [facts.sentence, count == 0 ? "No notes \(span)" : "\(count) \(noun) \(span)"]
     }
 
     // MARK: Level 1
@@ -87,7 +87,7 @@ struct NotesRoomContent: RoomContent {
         let door = facts.doors.first { $0.id == id }
         let rows = facts.rows[id] ?? []
         let name = door?.name ?? "All notes"
-        let line = rows.isEmpty ? "Nothing here yet." : "\(rows.count) \(rows.count == 1 ? "note" : "notes"), newest first."
+        let line = rows.isEmpty ? "Nothing here yet" : "\(rows.count) \(rows.count == 1 ? "note" : "notes"), newest first"
         return Screen(layout: .door, slots: [
             .title: title,
             .navWord: SlotContent(id: "log.nav.log", kind: .text, payload: .navWord("Log")),
@@ -116,7 +116,7 @@ struct NotesRoomContent: RoomContent {
     }
 
     private var caption: SlotContent {
-        SlotContent(id: "log.caption", kind: .text, payload: .lines(["Tap a word to open its note."]))
+        SlotContent(id: "log.caption", kind: .text, payload: .lines(["Tap a word to open its note"]))
     }
 
     private var action: SlotContent {
@@ -161,7 +161,7 @@ extension NotesRoomContent.Facts {
         }
         facts.doors = doors
         let top = Array(lists.things.prefix(2).map(\.name))
-        facts.sentence = notes.isEmpty ? "Write the first thing down."
+        facts.sentence = notes.isEmpty ? "Write the first thing down"
             : NotesLandingWords.subtitle(hasNotes: lists.hasNotes, topThings: top).text
         facts.openDates = open.map(\.updatedAt)
         facts.widget = open.prefix(4).map { note in
@@ -250,7 +250,7 @@ struct NotesShellHost: View {
             }
         case let .action(id):
             if id == "speak" {
-                TessVoice.shared.say("Say \"note: ...\" and I'll keep it.")
+                TessVoice.shared.say("Say \"note: ...\" and I'll keep it")
             } else {
                 draft = ""
                 writing = true
@@ -267,7 +267,7 @@ struct NotesShellHost: View {
             return
         }
         guard let result = try? model.engine.perform(CreateNote(body: text), by: .user) else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         let isPrivate = model.store.value("isPrivate", of: result.output) == .bool(true)
@@ -275,6 +275,6 @@ struct NotesShellHost: View {
             draft = ""
             model.touch()
         }
-        TessVoice.shared.say(isPrivate ? "Private note, kept." : "Note kept.", undo: result.record)
+        TessVoice.shared.say(isPrivate ? "Private note, kept" : "Note kept", undo: result.record)
     }
 }

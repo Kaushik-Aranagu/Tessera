@@ -155,7 +155,7 @@ enum WeekReview {
         guard let behind = trained.min(by: { $0.sets < $1.sets }), behind.sets < target else { return nil }
         let sets = behind.sets == 1 ? "1 set" : "\(behind.sets) sets"
         let name = behind.muscle.title.prefix(1).uppercased() + behind.muscle.title.dropFirst().lowercased()
-        return "\(name): \(sets) this week, toward a usual \(target)."
+        return "\(name): \(sets) this week, toward a usual \(target)"
     }
 }
 
@@ -254,7 +254,7 @@ struct ReviewPage: View {
                 .foregroundStyle(Theme.Colors.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityAddTraits(.isHeader)
-                .accessibilityLabel(pastLine ?? day?.hero ?? "\(week.headline). \(week.sessionLine).")
+                .accessibilityLabel(pastLine ?? day?.hero ?? "\(week.headline). \(week.sessionLine)")
                 .contentTransition(.opacity)
                 .siblingParallax()
                 .entrance(1, hero: true)

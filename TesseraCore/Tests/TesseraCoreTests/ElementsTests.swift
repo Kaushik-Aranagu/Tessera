@@ -146,7 +146,7 @@ struct ElementsTests {
         #expect(pick.tools.first == "startWorkout" && pick.tools.contains("query"))
         #expect(pick.tools.count <= ToolPicker.maxTools)
         let fragments = frame("deck", items: [push], window: "This week").fragments()
-        #expect(fragments.first?.text == "Where: Deck, the landing, This week.")
+        #expect(fragments.first?.text == "Where: Deck, the landing, This week")
         #expect(fragments.contains { $0.text == "This: routine Push A, tonight 6:30 pm (widget)" })
     }
 }

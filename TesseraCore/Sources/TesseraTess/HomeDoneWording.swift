@@ -254,7 +254,7 @@ public final class ClaudeHomeDone {
                   "model": Self.model, "max_tokens": Self.maxTokens, "system": Self.instructions,
                   "tools": [[
                       "name": "proposeLines",
-                      "description": "The context line and the SO FAR detail for each Home item.",
+                      "description": "The context line and the SO FAR detail for each Home item",
                       "strict": true, "input_schema": schema,
                   ]],
                   // Sonnet 5.5 refuses a forced tool (scripts/ai/home_lines_eval.py:637-640); a reply with no tool

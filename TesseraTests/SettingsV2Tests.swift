@@ -20,7 +20,7 @@ struct SettingsV2Tests {
     }
 
     @Test func wordsAreSpecs() {
-        #expect(SettingsV2.sentence == "How Tessera works for you.")
+        #expect(SettingsV2.sentence == "How Tessera works for you")
         #expect(SettingsV2.title == "Settings")
     }
 }

@@ -128,9 +128,9 @@ struct PlanWordingTests {
     {"id":"t3","start":"08:15","end":"08:35","lineText":""},{"id":"t2","start":"08:35","end":"09:20","lineText":""},
     {"id":"e1","start":"09:30","end":"09:45","lineText":""},{"id":"e2","start":"11:00","end":"12:00","lineText":""},
     {"id":"e3","start":"15:00","end":"15:30","lineText":""},{"id":"w1","start":"18:00","end":"19:00","lineText":""}],
-    "startWith":{"id":"t1","line":"Landlord reply first, then physio, then the report."},
-    "ghostLines":[{"id":"t1","line":"15 min, a quick one to open with."},
-    {"id":"t3","line":"20 min, while the morning is quiet."},{"id":"t2","line":"45 min, done before Standup. Due 5 pm."}],
+    "startWith":{"id":"t1","line":"Landlord reply first, then physio, then the report"},
+    "ghostLines":[{"id":"t1","line":"15 min, a quick one to open with"},
+    {"id":"t3","line":"20 min, while the morning is quiet"},{"id":"t2","line":"45 min, done before Standup. Due 5 pm"}],
     "note":null}
     """#
 
@@ -173,28 +173,28 @@ struct PlanWordingTests {
         let worded = try d01.applying(proposal(), pack: pack, calendar: DayPlanTests.calendar, now: now)
         #expect(worded.plan.ghosts.map(\.title) == ["Reply to landlord", "Book physio", "Expense report"])
         #expect(worded.plan.ghosts.map(\.start) == ["08:00", "08:15", "08:35"].map { DayPlanTests.at(2, $0) })
-        #expect(worded.lines[1] == "20 min, while the morning is quiet.")
-        #expect(worded.startLine == "Landlord reply first, then physio, then the report.")
+        #expect(worded.lines[1] == "20 min, while the morning is quiet")
+        #expect(worded.startLine == "Landlord reply first, then physio, then the report")
     }
 
     @Test(arguments: [
         ("V3", #""id":"e1","start":"09:30""#, #""id":"e1","start":"09:35""#),
         ("V4", #""id":"t2","start":"08:35","end":"09:20""#, #""id":"t2","start":"08:40","end":"09:25""#),
-        ("V7", #"{"id":"t2","line":"45 min, done before Standup. Due 5 pm."}"#, #"{"id":"e1","line":"Standup."}"#),
+        ("V7", #"{"id":"t2","line":"45 min, done before Standup. Due 5 pm"}"#, #"{"id":"e1","line":"Standup"}"#),
         ("V8", #""startWith":{"id":"t1""#, #""startWith":{"id":"t3""#),
         ("V9", #""id":"t1","start":"08:00","end":"08:15","lineText":"""#,
          #""id":"t1","start":"08:00","end":"08:15","lineText":"Quick.""#),
-        ("V10", "a quick one to open with.", "late but quick."),
-        ("V11", "Landlord reply first, then physio, then the report.", "Two quick ones, then the report."),
-        ("V11", "Due 5 pm.", "Due 17:00."),
-        ("V11", "Due 5 pm.", "Due 4 pm."),
-        ("V12", "while the morning is quiet.", "while you're not tired."),
+        ("V10", "a quick one to open with", "late but quick"),
+        ("V11", "Landlord reply first, then physio, then the report", "Two quick ones, then the report"),
+        ("V11", "Due 5 pm", "Due 17:00"),
+        ("V11", "Due 5 pm", "Due 4 pm"),
+        ("V12", "while the morning is quiet", "while you're not tired"),
         // QA T1: an added, dropped or renamed block.
         ("V2", #""id":"e3","start":"15:00""#, #""id":"e9","start":"15:00""#),
         ("V2", #"{"id":"e3","start":"15:00","end":"15:30","lineText":""},"#, ""),
         // V13 (Product 10:24 PM PT, fixture N5): something he has that isn't in this plan.
-        ("V13", "while the morning is quiet.", "before Sort the garage."),
-        ("V13", "a quick one to open with.", "before Mum's birthday."),
+        ("V13", "while the morning is quiet", "before Sort the garage"),
+        ("V13", "a quick one to open with", "before Mum's birthday"),
     ])
     func eachBadReplyIsCaught(_ code: String, _ from: String, _ to: String) throws {
         let bad = Self.ideal.replacingOccurrences(of: from, with: to)
@@ -217,7 +217,7 @@ struct PlanWordingTests {
             Issue.record("not worded")
             return
         }
-        #expect(worded.startLine == "Landlord reply first, then physio, then the report.")
+        #expect(worded.startLine == "Landlord reply first, then physio, then the report")
         let body = try #require(String(data: PlanStub.bodies[0], encoding: .utf8))
         #expect(body.contains("claude-sonnet-5-5") && body.contains("proposePlan"))
         #expect(!body.contains(d01.blocks[0].object?.uuidString ?? "none"))
@@ -237,13 +237,13 @@ struct PlanWordingTests {
     }
 
     @Test func everyFailureShowsTheRulesPlan() async {
-        PlanStub.queue = [(200, Self.reply(Self.ideal.replacingOccurrences(of: "Due 5 pm.", with: "Due 17:00.")))]
+        PlanStub.queue = [(200, Self.reply(Self.ideal.replacingOccurrences(of: "Due 5 pm", with: "Due 17:00")))]
         #expect(await wording().word(d01, pack: pack) == .rules(line: nil))
         #expect(ledger.calls().last.flatMap { store.value("outcome", of: $0)?.stringValue }?
             .hasPrefix("rejected") == true)
         PlanStub.failure = .timedOut
         #expect(await wording().word(d01, pack: pack)
-            == .rules(line: "Claude didn't answer in time. Here's your usual plan."))
+            == .rules(line: "Claude didn't answer in time. Here's your usual plan"))
         PlanStub.failure = nil
         PlanStub.queue = [(200, Self.reply(Self.ideal))]
         // A late reply (he touched the plan) is dropped, its cost still counted.
@@ -265,7 +265,7 @@ struct PlanWordingTests {
             at: now
         )
         #expect(await wording().word(d01, pack: pack)
-            == .rules(line: "Claude paused until Dec 1. Here's your usual plan."))
+            == .rules(line: "Claude paused until Dec 1. Here's your usual plan"))
         #expect(PlanStub.requests.isEmpty)
     }
 
@@ -282,7 +282,7 @@ struct PlanWordingTests {
         #expect(pack.json.contains(#""window":["07:00","21:00"]"#) && pack.json.contains(#""start":"07:00""#))
         let reply = try JSONDecoder().decode(ProposePlan.self, from: Data(#"""
         {"blocks":[{"id":"t1","start":"07:00","end":"07:20","lineText":""}],"startWith":{"id":"t1",
-        "line":"Bike light first, 7 am."},"ghostLines":[{"id":"t1","line":"20 min on the bike light."}],"note":null}
+        "line":"Bike light first, 7 am"},"ghostLines":[{"id":"t1","line":"20 min on the bike light"}],"note":null}
         """#.utf8))
         #expect(PlanProposalValidator.violations(reply, against: pack).isEmpty)
         let applied = plan.applying(reply, pack: pack, calendar: calendar, now: open)
@@ -298,23 +298,23 @@ struct PlanWordingTests {
                                          restDay: true, lastWeightKg: nil))
         func reply(_ note: String) throws -> ProposePlan {
             let json = #"{"blocks":[{"id":"t1","start":"08:00","end":"08:20","lineText":""}],"#
-                + #""startWith":{"id":"t1","line":"Bike light first."},"#
-                + #""ghostLines":[{"id":"t1","line":"20 min on the bike light."}],"note":""# + note + #""}"#
+                + #""startWith":{"id":"t1","line":"Bike light first"},"#
+                + #""ghostLines":[{"id":"t1","line":"20 min on the bike light"}],"note":""# + note + #""}"#
             return try JSONDecoder().decode(ProposePlan.self, from: Data(json.utf8))
         }
-        #expect(try PlanProposalValidator.violations(reply("Rest day."), against: rest).isEmpty)
-        #expect(try PlanProposalValidator.violations(reply("No gym today."), against: rest).contains("V13"))
+        #expect(try PlanProposalValidator.violations(reply("Rest day"), against: rest).isEmpty)
+        #expect(try PlanProposalValidator.violations(reply("No gym today"), against: rest).contains("V13"))
     }
 
     @Test func eachFailureHasProductsLine() async throws {
         // Product 10:24 PM PT, and effort low on the wire (QA P5).
         PlanStub.reply = (401, "{}")
         #expect(await wording().word(d01, pack: pack)
-            == .rules(line: "That key didn't work. Paste it again? Here's your usual plan."))
+            == .rules(line: "That key didn't work. Paste it again? Here's your usual plan"))
         PlanStub.reply = (529, "{}")
-        #expect(await wording().word(d01, pack: pack) == .rules(line: "Here's your usual plan."))
+        #expect(await wording().word(d01, pack: pack) == .rules(line: "Here's your usual plan"))
         PlanStub.failure = .notConnectedToInternet
-        #expect(await wording().word(d01, pack: pack) == .rules(line: "Here's your usual plan."))
+        #expect(await wording().word(d01, pack: pack) == .rules(line: "Here's your usual plan"))
         let body = try #require(String(data: PlanStub.bodies[0], encoding: .utf8))
         #expect(body.contains(#""effort":"low""#))
     }
@@ -360,7 +360,7 @@ struct PlanWordingTests {
 
     @Test func aRejectedPackIsRememberedAndTheSwitchIsOne() async {
         // Merge check on #298: reopening after a rejection makes no second paid call.
-        PlanStub.queue = [(200, Self.reply(Self.ideal.replacingOccurrences(of: "Due 5 pm.", with: "Due 17:00.")))]
+        PlanStub.queue = [(200, Self.reply(Self.ideal.replacingOccurrences(of: "Due 5 pm", with: "Due 17:00")))]
         let wording = wording()
         _ = await wording.word(d01, pack: pack)
         _ = await wording.word(d01, pack: pack)
@@ -379,12 +379,12 @@ struct PlanWordingTests {
     }
 
     @Test(arguments: [
-        "the rest of the afternoon is yours.", "before lunch.", "a quick session before Standup.",
-        "the landlord reply, before Standup.",
+        "the rest of the afternoon is yours", "before lunch", "a quick session before Standup",
+        "the landlord reply, before Standup",
     ])
     func ordinaryWordsPassV13(_ line: String) throws {
         // QA S1 on #303: "rest", a one-word Later task, "session", and a name overlapping a plan title.
-        let bad = Self.ideal.replacingOccurrences(of: "while the morning is quiet.", with: line)
+        let bad = Self.ideal.replacingOccurrences(of: "while the morning is quiet", with: line)
         #expect(try !PlanProposalValidator.violations(proposal(bad), against: #require(pack)).contains("V13"))
     }
 
@@ -409,7 +409,7 @@ struct PlanWordingTests {
         #expect(again.plan.ghosts.first?.start == DayPlanTests.at(2, "08:10"))
         // A rejection (or a late reply) is remembered for the day; a bad key is not.
         let failing = self.wording()
-        PlanStub.queue = [(200, Self.reply(Self.ideal.replacingOccurrences(of: "Due 5 pm.", with: "Due 17:00.")))]
+        PlanStub.queue = [(200, Self.reply(Self.ideal.replacingOccurrences(of: "Due 5 pm", with: "Due 17:00")))]
         _ = await failing.word(d01, pack: pack, stale: { true })
         _ = await failing.word(d01, pack: pack)
         #expect(PlanStub.requests.count == 2)
@@ -427,7 +427,7 @@ struct PlanWordingTests {
         let plan = DayPlanner.plan(day)
         let pack = try #require(PlanPack(plan: plan, now: now, calendar: DayPlanTests.calendar, calendarKnown: true,
                                          restDay: false, otherNames: ["Bank holiday"], lastWeightKg: nil))
-        let line = Self.ideal.replacingOccurrences(of: "while the morning is quiet.", with: "a Bank holiday morning.")
+        let line = Self.ideal.replacingOccurrences(of: "while the morning is quiet", with: "a Bank holiday morning")
         #expect(try !PlanProposalValidator.violations(proposal(line), against: pack).contains("V13"))
     }
 

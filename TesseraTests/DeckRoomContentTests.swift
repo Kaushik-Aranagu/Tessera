@@ -25,12 +25,12 @@ struct DeckRoomContentTests {
         ]
         let wall = TrainingWallFacts(day: day, words: words, doors: doors, brief: nil, action: action,
                                      restOption: restOption)
-        let board = TrainingBoard(headline: "Push A today", detail: "Bench opens at 80 kg.",
+        let board = TrainingBoard(headline: "Push A today", detail: "Bench opens at 80 kg",
                                   week: [BoardDay(id: 0, letter: "M", done: true, isToday: false),
                                          BoardDay(id: 1, letter: "T", done: false, isToday: true)],
                                   bests: [BoardBest(id: exercise, lift: "Bench", number: "82.5 kg")])
         let deck = TrainingDeckFacts(board: board, routineWords: ["Push A", "Private workout"],
-                                     needs: [["Push A today.", "Bench"], ["2 done", "1 to go"], ["8 this month", ""]],
+                                     needs: [["Push A today", "Bench"], ["2 done", "1 to go"], ["8 this month", ""]],
                                      widget: [WidgetItem(id: "today", header: "Tonight", big: "PUSH A"),
                                               WidgetItem(id: "week", header: "This week", big: "2")])
         return DeckRoomContent.Facts(wall: wall, deck: deck, rows: DeckRoomContent.Facts.rows(wall: wall, deck: deck))

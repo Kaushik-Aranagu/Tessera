@@ -44,7 +44,7 @@ struct RailPage<Row: Identifiable, RowView: View>: View {
     /// The line under the rows of a place, when it has one ("Swipe right when bought ...").
     var foot: (String) -> String? = { _ in nil }
     /// What an empty place says.
-    var empty: (String) -> String = { _ in "Nothing here yet." }
+    var empty: (String) -> String = { _ in "Nothing here yet" }
     /// A thin level line under the subtitle for the open place (nil draws none).
     var level: (String) -> Double? = { _ in nil }
     @ViewBuilder let row: (Row) -> RowView

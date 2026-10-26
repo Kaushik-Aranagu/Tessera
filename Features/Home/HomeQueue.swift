@@ -113,7 +113,7 @@ struct QueueWindow: View {
 
     var body: some View {
         if next.isEmpty, later.isEmpty {
-            Text("Nothing else today.")
+            Text("Nothing else today")
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -515,7 +515,7 @@ struct QueueRow: View {
             {
                 model.touch()
             }
-            voice.say("\(entry.title), done.", undo: record, holds: hand == nil ? nil : .seconds(5))
+            voice.say("\(entry.title), done", undo: record, holds: hand == nil ? nil : .seconds(5))
             finished?()
         }
     }
@@ -542,7 +542,7 @@ struct QueueRow: View {
             let moved = model.store.object(id: entry.id).flatMap { model.store.value("startsAt", of: $0)?.dateValue }
             let when = entry.time == nil ? "next week"
                 : moved.map { TessCaptureEngine.when($0, context: TessContext(now: AppClock.now)) } ?? "tomorrow"
-            voice.say("\(entry.title), \(when).", undo: record, holds: hand == nil ? nil : .seconds(5))
+            voice.say("\(entry.title), \(when)", undo: record, holds: hand == nil ? nil : .seconds(5))
         }
     }
 }

@@ -30,21 +30,21 @@ struct RecipeSendTests {
         Brown the beef.
         """), by: .user).output
         guard case let .added(line, _) = send(tacos) else { Issue.record("expected an add"); return }
-        #expect(line == "Tacos, 3 added.")
+        #expect(line == "Tacos, 3 added")
     }
 
     /// Only staples: nothing new goes on, one line, no UNDO.
     @Test func onlyStaplesSaysNothingToAdd() throws {
         let seasoning = try model.engine.perform(CreateRecipe(text: "Seasoning\nsalt\nblack pepper\n\nMix them."),
                                                  by: .user).output
-        #expect(send(seasoning) == .nothing("Seasoning, nothing to add."))
+        #expect(send(seasoning) == .nothing("Seasoning, nothing to add"))
     }
 
     @Test func aRefusalSaysDidntSave() {
         let outcome = RecipeCopy.send { () throws -> (count: Int, record: OpRecord) in
             throw ActionError.invalidArguments(action: "addRecipeToGroceries", reason: "x")
         }
-        #expect(outcome == .failed("Didn't save that. Try again."))
+        #expect(outcome == .failed("Didn't save that. Try again"))
     }
 
     @Test func eachRowIsOneSpokenStop() throws {
@@ -64,12 +64,12 @@ struct RecipeSendTests {
             return (result.output.count, result.record)
         }
         guard case let .added(line, _) = outcome else { Issue.record("expected an add"); return }
-        #expect(line == "Private recipe, 2 added." && !line.contains("stew") && !line.contains("Rent"))
+        #expect(line == "Private recipe, 2 added" && !line.contains("stew") && !line.contains("Rent"))
         let again = RecipeCopy.send(isPrivate: true) {
             let result = try model.engine.perform(AddRecipeToGroceries(recipe: stew.id), by: .user)
             return (result.output.count, result.record)
         }
-        #expect(again == .nothing("Private recipe, nothing to add."))
+        #expect(again == .nothing("Private recipe, nothing to add"))
     }
 
     /// G68: the add is named for what it does, the whole recipe.
@@ -104,9 +104,9 @@ struct RecipeSendTests {
         }
         _ = add(nil)
         guard case let .added(line, record) = add(4) else { Issue.record("expected an update"); return }
-        #expect(line.hasPrefix("Tacos, ") && line.hasSuffix("updated."))
+        #expect(line.hasPrefix("Tacos, ") && line.hasSuffix("updated"))
         _ = model.engine.undo(record)
-        #expect(add(2) == .nothing("Tacos, nothing to add."))
+        #expect(add(2) == .nothing("Tacos, nothing to add"))
     }
 
     /// G70 (ER14): a private recipe's failed add prints only the kind, never a word of its title.
@@ -114,7 +114,7 @@ struct RecipeSendTests {
         let outcome = RecipeCopy.send(isPrivate: true) { () throws -> (count: Int, record: OpRecord) in
             throw ActionError.invalidArguments(action: "addRecipeToGroceries", reason: "x")
         }
-        #expect(outcome == .failed("Didn't save that. Private recipe."))
+        #expect(outcome == .failed("Didn't save that. Private recipe"))
     }
 
     /// Product and Design 12:45: one warning per failure, never twice within a second.

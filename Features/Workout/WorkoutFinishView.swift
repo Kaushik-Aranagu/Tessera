@@ -68,7 +68,7 @@ struct WorkoutFinishView: View {
                 Text("\(Int((summary.duration / 60).rounded())) min, \(volume) kg moved")
                     .textRole(.label)
                     .foregroundStyle(Paint.cream)
-                Text("It drops into today on Home.")
+                Text("It drops into today on Home")
                     .font(Theme.voice)
                     .foregroundStyle(Paint.secondary)
             }

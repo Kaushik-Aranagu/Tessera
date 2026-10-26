@@ -32,8 +32,8 @@ struct CookLiveTests {
     }
 
     func two() throws -> (ObjectRecord, ObjectRecord, ObjectRecord) {
-        let chicken = try recipe("Paprika chicken", steps: ["Season it.", "Bake for 33 minutes.", "Plate it."])
-        let pasta = try recipe("Spaghetti", steps: ["Boil the water.", "Cook for 10 minutes.", "Drain it."])
+        let chicken = try recipe("Paprika chicken", steps: ["Season it", "Bake for 33 minutes", "Plate it"])
+        let pasta = try recipe("Spaghetti", steps: ["Boil the water", "Cook for 10 minutes", "Drain it"])
         let session = try engine.perform(
             StartCookSession(recipes: [chicken.id, pasta.id], serveAt: at(19), time: at(17)),
             by: .user
@@ -79,7 +79,7 @@ struct CookLiveTests {
         #expect(now.object.id == session.id && now.kind == .process)
         #expect(now.title == "Paprika chicken and Spaghetti")
         let line = try #require(now.nextStep)
-        #expect(line.hasPrefix("Cooking Paprika chicken and Spaghetti, ") && line.hasSuffix(" left."))
+        #expect(line.hasPrefix("Cooking Paprika chicken and Spaghetti, ") && line.hasSuffix(" left"))
         #expect(now.endsAt == at(17, 30).addingTimeInterval(33 * 60))
     }
 
@@ -98,8 +98,8 @@ struct CookLiveTests {
     }
 
     @Test func aPrivateDishNeverShowsItsNameOrItsTimerLabelOnNowOrTheLockScreen() throws {
-        let secret = try recipe("Lexapro cake", steps: ["Mix.", "Bake for 40 minutes."])
-        let pasta = try recipe("Spaghetti", steps: ["Boil.", "Cook for 10 minutes."])
+        let secret = try recipe("Lexapro cake", steps: ["Mix", "Bake for 40 minutes"])
+        let pasta = try recipe("Spaghetti", steps: ["Boil", "Cook for 10 minutes"])
         let session = try engine.perform(
             StartCookSession(recipes: [secret.id, pasta.id], serveAt: at(19), time: at(17)),
             by: .user
@@ -132,8 +132,8 @@ struct CookLiveTests {
     }
 
     @Test func theModelNamesRecipesAndGetsNothingBackButASentence() throws {
-        _ = try recipe("Paprika chicken", steps: ["Bake for 33 minutes."])
-        _ = try recipe("Spaghetti", steps: ["Cook for 10 minutes."])
+        _ = try recipe("Paprika chicken", steps: ["Bake for 33 minutes"])
+        _ = try recipe("Spaghetti", steps: ["Cook for 10 minutes"])
         let records = try run(
             "cookTogether",
             #"{"recipes":["paprika chicken","spaghetti"],"serveAt":"2026-10-22T19:00:00Z"}"#
@@ -146,8 +146,8 @@ struct CookLiveTests {
     }
 
     @Test func thePrivateAndTheUnknownCannotBeNamedAndTwoAreNeeded() throws {
-        _ = try recipe("Lexapro cake", steps: ["Bake for 40 minutes."])
-        _ = try recipe("Spaghetti", steps: ["Cook for 10 minutes."])
+        _ = try recipe("Lexapro cake", steps: ["Bake for 40 minutes"])
+        _ = try recipe("Spaghetti", steps: ["Cook for 10 minutes"])
         for json in [
             #"{"recipes":["Lexapro cake","spaghetti"],"serveAt":null}"#,
             #"{"recipes":["spaghetti","Nonesuch"],"serveAt":null}"#,

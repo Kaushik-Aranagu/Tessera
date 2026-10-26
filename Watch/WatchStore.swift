@@ -84,16 +84,16 @@ final class WatchStore: NSObject {
         // The set the wrist can see is the one it removes, with exactly its numbers; the phone takes it out only if it
         // is still the latest, and the note appears only once the phone says so.
         guard let removal = WatchUndo.removal(in: snapshot) else {
-            say("Not removed.", removed: nil)
+            say("Not removed", removed: nil)
             return
         }
         let number = max(snapshot.setNumber - 1, 1)
         send(.undo(setID: removal.setID)) { [weak self] done in
             guard let self else { return }
             if done {
-                say("Set \(number), removed.", removed: (removal.weight, removal.reps))
+                say("Set \(number), removed", removed: (removal.weight, removal.reps))
             } else {
-                say("Not removed.", removed: nil)
+                say("Not removed", removed: nil)
             }
         }
     }

@@ -18,10 +18,10 @@ public final class TessRun {
     /// A run still marked running after this long is dropped on launch, not resumed.
     static let resumeWindow: TimeInterval = 600
 
-    public static let tooManySteps = "That needed more steps than I take. Try it in two."
-    public static let cannotThink = "I can't think that through right now. The rest still works."
-    public static let keyLine = "That looks like a key, so I won't send it."
-    public static let noAnswer = "I couldn't get an answer just now. Try again in a moment."
+    public static let tooManySteps = "That needed more steps than I take. Try it in two"
+    public static let cannotThink = "I can't think that through right now. The rest still works"
+    public static let keyLine = "That looks like a key, so I won't send it"
+    public static let noAnswer = "I couldn't get an answer just now. Try again in a moment"
 
     /// Her voice and rules: fixed text, so the prefix caches (cache breakpoint after it).
     public static let voice = """
@@ -401,7 +401,7 @@ public final class TessRun {
             // All tool results go back together in one user message.
             state.messages.append(BrainMessage(.assistant, assistantContent))
             state.messages.append(BrainMessage(.user, uses.map { use in
-                let result = results[use.id] ?? ("Nothing ran.", true)
+                let result = results[use.id] ?? ("Nothing ran", true)
                 return .toolResult(id: use.id, content: result.text, isError: result.isError)
             }))
             state.round += 1
@@ -424,7 +424,7 @@ public final class TessRun {
             return cannotThink
         }
         switch outcome {
-        case .refused: return "I can't help with that one."
+        case .refused: return "I can't help with that one"
         case .notAllowed: return cannotThink
         default: return noAnswer
         }
@@ -446,7 +446,7 @@ public final class TessRun {
         let deviceOnly = TessTools.tool(named: name)?.deviceOnly == true
         switch name {
         case _ where !offered.contains(name) || (deviceOnly && !onDevice):
-            result = ("That isn't a call I can make here.", true)
+            result = ("That isn't a call I can make here", true)
         case TessOpenTool.name:
             result = TessOpenTool.run(arguments: input, handles: handles, engine: engine, policy: door.policy(),
                                       calendar: calendar)
@@ -464,7 +464,7 @@ public final class TessRun {
                 }
             }
             sink(.shell(ShellIntent(call: name, object: object, arguments: strings)))
-            result = ("Shown.", false)
+            result = ("Shown", false)
         default:
             do {
                 let records = try TessTools.run(name, arguments: input, engine: engine, pending: true, now: now(),
@@ -473,13 +473,13 @@ public final class TessRun {
                 for record in records {
                     sink(.ghost(record.id))
                 }
-                result = ("Done: \(records.count) waiting for approval.", false)
+                result = ("Done: \(records.count) waiting for approval", false)
             } catch let answer as TessToolAnswer {
                 result = (answer.line, false)
             } catch let error as TessToolError {
                 result = (error.description, true)
             } catch {
-                result = ("That didn't work.", true)
+                result = ("That didn't work", true)
             }
         }
         await trace.record(TraceSpan(kind: .tool, name: name, at: now(), totalMs: LatencyBench.ms(.now - started),
@@ -520,28 +520,28 @@ public final class TessRun {
             for record in records {
                 emit(.ghost(record.id), active)
             }
-            let line = records.compactMap(\.receipt).first ?? records.first?.summary ?? "Done."
+            let line = records.compactMap(\.receipt).first ?? records.first?.summary ?? "Done"
             return (line, false)
         } catch let answer as TessToolAnswer {
             return (answer.line, false)
         } catch let error as TessToolError {
             return (Self.boundFailure(error.description), true)
         } catch {
-            return ("That didn't work.", true)
+            return ("That didn't work", true)
         }
     }
 
     static func shellLine(_ bound: ToolPicker.Bound) -> String {
         switch bound.call {
-        case "goBack": "Back."
-        case "openDoor": bound.arguments["door"].map { "Opening \($0)." } ?? "Opening it."
-        case "showWindow": bound.arguments["window"].map { "\($0)." } ?? "Done."
-        default: bound.arguments["item"].map { "Opening \($0)." } ?? "Opening it."
+        case "goBack": "Back"
+        case "openDoor": bound.arguments["door"].map { "Opening \($0)" } ?? "Opening it"
+        case "showWindow": bound.arguments["window"].map { "\($0)." } ?? "Done"
+        default: bound.arguments["item"].map { "Opening \($0)" } ?? "Opening it"
         }
     }
 
     static func boundFailure(_ text: String) -> String {
-        text.isEmpty ? "That didn't work." : "I couldn't do that: \(text)."
+        text.isEmpty ? "That didn't work" : "I couldn't do that: \(text)"
     }
 
     // MARK: Resume
@@ -600,11 +600,11 @@ public final class TessRun {
                         return .toolResult(id: id, content: text, isError: false)
                     }
                     if name == TessOpenTool.name || name == "query" {
-                        return .toolResult(id: id, content: "The phone was interrupted before this ran.", isError: true)
+                        return .toolResult(id: id, content: "The phone was interrupted before this ran", isError: true)
                     }
                     return .toolResult(
                         id: id,
-                        content: "The phone was interrupted before this ran. Nothing was changed.",
+                        content: "The phone was interrupted before this ran. Nothing was changed",
                         isError: true
                     )
                 }))

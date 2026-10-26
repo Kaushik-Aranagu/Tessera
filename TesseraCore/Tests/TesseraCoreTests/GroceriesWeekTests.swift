@@ -159,7 +159,7 @@ struct GroceriesWeekTests {
         let addedTacos = try engine.perform(AddRecipeToGroceries(recipe: tacos.id), by: .user)
         // Kosher salt, olive oil and hot sauce stay off; everything else is new: 10 rows (G-R3, G-R14).
         #expect(addedTacos.output.count == 10, "\(addedTacos.output.map(\.title))")
-        #expect(addedTacos.record.summary == "Tacos, 10 added.") // the short name (Kitchen lead, #389)
+        #expect(addedTacos.record.summary == "Tacos, 10 added") // the short name (Kitchen lead, #389)
         #expect(RecipeBook.shortName(ofTitle: "Sausage, white bean and spinach pasta") == "Pasta")
         #expect(RecipeBook.shortName(ofTitle: "Weeknight turkey chili") == "Chili")
         #expect(RecipeBook.shortName(ofTitle: "Dal tadka (quick)") == "Tadka")
@@ -187,7 +187,7 @@ struct GroceriesWeekTests {
         let pasta = try engine.perform(CreateRecipe(text: Self.pasta), by: .user).output
         try engine.perform(AddRecipeToGroceries(recipe: pasta.id), by: .user)
         let smaller = try engine.perform(AddRecipeToGroceries(recipe: pasta.id, serves: 2), by: .user)
-        #expect(smaller.output.isEmpty && smaller.record.summary == "Pasta, nothing to add.")
+        #expect(smaller.output.isEmpty && smaller.record.summary == "Pasta, nothing to add")
         #expect(smaller.record.ops.isEmpty) // no write, so no UNDO
         #expect(row("orecchiette")?.quantity == "12 oz" && row("orecchiette")?.aisle == "Pantry",
                 "\(row("orecchiette")?.quantity ?? "nil")")
@@ -207,7 +207,7 @@ struct GroceriesWeekTests {
         // Eggs, milk and spinach join rows already there: 3 new (butter, green onions, feta); G-R2 the bare eggs row
         // shows the recipe's amount.
         #expect(addedFrittata.output.count == 3, "\(addedFrittata.output.map(\.title))")
-        #expect(addedFrittata.record.summary == "Frittata, 3 added.")
+        #expect(addedFrittata.record.summary == "Frittata, 3 added")
         #expect(row("eggs")?.quantity == "8")
         #expect(
             row("milk")?.quantity == "¼ cup" || row("milk")?.quantity == "1/4 cup",
@@ -250,7 +250,7 @@ struct GroceriesWeekTests {
         try engine.perform(RemoveRecipeFromGroceries(recipe: frittata.id), by: .user)
         let nothing = try engine.perform(AddRecipeToGroceries(recipe: frittata.id), by: .user)
         #expect(nothing.output.isEmpty && nothing.record.ops.isEmpty)
-        #expect(nothing.record.summary == "Frittata, nothing to add.")
+        #expect(nothing.record.summary == "Frittata, nothing to add")
     }
 
     @Test func aBiggerSizeReplacesTheShare() throws {
@@ -265,7 +265,7 @@ struct GroceriesWeekTests {
         #expect(bigger.output.isEmpty, "\(bigger.record.summary)")
         let summary = bigger.record.summary
         #expect(
-            summary.hasPrefix("Pasta, ") && summary.hasSuffix(" updated.") && !summary.contains("added"),
+            summary.hasPrefix("Pasta, ") && summary.hasSuffix(" updated") && !summary.contains("added"),
             "\(summary)"
         )
         engine.undo(bigger.record)
@@ -287,10 +287,10 @@ struct GroceriesWeekTests {
         let bigger = try engine.perform(AddRecipeToGroceries(recipe: pasta.id, serves: 8), by: .user)
         let summary = bigger.record.summary
         #expect(bigger.output.count == 1 && bigger.output.updated > 0)
-        #expect(summary.contains(", 1 added, ") && summary.hasSuffix(" updated."), "\(summary)")
+        #expect(summary.contains(", 1 added, ") && summary.hasSuffix(" updated"), "\(summary)")
         // A second add with nothing changed does not carry the first one's counts.
         let again = try engine.perform(AddRecipeToGroceries(recipe: pasta.id, serves: 8), by: .user)
-        #expect(again.record.summary.hasSuffix("nothing to add."), "\(again.record.summary)")
+        #expect(again.record.summary.hasSuffix("nothing to add"), "\(again.record.summary)")
     }
 
     @Test func aPrivateRecipeIsNeverNamedInItsAddLine() throws {
@@ -298,10 +298,10 @@ struct GroceriesWeekTests {
         let text = Self.pasta.replacingOccurrences(of: "Sausage, white bean and spinach pasta", with: "Lexapro pasta")
         let pasta = try engine.perform(CreateRecipe(text: text), by: .user).output
         let added = try engine.perform(AddRecipeToGroceries(recipe: pasta.id), by: .user)
-        #expect(added.record.summary.hasPrefix("Private recipe, ") && added.record.summary.hasSuffix(" added."),
+        #expect(added.record.summary.hasPrefix("Private recipe, ") && added.record.summary.hasSuffix(" added"),
                 "\(added.record.summary)")
         let again = try engine.perform(AddRecipeToGroceries(recipe: pasta.id), by: .user)
-        #expect(again.record.summary == "Private recipe, nothing to add.")
+        #expect(again.record.summary == "Private recipe, nothing to add")
         #expect(!added.record.summary.lowercased().contains("pasta"))
     }
 }

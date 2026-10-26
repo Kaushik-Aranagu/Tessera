@@ -42,7 +42,7 @@ struct TessOpenerTests {
     @Test func aBodyOrCalorieTitleInAPlainClassGetsNoSinceThenLine() throws {
         for title in ["Lunch 650 kcal", "Calories 1800 today", "Weighed in at 82.5 kg", "Weigh-in 181 lb"] {
             let task = try engine.perform(CreateTask(title: "Plan", startsAt: at(15)), by: .user).output
-            _ = conversation.append(role: .tess, text: "Noted.", about: [task], at: Date.now.addingTimeInterval(-60))
+            _ = conversation.append(role: .tess, text: "Noted", about: [task], at: Date.now.addingTimeInterval(-60))
             // Renamed to a body or calorie fact: the new title is walled, so there is no news to give.
             try engine.perform(RenameObject(object: task.id, title: title), by: .user)
             let line = opening(at(12))?.line ?? ""
@@ -56,13 +56,13 @@ struct TessOpenerTests {
         let task = try engine.perform(CreateTask(title: "Mail forms", startsAt: at(15)), by: .user).output
         _ = conversation.append(
             role: .tess,
-            text: "Mail forms is at 3 pm.",
+            text: "Mail forms is at 3 pm",
             about: [task],
             at: Date.now.addingTimeInterval(-60)
         )
         try engine.perform(MoveTask(task: task.id, to: at(17, 30), calendar: calendar), by: .user)
         let open = try #require(opening(at(12)))
-        #expect(open.line == "Since then, Mail forms changed." && open.source == .sinceThen(task.id))
+        #expect(open.line == "Since then, Mail forms changed" && open.source == .sinceThen(task.id))
         #expect(!open.line.contains("5:30") && !open.line.contains("17") && open.replies.count <= 3)
         #expect(open.replies == ["Show me", "Fine as it is"])
     }
@@ -71,7 +71,7 @@ struct TessOpenerTests {
         let workout = try engine.perform(CreateTask(title: "Push day", startsAt: at(18, 30)), by: .user).output
         _ = conversation.append(
             role: .tess,
-            text: "Push day is set.",
+            text: "Push day is set",
             about: [workout],
             at: Date.now.addingTimeInterval(-60)
         )
@@ -82,19 +82,19 @@ struct TessOpenerTests {
             HandsEvent(app: .routines, label: "Stretch", start: at(19, 30), end: at(20), hands: [], isFixed: false),
         ]
         let open = try #require(opening(at(12), events: events))
-        #expect(open.line == "Since then, Push day changed. Stretch may run into it.")
+        #expect(open.line == "Since then, Push day changed. Stretch may run into it")
         #expect(open.replies == ["Move it later", "Leave it", "Not now"])
     }
 
     @Test func herOwnChangeIsNotNewsAndNothingChangedOpensWithTheNewestNotice() throws {
         let task = try engine.perform(CreateTask(title: "Mail forms", startsAt: at(15)), by: .user).output
         // Her turn comes after the task was made; then only she changes it.
-        _ = conversation.append(role: .tess, text: "Mail forms is at 3 pm.", about: [task], at: Date.now)
+        _ = conversation.append(role: .tess, text: "Mail forms is at 3 pm", about: [task], at: Date.now)
         Thread.sleep(forTimeInterval: 0.02)
         try engine.perform(RenameObject(object: task.id, title: "Mail the forms"), by: .tess)
         let notice = try #require(opening(at(12)))
         #expect(notice.source == .notice && !notice.line.hasPrefix("Since then"))
-        #expect(notice.line.hasSuffix(".") && notice.replies == ["Show me", "Not now"])
+        #expect(!notice.line.hasSuffix(".") && notice.replies == ["Show me", "Not now"])
     }
 
     @Test func aChangedMoneyHealthBodyOrCalendarThingGivesNoSinceThenAtAll() throws {
@@ -127,7 +127,7 @@ struct TessOpenerTests {
         )
         try engine.perform(RenameObject(object: secret.id, title: "Lexapro refill today"), by: .user)
         let open = try #require(opening(at(12)))
-        #expect(open.line == "Since then, Private task changed." && !open.line.lowercased().contains("lexapro"))
+        #expect(open.line == "Since then, Private task changed" && !open.line.lowercased().contains("lexapro"))
         let gone = try engine.perform(CreateTask(title: "Pick up forms"), by: .user).output
         _ = conversation.append(
             role: .tess,
@@ -136,7 +136,7 @@ struct TessOpenerTests {
             at: Date.now.addingTimeInterval(-30)
         )
         try engine.perform(DeleteObject(object: gone.id), by: .user)
-        #expect(try #require(opening(at(12))).line == "Since then, Pick up forms changed.")
+        #expect(try #require(opening(at(12))).line == "Since then, Pick up forms changed")
     }
 
     @Test func quietHoursAndQuietForAnHourSayNothing() throws {
@@ -150,9 +150,9 @@ struct TessOpenerTests {
     }
 
     @Test func theLineIsNeverWalledAndTheTypeStaysOutOfClaudeCode() throws {
-        #expect(TessOpener.passes("Mail forms, due Friday.", store: store))
-        #expect(!TessOpener.passes("You paid 1200 rent.", store: store))
-        #expect(!TessOpener.passes("That was 600 calories.", store: store))
+        #expect(TessOpener.passes("Mail forms, due Friday", store: store))
+        #expect(!TessOpener.passes("You paid 1200 rent", store: store))
+        #expect(!TessOpener.passes("That was 600 calories", store: store))
         let package = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent()
         var checked = 0

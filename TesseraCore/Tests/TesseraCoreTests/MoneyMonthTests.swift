@@ -36,32 +36,32 @@ struct MoneyMonthTests {
     }
 
     @Test func nothingSpentSaysSo() {
-        #expect(report().monthSentence(calendar: calendar) == "October, nothing spent.")
+        #expect(report().monthSentence(calendar: calendar) == "October, nothing spent")
     }
 
     @Test func oneCurrencyIsExactAndHasNoAbout() throws {
         try spend(1240, "1240")
         try spend(12.5, "12.50", day: 6)
-        #expect(report().monthSentence(calendar: calendar) == "October, spent 1,252.50 US.")
+        #expect(report().monthSentence(calendar: calendar) == "October, spent 1,252.50 US")
     }
 
     @Test func twoCurrenciesAreExactAndOneAboutWhenBothHaveARate() throws {
         try spend(1240, "1240")
         try spend(310, "310", currency: "EUR")
         // No rate yet: no "about".
-        #expect(report().monthSentence(calendar: calendar) == "October, spent 1,240 US and 310 EUR.")
+        #expect(report().monthSentence(calendar: calendar) == "October, spent 1,240 US and 310 EUR")
         let a = try engine.perform(CreatePool(name: "Euro card", currency: "EUR", opening: "100"), by: .user).output
         _ = a
         try engine.perform(RecordRate(pair: "EUR/USD", value: "1.25", at: at(10, 15)), by: .user)
         #expect(report().monthSentence(calendar: calendar)
-            == "October, spent 1,240 US and 310 EUR, about 1,628 in all.")
+            == "October, spent 1,240 US and 310 EUR, about 1,628 in all")
     }
 
     @Test func aPastMonthKeepsItsYearOnlyWhenItIsAnotherYear() throws {
         try spend(40, "40", month: 9, day: 3)
-        #expect(report().monthSentence(monthOf: at(9, 15), calendar: calendar) == "September, spent 40 US.")
+        #expect(report().monthSentence(monthOf: at(9, 15), calendar: calendar) == "September, spent 40 US")
         let last = try #require(calendar.date(from: DateComponents(year: 2025, month: 5, day: 12, hour: 12)))
-        #expect(report().monthSentence(monthOf: last, calendar: calendar) == "May 2025, nothing spent.")
+        #expect(report().monthSentence(monthOf: last, calendar: calendar) == "May 2025, nothing spent")
     }
 
     @Test func poolLinesShowTheBalanceAndTheMonthAgainstLast() throws {
@@ -69,7 +69,7 @@ struct MoneyMonthTests {
         try spend(50, "50", pool: checking, month: 9, day: 4)
         try spend(25, "25", pool: checking, month: 10, day: 4)
         let line = try #require(report().poolLines(calendar: calendar).first)
-        #expect(line.text == "US checking, 2,025.")
+        #expect(line.text == "US checking, 2,025")
         #expect(line.spent == 25 && line.lastMonth == 50 && line.fill == 0.5)
         // No spend last month: no level.
         let fresh = try engine.perform(CreatePool(name: "Euro card", currency: "EUR", opening: "540"), by: .user).output
@@ -103,8 +103,8 @@ struct MoneyMonthTests {
         try engine.perform(RecordRate(pair: "EUR/USD", value: "1.2", at: at(9, 1)), by: .user)
         #expect(report()
             .monthSentence(calendar: calendar) ==
-            "October, spent 100 US and 10 EUR, about 112 in all. The rates are old.")
+            "October, spent 100 US and 10 EUR, about 112 in all. The rates are old")
         try engine.perform(RecordRate(pair: "EUR/USD", value: "1.3", at: at(10, 15)), by: .user)
-        #expect(report().monthSentence(calendar: calendar) == "October, spent 100 US and 10 EUR, about 113 in all.")
+        #expect(report().monthSentence(calendar: calendar) == "October, spent 100 US and 10 EUR, about 113 in all")
     }
 }

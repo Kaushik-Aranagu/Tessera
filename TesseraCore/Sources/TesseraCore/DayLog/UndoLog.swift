@@ -28,8 +28,8 @@ public enum UndoOutcome: Equatable, Sendable {
 @MainActor
 public enum UndoLog {
     public static let window: TimeInterval = 600
-    static let putBack = "Put back."
-    static let blocked = "Can't put that back."
+    static let putBack = "Put back"
+    static let blocked = "Can't put that back"
 
     /// The newest change inside the 10 minutes, for the page foot.
     public static func latest(engine: ActionEngine, now: Date) -> UndoEntry? {
@@ -100,7 +100,7 @@ public enum UndoLog {
             store.object(id: id).map { ObjectPrivacy.shownLabel(of: $0, in: store, classes: engine.classes) != nil }
                 ?? false
         }
-        let generic = record.summary.hasSuffix(".") ? record.summary : record.summary + "."
+        let generic = record.summary
         if money || touchedPrivate || isBodyOrHealth(record, engine: engine) {
             return generic
         }
@@ -113,6 +113,6 @@ public enum UndoLog {
         {
             return generic
         }
-        return text.hasSuffix(".") ? text : text + "."
+        return text
     }
 }

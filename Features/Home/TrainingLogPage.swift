@@ -36,7 +36,7 @@ struct TrainingLogPage: View {
             VStack(alignment: .leading, spacing: 0) {
                 header
                 if months.isEmpty {
-                    Text("Sessions you finish are listed here.")
+                    Text("Sessions you finish are listed here")
                         .font(Theme.voice(size: 21))
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -166,13 +166,13 @@ private struct LogRowView: View {
     private var spoken: String {
         let date = row.date.formatted(.dateTime.month(.wide).day())
         if row.isPrivate {
-            return "\(row.title), \(date)."
+            return "\(row.title), \(date)"
         }
         let duration = row.duration.map {
             $0.replacingOccurrences(of: " hr", with: " hour").replacingOccurrences(of: " min", with: " minutes")
         }
         return ([row.title, date, row.setsText, duration, row.calories].compactMap(
             \.self
-        )).joined(separator: ", ") + "."
+        )).joined(separator: ", ")
     }
 }

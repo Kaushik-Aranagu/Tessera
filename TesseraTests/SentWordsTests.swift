@@ -50,7 +50,7 @@ struct SentWordsTests {
         try row(.tessSent, words: "buy oat milk", request: "a")
         try row(.tessCall, request: "a")
         let log = TessSentLog(store: model.store, classes: model.classes)
-        #expect(log.clear() == "Cleared what was sent.")
+        #expect(log.clear() == "Cleared what was sent")
         #expect(log.count == 0)
         #expect(TessUsageLedger(store: model.store, classes: model.classes).calls().count == 1)
     }

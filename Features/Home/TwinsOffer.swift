@@ -59,7 +59,7 @@ struct TwinsOfferLine: View {
                 .record
             else { return }
             joined += 1
-            TessVoice.shared.say("Joined.", undo: record, holds: .seconds(600))
+            TessVoice.shared.say("Joined", undo: record, holds: .seconds(600))
         }
     }
 
@@ -69,7 +69,7 @@ struct TwinsOfferLine: View {
                                                          by: .user).record
             else { return }
             apart += 1
-            TessVoice.shared.say("Kept apart.", undo: record)
+            TessVoice.shared.say("Kept apart", undo: record)
         }
     }
 }

@@ -20,7 +20,7 @@ struct CountsAndCaptureTests {
             "log bench 80x8",
             context: TessContext(now: october)
         )
-        #expect(capture.line == "Bench 8 reps at 80. Added to today.")
+        #expect(capture.line == "Bench 8 reps at 80. Added to today")
         let workoutClass = try #require(classes[.workout])
         let workout = try #require(store.objects(of: workoutClass).first)
         let record = try #require(capture.records.first)

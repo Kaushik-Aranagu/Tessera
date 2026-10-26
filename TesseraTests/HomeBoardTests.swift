@@ -9,12 +9,12 @@ struct HomeBoardTests {
     }
 
     @Test func aLineFitsItsRowAtTwentyFourLetters() {
-        #expect(HomeBoard.fits(line("Push day at 6:30 pm.")))
-        #expect(!HomeBoard.fits(line("Free 2 hr 19 min, then Stretch & mobility.")))
+        #expect(HomeBoard.fits(line("Push day at 6:30 pm")))
+        #expect(!HomeBoard.fits(line("Free 2 hr 19 min, then Stretch & mobility")))
     }
 
     @Test func aLongLineIsCutAtAWordEdgeAndKeepsAWord() {
-        let cut = HomeBoard.cut(line("Free 2 hr 19 min, then Stretch and mobility."))
+        let cut = HomeBoard.cut(line("Free 2 hr 19 min, then Stretch and mobility"))
         #expect(HomeBoard.fits(cut))
         #expect(cut.segments.map(\.text).joined(separator: " ").hasPrefix("Free"))
         #expect(HomeBoard.cut(line("Supercalifragilisticexpialidocious")).segments.first?.text.isEmpty == false)
@@ -28,7 +28,7 @@ struct HomeBoardTests {
     }
 
     @Test func theBoardAlwaysHasThreeRowsAndTheRotationWraps() {
-        let notices = [line("One."), line("Two."), line("Three.")]
+        let notices = [line("One"), line("Two"), line("Three")]
         let date = HomeBoard.date(now: Date())
         for rotation in 0 ..< 5 {
             let board = HomeBoard.lines(date: date, notices: notices, rotation: rotation, moment: nil)

@@ -100,7 +100,7 @@ struct RunningOrderSheet: View {
             }
             .frame(height: CGFloat(entries.count) * Self.pitch, alignment: .top)
             .tesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.42), value: destination)
-            Text("Hold a name and drag. Today only; the plan keeps its order.")
+            Text("Hold a name and drag. Today only; the plan keeps its order")
                 .font(Theme.voice(size: 18))
                 .foregroundStyle(Paint.secondary)
                 .fixedSize(horizontal: false, vertical: true)

@@ -117,22 +117,22 @@ public struct MosaicFacts: Equatable, Sendable {
     public func caption(for scene: MosaicScene) -> String {
         switch scene {
         case .day:
-            guard let next = nextTimed, let free = freeMinutes else { return "Nothing else is timed today." }
-            return free <= 0 ? "\(next.title), now." : "Free \(HouseTime.minutes(free)), then \(next.title)."
+            guard let next = nextTimed, let free = freeMinutes else { return "Nothing else is timed today" }
+            return free <= 0 ? "\(next.title), now" : "Free \(HouseTime.minutes(free)), then \(next.title)"
         case .time:
-            return "\(HouseTime.clock(now, calendar: calendar)). \(TesseraDay.weekdayName(of: now, calendar: calendar))."
+            return "\(HouseTime.clock(now, calendar: calendar)). \(TesseraDay.weekdayName(of: now, calendar: calendar))"
         case .sky:
             if now < sunrise {
-                return "Sunrise at \(HouseTime.clock(sunrise, calendar: calendar))."
+                return "Sunrise at \(HouseTime.clock(sunrise, calendar: calendar))"
             }
-            return now < sunset ? "Sunset at \(HouseTime.clock(sunset, calendar: calendar))."
-                : "Sunset was at \(HouseTime.clock(sunset, calendar: calendar))."
+            return now < sunset ? "Sunset at \(HouseTime.clock(sunset, calendar: calendar))"
+                : "Sunset was at \(HouseTime.clock(sunset, calendar: calendar))"
         case .next:
-            guard let next = nextTimed, let free = freeMinutes else { return "Nothing timed next." }
-            return free <= 0 ? "\(next.title), now." : "\(HouseTime.minutes(free)) until \(next.title)."
+            guard let next = nextTimed, let free = freeMinutes else { return "Nothing timed next" }
+            return free <= 0 ? "\(next.title), now" : "\(HouseTime.minutes(free)) until \(next.title)"
         case .done:
             let count = finishedToday.count
-            return count == 0 ? "Nothing done yet today." : "Done today: \(count) \(count == 1 ? "thing" : "things")."
+            return count == 0 ? "Nothing done yet today" : "Done today: \(count) \(count == 1 ? "thing" : "things")"
         }
     }
 

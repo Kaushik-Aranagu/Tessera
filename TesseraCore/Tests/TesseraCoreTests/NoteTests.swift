@@ -22,7 +22,7 @@ struct NoteTests {
         #expect(notes.recent().map(\.id) == [note.id])
 
         // Editing the text re-links; undo puts the links back.
-        let edit = try engine.perform(EditNote(note: note.id, body: "Felt fine on @[Push A]."), by: .user)
+        let edit = try engine.perform(EditNote(note: note.id, body: "Felt fine on @[Push A]"), by: .user)
         #expect(notes.notes(about: bench).isEmpty)
         engine.undo(edit.record)
         #expect(notes.notes(about: bench).map(\.id) == [note.id])

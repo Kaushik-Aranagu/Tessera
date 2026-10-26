@@ -14,15 +14,15 @@ public enum TessOpenTool {
         let schema: [String: Any] = [
             "type": "object", "additionalProperties": false, "required": ["handle", "depth"],
             "properties": [
-                "handle": ["type": "string", "description": "A short handle from the pack, like o1."],
+                "handle": ["type": "string", "description": "A short handle from the pack, like o1"],
                 "depth": [
                     "type": "integer",
                     "enum": [1, 2],
-                    "description": "1 reads the object, 2 adds what its links link to.",
+                    "description": "1 reads the object, 2 adds what its links link to",
                 ],
             ],
         ]
-        return ToolSpec(name: name, description: "Read an object from the pack by its handle; read only.",
+        return ToolSpec(name: name, description: "Read an object from the pack by its handle; read only",
                         schema: (try? JSONSerialization.data(withJSONObject: schema, options: [.sortedKeys]))
                             ?? Data("{}".utf8))
     }
@@ -35,7 +35,7 @@ public enum TessOpenTool {
               let handle = object["handle"] as? String, let id = handles[handle],
               let target = engine.store.object(id: id), !target.isDeleted
         else {
-            return ("No object has that handle.", true)
+            return ("No object has that handle", true)
         }
         let depth = (object["depth"] as? Int) == 2 ? 2 : 1
         func line(_ record: ObjectRecord) -> String {

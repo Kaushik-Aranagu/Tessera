@@ -12,7 +12,7 @@ struct RecipesKeptTests {
         #expect(RecipesKeptCopy.host(link) == "seriouseats.com")
         #expect(RecipesKeptCopy.heading(1) == "1 link kept for later")
         #expect(RecipesKeptCopy.heading(3) == "3 links kept for later")
-        #expect(RecipesKeptCopy.removed(link) == "seriouseats.com, removed.")
+        #expect(RecipesKeptCopy.removed(link) == "seriouseats.com, removed")
         #expect(!RecipesKeptCopy.removed(link).contains("dal"))
     }
 

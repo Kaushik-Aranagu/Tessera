@@ -70,7 +70,7 @@ struct PurseRoomContent: RoomContent {
     private func door(_ id: String) -> Screen {
         let door = facts.doors.first { $0.id == id }
         let rows = facts.rows[id] ?? []
-        let line = rows.isEmpty ? "Nothing here yet." : "\(rows.count) \(rows.count == 1 ? "spend" : "spends"), newest first."
+        let line = rows.isEmpty ? "Nothing here yet" : "\(rows.count) \(rows.count == 1 ? "spend" : "spends"), newest first"
         return Screen(layout: .door, slots: [
             .title: title,
             .navWord: SlotContent(id: "purse.nav.purse", kind: .text, payload: .navWord("Purse")),
@@ -172,7 +172,7 @@ extension PurseRoomContent.Facts {
 
     /// The chart in words, never a figure: "Heading down at this pace." / "Nothing yet".
     static func caption(_ wall: MoneyWall) -> String {
-        wall.monthCount == 0 ? "Nothing yet" : "The dashed line is where this pace ends the month."
+        wall.monthCount == 0 ? "Nothing yet" : "The dashed line is where this pace ends the month"
     }
 
     /// Two lines beside the switcher: the month in words, or that the longer views come next. Never a figure.
@@ -287,7 +287,7 @@ struct PurseShellHost: View {
                     navigator.binding(\.switcherIndex).wrappedValue = 0
                 }
             case "plan":
-                TessVoice.shared.say("Plans for the month come with Bills.")
+                TessVoice.shared.say("Plans for the month come with Bills")
             default:
                 draft = ""
                 adding = true

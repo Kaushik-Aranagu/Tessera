@@ -23,7 +23,7 @@ public struct BuyCadence {
 
     /// "You buy it about every 9 days." Nil under three buys.
     public var line: String? {
-        everyDays.map { "You buy it about every \($0) days." }
+        everyDays.map { "You buy it about every \($0) days" }
     }
 
     private let calendar: Calendar

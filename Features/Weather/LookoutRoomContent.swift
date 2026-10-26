@@ -130,9 +130,9 @@ struct LookoutRoomContent: RoomContent {
         let lines = facts.lines(door)
         let rows = lines.enumerated().map { ShellRow(id: "\(door.rawValue).\($0.offset)", title: $0.element) }
         let line = switch door {
-        case .hours: "The next \(lines.count) hours."
-        case .week: lines.isEmpty ? "A steady week." : "The days to note."
-        case .air: "Air, sun and wind now."
+        case .hours: "The next \(lines.count) hours"
+        case .week: lines.isEmpty ? "A steady week" : "The days to note"
+        case .air: "Air, sun and wind now"
         }
         return Screen(layout: .door, slots: [
             .title: title,

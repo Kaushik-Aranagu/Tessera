@@ -38,7 +38,7 @@ struct SpeakLayer: View {
                         .foregroundStyle(Theme.Colors.ink)
                 }
             } else {
-                Text(listener.state == .asking ? "Tess needs the mic to hear you." : "Listening")
+                Text(listener.state == .asking ? "Tess needs the mic to hear you" : "Listening")
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.tess)
                 Text(listener.heard)

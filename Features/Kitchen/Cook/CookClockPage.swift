@@ -72,7 +72,7 @@ struct CookClockPage: View {
 
     private var gone: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            Text("Cook gone.")
+            Text("Cook gone")
                 .font(Theme.voice)
                 .foregroundStyle(Theme.Colors.Workout.inkSecondary)
             Button("Back to the recipe") { dismiss() }

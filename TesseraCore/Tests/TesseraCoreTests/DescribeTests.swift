@@ -50,20 +50,20 @@ struct DescribeTests {
 
     @Test func taskSentences() throws {
         let due = try run(CreateTask(title: "Pay rent bill!", due: Self.at(23)), at: Self.at(20))
-        #expect(sentence(due) == "Pay rent bill, due Friday.")
+        #expect(sentence(due) == "Pay rent bill, due Friday")
         let open = try run(CreateTask(title: "Water plants"), at: Self.at(20))
-        #expect(sentence(open) == "Water plants, still to do.")
+        #expect(sentence(open) == "Water plants, still to do")
         try run(SetTaskDone(task: open.id), at: Self.at(21))
-        #expect(sentence(open) == "Water plants, done.")
+        #expect(sentence(open) == "Water plants, done")
         let planned = try run(CreateTask(title: "Call Sam", startsAt: Self.at(22)), at: Self.at(20))
-        #expect(sentence(planned) == "Call Sam, due Thursday.")
+        #expect(sentence(planned) == "Call Sam, due Thursday")
     }
 
     @Test func workoutSentences() throws {
         let planned = try make(.workout, "Push Day")
-        #expect(sentence(planned) == "Push Day, planned.")
+        #expect(sentence(planned) == "Push Day, planned")
         try run(StartWorkout(workout: planned.id, time: Self.at(20, 9)), at: Self.at(20, 9))
-        #expect(sentence(planned) == "Push Day, under way.")
+        #expect(sentence(planned) == "Push Day, under way")
         let entry = try run(AddExercise(workout: planned.id, exercise: #require(classes[.benchPress]).id),
                             at: Self.at(20, 9))
         for index in 0 ..< 3 {
@@ -72,31 +72,31 @@ struct DescribeTests {
         try run(LogSet(entry: entry.id, weight: 20, reps: 10, kind: .warmup, time: Self.at(20, 9)),
                 at: Self.at(20, 9))
         try run(FinishWorkout(workout: planned.id, time: Self.at(20, 10)), at: Self.at(20, 10))
-        #expect(sentence(planned) == "Push Day, 1 exercise, 3 sets.")
+        #expect(sentence(planned) == "Push Day, 1 exercise, 3 sets")
     }
 
     @Test func listItemSentences() throws {
         let list = try make(.list, "Groceries")
         let milk = try run(AddListItem(list: list.id, text: "Milk"), at: Self.at(20))
-        #expect(sentence(milk) == "Milk on Groceries.")
+        #expect(sentence(milk) == "Milk on Groceries")
         try run(CheckListItem(item: milk.id), at: Self.at(21))
-        #expect(sentence(milk) == "Milk on Groceries, done.")
+        #expect(sentence(milk) == "Milk on Groceries, done")
     }
 
     @Test func recipeSentences() throws {
         let recipe = try make(.recipe, "Tacos")
-        #expect(sentence(recipe) == "Tacos.")
+        #expect(sentence(recipe) == "Tacos")
         try store.set("serves", to: .number(4), on: recipe)
-        #expect(sentence(recipe) == "Tacos, serves 4.")
+        #expect(sentence(recipe) == "Tacos, serves 4")
         try store.set("totalMinutes", to: .number(90), on: recipe)
-        #expect(sentence(recipe) == "Tacos, serves 4, 1 hr 30 min.")
+        #expect(sentence(recipe) == "Tacos, serves 4, 1 hr 30 min")
         let quick = try make(.recipe, "Toast")
         try store.set("totalMinutes", to: .number(5), on: quick)
-        #expect(sentence(quick) == "Toast, 5 min.")
+        #expect(sentence(quick) == "Toast, 5 min")
     }
 
     @Test func noExclamationOrEmDash() throws {
-        let task = try make(.task, "Big day! \u{2014} go.")
+        let task = try make(.task, "Big day! \u{2014} go")
         let text = try #require(sentence(task))
         #expect(!text.contains("!") && !text.contains("\u{2014}"))
     }
@@ -157,8 +157,8 @@ struct DescribeTests {
         try run(SetTaskDone(task: task.id), at: Self.at(23))
         try run(DeleteObject(object: task.id), at: Self.at(24))
         let lines = Describe.story(task, engine: engine, calendar: Self.utc, now: Self.now)
-        #expect(lines.map(\.text) == ["Deleted.", "Done Friday.", "Moved to Friday.", "Renamed Wednesday.",
-                                      "Made Tuesday."])
+        #expect(lines.map(\.text) == ["Deleted", "Done Friday", "Moved to Friday", "Renamed Wednesday",
+                                      "Made Tuesday"])
         #expect(lines.first?.time == Self.at(24))
     }
 
@@ -166,7 +166,7 @@ struct DescribeTests {
         let list = try make(.list, "Groceries")
         let milk = try run(AddListItem(list: list.id, text: "Milk"), at: Self.at(30, 9))
         try run(CheckListItem(item: milk.id), at: Self.at(30, 13))
-        #expect(story(milk) == ["Checked off today.", "Made today."])
+        #expect(story(milk) == ["Checked off today", "Made today"])
     }
 
     @Test func linkLineNamesTheThingAndMasksPrivate() throws {
@@ -174,8 +174,8 @@ struct DescribeTests {
         let secret = try make(.recipe, "Lexapro cake")
         let plain = try run(CreateTask(title: "Shop", about: [recipe.id]), at: Self.at(20))
         let hidden = try run(CreateTask(title: "Bake", about: [secret.id]), at: Self.at(20))
-        #expect(story(plain) == ["Linked to Tacos.", "Made Tuesday."])
-        #expect(story(hidden) == ["Linked to something private.", "Made Tuesday."])
+        #expect(story(plain) == ["Linked to Tacos", "Made Tuesday"])
+        #expect(story(hidden) == ["Linked to something private", "Made Tuesday"])
         #expect(!story(hidden).joined().contains("Lexapro"))
     }
 

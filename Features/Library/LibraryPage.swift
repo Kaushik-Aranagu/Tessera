@@ -140,7 +140,7 @@ struct LibraryPage: View {
         let _ = model.revision
         let items = LibraryItems.all(model: model).filter { $0.matches(muscle) && (!mineOnly || $0.isMine) }
         if items.isEmpty {
-            Text(mineOnly ? "Nothing here yet. Log a set and it shows up." : "Nothing matches.")
+            Text(mineOnly ? "Nothing here yet. Log a set and it shows up" : "Nothing matches")
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.inkSecondary)
         } else {
@@ -193,7 +193,7 @@ struct LibraryPage: View {
         let tried = Set(TriedHistory.ids())
         let list = ReadyWorkouts.search(group: group).filter { !triedOnly || tried.contains($0.id) }
         if list.isEmpty {
-            Text("Nothing tried yet. Try one today and it shows here.")
+            Text("Nothing tried yet. Try one today and it shows here")
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.inkSecondary)
         }

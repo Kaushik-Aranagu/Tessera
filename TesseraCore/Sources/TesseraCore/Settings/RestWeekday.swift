@@ -19,7 +19,7 @@ public enum RestWeekday {
 
     /// "Sunday, rest day.": the receipt for setting it, thing first.
     public static func receipt(for weekday: Int) -> String {
-        "\(name(of: weekday)), rest day."
+        "\(name(of: weekday)), rest day"
     }
 
     /// "Sunday" for 1 ... "Saturday" for 7.

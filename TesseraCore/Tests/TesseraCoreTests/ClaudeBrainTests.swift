@@ -105,7 +105,7 @@ private func answer(_ text: String, input: Int = 300, output: Int = 12) -> Strin
 @Suite(.serialized) @MainActor
 struct ClaudeBrainTests {
     static let key = "sk-" + "ant-" + "BRAIN-" + UUID().uuidString
-    let request = BrainRequest(system: [TextBlock("Be brief."), TextBlock("Big stable prefix.")],
+    let request = BrainRequest(system: [TextBlock("Be brief"), TextBlock("Big stable prefix")],
                                messages: [BrainMessage(.user, text: "Hello")], effort: .low, cacheAfter: [1])
 
     func brain(_ model: ClaudeBrain.Model = .haiku, key: String? = ClaudeBrainTests.key) -> ClaudeBrain {

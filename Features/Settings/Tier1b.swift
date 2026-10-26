@@ -25,13 +25,13 @@ enum Tier1b {
 enum UndoWords {
     static let undo = "Undo"
     static let recentTitle = "Recent changes"
-    static let empty = "Nothing changed lately."
+    static let empty = "Nothing changed lately"
 
-    /// The sentence said after an Undo: Core's own line, "Put back." or "Can't put that back.", and "Reversed." for
+    /// The sentence said after an Undo: Core's own line, "Put back." or "Can't put that back.", and "Reversed" for
     /// money. A change that is already gone says nothing.
     static func said(_ outcome: UndoOutcome, money: Bool) -> String? {
         switch outcome {
-        case let .putBack(line): money ? "Reversed." : line
+        case let .putBack(line): money ? "Reversed" : line
         case let .blocked(line): line
         case .gone: nil
         }

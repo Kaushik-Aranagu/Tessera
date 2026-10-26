@@ -18,7 +18,7 @@ enum AskAnswer: Equatable {
     case stays
     case answer(sentence: String, story: [String], changes: Int)
 
-    static let staysWords = "That stays on this phone."
+    static let staysWords = "That stays on this phone"
 
     /// A private object, or one Describe has no sentence for (money, body, health), stays on the phone. Otherwise the
     /// sentence, then what changed (newest first) and how many changes there are in all.

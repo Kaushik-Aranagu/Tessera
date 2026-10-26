@@ -5,11 +5,11 @@ import Testing
 /// Routines landing words (build sheet LR-1 to LR-6, LR-9 to LR-13, LR-19): fixed templates, no streaks, no misses.
 struct RoutinesLandingWordsTests {
     @Test func theSubtitleCountsAndNeverShames() {
-        #expect(RoutinesLandingWords.subtitle(total: 0, doneToday: 0) == "Nothing set up yet.")
-        #expect(RoutinesLandingWords.subtitle(total: 1, doneToday: 0) == "1 routine.")
-        #expect(RoutinesLandingWords.subtitle(total: 5, doneToday: 0) == "5 routines.")
-        #expect(RoutinesLandingWords.subtitle(total: 2, doneToday: 1) == "2 routines, 1 done today.")
-        #expect(RoutinesLandingWords.subtitle(total: 2, doneToday: 2) == "All done today.")
+        #expect(RoutinesLandingWords.subtitle(total: 0, doneToday: 0) == "Nothing set up yet")
+        #expect(RoutinesLandingWords.subtitle(total: 1, doneToday: 0) == "1 routine")
+        #expect(RoutinesLandingWords.subtitle(total: 5, doneToday: 0) == "5 routines")
+        #expect(RoutinesLandingWords.subtitle(total: 2, doneToday: 1) == "2 routines, 1 done today")
+        #expect(RoutinesLandingWords.subtitle(total: 2, doneToday: 2) == "All done today")
     }
 
     @Test func aLineBeforeSevenRunsCountsSteps() {
@@ -59,9 +59,9 @@ struct RoutinesLandingWordsTests {
 
     @Test func theVoiceReadsTheCountsInWords() {
         #expect(RoutinesLandingWords.spokenLine(name: "Morning", days: 14, startMinuteOfDay: 400, lengthMinutes: 22)
-            == "Morning. Ran 14 of the last 30 days. Usually starts 6:40. Usually 22 minutes.")
+            == "Morning. Ran 14 of the last 30 days. Usually starts 6:40. Usually 22 minutes")
         #expect(RoutinesLandingWords.spokenTop(name: "Morning", step: "Shoes on", onStep: "4 minutes on this step")
-            == "Morning is running. Step: Shoes on. 4 minutes on this step.")
+            == "Morning is running. Step: Shoes on. 4 minutes on this step")
     }
 
     @Test func aUsualStartFallsInItsPlace() {

@@ -204,9 +204,9 @@ enum SettingsLandingWords {
         let remembers = nothing ? "Tess remembers nothing yet" : "Tess remembers \(facts.remembers)"
         let claude = facts.asksClaude ? ", and asks Claude only with your key" : ", all on this phone"
         return [
-            "\(remembers)\(claude).",
-            "\(remembers).",
-            nothing ? "Nothing kept." : "Tess keeps \(facts.remembers.split(separator: " ").first ?? "").",
+            "\(remembers)\(claude)",
+            "\(remembers)",
+            nothing ? "Nothing kept" : "Tess keeps \(facts.remembers.split(separator: " ").first ?? "")",
         ]
     }
 
@@ -321,7 +321,8 @@ enum SettingsLandingWords {
         for word in text.split(separator: " ") {
             current += current.isEmpty ? String(word) : " \(word)"
             if word.hasSuffix(".") {
-                result.append(current)
+                // Each sentence is shown with no closing stop (Kaushik, Oct 26).
+                result.append(String(current.dropLast()))
                 current = ""
             }
         }

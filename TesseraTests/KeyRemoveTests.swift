@@ -16,7 +16,7 @@ struct KeyRemoveTests {
         #expect(KeyRemove.keepWord == "Keep it")
         let keys = InMemoryKeychain(fake)
         let line = KeyRemove.remove(from: keys)
-        #expect(line == "Claude key removed. Everything stays on this phone.")
+        #expect(line == "Claude key removed. Everything stays on this phone")
         #expect(keys.read() == nil, "a call right after Remove would still find the key")
         #expect(!line.contains("sk-"))
     }
@@ -33,15 +33,15 @@ struct KeyRemoveTests {
 
     /// Product 3:58 PM: with no key, Settings says "No Claude key yet."; no part of a key shows either way.
     @Test func theNoKeyLineIsPlain() {
-        #expect(ClaudeKeyWords.noKey == "No Claude key yet.")
+        #expect(ClaudeKeyWords.noKey == "No Claude key yet")
         #expect(!ClaudeKeyWords.noKey.contains("Paste"))
     }
 
     /// Builder A on release 21: the line before any call printed "Tess thinks Text(storage: …) only.". It reads
     /// plain words now, and both branches build a Text.
     @Test func theQuietLineReadsPlainWords() {
-        #expect(ClaudeKeyWords.noKeyLine(hasCalls: false) == "Tess thinks on this phone only.")
-        #expect(ClaudeKeyWords.noKeyLine(hasCalls: true) == "No Claude key yet.")
+        #expect(ClaudeKeyWords.noKeyLine(hasCalls: false) == "Tess thinks on this phone only")
+        #expect(ClaudeKeyWords.noKeyLine(hasCalls: true) == "No Claude key yet")
         #expect(!ClaudeKeyWords.noKeyLine(hasCalls: false).contains("Text("))
     }
 }

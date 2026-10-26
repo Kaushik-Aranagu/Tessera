@@ -44,7 +44,7 @@ struct CookingTests {
         #expect(log.lastCooked(recipe) == start.addingTimeInterval(1500))
         #expect(log
             .finishLine(for: recipe, at: start.addingTimeInterval(1500)) ==
-            "Spaghetti carbonara, first time this month.")
+            "Spaghetti carbonara, first time this month")
         #expect(throws: ActionError.self) {
             try engine.perform(StartKitchenTimer(label: "x", minutes: 0), by: .user)
         }
@@ -62,8 +62,8 @@ struct CookingTests {
         let cookClass = try #require(classes[.cook])
         let ops = engine.history(from: .distantPast, to: .distantFuture).count
 
-        #expect(StartCooking.workoutRunningLine == "Workout running.")
-        #expect(throws: ActionError.invalidArguments(action: "startCooking", reason: "Workout running.")) {
+        #expect(StartCooking.workoutRunningLine == "Workout running")
+        #expect(throws: ActionError.invalidArguments(action: "startCooking", reason: "Workout running")) {
             try engine.perform(StartCooking(recipe: recipe.id), by: .user)
         }
         #expect(store.objects(of: cookClass).isEmpty)
@@ -90,7 +90,7 @@ struct CookingTests {
         try engine.perform(StartWorkout(workout: workout.id), by: .user)
         let ops = engine.history(from: .distantPast, to: .distantFuture).count
 
-        let refusal = { (name: String) in ActionError.invalidArguments(action: name, reason: "Workout running.") }
+        let refusal = { (name: String) in ActionError.invalidArguments(action: name, reason: "Workout running") }
         #expect(throws: refusal("resumeProcess")) {
             try engine.perform(ResumeProcess(process: cookProcess.id), by: .user)
         }

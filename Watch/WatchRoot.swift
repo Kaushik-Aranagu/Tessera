@@ -63,8 +63,8 @@ struct WatchRoot: View {
 struct IdleFace: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("No workout running.").font(WatchInk.face(21)).lineLimit(2).minimumScaleFactor(0.8)
-            Text("Start one on your iPhone.").font(WatchInk.face(16, .regular)).opacity(0.7)
+            Text("No workout running").font(WatchInk.face(21)).lineLimit(2).minimumScaleFactor(0.8)
+            Text("Start one on your iPhone").font(WatchInk.face(16, .regular)).opacity(0.7)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12)
@@ -77,9 +77,9 @@ struct FinishedFace: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(store.snapshot.isPrivate ? "Private workout, ready to finish" : "Every set is done.")
+            Text(store.snapshot.isPrivate ? "Private workout, ready to finish" : "Every set is done")
                 .font(WatchInk.face(21)).lineLimit(3).minimumScaleFactor(0.8)
-            Text("Finish it on your iPhone.").font(WatchInk.face(16, .regular)).opacity(0.7)
+            Text("Finish it on your iPhone").font(WatchInk.face(16, .regular)).opacity(0.7)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12)
@@ -95,7 +95,7 @@ struct SideFace: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("THIS EXERCISE").font(WatchInk.face(16)).tracking(1).opacity(0.7)
             if store.snapshot.sets.isEmpty {
-                Text("No sets yet.").font(WatchInk.face(21))
+                Text("No sets yet").font(WatchInk.face(21))
             } else {
                 ForEach(Array(store.snapshot.sets.enumerated()), id: \.offset) { _, line in
                     Text(line).font(WatchInk.face(21)).monospacedDigit()

@@ -196,7 +196,7 @@ struct RecipeTitleTests {
             try engine.perform(CreateRecipe(text: text), by: .user)
             Issue.record("a second copy was written")
         } catch {
-            #expect("\(error)".contains("Weeknight dal is already on Recipes."), "\(error)")
+            #expect("\(error)".contains("Weeknight dal is already on Recipes"), "\(error)")
         }
         #expect(book.recipes().count == 1)
         // A private title is never named.

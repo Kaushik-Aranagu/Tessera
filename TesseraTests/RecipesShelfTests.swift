@@ -29,7 +29,7 @@ struct RecipesShelfTests {
 
     @Test func emptyIsNoneYet() {
         #expect(shelf.context == "None yet" && shelf.rows.isEmpty)
-        #expect(shelf.tess == "Paste a link or a page and I'll read it.")
+        #expect(shelf.tess == "Paste a link or a page and I'll read it")
     }
 
     @Test func aPrivateRecipeIsOnlyPrivateRecipeAndCounted() throws {
@@ -44,9 +44,9 @@ struct RecipesShelfTests {
         let tacos = try recipe("Tacos")
         try cook(tacos, at: saturday)
         try cook(tacos, at: saturday.addingTimeInterval(86400))
-        #expect(shelf.tess == "Tacos, cooked 2 times.")
+        #expect(shelf.tess == "Tacos, cooked 2 times")
         _ = try recipe("Dal")
-        #expect(shelf.tess == "Tacos is the one you cook most.")
+        #expect(shelf.tess == "Tacos is the one you cook most")
     }
 
     @Test func contextCounts() {
@@ -57,7 +57,7 @@ struct RecipesShelfTests {
     @Test func tessUsesTheShortNameAndOldDatesCarryTheYear() throws {
         let long = try recipe("Sheet-pan paprika chicken with lemon")
         try cook(long, at: saturday)
-        #expect(shelf.tess == "Sheet-pan paprika chicken, cooked 1 time.")
+        #expect(shelf.tess == "Sheet-pan paprika chicken, cooked 1 time")
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "America/Los_Angeles") ?? .current
         let lastYear = calendar.date(from: DateComponents(year: 2025, month: 10, day: 3, hour: 12)) ?? .now

@@ -62,7 +62,7 @@ public struct PlaybookJob {
         let shapes = BurstShape.allCases.map(\.rawValue)
         let kinds = OpenReactionKind.allCases.map(\.rawValue)
         let apps = AppID.allCases.map(\.rawValue)
-        let why: [String: Any] = ["type": "string", "description": "One short plain line: why this."]
+        let why: [String: Any] = ["type": "string", "description": "One short plain line: why this"]
         func burst() -> [String: Any] {
             ["type": "object", "additionalProperties": false, "required": ["shape", "count", "seconds", "why"],
              "properties": ["shape": ["type": "string", "enum": shapes],
@@ -151,7 +151,7 @@ public struct PlaybookJob {
             "reduce motion: \(inputs.reduceMotion)", "apps: \(inputs.accents.map(\.rawValue).joined(separator: ", "))",
             "recent choices: \(inputs.recent.joined(separator: ", "))",
         ].joined(separator: "\n")
-        let tool = ToolSpec(name: Self.toolName, description: "Sets today's playbook.", schema: Self.schema)
+        let tool = ToolSpec(name: Self.toolName, description: "Sets today's playbook", schema: Self.schema)
         let request = BrainRequest(system: [TextBlock(Self.instructions)],
                                    messages: [BrainMessage(.user, text: "Today:\n\(facts)")], tools: [tool],
                                    toolChoice: .tool(Self.toolName), maxTokens: 900, effort: .low,

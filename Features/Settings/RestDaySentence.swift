@@ -93,10 +93,10 @@ struct RestDaySentence: View {
         guard settings.restWeekday != weekday else { return }
         settings.restWeekday = weekday
         guard let record = try? model.engine.perform(WriteSettings(settings: settings), by: .user).record else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return
         }
         model.touch()
-        TessVoice.shared.say(weekday.map(RestWeekday.receipt(for:)) ?? "Rest day, any day.", undo: record)
+        TessVoice.shared.say(weekday.map(RestWeekday.receipt(for:)) ?? "Rest day, any day", undo: record)
     }
 }

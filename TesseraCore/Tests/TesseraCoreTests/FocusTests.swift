@@ -35,7 +35,7 @@ struct FocusTests {
         #expect(after.phase(at: start.addingTimeInterval(21 * 60)) == .over)
         #expect(after
             .wrapUpLine(endedAt: start.addingTimeInterval(20 * 60)) ==
-            "Focus done. 20 minutes on Reply to the landlord.")
+            "Focus done. 20 minutes on Reply to the landlord")
     }
 
     @Test func theBlockLengthIsKeptInBounds() throws {
@@ -56,15 +56,15 @@ struct FocusTests {
     // MARK: First step
 
     @Test(arguments: [
-        ("Write the report", "Write one sentence of the report."), (
+        ("Write the report", "Write one sentence of the report"), (
             "Call the plumber",
-            "Find the number for the plumber."
+            "Find the number for the plumber"
         ),
-        ("Reply to Priya", "Open the thread for to Priya."), (
+        ("Reply to Priya", "Open the thread for to Priya"), (
             "Clean the oven",
-            "Set a 2-minute timer and start on the oven."
+            "Set a 2-minute timer and start on the oven"
         ),
-        ("Buy stamps", "Put it on your list: stamps."), ("Laundry", "Spend 2 minutes on Laundry."),
+        ("Buy stamps", "Put it on your list: stamps"), ("Laundry", "Spend 2 minutes on Laundry"),
     ])
     func theStepIsTwoMinutesOfTheFirstMove(_ title: String, _ expected: String) {
         #expect(FirstStep.step(for: title) == expected)
@@ -78,12 +78,12 @@ struct FocusTests {
         fresh.updatedAt = start.addingTimeInterval(-86400)
         let steps = FirstStep(store: store, classes: engine.classes)
         let offer = try #require(steps.offer(now: start))
-        #expect(offer.task == old.id && offer.step == "Write one sentence of the report.")
+        #expect(offer.task == old.id && offer.step == "Write one sentence of the report")
         // Once a day: not again today.
         #expect(steps.offer(now: start, lastOfferedOn: start.addingTimeInterval(-3600)) == nil)
         // Accepting adds a 2-minute task about it.
         let step = try engine.perform(AcceptFirstStep(task: old.id, time: start), by: .user).output
-        #expect(store.number("length", of: step) == 120 && step.title == "Write one sentence of the report.")
+        #expect(store.number("length", of: step) == 120 && step.title == "Write one sentence of the report")
     }
 
     @Test func aPrivateTaskGetsNoOffer() throws {
@@ -125,7 +125,7 @@ struct FocusTests {
         }
         #expect(quiet.waitingCount == 5)
         let line = try #require(quiet.digestLine())
-        #expect(line == "5 things waited: Pay rent reminder, Water the plants, something private, and 2 more.")
+        #expect(line == "5 things waited: Pay rent reminder, Water the plants, something private, and 2 more")
         let released = try engine.perform(ReleaseHeldNotices(), by: .system).output
         #expect(released == line && quiet.waitingCount == 0)
         // Nothing waiting: nothing released, nothing logged.

@@ -95,10 +95,10 @@ struct PantryBoard {
     /// What an empty place says: "Nothing in the fridge yet."
     func empty(for open: String) -> String {
         if open == PantryPlaces.toGet {
-            return "Nothing to get. Add things on Groceries."
+            return "Nothing to get. Add things on Groceries"
         }
         let name = places.first { $0.id.uuidString == open }?.name ?? "here"
-        return "Nothing \(Self.where(name)) yet."
+        return "Nothing \(Self.where(name)) yet"
     }
 
     /// Where a thing usually lives by its shop section, until he puts it somewhere: one of the four seeded places and

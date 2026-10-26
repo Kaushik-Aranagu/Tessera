@@ -207,25 +207,17 @@ struct DepartureBoard: View {
         } else {
             // The letters always click forward (sheet 200), on one line in its own row: the words are chosen to fit,
             // never shrunk, wrapped or crossfaded.
-            HStack(spacing: 6) {
-                ForEach(units(of: line, starts: starts)) { unit in
-                    unitView(unit, cells: lineCells, li: li)
-                        .fixedSize()
-                }
-                // Letters the new line no longer has flip to spaces and collapse once the pass is over.
-                let kept = DepartureSteps.flat(line).count
-                if lineCells.count > kept {
-                    HStack(spacing: 0) {
-                        ForEach(kept ..< lineCells.count, id: \.self) { k in
-                            Text(String(lineCells[k].shown))
-                                .font(font(for: lineCells[k].kind ?? .plain))
-                                .foregroundStyle(droppedStyle(lineCells[k].kind ?? .plain))
-                                .fixedSize()
-                                .frame(width: lineCells[k].width)
-                                .scaleEffect(x: 1, y: lineCells[k].squash ? 0.08 : 1, anchor: .center)
-                        }
+            HStack(spacing: 0) {
+                // The words, 6 pt apart; the letters going away sit after them with no gap, so the row's right edge
+                // is the last word's (x 378 on Bridge).
+                HStack(spacing: 6) {
+                    ForEach(units(of: line, starts: starts)) { unit in
+                        unitView(unit, cells: lineCells, li: li)
+                            .fixedSize()
                     }
                 }
+                // Letters the new line no longer has go at once: the row's right edge stays at the last word (x 378),
+                // and nothing draws past it (Kaushik, Oct 26).
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
         }

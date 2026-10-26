@@ -124,7 +124,7 @@ private struct PantryPage: View {
         }
         let name = model.store.displayTitle(of: entry.ingredient)
         guard let record = try? model.engine.perform(AddGroceries(lines: [name]), by: .user).record else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+            TessVoice.shared.say("Didn't save that. Try again")
             return false
         }
         model.touch()

@@ -179,11 +179,11 @@ struct ListsLandingFacts {
         if let subtitle {
             return AccentedSentence(text: subtitle.text, key: subtitle.key)
         }
-        guard let lead else { return AccentedSentence(text: "Start one with a few words.", key: nil) }
+        guard let lead else { return AccentedSentence(text: "Start one with a few words", key: nil) }
         if lead.isRunning {
-            return AccentedSentence(text: "\(lead.name) is running, \(lead.left) left.", key: lead.name)
+            return AccentedSentence(text: "\(lead.name) is running, \(lead.left) left", key: lead.name)
         }
-        return AccentedSentence(text: "\(lead.name) is the one you touched last.", key: lead.name)
+        return AccentedSentence(text: "\(lead.name) is the one you touched last", key: lead.name)
     }
 }
 
@@ -246,7 +246,7 @@ struct ListsLandingPage: View {
                     },
                     doors: doors(facts),
                     action: LandingAction(word: "New list", hint: "Tess makes a list from a few words") {
-                        TessVoice.shared.say("Say \"list: films\" and I'll make it.")
+                        TessVoice.shared.say("Say \"list: films\" and I'll make it")
                     })
                     .background { ThemedBackground() }
                     .toolbar(.hidden, for: .navigationBar)
@@ -545,7 +545,7 @@ struct ListsKindPage: View {
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
-                Text(door == .reusable ? "Lists you use again and again." : "Lists you pick one thing from.")
+                Text(door == .reusable ? "Lists you use again and again" : "Lists you pick one thing from")
                     .font(Theme.voice(size: 21))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .padding(.top, Theme.Spacing.s)

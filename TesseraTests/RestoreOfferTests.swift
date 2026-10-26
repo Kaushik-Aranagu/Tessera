@@ -74,12 +74,12 @@ struct RestoreOfferTests {
     @Test func offerAndWarningReadDateFirst() throws {
         let stamp = try date("2026-10-03T17:00:00Z")
         #expect(RestoreOfferCopy.day(stamp, calendar: pacific) == "3 Oct")
-        #expect(RestoreOfferCopy.backups == "Have a copy from before? Backups, Restore.")
+        #expect(RestoreOfferCopy.backups == "Have a copy from before? Backups, Restore")
         #expect(RestoreOfferCopy.notNow == "Not now")
         #expect(RestoreOfferCopy.replace == "Replace what is here")
         #expect(RestoreOfferCopy.confirm(stamp).hasPrefix("Restore the "))
-        #expect(RestoreOfferCopy.confirm(stamp).hasSuffix(" backup? This replaces what is on this phone now."))
-        #expect(RestoreOfferCopy.waits(for: "Push A") == "Restore waits until Push A is done.")
+        #expect(RestoreOfferCopy.confirm(stamp).hasSuffix(" backup? This replaces what is on this phone now"))
+        #expect(RestoreOfferCopy.waits(for: "Push A") == "Restore waits until Push A is done")
         for line in [RestoreOfferCopy.offer(stamp), RestoreOfferCopy.inIt, RestoreOfferCopy.notInIt,
                      RestoreOfferCopy.walled, RestoreOfferCopy.staged]
         {
@@ -91,24 +91,24 @@ struct RestoreOfferTests {
         defer { reset() }
         let stamp = Date(timeIntervalSince1970: 1_790_000_000)
         RestoreOffer.rememberStaged(stamp)
-        let core = "Restored from your backup. What was here before is kept in Backups, so you can restore it again."
+        let core = "Restored from your backup. What was here before is kept in Backups, so you can restore it again"
         let dated = RestoreOffer.dated(core)
         #expect(dated == RestoreOfferCopy.restored(stamp)
-            + " What was here before is kept in Backups, so you can restore it again.")
+            + ". What was here before is kept in Backups, so you can restore it again")
         // Used once: a later note reads as Core wrote it.
-        #expect(RestoreOffer.dated("Restored from your backup.") == "Restored from your backup.")
+        #expect(RestoreOffer.dated("Restored from your backup") == "Restored from your backup")
         // Other notes are never touched.
         RestoreOffer.rememberStaged(stamp)
-        #expect(RestoreOffer.dated("Not saving this time.") == "Not saving this time.")
+        #expect(RestoreOffer.dated("Not saving this time") == "Not saving this time")
     }
 
     // MARK: The launch note queue
 
     @Test func twoLaunchNotesBothShowOnceOldestFirst() {
-        var queue = LaunchNoteQueue(["Restored the 3 Oct backup.", nil, "Couldn't open your data.", ""])
-        #expect(queue.current == "Restored the 3 Oct backup.")
+        var queue = LaunchNoteQueue(["Restored the 3 Oct backup", nil, "Couldn't open your data", ""])
+        #expect(queue.current == "Restored the 3 Oct backup")
         queue.advance()
-        #expect(queue.current == "Couldn't open your data.")
+        #expect(queue.current == "Couldn't open your data")
         queue.advance()
         #expect(queue.current == nil)
         queue.advance()
@@ -116,10 +116,10 @@ struct RestoreOfferTests {
     }
 
     @Test func aNoteAlreadyWaitingIsNotQueuedTwice() {
-        var queue = LaunchNoteQueue(["Not saving this time."])
-        queue.enqueue("Not saving this time.")
-        queue.enqueue("Sunday, rest day.")
-        #expect(queue.notes == ["Not saving this time.", "Sunday, rest day."])
+        var queue = LaunchNoteQueue(["Not saving this time"])
+        queue.enqueue("Not saving this time")
+        queue.enqueue("Sunday, rest day")
+        #expect(queue.notes == ["Not saving this time", "Sunday, rest day"])
     }
 
     @Test func nowShowsOneQuietLineInOrder() {
@@ -138,14 +138,14 @@ struct RestoreOfferTests {
         let twoHours = expiry.addingTimeInterval(-2 * 3600)
         #expect(SigningLapse.warning(expiry: expiry, now: threeDays, calendar: pacific) == nil)
         #expect(SigningLapse.warning(expiry: expiry, now: thirtyHours, calendar: pacific)
-            == "This build stops opening tomorrow at 6:36 AM. Your data stays on this iPhone.")
+            == "This build stops opening tomorrow at 6:36 AM. Your data stays on this iPhone")
         #expect(SigningLapse.warning(expiry: expiry, now: twoHours, calendar: pacific)
-            == "This build stops opening today at 6:36 AM. Your data stays on this iPhone.")
+            == "This build stops opening today at 6:36 AM. Your data stays on this iPhone")
         #expect(SigningLapse.warning(expiry: expiry, now: expiry.addingTimeInterval(60), calendar: pacific) == nil)
         #expect(SigningLapse.warning(expiry: nil, now: twoHours) == nil)
         // 47 hours before reads the weekday.
         #expect(SigningLapse.warning(expiry: expiry, now: expiry.addingTimeInterval(-47 * 3600), calendar: pacific)
-            == "This build stops opening Monday at 6:36 AM. Your data stays on this iPhone.")
+            == "This build stops opening Monday at 6:36 AM. Your data stays on this iPhone")
     }
 
     @Test func profileExpiryIsReadFromTheSignedEnvelope() throws {

@@ -319,41 +319,41 @@ public struct RuleDirector: TessDirector {
             let result = MosaicSwitchboard.step(state, cues: cues, quiet: context.quiet,
                                                 asksClaude: context.asksClaude, weatherOn: weatherOn)
             return DirectorDecision(choice: .mosaic(MosaicDecision(state: result.state, directive: result.directive)),
-                                    why: "The switchboard: a moment beats a mood, Tess then apps then the clock.",
+                                    why: "The switchboard: a moment beats a mood, Tess then apps then the clock",
                                     key: "mosaic")
         case let .handBack(state):
             let result = MosaicSwitchboard.handedBack(state, quiet: context.quiet)
             return DirectorDecision(choice: .mosaic(MosaicDecision(state: result.state, directive: result.directive)),
-                                    why: "The moment handed back; the best-ranked waiting one is next.",
+                                    why: "The moment handed back; the best-ranked waiting one is next",
                                     key: "handBack")
         case let .burst(kind, tone):
             let shape = vary(from: shapes(for: kind), context: context, prefix: "burst")
             let count = 8 + Int(context.seed % 9)
             return DirectorDecision(choice: .burst(BurstChoice(shape: shape, count: count, duration: 1.0, tone: tone)),
-                                    why: "A \(shape.rawValue) for \(kind.rawValue), not the one before it.",
+                                    why: "A \(shape.rawValue) for \(kind.rawValue), not the one before it",
                                     key: "burst-\(shape.rawValue)")
         case let .tessBurst(accents):
             let shape = vary(from: [.ring, .rise, .scatter], context: context, prefix: "burst")
             let palette = Self.palette(pageAccents: accents, context: context)
             return DirectorDecision(choice: .tessBurst(TessBurstChoice(shape: shape, count: 12, duration: 1.2,
                                                                        palette: palette)),
-                                    why: "Her own colour, a \(shape.rawValue).", key: "burst-\(shape.rawValue)")
+                                    why: "Her own colour, a \(shape.rawValue)", key: "burst-\(shape.rawValue)")
         case let .palette(from, to):
             return DirectorDecision(choice: .palette(PaletteChoice(from: from, to: to, mix: 0.2, duration: 0.6,
                                                                    curve: .easeInOut)),
-                                    why: "A light wash toward the page's accent.", key: "palette")
+                                    why: "A light wash toward the page's accent", key: "palette")
         case let .tessPalette(accents):
             let palette = Self.palette(pageAccents: accents, context: context)
             return DirectorDecision(choice: .tessPalette(palette),
-                                    why: palette.accent == nil ? "Ember: no single accent on this page."
-                                        : "A palette built from the page's one accent.", key: "tessPalette")
+                                    why: palette.accent == nil ? "Ember: no single accent on this page"
+                                        : "A palette built from the page's one accent", key: "tessPalette")
         case let .reaction(event):
             return reaction(event)
         case let .scene(backdrop, facts, place, weather, calendar):
             let scene = MosaicScenePicker.pick(backdrop, facts: facts, place: place, weather: weather,
                                                calendar: calendar)
             return DirectorDecision(choice: .scene(SceneChoice(scene: scene, still: false)),
-                                    why: "The hour, the weather and the kind of place.", key: "scene")
+                                    why: "The hour, the weather and the kind of place", key: "scene")
         }
     }
 
@@ -373,22 +373,22 @@ public struct RuleDirector: TessDirector {
         let why: String
         if momentPlaying {
             choice = ReactionChoice(kind: .none, duration: 0)
-            why = "A moment is playing and wins."
+            why = "A moment is playing and wins"
         } else if away == nil {
             choice = ReactionChoice(kind: .gatherFromNight, duration: 1.8)
-            why = "A cold launch gathers from the night."
+            why = "A cold launch gathers from the night"
         } else if let away, away >= 2 * 86400 {
             choice = ReactionChoice(kind: .gatherBack, duration: 2.4)
-            why = "Two days or more away: dusty pixels gather into today."
+            why = "Two days or more away: dusty pixels gather into today"
         } else if firstAfterFour {
             choice = ReactionChoice(kind: .nightFalls, duration: 2.2)
-            why = "The first open of the day: night falls away."
+            why = "The first open of the day: night falls away"
         } else if let away, away >= 120 {
             choice = ReactionChoice(kind: .flipRows, duration: 1.4)
-            why = "Back after a while: the tiles flip row by row."
+            why = "Back after a while: the tiles flip row by row"
         } else {
             choice = ReactionChoice(kind: .ripple, duration: 0.9)
-            why = "A quick return: a ripple from the middle."
+            why = "A quick return: a ripple from the middle"
         }
         return DirectorDecision(choice: .reaction(choice), why: why, key: "reaction-\(choice.kind.rawValue)")
     }

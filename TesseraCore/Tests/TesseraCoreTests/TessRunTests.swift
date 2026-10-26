@@ -49,7 +49,7 @@ struct TessRunTests {
     // MARK: Words and rungs
 
     @Test func wordsStreamInOrderAndFinishedIsTheirJoin() async throws {
-        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Hello "), .text("there.")]])
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Hello "), .text("there")]])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("how many sets today"))
         #expect(events.first == .waiting)
@@ -60,8 +60,8 @@ struct TessRunTests {
                 nil
             }
         }
-        #expect(words == ["Hello ", "there."])
-        #expect(events.last == .finished("Hello there."))
+        #expect(words == ["Hello ", "there"])
+        #expect(events.last == .finished("Hello there"))
     }
 
     @Test func pickRungSendsOpenQuestionsToSonnetAndLookupsToHaiku() {
@@ -85,13 +85,23 @@ struct TessRunTests {
 
     @Test func twoReadsReturnInOneToolResultMessage() async throws {
         let haiku = ScriptedBrain(.haiku, rounds: [
-            [use("t1", "query", #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#),
-             use("t2", "query", #"{"from":["notes"],"during":{"range":"today","field":null},"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#)],
-            [.text("Two answers.")],
+            [
+                use(
+                    "t1",
+                    "query",
+                    #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
+                ),
+                use(
+                    "t2",
+                    "query",
+                    #"{"from":["notes"],"during":{"range":"today","field":null},"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
+                ),
+            ],
+            [.text("Two answers")],
         ])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("how many tasks and notes"))
-        #expect(events.last == .finished("Two answers."))
+        #expect(events.last == .finished("Two answers"))
         let second = try #require(haiku.requestsSeen.last)
         let lastMessage = try #require(second.messages.last)
         let results = lastMessage.content.compactMap { piece -> String? in
@@ -109,7 +119,7 @@ struct TessRunTests {
         let haiku = ScriptedBrain(.haiku, rounds: [
             [use("t1", "createTask", #"{"title":"Call mom","startsAt":null,"about":[]}"#),
              use("t2", "createTask", #"{"title":"Buy stamps","startsAt":null,"about":[]}"#)],
-            [.text("Added both.")],
+            [.text("Added both")],
         ])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("add two tasks"))
@@ -124,11 +134,15 @@ struct TessRunTests {
         let pending = r.engine.history(limit: 20).filter { $0.state == .pending }
         // Oldest first: the first write is the first ghost.
         #expect(ghosts == pending.reversed().map(\.id))
-        #expect(events.last == .finished("Added both."))
+        #expect(events.last == .finished("Added both"))
     }
 
     @Test func anEleventhRoundIsNeverSentAndThePhoneLineComesBack() async throws {
-        let call = [use("t", "query", #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#)]
+        let call = [use(
+            "t",
+            "query",
+            #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
+        )]
         let haiku = ScriptedBrain(.haiku, rounds: Array(repeating: call, count: 12) + [[.text("never")]])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("keep looking"))
@@ -146,11 +160,11 @@ struct TessRunTests {
         let haiku = ScriptedBrain(.haiku, rounds: [
             [.assistant([block, search]), .done(BrainUsage(), stop: "pause_turn")],
             [.assistant([block]), .done(BrainUsage(), stop: "pause_turn")],
-            [.text("Found it.")],
+            [.text("Found it")],
         ])
         let r = try rig([.haiku: haiku])
         let events = await collect(r.run.ask("how many sets"))
-        #expect(events.last == .finished("Found it.") && haiku.streamCount == 3)
+        #expect(events.last == .finished("Found it") && haiku.streamCount == 3)
         let third = try #require(haiku.requestsSeen.last)
         let assistant = third.messages.filter { $0.role == .assistant }
         #expect(assistant.count == 2)
@@ -163,8 +177,15 @@ struct TessRunTests {
         let use = Data(#"{"type":"tool_use","id":"t1","name":"query","input":{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}}"#
             .utf8)
         let haiku = ScriptedBrain(.haiku, rounds: [
-            [.assistant([thinking, use]), self.use("t1", "query", #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#)],
-            [.text("Three.")],
+            [
+                .assistant([thinking, use]),
+                self.use(
+                    "t1",
+                    "query",
+                    #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
+                ),
+            ],
+            [.text("Three")],
         ])
         let r = try rig([.haiku: haiku])
         _ = await collect(r.run.ask("how many tasks"))
@@ -199,20 +220,21 @@ struct TessRunTests {
     }
 
     @Test func aSettledCheckpointKeepsNoWordsOfTheConversation() async throws {
-        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Four sets.")]])
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Four sets")]])
         let r = try rig([.haiku: haiku])
         _ = await collect(r.run.ask("how many sets today"))
         let state = try #require(TessRunStore(url: r.url).all().first)
         #expect(state.status == .finished && state.messages.isEmpty && state.words.isEmpty)
         #expect(state.toolResults.isEmpty && state.askText.isEmpty && state.aboutIDs.isEmpty)
         let text = try String(decoding: Data(contentsOf: r.url), as: UTF8.self)
-        #expect(!text.contains("how many sets today") && !text.contains("Four sets."))
+        #expect(!text.contains("how many sets today") && !text.contains("Four sets"))
     }
 
     @Test func aRunOlderThanTenMinutesIsDroppedNotResumed() async throws {
         let haiku = ScriptedBrain(.haiku, rounds: [[.text("never")]])
         let r = try rig([.haiku: haiku])
-        let input = Data(#"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#.utf8)
+        let input = Data(#"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
+            .utf8)
         var state = TessRunState(startedAt: Date().addingTimeInterval(-11 * 60), askText: "how many", aboutIDs: [],
                                  messages: [BrainMessage(.user, text: "how many"),
                                             BrainMessage(
@@ -220,7 +242,7 @@ struct TessRunTests {
                                                 [.toolUse(id: "t1", name: "query", input: input)]
                                             )])
         state.doneToolIDs = ["t1"]
-        state.toolResults = ["t1": "3 tasks."]
+        state.toolResults = ["t1": "3 tasks"]
         TessRunStore(url: r.url).save(state)
         await r.run.resumeInterrupted()
         #expect(TessRunStore(url: r.url).all().first?.status == .dropped && haiku.streamCount == 0)
@@ -242,7 +264,7 @@ struct TessRunTests {
     // MARK: Checkpoints
 
     @Test func aKillAfterAFinishedToolResumesWithoutRunningItAgain() async throws {
-        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Added.")]])
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Added")]])
         let r = try rig([.haiku: haiku])
         // The run was killed after createTask finished: its ghost is in the op log, the result is stored.
         let input = Data(#"{"title":"Call mom","startsAt":null,"about":[]}"#.utf8)
@@ -255,7 +277,7 @@ struct TessRunTests {
                                                 [.toolUse(id: "t1", name: "createTask", input: input)]
                                             )])
         state.doneToolIDs = ["t1"]
-        state.toolResults = ["t1": "Done: 1 waiting for approval."]
+        state.toolResults = ["t1": "Done: 1 waiting for approval"]
         TessRunStore(url: r.url).save(state)
         await r.run.resumeInterrupted()
         #expect(r.engine.history(limit: 50).count == before)
@@ -269,7 +291,7 @@ struct TessRunTests {
         } == true)
         #expect(TessRunStore(url: r.url).all().first?.status == .finished)
         // Her reply is stored.
-        #expect(r.conversation.turns().contains { r.conversation.text(of: $0) == "Added." })
+        #expect(r.conversation.turns().contains { r.conversation.text(of: $0) == "Added" })
     }
 
     @Test func aKillMidStreamDropsTheRunAndStoresNoTurn() async throws {
@@ -284,17 +306,18 @@ struct TessRunTests {
     }
 
     @Test func aWriteThatNeverFinishedIsNotRunOnResume() async throws {
-        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Sorry about that.")]])
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Sorry about that")]])
         let r = try rig([.haiku: haiku])
         let write = Data(#"{"title":"Call mom","startsAt":null,"about":[]}"#.utf8)
-        let read = Data(#"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#.utf8)
+        let read = Data(#"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
+            .utf8)
         var state = TessRunState(startedAt: .now, askText: "do it", aboutIDs: [], messages: [
             BrainMessage(.user, text: "do it"),
             BrainMessage(.assistant, [.toolUse(id: "r1", name: "query", input: read),
                                       .toolUse(id: "w1", name: "createTask", input: write)]),
         ])
         state.doneToolIDs = ["r1"]
-        state.toolResults = ["r1": "3 tasks."]
+        state.toolResults = ["r1": "3 tasks"]
         TessRunStore(url: r.url).save(state)
         let before = r.engine.history(limit: 50).count
         await r.run.resumeInterrupted()
@@ -327,7 +350,11 @@ struct TessRunTests {
 
     @Test func everySpanOfARunCarriesItsRunIDAndNoSpanHoldsTheAsk() async throws {
         let haiku = ScriptedBrain(.haiku, rounds: [
-            [use("t1", "query", #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#)], [.text("Fine.")],
+            [use(
+                "t1",
+                "query",
+                #"{"from":["tasks"],"during":null,"where":[],"group":null,"agg":{"kind":"count","field":null},"sort":null,"limit":null}"#
+            )], [.text("Fine")],
         ])
         let r = try rig([.haiku: haiku])
         let secret = "zebra-lantern-question"
@@ -409,11 +436,11 @@ struct TessRunTests {
     // MARK: Conversation
 
     @Test func theAskAndHerReplyAreStoredAndAFailureStoresNothingOfHers() async throws {
-        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Four sets.")]])
+        let haiku = ScriptedBrain(.haiku, rounds: [[.text("Four sets")]])
         let r = try rig([.haiku: haiku])
         _ = await collect(r.run.ask("how many sets today"))
         let texts = r.conversation.turns().map { r.conversation.text(of: $0) }
-        #expect(texts == ["how many sets today", "Four sets."])
+        #expect(texts == ["how many sets today", "Four sets"])
         let failing = FakeBrain(.haiku)
         failing.outcome = .busy
         let f = try rig([.haiku: failing])

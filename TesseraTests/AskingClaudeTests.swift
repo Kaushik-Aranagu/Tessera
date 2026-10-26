@@ -10,8 +10,8 @@ struct AskingClaudeTests {
     let container = TesseraSchema.makeContainer(inMemory: true)
 
     @Test func theLineIsOneElementSpokenOnce() {
-        #expect(AskingClaudeCopy.line == "Asking Claude.")
-        #expect(AskingClaudeCopy.spoken == "Asking Claude. Cancel.")
+        #expect(AskingClaudeCopy.line == "Asking Claude")
+        #expect(AskingClaudeCopy.spoken == "Asking Claude. Cancel")
     }
 
     /// A grammar answer never reaches Claude, so the line never shows and nothing is left set.

@@ -104,7 +104,7 @@ public struct TessDatedLiftAsk: Sendable, Equatable {
 
     /// "Bench 80 × 8 logged for Monday."
     public var loggedLine: String {
-        "\(lift) logged for \(dayName)."
+        "\(lift) logged for \(dayName)"
     }
 
     /// A said answer: "log", "log it", "yes" or "not now", "no". Nil for anything else (the ask then drops).

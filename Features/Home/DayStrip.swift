@@ -124,8 +124,8 @@ private struct DayStrokePage: View {
     private func accessibilityText(now: Date) -> String {
         let count = lane.items.count
         let things = count == 1 ? "1 thing" : "\(count) things"
-        let clock = lane.offset == 0 ? " Now \(Format.clock(now))." : ""
-        let trained = lane.workouts.isEmpty ? "" : " Trained."
+        let clock = lane.offset == 0 ? " Now \(Format.clock(now))" : ""
+        let trained = lane.workouts.isEmpty ? "" : " Trained"
         return "\(lane.phrase(now: now)). \(things) scheduled.\(trained)\(clock)"
     }
 }

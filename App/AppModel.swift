@@ -211,8 +211,8 @@ final class AppModel {
         // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.
         let outcome: String? = switch TesseraSchema.lastOpenOutcome {
         case .opened: nil
-        case .recoveredWithBackup: "Started fresh; your old data is saved in Backups."
-        case .inMemoryFallback: "Couldn't open your data, so nothing will be saved this time."
+        case .recoveredWithBackup: "Started fresh; your old data is saved in Backups"
+        case .inMemoryFallback: "Couldn't open your data, so nothing will be saved this time"
         }
         // Both are read, oldest first, one at a time (hunt 28 CALL 3 B); a restore says its copy's date (sheet 111).
         launchNotes = LaunchNoteQueue([TesseraSchema.launchNote.map(RestoreOffer.dated), outcome])
@@ -779,12 +779,12 @@ extension AppModel {
         guard let last = read.last else { return }
         // The first-send notice wins and is never dropped; else a lone phrase keeps its own line, and two or more
         // read together get a count.
-        let line = read.first(where: \.isNotice)?.line ?? (read.count == 1 ? last.line : "Offline, \(read.count) read.")
+        let line = read.first(where: \.isNotice)?.line ?? (read.count == 1 ? last.line : "Offline, \(read.count) read")
         // One landing for the lot, so every drained ghost stays pending together and is seen.
         _ = land(TessCapture(records: read.flatMap(\.records), line: line, source: .claude))
     }
 
-    /// Cancel under "Asking Claude.": Core stops the call and the capture ends with "Cancelled.".
+    /// Cancel under "Asking Claude.": Core stops the call and the capture ends with "Cancelled".
     func cancelAskingClaude() {
         claudeFlags.cancelAsking()
     }
