@@ -170,6 +170,14 @@ The rules:
   wait while a sheet is up.
 - **Reduce Transparency:** frosted grounds become opaque, and dims become the opaque ground at 92%.
 
+**Things in flight (sheet 296).** A move can carry a copy across other places: a word flying from the Log wall to
+the widget, or a ticket tearing off the Galley rail into the glyph. While it flies, it is on its own layer, and every
+other place its path crosses (with a 48 pt margin) steps back to 28% within the first 4% of the move. It returns over
+the last 20%. The place it lands in doesn't step back, because it is arriving there. A copy with a ground (a ticket
+is paper) stays opaque until it is clear of where it came from, then fades. The mid-move check (`t35.js`) runs nine
+routes, sampling 80 to 760 ms. Text of two places never crosses while both are above 40%. The only overlaps it allows
+are a copy leaving its own source, and the same word handing off in place.
+
 The board's boundary check (`t30.js`) finds no text crossing between places on all 7 landings and 6 door pages, in
 paper and black.
 

@@ -1487,12 +1487,21 @@ function dust(el,from,to,o){if(RM)return;let cv=el.querySelector('canvas.fx');if
   if(live)requestAnimationFrame(f);else g.clearRect(0,0,402,874)})(t0)}
 function fly(el,src,dst,o={}){if(RM||!src||!dst)return 0;const a=ptOf(src),b=ptOf(dst);const c=src.cloneNode(true);c.style.cssText+=';position:absolute;margin:0;left:'+a.x+'px;top:'+a.y+'px;width:'+a.w+'px;height:'+a.h+'px;z-index:9;pointer-events:none;transform-origin:0 0;'+(o.css||'');el.appendChild(c);
  const sx=b.w/a.w,sy=o.keep?sx:b.h/a.h,dx=b.x-a.x,dy=b.y-a.y;const k=[{transform:'none',opacity:1},...(o.mid||[]),{transform:'translate('+dx+'px,'+dy+'px) scale('+sx+','+sy+')',opacity:o.endOp??1}];
- c.animate(k,{duration:o.dur||700,easing:o.ease||'cubic-bezier(.5,0,.2,1)',fill:'both'}).onfinish=()=>c.remove();return o.dur||700}
+ c.animate(k,{duration:o.dur||700,easing:o.ease||'cubic-bezier(.5,0,.2,1)',fill:'both'}).onfinish=()=>c.remove();
+ /* 296: a thing in flight is on its own layer (sheet 291), and text never shows through text: every other place its
+    path crosses steps back to 28% while it passes, then returns. The place it lands in stays, since it is arriving there. */
+ const pad=48,box={l:Math.min(a.x,b.x)-pad,t:Math.min(a.y,b.y)-pad,r:Math.max(a.x+a.w,b.x+b.w)+pad,b:Math.max(a.y+a.h,b.y+b.h)+pad},D=o.dur||700;
+ const home=[...el.children].find(p=>p.contains(dst));
+ [...el.children].forEach(p=>{if(p===c||p===home||p.contains(src))return;if(!p.textContent.trim()&&!p.querySelector('canvas,svg'))return;
+  const q=ptOf(p);if(!q.w||q.x>box.r||q.x+q.w<box.l||q.y>box.b||q.y+q.h<box.t)return;
+  p.animate([{opacity:1},{opacity:.28,offset:.04},{opacity:.28,offset:.8},{opacity:1}],{duration:D,easing:'ease-in-out'})});
+ if(src&&o.dimSource!==false){const sp=[...el.children].find(p=>p!==c&&p.contains(src));if(sp&&sp!==home)sp.animate([{opacity:1},{opacity:.28,offset:.04},{opacity:.28,offset:.8},{opacity:1}],{duration:D,easing:'ease-in-out'})}
+ return D}
 const EMIT={
  notes:(el,it,b)=>{const ws=[...el.querySelectorAll('.wall .wd')];const t=it.big.toUpperCase();const w=ws.find(x=>x.textContent.toUpperCase()===t)||ws.find(x=>t.includes(x.textContent.toUpperCase().split(' ')[0]));
   const bw=b.querySelector('.bw');if(!w||!bw)return 0;bw.style.opacity=0;const d=fly(el,w,bw,{keep:1,dur:760,mid:[{transform:'translateY(-14px) scale(1.06)',offset:.18}],ease:'cubic-bezier(.45,0,.2,1)'});w.animate([{opacity:1},{opacity:.15,offset:.2},{opacity:.15,offset:.8},{opacity:1}],{duration:1400});setTimeout(()=>{bw.style.opacity=''},d-40);return d},
  kitchen:(el,it,b)=>{const map={tacos:/tacos/i,get:/things|way/i,rice:/rice/i,dish:/dish/i};const tk=[...el.querySelectorAll('.tix .tk')];const keys=['tacos','get','rice','dish'];const i=keys.findIndex(k=>map[k].test(it.big+' '+it.mid));const t=tk[i];const gl=b.parentNode.querySelector('svg.lg');if(!t||!gl)return 0;
-  const face=t.querySelector('.sheet');return fly(el,face,gl,{dur:900,css:'clip-path:polygon(0 0,100% 0,100% 88%,90% 94%,80% 88%,70% 95%,60% 88%,50% 94%,40% 88%,30% 95%,20% 88%,10% 94%,0 88%)',mid:[{transform:'rotate(-4deg)',offset:.12},{transform:'translate(10px,40px) rotate(9deg)',offset:.45}],endOp:0})},
+  const face=t.querySelector('.sheet');return fly(el,face,gl,{dur:900,css:'clip-path:polygon(0 0,100% 0,100% 88%,90% 94%,80% 88%,70% 95%,60% 88%,50% 94%,40% 88%,30% 95%,20% 88%,10% 94%,0 88%)',mid:[{transform:'rotate(-4deg)',opacity:1,offset:.12},{transform:'translate(10px,40px) rotate(9deg)',opacity:1,offset:.45},{opacity:0,offset:.8}],endOp:0})},
  training:(el,it,b)=>{const gl=b.parentNode.querySelector('svg.lg');if(!gl)return 0;dust(el,{x:40,y:220,w:320,h:130},ptOf(gl),{n:70,c:css('--training'),c0:'rgba(236,236,230,.95)',size:2.2,dur:900,spread:350,wobble:6,arc:-20});return 500},
  weather:(el,it,b)=>{const gl=b.parentNode.querySelector('svg.lg');if(!gl)return 0;dust(el,{x:40,y:330,w:320,h:30},ptOf(gl),{n:26,c:'rgba(220,235,250,.9)',size:3,dur:700,spread:500,drop:1});return 400},
  routines:(el,it,b,glyph,loop)=>{if(glyph==='bird'){loop(true);return 0}const gl=b.parentNode.querySelector('svg.lg');if(!gl)return 0;dust(el,{x:20,y:230,w:360,h:120},ptOf(gl),{n:24,c:'#E59AB0',size:3.2,dur:1100,spread:500,wobble:10,arc:30});return 500},
