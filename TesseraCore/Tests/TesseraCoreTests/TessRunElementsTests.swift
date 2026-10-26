@@ -180,4 +180,79 @@ struct TessRunElementsTests {
             "pauseRoutine",
         ])
     }
+
+    // MARK: The wall around what the model may call
+
+    @Test func aModelCannotRunACallItWasNeverOffered() async throws {
+        let haiku = ScriptedBrain(.haiku, rounds: [
+            [helper.use("t1", "logSpend", #"{"amount":12,"note":"lunch"}"#),
+             helper.use("t2", "startCooking", #"{"recipe":"x","serves":null}"#)],
+            [.text("Could not.")],
+        ])
+        let r = try helper.rig([.haiku: haiku])
+        let task = try makeTask(r, "Pack the charger")
+        let item = ElementItem(id: task.id, kind: "task", name: "Pack the charger")
+        let spends = try r.engine.store.objects(of: #require(r.engine.classes[.spend])).count
+        let before = r.engine.history(limit: 100).count
+        let events = await helper.collect(r.run.ask("could you bring up the thing I mean please now",
+                                                    frame: frame("bridge", items: [item])))
+        #expect(events.last == .finished("Could not."))
+        // Nothing was written: no spend, no cook, no op.
+        #expect(try r.engine.store.objects(of: #require(r.engine.classes[.spend])).count == spends)
+        #expect(r.engine.history(limit: 100).count == before)
+        let second = try #require(haiku.requestsSeen.last)
+        let results = second.messages.last?.content.compactMap { piece -> (String, Bool)? in
+            if case let .toolResult(_, content, isError) = piece {
+                (content, isError)
+            } else {
+                nil
+            }
+        } ?? []
+        #expect(results.count == 2 && results.allSatisfy { $0.1 && $0.0 == "That isn't a call I can make here." })
+    }
+
+    @Test func aShellCallPointsOnlyAtAHandleOfThisPack() async throws {
+        let other = UUID()
+        let haiku = ScriptedBrain(.haiku, rounds: [
+            [helper.use("t1", "openItem", #"{"item":"\#(other.uuidString)"}"#)], [.text("Done.")],
+        ])
+        let r = try helper.rig([.haiku: haiku])
+        let task = try makeTask(r, "Pack the charger")
+        let item = ElementItem(id: task.id, kind: "task", name: "Pack the charger")
+        let events = await helper.collect(r.run.ask("could you bring up the thing I mean please now",
+                                                    frame: frame("bridge", items: [item])))
+        let shells = events.compactMap { event -> ShellIntent? in
+            if case let .shell(intent) = event {
+                intent
+            } else {
+                nil
+            }
+        }
+        #expect(shells.count == 1 && shells.first?.object == nil)
+    }
+
+    @Test func privateNamesNeverReachAReceiptFromTheNewTools() throws {
+        let r = try helper.rig([:])
+        let engine = r.engine
+        // A list item with a medicine word, a walled routine, a recipe with a medicine word.
+        let list = try engine.perform(CreateList(name: "Packing"), by: .user).output
+        let pill = try engine.perform(AddListItem(list: list.id, text: "melatonin"), by: .user).output
+        let routine = try engine.perform(CreateRoutine(title: "Shoulder rehab"), by: .user).output
+        let recipe = try engine.perform(
+            CreateRecipe(text: "Melatonin gummies\nServes 2\nIngredients\n2 g gelatin\nMethod\nMix."),
+            by: .user
+        ).output
+        let checked = try TessTools.run("checkListItem", arguments: Data(#"{"item":"\#(pill.id.uuidString)"}"#.utf8),
+                                        engine: engine)
+        let cooked = try TessTools.run(
+            "startCooking",
+            arguments: Data(#"{"recipe":"\#(recipe.id.uuidString)","serves":null}"#.utf8),
+            engine: engine
+        )
+        for record in checked + cooked {
+            let said = [record.summary, record.receipt ?? ""].joined(separator: " ").lowercased()
+            #expect(!said.contains("melatonin"), "\(record.action): \(said)")
+        }
+        _ = routine
+    }
 }

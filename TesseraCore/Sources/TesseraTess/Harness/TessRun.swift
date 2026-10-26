@@ -351,7 +351,9 @@ public final class TessRun {
                         uses.append((id, name, input))
                         // Started at once: the tool runs now, not when the stream ends.
                         let result = await runTool(id: id, name: name, input: input, handles: pack.handles,
-                                                   budget: &budget, runID: runID, sink: sink)
+                                                   offered: Set(pack.tools.map(\.name)),
+                                                   onDevice: plan.ladder == [.appleOnDevice], budget: &budget,
+                                                   runID: runID, sink: sink)
                         results[id] = result
                         state.doneToolIDs.append(id)
                         state.toolResults[id] = result.text
@@ -433,12 +435,18 @@ public final class TessRun {
     /// Runs one tool. Reads (open, query) are read only; every other tool is a write that lands as a pending
     /// ghost,
     /// within the per-phrase budget. Never throws: a failure is the result the model reads.
-    func runTool(id _: String, name: String, input: Data, handles: [String: UUID], budget: inout Int, runID: UUID,
-                 sink: (TessRunEvent) -> Void) async -> (text: String, isError: Bool)
+    func runTool(id _: String, name: String, input: Data, handles: [String: UUID], offered: Set<String>,
+                 onDevice: Bool, budget: inout Int, runID: UUID, sink: (TessRunEvent) -> Void) async
+        -> (text: String, isError: Bool)
     {
         let started = ContinuousClock.now
         var result: (text: String, isError: Bool)
+        // Only a call this turn was offered can run, whatever name the model returns; and a device-only tool (money)
+        // never runs for a Claude rung, even if it were offered: it runs bound, or on the phone's own model.
+        let deviceOnly = TessTools.tool(named: name)?.deviceOnly == true
         switch name {
+        case _ where !offered.contains(name) || (deviceOnly && !onDevice):
+            result = ("That isn't a call I can make here.", true)
         case TessOpenTool.name:
             result = TessOpenTool.run(arguments: input, handles: handles, engine: engine, policy: door.policy(),
                                       calendar: calendar)
@@ -450,7 +458,8 @@ public final class TessRun {
             for (key, value) in args {
                 guard let text = value as? String else { continue }
                 strings[key] = text
-                if let id = handles[text] ?? UUID(uuidString: text) {
+                // Only a handle from this pack points at a thing; an id the model made up points at nothing.
+                if let id = handles[text] {
                     object = id
                 }
             }
