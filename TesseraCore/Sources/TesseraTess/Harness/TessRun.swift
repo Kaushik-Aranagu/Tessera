@@ -85,8 +85,9 @@ public final class TessRun {
     /// The memory slice for the run in flight, built on its first recall or path read.
     private var memory: (runID: UUID, index: MemoryIndex)?
     private var tries: LookTries?
-    /// The rehearsal for the run in flight: one per ask, so its three tries are the ask's.
-    private var rehearsal: (runID: UUID, rehearsal: Rehearsal)?
+    /// The rehearsal for the run in flight: one per ask, so its three tries are the ask's. Dropped when the run ends,
+    /// with its copy of his store.
+    private(set) var rehearsal: (runID: UUID, rehearsal: Rehearsal)?
     private var lastRung: BrainID?
     private var lastAskAt: Date?
     private var lastWarm: [BrainID: Date] = [:]
@@ -414,6 +415,11 @@ public final class TessRun {
     {
         var budget = TessTools.maxRecordsPerPhrase
         var pauses = 0
+        defer {
+            // The copy of his store and the tries live only as long as the ask.
+            rehearsal = nil
+            tries = nil
+        }
         while state.round <= Self.maxRounds {
             let request = BrainRequest(system: pack.system, messages: state.messages, tools: pack.tools,
                                        toolChoice: pack.tools.isEmpty ? .auto : plan.toolChoice,
@@ -575,7 +581,7 @@ public final class TessRun {
             }
             result = (answer.text, answer.isError)
         case RehearseFlags.tool:
-            result = rehearsed(input, runID: runID, onDevice: onDevice)
+            result = rehearsed(input, runID: runID, onDevice: onDevice, offered: offered)
         case "tryLook":
             let args = (try? JSONSerialization.jsonObject(with: input)) as? [String: Any] ?? [:]
             result = await tryLook(args.compactMapValues { $0 as? String }, runID: runID)
@@ -641,9 +647,14 @@ public final class TessRun {
     /// Runs `rehearse` on a copy of his store with the ask's one `Rehearsal`. The phone's own model reads the whole
     /// result; a Claude rung reads its fragments as the Door's policy allows (strict holds money, body and private
     /// lines back and says how many), never the receipts.
-    func rehearsed(_ input: Data, runID: UUID, onDevice: Bool) -> (text: String, isError: Bool) {
+    /// Only calls this turn offered may be tried, so the Deck can't rehearse the Purse's tools.
+    func rehearsed(_ input: Data, runID: UUID, onDevice: Bool, offered: Set<String>) -> (text: String, isError: Bool) {
         guard let asked = RehearseFlags.calls(input) else {
             return ("Give the calls to try, each with its name and arguments.", true)
+        }
+        let unoffered = asked.calls.map(\.name).filter { !offered.contains($0) || $0 == RehearseFlags.tool }
+        guard unoffered.isEmpty else {
+            return ("Only calls offered here can be rehearsed, not \(unoffered.joined(separator: ", "))", true)
         }
         let current: Rehearsal
         if let kept = rehearsal, kept.runID == runID {

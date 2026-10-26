@@ -83,18 +83,52 @@ struct RehearseFlagsTests {
             "calls": [["name": "createTask", "arguments": task]], "expecting": 1,
         ])
         let runID = UUID()
+        let offered: Set<String> = [RehearseFlags.tool, "createTask"]
         var budget = 10
         let first = await r.run.runTool(id: "t1", name: RehearseFlags.tool, input: input, handles: [:],
-                                        offered: [RehearseFlags.tool], onDevice: false, budget: &budget,
+                                        offered: offered, onDevice: false, budget: &budget,
                                         runID: runID, sink: { _ in })
         #expect(!first.isError && first.text.hasSuffix("All checks passed."), "\(first.text)")
         #expect(r.rig.store.context.objects.count == before && budget == 10)
-        _ = r.run.rehearsed(input, runID: runID, onDevice: false)
-        _ = r.run.rehearsed(input, runID: runID, onDevice: false)
-        let fourth = r.run.rehearsed(input, runID: runID, onDevice: false)
+        _ = r.run.rehearsed(input, runID: runID, onDevice: false, offered: offered)
+        _ = r.run.rehearsed(input, runID: runID, onDevice: false, offered: offered)
+        let fourth = r.run.rehearsed(input, runID: runID, onDevice: false, offered: offered)
         #expect(fourth.isError && fourth.text.hasPrefix("That's 3 rehearsals for this ask"))
         // A new ask starts again.
-        #expect(r.run.rehearsed(input, runID: UUID(), onDevice: false).text.hasSuffix("All checks passed."))
+        #expect(r.run.rehearsed(input, runID: UUID(), onDevice: false, offered: offered).text
+            .hasSuffix("All checks passed."))
+        // A call this turn didn't offer is never tried, and spends no try: the Deck can't rehearse the Purse.
+        let spend = try JSONSerialization.data(withJSONObject: ["calls": [["name": "logSpend", "arguments": "{}"]]])
+        let refused = r.run.rehearsed(spend, runID: UUID(), onDevice: false, offered: offered)
+        #expect(refused.isError && refused.text == "Only calls offered here can be rehearsed, not logSpend")
+    }
+
+    @Test func theCopyIsDroppedWhenTheAskEnds() async throws {
+        let helper = TessRunTests()
+        let frame = ElementLooksTests().deckFrame()
+        let ask = "could you move all my tasks over to tomorrow please"
+        let pick = ToolPicker.pick(ask, frame: frame)
+        let write = try #require(pick.tools.first { name in
+            name != RehearseFlags.tool && TessTools.tool(named: name).map { !$0.deviceOnly } == true
+        })
+        let calls = try JSONSerialization.data(withJSONObject: ["calls": [["name": write, "arguments": "{}"]]])
+        let use = helper.use("t1", RehearseFlags.tool, String(decoding: calls, as: UTF8.self))
+        var brains: [BrainID: any Brain] = [:]
+        var scripted: [ScriptedBrain] = []
+        for id in pick.plan.ladder {
+            let brain = ScriptedBrain(id, rounds: [[use], [.text("Nothing moved")]])
+            brains[id] = brain
+            scripted.append(brain)
+        }
+        let r = try helper.rig(brains)
+        _ = await helper.collect(r.run.ask(ask, frame: frame))
+        let results = scripted.flatMap(\.requestsSeen).flatMap { $0.messages.last?.content ?? [] }
+            .compactMap { piece -> String? in
+                if case let .toolResult(_, content, _) = piece { content } else { nil }
+            }
+        // It ran (checks passed or failed), and the run let go of the copy.
+        #expect(results.contains { $0.contains("checks passed") || $0.contains("failed") }, "\(results)")
+        #expect(r.run.rehearsal == nil)
     }
 
     @Test func theWorldScoresTheRehearsalBeforeTheWrite() throws {
