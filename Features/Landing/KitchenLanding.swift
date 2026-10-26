@@ -360,10 +360,19 @@ struct KitchenLandingPage: View {
                             }
                         },
                         action: action(front))
-            .overlay { KeystoneHandover(kind: .galleyTicket) }
+            .environment(\.doorSummaryStyle, .ticket)
+            .overlay { KeystoneHandover(kind: .galleyTicket, from: Self.firstTicketCentre(pass.tickets)) }
             .toolbar(.hidden, for: .navigationBar)
             .fullScreenCover(item: $cookCover) { CookClockPage(cookID: $0.id) }
             .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
+    }
+
+    /// Where the first ticket (tonight's) hangs, in design points, so the handover tears that one off.
+    static func firstTicketCentre(_ tickets: [GalleyTicket]) -> CGPoint {
+        let shares = tickets.reduce(0) { $0 + $1.share }
+        let room = 354 - GalleyRail.gap * CGFloat(max(tickets.count - 1, 0))
+        let width = room * (tickets.first?.share ?? 1) / max(shares, 1)
+        return CGPoint(x: 24 + width / 2, y: 196 + 70)
     }
 
     private func go(_ opens: GalleyTicket.Opens) {
