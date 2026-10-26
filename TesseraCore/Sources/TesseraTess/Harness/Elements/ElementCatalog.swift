@@ -104,12 +104,8 @@ public enum ElementCatalog {
                                    inputs: [CallInput("question", from: .asked)], reaction: .tessLine)
 
     /// Tools named here that `TessTools` does not have yet. Each wraps an engine action that exists.
-    /// Added: checkListItem, startWorkout, startCooking, logSpend (device rungs only). Still waiting for an engine
-    /// action to wrap: pinNote (no pinned field on a note), rainAlert (a local notification, the app's), restDay (a
-    /// read today, not a write), and the Watch trees' tend, plant and pause (no routine-tending action yet).
-    public static let proposed: Set<String> = [
-        "pinNote", "rainAlert", "restDay", "tendRoutine", "plantRoutine", "pauseRoutine",
-    ]
+    /// Tools named here that `TessTools` does not have yet. None: every call wraps an engine action that exists.
+    public static let proposed: Set<String> = []
 
     /// Shell calls: they change what is shown and write nothing.
     public static let shellCalls: Set<String> = ["openItem", "openDoor", "showWindow", "goBack"]
