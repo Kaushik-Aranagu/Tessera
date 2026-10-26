@@ -48,6 +48,16 @@ public final class TessRun {
     /// The shell's quiet stage (sheet 287, section 5): a look Tess picks is drawn off screen first and applied only
     /// if it passes. Nil until the host has one; then the shell's own check is the only gate.
     public var stage: LookStage?
+    /// The most looks Tess tries off screen for one ask (rehearsal.md section 2): past that she asks him.
+    nonisolated static let maxTries = 3
+
+    /// The looks tried in the run in flight: how many tries are left, and the ones that passed, which `setLook`
+    /// needn't stage again.
+    struct LookTries {
+        var runID: UUID
+        var left = TessRun.maxTries
+        var passed: Set<String> = []
+    }
 
     private final class Active: @unchecked Sendable {
         let id = UUID()
@@ -74,6 +84,7 @@ public final class TessRun {
     private var current: Active?
     /// The memory slice for the run in flight, built on its first recall or path read.
     private var memory: (runID: UUID, index: MemoryIndex)?
+    private var tries: LookTries?
     private var lastRung: BrainID?
     private var lastAskAt: Date?
     private var lastWarm: [BrainID: Date] = [:]
@@ -225,9 +236,24 @@ public final class TessRun {
         ]
     }
 
+    /// Tries a look off screen (the quiet stage): never a shell call, since nothing is shown.
+    static var tryLookSpec: ToolSpec {
+        let schema = TessSchema.object([
+            ("place", .string("The place: dial, widget, page, needs, doorSummary, glyph, keystone...")),
+            ("form", .nullable(.string("A form from the look line, or designed for the studio's look"))),
+            ("trait", .nullable(.string("A trait from the look line, with value"))),
+            ("value", .nullable(.string("The trait's new value"))),
+        ])
+        let data = (try? JSONSerialization.data(withJSONObject: schema.json, options: [.sortedKeys])) ?? Data()
+        return ToolSpec(name: "tryLook", description: "Try a look off screen before you show it: draws this screen "
+            + "with one form, or one trait at one value, and says which checks it fails (fits, floor, contrast, "
+            + "rules, touch, calm). Shows and changes nothing. On an open ask try up to three, then setLook one that "
+            + "passes, or tell him why none fit", schema: data)
+    }
+
     /// Only the tools a pick named, in its order (shell calls included); `open` rides along as a read.
     static func toolSpecs(only names: [String]) -> [ToolSpec] {
-        let all = toolSpecs() + shellSpecs()
+        let all = toolSpecs() + shellSpecs() + [tryLookSpec]
         return names.compactMap { name in all.first { $0.name == name } }
     }
 
@@ -299,6 +325,10 @@ public final class TessRun {
         }
         let specs = pick.map { Self.toolSpecs(only: $0.tools) }
             ?? Self.toolSpecs()
+        if let reason = pick?.rehearse, specs.contains(where: { $0.name == RehearseFlags.tool }) {
+            // Only when the phone has the rehearsal: a line about a tool she wasn't given would mislead her.
+            fragments.append(PackFragment(RehearseFlags.line(reason, count: pick?.count)))
+        }
         return Pack(system: system, cacheAfter: cache, tools: withTools ? specs : [],
                     fragments: fragments, handles: handles)
     }
@@ -531,6 +561,9 @@ public final class TessRun {
                 sink(.ghost(ghost))
             }
             result = (answer.text, answer.isError)
+        case "tryLook":
+            let args = (try? JSONSerialization.jsonObject(with: input)) as? [String: Any] ?? [:]
+            result = await tryLook(args.compactMapValues { $0 as? String }, runID: runID)
         case _ where ElementCatalog.shellCalls.contains(name):
             // A shell call writes nothing: the host plays it.
             let args = (try? JSONSerialization.jsonObject(with: input)) as? [String: Any] ?? [:]
@@ -544,7 +577,7 @@ public final class TessRun {
                     object = id
                 }
             }
-            if name == "setLook", let refusal = await staged(strings) {
+            if name == "setLook", let refusal = await staged(strings, runID: runID) {
                 result = refusal
                 break
             }
@@ -574,16 +607,50 @@ public final class TessRun {
 
     /// A look the model picked, checked before the host sees it: a form or value the place has, then the quiet stage.
     /// Nil when it may go to the shell; otherwise what the model hears instead. Nothing is shown either way.
-    func staged(_ arguments: [String: String]) async -> (text: String, isError: Bool)? {
+    /// A look she tried that passed this run isn't staged again.
+    func staged(_ arguments: [String: String], runID: UUID) async -> (text: String, isError: Bool)? {
         guard let key = arguments["place"], let place = ElementPlace(rawValue: key),
               let change = LookWords.change(arguments), LookWords.isKnown(change, place: key)
         else {
             return ("That place has no such look. Use one from its look line.", true)
         }
+        if tries?.runID == runID, tries?.passed.contains(Self.tryKey(key, change)) == true {
+            return nil
+        }
         guard let stage else { return nil }
         let report = await stage(place, change)
         guard !report.passed else { return nil }
         return ("Not shown: \(report.line); his look stays. Try another form, or tell him why", false)
+    }
+
+    /// A look tried off screen (`tryLook`): the place's own list, then the quiet stage. Nothing is shown or kept. At
+    /// most `maxTries` per ask; one that passed goes straight to the shell when she then sets it.
+    func tryLook(_ arguments: [String: String], runID: UUID) async -> (text: String, isError: Bool) {
+        guard let key = arguments["place"], let place = ElementPlace(rawValue: key),
+              let change = LookWords.change(arguments), LookWords.isKnown(change, place: key)
+        else {
+            return ("That place has no such look. Use one from its look line.", true)
+        }
+        var run = tries.flatMap { $0.runID == runID ? $0 : nil } ?? LookTries(runID: runID)
+        guard run.left > 0 else {
+            return ("That's \(Self.maxTries) tries for this ask. Set the best one, or ask him", true)
+        }
+        run.left -= 1
+        defer { tries = run }
+        guard let stage else {
+            return ("It is one of the place's looks. This phone can't draw it off screen yet; setLook checks it", false)
+        }
+        let report = await stage(place, change)
+        guard report.passed else {
+            return ("Tried, not shown: \(report.line). Try another, or tell him why", false)
+        }
+        run.passed.insert(Self.tryKey(key, change))
+        return ("Tried, not shown: it passes every check. setLook shows it", false)
+    }
+
+    /// One look change on one place, as the tries remember it.
+    static func tryKey(_ place: String, _ change: LookChange) -> String {
+        "\(place) \(change)"
     }
 
     // MARK: Bound calls
