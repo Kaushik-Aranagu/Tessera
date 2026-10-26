@@ -47,9 +47,21 @@ struct LayoutPlace: Identifiable, Equatable {
         kind == .plate
     }
 
-    /// The pane's rect: 2 pt in from the place's frame on every side, so every seam reads as a 4 pt gap.
+    /// The pane's rect: 2 pt in from the place's frame on every side, so every seam reads as a 4 pt gap, except where
+    /// the contract's frames sit 4 pt apart already (Switcher's right and Needs' left take 0 pt) or 2 pt apart (Dial's
+    /// right and Door summary's left take 1 pt). Design 283: frames stay as the contract has them, the insets differ.
     var paneFrame: CGRect {
-        frame.insetBy(dx: LayoutPlaces.inset, dy: LayoutPlaces.inset)
+        let inset = LayoutPlaces.inset
+        var left = inset, right = inset
+        switch name {
+        case "Switcher": right = 0
+        case "Needs": left = 0
+        case "Dial": right = 1
+        case "Door summary": left = 1
+        default: break
+        }
+        return CGRect(x: frame.minX + left, y: frame.minY + inset,
+                      width: frame.width - left - right, height: frame.height - 2 * inset)
     }
 
     /// Radius: min(22, max(10, 0.3 of the shorter side)) of the place's own frame.
@@ -182,7 +194,7 @@ struct LayoutChange: Equatable {
             min(160, abs(a.minY - b.minY) * 0.25 + Double((Int(a.minX) + Int(a.minY)) % 7) * 6)
         }
         func track(_ a: CGRect, _ b: CGRect, gone: Bool = false) {
-            change.tracks.append(LiquidTrack(from: a.insetBy(dx: 2, dy: 2), to: b.insetBy(dx: 2, dy: 2),
+            change.tracks.append(LiquidTrack(from: a, to: b,
                                              delay: delay(a, b), gone: gone))
         }
 
@@ -196,13 +208,13 @@ struct LayoutChange: Equatable {
                 continue
             }
             if let before = oldByKey[place.key] {
-                track(before.frame, place.frame)
+                track(before.paneFrame, place.paneFrame)
                 continue
             }
             let sources = (LayoutPlaces.made[place.key] ?? []).compactMap { oldByKey[$0] }
             if !sources.isEmpty {
                 for source in sources {
-                    track(source.frame, place.frame)
+                    track(source.paneFrame, place.paneFrame)
                 }
                 continue
             }
@@ -211,12 +223,12 @@ struct LayoutChange: Equatable {
             }
             if !bigger.isEmpty {
                 for source in bigger {
-                    track(source.frame, place.frame)
+                    track(source.paneFrame, place.paneFrame)
                 }
                 continue
             }
             let dot = CGRect(x: place.frame.midX - 6, y: place.frame.midY - 6, width: 12, height: 12)
-            track(dot.insetBy(dx: -2, dy: -2), place.frame)
+            track(dot, place.paneFrame)
         }
 
         for place in old {
@@ -229,7 +241,7 @@ struct LayoutChange: Equatable {
             }
             if !place.isGap, !place.isPlate, !related {
                 let dot = CGRect(x: place.frame.midX - 4, y: place.frame.midY - 4, width: 8, height: 8)
-                track(place.frame, dot.insetBy(dx: -2, dy: -2), gone: true)
+                track(place.paneFrame, dot, gone: true)
             }
             change.leaving.append(place.key)
         }

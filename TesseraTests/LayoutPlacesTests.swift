@@ -65,14 +65,18 @@ struct LayoutPlacesTests {
         }
     }
 
-    @Test func stackedPanesAreFourPointsApart() {
+    @Test func everySeamIsFourPoints() {
         func pane(_ name: String, _ level: LayoutLevel = .landing) -> CGRect {
             LayoutPlaces.place(named: name, in: .galley, level)!.paneFrame
         }
-        // Across, the contract's own numbers leave 8 pt (Switcher 24 to 224, Needs from 228) and 6 pt (Dial 24 to 184,
-        // Door summary from 186) between panes: pinned as they are so a change to the contract is noticed.
-        #expect(pane("Needs").minX - pane("Switcher").maxX == 8)
-        #expect(pane("Door summary").minX - pane("Dial").maxX == 6)
+        // Across: the frames stay as the contract has them and the insets differ (Switcher right 0, Needs left 0,
+        // Dial right 1, Door summary left 1), so these seams are 4 pt too.
+        #expect(pane("Needs").minX - pane("Switcher").maxX == 4)
+        #expect(pane("Door summary").minX - pane("Dial").maxX == 4)
+        #expect(pane("Switcher").minX == 26 && pane("Switcher").maxX == 224)
+        #expect(pane("Needs").minX == 228 && pane("Needs").maxX == 376)
+        #expect(pane("Dial").minX == 26 && pane("Dial").maxX == 183)
+        #expect(pane("Door summary").minX == 187 && pane("Door summary").maxX == 376)
         // Down: Keystone, Caption, Widget.
         #expect(pane("Caption").minY - pane("Keystone").maxY == 4)
         #expect(pane("Widget").minY - pane("Caption").maxY == 4)
@@ -113,7 +117,7 @@ struct LayoutPlacesTests {
         let widget = CGRect(x: 24, y: 412, width: 354, height: 200).insetBy(dx: 2, dy: 2)
         let page = CGRect(x: 24, y: 412, width: 354, height: 364).insetBy(dx: 2, dy: 2)
         #expect(plan.tracks.contains { $0.from == page && $0.to == widget })
-        #expect(plan.tracks.contains { $0.to == CGRect(x: 24, y: 106, width: 200, height: 76).insetBy(dx: 2, dy: 2) })
+        #expect(plan.tracks.contains { $0.to == CGRect(x: 26, y: 108, width: 198, height: 72) })
     }
 
     @Test func bridgeToARoomTurnsTheSettingsWordIntoTheTitle() {

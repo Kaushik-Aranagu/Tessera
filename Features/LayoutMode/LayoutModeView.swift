@@ -46,7 +46,10 @@ struct LayoutModeView: View {
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
-        .ignoresSafeArea()
+        // The canvas keeps the top safe area: Settings may be shown in Home's cover, whose "Close" word sits in an
+        // inset row there, and the canvas (scaled to what is left, frames unchanged) starts below it.
+        .ignoresSafeArea(edges: [.bottom, .horizontal])
+        .background { Theme.Colors.paper.ignoresSafeArea() }
         .background { EdgeSwipeBack() }
         .navigationBarBackButtonHidden()
         .toolbarVisibility(.hidden, for: .navigationBar)
