@@ -132,8 +132,10 @@ struct AgentsTests {
 
     @Test func episodesCarryAnAgentFromRunToRun() throws {
         let episodes = AgentEpisodes(engine: engine)
-        episodes.append(agent: "Training", ask: "How was bench this week?", report: "Up 2.5 kg, three clean sets.",
-                        lab: false, at: now.addingTimeInterval(-3600))
+        // Plates, not kilograms: a weight reads as a body number to the episode wall, which holds it back.
+        episodes.append(agent: "Training", ask: "How was bench this week?",
+                        report: "Up two and a half plates, three clean sets.", lab: false,
+                        at: now.addingTimeInterval(-3600))
         episodes.append(agent: "Training", ask: "Store this: \(keyShaped)", report: "No.", lab: false,
                         at: now.addingTimeInterval(-1800))
         episodes.append(agent: "Training", ask: "Did sleep slow me down?", report: "Short nights, slower bar.",
@@ -142,22 +144,22 @@ struct AgentsTests {
         let lab = episodes.recent(agent: "Training", policy: .lab, now: now)
         #expect(lab.map(\.ask) == ["How was bench this week?", "Did sleep slow me down?"])
         let strict = episodes.recent(agent: "Training", policy: .strict, now: now)
-        #expect(strict.map(\.report) == ["Up 2.5 kg, three clean sets."])
+        #expect(strict.map(\.report) == ["Up two and a half plates, three clean sets."])
         // Ninety days on, they are gone for good.
         #expect(episodes.expire(now: now.addingTimeInterval(91 * 86400)) == 4)
     }
 
     @Test func everyRunStartsFromItsPersonalityAndItsMemory() throws {
         try notebook(.training).create("/memories/training/warmups.md", text: "Two ramp sets before bench.")
-        AgentEpisodes(engine: engine).append(agent: "Training", ask: "How was bench?", report: "Up 2.5 kg.",
+        AgentEpisodes(engine: engine).append(agent: "Training", ask: "How was bench?", report: "Up two plates.",
                                              lab: false, at: now.addingTimeInterval(-3600))
         let blocks = AgentContext.blocks(for: .training, engine: engine, policy: .lab, now: now)
         #expect(blocks.count == 2)
         #expect(blocks[0].text.hasPrefix(Persona.deck) && blocks[0].text.contains("You work for Tess"))
-        #expect(blocks[1].text.contains("Two ramp sets") && blocks[1].text.contains("Up 2.5 kg."))
+        #expect(blocks[1].text.contains("Two ramp sets") && blocks[1].text.contains("Up two plates."))
         // The Galley starts from its own memory, not the Deck's.
         let galley = AgentContext.blocks(for: .kitchen, engine: engine, policy: .lab, now: now)
-        #expect(!galley[1].text.contains("ramp sets") && !galley[1].text.contains("2.5 kg"))
+        #expect(!galley[1].text.contains("ramp sets") && !galley[1].text.contains("plates"))
         let tess = AgentContext.blocks(for: .tess, engine: engine, policy: .lab, now: now)
         #expect(tess[0].text.contains("He talks to you"))
     }

@@ -16,12 +16,12 @@ struct AgentDeskTests {
     @Test func tessAsksTheDeckAndAnswersInHerOwnVoice() async throws {
         let haiku = ScriptedBrain(.haiku, rounds: [
             [helper.use("t1", TessRun.askAgent, #"{"agents":["Deck"],"question":"How was bench this week?"}"#)],
-            [.text("Up 2.5 kg, three clean sets.")],
-            [.text("The Deck says bench is up 2.5 kg.")],
+            [.text("Up two and a half plates, three clean sets.")],
+            [.text("The Deck says bench is up two and a half plates.")],
         ])
         let r = try helper.rig([.haiku: haiku])
         let events = await helper.collect(r.run.ask("how was bench this week"))
-        #expect(events.last == .finished("The Deck says bench is up 2.5 kg."))
+        #expect(events.last == .finished("The Deck says bench is up two and a half plates."))
         // The Deck ran as itself: its personality, its tools, and no way to ask another room.
         let seen = haiku.requestsSeen
         #expect(seen.count == 3)
@@ -30,12 +30,12 @@ struct AgentDeskTests {
         let deckTools = Set(deck.tools.map(\.name))
         #expect(!deckTools.contains(TessRun.askAgent) && deckTools.contains("recall") && deckTools.contains("logSet"))
         // Its words reached Tess, not him: only her reply streamed.
-        #expect(!events.contains(.words("Up 2.5 kg, three clean sets.")))
+        #expect(!events.contains(.words("Up two and a half plates, three clean sets.")))
         // The report is the Deck's episode, and its next run starts from it.
         let kept = AgentEpisodes(engine: r.engine).recent(agent: "Training", policy: .lab)
-        #expect(kept.last?.report == "Up 2.5 kg, three clean sets.")
+        #expect(kept.last?.report == "Up two and a half plates, three clean sets.")
         let next = AgentContext.blocks(for: .training, engine: r.engine, policy: .lab)
-        #expect(next[1].text.contains("Up 2.5 kg, three clean sets."))
+        #expect(next[1].text.contains("Up two and a half plates, three clean sets."))
     }
 
     @Test func onlyTessAsksTheRooms() async throws {
