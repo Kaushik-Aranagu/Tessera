@@ -31,6 +31,8 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
     var openDoor: (DialDoor) -> Void
     var action: LandingFootAction?
     var onSwitcherChange: () -> Void = {}
+    /// The page behind the sections; nil is the theme's page colour. Lookout draws its sky here.
+    var backdrop: AnyView?
 
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -65,6 +67,7 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                     .offset(x: 186, y: 652 * k)
                 if let action {
                     LandingActionWord(action: action, accent: accent)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                         .landingSection(.foot)
                         .offset(x: 24, y: proxy.size.height - 22 - 64)
                 }
@@ -72,14 +75,22 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                     Color.clear.frame(width: 24, height: proxy.size.height)
                         .contentShape(Rectangle())
                         .gesture(DragGesture(minimumDistance: 10).onEnded { value in
-                            if value.translation.width > 50, abs(value.translation.height) < 80 { onBack() }
+                            if value.translation.width > 50, abs(value.translation.height) < 80 {
+                                onBack()
+                            }
                         })
                 }
             }
             .frame(width: width, height: proxy.size.height, alignment: .topLeading)
         }
         .ignoresSafeArea(.container, edges: .top)
-        .background { ThemedBackground() }
+        .background {
+            if let backdrop {
+                backdrop.ignoresSafeArea()
+            } else {
+                ThemedBackground()
+            }
+        }
     }
 
     private func masthead(width: CGFloat, k: CGFloat) -> some View {
@@ -99,6 +110,7 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                         .font(.custom("Figtree", size: 15, relativeTo: .callout).weight(.medium))
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .lineLimit(1)
+                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .fixedSize()
                         .frame(minWidth: 44, minHeight: 44, alignment: .trailing)
                 }

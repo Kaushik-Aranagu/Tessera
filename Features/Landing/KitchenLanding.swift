@@ -349,7 +349,7 @@ struct KitchenLandingPage: View {
                             default: open(.recipes)
                             }
                         },
-                        glyph: { _ in GalleyGlyph() },
+                        glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? LandingAccent.kitchen) },
                         doors: doors(front, pass), focus: $focus,
                         openDoor: { door in
                             switch door.id {
@@ -360,6 +360,7 @@ struct KitchenLandingPage: View {
                             }
                         },
                         action: action(front))
+            .overlay { KeystoneHandover(kind: .galleyTicket) }
             .toolbar(.hidden, for: .navigationBar)
             .fullScreenCover(item: $cookCover) { CookClockPage(cookID: $0.id) }
             .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
@@ -460,15 +461,16 @@ struct KitchenLandingPage: View {
         var items: [WidgetItem] = []
         if let cook = front.cooking {
             items.append(WidgetItem(id: "cooking", header: "Cooking", big: "Go on", middle: cook.line,
-                                    small: "Tap for the clock", bigColor: LandingAccent.kitchen, strikeable: false, face: .galley))
+                                    small: "Tap for the clock", bigColor: LandingAccent.kitchen, strikeable: false,
+                                    face: .galley))
         }
         if let meal = front.tonight {
-            items.append(WidgetItem(id: "dinner", header: "Tonight", big: NotesLandingPage.short(meal.title),
-                                    middle: "start \(HouseTime.clock(meal.start))",
+            items.append(WidgetItem(id: "dinner", header: "Dinner", big: NotesLandingPage.short(meal.title),
+                                    middle: "cook at \(HouseTime.clock(meal.start))",
                                     small: meal.minutes.map { HouseTime.minutes(Int($0)) } ?? "Tap to open it",
                                     bigColor: LandingAccent.kitchen, strikeable: false, face: .galley))
         } else {
-            items.append(WidgetItem(id: "plan", header: "Tonight", big: "Tonight?", middle: "nothing planned yet",
+            items.append(WidgetItem(id: "plan", header: "Dinner", big: "Tonight?", middle: "nothing planned yet",
                                     small: pass.cookable.isEmpty ? "Tap for Recipes"
                                         : "You could make \(pass.cookable.count)",
                                     bigColor: LandingAccent.kitchen, strikeable: false, face: .galley))
@@ -481,19 +483,23 @@ struct KitchenLandingPage: View {
         }
         if let low = pass.low.first {
             items.append(WidgetItem(id: "runsout", header: "Runs out", big: NotesLandingPage.short(low),
-                                    middle: pass.low.count > 1 ? "and \(pass.low.count - 1) more" : "first to go",
+                                    middle: pass.low
+                                        .count > 1 ? "get it and \(pass.low.count - 1) more" : "first to go, get more",
                                     small: "Tap for Pantry", strikeable: false, face: .galley))
         }
         return items
     }
 
-    /// Cook when a meal is planned tonight, else Plan tonight. Drag right: Paste a recipe.
+    /// The foot (283 v3): a verb over its object. Cook (tonight's dish), swipe across for Get (To get). There is no
+    /// Dishes model yet, so no Wash. With nothing planned, Cook opens Recipes to pick tonight's dish.
     private func action(_ front: KitchenFront) -> LandingFootAction {
-        let paste = LandingFootAction.Option(name: "Paste a recipe") { open(.pasteRecipe) }
+        let get = LandingFootAction.Step(verb: "Get", object: "To get") { open(.groceries) }
         if let meal = front.tonight {
-            return LandingFootAction(word: "Cook", hint: "Starts \(meal.title)", right: paste) { cook(meal) }
+            return LandingFootAction(word: "Cook", object: NotesLandingPage.short(meal.title),
+                                     hint: "Starts \(meal.title)", alternates: [get]) { cook(meal) }
         }
-        return LandingFootAction(word: "Plan tonight", hint: "Opens Recipes", right: paste) { open(.recipes) }
+        return LandingFootAction(word: "Cook", object: "Pick tonight's dish", hint: "Opens Recipes",
+                                 alternates: [get]) { open(.recipes) }
     }
 
     /// Cook: tonight's recipe starts at its size and its clock opens (the same as Cook on the recipe page).
@@ -509,45 +515,6 @@ struct KitchenLandingPage: View {
         }
         model.touch()
         cookCover = .init(id: cook.id)
-    }
-}
-
-/// The widget glyph (283): one ticket hung on a rail, swinging as it is hung. It moves once on arrival and every 7 s;
-/// nothing moves under Reduce Motion.
-struct GalleyGlyph: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.colorScheme) private var scheme
-    @State private var swing: Double = 0
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            Rectangle().fill(Theme.Colors.inkSecondary.opacity(0.6)).frame(width: 64, height: 1)
-            TornPaper()
-                .fill(scheme == .dark ? Color(hex: 0x2B2722) : Color(hex: 0xF6EFDF))
-                .frame(width: 34, height: 46)
-                .overlay(alignment: .topLeading) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Capsule().fill(LandingAccent.kitchen).frame(width: 18, height: 2)
-                        Capsule().fill(Theme.Colors.inkSecondary).frame(width: 22, height: 1.5)
-                        Capsule().fill(Theme.Colors.inkSecondary).frame(width: 14, height: 1.5)
-                    }
-                    .padding(6)
-                }
-                .rotationEffect(.degrees(swing), anchor: .top)
-                .offset(y: 2)
-        }
-        .frame(width: 80, height: 80, alignment: .top)
-        .padding(.top, 10)
-        .accessibilityHidden(true)
-        .task {
-            guard !reduceMotion else { return }
-            while !Task.isCancelled {
-                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { swing = 10 }
-                try? await Task.sleep(for: .milliseconds(250))
-                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { swing = 0 }
-                try? await Task.sleep(for: .seconds(7))
-            }
-        }
     }
 }
 

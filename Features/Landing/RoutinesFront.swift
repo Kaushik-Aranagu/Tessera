@@ -31,6 +31,10 @@ struct RoutinesFront {
         let doneAt: Date?
         /// Days of the week it is pinned to in a fixed-days plan (1 Sunday to 7 Saturday).
         let weekdays: Set<Int>
+        /// The Tessera days it ran on, all time (the woodland's growth and health, sheet 248). Kept on the phone.
+        var runDays: Set<Date> = []
+        /// Cadence "day": every day is due. Otherwise its fixed weekdays, or weekly on a rolling plan.
+        var daily = false
 
         var place: RoutinePlace {
             RoutinePlace.of(startMinuteOfDay: usual?.startMinuteOfDay)
@@ -119,7 +123,9 @@ struct RoutinesFront {
                 runsIn30: own.filter { $0.start >= cutoff }.count,
                 lastRun: own.map(\.start).max(),
                 doneAt: finishedToday[routine.id],
-                weekdays: PlanSchedule.weekdays(of: routine, store: store)
+                weekdays: PlanSchedule.weekdays(of: routine, store: store),
+                runDays: Set(own.map { tesseraDay.day(of: $0.start) }),
+                daily: store.value("cadence", of: routine)?.stringValue == "day"
             )
         }
 

@@ -437,7 +437,12 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .notes: NotesView()
         case .review: ReviewView()
         case .money: MoneyLandingView()
-        case .training: ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
+        // The landing while Settings › Review › Landing pages is On; else the full page as it was.
+        case .training: if LandingSwitch.isOn {
+                TrainingRoomView()
+            } else {
+                ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
+            }
         case .today: TodayRoomView()
         // Settings as its own page from Home's top row, with Close above it (Kaushik, Oct 22: he couldn't find it).
         case .settings: NavigationStack { SettingsPage(cameFrom: "Home") }.environment(\.animateEntrance, true)
