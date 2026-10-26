@@ -92,6 +92,11 @@ public enum Reaction: String, Sendable, Equatable {
     case lines
     /// Nothing on screen moves; Tess's own line says it.
     case tessLine
+    /// The place takes a new form or trait (sheet 287): what both forms show travels to where it goes, matched by
+    /// item id over 520 ms, and the rest fades; it collapses to a point only when the two share no item
+    /// (`ReshapeMove`). By Tess, sheet 285's wash comes first, then the travel, then the Undo line; a look carries no
+    /// blue (docs/ai/harness/element-looks.md).
+    case reshape
 }
 
 /// Who may run a call. Money actions are never offered to Claude (his standing rule): they run on the phone's own
@@ -148,15 +153,22 @@ public struct ElementMeaning: Sendable, Equatable {
     /// The item in focus: the widget's shown item, the dial's focused door, the switcher's word.
     public var focus: Int?
     public var calls: [ElementCall]
+    /// Whether he can see it now: the shell's `liveScope` (docs/design/live-visibility.md), not whether it is resident.
+    /// "This" only points at a shown place, and a call on one that isn't shown writes the data and skips the move.
+    public var isShown: Bool
 
-    public init(place: ElementPlace, items: [ElementItem] = [], focus: Int? = nil, calls: [ElementCall] = []) {
+    public init(place: ElementPlace, items: [ElementItem] = [], focus: Int? = nil, calls: [ElementCall] = [],
+                isShown: Bool = true)
+    {
         self.place = place
         self.items = items
         self.focus = focus
         self.calls = calls
+        self.isShown = isShown
     }
 
     public var focused: ElementItem? {
         focus.flatMap { items.indices.contains($0) ? items[$0] : nil }
     }
 }
+
