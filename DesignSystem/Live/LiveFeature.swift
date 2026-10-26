@@ -17,6 +17,9 @@ enum LiveSwitch: String, CaseIterable, Sendable {
     case alwaysLive
     /// Force data only.
     case dataOnly
+    /// Quiet (sheet 286): still draws on change while seen, but has no idle loop. One switch for a keystone's Quiet
+    /// setting and for "stop animating the sky".
+    case quiet
 }
 
 /// What a feature costs while live, so the meter and the spec can rank them.
@@ -61,11 +64,62 @@ enum LiveGate {
         case .alwaysLive: true
         case .dataOnly: false
         case .auto:
-            switch mode {
-            case .backgroundOnly: false
-            case .uiRead: inputs.sceneActive && inputs.visible && inputs.scopeOn
-            }
+            seen(mode: mode, inputs: inputs)
+        case .quiet:
+            seen(mode: mode, inputs: inputs)
         }
+    }
+
+    /// Idle loops (a drifting sky, a breathing glyph) run only when live and not Quiet. Change-driven moves ignore this.
+    static func runsIdle(live: Bool, switchState: LiveSwitch) -> Bool {
+        live && switchState != .quiet
+    }
+
+    private static func seen(mode: LiveMode, inputs: Inputs) -> Bool {
+        mode == .uiRead && inputs.sceneActive && inputs.visible && inputs.scopeOn
+    }
+}
+
+/// What a keystone drew, as id to a short fingerprint (ticket ids and texts, tile faces, chalk lines).
+typealias LiveSnapshot = [String: String]
+
+/// What changed while a region was away (sheet 286, section 4).
+struct LiveDiff: Equatable, Sendable {
+    var added: [String]
+    var changed: [String]
+    var removed: [String]
+
+    var count: Int { added.count + changed.count + removed.count }
+    var isEmpty: Bool { count == 0 }
+    /// What actually plays. Removed things are simply gone.
+    var playable: [String] { added + changed }
+}
+
+enum LiveReturn: Equatable, Sendable {
+    /// Show the current state, nothing plays.
+    case showNow
+    /// Show the current state, then after `delay` play `diff` once within `window`.
+    case play(diff: LiveDiff, delay: TimeInterval, window: TimeInterval)
+
+    static let settle: TimeInterval = 0.65
+    static let window: TimeInterval = 0.6
+    static let maxChanges = 6
+    static let maxAway: TimeInterval = 3600
+
+    /// Order is stable: ids sorted, so a keystone can stagger in reading order by sorting its own ids.
+    static func diff(seen: LiveSnapshot, now: LiveSnapshot) -> LiveDiff {
+        LiveDiff(
+            added: now.keys.filter { seen[$0] == nil }.sorted(),
+            changed: now.keys.filter { seen[$0] != nil && seen[$0] != now[$0] }.sorted(),
+            removed: seen.keys.filter { now[$0] == nil }.sorted()
+        )
+    }
+
+    /// More than six changes, or more than an hour away, is just "show now". No replay of missed motion, ever.
+    static func plan(seen: LiveSnapshot, now: LiveSnapshot, away: TimeInterval) -> LiveReturn {
+        let diff = diff(seen: seen, now: now)
+        if diff.playable.isEmpty || diff.count > maxChanges || away > maxAway { return .showNow }
+        return .play(diff: diff, delay: settle, window: window)
     }
 }
 
