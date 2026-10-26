@@ -36,15 +36,15 @@ Haptics use the iOS feedback names. One haptic per move at most, and none while 
 | Deck: a chalk line is wiped (`remove`, Undo) | **A chalk ghost.** The wiped line stays at 10% for a moment and fades over 2.6 s, like a real blackboard. | none | on the board |
 | Doors change form (`form`) | **A ripple.** New words arrive in order of their distance from the right thumb's corner (up to 90 ms later). | soft, at the end | on the board |
 | Galley dishes done (`empty`) | **"the sink is clear"** instead of "none waiting". | success | on the board |
-| Departure board (Bridge) | **The last flap settles.** When the board stops, the final flap drops 1 pt and back, as a real split-flap does. | none | builders |
-| Digits roll (`value`) | **Odometer lag.** Each digit to the left starts 18 ms after the one on its right, so a 9 to 10 carries visibly. | none | builders |
+| Departure board (Bridge) | **The last flap settles.** When the board stops, the final flap drops 1 pt and back, as a real split-flap does. | none | on the board (291) |
+| Digits roll (`value`) | **Odometer lag.** Each digit to the left starts 18 ms after the one on its right, so a 9 to 10 carries visibly. | none | on the board (291) |
 | Rest day on the Deck | **The plates come back.** The glyph's plates are set down for a rest day; next morning they are back on the bar, with no motion. He only notices that they are back. | none | builders |
 | Watch: a routine done | **The water drop slides.** The drop on the watered tree runs down one leaf and is gone (420 ms). | soft | builders |
 | Log: a word sets in the wall (`add`) | **The wall makes room.** The neighbouring words shuffle 1 pt aside and back as the new word presses in. | none | builders |
 | Log: a list item checked | **The tick is drawn**, not shown: one stroke, 160 ms, slightly heavier at its start. | rigid, light | builders |
 | Lookout: rain starts | **The first drops are few.** Rain starts at a third of its strength and reaches it over 3 s. | none | builders |
 | Edge pull (back) | **The page resists at the end.** The last 8 pt of the pull is 30% stiffer, so letting go feels decided. | soft, at the commit | builders |
-| Shape mode (sheet 287) | **The places loosen.** Each outline breathes once, 1.006 in scale, as the screen goes into shape mode. | soft | builders |
+| Shape mode (sheet 287) | **The places loosen.** Each outline breathes once, 1.006 in scale, as the screen goes into shape mode. | soft | on the board (291) |
 | Paper to black (`appLook`) | **Ink goes last.** The ground changes first and the type follows 60 ms later, as if the ink were catching up. | none | builders |
 
 ## 3. Copy for empty and quiet states

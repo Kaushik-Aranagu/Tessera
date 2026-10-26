@@ -59,6 +59,7 @@ A child overrides only what differs. Anything it doesn't name, it inherits.
 | `reduceMotion` | its Reduce Motion version | a 150 ms crossfade; nothing travels |
 | `look` | its colours and type steps, drawn from the room's palette | the room's palette and type scale; no colour trait |
 | `privacy` | which of its facts are `deviceOnly` (money, body, calendar, location) | none |
+| `layer` | its surface layer (section 5b) and what it does to what is underneath | layer 1, places: flat, and never over another element |
 | `stage` | extra checks beyond the suite | none |
 
 Rules no element may override, because they are the walls:
@@ -124,6 +125,8 @@ the ones whose failure breaks something, loses or hides a thing, or breaks a wal
 | Touch | **must** | Every target is at least 44 pt. | yes: density, form |
 | Contrast | **must** | Text against its ground is AA or better, in both looks. | yes: the designed form |
 | Registered | **must** | The element is listed in `ElementRegistry.all`. | no |
+| Bounds | **must** | No text of this element crosses another element's frame, in any form, either look, any Dynamic Type size, or at the 50% frame of a move. | yes: size, density, facts, form |
+| Layers | **must** | It declares a layer from section 5b. Text over other text always has its layer's ground under it, and a shared slot has one owner at a time. | no |
 | Timing | should | Each move ends within 1 s; the dial reel is allowed 980 ms. | yes: Reduce Motion's crossfade for that move |
 | Return | should | Coming back into view plays only the differences, at most six. | yes: show now |
 | Colours | should | At most 4 colours on the page; the three biggest words don't share a colour. | yes: the designed form |
@@ -132,6 +135,43 @@ the ones whose failure breaks something, loses or hides a thing, or breaks a wal
 
 "Lands" is the core of the induction step: a move is only a path to a state the
 element already draws correctly when still.
+
+## 5b. Boundaries and layers (sheet 291)
+
+Kaushik, 2:58 PM PDT: "make sure the text... doesn't overlap between two elements... maintain the boundaries so that you
+don't need to deal with all of that problem. But yeah, surfaces, I think that's unavoidable, so let's just do that."
+
+**First, boundaries.** Places tile the screen and never overlap (the shell contract's frames, with the 4 pt seam).
+That is what keeps text from overlapping, so most screens never need the layering rule at all. Inside its frame an
+element fits its words with its own fixes (size, density, facts, form), never by spilling over. Two things may want
+the same slot, like the action word and the Undo line. Then the slot has **one owner at a time**, and the other steps
+aside (hidden, not faded under).
+
+**Then, layers.** Only these surfaces may sit over the places, from the bottom up:
+
+| Layer | Surface | What happens to what is underneath |
+|---|---|---|
+| 0 | Ground | nothing is under it |
+| 1 | Places (type, lists, widget, glyph, keystone) | never over another element |
+| 2 | Shape mode outlines | they sit on the seams and have no fill, so nothing is covered |
+| 3 | The glass lens | only under a finger, over the strip being swiped. It bends what is under it and never holds text of its own |
+| 4 | Tess's wash | it lasts 600 ms and is never under his finger. Behind a keystone it tints the material; over type it is a 55% screen blend, and the type stays readable |
+| 5 | Tess's soul | a fixed 96 pt square at the bottom right. No place may enter it, so it is a boundary, not a cover |
+| 6 | Tess's words and receipts | a fixed band above the foot with its own frosted ground (blur 16, 88% ground). What's underneath is dimmed to 35% and can't be touched while the words show |
+| 7 | Sheets (a level 2 item, a picker, settings) | an opaque ground. What's above the sheet dims to 60% and blurs 6 pt; a tap there closes the sheet. Nothing shows through the sheet |
+| 8 | System (alerts, keyboard) | iOS's own treatment |
+
+The rules:
+- **Text never shows through text.** If a surface carries text over other text, it has its layer's ground: frosted
+  for 6, opaque for 7. A bare glass or a fade is never enough.
+- **The top surface takes the touch.** What's underneath is dimmed, and blurred if it would compete, but never hidden
+  outright. He should always see where he is.
+- **One cover at a time.** A new sheet replaces the one before it, and is never stacked on top of it. Tess's words
+  wait while a sheet is up.
+- **Reduce Transparency:** frosted grounds become opaque, and dims become the opaque ground at 92%.
+
+The board's boundary check (`t30.js`) finds no text crossing between places on all 7 landings and 6 door pages, in
+paper and black.
 
 ## 6. The same pattern in other layers (proposed, for each lane to adopt)
 
@@ -151,5 +191,7 @@ element already draws correctly when still.
   `Check` has a `tier` (`.must` or `.should`) and an ordered list of `fixes: [ElementFix]`. A result is `.pass`,
   `.fixed(by:)`, `.warn` or `.block`. `scripts/test.sh` fails only on `.block`, and lists `.fixed` and `.warn`
   results. On the phone, `ShellStage` runs the same checks.
+- **Layers:** `enum SurfaceLayer: Int` with the cases in section 5b. `ElementSpec.layer` defaults to `.places`. The
+  stage's `fits` flag becomes the Bounds check: it intersects every text run's rect with the other elements' frames.
 - **Registration:** `ElementRegistry.all` lists every element. A new element that isn't registered fails a test, so
   nothing escapes the induction.
