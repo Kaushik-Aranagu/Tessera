@@ -14,19 +14,20 @@ struct PlaybookTests {
         DirectorContext(now: now, quiet: quiet, reduceMotion: reduce, accents: accents, seed: 3)
     }
 
+    /// Whys as they show (no closing stop), so a stored playbook reads back equal after the clamp.
     func playbook() -> DirectorPlaybook {
         var book = DirectorPlaybook(day: "2026-10-24")
         book.burst[.done] = PlaybookEntry(
             PlaybookBurst(shape: .ring, count: 14, seconds: 1.4),
-            why: "A calm ring suits the morning."
+            why: "A calm ring suits the morning"
         )
         book.tessPalette["training"] = PlaybookEntry(
             PlaybookPalette(accent: .training),
-            why: "On the training page her ember takes its red."
+            why: "On the training page her ember takes its red"
         )
         book.reaction[.underOneHour] = PlaybookEntry(
             PlaybookReaction(kind: .flipRows, seconds: 1.1),
-            why: "Back quickly, so the tiles flip."
+            why: "Back quickly, so the tiles flip"
         )
         return book
     }
