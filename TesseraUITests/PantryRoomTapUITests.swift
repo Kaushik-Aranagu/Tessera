@@ -13,7 +13,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         let dial = app.descendants(matching: .any)["Place"]
         XCTAssertTrue(dial.waitForExistence(timeout: 5))
         dial.swipeUp(velocity: .fast)
-        sleep(1)
+        sleep(3)
         return app
     }
 
