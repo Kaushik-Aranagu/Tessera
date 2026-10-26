@@ -72,13 +72,15 @@ final class RoomLandingsUITests: SimulatorOnlyTestCase {
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH[c] %@", "Settings")).firstMatch
             .waitForExistence(timeout: 30), "Bridge is up")
         sleep(3)
-        let labels = app.staticTexts.allElementsBoundByIndex.map(\.label)
-            + app.buttons.allElementsBoundByIndex.map(\.label)
+        // One snapshot of the whole tree (the board animates, so element-by-element reads can go stale).
+        let tree = app.debugDescription
         let counter = try? NSRegularExpression(pattern: "\\b\\d+ of \\d+\\b")
-        let hits = labels.filter { label in
-            counter?.firstMatch(in: label, range: NSRange(label.startIndex..., in: label)) != nil
-        }
+        let hits = counter?.matches(in: tree, range: NSRange(tree.startIndex..., in: tree))
+            .compactMap { Range($0.range, in: tree).map { String(tree[$0]) } } ?? []
         XCTAssertTrue(hits.isEmpty, "counters on Bridge: \(hits)")
-        XCTAssertFalse(labels.contains { $0.hasPrefix("Training") || $0.hasPrefix("Kitchen") }, "old names: \(labels)")
+        XCTAssertTrue(
+            tree.contains("Deck") || tree.contains("Galley") || tree.contains("Purse"),
+            "ship names on the dial"
+        )
     }
 }

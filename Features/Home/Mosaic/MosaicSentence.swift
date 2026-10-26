@@ -180,6 +180,8 @@ struct MosaicWordStyle: ButtonStyle {
             .overlay(alignment: .bottom) {
                 Rectangle().fill(accent).frame(height: 1)
                     .offset(y: 5)
+                    // At rest there is no line (landing contract §10); it shows only under the finger.
+                    .opacity(configuration.isPressed ? 1 : 0)
             }
             // A touch target past the glyphs, without making the line taller.
             .contentShape(.interaction, Rectangle().inset(by: -8))
