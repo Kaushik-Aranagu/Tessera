@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Recovery line</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for docs/design/recovery-line.md (W3), on Research's docs/research/recovery-line.md and healthkit-reads.md: the one-time Health line on a training-day morning, the system sheet, the L1 line arriving under the Now hero, "why" on a long press, and the line under a running workout. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 75%,#BFD8E2 0%,rgba(191,216,226,0) 70%),#F4EEE4}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub);white-space:nowrap}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+.sw{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap;position:relative;display:inline-block}
+.sw svg{position:absolute;left:-7px;bottom:7px;z-index:-1;overflow:visible}
+.rl{position:absolute;left:22px;right:22px;font-size:21px;line-height:28px;color:rgba(43,36,64,.6)}
+.rl .line{position:absolute;left:0;bottom:-4px;height:1.5px;background:rgba(43,36,64,.6);transform:scaleX(0);transform-origin:left}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+
+  <div class="abs lbl" style="left:22px;right:22px;top:58px;display:flex;gap:22px"><span>REVIEW</span><span style="color:var(--ink)">TODAY</span><span>TRAINING</span><span>KITCHEN</span></div>
+  <section id="now" class="abs" style="left:0;right:0;top:0;height:844px">
+    <div id="ctx" class="abs" style="left:22px;top:150px;font-size:21px;color:var(--ctx)">today's training</div>
+    <div id="hero" class="abs" style="left:20px;top:184px;font-size:56px;font-weight:500;line-height:1;letter-spacing:-.04em">Push day A</div>
+    <div id="rl" class="rl" style="top:358px;opacity:0"><span id="rlt" style="position:relative">Add last night's sleep from Health?<span class="line"></span></span></div>
+    <div id="act" class="abs" style="left:22px;top:270px;display:flex;align-items:center;gap:22px">
+      <div class="sw" id="start"><span id="sword">Start</span><svg width="90" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#C8452F" opacity=".85" filter="url(#rough)"/></svg></div>
+      <div class="lbl" id="meta" style="line-height:20px">5 EXERCISES<br>18 SETS</div>
+    </div>
+  </section>
+
+  <!-- the Health sheet is system UI (exempt) -->
+  <div id="sheet" class="abs" style="left:0;right:0;top:120px;bottom:0;background:#F2F2F7;border-radius:12px 12px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.15);transform:translateY(760px);z-index:20;font-family:-apple-system,'Helvetica Neue',sans-serif;color:#000">
+    <div style="text-align:center;font-weight:600;font-size:17px;margin-top:18px">Health Access</div>
+    <div style="margin:18px 20px 0;font-size:15px;color:#3c3c43;line-height:1.35">Tessera reads your sleep and heart rate to show workout heart rate and a quiet note on training days. It stays on this iPhone.</div>
+    <div style="margin:22px 20px 6px;font-size:13px;color:#6e6e73">ALLOW "TESSERA" TO READ</div>
+    <div style="margin:0 16px;background:#fff;border-radius:10px;font-size:17px">
+      <div style="padding:12px 16px;border-bottom:.5px solid #ddd">Heart Rate</div><div style="padding:12px 16px;border-bottom:.5px solid #ddd">Heart Rate Variability</div><div style="padding:12px 16px;border-bottom:.5px solid #ddd">Resting Heart Rate</div><div style="padding:12px 16px">Sleep</div>
+    </div>
+    <div id="allow" style="position:absolute;right:20px;top:18px;font-size:17px;font-weight:600;color:#007AFF">Allow</div>
+  </div>
+
+  <div id="say" class="abs" style="right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;text-align:right;color:var(--cobalt);opacity:0;z-index:12"></div>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+async function say(t) { const s = $('say'); s.getAnimations().forEach((a) => a.cancel()); s.innerHTML = t; await anim(s, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: HOUSE }); }
+const hush = () => anim($('say'), [{ opacity: 1 }, { opacity: 0 }], { duration: 220 });
+async function swapLine(text) {
+  const t = $('rlt');
+  await anim(t, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(4px)' }], { duration: 160 });
+  t.firstChild.textContent = text; t.querySelector('.line').getAnimations().forEach((a) => a.cancel()); t.querySelector('.line').style.transform = 'scaleX(0)';
+  await anim(t, [{ opacity: 0, filter: 'blur(4px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 220, easing: HOUSE });
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  // 1 · the first training-day morning: the hero settles, then the one-time line comes in under the action row
+  await sleep(700);
+  await anim($('rl'), [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: HOUSE });
+  await sleep(1500);
+  // tap: the hairline draws under the line, then the system sheet
+  const [lx, ly] = centre($('rlt')); await fingerOn(lx, ly);
+  await anim($('rlt').querySelector('.line'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 150, easing: 'ease-out' });
+  $('rlt').querySelector('.line').style.width = '100%';
+  fingerOff();
+  await anim($('sheet'), [{ transform: 'translateY(760px)' }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,.9,.25,1)' });
+  await sleep(1400);
+  const [ax, ay] = centre($('allow')); await fingerOn(ax, ay); await sleep(100); fingerOff();
+  await anim($('sheet'), [{ transform: 'none' }, { transform: 'translateY(760px)' }], { duration: 360, easing: HOUSE });
+  // the reading lands: the question becomes last night's line (L1); or, with nothing to say, the line leaves
+  await sleep(300);
+  await swapLine('Slept 5h 40m, take it lighter');
+  await sleep(1800);
+
+  // 2 · hold the line: its hairline fills, and Tess says why, with no numbers
+  await fingerOn(lx - 30, ly);
+  await anim($('rlt').querySelector('.line'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 500, easing: 'ease-out' });
+  fingerOff();
+  await say('Short night against your usual.');
+  await sleep(2000); hush();
+  $('rlt').querySelector('.line').animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 200, fill: 'forwards' });
+  await sleep(600);
+
+  // 3 · Start: the workout runs; back on Home, the line sits under the running process, never in place of it
+  const [sx, sy] = centre($('start')); await fingerOn(sx, sy); await sleep(100); fingerOff();
+  const sv = $('start').querySelector('svg'); sv.style.transformOrigin = '50% 70%';
+  await anim(sv, [{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.65)' }, { transform: 'scaleY(1)' }], { duration: 380, easing: 'ease-out' });
+  await anim($('now'), [{ opacity: 1 }, { opacity: 0 }], { duration: 240 });
+  $('ctx').textContent = 'running now, Push day A';
+  $('hero').textContent = 'Bench, set 2'; $('sword').textContent = 'Resume'; $('start').querySelector('svg').setAttribute('width', $('sword').offsetWidth + 14);
+  $('meta').innerHTML = 'REST<br>1:22';
+
+  await anim($('now'), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: HOUSE });
+  let r = 82; const iv = setInterval(() => { r--; $('meta').innerHTML = `REST<br>1:${String(r - 60).padStart(2, '0')}`; }, 1000);
+  await sleep(2800); clearInterval(iv);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

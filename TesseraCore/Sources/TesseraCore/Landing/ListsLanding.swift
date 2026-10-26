@@ -286,3 +286,50 @@ public struct ListsLanding {
         return Array((waiting + fresh).prefix(Self.maxMargin))
     }
 }
+
+// MARK: - Due this week (the Lists landing's word wall)
+
+public extension ListsLanding {
+    /// One open item with a due day. Names arrive masked: a walled list reads "Private list", a walled item
+    /// "Private item", and `isPrivate` says either was walled so a surface can leave it out.
+    struct DueItem: Equatable, Sendable {
+        public let list: UUID
+        public let listName: String
+        public let item: UUID
+        public let text: String
+        public let due: Date
+        public let isPrivate: Bool
+        /// "today", "tomorrow", "Fri".
+        public let day: String
+
+        public init(list: UUID, listName: String, item: UUID, text: String, due: Date, isPrivate: Bool, day: String) {
+            self.list = list
+            self.listName = listName
+            self.item = item
+            self.text = text
+            self.due = due
+            self.isPrivate = isPrivate
+            self.day = day
+        }
+    }
+
+    /// Open items due before the end of the next `days` house days (late ones included), soonest first. Groceries is
+    /// left out (it is Pantry's To get).
+    func dueItems(within days: Int = 7, now: Date = .now, calendar: Calendar = .current) -> [DueItem] {
+        let house = TesseraDay(calendar: calendar)
+        let today = house.today(now)
+        guard let end = calendar.date(byAdding: .day, value: days, to: today) else { return [] }
+        let options = Options(now: now, calendar: calendar)
+        var found: [DueItem] = []
+        for row in rows() where row.list.id != Groceries.listID {
+            let listPrivate = row.name == ListContents.privateListLabel
+            for item in row.items where !item.isDone {
+                guard let due = dueDate(item), due < end else { continue }
+                let text = itemName(item)
+                found.append(DueItem(list: row.list.id, listName: row.name, item: item.id, text: text, due: due,
+                                     isPrivate: listPrivate || text == "Private item", day: dayWord(due, options)))
+            }
+        }
+        return found.sorted { $0.due != $1.due ? $0.due < $1.due : $0.item.uuidString < $1.item.uuidString }
+    }
+}

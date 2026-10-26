@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Every side</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 75 (Kaushik 2:20 PM PT Oct 16): a screen is a unit, and every screen declares its own side. Six sides drawn on pages one tap down (back word at 58, Title 44 at 84, context at 146, the side word at the context line's right), each with Tess's line at its foot. ?play records two screens, one gesture. -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:22px}
+.head h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.015em;flex:none;width:420px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:900px}
+.grid{display:grid;grid-template-columns:repeat(3,393px) 420px;gap:28px 22px;align-items:start}
+.cap{margin-top:12px}
+.cap .opt{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6674}
+.cap h2{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.kinds{grid-row:span 2;padding-top:4px}
+.kinds h2{margin:0 0 12px;font-size:23px;font-weight:600}
+.kinds table{border-collapse:collapse;font-size:16px;line-height:22px;color:#36323c}
+.kinds td{padding:0 0 14px;vertical-align:top}
+.kinds td:first-child{font-weight:700;font-size:13px;letter-spacing:.08em;width:96px;padding-top:2px}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;border-radius:44px}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--tess:#2450D8;--ctx:#5A3DAF;--train:#C23A22;--kit:#12936A}
+.abs{position:absolute}
+.body{position:absolute;inset:0}
+.back{left:22px;top:52px;font-weight:700;font-size:15px;letter-spacing:.08em;color:rgba(var(--ink),.7)}
+.title{left:22px;top:84px;width:350px;font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.02em}
+.ctxl{left:22px;right:22px;top:146px;font-size:17px;color:var(--ctx);display:flex;justify-content:space-between}
+.ctxl b{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgb(var(--ink));padding-top:2px}
+.lbl{left:22px;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.rows{left:22px;width:350px;font-size:19px;line-height:26px}
+.rows div{display:flex;justify-content:space-between;gap:16px;margin-bottom:14px}
+.rows em{font-style:normal;color:rgba(var(--ink),.62);white-space:nowrap}
+.para{left:22px;width:350px;font-size:19px;line-height:27px}
+.para p{margin:0 0 14px}
+.para .dim{color:rgba(var(--ink),.62)}
+.strokes{left:22px;width:350px}
+.strokes .ex{font-size:19px;margin:0 0 6px}
+.strokes .st{display:flex;gap:6px;margin-bottom:16px}
+.strokes .st i{display:block;height:6px;border-radius:3px;background:color-mix(in oklab,var(--train) 72%,rgb(var(--ink)))}
+.strokes .st small{white-space:nowrap;font-size:15px;color:rgba(var(--ink),.62);margin-left:8px;margin-top:-6px}
+.tl{right:71px;top:768px;width:290px;text-align:right;font-size:18px;line-height:23px;color:var(--tess)}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.src{left:22px;font-size:15px;color:rgba(var(--ink),.45)}
+.gl{position:absolute;left:150px;right:0;top:186px;bottom:96px;padding:20px 22px 0 46px;background:linear-gradient(90deg,rgba(251,250,247,0),var(--bg) 34px)}
+.gl .gk{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.gl .big{font-size:56px;line-height:60px;font-weight:500;letter-spacing:-.02em;margin-top:10px}
+.gl .big small{font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px;color:rgba(var(--ink),.62)}
+.gl .gr{font-size:19px;line-height:26px;margin-top:14px}
+.gl .gr em{font-style:normal;color:rgba(var(--ink),.62)}
+.gl .more{position:absolute;left:46px;bottom:22px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.gl .more i{display:block;height:2px;margin-top:5px;background:currentColor;width:100%}
+.finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+const band = line => `<div class="abs soul"></div>${line ? `<div class="abs tl">${line}</div>` : ''}`;
+const top3 = (back, title, ctx, word) => `<div class="abs back">‹ ${back}</div><div class="abs title">${title}</div><div class="abs ctxl"><span>${ctx}</span><b>${word}</b></div>`;
+
+// Fronts (for the recording) and sides (board + recording).
+const S = {
+  ingredientFront: () => top3('GROCERIES', 'Ground beef', '1 lb, for tacos', 'PER 100 G') +
+    `<div class="abs lbl" style="top:206px">USED IN</div><div class="abs rows" style="top:234px"><div><span>Tacos</span><em>1 lb</em></div><div><span>Chili</span><em>2 lb</em></div></div>
+     <div class="abs lbl" style="top:340px">ON GROCERIES</div><div class="abs rows" style="top:368px"><div><span>Ground beef</span><em>1 lb</em></div></div>`,
+  ingredient: () => top3('GROCERIES', 'Ground beef', '85% lean, raw', 'GROUND BEEF') +
+    `<div class="abs lbl" style="top:206px">PER 100 G</div><div class="abs rows" style="top:234px"><div><span>Energy</span><em>215 kcal</em></div><div><span>Protein</span><em>18.6 g</em></div><div><span>Fat</span><em>15 g</em></div><div><span>Carbs</span><em>0 g</em></div></div>
+     <div class="abs lbl" style="top:420px">A POUND</div><div class="abs rows" style="top:448px"><div><span>Energy</span><em>975 kcal</em></div></div>
+     <div class="abs src" style="top:512px">From the phone’s food table</div>` + band('You buy it about every 9 days.'),
+  workout: () => top3('TRAINING', 'Push Day A', 'Friday, 6:02 pm to 6:54 pm', 'SUMMARY') +
+    `<div class="abs lbl" style="top:206px">THE SETS</div><div class="abs strokes" style="top:236px">
+     ${[['Bench press', [54, 54, 54, 58], '82.5 × 7'], ['Overhead press', [52, 52, 52], '45 × 8'], ['Incline dumbbell press', [44, 44, 44], '24 × 10'], ['Lateral raise', [38, 38, 38], '10 × 14'], ['Rope pushdown', [40, 40, 40], '30 × 12']]
+      .map(([n, w, top]) => `<div class="ex">${n}</div><div class="st">${w.map(x => `<i style="width:${x}px"></i>`).join('')}<small>${top}</small></div>`).join('')}</div>` + band('Bench 82.5 × 7, a best.'),
+  exercise: () => top3('PUSH DAY A', 'Bench press', 'HISTORY · REP MAXES · MUSCLES', 'SETUP').replace('<span>HISTORY · REP MAXES · MUSCLES</span>', '<span>last 82.5 × 7, Oct 16</span>') +
+    `<div class="abs lbl" style="top:206px">YOUR SETUP</div><div class="abs para" style="top:234px"><p>Bench at the third hole, feet flat, grip one finger off the rings.</p><p class="dim">You wrote this Oct 9.</p></div>
+     <div class="abs lbl" style="top:390px">THE BAR</div><div class="abs rows" style="top:418px"><div><span>Olympic bar</span><em>20 kg</em></div><div><span>Collars</span><em>2 × 2.5 kg</em></div></div>` + band('Same setup as last time.'),
+  note: () => top3('NOTES', 'Landlord call', 'Oct 14', 'THE NOTE') +
+    `<div class="abs lbl" style="top:206px">WHERE IT’S MENTIONED</div><div class="abs rows" style="top:234px"><div><span>Reply to landlord</span><em>task, today</em></div><div><span>Rent, October</span><em>note</em></div><div><span>Shutdown, Tuesday</span><em>day log</em></div></div>
+     <div class="abs lbl" style="top:388px">IT MENTIONS</div><div class="abs rows" style="top:416px"><div><span>Book physio</span><em>task</em></div></div>` + band('Mentioned 3 times this week.'),
+  backups: () => top3('THE WEEK', 'Backups', 'last one 4 am today', 'BACKUPS') +
+    `<div class="abs lbl" style="top:206px">WHAT’S IN ONE</div><div class="abs para" style="top:234px"><p>Every workout, task, note, recipe and list, and what Tess knows.</p></div>
+     <div class="abs lbl" style="top:340px">NEVER IN ONE</div><div class="abs para" style="top:368px"><p>Your Claude key, folder bookmarks and test flags.</p><p class="dim">Facts only. Restoring stays on the front.</p></div>` + band(''),
+  task: () => top3('TODAY', 'Reply to landlord', 'today, 8:15 am', 'THE TASK') +
+    `<div class="abs lbl" style="top:206px">ITS STORY</div><div class="abs rows" style="top:234px"><div><span>Made from “reply to landlord tue”</span><em>Tue</em></div><div><span>Moved to tomorrow</span><em>Tue</em></div><div><span>Moved to tomorrow</span><em>Wed</em></div><div><span>In Plan my day</span><em>today</em></div></div>
+     <div class="abs lbl" style="top:448px">LINKED</div><div class="abs rows" style="top:476px"><div><span>Landlord call</span><em>note</em></div></div>` + band('Moved twice, due today.'),
+  noteFront: () => top3('NOTES', 'Landlord call', 'Oct 14', 'MENTIONS') +
+    `<div class="abs para" style="top:206px"><p>Asked about the heater. He’ll send someone Thursday. Rent stays the same through March.</p><p class="dim">Mentions Book physio.</p></div>`,
+};
+
+// The glance: the first stop, half the screen, the side's two or three facts that matter (Kaushik 2:33 PM).
+const G = {
+  ingredient: () => `<div class="gl"><div class="gk">PER 100 G</div><div class="big">215<small>kcal</small></div><div class="gr">18.6 g <em>protein</em></div><div class="gr">15 g <em>fat</em></div><div class="more">ALL FACTS<i></i></div></div>`,
+  note: () => `<div class="gl"><div class="gk">MENTIONED IN</div><div class="big">3<small>places</small></div><div class="gr">Reply to landlord</div><div class="gr">Rent, October</div><div class="gr">Shutdown, Tuesday</div><div class="more">ALL LINKS<i></i></div></div>`,
+};
+// p: 0 front, 1 glance, 2 the full side.
+function stops(el, p) {
+  const f = el.querySelector('.fb'), g = el.querySelector('.gb'), s = el.querySelector('.sb');
+  const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1);
+  f.style.transform = `translateX(${-44 * p2}px)`; f.style.opacity = 1 - .7 * p1 - .3 * p2;
+  g.style.opacity = p <= 1 ? p1 : 1 - p2; g.style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`;
+  s.style.opacity = p2; s.style.transform = `translateX(${60 * (1 - p2)}px)`;
+}
+const splitHead = html => { const d = document.createElement('div'); d.innerHTML = html; const hs = [...d.children].filter(e => e.matches('.back,.title')); const head = hs.map(e => e.outerHTML).join(''); hs.forEach(e => e.remove()); return [head, d.innerHTML]; };
+function stack(front, side) {
+  const [h, f] = splitHead(S[front]()), [, sd] = splitHead(S[side]());
+  return h + `<div class="body fb">${f}</div><div class="body gb">${G[side]()}${band(S[side]().match(/class="abs tl">([^<]*)/)?.[1] || '')}</div><div class="body sb">${sd}</div>`;
+}
+if (location.search.includes('glance')) {
+  const cell = (front, side, p, opt, h, t) => `<div><div class="ph por" data-p="${p}">${stack(front, side)}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${t}</p></div></div>`;
+  let b = `<div class="head"><h1>A side in two stops</h1><p>Swipe a little and the side opens halfway: a glance with the two or three facts that matter, the front still in place, dimmed, under its left half. Keep pulling, or tap the word at its foot, and the full side takes the screen. A swipe right goes back one stop at a time.</p></div><div class="grid" style="grid-template-columns:repeat(4,393px)">`;
+  b += cell('ingredientFront', 'ingredient', 0, 'THE FRONT', 'Ground beef', 'The ingredient as it is.');
+  b += cell('ingredientFront', 'ingredient', 1, 'STOP 1 · THE GLANCE', 'Half the screen', 'The number that matters, big; two more under it. ALL FACTS opens the rest.');
+  b += cell('ingredientFront', 'ingredient', 2, 'STOP 2 · THE FULL SIDE', 'Everything', 'Per 100 g, a pound, the source, Tess’s line.');
+  b += cell('noteFront', 'note', 1, 'A NOTE’S GLANCE', 'Mentioned in 3', 'Count first, then the three named. From four it names two and says “and 2 more”.');
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.querySelectorAll('[data-p]').forEach(el => stops(el, +el.dataset.p));
+  document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
+} else
+if (!play) {
+  const card = (k, opt, h, p) => `<div><div class="ph por">${S[k]()}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
+  let b = `<div class="head"><h1>Every screen has a side</h1><p>A screen is one unit: the thing you came for on the front, and the other side of the same thing one swipe away. Every screen declares its side. The front’s name stays put as the spine, the word at the context line’s right names the side, and Tess’s line at the foot says one thing she noticed. Six sides drawn, one of each kind.</p></div><div class="grid">`;
+  b += card('ingredient', 'FACTS · AN INGREDIENT', 'Per 100 g', 'His calorie example. Phone’s food table first; Claude may fill a missing one, as a public fact about a named food.');
+  b += card('workout', 'PARTS · A WORKOUT', 'The sets', 'Every set as a stroke, the top set named. Nothing compares, nothing is red.');
+  b += card('exercise', 'FACTS · WORD ONLY', 'Your setup', 'x is taken by the siblings, so the word opens the side. His own notes about the lift.');
+  b += `<div class="kinds"><h2>Five kinds of side</h2><table>
+    <tr><td>FACTS</td><td>What the thing is, beyond the front: per 100 g, a setup, what a backup holds.</td></tr>
+    <tr><td>PARTS</td><td>What it’s made of: the sets, the ingredients, what a paste read.</td></tr>
+    <tr><td>BEFORE</td><td>Its past: last times, a task’s story, cooks of a recipe.</td></tr>
+    <tr><td>AHEAD</td><td>What comes next: THE DAY, the week, the plan.</td></tr>
+    <tr><td>LINKS</td><td>What it’s tied to: where a note is mentioned, what it mentions.</td></tr>
+    <tr><td>TESS</td><td>Every side ends with her one line, in the band: a fact the phone counted. Claude may word it when “Tess asks Claude” is on; private notes, money and body facts never leave the phone.</td></tr>
+    <tr><td>NEVER</td><td>Controls on a side. A side holds facts and links, and at most its own one key (ADD 4 TO GROCERIES).</td></tr></table></div>`;
+  b += card('note', 'LINKS · A NOTE', 'Where it’s mentioned', 'Backlinks move to the side. The note’s own text stays alone on the front.');
+  b += card('task', 'BEFORE · A TASK', 'Its story', 'Made, moved, planned. A task that keeps moving says so plainly, without blame.');
+  b += card('backups', 'FACTS · SETTINGS', 'What’s in one', 'Settings and money keep their controls on the front; the side only explains.');
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
+} else {
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = '';
+  w.innerHTML = `<div class="ph por" id="ph"><div class="body" id="a"></div><div class="body" id="b"></div><div class="finger" id="fg"></div></div>`;
+  const $ = id => document.getElementById(id);
+  const a = $('a'), b = $('b'), fg = $('fg');
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const tween = (ms, f, e = ease) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(e(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  // The spine: back word and title stay; only what's under them moves (71). Split each page into head and body.
+  const split = html => { const d = document.createElement('div'); d.innerHTML = html; const head = [...d.children].filter(e => e.matches('.back,.title')).map(e => e.outerHTML).join(''); [...d.children].filter(e => e.matches('.back,.title')).forEach(e => e.remove()); return [head, d.innerHTML]; };
+  async function show(front, side, y) {
+    const ph = $('ph'); a.innerHTML = stack(front, side); b.innerHTML = '';
+    const go = (from, to, ms, x0, x1) => { fg.style.opacity = 1; return tween(ms, q => { fg.style.left = x0 + (x1 - x0) * q + 'px'; fg.style.top = y + 'px'; stops(a, from + (to - from) * q); }).then(() => { fg.style.opacity = 0; }); };
+    stops(a, 0); await wait(1300);
+    await go(0, 1, 380, 320, 210); await wait(2300);     // stop 1: the glance
+    await go(1, 2, 380, 250, 90); await wait(2300);      // pull on: the full side
+    await go(2, 1, 340, 110, 230); await wait(1200);     // back one stop
+    await go(1, 0, 340, 200, 330); await wait(1000);     // and to the front
+  }
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await wait(300);
+    await show('ingredientFront', 'ingredient', 300);
+    await show('noteFront', 'note', 330);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

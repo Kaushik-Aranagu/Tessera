@@ -60,6 +60,8 @@ struct DepartureSegment: Equatable {
     var kind: Kind
     /// A door (sheet 211): an app word, or a number that belongs to a clause with an app word, opens its thing.
     var opens = false
+    /// Home 236 v2.4: the weather the word names, when it names one; the word then wears its effects.
+    var weather: WeatherKind?
 }
 
 /// Turns a clause into segments, using the same word split as the day sentence.
@@ -301,8 +303,16 @@ struct DepartureBoard: View {
             Button {
                 taps += 1
                 open(li, frames.byKey[key] ?? .zero)
-            } label: { door }
-                .buttonStyle(SkyWordStyle())
+            } label: {
+                if let weather = seg.weather {
+                    // Home 236 v2.4: a weather word wears its cloud's colour and its one effect.
+                    door.weatherWord(weather, night: WeatherKind.isNight(at: AppClock.now))
+                } else {
+                    door
+                }
+            }
+            .buttonStyle(SkyWordStyle(underline: seg.weather
+                    .map { $0.colour(night: WeatherKind.isNight(at: AppClock.now)) }))
         case .day:
             Button {
                 taps += 1
@@ -317,7 +327,6 @@ struct DepartureBoard: View {
                 open(li, frames.byKey[key] ?? .zero)
             } label: {
                 door.foregroundStyle(Theme.Colors.ink)
-                    .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.ink).frame(height: 1).offset(y: 5) }
                     .contentShape(.interaction, Rectangle().inset(by: -8))
             }
             .buttonStyle(.plain)
@@ -334,7 +343,12 @@ struct DepartureBoard: View {
         case let .app(app):
             Button { taps += 1; open(li, .zero) } label: { text }.buttonStyle(MosaicWordStyle(accent: app.accent))
         case .sky:
-            Button { taps += 1; open(li, .zero) } label: { text }.buttonStyle(SkyWordStyle())
+            Button { taps += 1; open(li, .zero) } label: {
+                text.foregroundStyle(seg.weather.map { $0.colour(night: WeatherKind.isNight(at: AppClock.now)) }
+                    ?? Theme.Colors.ink)
+            }
+            .buttonStyle(SkyWordStyle(underline: seg.weather
+                    .map { $0.colour(night: WeatherKind.isNight(at: AppClock.now)) }))
         case .day:
             Button { taps += 1; open(li, .zero) } label: { text.foregroundStyle(DateSky.gradient(band: band)) }
                 .buttonStyle(.plain)
@@ -342,8 +356,6 @@ struct DepartureBoard: View {
             if seg.opens {
                 Button { taps += 1; open(li, .zero) } label: {
                     text.foregroundStyle(Theme.Colors.ink)
-                        .overlay(alignment: .bottom) { Rectangle().fill(Theme.Colors.ink).frame(height: 1).offset(y: 5)
-                        }
                 }
                 .buttonStyle(.plain)
             } else {
@@ -482,6 +494,9 @@ struct DepartureBoard: View {
 /// The "Sunset" word: the mosaic's own sky as a two-stop text gradient (C9772E to B0466A by day, E8A06A to E07A9A at
 /// night), with a 1 pt underline at 5 pt in the second stop.
 struct SkyWordStyle: ButtonStyle {
+    /// A weather word's underline takes its cloud's colour; nil keeps the sky's second stop.
+    var underline: Color?
+
     static var first: Color {
         Theme.Colors.Accent.skyFrom
     }
@@ -497,8 +512,10 @@ struct SkyWordStyle: ButtonStyle {
                 startPoint: .leading,
                 endPoint: .trailing
             ))
+            // No decorative underline at rest (landing contract §10, QA on 283): a 1 pt line only while pressed.
             .overlay(alignment: .bottom) {
-                Rectangle().fill(Self.second).frame(height: 1).offset(y: 5)
+                Rectangle().fill(underline ?? Self.second).frame(height: 1).offset(y: 5)
+                    .opacity(configuration.isPressed ? 1 : 0)
             }
             .contentShape(.interaction, Rectangle().inset(by: -8))
             .opacity(configuration.isPressed ? 0.7 : 1)

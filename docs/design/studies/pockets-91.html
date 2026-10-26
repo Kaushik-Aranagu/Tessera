@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pockets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100..900&display=swap" rel="stylesheet">
+<!-- Design item 91, round 2: Pockets. Kaushik Oct 17 12:31 and 12:46 PM PT: no top band; very faded images in small sections; the muscle figure looked bad and not accurate; the soft colour patches looked like a dead Tess. Round 2: crisp drawings (line and flat colour, never blurred), a real-proportioned figure, no pocket on Groceries. ?play records. The "photo" is a drawn stand-in. -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1c1a20;font-variant-numeric:tabular-nums}
+.wrap{padding:34px 40px 40px;width:1340px}
+.head{display:flex;gap:30px;margin-bottom:26px}
+.head h1{margin:0;font-size:34px;font-weight:650;letter-spacing:-.02em;flex:none;width:300px;line-height:38px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:980px}
+.grid{display:grid;grid-template-columns:repeat(3,393px);gap:0 22px;align-items:start}
+.colh{border-top:2px solid #1c1a20;padding-top:10px;margin-bottom:22px}
+.colh .opt{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674}
+.colh h2{margin:4px 0 6px;font-size:24px;font-weight:650;letter-spacing:-.02em;line-height:28px}
+.colh p{margin:0;font-size:16px;line-height:22px;color:#4a4652;min-height:44px}
+.rowh{grid-column:1/-1;display:flex;gap:22px;align-items:baseline;margin:34px 0 16px;border-top:1px solid rgba(28,26,32,.2);padding-top:12px}
+.rowh .opt{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674;flex:none;width:130px}
+.rowh p{margin:0;font-size:16px;line-height:22px;color:#4a4652;max-width:1000px}
+.ph{position:relative;width:393px;height:852px;overflow:hidden;border-radius:44px;color:rgb(var(--ink));background:color-mix(in srgb,rgb(var(--area)) 4.5%,var(--bg))}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--ctx:#5A3DAF;--do:.62}
+.obs{--ink:245,242,236;--bg:#121014;--ctx:#B8A3FF;--do:.62}
+.kit{--area:18,147,106}.trn{--area:194,58,34}.obs.trn{--area:255,125,98}
+.ttl{position:absolute;left:22px;margin:0;font-size:52px;font-weight:650;letter-spacing:-.02em;line-height:56px}
+.ctx{position:absolute;left:22px;font-size:18px;font-weight:430;line-height:24px;color:var(--ctx);white-space:nowrap}
+.back{position:absolute;left:22px;top:58px;font-size:13px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--area))}
+.sw{position:absolute;left:22px;font-size:13px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;line-height:16px;color:rgb(var(--area))}
+.rows{position:absolute;left:22px;right:22px}
+.r{font-size:22px;font-weight:560;letter-spacing:-.005em;line-height:28px;padding:8px 0;white-space:nowrap;position:relative;transition:opacity .2s}
+.r span{font-weight:430;color:rgba(var(--ink),var(--do));margin-left:6px}
+.pk{position:absolute;pointer-events:none}
+.pk svg{display:block;width:100%;height:100%;overflow:visible}
+.ph:not(.obs) .ink{--st:rgba(18,16,22,.9)}
+.obs .ink{--st:rgba(245,242,236,.9)}
+.dr path,.dr ellipse,.dr rect,.dr circle,.dr line{stroke:var(--st);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.fl{position:absolute;font-size:13px;font-weight:700;letter-spacing:.1em;color:rgba(var(--ink),.5);text-align:center;width:166px}
+.mp .rg{transition:fill .5s,stroke .5s}
+</style></head><body>
+<div class="wrap" id="wrap">
+<div class="head" id="head"><h1>91. Pockets, round 2</h1><p>Kaushik (Oct 17, 12:46 PM): the muscle figure "looks super bad", not nice or accurate, use reference pictures; and the soft colour patches look like a diffused, dead Tess. <b>Round 2:</b> nothing is blurred any more, because Tess is the only soft, blurred thing in the app. A pocket is a <b>crisp drawing</b> (fine line, a little flat colour) or <b>his own photo</b>, small, at 18% strength, in the emptiest corner of a page. The figure is redrawn at real proportions (eight heads tall, muscles from anatomical charts: traps, delts, pecs, six-pack, obliques, quads, adductors, calves; lats, rear delts, spinal erectors, glutes, hamstrings). Groceries has no pocket: it is read in a shop and sheet 88 said none.</p></div>
+<div class="grid" id="grid">
+ <div><div class="colh"><div class="opt">RECIPE · HIS PHOTO</div><h2>The dish, in the corner</h2><p>His photo, feathered at its edge, 150 pt, bottom right. The stand-in here is a drawn pan.</p></div><div id="f1"></div></div>
+ <div><div class="colh"><div class="opt">INGREDIENT · A DRAWING</div><h2>Sweet potatoes, drawn in ink</h2><p>A fine line drawing with one flat colour, 160 pt, bottom right. It draws itself once on arrival.</p></div><div id="f2"></div></div>
+ <div><div class="colh"><div class="opt">MUSCLES · THE FIGURE</div><h2>Front and back, in proportion</h2><p>Both figures under the rows. Worked parts in the area colour, half-sets lighter.</p></div><div id="f3"></div></div>
+ <div class="rowh"><div class="opt">THE RULES</div><p><b>Never blurred</b> (that is Tess). <b>Size</b> 160 pt or less, one per page, in the largest empty corner, 24 pt clear of any word; if a bigger text size would reach it, it is not drawn. <b>Strength</b> 18% (Obsidian 16%); the figure is information and runs full strength. <b>Never</b> at the top, on Home, on Groceries, a live workout, a widget, a Private thing (plain ground), or a progress photo. <b>Arrival:</b> a photo or drawing fades up over 380 ms with no blur; an ingredient drawing also draws its line once. Reduce Motion: 150 ms crossfade. <b>VoiceOver:</b> hidden, except the figure (read as one element) and a photo.</p></div>
+</div></div>
+<script>
+// Original vector figure, left half drawn, mirrored. viewBox 0 0 200 440. Region ids = stored muscle names.
+const mirror = (d) => d; // paths are drawn for the left half; we use <use> with scale(-1,1) around x=100
+const FRONT = {
+  outline: [
+    // head, neck, shoulder line, arm, torso, leg (left half)
+    'M100 12 C88 12 80 22 80 36 C80 50 88 62 98 62 L100 62',
+    'M92 62 C92 72 90 78 88 82 C76 86 62 88 52 94 C44 98 40 106 38 120 C36 136 34 150 33 164 C32 180 29 200 27 222 C26 232 24 242 25 252 C26 258 32 258 34 250 C37 238 41 222 45 204 C48 190 52 176 54 164 C57 150 60 130 62 112',
+    'M62 112 C64 140 66 170 68 196 C69 212 66 232 62 256 C58 290 62 322 66 340 C68 368 70 396 70 418 L82 418 C82 396 84 368 86 340 C88 322 94 300 98 262 L100 250'
+  ],
+  regions: {
+    UpperBack: 'M92 66 C86 74 72 82 56 90 C58 94 60 98 63 100 C74 94 86 88 96 83 Z',
+    FrontDelts: 'M55 91 C46 90 40 98 39 110 C38 122 42 132 48 142 C54 136 60 122 63 104 C62 98 59 93 55 91 Z',
+    Chest: 'M98 100 C88 97 76 98 66 104 C62 116 64 130 72 138 C80 143 90 142 98 139 Z',
+    Biceps: 'M46 146 C41 158 39 172 42 184 C47 188 53 182 54 170 C54 158 52 148 50 142 Z',
+    Forearms: 'M41 188 C36 202 31 218 28 238 C32 244 39 240 43 230 C48 214 52 198 53 186 Z',
+    Obliques: 'M66 146 C62 160 62 178 64 196 C65 208 66 218 68 228 C74 222 78 208 79 192 C78 176 74 160 70 148 Z',
+    Abs: 'M98 143 C90 145 84 145 80 147 C79 170 79 200 80 224 C86 228 92 228 98 226 Z',
+    Abductors: 'M63 232 C59 244 60 258 63 270 C70 264 75 250 76 236 C72 234 67 232 63 232 Z',
+    Quads: 'M77 238 C67 262 62 292 66 326 C74 330 82 328 88 322 C90 298 92 270 90 242 C86 240 82 238 77 238 Z',
+    Adductors: 'M96 256 C99 276 98 298 93 318 C89 304 88 280 91 258 Z',
+    Calves: 'M68 340 C64 362 66 388 71 412 C75 414 79 412 81 410 C85 388 87 362 86 342 C80 346 74 346 68 340 Z',
+  },
+  lines: ['M80 168 L98 168', 'M80 188 L98 188', 'M80 208 L98 208', 'M98 143 L98 226', 'M74 250 C73 278 74 304 78 326', 'M66 108 C70 114 80 118 98 118', 'M72 232 C70 246 70 256 72 266', 'M76 352 C77 372 77 392 76 410'],
+};
+const BACK = {
+  outline: FRONT.outline,
+  regions: {
+    UpperBack: 'M98 68 C88 74 72 82 58 90 C62 100 72 112 86 124 C92 128 96 128 98 128 Z',
+    RearDelts: 'M55 91 C46 90 40 98 39 110 C38 122 42 130 48 138 C54 132 60 120 63 104 C62 98 59 93 55 91 Z',
+    Lats: 'M64 112 C62 134 64 160 70 182 C78 186 90 182 98 172 L98 130 C86 130 72 122 64 112 Z',
+    Triceps: 'M46 144 C41 158 39 172 42 184 C47 188 53 182 54 170 C54 158 52 148 50 140 Z',
+    Forearms: 'M41 188 C36 202 31 218 28 238 C32 244 39 240 43 230 C48 214 52 198 53 186 Z',
+    LowerBack: 'M98 174 C90 184 80 188 72 188 C72 204 76 218 82 228 L98 232 Z',
+    Glutes: 'M98 232 C86 228 72 232 64 244 C62 258 68 272 80 276 C90 276 96 270 98 262 Z',
+    Abductors: 'M63 238 C59 248 60 260 64 270 C66 264 66 252 66 242 Z',
+    Hamstrings: 'M78 280 C68 300 64 322 68 340 C76 344 86 342 92 336 C94 316 94 296 92 276 C88 276 82 278 78 280 Z',
+    Calves: 'M68 346 C64 366 66 390 71 412 C75 414 79 412 81 410 C85 390 87 366 86 348 C80 352 74 352 68 346 Z',
+  },
+  lines: ['M98 68 L98 232', 'M62 100 C68 118 78 130 90 136', 'M64 160 C72 176 86 180 98 176', 'M78 288 C77 308 78 326 82 340', 'M76 356 C77 374 77 394 76 410', 'M54 150 L50 176'],
+};
+
+
+const play = location.search.includes('play');
+if (play) document.body.classList.add('playing');
+const E = 'cubic-bezier(.22,.8,.2,1)';
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const phone = (host, cls, html) => { const p = document.createElement('div'); p.className = 'ph ' + cls; p.innerHTML = html; host.appendChild(p); return p; };
+const rows = (top, list) => `<div class="rows" style="top:${top}px">${list.map(r => { const x = typeof r === 'string' ? { t: r } : r; return `<div class="r" ${x.id ? `data-id="${x.id}"` : ''}>${x.t}${x.k ? `<span>${x.k}</span>` : ''}</div>`; }).join('')}</div>`;
+const pk = (x, y, s, svg, op) => { const d = document.createElement('div'); d.className = 'pk'; d.style.cssText = `left:${x}px;top:${y}px;width:${s}px;height:${s}px;opacity:${op}`; d.dataset.op = op; d.innerHTML = svg; return d; };
+const rise = d => d.animate([{ opacity: 0, filter: 'saturate(.5)' }, { opacity: d.dataset.op, filter: 'none' }], { duration: 380, easing: E, fill: 'both' });
+
+/* crisp drawings: fine line, flat colour, no blur */
+const PAN = `<svg viewBox="0 0 160 160"><defs><mask id="ft"><rect width="160" height="160" fill="#fff"/><rect width="160" height="160" fill="url(#fg)"/></mask><radialGradient id="fg" cx=".5" cy=".5" r=".72"><stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000"/></radialGradient></defs>
+<g mask="url(#ft)" class="dr ink"><rect x="6" y="26" width="148" height="112" rx="16" fill="#CFC9BC"/><rect x="14" y="34" width="132" height="96" rx="11" fill="#E9E3D4"/>
+<ellipse cx="52" cy="62" rx="24" ry="15" transform="rotate(-16 52 62)" fill="#C98A4B"/><ellipse cx="104" cy="58" rx="22" ry="14" transform="rotate(12 104 58)" fill="#B9763A"/><ellipse cx="78" cy="98" rx="24" ry="14" transform="rotate(-6 78 98)" fill="#C98A4B"/>
+<rect x="116" y="84" width="16" height="16" rx="3" fill="#E58A2B"/><rect x="132" y="98" width="14" height="14" rx="3" fill="#D97A1D"/><rect x="26" y="96" width="15" height="15" rx="3" fill="#E58A2B"/><rect x="108" y="108" width="15" height="15" rx="3" fill="#D97A1D"/>
+<path d="M38 112 a16 16 0 0 1 32 0z" fill="#F2D43A"/><path d="M92 40 a14 14 0 0 1 28 0z" fill="#F2D43A"/>
+<circle cx="62" cy="58" r="1.6" fill="#B32A12" stroke="none"/><circle cx="48" cy="68" r="1.6" fill="#B32A12" stroke="none"/><circle cx="108" cy="56" r="1.6" fill="#B32A12" stroke="none"/><circle cx="84" cy="94" r="1.6" fill="#B32A12" stroke="none"/><circle cx="70" cy="102" r="1.6" fill="#B32A12" stroke="none"/></g></svg>`;
+const POTATO = `<svg viewBox="0 0 160 160" class="dr ink"><path id="sp1" d="M18 104 C14 80 40 66 76 70 C108 73 142 80 146 98 C149 114 124 124 94 126 C58 129 22 126 18 104Z" fill="#D9731F" fill-opacity=".55"/><path d="M146 98 C152 94 156 92 158 90" fill="none"/><path d="M18 104 C12 108 8 110 4 110" fill="none"/>
+<path d="M44 92 l7 -2 M70 86 l8 1 M98 92 l7 3 M60 108 l8 -3 M112 108 l7 -3" fill="none"/><path d="M34 84 C54 76 80 76 110 82" fill="none" stroke-opacity=".4"/></svg>`;
+const LEMON = `<svg viewBox="0 0 160 160" class="dr ink"><circle cx="80" cy="80" r="52" fill="#F2D43A" fill-opacity=".55"/><circle cx="80" cy="80" r="44" fill="none"/><g fill="none"><path d="M80 80 L80 36 M80 80 L111 49 M80 80 L124 80 M80 80 L111 111 M80 80 L80 124 M80 80 L49 111 M80 80 L36 80 M80 80 L49 49"/></g></svg>`;
+
+const a = phone(document.getElementById('f1'), 'por kit',
+  `<div class="back">‹ Recipes</div><h1 class="ttl" style="top:112px;font-size:44px;line-height:48px">Sheet-pan paprika<br>chicken</h1><div class="ctx" style="top:216px">serves 4, 45 min</div><div class="sw" style="top:274px">Ingredients</div>` +
+  rows(296, ['1 1/2 lb chicken thighs', '2 sweet potatoes', '1 lemon', '2 tbsp smoked paprika', '3 garlic cloves', '1 tbsp olive oil', 'Salt']));
+const p1 = pk(228, 600, 168, PAN, .3); a.appendChild(p1);
+const b = phone(document.getElementById('f2'), 'por kit',
+  `<div class="back">‹ Pantry</div><h1 class="ttl" style="top:112px">Sweet potatoes</h1><div class="ctx" style="top:176px">in 2 recipes, 1 in the pantry</div><div class="sw" style="top:238px">Last cooked</div>` +
+  rows(260, ['Sheet-pan paprika chicken', 'Chickpea curry']) + `<div class="sw" style="top:430px">Pairs with</div>` + rows(452, ['Lemon', 'Smoked paprika']));
+const p2 = pk(222, 618, 160, POTATO, .2); b.appendChild(p2);
+const p2b = pk(196, 560, 90, LEMON, .0); b.appendChild(p2b);
+
+const wk = { Chest: 1, FrontDelts: .5, Triceps: .5, RearDelts: .5 };
+const c = phone(document.getElementById('f3'), 'obs trn',
+  `<div class="back">‹ Bench press</div><h1 class="ttl" style="top:112px">Muscles</h1><div class="ctx" style="top:176px">Chest, shoulders, triceps</div>` +
+  rows(232, [{ t: 'Chest', k: 'primary', id: 'Chest' }, { t: 'Front shoulders', k: 'half a set each', id: 'FrontDelts' }, { t: 'Triceps', k: 'half a set each', id: 'Triceps' }]) +
+  `<div style="position:absolute;left:24px;top:372px" id="ff"></div><div style="position:absolute;left:204px;top:372px" id="fb"></div><div class="fl" style="left:22px;top:790px">FRONT</div><div class="fl" style="left:202px;top:790px">BACK</div>`);
+const drawFig = (F, worked, w) => {
+  const half = `<g>${F.outline.map(d => `<path d="${d}" fill="none" stroke="rgba(var(--ink),.36)" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}${Object.entries(F.regions).map(([k, d]) => `<path class="rg" data-m="${k}" d="${d}" stroke-width=".8" stroke-linejoin="round"/>`).join('')}${F.lines.map(d => `<path d="${d}" fill="none" stroke="rgba(var(--ink),.25)" stroke-width=".7"/>`).join('')}</g>`;
+  return `<svg class="mp" viewBox="0 0 200 440" width="${w}" height="${w * 2.2}">${half}<g transform="translate(200 0) scale(-1 1)">${half}</g></svg>`;
+};
+const paint = (root, worked) => root.querySelectorAll('.rg').forEach(p => { const v = worked[p.dataset.m] || 0; p.style.fill = v === 1 ? 'rgba(var(--area),.78)' : v ? 'rgba(var(--area),.4)' : 'rgba(var(--ink),.06)'; p.style.stroke = v ? 'rgba(var(--area),1)' : 'rgba(var(--ink),.3)'; });
+document.getElementById('ff').innerHTML = drawFig(FRONT, wk, 166); document.getElementById('fb').innerHTML = drawFig(BACK, wk, 166);
+const front = c.querySelector('#ff'), back = c.querySelector('#fb');
+paint(front, wk); paint(back, wk);
+
+if (play) {
+  document.getElementById('head').style.display = 'none';
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    p1.style.opacity = 0; p2.style.opacity = 0; p2b.style.opacity = 0; paint(front, {}); paint(back, {});
+    await wait(900); rise(p1);
+    await wait(1400);
+    /* the ingredient draws its line once, then the colour comes up */
+    const paths = [...b.querySelectorAll('#sp1')]; p2.style.opacity = .2;
+    const sp = p2.querySelector('svg'); sp.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 900, easing: E, fill: 'both' });
+    await wait(1400); p2b.style.opacity = .2; p2b.animate([{ opacity: 0 }, { opacity: .2 }], { duration: 380, easing: E, fill: 'both' });
+    await wait(1600);
+    paint(front, { Chest: 1 }); paint(back, {});
+    await wait(900); paint(front, wk); paint(back, wk);
+    await wait(1400);
+    /* a tap on Triceps takes its region wet, then dries it back */
+    paint(back, { Triceps: 1, RearDelts: .5 }); c.querySelector('[data-id=Triceps]').style.opacity = 1;
+    await wait(1200); paint(back, wk);
+    await wait(1400);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

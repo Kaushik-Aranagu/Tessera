@@ -23,6 +23,7 @@ public enum SystemCatalog {
         case event, sleepNight, stepsDay, restingHeartRate, closedDay, heldNotice, spend, book
         case pool, inflow, poolMove, rateNote
         case tessSent
+        case tessSentExact
         case settings
         case meProfile
         case place
@@ -30,6 +31,9 @@ public enum SystemCatalog {
         case tessMemory
         case occasion
         case tessTurn
+        case belief
+        case routineRun, rest
+        case tessAgent, notebookPage, agentEpisode
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -197,7 +201,29 @@ public enum SystemCatalog {
                       // The last time a model was asked to improve this day's rule name (at most once a day).
                       FieldSpec(key: "autoNameTriedAt", name: "Model asked", kind: .date),
                       FieldSpec(key: "autoNameTriedKey", name: "Asked for", kind: .text),
+                      // Which grove its tree stands in on the Watch; empty reads as body, as every routine is today.
+                      FieldSpec(key: "grove", name: "Grove", kind: .choice, options: ["body", "mind", "home"]),
                   ]),
+        // One day a routine was tended without a workout (a Watch tree held, or its steps opened): the tree reads these
+        // with the finished workouts. The training ledger never reads a run.
+        ClassSpec(key: .routineRun, name: "Routine Run", parent: .thing, symbol: "leaf", colorRole: "health", fields: [
+            FieldSpec(key: "routine", name: "Routine", kind: .ref, target: .routine),
+            FieldSpec(key: "day", name: "Day", kind: .date),
+            FieldSpec(key: "doneAt", name: "Done at", kind: .date),
+            FieldSpec(key: "stepsDone", name: "Steps done", kind: .number),
+            FieldSpec(key: "by", name: "By", kind: .choice, defaultValue: .choice("tended"),
+                      options: ["tended", "workout"]),
+        ]),
+        // A rest: a training rest day, or a routine paused (its tree hangs a lamp). `until` empty means open; `endedAt`
+        // ends it early (tended, resumed).
+        ClassSpec(key: .rest, name: "Rest", parent: .thing, symbol: "moon.zzz", colorRole: "health", fields: [
+            FieldSpec(key: "scope", name: "Scope", kind: .choice, defaultValue: .choice("training"),
+                      options: ["training", "routine"]),
+            FieldSpec(key: "routine", name: "Routine", kind: .ref, target: .routine),
+            FieldSpec(key: "from", name: "From", kind: .date),
+            FieldSpec(key: "until", name: "Until", kind: .date),
+            FieldSpec(key: "endedAt", name: "Ended", kind: .date),
+        ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [
                       FieldSpec(key: "exercise", name: "Exercise", kind: .classRef, target: .exercise),
@@ -242,6 +268,9 @@ public enum SystemCatalog {
             // A phrase Tess couldn't read, kept to sort later (Product ruling, Oct 19): the inbox shows "To sort".
             // Added without a version bump: seeding adds a missing field to a class seeded earlier.
             FieldSpec(key: "toSort", name: "To sort", kind: .bool),
+            // Pinned to the Log's Pinned window, newest pin first.
+            FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
+            FieldSpec(key: "pinnedAt", name: "Pinned at", kind: .date),
         ]),
         // The calendar and Health mounts (M4 slices 1 and 2): read-only mirrors, written by the system, never by him.
         ClassSpec(key: .event, name: "Event", parent: .thing, symbol: "calendar", colorRole: "neutral", fields: [
@@ -408,6 +437,10 @@ public enum SystemCatalog {
             FieldSpec(key: "words", name: "Words", kind: .text),
             FieldSpec(key: "requestID", name: "Request", kind: .text),
         ]),
+        // A Tess Sent row written in lab mode (harness H1b): the words exactly as sent, health and money included. It is
+        // a mirror: in no backup copy (the local one too), no export, no op.
+        ClassSpec(key: .tessSentExact, name: "Tess Sent (exact)", parent: .tessSent, symbol: "paperplane.fill",
+                  colorRole: "neutral", fields: []),
         // His preferences that travel with a restore (docs/research/settings-object.md): one object, a fixed id, every
         // field optional (empty = never set; readers apply defaults). Never the Claude key or the folder bookmark.
         // Him (height, birth year, sex), optional and always private: it follows a weigh-in note's rules.
@@ -429,6 +462,9 @@ public enum SystemCatalog {
             FieldSpec(key: "quietEndMinute", name: "Quiet hours end", kind: .number),
             FieldSpec(key: "dayStartHour", name: "The day turns over at", kind: .number),
             FieldSpec(key: "mosaicBackdrop", name: "Mosaic scene", kind: .text),
+            FieldSpec(key: "rainAlert", name: "Rain alert", kind: .bool),
+            FieldSpec(key: "rainAlertLead", name: "Rain alert lead", kind: .number, unit: "min"),
+            FieldSpec(key: "placeLooks", name: "Looks", kind: .text),
         ]),
         // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
         // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.
@@ -451,8 +487,78 @@ public enum SystemCatalog {
             FieldSpec(key: "isPrivate", name: "Stays on this phone", kind: .bool, defaultValue: .bool(false)),
             FieldSpec(key: "day", name: "Day", kind: .date),
         ]),
+        // What Tess believes about him (docs/ai/harness/memory-context-m0-m6.md, M1). The title is the words (80
+        // characters, second person; a told belief keeps his own). A belief is closed when it changes, never deleted;
+        // deleting is his forget gesture. No evidence, no belief.
+        ClassSpec(key: .belief, name: "Belief", parent: .thing, symbol: "sparkles", colorRole: "neutral", fields: [
+            // The subject: one object, one class, or neither (him). Both set means the object.
+            FieldSpec(key: "subject", name: "About", kind: .ref, target: .thing),
+            FieldSpec(key: "subjectClass", name: "About class", kind: .classRef, target: .thing),
+            FieldSpec(key: "key", name: "Key", kind: .choice, defaultValue: .choice("fact"),
+                      options: ["usualTime", "cadence", "prefers", "avoids", "goal", "limit", "pattern", "alias",
+                                "fact"]),
+            // Typed JSON: {"text": ...} for words, {"hour": 18} for a usual time, and so on.
+            FieldSpec(key: "value", name: "Value", kind: .text),
+            FieldSpec(key: "confidence", name: "Confidence", kind: .number, defaultValue: .number(1)),
+            FieldSpec(key: "source", name: "Source", kind: .choice, defaultValue: .choice("told"),
+                      options: ["told", "noticed", "inferred", "learned"]),
+            FieldSpec(key: "evidence", name: "From", kind: .refList, target: .thing),
+            // Op ids behind it, as a JSON array of strings; an op or an object is enough.
+            FieldSpec(key: "evidenceOps", name: "From ops", kind: .text),
+            FieldSpec(key: "validFrom", name: "From", kind: .date),
+            FieldSpec(key: "validUntil", name: "Until", kind: .date),
+            FieldSpec(key: "supersedes", name: "Replaces", kind: .ref, target: .belief),
+            // The last 50 times it was used, as a JSON array of ISO dates.
+            FieldSpec(key: "uses", name: "Used", kind: .text),
+            // How many times the record has said it again; two make an inferred belief a fact.
+            FieldSpec(key: "confirmations", name: "Confirmed", kind: .number, defaultValue: .number(0)),
+            FieldSpec(key: "kept", name: "Kept", kind: .bool, defaultValue: .bool(false)),
+            // Which memory line it came from ("memory:<id>"), so a sync updates it in place and a forget follows it.
+            FieldSpec(key: "rule", name: "Rule", kind: .text),
+            FieldSpec(key: "isPrivate", name: "Stays on this phone", kind: .bool, defaultValue: .bool(false)),
+        ]),
+        // One of Tess's agents (docs/ai/harness/agents.md): a room's agent, with the personality it speaks to her in,
+        // its notebook folder and the classes it reads. The shipped ones mirror `AgentSpec`; a new room or app spawns
+        // one. The title is its room name ("Deck").
+        ClassSpec(key: .tessAgent, name: "Agent", parent: .thing, symbol: "person.2", colorRole: "neutral", fields: [
+            FieldSpec(key: "agentName", name: "Name", kind: .text),
+            FieldSpec(key: "room", name: "Room", kind: .text),
+            FieldSpec(key: "persona", name: "Personality", kind: .text),
+            FieldSpec(key: "notebook", name: "Notebook", kind: .text),
+            // Ids of the kinds it reads, beyond the system classes (a spawned room's own kind), as a JSON array.
+            FieldSpec(key: "classIDs", name: "Kinds", kind: .text),
+            FieldSpec(key: "shipped", name: "Shipped", kind: .bool, defaultValue: .bool(false)),
+            FieldSpec(key: "spawnedAt", name: "Started", kind: .date),
+        ]),
+        // One page of an agent's own notebook (`/memories/<agent>/...`): what it keeps for itself between runs. Only
+        // that agent reads or writes it. Written without ops, on the phone only, in no copy; a page written under lab
+        // is never read under strict.
+        ClassSpec(key: .notebookPage, name: "Notebook Page", parent: .thing, symbol: "book.closed",
+                  colorRole: "neutral", fields: [
+                      FieldSpec(key: "agentName", name: "Agent", kind: .text),
+                      FieldSpec(key: "path", name: "Path", kind: .text),
+                      FieldSpec(key: "body", name: "Body", kind: .text),
+                      FieldSpec(key: "lab", name: "Written under lab", kind: .bool, defaultValue: .bool(false)),
+                      FieldSpec(key: "updatedAt", name: "Updated", kind: .date),
+                  ]),
+        // One exchange an agent had (asked by Tess, what it reported), so the next run picks up where it left off.
+        // Written without ops, kept 90 days, on the phone only, in no copy. Walled words are stored as a placeholder,
+        // as her turns are.
+        ClassSpec(key: .agentEpisode, name: "Agent Episode", parent: .thing, symbol: "text.bubble",
+                  colorRole: "neutral", fields: [
+                      FieldSpec(key: "agentName", name: "Agent", kind: .text),
+                      FieldSpec(key: "at", name: "At", kind: .date),
+                      FieldSpec(key: "ask", name: "Asked", kind: .text),
+                      FieldSpec(key: "report", name: "Reported", kind: .text),
+                      FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+                      FieldSpec(key: "lab", name: "Under lab", kind: .bool, defaultValue: .bool(false)),
+                      FieldSpec(key: "held", name: "Held back", kind: .bool, defaultValue: .bool(false)),
+                  ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
-        ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning"),
+        ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning", fields: [
+            FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
+            FieldSpec(key: "pinnedAt", name: "Pinned at", kind: .date),
+        ]),
         ClassSpec(key: .listItem, name: "List Item", parent: .thing, symbol: "circle", colorRole: "planning",
                   fields: [
                       FieldSpec(key: "quantity", name: "Quantity", kind: .text),

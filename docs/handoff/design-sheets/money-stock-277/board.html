@@ -1,0 +1,283 @@
+<title>Money Stock</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: the Money landing with the position chart in the standard slot (paper and black), then the chart large as a sandbox with the money moves. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#3F7A62;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin:0}
+main{max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:64ch}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer}
+button.w:hover{color:var(--fg)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--money:#3F7A62;--clay:#9C4B2C;--gold:#7E6A1E;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none}
+.phone.black{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--money:#8DBFA7;--clay:#E2A07F;--gold:#D9C27A}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--money)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.n{font-family:var(--num);font-weight:400}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;touch-action:none;cursor:crosshair}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:22px}
+.kline b{color:var(--ink);font-weight:600}
+.ups{position:absolute;left:24px;right:24px;top:424px}
+.up{height:52px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:540px;display:flex;flex-wrap:wrap;gap:0 22px}
+.door{font-size:24px;font-weight:600;color:var(--ink2);padding:6px 0}
+.door.on{color:var(--money)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--money);padding:8px 0}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phone.black .tessw{color:#C79B7C}
+.big{width:100%;max-width:1062px;aspect-ratio:354/182;display:block;touch-action:none;cursor:crosshair}
+.moves{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:0 40px}
+.move{padding:14px 0;border-top:1px solid var(--line)}
+.move b{display:block;font-weight:600;margin-bottom:2px}
+.move span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 18px;align-items:center}
+.status{min-height:26px;color:var(--fg2);font-size:15px;margin-top:8px}
+.status b{color:var(--fg)}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Money / sheet 277</h2>
+<h1>You are the stock.</h1>
+<p class="lede">A stock chart where the stock is your money this month. The line is what is still yours, day by day: payday opens it high, every payment ticks it down. Past today the line goes dashed: where you will be at your pace, with the bills you know about already marked as the drops they will make, down to the close on the 31st. Last month runs faint behind. Under the chart, volume: how much went out each day, coloured by where. In the corner, two small tickers, your savings and your portfolio.</p>
+</header>
+
+<section aria-label="Landing">
+<div class="phones">
+ <div><div class="slot" data-fit><div class="phone" id="ph1">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b><span class="n" data-left>2,125</span> still yours.</b> At this pace you close the month at <b style="color:var(--money)"><span class="n" data-close>648</span></b>, after <b style="color:var(--clay)">rent</b>.</div>
+  <canvas class="key" data-st="small"></canvas>
+  <div class="kline" data-cap>Drag along the chart to read any day.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;today.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;on Monday is the next drop.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Paper, the 14th.</b> Solid to today, dashed to the close.</p></div>
+
+ <div><div class="slot" data-fit><div class="phone black" id="ph2">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b><span class="n" data-left>2,125</span> still yours.</b> At this pace you close the month at <b style="color:var(--money)"><span class="n" data-close>648</span></b>, after <b style="color:var(--clay)">rent</b>.</div>
+  <canvas class="key" data-st="small" data-scrub="22"></canvas>
+  <div class="kline" data-cap>Drag along the chart to read any day.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;today.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;on Monday is the next drop.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Black, scrubbing the 22nd.</b> A future day: what you will have after electricity.</p></div>
+</div>
+</section>
+
+<section aria-label="Sandbox">
+<h2>Trade</h2>
+<canvas class="big" id="big" data-st="big"></canvas>
+<div class="status" id="status" aria-live="polite">Drag along the chart to read any day. Tap a drop ahead to see the bill.</div>
+<div class="ctl" style="margin-top:6px">
+<button class="w" data-act="groceries">Groceries 86</button>
+<button class="w" data-act="drinks">Drinks 42</button>
+<button class="w" data-act="save">Save 300 for Japan</button>
+<button class="w" data-act="laptop">Laptop 1,800</button>
+<button class="w" data-act="side">Side job 180</button>
+<button class="w" data-act="day">Next day</button>
+<button class="w" data-act="defer">Defer the phone bill</button>
+<button class="w" data-act="whatif">What if 600</button>
+<button class="w" data-act="year" aria-pressed="false">Year</button>
+<button class="w" data-act="reset">Reset</button>
+</div>
+</section>
+
+<section aria-label="The moves">
+<h2>What it does</h2>
+<div class="moves">
+<div class="move"><b>The line is your position</b><span>What is still yours, from the open on payday to today. Every payment is a tick down; income is a tick up. The line draws itself when the page opens.</span></div>
+<div class="move"><b>The dashed line is the forecast</b><span>From today at your current pace, with the bills you already know about placed on their dates as the drops they will make. The close on the 31st is the number that matters: what you end the month with.</span></div>
+<div class="move"><b>Last month behind</b><span>Faint, the same chart for last month, so you see whether you are running above or below it without reading a number.</span></div>
+<div class="move"><b>Volume, by where</b><span>Bars under the chart: what went out each day, stacked in the colours of where it went. A heavy day is a tall bar; a quiet week is flat.</span></div>
+<div class="move"><b>Scrub any day</b><span>Drag along the chart: a hairline follows your finger and reads that day, past or future ("the 22nd: 1,090 after Electricity").</span></div>
+<div class="move"><b>Two small tickers</b><span>JAPAN (savings) and PORTFOLIO as sparklines in the corner, each with its figure for the month. Tap to open. The portfolio moves slowly through the day.</span></div>
+<div class="move"><b>A payment ticks</b><span>The line drops at today with a short flash, a bar grows, the forecast re-draws, the close updates. Under a second.</span></div>
+<div class="move"><b>No red, no green</b><span>Still yours in sage, forecast in ink, the kinds in their own colours. Up and down are directions on the chart, not judgements.</span></div>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var Q={};try{location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var p=kv.split('=');Q[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||'')})}catch(e){}
+var TAU=Math.PI*2;
+function lerp(a,b,u){return a+(b-a)*u}
+function clamp(v,a,b){return v<a?a:v>b?b:v}
+function ease(u){u=clamp(u,0,1);return 1-Math.pow(1-u,3)}
+function hex(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]}
+function rgba(c,a){return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(a==null?1:a)+')'}
+function mixc(a,b,u){return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)]}
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+function fmt2(n){return n%1?n.toFixed(2):fmt(n)}
+function ord(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+var K={in:{n:'In',c:['#3F7A62','#8DBFA7']},home:{n:'Home',c:['#9C4B2C','#E2A07F']},save:{n:'Japan',c:['#7E6A1E','#D9C27A']},food:{n:'Food',c:['#93611A','#C49A5E']},out:{n:'Going out',c:['#34506F','#A7BCD6']},body:{n:'Body',c:['#0B62AE','#8FB0EE']},subs:{n:'Subscriptions',c:['#1E6E77','#84C3C9']},big:{n:'Laptop',c:['#5B3FB8','#B9A9E0']}};
+// ---------- the month: a dated ledger. Day 0 = payday (30 Sep evening), days 1..31 October.
+function fresh(){return {today:14,days:31,
+ tx:[{d:0,n:'Salary',v:4200,in:1},{d:1,n:'Rent',k:'home',v:1150},{d:2,n:'Groceries',k:'food',v:64},{d:2,n:'Music',k:'subs',v:11},{d:3,n:'Gym',k:'body',v:49},{d:4,n:'Drinks',k:'out',v:38},{d:5,n:'Eating out',k:'food',v:42},{d:6,n:'Streaming',k:'subs',v:18},{d:7,n:'Groceries',k:'food',v:71},{d:8,n:'Electricity',k:'home',v:82},{d:8,n:'Badminton',k:'body',v:23},{d:9,n:'Side job',v:180,in:1},{d:9,n:'Cinema',k:'out',v:34},{d:10,n:'Japan',k:'save',v:400},{d:10,n:'Groceries',k:'food',v:47},{d:11,n:'Drinks',k:'out',v:66},{d:11,n:'Apps',k:'subs',v:34},{d:12,n:'Eating out',k:'food',v:58},{d:13,n:'Badminton',k:'body',v:24},{d:14,n:'Eating out',k:'food',v:44}],
+ due:[{d:17,n:'Phone',k:'home',v:45},{d:22,n:'Electricity',k:'home',v:82},{d:25,n:'Gym',k:'body',v:49},{d:31,n:'Rent',k:'home',v:1150}],
+ last:[4200,3050,2990,2930,2880,2840,2800,2720,2630,2580,2520,2460,2390,2340,2270,2190,2100,2030,1960,1870,1800,1740,1660,1600,1520,1430,1360,1290,1210,1140,1070,-80],
+ goal:{n:'Japan',v:1860,target:3000,path:[1460,1460,1460,1460,1460,1460,1460,1460,1460,1460,1860,1860,1860,1860,1860]},
+ port:{n:'Portfolio',v:12480,open:12190,path:[12190,12240,12170,12300,12360,12310,12410,12380,12450,12390,12470,12520,12440,12500,12480]}}}
+var M=fresh();
+function series(){var bal=0,s=[];for(var d=0;d<=M.today;d++){M.tx.forEach(function(t){if(t.d===d)bal+=t.in?t.v:-t.v});s.push(bal)}return s}
+function leftNow(){var s=series();return s[s.length-1]}
+function burn(){var out=0;M.tx.forEach(function(t){if(!t.in&&!isFixed(t))out+=t.v});return out/Math.max(1,M.today)}
+function isFixed(t){return t.k==='home'||t.k==='subs'||t.k==='save'||(t.k==='body'&&t.n==='Gym')}
+function forecast(){var s=series(),bal=s[s.length-1],f=[bal],b=burn();for(var d=M.today+1;d<=M.days;d++){bal-=b;M.due.forEach(function(x){if(x.d===d)bal-=x.v});f.push(bal)}return f}
+function closeAt(){var f=forecast();return f[f.length-1]}
+function committed(){return M.due.reduce(function(a,x){return a+x.v},0)}
+function spendable(){return leftNow()-committed()}
+function paces(){var days={};M.tx.forEach(function(t){if(!t.in&&!isFixed(t))days[t.d]=(days[t.d]||0)+t.v});var vals=[];for(var d=1;d<=M.today;d++)vals.push(days[d]||0);vals.sort(function(a,b){return a-b});var q=function(u){return vals[Math.min(vals.length-1,Math.floor(u*vals.length))]};return {lo:q(.25),hi:q(.85)}}
+function forecastAt(rate){var s=series(),bal=s[s.length-1],f=[bal];for(var d=M.today+1;d<=M.days;d++){bal-=rate;M.due.forEach(function(x){if(x.d===d)bal-=x.v});f.push(bal)}return f}
+function lastAtToday(){return M.last[Math.min(M.today,M.last.length-1)]}
+function kindTotal(k,upTo){var t=0;M.tx.forEach(function(x){if(!x.in&&x.k===k&&x.d<=upTo)t+=x.v});return t}
+var LASTK={food:{14:238,31:520},out:{14:120,31:210},body:{14:48,31:96},subs:{14:63,31:63}};
+function headline(){var h=[];var f=kindTotal('food',M.today),lf=LASTK.food[14]*(M.today/14);if(Math.abs(f-lf)>20)h.push('Food is running '+Math.round(Math.abs(f-lf)/lf*100)+'% '+(f<lf?'under':'over')+' last month.');
+ var o=kindTotal('out',M.today),lo=LASTK.out[14]*(M.today/14);if(Math.abs(o-lo)>20)h.push('Going out is '+Math.round(Math.abs(o-lo)/lo*100)+'% '+(o<lo?'under':'over')+' last month.');
+ var nd=M.due.slice().sort(function(a,b){return a.d-b.d})[0];if(nd)h.push(nd.n+' '+fmt(nd.v)+' goes out on the '+ord(nd.d)+'.');
+ var c=closeAt();h.push(c>=0?'On this pace you close the month with '+fmt(c)+'.':'On this pace you close the month '+fmt(-c)+' under.');
+ var d=leftNow()-lastAtToday();h.push((d>=0?fmt(d)+' ahead of':fmt(-d)+' behind')+' where you were last month today.');return h}
+function dayOut(d){var o={};M.tx.forEach(function(t){if(t.d===d&&!t.in)o[t.k]=(o[t.k]||0)+t.v});return o}
+var W={t:0,born:0,whatIf:0,year:false};
+M.deferred=[];
+function monthsBefore(){ // the ten months before last, synthesised from last month's shape with a little variation
+ var out=[];for(var m=0;m<10;m++){var k=.9+.2*Math.sin(m*1.7),o=4200*(1+.03*Math.sin(m*2.1));out.push(M.last.map(function(v,d){return d?o-(4200-v)*k:o}))}return out}
+var PAST=monthsBefore();
+function deferBill(x){M.due=M.due.filter(function(b){return b!==x});M.deferred.push(x);all(function(c){c.flash=W.t});say('<b>'+x.n+'</b> deferred to November. The close moves to '+fmt(closeAt())+'.');syncText()}
+function forecastWhatIf(v){var s=series(),bal=s[s.length-1]-v,f=[bal],b=burn();for(var d=M.today+1;d<=M.days;d++){bal-=b;M.due.forEach(function(x){if(x.d===d)bal-=x.v});f.push(bal)}return f}
+function rangeKinds(a,b){var o={},tot=0;M.tx.forEach(function(t){if(!t.in&&t.d>=a&&t.d<=b){o[t.k]=(o[t.k]||0)+t.v;tot+=t.v}});return {by:o,tot:tot}}
+
+function St(cv){var self=this;this.cv=cv;this.g=cv.getContext('2d');this.dark=!!cv.closest('.phone.black')||(!cv.closest('.phone')&&matchMedia('(prefers-color-scheme: dark)').matches);
+ this.compact=cv.dataset.st==='small';this.scrub=cv.dataset.scrub?+cv.dataset.scrub:-1;this.flash=-9;this.range=null;this.mode=null;
+ this.size();addEventListener('resize',function(){self.size()});
+ var dayAt=function(p){return clamp(Math.round((p.x-self.X0)/(self.X1-self.X0)*M.days),0,M.days)};
+ var move=function(e){var p=self.pt(e);if(self.mode==='whatif'){var v=clamp((self.Y1-p.y)/(self.Y1-self.Y0)*2400,0,2400);W.whatIf=Math.round(v/10)*10;say('<b>What if</b> you spent '+fmt(W.whatIf)+' today: the close would be '+fmt(forecastWhatIf(W.whatIf).slice(-1)[0])+'.');return}
+  if(self.mode==='range'){var d=dayAt(p);self.range.b=Math.min(M.today,Math.max(1,d));all(function(c){c.range=self.range});var a0=Math.min(self.range.a,self.range.b),b0=Math.max(self.range.a,self.range.b),rk=rangeKinds(a0,b0),ks=Object.keys(rk.by).sort(function(x,y){return rk.by[y]-rk.by[x]});say('<b>'+(a0===b0?'The '+ord(a0):ord(a0)+' to '+ord(b0))+'</b>: '+fmt(rk.tot)+' out'+(ks.length?' · '+ks.map(function(k){return K[k].n+' '+fmt(rk.by[k])}).join(', '):'')+'.');return}
+  var d2=dayAt(p);if(Math.abs(d2-self.scrub)>0||true){all(function(c){c.scrub=d2});self.read(d2)}};
+ cv.addEventListener('pointerdown',function(e){var p=self.pt(e);self.down=true;clearTimeout(self.hold);
+  if(p.x>self.X1+2&&p.x<self.X1+22&&p.y>self.Y0-6&&p.y<self.Y1+2&&!self.compact){self.mode='whatif';move(e);return}
+  if(p.y>self.VB-4){self.mode='range';self.range={a:Math.min(M.today,Math.max(1,dayAt(p))),b:Math.min(M.today,Math.max(1,dayAt(p)))};move(e);return}
+  self.mode='scrub';var d=dayAt(p);var bill=M.due.filter(function(x){return Math.abs(x.d-d)<=0})[0];if(bill&&d>M.today){self.hold=setTimeout(function(){self.mode=null;self.down=false;deferBill(bill)},520)}
+  move(e)});
+ cv.addEventListener('pointermove',function(e){if(self.down){var p=self.pt(e);if(self.mode==='scrub'&&self.hold&&Math.abs(dayAt(p)-self.scrub)>0)clearTimeout(self.hold);move(e)}});
+ var up=function(){clearTimeout(self.hold);var was=self.mode;self.down=false;self.mode=null;if(was==='whatif'){W.whatIf=0;say('Drag along the chart to read any day.');return}if(was==='range'){all(function(c){c.range=null});return}
+  if(!self.cv.dataset.scrub){all(function(c){if(!c.cv.dataset.scrub)c.scrub=-1});say(self.compact?'Tap to open the full chart (the sandbox below is that chart).':'Drag along the chart to read any day. Hold a drop ahead to defer the bill. Drag under the chart to sum a range.')}};
+ cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);cv.addEventListener('pointerleave',function(){if(self.down)up()})}
+St.prototype.size=function(){var r=this.cv.getBoundingClientRect();var dpr=Math.max(2,window.devicePixelRatio||1);var w=Math.max(1,r.width||354);this.cv.width=Math.round(w*dpr);this.cv.height=Math.round(w*182/354*dpr);this.s=this.cv.width/354;this.X0=14;this.X1=268;this.Y0=24;this.Y1=112;this.VB=140};
+St.prototype.pt=function(e){var r=this.cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*354,y:(e.clientY-r.top)/r.height*182}};
+St.prototype.read=function(d){var self=this;var s=series(),f=forecast();if(d<=M.today){var v=s[d],ev=M.tx.filter(function(t){return t.d===d});say('<b>'+(d===0?'Payday':'The '+ord(d))+'</b>: '+fmt(v)+' still yours'+(ev.length?' · '+ev.map(function(t){return t.n+' '+(t.in?'+':'')+fmt(t.v)}).join(', '):'')+'.')}
+ else{var v2=f[d-M.today],dues=M.due.filter(function(x){return x.d===d});say('<b>The '+ord(d)+'</b>, ahead: about '+fmt(v2)+(dues.length?' after '+dues.map(function(x){return x.n+' '+fmt(x.v)}).join(', '):' at your pace')+'.')}};
+St.prototype.draw=function(dt){var g=this.g,s=this.s,t=W.t,self=this,dk=this.dark;function kc(k){return hex(K[k].c[dk?1:0])}
+ var ink=dk?[232,227,218]:[36,36,35],ink2=dk?[164,158,150]:[110,106,99],ink3=dk?[107,103,95]:[169,164,155],bg=dk?[0,0,0]:[247,245,241],sage=kc('in');
+ g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,this.cv.width,this.cv.height);g.setTransform(s,0,0,s,0,0);
+ var X0=this.X0,X1=this.X1,Y0=this.Y0,Y1=this.Y1,VB=this.VB,cp=this.compact;if(W.year&&!cp){this.drawYear(g,ink,ink2,ink3,sage,bg);return}var ser=series(),fc=forecast();var all_=ser.concat(fc).concat(M.last);var hi=Math.max.apply(null,all_)*1.04,lo=Math.min(0,Math.min.apply(null,all_))-60;
+ function X(d){return X0+(X1-X0)*d/M.days}function Y(v){return Y1-(Y1-Y0)*(v-lo)/(hi-lo)}
+ var born=ease((W.t-W.born)/1.4);
+ // grid: the zero line and week ticks
+ g.strokeStyle=rgba(ink3,.7);g.lineWidth=.5;g.beginPath();g.moveTo(X0,Y(0));g.lineTo(X1,Y(0));g.stroke();
+ [1,8,15,22,29].forEach(function(d){g.beginPath();g.moveTo(X(d),Y1+1);g.lineTo(X(d),Y1+3.5);g.stroke();g.fillStyle=rgba(ink3);g.font='400 5px Figtree, system-ui, sans-serif';g.textAlign='center';g.fillText(d===1?'1 Oct':String(d),X(d),Y1+9.5)});
+ g.fillStyle=rgba(ink3);g.font='400 5px Figtree, system-ui, sans-serif';g.textAlign='center';g.fillText('31',X(31),Y1+9.5);
+ // last month, faint
+ g.strokeStyle=rgba(ink3,.75);g.lineWidth=.7;g.beginPath();M.last.forEach(function(v,d){d?g.lineTo(X(d),Y(v)):g.moveTo(X(d),Y(v))});g.stroke();
+ g.fillStyle=rgba(ink3);g.font='500 4.6px Figtree, system-ui, sans-serif';g.textAlign='right';g.fillText('LAST MONTH',X(26),Y(M.last[26])-3);
+ // the forecast fan: between your calmest and heaviest pace this month
+ var pc=paces(),fHi=forecastAt(pc.lo),fLo=forecastAt(pc.hi);g.save();g.beginPath();fHi.forEach(function(v,i){var d=M.today+i;i?g.lineTo(X(d),Y(v)):g.moveTo(X(d),Y(v))});for(var i2=fLo.length-1;i2>=0;i2--)g.lineTo(X(M.today+i2),Y(fLo[i2]));g.closePath();g.fillStyle=rgba(ink,dk?.09:.06);g.fill();g.restore();
+ // committed: what is still owed this month, as a floor under the line; everything above it is spendable
+ var cm=committed();if(cm>0){var yc=Y(cm);g.save();g.setLineDash([.8,2.2]);g.strokeStyle=rgba(kc('home'),.9);g.lineWidth=.6;g.beginPath();g.moveTo(X0,yc);g.lineTo(X1,yc);g.stroke();g.restore();g.fillStyle=rgba(kc('home'));g.textAlign='left';g.font='500 4.4px Figtree, system-ui, sans-serif';g.fillText(cp?'PROMISED '+fmt(cm):'PROMISED TO BILLS '+fmt(cm),X0+2,yc-2)}
+ // next payday: the jump at the end
+ g.fillStyle=rgba(sage);g.beginPath();g.moveTo(X(31),Y1+1);g.lineTo(X(31)-3,Y1+6);g.lineTo(X(31)+3,Y1+6);g.closePath();g.fill();
+ // the forecast: dashed from today, bills as drops with marks
+ var fl=ser.length-1,cl=fc[fc.length-1];g.save();g.setLineDash([1.6,2]);g.strokeStyle=rgba(ink,.8);g.lineWidth=.9;g.beginPath();fc.forEach(function(v,i){var d=M.today+i;i?g.lineTo(X(d),Y(v)):g.moveTo(X(d),Y(v))});g.stroke();g.restore();
+ M.due.forEach(function(x){var i=x.d-M.today;if(i<1)return;var top=fc[i-1]-burn(),yA=Y(top),yB=Y(fc[i]);g.strokeStyle=rgba(kc(x.k));g.lineWidth=1.6;g.beginPath();g.moveTo(X(x.d),yA);g.lineTo(X(x.d),yB);g.stroke();
+  if(x.v>60||self.scrub===x.d){g.fillStyle=rgba(kc(x.k));g.textAlign='center';g.font='600 4.6px Figtree, system-ui, sans-serif';g.fillText(x.n.toUpperCase(),X(x.d),yA-7);g.font='400 5.6px Outfit, Figtree, sans-serif';g.fillText(fmt(x.v),X(x.d),yA-1.5)}});
+ // deferred bills: where the drop was, faint, with the month it went to
+ M.deferred.forEach(function(x){var xx=X(x.d);g.save();g.setLineDash([1,1.5]);g.strokeStyle=rgba(kc(x.k),.6);g.lineWidth=1;g.beginPath();g.moveTo(xx,Y1-6);g.lineTo(xx,Y1-18);g.stroke();g.restore();g.fillStyle=rgba(kc(x.k),.9);g.textAlign='center';g.font='500 4.2px Figtree, system-ui, sans-serif';g.fillText(x.n.toUpperCase()+' → NOV',xx,Y1-21)});
+ // what if: a ghost forecast in slate for a purchase today, and its close
+ if(W.whatIf>0){var wf=forecastWhatIf(W.whatIf);g.save();g.setLineDash([1,2.4]);g.strokeStyle=rgba(kc('out'),.95);g.lineWidth=1;g.beginPath();wf.forEach(function(v,i){var d=M.today+i;i?g.lineTo(X(d),Y(v)):g.moveTo(X(d),Y(v))});g.stroke();g.restore();var wc=wf[wf.length-1];var wx=X(M.today+Math.floor((M.days-M.today)*.55)),wy=Y(wf[Math.floor((M.days-M.today)*.55)]);g.fillStyle=rgba(kc('out'));g.textAlign='center';g.font='600 4.6px Figtree, system-ui, sans-serif';g.fillText('IF '+fmt(W.whatIf)+' TODAY',wx,wy+12);g.font='400 7px Outfit, Figtree, sans-serif';g.fillText('closes at '+fmt(wc),wx,wy+20)}
+ // the close
+ var cy_=clamp(Y(cl),Y0+8,Y1-8);g.fillStyle=rgba(cl>=0?sage:ink);g.textAlign='right';g.font='600 4.8px Figtree, system-ui, sans-serif';g.fillText('CLOSE',X1-4,cy_-10);g.font='400 8px Outfit, Figtree, sans-serif';g.fillText(fmt(cl),X1-4,cy_-2);
+ if(!cp){var hx=X1+12,hy=W.whatIf>0?Y1-(W.whatIf/2400)*(Y1-Y0):Y1-4;g.strokeStyle=rgba(ink3,.6);g.lineWidth=.5;g.beginPath();g.moveTo(hx,Y0);g.lineTo(hx,Y1);g.stroke();g.fillStyle=rgba(kc('out'));g.beginPath();g.arc(hx,hy,2.4,0,TAU);g.fill();g.fillStyle=rgba(ink3);g.textAlign='center';g.font='500 4px Figtree, system-ui, sans-serif';g.fillText('WHAT IF',hx,Y0-6)}
+ // the position line, drawing itself, with a fill under it
+ var n=Math.max(1,Math.floor(born*(ser.length-1))),fr=born*(ser.length-1)-Math.floor(born*(ser.length-1));
+ g.beginPath();ser.forEach(function(v,d){if(d>n)return;var x=X(d),y=Y(v);if(d===n&&n<ser.length-1){x=lerp(X(d),X(d+1),fr);y=lerp(Y(v),Y(ser[d+1]),fr)}d?g.lineTo(x,y):g.moveTo(x,y)});var last=g;var endX=n<ser.length-1?lerp(X(n),X(n+1),fr):X(ser.length-1);
+ g.save();g.lineTo(endX,Y1);g.lineTo(X0,Y1);g.closePath();var fg=g.createLinearGradient(0,Y0,0,Y1);fg.addColorStop(0,rgba(sage,dk?.22:.16));fg.addColorStop(1,rgba(sage,0));g.fillStyle=fg;g.fill();g.restore();
+ g.strokeStyle=rgba(sage);g.lineWidth=1.5;g.lineJoin='round';g.beginPath();ser.forEach(function(v,d){if(d>n)return;var x=X(d),y=Y(v);if(d===n&&n<ser.length-1){x=lerp(X(d),X(d+1),fr);y=lerp(Y(v),Y(ser[d+1]),fr)}d?g.lineTo(x,y):g.moveTo(x,y)});g.stroke();
+ // today: the dot and the flash of the latest tick
+ var ty=Y(ser[ser.length-1]),tx=X(M.today);if(born>=1){var fe=W.t-this.flash;if(fe<.7){var a=1-fe/.7;g.fillStyle=rgba(sage,.35*a);g.beginPath();g.arc(tx,ty,4+fe*14,0,TAU);g.fill()}g.fillStyle=rgba(sage);g.beginPath();g.arc(tx,ty,2.2+.4*Math.sin(t*3),0,TAU);g.fill();g.fillStyle=rgba(bg);g.beginPath();g.arc(tx,ty,.9,0,TAU);g.fill()}
+ g.fillStyle=rgba(sage);g.textAlign='left';g.font='600 4.8px Figtree, system-ui, sans-serif';g.fillText('STILL YOURS',X0,Y0-10);g.font='300 12px Outfit, Figtree, sans-serif';g.fillText(fmt(ser[ser.length-1]),X0,Y0+1);if(!cp){g.fillStyle=rgba(ink3);g.font='400 4.4px Figtree, system-ui, sans-serif';g.fillText('YOU · OCT',X0,Y0-16)}
+ if(!cp){g.fillStyle=rgba(ink2);g.font='400 5px Figtree, system-ui, sans-serif';g.fillText('pace '+fmt(burn())+' a day · spendable '+fmt(spendable()),X0+50,Y0+1)}
+ // against last month, at today
+ var dl=ser[ser.length-1]-lastAtToday();g.fillStyle=rgba(dl>=0?sage:ink2);g.font='600 4.6px Figtree, system-ui, sans-serif';g.textAlign='left';g.fillText((dl>=0?'▲ ':'▼ ')+fmt(Math.abs(dl))+' VS LAST MONTH',X0+50,Y0-6);
+ // the headline: Tess reads the chart, one line at a time, cycling
+ var hl=headline(),hi_=Math.floor(t/4.5)%hl.length,ha=Math.min(1,(t%4.5)/.5)*Math.min(1,(4.5-(t%4.5))/.5);g.save();g.globalAlpha=ha;g.fillStyle=rgba(ink);g.textAlign='left';g.font='italic 400 6.6px Newsreader, Georgia, serif';g.fillText(hl[hi_],X0,VB+28);g.restore();
+ // volume: what went out each day, stacked by kind
+ var vmax=1;for(var d=1;d<=M.today;d++){var o=dayOut(d),tot=0;for(var k in o)tot+=o[k];vmax=Math.max(vmax,tot)}
+ var bw=(X1-X0)/M.days*.62;for(var d2=1;d2<=M.today;d2++){var o2=dayOut(d2),y=VB+14;var keys=Object.keys(o2).sort(function(a,b){return o2[b]-o2[a]});keys.forEach(function(k){var h=o2[k]/vmax*16*born;g.fillStyle=rgba(kc(k),.9);g.fillRect(X(d2)-bw/2,y-h,bw,h);y-=h})}
+ if(!cp){g.fillStyle=rgba(ink3);g.font='500 4.6px Figtree, system-ui, sans-serif';g.textAlign='left';g.fillText('OUT, BY DAY',X0,VB-9)}
+ if(this.range){var ra=Math.min(this.range.a,this.range.b),rb=Math.max(this.range.a,this.range.b);g.fillStyle=rgba(ink,dk?.1:.06);g.fillRect(X(ra)-bw/2-1,Y0-4,X(rb)-X(ra)+bw+2,VB+18-(Y0-4));var rk=rangeKinds(ra,rb),ks=Object.keys(rk.by).sort(function(x,y){return rk.by[y]-rk.by[x]}),bx=X0,bwid=X1-X0;ks.forEach(function(k){var w=rk.by[k]/Math.max(1,rk.tot)*bwid;g.fillStyle=rgba(kc(k));g.fillRect(bx,VB-6,w,3);bx+=w});g.fillStyle=rgba(ink);g.textAlign='right';g.font='400 7px Outfit, Figtree, sans-serif';g.fillText(fmt(rk.tot),X1,VB-9)}
+ // scrub: a hairline and the day's reading on the chart
+ if(this.scrub>=0){var d3=this.scrub,x3=X(d3);g.strokeStyle=rgba(ink,.7);g.lineWidth=.6;g.beginPath();g.moveTo(x3,Y0-4);g.lineTo(x3,VB+14);g.stroke();var v3=d3<=M.today?ser[d3]:fc[d3-M.today];g.fillStyle=rgba(d3<=M.today?sage:ink);g.beginPath();g.arc(x3,Y(v3),2.6,0,TAU);g.fill();
+  g.textAlign=x3>200?'right':'left';var lx=x3>200?x3-5:x3+5;g.fillStyle=rgba(ink);g.font='600 4.8px Figtree, system-ui, sans-serif';g.fillText((d3===0?'PAYDAY':'THE '+ord(d3).toUpperCase())+(d3>M.today?' · AHEAD':''),lx,Y(v3)-9);g.font='400 8px Outfit, Figtree, sans-serif';g.fillText((d3>M.today?'~':'')+fmt(v3),lx,Y(v3)-1);
+  if(!cp){var items=d3<=M.today?M.tx.filter(function(x){return x.d===d3}):M.due.filter(function(x){return x.d===d3});items.slice(0,4).forEach(function(it,j){var col=it.in?sage:kc(it.k);g.fillStyle=rgba(col);g.font='500 5px Figtree, system-ui, sans-serif';g.fillText(it.n+'  '+(it.in?'+':'')+fmt(it.v),lx,Y(v3)+9+j*7)});if(d3>M.today&&items.length){g.fillStyle=rgba(ink3);g.font='400 4.4px Figtree, system-ui, sans-serif';g.fillText('hold to defer',lx,Y(v3)+9+items.length*7)}}}
+ // tickers: savings and portfolio as sparklines in the corner
+ function spark(path,x,y,w,h,col,label,fig,sub){var mn=Math.min.apply(null,path),mx=Math.max.apply(null,path),rg=Math.max(1,mx-mn);g.strokeStyle=rgba(col);g.lineWidth=.9;g.beginPath();path.forEach(function(v,i){var px=x+w*i/(path.length-1),py=y+h-(v-mn)/rg*h;i?g.lineTo(px,py):g.moveTo(px,py)});g.stroke();g.fillStyle=rgba(col);g.beginPath();g.arc(x+w,y+h-(path[path.length-1]-mn)/rg*h,1.4,0,TAU);g.fill();
+  g.textAlign='left';g.font='600 4.6px Figtree, system-ui, sans-serif';g.fillText(label,x,y-5);g.font='400 7px Outfit, Figtree, sans-serif';g.fillText(fig,x,y+h+8.5);g.fillStyle=rgba(ink2);g.font='400 4.6px Figtree, system-ui, sans-serif';g.fillText(sub,x,y+h+14.5)}
+ var gx=288,gw=58;spark(M.goal.path,gx,30,gw,14,kc('save'),'JAPAN',fmt(M.goal.v),Math.round(M.goal.v/M.goal.target*100)+'% of '+fmt(M.goal.target));
+ var pp=M.port.path.slice();pp[pp.length-1]=M.port.v+Math.sin(t*.35)*18+Math.sin(t*2.3)*4;var ch=(pp[pp.length-1]-M.port.open)/M.port.open*100;spark(pp,gx,86,gw,16,ink2,'PORTFOLIO',fmt(pp[pp.length-1]),(ch>=0?'+':'')+ch.toFixed(1)+'% this month');
+ g.strokeStyle=rgba(ink3,.6);g.lineWidth=.5;g.beginPath();g.moveTo(280,Y0-6);g.lineTo(280,VB+14);g.stroke()};
+St.prototype.drawYear=function(g,ink,ink2,ink3,sage,bg){var X0=this.X0,X1=this.X1,Y0=this.Y0,Y1=this.Y1,VB=this.VB,dk=this.dark;var months=PAST.concat([M.last]);var ser=series();var all_=[].concat.apply([],months).concat(ser);var hi=Math.max.apply(null,all_)*1.04,lo=Math.min(0,Math.min.apply(null,all_))-60;
+ function X(d){return X0+(X1-X0)*d/31}function Y(v){return Y1-(Y1-Y0)*(v-lo)/(hi-lo)}
+ g.strokeStyle=rgba(ink3,.7);g.lineWidth=.5;g.beginPath();g.moveTo(X0,Y(0));g.lineTo(X1,Y(0));g.stroke();
+ months.forEach(function(m,i){g.strokeStyle=rgba(ink3,.25+.5*i/months.length);g.lineWidth=.6;g.beginPath();m.forEach(function(v,d){d?g.lineTo(X(d),Y(v)):g.moveTo(X(d),Y(v))});g.stroke()});
+ g.strokeStyle=rgba(sage);g.lineWidth=1.6;g.beginPath();ser.forEach(function(v,d){d?g.lineTo(X(d),Y(v)):g.moveTo(X(d),Y(v))});g.stroke();
+ g.fillStyle=rgba(sage);g.textAlign='left';g.font='600 4.8px Figtree, system-ui, sans-serif';g.fillText('THIS MONTH OVER THE LAST ELEVEN',X0,Y0-10);g.font='300 12px Outfit, Figtree, sans-serif';g.fillText(fmt(ser[ser.length-1]),X0,Y0+1);
+ g.fillStyle=rgba(ink2);g.font='400 5px Figtree, system-ui, sans-serif';g.fillText('every line is a month, payday to payday · this one in sage',X0+50,Y0+1);
+ // the closes: one dot per month along the bottom, the year's shape
+ var closes=months.map(function(m){return m[31]}),cmax=Math.max.apply(null,closes.map(Math.abs))||1;var mn=['N','D','J','F','M','A','M','J','J','A','S'];
+ closes.forEach(function(c,i){var x=X0+(X1-X0)*(i+.5)/12,y=VB+6-c/cmax*14;g.fillStyle=rgba(c>=0?sage:ink2);g.beginPath();g.arc(x,y,2,0,TAU);g.fill();g.fillStyle=rgba(ink3);g.textAlign='center';g.font='400 4.6px Figtree, system-ui, sans-serif';g.fillText(mn[i],x,VB+16)});
+ var cx=X0+(X1-X0)*11.5/12,cl=closeAt();g.fillStyle=rgba(cl>=0?sage:ink);g.beginPath();g.arc(cx,VB+6-cl/cmax*14,2.6,0,TAU);g.fill();g.fillStyle=rgba(sage);g.textAlign='center';g.font='600 4.6px Figtree, system-ui, sans-serif';g.fillText('O',cx,VB+16);
+ g.strokeStyle=rgba(ink3,.6);g.lineWidth=.5;g.beginPath();g.moveTo(X0,VB+6);g.lineTo(X1,VB+6);g.stroke();g.fillStyle=rgba(ink3);g.textAlign='left';g.font='500 4.6px Figtree, system-ui, sans-serif';g.fillText('HOW EACH MONTH CLOSED',X0,VB-9);
+ g.fillStyle=rgba(ink);g.textAlign='left';g.font='italic 400 6.6px Newsreader, Georgia, serif';g.fillText('You have closed under twice this year. Pinch in to come back to October.',X0,VB+28)};
+var views=[];function all(f){views.forEach(f)}
+var statusEl=$('#status');function say(s){if(statusEl)statusEl.innerHTML=s;$$('[data-cap]').forEach(function(e){e.innerHTML=s})}
+function syncText(){$$('[data-left]').forEach(function(e){e.textContent=fmt(leftNow())});$$('[data-close]').forEach(function(e){e.textContent=fmt(closeAt())})}
+function pay(n,k,v){M.tx.push({d:M.today,n:n,k:k,v:v});all(function(c){c.flash=W.t});say('<b>'+n+'</b>, '+fmt2(v)+'. '+fmt(leftNow())+' still yours; the close moves to '+fmt(closeAt())+'.');syncText()}
+function income(n,v){M.tx.push({d:M.today,n:n,v:v,in:1});all(function(c){c.flash=W.t});say('<b>'+n+'</b>, +'+fmt(v)+'. '+fmt(leftNow())+' still yours.');syncText()}
+function nextDay(){if(M.today>=M.days)return;M.today++;M.due=M.due.filter(function(x){if(x.d===M.today){M.tx.push({d:x.d,n:x.n,k:x.k,v:x.v});return false}return true});all(function(c){c.flash=W.t});say('The '+ord(M.today)+'. '+fmt(leftNow())+' still yours.');syncText()}
+views=$$('canvas[data-st]').map(function(cv){return new St(cv)});
+function fit(){var w=Math.min(402,document.documentElement.clientWidth-32),s=w/402;$$('[data-fit]').forEach(function(el){el.style.height=(874*s)+'px';el.firstElementChild.style.transform='scale('+s+')'});views.forEach(function(v){v.size()})}
+fit();addEventListener('resize',fit);
+$$('[data-act]').forEach(function(b){b.addEventListener('click',function(){var a=b.dataset.act;if(a==='groceries')pay('Groceries','food',86);if(a==='drinks')pay('Drinks','out',42);if(a==='save')pay('Japan','save',300);if(a==='laptop')pay('Laptop','big',1800);if(a==='side')income('Side job',180);if(a==='day')nextDay();if(a==='defer'){var ph=M.due.filter(function(x){return x.n==='Phone'})[0];if(ph)deferBill(ph)}if(a==='whatif'){W.whatIf=W.whatIf?0:600;say(W.whatIf?'<b>What if</b> you spent 600 today: the close would be '+fmt(forecastWhatIf(600).slice(-1)[0])+'. Drag the WHAT IF handle to change it.':'What if cleared.')}if(a==='year'){W.year=!W.year;b.setAttribute('aria-pressed',String(W.year));say(W.year?'The year: this month over the last eleven, and how each closed.':'Back to October.')}if(a==='reset'){M=fresh();W.born=W.t;syncText();say('Reset.')}})});
+(function(){var d=Q.demo;if(Q.born)W.born=-9;if(!d)return;if(d==='pay')pay('Groceries','food',86);if(d==='laptop')pay('Laptop','big',1800);if(d==='scrub'){all(function(c){c.scrub=+(Q.d||22)});views[0].read(+(Q.d||22))}if(d==='days'){for(var i=0;i<+(Q.n||8);i++)nextDay()}if(d==='defer'){deferBill(M.due.filter(function(x){return x.n==='Phone'})[0])}if(d==='whatif'){W.whatIf=+(Q.v||600)}if(d==='range'){all(function(c){c.range={a:+(Q.a||8),b:+(Q.b||12)}})}if(d==='year')W.year=true;if(d==='receipt'){all(function(c){c.scrub=+(Q.d||10)})}})();
+syncText();
+var last=performance.now();
+function frame(now){var dt=clamp((now-last)/1000,0,.05);last=now;W.t+=dt;views.forEach(function(v){try{v.draw(dt)}catch(e){if(!v.err){v.err=1;console.error(e);say('Error: '+e.message)}}});requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

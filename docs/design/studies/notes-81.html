@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Notes front</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 81 (E1): the Notes front in its first-use empty, a Private note row, and a long list, with the area's declared side BY THING (every-side.md row 22). Board by default; ?play records: the long list scrolls past a Private note, then the right edge opens the glance and the full side, then back to the page. -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:22px}
+.head h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.015em;flex:none;width:420px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:1000px}
+.grid{display:grid;grid-template-columns:repeat(4,393px);gap:22px 22px;align-items:start}
+.cap{margin-top:12px}
+.cap .opt{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6674}
+.cap h2{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;border-radius:44px}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--bg0:rgba(251,250,247,0);--tess:#2450D8;--ctx:#5A3DAF;--live:#C23A22}
+.obs{--ink:245,242,236;--bg:#121014;--bg0:rgba(18,16,20,0);--tess:#86B4FF;--ctx:#B8A3FF;--live:#FF7D62}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),.66)}
+.t44{font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.035em;white-space:nowrap}
+.ctx{left:22px;font-size:21px;line-height:28px;color:var(--ctx);white-space:nowrap}
+.sw{right:22px;font-weight:700;font-size:13px;letter-spacing:.08em;line-height:28px}
+.wl{left:22px;top:200px;width:346px;font-size:18px;line-height:24px;color:rgba(var(--ink),.66)}
+.hair{left:22px;top:232px;width:346px;height:1.5px;background:rgba(var(--ink),.12)}
+.nr{left:22px;width:280px;font-size:21px;line-height:28px}
+.nr.two{width:270px}
+.nr.pv{color:rgba(var(--ink),.66)}
+.nt{right:22px;font-weight:600;font-size:16px;line-height:28px;color:rgba(var(--ink),.66);white-space:nowrap}
+.quiet{left:22px;top:280px;font-size:21px;line-height:28px;color:rgba(var(--ink),.66)}
+.pin{left:0;right:0;top:0;height:104px;background:linear-gradient(var(--bg) 78%,var(--bg0))}
+.clip{left:0;right:0;top:0;height:736px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 calc(100% - 40px),transparent);mask-image:linear-gradient(#000 calc(100% - 40px),transparent)}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.tl{position:absolute;right:71px;width:270px;top:779px;transform:translateY(-50%);text-align:right;font-size:19px;line-height:25px;color:var(--tess)}
+.finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
+/* side */
+.gl{position:absolute;left:150px;right:0;top:186px;bottom:96px;padding:20px 22px 0 46px;background:linear-gradient(90deg,var(--bg0),var(--bg) 34px)}
+.gl .gk{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.gl .big{font-size:56px;line-height:62px;white-space:nowrap;font-weight:500;letter-spacing:-.02em;margin-top:10px}
+.gl .big small{font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px}
+.gl .gr{font-size:19px;line-height:26px;margin-top:12px}
+.gl .gr em{font-style:normal;color:rgba(var(--ink),.62)}
+.gl .more{position:absolute;left:46px;bottom:22px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.gl .more i{display:block;height:2px;margin-top:5px;background:currentColor}
+.sl{left:22px;width:350px;font-size:21px;line-height:28px;height:40px;display:flex;justify-content:space-between;align-items:center}
+.sl em{font-style:normal;font-size:19px;color:rgba(var(--ink),.62)}
+.glab{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+/* dynamic type */
+.ax .nr{width:346px;font-size:34px;line-height:42px}
+.ax .nt{position:static;display:block;font-size:20px;line-height:26px}
+/* voiceover */
+.vo{left:22px;width:350px;font-size:17px;line-height:22px}
+.vo b{display:inline-block;width:26px;font-weight:700;font-size:13px;letter-spacing:.04em;color:rgba(var(--ink),.5)}
+.vo i{font-style:normal;color:rgba(var(--ink),.62)}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+const band = line => `<div class="abs soul"></div>${line ? `<div class="tl">${line}</div>` : ''}`;
+const TESS_LIST = 'Landlord and Bench press come up most.';
+const TESS_SIDE = 'Landlord comes up most, 4 times.';
+const TESS_EMPTY = 'Say “note: bar felt heavy” and I’ll keep it here.';
+const P = 'Private note';
+const V = t => `<span style="font-weight:600">${t}</span>`;
+// 23 notes, newest first. [text, time, private?]
+const NOTES = [
+  ['Sleep is training too', 'yesterday'], [P, 'Tue', 1], [`${V('Bench press')} felt heavy on the third set`, 'Tue'],
+  [`Ask the ${V('Landlord')} about the boiler`, 'Mon'], ['Ideas for the garage gym', 'Oct 12'], ['Tacos need more lime', 'Oct 11'],
+  [`${V('Landlord')} is back on Friday`, 'Oct 9'], ['Call Mum on Sunday', 'Oct 8'], [P, 'Oct 6', 1], [`Try a narrower grip on ${V('Bench press')}`, 'Oct 5'],
+  ['Book the dentist', 'Oct 3'], ['Rack or stand for the garage', 'Oct 2'], [P, 'Sep 30', 1], ['Lamp for the desk', 'Sep 28'], ['Rice is nearly out', 'Sep 27'],
+  [`${V('Landlord')} wants the key back`, 'Sep 24'], ['Plan a long run', 'Sep 22'], [P, 'Sep 20', 1], ['Dinner with Sam', 'Sep 18'], ['Pull day felt easy', 'Sep 16'],
+  ['Read on Sundays', 'Sep 14'], [P, 'Sep 12', 1], ['First note', 'Sep 10'],
+];
+const isTwo = t => t.replace(/<[^>]+>/g, '').length > 30;
+const rows = (list, y0 = 280) => { let y = y0; return list.map(([t, w, pv]) => { const two = isTwo(t); const h = `<div class="abs nr${two ? ' two' : ''}${pv ? ' pv' : ''}" style="top:${y}px">${t}</div><div class="abs nt" style="top:${y + 2}px">${w}</div>`; y += two ? 74 : 46; return h; }).join(''); };
+const frame = (ctx, inner, o = {}) => `<div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div><div class="abs t44" style="left:22px;top:84px">Notes</div>
+  <div class="abs ctx" style="top:146px">${ctx}</div><div class="abs sw" style="top:146px">BY THING</div>
+  <div class="abs wl">Write something. @ links a thing.</div><div class="abs hair"></div>${inner}`;
+const page = (ctx, list) => frame(ctx, rows(list));
+const emptyPage = () => frame('A place for loose thoughts', '<div class="abs quiet">Nothing written yet.</div>');
+const scrolled = (list, dy) => `<div class="abs clip"><div class="abs" id="pg" style="left:0;top:0;width:393px;height:1500px;transform:translateY(${-dy}px)">${page('23 notes, the latest yesterday', list).replace(/<div class="abs lbl s2"[^>]*>‹ REVIEW<\/div>/, '')}</div></div>
+  <div class="abs pin"></div><div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>`;
+const sideGlance = () => `<div class="gl"><div class="gk">BY THING</div><div class="big">23<small>notes</small></div><div class="gr">Landlord <em>4</em></div><div class="gr">5 <em>private</em></div><div class="more">ALL OF THEM<i></i></div></div>`;
+const THINGS = [['Landlord', 4], ['Bench press', 3], ['Garage gym', 2], ['Tacos', 2], ['Mum', 1], ['Sam', 1]];
+const sideFull = () => `<div class="abs lbl s2" style="left:22px;top:58px">‹ NOTES</div><div class="abs ctx" style="top:84px">23 notes</div><div class="abs sw" style="top:84px">NOTES</div>
+  <div class="abs glab" style="left:22px;top:168px">MENTIONED</div>
+  ${THINGS.map(([n, c], i) => `<div class="abs sl" style="top:${196 + i * 40}px"><span>${n}</span><em>${c}</em></div>`).join('')}
+  <div class="abs glab" style="left:22px;top:466px">NOT ABOUT A THING</div><div class="abs sl" style="top:494px"><span>Notes on their own</span><em>9</em></div>
+  <div class="abs glab" style="left:22px;top:560px">KEPT PRIVATE</div><div class="abs sl" style="top:588px"><span>${P}</span><em>5</em></div>`;
+const sideEmpty = () => `<div class="abs lbl s2" style="left:22px;top:58px">‹ NOTES</div><div class="abs ctx" style="top:84px">Nothing written yet</div><div class="abs sw" style="top:84px">NOTES</div><div class="abs quiet" style="top:168px">Nothing to group yet.</div>`;
+const axPage = () => `<div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div><div class="abs" style="left:22px;top:84px;font-size:58px;line-height:64px;font-weight:500;letter-spacing:-.035em">Notes</div>
+  <div class="abs ctx" style="top:158px;font-size:30px;line-height:38px;white-space:normal;width:340px">23 notes, the latest yesterday</div><div class="abs sw" style="top:236px;font-size:20px">BY THING</div>
+  <div class="abs" style="left:22px;top:298px;width:346px">${[['Sleep is training too', 'yesterday'], [P, 'Tue', 1], [`${V('Bench press')} felt heavy on the third set`, 'Tue'], ['Ask the ' + V('Landlord') + ' about the boiler', 'Mon']].map(([t, w, pv]) => `<div style="margin-bottom:22px"><div class="nr${pv ? ' pv' : ''}" style="position:static;width:auto">${t}</div><div class="nt" style="position:static;margin-top:2px">${w}</div></div>`).join('')}</div>`;
+const voice = () => `<div class="abs lbl s2" style="left:22px;top:58px">VOICEOVER, IN ORDER</div>
+  ${[['1', 'Back, REVIEW, button'], ['2', 'Notes, heading'], ['3', '23 notes, the latest yesterday'], ['4', 'By thing, button. Swipes right too.'], ['5', 'Write something. Type at to link a thing. Text field'], ['6', 'Sleep is training too, yesterday'], ['7', 'Private note, Tuesday'], ['8', 'Bench press felt heavy on the third set, Tuesday'], ['9', 'And on down the list, one note a stop'], ['10', 'Tess: Landlord and Bench press come up most.']].map(([n, t], i) => `<div class="abs vo" style="top:${110 + i * 60}px"><b>${n}</b>${t}</div>`).join('')}
+  <div class="abs vo" style="top:730px;font-size:15px;color:rgba(var(--ink),.62);line-height:20px"><i>A written note says “Note kept.” UNDO waits 10 s here. A Private note is never read aloud as its words.</i></div>`;
+const ph = (cls, inner, opt, h, p) => `<div><div class="ph ${cls}">${inner}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
+const dim = (inner, o = .3) => `<div class="abs" style="inset:0;opacity:${o}">${inner}</div>`;
+
+if (!play) {
+  let b = `<div class="head"><h1>Sheet 81: the Notes front</h1><p>Notes stays one tap down from Review, under the one-line grammar of sheet 57, and this sheet draws its three states: the first-use empty page, a Private note row, and a long list that scrolls. It declares the side the inventory already holds for it, BY THING (LINKS). A row shows its own words and its time, never a list of names; "and N more" is the glance's and a note page's, not a row's. A Private note is a row reading "Private note" and nothing else, here, on the side, in Tess's line and in VoiceOver.</p></div><div class="grid">`;
+  b += ph('por', emptyPage() + band(TESS_EMPTY), 'FIRST USE', 'Nothing written yet.', 'The frame is the same: back word, Title 44, the writing line. One quiet line where the first row goes, never guilt, no art. Tess says how.');
+  b += ph('por', scrolled(NOTES, 0) + band(TESS_LIST), 'A PRIVATE NOTE ROW', 'It reads “Private note”', 'The second row. Its words stay out of the row, the context line, the side and Tess\'s line; it sits at 66% where a note\'s words are in ink, and has its time like any note. A tap opens it for him.');
+  b += ph('por', scrolled(NOTES, 330) + band(TESS_LIST), 'A LONG LIST', 'It scrolls; the band stays', 'Twenty-three notes, one line each (a long first line wraps to two, never cut). The page scrolls as one sheet under the back word; rows melt into Tess\'s band at 736. Pull down at the top opens the area index.');
+  b += ph('por', `<div class="abs" style="inset:0;opacity:.3">${scrolled(NOTES, 0)}</div>${sideGlance()}<div class="finger" style="left:372px;top:420px;opacity:1"></div>` + band(TESS_SIDE), 'THE SIDE, STOP 1', 'BY THING: 23 notes', 'The right edge, or the word BY THING at the right of the context line. The big fact, the top thing with its count, and "5 private", a count only. Foot word ALL OF THEM.');
+  b += ph('por', sideFull() + band(TESS_SIDE), 'THE SIDE, STOP 2 · LINKS', 'Each thing and how many notes', 'Counts, not sums: a note can mention two things. A thing opens its own page. Notes on their own, then the Private note count, one plain line with no words behind it. No controls here.');
+  b += ph('por', sideEmpty() + band(TESS_EMPTY), 'THE SIDE, EMPTY', 'Nothing to group yet.', 'With no notes the glance has no big fact, so the right edge opens straight to this. The swipe is never dead.');
+  b += ph('obs', scrolled(NOTES, 0) + band(TESS_LIST), 'OBSIDIAN', 'The list, same frame', 'Context #B8A3FF, Tess #86B4FF, ink 245,242,236. The Private note row stays at 66% of ink; nothing else changes.');
+  b += ph('obs ax', axPage() + band('Landlord and Bench press come up most.'), 'DYNAMIC TYPE, ACCESSIBILITY 3', 'One column, nothing cut', 'Rows wrap in full and the time drops under its row. The context line wraps and BY THING drops under it. Tess\'s line stays inside the band at three lines at most.');
+  b += ph('por', voice(), 'VOICEOVER', 'Reads in this order', 'The side is a custom action too (“Show by thing”), since a swipe is VoiceOver\'s own. A row reads its text then its time; a Private note reads only “Private note”.');
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.fonts.ready.then(() => { document.body.dataset.start = '1'; document.body.dataset.done = '1'; });
+} else {
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = '';
+  w.innerHTML = `<div class="ph por" id="ph">
+    <div class="body abs" style="inset:0" id="front">${scrolled(NOTES, 0)}</div>
+    <div class="abs" style="inset:0;opacity:0" id="gb">${sideGlance()}</div>
+    <div class="abs" style="inset:0;opacity:0" id="fb"><div class="abs" style="inset:0;background:var(--bg)"></div>${sideFull()}</div>
+    <div class="abs soul"></div><div class="tl" id="t1">${TESS_LIST}</div><div class="tl" id="t3" style="opacity:0">${TESS_SIDE}</div>
+    <div class="finger" id="fg"></div></div>`;
+  const $ = id => document.getElementById(id);
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const tween = (ms, f, e = ease) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(e(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  const fg = $('fg'), pg = $('pg'), fr = $('front'), gb = $('gb'), fb = $('fb');
+  const finger = (x, y, on = 1) => { fg.style.left = x + 'px'; fg.style.top = y + 'px'; fg.style.opacity = on; };
+  const scroll = dy => { pg.style.transform = `translateY(${-dy}px)`; };
+  const inn = p => { const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1);
+    fr.style.opacity = 1 - .7 * p1 - .3 * p2; fr.style.transform = `translateX(${-44 * p2}px)`;
+    gb.style.opacity = p <= 1 ? p1 : 1 - p2; gb.style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`;
+    fb.style.opacity = p2; fb.style.transform = `translateX(${60 * (1 - p2)}px)`;
+    $('t1').style.opacity = 1 - p1; $('t3').style.opacity = p1; };
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await wait(1400);
+    // 1. A flick up: the list scrolls under the back word; the Private note rows pass.
+    finger(300, 560); await tween(1500, q => { finger(300, 560 - 220 * q); scroll(330 * q); }); finger(0, 0, 0); await wait(1800);
+    await wait(100); finger(300, 340); await tween(1300, q => { finger(300, 340 + 220 * q); scroll(330 * (1 - q)); }); finger(0, 0, 0); await wait(1100);
+    // 2. The right edge: the glance, then the full side.
+    ['t1', 't3'].forEach(i => $(i).style.transition = 'none');
+    await tween(380, q => { finger(386 - 150 * q, 420); inn(q); }); finger(0, 0, 0); await wait(2400);
+    await tween(380, q => { finger(300 - 170 * q, 420); inn(1 + q); }); finger(0, 0, 0); await wait(2800);
+    // 3. The left edge brings him back to the page.
+    await tween(420, q => { finger(6 + 220 * q, 420); inn(2 - 2 * q); }); finger(0, 0, 0); await wait(1500);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

@@ -1,0 +1,235 @@
+<title>Money Tiles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: the Money landing with the tile month in the standard slot (paper and black), then the tiles large as a sandbox with the money moves. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#3F7A62;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin:0}
+main{max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:64ch}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w:hover{color:var(--fg)}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--money:#3F7A62;--clay:#9C4B2C;--teal:#1E6E77;--gold:#7E6A1E;--kitchen:#93611A;--slate:#34506F;--training:#0B62AE;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none}
+.phone.black{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--money:#8DBFA7;--clay:#E2A07F;--teal:#84C3C9;--gold:#D9C27A;--kitchen:#C49A5E;--slate:#A7BCD6;--training:#8FB0EE}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--money)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.n{font-family:var(--num);font-weight:400}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;touch-action:none;cursor:pointer}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:22px}
+.kline b{color:var(--ink);font-weight:600}
+.ups{position:absolute;left:24px;right:24px;top:424px}
+.up{height:52px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:540px;display:flex;flex-wrap:wrap;gap:0 22px}
+.door{font-size:24px;font-weight:600;color:var(--ink2);padding:6px 0}
+.door.on{color:var(--money)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--money);padding:8px 0}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phone.black .tessw{color:#C79B7C}
+.big{width:100%;max-width:1062px;aspect-ratio:354/182;display:block;touch-action:none;cursor:pointer}
+.moves{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:0 40px}
+.move{padding:14px 0;border-top:1px solid var(--line)}
+.move b{display:block;font-weight:600;margin-bottom:2px}
+.move span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 18px;align-items:center}
+.status{min-height:26px;color:var(--fg2);font-size:15px;margin-top:8px}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Money / sheet 271</h2>
+<h1>The month, in tiles.</h1>
+<p class="lede">One tile is 10. Everything that came in this month is the grid; every tile still sage is still yours. Each payment flips the next tiles to the colour of where it went, so the grid fills like a calendar of your spending. Every tile belongs to a real payment: tap one and its whole payment lights up; drag along the grid to scrub through the month. Swipe up and the tiles fly into blocks by kind, with last month's size in hollow tiles; swipe down and they go back to time.</p>
+</header>
+
+<section aria-label="Landing">
+<div class="phones">
+ <div><div class="slot" data-fit><div class="phone" id="ph1">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b><span class="n" data-in>4,380</span> in,</b> <b><span class="n" data-out>2,386</span> out.</b> <b style="color:var(--kitchen)">Food</b> is lighter than last month; <b style="color:var(--gold)">Japan</b> got <span class="n">400</span>.</div>
+  <canvas class="key" data-tiles="small"></canvas>
+  <div class="kline" data-cap>Tap a tile to see its payment. Swipe up to sort.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;went to&nbsp;<b style="color:var(--kitchen)">Food</b>.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;goes out Monday.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Paper.</b> The month in time order: coloured where it went, sage what is left.</p></div>
+
+ <div><div class="slot" data-fit><div class="phone black" id="ph2">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b><span class="n" data-in>4,380</span> in,</b> <b><span class="n" data-out>2,386</span> out.</b> <b style="color:var(--kitchen)">Food</b> is lighter than last month; <b style="color:var(--gold)">Japan</b> got <span class="n">400</span>.</div>
+  <canvas class="key" data-tiles="small" data-mode="sorted"></canvas>
+  <div class="kline" data-cap>Sorted by kind. Hollow tiles are last month.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;went to&nbsp;<b style="color:var(--kitchen)">Food</b>.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;goes out Monday.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Black, sorted.</b> The same tiles after a swipe up: blocks by kind, last month hollow.</p></div>
+</div>
+</section>
+
+<section aria-label="Sandbox">
+<h2>Use it</h2>
+<canvas class="big" id="big" data-tiles="big"></canvas>
+<div class="status" id="status" aria-live="polite">Tap a tile to see its payment. Drag along the grid to scrub the month. Swipe up to sort.</div>
+<div class="ctl" style="margin-top:6px">
+<button class="w" id="m-time" aria-pressed="true">In time</button>
+<button class="w" id="m-sort" aria-pressed="false">By kind</button>
+<span style="width:12px"></span>
+<button class="w" data-act="side">Side job 180</button>
+<button class="w" data-act="groceries">Groceries 86</button>
+<button class="w" data-act="coffee">Coffee 5.40</button>
+<button class="w" data-act="drinks">Drinks 42</button>
+<button class="w" data-act="save">Save 100 for Japan</button>
+<button class="w" data-act="reset">Reset</button>
+</div>
+</section>
+
+<section aria-label="The moves">
+<h2>What it does</h2>
+<div class="moves">
+<div class="move"><b>In adds tiles</b><span>Money in drops new sage tiles onto the end of the grid in a ripple. The grid is always exactly what came in this month.</span></div>
+<div class="move"><b>Out flips tiles</b><span>A payment flips the next sage tiles, one after another, to its kind's colour, with a flash. Coffee flips one; rent flips a hundred and fifteen.</span></div>
+<div class="move"><b>Every tile is a payment</b><span>Tap a tile: all the tiles of that payment light up and the line under the grid says what it was and when. Drag across to scrub through the month payment by payment.</span></div>
+<div class="move"><b>Sort by kind</b><span>Swipe up: the tiles fly into blocks, one per kind (Home, Food, Body, Subscriptions, Going out, Japan), with what is left in sage at the end. Swipe down: back to time.</span></div>
+<div class="move"><b>Last month, hollow</b><span>Sorted, each block shows last month as hollow tiles where it went further. Accountability at a glance, nothing coloured good or bad.</span></div>
+<div class="move"><b>The colours are the kinds</b><span>Home clay, Food the kitchen's ochre, Body the training blue, Subscriptions teal, Going out slate, saving gold, still yours sage (sheet 241).</span></div>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var Q={};try{location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var p=kv.split('=');Q[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||'')})}catch(e){}
+function lerp(a,b,u){return a+(b-a)*u}
+function clamp(v,a,b){return v<a?a:v>b?b:v}
+function hex(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]}
+function mixc(a,b,u){return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)]}
+function rgba(c,a){return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(a==null?1:a)+')'}
+function ease(u){u=clamp(u,0,1);return u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2}
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+function fmt2(n){return n%1?n.toFixed(2):fmt(n)}
+
+// ---------- kinds (sheet 241: room accent or kinds palette), light and dark
+var KINDS={home:{n:'Home',l:'#9C4B2C',d:'#E2A07F',last:1277},food:{n:'Food',l:'#93611A',d:'#C49A5E',last:520},body:{n:'Body',l:'#0B62AE',d:'#8FB0EE',last:96},
+ subs:{n:'Subscriptions',s:'Subs',l:'#1E6E77',d:'#84C3C9',last:63},out:{n:'Going out',s:'Out',l:'#34506F',d:'#A7BCD6',last:210},save:{n:'Japan',l:'#7E6A1E',d:'#D9C27A',last:300},left:{n:'Still yours',l:'#3F7A62',d:'#8DBFA7'}};
+var ORDER=['home','food','body','subs','out','save'];
+var UNIT=10;
+// ---------- the month so far (Tue 14 Oct)
+function fresh(){return {ins:[{n:'Salary',v:4200,d:'30 Sep'}],
+ outs:[{n:'Rent',k:'home',v:1150,d:'1 Oct'},{n:'Groceries',k:'food',v:64,d:'2 Oct'},{n:'Music',k:'subs',v:11,d:'2 Oct'},{n:'Gym',k:'body',v:49,d:'3 Oct'},{n:'Drinks',k:'out',v:38,d:'4 Oct'},{n:'Eating out',k:'food',v:42,d:'5 Oct'},
+  {n:'Streaming',k:'subs',v:18,d:'6 Oct'},{n:'Groceries',k:'food',v:71,d:'7 Oct'},{n:'Electricity',k:'home',v:82,d:'8 Oct'},{n:'Badminton',k:'body',v:23,d:'8 Oct'},{n:'Side job',in:1,v:180,d:'9 Oct'},{n:'Cinema',k:'out',v:34,d:'9 Oct'},
+  {n:'Japan',k:'save',v:400,d:'10 Oct'},{n:'Groceries',k:'food',v:47,d:'10 Oct'},{n:'Drinks',k:'out',v:66,d:'11 Oct'},{n:'Apps',k:'subs',v:34,d:'11 Oct'},{n:'Eating out',k:'food',v:58,d:'12 Oct'},{n:'Badminton',k:'body',v:24,d:'13 Oct'},{n:'Eating out',k:'food',v:44,d:'14 Oct'}]}}
+var M=fresh();
+function tilesOf(v){return Math.max(1,Math.round(v/UNIT))}
+// Build the tile list: in-tiles define the grid; out-payments recolour tiles in time order.
+function build(){var tiles=[],cursor=0,txs=[];
+ M.ins.forEach(function(x){for(var i=0;i<tilesOf(x.v);i++)tiles.push({k:'left',tx:-1,born:x})});
+ M.outs.forEach(function(x,ti){if(x.in){for(var i=0;i<tilesOf(x.v);i++)tiles.push({k:'left',tx:-1,born:x});return}var n=tilesOf(x.v);for(var j=0;j<n&&cursor<tiles.length;j++){tiles[cursor].k=x.k;tiles[cursor].tx=ti;cursor++}});
+ return {tiles:tiles,spent:cursor}}
+function totals(){var t={};ORDER.forEach(function(k){t[k]=0});var inn=M.ins.reduce(function(a,x){return a+x.v},0);M.outs.forEach(function(x){if(x.in)inn+=x.v;else t[x.k]+=x.v});var out=ORDER.reduce(function(a,k){return a+t[k]},0);return {by:t,in:inn,out:out}}
+
+// ---------- grid geometry (354 x 182 slot)
+var PITCH=8,TS=6.6,COLS=44,ROWS=12,X0=1,Y0=4;
+function timePos(i){return {x:X0+(i%COLS)*PITCH,y:Y0+Math.floor(i/COLS)*PITCH}}
+// sorted: each kind takes whole columns top to bottom, a column of gap between kinds, "still yours" last
+function sortLayout(tiles){var pos=new Array(tiles.length),col=0,groups=[],T=totals();
+ ORDER.concat(['left']).forEach(function(k){var idx=[];tiles.forEach(function(t,i){if(t.k===k)idx.push(i)});var lastN=k==='left'?0:Math.round((KINDS[k].last||0)/UNIT);var span=Math.max(idx.length,lastN);if(!span)return;var c0=col;
+  idx.forEach(function(ti,j){pos[ti]={x:X0+(c0+Math.floor(j/ROWS))*PITCH,y:Y0+(j%ROWS)*PITCH}});
+  var ghosts=[];for(var j=idx.length;j<lastN;j++)ghosts.push({x:X0+(c0+Math.floor(j/ROWS))*PITCH,y:Y0+(j%ROWS)*PITCH});
+  var cols=Math.ceil(span/ROWS);groups.push({k:k,c0:c0,cols:cols,n:idx.length,ghosts:ghosts,v:k==='left'?T.in-T.out:T.by[k],last:KINDS[k].last});col+=cols+1});
+ return {pos:pos,groups:groups}}
+
+function Tiles(cv){var self=this;this.cv=cv;this.g=cv.getContext('2d');this.dark=!!cv.closest('.phone.black');this.mode=cv.dataset.mode||'time';this.mt=this.mode==='sorted'?1:0;
+ this.anim={};this.hl=-1;this.hlT=0;this.ripple=[];this.size();addEventListener('resize',function(){self.size()});
+ cv.addEventListener('pointerdown',function(e){self.down(e)});cv.addEventListener('pointermove',function(e){self.move(e)});cv.addEventListener('pointerup',function(e){self.up(e)});cv.addEventListener('pointercancel',function(){self.st=null})}
+Tiles.prototype.size=function(){var r=this.cv.getBoundingClientRect();var dpr=Math.max(2,window.devicePixelRatio||1);var w=Math.max(1,r.width||354);this.cv.width=Math.round(w*dpr);this.cv.height=Math.round(w*182/354*dpr);this.s=this.cv.width/354};
+Tiles.prototype.pt=function(e){var r=this.cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*354,y:(e.clientY-r.top)/r.height*182}};
+Tiles.prototype.tileAt=function(p){var B=STATE,best=-1;for(var i=0;i<B.tiles.length;i++){var q=this.posOf(i);if(p.x>=q.x-1&&p.x<=q.x+TS+1&&p.y>=q.y-1&&p.y<=q.y+TS+1){best=i;break}}return best};
+Tiles.prototype.down=function(e){var p=this.pt(e);try{this.cv.setPointerCapture(e.pointerId)}catch(_){}this.st={p:p,t:performance.now(),moved:false};this.pick(p)};
+Tiles.prototype.move=function(e){if(!this.st)return;var p=this.pt(e);if(Math.abs(p.y-this.st.p.y)>6||Math.abs(p.x-this.st.p.x)>6)this.st.moved=true;this.pick(p)};
+Tiles.prototype.up=function(e){var st=this.st;this.st=null;if(!st)return;var p=this.pt(e),dy=p.y-st.p.y,dx=p.x-st.p.x;
+ if(Math.abs(dy)>30&&Math.abs(dy)>Math.abs(dx)*1.4){setMode(dy<0?'sorted':'time');return}
+ if(!st.moved&&this.tileAt(p)<0){all(function(t){t.hl=-1});say('Tap a tile to see its payment. Swipe up to sort.')}};
+Tiles.prototype.pick=function(p){var i=this.tileAt(p);if(i<0)return;var t=STATE.tiles[i];var key=t.tx>=0?'o'+t.tx:'l';if(this.hlKey===key)return;var self=this;all(function(x){x.hl=t.tx;x.hlLeft=t.tx<0;x.hlKey=key;x.hlT=W.t});
+ if(t.tx>=0){var o=M.outs[t.tx];say('<b>'+o.n+'</b>, '+fmt2(o.v)+', '+o.d+', to '+KINDS[o.k].n+'. '+tilesOf(o.v)+' tile'+(tilesOf(o.v)>1?'s':'')+'.')}else{var T=totals();say('<b>Still yours</b>: '+fmt(T.in-T.out)+' of the '+fmt(T.in)+' that came in.')}};
+Tiles.prototype.posOf=function(i){var a=timePos(i),b=(LAYOUT.pos[i]||a),an=this.anim[i];var u=this.mt;if(u>0&&u<1){var st=(i%COLS)/COLS*.35+Math.floor(i/COLS)/ROWS*.1;u=ease(clamp((this.mtRaw-st)/(1-.45),0,1));if(this.mode==='time')u=ease(clamp((this.mtRaw-st)/(1-.45),0,1))}return {x:lerp(a.x,b.x,u),y:lerp(a.y,b.y,u)}};
+Tiles.prototype.draw=function(dt){var g=this.g,s=this.s,self=this;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,this.cv.width,this.cv.height);g.setTransform(s,0,0,s,0,0);
+ var target=this.mode==='sorted'?1:0;if(this.modeTarget!==target){this.modeFrom=this.mtRaw==null?target:this.mtRaw;this.modeT0=W.t;this.modeTarget=target}this.mtRaw=clamp(lerp(this.modeFrom,target,clamp((W.t-this.modeT0)/1.1,0,1)),0,1);this.mt=this.mtRaw;
+ var dk=this.dark,ink=dk?[232,227,218]:[36,36,35],ink2=dk?[164,158,150]:[110,106,99];
+ function kc(k){return hex(dk?KINDS[k].d:KINDS[k].l)}
+ // ghosts of last month, sorted mode
+ if(this.mt>.6){var ga=(this.mt-.6)/.4;LAYOUT.groups.forEach(function(gp){if(gp.k==='left')return;var c=kc(gp.k);g.strokeStyle=rgba(c,.55*ga);g.lineWidth=.6;gp.ghosts.forEach(function(q){g.strokeRect(q.x+.3,q.y+.3,TS-.6,TS-.6)})})}
+ var B=STATE;for(var i=0;i<B.tiles.length;i++){var t=B.tiles[i],q=this.posOf(i),c=kc(t.k);var A=this.anim[i],scaleY=1,flash=0,born=1;
+  if(A){var e=W.t-A.t0;if(A.type==='flip'){var u=clamp(e/.34,0,1);if(e<0){c=kc('left')}else if(u<.5){c=kc(A.from);scaleY=1-u*2}else{scaleY=(u-.5)*2;flash=Math.max(0,1-(e-.17)/.6)}if(e>1)delete this.anim[i]}
+   else if(A.type==='born'){var u2=clamp(e/.45,0,1);born=u2<=0?0:1-Math.pow(1-u2,3)*(1-u2*.0);if(e<0)born=0;flash=Math.max(0,1-e/.7)*(e>0?1:0);if(e>1)delete this.anim[i]}}
+  if(born<=0)continue;
+  var dim=(this.hl!=null&&this.hlKey)?((this.hlLeft?t.tx<0:t.tx===this.hl)?1:.28):1;var hlOn=this.hlKey&&((this.hlLeft&&t.tx<0)||(!this.hlLeft&&t.tx===this.hl));
+  var col=mixc(c,dk?[0,0,0]:[255,255,255],t.k==='left'?(dk?.35:.25):0);if(t.k==='left'){var sw=((W.t*.18)%1.6)-.3,ph=(q.x/354)-sw;if(ph>-.06&&ph<.06)col=mixc(col,[255,255,255],(1-Math.abs(ph)/.06)*.35)}if(flash>0)col=mixc(col,[255,255,255],.55*flash);
+  var w=TS*born,h=TS*scaleY*born,x=q.x+(TS-w)/2,y=q.y+(TS-h)/2;g.globalAlpha=dim;g.fillStyle=rgba(col);
+  var r=1.1;g.beginPath();g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.quadraticCurveTo(x+w,y,x+w,y+r);g.lineTo(x+w,y+h-r);g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);g.lineTo(x+r,y+h);g.quadraticCurveTo(x,y+h,x,y+h-r);g.lineTo(x,y+r);g.quadraticCurveTo(x,y,x+r,y);g.fill();
+  if(hlOn){g.strokeStyle=rgba(ink,.8);g.lineWidth=.5;g.stroke()}
+  g.globalAlpha=1}
+ // the cursor: a blinking outline on the first tile still yours, like a text caret, in time order
+ if(this.mt<.3&&STATE.spent<B.tiles.length){var cq=this.posOf(STATE.spent),bl=.5+.5*Math.sin(W.t*5);g.strokeStyle=rgba(ink,(.35+.55*bl)*(1-this.mt/.3));g.lineWidth=.9;g.strokeRect(cq.x-.6,cq.y-.6,TS+1.2,TS+1.2)}
+ // a slow light runs across the sage tiles now and then: the money that is still yours is live
+ // labels: sorted mode names each block under it
+ var ly=Y0+ROWS*PITCH+9;
+ if(this.mt>.5){var a=(this.mt-.5)/.5;g.globalAlpha=a;var narrowN=0;LAYOUT.groups.forEach(function(gp){var x=X0+gp.c0*PITCH,c=kc(gp.k),narrow=gp.cols<4,dy=narrow?(narrowN++%2)*24:0;g.fillStyle=rgba(c);g.textAlign='left';g.font='600 5.6px Figtree, system-ui, sans-serif';var name=(KINDS[gp.k].s&&gp.cols<8?KINDS[gp.k].s:KINDS[gp.k].n).toUpperCase();if(dy){g.strokeStyle=rgba(c,.6);g.lineWidth=.4;g.beginPath();g.moveTo(x+.5,ly-6);g.lineTo(x+.5,ly+dy-6);g.stroke()}g.fillText(name,x,ly+dy);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(gp.v),x,ly+11+dy);
+   if(gp.k!=='left'){g.fillStyle=rgba(ink2);g.font='400 5.4px Figtree, system-ui, sans-serif';g.fillText('last '+fmt(gp.last),x,ly+19+dy)}});g.globalAlpha=1}
+ if(this.mt<.5){var a2=1-this.mt/.5;g.globalAlpha=a2;var T=totals();g.textAlign='left';g.fillStyle=rgba(kc('left'));g.font='600 5.6px Figtree, system-ui, sans-serif';g.fillText('IN',X0,ly);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(T.in),X0,ly+11);
+  g.fillStyle=rgba(ink);g.font='600 5.6px Figtree, system-ui, sans-serif';g.fillText('OUT',X0+60,ly);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(T.out),X0+60,ly+11);
+  g.fillStyle=rgba(kc('left'));g.font='600 5.6px Figtree, system-ui, sans-serif';g.fillText('STILL YOURS',X0+120,ly);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(T.in-T.out),X0+120,ly+11);
+  g.globalAlpha=1}
+};
+var W={t:0},STATE,LAYOUT,views=[];function all(f){views.forEach(f)}
+function rebuild(){STATE=build();LAYOUT=sortLayout(STATE.tiles)}
+rebuild();
+var statusEl=$('#status');
+function say(s){if(statusEl)statusEl.innerHTML=s;$$('[data-cap]').forEach(function(e){e.innerHTML=s})}
+function syncText(){var T=totals();$$('[data-in]').forEach(function(e){e.textContent=fmt(T.in)});$$('[data-out]').forEach(function(e){e.textContent=fmt(T.out)})}
+function setMode(m){all(function(v){v.mode=m});$('#m-time').setAttribute('aria-pressed',String(m==='time'));$('#m-sort').setAttribute('aria-pressed',String(m==='sorted'));say(m==='sorted'?'By kind. Hollow tiles are where last month went further.':'In time. Coloured is where it went; sage is still yours.')}
+// payments flip the next sage tiles in sequence; income drops new tiles in a ripple
+function pay(n,k,v){var before=STATE.spent;M.outs.push({n:n,k:k,v:v,d:'14 Oct'});rebuild();var n2=STATE.spent-before;
+ all(function(view){for(var j=0;j<n2;j++)view.anim[before+j]={type:'flip',from:'left',t0:W.t+j*Math.min(.06,1.2/n2)}});
+ say('<b>'+n+'</b>, '+fmt2(v)+', to '+KINDS[k].n+'. '+n2+' tile'+(n2>1?'s':'')+' flipped.');syncText()}
+function income(n,v){var before=STATE.tiles.length;M.outs.push({n:n,in:1,v:v,d:'14 Oct'});rebuild();var n2=STATE.tiles.length-before;
+ all(function(view){for(var j=0;j<n2;j++)view.anim[before+j]={type:'born',t0:W.t+j*.04}});say('<b>'+n+'</b>, '+fmt(v)+' in. '+n2+' new tiles.');syncText()}
+views=$$('canvas[data-tiles]').map(function(cv){return new Tiles(cv)});
+function fit(){var w=Math.min(402,document.documentElement.clientWidth-32),s=w/402;$$('[data-fit]').forEach(function(el){el.style.height=(874*s)+'px';el.firstElementChild.style.transform='scale('+s+')'});views.forEach(function(v){v.size()})}
+fit();addEventListener('resize',fit);
+$('#m-time').addEventListener('click',function(){setMode('time')});$('#m-sort').addEventListener('click',function(){setMode('sorted')});
+$$('[data-act]').forEach(function(b){b.addEventListener('click',function(){var a=b.dataset.act;
+ if(a==='side')income('Side job',180);if(a==='groceries')pay('Groceries','food',86);if(a==='coffee')pay('Coffee','food',5.4);if(a==='drinks')pay('Drinks','out',42);if(a==='save')pay('Japan','save',100);
+ if(a==='reset'){M=fresh();rebuild();all(function(v){v.anim={};v.hlKey=null});syncText();say('Reset.')}})});
+(function(){var d=Q.demo;if(!d)return;var big=views[views.length-1];
+ if(d==='sorted')setMode('sorted');if(d==='pay')pay('Groceries','food',86);if(d==='rent')pay('Rent','home',1150);if(d==='income')income('Side job',180);
+ if(d==='tap'){var idx=STATE.tiles.findIndex(function(t){return t.tx>=0&&M.outs[t.tx].n==='Japan'});views.forEach(function(v){v.hl=STATE.tiles[idx].tx;v.hlLeft=false;v.hlKey='o'+STATE.tiles[idx].tx});var o=M.outs[STATE.tiles[idx].tx];say('<b>'+o.n+'</b>, '+fmt2(o.v)+', '+o.d+', to '+KINDS[o.k].n+'. '+tilesOf(o.v)+' tiles.')}})();
+syncText();
+var last=performance.now();
+function frame(now){var dt=clamp((now-last)/1000,0,.05);last=now;W.t+=dt;if(Q.debug)say(views.map(function(v){return v.mode+':'+(v.mt==null?'n':v.mt.toFixed(2))+':'+(v.mtRaw==null?'n':String(v.mtRaw).slice(0,5))}).join(' ')+' dt '+dt.toFixed(3));views.forEach(function(v){try{v.draw(dt)}catch(e){if(!v.err){v.err=1;console.error(e);say('Error: '+e.message)}}});requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

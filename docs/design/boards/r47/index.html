@@ -1,0 +1,151 @@
+<title>Pantry page</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --kit:#A8701F;--kitT:#93611A;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--kit:#C49A5E;--kitT:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--kit:#C49A5E;--kitT:#C49A5E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head,.sec{max-width:1120px;margin:0 auto 40px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:0}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+.notes{flex:1 1 340px;min-width:0;max-width:540px;display:flex;flex-direction:column;gap:12px}
+.notes p{margin:0}
+.flow{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;font-size:16px;color:var(--ink3)}
+.flow b{color:var(--ink);font-weight:600}
+.try{display:grid;grid-template-columns:22px 1fr;gap:6px;font-size:16px}
+.try span:nth-child(odd){color:var(--ink3);font-family:var(--nums)}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr:hover{color:var(--ink)}
+.tap{all:unset;cursor:pointer}
+.tr:focus-visible,.tap:focus-visible,.act:focus-visible{outline:2px solid var(--ink3);outline-offset:3px}
+.phone{position:relative;width:350px;max-width:100%;height:720px;background:var(--phone);border:1px solid var(--edge);border-radius:44px;overflow:hidden;box-sizing:border-box;flex:none;user-select:none;-webkit-user-select:none}
+.scr{position:absolute;inset:0}
+.z{position:absolute;left:24px;right:24px}
+.n{font-family:var(--nums);font-weight:300}
+.big{font-family:var(--nums);font-weight:200;line-height:.86;letter-spacing:-.02em}
+.brief{text-align:right;font-size:19px;line-height:25px;height:50px;overflow:hidden}
+.l{height:26px;line-height:26px;font-size:15px;white-space:nowrap;overflow:hidden;color:var(--ink2);display:flex;justify-content:space-between;gap:10px}
+.act{all:unset;cursor:pointer;font-size:19px;font-weight:600}
+.tess{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#FFA90F,#FF5A26 55%,#E5341C)}
+.ft{bottom:24px;height:40px;display:flex;justify-content:space-between;align-items:center}
+.u{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+</style>
+<div class="head">
+  <p class="lab">Round 232, Oct 23</p>
+  <h1>Pantry, place by place</h1>
+  <p class="sub">The Pantry page from the Kitchen landing. One place at a time on a three-place dial: To get, Fridge, Freezer, Shelf, Counter. Each place lists its things in short pages that turn up and down. Swipe a thing right when it's used up and it flies onto To get.</p>
+  <div style="display:flex;gap:22px;flex-wrap:wrap"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button><button class="tr" id="reset">Start over</button></div>
+</div>
+<div class="sec">
+  <div class="row">
+    <div class="phone" id="ph">
+      <div class="scr" id="pan">
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span>Pantry</span><button class="tap" id="tg" style="color:var(--ink2)"><span class="n" id="tgN">5</span> to get</button></div>
+        <div class="z" style="top:82px;height:196px;overflow:hidden;touch-action:none;cursor:ns-resize" id="dial" role="slider" aria-label="Place" aria-valuetext="Fridge"></div>
+        <div class="z brief" style="top:292px" id="brief"></div>
+        <div class="z" style="top:352px;height:20px;display:flex;justify-content:space-between;font-size:13px;color:var(--ink2)"><span id="secL"></span><span id="pg" class="n"></span></div>
+        <div class="z" style="top:376px;height:220px;overflow:hidden;touch-action:pan-x" id="list"></div>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="receipt"></div>
+        <div class="z ft"><button class="act" id="act" style="color:var(--kit)">Add a thing</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+    </div>
+    <div class="notes">
+      <h2>How it works</h2>
+      <div class="try">
+        <span>1</span><span><b>The dial.</b> The place you're in sits large in the Kitchen colour, with its count. The place above and below sit small. Drag the dial up or down, or tap a small place, and it snaps one place at a time. It loops.</span>
+        <span>2</span><span><b>The brief</b> says what matters in this place, in two lines: what runs low, what wants using.</span>
+        <span>3</span><span><b>Things, five to a page.</b> Low things say <i>low</i> in the Kitchen colour; others show how much. Drag the list up for the next page. Tap a thing to switch it between in and low.</span>
+        <span>4</span><span><b>Swipe right: used up.</b> The row slides off and its name arcs up to "to get", which counts up. On To get, swipe right means you got it, and it goes back to its place. Undo for 10 s.</span>
+        <span>5</span><span><b>Swipe left: not now.</b> A low thing stops asking for today. <b>Hold</b> a thing to pin it to the top of its place (three pins at most).</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1,1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e,u);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const spring=u=>1-Math.exp(-7*u)*Math.cos(9*u);
+const $=id=>document.getElementById(id);
+const clipIn=(node,delay=0)=>{node.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>anim(.3,e=>node.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`,()=>node.style.clipPath=''),RM?0:delay)};
+const PLACES=['To get','Fridge','Freezer','Shelf','Counter'];
+let D;const seed=()=>({
+ 'To get':[['Feta','for Shakshuka','Fridge'],['Bread flour','','Shelf'],['Bananas','','Counter'],['Dish soap','',''],['Coffee','','Shelf']],
+ 'Fridge':[['Milk','low'],['Eggs','low'],['Spinach','by Sunday'],['Butter','half'],['Parmesan','1 wedge'],['Yogurt','2'],['Scallions','1 bunch'],['Cream','1 cup']],
+ 'Freezer':[['Peas','1 bag'],['Chicken thighs','6'],['Bread','half loaf'],['Ice cream','1 tub']],
+ 'Shelf':[['Rice','low'],['Spaghetti','2 packs'],['Red lentils','1 bag'],['Soy sauce','full'],['Cumin','full'],['Turmeric','half'],['Olive oil','half']],
+ 'Counter':[['Lemons','4'],['Garlic','1 head'],['Onions','5'],['Tomatoes','6'],['Potatoes','2 lb']]});
+const BRIEF={'To get':'Feta makes Shakshuka work.<br>Nothing else is urgent.','Fridge':'Milk and eggs run low.<br>Spinach wants using by Sunday.','Freezer':'All good in here.<br>Chicken for Dal on Tuesday?','Shelf':'Rice runs low.<br>Plenty of pasta.','Counter':'Lemons for the pasta.<br>Tomatoes are ripe.'};
+function briefOf(p){if(p==='Fridge'||p==='Shelf'){const lo=D[p].filter(x=>x[1]==='low').map(x=>x[0]);const a=lo.length?`Low on ${lo.slice(0,2).map(x=>x.toLowerCase()).join(' and ')}.`:'Nothing low in here.';return a+'<br>'+(p==='Fridge'?'Spinach wants using by Sunday.':'Plenty of pasta.')}return BRIEF[p]}
+let pi=1,off=1,page=0,pins={},spin=0;
+const items=p=>{const a=D[p],pn=pins[p]||[];return [...a.filter(x=>pn.includes(x[0])),...a.filter(x=>!pn.includes(x[0]))]};
+const wrap=i=>(i%5+5)%5;
+// ---------- the dial: three places, the middle one large
+function renderDial(){const d=$('dial');d.innerHTML=[-2,-1,0,1,2].map(k=>`<button class="tap" data-k="${k}" style="position:absolute;left:0;width:100%;height:64px;display:flex;justify-content:space-between;align-items:center;white-space:nowrap"><span class="pn" style="transform-origin:left center;display:inline-block;font-size:44px;letter-spacing:-.03em"></span><span class="pc n" style="transform-origin:right center;display:inline-block;font-size:44px"></span></button>`).join('');paintDial();
+  [...d.children].forEach(b=>b.onclick=()=>{if(dragged)return;const k=Math.round(+b.dataset.k+Math.round(off)-off);const t=Math.round(off)+(+b.dataset.k);if(+b.dataset.k!==0)spinTo(t)})}
+function paintDial(){const d=$('dial'),base=Math.round(off);[...d.children].forEach(b=>{const k=+b.dataset.k,i=base+k,dd=i-off,a=Math.abs(dd),p=PLACES[wrap(i)];
+  b.dataset.i=i;b.style.transform=`translateY(${98-32+dd*64}px)`;b.style.visibility=a>1.6?'hidden':'';
+  const sc=1-(1-26/44)*Math.min(a,1);const pn=b.firstChild,pc=b.lastChild;pn.textContent=p;pc.textContent=p==='To get'?D[p].length:D[p].length;
+  pn.style.transform=pc.style.transform=`scale(${sc})`;const f=a<.5;pn.style.color=f?'var(--kit)':'var(--ink2)';pn.style.fontWeight=f?600:400;pc.style.color=f?'var(--ink)':'var(--ink2)';pc.style.fontWeight=f?200:300;
+  b.setAttribute('aria-label',`${p}, ${D[p].length} things`)})}
+function spinTo(t,dur=.42){const from=off,id=++spin;anim(dur,(e,u)=>{if(id!==spin)return;off=from+(t-from)*spring(u);paintDial()},()=>{if(id!==spin)return;off=t;paintDial();setPlace(wrap(t))})}
+let dragged=false;(()=>{const d=$('dial');let sy=null,so=0,vy=0,ly=0,lt=0;
+  d.onpointerdown=e=>{sy=e.clientY;so=off;dragged=false;vy=0;ly=e.clientY;lt=performance.now();spin++};
+  d.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!dragged){dragged=true;d.setPointerCapture(e.pointerId)}if(!dragged)return;const n=performance.now();vy=(e.clientY-ly)/Math.max(1,n-lt);ly=e.clientY;lt=n;off=so-dy/64;paintDial()};
+  d.onpointerup=d.onpointercancel=()=>{if(sy==null)return;sy=null;if(dragged){spinTo(Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(off),.36);setTimeout(()=>dragged=false,0)}else{spinTo(Math.round(off))}};
+  d.tabIndex=0;d.onkeydown=e=>{if(e.key==='ArrowDown'){spinTo(Math.round(off)+1,.36);e.preventDefault()}if(e.key==='ArrowUp'){spinTo(Math.round(off)-1,.36);e.preventDefault()}}})();
+function setPlace(i){$('dial').setAttribute('aria-valuetext',`${PLACES[i]}, ${D[PLACES[i]].length} things`);if(i===pi&&$('list').childElementCount)return;pi=i;page=0;const p=PLACES[pi];$('brief').innerHTML=briefOf(p);clipIn($('brief'));renderList(0)}
+// ---------- the list: five to a page, pages turn up and down
+function renderList(dir){const p=PLACES[pi],it=items(p),pages=Math.max(1,Math.ceil(it.length/5));page=Math.min(page,pages-1);
+  const lo=D[p].filter(x=>x[1]==='low').length,soon=D[p].filter(x=>/^by /.test(x[1])).length,fr=D[p].filter(x=>x[1]&&x[1].startsWith('for ')).length;$('secL').textContent=p==='To get'?(fr?`${fr} for a recipe`:'For the next shop'):[lo?`${lo} low`:'Nothing low',soon?`${soon} to use soon`:''].filter(Boolean).join(', ');$('pg').textContent=pages>1?`${page+1} of ${pages}`:'';
+  const L=$('list');const html=it.slice(page*5,page*5+5).map(x=>{const pinned=(pins[p]||[]).includes(x[0]),low=x[1]==='low';
+    return `<div class="rw" data-n="${x[0]}" style="position:relative;height:44px;overflow:hidden"><div class="rc" role="button" tabindex="0" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:17px;white-space:nowrap;touch-action:pan-y;cursor:grab;background:var(--phone)"><span class="nm" style="color:var(--ink);font-weight:${pinned?600:400}">${x[0]}</span><span style="font-size:15px;color:${low?'var(--kitT)':'var(--ink2)'};font-weight:${low?600:400}" class="${/\d/.test(x[1])?'n':''}">${pinned?'pinned'+(x[1]?', ':''):''}${x[1]}</span></div></div>`}).join('')||`<div style="height:44px;line-height:44px;color:var(--ink2);font-size:17px">Nothing here.</div>`;
+  if(dir&&!RM){const old=L.innerHTML;L.innerHTML=`<div id="pA">${old}</div><div id="pB" style="position:absolute;left:0;right:0;top:${dir*220}px">${html}</div>`;const A=$('pA'),B=$('pB');A.style.position='absolute';A.style.left=A.style.right='0';
+    anim(.4,(e,u)=>{const k=spring(u);A.style.transform=`translateY(${-dir*220*k}px)`;B.style.transform=`translateY(${-dir*220*k}px)`},()=>{L.innerHTML=html;wireRows()})}
+  else{L.innerHTML=html;wireRows()}}
+(()=>{const L=$('list');let sy=null,sx=0;L.addEventListener('pointerdown',e=>{sy=e.clientY;sx=e.clientX});L.addEventListener('pointerup',e=>{if(sy==null)return;const dy=e.clientY-sy,dx=e.clientX-sx;sy=null;if(Math.abs(dy)>40&&Math.abs(dy)>Math.abs(dx)*1.5)turn(dy<0?1:-1)});
+  L.addEventListener('wheel',e=>{e.preventDefault();if(Math.abs(e.deltaY)>20&&!L.dataset.lock){L.dataset.lock=1;turn(e.deltaY>0?1:-1);setTimeout(()=>delete L.dataset.lock,500)}},{passive:false})})();
+function turn(dir){const it=items(PLACES[pi]),pages=Math.ceil(it.length/5);const np=page+dir;if(np<0||np>=pages)return;page=np;renderList(dir)}
+// ---------- rows: right = used up (or got it), left = not now, tap = in/low, hold = pin
+function wireRows(){document.querySelectorAll('#list .rw').forEach(rw=>{const rc=rw.querySelector('.rc'),n=rw.dataset.n,p=PLACES[pi];let sx=null,sy=0,dx=0,moved=false,hold=null;
+  rc.onpointerdown=e=>{sx=e.clientX;sy=e.clientY;dx=0;moved=false;hold=setTimeout(()=>{hold=null;if(!moved){sx=null;pin(p,n)}},520)};
+  rc.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;if(Math.abs(e.clientY-sy)>3||Math.abs(e.clientX-sx)>3)clearTimeout(hold);if(Math.abs(dx)>6&&Math.abs(dx)>Math.abs(e.clientY-sy)){moved=true;clearTimeout(hold);rc.setPointerCapture(e.pointerId);rc.style.transform=`translateX(${dx}px)`}};
+  rc.onpointerup=e=>{clearTimeout(hold);if(sx==null)return;sx=null;if(!moved){if(Math.abs(e.clientY-sy)<8)toggle(p,n);return}
+    if(dx>90)usedUp(rw,rc,p,n);else if(dx<-90)notNow(rw,rc,p,n);else{const d0=dx;anim(.3,(e,u)=>rc.style.transform=`translateX(${d0*(1-spring(u))}px)`)}};
+  rc.onpointerleave=()=>{if(!moved){clearTimeout(hold);sx=null}};rc.onkeydown=e=>{if(e.key==='Enter')toggle(p,n);if(e.key==='ArrowRight')usedUp(rw,rc,p,n);if(e.key==='ArrowLeft')notNow(rw,rc,p,n)}})}
+const find=(p,n)=>D[p].find(x=>x[0]===n);
+function toggle(p,n){if(p==='To get')return;const x=find(p,n);const was=x[1];x[1]=x[1]==='low'?(x[3]||'in'):(x[3]=x[1],'low');renderList(0);say(`${n}, ${x[1]==='low'?'running low':'in'}.`,()=>{x[1]=was;renderList(0)})}
+function pin(p,n){const a=pins[p]=pins[p]||[];if(a.includes(n)){pins[p]=a.filter(x=>x!==n);renderList(0);say(`${n}, unpinned.`,()=>{pins[p].push(n);renderList(0)});return}if(a.length>=3){say('Three pins already. Unpin one first.');return}a.push(n);renderList(0);say(`${n}, pinned.`,()=>{pins[p]=pins[p].filter(x=>x!==n);renderList(0)})}
+function notNow(rw,rc,p,n){const d0=parseFloat(rc.style.transform.replace('translateX(',''))||0;anim(.36,(e,u)=>rc.style.transform=`translateX(${d0*(1-spring(u))}px)`);say(`${n}, not now. Asks again tomorrow.`)}
+function usedUp(rw,rc,p,n){const x=find(p,n);const sr=$('ph').getBoundingClientRect(),nm=rc.querySelector('.nm').getBoundingClientRect(),tg=$('tg').getBoundingClientRect();
+  const fl=document.createElement('div');fl.textContent=n;fl.style.cssText=`position:absolute;left:${nm.left-sr.left}px;top:${nm.top-sr.top}px;font-size:17px;color:var(--ink);white-space:nowrap;z-index:3;transform-origin:left top;pointer-events:none`;
+  const x0=nm.left-sr.left,y0=nm.top-sr.top,x1=tg.left-sr.left-6,y1=tg.top-sr.top;
+  const d0=parseFloat(rc.style.transform.replace('translateX(',''))||0;
+  anim(.22,e=>rc.style.transform=`translateX(${d0+(330-d0)*e}px)`,()=>{
+    if(p==='To get'){D[p]=D[p].filter(y=>y[0]!==n);if(x[2]&&D[x[2]])D[x[2]].push([n,'in']);collapse(rw,()=>{renderList(0);paintDial();roll(-1)});say(`${n}, got it.${x[2]?' Back in the '+x[2].toLowerCase()+'.':''}`,()=>{if(x[2])D[x[2]]=D[x[2]].filter(y=>y[0]!==n);D[p].unshift(x);renderList(0);paintDial();roll(1)});return}
+    $('ph').append(fl);D[p]=D[p].filter(y=>y[0]!==n);D['To get'].push([n,'',p]);
+    collapse(rw,()=>{renderList(0);$('brief').innerHTML=briefOf(p)});
+    // the name arcs up to "to get", which counts up when it lands
+    anim(.6,(e,u)=>{fl.style.transform=`translate(${(x1-x0)*e}px,${(y1-y0)*e-60*Math.sin(Math.PI*e)}px) scale(${1-.25*e})`;fl.style.color=e>.7?'var(--ink2)':'var(--ink)'},()=>{fl.remove();roll(1);paintDial()});
+    say(`${n}, used up. On To get.`,()=>{D['To get']=D['To get'].filter(y=>y[0]!==n);D[p].push(x);renderList(0);paintDial();roll(-1)})})}
+function collapse(rw,done){const h=44;anim(.26,e=>rw.style.height=`${h*(1-e)}px`,done)}
+function roll(d){const node=$('tgN'),v=D['To get'].length;if(RM){node.textContent=v;return}const old=node.textContent;node.style.display='inline-block';node.style.height='1.2em';node.style.overflow='hidden';node.style.verticalAlign='bottom';
+  node.innerHTML=d>0?`<span style="display:block;line-height:1.2em">${old}</span><span style="display:block;line-height:1.2em">${v}</span>`:`<span style="display:block;line-height:1.2em">${v}</span><span style="display:block;line-height:1.2em">${old}</span>`;
+  const a=node.firstChild,b=node.lastChild;const s0=d>0?0:-1.2;a.style.transform=b.style.transform=`translateY(${s0}em)`;anim(.42,(e,u)=>{const k=spring(u);a.style.transform=b.style.transform=`translateY(${s0+(d>0?-1.2:1.2)*k}em)`},()=>{node.textContent=v;node.removeAttribute('style')})}
+let sayT=null;function say(t,undo){const r=$('receipt');r.innerHTML=t+(undo?' <button class="tap" id="undo" style="color:var(--kitT);font-weight:600">Undo</button>':'');clipIn(r);clearTimeout(sayT);sayT=setTimeout(()=>r.textContent='',undo?10000:3000);if(undo)$('undo').onclick=()=>{r.textContent='';undo()}}
+$('tg').onclick=()=>{const t=Math.round(off),cur=wrap(t);let d=(0-cur+5)%5;if(d>2)d-=5;spinTo(t+d)};
+$('act').onclick=()=>{D.Fridge.push(['Basil','1 bunch']);if(PLACES[pi]==='Fridge')renderList(0);paintDial();say('Basil, added to the fridge.',()=>{D.Fridge=D.Fridge.filter(x=>x[0]!=='Basil');renderList(0);paintDial()})};
+function reset(){D=seed();pins={};pi=1;off=1;page=0;$('tgN').textContent=D['To get'].length;$('receipt').textContent='';renderDial();$('list').innerHTML='';setPlace(1);clipIn($('dial'))}
+$('reset').onclick=reset;$('th').onclick=()=>document.documentElement.dataset.theme='dark';$('tw').onclick=()=>document.documentElement.dataset.theme='light';
+reset();
+})();
+</script>

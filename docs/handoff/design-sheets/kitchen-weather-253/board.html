@@ -1,0 +1,274 @@
+<title>Kitchen and Weather</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: a review board, two live phones. Kitchen: the pull-apart theme on its landing. Weather: the whole page is the sky.
+   App tokens on .phone follow sheet 241; the Weather sky paints its own colors from the hour and the condition. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#A8701F;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#C49A5E;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+h3{font-size:20px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:62ch}
+.bar{display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:0 44px}
+.rule{padding:14px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600;margin-bottom:2px}
+.rule span{color:var(--fg2)}
+.q{border-top:2px solid var(--fg);padding-top:16px}
+
+/* ---------- phone ---------- */
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--hair:rgba(36,36,35,.16);--kitchen:#A8701F;--ktext:#93611A;--teal:#1E6E77;--clay:#9C4B2C;--wine:#9A2541;--slate:#34506F;--pine:#2F6450;--gold:#7E6A1E;--green:#25803D;--rain:#557A93;--weather:#C9772E;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none;touch-action:none;box-shadow:0 0 0 1px var(--line)}
+.phones[data-look="black"] .phone{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--hair:rgba(232,227,218,.2);--kitchen:#C49A5E;--ktext:#C49A5E;--teal:#84C3C9;--clay:#E2A07F;--wine:#EE8E9C;--slate:#A7BCD6;--pine:#8EC7AE;--gold:#D9C27A;--green:#8FC9A0;--rain:#9DBACE;--weather:#E8A06A}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);padding:8px 0;min-width:96px;min-height:44px;text-align:left;background:none;border:0;cursor:pointer;z-index:4}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phones[data-look="black"] .tessw{color:#C79B7C}
+.receipt{position:absolute;left:24px;right:110px;bottom:84px;font-size:15px;color:var(--ink2);height:24px;white-space:nowrap;overflow:hidden;z-index:4}
+.receipt b{font-weight:600;cursor:pointer}
+.sc{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.o{font-family:var(--num)}
+
+/* ---------- Kitchen: pull apart ---------- */
+.kbrief{position:absolute;left:24px;right:24px;top:108px;font-size:19px;line-height:1.35;color:var(--ink)}
+.kbrief b{font-weight:600;color:var(--kitchen)}
+.secs{position:absolute;left:24px;right:24px;top:176px;height:580px}
+.secn{position:absolute;left:0;right:0;height:66px;cursor:pointer;transition:top .55s cubic-bezier(.3,.9,.3,1),opacity .4s,filter .4s}
+.secn .word{position:absolute;left:0;top:0;height:66px;display:flex;align-items:center;white-space:nowrap}
+.secn .ch{display:inline-block;font-size:52px;font-weight:900;letter-spacing:-.02em;line-height:1;transition:transform .6s cubic-bezier(.3,.9,.3,1),color .4s,font-size .6s cubic-bezier(.3,.9,.3,1)}
+.secn .cnt{font:300 18px var(--num);color:var(--ink2);margin-left:12px;transition:opacity .3s}
+.secn .inside{position:absolute;left:0;right:0;top:48px;opacity:0;pointer-events:none;transition:opacity .35s .25s;font-size:17px;line-height:1.45}
+.secn.open .inside{opacity:1;pointer-events:auto}
+.secn.open .cnt{opacity:0}
+.inside .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;min-height:40px;padding-top:6px;white-space:nowrap}
+.inside .row span:last-child{font:300 15px var(--num);color:var(--ink2)}
+.inside .row.miss span:first-child{color:var(--wine);font-weight:500}
+.inside .lead{font-size:15px;color:var(--ink2);margin-top:6px}
+.inside .pl{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin-top:6px}
+.inside .pl div{display:flex;justify-content:space-between;min-height:34px;align-items:baseline;border-bottom:1px solid var(--hair)}
+.inside .pl span:last-child{font:300 15px var(--num);color:var(--ink2)}
+.khint{position:absolute;left:24px;right:24px;bottom:120px;font-size:13px;color:var(--ink3)}
+
+/* ---------- Weather: the sky is the page ---------- */
+#sky{position:absolute;inset:0;width:402px;height:874px;display:block}
+.wover{position:absolute;inset:0;pointer-events:none}
+.wover>*{pointer-events:auto}
+.wttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.wtime{position:absolute;right:24px;top:70px;font:300 15px var(--num)}
+.info{position:absolute;left:24px;right:24px;top:196px;height:182px}
+.info .temp{position:absolute;left:-4px;top:-10px;font:200 118px/1 var(--num);letter-spacing:-.03em}
+.info .temp small{font-size:48px;vertical-align:top;margin-left:2px}
+.info .side{position:absolute;right:0;top:12px;text-align:right;font-size:15px;line-height:1.5}
+.info .side b{font:300 20px var(--num)}
+.info .nums{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.info .nums div{font:300 24px var(--num);line-height:1}
+.info .nums div small{display:block;font:500 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-top:4px}
+.wline{position:absolute;left:24px;right:24px;top:400px;font-size:24px;line-height:1.3;font-weight:500}
+.wline b{font-weight:700}
+.hours{position:absolute;left:24px;right:0;top:478px;height:76px;display:flex;overflow:hidden}
+.hours div{flex:0 0 59px}
+.hours em{display:block;font-style:normal;font-size:12px;opacity:.8}
+.hours b{display:block;font:300 22px var(--num);margin:2px 0}
+.hours span{font-size:12px;font-weight:600}
+.care{position:absolute;left:24px;right:24px;top:574px}
+.care .sc{opacity:.8;margin-bottom:4px}
+.care .cr{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-height:46px;padding-top:8px;font-size:17px;cursor:pointer;touch-action:none;transition:opacity .3s}
+.care .cr .nm{position:relative;white-space:nowrap;overflow:hidden}
+.care .cr .nm i{position:absolute;left:0;top:55%;height:1px;width:0;background:currentColor;transition:width .26s}
+.care .cr.done .nm i{width:100%}
+.care .cr.done{opacity:.5}
+.care .cr em{font-style:normal;font-size:13px;opacity:.8;white-space:nowrap}
+.wfoot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);padding:8px 0;min-height:44px;background:none;border:0;cursor:pointer}
+.wtess{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center;margin-top:8px}
+.ctl span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);margin-right:4px}
+@media (prefers-reduced-motion:reduce){.secn,.secn .ch,.secn .inside{transition:none!important}}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Kitchen and Weather / sheet 253</h2>
+<h1>Pull apart, and a page that is the sky.</h1>
+<p class="lede">Two decisions from the keystone rounds. Kitchen: pull apart is the theme of the whole app; sections are large words, and tapping one pulls its letters apart to open it in place. Weather: the whole page carries the weather, like a live wallpaper; the slot holds plain numbers, and the rest is detail and care.</p>
+<div class="bar" role="group" aria-label="Phone look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+</div>
+</header>
+
+<section aria-label="Phones">
+<div class="phones" id="phones" data-look="paper">
+
+<!-- Kitchen -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p1">
+ <div class="sbar"><span>5:10</span><span></span></div>
+ <div class="ttl" style="color:var(--kitchen)">Kitchen</div>
+ <div class="kbrief"><b>Tacos</b> tonight, 25 min, you have all 8 things. Eggs and milk run out first.</div>
+ <div class="secs" id="secs"></div>
+ <div class="khint" id="khint">Tap a word to pull it apart.</div>
+ <div class="receipt" id="r1"></div>
+ <button class="foot" id="kfoot" style="color:var(--kitchen)">Cook</button>
+ <div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<p class="cap"><b>Kitchen, pulled apart.</b> The sections are five big words. Tap one: its letters spread, the other words slide out of the way, and what is inside appears in the gap, right there, with no new page. Tap the word again to close it. The same move will open a dish into its ingredients on the Recipes page, and a place into its things in Pantry. The brief sentence stays at the top because you asked to keep it.</p>
+</div>
+
+<!-- Weather -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p2">
+ <canvas id="sky" width="804" height="1748"></canvas>
+ <div class="wover" id="wover">
+  <div class="sbar"><span id="wclock">5:10</span><span></span></div>
+  <div class="wttl">Weather</div>
+  <div class="wtime" id="wtime"></div>
+  <div class="info" id="info"></div>
+  <div class="wline" id="wline"></div>
+  <div class="hours" id="whours"></div>
+  <div class="care" id="care"></div>
+  <div class="receipt" id="r2"></div>
+  <button class="wfoot" id="wfoot">Rain alert</button>
+  <div class="wtess">Tess</div>
+ </div>
+ <div class="home"></div>
+</div></div>
+<div class="ctl" id="hourctl"><span>Hour</span></div>
+<div class="ctl" id="wxctl"><span>Sky</span></div>
+<p class="cap"><b>Weather, as the sky.</b> The page is the sky right now. The sun is where it really is and as bright as it is; at night the moon rises and sets on its real arc in its real phase; clouds come when it is cloudy, rain falls, a storm flickers, fog softens everything. The slot holds plain numbers: the temperature and four small facts. Under it, one line on what is coming, the next hours, and care: small things to do because of the weather, each a row you can swipe right when done. The words change color with the sky so they always read.</p>
+</div>
+
+</div>
+</section>
+
+<section>
+<h2>How it works</h2>
+<div class="rules">
+<div class="rule"><b>The pull.</b><span>Letters spread from the middle, 30 pt per step, and lift 10 pt, over 0.6 s on a spring. The word shrinks from 52 to 40 pt as it opens so the inside has room. The other sections slide to make the gap (0.55 s) and dim to 40%.</span></div>
+<div class="rule"><b>Inside a section.</b><span>Tonight: the dish, time, and its ingredients with missing ones in wine. Pantry: the five places with counts. Recipes: what you can make now. Groceries: what to get. Leftovers: what goes out when. Each is the first screen of that section, in place; its foot word changes with it.</span></div>
+<div class="rule"><b>The sun.</b><span>Its height follows the real rise (7:25) and set (6:06). Brightness and the sky gradient follow its altitude: pale gold at dawn, white at noon, amber at dusk, slate below the horizon. Clouds cover it when the sky is overcast.</span></div>
+<div class="rule"><b>The moon.</b><span>Rises and sets on its own arc (today 3:48 pm to 2:12 am) in its real phase (waxing gibbous), drawn as a lit disc with a shadow disc offset by the phase. Stars appear as the sun goes down.</span></div>
+<div class="rule"><b>Weather on the page.</b><span>Cloudy: layered soft clouds drift. Rain: streaks fall the whole height, heavier below the clouds. Storm: a flash every few seconds lights the clouds from inside. Fog: a moving haze lowers contrast. Snow: flakes drift. Each is the same condition language as the Home weather words.</span></div>
+<div class="rule"><b>Words on the sky.</b><span>Text color is computed from the sky’s brightness behind it: ink on bright skies, warm white at night and in storms. Every line keeps 4.5:1.</span></div>
+<div class="rule"><b>Care.</b><span>Nudges from the forecast and the other rooms: take the umbrella at seven; close the windows before the storm; water the balcony plants, no rain till Thursday; sunscreen at noon, UV 7; frost tonight, bring the basil in. Swipe right when done; Undo 10 s.</span></div>
+</div>
+</section>
+
+<section class="q">
+<h2>Open, with a recommendation</h2>
+<h3>The fridge</h3>
+<p>You said "something about the refrigerator, something that could help" for Kitchen. Recommendation: not a keystone (pull apart is the theme), but the Leftovers and Pantry sections could open from a FRIDGE word and show what goes out when, which is the help a fridge needs. Say more if you had something else in mind.</p>
+<h3>Where the sun and moon come from</h3>
+<p>Open-Meteo gives sunrise and sunset; moon rise, set and phase need a small on-device calculation (standard astronomy, no service). Recommendation: do the moon on the phone.</p>
+</section>
+</main>
+
+<script>
+(function(){
+const $=(s,r=document)=>r.querySelector(s);
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let K=1;function fit(){document.querySelectorAll('[data-fit]').forEach(s=>{const p=s.firstElementChild;K=Math.min(1,s.clientWidth/402);p.style.transform=K<1?'scale('+K+')':'';s.style.height=(874*K)+'px'})}
+addEventListener('resize',fit);fit();
+function setLook(l){$('#phones').dataset.look=l;$('#lk-paper').setAttribute('aria-pressed',l==='paper');$('#lk-black').setAttribute('aria-pressed',l==='black')}
+$('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('black');
+let rT={};function receipt(id,msg,undo){const r=$(id);r.innerHTML=msg+(undo?' <b>Undo</b>':'');if(undo)r.querySelector('b').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT[id]);rT[id]=setTimeout(()=>{r.innerHTML=''},10000)}
+
+/* ================= Kitchen: pull apart ================= */
+const SECS=[
+ {w:'Tonight',n:'',foot:'Cook',inside:'<div class="lead">Tacos, 25 min. You have all 8 things.</div>'+[['Tortillas','8'],['Chicken thighs','1 lb'],['Onions','2'],['Peppers','2'],['Cilantro','a bunch'],['Limes','3'],['Cumin',''],['Sour cream','']].map(([a,b])=>'<div class="row"><span>'+a+'</span><span>'+b+'</span></div>').join('')},
+ {w:'Pantry',n:'31',foot:'Add a thing',inside:'<div class="lead">Low on milk and eggs. Rice goes out today.</div><div class="pl">'+[['Fridge','13'],['Freezer','8'],['Shelf','15'],['Counter','6'],['To get','4']].map(([a,b])=>'<div><span>'+a+'</span><span>'+b+'</span></div>').join('')+'</div>'},
+ {w:'Recipes',n:'4 now',foot:'Cook',inside:'<div class="lead">You can make four tonight.</div>'+[['Tacos','25 min'],['Dal','40 min'],['Pasta','20 min'],['Fried rice','15 min'],['Shakshuka','feta short']].map(([a,b],i)=>'<div class="row'+(i===4?' miss':'')+'"><span>'+a+'</span><span>'+b+'</span></div>').join('')},
+ {w:'Groceries',n:'4',foot:'Got it',inside:'<div class="lead">For tacos tonight, on the way home.</div>'+[['Tortillas','bakery'],['Cilantro','produce'],['Limes','produce'],['Feta','dairy']].map(([a,b])=>'<div class="row"><span>'+a+'</span><span>'+b+'</span></div>').join('')},
+ {w:'Leftovers',n:'2',foot:'Eat it',inside:'<div class="lead">Rice goes out today. Dal has until Friday.</div>'+[['Rice, cooked Thursday','today'],['Dal','Fri']].map(([a,b],i)=>'<div class="row'+(i===0?' miss':'')+'"><span>'+a+'</span><span>'+b+'</span></div>').join('')}];
+const secs=$('#secs');let open=-1;
+const EL=SECS.map((s,i)=>{const e=document.createElement('div');e.className='secn';e.innerHTML='<div class="word">'+[...s.w].map(ch=>'<span class="ch">'+ch+'</span>').join('')+'<span class="cnt">'+s.n+'</span></div><div class="inside">'+s.inside+'</div>';secs.appendChild(e);
+ e.querySelector('.word').onclick=()=>{open=open===i?-1:i;layoutK()};return e});
+function insideH(i){return 60+SECS[i].inside.split('<div').length*(i===1?22:40)}
+function layoutK(){let y=0;EL.forEach((e,i)=>{const isO=i===open,other=open>=0&&!isO;e.classList.toggle('open',isO);e.style.top=y+'px';e.style.opacity=other?.4:1;e.style.filter=other&&!RM?'blur(.6px)':'none';
+  const ch=[...e.querySelectorAll('.ch')],mid=(ch.length-1)/2;ch.forEach((c,k)=>{c.style.transform=isO?'translate('+((k-mid)*(mid?30/mid*1.6:0))+'px,-10px)':'none';c.style.fontSize=isO?'40px':'52px';c.style.color=isO?'var(--kitchen)':'var(--ink)'});
+  y+=isO?insideH(i)+40:66});
+ $('#kfoot').textContent=open>=0?SECS[open].foot:'Cook';$('#khint').style.opacity=open>=0?0:1}
+layoutK();$('#kfoot').onclick=()=>receipt('#r1',open>=0?SECS[open].foot+'. Not on this board yet.':'Recipes opens on Ready now.');
+
+/* ================= Weather: the sky is the page ================= */
+const cv=$('#sky'),c=cv.getContext('2d');c.scale(2,2);
+let hour=17.17,cond='cloudy',rainFrom=19;const RISE=7.42,SET=18.1,MRISE=15.8,MSET=26.2,PHASE=.68;// waxing gibbous
+const HOURS=[['Now',17.17],['6 am',6],['9 am',9],['Noon',12],['3 pm',15],['6 pm',18],['9 pm',21],['Midnight',24],['3 am',27]];
+const CONDS=[['Clear','clear'],['Cloudy','cloudy'],['Rain','rain'],['Storm','storm'],['Fog','fog'],['Snow','snow']];
+HOURS.forEach(([n,hh])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.setAttribute('aria-pressed',hh===hour);b.onclick=()=>{hour=hh;$('#hourctl').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawInfo()};$('#hourctl').appendChild(b)});
+CONDS.forEach(([n,k])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.setAttribute('aria-pressed',k===cond);b.onclick=()=>{cond=k;$('#wxctl').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawInfo()};$('#wxctl').appendChild(b)});
+const lerp=(a,b,u)=>a+(b-a)*u,clamp=(v,a,b)=>v<a?a:v>b?b:v,ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
+const mixC=(a,b,u)=>{const p=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));const x=p(a),y=p(b);return x.map((v,i)=>Math.round(v+(y[i]-v)*u))};
+const rgb=a=>'rgb('+a+')',rgba=(a,al)=>'rgba('+a+','+al+')';
+function sunAlt(h){const H=((h-RISE)/(SET-RISE));return H<0||H>1?-Math.sin(Math.PI*Math.min(1,Math.abs(H<0?H:H-1))*1.5)*.5:Math.sin(Math.PI*H)}
+function moonAlt(h){let hh=h<12?h+24:h;const H=(hh-MRISE)/(MSET-MRISE);return H<0||H>1?-.3:Math.sin(Math.PI*H)}
+let seedC=0;const rnd=i=>{const s=Math.sin(i*127.1+311.7)*43758.5453;return s-Math.floor(s)};
+const clouds=Array.from({length:14},(_,i)=>({x:rnd(i)*500-50,y:120+rnd(i+9)*520,s:.7+rnd(i+3)*.9,v:.4+rnd(i+5)*.6}));
+const stars=Array.from({length:120},(_,i)=>({x:rnd(i+40)*402,y:rnd(i+80)*620,s:rnd(i+120)}));
+let flash=0,nextFlash=3;
+function skyColors(alt){// top and bottom of the sky by sun altitude
+ const night=['#0E1430','#1F2A4C'],dawn=['#3A4A7A','#F2B07A'],day=['#4F93D6','#CFE3F0'],dusk=['#5A4C8C','#F08A5A'];
+ if(alt<-.25)return [night,0];if(alt<0){const u=(alt+.25)/.25;return [[mixC(night[0],dawn[0],u),mixC(night[1],dawn[1],u)],u*.5]}
+ if(alt<.3){const u=alt/.3;return [[mixC(dawn[0],day[0],u),mixC(dawn[1],day[1],u)],.5+u*.5]}return [day.map(x=>mixC(x,x,0)),1]}
+function draw(t){const dt=1/60;const alt=sunAlt(hour),malt=moonAlt(hour);let [[top,bot],bright]=skyColors(alt);
+ const gloom=cond==='storm'?.75:cond==='rain'?.5:cond==='cloudy'?.3:cond==='fog'?.35:cond==='snow'?.45:0;
+ top=top.map(v=>Math.round(lerp(v,(v*.3+90),gloom*.7)));bot=bot.map(v=>Math.round(lerp(v,(v*.4+110),gloom*.7)));
+ const g=c.createLinearGradient(0,0,0,874);g.addColorStop(0,rgb(top));g.addColorStop(1,rgb(bot));c.fillStyle=g;c.fillRect(0,0,402,874);
+ // stars
+ if(bright<.6)stars.forEach(s=>{const tw=.4+.6*Math.abs(Math.sin(t*(.6+s.s)+s.x));c.fillStyle=rgba([235,238,250],tw*(1-bright/.6)*(1-gloom));c.fillRect(s.x,s.y,1+s.s,1+s.s)});
+ // sun
+ if(alt>-.08){const sx=60+((hour-RISE)/(SET-RISE))*282,sy=560-alt*470;const r=36;const sg=c.createRadialGradient(sx,sy,2,sx,sy,r*4);const warm=alt<.3?[255,200,120]:[255,246,220];sg.addColorStop(0,rgba(warm,.95*(1-gloom*.8)));sg.addColorStop(.25,rgba(warm,.5*(1-gloom*.8)));sg.addColorStop(1,rgba(warm,0));c.fillStyle=sg;c.fillRect(sx-r*4,sy-r*4,r*8,r*8);c.fillStyle=rgba(warm,1-gloom*.85);c.beginPath();c.arc(sx,sy,alt<.3?24:20,0,7);c.fill()}
+ // moon
+ if(malt>0){let hh=hour<12?hour+24:hour;const mx=40+((hh-MRISE)/(MSET-MRISE))*322,my=560-malt*430,r=22;const mg=c.createRadialGradient(mx,my,r,mx,my,r*3);mg.addColorStop(0,rgba([230,232,240],.35*(1-gloom)));mg.addColorStop(1,rgba([230,232,240],0));c.fillStyle=mg;c.fillRect(mx-r*3,my-r*3,r*6,r*6);
+  c.fillStyle=rgba([236,236,228],.95*(1-gloom*.8));c.beginPath();c.arc(mx,my,r,0,7);c.fill();// phase: shadow disc offset
+  const off=(1-Math.abs(PHASE-.5)*2)*2*r*(PHASE<.5?1:-1)+ (PHASE<.5?-r*2:r*2)*0;c.fillStyle=rgb(top.map(v=>Math.round(v*.9)));c.beginPath();c.arc(mx+(PHASE<.5?1:-1)*(2*r-Math.abs(PHASE-.5)*4*r),my,r*1.02,0,7);c.fill()}
+ // clouds
+ const cover=cond==='clear'?.15:cond==='fog'?.5:cond==='snow'?.8:cond==='cloudy'?.85:1;const ccol=cond==='storm'?[70,74,92]:cond==='rain'?[150,158,170]:bright>.6?[255,255,255]:[150,160,185];
+ clouds.forEach((cl,i)=>{if(i/clouds.length>cover)return;cl.x+=cl.v*dt*(cond==='storm'?6:2)*(RM?0:1);if(cl.x>480)cl.x=-120;const a=.55*(cond==='clear'?.5:1);
+  for(let p=0;p<6;p++){const px=cl.x+p*26*cl.s,py=cl.y+Math.sin(p*2.1+i)*8*cl.s,pr=(22+rnd(p+i*7)*16)*cl.s;const cg=c.createRadialGradient(px,py-pr*.3,2,px,py,pr);cg.addColorStop(0,rgba(ccol,a));cg.addColorStop(1,rgba(ccol,0));c.fillStyle=cg;c.beginPath();c.arc(px,py,pr,0,7);c.fill()}});
+ // storm flash
+ if(cond==='storm'){nextFlash-=dt;if(nextFlash<0){flash=1;nextFlash=2.5+Math.random()*4}if(flash>0){c.fillStyle=rgba([255,250,230],flash*.55);c.fillRect(0,0,402,874);const bx=80+Math.random()*240;if(flash>.8){c.strokeStyle=rgba([255,246,200],.9);c.lineWidth=2;c.beginPath();let x=bx,y=140;c.moveTo(x,y);for(let k=0;k<7;k++){x+=(Math.random()-.5)*50;y+=60;c.lineTo(x,y)}c.stroke()}flash-=dt*4}}
+ // rain and snow
+ if(cond==='rain'||cond==='storm'){for(let k=0;k<160;k++){const x=((k*53+t*40)%420)-10,y=((k*37+t*(cond==='storm'?900:620))%900)-20;c.strokeStyle=rgba([215,228,240],.55);c.lineWidth=1.2;c.beginPath();c.moveTo(x,y);c.lineTo(x-2,y+14);c.stroke()}}
+ if(cond==='snow'){for(let k=0;k<120;k++){const x=((k*53+Math.sin(t+k)*30+t*10)%420)-10,y=((k*37+t*60)%900)-20;c.fillStyle=rgba([255,255,255],.85);c.beginPath();c.arc(x,y,1.5+rnd(k)*1.5,0,7);c.fill()}}
+ if(cond==='fog'){for(let k=0;k<5;k++){const y=120+k*150+Math.sin(t*.2+k)*20;const fg=c.createLinearGradient(0,y-80,0,y+80);fg.addColorStop(0,rgba([225,228,230],0));fg.addColorStop(.5,rgba([225,228,230],.45));fg.addColorStop(1,rgba([225,228,230],0));c.fillStyle=fg;c.fillRect(0,y-80,402,160)}}
+ // the ground: a low horizon band so the page has a floor
+ const hg=c.createLinearGradient(0,790,0,874);hg.addColorStop(0,rgba(bot,0));hg.addColorStop(1,rgba(bot.map(v=>Math.round(v*.7)),.8));c.fillStyle=hg;c.fillRect(0,790,402,84);
+ // text color from the sky's brightness
+ const lum=(top[0]*.3+top[1]*.59+top[2]*.11+bot[0]*.3+bot[1]*.59+bot[2]*.11)/2;const ink=lum>150?'#1E1C1F':'#F4F0E8';$('#wover').style.color=ink;$('#wover').style.setProperty('--wink',ink);
+ requestAnimationFrame(tick)}
+let t0=performance.now();function tick(now){draw((now-t0)/1000)}requestAnimationFrame(tick);
+const TEMP={clear:[64,62,66,51],cloudy:[64,62,66,51],rain:[59,55,62,50],storm:[61,57,64,52],fog:[56,54,60,49],snow:[31,24,33,22]};
+const CARE={clear:[['Sunscreen at noon','UV 7'],['Water the balcony plants tonight','no rain till Thursday'],['Open the windows this evening','66°, dry']],
+ cloudy:[['Take the umbrella at 7','rain from 7 PM'],['Water the balcony plants tonight','no rain till Thursday'],['Bring the washing in before 7','']],
+ rain:[['Take the umbrella','rain until midnight'],['Close the balcony door','wind from the west'],['Skip watering the plants','rain does it']],
+ storm:[['Close the windows now','storm by 7'],['Charge the phone','outages are likely'],['Walk tomorrow instead','clear by morning']],
+ fog:[['Lights on for the walk','fog until 10 AM'],['Leave ten minutes early','slow traffic'],['Water the balcony plants tonight','']],
+ snow:[['Bring the basil in','frost tonight'],['Salt the steps','ice by morning'],['Warm layers for the walk','feels like 24°']]};
+function drawInfo(){const T=TEMP[cond],hh=Math.round(hour)%24,clockTxt=(hh%12||12)+(hour%1?':'+String(Math.round((hour%1)*60)).padStart(2,'0'):':00')+(hh<12?' am':' pm');$('#wclock').textContent=clockTxt.replace(/ [ap]m/,'');$('#wtime').textContent=clockTxt;
+ const word={clear:hour>SET||hour<RISE?'Clear':'Sunny',cloudy:'Cloudy',rain:'Rain',storm:'Thunderstorm',fog:'Fog',snow:'Snow'}[cond];
+ $('#info').innerHTML='<div class="temp">'+T[0]+'<small>°</small></div><div class="side">feels like <b>'+T[1]+'°</b><br>high <b>'+T[2]+'°</b>, low <b>'+T[3]+'°</b></div><div class="nums"><div>9<small>mph W</small></div><div>'+(cond==='rain'||cond==='storm'?82:cond==='fog'?94:58)+'<small>humid</small></div><div>'+(hour>SET||hour<RISE?0:cond==='clear'?7:2)+'<small>UV</small></div><div>6:06<small>sunset</small></div></div>';
+ $('#wline').innerHTML=cond==='cloudy'?'<b>Cloudy</b> now, <b>rain</b> from 7 PM.':cond==='clear'?'<b>'+word+'</b> now, clear all night.':cond==='rain'?'<b>Rain</b> until about midnight, then clearing.':cond==='storm'?'A <b>storm</b> by 7, clear by morning.':cond==='fog'?'<b>Fog</b> until 10 AM, then sun.':'<b>Snow</b> through the evening, 2 in.';
+ const hrs=[['Now',T[0],word],['6 PM',T[0]-1,word],['7 PM',T[0]-3,cond==='cloudy'?'Rain':word],['8 PM',T[0]-5,cond==='cloudy'?'Rain':word],['9 PM',T[0]-6,cond==='cloudy'?'Rain':word],['10 PM',T[0]-7,cond==='storm'?'Clearing':cond==='cloudy'?'Rain':word]];
+ $('#whours').innerHTML=hrs.map(([a,b,w])=>'<div><em>'+a+'</em><b>'+b+'°</b><span>'+w+'</span></div>').join('');
+ const care=$('#care');care.innerHTML='<div class="sc">Care</div>'+CARE[cond].map(([a,b])=>'<div class="cr"><span class="nm">'+a+'<i></i></span><em>'+b+'</em></div>').join('');
+ care.querySelectorAll('.cr').forEach(r=>{let x0=null,dx=0;r.onpointerdown=e=>{x0=e.clientX;dx=0;r.setPointerCapture(e.pointerId)};r.onpointermove=e=>{if(x0==null)return;dx=(e.clientX-x0)/K;r.style.transform='translateX('+Math.max(-60,Math.min(60,dx))+'px)'};
+  r.onpointerup=()=>{if(x0==null)return;x0=null;r.style.transform='';if(dx>56||Math.abs(dx)<6){const on=r.classList.toggle('done');receipt('#r2',r.querySelector('.nm').textContent+(on?', done.':', back.'),()=>r.classList.toggle('done'))}}})}
+drawInfo();$('#wfoot').onclick=()=>receipt('#r2','You’ll hear 30 minutes before rain.',()=>{});
+})();
+</script>

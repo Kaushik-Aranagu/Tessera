@@ -9,7 +9,7 @@ Sources: `TesseraCore/Sources/TesseraTess/PlanWording.swift` (`PlanProposalValid
 ## What TessLineCheck owns
 
 - **Empty line.** A nil or blank line (Claude skipped the tool, or sent nothing for the item) gives `.noLine`. The rules line stays. Not a failure, not logged as a miss.
-- **Slot shape (C2, C3, C4, C5).** Input: the line and its slot. Context: 6 words or fewer, 32 characters or fewer, no stop at the end (`.`, `:` or `;`). Detail (SO FAR): 14 words or fewer, 80 characters or fewer, exactly one sentence ending in `.`. Both: no `!`, `…`, newline or emoji. Caps come from `HomeLines.contextWords`, `contextCharacters`, `detailWords`, `detailCharacters`; `HomeLines.fitsContext` and `fitsDetail` are the start.
+- **Slot shape (C2, C3, C4, C5).** Input: the line and its slot. Context: 6 words or fewer, 32 characters or fewer, no stop at the end (`.`, `:` or `;`). Detail (SO FAR): 14 words or fewer, 80 characters or fewer, exactly one sentence, shown with no stop (Kaushik, Oct 26: a closing `.` is let through and dropped by `ShownLine.unstopped` before it shows). Both: no `!`, `…`, newline or emoji. Caps come from `HomeLines.contextWords`, `contextCharacters`, `detailWords`, `detailCharacters`; `HomeLines.fitsContext` and `fitsDetail` are the start.
 - **Licensed digits (C6, C7, C8).** Input: the item's `HomeLine.numbers` and the rules line. Every digit group must be in `numbers`. Every digit group in the rules line survives, except D2: on a done item the context line may drop its whole clock time. No number words. The time and length parsing comes from `PlanProposalValidator.numbersAreLicensed`, which moves here.
 - **Names (C9).** Input: the pack's `names` for the item (`HomeFact.names`: title, exercise in focus, records). A capitalised word must be one of those names' words, with the exemptions below.
 - **Grading and voice (C10, C11).** `TessVoice.bannedWords` plus `PlanProposalValidator.planBanned` and `planBannedPhrases`, plus the words home-lines.md section 2 adds: still, streak, should, finally. "record" fails; the house word is "best".
@@ -85,7 +85,7 @@ Unless the row says otherwise, the item is the done Push A above, with rules det
 | L40 | You got through all 3 exercises and 12 sets, with 1 new bench best today. | done | Push A, Bench | fail | C2, 15 words |
 | L41 | Bench, incline barbell press, cable crossover: 3 exercises, 12 sets, 1 new best. | done | Push A, Bench, incline barbell press, cable crossover | pass | C3 at the cap, 80 chars |
 | L42 | Bench, incline barbell press, cable crossovers: 3 exercises, 12 sets, 1 new best. | done | Push A, Bench, incline barbell press, cable crossovers | fail | C3, 81 chars |
-| L43 | 3 exercises, 12 sets, 1 new best | done | Push A, Bench | fail | C4, no stop |
+| L43 | 3 exercises, 12 sets, 1 new best | done | Push A, Bench | pass | shown with no stop (Oct 26) |
 | L44 | 3 exercises, 12 sets. 1 new best. | done | Push A, Bench | fail | C4, two sentences |
 | L45 | 3 exercises and 1 new best. | done | Push A, Bench | fail | C7, 12 dropped (no D2 on a detail) |
 | L46 | 3 exercises, 12 sets, 2 new bests. | done | Push A, Bench | fail | C6, 2 not licensed |

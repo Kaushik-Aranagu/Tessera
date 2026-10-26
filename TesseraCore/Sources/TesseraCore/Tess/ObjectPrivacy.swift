@@ -56,9 +56,18 @@ public enum ObjectPrivacy {
             return flagged || object.title == noteLabel || isPrivateText(object.title) || isPrivateText(body)
                 ? noteLabel : nil
         }
+        if isA(.belief) {
+            let rule = store.value("rule", of: object)?.stringValue ?? ""
+            return flagged || isPrivateText(object.title) || isPrivateText(rule) ? memoryLabel : nil
+        }
         if isA(.tessMemory) {
             let rule = store.value("rule", of: object)?.stringValue ?? ""
             return flagged || isPrivateText(object.title) || isPrivateText(rule) ? memoryLabel : nil
+        }
+        // An agent's notebook page and its episodes are Tess's own working memory: outside the harness they always
+        // read as the memory label, never their words (docs/ai/harness/agents.md).
+        if isA(.notebookPage) || isA(.agentEpisode) {
+            return memoryLabel
         }
         if isA(.task) {
             // The one shared title check (G105): title words and "Dr Name" count for a task as for a routine or recipe.

@@ -19,11 +19,11 @@ struct MosaicSignLendTests {
         #expect(value == lend(), "deterministic")
     }
 
-    @Test func tilesLaunchSevenMillisecondsApartAndFlyForFiveHundredSixtyMilliseconds() {
+    @Test func tilesLaunchSixMillisecondsApartAndFlyForFourHundredTwentyMilliseconds() {
         let value = lend()
-        #expect(abs(value.launch(1) - value.launch(0) - 0.007) < 1e-9)
-        #expect(value.progress(0, at: 10) == 0 && value.progress(0, at: 10.56) == 1)
-        #expect(abs(value.landedAt - (10 + Double(value.tiles.count - 1) * 0.007 + 0.56)) < 1e-9)
+        #expect(abs(value.launch(1) - value.launch(0) - 0.006) < 1e-9)
+        #expect(value.progress(0, at: 10) == 0 && value.progress(0, at: 10.42) == 1)
+        #expect(abs(value.landedAt - (10 + Double(value.tiles.count - 1) * 0.006 + 0.42)) < 1e-9)
     }
 
     @Test func theArcLiftsTwentySixPointsAndSwellsToOneAndAHalfMidFlight() {

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Edit a set</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for v1 slice 8 (edit and undo any set), drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<style>
+:root{--cream:#F3ECE0;--verm:#C8452F;--cobalt:#2E6DA4;--cad:#E0A35C;--sage:#6E9E6A}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--cream);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(70% 40% at 80% 10%,#3A3150 0%,rgba(58,49,80,0) 70%),radial-gradient(70% 50% at 0% 70%,#2E2A44 0%,rgba(46,42,68,0) 70%),#1C1826}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(243,236,224,.6)}
+.num{font-weight:300;font-size:80px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.sw{position:absolute;display:inline-block}
+.sw .w{position:relative;z-index:2;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap}
+.sw svg{position:absolute;left:-7px;bottom:3px;height:19px;z-index:1;overflow:visible;transform-origin:50% 70%}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(243,236,224,.2);box-shadow:0 0 0 1.5px rgba(255,255,255,.5);opacity:0;z-index:30;pointer-events:none}
+.horizon{position:absolute;left:0;right:0;bottom:0;height:150px;z-index:8;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);-webkit-mask-image:linear-gradient(transparent,#000 55%);mask-image:linear-gradient(transparent,#000 55%)}
+.dc span{display:block;height:64px;line-height:64px;text-align:center}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="0" height="0" class="abs" aria-hidden="true">
+    <filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+    <filter id="wet" x="-10%" y="-80%" width="120%" height="260%"><feTurbulence type="fractalNoise" baseFrequency="0.6 0.2" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="5"/><feGaussianBlur stdDeviation="1.1"/></filter>
+  </svg>
+  <div class="abs" style="left:0;right:0;top:0;height:3px;display:flex;gap:4px"><div style="flex:1;background:var(--verm);box-shadow:0 0 8px rgba(200,69,47,.8)"></div><div style="flex:1;background:rgba(243,236,224,.15)"></div><div style="flex:1;background:rgba(243,236,224,.15)"></div><div style="flex:1;background:rgba(243,236,224,.15)"></div><div style="flex:1;background:rgba(243,236,224,.15)"></div></div>
+  <div class="abs" style="left:22px;top:56px;font-size:21px;color:rgba(243,236,224,.6)">Push Day A, 12:48</div>
+  <div class="abs lbl" style="right:22px;top:60px">1 / 5</div>
+  <div class="abs" style="left:20px;top:92px;font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:52px">Bench press</div>
+
+  <svg id="strokes" class="abs" style="left:22px;top:170px;overflow:visible" width="300" height="30"></svg>
+  <div id="sub" class="abs" style="left:22px;top:210px;font-size:21px;color:rgba(243,236,224,.7)">set 3 of 4, last was 80 × 8</div>
+
+  <div class="abs" style="left:20px;top:270px;display:flex;align-items:baseline;gap:8px"><span id="w" class="num"></span><span style="font-size:21px;color:rgba(243,236,224,.7)">kg</span></div>
+  <div id="plates" class="abs lbl" style="left:22px;top:362px">31.25 KG A SIDE</div>
+  <div class="abs" style="left:286px;top:222px;width:82px;height:196px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,rgba(0,0,0,.35) 18%,#000 40%,#000 60%,rgba(0,0,0,.35) 82%,transparent);mask-image:linear-gradient(transparent,rgba(0,0,0,.35) 18%,#000 40%,#000 60%,rgba(0,0,0,.35) 82%,transparent)">
+    <div id="drum" class="dc num" style="font-size:64px;position:absolute;left:0;right:0;top:0"></div>
+  </div>
+  <div class="abs" style="left:286px;width:82px;top:420px;text-align:center;font-size:18px;color:rgba(243,236,224,.55)">reps</div>
+
+  <!-- the weight dial: a ruler of ticks under a fixed centre mark -->
+  <div class="abs" style="left:0;right:0;top:470px;height:70px;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 25%,#000 75%,transparent);mask-image:linear-gradient(90deg,transparent,#000 25%,#000 75%,transparent)">
+    <div id="ruler" class="abs" style="left:0;top:10px;height:50px"></div>
+  </div>
+  <div class="abs" style="left:194px;top:474px;width:2px;height:58px;background:var(--verm);box-shadow:0 0 8px rgba(200,69,47,.7)"></div>
+
+  <div id="act" class="sw" style="left:22px;top:600px"><span class="w">Log set</span></div>
+  <div id="meta" class="abs lbl" style="left:160px;top:617px">HOLD · 82.5 × 8</div>
+  <span id="cancel" class="abs la lbl" style="right:22px;top:617px;opacity:0">CANCEL<span class="line" style="background:var(--cream)"></span></span>
+
+  <div class="horizon"></div>
+  <div class="abs" style="left:76px;right:22px;top:788px;height:.5px;background:rgba(243,236,224,.3);z-index:9"></div>
+  <span id="tess" class="abs" style="left:78px;top:756px;font-size:21px;color:rgba(243,236,224,.55);z-index:9">Ask Tess…</span>
+  <span id="undo" class="abs la lbl" style="right:22px;top:762px;color:var(--verm);opacity:0;z-index:9">UNDO<span class="line" style="background:var(--verm)"></span></span>
+  <div class="abs" style="left:36px;top:760px;width:28px;height:24px;border-radius:52% 48% 60% 40%;background:radial-gradient(closest-side,rgba(46,109,164,.9),rgba(46,109,164,0));filter:blur(2px);z-index:9;mix-blend-mode:screen"></div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+const NS = 'http://www.w3.org/2000/svg';
+async function swap(el, text, colour) {
+  await anim(el, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 120 });
+  el.textContent = text; if (colour) el.style.color = colour;
+  await anim(el, [{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 180, easing: HOUSE });
+}
+async function tessSay(text, colour = '#9DBFE6') { await swap($('tess'), text, colour); }
+
+// set strokes: logged sets in their paint, the current one a dashed guide, later ones faint
+const PAINT = ['#C8452F', '#2E6DA4', '#E0A35C', '#6E9E6A'];
+const SETS = [{ w: 82.5, r: 8 }, { w: 80, r: 8 }];
+const strokes = [];
+for (let i = 0; i < 4; i++) {
+  const g = document.createElementNS(NS, 'g'); g.setAttribute('transform', `translate(${i * 74},0)`);
+  const p = document.createElementNS(NS, 'path'); p.setAttribute('d', 'M4 16 C 18 9, 40 19, 60 11'); p.setAttribute('fill', 'none'); p.setAttribute('stroke-linecap', 'round');
+  if (i < SETS.length) { p.setAttribute('stroke', PAINT[i]); p.setAttribute('stroke-width', 9); p.setAttribute('filter', 'url(#rough)'); }
+  else { p.setAttribute('stroke', 'rgba(243,236,224,' + (i === 2 ? .7 : .18) + ')'); p.setAttribute('stroke-width', 2); if (i === 2) p.setAttribute('stroke-dasharray', '5 5'); }
+  g.appendChild(p); $('strokes').appendChild(g); strokes.push({ g, p });
+}
+strokes[2].p.animate([{ opacity: .5 }, { opacity: 1 }, { opacity: .5 }], { duration: 1600, iterations: Infinity });
+
+// tabular roll for the weight numeral
+const W = (ch) => ch === '.' ? 20 : 46;
+function setNum(el, str) { el.innerHTML = ''; for (const ch of str) { const c = document.createElement('span'); Object.assign(c.style, { display: 'inline-block', width: W(ch) + 'px', height: '80px', overflow: 'hidden', position: 'relative', verticalAlign: 'top' }); c.innerHTML = `<span style="position:absolute;left:0;right:0;text-align:center">${ch}</span>`; el.appendChild(c); } }
+function rollNum(el, from, to) {
+  const n = Math.max(from.length, to.length); const a = from.padStart(n, '\0'), b = to.padStart(n, '\0'); el.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const o = a[i] === '\0' ? '' : a[i], nw = b[i] === '\0' ? '' : b[i];
+    const c = document.createElement('span'); Object.assign(c.style, { display: 'inline-block', width: (o ? W(o) : 0) + 'px', height: '80px', overflow: 'hidden', position: 'relative', verticalAlign: 'top' });
+    const so = document.createElement('span'), sn = document.createElement('span');
+    [so, sn].forEach((s) => Object.assign(s.style, { position: 'absolute', left: 0, right: 0, textAlign: 'center' }));
+    so.textContent = o; sn.textContent = nw; c.append(so, sn); el.appendChild(c);
+    const d = (n - 1 - i) * 30;
+    if (o !== nw) { const dir = parseFloat(to) < parseFloat(from) ? -1 : 1; anim(so, [{ transform: 'none' }, { transform: `translateY(${-80 * dir}px)` }], { duration: 460, delay: d, easing: HOUSE }); anim(sn, [{ transform: `translateY(${80 * dir}px)` }, { transform: 'none' }], { duration: 460, delay: d, easing: HOUSE }); }
+    else sn.style.display = 'none';
+    anim(c, [{ width: (o ? W(o) : 0) + 'px' }, { width: (nw ? W(nw) : 0) + 'px' }], { duration: 460, delay: d, easing: HOUSE });
+  }
+}
+// reps drum and dial
+for (let r = 4; r <= 12; r++) $('drum').insertAdjacentHTML('beforeend', `<span>${r}</span>`);
+const drumTo = (r, dur = 0) => { const y = 66 - (r - 4) * 64; dur ? anim($('drum'), [{ top: $('drum').style.top || '0px' }, { top: y + 'px' }], { duration: dur, easing: 'cubic-bezier(.3,1.25,.5,1)' }) : null; $('drum').style.top = y + 'px'; };
+let ticks = ''; for (let k = 0; k <= 80; k++) { const kg = 60 + k * 1.25 * 0.5 * 2; const big = k % 4 === 0; ticks += `<div style="position:absolute;left:${k * 14}px;top:${big ? 0 : 12}px;width:1.5px;height:${big ? 40 : 22}px;background:rgba(243,236,224,${big ? .7 : .35})"></div>`; if (big) ticks += `<div style="position:absolute;left:${k * 14 - 20}px;top:44px;width:40px;text-align:center;font-size:16px;font-weight:700;color:rgba(243,236,224,.5)">${60 + k * 1.25}</div>`; }
+$('ruler').innerHTML = ticks;
+const dialX = (w) => 195 - ((w - 60) / 1.25) * 14;
+const dialTo = (w, dur = 0) => { const x = dialX(w); if (dur) anim($('ruler'), [{ left: $('ruler').style.left }, { left: x + 'px' }], { duration: dur, easing: HOUSE }); $('ruler').style.left = x + 'px'; };
+
+// the stroke word
+const BRUSH = 'M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z';
+function brush(paint) {
+  const el = $('act'); el.querySelector('svg')?.remove();
+  const w = el.querySelector('.w').getBoundingClientRect().width / ($('ph').getBoundingClientRect().width / 390) + 14;
+  el.insertAdjacentHTML('beforeend', `<svg width="${w}" viewBox="0 0 200 14" preserveAspectRatio="none"><path class="paint" d="${BRUSH}" fill="${paint}" opacity=".82" filter="url(#rough)"/></svg>`);
+  return el.querySelector('svg');
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready;
+  setNum($('w'), '82.5'); drumTo(8); dialTo(82.5); brush('#C8452F');
+  await sleep(400); document.body.dataset.start = '1';
+  await sleep(1300);
+
+  // tap the second stroke: it lifts and wets, the others dim; the instruments roll back to what that set was
+  const s2 = strokes[1]; const [sx, sy] = centre(s2.g); await fingerOn(sx, sy); await sleep(100); fingerOff();
+  s2.p.setAttribute('filter', 'url(#wet)');
+  anim(s2.p, [{ strokeWidth: 9 }, { strokeWidth: 13 }], { duration: 220, easing: HOUSE });
+  anim(s2.g, [{ transform: 'translate(74px,0)' }, { transform: 'translate(74px,-4px)' }], { duration: 300, easing: HOUSE });
+  strokes.forEach((s, i) => { if (i !== 1) anim(s.g, [{ opacity: 1 }, { opacity: .3 }], { duration: 260 }); });
+  swap($('sub'), 'set 2, as logged: 80 × 8', '#9DBFE6');
+  rollNum($('w'), '82.5', '80'); dialTo(80, 520); swap($('plates'), '30 KG A SIDE');
+  await swap($('act').querySelector('.w'), 'Save set 2'); brush('#2E6DA4');
+  swap($('meta'), '80 × 8'); $('meta').style.left = '210px';
+  anim($('cancel'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
+  await sleep(1200);
+
+  // change the reps on the drum: 8 → 7
+  await fingerOn(327, 318);
+  await tween(280, (t) => fingerAt(327, 318 + 40 * t));
+  fingerOff(); drumTo(7, 420); swap($('meta'), '80 × 7');
+  await sleep(1300);
+
+  // tap Save: the stroke wets, then drains and repaints with the new set; everything rolls back to set 3
+  const [ax, ay] = centre($('act').querySelector('.w')); await fingerOn(ax, ay);
+  const sv = $('act').querySelector('svg'); anim(sv, [{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.65)' }], { duration: 120, easing: 'ease-out' });
+  await sleep(160); fingerOff(); anim(sv, [{ transform: 'scaleY(1.65)' }, { transform: 'scaleY(1)' }], { duration: 300, easing: HOUSE });
+  const len = s2.p.getTotalLength(); s2.p.style.strokeDasharray = len; s2.p.style.strokeDashoffset = 0;
+  await tween(220, (t) => { s2.p.style.strokeDashoffset = len * t; });
+  await tween(520, (t) => { s2.p.style.strokeDashoffset = len * (1 - t); }, (t) => 1 - Math.pow(1 - t, 3));
+  s2.p.setAttribute('filter', 'url(#rough)');
+  anim(s2.p, [{ strokeWidth: 13 }, { strokeWidth: 9 }], { duration: 300, easing: HOUSE });
+  anim(s2.g, [{ transform: 'translate(74px,-4px)' }, { transform: 'translate(74px,0)' }], { duration: 300, easing: HOUSE });
+  strokes.forEach((s, i) => { if (i !== 1) anim(s.g, [{ opacity: .3 }, { opacity: 1 }], { duration: 300 }); });
+  anim($('cancel'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  swap($('sub'), 'set 3 of 4, last was 80 × 7', 'rgba(243,236,224,.7)');
+  rollNum($('w'), '80', '82.5'); dialTo(82.5, 520); drumTo(8, 420); swap($('plates'), '31.25 KG A SIDE');
+  await swap($('act').querySelector('.w'), 'Log set'); brush('#C8452F');
+  $('meta').style.left = '160px'; swap($('meta'), 'HOLD · 82.5 × 8');
+  tessSay('Set 2 is 80 × 7 now.');
+  anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 200 });
+  await sleep(2400);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

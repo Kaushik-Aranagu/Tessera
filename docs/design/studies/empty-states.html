@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Empty states board</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board for docs/design/empty-states.md (Design item 23): the empty Day log, Habits, Settings (fresh install), Upkeep, Money and Reading on one board, Porcelain on top and Obsidian below, one base. One shape everywhere: the page's own frame, one quiet line where the first record will land, and one way in. ?play records Money's first spend replacing the quiet line. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:40px;margin-bottom:28px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px;white-space:nowrap}
+.ph{position:relative;width:390px;height:844px;overflow:hidden}
+.P{background:#fff;--ink:23,20,31;--s2:.66;--tess:#2450D8;--now:240,165,0;--liveInk:#C23A22;--ctx:#6A4C9C;--hair:rgba(23,20,31,.14);--p1:#2450D8;--p2:#E2432A;--p3:#F0A500}
+.O{background:#000;--ink:245,242,236;--s2:.72;--tess:#86B4FF;--now:255,194,61;--liveInk:#FF7A5C;--ctx:#B7A6E0;--hair:rgba(245,242,236,.18);--p1:#86B4FF;--p2:#FF7A5C;--p3:#FFC23D}
+.pg{position:absolute;inset:0;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap;color:rgba(var(--ink),var(--s2))}
+.ink{color:rgb(var(--ink))}
+.b{font-size:21px;line-height:28px}
+.s2{color:rgba(var(--ink),var(--s2))}
+.vw{font-weight:600}
+.tess{color:var(--tess)}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px}
+.sec .lbl{display:block;margin-bottom:8px}
+.sec .b{margin-bottom:5px}
+.words{white-space:nowrap;font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),var(--s2))}
+.words i{font-style:normal;margin:0 10px}
+.flow{position:absolute;left:22px;right:22px;top:150px;display:flex;flex-direction:column;gap:16px}
+.say{right:71px;width:270px;top:751px;text-align:right}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);max-width:1250px;line-height:24px}
+.wash{position:absolute;inset:-2px -6px;border-radius:40% 55% 45% 50%/60% 50% 55% 45%;background:rgba(var(--now),.55);filter:blur(4px);z-index:-1;opacity:0}
+</style>
+</head>
+<body>
+<div id="rows"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),at=(t,f)=>setTimeout(f,t);
+const soul=`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,var(--p1),transparent)"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,var(--p2),transparent)"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,var(--p3),transparent)"></i></div>`;
+// the writing line: a 0.5pt hairline with Tess's cobalt nib at its start (as in Notes)
+const hair=(y,ph)=>`<div class="abs b s2" style="left:22px;top:${y}px">${ph}</div><div class="abs" style="left:22px;right:22px;top:${y+34}px;height:.5px;background:var(--hair)"></div><svg class="abs" style="left:22px;top:${y+31}px;overflow:visible" width="42" height="8"><path d="M0 4 C 12 2.4, 28 2.6, 41.5 3.6 L 41.5 4.6 C 28 5.8, 12 5.6, 0 5 Z" fill="var(--tess)"/></svg>`;
+const tess=(L,line,ex)=>`<div class="abs b tess say" id="${L}say">${line} <span style="white-space:nowrap">Try: <span class="vw">${ex}</span>.</span></div>`;
+
+const pages={
+ daylog:L=>`<div class="abs lbl" style="left:22px;top:58px">‹ TODAY</div>
+  <div class="abs t44" style="left:22px;top:84px">October</div>
+  <div class="abs lbl ink" style="left:22px;top:676px">TODAY</div>
+  <div class="abs b s2" style="left:22px;top:704px">Your days write themselves here.</div>`,
+ habits:L=>`<div class="abs lbl" style="left:22px;top:58px">‹ TODAY</div>
+  <div class="abs t44" style="left:22px;top:84px">This week</div>
+  <div class="abs b" style="left:22px;top:144px;color:var(--ctx)">Saturday, 1 day to go</div>
+  <div class="abs b s2" style="left:22px;top:200px">No habits yet.</div>
+  ${hair(248,'new habit read 5 a week')}`,
+ settings:L=>`<div class="abs lbl" style="left:22px;top:58px">‹ REVIEW</div>
+  <div class="abs t44" style="left:22px;top:84px">Settings</div>
+  <div class="flow"><div class="sec"><span class="lbl">LOOK</span><div class="b"><span class="vw">Porcelain</span> by day, <span class="vw">Obsidian</span> by night.</div><div class="b s2">Hold a name to keep it day and night.</div></div>
+  <div class="sec"><span class="lbl">CLAUDE</span><div class="b">Tess thinks on this phone only.</div><div class="b vw">Add a Claude key</div></div>
+  <div class="sec"><span class="lbl">BACKUPS</span>
+   <div class="b">The first copy is made when you leave the app today.</div>
+   <div class="b">Also keep them in <span class="vw">a folder you choose</span>.</div>
+   <div class="b s2">Reinstalled? Restore brings back your copy from iCloud Drive.</div>
+   <div class="words" style="margin-top:2px">SAVE A COPY<i>·</i>RESTORE</div></div>
+  <div class="sec"><span class="lbl">UNITS</span><div class="b">Kilograms. Bar 20&nbsp;kg, plates from 1.25&nbsp;kg, dumbbells in 2&nbsp;kg steps.</div></div></div>`,
+ upkeep:L=>`<div class="abs lbl" style="left:22px;top:58px">‹ REVIEW</div>
+  <div class="abs t44" style="left:22px;top:84px">Upkeep</div>
+  <div class="abs b s2" style="left:22px;top:150px">No chores yet.</div>
+  ${tess(L,'Tell me what you just did.','watered plants')}`,
+ money:L=>`<div class="abs lbl" style="left:22px;top:58px">‹ REVIEW</div>
+  <div class="abs t44" style="left:22px;top:84px">Money</div>
+  <div class="abs lbl" style="left:22px;top:150px">OCTOBER</div>
+  <div class="abs b s2" id="${L}quiet" style="left:22px;top:178px">Nothing logged yet.</div>
+  <div class="abs b" id="${L}first" style="left:22px;top:178px;opacity:0"><span class="vw">1</span> spend, <span class="vw" style="position:relative;display:inline-block;isolation:isolate"><span class="wash" id="${L}wash"></span>4.50</span> on coffee.</div>
+  ${tess(L,'Tell me what you spent.','spent 4.50 coffee')}
+  <div class="abs lbl" id="${L}undo" style="right:71px;top:784px;color:var(--liveInk);opacity:0">UNDO</div>`,
+ reading:L=>`<div class="abs lbl" style="left:22px;top:58px">‹ REVIEW</div>
+  <div class="abs t44" style="left:22px;top:84px">Reading</div>
+  <div class="abs b s2" style="left:22px;top:150px">No books yet.</div>
+  ${tess(L,"Tell me what you're reading.",'reading Dune')}`};
+const phone=(L,k,cap)=>`<div><div class="cap" id="${L}${k}cap">${cap}</div><div class="ph ${L}"><div class="pg" id="${L}${k}">${pages[k](L+k)}${soul}</div></div></div>`;
+
+if(PLAY){
+ $('rows').innerHTML=`<div class="row">${phone('P','money','MONEY · EMPTY')}</div>`;
+}else{
+ $('rows').innerHTML=`<div class="row">${phone('P','daylog','DAY LOG · THE FIRST DAY')}${phone('P','habits','HABITS · NONE YET')}${phone('P','settings','SETTINGS · FRESH INSTALL')}</div>
+ <div class="row">${phone('O','upkeep','UPKEEP · AFTER SKIP')}${phone('O','money','MONEY · OCTOBER')}${phone('O','reading','READING · NO BOOKS')}</div>`;
+ $('note').innerHTML='ONE SHAPE: THE PAGE\'S OWN FRAME, ONE QUIET LINE IN INK SECONDARY WHERE THE FIRST RECORD WILL LAND, AND ONE WAY IN (THE PAGE\'S WRITING LINE, OR TESS\'S "TRY:" LINE BY THE SOUL). NO ICONS, NO COUNTS OF ZERO, NO EMPTY LABELS. PORCELAIN ABOVE, OBSIDIAN BELOW.';
+}
+// Tess's line writes itself in, glyph by glyph, once per open (Reduce Motion: it is just there)
+function writeIn(el,delay){const html=el.innerHTML;const txt=el.textContent;el.style.opacity=0;
+ at(delay,()=>{el.style.opacity=1;el.style.clipPath='inset(0 100% 0 0)';el.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:700,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})})}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(!PLAY){setTimeout(()=>document.body.dataset.done='1',200);return}
+ const L='Pmoney';
+ writeIn($(L+'say'),1100);
+ at(3000,()=>{$('Pmoneycap').textContent='HE SAYS "SPENT 4.50 COFFEE"';
+  const s=$(L+'say');const out=s.animate([{filter:'blur(0)',opacity:1},{filter:'blur(3px)',opacity:0}],{duration:200,fill:'forwards'});out.onfinish=()=>{s.getAnimations().forEach(a=>a.cancel());s.style.clipPath='none';s.style.top='748px';s.innerHTML='Logged 4.50, coffee.';s.animate([{opacity:0},{opacity:1}],{duration:260,fill:'forwards'})};
+  $(L+'undo').animate([{opacity:0},{opacity:1}],{duration:260,delay:300,fill:'forwards'});
+  $(L+'quiet').animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'});
+  $(L+'first').animate([{opacity:0,transform:'translateY(10px)',filter:'blur(3px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:420,delay:180,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'});
+  $(L+'wash').animate([{opacity:0},{opacity:1,offset:.2},{opacity:0}],{duration:1600,delay:300,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})});
+ at(6200,()=>{$(L+'undo').animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'});const s=$(L+'say');s.animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'})});
+ at(7200,()=>document.body.dataset.done='1');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<title>Tessera, Mosaic Moods</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300;400&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --training:#C4472A;--kitchen:#A8701F;--routines:#A4505F;--lists:#5E6B1F;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E0E10;--phone:#151517;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#EE6A4C;--kitchen:#E0A458;--routines:#D79AA6;--lists:#B5BE7A;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#0E0E10;--phone:#151517;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#EE6A4C;--kitchen:#E0A458;--routines:#D79AA6;--lists:#B5BE7A;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;gap:56px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+.notes{flex:1 1 360px;min-width:0;max-width:520px;display:flex;flex-direction:column;gap:22px}
+h1{font-weight:500;font-size:clamp(38px,7vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);font-size:19px;margin:0}
+.moods{display:flex;flex-direction:column;gap:2px}
+.mood{all:unset;cursor:pointer;display:grid;grid-template-columns:28px 1fr;gap:4px 14px;padding:12px 0}
+.mood .k{font-family:var(--nums);font-weight:200;font-size:26px;line-height:1;color:var(--ink3)}
+.mood b{font-weight:500}
+.mood span.d{grid-column:2;color:var(--ink2);font-size:16px}
+.mood[aria-pressed="true"] .k{color:var(--ink)}
+.mood[aria-pressed="true"] b{text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px}
+.mood:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+.small{color:var(--ink3);font-size:16px;margin:0}
+.phone{position:relative;width:392px;max-width:100%;height:820px;background:var(--phone);border:1px solid var(--edge);border-radius:46px;overflow:hidden;user-select:none;-webkit-user-select:none;
+  display:flex;flex-direction:column;padding:72px 26px 30px;box-sizing:border-box;gap:16px}
+.sent{text-align:right;font-size:24px;line-height:1.3;display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-height:132px;letter-spacing:-.01em}
+.sent .ln{white-space:pre}
+.sent .c{display:inline-block;transform-origin:50% 55%}
+.sent .c.flip{animation:flip 90ms ease-out}
+@keyframes flip{0%{transform:scaleY(.15);opacity:.55}100%{transform:scaleY(1);opacity:1}}
+.sent .a{font-weight:500}
+.sent .n{font-family:var(--nums);font-weight:300}
+.mos{display:flex;justify-content:center;margin-top:18px;touch-action:none}
+canvas{display:block;width:340px;height:250px;max-width:100%}
+.cap{text-align:right;color:var(--ink3);font-size:16px;min-height:22px}
+.next{margin-top:auto;display:flex;flex-direction:column;gap:2px}
+.next .h{color:var(--ink3);font-size:16px}
+.next .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;min-height:40px}
+.next .row .t{font-size:19px}
+.next .row .w{color:var(--ink2);font-size:16px;text-align:right}
+@media (prefers-reduced-motion:reduce){.sent .c.flip{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="phone" id="phone" aria-label="Home preview">
+    <div class="sent" id="sent" aria-live="polite"></div>
+    <div class="mos"><canvas id="cv" width="340" height="250" aria-label="Day mosaic"></canvas></div>
+    <div class="cap" id="cap"></div>
+    <div class="next"><div class="h">Next</div><div class="row"><span class="t" id="nt"></span><span class="w" id="nw"></span></div></div>
+  </div>
+
+  <div class="notes">
+    <h1>Mosaic moods</h1>
+    <p class="sub">The mosaic changes its whole temper with the day you're having, not just the hour. The three lines turn over letter by letter when the mood changes, so the words and the picture move together.</p>
+    <div class="moods" id="moods"></div>
+    <p class="small">Each mood comes from what Next already knows: something running, a planned rest day, coming back after three or more days away, or the late evening. Nothing new leaves the phone. Tap a mood to see the change roll across; touch the mosaic to lean the tiles and send a ripple.</p>
+  </div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NOW=18.1; // 6:06 pm
+const COLS=34,ROWS=25,STEP=10,TILE=8;
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const dpr=Math.min(3,window.devicePixelRatio||1);
+cv.width=340*dpr;cv.height=250*dpr;ctx.scale(dpr,dpr);
+
+const stops=[[0,36,34,58],[5.8,58,54,90],[6.8,233,185,160],[7.8,240,214,180],[10.5,236,228,206],[14.5,234,214,176],[17.7,214,160,138],[18.7,176,122,140],[19.7,104,98,146],[22,58,54,90],[24,36,34,58]];
+function sky(h){for(let k=1;k<stops.length;k++){if(h<=stops[k][0]){const a=stops[k-1],b=stops[k],p=(h-a[0])/(b[0]-a[0]);return[a[1]+(b[1]-a[1])*p,a[2]+(b[2]-a[2])*p,a[3]+(b[3]-a[3])*p]}}return stops[0].slice(1)}
+const mix=(a,b,p)=>[a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p,a[2]+(b[2]-a[2])*p];
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const ease=p=>1-Math.pow(1-p,3);
+function hash(i,j,s=0){const x=Math.sin(i*127.1+j*311.7+s*74.7)*43758.5453;return x-Math.floor(x)}
+const colH=j=>5+j*(19/(COLS-1));
+const nowCol=Math.round((NOW-5)/(19/(COLS-1)));
+
+let ground=[247,245,241],dark=false,acc={};
+function hex(h){h=h.trim().replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+function readTheme(){const cs=getComputedStyle(document.documentElement);ground=hex(cs.getPropertyValue('--phone'));dark=ground[0]<100;
+  acc={training:hex(cs.getPropertyValue('--training')),kitchen:hex(cs.getPropertyValue('--kitchen')),ink:hex(cs.getPropertyValue('--ink'))}}
+readTheme();matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readTheme);
+new MutationObserver(readTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+// base day field
+function dayTile(i,j,t){
+  const h=colH(j);let c=sky(h);const jt=(hash(i,j)-.5)*20;c=[c[0]+jt,c[1]+jt,c[2]+jt];
+  c=mix(c,[c[0]*.9,c[1]*.9,c[2]*.9],i/(ROWS-1)*.5);
+  if(j>nowCol)c=mix(c,ground,.58);
+  let s=1;
+  if(j===nowCol){const b=Math.sin(t/900+i*.25)*8;c=[c[0]+b,c[1]+b,c[2]+b]}
+  // swell
+  const sw=Math.sin((j*.35+i*.18)-t/1100);s+=Math.max(0,sw)*.12;
+  return{c,s,dx:0,dy:0,ring:null};
+}
+const scenes={
+  day:{fn:dayTile},
+  running:{fn(i,j,t){
+    const o=dayTile(i,j,t);
+    const ph=((t/2400)%1)*nowCol;const d=j-ph;
+    if(j<=nowCol){const g=Math.exp(-d*d/3)*16;o.c=[o.c[0]+g,o.c[1]+g,o.c[2]+g];o.s+=Math.exp(-d*d/3)*.15}
+    const sets=[[9,nowCol],[11,nowCol],[13,nowCol],[15,nowCol],[17,nowCol]];
+    for(let k=0;k<sets.length;k++){if(sets[k][0]===i&&j===nowCol){
+      if(k<3){o.c=acc.training;o.s=1.15+Math.sin(t/600+k)*.04}
+      else{o.ring=acc.ink;o.c=mix(o.c,ground,.7)}}}
+    return o}},
+  rest:{fn(i,j,t){
+    const H=15;let ii=i;let jj=j;
+    if(i>H){ii=2*H-i;jj=clamp(Math.round(j+Math.sin(t/1400+i*.8)*1.2),0,COLS-1)}
+    const c0=sky(15.2+ii/H*1.6);const jt=(hash(ii,jj)-.5)*12;let c=[c0[0]+jt,c0[1]+jt,c0[2]+jt];
+    c=mix(c,ground,.25);
+    if(i>H)c=mix(c,[c[0]*.82,c[1]*.84,c[2]*.9],.9);
+    if(i===H)c=mix(c,ground,.5);
+    return{c,s:i>H?.92+Math.sin(t/1600+j*.5)*.04:1,dx:0,dy:0,ring:null}}},
+  back:{enter:0,fn(i,j,t){
+    const o=dayTile(i,j,t);const lt=t-scenes.back.enter;
+    const k=1-ease(clamp((lt-200-hash(i,j,3)*1300)/900));
+    const a=hash(i,j,1)*Math.PI*2,r=12+hash(i,j,2)*40;
+    o.dx=Math.cos(a)*r*k;o.dy=Math.sin(a)*r*k;o.c=mix(o.c,dark?[70,68,66]:[190,186,180],k*.75);o.s*=1-k*.45;return o}},
+  night:{fn(i,j,t){
+    let c=mix([36,34,58],[64,58,96],i/(ROWS-1));const jt=(hash(i,j)-.5)*8;c=[c[0]+jt,c[1]+jt,c[2]+jt];
+    if(!dark)c=mix(c,[90,86,120],.25);
+    let s=1;const hs=hash(i,j,7);
+    if(hs<.045&&i<17){const tw=(Math.sin(t/(700+hs*9000)+hs*40)+1)/2;c=mix(c,[232,228,242],.35+tw*.55);s=.7+tw*.3}
+    const dm=Math.hypot(j-26,i-5);if(dm<2.3)c=mix([236,232,220],c,clamp(dm-1.3));
+    if(j===nowCol&&i>=19&&i<=22)c=mix(sky(17.9),c,.15);
+    return{c,s,dx:0,dy:0,ring:null}}},
+};
+
+const copy={
+  day:{lines:[['Thursday evening,'],[['Push day','training'],' at ',['6:30 pm','n'],','],['then ',['groceries','kitchen'],'.']],cap:'',nt:'Push day',nw:'At 6:30 pm, due today'},
+  running:{lines:[[['Push day','training'],' is running,'],['set ',['3','n'],' of ',['5','n'],','],['next set at ',['6:09 pm','n'],'.']],cap:'Three sets done',nt:'Set 4, bench press',nw:'Since 6:02 pm'},
+  rest:{lines:[['A rest day.'],['Nothing is timed,'],['so go easy.']],cap:'',nt:'Evening walk',nw:'Your evening slot'},
+  back:{lines:[['Welcome back.'],['Three days away,'],['start with one thing.']],cap:'',nt:'Groceries',nw:'Carried from Monday'},
+  night:{lines:[['Quiet now.'],['Four things done today,'],['tomorrow starts with a walk.']],cap:'Four things done',nt:'Morning walk',nw:'Tomorrow at 7:30 am'},
+};
+const moodsInfo=[
+  ['day','The day','The mosaic you know: the sky by hour, the hour you\'re in breathing.'],
+  ['running','Something running','A current flows along the day toward now. Sets done sit in the now column in Training colour; the rest wait as ink rings.'],
+  ['rest','A rest day','The day lays down into still water. Sky above, its reflection below, moving only a little.'],
+  ['back','Coming back','The tiles start scattered and dusty, then gather into today one by one.'],
+  ['night','Late evening','The day goes dark, a few tiles twinkle, and what you finished glows low in the now column.'],
+];
+
+// sentence with split-flap change
+const sent=document.getElementById('sent');
+const FL=' abcdefghijklmnopqrstuvwxyz';
+function spans(line){const out=[];for(const seg of line){if(typeof seg==='string'){for(const ch of seg)out.push({ch,cls:''})}else{const cls=seg[1]==='n'?'n':'a';for(const ch of seg[0])out.push({ch,cls,app:seg[1]})}}return out}
+let lineEls=[];
+function setSentence(lines,animate){
+  while(lineEls.length<3){const d=document.createElement('div');d.className='ln';sent.appendChild(d);lineEls.push(d)}
+  lines.forEach((line,li)=>{
+    const el=lineEls[li];const want=spans(line);const old=[...el.children];
+    el.textContent='';
+    want.forEach((w,k)=>{
+      const s=document.createElement('span');s.className='c'+(w.cls?' '+w.cls:'');
+      if(w.app&&w.app!=='n')s.style.color=`var(--${w.app})`;
+      el.appendChild(s);
+      const before=old[k]?old[k].textContent:'';
+      if(!animate||RM||before===w.ch){s.textContent=w.ch;return}
+      const n=2+Math.floor(Math.random()*3);let step=0;
+      const delay=(li*6+k)*16;
+      s.textContent=before||' ';
+      setTimeout(function tick(){
+        if(step<n){s.textContent=w.ch===' '?' ':FL[1+Math.floor(Math.random()*26)];s.classList.remove('flip');void s.offsetWidth;s.classList.add('flip');step++;setTimeout(tick,45)}
+        else{s.textContent=w.ch;s.classList.remove('flip');void s.offsetWidth;s.classList.add('flip')}
+      },delay);
+    });
+  });
+  sent.setAttribute('aria-label',lines.map(l=>spans(l).map(x=>x.ch).join('')).join(' '));
+}
+
+// scene switching
+let cur='day',prev='day',ts=-1e9,origin=[nowCol,12];
+function go(name,from){
+  if(name===cur&&name!=='back')return;
+  prev=cur;cur=name;ts=performance.now();origin=from||[nowCol,12];
+  if(name==='back')scenes.back.enter=ts;
+  const c=copy[name];setSentence(c.lines,true);
+  document.getElementById('cap').textContent=c.cap;
+  document.getElementById('nt').textContent=c.nt;document.getElementById('nw').textContent=c.nw;
+  document.querySelectorAll('.mood').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===name));
+}
+const mw=document.getElementById('moods');
+moodsInfo.forEach(([k,t,d],n)=>{const b=document.createElement('button');b.className='mood';b.dataset.m=k;b.setAttribute('aria-pressed',k==='day');
+  b.innerHTML=`<span class="k">${n+1}</span><b>${t}</b><span class="d">${d}</span>`;b.onclick=()=>go(k);mw.appendChild(b)});
+
+// pointer lean + ripple
+let px=-999,py=-999,rip=null;
+const lean=new Float32Array(ROWS*COLS*2);
+function loc(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*340/r.width,(e.clientY-r.top)*250/r.height]}
+cv.addEventListener('pointermove',e=>{[px,py]=loc(e)});
+cv.addEventListener('pointerleave',()=>{px=py=-999});
+cv.addEventListener('pointerdown',e=>{[px,py]=loc(e);rip={x:px,y:py,t:performance.now()}});
+
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function frame(){
+  const t=performance.now();ctx.clearRect(0,0,340,250);
+  const A=scenes[prev].fn,B=scenes[cur].fn;
+  for(let i=0;i<ROWS;i++)for(let j=0;j<COLS;j++){
+    const dist=Math.hypot(j-origin[0],i-origin[1]);
+    let p=RM?clamp((t-ts)/150):clamp((t-ts-dist*22)/520);p=RM?p:ease(p);
+    const b=B(i,j,t);let o=b;
+    if(p<1){const a=A(i,j,t);o={c:mix(a.c,b.c,p),s:a.s+(b.s-a.s)*p+(RM?0:Math.sin(p*Math.PI)*.45),dx:a.dx+(b.dx-a.dx)*p,dy:a.dy+(b.dy-a.dy)*p,ring:p>.5?b.ring:a.ring}}
+    const cx=j*STEP+TILE/2+1,cy=i*STEP+TILE/2;
+    // lean
+    const k=(i*COLS+j)*2;let tx=0,ty=0;
+    if(!RM){const ddx=cx-px,ddy=cy-py,dd=Math.hypot(ddx,ddy);if(dd<46&&dd>.01){const f=(1-dd/46)*7;tx=ddx/dd*f;ty=ddy/dd*f}}
+    lean[k]+=(tx-lean[k])*.22;lean[k+1]+=(ty-lean[k+1])*.22;
+    let s=o.s;
+    if(rip&&!RM){const rd=Math.hypot(cx-rip.x,cy-rip.y);const lt=t-rip.t-rd*3.4;if(rd<150&&lt>0&&lt<240)s+=Math.sin(lt/240*Math.PI)*.32*(1-rd/150)}
+    const w=TILE*s,x=cx+o.dx+lean[k]-w/2,y=cy+o.dy+lean[k+1]-w/2;
+    if(o.ring){ctx.strokeStyle=`rgb(${o.ring.join(',')})`;ctx.lineWidth=1.2;rr(x+.6,y+.6,w-1.2,w-1.2,1.6);ctx.stroke();continue}
+    ctx.fillStyle=`rgb(${o.c.map(v=>Math.round(clamp(v,0,255))).join(',')})`;rr(x,y,w,w,1.6);ctx.fill();
+  }
+  if(rip&&t-rip.t>900)rip=null;
+  requestAnimationFrame(frame);
+}
+setSentence(copy.day.lines,false);
+document.getElementById('nt').textContent=copy.day.nt;document.getElementById('nw').textContent=copy.day.nw;
+requestAnimationFrame(frame);
+window.__go=go;
+})();
+</script>

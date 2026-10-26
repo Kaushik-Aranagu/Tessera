@@ -1,0 +1,90 @@
+<title>Set marks, round two</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300&display=swap">
+<style>
+:root{--ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;--training:#0B62AE;--go:#2FA24D;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#78736D;--edge:#2A2A2E;--training:#8FB0EE;--go:#8FC9A0;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#78736D;--edge:#2A2A2E;--training:#8FB0EE;--go:#8FC9A0;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-weight:500;font-size:clamp(34px,6vw,54px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.ctl{display:flex;gap:22px;flex-wrap:wrap}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr:hover{color:var(--ink)}.tr:focus-visible{outline:2px solid var(--ink3);outline-offset:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}
+.c{background:var(--phone);border:1px solid var(--edge);border-radius:28px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.c h2{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.c .why{color:var(--ink2);font-size:15px;line-height:21px;margin:0 0 10px;min-height:84px}
+.r{display:flex;justify-content:space-between;align-items:center;gap:10px;height:40px;white-space:nowrap}
+.r .nm{font-size:19px;color:var(--ink2)}
+.r.f .nm{font-size:26px;font-weight:600;color:var(--training);letter-spacing:-.02em}
+.r.d .nm{text-decoration:line-through;text-decoration-color:var(--go);text-decoration-thickness:1.5px}
+.r .v{display:flex;align-items:center;gap:9px;color:var(--ink)}
+.r .w{font-family:var(--nums);font-weight:300;color:var(--ink2);font-size:15px}
+.pick{color:var(--training);font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em}
+svg{overflow:visible}
+</style>
+<div class="wrap">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <h1>Sets, round four</h1>
+    <p class="sub">Four more ways, closer to the gym itself: the weight stack, the bar, an abacus, and the name doing the work. Each shows the same workout: Bench done (the last set one short), Overhead press in progress, Dips and Cable fly still to do. Reps to do are thin ink; reps you did draw in go green. Tap <b>Log a set</b> (sets are logged whole, his 10:02 PM) and watch each one fill in.</p>
+    <div class="ctl"><button class="tr" id="rep">Log a set</button><button class="tr" id="miss">Log a set one short</button><button class="tr" id="rs">Start over</button><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button></div>
+    <p class="sub" style="font-size:16px">Round one (Pulse, Climb, Waves, Arrows): <a href="https://claude.ai/artifact/VrW9eWQyzZbeekpdmbWfqA" style="color:var(--training)">the first study</a>.</p>
+  </div>
+  <div class="grid" id="g"></div>
+</div>
+<script>
+// set mark: a cable-machine stack per set (his 10:04 PM). On top, a small grip on its cable; under it the top plate (the cap),
+// the rod down the middle, and the floor. Each rep is a plate. Reps you did are lifted up under the cap in go green; reps still to do
+// rest on the floor in ink3, and the bare rod between them is what's left. A finished set closes the gap and its grip turns green.
+function rodStack(L,big,did){const H=big?28:24,w=big?12:11,gap=big?6:5,cap=7,G='var(--go)',I='var(--ink3)',el=[];let x=0;
+  const ln=(x1,y1,x2,y2,c,sw)=>el.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${sw}" stroke-linecap="round"/>`);
+  for(let s=0;s<L.sets;s++){const dn=did(s),R=L.reps,full=dn>=R&&L.done[s]!=null,cx=x+w/2,sp=Math.min(2.2,(H-cap-3)/Math.max(R,1)),k=dn>0?G:I;
+    ln(cx-2.6,1,cx+2.6,1,full?G:I,1.6);ln(cx,1,cx,cap,k,.8);ln(x,cap,x+w,cap,k,1.4);ln(cx,cap,cx,H,I,.8);ln(x-.5,H,x+w+.5,H,I,1);
+    for(let r=0;r<R;r++){const on=r<dn,y=on?cap+sp*(r+1):H-sp*(R-r);ln(x+.5,y,x+w-.5,y,on?G:I,on?1.15:.8)}
+    x+=w+gap}
+  const W=x-gap+1;return `<svg width="${W}" height="${H}" viewBox="-1 0 ${W+1} ${H+1}" style="vertical-align:middle;overflow:visible" aria-hidden="true">${el.join('')}</svg>`}
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches,$=id=>document.getElementById(id);
+const K=[
+ {k:'rod',t:'Stack and handle',why:'A cable-machine stack per set: the grip on its cable, the top plate, the rod and the floor. Each rep is a plate. A logged set lifts its plates up under the cap in green; plates still to do rest on the floor, and the bare rod between is what's left. A finished set's grip turns green.',pick:1},
+ {k:'plates',t:'Plate stack',why:'The stack and the bar in one. Each set is a slim plate, and inside it a slat per rep lights up green from the bottom as you lift. A finished plate gets its green rim; a short set leaves its top slats dark. Three sets take about 30 pt. The weight carries its unit, half size.',pick:0},
+ {k:'stack',t:'Weight stack',why:'Each set is a small cable-machine stack, one slat per rep. Slats you lift light up green from the bottom; a short set leaves its top slats dark. Three sets fit in the width of a word, so long names never squeeze.',pick:0},
+ {k:'bar',t:'The bar',why:'The lift as a little barbell: the sleeve, then one plate per set, hatched with a line per rep. Reps you did ink in green; a finished plate gets its green rim. It echoes the bar you drag on the workout screen.'},
+ {k:'abacus',t:'Abacus',why:'Each set is a rod of beads, one per rep. Logging a rep slides a bead to the left in green, with a spring; the beads still to lift wait on the right.'},
+ {k:'ink',t:'Ink in',why:'No mark at all. The lift name itself fills with ink left to right as you lift, so the name is the progress. The weight stays on the right; the sets and reps live on the lift page.'}];
+const seed=()=>[{n:'Bench press',w:185,sets:3,reps:5,done:[5,5,4]},{n:'Overhead press',w:115,sets:3,reps:6,done:[6],live:0},{n:'Dips',w:0,sets:3,reps:10,done:[]},{n:'Cable fly',w:40,sets:2,reps:12,done:[]}];
+let D=seed(),fresh=null;
+// reps done in set s (a live set counts what's logged so far)
+const did=(L,s)=>L.done[s]!=null?L.done[s]:(s===L.done.length&&L.live!=null?L.live:0);
+function svg(kind,L,big){const G='var(--go)',I='var(--ink3)',el=[];const nw=(s,r)=>fresh&&fresh.L===L&&fresh.s===s&&fresh.r===r;
+  if(kind==='rod')return rodStack(L,big,q=>did(L,q));
+  if(kind==='plates'){const H=big?24:21,pw=big?9:8,gap=2.5;let x=0;el.push(`<line x1="0" x2="3" y1="${H/2}" y2="${H/2}" stroke="${I}" stroke-width="1.6" stroke-linecap="round"/>`);x=4;
+    for(let s=0;s<L.sets;s++){const dn=did(L,s),full=L.done[s]!=null&&dn>=L.reps;el.push(`<rect x="${x}" y="0.5" width="${pw}" height="${H-1}" rx="2.2" fill="none" stroke="${full?G:I}" stroke-width="${full?1.4:.9}"/>`);
+      const sp=(H-5)/(L.reps+1);for(let r=0;r<L.reps;r++){const y=H-2.5-sp*(r+1),on=r<dn;el.push(`<line x1="${x+2}" x2="${x+pw-2}" y1="${y}" y2="${y}" stroke="${on?G:I}" stroke-width="${on?1.2:.7}" stroke-linecap="round"${nw(s,r)?' pathLength="1" class="nw"':''}/>`)}x+=pw+gap}
+    const W=x-gap+1;return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${el.join('')}</svg>`}
+  if(kind==='ink')return '';
+  if(kind==='stack'){const H=big?26:22,w=big?13:11,gap=8;let x=0;for(let s=0;s<L.sets;s++){const dn=did(L,s),sp=(H-2)/Math.max(L.reps-1,1);
+      for(let r=0;r<L.reps;r++){const y=H-1-r*sp,on=r<dn;el.push(`<line x1="${x}" x2="${x+w}" y1="${y}" y2="${y}" stroke="${on?G:I}" stroke-width="${on?1.6:1}" stroke-linecap="round"${nw(s,r)?' pathLength="1" class="nw"':''}/>`)}x+=w+gap}
+    const W=x-gap+1;return `<svg width="${W}" height="${H}" viewBox="0 -1 ${W} ${H+1}" aria-hidden="true">${el.join('')}</svg>`}
+  if(kind==='bar'){const H=big?28:24,pw=big?12:10,gap=3;let x=0;el.push(`<line x1="0" x2="12" y1="${H/2}" y2="${H/2}" stroke="${I}" stroke-width="1.6" stroke-linecap="round"/>`);x=13;
+    for(let s=0;s<L.sets;s++){const dn=did(L,s),full=L.done[s]!=null&&dn>=L.reps;el.push(`<rect x="${x}" y="0.5" width="${pw}" height="${H-1}" rx="2" fill="none" stroke="${full?G:I}" stroke-width="${full?1.5:1}"/>`);
+      const sp=(H-4)/(L.reps+1);for(let r=0;r<L.reps;r++){const y=2+sp*(r+1),on=r<dn;el.push(`<line x1="${x+2}" x2="${x+pw-2}" y1="${H-y}" y2="${H-y}" stroke="${on?G:I}" stroke-width="${on?1.3:.8}"${nw(s,r)?' pathLength="1" class="nw"':''}/>`)}x+=pw+gap}
+    el.push(`<line x1="${x}" x2="${x+5}" y1="${H/2}" y2="${H/2}" stroke="${I}" stroke-width="1.6" stroke-linecap="round"/>`);const W=x+6;return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${el.join('')}</svg>`}
+  // abacus
+  const H=big?14:12,bw=big?4.4:3.8,gap=10,slide=7;let x=0;for(let s=0;s<L.sets;s++){const dn=did(L,s),len=L.reps*bw+slide;el.push(`<line x1="${x}" x2="${x+len}" y1="${H/2}" y2="${H/2}" stroke="${I}" stroke-width=".8"/>`);
+    for(let r=0;r<L.reps;r++){const on=r<dn,bx=on?x+r*bw:x+slide+r*bw;el.push(`<ellipse cx="${bx+bw/2}" cy="${H/2}" rx="${bw/2-.35}" ry="${H/2-.6}" fill="var(--phone)" stroke="${on?G:I}" stroke-width="${on?1.4:1}"${nw(s,r)?` class="sl" data-from="${slide}"`:''}/>`)}x+=len+gap}
+  const W=x-gap+1;return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${el.join('')}</svg>`}
+function inkName(L,big){let tot=0,dn=0;for(let s=0;s<L.sets;s++){tot+=L.reps;dn+=did(L,s)}const p=Math.round(dn/tot*100);
+  return `style="background:linear-gradient(90deg,${big?'var(--training)':'var(--ink)'} ${p}%,var(--ink3) ${p}%);-webkit-background-clip:text;background-clip:text;color:transparent;${big?'':'font-weight:500;'}"`}
+function render(){$('g').innerHTML=K.map(c=>`<div class="c"><div style="display:flex;justify-content:space-between;align-items:baseline"><h2>${c.t}</h2>${c.pick?'<span class="pick">my pick</span>':''}</div><p class="why">${c.why}</p>${D.map((L,i)=>`<div class="r${i===1?' f':''}${L.done.length>=L.sets?' d':''}" aria-label="${L.n}, ${L.sets} sets of ${L.reps}${L.w?' at '+L.w:''}${L.done.length?', done '+L.done.join(', '):''}"><span class="nm" ${c.k==='ink'?inkName(L,i===1):''}>${L.n}</span><span class="v">${L.w?`<span class="w">${L.w}<span style="font-size:.5em;margin-left:2px;font-family:var(--words);font-weight:400">lb</span></span>`:''}${svg(c.k,L,i===1)}</span></div>`).join('')}</div>`).join('');
+  if(!RM)document.querySelectorAll('.sl').forEach(e=>{const d=+e.dataset.from,s0=performance.now();(function f(n){const u=Math.min(1,(n-s0)/420),k=1-Math.exp(-7*u)*Math.cos(9*u);e.setAttribute('transform',`translate(${d*(1-k)},0)`);if(u<1)requestAnimationFrame(f)})(s0)});document.querySelectorAll('.nw').forEach(p=>{p.style.strokeDasharray='1';p.style.strokeDashoffset='1';const s0=performance.now();(function f(n){const u=Math.min(1,(n-s0)/320),e=1-Math.pow(1-u,3);p.style.strokeDashoffset=String(1-e);if(u<1)requestAnimationFrame(f)})(s0)});fresh=null}
+const cur=()=>D.find(L=>L.done.length<L.sets);
+$('rep').onclick=()=>{const L=cur();if(!L)return;L.live=0;L.done.push(L.reps);fresh=null;render()};
+$('miss').onclick=()=>{const L=cur();if(!L)return;L.live=0;L.done.push(Math.max(1,L.reps-1));render()};
+$('rs').onclick=()=>{D=seed();render()};
+$('th').onclick=()=>document.documentElement.dataset.theme='dark';$('tw').onclick=()=>document.documentElement.dataset.theme='light';
+(document.fonts?document.fonts.ready:Promise.resolve()).then(render);render();
+})();
+</script>
