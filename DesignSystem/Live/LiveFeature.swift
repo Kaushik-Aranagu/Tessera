@@ -89,7 +89,17 @@ enum LiveFeatures {
     static let tessSoul = LiveFeature(id: "tess.soul", title: "Tess soul", owner: .builderA,
                                       mode: .uiRead, cost: .frames(perSecond: 30))
 
+    static let lookoutHandover = LiveFeature(id: "keystone.lookout.handover", title: "Lookout drop hand-over",
+                                             owner: .builderA, mode: .uiRead, cost: .frames(perSecond: 60))
+    static let wallHandover = LiveFeature(id: "keystone.wall.handover", title: "Wall chalk-dust hand-over",
+                                          owner: .builderA, mode: .uiRead, cost: .frames(perSecond: 60))
+    static let watchHandover = LiveFeature(id: "keystone.watch.handover", title: "Watch bird and petals hand-over",
+                                           owner: .builderA, mode: .uiRead, cost: .frames(perSecond: 60))
+    static let thinking = LiveFeature(id: "tess.thinking", title: "Tess thinking glyph", owner: .builderA,
+                                      mode: .uiRead, cost: .frames(perSecond: 60))
+
     static let all: [LiveFeature] = [
         deckChalk, galleyRail, purseChart, watchWoodland, lookoutSky, mosaicHome, landingGlyph, tessSoul,
+        lookoutHandover, wallHandover, watchHandover, thinking,
     ]
 }

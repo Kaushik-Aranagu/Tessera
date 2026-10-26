@@ -38,7 +38,9 @@ final class LiveRegistry {
 
     /// Sets every feature at once. The measurement run uses `.alwaysLive` for the before and `.auto` for the after.
     func setAll(_ state: LiveSwitch) {
-        for feature in LiveFeatures.all { set(state, for: feature) }
+        for feature in LiveFeatures.all {
+            set(state, for: feature)
+        }
     }
 
     /// Called by `liveRegion` when a feature's live state flips.
@@ -51,7 +53,9 @@ final class LiveRegistry {
                                                              "\(feature.id, privacy: .public)")
         } else if let start = since.removeValue(forKey: feature.id) {
             liveSeconds[feature.id, default: 0] += date.timeIntervalSince(start)
-            if let state = intervals.removeValue(forKey: feature.id) { signposter.endInterval("live", state) }
+            if let state = intervals.removeValue(forKey: feature.id) {
+                signposter.endInterval("live", state)
+            }
         }
     }
 

@@ -1,26 +1,12 @@
 import SwiftUI
 
-private struct LiveScopeKey: EnvironmentKey {
-    static let defaultValue = true
-}
-
-private struct IsLiveKey: EnvironmentKey {
-    static let defaultValue = true
-}
-
 extension EnvironmentValues {
-    /// False inside a page that is not current or is covered. Set by `liveScope`; ANDed down the tree.
-    var liveScope: Bool {
-        get { self[LiveScopeKey.self] }
-        set { self[LiveScopeKey.self] = newValue }
-    }
+    // False inside a page that is not current or is covered. Set by `liveScope`; ANDed down the tree.
+    @Entry var liveScope: Bool = true
 
-    /// Whether the nearest `liveRegion` above is live. Defaults to true outside any region, so un-adopted views
-    /// behave as before.
-    var isLive: Bool {
-        get { self[IsLiveKey.self] }
-        set { self[IsLiveKey.self] = newValue }
-    }
+    // Whether the nearest `liveRegion` above is live. Defaults to true outside any region, so un-adopted views
+    // behave as before.
+    @Entry var isLive: Bool = true
 }
 
 private struct LiveScopeModifier: ViewModifier {
@@ -69,7 +55,9 @@ extension View {
 
     /// Runs `action` only while the nearest region is live, cancels it when it stops, restarts it on return.
     /// For data-to-pixels work (a repeating timer, a poll) that has no reason to run unseen.
-    func liveTask(priority: TaskPriority = .userInitiated, _ action: @escaping @Sendable () async -> Void) -> some View {
+    func liveTask(priority: TaskPriority = .userInitiated,
+                  _ action: @escaping @Sendable () async -> Void) -> some View
+    {
         modifier(LiveTaskModifier(priority: priority, action: action))
     }
 }
@@ -97,13 +85,39 @@ struct LiveTimeline<Content: View>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// `minimumInterval` as `TimelineView(.animation)`. With Reduce Motion on, it never ticks.
-    init(minimumInterval: TimeInterval = 1 / 30, @ViewBuilder content: @escaping (TimelineViewDefaultContext) -> Content) {
+    init(
+        minimumInterval: TimeInterval = 1 / 30,
+        @ViewBuilder content: @escaping (TimelineViewDefaultContext) -> Content
+    ) {
         interval = minimumInterval
         self.content = content
     }
 
     var body: some View {
         TimelineView(.animation(minimumInterval: interval, paused: !live || reduceMotion), content: content)
+    }
+}
+
+/// `TimelineView(.animation)` that stops when the region is not live but leaves Reduce Motion to the caller, for the
+/// features whose shipped Reduce Motion look still ticks (a slow fade, a blink). `paused` adds the caller's own
+/// reasons.
+struct LiveClock<Content: View>: View {
+    private let interval: TimeInterval
+    private let extraPause: Bool
+    private let content: (TimelineViewDefaultContext) -> Content
+
+    @Environment(\.isLive) private var live
+
+    init(minimumInterval: TimeInterval = 1 / 30, paused: Bool = false,
+         @ViewBuilder content: @escaping (TimelineViewDefaultContext) -> Content)
+    {
+        interval = minimumInterval
+        extraPause = paused
+        self.content = content
+    }
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: interval, paused: !live || extraPause), content: content)
     }
 }
 

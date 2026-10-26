@@ -44,6 +44,8 @@ struct ShellView<Room: RoomContent>: View {
                         .offset(x: rect.minX + dx, y: rect.minY * scale)
                         .modifier(BackPull(place: place, amount: pullAmount, reduceMotion: reduceMotion))
                         .allowsHitTesting(shown[place] != nil && !busy.contains(place))
+                        // Live only when seen: a place with no content (the dial or glyph merged away) draws nothing.
+                        .liveScope(shown[place] != nil)
                         .zIndex(place == .glyph ? 1 : 0)
                 }
                 backEdge(height: proxy.size.height)

@@ -183,6 +183,8 @@ struct HomeMosaicPage: View {
         .mosaicTouchFeed(controller, enabled: layerOn)
         // Sheet 215: Home sits under her blur (hers alone) while her layer is open.
         .tessBackdrop(open: tessOpen)
+        // Live only when seen: her layer or a full-screen link hides the page.
+        .liveScope(!tessOpen && link == nil)
         // Sheet 209 and 215: Tess on her own layer above all of Home; touches pass through except on her. Her
         // conversation opens over Home, and she moves to the bottom middle.
         .overlay { tessOverlay }

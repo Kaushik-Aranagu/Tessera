@@ -284,7 +284,8 @@ struct GlyphCover: View {
             ForEach(Array(words.prefix(3).enumerated()), id: \.offset) { _, word in
                 // Sized to the word: the largest size (18 at most) at which it fits 80 pt, so it never ends in "...".
                 Text(word.uppercased())
-                    .font(.custom("Figtree", fixedSize: min(18, 78 / max(WordWallMeasure.advance(word), 0.1))).weight(.black))
+                    .font(.custom("Figtree", fixedSize: min(18, 78 / max(WordWallMeasure.advance(word), 0.1)))
+                        .weight(.black))
                     .foregroundStyle(color)
                     .lineLimit(1)
                     .fixedSize()
@@ -313,7 +314,7 @@ struct LandingGlyph: View {
 
     var body: some View {
         ZStack {
-            TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion)) { timeline in
+            LiveTimeline(minimumInterval: 1.0 / 20) { timeline in
                 let seconds = timeline.date.timeIntervalSince(moveStart)
                 // One move on arrival, then one every 7 s: a 2 s move inside each 7 s cycle.
                 let cycle = reduceMotion ? 0 : seconds.truncatingRemainder(dividingBy: 7)
@@ -330,6 +331,7 @@ struct LandingGlyph: View {
                 .scaleEffect(formed ? 0.001 : 1.4).opacity(formed ? 0 : 1)
         }
         .frame(width: 80, height: 80)
+        .liveRegion(LiveFeatures.landingGlyph)
         // Collapse the old drawing, pulse the point, form the new one: keyed on the item so a change replays it.
         .task(id: item.id) { await form() }
         .accessibilityHidden(true)
