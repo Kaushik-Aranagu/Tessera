@@ -34,7 +34,6 @@ public enum SystemCatalog {
         case belief
         case routineRun, rest
         case tessAgent, notebookPage, agentEpisode
-        case elementLook
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -465,6 +464,7 @@ public enum SystemCatalog {
             FieldSpec(key: "mosaicBackdrop", name: "Mosaic scene", kind: .text),
             FieldSpec(key: "rainAlert", name: "Rain alert", kind: .bool),
             FieldSpec(key: "rainAlertLead", name: "Rain alert lead", kind: .number, unit: "min"),
+            FieldSpec(key: "placeLooks", name: "Looks", kind: .text),
         ]),
         // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
         // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.
@@ -553,18 +553,6 @@ public enum SystemCatalog {
                       FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
                       FieldSpec(key: "lab", name: "Under lab", kind: .bool, defaultValue: .bool(false)),
                       FieldSpec(key: "held", name: "Held back", kind: .bool, defaultValue: .bool(false)),
-                  ]),
-        // How one place on screen looks for one scope (docs/ai/harness/element-looks.md): a room's place at a level,
-        // at every level, or a place in every room. Set by his hand or by Tess through `setElementLook`; an empty form
-        // and no traits is the studio's look. Nothing private: rides in backups and the export like a setting.
-        ClassSpec(key: .elementLook, name: "Look", parent: .thing, symbol: "paintbrush", colorRole: "neutral",
-                  fields: [
-                      FieldSpec(key: "room", name: "Room", kind: .text),
-                      FieldSpec(key: "place", name: "Place", kind: .text),
-                      FieldSpec(key: "level", name: "Level", kind: .text),
-                      FieldSpec(key: "form", name: "Form", kind: .text),
-                      // Trait names to their words, as a JSON object ("density": "dense").
-                      FieldSpec(key: "traits", name: "Traits", kind: .text),
                   ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
         ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning", fields: [

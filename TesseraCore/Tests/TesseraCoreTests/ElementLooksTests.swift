@@ -3,155 +3,116 @@ import Foundation
 @testable import TesseraTess
 import Testing
 
-/// Living elements (docs/ai/harness/element-looks.md): a place's look is an object with a scope, the most specific
-/// row wins, only the studio's forms and words are taken, a short nudge on the place he means runs with no model,
-/// and only a place he can see is "this".
+/// Living looks (Design sheet 286, docs/ai/harness/element-looks.md): a look is a setting per room and place, the
+/// frame is the same in every look, a keystone only has Quiet, a short ask naming one look on the place he means runs
+/// with no model, and only a place he can see is "this".
 @MainActor
 struct ElementLooksTests {
-    let store = ObjectStore.open(inMemory: true)
-    let classes: [SystemCatalog.Key: ClassDef]
-    let engine: ActionEngine
     let now = Date(timeIntervalSince1970: 1_793_000_000)
-
-    init() throws {
-        classes = try store.prepareCatalog()
-        engine = ActionEngine(store: store, classes: classes)
-    }
-
-    func look(_ scope: LookScope, _ shape: ContentShape, designed: String) -> ResolvedLook? {
-        ElementLooks.look(scope, shape: shape, designed: designed, store: store, classes: classes)
-    }
-
-    func set(_ scope: LookScope, form: String = "", _ traits: [String: String] = [:]) throws -> OpRecord {
-        try engine.perform(SetElementLook(scope: scope, form: form, traits: traits), by: .user).record
-    }
 
     // MARK: Kept looks
 
-    @Test func theMostSpecificLookWinsAndTheStudiosIsTheBase() throws {
-        let deckDial = LookScope(room: "deck", place: "dial", level: "landing")
-        #expect(look(deckDial, .doors, designed: "reel")?.isChanged == false)
-        // Every dial as an index, then the Deck's landing dial calmer: both apply there, only the first elsewhere.
-        _ = try set(LookScope(place: "dial"), form: "index")
-        _ = try set(deckDial, ["motion": "calm"])
-        let deck = try #require(look(deckDial, .doors, designed: "reel"))
-        #expect(deck.form.name == "index" && deck.traits["motion"] == "calm" && deck.isChanged)
-        let galley = try #require(look(LookScope(room: "galley", place: "dial"), .doors, designed: "reel"))
-        #expect(galley.form.name == "index" && galley.traits["motion"] == "designed")
-        // On the Deck's door pages, the room's landing-only row doesn't reach.
-        let door = try #require(look(LookScope(room: "deck", place: "dial", level: "door"), .doors, designed: "reel"))
-        #expect(door.traits["motion"] == "designed")
+    @Test func theRoomsLookWinsThenEveryRoomsThenTheDefault() throws {
+        var looks = RoomLooks()
+        #expect(looks.look(room: "deck", place: "dial") == "reel")
+        looks = try #require(looks.setting("column", place: "dial", scope: .everywhere))
+        looks = try #require(looks.setting("sentence", place: "dial", scope: .room("deck")))
+        #expect(looks.look(room: "deck", place: "dial") == "sentence")
+        #expect(looks.look(room: "galley", place: "dial") == "column")
+        // The default everywhere clears every room's entry rather than storing it.
+        looks = try #require(looks.setting("reel", place: "dial", scope: .everywhere))
+        #expect(looks.everywhere["dial"] == nil && looks.look(room: "galley", place: "dial") == "reel")
+        #expect(RoomLooks(encoded: looks.encoded) == looks)
     }
 
-    @Test func aFormThatCantDrawTodaysContentIsPassedOver() throws {
-        _ = try set(LookScope(room: "log", place: "page"), form: "ledger")
-        #expect(look(LookScope(room: "log", place: "page"), .many, designed: "rows")?.form.name == "ledger")
-        // Words on the page today: a ledger can't draw them, so the studio's form stays.
-        #expect(look(LookScope(room: "log", place: "page"), .words, designed: "wall")?.form.name == "wall")
+    @Test func onlyTheSheetsLooksAndOnlyWhereTheyFit() throws {
+        let looks = RoomLooks()
+        #expect(looks.setting("card", place: "dial", scope: .everywhere) == nil)
+        #expect(looks.setting("column", place: "widget", scope: .room("deck")) == nil)
+        // By time needs rows with times: the Deck has them, the Log doesn't, and so not every room.
+        #expect(looks.setting("byTime", place: "page", scope: .room("deck")) != nil)
+        #expect(looks.setting("byTime", place: "page", scope: .room("log")) == nil)
+        #expect(looks.setting("byTime", place: "page", scope: .everywhere) == nil)
+        // A kept look a room can't show falls through to the default.
+        let stale = RoomLooks(rooms: ["log": ["page": "byTime", "dial": "gone"]])
+        #expect(stale.look(room: "log", place: "page") == "ranked" && stale.look(room: "log", place: "dial") == "reel")
+        // A keystone is its room's identity: as drawn, or Quiet.
+        #expect(LookCatalog.looks(for: "keystone").map(\.id) == ["drawn", "quiet"])
     }
 
-    @Test func onlyTheStudiosFormsAndWordsAreTaken() throws {
-        let deck = LookScope(room: "deck", place: "keystone")
-        #expect(throws: ActionError.self) { try set(LookScope(room: "galley", place: "keystone"), form: "chalk") }
-        #expect(throws: ActionError.self) { try set(LookScope(place: "keystone"), form: "chalk") }
-        #expect(throws: ActionError.self) { try set(deck, form: "card") }
-        #expect(throws: ActionError.self) { try set(deck, form: "reel") }
-        #expect(throws: ActionError.self) { try set(deck, form: "chalk", ["colour": "red"]) }
-        #expect(throws: ActionError.self) { try set(deck, form: "chalk", ["motion": "wild"]) }
-        _ = try set(deck, form: "chalk", ["shows": "bests"])
-        #expect(look(deck, .few, designed: "chalk")?.traits["shows"] == "bests")
+    @Test func looksAreASettingThatSurvivesARestore() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let settings = SettingsStore(engine: engine)
+        let looks = try #require(RoomLooks().setting("column", place: "dial", scope: .room("deck")))
+        _ = try settings.update { $0.placeLooks = looks.encoded }
+        #expect(settings.read().looks.look(room: "deck", place: "dial") == "column")
+        // Only what the catalog reads lands.
+        _ = try settings.update { $0.placeLooks = "not json" }
+        #expect(settings.read().placeLooks == nil)
     }
 
-    @Test func undoAndRestoreGiveTheOldLookBack() throws {
-        let page = LookScope(room: "bridge", place: "page")
-        let record = try set(page, form: "ledger", ["density": "dense"])
-        #expect(look(page, .many, designed: "rows")?.form.name == "ledger")
-        _ = engine.undo(record)
-        #expect(look(page, .many, designed: "rows")?.isChanged == false)
-        _ = try set(page, ["density": "airy"])
-        _ = try engine.perform(RestoreElementLook(scope: page), by: .user)
-        #expect(look(page, .many, designed: "rows")?.isChanged == false)
-        // The row stays: the look is history, nothing is deleted.
-        #expect(ElementLooks.row(page, store: store, classes: classes) != nil)
+    // MARK: The frame
+
+    func deckFrame(touch: TessFrame.Touch? = nil, keystoneShown: Bool = true, room: String = "deck") -> TessFrame {
+        let push = ElementItem(id: UUID(), kind: "routine", name: "Push A")
+        func meaning(_ place: ElementPlace, _ items: [ElementItem] = [], shown: Bool = true) -> ElementMeaning {
+            ElementMeaning(place: place, items: items, focus: items.isEmpty ? nil : 0,
+                           calls: ElementCatalog.calls(room: room, place: place), isShown: shown)
+        }
+        return TessFrame(room: room, elements: [
+            meaning(.widget, [push]),
+            meaning(.keystone, shown: keystoneShown),
+            meaning(.dial, [ElementItem(kind: "door", name: "Plans")]),
+            meaning(.doorSummary),
+        ], touch: touch, now: now)
+    }
+
+    @Test func theSameScreenInTwoLooksGivesTheSameFrame() {
+        // Sheet 286: a look keeps the place's frame, items, focus and calls, so nothing Tess reads moves with it.
+        let reel = RoomLooks()
+        let column = RoomLooks(rooms: ["deck": ["dial": "column", "widget": "oneAndNext"]])
+        #expect(reel.look(room: "deck", place: "dial") != column.look(room: "deck", place: "dial"))
+        let first = deckFrame(), second = deckFrame()
+        #expect(first.room == second.room && first.elements.map(\.calls) == second.elements.map(\.calls))
+        #expect(first.fragments().map(\.text) == second.fragments().map(\.text))
+        #expect(ToolPicker.pick("start", frame: first).tools == ToolPicker.pick("start", frame: second).tools)
+        // Only an ask about looks reads them, from settings.
+        #expect(first.lookLines(reel) != first.lookLines(column))
     }
 
     // MARK: Tess
 
-    func meaning(_ place: ElementPlace, _ scope: LookScope, _ shape: ContentShape, designed: String,
-                 room: String, shown: Bool = true, items: [ElementItem] = []) -> ElementMeaning
-    {
-        ElementMeaning(place: place, items: items, focus: items.isEmpty ? nil : 0,
-                       calls: ElementCatalog.calls(room: room, place: place), isShown: shown,
-                       look: LookInfo.make(scope, shape: shape, designed: designed, store: store, classes: classes))
+    @Test func aShortAskNamingOneLookRunsWithNoModel() throws {
+        let column = try #require(ToolPicker.pick("show the doors as a column", frame: deckFrame()).bound)
+        #expect(column.call == "setLook" && column.place == .dial && column.arguments["look"] == "column")
+        #expect(column.arguments["scope"] == "room" && column.arguments["room"] == "deck")
+        let every = try #require(ToolPicker.pick("every dial as a list", frame: deckFrame()).bound)
+        #expect(every.arguments["look"] == "column" && every.arguments["scope"] == "everywhere")
+        let one = try #require(ToolPicker.pick("the summary as one sentence", frame: deckFrame()).bound)
+        #expect(one.arguments["look"] == "oneSentence")
+        let sky = try #require(ToolPicker.pick("quieter sky", frame: deckFrame(room: "lookout")).bound)
+        #expect(sky.place == .keystone && sky.arguments["look"] == "quiet")
+        // No place named: the one he touched.
+        let touch = TessFrame.Touch(place: .dial, item: ElementItem(kind: "door", name: "Plans"),
+                                    at: now.addingTimeInterval(-5))
+        let back = try #require(ToolPicker.pick("as drawn", frame: deckFrame(touch: touch)).bound)
+        #expect(back.place == .dial && back.arguments["look"] == "reel")
+        let browse = try #require(ToolPicker.pick("what looks can the doors have", frame: deckFrame()).bound)
+        #expect(browse.call == "showLooks" && browse.place == .dial)
+        #expect(TessRun.lookLine(column.arguments) == "The dial, as column.")
     }
 
-    func deckFrame(touch: TessFrame.Touch? = nil, keystoneShown: Bool = true) -> TessFrame {
-        let push = ElementItem(id: UUID(), kind: "routine", name: "Push A")
-        return TessFrame(room: "deck", elements: [
-            meaning(.widget, LookScope(room: "deck", place: "widget"), .few, designed: "rise", room: "deck",
-                    items: [push]),
-            meaning(.keystone, LookScope(room: "deck", place: "keystone"), .few, designed: "chalk", room: "deck",
-                    shown: keystoneShown),
-            meaning(.dial, LookScope(room: "deck", place: "dial"), .doors, designed: "reel", room: "deck",
-                    items: [ElementItem(kind: "door", name: "Plans")]),
-        ], touch: touch, now: now)
-    }
-
-    @Test func aShortNudgeOnThePlaceHeMeansRunsWithNoModel() throws {
-        let dial = try #require(ToolPicker.pick("the dial as an index", frame: deckFrame()).bound)
-        #expect(dial.call == "reshape" && dial.place == .dial && dial.arguments["form"] == "index")
-        #expect(dial.arguments["room"] == "deck")
-        let calmer = try #require(ToolPicker.pick("make the dial calmer", frame: deckFrame()).bound)
-        #expect(calmer.arguments["trait"] == "motion" && calmer.arguments["value"] == "calm")
-        let every = try #require(ToolPicker.pick("every dial as an index", frame: deckFrame()).bound)
-        #expect(every.arguments["room"] == "")
-        // "This" with no place named: the widget is in focus.
-        let bigger = try #require(ToolPicker.pick("bigger", frame: deckFrame()).bound)
-        #expect(bigger.place == .widget && bigger.arguments["value"] == "bigger")
-        let back = try #require(ToolPicker.pick("as it was", frame: deckFrame()).bound)
-        #expect(back.call == "restoreLook")
-    }
-
-    @Test func aNudgeThatIsntAboutALookOrCantLandNeverBinds() {
-        #expect(ToolPicker.pick("log a bigger set on bench", frame: deckFrame()).bound?.call != "reshape")
-        // A dial can't be rows; a chalkboard can't go past its own words.
-        #expect(ToolPicker.pick("the dial as a list", frame: deckFrame()).bound == nil)
-        #expect(ToolPicker.pick("the board as tickets", frame: deckFrame()).bound == nil)
-        // The keystone behind a sheet isn't "the board" he can see.
-        #expect(ToolPicker.pick("make the board bigger", frame: deckFrame(keystoneShown: false)).bound == nil)
-        // "I don't like this dial" is open: the model gets the look tools first and the look lines.
-        let open = ToolPicker.pick("I don't like this dial, what else is there", frame: deckFrame())
-        #expect(open.bound == nil && open.looks && open.tools.prefix(2) == ["reshape", "restoreLook"])
-        let lines = deckFrame().fragments(looks: open.looks).map(\.text)
-        #expect(lines.contains("Look of dial: drawn as reel; could be index; motion designed, size designed."))
-    }
-
-    @Test func thePursesLooksStayOnThePhone() throws {
-        let purse = TessFrame(room: "purse", elements: [
-            meaning(.dial, LookScope(room: "purse", place: "dial"), .doors, designed: "reel", room: "purse"),
-        ], now: now)
-        let calls = ElementCatalog.calls(room: "purse", place: .dial).filter { LookWords.calls.contains($0.name) }
-        #expect(calls.count == 2 && calls.allSatisfy { $0.reach == .deviceOnly })
-        let open = ToolPicker.pick("I don't like how this dial looks, try something else", frame: purse)
-        #expect(!open.tools.contains("reshape") || open.plan.ladder == [.appleOnDevice])
-        let bound = try #require(ToolPicker.pick("the dial as an index", frame: purse).bound)
-        #expect(bound.call == "reshape" && ToolPicker.pick("the dial as an index", frame: purse).plan.ladder
-            == [.appleOnDevice])
-    }
-
-    @Test func theToolKeepsHisOtherTraitsAndSaysWhenNothingChanges() throws {
-        func run(_ json: String) throws -> [OpRecord] {
-            try TessTools.run("reshape", arguments: Data(json.utf8), engine: engine, pending: false, now: now)
-        }
-        let dense = #"[{"name":"density","value":"dense"}]"#
-        _ = try run(#"{"place":"page","room":"log","level":null,"form":null,"traits":"# + dense + "}")
-        let made = try run(#"{"place":"page","room":"log","level":null,"form":null,"trait":"facts","value":"none"}"#)
-        #expect(made.first?.receipt == "Log page, reshaped.")
-        let kept = ElementLooks.stored(LookScope(room: "log", place: "page"), store: store, classes: classes)
-        #expect(kept.traits == ["density": "dense", "facts": "none"])
-        #expect(throws: TessToolAnswer.self) {
-            try run(#"{"place":"page","room":"log","level":null,"form":null,"traits":[]}"#)
-        }
+    @Test func anAskThatNamesNoLookOrAPlaceHeCantSeeNeverBinds() {
+        #expect(ToolPicker.pick("add milk to the list", frame: deckFrame()).bound?.call != "setLook")
+        #expect(ToolPicker.pick("make the board quieter", frame: deckFrame(keystoneShown: false)).bound == nil)
+        // The Log's rows have no times.
+        #expect(ToolPicker.pick("the rows by time", frame: deckFrame(room: "log")).bound == nil)
+        // Open: the model gets the look calls first, and the look lines from settings.
+        let open = ToolPicker.pick("I don't like this dial, what would be better here", frame: deckFrame())
+        #expect(open.bound == nil && open.looks && open.tools.prefix(2) == ["setLook", "showLooks"])
+        let lines = deckFrame().lookLines(RoomLooks()).map(\.text)
+        #expect(lines.contains("Look of dial: Reel; could be Column (column), Sentence (sentence)."))
     }
 
     // MARK: Shown
@@ -161,9 +122,9 @@ struct ElementLooksTests {
         var frame = deckFrame(touch: TessFrame.Touch(place: .keystone, item: board, at: now.addingTimeInterval(-5)),
                               keystoneShown: false)
         #expect(frame.referent()?.place == .widget)
-        let reshape = try #require(frame.element(.keystone)?.calls.first { $0.name == "reshape" })
-        #expect(frame.reaction(of: reshape, on: .keystone) == nil)
-        #expect(frame.reaction(of: reshape, on: .dial) == .reshape)
+        let setLook = try #require(frame.element(.keystone)?.calls.first { $0.name == "setLook" })
+        #expect(frame.reaction(of: setLook, on: .keystone) == nil)
+        #expect(frame.reaction(of: setLook, on: .dial) == .reshape)
         frame.elements[1].isShown = true
         #expect(frame.referent()?.place == .keystone)
     }

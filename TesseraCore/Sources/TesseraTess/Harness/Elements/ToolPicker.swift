@@ -36,9 +36,8 @@ public enum ToolPicker {
     public static func pick(_ ask: String, frame: TessFrame, agent: AgentSpec? = nil) -> Pick {
         // A look nudge on one place ("denser", "the dial as a list", "as it was"): no model.
         let looks = LookWords.isAbout(ask)
-        if looks, let bound = lookBound(ask, frame: frame) {
-            let plan = frame.room == "purse" ? device(bound.call) : forced(bound.call)
-            return Pick(tools: [bound.call], plan: plan, bound: bound, matched: [bound.call], looks: true)
+        if let bound = lookBound(ask, frame: frame, about: looks) {
+            return Pick(tools: [bound.call], plan: forced(bound.call), bound: bound, matched: [bound.call], looks: true)
         }
         let offered = frame.calls
         let words = TessFrame.words(ask)
@@ -79,9 +78,8 @@ public enum ToolPicker {
         }
         let plan = matched.isEmpty ? RungPlan.pick(ask) : small(ask)
         if looks {
-            // About a look: the two look tools lead, whatever else the screen offers.
-            let lookTools = ["reshape", "restoreLook"].filter { !deviceOnly.contains($0) }
-            tools = lookTools + tools.filter { !LookWords.calls.contains($0) }
+            // About a look: the two look calls lead, whatever else the screen offers.
+            tools = ["setLook", "showLooks"] + tools.filter { !LookWords.calls.contains($0) }
         }
         return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name },
                     looks: looks)

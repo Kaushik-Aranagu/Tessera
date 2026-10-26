@@ -108,20 +108,17 @@ public enum ElementCatalog {
     /// Tools named here that `TessTools` does not have yet. None: every call wraps an engine action that exists.
     public static let proposed: Set<String> = []
 
-    /// Looks (element-looks.md): every place with forms can be reshaped or put back as drawn. They bind only through
-    /// `ToolPicker.lookBound`; the phrases here are what the trace shows.
-    static let reshape = ElementCall("reshape", phrases: lookPhrases(restore: false) + ["reshape"],
-                                     inputs: [CallInput("place", from: .asked, required: false)], reaction: .reshape)
-    static let restoreLook = ElementCall("restoreLook", phrases: lookPhrases(restore: true),
-                                         inputs: [CallInput("place", from: .asked, required: false)],
-                                         reaction: .reshape)
-
-    static func lookPhrases(restore: Bool) -> [String] {
-        LookWords.nudges.filter { ($0.change == .restore) == restore }.map { $0.phrase }
-    }
+    /// Looks (sheet 286, element-looks.md): every place with looks can take one or open Layout mode on itself. Shell
+    /// calls: a look is a setting, not his data. They bind only through `ToolPicker.lookBound`.
+    static let setLook = ElementCall("setLook", .shell, phrases: [],
+                                     inputs: [CallInput("look", from: .asked), CallInput("scope", from: .asked,
+                                                                                           required: false)],
+                                     reaction: .reshape)
+    static let showLooks = ElementCall("showLooks", .shell, phrases: [], reaction: .navigate)
 
     /// Shell calls: they change what is shown and write nothing.
-    public static let shellCalls: Set<String> = ["openItem", "openDoor", "showWindow", "goBack"]
+    public static let shellCalls: Set<String> = ["openItem", "openDoor", "showWindow", "goBack", "setLook",
+                                                 "showLooks"]
 
     // MARK: Places, room by room
 
@@ -180,13 +177,8 @@ public enum ElementCatalog {
         for call in shared[place] ?? [] where !out.contains(where: { $0.name == call.name }) {
             out.append(call)
         }
-        if ElementForms.all.contains(where: { $0.places.contains(place.rawValue) }) {
-            // The Purse's calls never reach Claude, looks included: a nudge there runs bound or on the phone's model.
-            out += [reshape, restoreLook].map { call in
-                var look = call
-                look.reach = room == "purse" ? .deviceOnly : .anyRung
-                return look
-            }
+        if LookCatalog.looks(for: place.rawValue, room: room).count > 1 {
+            out += [setLook, showLooks]
         }
         return out
     }
@@ -195,7 +187,7 @@ public enum ElementCatalog {
     public static var everyCall: [ElementCall] {
         var out: [ElementCall] = []
         let lists: [[ElementCall]] = rooms.values.flatMap(\.values) + Array(shared.values)
-            + [[reshape, restoreLook]]
+            + [[setLook, showLooks]]
         for call in lists.flatMap(\.self) where !out.contains(where: { $0.name == call.name }) {
             out.append(call)
         }

@@ -132,8 +132,6 @@ public enum DayStory {
         // Occasions: links and dates only; the page reads them, the Day log does not.
         "createOccasion", "linkToOccasion", "unlinkFromOccasion", "setAway",
         "repeatWorkout", "markArrived", "joinTwins", "keepTwinsApart",
-        // Looks: how a place is drawn is not part of his day.
-        "setElementLook", "restoreElementLook",
     ]
 
     /// Actions with their own fold rule (the rest are workout, own-line or dropped).

@@ -191,6 +191,14 @@ public final class TessRun {
                 .object([("window", .string("The word"))])
             ),
             spec("goBack", "Go back one page", .object([])),
+            spec("setLook", "Change how a place on screen looks (a setting; his things don't change). Only a look "
+                + "from that place's look line", .object([
+                    ("place", .string("The place: dial, widget, page, needs, doorSummary, glyph, keystone...")),
+                    ("look", .string("The look's id from the look line")),
+                    ("scope", .nullable(.string("room for this room, everywhere for every room; null is this room"))),
+                ])),
+            spec("showLooks", "Open the looks of a place so he can swipe through them",
+                 .object([("place", .string("The place"))])),
         ]
     }
 
@@ -242,7 +250,11 @@ public final class TessRun {
         let store = engine.store, classes = engine.classes
         if let frame {
             // Where he is, by shown names; each fragment keeps its own taint for the Door.
-            fragments.append(contentsOf: frame.fragments(looks: pick?.looks ?? false))
+            fragments.append(contentsOf: frame.fragments())
+            if pick?.looks == true {
+                // His looks come from settings, never from the frame: the frame is the same in every look.
+                fragments.append(contentsOf: frame.lookLines(SettingsStore(engine: engine).read().looks))
+            }
         } else if let screen, !screen.isEmpty {
             fragments.append(PackFragment("On screen: \(screen)"))
         }
@@ -582,8 +594,18 @@ public final class TessRun {
         case "goBack": "Back."
         case "openDoor": bound.arguments["door"].map { "Opening \($0)." } ?? "Opening it."
         case "showWindow": bound.arguments["window"].map { "\($0)." } ?? "Done."
+        case "setLook": lookLine(bound.arguments)
+        case "showLooks": "Here are its looks."
         default: bound.arguments["item"].map { "Opening \($0)." } ?? "Opening it."
         }
+    }
+
+    /// "The dial, as a column." from a bound look; the shell's own Undo line follows.
+    static func lookLine(_ arguments: [String: String]) -> String {
+        guard let place = arguments["place"], let id = arguments["look"],
+              let look = LookCatalog.look(id, for: place) else { return "Done." }
+        let everywhere = arguments["scope"] == "everywhere" ? ", in every room" : ""
+        return "The \(place), as \(look.name.lowercased())\(everywhere)."
     }
 
     static func boundFailure(_ text: String) -> String {

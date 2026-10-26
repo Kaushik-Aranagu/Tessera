@@ -93,8 +93,6 @@ public enum TesseraIntentsCatalog {
         "joinTwins": "in-app only: Twins",
         "keepTwinsApart": "in-app only: Twins",
         "unlinkFromOccasion": "in-app only: Occasions",
-        "setElementLook": "in-app only: reshaping a place",
-        "restoreElementLook": "in-app only: reshaping a place",
         "logShopTotal": "in-app only: the groceries total",
         "skipShopTotal": "in-app only: the groceries total",
         "holdNotice": "system: quiet interrupts",

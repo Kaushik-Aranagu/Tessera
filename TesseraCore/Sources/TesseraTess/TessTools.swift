@@ -52,7 +52,7 @@ public enum TessTools {
          createRecipe, query, startShop, cookTogether, setServeTime, checkListItem, startWorkout, startCooking,
          logSpend,
          pinNote, rainAlert, restDay, tendRoutine,
-         plantRoutine, pauseRoutine, reshape, restoreLook]
+         plantRoutine, pauseRoutine]
     }
 
     /// The tools Claude may be given: everything but the device-only ones (money).

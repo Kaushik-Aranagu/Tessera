@@ -119,8 +119,7 @@ public struct TessFrame: Sendable, Equatable {
 
     /// The frame as context: where he is (always safe), what "this" is, and what each place shows by shown name.
     /// A name or fact keeps its own taint, so the Door drops money, body and calendar under strict.
-    /// With `looks`, each shown place's look line follows (what it's drawn as, what it could be, its traits).
-    public func fragments(itemsPerPlace: Int = 5, looks: Bool = false) -> [PackFragment] {
+    public func fragments(itemsPerPlace: Int = 5) -> [PackFragment] {
         let level = level == 0 ? "the landing" : "the \(door ?? "door") page"
         var fragments = [PackFragment("Where: \(room.capitalized), \(level)\(window.map { ", \($0)" } ?? "").")]
         if let referent = referent() {
@@ -130,13 +129,6 @@ public struct TessFrame: Sendable, Equatable {
         for element in elements where !element.items.isEmpty {
             for item in element.items.prefix(itemsPerPlace) {
                 fragments.append(PackFragment("\(element.place.rawValue): \(line(item))", taint: taint(of: item)))
-            }
-        }
-        if looks {
-            for element in elements where element.isShown {
-                if let look = element.look {
-                    fragments.append(PackFragment("Look of \(look.line)"))
-                }
             }
         }
         return fragments
