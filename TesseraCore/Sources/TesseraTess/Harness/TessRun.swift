@@ -61,7 +61,11 @@ public final class TessRun {
         }
     }
 
+    /// The agent this run speaks for (M4). Its memory scope decides what recall and open can reach (M2).
+    public var agent: AgentSpec = .tess
     private var current: Active?
+    /// The memory slice for the run in flight, built on its first recall or path read.
+    private var memory: (runID: UUID, index: MemoryIndex)?
     private var lastRung: BrainID?
     private var lastAskAt: Date?
     private var lastWarm: [BrainID: Date] = [:]
@@ -206,7 +210,17 @@ public final class TessRun {
                 specs.append(ToolSpec(name: name, description: item["description"] as? String ?? "", schema: json))
             }
         }
-        return specs + [TessOpenTool.spec]
+        return specs + [TessOpenTool.spec] + TessRecallTools.specs
+    }
+
+    /// The agent's memory slice for this run (M2), built once per run so recall's paths stay the same across rounds.
+    func memoryIndex(for runID: UUID) -> MemoryIndex {
+        if let memory, memory.runID == runID {
+            return memory.index
+        }
+        let index = MemoryIndex(engine: engine, scope: MemoryScope(agent, policy: door.policy()), calendar: calendar)
+        memory = (runID, index)
+        return index
     }
 
     /// system[0] voice (cache), tools, system[1] profile (cache); fragments ride on the ask.
@@ -448,8 +462,23 @@ public final class TessRun {
         case _ where !offered.contains(name) || (deviceOnly && !onDevice):
             result = ("That isn't a call I can make here.", true)
         case TessOpenTool.name:
+            // A path (from recall) resolves through the agent's slice; a pack handle needs no index.
+            let isPath = ((try? JSONSerialization.jsonObject(with: input)) as? [String: Any])?["handle"]
+                .flatMap { $0 as? String }?.hasPrefix("/") == true
             result = TessOpenTool.run(arguments: input, handles: handles, engine: engine, policy: door.policy(),
-                                      calendar: calendar)
+                                      calendar: calendar, index: isPath ? memoryIndex(for: runID) : nil)
+        case _ where TessRecallTools.names.contains(name):
+            if name == TessRecallTools.remember, budget <= 0 {
+                result = (TessTools.capLine, true)
+                break
+            }
+            let answer = TessRecallTools.run(name, arguments: input, index: memoryIndex(for: runID), engine: engine,
+                                             seeds: Array(handles.values), now: now(), calendar: calendar)
+            budget -= answer.ghosts.count
+            for ghost in answer.ghosts {
+                sink(.ghost(ghost))
+            }
+            result = (answer.text, answer.isError)
         case _ where ElementCatalog.shellCalls.contains(name):
             // A shell call writes nothing: the host plays it.
             let args = (try? JSONSerialization.jsonObject(with: input)) as? [String: Any] ?? [:]

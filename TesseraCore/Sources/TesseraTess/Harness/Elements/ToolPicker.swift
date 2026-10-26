@@ -27,7 +27,7 @@ public enum ToolPicker {
     /// The most tools one ask carries.
     public static let maxTools = 12
     /// The reads every ask may use.
-    static let reads = ["query", "open"]
+    static let reads = ["query", "open", "recall"]
     /// A bound call is a short command; a longer ask has more in it than the frame can fill.
     static let boundWords = 6
 
