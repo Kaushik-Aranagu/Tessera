@@ -61,37 +61,34 @@ extension TessRun {
             return AgentAnswer(text: "No such room here. Rooms: \(rooms.joined(separator: ", ")).", isError: true,
                                ghosts: [])
         }
-        picked = Array(picked.prefix(agent.maxChildren))
+        let rooms = Array(picked.prefix(agent.maxChildren))
 
-        // In parallel: every room thinks at once, and the slowest one sets the wait.
-        let results = await withTaskGroup(of: (Int, String, [UUID], Bool).self) { group in
-            for (position, spec) in picked.enumerated() {
-                group.addTask { @MainActor in
-                    let answer = await self.runAgent(spec, question: question, handles: handles, onDevice: onDevice)
-                    return (position, answer.report, answer.ghosts, answer.failed)
-                }
+        // In parallel: every room thinks at once, and the slowest one sets the wait. Main-actor tasks started
+        // together and awaited in order (a task group's sendability check refuses this shape).
+        let tasks = rooms.indices.map { position in
+            Task { @MainActor in
+                await self.runAgent(rooms[position], question: question, handles: handles, onDevice: onDevice)
             }
-            var out: [(Int, String, [UUID], Bool)] = []
-            for await result in group {
-                out.append(result)
-            }
-            return out.sorted { $0.0 < $1.0 }
+        }
+        var results: [(report: String, ghosts: [UUID], failed: Bool)] = []
+        for task in tasks {
+            results.append(await task.value)
         }
 
         let about = handles.values.compactMap { engine.store.object(id: $0) }
         let episodes = AgentEpisodes(engine: engine)
         var lines: [String] = []
         var ghosts: [UUID] = []
-        for (position, report, made, failed) in results {
-            let spec = picked[position]
-            lines.append("\(spec.title): \(report)")
-            ghosts += made
-            if !failed {
-                episodes.append(agent: spec.name, ask: question, report: report, about: about, lab: policy == .lab,
-                                at: now())
+        for (spec, result) in zip(rooms, results) {
+            lines.append("\(spec.title): \(result.report)")
+            ghosts += result.ghosts
+            if !result.failed {
+                episodes.append(agent: spec.name, ask: question, report: result.report, about: about,
+                                lab: policy == .lab, at: now())
             }
         }
-        return AgentAnswer(text: lines.joined(separator: "\n"), isError: results.allSatisfy { $0.3 }, ghosts: ghosts)
+        return AgentAnswer(text: lines.joined(separator: "\n"), isError: results.allSatisfy { $0.failed },
+                           ghosts: ghosts)
     }
 
     /// One room agent's run: a child loop with the agent's own context, scope and tools, and no history but its own
