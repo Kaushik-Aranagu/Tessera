@@ -43,12 +43,12 @@ enum ShellRooms {
     static var all: [Entry] {
         [
             Entry(id: NotesRoomContent.room, driver: { NotesRoomDriver() }) { AnyView(NotesShellHost()) },
-            Entry(id: DeckRoomContent.room) { AnyView(DeckShellHost()) },
-            Entry(id: SettingsRoomContent.room) { AnyView(SettingsShellHost()) },
-            Entry(id: WatchRoomContent.room) { AnyView(WatchShellHost()) },
-            Entry(id: LookoutRoomContent.room) { AnyView(LookoutShellHost()) },
-            Entry(id: GalleyRoomContent.room) { AnyView(GalleyShellHost()) },
-            Entry(id: PurseRoomContent.room) { AnyView(PurseShellHost()) },
+            Entry(id: DeckRoomContent.room, driver: { DeckRoomDriver() }) { AnyView(DeckShellHost()) },
+            Entry(id: SettingsRoomContent.room, driver: { SettingsRoomDriver() }) { AnyView(SettingsShellHost()) },
+            Entry(id: WatchRoomContent.room, driver: { WatchRoomDriver() }) { AnyView(WatchShellHost()) },
+            Entry(id: LookoutRoomContent.room, driver: { LookoutRoomDriver() }) { AnyView(LookoutShellHost()) },
+            Entry(id: GalleyRoomContent.room, driver: { GalleyRoomDriver() }) { AnyView(GalleyShellHost()) },
+            Entry(id: PurseRoomContent.room, driver: { PurseRoomDriver() }) { AnyView(PurseShellHost()) },
         ]
     }
 

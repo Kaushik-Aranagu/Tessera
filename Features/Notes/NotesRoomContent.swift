@@ -202,6 +202,7 @@ final class NotesRoomDriver: ShellRoomDriver {
     }
 
     let tessRoom: AppID? = .notes
+    let flip = KeystoneFlip.rows
 
     struct OpenNote: Identifiable {
         let id: UUID

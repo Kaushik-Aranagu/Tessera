@@ -19,6 +19,17 @@ protocol ShellRoomDriver: AnyObject {
     func handle(_ intent: ShellIntent, navigator: ShellNavigator) -> Bool
     /// The room's sheets and alerts, laid behind the shell.
     func presenter() -> AnyView
+    /// How the room's keystone comes in from Bridge's mosaic (sheet 283 v4 flip orders).
+    var flip: KeystoneFlip { get }
+    /// The room's door-summary move (sheet 283 v6) and glyph library.
+    var summaryStyle: DoorSummaryStyle { get }
+    var glyphRoom: GlyphKind.Room? { get }
+    /// A colour scheme the room's page forces (Lookout's plate); nil keeps the phone's.
+    var scheme: ColorScheme? { get }
+    /// The room's hand-over drawn over the shell while its landing shows (a ticket falling, chalk dust, drops).
+    func overlay(navigator: ShellNavigator) -> AnyView
+    /// Called when the room's landing comes in from Bridge.
+    func entered(navigator: ShellNavigator)
 }
 
 extension ShellRoomDriver {
@@ -33,14 +44,39 @@ extension ShellRoomDriver {
     func presenter() -> AnyView {
         AnyView(EmptyView())
     }
+
+    var summaryStyle: DoorSummaryStyle {
+        .plain
+    }
+
+    var glyphRoom: GlyphKind.Room? {
+        nil
+    }
+
+    var scheme: ColorScheme? {
+        nil
+    }
+
+    func overlay(navigator _: ShellNavigator) -> AnyView {
+        AnyView(EmptyView())
+    }
+
+    func entered(navigator _: ShellNavigator) {}
 }
 
 /// The rooms of the root shell, by id, routing each route to its room's content.
 struct RootShellContent: RoomContent {
     let rooms: [String: any RoomContent]
+    var flips: [String: KeystoneFlip] = [:]
 
     func screen(for route: ShellRoute, state: RoomState) -> Screen {
-        rooms[route.room]?.screen(for: route, state: state) ?? Screen(layout: .landing, slots: [:])
+        guard var screen = rooms[route.room]?.screen(for: route, state: state) else {
+            return Screen(layout: .landing, slots: [:])
+        }
+        if screen.flip == nil {
+            screen.flip = flips[route.room]
+        }
+        return screen
     }
 }
 
@@ -99,11 +135,13 @@ struct RootShellHost: View {
     @Environment(AppModel.self) private var model
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.realModel) private var realModel
     @State private var navigator = ShellNavigator(root: .landing(BridgeRoomContent.room))
     @State private var stage = BridgeStage()
     @State private var drivers: [String: any ShellRoomDriver] = ShellRooms.drivers()
     /// The mosaic's own pixels behind Bridge: kept while it flips away, gone in a room.
     @State private var field = FieldState()
+    @State private var minute = 0
 
     private var onBridge: Bool {
         navigator.route.room == BridgeRoomContent.room
@@ -117,6 +155,14 @@ struct RootShellHost: View {
             .environment(\.shellScene) { key in scene(key) }
             .environment(\.shellBackdrop, AnyView(backdrop(driver)))
             .environment(\.openShellDoor) { door in openDoor(door) }
+            .environment(\.doorSummaryStyle, driver?.summaryStyle ?? .plain)
+            .environment(\.shellGlyphRoom, driver?.glyphRoom)
+            .modifier(SchemeOverride(scheme: onBridge ? nil : driver?.scheme))
+            .overlay {
+                if let driver, !onBridge, navigator.route.level == 0 {
+                    driver.overlay(navigator: navigator)
+                }
+            }
             .modifier(BridgeLife(stage: stage, showing: onBridge, tessElsewhere: true))
             .overlay { tess(driver) }
             .modifier(BridgeDoors(stage: stage))
@@ -126,7 +172,19 @@ struct RootShellHost: View {
                 }
             }
             .onAppear { wire() }
-            .onChange(of: onBridge) { _, now in moveField(toBridge: now) }
+            .onChange(of: onBridge) { _, now in
+                moveField(toBridge: now)
+                if !now, let driver {
+                    driver.entered(navigator: navigator)
+                }
+            }
+            // Rooms that read the clock (Lookout's sky) refresh each minute.
+            .task {
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(60 - Double(Calendar.current.component(.second, from: .now))))
+                    minute += 1
+                }
+            }
         #if DEBUG
             .task {
                 NotesDemo.seedIfRequested(model)
@@ -138,32 +196,30 @@ struct RootShellHost: View {
     // MARK: Content
 
     private func content() -> RootShellContent {
+        (drivers[SettingsRoomContent.room] as? SettingsRoomDriver)?.realModel = realModel
+        let _ = minute
         var rooms: [String: any RoomContent] = [BridgeRoomContent.room: BridgeRoomContent()]
+        var flips: [String: KeystoneFlip] = [:]
         for (id, driver) in drivers {
             rooms[id] = driver.content(model: model, scheme: scheme)
+            flips[id] = driver.flip
         }
-        return RootShellContent(rooms: rooms)
+        return RootShellContent(rooms: rooms, flips: flips)
     }
 
     /// The room being entered or left: its flip order for the mosaic's tiles.
     private var flipOrder: KeystoneFlip {
         let room = navigator.stack.first { $0.room != BridgeRoomContent.room }?.room
             ?? navigator.change?.from.room ?? NotesRoomContent.room
-        let screen = drivers[room]?.content(model: model, scheme: scheme)
-            .screen(for: .landing(room), state: RoomState())
-        return screen?.flip ?? .rows
+        return drivers[room]?.flip ?? .rows
     }
 
     private func scene(_ key: String) -> AnyView {
         if key.hasPrefix("bridge.") {
             return AnyView(BridgeRoomContent.draw(key, stage: stage))
         }
-        for driver in drivers.values {
-            if let view = driver.scene(key) {
-                return view
-            }
-        }
-        return AnyView(EmptyView())
+        let room = String(key.split(separator: ".").first ?? "")
+        return drivers[room]?.scene(key) ?? AnyView(EmptyView())
     }
 
     private func backdrop(_ driver: (any ShellRoomDriver)?) -> some View {
@@ -323,6 +379,19 @@ struct FieldFlip: ViewModifier, Animatable {
                     }
                 }
             }
+        }
+    }
+}
+
+/// A room that forces its page's colour scheme (Lookout's plate) wears it inside the shell too.
+private struct SchemeOverride: ViewModifier {
+    let scheme: ColorScheme?
+
+    func body(content: Content) -> some View {
+        if let scheme {
+            content.environment(\.colorScheme, scheme)
+        } else {
+            content
         }
     }
 }
