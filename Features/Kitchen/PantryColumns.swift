@@ -125,6 +125,8 @@ struct PantryColumnsView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// What each place was last packed as, kept for the visit.
     @State private var packers: [String: PantryPacker] = [:]
+    /// The shape each kept packing was made for: a packing from another shape is never drawn.
+    @State private var packed: [String: String] = [:]
     @State private var width: CGFloat = 0
     /// The columns' left edge on the screen, for the back-edge rule.
     @State private var originX: CGFloat = 0
@@ -175,6 +177,11 @@ struct PantryColumnsView: View {
         }
     }
 
+    private func keep(_ made: PantryPacker) {
+        packers[place] = made
+        packed[place] = signature
+    }
+
     private func build() -> PantryPacker {
         let layouts = fits
         let sections = groups.indices.map { index in
@@ -185,7 +192,10 @@ struct PantryColumnsView: View {
     }
 
     private var packer: PantryPacker {
-        packers[place] ?? build()
+        if let kept = packers[place], packed[place] == signature {
+            return kept
+        }
+        return build()
     }
 
     /// The shape of the sections; the packing is rebuilt when it changes (a thing leaves, a thing arrives, the text
@@ -204,8 +214,8 @@ struct PantryColumnsView: View {
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
                 .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minX } action: { originX = $0 }
         }
-        .onAppear { packers[place] = build() }
-        .onChange(of: signature) { packers[place] = build() }
+        .onAppear { keep(build()) }
+        .onChange(of: signature) { keep(build()) }
         .tesseraFeedback(.dialStep, trigger: steps)
         .tesseraFeedback(.notNow, trigger: bumps)
     }
@@ -264,10 +274,12 @@ struct PantryColumnsView: View {
     private func blockView(_ block: PantryPacker.Block, blockIndex: Int, column: Int, packer: PantryPacker,
                            layouts: [[PantryRowLayout.Fit]]) -> some View
     {
+        // A packing from another shape of the sections draws nothing rather than a wrong row.
+        guard groups.indices.contains(block.section) else { return AnyView(EmptyView()) }
         let group = groups[block.section]
         let end = min(block.start + block.count, group.items.count)
-        let rows = Array(group.items[block.start ..< end])
-        return VStack(alignment: .leading, spacing: 0) {
+        let rows = block.start < end ? Array(group.items[block.start ..< end]) : []
+        return AnyView(VStack(alignment: .leading, spacing: 0) {
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(group.title)
@@ -289,7 +301,10 @@ struct PantryColumnsView: View {
             .accessibilityAction(named: "Next") { step(forward: true) }
             .accessibilityAction(named: "Back") { step(forward: false) }
             ForEach(Array(rows.enumerated()), id: \.element.id) { rowIndex, item in
-                let fit = layouts[block.section][block.start + rowIndex]
+                let fit = layouts.indices.contains(block.section) && layouts[block.section].indices
+                    .contains(block.start + rowIndex)
+                    ? layouts[block.section][block.start + rowIndex]
+                    : PantryRowLayout.Fit(beside: true, height: 28)
                 rowView(item, fit: fit)
                     .offset(x: swiping(column: column, block: blockIndex, row: rowIndex) ? rowOffset : 0)
             }
@@ -301,7 +316,7 @@ struct PantryColumnsView: View {
                     .accessibilityLabel("\(block.more) more")
                     .accessibilityAction(named: "Next") { step(forward: true) }
             }
-        }
+        })
     }
 
     /// A row: the name (wine and weight 500 when low, never a word), the value beside it or under it in ink 2 Light.
@@ -357,7 +372,7 @@ struct PantryColumnsView: View {
         var next = packer
         let moved = forward ? next.advance() : next.back()
         if moved {
-            withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { packers[place] = next }
+            withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { keep(next) }
             steps += 1
         } else if reduceMotion {
             bumps += 1
@@ -378,7 +393,7 @@ struct PantryColumnsView: View {
         guard column < columnCount, point.x - CGFloat(column) * (width + Self.gap) <= width,
               column < packer.columns.count else { return .space }
         var y: CGFloat = 0
-        for (blockIndex, block) in packer.columns[column].enumerated() {
+        for (blockIndex, block) in packer.columns[column].enumerated() where layouts.indices.contains(block.section) {
             if blockIndex > 0 {
                 y += PantryPacker.gap
             }
@@ -407,6 +422,7 @@ struct PantryColumnsView: View {
     private func item(for hit: Hit, packer: PantryPacker) -> PantryRoomItem? {
         guard case let .row(column, blockIndex, row) = hit else { return nil }
         let block = packer.columns[column][blockIndex]
+        guard groups.indices.contains(block.section) else { return nil }
         let items = groups[block.section].items
         let index = block.start + row
         return items.indices.contains(index) ? items[index] : nil
