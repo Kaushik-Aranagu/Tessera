@@ -63,6 +63,10 @@ struct AgentsTests {
         // A second private room gets its own agent, numbered like any clash.
         let clinic = try registry.spawn(room: "clinic", title: "Clinic", now: now)
         #expect(clinic.name == "Private room 2" && clinic != therapy)
+        // The room key is salted per install: a backup can't confirm a guessed name.
+        let plain = Data(repeating: 0, count: 32)
+        #expect(registry.key(for: "therapy") != AgentRegistry(engine: engine, roomSalt: plain).key(for: "therapy"))
+        #expect(registry.key(for: "therapy") == therapy.room)
         // Nothing stored on the Agent objects names either room.
         for row in registry.rows() {
             let fields = ["agentName", "room", "persona", "notebook"]
