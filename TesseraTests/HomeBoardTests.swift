@@ -53,10 +53,7 @@ struct HomeBoardTests {
         let sizes: [DynamicTypeSize] = [.xSmall, .large, .xxxLarge, .accessibility1, .accessibility3, .accessibility5]
         for typeSize in sizes {
             let size = HomeOneThing.bigSize(typeSize)
-            let descriptor = UIFontDescriptor(fontAttributes: [
-                .family: "Figtree", .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.bold],
-            ])
-            #expect(UIFont(descriptor: descriptor, size: size).lineHeight <= HomeOneThing.bigSlot)
+            #expect(HomeOneThing.bigLineHeight(size) <= HomeOneThing.bigSlot)
             #expect(size >= 38)
         }
     }

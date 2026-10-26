@@ -283,6 +283,11 @@ struct HomeOneThing: View {
         return size
     }
 
+    /// The height of the Big line at `size`, for the no-overlap check.
+    static func bigLineHeight(_ size: CGFloat) -> CGFloat {
+        bigFont(size).lineHeight
+    }
+
     private static func bigFont(_ size: CGFloat) -> UIFont {
         let descriptor = UIFontDescriptor(fontAttributes: [
             .family: "Figtree", .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.bold],
