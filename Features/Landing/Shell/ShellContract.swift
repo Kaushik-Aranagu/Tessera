@@ -43,6 +43,9 @@ struct ContentID: Hashable, ExpressibleByStringLiteral, CustomStringConvertible 
 /// to a point and forms again.
 enum SlotKind: String, Equatable {
     case text, switcher, wall, widget, glyph, dial, summary, list, action
+    /// A room's own drawn keystone (Deck's board, Watch's woods, Lookout's skypiece, Purse's chart, Galley's rail),
+    /// drawn by the room's `shellScene` renderer; the payload carries only its key.
+    case scene
 }
 
 /// One row of a door page: an id the shell hands back on tap, a title and a short detail. A private row never
@@ -77,6 +80,9 @@ enum SlotPayload: Equatable {
     case doorTitle(name: String, line: String, color: Color)
     case list([ShellRow])
     case action([ShellStep], accent: Color)
+    /// A room's own keystone, by key ("deck.board"). The room's host supplies the drawing through the environment
+    /// value `shellScene`, so content stays free of views. The key changes only when the drawing must be rebuilt.
+    case scene(String, label: String)
 }
 
 struct SlotContent: Identifiable, Equatable {

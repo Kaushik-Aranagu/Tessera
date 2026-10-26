@@ -67,6 +67,8 @@ private struct PlaceRenderer: View {
                 .accessibilityIdentifier("shell.switcher")
         case let .wall(words, label):
             ShellKeystone(words: words, label: label, act: act)
+        case let .scene(key, label):
+            ShellSceneKeystone(key: key, label: label)
         case let .widget(items):
             LandingWidget(items: items, index: navigator.binding(\.widgetIndex),
                           open: { act(.openItem($0.id)) }, glyph: { _ in Color.clear })
@@ -154,6 +156,32 @@ private struct ShellKeystone: View {
     var body: some View {
         LandingKeystone(label: label) {
             WordWallView(words: words) { act(.openItem($0)) }
+        }
+        .overlay(alignment: .topLeading) {
+            if ShellProbe.enabled {
+                Text(token)
+                    .font(.system(size: 1))
+                    .opacity(0.02)
+                    .frame(width: 2, height: 2)
+                    .accessibilityIdentifier("shell.keystone.token")
+                    .accessibilityLabel(token)
+            }
+        }
+    }
+}
+
+/// The keystone place holding a room's own drawing: the room's host renders `key` through `shellScene`. The same
+/// key on both sides keeps the view (and its state), as the word wall does. A probe token, as on `ShellKeystone`.
+private struct ShellSceneKeystone: View {
+    let key: String
+    let label: String
+
+    @Environment(\.shellScene) private var scene
+    @State private var token = String(UUID().uuidString.prefix(8))
+
+    var body: some View {
+        LandingKeystone(label: label) {
+            scene(key)
         }
         .overlay(alignment: .topLeading) {
             if ShellProbe.enabled {
