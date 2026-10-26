@@ -74,6 +74,8 @@ struct ShellRow: Identifiable, Equatable {
     let title: String
     var detail = ""
     var isPrivate = false
+    /// Swipe right is Done and left is Not now (sheet 283 touch; through GestureKit's `rowSwipe`).
+    var swipe = false
 }
 
 /// One of the foot's actions as data; the shell hands `id` back when it is done.
@@ -174,4 +176,8 @@ enum ShellIntent: Equatable {
     case openDoor(String)
     case openItem(String)
     case action(String)
+    /// A row swiped right (Done, or start it) or a widget item's Big line held to strike it.
+    case done(String)
+    /// A row swiped left: not now.
+    case notNow(String)
 }

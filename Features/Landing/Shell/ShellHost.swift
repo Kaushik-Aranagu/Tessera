@@ -201,8 +201,13 @@ struct RootShellHost: View {
         var rooms: [String: any RoomContent] = [BridgeRoomContent.room: BridgeRoomContent()]
         var flips: [String: KeystoneFlip] = [:]
         for (id, driver) in drivers {
-            rooms[id] = driver.content(model: model, scheme: scheme)
             flips[id] = driver.flip
+        }
+        // Only the room on screen loads its facts: every room's facts on every frame is far too slow (the Settings
+        // privacy scan alone), and the shell only ever asks for the current route.
+        let current = navigator.route.room
+        if let driver = drivers[current] {
+            rooms[current] = driver.content(model: model, scheme: scheme)
         }
         return RootShellContent(rooms: rooms, flips: flips)
     }

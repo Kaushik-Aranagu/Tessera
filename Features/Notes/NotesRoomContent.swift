@@ -11,7 +11,7 @@ struct NotesRoomContent: RoomContent {
         var words: [WallWord] = []
         var doors: [DialDoor] = []
         /// The needs' first line (the subtitle sentence) and the open notes' dates, for the switcher's windows.
-        var sentence = "Write the first thing down."
+        var sentence = "Write the first thing down"
         var openDates: [Date] = []
         var widget: [WidgetItem] = []
         /// The rows of each door, newest first.
@@ -26,6 +26,16 @@ struct NotesRoomContent: RoomContent {
     var accent: Color = LandingAccent.notes
 
     static let across = ["Newest", "Due", "Pinned", "From Tess"]
+
+    /// A shown line never ends on a full stop (Kaushik, Oct 26).
+    static func unstopped(_ line: String) -> String {
+        var line = line
+        while line.hasSuffix(".") {
+            line.removeLast()
+        }
+        return line
+    }
+
     static let vertical = ["Today", "This week", "Earlier"]
 
     func screen(for route: ShellRoute, state: RoomState) -> Screen {
@@ -67,7 +77,7 @@ struct NotesRoomContent: RoomContent {
 
     /// The needs change with the switcher's up-and-down window: the subtitle, then how many notes the window holds.
     private func needs(_ window: Int) -> [String] {
-        guard facts.hasNotes else { return [facts.sentence] }
+        guard facts.hasNotes else { return [Self.unstopped(facts.sentence)] }
         let calendar = Calendar.current
         let count = facts.openDates.filter { date in
             switch window {
@@ -78,7 +88,7 @@ struct NotesRoomContent: RoomContent {
         }.count
         let span = ["today", "this week", "before this week"][window]
         let noun = count == 1 ? "note" : "notes"
-        return [facts.sentence, count == 0 ? "No notes \(span)." : "\(count) \(noun) \(span)."]
+        return [Self.unstopped(facts.sentence), count == 0 ? "No notes \(span)" : "\(count) \(noun) \(span)"]
     }
 
     // MARK: Level 1
@@ -87,7 +97,7 @@ struct NotesRoomContent: RoomContent {
         let door = facts.doors.first { $0.id == id }
         let rows = facts.rows[id] ?? []
         let name = door?.name ?? "All notes"
-        let line = rows.isEmpty ? "Nothing here yet." : "\(rows.count) \(rows.count == 1 ? "note" : "notes"), newest first."
+        let line = rows.isEmpty ? "Nothing here yet" : "\(rows.count) \(rows.count == 1 ? "note" : "notes"), newest first"
         return Screen(layout: .door, flip: .rows, slots: [
             .title: title,
             .navWord: SlotContent(id: "log.nav.log", kind: .text, payload: .navWord("Log")),
@@ -116,7 +126,7 @@ struct NotesRoomContent: RoomContent {
     }
 
     private var caption: SlotContent {
-        SlotContent(id: "log.caption", kind: .text, payload: .lines(["Tap a word to open its note."]))
+        SlotContent(id: "log.caption", kind: .text, payload: .lines(["Tap a word to open its note"]))
     }
 
     private var action: SlotContent {
@@ -161,7 +171,7 @@ extension NotesRoomContent.Facts {
         }
         facts.doors = doors
         let top = Array(lists.things.prefix(2).map(\.name))
-        facts.sentence = notes.isEmpty ? "Write the first thing down."
+        facts.sentence = notes.isEmpty ? "Write the first thing down"
             : NotesLandingWords.subtitle(hasNotes: lists.hasNotes, topThings: top).text
         facts.openDates = open.map(\.updatedAt)
         facts.widget = open.prefix(4).map { note in
@@ -220,6 +230,8 @@ final class NotesRoomDriver: ShellRoomDriver {
 
     func handle(_ intent: ShellIntent, navigator: ShellNavigator) -> Bool {
         switch intent {
+        case .done, .notNow:
+            break
         case .back:
             return false
         case let .openDoor(id):

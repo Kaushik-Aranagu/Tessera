@@ -21,6 +21,9 @@ struct ShellView<Room: RoomContent>: View {
     @State private var busy: Set<Place> = []
     @State private var appliedRoute: ShellRoute?
     @State private var driver: Task<Void, Never>?
+    /// A route change is playing: a change of state waits for it (the change reads the latest content as it goes and
+    /// catches up when it ends), so it never swaps a place's content out from under the route's own moves.
+    @State private var changing = false
     /// The back edge's pull in points (sheet 283 v6): the screen never moves; content softens as it grows.
     @State private var pull: CGFloat = 0
 
@@ -148,7 +151,7 @@ struct ShellView<Room: RoomContent>: View {
         for place in payloadOnly {
             shown[place] = screen[place]
         }
-        guard !changed.isEmpty else { return }
+        guard !changed.isEmpty, !changing else { return }
         for place in changed {
             styles[place] = PlaceStyle(move: moves[place] ?? .move, context: .state)
         }
@@ -178,6 +181,7 @@ struct ShellView<Room: RoomContent>: View {
         }
         // Places still entering from a change this one replaces are freed; this change's places wait for their entry.
         busy = plan.affected
+        changing = true
         driver = Task { @MainActor in
             let clock = ContinuousClock()
             let start = clock.now
@@ -187,15 +191,18 @@ struct ShellView<Room: RoomContent>: View {
                 playReduced(screen)
             } else if plan.oldLayout == plan.newLayout {
                 // Same layout: every place plays its own move; the delays live in each place's transition.
-                withTesseraAnimation(Theme.Motion.house, reduceMotion: false) { shown = screen.slots }
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: false) { shown = navigatorTarget.slots }
             } else {
                 guard await playLayoutChange(plan, screen, clock: clock, start: start) else { return }
             }
             guard await releaseTouches(plan, clock: clock, start: start) else { return }
             washes = [:]
+            changing = false
             if let changeID {
                 navigator.finish(changeID)
             }
+            // Catch up with any change of state that waited for the route's moves.
+            refresh(navigatorTarget)
         }
     }
 

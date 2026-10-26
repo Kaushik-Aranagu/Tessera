@@ -80,7 +80,7 @@ enum PlaceTransition {
             return style.reelFrom.isEmpty ? .opacity.animation(motion(.easeOut(duration: 0.3))) : .identity
         case .doorSummary:
             if route {
-                return .modifier(active: Shift(x: 90, opacity: 0), identity: Shift())
+                return .modifier(active: Shift(x: -90, opacity: 0), identity: Shift())
                     .animation(motion(.spring(duration: 0.42, bounce: 0.2).delay(ShellTiming.summaryDelay)))
             }
             // Inside the room the summary rises 6 pt by a clip as the dial turns.
@@ -140,7 +140,7 @@ enum PlaceTransition {
         case .dial:
             return .opacity.animation(motion(.easeOut(duration: 0.14)))
         case .doorSummary:
-            return route ? .modifier(active: Shift(x: 80, opacity: 0), identity: Shift())
+            return route ? .modifier(active: Shift(x: -80, opacity: 0), identity: Shift())
                 .animation(motion(.easeIn(duration: 0.26)))
                 : .opacity.animation(motion(.easeOut(duration: 0.15)))
         case .actionWord:
@@ -283,7 +283,7 @@ struct DialReel: View {
                     .font(.custom("Figtree", size: 20, relativeTo: .title3).weight(.bold))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
-                    .frame(width: 160, height: 40, alignment: .leading)
+                    .frame(width: 160, height: 40, alignment: .trailing)
             }
         }
         .offset(y: landed ? -travel : 0)

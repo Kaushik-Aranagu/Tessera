@@ -55,6 +55,8 @@ final class DeckRoomDriver: ShellRoomDriver {
 
     func handle(_ intent: ShellIntent, navigator: ShellNavigator) -> Bool {
         switch intent {
+        case .done, .notNow:
+            break
         case .back: return false
         case let .openDoor(id): navigator.push(.door(room, id))
         case let .openItem(id): actions?.item(id)
@@ -151,6 +153,8 @@ final class GalleyRoomDriver: ShellRoomDriver {
 
     func handle(_ intent: ShellIntent, navigator: ShellNavigator) -> Bool {
         switch intent {
+        case .done, .notNow:
+            break
         case .back:
             return false
         case let .openDoor(id):
@@ -290,6 +294,14 @@ final class WatchRoomDriver: ShellRoomDriver {
 
     func handle(_ intent: ShellIntent, navigator: ShellNavigator) -> Bool {
         switch intent {
+        case let .done(id):
+            // Swipe right starts it: its page opens.
+            if let uuid = UUID(uuidString: id) {
+                opened = Opened(id: uuid)
+            }
+        case let .notNow(id):
+            let name = facts?.trees.first { $0.id.uuidString == id }?.name ?? "It"
+            TessVoice.shared.say("\(name) can wait")
         case .back:
             return false
         case let .openDoor(id):
@@ -391,6 +403,8 @@ final class PurseRoomDriver: ShellRoomDriver {
 
     func handle(_ intent: ShellIntent, navigator: ShellNavigator) -> Bool {
         switch intent {
+        case .done, .notNow:
+            break
         case .back:
             return false
         case let .openDoor(id):
@@ -477,6 +491,8 @@ final class SettingsRoomDriver: ShellRoomDriver {
 
     func handle(_ intent: ShellIntent, navigator: ShellNavigator) -> Bool {
         switch intent {
+        case .done, .notNow:
+            break
         case .back:
             return false
         case let .openDoor(id):
@@ -571,6 +587,8 @@ final class LookoutRoomDriver: ShellRoomDriver {
     func handle(_ intent: ShellIntent, navigator: ShellNavigator) -> Bool {
         guard let facts else { return false }
         switch intent {
+        case .done, .notNow:
+            break
         case .back:
             return false
         case let .openDoor(id):
