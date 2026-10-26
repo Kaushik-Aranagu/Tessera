@@ -96,8 +96,9 @@ extension TessRun {
 
     /// One room agent's run: a child loop with the agent's own context, scope and tools, and no history but its own
     /// episodes (they are in its context). Its words never reach him; its report goes back to Tess.
-    func runAgent(_ spec: AgentSpec, question: String, handles: [String: UUID],
-                  onDevice: Bool) async -> (report: String, ghosts: [UUID], failed: Bool)
+    func runAgent(_ spec: AgentSpec, question: String, handles: [String: UUID], onDevice: Bool,
+                  plan chosen: RungPlan? = nil, remembers: Int? = nil) async
+        -> (report: String, ghosts: [UUID], failed: Bool)
     {
         let child = TessRun(door: door, engine: engine, conversation: conversation, trace: trace,
                             runs: TessRunStore(url: nil))
@@ -105,13 +106,15 @@ extension TessRun {
         child.now = now
         child.calendar = calendar
         child.flagOn = flagOn
+        child.remembersLeft = remembers
         let system = AgentContext.blocks(for: spec, engine: engine, policy: door.policy(), now: now(),
                                          calendar: calendar)
         // The child's own tools only: never ask_agent, never a money write (AgentSpec.problems keeps both out).
         let tools = Self.toolSpecs(only: spec.tools.filter { $0 != Self.askAgent })
         let pack = Pack(system: system, cacheAfter: [CacheMark(0, .oneHour), CacheMark(1, .fiveMinutes)],
                         tools: tools, fragments: [], handles: handles)
-        let plan: RungPlan = onDevice ? .deviceOnly : (RungPlan.pick(question) == .open ? spec.open : spec.plain)
+        let plan: RungPlan = onDevice ? .deviceOnly
+            : chosen ?? (RungPlan.pick(question) == .open ? spec.open : spec.plain)
         var state = TessRunState(startedAt: now(), askText: question, aboutIDs: Array(handles.values),
                                  messages: [BrainMessage(.user, text: question)])
         var ghosts: [UUID] = []

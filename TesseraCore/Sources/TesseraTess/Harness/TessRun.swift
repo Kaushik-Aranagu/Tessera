@@ -63,6 +63,9 @@ public final class TessRun {
 
     /// The agent this run speaks for (M4). Its memory scope decides what recall and open can reach (M2).
     public var agent: AgentSpec = .tess
+    /// How many more beliefs `remember` may keep in this run; nil is no limit beyond the phrase's ghost budget. The
+    /// 4 am reflection sets it (at most five a night).
+    public var remembersLeft: Int?
     private var current: Active?
     /// The memory slice for the run in flight, built on its first recall or path read.
     private var memory: (runID: UUID, index: MemoryIndex)?
@@ -479,13 +482,16 @@ public final class TessRun {
             result = AgentNotebook(engine: engine, scope: MemoryScope(agent, policy: door.policy()), now: now())
                 .run(arguments: input)
         case _ where TessRecallTools.names.contains(name):
-            if name == TessRecallTools.remember, budget <= 0 {
-                result = (TessTools.capLine, true)
+            if name == TessRecallTools.remember, budget <= 0 || (remembersLeft.map { $0 <= 0 } ?? false) {
+                result = (budget <= 0 ? TessTools.capLine : "That's enough for tonight.", true)
                 break
             }
             let answer = TessRecallTools.run(name, arguments: input, index: memoryIndex(for: runID), engine: engine,
                                              seeds: Array(handles.values), now: now(), calendar: calendar)
             budget -= answer.ghosts.count
+            if let left = remembersLeft, name == TessRecallTools.remember {
+                remembersLeft = left - answer.ghosts.count
+            }
             for ghost in answer.ghosts {
                 sink(.ghost(ghost))
             }
