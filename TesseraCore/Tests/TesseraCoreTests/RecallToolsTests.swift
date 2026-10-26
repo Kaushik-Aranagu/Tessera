@@ -53,6 +53,26 @@ struct RecallToolsTests {
         #expect(!MemoryScope(.tess, policy: .lab).reads(turn, classes: classes))
     }
 
+    @Test func strictRecallsNoCalendarOrHealthThing() throws {
+        // A calendar event's title is free text the Door's scan can't read: under strict it is in no slice at all.
+        let eventClass = try #require(classes[.event])
+        let event = try store.create(eventClass, title: "Dentist with Dr Rao")
+        let sleepClass = try #require(classes[.sleepNight])
+        let night = try store.create(sleepClass, title: "Short night")
+        let strict = index(policy: .strict)
+        #expect(strict.path(of: event.id) == nil && strict.path(of: night.id) == nil)
+        let asked = call(TessRecallTools.recall, #"{"query":"dentist","kinds":"all","limit":5}"#, strict)
+        #expect(asked.text == ContextPacker.nothingKeptLine)
+        #expect(!strict.entries.values.contains { $0.digest.contains("Dentist") || $0.digest.contains("Short night") })
+        // Lab carries them, as it does for the pack.
+        #expect(index(policy: .lab).path(of: event.id) != nil)
+    }
+
+    @Test func aMixedCaseNotebookStillOwnsItsPages() {
+        let scope = MemoryScope(agent: "Garden", classes: [], notebook: "/memories/Garden", policy: .lab)
+        #expect(scope.owns("/memories/garden/beds.md") && scope.owns("/memories/Garden/beds.md"))
+    }
+
     @Test func aNotebookBelongsToItsAgentOnly() {
         let deck = MemoryScope(.training, policy: .lab)
         #expect(deck.owns("/memories/training/lifts.md"))
