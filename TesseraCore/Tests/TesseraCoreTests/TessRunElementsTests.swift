@@ -15,6 +15,7 @@ struct TessRunElementsTests {
         var elements = [ElementMeaning(place: place, items: items, focus: focus,
                                        calls: ElementCatalog.calls(room: room, place: place))]
         elements.append(ElementMeaning(place: .actionWord, calls: ElementCatalog.calls(room: room, place: .actionWord)))
+        elements.append(ElementMeaning(place: .navWord, calls: ElementCatalog.calls(room: room, place: .navWord)))
         return TessFrame(room: room, elements: elements, now: now)
     }
 
@@ -54,7 +55,7 @@ struct TessRunElementsTests {
     @Test func aPrivateThingIsDoneByItsIDAndNeverNamed() async throws {
         let haiku = ScriptedBrain(.haiku, rounds: [])
         let r = try helper.rig([.haiku: haiku])
-        let task = try makeTask(r, "Call the bank")
+        let task = try makeTask(r, "take my melatonin")
         // The screen shows a label; the call carries the id.
         let item = ElementItem(id: task.id, kind: "task", name: "Private task", isPrivate: true)
         let events = await helper.collect(r.run.ask("done", frame: frame("bridge", items: [item])))
@@ -64,7 +65,7 @@ struct TessRunElementsTests {
             Issue.record("no reply: \(events)")
             return
         }
-        #expect(!line.lowercased().contains("bank"))
+        #expect(!line.lowercased().contains("melatonin"))
     }
 
     @Test func openThisIsHandedToTheHostAndWritesNothing() async throws {
