@@ -18,7 +18,7 @@ public enum TessLineCheck {
     public enum Slot: Sendable {
         /// The time words above the hero: 6 words, 32 characters, no stop.
         case context
-        /// SO FAR: one sentence, 14 words, 80 characters, with its stop.
+        /// SO FAR: one sentence, 14 words, 80 characters, shown with no stop (a closing stop is dropped).
         case detail
     }
 
@@ -143,9 +143,11 @@ public enum TessLineCheck {
             if text.count > HomeLines.detailCharacters {
                 codes.append("C3")
             }
-            let body = String(text.dropLast())
-            if !text.hasSuffix(".") || body.contains("?") || body.contains("!")
-                || body.firstMatch(of: /[.?!]\s/) != nil
+            // One sentence. It is shown with no closing stop (ShownLine), so a model's closing stop is let through
+            // and dropped before it shows; a stop, question or exclamation anywhere else is a second sentence.
+            let body = text.hasSuffix(".") ? String(text.dropLast()) : text
+            if body.hasSuffix(".") || body.hasSuffix(":") || body.hasSuffix(";") || body.contains("?")
+                || body.contains("!") || body.firstMatch(of: /[.?!]\s/) != nil
             {
                 codes.append("C4")
             }

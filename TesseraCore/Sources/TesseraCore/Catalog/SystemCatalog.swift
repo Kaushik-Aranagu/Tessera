@@ -33,6 +33,7 @@ public enum SystemCatalog {
         case tessTurn
         case belief
         case routineRun, rest
+        case tessAgent, notebookPage, agentEpisode
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -463,6 +464,7 @@ public enum SystemCatalog {
             FieldSpec(key: "mosaicBackdrop", name: "Mosaic scene", kind: .text),
             FieldSpec(key: "rainAlert", name: "Rain alert", kind: .bool),
             FieldSpec(key: "rainAlertLead", name: "Rain alert lead", kind: .number, unit: "min"),
+            FieldSpec(key: "placeLooks", name: "Looks", kind: .text),
         ]),
         // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
         // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.
@@ -515,6 +517,43 @@ public enum SystemCatalog {
             FieldSpec(key: "rule", name: "Rule", kind: .text),
             FieldSpec(key: "isPrivate", name: "Stays on this phone", kind: .bool, defaultValue: .bool(false)),
         ]),
+        // One of Tess's agents (docs/ai/harness/agents.md): a room's agent, with the personality it speaks to her in,
+        // its notebook folder and the classes it reads. The shipped ones mirror `AgentSpec`; a new room or app spawns
+        // one. The title is its room name ("Deck").
+        ClassSpec(key: .tessAgent, name: "Agent", parent: .thing, symbol: "person.2", colorRole: "neutral", fields: [
+            FieldSpec(key: "agentName", name: "Name", kind: .text),
+            FieldSpec(key: "room", name: "Room", kind: .text),
+            FieldSpec(key: "persona", name: "Personality", kind: .text),
+            FieldSpec(key: "notebook", name: "Notebook", kind: .text),
+            // Ids of the kinds it reads, beyond the system classes (a spawned room's own kind), as a JSON array.
+            FieldSpec(key: "classIDs", name: "Kinds", kind: .text),
+            FieldSpec(key: "shipped", name: "Shipped", kind: .bool, defaultValue: .bool(false)),
+            FieldSpec(key: "spawnedAt", name: "Started", kind: .date),
+        ]),
+        // One page of an agent's own notebook (`/memories/<agent>/...`): what it keeps for itself between runs. Only
+        // that agent reads or writes it. Written without ops, on the phone only, in no copy; a page written under lab
+        // is never read under strict.
+        ClassSpec(key: .notebookPage, name: "Notebook Page", parent: .thing, symbol: "book.closed",
+                  colorRole: "neutral", fields: [
+                      FieldSpec(key: "agentName", name: "Agent", kind: .text),
+                      FieldSpec(key: "path", name: "Path", kind: .text),
+                      FieldSpec(key: "body", name: "Body", kind: .text),
+                      FieldSpec(key: "lab", name: "Written under lab", kind: .bool, defaultValue: .bool(false)),
+                      FieldSpec(key: "updatedAt", name: "Updated", kind: .date),
+                  ]),
+        // One exchange an agent had (asked by Tess, what it reported), so the next run picks up where it left off.
+        // Written without ops, kept 90 days, on the phone only, in no copy. Walled words are stored as a placeholder,
+        // as her turns are.
+        ClassSpec(key: .agentEpisode, name: "Agent Episode", parent: .thing, symbol: "text.bubble",
+                  colorRole: "neutral", fields: [
+                      FieldSpec(key: "agentName", name: "Agent", kind: .text),
+                      FieldSpec(key: "at", name: "At", kind: .date),
+                      FieldSpec(key: "ask", name: "Asked", kind: .text),
+                      FieldSpec(key: "report", name: "Reported", kind: .text),
+                      FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+                      FieldSpec(key: "lab", name: "Under lab", kind: .bool, defaultValue: .bool(false)),
+                      FieldSpec(key: "held", name: "Held back", kind: .bool, defaultValue: .bool(false)),
+                  ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
         ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning", fields: [
             FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
@@ -538,6 +577,14 @@ public enum SystemCatalog {
                       // Where it lives in the Pantry (a Place) and the section inside it ("Door"); both optional.
                       FieldSpec(key: "place", name: "Place", kind: .ref, target: .place),
                       FieldSpec(key: "section", name: "Section", kind: .text),
+                      // What he told the Pantry by hand (Kitchen actions): in, low or out, and when. A later buy or cook
+                      // is newer than this; the ledger takes whichever fact is later.
+                      FieldSpec(key: "stock", name: "Stock", kind: .choice, options: ["in", "low", "out"]),
+                      FieldSpec(key: "stockAt", name: "Stock set", kind: .date),
+                      // "Not now": the Pantry stops asking until this moment (the next 4 am).
+                      FieldSpec(key: "snoozedUntil", name: "Snoozed until", kind: .date),
+                      // Pinned to the top of its place (three at most per place).
+                      FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
                   ]),
         // A place in the Pantry (Fridge, Freezer, Shelf, Counter, or his own): ordered, with its sections as words.
         ClassSpec(key: .place, name: "Place", parent: .thing, symbol: "refrigerator", colorRole: "health",
@@ -553,6 +600,8 @@ public enum SystemCatalog {
             FieldSpec(key: "sourceText", name: "Original text", kind: .text),
             // Set when the recipe page opens, without an op (kitchen week one: opened but never cooked).
             FieldSpec(key: "lastOpenedAt", name: "Last opened", kind: .date),
+            // Pinned to the top of the shelf (three at most).
+            FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),
         ]),
         ClassSpec(key: .recipeLine, name: "Recipe Line", parent: .thing, symbol: "list.dash", colorRole: "health",
                   fields: [

@@ -289,7 +289,7 @@ struct InkDropView: View {
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        TimelineView(.animation) { timeline in
+        LiveClock(LiveFeatures.inkDrops, minimumInterval: nil) { timeline in
             let _ = swarm.step(now: timeline.date, rep: rep)
             Canvas { context, size in
                 let centre = CGPoint(x: size.width / 2, y: size.height / 2)

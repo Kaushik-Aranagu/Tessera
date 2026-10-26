@@ -1,4 +1,5 @@
 import Foundation
+import TesseraCore
 
 /// Picks the calls Tess gets for one ask from where he is (`TessFrame`): the calls the screen offers first, then the
 /// room agent's tools, then the reads. Fewer, better-fitting tools are the accuracy rule (a model with 20 tools picks
@@ -22,16 +23,26 @@ public enum ToolPicker {
         public var bound: Bound?
         /// The calls the ask named, best first, so the trace can show why.
         public var matched: [String]
+        /// The ask is about how something looks: the frame sends each place's look line.
+        public var looks = false
     }
 
     /// The most tools one ask carries.
     public static let maxTools = 12
     /// The reads every ask may use.
-    static let reads = ["query", "open"]
+    static let reads = ["query", "open", "recall"]
     /// A bound call is a short command; a longer ask has more in it than the frame can fill.
     static let boundWords = 6
 
-    public static func pick(_ ask: String, frame: TessFrame, agent: AgentSpec? = nil) -> Pick {
+    /// `looks` is his kept looks (settings), which a trait word steps from ("denser" is one step denser than now).
+    public static func pick(_ ask: String, frame: TessFrame, agent: AgentSpec? = nil,
+                            looks kept: RoomLooks = RoomLooks()) -> Pick
+    {
+        // A look nudge on one place ("denser", "the doors as an index", "as it was"): no model.
+        let looks = LookWords.isAbout(ask)
+        if let bound = lookBound(ask, frame: frame, about: looks, looks: kept) {
+            return Pick(tools: [bound.call], plan: forced(bound.call), bound: bound, matched: [bound.call], looks: true)
+        }
         let offered = frame.calls
         let words = TessFrame.words(ask)
         let pointed = TessFrame.points(ask)
@@ -43,8 +54,10 @@ public enum ToolPicker {
 
         // One call named ("open this" names two, but only one of them takes a thing), every input filled from the
         // frame: run it, no model.
-        let aboutThing = matched.filter { entry in entry.call.inputs.contains { $0.source == .referent } }
-        let single: (place: ElementPlace, call: ElementCall)? = matched.count == 1 ? matched.first
+        // The look tools bind only above, from the look words.
+        let bindable = matched.filter { !LookWords.calls.contains($0.call.name) }
+        let aboutThing = bindable.filter { entry in entry.call.inputs.contains { $0.source == .referent } }
+        let single: (place: ElementPlace, call: ElementCall)? = bindable.count == 1 ? bindable.first
             : pointed && aboutThing.count == 1 ? aboutThing.first : nil
         if let entry = single, words.count <= boundWords,
            let bound = bind(entry.call, at: entry.place, frame: frame, pointed: pointed)
@@ -64,11 +77,19 @@ public enum ToolPicker {
         let named: [String] = matched.map { $0.call.name }
         let shown: [String] = offered.map { $0.call.name }
         let candidates: [String] = named + shown + (agent?.tools ?? []) + reads
-        for name in candidates where !deviceOnly.contains(name) && !tools.contains(name) {
+        // The look calls ride only on an ask about looks, so she never changes a look he didn't ask about.
+        for name in candidates where !deviceOnly.contains(name) && !tools.contains(name)
+            && (looks || !LookWords.calls.contains(name))
+        {
             tools.append(name)
         }
         let plan = matched.isEmpty ? RungPlan.pick(ask) : small(ask)
-        return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name })
+        if looks {
+            // About a look: the two look calls lead, whatever else the screen offers.
+            tools = ["setLook", "showLooks"] + tools.filter { !LookWords.calls.contains($0) }
+        }
+        return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name },
+                    looks: looks)
     }
 
     /// Fills a call's inputs from the frame. Nil when a required input needs his words, or "this" means nothing.

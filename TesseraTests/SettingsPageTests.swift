@@ -78,7 +78,7 @@ struct SettingsPageTests {
             "Kitchen v2",
             "Safe keeping",
             "Home mosaic",
-            "Home faces",
+            "Tess",
         ])
         #expect(PeekTabsCopy.spoken(tabs, 1) == "Workout, tab 2 of 16")
         #expect(PeekTabsCopy.next(tabs, 1) == "next: Kitchen")
@@ -90,7 +90,7 @@ struct SettingsPageTests {
         #expect(PeekTabsCopy.next(tabs, 11) == "next: Kitchen v2")
         #expect(PeekTabsCopy.next(tabs, 12) == "next: Safe keeping")
         #expect(PeekTabsCopy.next(tabs, 13) == "next: Home mosaic")
-        #expect(PeekTabsCopy.next(tabs, 14) == "next: Home faces")
+        #expect(PeekTabsCopy.next(tabs, 14) == "next: Tess")
         #expect(PeekTabsCopy.next(tabs, 15) == nil)
         // Every row is on a named page (no "More"), six at most.
         #expect(ReviewChoices.facetPages().allSatisfy { $0.rows.count <= 6 })

@@ -18,18 +18,18 @@ public final class TessRun {
     /// A run still marked running after this long is dropped on launch, not resumed.
     static let resumeWindow: TimeInterval = 600
 
-    public static let tooManySteps = "That needed more steps than I take. Try it in two."
-    public static let cannotThink = "I can't think that through right now. The rest still works."
-    public static let keyLine = "That looks like a key, so I won't send it."
-    public static let noAnswer = "I couldn't get an answer just now. Try again in a moment."
+    public static let tooManySteps = "That needed more steps than I take, try it in two"
+    public static let cannotThink = "I can't think that through right now, the rest still works"
+    public static let keyLine = "That looks like a key, so I won't send it"
+    public static let noAnswer = "I couldn't get an answer just now, try again in a moment"
 
     /// Her voice and rules: fixed text, so the prefix caches (cache breakpoint after it).
     public static let voice = """
     You are Tess, the assistant inside Tessera, a personal app on one person's phone. Voice: brief, warm, a little dry. \
-    Answer in a sentence or two unless asked for more. Use the tools to look things up and to make small changes; a \
-    change you make is only proposed until the person approves it. You never move or record money, and you never \
-    invent facts about the person's data: say you don't know. Objects in the pack have short handles like o1; read one \
-    with open. Do not repeat the pack back.
+    Answer in a sentence or two unless asked for more, with no full stop at the end of a line. Use the tools to look \
+    things up and to make small changes; a change you make is only proposed until the person approves it. You never \
+    move or record money, and you never invent facts about the person's data: say you don't know. Objects in the pack \
+    have short handles like o1; read one with open. Do not repeat the pack back.
     """
 
     public let door: Door
@@ -45,6 +45,9 @@ public final class TessRun {
     public var flagOn: @MainActor () -> Bool = { true }
     public var now: () -> Date = { .now }
     public var calendar: Calendar = .current
+    /// The shell's quiet stage (sheet 287, section 5): a look Tess picks is drawn off screen first and applied only
+    /// if it passes. Nil until the host has one; then the shell's own check is the only gate.
+    public var stage: LookStage?
 
     private final class Active: @unchecked Sendable {
         let id = UUID()
@@ -54,6 +57,8 @@ public final class TessRun {
         var buffer: [TessRunEvent] = []
         var subscribers: [UUID: AsyncStream<TessRunEvent>.Continuation] = [:]
         var done = false
+        /// A full stop held back from the live words: shown only if more words follow it (ShownLine).
+        var heldStop = false
 
         init(text: String, startedAt: Date) {
             self.text = text
@@ -61,7 +66,14 @@ public final class TessRun {
         }
     }
 
+    /// The agent this run speaks for (M4). Its memory scope decides what recall and open can reach (M2).
+    public var agent: AgentSpec = .tess
+    /// How many more beliefs `remember` may keep in this run; nil is no limit beyond the phrase's ghost budget. The
+    /// 4 am reflection sets it (at most five a night).
+    public var remembersLeft: Int?
     private var current: Active?
+    /// The memory slice for the run in flight, built on its first recall or path read.
+    private var memory: (runID: UUID, index: MemoryIndex)?
     private var lastRung: BrainID?
     private var lastAskAt: Date?
     private var lastWarm: [BrainID: Date] = [:]
@@ -90,7 +102,7 @@ public final class TessRun {
     /// thing in focus ("done", "open this") is bound from the frame and runs with no model at all. The frame's
     /// fragments replace the old "On screen" line, and its object ids become the run's handles.
     public func ask(_ text: String, frame: TessFrame) -> AsyncStream<TessRunEvent> {
-        let pick = ToolPicker.pick(text, frame: frame)
+        let pick = ToolPicker.pick(text, frame: frame, agent: agent, looks: SettingsStore(engine: engine).read().looks)
         let about = frame.aboutIDs.compactMap { engine.store.object(id: $0) }.filter { !$0.isDeleted }
         return start(text, about: about, context: Context(screen: nil, frame: frame, pick: pick))
     }
@@ -142,11 +154,27 @@ public final class TessRun {
 
     private func emit(_ event: TessRunEvent, _ active: Active) {
         guard !active.done else { return }
-        active.buffer.append(event)
-        for continuation in active.subscribers.values {
-            continuation.yield(event)
+        // No full stop on a line he sees (ShownLine): her whole reply, her phone lines, and the live words, whose
+        // closing stop is held until more words follow so nothing flickers when the reply lands.
+        let shown: TessRunEvent
+        switch event {
+        case let .finished(line): shown = .finished(ShownLine.unstopped(line))
+        case let .failed(line): shown = .failed(ShownLine.unstopped(line))
+        case let .words(delta):
+            var live = (active.heldStop ? "." : "") + delta
+            active.heldStop = live.hasSuffix(".") && !live.hasSuffix("..")
+            if active.heldStop {
+                live.removeLast()
+            }
+            guard !live.isEmpty else { return }
+            shown = .words(live)
+        default: shown = event
         }
-        if event.isTerminal {
+        active.buffer.append(shown)
+        for continuation in active.subscribers.values {
+            continuation.yield(shown)
+        }
+        if shown.isTerminal {
             active.done = true
             for continuation in active.subscribers.values {
                 continuation.finish()
@@ -184,6 +212,16 @@ public final class TessRun {
                 .object([("window", .string("The word"))])
             ),
             spec("goBack", "Go back one page", .object([])),
+            spec("setLook", "Change how a place on screen looks (a setting; his things don't change): one form, or "
+                + "one trait to one value, only from that place's look line. It is tried off screen first", .object([
+                    ("place", .string("The place: dial, widget, page, needs, doorSummary, glyph, keystone...")),
+                    ("form", .nullable(.string("A form from the look line, or designed for the studio's look"))),
+                    ("trait", .nullable(.string("A trait from the look line, with value"))),
+                    ("value", .nullable(.string("The trait's new value"))),
+                    ("scope", .nullable(.string("room for this room, everywhere for every room; null is this room"))),
+                ])),
+            spec("showLooks", "Open shape mode on a place so he can swipe through its forms",
+                 .object([("place", .string("The place"))])),
         ]
     }
 
@@ -206,7 +244,17 @@ public final class TessRun {
                 specs.append(ToolSpec(name: name, description: item["description"] as? String ?? "", schema: json))
             }
         }
-        return specs + [TessOpenTool.spec]
+        return specs + [TessOpenTool.spec] + TessRecallTools.specs + [AgentNotebook.spec, askAgentSpec]
+    }
+
+    /// The agent's memory slice for this run (M2), built once per run so recall's paths stay the same across rounds.
+    func memoryIndex(for runID: UUID) -> MemoryIndex {
+        if let memory, memory.runID == runID {
+            return memory.index
+        }
+        let index = MemoryIndex(engine: engine, scope: MemoryScope(agent, policy: door.policy()), calendar: calendar)
+        memory = (runID, index)
+        return index
     }
 
     /// system[0] voice (cache), tools, system[1] profile (cache); fragments ride on the ask.
@@ -226,6 +274,10 @@ public final class TessRun {
         if let frame {
             // Where he is, by shown names; each fragment keeps its own taint for the Door.
             fragments.append(contentsOf: frame.fragments())
+            if pick?.looks == true {
+                // His looks come from settings, never from the frame: the frame is the same in every look.
+                fragments.append(contentsOf: frame.lookLines(SettingsStore(engine: engine).read().looks))
+            }
         } else if let screen, !screen.isEmpty {
             fragments.append(PackFragment("On screen: \(screen)"))
         }
@@ -448,8 +500,37 @@ public final class TessRun {
         case _ where !offered.contains(name) || (deviceOnly && !onDevice):
             result = ("That isn't a call I can make here.", true)
         case TessOpenTool.name:
+            // A path (from recall) resolves through the agent's slice; a pack handle needs no index.
+            let isPath = ((try? JSONSerialization.jsonObject(with: input)) as? [String: Any])?["handle"]
+                .flatMap { $0 as? String }?.hasPrefix("/") == true
             result = TessOpenTool.run(arguments: input, handles: handles, engine: engine, policy: door.policy(),
-                                      calendar: calendar)
+                                      calendar: calendar, index: isPath ? memoryIndex(for: runID) : nil)
+        case Self.askAgent:
+            // Tess asks her rooms; each runs as itself, in parallel, and its writes land as ghost rows.
+            let answer = await askAgents(input, handles: handles, onDevice: onDevice)
+            for ghost in answer.ghosts {
+                sink(.ghost(ghost))
+            }
+            result = (answer.text, answer.isError)
+        case AgentNotebook.name:
+            // Its own notebook only: the scope's folder, the policy's pages.
+            result = AgentNotebook(engine: engine, scope: MemoryScope(agent, policy: door.policy()), now: now())
+                .run(arguments: input)
+        case _ where TessRecallTools.names.contains(name):
+            if name == TessRecallTools.remember, budget <= 0 || (remembersLeft.map { $0 <= 0 } ?? false) {
+                result = (budget <= 0 ? TessTools.capLine : "That's enough for tonight.", true)
+                break
+            }
+            let answer = TessRecallTools.run(name, arguments: input, index: memoryIndex(for: runID), engine: engine,
+                                             seeds: Array(handles.values), now: now(), calendar: calendar)
+            budget -= answer.ghosts.count
+            if let left = remembersLeft, name == TessRecallTools.remember {
+                remembersLeft = left - answer.ghosts.count
+            }
+            for ghost in answer.ghosts {
+                sink(.ghost(ghost))
+            }
+            result = (answer.text, answer.isError)
         case _ where ElementCatalog.shellCalls.contains(name):
             // A shell call writes nothing: the host plays it.
             let args = (try? JSONSerialization.jsonObject(with: input)) as? [String: Any] ?? [:]
@@ -462,6 +543,10 @@ public final class TessRun {
                 if let id = handles[text] {
                     object = id
                 }
+            }
+            if name == "setLook", let refusal = await staged(strings) {
+                result = refusal
+                break
             }
             sink(.shell(ShellIntent(call: name, object: object, arguments: strings)))
             result = ("Shown.", false)
@@ -485,6 +570,20 @@ public final class TessRun {
         await trace.record(TraceSpan(kind: .tool, name: name, at: now(), totalMs: LatencyBench.ms(.now - started),
                                      outcome: result.isError ? "error" : "works", runID: runID))
         return result
+    }
+
+    /// A look the model picked, checked before the host sees it: a form or value the place has, then the quiet stage.
+    /// Nil when it may go to the shell; otherwise what the model hears instead. Nothing is shown either way.
+    func staged(_ arguments: [String: String]) async -> (text: String, isError: Bool)? {
+        guard let key = arguments["place"], let place = ElementPlace(rawValue: key),
+              let change = LookWords.change(arguments), LookWords.isKnown(change, place: key)
+        else {
+            return ("That place has no such look. Use one from its look line.", true)
+        }
+        guard let stage else { return nil }
+        let report = await stage(place, change)
+        guard !report.passed else { return nil }
+        return ("Not shown: \(report.line); his look stays. Try another form, or tell him why", false)
     }
 
     // MARK: Bound calls
@@ -536,7 +635,20 @@ public final class TessRun {
         case "goBack": "Back."
         case "openDoor": bound.arguments["door"].map { "Opening \($0)." } ?? "Opening it."
         case "showWindow": bound.arguments["window"].map { "\($0)." } ?? "Done."
+        case "setLook": lookLine(bound.arguments)
+        case "showLooks": "Here are its looks"
         default: bound.arguments["item"].map { "Opening \($0)." } ?? "Opening it."
+        }
+    }
+
+    /// "The dial, as index" from a bound look; the shell's own Undo line follows.
+    static func lookLine(_ arguments: [String: String]) -> String {
+        guard let place = arguments["place"], let change = LookWords.change(arguments) else { return "Done" }
+        let everywhere = arguments["scope"] == "everywhere" ? ", in every room" : ""
+        return switch change {
+        case let .form(id): "The \(place), as \(id)\(everywhere)"
+        case .designed: "The \(place), as drawn\(everywhere)"
+        case let .trait(name, value): "The \(place): \(name) \(value)\(everywhere)"
         }
     }
 

@@ -196,6 +196,8 @@ struct BridgeLife: ViewModifier {
             .mosaicTouchFeed(stage.controller, enabled: stage.layerOn && showing)
             // Sheet 215: Home sits under her blur (hers alone) while her layer is open.
             .tessBackdrop(open: stage.tessOpen)
+            // Live only when seen: her layer, a full-screen link or a room in the shell hides Bridge.
+            .liveScope(!stage.tessOpen && stage.link == nil && showing)
             .onChange(of: stage.layerOn && showing, initial: true) { _, on in
                 model.homeTessLayerActive = tessElsewhere || (on && HomeMosaic.appsListIsOn)
             }

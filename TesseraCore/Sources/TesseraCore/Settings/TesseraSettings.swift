@@ -38,6 +38,12 @@ public struct TesseraSettings: Equatable, Sendable, Codable {
     /// "Rain alert" (Lookout): a local notice before rain; nil is off. The lead in minutes, 30 when unset.
     public var rainAlert: Bool?
     public var rainAlertLead: Int?
+    /// His looks per room and place (sheet 286), as `RoomLooks` JSON; nil is every place as drawn.
+    public var placeLooks: String?
+
+    public var looks: RoomLooks {
+        RoomLooks(encoded: placeLooks)
+    }
 
     public var rainAlertMinutes: Int {
         min(max(rainAlertLead ?? 30, 5), 24 * 60)
@@ -153,6 +159,7 @@ public struct SettingsStore {
             .flatMap { (5 ... 1440).contains($0) ? $0 : nil }
         settings.dayStartHour = store.number("dayStartHour", of: object).map { Int($0) }
             .flatMap { (0 ... 8).contains($0) ? $0 : nil }
+        settings.placeLooks = RoomLooks(encoded: text("placeLooks")).encoded
         return settings
     }
 
@@ -241,6 +248,9 @@ public struct WriteSettings: EngineAction {
                             to: MosaicBackdrop(encoded: settings.mosaicBackdrop).encoded.map(FieldValue.text),
                             on: object)
         try transaction.set("dayStartHour", to: settings.dayStartHour.map { .number(Double($0)) }, on: object)
+        // Re-encoded, so only looks the catalog reads ever land.
+        try transaction.set("placeLooks", to: RoomLooks(encoded: settings.placeLooks).encoded.map(FieldValue.text),
+                            on: object)
         return object
     }
 
