@@ -1,0 +1,158 @@
+<div class="head">
+  <p class="lab">Round 238, Oct 23</p>
+  <h1>Routines, one step at a time</h1>
+  <p class="sub">The Routines page from the Routines landing (226, 219). Today's routines on the depth wheel, the next one opened a little, and a routine on its own page, where you work through its steps one at a time. Rhythm shows as weekday letters and stroke marks, never bars or rings. Three colors plus ink: Routines plum for the room and its actions, slate for labels, and wine only for something late.</p>
+  <div style="display:flex;gap:22px;flex-wrap:wrap"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button><button class="tr" id="dp" aria-pressed="true">Depth on wheels: on</button><button class="tr" id="reset">Start over</button></div>
+</div>
+<div class="sec">
+  <div class="row">
+    <div class="phone" id="ph">
+      <div class="scr" id="day">
+        <div class="z" style="top:50px;height:40px;overflow:hidden"><span id="dTitle" style="display:block;font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:40px;white-space:nowrap;color:var(--acc)">Routines</span></div>
+        <div class="z" style="top:94px;height:26px;display:flex;justify-content:space-between;align-items:baseline;white-space:nowrap" id="week" aria-label="This week"></div>
+        <div class="z brief" style="top:140px" id="brief"></div>
+        <div class="z" style="top:206px;height:380px;overflow:hidden;touch-action:none;cursor:ns-resize" id="wheel" role="list" aria-label="Today's routines"></div>
+        <div class="z" style="top:597px;height:44px;line-height:44px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="receipt"></div>
+        <div class="z ft"><button class="act" id="act" style="color:var(--acc)">Start</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <div class="sc2" id="page" hidden>
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span style="font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--sec)" id="pWhen">Evening</span><span id="pLeft" style="color:var(--ink2)"></span></div>
+        <div class="z" style="top:76px;height:40px;overflow:hidden"><span id="pTitle" style="display:block;font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:40px;white-space:nowrap;color:var(--acc)"></span></div>
+        <div class="z" style="top:118px;height:22px;font-size:15px;color:var(--ink2);white-space:nowrap" id="pRun"></div>
+        <div class="z" style="top:146px;height:20px;display:flex;justify-content:space-between;align-items:flex-end" id="pMarks" aria-label="Last two weeks"></div>
+        <div class="z" style="top:182px;height:410px;overflow:hidden" id="stepsW"><div id="steps" role="list"></div></div>
+        <div class="z" style="top:597px;height:44px;line-height:44px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="pRc"></div>
+        <div class="z ft"><button class="act" id="pGo" style="color:var(--acc)">Start</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+    </div>
+    <div class="notes">
+      <h2>How it works</h2>
+      <div class="try">
+        <span>1</span><span><b>The week, as letters.</b> Under the title, Monday to Sunday as single letters. A day you kept every routine is plum and heavier, a day with a gap is plain ink2, and today is a size larger in ink. To the right, the rhythm in words: "four nights of stretch". No bars, rings or counters.</span>
+        <span>2</span><span><b>Today on the depth wheel.</b> A small-caps "Today" header row sits above the first routine. The routine in front is open a little: its name in plum (26 pt, stepping down 1 pt at a time to 21, then cut at a whole word), then how many steps, how long and when, then its first steps. The rest step back smaller, with up to 1 pt of blur (never on the one in front; off under Reduce Motion or with Depth off). Done routines read in ink2 with the time you finished. Rows are 44 pt apart, so every one is a full tap target. A late one shows its time in wine, the page's one warning color.</span>
+        <span>3</span><span><b>A routine on its own page.</b> Its title, the rhythm in words ("Fourth night in a row"), and the last 14 days as stroke marks, all the same length: plum and heavier for a day you did it, light ink3 for a day you didn't. No count. Then its steps. The step you're on is plum, with one line on how to do it.</span>
+        <span>4</span><span><b>Checking a step off.</b> Tap a step, or swipe it right: a thin plum line draws through it, it waits 1.5 s, then it drops under Done and the next step opens. Swipe left for <i>Not now</i>: it moves to the end of the routine. Everything has Undo for 10 s.</span>
+        <span>5</span><span><b>The action word takes gestures.</b> On a routine, tap <i>Start</i> (later <i>Next step</i>). Drag it left for <i>Skip today</i> ("Skipped today.", recorded as skipped, never late) or right for <i>Restart</i> ("Evening stretch, restarted."; Undo puts the checked steps back), each with a haptic tick when it arms and Undo for 10 s. On today's page, <i>Start</i> opens the routine in front and starts it; drag left for <i>Skip today</i>, right for <i>Later, 9 pm</i>.</span>
+        <span>6</span><span><b>Privacy.</b> A private routine reads normally here and as "Private routine" everywhere off the phone (Lock Screen, widgets, Tess and Claude lines, backups, notices).</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1,1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e,u);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const spring=u=>1-Math.exp(-7*u)*Math.cos(9*u);
+const $=id=>document.getElementById(id);
+const clipIn=(node,delay=0)=>{node.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>anim(.3,e=>node.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`,()=>node.style.clipPath=''),RM?0:delay)};
+const haptic=k=>{try{navigator.vibrate&&navigator.vibrate(k==='commit'?14:5)}catch(_){}};
+const mctx=document.createElement('canvas').getContext('2d');
+let DEPTH=true;
+// ---------- sample data (Friday, Oct 23; sample only)
+const st=(t,m,how)=>({t,m,how,d:false});
+let R;const seed=()=>[
+ {n:'Morning walk',w:'Morning',at:'7:30 am',min:20,done:'7:52 am',run:'Six mornings running',h:[1,1,1,0,1,1,1,1,1,1,1,1,1,1],steps:[st('Shoes on, out the door',1,''),st('Walk the long block',18,''),st('Water when you get back',1,'')]},
+ {n:'Vitamins',w:'Morning',at:'8 am',min:1,done:'8:04 am',run:'Every day this month',h:[1,1,1,1,1,1,1,1,1,1,1,1,1,1],steps:[st('D3 and the fish oil',1,'')]},
+ {n:'Water the plants',w:'Morning',at:'9 am',min:5,late:true,run:'Every other day',h:[1,0,1,0,1,0,1,0,1,0,1,0,0,0],steps:[st('Fill the green can',1,''),st('Fern and pothos by the window',2,''),st('Basil on the sill, just a little',1,'')]},
+ {n:'Evening stretch',w:'Evening',at:'8 pm',min:10,run:'Fourth night in a row',h:[1,0,1,1,0,1,1,1,0,0,1,1,1,1],steps:[st('Neck rolls',1,'Slow circles, five each way, shoulders down.'),st('Cat and cow',1,'On hands and knees, round up on the out-breath.'),st('Hip opener',2,'Low lunge, one minute a side, hips square.'),st('Hamstrings',2,'Seated, reach for your feet, knees soft.'),st('Breathe',3,'Lie flat. In for four, out for six.')]},
+ {n:'Wind down',w:'Night',at:'10:30 pm',min:25,run:'Three nights this week',h:[0,1,0,1,1,0,1,0,1,0,1,1,0,1],steps:[st('Phone on the charger, in the kitchen',1,'Out of the bedroom, face down.'),st('Lights low',1,'Lamp only.'),st('Read',20,'Paper book, twenty minutes.'),st('Write tomorrow’s one thing',2,'One line, in Notes.')]}];
+const WEEK=[['M',1],['T',0],['W',1],['T',1],['F',2],['S',3],['S',3]];
+const leftOf=x=>x.steps.filter(s=>!s.d).length,minsLeft=x=>x.steps.filter(s=>!s.d).reduce((a,s)=>a+s.m,0);
+const isDone=x=>!!x.done;
+function fitTitle(el,max,min){el.style.fontSize=max+'px';const w=el.parentElement.clientWidth;let f=max;while(el.scrollWidth>w&&f>min){f--;el.style.fontSize=f+'px'}if(el.scrollWidth>w){let s=el.textContent;while(el.scrollWidth>w&&s.includes(' ')){s=s.slice(0,s.lastIndexOf(' '));el.textContent=s.replace(/,$/,'')}}}
+const sayT={};function say(t,undo,el='receipt'){const r=$(el);r.innerHTML=t+(undo?' <button class="tap un" style="color:var(--acc);font-weight:600;margin-left:2px;padding:0 8px;display:inline-block;height:44px;line-height:44px;min-width:44px;text-align:center">Undo</button>':'');clipIn(r);clearTimeout(sayT[el]);sayT[el]=setTimeout(()=>r.textContent='',undo?10000:3000);if(undo)r.querySelector('.un').onclick=()=>{r.textContent='';undo()}}
+// ---------- the week as letters (rhythm in words beside it)
+function renderWeek(){const run=R.find(x=>x.n==='Evening stretch');$('week').innerHTML=`<span style="display:flex;gap:9px;align-items:baseline;flex:none">${WEEK.map(([l,s])=>`<span style="font-size:${s===2?19:15}px;font-weight:${s===1?600:s===2?600:400};color:${s===1?'var(--acc)':s===2?'var(--ink)':s===3?'var(--ink3)':'var(--ink2)'}">${l}</span>`).join('')}</span><span style="font-size:15px;color:var(--ink2)">${run.done?'five':'four'} nights of stretch</span>`;
+  $('week').setAttribute('aria-label','This week: every routine kept Monday, Wednesday and Thursday; today Friday; '+(run.done?'stretch five':'stretch four')+' nights running')}
+function briefOf(){const late=R.filter(x=>x.late&&!isDone(x)),nx=R.filter(x=>!isDone(x)&&!x.late&&!x.skip),left=R.filter(x=>!isDone(x)&&!x.skip).length;
+  if(!left)return 'Every routine done today.<br>Tomorrow starts with a walk.';
+  return `${left} left today.<br>${late.length?`<span style="color:var(--warm)">${late[0].n} is late</span>, from ${late[0].at}.`:nx.length?`${nx[0].n} is next, at ${nx[0].at}.`:'&nbsp;'}`}
+// ---------- the depth wheel: today's routines, the front one opened a little
+const RH=44,FX=58,FY=44;let wOff=0,wSpin=0,wDrag=false;
+const items=()=>R;
+const blurAt=a=>RM||!DEPTH?0:Math.min(1,.65*Math.min(a,1)+.35*Math.max(0,Math.min(a-1,1)));
+const wPos=d=>FY+(d<=0?d*RH:d<1?d*(RH+FX):RH+FX+(d-1)*RH);
+function firstSteps(x){const o=x.steps.filter(s=>!s.d).slice(0,4).map(s=>s.t);let s=o.join(', ');mctx.font='400 15px Figtree, system-ui, sans-serif';const w=$('wheel').clientWidth;while(o.length>1&&mctx.measureText(s).width>w){o.pop();s=o.join(', ')}return s}
+function renderWheel(){const W=$('wheel'),xs=items();
+  W.innerHTML=`<div id="wHd" style="position:absolute;left:0;right:0;top:0;height:${RH}px;display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:6px;box-sizing:border-box;white-space:nowrap;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--sec)"><span>Today</span><span>by time</span></div>`+
+   xs.map((x,i)=>`<div class="wr" data-i="${i}" role="listitem" tabindex="0" style="position:absolute;left:0;right:0;top:0;height:${RH}px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;white-space:nowrap;height:${RH}px;line-height:${RH}px"><span class="tt" style="overflow:hidden;transform-origin:left center"></span><span class="ag n" style="font-size:15px"></span></div><div class="dt" hidden style="margin-top:-4px"><div class="d1" style="font-size:13px;color:var(--ink2);white-space:nowrap;line-height:18px"></div><div class="d2" style="font-size:15px;color:var(--ink);white-space:nowrap;overflow:hidden;line-height:22px"></div></div></div>`).join('');
+  [...W.querySelectorAll('.wr')].forEach(r=>{const x=xs[+r.dataset.i],w=W.clientWidth*.9;let fz=26;const m=(t,z)=>{mctx.font=`600 ${z}px Figtree, system-ui, sans-serif`;return mctx.measureText(t).width};while(fz>21&&m(x.n,fz)>w)fz--;let ft=x.n;while(m(ft,fz)>w&&ft.includes(' '))ft=ft.slice(0,ft.lastIndexOf(' '));r.dataset.fz=fz;r.dataset.ft=ft;
+    r.onclick=()=>{if(wDrag)return;const d=Math.round(+r.dataset.i-wOff);if(d===0)openR(x);else wSpinTo(+r.dataset.i)};r.onkeydown=e=>{if(e.key==='Enter')r.onclick()}});
+  lastF=-1;paintWheel()}
+let lastF=-1;function paintWheel(){const W=$('wheel'),xs=items(),H=$('wHd');if(H){const d=-1-wOff;H.style.transform=`translateY(${wPos(d)}px)`;H.style.visibility=d>-.3||wPos(d)<-RH?'hidden':''}
+  [...W.querySelectorAll('.wr')].forEach(r=>{const i=+r.dataset.i,d=i-wOff,a=Math.abs(d),x=xs[i],f=Math.max(0,1-a),fz=+r.dataset.fz;
+    r.style.transform=`translateY(${wPos(d)}px)`;r.style.visibility=(wPos(d)<-RH||wPos(d)+RH>384)?'hidden':'';
+    const tt=r.querySelector('.tt'),ag=r.querySelector('.ag');const size=d<0?17:a<1?17+(fz-17)*f:Math.max(15,17-(a-1));tt.style.fontSize=size+'px';const front=a<.5;
+    tt.style.fontWeight=front?600:400;tt.style.color=front?'var(--acc)':'var(--ink2)';tt.textContent=front?r.dataset.ft:x.n;
+    const bl=front?0:blurAt(a);r.style.filter=bl>.05?`blur(${bl.toFixed(2)}px)`:'';
+    ag.textContent=isDone(x)?'done '+x.done:x.skip?'skipped':x.at;ag.style.color=x.late&&!isDone(x)?'var(--warm)':'var(--ink2)';ag.style.fontWeight=x.late&&!isDone(x)?400:300;
+    r.setAttribute('aria-label',`${x.n}, ${isDone(x)?'done at '+x.done:x.skip?'skipped today':'at '+x.at+(x.late?', late':'')}`)});
+  const fi=Math.round(wOff);if(fi!==lastF){lastF=fi;[...W.querySelectorAll('.wr')].forEach(r=>{const dt=r.querySelector('.dt'),on=+r.dataset.i===fi;if(on){const x=xs[fi];
+    dt.querySelector('.d1').innerHTML=isDone(x)?`all ${x.steps.length} ${x.steps.length===1?'step':'steps'} done, ${x.run.toLowerCase()}`:`${leftOf(x)} ${leftOf(x)===1?'step':'steps'}, about ${minsLeft(x)} min${x.late?`, <span style="color:var(--warm);font-weight:500">late since ${x.at}</span>`:''}`;
+    dt.querySelector('.d2').textContent=isDone(x)?'Do it again tomorrow':firstSteps(x);if(dt.hidden){dt.hidden=false;clipIn(dt,120)}}else dt.hidden=true});$('act').textContent=isDone(xs[fi])?'Do it again':'Start'}}
+function wSpinTo(t,dur=.42){const n=items().length;t=Math.max(0,Math.min(n-1,t));const from=wOff,id=++wSpin;anim(dur,(e,u)=>{if(id!==wSpin)return;wOff=from+(t-from)*spring(u);paintWheel()},()=>{if(id!==wSpin)return;wOff=t;paintWheel()})}
+(()=>{const W=$('wheel');let sy=null,so=0,vy=0,ly=0,lt=0;
+  W.onpointerdown=e=>{sy=e.clientY;so=wOff;wDrag=false;vy=0;ly=e.clientY;lt=performance.now();wSpin++};
+  W.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!wDrag){wDrag=true;W.setPointerCapture(e.pointerId)}if(!wDrag)return;const n=performance.now();vy=(e.clientY-ly)/Math.max(1,n-lt);ly=e.clientY;lt=n;wOff=Math.max(-.35,Math.min(items().length-.65,so-dy/RH));paintWheel()};
+  W.onpointerup=W.onpointercancel=()=>{if(sy==null)return;sy=null;if(wDrag){wSpinTo(Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(wOff),.36);setTimeout(()=>wDrag=false,0)}};
+  let wt=null;W.addEventListener('wheel',e=>{e.preventDefault();wSpin++;wOff=Math.max(-.35,Math.min(items().length-.65,wOff+e.deltaY/120));paintWheel();clearTimeout(wt);wt=setTimeout(()=>wSpinTo(Math.round(wOff),.36),120)},{passive:false})})();
+function refreshDay(){$('brief').innerHTML=briefOf();renderWeek();renderWheel()}
+// ---------- a routine on its own page
+let cur=null,started=false;const IR=44;
+function openR(x,start){cur=x;started=!!start;$('pWhen').textContent=x.w;$('pTitle').textContent=x.n;$('pRc').textContent='';const P=$('page');P.hidden=false;fitTitle($('pTitle'),28,21);renderSteps();
+  if(!RM){P.style.transform='translateX(100%)';anim(.4,(e,u)=>P.style.transform=`translateX(${(1-spring(u))*100}%)`,()=>P.style.transform='')}}
+function head(){const x=cur,l=leftOf(x);$('pLeft').innerHTML=l?`about <span class="n">${minsLeft(x)}</span> min left`:'All done';
+  $('pRun').textContent=x.run;
+  // the last 14 days as stroke marks, all one length (227 rule): plum and heavier = did it, ink3 and light = didn't. No count.
+  const h=x.h.slice(1).concat([isDone(x)?1:0]);$('pMarks').innerHTML=`<svg width="${14*9}" height="18" aria-hidden="true">${h.map((v,i)=>{return `<line x1="${i*9+1}" x2="${i*9+1}" y1="4" y2="18" stroke="${v?'var(--acc)':'var(--ink3)'}" stroke-width="${v?2:1}"/>`}).join('')}</svg><span style="font-size:13px;color:var(--ink2);line-height:16px">last two weeks</span>`;
+  $('pMarks').setAttribute('aria-label','Last two weeks: '+h.map(v=>v?'done':'missed').join(', '));$('pGo').textContent=isDone(x)?'Do it again':started?'Next step':'Start'}
+function renderSteps(){const x=cur,open=x.steps.filter(s=>!s.d),done=x.steps.filter(s=>s.d);head();
+  const lab=t=>`<div style="height:${IR}px;display:flex;align-items:flex-end;padding-bottom:7px;box-sizing:border-box;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--sec)">${t}</div>`;
+  const row=(s,k,on)=>`<div class="ir" data-k="${k}" role="listitem" tabindex="0" style="position:relative;cursor:pointer;touch-action:pan-y"><div style="height:${IR}px;display:flex;justify-content:space-between;align-items:center;gap:12px;white-space:nowrap"><span class="it" style="position:relative;font-size:${on?21:19}px;font-weight:${on?600:400};overflow:hidden;color:${s.d?'var(--ink2)':on?'var(--acc)':'var(--ink)'}">${s.t}<svg class="sk" width="100%" height="2" style="position:absolute;left:0;top:52%;overflow:visible;${s.d?'':'visibility:hidden'}" aria-hidden="true"><line x1="0" x2="100%" y1="1" y2="1" stroke="var(--acc)" stroke-width="1"/></svg></span><span class="n" style="font-size:15px;color:var(--ink2)">${s.m} min</span></div>${on&&s.how?`<div class="hw" style="font-size:15px;color:var(--ink2);margin-top:-8px;line-height:22px;padding-bottom:6px">${s.how}</div>`:''}</div>`;
+  $('steps').innerHTML=open.map((s,i)=>row(s,x.steps.indexOf(s),i===0&&!isDone(x))).join('')+(done.length?lab('Done')+done.map(s=>row(s,x.steps.indexOf(s),false)).join(''):'');
+  const hw=$('steps').querySelector('.hw');if(hw)clipIn(hw,80);wireRows()}
+let pend=[],pendT=null;
+function check(k,row){const s=cur.steps[k];if(s.d){s.d=false;cur.done=null;say(`${s.t}, back on.`,()=>{s.d=true;renderSteps()},'pRc');renderSteps();return}
+  const sk=row.querySelector('.sk'),ln=sk.querySelector('line');
+  if(pend.includes(s)){pend=pend.filter(q=>q!==s);sk.style.visibility='hidden';haptic('tick');armDrop();return}
+  pend.push(s);started=true;sk.style.visibility='';row.querySelector('.it').style.color='var(--ink2)';haptic('commit');
+  if(!RM){ln.setAttribute('pathLength','1');ln.style.strokeDasharray='1';ln.style.strokeDashoffset='1';anim(.26,e=>ln.style.strokeDashoffset=String(1-e))}armDrop()}
+function armDrop(){clearTimeout(pendT);if(!pend.length)return;pendT=setTimeout(dropPending,RM?600:1500)}
+function finish(){cur.done='8:14 pm';cur.late=false;cur.run0=cur.run0||cur.run;if(cur.n==='Evening stretch')cur.run='Fifth night in a row'}
+function dropPending(){clearTimeout(pendT);if(!pend.length||!cur)return;const P=pend;pend=[];P.forEach(s=>s.d=true);const x=cur;
+  if(!leftOf(x)){finish();say(x.n==='Evening stretch'?'Done, fifth night running.':`${x.n}, done.`,()=>{P.forEach(s=>s.d=false);x.done=null;x.run=x.run0||x.run;renderSteps()},'pRc')}
+  else say(P.length>1?`${P.length} steps done.`:`${P[0].t}, done.`,()=>{P.forEach(s=>s.d=false);renderSteps()},'pRc');renderSteps()}
+function notNow(k){const s=cur.steps.splice(k,1)[0];cur.steps.push(s);say(`${s.t}, not now.`,()=>{cur.steps.splice(cur.steps.indexOf(s),1);cur.steps.splice(k,0,s);renderSteps()},'pRc');renderSteps()}
+function wireRows(){document.querySelectorAll('#steps .ir').forEach(r=>{const k=+r.dataset.k;let sx=null,dx=0;
+  r.onpointerdown=e=>{sx=e.clientX;dx=0};r.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;if(Math.abs(dx)>6){r.setPointerCapture(e.pointerId);r.style.transform=`translateX(${Math.sign(dx)*Math.min(90,Math.abs(dx))}px)`}};
+  r.onpointerup=r.onpointercancel=e=>{if(sx==null)return;sx=null;const d=dx;anim(.3,(q,u)=>r.style.transform=`translateX(${Math.sign(d)*Math.min(90,Math.abs(d))*(1-spring(u))}px)`,()=>r.style.transform='');
+    if(d>70&&!cur.steps[k].d)check(k,r);else if(d<-70&&!cur.steps[k].d)notNow(k);else if(Math.abs(d)<6&&e.type==='pointerup')check(k,r)};
+  r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){check(k,r);e.preventDefault()}}})}
+function closeR(){dropPending();const P=$('page');const back=()=>{P.hidden=true;P.style.transform='';refreshDay()};if(RM){back();return}anim(.3,e=>P.style.transform=`translateX(${e*100}%)`,back)}
+(()=>{const P=$('page');let sx=null;P.addEventListener('pointerdown',e=>{const r=P.getBoundingClientRect();sx=e.clientX-r.left<24?e.clientX:null});P.addEventListener('pointerup',e=>{if(sx!=null&&e.clientX-sx>60)closeR();sx=null})})();
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('page').hidden)closeR()});
+// ---------- the action word takes gestures (his 9:21 PM rule): tap does it; drag for the others; tick when one arms
+function actionWord(btn,o){let sx=null,dx=0,arm=null,base='',baseC='';const set=(t,c)=>{btn.textContent=t;btn.style.color=c};btn.style.touchAction='none';btn.style.display='inline-block';
+  btn.onpointerdown=e=>{sx=e.clientX;dx=0;arm=null;base=btn.textContent;baseC=btn.style.color;btn.setPointerCapture(e.pointerId)};
+  btn.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;const side=dx<0?(o.left&&o.left()):(o.right&&o.right());btn.style.transform=`translateX(${Math.sign(dx)*Math.min(side?18:6,Math.abs(dx)*(side?.25:.1))}px)`;
+    const want=side&&Math.abs(dx)>56?side:null;if((want&&want.label)!==(arm&&arm.label)){arm=want;want?set(want.label,want.color):set(base,baseC);clipIn(btn);haptic('tick')}};
+  btn.onpointerup=btn.onpointercancel=e=>{if(sx==null)return;sx=null;const x0=parseFloat((btn.style.transform.match(/-?[\d.]+/)||[0])[0]);anim(.36,(q,u)=>btn.style.transform=`translateX(${x0*(1-spring(u))}px)`,()=>btn.style.transform='');
+    if(arm){const a=arm;arm=null;set(base,baseC);haptic('commit');a.fn()}else if(Math.abs(dx)<6&&e.type==='pointerup')o.tap()};
+  btn.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){o.tap();e.preventDefault()}const q=e.key==='ArrowLeft'?o.left&&o.left():e.key==='ArrowRight'?o.right&&o.right():null;if(q){q.fn();e.preventDefault()}}}
+const snap=()=>cur.steps.map(s=>({...s}));
+function nextStep(){if(isDone(cur)){const S=snap();cur.steps.forEach(s=>s.d=false);cur.done=null;started=true;renderSteps();say(`${cur.n}, again.`,()=>{cur.steps=S;finish();started=false;renderSteps()},'pRc');return}
+  if(!started){started=true;renderSteps();haptic('commit');return}const r=[...document.querySelectorAll('#steps .ir')].find(q=>{const s=cur.steps[+q.dataset.k];return !s.d&&!pend.includes(s)});if(r)check(+r.dataset.k,r)}
+function skipToday(x){x=x||cur;const was={...x};x.skip=true;x.late=false;say('Skipped today.',()=>{x.skip=false;x.late=was.late;refreshDay()},'receipt');if(!$('page').hidden)closeR();else refreshDay()}
+function restart(){pend=[];clearTimeout(pendT);const S=snap(),d=cur.done;cur.steps.forEach(s=>s.d=false);cur.done=null;started=false;renderSteps();say(`${cur.n}, restarted.`,()=>{cur.steps=S;cur.done=d;renderSteps()},'pRc')}
+actionWord($('pGo'),{tap:nextStep,left:()=>isDone(cur)?null:{label:'Skip today',color:'var(--ink)',fn:()=>skipToday()},right:()=>({label:'Restart',color:'var(--acc)',fn:restart})});
+const front=()=>R[Math.max(0,Math.min(R.length-1,Math.round(wOff)))];
+actionWord($('act'),{tap:()=>openR(front(),!isDone(front())),left:()=>isDone(front())?null:{label:'Skip today',color:'var(--ink)',fn:()=>skipToday(front())},
+  right:()=>isDone(front())?null:{label:'Later, 9 pm',color:'var(--acc)',fn:()=>{const x=front(),a=x.at,l=x.late;x.at='9 pm';x.late=false;refreshDay();say(`${x.n}, moved to 9 pm.`,()=>{x.at=a;x.late=l;refreshDay()})}}});
+// ---------- board controls
+const setTheme=t=>{document.documentElement.dataset.theme=t;['th','tw'].forEach(b=>$(b).style.color='');$(t==='dark'?'th':'tw').style.color='var(--ink)'};
+$('th').onclick=()=>setTheme('dark');$('tw').onclick=()=>setTheme('light');
+$('dp').onclick=()=>{DEPTH=!DEPTH;$('dp').textContent='Depth on wheels: '+(DEPTH?'on':'off');$('dp').setAttribute('aria-pressed',DEPTH);paintWheel()};
+function start(){R=seed();cur=null;started=false;$('page').hidden=true;wOff=R.findIndex(x=>!isDone(x));refreshDay();fitTitle($('dTitle'),28,21)}
+$('reset').onclick=start;start();
+})();
+</script>

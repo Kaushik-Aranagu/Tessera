@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Money pages</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M5 money screens 7 (month page) and 6 (spend page): the month line as hero, the ledger one gesture away, a spend opened in place, its word retagged, its details one level deeper, and a swipe to delete with undo. Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--sage:#6E9E6A}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#E3EAD8 0%,rgba(227,234,216,0) 70%),radial-gradient(70% 45% at 0% 35%,#DCE8D2 0%,rgba(220,232,210,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F4F0EC}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.body{font-size:21px;line-height:30px;color:rgba(43,36,64,.75)}
+.body b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.day{position:absolute;left:22px;font-size:34px;font-weight:300;letter-spacing:-.03em;color:var(--sub);font-variant-numeric:tabular-nums;line-height:36px}
+.en{position:absolute;left:62px;font-size:24px;line-height:36px;white-space:nowrap}
+.en .a{display:inline-block;width:104px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.en .w{margin-left:14px;color:var(--ctx)}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0)}
+.vw{font-weight:600;color:var(--ink);background:linear-gradient(transparent 62%,rgba(122,92,142,.16) 62%,rgba(122,92,142,.16) 92%,transparent 92%)}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <!-- 7 · the month page: the month line is the hero -->
+  <section id="month" class="abs" style="inset:0">
+    <div class="abs lbl" style="left:22px;top:58px">MONEY</div>
+    <div id="mhero" class="abs" style="left:20px;top:150px;font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:1">October, logged</div>
+    <div id="mline" class="abs body" style="left:22px;right:22px;top:214px"><b>41</b> spends. Most went to groceries, <b>312.40</b>, and lunch, <b>86.10</b>.</div>
+    <div id="mline2" class="abs body" style="left:22px;right:22px;top:290px">Also <b>€60.00</b> in 3 spends.</div>
+    <div id="peek" class="abs" style="left:0;right:0;top:716px;opacity:.28">
+      <div class="day" style="top:0">15</div><div class="en" style="top:0"><span class="a">4.50</span><span class="w">coffee</span></div>
+    </div>
+  </section>
+
+  <!-- the ledger behind it -->
+  <section id="ledger" class="abs" style="inset:0;opacity:0">
+    <div id="lhead" class="abs lbl" style="left:22px;top:58px">OCTOBER · 41 SPENDS</div>
+    <div id="rows"></div>
+  </section>
+
+  <!-- 6 · one spend -->
+  <section id="spend" class="abs" style="inset:0;opacity:0;pointer-events:none">
+    <div class="abs lbl" style="left:22px;top:58px">OCTOBER</div>
+    <div id="sctx" class="abs body" style="left:22px;right:22px;top:244px;opacity:0"><span id="tag" class="vw">lunch</span> · Thu 15 Oct, 13:10</div>
+    <div id="recent" class="abs body" style="left:22px;right:22px;top:290px;color:var(--sub);word-spacing:14px"></div>
+    <div id="deeper" class="abs body" style="left:22px;right:22px;top:380px;opacity:0">
+      <div>Typed as <b>spent 12.40 lunch</b>.</div>
+      <div style="margin-top:12px">In <span class="vw">no currency</span>.</div>
+      <div style="margin-top:12px">Logged at <span class="vw">13:10</span> on <span class="vw">Thu 15 Oct</span>.</div>
+      <div style="margin-top:12px">A note? <span class="vw" style="color:var(--sub)">Add one</span></div>
+    </div>
+  </section>
+  <div id="hero" class="abs" style="font-variant-numeric:tabular-nums;white-space:nowrap;opacity:0;z-index:8"></div>
+
+  <div id="say" class="abs" style="right:78px;top:775px;font-size:21px;color:var(--cobalt);text-align:right;opacity:0;z-index:12;white-space:nowrap"></div>
+  <span id="undo" class="abs la lbl" style="right:78px;top:808px;color:var(--verm);opacity:0;z-index:12">UNDO<span class="line" style="background:var(--verm)"></span></span>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+async function swapWord(el, t) { await anim(el, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 120 }); el.textContent = t; await anim(el, [{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 180, easing: HOUSE }); }
+
+// the ledger: day numerals in the margin, amount 600, word 400; no rows, no separators
+const L = [
+  { day: '15', top: 120, e: [['4.50', 'coffee'], ['12.40', 'lunch'], ['£38.20', 'groceries']] },
+  { day: '14', top: 250, e: [['6.80', 'taxi'], ['3.20', 'coffee']] },
+  { day: '13', top: 344, e: [['54.10', 'groceries']] },
+  { day: '12', top: 402, e: [['11.90', 'lunch'], ['2.80', 'coffee']] },
+  { label: 'IN EUROS', top: 522 },
+  { day: '9', top: 556, e: [['€20.00', 'dinner']] },
+  { day: '8', top: 614, e: [['€32.50', 'train'], ['€7.50', 'coffee']] },
+];
+const items = [];
+L.forEach((b) => {
+  if (b.label) { $('rows').insertAdjacentHTML('beforeend', `<div class="abs lbl" style="left:22px;top:${b.top + 8}px">${b.label}</div>`); items.push($('rows').lastElementChild); return; }
+  $('rows').insertAdjacentHTML('beforeend', `<div class="day" style="top:${b.top}px">${b.day}</div>`); items.push($('rows').lastElementChild);
+  b.e.forEach(([a, w], k) => { $('rows').insertAdjacentHTML('beforeend', `<div class="en" style="top:${b.top + k * 36}px"><span class="a">${a}</span><span class="w">${w}</span></div>`); items.push($('rows').lastElementChild); });
+});
+const lunch = items[2];
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  // arrival: the month line settles in from below
+  [$('mhero'), $('mline'), $('mline2')].forEach((el, k) => anim(el, [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: k * 70, easing: HOUSE }));
+  await sleep(1700);
+
+  // swipe up: the month line folds into the label, the ledger rises day by day
+  await fingerOn(200, 640);
+  await tween(300, (t) => { fingerAt(200, 640 - 260 * t); }); fingerOff();
+  anim($('month'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-40px)' }], { duration: 340, easing: HOUSE });
+  $('ledger').style.opacity = 1;
+  anim($('lhead'), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 120, easing: HOUSE });
+  items.forEach((el, k) => anim(el, [{ opacity: 0, transform: 'translateY(26px)' }, { opacity: 1, transform: 'none' }], { duration: 440, delay: 160 + k * 30, easing: HOUSE }));
+  await sleep(1900);
+
+  // tap a spend: its amount grows in place into the hero, everything else steps back
+  const r = rel(lunch.querySelector('.a').getBoundingClientRect());
+  const [tx, ty] = centre(lunch); await fingerOn(tx, ty); await sleep(110); fingerOff();
+  const hero = $('hero'); hero.textContent = '12.40';
+  hero.style.left = (r.left + r.width - 62) + 'px'; hero.style.top = r.top + 'px'; hero.style.fontSize = '24px'; hero.style.fontWeight = 600; hero.style.opacity = 1;
+  lunch.style.visibility = 'hidden';
+  anim($('ledger'), [{ opacity: 1, filter: 'blur(0)', transform: 'none' }, { opacity: 0, filter: 'blur(3px)', transform: 'scale(.985)' }], { duration: 360, easing: HOUSE });
+  const s0 = { x: r.left + r.width - 62, y: r.top, f: 24, w: 600 }, s1 = { x: 20, y: 140, f: 80, w: 300 };
+  await tween(520, (t) => { hero.style.left = (s0.x + (s1.x - s0.x) * t) + 'px'; hero.style.top = (s0.y + (s1.y - s0.y) * t) + 'px'; hero.style.fontSize = (s0.f + (s1.f - s0.f) * t) + 'px'; hero.style.fontWeight = Math.round(s0.w + (s1.w - s0.w) * t); hero.style.letterSpacing = (-.01 - .03 * t) + 'em'; }, (t) => 1 - Math.pow(1 - t, 3));
+  $('spend').style.opacity = 1;
+  anim($('spend').firstElementChild, [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
+  anim($('sctx'), [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: HOUSE });
+  await sleep(1300);
+
+  // the word is a tag that edits in place: tap it, recent words arrive beside it, pick one
+  const [gx, gy] = centre($('tag')); await fingerOn(gx, gy); await sleep(90); fingerOff();
+  $('recent').innerHTML = ['coffee', 'food', 'taxi', 'groceries'].map((w) => `<span style="display:inline-block">${w}</span>`).join(' ');
+  [...$('recent').children].forEach((el, k) => anim(el, [{ opacity: 0, transform: 'translateX(-10px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: k * 40, easing: HOUSE }));
+  await sleep(900);
+  const food = $('recent').children[1]; const [fx, fy] = centre(food); await fingerOn(fx, fy); await sleep(90); fingerOff();
+  [...$('recent').children].forEach((el) => { if (el !== food) anim(el, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }); });
+  const fr = rel(food.getBoundingClientRect()), gr = rel($('tag').getBoundingClientRect());
+  anim(food, [{ transform: 'none', opacity: 1 }, { transform: `translate(${gr.left - fr.left}px,${gr.top - fr.top}px)`, opacity: 0 }], { duration: 300, easing: HOUSE });
+  await sleep(140); await swapWord($('tag'), 'food');
+  await sleep(900);
+
+  // one level deeper: pull up, and the rest of the spend arrives as sentences, not a form
+  await fingerOn(200, 640);
+  await tween(280, (t) => fingerAt(200, 640 - 180 * t)); fingerOff();
+  [...$('deeper').children].forEach((el, k) => anim(el, [{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: k * 60, easing: HOUSE }));
+  $('deeper').style.opacity = 1;
+  await sleep(1800);
+
+  // delete is a swipe: drag the amount left, it wipes away, and the ledger closes up
+  await fingerOn(250, 182);
+  await tween(380, (t) => { fingerAt(250 - 190 * t, 182); hero.style.transform = `translateX(${-70 * t}px)`; hero.style.opacity = 1 - .6 * t; }); fingerOff();
+  anim(hero, [{ opacity: .4, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(4px)' }], { duration: 200 });
+  anim($('spend'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97)' }], { duration: 320, easing: HOUSE });
+  await sleep(160);
+  anim($('ledger'), [{ opacity: 0, filter: 'blur(3px)', transform: 'scale(.985)' }, { opacity: 1, filter: 'blur(0)', transform: 'none' }], { duration: 380, easing: HOUSE });
+  $('lhead').textContent = 'OCTOBER · 40 SPENDS';
+  await sleep(240);
+  items.slice(3).forEach((el, k) => anim(el, [{ transform: 'none' }, { transform: 'translateY(-36px)' }], { duration: 420, delay: k * 12, easing: 'cubic-bezier(.3,1.3,.5,1)' }));
+  $('say').textContent = 'Deleted 12.40, food.';
+  anim($('say'), [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE });
+  anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 120 });
+  await sleep(2300);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

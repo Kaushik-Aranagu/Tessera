@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home, running</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=Hanken+Grotesk:wght@400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ph a{color:#2B2440;text-decoration:none}
+.ph *::-webkit-scrollbar{display:none}
+.lbl{font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:16px;letter-spacing:.08em;color:#6E6480}
+.it{font-family:'Fraunces',serif;font-style:italic;font-variation-settings:'SOFT' 100}
+.hero{font-family:'Fraunces',serif;font-weight:640;font-size:60px;line-height:.95;letter-spacing:-0.025em;font-variation-settings:'opsz' 144,'SOFT' 100,'WONK' 1}
+.pg{flex:none;width:390px;height:844px;position:relative;scroll-snap-align:start;scroll-snap-stop:always}
+/* precision lives only in the edges: one hairline, one lit chamfer */
+.key{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 .5px rgba(43,36,64,.5),0 6px 18px rgba(43,36,64,.14)}
+@keyframes stroke{0%{stroke-dashoffset:400}100%{stroke-dashoffset:var(--to)}}
+@keyframes inR{0%{opacity:0;transform:translateX(18px);filter:blur(4px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes inR2{0%{opacity:0;transform:translateX(18px);filter:blur(4px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-12px,8px) scale(1.06)}}
+@keyframes wetTip{0%,100%{transform:scale(1);opacity:.75;filter:blur(3px)}50%{transform:scale(1.35);opacity:.4;filter:blur(6px)}}
+@keyframes procGlint{0%{background-position:180% 0}30%,100%{background-position:-80% 0}}
+@keyframes runBreath{0%,100%{transform:rotate(-6deg) scale(1);box-shadow:0 0 0 rgba(200,69,47,0)}50%{transform:rotate(-6deg) scale(1.12);box-shadow:0 0 10px 2px rgba(200,69,47,.45)}}
+@keyframes ghostIn{0%{opacity:0;transform:translateY(-10px);filter:blur(6px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes wet{0%,100%{opacity:.5}50%{opacity:.66}}
+@keyframes dry{0%{stroke-dashoffset:360}100%{stroke-dashoffset:0}}
+@keyframes washFade{0%{opacity:.9}100%{opacity:0}}
+@keyframes rowsIn{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
+@keyframes carryG{0%,6%{transform:translate(var(--x),var(--y)) scale(.8);opacity:1;filter:blur(4px)}40%{transform:translate(70px,-410px) scale(.55);filter:blur(5px);opacity:1}52%{transform:translate(70px,-410px) scale(3.2,.7);filter:blur(10px);opacity:.55}80%{transform:translate(70px,-410px) scale(3.2,.7);filter:blur(12px);opacity:.4}92%{opacity:0;transform:translate(var(--x),var(--y)) scale(.3)}100%{opacity:1;transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}}
+/* Tess's soul v2: every state is wet paint. Soft radial dabs, live blur, multiply mixing */
+.d{position:absolute;width:76px;height:70px;margin:-35px 0 0 -38px;border-radius:52% 48% 60% 40% / 55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.8) 0%,rgba(var(--c),.6) 40%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(4px)}
+.r{--c:200,69,47;--x:-14px;--y:-8px;--mx:18px;--my:-10px}
+.b{--c:46,109,164;--x:14px;--y:-8px;--mx:-16px;--my:-12px;border-radius:45% 55% 40% 60% / 50% 60% 40% 50%}
+.y{--c:224,179,65;--x:0px;--y:13px;--mx:0px;--my:18px;border-radius:60% 40% 55% 45% / 45% 55% 45% 55%}
+.halo{position:absolute;width:150px;height:140px;margin:-70px 0 0 -75px;border-radius:50%;background:radial-gradient(closest-side,rgba(214,96,70,.16),rgba(122,92,142,.10) 55%,rgba(224,179,65,0) 100%);filter:blur(10px);animation:halo 7s ease-in-out infinite;pointer-events:none}
+.ring{position:absolute;width:100px;height:100px;margin:-50px 0 0 -50px;border-radius:50%;background:radial-gradient(closest-side,rgba(122,74,58,0) 52%,rgba(122,74,58,.5) 72%,rgba(122,74,58,0) 100%);filter:blur(3px);opacity:0;pointer-events:none}
+@keyframes halo{0%,100%{transform:scale(.8);opacity:.6}50%{transform:scale(1);opacity:1}}
+@keyframes idle{0%,100%{transform:translate(var(--x),calc(var(--y) - 6px)) scale(.78);filter:blur(3px)}25%{transform:translate(calc(var(--x) + 6px),var(--y)) scale(.9);filter:blur(5px)}50%{transform:translate(var(--x),calc(var(--y) + 6px)) scale(.8);filter:blur(4px)}75%{transform:translate(calc(var(--x) - 6px),var(--y)) scale(.92);filter:blur(6px)}}
+@keyframes listen{0%,100%{transform:translate(calc(var(--x)*.6),calc(var(--y)*.6)) scale(.72);filter:blur(3px);opacity:.85}30%{transform:translate(calc(var(--x)*1.3),calc(var(--y)*1.3)) scale(1.06);filter:blur(7px);opacity:1}60%{transform:translate(calc(var(--x)*.9),calc(var(--y)*.9)) scale(.84);filter:blur(4px);opacity:.92}}
+@keyframes bloom{0%,100%{transform:translate(0,0) scale(.55);filter:blur(2px)}40%{transform:translate(var(--mx),var(--my)) scale(1.15);filter:blur(6px)}70%{transform:translate(0,0) scale(.9);filter:blur(3px)}}
+@keyframes stir{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes smear{0%,100%{transform:translate(calc(var(--x)*.8),calc(var(--y)*.8)) scale(.85,.7);filter:blur(5px)}50%{transform:translate(calc(var(--x)*1.5),calc(var(--y)*1.5)) scale(1.1,.66);filter:blur(8px)}}
+@keyframes merge{0%{transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}30%{transform:translate(0,0) scale(.9);filter:blur(5px)}45%{transform:translate(0,0) scale(1.35);filter:blur(9px)}60%,72%{transform:translate(0,0) scale(1);filter:blur(6px)}100%{transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}}
+@keyframes splash{0%,30%{transform:scale(.4);opacity:0}42%{transform:scale(.75);opacity:1}88%,100%{transform:scale(2.6);opacity:0}}
+@keyframes nudge{0%,100%{transform:translate(var(--x),var(--y)) scale(.85);filter:blur(4px)}35%{transform:translate(calc(var(--x) + 12px),calc(var(--y) - 16px)) scale(1.06);filter:blur(7px)}50%{transform:translate(calc(var(--x) + 15px),calc(var(--y) - 12px)) scale(.98);filter:blur(5px)}65%{transform:translate(calc(var(--x) + 12px),calc(var(--y) - 16px)) scale(1.06);filter:blur(7px)}}
+@keyframes drip{0%,40%{transform:translate(-2px,-12px) scale(.2);opacity:0}52%{transform:translate(0,-4px) scale(.38);opacity:.85}92%,100%{transform:translate(0,34px) scale(.16);opacity:0}}
+@keyframes carry{0%,8%{transform:translate(var(--x),var(--y)) scale(.8);opacity:1;filter:blur(4px)}38%{transform:translate(132px,-66px) scale(.55);filter:blur(5px);opacity:1}50%{transform:translate(132px,-66px) scale(2.8,.75);filter:blur(10px);opacity:.6}78%{transform:translate(132px,-66px) scale(2.8,.75);filter:blur(12px);opacity:.45}90%{opacity:0;transform:translate(var(--x),var(--y)) scale(.3);filter:blur(4px)}100%{opacity:1;transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}}
+@keyframes rest{0%,100%{transform:translate(calc(var(--x)*.7),calc(var(--y)*.7 - 3px)) scale(.62);filter:blur(6px)}50%{transform:translate(calc(var(--x)*.8 + 3px),calc(var(--y)*.8)) scale(.68);filter:blur(8px)}}
+.d.s{width:46px;height:42px;margin:-21px 0 0 -23px}
+.r.s{--x:-22px;--y:10px;--mx:-20px;--my:14px}.b.s{--x:20px;--y:12px;--mx:22px;--my:10px}.y.s{--x:4px;--y:-20px;--mx:6px;--my:-22px}
+
+.soulmix{filter:saturate(1.45) contrast(1.04)}
+
+</style>
+</helmet>
+<div class="ph" style="position: relative; width: 390px; height: 844px; overflow: hidden; color: #2B2440; font-family: 'Hanken Grotesk', sans-serif; background: radial-gradient(60% 40% at 85% 6%, #F7E6B8 0%, rgba(247,230,184,0) 70%), radial-gradient(70% 45% at 0% 30%, #D8CBE6 0%, rgba(216,203,230,0) 70%), radial-gradient(80% 50% at 100% 70%, #BFD8E2 0%, rgba(191,216,226,0) 70%), radial-gradient(70% 40% at 10% 100%, #C9DDB8 0%, rgba(201,221,184,0) 70%), #F1EBE2">
+  <div style="position: absolute; right: -60px; top: 140px; width: 260px; height: 200px; border-radius: 50%; background: radial-gradient(closest-side, rgba(233,183,168,.5), rgba(233,183,168,0)); animation: drift 14s ease-in-out infinite"></div>
+  <svg width="390" height="844" style="position: absolute; inset: 0; mix-blend-mode: multiply; opacity: .3; pointer-events: none" aria-hidden="true">
+    <filter id="phGrain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#phGrain)"/>
+  </svg>
+
+  <!-- x: three sibling pages -->
+  <div id="phPages" onScroll="{{onPages}}" style="position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none">
+
+    <section class="pg">
+      <div class="it" style="position: absolute; left: 22px; top: 122px; font-size: 21px; color: #7A5C8E">the week so far</div>
+      <div class="hero" style="position: absolute; left: 20px; top: 152px">Four good<br>days of<br>seven</div>
+      <div style="position: absolute; left: 22px; right: 22px; top: 370px; display: flex; justify-content: space-between">
+        <sc-for list="{{week}}" as="w" hint-placeholder-count="7">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px">
+            <span style="width: 34px; height: 30px; border-radius: 55% 45% 60% 40% / 50% 60% 40% 50%; background: {{w.bg}}; box-shadow: {{w.ring}}; transform: rotate({{w.rot}}); filter: blur(.6px)"></span>
+            <span class="lbl" style="color: {{w.fg}}">{{w.d}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div class="it" style="position: absolute; left: 22px; right: 30px; top: 470px; font-size: 21px; line-height: 1.4; color: #2E6DA4">Chest is a little behind. I slipped one more press into Thursday.</div>
+    </section>
+
+    <section class="pg">
+      <!-- the day, as one watercolour stroke; swipe it for yesterday or tomorrow -->
+      <div id="phDays" onScroll="{{onDays}}" style="position: absolute; left: 0; right: 0; top: 100px; height: 96px; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none">
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="3">
+          <div style="flex: none; width: 390px; scroll-snap-align: start; position: relative">
+            <span class="it" style="position: absolute; left: 22px; top: 0; font-size: 21px; color: {{d.fg}}">{{d.label}}</span>
+            <svg width="346" height="56" viewBox="0 0 346 56" style="position: absolute; left: 22px; top: 34px; overflow: visible" aria-hidden="true">
+              <defs><filter id="phWet{{d.id}}"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="{{d.seed}}"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter>
+              <linearGradient id="phDay{{d.id}}" x1="0" x2="1"><stop offset="0" stop-color="#9EC3D6"/><stop offset=".3" stop-color="#8FB58A"/><stop offset=".55" stop-color="#7A5C8E"/><stop offset=".8" stop-color="#E0A35C"/><stop offset="1" stop-color="#C8452F"/></linearGradient></defs>
+              <path d="M4 28 C 60 18, 110 34, 182 24 S 300 26, 342 22" fill="none" stroke="#2B2440" stroke-opacity=".22" stroke-width="1.5" stroke-dasharray="2 6"/>
+              <path d="M4 28 C 60 18, 110 34, 182 24 S 300 26, 342 22" fill="none" stroke="url(#phDay{{d.id}})" stroke-width="20" stroke-linecap="round" filter="url(#phWet{{d.id}})" opacity=".85" stroke-dasharray="400" style="--to: {{d.to}}; animation: stroke 700ms cubic-bezier(.3,.7,.2,1) 60ms both"/>
+            </svg>
+            <span style="position: absolute; left: {{d.tipX}}; top: 48px; width: 26px; height: 26px; border-radius: 50%; background: #E0A35C; display: {{d.tipD}}; animation: wetTip 3.6s ease-in-out infinite"></span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div class="it" style="position: absolute; left: 22px; top: 222px; font-size: 21px; color: #7A5C8E">{{nowLine}}</div>
+      <a href="BenchObject.dc.html" class="hero" style="position: absolute; left: 20px; right: 20px; top: 252px; animation: inR{{k}} 340ms cubic-bezier(.2,.8,.2,1) both">{{hero}}</a>
+
+      <!-- hold to finish: an ink key; paint spreads through it as you hold -->
+      <div onPointerDown="{{holdStart}}" onPointerUp="{{holdEnd}}" onPointerLeave="{{holdEnd}}" class="key" style="position: absolute; left: 22px; width: 220px; top: 452px; height: 58px; overflow: hidden; background: #2B2440; color: #F6F0E6; cursor: pointer; user-select: none; touch-action: none">
+        <span style="position: absolute; inset: -20px; background: radial-gradient(closest-side, #C8452F 0%, #C8452F 70%, rgba(200,69,47,0) 100%); transform-origin: 15% 50%; transform: scale({{fillS}}); transition: {{fillT}}; filter: blur(4px)"></span>
+        <span style="position: relative; display: flex; height: 100%; align-items: center; padding: 0 20px; font-size: 21px; font-weight: 600">{{holdText}}</span>
+      </div>
+      <span class="lbl" style="position: absolute; left: 258px; top: 460px; line-height: 1.35">{{holdMeta}}</span>
+
+      <!-- a Tess capture arrives as wet paint: a ghost row that dries (commits) in 2 s, or on tap -->
+      <sc-if value="{{ghostOn}}" hint-placeholder-val="{{false}}">
+        <div onClick="{{ghostTap}}" style="position: absolute; left: 22px; right: 22px; top: 584px; height: 50px; cursor: pointer; animation: ghostIn 420ms cubic-bezier(.2,.8,.2,1) both">
+          <div style="display: grid; grid-template-columns: 30px 1fr auto; align-items: center; height: 50px; animation: wet 1.6s ease-in-out infinite">
+            <span style="width: 22px; height: 18px; border-radius: 55% 45% 60% 40% / 50% 60% 40% 50%; background: radial-gradient(closest-side, rgba(46,109,164,.9), rgba(46,109,164,.2)); filter: blur(1.6px); transform: rotate(-8deg)"></span>
+            <span class="it" style="font-size: 21px; color: #2E6DA4">Text Sam back</span>
+            <span class="lbl" style="color: #2E6DA4">15:30</span>
+          </div>
+          <svg width="346" height="10" viewBox="0 0 346 10" style="position: absolute; left: 0; top: 44px; overflow: visible" aria-hidden="true">
+            <path d="M2 6 C 90 2, 200 9, 344 4" fill="none" stroke="#2E6DA4" stroke-opacity=".6" stroke-width="3" stroke-linecap="round" stroke-dasharray="360" style="animation: dry 2s linear both; filter: blur(.6px)"/>
+          </svg>
+        </div>
+      </sc-if>
+
+      <!-- y: later, in a short window that scrolls on its own -->
+      <div class="it" style="position: absolute; left: 22px; top: 532px; font-size: 34px; font-weight: 500">Later</div>
+      <div id="phNext" onScroll="{{onNext}}" style="position: absolute; left: 22px; right: 22px; top: {{nextTop}}; height: {{nextH}}; transition: top 320ms cubic-bezier(.2,.8,.2,1), height 320ms cubic-bezier(.2,.8,.2,1); overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent)">
+        <sc-for list="{{next}}" as="n" hint-placeholder-count="5">
+          <a href="{{n.href}}" style="position: relative; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; height: 50px; scroll-snap-align: start">
+            <span style="position: absolute; left: -10px; right: -6px; top: 6px; bottom: 6px; border-radius: 40% 60% 50% 50% / 60% 40% 60% 40%; background: rgba(46,109,164,.22); filter: blur(4px); display: {{n.washD}}; animation: washFade 2.8s ease-out 400ms both"></span>
+            <span style="width: 18px; height: 15px; border-radius: 55% 45% 60% 40% / 50% 60% 40% 50%; background: {{n.c}}; transform: rotate({{n.rot}}); filter: blur(.4px)"></span>
+            <span style="font-size: 21px; font-weight: 500">{{n.label}}</span>
+            <span class="lbl" style="color: #5E5470">{{n.t}}</span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+
+    <section class="pg">
+      <div class="it" style="position: absolute; left: 22px; top: 122px; font-size: 21px; color: #7A5C8E">this evening, 6 pm</div>
+      <div class="hero" style="position: absolute; left: 20px; top: 152px">Push Day A</div>
+      <div style="position: absolute; left: 22px; right: 22px; top: 232px; display: flex; flex-direction: column">
+        <sc-for list="{{plan}}" as="p" hint-placeholder-count="5">
+          <a href="{{p.href}}" style="display: grid; grid-template-columns: 1fr auto; align-items: center; height: 50px">
+            <span style="font-size: 21px; font-weight: 500">{{p.n}}</span>
+            <span class="lbl" style="color: #5E5470">{{p.s}}</span>
+          </a>
+        </sc-for>
+      </div>
+      <a href="PleinWorkout.dc.html" class="key" style="position: absolute; left: 22px; width: 220px; top: 512px; height: 58px; display: flex; align-items: center; padding: 0 20px; box-sizing: border-box; background: #2B2440; color: #F6F0E6; font-size: 21px; font-weight: 600">Start workout</a>
+      <div class="it" style="position: absolute; left: 22px; right: 30px; top: 600px; font-size: 21px; line-height: 1.4; color: #2E6DA4">Bench is ready for 82.5 today.</div>
+    </section>
+  </div>
+
+  <!-- the sibling rail: three words, and a painted underline that glides with your swipe -->
+  <div style="position: absolute; left: 22px; right: 22px; top: 58px; height: 34px; pointer-events: none">
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr" class="lbl">
+      <span style="color: {{rail0}}; transition: color 200ms">REVIEW</span>
+      <span style="color: {{rail1}}; text-align: center; transition: color 200ms">TODAY</span>
+      <span style="color: {{rail2}}; text-align: right; transition: color 200ms">TRAINING</span>
+    </div>
+    <span style="position: absolute; top: 26px; left: {{carL}}; width: 33.33%; height: 4px; display: flex; justify-content: {{carJ}}">
+      <span style="width: 64px; height: 4px; border-radius: 2px 6px 3px 5px; background: #C8452F; filter: blur(.5px)"></span>
+    </span>
+  </div>
+
+  <!-- the dock: what's running sits on top of Ask Tess, in one glass lens. Tap the process name to see every process -->
+  <div style="position: absolute; left: 14px; right: 14px; bottom: 18px; height: {{dockH}}; border-radius: 22px; overflow: hidden; background: {{dockBg}}; backdrop-filter: blur(18px); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 .5px rgba(43,36,64,.2), 0 10px 28px rgba(43,36,64,.12); transition: height 440ms cubic-bezier(.2,.9,.25,1), background 300ms; display: flex; flex-direction: column; justify-content: flex-end">
+    <span style="position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, #C8452F 0%, #C8452F 40%, #FFE2A8 50%, #C8452F 60%, #C8452F 100%); background-size: 300% 100%; animation: procGlint 4.5s ease-in-out infinite; box-shadow: 0 0 10px rgba(200,69,47,.5)"></span>
+    <sc-if value="{{expanded}}" hint-placeholder-val="{{false}}">
+      <div style="animation: rowsIn 360ms cubic-bezier(.2,.8,.2,1) 80ms both">
+        <div class="it" style="height: 52px; display: flex; align-items: flex-end; padding: 0 22px 6px; font-size: 21px; color: #7A5C8E">what's running</div>
+        <sc-for list="{{procs}}" as="p" hint-placeholder-count="2">
+          <div style="height: 64px; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; padding: 0 10px 0 22px; box-shadow: inset 0 -1px 0 rgba(255,255,255,.8), inset 0 -2px 0 rgba(43,36,64,.12)">
+            <span style="width: 16px; height: 14px; border-radius: 55% 45% 60% 40% / 50% 60% 40% 50%; background: {{p.c}}; box-shadow: {{p.ring}}; transform: rotate(-6deg)"></span>
+            <span style="display: flex; flex-direction: column; line-height: 1.15"><span style="font-size: 21px; font-weight: 600">{{p.n}}</span><span class="it" style="font-size: 18px; color: #6E6480">{{p.s}}</span></span>
+            <a href="{{p.href}}" class="key" style="width: 104px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: transparent; color: #2B2440; font-size: 21px; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(43,36,64,.35)">{{p.k}}</a>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <div style="height: 64px; flex: none; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; padding: 0 10px 0 22px; box-shadow: inset 0 -1px 0 rgba(255,255,255,.8), inset 0 -2px 0 rgba(43,36,64,.12)">
+      <span style="width: 16px; height: 14px; border-radius: 55% 45% 60% 40% / 50% 60% 40% 50%; background: #C8452F; animation: runBreath 3s ease-in-out infinite"></span>
+      <span onClick="{{toggle}}" style="display: flex; flex-direction: column; line-height: 1.15; cursor: pointer"><span style="font-size: 21px; font-weight: 600">Push Day A</span><span class="it" style="font-size: 18px; color: {{runColor}}">{{runLine}}</span></span>
+      <a href="PleinWorkout.dc.html" class="key" style="width: 104px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #2B2440; color: #F6F0E6; font-size: 21px; font-weight: 600">Resume</a>
+    </div>
+    <div onClick="{{askTap}}" style="height: 74px; flex: none; display: flex; align-items: center; padding-left: 78px; cursor: pointer">
+      <span class="it" style="font-size: 21px; color: {{tessColor}}">{{tessText}}</span>
+    </div>
+  </div>
+  <sc-if value="{{undoOn}}" hint-placeholder-val="{{false}}">
+    <span onClick="{{undoTap}}" style="position: absolute; right: 34px; top: 770px; height: 38px; display: flex; align-items: center; font-size: 21px; font-weight: 600; color: #C8452F; cursor: pointer; animation: ghostIn 300ms ease-out both">Undo</span>
+  </sc-if>
+  <div class="soulmix" style="position: absolute; left: 50px; top: 789px; width: 0; height: 0; transform: scale(.5)">
+    <span class="halo"></span>
+    <span class="ring" style="animation: {{splash}}"></span>
+    <span class="d r" style="animation: {{a1}}"></span><span class="d b" style="animation: {{a2}}"></span><span class="d y" style="animation: {{a3}}"></span>
+    <span class="d r s" style="animation: {{a4}}"></span><span class="d b s" style="animation: {{a5}}"></span><span class="d y s" style="animation: {{a6}}"></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { pageX: 390, day: 1, holding: false, step: 0, soul: 'idle', n: 0, rest: 102, expanded: false, cap: 'none', added: false, fresh: false };
+    this.g = null;
+    setInterval(() => { if (this.state.rest > 0) this.setState({ rest: this.state.rest - 1 }); }, 1000);
+    this.t = null;
+    setTimeout(() => {
+      const p = document.getElementById('phPages'); if (p) p.scrollLeft = 390;
+      const d = document.getElementById('phDays'); if (d) d.scrollLeft = 390;
+    }, 60);
+  }
+  commit() {
+    const ph = document.getElementById('phNext'); if (ph) ph.scrollTop = 0;
+    this.setState({ cap: 'kept', added: true, fresh: true, soul: 'done' });
+    setTimeout(() => this.setState({ soul: 'idle' }), 2000);
+    this.g = setTimeout(() => this.setState({ cap: 'none', fresh: false }), 4200);
+  }
+  renderVals() {
+    const s = this.state;
+    const ink = '#2B2440', mute = '#A39AAE';
+    const frac = Math.max(0, Math.min(2, s.pageX / 390));
+    const rail = (i) => Math.abs(frac - i) < 0.5 ? ink : mute;
+    const days = [
+      { id: 'a', seed: 4, label: 'Wednesday, done', to: 0, tipX: '0px', tipD: 'none' },
+      { id: 'b', seed: 3, label: 'Thursday afternoon', to: 220, tipX: '191px', tipD: 'block' },
+      { id: 'c', seed: 9, label: 'Friday, three planned', to: 400, tipX: '0px', tipD: 'none' }
+    ].map((d, i) => ({ ...d, fg: i === s.day ? ink : '#7A6E86' }));
+    const heroes = ['Draft the push‑day plan', 'Call the dentist', 'Groceries'];
+    const lines = ['now, until twenty to four', 'next, by twenty to four', 'next, by half four'];
+    const metas = ['14 MIN<br>LEFT', 'DUE<br>15:40', 'DUE<br>16:30'];
+    const all = [
+      { label: 'Call the dentist', t: '15:40', c: '#E0A35C', rot: '-8deg', href: 'V2Today.dc.html' },
+      { label: 'Groceries', t: '16:30', c: '#E0A35C', rot: '12deg', href: 'V2Today.dc.html' },
+      { label: 'Push Day A', t: '18:00', c: '#C8452F', rot: '-4deg', href: 'PleinWorkout.dc.html' },
+      { label: 'Shutdown review', t: '21:30', c: '#2E6DA4', rot: '6deg', href: 'V2Today.dc.html' },
+      { label: 'Read, 20 pages', t: '22:15', c: '#6E9E6A', rot: '-10deg', href: 'V2Today.dc.html' }
+    ];
+    const E = 'ease-in-out';
+    const S = {
+      idle: [`idle 7s ${E} infinite`, `idle 8.5s ${E} -3s infinite`, `idle 10s ${E} -6s infinite`, `idle 9s ${E} -4s infinite`, `idle 11s ${E} -1s infinite`, `idle 7.5s ${E} -5s infinite`],
+      done: Array(6).fill('merge 1.8s cubic-bezier(.4,0,.2,1) 1 both'),
+      think: [`bloom 1.2s ${E} infinite`, `bloom 1.2s ${E} -.4s infinite`, `bloom 1.2s ${E} -.8s infinite`, `bloom 1.2s ${E} -.2s infinite`, `bloom 1.2s ${E} -.6s infinite`, `bloom 1.2s ${E} -1s infinite`],
+      carry: [`idle 7s ${E} infinite`, `carryG 2.2s cubic-bezier(.5,0,.2,1) 1 both`, `idle 10s ${E} -6s infinite`, `idle 9s ${E} -4s infinite`, `carryG 2.2s cubic-bezier(.5,0,.2,1) .07s 1 both`, `idle 7.5s ${E} -5s infinite`]
+    }[s.soul];
+    const week = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => {
+      const done = [1, 1, 0, 1, 1, 0, 0][i];
+      const cols = ['#2E6DA4', '#6E9E6A', '', '#C8452F', '#E0B341'];
+      return { d, bg: done ? cols[i] : 'transparent', ring: done ? 'none' : 'inset 0 0 0 1.5px rgba(43,36,64,.25)', rot: (i * 37 % 20 - 10) + 'deg', fg: i === 3 ? ink : '#7A6E86' };
+    });
+    const plan = [['Bench press', '4 × 8'], ['Incline press', '3 × 10'], ['Overhead press', '3 × 6'], ['Cable fly', '3 × 12'], ['Dips', '3 sets']].map(([n, x]) => ({ n, s: x, href: 'PleinWorkout.dc.html' }));
+    const doneNow = s.soul === 'done';
+    return {
+      k: s.n % 2 ? '2' : '',
+      rail0: rail(0), rail1: rail(1), rail2: rail(2),
+      carL: (frac / 3 * 100).toFixed(2) + '%', carJ: frac < 0.5 ? 'flex-start' : frac > 1.5 ? 'flex-end' : 'center',
+      days, week, plan, next: (s.added ? [{ label: 'Text Sam back', t: '15:30', c: '#2E6DA4', rot: '-8deg', href: 'V2Today.dc.html' }] : []).concat(all.slice(s.step)).map((n, i) => ({ ...n, washD: s.fresh && s.added && i === 0 ? 'block' : 'none' })),
+      nowLine: lines[Math.min(s.step, 2)], hero: heroes[Math.min(s.step, 2)], holdMeta: metas[Math.min(s.step, 2)],
+      fillS: s.holding ? 1.4 : 0, fillT: s.holding ? 'transform 900ms cubic-bezier(.3,.6,.4,1)' : 'transform 220ms ease-out',
+      holdText: s.holding ? 'Keep holding' : 'Hold to finish',
+      a1: S[0], a2: S[1], a3: S[2], a4: S[3], a5: S[4], a6: S[5], splash: doneNow ? 'splash 1.8s ease-out 1' : 'none',
+      tessText: ({ heard: '“text Sam back at half three”', ghost: 'Drying. Swipe to drop it.', kept: 'Added to Later.', undone: 'Taken back out.' })[s.cap] || (doneNow ? 'Done. Next one is up.' : 'Ask Tess…'),
+      tessColor: s.cap !== 'none' || doneNow ? '#2E6DA4' : '#8A7F96',
+      ghostOn: s.cap === 'ghost', undoOn: s.cap === 'kept',
+      nextTop: s.cap === 'ghost' ? '634px' : '584px', nextH: s.cap === 'ghost' ? '42px' : '92px',
+      expanded: s.expanded, dockBg: s.expanded ? 'rgba(248,243,235,.94)' : 'rgba(250,246,239,.62)', dockH: s.expanded ? '318px' : '138px',
+      runLine: s.rest > 0 ? 'resting, ' + Math.floor(s.rest / 60) + ':' + String(s.rest % 60).padStart(2, '0') : 'set 4 is up', runColor: s.rest > 0 ? '#6E6480' : '#C8452F',
+      procs: [
+        { n: 'Weekly review', s: 'paused at Tuesday', c: '#E0B341', ring: 'none', k: 'Resume', href: 'V2Today.dc.html' },
+        { n: 'Sam’s gym times', s: 'waiting since Monday', c: 'transparent', ring: 'inset 0 0 0 2px #2E6DA4', k: 'Open', href: 'V2Today.dc.html' }
+      ],
+      toggle: () => this.setState({ expanded: !this.state.expanded }),
+      askTap: () => {
+        if (this.state.cap !== 'none' && this.state.cap !== 'undone') return;
+        clearTimeout(this.g);
+        this.setState({ cap: 'heard', soul: 'think', expanded: false });
+        this.g = setTimeout(() => {
+          this.setState({ cap: 'ghost', soul: 'carry' });
+          this.g = setTimeout(() => this.commit(), 2000);
+        }, 1100);
+      },
+      ghostTap: () => { clearTimeout(this.g); this.commit(); },
+      undoTap: () => { clearTimeout(this.g); this.setState({ added: false, fresh: false, cap: 'undone', soul: 'idle' }); this.g = setTimeout(() => this.setState({ cap: 'none' }), 2400); },
+      onPages: (e) => { const x = e && e.target ? e.target.scrollLeft : 390; if (Math.abs(x - this.state.pageX) > 2) this.setState({ pageX: x }); },
+      onDays: (e) => { const x = e && e.target ? e.target.scrollLeft : 390; const i = Math.round(x / 390); if (i !== this.state.day) this.setState({ day: i }); },
+      onNext: () => {},
+      holdStart: () => {
+        if (this.state.step >= 2) return;
+        this.setState({ holding: true });
+        clearTimeout(this.t);
+        this.t = setTimeout(() => {
+          this.setState({ holding: false, step: this.state.step + 1, soul: 'done', n: this.state.n + 1 });
+          setTimeout(() => this.setState({ soul: 'idle' }), 2600);
+        }, 900);
+      },
+      holdEnd: () => { clearTimeout(this.t); if (this.state.holding) this.setState({ holding: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

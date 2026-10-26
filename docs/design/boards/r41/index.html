@@ -1,0 +1,200 @@
+<title>Room landings layout</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@200;300&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;--zone:#E6E1D8;
+  --training:#0B62AE;--kitchen:#A8701F;--notes:#5B3FB8;--lists:#5E6B1F;--routines:#8E4A78;--money:#2A7878;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--zone:#17171A;
+  --training:#3B8CF2;--kitchen:#C49A5E;--notes:#B9A9E0;--lists:#B5BE7A;--routines:#D79AA6;--money:#7BC0C4;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--zone:#17171A;
+  --training:#3B8CF2;--kitchen:#C49A5E;--notes:#B9A9E0;--lists:#B5BE7A;--routines:#D79AA6;--money:#7BC0C4;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head{max-width:1180px;margin:0 auto 34px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-size:30px;font-weight:600;letter-spacing:-.02em;margin:0}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.sec{max-width:1180px;margin:0 auto 60px;display:flex;flex-direction:column;gap:22px}
+.row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+.notes{flex:1 1 320px;min-width:0;max-width:520px;display:flex;flex-direction:column;gap:12px}
+.notes p{margin:0}.notes b{font-weight:600}
+.zl{display:grid;grid-template-columns:118px 1fr;gap:6px 14px;font-size:16px}.zl span:nth-child(odd){color:var(--ink3)}
+.grid{display:flex;gap:28px;flex-wrap:wrap}
+.cap{max-width:300px;font-size:15px;color:var(--ink2);margin:10px 4px 0}
+.cap b{color:var(--ink);font-weight:600}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr[aria-pressed="true"]{color:var(--ink);font-weight:600}
+.tr:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+
+/* the phone: 1 board px = 1 pt at 0.92 */
+.phone{position:relative;width:300px;height:620px;background:var(--phone);border:1px solid var(--edge);border-radius:40px;overflow:hidden;box-sizing:border-box;flex:none}
+.z{position:absolute;left:20px;right:20px}
+.mq{top:44px;height:170px}
+.br{top:222px;height:50px}
+.bd{top:286px;height:262px}
+.ft{bottom:22px;height:36px;display:flex;justify-content:space-between;align-items:center}
+.act{font-size:17px;font-weight:600}
+.tess{width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#FFA90F,#FF5A26 55%,#E5341C)}
+.sent{text-align:right;font-size:19px;line-height:25px}
+.sent b{font-weight:600}
+.n{font-family:var(--nums);font-weight:300}
+.big{font-family:var(--nums);font-weight:200;line-height:.86;letter-spacing:-.02em}
+.t{font-size:23px;font-weight:600;letter-spacing:-.015em;line-height:28px}
+.l{height:24px;line-height:24px;font-size:15px;white-space:nowrap;overflow:hidden;color:var(--ink2)}
+.l.i{color:var(--ink)}
+.cols{display:grid;gap:0 22px}
+.mt{margin-top:14px}
+
+/* skeleton */
+.sk .z{background:var(--zone);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:15px;text-align:center}
+.sk .ft{background:none}
+.sk .ft span{background:var(--zone);border-radius:4px;padding:6px 10px}
+</style>
+
+<div class="head">
+  <p class="lab">Round 226, Oct 23</p>
+  <h1>Room landings, layout first</h1>
+  <p class="sub">No pixel art outside the Home mosaic. Every room lands on the same four bands, so the app feels like one place. What goes in each band is the room's own, which keeps the rooms from looking alike: a big headline drawn in type and fine lines, a brief, then a body laid out in one, two or three columns.</p>
+  <div style="display:flex;gap:22px"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button></div>
+</div>
+
+<div class="sec">
+  <div class="row">
+    <div class="phone sk" aria-label="The four bands">
+      <div class="z mq">Headline<br>170 pt<br>one big thing, type and fine line</div>
+      <div class="z br">Brief, 2 lines, 50 pt</div>
+      <div class="z bd">Body<br>262 pt<br>1, 2 or 3 columns<br>on a 24 pt line grid</div>
+      <div class="z ft"><span>Action word</span><span>Tess</span></div>
+    </div>
+    <div class="notes">
+      <h2>The four bands</h2>
+      <div class="zl">
+        <span>Headline</span><span>The one thing that matters in this room right now, as large type: a number in Outfit ExtraLight or a word in Figtree. Beside it, one fine-line drawing that belongs only to this room. It replaces the lintel. No tiles, no fills.</span>
+        <span>Brief</span><span>Two lines, right aligned, fixed. What's next and what's off ("Tacos tonight. Lemon is short."). Tess shortens it; it never wraps a third line.</span>
+        <span>Body</span><span>Lines on a shared 24 pt grid, so every column's baselines meet across the page. Column titles sit on one baseline. Numbers align on the right of their column. No rules between columns; a 22 pt gutter does the work.</span>
+        <span>Foot</span><span>One action word bottom left, Tess bottom right. Nothing else. Swipe from the left edge to go home.</span>
+      </div>
+      <p>Columns by room: <b>one</b> where order matters (Training's sets, Routines' evening), <b>two</b> where two things sit side by side (Kitchen's Pantry and Recipes, Lists, Notes), <b>three</b> where the room is a ledger (Money). Each column holds at most six lines, then pages.</p>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>Each room on the bands</h2>
+  <div class="grid" id="rooms"></div>
+</div>
+
+<div class="sec">
+  <h2>States</h2>
+  <p class="sub">The same bands hold when the type is large, when there is nothing to show, and on a rest day. Nothing grows past its band.</p>
+  <div class="grid" id="states"></div>
+</div>
+
+<script>
+(()=>{
+const R=[
+ {k:'training',cap:'<b>Training.</b> Headline: the opening weight, huge, with one side of the loaded bar drawn in fine line beside it: shaft, inner collar, 45, 25, outer collar. Body, one column: today\'s lifts with set rings, then one line for bests.',
+  act:'Start Push A',
+  mq:`<div style="display:flex;align-items:flex-end;justify-content:space-between;height:100%">
+     <div><div class="big" style="font-size:100px;color:var(--training)">185</div><div style="font-size:15px;color:var(--ink2);margin-top:8px">lb, bench opens</div></div>
+     <svg width="92" height="130" viewBox="0 0 92 130" aria-label="One side of the bar: 45, then 25, then the collar">
+       <line x1="0" y1="65" x2="14" y2="65" stroke="var(--ink3)" stroke-width="2"/>
+       <rect x="14" y="58" width="5" height="14" rx="1" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+       <line x1="19" y1="65" x2="92" y2="65" stroke="var(--ink)" stroke-width="1.5"/>
+       <rect x="22" y="6" width="16" height="118" rx="3" fill="none" stroke="var(--training)" stroke-width="1.8"/>
+       <rect x="41" y="26" width="12" height="78" rx="3" fill="none" stroke="var(--training)" stroke-width="1.8"/>
+       <rect x="56" y="59" width="6" height="12" rx="1" fill="none" stroke="var(--ink)" stroke-width="1.5"/></svg></div>`,
+  br:`Push A today, about <span class="n">45</span> min.<br>Last time <span class="n">185</span> for <span class="n">5</span>. Try <span class="n">190</span>?`,
+  bd:()=>[['Bench press','3 x 5',2,3],['Overhead press','3 x 6',0,3],['Dips','3 x 10',0,3],['Cable fly','2 x 12',0,2]].map(([n,s,d,k])=>`<div style="display:flex;justify-content:space-between;height:36px;align-items:center"><span style="font-size:17px">${n}</span><span style="display:flex;gap:5px;align-items:center"><span class="n" style="color:var(--ink2);font-size:14px;margin-right:6px">${s}</span>${Array.from({length:k},(_,q)=>`<svg width="13" height="13"><circle cx="6.5" cy="6.5" r="5" fill="none" stroke="${q<d?'var(--ink)':'var(--edge)'}" stroke-width="${q<d?1.6:1.2}"/></svg>`).join('')}</span></div>`).join('')+`<div class="l i mt">Bench best <span class="n">205</span>, three weeks ago.</div><div class="l">New bests in <span class="n">4</span> of <span class="n">12</span> weeks.</div>`},
+ {k:'kitchen',cap:'<b>Kitchen.</b> Headline: tonight\'s dinner as a big word, with the minutes to start and one fine line that shortens as start nears. Body, two columns: Pantry (what\'s out, what\'s low) and Recipes (the week), baselines shared.',
+  act:'Cook',
+  mq:`<div style="display:flex;align-items:flex-end;justify-content:space-between;height:100%">
+     <div><div style="font-size:56px;font-weight:600;letter-spacing:-.035em;line-height:.9;color:var(--kitchen)">Tacos</div><div style="font-size:15px;color:var(--ink2);margin-top:10px">tonight, start at <span class="n">6:05</span></div></div>
+     <div style="text-align:right"><div class="n" style="font-size:30px;line-height:1">38<span style="font-size:15px;color:var(--ink2)"> min</span></div>
+       <svg width="84" height="10" viewBox="0 0 84 10" aria-hidden="true" style="margin-top:8px"><line x1="0" y1="5" x2="52" y2="5" stroke="var(--kitchen)" stroke-width="2" stroke-linecap="round"/><line x1="52" y1="5" x2="84" y2="5" stroke="var(--edge)" stroke-width="1.5"/></svg></div></div>`,
+  br:`<b style="color:var(--kitchen)">Lemon</b> is short,<br>and so are limes.`,
+  bd:()=>`<div class="cols" style="grid-template-columns:1fr 1fr"><div><div class="t">Pantry</div><div class="l i">Lemon, out</div><div class="l i">Limes, out</div><div class="l">Eggs, low</div><div class="l">Cheddar, low</div><div class="l">Pasta, low</div><div class="l" style="color:var(--ink3)">and 38 at home</div></div>
+    <div><div class="t">Recipes</div><div class="l">Thu pasta</div><div class="l i"><b style="color:var(--kitchen);font-weight:600">Fri tacos</b></div><div class="l">Sat out</div><div class="l">Sun open</div><div class="l">Mon dal</div><div class="l" style="color:var(--ink3)">6 you can cook</div></div></div>
+    <div class="l i mt" style="margin-top:22px">To get: lemon, limes, milk, tortillas.</div>`},
+ {k:'notes',cap:'<b>Notes.</b> Headline: the last thing you wrote, its first words set large as a pull quote. Body, two columns of titles, newest first, pages of six.',
+  act:'Write',
+  mq:`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="font-size:30px;font-weight:500;letter-spacing:-.02em;line-height:34px;color:var(--ink);height:102px;overflow:hidden"><span style="color:var(--notes);font-weight:600">“</span>Ask about the lease before Friday, and the parking</div><div style="font-size:15px;color:var(--ink2);margin-top:10px">Apartment, <span class="n">2</span> hours ago</div></div>`,
+  br:`<span class="n">3</span> notes this week.<br>One is <b style="color:var(--notes)">pinned</b>.`,
+  bd:()=>`<div class="cols" style="grid-template-columns:1fr 1fr"><div><div class="t">Recent</div>${['Apartment','Trip packing','Book notes','Gift ideas','Standup','Recipes to try'].map((x,i)=>`<div class="l ${i<2?'i':''}">${x}</div>`).join('')}</div><div><div class="t">&nbsp;</div>${['Oct 23','Oct 22','Oct 20','Oct 18','Oct 17','Oct 15'].map(x=>`<div class="l" style="text-align:right;color:var(--ink3)">${x}</div>`).join('')}</div></div>`},
+ {k:'lists',cap:'<b>Lists.</b> Headline: the list that\'s due, as a count with fine tally strokes, struck through as you pack. Body, two columns: the list\'s next items and your other lists.',
+  act:'Pack',
+  mq:`<div style="display:flex;align-items:flex-end;justify-content:space-between;height:100%">
+     <div><div class="big" style="font-size:96px;color:var(--lists)">6<span style="font-size:40px;color:var(--ink3)"> of 14</span></div><div style="font-size:15px;color:var(--ink2);margin-top:8px">Packing, for Sunday</div></div>
+     <svg width="92" height="70" viewBox="0 0 92 70" aria-hidden="true">${Array.from({length:14},(_,i)=>{const g=Math.floor(i/5),x=4+g*32+(i%5)*5,y=i<10?0:36;return ''}).join('')}
+     ${[0,1,2].map(g=>{const n=g<2?5:4;return Array.from({length:n},(_,q)=>{const idx=g*5+q,x=6+g*30+q*5;return `<line x1="${x}" y1="${idx<6?14:14}" x2="${x}" y2="56" stroke="${idx<6?'var(--ink)':'var(--edge)'}" stroke-width="1.6" stroke-linecap="round"/>`}).join('')+(g===0?`<line x1="2" y1="46" x2="${6+4*5+4}" y2="24" stroke="var(--lists)" stroke-width="2" stroke-linecap="round"/>`:'')}).join('')}</svg></div>`,
+  br:`Next: socks, the book.<br>Packing is done by <b style="color:var(--lists)">Sunday</b>.`,
+  bd:()=>`<div class="cols" style="grid-template-columns:1.1fr 1fr"><div><div class="t">Packing</div>${['Socks','The book','Adapter','Chargers','Rain jacket','Passport'].map((x,i)=>`<div class="l ${i<3?'i':''}">${x}</div>`).join('')}</div><div><div class="t">Others</div>${[['Groceries','4'],['Gifts','2'],['Movies','9'],['Errands','3']].map(([a,b])=>`<div class="l" style="display:flex;justify-content:space-between"><span>${a}</span><span class="n">${b}</span></div>`).join('')}</div></div>`},
+ {k:'routines',cap:'<b>Routines.</b> Headline: the next routine\'s time, big, over one fine tide line for the day (a swell per routine, passed water solid ink, ahead pale). Body, one column: the evening in order.',
+  act:'Start night',
+  mq:`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="display:flex;align-items:baseline;gap:10px"><span class="big" style="font-size:84px;color:var(--routines)">8</span><span style="font-size:22px;color:var(--ink2)">pm, stretch</span></div>
+     <svg width="100%" height="40" viewBox="0 0 260 40" preserveAspectRatio="none" style="margin-top:12px" aria-hidden="true"><path d="M0 30 C 20 30, 26 10, 40 10 S 60 30, 80 30 S 110 30, 120 30 C 135 30, 140 14, 152 14 S 170 30, 186 30" fill="none" stroke="var(--ink)" stroke-width="1.6"/><path d="M186 30 C 200 30, 206 6, 220 6 S 240 30, 260 30" fill="none" stroke="var(--edge)" stroke-width="1.6"/><circle cx="186" cy="30" r="4" fill="var(--phone)" stroke="var(--routines)" stroke-width="2"/></svg></div>`,
+  br:`Morning and lunch are done.<br>Night starts at <b style="color:var(--routines)">10:30</b>.`,
+  bd:()=>[['8:00 pm','Stretch, five minutes',1],['9:15 pm','Pills',0],['10:30 pm','Night: teeth, read, lights',0],['11:00 pm','Phone away',0]].map(([t,n,a])=>`<div style="display:grid;grid-template-columns:76px 1fr;height:40px;align-items:center"><span class="n" style="font-size:15px;color:${a?'var(--routines)':'var(--ink3)'}">${t}</span><span style="font-size:16px;${a?'font-weight:600':''}">${n}</span></div>`).join('')+`<div class="l mt">Third night in a row for stretch.</div>`},
+ {k:'money',cap:'<b>Money.</b> Headline: the month so far as the big number, over one fine line for the month with today marked and bills as small notches. Body, three columns as a ledger: Due, Spent, Coming.',
+  act:'Add a spend',
+  mq:`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="font-size:15px;color:var(--ink2);margin-bottom:6px">October so far</div><div class="big" style="font-size:56px;color:var(--money)">$2,418<span style="font-size:30px">.60</span></div>
+     <svg width="100%" height="26" viewBox="0 0 260 26" preserveAspectRatio="none" style="margin-top:14px" aria-hidden="true"><line x1="0" y1="13" x2="${260*23/31}" y2="13" stroke="var(--ink)" stroke-width="1.6"/><line x1="${260*23/31}" y1="13" x2="260" y2="13" stroke="var(--edge)" stroke-width="1.6"/>${[1,5,15,28].map(d=>`<circle cx="${260*(d-.5)/31}" cy="13" r="3.2" fill="var(--phone)" stroke="${d<23?'var(--ink)':'var(--money)'}" stroke-width="1.5"/>`).join('')}<line x1="${260*22.5/31}" y1="3" x2="${260*22.5/31}" y2="23" stroke="var(--money)" stroke-width="2" stroke-linecap="round"/></svg></div>`,
+  br:`<b style="color:var(--money)">Rent</b> is due Friday.<br>Payday was the 15th.`,
+  bd:()=>`<div class="cols" style="grid-template-columns:.9fr 1.1fr 1.05fr;gap:0 14px"><div><div class="t" style="font-size:20px">Due</div>${[['Rent','Fri'],['Phone','28'],['Gym','31']].map(([a,b])=>`<div class="l i" style="display:flex;justify-content:space-between"><span>${a}</span><span class="n" style="color:var(--ink2)">${b}</span></div>`).join('')}</div>
+    <div><div class="t" style="font-size:20px">Spent</div>${[['Home','1,450'],['Food','612'],['Fun','214'],['Other','142']].map(([a,b])=>`<div class="l" style="display:flex;justify-content:space-between"><span>${a}</span><span class="n">${b}</span></div>`).join('')}</div>
+    <div><div class="t" style="font-size:20px">Coming</div>${[['Pay','1st'],['Refund','2nd']].map(([a,b])=>`<div class="l" style="display:flex;justify-content:space-between"><span>${a}</span><span class="n" style="color:var(--ink3)">${b}</span></div>`).join('')}</div></div>
+    <div class="l mt" style="margin-top:22px">About <span class="n">$40</span> a day left this month.</div>`},
+];
+document.getElementById('rooms').innerHTML=R.map(r=>`<div><div class="phone" aria-label="${r.k} landing">
+  <div class="z mq">${r.mq}</div><div class="z br sent">${r.br}</div><div class="z bd">${r.bd()}</div>
+  <div class="z ft"><button class="tr act" style="color:var(--${r.k});font-weight:600;font-size:17px">${r.act}</button><span class="tess" aria-hidden="true"></span></div></div>
+  <p class="cap">${r.cap}</p></div>`).join('');
+
+const S=[
+ {k:'kitchen',cap:'<b>Large text (AX3).</b> The body becomes one column: Pantry, then Recipes, each keeping its title. The brief and headline take their short forms. Lines that no longer fit move to the next page.',
+  act:'Cook',big:true,
+  mq:`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="font-size:56px;font-weight:600;letter-spacing:-.035em;line-height:.9;color:var(--kitchen)">Tacos</div><div style="font-size:22px;color:var(--ink2);margin-top:10px">at <span class="n">6:05</span></div></div>`,
+  br:`<span style="font-size:26px;line-height:32px"><b style="color:var(--kitchen)">Lemon</b> is short.</span>`,
+  bd:`<div class="t" style="font-size:30px;line-height:36px">Pantry</div><div class="l i" style="font-size:22px;height:34px;line-height:34px">Lemon, out</div><div class="l i" style="font-size:22px;height:34px;line-height:34px">Limes, out</div><div class="l" style="font-size:22px;height:34px;line-height:34px">Eggs, low</div><div class="t" style="font-size:30px;line-height:36px;margin-top:14px">Recipes</div><div class="l i" style="font-size:22px;height:34px;line-height:34px"><b style="color:var(--kitchen)">Fri tacos</b></div><div class="l" style="font-size:22px;height:34px;line-height:34px;color:var(--ink3)">1 of 2 pages</div>`},
+ {k:'kitchen',cap:'<b>Nothing planned.</b> The headline asks instead of guessing: "Tonight?" in ink 3. The action word becomes Plan tonight. Pantry and Recipes still sit side by side; Recipes leads with what you can cook now.',
+  act:'Plan tonight',
+  mq:`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="font-size:56px;font-weight:600;letter-spacing:-.035em;line-height:.9;color:var(--ink3)">Tonight?</div><div style="font-size:15px;color:var(--ink2);margin-top:10px">nothing planned yet</div></div>`,
+  br:`<b style="color:var(--kitchen)">Dal</b> or fried rice,<br>both from what's home.`,
+  bd:`<div class="cols" style="grid-template-columns:1fr 1fr"><div><div class="t">Pantry</div><div class="l">Eggs, low</div><div class="l">Pasta, low</div><div class="l" style="color:var(--ink3)">and 41 at home</div></div><div><div class="t">Recipes</div><div class="l i">Dal</div><div class="l i">Fried rice</div><div class="l i">Shakshuka</div><div class="l" style="color:var(--ink3)">6 you can cook</div></div></div>`},
+ {k:'training',cap:'<b>Rest day.</b> The headline is the next session\'s day, not a weight, and the bar isn\'t drawn. The body shows the week so far. The action word becomes Log a walk, since there\'s nothing to start.',
+  act:'Log a walk',
+  mq:`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="font-size:15px;color:var(--ink2);margin-bottom:6px">Rest today. Next is</div><div style="font-size:56px;font-weight:600;letter-spacing:-.035em;line-height:.9;color:var(--training)">Saturday</div><div style="font-size:15px;color:var(--ink2);margin-top:10px">Pull B, about <span class="n">50</span> min</div></div>`,
+  br:`Three sessions this week.<br>Bench is up <span class="n">5</span> lb.`,
+  bd:`${[['Mon','Push A','done'],['Tue','Pull A','done'],['Thu','Legs','done'],['Sat','Pull B','next']].map(([d,n,t])=>`<div style="display:grid;grid-template-columns:52px 1fr auto;height:36px;align-items:center"><span style="color:var(--ink3);font-size:15px">${d}</span><span style="font-size:17px">${n}</span><span style="font-size:14px;color:${t==='next'?'var(--training)':'var(--ink3)'}">${t}</span></div>`).join('')}<div class="l mt">Bench best <span class="n">205</span>, three weeks ago.</div>`},
+ {k:'notes',cap:'<b>Notes, no notes yet.</b> The headline invites the first line in ink 3 ("Write the first thing down"). The body is empty space, not a placeholder list. The action word is Write.',
+  act:'Write',
+  mq:`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="font-size:30px;font-weight:500;letter-spacing:-.02em;line-height:34px;color:var(--ink3)">Write the first thing down.</div></div>`,
+  br:`Notes stay on this phone<br>unless you ask Tess.`,
+  bd:``},
+ {k:'lists',cap:'<b>Lists, all done.</b> The headline count reaches 14 of 14 and the tally strokes leave, since the number says it all. The brief says what\'s next. The action word becomes New list.',
+  act:'New list',
+  mq:`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div class="big" style="font-size:96px;color:var(--lists)">14<span style="font-size:40px;color:var(--ink3)"> of 14</span></div><div style="font-size:15px;color:var(--ink2);margin-top:8px">Packing is done</div></div>`,
+  br:`Nothing due this week.<br>Groceries has <span class="n">4</span> left.`,
+  bd:`<div class="t">Others</div>${[['Groceries','4'],['Gifts','2'],['Movies','9']].map(([a,b])=>`<div class="l" style="display:flex;justify-content:space-between"><span>${a}</span><span class="n">${b}</span></div>`).join('')}`},
+ {k:'routines',cap:'<b>Routines, quiet day.</b> The headline says the day is clear, with no time drawn large. The tide line lies flat. The action word names the next routine, Start stretch, to start it now.',
+  act:'Start stretch',
+  mq:`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="font-size:56px;font-weight:600;letter-spacing:-.035em;line-height:.9;color:var(--routines)">Quiet day</div><svg width="100%" height="20" viewBox="0 0 260 20" preserveAspectRatio="none" style="margin-top:16px" aria-hidden="true"><line x1="0" y1="10" x2="260" y2="10" stroke="var(--edge)" stroke-width="1.6"/></svg></div>`,
+  br:`Nothing set for today.<br>Stretch is usually at <span class="n">8</span>.`,
+  bd:``},
+ {k:'money',cap:'<b>Money, start of the month.</b> The headline is $0 until the first spend, in ink 3. Due and Coming stay; Spent says "Nothing yet". The action word is Add a spend.',
+  act:'Add a spend',
+  mq:`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="font-size:15px;color:var(--ink2);margin-bottom:6px">November so far</div><div class="big" style="font-size:56px;color:var(--ink3)">$0</div></div>`,
+  br:`<b style="color:var(--money)">Rent</b> is due on the 1st.<br>Payday is the 1st too.`,
+  bd:`<div class="cols" style="grid-template-columns:.9fr 1.1fr 1.05fr;gap:0 14px"><div><div class="t" style="font-size:20px">Due</div><div class="l i" style="display:flex;justify-content:space-between"><span>Rent</span><span class="n" style="color:var(--ink2)">1st</span></div></div><div><div class="t" style="font-size:20px">Spent</div><div class="l" style="color:var(--ink3)">Nothing yet</div></div><div><div class="t" style="font-size:20px">Coming</div><div class="l" style="display:flex;justify-content:space-between"><span>Pay</span><span class="n" style="color:var(--ink3)">1st</span></div></div></div>`},
+];
+document.getElementById('states').innerHTML=S.map(r=>`<div><div class="phone" aria-label="${r.k} state">
+  <div class="z mq">${r.mq}</div><div class="z br sent">${r.br}</div><div class="z bd" style="overflow:hidden">${r.bd}</div>
+  <div class="z ft"><button class="tr act" style="color:var(--${r.k});font-weight:600;font-size:${r.big?22:17}px">${r.act}</button><span class="tess" aria-hidden="true"></span></div></div>
+  <p class="cap">${r.cap}</p></div>`).join('');
+document.getElementById('th').onclick=()=>document.documentElement.dataset.theme='dark';document.getElementById('tw').onclick=()=>document.documentElement.dataset.theme='light';
+})();
+</script>

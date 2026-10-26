@@ -1,0 +1,326 @@
+<title>Sky Glass and Pull Apart</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: a review board, two live phones. Weather: a more real sky with an embossed glass keystone. Kitchen: a level-1 page where pull apart opens a layer over a blurred page.
+   Then written directions for the Kitchen landing keystone. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#A8701F;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#C49A5E;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+h3{font-size:20px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:62ch}
+.bar{display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:0 44px}
+.rule{padding:14px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600;margin-bottom:2px}
+.rule span{color:var(--fg2)}
+.ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:24px 36px}
+.idea{border-top:2px solid var(--fg);padding-top:12px}
+.idea b{display:block;font-size:19px;font-weight:600;margin-bottom:4px}
+.idea p{font-size:15px;color:var(--fg2)}
+.idea p i{color:var(--fg);font-style:normal}
+.ctl{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center;margin-top:8px}
+.ctl span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);margin-right:4px}
+
+/* ---------- phone ---------- */
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--hair:rgba(36,36,35,.16);--kitchen:#A8701F;--clay:#9C4B2C;--wine:#9A2541;--slate:#34506F;--pine:#2F6450;--teal:#1E6E77;--rain:#557A93;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none;touch-action:none;box-shadow:0 0 0 1px var(--line)}
+.phones[data-look="black"] .phone{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--hair:rgba(232,227,218,.2);--kitchen:#C49A5E;--clay:#E2A07F;--wine:#EE8E9C;--slate:#A7BCD6;--pine:#8EC7AE;--teal:#84C3C9;--rain:#9DBACE}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:30}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);padding:8px 0;min-width:96px;min-height:44px;text-align:left;background:none;border:0;cursor:pointer;z-index:4}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phones[data-look="black"] .tessw{color:#C79B7C}
+.receipt{position:absolute;left:24px;right:110px;bottom:84px;font-size:15px;color:var(--ink2);height:24px;white-space:nowrap;overflow:hidden;z-index:4}
+.receipt b{font-weight:600;cursor:pointer}
+.sc{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+
+/* ---------- Weather ---------- */
+#sky{position:absolute;inset:0;width:402px;height:874px;display:block}
+#glass{position:absolute;left:-6px;top:166px;width:414px;height:242px;display:block;cursor:pointer;touch-action:none}
+.wover{position:absolute;inset:0;pointer-events:none}
+.wover>*{pointer-events:auto}
+.wttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.wtime{position:absolute;right:24px;top:70px;font:300 15px var(--num)}
+.gl{position:absolute;left:24px;top:196px;width:354px;height:182px;pointer-events:none;padding:22px 24px}
+.gl .temp{position:absolute;left:18px;top:4px;font:200 112px/1 var(--num);letter-spacing:-.03em}
+.gl .temp small{font-size:44px;vertical-align:top;margin-left:2px}
+.gl .word{position:absolute;right:24px;top:28px;font-size:22px;font-weight:600;text-align:right;line-height:1.2}
+.gl .word em{display:block;font:300 15px var(--num);opacity:.85;font-style:normal;margin-top:4px}
+.gl .live{position:absolute;left:24px;right:24px;bottom:18px;display:flex;justify-content:space-between;align-items:flex-end;font-size:13px}
+.gl .live b{display:block;font:300 22px var(--num);line-height:1}
+.gl .live small{display:block;font:500 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;opacity:.8;margin-top:3px}
+.wline{position:absolute;left:24px;right:24px;top:402px;font-size:24px;line-height:1.3;font-weight:500}
+.wline b{font-weight:700}
+.hours{position:absolute;left:24px;right:0;top:480px;height:76px;display:flex;overflow:hidden}
+.hours div{flex:0 0 59px}
+.hours em{display:block;font-style:normal;font-size:12px;opacity:.8}
+.hours b{display:block;font:300 22px var(--num);margin:2px 0}
+.hours span{font-size:12px;font-weight:600}
+.care{position:absolute;left:24px;right:24px;top:576px}
+.care .sc{opacity:.8;margin-bottom:4px}
+.care .cr{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-height:46px;padding-top:8px;font-size:17px;cursor:pointer;touch-action:none;transition:opacity .3s}
+.care .cr .nm{position:relative;white-space:nowrap;overflow:hidden}
+.care .cr .nm i{position:absolute;left:0;top:55%;height:1px;width:0;background:currentColor;transition:width .26s}
+.care .cr.done .nm i{width:100%}
+.care .cr.done{opacity:.5}
+.care .cr em{font-style:normal;font-size:13px;opacity:.8;white-space:nowrap}
+.wfoot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);padding:8px 0;min-height:44px;background:none;border:0;cursor:pointer}
+.wtess{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif)}
+
+/* ---------- Kitchen level 1: Recipes, with the pull-apart layer ---------- */
+.page{position:absolute;inset:0;transition:filter .5s cubic-bezier(.3,.9,.3,1),transform .5s cubic-bezier(.3,.9,.3,1)}
+.page.dim{filter:blur(18px) saturate(1.15) brightness(.92);transform:scale(.97)}
+.backw{position:absolute;left:24px;top:52px;font-size:13px;color:var(--ink2);padding:6px 0}
+.ttl2{position:absolute;left:24px;right:24px;top:76px;font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.kline{position:absolute;left:24px;right:24px;top:126px;font-size:16px;color:var(--ink2)}
+.names{position:absolute;left:24px;right:24px;top:176px}
+.name{height:64px;display:flex;align-items:baseline;gap:12px;cursor:pointer;white-space:nowrap}
+.name .ch{display:inline-block;font-size:44px;font-weight:900;letter-spacing:-.02em;line-height:1}
+.name .m{font:300 16px var(--num);color:var(--ink2)}
+.name .m.miss{color:var(--wine)}
+.tint{position:absolute;inset:0;background:color-mix(in srgb,var(--p-bg) 52%,transparent);opacity:0;pointer-events:none;transition:opacity .5s;z-index:10}
+.tint.on{opacity:1;pointer-events:auto}
+.layer{position:absolute;inset:0;z-index:11;pointer-events:none}
+.layer .big{position:absolute;left:0;right:0;top:150px;height:70px;display:flex;justify-content:center;align-items:center;white-space:nowrap}
+.layer .big .ch{display:inline-block;font-size:52px;font-weight:900;letter-spacing:-.02em;line-height:1;color:var(--kitchen);will-change:transform;transition:transform .7s cubic-bezier(.25,.9,.3,1),opacity .4s}
+.layer .body{position:absolute;left:24px;right:24px;top:250px;opacity:0;transform:translateY(24px);transition:opacity .45s .3s,transform .6s .3s cubic-bezier(.3,.9,.3,1);pointer-events:auto}
+.layer.on .body{opacity:1;transform:none}
+.layer .lead{font-size:17px;color:var(--ink2);margin-bottom:10px}
+.layer .ing{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px}
+.layer .ing div{display:flex;justify-content:space-between;align-items:baseline;min-height:36px;border-bottom:1px solid var(--hair);font-size:17px}
+.layer .ing div span:last-child{font:300 14px var(--num);color:var(--ink2)}
+.layer .ing div.miss span:first-child{color:var(--wine);font-weight:500}
+.layer .steps{margin-top:22px}
+.layer .steps div{font-size:16px;line-height:1.45;padding:7px 0;display:flex;gap:12px}
+.layer .steps div b{font:300 16px var(--num);color:var(--kitchen);min-width:18px}
+.layer .close{position:absolute;left:24px;top:52px;font-size:13px;color:var(--ink2);pointer-events:auto;cursor:pointer;padding:6px 0;opacity:0;transition:opacity .3s .3s}
+.layer.on .close{opacity:1}
+@media (prefers-reduced-motion:reduce){.page,.tint,.layer .ch,.layer .body{transition:none!important}}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Kitchen and Weather / sheet 254</h2>
+<h1>Glass over a real sky, and a more dramatic pull.</h1>
+<p class="lede">Weather: the sky gets closer to real (volume in the clouds, a sun with glare, a moon with a face, rain with weight) and its keystone is a slab of embossed glass lifted off that sky, with live numbers inside. Kitchen: pull apart moves to level 1 and 2, opening a layer over a deeply blurred page. Under the phones, four directions for the Kitchen landing keystone, to pick from before I build one.</p>
+<div class="bar" role="group" aria-label="Phone look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+</div>
+</header>
+
+<section aria-label="Phones">
+<div class="phones" id="phones" data-look="paper">
+
+<!-- Weather -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p2">
+ <canvas id="sky" width="804" height="1748"></canvas>
+ <canvas id="glass" width="828" height="484"></canvas>
+ <div class="wover" id="wover">
+  <div class="sbar"><span id="wclock">5:10</span><span></span></div>
+  <div class="wttl">Weather</div>
+  <div class="wtime" id="wtime"></div>
+  <div class="gl" id="gl"></div>
+  <div class="wline" id="wline"></div>
+  <div class="hours" id="whours"></div>
+  <div class="care" id="care"></div>
+  <div class="receipt" id="r2"></div>
+  <button class="wfoot" id="wfoot">Rain alert</button>
+  <div class="wtess">Tess</div>
+ </div>
+ <div class="home"></div>
+</div></div>
+<div class="ctl" id="hourctl"><span>Hour</span></div>
+<div class="ctl" id="wxctl"><span>Sky</span></div>
+<p class="cap"><b>Weather, with the glass.</b> The sky is drawn with more care this round: clouds have volume and a lit side, the sun has a hot core, a halo and glare streaks, the moon has its phase and a faint face, rain has weight and catches light. In the keystone slot, the screen glass raised a touch. One shape, no lines: inside its edge a 30 pt rim pulls the sky in a little (9% at most) and catches a little light on the top-left and shade on the bottom-right, and both fade to nothing at the outer edge, so the glass dissolves into the screen rather than stopping at a line. A soft shadow under it. No fill, no frost, no tint. Inside: the temperature, the word for now, and three live numbers that tick (wind gusting, the minutes until rain, the sun’s height). Drag across the glass to tilt it. On the phone this would be a real photographic sky library; what you see here is the closest a drawing gets.</p>
+</div>
+
+<!-- Kitchen level 1 -->
+<div>
+<div class="slot" data-fit><div class="phone" id="p1">
+ <div class="page" id="kpage">
+  <div class="sbar"><span>5:10</span><span></span></div>
+  <div class="backw">Kitchen</div>
+  <div class="ttl2" style="color:var(--kitchen)">Recipes</div>
+  <div class="kline">You can make four tonight.</div>
+  <div class="names" id="names"></div>
+  <div class="receipt" id="r1"></div>
+  <button class="foot" style="color:var(--kitchen)">Cook</button>
+  <div class="tessw">Tess</div>
+ </div>
+ <div class="tint" id="tint"></div>
+ <div class="layer" id="layer"><div class="close" id="lclose">Recipes</div><div class="big" id="lbig"></div><div class="body" id="lbody"></div></div>
+ <div class="home"></div>
+</div></div>
+<p class="cap"><b>Kitchen level 1, Recipes.</b> Dishes are large words. Tap one: the page falls back, blurred and faintly tinted, and a new layer comes forward. The word travels to the top of the layer and its letters pull wide apart, in Kitchen ochre, and the dish’s ingredients and steps rise in under it. The back word or an edge swipe closes it: the letters gather, the layer leaves, the page comes back sharp. The same layer serves a place in Pantry and a thing on Groceries.</p>
+</div>
+
+</div>
+</section>
+
+<section>
+<h2>Kitchen landing keystone: four directions</h2>
+<p class="lede" style="font-size:16px">Same slot and layout as the other landings. Food is never drawn (your rule), so these are made of the kitchen itself. Pick one or two to build live, or tell me what the fridge idea was.</p>
+<div class="ideas">
+<div class="idea"><b>The fridge door</b><p>What you asked about. A fridge door with magnet letters spelling what is in the house. Words that need using soon <i>drift up and lean</i>; a low thing <i>loses letters</i>; a thing that ran out <i>drops off the door</i> and lies on the shelf; groceries fly in as new letters. The help: one look says what to use first and what to buy. Tess could leave a magnet note.</p></div>
+<div class="idea"><b>The stove</b><p>Four burners seen from above, each a dish you could make tonight. <i>Flame size is how ready you are</i> (all ingredients: a full ring; something missing: a flicker). The pot you are cooking boils and steams; the lid rattles. Cook mode takes the slot over with the live timers as the flame ring counting down.</p></div>
+<div class="idea"><b>The pantry light</b><p>The dark inside of a cupboard. Open it and <i>a bulb warms up</i>, showing shelves as rows of plain labels (no food drawn). Things going off soon sit in the <i>front row, in the light</i>; things low have a gap beside them. Leftovers are on the fridge shelf with their day. The light dims again when you leave.</p></div>
+<div class="idea"><b>The kitchen window</b><p>A window over the sink showing the day outside (the Weather room’s sky, borrowed), with the kitchen’s own life on the sill: <i>a kettle steaming at breakfast time</i>, a timer ticking while something cooks, a note stuck to the glass with tonight’s dish, a glass of water that empties through the day with Drink water. Calm, and it ties rooms together.</p></div>
+</div>
+</section>
+
+<section>
+<h2>How it works</h2>
+<div class="rules">
+<div class="rule"><b>The glass, round six.</b><span>The rim now bends the right way: it pulls the picture from outside the edge inward (9% at most), so the moon or a cloud crossing the boundary continues into the glass, a little squeezed, instead of being cut. The rim is 30 pt, eighteen rings, with bending and light fading in from nothing at the outer edge, peaking a quarter of the way in, and fading to nothing at the flat middle. The light is down to 13% at its peak and the sheen on the top to about 3%, so the inside is no brighter than the sky around it. Soft shadow under it, no lines.</span></div>
+<div class="rule"><b>Live inside.</b><span>Three numbers tick on their own: the wind (gusts within a range), the minutes until the next change (counts down), and the sun’s height in degrees (moves with the hour). The temperature rolls like an odometer when it changes.</span></div>
+<div class="rule"><b>The real library.</b><span>A canvas drawing will always read as drawn. The real page needs plates: photographed or filmed skies, about 30 (clear, thin cloud, broken cloud, overcast, rain, storm, fog, snow, each at dawn, day, dusk and night), the sun and moon composited by position, particle rain and snow on top, a grade per look. I can start that library the moment a few sky photos land in the repo folder; this round only improves the stand-in: noise cloud fields lit from the sun, horizon haze, film grain, a quieter sun.</span></div>
+<div class="rule"><b>The pull-apart layer.</b><span>Tap: the page scales to 97% and blurs 18 pt with a 52% page tint over 0.5 s. The word’s letters start where they were, then travel to the layer’s headline and spread 34 pt per step over 0.7 s on a spring. The body rises 24 pt and fades in, 0.3 s behind the letters. Close reverses it in 0.4 s. Reduce Motion: no blur, cross-fades only.</span></div>
+<div class="rule"><b>Where the move lives.</b><span>Level 1 (a section's list: Recipes, Pantry places, Groceries) and level 2 (a dish, a place). Never on the landing, which keeps the keystone like every other room.</span></div>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+const $=(s,r=document)=>r.querySelector(s);
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let K=1;function fit(){document.querySelectorAll('[data-fit]').forEach(s=>{const p=s.firstElementChild;K=Math.min(1,s.clientWidth/402);p.style.transform=K<1?'scale('+K+')':'';s.style.height=(874*K)+'px'})}
+addEventListener('resize',fit);fit();
+function setLook(l){$('#phones').dataset.look=l;$('#lk-paper').setAttribute('aria-pressed',l==='paper');$('#lk-black').setAttribute('aria-pressed',l==='black')}
+$('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('black');
+let rT={};function receipt(id,msg,undo){const r=$(id);r.innerHTML=msg+(undo?' <b>Undo</b>':'');if(undo)r.querySelector('b').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT[id]);rT[id]=setTimeout(()=>{r.innerHTML=''},10000)}
+const lerp=(a,b,u)=>a+(b-a)*u,clamp=(v,a,b)=>v<a?a:v>b?b:v,ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
+const mixC=(a,b,u)=>a.map((v,i)=>Math.round(v+(b[i]-v)*u));const hx=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));
+const rgb=a=>'rgb('+a+')',rgba=(a,al)=>'rgba('+a+','+al+')';
+function noise(x,y){const s=Math.sin(x*12.9898+y*78.233)*43758.5453;return s-Math.floor(s)}
+function vnoise(x,y){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=ease(xf),v=ease(yf);const a=noise(xi,yi),b=noise(xi+1,yi),c=noise(xi,yi+1),d=noise(xi+1,yi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+const fbm=(x,y)=>vnoise(x,y)*.5+vnoise(x*2.1,y*2.1)*.25+vnoise(x*4.3,y*4.3)*.125+vnoise(x*8.7,y*8.7)*.0625;
+
+/* ================= Weather: a more real sky ================= */
+const cv=$('#sky'),c=cv.getContext('2d');c.scale(2,2);const gcv=$('#glass'),gc=gcv.getContext('2d');gc.scale(2,2);
+let hour=17.17,cond='cloudy';const RISE=7.42,SET=18.1,MRISE=15.8,MSET=26.2,PHASE=.68;
+const HOURS=[['Now',17.17],['6 am',6],['9 am',9],['Noon',12],['3 pm',15],['6 pm',18],['9 pm',21],['Midnight',24],['3 am',27]];
+const CONDS=[['Clear','clear'],['Cloudy','cloudy'],['Rain','rain'],['Storm','storm'],['Fog','fog'],['Snow','snow']];
+HOURS.forEach(([n,hh])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.setAttribute('aria-pressed',hh===hour);b.onclick=()=>{hour=hh;$('#hourctl').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawInfo()};$('#hourctl').appendChild(b)});
+CONDS.forEach(([n,k])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.setAttribute('aria-pressed',k===cond);b.onclick=()=>{cond=k;$('#wxctl').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawInfo()};$('#wxctl').appendChild(b)});
+function sunAlt(h){const H=(h-RISE)/(SET-RISE);return H<0||H>1?-Math.min(.6,Math.abs(H<0?H:H-1)*2):Math.sin(Math.PI*H)}
+function moonAlt(h){let hh=h<12?h+24:h;const H=(hh-MRISE)/(MSET-MRISE);return H<0||H>1?-.3:Math.sin(Math.PI*H)}
+const rnd=i=>{const s=Math.sin(i*127.1+311.7)*43758.5453;return s-Math.floor(s)};
+const stars=Array.from({length:160},(_,i)=>({x:rnd(i+40)*402,y:rnd(i+80)*640,s:rnd(i+120),c:rnd(i+200)}));
+// cloud masses: each a cluster of puffs with a lit side
+let flash=0,nextFlash=3;
+function skyPalette(alt){const night=[[10,14,34],[28,36,66]],dawn=[[58,70,120],[246,176,118]],day=[[70,140,214],[198,222,238]],noon=[[48,118,200],[214,230,240]];
+ if(alt<-.3)return night;if(alt<0){const u=(alt+.3)/.3;return [mixC(night[0],dawn[0],u),mixC(night[1],dawn[1],u)]}if(alt<.35){const u=alt/.35;return [mixC(dawn[0],day[0],u),mixC(dawn[1],day[1],u)]}const u=(alt-.35)/.65;return [mixC(day[0],noon[0],u),mixC(day[1],noon[1],u)]}
+let lastT=0;
+function draw(t){const dt=Math.min(.05,t-lastT);lastT=t;const alt=sunAlt(hour),malt=moonAlt(hour);let [top,bot]=skyPalette(alt);
+ const gloom={storm:.8,rain:.55,cloudy:.3,fog:.4,snow:.5,clear:0}[cond];const grey=v=>Math.round(v*.35+95);top=top.map(v=>Math.round(lerp(v,grey(v),gloom*.8)));bot=bot.map(v=>Math.round(lerp(v,grey(v)+20,gloom*.8)));
+ const g=c.createLinearGradient(0,0,0,874);g.addColorStop(0,rgb(top));g.addColorStop(.7,rgb(mixC(top,bot,.7)));g.addColorStop(1,rgb(bot));c.fillStyle=g;c.fillRect(0,0,402,874);
+ const bright=clamp((alt+.3)/.6,0,1);
+ if(bright<.7)stars.forEach(s=>{const tw=.5+.5*Math.abs(Math.sin(t*(.4+s.s*1.2)+s.x));const a=tw*(1-bright/.7)*(1-gloom);c.fillStyle=rgba(s.c>.8?[255,230,200]:s.c>.6?[200,215,255]:[240,242,250],a);c.beginPath();c.arc(s.x,s.y,.6+s.s*1.1,0,7);c.fill()});
+ // sun: hot core, halo, glare streaks
+ let sx=0,sy=0;if(alt>-.1){sx=50+((hour-RISE)/(SET-RISE))*300;sy=600-alt*520;const low=clamp(1-alt/.35,0,1);const warm=mixC([255,250,235],[255,170,90],low);const vis=1-gloom*.85;
+  const halo=c.createRadialGradient(sx,sy,4,sx,sy,260);halo.addColorStop(0,rgba(warm,.55*vis));halo.addColorStop(.12,rgba(warm,.22*vis));halo.addColorStop(.5,rgba(warm,.06*vis));halo.addColorStop(1,rgba(warm,0));c.fillStyle=halo;c.fillRect(0,0,402,874);
+  const core=c.createRadialGradient(sx,sy,1,sx,sy,30+low*10);core.addColorStop(0,rgba([255,255,250],vis));core.addColorStop(.5,rgba(warm,.95*vis));core.addColorStop(1,rgba(warm,0));c.fillStyle=core;c.beginPath();c.arc(sx,sy,30+low*10,0,7);c.fill();
+  if(gloom<.4){const sc=c.createRadialGradient(sx,sy,30,sx,sy,420);sc.addColorStop(0,rgba(warm,.10*vis));sc.addColorStop(1,rgba(warm,0));c.fillStyle=sc;c.fillRect(0,0,402,874)}}
+ // moon: phase and a faint face
+ let mx=0,my=0;if(malt>0){let hh=hour<12?hour+24:hour;mx=40+((hh-MRISE)/(MSET-MRISE))*322;my=560-malt*430;const r=24;const vis=1-gloom*.8;
+  const mg=c.createRadialGradient(mx,my,r,mx,my,r*4);mg.addColorStop(0,rgba([225,228,240],.3*vis*(1-bright)));mg.addColorStop(1,rgba([225,228,240],0));c.fillStyle=mg;c.fillRect(mx-r*4,my-r*4,r*8,r*8);
+  c.save();c.beginPath();c.arc(mx,my,r,0,7);c.clip();c.fillStyle=rgba([236,236,228],.96*vis);c.fillRect(mx-r,my-r,2*r,2*r);
+  [[-6,-8,5],[7,2,4],[-2,9,3],[9,-10,2.5],[-11,4,2]].forEach(([dx,dy,rr])=>{c.fillStyle=rgba([190,192,186],.5*vis);c.beginPath();c.arc(mx+dx,my+dy,rr,0,7);c.fill()});
+  const k=Math.abs(PHASE-.5)*2;c.fillStyle=rgb(mixC(top,[0,0,0],.3));c.beginPath();c.arc(mx+(PHASE<.5?1:-1)*2*r*(1-k),my,r*1.04,0,7);c.fill();c.restore()}
+ // cloud field: a noise sky, thresholded by cover, lit from the sun or moon, drawn at low resolution and softened
+ const cover={clear:.15,fog:.45,snow:.8,cloudy:.85,rain:1,storm:1}[cond];const lightDir=alt>0?[sx,sy]:[mx||200,my||100];
+ const base=cond==='storm'?[46,50,66]:cond==='rain'?[112,120,132]:bright>.5?[150,164,186]:[60,70,96];const lit=cond==='storm'?[118,116,136]:cond==='rain'?[196,202,210]:bright>.5?[255,253,246]:[140,152,184];
+ if(!cfc){cfc=document.createElement('canvas');cfc.width=101;cfc.height=219}const fc=cfc.getContext('2d');const img=fc.createImageData(101,219);const d=img.data;const drift=RM?0:t*.012;
+ const thr=1-cover*.78,soft=.22;const ldx=lightDir[0]/4,ldy=lightDir[1]/4;const fb=(x,y)=>fbm(x,y)*(.8+.4*fbm(x*.3+9,y*.3));
+ for(let j=0;j<219;j++)for(let i=0;i<101;i++){const nx=i*.055+drift,ny=j*.055;let v=fb(nx,ny)+(j<140?0:.08);const a=clamp((v-thr)/soft,0,1);if(a<=0)continue;
+  const toL=Math.hypot(ldx-i,ldy-j)||1;const lx=i+(ldx-i)/toL*2.2,ly=j+(ldy-j)/toL*2.2;const vl=fb(lx*.055+drift,ly*.055);const shade=clamp(.5+(v-vl)*4,0,1);
+  const col=mixC(base,lit,1-shade*.9);const k=(j*101+i)*4;d[k]=col[0];d[k+1]=col[1];d[k+2]=col[2];d[k+3]=Math.round(a*a*(cond==='clear'?150:235))}
+ fc.putImageData(img,0,0);c.save();c.filter='blur(5px)';c.drawImage(cfc,0,0,402,874);c.filter='none';c.restore();
+ const hz=c.createLinearGradient(0,520,0,800);hz.addColorStop(0,rgba(bot,0));hz.addColorStop(1,rgba(mixC(bot,[255,255,255],.25),.45*(1-gloom*.3)));c.fillStyle=hz;c.fillRect(0,520,402,280);
+ for(let k=0;k<700;k++){const x=noise(k,Math.floor(t*2))*402,y=noise(k+3,Math.floor(t*2))*874;c.fillStyle='rgba(255,255,255,'+(.025+noise(k,7)*.03)+')';c.fillRect(x,y,1,1)}
+ // storm
+ if(cond==='storm'){nextFlash-=dt;if(nextFlash<0){flash=1;nextFlash=2.5+Math.random()*4}if(flash>0){c.fillStyle=rgba([255,250,230],flash*.5);c.fillRect(0,0,402,874);if(flash>.7){c.strokeStyle=rgba([255,246,210],.95);c.lineWidth=2.2;c.shadowColor='rgba(255,240,200,.9)';c.shadowBlur=14;c.beginPath();let x=100+noise(Math.floor(t),1)*200,y=120;c.moveTo(x,y);for(let k=0;k<8;k++){x+=(noise(k,Math.floor(t*3))-.5)*60;y+=55;c.lineTo(x,y)}c.stroke();c.shadowBlur=0}flash-=dt*3.5}}
+ // rain with weight: long streaks, brighter near the light
+ if(cond==='rain'||cond==='storm'){const n=cond==='storm'?220:150;for(let k=0;k<n;k++){const sp=cond==='storm'?1100:760;const x=((k*53+t*50)%440)-20,y=((k*37+t*sp*(0.8+rnd(k)*.4))%940)-40;const a=.25+.45*rnd(k+9);c.strokeStyle=rgba([225,235,245],a);c.lineWidth=1+rnd(k)*.8;c.beginPath();c.moveTo(x,y);c.lineTo(x-2.5,y+18+rnd(k)*10);c.stroke()}}
+ if(cond==='snow'){for(let k=0;k<140;k++){const x=((k*53+Math.sin(t*.7+k)*40+t*12)%440)-20,y=((k*37+t*(45+rnd(k)*35))%920)-20;c.fillStyle=rgba([255,255,255],.75+rnd(k)*.25);c.beginPath();c.arc(x,y,1.2+rnd(k)*2.2,0,7);c.fill()}}
+ if(cond==='fog'){for(let k=0;k<6;k++){const y=100+k*130+Math.sin(t*.15+k)*24;const fg=c.createLinearGradient(0,y-90,0,y+90);fg.addColorStop(0,rgba([228,230,232],0));fg.addColorStop(.5,rgba([228,230,232],.5));fg.addColorStop(1,rgba([228,230,232],0));c.fillStyle=fg;c.fillRect(0,y-90,402,180)}}
+ const hg=c.createLinearGradient(0,780,0,874);hg.addColorStop(0,rgba(bot,0));hg.addColorStop(1,rgba(mixC(bot,[0,0,0],.35),.85));c.fillStyle=hg;c.fillRect(0,780,402,94);
+ // text color from the sky brightness under the words
+ const lum=(top[0]*.3+top[1]*.59+top[2]*.11)*.5+(bot[0]*.3+bot[1]*.59+bot[2]*.11)*.5;const ink=lum>150?'#1E1C1F':'#F6F2EA';$('#wover').style.color=ink;
+ glass(t,ink);liveTick(t);requestAnimationFrame(tick)}
+let tilt={x:0,y:0},tiltT={x:0,y:0},cfc=null;
+function glass(t,ink){const M=30,X=24,Y=196,Wd=354,H=182,R=26;tilt.x+=(tiltT.x-tilt.x)*.1;tilt.y+=(tiltT.y-tilt.y)*.1;const dark=ink!=='#1E1C1F';
+ gc.setTransform(2,0,0,2,0,0);gc.clearRect(0,0,Wd+2*M,H+2*M);gc.save();gc.translate(M,M);
+ // a very soft shadow under the slot, so the glass sits a touch above the screen
+ gc.save();gc.shadowColor='rgba(0,0,0,'+(dark?.22:.13)+')';gc.shadowBlur=16;gc.shadowOffsetX=1+tilt.x*.5;gc.shadowOffsetY=6+tilt.y*.5;gc.fillStyle='rgba(0,0,0,1)';gc.beginPath();gc.roundRect(3,3,Wd-6,H-6,R-3);gc.fill();gc.restore();
+ gc.save();gc.beginPath();gc.roundRect(0,0,Wd,H,R);gc.clip();
+ // the sky is sampled from a region 30 pt larger than the slot and scaled about the slot's center.
+ // sc = 1 is the sky exactly in place. sc < 1 pulls the picture from OUTSIDE the edge inward, the way a raised edge of glass does,
+ // so whatever crosses the boundary (the moon, a cloud) continues into the glass, slightly squeezed.
+ const sky=(sc,dx,dy)=>{const cx=Wd/2,cy=H/2;gc.drawImage(cv,(X-M)*2,(Y-M)*2,(Wd+2*M)*2,(H+2*M)*2,cx-(cx+M)*sc+dx,cy-(cy+M)*sc+dy,(Wd+2*M)*sc,(H+2*M)*sc)};
+ sky(1,tilt.x*.6,tilt.y*.6);
+ // the rim: 30 pt inside the edge. Bending and light fade in from nothing at the outer edge, peak a quarter of the way in, and fade to nothing at the flat middle.
+ const BW=30,N=18;for(let i=0;i<N;i++){const dOut=BW*i/N,dIn=BW*(i+1)/N,u=(i+.5)/N;const w=Math.pow(Math.sin(Math.PI*Math.pow(u,.6)),1.4);
+  gc.save();gc.beginPath();gc.roundRect(dOut,dOut,Wd-2*dOut,H-2*dOut,Math.max(1,R-dOut));gc.roundRect(dIn,dIn,Wd-2*dIn,H-2*dIn,Math.max(1,R-dIn));gc.clip('evenodd');
+  sky(1-w*.09,tilt.x*(.6+w*1.5),tilt.y*(.6+w*1.5));
+  const k=.13*w;const lg=gc.createLinearGradient(0,0,Wd,H);lg.addColorStop(0,'rgba(255,255,255,'+(k*(dark?.8:1))+')');lg.addColorStop(.45,'rgba(255,255,255,0)');lg.addColorStop(.55,'rgba(0,0,0,0)');lg.addColorStop(1,'rgba(0,0,0,'+(k*(dark?.9:.7))+')');gc.fillStyle=lg;gc.fillRect(0,0,Wd,H);gc.restore()}
+ // the faintest sheen on the flat top, following the tilt
+ const p=clamp(.5+tilt.x*.07-tilt.y*.05,0,1);const sh=gc.createLinearGradient(0,0,Wd,H);sh.addColorStop(clamp(p-.3,0,1),'rgba(255,255,255,0)');sh.addColorStop(p,'rgba(255,255,255,'+(dark?.025:.035)+')');sh.addColorStop(clamp(p+.3,0,1),'rgba(255,255,255,0)');gc.fillStyle=sh;gc.fillRect(0,0,Wd,H);
+ gc.restore();gc.restore();
+ const tr='perspective(1100px) rotateX('+(-tilt.y*.7)+'deg) rotateY('+(tilt.x*.7)+'deg)';$('#glass').style.transform=tr;$('#gl').style.transform=tr}
+let gx0=null;const G=$('#glass');G.onpointerdown=e=>{gx0=[e.clientX,e.clientY];G.setPointerCapture(e.pointerId)};G.onpointermove=e=>{if(!gx0)return;tiltT.x=clamp((e.clientX-gx0[0])/K/30,-5,5);tiltT.y=clamp((e.clientY-gx0[1])/K/30,-5,5)};G.onpointerup=()=>{gx0=null;tiltT.x=tiltT.y=0};
+let t0=performance.now();function tick(now){try{draw((now-t0)/1000)}catch(e){console.error(e);requestAnimationFrame(tick)}}requestAnimationFrame(tick);
+const TEMP={clear:[64,62,66,51],cloudy:[64,62,66,51],rain:[59,55,62,50],storm:[61,57,64,52],fog:[56,54,60,49],snow:[31,24,33,22]};
+const CARE={clear:[['Sunscreen at noon','UV 7'],['Water the balcony plants tonight','no rain till Thursday'],['Open the windows this evening','66°, dry']],cloudy:[['Take the umbrella at 7','rain from 7 PM'],['Water the balcony plants tonight','no rain till Thursday'],['Bring the washing in before 7','']],rain:[['Take the umbrella','rain until midnight'],['Close the balcony door','wind from the west'],['Skip watering the plants','rain does it']],storm:[['Close the windows now','storm by 7'],['Charge the phone','outages are likely'],['Walk tomorrow instead','clear by morning']],fog:[['Lights on for the walk','fog until 10 AM'],['Leave ten minutes early','slow traffic'],['Water the balcony plants tonight','']],snow:[['Bring the basil in','frost tonight'],['Salt the steps','ice by morning'],['Warm layers for the walk','feels like 24°']]};
+let live={wind:9,until:108,sunDeg:12};
+function liveTick(t){const alt=sunAlt(hour);live.sunDeg=Math.round(alt*62);live.wind=9+Math.round(Math.sin(t*.7)*2+Math.sin(t*2.3)*1.5);live.until=Math.max(0,108-Math.floor(t/2));
+ const L=$('#gl .live');if(L){L.children[0].querySelector('b').textContent=live.wind;L.children[1].querySelector('b').textContent=cond==='clear'?'—':Math.floor(live.until/60)+':'+String(live.until%60).padStart(2,'0');L.children[2].querySelector('b').textContent=(live.sunDeg<0?'below':live.sunDeg+'°')}}
+function drawInfo(){const T=TEMP[cond],hh=Math.round(hour)%24,clockTxt=(hh%12||12)+(hour%1?':'+String(Math.round((hour%1)*60)).padStart(2,'0'):':00')+(hh<12?' am':' pm');$('#wclock').textContent=clockTxt.replace(/ [ap]m/,'');$('#wtime').textContent=clockTxt;
+ const word={clear:hour>SET||hour<RISE?'Clear':'Sunny',cloudy:'Cloudy',rain:'Rain',storm:'Thunderstorm',fog:'Fog',snow:'Snow'}[cond];
+ $('#gl').innerHTML='<div class="temp">'+T[0]+'<small>°</small></div><div class="word">'+word+'<em>feels like '+T[1]+'°, high '+T[2]+'°</em></div><div class="live"><div><b>9</b><small>mph, gusting</small></div><div><b>1:48</b><small>'+(cond==='clear'?'no change':cond==='cloudy'?'until rain':cond==='rain'||cond==='storm'?'until it clears':'until it lifts')+'</small></div><div><b>12°</b><small>sun height</small></div></div>';
+ $('#wline').innerHTML={cloudy:'<b>Cloudy</b> now, <b>rain</b> from 7 PM.',clear:'<b>'+word+'</b> now, clear all night.',rain:'<b>Rain</b> until about midnight, then clearing.',storm:'A <b>storm</b> by 7, clear by morning.',fog:'<b>Fog</b> until 10 AM, then sun.',snow:'<b>Snow</b> through the evening, 2 in.'}[cond];
+ const hrs=[['Now',T[0],word],['6 PM',T[0]-1,word],['7 PM',T[0]-3,cond==='cloudy'?'Rain':word],['8 PM',T[0]-5,cond==='cloudy'?'Rain':word],['9 PM',T[0]-6,cond==='cloudy'?'Rain':word],['10 PM',T[0]-7,cond==='storm'?'Clearing':cond==='cloudy'?'Rain':word]];
+ $('#whours').innerHTML=hrs.map(([a,b,w])=>'<div><em>'+a+'</em><b>'+b+'°</b><span>'+w+'</span></div>').join('');
+ const care=$('#care');care.innerHTML='<div class="sc">Care</div>'+CARE[cond].map(([a,b])=>'<div class="cr"><span class="nm">'+a+'<i></i></span><em>'+b+'</em></div>').join('');
+ care.querySelectorAll('.cr').forEach(r=>{let x0=null,dx=0;r.onpointerdown=e=>{x0=e.clientX;dx=0;r.setPointerCapture(e.pointerId)};r.onpointermove=e=>{if(x0==null)return;dx=(e.clientX-x0)/K;r.style.transform='translateX('+Math.max(-60,Math.min(60,dx))+'px)'};
+  r.onpointerup=()=>{if(x0==null)return;x0=null;r.style.transform='';if(dx>56||Math.abs(dx)<6){const on=r.classList.toggle('done');receipt('#r2',r.querySelector('.nm').textContent+(on?', done.':', back.'),()=>r.classList.toggle('done'))}}})}
+drawInfo();$('#wfoot').onclick=()=>receipt('#r2','You’ll hear 30 minutes before rain.',()=>{});
+
+/* ================= Kitchen level 1: Recipes, pull apart as a layer ================= */
+const DISHES=[['Tacos','25 min',0,[['Tortillas','8'],['Chicken thighs','1 lb'],['Onions','2'],['Peppers','2'],['Cilantro','a bunch'],['Limes','3'],['Cumin',''],['Sour cream','']],['Char the tortillas on the burner.','Brown the chicken with cumin, then the onions and peppers.','Lime, cilantro, sour cream. Eat.']],
+ ['Dal','40 min',0,[['Red lentils','1 cup'],['Onion','1'],['Tomatoes','2'],['Garlic','3 cloves'],['Turmeric',''],['Cumin',''],['Ghee','']],['Rinse the lentils, simmer with turmeric.','Fry the onion, garlic, cumin in ghee.','Stir in the tomatoes, then the lentils. Salt.']],
+ ['Pasta','20 min',0,[['Penne','300 g'],['Garlic','2 cloves'],['Spinach','a bag'],['Parmesan',''],['Olive oil','']],['Boil the penne.','Garlic in oil, then the spinach until it wilts.','Toss, parmesan, pepper.']],
+ ['Fried rice','15 min',0,[['Rice, cooked','3 cups'],['Eggs','2'],['Peas','1 cup'],['Spring onions',''],['Soy sauce','']],['Scramble the eggs, set aside.','Fry the rice hot with the peas.','Eggs back in, soy, spring onions.']],
+ ['Shakshuka','30 min',1,[['Eggs','4'],['Tomatoes','4'],['Peppers','2'],['Onion','1'],['Feta','',1],['Cumin',''],['Bread','']],['Soften onion and peppers, add cumin.','Tomatoes down to a sauce, wells for the eggs.','Eggs in, lid on, feta over. Bread.']]];
+const names=$('#names');DISHES.forEach((d,i)=>{const e=document.createElement('div');e.className='name';e.innerHTML=[...d[0]].map(ch=>'<span class="ch">'+ch+'</span>').join('')+'<span class="m'+(d[2]?' miss':'')+'">'+(d[2]?'feta short':d[1])+'</span>';e.onclick=()=>openDish(i,e);names.appendChild(e)});
+const page=$('#kpage'),tint=$('#tint'),layer=$('#layer'),lbig=$('#lbig'),lbody=$('#lbody');let openI=-1;
+function openDish(i,src){const d=DISHES[i];openI=i;const pr=$('#p1').getBoundingClientRect();
+ // letters start where they were on the page, then travel to the layer's headline and spread
+ lbig.innerHTML='';const srcCh=[...src.querySelectorAll('.ch')];const chs=[...d[0]].map((ch,k)=>{const s=document.createElement('span');s.className='ch';s.textContent=ch;lbig.appendChild(s);return s});
+ const mid=(chs.length-1)/2;chs.forEach((s,k)=>{const r=srcCh[k].getBoundingClientRect(),lr=s.getBoundingClientRect();const dx=(r.left-lr.left)/K,dy=(r.top-lr.top)/K;s.style.transition='none';s.style.transform='translate('+dx+'px,'+dy+'px) scale(.85)';s.style.color='var(--ink)'});
+ lbody.innerHTML='<div class="lead">'+d[1]+(d[2]?', <span style="color:var(--wine)">feta is short</span>':', you have everything')+'.</div><div class="ing">'+d[3].map(([n,q,m])=>'<div'+(m?' class="miss"':'')+'><span>'+n+'</span><span>'+q+'</span></div>').join('')+'</div><div class="steps">'+d[4].map((s,k)=>'<div><b>'+(k+1)+'</b><span>'+s+'</span></div>').join('')+'</div>';
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{page.classList.add('dim');tint.classList.add('on');layer.classList.add('on');chs.forEach((s,k)=>{s.style.transition='';s.style.transform='translate('+((k-mid)*34)+'px,0) scale(1)';s.style.color='var(--kitchen)'})}));
+ $('.foot',page).textContent='Cook '+d[0]}
+function closeDish(){const chs=[...lbig.querySelectorAll('.ch')],mid=(chs.length-1)/2;chs.forEach((s,k)=>{s.style.transform='translate(0,0) scale(.9)';s.style.opacity=0});layer.classList.remove('on');tint.classList.remove('on');page.classList.remove('dim');setTimeout(()=>{lbig.innerHTML='';chs.forEach(s=>s.style.opacity=1)},450);openI=-1;$('.foot',page).textContent='Cook'}
+$('#lclose').onclick=closeDish;tint.onclick=closeDish;
+let ex=null;$('#p1').addEventListener('pointerdown',e=>{const r=$('#p1').getBoundingClientRect();if((e.clientX-r.left)/K<24&&openI>=0)ex=e.clientX},true);$('#p1').addEventListener('pointerup',e=>{if(ex==null)return;if((e.clientX-ex)/K>60)closeDish();ex=null},true);
+})();
+</script>

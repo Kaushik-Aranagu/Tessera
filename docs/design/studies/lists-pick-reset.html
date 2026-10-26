@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Pick one and reset</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for Lists screens 10 and 12 (docs/design/kitchen/lists-9-12.md). Plays once on load; add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--mute:#A39AAE;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 90% 5%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(70% 45% at 0% 35%,#BFD8E2 0%,rgba(191,216,226,0) 70%),radial-gradient(80% 50% at 100% 75%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(70% 40% at 10% 95%,#CFE0EA 0%,rgba(207,224,234,0) 70%),#F4F0F2}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.hero{font-weight:500;font-size:56px;line-height:1;letter-spacing:-.04em}
+.pg{position:absolute;top:0;width:390px;height:844px}
+.it{position:absolute;left:22px;height:48px;line-height:48px;font-size:21px;font-weight:400;white-space:nowrap}
+.strike{position:absolute;left:-4px;top:0;overflow:visible}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:20;pointer-events:none}
+.d{position:absolute;width:76px;height:70px;margin:-35px 0 0 -38px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.8) 0%,rgba(var(--c),.6) 40%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(4px)}
+.r{--c:200,69,47;--x:-14px;--y:-8px;--mx:18px;--my:-10px}.b{--c:46,109,164;--x:14px;--y:-8px;--mx:-16px;--my:-12px}.y{--c:224,179,65;--x:0px;--y:13px;--mx:0px;--my:18px}
+@keyframes idle{0%,100%{transform:translate(var(--x),calc(var(--y) - 6px)) scale(.78)}50%{transform:translate(var(--x),calc(var(--y) + 6px)) scale(.86)}}
+@keyframes bloom{0%{transform:translate(0,0) scale(.4);opacity:0}35%{transform:translate(var(--mx),var(--my)) scale(1.15);opacity:1}100%{transform:translate(0,0) scale(.9);opacity:0}}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+  <!-- rail of list names -->
+  <div class="abs lbl" style="left:22px;right:22px;top:58px;display:flex;gap:26px">
+    <span id="rA" style="color:var(--ink)">FILMS</span><span id="rB" style="color:var(--mute)">GYM BAG</span><span style="color:var(--mute)">GIFTS</span><span style="color:var(--mute)">TO READ</span>
+  </div>
+  <span id="car" class="abs" style="left:22px;top:84px;width:52px;height:4px;border-radius:2px 6px 3px 5px;background:var(--verm);filter:blur(.5px)"></span>
+
+  <div id="pages" class="abs" style="left:0;top:0;width:780px;height:844px">
+    <!-- Films: pick one is on -->
+    <section class="pg" style="left:0">
+      <div class="abs" style="left:22px;top:112px;font-size:21px;color:var(--ctx)">9 to watch</div>
+      <div id="heroA" class="abs hero" style="left:20px;top:142px">Films</div>
+      <span id="hold" class="abs" style="left:22px;top:204px;width:0;height:4px;border-radius:2px 5px 3px 4px;background:var(--verm);filter:blur(.5px)"></span>
+      <div class="abs lbl" style="left:22px;top:218px">PICK ONE</div>
+      <div id="films" class="abs" style="left:0;right:0;top:256px;height:440px"></div>
+      <div id="pick" class="abs hero" style="left:20px;right:20px;top:360px;opacity:0;z-index:4"></div>
+      <div id="bloom" class="abs" style="left:195px;top:400px;width:0;height:0;transform:scale(1.4)">
+        <span class="d r" style="opacity:0"></span><span class="d b" style="opacity:0"></span><span class="d y" style="opacity:0"></span>
+      </div>
+    </section>
+    <!-- Gym bag: reusable -->
+    <section class="pg" style="left:390px">
+      <div id="bagCtx" class="abs" style="left:22px;top:112px;font-size:21px;color:var(--ctx)">2 of 6 left</div>
+      <div class="abs hero" style="left:20px;top:142px">Gym bag</div>
+      <div class="abs lbl" style="left:22px;top:218px">REUSABLE</div>
+      <div id="bag" class="abs" style="left:0;right:0;top:256px;height:440px"></div>
+      <div id="fold" class="abs" style="left:22px;right:22px;top:708px;height:40px;font-size:21px;border-top:.5px solid rgba(43,36,64,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.7);padding-top:10px">
+        <span id="foldN" style="font-weight:600">4</span> done<span id="foldHint" class="lbl" style="margin-left:12px">· HOLD TO RESET</span>
+        <span id="foldFill" class="abs" style="left:0;top:-1px;height:2px;width:0;background:var(--verm)"></span>
+      </div>
+    </section>
+  </div>
+
+  <div class="abs" style="left:14px;right:14px;bottom:18px;height:74px;border-radius:20px;background:rgba(250,246,239,.62);backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 .5px rgba(43,36,64,.2),0 10px 28px rgba(43,36,64,.12)">
+    <span id="tess" class="abs" style="left:78px;top:24px;font-size:21px;color:#8A7F96">Ask Tess…</span>
+  </div>
+  <div class="abs" style="left:50px;top:789px;width:0;height:0;transform:scale(.5)">
+    <span class="d r" style="animation:idle 7s ease-in-out infinite"></span><span class="d b" style="animation:idle 8.5s ease-in-out -3s infinite"></span><span class="d y" style="animation:idle 10s ease-in-out -6s infinite"></span>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(ease(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+async function tessSay(text, colour = '#2E6DA4') {
+  const t = $('tess'); await anim(t, [{ opacity: 1 }, { opacity: 0 }], { duration: 120 });
+  t.textContent = text; t.style.color = colour;
+  anim(t, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: HOUSE });
+}
+const films = ['Perfect Days', 'Past Lives', 'Aftersun', 'The Zone of Interest', 'Drive My Car', 'Paterson', 'Columbus', 'In the Mood for Love'];
+const fEls = films.map((n, k) => { const e = document.createElement('div'); e.className = 'it'; e.textContent = n; e.style.top = (k * 48) + 'px'; $('films').appendChild(e); return e; });
+const bag = [['Towel', 1], ['Lifting belt', 1], ['Chalk', 1], ['Headphones', 1], ['Shoes', 0], ['Water bottle', 0]];
+function strikeSvg(w) {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('width', w + 10); s.setAttribute('height', 48); s.setAttribute('class', 'strike');
+  s.innerHTML = `<path d="M2 25 C ${w * .3} 22, ${w * .62} 27.5, ${w + 8} 23.5" fill="none" stroke="#2B2440" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0" opacity=".85"/>`;
+  return s;
+}
+const bEls = bag.map(([n, done], k) => { const e = document.createElement('div'); e.className = 'it'; e.textContent = n; $('bag').appendChild(e); return { e, done, n }; });
+// open items at the top; done ones have sunk into the fold
+function layoutBag() { let k = 0; bEls.filter((b) => !b.done).forEach((b) => { b.e.style.top = (k++ * 48) + 'px'; b.e.style.opacity = 1; }); bEls.filter((b) => b.done).forEach((b) => { b.e.style.top = (470) + 'px'; b.e.style.opacity = 0; }); }
+
+async function pickOne(idx) {
+  const el = fEls[idx]; const r = rel(el.getBoundingClientRect());
+  fEls.forEach((e, k) => { if (k !== idx) anim(e, [{ opacity: getComputedStyle(e).opacity, filter: 'blur(0)' }, { opacity: .14, filter: 'blur(2px)' }], { duration: 300 }); });
+  const g = $('pick'); g.textContent = films[idx]; el.style.visibility = 'hidden';
+  [...$('bloom').children].forEach((d, k) => d.animate([{ transform: 'scale(.4)', opacity: 0 }, { transform: 'translate(var(--mx),var(--my)) scale(1.15)', opacity: 1, offset: .35 }, { transform: 'scale(.9)', opacity: 0 }], { duration: 900, delay: 200 + k * 40, fill: 'forwards' }));
+  await anim(g, [
+    { left: r.left + 'px', top: r.top + 'px', fontSize: '21px', lineHeight: '48px', opacity: 1, letterSpacing: '-.005em' },
+    { left: '20px', top: '370px', fontSize: '56px', lineHeight: '56px', opacity: 1, letterSpacing: '-.04em' }
+  ], { duration: 520, easing: HOUSE });
+}
+async function sendBack(idx) {
+  const el = fEls[idx]; const r = rel(el.getBoundingClientRect()); const g = $('pick');
+  await fingerOn(260, 398);
+  await tween(300, (t) => fingerAt(260 - 180 * t, 398));
+  fingerOff();
+  await anim(g, [{ left: '20px', top: '370px', fontSize: '56px', lineHeight: '56px', opacity: 1, letterSpacing: '-.04em' }, { left: r.left + 'px', top: r.top + 'px', fontSize: '21px', lineHeight: '48px', opacity: 1, letterSpacing: '-.005em' }], { duration: 420, easing: HOUSE });
+  el.style.visibility = 'visible'; g.style.opacity = 0; g.getAnimations().forEach((a) => a.cancel()); g.style.opacity = 0;
+  await sleep(200);
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  layoutBag();
+  bEls.filter((b) => b.done).forEach((b) => { b.e.appendChild(strikeSvg(b.e.offsetWidth)); });
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  // arrive
+  fEls.forEach((e, k) => e.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 120 + k * 30, easing: 'ease-out', fill: 'backwards' }));
+  await sleep(1200);
+
+  // hold the hero: paint fills its underline over 0.6s, then one film lifts out
+  await fingerOn(110, 170);
+  await anim($('hold'), [{ width: '0px' }, { width: '150px' }], { duration: 600, easing: 'cubic-bezier(.3,.6,.4,1)' });
+  fingerOff(); anim($('hold'), [{ opacity: 1 }, { opacity: 0 }], { duration: 300 }).then(() => { $('hold').getAnimations().forEach((a) => a.cancel()); });
+  await pickOne(2);
+  await sleep(1500);
+  // swipe it away: back into its row, and another pick
+  await sendBack(2);
+  await pickOne(5);
+  await sleep(1500);
+  await sendBack(5);
+  fEls.forEach((e) => anim(e, [{ opacity: .14, filter: 'blur(2px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 300 }));
+  await sleep(700);
+
+  // swipe to the next list on x: the hero parallaxes
+  await fingerOn(330, 520);
+  await tween(520, (t) => { fingerAt(330 - 260 * t, 520); $('pages').style.transform = `translateX(${-390 * t}px)`; $('car').style.left = (22 + 78 * t) + 'px'; $('car').style.width = (52 + 26 * t) + 'px'; });
+  fingerOff(); $('rA').style.color = 'var(--mute)'; $('rB').style.color = 'var(--ink)';
+  await sleep(900);
+
+  // reusable: hold the fold to reset; the strikes un-paint, the items rise back
+  await fingerOn(120, 730);
+  const struck = bEls.filter((b) => b.done);
+  await anim($('foldFill'), [{ width: '0px' }, { width: '346px' }], { duration: 700, easing: 'cubic-bezier(.3,.6,.4,1)' });
+  fingerOff();
+  struck.forEach((b, k) => {
+    const to = (2 + k) * 48;
+    b.e.style.top = to + 'px';
+    b.e.animate([{ transform: `translateY(${470 - to}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 520, delay: k * 30, easing: HOUSE, fill: 'forwards' });
+    b.e.querySelector('path').animate([{ strokeDashoffset: 0, opacity: .85 }, { strokeDashoffset: -100, opacity: .85, offset: .9 }, { strokeDashoffset: -100, opacity: 0 }], { duration: 420, delay: 300 + k * 30, easing: 'ease-in', fill: 'forwards' });
+  });
+  anim($('foldFill'), [{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: 200 });
+  await anim($('foldN'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }); $('foldN').textContent = '0'; anim($('foldN'), [{ opacity: 0 }, { opacity: 1 }], { duration: 160 });
+  anim($('bagCtx'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }).then(() => { $('bagCtx').textContent = '6 to pack'; anim($('bagCtx'), [{ opacity: 0 }, { opacity: 1 }], { duration: 200 }); });
+  tessSay('Gym bag is ready to pack.');
+  await sleep(2200);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

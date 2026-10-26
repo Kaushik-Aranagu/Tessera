@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Recipe shelf</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for kitchen sheet 14 (docs/design/kitchen/14-15-shelf-and-lists.md): the shelf settling into its sizes, a filter closing it up, and a name zooming into its recipe page. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--cad:#E0A35C;--sage:#6E9E6A}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 35%,#DCE8D2 0%,rgba(220,232,210,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2D9C0 0%,rgba(242,217,192,0) 70%),#F5F0E6}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.car{position:absolute;height:5px;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;background:var(--verm);opacity:.85;filter:blur(.3px)}
+#shelf{position:absolute;left:0;right:0;top:196px;height:504px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 calc(100% - 40px),transparent);mask-image:linear-gradient(#000 calc(100% - 40px),transparent)}
+.nm{overflow:hidden;white-space:nowrap}
+.nm span{display:block;padding-left:22px;font-size:21px;line-height:1.5;font-weight:500;letter-spacing:-.01em;transform-origin:22px 50%}
+.seam{position:absolute;left:22px;width:110px;height:2px;background:var(--verm);border-radius:1px}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:20;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+
+  <section id="shelfPage" class="abs" style="inset:0">
+    <div class="abs lbl" style="left:22px;top:58px"><span style="color:var(--ink)">RECIPES</span> · GROCERIES</div>
+    <div class="car" style="left:22px;top:80px;width:78px"></div>
+    <div id="ctx" class="abs" style="left:22px;top:112px;font-size:21px;color:var(--ctx)">14 recipes, carbonara last night</div>
+    <div class="abs lbl" style="left:22px;top:150px;display:flex;gap:18px"><span id="fQuick">QUICK</span><span>NOT LATELY</span><span>FROM THE BASKET</span></div>
+    <div id="fCar" class="car" style="left:22px;top:172px;width:0"></div>
+    <div id="shelf"><div id="col"></div></div>
+  </section>
+
+  <!-- the recipe page the name zooms into -->
+  <section id="page" class="abs" style="inset:0;opacity:0;pointer-events:none">
+    <div class="abs lbl" style="left:22px;top:58px">RECIPES</div>
+    <div class="abs" style="left:22px;top:160px;font-size:21px;color:var(--ctx)">serves 2, 35 min</div>
+    <div id="ings" class="abs" style="left:22px;top:256px;font-size:21px;line-height:44px"></div>
+  </section>
+
+  <div class="abs" style="left:14px;right:14px;bottom:18px;height:74px;border-radius:20px;background:rgba(250,246,239,.62);backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 .5px rgba(43,36,64,.2),0 10px 28px rgba(43,36,64,.12);z-index:6">
+    <span id="tess" class="abs" style="left:78px;top:24px;font-size:21px;color:#8A7F96">Ask Tess…</span>
+  </div>
+  <div class="abs" style="left:36px;top:778px;width:28px;height:24px;border-radius:52% 48% 60% 40%;background:radial-gradient(closest-side,rgba(46,109,164,.7),rgba(46,109,164,0));filter:blur(2px);z-index:7"></div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const SETTLE = 'cubic-bezier(.3,1.3,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const tap = async (x, y) => { await fingerOn(x, y); await sleep(120); fingerOff(); };
+
+// tiers by use over 90 days: hero 56/500, regular 34/500 at 90%, body 21/500 at 70%, quiet 21/400 at 45%
+const TIER = {
+  hero: { size: 56, lh: 62, w: 500, a: 1, ls: '-.04em' },
+  reg: { size: 34, lh: 44, w: 500, a: .9, ls: '-.035em' },
+  body: { size: 21, lh: 34, w: 500, a: .7, ls: '-.01em' },
+  quiet: { size: 21, lh: 34, w: 400, a: .45, ls: '-.01em' }
+};
+const NAMES = [
+  { n: 'Carbonara', t: 'hero', q: true },
+  { n: 'Dal tadka', t: 'reg', q: false, cooking: true },
+  { n: 'Green curry', t: 'hero', q: false },
+  { n: 'Shakshuka', t: 'body', q: true },
+  { n: 'Miso salmon', t: 'reg', q: true },
+  { n: 'Chili', t: 'hero', q: false },
+  { n: 'Lemon pasta', t: 'body', q: true },
+  { n: 'Overnight oats', t: 'body', q: true },
+  { n: 'Banana bread', t: 'quiet', q: false },
+  { n: 'Risotto', t: 'quiet', q: false }
+];
+for (const it of NAMES) {
+  const w = document.createElement('div'); w.className = 'nm'; w.style.position = 'relative';
+  const s = document.createElement('span'); s.textContent = it.n;
+  s.style.color = `rgba(43,36,64,${TIER.body.a})`; s.style.lineHeight = '34px'; s.style.opacity = 0;
+  w.appendChild(s); $('col').appendChild(w); it.w = w; it.s = s;
+}
+const paste = document.createElement('div'); paste.className = 'nm';
+paste.innerHTML = '<span style="color:var(--cobalt);font-weight:400;line-height:34px;opacity:0">Paste a recipe</span>';
+$('col').appendChild(paste);
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+
+  // arrival: the page enters from the right (x sibling of Groceries); names land at Body size
+  anim($('shelfPage'), [{ transform: 'translateX(40px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 360, easing: HOUSE });
+  NAMES.forEach((it, k) => anim(it.s, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: 80 + k * 18, easing: 'ease-out' }));
+  anim(paste.firstChild, [{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 300 });
+  await sleep(700);
+
+  // the one living moment: each name settles into its size, 25ms stagger down the column
+  NAMES.forEach((it, k) => {
+    const T = TIER[it.t];
+    anim(it.s, [
+      { fontSize: '21px', lineHeight: '34px', fontWeight: 500, letterSpacing: '-.01em', color: `rgba(43,36,64,${TIER.body.a})` },
+      { fontSize: T.size + 'px', lineHeight: T.lh + 'px', fontWeight: T.w, letterSpacing: T.ls, color: `rgba(43,36,64,${T.a})` }
+    ], { duration: 620, delay: k * 25, easing: it.t === 'hero' || it.t === 'reg' ? SETTLE : HOUSE });
+  });
+  await sleep(760);
+  // a cook running on Dal tadka: the ledger's 2pt vermilion seam above its name
+  const dal = NAMES[1]; const seam = document.createElement('div'); seam.className = 'seam'; seam.style.top = '6px'; seam.style.width = '0';
+  anim(dal.w, [{ paddingTop: '0px' }, { paddingTop: '10px' }], { duration: 300, easing: HOUSE });
+  dal.w.appendChild(seam); anim(seam, [{ width: '0px' }, { width: '140px' }], { duration: 420, easing: HOUSE });
+  await sleep(1300);
+
+  // filter QUICK on: names that don't match drop, the rest close up keeping their sizes
+  const q = rel($('fQuick').getBoundingClientRect());
+  await tap(q.left + q.width / 2, q.top + 10);
+  $('fQuick').style.color = 'var(--ink)';
+  anim($('fCar'), [{ width: '0px' }, { width: q.width + 'px' }], { duration: 280, easing: HOUSE });
+  const out = NAMES.filter((it) => !it.q);
+  out.forEach((it) => { it.h = it.w.offsetHeight; anim(it.s, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(10px)' }], { duration: 180 }); });
+  await sleep(140);
+  out.forEach((it) => anim(it.w, [{ height: it.h + 'px' }, { height: '0px' }], { duration: 320, easing: HOUSE }));
+  anim($('ctx'), [{ opacity: 1 }, { opacity: 0 }], { duration: 140 }).then(() => { $('ctx').textContent = '5 under 30 minutes'; anim($('ctx'), [{ opacity: 0 }, { opacity: 1 }], { duration: 220 }); });
+  await sleep(1600);
+
+  // filter off: they come back in their places
+  await tap(q.left + q.width / 2, q.top + 10);
+  $('fQuick').style.color = '';
+  anim($('fCar'), [{ width: q.width + 'px' }, { width: '0px' }], { duration: 220, easing: HOUSE });
+  out.forEach((it) => anim(it.w, [{ height: '0px' }, { height: it.h + 'px' }], { duration: 320, easing: HOUSE }));
+  await sleep(160);
+  out.forEach((it) => anim(it.s, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: HOUSE }));
+  anim($('ctx'), [{ opacity: 1 }, { opacity: 0 }], { duration: 140 }).then(() => { $('ctx').textContent = '14 recipes, carbonara last night'; anim($('ctx'), [{ opacity: 0 }, { opacity: 1 }], { duration: 220 }); });
+  await sleep(1300);
+
+  // tap Green curry: the name zooms (z) into the recipe page's hero
+  const gc = NAMES[2]; const r = rel(gc.s.getBoundingClientRect());
+  await tap(120, r.top + r.height / 2);
+  const hero = gc.s.cloneNode(true); Object.assign(hero.style, { position: 'absolute', left: '0px', paddingLeft: '22px', top: r.top + 'px', margin: 0, zIndex: 5, opacity: 1, fontSize: '56px', lineHeight: '62px', letterSpacing: '-.04em', color: 'var(--ink)' });
+  $('ph').appendChild(hero); gc.s.style.visibility = 'hidden';
+  NAMES.filter((it) => it !== gc).forEach((it) => anim(it.s, [{ opacity: 1 }, { opacity: 0, transform: 'scale(.96)' }], { duration: 240 }));
+  anim(paste, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  anim($('shelfPage'), [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.06)', opacity: 0 }], { duration: 380, delay: 120, easing: HOUSE });
+  await anim(hero, [{ top: r.top + 'px', left: '0px' }, { top: '86px', left: '-2px' }], { duration: 460, easing: HOUSE });
+  $('ings').innerHTML = ['<b style="font-weight:600">400 ml</b> coconut milk', '<b style="font-weight:600">2 tbsp</b> green curry paste', '<b style="font-weight:600">300 g</b> chicken thigh', '<b style="font-weight:600">1</b> lime'].map((x) => `<div>${x}</div>`).join('');
+  anim($('page'), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: HOUSE });
+  await sleep(2000);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

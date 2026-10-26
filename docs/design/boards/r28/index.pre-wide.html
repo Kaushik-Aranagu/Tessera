@@ -1,0 +1,492 @@
+<title>Tessera, Departure Mosaic</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300;400&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --training:#C4472A;--kitchen:#A8701F;--routines:#A4505F;--lists:#5E6B1F;--notes:#5B3FB8;--money:#3F7A62;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E0E10;--phone:#151517;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#EE6A4C;--kitchen:#E0A458;--routines:#D79AA6;--lists:#B5BE7A;--notes:#B9A9E0;--money:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#0E0E10;--phone:#151517;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#EE6A4C;--kitchen:#E0A458;--routines:#D79AA6;--lists:#B5BE7A;--notes:#B9A9E0;--money:#8DBFA7;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;gap:56px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+.notes{flex:1 1 360px;min-width:0;max-width:520px;display:flex;flex-direction:column;gap:20px}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,56px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);font-size:19px;margin:0}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+.moods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px}
+.mood{all:unset;cursor:pointer;display:grid;grid-template-columns:24px 1fr;gap:2px 10px;padding:9px 0}
+.mood .k{font-family:var(--nums);font-weight:200;font-size:22px;line-height:1.1;color:var(--ink3)}
+.mood b{font-weight:500}
+.mood span.d{grid-column:2;color:var(--ink2);font-size:16px;line-height:1.35}
+.mood[aria-pressed="true"] .k{color:var(--ink)}
+.mood[aria-pressed="true"] b{text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px}
+.mood:focus-visible,.tr:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+.trs{display:flex;flex-wrap:wrap;gap:6px 22px}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px;padding:4px 0}
+.tr[aria-pressed="true"]{color:var(--ink);text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px}
+@media (max-width:440px){.moods{grid-template-columns:1fr}}
+.phone{position:relative;width:360px;max-width:100%;height:740px;background:var(--phone);border:1px solid var(--edge);border-radius:44px;overflow:hidden;user-select:none;-webkit-user-select:none;
+  display:flex;flex-direction:column;padding:64px 24px 26px;box-sizing:border-box;gap:12px}
+.sent{text-align:right;font-size:21px;line-height:1.3;display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-height:112px;letter-spacing:-.005em}
+.sent .ln{white-space:pre}
+.sent .c{display:inline-block;transform-origin:50% 52%}
+.sent .c.flip{animation:flip 70ms cubic-bezier(.3,.7,.4,1)}
+@keyframes flip{0%{transform:scaleY(.08)}100%{transform:scaleY(1)}}
+.sent .a{font-weight:500}
+.sent .n{font-family:var(--nums);font-weight:300}
+.mos{height:160px;margin-top:14px}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+.phone>*:not(#cv){position:relative;z-index:1}
+.phone{touch-action:none}
+.cap{text-align:right;color:var(--ink3);font-size:16px;min-height:22px}
+.next{margin-top:auto;display:flex;flex-direction:column;gap:2px}
+.next .h{color:var(--ink3);font-size:16px}
+.next .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;min-height:40px}
+.next .row .t{font-size:18px}
+.next .row .w{color:var(--ink2);font-size:16px;text-align:right}
+@media (prefers-reduced-motion:reduce){.sent .c.flip{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="phone" id="phone" aria-label="Home preview">
+    <canvas id="cv" aria-label="Home, its screen pixels showing the day"></canvas>
+    <div class="sent" id="sent" aria-live="polite"></div>
+    <div class="mos" id="mos" aria-hidden="true"></div>
+    <div class="cap" id="cap"></div>
+    <div class="next"><div class="h">Next</div><div class="row"><span class="t" id="nt"></span><span class="w" id="nw"></span></div></div>
+  </div>
+
+  <div class="notes">
+    <h1>Departure mosaic</h1>
+    <p class="sub">The three lines are a departure board: when the day turns, each letter clicks forward through the alphabet to its new word. Under it the mosaic, the page stays a page. Only the mosaic is pixels, and its edge has no line. Its corners are softly rounded, between a circle and a square, and every pixel stays full size. Around it, about twelve rows of pixels start in the page's own color and climb, a small step per pixel, into the mosaic's colors, carrying the scene's detail as they go, so a star stays a star. You can't point to where the page stops and the mosaic starts. Its shape has a life of its own: it breathes a little, and stretches or shrinks to fit each mood (wide and low for still water, tall for the night sky, narrow while something runs), carries the mood of the hour in its own colors. Its edges break up into scattered pixels so it sits on the page instead of in a box.</p>
+    <p class="lab">Moods</p>
+    <div class="moods" id="moods"></div>
+    <p class="lab">How the edge meets the page</p>
+    <div class="trs" id="skins"><button class="tr sk" data-k="blend" aria-pressed="true">Rounded, rising from the page</button><button class="tr sk" data-k="skin" aria-pressed="false">Square, out of its own skin</button></div>
+    <p class="lab">How the pixels change over</p>
+    <div class="trs" id="trs"></div>
+    <p class="lab">Moments: the mosaic interrupts itself</p>
+    <div class="moods" id="evs"></div>
+    <p class="lab">Tess picks the mood</p>
+    <p class="sub" style="font-size:17px">On the phone nobody taps these. Tess watches the day on the phone and moves the mosaic: the clock and sun times, something running, a plan for rest, days away, everything finished, and later the weather. All of it is read on the phone, so nothing about you leaves it.</p>
+    <div class="trs"><button class="tr" id="play">Play a day with Tess</button></div>
+    <p class="lab">Each mood picks its own changeover unless you choose one here. Touch the mosaic to lean the pixels; tap for a ripple. On the phone the mood follows the day by itself.</p>
+  </div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const STEP=4,TILE=3.2,W=248,H=160,MC=Math.floor(W/STEP),MR=Math.floor(H/STEP);let COLS=48,ROWS=24;
+const SIZES={morning:[50,28],day:[48,24],golden:[60,30],running:[40,28],rest:[62,20],back:[36,22],done:[56,36],rain:[50,30],night:[62,38]};
+let wF=48,hF=24;
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),phoneEl=document.getElementById('phone'),mosEl=document.getElementById('mos');
+const dpr=Math.min(3,window.devicePixelRatio||1);const F=12;
+let PW=360,PH=740,GC=90,GR=185,winR=84,winT=50,protect=new Uint8Array(1),baseLayer=null,lean=new Float32Array(2);
+const mix=(a,b,p)=>[a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p,a[2]+(b[2]-a[2])*p];
+const add=(a,v)=>[a[0]+v,a[1]+v,a[2]+v];
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const ease=p=>1-Math.pow(1-p,3);
+function hash(i,j,s=0){const x=Math.sin(i*127.1+j*311.7+s*74.7)*43758.5453;return x-Math.floor(x)}
+function grad(stops,p){p=clamp(p);for(let k=1;k<stops.length;k++)if(p<=stops[k][0]){const a=stops[k-1],b=stops[k];return mix(a[1],b[1],(p-a[0])/(b[0]-a[0]||1))}return stops[stops.length-1][1]}
+
+const skyStops=[[0,[36,34,58]],[5.8/24,[58,54,90]],[6.8/24,[233,185,160]],[7.8/24,[240,214,180]],[10.5/24,[236,228,206]],[14.5/24,[234,214,176]],[17.7/24,[214,160,138]],[18.7/24,[176,122,140]],[19.7/24,[104,98,146]],[22/24,[58,54,90]],[1,[36,34,58]]];
+const sky=h=>grad(skyStops,h/24);
+const colH=j=>5+j*(19/(COLS-1));
+
+let ground=[247,245,241],dark=false,acc={};
+function hex(h){h=h.trim().replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+function readTheme(){const cs=getComputedStyle(document.documentElement);ground=hex(cs.getPropertyValue('--phone'));dark=ground[0]<100;
+  for(const k of['training','kitchen','routines','lists','notes','ink'])acc[k]=hex(cs.getPropertyValue('--'+k))}
+readTheme();matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readTheme);
+new MutationObserver(readTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+const T=(c,s=1,o={})=>Object.assign({c,s,dx:0,dy:0,ring:null},o);
+const jit=(i,j,a=16)=>(hash(i,j)-.5)*a;
+
+// pixel sun / moon helper: returns 0..1 coverage of a disc in tile space
+const disc=(i,j,ci,cj,r)=>clamp(r+.5-Math.hypot(j-cj,i-ci));
+
+function dayField(now){const nc=Math.round((now-5)/(19/(COLS-1)));
+  return (i,j,t)=>{let c=sky(colH(j));c=add(c,jit(i,j));c=mix(c,[c[0]*.88,c[1]*.88,c[2]*.9],i/(ROWS-1)*.5);
+    if(j>nc)c=mix(c,ground,.58);
+    if(j===nc)c=add(c,Math.sin(t/900+i*.25)*9);
+    const sw=Math.sin(j*.24+i*.13-t/1100);return T(c,1+Math.max(0,sw)*.12)}}
+const nowColFor=now=>Math.round((now-5)/(19/(COLS-1)));
+
+const scenes={
+  morning:{tr:'fall',fn(i,j,t){
+    const hz=Math.round(ROWS*.66);let c;
+    if(i<hz){c=grad([[0,[150,170,214]],[.45,[214,196,222]],[.8,[246,196,170]],[1,[252,214,168]]],i/hz)}
+    else{c=grad([[0,[180,150,160]],[1,[120,110,138]]],(i-hz)/(ROWS-hz))}
+    c=add(c,jit(i,j,10));
+    const rise=clamp((t%26000)/26000);const si=hz-1-rise*4,sj=COLS*.28;
+    const d=disc(i,j,si,sj,4.6);if(i<hz&&d>0)c=mix(c,[255,226,150],d);
+    const glow=Math.exp(-Math.hypot(j-sj,(i-si)*1.6)/9)*.35;if(i<hz)c=mix(c,[255,220,170],glow);
+    if(i>=hz){const sh=Math.abs(j-sj)<3+ (i-hz)*.6 && hash(i,j,Math.floor(t/500))<.35;if(sh)c=mix(c,[250,210,160],.45)}
+    return T(c)}},
+  day:{tr:'flip',fn:dayField(13.7)},
+  golden:{tr:'flip',fn(i,j,t){
+    let c=grad([[0,[232,170,120]],[.5,[226,140,118]],[1,[150,96,128]]],i/(ROWS-1));
+    c=add(c,jit(i,j,12));
+    const sj=COLS*.78,si=ROWS*.62;const d=disc(i,j,si,sj,5.2);
+    const streak=Math.exp(-Math.pow((i-si)/1.4,2))*(.25+.2*Math.sin(j*.3-t/700));
+    c=mix(c,[255,214,150],clamp(streak));
+    if(d>0)c=mix(c,[255,226,160],d);
+    return T(c,1+Math.max(0,Math.sin(j*.2-t/1300))*.08)}},
+  running:{tr:'wave',fn(i,j,t){
+    const base=dayField(18.1),nc=nowColFor(18.1);const o=base(i,j,t);
+    const ph=((t/2200)%1)*nc,d=j-ph;
+    if(j<=nc){const g=Math.exp(-d*d/5);o.c=add(o.c,g*18);o.s+=g*.14}
+    const rows=[Math.round(ROWS*.3),Math.round(ROWS*.4),Math.round(ROWS*.5),Math.round(ROWS*.6),Math.round(ROWS*.7)];
+    const k=rows.indexOf(i);
+    if(k>=0&&Math.abs(j-nc)<=1){if(k<3){o.c=acc.training;o.s=1.1+Math.sin(t/600+k)*.05}else if(j===nc){o.ring=acc.ink}else o.c=mix(o.c,ground,.6)}
+    return o}},
+  rest:{tr:'flip',fn(i,j,t){
+    const hz=Math.round(ROWS*.55);let ii=i,jj=j;
+    if(i>hz){ii=2*hz-i;jj=clamp(Math.round(j+Math.sin(t/1500+i*.7)*1.5),0,COLS-1)}
+    let c=grad([[0,[196,206,222]],[.6,[230,212,200]],[1,[238,200,176]]],ii/hz);c=add(c,(hash(ii,jj)-.5)*10);
+    if(i>hz)c=mix(c,[c[0]*.8,c[1]*.85,c[2]*.95],.9);
+    if(i===hz)c=mix(c,[250,236,220],.6);
+    if(dark)c=mix(c,[60,62,84],.45);
+    return T(c,i>hz?.9+Math.sin(t/1700+j*.4)*.05:1)}},
+  back:{tr:'gather',enter:0,fn(i,j,t){
+    const o=dayField(10.2)(i,j,t);const lt=t-scenes.back.enter;
+    const k=1-ease(clamp((lt-200-hash(i,j,3)*1400)/900));
+    const a=hash(i,j,1)*Math.PI*2,r=10+hash(i,j,2)*34;
+    o.dx=Math.cos(a)*r*k;o.dy=Math.sin(a)*r*k;o.c=mix(o.c,dark?[70,68,66]:[192,188,182],k*.75);o.s*=1-k*.5;return o}},
+  done:{tr:'wave',enter:0,fn(i,j,t){
+    let c=grad([[0,[70,60,110]],[.6,[150,96,128]],[1,[214,150,124]]],i/(ROWS-1));c=add(c,jit(i,j,10));
+    const lt=t-scenes.done.enter;const bursts=[[.30,.30,0,'training'],[.68,.24,700,'kitchen'],[.50,.42,1400,'routines'],[.80,.46,2100,'lists']];
+    let s=1;
+    for(const[bx,by,bt,a]of bursts){const lb=((lt-bt)%5200+5200)%5200;if(lt<bt)continue;
+      const R=lb/1300*13,dd=Math.hypot(j-bx*COLS,i-by*ROWS);const shell=Math.exp(-Math.pow(dd-R,2)/1.2)*clamp(1-lb/2200);
+      if(shell>.05&&hash(i,j,a.length)<.6){c=mix(c,acc[a],clamp(shell*1.2));s=Math.max(s,1+shell*.25)}}
+    const hzr=ROWS-3;if(i>=hzr){c=mix(c,[40,34,58],.6)}
+    return T(c,s)}},
+  night:{tr:'flip',fn(i,j,t){
+    let c=grad([[0,[22,22,44]],[.7,[44,42,82]],[1,[70,58,98]]],i/(ROWS-1));c=add(c,jit(i,j,6));
+    const au=Math.exp(-Math.pow(i-(ROWS*.45+Math.sin(j*.18+t/2600)*3),2)/7)*.22;c=mix(c,[96,180,170],au*(.6+.4*Math.sin(j*.11-t/1900)));
+    let s=1;const hs=hash(i,j,7);
+    if(hs<.04&&i<ROWS*.75){const tw=(Math.sin(t/(700+hs*9000)+hs*40)+1)/2;c=mix(c,[236,232,246],.3+tw*.6);s=.65+tw*.35}
+    const mi=ROWS*.22,mj=COLS*.76;const m=disc(i,j,mi,mj,4.8),cut=disc(i,j,mi-1.4,mj+2.3,4.5);
+    if(m>0)c=mix(c,[240,234,214],clamp(m-cut));
+    const sp=(t%7000)/7000;if(sp<.18){const q=sp/.18,hx=COLS*(.1+q*.55),hy=ROWS*(.08+q*.3);const along=(j-hx)*.5+(i-hy)*.3,perp=Math.abs((i-hy)-(j-hx)*.55);if(perp<.7&&along<0&&along>-5)c=mix(c,[240,236,250],clamp(1+along/5))}
+    const nc=nowColFor(22.4);if(j===nc&&i>=ROWS-6&&i<=ROWS-3)c=mix(c,[232,190,150],.85);
+    return T(c,s)}},
+  rain:{tr:'fall',fn(i,j,t){
+    let c=grad([[0,[150,160,178]],[1,[110,118,140]]],i/(ROWS-1));c=add(c,jit(i,j,8));
+    if(dark)c=mix(c,[40,44,60],.5);
+    const sp=hash(0,j,11),ph=(t/(420+sp*260)+sp*9)%1;const hd=ph*(ROWS+6)-3;const dd=i-hd;
+    if(dd<=0&&dd>-3&&hash(1,j,12)<.55)c=mix(c,[214,224,240],.7+dd*.2);
+    if(i===ROWS-1&&Math.abs(hd-ROWS)<1.2&&hash(1,j,12)<.55)c=mix(c,[220,230,244],.5);
+    return T(c)}},
+};
+const copy={
+  morning:{lines:[['Good morning.'],[['Walk','routines'],' at ',['7:30 am','n'],','],['then ',['notes','notes'],' for work.']],cap:'',nt:'Walk',nw:'At 7:30 am, your morning slot'},
+  day:{lines:[['Thursday afternoon,'],[['Push day','training'],' at ',['6:30 pm','n'],','],['then ',['groceries','kitchen'],'.']],cap:'',nt:'Groceries',nw:'Fits the afternoon'},
+  golden:{lines:[['Golden hour.'],['The sun sets at ',['6:34 pm','n'],','],[['Push day','training'],' after.']],cap:'',nt:'Push day',nw:'At 6:30 pm, due today'},
+  running:{lines:[[['Push day','training'],' is running,'],['set ',['3','n'],' of ',['5','n'],','],['next set at ',['6:09 pm','n'],'.']],cap:'Three sets done',nt:'Set 4, bench press',nw:'Since 6:02 pm'},
+  rest:{lines:[['A rest day.'],['Nothing is timed,'],['so go easy.']],cap:'',nt:'Evening walk',nw:'Your evening slot'},
+  back:{lines:[['Welcome back.'],['Three days away,'],['start with one thing.']],cap:'',nt:'Groceries',nw:'Carried from Monday'},
+  done:{lines:[['All done today.'],['Four things finished,'],['the evening is yours.']],cap:'Four things finished',nt:'Morning walk',nw:'Tomorrow at 7:30 am'},
+  rain:{lines:[['Rain until ',['4 pm','n'],','],[['Push day','training'],' moves inside,'],['a quiet afternoon.']],cap:'',nt:'Push day',nw:'At 6:30 pm, due today'},
+  night:{lines:[['Quiet now.'],['Lights at ',['11 pm','n'],','],['tomorrow starts with a ',['walk','routines'],'.']],cap:'',nt:'Morning walk',nw:'Tomorrow at 7:30 am'},
+};
+const info=[
+  ['morning','Morning','A pixel sun climbs out of a lilac and peach sky; its light flickers on the water.'],
+  ['day','The day','The sky by hour, the hour you\'re in breathing, later hours softened.'],
+  ['golden','Golden hour','Before sunset the field turns amber and rose, with a slow streak of light.'],
+  ['running','Something running','A current flows toward now; sets done glow in Training color, the rest wait as rings.'],
+  ['rest','A rest day','Still water: pale sky above, its reflection below.'],
+  ['back','Coming back','Scattered, dusty pixels gather into today.'],
+  ['done','All done','Small pixel fireworks, one in each app\'s color, for what you finished.'],
+  ['rain','Rain','Grey-blue field with drops running down in columns. Needs Apple weather later, coarse location only.'],
+  ['night','Late evening','Crescent moon, twinkling stars, a faint aurora, a shooting star now and then. What you did glows low.'],
+];
+const trInfo=[['auto','Mood picks'],['flip','Pixel flip'],['wave','Wave'],['fall','Fall'],['wipe','Stair wipe'],['dissolve','Dissolve'],['gather','Gather']];
+
+// departure-board sentence
+const sent=document.getElementById('sent');
+const AL=" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:,.'";
+function spans(line){const out=[];for(const seg of line){if(typeof seg==='string'){for(const ch of seg)out.push({ch,cls:''})}else{const n=seg[1]==='n';for(const ch of seg[0])out.push({ch,cls:n?'n':'a',app:n?null:seg[1]})}}return out}
+const lineEls=[];let flipGen=0;
+function setSentence(lines,animate){
+  const gen=++flipGen;
+  while(lineEls.length<3){const d=document.createElement('div');d.className='ln';sent.appendChild(d);lineEls.push(d)}
+  lines.forEach((line,li)=>{
+    const el=lineEls[li];const want=spans(line);const old=[...el.children].map(s=>s.textContent);
+    el.textContent='';
+    want.forEach((w,k)=>{
+      const s=document.createElement('span');s.className='c'+(w.cls?' '+w.cls:'');
+      if(w.app)s.style.color=`var(--${w.app})`;el.appendChild(s);
+      const before=old[k]??' ';
+      if(!animate||RM||before===w.ch){s.textContent=w.ch;return}
+      let a=AL.indexOf(before);if(a<0)a=0;let b=AL.indexOf(w.ch);
+      const seq=[];if(b<0){seq.push(w.ch)}else{let n=(b-a+AL.length)%AL.length;const skip=Math.max(1,Math.ceil(n/9));for(let x=a;n>0;){x=(x+Math.min(skip,n))%AL.length;n-=Math.min(skip,n);seq.push(AL[x])}}
+      s.textContent=before;let q=0;
+      setTimeout(function tick(){if(gen!==flipGen){s.textContent=w.ch;return}
+        s.textContent=seq[q++];s.classList.remove('flip');void s.offsetWidth;s.classList.add('flip');
+        if(q<seq.length)setTimeout(tick,52)},(li*5+k)*14);
+    });
+  });
+  sent.setAttribute('aria-label',lines.map(l=>spans(l).map(x=>x.ch).join('')).join(' '));
+}
+
+// transitions
+let cur='day',prev='day',ts=-1e9,origin=[COLS/2,ROWS/2],trPick='auto',trUsed='wave';
+function progress(i,j,t){
+  const lt=t-ts;
+  if(RM)return{p:ease(clamp(lt/150)),bump:0,dy:0};
+  switch(trUsed){
+    case'wave':{const d=Math.hypot(j-origin[0],i-origin[1]);const p=clamp((lt-d*20)/520);return{p:ease(p),bump:Math.sin(p*Math.PI)*.45,dy:0}}
+    case'dissolve':{const p=lt>hash(i,j,9)*900?1:0;return{p,bump:0,dy:0}}
+    case'wipe':{const front=lt/1000*(COLS+ROWS*1.4)/1.1;const d=j+i*1.4;const step=Math.floor(d/3)*3;
+      const p=step<front-3?1:step<front?(hash(i,j,4)<(front-step)/3?1:0):0;return{p,bump:0,dy:0}}
+    case'fall':{const land=hash(0,j,5)*380+(ROWS-1-i)*26;const q=clamp((lt-land)/360);
+      return{p:q>0?1:0,bump:0,dy:q>0&&q<1?-(1-q*q)*(i*STEP+18):0,keepOld:q>0&&q<1}}
+    case'flip':{const n=hash(i,j,54)<.3?2:1,delay=(j+F)*14+i*3+hash(i,j,52)*80,q=clamp((lt-delay)/(300*n));
+      if(q<=0)return{p:0,bump:0,dy:0};if(q>=1)return{p:1,bump:0,dy:0};
+      const k=Math.floor(q*n),u=q*n-k,sy=Math.abs(Math.cos(u*Math.PI));
+      const last=k===n-1;const p=last&&u>=.5?1:(k===0&&u<.5?0:-1);return{p,bump:0,dy:0,sy:Math.max(.08,sy)}}
+    case'melt':{const st=hash(0,j,41)*420+i*18;const q=clamp((t-ts-st)/520);
+      return{p:q>=1?1:0,bump:0,dy:0,melt:q>0&&q<1,mq:q}}
+    case'gather':{const p=clamp((lt-hash(i,j,6)*700)/500);return{p:ease(p),bump:0,dy:0}}
+  }
+  return{p:1,bump:0,dy:0};
+}
+function go(name){
+  if(typeof evTimer!=='undefined'&&evTimer){clearTimeout(evTimer);evTimer=null}
+  if(typeof base!=='undefined')base=name;
+  prev=cur;cur=name;ts=performance.now();
+  trUsed=trPick==='auto'?scenes[name].tr:trPick;
+  origin=[COLS*(.2+Math.random()*.6),ROWS*(.3+Math.random()*.4)];
+  if(name==='back')scenes.back.enter=ts;if(name==='done')scenes.done.enter=ts;
+  const c=copy[name];setSentence(c.lines,true);
+  document.getElementById('cap').textContent=c.cap;document.getElementById('nt').textContent=c.nt;document.getElementById('nw').textContent=c.nw;
+  document.querySelectorAll('.mood').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===name));
+}
+const mw=document.getElementById('moods');
+info.forEach(([k,t,d],n)=>{const b=document.createElement('button');b.className='mood';b.dataset.m=k;b.setAttribute('aria-pressed',k==='day');
+  b.innerHTML=`<span class="k">${n+1}</span><b>${t}</b><span class="d">${d}</span>`;b.onclick=()=>go(k);mw.appendChild(b)});
+const tw=document.getElementById('trs');
+trInfo.forEach(([k,t])=>{const b=document.createElement('button');b.className='tr';b.dataset.t=k;b.textContent=t;b.setAttribute('aria-pressed',k==='auto');
+  b.onclick=()=>{trPick=k;document.querySelectorAll('.tr').forEach(x=>x.setAttribute('aria-pressed',x.dataset.t===k));go(cur==='day'?'golden':'day')};tw.appendChild(b)});
+
+// pointer: the whole screen answers, not a box
+let px=-999,py=-999,rip=null;
+function loc(e){const r=phoneEl.getBoundingClientRect();return[(e.clientX-r.left)*PW/r.width,(e.clientY-r.top)*PH/r.height]}
+phoneEl.addEventListener('pointermove',e=>{[px,py]=loc(e)});phoneEl.addEventListener('pointerleave',()=>{px=py=-999});
+phoneEl.addEventListener('pointerdown',e=>{[px,py]=loc(e);rip={x:px,y:py,t:performance.now()}});
+
+const css=c=>`rgb(${Math.round(clamp(c[0],0,255))},${Math.round(clamp(c[1],0,255))},${Math.round(clamp(c[2],0,255))})`;
+let baseCol=[0,0,0];
+// the screen's own pixels: every tile of Home, almost the ground colour
+function layout(){
+  const r=phoneEl.getBoundingClientRect();PW=phoneEl.clientWidth;PH=phoneEl.clientHeight;
+  cv.width=PW*dpr;cv.height=PH*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  GC=Math.ceil(PW/STEP);GR=Math.ceil(PH/STEP);lean=new Float32Array(GC*GR*2);
+  const m=mosEl.getBoundingClientRect();winR=Math.floor((m.right-r.left)/STEP);winT=Math.floor((m.top-r.top)/STEP);
+  shield();paintBase();
+}
+function shield(){
+  const r=phoneEl.getBoundingClientRect();const pr=new Uint8Array(GC*GR);
+  for(const id of['sent','cap','nt','nw']){const el=document.getElementById(id);const b=el.getBoundingClientRect();if(!b.width)continue;
+    const x0=Math.floor((b.left-r.left)/STEP)-1,x1=Math.ceil((b.right-r.left)/STEP)+1,y0=Math.floor((b.top-r.top)/STEP)-1,y1=Math.ceil((b.bottom-r.top)/STEP)+1;
+    for(let i=Math.max(0,y0);i<Math.min(GR,y1);i++)for(let j=Math.max(0,x0);j<Math.min(GC,x1);j++)pr[i*GC+j]=1}
+  protect=pr;
+}
+setInterval(shield,300);
+function paintBase(){
+  readTheme();baseCol=ground.slice();
+  baseLayer=document.createElement('canvas');baseLayer.width=PW*dpr;baseLayer.height=PH*dpr;const b=baseLayer.getContext('2d');b.setTransform(dpr,0,0,dpr,0,0);
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>setTimeout(paintBase,0));
+new MutationObserver(()=>setTimeout(paintBase,0)).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+addEventListener('resize',layout);
+// skin: the window keeps its own colours; the rim is solved like a seamless clone, its outer row is the page's
+// own colour and inward it carries the scene's texture (gradients, scaled by wt) until it is the scene. Full-size tiles only.
+let SK=null,SR=null,SM=null,SW=null,off=[0,0,0],LQ=1,SKIN='blend';
+document.querySelectorAll('.sk').forEach(b=>b.onclick=()=>{SKIN=b.dataset.k;document.querySelectorAll('.sk').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+const BAY=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];const refl=(i,n)=>{if(i<0)i=-i-1;else if(i>n-1)i=2*n-1-i;return Math.max(0,Math.min(n-1,i))};
+function skinBufs(){const n=GC*GR;if(!SK||SK.length!==n*3){SK=new Float32Array(n*3);SR=new Float32Array(n*3);SM=new Uint8Array(n);SW=new Float32Array(n);for(let g=0;g<n;g++){SK[g*3]=ground[0];SK[g*3+1]=ground[1];SK[g*3+2]=ground[2]}}}
+function tile(o,cx,cy,k,s,dy,sy,g,ref){
+  const w=TILE*s,h=w*(sy??1),x=cx+o.dx+lean[k]-w/2,y=cy+o.dy+lean[k+1]-h/2+dy;
+  const c0=o.ring||o.c;if(ref){SR[g*3]=c0[0];SR[g*3+1]=c0[1];SR[g*3+2]=c0[2]}
+  let c=SKIN==='dither'||SKIN==='blend'?mix(ground,c0,LQ):[c0[0]+off[0],c0[1]+off[1],c0[2]+off[2]];if(SKIN==='skin')c=mix(ground,c,LQ);if(protect[g])c=mix(ground,c,.22);
+  if(o.ring){ctx.strokeStyle=css(c);ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,w-1,h-1);return}
+  ctx.fillStyle=css(c);ctx.fillRect(x,y,w,h);
+}
+function solveSkin(r0,r1,c0,c1){
+  // Gauss-Seidel on rim cells: C_p = mean over 4 neighbours of (C_q + wt*(S_p - S_q)); window cells pinned to S, outside pinned to ground
+  for(let it=0;it<14;it++)for(let gi=r0;gi<r1;gi++)for(let gj=c0;gj<c1;gj++){const g=gi*GC+gj;if(SM[g]!==2)continue;const wp=SW[g];
+    for(let ch=0;ch<3;ch++){let acc=0;const sp=SR[g*3+ch];
+      for(const q of[g-1,g+1,g-GC,g+GC]){const m=SM[q];let cq,sq;
+        if(m===1){cq=sq=SR[q*3+ch]}else if(m===2){cq=SK[q*3+ch];sq=SR[q*3+ch]}else{cq=ground[ch];sq=sp}
+        acc+=cq+wp*(sp-sq)}
+      SK[g*3+ch]=acc/4}}
+}
+function frame(){
+  const t=performance.now();ctx.clearRect(0,0,PW,PH);if(baseLayer)ctx.drawImage(baseLayer,0,0,PW,PH);
+  const A0=scenes[prev].fn,B1=scenes[cur].fn;
+  const sz=_sizeOf(cur),life=RM?0:Math.sin(t/4300),life2=RM?0:Math.sin(t/5900+1);
+  const tw=sz[0]+life*1.4,th=sz[1]+life2*1.2;
+  if(RM){wF=tw;hF=th}else{wF+=(tw-wF)*.06;hF+=(th-hF)*.06}
+  COLS=Math.min(MC,Math.round(wF));ROWS=Math.min(MR,Math.round(hF));const left=Math.round(GC*.56-COLS/2);
+  skinBufs();
+  const r0=Math.max(1,winT-F),r1=Math.min(GR-1,winT+ROWS+F),c0=Math.max(1,left-F),c1=Math.min(GC-1,left+COLS+F);
+  SM.fill(0,Math.max(0,(r0-1)*GC),Math.min(GC*GR,(r1+1)*GC));
+  for(let gi=r0;gi<r1;gi++)for(let gj=c0;gj<c1;gj++){
+    const i=gi-winT,j=gj-left,g=gi*GC+gj;
+    let d;if(SKIN==='blend'){const R=Math.min(6,ROWS/2,COLS/2),hx=(COLS-1)/2,hy=(ROWS-1)/2,qx=Math.max(0,Math.abs(j-hx)-(hx-R)),qy=Math.max(0,Math.abs(i-hy)-(hy-R));
+      d=Math.max(0,Math.cbrt(qx*qx*qx+qy*qy*qy)-R)}else{const dx=Math.max(0,-j,j-(COLS-1)),dy0=Math.max(0,-i,i-(ROWS-1));d=Math.hypot(dx,dy0)}
+    if(d>=F){continue}
+    SM[g]=d===0?1:2;SW[g]=d===0?1:SKIN==='skin'?.45+.55*(1-d/F):Math.pow(1-d/F,1.6);
+    LQ=1;if(d>0){const bq=(BAY[(gi&3)*4+(gj&3)]+.5)/16;if(SKIN==='blend'){const u=clamp(1-d/F),l=u*u*(3-2*u);LQ=clamp(Math.floor(l*8+bq)/8)}else if(SKIN==='skin'){LQ=clamp(2.2*(1-d/F))>bq?1:0}else{const l=Math.pow(1-d/F,1.15);LQ=clamp(Math.floor(l*3+bq)/3)}}
+    if(d===0){off[0]=off[1]=off[2]=0}else{off[0]=SK[g*3]-SR[g*3];off[1]=SK[g*3+1]-SR[g*3+1];off[2]=SK[g*3+2]-SR[g*3+2]}
+    const cx=gj*STEP+TILE/2+.4,cy=gi*STEP+TILE/2+.4,k=g*2;
+    let tx=0,ty=0;if(!RM){const ddx=cx-px,ddy=cy-py,dd=Math.hypot(ddx,ddy);if(dd<36&&dd>.01){const f=(1-dd/36)*5;tx=ddx/dd*f;ty=ddy/dd*f}}
+    lean[k]+=(tx-lean[k])*.22;lean[k+1]+=(ty-lean[k+1])*.22;
+    let rs=0;if(rip&&!RM){const rd=Math.hypot(cx-rip.x,cy-rip.y);const lt=t-rip.t-rd*3.4;if(rd<140&&lt>0&&lt<240)rs=Math.sin(lt/240*Math.PI)*.32*(1-rd/140)}
+    const si=refl(i,ROWS),sj=refl(j,COLS);
+    const out=si!==i||sj!==j,A=out&&prev==='announce'?ANB:A0,B=out&&cur==='announce'?ANB:B1;
+    const pr=progress(si,sj,t);
+    if(pr.p===-1){const a=A(si,sj,t),b=B(si,sj,t);tile({c:add(mix(a.c,b.c,.5),(hash(i,j,55)-.5)*40),dx:0,dy:0},cx,cy,k,1,0,pr.sy,g,1);continue}
+    if(pr.p>=1&&!pr.keepOld){const b=B(si,sj,t);tile(b,cx,cy,k,b.s+rs,0,pr.sy,g,1);continue}
+    const a=A(si,sj,t);
+    if(pr.melt){const b=B(si,sj,t);tile(b,cx,cy,k,b.s*pr.mq+rs,0,1,g,1);tile(a,cx,cy,k,a.s*(1-pr.mq*.7),pr.mq*pr.mq*(ROWS-i+4)*STEP*.5,1,g,0);continue}
+    if(pr.keepOld){tile(a,cx,cy,k,a.s+rs,0,1,g,1);const b=B(si,sj,t);tile(b,cx,cy,k,b.s,pr.dy,1,g,0);continue}
+    if(pr.p<=0){tile(a,cx,cy,k,a.s+rs,0,pr.sy,g,1);continue}
+    const b=B(si,sj,t),p=pr.p;
+    tile({c:mix(a.c,b.c,p),dx:a.dx+(b.dx-a.dx)*p,dy:a.dy+(b.dy-a.dy)*p,ring:p>.5?b.ring:a.ring},cx,cy,k,a.s+(b.s-a.s)*p+pr.bump+rs,0,1,g,1);
+  }
+  if(SKIN==='skin'||SKIN==='seam')solveSkin(r0,r1,c0,c1);
+  if(rip&&t-rip.t>1000)rip=null;
+  requestAnimationFrame(frame);
+}
+
+// ===== moments: weather, announcements, Tess, app events =====
+let base='day',evTimer=null;const isEv=n=>!!EV[n];
+const B0=(i,j,t)=>scenes[base].fn(i,j,t);
+const ANB=(i,j,t)=>{const o=B0(i,j,t);o.c=mix(o.c,ground,.55);return o};
+const step4=x=>Math.round(clamp(x)*4)/4;
+let TESS=[46,109,164];function tessCol(){TESS=dark?[157,191,230]:[46,109,164]}
+// pixel text mask for the marquee
+function textMask(str){const c=document.createElement('canvas');const h=14;c.height=h;const x=c.getContext('2d');x.font='600 12.5px Figtree, system-ui, sans-serif';
+  const w=Math.ceil(x.measureText(str).width)+2;c.width=w;x.font='600 12.5px Figtree, system-ui, sans-serif';x.fillStyle='#000';x.textBaseline='top';x.fillText(str,1,1);
+  const d=x.getImageData(0,0,w,h).data;const m=new Uint8Array(w*h);for(let k=0;k<w*h;k++)m[k]=d[k*4+3]>120?1:0;return{w,h,m}}
+let MASK=null;
+const EV={
+  snow:{size:[50,32],tr:'fall',dur:9000,fn(i,j,t){
+    let c=grad([[0,[178,186,204]],[1,[214,218,228]]],i/(ROWS-1));if(dark)c=mix(c,[52,56,74],.6);c=add(c,jit(i,j,8));
+    const lt=t-EV.snow.enter;const sh=Math.min(5,Math.floor(lt/1500+hash(0,j,31)*1.6));
+    if(i>=ROWS-sh)return T(mix([244,246,250],c,hash(i,j,32)*.25),1.05);
+    for(let f=0;f<2;f++){const jj=clamp(j+Math.round(Math.sin(t/1100+i*.45+f*2)*.8),0,COLS-1);
+      const y=((t/(2400+hash(f,jj,33)*1800))+hash(f,jj,34))%1*(ROWS+2)-1;if(Math.abs(i-y)<.5&&hash(f,jj,35)<.5)return T([248,249,252],.9)}
+    return T(c)}},
+  fog:{size:[56,24],tr:'dissolve',dur:8000,fn(i,j,t){
+    const o=B0(i,j,t);const f=dark?[96,98,108]:[226,226,228];
+    const d=step4(.55+.35*Math.sin(j*.13+t/1800+i*.35)+.1*Math.sin(j*.4-t/900));o.c=mix(o.c,f,d*.85);o.s=1-d*.15;return o}},
+  wind:{size:[62,22],tr:'wipe',dur:7000,fn(i,j,t){
+    const o=B0(i,j,t);const g=.5+.5*Math.sin(t/1300);o.dx=Math.sin(t/260+i*.5-j*.25)*1.8*g;
+    const sk=((t/90+hash(i,0,36)*200)%(COLS+18))-9;if(hash(i,0,37)<.35&&j<sk&&j>sk-7)o.c=mix(o.c,dark?[220,222,230]:[255,255,255],.55*(1-(sk-j)/7));return o}},
+  storm:{size:[56,34],tr:'fall',dur:8000,fn(i,j,t){
+    let c=grad([[0,[70,74,96]],[1,[44,46,64]]],i/(ROWS-1));c=add(c,jit(i,j,8));
+    const sp=hash(0,j,11),ph=(t/(300+sp*180)+sp*9)%1,hd=ph*(ROWS+6)-3,dd=i-hd;if(dd<=0&&dd>-3&&hash(1,j,12)<.5)c=mix(c,[170,182,210],.6+dd*.18);
+    const lt=t-EV.storm.enter,k=Math.floor((lt-900)/3000),u=(lt-900)-k*3000;
+    if(lt>900&&u<260){const j0=Math.round(COLS*(.25+hash(k,1,38)*.5));let jc=j0;for(let r=0;r<=i;r++)jc+=Math.round((hash(r,k,39)-.5)*2.4);
+      if(u<90)c=mix(c,[236,238,250],.55);
+      if(Math.abs(j-jc)<1&&i<ROWS*.85)return T([250,248,232],1.15)}
+    return T(c)}},
+  heat:{size:[50,26],tr:'wave',dur:7000,fn(i,j,t){
+    const ii=clamp(Math.round(i+Math.sin(t/240+j*.7)*.8),0,ROWS-1);const o=B0(ii,j,t);o.c=mix(o.c,[250,196,140],.18);o.dy=Math.sin(t/300+j*.5)*.9;return o}},
+  announce:{size:[62,22],tr:'wipe',dur:0,fn(i,j,t){
+    const o=B0(i,j,t);o.c=mix(o.c,ground,.55);
+    if(!MASK)return o;const lt=t-EV.announce.enter;const x0=Math.round(COLS-lt/1000*15);const top=Math.floor((ROWS-MASK.h)/2);
+    const mi=i-top,mj=j-x0;if(mi>=0&&mi<MASK.h&&mj>=0&&mj<MASK.w&&MASK.m[mi*MASK.w+mj]){const app=mj<MASK.split?acc.training:acc.ink;return T(app,1.1)}
+    return o}},
+  tess:{size:[40,24],tr:'gather',dur:6500,fn(i,j,t){
+    const o=B0(i,j,t);o.c=mix(o.c,ground,.5);
+    const lt=t-EV.tess.enter,bl=(lt%2900)<150&&lt>1200;const eh=bl?1:5,ci=Math.round(ROWS*.5);
+    const look=Math.round(Math.sin(lt/1400)*1.2);
+    for(const cj of[Math.round(COLS*.4)+look,Math.round(COLS*.6)+look]){if(j>=cj&&j<=cj+1&&i>=ci-Math.floor(eh/2)&&i<ci-Math.floor(eh/2)+eh)return T(TESS,1.1)}
+    const d=Math.hypot(j-COLS/2,(i-ci)*1.5);o.dx=-(j-COLS/2)/(d+.01)*Math.min(1.5,d/12)*-.6;return o}},
+  timer:{size:[32,32],tr:'wave',dur:4200,fn(i,j,t){
+    const o=B0(i,j,t);const lt=t-EV.timer.enter,ci=Math.floor(ROWS/2),cj=Math.floor(COLS/2);const d=Math.max(Math.abs(i-ci),Math.abs(j-cj));
+    for(let n=0;n<3;n++){const r=(lt-500-n*480)/55;if(r>0&&r<ROWS&&Math.abs(d-r)<.6){o.c=mix(o.c,acc.kitchen,.85);o.s=1.15}}
+    if(d<=1&&lt>500)o.c=acc.kitchen;return o}},
+  best:{size:[44,30],tr:'wave',dur:4600,fn(i,j,t){
+    const o=B0(i,j,t);o.c=mix(o.c,ground,.4);const lt=t-EV.best.enter-400;const n=Math.floor(lt/120);
+    for(let k=0;k<Math.min(n,7);k++){const bj=4+k*5,bi=ROWS-5-k*3;if(j>=bj&&j<bj+5&&i>=bi&&i<bi+2)return T(acc.training,1.05)}
+    if(n>=8){const si=ROWS-5-7*3+1,sj=4+7*5-2,on=Math.floor((lt-960)/180)%2===0;const d=Math.abs(i-si)+Math.abs(j-sj);
+      if(on&&((i===si&&Math.abs(j-sj)<=2)||(j===sj&&Math.abs(i-si)<=2)))return T(d===0?[255,236,200]:acc.training,1.15)}
+    return o}},
+  reminder:{size:null,tr:'dissolve',dur:3000,fn(i,j,t){
+    const o=B0(i,j,t);const lt=t-EV.reminder.enter;let kn=0;for(const k0 of[300,560,820]){const u=lt-k0;if(u>0&&u<110)kn=Math.sin(u/110*Math.PI)}
+    o.dx=kn*2;const ej=j>=COLS-6&&j<=COLS-5&&i>3&&i<ROWS-4;if(ej&&kn>0)o.c=mix(o.c,acc.routines,.95);if(lt>1100&&ej)o.c=mix(o.c,acc.routines,.7);return o}},
+  delivery:{size:[50,26],tr:'wave',dur:4400,fn(i,j,t){
+    const o=B0(i,j,t);const lt=t-EV.delivery.enter-300;const q=ease(clamp(lt/900));const bw=9,bh=7;
+    const bj=Math.round(COLS+2-(COLS*.42+bw)*q),bounce=lt>900&&lt<1100?-1:0,bi=ROWS-bh-4+bounce;
+    if(i>=bi&&i<bi+bh&&j>=bj&&j<bj+bw){const edgeT=i===bi||i===bi+bh-1||j===bj||j===bj+bw-1,tape=j===bj+Math.floor(bw/2);
+      return T(edgeT||tape?acc.kitchen:mix(acc.kitchen,ground,.55),1.05)}
+    if(lt>900&&lt<1300&&i===bi+bh&&(j===bj-1||j===bj+bw))o.c=mix(o.c,ground,.6);
+    return o}},
+  finished:{size:null,tr:'wave',dur:3200,fn(i,j,t){
+    const o=B0(i,j,t);const lt=t-EV.finished.enter;const ti=Math.round(ROWS*.62),tj=nowColFor(18.1);
+    const q=ease(clamp((lt-300)/700));const fi=Math.round(0+(ti-0)*q),fj=Math.round(COLS-1+(tj-COLS+1)*q);
+    if(lt>300&&i===fi&&j===fj)return T(acc.kitchen,1.4-(q*.3));
+    if(q>=1){const d=Math.max(Math.abs(i-ti),Math.abs(j-tj)),u=lt-1000;if(d===Math.floor(u/90)&&d<=3)o.c=mix(o.c,[255,240,210],.7);}
+    return o}},
+};
+Object.assign(scenes,Object.fromEntries(Object.entries(EV).map(([k,v])=>[k,v])));
+const evCopy={
+  snow:[['Snow from ',['3 pm','n'],','],[['Push day','training'],' moves inside,'],['stay warm.']],
+  fog:[['Fog until ',['9 am','n'],','],['take it slow,'],['the walk can wait.']],
+  wind:[['Windy until noon,'],['gusts near ',['30','n'],' mph,'],['hold onto the lists.']],
+  storm:[['Storms after ',['4 pm','n'],','],['done by evening,'],[['Push day','training'],' stays on.']],
+  heat:[['Hot today, ',['96°','n'],','],['drink more water,'],['walk after sunset.']],
+  announce:null,
+  tess:[['Tess here.'],['Your week got lighter,'],['want a longer walk?']],
+  timer:[[['Rice','kitchen'],' is ready.'],['Timer done at ',['6:42 pm','n'],','],['lid off, rest ',['5','n'],' min.']],
+  best:[['A new best.'],[['Bench press','training'],' at ',['185','n'],' lb,'],['up ',['5','n'],' from last month.']],
+  reminder:[[['Stretch','routines'],' now,'],['you asked at ',['8 am','n'],','],['five minutes is enough.']],
+  delivery:[[['Groceries','kitchen'],' are at the door,'],['milk and eggs first,'],['the rest can wait.']],
+  finished:[[['Groceries','kitchen'],' done.'],['Two things left today,'],['then ',['Push day','training'],'.']],
+};
+function goEvent(name,str){
+  if(evTimer)clearTimeout(evTimer);
+  if(!isEv(cur))base=cur;
+  if(name==='announce'){MASK=textMask(str||'Push day in 15 min, warm up at 6:15 pm');MASK.split=Math.round(MASK.w*0.24)}
+  tessCol();prev=cur;cur=name;ts=performance.now();EV[name].enter=ts;trUsed=trPick==='auto'?EV[name].tr:trPick;
+  origin=[COLS*(.2+Math.random()*.6),ROWS*(.3+Math.random()*.4)];
+  const lines=evCopy[name]||[[['Push day','training'],' in ',['15 min','n'],','],['warm up at ',['6:15 pm','n'],','],['bench is first.']];
+  setSentence(lines,true);
+  const dur=name==='announce'?((COLS+MASK.w)/15*1000+600):EV[name].dur;
+  evTimer=setTimeout(()=>{evTimer=null;const b=base;prev=cur;cur=b;ts=performance.now();trUsed=({best:'melt',delivery:'wave',reminder:'dissolve',announce:'melt',snow:'melt',storm:'melt',fog:'dissolve',heat:'wave',tess:'gather'})[name]||'dissolve';origin=[COLS/2,ROWS/2];setSentence(copy[b].lines,true)},dur);
+}
+const _sizeOf=n=>(EV[n]&&EV[n].size)||SIZES[n]||SIZES[base];
+const evInfo=[['snow','Snow','Flakes drift down and settle into a growing drift.'],['fog','Fog','Stepped bands of mist roll across the mood.'],['wind','Wind','The tiles sway in gusts while light streaks blow through.'],
+  ['storm','Storm','Dark rain, then a pixel lightning bolt and a flash.'],['heat','Heat','The mood shimmers like air over a road.'],
+  ['announce','Announcement','The window thins to a strip and the words crawl through it like a station sign, then fall back into the mood.'],
+  ['tess','Tess','The mood steps back and Tess\'s eyes form in the tiles, in her cobalt. She looks, blinks, and hands back.'],
+  ['timer','Timer done','The window squares up and pulses out in Kitchen color.'],['finished','Something finished','A tile flies from the sentence into today and lands with a small square sparkle.'],
+  ['best','A new best','Training-colored steps climb the window one by one and a small pixel star blinks at the top.'],['reminder','A reminder','The window knocks three times against the edge, and the edge lights in the app\'s color.'],['delivery','At the door','A small parcel slides in from the edge, bumps down and settles.']];
+// hand-backs: snow, storm and the announcement melt down into the mood; fog dissolves; heat waves back; Tess gathers back
+const ew=document.getElementById('evs');
+evInfo.forEach(([k,t,d])=>{const b=document.createElement('button');b.className='mood';b.dataset.e=k;b.innerHTML=`<span class="k"></span><b>${t}</b><span class="d">${d}</span>`;b.onclick=()=>goEvent(k);ew.appendChild(b)});
+const day=[['morning','7:05 am, sunrise was 7:18'],['@fog','fog until 9 am'],['back','first open after three days away'],['day','1:40 pm, nothing running'],['@tess','a lighter week to suggest'],['@finished','groceries checked off'],['rain','weather says rain until 4 pm'],['@announce','Push day in 15 min'],['golden','sunset in 20 min'],['running','Push day started at 6:02 pm'],['done','last thing on today finished'],['night','after 10 pm']];
+let playing=null;const capEl=document.getElementById('cap');
+document.getElementById('play').onclick=function(){if(playing){clearTimeout(playing);playing=null;this.textContent='Play a day with Tess';return}
+  this.textContent='Stop';let n=0;const step=()=>{const[m,why]=day[n%day.length];if(m[0]==='@')goEvent(m.slice(1));else go(m);capEl.textContent='Tess saw: '+why;n++;playing=setTimeout(step,m[0]==='@'?(m==='@announce'?6600:5200):4200)};step()};
+setSentence(copy.day.lines,false);
+document.getElementById('nt').textContent=copy.day.nt;document.getElementById('nw').textContent=copy.day.nw;
+document.fonts.ready.then(layout);layout();
+requestAnimationFrame(frame);
+})();
+</script>

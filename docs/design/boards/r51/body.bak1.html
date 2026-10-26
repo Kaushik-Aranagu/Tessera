@@ -1,0 +1,165 @@
+<div class="head">
+  <p class="lab">Round 237, Oct 23</p>
+  <h1>Lists, one at a time</h1>
+  <p class="sub">The Lists page from the Lists landing (226, 217). A dial of ways to look, your lists on the depth wheel with the front one opened a little, and a list on its own page where things get checked off and added. Three colors plus ink: Lists olive for the room and its actions, slate for labels, wine for what's due.</p>
+  <div style="display:flex;gap:22px;flex-wrap:wrap"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button><button class="tr" id="reset">Start over</button></div>
+</div>
+<div class="sec">
+  <div class="row">
+    <div class="phone" id="ph">
+      <div class="scr" id="lst">
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span>Lists</span><span style="color:var(--ink2)"><span class="n" id="allN">8</span> lists</span></div>
+        <div class="z" style="top:82px;height:196px;overflow:hidden;touch-action:none;cursor:ns-resize" id="dial" role="slider" aria-label="Look" tabindex="0"></div>
+        <div class="z brief" style="top:292px" id="brief"></div>
+        <div class="z" style="top:350px;height:254px;overflow:hidden;touch-action:none;cursor:ns-resize" id="wheel" role="list" aria-label="Lists"></div>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="receipt"></div>
+        <div class="z ft"><button class="act" id="act" style="color:var(--acc)">New list</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <div class="sc2" id="page" hidden>
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span id="pLens">Lists</span><span id="pLeft" style="color:var(--ink2)"></span></div>
+        <div class="z" style="top:82px;height:40px;overflow:hidden"><span id="pTitle" style="display:block;font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:40px;white-space:nowrap;color:var(--acc)"></span></div>
+        <div class="z" style="top:124px;height:20px;font-size:13px;color:var(--ink2);white-space:nowrap" id="pMeta"></div>
+        <div class="z" style="top:156px;height:400px;overflow:hidden;touch-action:pan-x" id="itemsW"><div id="items"></div></div>
+        <div class="z n" style="top:560px;height:18px;font-size:13px;color:var(--ink2);text-align:right" id="pPg"></div>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="pRc"></div>
+        <div class="z ft"><button class="act" id="pGo" style="color:var(--acc)">Add</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+    </div>
+    <div class="notes">
+      <h2>How it works</h2>
+      <div class="try">
+        <span>1</span><span><b>The dial.</b> Ways to look: Going, Due soon, Done, All. The one you're on sits large in olive with its count. Drag it or tap a neighbor; it snaps one place at a time and loops.</span>
+        <span>2</span><span><b>The depth wheel.</b> The front list is open a little: its name in olive (26 pt, down to 21 to fit), then what's left and when it's due, then the next few things. The rest step back, smaller and softly out of focus. A small "Your lists" title sits above the first. Tap the front list to open it.</span>
+        <span>3</span><span><b>A list.</b> Things still to do first, then a "Done" label and what you've checked. Tap a thing (or swipe it right) to check it: a thin olive line draws through it and it drops to Done. Swipe left for <i>Not now</i>: it moves to the end. Tap a done thing to bring it back. Long lists turn page by page.</span>
+        <span>4</span><span><b>Adding.</b> Tap <i>Add</i>: a new line opens at the top of what's left, ready to type; Return adds it and opens the next. Esc or tapping away ends.</span>
+        <span>5</span><span><b>The action word takes gestures.</b> On a list, drag <i>Add</i> left to <i>Clear done</i>, right to <i>Uncheck all</i> (packing again for the next trip), each with Undo for 10 s. On the landing, tap <i>New list</i>, or drag it right for a <i>Private list</i>.</span>
+        <span>6</span><span><b>Due</b> is the one wine touch: "Fri" beside a thing, and "due Friday" on the list. Labels are slate small capitals. A private list reads normally here and as "Private list" everywhere off the phone.</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1,1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e,u);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const spring=u=>1-Math.exp(-7*u)*Math.cos(9*u);
+const $=id=>document.getElementById(id);
+const clipIn=(node,delay=0)=>{node.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>anim(.3,e=>node.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`,()=>node.style.clipPath=''),RM?0:delay)};
+const md=(a,n)=>((a%n)+n)%n;
+const haptic=k=>{try{navigator.vibrate&&navigator.vibrate(k==='commit'?14:5)}catch(_){}};
+const LENS=['Going','Due soon','Done','All'];
+const it=(t,d,due)=>({t,d:!!d,due:due||null});
+let N;const seed=()=>[
+ {t:'Before the trip',h:3,due:'Fri',items:[it('Passports'),it('Both chargers'),it('The blue jacket',0,'Fri'),it('Ask about late checkout',0,'Thu'),it('Water the plants',1),it('Download the podcasts',1),it('Sunglasses',1),it('Cash for tolls'),it('Pack the small bag',1)]},
+ {t:'Weekend errands',h:20,items:[it('Return the library books',0,'Sat'),it('Pick up the dry cleaning'),it('Car wash'),it('New light bulbs',1)]},
+ {t:'Apartment fixes',h:50,items:[it('Bathroom tap drips'),it('Closet door sticks'),it('Window seal before winter',0,'Nov 1'),it('Smoke alarm battery',1)]},
+ {t:'Gifts for December',h:80,priv:true,items:[it('A good pen for Ravi'),it('The cookbook for Meera'),it('Something for the neighbors')]},
+ {t:'Books to read',h:120,items:[it('The lighthouse keeper one'),it('The essays from the airport',1),it('Whatever Sam keeps talking about')]},
+ {t:'Call back',h:30,due:'Mon',items:[it('The dentist',0,'Mon'),it('Insurance about the claim'),it('Mom',1)]},
+ {t:'Movies to watch',h:300,items:[it('The long one with the train'),it('That documentary about bees',1)]},
+ {t:'Moving boxes',h:700,items:[it('Kitchen',1),it('Books',1),it('Winter clothes',1)]}];
+const left=x=>x.items.filter(i=>!i.d).length,dueOf=x=>{const d=x.items.filter(i=>!i.d&&i.due);return d.length?d[0].due:null};
+const DAY={Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday',Sun:'Sunday'};
+const soon=x=>{const d=dueOf(x);return d&&['Thu','Fri','Sat'].includes(d)};
+const inLens=(x,l)=>l==='All'||(l==='Going'&&left(x)>0)||(l==='Due soon'&&soon(x))||(l==='Done'&&left(x)===0);
+const mctx=document.createElement('canvas').getContext('2d');
+let li=0,off=0,spin=0;
+// ---------- dial (232 spec)
+function renderDial(){const d=$('dial');d.innerHTML=[-2,-1,0,1,2].map(k=>`<button class="tap" data-k="${k}" style="position:absolute;left:0;width:100%;height:64px;display:flex;justify-content:space-between;align-items:center;white-space:nowrap"><span class="pn" style="transform-origin:left center;display:inline-block;font-size:44px;letter-spacing:-.03em"></span><span class="pc n" style="transform-origin:right center;display:inline-block;font-size:44px"></span></button>`).join('');paintDial();
+  [...d.children].forEach(b=>b.onclick=()=>{if(dragged)return;if(+b.dataset.k!==0)spinTo(Math.round(off)+(+b.dataset.k))})}
+function paintDial(){const base=Math.round(off);[...$('dial').children].forEach(b=>{const k=+b.dataset.k,i=base+k,dd=i-off,a=Math.abs(dd),l=LENS[md(i,4)],c=N.filter(x=>inLens(x,l)).length;
+  b.style.transform=`translateY(${98-32+dd*64}px)`;b.style.visibility=a>1.6?'hidden':'';const sc=1-(1-26/44)*Math.min(a,1);b.firstChild.textContent=l;b.lastChild.textContent=c;
+  b.firstChild.style.transform=b.lastChild.style.transform=`scale(${sc})`;const f=a<.5;b.firstChild.style.color=f?'var(--acc)':'var(--ink2)';b.firstChild.style.fontWeight=f?600:400;b.lastChild.style.color=f?'var(--ink)':'var(--ink2)';b.lastChild.style.fontWeight=f?200:300});
+  $('dial').setAttribute('aria-valuetext',`${LENS[md(Math.round(off),4)]}, ${N.filter(x=>inLens(x,LENS[md(Math.round(off),4)])).length} lists`)}
+let pdir=1;function spinTo(t,dur=.42){const from=off,id=++spin;pdir=t>=from?1:-1;anim(dur,(e,u)=>{if(id!==spin)return;off=from+(t-from)*spring(u);paintDial()},()=>{if(id!==spin)return;off=t;paintDial();setLens(md(t,4))})}
+let dragged=false;(()=>{const d=$('dial');let sy=null,so=0,vy=0,ly=0,lt=0;
+  d.onpointerdown=e=>{sy=e.clientY;so=off;dragged=false;vy=0;ly=e.clientY;lt=performance.now();spin++};
+  d.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!dragged){dragged=true;d.setPointerCapture(e.pointerId)}if(!dragged)return;const n=performance.now();vy=(e.clientY-ly)/Math.max(1,n-lt);ly=e.clientY;lt=n;off=so-dy/64;paintDial()};
+  d.onpointerup=d.onpointercancel=()=>{if(sy==null)return;sy=null;if(dragged){spinTo(Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(off),.36);setTimeout(()=>dragged=false,0)}else spinTo(Math.round(off))};
+  d.onkeydown=e=>{if(e.key==='ArrowDown'){spinTo(Math.round(off)+1,.36);e.preventDefault()}if(e.key==='ArrowUp'){spinTo(Math.round(off)-1,.36);e.preventDefault()}}})();
+function briefOf(l){const xs=N.filter(x=>inLens(x,l)),tl=N.reduce((a,x)=>a+left(x),0),dl=N.filter(soon);
+  if(!xs.length)return l==='Done'?'Nothing finished yet.<br>Lists land here when every thing is checked.':'Nothing here yet.<br>Start a list with New list.';
+  if(l==='Done')return `${xs.length} finished ${xs.length===1?'list':'lists'}.<br>Uncheck all to use one again.`;
+  if(l==='Due soon')return `${dl.length} due by Saturday.<br>${xs[0].t} first, ${DAY[dueOf(xs[0])]}.`;
+  return `${tl} things left across ${N.filter(x=>left(x)).length} lists.<br>${dl.length?`${dl[0].t} is due ${DAY[dueOf(dl[0])]}.`:'Nothing due this week.'}`}
+function setLens(i,force){if(i===li&&!force)return;li=i;$('brief').innerHTML=briefOf(LENS[li]);clipIn($('brief'));wOff=0;renderWheel(pdir)}
+// ---------- the depth wheel: the front list opened a little, a title above the first (his 9:37 PM)
+const RH=38,FX=58,FY=40;let wOff=0,wSpin=0,wDrag=false;
+const items=()=>{const xs=N.filter(x=>inLens(x,LENS[li]));return xs.sort((a,b)=>(soon(b)-soon(a))||(a.h-b.h))};
+const blurAt=a=>RM?0:Math.min(1,.65*Math.min(a,1)+.35*Math.max(0,Math.min(a-1,1)));
+const wPos=d=>FY+(d<=0?d*RH:d<1?d*(RH+FX):RH+FX+(d-1)*RH);
+function nextThings(x){const o=x.items.filter(i=>!i.d).slice(0,4).map(i=>i.t);let s=o.join(', ');mctx.font='400 15px Figtree, system-ui, sans-serif';const w=$('wheel').clientWidth;while(o.length>1&&mctx.measureText(s).width>w){o.pop();s=o.join(', ')}return s}
+function renderWheel(dir){const W=$('wheel'),xs=items();
+  W.innerHTML=`<div id="wHd" style="position:absolute;left:0;right:0;top:0;height:${RH}px;display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:6px;box-sizing:border-box;white-space:nowrap;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--sec)"><span>Your lists</span><span class="n" style="font-variant-caps:normal;letter-spacing:0;font-weight:300;color:var(--ink2)">${xs.length} ${xs.length===1?'list':'lists'}, due first</span></div>`+
+   xs.map((x,i)=>`<div class="wr" data-i="${i}" role="listitem" style="position:absolute;left:0;right:0;top:0;height:${RH}px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;white-space:nowrap;height:${RH}px;line-height:${RH}px"><span class="tt" style="overflow:hidden;transform-origin:left center"></span><span class="ag n" style="font-size:15px"></span></div><div class="dt" hidden style="margin-top:-4px"><div class="d1" style="font-size:13px;color:var(--ink2);white-space:nowrap;line-height:18px"></div><div class="d2" style="font-size:15px;color:var(--ink2);white-space:nowrap;line-height:22px;overflow:hidden"></div></div></div>`).join('');
+  [...W.querySelectorAll('.wr')].forEach(r=>{const x=xs[+r.dataset.i],w=W.clientWidth*.9;let fz=26;const m=(t,z)=>{mctx.font=`600 ${z}px Figtree, system-ui, sans-serif`;return mctx.measureText(t).width};while(fz>21&&m(x.t,fz)>w)fz--;let ft=x.t;while(m(ft,fz)>w&&ft.includes(' '))ft=ft.slice(0,ft.lastIndexOf(' ')).replace(/,$/,'');r.dataset.fz=fz;r.dataset.ft=ft;
+    r.onclick=()=>{if(wDrag)return;const d=Math.round(+r.dataset.i-wOff);if(d===0)openList(x);else wSpinTo(+r.dataset.i)}});
+  lastF=-1;paintWheel();if(dir&&!RM){W.style.clipPath=dir>0?'inset(0 0 100% 0)':'inset(100% 0 0 0)';W.style.transform=`translateY(${dir*24}px)`;anim(.46,(e,u)=>{W.style.transform=`translateY(${dir*24*(1-spring(u))}px)`;W.style.clipPath=dir>0?`inset(0 0 ${(1-e)*100}% 0)`:`inset(${(1-e)*100}% 0 0 0)`},()=>{W.style.clipPath='';W.style.transform=''})}}
+let lastF=-1;function paintWheel(){const W=$('wheel'),xs=items(),n=xs.length;const H=$('wHd');if(H){const d=-1-wOff;H.style.transform=`translateY(${wPos(d)}px)`;H.style.visibility=d>-.3||wPos(d)<-RH?'hidden':''}
+  if(!n)return;
+  [...W.querySelectorAll('.wr')].forEach(r=>{const i=+r.dataset.i,d=i-wOff,a=Math.abs(d),x=xs[i],f=Math.max(0,1-a),fz=+r.dataset.fz;
+    r.style.transform=`translateY(${wPos(d)}px)`;r.style.visibility=(wPos(d)<-RH||wPos(d)+RH>256)?'hidden':'';
+    const tt=r.querySelector('.tt'),ag=r.querySelector('.ag');const size=d<0?17:a<1?17+(fz-17)*f:Math.max(15,17-(a-1));tt.style.fontSize=size+'px';tt.style.fontWeight=a<.5?600:400;tt.style.color=a<.5?'var(--acc)':'var(--ink2)';tt.textContent=a<.5?r.dataset.ft:x.t;
+    const bl=a<.5?0:blurAt(a);r.style.filter=bl>.05?`blur(${bl.toFixed(2)}px)`:'';
+    const l=left(x);ag.textContent=a<.5?'':l?l:'';ag.style.color=soon(x)?'var(--warm)':'var(--ink2)';ag.style.fontWeight=soon(x)?400:300;
+    r.setAttribute('aria-label',`${x.t}, ${l} of ${x.items.length} left${dueOf(x)?', due '+DAY[dueOf(x)]||dueOf(x):''}`)});
+  const fi=Math.round(wOff);if(fi!==lastF){lastF=fi;[...W.querySelectorAll('.wr')].forEach(r=>{const dt=r.querySelector('.dt'),on=+r.dataset.i===fi;if(on){const x=xs[fi],l=left(x),du=dueOf(x);
+    dt.querySelector('.d1').innerHTML=l?`${l} of ${x.items.length} left${du?`, <span style="color:var(--warm);font-weight:500">due ${DAY[du]||du}</span>`:''}${x.priv?', private':''}`:`all ${x.items.length} done${x.priv?', private':''}`;
+    dt.querySelector('.d2').textContent=l?nextThings(x):'Uncheck all to use it again';if(dt.hidden){dt.hidden=false;clipIn(dt,120)}}else dt.hidden=true})}}
+function wSpinTo(t,dur=.42){const n=items().length;t=Math.max(0,Math.min(n-1,t));const from=wOff,id=++wSpin;anim(dur,(e,u)=>{if(id!==wSpin)return;wOff=from+(t-from)*spring(u);paintWheel()},()=>{if(id!==wSpin)return;wOff=t;paintWheel()})}
+(()=>{const W=$('wheel');let sy=null,so=0,vy=0,ly=0,lt=0;
+  W.onpointerdown=e=>{sy=e.clientY;so=wOff;wDrag=false;vy=0;ly=e.clientY;lt=performance.now();wSpin++};
+  W.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!wDrag){wDrag=true;W.setPointerCapture(e.pointerId)}if(!wDrag)return;const n=performance.now();vy=(e.clientY-ly)/Math.max(1,n-lt);ly=e.clientY;lt=n;wOff=Math.max(-.35,Math.min(items().length-.65,so-dy/RH));paintWheel()};
+  W.onpointerup=W.onpointercancel=()=>{if(sy==null)return;sy=null;if(wDrag){wSpinTo(Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(wOff),.36);setTimeout(()=>wDrag=false,0)}};
+  let wt=null;W.addEventListener('wheel',e=>{e.preventDefault();wSpin++;wOff=Math.max(-.35,Math.min(items().length-.65,wOff+e.deltaY/120));paintWheel();clearTimeout(wt);wt=setTimeout(()=>wSpinTo(Math.round(wOff),.36),120)},{passive:false})})();
+const sayT={};function say(t,undo,el='receipt'){const r=$(el);r.innerHTML=t+(undo?' <button class="tap un" style="color:var(--acc);font-weight:600;margin-left:6px">Undo</button>':'');clipIn(r);clearTimeout(sayT[el]);sayT[el]=setTimeout(()=>r.textContent='',undo?10000:3000);if(undo)r.querySelector('.un').onclick=()=>{r.textContent='';undo()}}
+function fitTitle(el,max,min){el.style.fontSize=max+'px';const w=el.parentElement.clientWidth;let f=max;while(el.scrollWidth>w&&f>min){f--;el.style.fontSize=f+'px'}if(el.scrollWidth>w){let s=el.textContent;while(el.scrollWidth>w&&s.includes(' ')){s=s.slice(0,s.lastIndexOf(' '));el.textContent=s.replace(/,$/,'')}}}
+// ---------- a list
+let cur=null,pg=0,adding=false;const IR=40,PH=400;
+function openList(x){cur=x;pg=0;adding=false;$('pLens').textContent=LENS[li];$('pTitle').textContent=x.t;$('pRc').textContent='';const P=$('page');P.hidden=false;fitTitle($('pTitle'),28,21);renderItems();
+  if(!RM){P.style.transform='translateX(100%)';anim(.4,(e,u)=>P.style.transform=`translateX(${(1-spring(u))*100}%)`,()=>P.style.transform='')}}
+function head(){const x=cur,l=left(x),du=dueOf(x);$('pLeft').innerHTML=l?`<span class="n">${l}</span> of <span class="n">${x.items.length}</span> left`:'All done';
+  $('pMeta').innerHTML=`<span style="font-variant-caps:all-small-caps;font-weight:600;letter-spacing:.06em;color:var(--sec);font-size:15px">${x.priv?'Private':'List'}</span>&nbsp; ${x.items.length} ${x.items.length===1?'thing':'things'}${du?`, <span style="color:var(--warm);font-weight:500">due ${DAY[du]||du}</span>`:''}`}
+const rowH=(i,k)=>`<div class="ir" data-k="${k}" role="listitem" tabindex="0" style="position:relative;height:${IR}px;display:flex;justify-content:space-between;align-items:center;gap:12px;white-space:nowrap;cursor:pointer;touch-action:pan-y"><span class="it" style="position:relative;font-size:19px;overflow:hidden;color:${i.d?'var(--ink2)':'var(--ink)'}">${i.t}<svg class="sk" width="100%" height="2" style="position:absolute;left:0;top:52%;overflow:visible;${i.d?'':'visibility:hidden'}" aria-hidden="true"><line x1="0" x2="100%" y1="1" y2="1" stroke="var(--acc)" stroke-width="1"/></svg></span><span class="n" style="font-size:13px;color:var(--warm);font-weight:400">${!i.d&&i.due?i.due:''}</span></div>`;
+function renderItems(enter){const x=cur,open=x.items.filter(i=>!i.d),done=x.items.filter(i=>i.d);head();
+  const lab=t=>`<div style="height:${IR}px;display:flex;align-items:flex-end;padding-bottom:7px;box-sizing:border-box;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--sec)">${t}</div>`;
+  $('items').innerHTML=(adding?`<div style="height:${IR}px;display:flex;align-items:center"><span id="newIt" contenteditable="true" style="font-size:19px;color:var(--ink);outline:none;min-width:60%;caret-color:var(--acc)" aria-label="New thing"></span></div>`:'')+open.map(i=>rowH(i,x.items.indexOf(i))).join('')+(done.length?lab('Done')+done.map(i=>rowH(i,x.items.indexOf(i))).join(''):'');
+  wireRows();paginate();if(adding){const e=$('newIt');e.focus();e.onkeydown=k=>{if(k.key==='Enter'){k.preventDefault();const t=e.textContent.trim();if(t){x.items.unshift(it(t));say(`${t}, added.`,()=>{x.items.splice(x.items.findIndex(q=>q.t===t),1);renderItems()},'pRc')}renderItems()}if(k.key==='Escape'){k.stopPropagation();adding=false;$('pGo').textContent='Add';renderItems()}};e.onblur=()=>setTimeout(()=>{if(adding&&e.isConnected&&document.activeElement!==e){const t=e.textContent.trim();if(t)x.items.unshift(it(t));adding=false;$('pGo').textContent='Add';renderItems()}},150)}}
+function paginate(){const I=$('items'),pages=Math.max(1,Math.ceil(I.scrollHeight/PH));pg=Math.min(pg,pages-1);I.style.transform=`translateY(${-pg*PH}px)`;$('pPg').textContent=pages>1?`${pg+1} of ${pages}`:''}
+function turnP(d){const I=$('items'),pages=Math.ceil(I.scrollHeight/PH),np=pg+d;if(np<0||np>=pages)return;const from=-pg*PH,to=-np*PH;pg=np;$('pPg').textContent=`${pg+1} of ${pages}`;anim(.42,(e,u)=>I.style.transform=`translateY(${from+(to-from)*spring(u)}px)`)}
+(()=>{const W=$('itemsW');let sy=null;W.addEventListener('pointerdown',e=>{sy=e.clientY});W.addEventListener('pointerup',e=>{if(sy==null)return;const dy=e.clientY-sy;sy=null;if(Math.abs(dy)>40)turnP(dy<0?1:-1)});
+  W.addEventListener('wheel',e=>{e.preventDefault();if(Math.abs(e.deltaY)>20&&!W.dataset.lock){W.dataset.lock=1;turnP(e.deltaY>0?1:-1);setTimeout(()=>delete W.dataset.lock,500)}},{passive:false})})();
+// check: the thin olive line draws through, then the thing drops to Done
+function check(k,row){const i=cur.items[k];if(i.d){i.d=false;say(`${i.t}, back on the list.`,()=>{i.d=true;renderItems()},'pRc');renderItems();return}
+  const sk=row.querySelector('.sk'),ln=sk.querySelector('line');sk.style.visibility='';row.querySelector('.it').style.color='var(--ink2)';haptic('commit');
+  if(!RM){ln.setAttribute('pathLength','1');ln.style.strokeDasharray='1';ln.style.strokeDashoffset='1';anim(.26,e=>ln.style.strokeDashoffset=String(1-e))}
+  setTimeout(()=>{i.d=true;const l=left(cur);say(l?`${i.t}, done.`:`${cur.t}, all done.`,()=>{i.d=false;renderItems()},'pRc');renderItems()},RM?0:520)}
+function notNow(k){const i=cur.items.splice(k,1)[0];cur.items.push(i);say(`${i.t}, not now.`,()=>{cur.items.splice(cur.items.indexOf(i),1);cur.items.splice(k,0,i);renderItems()},'pRc');renderItems()}
+function wireRows(){document.querySelectorAll('#items .ir').forEach(r=>{const k=+r.dataset.k;let sx=null,dx=0;
+  r.onpointerdown=e=>{sx=e.clientX;dx=0};r.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;if(Math.abs(dx)>6){r.setPointerCapture(e.pointerId);r.style.transform=`translateX(${Math.sign(dx)*Math.min(90,Math.abs(dx))}px)`}};
+  r.onpointerup=r.onpointercancel=e=>{if(sx==null)return;sx=null;const d=dx;anim(.3,(q,u)=>r.style.transform=`translateX(${Math.sign(d)*Math.min(90,Math.abs(d))*(1-spring(u))}px)`,()=>r.style.transform='');
+    if(d>70&&!cur.items[k].d)check(k,r);else if(d<-70&&!cur.items[k].d)notNow(k);else if(Math.abs(d)<6&&e.type==='pointerup')check(k,r)};
+  r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){check(k,r);e.preventDefault()}}})}
+function closeList(){const P=$('page');adding=false;$('pGo').textContent='Add';const back=()=>{P.hidden=true;P.style.transform='';paintDial();$('brief').innerHTML=briefOf(LENS[li]);renderWheel(0)};if(RM){back();return}anim(.3,e=>P.style.transform=`translateX(${e*100}%)`,back)}
+(()=>{const P=$('page');let sx=null;P.addEventListener('pointerdown',e=>{const r=P.getBoundingClientRect();sx=e.clientX-r.left<24?e.clientX:null});P.addEventListener('pointerup',e=>{if(sx!=null&&e.clientX-sx>60)closeList();sx=null})})();
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('page').hidden&&!adding)closeList()});
+// ---------- the action word takes gestures (his 9:21 PM rule, sheet 230)
+function actionWord(btn,o){let sx=null,dx=0,arm=null,base='',baseC='';const set=(t,c)=>{btn.textContent=t;btn.style.color=c};btn.style.touchAction='none';btn.style.display='inline-block';
+  btn.onpointerdown=e=>{sx=e.clientX;dx=0;arm=null;base=btn.textContent;baseC=btn.style.color;btn.setPointerCapture(e.pointerId)};
+  btn.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;const side=dx<0?(o.left&&o.left()):(o.right&&o.right());btn.style.transform=`translateX(${Math.sign(dx)*Math.min(side?18:6,Math.abs(dx)*(side?.25:.1))}px)`;
+    const want=side&&Math.abs(dx)>56?side:null;if((want&&want.label)!==(arm&&arm.label)){arm=want;want?set(want.label,want.color):set(base,baseC);clipIn(btn);haptic('tick')}};
+  btn.onpointerup=btn.onpointercancel=e=>{if(sx==null)return;sx=null;const x0=parseFloat((btn.style.transform.match(/-?[\d.]+/)||[0])[0]);anim(.36,(q,u)=>btn.style.transform=`translateX(${x0*(1-spring(u))}px)`,()=>btn.style.transform='');
+    if(arm){const a=arm;arm=null;set(base,baseC);haptic('commit');a.fn()}else if(Math.abs(dx)<6&&e.type==='pointerup')o.tap()};
+  btn.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){o.tap();e.preventDefault()}const q=e.key==='ArrowLeft'?o.left&&o.left():e.key==='ArrowRight'?o.right&&o.right():null;if(q){q.fn();e.preventDefault()}}}
+const snapItems=()=>cur.items.map(i=>({...i}));
+function clearDone(){const S=snapItems(),n=cur.items.filter(i=>i.d).length;if(!n){say('Nothing done to clear.',null,'pRc');return}cur.items=cur.items.filter(i=>!i.d);renderItems();say(`${n} done, cleared.`,()=>{cur.items=S;renderItems()},'pRc')}
+function uncheckAll(){const S=snapItems();cur.items.forEach(i=>i.d=false);renderItems();say(`${cur.t}, all unchecked.`,()=>{cur.items=S;renderItems()},'pRc')}
+function newList(priv){const x={t:priv?'Private list':'New list',h:0,priv:!!priv,items:[]};N.unshift(x);$('allN').textContent=N.length;openList(x);adding=true;$('pGo').textContent='Done';renderItems()}
+actionWord($('pGo'),{tap:()=>{if(adding){const e=$('newIt');const t=e&&e.textContent.trim();if(t)cur.items.unshift(it(t));adding=false;$('pGo').textContent='Add';renderItems();return}adding=true;pg=0;$('pGo').textContent='Done';renderItems()},
+  left:()=>adding?null:{label:'Clear done',color:'var(--ink)',fn:clearDone},right:()=>adding?null:{label:'Uncheck all',color:'var(--acc)',fn:uncheckAll}});
+actionWord($('act'),{tap:()=>newList(false),right:()=>({label:'Private list',color:'var(--acc)',fn:()=>newList(true)})});
+function reset(){N=seed();li=0;off=0;$('page').hidden=true;$('allN').textContent=N.length;$('receipt').textContent='';renderDial();setLens(0,true);clipIn($('dial'))}
+$('reset').onclick=reset;$('th').onclick=()=>document.documentElement.dataset.theme='dark';$('tw').onclick=()=>document.documentElement.dataset.theme='light';
+(document.fonts?document.fonts.ready:Promise.resolve()).then(reset);
+})();
+</script>

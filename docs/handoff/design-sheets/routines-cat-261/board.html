@@ -1,0 +1,205 @@
+<title>The Routines Cat</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: one live phone, the Routines landing with an animal living in the keystone slot. Board tokens around it; app tokens on .phone per sheet 241. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#8E4A78;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+h3{font-size:20px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:62ch}
+.bar{display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:0 44px}
+.rule{padding:14px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600;margin-bottom:2px}
+.rule span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center;margin-top:8px}
+.ctl span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);margin-right:4px}
+.q{border-top:2px solid var(--fg);padding-top:16px}
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--hair:rgba(36,36,35,.16);--routines:#8E4A78;--green:#2F6450;--wine:#9A2541;--gold:#7E6A1E;--slate:#34506F;--sun:#F3D9A4;--cat:#2A2724;--eye:#C9A24A;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none;touch-action:none;box-shadow:0 0 0 1px var(--line)}
+.phones[data-look="black"] .phone{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--hair:rgba(232,227,218,.2);--routines:#D59AC4;--green:#8EC7AE;--wine:#EE8E9C;--gold:#D9C27A;--slate:#A7BCD6;--sun:#5A4A2C;--cat:#E6E0D4;--eye:#D9C27A}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--routines)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;cursor:pointer;touch-action:none}
+.catline{position:absolute;left:24px;right:24px;top:388px;font:italic 400 18px/1.35 var(--serif);color:var(--ink);min-height:48px}
+.catline span{display:inline-block;opacity:0;transform:translateY(3px);transition:opacity .18s,transform .18s}
+.ups{position:absolute;left:24px;right:24px;top:448px}
+.up{height:52px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:562px;display:flex;flex-wrap:wrap;gap:0 22px}
+.door{font-size:24px;font-weight:600;color:var(--ink2);padding:6px 0;cursor:pointer}
+.door.on{color:var(--routines)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--routines);padding:8px 0;min-width:96px;min-height:44px;text-align:left;background:none;border:0;cursor:pointer;z-index:4}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phones[data-look="black"] .tessw{color:#C79B7C}
+.receipt{position:absolute;left:24px;right:110px;bottom:84px;font-size:15px;color:var(--ink2);height:24px;white-space:nowrap;overflow:hidden;z-index:4}
+.receipt b{font-weight:600;cursor:pointer;color:var(--routines)}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Routines / sheet 261</h2>
+<h1>The cat who keeps your day.</h1>
+<p class="lede">One animal, not many. A cat lives in the slot, and your routines are its routine: asleep in the sun patch until the morning things are done, up and stretching at stretch time, watching the door before the walk, pacing at dinner, curled up for the night. It reacts in character to what you do and don’t do, and Tess writes what it would say. Move the hour, press the events, tap it, stroke it.</p>
+<div class="bar" role="group" aria-label="Phone look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+</div>
+</header>
+
+<section aria-label="Phone">
+<div class="phones" id="phones" data-look="paper">
+<div>
+<div class="slot" data-fit><div class="phone" id="p1">
+ <div class="sbar"><span id="clk">5:10</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say"><b style="color:var(--green)">Three done,</b> <b style="color:var(--routines)">eight to tend,</b> <b style="color:var(--wine)">two to give a little care.</b></div>
+ <canvas id="cat" class="key" width="708" height="364"></canvas>
+ <div class="catline" id="catline"></div>
+ <div class="ups"><div class="up"><b>Tidy a little</b>&nbsp;is next, around 5:30.</div><div class="up"><b>Take screen breaks</b>&nbsp;<span style="color:var(--wine)">needs a little care.</span></div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Body</span><span class="door">Mind</span><span class="door">Home</span><span class="door">Across the lake</span></div>
+ <div class="receipt" id="r1"></div>
+ <button class="foot">Plant</button><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="hour"><span>Hour</span></div>
+<div class="ctl" id="ev"><span>Events</span></div>
+<p class="cap"><b>The cat.</b> A silhouette with eyes, so it stays graphic and never cartoonish. It has moods and places: the sun patch moves with the real hour; the door is at the right; the bowl at the left. It blinks, its tail has a life of its own, its ears turn toward sounds (a new ticket, a tap). What you do changes it: finish something and it purrs and slow-blinks at you; finish the walk and it comes back from the door and settles; leave a routine a few days and it sits facing away, looking over its shoulder now and then; miss a lot and it curls up small. Tap it to see what it thinks; stroke it (drag) and it leans into your finger. Under the slot, one line in Tess’s voice says what the cat would say.</p>
+</div>
+</div>
+</section>
+
+<section>
+<h2>How it works</h2>
+<div class="rules">
+<div class="rule"><b>Your routines are its routine.</b><span>Each routine has a time, and the cat has a behavior for it: morning things = waking and the sun patch; stretch = the long stretch; walk = waiting at the door, then back; dinner = pacing by the bowl; evening things = the loaf; night = curled and asleep. Routines without a time (breaks, water) show as small habits: a yawn, a wash, a look at you.</span></div>
+<div class="rule"><b>It reacts to what you do.</b><span>Done: a purr (a soft vibration you can feel) and a slow blink. Done late: it stands and comes to you. Not now: it flicks an ear and goes back to what it was doing. Three or more days left on one routine: it sits facing away and glances back at you. A week of nothing: it curls up small and sleeps more. Everything done today: it rolls onto its back in the sun.</span></div>
+<div class="rule"><b>It has a life when you are not acting.</b><span>Blinks every 3 to 7 s, a double blink one time in five. The tail is six joints on a spring that follow the body, with a tip twitch when alert. Ears swivel toward a sound. Every few minutes it changes place: sun patch, windowsill, the door. It breathes. At night it dreams (paws twitch).</span></div>
+<div class="rule"><b>Tess writes its lines.</b><span>One sentence under the slot, in her voice as the cat’s voice: "The sun is on this side of the kitchen until four. Stretch, then we both lie down." "You said walk at six. It is six." "Fine. I will look at the wall." The AI layer can own this entirely: the cat’s state is a small vocabulary (place, posture, mood, attention), and Tess writes to it.</span></div>
+<div class="rule"><b>Through the app.</b><span>Behind a door the cat comes along: in Body it is stretching, in Mind it sits by the bookshelf, in Home it is on the windowsill. On a routine’s page it does that routine’s thing, small, while the steps are below.</span></div>
+<div class="rule"><b>The relation.</b><span>If you have or had a cat, it can be that cat: its name, its color (the silhouette tints), its one habit (sleeps on the laundry; sits in boxes). If not, Tess names it and it becomes yours over the weeks. The cherry on top you asked for.</span></div>
+</div>
+</section>
+
+<section class="q">
+<h2>Open, with a recommendation</h2>
+<h3>Which animal?</h3><p>A cat is the strongest: it has a routine of its own that people recognize, it can be indifferent as well as affectionate (so a missed day reads as a look, never as a wound), and its silhouette is unmistakable at 180 pt. A dog is warmer but reads as needy when things slip. A bird (a parakeet on a perch) is the lightest and cheekiest. Recommendation: the cat, with the bird as the alternative if you want something that talks more.</p>
+<h3>How much face?</h3><p>Eyes only, as here, keeps it graphic and lets the silhouette carry the acting. A mouth would push it into cartoon. Recommendation: eyes, ears, tail, posture. That is a lot of acting.</p>
+</section>
+</main>
+
+<script>
+(function(){
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let K=1;function fit(){document.querySelectorAll('[data-fit]').forEach(s=>{const p=s.firstElementChild;K=Math.min(1,s.clientWidth/402);p.style.transform=K<1?'scale('+K+')':'';s.style.height=(874*K)+'px'})}
+addEventListener('resize',fit);fit();
+const $=id=>document.getElementById(id);const looks=()=>$('phones').dataset.look;
+function setLook(l){$('phones').dataset.look=l;$('lk-paper').setAttribute('aria-pressed',l==='paper');$('lk-black').setAttribute('aria-pressed',l==='black')}
+$('lk-paper').onclick=()=>setLook('paper');$('lk-black').onclick=()=>setLook('black');
+let rT=null;function receipt(msg,undo){const r=$('r1');r.innerHTML=msg+(undo?' <b>Undo</b>':'');if(undo)r.querySelector('b').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT);rT=setTimeout(()=>{r.innerHTML=''},10000)}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,ease=u=>u<0?0:u>1?1:u*u*(3-2*u),lerp=(a,b,u)=>a+(b-a)*u;
+const css=v=>getComputedStyle($('p1')).getPropertyValue(v).trim();
+let sayT=null;function say(text){const L=$('catline');L.innerHTML='';let d=0;text.split(' ').forEach(w=>{const s=document.createElement('span');s.textContent=w+' ';setTimeout(()=>{s.style.opacity=1;s.style.transform='none'},d);L.appendChild(s);d+=62+(/[.,]$/.test(w)?40:0)});clearTimeout(sayT)}
+
+/* ---------- the cat's world ---------- */
+const W=354,H=182,FLOOR=150;
+let hour=17.2,mood='content',posture='sit',place='mid',att=0,sunX=120,blink=0,nextBlink=3,ear=0,earT=0,purr=0,stretchU=0,walkTo=null,x=200,face=1,lookAway=0,curl=0,belly=0,twitch=0,lastEv='';
+const tail=Array.from({length:7},(_,i)=>({x:200-i*9,y:FLOOR-10,vx:0,vy:0}));
+const HOURS=[['Morning',7.5],['Stretch time',8],['Day',12],['Walk time',18.5],['Dinner',19.5],['Evening',21],['Night',23.5]];
+HOURS.forEach(([n,hh])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.setAttribute('aria-pressed',false);b.onclick=()=>{hour=hh;$('hour').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('clk').textContent=(Math.round(hh)%12||12)+':'+(hh%1?'30':'00');schedule(n)};$('hour').appendChild(b)});
+function schedule(n){lookAway=0;belly=0;
+ if(n==='Morning'){posture='sleep';place='sun';say('The sun is on this side until ten. Water, then we both get up.')}
+ else if(n==='Stretch time'){posture='stretch';place='mid';say('You first. I will show you how it is done.')}
+ else if(n==='Day'){posture='loaf';place='sill';say('Tidy a little is at half five. Until then, the window.')}
+ else if(n==='Walk time'){posture='door';place='door';say('You said walk at six. It is six.')}
+ else if(n==='Dinner'){posture='pace';place='bowl';say('Tacos, you said. I heard tacos.')}
+ else if(n==='Evening'){posture='loaf';place='mid';say('Read ten pages. I will keep the chair warm.')}
+ else{posture='sleep';place='sun';say('Plan tomorrow is done. Lights.')}}
+const EV=[['Finish stretch',()=>{purr=1;mood='content';if(posture==='stretch')posture='sit';say('Good. Again tomorrow, and I will do mine beside you.')}],
+ ['Back from the walk',()=>{walkTo='mid';purr=.6;say('You went. I waited the whole time, obviously.')}],
+ ['Not now',()=>{earT=1;say('Fine. I will look at the wall.')}],
+ ['Three days without breaks',()=>{lookAway=1;posture='sit';say('I am not looking at you. I am looking at the wall near you.')}],
+ ['Everything done today',()=>{belly=1;posture='belly';purr=1;say('Everything. Come here then.')}],
+ ['A quiet week',()=>{curl=1;posture='sleep';place='sun';say('I will be here when you are.')}]];
+EV.forEach(([n,f])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.onclick=()=>{f()};$('ev').appendChild(b)});
+schedule('Day');hour=17.2;
+// touch: tap asks it what it thinks; a drag strokes it and it leans into the finger
+let px=null,stroke=0;const cv=$('cat');cv.onpointerdown=e=>{px=e.clientX;att=1};cv.onpointermove=e=>{if(px==null)return;stroke=clamp((e.clientX-px)/K/60,-1,1);att=1};
+cv.onpointerup=e=>{if(px==null)return;const dx=(e.clientX-px)/K;px=null;if(Math.abs(dx)<6){purr=.4;say(posture==='sleep'?'Mm.':posture==='door'?'Six. Shoes.':'Yes?');receipt('Opens the routine the cat is thinking about.')}else{purr=1;say('There. Yes. There.')}stroke=0};
+
+function targetX(){return place==='sun'?sunX:place==='door'?W-62:place==='bowl'?58:place==='sill'?W/2+40:W/2}
+function drawCat(t,dt){const dark=looks()==='black';const g=cv.getContext('2d');g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,W,H);
+ const ink=css('--cat'),eye=css('--eye'),sun=css('--sun');
+ // the room: a floor line, a door frame at the right, a sill at the left-middle, a bowl, a sun patch that moves with the hour
+ g.strokeStyle='rgba('+(dark?'232,227,218':'36,36,35')+',.16)';g.lineWidth=1;g.beginPath();g.moveTo(0,FLOOR+.5);g.lineTo(W,FLOOR+.5);g.stroke();
+ g.beginPath();g.moveTo(W-40,FLOOR);g.lineTo(W-40,20);g.lineTo(W-6,20);g.lineTo(W-6,FLOOR);g.stroke();
+ g.beginPath();g.moveTo(W/2+8,96);g.lineTo(W/2+90,96);g.stroke();
+ g.fillStyle='rgba('+(dark?'232,227,218':'36,36,35')+',.5)';g.beginPath();g.ellipse(58,FLOOR-2,12,3.5,0,0,7);g.fill();g.fillStyle='rgba('+(dark?'232,227,218':'36,36,35')+',.18)';g.beginPath();g.ellipse(58,FLOOR-5,12,3.5,0,0,7);g.fill();
+ sunX=lerp(80,250,clamp((hour-7)/12,0,1));const dayLight=hour>6.5&&hour<18.3;if(dayLight){const sg=g.createRadialGradient(sunX,FLOOR-6,4,sunX,FLOOR-6,60);sg.addColorStop(0,sun);sg.addColorStop(1,sun+'00');g.fillStyle=sg;g.beginPath();g.ellipse(sunX,FLOOR-4,70,16,0,0,7);g.fill()}
+ // move toward the place
+ if(walkTo){place=walkTo;walkTo=null;posture='walk'}
+ const tx=targetX();const dx=tx-x;if(Math.abs(dx)>2){x+=Math.sign(dx)*Math.min(Math.abs(dx),60*dt);face=Math.sign(dx);if(posture!=='walk')posture='walk'}else if(posture==='walk'){posture=place==='sun'&&hour<9?'sleep':place==='door'?'door':place==='bowl'?'pace':'sit'}
+ if(posture==='door')face=1;if(posture==='pace'){x=tx+Math.sin(t*1.4)*18;face=Math.cos(t*1.4)>0?1:-1}
+ if(lookAway)face=-1;
+ // blink, ears, purr
+ nextBlink-=dt;if(nextBlink<0){blink=1;nextBlink=3+Math.random()*4+(Math.random()<.2?-2.6:0)}if(blink>0)blink=Math.max(0,blink-dt*7);
+ earT=Math.max(0,earT-dt*1.5);purr=Math.max(0,purr-dt*.25);stretchU=posture==='stretch'?Math.min(1,stretchU+dt*.8):Math.max(0,stretchU-dt*1.5);
+ const breath=Math.sin(t*(posture==='sleep'?1.4:2.2))*(posture==='sleep'?1.2:.7)+(purr>0?Math.sin(t*40)*purr*.5:0);
+ // body geometry by posture
+ const sleep=posture==='sleep',loaf=posture==='loaf',sit=posture==='sit'||posture==='door',walk=posture==='walk',pace=posture==='pace',st=stretchU,bel=posture==='belly';
+ const bx=x,by=FLOOR-(sleep?12:loaf?14:16)-breath*.3;
+ g.save();g.translate(bx,by);g.scale(face,1);if(stroke)g.transform(1,0,stroke*.12,1,0,0);
+ g.fillStyle=ink;
+ if(sleep){const sc=curl?.85:1;g.beginPath();g.ellipse(0,0,34*sc,13*sc,0,0,7);g.fill();g.beginPath();g.arc(22*sc,-4*sc,11*sc,0,7);g.fill();// head tucked
+  // ears
+  g.beginPath();g.moveTo(14*sc,-11*sc);g.lineTo(17*sc,-20*sc);g.lineTo(23*sc,-12*sc);g.fill();g.beginPath();g.moveTo(26*sc,-13*sc);g.lineTo(31*sc,-20*sc);g.lineTo(33*sc,-10*sc);g.fill();
+  // eyes closed: two tiny curves
+  g.strokeStyle=dark?'#000':'#F7F5F1';g.lineWidth=1;g.beginPath();g.arc(20*sc,-3*sc,2,.2,2.9);g.stroke();g.beginPath();g.arc(27*sc,-3*sc,2,.2,2.9);g.stroke();
+  if(Math.random()<.004)twitch=1;twitch=Math.max(0,twitch-dt*3);if(twitch){g.beginPath();g.ellipse(-26*sc,8*sc-twitch*2,5,3,0,0,7);g.fill()}}
+ else if(bel){g.beginPath();g.ellipse(0,0,36,14,0,0,7);g.fill();g.beginPath();g.arc(-30,-6,11,0,7);g.fill();[-10,2,14].forEach(px=>{g.beginPath();g.ellipse(px,-14+Math.sin(t*3+px)*1.5,4,8,.3,0,7);g.fill()});
+  g.fillStyle=eye;g.beginPath();g.ellipse(-33,-8,2.4,3.2*(1-blink),0,0,7);g.fill();g.beginPath();g.ellipse(-26,-9,2.4,3.2*(1-blink),0,0,7);g.fill();g.fillStyle=ink;g.beginPath();g.moveTo(-40,-14);g.lineTo(-38,-24);g.lineTo(-32,-16);g.fill();g.beginPath();g.moveTo(-28,-16);g.lineTo(-24,-24);g.lineTo(-20,-14);g.fill()}
+ else{// standing / sitting / loaf / stretch family: body ellipse, chest, head, ears
+  const len=sit?26:loaf?34:walk||pace?36:lerp(30,52,st),hgt=sit?20:loaf?15:walk||pace?14:lerp(16,9,st);
+  g.beginPath();g.ellipse(-4,0,len,hgt,0,0,7);g.fill();
+  const hx=sit?14:loaf?22:walk||pace?30:lerp(26,46,st),hy=sit?-28:loaf?-10:walk||pace?-12:lerp(-14,-2,st);
+  if(sit){g.beginPath();g.ellipse(8,-10,14,20,0,0,7);g.fill()}// chest upright
+  if(!loaf&&!sit){// legs when standing or stretching
+   const step=walk||pace?Math.sin(t*9)*4:0;[[-22,step],[-14,-step],[len-14,-step],[len-6,step]].forEach(([lx,s])=>{g.fillRect(lx-2.5,hgt-6+(s>0?0:0),5,FLOOR-by-hgt+6-Math.abs(s)*.4)})}
+  if(st>.2){g.beginPath();g.ellipse(len-2,hgt-2,8,3,0,0,7);g.fill()}// front paws stretched
+  g.beginPath();g.arc(hx,hy,12,0,7);g.fill();// head
+  const e=earT?3:0;g.beginPath();g.moveTo(hx-10,hy-6);g.lineTo(hx-9+e,hy-19);g.lineTo(hx-1,hy-10);g.fill();g.beginPath();g.moveTo(hx+2,hy-10);g.lineTo(hx+8-e,hy-19);g.lineTo(hx+11,hy-6);g.fill();
+  // eyes: almonds that blink; narrow when content, round when alert
+  const alert=posture==='door'||pace||att>0?1:0;const eh=(2.2+alert*1.4)*(1-blink);g.fillStyle=eye;g.beginPath();g.ellipse(hx+2,hy-1,2.6,eh,0,0,7);g.fill();g.beginPath();g.ellipse(hx+8,hy-1,2.6,eh,0,0,7);g.fill();
+  g.fillStyle=ink;g.fillRect(hx+1.4,hy-1-eh,1.2,eh*2);g.fillRect(hx+7.4,hy-1-eh,1.2,eh*2);// slit pupils
+  // whiskers
+  g.strokeStyle='rgba('+(dark?'230,224,212':'42,39,36')+',.5)';g.lineWidth=.6;for(let k=-1;k<=1;k++){g.beginPath();g.moveTo(hx+9,hy+3+k*2);g.lineTo(hx+22,hy+1+k*4);g.stroke()}}
+ g.restore();att=Math.max(0,att-dt);
+ // the tail: a chain that follows the body root with a spring, lazy when calm, flicking when alert or annoyed
+ const rootX=bx-face*(sleep?30:loaf?-30*face*0+ -30:28),rootY=by+(sleep?6:2);tail[0].x=rootX;tail[0].y=rootY;const swish=Math.sin(t*(earT?6:1.3))*(earT?14:6)+(posture==='door'?Math.sin(t*5)*4:0);
+ for(let i=1;i<tail.length;i++){const p=tail[i-1],q=tail[i];const want={x:p.x-face*9*(1-i*.04),y:p.y-(sleep?2:i<3?-3:6)+Math.sin(t*1.5+i*.6)*1.2+(i===tail.length-1?swish*.3:0)+(i>3?swish*(i-3)*.08:0)};
+  q.vx+=(want.x-q.x)*22*dt;q.vy+=(want.y-q.y)*22*dt;q.vx*=.75;q.vy*=.75;q.x+=q.vx*dt*10;q.y+=q.vy*dt*10}
+ g.strokeStyle=ink;g.lineCap='round';g.beginPath();g.moveTo(tail[0].x,tail[0].y);for(let i=1;i<tail.length;i++){g.lineWidth=6-i*.6;g.lineTo(tail[i].x,tail[i].y)}g.stroke();
+ // purr: a few faint arcs by the head when purring
+ if(purr>.05){g.strokeStyle='rgba('+(dark?'230,224,212':'42,39,36')+','+(purr*.35)+')';g.lineWidth=.8;for(let k=0;k<3;k++){g.beginPath();g.arc(bx+face*14,by-30,8+k*5+Math.sin(t*6+k)*1,-.6,.6);g.stroke()}}
+ // the approved soft edge
+ const e2=g.createLinearGradient(0,0,W,H);e2.addColorStop(0,'rgba(255,255,255,'+(dark?.18:.3)+')');e2.addColorStop(.5,'rgba(255,255,255,0)');e2.addColorStop(1,'rgba(0,0,0,'+(dark?.14:.08)+')');g.strokeStyle=e2;g.lineWidth=1;g.beginPath();g.roundRect(.5,.5,W-1,H-1,26);g.stroke()}
+let t0=performance.now(),last=t0;function tick(now){const t=(now-t0)/1000,dt=Math.min(.05,(now-last)/1000);last=now;try{drawCat(t,RM?0:dt)}catch(e){console.error(e)}requestAnimationFrame(tick)}requestAnimationFrame(tick);
+})();
+</script>

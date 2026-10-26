@@ -1,0 +1,256 @@
+<title>The Kitchen Pass</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&family=Reenie+Beanie&family=Caveat:wght@400;600&display=swap">
+<style>
+/* Layout: one live phone, the whole Kitchen app with the pass as its permanent top. The rail is DOM so tickets can flip in 3D and reflow smoothly. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#A8701F;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif;--hand:'Caveat','Reenie Beanie',cursive}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#C49A5E;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+h3{font-size:20px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:62ch}
+.bar{display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:0 44px}
+.rule{padding:14px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600;margin-bottom:2px}
+.rule span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 14px;align-items:center;margin-top:8px}
+.ctl span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);margin-right:4px}
+.q{border-top:2px solid var(--fg);padding-top:16px}
+
+/* ---------- phone ---------- */
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--hair:rgba(36,36,35,.16);--kitchen:#A8701F;--clay:#9C4B2C;--teal:#1E6E77;--wine:#9A2541;--slate:#34506F;--gold:#7E6A1E;--green:#25803D;--lists:#5E6B1F;--money:#2A7878;--tess:#3A5BA8;--paper:#FBF8F0;--paperInk:#2E2A24;--paper2:#4A463F;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none;touch-action:none;box-shadow:0 0 0 1px var(--line)}
+.phones[data-look="black"] .phone{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--hair:rgba(232,227,218,.2);--kitchen:#C49A5E;--clay:#E2A07F;--teal:#84C3C9;--wine:#EE8E9C;--slate:#A7BCD6;--gold:#D9C27A;--green:#8FC9A0;--lists:#B5BE7A;--money:#7BC0C4;--tess:#9DB4F0;--paper:#E9E4D6;--paperInk:#2A2622;--paper2:#514C44}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:30}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--kitchen);z-index:2}
+.day{position:absolute;right:24px;top:70px;font-size:15px;color:var(--ink2);z-index:2}
+.brief{position:absolute;left:24px;right:24px;top:108px;font-size:19px;line-height:1.35;z-index:2;height:52px;overflow:hidden}
+.brief b{font-weight:600;color:var(--kitchen)}
+
+/* ---------- the pass: permanent, top 170..420 ---------- */
+.pass{position:absolute;left:0;right:0;top:196px;height:182px;z-index:5;perspective:1000px}
+.rail{position:absolute;left:24px;right:24px;top:8px;height:8px;border-radius:4px;background:linear-gradient(#C9CED2,#9AA0A5);box-shadow:0 4px 10px rgba(0,0,0,.22)}
+.phones[data-look="black"] .rail{background:linear-gradient(#8E9397,#5C6165);box-shadow:0 4px 10px rgba(0,0,0,.5)}
+.rail::after{content:"";position:absolute;left:0;right:0;top:1px;height:1.5px;background:rgba(255,255,255,.5)}
+.spike{position:absolute;right:28px;top:-14px;width:2px;height:30px;background:#8A9095}
+.tix{position:absolute;left:24px;right:24px;top:14px;height:166px;display:flex;align-items:flex-start;gap:12px}
+.tk{position:relative;flex:1 1 0;height:100%;transform-style:preserve-3d;transition:flex-basis .55s cubic-bezier(.3,.9,.3,1),flex-grow .55s cubic-bezier(.3,.9,.3,1),opacity .4s,transform .55s cubic-bezier(.3,.9,.3,1);min-width:0;touch-action:none;cursor:pointer}
+.tk.big{flex:2.4 1 0}
+.tk.gone{flex:0 0 0;opacity:0;transform:translateY(-70px)}
+.tk.enter{animation:slidein .55s cubic-bezier(.3,.9,.3,1)}
+@keyframes slidein{from{transform:translateX(380px) rotate(3deg);opacity:0}to{transform:none;opacity:1}}
+.clip{position:absolute;left:50%;top:-6px;width:12px;height:14px;margin-left:-6px;background:#7D8388;border-radius:1px;z-index:3}
+.phones[data-look="black"] .clip{background:#AEB3B7}
+.sheet{position:absolute;left:0;right:0;top:4px;bottom:0;transform-origin:top center;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.35,.1,.2,1)}
+.face{position:absolute;inset:0;background:var(--paper);color:var(--paperInk);padding:12px 9px 10px;backface-visibility:hidden;box-shadow:0 3px 8px rgba(0,0,0,.18);clip-path:polygon(0 0,100% 0,100% calc(100% - 4px),97% 100%,94% calc(100% - 4px),91% 100%,88% calc(100% - 4px),85% 100%,82% calc(100% - 4px),79% 100%,76% calc(100% - 4px),73% 100%,70% calc(100% - 4px),67% 100%,64% calc(100% - 4px),61% 100%,58% calc(100% - 4px),55% 100%,52% calc(100% - 4px),49% 100%,46% calc(100% - 4px),43% 100%,40% calc(100% - 4px),37% 100%,34% calc(100% - 4px),31% 100%,28% calc(100% - 4px),25% 100%,22% calc(100% - 4px),19% 100%,16% calc(100% - 4px),13% 100%,10% calc(100% - 4px),7% 100%,4% calc(100% - 4px),1% 100%,0 calc(100% - 4px));overflow:hidden}
+.face.back{transform:rotateX(180deg)}
+.sheet.flipped{transform:rotateX(180deg)}
+.face .ttk{font:600 22px/1.05 var(--hand);margin-bottom:4px;white-space:nowrap;overflow:hidden}
+.face .sub{font:400 16px/1.25 var(--hand);color:var(--paper2)}
+.face .li{font:400 16px/1.25 var(--hand);color:var(--paperInk);display:flex;gap:8px;align-items:baseline;position:relative;min-height:20px}
+.face .li.done{color:var(--paper2)}
+.face .li.done::after{content:"";position:absolute;left:0;right:0;top:55%;height:1.5px;background:var(--paperInk);opacity:.7}
+.face .li.now{font-weight:600}
+.face .li .n{font:300 13px var(--num);color:var(--paper2);min-width:14px}
+.face .pg{position:absolute;right:10px;bottom:10px;font:300 11px var(--num);color:var(--paper2)}
+.face .tally{position:absolute;left:10px;bottom:8px;font:400 13px var(--hand);color:var(--paper2)}
+.flutter{animation:flutter var(--fd,4s) ease-in-out infinite alternate;transform-origin:top center}
+@keyframes flutter{from{transform:rotate(-.6deg)}to{transform:rotate(.7deg)}}
+.cooking .flutter{animation-duration:1.4s}
+.hint{position:absolute;left:24px;right:24px;top:386px;font-size:13px;color:var(--ink3);z-index:2;white-space:nowrap;overflow:hidden}
+
+/* ---------- the lower part: the app's pages ---------- */
+.lower{position:absolute;left:0;right:0;top:412px;bottom:0;z-index:2}
+.pgv{position:absolute;inset:0;padding:0 24px;transition:transform .42s cubic-bezier(.25,.9,.3,1),opacity .3s}
+.pgv.off{transform:translateX(402px);opacity:0;pointer-events:none}
+.pgv.back{transform:translateX(-60px);opacity:0;pointer-events:none}
+.door{height:56px;display:flex;align-items:baseline;gap:12px;cursor:pointer;white-space:nowrap}
+.door b{font-size:36px;font-weight:900;letter-spacing:-.02em;line-height:1}
+.door span{font:300 16px var(--num);color:var(--ink2)}
+.door span.w2{color:var(--wine)}
+.backw{font-size:13px;color:var(--ink2);padding:0 0 6px;cursor:pointer}
+.ph{font-size:34px;font-weight:700;letter-spacing:-.02em;color:var(--kitchen);line-height:1.1;margin-bottom:6px}
+.row{display:flex;justify-content:space-between;align-items:baseline;min-height:42px;border-bottom:1px solid var(--hair);font-size:18px;cursor:pointer}
+.row span:last-child{font:300 15px var(--num);color:var(--ink2)}
+.row.miss span:first-child{color:var(--wine);font-weight:500}
+.step{display:flex;gap:12px;align-items:baseline;min-height:48px;font-size:18px;line-height:1.35;cursor:pointer;touch-action:none}
+.step .n{font:300 16px var(--num);color:var(--kitchen);min-width:20px}
+.step.done{color:var(--ink2)}
+.step.done span:last-child{text-decoration:line-through;text-decoration-thickness:1px}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--kitchen);padding:8px 0;min-width:96px;min-height:44px;text-align:left;background:none;border:0;cursor:pointer;z-index:4}
+.foot2{position:absolute;left:150px;bottom:30px;font:500 17px var(--sans);color:var(--ink2);padding:10px 0;min-height:44px;background:none;border:0;cursor:pointer;z-index:4}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phones[data-look="black"] .tessw{color:#C79B7C}
+.receipt{position:absolute;left:24px;right:110px;bottom:84px;font-size:15px;color:var(--ink2);height:24px;white-space:nowrap;overflow:hidden;z-index:4}
+.receipt b{font-weight:600;cursor:pointer;color:var(--kitchen)}
+@media (prefers-reduced-motion:reduce){.tk,.sheet,.pgv{transition:none!important}.flutter,.tk.enter{animation:none!important}}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Kitchen / sheet 259</h2>
+<h1>The pass runs the kitchen.</h1>
+<p class="lede">Your spec, built: the ticket rail is the Kitchen’s permanent top. It stays there on every page of the app and is always live to whatever the bottom of the screen is doing. The slot is the same fixed size as every keystone; tickets size themselves within it, and a ticket with more than fits flips to its next page on a swipe up and back on a swipe down; and in cook mode the rail runs the recipe, striking each step as you go. Open the doors below the rail and watch the rail change.</p>
+<div class="bar" role="group" aria-label="Phone look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+</div>
+</header>
+
+<section aria-label="Phone">
+<div class="phones" id="phones" data-look="paper">
+<div>
+<div class="slot" data-fit><div class="phone" id="p1">
+ <div class="sbar"><span>5:10</span><span></span></div>
+ <div class="ttl">Kitchen</div><div class="day">Sunday</div>
+ <div class="brief" id="brief"><b>Tacos</b> tonight, 25 min, you have all 8 things. Eggs and milk run out first.</div>
+ <div class="pass" id="pass"><div class="rail"><div class="spike"></div></div><div class="tix" id="tix"></div></div>
+ <div class="hint" id="hint">Swipe a ticket up for its next page, down to come back. Tap it to open. Swipe up fast to spike it.</div>
+ <div class="lower" id="lower"></div>
+ <div class="receipt" id="r1"></div>
+ <button class="foot" id="foot">Cook</button>
+ <button class="foot2" id="foot2">Dishes 7</button>
+ <div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<div class="ctl" id="ev"><span>Events</span></div>
+<p class="cap" id="cap"><b>The landing.</b> Four tickets: Tacos (two pages: ingredients, then the plan), Get, Rice, Dishes. The rail stays at the top of every page; open a door below and see the rail become that page’s tickets. Cook starts the recipe on the rail.</p>
+</div>
+</div>
+</section>
+
+<section>
+<h2>How it works</h2>
+<div class="rules">
+<div class="rule"><b>The pass is permanent.</b><span>The rail lives in the standard keystone slot (354 x 182 at top 196), the same slot as the Home mosaic and every other app; it never grows. Below 412 is the page: the landing’s doors, or Tonight, Pantry, Recipes, Groceries, Leftovers. Back is the edge swipe or the back word; the rail never leaves.</span></div>
+<div class="rule"><b>Live to the page.</b><span>The rail shows the tickets that belong to what is below. Landing: the kitchen’s asks (dish, get, going out, dishes). Tonight: one big ticket for the dish. Recipes: two medium tickets for the dishes you can make. Groceries: one big list ticket, as many pages as it needs. Pantry: one ticket per place with its count. Leftovers: a ticket per thing with its day. Tickets that stay keep their place; the others slide away and the new ones slide in from the right, all in 0.55 s.</span></div>
+<div class="rule"><b>Dynamic size.</b><span>Tickets share the rail width: four small, three, two, or one big. A big ticket holds about six lines, a small one three; what does not fit goes to the next page, never to a taller rail. Type is the kitchen hand (Caveat here; Reenie Beanie is the thinner option).</span></div>
+<div class="rule"><b>Pages.</b><span>Swipe a ticket up and it flips over on its clip (rotateX, 0.65 s) to show the next page on its back; swipe down and it flips back. A page number sits bottom right. Flipping is only within one ticket; the rail’s set does not change.</span></div>
+<div class="rule"><b>Cook mode.</b><span>Cook: the rail becomes one big ticket of steps with the running tally bottom left (“2 of 5” in hand). Tap or swipe right on a step, on the ticket or in the page below, and it is struck on the ticket as it happens; the ticket flips to its next page of steps by itself when the last visible step is done; the timer ticket beside it counts down and announces (“Rice, 2 min”). Finishing spikes the recipe ticket and writes a Dishes ticket with the new count.</span></div>
+<div class="rule"><b>Spike and finish.</b><span>A fast swipe up spikes a ticket (done); the rest reflow. Open to decide: your “some other gesture” for finishing. Candidates: a hold (0.5 s) that lets the ticket tear off the clip, or a drag to the spike at the right. Recommendation: the hold-and-tear, since swipe up is taken by pages.</span></div>
+<div class="rule"><b>Life.</b><span>Tickets flutter in the hood’s draft (slow sine, harder while cooking). New tickets slide in with a clip. Tess writes them all, in one hand.</span></div>
+</div>
+</section>
+
+<section class="q">
+<h2>Open, with a recommendation</h2>
+<h3>Finishing gesture</h3><p>Hold a ticket half a second and it loosens from the clip; let go and it tears off onto the spike. Swipe up stays for pages, swipe down for back. Recommendation: build this; it feels like paper.</p>
+<h3>How many tickets at most</h3><p>Four small is the comfortable limit at 354 pt. Beyond that the rail pages: swipe the rail itself sideways to see the next four. Recommendation: cap at four and let the rail page.</p>
+</section>
+</main>
+
+<script>
+(function(){
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let K=1;function fit(){document.querySelectorAll('[data-fit]').forEach(s=>{const p=s.firstElementChild;K=Math.min(1,s.clientWidth/402);p.style.transform=K<1?'scale('+K+')':'';s.style.height=(874*K)+'px'})}
+addEventListener('resize',fit);fit();
+const $=id=>document.getElementById(id);
+function setLook(l){$('phones').dataset.look=l;$('lk-paper').setAttribute('aria-pressed',l==='paper');$('lk-black').setAttribute('aria-pressed',l==='black')}
+$('lk-paper').onclick=()=>setLook('paper');$('lk-black').onclick=()=>setLook('black');
+let rT=null;function receipt(msg,undo){const r=$('r1');r.innerHTML=msg+(undo?' <b>Undo</b>':'');if(undo)r.querySelector('b').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT);rT=setTimeout(()=>{r.innerHTML=''},10000)}
+const h=(cls,html)=>{const e=document.createElement('div');e.className=cls;if(html!=null)e.innerHTML=html;return e};
+
+/* ---------- data ---------- */
+const TACOS={n:'Tacos',time:'25 min',ing:[['Tortillas','8'],['Chicken thighs','1 lb'],['Onions','2'],['Peppers','2'],['Cilantro','a bunch'],['Limes','3'],['Cumin',''],['Sour cream','']],
+ steps:['Char the tortillas on the burner, both sides.','Brown the chicken with cumin, five minutes.','Onions and peppers in, until soft.','Squeeze the limes over, chop the cilantro.','Fill, fold, sour cream. Eat.']};
+const DAL={n:'Dal',time:'40 min',ing:[['Red lentils','1 cup'],['Onion','1'],['Tomatoes','2'],['Garlic','3'],['Turmeric',''],['Cumin',''],['Ghee','']],steps:['Rinse the lentils, simmer with turmeric.','Fry onion, garlic, cumin in ghee.','Tomatoes in, then the lentils. Salt.']};
+let GET=['Limes','Cilantro','Tortillas','Feta','Milk','Eggs','Yogurt','Bread','Coffee','Peppers','Dish soap'];
+let dishes=7;let cooking=null;// {recipe, done:Set, step}
+const PLACES=[['Fridge',13,'milk and eggs low'],['Freezer',8,'all good'],['Shelf',15,'pasta low'],['Counter',6,'bananas first'],['To get',4,'for tacos']];
+const LEFT=[['Rice','today','cooked Thursday'],['Dal','Friday','half a pot']];
+
+/* ---------- the pass ---------- */
+// a ticket: {id, title, color, pages:[ [lines] ], big?, tally?}
+const tix=$('tix');let shown=new Map();// id -> element
+function pageHTML(tk,pi){const pg=tk.pages[pi];return '<div class="ttk" style="color:var(--'+tk.color+')">'+tk.title+'</div>'+(pg.sub?'<div class="sub">'+pg.sub+'</div>':'')+(pg.lines||[]).map((l,i)=>typeof l==='string'?'<div class="li">'+l+'</div>':'<div class="li'+(l.done?' done':'')+(l.now?' now':'')+'" data-step="'+l.idx+'">'+(l.n!=null?'<span class="n">'+l.n+'</span>':'')+'<span>'+l.t+'</span></div>').join('')+(tk.pages.length>1?'<div class="pg">'+(pi+1)+' / '+tk.pages.length+'</div>':'')+(tk.tally?'<div class="tally">'+tk.tally+'</div>':'')}
+function ticketEl(tk){const e=h('tk'+(tk.big?' big':'')+' enter');e.dataset.id=tk.id;e.innerHTML='<div class="clip"></div><div class="sheet flutter" style="--fd:'+(3.4+Math.random()*2)+'s"><div class="face front"></div><div class="face back"></div></div>';e._pi=0;e._tk=tk;
+ const sheet=e.querySelector('.sheet');e.querySelector('.front').innerHTML=pageHTML(tk,0);if(tk.pages[1])e.querySelector('.back').innerHTML=pageHTML(tk,1);
+ let y0=null,x0=null,t0=0;e.onpointerdown=ev=>{y0=ev.clientY;x0=ev.clientX;t0=performance.now();e.setPointerCapture(ev.pointerId);sheet.classList.remove('flutter')};
+ e.onpointerup=ev=>{if(y0==null)return;const dy=(ev.clientY-y0)/K,dx=(ev.clientX-x0)/K,dt=performance.now()-t0;y0=null;sheet.classList.add('flutter');
+  if(dy<-70&&dt<260){spike(tk.id);return}
+  if(dy<-30){flip(e,1);return}if(dy>30){flip(e,-1);return}
+  if(Math.abs(dx)>50&&cooking&&tk.id==='cook'){stepDone();return}
+  if(Math.abs(dy)<8&&Math.abs(dx)<8){const li=ev.target.closest('[data-step]');if(li&&cooking){stepDone(+li.dataset.step);return}open(tk.id)}};
+ return e}
+function flip(e,dir){const tk=e._tk,n=tk.pages.length;if(n<2)return;const np=e._pi+dir;if(np<0||np>=n){receipt(np<0?'First page.':'Last page.');return}
+ const sheet=e.querySelector('.sheet');// the next page is written on the hidden face before the turn
+ const target=sheet.classList.contains('flipped')?'.front':'.back';e.querySelector(target).innerHTML=pageHTML(tk,np);sheet.classList.toggle('flipped');e._pi=np}
+function refresh(e){const tk=e._tk;const sheet=e.querySelector('.sheet');const cur=sheet.classList.contains('flipped')?'.back':'.front';e.querySelector(cur).innerHTML=pageHTML(tk,e._pi)}
+function setTickets(list){// keep what stays, slide out what goes, slide in what is new
+ const ids=new Set(list.map(t=>t.id));[...shown.keys()].forEach(id=>{if(!ids.has(id)){const e=shown.get(id);e.classList.add('gone');setTimeout(()=>e.remove(),RM?0:450);shown.delete(id)}});
+ list.forEach((tk,i)=>{let e=shown.get(tk.id);if(!e){e=ticketEl(tk);shown.set(tk.id,e);setTimeout(()=>e.classList.remove('enter'),600)}else{e._tk=tk;e.classList.toggle('big',!!tk.big);if(e._pi>=tk.pages.length)e._pi=tk.pages.length-1;refresh(e)}
+  const ref=tix.children[i];if(ref!==e)tix.insertBefore(e,ref||null)})}
+function spike(id){const e=shown.get(id);if(!e)return;e.classList.add('gone');shown.delete(id);setTimeout(()=>e.remove(),450);
+ if(id==='dish'){const was=dishes;dishes=0;foot();receipt('Dishes, done.',()=>{dishes=was;foot();rail()})}else receipt(e._tk.title+', done.');setTimeout(rail,500)}
+
+/* ---------- what the rail shows for each page ---------- */
+const dishT=()=>({id:'dish',title:'Dishes',color:'money',pages:[{lines:[dishes?dishes+' waiting':'none waiting','since lunch']}]});
+const tacosT=(big)=>({id:'tacos',title:'Tacos',color:'clay',big,pages:[{sub:'25 min, tonight',lines:big?TACOS.ing.slice(0,6).map(([a,b])=>a+(b?', '+b:'')):TACOS.ing.slice(0,3).map(a=>a[0])},...(big?[{sub:'and',lines:TACOS.ing.slice(6).map(([a,b])=>a+(b?', '+b:''))}]:[]),{sub:'the plan',lines:TACOS.steps.map((s,i)=>({t:s,n:i+1,idx:i}))}]});
+const getT=(big)=>{const per=big?6:3;const pages=[];for(let i=0;i<GET.length;i+=per)pages.push({sub:i?'':GET.length+' things',lines:GET.slice(i,i+per)});return {id:'get',title:'Get',color:'lists',big,pages}};
+const riceT=()=>({id:'rice',title:'Rice',color:'wine',pages:[{lines:['goes out today','cooked Thursday']}]});
+function cookT(){const c=cooking,R=c.recipe;const per=3;const pages=[];for(let i=0;i<R.steps.length;i+=per)pages.push({sub:i?'':R.time+', step by step',lines:R.steps.slice(i,i+per).map((s,k)=>({t:s,n:i+k+1,idx:i+k,done:c.done.has(i+k),now:i+k===c.step}))});return {id:'cook',title:R.n,color:'clay',big:true,pages,tally:c.done.size+' of '+R.steps.length}}
+function timerT(){const c=cooking;const left=Math.max(0,c.endAt-performance.now());const m=Math.floor(left/60000),s=Math.floor(left%60000/1000);return {id:'timer',title:m+':'+String(s).padStart(2,'0'),color:'kitchen',pages:[{lines:[c.recipe.n==='Tacos'?'chicken in the pan':'lentils simmering',left<60000?'nearly there':'']}]}}
+let page='home';
+function rail(){$('pass').classList.toggle('cooking',!!cooking);
+ if(cooking){setTickets([cookT(),timerT()]);return}
+ if(page==='home')setTickets([tacosT(false),getT(false),riceT(),dishT()]);
+ else if(page==='tonight')setTickets([tacosT(true)]);
+ else if(page==='recipes')setTickets([tacosT(false),{id:'dal',title:'Dal',color:'clay',pages:[{sub:'40 min',lines:DAL.ing.slice(0,3).map(a=>a[0])},{sub:'the plan',lines:DAL.steps.map((s,i)=>({t:s,n:i+1,idx:i}))}]}]);
+ else if(page==='groceries')setTickets([getT(true),dishT()]);
+ else if(page==='pantry')setTickets(PLACES.slice(0,4).map(([n,c,s])=>({id:'pl'+n,title:n,color:'teal',pages:[{lines:[c+' things',s]}]})));
+ else if(page==='leftovers')setTickets(LEFT.map(([n,d,s])=>({id:'lf'+n,title:n,color:d==='today'?'wine':'teal',pages:[{lines:[d,s]}]})).concat([dishT()]))}
+function foot(){$('foot2').textContent=dishes?'Dishes '+dishes:'Dishes';$('foot').textContent=cooking?'Next step':page==='home'?'Cook':page==='groceries'?'Got it':page==='leftovers'?'Eat it':'Cook'}
+
+/* ---------- the lower part: pages ---------- */
+const lower=$('lower');let pageEl=null;
+function show(id,build){page=id;const e=h('pgv off');build(e);lower.appendChild(e);const old=pageEl;pageEl=e;requestAnimationFrame(()=>requestAnimationFrame(()=>{e.classList.remove('off');if(old){old.classList.add('back');setTimeout(()=>old.remove(),RM?0:440)}}));rail();foot();
+ $('cap').innerHTML=CAPS[id]||CAPS.home}
+const CAPS={home:'<b>The landing.</b> Four tickets: Tacos (two pages: ingredients, then the plan), Get, Rice, Dishes. The rail stays at the top of every page; open a door below and see the rail become that page’s tickets. Cook starts the recipe on the rail.',
+ tonight:'<b>Tonight.</b> The rail is one big Tacos ticket: all eight ingredients on the front, the plan on the back. Below, the same dish in page form. Cook starts it.',
+ recipes:'<b>Recipes.</b> Two medium tickets, the dishes you can make, each with its plan on page two. Below, the full list.',
+ groceries:'<b>Groceries.</b> One big Get ticket, nine things a page, two pages; swipe up to flip. Dishes keeps its small ticket beside it.',
+ pantry:'<b>Pantry.</b> A ticket per place with its count and the one thing to know. Below, the places and their things.',
+ leftovers:'<b>Leftovers.</b> A ticket per thing with its day, wine when it is today. Below, the list.'};
+const back=e=>{const b=h('backw','Kitchen');b.onclick=home;e.appendChild(b)};
+function home(){show('home',e=>{[['Tonight','Tacos, 25 min',()=>tonight()],['Pantry','31, milk and eggs low',()=>pantry()],['Recipes','4 you can make',()=>recipes()],['Groceries',GET.length+' to get',()=>groceries()],['Leftovers','rice goes out today',()=>leftovers(),1]].forEach(([n,m,f,w])=>{const d=h('door','<b>'+n+'</b><span'+(w?' class="w2"':'')+'>'+m+'</span>');d.onclick=f;e.appendChild(d)})})}
+function tonight(){show('tonight',e=>{back(e);e.appendChild(h('ph','Tacos'));e.appendChild(h('row','<span>25 min, you have everything</span><span>8 things</span>'));TACOS.ing.forEach(([a,b])=>e.appendChild(h('row','<span>'+a+'</span><span>'+b+'</span>')))})}
+function recipes(){show('recipes',e=>{back(e);e.appendChild(h('ph','Recipes'));[['Tacos','25 min'],['Dal','40 min'],['Pasta','20 min'],['Fried rice','15 min'],['Shakshuka','feta short',1]].forEach(([a,b,m])=>e.appendChild(h('row'+(m?' miss':''),'<span>'+a+'</span><span>'+b+'</span>')))})}
+function groceries(){show('groceries',e=>{back(e);e.appendChild(h('ph','Groceries'));GET.forEach((g,i)=>{const r=h('row','<span>'+g+'</span><span>'+(i<4?'for tacos':'')+'</span>');r.onclick=()=>{GET=GET.filter(x=>x!==g);receipt(g+', got it.',()=>{GET.splice(i,0,g);groceries()});groceries()};e.appendChild(r)})})}
+function pantry(){show('pantry',e=>{back(e);e.appendChild(h('ph','Pantry'));PLACES.forEach(([n,c,s])=>e.appendChild(h('row','<span>'+n+'</span><span>'+c+', '+s+'</span>')))})}
+function leftovers(){show('leftovers',e=>{back(e);e.appendChild(h('ph','Leftovers'));LEFT.forEach(([n,d,s])=>e.appendChild(h('row'+(d==='today'?' miss':''),'<span>'+n+'</span><span>'+d+', '+s+'</span>')))})}
+
+/* ---------- cook mode ---------- */
+function startCook(R){cooking={recipe:R,done:new Set(),step:0,endAt:performance.now()+(R.n==='Tacos'?8:12)*60000};show('cook',e=>{back(e);e.appendChild(h('ph',R.n));R.steps.forEach((s,i)=>{const st=h('step','<span class="n">'+(i+1)+'</span><span>'+s+'</span>');st.dataset.i=i;let x0=null;st.onpointerdown=ev=>{x0=ev.clientX};st.onpointerup=ev=>{const dx=(ev.clientX-x0)/K;if(dx>50||Math.abs(dx)<6)stepDone(i)};e.appendChild(st)})});receipt(R.n+', started.')}
+function stepDone(i){const c=cooking;if(!c)return;if(i==null)i=c.step;if(c.done.has(i))c.done.delete(i);else c.done.add(i);
+ // the next open step becomes "now"; the ticket turns its page by itself when the visible steps are done
+ let nx=0;while(c.done.has(nx)&&nx<c.recipe.steps.length)nx++;c.step=nx;
+ pageEl&&pageEl.querySelectorAll('.step').forEach(st=>st.classList.toggle('done',c.done.has(+st.dataset.i)));
+ rail();const e=shown.get('cook');if(e){const per=3,wantPage=Math.min(e._tk.pages.length-1,Math.floor(nx/per));if(wantPage!==e._pi)flip(e,wantPage>e._pi?1:-1)}
+ receipt(c.recipe.steps[i].split(',')[0]+(c.done.has(i)?', done.':', back.'));
+ if(c.done.size===c.recipe.steps.length){setTimeout(()=>{dishes+=5;cooking=null;foot();home();receipt(c.recipe.n+', done. Five more dishes.',()=>{dishes-=5;foot();rail()})},900)}}
+function open(id){if(id==='tacos')tonight();else if(id==='get')groceries();else if(id==='rice')leftovers();else if(id==='dish')receipt('Dishes: '+dishes+' waiting. Swipe the ticket up fast when they are done.');else if(id.startsWith('pl'))pantry();else if(id.startsWith('lf'))leftovers();else if(id==='dal')recipes();else if(id==='cook')receipt('The recipe is on the rail. Tap a step to strike it.');else if(id==='timer')receipt('Timer: tap to add two minutes.')}
+$('foot').onclick=()=>{if(cooking){stepDone();return}if(page==='groceries'){receipt('Got it all.');GET=GET.slice(4);groceries();return}startCook(page==='recipes'?TACOS:TACOS)};
+$('foot2').onclick=()=>{if(dishes){const was=dishes;dishes=0;foot();rail();receipt('Dishes, done.',()=>{dishes=was;foot();rail()})}};
+// edge-swipe back
+let ex=null;const ph=$('p1');ph.addEventListener('pointerdown',e=>{const r=ph.getBoundingClientRect();if((e.clientX-r.left)/K<24&&page!=='home')ex=e.clientX},true);ph.addEventListener('pointerup',e=>{if(ex==null)return;if((e.clientX-ex)/K>60){if(cooking){cooking=null;foot()}home()}ex=null},true);
+// events
+[['Cook Tacos',()=>startCook(TACOS)],['Next step',()=>stepDone()],['Milk ran out',()=>{if(!GET.includes('Milk'))GET.push('Milk');rail();receipt('Milk added to Get.')}],['Dinner eaten',()=>{dishes+=3;foot();rail()}],['Dishes done',()=>spike('dish')]].forEach(([n,f])=>{const b=document.createElement('button');b.className='w';b.textContent=n;b.onclick=f;$('ev').appendChild(b)});
+// the timer ticket ticks
+setInterval(()=>{if(cooking&&shown.get('timer')){const e=shown.get('timer');e._tk=timerT();refresh(e)}},1000);
+home();
+})();
+</script>

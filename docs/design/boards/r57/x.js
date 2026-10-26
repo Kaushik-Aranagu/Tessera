@@ -1,0 +1,203 @@
+(()=>{const $=s=>document.querySelector(s),RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let CC=new Map();const C=(v)=>{if(!CC.has(v))CC.set(v,getComputedStyle(document.body).getPropertyValue('--'+v).trim());return CC.get(v)};
+const resetC=()=>CC=new Map();new MutationObserver(resetC).observe(document.documentElement,{attributes:true});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',resetC);
+const rgba=(h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${Math.max(0,Math.min(1,a)).toFixed(3)})`};
+const mix=(a,b,f)=>{const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16),m=s=>Math.round(((A>>s)&255)*(1-f)+((B>>s)&255)*f);return '#'+((1<<24)+(m(16)<<16)+(m(8)<<8)+m(0)).toString(16).slice(1)};
+const dark=()=>C('phone').toLowerCase()==='#000000';
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const W='"Figtree",system-ui,sans-serif';
+
+// ---------- data
+const NOW=19*60+40,X=m=>30+(m-300)/(1380-300)*342;
+const R=[{n:'Morning pages',k:'gold',at:420,min:10,st:'done',w:'7 am'},{n:'Vitamins',k:'gold',at:450,min:2,st:'done',w:'7:30'},{n:'Water the plants',k:'clay',at:540,min:5,st:'late',w:'9 am'},
+ {n:'Walk',k:'training',at:750,min:25,st:'done',w:'12:30'},{n:'Evening stretch',k:'slate',at:1200,min:12,st:'next',w:'8 pm'},{n:'Tidy kitchen',k:'clay',at:1260,min:15,st:'todo',w:'9 pm'},{n:'Read 20 minutes',k:'teal',at:1290,min:20,st:'todo',w:'9:30'}];
+const KINDS=[['Mornings','gold',2],['Evenings','slate',3],['Body','training',3],['Home','clay',3],['Mind','teal',3],['Borrowed','kitchen',3]];
+const rc=r=>r.st==='late'?'wine':r.k;
+const PANTRY=[{n:'Rice',a:.62,u:'4 cups',s:'off',dry:1},{n:'Oats',a:.45,u:'3 cups',dry:1},{n:'Lentils',a:.8,u:'5 cups',dry:1},{n:'Coffee',a:.12,u:'a few days',s:'low',dry:1},
+ {n:'Flour',a:.55,u:'2 lb',dry:1},{n:'Pasta',a:.32,u:'2 boxes',dry:1},{n:'Olive oil',a:.16,u:'a cup',s:'low'},{n:'Honey',a:.86,u:'a jar'}];
+const RECIPES=[['Dal',1,'clay'],['Overnight oats',1,'gold'],['Pasta al limone',1,'clay'],['Rice bowls',1,'teal'],['Pancakes',0,'gold'],['Lentil soup',1,'clay'],['Fried rice',1,'teal'],['Granola',0,'gold'],['Pesto',0,'clay'],['Banana bread',0,'gold']];
+const SHOP=[['Coffee',2,'wine'],['Olive oil',2,'wine'],['Eggs',1,'kitchen'],['Lemons',1,'kitchen'],['Spinach',1,'kitchen'],['Milk',1,'kitchen'],['Garlic',0,'kitchen'],['Basil',0,'kitchen'],['Butter',1,'kitchen']];
+
+// ---------- phones
+function phone(row,{title,tc,state,act,ac,el,cap},scene){const col=document.createElement('div');col.className='col';
+  col.innerHTML=`<p class="el">${el}</p><div class="fit"><div class="phone"><div class="scr" data-home><canvas class="cv" width="804" height="1748"></canvas>
+   <div class="z ttl"><span style="color:var(--${tc})">${title}</span><small>Friday</small></div><div class="z state">${state}</div>
+   <div class="z ft"><span class="act" style="color:var(--${ac})">${act}</span><span class="tess" aria-hidden="true"></span></div></div>
+   <div class="scr sub-p"><button class="back">Back</button><div class="z ttl" style="top:118px"><span class="st"></span></div><p class="z" style="top:178px;margin:0;font-size:17px;color:var(--ink2)">The page behind this door opens here.</p></div></div></div><p class="cap">${cap}</p>`;
+  $(row).appendChild(col);const cv=col.querySelector('canvas'),x=cv.getContext('2d'),P=col.querySelector('.phone'),home=P.querySelector('[data-home]'),sub=P.querySelector('.sub-p');
+  const open=(name,c)=>{const st=sub.querySelector('.st');st.textContent=name;st.style.color=`var(--${c})`;let f=40;st.style.fontSize=f+'px';while(st.offsetWidth>354&&f>28){f--;st.style.fontSize=f+'px'}home.style.transform='translateX(-30%)';sub.classList.add('on')};
+  sub.querySelector('.back').onclick=()=>{sub.classList.remove('on');home.style.transform=''};
+  const S=scene();S.hits=[];let down=null,last=null;
+  const pt=e=>{const b=cv.getBoundingClientRect(),k=402/b.width;return{x:(e.clientX-b.left)*k,y:(e.clientY-b.top)*k,t:performance.now()}};
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);down=last=pt(e);S.down&&S.down(down)});
+  cv.addEventListener('pointermove',e=>{const p=pt(e);if(last&&!RM)S.move&&S.move(p,last,!!down);last=p});
+  cv.addEventListener('pointerup',e=>{const p=pt(e);if(down&&Math.hypot(p.x-down.x,p.y-down.y)<10){const h=S.hits.find(h=>p.x>=h.x&&p.x<=h.x+h.w&&p.y>=h.y&&p.y<=h.y+h.h);if(h)open(h.to,h.c);else S.tap&&S.tap(p)}else if(down)S.up&&S.up(p,down);down=null;last=null});
+  cv.addEventListener('pointerleave',()=>{if(!down)last=null});
+  S.cv=cv;S.x=x;PH.push(S)}
+const PH=[];
+function fitAll(){document.querySelectorAll('.fit').forEach(f=>{f.querySelector('.phone').style.transform=`scale(${f.clientWidth/402})`})}
+
+// shared: kinds as door words along a line (Routines)
+function kindWords(x,S,y){let px=28,py=y;x.textBaseline='alphabetic';KINDS.forEach(([n,c,ct])=>{x.font=`600 17px ${W}`;const w=x.measureText(n).width;x.font=`400 14px "Outfit",${W}`;const w2=x.measureText(String(ct)).width;
+  if(px+w+w2+6>376){px=28;py+=34}x.font=`600 17px ${W}`;x.fillStyle=C(c);x.fillText(n,px,py);x.font=`400 14px "Outfit",${W}`;x.fillStyle=C('ink3');x.fillText(ct,px+w+4,py);
+  S.hits.push({x:px-4,y:py-28,w:w+w2+12,h:44,to:n,c});px+=w+w2+22})}
+
+// ===================== ROUTINES 1: STRINGS =====================
+phone('#rowR',{title:'Routines',tc:'routines',el:'1 Strings',act:'Start stretch',ac:'routines',
+ state:'<b style="color:var(--go)">3 done</b>, <b style="color:var(--slate)">stretch</b> at 8, <b style="color:var(--wine)">plants</b> waiting',
+ cap:'<b>The day as strings.</b> One string per routine, strung across the day. Done strings are pulled taut in their kind’s color, waiting ones hang slack and sway, a late one sags lowest in wine. The needle stands at now. Drag across to pluck them; they ring and settle. Tap a name to open it; the kind words under the strings open each kind.'},()=>{
+ const S={},N=34,L0=28,L1=374;const T=R.map((r,i)=>{const y=176+i*60,sl=r.st==='done'?1.0:r.st==='late'?1.022:r.st==='next'?1.006:1.011,pts=[];for(let j=0;j<=N;j++){const px=L0+(L1-L0)*j/N;pts.push({x:px,y,px,py:y})}return{r,y,pts,rest:(L1-L0)/N*sl,g:r.st==='done'?0:.3}});
+ S.move=(p,q)=>{T.forEach(s=>{const j=Math.round((p.x-L0)/(L1-L0)*N);if(j<1||j>=N)return;const sy=s.pts[j].y;if((q.y-sy)*(p.y-sy)<0||Math.abs(p.y-sy)<3){const v=(p.y-q.y);s.pts.forEach((pp,k)=>{const f=Math.max(0,1-Math.abs(k-j)/9);pp.y+=v*.55*f})}})};
+ S.tap=p=>{};
+ S.step=()=>{T.forEach(s=>{s.pts.forEach((p,j)=>{if(j===0||j===N)return;const vx=(p.x-p.px)*.985,vy=(p.y-p.py)*.985;p.px=p.x;p.py=p.y;p.x+=vx;p.y+=vy+s.g*.12});
+   for(let it=0;it<7;it++)for(let j=0;j<N;j++){const a=s.pts[j],b=s.pts[j+1],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,df=(d-s.rest)/d*.5;if(j>0){a.x+=dx*df;a.y+=dy*df}if(j+1<N){b.x-=dx*df;b.y-=dy*df}}})};
+ for(let i=0;i<260;i++)S.step();
+ S.draw=(x,t)=>{S.hits=[];if(!RM)S.step();
+   x.strokeStyle=rgba(C('ink3'),.22);x.lineWidth=1;x.font=`400 11px "Outfit",${W}`;x.fillStyle=C('ink3');x.textAlign='center';
+   [[360,'6 am'],[540,'9'],[720,'noon'],[900,'3 pm'],[1080,'6'],[1260,'9']].forEach(([m,l])=>{const px=X(m);x.beginPath();x.moveTo(px,150);x.lineTo(px,590);x.stroke();x.fillText(l,px,610)});x.textAlign='left';
+   const nx=X(NOW);x.strokeStyle=C('ink');x.lineWidth=1.3;x.beginPath();x.moveTo(nx,146);x.lineTo(nx,596);x.stroke();x.beginPath();x.ellipse(nx,143,2.2,5,0,0,7);x.stroke();
+   T.forEach((s,i)=>{const r=s.r,col=C(rc(r)),P=s.pts;const path=()=>{x.beginPath();P.forEach((p,j)=>j?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y))};
+     x.lineCap='round';x.lineJoin='round';path();x.strokeStyle=r.st==='done'?col:rgba(col,r.st==='todo'?.6:.9);x.lineWidth=r.st==='done'?2.8:r.st==='late'?2:1.7;x.stroke();
+     path();x.setLineDash([2,3.2]);x.lineDashOffset=-i*1.3;x.strokeStyle=rgba(mix(col,C('phone'),.55),.9);x.lineWidth=r.st==='done'?1:.7;x.stroke();x.setLineDash([]);
+     if(r.st==='next'){const u=(t/2400)%1,j=Math.floor(u*N),p=P[j];x.strokeStyle=C('phone');x.lineWidth=1.2;x.beginPath();x.moveTo(p.x-5,p.y);x.lineTo(p.x+5,p.y);x.stroke()}
+     const ki=Math.max(1,Math.min(N-1,Math.round((X(r.at)-L0)/(L1-L0)*N))),kp=P[ki];x.strokeStyle=col;x.lineWidth=1.4;x.beginPath();x.arc(kp.x,kp.y,r.st==='done'?2.4:4,0,7);x.stroke();
+     x.font=`600 15px ${W}`;const nw=x.measureText(r.n).width;let lx=Math.min(kp.x+8,370-nw-34);if(r.st==='late')lx=Math.max(lx,kp.x+8);
+     x.fillStyle=r.st==='todo'?C('ink'):col;x.fillText(r.n,lx,kp.y-9);x.font=`400 12px "Outfit",${W}`;x.fillStyle=C('ink3');x.fillText(r.w,lx+nw+6,kp.y-9);
+     S.hits.push({x:lx-8,y:kp.y-34,w:nw+50,h:44,to:r.n,c:rc(r)})});
+   kindWords(x,S,668)};return S});
+
+// ===================== ROUTINES 2: CHIMES =====================
+phone('#rowR',{title:'Routines',tc:'routines',el:'2 Chimes',act:'Start stretch',ac:'routines',
+ state:'<b style="color:var(--go)">3 rang</b>, <b style="color:var(--slate)">stretch</b> next, <b style="color:var(--wine)">plants</b> late',
+ cap:'<b>A rail of chimes.</b> Each routine hangs from the day’s rail, its length its minutes. Done chimes are solid in their kind’s color and hang still; waiting ones are hollow and stir in a breeze; the late one swings wider in wine; the next one carries a slow glint. Swipe through them and they knock together; tap the rail to ring them all. Names ride along each chime.'},()=>{
+ const S={},RY=196;const H=R.map((r,i)=>({r,px:46+i*52,len:120+r.min*7,th:0,w:0,clink:0}));
+ const tip=h=>{const L=24+h.len;return{x:h.px+Math.sin(h.th)*L,y:RY+Math.cos(h.th)*L}};
+ S.move=(p,q)=>{H.forEach(h=>{const a={x:h.px,y:RY},L=24+h.len,b=tip(h),dx=b.x-a.x,dy=b.y-a.y,u=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(L*L))),cx=a.x+dx*u,cy=a.y+dy*u;if(Math.hypot(p.x-cx,p.y-cy)<12&&u>.15)h.w+=(p.x-q.x)*.0009/Math.max(.5,u)})};
+ S.tap=p=>{if(Math.abs(p.y-RY)<22)H.forEach((h,i)=>h.w+=(i%2?1:-1)*(.012+.006*Math.sin(i*3)))};
+ S.draw=(x,t)=>{S.hits=[];
+   if(!RM)H.forEach((h,i)=>{const r=h.r,L=24+h.len,breeze=r.st==='done'?0:(r.st==='late'?2.2:1)*.00055*Math.sin(t/1700+i*1.9);h.w+=-9.8/L*.02*Math.sin(h.th)+breeze*.12;h.w*=r.st==='done'?.97:.986;h.w=Math.max(-.05,Math.min(.05,h.w));h.th+=h.w});
+   if(!RM)for(let i=0;i<H.length-1;i++){const A=H[i],B_=H[i+1],a=tip(A),b=tip(B_);if(a.x>b.x-11&&A.w>B_.w){const t_=A.w;A.w=B_.w*.85;B_.w=t_*.85;A.clink=B_.clink=1;A.cx=(a.x+b.x)/2;A.cy=Math.min(a.y,b.y)-10}}
+   const ink3=C('ink3');x.strokeStyle=C('ink2');x.lineWidth=2.6;x.lineCap='round';x.beginPath();x.moveTo(26,RY);x.lineTo(376,RY);x.stroke();x.strokeStyle=rgba(ink3,.5);x.lineWidth=1;x.beginPath();x.moveTo(26,RY-4);x.lineTo(376,RY-4);x.stroke();
+   const nx=46+4.5*52;x.strokeStyle=C('ink');x.lineWidth=1.3;x.beginPath();x.moveTo(nx,RY-16);x.lineTo(nx,RY-6);x.stroke();x.font=`400 11px "Outfit",${W}`;x.fillStyle=C('ink3');x.textAlign='center';x.fillText('now',nx,RY-20);x.textAlign='left';
+   S.hits.push({x:26,y:RY-22,w:350,h:0,to:'',c:'ink'});S.hits.pop();
+   H.forEach((h,i)=>{const r=h.r,col=C(rc(r));x.save();x.translate(h.px,RY);x.rotate(-h.th);
+     x.strokeStyle=rgba(C('ink2'),.8);x.lineWidth=1;x.beginPath();x.arc(0,3,3,Math.PI,0);x.stroke();x.beginPath();x.moveTo(0,6);x.lineTo(0,24);x.stroke();
+     x.lineCap='round';x.strokeStyle=col;x.lineWidth=9;x.beginPath();x.moveTo(0,28);x.lineTo(0,24+h.len);x.stroke();
+     if(r.st!=='done'){x.strokeStyle=C('phone');x.lineWidth=5.6;x.beginPath();x.moveTo(0,28);x.lineTo(0,24+h.len);x.stroke()}
+     else{x.strokeStyle=rgba(mix(col,'#FFFFFF',.55),.9);x.lineWidth=1.4;x.beginPath();x.moveTo(-2,32);x.lineTo(-2,20+h.len);x.stroke()}
+     if(r.st==='next'){const u=(t/2600)%1,gy=28+u*(h.len-4);x.strokeStyle=col;x.lineWidth=2.4;x.beginPath();x.moveTo(0,gy);x.lineTo(0,gy+12);x.stroke()}
+     x.rotate(Math.PI/2);x.font=`600 14px ${W}`;x.fillStyle=r.st==='todo'?C('ink'):col;x.textBaseline='middle';x.fillText(r.n,30,-13);x.font=`400 11px "Outfit",${W}`;x.fillStyle=C('ink3');x.fillText(r.w,30+x.measureText(r.n).width*1.27+6,-13);x.textBaseline='alphabetic';x.restore();
+     const b=tip(h);S.hits.push({x:h.px-22,y:RY+6,w:44,h:Math.max(80,b.y-RY+10),to:r.n,c:rc(r)});
+     if(h.clink>0){x.strokeStyle=rgba(C('ink2'),h.clink);x.lineWidth=1;for(let k=0;k<3;k++){const a=-Math.PI/2+(k-1)*.7;x.beginPath();x.moveTo(h.cx+Math.cos(a)*4,h.cy+Math.sin(a)*4);x.lineTo(h.cx+Math.cos(a)*9,h.cy+Math.sin(a)*9);x.stroke()}h.clink-=.05}});
+   x.font=`400 13px ${W}`;x.fillStyle=C('ink3');x.fillText('tap the rail to ring them',28,RY-34);
+   kindWords(x,S,668)};return S});
+
+// ===================== ROUTINES 3: SWARM =====================
+phone('#rowR',{title:'Routines',tc:'routines',el:'3 Swarm',act:'Start stretch',ac:'routines',
+ state:'<b style="color:var(--go)">3 done</b>, <b style="color:var(--wine)">plants</b> waiting since 9 am',
+ cap:'<b>A swarm that spells the door.</b> A few hundred short fibres in the kind’s color gather into one word: the next routine first. Swipe any way and they burst and re-form into the next door (the late one, then each kind). Touch stirs them; tap the word to open it. Done routines are the settled fibres resting along the floor in green.'},()=>{
+ const S={};const DOORS=[['Stretch','slate','Evening stretch','next, at 8 pm, 12 minutes'],['Plants','wine','Water the plants','late, since 9 am'],['Mornings','gold','Mornings','2 routines, both done'],['Evenings','slate','Evenings','3 routines, 1 next'],['Body','training','Body','3 routines, walk done'],['Home','clay','Home','3 routines, plants late'],['Mind','teal','Mind','3 routines, read tonight'],['Borrowed','kitchen','Borrowed','3 from other rooms']];
+ let di=0,burst=0;const off=document.createElement('canvas');off.width=354;off.height=220;const o=off.getContext('2d',{willReadFrequently:true});
+ const targets=w=>{o.clearRect(0,0,354,220);let f=118;o.font=`800 ${f}px ${W}`;while(o.measureText(w).width>340&&f>40){f-=4;o.font=`800 ${f}px ${W}`}o.fillStyle='#000';o.textAlign='center';o.textBaseline='middle';o.fillText(w,177,110);const d=o.getImageData(0,0,354,220).data,T=[];for(let y=0;y<220;y+=4)for(let x=0;x<354;x+=4)if(d[(y*354+x)*4+3]>140)T.push([x+24,y+230]);return T};
+ const NP=900,P=[];for(let i=0;i<NP;i++){P.push({x:24+rnd()*354,y:200+rnd()*300,vx:0,vy:0,tx:0,ty:0,on:1})}
+ const assign=()=>{const T=targets(DOORS[di][0]);for(let i=0;i<NP;i++){const p=P[i];if(i<T.length){p.tx=T[i][0]+(rnd()-.5);p.ty=T[i][1];p.on=1}else{p.on=0;p.tx=30+rnd()*342;p.ty=600+rnd()*14}}
+   for(let i=T.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[P[i].tx,P[j].tx]=[P[j].tx,P[i].tx];[P[i].ty,P[j].ty]=[P[j].ty,P[i].ty]}};
+ S.refont=()=>assign();assign();if(RM)P.forEach(p=>{p.x=p.tx;p.y=p.ty});else P.forEach(p=>{p.x=p.tx+(rnd()-.5)*30;p.y=p.ty+(rnd()-.5)*30});
+ const go=d=>{di=(di+d+DOORS.length)%DOORS.length;P.forEach(p=>{const a=rnd()*7,s=4+rnd()*5;p.vx+=Math.cos(a)*s;p.vy+=Math.sin(a)*s});burst=1;assign();if(RM)P.forEach(p=>{p.x=p.tx;p.y=p.ty})};
+ S.move=(p,q,dn)=>{P.forEach(a=>{const dx=a.x-p.x,dy=a.y-p.y,d2=dx*dx+dy*dy;if(d2<1600){const f=(1-d2/1600)*2.2;a.vx+=dx/Math.sqrt(d2+1)*f+(p.x-q.x)*.08;a.vy+=dy/Math.sqrt(d2+1)*f+(p.y-q.y)*.08}})};
+ S.up=(p,d)=>{const dx=p.x-d.x,dy=p.y-d.y;if(Math.hypot(dx,dy)>40)go((Math.abs(dx)>Math.abs(dy)?dx:dy)<0?1:-1)};
+ S.draw=(x,t)=>{S.hits=[];const [w,c,full,line]=DOORS[di],col=C(c),go_=C('go');
+   x.lineCap='round';P.forEach((p,i)=>{if(!RM){const k=p.on?.018:.006;p.vx+=(p.tx-p.x)*k+Math.sin(t/700+i)*.03;p.vy+=(p.ty-p.y)*k+Math.cos(t/900+i*1.3)*.03;p.vx*=.86;p.vy*=.86;p.x+=p.vx;p.y+=p.vy}
+     const sp=Math.hypot(p.vx,p.vy),ang=sp>.2?Math.atan2(p.vy,p.vx):(i*2.4+t/3000),l=1.6+Math.min(6,sp*1.4);x.strokeStyle=p.on?col:rgba(go_,.55);x.lineWidth=p.on?2:1.3;x.beginPath();x.moveTo(p.x-Math.cos(ang)*l,p.y-Math.sin(ang)*l);x.lineTo(p.x+Math.cos(ang)*l,p.y+Math.sin(ang)*l);x.stroke()});
+   x.font=`600 17px ${W}`;x.fillStyle=C('ink');x.textAlign='center';x.fillText(full,201,480);x.font=`400 15px ${W}`;x.fillStyle=C('ink2');x.fillText(line,201,504);
+   x.font=`400 13px ${W}`;x.fillStyle=C('ink3');x.fillText('swipe for the next door',201,700);x.textAlign='left';
+   x.strokeStyle=rgba(C('ink3'),.35);x.lineWidth=1;x.beginPath();x.moveTo(28,622);x.lineTo(374,622);x.stroke();x.font=`400 12px ${W}`;x.fillStyle=go_;x.fillText('done today rests here',28,642);
+   S.hits.push({x:24,y:228,w:354,h:286,to:full,c})};return S});
+
+// ===================== KITCHEN 1: JARS =====================
+phone('#rowK',{title:'Kitchen',tc:'kitchen',el:'4 Jars',act:'Shopping',ac:'kitchen',
+ state:'<b style="color:var(--wine)">Rice</b> goes out today, <b style="color:var(--wine)">2</b> running low',
+ cap:'<b>A pantry shelf of living jars.</b> Each jar’s fill is what’s left; dry goods show their grain, oils catch the light. Low ones turn wine, the one going off rises with small bubbles. Drag sideways and the whole shelf tilts and sloshes, then settles. Tap a jar to open it; Pantry and Recipes are written on the shelf edges, and the spines below are recipes you can cook now (upright) or nearly (leaning).'},()=>{
+ const S={};let tilt=0,tv=0,slosh=0;const shelves=[296,506];const J=PANTRY.map((p,i)=>({...p,cx:62+(i%4)*92,base:shelves[i>>2],h:[124,108,136,96,112,100,120,104][i],w:[62,58,64,54,60,58,52,60][i]}));
+ const grains=J.map((j,i)=>{seed=31+i*17;const g=[];for(let k=0;k<70;k++)g.push([rnd(),rnd(),rnd()*3]);return g});
+ const SP=RECIPES.map((r,i)=>({n:r[0],ok:r[1],c:r[2],w:[24,28,30,24,26,28,24,26,22,30][i],h:[96,112,104,88,100,108,92,98,84,106][i],a:r[1]?0:-.13,v:0}));
+ let sx=30;SP.forEach(s=>{s.x=sx;sx+=s.w+5});
+ S.move=(p,q)=>{const vx=p.x-q.x;if(p.y<500){tv+=vx*.0022;slosh=Math.min(6,slosh+Math.abs(vx)*.08)}else SP.forEach(s=>{if(Math.abs(p.x-(s.x+s.w/2))<s.w)s.v+=vx*.004})};
+ S.draw=(x,t)=>{S.hits=[];if(!RM){tv+=-tilt*.06;tv*=.9;tilt+=tv;slosh*=.985}
+   const ink3=C('ink3'),pg=C('phone'),teal=C('teal'),wine=C('wine'),dk=dark();
+   shelves.forEach((y,si)=>{x.strokeStyle=C('ink2');x.lineWidth=2.2;x.beginPath();x.moveTo(24,y+1);x.lineTo(378,y+1);x.stroke();x.strokeStyle=rgba(ink3,.5);x.lineWidth=1;x.beginPath();x.moveTo(24,y+6);x.lineTo(378,y+6);x.stroke()});
+   x.font=`600 13px ${W}`;x.fillStyle=teal;x.textAlign='right';x.fillText('Pantry',376,shelves[0]+24);S.hits.push({x:316,y:shelves[0]+4,w:62,h:40,to:'Pantry',c:'teal'});x.textAlign='left';
+   J.forEach((j,i)=>{const col=j.s?wine:teal,L=j.cx-j.w/2,T=j.base-j.h,ix=L+4,iw=j.w-8,ib=j.base-4,ih=j.h-26,lvl=ib-ih*j.a;
+     if(j.s==='off'&&!RM){const g=x.createRadialGradient(j.cx,j.base-j.h/2,4,j.cx,j.base-j.h/2,j.w);g.addColorStop(0,rgba(wine,.13+.05*Math.sin(t/600)));g.addColorStop(1,rgba(wine,0));x.fillStyle=g;x.fillRect(L-30,T-20,j.w+60,j.h+30)}
+     x.save();x.beginPath();x.roundRect(ix,T+18,iw,j.h-22,[4,4,9,9]);x.clip();
+     const surf=px=>lvl+Math.sin((px-j.cx)/7+t/420+i)*(j.dry?.6:1.2+slosh*.4)+Math.sin((px-j.cx)/13-t/700)*slosh*.5+tilt*(px-j.cx)*(j.dry?.35:1);
+     x.beginPath();x.moveTo(ix,ib+6);for(let px=ix;px<=ix+iw;px+=2)x.lineTo(px,surf(px));x.lineTo(ix+iw,ib+6);x.closePath();x.fillStyle=rgba(col,j.dry?(dk?.26:.2):(dk?.38:.3));x.fill();
+     if(j.dry){x.strokeStyle=rgba(col,.75);x.lineWidth=1.1;grains[i].forEach(([gx,gy,ga])=>{const px=ix+3+gx*(iw-6),py=lvl+4+gy*(ib-lvl);if(py>surf(px)+2){x.beginPath();x.moveTo(px,py);x.lineTo(px+Math.cos(ga)*2.2,py+Math.sin(ga)*2.2);x.stroke()}})}
+     else{x.strokeStyle=rgba(mix(col,'#FFFFFF',.6),.8);x.lineWidth=1.2;x.beginPath();for(let px=ix;px<=ix+iw;px+=2)px===ix?x.moveTo(px,surf(px)):x.lineTo(px,surf(px));x.stroke()}
+     if(j.s==='off'&&!RM){x.strokeStyle=rgba(wine,.8);x.lineWidth=1;for(let b=0;b<5;b++){const u=((t/2200)+b*.21)%1,by=ib-u*(ib-lvl),bx=j.cx+Math.sin(b*3+t/500)*iw*.3;x.globalAlpha=Math.sin(u*Math.PI);x.beginPath();x.arc(bx,by,1.4+b%2,0,7);x.stroke()}x.globalAlpha=1}
+     x.restore();
+     x.strokeStyle=rgba(ink3,.9);x.lineWidth=1.3;x.beginPath();x.roundRect(L,T+14,j.w,j.h-14,[7,7,12,12]);x.stroke();
+     x.strokeStyle=rgba(dk?'#FFFFFF':'#FFFFFF',dk?.25:.9);x.lineWidth=2;x.beginPath();x.moveTo(L+6,T+26);x.lineTo(L+6,j.base-16);x.stroke();
+     x.strokeStyle=col;x.lineWidth=3;x.lineCap='round';x.beginPath();x.moveTo(L+5,T+8);x.lineTo(L+j.w-5,T+8);x.stroke();x.lineWidth=1.2;x.beginPath();x.moveTo(L+8,T+13);x.lineTo(L+j.w-8,T+13);x.stroke();
+     x.font=`600 13px ${W}`;x.fillStyle=j.s?wine:C('ink');x.textAlign='center';x.fillText(j.n,j.cx,j.base+(i>>2?40:40));x.font=`400 11px ${W}`;x.fillStyle=ink3;x.fillText(j.u,j.cx,j.base+54);x.textAlign='left';
+     S.hits.push({x:j.cx-44,y:T,w:88,h:j.h+60,to:j.n,c:j.s?'wine':'teal'})});
+   const sy=700;x.strokeStyle=C('ink2');x.lineWidth=2.2;x.beginPath();x.moveTo(24,sy+1);x.lineTo(378,sy+1);x.stroke();
+   SP.forEach(s=>{if(!RM){s.v+=(s.a0??(s.a0=s.a)-s.a)*0;s.v+=((s.ok?0:-.13)-s.a)*.08;s.v*=.86;s.a+=s.v;s.a=Math.max(-.5,Math.min(.5,s.a))}
+     const c=C(s.c);x.save();x.translate(s.a<0?s.x:s.x+s.w,sy);x.rotate(s.a);const ox=s.a<0?0:-s.w;
+     x.fillStyle=s.ok?c:rgba(c,.0);x.strokeStyle=c;x.lineWidth=1.4;x.beginPath();x.roundRect(ox,-s.h,s.w,s.h,3);s.ok?x.fill():x.stroke();
+     x.save();x.translate(ox+s.w/2,-6);x.rotate(-Math.PI/2);x.font=`600 11px ${W}`;x.fillStyle=s.ok?pg:c;x.textBaseline='middle';let tn=s.n;while(x.measureText(tn).width>s.h-14&&tn.includes(' '))tn=tn.slice(0,tn.lastIndexOf(' '));x.fillText(tn,0,0);x.restore();x.restore();
+     S.hits.push({x:s.x-4,y:sy-s.h,w:s.w+6,h:s.h+6,to:s.n,c:s.c})});
+   x.font=`600 13px ${W}`;x.fillStyle=C('clay');x.textAlign='right';x.fillText('Recipes',376,sy+24);x.font=`400 12px ${W}`;x.fillStyle=ink3;x.fillText('6 ready tonight',376,sy+40);x.textAlign='left';S.hits.push({x:296,y:sy+4,w:82,h:44,to:'Recipes',c:'clay'})};return S});
+
+// ===================== KITCHEN 2: HEAP =====================
+phone('#rowK',{title:'Kitchen',tc:'kitchen',el:'5 Heap',act:'Shopping',ac:'kitchen',
+ state:'<b style="color:var(--kitchen)">9 to buy</b>, <b style="color:var(--wine)">coffee</b> and oil first',
+ cap:'<b>The shopping heap.</b> Everything to buy falls in as words and piles up on the room’s two big doors, Pantry and Recipes. Size is how much you need; wine words are running out. The heap is the list’s weight at a glance. Fling a word and it tumbles; tap one to open it; tap Pantry or Recipes to go in. When the trip is done, the heap empties.'},()=>{
+ const S={},G=.35,FLOOR=596;const F=[{n:'Pantry',c:'teal',x:28,y:FLOOR,s:58},{n:'Recipes',c:'clay',x:0,y:FLOOR+70,s:58}];
+ const B=[];const off=document.createElement('canvas').getContext('2d');
+ const mk=(n,q,c,i)=>{const fs=q===2?34:q===1?26:20;off.font=`700 ${fs}px ${W}`;const w=off.measureText(n).width;return{n,c,fs,w:w+4,h:fs*.82,x:40+((i*97)%260),y:200-i*34,vx:(rnd()-.5)*1.5,vy:0,a:(rnd()-.5)*.3,va:0,rest:(rnd()-.5)*.12}};
+ SHOP.forEach((s,i)=>B.push(mk(s[0],s[1],s[2],i)));
+ let floors=[];
+ S.down=p=>{S.grab=B.find(b=>p.x>b.x&&p.x<b.x+b.w&&p.y>b.y-b.h&&p.y<b.y+4)||null};
+ S.move=(p,q,dn)=>{if(dn&&S.grab){S.grab.x+=p.x-q.x;S.grab.y+=p.y-q.y;S.grab.vx=(p.x-q.x);S.grab.vy=(p.y-q.y);S.grab.va+=(p.x-q.x)*.004}};
+ S.up=()=>{S.grab=null};
+ S.draw=(x,t)=>{S.hits=[];
+   x.textBaseline='alphabetic';F.forEach((f,i)=>{x.font=`800 ${f.s}px ${W}`;const w=x.measureText(f.n).width;if(i===1)f.x=374-w;f.w=w;x.fillStyle=C(f.c);x.fillText(f.n,f.x,f.y+f.s*.78);S.hits.push({x:f.x,y:f.y,w,h:f.s*.9,to:f.n,c:f.c})});
+   x.font=`400 13px ${W}`;x.fillStyle=C('ink3');x.fillText('8 low, 2 going off',30,F[0].y+F[0].s*.78+20);x.textAlign='right';x.fillText('6 ready tonight',F[1].x-12,F[1].y+F[1].s*.78);x.textAlign='left';
+   const ground=bx=>{let g=FLOOR;F.forEach(f=>{if(bx.x+bx.w>f.x+4&&bx.x<f.x+f.w-4)g=Math.min(g,f.y+4)});return g};
+   if(!RM)for(let it=0;it<5;it++)B.forEach(b=>{if(b===S.grab)return;b.vy+=G*.2;b.x+=b.vx*.2;b.y+=b.vy*.2;b.va+=(b.rest-b.a)*.01;b.va*=.96;b.a+=b.va*.2;
+     if(b.x<26){b.x=26;b.vx=Math.abs(b.vx)*.5}if(b.x+b.w>376){b.x=376-b.w;b.vx=-Math.abs(b.vx)*.5}
+     let gy=ground(b);if(b.y>gy){b.y=gy;b.vy=b.vy>2?-b.vy*.25:0;b.vx*=.8;if(Math.abs(b.vy)<.5)b.va+=(b.rest-b.a)*.05}
+     B.forEach(o=>{if(o===b)return;const ox=Math.min(b.x+b.w,o.x+o.w)-Math.max(b.x,o.x),oy=Math.min(b.y,o.y)-Math.max(b.y-b.h,o.y-o.h);if(ox>0&&oy>0){if(oy<ox){if(b.y<o.y){b.y-=oy;if(b.vy>0)b.vy=0;b.vx*=.85}else{o.y-=oy;if(o.vy>0)o.vy=0}}else{const d=b.x<o.x?-1:1;b.x+=d*ox/2;o.x-=d*ox/2;b.vx*=.8;o.vx*=.8}}})});
+   B.forEach(b=>{x.save();x.translate(b.x+b.w/2,b.y-b.h/2);x.rotate(RM?b.rest:b.a);x.font=`700 ${b.fs}px ${W}`;x.fillStyle=C(b.c);x.textBaseline='middle';x.fillText(b.n,-b.w/2+2,1);x.restore();S.hits.push({x:b.x-4,y:b.y-b.h-8,w:b.w+8,h:Math.max(44,b.h+16),to:b.n,c:b.c})});
+   S.hits.reverse();
+   x.font=`400 13px ${W}`;x.fillStyle=C('ink3');x.textAlign='center';x.fillText('fling a word, tap to open',201,170);x.textAlign='left'};return S});
+
+// ===================== KITCHEN 3: INK =====================
+phone('#rowK',{title:'Kitchen',tc:'kitchen',el:'6 Ink',act:'Shopping',ac:'kitchen',
+ state:'<b style="color:var(--clay)">6 recipes</b> ready from what you have',
+ cap:'<b>Ink in water.</b> Every recipe you can cook tonight is a drop of ink blooming in still water, its size how much of it you already have, its color its meal (dinners clay, breakfasts gold, bowls teal). Nearly-there recipes are thin wine wisps. Stir the water with your finger and the blooms swirl and slowly re-form. Tap a bloom’s name to open the recipe; Pantry and Shopping sit on the water’s edge.'},()=>{
+ const S={};const BL=[['Dal','clay',105,300,1],['Lentil soup','clay',280,270,.9],['Rice bowls','teal',120,450,.85],['Fried rice','teal',290,430,.75],['Overnight oats','gold',200,560,.8],['Pasta al limone','clay',220,365,.7],['Pancakes','wine',70,600,.35],['Pesto','wine',330,600,.3]].map(([n,c,x,y,s])=>({n,c,x,y,s,ox:x,oy:y}));
+ const tr=document.createElement('canvas');tr.width=804;tr.height=1748;const T=tr.getContext('2d');T.setTransform(2,0,0,2,0,0);
+ const PT=[];BL.forEach((b,bi)=>{const n=Math.round(170*b.s+50);for(let i=0;i<n;i++)PT.push({b:bi,x:b.x,y:b.y,life:rnd()*200})});
+ let stir=[];S.move=(p,q)=>{stir.push({x:p.x,y:p.y,vx:p.x-q.x,vy:p.y-q.y,l:1});BL.forEach(b=>{const d=Math.hypot(b.x-p.x,b.y-p.y);if(d<70){b.x+=(p.x-q.x)*.25*(1-d/70);b.y+=(p.y-q.y)*.25*(1-d/70)}})};
+ const flow=(px,py,t)=>{let ax=Math.sin(py*.021+t*.00031)*.6+Math.cos(px*.017-t*.00023)*.4,ay=Math.cos(px*.019+t*.00027)*.6-Math.sin(py*.015+t*.0002)*.4;stir.forEach(s=>{const d2=(px-s.x)**2+(py-s.y)**2;if(d2<4000){const f=s.l*(1-d2/4000);ax+=s.vx*.25*f-(py-s.y)*.02*f;ay+=s.vy*.25*f+(px-s.x)*.02*f}});return[ax,ay]};
+ let lastTheme='';
+ S.draw=(x,t)=>{S.hits=[];const pg=C('phone');if(lastTheme!==pg){T.clearRect(0,0,402,874);lastTheme=pg}
+   if(!RM){T.globalCompositeOperation='destination-out';T.fillStyle='rgba(0,0,0,.022)';T.fillRect(0,140,402,560);T.globalCompositeOperation='source-over';
+     BL.forEach(b=>{b.x+=(b.ox-b.x)*.004;b.y+=(b.oy-b.y)*.004});stir.forEach(s=>s.l*=.96);stir=stir.filter(s=>s.l>.05);
+     PT.forEach(p=>{const b=BL[p.b],R0=26+46*b.s;const [ax,ay]=flow(p.x,p.y,t),dx=p.x-b.x,dy=p.y-b.y,d=Math.hypot(dx,dy)||1;const out=(d<R0?.5:-.35*(d-R0)/R0),sw=.9;
+       const nx=p.x+(ax*1.1+dx/d*out-dy/d*sw*.6),ny=p.y+(ay*1.1+dy/d*out+dx/d*sw*.6);T.strokeStyle=rgba(C(b.c),b.c==='wine'?.22:.32);T.lineWidth=b.c==='wine'?.8:1.2;T.beginPath();T.moveTo(p.x,p.y);T.lineTo(nx,ny);T.stroke();p.x=nx;p.y=ny;
+       if(--p.life<0||d>R0*1.9){p.x=b.x+(rnd()-.5)*8;p.y=b.y+(rnd()-.5)*8;p.life=120+rnd()*160}})}
+   else if(!S.static){BL.forEach(b=>{const R0=26+46*b.s;for(let k=0;k<160;k++){const a=k*.39,r=R0*(.2+.8*((k*37)%100)/100);T.strokeStyle=rgba(C(b.c),.35);T.lineWidth=1;T.beginPath();T.arc(b.x,b.y,r,a,a+.5);T.stroke()}});S.static=1}
+   x.drawImage(tr,0,0,804,1748,0,0,402,874);
+   x.textAlign='center';BL.forEach(b=>{x.font=`600 ${b.c==='wine'?13:15}px ${W}`;const w=x.measureText(b.n).width;x.lineJoin='round';x.strokeStyle=rgba(C('phone'),.85);x.lineWidth=5;x.strokeText(b.n,b.x,b.y+5);x.fillStyle=b.c==='wine'?C('wine'):C('ink');x.fillText(b.n,b.x,b.y+5);S.hits.push({x:b.x-w/2-8,y:b.y-17,w:w+16,h:44,to:b.n,c:b.c})});
+   x.textAlign='left';x.strokeStyle=rgba(C('ink3'),.5);x.lineWidth=1;x.beginPath();for(let px=24;px<=378;px+=3){const yy=700+Math.sin(px/14+t/900)*1.4;px===24?x.moveTo(px,yy):x.lineTo(px,yy)}x.stroke();
+   x.font=`600 17px ${W}`;x.fillStyle=C('teal');x.fillText('Pantry',28,732);x.font=`400 13px ${W}`;x.fillStyle=C('ink3');x.fillText('2 low, rice going off',28,750);S.hits.push({x:24,y:708,w:160,h:48,to:'Pantry',c:'teal'});
+   x.textAlign='right';x.font=`600 17px ${W}`;x.fillStyle=C('kitchen');x.fillText('Shopping',374,732);x.font=`400 13px ${W}`;x.fillStyle=C('ink3');x.fillText('9 to buy',374,750);x.textAlign='left';S.hits.push({x:250,y:708,w:128,h:48,to:'Shopping',c:'kitchen'})};if(!RM){const d_=document.createElement('canvas').getContext('2d');for(let k=0;k<160;k++)S.draw(d_,k*16)}return S});
+
+fitAll();addEventListener('resize',fitAll);
+$('#th').onclick=()=>{document.documentElement.dataset.theme='dark'};$('#tw').onclick=()=>{document.documentElement.dataset.theme='light'};
+let lt=performance.now();(function loop(t){PH.forEach(S=>{const r=S.cv.getBoundingClientRect();if(r.bottom<-200||r.top>innerHeight+200)return;const x=S.x;x.setTransform(2,0,0,2,0,0);x.clearRect(0,0,402,874);S.draw(x,RM?0:t)});lt=t;requestAnimationFrame(loop)})(performance.now());
+(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>PH.forEach(S=>S.refont&&S.refont()))
+})();

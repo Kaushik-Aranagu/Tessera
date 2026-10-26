@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Type and colour round</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100..900&display=swap" rel="stylesheet">
+<!-- Design item 86: Kaushik's Oct 16 8:16 PM PT ask (clearer size steps, stronger editorial type, a little more colour). Three type-and-colour options (A Heavier, B Editorial steps, C B plus area colour) drawn on the same four real screens (Home, Notes, a routine, Review's week), plus C in Obsidian. Board by default; ?play records the Notes screen flipping A, B, C with every token tweened (weight, size, tracking, colour). -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20;font-variant-numeric:tabular-nums}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:26px}
+.head h1{margin:0;font-size:34px;font-weight:650;letter-spacing:-.02em;flex:none;width:420px;line-height:38px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:1100px}
+.grid{display:grid;grid-template-columns:repeat(4,393px);gap:0 22px;align-items:start}
+.colh{border-top:2px solid #1c1a20;padding-top:10px;margin-bottom:26px}
+.colh .opt{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674}
+.colh h2{margin:4px 0 6px;font-size:26px;font-weight:650;letter-spacing:-.02em;line-height:30px}
+.colh p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.rowh{grid-column:1/-1;display:flex;gap:22px;align-items:baseline;margin:30px 0 14px;border-top:1px solid rgba(28,26,32,.2);padding-top:12px}
+.rowh .opt{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674;flex:none;width:130px}
+.rowh p{margin:0;font-size:16px;line-height:22px;color:#4a4652;max-width:1000px}
+.cap{margin-top:8px;font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674}
+
+/* the phone and the tokens: every size, weight and tracking below comes from a --var the option sets */
+.ph{position:relative;width:393px;height:852px;overflow:hidden;border-radius:44px;color:rgb(var(--ink));
+  background:color-mix(in srgb,rgb(var(--area)) calc(var(--tint)*100%),var(--bg))}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--bg0:rgba(251,250,247,0);--tess:#2450D8;--ctx:#5A3DAF;--health:#12936A;--now:#F0A500;--tintd:.45}
+.obs{--ink:245,242,236;--bg:#121014;--bg0:rgba(18,16,20,0);--tess:#86B4FF;--ctx:#B8A3FF;--health:#52D3A3;--now:#FFC23D;--tintd:.55}
+.por.train{--area:194,58,34}.por.rev{--area:90,61,175}
+.obs.train{--area:255,125,98}.obs.rev{--area:184,163,255}
+.abs{position:absolute}
+.pg{position:absolute;left:22px;right:22px}
+.keyc{color:color-mix(in srgb,rgb(var(--area)) calc(var(--keymix)*100%),rgb(var(--ink)))}
+
+.hero{font-size:calc(var(--hs)*1px);font-weight:var(--hw);letter-spacing:calc(var(--ht)*1em);line-height:calc(var(--hl)*1px);white-space:nowrap;margin:0}
+.ttl{font-size:calc(var(--ts)*1px);font-weight:var(--tw);letter-spacing:calc(var(--tt)*1em);line-height:calc(var(--tl)*1px);white-space:nowrap;margin:0}
+.ttl .keyc,.hero .keyc{font-weight:calc(var(--tw) + var(--kb))}
+.hero .keyc{font-weight:calc(var(--hw) + var(--kb))}
+.lab{font-size:calc(var(--ls)*1px);font-weight:var(--lw);letter-spacing:calc(var(--lt)*1em);line-height:16px;white-space:nowrap;text-transform:uppercase;
+  color:color-mix(in srgb,rgb(var(--area)) calc(var(--labmix)*100%),rgba(var(--ink),var(--lo)))}
+.lab.ink{color:rgb(var(--ink))}
+.back{position:absolute;left:22px;top:58px}
+.sec{border-top:1px solid color-mix(in srgb,rgb(var(--area)) calc(var(--labmix)*34%),rgba(var(--ink),calc(var(--rule)*.15)));padding-top:calc(var(--rule)*11px);margin-top:20px}
+.sec.first{margin-top:16px}
+.secw{font-size:calc(var(--ss)*1px);font-weight:var(--sw);letter-spacing:calc(var(--st)*1em);line-height:40px;margin:0}
+.ctx{font-size:calc(var(--cs)*1px);font-weight:var(--cw);line-height:calc(var(--cl)*1px);letter-spacing:0;color:var(--ctx);white-space:nowrap}
+.ctx b{font-size:calc(var(--cn)*1px);font-weight:var(--cnw);letter-spacing:-.01em}
+.dayl{font-size:calc(var(--cs)*1px);font-weight:var(--cw);line-height:calc(var(--cl)*1px);color:rgba(var(--ink),var(--do));white-space:nowrap}
+.row{display:flex;justify-content:space-between;align-items:flex-start;font-size:calc(var(--rs)*1px);font-weight:var(--rw);letter-spacing:calc(var(--rt)*1em);line-height:28px;padding:9px 0}
+.row .l{width:278px}
+.row .l .k{font-weight:calc(var(--rw) + 90)}
+.row.pv .l{color:rgba(var(--ink),var(--do))}
+.v{font-size:calc(var(--ds)*1px);font-weight:calc(var(--dw) + 140);line-height:28px;letter-spacing:0;color:rgba(var(--ink),var(--do));white-space:nowrap;padding-top:calc((var(--rs) - var(--ds))*.4px)}
+.det{font-size:calc(var(--ds)*1px);font-weight:var(--dw);line-height:calc(var(--dl)*1px);letter-spacing:0;color:rgba(var(--ink),var(--do))}
+.det b{font-weight:calc(var(--dw) + 160);color:rgb(var(--ink))}
+.fig{font-size:calc(var(--vs)*1px);font-weight:var(--vwt);letter-spacing:-.02em;line-height:34px;text-align:right;white-space:nowrap}
+.fig small{font-size:calc(var(--ds)*1px);font-weight:var(--dw);letter-spacing:0;margin-left:3px;color:rgba(var(--ink),var(--do))}
+.rowx{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--xp)*1px) 0}
+.hair{height:1.5px;background:rgba(var(--ink),.12)}
+.wl{font-size:calc(var(--ds)*1px);font-weight:var(--dw);line-height:24px;color:rgba(var(--ink),var(--do));padding:10px 0 9px}
+.sw{position:absolute;right:22px}
+.keyw{display:inline-block;margin-top:18px}
+.keyw .trk{display:block;height:2px;margin-top:6px;background:rgb(var(--ink))}
+.clip{position:absolute;left:0;right:0;top:0;height:736px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 calc(100% - 40px),transparent);mask-image:linear-gradient(#000 calc(100% - 40px),transparent)}
+.pin{position:absolute;left:0;right:0;top:0;height:84px;background:linear-gradient(var(--bg) 70%,var(--bg0))}
+.soul{position:absolute;left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.tl2{position:absolute;right:71px;width:262px;top:779px;transform:translateY(-50%);text-align:right;font-size:calc(var(--es)*1px);font-weight:var(--ew);line-height:25px;color:var(--tess)}
+.dl{font-size:16px;font-weight:700;text-align:center;width:49.4px;position:absolute}
+.cells{position:relative;height:30px;margin-top:6px}
+.cn{position:absolute;width:49.4px;text-align:center;top:0;font-size:calc(var(--ns)*1px);font-weight:var(--nw);letter-spacing:-.01em;line-height:30px}
+.line{font-size:calc(var(--ds)*1px);line-height:calc(var(--dl)*1px);font-weight:var(--dw);color:rgb(var(--ink));padding:2px 0}
+.line i{font-style:normal;display:inline-block;width:42px;font-weight:calc(var(--dw) + 160);color:rgba(var(--ink),var(--do))}
+.mode{position:absolute;left:0;right:0;top:20px;text-align:center;font-size:13px;font-weight:750;letter-spacing:.1em;color:rgba(var(--ink),.55);z-index:9}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+
+/* ---------- the three token sets (the sheet's tables are these numbers) ---------- */
+// h hero, t title, l label, s section word, r row, d detail, c context, e tess's line, v figures (numerals), n week numerals
+const OPT = {
+  A: { name: 'Heavier', hs: 56, hw: 640, ht: -.035, hl: 58,   ts: 44, tw: 650, tt: -.035, tl: 50,   ls: 13, lw: 800, lt: .08, lo: .66,
+       ss: 34, sw: 620, st: -.03,  rs: 21, rw: 520, rt: -.005,  ds: 18, dw: 430, dl: 24, do: .66,  cs: 21, cw: 480, cl: 28, cn: 21, cnw: 480, es: 19, ew: 500,
+       vs: 21, vwt: 640, ns: 17, nw: 650, hn: 56, hnw: 640, kb: 90, rule: 0, labmix: 0, keymix: 0, tint: 0, xp: 9 },
+  B: { name: 'Editorial steps', hs: 60, hw: 700, ht: -.04, hl: 62,   ts: 52, tw: 650, tt: -.03, tl: 56,   ls: 13, lw: 750, lt: .1, lo: .62,
+       ss: 34, sw: 650, st: -.03,  rs: 22, rw: 560, rt: -.005,  ds: 17, dw: 420, dl: 22, do: .62,  cs: 19, cw: 500, cl: 26, cn: 27, cnw: 700, es: 20, ew: 500,
+       vs: 30, vwt: 680, ns: 23, nw: 700, hn: 92, hnw: 700, kb: 90, rule: 1, labmix: 0, keymix: 0, tint: 0, xp: 9 },
+  C: { name: 'Area colour', hs: 60, hw: 700, ht: -.04, hl: 62,   ts: 52, tw: 650, tt: -.03, tl: 56,   ls: 13, lw: 750, lt: .1, lo: .62,
+       ss: 34, sw: 650, st: -.03,  rs: 22, rw: 560, rt: -.005,  ds: 17, dw: 420, dl: 22, do: .62,  cs: 19, cw: 500, cl: 26, cn: 27, cnw: 700, es: 20, ew: 500,
+       vs: 30, vwt: 680, ns: 23, nw: 700, hn: 92, hnw: 700, kb: 90, rule: 1, labmix: .72, keymix: .72, tint: .025, xp: 9 },
+};
+const tokenStyle = (o, dark) => Object.entries(o).filter(([k]) => k !== 'name').map(([k, v]) => `--${k}:${k === 'tint' && dark ? .03 : v}`).join(';');
+
+/* ---------- parts ---------- */
+const band = line => `<div class="soul"></div>${line ? `<div class="tl2">${line}</div>` : ''}`;
+const V = t => `<span class="k">${t}</span>`;
+const P = 'Private note';
+
+/* Notes (81): back word, Title, count context with BY THING, the writing line, one row per note */
+const NOTES = [
+  ['Sleep is training too', 'yesterday'], [P, 'Tue', 1], [`${V('Bench press')} felt heavy on the third set`, 'Tue'],
+  [`Ask the ${V('Landlord')} about the boiler`, 'Mon'], ['Ideas for the garage gym', 'Oct 12'], ['Tacos need more lime', 'Oct 11'],
+  [`${V('Landlord')} is back on Friday`, 'Oct 9'], ['Call Mum on Sunday', 'Oct 8'], [P, 'Oct 6', 1], [`Try a narrower grip on ${V('Bench press')}`, 'Oct 5'],
+  ['Book the dentist', 'Oct 3'],
+];
+const noteRows = list => list.map(([t, w, pv]) => `<div class="row${pv ? ' pv' : ''}"><div class="l">${t}</div><div class="v">${w}</div></div>`).join('');
+const notes = () => `<div class="clip"><div class="pg" style="top:84px">
+    <h1 class="ttl"><span class="keyc">Notes</span></h1>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><div class="ctx"><b>23</b> notes, the latest yesterday</div></div>
+    <div class="wl" style="margin-top:6px">Write something. @ links a thing.</div><div class="hair"></div>
+    <div style="margin-top:10px">${noteRows(NOTES)}</div></div></div>
+  <div class="pin"></div><div class="lab back">‹ REVIEW</div><div class="lab sw ink" style="top:154px">BY THING</div>${band('Landlord and Bench press come up most.')}`;
+
+/* Home (41): the day, the context, the hero with its key word first, the Start key, Next */
+const NEXT = [['Read Designing Data-Intensive Applications', '9:10 pm'], ['Call mom', 'tomorrow'], ['Book physio', 'Sat']];
+const home = () => `<div class="pg" style="top:128px">
+    <div class="dayl">Friday afternoon</div>
+    <div class="ctx" style="margin-top:8px">today</div>
+    <div class="hero" style="margin-top:8px"><span class="keyc">Push A</span>, 6 pm</div>
+    <div class="keyw"><span class="lab ink">START PUSH A</span><i class="trk"></i></div>
+    <div class="sec first" style="margin-top:34px"><div class="secw">Next</div></div>
+    <div style="margin-top:4px">${NEXT.map(([t, w]) => `<div class="row"><div class="l">${t}</div><div class="v">${w}</div></div>`).join('')}</div></div>${band('Bench press is ready for 82.5 today.')}`;
+
+/* Training: a routine, its exercises (name, scheme, the weight as the numeral) */
+const EX = [['Bench press', '4 sets of 8', '82.5'], ['Overhead press', '3 sets of 8', '47.5'], ['Incline dumbbell', '3 sets of 10', '28'], ['Lateral raise', '3 sets of 12', '10'], ['Triceps pushdown', '3 sets of 12', '30']];
+const routine = () => `<div class="lab back">‹ ROUTINES</div><div class="pg" style="top:84px">
+    <h1 class="ttl"><span class="keyc">Push</span> A</h1>
+    <div class="ctx" style="margin-top:12px"><b>5</b> exercises, about 55 min</div>
+    <div class="sec first" style="margin-top:22px"><div class="lab" style="margin-bottom:6px">DAYS</div><div class="row" style="padding:2px 0"><div class="l" style="font-weight:calc(var(--rw) + 90)">Mon, Thu</div></div></div>
+    <div class="sec"><div class="lab" style="margin-bottom:2px">EXERCISES</div>
+    ${EX.map(([n, d, w]) => `<div class="rowx" style="padding:calc(var(--xp)*1px) 0 calc(var(--xp)*1px + 1px)"><div><div style="font-size:calc(var(--rs)*1px);font-weight:var(--rw);letter-spacing:calc(var(--rt)*1em);line-height:28px">${n}</div><div class="det">${d}</div></div><div class="fig">${w}<small>kg</small></div></div>`).join('')}</div></div>${band('Bench press is ready for 82.5 today.')}`;
+
+/* Review's week (46, 83): the figure as the numeral, bands with their week figure, the week's lines */
+const X = i => 49.4 * i, cx = i => X(i) + 24.7;
+const dab = (x, y, pig = 'var(--health)', t = .5) => `<div class="abs" style="left:${x - 13}px;top:${y - 11}px;width:26px;height:22px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:${pig};opacity:${t}"></div>`;
+const restm = (x, y) => `<div class="abs" style="left:${x - 16}px;top:${y + 4}px;width:32px;height:5px;background:rgba(var(--ink),.5);border-radius:3px 1px 2px 3px/2px 3px 1px 2px;clip-path:polygon(0 20%,30% 0,70% 15%,100% 30%,96% 100%,60% 80%,25% 100%,2% 70%)"></div>`;
+const ringm = (x, y) => `<div class="abs" style="left:${x - 11}px;top:${y - 9}px;width:22px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(var(--ink),.28)"></div>`;
+const bandR = (first, label, right, cells, figure) => `<div class="sec${first ? ' first' : ''}" style="${first ? '' : 'margin-top:12px'}"><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="lab">${label}</div>${figure ? `<div class="fig" style="line-height:20px;font-size:calc(var(--vs)*.8px)">${right}</div>` : `<div class="lab ink">${right}</div>`}</div><div class="cells">${cells}</div></div>`;
+const week = () => `<div class="lab abs" style="left:22px;top:52px;color:rgb(var(--ink))">REVIEW</div><div class="lab sw ink" style="top:104px">THE DAYS</div>
+  <div class="pg" style="top:140px"><div class="ctx">Oct 12 to 18</div>
+    <div style="display:flex;align-items:baseline;margin-top:0;line-height:calc(var(--hn)*1px)"><span style="font-size:calc(var(--hn)*1px);font-weight:var(--hnw);letter-spacing:-.045em" class="keyc">3</span><span class="ttl" style="margin-left:calc(var(--hn)*.1px);font-size:calc(var(--ts)*.78px);font-weight:var(--tw);line-height:1">sessions</span></div>
+    <div style="position:relative;height:22px;margin-top:6px">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => `<div class="dl" style="left:${X(i)}px;top:0;color:rgba(var(--ink),${i === 4 ? 1 : i < 4 ? .62 : .38})">${d}</div>`).join('')}</div>
+    ${bandR(true, 'TRAINING', '3 SO FAR', [dab(cx(0), 15), dab(cx(1), 15), dab(cx(2), 15), restm(cx(3), 9), ringm(cx(4), 15)].join(''))}
+    ${bandR(false, 'TASKS DONE', '18', [3, 4, 6, 2, 3].map((n, i) => `<div class="cn" style="left:${X(i)}px">${n}</div>`).join(''), 1)}
+    ${bandR(false, 'COOK, 2 OF 4', '', [1, 0, 1, 0, 0].map((on, i) => on ? `<div class="abs" style="left:${cx(i) - 14}px;top:14px;width:${[1, 0, 1, 0, 0][i + 1] ? 77 : 28}px;height:3px;background:var(--health);opacity:.5;border-radius:2px"></div>` : '').join(''))}
+    ${bandR(false, 'COOKED', '2', [dab(cx(0), 15, 'var(--now)'), dab(cx(3), 15, 'var(--now)')].join(''), 1)}
+    <div class="sec" style="margin-top:12px"><div class="lab" style="margin-bottom:5px">THE WEEK’S LINES</div>
+    ${[['Tue', 'Bench 85 × 8, a best.'], ['Wed', 'Row 70 × 10, a first.'], ['Thu', 'Chili cooked for 4.']].map(([d, t]) => `<div class="line"><i>${d}</i>${t}</div>`).join('')}</div></div>${band('Wednesday was the fullest day.')}`;
+
+const SCREENS = [
+  { id: 'home', cls: 'train', fn: home, h: 'HOME', p: 'Hero, Start key, Next. The hero is a thing in Training\'s area, so C leans the page toward vermilion; a run of tasks would stay neutral.' },
+  { id: 'notes', cls: 'rev', fn: notes, h: 'NOTES (81)', p: 'Title, count, one line per note with its time. The smallest steps on the board: row against its time.' },
+  { id: 'routine', cls: 'train', fn: routine, h: 'A ROUTINE', p: 'Title, context, DAYS and EXERCISES. The weight is the numeral; the scheme sits under each name.' },
+  { id: 'week', cls: 'rev', fn: week, h: 'REVIEW\'S WEEK (46, 83)', p: 'The figure first, bands with their week figure, the week\'s lines. Numerals carry the editorial scale here.' },
+];
+const phone = (s, key, dark) => `<div><div class="ph ${dark ? 'obs' : 'por'} ${s.cls}" style="${tokenStyle(OPT[key], dark)}">${s.fn()}</div><div class="cap">${key}  ${OPT[key].name.toUpperCase()}${dark ? ', OBSIDIAN' : ''}</div></div>`;
+
+if (!play) {
+  let b = `<div class="head"><h1>Sheet 86: type and colour, three options</h1><p>Kaushik's ask: clearer steps between title, list rows and notes; type that is stronger and a little editorial instead of thin; a little more colour, still subtle. Inter Tight only, no italics, 16 pt floor (labels are the house caps label), tabular figures, no cards or pills, cobalt stays Tess's. Editorial comes from weight, size contrast, tracking, small caps, rules between sections, numeral scale and ink steps. Each column is one option on the same four screens; the fourth column is the recommended option, C, in Obsidian. The token tables are in the sheet.</p></div><div class="grid">`;
+  b += `<div class="colh"><div class="opt">A</div><h2>Heavier</h2><p>Same scale, every weight up one or two steps. Title 650, row 520, notes 430, labels 800.</p></div>
+        <div class="colh"><div class="opt">B</div><h2>Editorial steps</h2><p>Bigger jumps: Title 52, row 22, notes 17 in secondary ink; caps labels with a hairline above each section; numerals scaled up.</p></div>
+        <div class="colh"><div class="opt">C, RECOMMENDED</div><h2>B plus area colour</h2><p>Labels, rules and the title's key word at the area colour, 72%; a 2.5% area tint on the ground. Cobalt still only Tess.</p></div>
+        <div class="colh"><div class="opt">C IN OBSIDIAN</div><h2>The same, at night</h2><p>Light partners of each area colour, 3% tint on #121014, ink 245,242,236.</p></div>`;
+  for (const s of SCREENS) {
+    b += `<div class="rowh"><div class="opt">${s.h}</div><p>${s.p}</p></div>${phone(s, 'A')}${phone(s, 'B')}${phone(s, 'C')}${phone(s, 'C', 1)}`;
+  }
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.fonts.ready.then(() => { document.body.dataset.start = '1'; document.body.dataset.done = '1'; });
+} else {
+  /* the clip: the Notes screen flips A, B, C; every token tweens, so the title's weight, size and colour move live */
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = '';
+  const s = SCREENS[1];
+  w.innerHTML = `<div class="ph por ${s.cls}" id="ph" style="${tokenStyle(OPT.A)}">${s.fn()}<div class="mode" id="mode">A  HEAVIER</div></div>`;
+  const ph = document.getElementById('ph'), mode = document.getElementById('mode');
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const tween = (ms, f) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(ease(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  const go = async (from, to, ms) => {
+    const a = OPT[from], b = OPT[to];
+    mode.style.transition = 'opacity .18s'; mode.style.opacity = 0; setTimeout(() => { mode.textContent = `${to}  ${b.name.toUpperCase()}`; mode.style.opacity = 1; }, 220);
+    await tween(ms, q => { for (const k of Object.keys(a)) if (k !== 'name') ph.style.setProperty('--' + k, a[k] + (b[k] - a[k]) * q); });
+  };
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await wait(1500);
+    await go('A', 'B', 1500); await wait(2700);
+    await go('B', 'C', 1500); await wait(2900);
+    await go('C', 'A', 1500); await wait(1700);
+    await go("A", "C", 1500); await wait(1000);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

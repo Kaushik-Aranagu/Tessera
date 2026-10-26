@@ -1,0 +1,224 @@
+<title>Money Balance</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=Outfit:wght@200;300;400;500&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: the Money landing with the balance in the standard slot (paper and black), then the balance large as a sandbox with the money moves. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#3F7A62;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin:0}
+main{max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:64ch}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w:hover{color:var(--fg)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--money:#3F7A62;--clay:#9C4B2C;--gold:#7E6A1E;--kitchen:#93611A;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none}
+.phone.black{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--money:#8DBFA7;--clay:#E2A07F;--gold:#D9C27A;--kitchen:#C49A5E}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--money)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.n{font-family:var(--num);font-weight:400}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;touch-action:none;cursor:pointer}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:22px}
+.kline b{color:var(--ink);font-weight:600}
+.ups{position:absolute;left:24px;right:24px;top:424px}
+.up{height:52px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:540px;display:flex;flex-wrap:wrap;gap:0 22px}
+.door{font-size:24px;font-weight:600;color:var(--ink2);padding:6px 0}
+.door.on{color:var(--money)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--money);padding:8px 0}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phone.black .tessw{color:#C79B7C}
+.big{width:100%;max-width:1062px;aspect-ratio:354/182;display:block;touch-action:none;cursor:pointer}
+.moves{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:0 40px}
+.move{padding:14px 0;border-top:1px solid var(--line)}
+.move b{display:block;font-weight:600;margin-bottom:2px}
+.move span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 18px;align-items:center}
+.status{min-height:26px;color:var(--fg2);font-size:15px;margin-top:8px}
+.status b{color:var(--fg)}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Money / sheet 272</h2>
+<h1>The balance.</h1>
+<p class="lede">One hairline, balanced on a point. On the left sits what came in this month; on the right, where it went, each kind of spending as a word set at the size of its amount. The line tilts toward whichever side is heavier, so you can see at a glance whether you are spending more than you earn, and the biggest word on the right is where most of it went. Every payment drops onto the right and the line dips; pay drops onto the left. A dashed line is last month.</p>
+</header>
+
+<section aria-label="Landing">
+<div class="phones">
+ <div><div class="slot" data-fit><div class="phone" id="ph1">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b style="color:var(--money)">In</b> outweighs <b>out</b> by <span class="n" data-diff>2,125</span>. <b style="color:var(--clay)">Home</b> is the heaviest thing on the right.</div>
+  <canvas class="key" data-bal="small"></canvas>
+  <div class="kline" data-cap>Tap a word to see what is in it.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;went to&nbsp;<b style="color:var(--kitchen)">Food</b>.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;goes out Monday.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Paper, mid-month.</b> In is heavier; the line leans left.</p></div>
+
+ <div><div class="slot" data-fit><div class="phone black" id="ph2">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b style="color:var(--money)">In</b> outweighs <b>out</b> by <span class="n" data-diff>2,125</span>. <b style="color:var(--clay)">Home</b> is the heaviest thing on the right.</div>
+  <canvas class="key" data-bal="small"></canvas>
+  <div class="kline" data-cap>Tap a word to see what is in it.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;went to&nbsp;<b style="color:var(--kitchen)">Food</b>.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;goes out Monday.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Black.</b> The same balance.</p></div>
+</div>
+</section>
+
+<section aria-label="Sandbox">
+<h2>Weigh it</h2>
+<canvas class="big" id="big" data-bal="big"></canvas>
+<div class="status" id="status" aria-live="polite">Tap a word to see what is in it.</div>
+<div class="ctl" style="margin-top:6px">
+<button class="w" data-act="side">Side job 180</button>
+<button class="w" data-act="groceries">Groceries 86</button>
+<button class="w" data-act="coffee">Coffee 5.40</button>
+<button class="w" data-act="drinks">Drinks 42</button>
+<button class="w" data-act="save">Save 300 for Japan</button>
+<button class="w" data-act="splurge">A new laptop 1,800</button>
+<button class="w" data-act="reset">Reset</button>
+</div>
+</section>
+
+<section aria-label="The moves">
+<h2>What it does</h2>
+<div class="moves">
+<div class="move"><b>The tilt is the answer</b><span>Level when in and out match. It leans left while more has come in than gone out, and right the moment you spend more than you earn. You read it before you read any number.</span></div>
+<div class="move"><b>Word size is weight</b><span>Each word's size follows its amount (by area), so the biggest word is where most of the money went. The exact amount sits under it.</span></div>
+<div class="move"><b>Payments drop in</b><span>A payment falls onto the right as a small word, lands on its kind, and the kind swells to take it in; the line dips and settles on a spring.</span></div>
+<div class="move"><b>Pay drops on the left</b><span>Salary, a side job, a refund: the word falls onto the left and the line swings back.</span></div>
+<div class="move"><b>Open a word</b><span>Tap Food: its things hang under the line on threads, Groceries and Eating out, each sized by amount. Tap again to fold them away.</span></div>
+<div class="move"><b>Last month, dashed</b><span>A dashed line at the angle last month ended on. Under each kind, last month's amount, small.</span></div>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var Q={};try{location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var p=kv.split('=');Q[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||'')})}catch(e){}
+function lerp(a,b,u){return a+(b-a)*u}
+function clamp(v,a,b){return v<a?a:v>b?b:v}
+function hex(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]}
+function rgba(c,a){return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(a==null?1:a)+')'}
+function mixc(a,b,u){return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)]}
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+function fmt2(n){return n%1?n.toFixed(2):fmt(n)}
+var D2R=Math.PI/180;
+
+// ---------- kinds (sheet 241) and the month (Tue 14 Oct)
+var KC={in:['#3F7A62','#8DBFA7'],home:['#9C4B2C','#E2A07F'],food:['#93611A','#C49A5E'],body:['#0B62AE','#8FB0EE'],subs:['#1E6E77','#84C3C9'],out:['#34506F','#A7BCD6'],save:['#7E6A1E','#D9C27A'],big:['#5B3FB8','#B9A9E0']};
+function fresh(){return {ins:[{n:'Salary',v:4200},{n:'Side job',v:180}],
+ kinds:[{id:'home',n:'Home',last:1277,items:[{n:'Rent',v:1150},{n:'Electricity',v:82}]},{id:'save',n:'Japan',last:300,items:[{n:'Japan',v:400}]},{id:'food',n:'Food',last:520,items:[{n:'Groceries',v:182},{n:'Eating out',v:144}]},
+  {id:'out',n:'Going out',s:'Out',last:210,items:[{n:'Drinks',v:104},{n:'Cinema',v:34}]},{id:'body',n:'Body',last:96,items:[{n:'Gym',v:49},{n:'Badminton',v:47}]},{id:'subs',n:'Subscriptions',s:'Subs',last:63,items:[{n:'Streaming',v:18},{n:'Music',v:11},{n:'Apps',v:34}]}],
+ lastIn:4200,lastOut:4110}}
+var M=fresh();
+function sum(a){return a.reduce(function(s,x){return s+x.v},0)}
+function inT(){return sum(M.ins)}
+function outT(){return M.kinds.reduce(function(s,k){return s+sum(k.items)},0)}
+function kindOf(id){return M.kinds.filter(function(k){return k.id===id})[0]}
+function angleFor(i,o){return clamp((o-i)/Math.max(i,o,1),-1,1)*18}   // degrees; + = right side down
+
+// ---------- geometry (354 x 182)
+var PX=177,PY=142,HALF=160,PILE=84;   // pivot, half the beam, how far out each pile stands
+
+function Bal(cv){var self=this;this.cv=cv;this.g=cv.getContext('2d');this.dark=!!cv.closest('.phone.black')||(!cv.closest('.phone')&&matchMedia('(prefers-color-scheme: dark)').matches);
+ this.ang=angleFor(inT(),outT());this.av=0;this.disp={};this.pulse={};this.drops=[];this.open=null;this.hits=[];
+ M.ins.forEach(function(x){self.disp['in:'+x.n]=x.v});M.kinds.forEach(function(k){self.disp[k.id]=sum(k.items)});
+ this.size();addEventListener('resize',function(){self.size()});cv.addEventListener('pointerup',function(e){self.tap(e)})}
+Bal.prototype.size=function(){var r=this.cv.getBoundingClientRect();var dpr=Math.max(2,window.devicePixelRatio||1);var w=Math.max(1,r.width||354);this.cv.width=Math.round(w*dpr);this.cv.height=Math.round(w*182/354*dpr);this.s=this.cv.width/354};
+Bal.prototype.pt=function(e){var r=this.cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*354,y:(e.clientY-r.top)/r.height*182}};
+Bal.prototype.tap=function(e){var p=this.pt(e);for(var i=0;i<this.hits.length;i++){var h=this.hits[i];if(p.x>h.x0&&p.x<h.x1&&p.y>h.y0-4&&p.y<h.y1+4){if(h.id==='in'){say('<b>In</b>: '+M.ins.map(function(x){return x.n+' '+fmt(x.v)}).join(', ')+'. Last month '+fmt(M.lastIn)+'.');return}
+  var k=kindOf(h.id),same=this.open===h.id;all(function(b){b.open=same?null:h.id});say(same?'Tap a word to see what is in it.':'<b>'+k.n+'</b>: '+fmt(sum(k.items))+' ('+k.items.map(function(it){return it.n+' '+fmt(it.v)}).join(', ')+'). Last month '+fmt(k.last)+'.');return}}
+ all(function(b){b.open=null})};
+// font size from amount: area follows money (size ~ sqrt), then each side is fitted to its half of the beam
+function sizeOf(v){return 4+Math.sqrt(Math.max(0,v))*.62}
+Bal.prototype.layout=function(g){var self=this,L=[],R=[];
+ M.ins.forEach(function(x){L.push({id:'in',key:'in:'+x.n,n:x.n,v:self.disp['in:'+x.n]||0,col:'in'})});
+ M.kinds.forEach(function(k){R.push({id:k.id,key:k.id,n:k.n,v:self.disp[k.id]||0,col:k.id==='save'?'save':k.id,last:k.last})});
+ [L,R].forEach(function(arr){arr.sort(function(a,b){return b.v-a.v});arr.forEach(function(w){w.fs=sizeOf(w.v);g.font='700 '+w.fs+'px Figtree, system-ui, sans-serif';w.ww=g.measureText(w.n).width;w.as=Math.max(5.6,Math.min(10,w.fs*.4));g.font='400 '+w.as+'px Outfit, Figtree, sans-serif';w.aw=g.measureText(fmt(w.v)).width;w.w=w.ww+3+w.aw});
+  var maxW=Math.max.apply(null,arr.map(function(w){return w.w})),tot=arr.reduce(function(a,w){return a+w.fs*.86+2},0),k=Math.min(1,138/maxW,118/tot);
+  var y=0;arr.forEach(function(w){w.fs*=k;w.ww*=k;w.as*=k;w.aw*=k;w.w*=k;w.lift=y;y+=w.fs*.86+2*k})});
+ return {L:L,R:R}};
+Bal.prototype.draw=function(dt){var g=this.g,s=this.s,self=this,t=W.t;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,this.cv.width,this.cv.height);g.setTransform(s,0,0,s,0,0);
+ var dk=this.dark,ink=dk?[232,227,218]:[36,36,35],ink2=dk?[164,158,150]:[110,106,99],ink3=dk?[107,103,95]:[169,164,155];function kc(k){return hex(KC[k][dk?1:0])}
+ // displayed weights follow the drops: a word only grows when its drop lands
+ var pending={};this.drops.forEach(function(d){if(!d.landed)pending[d.key]=(pending[d.key]||0)+d.v});
+ var k=Math.min(1,(dt||0)*5);M.ins.forEach(function(x){var key='in:'+x.n;if(self.disp[key]==null)self.disp[key]=0;self.disp[key]+=(x.v-(pending[key]||0)-self.disp[key])*k});
+ M.kinds.forEach(function(kd){if(self.disp[kd.id]==null)self.disp[kd.id]=0;self.disp[kd.id]+=(sum(kd.items)-(pending[kd.id]||0)-self.disp[kd.id])*k});
+ var iShown=M.ins.reduce(function(a,x){return a+self.disp['in:'+x.n]},0),oShown=M.kinds.reduce(function(a,kd){return a+self.disp[kd.id]},0);
+ // the beam on a spring toward the balance of what has landed
+ var target=angleFor(iShown,oShown);this.av+=((target-this.ang)*42-this.av*5.5)*(dt||0);this.ang+=this.av*(dt||0);var a=(this.ang+Math.sin(t*.9)*.12)*D2R,ca=Math.cos(a),sa=Math.sin(a);
+ function onBeam(d){return {x:PX+d*ca,y:PY+d*sa}}
+ // last month: a dashed line through the pivot
+ var la=angleFor(M.lastIn,M.lastOut)*D2R;g.strokeStyle=rgba(ink3,.9);g.lineWidth=.6;g.setLineDash([2,2.4]);g.beginPath();g.moveTo(PX-HALF*Math.cos(la),PY-HALF*Math.sin(la));g.lineTo(PX+HALF*Math.cos(la),PY+HALF*Math.sin(la));g.stroke();g.setLineDash([]);
+ g.fillStyle=rgba(ink3);g.font='500 5px Figtree, system-ui, sans-serif';g.textAlign='center';g.fillText('LAST MONTH',PX,PY+44);
+ // the pivot: a small point and two hairlines to the floor
+ g.strokeStyle=rgba(ink2,.9);g.lineWidth=.7;g.beginPath();g.moveTo(PX-7,PY+15);g.lineTo(PX,PY+1.5);g.lineTo(PX+7,PY+15);g.stroke();
+ // the beam
+ g.strokeStyle=rgba(ink);g.lineWidth=1.1;g.lineCap='round';g.beginPath();g.moveTo(PX-HALF*ca,PY-HALF*sa);g.lineTo(PX+HALF*ca,PY+HALF*sa);g.stroke();g.fillStyle=rgba(ink);g.beginPath();g.arc(PX,PY,1.6,0,Math.PI*2);g.fill();
+ // words sit on the beam, rotated with it
+ var lay=this.layout(g);this.hits=[];
+ function word(w,side){var base=onBeam(side*PILE),pl=self.pulse[w.key]?W.t-self.pulse[w.key]:9,sc=pl<.9?1+.2*Math.sin(pl*Math.PI*2.6)*Math.exp(-pl*4):1;var col=kc(w.col);
+  g.save();g.translate(base.x,base.y);g.rotate(a);g.translate(0,-3-w.lift);var dim=self.open&&self.open!==w.id?.28:1;g.globalAlpha=dim;
+  g.save();g.translate(-w.w/2+w.ww/2,0);g.scale(sc,sc);g.fillStyle=rgba(col);g.textAlign='center';g.textBaseline='alphabetic';g.font='700 '+w.fs+'px Figtree, system-ui, sans-serif';g.fillText(w.n,0,0);g.restore();
+  g.fillStyle=rgba(col,.9);g.textAlign='left';g.font='400 '+w.as+'px Outfit, Figtree, sans-serif';g.fillText(fmt(w.v),-w.w/2+w.ww+3,0);
+  g.restore();var cx=base.x,cy=base.y-3-w.lift;self.hits.push({id:w.id,x0:cx-w.w/2,x1:cx+w.w/2,y0:cy-w.fs*.8,y1:cy+2,key:w.key,top:cy-w.fs*.7});
+  if(self.open===w.id&&w.id!=='in'){var kd=kindOf(w.id),n=kd.items.length;kd.items.forEach(function(it,j){var hx=base.x+(j-(n-1)/2)*44,hy=base.y+20+(j%2)*9,fs=Math.max(6.5,sizeOf(it.v)*.5);g.strokeStyle=rgba(col,.7);g.lineWidth=.45;g.beginPath();g.moveTo(base.x+(j-(n-1)/2)*6,base.y+1);g.lineTo(hx,hy-fs);g.stroke();
+   g.fillStyle=rgba(col);g.textAlign='center';g.font='600 '+fs+'px Figtree, system-ui, sans-serif';g.fillText(it.n,hx,hy);g.font='400 6px Outfit, Figtree, sans-serif';g.fillText(fmt(it.v),hx,hy+7)})}}
+ lay.L.forEach(function(w){word(w,-1)});lay.R.forEach(function(w){word(w,1)});
+ // totals under the ends of the beam
+ var pl=onBeam(-HALF+14),pr=onBeam(HALF-14);g.textAlign='left';g.fillStyle=rgba(kc('in'));g.font='600 5.4px Figtree, system-ui, sans-serif';var ly_=Math.min(pl.y+11,163),ry_=Math.min(pr.y+11,163);g.fillText('IN',pl.x-10,ly_);g.font='300 12px Outfit, Figtree, sans-serif';g.fillText(fmt(iShown),pl.x-10,ly_+13);
+ g.textAlign='right';g.fillStyle=rgba(ink);g.font='600 5.4px Figtree, system-ui, sans-serif';g.fillText('OUT',pr.x+10,ry_);g.font='300 12px Outfit, Figtree, sans-serif';g.fillText(fmt(oShown),pr.x+10,ry_+13);
+ var diff=iShown-oShown;g.textAlign='center';g.fillStyle=rgba(diff>=0?kc('in'):ink);g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText(diff>=0?'STILL YOURS':'OVER BY',PX,PY+23);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(Math.abs(diff)),PX,PY+33);
+ // drops: a small word falls onto its place on the beam, bounces, and is taken in
+ var lp={};this.hits.forEach(function(h){lp[h.key]=h});
+ this.drops=this.drops.filter(function(d){var e=W.t-d.t0;if(e<0)return true;var hh=lp[d.key],p=hh?{x:(hh.x0+hh.x1)/2,y:hh.top}:onBeam(d.side*PILE);var fall=Math.min(1,e/.55),y=lerp(-10,p.y-4,fall*fall),bounce=e>.55&&e<.95?Math.sin((e-.55)/.4*Math.PI)*5:0;
+  if(e>=.95&&!d.landed){d.landed=1;self.pulse[d.key]=W.t;self.av+=d.side*(4+Math.min(30,d.v/40))}
+  if(e<1.25){var col=kc(d.col),al=e<.95?1:1-(e-.95)/.3;g.save();g.globalAlpha=al;g.fillStyle=rgba(col);g.textAlign='center';g.font='600 7px Figtree, system-ui, sans-serif';g.fillText(d.n,p.x,y-bounce-7);g.font='400 7px Outfit, Figtree, sans-serif';g.fillText((d.side<0?'+':'')+fmt2(d.v),p.x,y-bounce+1);g.restore();return true}return false})};
+var W={t:0},views=[];function all(f){views.forEach(f)}
+var statusEl=$('#status');
+function say(s){if(statusEl)statusEl.innerHTML=s;$$('[data-cap]').forEach(function(e){e.innerHTML=s})}
+function syncText(){$$('[data-diff]').forEach(function(e){e.textContent=fmt(Math.abs(inT()-outT()))})}
+function pay(id,n,v,newKind){var k=kindOf(id);if(!k){k={id:id,n:newKind,last:0,items:[]};M.kinds.push(k);all(function(b){b.disp[id]=0})}var it=k.items.filter(function(x){return x.n===n})[0];if(!it){it={n:n,v:0};k.items.push(it)}it.v+=v;
+ all(function(b){b.drops.push({key:id,col:id==='save'?'save':id,n:n,v:v,side:1,t0:W.t})});var o=outT(),i=inT();say('<b>'+n+'</b>, '+fmt2(v)+', on '+k.n+'. '+(o>i?'Out is now heavier than in, by '+fmt(o-i)+'.':'In still outweighs out by '+fmt(i-o)+'.'));syncText()}
+function income(n,v){var it=M.ins.filter(function(x){return x.n===n})[0];if(!it){it={n:n,v:0};M.ins.push(it);all(function(b){b.disp['in:'+n]=0})}it.v+=v;all(function(b){b.drops.push({key:'in:'+n,col:'in',n:n,v:v,side:-1,t0:W.t})});say('<b>'+n+'</b>, '+fmt(v)+' in. In outweighs out by '+fmt(inT()-outT())+'.');syncText()}
+views=$$('canvas[data-bal]').map(function(cv){return new Bal(cv)});
+function fit(){var w=Math.min(402,document.documentElement.clientWidth-32),s=w/402;$$('[data-fit]').forEach(function(el){el.style.height=(874*s)+'px';el.firstElementChild.style.transform='scale('+s+')'});views.forEach(function(v){v.size()})}
+fit();addEventListener('resize',fit);
+$$('[data-act]').forEach(function(b){b.addEventListener('click',function(){var a=b.dataset.act;
+ if(a==='side')income('Side job',180);if(a==='groceries')pay('food','Groceries',86);if(a==='coffee')pay('food','Eating out',5.4);if(a==='drinks')pay('out','Drinks',42);if(a==='save')pay('save','Japan',300);if(a==='splurge')pay('big','Laptop',1800,'Laptop');
+ if(a==='reset'){M=fresh();views.forEach(function(v){v.disp={};M.ins.forEach(function(x){v.disp['in:'+x.n]=x.v});M.kinds.forEach(function(k){v.disp[k.id]=sum(k.items)});v.drops=[];v.open=null});syncText();say('Reset.')}})});
+(function(){var d=Q.demo;if(!d)return;if(d==='groceries')pay('food','Groceries',86);if(d==='splurge')pay('big','Laptop',1800,'Laptop');if(d==='side')income('Side job',180);if(d==='open')all(function(b){b.open=Q.k||'food'});
+ if(d==='over'){pay('big','Laptop',1800,'Laptop');pay('out','Weekend away',600)}
+ if(Q.instant)all(function(b){b.drops.forEach(function(x){x.t0-=+Q.instant});if(+Q.instant>=1.3){M.ins.forEach(function(x){b.disp['in:'+x.n]=x.v});M.kinds.forEach(function(k){b.disp[k.id]=sum(k.items)});b.ang=angleFor(inT(),outT())}})})();
+syncText();
+var last=performance.now();
+function frame(now){var dt=clamp((now-last)/1000,0,.05);last=now;W.t+=dt;views.forEach(function(v){try{v.draw(dt)}catch(e){if(!v.err){v.err=1;console.error(e);say('Error: '+e.message)}}});requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

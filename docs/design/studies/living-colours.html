@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Living colours</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/living-colours.md (Design item 48). Kaushik (16 Oct, 12:08 AM PT): Tess's colours keep changing, chosen by AI. Design owns the palette space (six named palettes per look), the nudges Claude may make inside each, the cadence, how a change arrives (a wet bloom through her own dabs, then it dries) and the fallback. The board: every palette on every look, at 2.4x, plus the nudge ranges. ?play records the soul on Obsidian Home moving Today, Lagoon, Kiln, Ember and back. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.grid{display:grid;grid-template-columns:120px repeat(6,180px);gap:12px;align-items:center}
+.hd{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66)}
+.cell{position:relative;width:180px;height:120px;overflow:hidden}
+.cell .nm{position:absolute;left:12px;bottom:10px;font-size:16px;font-weight:600;letter-spacing:.02em}
+.soul{position:absolute;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.72;--ctx:#B7A6E0;background:#000;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.nw{white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.ctx{color:var(--ctx)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:1400px}
+.range{display:flex;gap:12px;align-items:center;margin-top:28px}
+</style>
+</head>
+<body>
+<div id="board"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+// The looks (item 43 tokens) and their own soul pigments: tess, live, now.
+const LOOKS={Porcelain:{dark:0,ground:'#FFFFFF',ink:'#121016',own:['#2450D8','#E2432A','#F0A500']},Plein:{dark:0,ground:'#F3EDE2',ink:'#26201E',own:['#2A4FA8','#B9452B','#C98E1B']},Celadon:{dark:0,ground:'#E0EAE2',ink:'#0C1E19',own:['#2C59BE','#D94B2E','#CF9418']},Obsidian:{dark:1,ground:'#000000',ink:'#F5F2EC',own:['#86B4FF','#FF5B3A','#FFC23D']},Lacquer:{dark:1,ground:'#130A0D',ink:'#F3E8D6',own:['#8FB5FF','#F0583A','#E9B64A']}};
+// The six palettes (soul-explore.md): [light set, dark set]. "Today" is the look's own pigments.
+const PAL={Today:null,Kiln:[['#2F3C9E','#C4553B','#D79A2B'],['#8E9BFF','#F08A6E','#F2C062']],Lagoon:[['#0E8C86','#F0624D','#EDB730'],['#4FD8CF','#FF8A75','#FFD563']],Orchard:[['#6E3A8E','#E2557A','#F29A5B'],['#C39BFF','#FF86A6','#FFBC86']],Aurora:[['#2F6FE0','#14A37F','#8C5BD6'],['#7FB0FF','#4FE0B5','#BC97FF']],Ember:[['#3433D6','#D6266E','#F2B21B'],['#9A98FF','#FF5C9A','#FFD24A']]};
+const pig=(look,name)=>name==='Today'?LOOKS[look].own:PAL[name][LOOKS[look].dark];
+const soul=(P,dark,scale=1,x=0,y=0,id='')=>{const f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;
+ return `<div class="soul" ${id?`id="${id}"`:''} style="left:${x}px;top:${y}px;transform:scale(${scale});transform-origin:0 0">${C.map(([px,py],i)=>`<i data-d="${i}" style="left:${cx+(px-cx)*f-10+2}px;top:${cy+(py-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33);mix-blend-mode:${dark?'screen':'multiply'}"></i>`).join('')}</div>`};
+const cell=(look,name)=>{const L=LOOKS[look],P=pig(look,name);return `<div class="cell" style="background:${L.ground};color:${L.ink}">${soul(P,L.dark,2.4,34,14)}<div class="nm" style="color:${L.ink};opacity:.7">${name}</div></div>`};
+if(!PLAY){
+ let h=`<div class="grid"><div></div>${Object.keys(PAL).map(n=>`<div class="hd">${n.toUpperCase()}</div>`).join('')}`;
+ for(const look of Object.keys(LOOKS)){h+=`<div class="hd">${look.toUpperCase()}</div>${Object.keys(PAL).map(n=>cell(look,n)).join('')}`}
+ h+=`</div>`;
+ // the nudges: warmth and weight, on Lagoon / Obsidian
+ const P=pig('Obsidian','Lagoon');
+ h+=`<div class="range"><div class="hd" style="width:120px">WARMTH<br>−.2 → +.2</div>${[-.2,-.1,0,.1,.2].map(w=>`<div class="cell" style="width:120px;background:#000"><div style="position:absolute;inset:0;filter:hue-rotate(${-w*60}deg)">${soul(P,1,2,10,14)}</div><div class="nm" style="color:#F5F2EC;opacity:.7">${w>0?'+':''}${w}</div></div>`).join('')}</div>`;
+ h+=`<div class="range"><div class="hd" style="width:120px">WEIGHT<br>−.2 → +.2</div>${[-.2,-.1,0,.1,.2].map(w=>`<div class="cell" style="width:120px;background:#000"><div style="position:absolute;inset:0;filter:brightness(${1+w*.6}) saturate(${1+w*.5})">${soul(P,1,2,10,14)}</div><div class="nm" style="color:#F5F2EC;opacity:.7">${w>0?'+':''}${w}</div></div>`).join('')}</div>`;
+ $('board').innerHTML=h;
+ $('note').innerHTML='THE PALETTE SPACE: SIX NAMED PALETTES ON EACH OF THE FIVE LOOKS, HER DABS AT 2.4×. “TODAY” IS THE LOOK’S OWN PIGMENTS (TESS, LIVE, NOW), SO IT’S WHAT SHE WEARS WHEN NOTHING HAS BEEN PICKED. THE OTHER FIVE ARE ONE SET FOR LIGHT LOOKS AND ONE FOR DARK. INSIDE A PALETTE, TWO NUDGES: WARMTH ROTATES ALL THREE HUES UP TO 12° TOWARD WARM OR COOL, WEIGHT LIFTS OR LOWERS LIGHTNESS BY UP TO 6 L AND CHROMA BY UP TO 10%. NOTHING HERE TOUCHES THE INK, THE GROUND, COBALT AS HER VOICE, DONE, UNDO, THE LIVE ACTIVITY OR THE ICON.';
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+}else{
+ const TABS=['REVIEW','TODAY','TRAINING','KITCHEN'],TX=[22,118,199,300];
+ const tabs=on=>`<div class="abs lbl" style="left:0;right:0;top:78px;height:24px;letter-spacing:.06em;z-index:13">${TABS.map((t,i)=>`<span class="abs" style="left:${TX[i]}px;top:0;color:rgba(var(--ink),${t===on?1:.38})">${t}</span>`).join('')}<svg class="abs" style="left:${TX[TABS.indexOf(on)]}px;top:24px;overflow:visible" width="90" height="12"><path d="${lens(on.length*10.6,1.2)}" fill="rgb(var(--ink))"/></svg></div>`;
+ const home=`${tabs('TODAY')}<div class="abs b nw" style="left:22px;top:138px">Thursday night</div><div class="abs b ctx nw" style="left:22px;top:186px">done, 7:40 pm</div><div class="abs hero" style="left:22px;top:220px">Push A done</div><div class="abs t34" style="left:22px;top:326px">Next</div>${[['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1],['Call mom','tomorrow']].map(([t,h,w],k,a)=>{const y=378+a.slice(0,k).reduce((s,r)=>s+(r[2]?74:46),0);return `<div class="abs b" style="left:22px;top:${y}px;width:280px">${t}</div><div class="abs lbl s2" style="right:22px;top:${y+4}px">${h}</div>`}).join('')}`;
+ $('board').innerHTML=`<div class="cap" id="cap">TODAY · HER OWN PIGMENTS AT REST</div><div class="ph" id="P">${home}${soul(pig('Obsidian','Today'),1,1,323,759,'S')}</div>`;
+ const seq=[['Lagoon','night after a push day'],['Kiln','a cook evening'],['Ember','a bench best today'],['Today','back to her own']];
+ async function play(){await sleep(1600);
+  for(const [name,why] of seq){$('cap').textContent=`${name.toUpperCase()} · ${why.toUpperCase()}: A WET BLOOM, THEN IT DRIES`;
+   const P=pig('Obsidian',name);const dabs=[...$('S').querySelectorAll('i')];
+   // the change arrives as paint: each dab pools its new colour from the centre outward, swelling a little and wet (brighter), 60ms apart, then dries back over 2.8s
+   dabs.forEach((d,i)=>{const o=d.style.background;const w=document.createElement('b');w.style.cssText=`position:absolute;inset:0;border-radius:inherit;background:radial-gradient(closest-side,${P[i]},${P[i]}33);clip-path:circle(0% at 50% 50%)`;d.appendChild(w);
+    w.animate([{clipPath:'circle(0% at 50% 50%)'},{clipPath:'circle(75% at 50% 50%)'}],{duration:900,delay:i*120,easing:H,fill:'forwards'});
+    d.animate([{transform:'scale(1)',filter:'blur(1.2px) brightness(1)'},{transform:'scale(1.12)',filter:'blur(1.6px) brightness(1.35)',offset:.3},{transform:'scale(1)',filter:'blur(1.2px) brightness(1)'}],{duration:2800,delay:i*120,easing:H,fill:'forwards'})});
+   await sleep(3400)}
+  await sleep(800);document.body.dataset.done='1'}
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';play()});
+}
+</script>
+</body>
+</html>

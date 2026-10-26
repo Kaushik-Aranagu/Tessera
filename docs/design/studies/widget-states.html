@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Widget states</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board for docs/design/widget-states.md (Design board item 10, Research item 22). ?home draws the Home Screen small and medium in Porcelain plus medium in Obsidian for every state; ?large draws the large size and tinted mode; ?lock draws the Lock Screen accessories and the rest Live Activity; ?snip draws the two snippets; ?rest plays the resting medium widget (the seam is the rest horizon) and its flip to "Set 4 is up". One base: each widget is on the look's own ground. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;color:#17141F;transform-origin:0 0;padding:28px 30px 40px}
+body.x2{transform:scale(2)}
+h2{font-size:16px;font-weight:700;letter-spacing:.08em;color:rgba(23,20,31,.66);margin:0 0 18px}
+.grid{display:grid;gap:22px 24px;align-items:start}
+.rowlbl{font-size:16px;font-weight:700;letter-spacing:.08em;color:rgba(23,20,31,.66);padding-top:8px;line-height:22px}
+.colh{font-size:16px;font-weight:700;letter-spacing:.08em;color:rgba(23,20,31,.45)}
+.w{position:relative;border-radius:22px;overflow:hidden;box-shadow:0 1px 0 rgba(23,20,31,.06),0 8px 24px rgba(23,20,31,.08)}
+.P{background:#fff;--ink:23,20,31;--s2:.66;--live:#E2432A;--liveInk:#C23A22;--now:#F0A500;--tess:#2450D8;--tr:#CC3F68;--seam:rgba(23,20,31,.12)}
+.O{background:#000;--ink:245,242,236;--s2:.72;--live:#FF5B3A;--liveInk:#FF7A5C;--now:#FFC23D;--tess:#86B4FF;--tr:#FF6B92;--seam:rgba(245,242,236,.16)}
+.T{background:rgba(40,46,60,.55);backdrop-filter:blur(10px);--ink:255,255,255;--s2:.6;--live:#fff;--liveInk:#fff;--now:#fff;--seam:rgba(255,255,255,.2)}
+.w *{box-sizing:border-box}
+.ink{color:rgb(var(--ink))}.s2{color:rgba(var(--ink),var(--s2))}
+.ctx{position:absolute;left:16px;top:14px;font-size:21px;line-height:26px;white-space:nowrap}
+.hero{position:absolute;left:16px;right:16px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:38px}
+.lbl{font-size:16px;font-weight:700;letter-spacing:.08em;line-height:20px;white-space:nowrap}
+.seam{position:absolute;left:16px;right:16px;height:1px;background:var(--seam)}
+.key{position:absolute;right:16px;font-size:21px;font-weight:600;line-height:26px}
+.key svg{position:absolute;left:-2px;top:27px;overflow:visible}
+.num{font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.later{position:absolute;left:16px;right:16px;font-size:21px;line-height:26px;display:flex;justify-content:space-between}
+/* lock screen */
+.lockbg{background:linear-gradient(160deg,#20324F 0%,#3B3357 55%,#5A3E4E 100%);border-radius:28px;padding:22px}
+.acc{color:#fff}
+.rect{width:172px;height:76px;font-size:16px;line-height:22px;padding-top:4px}
+.rect b{font-weight:700}.rect .d{opacity:.66}
+.circ{color:#fff;width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:16px;font-weight:700;position:relative;text-align:center;line-height:18px}
+.inl{font-size:16px;font-weight:600;white-space:nowrap}
+.la{width:364px;height:164px;border-radius:22px;position:relative;overflow:hidden}
+.island{background:#000;border-radius:28px;color:#F5F2EC;display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:37px;width:250px;font-size:16px;font-weight:600}
+/* snippets */
+.plat{width:364px;border-radius:26px;background:rgba(246,245,248,.94);box-shadow:0 10px 30px rgba(23,20,31,.12);position:relative;--ink:23,20,31;--s2:.66;--liveInk:#C23A22;--seam:rgba(23,20,31,.12);--tess:#2450D8}
+.note{font-size:16px;font-weight:700;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:22px;max-width:1500px;line-height:24px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const R=document.getElementById('root');
+const lens=(w,t=2.5)=>`M0 6 Q ${w*.42} ${6-t} ${w} 5.6 Q ${w*.58} ${6+t} 0 6 Z`;
+const keyW=(word,w,paint,colour,top)=>`<div class="key" style="top:${top}px;color:${colour}">${word}<svg width="${w+6}" height="12"><path d="${lens(w)}" fill="${paint}" opacity=".75"/></svg></div>`;
+// the states (running example Thu 18:10, Push A started 18:00, rest ends 18:12:30)
+const S=[
+ {k:'RUNNING',ctx:'running now, Push A',hero:'Bench, set 4 of 5',meta:'SET 4 IS UP',key:['Resume',74,'var(--live)','var(--liveInk)'],small:['running now','Bench, set 4 of 5']},
+ {k:'RESTING',ctx:'running now, Push A',hero:'Bench, set 4 of 5',meta:'RESTING',timer:'1:32',horizon:.38,key:['Resume',74,'var(--live)','var(--liveInk)'],small:['resting',null,'1:32']},
+ {k:'TIMED TASK<br>WITHIN 15 MIN',ctx:'next, 6 pm',hero:'Call landlord',meta:'IN 10 MIN',small:['next, 6 pm','Call landlord']},
+ {k:'REST DAY',ctx:'Rest day',hero:'Pull A is a tap away',key:['Pull A',62,'var(--tr)','rgb(var(--ink))'],small:['Rest day','Pull A is a tap away']},
+ {k:'ALL QUIET',hero:'All quiet.',quiet:1,small:[null,'All quiet.']},
+ {k:'DAY DONE',ctx:'trained this evening',hero:'Push A',meta:'6 OF 6 · 22 SETS · 1 RECORD',small:['trained','Push A']},
+ {k:'DAY CLOSED<br>(AFTER SHUTDOWN)',ctx:'tomorrow, first',hero:'Pull A',dim:1,meta:'07:30',small:['tomorrow, first','Pull A']},
+ {k:'24 H BEFORE<br>SIGNING ENDS',ctx:'Rest day',hero:'Pull A is a tap away',meta:'RE-SIGN BY THU 18:10',key:['Pull A',62,'var(--tr)','rgb(var(--ink))'],small:['Rest day','Pull A is a tap away']},
+ {k:'SIGNING ENDED',ctx:'paused',hero:'Run from Xcode to wake it.',meta:'EVERYTHING IS STILL ON THIS PHONE',dim:1,small:['paused','Run from Xcode to wake it.']},
+];
+function medium(s,look,h=170,later){
+ const heroTop=s.ctx?44:28, two=s.hero.length>20&&!s.timer;
+ const seamTop=two?126:96;
+ let html=`<div class="w ${look}" style="width:364px;height:${h}px">`;
+ if(s.ctx)html+=`<div class="ctx s2">${s.ctx}</div>`;
+ html+=`<div class="hero ${s.dim||s.quiet?'s2':'ink'}" style="top:${s.quiet?60:heroTop}px">${s.hero}</div>`;
+ if(!s.quiet){
+  if(s.horizon!=null)html+=`<div class="seam" style="top:${seamTop}px;background:var(--seam)"></div><div class="seam" style="top:${seamTop-0.5}px;height:2px;background:var(--now);opacity:.55;right:auto;width:${332*s.horizon}px"></div>`;
+  else html+=`<div class="seam" style="top:${seamTop}px"></div>`;
+  if(s.meta)html+=`<div class="lbl s2" style="position:absolute;left:16px;top:${seamTop+14}px">${s.meta}${s.timer?` <span class="ink" style="font-size:21px;font-weight:600;letter-spacing:0;margin-left:6px;font-variant-numeric:tabular-nums">${s.timer}</span>`:''}</div>`;
+  if(s.key)html+=keyW(...s.key,seamTop+10);
+ }
+ if(later)html+=later;
+ return html+'</div>'}
+function small(s,look){
+ const [a,b,t]=s.small;let html=`<div class="w ${look}" style="width:170px;height:170px">`;
+ if(a)html+=`<div class="ctx s2" style="font-size:21px">${a}</div>`;
+ if(t)html+=`<div class="num ink" style="position:absolute;left:14px;top:62px;font-size:64px">${t}</div><div class="seam" style="top:142px"></div><div class="seam" style="top:141.5px;height:2px;background:var(--now);opacity:.55;right:auto;width:${138*.38}px"></div>`;
+ else html+=`<div class="hero ${s.dim||s.quiet?'s2':'ink'}" style="top:${a?46:60}px;font-size:${b.length>18?26:34}px;line-height:${b.length>18?30:38}px;${b.length>18?'font-weight:500':''}">${b}</div>`;
+ return html+'</div>'}
+function laterRows(rows,top){return rows.map((r,i)=>`<div class="later" style="top:${top+i*36}px"><span class="ink">${r[0]}</span><span class="lbl s2" style="padding-top:3px">${r[1]||''}</span></div>`).join('')}
+let mode=Q.includes('large')?'large':Q.includes('lock')?'lock':Q.includes('snip')?'snip':Q.includes('rest')?'rest':'home';
+if(mode==='home'){
+ let g=`<h2>HOME SCREEN · EVERY STATE · SMALL AND MEDIUM IN PORCELAIN, MEDIUM IN OBSIDIAN · ONE BASE, NO DOTS, ONE ACTION WORD ON ITS INK LINE</h2><div class="grid" style="grid-template-columns:150px 170px 364px 364px"><div></div><div class="colh">SMALL</div><div class="colh">MEDIUM · PORCELAIN</div><div class="colh">MEDIUM · OBSIDIAN</div>`;
+ S.forEach(s=>{g+=`<div class="rowlbl">${s.k}</div>${small(s,'P')}${medium(s,'P')}${medium(s,'O')}`});
+ R.innerHTML=g+'</div><div class="note">THE SEAM IS THE REST HORIZON WHILE RESTING (A SYSTEM-DRAWN PROGRESS LINE IN NOW AT 55%). THE TIMELINE FLIPS TO "SET 4 IS UP" AT 18:12:30. SMALL HAS NO KEY: THE WHOLE WIDGET IS THE TAP.</div>';
+}
+if(mode==='large'){
+ const L=(s,rows,look='P')=>medium(s,look,382,rows?`<div class="lbl s2" style="position:absolute;left:16px;top:196px">LATER</div>`+laterRows(rows,230):'');
+ R.innerHTML=`<h2>HOME SCREEN · LARGE: MEDIUM ON TOP, THEN UP TO 3 LATER ROWS FROM THE RANKER · AND TINTED MODE</h2>
+ <div class="grid" style="grid-template-columns:repeat(5,364px)"><div class="colh">RUNNING OR RESTING</div><div class="colh">REST DAY</div><div class="colh">ALL QUIET · DAY DONE</div><div class="colh">SIGNING ENDED</div><div class="colh">TINTED · ONE ACCENT</div>
+ ${L(S[1],[['Call landlord','19:00'],['Stretch &amp; mobility','20:30'],['Read','21:10']])}
+ ${L(S[3],[['Renew passport',''],['Water the plants','']])}
+ ${L(S[5])}
+ ${L(S[8])}
+ <div style="background:linear-gradient(160deg,#5B6C86,#7A6E8E);border-radius:26px;padding:0">${medium(S[1],'T',382,`<div class="lbl s2" style="position:absolute;left:16px;top:196px">LATER</div>`+laterRows([['Call landlord','19:00'],['Stretch &amp; mobility','20:30'],['Read','21:10']],230))}</div>
+ </div><div class="note">NO LATER WINDOW WHEN THERE IS NOTHING LATER, AND NONE ONCE SIGNING HAS ENDED (A STALE LIST LOOKS LIKE A PLAN). TINTED AND CLEAR: THE PAINT GOES, THE TYPE STAYS; THE ONLY ACCENTABLE ELEMENT IS THE ACTION'S INK LINE (HERE THE REST HORIZON).</div>`;
+}
+if(mode==='lock'){
+ const rect=[
+  ['<b>Push A</b>','Bench, set 4 of 5','<span class="d">Set 4 is up</span>'],
+  ['<b>Push A</b>','Bench, set 4 of 5','<span class="d">Resting</span> 1:32'],
+  ['<b>Call landlord</b>','next, 6 pm','<span class="d">In 10 min</span>'],
+  ['<b>Rest day</b>','Pull A is a tap away',''],
+  ['<b>All quiet.</b>','',''],
+  ['<b>Push A</b>','trained this evening','<span class="d">6 of 6 exercises, 22 sets</span>'],
+  ['<b>Pull A</b>','tomorrow, first','<span class="d">07:30</span>'],
+  ['<b>Rest day</b>','Pull A is a tap away','<span class="d">Re-sign by Thu 18:10</span>'],
+  ['<b>Tessera is paused</b>','Run from Xcode',''],
+ ];
+ const ring=(f,txt,sub='')=>`<div class="circ"><svg width="76" height="76" style="position:absolute;left:0;top:0"><circle cx="38" cy="38" r="33" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="4"/>${f?`<circle cx="38" cy="38" r="33" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="${207*f} 207" transform="rotate(-90 38 38)"/>`:''}</svg><span style="position:relative">${txt}</span>${sub?`<span style="position:relative;font-size:16px;font-weight:600;opacity:.66">${sub}</span>`:''}</div>`;
+ const circ=[ring(.6,'4/5'),ring(.38,'1:32'),ring(0,'10<br><span style=\'font-weight:600\'>min</span>'),`<div class="circ">Rest</div>`,`<div class="circ">Quiet</div>`,ring(1,'✓','22'),`<div class="circ" style="opacity:.66">7:30</div>`,`<div class="circ">Rest</div>`,`<div class="circ" style="opacity:.66">Paused</div>`];
+ const inl=['Bench, set 4 of 5','Resting 1:32','Call landlord, 6 pm','Rest day','All quiet.','Push A, done','Pull A, 7:30 pm','Rest day','Tessera paused'];
+ let g=`<h2>LOCK SCREEN ACCESSORIES · MONOCHROME, OPACITY TIERS ONLY · WORDS AND ONE TIMER CARRY THE STATE</h2><div style="display:flex;gap:40px;align-items:flex-start"><div class="lockbg"><div class="grid" style="grid-template-columns:170px 172px 76px 200px;gap:18px 22px">
+  <div></div><div class="colh" style="color:rgba(255,255,255,.5)">RECTANGULAR</div><div class="colh" style="color:rgba(255,255,255,.5)">CIRCULAR</div><div class="colh" style="color:rgba(255,255,255,.5)">INLINE</div>`;
+ S.forEach((s,i)=>{g+=`<div class="rowlbl" style="color:rgba(255,255,255,.66)">${s.k}</div><div class="acc rect">${rect[i].filter(Boolean).join('<br>')}</div>${circ[i]}<div class="acc inl" style="padding-top:8px">${inl[i]}</div>`});
+ g+=`</div></div>`;
+ // live activity faces
+ const sky=(look)=>look==='P'?`radial-gradient(60% 70% at 0% 0%,rgba(36,80,216,.16),rgba(36,80,216,0) 70%),radial-gradient(60% 70% at 100% 0%,rgba(106,76,156,.18),rgba(106,76,156,0) 70%),#fff`:`radial-gradient(60% 70% at 0% 0%,rgba(134,180,255,.2),rgba(134,180,255,0) 70%),radial-gradient(60% 70% at 100% 0%,rgba(160,130,210,.22),rgba(160,130,210,0) 70%),#000`;
+ const la=(look,body)=>`<div class="la ${look}" style="background:${sky(look)}">${body}</div>`;
+ const horizon=(f)=>`<div style="position:absolute;left:16px;right:16px;top:118px;height:1px;background:var(--seam)"></div><div style="position:absolute;left:16px;top:117px;height:2px;width:${332*f}px;background:var(--now);opacity:.8"></div>`;
+ const right=`<div class="ink" style="position:absolute;right:62px;top:22px;font-size:21px;font-weight:600;text-align:right;line-height:26px">Bench<br><span class="s2" style="font-weight:400">82.5 × 8</span></div><svg style="position:absolute;right:16px;top:28px" width="34" height="34"><path d="M8 18 L15 25 L27 10" fill="none" stroke="rgb(var(--ink))" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+ g+=`<div><div class="grid" style="grid-template-columns:364px;gap:14px">
+  <div class="colh">REST LIVE ACTIVITY · LOCK SCREEN FOLLOWS THE LOOK</div>
+  ${la('P',`<div class="num ink" style="position:absolute;left:16px;top:20px;font-size:48px">1:32</div>${right}${horizon(.38)}<div class="lbl s2" style="position:absolute;left:16px;top:132px">REST, THEN SET 4</div><div class="ink" style="position:absolute;right:76px;top:128px;font-size:21px;font-weight:600">+15</div><div class="ink" style="position:absolute;right:16px;top:128px;font-size:21px;font-weight:600">Skip</div>`)}
+  ${la('P',`<div class="ink" style="position:absolute;left:16px;top:24px;font-size:44px;font-weight:500;letter-spacing:-.03em">Go</div><svg style="position:absolute;left:14px;top:76px;overflow:visible" width="64" height="12"><path d="${lens(58,2.5)}" fill="var(--now)" opacity=".75"/></svg>${right}${horizon(1)}<div class="lbl s2" style="position:absolute;left:16px;top:132px">RESTED 2:30</div><div class="ink" style="position:absolute;right:76px;top:128px;font-size:21px;font-weight:600;opacity:.25">+15</div><div class="ink" style="position:absolute;right:16px;top:128px;font-size:21px;font-weight:600">Skip</div>`)}
+  ${la('P',`<div class="ink" style="position:absolute;left:16px;top:22px;font-size:21px;line-height:26px">Set 3 logged.</div><div style="position:absolute;right:16px;top:22px;font-size:16px;font-weight:700;letter-spacing:.08em;color:var(--liveInk)">UNDO</div><div class="num ink" style="position:absolute;left:16px;top:58px;font-size:48px">2:30</div>${horizon(0)}<div class="lbl s2" style="position:absolute;left:16px;top:132px">REST, THEN SET 4</div>`)}
+  ${la('P',`<div class="ink" style="position:absolute;left:16px;top:28px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:38px">All 22 sets in.</div><div class="s2" style="position:absolute;left:16px;top:74px;font-size:21px">Push A, ready to finish</div>${horizon(1)}<div class="lbl s2" style="position:absolute;left:16px;top:132px">ENDS IN A MINUTE</div>`)}
+  ${la('O',`<div class="num ink" style="position:absolute;left:16px;top:20px;font-size:48px">1:32</div>${right}${horizon(.38)}<div class="lbl s2" style="position:absolute;left:16px;top:132px">REST, THEN SET 4</div><div class="ink" style="position:absolute;right:76px;top:128px;font-size:21px;font-weight:600">+15</div><div class="ink" style="position:absolute;right:16px;top:128px;font-size:21px;font-weight:600">Skip</div>`)}
+  <div class="colh" style="margin-top:6px">DYNAMIC ISLAND · ALWAYS OBSIDIAN</div>
+  <div class="island"><svg width="20" height="20"><path d="M4 10 L8.5 14.5 L16 6" fill="none" stroke="#F5F2EC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="font-variant-numeric:tabular-nums">1:32</span></div>
+  <div class="island"><svg width="20" height="20"><path d="M4 10 L8.5 14.5 L16 6" fill="none" stroke="#F5F2EC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="color:#FFC23D">Go</span></div>
+ </div></div></div>
+ <div class="note">ROWS 3 AND 4 OF THE LIVE ACTIVITY ARE NEW: UNDO AFTER DONE ("SET 3 LOGGED." · UNDO, THEN "SET 3 TAKEN BACK.") AND "ALL 22 SETS IN." FOR 60 S AFTER THE LAST SET, THEN IT ENDS. CIRCULAR "QUIET" REPLACES A TICK FOR ALL QUIET: A TICK WOULD SAY DONE.</div>`;
+ R.innerHTML=g;
+}
+if(mode==='snip'){
+ const plat=(h,body)=>`<div class="plat" style="height:${h}px">${body}</div>`;
+ const w=(t,x,top,c='rgb(var(--ink))',line,lw)=>`<div style="position:absolute;${x};top:${top}px;font-size:21px;font-weight:600;color:${c}">${t}${line?`<svg style="position:absolute;left:-2px;top:27px;overflow:visible" width="${lw+6}" height="12"><path d="${lens(lw)}" fill="${line}" opacity=".75"/></svg>`:''}</div>`;
+ const seam=t=>`<div class="seam" style="top:${t}px;left:20px;right:20px"></div>`;
+ const now=[
+  plat(176,`<div class="ctx s2" style="left:20px;top:18px">running now, Push A</div><div class="hero ink" style="left:20px;top:48px">Bench, set 4 of 5</div>${seam(104)}<div class="lbl s2" style="position:absolute;left:20px;top:122px">SET 4 IS UP</div>${w('Same again','right:110px',118,'rgb(var(--ink))','#CC3F68',104)}${w('Resume','right:20px',118,'var(--liveInk)')}`),
+  plat(196,`<div class="ctx s2" style="left:20px;top:18px">running now, Push A</div><div class="num ink" style="position:absolute;left:18px;top:50px;font-size:64px">1:32</div>${seam(126)}<div class="seam" style="top:125.5px;left:20px;height:2px;width:${324*.38}px;background:#F0A500;opacity:.55"></div><div class="lbl s2" style="position:absolute;left:20px;top:144px">REST, THEN SET 4</div>${w('+15','right:84px',140)}${w('Skip','right:20px',140)}`),
+  plat(150,`<div class="ctx s2" style="left:20px;top:18px">Rest day</div><div class="hero ink" style="left:20px;top:48px">Pull A is a tap away</div>${seam(100)}${w('Open Pull A','right:20px',112,'rgb(var(--ink))','#CC3F68',112)}`),
+  plat(110,`<div class="hero s2" style="left:20px;top:34px">All quiet.</div>`),
+  plat(170,`<div class="ctx s2" style="left:20px;top:18px">trained this evening</div><div class="hero ink" style="left:20px;top:48px">Push A</div>${seam(104)}<div class="lbl s2" style="position:absolute;left:20px;top:122px">6 OF 6 · 22 SETS · 1 RECORD</div>`),
+ ];
+ const said=['"Bench, set 4 of 5. 82.5 × 8."','"Resting. Set 4 in 1:32."','"Rest day. Pull A is a tap away."','"All quiet."','"Push A done. 6 of 6 exercises, 22 sets."'];
+ const nums=(sub,extra='')=>`<div class="lbl s2" style="position:absolute;left:20px;top:18px">BENCH PRESS · SET 4</div><div class="num ink" style="position:absolute;left:20px;top:50px;font-size:80px">82.5</div><div style="position:absolute;left:206px;top:58px;width:1px;height:66px;background:var(--seam)"></div><div class="num ink" style="position:absolute;left:226px;top:50px;font-size:80px">8</div><div class="lbl s2" style="position:absolute;left:22px;top:136px">KG</div><div class="lbl s2" style="position:absolute;left:228px;top:136px">REPS</div>${seam(170)}<div class="s2" style="position:absolute;left:20px;top:184px;font-size:21px">${sub}</div>${extra}${w('Same again','left:20px',222,'rgb(var(--ink))','#CC3F68',104)}${w('+2.5','right:104px',222,'rgba(var(--ink),.66)')}${w('+1 rep','right:20px',222,'rgba(var(--ink),.66)')}`;
+ const log=[
+  plat(272,nums('Bench, set 4 of 5')),
+  plat(272,nums('Resting <span class="ink" style="font-weight:600;font-variant-numeric:tabular-nums">1:32</span>')),
+  plat(110,`<div class="s2" style="position:absolute;left:20px;top:18px;font-size:21px">Rest day. Pull A is a tap away.</div>${w('Start Pull A','left:20px',58,'rgb(var(--ink))','#CC3F68',118)}`),
+  plat(110,`<div class="s2" style="position:absolute;left:20px;top:18px;font-size:21px">No workout running.</div>${w('Start Pull A','left:20px',58,'rgb(var(--ink))','#CC3F68',118)}`),
+  plat(110,`<div class="s2" style="position:absolute;left:20px;top:18px;font-size:21px">Push A is done. 22 sets.</div><div style="position:absolute;left:20px;top:62px;font-size:16px;font-weight:700;letter-spacing:.08em;color:var(--liveInk)">UNDO SET 22</div>`),
+ ];
+ const ks=['RUNNING','RESTING','REST DAY','ALL QUIET','DAY DONE'];
+ let g=`<h2>SNIPPETS · ON THE SYSTEM PLATTER, TYPE ONLY · "WHAT'S NOW" AND "LOG A SET" · NOTHING WHEN SIGNING HAS ENDED (THE INTENT CAN'T RUN)</h2><div class="grid" style="grid-template-columns:130px 364px 300px 364px"><div></div><div class="colh">WHAT'S NOW</div><div class="colh">SPOKEN</div><div class="colh">LOG A SET</div>`;
+ ks.forEach((k,i)=>{g+=`<div class="rowlbl">${k}</div>${now[i]}<div style="font-size:21px;line-height:28px;color:#2450D8;padding-top:14px">${said[i]}</div>${log[i]}`});
+ R.innerHTML=g+`</div><div class="note">ACTION WORDS SIT ON THE INK LINE IN THE ACTION'S PAINT (TRAINING FOR SAME AGAIN AND START, LIVE FOR RESUME). SECONDARY WORDS (+2.5, +1 REP, +15, SKIP) ARE PLAIN. UNDO NAMES ITS RECORD AND ANSWERS "SET 22 TAKEN BACK."</div>`;
+}
+if(mode==='rest'){
+ document.body.style.width='460px';
+ R.innerHTML=`<h2>RESTING → SET 4 IS UP (TIMELINE FLIP)</h2><div id="wrap" style="position:relative">${medium(S[1],'P')}</div><div style="height:18px"></div><div id="wrap2">${medium(S[1],'O')}</div>`;
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(mode!=='rest'){document.body.dataset.done='1';return}
+ // play: horizon drains over 3 s (compressed from 1:32), the timer counts, then the meta pushes up to SET 4 IS UP
+ const all=[...document.querySelectorAll('.w')];
+ all.forEach(w=>{const hz=w.querySelectorAll('.seam')[1];const lbl=w.querySelector('.lbl');const t=lbl.querySelector('span');
+  let s=92;const iv=setInterval(()=>{s-=1;if(s<=0){clearInterval(iv)}t.textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`},3000/92);
+  hz.animate([{width:332*.38+'px'},{width:'0px'}],{duration:3000,easing:'linear',fill:'forwards'});
+  setTimeout(()=>{lbl.animate([{transform:'none',opacity:1},{transform:'translateY(-14px)',opacity:0}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+   setTimeout(()=>{lbl.innerHTML='SET 4 IS UP';lbl.animate([{transform:'translateY(14px)',opacity:0},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})},260)},3300)});
+ setTimeout(()=>document.body.dataset.done='1',5600);
+});
+</script>
+</body>
+</html>

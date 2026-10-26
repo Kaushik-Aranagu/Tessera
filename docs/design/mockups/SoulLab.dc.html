@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soul lab</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100..900&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sl{font-family:'Inter Tight',sans-serif;color:#2B2440}
+@property --k{syntax:'<color>';inherits:false;initial-value:#C8452F}
+.e{position:absolute;left:0;top:0;background:radial-gradient(closest-side,color-mix(in srgb,var(--k) 80%,transparent) 0%,color-mix(in srgb,var(--k) 60%,transparent) 40%,transparent 100%);filter:blur(4px)}
+.halo{position:absolute;width:150px;height:140px;margin:-70px 0 0 -75px;border-radius:50%;background:radial-gradient(closest-side,rgba(214,96,70,.16),rgba(122,92,142,.10) 55%,rgba(224,179,65,0) 100%);filter:blur(10px);animation:halo 7s ease-in-out infinite}
+.ring{position:absolute;width:100px;height:100px;margin:-50px 0 0 -50px;border-radius:50%;background:radial-gradient(closest-side,transparent 52%,rgba(122,74,58,.5) 72%,transparent 100%);filter:blur(3px);opacity:0}
+.rp{position:absolute;width:90px;height:90px;margin:-45px 0 0 -45px;border-radius:50%;filter:blur(3px)}
+.opt{display:block;width:100%;text-align:left;border:0;background:none;padding:0 0 0 2px;height:44px;font-family:'Inter Tight',sans-serif;font-size:21px;cursor:pointer;position:relative}
+.grp{font-weight:600;font-size:16px;letter-spacing:.08em;color:#7A5C8E;margin:0 0 6px}
+@keyframes halo{0%,100%{transform:scale(.8);opacity:.6}50%{transform:scale(1);opacity:1}}
+@keyframes idle{0%,100%{transform:translate(var(--x),calc(var(--y) - 6px)) scale(.78);filter:blur(3px)}25%{transform:translate(calc(var(--x) + 6px),var(--y)) scale(.9);filter:blur(5px)}50%{transform:translate(var(--x),calc(var(--y) + 6px)) scale(.8);filter:blur(4px)}75%{transform:translate(calc(var(--x) - 6px),var(--y)) scale(.92);filter:blur(6px)}}
+@keyframes lift{0%,100%{transform:translate(var(--x),var(--y)) scale(.78);filter:blur(4px)}10%{transform:translate(calc(var(--x) + 5px),calc(var(--y) - 10px)) scale(.92);filter:blur(5.5px)}17%{transform:translate(calc(var(--x) + 7px),calc(var(--y) - 7px)) scale(.86);filter:blur(4.5px)}24%{transform:translate(calc(var(--x) + 5px),calc(var(--y) - 10px)) scale(.92);filter:blur(5.5px)}38%{transform:translate(var(--x),var(--y)) scale(.78);filter:blur(4px)}}
+@keyframes bloomS{0%,100%{transform:translate(calc(var(--x)*.45),calc(var(--y)*.45)) scale(.6);filter:blur(3px)}40%{transform:translate(var(--mx),var(--my)) scale(1.15);filter:blur(6px)}70%{transform:translate(calc(var(--x)*.6),calc(var(--y)*.6)) scale(.9);filter:blur(4px)}}
+@keyframes listen{0%,100%{transform:translate(calc(var(--x)*.6),calc(var(--y)*.6)) scale(.72);filter:blur(3px);opacity:.85}30%{transform:translate(calc(var(--x)*1.3),calc(var(--y)*1.3)) scale(1.06);filter:blur(7px);opacity:1}60%{transform:translate(calc(var(--x)*.9),calc(var(--y)*.9)) scale(.84);filter:blur(4px);opacity:.92}}
+@keyframes nudge{0%,100%{transform:translate(var(--x),var(--y)) scale(.85);filter:blur(4px)}35%{transform:translate(calc(var(--x) + 12px),calc(var(--y) - 16px)) scale(1.06);filter:blur(7px)}50%{transform:translate(calc(var(--x) + 15px),calc(var(--y) - 12px)) scale(.98);filter:blur(5px)}65%{transform:translate(calc(var(--x) + 12px),calc(var(--y) - 16px)) scale(1.06);filter:blur(7px)}}
+@keyframes merge{0%{transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}30%{transform:translate(0,0) scale(.9);filter:blur(5px)}45%{transform:translate(0,0) scale(1.35);filter:blur(9px)}60%,72%{transform:translate(0,0) scale(1);filter:blur(6px)}100%{transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}}
+@keyframes splash{0%,30%{transform:scale(.4);opacity:0}42%{transform:scale(.75);opacity:1}88%,100%{transform:scale(2.6);opacity:0}}
+@keyframes rest{0%,100%{transform:translate(calc(var(--x)*.7),calc(var(--y)*.7 - 3px)) scale(.62);filter:blur(6px)}50%{transform:translate(calc(var(--x)*.8 + 3px),calc(var(--y)*.8)) scale(.68);filter:blur(8px)}}
+@keyframes drip{0%,40%{transform:translate(-2px,-12px) scale(.2);opacity:0}52%{transform:translate(0,-4px) scale(.38);opacity:.85}92%,100%{transform:translate(0,34px) scale(.16);opacity:0}}
+@keyframes ripple{0%{transform:scale(.15);opacity:0}15%{opacity:.85}100%{transform:scale(2.5);opacity:0}}
+@keyframes morphR{0%,100%{border-radius:52% 48% 60% 40% / 55% 45% 55% 45%}33%{border-radius:70% 30% 65% 35% / 40% 60% 40% 60%}66%{border-radius:40% 60% 30% 70% / 60% 40% 60% 40%}}
+@keyframes dayR{0%,100%{--k:#E58A8A}25%{--k:#C8452F}50%{--k:#B0306A}75%{--k:#3B3F8F}}
+@keyframes dayB{0%,100%{--k:#F0B27A}25%{--k:#2E6DA4}50%{--k:#7A4FA0}75%{--k:#2A7F86}}
+@keyframes dayY{0%,100%{--k:#9EC3D6}25%{--k:#E0B341}50%{--k:#E08A3C}75%{--k:#C9BE98}}
+@keyframes chase{0%,100%{--k:#C8452F}33%{--k:#2E6DA4}66%{--k:#E0B341}}
+@keyframes breathK{0%,100%{--k:var(--k1)}50%{--k:var(--k2)}}
+</style>
+</helmet>
+<div class="sl" style="width: 1250px; height: 900px; display: flex; background: #E9E2D7">
+  <!-- the stage -->
+  <div style="position: relative; width: 640px; height: 900px; overflow: hidden; background: {{stageBg}}; transition: background 500ms">
+    <div style="position: absolute; left: 36px; top: 34px; font-size: 44px; font-weight: 500; letter-spacing: -.035em; color: {{stageInk}}">Soul lab</div>
+    <div style="position: absolute; left: 36px; top: 92px; right: 40px; font-size: 19px; line-height: 1.35; color: {{stageSub}}">Mix any state with any colour and shape. Big here, real size in the bar below.</div>
+    <div style="position: absolute; left: 320px; top: 420px; width: 0; height: 0; transform: scale(2.4)">
+      <div style="position: absolute; left: 0; top: 0; filter: {{groupFilter}}">
+        <span class="halo" style="display: {{haloD}}"></span>
+        <sc-for list="{{rings}}" as="g" hint-placeholder-count="0"><span class="rp" style="background: radial-gradient(closest-side, transparent 45%, {{g.c}} 68%, transparent 100%); mix-blend-mode: {{blend}}; animation: ripple 3.6s cubic-bezier(.2,.6,.3,1) {{g.d}} infinite"></span></sc-for>
+        <span class="ring" style="animation: {{splash}}"></span>
+        <sc-for list="{{dabs}}" as="d" hint-placeholder-count="6">
+          <span style="position: absolute; left: 0; top: 0; transform: rotate({{d.rot}}); mix-blend-mode: {{blend}}"><span class="e" style="--k: {{d.k}}; --k1: {{d.k1}}; --k2: {{d.k2}}; --x: {{d.x}}; --y: {{d.y}}; --mx: {{d.mx}}; --my: {{d.my}}; width: {{d.w}}; height: {{d.h}}; margin: {{d.m}}; border-radius: 52% 48% 60% 40% / 55% 45% 55% 45%; animation: {{d.a}}"></span></span>
+        </sc-for>
+        <span class="e" style="--k: {{dripK}}; width: 22px; height: 20px; margin: -10px 0 0 -11px; border-radius: 50%; mix-blend-mode: {{blend}}; display: {{dripD}}; animation: drip 2.4s ease-in infinite"></span>
+      </div>
+    </div>
+    <!-- real size, in an Ask Tess bar -->
+    <div style="position: absolute; left: 120px; right: 120px; bottom: 60px; height: 66px; border-radius: 18px; background: {{barBg}}; backdrop-filter: blur(16px); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 0 0 .5px rgba(43,36,64,.25); display: flex; align-items: center; padding-left: 80px; font-size: 21px; color: {{barInk}}">{{barText}}</div>
+    <div style="position: absolute; left: 156px; bottom: 93px; width: 0; height: 0; transform: scale(.5)">
+      <div style="position: absolute; left: 0; top: 0; filter: {{groupFilter}}">
+        <sc-for list="{{dabs}}" as="d" hint-placeholder-count="6">
+          <span style="position: absolute; left: 0; top: 0; transform: rotate({{d.rot}}); mix-blend-mode: {{blend}}"><span class="e" style="--k: {{d.k}}; --k1: {{d.k1}}; --k2: {{d.k2}}; --x: {{d.x}}; --y: {{d.y}}; --mx: {{d.mx}}; --my: {{d.my}}; width: {{d.w}}; height: {{d.h}}; margin: {{d.m}}; border-radius: 52% 48% 60% 40% / 55% 45% 55% 45%; animation: {{d.a}}"></span></span>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  <!-- the controls -->
+  <div style="flex: 1; padding: 36px 40px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; align-content: start">
+    <div>
+      <div class="grp">STATE</div>
+      <sc-for list="{{states}}" as="o" hint-placeholder-count="6"><button class="opt" onClick="{{o.go}}" style="font-weight: {{o.fw}}; color: {{o.c}}">{{o.n}}<span style="position: absolute; left: 0; bottom: 6px; width: 40px; height: 3px; border-radius: 2px 5px 3px 4px; background: #C8452F; filter: blur(.4px); opacity: {{o.u}}"></span></button></sc-for>
+      <div class="grp" style="margin-top: 28px">SHAPE</div>
+      <sc-for list="{{shapes}}" as="o" hint-placeholder-count="4"><button class="opt" onClick="{{o.go}}" style="font-weight: {{o.fw}}; color: {{o.c}}">{{o.n}}<span style="position: absolute; left: 0; bottom: 6px; width: 40px; height: 3px; border-radius: 2px 5px 3px 4px; background: #C8452F; filter: blur(.4px); opacity: {{o.u}}"></span></button></sc-for>
+      <div class="grp" style="margin-top: 28px">GROUND</div>
+      <sc-for list="{{grounds}}" as="o" hint-placeholder-count="2"><button class="opt" onClick="{{o.go}}" style="font-weight: {{o.fw}}; color: {{o.c}}">{{o.n}}<span style="position: absolute; left: 0; bottom: 6px; width: 40px; height: 3px; border-radius: 2px 5px 3px 4px; background: #C8452F; filter: blur(.4px); opacity: {{o.u}}"></span></button></sc-for>
+    </div>
+    <div>
+      <div class="grp">COLOUR</div>
+      <sc-for list="{{colours}}" as="o" hint-placeholder-count="9"><button class="opt" onClick="{{o.go}}" style="font-weight: {{o.fw}}; color: {{o.c}}"><span style="display: inline-flex; gap: 4px; margin-right: 12px; vertical-align: middle"><sc-for list="{{o.sw}}" as="w" hint-placeholder-count="3"><span style="display: inline-block; width: 14px; height: 12px; border-radius: 55% 45% 60% 40%; background: {{w.c}}; filter: blur(.4px)"></span></sc-for></span>{{o.n}}<span style="position: absolute; left: 0; bottom: 6px; width: 40px; height: 3px; border-radius: 2px 5px 3px 4px; background: #C8452F; filter: blur(.4px); opacity: {{o.u}}"></span></button></sc-for>
+      <div style="margin-top: 26px; font-size: 18px; line-height: 1.4; color: #5E5470">{{note}}</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1250,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { st: 'idle', col: 'classic', shp: 'drops', dark: false };
+  }
+  renderVals() {
+    const s = this.state, E = 'ease-in-out';
+    const pos = [[-14, -8, 18, -10], [14, -8, -16, -12], [0, 13, 0, 18], [-22, 10, -20, 14], [20, 12, 22, 10], [4, -20, 6, -22]];
+    const P = {
+      classic: s.dark ? ['#D9563F', '#3F7FC0', '#E8BD4C'] : ['#C8452F', '#2E6DA4', '#E0B341'],
+      training: ['#C8452F', '#8A4B2E', '#E0B341'], tasks: ['#2E6DA4', '#6E9E6A', '#9A86C0'], night: ['#3B3F8F', '#2A7F86', '#C9BE98'],
+      cobalt: ['#2E6DA4', '#5B8FC4', '#1F4F7C'], cadmium: ['#E0B341', '#E8A03A', '#F0CF6A'],
+      day: ['#C8452F', '#2E6DA4', '#E0B341'], chase: ['#C8452F', '#2E6DA4', '#E0B341'], breathe: ['#C8452F', '#2E6DA4', '#E0B341']
+    };
+    const pal = P[s.col];
+    const breatheTo = ['#B0306A', '#2A7F86', '#E08A3C'];
+    const motion = (i) => {
+      const main = i < 3;
+      switch (s.st) {
+        case 'idle': return main ? `lift 9s ${E} ${['0s', '-6s', '-3s'][i]} infinite` : `idle ${['9s', '11s', '7.5s'][i - 3]} ${E} -${i}s infinite`;
+        case 'listening': return `bloomS 2.4s ${E} -${[0, .8, 1.6, 1.2, 2, .4][i]}s infinite`;
+        case 'thinking': return `listen ${['.9s', '.72s', '1.1s', '.8s', '1s', '.66s'][i]} ${E} -${[0, .3, .5, .2, .6, .1][i]}s infinite`;
+        case 'needs': return (i === 0 || i === 3) ? `nudge 2.4s ${E} -${i ? .15 : 0}s infinite` : `idle ${['7s', '8.5s', '10s', '9s', '11s', '7.5s'][i]} ${E} -${i}s infinite`;
+        case 'done': return `merge 3.2s cubic-bezier(.4,0,.2,1) -${main ? 0 : (i - 2) * .08}s infinite`;
+        default: return `rest ${['12s', '12s', '12s', '14s', '13s', '15s'][i]} ${E} -${[0, 4, 8, 2, 7, 10][i]}s infinite`;
+      }
+    };
+    const colourAnim = (i) => {
+      const c = i % 3;
+      if (s.col === 'day') return `, day${'RBY'[c]} 16s linear -${(i * .4).toFixed(1)}s infinite`;
+      if (s.col === 'chase') return `, chase 6s ${E} -${c * 2 + (i >= 3 ? 1 : 0)}s infinite`;
+      if (s.col === 'breathe') return `, breathK 5s ${E} -${i * .7}s infinite`;
+      return '';
+    };
+    const strokes = s.shp === 'strokes';
+    const dabs = pos.map(([x, y, mx, my], i) => {
+      const main = i < 3;
+      let w = main ? 76 : 46, h = main ? 70 : 42;
+      if (strokes) { w = main ? 120 : 70; h = main ? 40 : 26; }
+      const morph = s.shp === 'morph' ? `, morphR 4s ${E} -${i * .6}s infinite` : '';
+      return {
+        k: pal[i % 3], k1: pal[i % 3], k2: breatheTo[i % 3], x: x + 'px', y: y + 'px', mx: mx + 'px', my: my + 'px',
+        w: w + 'px', h: h + 'px', m: `-${h / 2}px 0 0 -${w / 2}px`, rot: strokes ? ['-18deg', '24deg', '-62deg', '34deg', '-30deg', '76deg'][i] : '0deg',
+        a: motion(i) + colourAnim(i) + morph
+      };
+    });
+    const wet = s.shp === 'wet';
+    const rings = wet ? [0, 1, 2].map((i) => ({ c: ['rgba(200,69,47,.5)', 'rgba(46,109,164,.45)', 'rgba(224,179,65,.55)'][i], d: `-${i * 1.2}s` })) : [];
+    const opt = (cur) => (v, n, extra) => ({ n, go: () => this.setState(extra(v)), fw: v === cur ? 600 : 400, c: v === cur ? '#2B2440' : '#7A6E86', u: v === cur ? 1 : 0 });
+    const sw = (cols) => cols.map((c) => ({ c }));
+    const so = opt(s.st), co = opt(s.col), ho = opt(s.shp), go = opt(s.dark);
+    const notes = {
+      idle: 'Idle: one dab at a time lifts and settles. Calm needs-you, no drip.',
+      listening: 'Listening: the bloom. Your voice opens the paint.',
+      thinking: 'Thinking: each dab pulses at its own pace. Also covers Tess doing things.',
+      needs: 'Needs you: the red leans out and drips.',
+      done: 'Done: unchanged, on a loop here so you can watch it.',
+      rest: 'Resting: muted and slow, for night.'
+    };
+    return {
+      dabs, rings, blend: s.dark ? 'screen' : 'multiply',
+      groupFilter: s.st === 'rest' ? 'saturate(.35) brightness(1.06)' : 'saturate(1.45) contrast(1.04)',
+      haloD: s.dark ? 'none' : 'block',
+      splash: s.st === 'done' ? 'splash 3.2s ease-out infinite' : 'none',
+      dripD: s.st === 'needs' ? 'block' : 'none', dripK: pal[0],
+      stageBg: s.dark ? 'radial-gradient(70% 45% at 0% 10%, #3B2D57 0%, rgba(59,45,87,0) 70%), radial-gradient(70% 50% at 100% 60%, #1E3D4A 0%, rgba(30,61,74,0) 70%), #1C1828' : 'radial-gradient(60% 40% at 85% 6%, #F7E6B8 0%, rgba(247,230,184,0) 70%), radial-gradient(70% 45% at 0% 40%, #D8CBE6 0%, rgba(216,203,230,0) 70%), radial-gradient(80% 50% at 100% 80%, #BFD8E2 0%, rgba(191,216,226,0) 70%), #F2ECE3',
+      stageInk: s.dark ? '#F3ECE0' : '#2B2440', stageSub: s.dark ? '#A79FB5' : '#5E5470',
+      barBg: s.dark ? 'rgba(255,255,255,.07)' : 'rgba(250,246,239,.6)', barInk: s.dark ? '#C9D9EE' : '#8A7F96',
+      barText: { idle: 'Ask Tess…', listening: 'Listening…', thinking: 'Thinking…', needs: 'One thing needs you.', done: 'Done.', rest: 'Goodnight.' }[s.st],
+      states: [['idle', 'Idle'], ['listening', 'Listening'], ['thinking', 'Thinking'], ['needs', 'Needs you'], ['done', 'Done'], ['rest', 'Resting']].map(([v, n]) => so(v, n, (x) => ({ st: x }))),
+      shapes: [['drops', 'Drops'], ['morph', 'Morphing drops'], ['strokes', 'Brushstrokes'], ['wet', 'Wet on wet rings']].map(([v, n]) => ho(v, n, (x) => ({ shp: x }))),
+      grounds: [[false, 'Paper (light)'], [true, 'Night (dark)']].map(([v, n]) => go(v, n, (x) => ({ dark: x }))),
+      colours: [['classic', 'Classic three'], ['day', 'Follows the day'], ['chase', 'Colour chase'], ['breathe', 'Breathing hues'], ['training', 'Training room'], ['tasks', 'Tasks room'], ['night', 'Night room'], ['cobalt', 'All cobalt (focus)'], ['cadmium', 'All cadmium (celebrate)']].map(([v, n]) => ({ ...co(v, n, (x) => ({ col: x })), sw: sw(P[v === 'breathe' ? 'classic' : v]) })),
+      note: notes[s.st]
+    };
+  }
+}
+</script>
+</body>
+</html>
