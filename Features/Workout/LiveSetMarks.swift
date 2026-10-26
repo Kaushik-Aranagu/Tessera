@@ -128,12 +128,12 @@ struct LiveSetMarks: View {
     private func stage(specs _: [SetMarkSpec]) -> some View {
         ZStack {
             if !calm {
-                TimelineView(.animation) { context in
+                LiveClock(LiveFeatures.workoutSetMarks, minimumInterval: nil) { context in
                     let motion = motion(at: context.date)
                     InkDropView(swarm: swarm, rep: motion.rep, warmth: motion.warmth)
                 }
                 if let play {
-                    TimelineView(.animation) { context in
+                    LiveClock(LiveFeatures.workoutSetMarks, minimumInterval: nil) { context in
                         let elapsed = context.date.timeIntervalSince(play.started)
                         let repsDone = SetMarkClock.closes(reps: play.spec.reps) - SetMarkClock.draw
                         let drawn = min(max((elapsed - repsDone) / SetMarkClock.draw, 0), 1)
