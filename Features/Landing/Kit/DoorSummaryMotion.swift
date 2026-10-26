@@ -1,10 +1,15 @@
 import SwiftUI
 
-/// How a room's door summary changes when the dial turns (sheet 283 v6). All under 1 s, all through MotionPolicy;
-/// Reduce Motion is a plain swap (the policy's 150 ms cross-fade, nothing moves).
+/// How a room's door summary changes when the dial turns (sheet 283 v6). One enum for every room, chosen through the
+/// environment value `doorSummaryStyle` (a room sets `.environment(\.doorSummaryStyle, ...)`, or the scaffold's
+/// `summaryStyle`). All under 1 s, all through MotionPolicy; Reduce Motion is a plain swap.
 enum DoorSummaryStyle: Equatable {
-    /// The kit's plain rise (Settings, Log until it has its own).
-    case rise
+    /// A 6 pt rise (the default; Settings, Log).
+    case plain
+    /// Galley: the new summary comes down like a printed ticket; the old one lifts away.
+    case ticket
+    /// Purse: words hold still (a plain fade); only the numbers roll like a meter, digit by digit.
+    case meter
     /// Deck: lines chalked on left to right (0.3 s each, 0.15 s apart) in Barlow Condensed; old ones wiped off with a
     /// small puff of chalk dust falling toward the foot.
     case chalk
@@ -26,7 +31,7 @@ enum DoorSummaryStyle: Equatable {
     /// Total length of a change for `rows` rows.
     func duration(rows: Int) -> Double {
         switch self {
-        case .rise: 0.35
+        case .plain, .ticket, .meter: 0.35
         case .chalk: 0.3 + 0.15 * Double(max(rows - 1, 0))
         case .fog: 0.62
         case .grow: 0.56
@@ -35,7 +40,7 @@ enum DoorSummaryStyle: Equatable {
 
     func animation(rows: Int) -> Animation {
         switch self {
-        case .rise: Theme.Motion.firm
+        case .plain, .ticket, .meter: Theme.Motion.firm
         case .chalk, .fog: .timingCurve(0.2, 0.8, 0.2, 1, duration: duration(rows: rows))
         case .grow: .spring(duration: 0.56, bounce: 0.3)
         }
@@ -46,7 +51,7 @@ enum DoorSummaryStyle: Equatable {
             return .opacity
         }
         switch self {
-        case .rise:
+        case .plain, .ticket, .meter:
             return .offset(y: 6)
         case .chalk:
             let window = ChalkWindow(index: index, count: count)
@@ -195,4 +200,8 @@ private struct LeafFall: ViewModifier, Animatable {
             .offset(x: 14 * sin(progress * .pi * 1.5) * side, y: 40 * progress * progress)
             .opacity(1 - progress)
     }
+}
+
+extension EnvironmentValues {
+    @Entry var doorSummaryStyle: DoorSummaryStyle = .plain
 }

@@ -212,12 +212,15 @@ private extension CGFloat {
 
 /// The door summary beside the landing dial (sheet 283): x 186, top 652; a 13 pt ink 2 label and up to three
 /// 16/24 lines, the first 700. Not blurred; each room fills it its way, and (283 v6) each room changes it its way when
-/// the dial turns (`DoorSummaryStyle`). The old and new rows share their places, so nothing moves the layout.
+/// the dial turns: the style comes from the environment value `doorSummaryStyle` (see `DoorSummaryStyle`).
 struct DoorSummary: View {
     let door: DialDoor?
-    var style: DoorSummaryStyle = .rise
+    /// The summary's own move on a focus change. The standing shell turns it off: there the place plays the move and
+    /// the summary keeps one identity.
+    var ownMove = true
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.doorSummaryStyle) private var style
 
     struct Row: Identifiable, Equatable {
         let id: String
@@ -228,31 +231,88 @@ struct DoorSummary: View {
         let y: CGFloat
     }
 
-    static func rows(_ door: DialDoor) -> [Row] {
+    /// The rows of the per-row styles (chalk, fog, grow), each in its fixed place, keyed by door so a turn swaps them.
+    static func rows(_ door: DialDoor, key: String? = nil) -> [Row] {
+        let key = key ?? door.id
         var rows: [Row] = []
         var y: CGFloat = 0
         if let label = door.label {
-            rows.append(Row(id: "\(door.id)#label", text: label, isLabel: true, isFirst: false, index: 0, y: 0))
+            rows.append(Row(id: "\(key)#label", text: label, isLabel: true, isFirst: false, index: 0, y: 0))
             y = 20
         }
         for (index, line) in door.lines.prefix(3).enumerated() {
-            rows.append(Row(id: "\(door.id)#\(index)", text: line, isLabel: false, isFirst: index == 0,
+            rows.append(Row(id: "\(key)#\(index)", text: line, isLabel: false, isFirst: index == 0,
                             index: rows.count, y: y + CGFloat(index) * 24))
         }
         return rows
     }
 
     var body: some View {
-        let rows = door.map(Self.rows) ?? []
-        ZStack(alignment: .topLeading) {
+        if let door, door.label != nil || !door.lines.isEmpty {
+            switch style {
+            case .plain:
+                // The standing shell plays the move itself (`ownMove` false): then the summary keeps one identity.
+                lines(door)
+                    .id(ownMove ? door.id : "summary")
+                    .transition(.offset(y: reduceMotion || !ownMove ? 0 : 6))
+                    .tesseraAnimation(Theme.Motion.firm, value: ownMove ? door.id : "summary")
+            case .ticket:
+                // Galley: the new summary comes down like a ticket out of the printer; the old one lifts away.
+                lines(door)
+                    .id(ownMove ? door.id : "summary")
+                    .transition(reduceMotion || !ownMove ? .identity
+                        : .asymmetric(insertion: .push(from: .top),
+                                      removal: .offset(y: -14).combined(with: .opacity)))
+                    .tesseraAnimation(Theme.Motion.firm, value: door.id)
+            case .meter:
+                // One identity across doors: the digits roll, the words cross-fade in place.
+                lines(door)
+                    .contentTransition(reduceMotion ? .identity : .numericText())
+                    .tesseraAnimation(Theme.Motion.firm, value: door.id)
+            case .chalk, .fog, .grow:
+                staged(door)
+            }
+        }
+    }
+
+    private func lines(_ door: DialDoor) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let label = door.label {
+                Text(label)
+                    .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(1)
+                    .frame(height: 20, alignment: .leading)
+            }
+            ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
+                FitLine(
+                    forms: FitLine.cuts(line),
+                    size: 16,
+                    color: Theme.Colors.ink,
+                    weight: index == 0 ? .bold : .regular
+                )
+                .frame(width: 192, height: 24, alignment: .leading)
+            }
+        }
+        .frame(width: 192, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// Deck, Lookout and Watch: each row has its own place, so the old and new rows overlap while they change and
+    /// nothing moves the layout. Without its own move the rows keep one identity and change in place.
+    private func staged(_ door: DialDoor) -> some View {
+        let rows = Self.rows(door, key: ownMove ? nil : "summary")
+        return ZStack(alignment: .topLeading) {
             ForEach(rows) { row in
                 rowView(row)
                     .offset(y: row.y)
-                    .transition(style.transition(index: row.index, count: rows.count, reduceMotion: reduceMotion))
+                    .transition(ownMove
+                        ? style.transition(index: row.index, count: rows.count, reduceMotion: reduceMotion)
+                        : .identity)
             }
         }
         .frame(width: 192, height: 92, alignment: .topLeading)
-        .tesseraAnimation(style.animation(rows: rows.count), value: door?.id)
+        .tesseraAnimation(style.animation(rows: rows.count), value: ownMove ? door.id : "summary")
         .accessibilityElement(children: .combine)
     }
 

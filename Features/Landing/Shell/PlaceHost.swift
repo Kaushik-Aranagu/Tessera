@@ -77,7 +77,7 @@ private struct PlaceRenderer: View {
             ShellDial(doors: doors, reelFrom: reduceMotion ? [] : style.reelFrom, navigator: navigator, act: act)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         case let .summary(door):
-            DoorSummary(door: door)
+            DoorSummary(door: door, ownMove: false)
                 .padding(.top, 12)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         case let .doorTitle(name, line, color):
@@ -242,12 +242,11 @@ private struct ShellPage: View {
         VStack(alignment: .leading, spacing: 0) {
             FitLine(forms: FitLine.cuts(row.title), size: 20,
                     color: row.isPrivate ? Theme.Colors.inkSecondary : Theme.Colors.ink, weight: .medium)
-                .frame(height: 28, alignment: .leading)
             if !row.detail.isEmpty {
                 FitLine(forms: FitLine.cuts(row.detail), size: 13, color: Theme.Colors.inkSecondary)
-                    .frame(height: 18, alignment: .leading)
             }
         }
+        .padding(.vertical, 6)
         .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
         .contentShape(Rectangle())
     }

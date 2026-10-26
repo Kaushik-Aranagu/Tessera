@@ -6,7 +6,7 @@ import Testing
 @MainActor
 struct DoorSummaryStyleTests {
     @Test func everyChangeIsUnderOneSecond() {
-        for style in [DoorSummaryStyle.rise, .chalk, .fog, .grow] {
+        for style in [DoorSummaryStyle.plain, .ticket, .meter, .chalk, .fog, .grow] {
             #expect(style.duration(rows: 4) < 1)
         }
     }

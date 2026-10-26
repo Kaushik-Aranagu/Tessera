@@ -33,8 +33,9 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
     var onSwitcherChange: () -> Void = {}
     /// The page behind the sections; nil is the theme's page colour. Lookout draws its sky here.
     var backdrop: AnyView?
-    /// How the door summary changes when the dial turns (283 v6); the kit's plain rise unless the room has its own.
-    var summaryStyle: DoorSummaryStyle = .rise
+    /// How the door summary changes when the dial turns (283 v6). nil keeps the environment's `doorSummaryStyle`
+    /// (plain unless the room set one); a value sets that environment value for the summary.
+    var summaryStyle: DoorSummaryStyle?
 
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -63,8 +64,8 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.doors)
                     .offset(x: 24, y: 640 * k)
-                DoorSummary(door: doors.isEmpty ? nil : doors[((focus % doors.count) + doors.count) % doors.count],
-                            style: summaryStyle)
+                DoorSummary(door: doors.isEmpty ? nil : doors[((focus % doors.count) + doors.count) % doors.count])
+                    .modifier(SummaryStyleOverride(style: summaryStyle))
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.doors)
                     .offset(x: 186, y: 652 * k)
@@ -155,5 +156,18 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
             .minimumScaleFactor(0.5)
             .dynamicTypeSize(...DynamicTypeSize.accessibility3)
             .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Sets `doorSummaryStyle` only when the scaffold was given one, so a room's own environment value stands otherwise.
+private struct SummaryStyleOverride: ViewModifier {
+    let style: DoorSummaryStyle?
+
+    func body(content: Content) -> some View {
+        if let style {
+            content.environment(\.doorSummaryStyle, style)
+        } else {
+            content
+        }
     }
 }
