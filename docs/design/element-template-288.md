@@ -21,8 +21,8 @@ short template, and an automatic conformance suite proves it keeps every rule.
   Because the suite checks the rules, not the element, every element that passes keeps the rules. Every element
   after that is proven the same way.
 - **What keeps it true.** The conformance suite runs in `scripts/test.sh`. On the phone, the quiet stage (sheet 287,
-  section 5) runs it before Tess applies a reshape. A failing element doesn't ship, and Tess doesn't apply a failing
-  look. (Kaushik to confirm: block, recommended, or warn.)
+  section 5) runs it before Tess applies a reshape. What happens on a failure depends on the check's tier
+  (section 5): fix first, then block or warn.
 
 ## 2. The inheritance tree
 
@@ -92,18 +92,45 @@ The board draws all three forms of the dial, its swap, and the Nav word hold to 
 
 ## 5. The conformance suite (what every element must pass)
 
-These checks run for each element, each of its forms, both looks and Reduce Motion on and off:
+Kaushik, 1:00 PM PDT: "see if it can be fixed... some few of them are mandatory and will break the functionality...
+and some of them are just good to have... depending on it, we should block or warn."
 
-1. **Renders:** each form draws its shape from sample data without clipping (the stage's `fits`).
-2. **Moves:** every change kind in its `moves` plays for `.hand`, `.tess` and `.system`, ends within 1 s, and
-   lands on the same end frame as a still render of the after state.
-3. **Unseen:** with `isShown` false, a change writes no frames, and the element arrives at the end state.
-4. **Return:** after a change while unseen, return plays only the differences, no more than six.
-5. **Rules:** the stage's floor, contrast, rules and touch checks.
-6. **Meaning:** the same screen gives the same `ElementMeaning` in every form (#1449).
-7. **Walls:** no `deviceOnly` fact reaches a frame that leaves the phone, and no colour trait exists.
+**On a failure: fix first, then block or warn.**
+1. **Fix.** The suite (or the quiet stage on the phone) tries the element's own fixes, in order. Each fix is a step
+   it already knows how to take, never an invention:
+   - step the size trait down (never below the floor);
+   - step density down;
+   - fewer facts;
+   - the next form in its list;
+   - the designed form.
 
-Check 2's "lands on the same end frame" is the induction step's core: a move is only a path to a state the
+   If a fix passes, the build or Tess's change goes ahead with it, and the fix is reported ("index was too tight
+   for 8 doors; used two columns").
+2. **Must, so block.** If no fix passes a must check, the build fails and Tess does not apply the change.
+3. **Should, so warn.** A should check that still fails is listed in the test report (and in Tess's line when she
+   made the change). Nothing is held back.
+
+These checks run for each element, each of its forms, both looks and Reduce Motion on and off. Must checks are
+the ones whose failure breaks something, loses or hides a thing, or breaks a wall:
+
+| Check | Tier | What it checks | Fixable |
+|---|---|---|---|
+| Renders | **must** | Each form draws its shape from sample data, with nothing clipped or hidden. | yes: size, density, facts, form |
+| Lands | **must** | Every move ends on the same end frame as a still render of the after state. | no |
+| Meaning | **must** | The same screen gives the same `ElementMeaning` in every form (#1449). | no |
+| Unseen | **must** | With `isShown` false, a change draws no frames and the element arrives at its end state. | no |
+| Walls | **must** | No `deviceOnly` fact reaches a frame that leaves the phone; no colour trait exists; the look rules hold (no cards, pills, bars, rings, middle dots; money "about", never red or green). | no |
+| Floor | **must** | No type is below its floor (10 pt units, 13 pt lines). | yes: size, form |
+| Touch | **must** | Every target is at least 44 pt. | yes: density, form |
+| Contrast | **must** | Text against its ground is AA or better, in both looks. | yes: the designed form |
+| Registered | **must** | The element is listed in `ElementRegistry.all`. | no |
+| Timing | should | Each move ends within 1 s; the dial reel is allowed 980 ms. | yes: Reduce Motion's crossfade for that move |
+| Return | should | Coming back into view plays only the differences, at most six. | yes: show now |
+| Colours | should | At most 4 colours on the page; the three biggest words don't share a colour. | yes: the designed form |
+| Reduce Motion | should | A Reduce Motion version exists (inherited counts). | inherits the base crossfade |
+| Template | should | Every entry is answered or says "inherits". | no |
+
+"Lands" is the core of the induction step: a move is only a path to a state the
 element already draws correctly when still.
 
 ## 6. The same pattern in other layers (proposed, for each lane to adopt)
@@ -120,7 +147,9 @@ element already draws correctly when still.
   `struct ElementSpec` that holds the filled template as data, so the stage, Tess and the tests can read it.
 - **The walls:** wall rules live in the protocol extension only. They are `final` helpers, not requirements, so no
   conformer can override them.
-- **The suite:** `ElementConformance.run(spec:)` in the test target, called for every registered element. On the
-  phone, `ShellStage` runs the same checks.
+- **The suite:** `ElementConformance.run(spec:)` in the test target, called for every registered element. Each
+  `Check` has a `tier` (`.must` or `.should`) and an ordered list of `fixes: [ElementFix]`. A result is `.pass`,
+  `.fixed(by:)`, `.warn` or `.block`. `scripts/test.sh` fails only on `.block`, and lists `.fixed` and `.warn`
+  results. On the phone, `ShellStage` runs the same checks.
 - **Registration:** `ElementRegistry.all` lists every element. A new element that isn't registered fails a test, so
   nothing escapes the induction.
