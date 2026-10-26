@@ -17,12 +17,15 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         return app
     }
 
+    /// A name no earlier run has used, so a thing kept from another run never answers for this one.
+    private let thing = "Eggs\(Int(Date().timeIntervalSince1970) % 100_000)"
+
     private func addEggs(_ app: XCUIApplication) -> XCUIElement {
         app.buttons["Add a thing"].tap()
         let field = app.textFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 5))
-        field.typeText("Eggs\n")
-        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Eggs")).firstMatch
+        field.typeText("\(thing)\n")
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", thing)).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 8), "The new thing is a row")
         return row
     }
@@ -31,7 +34,7 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         let app = launchOnFridge()
         let row = addEggs(app)
         row.tap()
-        let low = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Eggs, low")).firstMatch
+        let low = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "\(thing), low")).firstMatch
         XCTAssertTrue(low.waitForExistence(timeout: 5), "A plain tap flipped the row to low")
     }
 
