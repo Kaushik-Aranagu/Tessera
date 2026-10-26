@@ -147,7 +147,33 @@ struct ElementActionsTests {
 
     @Test func aPrivateRoutineNameIsPlantedAsPrivateRoutine() throws {
         let made = try engine.perform(PlantRoutine(name: "weigh in at 82 kg"), by: .tess)
-        #expect(made.output.title == PlantRoutine.privateName && made.record.receipt == "Private routine, planted.")
+        // The real name stays on the device; the shown label and the receipt say "Private routine".
+        #expect(made.output.title == "weigh in at 82 kg" && made.record.receipt == "Private routine, planted.")
+        #expect(ObjectPrivacy.shownLabel(of: made.output, in: store, classes: classes) == PlantRoutine.privateName)
+    }
+
+    @Test func aSessionPlannedForTodayRefusesTheRestInHisWords() throws {
+        let workout = try store.create(#require(classes[.workout]), title: "Push A")
+        try store.set("scheduledFor", to: .date(at(24)), on: workout)
+        let error = #expect(throws: ActionError.self) {
+            try engine.perform(TakeRest(scope: .training, from: at(24, 9), until: at(24, 9)), by: .tess)
+        }
+        #expect(error.flatMap(TakeRest.refusalLine) == "There's a session planned today.")
+        // Through the tool, that line is what he hears.
+        let spoken = #expect(throws: TessToolError.self) {
+            try TessTools.run("restDay", arguments: Data("{}".utf8), engine: engine, now: at(24, 9), calendar: calendar)
+        }
+        #expect(spoken?.description == "There's a session planned today.")
+    }
+
+    @Test func anIdOfTheWrongClassIsNoNoteOrList() throws {
+        let journal = try routine("Journal")
+        let spoken = #expect(throws: TessToolError.self) {
+            try TessTools.run("pinNote", arguments: Data(#"{"note":"\#(journal.id.uuidString)","pinned":null}"#.utf8),
+                              engine: engine)
+        }
+        #expect(spoken != nil)
+        #expect(store.value("pinned", of: journal) == nil)
     }
 
     @Test func pausingForDaysEndsByItselfAndResumeEndsItEarly() throws {

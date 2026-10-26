@@ -120,8 +120,12 @@ extension TessTools {
 extension TessTools.Call {
     /// A note or a list by id, else by title (exactly one match, never a private one by name).
     func noteOrList(named name: String) throws -> ObjectRecord {
-        if let id = UUID(uuidString: name), let object = store.object(id: id), !object.isDeleted {
-            return object
+        if let id = UUID(uuidString: name) {
+            // An id of the wrong class is no note or list.
+            if let note = object(id: name, of: .note) ?? object(id: name, of: .list) {
+                return note
+            }
+            throw TessToolError("no note or list called \(name)")
         }
         let query = name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         let pool = [SystemCatalog.Key.note, .list].compactMap { engine.classes[$0] }.flatMap { store.objects(of: $0) }

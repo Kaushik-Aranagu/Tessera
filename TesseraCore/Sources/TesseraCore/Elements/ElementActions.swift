@@ -144,8 +144,9 @@ public struct SetRainAlert: EngineAction {
     public func apply(_ transaction: inout Transaction) throws -> (on: Bool, lead: Int) {
         let object = try transaction.store.object(id: SettingsStore.objectID)
             ?? transaction.create(transaction.classDef(.settings), title: "Settings", id: SettingsStore.objectID)
-        if object.isDeleted {
-            object.deletedAt = nil
+        // A deleted settings row has no op that brings it back, so it is refused rather than revived outside the log.
+        guard !object.isDeleted else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: settingsGone")
         }
         let enabled = on ?? true
         let current = transaction.store.number("rainAlertLead", of: object).map { Int($0) }
@@ -215,6 +216,10 @@ public struct TakeRest: EngineAction {
             if ledger.hasWorkoutUnderway(on: moment, calendar: transaction.calendar) {
                 throw ActionError.invalidArguments(action: name, reason: "refused: workoutGoing")
             }
+            // A session planned for today beats rest, as it does on Now and Home.
+            if ledger.hasPlannedSession(on: moment, calendar: transaction.calendar) {
+                throw ActionError.invalidArguments(action: name, reason: "refused: sessionPlanned")
+            }
         case .routine:
             guard let routine else { throw ActionError.invalidArguments(action: name, reason: "refused: noRoutine") }
             target = try transaction.object(routine, is: .routine)
@@ -250,10 +255,15 @@ public struct TakeRest: EngineAction {
     }
 
     public static let workoutGoingLine = "A workout is already going."
+    public static let sessionPlannedLine = "There's a session planned today."
 
     public static func refusalLine(_ error: any Error) -> String? {
         guard case let ActionError.invalidArguments(_, reason) = error else { return nil }
-        return reason == "refused: workoutGoing" ? workoutGoingLine : nil
+        switch reason {
+        case "refused: workoutGoing": return workoutGoingLine
+        case "refused: sessionPlanned": return sessionPlannedLine
+        default: return nil
+        }
     }
 
     public func receipt(in store: ObjectStore, output rest: ObjectRecord) -> String? {
@@ -261,8 +271,10 @@ public struct TakeRest: EngineAction {
         case .training:
             let classes = PrivateWords.systemClasses(in: store.context)
             let ledger = TrainingLedger(store: store, classes: classes)
-            if let plan = store.objects(of: classes[.plan]!).first(where: { !$0.isDeleted }),
-               let next = ledger.nextRoutine(in: plan, now: from ?? .now)
+            // The rest row holds the day it was made for, so the receipt needs no clock of its own.
+            let day = store.value("from", of: rest)?.dateValue ?? from ?? .distantPast
+            if let planClass = classes[.plan], let plan = store.objects(of: planClass).first(where: { !$0.isDeleted }),
+               let next = ledger.nextRoutine(in: plan, now: day)
             {
                 return "Rest today. Next is \(ElementActionLine.shown(next, in: store))."
             }
@@ -416,8 +428,8 @@ public struct PlantRoutine: EngineAction {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: name")
         }
         let isPrivate = ObjectPrivacy.isPrivateTitle(trimmed, lastWeightKg: BodyWeight.lastKg(in: transaction.store))
-        let routine = try transaction.create(transaction.classDef(.routine),
-                                             title: isPrivate ? Self.privateName : trimmed)
+        // The real name stays on the device; `ObjectPrivacy.shownLabel` says "Private routine" wherever it is shown.
+        let routine = try transaction.create(transaction.classDef(.routine), title: trimmed)
         let days = (weekdays ?? "").split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
             .filter { (1 ... 7).contains($0) }
         let rhythm = ["day", "week", "month"].contains(cadence ?? "") ? cadence! : "day"

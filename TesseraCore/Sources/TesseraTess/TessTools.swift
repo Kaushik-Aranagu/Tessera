@@ -49,7 +49,9 @@ public enum TessTools {
 
     public static var all: [Tool] {
         [logSet, createTask, completeTask, rescheduleTask, addGroceries, addToList, createList, createNote,
-         createRecipe, query, startShop, cookTogether, setServeTime, checkListItem, startWorkout, startCooking, logSpend, pinNote, rainAlert, restDay, tendRoutine,
+         createRecipe, query, startShop, cookTogether, setServeTime, checkListItem, startWorkout, startCooking,
+         logSpend,
+         pinNote, rainAlert, restDay, tendRoutine,
          plantRoutine, pauseRoutine]
     }
 
@@ -122,6 +124,10 @@ public enum TessTools {
                 } else if record.state != .undone {
                     engine.undo(record)
                 }
+            }
+            // A refusal the actions word themselves is what he hears, not the error's debug text.
+            if let line = TakeRest.refusalLine(error) {
+                throw TessToolError(line)
             }
             throw (error as? TessToolError) ?? TessToolError("\(error)")
         }
