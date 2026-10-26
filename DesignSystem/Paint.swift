@@ -112,15 +112,25 @@ private struct DriftingWash: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        LiveGated(LiveFeatures.driftWash) { live in wash(live: live) }
+    }
+
+    private func wash(live: Bool) -> some View {
         let tint = dark ? Color(hex: 0x7A5C8E).opacity(0.35) : Color(hex: 0xE9B7A8).opacity(0.5)
-        Ellipse()
+        return Ellipse()
             .fill(RadialGradient(colors: [tint, tint.opacity(0)], center: .center, startRadius: 0, endRadius: 140))
             .frame(width: dark ? 300 : 260, height: dark ? 240 : 200)
             .scaleEffect(away ? 1.08 : 1)
             .offset(x: away ? -12 : 0, y: away ? 8 : 0)
-            .onAppear {
-                guard !reduceMotion else { return }
-                withAnimation(.easeInOut(duration: dark ? 8 : 7).repeatForever(autoreverses: true)) { away = true }
+            // Drifts only while seen; off screen it rests (a transaction with no animation ends the loop).
+            .onChange(of: live, initial: true) { _, now in
+                if now, !reduceMotion {
+                    withAnimation(.easeInOut(duration: dark ? 8 : 7).repeatForever(autoreverses: true)) { away = true }
+                } else {
+                    var rest = Transaction()
+                    rest.disablesAnimations = true
+                    withTransaction(rest) { away = false }
+                }
             }
     }
 }

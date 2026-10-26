@@ -1,14 +1,14 @@
 import SwiftUI
 
 extension EnvironmentValues {
-    // False inside a page that is not current or is covered. Set by `liveScope`; ANDed down the tree.
+    /// False inside a page that is not current or is covered. Set by `liveScope`; ANDed down the tree.
     @Entry var liveScope: Bool = true
 
-    // True when the nearest region's switch is Quiet: change-driven moves play, idle loops do not.
+    /// True when the nearest region's switch is Quiet: change-driven moves play, idle loops do not.
     @Entry var liveQuiet: Bool = false
 
-    // Whether the nearest `liveRegion` above is live. Defaults to true outside any region, so un-adopted views
-    // behave as before.
+    /// Whether the nearest `liveRegion` above is live. Defaults to true outside any region, so un-adopted views
+    /// behave as before.
     @Entry var isLive: Bool = true
 }
 
@@ -59,7 +59,11 @@ private struct LiveRegionModifier: ViewModifier {
         } else if let before = seen, let left = leftAt {
             seen = nil
             leftAt = nil
-            if case let .play(diff, delay, _) = LiveReturn.plan(seen: before, now: snapshot(), away: Date.now.timeIntervalSince(left)) {
+            if case let .play(diff, delay, _) = LiveReturn.plan(
+                seen: before,
+                now: snapshot(),
+                away: Date.now.timeIntervalSince(left)
+            ) {
                 Task { @MainActor in
                     try? await Task.sleep(for: .seconds(delay))
                     onReturn(diff)
@@ -85,7 +89,8 @@ extension View {
     /// when the region stops being live and again when it returns). `onReturn` gets at most six differences, once,
     /// 650 ms after return; with more changes or an hour away nothing plays and the view just shows now.
     func liveRegion(_ feature: LiveFeature, snapshot: @escaping () -> LiveSnapshot,
-                    onReturn: @escaping (LiveDiff) -> Void) -> some View {
+                    onReturn: @escaping (LiveDiff) -> Void) -> some View
+    {
         modifier(LiveRegionModifier(feature: feature, snapshot: snapshot, onReturn: onReturn))
     }
 
@@ -113,50 +118,128 @@ private struct LiveTaskModifier: ViewModifier {
 
 /// `TimelineView` that stops ticking when the region is not live. Paused, it keeps its last frame; on return the
 /// next frame is drawn from the current date and the current data, so nothing replays or catches up.
+///
+/// Pass `feature` when nothing above it declares a region: the timeline then wraps itself in `liveRegion(feature)`.
 struct LiveTimeline<Content: View>: View {
+    private let feature: LiveFeature?
     private let interval: TimeInterval
-    private let content: (TimelineViewDefaultContext) -> Content
-
     private let idle: Bool
-
-    @Environment(\.isLive) private var live
-    @Environment(\.liveQuiet) private var quiet
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let content: (TimelineViewDefaultContext) -> Content
 
     /// `minimumInterval` as `TimelineView(.animation)`. With Reduce Motion on, it never ticks. `idle` marks a loop
     /// with no cause (drift, breathing); Quiet stops those but not change-driven timelines (`idle: false`).
-    init(minimumInterval: TimeInterval = 1 / 30, idle: Bool = true,
-         @ViewBuilder content: @escaping (TimelineViewDefaultContext) -> Content) {
+    init(_ feature: LiveFeature? = nil, minimumInterval: TimeInterval = 1 / 30, idle: Bool = true,
+         @ViewBuilder content: @escaping (TimelineViewDefaultContext) -> Content)
+    {
+        self.feature = feature
         interval = minimumInterval
         self.idle = idle
         self.content = content
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: interval, paused: !live || reduceMotion || (idle && quiet)), content: content)
+        let inner = LiveTimelineBody(interval: interval, idle: idle, calm: true, extraPause: false, content: content)
+        if let feature {
+            inner.liveRegion(feature)
+        } else {
+            inner
+        }
     }
 }
 
 /// `TimelineView(.animation)` that stops when the region is not live but leaves Reduce Motion to the caller, for the
-/// features whose shipped Reduce Motion look still ticks (a slow fade, a blink). `paused` adds the caller's own
-/// reasons.
+/// features whose shipped Reduce Motion look still ticks (a slow fade, a blink) or that pause for their own reasons
+/// (`paused`). Pass `feature` when nothing above it declares a region.
 struct LiveClock<Content: View>: View {
-    private let interval: TimeInterval
+    private let feature: LiveFeature?
+    private let interval: TimeInterval?
     private let extraPause: Bool
     private let content: (TimelineViewDefaultContext) -> Content
 
-    @Environment(\.isLive) private var live
-
-    init(minimumInterval: TimeInterval = 1 / 30, paused: Bool = false,
+    /// `minimumInterval: nil` ticks at the display rate, as `TimelineView(.animation)`.
+    init(_ feature: LiveFeature? = nil, minimumInterval: TimeInterval? = 1 / 30, paused: Bool = false,
          @ViewBuilder content: @escaping (TimelineViewDefaultContext) -> Content)
     {
+        self.feature = feature
         interval = minimumInterval
         extraPause = paused
         self.content = content
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: interval, paused: !live || extraPause), content: content)
+        let inner = LiveTimelineBody(interval: interval, idle: false, calm: false, extraPause: extraPause,
+                                     content: content)
+        if let feature {
+            inner.liveRegion(feature)
+        } else {
+            inner
+        }
+    }
+}
+
+/// The ticking part of `LiveTimeline` and `LiveClock`, inside whatever region they set up.
+private struct LiveTimelineBody<Content: View>: View {
+    let interval: TimeInterval?
+    let idle: Bool
+    /// True: Reduce Motion pauses it (`LiveTimeline`). False: the caller decides (`LiveClock`).
+    let calm: Bool
+    let extraPause: Bool
+    let content: (TimelineViewDefaultContext) -> Content
+
+    @Environment(\.isLive) private var live
+    @Environment(\.liveQuiet) private var quiet
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        let paused = !live || (calm && reduceMotion) || (idle && quiet) || extraPause
+        TimelineView(.animation(minimumInterval: interval, paused: paused), content: content)
+    }
+}
+
+/// Hands its content whether the region it declares is live, for work that is not a timeline (a repeating animation
+/// started by a state flip). Content flips its state from `live`; off screen nothing loops.
+struct LiveGated<Content: View>: View {
+    let feature: LiveFeature
+    let content: (Bool) -> Content
+
+    init(_ feature: LiveFeature, @ViewBuilder content: @escaping (Bool) -> Content) {
+        self.feature = feature
+        self.content = content
+    }
+
+    var body: some View {
+        LiveGatedBody(content: content).liveRegion(feature)
+    }
+}
+
+private struct LiveGatedBody<Content: View>: View {
+    let content: (Bool) -> Content
+    @Environment(\.isLive) private var live
+
+    var body: some View {
+        content(live)
+    }
+}
+
+/// The soul's 3.2 s breath (1 to 1.08), looping only while the region is live. `on` is the caller's own state (it is
+/// off under Reduce Motion). Off screen the scale rests at 1 and nothing repeats.
+private struct LiveBreathBody: ViewModifier {
+    let on: Bool
+    @Environment(\.isLive) private var live
+
+    func body(content: Content) -> some View {
+        let active = on && live
+        content
+            .scaleEffect(active ? 1.08 : 1)
+            .tesseraAnimation(active ? .easeInOut(duration: 3.2).repeatForever(autoreverses: true)
+                : .linear(duration: 0), value: active)
+    }
+}
+
+extension View {
+    /// Tess's breath as one live feature (`tess.breath`): the soul in the dock and the workout corner use it.
+    func liveBreath(on: Bool) -> some View {
+        modifier(LiveBreathBody(on: on)).liveRegion(LiveFeatures.soulBreath)
     }
 }
 

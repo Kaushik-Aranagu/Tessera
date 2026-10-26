@@ -70,7 +70,8 @@ enum LiveGate {
         }
     }
 
-    /// Idle loops (a drifting sky, a breathing glyph) run only when live and not Quiet. Change-driven moves ignore this.
+    /// Idle loops (a drifting sky, a breathing glyph) run only when live and not Quiet. Change-driven moves ignore
+    /// this.
     static func runsIdle(live: Bool, switchState: LiveSwitch) -> Bool {
         live && switchState != .quiet
     }
@@ -89,10 +90,18 @@ struct LiveDiff: Equatable, Sendable {
     var changed: [String]
     var removed: [String]
 
-    var count: Int { added.count + changed.count + removed.count }
-    var isEmpty: Bool { count == 0 }
+    var count: Int {
+        added.count + changed.count + removed.count
+    }
+
+    var isEmpty: Bool {
+        count == 0
+    }
+
     /// What actually plays. Removed things are simply gone.
-    var playable: [String] { added + changed }
+    var playable: [String] {
+        added + changed
+    }
 }
 
 enum LiveReturn: Equatable, Sendable {
@@ -118,7 +127,9 @@ enum LiveReturn: Equatable, Sendable {
     /// More than six changes, or more than an hour away, is just "show now". No replay of missed motion, ever.
     static func plan(seen: LiveSnapshot, now: LiveSnapshot, away: TimeInterval) -> LiveReturn {
         let diff = diff(seen: seen, now: now)
-        if diff.playable.isEmpty || diff.count > maxChanges || away > maxAway { return .showNow }
+        if diff.playable.isEmpty || diff.count > maxChanges || away > maxAway {
+            return .showNow
+        }
         return .play(diff: diff, delay: settle, window: window)
     }
 }
@@ -151,9 +162,77 @@ enum LiveFeatures {
                                            owner: .builderA, mode: .uiRead, cost: .frames(perSecond: 60))
     static let thinking = LiveFeature(id: "tess.thinking", title: "Tess thinking glyph", owner: .builderA,
                                       mode: .uiRead, cost: .frames(perSecond: 60))
+    static let tessGlint = LiveFeature(id: "tess.glint", title: "Tess glint sheen", owner: .builderA, mode: .uiRead,
+                                       cost: .frames(perSecond: 30))
+    static let tessRoundRobin = LiveFeature(
+        id: "tess.roundrobin",
+        title: "Tess working bars",
+        owner: .builderA,
+        mode: .uiRead,
+        cost: .frames(perSecond: 30)
+    )
+    static let processSeam = LiveFeature(
+        id: "machined.seam",
+        title: "Process seam glint",
+        owner: .builderA,
+        mode: .uiRead,
+        cost: .frames(perSecond: 60)
+    )
+    static let inkDrops = LiveFeature(
+        id: "setmark.inkdrops",
+        title: "Set-mark ink drops",
+        owner: .builderA,
+        mode: .uiRead,
+        cost: .frames(perSecond: 60)
+    )
+    static let groundSky = LiveFeature(id: "theme.groundsky", title: "Ground sky mesh", owner: .builderA, mode: .uiRead,
+                                       cost: .frames(perSecond: 15))
+    static let driftWash = LiveFeature(
+        id: "paint.driftwash",
+        title: "Ground drifting wash",
+        owner: .builderA,
+        mode: .uiRead,
+        cost: .still
+    )
+    static let soulBreath = LiveFeature(id: "tess.breath", title: "Tess soul breath", owner: .builderA, mode: .uiRead,
+                                        cost: .frames(perSecond: 60))
+    static let doorway = LiveFeature(id: "home.doorway", title: "Pixel doorway", owner: .builderA, mode: .uiRead,
+                                     cost: .frames(perSecond: 60))
+    static let tessConversation = LiveFeature(
+        id: "tess.conversation",
+        title: "Tess conversation arrival",
+        owner: .builderA,
+        mode: .uiRead,
+        cost: .frames(perSecond: 60)
+    )
+    static let exerciseStrip = LiveFeature(
+        id: "workout.strip",
+        title: "Workout exercise strip glint",
+        owner: .builderA,
+        mode: .uiRead,
+        cost: .frames(perSecond: 60)
+    )
+    static let workoutSetMarks = LiveFeature(
+        id: "workout.setmarks",
+        title: "Workout set marks",
+        owner: .builderA,
+        mode: .uiRead,
+        cost: .frames(perSecond: 60)
+    )
+    static let swapPanel = LiveFeature(
+        id: "workout.swap",
+        title: "Workout swap breath",
+        owner: .builderA,
+        mode: .uiRead,
+        cost: .frames(perSecond: 20)
+    )
+    static let weatherWords = LiveFeature(id: "home.weatherwords", title: "Weather word effects", owner: .builderB,
+                                          mode: .uiRead, cost: .frames(perSecond: 30))
 
     static let all: [LiveFeature] = [
         deckChalk, galleyRail, purseChart, watchWoodland, lookoutSky, mosaicHome, landingGlyph, tessSoul,
         lookoutHandover, wallHandover, watchHandover, thinking,
+        tessGlint, tessRoundRobin, processSeam, inkDrops, groundSky, driftWash, soulBreath, doorway, tessConversation,
+        exerciseStrip, workoutSetMarks, swapPanel, weatherWords,
     ]
 }
