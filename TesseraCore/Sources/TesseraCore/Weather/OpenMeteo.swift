@@ -33,7 +33,10 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
         configuration.httpShouldSetCookies = false
         configuration.urlCache = nil
         configuration.timeoutIntervalForRequest = 15
-        let (data, response) = try await URLSession(configuration: configuration).data(from: url)
+        let (data, response) = try await URLSession(configuration: configuration).data(
+            from: url,
+            delegate: SameHostOnly()
+        )
         guard let http = response as? HTTPURLResponse, (200 ..< 300).contains(http.statusCode) else {
             throw WeatherError("Open-Meteo answered with an error")
         }
@@ -240,12 +243,21 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
         guard let response = try? JSONDecoder().decode(AirResponse.self, from: data), let aqi = response.current.us_aqi,
               aqi.isFinite else { return nil }
         return WeatherReport.AirQuality(usAQI: Int(aqi.rounded()), pm25: response.current.pm2_5,
-                                          pm10: response.current.pm10)
+                                        pm10: response.current.pm10)
     }
 }
 
 private extension Array {
     subscript(safe index: Int) -> Element? {
         indices.contains(index) ? self[index] : nil
+    }
+}
+
+/// Follows a redirect only inside Open-Meteo's own host, so the rounded coordinate never travels anywhere else.
+private final class SameHostOnly: NSObject, URLSessionTaskDelegate, Sendable {
+    func urlSession(_: URLSession, task: URLSessionTask, willPerformHTTPRedirection _: HTTPURLResponse,
+                    newRequest request: URLRequest) async -> URLRequest?
+    {
+        request.url?.host == task.originalRequest?.url?.host ? request : nil
     }
 }
