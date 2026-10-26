@@ -42,6 +42,9 @@ enum GlyphKind: String, CaseIterable {
             (.book, has("club", "book", "read")),
             (.checklist, has("packing", "list", "plan")),
             (.spark, has("tess")),
+            // Lookout's quiet sky (283 library: rain, moon, sun): a steady or dry spell is the sun, never the cover;
+            // "No rain" must not draw rain.
+            (.sun, has("steady", "no rain", "coming dry", "staying dry")),
             (.rain, has("rain", "storm", "shower")),
             (.moon, has("low", "night", "tonight")),
             (.sun, has("driest", "clear", "sunny")),
@@ -284,7 +287,8 @@ struct GlyphCover: View {
             ForEach(Array(words.prefix(3).enumerated()), id: \.offset) { _, word in
                 // Sized to the word: the largest size (18 at most) at which it fits 80 pt, so it never ends in "...".
                 Text(word.uppercased())
-                    .font(.custom("Figtree", fixedSize: min(18, 78 / max(WordWallMeasure.advance(word), 0.1))).weight(.black))
+                    .font(.custom("Figtree", fixedSize: min(18, 78 / max(WordWallMeasure.advance(word), 0.1)))
+                        .weight(.black))
                     .foregroundStyle(color)
                     .lineLimit(1)
                     .fixedSize()
