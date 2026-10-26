@@ -21,7 +21,8 @@ public struct MemoryScope: Sendable, Equatable {
     public init(agent: String, classes: Set<SystemCatalog.Key>?, notebook: String, policy: DoorPolicy) {
         self.agent = agent
         self.classes = classes
-        self.notebook = notebook
+        // Paths are compared lowercased, so the folder is too.
+        self.notebook = Self.normalize(notebook)
         self.policy = policy
     }
 
@@ -40,6 +41,22 @@ public struct MemoryScope: Sendable, Equatable {
         .closedDay,
     ]
 
+    /// What strict keeps on the phone beyond the lab-only belief classes: the calendar and Health mirrors and held
+    /// notices (their titles are free text the Door's scan can't read), and meal numbers. `strictRawKeys` names system
+    /// classes by key so a class that lands later (meal nutrition) is walled the day it exists.
+    static let strictNever: Set<SystemCatalog.Key> = [.event, .sleepNight, .stepsDay, .restingHeartRate, .heldNotice]
+    static let strictRawKeys: Set<String> = ["mealNutrition", "nutrition", "nutritionRow"]
+    /// Never in any slice, by key, for classes that may land after this file (meal numbers are never recalled).
+    static let neverRawKeys: Set<String> = ["mealNutrition"]
+
+    /// Whether `classDef` or a class above it has one of these system keys.
+    @MainActor
+    static func lineage(_ classDef: ClassDef, has keys: Set<String>) -> Bool {
+        ClassResolver.lineage(of: classDef).contains { node in
+            node.systemKey.map { keys.contains(String($0.dropFirst("system.".count))) } ?? false
+        }
+    }
+
     /// Whether an object of `classDef` is in this slice. A subclass counts as its parent (a barbell lift is an
     /// exercise).
     @MainActor
@@ -48,10 +65,11 @@ public struct MemoryScope: Sendable, Equatable {
         func isA(_ key: SystemCatalog.Key) -> Bool {
             all[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
         }
-        if Self.neverRead.contains(where: isA) {
+        if Self.neverRead.contains(where: isA) || Self.lineage(classDef, has: Self.neverRawKeys) {
             return false
         }
         let labOnly = AgentSpec.labOnlyBeliefs.contains(where: isA) || ClassResolver.app(for: classDef) == .money
+            || Self.strictNever.contains(where: isA) || Self.lineage(classDef, has: Self.strictRawKeys)
         if policy == .strict, labOnly {
             return false
         }
