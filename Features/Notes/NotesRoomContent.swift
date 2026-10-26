@@ -347,6 +347,7 @@ struct NotesShellHost: View {
             if let door = LaunchFlags.value(after: "-shellDoor") {
                 try? await Task.sleep(for: .seconds(2.5))
                 navigator.push(.door(room, door))
+                guard LaunchFlags.has("-shellBack") else { return }
                 try? await Task.sleep(for: .seconds(2.5))
                 navigator.pop()
             }
