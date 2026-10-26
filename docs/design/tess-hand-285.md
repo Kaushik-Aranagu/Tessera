@@ -21,6 +21,10 @@ mark that says "Tess did this"; there is no badge, outline or toast.
 | Log, wall word | Word sets in blue | Ink (to draw) |
 | Watch, tree | New leaves blue-green | The tree's own green (to draw) |
 
+Her blue lives only in the keystone's material and in strikes. Type in the widget, needs and rows never carries it,
+because on the Deck her blue sits too close to the room's own blue to read as a mark. "Tess" in the Undo line says
+who did it.
+
 A new change by her dries the previous one at once. Undo takes the change back with its own exit (chalk wipes,
 the ticket lifts off), and the foot returns.
 
@@ -64,11 +68,11 @@ and the Undo line has no "Tess".
 | Reaction | Tess's version |
 |---|---|
 | strike | The wash sits behind the widget's Big line. The strike draws in blue, dries to ink, and the next item rises. |
-| next | The wash sits behind the widget. The item rises out and the next rises in, with the new item's first word in blue until it dries. |
+| next | The wash sits behind the widget. The item rises out and the next rises in, in the room's own type. |
 | keystoneTakes | The wash sits behind or over the keystone part. The keystone's own arrival plays (chalk writes, a ticket hangs, a word sets, a tree is planted) in her blue until it dries. |
 | reform | The wash sits behind the glyph, which collapses and forms again. No blue: a glyph never carries her ink. |
 | navigate | No wash. Places change content in place, as when he taps. Her line says where she took him. |
-| lines | The wash sits behind the needs or the door summary. The new line arrives in the room's way, with its first word in blue until it dries. |
+| lines | The wash sits behind the needs or the door summary. The new line arrives in the room's way. |
 | tessLine | No flight. Only her line. |
 
 ## Built and checked on the board
@@ -86,3 +90,21 @@ and the Undo line has no "Tess".
 - `SlotContent` needs a `pending: Bool` (set while the ghost row is open). Each place draws its pending state in
   `Theme.tess` and dries it with `withTesseraAnimation` when the ghost commits.
 - Each keystone needs a `washPlacement` (`behind` or `over`), declared by the keystone kind, not by the room.
+
+## Rest today on the Deck (asked by the harness thread)
+
+They recommended chalk words in the widget, using the glyph's ticks. I'm keeping chalk on the board only. The widget
+uses the app's own type in every room, so chalk there would blur the line between keystone and widget. The rest
+goes where the week already lives, on the board:
+
+- **Board:** tonight's line is wiped left to right, then "Rest today, Push A tomorrow" is chalked with "a walk is
+  fine, nothing heavy" under it. Today's letter in the week takes the word "rest" under it, where a done day takes
+  a tick. It is never a cross and never "missed".
+- **Needs:** the lines flap to "Rest today" and "Push A tomorrow".
+- **Widget:** "Today / Rest / Push A waits for tomorrow / A rest day never counts as missed", in type, with the
+  widget's own move (out the top, in from below).
+- **Glyph:** the barbell sets its plates down. The four plates come off the bar and lie flat, stacked under it.
+- **By Tess:** a wash over the board, the chalk in her blue until it dries, and the Undo line "Tess set today as a
+  rest day."
+- **By finger:** no wash, and white chalk at once.
+- **Undo:** the chalk wipes, the needs flap back, the widget returns and the plates go back on.

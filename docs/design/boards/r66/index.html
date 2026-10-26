@@ -126,7 +126,7 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
  <h1>Every landing, one layout.</h1>
  <p class="lede">Every landing now opens like Bridge and keeps Bridge’s lower half: the widget in the middle and the doors dial below it. The top holds the title, a text-only switcher and the room’s needs. Tap a room in Bridge’s apps dial (or a face, or a highlighted word) to watch the flip. Swipe from the left edge, or tap “Bridge”, to go back.</p>
  <div class="notes283">
-  <p><b>New: when Tess makes the change (sheet 285).</b> Use the “Tess acts” buttons under the phone. Her dab flies from her to the place on an arc, spreads into a blue wash, and the place plays its own move inside it, the same move your finger makes, only a little slower. What she changed stays in her blue until the 10 s Undo window closes, then it dries into the room’s own ink: blue chalk turns white on the Deck, the blue clip on a new Galley ticket turns steel, and her blue strike turns ink. On the rail the wash sits behind the tickets. The board has no gaps, so there the wash lies over it in light. When the engine refuses, her dab stops short, waits, and goes home. Nothing moves, and only her line says why. While Undo holds the foot, the action word steps aside.</p>
+  <p><b>New: when Tess makes the change (sheet 285).</b> Use the “Tess acts” buttons under the phone. Her dab flies from her to the place on an arc, spreads into a blue wash, and the place plays its own move inside it, the same move your finger makes, only a little slower. What she changed stays in her blue until the 10 s Undo window closes, then it dries into the room’s own ink: blue chalk turns white on the Deck, the blue clip on a new Galley ticket turns steel, and her blue strike turns ink. On the rail the wash sits behind the tickets. The board has no gaps, so there the wash lies over it in light. When the engine refuses, her dab stops short, waits, and goes home. Nothing moves, and only her line says why. While Undo holds the foot, the action word steps aside. “Tess sets a rest day” shows the Deck’s rest: the board wipes tonight’s line and chalks the rest, today’s letter in the week takes the word “rest” under it (never a cross), the needs flap, the widget says it in type, and the barbell sets its plates down.</p>
   <p><b>New: level 1 and level 2 in every room (sheet 284, his 7:44 PM note).</b> Turn any room’s dial and tap the focused door. The page does not slide: the title and the keystone stay exactly where they were (the Galley rail keeps its tickets, the Deck keeps its board), the switcher and needs become the door’s title, and the widget, dial and summary make way for the door’s list. The list fills its block exactly, biggest first, so there is never a gap or a run of equal rows. Swipe the door title across for the next door. Tap a row for its item page: the same frame again, with the item’s title, three facts, and its body (Trip packing is a checklist, the Run plan is Tess’s note, 7 PM is the hours around it, Bench is its sets, Tacos are the steps, Walk is the week, Food is the ledger in “about” amounts). Swipe the item title across for the next item. Back undoes each step in place.</p>
   <p><b>New in version 6 (his 4:47 and 4:48 PM notes).</b> Back no longer moves the page. Pull from the left edge and the screen stays put: the content loosens and blurs a little and the nav word grows; let go past a short pull and every place changes in place, short of it everything settles back. The door summary beside the dial now changes in each room’s own way as you turn the dial. Log types its lines and backspaces the old ones. Lookout’s lines condense out of fog. The Deck chalks them on and wipes them off with a puff of dust. The Galley prints them like a ticket and tears the old one off. The Watch grows them from the ground and the old ones fall like leaves. The Purse keeps its words still and rolls only the numbers.</p>
   <p><b>New in version 5 (his 4:21 and 4:22 PM notes).</b> The screen never changes now. The places stay where they are and only what is inside them changes. Open a door and nothing slides in: the masthead flaps to the door’s name, the keystone stays (the Galley’s rail keeps its tickets), the widget and the doors leave and the door’s list settles in from the top. Back runs the same moves the other way and puts every place back as you left it. In Layout mode, tap the Dial bubble twice (or press the down arrow) to open a door: Switcher and Needs melt into one Door title, and the widget, glyph, dial and summary melt into one Page. Tap the Nav word twice (or the up arrow) and they split apart again.</p>
@@ -171,6 +171,8 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
   <button class="w" data-th="deck-tess">Deck: Tess logs the walk</button>
   <button class="w" data-th="deck-you">Deck: your finger logs it</button>
   <button class="w" data-th="deck-no">Deck: Tess is refused</button>
+  <button class="w" data-th="deck-rest">Deck: Tess sets a rest day</button>
+  <button class="w" data-th="deck-rest-you">Deck: your finger sets it</button>
   <button class="w" data-th="galley-tess">Galley: Tess hangs a ticket</button>
   <button class="w" data-th="galley-you">Galley: your finger hangs it</button>
   <button class="w" data-th="galley-dish">Galley: Tess does the dishes</button>
@@ -2277,8 +2279,35 @@ function thGalleyDishes(byTess){const el=current;if(!el)return;const t=[...el.qu
   thUndo(el,byTess,byTess?'did the dishes, all 7.':'Dishes, done.',()=>{s.remove();li.innerHTML=was},byTess?dry:null);if(!byTess)dry()};
  if(byTess)tessHand(thRect(t),{behind:t.closest('.pass'),hold:1000}).then(play);else play()}
 
+/* 285b: Rest today on the Deck. The board wipes tonight's line and chalks the rest; today's letter in the week takes
+   the word "rest" under it (never a cross, never "missed"). The widget says it in type. The glyph sets its plates down. */
+function thDeckRest(byTess){const el=current,cv=el&&el.querySelector('canvas.tboard'),one=el&&el.querySelector('.one');if(!cv||!one)return;
+ const st={w:0,p:0,r:0,dry:byTess?0:1};cv._x=(cv._x||[]).filter(f=>!f._rest);
+ const f=ck=>{if(st.w>0){ck.save();ck.globalCompositeOperation='destination-out';ck.fillStyle='#000';ck.fillRect(18,212,st.w*366,62);ck.restore()}
+  const col=mixRGB(TESSCHALK,C,st.dry),col2=mixRGB(TESSCHALK,C2,st.dry);
+  if(st.p>0){ck.save();ck.beginPath();ck.rect(18,212,st.p*366,62);ck.clip();chalk(ck,'Rest today, Push A tomorrow',26,244,28,.95,col);chalk(ck,'a walk is fine, nothing heavy',26,266,16,.7,col2);ck.restore()}
+  if(st.r>0){ck.save();ck.beginPath();ck.rect(110,296,st.r*40,20);ck.clip();chalk(ck,'rest',113,311,14,.85,col2);ck.restore()}};f._rest=1;cv._x.push(f);
+ const k=byTess?1.2:1;
+ const board=()=>thTween(380*k,u=>{st.w=u},()=>thTween(1000*k,u=>{st.p=u},()=>thTween(420*k,u=>{st.r=u})));
+ const blk=one.querySelector('.blk'),was=blk.innerHTML,g=one.querySelector('svg.lg g'),bars=g?[...g.children]:[];
+ const widget=()=>{const swap=()=>{blk.innerHTML='<div class="hdr" style="color:var(--training)">Today</div><div class="big" style="color:var(--training)"><span class="bn"><span class="o">Rest</span></span><i class="strike"></i></div><div class="mid">Push A waits for tomorrow</div><div class="sml">A rest day never counts as missed</div>'};
+  if(RM){swap();return}
+  blk.animate([{transform:'none',opacity:1},{transform:'translateY(-28px)',opacity:0}],{duration:220,easing:'ease-in'}).onfinish=()=>{swap();blk.animate([{transform:'translateY(36px)',opacity:0},{transform:'none',opacity:1}],{duration:420*k,easing:'cubic-bezier(.2,.8,.3,1)'})};
+  /* the glyph: plates come off the bar and lie flat, stacked under it */
+  const flat=[[0,0,0],[ -2,30,90],[ -10,30,90],[ 24,30,90],[ 16,30,90]];
+  bars.forEach((b,i)=>{b.style.transformBox='fill-box';b.style.transformOrigin='center';const [dx,dy,rot]=i===0?[0,26,0]:[[0,0],[ 22,22],[ 17,26],[-17,26],[-22,22]][i].concat(90);
+   b.animate([{transform:'none'},{transform:'translate('+dx+'px,'+dy+'px) rotate('+rot+'deg) scale('+(i?'.62,1':'1,1')+')'}],{duration:620*k,delay:i*50,easing:'cubic-bezier(.5,0,.2,1)',fill:'forwards'})})};
+ /* the needs beside the switcher flap to the rest */
+ const needs=[['Push A at 6:30 pm','Rest today'],['4 lifts, about 45 min','Push A tomorrow']].map(([a,b])=>[[...el.querySelectorAll('*')].find(n=>!n.children.length&&n.textContent===a),a,b]).filter(x=>x[0]);
+ const flap=back=>needs.forEach(([n,a,b],i)=>{const t=back?a:b;if(RM){n.textContent=t;return}n.animate([{transform:'none',opacity:1},{transform:'perspective(300px) rotateX(80deg)',opacity:0}],{duration:160,delay:i*60,easing:'ease-in'}).onfinish=()=>{n.textContent=t;n.animate([{transform:'perspective(300px) rotateX(-80deg)',opacity:0},{transform:'none',opacity:1}],{duration:240,easing:'cubic-bezier(.2,.8,.3,1)'})}});
+ const play=()=>{board();setTimeout(widget,120);setTimeout(()=>flap(0),240)};
+ const undo=()=>{thTween(300,u=>{st.p=1-u;st.r=1-u;st.w=1-u});blk.innerHTML=was;flap(1);bars.forEach(b=>b.getAnimations().forEach(a=>a.cancel()))};
+ const dry=()=>thTween(700,u=>{st.dry=u});
+ const done=()=>thUndo(el,byTess,byTess?'set today as a rest day.':'Rest today.',undo,byTess?dry:null);
+ if(byTess)tessHand({x:20,y:212,w:362,h:100},{hold:1600}).then(()=>{play();setTimeout(done,600)});else{play();done()}}
+
 /* the board's buttons: open the room if needed, then play */
-const TH_DEMOS={'deck-tess':['training',()=>thDeckLog(true)],'deck-you':['training',()=>thDeckLog(false)],'deck-no':['training',thDeckRefuse],
+const TH_DEMOS={'deck-tess':['training',()=>thDeckLog(true)],'deck-you':['training',()=>thDeckLog(false)],'deck-no':['training',thDeckRefuse],'deck-rest':['training',()=>thDeckRest(true)],'deck-rest-you':['training',()=>thDeckRest(false)],
  'galley-tess':['kitchen',()=>thGalleyHang(true)],'galley-you':['kitchen',()=>thGalleyHang(false)],'galley-dish':['kitchen',()=>thGalleyDishes(true)]};
 window.__th=k=>{const [room,f]=TH_DEMOS[k];const tl=$('#tessline');if(tl)tl.innerHTML='';const top=stack.length?stack[stack.length-1].id:null;if(top===room){f();return}reset('home');go(room);setTimeout(f,1500)};
 document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
