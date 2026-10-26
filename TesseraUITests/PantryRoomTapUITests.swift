@@ -34,8 +34,12 @@ final class PantryRoomTapUITests: SimulatorOnlyTestCase {
         let app = launchOnFridge()
         let row = addEggs(app)
         row.tap()
-        let low = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "\(thing), low")).firstMatch
+        let low = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "\(thing), low"))
+            .firstMatch
         XCTAssertTrue(low.waitForExistence(timeout: 5), "A plain tap flipped the row to low")
+        // Use the row up so the simulator's pantry does not fill with test things.
+        let start = low.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 140, dy: 0)))
     }
 
     func testSwipeRightUsesTheRowUp() {

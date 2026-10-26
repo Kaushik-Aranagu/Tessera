@@ -93,6 +93,9 @@ enum PantryRowLayout {
     struct Fit: Equatable {
         let beside: Bool
         let height: CGFloat
+
+        /// A plain one-line row, for a lookup that is briefly out of step with the sections.
+        static let plain = Fit(beside: true, height: 28)
     }
 
     /// `scale` is the text-size scale (1 at the default size); `large` is the first accessibility size and up.
@@ -304,7 +307,7 @@ struct PantryColumnsView: View {
                 let fit = layouts.indices.contains(block.section) && layouts[block.section].indices
                     .contains(block.start + rowIndex)
                     ? layouts[block.section][block.start + rowIndex]
-                    : PantryRowLayout.Fit(beside: true, height: 28)
+                    : PantryRowLayout.Fit.plain
                 rowView(item, fit: fit)
                     .offset(x: swiping(column: column, block: blockIndex, row: rowIndex) ? rowOffset : 0)
             }
