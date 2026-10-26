@@ -52,7 +52,7 @@ struct LeftoverTests {
         func sections(_ key: String) throws -> [String] {
             try places.sections(of: #require(store.object(id: PantryPlaces.defaultID(key))))
         }
-        #expect(try sections("fridge") == ["Leftovers", "Dairy and eggs", "Vegetables", "Fruit"])
+        #expect(try sections("fridge") == ["Leftovers", "Dairy and eggs", "Meat and fish", "Produce"])
         #expect(try sections("freezer") == ["Cooked", "Meat and fish", "Vegetables", "Bread"])
         #expect(try sections("shelf") == ["Dal and lentils", "Grains and pasta", "Snacks", "Spices"])
         #expect(try sections("counter") == ["Fruit", "Vegetables"])
@@ -78,7 +78,7 @@ struct LeftoverTests {
         let loose = try engine.perform(AddToPlace(name: "Mystery jar", place: fridge), by: .user).output.ingredient
         let place = try #require(store.object(id: fridge))
         let groups = PantryPlaces(store: store, classes: classes).grouped(in: place)
-        #expect(groups.map(\.section) == ["Dairy and eggs", "Fruit"])
+        #expect(groups.map(\.section) == ["Dairy and eggs", "Produce"])
         #expect(groups.last?.ingredients.map(\.id) == [loose.id])
         #expect(groups.first?.ingredients.map(\.id) == [milk.id])
     }

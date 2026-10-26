@@ -59,9 +59,13 @@ public enum ObjectPrivacy {
         }
         if isA(.leftover) || isA(.mealEntry) {
             // Private by its own words (a doctor's name, a medicine), by its flag, or by what it was made from.
-            let sources = store.linkedObjects("source", of: object) + store.linkedObjects("leftover", of: object)
-            let fromPrivate = sources.contains {
-                isPrivateRecipeTitle($0.title, lastWeightKg: last) || label(of: $0, in: store, classes: classes) != nil
+            // One step out through its links, by title and flag only: a leftover and the meal eaten from it point at
+            // each other, so reading their labels would never end.
+            let near = store.linkedObjects("source", of: object) + store.linkedObjects("leftover", of: object)
+            let far = near.flatMap { store.linkedObjects("source", of: $0) + store.linkedObjects("leftover", of: $0) }
+            let fromPrivate = (near + far).contains {
+                store.value("isPrivate", of: $0) == .bool(true)
+                    || isPrivateRecipeTitle($0.title, lastWeightKg: last)
             }
             return flagged || isPrivateTitle(object.title, lastWeightKg: last) || fromPrivate ? mealLabel : nil
         }

@@ -29,7 +29,7 @@ struct PantryPlacesTests {
         places.ensureDefaults()
         #expect(places.places().map(\.title) == ["Fridge", "Freezer", "Shelf", "Counter"])
         let fridge = try place("fridge")
-        #expect(places.sections(of: fridge) == ["Leftovers", "Dairy and eggs", "Vegetables", "Fruit"])
+        #expect(places.sections(of: fridge) == ["Leftovers", "Dairy and eggs", "Meat and fish", "Produce"])
         #expect(try places.sections(of: place("freezer")) == ["Cooked", "Meat and fish", "Vegetables", "Bread"])
         #expect(try places.sections(of: place("shelf")) == ["Dal and lentils", "Grains and pasta", "Snacks", "Spices"])
         #expect(PantryPlaces.toGet == "To get")
@@ -42,7 +42,7 @@ struct PantryPlacesTests {
         let freezer = try place("freezer")
         try store.set("sections", to: .text("My own box"), on: freezer)
         places.ensureDefaults()
-        #expect(places.sections(of: fridge) == ["Leftovers", "Dairy and eggs", "Vegetables", "Fruit"])
+        #expect(places.sections(of: fridge) == ["Leftovers", "Dairy and eggs", "Meat and fish", "Produce"])
         // Words he chose himself are never touched.
         #expect(places.sections(of: freezer) == ["My own box"])
     }
@@ -103,7 +103,7 @@ struct PantryPlacesTests {
         places.ensureDefaults()
         let fridge = try place("fridge")
         for (name, section) in [
-            ("eggs", "Vegetables"),
+            ("eggs", "Meat and fish"),
             ("milk", "Dairy and eggs"),
             ("butter", "Dairy and eggs"),
             ("leftovers", nil),
@@ -112,7 +112,7 @@ struct PantryPlacesTests {
         }
         let groups = places.grouped(in: fridge)
         // A thing with no category goes in the last section.
-        #expect(groups.map(\.section) == ["Dairy and eggs", "Vegetables", "Fruit"])
+        #expect(groups.map(\.section) == ["Dairy and eggs", "Meat and fish", "Produce"])
         #expect(groups.map { $0.ingredients.map(\.title) } == [["butter", "milk"], ["eggs"], ["leftovers"]])
         // A place with no sections lists directly.
         let garage = try engine.perform(CreatePlace(name: "Garage"), by: .user).output

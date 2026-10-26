@@ -13,16 +13,20 @@ public struct PantryPlaces {
     /// The places seeded the first time, in order, with their sections (item 118 §2). Stable ids: removing one
     /// leaves its tombstone, so it is never put back.
     public nonisolated static let defaults: [(key: String, name: String, sections: [String])] = [
-        ("fridge", "Fridge", ["Leftovers", "Dairy and eggs", "Vegetables", "Fruit"]),
+        ("fridge", "Fridge", ["Leftovers", "Dairy and eggs", "Meat and fish", "Produce"]),
         ("freezer", "Freezer", ["Cooked", "Meat and fish", "Vegetables", "Bread"]),
         ("shelf", "Shelf", ["Dal and lentils", "Grains and pasta", "Snacks", "Spices"]),
         ("counter", "Counter", ["Fruit", "Vegetables"]),
     ]
 
-    /// What the first version seeded (item 118): a place still holding exactly these gets the categories above (sheet 234).
+    /// What the first version seeded (item 118): a place still holding exactly these gets the categories above (sheet
+    /// 234).
     static let firstSections: [String: [String]] = [
         "fridge": ["Door", "Shelves", "Drawer"], "freezer": ["Drawers", "Ice"], "shelf": [], "counter": [],
     ]
+
+    /// The fridge list sheet 234 had before its v4 ruling (Meat and fish, Produce): upgraded the same way.
+    static let earlierSections: [String: [String]] = ["fridge": ["Leftovers", "Dairy and eggs", "Vegetables", "Fruit"]]
 
     /// The categories "To get" shows (sheet 234): items added for a recipe, and items for the next shop.
     public static let toGetSections = ["For a recipe", "Next shop"]
@@ -87,7 +91,9 @@ public struct PantryPlaces {
         for entry in Self.defaults {
             guard let place = store.object(id: Self.defaultID(entry.key)), !place.isDeleted else { continue }
             let current = sections(of: place)
-            guard current != entry.sections, current == Self.firstSections[entry.key] else { continue }
+            guard current != entry.sections,
+                  current == Self.firstSections[entry.key] || current == Self.earlierSections[entry.key]
+            else { continue }
             try? store.set("sections", to: .text(entry.sections.joined(separator: ",")), on: place)
             changed += 1
         }
