@@ -344,7 +344,12 @@ $('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('
 .date{font-weight:600;background-clip:text;-webkit-background-clip:text;color:transparent;cursor:pointer}
 .setw{position:absolute;left:24px;top:84px;height:30px;line-height:30px;font-size:15px;font-weight:500;color:var(--ink2);cursor:pointer}
 #mosaic{position:absolute;left:0;top:180px;width:402px;height:220px;touch-action:none;cursor:pointer}
-.one{position:absolute;left:24px;right:24px;top:400px;height:212px;overflow:hidden;touch-action:none;cursor:pointer}
+.one{position:absolute;left:24px;right:24px;top:400px;height:212px;overflow:hidden;touch-action:none;cursor:pointer;perspective:720px}
+/* 294: the edge bands soften what crosses them; seen only while something moves */
+.one .edge{position:absolute;z-index:3;pointer-events:none;opacity:0;transition:opacity .18s;-webkit-backdrop-filter:blur(2.5px);backdrop-filter:blur(2.5px)}
+.one.moving .edge{opacity:1}
+.one .edge.l,.one .edge.r{top:0;bottom:0;width:18px}.one .edge.l{left:0;-webkit-mask-image:linear-gradient(90deg,#000,transparent);mask-image:linear-gradient(90deg,#000,transparent)}.one .edge.r{right:0;-webkit-mask-image:linear-gradient(270deg,#000,transparent);mask-image:linear-gradient(270deg,#000,transparent)}
+.one .edge.t,.one .edge.b{left:0;right:0;height:16px}.one .edge.t{top:0;-webkit-mask-image:linear-gradient(180deg,#000,transparent);mask-image:linear-gradient(180deg,#000,transparent)}.one .edge.b{bottom:0;-webkit-mask-image:linear-gradient(0deg,#000,transparent);mask-image:linear-gradient(0deg,#000,transparent)}
 .one .blk{position:absolute;left:0;right:0;top:29px;height:154px;will-change:transform}
 .one .hdr{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;height:18px}
 .one .big{height:64px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;position:relative;max-width:262px;margin-top:8px}
@@ -480,8 +485,9 @@ SCREENS.home={title:'Home',accent:null,tess:'Stretch at 8 may run into Push A. M
  let curB=card(0);one.appendChild(curB);
  function show(n,dir){const nb=card(n);one.appendChild(nb);const dx=dir==='x'?1:0;const sgn=n>oi||(oi===ONE.length-1&&n===0)?1:-1;
   if(RM){curB.remove();curB=nb;oi=n;return}
-  nb.style.transform=dx?'translateX('+(sgn*360)+'px)':'translateY('+(sgn*212)+'px)';requestAnimationFrame(()=>{nb.style.transition=curB.style.transition='transform .38s cubic-bezier(.3,.9,.3,1)';nb.style.transform='none';curB.style.transform=dx?'translateX('+(-sgn*360)+'px)':'translateY('+(-sgn*212)+'px)'});
-  const old=curB;setTimeout(()=>old.remove(),400);curB=nb;oi=n}
+  nb.style.transform=dx?'translateX('+(sgn*360)+'px)':'translateY('+(sgn*212)+'px)';/* 294 fix: the card that leaves is the one shown now, captured before the frame (curB changes below) */
+  const old=curB;requestAnimationFrame(()=>{nb.style.transition=old.style.transition='transform .38s cubic-bezier(.3,.9,.3,1)';nb.style.transform='none';old.style.transform=dx?'translateX('+(-sgn*360)+'px)':'translateY('+(-sgn*212)+'px)'});
+  setTimeout(()=>old.remove(),400);curB=nb;oi=n}
  let ox=null,oy,odx,ody,oax,hold=null,struck=false;
  one.addEventListener('pointerdown',e=>{ox=e.clientX;oy=e.clientY;odx=ody=0;oax=null;struck=false;one.setPointerCapture(e.pointerId);
   const [,ly]=localXY(e,one);if(ly>40&&ly<110){const st=$('.strike',curB);hold=setTimeout(()=>{st.style.transition='width .6s linear';st.style.width='100%';hold=setTimeout(()=>{struck=true;st.classList.add('lift')},600)},180)}});
@@ -2482,6 +2488,26 @@ document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.da
   hits.forEach(t=>{t.nodeValue=t.nodeValue.replace(/\.(\s*)$/,'$1')})}
  let q=0;const mo=new MutationObserver(()=>{if(q)return;q=1;requestAnimationFrame(()=>{q=0;mo.disconnect();sweep(phone);mo.observe(phone,{subtree:true,childList:true,characterData:true})})});
  sweep(phone);mo.observe(phone,{subtree:true,childList:true,characterData:true})})();
+
+/* 294: things roll over an edge, never get cut by it. Whatever crosses a clipped place's edge (the widget's cards,
+   across or up) shrinks a little, tilts away over that edge and fades, starting only once it is past the edge, so
+   under his finger it stays readable. A thin band along the edge softens what passes under it, and shows only while
+   something is moving. Driven by where the thing is, so a drag and a release look the same. */
+(function(){
+ const band=host=>{if(host._bands)return;host._bands=['l','r','t','b'].map(k=>{const e=h('i','edge '+k);host.appendChild(e);return e})};
+ const roll=()=>{requestAnimationFrame(roll);if(RM||!current)return;
+  current.querySelectorAll('.one').forEach(host=>{const H=host.getBoundingClientRect();if(!H.width)return;band(host);let moving=0;
+   host.querySelectorAll(':scope > .blk').forEach(b=>{const r=b.getBoundingClientRect();
+    const ox=Math.max(0,H.left-r.left,r.right-H.right)/r.width,oy=Math.max(0,H.top-r.top,r.bottom-H.bottom)/r.height;
+    const ax=ox>=oy?'x':'y',o=ax==='x'?ox:oy,f=ax==='x'?(r.left<H.left?-1:1):(r.top<H.top?-1:1);if(o>.01)moving=1;
+    const p=Math.min(1,o/.75),k=Math.round(p*100)/100;if(b._rk===k&&b._ra===ax)return;b._rk=k;b._ra=ax;
+    if(!k){b.style.scale=b.style.rotate=b.style.filter=b.style.opacity='';return}
+    const e=p*p*(3-2*p);
+    b.style.transformOrigin=ax==='x'?(f<0?'right center':'left center'):(f<0?'center bottom':'center top');
+    b.style.scale=String(1-.05*e);b.style.rotate=(ax==='x'?'y ':'x ')+((ax==='x'?1:-1)*f*24*e).toFixed(2)+'deg';
+    b.style.filter='blur('+(2.4*e).toFixed(2)+'px)';b.style.opacity=String(1-.6*e)});
+   if(host._mv!==moving){host._mv=moving;host.classList.toggle('moving',!!moving)}})};
+ requestAnimationFrame(roll)})();
 
 })();
 </script>
