@@ -110,7 +110,7 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
 }
 
 extension FitLine {
-    private static let small: Set<String> = [
+    private nonisolated static let small: Set<String> = [
         "and",
         "the",
         "a",
@@ -127,23 +127,79 @@ extension FitLine {
         "is",
     ]
 
-    /// The longest form first, then every shorter whole-word cut: trailing small words, commas and full stops are
-    /// dropped, so a fixed slot shows a clean shorter line, never "...".
-    static func cuts(_ text: String) -> [String] {
+    /// Words a cut never ends on: a line that stops on "opens", "around" or "this" says nothing (AX5 QA).
+    private nonisolated static let weak: Set<String> = [
+        "opens", "open", "is", "are", "was", "were", "around", "about", "this", "next", "from", "until", "since",
+        "than", "starts", "start", "last", "then", "so", "but", "your", "my", "his", "her",
+    ]
+
+    /// A bare number ("5", "12", "6:10", "82.5", "+10"), which never stands alone at the end of a cut.
+    nonisolated static func isNumber(_ word: String) -> Bool {
+        let core = word.trimmingCharacters(in: CharacterSet(charactersIn: ",;:.!?()+-−°"))
+        guard let first = core.unicodeScalars.first, CharacterSet.decimalDigits.contains(first) else { return false }
+        return core.unicodeScalars
+            .allSatisfy { CharacterSet.decimalDigits.contains($0) || ":.,".unicodeScalars.contains($0) }
+    }
+
+    /// Words grouped so a cut never splits them: a number travels with the word after it ("40 min", "5 lifts",
+    /// "6:10 pm", "82.5 kg", "12 hours"), unless that word is a small one ("3 to go" keeps "3" apart).
+    nonisolated static func tokens(_ text: String) -> [String] {
+        let words = text.split(separator: " ").map(String.init)
+        var tokens: [String] = []
+        var index = 0
+        while index < words.count {
+            let word = words[index]
+            let endsClause = word.last.map { ",;:.!?".contains($0) } ?? false
+            if isNumber(word), !endsClause, index + 1 < words.count {
+                let next = words[index + 1]
+                let bare = next.lowercased().trimmingCharacters(in: .punctuationCharacters)
+                if !small.contains(bare), !weak.contains(bare) {
+                    tokens.append(word + " " + next)
+                    index += 2
+                    continue
+                }
+            }
+            tokens.append(word)
+            index += 1
+        }
+        return tokens
+    }
+
+    private nonisolated static func bareLast(_ kept: [String]) -> String {
+        let last = kept[kept.count - 1].split(separator: " ").last.map(String.init) ?? ""
+        return last.lowercased().trimmingCharacters(in: .punctuationCharacters)
+    }
+
+    /// The longest form first, then every shorter whole-word cut: trailing small and weak words, lone numbers, commas
+    /// and full stops are dropped, a number keeps its unit and a time its am or pm, so a fixed slot shows a clean
+    /// shorter line, never "..." and never a fragment like "About 40 min, 5" or "Starts around 6:10".
+    nonisolated static func cuts(_ text: String) -> [String] {
         // Sentence case: a line starts with a capital ("cook at 6:45 pm" reads "Cook at 6:45 pm").
         let text = text.prefix(1).uppercased() + text.dropFirst()
-        let words = text.split(separator: " ").map(String.init)
-        guard words.count > 1 else { return [text] }
+        let tokens = tokens(text)
+        guard tokens.count > 1 else { return [text] }
         var forms = [text]
-        for count in stride(from: words.count - 1, through: 1, by: -1) {
-            var kept = Array(words.prefix(count))
-            while kept.count > 1,
-                  small.contains(kept[kept.count - 1].lowercased().trimmingCharacters(in: .punctuationCharacters))
-            {
-                kept.removeLast()
+        for count in stride(from: tokens.count - 1, through: 1, by: -1) {
+            var kept = Array(tokens.prefix(count))
+            while kept.count > 1 {
+                let last = kept[kept.count - 1]
+                let bare = bareLast(kept)
+                if small.contains(bare) || weak.contains(bare) || (isNumber(last) && !last.contains(" ")) {
+                    kept.removeLast()
+                } else {
+                    break
+                }
             }
-            let form = kept.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ",;:.-"))
-            if !form.isEmpty, form != forms.last {
+            if kept.count == 1 {
+                // A form of one lone small, weak or number word says nothing.
+                let only = kept[0]
+                let bare = bareLast(kept)
+                if small.contains(bare) || weak.contains(bare) || (isNumber(only) && !only.contains(" ")) {
+                    continue
+                }
+            }
+            let form = kept.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ",;:.- "))
+            if !form.isEmpty, !forms.contains(form) {
                 forms.append(form)
             }
         }
@@ -160,8 +216,24 @@ struct FitLine: View {
     var weight: Font.Weight = .regular
     /// The face; Figtree unless a room writes in its own (Deck's door summary in Barlow Condensed).
     var family = "Figtree"
+    /// The room's own short form: at accessibility sizes it is shown directly (contract §8: AX3 and up use the short
+    /// form), instead of the longest cut that happens to fit.
+    var short: String?
+    /// At accessibility sizes, show the last of `forms` directly (a room that supplied its own forms, short last).
+    var shortAtAccessibility = false
+
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
+        if typeSize.isAccessibilitySize, let shown = short ?? (shortAtAccessibility ? forms.last : nil) {
+            text(shown).lineLimit(1).minimumScaleFactor(0.5)
+                .accessibilityLabel(forms.first ?? shown)
+        } else {
+            fitted
+        }
+    }
+
+    private var fitted: some View {
         ViewThatFits(in: .horizontal) {
             ForEach(Array(forms.dropLast().enumerated()), id: \.offset) { _, form in text(form).fixedSize(
                 horizontal: true,

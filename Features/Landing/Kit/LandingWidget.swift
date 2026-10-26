@@ -21,6 +21,9 @@ struct WidgetItem: Identifiable, Equatable {
     /// The Big line's face (sheet 283 v3): Figtree 700 38, Deck's Barlow Condensed 600 at 50 in caps, or Galley's
     /// IBM Plex Sans Condensed 700 at 40 in caps (.04 em). Numbers stay Outfit.
     var face = BigFace.figtree
+    /// The room's own short Middle and Small lines, shown at accessibility sizes (contract §8); nil keeps the cuts.
+    var middleShort: String?
+    var smallShort: String?
 
     enum BigFace { case figtree, deck, galley }
 }
@@ -34,8 +37,13 @@ struct LandingWidget<Glyph: View>: View {
     var strike: (WidgetItem) -> Void = { _ in }
     @ViewBuilder let glyph: (WidgetItem) -> Glyph
 
-    static var size: CGSize { LandingPlace.widget.frame.size }
-    static var top: CGFloat { LandingPlace.widget.frame.minY }
+    static var size: CGSize {
+        LandingPlace.widget.frame.size
+    }
+
+    static var top: CGFloat {
+        LandingPlace.widget.frame.minY
+    }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var drag = CGSize.zero
@@ -60,7 +68,9 @@ struct LandingWidget<Glyph: View>: View {
         .accessibilityAdjustableAction { direction in turn(direction == .increment ? 1 : -1) }
     }
 
-    private var lockedHorizontal: Bool { abs(drag.width) > abs(drag.height) }
+    private var lockedHorizontal: Bool {
+        abs(drag.width) > abs(drag.height)
+    }
 
     private func card(_ item: WidgetItem) -> some View {
         let done = struck.contains(item.id)
@@ -72,10 +82,12 @@ struct LandingWidget<Glyph: View>: View {
                 .lineLimit(1)
                 .offset(y: 17)
             bigLine(item, done: done).offset(y: 32)
-            FitLine(forms: FitLine.cuts(item.middle), size: 20, color: Theme.Colors.ink, weight: .medium)
+            FitLine(forms: FitLine.cuts(item.middle), size: 20, color: Theme.Colors.ink, weight: .medium,
+                    short: item.middleShort)
                 .frame(width: 262, alignment: .leading)
                 .offset(y: 110)
-            FitLine(forms: FitLine.cuts(item.small), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
+            FitLine(forms: FitLine.cuts(item.small), size: 15, color: Theme.Colors.inkSecondary, weight: .medium,
+                    short: item.smallShort)
                 .frame(width: 262, alignment: .leading)
                 .offset(y: 142)
             glyph(item)
@@ -102,7 +114,11 @@ struct LandingWidget<Glyph: View>: View {
                 case .figtree:
                     Text(item.big).font(.custom("Figtree", size: 38, relativeTo: .largeTitle).weight(.bold))
                 case .deck:
-                    Text(item.big.uppercased()).font(.custom("BarlowCondensed-SemiBold", size: 50, relativeTo: .largeTitle))
+                    Text(item.big.uppercased()).font(.custom(
+                        "BarlowCondensed-SemiBold",
+                        size: 50,
+                        relativeTo: .largeTitle
+                    ))
                 case .galley:
                     Text(item.big.uppercased()).font(.custom("IBMPlexSansCond-Bold", size: 40, relativeTo: .largeTitle))
                         .tracking(40 * 0.04)
@@ -121,7 +137,11 @@ struct LandingWidget<Glyph: View>: View {
             cue.play(.done)
             strike(item)
         }
-        .accessibilityAction(named: item.strikeable ? "Done" : "") { if item.strikeable { strike(item) } }
+        .accessibilityAction(named: item.strikeable ? "Done" : "") {
+            if item.strikeable {
+                strike(item)
+            }
+        }
     }
 
     private var swipe: some Gesture {
@@ -131,7 +151,9 @@ struct LandingWidget<Glyph: View>: View {
                 let across = abs(value.translation.width) > abs(value.translation.height)
                 let distance = across ? value.translation.width : value.translation.height
                 let threshold: CGFloat = across ? 50 : 44
-                if abs(distance) > threshold { turn(distance < 0 ? 1 : -1) }
+                if abs(distance) > threshold {
+                    turn(distance < 0 ? 1 : -1)
+                }
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { drag = .zero }
             }
     }

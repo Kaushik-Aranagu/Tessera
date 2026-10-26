@@ -125,17 +125,13 @@ struct TrainingWallLanding: View {
 
     private func openDoor(_ door: DialDoor) {
         switch door.id {
+        case "today":
+            goTo(.page)
         case "week":
-            if LogSwitch.isOn {
-                goTo(.log)
-            } else {
-                goTo(.page)
-            }
-        case "routines":
-            goTo(.route(.routinesLanding))
-        case "exercises":
+            goTo(LogSwitch.isOn ? .log : .page)
+        case "library":
             goTo(.library)
-        case "programs":
+        case "plan":
             if let plan = model.plan {
                 goTo(.route(.routines(plan.id)))
             } else if let planClass = model.classDef(.plan) {

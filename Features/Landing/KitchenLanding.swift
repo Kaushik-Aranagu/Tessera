@@ -349,7 +349,11 @@ struct KitchenLandingPage: View {
                             default: open(.recipes)
                             }
                         },
-                        glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? LandingAccent.kitchen, room: .galley) },
+                        glyph: { item in LandingGlyph(
+                            item: item,
+                            color: item.bigColor ?? LandingAccent.kitchen,
+                            room: .galley
+                        ) },
                         doors: doors(front, pass), focus: $focus,
                         openDoor: { door in
                             switch door.id {
@@ -418,29 +422,53 @@ struct KitchenLandingPage: View {
         return pass.hidden > 0 ? "\(pass.hidden) private kept off the pass." : nil
     }
 
+    /// Each door's meaning colour (241), worn by the dial focus. Tonight is the room's own ochre (QA: it was slate,
+    /// the planned colour, which read as another room); Pantry is wine only while something runs low.
+    enum DoorTone: Equatable {
+        case ochre, wine, olive, ink
+    }
+
+    static func tone(door id: String, lowEmpty: Bool) -> DoorTone {
+        switch id {
+        case "tonight", "recipes": .ochre
+        case "pantry": lowEmpty ? .ink : .wine
+        case "groceries": .olive
+        default: .ink
+        }
+    }
+
+    private func color(_ tone: DoorTone) -> Color {
+        let dark = scheme == .dark
+        return switch tone {
+        case .ochre: LandingAccent.kitchen
+        case .wine: dark ? Color(hex: 0xEE8E9C) : Color(hex: 0x9A2541)
+        case .olive: dark ? Color(hex: 0xB5BE7A) : Color(hex: 0x5E6B1F)
+        case .ink: Theme.Colors.ink
+        }
+    }
+
     /// Tonight, Pantry, Recipes, Groceries, Leftovers (contract v2 §12). Leftovers has no model yet and opens Pantry.
     private func doors(_ front: KitchenFront, _ pass: GalleyPass) -> [DialDoor] {
-        let dark = scheme == .dark
-        let wine = dark ? Color(hex: 0xEE8E9C) : Color(hex: 0x9A2541)
-        let slate = dark ? Color(hex: 0xA7BCD6) : Color(hex: 0x34506F)
-        let olive = dark ? Color(hex: 0xB5BE7A) : Color(hex: 0x5E6B1F)
+        let low = pass.low.isEmpty
         let planned = front.week
             .compactMap { day in day.meal.map { "\(day.weekday) \(NotesLandingPage.short($0.title))" } }
         return [
-            DialDoor(id: "tonight", name: "Tonight", color: slate,
+            DialDoor(id: "tonight", name: "Tonight", color: color(Self.tone(door: "tonight", lowEmpty: low)),
                      label: front.tonight == nil ? "Nothing planned yet" : "Next \(front.week.count) days",
                      lines: Array(planned.prefix(3))),
             DialDoor(id: "pantry", name: "Pantry", count: pass.low.isEmpty ? nil : "\(pass.low.count)",
-                     color: pass.low.isEmpty ? Theme.Colors.ink : wine,
+                     color: color(Self.tone(door: "pantry", lowEmpty: low)),
                      label: pass.low.isEmpty ? "Nothing running low" : "Running low", lines: Array(pass.low.prefix(3))),
             DialDoor(id: "recipes", name: "Recipes", count: front.saved > 0 ? "\(front.saved)" : nil,
-                     color: LandingAccent.kitchen,
+                     color: color(Self.tone(door: "recipes", lowEmpty: low)),
                      label: pass.cookable.isEmpty ? nil : "You can make \(pass.cookable.count) now",
                      lines: Array(pass.cookable.prefix(3))),
             DialDoor(id: "groceries", name: "Groceries", count: pass.toGet.isEmpty ? nil : "\(pass.toGet.count)",
-                     color: olive, label: pass.toGet.isEmpty ? "Nothing to get" : "To get",
+                     color: color(Self.tone(door: "groceries", lowEmpty: low)),
+                     label: pass.toGet.isEmpty ? "Nothing to get" : "To get",
                      lines: Array(pass.toGet.prefix(3))),
-            DialDoor(id: "leftovers", name: "Leftovers", color: Theme.Colors.ink, label: "Kept in Pantry for now"),
+            DialDoor(id: "leftovers", name: "Leftovers", color: color(Self.tone(door: "leftovers", lowEmpty: low)),
+                     label: "Kept in Pantry for now"),
         ]
     }
 

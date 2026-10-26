@@ -47,11 +47,13 @@ struct WeatherLandingPage: View {
     @State private var switcherVerticalIndex = 0
     @State private var widgetIndex = 0
     @State private var alertOn = WeatherRainAlert.isOn()
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 60)) { _ in
             let snapshot = WeatherSample.snapshot(now: AppClock.now)
             let cards = WeatherWords.cards(snapshot, alertOn: alertOn)
+            let plate = LookoutPlate.pick(kind: snapshot.kind, at: snapshot.now, dark: scheme == .dark)
             LandingScaffold(title: "Lookout", accent: WeatherAccent.room, navWord: "Bridge", onBack: { dismiss() },
                             switcher: WeatherWords.switcher, switcherIndex: $switcherIndex,
                             switcherVerticalIndex: $switcherVerticalIndex,
@@ -69,8 +71,13 @@ struct WeatherLandingPage: View {
                             doors: doors(snapshot), focus: $focus,
                             openDoor: { door in openDoor(WeatherDoor(rawValue: door.id) ?? .hours) },
                             action: action(snapshot),
-                            backdrop: AnyView(LookoutSkyView(kind: snapshot.kind, now: snapshot.now)),
+                            backdrop: AnyView(LookoutPlateView(plate: plate, fallback: AnyView(
+                                LookoutSkyView(kind: snapshot.kind, now: snapshot.now)
+                            ))),
                             summaryStyle: .fog)
+                // The text colour comes from the plate (256): light ink on a dark plate, dark ink on a bright one.
+                // The house inks follow the scheme, so the page wears the plate's scheme.
+                .environment(\.colorScheme, plate.lightInk ? .dark : .light)
         }
         .overlay { LookoutDropHandover() }
         .toolbar(.hidden, for: .navigationBar)
@@ -142,9 +149,10 @@ struct LookoutSkyView: View {
     }
 }
 
-/// The keystone, the skypiece (253/254): the sky continues through a slab raised by light and shadow only (a caught
-/// hairline top-left, a shade hairline bottom-right, a short and a soft shadow; no material, no blur, no tint). It
-/// holds the temperature and the condition word in its sky's colour. Nothing in it moves.
+/// The keystone, the skypiece (253/254, board r66): raised glass over the plate, made of light and shadow only (a
+/// caught light top-left, two shadows bottom-right, a hairline; no material, no blur, no fill), so the sky shows
+/// through untouched. Inside: the temperature, the condition with feels and high, and three live stats. The shadows
+/// stop at the slot's foot, so none runs under the caption.
 struct LookoutSkypiece: View {
     let snapshot: WeatherSnapshot
     let open: () -> Void
@@ -152,37 +160,16 @@ struct LookoutSkypiece: View {
     @Environment(\.colorScheme) private var scheme
 
     static let radius: CGFloat = 26
-    /// The slot's top on the 402 x 874 frame (contract v3).
-    static let top: CGFloat = 196
+    /// How far below the glass a shadow may reach: the caption starts 10 pt under the slot.
+    static let shadowFoot: CGFloat = 6
 
     var body: some View {
         let size = LandingKeystone<EmptyView>.size
-        let dark = scheme == .dark
-        let stops = LookoutSky.stops(kind: snapshot.kind, hour: LookoutSky.hour(snapshot.now), dark: dark)
         let shape = RoundedRectangle(cornerRadius: Self.radius, style: .continuous)
-        // The slab's fill is the page sky at the same place, so only the edge light and the shadows raise it.
-        let start = UnitPoint(x: 0.5, y: -Self.top / size.height)
-        let end = UnitPoint(x: 0.5, y: (LookoutSky.settle - Self.top) / size.height)
         Button(action: open) {
-            content
-                .padding(.horizontal, 24)
-                .frame(width: size.width, height: size.height, alignment: .leading)
-                .background {
-                    shape
-                        .fill(LinearGradient(colors: [Color(hex: stops.top), Color(hex: stops.bottom)],
-                                             startPoint: start, endPoint: end))
-                        .shadow(color: .black.opacity(dark ? 0.55 : 0.14), radius: 16, x: 0, y: 8)
-                        .shadow(color: .black.opacity(dark ? 0.45 : 0.10), radius: 1.5, x: 1, y: 2)
-                }
-                .overlay {
-                    shape
-                        .strokeBorder(LinearGradient(stops: [
-                            .init(color: .white.opacity(dark ? 0.32 : 0.85), location: 0),
-                            .init(color: .white.opacity(0), location: 0.45),
-                            .init(color: .black.opacity(0), location: 0.6),
-                            .init(color: .black.opacity(dark ? 0.6 : 0.16), location: 1),
-                        ], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.2)
-                }
+            content(size)
+                .frame(width: size.width, height: size.height, alignment: .topLeading)
+                .background { LookoutGlass(shape: shape, onDark: scheme == .dark, foot: Self.shadowFoot) }
                 .contentShape(shape)
         }
         .buttonStyle(.plain)
@@ -193,59 +180,121 @@ struct LookoutSkypiece: View {
         .accessibilityIdentifier("weather.condition")
     }
 
-    private var content: some View {
+    private func content(_ size: CGSize) -> some View {
         let forms = WeatherWords.condition(snapshot.kind, night: snapshot.night)
-        return HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 0) {
-                (Text("\(snapshot.temperature)")
-                    .font(.custom("Outfit", fixedSize: 88).weight(.ultraLight))
-                    + Text("°").font(.custom("Outfit", fixedSize: 44).weight(.ultraLight)))
-                    .monospacedDigit()
-                    .foregroundStyle(Theme.Colors.ink)
-                    .frame(height: 92, alignment: .leading)
-                // The word wears its sky's colour only: the 236 word effects draw clipped layers that show as
-                // boxes on the glass, so they stay off the skypiece until they are cut to the letters.
-                word(Self.fitted(forms))
-                    .fixedSize()
-                    .foregroundStyle(snapshot.kind.colour(night: snapshot.night))
-            }
-            Spacer(minLength: 0)
+        return ZStack(alignment: .topLeading) {
+            (Text("\(snapshot.temperature)")
+                .font(.custom("Outfit", fixedSize: 112).weight(.ultraLight))
+                + Text("°").font(.custom("Outfit", fixedSize: 44).weight(.ultraLight))
+                // Raised to the numeral's cap line, as on the board.
+                .baselineOffset(46))
+                .tracking(-0.03 * 112)
+                .monospacedDigit()
+                .foregroundStyle(Theme.Colors.ink)
+                .fixedSize()
+                .offset(x: 18, y: -4)
             VStack(alignment: .trailing, spacing: 4) {
-                side("Feels", WeatherWords.degrees(snapshot.feelsLike))
-                side("High", WeatherWords.degrees(snapshot.high))
-                side("Low", WeatherWords.degrees(snapshot.low))
+                Text(Self.fitted(forms))
+                    .font(.custom("Figtree", fixedSize: Self.wordSize).weight(.semibold))
+                    .foregroundStyle(Theme.Colors.ink)
+                    .lineLimit(1)
+                    .fixedSize()
+                Text(Self.feels(snapshot))
+                    .font(.custom("Outfit", fixedSize: 15).weight(.light))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(1)
+                    .fixedSize()
             }
+            .frame(width: size.width - 24, alignment: .trailing)
+            .offset(y: 28)
+            HStack(alignment: .bottom) {
+                ForEach(Array(Self.stats(snapshot).enumerated()), id: \.offset) { index, stat in
+                    if index > 0 {
+                        Spacer(minLength: 8)
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(stat.value)
+                            .font(.custom("Outfit", fixedSize: 22).weight(.light))
+                            .monospacedDigit()
+                            .foregroundStyle(Theme.Colors.ink)
+                        Text(stat.label.uppercased())
+                            .font(.custom("Figtree", fixedSize: 10.5).weight(.medium))
+                            .tracking(0.06 * 10.5)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                    }
+                    .lineLimit(1)
+                    .fixedSize()
+                }
+            }
+            .frame(width: size.width - 48)
+            .offset(x: 24, y: size.height - 18 - 40)
         }
     }
 
-    static let wordSize: CGFloat = 34
-    /// The room the word has beside the Feels, High and Low column.
-    static let wordWidth: CGFloat = 196
+    static let wordSize: CGFloat = 22
+    /// The room the condition has at the top right, beside the temperature.
+    static let wordWidth: CGFloat = 170
 
-    /// The longest condition form that fits its slot at 34 pt (never smaller type, never "...").
+    /// The longest condition form that fits its slot (never smaller type, never "...").
     static func fitted(_ forms: [String]) -> String {
-        let font = UIFont(name: "Figtree-Bold", size: wordSize) ?? .boldSystemFont(ofSize: wordSize)
+        let font = UIFont(name: "Figtree-SemiBold", size: wordSize) ?? .boldSystemFont(ofSize: wordSize)
         return forms.first { ($0 as NSString).size(withAttributes: [.font: font]).width <= wordWidth }
             ?? forms.last ?? ""
     }
 
-    private func word(_ text: String) -> some View {
-        Text(text)
-            .font(.custom("Figtree", fixedSize: Self.wordSize).weight(.bold))
-            .tracking(-0.01 * Self.wordSize)
-            .lineLimit(1)
+    /// "feels like 79°, high 81°" (board r66).
+    static func feels(_ snapshot: WeatherSnapshot) -> String {
+        "feels like \(WeatherWords.degrees(snapshot.feelsLike)), high \(WeatherWords.degrees(snapshot.high))"
     }
 
-    private func side(_ label: String, _ value: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text(label)
-                .font(.custom("Figtree", fixedSize: 13).weight(.semibold))
-                .foregroundStyle(Theme.Colors.inkSecondary)
-            Text(value)
-                .font(.custom("Outfit", fixedSize: 20).weight(.light))
-                .monospacedDigit()
-                .foregroundStyle(Theme.Colors.ink)
+    /// The glass's three live stats: wind, when rain starts (else tonight's low) and the UV index.
+    static func stats(_ snapshot: WeatherSnapshot, calendar: Calendar = .current) -> [(value: String, label: String)] {
+        let wind = (String(snapshot.wind), WeatherWords.windUnit(snapshot.fahrenheit))
+        let middle: (String, String) = if let wet = snapshot.hours.first(where: { WeatherWords.isWet($0.kind) }) {
+            (WeatherWords.hour(wet.date, calendar: calendar), "rain from")
+        } else {
+            (WeatherWords.degrees(snapshot.low), "low")
         }
+        return [wind, middle, (String(snapshot.uvIndex), "uv index")]
+    }
+}
+
+/// The glass's light and shadow, drawn outside the shape only: the inside is cut away so the sky stays untouched.
+/// The shadows end `foot` points under the glass, fading out, so they never reach the caption.
+struct LookoutGlass: View {
+    let shape: RoundedRectangle
+    let onDark: Bool
+    let foot: CGFloat
+
+    private static let reach: CGFloat = 30
+
+    var body: some View {
+        let reach = Self.reach
+        let insets = EdgeInsets(top: reach, leading: reach, bottom: foot, trailing: reach)
+        ZStack {
+            shape.fill(.black).shadow(color: .white.opacity(onDark ? 0.22 : 0.38), radius: 7, x: -4, y: -4)
+            shape.fill(.black).shadow(color: .black.opacity(onDark ? 0.36 : 0.24), radius: 10, x: 5, y: 4)
+            shape.fill(.black).shadow(color: .black.opacity(onDark ? 0.16 : 0.09), radius: 17, x: 2, y: 6)
+        }
+        .padding(insets)
+        .mask {
+            VStack(spacing: 0) {
+                Rectangle()
+                LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom).frame(height: foot)
+            }
+            .overlay { shape.padding(insets).blendMode(.destinationOut) }
+            .compositingGroup()
+        }
+        .padding(EdgeInsets(top: -reach, leading: -reach, bottom: -foot, trailing: -reach))
+        .overlay {
+            shape.strokeBorder(LinearGradient(stops: [
+                .init(color: .white.opacity(onDark ? 0.18 : 0.3), location: 0),
+                .init(color: .white.opacity(0), location: 0.5),
+                .init(color: .black.opacity(onDark ? 0.14 : 0.08), location: 1),
+            ], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

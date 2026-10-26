@@ -24,11 +24,11 @@ final class TrainingWallLandingUITests: SimulatorOnlyTestCase {
             )
         ).firstMatch
         XCTAssertTrue(foot.waitForExistence(timeout: 5), "The foot carries the day's action word")
-        let routines = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Routines'")).firstMatch
-        XCTAssertTrue(routines.waitForExistence(timeout: 5), "Routines is a neighbour of This week")
-        routines.tap()
-        let selected = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Routines' AND selected == true"))
-        XCTAssertTrue(selected.firstMatch.waitForExistence(timeout: 3), "The dial turned to Routines")
+        let week = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'This week'")).firstMatch
+        XCTAssertTrue(week.waitForExistence(timeout: 5), "This week is a neighbour of Today")
+        week.tap()
+        let selected = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'This week' AND selected == true"))
+        XCTAssertTrue(selected.firstMatch.waitForExistence(timeout: 3), "The dial turned to This week")
     }
 
     func testABestOnTheBoardOpensItsLift() {

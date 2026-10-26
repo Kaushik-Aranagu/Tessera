@@ -253,7 +253,6 @@ extension TrainingWallFacts {
     {
         let store = model.store
         let blue = Theme.Colors.Accent.training
-        let green = Color(hex: dark ? 0x8FC9A0 : 0x25803D)
         let gold = Color(hex: dark ? 0xD9C27A : 0x7E6A1E)
         let slate = Color(hex: dark ? 0xA7BCD6 : 0x34506F)
         let plan = model.plan
@@ -298,18 +297,57 @@ extension TrainingWallFacts {
         }
 
         let bests = lifts.compactMap { lift in lift.best.map { (lift.exercise.name, $0) } }.prefix(3)
+
+        // Today (board r66): the routine and its lifts, the opening weight where one is known.
+        var todayLabel: String?
+        var todayLines: [String] = []
+        switch day {
+        case let .ready(name, _, count):
+            todayLabel = name == ObjectPrivacy.routineLabel ? name : "\(short(name)), \(count) \(count == 1 ? "lift" : "lifts")"
+            // The same source the day was read from: tonight's workout first, else the tried or planned routine.
+            if name != ObjectPrivacy.routineLabel,
+               let source = model.tonightWorkout(around: now) ?? model.triedRoutine() ?? model.todaysRoutine(now: now)
+            {
+                for slot in source.orderedChildren.filter({ !$0.isDeleted }).prefix(3) {
+                    guard let exercise = store.linkedClass("exercise", of: slot) else { continue }
+                    let weight = model.ledger.sessions(of: exercise).first?.sets.first?.weight ?? 0
+                    todayLines
+                        .append(weight > 0 ? "\(lift(exercise.name)) \(Format.mass(weight))" : lift(exercise.name))
+                }
+            }
+        case let .running(name, done):
+            todayLabel = "\(short(name)) under way"
+            todayLines = [done > 0 ? "\(done) \(done == 1 ? "lift" : "lifts") done" : "Just started"]
+        case let .done(name, next):
+            todayLabel = "\(short(name)) done"
+            todayLines = next.map { ["Next is \(short($0))"] } ?? []
+        case let .rest(next, _):
+            todayLabel = "Rest today"
+            todayLines = next.map { ["Next is \(short($0))"] } ?? ["A rest day counts too"]
+        case .nothing:
+            todayLabel = "Nothing on the plan"
+        }
+
+        // Library: the exercises he can pick from, by kind.
+        let groups = ExerciseLibraryList.groups(model).filter { !$0.exercises.isEmpty }
+        let exerciseCount = groups.reduce(0) { $0 + $1.exercises.count }
+        let libraryLabel = exerciseCount == 0 ? nil
+            : "\(exerciseCount) \(exerciseCount == 1 ? "exercise" : "exercises") in \(groups.count) \(groups.count == 1 ? "kind" : "kinds")"
+        var libraryLines = Array(routineNames.prefix(1).map { $0 == ObjectPrivacy.routineLabel ? $0 : short($0) })
+        libraryLines += groups.prefix(3 - libraryLines.count).map { short($0.pattern.name) }
+
+        let first = calendar.weekdaySymbols[(calendar.firstWeekday - 1) % 7]
+        let last = calendar.weekdaySymbols[(calendar.firstWeekday + 5) % 7]
         return [
+            DialDoor(id: "today", name: "Today", color: blue, label: todayLabel, lines: todayLines),
             DialDoor(id: "week", name: "This week", count: done > 0 ? "\(done)" : nil, color: blue,
-                     lines: weekLines),
-            DialDoor(id: "routines", name: "Routines", count: routines.isEmpty ? nil : "\(routines.count)",
-                     color: green, label: routineNames.isEmpty ? nil : "In the plan",
-                     lines: Array(routineNames.prefix(3).map { $0 == ObjectPrivacy.routineLabel ? $0 : short($0) })),
-            DialDoor(id: "exercises", name: "Exercises", count: lifts.isEmpty ? nil : "\(lifts.count)", color: gold,
-                     label: lifts.isEmpty ? nil : "Lately", lines: lifts.prefix(3).map { short($0.exercise.name) }),
-            DialDoor(id: "programs", name: "Programs", count: plans.count > 1 ? "\(plans.count)" : nil, color: slate,
-                     lines: programLines),
-            DialDoor(id: "goals", name: "Goals", color: blue, label: bests.isEmpty ? nil : "Bests",
+                     label: "\(first) to \(last)", lines: weekLines),
+            DialDoor(id: "library", name: "Library", count: exerciseCount > 0 ? "\(exerciseCount)" : nil, color: gold,
+                     label: libraryLabel, lines: libraryLines),
+            DialDoor(id: "bests", name: "Bests", color: gold, label: bests.isEmpty ? "None yet" : "Lately",
                      lines: bests.map { "\(lift($0.0)) \(Format.mass($0.1.weight))" }),
+            DialDoor(id: "plan", name: "Plan", count: plans.count > 1 ? "\(plans.count)" : nil, color: slate,
+                     label: plan.map { short(shown($0.title)) }, lines: Array(programLines.dropFirst())),
         ]
     }
 
