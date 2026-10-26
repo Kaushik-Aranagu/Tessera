@@ -324,8 +324,6 @@ struct LandingGlyph: View {
         }
         moveStart = .now
         withAnimation(.easeIn(duration: 0.26)) { formed = false }
-        try? await Task.sleep(for: .milliseconds(330))
-        guard !Task.isCancelled else { return }
         withAnimation(.spring(duration: 0.44, bounce: 0.3).delay(formDelay)) { formed = true }
     }
 }
