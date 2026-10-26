@@ -27,10 +27,21 @@ struct DoorsDial: View {
     /// focus 26 pt, neighbours 20 pt, 1.6 pt blur, 160 pt wide; the summary is drawn apart by `DoorSummary`).
     enum Style { case notes, landing }
     static let slot: CGFloat = 48
-    private var placeHeight: CGFloat { style == .landing ? 40 : Self.slot }
-    private var focusSize: CGFloat { style == .landing ? 26 : 28 }
-    private var neighbourSize: CGFloat { style == .landing ? 20 : 21 }
-    private var maxBlur: CGFloat { style == .landing ? 1.6 : 1.8 }
+    private var placeHeight: CGFloat {
+        style == .landing ? 40 : Self.slot
+    }
+
+    private var focusSize: CGFloat {
+        style == .landing ? 26 : 28
+    }
+
+    private var neighbourSize: CGFloat {
+        style == .landing ? 20 : 21
+    }
+
+    private var maxBlur: CGFloat {
+        style == .landing ? 1.6 : 1.8
+    }
 
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -59,7 +70,9 @@ struct DoorsDial: View {
                 ForEach(places(count), id: \.self) { place in
                     row(for: wrapped(focus + place), place: place)
                 }
-                if style == .notes { facts }
+                if style == .notes {
+                    facts
+                }
             }
         }
         .frame(height: slotHeight * CGFloat(places(count).count == 3 ? 3 : (large ? 2 : 3)))
@@ -104,7 +117,11 @@ struct DoorsDial: View {
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(door.name)
-                    .font(.custom("Figtree", size: focusSize - (focusSize - neighbourSize) * distance, relativeTo: .title3).weight(.bold))
+                    .font(.custom(
+                        "Figtree",
+                        size: focusSize - (focusSize - neighbourSize) * distance,
+                        relativeTo: .title3
+                    ).weight(.bold))
                     .foregroundStyle(isFocus ? door.color : Theme.Colors.inkSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.4)
@@ -195,31 +212,144 @@ private extension CGFloat {
 
 /// The door summary beside the landing dial (sheet 283): x 186, top 652; a 13 pt ink 2 label and up to three
 /// 16/24 lines, the first 700. It rises 6 pt by a clip when the focus changes. Not blurred; each room fills it its way.
+/// How a room's door summary changes when the dial turns (283 v6). Plain is the rise every room had; a room picks its
+/// own through the environment, so the scaffold needs no new parameter.
+enum DoorSummaryStyle {
+    /// A 6 pt rise (the default).
+    case plain
+    /// Galley: the new summary prints down in 7 steps (0.52 s); the old one tears off upward on a zigzag edge.
+    case ticket
+    /// Purse: words hold still (a plain fade); only the numbers roll like a meter, digit by digit.
+    case meter
+}
+
+extension EnvironmentValues {
+    @Entry var doorSummaryStyle: DoorSummaryStyle = .plain
+}
+
 struct DoorSummary: View {
     let door: DialDoor?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.doorSummaryStyle) private var style
 
     var body: some View {
         if let door, door.label != nil || !door.lines.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
-                if let label = door.label {
-                    Text(label)
-                        .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .lineLimit(1)
-                        .frame(height: 20, alignment: .leading)
-                }
-                ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
-                    FitLine(forms: FitLine.cuts(line), size: 16, color: Theme.Colors.ink, weight: index == 0 ? .bold : .regular)
-                        .frame(width: 192, height: 24, alignment: .leading)
+            switch style {
+            case .plain:
+                lines(door)
+                    .id(door.id)
+                    .transition(.offset(y: reduceMotion ? 0 : 6))
+                    .tesseraAnimation(Theme.Motion.firm, value: door.id)
+            case .ticket:
+                TicketPrint(id: door.id) { lines(door) }
+                    .id(door.id)
+                    .transition(.asymmetric(insertion: .identity,
+                                            removal: reduceMotion ? .identity : .modifier(active: TearOff(gone: true),
+                                                                                          identity: TearOff(
+                                                                                              gone: false
+                                                                                          ))))
+                    .tesseraAnimation(Theme.Motion.firm, value: door.id)
+            case .meter:
+                // One identity across doors: the digits roll, the words cross-fade in place.
+                lines(door)
+                    .contentTransition(reduceMotion ? .identity : .numericText())
+                    .tesseraAnimation(Theme.Motion.firm, value: door.id)
+            }
+        }
+    }
+
+    private func lines(_ door: DialDoor) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let label = door.label {
+                Text(label)
+                    .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(1)
+                    .frame(height: 20, alignment: .leading)
+            }
+            ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
+                FitLine(
+                    forms: FitLine.cuts(line),
+                    size: 16,
+                    color: Theme.Colors.ink,
+                    weight: index == 0 ? .bold : .regular
+                )
+                .frame(width: 192, height: 24, alignment: .leading)
+            }
+        }
+        .frame(width: 192, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Prints its content down in 7 steps over 0.52 s, like a ticket out of the printer. Reduce Motion: shown at once.
+private struct TicketPrint<Content: View>: View {
+    let id: String
+    @ViewBuilder let content: Content
+
+    static var steps: Int {
+        7
+    }
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var printed = Self.steps
+
+    var body: some View {
+        content
+            .mask(alignment: .top) {
+                GeometryReader { proxy in
+                    Rectangle().frame(height: proxy.size.height * CGFloat(printed) / CGFloat(Self.steps))
                 }
             }
-            .frame(width: 192, alignment: .leading)
-            .id(door.id)
-            .transition(.offset(y: reduceMotion ? 0 : 6))
-            .tesseraAnimation(Theme.Motion.firm, value: door.id)
-            .accessibilityElement(children: .combine)
+            .task(id: id) {
+                guard !reduceMotion else {
+                    printed = Self.steps
+                    return
+                }
+                printed = 0
+                for step in 1 ... Self.steps {
+                    try? await Task.sleep(for: .milliseconds(74))
+                    printed = step
+                }
+            }
+    }
+}
+
+/// The old summary tearing off: it lifts and fades, its foot cut on a zigzag edge.
+private struct TearOff: ViewModifier {
+    let gone: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .mask { ZigzagFoot(depth: gone ? 6 : 0) }
+            .offset(y: gone ? -14 : 0)
+            .opacity(gone ? 0 : 1)
+    }
+}
+
+/// A rectangle whose bottom edge is a zigzag `depth` deep (0 is a straight edge).
+private struct ZigzagFoot: Shape {
+    var depth: CGFloat
+
+    var animatableData: CGFloat {
+        get { depth }
+        set { depth = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - depth))
+        let teeth = max(Int(rect.width / 10), 2)
+        let step = rect.width / CGFloat(teeth)
+        for index in (0 ..< teeth).reversed() {
+            let x = rect.minX + step * CGFloat(index)
+            path.addLine(to: CGPoint(x: x + step / 2, y: rect.maxY))
+            path.addLine(to: CGPoint(x: x, y: rect.maxY - depth))
         }
+        path.closeSubpath()
+        return path
     }
 }

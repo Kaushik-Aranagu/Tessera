@@ -153,7 +153,8 @@ struct MoneyLandingView: View {
                             draft = ""
                             adding = true
                         })
-                        .overlay { KeystoneHandover(kind: .purseDot, from: CGPoint(x: 230, y: 330)) }
+                        .environment(\.doorSummaryStyle, .meter)
+                        .overlay { KeystoneHandover(kind: .purseDot, from: Self.lineEnd()) }
                         .toolbar(.hidden, for: .navigationBar)
                         .onChange(of: category) { _, _ in index = 0 }
                         .alert("Log a spend", isPresented: $adding) {
@@ -186,6 +187,13 @@ struct MoneyLandingView: View {
         return MoneyWall.build(spends: shown, monthCount: monthCount, monthName: monthName, trend: sentence)
     }
 
+    /// Today's point on the chart, in design points: the chart runs x 24 to 292 (the index names take the rest).
+    static func lineEnd(now: Date = AppClock.now, calendar: Calendar = .current) -> CGPoint {
+        let days = Double(calendar.range(of: .day, in: .month, for: now)?.count ?? 30)
+        let today = Double(calendar.component(.day, from: now))
+        return CGPoint(x: 24 + 268 * (today - 1) / max(days - 1, 1), y: 300)
+    }
+
     /// Look: the chart back on this month's MONTH line.
     private func look() {
         withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) {
@@ -200,7 +208,9 @@ struct MoneyLandingView: View {
         categories.map { item in
             DialDoor(id: item.id, name: item.name, color: item.indices.isEmpty ? Theme.Colors.ink : LandingAccent.money,
                      label: item.indices.isEmpty ? "Not set up yet" : "Indices",
-                     lines: Array(item.indices.prefix(4).map(\.name.capitalized)))
+                     lines: item.indices.isEmpty ? []
+                         : ["\(item.indices.count) \(item.indices.count == 1 ? "index" : "indices")"]
+                         + item.indices.prefix(2).map(\.name.capitalized))
         }
     }
 
