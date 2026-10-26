@@ -185,7 +185,9 @@ struct LookoutSkypiece: View {
         return ZStack(alignment: .topLeading) {
             (Text("\(snapshot.temperature)")
                 .font(.custom("Outfit", fixedSize: 112).weight(.ultraLight))
-                + Text("°").font(.custom("Outfit", fixedSize: 44).weight(.ultraLight)))
+                + Text("°").font(.custom("Outfit", fixedSize: 44).weight(.ultraLight))
+                // Raised to the numeral's cap line, as on the board.
+                .baselineOffset(46))
                 .tracking(-0.03 * 112)
                 .monospacedDigit()
                 .foregroundStyle(Theme.Colors.ink)
