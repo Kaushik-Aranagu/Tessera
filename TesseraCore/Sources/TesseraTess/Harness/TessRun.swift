@@ -54,6 +54,8 @@ public final class TessRun {
         var buffer: [TessRunEvent] = []
         var subscribers: [UUID: AsyncStream<TessRunEvent>.Continuation] = [:]
         var done = false
+        /// A full stop held back from the live words: shown only if more words follow it (ShownLine).
+        var heldStop = false
 
         init(text: String, startedAt: Date) {
             self.text = text
@@ -142,17 +144,27 @@ public final class TessRun {
 
     private func emit(_ event: TessRunEvent, _ active: Active) {
         guard !active.done else { return }
-        // No full stop on a line he sees (ShownLine): her whole reply and her phone lines.
-        let event: TessRunEvent = switch event {
-        case let .finished(line): .finished(ShownLine.unstopped(line))
-        case let .failed(line): .failed(ShownLine.unstopped(line))
-        default: event
+        // No full stop on a line he sees (ShownLine): her whole reply, her phone lines, and the live words, whose
+        // closing stop is held until more words follow so nothing flickers when the reply lands.
+        let shown: TessRunEvent
+        switch event {
+        case let .finished(line): shown = .finished(ShownLine.unstopped(line))
+        case let .failed(line): shown = .failed(ShownLine.unstopped(line))
+        case let .words(delta):
+            var live = (active.heldStop ? "." : "") + delta
+            active.heldStop = live.hasSuffix(".") && !live.hasSuffix("..")
+            if active.heldStop {
+                live.removeLast()
+            }
+            guard !live.isEmpty else { return }
+            shown = .words(live)
+        default: shown = event
         }
-        active.buffer.append(event)
+        active.buffer.append(shown)
         for continuation in active.subscribers.values {
-            continuation.yield(event)
+            continuation.yield(shown)
         }
-        if event.isTerminal {
+        if shown.isTerminal {
             active.done = true
             for continuation in active.subscribers.values {
                 continuation.finish()

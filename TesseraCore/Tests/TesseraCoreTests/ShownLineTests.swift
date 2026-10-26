@@ -16,6 +16,11 @@ struct ShownLineTests {
         #expect(ShownLine.unstopped("2.5 km at 6.30 pace.") == "2.5 km at 6.30 pace")
         #expect(ShownLine.unstopped("Bring snacks, e.g. nuts.") == "Bring snacks, e.g. nuts")
         #expect(ShownLine.isUnstopped("Push A done") && !ShownLine.isUnstopped("Push A done."))
+        // A stop after an abbreviation or a single letter is no sentence break (QA on #1451).
+        #expect(ShownLine.unstopped("Dentist with Dr. Lin at 3.") == "Dentist with Dr. Lin at 3")
+        #expect(ShownLine.unstopped("Flight to St. Louis. Pack tonight.") == "Flight to St. Louis\nPack tonight")
+        #expect(ShownLine.unstopped("The U.S. Open is on.") == "The U.S. Open is on")
+        #expect(ShownLine.unstopped("Mrs. Rao called. Mr. Rao too.") == "Mrs. Rao called\nMr. Rao too")
     }
 
     @MainActor
