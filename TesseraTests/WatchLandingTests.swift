@@ -108,4 +108,47 @@ struct WatchLandingTests {
         #expect(!cut.hasSuffix(" and") && !cut.hasSuffix(" with"))
         #expect(WatchWords.bigFit("Walk") == "Walk")
     }
+
+    // MARK: 283 v3: glyphs, foot, hand-over
+
+    @Test func libraryPicksAWateringCanForThirstyAndTheGroveForTheTally() {
+        let walk = Self.tree("Walk", due: true, steps: 3)
+        let journal = Self.tree("Journal", marks: [.kept, .slipped, .slipped, .slipped])
+        let swim = Self.tree("Swim", done: true)
+        let items = WatchWords.widget(RoutinesWoodlandFacts(trees: [walk, journal, swim]), wine: .red)
+        let kinds = items.map { GlyphKind.pick(header: $0.header, big: $0.big, middle: $0.middle) }
+        #expect(kinds[1] == .wateringCan)
+        #expect(kinds[2] == .grove)
+        let quiet = WatchWords.widget(RoutinesWoodlandFacts(trees: []), wine: .red)[0]
+        #expect(GlyphKind.pick(header: quiet.header, big: quiet.big, middle: quiet.middle) == .grove)
+    }
+
+    @Test func waterGoesToTheNamedTreeThenTheThirstiest() {
+        let walk = Self.tree("Walk", due: true)
+        let journal = Self.tree("Journal", marks: [.kept, .slipped, .slipped, .slipped])
+        let facts = RoutinesWoodlandFacts(trees: [walk, journal])
+        #expect(WatchWords.waterTarget(facts, selected: nil)?.name == "Journal")
+        #expect(WatchWords.waterTarget(facts, selected: walk.id)?.name == "Walk")
+        #expect(WatchWords.waterTarget(RoutinesWoodlandFacts(trees: []), selected: nil) == nil)
+    }
+
+    @Test func pauseIsKeptOnThePhoneForOneDay() throws {
+        let defaults = try #require(UserDefaults(suiteName: "watch.pause.test"))
+        defaults.removePersistentDomain(forName: "watch.pause.test")
+        let day = Date(timeIntervalSince1970: 1_800_000_000)
+        #expect(!WatchPause.isPaused(on: day, defaults: defaults))
+        WatchPause.set(true, on: day, defaults: defaults)
+        #expect(WatchPause.isPaused(on: day, defaults: defaults))
+        #expect(!WatchPause.isPaused(on: day.addingTimeInterval(86400), defaults: defaults))
+        WatchPause.set(false, on: day, defaults: defaults)
+        #expect(!WatchPause.isPaused(on: day, defaults: defaults))
+    }
+
+    @Test func handOverIsShortAndLandsOnTheGlyph() {
+        #expect(WatchHandOver.duration(.bird) <= 5 && WatchHandOver.duration(.petals) <= 5)
+        let from = CGPoint(x: 150, y: 250), to = CGPoint(x: 338, y: 484)
+        #expect(WatchHandOver.birdPoint(0, from: from, to: to) == from)
+        let end = WatchHandOver.birdPoint(1, from: from, to: to)
+        #expect(abs(end.x - to.x) < 0.5 && abs(end.y - to.y) < 0.5)
+    }
 }
