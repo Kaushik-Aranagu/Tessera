@@ -154,6 +154,23 @@ The new forms each need a row in `ElementForms`:
 - Both pass the Bounds check (sheet 291) in paper and black. Before this, the eight-door index ran past the frame's
   left edge, and the eight-door sentence ran seven lines into the Undo line.
 
+### Page forms (sheet 293, drawn on the Watch's Today)
+
+- **Ranked** (designed): row weights 1.7 to 0.84. The first row is 700 in a darkened room colour.
+- **Even:** every row is the same height and size. The first keeps its colour but not its weight, so nothing reads as
+  ranked.
+- **Columns:** names only, two across. Each column is 171 pt wide with a 12 pt gap, filled down the left column first
+  (3 and 2 for five rows). Rows are 22 pt and at most 76 pt tall. Values and second lines are left out, because this
+  form is for finding, not reading.
+- **By time:** a 52 pt time column (Outfit), then the names, in time order. A bare clock time means the next time it
+  comes after now, so at 5:10 pm, 6:00 is tonight and comes before 9:00. Rows with no time (done, thirsty) come first
+  in ink2, with their word at 13 pt in their own colour, because they are already behind him. Offered only where rows
+  have times (Watch, Galley, Lookout, Deck).
+- **The switch:** a row's name travels from its place in one form to its place in the next (520 ms, matched by name).
+  Times, values and second lines fade in at 260 ms. The Undo line reads "Page by time  Undo". Tess's version starts
+  with the wash over the whole page: "Tess set the page by time  Undo".
+- Every form passes Bounds (sheet 291) in paper and black. Nothing leaves the page frame and no two runs cross.
+
 ## 7. Interface changes
 
 - **Change and control:**

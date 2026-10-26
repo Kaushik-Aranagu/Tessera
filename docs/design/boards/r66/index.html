@@ -187,6 +187,11 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
   <button class="w" data-th="log-index">Log doors: Index</button>
   <button class="w" data-th="log-sentence">Log doors: Sentence</button>
   <button class="w" data-th="log-reel">Log doors: Reel</button>
+  <button class="w" data-th="page-even">Watch page: Even</button>
+  <button class="w" data-th="page-columns">Watch page: Two columns</button>
+  <button class="w" data-th="page-time">Watch page: By time</button>
+  <button class="w" data-th="page-ranked">Watch page: Ranked</button>
+  <button class="w" data-th="page-tess">Watch: Tess sets the page by time</button>
   <button class="w" data-th="look-tess">Galley: Tess shows the doors as an index</button>
   <button class="w" data-th="away-galley">Galley: leave, change, come back</button>
   <button class="w" data-th="shape-deck">Deck: hold the Nav word to reshape</button>
@@ -1897,9 +1902,21 @@ const LV={
   {k:'Mine',line:'Your own indices',cap:'Make one with Tess.',rows:[{t:'INDIA',s:'12 months',v:'12'},{t:'DEBTS',s:'4 children',v:'4'}]}],
   items:{food:{name:'Food',line:'October so far',facts:[['about 412','','spent'],['about 550','','usual'],['6','','days left']],body:{kind:'ledger',l:[['Oct 24','Groceries','about 64'],['Oct 22','Dinner with Sam','about 38'],['Oct 20','Groceries','about 71'],['Oct 17','Coffee beans','about 18'],['Oct 15','Takeout','about 26']]},acts:[{v:'Log',o:'a food spend'},{v:'Look',o:'last October'}]}}}};
 // a door's rows fill the Page exactly, sized by rank: the first is the biggest, the rest step down, never all equal
-function lvRows(box,rows,color,open){const H=364,n=rows.length,W=[1.7,1.3,1.08,1,.94,.88,.84].slice(0,n);const sum=W.reduce((a,b)=>a+b,0);let y=0;
+/* 293: the Page's forms. ranked (designed), even, columns (names only, two across), time (a 52 pt time column, in time order) */
+const PAGE_FORM={};const PAGE_NAMES={ranked:'ranked',even:'even',columns:'in two columns',time:'by time'};
+/* a bare clock time means its next one after now (the board's day is 5:10 pm) */
+const BOARD_NOW=17*60+10;const rowTime=r=>{const m=/^(\d{1,2}):(\d\d)$/.exec(r.v||'');if(!m)return null;let t=+m[1]*60+ +m[2];if(t<BOARD_NOW&&+m[1]<12)t+=720;return t};
+function lvRows(box,rows,color,open,form){form=form||'ranked';
+ if(form==='columns'){const n=rows.length,per=Math.ceil(n/2),rh=Math.min(76,364/per);
+  rows.forEach((r,i)=>{const c=Math.floor(i/per),k=i%per;const e=h('button','lvr','<span class="lt" style="right:0;font-size:22px;'+(i===0?'font-weight:700;color:color-mix(in srgb,'+color+' 58%,var(--ink))':'')+'">'+r.t+'</span>');
+   e.style.cssText='top:'+(k*rh)+'px;height:'+rh+'px;left:'+(c*183)+'px;right:auto;width:171px';e.onclick=()=>open(r);box.appendChild(e)});box.querySelectorAll('.lt').forEach(fitLine);return}
+ if(form==='time'){const done=rows.filter(r=>rowTime(r)==null),timed=rows.filter(r=>rowTime(r)!=null).sort((a,b)=>rowTime(a)-rowTime(b));const L=[...done,...timed],rh=364/L.length;
+  L.forEach((r,i)=>{const t=rowTime(r)!=null,f=Math.round(Math.min(26,Math.max(17,rh*.3)));
+   const e=h('button','lvr','<span class="ltm" style="font-size:'+(t?Math.round(f*.8):13)+'px;color:'+(t?'var(--ink)':(r.c||'var(--ink2)'))+'">'+(t?r.v:r.v||'')+'</span><span class="lt" style="left:64px;font-size:'+f+'px;color:'+(t?'var(--ink)':'var(--ink2)')+'">'+r.t+'</span>'+(r.s&&rh>40?'<span class="ls" style="left:64px;top:'+Math.round(rh/2+f*.42)+'px">'+r.s+'</span>':''));
+   e.style.cssText='top:'+(i*rh)+'px;height:'+rh+'px';e.onclick=()=>open(r);box.appendChild(e)});box.querySelectorAll('.lt').forEach(fitLine);return}
+ const H=364,n=rows.length,W=(form==='even'?[1,1,1,1,1,1,1]:[1.7,1.3,1.08,1,.94,.88,.84]).slice(0,n);const sum=W.reduce((a,b)=>a+b,0);let y=0;
  rows.forEach((r,i)=>{const hh=Math.round(H*W[i]/sum*100)/100,f=Math.round(Math.min(34,Math.max(17,hh*.36)));
-  const e=h('button','lvr','<span class="lt" style="font-size:'+f+'px;'+(i===0?'font-weight:700;':'')+'color:'+(r.c||(i===0?'color-mix(in srgb,'+color+' 58%,var(--ink))':'var(--ink)'))+'">'+r.t+'</span>'+(r.v?'<span class="lv" style="font-size:'+Math.round(f*.82)+'px">'+r.v+'</span>':'')+(r.s&&hh>40?'<span class="ls" style="top:'+Math.round(hh/2+f*.42)+'px">'+r.s+'</span>':''));
+  const e=h('button','lvr','<span class="lt" style="font-size:'+f+'px;'+(i===0&&form!=='even'?'font-weight:700;':'')+'color:'+(r.c||(i===0?'color-mix(in srgb,'+color+' 58%,var(--ink))':'var(--ink)'))+'">'+r.t+'</span>'+(r.v?'<span class="lv" style="font-size:'+Math.round(f*.82)+'px">'+r.v+'</span>':'')+(r.s&&hh>40?'<span class="ls" style="top:'+Math.round(hh/2+f*.42)+'px">'+r.s+'</span>':''));
   e.style.cssText='top:'+y+'px;height:'+hh+'px';y+=hh;e.onclick=()=>open(r);box.appendChild(e)});box.querySelectorAll('.lt').forEach(fitLine)}
 function lvBody(box,b,color){box.innerHTML='';const add=x=>{box.insertAdjacentHTML('beforeend',x)};
  if(b.kind==='checks'){const rh=292/b.l.length;b.l.forEach(([t,d])=>add('<div class="lbc'+(d?' dn':'')+'" style="height:'+rh+'px;line-height:'+rh+'px"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"'+(d?'':' opacity=".18"')+'/></svg>'+t+'</div>'));
@@ -1923,7 +1940,7 @@ function lvSettle(box){if(RM)return;[...box.children].forEach((c,j)=>c.animate([
 Object.keys(LV).forEach(room=>{const D=LV[room];const S=SCREENS[room];
  SCREENS['l1_'+room]={title:S.title,accent:S.accent,tess:S.tess,render(el,p){const stop=lvBase(el,room);lvNav(el,'Doors');let di=p.door||0;
   const cap=el.querySelector('.lcap');const pg=h('div','lpg');el.appendChild(pg);
-  const fill=(dir)=>{const d=D.doors[di];if(cap)cap.textContent=d.cap;pg.innerHTML='';lvRows(pg,d.rows,D.color,r=>{const it=D.items[r.it]||{name:r.t,line:d.k,facts:[[r.v?r.v.replace(/<[^>]+>/g,''):'','',d.k.toLowerCase()]],body:{kind:'text',t:r.s+'.'},acts:[{v:'Open',o:r.t}]};go('l2_'+room,{door:di,it:r.it||null,row:r.t})});if(dir)lvSettle(pg)};
+  const fill=(dir)=>{const d=D.doors[di];if(cap)cap.textContent=d.cap;pg.innerHTML='';lvRows(pg,d.rows,D.color,r=>{const it=D.items[r.it]||{name:r.t,line:d.k,facts:[[r.v?r.v.replace(/<[^>]+>/g,''):'','',d.k.toLowerCase()]],body:{kind:'text',t:r.s+'.'},acts:[{v:'Open',o:r.t}]};go('l2_'+room,{door:di,it:r.it||null,row:r.t})},PAGE_FORM[room]);if(dir)lvSettle(pg)};el._refill=()=>fill(0);el._room=room;
   lvTitle(el,'ldt',i=>[D.doors[i].k,D.doors[i].line],D.doors.length,di,(i,d)=>{di=i;stack[stack.length-1].params={...p,door:i};fill(d)});fill(0);
   const f=lvAct(el,D.color,[{v:'Add',o:'to '+D.doors[di].k},{v:'Ask',o:'Tess about '+D.doors[di].k}]);return stop}};
  SCREENS['l2_'+room]={title:S.title,accent:S.accent,tess:S.tess,render(el,p){const stop=lvBase(el,room);const d=D.doors[p.door||0];lvNav(el,d.k);
@@ -1945,6 +1962,7 @@ SECT.masthead.push('.ldt');
 .lvr .lt{position:absolute;left:0;right:110px;top:50%;transform:translateY(-62%);font-weight:600;letter-spacing:-.015em;line-height:1.05;white-space:nowrap}
 .lvr .lv{position:absolute;right:0;top:50%;transform:translateY(-62%);font-family:var(--num);font-weight:300;color:var(--ink);white-space:nowrap}
 .lvr .lv .u{font-size:.5em;margin-left:1px}
+.lvr .ltm{position:absolute;left:0;width:52px;top:50%;transform:translateY(-62%);font-family:var(--num);font-weight:400;white-space:nowrap}
 .lvr .ls{position:absolute;left:0;right:0;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lfx{position:absolute;left:24px;top:412px;width:354px;height:64px;z-index:6;display:grid;grid-template-columns:1.2fr 1fr 1fr;align-items:center}
 .lfx div{min-width:0}.lfx b{display:block;font:300 28px/1.05 var(--num);color:var(--ink);white-space:nowrap;overflow:hidden}.lfx b .u{font-size:14px;margin-left:2px}
@@ -2301,6 +2319,13 @@ function thDeckRefuse(){if(!current)return;tessHand({x:20,y:220,w:340,h:30},{ref
 
 /* Galley: Tess hangs a ticket on the rail with a blue clip; the clip turns steel when it dries. */
 /* 290: a ticket hung on the rail nudges its neighbours, less with distance, and the rail dips half a point */
+function pageForm(form,byTess){const el=current;if(!el||!el._refill)return;const room=el._room,was=PAGE_FORM[room]||'ranked';if(was===form)return;
+ const play=()=>{const rects=()=>{const m={};el.querySelectorAll('.lpg .lt').forEach(t=>{m[t.textContent]=t.getBoundingClientRect()});return m};const a=rects();PAGE_FORM[room]=form;el._refill();
+  if(!RM){const b=rects();el.querySelectorAll('.lpg .lvr').forEach(row=>{const t=row.querySelector('.lt'),A=a[t.textContent],B=b[t.textContent];
+   if(A&&B){t.style.transformOrigin='0 0';t.animate([{translate:((A.left-B.left)/K)+'px '+((A.top-B.top)/K)+'px',scale:String(A.height/B.height)},{translate:'0 0',scale:'1'}],{duration:520,easing:'cubic-bezier(.2,.9,.25,1.04)',composite:'add'})}
+   [...row.children].filter(c=>c!==t).forEach(c=>c.animate([{opacity:0},{opacity:1}],{duration:260,delay:260,fill:'backwards'}))})}
+  thUndo(el,byTess,(byTess?'set the page ':'Page ')+PAGE_NAMES[form],()=>{PAGE_FORM[room]=was;el._refill()},null)};
+ if(byTess)tessHand({x:24,y:412,w:354,h:364},{hold:900}).then(play);else play()}
 function railSway(tix,src,delay){if(RM)return;const all=[...tix.querySelectorAll('.tk')],i0=all.indexOf(src);
  all.forEach((t,i)=>{if(t===src)return;const d=Math.abs(i-i0),a=1.6/d*(i<i0?-1:1);t.style.transformOrigin='50% 0';t.animate([{rotate:'0deg'},{rotate:a+'deg'},{rotate:(-a*.4)+'deg'},{rotate:'0deg'}],{duration:900,delay:delay+d*60,easing:'cubic-bezier(.3,.6,.4,1)',composite:'add'})});
  tix.animate([{translate:'0 0'},{translate:'0 .6px'},{translate:'0 0'}],{duration:420,delay,easing:'ease-out',composite:'add'})}
@@ -2408,7 +2433,7 @@ function galleyAway(){const go2=()=>{const el=current;SEEN.kitchen=railSnap(el);
  const top=stack.length?stack[stack.length-1].id:null;if(top==='kitchen')go2();else{reset('home');go('kitchen');setTimeout(go2,1500)}}
 
 Object.assign(TH_DEMOS,{'look-index':['training',()=>lookBy('training','index',false)],'look-sentence':['training',()=>lookBy('training','sentence',false)],
- 'look-reel':['training',()=>lookBy('training','reel',false)],'look-tess':['kitchen',()=>lookBy('kitchen','index',true)],'away-galley':['kitchen',galleyAway],'log-index':['notes',()=>lookBy('notes','index',false)],'log-sentence':['notes',()=>lookBy('notes','sentence',false)],'log-reel':['notes',()=>lookBy('notes','reel',false)]});
+ 'look-reel':['training',()=>lookBy('training','reel',false)],'look-tess':['kitchen',()=>lookBy('kitchen','index',true)],'away-galley':['kitchen',galleyAway],'log-index':['notes',()=>lookBy('notes','index',false)],'log-sentence':['notes',()=>lookBy('notes','sentence',false)],'log-reel':['notes',()=>lookBy('notes','reel',false)],'page-even':['l1_routines',()=>pageForm('even',false)],'page-columns':['l1_routines',()=>pageForm('columns',false)],'page-time':['l1_routines',()=>pageForm('time',false)],'page-ranked':['l1_routines',()=>pageForm('ranked',false)],'page-tess':['l1_routines',()=>pageForm('time',true)]});
 document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
 
 /* ================= 287: reshape by hand. Hold the Nav word: the screen loosens into shape mode, over the live
