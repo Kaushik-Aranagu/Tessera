@@ -42,8 +42,9 @@ struct WeatherLandingTests {
     }
 
     @Test func theConditionWordFitsTheSkypiece() {
-        // Figtree Bold 34 beside the Feels, High and Low column: the chosen form always fits, never smaller type.
-        let font = UIFont(name: "Figtree-Bold", size: LookoutSkypiece.wordSize) ?? .boldSystemFont(ofSize: 34)
+        // Figtree SemiBold 22 at the glass top right, beside the temperature: the chosen form always fits, never
+        // smaller type.
+        let font = UIFont(name: "Figtree-SemiBold", size: LookoutSkypiece.wordSize) ?? .boldSystemFont(ofSize: 22)
         for kind in WeatherKind.allCases {
             for night in [false, true] {
                 let forms = WeatherWords.condition(kind, night: night)
