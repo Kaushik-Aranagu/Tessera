@@ -125,8 +125,9 @@ struct DeckRoomContentTests {
         #expect(plan.map(\.title) == ["Push A"])
     }
 
-    @Test func theRegistryOpensDeck() {
+    @Test func theRegistryOpensDeckAndSettings() {
         #expect(ShellRooms.ids.contains(DeckRoomContent.room))
+        #expect(ShellRooms.ids.contains(SettingsRoomContent.room))
         #expect(ShellRooms.host(for: "nowhere") == nil)
     }
 }
