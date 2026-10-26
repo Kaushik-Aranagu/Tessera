@@ -19,7 +19,12 @@ struct AgentSpecTests {
 
     @Test func everyShippedAgentCompiles() {
         #expect(AgentSpec.problems().isEmpty)
-        #expect(AgentSpec.shipped.map(\.name) == ["Tess", "Training", "Kitchen", "Today", "Notes", "Money", "Body"])
+        #expect(AgentSpec.shipped.map(\.name)
+            == ["Tess", "Training", "Kitchen", "Today", "Notes", "Money", "Body", "Watch", "Lookout"])
+        // Each has the room name he sees and its own personality.
+        #expect(AgentSpec.shipped.map(\.title)
+            == ["Tess", "Deck", "Galley", "Bridge", "Log", "Purse", "Body", "Watch", "Lookout"])
+        #expect(Set(AgentSpec.shipped.map(\.persona)).count == AgentSpec.shipped.count)
     }
 
     @Test func noAgentIsOfferedAMoneyAction() {
@@ -41,8 +46,9 @@ struct AgentSpecTests {
     }
 
     @Test func bodyAndMoneyAreLabOnly() {
-        #expect(AgentSpec.available(under: .lab).count == 7)
-        #expect(AgentSpec.available(under: .strict).map(\.name) == ["Tess", "Training", "Kitchen", "Today", "Notes"])
+        #expect(AgentSpec.available(under: .lab).count == 9)
+        #expect(AgentSpec.available(under: .strict).map(\.name)
+            == ["Tess", "Training", "Kitchen", "Today", "Notes", "Watch", "Lookout"])
     }
 
     @Test func strictDropsCalendarBeliefs() {
@@ -71,6 +77,10 @@ struct AgentSpecTests {
         #expect(odd.problems().contains { $0.contains("unknown tools") })
         #expect(!AgentSpec.problems([AgentSpec.notes, AgentSpec.notes]).isEmpty)
         #expect(AgentSpec.named("training") == AgentSpec.training)
+        #expect(AgentSpec.named("Deck") == AgentSpec.training)
+        var blank = AgentSpec.watch
+        blank.persona = ""
+        #expect(blank.problems().contains { $0.contains("personality") })
     }
 
     // MARK: Expertise packs

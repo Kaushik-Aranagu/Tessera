@@ -14,7 +14,10 @@ public enum TessOpenTool {
         let schema: [String: Any] = [
             "type": "object", "additionalProperties": false, "required": ["handle", "depth"],
             "properties": [
-                "handle": ["type": "string", "description": "A short handle from the pack, like o1."],
+                "handle": [
+                    "type": "string",
+                    "description": "A short handle from the pack, like o1, or a path from recall.",
+                ],
                 "depth": [
                     "type": "integer",
                     "enum": [1, 2],
@@ -22,17 +25,30 @@ public enum TessOpenTool {
                 ],
             ],
         ]
-        return ToolSpec(name: name, description: "Read an object from the pack by its handle; read only.",
+        return ToolSpec(name: name, description: "Read an object by its handle or its path; read only.",
                         schema: (try? JSONSerialization.data(withJSONObject: schema, options: [.sortedKeys]))
                             ?? Data("{}".utf8))
     }
 
-    /// The text the tool returns. `handles` maps the pack's handles to objects.
+    /// The text the tool returns. `handles` maps the pack's handles to objects; `index` (the agent's memory slice, M2)
+    /// resolves a path from recall. A path outside the slice reads as no object at all.
     public static func run(arguments: Data, handles: [String: UUID], engine: ActionEngine, policy: DoorPolicy,
-                           calendar: Calendar = .current) -> (text: String, isError: Bool)
+                           calendar: Calendar = .current, index: MemoryIndex? = nil) -> (text: String, isError: Bool)
     {
-        guard let object = (try? JSONSerialization.jsonObject(with: arguments)) as? [String: Any],
-              let handle = object["handle"] as? String, let id = handles[handle],
+        let object = (try? JSONSerialization.jsonObject(with: arguments)) as? [String: Any]
+        let handle = object?["handle"] as? String ?? ""
+        let entry = handles[handle] == nil ? index?.entry(handle) : nil
+        if let entry, entry.kind == .belief {
+            // A belief reads as she would say it, with the paths of what shows it.
+            let evidence = TessBeliefStore(engine: engine).belief(entry.id)?.evidence ?? []
+            let shows = evidence.compactMap { index?.path(of: $0) }
+            var text = ([entry.digest] + shows.map { "shown by: \($0)" }).joined(separator: "\n")
+            if text.count > maxCharacters {
+                text = String(text.prefix(maxCharacters - 1)) + "…"
+            }
+            return (text, false)
+        }
+        guard let object, let id = handles[handle] ?? entry?.id,
               let target = engine.store.object(id: id), !target.isDeleted
         else {
             return ("No object has that handle.", true)

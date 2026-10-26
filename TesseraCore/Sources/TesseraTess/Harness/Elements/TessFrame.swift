@@ -53,16 +53,27 @@ public struct TessFrame: Sendable, Equatable {
 
     /// What "this" means: a touch in the last 30 s, then the widget's item, the page's focused row, the keystone's
     /// focused part, the dial's door. Nil when nothing is in focus.
+    /// Only a place he can see counts (docs/design/live-visibility.md): a page kept resident behind another is not
+    /// "this".
     public func referent() -> (place: ElementPlace, item: ElementItem)? {
-        if let touch, now.timeIntervalSince(touch.at) <= Self.touchWindow, touch.at <= now {
+        if let touch, now.timeIntervalSince(touch.at) <= Self.touchWindow, touch.at <= now,
+           element(touch.place)?.isShown ?? true
+        {
             return (touch.place, touch.item)
         }
         for place in Self.focusOrder {
-            if let item = element(place)?.focused {
+            if let shown = element(place), shown.isShown, let item = shown.focused {
                 return (place, item)
             }
         }
         return nil
+    }
+
+    /// The move the shell plays when a call lands on a place, or nil when he can't see the place: the data is
+    /// already written and the Undo clock runs, so the place arrives changed (live-visibility.md, compatibility).
+    public func reaction(of call: ElementCall, on place: ElementPlace) -> Reaction? {
+        guard element(place)?.isShown ?? false else { return nil }
+        return call.reaction
     }
 
     /// Whether the ask points at something on screen ("move it", "this is done").

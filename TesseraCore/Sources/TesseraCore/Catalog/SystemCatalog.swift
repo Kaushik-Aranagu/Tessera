@@ -33,6 +33,7 @@ public enum SystemCatalog {
         case tessTurn
         case belief
         case routineRun, rest
+        case tessAgent, notebookPage, agentEpisode
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -463,6 +464,7 @@ public enum SystemCatalog {
             FieldSpec(key: "mosaicBackdrop", name: "Mosaic scene", kind: .text),
             FieldSpec(key: "rainAlert", name: "Rain alert", kind: .bool),
             FieldSpec(key: "rainAlertLead", name: "Rain alert lead", kind: .number, unit: "min"),
+            FieldSpec(key: "placeLooks", name: "Looks", kind: .text),
         ]),
         // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
         // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.
@@ -515,6 +517,43 @@ public enum SystemCatalog {
             FieldSpec(key: "rule", name: "Rule", kind: .text),
             FieldSpec(key: "isPrivate", name: "Stays on this phone", kind: .bool, defaultValue: .bool(false)),
         ]),
+        // One of Tess's agents (docs/ai/harness/agents.md): a room's agent, with the personality it speaks to her in,
+        // its notebook folder and the classes it reads. The shipped ones mirror `AgentSpec`; a new room or app spawns
+        // one. The title is its room name ("Deck").
+        ClassSpec(key: .tessAgent, name: "Agent", parent: .thing, symbol: "person.2", colorRole: "neutral", fields: [
+            FieldSpec(key: "agentName", name: "Name", kind: .text),
+            FieldSpec(key: "room", name: "Room", kind: .text),
+            FieldSpec(key: "persona", name: "Personality", kind: .text),
+            FieldSpec(key: "notebook", name: "Notebook", kind: .text),
+            // Ids of the kinds it reads, beyond the system classes (a spawned room's own kind), as a JSON array.
+            FieldSpec(key: "classIDs", name: "Kinds", kind: .text),
+            FieldSpec(key: "shipped", name: "Shipped", kind: .bool, defaultValue: .bool(false)),
+            FieldSpec(key: "spawnedAt", name: "Started", kind: .date),
+        ]),
+        // One page of an agent's own notebook (`/memories/<agent>/...`): what it keeps for itself between runs. Only
+        // that agent reads or writes it. Written without ops, on the phone only, in no copy; a page written under lab
+        // is never read under strict.
+        ClassSpec(key: .notebookPage, name: "Notebook Page", parent: .thing, symbol: "book.closed",
+                  colorRole: "neutral", fields: [
+                      FieldSpec(key: "agentName", name: "Agent", kind: .text),
+                      FieldSpec(key: "path", name: "Path", kind: .text),
+                      FieldSpec(key: "body", name: "Body", kind: .text),
+                      FieldSpec(key: "lab", name: "Written under lab", kind: .bool, defaultValue: .bool(false)),
+                      FieldSpec(key: "updatedAt", name: "Updated", kind: .date),
+                  ]),
+        // One exchange an agent had (asked by Tess, what it reported), so the next run picks up where it left off.
+        // Written without ops, kept 90 days, on the phone only, in no copy. Walled words are stored as a placeholder,
+        // as her turns are.
+        ClassSpec(key: .agentEpisode, name: "Agent Episode", parent: .thing, symbol: "text.bubble",
+                  colorRole: "neutral", fields: [
+                      FieldSpec(key: "agentName", name: "Agent", kind: .text),
+                      FieldSpec(key: "at", name: "At", kind: .date),
+                      FieldSpec(key: "ask", name: "Asked", kind: .text),
+                      FieldSpec(key: "report", name: "Reported", kind: .text),
+                      FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+                      FieldSpec(key: "lab", name: "Under lab", kind: .bool, defaultValue: .bool(false)),
+                      FieldSpec(key: "held", name: "Held back", kind: .bool, defaultValue: .bool(false)),
+                  ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
         ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning", fields: [
             FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),

@@ -14,19 +14,20 @@ struct PlaybookTests {
         DirectorContext(now: now, quiet: quiet, reduceMotion: reduce, accents: accents, seed: 3)
     }
 
+    /// Whys as they show (no closing stop), so a stored playbook reads back equal after the clamp.
     func playbook() -> DirectorPlaybook {
         var book = DirectorPlaybook(day: "2026-10-24")
         book.burst[.done] = PlaybookEntry(
             PlaybookBurst(shape: .ring, count: 14, seconds: 1.4),
-            why: "A calm ring suits the morning."
+            why: "A calm ring suits the morning"
         )
         book.tessPalette["training"] = PlaybookEntry(
             PlaybookPalette(accent: .training),
-            why: "On the training page her ember takes its red."
+            why: "On the training page her ember takes its red"
         )
         book.reaction[.underOneHour] = PlaybookEntry(
             PlaybookReaction(kind: .flipRows, seconds: 1.1),
-            why: "Back quickly, so the tiles flip."
+            why: "Back quickly, so the tiles flip"
         )
         return book
     }
@@ -56,7 +57,7 @@ struct PlaybookTests {
         else { Issue.record("not a burst"); return }
         #expect(burst.shape == .ring && burst.count == 14 && burst.duration == 1.4)
         #expect(TessDirection.decide(director, .burst(.done, tone: .glaze), context: context())
-            .why == "A calm ring suits the morning.")
+            .why == "A calm ring suits the morning")
         // An ask with no entry (another kind) is the rules'.
         let other = TessDirection.decide(director, .burst(.best, tone: .glaze), context: context())
         #expect(other.why == TessDirection.decide(RuleDirector(), .burst(.best, tone: .glaze), context: context()).why)
@@ -67,7 +68,7 @@ struct PlaybookTests {
                                                                         momentPlaying: false)), context: context())
         guard case let .reaction(chosen) = reaction.choice else { Issue.record("not a reaction"); return }
         #expect(chosen.kind == .flipRows && chosen.duration == 1.1 && reaction
-            .why == "Back quickly, so the tiles flip.")
+            .why == "Back quickly, so the tiles flip")
     }
 
     @Test func aMomentPlayingAndAColdLaunchStayWithTheRules() {
@@ -323,7 +324,7 @@ struct PlaybookTests {
             "Rent 1450 is due so keep it calm.", // money
             "Lunch 650 kcal means a big burst.", // calories
             "sk-" + "ant-" + "api03-" + String(repeating: "Ab3x", count: 8) + ".", // key-shaped
-            "No full stop at the end", // not a sentence
+            "Two sentences. Too many", // not one sentence
             "This sentence runs on far too long for the small space it has to fit into today.", // too long
         ]
         for why in bad {
@@ -337,7 +338,8 @@ struct PlaybookTests {
             PlaybookBurst(shape: .ring, count: 10, seconds: 1),
             why: "A calm ring suits the morning."
         )
-        #expect(good.clamped().burst[.done]?.why == "A calm ring suits the morning.")
+        // Shown with no closing stop (Kaushik, Oct 26), and a why with none passes.
+        #expect(good.clamped().burst[.done]?.why == "A calm ring suits the morning")
     }
 
     @Test func theInstructionsSayThePersonAndAskForALineTheCheckPasses() {
