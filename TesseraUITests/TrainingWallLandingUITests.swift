@@ -19,7 +19,9 @@ final class TrainingWallLandingUITests: SimulatorOnlyTestCase {
     func testFootWordAndDialTurnToATappedNeighbour() {
         let app = launch()
         let foot = app.descendants(matching: .any).matching(
-            NSPredicate(format: "label BEGINSWITH 'Start' OR label BEGINSWITH 'Pick up' OR label == 'Log a walk'")
+            NSPredicate(
+                format: "label BEGINSWITH 'Start, ' OR label BEGINSWITH 'Pick up, ' OR label == 'Log, A walk' OR label == 'Pick, A routine'"
+            )
         ).firstMatch
         XCTAssertTrue(foot.waitForExistence(timeout: 5), "The foot carries the day's action word")
         let routines = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Routines'")).firstMatch

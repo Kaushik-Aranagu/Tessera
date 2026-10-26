@@ -17,7 +17,8 @@ final class RoutinesWoodlandUITests: SimulatorOnlyTestCase {
 
     func testFootCarriesPlantAndTheDialTurnsToATappedNeighbour() {
         let app = launch()
-        XCTAssertTrue(app.descendants(matching: .any)["Plant"].firstMatch.exists, "The action word is Plant")
+        let foot = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Plant'")).firstMatch
+        XCTAssertTrue(foot.exists, "The foot's verb is Plant, over its object")
         let body = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Body'")).firstMatch
         XCTAssertTrue(body.waitForExistence(timeout: 5), "Body is a neighbour of Today")
         body.tap()

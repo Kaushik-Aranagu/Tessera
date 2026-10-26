@@ -7,12 +7,20 @@ import SwiftUI
 /// buds for its steps, flowers for done today, fruit for a kept week, a lamp on a planned rest, a caretaker by the
 /// lake. It spans the phone's full width (402 x 182, painted in the 354 x 160 scene scaled up) and its edges dissolve
 /// into the page; no frame. Hold a tree 1.5 s to water it. Reduce Motion: one still frame, no reactions drawn.
+/// One water asked for from outside the woodland, stamped so the same tree can be watered twice.
+struct WoodlandWaterRequest: Equatable {
+    let id: UUID
+    let at: Date
+}
+
 struct RoutinesWoodlandScene: View {
     let trees: [WoodlandTree]
     let selected: UUID?
     var hour: Double = 12
     let tap: (UUID) -> Void
     var water: (UUID) -> Void = { _ in }
+    /// A water from outside the slot (the foot's Water): the tree springs and blooms as after a hold.
+    var waterRequest: WoodlandWaterRequest?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var scheme
@@ -67,6 +75,11 @@ struct RoutinesWoodlandScene: View {
         .tesseraFeedback(cue)
         .overlay { targets(places) }
         .accessibilityElement(children: .contain)
+        .onChange(of: waterRequest) { _, request in
+            guard let request else { return }
+            bloom = (request.id, request.at)
+            cue.play(.done)
+        }
     }
 
     /// One gesture for the slot (it owns any drag that starts here): a short tap names or opens; a 1.5 s hold on a

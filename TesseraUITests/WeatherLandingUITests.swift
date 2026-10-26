@@ -1,7 +1,7 @@
 import XCTest
 
 /// The Weather landing (243, landing contract §14): the condition word opens the hours, a dial neighbour turns the
-/// dial, and the foot carries "Rain alert". Launched straight onto the landing with `-weatherLanding`.
+/// dial, and the foot carries "Alert" over "Rain". Launched straight onto the landing with `-weatherLanding`.
 @MainActor
 final class WeatherLandingUITests: SimulatorOnlyTestCase {
     private func launch() -> XCUIApplication {
@@ -15,7 +15,10 @@ final class WeatherLandingUITests: SimulatorOnlyTestCase {
 
     func testFootAndDialNeighbour() {
         let app = launch()
-        XCTAssertTrue(app.descendants(matching: .any)["Rain alert"].firstMatch.exists, "The action word")
+        XCTAssertTrue(
+            app.descendants(matching: .any)["Alert, Rain"].firstMatch.exists,
+            "The foot action, verb over object"
+        )
         let week = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Week'")).firstMatch
         XCTAssertTrue(week.waitForExistence(timeout: 5), "Week is a neighbour of Hours")
         week.tap()

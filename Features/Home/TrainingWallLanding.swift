@@ -90,9 +90,10 @@ struct TrainingWallLanding: View {
                         caption: ["Tap a number to open the lift. Swipe left to wipe."],
                         widget: deck.widget, widgetIndex: $widgetIndex,
                         openWidget: openWidget,
-                        glyph: { _ in TallyGlyph() },
+                        glyph: { item in LandingGlyph(item: item, color: Theme.Colors.Accent.training) },
                         doors: facts.doors, focus: $focus, openDoor: openDoor,
                         action: action(facts))
+            .overlay { ChalkDustHandOver() }
             .toolbar(.hidden, for: .navigationBar)
     }
 
@@ -146,22 +147,39 @@ struct TrainingWallLanding: View {
     // MARK: Foot
 
     private func action(_ facts: TrainingWallFacts) -> LandingFootAction? {
-        guard let word = facts.action else { return nil }
+        guard let foot = facts.action else { return nil }
+        let log = LandingFootAction.Step(verb: "Log", object: "This week") { goTo(LogSwitch.isOn ? .log : .page) }
+        let rest = LandingFootAction.Step(verb: "Rest", object: "Today") {
+            // Nothing is written: the plan keeps its day; Tess only says so.
+            TessVoice.shared.say("Rest it is. Nothing logged, the plan keeps its day.")
+        }
         switch facts.day {
         case .ready:
-            return LandingFootAction(word: word, hint: "Starts the workout") { start() }
+            return LandingFootAction(
+                word: foot.verb,
+                object: foot.object,
+                hold: true,
+                hint: "Hold to start the workout",
+                alternates: [log, rest]
+            ) { start() }
         case .running:
-            return LandingFootAction(word: word, hint: "Opens the workout") { model.isWorkoutPresented = true }
-        case let .rest(next, _):
-            var action = LandingFootAction(word: word, hint: "Logs a walk") {
+            return LandingFootAction(word: foot.verb, object: foot.object, hint: "Opens the workout",
+                                     alternates: [log]) { model.isWorkoutPresented = true }
+        case .rest:
+            var alternates = [log]
+            if let next = facts.restOption {
+                alternates.insert(
+                    LandingFootAction.Step(verb: "Start", object: next, hold: true) { startNext() },
+                    at: 0
+                )
+            }
+            return LandingFootAction(word: foot.verb, object: foot.object, hint: "Logs a walk",
+                                     alternates: alternates)
+            {
                 TessVoice.shared.say("Walks come in from Health.")
             }
-            if let option = facts.restOption, next != nil {
-                action.right = .init(name: option) { startNext() }
-            }
-            return action
         case .nothing:
-            return LandingFootAction(word: word, hint: "Opens the library") { goTo(.library) }
+            return LandingFootAction(word: foot.verb, object: foot.object, hint: "Opens the library") { goTo(.library) }
         case .done:
             return nil
         }
@@ -187,56 +205,65 @@ struct TrainingWallLanding: View {
     }
 }
 
-/// The widget's glyph: the board's ticks written stroke by stroke, once on arrival and again every 7 s. Still under
-/// Reduce Motion.
-struct TallyGlyph: View {
+/// The keystone hands the widget over on arrival (283 v3): 70 grains of chalk dust fall from the board's lower edge
+/// onto the widget and turn the room's blue as they land. Once, 2.4 s; nothing under Reduce Motion. Never takes a
+/// touch.
+struct ChalkDustHandOver: View {
+    static let grains = 70
+    static let duration: TimeInterval = 2.4
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var progress: CGFloat = 0
+    @Environment(\.colorScheme) private var scheme
+    @State private var start: Date?
 
     var body: some View {
-        TallyShape(progress: reduceMotion ? 5 : progress)
-            .stroke(Theme.Colors.inkSecondary, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-            .frame(width: 64, height: 56)
-            .frame(width: 80, height: 80)
-            .accessibilityHidden(true)
-            .task {
-                guard !reduceMotion else { return }
-                while !Task.isCancelled {
-                    progress = 0
-                    for stroke in 1 ... 5 {
-                        try? await Task.sleep(for: .milliseconds(180))
-                        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
-                            progress = CGFloat(stroke)
-                        }
+        GeometryReader { proxy in
+            let scale = max(0.86, min(1.1, proxy.size.height / 874))
+            if let start, !reduceMotion {
+                TimelineView(.animation(minimumInterval: 1.0 / 60)) { timeline in
+                    let elapsed = timeline.date.timeIntervalSince(start)
+                    Canvas { context, _ in
+                        guard elapsed < Self.duration else { return }
+                        draw(&context, elapsed: elapsed, width: proxy.size.width, scale: scale)
                     }
-                    try? await Task.sleep(for: .seconds(7))
                 }
             }
-    }
-}
-
-/// Four upright strokes and the fifth across them, drawn up to `progress` strokes (fractions draw part of one).
-struct TallyShape: Shape {
-    var progress: CGFloat
-
-    var animatableData: CGFloat {
-        get { progress }
-        set { progress = newValue }
-    }
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let lines: [(CGPoint, CGPoint)] = (0 ..< 4).map { index in
-            let x = rect.minX + rect.width * (0.14 + 0.2 * CGFloat(index))
-            return (CGPoint(x: x, y: rect.minY + 6), CGPoint(x: x + 2, y: rect.maxY - 6))
-        } + [(CGPoint(x: rect.minX + 2, y: rect.maxY - 14), CGPoint(x: rect.maxX - 2, y: rect.minY + 14))]
-        for (index, line) in lines.enumerated() {
-            let amount = min(max(progress - CGFloat(index), 0), 1)
-            guard amount > 0 else { continue }
-            path.move(to: line.0)
-            path.addLine(to: CGPoint(x: line.0.x + (line.1.x - line.0.x) * amount,
-                                     y: line.0.y + (line.1.y - line.0.y) * amount))
         }
-        return path
+        .ignoresSafeArea(.container, edges: .top)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .task {
+            guard !reduceMotion, start == nil else { return }
+            start = .now
+            try? await Task.sleep(for: .seconds(Self.duration))
+            start = nil
+        }
+    }
+
+    private func draw(_ context: inout GraphicsContext, elapsed: TimeInterval, width: CGFloat, scale: CGFloat) {
+        var rng = ChalkRandom(seed: 258)
+        let chalk = Color(white: 0.93)
+        let blue = Theme.Colors.Accent.training
+        let left = (width - 354) / 2
+        for _ in 0 ..< Self.grains {
+            let x0 = left + 20 + rng.next() * 314
+            let delay = rng.next() * 0.9
+            let fall = 0.7 + rng.next() * 0.5
+            let drift = (rng.next() - 0.5) * 18
+            let land = (430 + rng.next() * 60) * scale
+            let size = 1.2 + rng.next() * 1.8
+            let phase = (elapsed - delay) / fall
+            guard phase > 0 else { continue }
+            let fallen = min(phase, 1)
+            // Gravity: slow off the board, quick to land.
+            let y = 372 * scale + (land - 372 * scale) * fallen * fallen
+            let x = x0 + drift * fallen
+            let landed = phase >= 1
+            let after = max(0, elapsed - delay - fall)
+            var dot = context
+            dot.opacity = landed ? max(0, 1 - after / 0.6) : 0.85
+            dot.fill(Path(ellipseIn: CGRect(x: x, y: y, width: size, height: size)),
+                     with: .color(landed || fallen > 0.85 ? blue : chalk))
+        }
     }
 }

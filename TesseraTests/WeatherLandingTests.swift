@@ -136,6 +136,28 @@ struct WeatherLandingTests {
         #expect(!WeatherRainAlert.isOn(defaults))
     }
 
+    @Test func footIsVerbOverObject() {
+        #expect(WeatherWords.alertObject(on: false) == "Rain")
+        #expect(WeatherWords.alertObject(on: true) == "Rain, on")
+        #expect(!WeatherWords.alertObject(on: false).contains("alert"))
+    }
+
+    @Test func walkLinePicksADryDaylightHourAndNamesNoPlace() {
+        let snapshot = Self.snapshot(sample: true)
+        let line = WeatherWords.walkLine(snapshot, calendar: Self.calendar)
+        #expect(line ==
+            "Best walk around \(WeatherWords.hour(snapshot.hours[0].date, calendar: Self.calendar)), 60° and dry.")
+        #expect(!line.contains("..."))
+        var wet = snapshot
+        wet.hours = wet.hours.map { WeatherHour(date: $0.date, temperature: $0.temperature, kind: .rain) }
+        #expect(WeatherWords.walkLine(wet, calendar: Self.calendar) == "No dry daylight hour for a walk soon.")
+    }
+
+    @Test func dropHandoverIsShortAndCounted() {
+        #expect(LookoutDropHandover.count == 26)
+        #expect(LookoutDropHandover.length <= 5)
+    }
+
     // MARK: Lookout (283)
 
     @Test func skyKeepsInkReadableInEveryHourAndCondition() {

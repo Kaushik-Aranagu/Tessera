@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import UIKit
 
 // What Deck (the Training landing, sheets 258 and 283) writes on the blackboard and shows in the masthead and the
 // widget. Built from the same facts as the doors; nothing here draws. Private routines read "Private workout".
@@ -42,6 +43,21 @@ struct TrainingBoard: Equatable {
 
 /// Deck's masthead and widget content.
 struct TrainingDeckFacts {
+    /// The widget's Big line in Deck's face (Barlow Condensed 600, 50 pt caps) cut on whole words to its 262 pt
+    /// slot, trailing small words dropped: never "...".
+    static func deckBig(_ text: String, width: CGFloat = 262) -> String {
+        let font = UIFont(name: "BarlowCondensed-SemiBold", size: 50) ?? .systemFont(ofSize: 50, weight: .semibold)
+        func fits(_ form: String) -> Bool {
+            (form.uppercased() as NSString).size(withAttributes: [.font: font]).width <= width
+        }
+        var words = text.split(separator: " ").map(String.init)
+        let small: Set = ["and", "the", "an", "of", "to", "in", "on", "or", "for", "with", "at"]
+        while words.count > 1, !fits(words.joined(separator: " ")) || small.contains(words.last!.lowercased()) {
+            words.removeLast()
+        }
+        return words.joined(separator: " ")
+    }
+
     let board: TrainingBoard
     /// The vertical switcher: the plan's routines by name (private ones as "Private workout").
     let routineWords: [String]
@@ -118,7 +134,7 @@ extension TrainingDeckFacts {
             headline = "No plan yet"
         }
         let detail = wall.brief?.text ?? TrainingDeckFacts.leftWords(done: doneDays, perWeek: perWeek)
-        let board = TrainingBoard(headline: TrainingBoard.fitted(headline, limit: 18),
+        let board = TrainingBoard(headline: TrainingBoard.fitted(headline, limit: 24),
                                   detail: TrainingBoard.fitted(detail, limit: 38),
                                   week: days, bests: bests, split: split)
 
@@ -189,6 +205,15 @@ extension TrainingDeckFacts {
                 widget.append(WidgetItem(id: "yesterday", header: "Yesterday", big: "Rest",
                                          middle: "Walks come in from Health", small: "", strikeable: false))
             }
+        }
+        // Deck's Big line is Barlow Condensed in caps (283 v3); numbers stay Outfit.
+        widget = widget.map { item in
+            var item = item
+            item.face = .deck
+            if !item.bigIsNumber {
+                item.big = Self.deckBig(item.big)
+            }
+            return item
         }
         return TrainingDeckFacts(board: board, routineWords: routineWords, needs: needs, widget: widget)
     }
