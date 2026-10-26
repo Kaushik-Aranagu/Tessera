@@ -108,11 +108,11 @@ struct HomeOneThing: View {
     @State private var turns = 0
     @State private var finishes = 0
 
-    /// Sheet 283 section 5: the widget box is 212 tall (400 to 612).
-    static let height: CGFloat = 212
+    /// Sheet 283 v4: the widget place is 200 tall (412 to 612).
+    static let height: CGFloat = 200
     static let swipeDistance: CGFloat = 50
     /// Home 236: the 80 pt sign is centred on the big and mid tiers (4 to 150 pt), so its top sits at 37.
-    static let signTop: CGFloat = 44
+    static let signTop: CGFloat = 32
     /// The sign's width plus the 12 pt that every tier's text stops short of it.
     static let signRoom: CGFloat = 80 + 12
 
@@ -148,8 +148,9 @@ struct HomeOneThing: View {
     // MARK: Page
 
     private func page(_ thing: HomeThing) -> some View {
-        // Sheet 283 section 5, Bridge's one-thing box: header (13 pt 600 caps, tracked .12 em) at 29, the Big line in a
-        // 64 pt slot at 44, the Middle line (20 pt) at 122, the Small line (15 pt 500 ink 2) at 154. Fixed slots: text
+        // Sheet 283 section 5, Bridge's one-thing box: header (13 pt 600 caps, tracked .12 em) at 429, the Big line in
+        // a
+        // 64 pt slot at 444, the Middle line (20 pt) at 522, the Small line (15 pt 500 ink 2) at 554. Fixed slots: text
         // cuts on whole words and never wraps; the type stops growing at AX1 so nothing overlaps.
         ZStack(alignment: .topLeading) {
             tier(thing, delay: 0.12, height: 20) {
@@ -159,16 +160,16 @@ struct HomeOneThing: View {
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
             }
-            .offset(y: 29)
+            .offset(y: 17)
             tier(thing, delay: 0.2, height: 64) { big(thing) }
                 .frame(height: 64, alignment: .leading)
-                .offset(y: 44)
+                .offset(y: 32)
             tier(thing, delay: 0.28, height: 28) { mid(thing) }
-                .offset(y: 122)
+                .offset(y: 110)
             tier(thing, delay: 0.36, height: 22) {
                 FitLine(forms: FitLine.cuts(thing.small), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
             }
-            .offset(y: 154)
+            .offset(y: 142)
         }
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .frame(height: Self.height, alignment: .topLeading)

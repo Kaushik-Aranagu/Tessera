@@ -42,7 +42,7 @@ struct TrainingBoard: Equatable {
 }
 
 /// Deck's masthead and widget content.
-struct TrainingDeckFacts {
+struct TrainingDeckFacts: Equatable {
     /// The widget's Big line in Deck's face (Barlow Condensed 600, 50 pt caps) cut on whole words to its 262 pt
     /// slot, trailing small words dropped: never "...".
     static func deckBig(_ text: String, width: CGFloat = 262) -> String {

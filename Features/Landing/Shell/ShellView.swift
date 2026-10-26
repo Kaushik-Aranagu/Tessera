@@ -12,6 +12,8 @@ struct ShellView<Room: RoomContent>: View {
     var act: (ShellIntent) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    /// The page behind the places; nil is the theme's page (Lookout draws its sky plate here).
+    @Environment(\.shellBackdrop) private var backdrop
     @State private var shown: [Place: SlotContent] = [:]
     @State private var styles: [Place: PlaceStyle] = [:]
     @State private var layout: LayoutKind = .landing
@@ -56,7 +58,7 @@ struct ShellView<Room: RoomContent>: View {
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
         }
         .ignoresSafeArea()
-        .background { ThemedBackground() }
+        .background { (backdrop ?? AnyView(ThemedBackground())).ignoresSafeArea() }
         .onChange(of: next, initial: true) { _, screen in apply(screen) }
         .onDisappear { driver?.cancel() }
     }

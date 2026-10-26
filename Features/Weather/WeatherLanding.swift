@@ -51,26 +51,23 @@ struct WeatherLandingPage: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 60)) { _ in
-            let snapshot = WeatherSample.snapshot(now: AppClock.now)
-            let cards = WeatherWords.cards(snapshot, alertOn: alertOn)
+            let facts = LookoutRoomContent.Facts(snapshot: WeatherSample.snapshot(now: AppClock.now), alertOn: alertOn)
+            let snapshot = facts.snapshot
             let plate = LookoutPlate.pick(kind: snapshot.kind, at: snapshot.now, dark: scheme == .dark)
             LandingScaffold(title: "Lookout", accent: WeatherAccent.room, navWord: "Bridge", onBack: { dismiss() },
                             switcher: WeatherWords.switcher, switcherIndex: $switcherIndex,
                             switcherVerticalIndex: $switcherVerticalIndex,
-                            needs: WeatherWords.needs(snapshot, switcher: switcherIndex),
+                            needs: facts.needs(switcherIndex),
                             keystone: { LookoutSkypiece(snapshot: snapshot) { openDoor(.hours) } },
-                            caption: WeatherWords.briefForms(snapshot).map { $0.lead + $0.rest },
-                            widget: cards.map(item), widgetIndex: $widgetIndex,
-                            openWidget: { item in
-                                let card = cards.first { $0.id == item.id }
-                                openDoor(card?.opens == .week ? .week : .hours)
-                            },
+                            caption: facts.caption,
+                            widget: facts.widget, widgetIndex: $widgetIndex,
+                            openWidget: { item in openDoor(facts.door(forItem: item.id)) },
                             glyph: { item in
                                 LandingGlyph(item: item, color: item.bigColor ?? WeatherAccent.room, room: .lookout)
                             },
-                            doors: doors(snapshot), focus: $focus,
+                            doors: facts.doors, focus: $focus,
                             openDoor: { door in openDoor(WeatherDoor(rawValue: door.id) ?? .hours) },
-                            action: action(snapshot),
+                            action: action(facts),
                             backdrop: AnyView(LookoutPlateView(plate: plate, fallback: AnyView(
                                 LookoutSkyView(kind: snapshot.kind, now: snapshot.now)
                             ))),
@@ -83,49 +80,21 @@ struct WeatherLandingPage: View {
         .toolbar(.hidden, for: .navigationBar)
     }
 
-    private func item(_ card: LookoutCard) -> WidgetItem {
-        WidgetItem(id: card.id, header: card.header, big: card.big, bigIsNumber: card.bigIsNumber, unit: card.unit,
-                   middle: card.middle, small: card.small,
-                   bigColor: card.wet ? Theme.Colors.Accent.rain : nil, strikeable: false)
-    }
-
-    private func doors(_ snapshot: WeatherSnapshot) -> [DialDoor] {
-        let next = snapshot.hours.first
-        let wet = Theme.Colors.Accent.rain
-        return [
-            DialDoor(id: "hours", name: "Hours", count: nil,
-                     color: snapshot.kind.colour(night: snapshot.night),
-                     label: next.map { _ in "Next hours" },
-                     lines: WeatherWords.hourLines(snapshot)),
-            DialDoor(id: "week", name: "Week", color: wet, label: "Days to note",
-                     lines: WeatherWords.weekLines(snapshot)),
-            DialDoor(id: "air", name: "Air", color: snapshot.air == "good" ? WeatherAccent.good : Theme.Colors.ink,
-                     label: "Now", lines: WeatherWords.airLines(snapshot)),
-        ]
-    }
-
-    /// Verb over object (283 v3): Alert (rain), then Hours and Walk across. Never "Rain alert" as one word.
-    private func action(_ snapshot: WeatherSnapshot) -> LandingFootAction {
-        LandingFootAction(word: "Alert", object: WeatherWords.alertObject(on: alertOn),
-                          hint: alertOn ? "Turns the rain alert off" : "Tells you before rain",
-                          alternates: [
-                              .init(verb: "Hours", object: "Next 12 hours") { openDoor(.hours) },
-                              .init(verb: "Walk", object: "Best time today") {
-                                  TessVoice.shared.say(WeatherWords.walkLine(snapshot))
-                              },
-                          ]) {
-            toggle()
+    /// Verb over object (283 v3), from the shared steps: Alert (rain), then Hours and Walk across.
+    private func action(_ facts: LookoutRoomContent.Facts) -> LandingFootAction {
+        let steps = facts.steps
+        return LandingFootAction(word: steps[0].verb, object: steps[0].object,
+                                 hint: alertOn ? "Turns the rain alert off" : "Tells you before rain",
+                                 alternates: [
+                                     .init(verb: steps[1].verb, object: steps[1].object) { openDoor(.hours) },
+                                     .init(verb: steps[2].verb, object: steps[2].object) {
+                                         LookoutActions.walk(facts.snapshot)
+                                     },
+                                 ]) {
+            LookoutActions.toggleAlert { on in
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { alertOn = on }
+            }
         }
-    }
-
-    private func toggle() {
-        let was = alertOn
-        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { alertOn = !was }
-        WeatherRainAlert.set(!was)
-        TessVoice.shared.say(WeatherRainAlert.receipt(on: !was), takeBack: {
-            WeatherRainAlert.set(was)
-            alertOn = was
-        })
     }
 }
 
@@ -384,21 +353,6 @@ struct WeatherDoorPage: View {
     }
 
     private func lines(_ snapshot: WeatherSnapshot) -> [String] {
-        switch door {
-        case .hours:
-            snapshot.hours.map { hour in
-                let name = WeatherWords.name(hour.kind, night: false).lowercased()
-                return "\(WeatherWords.hour(hour.date)) \(WeatherWords.degrees(hour.temperature)) \(name)"
-            }
-        case .week:
-            snapshot.week.dropFirst().map { day in
-                let calendar = Calendar.current
-                let weekday = calendar.weekdaySymbols[calendar.component(.weekday, from: day.date) - 1]
-                let name = WeatherWords.name(day.kind, night: false).lowercased()
-                return "\(weekday) \(name), high \(WeatherWords.degrees(day.high)), low \(WeatherWords.degrees(day.low))"
-            }
-        case .air:
-            WeatherWords.airLines(snapshot)
-        }
+        LookoutRoomContent.Facts(snapshot: snapshot).lines(door)
     }
 }

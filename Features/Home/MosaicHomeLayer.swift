@@ -494,7 +494,13 @@ struct MosaicHomeLayer: View {
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
-        .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { controller.globalOrigin = $0 }
+        // The canvas ignores the safe area and draws from the screen's top, but its reported frame is the one inside
+        // the safe area: the origin less the insets is where its row 0 really is (the sign drew 62 pt high without
+        // this).
+        .onGeometryChange(for: CGPoint.self) { proxy in
+            let frame = proxy.frame(in: .global)
+            return CGPoint(x: frame.minX - proxy.safeAreaInsets.leading, y: frame.minY - proxy.safeAreaInsets.top)
+        } action: { controller.globalOrigin = $0 }
         .onAppear {
             visible = true
             // The first open of this process is a cold launch: gather from night. Never over a moment, never under
