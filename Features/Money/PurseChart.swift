@@ -2,8 +2,10 @@ import SwiftUI
 
 // The Purse keystone, first working version (sheets 277 v3, 279; landing contract v2 §2): "you are the stock". One
 // chart in the slot, no figures anywhere on it: a solid line for what is still yours by day, a dashed forecast at your
-// pace to the month's end, last month faint behind, and a dotted floor for bills once bills exist. The category
-// names run across the top (swipe sideways), the index names down the right (swipe up and down).
+// pace to the month's end, last month faint behind, and a dotted floor for bills once bills exist. Over it the ticker
+// header (277: the index and its clock, "YOU" then "OCT"), the line's own name ("Still yours ..."), and under it the
+// day axis. The category is chosen on the doors dial (no tab row: the contract bans filter rows); the index names
+// run down the right (swipe up and down).
 
 /// One index drawn as a month by day. Values are in the ledger's one currency; they never leave this struct as text.
 struct PurseSeries: Equatable {
@@ -71,8 +73,8 @@ struct PurseCategory: Equatable, Identifiable {
     let indices: [PurseSeries]
 }
 
-/// The keystone: category names across the top, the chart, the index names at the right. Swipe sideways for the
-/// category, up and down for the index. The chart has no numbers, no red and no green.
+/// The keystone: the ticker header, the line's name, the chart with its day axis, the index names at the right.
+/// Swipe sideways for the category (the dial turns with it), up and down for the index. No figures, no red or green.
 struct PurseIndexView: View {
     let categories: [PurseCategory]
     @Binding var category: Int
@@ -83,7 +85,8 @@ struct PurseIndexView: View {
     @State private var drawn: CGFloat = 0
     @State private var cue = HapticCue()
 
-    static let topRow: CGFloat = 26
+    static let header: CGFloat = 40
+    static let axis: CGFloat = 16
     static let scroller: CGFloat = 78
 
     private var sage: Color {
@@ -104,11 +107,16 @@ struct PurseIndexView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            categoryRow
+        VStack(alignment: .leading, spacing: 4) {
+            header
             HStack(alignment: .top, spacing: 8) {
-                chart
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(spacing: 2) {
+                    chart
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    axisRow
+                        .frame(height: Self.axis)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 scrollerColumn
                     .frame(width: Self.scroller, alignment: .leading)
             }
@@ -135,24 +143,54 @@ struct PurseIndexView: View {
         .onChange(of: index) { _, _ in draw() }
     }
 
-    /// The current category bold in ink, the next ones after it in ink 2, clipped at the right edge.
-    private var categoryRow: some View {
-        HStack(spacing: 16) {
-            ForEach(Array(categories.enumerated()), id: \.element.id) { offset, item in
-                if offset >= category {
-                    Text(item.name)
-                        .font(.custom("Figtree", fixedSize: offset == category ? 15 : 13)
-                            .weight(offset == category ? .bold : .regular))
-                        .foregroundStyle(offset == category ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+    /// The ticker header (277, 278): the index's ticker in its colour and the clock it runs on in ink 2, then the
+    /// solid line's own name ("Still yours, heading up at this pace"). Words only; the widget carries the figures.
+    private var header: some View {
+        let ticker = Self.ticker(series: series, category: current?.name, now: AppClock.now)
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(ticker.symbol)
+                    .font(.custom("Figtree", fixedSize: 13).weight(.bold))
+                    .tracking(13 * 0.06)
+                    .foregroundStyle(sage)
+                Text(ticker.clock)
+                    .font(.custom("Figtree", fixedSize: 13).weight(.semibold))
+                    .tracking(13 * 0.06)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+            }
+            .lineLimit(1)
+            .frame(height: 16, alignment: .leading)
+            ViewThatFits(in: .horizontal) {
+                ForEach(Array(Self.lineName(series: series).enumerated()), id: \.offset) { _, form in
+                    (Text(form.name).foregroundStyle(sage).fontWeight(.semibold)
+                        + Text(form.rest).foregroundStyle(Theme.Colors.inkSecondary))
+                        .font(.custom("Figtree", fixedSize: 15))
                         .lineLimit(1)
                         .fixedSize()
                 }
             }
+            .frame(height: 20, alignment: .leading)
         }
-        .frame(height: Self.topRow - 6, alignment: .leading)
+        .frame(height: Self.header, alignment: .topLeading)
         .frame(maxWidth: .infinity, alignment: .leading)
         .clipped()
-        .tesseraAnimation(Theme.Motion.firm, value: category)
+        .tesseraAnimation(Theme.Motion.firm, value: category * 100 + index)
+    }
+
+    /// The day axis under the chart: "1 Oct", 8, 15, 22, 29, placed on their days.
+    private var axisRow: some View {
+        GeometryReader { proxy in
+            let days = series?.daysInMonth ?? 30
+            ForEach(Self.axisLabels(days: days, now: AppClock.now), id: \.day) { tick in
+                let x = proxy.size.width * CGFloat(tick.day - 1) / CGFloat(max(days - 1, 1))
+                Text(tick.text)
+                    .font(.custom("Figtree", fixedSize: 11))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .fixedSize()
+                    .position(x: min(max(x, 14), proxy.size.width - 8), y: proxy.size.height / 2)
+            }
+        }
+        .accessibilityHidden(true)
     }
 
     private var scrollerColumn: some View {
@@ -199,6 +237,17 @@ struct PurseIndexView: View {
                 zero.move(to: point(0, 0))
                 zero.addLine(to: point(days, 0))
                 context.stroke(zero, with: .color(Theme.Colors.inkSecondary.opacity(0.35)), lineWidth: 0.5)
+                // The axes: a hairline up the left edge and along the foot, with a short tick on each labelled day.
+                var axes = Path()
+                axes.move(to: CGPoint(x: 0, y: 0))
+                axes.addLine(to: CGPoint(x: 0, y: size.height))
+                axes.addLine(to: CGPoint(x: size.width, y: size.height))
+                for tick in Self.axisLabels(days: series.daysInMonth, now: AppClock.now) {
+                    let x = size.width * CGFloat(tick.day - 1) / CGFloat(days)
+                    axes.move(to: CGPoint(x: x, y: size.height))
+                    axes.addLine(to: CGPoint(x: x, y: size.height - 4))
+                }
+                context.stroke(axes, with: .color(Theme.Colors.inkSecondary.opacity(0.6)), lineWidth: 0.6)
                 context.stroke(line(series.prior, from: 0), with: .color(Theme.Colors.inkSecondary.opacity(0.35)),
                                lineWidth: 1)
                 if let floor = series.floor {
@@ -254,5 +303,64 @@ struct PurseIndexView: View {
         guard let count = current?.indices.count, count > 1 else { return }
         withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) { index = (index + step + count) % count }
         cue.play(.selection)
+    }
+}
+
+// MARK: - Header words
+
+extension PurseIndexView {
+    struct Ticker: Equatable {
+        let symbol: String
+        let clock: String
+    }
+
+    struct LineName: Equatable {
+        let name: String
+        let rest: String
+    }
+
+    /// "YOU" "OCT" for the month (you are the stock, 277); a kind's ticker is its name ("LUNCH" "OCT"). No dot glyph
+    /// between them: the contract bans middle dots on landings, so the pair is set apart by space and colour.
+    static func ticker(series: PurseSeries?, category: String?, now: Date) -> Ticker {
+        let month = now.formatted(Date.FormatStyle().locale(Locale(identifier: "en_US")).month(.abbreviated))
+            .uppercased()
+        guard let series else { return Ticker(symbol: (category ?? "Purse").uppercased(), clock: "NOT SET UP") }
+        let symbol = series.shape == .balance ? "YOU" : series.name.uppercased()
+        return Ticker(symbol: symbol, clock: month)
+    }
+
+    /// The solid line's name, longest form first: "Still yours, heading up at this pace" / "Still yours, heading up" /
+    /// "Still yours". A flow reads "Spent, faster than last month". Words only, never a figure.
+    static func lineName(series: PurseSeries?) -> [LineName] {
+        guard let series else { return [LineName(name: "Not set up yet", rest: "")] }
+        guard !series.isEmpty else {
+            return [LineName(name: series.shape == .balance ? "Still yours" : "Spent", rest: ", nothing yet")]
+        }
+        switch series.shape {
+        case .balance:
+            let heading = (series.forecast.last ?? series.solid.last ?? 0) >= (series.solid.last ?? 0) ? "up" : "down"
+            return [LineName(name: "Still yours", rest: ", heading \(heading) at this pace"),
+                    LineName(name: "Still yours", rest: ", heading \(heading)"),
+                    LineName(name: "Still yours", rest: "")]
+        case .flow:
+            let today = series.solid.count - 1
+            let now = series.solid.last ?? 0
+            let then = series.prior.indices.contains(today) ? series.prior[today] : series.prior.last ?? 0
+            let pace = series.prior.isEmpty || then == 0 ? nil : (now > then ? "faster than" : "calmer than")
+            let rest = pace.map { ", \($0) last month" } ?? ", the first month"
+            return [LineName(name: "Spent", rest: rest), LineName(name: "Spent", rest: "")]
+        }
+    }
+
+    struct AxisTick: Equatable {
+        let day: Int
+        let text: String
+    }
+
+    /// 1, 8, 15, 22, 29 (the board's ticks), the first with the month: "1 Oct".
+    static func axisLabels(days: Int, now: Date) -> [AxisTick] {
+        let month = now.formatted(Date.FormatStyle().locale(Locale(identifier: "en_US")).month(.abbreviated))
+        return [1, 8, 15, 22, 29].filter { $0 <= days }
+            .map { AxisTick(day: $0, text: $0 == 1 ? "1 \(month)" : "\($0)") }
     }
 }
