@@ -14,13 +14,18 @@ public struct MemoryScope: Sendable, Equatable {
     public var agent: String
     /// The classes its shared slice reads; nil is every class (Tess, the front desk).
     public var classes: Set<SystemCatalog.Key>?
+    /// Kinds it reads beyond the system classes: a spawned room's own kind and its subclasses.
+    public var classIDs: Set<UUID>
     /// Its private folder, with no trailing slash ("/memories/deck").
     public var notebook: String
     public var policy: DoorPolicy
 
-    public init(agent: String, classes: Set<SystemCatalog.Key>?, notebook: String, policy: DoorPolicy) {
+    public init(agent: String, classes: Set<SystemCatalog.Key>?, classIDs: Set<UUID> = [], notebook: String,
+                policy: DoorPolicy)
+    {
         self.agent = agent
         self.classes = classes
+        self.classIDs = classIDs
         self.notebook = notebook
         self.policy = policy
     }
@@ -30,14 +35,14 @@ public struct MemoryScope: Sendable, Equatable {
     public init(_ spec: AgentSpec, policy: DoorPolicy) {
         let own = spec.beliefClasses(under: policy)
         self.init(agent: spec.name, classes: spec.room == AgentSpec.tess.room ? nil : Set(own),
-                  notebook: spec.notebook, policy: policy)
+                  classIDs: Set(spec.classIDs), notebook: spec.notebook, policy: policy)
     }
 
     /// The system's own bookkeeping never enters a slice: turns, sent rows, settings, the profile and the memory lines
     /// that beliefs already carry.
     static let neverRead: Set<SystemCatalog.Key> = [
         .tessTurn, .tessCall, .tessSent, .tessSentExact, .tessWaiting, .tessMemory, .settings, .meProfile, .heldNotice,
-        .closedDay,
+        .closedDay, .tessAgent, .notebookPage, .agentEpisode,
     ]
 
     /// Whether an object of `classDef` is in this slice. A subclass counts as its parent (a barbell lift is an
@@ -56,7 +61,7 @@ public struct MemoryScope: Sendable, Equatable {
             return false
         }
         guard let classes else { return true }
-        return classes.contains(where: isA)
+        return classes.contains(where: isA) || classIDs.contains { ClassResolver.isSubclass(classDef, ofClassID: $0) }
     }
 
     /// Whether `path` is inside this agent's own notebook folder.

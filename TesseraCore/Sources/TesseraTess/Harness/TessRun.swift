@@ -210,7 +210,7 @@ public final class TessRun {
                 specs.append(ToolSpec(name: name, description: item["description"] as? String ?? "", schema: json))
             }
         }
-        return specs + [TessOpenTool.spec] + TessRecallTools.specs
+        return specs + [TessOpenTool.spec] + TessRecallTools.specs + [AgentNotebook.spec]
     }
 
     /// The agent's memory slice for this run (M2), built once per run so recall's paths stay the same across rounds.
@@ -467,6 +467,10 @@ public final class TessRun {
                 .flatMap { $0 as? String }?.hasPrefix("/") == true
             result = TessOpenTool.run(arguments: input, handles: handles, engine: engine, policy: door.policy(),
                                       calendar: calendar, index: isPath ? memoryIndex(for: runID) : nil)
+        case AgentNotebook.name:
+            // Its own notebook only: the scope's folder, the policy's pages.
+            result = AgentNotebook(engine: engine, scope: MemoryScope(agent, policy: door.policy()), now: now())
+                .run(arguments: input)
         case _ where TessRecallTools.names.contains(name):
             if name == TessRecallTools.remember, budget <= 0 {
                 result = (TessTools.capLine, true)

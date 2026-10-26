@@ -35,6 +35,8 @@ enum PrivateWords {
         SystemCatalog.Key.heldNotice.systemKey, SystemCatalog.Key.tessSentExact.systemKey,
         // Her conversation (sheet 215 rev 5) is on the phone only, in no copy at all.
         SystemCatalog.Key.tessTurn.systemKey,
+        // Her agents' notebooks and episodes, the same (docs/ai/harness/agents.md).
+        SystemCatalog.Key.notebookPage.systemKey, SystemCatalog.Key.agentEpisode.systemKey,
     ]
 
     static func isMirror(_ record: ObjectRecord) -> Bool {
