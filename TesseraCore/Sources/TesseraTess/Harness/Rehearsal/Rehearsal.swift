@@ -56,6 +56,14 @@ public final class Rehearsal {
         case outOfScope(String)
         case moneyOffPhone(String)
 
+        /// A line that holds a name or a tool's own words may hold a private title, so it stays on the phone.
+        public var taint: Taint {
+            switch self {
+            case .count, .moneyOffPhone: .claudeSafe
+            case .refused, .danglingLink, .orphan, .outOfScope: .deviceOnly
+            }
+        }
+
         public var line: String {
             switch self {
             case let .refused(tool, line): "\(tool) was refused: \(line)"
@@ -78,7 +86,7 @@ public final class Rehearsal {
 
         /// The diff and the failed checks as Door fragments (the diff's taint rides on each).
         public var fragments: [PackFragment] {
-            diff.map(\.fragment) + failed.map { PackFragment($0.line) }
+            diff.map(\.fragment) + failed.map { PackFragment($0.line, taint: $0.taint) }
         }
 
         /// Receipts, the diff and the failed checks as text for Tess, the diff's tainted lines included. Only the
@@ -240,6 +248,12 @@ public final class Rehearsal {
         }
     }
 
+    /// An object's name as anything outside the room says it: its label when it is private.
+    static func shown(_ id: UUID, in engine: ActionEngine) -> String {
+        guard let object = engine.store.context.objects[id] else { return "An object" }
+        return ObjectPrivacy.shownLabel(of: object, in: engine.store, classes: engine.classes) ?? object.title
+    }
+
     /// No link left pointing at a deleted object, and nothing made under a parent that is gone.
     static func integrity(of records: [OpRecord], in engine: ActionEngine) -> [Failure] {
         let store = engine.store
@@ -248,14 +262,14 @@ public final class Rehearsal {
             for op in record.ops {
                 switch op {
                 case let .setLinks(object, _, _, new):
-                    let name = store.context.objects[object].map(\.title) ?? "An object"
+                    let name = shown(object, in: engine)
                     for case let .object(target) in new where store.context.objects[target]?.isDeleted != false {
                         failures.append(.danglingLink(name))
                     }
                 case let .create(object, _, parent, _):
                     guard let parent else { continue }
                     if store.context.objects[parent]?.isDeleted != false {
-                        failures.append(.orphan(store.context.objects[object]?.title ?? "An object"))
+                        failures.append(.orphan(shown(object, in: engine)))
                     }
                 default: break
                 }
@@ -265,7 +279,7 @@ public final class Rehearsal {
         for record in records {
             for case let .softDelete(id) in record.ops {
                 for child in store.context.objects.values where child.parent?.id == id && !child.isDeleted {
-                    failures.append(.orphan(child.title))
+                    failures.append(.orphan(shown(child.id, in: engine)))
                 }
             }
         }

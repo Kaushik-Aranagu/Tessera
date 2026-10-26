@@ -84,6 +84,15 @@ struct RehearsalTests {
         #expect(spend.fragments.filter { $0.taint == .deviceOnly }.count == spend.diff.count)
     }
 
+    @Test func failureLinesThatHoldNamesStayOnThePhone() {
+        let failures: [Rehearsal.Failure] = [.refused(tool: "x", line: "no note called Lexapro"), .danglingLink("n"),
+                                             .orphan("n"), .outOfScope("n")]
+        #expect(failures.allSatisfy { $0.taint == .deviceOnly })
+        #expect(Rehearsal.Failure.count(expected: 1, got: 2).taint == .claudeSafe)
+        let result = Rehearsal.Result(receipts: [], diff: [], failed: failures)
+        #expect(result.fragments.allSatisfy { $0.taint == .deviceOnly })
+    }
+
     @Test func aMoneyToolOffThePhoneIsAFailedCheck() {
         let result = Rehearsal(engine: engine).try(
             [Rehearsal.Call(name: "logSpend", json: #"{"amount":12,"note":"x"}"#)],
