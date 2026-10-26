@@ -179,7 +179,7 @@ struct ElementLooksTests {
         let said = try #require(haiku.requestsSeen.last).messages.last?.content.compactMap { piece -> String? in
             if case let .toolResult(_, content, _) = piece { content } else { nil }
         } ?? []
-        #expect(said == ["That isn't a call I can make here."])
+        #expect(said == ["That isn't a call I can make here"])
     }
 
     @Test func aFormTessPicksIsStagedAndAppliedOnlyIfItPasses() async throws {
