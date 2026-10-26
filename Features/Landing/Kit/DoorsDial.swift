@@ -278,11 +278,8 @@ struct DoorSummary: View {
     private func lines(_ door: DialDoor) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if let label = door.label {
-                Text(label)
-                    .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(1)
-                    .frame(height: 20, alignment: .leading)
+                FitLine(forms: FitLine.cuts(label), size: 13, color: Theme.Colors.inkSecondary)
+                    .frame(width: 192, height: 20, alignment: .leading)
             }
             ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
                 FitLine(
@@ -319,10 +316,8 @@ struct DoorSummary: View {
     @ViewBuilder
     private func rowView(_ row: Row) -> some View {
         if row.isLabel {
-            Text(row.text)
-                .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .lineLimit(1)
+            // Whole-word cuts, never "..." (contract §7).
+            FitLine(forms: FitLine.cuts(row.text), size: 13, color: Theme.Colors.inkSecondary)
                 .frame(width: 192, height: 20, alignment: .leading)
         } else {
             FitLine(forms: FitLine.cuts(row.text), size: style.lineSize, color: Theme.Colors.ink,

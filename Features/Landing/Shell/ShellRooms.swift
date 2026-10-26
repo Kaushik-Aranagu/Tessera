@@ -6,6 +6,8 @@ extension EnvironmentValues {
     @Entry var shellScene: @MainActor (String) -> AnyView = { _ in AnyView(EmptyView()) }
     /// The page behind the shell's places; nil keeps the theme's page.
     @Entry var shellBackdrop: AnyView?
+    /// The glyph library the shell's glyph place draws from (a room only draws its own drawings); nil: all of them.
+    @Entry var shellGlyphRoom: GlyphKind.Room?
 }
 
 /// Any room's content behind one type, so the shell can hold a room chosen at run time.
@@ -30,6 +32,7 @@ enum ShellRooms {
     static var all: [Entry] {
         [
             Entry(id: NotesRoomContent.room) { AnyView(NotesShellHost()) },
+            Entry(id: DeckRoomContent.room) { AnyView(DeckShellHost()) },
         ]
     }
 
@@ -41,3 +44,18 @@ enum ShellRooms {
         all.first { $0.id == room }?.host()
     }
 }
+
+#if DEBUG
+    extension ShellNavigator {
+        /// `-shellDoor <door>` (simulator only, LaunchFlags): opens that door of `room` 2 s after launch and, with
+        /// `-shellBack`, comes back 3 s later, so stills and recordings catch the merge and the split.
+        func walkForStills(room: String) async {
+            guard let door = LaunchFlags.value(after: "-shellDoor") else { return }
+            try? await Task.sleep(for: .seconds(2))
+            push(.door(room, door))
+            guard LaunchFlags.has("-shellBack") else { return }
+            try? await Task.sleep(for: .seconds(3))
+            pop()
+        }
+    }
+#endif

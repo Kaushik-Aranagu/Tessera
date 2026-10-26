@@ -74,132 +74,31 @@ struct TrainingWallLanding: View {
 
     var body: some View {
         let _ = model.revision
-        let facts = TrainingWallFacts.load(model, dark: scheme == .dark)
-        let deck = TrainingDeckFacts.load(model, wall: facts, dark: scheme == .dark)
-        LandingScaffold(title: "Deck", accent: Theme.Colors.Accent.training, navWord: "Bridge",
+        // One source with the shell's `DeckRoomContent`: the same facts, words, taps and foot.
+        let facts = DeckRoomContent.Facts.load(model: model, scheme: scheme)
+        let actions = DeckActions(model: model, reduceMotion: reduceMotion, goTo: goTo)
+        LandingScaffold(title: DeckRoomContent.title, accent: Theme.Colors.Accent.training, navWord: "Bridge",
                         onBack: { dismiss() }, onTitle: { goTo(.page) },
-                        switcher: TrainingDeckFacts.across, switcherVertical: deck.routineWords,
+                        switcher: TrainingDeckFacts.across, switcherVertical: facts.deck.routineWords,
                         switcherIndex: $switcherIndex, switcherVerticalIndex: $switcherVerticalIndex,
-                        needs: deck.needs.indices.contains(switcherIndex) ? deck.needs[switcherIndex] : [],
+                        needs: facts.deck.needs.indices.contains(switcherIndex) ? facts.deck.needs[switcherIndex] : [],
                         keystone: {
-                            LandingKeystone(label: "The board") {
-                                TrainingBlackboard(board: deck.board, openToday: { goTo(.page) },
+                            LandingKeystone(label: DeckRoomContent.boardLabel) {
+                                TrainingBlackboard(board: facts.deck.board, openToday: { goTo(.page) },
                                                    openLift: { goTo(.route(.classDef($0))) })
                             }
                         },
-                        caption: ["Tap a number to open the lift. Swipe left to wipe."],
-                        widget: deck.widget, widgetIndex: $widgetIndex,
-                        openWidget: openWidget,
+                        caption: DeckRoomContent.caption,
+                        widget: facts.deck.widget, widgetIndex: $widgetIndex,
+                        openWidget: { actions.item($0.id) },
                         glyph: { item in
-                            LandingGlyph(item: Self.glyphWords(item), color: Theme.Colors.Accent.training, room: .deck)
+                            LandingGlyph(item: DeckRoomContent.glyphWords(item), color: Theme.Colors.Accent.training,
+                                         room: .deck)
                         },
-                        doors: facts.doors, focus: $focus, openDoor: openDoor,
-                        action: action(facts), summaryStyle: .chalk)
+                        doors: facts.wall.doors, focus: $focus, openDoor: { actions.door($0.id) },
+                        action: actions.footAction(facts.wall), summaryStyle: .chalk)
             .overlay { ChalkDustHandOver() }
             .toolbar(.hidden, for: .navigationBar)
-    }
-
-    private func openWidget(_ item: WidgetItem) {
-        switch item.id {
-        case "today": goTo(.page)
-        default: goTo(LogSwitch.isOn ? .log : .page)
-        }
-    }
-
-    // MARK: Taps
-
-    private func openWord(_ id: String) {
-        switch TrainingWallTarget(id: id) {
-        case let .exercise(uuid): goTo(.route(.classDef(uuid)))
-        case let .routine(uuid): goTo(.route(.object(uuid)))
-        case nil: break
-        }
-    }
-
-    private func spoken(_ word: WallWord) -> String {
-        switch TrainingWallTarget(id: word.id) {
-        case .routine: "\(word.text), routine"
-        default: "\(word.text), exercise"
-        }
-    }
-
-    private func openDoor(_ door: DialDoor) {
-        switch door.id {
-        case "today":
-            goTo(.page)
-        case "week":
-            goTo(LogSwitch.isOn ? .log : .page)
-        case "library":
-            goTo(.library)
-        case "plan":
-            if let plan = model.plan {
-                goTo(.route(.routines(plan.id)))
-            } else if let planClass = model.classDef(.plan) {
-                goTo(.route(.classDef(planClass.id)))
-            }
-        default:
-            goTo(.stats)
-        }
-    }
-
-    // MARK: Foot
-
-    private func action(_ facts: TrainingWallFacts) -> LandingFootAction? {
-        guard let foot = facts.action else { return nil }
-        let log = LandingFootAction.Step(verb: "Log", object: "This week") { goTo(LogSwitch.isOn ? .log : .page) }
-        let rest = LandingFootAction.Step(verb: "Rest", object: "Today") {
-            // Nothing is written: the plan keeps its day; Tess only says so.
-            TessVoice.shared.say("Rest it is. Nothing logged, the plan keeps its day.")
-        }
-        switch facts.day {
-        case .ready:
-            return LandingFootAction(
-                word: foot.verb,
-                object: foot.object,
-                hold: true,
-                hint: "Hold to start the workout",
-                alternates: [log, rest]
-            ) { start() }
-        case .running:
-            return LandingFootAction(word: foot.verb, object: foot.object, hint: "Opens the workout",
-                                     alternates: [log]) { model.isWorkoutPresented = true }
-        case .rest:
-            var alternates = [log]
-            if let next = facts.restOption {
-                alternates.insert(
-                    LandingFootAction.Step(verb: "Start", object: next, hold: true) { startNext() },
-                    at: 0
-                )
-            }
-            return LandingFootAction(word: foot.verb, object: foot.object, hint: "Logs a walk",
-                                     alternates: alternates)
-            {
-                TessVoice.shared.say("Walks come in from Health.")
-            }
-        case .nothing:
-            return LandingFootAction(word: foot.verb, object: foot.object, hint: "Opens the library") { goTo(.library) }
-        case .done:
-            return nil
-        }
-    }
-
-    /// The same start the Training page does: running picks up, tonight's workout starts, else the routine.
-    private func start() {
-        model.workoutRisesFromLane = false
-        if model.session != nil {
-            model.isWorkoutPresented = true
-        } else if let workout = model.tonightWorkout() {
-            model.startWorkout(workout)
-        } else if let routine = model.triedRoutine() ?? model.todaysRoutine() {
-            model.startRoutine(routine)
-        }
-    }
-
-    /// A rest day's right drag: the next routine anyway.
-    private func startNext() {
-        guard let plan = model.plan, let next = model.ledger.nextRoutine(in: plan, now: AppClock.now) else { return }
-        model.workoutRisesFromLane = false
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.startRoutine(next) }
     }
 }
 
@@ -263,14 +162,5 @@ struct ChalkDustHandOver: View {
             dot.fill(Path(ellipseIn: CGRect(x: x, y: y, width: size, height: size)),
                      with: .color(landed || fallen > 0.85 ? blue : chalk))
         }
-    }
-}
-
-extension TrainingWallLanding {
-    /// Deck's glyph is the board's ticks (283): the library picks by words, and "Tonight" or a routine like
-    /// "Lower body" would draw a moon, so today's item is picked as the week's sessions. Yesterday keeps its words.
-    static func glyphWords(_ item: WidgetItem) -> WidgetItem {
-        guard item.id == "today" || item.id == "week" else { return item }
-        return WidgetItem(id: item.id, header: "This week", big: "", middle: "")
     }
 }
