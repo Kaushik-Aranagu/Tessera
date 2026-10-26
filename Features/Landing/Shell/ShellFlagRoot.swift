@@ -7,7 +7,12 @@ struct ShellFlagRoot: View {
         LaunchFlags.has("-shell")
     }
 
+    /// `-shellRoom deck` (simulator only) opens that room through the shell; the Log otherwise.
     var body: some View {
-        NotesShellHost()
+        if let room = LaunchFlags.value(after: "-shellRoom"), let host = ShellRooms.host(for: room) {
+            host
+        } else {
+            NotesShellHost()
+        }
     }
 }
