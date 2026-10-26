@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import TesseraCore
 
@@ -72,11 +73,15 @@ public struct AgentRegistry {
     /// never makes a second. `classIDs` are the kinds the room keeps.
     @discardableResult
     public func spawn(room: String, title: String, classIDs: [UUID] = [], now: Date = .now) throws -> AgentSpec {
-        let roomKey = room.lowercased()
-        guard !AgentSpec.shipped.contains(where: { $0.room == roomKey }) else { throw Refusal.shippedRoom }
-        let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty, let agentClass = engine.classes[.tessAgent] else { throw Refusal.noName }
-        if let existing = rows().first(where: { store.value("room", of: $0)?.stringValue == roomKey }),
+        guard !AgentSpec.shipped.contains(where: { $0.room == room.lowercased() }) else { throw Refusal.shippedRoom }
+        let typed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !typed.isEmpty, let agentClass = engine.classes[.tessAgent] else { throw Refusal.noName }
+        // Agent objects ride in backups and the export, so a private room ("Therapy") is kept as "Private room" and
+        // its room key as a digest: the name never leaves the room it was typed in.
+        let name = isPrivate(typed) ? Self.privateTitle : typed
+        let roomKey = key(for: room, title: typed)
+        let either: Set = [room.lowercased(), Self.digest(room)]
+        if let existing = rows().first(where: { either.contains(store.value("room", of: $0)?.stringValue ?? "") }),
            let found = spec(from: existing)
         {
             return found
@@ -94,6 +99,23 @@ public struct AgentRegistry {
         store.save()
         guard let made = spec(from: row) else { throw Refusal.unreadable }
         return made
+    }
+
+    static let privateTitle = "Private room"
+
+    func isPrivate(_ text: String) -> Bool {
+        ObjectPrivacy.isPrivateTitle(text, lastWeightKg: BodyWeight.lastKg(in: store))
+    }
+
+    /// The stored room key: the room as typed, or a digest of it when the room or its title is private.
+    func key(for room: String, title: String = "") -> String {
+        let lower = room.lowercased()
+        return isPrivate(lower) || (!title.isEmpty && isPrivate(title)) ? Self.digest(lower) : lower
+    }
+
+    static func digest(_ room: String) -> String {
+        let bytes = SHA256.hash(data: Data(room.lowercased().utf8)).prefix(6)
+        return "private-" + bytes.map { String(format: "%02x", $0) }.joined()
     }
 
     /// A name no other agent has (a spawned "Deck" room's agent is "Deck 2").
@@ -120,8 +142,9 @@ public struct AgentRegistry {
     /// The agent for a room, by its room key, name or room name.
     public func agent(_ key: String, under policy: DoorPolicy) -> AgentSpec? {
         let wanted = key.lowercased()
+        let hidden = Self.digest(wanted)
         return agents(under: policy).first {
-            $0.room == wanted || $0.name.lowercased() == wanted || $0.title.lowercased() == wanted
+            $0.room == wanted || $0.room == hidden || $0.name.lowercased() == wanted || $0.title.lowercased() == wanted
         }
     }
 
