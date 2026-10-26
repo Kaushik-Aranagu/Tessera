@@ -61,9 +61,9 @@ struct TesseraApp: App {
                             SoulGallery()
                         } else if LaunchFlags.has("-measureGallery") {
                             MeasureGallery().environment(model)
-                        } else if LaunchFlags.has("-shell") {
-                            // The standing shell (sheet 283 v5) with the Log; simulator only (LaunchFlags).
-                            NotesShellHost()
+                        } else if ShellFlagRoot.isAsked {
+                            // The standing shell (-shell) or Layout mode (-layoutMode), sheet 283; simulator only.
+                            ShellFlagRoot()
                         } else if LaunchFlags.has("-notes") {
                             NotesView()
                         } else if LaunchFlags.has("-trainingLanding") {
