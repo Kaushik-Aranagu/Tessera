@@ -211,6 +211,6 @@ public struct SampleWeather: WeatherSource {
             gustKph: 22
         )
         return WeatherReport(fetchedAt: now, now: current, hourly: hours, daily: days,
-                               air: WeatherReport.AirQuality(usAQI: 42, pm25: 9, pm10: 14))
+                             air: WeatherReport.AirQuality(usAQI: 42, pm25: 9, pm10: 14))
     }
 }

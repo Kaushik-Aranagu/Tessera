@@ -214,16 +214,38 @@ struct WeatherTests {
     // MARK: Walls
 
     @Test func noClaudeSenderOrToolReadsTheForecast() throws {
+        // Every source file outside Weather/ (Core builds the fragments Claude is sent), not only the Claude senders.
         let sources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().appendingPathComponent("Sources")
-        let tess = sources.appendingPathComponent("TesseraTess")
-        let files = FileManager.default.enumerator(at: tess, includingPropertiesForKeys: nil)?
-            .compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" } ?? []
-        #expect(!files.isEmpty)
+        let files = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil)?
+            .compactMap { $0 as? URL }
+            .filter { $0.pathExtension == "swift" && !$0.path.contains("/TesseraCore/Weather/") } ?? []
+        #expect(files.count > 100)
         for file in files {
             let text = try String(contentsOf: file, encoding: .utf8)
-            #expect(!text.contains("WeatherReport") && !text.contains("OpenMeteo") && !text.contains("WeatherSource") && !text.contains("WeatherCondition"),
-                    "\(file.lastPathComponent) reads the weather")
+            #expect(!text.contains("WeatherReport") && !text.contains("OpenMeteo") && !text.contains("WeatherSource")
+                && !text.contains("WeatherCondition"), "\(file.lastPathComponent) reads the weather")
         }
+    }
+
+    @Test func theForecastRequestAsksForWindDirection() throws {
+        let url = try #require(OpenMeteoSource.forecastURL(latitude: 1, longitude: 1))
+        let current = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?
+            .first { $0.name == "current" }?.value ?? ""
+        #expect(current.contains("wind_direction_10m"))
+    }
+
+    @Test func twoAsksForTheSamePlaceShareOneFetch() async throws {
+        let counter = Counter()
+        let source = OpenMeteoSource { url in
+            counter.add(url)
+            try await Task.sleep(for: .milliseconds(150))
+            return url.host?.hasPrefix("air-quality") == true ? Data(Self.airJSON.utf8) : Data(Self.forecastJSON.utf8)
+        }
+        let now = Date(timeIntervalSince1970: 1_792_000_000)
+        async let first = source.forecast(latitude: 37.7, longitude: -122.4, now: now)
+        async let second = source.forecast(latitude: 37.7, longitude: -122.4, now: now)
+        _ = try await (first, second)
+        #expect(counter.all.count == 2)
     }
 }

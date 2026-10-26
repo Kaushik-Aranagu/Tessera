@@ -21,22 +21,25 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
     private let fetch: Fetch
     private let lock = NSLock()
     private var cached: (key: String, at: Date, forecast: WeatherReport)?
+    private var inFlight: (key: String, task: Task<WeatherReport, any Error>)?
 
     public init(fetch: @escaping Fetch = OpenMeteoSource.liveFetch) {
         self.fetch = fetch
     }
 
-    /// A plain GET with no cookies, no redirects away from Open-Meteo, and no caching on disk.
-    public static let liveFetch: Fetch = { url in
+    /// One session for every fetch: no cookies, no disk cache.
+    private static let session: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.httpCookieAcceptPolicy = .never
         configuration.httpShouldSetCookies = false
         configuration.urlCache = nil
         configuration.timeoutIntervalForRequest = 15
-        let (data, response) = try await URLSession(configuration: configuration).data(
-            from: url,
-            delegate: SameHostOnly()
-        )
+        return URLSession(configuration: configuration)
+    }()
+
+    /// A plain GET with no cookies, no redirects away from Open-Meteo, and no caching on disk.
+    public static let liveFetch: Fetch = { url in
+        let (data, response) = try await session.data(from: url, delegate: SameHostOnly())
         guard let http = response as? HTTPURLResponse, (200 ..< 300).contains(http.statusCode) else {
             throw WeatherError("Open-Meteo answered with an error")
         }
@@ -52,7 +55,7 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
             .init(name: "longitude", value: String(format: "%.1f", rounded(longitude))),
             .init(
                 name: "current",
-                value: "temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,wind_gusts_10m"
+                value: "temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,wind_gusts_10m,wind_direction_10m"
             ),
             .init(
                 name: "hourly",
@@ -99,6 +102,28 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
         cached = (key, now, forecast)
     }
 
+    private func joinOrStart(key: String,
+                             _ work: @escaping @Sendable () async throws -> WeatherReport)
+        -> Task<WeatherReport, any Error>
+    {
+        lock.lock()
+        defer { lock.unlock() }
+        if let running = inFlight, running.key == key {
+            return running.task
+        }
+        let task = Task { try await work() }
+        inFlight = (key, task)
+        return task
+    }
+
+    private func finish(key: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        if inFlight?.key == key {
+            inFlight = nil
+        }
+    }
+
     public func forecast(latitude: Double, longitude: Double, now: Date) async throws -> WeatherReport {
         let key = "\(Self.rounded(latitude)),\(Self.rounded(longitude))"
         if let hit = held(key, now: now) {
@@ -107,13 +132,18 @@ public final class OpenMeteoSource: WeatherSource, @unchecked Sendable {
         guard let url = Self.forecastURL(latitude: latitude, longitude: longitude) else {
             throw WeatherError("no forecast address")
         }
-        var forecast = try await Self.parse(forecast: fetch(url), fetchedAt: now)
-        // Air quality is a second, optional request; a failure leaves it out.
-        if let airURL = Self.airURL(latitude: latitude, longitude: longitude),
-           let data = try? await fetch(airURL)
-        {
-            forecast.air = Self.parse(air: data)
+        // A fetch already going for this place is joined, not repeated.
+        let airURL = Self.airURL(latitude: latitude, longitude: longitude)
+        let task = joinOrStart(key: key) { [fetch] in
+            var forecast = try await Self.parse(forecast: fetch(url), fetchedAt: now)
+            // Air quality is a second, optional request; a failure leaves it out.
+            if let airURL, let data = try? await fetch(airURL) {
+                forecast.air = Self.parse(air: data)
+            }
+            return forecast
         }
+        defer { finish(key: key) }
+        let forecast = try await task.value
         hold(forecast, key: key, now: now)
         return forecast
     }
@@ -253,11 +283,12 @@ private extension Array {
     }
 }
 
-/// Follows a redirect only inside Open-Meteo's own host, so the rounded coordinate never travels anywhere else.
+/// Follows a redirect only over https and inside Open-Meteo's own host, so the rounded coordinate never travels
+/// anywhere else.
 private final class SameHostOnly: NSObject, URLSessionTaskDelegate, Sendable {
     func urlSession(_: URLSession, task: URLSessionTask, willPerformHTTPRedirection _: HTTPURLResponse,
                     newRequest request: URLRequest) async -> URLRequest?
     {
-        request.url?.host == task.originalRequest?.url?.host ? request : nil
+        request.url?.scheme == "https" && request.url?.host == task.originalRequest?.url?.host ? request : nil
     }
 }
