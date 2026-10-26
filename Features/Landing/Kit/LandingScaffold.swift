@@ -50,7 +50,7 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                     .landingSection(.keystone)
                     .offset(x: (width - LandingKeystone<EmptyView>.size.width) / 2, y: 196 * k)
                 if !caption.isEmpty {
-                    FitLine(forms: caption, size: 15, color: Theme.Colors.inkSecondary)
+                    FitLine(forms: caption, size: 15, color: Theme.Colors.inkSecondary, shortAtAccessibility: true)
                         .frame(width: width - 48, alignment: .leading)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                         .landingSection(.caption)
