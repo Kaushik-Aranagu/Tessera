@@ -419,6 +419,8 @@ final class ReviewChoices {
         ("Safe keeping", ["walledPageV2", "backupsV2", "undoLogV2"]),
         ("Home mosaic", ["homeMosaic", "homeMosaicMoods", "homeMosaicMoments", "homeAppsList"]),
         ("Home faces", ["homeFace.now", "homeFace.gallery", "homeFace.weather", "homeFace.workout", "homeFaceTurn"]),
+        // Harness H1b to H3 (Claude for Tess): lab mode, her looks, asking her anything.
+        ("Tess", ["tessLabPolicy", "tessDirectorPlaybook", "tessAsks"]),
     ]
 
     /// The facet pages with their rows, in the facets' order; a row no facet names goes on a last "More" page.
