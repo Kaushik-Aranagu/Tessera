@@ -71,6 +71,12 @@ struct TrainingWallLandingTests {
         #expect(TrainingWallFacts.actionWord(hidden)?.verb.contains(" ") == false)
     }
 
+    @Test func deckBigLineCutsOnWholeWords() {
+        #expect(TrainingDeckFacts.deckBig("Chest and shoulders") == "Chest")
+        #expect(TrainingDeckFacts.deckBig("Push A") == "Push A")
+        #expect(!TrainingDeckFacts.deckBig("Romanian deadlift and more").hasSuffix("and"))
+    }
+
     @Test func dustHandOverIsSeventyGrainsUnderFiveSeconds() {
         #expect(ChalkDustHandOver.grains == 70)
         #expect(ChalkDustHandOver.duration <= 5)
