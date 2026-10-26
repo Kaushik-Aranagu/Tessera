@@ -4,7 +4,7 @@ import TesseraCore
 /// What the Routines landing says (248 v2, landing contract): the woodland's plants, the state line forms (longest
 /// first, for `FitLine`), the caption under the scene, the two update rows and the doors' facts. Read from
 /// `RoutinesFront`, which already masks private routines as "Private routine".
-struct RoutinesWoodlandFacts {
+struct RoutinesWoodlandFacts: Equatable {
     /// One update row in the brief: the routine and its sentence, with the name set apart (600).
     struct Update: Equatable, Identifiable {
         enum Kind: Equatable { case next, care }

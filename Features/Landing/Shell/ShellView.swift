@@ -56,7 +56,7 @@ struct ShellView<Room: RoomContent>: View {
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
         }
         .ignoresSafeArea()
-        .background { backdrop ?? AnyView(ThemedBackground()) }
+        .background { (backdrop ?? AnyView(ThemedBackground())).ignoresSafeArea() }
         .onChange(of: next, initial: true) { _, screen in apply(screen) }
         .onDisappear { driver?.cancel() }
     }
