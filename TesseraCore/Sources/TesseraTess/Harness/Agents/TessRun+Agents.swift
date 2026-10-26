@@ -70,9 +70,15 @@ extension TessRun {
                 await self.runAgent(rooms[position], question: question, handles: handles, onDevice: onDevice)
             }
         }
-        var results: [(report: String, ghosts: [UUID], failed: Bool)] = []
-        for task in tasks {
-            results.append(await task.value)
+        // Unstructured tasks don't inherit cancellation: a cancelled ask stops every room, so none keeps spending.
+        let results = await withTaskCancellationHandler {
+            var out: [(report: String, ghosts: [UUID], failed: Bool)] = []
+            for task in tasks {
+                out.append(await task.value)
+            }
+            return out
+        } onCancel: {
+            tasks.forEach { $0.cancel() }
         }
 
         let about = handles.values.compactMap { engine.store.object(id: $0) }
