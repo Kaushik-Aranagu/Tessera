@@ -100,6 +100,7 @@ struct HomeOneThing: View {
     var onSlot: (CGRect) -> Void = { _ in }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var strike: Double = 0
     @State private var holdTask: Task<Void, Never>?
     @State private var full = false
@@ -214,7 +215,7 @@ struct HomeOneThing: View {
     private func big(_ thing: HomeThing) -> some View {
         let colour = thing.accentColor
         // Sheet 283: a word at Figtree 38 700 on one line (cut on whole words), or an Outfit 56 number.
-        let text = Text(thing.bigIsNumber ? thing.big : Self.cut(thing.big, size: 38, width: 262))
+        let text = Text(thing.bigIsNumber ? thing.big : Self.cut(thing.big, size: 38, width: 262, typeSize: typeSize))
             .font(thing.bigIsNumber ? .custom("Outfit", size: 56, relativeTo: .largeTitle).weight(.light)
                 : .custom("Figtree", size: 38, relativeTo: .largeTitle).weight(.bold))
             .foregroundStyle(colour)
@@ -268,16 +269,38 @@ struct HomeOneThing: View {
         }
     }
 
-    /// The longest whole-word cut of `text` that fits `width` at Figtree `size` 700; never an ellipsis.
-    static func cut(_ text: String, size: CGFloat, width: CGFloat) -> String {
+    /// The longest whole-word cut of `text` that fits `width` at Figtree `size` 700; never an ellipsis. It measures at
+    /// the size the line draws at: scaled with the reader's text size, but clamped to AX1 like the page (so a larger
+    /// size never cuts words that still fit).
+    static func cut(_ text: String, size: CGFloat, width: CGFloat, typeSize: DynamicTypeSize = .large) -> String {
         let descriptor = UIFontDescriptor(fontAttributes: [
             .family: "Figtree", .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.bold],
         ])
-        let font = UIFont(descriptor: descriptor, size: size)
+        let traits = UITraitCollection(preferredContentSizeCategory: category(min(typeSize, .accessibility1)))
+        let scaled = UIFontMetrics(forTextStyle: .largeTitle).scaledValue(for: size, compatibleWith: traits)
+        let font = UIFont(descriptor: descriptor, size: scaled)
         for form in FitLine.cuts(text) where (form as NSString).size(withAttributes: [.font: font]).width <= width {
             return form
         }
         return FitLine.cuts(text).last ?? text
+    }
+
+    private static func category(_ size: DynamicTypeSize) -> UIContentSizeCategory {
+        switch size {
+        case .xSmall: .extraSmall
+        case .small: .small
+        case .medium: .medium
+        case .large: .large
+        case .xLarge: .extraLarge
+        case .xxLarge: .extraExtraLarge
+        case .xxxLarge: .extraExtraExtraLarge
+        case .accessibility1: .accessibilityMedium
+        case .accessibility2: .accessibilityLarge
+        case .accessibility3: .accessibilityExtraLarge
+        case .accessibility4: .accessibilityExtraExtraLarge
+        case .accessibility5: .accessibilityExtraExtraExtraLarge
+        @unknown default: .large
+        }
     }
 
     // MARK: Gestures
