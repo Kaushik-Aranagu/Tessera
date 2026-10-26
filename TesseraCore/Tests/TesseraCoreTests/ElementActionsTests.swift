@@ -167,7 +167,7 @@ struct ElementActionsTests {
 
     @Test func theSixToolsExistAndTheProposedListIsEmpty() throws {
         for name in ["pinNote", "rainAlert", "restDay", "tendRoutine", "plantRoutine", "pauseRoutine"] {
-            #expect(TessTools.tool(named: name) != nil, name)
+            #expect(TessTools.tool(named: name) != nil, "\(name)")
         }
         #expect(ElementCatalog.proposed.isEmpty)
         let note = try engine.perform(CreateNote(body: "Trip packing"), by: .user).output
