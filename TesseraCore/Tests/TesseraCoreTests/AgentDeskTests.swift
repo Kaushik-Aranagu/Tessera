@@ -21,7 +21,7 @@ struct AgentDeskTests {
         ])
         let r = try helper.rig([.haiku: haiku])
         let events = await helper.collect(r.run.ask("how was bench this week"))
-        #expect(events.last == .finished("The Deck says bench is up two and a half plates."))
+        #expect(events.last == .finished("The Deck says bench is up two and a half plates"))
         // The Deck ran as itself: its personality, its tools, and no way to ask another room.
         let seen = haiku.requestsSeen
         #expect(seen.count == 3)
