@@ -179,7 +179,7 @@ public final class ClaudeHomeDone {
         let house = TessLineCheck.HouseDay(finish: ended, now: now(), calendar: calendar)
         var failures: [String] = []
         func slot(_ text: String?, _ slot: TessLineCheck.Slot, rules: String?) -> String? {
-            guard let text, text != rules else { return nil }
+            guard let text, ShownLine.unstopped(text) != rules.map({ ShownLine.unstopped($0) }) else { return nil }
             // The digits Claude was given (the pack's) and the line's own, together (AI architecture on #658).
             let verdict = TessLineCheck.check(text, slot: slot, numbers: Array(Set(line.numbers + pack.numbers)),
                                               names: pack.names,
@@ -190,7 +190,8 @@ public final class ClaudeHomeDone {
                 failures += codes
                 return nil
             }
-            return verdict == .pass ? text : nil
+            // Shown with no closing stop (Kaushik, Oct 26).
+            return verdict == .pass ? ShownLine.unstopped(text) : nil
         }
         let result = HomeDoneWords(context: slot(words.context, .context, rules: line.context),
                                    detail: slot(words.detail, .detail, rules: line.detail))
@@ -324,8 +325,8 @@ public final class ClaudeHomeDone {
     - Never use a word the day label or hero already shows (the weekday, the routine name, done) unless rules.context \
     already uses it.
     - The item may drop its clock time. Every other digit in rules.context stays.
-    Detail: one sentence ending in a full stop, 14 words or fewer, 80 characters or fewer. Every digit in rules.detail \
-    stays. If rules.detail is null, return a null detail.
+    Detail: one sentence with no full stop at the end, 14 words or fewer, 80 characters or fewer. Every digit in \
+    rules.detail stays. If rules.detail is null, return a null detail.
     Both slots:
     - Digits only from that item's "numbers", never number words. No weights, reps or units.
     - Capitalise only the first word and the item's own names.

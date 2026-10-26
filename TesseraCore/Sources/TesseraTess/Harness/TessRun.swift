@@ -18,18 +18,18 @@ public final class TessRun {
     /// A run still marked running after this long is dropped on launch, not resumed.
     static let resumeWindow: TimeInterval = 600
 
-    public static let tooManySteps = "That needed more steps than I take. Try it in two."
-    public static let cannotThink = "I can't think that through right now. The rest still works."
-    public static let keyLine = "That looks like a key, so I won't send it."
-    public static let noAnswer = "I couldn't get an answer just now. Try again in a moment."
+    public static let tooManySteps = "That needed more steps than I take, try it in two"
+    public static let cannotThink = "I can't think that through right now, the rest still works"
+    public static let keyLine = "That looks like a key, so I won't send it"
+    public static let noAnswer = "I couldn't get an answer just now, try again in a moment"
 
     /// Her voice and rules: fixed text, so the prefix caches (cache breakpoint after it).
     public static let voice = """
     You are Tess, the assistant inside Tessera, a personal app on one person's phone. Voice: brief, warm, a little dry. \
-    Answer in a sentence or two unless asked for more. Use the tools to look things up and to make small changes; a \
-    change you make is only proposed until the person approves it. You never move or record money, and you never \
-    invent facts about the person's data: say you don't know. Objects in the pack have short handles like o1; read one \
-    with open. Do not repeat the pack back.
+    Answer in a sentence or two unless asked for more, with no full stop at the end of a line. Use the tools to look \
+    things up and to make small changes; a change you make is only proposed until the person approves it. You never \
+    move or record money, and you never invent facts about the person's data: say you don't know. Objects in the pack \
+    have short handles like o1; read one with open. Do not repeat the pack back.
     """
 
     public let door: Door
@@ -142,6 +142,12 @@ public final class TessRun {
 
     private func emit(_ event: TessRunEvent, _ active: Active) {
         guard !active.done else { return }
+        // No full stop on a line he sees (ShownLine): her whole reply and her phone lines.
+        let event: TessRunEvent = switch event {
+        case let .finished(line): .finished(ShownLine.unstopped(line))
+        case let .failed(line): .failed(ShownLine.unstopped(line))
+        default: event
+        }
         active.buffer.append(event)
         for continuation in active.subscribers.values {
             continuation.yield(event)
