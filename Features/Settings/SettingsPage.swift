@@ -110,6 +110,18 @@ struct SettingsPage: View {
                     .padding(.top, Theme.Spacing.xxl)
                     .accessibilityHint("Where your history is kept")
 
+                    #if DEBUG
+                        // Design 283 v8: the shared landing layout as raised glass, read-only. A debug surface.
+                        NavigationLink {
+                            LayoutModeView()
+                        } label: {
+                            Text("Layout mode")
+                        }
+                        .settingsWordStyle()
+                        .padding(.top, Theme.Spacing.l)
+                        .accessibilityHint("Every landing screen as panes of glass")
+                    #endif
+
                     // Privacy (179, walledPageV2): what stays on this phone, in counts. Drawn only while its switch is
                     // On.
                     if Tier1b.walledIsOn {
