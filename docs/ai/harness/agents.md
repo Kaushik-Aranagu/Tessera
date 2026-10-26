@@ -41,8 +41,8 @@ Tests: `AgentsTests.swift`, `AgentSpecTests.swift`.
   - A shipped room is refused.
   - A name clash gets a number ("Deck 2").
   - A private room ("Therapy") is kept as "Private room", with its room key stored as a digest keyed by this
-    install's salt (in the app's defaults, never the store), because Agent objects ride in backups and the export. A
-    backup can't confirm a guessed name. After a restore on a new install, that room's next spawn makes a fresh
+    install's salt (in the Keychain, after first unlock, this device only; never the store or a phone backup),
+    because Agent objects ride in backups and the export. A backup can't confirm a guessed name. After a restore on a new install, that room's next spawn makes a fresh
     "Private room" agent; its notebook and episodes were never copied anyway.
   - A spawned agent gets plain reads plus `remember`, `createNote` and `createTask`, reads its room's kinds, has no
     sub-agents, and starts from a plain personality he can reshape.
