@@ -3,9 +3,9 @@ import TesseraCore
 
 /// The 4 am reflection (docs/ai/harness/night-pass.md, `reflect(agent:)`): each active room agent looks back at the
 /// closing day in its room and keeps what it learned about him, as itself. It runs like any of its runs (its
-/// personality, notebook, beliefs and last episodes; its own scope and tools), on its open ladder with high effort,
-/// and may keep at most `cap` maybes through `remember`, each with the paths that show it. He keeps or dismisses them
-/// in the morning. What it said is kept as its episode, so the next run knows what it noticed.
+/// personality, notebook, beliefs and last episodes; its own scope and tools), on its open ladder, and may keep at
+/// most `cap` maybes through `remember`, each with the paths that show it. He keeps or dismisses them in the morning.
+/// What it said is kept as its episode, so the next run knows what it noticed.
 public struct ReflectResult: Sendable, Equatable {
     public var agent: String
     /// The ghost rows `remember` left (inferred beliefs waiting for him).
@@ -17,6 +17,8 @@ public struct ReflectResult: Sendable, Equatable {
 extension TessRun {
     /// The most maybes one night keeps across every agent (the caller passes what is left to each).
     public static let reflectCap = 5
+    /// The fewest things a room's day needs before its agent reflects on it.
+    public static let reflectMinItems = 3
 
     /// One agent's reflection on the closing day. `items` are that day's things in its room (`NightRun.dayItems`),
     /// already by shown name. Nothing to look at means no call.
@@ -24,14 +26,16 @@ extension TessRun {
         -> ReflectResult
     {
         let policy = door.policy()
+        let none = ReflectResult(agent: spec.name, kept: [], report: "", failed: false)
+        // Tess's AI flag off, or Claude closed by the Door: no 4 am call at all. A lab-only room (Purse, Body) never
+        // reflects under strict, whatever its items say.
+        guard flagOn(), door.asksClaude(), !spec.labOnly || policy == .lab, cap > 0 else { return none }
         let shown = NightPass.allowed(items, under: policy)
-        guard !shown.isEmpty, cap > 0 else {
-            return ReflectResult(agent: spec.name, kept: [], report: "", failed: false)
-        }
+        // Pace: a quiet room has little to learn from, so it waits for a fuller day.
+        guard shown.count >= Self.reflectMinItems else { return none }
         let question = Self.reflectQuestion(shown, cap: cap, calendar: calendar)
-        var plan = spec.open
-        plan.effort = .high
-        let answer = await runAgent(spec, question: question, handles: [:], onDevice: false, plan: plan,
+        // Its open ladder at the ladder's own effort; high effort waits until the memory eval shows reflection helps.
+        let answer = await runAgent(spec, question: question, handles: [:], onDevice: false, plan: spec.open,
                                     remembers: cap)
         if !answer.failed {
             AgentEpisodes(engine: engine).append(agent: spec.name, ask: "Night: the closing day in your room.",

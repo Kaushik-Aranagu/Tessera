@@ -3,9 +3,9 @@ import Foundation
 @testable import TesseraTess
 import Testing
 
-/// The 4 am reflection: a room agent looks back at its closing day as itself (its personality, open ladder, high
-/// effort), keeps at most its cap of maybes through remember with evidence, and what it said becomes its episode. No
-/// items, no call; strict never shows it money or body things.
+/// The 4 am reflection: a room agent looks back at its closing day as itself (its personality, open ladder), keeps at
+/// most its cap of maybes through remember with evidence, and what it said becomes its episode. A quiet day, the AI
+/// flag off, or a lab-only room under strict means no call; strict never shows it money or body things.
 @MainActor
 struct TessReflectTests {
     let helper = TessRunTests()
@@ -34,11 +34,13 @@ struct TessReflectTests {
         ])
         let r = try helper.rig([.sonnet: sonnet])
         _ = try r.engine.perform(CreateTask(title: "Water the plants"), by: .user)
-        let items = [NightPass.DayItem(kind: "task done", name: "Water the plants", at: now, room: "today")]
+        let items = ["Water the plants", "Call the bank", "Pick up dry cleaning"].map {
+            NightPass.DayItem(kind: "task done", name: $0, at: now, room: "today")
+        }
         let result = await r.run.reflect(.today, items: items, cap: 1)
         #expect(!result.failed && result.kept.count == 1 && result.report == "Kept one: plants on Sundays.")
         let seen = try #require(sonnet.requestsSeen.first)
-        #expect(seen.system.map(\.text).joined().contains(Persona.bridge) && seen.effort == .high)
+        #expect(seen.system.map(\.text).joined().contains(Persona.bridge))
         let asked = seen.messages.flatMap(\.content).compactMap { piece -> String? in
             if case let .text(text) = piece { text } else { nil }
         }.joined()
@@ -56,6 +58,23 @@ struct TessReflectTests {
         let walled = [NightPass.DayItem(kind: "spend", name: "Lunch", at: now, room: "today"),
                       NightPass.DayItem(kind: "sleep", name: "", at: now, room: "today")]
         _ = await r.run.reflect(.today, items: walled)
+        #expect(sonnet.requestsSeen.isEmpty)
+    }
+
+    @Test func aQuietDayAFlagOffOrAWalledRoomMakesNoCall() async throws {
+        let sonnet = ScriptedBrain(.sonnet, rounds: [])
+        let r = try helper.rig([.sonnet: sonnet], policy: .strict)
+        let busy = (1 ... 4).map { NightPass.DayItem(kind: "task done", name: "Task \($0)", at: now, room: "today") }
+        // Two things is a quiet day.
+        _ = await r.run.reflect(.today, items: Array(busy.prefix(2)))
+        // Purse is lab only: under strict it never reflects, even on a full day.
+        let spends = (1 ... 4).map {
+            NightPass.DayItem(kind: "move", name: "Move \($0)", at: now, room: AppID.money.rawValue)
+        }
+        _ = await r.run.reflect(.money, items: spends)
+        // Tess's AI flag off: no call however full the day.
+        r.run.flagOn = { false }
+        _ = await r.run.reflect(.today, items: busy)
         #expect(sonnet.requestsSeen.isEmpty)
     }
 }
