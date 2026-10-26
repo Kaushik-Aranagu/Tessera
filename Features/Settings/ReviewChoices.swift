@@ -408,7 +408,7 @@ final class ReviewChoices {
         Choice(id: "caloriesBurned", name: "Calories burned", values: ["Off", "On"], defaultValue: "Off",
                says: ["Off": "No calorie line.", "On": "A finished workout shows the calories burned."],
                readiness: .arrivesWith("calories burned")),
-    ]
+    ] + MosaicFaceChoices.all
 
     /// Review's tabs by facet, named in PeekTabs (Design sheets 100 and 108), six rows at most.
     nonisolated static let facets: [(word: String, ids: [String])] = [

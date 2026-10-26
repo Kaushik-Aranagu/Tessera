@@ -21,7 +21,7 @@ extension Theme.Colors {
 
         /// Kitchen: ochre.
         static var kitchen: Color {
-            tuned(\.kitchen, light: 0xA8701F, dark: 0xC49A5E)
+            tuned(\.kitchen, light: 0xA8701F, dark: 0xD49A52)
         }
 
         /// Kitchen's small words (sheet 231: Cook now, Undo, low, Get it): darker by day so they reach 4.5:1.
