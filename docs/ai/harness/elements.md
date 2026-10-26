@@ -104,7 +104,8 @@ bound call that the engine refuses moves nothing: her line says why.
 
 The look of a change Tess makes is sheet 285 (`docs/design/tess-hand-285.md`, board v12 "Tess acts"):
 - The place's own move plays, starting at 0.5 of the carry track.
-- What she changed stays in her blue for the 10 s Undo window, then dries into the room's ink.
+- What she changed stays in her blue for the 10 s Undo window, then dries into the room's ink. The blue shows only
+  in keystone materials and strikes, never in widget, needs or row type.
 - The wash goes behind the place on keystones with gaps (Galley rail, Log wall, Watch woods). On full-bleed
   keystones (Deck, Lookout, Purse) it lies over the keystone in screen blend.
 - On a refusal, the dab stops short and goes home.

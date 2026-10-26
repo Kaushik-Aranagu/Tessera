@@ -56,7 +56,8 @@ Two new classes carry four of them:
     training day.
   - Fixed-days plan: today's pinned routine is skipped, not moved (the same as the rest weekday).
   - The day log reads today as a rest day (`DayStory` `isRestDay` from the `rest` row as well as `restWeekday`).
-  - The Deck board and widget show "Rest today. Next is Push A, Saturday."
+  - The Deck board chalks "Rest today, Push A tomorrow", today's week letter gets "rest" under it, and the barbell
+    glyph sets its plates down (sheet 285, board v13). The widget keeps the app's own type.
   - The Watch: a workout routine's tree does not dry on a rest day.
 - **Refuses:** a day with a workout already started or finished: "Push A is already going." No row is written.
 - **Receipt:** "Rest today. Next is Push A." with Undo.
@@ -103,8 +104,6 @@ Two new classes carry four of them:
 
 ## For the Design studio
 
-Every look is already on the sheets: the strike and petals for tend, the seed for plant, the lamp for pause, the
-widget reform for rest, and the action word toggle for the rain alert. When Tess runs one of these, sheet 285
-(`docs/design/tess-hand-285.md`) applies: her blue for the 10 s Undo window, then the room's ink. The one look
-still open is how the board says "Rest today" on the Deck: chalk words in the widget, with the glyph's ticks, is
-my recommendation.
+Every look is on the sheets: the strike and petals for tend, the seed for plant, the lamp for pause, the rest board
+for rest (sheet 285, board v13), and the action word toggle for the rain alert. When Tess runs one of these, sheet
+285 (`docs/design/tess-hand-285.md`) applies: her pending blue for the 10 s Undo window, then the room's ink.
