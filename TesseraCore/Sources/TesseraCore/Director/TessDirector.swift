@@ -169,7 +169,7 @@ public struct TessBurstChoice: Equatable, Sendable {
     public var palette: TessPaletteChoice
 }
 
-public enum OpenReactionKind: String, Sendable {
+public enum OpenReactionKind: String, CaseIterable, Sendable {
     case none, ripple, flipRows, nightFalls, gatherBack, gatherFromNight
 }
 

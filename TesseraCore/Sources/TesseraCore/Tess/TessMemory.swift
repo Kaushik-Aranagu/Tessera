@@ -307,6 +307,10 @@ public struct ForgetMemory: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         try transaction.delete(transaction.object(memory, is: .tessMemory))
+        // The beliefs made from the line go with it (M1): closing one would keep his words.
+        for belief in TessBeliefStore.beliefs(madeFrom: memory, store: transaction.store, classes: transaction.classes) {
+            transaction.delete(belief)
+        }
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -326,7 +330,16 @@ public struct ForgetAllMemory: EngineAction {
         for memory in memories {
             transaction.delete(memory)
         }
-        return memories.count
+        // Every belief goes too; the count stays the lines he saw, plus beliefs that had no line.
+        var beliefCount = 0
+        if let beliefClass = transaction.classes[.belief] {
+            for belief in transaction.store.objects(of: beliefClass) where !belief.isDeleted {
+                let rule = transaction.store.value("rule", of: belief)?.stringValue ?? ""
+                if !rule.hasPrefix("memory:") { beliefCount += 1 }
+                transaction.delete(belief)
+            }
+        }
+        return memories.count + beliefCount
     }
 
     public func summary(in store: ObjectStore) -> String {
