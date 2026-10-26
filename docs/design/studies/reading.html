@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Reading</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M5 Reading screens 6 (resume a book), 5 (book page) and 7 (reading shelf): Now resumes the book, the page drum lands at eye level with one glint, the page turns, Finished is held, one line is written, and the book settles onto the shelf. Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--mute:#A39AAE;--verm:#C8452F;--cobalt:#2E6DA4;--sage:#6E9E6A}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#E9DCEF 0%,rgba(233,220,239,0) 70%),radial-gradient(70% 45% at 0% 40%,#E6D7C6 0%,rgba(230,215,198,0) 70%),radial-gradient(80% 50% at 100% 80%,#D9E2EC 0%,rgba(217,226,236,0) 70%),#F4EFE8}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.body{font-size:21px;line-height:30px;color:var(--ctx)}
+.num{font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.drum span{display:block;text-align:right}
+.sw{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap;position:relative}
+.sw svg{position:absolute;left:-7px;bottom:7px;z-index:-1}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0)}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+.caret{display:inline-block;width:2px;height:24px;margin-left:2px;vertical-align:-4px;background:var(--cobalt);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.sh{position:absolute;left:22px;white-space:nowrap;letter-spacing:-.03em}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+  <div id="clock" class="abs lbl" style="right:22px;top:14px;color:#7A6E86">19:20</div>
+
+  <!-- 6 · Home: the book is Now, suspended -->
+  <section id="home" class="abs" style="inset:0">
+    <div class="abs lbl" style="left:22px;top:58px;display:flex;gap:16px"><span style="color:var(--mute)">REVIEW</span><span style="color:var(--ink)">TODAY</span><span style="color:var(--mute)">TRAINING</span><span style="color:var(--mute)">KITCHEN</span></div>
+    <div class="abs" style="left:0;right:0;top:140px;height:1px;background:rgba(43,36,64,.14)"></div>
+    <div class="abs lbl" style="left:22px;top:150px">NOW</div>
+    <div class="abs body" style="left:22px;top:246px">p 142 of 612</div>
+    <span id="resume" class="abs la lbl" style="left:22px;top:300px;color:var(--ink)">RESUME<span class="line" style="background:var(--ink)"></span></span>
+    <div class="abs lbl" style="left:22px;top:620px;color:var(--mute)">ALSO RUNNING</div>
+    <div class="abs body" style="left:22px;top:648px;color:var(--sub)">Groceries list, 4 left</div>
+  </section>
+  <div id="title" class="abs" style="left:20px;top:178px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:1;z-index:6">Dune</div>
+
+  <!-- 5 · the book page -->
+  <section id="book" class="abs" style="inset:0;opacity:0;pointer-events:none">
+    <div class="abs lbl" style="left:22px;top:58px">READING</div>
+    <div id="bctx" class="abs body" style="left:22px;top:178px">p <span id="pg">142</span> of 612 · started 9 days ago</div>
+    <div id="seam" class="abs" style="left:0;right:0;top:228px;height:1px;background:linear-gradient(90deg,rgba(200,69,47,0),rgba(200,69,47,.85) 20%,rgba(200,69,47,.85) 80%,rgba(200,69,47,0));transform-origin:0 50%"></div>
+    <div id="win" class="abs" style="left:0;width:230px;top:250px;height:260px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 20%,#000 42%,#000 58%,rgba(0,0,0,.25) 80%,transparent);mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 20%,#000 42%,#000 58%,rgba(0,0,0,.25) 80%,transparent)">
+      <div id="drum" class="drum num abs" style="right:0;width:220px;font-size:96px;top:0"></div>
+      <div id="glint" class="abs" style="top:0;bottom:0;left:-90px;width:70px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.75),rgba(255,255,255,0));transform:skewX(-14deg);mix-blend-mode:soft-light;opacity:0"></div>
+    </div>
+    <div class="abs num" style="left:240px;top:402px;font-size:34px;color:var(--sub)">of 612</div>
+    <div id="fin" class="abs" style="left:22px;top:560px"><div class="sw"><span id="finText">Finished</span><svg id="trace" width="140" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#6E9E6A" opacity=".82" filter="url(#rough)"/></svg><svg id="paint" width="140" height="19" viewBox="0 0 200 14" preserveAspectRatio="none" style="transform-origin:0 50%;transform:scaleX(0)"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#6E9E6A" opacity=".9" filter="url(#rough)"/></svg></div></div>
+    <span id="aside" class="abs la lbl" style="right:22px;top:576px">SET ASIDE<span class="line" style="background:var(--sub)"></span></span>
+    <div id="review" class="abs" style="left:22px;right:22px;top:634px;font-size:21px;opacity:0"><span id="rText" style="color:rgba(43,36,64,.5)">One line on it?</span><div id="rLine" class="abs" style="left:0;right:0;top:36px;height:1px;background:var(--cobalt);transform-origin:0 50%;transform:scaleX(0)"></div></div>
+  </section>
+
+  <!-- 7 · the shelf: titles as a typographic column -->
+  <section id="shelf" class="abs" style="inset:0;opacity:0">
+    <div class="abs lbl" style="left:22px;top:58px">READING</div>
+    <div class="sh" style="top:110px;font-size:44px;font-weight:500">Piranesi</div>
+    <div class="sh lbl" style="top:162px;letter-spacing:.08em">P 88</div>
+    <div class="sh" style="top:200px;font-size:44px;font-weight:500">Hamnet</div>
+    <div class="sh lbl" style="top:252px;letter-spacing:.08em">P 41</div>
+    <div class="sh" style="top:312px;font-size:28px;font-weight:500;line-height:38px">The Overstory</div>
+    <div class="sh" style="top:350px;font-size:28px;font-weight:500;line-height:38px">Middlemarch</div>
+    <div class="sh" style="top:388px;font-size:28px;font-weight:500;line-height:38px">Klara and the Sun</div>
+    <div id="f1" class="sh" style="top:454px;font-size:24px;line-height:34px;color:rgba(43,36,64,.45)">The Remains of the Day</div>
+    <div id="f2" class="sh" style="top:488px;font-size:24px;line-height:34px;color:rgba(43,36,64,.45)">Stoner</div>
+  </section>
+
+  <div id="say" class="abs" style="right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;color:var(--cobalt);text-align:right;opacity:0;z-index:12"></div>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+async function say(t) { const s = $('say'); s.textContent = t; await anim(s, [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE }); }
+// the page drum: 96 Light, rows 100pt; the centre row sits at y 380
+for (let n = 120; n <= 200; n++) $('drum').insertAdjacentHTML('beforeend', `<span style="height:100px;line-height:100px">${n}</span>`);
+const drumY = (n) => 80 - (n - 120) * 100;
+$('drum').style.top = drumY(142) + 'px';
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready;
+  { const k = $('ph').getBoundingClientRect().width / 390, w = $('finText').getBoundingClientRect().width / k + 14; $('trace').setAttribute('width', w); $('paint').setAttribute('width', w); }
+  await sleep(400); document.body.dataset.start = '1';
+  await sleep(1400);
+
+  // RESUME: the title holds still and rises; the rest of Home steps back; the seam lights; the drum lands at eye level
+  const [rx, ry] = centre($('resume')); await fingerOn(rx, ry);
+  anim($('resume').querySelector('.line'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 160, easing: HOUSE });
+  await sleep(120); fingerOff();
+  anim($('home'), [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 320, easing: HOUSE });
+  anim($('title'), [{ transform: 'none' }, { transform: 'translateY(-68px)' }], { duration: 460, easing: HOUSE });
+  $('book').style.opacity = 1;
+  anim($('book').children[0], [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  anim($('bctx'), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: 120, easing: HOUSE });
+  anim($('seam'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 520, delay: 160, easing: HOUSE });
+  [...$('book').children].slice(3, 7).forEach((el, k) => anim(el, [{ opacity: 0, transform: 'translateY(24px)' }, { opacity: 1, transform: 'none' }], { duration: 440, delay: 180 + k * 50, easing: HOUSE }));
+  await sleep(640);
+  // one glint across the numeral: "here is where you stopped"
+  anim($('glint'), [{ opacity: 0, transform: 'translateX(0) skewX(-14deg)' }, { opacity: 1, offset: .2 }, { opacity: 1, offset: .8 }, { opacity: 0, transform: 'translateX(380px) skewX(-14deg)' }], { duration: 760, easing: 'cubic-bezier(.4,0,.2,1)' });
+  await sleep(1500);
+
+  // turn the page drum: flick up, it coasts to 168 and ticks per page
+  await fingerOn(150, 420);
+  await tween(240, (t) => fingerAt(150, 420 - 90 * t)); fingerOff();
+  let last = 142;
+  await tween(900, (t) => { const y = drumY(142) - 2600 * t; $('drum').style.top = y + 'px'; const n = Math.round(142 + 26 * t); if (n !== last) { last = n; $('pg').textContent = n; } }, (t) => 1 - Math.pow(1 - t, 3));
+  say('Dune, p 168.');
+  await sleep(1500);
+
+  // Finished is held: the stroke empties to a trace and repaints; one faint line opens for a review
+  anim($('say'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  await fingerOn(80, 582);
+  anim($('trace'), [{ opacity: 1 }, { opacity: .2 }], { duration: 120 });
+  await anim($('paint'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 600, easing: 'cubic-bezier(.3,.6,.4,1)' });
+  anim($('paint'), [{ transform: 'scaleX(1) scaleY(1)' }, { transform: 'scaleX(1.02) scaleY(1.6)' }, { transform: 'scaleX(1) scaleY(1)' }], { duration: 300, easing: 'ease-out' });
+  fingerOff();
+  anim($('aside'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  anim($('review'), [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: HOUSE });
+  anim($('rLine'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 300, delay: 80, easing: HOUSE });
+  say('Finished Dune. One line on it?');
+  await sleep(1100);
+  $('rText').style.color = 'var(--cobalt)'; $('rText').innerHTML = '<span class="caret"></span>';
+  for (const ch of 'Slow start, great end') { const c = $('rText').querySelector('.caret'); c.insertAdjacentText('beforebegin', ch); await sleep(48); }
+  await sleep(400);
+  // Return: the ghost dries into ink and the writing line goes
+  $('rText').querySelector('.caret').remove();
+  anim($('rLine'), [{ opacity: 1 }, { opacity: 0 }], { duration: 240 });
+  await tween(600, (t) => { $('rText').style.color = `rgb(${46 + (43 - 46) * t},${109 + (36 - 109) * t},${164 + (64 - 164) * t})`; });
+  anim($('say'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+  await sleep(180); say('Finished Dune: slow start, great end.');
+  await sleep(1300);
+
+  // back to the shelf: the title flies to the top of the finished books, dimmer and smaller
+  anim($('book'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97)' }], { duration: 320, easing: HOUSE });
+  $('shelf').style.opacity = 1;
+  [...$('shelf').children].forEach((el, k) => anim(el, [{ opacity: 0, transform: 'translateY(22px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 80 + k * 30, easing: HOUSE }));
+  anim($('clock'), [{ opacity: 1 }, { opacity: 1 }], { duration: 1 });
+  await sleep(360);
+  ['f1', 'f2'].forEach((id) => anim($(id), [{ transform: 'none' }, { transform: 'translateY(34px)' }], { duration: 420, easing: 'cubic-bezier(.3,1.3,.5,1)' }));
+  const t = $('title'); const tr = rel(t.getBoundingClientRect());
+  t.getAnimations().forEach((a) => a.cancel()); t.style.top = tr.top + 'px';
+  await tween(620, (k) => { t.style.left = (20 + 2 * k) + 'px'; t.style.top = (tr.top + (454 - tr.top) * k) + 'px'; t.style.fontSize = (56 - 32 * k) + 'px'; t.style.lineHeight = (56 - 22 * k) + 'px'; t.style.fontWeight = Math.round(500 - 100 * k); t.style.color = `rgba(43,36,64,${1 - .55 * k})`; t.style.letterSpacing = (-.04 + .01 * k) + 'em'; }, (k) => 1 - Math.pow(1 - k, 3));
+  await sleep(2000);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

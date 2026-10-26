@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Widgets and snippets</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Static board for docs/design/widgets-and-snippets.md. Sizes are iPhone 17 points. -->
+<style>
+:root{--ink:#2B2440;--sub:#6E6480;--ctx:#7A5C8E;--verm:#C8452F;--cobalt:#2E6DA4;--cream:#F6F0E6}
+body{margin:0;background:#1d1a24;font-family:'Inter Tight',sans-serif;display:flex;gap:28px;padding:28px;flex-wrap:wrap;width:1300px}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase}
+.board{width:390px;height:844px;border-radius:44px;overflow:hidden;position:relative;flex:none}
+.wall{background:radial-gradient(80% 50% at 20% 10%,#5b6f9a,rgba(0,0,0,0) 70%),radial-gradient(70% 50% at 90% 60%,#8a5a78,rgba(0,0,0,0) 70%),linear-gradient(#2a3150,#3b2b45)}
+.cap{position:absolute;left:24px;top:22px;color:rgba(255,255,255,.75)}
+.w{position:absolute;border-radius:24px;overflow:hidden;color:var(--ink)}
+.paint{background:radial-gradient(60% 60% at 90% 0%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 70% at 0% 40%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 60% at 100% 100%,#BFD8E2 0%,rgba(191,216,226,0) 70%),#F4EEE4}
+.dusk{background:radial-gradient(60% 70% at 90% 0%,rgba(200,69,47,.55) 0%,rgba(200,69,47,0) 70%),radial-gradient(70% 70% at 0% 100%,rgba(122,92,142,.7) 0%,rgba(122,92,142,0) 70%),#2B2440;color:var(--cream)}
+.seam{position:absolute;left:0;right:0;height:1px;background:rgba(43,36,64,.18);box-shadow:0 1px 0 rgba(255,255,255,.7)}
+.dusk .seam{background:rgba(246,240,230,.18);box-shadow:none}
+.lit{position:absolute;left:0;right:0;top:0;height:2px;background:var(--verm);box-shadow:0 0 10px rgba(200,69,47,.6)}
+.ttl{font-weight:500;font-size:34px;line-height:1.02;letter-spacing:-.035em}
+.num{font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-.04em;line-height:1}
+.ctl{font-size:21px;font-weight:600}
+.glyph{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center}
+.platter{position:absolute;left:10px;right:10px;border-radius:32px;background:rgba(246,243,238,.92);color:var(--ink);box-shadow:0 20px 40px rgba(0,0,0,.35)}
+.plat-dark{background:rgba(30,28,36,.9);color:var(--cream)}
+</style>
+</head>
+<body>
+
+<!-- Board 1: Home Screen -->
+<div class="board wall">
+  <div class="cap lbl">Home Screen</div>
+  <!-- medium Now -->
+  <div class="w paint" style="left:20px;top:70px;width:350px;height:164px">
+    <span class="lbl abs" style="position:absolute;left:18px;top:16px;color:var(--ctx)">Now · 14 min left</span>
+    <div class="ttl" style="position:absolute;left:16px;right:16px;top:44px">Draft the push‑day plan</div>
+    <span class="seam" style="top:116px"></span>
+    <span style="position:absolute;left:18px;top:126px;font-size:18px;color:var(--sub)">then Call the dentist, 15:40</span>
+    <span class="ctl" style="position:absolute;right:18px;top:124px">Done</span>
+  </div>
+  <!-- medium running workout -->
+  <div class="w dusk" style="left:20px;top:250px;width:350px;height:164px">
+    <span class="lit"></span>
+    <span class="lbl" style="position:absolute;left:18px;top:16px;color:rgba(246,240,230,.7)">Push Day A · Resting</span>
+    <div class="ttl" style="position:absolute;left:16px;top:44px;width:170px">Bench, set 3 of 4</div>
+    <div class="num" style="position:absolute;right:16px;top:40px;font-size:64px">1:42</div>
+    <span class="seam" style="top:116px"></span>
+    <span style="position:absolute;left:18px;top:126px;font-size:18px;color:rgba(246,240,230,.7)">82.5 × 8 last</span>
+    <span class="ctl" style="position:absolute;right:18px;top:124px;color:#F2B8A8">Same again</span>
+  </div>
+  <!-- small -->
+  <div class="w paint" style="left:20px;top:430px;width:164px;height:164px">
+    <span class="lbl" style="position:absolute;left:16px;top:16px;color:var(--ctx)">Groceries</span>
+    <div class="num" style="position:absolute;left:12px;top:40px;font-size:80px">12</div>
+    <span class="seam" style="top:126px"></span>
+    <span style="position:absolute;left:16px;top:132px;font-size:18px;color:var(--sub)">to buy, Dairy first</span>
+  </div>
+  <!-- small, tinted -->
+  <div class="w" style="left:206px;top:430px;width:164px;height:164px;background:rgba(255,255,255,.14);backdrop-filter:blur(16px);color:#fff">
+    <span class="lbl" style="position:absolute;left:16px;top:16px;opacity:.7">Now</span>
+    <div class="ttl" style="position:absolute;left:14px;right:12px;top:42px;font-size:30px">Call the dentist</div>
+    <span class="seam" style="top:126px;background:rgba(255,255,255,.35);box-shadow:none"></span>
+    <span class="lbl" style="position:absolute;left:16px;top:134px;opacity:.7">15:40</span>
+  </div>
+  <span class="lbl" style="position:absolute;left:206px;top:604px;color:rgba(255,255,255,.55)">tinted mode</span>
+  <!-- control -->
+  <div style="position:absolute;left:20px;top:650px;display:flex;gap:16px;align-items:center">
+    <div class="glyph">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M8 20c-2-6 3-12 10-11 6 1 9 6 7 11-2 5-8 7-12 6-3-1-4-3-5-6z" fill="#fff" opacity=".95"/><path d="M26 4v8M22 8h8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+    </div>
+    <span style="color:rgba(255,255,255,.8);font-size:18px;width:240px">Control: <b>Tell Tess</b>. A paint dab with a plus, opens the ghost row with the keyboard up</span>
+  </div>
+</div>
+
+<!-- Board 2: Lock Screen -->
+<div class="board" style="background:linear-gradient(#20263d,#3a2a44)">
+  <div class="cap lbl">Lock Screen</div>
+  <div style="position:absolute;left:0;right:0;top:90px;text-align:center;color:rgba(255,255,255,.85);font-size:21px">Thursday 15 October</div>
+  <div class="num" style="position:absolute;left:0;right:0;top:118px;text-align:center;color:rgba(255,255,255,.9);font-size:96px;font-weight:500">18:24</div>
+  <!-- rectangular, resting -->
+  <div style="position:absolute;left:30px;top:250px;width:160px;height:72px;color:#fff">
+    <span class="lbl" style="opacity:.75">Bench · set 3</span>
+    <div class="num" style="font-size:44px;margin-top:4px">1:42</div>
+  </div>
+  <!-- rectangular, now -->
+  <div style="position:absolute;left:204px;top:250px;width:160px;height:72px;color:#fff">
+    <span class="lbl" style="opacity:.75">Now</span>
+    <div style="font-size:21px;font-weight:600;line-height:1.1;margin-top:4px">Call the dentist</div>
+  </div>
+  <span class="lbl" style="position:absolute;left:30px;top:340px;color:rgba(255,255,255,.45)">Accessories: one label, one line</span>
+</div>
+
+<!-- Board 3: Snippets -->
+<div class="board wall" style="filter:saturate(.8)">
+  <div class="cap lbl">Snippets (Siri, Action button)</div>
+  <div class="platter" style="top:110px;height:250px">
+    <span class="lbl" style="position:absolute;left:24px;top:22px;color:var(--sub)">Bench press · set 4</span>
+    <div class="num" style="position:absolute;left:22px;top:52px;font-size:80px">82.5</div>
+    <span style="position:absolute;left:204px;top:58px;width:1px;height:76px;background:rgba(43,36,64,.2)"></span>
+    <div class="num" style="position:absolute;left:226px;top:52px;font-size:80px">8</div>
+    <span class="lbl" style="position:absolute;left:24px;top:140px;color:var(--sub)">kg</span><span class="lbl" style="position:absolute;left:228px;top:140px;color:var(--sub)">reps</span>
+    <span class="seam" style="top:180px;left:24px;right:24px"></span>
+    <div style="position:absolute;left:24px;right:24px;top:196px;display:flex;justify-content:space-between" class="ctl">
+      <span>Same again</span><span style="color:var(--sub)">+2.5</span><span style="color:var(--sub)">+1 rep</span>
+    </div>
+  </div>
+  <div class="platter" style="top:390px;height:96px">
+    <div style="position:absolute;left:24px;top:22px;font-size:21px">Milk is on Groceries, under Dairy.</div>
+    <span class="ctl" style="position:absolute;right:24px;top:56px;color:var(--verm)">Undo</span>
+  </div>
+  <div class="platter plat-dark" style="top:510px;height:96px">
+    <div style="position:absolute;left:24px;top:22px;font-size:21px">Carbonara on Thursday. Added as a task.</div>
+    <span class="ctl" style="position:absolute;right:24px;top:56px;color:#F2B8A8">Undo</span>
+  </div>
+  <span class="lbl" style="position:absolute;left:24px;top:626px;color:rgba(255,255,255,.55)">Type does all the work on the platter</span>
+</div>
+
+</body>
+</html>

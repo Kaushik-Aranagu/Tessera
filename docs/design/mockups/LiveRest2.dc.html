@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rest on the lock screen, round 2</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=Hanken+Grotesk:wght@400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.lr{font-family:'Hanken Grotesk',sans-serif;color:#F6EFE4}
+.it{font-family:'Fraunces',serif;font-style:italic;font-variation-settings:'SOFT' 100}
+.fr{font-family:'Fraunces',serif;font-variation-settings:'opsz' 144,'SOFT' 50,'WONK' 0;font-variant-numeric:lining-nums tabular-nums}
+.phone{position:relative;width:390px;height:844px;border-radius:44px;overflow:hidden;flex:none;background:radial-gradient(60% 35% at 80% 18%,#F2C38A 0%,rgba(242,195,138,0) 70%),radial-gradient(70% 40% at 10% 30%,#B9708A 0%,rgba(185,112,138,0) 70%),radial-gradient(90% 45% at 50% 62%,#5C4E86 0%,rgba(92,78,134,0) 70%),radial-gradient(80% 40% at 30% 100%,#203A5E 0%,rgba(32,58,94,0) 70%),#2A2546}
+.grain{position:absolute;inset:0;mix-blend-mode:soft-light;opacity:.4;pointer-events:none}
+.date{position:absolute;left:0;right:0;top:72px;text-align:center;font-family:'Fraunces',serif;font-style:italic;font-size:21px;color:rgba(246,239,228,.9);font-variation-settings:'SOFT' 100}
+.clock{position:absolute;left:0;right:0;top:96px;text-align:center;font-family:'Fraunces',serif;font-weight:560;font-size:104px;line-height:1;letter-spacing:-.02em;color:rgba(246,239,228,.95);font-variation-settings:'opsz' 144,'SOFT' 60}
+/* the system's own Live Activity material: dark glass over the wallpaper */
+.act{position:absolute;left:12px;right:12px;top:560px;height:156px;border-radius:26px;overflow:hidden;background:rgba(18,14,26,.46);backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5)}
+.strip{position:relative;width:390px;height:190px;border-radius:30px;overflow:hidden;flex:none;background:radial-gradient(90% 90% at 50% 40%,#5C4E86 0%,rgba(92,78,134,0) 70%),radial-gradient(80% 80% at 30% 100%,#203A5E 0%,rgba(32,58,94,0) 70%),#2A2546}
+.strip .act{top:17px}
+.colon{opacity:.7}
+.hair{position:absolute;background:rgba(246,239,228,.16)}
+.cap{font-family:'Fraunces',serif;font-style:italic;font-size:21px;color:#2B2440;line-height:1.35;font-variation-settings:'SOFT' 100}
+.ttl{font-family:'Fraunces',serif;font-weight:640;font-size:40px;line-height:1;letter-spacing:-.02em;color:#2B2440;font-variation-settings:'opsz' 144,'SOFT' 100,'WONK' 1}
+@keyframes tickPulse{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+@keyframes swell{0%,100%{transform:scale(1);filter:blur(.8px)}50%{transform:scale(1.07);filter:blur(1.4px)}}
+@keyframes washDrift{0%,100%{transform:translateX(0)}50%{transform:translateX(-10px)}}
+@keyframes glow{0%,100%{opacity:.55}50%{opacity:1}}
+</style>
+</helmet>
+<div class="lr" style="width: 1250px; height: 1310px; display: flex; gap: 40px; background: #E9E2D7">
+
+  <!-- ================= A · GESSO ================= -->
+  <div style="display: flex; flex-direction: column; gap: 20px; width: 390px">
+    <div class="ttl">A · Gesso</div>
+    <div class="phone">
+      <svg class="grain" width="390" height="844"><filter id="g1"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" seed="3"/><feColorMatrix values="0 0 0 0 .9 0 0 0 0 .85 0 0 0 0 .8 0 0 0 .5 0"/></filter><rect width="390" height="844" filter="url(#g1)"/></svg>
+      <div class="date">Thursday 15 October</div>
+      <div class="clock">18:24</div>
+      <div class="act">
+        <!-- left: the number, and one brushstroke that dries -->
+        <div class="fr" style="position: absolute; left: 22px; top: 20px; font-size: 64px; font-weight: 560; line-height: 1">{{m}}<span class="colon">:</span>{{sec}}</div>
+        <svg width="188" height="16" viewBox="0 0 188 16" style="position: absolute; left: 22px; top: 100px; overflow: visible" aria-hidden="true">
+          <path d="M3 9 C 50 4, 120 12, 185 6" fill="none" stroke="rgba(246,239,228,.12)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M3 9 C 50 4, 120 12, 185 6" fill="none" stroke="#E2603F" stroke-width="5" stroke-linecap="round" stroke-dasharray="190" stroke-dashoffset="{{drainA}}" style="transition: stroke-dashoffset 1s linear; filter: blur(.4px)"/>
+        </svg>
+        
+        <div class="hair" style="left: 222px; top: 18px; bottom: 18px; width: 1px"></div>
+        <!-- right: the next set is itself the Done button -->
+        <div style="position: absolute; left: 238px; right: 14px; top: 18px; height: 78px">
+          <div class="it" style="font-size: 21px; color: rgba(246,239,228,.75)">Bench</div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px">
+            <span class="fr" style="font-size: 26px; font-weight: 560">82.5 × 8</span>
+          </div>
+          <svg width="26" height="20" viewBox="0 0 26 20" style="position: absolute; right: 2px; top: 4px; overflow: visible; animation: tickPulse 2.8s ease-in-out infinite" aria-hidden="true"><path d="M2 11 C 6 13, 8 16, 10 18 C 14 10, 19 5, 24 2" fill="none" stroke="#E2603F" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="hair" style="left: 238px; right: 14px; top: 104px; height: 1px"></div>
+        <div style="position: absolute; left: 238px; right: 14px; top: 106px; height: 36px; display: grid; grid-template-columns: 1fr 1px 1fr; align-items: center; text-align: center">
+          <span class="it" style="font-size: 19px">+15</span><span class="hair" style="position: static; width: 1px; height: 20px"></span><span class="it" style="font-size: 19px">skip</span>
+        </div>
+      </div>
+    </div>
+    <div class="strip">
+      <div class="act">
+        <div class="fr" style="position: absolute; left: 22px; top: 20px; font-size: 64px; font-weight: 560; line-height: 1">Go</div>
+        <div class="it" style="position: absolute; left: 22px; top: 96px; font-size: 21px; color: #F0B866">rested 2:30</div>
+        <div class="hair" style="left: 222px; top: 18px; bottom: 18px; width: 1px"></div>
+        <div style="position: absolute; left: 238px; right: 14px; top: 18px">
+          <div class="it" style="font-size: 21px; color: rgba(246,239,228,.75)">Bench</div>
+          <div class="fr" style="font-size: 26px; font-weight: 560; margin-top: 2px">82.5 × 8</div>
+          <svg width="26" height="20" viewBox="0 0 26 20" style="position: absolute; right: 2px; top: 4px; overflow: visible" aria-hidden="true"><path d="M2 11 C 6 13, 8 16, 10 18 C 14 10, 19 5, 24 2" fill="none" stroke="#E2603F" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="position: absolute; left: -16px; right: -14px; top: -18px; height: 104px; background: radial-gradient(closest-side, rgba(226,96,63,.35), rgba(226,96,63,0)); animation: glow 2.2s ease-in-out infinite; pointer-events: none"></span>
+        </div>
+        <div class="hair" style="left: 238px; right: 14px; top: 104px; height: 1px"></div>
+        <div class="it" style="position: absolute; left: 238px; right: 14px; top: 112px; text-align: center; font-size: 19px">skip</div>
+      </div>
+    </div>
+    <div class="cap">The system's own glass, no colour field. A cream number, one red stroke drying. The set itself is the Done button: tap “82.5 × 8”. +15 and skip are just words.</div>
+  </div>
+
+  <!-- ================= B · HORIZON ================= -->
+  <div style="display: flex; flex-direction: column; gap: 20px; width: 390px">
+    <div class="ttl">B · Horizon</div>
+    <div class="phone">
+      <svg class="grain" width="390" height="844"><filter id="g2"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" seed="5"/><feColorMatrix values="0 0 0 0 .9 0 0 0 0 .85 0 0 0 0 .8 0 0 0 .5 0"/></filter><rect width="390" height="844" filter="url(#g2)"/></svg>
+      <div class="date">Thursday 15 October</div>
+      <div class="clock">18:24</div>
+      <div class="act">
+        <!-- a cobalt watercolour sky above a painted horizon; the horizon is the timer -->
+        <span style="position: absolute; left: -30px; right: -30px; top: -40px; height: 150px; background: radial-gradient(60% 70% at 30% 60%, rgba(63,127,192,.55), rgba(63,127,192,0) 70%), radial-gradient(50% 60% at 80% 40%, rgba(122,92,160,.45), rgba(122,92,160,0) 70%); filter: blur(6px); animation: washDrift 9s ease-in-out infinite"></span>
+        <div class="fr" style="position: absolute; left: 22px; top: 18px; font-size: 64px; font-weight: 560; line-height: 1">{{m}}<span class="colon">:</span>{{sec}}</div>
+        <div style="position: absolute; right: 22px; top: 26px; text-align: right">
+          <div class="it" style="font-size: 18px; color: rgba(246,239,228,.7)">then</div>
+          <div class="it" style="font-size: 21px">Bench, 82.5 × 8</div>
+        </div>
+        <svg width="342" height="14" viewBox="0 0 342 14" style="position: absolute; left: 12px; top: 92px; overflow: visible" aria-hidden="true">
+          <path d="M2 7 C 90 4, 200 9, 340 6" fill="none" stroke="rgba(246,239,228,.16)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M2 7 C 90 4, 200 9, 340 6" fill="none" stroke="#F6EFE4" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="345" stroke-dashoffset="{{drainB}}" style="transition: stroke-dashoffset 1s linear"/>
+        </svg>
+        <div style="position: absolute; left: 12px; right: 12px; bottom: 8px; height: 44px; display: grid; grid-template-columns: 1.4fr 1px 1fr 1px 1fr; align-items: center; text-align: center">
+          <span class="fr" style="font-size: 21px; font-weight: 600; color: #F08A6A">Done</span><span class="hair" style="position: static; width: 1px; height: 22px"></span><span class="it" style="font-size: 19px">+15</span><span class="hair" style="position: static; width: 1px; height: 22px"></span><span class="it" style="font-size: 19px">skip</span>
+        </div>
+      </div>
+    </div>
+    <div class="strip">
+      <div class="act">
+        <span style="position: absolute; left: -30px; right: -30px; top: -40px; height: 150px; background: radial-gradient(60% 70% at 30% 60%, rgba(232,189,76,.6), rgba(232,189,76,0) 70%), radial-gradient(50% 60% at 80% 40%, rgba(226,96,63,.45), rgba(226,96,63,0) 70%); filter: blur(6px)"></span>
+        <div class="fr" style="position: absolute; left: 22px; top: 18px; font-size: 64px; font-weight: 560; line-height: 1">Go</div>
+        <div style="position: absolute; right: 22px; top: 26px; text-align: right">
+          <div class="it" style="font-size: 18px; color: rgba(246,239,228,.8)">now</div>
+          <div class="it" style="font-size: 21px">Bench, 82.5 × 8</div>
+        </div>
+        <svg width="342" height="14" viewBox="0 0 342 14" style="position: absolute; left: 12px; top: 92px; overflow: visible" aria-hidden="true"><path d="M2 7 C 90 4, 200 9, 340 6" fill="none" stroke="rgba(246,239,228,.3)" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div style="position: absolute; left: 12px; right: 12px; bottom: 8px; height: 44px; display: grid; grid-template-columns: 2fr 1px 1fr; align-items: center; text-align: center">
+          <span class="fr" style="font-size: 21px; font-weight: 600; color: #FFF3DC">Done</span><span class="hair" style="position: static; width: 1px; height: 22px"></span><span class="it" style="font-size: 19px">skip</span>
+        </div>
+      </div>
+    </div>
+    <div class="cap">A cobalt sky over a painted horizon; the horizon line is the timer, shrinking toward the left. When rest ends the sky warms to cadmium. Controls are three words split by hairlines.</div>
+  </div>
+
+  <!-- ================= C · PALETTE ================= -->
+  <div style="display: flex; flex-direction: column; gap: 20px; width: 390px">
+    <div class="ttl">C · Palette</div>
+    <div class="phone">
+      <svg class="grain" width="390" height="844"><filter id="g3"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" seed="9"/><feColorMatrix values="0 0 0 0 .9 0 0 0 0 .85 0 0 0 0 .8 0 0 0 .5 0"/></filter><rect width="390" height="844" filter="url(#g3)"/></svg>
+      <div class="date">Thursday 15 October</div>
+      <div class="clock">18:24</div>
+      <div class="act">
+        <div class="fr" style="position: absolute; left: 22px; top: 22px; font-size: 64px; font-weight: 560; line-height: 1">{{m}}<span class="colon">:</span>{{sec}}</div>
+        <div class="it" style="position: absolute; left: 22px; top: 96px; font-size: 21px">Bench, 82.5 × 8</div>
+        <svg width="150" height="10" viewBox="0 0 150 10" style="position: absolute; left: 22px; top: 130px; overflow: visible" aria-hidden="true">
+          <path d="M2 5 C 40 2, 100 8, 148 4" fill="none" stroke="#E8BD4C" stroke-width="3" stroke-linecap="round" stroke-dasharray="150" stroke-dashoffset="{{drainC}}" style="transition: stroke-dashoffset 1s linear"/>
+        </svg>
+        <!-- three pigment swatches, as on a palette -->
+        <div style="position: absolute; right: 14px; top: 14px; width: 128px; height: 128px">
+          <span style="position: absolute; left: 0; top: 0; width: 128px; height: 82px; border-radius: 46% 54% 40% 60% / 55% 45% 60% 40%; background: radial-gradient(120% 120% at 30% 25%, #EE7454, #C8452F 60%, #A8341F); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); animation: swell 3.4s ease-in-out infinite"></span>
+          <span class="fr" style="position: absolute; left: 0; top: 0; width: 128px; height: 82px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; color: #FFF3E6">Done</span>
+          <span style="position: absolute; left: 8px; top: 84px; width: 52px; height: 46px; transform: rotate(-8deg); border-radius: 58% 42% 52% 48% / 46% 58% 42% 54%; background: radial-gradient(120% 120% at 30% 25%, #5B8FC4, #2E6DA4 65%); box-shadow: inset 0 1px 0 rgba(255,255,255,.3)"></span>
+          <span class="it" style="position: absolute; left: 8px; top: 84px; width: 52px; height: 46px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #F6EFE4">+15</span>
+          <span style="position: absolute; left: 70px; top: 86px; width: 52px; height: 44px; transform: rotate(10deg); border-radius: 44% 56% 50% 50% / 58% 48% 52% 42%; background: radial-gradient(120% 120% at 30% 25%, #F0CF6A, #D9A93A 65%); box-shadow: inset 0 1px 0 rgba(255,255,255,.35)"></span>
+          <span class="it" style="position: absolute; left: 70px; top: 86px; width: 52px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #2B2440">skip</span>
+        </div>
+      </div>
+    </div>
+    <div class="strip">
+      <div class="act">
+        <div class="fr" style="position: absolute; left: 22px; top: 22px; font-size: 64px; font-weight: 560; line-height: 1">Go</div>
+        <div class="it" style="position: absolute; left: 22px; top: 96px; font-size: 21px">Bench, 82.5 × 8</div>
+        <div style="position: absolute; right: 14px; top: 14px; width: 128px; height: 128px">
+          <span style="position: absolute; left: -8px; top: -4px; width: 144px; height: 120px; border-radius: 46% 54% 40% 60% / 55% 45% 60% 40%; background: radial-gradient(120% 120% at 30% 25%, #F07E5E, #C8452F 60%, #A8341F); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 0 24px rgba(226,96,63,.55); animation: swell 2.2s ease-in-out infinite"></span>
+          <span class="fr" style="position: absolute; left: -8px; top: -4px; width: 144px; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600; color: #FFF3E6">Done</span>
+        </div>
+      </div>
+    </div>
+    <div class="cap">The controls are paint on a palette: a big vermilion swatch for Done, small cobalt and ochre ones for +15 and skip. When rest ends, the other two dry up and Done swells.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1250,"height":1310}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { rest: 102 };
+    setInterval(() => this.setState({ rest: this.state.rest > 1 ? this.state.rest - 1 : 150 }), 1000);
+  }
+  renderVals() {
+    const r = this.state.rest, left = r / 150;
+    return {
+      m: String(Math.floor(r / 60)), sec: String(r % 60).padStart(2, '0'),
+      drainA: (190 * (1 - left)).toFixed(1), drainB: (345 * (1 - left)).toFixed(1), drainC: (150 * (1 - left)).toFixed(1)
+    };
+  }
+}
+</script>
+</body>
+</html>

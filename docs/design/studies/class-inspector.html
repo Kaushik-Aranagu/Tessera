@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Class inspector</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M3 slice 6 (docs/design/m3-steers.md §6): adding a field to a class. Follows docs/design/no-buttons.md (no shapes around anything). Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#D6E2F0 0%,rgba(214,226,240,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F4F0EC}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.row{position:absolute;left:22px;right:22px;height:48px;line-height:48px;font-size:21px;font-weight:500;display:flex;justify-content:space-between}
+.row .t{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.inh{opacity:.5}
+.col{display:inline-block;position:relative;height:30px;overflow:hidden;vertical-align:top}
+.col span{position:absolute;left:0;top:0}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+.horizon{position:absolute;left:0;right:0;bottom:0;height:150px;z-index:8;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);-webkit-mask-image:linear-gradient(transparent,#000 55%);mask-image:linear-gradient(transparent,#000 55%)}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0)}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <section id="page" class="abs" style="inset:0">
+    <div class="abs lbl" style="left:22px;top:58px">THINGS › EXERCISE › <span style="color:var(--ink)">BARBELL LIFT</span></div>
+    <div class="abs" style="left:20px;top:84px;font-size:56px;font-weight:500;line-height:1;letter-spacing:-.04em">Barbell lift</div>
+    <div class="abs" style="left:22px;right:22px;top:150px;font-size:21px;color:var(--ctx)">42 objects and 3 subclasses</div>
+    <div class="abs lbl" style="left:22px;top:212px">FIELDS <span id="count" style="color:var(--ink);display:inline-block;height:20px;overflow:hidden;vertical-align:top;position:relative;width:12px"><span id="c6" style="position:absolute;left:0;top:0">6</span><span id="c7" style="position:absolute;left:0;top:20px">7</span></span></div>
+    <div id="rows"></div>
+  </section>
+
+  <div class="horizon"></div>
+  <div class="abs" style="left:76px;right:22px;top:788px;height:.5px;background:rgba(43,36,64,.28);z-index:9"></div>
+  <span id="tess" class="abs" style="left:78px;top:756px;font-size:21px;color:#8A7F96;z-index:9">Ask Tess…</span>
+  <span id="undo" class="abs la lbl" style="right:22px;top:762px;color:var(--verm);opacity:0;z-index:9">UNDO<span class="line" style="background:var(--verm)"></span></span>
+  <div class="abs" style="left:36px;top:760px;width:28px;height:24px;border-radius:52% 48% 60% 40%;background:radial-gradient(closest-side,rgba(46,109,164,.7),rgba(46,109,164,0));filter:blur(2px);z-index:9"></div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const tapEl = async (el) => { const r = rel(el.getBoundingClientRect()); await fingerOn(r.left + r.width / 2, r.top + r.height / 2); await sleep(110); fingerOff(); };
+async function tessSay(text, colour = '#2E6DA4') {
+  const t = $('tess'); await anim(t, [{ opacity: 1 }, { opacity: 0 }], { duration: 120 });
+  t.textContent = text; t.style.color = colour;
+  anim(t, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: HOUSE });
+}
+// value-word touch: a soft cobalt wash with no edge
+function wash(el) {
+  const w = document.createElement('span'); Object.assign(w.style, { position: 'absolute', left: '-10px', right: '-8px', top: '8px', bottom: '8px', borderRadius: '40% 60% 50% 50% / 60% 40% 60% 40%', background: 'rgba(46,109,164,.22)', filter: 'blur(5px)', zIndex: -1 });
+  el.style.position = 'relative'; el.appendChild(w);
+  anim(w, [{ opacity: 0 }, { opacity: 1, offset: .3 }, { opacity: 0 }], { duration: 600 }).then(() => w.remove());
+}
+
+const Y0 = 236, PITCH = 48;
+const FIELDS = [
+  { n: 'Name', t: 'TEXT', inh: true },
+  { n: 'Muscles', t: 'LINK → MUSCLE', inh: true },
+  { n: 'Equipment', t: 'LINK → KIT', inh: true },
+  { n: 'Bar', t: 'MASS' },
+  { n: 'Plates', t: 'LIST → PLATE' },
+  { n: 'Bar path', t: 'CHOICE' }
+];
+const els = [];
+function row(f) {
+  const e = document.createElement('div'); e.className = 'row' + (f.inh ? ' inh' : '');
+  e.innerHTML = `<span>${f.n}</span><span class="t">${f.t}</span>`; $('rows').appendChild(e); return e;
+}
+FIELDS.forEach((f) => els.push(row(f)));
+// "FROM EXERCISE" over the inherited group and the one seam where inheritance changes
+const from = document.createElement('div'); from.className = 'abs lbl'; from.style.cssText = 'right:22px;top:212px;opacity:.5'; from.textContent = 'FROM EXERCISE'; $('rows').appendChild(from);
+const seam = document.createElement('div'); seam.className = 'abs'; seam.style.cssText = 'left:22px;right:22px;height:1px;background:linear-gradient(90deg,rgba(43,36,64,.35),rgba(43,36,64,.08))'; $('rows').appendChild(seam);
+const add = document.createElement('div'); add.className = 'row'; add.innerHTML = '<span id="addw" style="color:var(--cobalt);font-weight:400">Add <b style="font-weight:600">grip width</b>?</span><span class="t" style="color:var(--cobalt);opacity:.7">TESS</span>'; $('rows').appendChild(add);
+const traits = document.createElement('div'); traits.className = 'abs'; traits.innerHTML = '<div class="lbl">TRAITS</div><div style="font-size:21px;margin-top:6px">Barbell · Compound · Loadable</div>'; $('rows').appendChild(traits);
+function place(animate) {
+  const all = [...els];
+  all.forEach((e, k) => { const y = Y0 + k * PITCH + (k >= 3 ? 9 : 0); const from = parseFloat(e.style.top || y); e.style.top = y + 'px'; if (animate && from !== y) e.animate([{ transform: `translateY(${from - y}px)` }, { transform: 'none' }], { duration: 360, easing: HOUSE }); });
+  seam.style.top = (Y0 + 3 * PITCH + 4) + 'px';
+  const ya = Y0 + all.length * PITCH + 9; const fa = parseFloat(add.style.top || ya); add.style.top = ya + 'px';
+  const yt = ya + 70; const ft = parseFloat(traits.style.top || yt); traits.style.top = yt + 'px'; traits.style.left = '22px';
+  if (animate) { if (fa !== ya) add.animate([{ transform: `translateY(${fa - ya}px)` }, { transform: 'none' }], { duration: 360, easing: HOUSE }); if (ft !== yt) traits.animate([{ transform: `translateY(${ft - yt}px)` }, { transform: 'none' }], { duration: 360, easing: HOUSE }); }
+}
+place(false);
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  // z: the inspector zooms in from its parent row; rows follow down the column
+  anim($('page'), [{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: HOUSE });
+  [...$('rows').children].forEach((e, k) => anim(e, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: 160 + k * 35, easing: 'ease-out', fill: 'backwards' }));
+  await sleep(1700);
+
+  // tap Tess's suggestion: the row becomes the form in place, no sheet, no box
+  await tapEl($('addw')); wash($('addw'));
+  await sleep(200);
+  const form = document.createElement('div'); form.className = 'row'; form.style.top = add.style.top;
+  form.innerHTML = '<span style="position:relative"><span id="nm"></span><span id="caret" style="display:inline-block;width:2px;height:24px;background:var(--cobalt);vertical-align:-4px;margin-left:1px"></span></span><span class="t" id="ty" style="color:var(--ink)">MASS</span>';
+  $('rows').appendChild(form);
+  const line = document.createElement('div'); line.className = 'abs'; line.style.cssText = `left:22px;right:22px;top:${parseFloat(add.style.top) + 38}px;height:.5px;background:rgba(46,109,164,.6);transform-origin:0 50%`;
+  $('rows').appendChild(line);
+  anim(add, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-8px)' }], { duration: 200 });
+  anim(form, [{ opacity: 0, transform: 'translateX(30px)' }, { opacity: 1, transform: 'none' }], { duration: 340, easing: HOUSE });
+  anim(line, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 420, easing: HOUSE });
+  anim($('caret'), [{ opacity: 1 }, { opacity: 0 }, { opacity: 1 }], { duration: 900, iterations: Infinity });
+  tessSay('Name it, then pick a kind.');
+  for (const ch of 'Grip width') { $('nm').textContent += ch; await sleep(70); }
+  await sleep(600);
+  // the type word cycles on tap with the short blurred crossfade
+  for (const nx of ['NUMBER', 'CHOICE']) {
+    await tapEl($('ty')); wash($('ty'));
+    await anim($('ty'), [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 120 });
+    $('ty').textContent = nx;
+    await anim($('ty'), [{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 180, easing: HOUSE });
+    await sleep(500);
+  }
+  await sleep(300);
+  // Return commits: a ghost row at 60% with Undo, the form line retracts
+  $('caret').remove();
+  anim(line, [{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 260, easing: HOUSE });
+  await anim(form, [{ opacity: 1 }, { opacity: .45 }], { duration: 200 });
+  tessSay('Grip width, a choice.'); anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
+  await sleep(2000);
+
+  // it settles: the field writes itself into the column with the glyph reveal and a cobalt wash; FIELDS ticks 6 → 7
+  anim($('undo'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }); tessSay('Ask Tess…', '#8A7F96');
+  const f = { n: 'Grip width', t: 'CHOICE' }; const e = row(f); els.push(e); e.style.top = form.style.top; e.querySelector('span').textContent = '';
+  form.remove(); place(true);
+  const nameEl = e.querySelector('span');
+  const w = document.createElement('span'); Object.assign(w.style, { position: 'absolute', left: '-10px', width: '150px', top: '6px', bottom: '6px', borderRadius: '40% 60% 50% 50% / 60% 40% 60% 40%', background: 'rgba(46,109,164,.22)', filter: 'blur(5px)' });
+  e.prepend(w); e.style.position = 'absolute';
+  w.animate([{ opacity: .9 }, { opacity: 0 }], { duration: 2800, delay: 400, fill: 'forwards' });
+  const spans = [...f.n].map((ch) => { const s = document.createElement('span'); s.textContent = ch; s.style.opacity = 0; s.style.position = 'relative'; nameEl.appendChild(s); return s; });
+  spans.forEach((s, i) => s.animate([{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 160, delay: i * 30, fill: 'forwards' }));
+  anim(e.querySelector('.t'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: spans.length * 30 });
+  anim($('c6'), [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-20px)', opacity: 0 }], { duration: 420, delay: 200, easing: HOUSE });
+  anim($('c7'), [{ transform: 'none', opacity: 0 }, { transform: 'translateY(-20px)', opacity: 1 }], { duration: 420, delay: 200, easing: HOUSE });
+  // "Add a field" returns in ink, with no suggestion left
+  add.innerHTML = '<span>Add a field</span><span></span>';
+  anim(add, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: 500, easing: HOUSE });
+  await sleep(3000);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<title>Routines Ideas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: five live phones, all the Routines landing, each with a different idea in the standard slot. Rendering kept to hairlines, dots and type on purpose. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#8E4A78;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin:0}
+main{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:48px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:62ch}
+.bar{display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input[type=range]{width:min(360px,100%);accent-color:var(--acc)}
+.lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2)}
+.phones{display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--hair:rgba(36,36,35,.16);--routines:#8E4A78;--green:#2F6450;--wine:#9A2541;--gold:#7E6A1E;--teal:#1E6E77;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none}
+.phones[data-look="black"] .phone{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--hair:rgba(232,227,218,.2);--routines:#D59AC4;--green:#8EC7AE;--wine:#EE8E9C;--gold:#D9C27A;--teal:#7FC7CE}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--routines)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden}
+.ups{position:absolute;left:24px;right:24px;top:424px}
+.up{height:52px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:540px;display:flex;flex-wrap:wrap;gap:0 22px}
+.door{font-size:24px;font-weight:600;color:var(--ink2);padding:6px 0}
+.door.on{color:var(--routines)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--routines);padding:8px 0}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phones[data-look="black"] .tessw{color:#C79B7C}
+.voice{position:absolute;left:24px;top:196px;width:354px;height:182px;font:italic 400 30px/1.2 var(--serif);color:var(--ink);display:flex;align-items:center}
+.voice span{opacity:0;transition:opacity .5s}
+.voice span.in{opacity:1}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Routines / sheet 263</h2>
+<h1>Five ideas, drawn plainly.</h1>
+<p class="lede">The rule for this round: the idea does the work, the drawing stays at hairlines, dots and type. One day runs in about a minute, or drag the hour. Same sample routines everywhere: Water, Stretch, Lunch, Tidy, Walk, Journal every day; Swim Thursday, Badminton Saturday, Call family Sunday; Backup and Water plants run themselves.</p>
+<div class="bar" role="group" aria-label="Phone look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+<span class="lbl" style="margin-left:18px">Hour</span>
+<input type="range" id="hour" min="0" max="24" step="0.05" value="17.6" aria-label="Hour of day">
+<button class="w" id="play" aria-pressed="true">Playing</button>
+</div>
+</header>
+
+<section aria-label="Phones">
+<div class="phones" id="phones" data-look="paper">
+
+<div><div class="slot" data-fit><div class="phone">
+ <div class="sbar"><span class="clk">5:36</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say"><b style="color:var(--green)">Four done,</b> <b style="color:var(--routines)">three to go,</b> one is Thursday's.</div>
+ <canvas id="record" class="key" width="708" height="364"></canvas>
+ <div class="kline">Side A is the morning, side B the evening. The week turns behind.</div>
+ <div class="ups"><div class="up"><b>Walk</b>&nbsp;is the next track, at 6.</div><div class="up"><b>Swim</b>&nbsp;on Thursday's record.</div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Daily</span><span class="door">Weekly</span><span class="door">Body</span><span class="door">Mind</span></div>
+ <div class="foot">Sheaf</div><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<p class="cap"><b>1. The record player.</b> Routines are on repeat. The record turns once a day; each routine is a groove band, each step a mark in the groove at its hour; the tonearm is now. A played mark shines; a skipped one stays dull and the needle jitters past. The weekly record turns behind, seven times slower. Drag the platter to see what's coming.</p></div>
+
+<div><div class="slot" data-fit><div class="phone">
+ <div class="sbar"><span class="clk">5:36</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say">You are at the <b style="color:var(--routines)">desk.</b> The <b>door</b> lights at six.</div>
+ <canvas id="daymap" class="key" width="708" height="364"></canvas>
+ <div class="kline">Routines are places. A room lights when its routine is due.</div>
+ <div class="ups"><div class="up"><b>Walk</b>&nbsp;from the door at 6.</div><div class="up"><b>Pool</b>&nbsp;appears on Thursday.</div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Daily</span><span class="door">Weekly</span><span class="door">Body</span><span class="door">Mind</span></div>
+ <div class="foot">Sheaf</div><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<p class="cap"><b>2. The day map.</b> A floor plan of your day in hairline: bed, kitchen, desk, gym, door, and a pool that only exists on Thursdays. You are the dot, moving on schedule or on your check-ins. A room lights when its routine is due; automated routines switch their own lights on. Sunlight crosses the plan with the real hour. Behind a door you are inside that room.</p></div>
+
+<div><div class="slot" data-fit><div class="phone">
+ <div class="sbar"><span class="clk">5:36</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say">Everything <b style="color:var(--routines)">lines up</b> on Sunday evening.</div>
+ <canvas id="pendula" class="key" width="708" height="364"></canvas>
+ <div class="kline">Each routine swings at its own period. Crossing the line is "due".</div>
+ <div class="ups"><div class="up"><b>Walk</b>&nbsp;crosses at 6.</div><div class="up"><b>Swim</b>&nbsp;is on its long swing to Thursday.</div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Daily</span><span class="door">Weekly</span><span class="door">Body</span><span class="door">Mind</span></div>
+ <div class="foot">Sheaf</div><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<p class="cap"><b>3. The polyrhythm.</b> Each routine is a pendulum whose length is its period: dailies swing fast, weeklies slow. A bob crossing the centre line is "it's time"; done bobs glow through the rest of their swing. Together they make a pendulum wave that falls into step on the days everything coincides, and that alignment is what the keystone celebrates.</p></div>
+
+<div><div class="slot" data-fit><div class="phone">
+ <div class="sbar"><span class="clk">5:36</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say">The shadow reaches <b style="color:var(--routines)">Walk</b> in twenty minutes.</div>
+ <canvas id="sundial" class="key" width="708" height="364"></canvas>
+ <div class="kline">The real sun drives the shadow. The outer ring is the week.</div>
+ <div class="ups"><div class="up"><b>Walk</b>&nbsp;at 6, by the shadow.</div><div class="up"><b>Journal</b>&nbsp;by moonlight at 10.</div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Daily</span><span class="door">Weekly</span><span class="door">Body</span><span class="door">Mind</span></div>
+ <div class="foot">Sheaf</div><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<p class="cap"><b>4. The sundial.</b> A flat dial and a gnomon; the shadow is driven by the actual sun (shared with Weather). Routines are marks on the dial at their hour; the shadow sweeping over a mark is "it's time". Weekly routines on the outer ring. After sunset the dial dims and the night routines are read by a thin moon shadow. Done marks catch light.</p></div>
+
+<div><div class="slot" data-fit><div class="phone">
+ <div class="sbar"><span class="clk">5:36</span><span></span></div>
+ <div class="ttl">Routines</div>
+ <div class="say"><b style="color:var(--green)">Four done,</b> <b style="color:var(--routines)">three to go.</b></div>
+ <div id="voice" class="voice" aria-live="polite"></div>
+ <div class="kline">No picture. Tess says what is next, and when.</div>
+ <div class="ups"><div class="up"><b>Walk</b>&nbsp;at 6.</div><div class="up"><b>Journal</b>&nbsp;at 10.</div></div>
+ <div class="doors"><span class="door on">Today</span><span class="door">Daily</span><span class="door">Weekly</span><span class="door">Body</span><span class="door">Mind</span></div>
+ <div class="foot">Sheaf</div><div class="tessw">Tess</div><div class="home"></div>
+</div></div>
+<p class="cap"><b>5. No picture.</b> The keystone is one sentence in Tess's voice, arriving a word at a time and changing through the day. Routines as a voice rather than a diagram. Nothing to draw; everything leans on the AI layer, which is the thing that makes Tessera yours.</p></div>
+
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+
+// ---- shared sample data. h = hour of day; wd = weekday 0..6 (Sun..Sat) for weeklies; auto = runs itself.
+var DAILY=[{n:'Water',h:6.5,steps:1},{n:'Stretch',h:7,steps:5},{n:'Water plants',h:8,steps:1,auto:true},{n:'Lunch',h:12.5,steps:2},
+ {n:'Tidy',h:17.5,steps:3},{n:'Walk',h:18,steps:1},{n:'Journal',h:22,steps:3},{n:'Backup',h:23,steps:1,auto:true}];
+var WEEKLY=[{n:'Call family',wd:0,h:19},{n:'Swim',wd:4,h:18},{n:'Badminton',wd:6,h:10}];
+var SKIPPED={'Water plants':false,'Stretch':true}; // Stretch was skipped today, on purpose, to show the dull state
+var TODAY=2; // Tuesday
+var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var hour=17.6, playing=true;
+var slider=$('#hour'), playBtn=$('#play');
+slider.addEventListener('input',function(){hour=+slider.value;playing=false;playBtn.setAttribute('aria-pressed','false');playBtn.textContent='Paused'});
+playBtn.addEventListener('click',function(){playing=!playing;playBtn.setAttribute('aria-pressed',String(playing));playBtn.textContent=playing?'Playing':'Paused'});
+$('#lk-paper').addEventListener('click',function(){look('paper')});
+$('#lk-black').addEventListener('click',function(){look('black')});
+function look(l){$('#phones').dataset.look=l;$('#lk-paper').setAttribute('aria-pressed',String(l==='paper'));$('#lk-black').setAttribute('aria-pressed',String(l==='black'))}
+function fit(){var w=Math.min(402,document.documentElement.clientWidth-32),s=w/402;$$('[data-fit]').forEach(function(el){el.style.height=(874*s)+'px';el.firstElementChild.style.transform='scale('+s+')'})}
+fit();addEventListener('resize',fit);
+
+function css(el,v){return getComputedStyle(el).getPropertyValue(v).trim()}
+function pal(c){var p=c.closest('.phone');return {ink:css(p,'--ink'),ink2:css(p,'--ink2'),ink3:css(p,'--ink3'),hair:css(p,'--hair'),acc:css(p,'--routines'),green:css(p,'--green'),gold:css(p,'--gold'),teal:css(p,'--teal'),bg:css(p,'--p-bg'),black:$('#phones').dataset.look==='black'}}
+function ctx(id){var c=$('#'+id);var g=c.getContext('2d');g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,354,182);return {c:c,g:g,p:pal(c)}}
+function clock(){var h=Math.floor(hour)%24,m=Math.floor((hour%1)*60);var s=((h+11)%12+1)+':'+(m<10?'0':'')+m;$$('.clk').forEach(function(e){e.textContent=s})}
+function doneState(r){ if(SKIPPED[r.n]&&r.h<hour) return 'skipped'; return r.h<=hour?'done':'wait'}
+function tone(p,st){return st==='done'?p.gold:st==='skipped'?p.ink3:p.ink}
+var TAU=Math.PI*2;
+
+// ---- 1. record player
+function drawRecord(){
+ var o=ctx('record'),g=o.g,p=o.p;
+ // weekly record behind, to the right, fainter
+ var wx=262,wy=98,wr=78;
+ g.save();g.globalAlpha=.55;
+ g.strokeStyle=p.hair;g.lineWidth=1;g.beginPath();g.arc(wx,wy,wr,0,TAU);g.stroke();
+ var wrot=-TAU*((TODAY+hour/24)/7); // once a week
+ WEEKLY.forEach(function(r,i){var rr=wr-14-i*14;g.strokeStyle=p.hair;g.beginPath();g.arc(wx,wy,rr,0,TAU);g.stroke();
+  var a=wrot+TAU*((r.wd+r.h/24)/7)-Math.PI/2; var past=(r.wd+r.h/24)<(TODAY+hour/24);
+  g.fillStyle=past?p.gold:p.ink;g.beginPath();g.arc(wx+Math.cos(a)*rr,wy+Math.sin(a)*rr,2.6,0,TAU);g.fill();
+  if(Math.abs(((a+Math.PI/2)%TAU+TAU)%TAU)<.6||true){g.fillStyle=p.ink2;g.font='300 10px Figtree,system-ui,sans-serif';g.textAlign='left';
+   if(i===0){} }
+ });
+ g.fillStyle=p.ink2;g.font='500 10px Figtree,system-ui,sans-serif';g.textAlign='center';g.fillText(DAYS[TODAY],wx,wy+3);
+ // weekly needle
+ g.strokeStyle=p.ink2;g.lineWidth=1;g.beginPath();g.moveTo(wx,wy-wr-10);g.lineTo(wx,wy-wr+22);g.stroke();
+ g.restore();
+ // daily record
+ var cx=112,cy=96,R=86;
+ var rot=-TAU*(hour/24)-Math.PI/2; // now sits under the needle at top
+ g.strokeStyle=p.ink;g.lineWidth=1.2;g.beginPath();g.arc(cx,cy,R,0,TAU);g.stroke();
+ g.fillStyle=p.hair;g.beginPath();g.arc(cx,cy,R,0,TAU);g.fill();
+ // grooves: one band per routine, outer = earliest
+ DAILY.forEach(function(r,i){
+  var rr=R-9-i*8.6; g.strokeStyle=p.hair;g.lineWidth=1;g.beginPath();g.arc(cx,cy,rr,0,TAU);g.stroke();
+  var st=doneState(r);
+  for(var s=0;s<r.steps;s++){var a=rot+TAU*((r.h+s*0.25)/24)-Math.PI/2; // first step at its hour, next every 15 min
+   var x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;
+   g.fillStyle=tone(p,st);
+   if(r.auto){g.strokeStyle=tone(p,st);g.lineWidth=1;g.beginPath();g.arc(x,y,2.4,0,TAU);g.stroke()}
+   else{g.beginPath();g.arc(x,y,st==='done'?2.8:2.2,0,TAU);g.fill()}
+   if(st==='done'&&s===0){g.strokeStyle=p.gold;g.globalAlpha=.35;g.lineWidth=2;var a0=rot+TAU*(r.h/24)-Math.PI/2,a1=rot-Math.PI/2;g.beginPath();g.arc(cx,cy,rr,a0,a1);g.stroke();g.globalAlpha=1}
+  }
+ });
+ // label + spindle
+ g.fillStyle=p.bg;g.beginPath();g.arc(cx,cy,16,0,TAU);g.fill();g.strokeStyle=p.hair;g.beginPath();g.arc(cx,cy,16,0,TAU);g.stroke();
+ g.fillStyle=p.ink;g.beginPath();g.arc(cx,cy,1.6,0,TAU);g.fill();
+ g.fillStyle=p.ink2;g.font='300 9px Figtree,system-ui,sans-serif';g.textAlign='center';g.fillText(hour<12?'side A':'side B',cx,cy+22+ (0));
+ // tonearm: pivot top-right of platter, needle at top of record (now), riding inward as the day goes
+ var px=cx+R+40,py=cy-R-6, nr=R-9-(Math.min(DAILY.length-1,Math.max(0,DAILY.filter(function(r){return r.h<=hour}).length-0.5)))*8.6;
+ var nx=cx,ny=cy-nr;
+ g.strokeStyle=p.ink;g.lineWidth=1.4;g.lineCap='round';g.beginPath();g.moveTo(px,py);g.lineTo(nx+8,ny-4);g.lineTo(nx,ny);g.stroke();
+ g.fillStyle=p.ink;g.beginPath();g.arc(px,py,3,0,TAU);g.fill();
+ // name of the groove under the needle
+ var nxt=DAILY.filter(function(r){return r.h>hour})[0];
+ var cur=DAILY.filter(function(r){return r.h<=hour}).slice(-1)[0];
+ g.fillStyle=p.ink2;g.font='300 12px Figtree,system-ui,sans-serif';g.textAlign='left';
+ g.fillText((cur?cur.n+' played':'')+(nxt?(cur?' · ':'')+'next '+nxt.n:''),8,176);
+}
+
+// ---- 2. day map
+var ROOMS=[{n:'Bed',x:8,y:10,w:84,h:62,at:[22,23,6.5]},{n:'Kitchen',x:98,y:10,w:100,h:62,at:[8,12.5,17.5]},{n:'Desk',x:204,y:10,w:84,h:92,at:[]},
+ {n:'Gym',x:8,y:78,w:84,h:70,at:[7]},{n:'Door',x:98,y:78,w:100,h:40,at:[18]},{n:'Pool',x:204,y:108,w:84,h:40,at:[],wd:4}];
+function roomFor(h){ if(h<6.5||h>=22.5)return ROOMS[0]; if(h<7)return ROOMS[1]; if(h<8)return ROOMS[3]; if(h<8.5)return ROOMS[1]; if(h<12.5)return ROOMS[2]; if(h<13.2)return ROOMS[1]; if(h<17.5)return ROOMS[2]; if(h<18)return ROOMS[1]; if(h<19)return ROOMS[4]; if(h<22)return ROOMS[2]; return ROOMS[0]}
+var dot={x:0,y:0,init:false};
+function drawDayMap(){
+ var o=ctx('daymap'),g=o.g,p=o.p;
+ var day=hour>6&&hour<19.5;
+ // sunlight across the plan with the hour
+ if(day){var sx=20+(hour-6)/13.5*300;g.save();g.globalAlpha=p.black?.08:.16;var grd=g.createLinearGradient(sx-50,0,sx+50,0);grd.addColorStop(0,'rgba(255,200,80,0)');grd.addColorStop(.5,'#E8B84A');grd.addColorStop(1,'rgba(255,200,80,0)');g.fillStyle=grd;g.fillRect(0,0,300,160);g.restore()}
+ var nowRoom=roomFor(hour);
+ ROOMS.forEach(function(r){
+  if(r.wd!==undefined&&r.wd!==TODAY){ // the pool exists only on Thursday: a faint ghost otherwise
+   g.setLineDash([2,4]);g.strokeStyle=p.hair;g.strokeRect(r.x,r.y,r.w,r.h);g.setLineDash([]);
+   g.fillStyle=p.ink3;g.font='300 10px Figtree,system-ui,sans-serif';g.textAlign='left';g.fillText('Pool, Thu',r.x+8,r.y+16);return}
+  var due=r.at.some(function(h){return hour>=h-0.35&&hour<h+0.35});
+  var lit=due||(!day&&r===nowRoom);
+  if(lit){g.fillStyle=p.black?'rgba(217,194,122,.16)':'rgba(126,106,30,.10)';g.fillRect(r.x,r.y,r.w,r.h)}
+  g.strokeStyle=lit?p.gold:p.hair;g.lineWidth=lit?1.4:1;g.strokeRect(r.x,r.y,r.w,r.h);
+  g.fillStyle=lit?p.ink:p.ink2;g.font=(lit?'500':'300')+' 11px Figtree,system-ui,sans-serif';g.textAlign='left';g.fillText(r.n,r.x+8,r.y+16);
+  // routine marks in the room, done ones gold
+  r.at.forEach(function(h,i){var dn=h<=hour;g.fillStyle=dn?p.gold:p.ink3;g.beginPath();g.arc(r.x+r.w-10-i*8,r.y+r.h-10,1.8,0,TAU);g.fill()});
+ });
+ // the dot: you, easing to the room you are in
+ var tx=nowRoom.x+nowRoom.w/2,ty=nowRoom.y+nowRoom.h/2+8;
+ if(!dot.init){dot.x=tx;dot.y=ty;dot.init=true}
+ dot.x+=(tx-dot.x)*.06;dot.y+=(ty-dot.y)*.06;
+ g.fillStyle=p.acc;g.beginPath();g.arc(dot.x,dot.y,4,0,TAU);g.fill();
+ g.strokeStyle=p.acc;g.globalAlpha=.35;g.beginPath();g.arc(dot.x,dot.y,8+Math.sin(performance.now()/500)*2,0,TAU);g.stroke();g.globalAlpha=1;
+ // legend line at the bottom right
+ g.fillStyle=p.ink2;g.font='300 12px Figtree,system-ui,sans-serif';g.textAlign='right';
+ var nxt=DAILY.filter(function(r){return r.h>hour&&!r.auto})[0];
+ g.fillText(nxt?nxt.n+' at '+fmt(nxt.h):'Nothing more today',348,176);
+}
+function fmt(h){var hh=Math.floor(h),m=Math.round((h-hh)*60);return ((hh+11)%12+1)+(m?':'+(m<10?'0':'')+m:'')+(hh<12?'am':'pm')}
+
+// ---- 3. polyrhythm
+function drawPendula(){
+ var o=ctx('pendula'),g=o.g,p=o.p;
+ var top=6,mid=40+ (0),baseY=160;
+ var all=DAILY.filter(function(r){return !r.auto}).map(function(r){return {n:r.n,per:1,phase:r.h/24,done:doneState(r)}})
+  .concat(WEEKLY.map(function(r){return {n:r.n,per:7,phase:(r.wd+r.h/24)/7,done:(r.wd+r.h/24)<(TODAY+hour/24)?'done':'wait'}}));
+ var n=all.length,gap=330/(n-1),x0=12;
+ var t=TODAY+hour/24; // days
+ // centre line
+ g.strokeStyle=p.hair;g.lineWidth=1;g.beginPath();g.moveTo(0,top);g.lineTo(354,top);g.stroke();
+ all.forEach(function(r,i){
+  var x=x0+i*gap; var L=r.per===1?92:150; // length is the period
+  var ph=((t/r.per)-r.phase)*TAU; // zero when due
+  var ang=Math.sin(ph)*0.55;
+  var bx=x+Math.sin(ang)*L,by=top+Math.cos(ang)*L;
+  var near=Math.abs(Math.sin(ph))<0.08&&Math.cos(ph)>0;
+  g.strokeStyle=p.hair;g.lineWidth=1;g.beginPath();g.moveTo(x,top);g.lineTo(bx,by);g.stroke();
+  g.fillStyle=r.done==='done'?p.gold:r.done==='skipped'?p.ink3:(near?p.acc:p.ink);
+  g.beginPath();g.arc(bx,by,r.per===1?4:5.5,0,TAU);g.fill();
+  if(near){g.strokeStyle=p.acc;g.globalAlpha=.4;g.beginPath();g.arc(bx,by,10,0,TAU);g.stroke();g.globalAlpha=1}
+  g.fillStyle=p.ink2;g.font='300 9px Figtree,system-ui,sans-serif';g.textAlign='center';
+  if(r.per===7||near){g.fillText(r.n,x,baseY+18)}
+ });
+ // the "line": where due is read
+ g.strokeStyle=p.ink3;g.setLineDash([1,3]);g.beginPath();g.moveTo(0,top+92);g.lineTo(354,top+92);g.moveTo(0,top+150);g.lineTo(354,top+150);g.stroke();g.setLineDash([]);
+}
+
+// ---- 4. sundial
+function drawSundial(){
+ var o=ctx('sundial'),g=o.g,p=o.p;
+ var cx=177,cy=120,rx=160,ry=58; var rise=6.3,set=19.4;
+ var day=hour>=rise&&hour<=set;
+ g.save();g.globalAlpha=day?1:.55;
+ g.strokeStyle=p.hair;g.lineWidth=1;g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,TAU);g.stroke();
+ g.beginPath();g.ellipse(cx,cy,rx-26,ry-10,0,0,TAU);g.stroke();
+ // hour marks on the inner dial: angle for hour h over the half-day arc (sun from east/left to west/right), evening reads on the lower half
+ function ang(h){var f=(h-rise)/(set-rise); return Math.PI+f*Math.PI} // over the top, left to right
+ function pos(h,r){var a=h>=rise&&h<=set?ang(h):(Math.PI*2-((h<rise?h+24:h)-set)/(24-(set-rise))*Math.PI);var k=r; return [cx+Math.cos(a)*(rx-k)*1,cy+Math.sin(a)*(ry-k*0.36)]}
+ DAILY.forEach(function(r){var P=pos(r.h,26);var st=doneState(r);g.fillStyle=tone(p,st);
+  if(r.auto){g.strokeStyle=tone(p,st);g.beginPath();g.arc(P[0],P[1],2.6,0,TAU);g.stroke()}else{g.beginPath();g.arc(P[0],P[1],st==='done'?3:2.4,0,TAU);g.fill()}
+  g.fillStyle=p.ink2;g.font='300 9px Figtree,system-ui,sans-serif';g.textAlign='center';g.fillText(r.n,P[0],P[1]+(P[1]<cy?-7:13))});
+ // weekly on the outer ring: around the full ellipse by weekday
+ WEEKLY.forEach(function(r){var a=Math.PI+((r.wd+r.h/24)/7)*TAU;var P=[cx+Math.cos(a)*(rx-8),cy+Math.sin(a)*(ry-3)];var past=(r.wd+r.h/24)<(TODAY+hour/24);
+  g.fillStyle=past?p.gold:p.ink;g.beginPath();g.arc(P[0],P[1],2.6,0,TAU);g.fill();
+  g.fillStyle=p.ink3;g.font='300 9px Figtree,system-ui,sans-serif';g.textAlign='center';g.fillText(r.n+' '+DAYS[r.wd],P[0],P[1]+(P[1]<cy?-6:12))});
+ // gnomon and shadow
+ g.strokeStyle=p.ink;g.lineWidth=1.4;g.beginPath();g.moveTo(cx,cy);g.lineTo(cx,cy-44);g.stroke();
+ var sa=day?ang(hour)+Math.PI:(Math.PI*2-((hour<rise?hour+24:hour)-set)/(24-(set-rise))*Math.PI)+Math.PI; // shadow opposite the sun
+ var len=day?(26+70*Math.abs(Math.cos(ang(hour)))):60;
+ g.strokeStyle=day?p.ink:p.ink3;g.globalAlpha=day?.55:.4;g.lineWidth=day?3:1.2;g.lineCap='round';
+ g.beginPath();g.moveTo(cx,cy);g.lineTo(cx+Math.cos(sa)*len,cy+Math.sin(sa)*len*0.36);g.stroke();g.globalAlpha=1;
+ g.restore();
+ g.fillStyle=p.ink2;g.font='300 12px Figtree,system-ui,sans-serif';g.textAlign='left';g.fillText(day?'Sun up':'Moon shadow',8,176);
+}
+
+// ---- 5. no picture
+var lastLine='';
+function lineFor(){
+ var nxt=DAILY.filter(function(r){return r.h>hour&&!r.auto})[0];
+ var mins=nxt?Math.round((nxt.h-hour)*60):0;
+ if(!nxt) return 'That was the day. Backup runs itself at eleven.';
+ if(mins<=0) return nxt.n+' now.';
+ if(mins<30) return nxt.n+' in '+mins+' minute'+(mins===1?'':'s')+'. You said '+fmt(nxt.h)+'.';
+ if(TODAY===3&&hour>12) return 'Swim is tomorrow. Nothing until '+nxt.n+' at '+fmt(nxt.h)+'.';
+ return 'Nothing until '+nxt.n+' at '+fmt(nxt.h)+'.';
+}
+function drawVoice(){
+ var l=lineFor(); if(l===lastLine) return; lastLine=l;
+ var el=$('#voice');el.innerHTML='';
+ l.split(' ').forEach(function(w,i){var s=document.createElement('span');s.textContent=w+' ';el.appendChild(s);setTimeout(function(){s.classList.add('in')},120*i+80)});
+}
+
+var last=performance.now();
+function frame(now){
+ var dt=(now-last)/1000;last=now;
+ if(playing){hour+=dt*(24/60);if(hour>=24)hour-=24;slider.value=hour.toFixed(2)}
+ clock();
+ try{drawRecord();drawDayMap();drawPendula();drawSundial();drawVoice()}catch(e){console.error(e)}
+ requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>

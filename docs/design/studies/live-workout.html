@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The workout, live, on the new frame</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 56: the running workout page checked against 41's frame (one line per thing, never cut, no counts beyond the data), 44's training mode (the strip at the top, the Start line lifted into it) and the motion lab's soul states (LiveTessCorner fixed, hold to speak). The set block is set-block.md's (the numeral in place, one-row reps, the plates drawn, rest on the horizon). ?look=por|obs; ?play records Porcelain: a set logged by the hold, rest in place, a set spoken, the last set's rest naming the next exercise. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.72;--s3:.38;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;--now:#FFC23D;--health:#3FD49A;--tint:.55;background:#000;color:rgb(var(--ink))}
+.ph.por{--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--health:#12936A;--tint:.45;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.f18{font-size:18px;line-height:24px}
+.nw{white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.num{font-size:80px;font-weight:300;letter-spacing:-.04em;line-height:80px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.reps{font-size:56px;font-weight:300;letter-spacing:-.04em;line-height:80px;font-variant-numeric:tabular-nums}
+.x{font-size:34px;font-weight:400;opacity:.6;line-height:80px;margin:0 10px}
+.ctx{color:var(--ctx)}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7;transform-origin:50% 50%}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.por .soul i{mix-blend-mode:multiply}
+.seg{position:absolute;top:0;height:3px;border-radius:0 0 2px 2px}
+.plate{position:absolute;bottom:0;border-radius:3px 3px 2px 2px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;transition:opacity .15s}
+.por #fing{background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+.clock{position:absolute;left:22px;top:30px;font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.5);z-index:20}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),POR=PLAY||Q.includes('look=por'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const pigOf=por=>por?['#2450D8','#E2432A','#F0A500']:['#86B4FF','#FF5B3A','#FFC23D'];
+const soul=(por,id='S')=>{const P=pigOf(por),f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;return `<div class="soul" id="${id}">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+const PLAN=[['Bench press',4],['Overhead press',3],['Incline dumbbell press',3],['Lateral raise',3],['Triceps pushdown',3]];
+// 44: the strip at the page top, one segment per exercise, its length its sets; the live one lit in `live`.
+const strip=(lit,part)=>{const total=PLAN.reduce((s,p)=>s+p[1],0);let x=22;return `<div class="abs" id="strip" style="left:0;right:0;top:0;height:3px;z-index:14">${PLAN.map((p,i)=>{const w=(346-4*(PLAN.length-1))*p[1]/total;const h=`<div class="seg" style="left:${x}px;width:${w}px;background:rgba(var(--ink),${i<lit?.9:.14})"></div>${i===lit?`<div class="seg" id="lit" style="left:${x}px;width:${w*part}px;background:var(--live);box-shadow:0 0 6px var(--live)"></div>`:''}`;x+=w+4;return h}).join('')}</div>`};
+const stroke=(x,y,kind,id='')=>kind==='done'?`<svg class="abs" ${id?`id="${id}"`:''} style="left:${x}px;top:${y}px;overflow:visible" width="40" height="12"><path d="${lens(40,3.2)}" fill="var(--live)" opacity="var(--tint)"/></svg>`:`<svg class="abs" ${id?`id="${id}"`:''} style="left:${x}px;top:${y}px" width="40" height="12"><path d="M1 6 H39" stroke="rgba(var(--ink),${kind==='current'?.9:.22})" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/></svg>`;
+const key=(word,y=580,id='k',fill=1)=>{const w=word.length*10.8-6;return `<div class="abs lbl" id="${id}" style="left:22px;top:${y}px">${word}<svg id="${id}l" style="position:absolute;left:0;top:22px;overflow:visible" width="${w+6}" height="12">${fill<1?`<path d="${lens(w,1.6)}" fill="rgba(var(--ink),.22)"/>`:''}<path id="${id}f" d="${lens(w*fill,1.6)}" fill="rgb(var(--ink))"/></svg></div>`};
+// set-block.md: the bar side-on with one side's plates drawn outward, standard plate colours, tallest 150.
+const PC={25:'#C8372D',20:'#2B5BB8',10:'#2E8B57',5:'#E8DCC4',2.5:'#2A2A2E',1.25:'#B9B9C0'};
+const plates=(per,y0=380)=>{let x=176,h='';h+=`<div class="abs" style="left:22px;top:${y0+118}px;width:346px;height:8px;background:rgba(var(--ink),.72);border-radius:4px"></div><div class="abs" style="left:168px;top:${y0+104}px;width:10px;height:36px;background:rgba(var(--ink),.72);border-radius:2px"></div>`;per.forEach((p,i)=>{const ph=p>=20?150:p>=10?118:p>=5?92:p>=2.5?70:56,w=p>=20?22:p>=10?18:p>=5?14:12;h+=`<div class="plate pl" style="left:${x}px;top:${y0+150-ph}px;width:${w}px;height:${ph}px;background:${PC[p]};opacity:.92"></div>`;x+=w+3});return `<div id="plates" class="abs" style="left:0;top:0">${h}<div class="abs lbl s2" style="left:22px;top:${y0+160}px">${per.join(' + ')} EACH SIDE</div></div>`};
+const numberRow=(kg,reps,y=270)=>`<div class="abs" id="nr" style="left:22px;top:${y}px;display:flex;align-items:baseline;white-space:nowrap"><span class="num" id="kg">${kg}</span><span class="b s2" style="margin-left:8px">kg</span><span class="x">×</span><span class="reps" id="rp">${reps}</span></div>`;
+const live=(o)=>{const nm=o.name.length>16?'t34':'t44';return `${strip(o.ex,o.part)}<div class="abs b ctx nw" id="ctxl" style="left:22px;top:56px">${o.ctx}</div><div class="abs ${nm}" id="name" style="left:22px;top:${nm==='t44'?92:97}px">${o.name}</div>${o.strokes.map((k,i)=>stroke(22+48*i,176,k,'st'+i)).join('')}<div class="abs b s2 nw" id="last" style="left:22px;top:210px">${o.last}</div>${o.rest?`<div class="abs" id="nr" style="left:22px;top:270px;display:flex;align-items:baseline"><span class="num" style="color:var(--now)">${o.rest}</span><span class="b s2" style="margin-left:10px">rest</span></div><div class="abs" id="hz" style="left:22px;top:450px;width:${346*o.hzf}px;height:3px;background:var(--now);border-radius:2px"></div><div class="abs" style="left:22px;top:450px;width:346px;height:1.5px;background:rgba(var(--ink),.14);margin-top:.75px;z-index:-1"></div>${o.hint?`<div class="abs lbl s2" style="left:22px;top:472px">DRAG RIGHT +15 · FLING LEFT TO GO</div>`:''}${key('SKIP REST')}`:`${numberRow(o.kg,o.reps,o.per.length?270:310)}${o.per.length?plates(o.per):'<div id="plates"></div>'}${key(o.key||`LOG ${o.kg} × ${o.reps}`)}`}<div class="abs lbl" id="pause" style="right:22px;top:580px;color:rgba(var(--ink),.6)">${o.last_?'':'PAUSE'}</div>`};
+const S1={ex:0,part:0,ctx:'Push A, set 1 of 4',name:'Bench press',strokes:['current','future','future','future'],last:'last time 82.5 × 8',kg:'82.5',reps:'8',per:[25,5,1.25]};
+const S2={ex:0,part:.25,ctx:'Rest, then set 2',name:'Bench press',strokes:['done','current','future','future'],last:'set 1, 82.5 × 8',rest:'1:30',hzf:.62,hint:1};
+const S3={ex:0,part:.5,ctx:'Push A, set 3 of 4',name:'Bench press',strokes:['done','done','current','future'],last:'last time 82.5 × 8',kg:'80',reps:'7',per:[25,5]};
+const S4={ex:0,part:1,ctx:'Rest, then Overhead press',name:'Bench press',strokes:['done','done','done','done'],last:'4 sets, 82.5 × 8 best',rest:'2:00',hzf:.9};
+const S5={ex:2,part:0,ctx:'Push A, set 1 of 3',name:'Incline dumbbell press',strokes:['current','future','future'],last:'last time 28 × 10',kg:'28',reps:'10',per:[]};
+const S6={ex:4,part:.67,ctx:'Push A, last set',name:'Triceps pushdown',strokes:['done','done','current'],last:'last time 30 × 12',kg:'30',reps:'12',per:[],key:'LOG 30 × 12 AND FINISH'};
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph${(opt.por??POR)?' por':''}" ${opt.id?`id="${opt.id}"`:''}>${inner}${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${soul(opt.por??POR,opt.id?'S':'s'+Math.random().toString(36).slice(2,6))}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+if(!PLAY){
+ $('row').innerHTML=phone('SET 1 READY: THE STRIP, THE CONTEXT LINE, THE NAME, THE SET BLOCK',live(S1),{por:1,line:'Hold me to tell me a set.'})
+  +phone('THE SAME PAGE ON OBSIDIAN: ONE BASE',live(S1),{por:0,line:'Hold me to tell me a set.'})
+  +phone('REST IN PLACE: THE COUNTDOWN, THE HORIZON, THE REST LINE',live(S2),{por:1,line:'Set 1 logged. 82.5 × 8.',undo:1})
+  +phone('SPEAK IN THE GYM: HIS WORDS AT 18 ABOVE THE SOUL, THE NUMERALS WET',live(S3)+`<div class="abs f18 s2" style="right:71px;top:722px;width:270px;text-align:right">eighty for seven</div>`,{por:1})
+  +phone('THE LAST SET OF AN EXERCISE: THE REST LINE NAMES WHAT’S NEXT',live(S4),{por:0,line:'Set 4 logged. 82.5 × 8.',undo:1})
+  +phone('A LONG NAME STEPS TO 34; DUMBBELLS: NO PLATES, THE ROW SITS 40 LOWER',live(S5),{por:0});
+ const ph=document.querySelectorAll('.ph');ph[3].querySelector('.soul').style.transform='scale(1.4)';ph[3].querySelector('#kg').style.color='var(--tess)';ph[3].querySelector('#kg').style.opacity=.62;ph[3].querySelector('#rp').style.color='var(--tess)';ph[3].querySelector('#rp').style.opacity=.62;
+ $('note').innerHTML='THE RUNNING WORKOUT ON THE ONE FRAME: THE STRIP AT 0 (44), THE CONTEXT LINE AT 56 IN THE CONTEXT COLOUR, THE EXERCISE AT TITLE 44 (34 WHEN IT’S LONGER THAN 16 CHARACTERS, NEVER CUT), THE SET STROKES AS THE ONLY MARKS, ONE LINE OF DETAIL, THE SET BLOCK FROM SET-BLOCK.MD WITH THE PLATES DRAWN, THE KEY AT 580 AS AN INK-LINE WORD, PAUSE AS A PLAIN WORD, AND TESS’S BAND FIXED AT 736 TO 820 WITH THE SOUL IN ITS CORNER. NO 1 / 5 COUNT (THE STRIP SAYS IT), NO NEXT NAME PEEKING CUT AT THE EDGE: THE REST LINE NAMES THE NEXT EXERCISE WHEN ITS TIME COMES.';
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+}else{
+ $('row').innerHTML=phone('6:42 PM · SET 1 READY',live(S1)+'<div class="clock" id="clock" style="top:16px;left:auto;right:22px">6:42</div>',{id:'P',fing:1,por:1,line:'Hold me to tell me a set.'});
+ const P=$('P'),f=$('fing'),cap=document.querySelector('.cap'),setCap=t=>cap.textContent=t,INK='rgb(18,16,22)';
+ const say=(t,undo)=>{const old=P.querySelector('.tl');if(old)old.remove();if(!t)return;P.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">${t}${undo?'<span class="u">UNDO</span>':''}</div>`);P.querySelector('.tl').animate([{opacity:0,transform:'translateY(-50%) translateY(4px)'},{opacity:1,transform:'translateY(-50%)'}],{duration:300,easing:H,fill:'forwards'})};
+ const swap=async(el,txt)=>{el.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:180,fill:'forwards'});await sleep(180);el.innerHTML=txt;el.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:380,easing:H,fill:'forwards'})};
+ const paintStroke=(i)=>{const s=$('st'+i);const n=document.createElement('div');n.innerHTML=stroke(22+48*i,176,'done','st'+i);const el=n.firstChild;el.style.clipPath='inset(0 100% 0 0)';s.replaceWith(el);el.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:700,easing:'cubic-bezier(.3,.7,.2,1)',fill:'forwards'});el.querySelector('path').animate([{opacity:1},{opacity:.45}],{duration:2000,delay:700,fill:'forwards'})};
+ const litTo=(part)=>{const l=$('lit');const w=parseFloat(l.style.width)/(parseFloat(l.style.width)||1);l.animate([{width:l.style.width},{width:(84*part)+'px'}],{duration:260,easing:SET,fill:'forwards'})};
+ const restIn=async(ctx,secs,next)=>{
+  // set-block.md: the number row rolls into the countdown in `now`; the plates fade; the horizon draws across their place and drains right to left
+  swap($('ctxl'),ctx);const nr=$('nr');nr.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:200,fill:'forwards'});await sleep(200);
+  nr.innerHTML=`<span class="num" id="cd" style="color:var(--now)">${secs}</span><span class="b s2" style="margin-left:10px">rest</span>`;nr.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:320,fill:'forwards'});
+  $('plates').animate([{opacity:1},{opacity:0}],{duration:400,fill:'forwards'});
+  P.insertAdjacentHTML('beforeend',`<div class="abs" style="left:22px;top:450px;width:346px;height:1.5px;background:rgba(var(--ink),.14)"></div><div class="abs" id="hz" style="left:22px;top:449px;width:0;height:3px;background:var(--now);border-radius:2px"></div>`);
+  const hz=$('hz');hz.animate([{width:'0px'},{width:'346px'}],{duration:500,easing:H,fill:'forwards'});await sleep(500);hz.animate([{width:'346px'},{width:'0px'}],{duration:next,easing:'linear',fill:'forwards'});
+  const k=$('k');k.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'});await sleep(160);k.outerHTML=key('SKIP REST');$('k').animate([{opacity:0},{opacity:1}],{duration:260,fill:'forwards'});
+  let t=parseInt(secs.split(':')[0])*60+parseInt(secs.split(':')[1]);const cd=$('cd');const iv=setInterval(()=>{t-=1;if(t<0){clearInterval(iv);return}cd.textContent=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`},next/90);return iv};
+ const restOut=async(o)=>{const hz=$('hz');hz.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});const nr=$('nr');nr.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:200,fill:'forwards'});await sleep(200);nr.outerHTML=numberRow(o.kg,o.reps);$('nr').animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:320,fill:'forwards'});$('plates').outerHTML=plates(o.per);$('plates').animate([{opacity:0},{opacity:1}],{duration:400,fill:'forwards'});const k=$('k');k.outerHTML=key(`LOG ${o.kg} × ${o.reps}`);$('k').animate([{opacity:0},{opacity:1}],{duration:260,fill:'forwards'});swap($('ctxl'),o.ctx);swap($('last'),o.last);};
+ (async()=>{document.body.dataset.start='1';await sleep(1400);
+  // Hold LOG: the line fills over the hold (Finish grammar), then live-polish's stamp: press, carry to the stroke slot, seat, rest in place
+  setCap('6:43 PM · HOLD LOG: THE LINE FILLS, THE SET STAMPS INTO ITS STROKE');f.style.left='80px';f.style.top='590px';f.style.opacity=1;
+  const kf=$('kf');kf.animate([{opacity:1},{opacity:.35}],{duration:120,fill:'forwards'});const tr=kf.cloneNode();tr.id='';tr.style.clipPath='inset(0 100% 0 0)';kf.parentNode.appendChild(tr);tr.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:700,easing:'linear',fill:'forwards'});await sleep(720);f.style.opacity=0;
+  const nr=$('nr');nr.animate([{transform:'scale(1) translateY(0)'},{transform:'scale(.94) translateY(6px)'}],{duration:140,easing:'cubic-bezier(.3,0,.6,1)',fill:'forwards'});
+  const carry=document.createElement('div');carry.className='abs num';carry.style.cssText='left:22px;top:270px;z-index:9';carry.textContent='82.5';P.appendChild(carry);
+  carry.animate([{transform:'translate(0,0) scale(1)',opacity:1,filter:'blur(0)'},{transform:'translate(0,-94px) scale(.2)',opacity:1,filter:'blur(1px)',offset:.6},{transform:'translate(0,-94px) scale(.2)',opacity:0,filter:'blur(3px)'}],{duration:380,delay:140,easing:'cubic-bezier(.3,0,.25,1)',fill:'forwards'});
+  await sleep(380);paintStroke(0);litTo(.25);setTimeout(()=>carry.remove(),200);await sleep(140);nr.animate([{transform:'scale(.94) translateY(6px)'},{transform:'scale(1) translateY(0)'}],{duration:300,easing:SET,fill:'forwards'});
+  setCap('6:43 PM · REST IN PLACE: THE COUNTDOWN IN THE REST COLOUR, THE HORIZON DRAINS');say('Set 1 logged. 82.5 × 8.',1);$('st1').outerHTML=stroke(70,176,'current','st1');const iv=await restIn('Rest, then set 2','1:30',3600);await sleep(3400);clearInterval(iv);
+  // Speak in the gym: hold the soul, it swells in place; his words at Field 18 above it; let go and the numerals go wet with the set
+  setCap('6:45 PM · HOLD THE SOUL: "EIGHTY FOR SEVEN" LANDS AS THE SET');say('');await restOut({kg:'82.5',reps:'8',per:[25,5,1.25],ctx:'Push A, set 2 of 4',last:'set 1, 82.5 × 8'});await sleep(600);
+  f.style.left='346px';f.style.top='779px';f.style.opacity=1;const S=$('S');S.animate([{transform:'scale(1)'},{transform:'scale(1.4)'}],{duration:320,easing:SET,fill:'forwards'});
+  P.insertAdjacentHTML('beforeend',`<div class="abs f18 s2" id="heard" style="right:71px;top:722px;width:270px;text-align:right"></div>`);const hd=$('heard');for(const w of ['eighty','for','seven']){const sp=document.createElement('span');sp.textContent=(hd.textContent?' ':'')+w;sp.style.opacity=0;sp.style.filter='blur(6px)';hd.appendChild(sp);sp.animate([{opacity:0,filter:'blur(6px)'},{opacity:1,filter:'blur(0)'}],{duration:260,fill:'forwards'});await sleep(420)}
+  await sleep(500);f.style.opacity=0;S.animate([{transform:'scale(1.4)'},{transform:'scale(1)'}],{duration:380,easing:SET,fill:'forwards'});hd.animate([{opacity:1},{opacity:0}],{duration:250,fill:'forwards'});
+  const kg=$('kg'),rp=$('rp');for(const [el,v] of [[kg,'80'],[rp,'7']]){el.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:160,fill:'forwards'});await sleep(160);el.textContent=v;el.style.color='var(--tess)';el.animate([{opacity:0,filter:'blur(4px)'},{opacity:.62,filter:'blur(0)'}],{duration:260,fill:'forwards'})}
+  $('k').querySelector('svg').previousSibling.textContent='LOG 80 × 7';$('plates').outerHTML=plates([25,5]);
+  setCap('6:45 PM · THE NUMERALS DRY INTO INK OVER 2 S, THEN THE STROKE LANDS');await sleep(2000);
+  for(const el of [kg,rp]){el.animate([{color:'#2450D8',opacity:.62},{color:INK,opacity:1}],{duration:400,fill:'forwards'})}
+  paintStroke(1);litTo(.5);say('Set 2 logged. 80 × 7.',1);await sleep(600);$('st2').outerHTML=stroke(118,176,'current','st2');const iv2=await restIn('Rest, then set 3','1:30',2600);await sleep(2200);clearInterval(iv2);
+  // The last set of the exercise: the rest line names what's next
+  setCap('6:51 PM · THE LAST SET’S REST NAMES WHAT’S NEXT');say('');await restOut({kg:'82.5',reps:'8',per:[25,5,1.25],ctx:'Push A, set 4 of 4',last:'set 3, 80 × 7'});$('st2').outerHTML=stroke(118,176,'done','st2');$('st3').outerHTML=stroke(166,176,'current','st3');await sleep(900);
+  paintStroke(3);litTo(1);say('Set 4 logged. 82.5 × 8.',1);const iv3=await restIn('Rest, then Overhead press','2:00',3000);await sleep(2600);clearInterval(iv3);document.body.dataset.done='1'})();
+}
+</script>
+</body>
+</html>

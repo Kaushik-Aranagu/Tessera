@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Day strip</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M2 slices 11 and 13 (docs/design/day-strip.md). Plays once on load; add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--mute:#A39AAE;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--amber:#E0A35C}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 30%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 70%,#BFD8E2 0%,rgba(191,216,226,0) 70%),radial-gradient(70% 40% at 10% 95%,#F2D3C4 0%,rgba(242,211,196,0) 70%),#F4EEE4}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.ctx{font-size:21px;font-weight:400;color:var(--ctx)}
+.hero{font-weight:500;font-size:56px;line-height:1;letter-spacing:-.04em}
+.key{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 .5px rgba(43,36,64,.5),0 6px 18px rgba(43,36,64,.14)}
+.row{position:absolute;left:22px;right:22px;height:48px;display:grid;grid-template-columns:30px 1fr auto;align-items:center}
+.dabr{width:18px;height:15px;border-radius:55% 45% 60% 40%/50% 60% 40% 50%}
+.mark{position:absolute;width:14px;height:12px;margin:-6px 0 0 -7px;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;filter:blur(.4px);z-index:2}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:20;pointer-events:none}
+.d{position:absolute;width:76px;height:70px;margin:-35px 0 0 -38px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.8) 0%,rgba(var(--c),.6) 40%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(4px)}
+.r{--c:200,69,47;--x:-14px;--y:-8px}.b{--c:46,109,164;--x:14px;--y:-8px}.y{--c:224,179,65;--x:0px;--y:13px}
+@keyframes idle{0%,100%{transform:translate(var(--x),calc(var(--y) - 6px)) scale(.78)}50%{transform:translate(var(--x),calc(var(--y) + 6px)) scale(.86)}}
+@keyframes wetTip{0%,100%{transform:scale(1);opacity:.75;filter:blur(3px)}50%{transform:scale(1.35);opacity:.4;filter:blur(6px)}}
+@keyframes wet{0%,100%{opacity:.55}50%{opacity:.75}}
+@keyframes dry{0%{stroke-dashoffset:300}100%{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+  <div class="abs lbl" style="left:22px;right:22px;top:58px;display:grid;grid-template-columns:1fr 1fr 1fr">
+    <span style="color:var(--mute)">REVIEW</span><span style="color:var(--ink);text-align:center">TODAY</span><span style="color:var(--mute);text-align:right">TRAINING</span>
+  </div>
+  <span class="abs" style="left:163px;top:84px;width:64px;height:4px;border-radius:2px 6px 3px 5px;background:var(--verm);filter:blur(.5px)"></span>
+
+  <span id="dayLabel" class="abs ctx" style="left:22px;top:100px;color:var(--ink)">Thursday afternoon</span>
+  <span id="room" class="abs" style="right:22px;top:100px;font-size:21px;font-weight:600;opacity:0">Make room</span>
+  <div id="lane" class="abs" style="left:22px;top:134px;width:346px;height:56px">
+    <svg width="346" height="56" viewBox="0 0 346 56" class="abs" style="left:0;top:0;overflow:visible" aria-hidden="true">
+      <defs><filter id="wetF" filterUnits="userSpaceOnUse" x="-20" y="-20" width="390" height="96"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter>
+      <linearGradient id="day" x1="4" x2="342" y1="0" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9EC3D6"/><stop offset=".3" stop-color="#8FB58A"/><stop offset=".55" stop-color="#7A5C8E"/><stop offset=".8" stop-color="#E0A35C"/><stop offset="1" stop-color="#C8452F"/></linearGradient></defs>
+      <g id="guide"></g>
+      <g id="segs"></g>
+      <path id="dayStroke" d="M4 28 C 120 25, 230 31, 342 27" fill="none" stroke="url(#day)" stroke-width="20" stroke-linecap="round" filter="url(#wetF)" opacity=".85" stroke-dasharray="340" stroke-dashoffset="340"/>
+    </svg>
+    <span id="tip" class="abs" style="top:15px;width:26px;height:26px;margin-left:-13px;border-radius:50%;background:var(--amber);opacity:0;z-index:3"></span>
+  </div>
+
+  <div class="abs ctx" style="left:22px;top:222px">now, until twenty to four</div>
+  <div class="abs hero" style="left:20px;right:20px;top:252px">Draft the<br>push‑day plan</div>
+  <div class="abs key" style="left:22px;width:220px;top:452px;height:58px;background:var(--ink);color:#F6F0E6;display:flex;align-items:center;padding:0 20px;box-sizing:border-box;font-size:21px;font-weight:600">Hold to finish</div>
+  <span class="abs lbl" style="left:258px;top:460px;line-height:1.35">14 MIN<br>LEFT</span>
+  <div class="abs" style="left:22px;top:540px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px">Next</div>
+  <div id="rows"></div>
+
+  <div class="abs" style="left:14px;right:14px;bottom:18px;height:74px;border-radius:20px;background:rgba(250,246,239,.62);backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 .5px rgba(43,36,64,.2),0 10px 28px rgba(43,36,64,.12)">
+    <span id="tess" class="abs" style="left:78px;right:90px;top:24px;font-size:21px;color:#8A7F96;white-space:nowrap">Ask Tess…</span>
+    <svg id="dryS" width="230" height="8" class="abs" style="left:78px;top:54px;opacity:0;overflow:visible"><path d="M2 4 C 70 2, 150 6, 228 3" fill="none" stroke="#2E6DA4" stroke-opacity=".6" stroke-width="3" stroke-linecap="round" stroke-dasharray="300" stroke-dashoffset="300"/></svg>
+    <span id="undo" class="abs" style="right:20px;top:24px;font-size:21px;font-weight:600;color:var(--verm);opacity:0">Undo</span>
+  </div>
+  <div id="soul" class="abs" style="left:50px;top:789px;width:0;height:0;transform:scale(.5)">
+    <span class="d r" style="animation:idle 7s ease-in-out infinite"></span><span class="d b" style="animation:idle 8.5s ease-in-out -3s infinite"></span><span class="d y" style="animation:idle 10s ease-in-out -6s infinite"></span>
+  </div>
+  <div id="clock" class="abs lbl" style="right:22px;top:14px;color:#7A6E86">15:00</div>
+  <div id="finger" class="abs"></div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const NS = 'http://www.w3.org/2000/svg';
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+// x is the clock: 07:00 at 4, 23:00 at 342
+const X = (h) => 4 + (h - 7) / 16 * 338;
+let now = 15;
+const booked = []; // [h0, h1]
+async function tessSay(text, colour = '#2E6DA4') {
+  const t = $('tess'); await anim(t, [{ opacity: 1 }, { opacity: 0 }], { duration: 120 });
+  t.textContent = text; t.style.color = colour;
+  anim(t, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: HOUSE });
+}
+async function setLabel(text) {
+  const l = $('dayLabel'); await anim(l, [{ opacity: 1 }, { opacity: 0 }], { duration: 80 }); l.textContent = text; await anim(l, [{ opacity: 0 }, { opacity: 1 }], { duration: 80 });
+}
+
+// the rest-of-day guide: one 15-minute slot per element; a free slot is a 2pt dash (its gap is slack), a booked slot is solid
+const slots = [];
+function buildGuide() {
+  for (let h = 7; h < 23; h += .25) {
+    const l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', X(h)); l.setAttribute('x2', X(h + .25)); l.setAttribute('y1', 28); l.setAttribute('y2', 28);
+    l.setAttribute('stroke', '#2B2440'); l.setAttribute('stroke-opacity', '.24'); l.setAttribute('stroke-width', 1.5);
+    l.style.transformBox = 'fill-box'; l.style.transformOrigin = '0 50%';
+    $('guide').appendChild(l); slots.push({ h, el: l, solid: false }); l.style.transform = 'scaleX(.25)';
+  }
+}
+function isBooked(h) { return booked.some(([a, b]) => h + .01 >= a && h + .24 <= b + .001); }
+function refreshGuide(dur = 600) {
+  for (const s of slots) {
+    const want = s.h >= now - .01 && isBooked(s.h);
+    if (want !== s.solid) { s.solid = want; s.el.animate([{ transform: `scaleX(${want ? .25 : 1})` }, { transform: `scaleX(${want ? 1 : .25})` }], { duration: dur, easing: HOUSE, fill: 'forwards' }); }
+  }
+}
+function setNow(h, dur) {
+  now = h;
+  const off = 340 - X(h);
+  $('dayStroke').animate([{ strokeDashoffset: $('dayStroke').dataset.off || 340 }, { strokeDashoffset: off }], { duration: dur, easing: dur > 700 ? 'cubic-bezier(.3,.7,.2,1)' : 'linear', fill: 'forwards' });
+  $('dayStroke').dataset.off = off;
+  $('tip').style.transition = `left ${dur}ms ${dur > 700 ? 'cubic-bezier(.3,.7,.2,1)' : 'linear'}`; $('tip').style.left = X(h) + 'px';
+}
+function mark(h, colour, op = 1, label) {
+  const m = document.createElement('span'); m.className = 'mark';
+  Object.assign(m.style, { left: X(h) + 'px', top: '28px', background: colour, opacity: op });
+  m.dataset.label = label || ''; $('lane').appendChild(m); return m;
+}
+function seg(h0, h1, colour, op) {
+  const p = document.createElementNS(NS, 'path'); p.setAttribute('d', `M${X(h0)} 28 L ${X(h1)} 28`);
+  p.setAttribute('stroke', colour); p.setAttribute('stroke-opacity', op); p.setAttribute('stroke-width', 6); p.setAttribute('stroke-linecap', 'round');
+  $('segs').appendChild(p); return p;
+}
+function addRow(n, t, c, k) {
+  const r = document.createElement('div'); r.className = 'row'; r.style.top = (588 + k * 48) + 'px';
+  r.innerHTML = `<span class="dabr" style="background:${c}"></span><span style="font-size:21px;font-weight:500">${n}</span><span class="lbl" style="color:#5E5470">${t}</span>`;
+  r.style.opacity = [1, .88, .76][k]; $('rows').appendChild(r); return r;
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  buildGuide();
+  const lane = $('lane').getBoundingClientRect();
+  // the day: things on the stroke
+  mark(11.25, '#7A5C8E', .4, 'Draft the push‑day plan, 11:15');
+  const sam = mark(15.08, '#2E6DA4', 1, 'Text Sam back, done'); // done ahead of time: it soaks when the stroke reaches it
+  const dentist = mark(15.67, '#E0A35C', 1, 'Call the dentist, 15:40');
+  mark(16.5, '#6E9E6A', 1, 'Groceries, 16:30');
+  seg(18, 19, '#C8452F', .85); booked.push([18, 19]);
+  mark(21, '#7A5C8E', 1, 'Shutdown, 21:00');
+  booked.push([15.5, 15.75], [16.25, 16.75], [20.75, 21.25]);
+  addRow('Call the dentist', '15:40', '#E0A35C', 0); addRow('Groceries', '16:30', '#6E9E6A', 1); addRow('Push Day A', '18:00', '#C8452F', 2);
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+
+  setNow(15, 700); refreshGuide(0);
+  anim($('tip'), [{ opacity: 0 }, { opacity: .75 }], { duration: 300, delay: 600 }).then(() => $('tip').style.animation = 'wetTip 3.6s ease-in-out infinite');
+  await sleep(1400);
+
+  // the now tip slides each minute; a finished item is painted over (soaks into the stroke)
+  for (const [i, t] of ['15:01', '15:02', '15:03', '15:04', '15:05'].entries()) {
+    $('clock').textContent = t; setNow(15 + (i + 1) / 60, 600); await sleep(650);
+  }
+  await anim(sam, [{ opacity: 1, filter: 'blur(.4px)', transform: 'scale(1)' }, { opacity: 0, filter: 'blur(6px)', transform: 'scale(1.6)' }], { duration: 400 });
+  await sleep(600);
+
+  // tap a dab: the label names it for 2.5s
+  const dx = 22 + X(15.67), dy = 134 + 28;
+  await fingerOn(dx, dy); await sleep(100); fingerOff();
+  await setLabel('Call the dentist, 15:40');
+  await sleep(1900);
+  await setLabel('Thursday afternoon');
+  await sleep(500);
+
+  // the day fills: two captures and an evening event close the gaps
+  await tessSay('“write the review 4 to 6”');
+  await sleep(500);
+  const rev = mark(17, '#2E6DA4', 0, 'Write the review');
+  anim(rev, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 320, easing: HOUSE });
+  booked.push([16, 18]); refreshGuide(); await sleep(900);
+  await tessSay('“clean the flat 7 to 9”');
+  await sleep(500);
+  const flat = mark(20, '#E0A35C', 0, 'Clean the flat');
+  anim(flat, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 320, easing: HOUSE });
+  booked.push([19, 21], [15.08, 15.5], [15.75, 16], [21.25, 23]); refreshGuide(); await sleep(800);
+  await tessSay('Ask Tess…', '#8A7F96');
+  // full: the label says so, Make room appears, neutral ink
+  await setLabel('Thursday, full');
+  anim($('room'), [{ opacity: 0, transform: 'translateX(10px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE });
+  await sleep(1800);
+
+  // Make room: a ghost line dries in 2s, then the movable dabs lift off and drop to Later, and the gaps reopen
+  await fingerOn(320, 112); await sleep(100); fingerOff();
+  await tessSay('Moving 2 to Later');
+  $('tess').style.animation = 'wet 1.6s ease-in-out infinite';
+  $('dryS').style.opacity = 1; $('dryS').querySelector('path').style.animation = 'dry 2s linear both';
+  [rev, flat].forEach((m) => { m.style.boxShadow = '0 0 0 6px rgba(46,109,164,.22)'; });
+  await sleep(2050);
+  $('tess').style.animation = 'none'; $('dryS').style.opacity = 0;
+  for (const m of [rev, flat]) {
+    m.style.boxShadow = 'none';
+    m.animate([{ transform: 'translate(0,0)', opacity: 1 }, { transform: 'translate(-20px,-14px) scale(1.2)', opacity: 1, offset: .25 }, { transform: 'translate(-60px,470px) scale(.8)', opacity: 0 }], { duration: 700, easing: 'cubic-bezier(.5,0,.6,1)', fill: 'forwards' });
+    await sleep(90);
+  }
+  booked.splice(0, booked.length, [18, 19], [15.5, 15.75], [16.25, 16.75], [20.75, 21.25]);
+  await sleep(400);
+  refreshGuide(600);
+  setLabel('Thursday afternoon');
+  anim($('room'), [{ opacity: 1 }, { opacity: 0 }], { duration: 240 });
+  await tessSay('Moved 2 to Later.');
+  anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
+  await sleep(2600);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Imagery 88</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 88: where imagery belongs. Board by default (decision matrix + twelve frames); ?play records: a recipe plate (wash first, the photo dries in over it, 380 ms), the exercise MUSCLES page (the map fills in the train colour), an ingredient wash arriving. All artwork is original: the "photo" is a drawn stand-in for the link's og-image, the figure is a vector drawing. -->
+<style>
+:root{--board:#E9E6EE;--house:cubic-bezier(.2,.9,.25,1)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px;width:1720px}
+.head{display:flex;gap:30px;margin-bottom:22px}
+.head h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.015em;flex:none;width:420px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:1100px}
+table.mx{border-collapse:collapse;width:100%;margin-bottom:30px;font-size:14.5px;line-height:19px;background:#F4F2F7}
+.mx th{font-size:12px;letter-spacing:.08em;text-align:left;padding:9px 10px;color:#6b6674;font-weight:700;border-bottom:1.5px solid #8c8795}
+.mx td{padding:7px 10px;vertical-align:top;border-bottom:1px solid #d6d2dd;color:#2c2932}
+.mx td:first-child{font-weight:600;white-space:nowrap}
+.mx td.d{font-weight:700;white-space:nowrap}
+.mx tr.no td.d{color:#6b6674}
+.mx tr.yes td.d{color:#9d2b16}
+.grid{display:grid;grid-template-columns:repeat(4,393px);gap:26px 22px;align-items:start}
+.cap{margin-top:12px}
+.cap .opt{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6674}
+.cap h2{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;border-radius:44px}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--bg0:rgba(251,250,247,0);--tess:#2450D8;--ctx:#5A3DAF;--s2:.66;--hair:rgba(18,16,22,.14);--train:226,67,42;--kit:18,147,106;--tinkInk:#C23A22;--grain:multiply;--wash:.34}
+.obs{--ink:245,242,236;--bg:#121014;--bg0:rgba(18,16,20,0);--tess:#86B4FF;--ctx:#B8A3FF;--s2:.72;--hair:rgba(245,242,236,.18);--train:255,106,77;--kit:63,212,154;--tinkInk:#FF7A5C;--grain:screen;--wash:.26}
+.abs{position:absolute}
+.s2{color:rgba(var(--ink),var(--s2))}
+.lab{font-weight:700;font-size:16px;line-height:22px;letter-spacing:.08em;color:rgba(var(--ink),var(--s2))}
+.sub{font-weight:700;font-size:13px;line-height:20px;letter-spacing:.08em;color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.b19{font-size:19px;line-height:26px}
+.v{font-weight:600}
+.title{left:22px;top:84px;font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.02em;width:349px}
+.hero{left:22px;top:212px;font-size:56px;line-height:62px;font-weight:500;letter-spacing:-.02em;white-space:nowrap}
+.ctx{left:22px;top:146px;color:var(--ctx);font-size:21px;line-height:28px}
+.cvT{position:absolute;left:0;right:0;top:0;height:112px;pointer-events:none}
+.cvB{position:absolute;left:0;right:0;top:686px;bottom:0;background:linear-gradient(var(--bg0),var(--bg) 50px);z-index:3}
+/* the plate: 393 x 56 (6.6% of 852), full bleed from the top edge, melts into the ground over its last 22 pt */
+.plate,.photo{position:absolute;left:0;top:0;width:393px;height:56px;pointer-events:none;z-index:1;
+  -webkit-mask-image:linear-gradient(#000 0 34px,transparent 56px);mask-image:linear-gradient(#000 0 34px,transparent 56px)}
+.plate svg,.photo svg{display:block}
+.wet{will-change:opacity,filter}
+.sd .ctxl{display:flex;justify-content:space-between;align-items:baseline;font-size:21px;line-height:28px;color:var(--ctx)}
+.sd .ctxl b{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgb(var(--ink))}
+.sd{position:absolute;left:22px;right:22px}
+.mrow{display:flex;justify-content:space-between;align-items:center;height:40px;font-size:21px;line-height:28px}
+.mrow em{font-style:normal;font-size:19px;color:rgba(var(--ink),var(--s2))}
+.fig{position:absolute;top:186px}
+.fig .nm{margin-top:8px;text-align:center;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),var(--s2))}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px);z-index:6}
+.tl{position:absolute;right:71px;width:270px;top:779px;transform:translateY(-50%);text-align:right;font-size:19px;line-height:25px;color:var(--tess);z-index:6}
+.finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
+.obs .finger{background:rgba(245,242,236,.16);border-color:rgba(245,242,236,.3)}
+.step{position:absolute;left:22px;right:22px}
+.step .n{position:absolute;left:0;top:0;width:34px;text-align:right;font-weight:700;font-size:16px;line-height:28px;color:var(--ctx)}
+.step .t{margin-left:62px}
+.step .d{font-size:16px;line-height:22px;color:rgba(var(--ink),var(--s2))}
+.spine{position:absolute;left:50px;width:1.5px;background:rgba(var(--ink),.3)}
+.rowl{display:flex;justify-content:space-between;align-items:baseline;height:40px;font-size:21px;line-height:28px}
+.rowl em{font-style:normal;font-size:19px;color:rgba(var(--ink),var(--s2))}
+/* Dynamic Type AX3 */
+.ax .b{font-size:31px;line-height:38px}
+.ax .mrow{height:auto;min-height:52px;flex-direction:column;align-items:flex-start;justify-content:center;font-size:31px;line-height:38px;padding:4px 0}
+.ax .mrow em{font-size:28px}
+.ax .lab{font-size:24px;line-height:30px}
+.ax .sd .ctxl{font-size:28px;line-height:35px}
+.ax .sd .ctxl b{font-size:20px}
+/* widgets */
+.wg{position:absolute;border-radius:22px;background:var(--bg);overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.05),0 10px 26px rgba(40,30,60,.16)}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<filter id="wc" x="-20%" y="-60%" width="140%" height="220%"><feTurbulence type="fractalNoise" baseFrequency=".022" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="16" result="d"/><feGaussianBlur in="d" stdDeviation="5"/></filter>
+<filter id="gr" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="7"/><feColorMatrix values="0 0 0 0 .45  0 0 0 0 .42  0 0 0 0 .4  0 0 0 .9 -.28"/></filter>
+<filter id="soft"><feGaussianBlur stdDeviation=".7"/></filter>
+</defs></svg>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+let uid = 0;
+const band = line => `<div class="abs soul"></div>${line ? `<div class="tl">${line}</div>` : ''}`;
+
+// ---------- the plate: a generative wash keyed to an object's colour (kind c), with paper grain ----------
+// blobs: [colour 'r,g,b', cx, cy, rx, ry, alpha scale]
+const plate = (blobs, o = {}) => { const i = ++uid;
+  return `<div class="plate ${o.cls || ''}" ${o.id ? `id="${o.id}"` : ''} aria-hidden="true"><svg width="393" height="56" viewBox="0 0 393 56">
+   <g filter="url(#wc)" style="opacity:var(--wash)">${blobs.map(([c, x, y, rx, ry, a]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="rgb(${c})" fill-opacity="${a ?? 1}"/>`).join('')}</g>
+   <rect width="393" height="56" filter="url(#gr)" style="mix-blend-mode:var(--grain);opacity:.55"/></svg></div>`; };
+// the drawn stand-in for a recipe's og-image (a sheet pan from above); his real one is the link's own photo
+const photoSVG = () => `<svg width="393" height="56" viewBox="0 0 393 56"><defs><radialGradient id="pv" cx=".5" cy=".5" r=".75"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#2a1a0c" stop-opacity=".45"/></radialGradient></defs>
+  <rect width="393" height="56" fill="#C9A878"/>
+  <g filter="url(#soft)"><ellipse cx="200" cy="30" rx="215" ry="44" fill="#4a4a4f"/><ellipse cx="200" cy="30" rx="203" ry="38" fill="#6b6b71"/>
+  ${[[40,14],[88,34],[140,12],[196,36],[250,16],[312,32],[362,12]].map(([x,y],i)=>`<rect x="${x}" y="${y}" width="${24+i%3*4}" height="${20+i%2*4}" rx="6" fill="${i%2?'#E58F2D':'#D97B22'}" transform="rotate(${i*23} ${x+12} ${y+10})"/><rect x="${x+4}" y="${y+4}" width="9" height="6" rx="3" fill="#F2B25C" opacity=".7" transform="rotate(${i*23} ${x+12} ${y+10})"/>`).join('')}
+  ${[[66,16],[118,34],[170,14],[226,30],[284,12],[336,34]].map(([x,y],i)=>`<ellipse cx="${x+16}" cy="${y+8}" rx="${25}" ry="${14}" fill="${i%2?'#9A4F22':'#B0652B'}" transform="rotate(${-20+i*17} ${x+16} ${y+8})"/><ellipse cx="${x+10}" cy="${y+4}" rx="11" ry="5" fill="#D08A4A" opacity=".65"/><circle cx="${x+22}" cy="${y+10}" r="2" fill="#C23A22" opacity=".8"/>`).join('')}
+  ${Array.from({length:26},(_,i)=>`<circle cx="${(i*47+13)%393}" cy="${(i*29+7)%56}" r="${1+i%3*.5}" fill="${i%3?'#4F7A32':'#C23A22'}" opacity=".85"/>`).join('')}</g>
+  <rect width="393" height="56" fill="url(#pv)"/><rect width="393" height="56" filter="url(#gr)" style="mix-blend-mode:multiply;opacity:.35"/></svg>`;
+const photo = (o = {}) => `<div class="photo ${o.cls || ''}" ${o.id ? `id="${o.id}"` : ''} style="${o.hidden ? 'opacity:0;' : ''}${o.dim ? 'filter:brightness(.78) saturate(.9)' : ''}" role="img" aria-label="Photo of Sheet-pan paprika chicken, from budgetbytes.com">${photoSVG()}</div>`;
+
+// recipe wash: the Kitchen's colour with the recipe's three main ingredients as pigment
+const RW = [['var(--kit)', 70, 22, 150, 30, .85], ['184,69,42', 120, 30, 62, 20, .9], ['217,138,58', 215, 24, 70, 22, .9], ['232,201,74', 310, 28, 58, 18, .9], ['var(--kit)', 360, 18, 90, 30, .6]]
+  .map(b => [b[0].startsWith('var') ? '18,147,106' : b[0], ...b.slice(1)]);
+const RWo = RW.map(b => [b[0] === '18,147,106' ? '63,212,154' : b[0], ...b.slice(1)]);
+const KITWASH = obs => (obs ? RWo : RW);
+
+// ---------- the muscle map: front and back, original vector regions ----------
+const FR = { // left-side regions, mirrored to the right
+  traps: 'M59 40 L48 44 L42 50 L50 50 L59 46 Z', delts: 'M43 52 C34 50 28 56 28 66 C34 68 40 66 44 62 Z', chest: 'M58 52 L45 54 C42 62 44 74 50 78 C54 80 57 79 58 78 Z',
+  arms: 'M28 68 C25 78 25 88 27 96 L35 97 C37 88 37 76 34 68 Z', forearms: 'M27 98 C24 110 22 120 21 132 L28 134 C31 122 34 110 35 99 Z',
+  abs: 'M58 82 L58 122 L52 122 C50 110 50 96 52 84 Z', obliques: 'M50 82 C46 90 44 104 45 120 L50 121 C49 108 49 94 50 83 Z',
+  hips: 'M45 124 L58 124 L58 131 L46 133 Z', quads: 'M52 135 L45 133 C40 150 39 168 42 184 L50 186 C53 168 53 150 52 135 Z', adductors: 'M58 135 L52 135 C53 150 53 168 50 186 L56 186 C58 168 59 150 58 135 Z', calves: 'M42 192 C39 210 41 228 44 244 L53 244 C56 228 57 210 55 192 Z' };
+const BK = {
+  traps: 'M59 38 L47 46 C46 56 52 68 59 76 Z', delts: FR.delts, lats: 'M58 78 L52 70 C44 72 42 86 46 100 L58 106 Z', arms: FR.arms, forearms: FR.forearms,
+  lowback: 'M58 108 L47 102 L48 122 L58 124 Z', glutes: 'M58 128 L46 126 C41 136 46 148 58 148 Z', quads: 'M58 152 L46 150 C41 162 41 176 43 188 L56 189 C58 174 59 162 58 152 Z', calves: FR.calves };
+// worked: {'f-chest':1, 'f-delts':.5, 'b-arms':.5}; 1 = primary, .5 = half a set each
+const figure = (view, h, worked = {}, o = {}) => { const set = view === 'f' ? FR : BK, w = h * 120 / 260;
+  const reg = (id, d) => ['', ' '].map((_, m) => `<path class="rg" data-id="${view}-${id}" d="${d}" ${m ? 'transform="translate(120 0) scale(-1 1)"' : ''} fill="rgba(var(--ink),.045)" stroke="rgba(var(--ink),.28)" stroke-width=".8" stroke-linejoin="round"/>`).join('');
+  const hit = Object.keys(worked).filter(k => k[0] === view);
+  return `<svg width="${w}" height="${h}" viewBox="0 0 120 260" style="overflow:visible" ${o.attr || 'aria-hidden="true"'}>
+   <circle cx="60" cy="20" r="12" fill="rgba(var(--ink),.045)" stroke="rgba(var(--ink),.28)" stroke-width=".8"/>
+   ${[0, 1].map(m => `<ellipse cx="${m ? 96 : 24}" cy="140" rx="4" ry="6.5" fill="rgba(var(--ink),.045)" stroke="rgba(var(--ink),.28)" stroke-width=".8"/>`).join('')}
+   ${Object.entries(set).map(([id, d]) => reg(id, d)).join('')}
+   ${hit.map(k => { const id = k.slice(2), d = set[id]; return [0, 1].map(m => `<path class="wk" data-id="${k}" data-role="${worked[k]}" d="${d}" ${m ? 'transform="translate(120 0) scale(-1 1)"' : ''} fill="rgb(var(--train))" fill-opacity="${o.empty ? 0 : (.72 * worked[k]).toFixed(3)}" stroke="rgba(var(--ink),.3)" stroke-width=".8" stroke-linejoin="round"/>`).join(''); }).join('')}
+  </svg>`; };
+const BENCH = { 'f-chest': 1, 'f-delts': .5, 'b-arms': .5 };
+const BENCH_LABEL = 'Bench Press works chest, front shoulders and triceps. Chest is primary.';
+
+// ---------- pages ----------
+const back = w => `<div class="abs lab" style="left:22px;top:58px;z-index:4">‹ ${w}</div>`;
+const recipe = (o = {}) => { const obs = o.obs;
+  const steps = [['0', 'Oven 425°F, potatoes on', '2 sweet potatoes, in chunks'], ['5', 'Chicken in, on the pan', '1½ lb chicken thighs, bone-in'], ['10', 'Roast 35 min', 'until the skin is crisp'], ['30', 'Whisk the sauce', '½ cup Greek yogurt, 1 garlic clove']];
+  const plateEl = o.photo ? plate(KITWASH(obs), { id: o.pid }) + photo({ id: o.phid, hidden: o.phHidden, dim: obs }) : plate(KITWASH(obs), { id: o.pid });
+  return `${plateEl}${back('RECIPES')}<div class="abs title">Sheet-pan paprika chicken</div>
+  <div class="abs b s2" style="left:22px;top:196px">serves <span class="v" style="color:rgb(var(--ink))">4</span>, 45 min, cooked 12 days ago</div>
+  <div class="spine" style="top:262px;height:318px"></div>
+  ${steps.map(([n, t, d], i) => `<div class="step" style="top:${254 + i * 80}px"><div class="n">${n}</div><div class="t b">${t}</div><div class="t d">${d}</div></div>`).join('')}
+  <div class="abs lab" style="left:22px;top:672px;z-index:2;color:rgb(var(--ink))">COOK <span style="color:rgba(var(--ink),var(--s2))">45 MIN</span></div>
+  <div class="abs lab" style="right:22px;top:672px;z-index:2">INGREDIENTS</div><div class="cvB"></div>`; };
+
+const muscles = (o = {}) => { const h = o.ax ? 220 : 300, fw = h * 120 / 260, gap = 22, x0 = (393 - (2 * fw + gap)) / 2, fy = o.ax ? 196 : 186;
+  const rows = [['Chest', 'primary'], ['Front shoulders', 'half a set each'], ['Triceps', 'half a set each']];
+  const ry = fy + h + (o.ax ? 52 : 44);
+  return `<div class="sd" style="top:138px"><div class="ctxl"><span>${o.ax ? 'Chest and 2 more' : 'Chest, shoulders, triceps'}</span>${o.ax ? '' : '<b>BENCH PRESS</b>'}</div></div>
+  <div class="fig" id="${o.pre || ''}ff" style="left:${x0}px;top:${fy}px" role="img" aria-label="${BENCH_LABEL}">${figure('f', h, BENCH, { empty: o.empty })}<div class="nm">FRONT</div></div>
+  <div class="fig" id="${o.pre || ''}fb" style="left:${x0 + fw + gap}px;top:${fy}px" aria-hidden="true">${figure('b', h, BENCH, { empty: o.empty })}<div class="nm">BACK</div></div>
+  <div class="sd" id="${o.pre || ''}rows" style="top:${ry}px">${rows.map(([n, r], i) => `<div class="mrow" data-m="${['f-chest', 'f-delts', 'b-arms'][i]}"><span>${n}</span><em>${r}</em></div>`).join('')}</div>
+  <div class="cvB"></div>`; };
+
+const ingredient = (o = {}) => { const obs = o.obs, c = obs ? '255,140,100' : '184,69,42', c2 = obs ? '255,176,120' : '208,110,52', c3 = obs ? '200,120,255' : '120,60,80';
+  return `${plate([[c, 90, 24, 130, 30, .95], [c2, 210, 30, 90, 22, .8], [c, 330, 22, 100, 28, .8], [c3, 150, 18, 50, 12, .35]], { id: o.pid })}${back('RECIPE')}<div class="abs title">Smoked paprika</div>
+  <div class="abs ctx">on hand, bought Sat</div>
+  <div class="abs sub" style="left:22px;top:222px">IN 3 RECIPES</div>
+  <div class="abs" style="left:22px;right:22px;top:250px">${['Sheet-pan paprika chicken', 'Tacos', 'Chili'].map((n, i) => `<div class="rowl"><span>${n}</span><em>${['1 tsp', '2 tsp', '1 tbsp'][i]}</em></div>`).join('')}</div>
+  <div class="abs b s2" style="left:22px;top:410px">Usually in the pantry.</div><div class="cvB"></div>`; };
+
+const routine = () => `${back('TRAINING')}<div class="abs title">Push A</div>
+  <div class="abs" style="left:286px;top:80px;display:flex;gap:6px" role="img" aria-label="Works chest, shoulders and triceps">${figure('f', 76, { 'f-chest': 1, 'f-delts': 1 })}${figure('b', 76, { 'b-arms': 1 })}</div>
+  <div class="abs ctx">Mon, Thu, 4 exercises</div>
+  <div class="abs" style="left:22px;right:22px;top:210px">${[['Bench Press', '4 × 8'], ['Overhead Press', '3 × 8'], ['Incline Dumbbell', '3 × 10'], ['Lateral Raise', '3 × 12']].map(([n, r]) => `<div class="rowl" style="height:48px"><span>${n}</span><em>${r}</em></div>`).join('')}</div>
+  <div class="abs lab" style="left:22px;top:672px;color:rgb(var(--ink))">START PUSH A</div><div class="cvB"></div>`;
+
+const home = () => `<div class="abs lab" style="left:22px;top:52px;font-size:15px;color:rgb(var(--ink))">TODAY</div>
+  <div class="abs b s2" style="left:22px;top:138px">Friday</div><div class="abs ctx" style="top:186px">today</div>
+  <div class="abs hero" style="top:212px">Push A</div><div class="abs lab" style="left:22px;top:292px;color:rgb(var(--ink))">START PUSH A</div>
+  <div class="abs title" style="top:372px;font-size:34px;line-height:40px">Next</div>
+  <div class="abs" style="left:22px;right:22px;top:424px">${[['Call the bank', '3 pm'], ['Tacos', '7 pm'], ['Stretch and mobility', '8:30 pm']].map(([n, t]) => `<div class="rowl"><span>${n}</span><em>${t}</em></div>`).join('')}</div>`;
+
+const stroke = (x, y0, y1, c, a = .8) => `<path d="M${x} ${y0} C ${x - 3} ${(y0 + y1) / 2 - 20}, ${x + 3} ${(y0 + y1) / 2 + 20}, ${x} ${y1}" stroke="rgb(${c})" stroke-opacity="${a}" stroke-width="9" stroke-linecap="round" fill="none" filter="url(#soft)"/>`;
+const review = () => `<div class="abs lab" style="left:22px;top:52px;font-size:15px;color:rgb(var(--ink))">REVIEW</div>
+  <div class="abs b s2" style="left:22px;top:138px">This week</div><div class="abs ctx" style="top:186px">Mon to Fri</div>
+  <div class="abs hero">3 sessions</div>
+  <svg class="abs" style="left:0;top:300px" width="393" height="230" viewBox="0 0 393 230" aria-label="The week, one stroke a day">
+   ${[0, 1, 2, 3, 4, 5, 6].map(i => `<line x1="${44 + i * 50}" y1="20" x2="${44 + i * 50}" y2="210" stroke="rgba(var(--ink),.12)"/>`).join('')}
+   ${stroke(44, 40, 200, 'var(--train)')}${stroke(94, 120, 200, 'var(--kit)', .7)}${stroke(144, 52, 200, 'var(--train)')}${stroke(244, 90, 200, 'var(--train)', .55)}${stroke(194, 150, 200, 'var(--kit)', .5)}
+  </svg>
+  ${'MTWTFSS'.split('').map((l, i) => `<div class="abs lab" style="left:${44 + i * 50 - 6}px;top:540px">${l}</div>`).join('')}
+  <div class="abs" style="left:22px;right:22px;top:590px">${[['Mon, Push A', '22 sets'], ['Tue, Tacos', '7 pm'], ['Wed, Pull A', '19 sets']].map(([n, t]) => `<div class="rowl"><span>${n}</span><em>${t}</em></div>`).join('')}</div><div class="cvB"></div>`;
+
+const live = () => `<div class="abs lab" style="left:22px;top:58px">‹ PUSH A</div><div class="abs title">Bench Press</div>
+  <div class="abs ctx">set 2 of 4</div><div class="abs hero">82.5 × 8</div>
+  <svg class="abs" style="left:22px;top:318px" width="349" height="60" aria-hidden="true">${[0, 1, 2, 3].map(i => `<path d="M${i * 88} 22 C ${i * 88 + 26} ${i < 2 ? 18 : 24}, ${i * 88 + 50} ${i < 2 ? 26 : 22}, ${i * 88 + 76} 22" stroke="${i < 2 ? 'rgba(var(--ink),.8)' : i == 2 ? 'rgba(var(--train),.8)' : 'rgba(var(--ink),.2)'}" stroke-width="5" stroke-linecap="round" fill="none"/>`).join('')}</svg>
+  <div class="abs lab" style="left:22px;top:420px;color:rgb(var(--ink))">RESTING <span style="color:var(--tinkInk)">1:32</span></div>`;
+
+const widgets = () => `<div class="abs sub" style="left:30px;top:78px">HOME SCREEN</div>
+  <div class="wg" style="left:20px;top:110px;width:353px;height:169px">${`<div style="position:absolute;left:0;top:0;width:353px;height:10px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 0 4px,transparent 10px);mask-image:linear-gradient(#000 0 4px,transparent 10px)"><svg width="353" height="10" viewBox="0 0 353 10"><g filter="url(#wc)" style="opacity:var(--wash)"><ellipse cx="60" cy="-2" rx="130" ry="9" fill="rgb(var(--kit))"/><ellipse cx="270" cy="-2" rx="110" ry="9" fill="rgb(var(--kit))" fill-opacity=".7"/></g><rect width="353" height="10" filter="url(#gr)" style="mix-blend-mode:var(--grain);opacity:.55"/></svg></div>`}
+   <div class="abs s2 b" style="left:18px;top:24px;font-size:19px">next, 7 pm</div><div class="abs" style="left:18px;top:56px;font-size:34px;line-height:40px;font-weight:500;letter-spacing:-.02em">Tacos</div>
+   <div class="abs lab" style="left:18px;top:128px;font-size:13px">COOK 40 MIN</div></div>
+  <div class="wg" style="left:20px;top:299px;width:169px;height:169px"><div class="abs s2" style="left:16px;top:24px;font-size:17px">today</div><div class="abs" style="left:16px;top:52px;font-size:34px;line-height:40px;font-weight:500;letter-spacing:-.02em">Push A</div></div>
+  <div class="wg" style="left:204px;top:299px;width:169px;height:169px"><div class="abs" style="left:16px;top:62px;font-size:34px;line-height:40px;font-weight:500;letter-spacing:-.02em;color:rgba(var(--ink),.66)">All quiet.</div></div>
+  <div class="abs sub" style="left:30px;top:520px">NO PHOTO ON ANY WIDGET, NO IMAGE ON THE LOCK SCREEN</div>`;
+
+const ph = (cls, inner, opt, h, p, extra = '') => `<div><div class="ph ${cls}">${inner}${extra}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
+const rowsM = [
+ ['Home', 'none', 'none', 'none', 'The hero and the day carry colour already (title ink fills, Tess\'s living palette). A plate would double them.', '-', 'Hidden: nothing to hide'],
+ ['Exercise front', 'none', 'none', 'none', 'The numbers are the picture; sibling views and sides hold the rest.', '-', '-'],
+ ['Exercise, MUSCLES page', 'IMAGE', 'b drawn', 'y 186-486, two figures 138 x 300 centred, FRONT and BACK words under, rows from 530', 'No muscle row yet (no table, no Claude): the page says "Nothing known yet." and no figure.', 'Drawn on the phone from its muscle table; never sent', 'One element, labelled with the muscles and the primary one; regions hidden; rows carry the detail. At AX3 figures shrink to 220 tall, rows stack'],
+ ['Routine', 'IMAGE', 'b drawn', 'Right of the title, x 286-371, y 80-156, 76 tall; hidden when the title runs past x 280', 'Title only. Never a wash', 'Local; the union of its slots\' muscles', 'Labelled "Works chest, shoulders and triceps". Hidden at AX sizes'],
+ ['Live workout', 'none', 'none', 'none', 'Hands busy, one glance, sun and sweat; the set strokes are already its picture; colour here means live.', '-', '-'],
+ ['Recipe', 'IMAGE', 'a photo over c wash', 'Plate y 0-56, full bleed, melts out by 56; back word at 58 stays clear', 'The wash is the page\'s own: Kitchen green with the main ingredients as pigment. Always there first.', 'Photo kept on the phone, never sent; a Private recipe shows no photo and no pigment', 'Photo: "Photo of the recipe, from budgetbytes.com", read after the title; wash hidden'],
+ ['Ingredient page', 'IMAGE', 'c wash', 'Plate y 0-56, the ingredient\'s own colour', 'It is the fallback; no photo ever', 'Local colour table or his own pick', 'Hidden (the name already says it)'],
+ ['Pantry front', 'none', 'none', 'none', 'Lines of state words; a swatch per row would be an icon.', '-', '-'],
+ ['Groceries', 'none', 'none', 'none', 'Read in a shop, struck with a thumb; nothing may compete with the row.', '-', '-'],
+ ['Note', 'none', 'none', 'none', 'Words only, and a Private note is only ever "Private note".', 'Private: never any image', '-'],
+ ['Day log', 'none', 'none', 'none', 'Its day stroke is the picture (day-strip).', '-', 'Stroke labelled as today\'s'],
+ ['Review', 'none added', 'a drawn, existing', 'The week\'s strokes are the image, y 300-530', 'Empty day = hairline, nothing painted', 'Local', 'Strokes read as one line a day (already so)'],
+ ['Plans', 'none', 'none', 'none', 'Week and month dabs are its picture.', '-', '-'],
+ ['Settings', 'none', 'none', 'none', 'Settings states facts and walls; imagery would blur which is which.', '-', '-'],
+ ['Area index (73)', 'none', 'none', 'none', 'Five lines; the colour arrives under the finger already.', '-', '-'],
+ ['Empty states', 'none', 'none', 'none', 'A quiet line; a drawing of emptiness is decoration.', '-', '-'],
+ ['Widgets', 'wash only', 'c wash', 'Kitchen medium only: top 10 pt of 169 (6%). None on small, Lock Screen or Live Activity', 'Removed under tinted and clear', 'No photo, ever; widgets never read photos', 'Hidden'],
+ ['Body weight (progress photo)', 'later, one page', 'a own photo', 'Not drawn. If built: one page under Body weight, never elsewhere', 'No photo yet: the page says nothing', 'Body fact: on this phone and in a copy, never to Claude, widgets or Review', 'Labelled with its date']
+];
+const matrix = () => `<table class="mx"><tr><th>PAGE</th><th>IMAGE?</th><th>KIND</th><th>SIZE AND PLACE ON 393 x 852</th><th>FALLBACK, OR WHY NOT</th><th>PRIVATE AND WALL RULE</th><th>VOICEOVER</th></tr>
+ ${rowsM.map(r => `<tr class="${r[1] === 'none' ? 'no' : 'yes'}"><td>${r[0]}</td><td class="d">${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td></tr>`).join('')}</table>`;
+
+if (!play) {
+  let b = `<div class="head"><h1>Sheet 88: Where imagery belongs</h1><p>Images only where they carry information or identity, and the same small place everywhere: a plate 393 x 56 (6.6% of the height) at the top edge, or a drawing in a page's own column. Three kinds: (a) his own photo, from a recipe link's og-image or the camera; (b) a drawn information image (muscle map); (c) a generative wash keyed to an object's colour. The wash always arrives first and a photo dries in over it (380 ms, 150 ms under Reduce Motion). Six places get one (the progress photo later), Review keeps its own strokes, and twelve pages are named as having none. The "photo" in the mock is a drawn stand-in.</p></div>`;
+  b += matrix() + `<div class="grid">`;
+  b += ph('por', recipe({ photo: 1 }) + band('Roasts 35 min, sauce at 30.'), 'RECIPE · PORCELAIN · PHOTO', 'The link\'s photo, a band', 'The og-image, read once at Save, cropped to a 393 x 56 band over the wash. Back word at 58 stays clear; nothing enters 686 to 820.');
+  b += ph('por', recipe() + band('Roasts 35 min, sauce at 30.'), 'RECIPE · NO PHOTO', 'The fallback is the wash', 'Kitchen green with paprika, sweet potato and lemon as pigment. Never a grey box, never a prompt to add one.');
+  b += ph('por', muscles() + band(), 'EXERCISE · MUSCLES PAGE', 'Bench Press, what it works', 'Front and back, ink at 22%, worked regions in the train colour at 72% (half a set each at 36%). Tess is silent on this side.');
+  b += ph('obs', muscles() + band(), 'EXERCISE · MUSCLES · OBSIDIAN', 'The same, at night', 'Ink 245,242,236 at 28% on #121014; fill is the dark train colour at 72%.');
+  b += ph('por', ingredient() + band(), 'INGREDIENT · PORCELAIN', 'Smoked paprika, its own colour', 'A wash in the ingredient\'s own colour from the phone\'s colour table (or his pick). No photo kind exists here.');
+  b += ph('por', routine() + band(), 'ROUTINE · MINI MAP', 'Push A, what the day hits', 'The union of its slots\' muscles, 66 tall at the title\'s right. A long name wraps and the map leaves.');
+  b += ph('por', review() + band(), 'REVIEW · NONE ADDED', 'The week\'s strokes are the picture', 'One painted stroke a day, already the image. Nothing is placed above them and nothing under; a day without a stroke is a hairline.');
+  b += ph('por', home() + band(), 'HOME · NONE', 'The hero is enough', 'Colour on Home arrives through the title ink and Tess\'s palette. A plate here would be a third voice.');
+  b += ph('por', widgets(), 'WIDGET · WASH ONLY', 'One Kitchen widget, 10 pt of wash', 'The cook-day widget carries a wash on its top edge, 6% of its height. No photo reaches an extension; small and quiet widgets are plain.');
+  b += ph('obs', recipe({ photo: 1, obs: 1 }) + band('Roasts 35 min, sauce at 30.'), 'RECIPE · OBSIDIAN', 'The photo at night', 'Photo dimmed to 78%, wash on screen blend at 26%, grain screens. Same band, same place.');
+  b += ph('por ax', muscles({ ax: 1 }) + band(), 'MUSCLES · DYNAMIC TYPE AX3', 'Figures shrink, rows stack', 'The figures drop from 300 to 220 tall so a row is still near them; names and roles stack; the page scrolls under the fade.');
+  b += ph('por', live() + band('Rest, then set 3.'), 'LIVE WORKOUT · NONE', 'Colour here means live', 'Sets are the picture. The one vermilion is the set now.');
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
+} else {
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = ''; w.style.cssText = 'padding:0;width:auto';
+  w.innerHTML = `<div class="ph por" id="ph">
+    <div class="abs" id="pR" style="inset:0">${recipe({ photo: 1, phHidden: 1, pid: 'rp', phid: 'rph' })}${band('Roasts 35 min, sauce at 30.')}</div>
+    <div class="abs" id="pM" style="inset:0;opacity:0;background:var(--bg)">${muscles({ empty: 1, pre: 'm' })}</div>
+    <div class="abs" id="pI" style="inset:0;opacity:0;background:var(--bg)">${ingredient({ pid: 'ip' })}</div>
+    <div class="abs soul"></div><div class="finger" id="fg"></div></div>`;
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const HOUSE = 'cubic-bezier(.2,.9,.25,1)';
+  const fg = $('fg'), finger = (x, y, on = 1) => { fg.style.left = x + 'px'; fg.style.top = y + 'px'; fg.style.opacity = on; };
+  const anim = (el, kf, ms, extra = {}) => el.animate(kf, { duration: ms, easing: HOUSE, fill: 'forwards', ...extra }).finished;
+  const fill = (id, v, ms = 420) => Promise.all([...document.querySelectorAll(`#pM .wk[data-id="${id}"]`)].map(e => anim(e, [{ fillOpacity: e.getAttribute('fill-opacity') }, { fillOpacity: v }], ms)));
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    $('rp').style.opacity = 0; await wait(300);
+    await anim($('rp'), [{ opacity: 0, filter: 'blur(6px)' }, { opacity: 1, filter: 'blur(0)' }], 700);   // the wash arrives first
+    await wait(1500);
+    // the photo dries in over the wash, 380 ms
+    anim($('rph'), [{ opacity: 0, filter: 'blur(5px) saturate(.6)' }, { opacity: 1, filter: 'blur(0) saturate(1)' }], 380);
+    await wait(2800);
+    // to the MUSCLES page
+    anim($('pR'), [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], 320); await anim($('pM'), [{ opacity: 0 }, { opacity: 1 }], 320);
+    await wait(900);
+    await fill('f-chest', .72, 520); await wait(120);
+    await Promise.all([fill('f-delts', .36, 480), wait(120).then(() => fill('b-arms', .36, 480))]); await wait(1300);
+    // a tap on Triceps: its region goes wet and dries back
+    const row = document.querySelector('#pM .mrow[data-m="b-arms"]'); const r = row.getBoundingClientRect(), pr = $('ph').getBoundingClientRect(), k = document.body.classList.contains('x2') ? 2 : 1;
+    const ry = (r.top - pr.top) / k + 20;
+    finger(300, ry + 60); await anim(fg, [{ left: '300px', top: ry + 60 + 'px' }, { left: '110px', top: ry + 'px' }], 320); await wait(80);
+    document.querySelectorAll('#pM .wk[data-id="b-arms"]').forEach(e => anim(e, [{ fillOpacity: .9 }, { fillOpacity: .36 }], 1200));
+    row.animate([{ opacity: 1 }, { opacity: .55 }, { opacity: 1 }], 500); finger(110, ry, 0); await wait(2000);
+    // an ingredient page: the wash arrives
+    $('ip').style.opacity = 0;
+    anim($('pM'), [{ opacity: 1 }, { opacity: 0 }], 320); await anim($('pI'), [{ opacity: 1 }, { opacity: 1 }], 1);
+    $('pI').style.opacity = 1; await wait(350);
+    await anim($('ip'), [{ opacity: 0, filter: 'blur(6px)' }, { opacity: 1, filter: 'blur(0)' }], 700);
+    await wait(2600);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

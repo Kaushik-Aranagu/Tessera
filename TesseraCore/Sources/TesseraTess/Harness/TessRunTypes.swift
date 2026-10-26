@@ -9,6 +9,8 @@ public enum TessRunEvent: Sendable, Equatable {
     case words(String)
     /// A pending row a tool made (an op id).
     case ghost(UUID)
+    /// A call that only changes what is shown (open this, go back): the host plays it, nothing is written.
+    case shell(ShellIntent)
     /// Her whole reply.
     case finished(String)
     /// A line made on the phone, never a raw error.
@@ -19,6 +21,24 @@ public enum TessRunEvent: Sendable, Equatable {
         case .finished, .failed: true
         default: false
         }
+    }
+}
+
+/// A call that changes what is shown and writes nothing (docs/ai/harness/elements.md): open an item, open a door, show
+/// a
+/// window, go back. `TessRun` hands it to the host; the host's navigator plays it.
+public struct ShellIntent: Sendable, Equatable {
+    /// openItem, openDoor, showWindow or goBack.
+    public var call: String
+    /// The thing it is about, when it is one (a private thing is still found by id).
+    public var object: UUID?
+    /// Its other inputs: the door's name, the switcher's word, the item's shown name.
+    public var arguments: [String: String]
+
+    public init(call: String, object: UUID? = nil, arguments: [String: String] = [:]) {
+        self.call = call
+        self.object = object
+        self.arguments = arguments
     }
 }
 

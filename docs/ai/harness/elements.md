@@ -118,6 +118,12 @@ The look of a change Tess makes is sheet 285 (`docs/design/tess-hand-285.md`, bo
   never reach Claude. Under lab they may be read, and still never acted on by Claude.
 - Body, sleep and calendar facts carry `deviceOnly` taint, the same as the day digest.
 - Shell calls write nothing. Tool calls are always pending (a ghost row, Undo 10 s), as `TessTools` already does.
+- **A model runs only a call it was offered.** `TessRun.runTool` refuses any tool name that is not in this turn's
+  pack (plus `open` and the offered shell calls), and refuses a `deviceOnly` tool on a Claude rung even if it were
+  offered. So `logSpend` runs in exactly two ways: bound from the frame by the phone with no model (never today: its
+  amount is asked, so it does not bind), or called by the phone's own model. Claude can neither see nor call it; a
+  test scripts Claude returning `logSpend` and finds no op and an error result. A shell call's object must be a handle
+  of this pack.
 
 ## 7. Room by room
 

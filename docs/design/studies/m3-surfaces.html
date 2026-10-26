@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Weight and habits</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for docs/design/body-weight-and-habits.md (M3 slices 1 and 2), on Research's fixtures in docs/research/m3-1-2-brief.md: the body weight page with its trend stroke, a bare "82.4" written to Tess as a ghost that waits for a tap, and the habits week on 15 Oct with a Read check-in. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--sage:#6E9E6A;--cad:#E0B341}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#E3EAD8 0%,rgba(227,234,216,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8E6DC 0%,rgba(216,230,220,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F4F0EC}
+.abs{position:absolute}
+.page{position:absolute;inset:0}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub);white-space:nowrap}
+.num{font-variant-numeric:tabular-nums}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+.wd{position:absolute;width:11px;height:9px;margin:-4.5px 0 0 -5.5px;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;background:var(--sage);filter:blur(.4px)}
+.roll{display:inline-block;overflow:hidden;vertical-align:top}
+.roll span{display:block}
+/* habits */
+.hb{position:absolute;left:0;right:0}
+.hb .n{position:absolute;left:22px;top:0;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px}
+.hb .c{position:absolute;right:22px;top:8px;font-size:21px;color:rgba(43,36,64,.75);text-align:right}
+.hb .c b{font-weight:600;color:var(--ink);display:inline-block;overflow:hidden;height:28px;vertical-align:top}
+.slot{position:absolute;width:36px;height:32px;margin:-16px 0 0 -18px}
+.dab{position:absolute;inset:0;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.ltr{position:absolute;width:36px;margin-left:-18px;text-align:center;font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(110,100,128,.7)}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+
+  <!-- body weight -->
+  <section id="bw" class="page">
+    <div class="abs lbl" style="left:22px;top:58px">‹ TRAINING</div>
+    <div id="bctx" class="abs" style="left:22px;top:100px;font-size:21px;color:var(--ctx)">78.1 yesterday, 0.3 kg less than last week</div>
+    <div class="abs" style="left:18px;top:136px;white-space:nowrap"><span id="bnum" class="roll num" style="font-size:80px;font-weight:300;letter-spacing:-.04em;line-height:84px;height:84px"><span>78.2</span></span><span style="font-size:21px;margin-left:8px;vertical-align:top;position:relative;top:52px">kg</span></div>
+    <div class="abs lbl" style="left:22px;top:230px">TREND</div>
+    <svg id="chart" class="abs" style="left:0;top:270px;overflow:visible" width="390" height="260"></svg>
+    <div class="abs lbl" style="left:22px;top:548px;opacity:.7">SEP 3</div>
+    <div class="abs lbl" style="right:22px;top:548px;opacity:.7">TODAY</div>
+    <div class="abs" style="left:22px;top:590px;font-size:21px;color:var(--ctx)">1.2 kg less since 3 September</div>
+    <div id="ghost" class="abs" style="left:22px;top:640px;opacity:0;white-space:nowrap">
+      <div style="font-size:34px;font-weight:500;letter-spacing:-.03em;color:rgba(43,36,64,.45)">Body weight <b style="font-weight:600;color:rgba(43,36,64,.8)">82.4</b> kg?</div>
+      <div class="lbl" style="margin-top:8px">4.2 KG ABOVE TREND</div>
+    </div>
+  </section>
+
+  <!-- Tess, Write open -->
+  <section id="write" class="page" style="opacity:0;pointer-events:none;background:linear-gradient(rgba(244,240,236,0) 0%,rgba(244,240,236,.92) 30%)">
+    <div class="abs" style="right:44px;top:380px;font-size:34px;font-weight:500;letter-spacing:-.03em;color:var(--cobalt)">What happened?</div>
+    <div class="abs" style="left:22px;right:22px;top:452px;height:44px;border-bottom:.5px solid rgba(46,109,164,.6)"><span id="typed" style="font-size:34px;font-weight:500;letter-spacing:-.03em"></span><span id="caret" style="display:inline-block;width:2px;height:34px;background:var(--cobalt);vertical-align:-6px;margin-left:2px"></span></div>
+    <div class="abs" style="left:0;right:0;top:540px;bottom:0;background:#D3D2D9" id="kb"></div>
+  </section>
+
+  <!-- habits -->
+  <section id="hab" class="page" style="opacity:0;pointer-events:none">
+    <div class="abs lbl" style="left:22px;top:58px">‹ TODAY</div>
+    <div class="abs" style="left:20px;top:90px;font-size:56px;font-weight:500;line-height:1;letter-spacing:-.04em">This week</div>
+    <div class="abs" style="left:22px;top:158px;font-size:21px;color:var(--ctx)">Thursday, three days to go</div>
+    <div id="list"></div>
+  </section>
+
+  <div id="say" class="abs" style="right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;text-align:right;color:var(--cobalt);opacity:0;z-index:12"></div>
+  <span id="undo" class="abs la lbl" style="right:78px;top:808px;color:var(--verm);opacity:0;z-index:12">UNDO</span>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const SPRING = 'cubic-bezier(.3,1.4,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+async function say(t, undo) {
+  const s = $('say'); s.getAnimations().forEach((a) => a.cancel()); s.innerHTML = t;
+  anim(s, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: HOUSE });
+  const u = $('undo'); u.getAnimations().forEach((a) => a.cancel());
+  anim(u, [{ opacity: 0 }, { opacity: undo ? 1 : 0 }], { duration: 240, delay: 120 });
+}
+const hush = () => { anim($('say'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }); anim($('undo'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }); };
+async function roll(el, to) {
+  const old = el.querySelector('span'); const h = el.offsetHeight;
+  const nw = document.createElement('span'); nw.textContent = to; el.appendChild(nw);
+  anim(old, [{ transform: 'none' }, { transform: `translateY(-${h}px)` }], { duration: 380, easing: HOUSE }).then(() => old.remove());
+  await anim(nw, [{ transform: 'none' }, { transform: `translateY(-${h}px)` }], { duration: 380, easing: HOUSE });
+  nw.getAnimations().forEach((a) => a.cancel());
+}
+
+// Research's 30 rows (2026), day number from 3 Sep, kg, trend
+const ROWS = [[0,79.4,79.4],[1,79.8,79.4],[2,79.1,79.4],[4,79.3,79.4],[5,79.0,79.3],[6,79.6,79.4],[7,79.2,79.4],[9,78.9,79.3],[10,79.1,79.3],[11,78.8,79.2],[12,79.0,79.2],[13,87.4,79.4],[14,78.7,79.3],[15,78.9,79.3],[18,78.6,79.1],[19,78.5,79.0],[20,78.8,79.0],[21,78.4,78.9],[23,78.7,78.9],[25,78.3,78.8],[26,78.6,78.8],[27,78.2,78.7],[29,78.5,78.7],[32,78.1,78.5],[33,78.4,78.5],[35,78.0,78.4],[37,78.3,78.4],[40,77.9,78.3],[41,78.1,78.2]];
+const X = (d) => 22 + d * (346 / 42), Y = (kg) => 20 + (80 - kg) / 2.6 * 220; // 80.0 at the top, 77.4 at the bottom
+const chart = $('chart');
+let path = ''; ROWS.forEach(([d, , t], i) => { path += (i ? ' L ' : 'M ') + X(d).toFixed(1) + ' ' + Y(t).toFixed(1); });
+chart.innerHTML = `<path id="trend" d="${path}" stroke="#6E9E6A" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".8" filter="url(#rough)"/>`;
+for (const [d, kg] of ROWS) {
+  const off = kg > 80; const e = document.createElement('div'); e.className = 'wd';
+  e.style.left = X(d) + 'px'; e.style.top = (270 + (off ? 6 : Y(kg))) + 'px'; e.style.opacity = off ? .45 : .7;
+  $('bw').appendChild(e);
+  if (off) { const l = document.createElement('div'); l.className = 'abs lbl'; l.style.cssText = `left:${X(d) + 10}px;top:${266}px;opacity:.55`; l.textContent = '87.4'; $('bw').appendChild(l); }
+}
+
+// habits on Thu 15 Oct: Read (5 a week, manual) Mon, Wed; Train (3, counts when a workout finishes) Tue
+const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'], TODAY = 3, X0 = 40, DX = 50;
+const HABITS = [
+  { n: 'Read', target: 5, colour: '224,179,65', done: [0, 2] },
+  { n: 'Train', target: 3, colour: '200,69,47', done: [1], auto: 'COUNTS WHEN A WORKOUT FINISHES', hist: 'Met in 1 of the last 3 weeks.' },
+];
+HABITS.forEach((h, i) => {
+  const e = document.createElement('div'); e.className = 'hb'; e.style.top = (226 + i * 196) + 'px';
+  e.innerHTML = `<div class="n">${h.n}</div><div class="c"><b class="roll"><span>${h.done.length}</span></b> of ${h.target}</div>` + (h.auto ? `<div class="lbl abs" style="left:22px;top:48px;opacity:.75">${h.auto}</div>` : '');
+  const rowY = h.auto ? 110 : 84;
+  DAYS.forEach((d, k) => {
+    const x = X0 + k * DX; const on = h.done.includes(k);
+    const s = document.createElement('div'); s.className = 'slot'; s.style.left = x + 'px'; s.style.top = rowY + 'px'; if (k > TODAY) s.style.opacity = .55;
+    s.innerHTML = `<div class="dab" style="background:radial-gradient(closest-side,rgba(${h.colour},${on ? .9 : .14}) 0%,rgba(${h.colour},${on ? .65 : .1}) 50%,rgba(${h.colour},0) 100%)"></div>`;
+    e.appendChild(s);
+    const l = document.createElement('div'); l.className = 'ltr'; l.style.left = x + 'px'; l.style.top = (rowY + 20) + 'px'; l.textContent = d; if (k === TODAY) l.style.color = 'var(--ink)';
+    e.appendChild(l);
+  });
+  if (h.hist) { const q = document.createElement('div'); q.className = 'abs'; q.style.cssText = `left:22px;top:${rowY + 54}px;font-size:21px;color:rgba(43,36,64,.55)`; q.textContent = h.hist; e.appendChild(q); }
+  $('list').appendChild(e); h.el = e; h.rowY = rowY; h.top = 226 + i * 196;
+});
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  const tr = $('trend'); const L = tr.getTotalLength(); tr.style.strokeDasharray = L; tr.style.strokeDashoffset = L;
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  // 1 · the body weight page: the trend paints in left to right, the entries settle on it
+  await anim(tr, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 900, easing: HOUSE });
+  await sleep(1200);
+
+  // 2 · a bare number written to Tess: Write opens, "82.4", Return
+  await fingerOn(346, 788); await sleep(100); fingerOff();
+  await anim($('write'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: HOUSE });
+  for (const ch of '82.4') { $('typed').textContent += ch; await sleep(150); }
+  await sleep(400);
+  await anim($('write'), [{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: HOUSE });
+  // the ghost waits: a wet cobalt dab above today, the ghost line, no drying line; Tess asks
+  const gd = document.createElement('div'); gd.className = 'wd'; gd.style.cssText = `left:${X(42)}px;top:${270 + 6}px;background:var(--cobalt);opacity:.6;width:14px;height:12px`; $('bw').appendChild(gd);
+  anim(gd, [{ opacity: 0, transform: 'translateY(-20px) scale(.4)' }, { opacity: .6, transform: 'none' }], { duration: 420, easing: SPRING });
+  anim($('ghost'), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: HOUSE });
+  await say('Tap to keep it.');
+  await sleep(2000);
+  // tap the ghost: it inks; the dab dries sage; the stroke re-draws its last stretch, the step capped at 2 kg; the numeral rolls
+  await fingerOn(150, 660); await sleep(100); fingerOff();
+  hush();
+  await anim($('ghost'), [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-6px)' }], { duration: 260 });
+  anim(gd, [{ background: '#2E6DA4', opacity: .6 }, { background: '#6E9E6A', opacity: .45 }], { duration: 600 });
+  const nt = 78.4; const x0 = X(41), y0 = Y(78.2), x1 = X(42), y1 = Y(nt);
+  const seg = document.createElementNS('http://www.w3.org/2000/svg', 'path'); seg.setAttribute('d', `M ${x0} ${y0} L ${x1} ${y1}`); seg.setAttribute('stroke', '#6E9E6A'); seg.setAttribute('stroke-width', 5); seg.setAttribute('stroke-linecap', 'round'); seg.setAttribute('fill', 'none'); seg.setAttribute('opacity', .8); seg.setAttribute('filter', 'url(#rough)');
+  chart.appendChild(seg); const sl = seg.getTotalLength(); seg.style.strokeDasharray = sl;
+  anim(seg, [{ strokeDashoffset: sl }, { strokeDashoffset: 0 }], { duration: 500, easing: HOUSE });
+  roll($('bnum'), '78.4');
+  anim($('bctx'), [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(4px)' }], { duration: 160 }).then(() => { $('bctx').textContent = '82.4 this morning, 4.2 above trend'; anim($('bctx'), [{ opacity: 0, filter: 'blur(4px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 220 }); });
+  await say('82.4 kg, 4.2 kg above trend.', true);
+  await sleep(2600);
+  hush();
+
+  // 3 · the habits week (‹ TODAY): dabs pop in; tap today on Read
+  anim($('bw'), [{ opacity: 1 }, { opacity: 0, transform: 'translateX(-40px)' }], { duration: 360, easing: HOUSE });
+  await anim($('hab'), [{ opacity: 0, transform: 'translateX(40px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: HOUSE });
+  HABITS.forEach((h, i) => [...h.el.querySelectorAll('.slot')].forEach((s, k) => anim(s, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: k > TODAY ? .55 : 1, transform: 'none' }], { duration: 360, delay: i * 90 + k * 28, easing: SPRING })));
+  await sleep(1500);
+  const rd = HABITS[0]; const sx = X0 + TODAY * DX, sy = rd.top + rd.rowY;
+  await fingerOn(sx, sy); await sleep(90); fingerOff();
+  const s = rd.el.querySelectorAll('.slot')[TODAY];
+  const wet = document.createElement('div'); wet.className = 'dab'; wet.style.background = `radial-gradient(closest-side,rgba(${rd.colour},.95) 0%,rgba(${rd.colour},.7) 50%,rgba(${rd.colour},0) 100%)`; s.appendChild(wet);
+  anim(wet, [{ transform: 'translateY(-26px) scale(.3)', opacity: 0, filter: 'blur(3px)' }, { transform: 'translateY(0) scale(1.25)', opacity: 1, filter: 'blur(2px)', offset: .55 }, { transform: 'scale(1)', opacity: 1, filter: 'blur(1.2px)' }], { duration: 460, easing: 'cubic-bezier(.5,0,.3,1)' });
+  await sleep(200);
+  roll(rd.el.querySelector('.c b'), '3');
+  await say('Read, 3 of 5 this week.', true);
+  await sleep(2600);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

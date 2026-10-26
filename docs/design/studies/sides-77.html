@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The rest of the sides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Sheet 77 (Kaushik's rule, sheet 75): the screens whose side 75 declares but has not drawn. Eight sides, each as a glance (right half from x 150) and the full side, on the front's spine. Default URL is the board; ?play records front, glance, full for each; ?x2 scales for the recorder. Porcelain, 393x852. -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:26px}
+.head h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.015em;flex:none;width:420px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:1100px}
+.grid{display:grid;grid-template-columns:repeat(4,393px);gap:30px 22px;align-items:start}
+.cap{margin-top:12px}
+.cap .opt{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6674}
+.cap h2{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;border-radius:44px}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--tess:#2450D8;--ctx:#5A3DAF}
+.abs{position:absolute}
+.body{position:absolute;inset:0}
+.back{left:22px;top:52px;font-weight:700;font-size:15px;letter-spacing:.08em;color:rgba(var(--ink),.7)}
+.title{left:22px;top:84px;width:350px;font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.02em;white-space:nowrap}
+.ctxl{left:22px;right:22px;top:146px;font-size:17px;color:var(--ctx);display:flex;justify-content:space-between;gap:12px}
+.ctxl span{white-space:nowrap}
+.ctxl b{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgb(var(--ink));padding-top:2px;white-space:nowrap}
+.flow{position:absolute;left:22px;width:350px;top:206px;font-size:19px;line-height:26px}
+.lb{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55);margin:24px 0 10px;line-height:16px}
+.lb:first-child{margin-top:0}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:9px}
+.row em{font-style:normal;color:rgba(var(--ink),.62);white-space:nowrap}
+.row i{font-style:normal;font-size:15px;color:rgba(var(--ink),.5);margin-left:8px}
+.sub{font-size:15px;line-height:20px;color:rgba(var(--ink),.55);margin:-6px 0 12px}
+.dim{color:rgba(var(--ink),.62)}
+.para{margin:0 0 12px}
+.tight .row{font-size:17px;line-height:22px;margin-bottom:6px}
+.ig{opacity:.45}
+.bar{display:block;height:9px;border-radius:5px;background:rgba(var(--ink),.5);width:150px;align-self:center}
+.tl{right:71px;top:768px;width:290px;text-align:right;font-size:18px;line-height:23px;color:var(--tess)}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.gl{position:absolute;left:150px;right:0;top:186px;bottom:96px;padding:20px 22px 0 46px;background:linear-gradient(90deg,rgba(251,250,247,0),var(--bg) 34px)}
+.gl .gk{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.gl .big{font-size:56px;line-height:62px;font-weight:500;letter-spacing:-.02em;margin-top:10px;white-space:nowrap}
+.gl .big.t44{font-size:44px;line-height:52px}
+.gl .big small{font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px;color:rgba(var(--ink),.62)}
+.gl .big.st small{display:block;margin:0;line-height:24px}
+.gl .gr{font-size:19px;line-height:26px;margin-top:12px}
+.gl .gr em{font-style:normal;color:rgba(var(--ink),.62)}
+.gl .more{position:absolute;left:46px;bottom:22px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.gl .more i{display:block;height:2px;margin-top:5px;background:currentColor}
+.finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+const band = line => `<div class="abs soul"></div>${line ? `<div class="abs tl">${line}</div>` : ''}`;
+const ctx = (l, w) => `<div class="abs ctxl"><span>${l}</span><b>${w}</b></div>`;
+const row = (a, b = '', x = '') => `<div class="row"><span>${a}${x ? `<i>${x}</i>` : ''}</span><em>${b}</em></div>`;
+const lb = t => `<div class="lb">${t}</div>`;
+const flow = (h, cls = '') => `<div class="flow ${cls}">${h}</div>`;
+const gl = (k, big, unit, smalls, more, o = {}) => `<div class="gl"><div class="gk">${k}</div><div class="big ${o.cls || ''}">${big}${unit ? `<small>${unit}</small>` : ''}</div>${smalls.map(s => `<div class="gr">${s}</div>`).join('')}<div class="more">${more}<i></i></div></div>`;
+
+const SC = [
+{ n: '1', kind: 'LINKS', name: 'Groceries', word: 'FOR WHAT', foot: 'ALL LINKS', back: 'KITCHEN', title: 'Groceries', tess: '7 for 2 cooks, 3 just because.',
+  h: 'Each thing under the cook it is for',
+  p: 'Soonest cook first. Ground beef is for two cooks, so it shows once with “also chili”. What is for no cook sits under Just because.',
+  front: ctx('10 to get', 'FOR WHAT') + flow(lb('PRODUCE') + row('Cilantro', '1 bunch') + row('Limes', '4') + lb('PANTRY') + row('Tortillas', '8') + row('Kidney beans', '2 cans') + row('Diced tomatoes', '1 can') + row('Chili powder', '1 jar') + row('Coffee', '1 bag') + lb('FRIDGE') + row('Ground beef', '1 lb') + row('Oat milk', '1') + row('Eggs', '1 dozen')),
+  glance: gl('FOR WHAT', '7', 'for 2 cooks', ['Tacos and chili', '<em>3 just because</em>'], 'ALL LINKS'),
+  side: ctx('soonest cook first', 'GROCERIES') + flow(lb('TACOS, SUNDAY') + row('Ground beef', '1 lb', 'also chili') + row('Tortillas', '8') + row('Cilantro', '1 bunch') + row('Limes', '4') + lb('CHILI, TUESDAY') + row('Kidney beans', '2 cans') + row('Diced tomatoes', '1 can') + row('Chili powder', '1 jar') + lb('JUST BECAUSE') + row('Oat milk', '1') + row('Eggs', '1 dozen') + row('Coffee', '1 bag') + `<div class="row" style="margin-top:22px"><span><b style="font:700 13px/16px inherit;letter-spacing:.08em;color:rgba(var(--ink),.55)">USUALLY</b><i style="margin-left:14px;font-size:19px;color:rgba(var(--ink),.62)">Rice and butter</i></span></div>`) },
+{ n: '2', kind: 'BEFORE', name: 'Routines', word: 'LAST TIMES', foot: 'THE WHOLE STORY', back: 'TRAINING', title: 'Routines', tess: 'Push A, 4 times this month.',
+  h: 'The last time of each, one line',
+  p: 'Name, the day, how long it took. A swipe on a row stays DROP, so the page owns the side swipe.',
+  front: ctx('4 routines', 'LAST TIMES') + flow(lb('YOURS') + row('Push A', '5 exercises') + row('Pull A', '5 exercises') + row('Legs A', '6 exercises') + row('Push B', '5 exercises')),
+  glance: gl('LAST TIMES', 'Push A', '', ['today', '<em>Pull A, Tuesday</em>'], 'THE WHOLE STORY'),
+  side: ctx('newest first', 'ROUTINES') + flow(lb('LAST TIMES') + row('Push A, today', '52 min') + row('Push B, Thursday', '48 min') + row('Legs A, Wednesday', '1 h 1 min') + row('Pull A, Tuesday', '55 min')) },
+{ n: '3', kind: 'BEFORE', name: 'Recipe original', word: 'COOKS', foot: 'THE WHOLE STORY', back: 'CHILI', title: 'Original', tess: 'Cooked 4 times, about 45 min.',
+  h: 'Each time cooked, and how long',
+  p: 'Newest first. Sixty minutes and over read as hours: “6 h 55 min”. Tess gives the median, and says nothing under 2 cooks.',
+  front: ctx('nytimes.com', 'COOKS') + flow(`<p class="para">Brown the beef in a heavy pot. Add the onion and cook until soft, about 8 minutes.</p><p class="para dim">Stir in the tomatoes, beans and chili powder, then simmer for 40 minutes. Taste for salt.</p>`),
+  glance: gl('COOKS', '4', 'times', ['Thursday, 46 min', '<em>about 45 min</em>'], 'THE WHOLE STORY'),
+  side: ctx('newest first', 'ORIGINAL') + flow(lb('EACH TIME') + row('Thursday', '46 min') + row('Oct 8', '44 min') + row('Oct 1', '6 h 55 min') + row('Sep 24', '41 min')) },
+{ n: '4', kind: 'PARTS', name: 'Paste a recipe', word: 'WHAT I READ', foot: 'ALL OF IT', back: 'RECIPES', title: 'Paste a recipe', tess: '14 of 17 lines kept.',
+  h: 'Every line, kept or ignored',
+  p: 'A line that looks private or secret shows only as a bar and “ignored”, never its words. A plain ignored line (the ad) can show its words.',
+  front: ctx('from nytimes.com', 'WHAT I READ') + flow(`<p class="para">Sheet-pan chicken and orzo</p><p class="para dim">Advertisement. 1½ lb chicken thighs, 1 cup orzo, 2 cups stock, 1 onion, 3 cloves garlic, 2 tbsp olive oil, 1 tsp cumin, salt. Heat the oven to 425°F. Toss everything on a sheet pan. Roast 35 minutes. Rest 5 minutes. Serve with lemon.</p>`),
+  glance: gl('WHAT I READ', '14', 'lines kept', ['3 ignored', '<em>nytimes.com</em>'], 'ALL OF IT'),
+  side: ctx('17 lines', 'PASTE') + flow(lb('WHAT I READ') + row('Sheet-pan chicken and orzo') + `<div class="row ig"><span>Advertisement</span><em>ignored</em></div>` + ['1½ lb chicken thighs', '1 cup orzo', '2 cups stock', '1 onion', '3 cloves garlic', '2 tbsp olive oil', '1 tsp cumin', 'Salt'].map(x => row(x)).join('') + `<div class="row ig"><span class="bar"></span><em>ignored</em></div>` + ['Heat the oven to 425°F.', 'Toss everything on a sheet pan.', 'Roast 35 minutes.', 'Rest 5 minutes.', 'Serve with lemon.'].map(x => row(x)).join('') + `<div class="row ig"><span class="bar" style="width:110px"></span><em>ignored</em></div>`, 'tight') },
+{ n: '5', kind: 'FACTS', name: 'The week (Settings)', word: 'WHAT LEAVES THE PHONE', foot: 'ALL FACTS', back: 'TODAY', title: 'The week', tess: 'Today’s lines made 21 of 38 calls.',
+  h: 'What leaves the phone, by job',
+  p: 'Titles and counts only. The cost is the receipts’ own Claude cost, never his money. Every control stays on the front.',
+  front: ctx('Oct 12 to 18', 'WHAT LEAVES THE PHONE') + flow(lb('TESS') + row('Tess asks Claude', 'on') + row('Eyes', 'no') + lb('BACKUPS') + row('Last one', '4 am') + row('Kept', '7') + `<p class="para dim" style="margin-top:22px">Tess asks Claude when unsure, for plans, Today and your week.</p>`),
+  glance: gl('LEAVES THE PHONE', '$3.20', 'this month', ['38 calls', '<em>Titles and counts only.</em>'], 'ALL FACTS', { cls: 'st' }),
+  side: ctx('October', 'THE WEEK') + flow(lb('CLAUDE CALLS, BY JOB') + row('Today’s lines', '21 calls') + `<div class="sub">Task and calendar titles</div>` + row('Plan my day', '9 calls') + `<div class="sub">Task titles and free hours</div>` + row('Your week', '5 calls') + `<div class="sub">Counts of sessions and tasks</div>` + row('Recipe reading', '3 calls') + `<div class="sub">The page’s text</div>` + lb('NEVER LEAVES') + `<p class="para">Titles and counts only. Never notes, places, health or money.</p>`) },
+{ n: '6', kind: 'FACTS', name: 'Plans', word: 'THE PLAN', foot: 'ALL FACTS', back: 'TRAINING', title: 'Plans', tess: 'Session 11 of 26 this month.',
+  h: 'What the plan is, how it moves',
+  p: 'Plans is a run (WEEK, MONTH) so the middle goes along it and the right edge opens the plan. Rules from the Plans sheet: it rolls on, below a range is never red.',
+  front: ctx('this week, rolling on', 'THE PLAN') + flow(lb('WEEK') + row('Monday', 'rest') + row('Tuesday, Pull A', 'done') + row('Wednesday, Legs A', 'done') + row('Thursday, Push B', 'done') + row('Friday, Push A', 'today') + row('Saturday', 'rest') + row('Sunday', 'rest')),
+  glance: gl('THE PLAN', '4', 'days a week', ['Push Pull Legs', '<em>on fixed days</em>'], 'ALL FACTS'),
+  side: ctx('Push Pull Legs', 'PLANS') + flow(lb('WHAT IT IS') + row('Split', 'Push Pull Legs') + row('Days', '4 a week') + row('Fixed days', 'Tuesday to Friday') + lb('HOW IT PROGRESSES') + `<p class="para">It rolls on every week.</p><p class="para">Primary sets count 1, secondary ½.</p><p class="para dim">A muscle under its range stays neutral.</p>`) },
+{ n: '7', kind: 'PARTS', name: 'A class page', word: 'ITS OBJECTS', foot: 'ALL LINKS', back: 'KITCHEN', title: 'Recipes', tess: 'Chili is the one you cook most.',
+  h: 'A class page: its objects',
+  p: 'The newest and the most used, three named and “and 35 more”. The fields every one of them has.',
+  front: ctx('by name', 'ITS OBJECTS') + flow(row('Chili', '4 cooks') + row('Dal', '3 cooks') + row('Sheet-pan chicken', '1 cook') + row('Tacos', '3 cooks') + `<div class="row"><span class="dim">and 34 more</span></div>`),
+  glance: gl('ITS OBJECTS', '38', 'objects', ['Newest, Dal', '<em>Most used, Chili</em>'], 'ALL LINKS'),
+  side: ctx('by use', 'RECIPES') + flow(lb('NEWEST') + row('Dal', 'Oct 16') + row('Sheet-pan chicken', 'Oct 12') + row('Chili', 'Oct 3') + `<div class="row"><span class="dim">and 35 more</span></div>` + lb('MOST USED') + row('Chili', '4 cooks') + row('Tacos', '3 cooks') + row('Dal', '3 cooks') + lb('EVERY ONE HAS') + `<p class="para">Time, serves, source and original.</p>`) },
+{ n: '8', kind: 'LINKS + FACTS', name: 'Any other object', word: 'DETAILS', foot: 'ALL FACTS', back: 'BOOKS', title: 'Dune', tess: 'Reading since Oct 2.',
+  h: 'The default side, for free',
+  p: 'Links, then every field the front does not show. A class can declare its own side; one that does not gets this. A private field is never shown or named.',
+  front: ctx('Frank Herbert', 'DETAILS') + flow(lb('NOW') + row('Status', 'Reading') + row('Page', '112')),
+  glance: gl('DETAILS', 'Reading', '', ['412 pages', '<em>linked from 3</em>'], 'ALL FACTS', { cls: 't44' }),
+  side: ctx('what the front leaves out', 'THE BOOK') + flow(lb('LINKED FROM') + row('Dune notes', 'note') + row('Read 30 min', 'task') + row('Reading, October', 'note') + lb('ALSO') + row('Pages', '412') + row('Started', 'Oct 2') + row('Added', 'Sep 28') + row('From', 'Library')) },
+];
+
+function stops(el, p) {
+  const f = el.querySelector('.fb'), g = el.querySelector('.gb'), s = el.querySelector('.sb'), t = el.querySelector('.tb');
+  const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1);
+  f.style.transform = `translateX(${-44 * p2}px)`; f.style.opacity = 1 - .7 * p1 - .3 * p2;
+  g.style.opacity = p <= 1 ? p1 : 1 - p2; g.style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`;
+  s.style.opacity = p2; s.style.transform = `translateX(${60 * (1 - p2)}px)`;
+  t.style.opacity = p1;
+}
+const stack = s => `<div class="abs back">‹ ${s.back}</div><div class="abs title">${s.title}</div><div class="body fb">${s.front}</div><div class="body gb">${s.glance}</div><div class="body sb">${s.side}</div><div class="abs soul"></div><div class="body tb"><div class="abs tl">${s.tess}</div></div>`;
+
+if (!play) {
+  const cell = (s, p, opt, h, t) => `<div><div class="ph por" data-p="${p}">${stack(s)}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${t}</p></div></div>`;
+  let b = `<div class="head"><h1>The rest of the sides</h1><p>Sheet 75 declared a side for every screen and drew some. These are the eight it left: each a glance (the right half from x 150, one big fact and two small, the front dimmed under it) and the full side. The spine holds, there are no controls, and Tess’s one line is in her band at both stops. Groups read as the cook and its day; a private line shows only as a bar and “ignored”.</p></div><div class="grid">`;
+  SC.forEach(s => {
+    b += cell(s, 1, `${s.n} · ${s.kind} · ${s.name.toUpperCase()}`, `${s.word}, the glance`, `Foot word ${s.foot}. ${s.h}.`);
+    b += cell(s, 2, `${s.n} · THE FULL SIDE`, s.h, s.p);
+  });
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.querySelectorAll('[data-p]').forEach(el => stops(el, +el.dataset.p));
+  document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
+} else {
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = '';
+  w.innerHTML = `<div class="ph por" id="ph"></div>`;
+  const ph = document.getElementById('ph');
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const tween = (ms, f) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(ease(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  let fg;
+  const finger = (x, y, on = 1) => { fg.style.left = x + 'px'; fg.style.top = y + 'px'; fg.style.opacity = on; };
+  async function one(s, i) {
+    ph.innerHTML = stack(s) + '<div class="finger"></div>';
+    fg = ph.querySelector('.finger');
+    ph.style.opacity = 0; stops(ph, 0);
+    await tween(200, q => { ph.style.opacity = q; });
+    await wait(400);
+    await tween(380, q => { finger(386 - 150 * q, 430); stops(ph, q); }); finger(0, 0, 0); await wait(700);
+    await tween(380, q => { finger(300 - 170 * q, 430); stops(ph, 1 + q); }); finger(0, 0, 0); await wait(1000);
+    await tween(250, q => { finger(120 + 160 * q, 430); stops(ph, 2 - q); }); finger(0, 0, 0); await wait(60);
+    await tween(250, q => { finger(120 + 160 * q, 430); stops(ph, 1 - q); }); finger(0, 0, 0);
+    if (i < SC.length - 1) { await wait(200); await tween(160, q => { ph.style.opacity = 1 - q; }); }
+    else await wait(900);
+  }
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    for (let i = 0; i < SC.length; i++) await one(SC[i], i);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

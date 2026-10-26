@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// Tess's living mark: three dabs of wet paint (vermilion, cobalt, cadmium) and three satellites, mixing by
 /// multiply on light grounds and screen on dark. How they move says what Tess is doing.
@@ -42,6 +43,24 @@ struct TessSoul: View {
     /// Two ink dots (tess-motion.md §1): a setting, off by default.
     var eyes = false
     var gaze: SoulGaze = .ahead
+    /// A finger or drag near her, as a direction her eyes follow, and her reaction to touch, a line or a deed.
+    var attention: CGPoint?
+    var reaction: (kind: SoulLife.Reaction, start: Date)?
+    /// Hearing (rev 19 F4): while he holds to talk, his voice's level (0 ... 1), and when the last word was heard.
+    /// On-device
+    /// speech only; no audio is kept. Off under Reduce Motion and in Low Power.
+    var voice: Double = 0
+    var heardAt: Date?
+    /// Quiet for an hour: her eyes are closed.
+    var quiet = false
+    /// The one clear accent of the screen she is on (an app room's colour); nil on Home or with several: she keeps
+    /// Ember.
+    var pageAccents: Set<AppID> = []
+    /// Who decides how she looks and changes: the burst's timing and choice and the palette. Rule-based now; Core's
+    /// director takes this seat later.
+    var director: any SoulDirecting = CoreSoulDirector()
+    /// Her mouth (rev 19 F5): nil while she speaks or listens.
+    var mouth: (kind: SoulMouth, start: Date)?
     /// When she began waking with him (idea 2, `SoulRouter.wake`).
     var wake: Date?
     /// A stroke's ripple and the blink after it (idea 3, `SoulRouter.stroke` / `strokeBlink`).
@@ -55,8 +74,10 @@ struct TessSoul: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.onWorkoutGround) private var onWorkoutGround
     @State private var layers: [SoulLayer] = []
+    @State private var glider = SoulPaletteGlider()
     /// The working overlay, from its split to a second after its gather.
     @State private var work: SoulWorkTimes?
     /// Working ticks at 60 fps, then 30 after 20 s (the frame budget).
@@ -79,9 +100,10 @@ struct TessSoul: View {
             paused: reduceMotion && work == nil
         )) { context in
             let drawn = frame(at: context.date)
+            let cloud = SoulCloud.image(cloudInput(drawn.frame, at: context.date, dark: palette.layered == false))
             Canvas(rendersAsynchronously: true) { context, canvasSize in
                 SoulRenderer.draw(drawn.frame, in: &context, size: canvasSize, palette: palette, lights: drawn.lights,
-                                  blurScale: 1 / hostScale)
+                                  blurScale: 1 / hostScale, cloud: cloud)
             }
             .saturation(drawn.frame.look.saturation)
             .contrast(drawn.frame.look.contrast)
@@ -89,6 +111,9 @@ struct TessSoul: View {
             .opacity(drawn.frame.look.opacity)
             // Flattened by Metal: without this the Canvas is rasterised by Core Graphics on the CPU every frame.
             .drawingGroup()
+            // Her body follows her life: the float of her breath, a lean after her eyes, a small breath on a touch.
+            .offset(bodyMotion(at: context.date).offset)
+            .scaleEffect(bodyMotion(at: context.date).scale)
         }
         .frame(width: size.width, height: size.height)
         .overlay {
@@ -140,6 +165,66 @@ struct TessSoul: View {
         .accessibilityElement()
         .accessibilityLabel(accessibilityText)
         .allowsHitTesting(false)
+    }
+
+    /// What her body is made of right now: the paints for the look, her spread from the frame, slow under Reduce
+    /// Motion (a still body), flat under Reduce Transparency.
+    private func cloudInput(_ frame: SoulFrame, at date: Date, dark: Bool) -> SoulCloud.Input {
+        let mains = frame.dabs.prefix(3)
+        let home = 9.5
+        let mean = mains.reduce(0) { $0 + Double(hypot($1.x, $1.y)) } / Double(max(mains.count, 1))
+        let time = reduceMotion ? 0 : date.timeIntervalSinceReferenceDate
+        var active = director
+        if var core = director as? CoreSoulDirector {
+            core.reduceMotion = reduceMotion
+            core.lowPower = lowPower
+            active = core
+        }
+        let target = active.paints(dark: dark, pageAccents: pageAccents)
+        var input = SoulCloud.Input(paints: glider.paints(target: target, at: time, instant: reduceMotion || lowPower),
+                                    dark: dark, time: time)
+        input.spread = min(max(mean / home - 1, 0), 1)
+        input.quiet = mode == .resting || quiet
+        input.flat = reduceTransparency
+        input.activeBurst = reduceMotion || lowPower ? nil : active.burst(at: time, quiet: input.quiet)
+        input.sway = !reduceMotion && !lowPower
+        if !reduceMotion, !lowPower {
+            input.voice = voice
+            // A heard word gathers her for 220 ms.
+            if let heardAt {
+                let unit = date.timeIntervalSince(heardAt) / 0.22
+                input.gather = unit >= 0 && unit <= 1 ? sin(Double.pi * unit) : 0
+            }
+        }
+        let store = ThemeStore.shared
+        let look = onWorkoutGround ? store.workoutLook : (colorScheme == .dark ? store.pair.night : store.pair.day)
+        // On Black the chroma is held lower so cobalt does not blow out.
+        if look.isDark, look.ground == 0x000000 {
+            input.chroma = 1.25
+        }
+        return input
+    }
+
+    /// Her float, lean and breath at `date` (none under Reduce Motion, or without her eyes).
+    private func bodyMotion(at date: Date) -> (offset: CGSize, scale: CGFloat) {
+        guard eyes, !reduceMotion else { return (.zero, 1) }
+        let time = date.timeIntervalSinceReferenceDate
+        let lean = SoulLife.lean(at: time)
+        var scale: CGFloat = 1
+        if let reaction, reaction.kind != .did {
+            scale = SoulLife.breath(reaction.kind, since: time - reaction.start.timeIntervalSinceReferenceDate)
+        }
+        // While he talks she leans 1.6 pt toward him (his finger, else straight down).
+        var toward = CGSize.zero
+        if voice > 0, !lowPower {
+            let direction = attention ?? CGPoint(x: 0, y: 1)
+            let length = max(hypot(direction.x, direction.y), 0.001)
+            toward = CGSize(width: direction.x / length * 1.6, height: direction.y / length * 1.6)
+        }
+        return (
+            CGSize(width: lean.width + toward.width, height: lean.height + toward.height + SoulLife.float(at: time)),
+            scale
+        )
     }
 
     /// The frame at `date`, and the twelve lights when she works (nil draws the six dabs as built).
@@ -200,7 +285,10 @@ struct TessSoul: View {
                 ?? strokeBlink.flatMap { SoulBlink.once(since: context.date.timeIntervalSince($0)) }
                 ?? wake.map { SoulWake.lid(at: context.date.timeIntervalSince($0), quiet: reduceMotion || lowPower) }
             SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
-                     still: reduceMotion, lid: lid)
+                     still: reduceMotion, lid: lid, attention: attention,
+                     reaction: reaction.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) },
+                     solid: !look.isDark, closed: quiet,
+                     mouth: mouth.map { ($0.kind, $0.start.timeIntervalSinceReferenceDate) })
         }
         .opacity(eyesShown ? 1 : 0)
     }
@@ -308,7 +396,7 @@ struct SoulPalette {
 /// own live blur. The group grade (saturation, contrast) is applied by the view around the canvas.
 enum SoulRenderer {
     static func draw(_ frame: SoulFrame, in context: inout GraphicsContext, size: CGSize, palette: SoulPalette,
-                     lights: [SoulLight]? = nil, blurScale: CGFloat = 1)
+                     lights: [SoulLight]? = nil, blurScale: CGFloat = 1, cloud: CGImage? = nil)
     {
         context.translateBy(x: size.width / 2, y: size.height / 2)
         context.scaleBy(x: frame.look.scale, y: frame.look.scale)
@@ -328,34 +416,23 @@ enum SoulRenderer {
                       with: .radialGradient(palette.ring, center: .zero, startRadius: 0, endRadius: radius))
         }
 
-        if palette.layered, lights == nil {
-            // Light looks: blue first, then vermilion, then cadmium, the satellites after the mains.
-            let order = [1, 0, 2, 3, 4, 5]
-            let paint: (inout GraphicsContext) -> Void = { layer in
-                layer.blendMode = .normal
-                layer.opacity = 1
-                for index in order {
-                    let opacity = index < 3 ? 1 : frame.look.satellites
-                    dab(frame.dabs[index], SoulDab.all[index], opacity: opacity, in: &layer, palette: palette,
-                        blurScale: blurScale)
-                }
-                dab(frame.drip, SoulDab.drip, opacity: 1, in: &layer, palette: palette, blurScale: blurScale)
-            }
-            var normal = context
-            normal.blendMode = .normal
-            normal.drawLayer { paint(&$0) }
-            var multiply = context
-            multiply.blendMode = .multiply
-            multiply.opacity = 0.3
-            multiply.drawLayer { paint(&$0) }
-            return
-        }
         context.blendMode = palette.blend
         if let lights {
             // Working: the twelve lights instead of the six dabs (the drip and ring never show while she works).
             for light in lights {
                 self.light(light, in: &context, palette: palette)
             }
+            return
+        }
+        if let cloud {
+            // Her body: one cloud, in its own compositing group (the canvas), normal blend; nothing leaks onto the
+            // page.
+            let side = 140 * SoulCloud.span
+            context.draw(
+                Image(decorative: cloud, scale: 1),
+                in: CGRect(x: -side / 2, y: -side / 2, width: side, height: side)
+            )
+            dab(frame.drip, SoulDab.drip, opacity: 1, in: &context, palette: palette, blurScale: blurScale)
             return
         }
         for (index, pose) in frame.dabs.enumerated() {

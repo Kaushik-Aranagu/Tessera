@@ -1,0 +1,2 @@
+const { chromium } = require('/opt/node22/lib/node_modules/playwright');
+(async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome'});const p=await b.newPage({viewport:{width:2300,height:1000}});p.on('pageerror',e=>console.log('ERR',e.message));p.on('console',m=>console.log('LOG',m.text()));await p.goto('file://'+__dirname+'/board2.html');await p.waitForTimeout(400);await b.close()})();

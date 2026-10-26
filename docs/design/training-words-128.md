@@ -15,8 +15,9 @@ From the Training brainstorm (Oct 22) and Kaushik's answer 08:16: "mostly at the
 - Primary action: "Start" with the hot underline.
 
 ## 2. Live set: three quiet words
-- Row under the big number: "Busy" (left), the ink action "Log 6" (centre-left, hot
-  underline), "Short" (right). Busy and Short are ink-secondary words, no underline.
+- Row under the big number: the ink action "Log 6" on the left (hot underline), then
+  "Busy" and "Pause" on the right (Oct 22, #1214: Busy beside Pause keeps Log uncrowded);
+  "Short" joins them when it ships. Busy and Short are ink-secondary words, no underline.
 - Busy: the exercise moves to the end, the next one slides up; receipt "Bench Press, later."
   with Undo (10 s). At the end, if still busy, the page offers Similar.
 - Short: steps the minutes the same way as Today, mid-session; receipt "Cut to 35 min."

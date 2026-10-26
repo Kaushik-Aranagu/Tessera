@@ -17,7 +17,8 @@ struct TessToolsTests {
         #expect(TessTools.all.map(\.name) == ["logSet", "createTask", "completeTask", "rescheduleTask",
                                               "addGroceries", "addToList", "createList", "createNote",
                                               "createRecipe", "query", "startShop", "cookTogether",
-                                              "setServeTime"])
+                                              "setServeTime", "checkListItem", "startWorkout", "startCooking",
+                                              "logSpend"])
 
         let set = try call("logSet", #"{"exercise":"bench","weight":80,"reps":8,"sets":1,"unit":"kg"}"#, engine)
         #expect(set.first?.action == "logExercise" && set.first?.state == .pending)
@@ -175,7 +176,8 @@ struct TessToolsTests {
     @Test func claudeGetsStrictSchemas() throws {
         let data = try TessTools.definitionsJSON()
         let tools = try #require(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
-        #expect(tools.count == 13)
+        // Claude's list: every tool but the device-only ones (logSpend is money).
+        #expect(tools.count == 16 && !tools.contains { $0["name"] as? String == "logSpend" })
         func check(_ schema: [String: Any], path: String) {
             if schema["type"] as? String == "object" {
                 #expect(schema["additionalProperties"] as? Bool == false, "\(path) must be closed")

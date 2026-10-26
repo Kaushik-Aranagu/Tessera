@@ -1,0 +1,66 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#f4f1ea}</style><svg width=0 height=0><filter id=goo x=-20% y=-20% width=140% height=140%><feGaussianBlur stdDeviation="2.0"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></svg><canvas id=c width=1200 height=460></canvas>
+<script>
+const c=document.getElementById('c'),g=c.getContext('2d');
+const INK=[20,24,31],STAGE=[226,67,42];
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),mix=(a,b,t)=>a+(b-a)*t;
+const sm=x=>{x=clamp(x);return x*x*(3-2*x)},eob=x=>{x=clamp(x);const c1=1.7,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const rgb=(a,al=1)=>`rgba(${a[0]|0},${a[1]|0},${a[2]|0},${al})`;
+const colOf=s=>s==='best'?rgb(STAGE):s==='short'?rgb(INK,.22):rgb(INK,.9);
+const DEMO=['full','short','full','best'];
+function demo(n){const s=Array(n).fill('full');if(n>=3)s[1]='short';if(n>=4)s[n-1]='best';return s}
+// ---- shared: an arrival record {ta: time the newest element arrives (or -1e9 if settled)}
+// glide p: 0 -> 1 while existing elements move to the new layout; land: 0->1 for the new element
+function prog(t,ta){return{p:sm((t-ta-.30)/.45),u:clamp((t-ta)/.6)}}
+
+
+
+const off=document.createElement('canvas');off.width=off.height=300;const og=off.getContext('2d');
+// smooth pseudo-random: sum of sines with irrational ratios, seeded per dot
+const n1=(t,s)=>Math.sin(t*1.0+s*7.1)+.6*Math.sin(t*1.9+s*3.3)+.35*Math.sin(t*3.7+s*1.7);
+// gather events: every 7-10 s (pseudo-random), gather .55 s, hold .4 s, burst .7 s
+function gather(t){let T=2.5,k=0;while(T<t){const d=7+3*(.5+.5*Math.sin(k*12.9898)*1.0);if(t<T+d)break;T+=d;k++}
+ // find the current event start E (an event begins at T_k + d_k - 1.65?) simpler: event at the END of each gap
+ let E=T; // next boundary: event happens starting at E-1.65? use E as the event start of previous boundary
+ // compute previous boundary
+ let P=2.5,j=0;while(true){const d=7+3*(.5+.5*Math.sin(j*12.9898));if(P+d>t)break;P+=d;j++}
+ const tau=t-P;if(tau<0||tau>1.65)return{g:0,phase:'none',k:j};
+ if(tau<.55)return{g:sm(tau/.55),phase:'in',k:j};if(tau<.95)return{g:1,phase:'hold',k:j,h:(tau-.55)/.4};
+ const q=(tau-.95)/.7;return{g:1-eob(q),phase:'out',k:j,q};}
+function homeR(i,n,B){const o=n<=8?n:8,inn=n-o;let k,cnt,rr;if(i<o){k=i;cnt=o;rr=B*.30}else{k=i-o;cnt=inn;rr=B*.15}
+ return{a:-Math.PI/2+k*2*Math.PI/cnt+(i<o?0:.5),r:rr}}
+function blob(ctx,x,y,r,t,seed,wob){ctx.beginPath();const N=18;for(let k=0;k<=N;k++){const a=k/N*2*Math.PI;const rr=r*(1+wob*(.06*Math.sin(2*a+t*2.3+seed)+.04*Math.sin(3*a-t*1.7+seed*2)+.025*Math.sin(5*a+t*3.1)));
+ const px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;k?ctx.lineTo(px,py):ctx.moveTo(px,py)}ctx.closePath();ctx.fill()}
+function inkRing(cx,cy,B,n,st,t,ta,live){const{p,u}=prog(t,ta),tau=t-ta;const G=live?gather(t+n*1.3):{g:0};
+ const dots=[];const spin=live?.25*t+.4*Math.sin(t*.23):0;
+ for(let i=0;i<n;i++){const last=i===n-1&&ta>-1e8&&live;
+  let h=homeR(i,n,B);if(!last&&ta>-1e8&&live&&n>1){const h0=homeR(i,n-1,B);h={a:mix(h0.a,h.a,p),r:mix(h0.r,h.r,p)}}
+  let a=h.a+spin,r=h.r;
+  if(live){a+=.07*n1(t*.5,i);r*=1+.06*n1(t*.6,i+9)} // rough orbit, never a perfect circle
+  let x=Math.cos(a)*r,y=Math.sin(a)*r,sw=1;
+  if(live){const wv=Math.pow(Math.max(0,Math.sin(2*Math.PI*(t*.38-i/Math.max(n,3)))),2);sw+=.14*wv;
+   if(ta>-1e8&&tau>0){const d=Math.abs(i-(n-1)),dd=Math.min(d,n-d),f=Math.exp(-Math.pow(tau*3.2-dd*.9,2)*1.4);sw+=.5*f}
+   // gather: ease to centre and back; in the hold the blob breathes
+   if(G.g>0){const gx=B*.03*n1(t*2,i+3),gy=B*.03*n1(t*2,i+5);x=mix(x,gx,G.g);y=mix(y,gy,G.g);sw=mix(sw,1.0,G.g)}}
+  if(last){const e=eob(u/.8);x=mix(Math.cos(a+1.2)*B*.95,x,e);y=mix(Math.sin(a+1.2)*B*.95,y,e);sw*=clamp(u*4)}
+  dots.push({x,y,sw,st:st[i],i})}
+ const draw1=(ctx,ox,oy,wob)=>{dots.forEach(d=>{const best=d.st==='best',short=d.st==='short';
+  const rad=live?B*.048*(best?1.2:1)*d.sw:(best?4.2:3.75);
+  ctx.fillStyle=best?rgb(STAGE):short?rgb(INK,live?.25:.42):rgb(INK,.9);
+  if(live)blob(ctx,ox+d.x,oy+d.y,rad,t,d.i*2.1,wob);else{ctx.beginPath();ctx.arc(ox+d.x,oy+d.y,rad,0,7);ctx.fill()}})};
+ if(live){og.clearRect(0,0,300,300);draw1(og,150,150,1);g.save();g.filter='url(#goo)';g.drawImage(off,cx-150,cy-150);g.restore()}
+ else draw1(g,cx,cy,0)}
+const T0=1,STEP=3;
+function build(t){let n=0,ta=-1e9;for(let i=0;i<4;i++){if(t>=T0+i*STEP){n=i+1;ta=T0+i*STEP}}return{n,ta}}
+function demo(n){const s=Array(n).fill('full');if(n>=3)s[1]='short';if(n>=4)s[n-1]='best';return s}
+function draw(t){g.setTransform(1,0,0,1,0,0);g.fillStyle='#f4f1ea';g.fillRect(0,0,1200,460);
+ g.font='600 20px -apple-system,Helvetica,Arial';g.fillStyle=rgb(INK,.9);g.fillText('Ink ring v2, neater: smaller drops, calmer orbit, same gather (live 36 pt, row 14 pt, shown 3x)',30,36);
+ const {n,ta}=build(t);const y0=50;
+ g.fillStyle=rgb(INK,.4);g.font='11px -apple-system,Helvetica';g.fillText('LIVE, sets 1 to 4',250,y0+12);g.fillText('ROW (true size)',420,y0+12);g.fillText('EVERY COUNT, 1 to 8 (each on its own clock)',560,y0+12);
+ g.strokeStyle=rgb(INK,.07);g.strokeRect(235,y0+20,150,300);g.strokeRect(400,y0+20,130,300);
+ const st=demo(4).slice(0,Math.max(n,0));
+ if(n>0){inkRing(310,y0+170,84*1.6,n,st,t,ta,true);inkRing(465,y0+170,42,n,st,t,-1e9,false)}
+ for(let m=1;m<=8;m++){const cx=600+(m-1)*77,cy=y0+170;g.strokeStyle=rgb(INK,.07);g.strokeRect(cx-34,y0+20,68,300);g.fillStyle=rgb(INK,.4);g.font='11px -apple-system,Helvetica';g.fillText(m,cx-3,y0+314);inkRing(cx,cy,84*1.05,m,demo(m),t+m*2.7,-1e9,true)}
+ if(n>0&&t-ta<.2){g.fillStyle=rgb(INK,.5*(1-(t-ta)/.2));g.font='600 11px -apple-system,Helvetica';g.fillText('haptic',250,y0+336)}
+ g.fillStyle=rgb(INK,.45);g.font='12px -apple-system,Helvetica';g.fillText('Each drop is liquid with its own wobble. Pale = short, stage colour = best; the swell never changes a colour. One haptic when the new drop lands. Row: flat, still. Reduce Motion: finished mark, 150 ms crossfade.',30,440)}
+window.sceneDuration=()=>T0+4*STEP+9;window.renderAt=draw;draw(0);
+</script>

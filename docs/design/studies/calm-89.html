@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calm pass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100..900&display=swap" rel="stylesheet">
+<!-- Design item 89: the calm pass. Kaushik Oct 17 2:32 AM PT: still cluttered, two-column data is a lot. One column, a lead row, budgets per screen; before = sheet 86 C, after = calm, same C tokens. Board by default; ?play records Groceries folding from two columns to one. -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20;font-variant-numeric:tabular-nums}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:26px}
+.head h1{margin:0;font-size:34px;font-weight:650;letter-spacing:-.02em;flex:none;width:420px;line-height:38px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:1100px}
+.grid{display:grid;grid-template-columns:repeat(4,393px);gap:0 22px;align-items:start}
+.colh{border-top:2px solid #1c1a20;padding-top:10px;margin-bottom:26px}
+.colh .opt{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674}
+.colh h2{margin:4px 0 6px;font-size:26px;font-weight:650;letter-spacing:-.02em;line-height:30px}
+.colh p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.rowh{grid-column:1/-1;display:flex;gap:22px;align-items:baseline;margin:30px 0 14px;border-top:1px solid rgba(28,26,32,.2);padding-top:12px}
+.rowh .opt{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674;flex:none;width:130px}
+.rowh p{margin:0;font-size:16px;line-height:22px;color:#4a4652;max-width:1000px}
+.cap{margin-top:8px;font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674}
+
+/* the phone and the tokens: every size, weight and tracking below comes from a --var the option sets */
+.ph{position:relative;width:393px;height:852px;overflow:hidden;border-radius:44px;color:rgb(var(--ink));
+  background:color-mix(in srgb,rgb(var(--area)) calc(var(--tint)*100%),var(--bg))}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--bg0:rgba(251,250,247,0);--tess:#2450D8;--ctx:#5A3DAF;--health:#12936A;--now:#F0A500;--tintd:.45}
+.obs{--ink:245,242,236;--bg:#121014;--bg0:rgba(18,16,20,0);--tess:#86B4FF;--ctx:#B8A3FF;--health:#52D3A3;--now:#FFC23D;--tintd:.55}
+.por.train{--area:194,58,34}.por.rev{--area:90,61,175}
+.obs.train{--area:255,125,98}.obs.rev{--area:184,163,255}
+.abs{position:absolute}
+.pg{position:absolute;left:22px;right:22px}
+.keyc{color:color-mix(in srgb,rgb(var(--area)) calc(var(--keymix)*100%),rgb(var(--ink)))}
+
+.hero{font-size:calc(var(--hs)*1px);font-weight:var(--hw);letter-spacing:calc(var(--ht)*1em);line-height:calc(var(--hl)*1px);white-space:nowrap;margin:0}
+.ttl{font-size:calc(var(--ts)*1px);font-weight:var(--tw);letter-spacing:calc(var(--tt)*1em);line-height:calc(var(--tl)*1px);white-space:nowrap;margin:0}
+.ttl .keyc,.hero .keyc{font-weight:calc(var(--tw) + var(--kb))}
+.hero .keyc{font-weight:calc(var(--hw) + var(--kb))}
+.lab{font-size:calc(var(--ls)*1px);font-weight:var(--lw);letter-spacing:calc(var(--lt)*1em);line-height:16px;white-space:nowrap;text-transform:uppercase;
+  color:color-mix(in srgb,rgb(var(--area)) calc(var(--labmix)*100%),rgba(var(--ink),var(--lo)))}
+.lab.ink{color:rgb(var(--ink))}
+.back{position:absolute;left:22px;top:58px}
+.sec{border-top:1px solid color-mix(in srgb,rgb(var(--area)) calc(var(--labmix)*34%),rgba(var(--ink),calc(var(--rule)*.15)));padding-top:calc(var(--rule)*11px);margin-top:20px}
+.sec.first{margin-top:16px}
+.secw{font-size:calc(var(--ss)*1px);font-weight:var(--sw);letter-spacing:calc(var(--st)*1em);line-height:40px;margin:0}
+.ctx{font-size:calc(var(--cs)*1px);font-weight:var(--cw);line-height:calc(var(--cl)*1px);letter-spacing:0;color:var(--ctx);white-space:nowrap}
+.ctx b{font-size:calc(var(--cn)*1px);font-weight:var(--cnw);letter-spacing:-.01em}
+.dayl{font-size:calc(var(--cs)*1px);font-weight:var(--cw);line-height:calc(var(--cl)*1px);color:rgba(var(--ink),var(--do));white-space:nowrap}
+.row{display:flex;justify-content:space-between;align-items:flex-start;font-size:calc(var(--rs)*1px);font-weight:var(--rw);letter-spacing:calc(var(--rt)*1em);line-height:28px;padding:9px 0}
+.row .l{width:278px}
+.row .l .k{font-weight:calc(var(--rw) + 90)}
+.row.pv .l{color:rgba(var(--ink),var(--do))}
+.v{font-size:calc(var(--ds)*1px);font-weight:calc(var(--dw) + 140);line-height:28px;letter-spacing:0;color:rgba(var(--ink),var(--do));white-space:nowrap;padding-top:calc((var(--rs) - var(--ds))*.4px)}
+.det{font-size:calc(var(--ds)*1px);font-weight:var(--dw);line-height:calc(var(--dl)*1px);letter-spacing:0;color:rgba(var(--ink),var(--do))}
+.det b{font-weight:calc(var(--dw) + 160);color:rgb(var(--ink))}
+.fig{font-size:calc(var(--vs)*1px);font-weight:var(--vwt);letter-spacing:-.02em;line-height:34px;text-align:right;white-space:nowrap}
+.fig small{font-size:calc(var(--ds)*1px);font-weight:var(--dw);letter-spacing:0;margin-left:3px;color:rgba(var(--ink),var(--do))}
+.rowx{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--xp)*1px) 0}
+.hair{height:1.5px;background:rgba(var(--ink),.12)}
+.wl{font-size:calc(var(--ds)*1px);font-weight:var(--dw);line-height:24px;color:rgba(var(--ink),var(--do));padding:10px 0 9px}
+.sw{position:absolute;right:22px}
+.keyw{display:inline-block;margin-top:18px}
+.keyw .trk{display:block;height:2px;margin-top:6px;background:rgb(var(--ink))}
+.clip{position:absolute;left:0;right:0;top:0;height:736px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 calc(100% - 40px),transparent);mask-image:linear-gradient(#000 calc(100% - 40px),transparent)}
+.pin{position:absolute;left:0;right:0;top:0;height:84px;background:linear-gradient(var(--bg) 70%,var(--bg0))}
+.soul{position:absolute;left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.tl2{position:absolute;right:71px;width:262px;top:779px;transform:translateY(-50%);text-align:right;font-size:calc(var(--es)*1px);font-weight:var(--ew);line-height:25px;color:var(--tess)}
+.dl{font-size:16px;font-weight:700;text-align:center;width:49.4px;position:absolute}
+.cells{position:relative;height:30px;margin-top:6px}
+.cn{position:absolute;width:49.4px;text-align:center;top:0;font-size:calc(var(--ns)*1px);font-weight:var(--nw);letter-spacing:-.01em;line-height:30px}
+.line{font-size:calc(var(--ds)*1px);line-height:calc(var(--dl)*1px);font-weight:var(--dw);color:rgb(var(--ink));padding:2px 0}
+.line i{font-style:normal;display:inline-block;width:42px;font-weight:calc(var(--dw) + 160);color:rgba(var(--ink),var(--do))}
+.mode{position:absolute;left:0;right:0;top:20px;text-align:center;font-size:13px;font-weight:750;letter-spacing:.1em;color:rgba(var(--ink),.55);z-index:9}
+.por.kit{--area:18,147,106}.obs.kit{--area:82,211,163}
+/* calm 89: one column. row 22/560, lead 28/650, note 18/430, pitch 44 */
+.cr{position:relative;padding:8px 0;font-size:22px;font-weight:560;letter-spacing:-.005em;line-height:28px;white-space:nowrap;overflow:visible}
+.cr .t{display:block;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.cr .t.s{-webkit-mask-image:none;mask-image:none}
+.cr.dm{color:rgba(var(--ink),.46)}.cr.fu{color:rgba(var(--ink),.62)}
+.cr.ld{font-size:28px;font-weight:650;letter-spacing:-.012em;line-height:34px}
+.cr .nt{font-size:18px;font-weight:430;letter-spacing:0;line-height:24px;color:rgba(var(--ink),.62)}
+.cr .mk{position:absolute;left:-13px;top:8px;bottom:8px;width:3px;border-radius:1.5px;background:color-mix(in srgb,rgb(var(--area)) 72%,rgb(var(--ink)))}
+.cr.wr{color:rgba(var(--ink),.38)}
+.nt0{font-size:18px;font-weight:430;line-height:24px;color:rgba(var(--ink),.62);white-space:nowrap}
+.nt0.cx{color:var(--ctx);font-weight:500}
+.hr1{height:1px;background:color-mix(in srgb,rgb(var(--area)) 34%,transparent)}
+.cw{display:grid;grid-template-columns:393px 393px 393px 330px;gap:0 22px;align-items:start}
+.cut{font-size:16px;line-height:22px;color:#4a4652;padding-top:4px}
+.cut h3{margin:0 0 6px;font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674}
+.cut p{margin:0 0 10px}.cut b{font-weight:650;color:#1c1a20}
+.cut .n{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674;margin-top:6px}
+.side{position:absolute;top:0;bottom:0;background:var(--bg);box-shadow:-1px 0 0 rgba(var(--ink),.12)}
+.big{font-size:92px;font-weight:700;letter-spacing:-.045em;line-height:92px}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+// h hero, t title, l label, s section word, r row, d detail, c context, e tess's line, v figures (numerals), n week numerals
+const OPT = {
+  A: { name: 'Heavier', hs: 56, hw: 640, ht: -.035, hl: 58,   ts: 44, tw: 650, tt: -.035, tl: 50,   ls: 13, lw: 800, lt: .08, lo: .66,
+       ss: 34, sw: 620, st: -.03,  rs: 21, rw: 520, rt: -.005,  ds: 18, dw: 430, dl: 24, do: .66,  cs: 21, cw: 480, cl: 28, cn: 21, cnw: 480, es: 19, ew: 500,
+       vs: 21, vwt: 640, ns: 17, nw: 650, hn: 56, hnw: 640, kb: 90, rule: 0, labmix: 0, keymix: 0, tint: 0, xp: 9 },
+  B: { name: 'Editorial steps', hs: 60, hw: 700, ht: -.04, hl: 62,   ts: 52, tw: 650, tt: -.03, tl: 56,   ls: 13, lw: 750, lt: .1, lo: .62,
+       ss: 34, sw: 650, st: -.03,  rs: 22, rw: 560, rt: -.005,  ds: 17, dw: 420, dl: 22, do: .62,  cs: 19, cw: 500, cl: 26, cn: 27, cnw: 700, es: 20, ew: 500,
+       vs: 30, vwt: 680, ns: 23, nw: 700, hn: 92, hnw: 700, kb: 90, rule: 1, labmix: 0, keymix: 0, tint: 0, xp: 9 },
+  C: { name: 'Area colour', hs: 60, hw: 700, ht: -.04, hl: 62,   ts: 52, tw: 650, tt: -.03, tl: 56,   ls: 13, lw: 750, lt: .1, lo: .62,
+       ss: 34, sw: 650, st: -.03,  rs: 22, rw: 560, rt: -.005,  ds: 17, dw: 420, dl: 22, do: .62,  cs: 19, cw: 500, cl: 26, cn: 27, cnw: 700, es: 20, ew: 500,
+       vs: 30, vwt: 680, ns: 23, nw: 700, hn: 92, hnw: 700, kb: 90, rule: 1, labmix: .72, keymix: .72, tint: .025, xp: 9 },
+};
+const tokenStyle = (o, dark) => Object.entries(o).filter(([k]) => k !== 'name').map(([k, v]) => `--${k}:${k === 'tint' && dark ? .03 : v}`).join(';');
+/* ---------- parts ---------- */
+const band = line => `<div class="soul"></div>${line ? `<div class="tl2">${line}</div>` : ''}`;
+const V = t => `<span class="k">${t}</span>`;
+const P = 'Private note';
+
+/* Notes (81): back word, Title, count context with BY THING, the writing line, one row per note */
+const NOTES = [
+  ['Sleep is training too', 'yesterday'], [P, 'Tue', 1], [`${V('Bench press')} felt heavy on the third set`, 'Tue'],
+  [`Ask the ${V('Landlord')} about the boiler`, 'Mon'], ['Ideas for the garage gym', 'Oct 12'], ['Tacos need more lime', 'Oct 11'],
+  [`${V('Landlord')} is back on Friday`, 'Oct 9'], ['Call Mum on Sunday', 'Oct 8'], [P, 'Oct 6', 1], [`Try a narrower grip on ${V('Bench press')}`, 'Oct 5'],
+  ['Book the dentist', 'Oct 3'], ['Pasta sauce, less salt', 'Oct 2'], ['Gym playlist', 'Oct 1'], ['Ask Sam about the trip', 'Sep 29'], ['Passport expires in March', 'Sep 27'],
+  ['Fix the bike light', 'Sep 25'], ['Try the new bakery', 'Sep 22'], ['Deadlift form, hips first', 'Sep 20'], ['Rent due on the 1st', 'Sep 18'], ['Ideas for the balcony', 'Sep 15'],
+];
+const noteRows = list => list.map(([t, w, pv]) => `<div class="row${pv ? ' pv' : ''}"><div class="l">${t}</div><div class="v">${w}</div></div>`).join('');
+const notes = () => `<div class="clip"><div class="pg" style="top:84px">
+    <h1 class="ttl"><span class="keyc">Notes</span></h1>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><div class="ctx"><b>20</b> notes, the latest yesterday</div></div>
+    <div class="wl" style="margin-top:6px">Write something. @ links a thing.</div><div class="hair"></div>
+    <div style="margin-top:10px">${noteRows(NOTES)}</div></div></div>
+  <div class="pin"></div><div class="lab back">‹ REVIEW</div><div class="lab sw ink" style="top:154px">BY THING</div>${band('Landlord and Bench press come up most.')}`;
+
+/* Home (41): the day, the context, the hero with its key word first, the Start key, Next */
+const NEXT = [['Read Designing Data-Intensive Applications', '9:10 pm'], ['Call mom', 'tomorrow'], ['Book physio', 'Sat']];
+const home = () => `<div class="pg" style="top:128px">
+    <div class="dayl">Friday afternoon</div>
+    <div class="ctx" style="margin-top:8px">today</div>
+    <div class="hero" style="margin-top:8px"><span class="keyc">Push A</span>, 6 pm</div>
+    <div class="keyw"><span class="lab ink">START PUSH A</span><i class="trk"></i></div>
+    <div class="sec first" style="margin-top:34px"><div class="secw">Next</div></div>
+    <div style="margin-top:4px">${NEXT.map(([t, w]) => `<div class="row"><div class="l">${t}</div><div class="v">${w}</div></div>`).join('')}</div></div>${band('Bench press is ready for 82.5 today.')}`;
+
+/* Training: a routine, its exercises (name, scheme, the weight as the numeral) */
+const EX = [['Bench press', '4 sets of 8', '82.5'], ['Overhead press', '3 sets of 8', '47.5'], ['Incline dumbbell', '3 sets of 10', '28'], ['Lateral raise', '3 sets of 12', '10'], ['Triceps pushdown', '3 sets of 12', '30'], ['Cable fly', '3 sets of 12', '15'], ['Face pull', '3 sets of 15', '20'], ['Dips', '3 sets of 10', '0']];
+const routine = () => `<div class="clip"><div class="pg" style="top:84px">
+    <h1 class="ttl"><span class="keyc">Push</span> A</h1>
+    <div class="ctx" style="margin-top:12px"><b>8</b> exercises, about 55 min</div>
+    <div class="sec first" style="margin-top:22px"><div class="lab" style="margin-bottom:6px">DAYS</div><div class="row" style="padding:2px 0"><div class="l" style="font-weight:calc(var(--rw) + 90)">Mon, Thu</div></div></div>
+    <div class="sec"><div class="lab" style="margin-bottom:2px">EXERCISES</div>
+    ${EX.map(([n, d, w]) => `<div class="rowx" style="padding:calc(var(--xp)*1px) 0 calc(var(--xp)*1px + 1px)"><div><div style="font-size:calc(var(--rs)*1px);font-weight:var(--rw);letter-spacing:calc(var(--rt)*1em);line-height:28px">${n}</div><div class="det">${d}</div></div><div class="fig">${w}<small>kg</small></div></div>`).join('')}</div></div></div><div class="pin"></div><div class="lab back">‹ ROUTINES</div>${band('Bench press is ready for 82.5 today.')}`;
+
+/* Review's week (46, 83): the figure as the numeral, bands with their week figure, the week's lines */
+const X = i => 49.4 * i, cx = i => X(i) + 24.7;
+const dab = (x, y, pig = 'var(--health)', t = .5) => `<div class="abs" style="left:${x - 13}px;top:${y - 11}px;width:26px;height:22px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:${pig};opacity:${t}"></div>`;
+const restm = (x, y) => `<div class="abs" style="left:${x - 16}px;top:${y + 4}px;width:32px;height:5px;background:rgba(var(--ink),.5);border-radius:3px 1px 2px 3px/2px 3px 1px 2px;clip-path:polygon(0 20%,30% 0,70% 15%,100% 30%,96% 100%,60% 80%,25% 100%,2% 70%)"></div>`;
+const ringm = (x, y) => `<div class="abs" style="left:${x - 11}px;top:${y - 9}px;width:22px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(var(--ink),.28)"></div>`;
+const bandR = (first, label, right, cells, figure) => `<div class="sec${first ? ' first' : ''}" style="${first ? '' : 'margin-top:12px'}"><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="lab">${label}</div>${figure ? `<div class="fig" style="line-height:20px;font-size:calc(var(--vs)*.8px)">${right}</div>` : `<div class="lab ink">${right}</div>`}</div><div class="cells">${cells}</div></div>`;
+const week = () => `<div class="lab abs" style="left:22px;top:52px;color:rgb(var(--ink))">REVIEW</div><div class="lab sw ink" style="top:104px">THE DAYS</div>
+  <div class="pg" style="top:140px"><div class="ctx">Oct 12 to 18</div>
+    <div style="display:flex;align-items:baseline;margin-top:0;line-height:calc(var(--hn)*1px)"><span style="font-size:calc(var(--hn)*1px);font-weight:var(--hnw);letter-spacing:-.045em" class="keyc">3</span><span class="ttl" style="margin-left:calc(var(--hn)*.1px);font-size:calc(var(--ts)*.78px);font-weight:var(--tw);line-height:1">sessions</span></div>
+    <div style="position:relative;height:22px;margin-top:6px">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => `<div class="dl" style="left:${X(i)}px;top:0;color:rgba(var(--ink),${i === 4 ? 1 : i < 4 ? .62 : .38})">${d}</div>`).join('')}</div>
+    ${bandR(true, 'TRAINING', '3 SO FAR', [dab(cx(0), 15), dab(cx(1), 15), dab(cx(2), 15), restm(cx(3), 9), ringm(cx(4), 15)].join(''))}
+    ${bandR(false, 'TASKS DONE', '18', [3, 4, 6, 2, 3].map((n, i) => `<div class="cn" style="left:${X(i)}px">${n}</div>`).join(''), 1)}
+    ${bandR(false, 'COOK, 2 OF 4', '', [1, 0, 1, 0, 0].map((on, i) => on ? `<div class="abs" style="left:${cx(i) - 14}px;top:14px;width:${[1, 0, 1, 0, 0][i + 1] ? 77 : 28}px;height:3px;background:var(--health);opacity:.5;border-radius:2px"></div>` : '').join(''))}
+    ${bandR(false, 'COOKED', '2', [dab(cx(0), 15, 'var(--now)'), dab(cx(3), 15, 'var(--now)')].join(''), 1)}
+    <div class="sec" style="margin-top:12px"><div class="lab" style="margin-bottom:5px">THE WEEK’S LINES</div>
+    ${[['Tue', 'Bench 85 × 8, a best.'], ['Wed', 'Row 70 × 10, a first.'], ['Thu', 'Chili cooked for 4.']].map(([d, t]) => `<div class="line"><i>${d}</i>${t}</div>`).join('')}</div></div>${band('Wednesday was the fullest day.')}`;
+
+/* =============== sheet 89: the calm pass =============== */
+/* calm parts: one row = one line. cr(name) rest row, led(name, detail) lead row with edge marker, run() adds the breath */
+const T = (t, o = {}) => `<span class="t${o.s ? ' s' : ''}">${t}</span>`;
+const cr = (t, o = {}) => `<div class="cr${o.dm ? ' dm' : ''}${o.fu ? ' fu' : ''}" style="${o.mt ? `margin-top:${o.mt}px` : ''}">${T(t, o)}</div>`;
+const led = (t, d, o = {}) => `<div class="cr ld" style="${o.mt ? `margin-top:${o.mt}px` : ''}"><i class="mk" ${d ? '' : 'style="bottom:8px"'}></i>${T(t, o)}${d ? `<div class="nt">${d}</div>` : ''}</div>`;
+/* rows: strings, or {lead, d} ; breath: +14 pt before every 4th row from the 5th, only in a run of 8 or more */
+const run = (rows, o = {}) => { const br = rows.length >= 8 && !o.nobreath; return rows.map((r, i) => { const mt = br && i > 0 && i % 4 === 0 ? 14 : 0; return typeof r === 'string' ? cr(r, { mt, dm: o.dm }) : led(r.t, r.d, { mt }); }).join(''); };
+const side = w => `<div class="lab sw ink" style="top:150px">${w}</div>`;
+const lw = (t, mt) => `<div class="lab" style="margin-top:${mt}px;margin-bottom:2px">${t}</div>`;
+const lwr = (t, mt) => `<div class="hr1" style="margin-top:${mt}px"></div><div class="lab" style="margin-top:12px;margin-bottom:2px">${t}</div>`;
+const hdr = (back, title, ctx, sw) => `<div class="lab back">${back}</div><div class="pg" style="top:84px"><h1 class="ttl">${title}</h1><div class="nt0 cx" style="margin-top:6px;line-height:26px;font-size:18px">${ctx}</div></div>${sw ? side(sw) : ''}`;
+const body = (inner, top = 190) => `<div class="clip"><div class="pg" style="top:${top}px">${inner}</div></div><div class="pin"></div>`;
+
+/* ---- Notes, 20 ---- */
+const N_WEEK = ['Sleep is training too', P, 'Bench press felt heavy on the third set', 'Ask the Landlord about the boiler', 'Ideas for the garage gym', 'Tacos need more lime', 'Landlord is back on Friday'];
+const N_EARLY = ['Call Mum on Sunday', P, 'Try a narrower grip on Bench press', 'Book the dentist', 'Pasta sauce, less salt', 'Gym playlist', 'Ask Sam about the trip', 'Passport expires in March', 'Fix the bike light', 'Try the new bakery', 'Deadlift form, hips first', 'Rent due on the 1st', 'Ideas for the balcony'];
+const writeLine = `<div class="cr ld wr"><i class="mk"></i>${T('Write something', { s: 1 })}</div>`;
+const notesA = (n = 20) => {
+  if (n === 3) return `${hdr('‹ REVIEW', `<span class="keyc">Notes</span>`, '3 notes, latest yesterday', 'BY THING')}${body(writeLine + run(N_WEEK.slice(0, 3)), 190)}`;
+  return `${hdr('‹ REVIEW', `<span class="keyc">Notes</span>`, '20 notes, latest yesterday', 'BY THING')}${body(writeLine + run(N_WEEK, { nobreath: 1 }) + lwr('EARLIER', 22) + `<div style="margin-top:2px"></div>` + run(N_EARLY), 190)}${band('Landlord and Bench press come up most.')}`;
+};
+const notesAfter = () => notesA(20);
+
+/* ---- Home ---- */
+const homeA = () => `<div class="pg" style="top:186px"><div class="nt0 cx" style="line-height:26px">today</div>
+  <div class="hero" style="margin-top:0"><span class="keyc">Push A</span>, 6 pm</div>
+  <div class="keyw"><span class="lab ink">START PUSH A</span><i class="trk"></i></div>
+  <div class="lab" style="margin-top:40px;margin-bottom:2px">NEXT</div>
+  ${led('Read the data book', '9:10 pm')}${cr('Call mom, tomorrow')}${cr('Book physio, Saturday')}</div>${band('Bench press is ready for 82.5 today.')}`;
+/* ---- Routine, 8 ---- */
+const EX8 = ['Bench press', 'Overhead press', 'Incline dumbbell', 'Lateral raise', 'Triceps pushdown', 'Cable fly', 'Face pull', 'Dips'];
+const routineA = () => `${hdr('‹ ROUTINES', `<span class="keyc">Push</span> A`, '8 exercises, Mon and Thu', 'LAST TIMES')}${body(run([{ t: 'Bench press', d: '4 sets of 8, 82.5 kg' }, ...EX8.slice(1)]), 190)}${band('Bench press is ready for 82.5 today.')}`;
+/* ---- Review's week ---- */
+const DAYS = [['Monday', 'Legs'], ['Tuesday', 'Pull A'], ['Wednesday', 'Push B'], ['Thursday', ''], ['Friday', 'today'], ['Saturday', ''], ['Sunday', '']];
+const weekA = () => `<div class="lab abs" style="left:22px;top:52px;color:rgb(var(--ink))">REVIEW</div>
+  <div class="pg" style="top:140px"><div class="nt0 cx" style="line-height:26px">Oct 12 to 18</div>
+  <div style="display:flex;align-items:baseline;line-height:92px;margin-top:6px"><span class="keyc" style="font-size:92px;font-weight:700;letter-spacing:-.045em">3</span><span class="ttl" style="margin-left:10px;font-size:40px;line-height:1">sessions</span></div>
+  <div style="margin-top:22px">${DAYS.map(([d, w], i) => i < 4 ? cr(w ? `${d}, ${w}` : d, { dm: !w }) : i === 4 ? `<div class="cr"><i class="mk"></i>${T('Friday')}<div class="nt">Push A, 6 pm</div></div>` : cr(d, { fu: 1 })).join('')}</div></div><div class="lab sw ink" style="top:143px">THE DAYS</div>${band('Wednesday was the fullest day.')}`;
+/* ---- Groceries, 30 ---- */
+const GR = [['Produce', ['Bananas', 'Limes', 'Cilantro', 'Onions', 'Tomatoes', 'Spinach', 'Avocados', 'Garlic', 'Ginger', 'Lemons']], ['Dairy and eggs', ['Milk', 'Eggs', 'Cheddar', 'Yoghurt', 'Butter']], ['Meat and fish', ['Chicken thighs', 'Ground beef', 'Salmon']], ['Dry goods', ['Rice', 'Black beans', 'Tortillas', 'Pasta', 'Oats', 'Coffee', 'Olive oil']], ['Frozen', ['Peas', 'Ice cream']], ['Home', ['Dish soap', 'Bin bags', 'Paper towels']]];
+const AMT = { Bananas: '6', Limes: '4', Cilantro: '1 bunch', Onions: '3', Tomatoes: '5', Spinach: '1 bag', Avocados: '3', Garlic: '2', Ginger: '1', Lemons: '3', Milk: '1 L', Eggs: '12', Cheddar: '200 g', Yoghurt: '500 g', Butter: '250 g', 'Chicken thighs': '1 kg', 'Ground beef': '500 g', Salmon: '2', Rice: '2 kg', 'Black beans': '3 cans', Tortillas: '1 pack', Pasta: '500 g', Oats: '1 kg', Coffee: '250 g', 'Olive oil': '1 L', Peas: '1 bag', 'Ice cream': '1', 'Dish soap': '1', 'Bin bags': '1 roll', 'Paper towels': '1' };
+const grocA = () => {
+  let h = '', first = true, idx = 0;
+  for (const [aisle, items] of GR) {
+    items.forEach((n, i) => { const mt = i === 0 && !first ? 28 : (i > 0 && i % 4 === 0 ? 14 : 0); h += first && i === 0 ? led(n, 'Produce, 6') : cr(n, { mt }); idx++; });
+    first = false;
+  }
+  return `${hdr('‹ KITCHEN', `<span class="keyc">Groceries</span>`, '30 to get, for 2 cooks', 'FOR WHAT')}${body(h, 190)}${band('Tacos need 9 of them.')}`;
+};
+const grocGlance = () => `<div style="opacity:.3">${grocA()}</div><div class="side" style="left:150px;right:0"><div class="lab abs" style="left:22px;top:150px;color:rgb(var(--area))">FOR WHAT</div>
+  <div class="abs" style="left:22px;top:186px;right:22px"><div style="display:flex;align-items:baseline"><span class="keyc big">30</span><span class="ttl" style="margin-left:10px;font-size:24px;line-height:1">to get</span></div>
+  <div class="nt0" style="margin-top:14px;white-space:normal;line-height:24px">Bananas, limes and 28 more</div><div class="nt0" style="margin-top:6px">for 2 cooks</div></div><div class="lab abs ink" style="left:22px;top:690px">ALL OF THEM</div></div>${band('')}`;
+const grocBefore = () => {
+  const forT = { Limes: 1, Cilantro: 1, Tomatoes: 1 }; let h = '';
+  GR.forEach(([a, items], gi) => { h += `<div class="sec${gi ? '' : ' first'}"><div class="secw">${a}</div></div><div style="margin-top:2px">${items.map(n => `<div class="row"><div class="l">${n}${forT[n] ? `<div class="det">for tacos</div>` : ''}</div><div class="v">${AMT[n]}</div></div>`).join('')}</div>`; });
+  return `<div class="clip"><div class="pg" style="top:84px"><h1 class="ttl"><span class="keyc">Groceries</span></h1><div class="ctx" style="margin-top:12px">30 to get, for tacos and 2 more</div><div style="margin-top:6px">${h}</div></div></div><div class="pin"></div><div class="lab back">‹ KITCHEN</div><div class="lab sw ink" style="top:154px">FOR WHAT</div>${band('Tacos need 9 of them.')}`;
+};
+/* ---- an exercise's set history, 12 ---- */
+const S1 = ['60 × 5', '80 × 5', '100 × 5', '120 × 3', '100 × 5', '90 × 8'], S2 = ['60 × 5', '80 × 5', '100 × 5', '115 × 3', '100 × 5', '90 × 7'];
+const histBefore = () => `<div class="clip"><div class="pg" style="top:84px"><h1 class="ttl"><span class="keyc">Squat</span></h1><div class="ctx" style="margin-top:12px">back and legs, with the glutes</div>
+  <div style="display:flex;gap:40px;margin-top:14px"><div><div class="fig" style="text-align:left;line-height:34px">134</div><div class="lab ink" style="margin-top:2px">BEST E1RM, KG</div></div><div><div class="fig" style="text-align:left;line-height:34px">120 × 3</div><div class="lab ink" style="margin-top:2px">BEST SET</div></div></div>
+  <div class="lab" style="margin-top:18px;display:flex;gap:18px"><span style="color:rgb(var(--ink))">HISTORY</span><span>REP MAXES</span><span>MUSCLES</span></div>
+  <div class="sec" style="margin-top:12px"><div class="lab" style="margin-bottom:4px">MONDAY, OCT 12</div>${S1.map((s, i) => `<div class="row"><div class="l">Set ${i + 1}</div><div class="v">${s}</div></div>`).join('')}</div>
+  <div class="sec" style="margin-top:10px"><div class="lab" style="margin-bottom:4px">MONDAY, OCT 5</div>${S2.map((s, i) => `<div class="row"><div class="l">Set ${i + 1}</div><div class="v">${s}</div></div>`).join('')}</div></div></div><div class="pin"></div><div class="lab back">‹ EXERCISES</div><div class="lab sw ink" style="top:154px">REP MAXES</div>${band('Next time: 122.5 for 3.')}`;
+const histA = (n = 12) => n === 3
+  ? `${hdr('‹ EXERCISES', `<span class="keyc">Face pull</span>`, '3 sets, in kg', 'REP MAXES')}${body(cr('20 × 12') + cr('20 × 12') + led('25 × 10', 'A best.'), 190)}`
+  : `${hdr('‹ EXERCISES', `<span class="keyc">Squat</span>`, '12 sets, in kg', 'REP MAXES')}${body(lw('MONDAY', 0) + S1.map((s, i) => i === 3 ? led(s, 'A best.') : cr(s)).join('') + lwr('OCT 5', 18) + S2.map(s => cr(s)).join(''), 190)}${band('Next time: 122.5 for 3.')}`;
+
+/* ---- the board ---- */
+const homeBefore = () => home(), routineBefore = () => routine(), weekBefore = () => week(), notesBefore = () => notes();
+const cutBox = h => `<div class="cut">${h}</div>`;
+const ROWS = [
+  { id: 'home', cls: 'train', h: 'HOME', p: 'Three rows, so a value may run in (a comma), never sit at the right. The lead row (the next thing) is the only one with a detail line.', b: homeBefore, a: homeA, c: 'obs',
+    cut: `<h3>CUT</h3><p><b>The day line</b> (“Friday afternoon”): gone, the phone shows it.</p><p><b>The wrapped title</b> “Read Designing Data-Intensive Applications”: a name is one line and fades at the edge; a tap opens it whole.</p><p><b>The right column</b> of times: 9:10 pm drops under the lead; “tomorrow” and “Saturday” run in after a comma (3 rows).</p><p><b>“Next” at 34</b>: now the 13 pt caps word, one type level less.</p><p class="n">BUDGET</p><p>1 hero, 1 context line, 1 section word, 1 lead, 0 hairlines (the key’s own line stays).</p>` },
+  { id: 'notes', cls: 'rev', h: 'NOTES, 20 ROWS (81)', p: 'The writing line is the lead row. 20 notes read as two runs: this week (7, no word) and EARLIER (13, quartered by breath). Right: the same screen at 3 rows.', b: notesBefore, a: notesAfter, c: () => notesA(3), cn: 'AFTER, 3 ROWS',
+    cut: `<h3>CUT</h3><p><b>Every time</b> (“yesterday”, “Tue”, “Oct 12”): into the tap and BY THING; the groups say it.</p><p><b>The heavier mention</b> (Landlord, Bench press at 600 inside a row): gone from the row, kept in BY THING.</p><p><b>“Write something. @ links a thing.”</b>: the line is now the lead row; the hint shows only when it is touched.</p><p><b>The hairline under the writing line</b>: one hairline now, above EARLIER only.</p><p class="n">BUDGET</p><p>1 title, 1 context line, 1 section word (+ the side word BY THING), 1 lead, 1 hairline.</p>` },
+  { id: 'routine', cls: 'train', h: 'A ROUTINE, 8 EXERCISES', p: 'Eight names in one column, quartered by breath after the 4th; Bench press leads with its scheme and weight under it.', b: routineBefore, a: routineA, c: 'obs',
+    cut: `<h3>CUT</h3><p><b>8 scheme lines</b> (“3 sets of 12”): 7 into the tap, 1 under the lead.</p><p><b>8 weights</b> at 30 pt on the right: the side page LAST TIMES (sheet 71), and the lead’s own “82.5 kg”.</p><p><b>DAYS and EXERCISES</b> caps words and their rule: the days join the context line (“Mon and Thu”); the list needs no word.</p><p><b>“about 55 min”</b>: into the side page.</p><p class="n">BUDGET</p><p>1 title, 1 context line, 0 section words, 1 lead, 0 hairlines.</p>` },
+  { id: 'week', cls: 'rev', h: 'REVIEW’S WEEK (46, 83)', p: 'A week of 7 days as 7 rows. The one numeral is the lead, so today only gets the edge marker, not a bigger row. Right: Obsidian.', b: weekBefore, a: weekA, c: 'obs',
+    cut: `<h3>CUT</h3><p><b>The day-letter strip</b> and its 4 bands (TRAINING, TASKS DONE, COOK, COOKED): each day is now a row; the bands’ figures go to the side page THE DAYS.</p><p><b>THE WEEK’S LINES</b>: a tap on a day; Tess’s band keeps one.</p><p><b>“3 SO FAR”, “18”, “2”</b>: side page.</p><p class="n">BUDGET</p><p>1 title (the label REVIEW), 1 context line, 0 section words, 1 numeral, 0 hairlines.</p>` },
+  { id: 'groc', cls: 'kit', h: 'GROCERIES, 30 ROWS', p: 'Aisles are whitespace (28 pt), not words. The lead is the next thing in the shop walk. Right: the glance on the side swipe, “and N more” from 4.', b: grocBefore, a: grocA, c: () => grocGlance(), cn: 'THE GLANCE, “AND N MORE”',
+    cut: `<h3>CUT</h3><p><b>6 aisle words</b> at 34 pt with rules: whitespace and the lead’s detail (“Produce, 6”).</p><p><b>30 amounts</b> on the right: the side FOR WHAT, run in under each cook (“Limes, 4”).</p><p><b>“for tacos” lines</b>: the same side.</p><p class="n">BUDGET</p><p>1 title, 1 context line, 0 section words, 1 lead, 0 hairlines.</p>` },
+  { id: 'hist', cls: 'train', h: 'AN EXERCISE’S SET HISTORY, 12 SETS', p: 'A set is its value, so the value is the row: “100 × 5”, run in, never a right column. Two workouts as two section words; the best set leads. Right: 3 sets.', b: histBefore, a: histA, c: () => histA(3), cn: 'AFTER, 3 ROWS',
+    cut: `<h3>CUT</h3><p><b>12 “Set n” labels</b>: the row is the set.</p><p><b>Two numerals and their labels</b> (BEST E1RM, BEST SET): into REP MAXES; the best set leads the list.</p><p><b>The HISTORY, REP MAXES, MUSCLES words</b>: the side word and the swipe.</p><p><b>The back-and-legs context</b>: shorter, “12 sets, in kg”.</p><p class="n">BUDGET</p><p>1 title, 1 context line, 2 section words, 1 lead, 1 hairline.</p>` },
+];
+const phone2 = (cls, fn, dark) => `<div><div class="ph ${dark ? 'obs' : 'por'} ${cls}" style="${tokenStyle(OPT.C, dark)}">${fn()}</div></div>`;
+if (!play) {
+  let b = `<div class="head"><h1>Sheet 89: calm, one column</h1><p>Kaushik’s ask: it still feels cluttered (text, size, style, layout), and two-column data is a lot with many rows. This is a layout and density system that works with any of 86’s A, B or C; the mockups use C’s tokens. Left, before: sheet 86 C. Then after: one line per row, a value only when it is the point, one lead row, whitespace and breath instead of columns and caps words. Third column: Obsidian or the same screen at another length; right: what was cut and where it went.</p></div><div class="cw">`;
+  b += `<div class="colh"><div class="opt">BEFORE</div><h2>Sheet 86, C</h2></div><div class="colh"><div class="opt">AFTER</div><h2>Calm</h2></div><div class="colh"><div class="opt">OBSIDIAN OR ANOTHER LENGTH</div><h2>Same rules</h2></div><div class="colh"><div class="opt">WHAT CHANGED</div><h2>Cut, and where</h2></div>`;
+  for (const r of ROWS) {
+    b += `<div class="rowh" style="grid-column:1/-1"><div class="opt">${r.h}</div><p>${r.p}</p></div>`;
+    b += phone2(r.cls, r.b) + phone2(r.cls, r.a) + (r.c === 'obs' ? phone2(r.cls, r.a, 1) : phone2(r.cls, r.c)) + cutBox(r.cut);
+    b += `<div class="cap">BEFORE, C</div><div class="cap">AFTER</div><div class="cap">${r.c === 'obs' ? 'AFTER, OBSIDIAN' : r.cn}</div><div></div>`;
+  }
+  document.getElementById('board').innerHTML = b + `</div>`;
+  document.fonts.ready.then(() => { document.body.dataset.start = '1'; document.body.dataset.done = '1'; });
+}
+else {
+  /* the clip: Groceries, 30 rows, two columns fold into one; the lead moves; the amounts live on the side */
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = '';
+  const all = GR.flatMap(([a, items], g) => items.map((n, i) => ({ n, g, i })));
+  let html = '';
+  GR.forEach(([a, items], g) => {
+    html += `<div class="aw" data-g="${g}"><div class="hrr"></div><div class="secw" style="font-size:34px;font-weight:650;letter-spacing:-.03em;line-height:40px">${a}</div></div>`;
+    items.forEach((n, i) => { html += `<div class="rr" data-i="${all.findIndex(x => x.n === n)}" data-first="${i === 0 ? 1 : 0}"><i class="mk"></i><div class="rl"><span class="rn">${n}</span><span class="rv">${AMT[n]}</span></div><div class="rd">${all.findIndex(x => x.n === n) === 0 ? 'Produce, 6' : ''}</div></div>`; });
+  });
+  const css = document.createElement('style');
+  css.textContent = `.aw{overflow:hidden;position:relative}.aw .hrr{height:1px;background:color-mix(in srgb,rgb(var(--area)) 34%,transparent);margin-top:20px}.aw .secw{padding-top:11px}
+  .rr{position:relative}.rl{display:flex;justify-content:space-between;align-items:baseline;white-space:nowrap}.rn{font-size:22px;font-weight:560;letter-spacing:-.005em;line-height:28px}
+  .rv{font-size:17px;font-weight:560;color:rgba(var(--ink),.62)}.rd{overflow:hidden;font-size:18px;font-weight:430;line-height:24px;color:rgba(var(--ink),.62);height:0;opacity:0}
+  .rr .mk{position:absolute;left:-13px;top:8px;bottom:8px;width:3px;border-radius:1.5px;background:color-mix(in srgb,rgb(var(--area)) 72%,rgb(var(--ink)));opacity:0}
+  .sd{position:absolute;left:0;top:0;width:393px;height:852px;background:var(--bg);box-shadow:-1px 0 0 rgba(var(--ink),.12);transform:translateX(393px)}`;
+  document.head.appendChild(css);
+  w.innerHTML = `<div class="ph por kit" id="ph" style="${tokenStyle(OPT.C)}"><div id="front"><div class="clip"><div class="pg" style="top:84px"><h1 class="ttl"><span class="keyc">Groceries</span></h1>
+    <div style="position:relative;height:26px;margin-top:6px"><div class="ctx" id="c1" style="position:absolute;left:0;top:0">30 to get, for tacos and 2 more</div><div class="nt0 cx" id="c2" style="position:absolute;left:0;top:0;line-height:26px;opacity:0">30 to get, for 2 cooks</div></div>
+    <div style="height:556px;overflow:hidden;margin-top:6px"><div id="scr">${html}</div></div></div></div><div class="pin"></div><div class="lab back">‹ KITCHEN</div><div class="lab sw ink" id="swd" style="top:154px">FOR WHAT</div></div>
+    <div class="sd" id="sd"><div class="clip"><div class="pg" style="top:84px"><h1 class="ttl"><span class="keyc">Groceries</span></h1><div class="nt0 cx" style="margin-top:6px;line-height:26px">2 cooks</div>
+    <div style="margin-top:6px"><div class="lab" style="margin-top:28px;margin-bottom:2px">TACOS</div>${['Limes, 4', 'Cilantro, 1 bunch', 'Tortillas, 1 pack', 'Avocados, 3', 'Tomatoes, 5'].map(t => cr(t)).join('')}<div class="hr1" style="margin-top:22px"></div><div class="lab" style="margin-top:12px;margin-bottom:2px">CHILI</div>${['Black beans, 3 cans', 'Onions, 3', 'Garlic, 2', 'Ground beef, 500 g'].map(t => cr(t)).join('')}</div></div></div><div class="pin"></div><div class="lab back">‹ KITCHEN</div><div class="lab sw ink" style="top:154px">GROCERIES</div>${band('Tacos need 9 of them.')}</div>
+    <div class="soul" id="soul"></div><div class="tl2" id="tl">Tacos need 9 of them.</div><div class="mode" id="mode">TWO COLUMNS</div></div>`;
+  const rows = [...document.querySelectorAll('.rr')], aws = [...document.querySelectorAll('.aw')];
+  const S = { vc: 1, aw: 1, br: 0, L: rows.map(() => 0), dn: rows.map(() => 0), sc: 0, sd: 0 };
+  const render = () => {
+    rows.forEach((r, k) => {
+      const L = S.L[k], rn = r.querySelector('.rn'), rv = r.querySelector('.rv'), rd = r.querySelector('.rd'), mk = r.querySelector('.mk');
+      rn.style.fontSize = 22 + 6 * L + 'px'; rn.style.fontWeight = 560 + 90 * L; rn.style.lineHeight = 28 + 6 * L + 'px';
+      rv.style.opacity = S.vc; rv.style.transform = `translateX(${(1 - S.vc) * 26}px)`;
+      rd.style.height = 24 * L + 'px'; rd.style.opacity = L; mk.style.opacity = L;
+      r.style.paddingTop = 8 + S.vc + 'px'; r.style.paddingBottom = 8 + S.vc + 'px';
+      r.style.opacity = 1 - .54 * S.dn[k];
+      const i = +r.dataset.i, inG = rows.slice(0, k).filter(q => q.dataset.g).length;
+      const idxInG = +r.dataset.first ? 0 : null;
+    });
+    /* breath: every 4th row within a group, from the 5th */
+    let c = 0; rows.forEach(r => { if (+r.dataset.first) c = 0; r.style.marginTop = (c > 0 && c % 4 === 0 ? 14 * S.br : 0) + 'px'; c++; });
+    aws.forEach((a, g) => { const full = 71, calm = g ? 28 : 0; a.style.height = calm + (full - calm - (g ? 0 : 15)) * S.aw + 'px'; a.style.opacity = g ? 1 : S.aw; a.querySelector('.hrr').style.opacity = S.aw; a.querySelector('.secw').style.opacity = S.aw; if (!g) a.style.height = 71 * S.aw + 'px'; });
+    document.getElementById('scr').style.transform = `translateY(${-S.sc}px)`;
+    document.getElementById('sd').style.transform = `translateX(${393 * (1 - S.sd)}px)`;
+    document.getElementById('front').style.transform = `translateX(${-70 * S.sd}px)`;
+  };
+  render();
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const tw = (ms, f) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(ease(q)); render(); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  const to = (key, v, ms, idx) => { const get = () => idx === undefined ? S[key] : S[key][idx]; const a = get(); return tw(ms, q => { const val = a + (v - a) * q; idx === undefined ? S[key] = val : S[key][idx] = val; }); };
+  const mode = document.getElementById('mode'), setMode = t => { mode.style.transition = 'opacity .18s'; mode.style.opacity = 0; setTimeout(() => { mode.textContent = t; mode.style.opacity = 1; }, 220); };
+  const fade = (id, v, ms) => { const e = document.getElementById(id); e.style.transition = `opacity ${ms}ms`; e.style.opacity = v; };
+  const tl = document.getElementById('tl'), sayT = t => { tl.style.transition = 'opacity .2s'; tl.style.opacity = 0; setTimeout(() => { tl.textContent = t; tl.style.opacity = 1; }, 220); };
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await wait(1400);
+    setMode('ONE COLUMN'); fade('c1', 0, 700); fade('c2', 1, 700);
+    await Promise.all([to('vc', 0, 1500), to('aw', 0, 1500), to('br', 1, 1500)]);
+    await wait(500);
+    setMode('THE LEAD ROW'); await to('L', 1, 700, 0); await wait(1000);
+    setMode('THE LEAD MOVES');
+    sayT('Bananas, in the basket.');
+    await Promise.all([to('L', 0, 600, 0), to('dn', 1, 600, 0), to('L', 1, 600, 1)]); await wait(900);
+    sayT('Limes, in the basket.');
+    await Promise.all([to('L', 0, 600, 1), to('dn', 1, 600, 1), to('L', 1, 600, 2)]); await wait(1000);
+    setMode('A LONG RUN, QUARTERED');
+    await to('sc', 420, 2200); await wait(400);
+    await to('sc', 0, 1000); await wait(300);
+    setMode('THE AMOUNTS ARE ONE SWIPE AWAY');
+    sayT('Tacos need 9 of them.');
+    await to('sd', 1, 700); await wait(2200);
+    await to('sd', 0, 600); await wait(600);
+    document.body.dataset.done = '1';
+  });
+}
+
+</script>
+</body></html>

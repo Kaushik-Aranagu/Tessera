@@ -1,0 +1,327 @@
+<title>Money Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: the Money landing with the flow in the standard slot (paper and black), then the flow large as a sandbox with the money moves. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#3F7A62;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin:0}
+main{max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:64ch}
+.bar{display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w:hover{color:var(--fg)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input[type=range]{width:min(320px,100%);accent-color:var(--acc)}
+.lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2)}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--ink3:#A9A49B;--money:#3F7A62;--clay:#9C4B2C;--teal:#1E6E77;--gold:#7E6A1E;--kitchen:#93611A;--slate:#34506F;--training:#0B62AE;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none}
+.phone.black{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#6B675F;--money:#8DBFA7;--clay:#E2A07F;--teal:#84C3C9;--gold:#D9C27A;--kitchen:#C49A5E;--slate:#A7BCD6;--training:#8FB0EE}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--money)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.n{font-family:var(--num);font-weight:400}
+.key{position:absolute;left:0;top:196px;width:402px;height:182px;display:block;touch-action:none;cursor:pointer}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:22px}
+.ups{position:absolute;left:24px;right:24px;top:424px}
+.up{height:52px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:540px;display:flex;flex-wrap:wrap;gap:0 22px}
+.door{font-size:24px;font-weight:600;color:var(--ink2);padding:6px 0}
+.door.on{color:var(--money)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--money);padding:8px 0}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phone.black .tessw{color:#C79B7C}
+.big{width:100%;max-width:1206px;aspect-ratio:402/182;display:block;touch-action:none;cursor:pointer}
+.moves{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:0 40px}
+.move{padding:14px 0;border-top:1px solid var(--line)}
+.move b{display:block;font-weight:600;margin-bottom:2px}
+.move span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 18px;align-items:center}
+.status{min-height:26px;color:var(--fg2);font-size:15px;margin-top:8px}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Money / sheet 269</h2>
+<h1>In, and out.</h1>
+<p class="lede">Money's whole story is what comes in and where it goes. Read it left to right: income pours in from a pipe; this month's money sits in the jar on the shelf; every payment runs out along a glass tube and drops into the vessel for its kind of spending, where it stays for the month in bands for each thing. Saving drops into a honey pot. A faint line on every vessel marks last month, so you can see at a glance what grew and what didn't. Nothing is coloured good or bad.</p>
+<div class="bar" role="group" aria-label="Controls">
+<span class="lbl">Hour</span>
+<input type="range" id="hour" min="0" max="24" step="0.05" value="17.6" aria-label="Hour of day">
+<span id="hourv" class="lbl" style="min-width:64px">5:36 pm</span>
+</div>
+</header>
+
+<section aria-label="Landing">
+<div class="phones">
+ <div><div class="slot" data-fit><div class="phone" id="ph1">
+  <div class="sbar"><span class="clk">5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b><span class="n" data-in>4,380</span> in,</b> <b><span class="n" data-out>2,386</span> out</b> so far. <b style="color:var(--kitchen)">Food</b> is under last month; <b style="color:var(--gold)">Japan</b> got <span class="n" data-saved>400</span>.</div>
+  <canvas class="key" data-jar="small"></canvas>
+  <div class="kline" data-cap>Tap a vessel to see what is in it.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86.20</span>&nbsp;into&nbsp;<b style="color:var(--kitchen)">Food</b>, just now.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;goes out Monday.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Paper.</b> In from the left, out to the right; the light is the real hour.</p></div>
+
+ <div><div class="slot" data-fit><div class="phone black" id="ph2">
+  <div class="sbar"><span class="clk">5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say"><b><span class="n" data-in>4,380</span> in,</b> <b><span class="n" data-out>2,386</span> out</b> so far. <b style="color:var(--kitchen)">Food</b> is under last month; <b style="color:var(--gold)">Japan</b> got <span class="n" data-saved>400</span>.</div>
+  <canvas class="key" data-jar="small" data-black="1"></canvas>
+  <div class="kline" data-cap>Tap a vessel to see what is in it.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86.20</span>&nbsp;into&nbsp;<b style="color:var(--kitchen)">Food</b>, just now.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;goes out Monday.</div></div>
+  <div class="doors"><span class="door on">October</span><span class="door">In</span><span class="door">Out</span><span class="door">Saving</span></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Black.</b> The same flow, dissolving into black.</p></div>
+</div>
+</section>
+
+<section aria-label="Sandbox">
+<h2>Run it</h2>
+<canvas class="big" id="big" data-jar="big"></canvas>
+<div class="status" id="status" aria-live="polite">Tap a vessel to see what is in it. Tap the jar for in and out.</div>
+<div class="ctl" style="margin-top:6px">
+<button class="w" data-act="income">Side job paid 180</button>
+<button class="w" data-act="groceries">Groceries 86.20</button>
+<button class="w" data-act="coffee">Coffee 5.40</button>
+<button class="w" data-act="drinks">Drinks 42</button>
+<button class="w" data-act="bill">Phone bill 45</button>
+<button class="w" data-act="save">Save 100 for Japan</button>
+<button class="w" data-act="reset">Reset</button>
+</div>
+</section>
+
+<section aria-label="The moves">
+<h2>What it does</h2>
+<div class="moves">
+<div class="move"><b>In pours in</b><span>Pay, a refund, a side job: water gushes from the pipe into the jar, bubbles rise, the tag counts up the month's "in".</span></div>
+<div class="move"><b>Out runs out</b><span>A payment opens the tap; a slug of water runs along the glass tube to its kind and drops into that vessel, which glows as it fills. The name and amount float up and fade.</span></div>
+<div class="move"><b>Kinds, and the things inside</b><span>Home, Food, Body, Subscriptions, Going out: each vessel holds this month in bands, one per thing (Rent, Electricity, Phone). Tap it: the bands are named.</span></div>
+<div class="move"><b>Saving becomes honey</b><span>Saving runs down the same tube but drops into the honey pot, turning gold as it falls.</span></div>
+<div class="move"><b>Last month, faintly</b><span>A dashed hairline on every vessel: where last month ended. Accountability without judgement; amounts never turn red or green.</span></div>
+<div class="move"><b>What is left</b><span>The jar on the shelf is what is still in hand: in minus out. Tap it for the month's in and out.</span></div>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var TAU=Math.PI*2;
+var Q={};try{location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var p=kv.split('=');Q[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||'')})}catch(e){}
+function lerp(a,b,u){return a+(b-a)*u}
+function clamp(v,a,b){return v<a?a:v>b?b:v}
+function hex(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]}
+function mixc(a,b,u){return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)]}
+function rgba(c,a){return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(a==null?1:a)+')'}
+function seed(n){var a=Math.sin(n*127.1+311.7)*43758.5453;return a-Math.floor(a)}
+function ease(u){u=clamp(u,0,1);return u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2}
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+function fmt2(n){return n%1?n.toFixed(2):fmt(n)}
+
+// ---------- the month (Tue 14 Oct). Kinds wear the room or kinds palette (sheet 241).
+function fresh(){return {
+ ins:[{n:'Salary',v:4200},{n:'Side job',v:180}],
+ kinds:[
+  {id:'home',n:'Home',col:'#B8664A',dk:'#E2A07F',x:150,w:30,h:50,last:1277,items:[{n:'Rent',v:1150},{n:'Electricity',v:82}]},
+  {id:'food',n:'Food',col:'#C08A3C',dk:'#C49A5E',x:190,w:26,h:40,last:520,items:[{n:'Groceries',v:268},{n:'Eating out',v:144}]},
+  {id:'body',n:'Body',col:'#3E7CC0',dk:'#8FB0EE',x:224,w:20,h:30,last:96,items:[{n:'Gym',v:49},{n:'Badminton',v:47}]},
+  {id:'subs',n:'Subscriptions',short:'Subs',col:'#2E8A93',dk:'#84C3C9',x:252,w:17,h:24,last:63,items:[{n:'Streaming',v:18},{n:'Music',v:11},{n:'Apps',v:34}]},
+  {id:'out',n:'Going out',col:'#5A7896',dk:'#A7BCD6',x:282,w:22,h:34,last:210,items:[{n:'Drinks',v:104},{n:'Cinema',v:34}]},
+  {id:'save',n:'Japan',col:'#E2B33E',dk:'#D9C27A',x:322,w:30,h:44,last:300,honey:1,items:[{n:'October',v:400}]}]}}
+var M=fresh();
+function kind(id){return M.kinds.filter(function(k){return k.id===id})[0]}
+function sum(a){return a.reduce(function(s,x){return s+x.v},0)}
+function inT(){return sum(M.ins)}
+function outT(){return M.kinds.reduce(function(s,k){return s+sum(k.items)},0)}
+function hand(){return inT()-outT()}
+
+// ---------- light by hour (indoors)
+var KEYS=[{h:0,wall:'#2A2F3A',warm:0,amb:.25},{h:6,wall:'#8E8F98',warm:.4,amb:.6},{h:8.5,wall:'#E9E3D6',warm:.25,amb:.95},{h:13,wall:'#EEE9DE',warm:.1,amb:1},{h:17.5,wall:'#EBDCC6',warm:.55,amb:.9},{h:19.4,wall:'#B9A08C',warm:.9,amb:.6},{h:21,wall:'#3A3A46',warm:.2,amb:.3},{h:24,wall:'#2A2F3A',warm:0,amb:.25}];
+function light(h){var i=0;while(i<KEYS.length-2&&KEYS[i+1].h<=h)i++;var a=KEYS[i],b=KEYS[i+1],u=ease((h-a.h)/(b.h-a.h));return {wall:mixc(hex(a.wall),hex(b.wall),u),warm:lerp(a.warm,b.warm,u),amb:lerp(a.amb,b.amb,u)}}
+var W={hour:Q.hour?+Q.hour:17.6,t:0};
+
+// ---------- geometry (scene units; canvas is 402 wide, 24 of bleed each side)
+var JAR={l:30,r:102,top:22,bot:94,cx:66,cap:5200};       // this month's money, on a shelf
+var SHELF={y:94,l:16,r:116};
+var TUBE={x0:110,y0:90,x1:346,y1:98};                    // glass tube, falling gently to the right
+var TABLE=152;
+var PIPE={y:8};
+function tubeY(x){return TUBE.y0+(TUBE.y1-TUBE.y0)*(x-TUBE.x0)/(TUBE.x1-TUBE.x0)}
+function vessel(k){return {l:k.x-k.w/2,r:k.x+k.w/2,bot:TABLE,top:TABLE-k.h}}
+function vscale(k){return Math.max(k.last,sum(k.items))*1.18}
+
+function Flow(cv){
+ var self=this;this.cv=cv;this.g=cv.getContext('2d');
+ this.disp={hand:hand(),inT:inT(),kinds:M.kinds.map(function(k){return k.items.map(function(it){return it.v})})};
+ this.wave=new Float32Array(14);this.wv=new Float32Array(14);this.fx=[];this.runs=[];this.gush=[];this.glow=[];this.floats=[];this.open=null;this.jarOpen=false;
+ this.size();addEventListener('resize',function(){self.size()});
+ cv.addEventListener('pointerup',function(e){self.tap(e)});
+}
+Flow.prototype.size=function(){var r=this.cv.getBoundingClientRect();var dpr=Math.max(2,window.devicePixelRatio||1);var w=Math.max(1,r.width||402);this.cv.width=Math.round(w*dpr);this.cv.height=Math.round(w*182/402*dpr);this.s=this.cv.width/402;this.mask=null};
+Flow.prototype.pt=function(e){var r=this.cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*402-24,y:(e.clientY-r.top)/r.height*182}};
+Flow.prototype.pageColor=function(){var el=this.cv.closest('.phone')||document.body;var c=getComputedStyle(el).backgroundColor;var m=c.match(/\d+(\.\d+)?/g);return m?[+m[0],+m[1],+m[2]]:[247,245,241]};
+Flow.prototype.tap=function(e){var p=this.pt(e);
+ for(var i=0;i<M.kinds.length;i++){var k=M.kinds[i],v=vessel(k);if(p.x>v.l-6&&p.x<v.r+6&&p.y>v.top-10&&p.y<v.bot+16){var same=this.open===k.id;all(function(f){f.open=same?null:k.id;f.jarOpen=false});
+   say(same?'Tap a vessel to see what is in it.':k.n+': '+fmt(sum(k.items))+' this month ('+k.items.map(function(it){return it.n+' '+fmt(it.v)}).join(', ')+'). Last month '+fmt(k.last)+'.');return}}
+ if(p.x>JAR.l-6&&p.x<JAR.r+6&&p.y>JAR.top-10&&p.y<JAR.bot+6){var on=!this.jarOpen;all(function(f){f.jarOpen=on;f.open=null});say('In '+fmt(inT())+' ('+M.ins.map(function(x){return x.n+' '+fmt(x.v)}).join(', ')+'). Out '+fmt(outT())+'. In hand '+fmt(hand())+'.')}};
+
+// ---------- actions: the state changes once, every canvas plays it
+var flows=[];function all(f){flows.forEach(f)}
+function income(n,v){M.ins.push({n:n,v:v});all(function(f){f.gush.push({t0:W.t,dur:2,v:v,n:n});f.kick(1)});say(n+', '+fmt2(v)+' in. In this month: '+fmt(inT())+'.');syncText()}
+function pay(kid,n,v){var k=kind(kid),it=k.items.filter(function(x){return x.n===n})[0];if(!it){it={n:n,v:0};k.items.push(it);all(function(f){f.disp.kinds[M.kinds.indexOf(k)].push(0)})}it.v+=v;
+ all(function(f){f.runs.push({kid:kid,t0:W.t,v:v,n:n});f.kick(-.6)});say(n+', '+fmt2(v)+', into '+k.n+'. '+k.n+' this month: '+fmt(sum(k.items))+' (last month '+fmt(k.last)+').');syncText()}
+Flow.prototype.kick=function(a){for(var i=0;i<this.wv.length;i++)this.wv[i]+=a*(i<7?1:-1)*(1-Math.abs(i-6.5)/7)*2.4+(seed(i+W.t)-.5)*a};
+
+// ---------- painting
+Flow.prototype.draw=function(dt){
+ var g=this.g,s=this.s,t=W.t;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,this.cv.width,this.cv.height);g.setTransform(s,0,0,s,24*s,0);
+ var L=light(W.hour),bg=this.pageColor(),dark=L.amb<.45,pd=(bg[0]+bg[1]+bg[2])<300;
+ // displayed numbers ease (water moves, never jumps); a vessel only rises once its water arrives
+ var D=this.disp,k=Math.min(1,(dt||0)*2.4),self=this;
+ var arriving={};this.runs.forEach(function(r){var e=W.t-r.t0;if(e<1.55){arriving[r.kid]=(arriving[r.kid]||0)+r.v*(1-clamp((e-.9)/.65,0,1))}});
+ var gushing=this.gush.reduce(function(a,x){var e=W.t-x.t0;return a+(e<x.dur?x.v*(1-clamp(e/x.dur,0,1)):0)},0);
+ var outShown=0;M.kinds.forEach(function(kk,i){var pending=arriving[kk.id]||0,acc=0;kk.items.forEach(function(it,j){var tgt=it.v;if(pending>0&&j===kk.items.length-1)tgt=Math.max(0,it.v-pending);if(D.kinds[i][j]==null)D.kinds[i][j]=0;D.kinds[i][j]+=(tgt-D.kinds[i][j])*k;acc+=D.kinds[i][j]});outShown+=acc});
+ var leaving=this.runs.reduce(function(a,r){var e=W.t-r.t0;return a+(e<.45?r.v*(1-clamp(e/.45,0,1)):0)},0);
+ D.inT+=(inT()-gushing-D.inT)*k;D.hand+=(hand()-gushing+leaving-D.hand)*k;
+ // wall with window light, a lamp at night, the table
+ var wall=mixc(L.wall,bg,.18);var wg=g.createLinearGradient(0,0,0,150);wg.addColorStop(0,rgba(mixc(wall,bg,.35)));wg.addColorStop(1,rgba(wall));g.fillStyle=wg;g.fillRect(-24,0,402,152);
+ if(L.amb>.5){var f=clamp((W.hour-6)/14,0,1),wx=lerp(330,-20,f);g.save();g.globalAlpha=(L.amb-.5)*.85;var wl=g.createLinearGradient(wx,0,wx+90,0);var wc=mixc([255,246,224],[255,206,150],L.warm);wl.addColorStop(0,rgba(wc,0));wl.addColorStop(.3,rgba(wc,.5));wl.addColorStop(.7,rgba(wc,.45));wl.addColorStop(1,rgba(wc,0));g.fillStyle=wl;g.beginPath();g.moveTo(wx+30,6);g.lineTo(wx+120,6);g.lineTo(wx+80,152);g.lineTo(wx-10,152);g.closePath();g.fill();g.restore()}
+ if(dark){var lp=g.createRadialGradient(250,30,4,250,30,190);lp.addColorStop(0,'rgba(255,196,120,.4)');lp.addColorStop(1,'rgba(255,196,120,0)');g.fillStyle=lp;g.fillRect(-24,0,402,182)}
+ var tb=mixc(mixc(hex('#C9A57E'),hex('#8C6A4C'),.3),[24,26,32],(1-L.amb)*.75);var tg=g.createLinearGradient(0,TABLE-2,0,182);tg.addColorStop(0,rgba(mixc(tb,[255,240,220],.18)));tg.addColorStop(1,rgba(mixc(tb,[0,0,0],.12)));g.fillStyle=tg;g.fillRect(-24,TABLE-2,402,34);
+ g.strokeStyle=rgba(mixc(tb,[255,255,255],.3),.6);g.lineWidth=.8;g.beginPath();g.moveTo(-24,TABLE-1.5);g.lineTo(378,TABLE-1.5);g.stroke();
+ for(var gr=0;gr<6;gr++){g.strokeStyle=rgba(mixc(tb,[0,0,0],.12),.3);g.lineWidth=.5;g.beginPath();g.moveTo(-24,TABLE+4+gr*4+seed(gr)*2);g.bezierCurveTo(100,TABLE+3+gr*4,250,TABLE+6+gr*4,378,TABLE+4+gr*4);g.stroke()}
+ // shelf on brackets
+ var wood=mixc(hex('#7B5A40'),[20,20,24],(1-L.amb)*.6);g.fillStyle=rgba([30,24,20],.14);g.fillRect(SHELF.l+2,SHELF.y+4,SHELF.r-SHELF.l,5);g.fillStyle=rgba(wood);g.fillRect(SHELF.l,SHELF.y,SHELF.r-SHELF.l,4);g.fillStyle=rgba(mixc(wood,[255,230,200],.22));g.fillRect(SHELF.l,SHELF.y,SHELF.r-SHELF.l,1);
+ [SHELF.l+12,SHELF.r-14].forEach(function(bx){g.strokeStyle=rgba(mixc(wood,[0,0,0],.2));g.lineWidth=1.4;g.beginPath();g.moveTo(bx,SHELF.y+4);g.lineTo(bx,SHELF.y+16);g.lineTo(bx+8,SHELF.y+4);g.stroke()});
+ // income pipe from beyond the left edge, down into the jar
+ this.pipe(g,L,t,dark);
+ this.jar(g,L,t,dt,D,pd,dark);
+ this.tube(g,L,t,dark,pd);
+ for(var i=0;i<M.kinds.length;i++)this.vessel(g,i,L,t,D,pd,dark);
+ this.flowsDraw(g,L,t,dt,D,dark);
+ this.effects(g,t,dt,pd);
+ if(this.jarOpen)this.jarLabels(g,D,pd);
+ this.haze(g,bg);this.dissolve(g);
+};
+Flow.prototype.pipe=function(g,L,t,dark){var cop=mixc(hex('#B87A4E'),[30,26,24],dark?.5:0),y=PIPE.y,x1=JAR.cx-8;
+ var pg=g.createLinearGradient(0,y-3,0,y+3);pg.addColorStop(0,rgba(mixc(cop,[255,230,200],.35)));pg.addColorStop(.5,rgba(cop));pg.addColorStop(1,rgba(mixc(cop,[0,0,0],.3)));g.fillStyle=pg;g.fillRect(-30,y-3,x1+30,6);
+ g.beginPath();g.moveTo(x1,y-3);g.quadraticCurveTo(x1+8,y-3,x1+8,y+5);g.lineTo(x1+2,y+5);g.quadraticCurveTo(x1+2,y+3,x1,y+3);g.closePath();g.fill();g.fillRect(x1+1.5,y+5,7,3);
+ g.fillStyle=rgba(mixc(cop,[0,0,0],.25));[4,40].forEach(function(px){g.fillRect(px,y-3.6,2.4,7.2)});
+ // the tag of the month's in
+ g.fillStyle=dark?'rgba(236,230,214,.9)':'rgba(60,56,48,.8)';g.font='600 5.4px Figtree, system-ui, sans-serif';g.textAlign='left';g.fillText('IN',12,y+11.5);g.font='400 8px Outfit, Figtree, sans-serif';g.fillText(fmt(this.disp.inT),20,y+12)};
+Flow.prototype.surface=function(j,y,t,dt){var n=this.wave.length;if(dt){for(var i=0;i<n;i++){var lft=this.wave[i>0?i-1:i],rgt=this.wave[i<n-1?i+1:i];this.wv[i]+=(-this.wave[i]*30+(lft+rgt-2*this.wave[i])*60-this.wv[i]*2.4)*dt}for(var i2=0;i2<n;i2++)this.wave[i2]+=this.wv[i2]*dt}
+ var pts=[];for(var x=0;x<n;x++)pts.push([j.l+(j.r-j.l)*x/(n-1),y+this.wave[x]+Math.sin(t*1.6+x*.8)*.4]);return pts};
+function jarPath(g,j){var l=j.l,r=j.r,b=j.bot,tp=j.top,rad=8;g.beginPath();g.moveTo(l+10,tp-6);g.lineTo(l+10,tp-1);g.quadraticCurveTo(l,tp,l,tp+rad);g.lineTo(l,b-rad);g.quadraticCurveTo(l,b,l+rad,b);g.lineTo(r-rad,b);g.quadraticCurveTo(r,b,r,b-rad);g.lineTo(r,tp+rad);g.quadraticCurveTo(r,tp,r-10,tp-1);g.lineTo(r-10,tp-6);g.closePath()}
+Flow.prototype.jar=function(g,L,t,dt,D,pd,dark){var j=JAR,h=j.bot-j.top,y=j.bot-clamp(D.hand/j.cap,0,1)*h;
+ g.save();jarPath(g,j);g.clip();g.fillStyle=rgba(mixc([235,242,240],[40,48,56],dark?.6:0),.25);g.fillRect(j.l-2,j.top-8,j.r-j.l+4,h+10);
+ var wc=mixc([142,196,176],[40,72,70],dark?.55:0);var pts=this.surface(j,y,t,dt);var wg=g.createLinearGradient(0,y,0,j.bot);wg.addColorStop(0,rgba(mixc(wc,[255,255,255],.3),.85));wg.addColorStop(1,rgba(wc,.92));g.fillStyle=wg;g.beginPath();g.moveTo(j.l-2,j.bot+2);g.lineTo(j.r+2,j.bot+2);for(var i=pts.length-1;i>=0;i--)g.lineTo(pts[i][0],pts[i][1]);g.closePath();g.fill();
+ g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=.7;g.beginPath();pts.forEach(function(p,i){i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])});g.stroke();
+ for(var b=0;b<5;b++){var u=((t*.2+seed(b))%1),bx=j.l+8+seed(b+3)*56,by=lerp(j.bot-3,y+3,u);if(by>y+2){g.strokeStyle='rgba(255,255,255,'+(.5*(1-u))+')';g.lineWidth=.5;g.beginPath();g.arc(bx,by,.8+seed(b+5)*.7,0,TAU);g.stroke()}}
+ g.restore();
+ g.strokeStyle=rgba(pd?[220,230,232]:[120,136,140],.55);g.lineWidth=1;jarPath(g,j);g.stroke();g.strokeStyle='rgba(255,255,255,.6)';g.lineWidth=1.8;g.beginPath();g.moveTo(j.l+4,j.top+10);g.lineTo(j.l+4,j.bot-10);g.stroke();
+ // tap at the bottom right into the tube
+ var open=this.runs.some(function(r){return W.t-r.t0<.5});var bc=mixc(hex('#C2A257'),[30,30,30],dark?.45:0);g.fillStyle=rgba(bc);g.fillRect(j.r-1,j.bot-8,TUBE.x0-j.r+3,4);g.save();g.translate(j.r+3,j.bot-9);g.rotate(open?-.9:0);g.fillRect(-.7,-4,1.4,4);g.beginPath();g.arc(0,-4.3,1.4,0,TAU);g.fill();g.restore();
+ // tag: in hand
+ g.save();g.translate(j.l+6,j.top+4);g.rotate(-.04+Math.sin(t*.8)*.02);var paper=pd?[226,218,200]:[250,246,236];g.fillStyle=rgba([0,0,0],.1);g.fillRect(1,1.4,34,19);g.fillStyle=rgba(paper);g.fillRect(0,0,34,19);g.fillStyle='#3B3A36';g.font='600 4.2px Figtree, system-ui, sans-serif';g.textAlign='left';g.fillText('IN HAND',3,5.6);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(D.hand),3,15.5);g.restore()};
+Flow.prototype.tube=function(g,L,t,dark,pd){var c=rgba(pd?[220,230,232]:[120,136,140],.5);g.strokeStyle=c;g.lineWidth=.8;
+ g.beginPath();g.moveTo(TUBE.x0,TUBE.y0-2.2);g.lineTo(TUBE.x1,TUBE.y1-2.2);g.moveTo(TUBE.x0,TUBE.y0+2.2);g.lineTo(TUBE.x1,TUBE.y1+2.2);g.stroke();
+ g.fillStyle=rgba([255,255,255],.18);g.beginPath();g.moveTo(TUBE.x0,TUBE.y0-2.2);g.lineTo(TUBE.x1,TUBE.y1-2.2);g.lineTo(TUBE.x1,TUBE.y1+2.2);g.lineTo(TUBE.x0,TUBE.y0+2.2);g.closePath();g.fill();
+ g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=.5;g.beginPath();g.moveTo(TUBE.x0,TUBE.y0-1.4);g.lineTo(TUBE.x1,TUBE.y1-1.4);g.stroke();
+ M.kinds.forEach(function(k){var y=tubeY(k.x);g.strokeStyle=c;g.lineWidth=.8;g.beginPath();g.moveTo(k.x-2,y+2.2);g.lineTo(k.x-2,y+7);g.moveTo(k.x+2,y+2.2);g.lineTo(k.x+2,y+7);g.stroke()});
+ g.beginPath();g.arc(TUBE.x1,TUBE.y1,2.2,-Math.PI/2,Math.PI/2);g.stroke()};
+Flow.prototype.vessel=function(g,i,L,t,D,pd,dark){var k=M.kinds[i],v=vessel(k),h=v.bot-v.top,sc=vscale(k),self=this;
+ var colB=hex(pd?k.dk:k.col);if(dark&&!pd)colB=mixc(colB,[30,30,36],.35);
+ var open=this.open===k.id;var path=function(){var r=4;g.beginPath();g.moveTo(v.l,v.top);g.lineTo(v.l,v.bot-r);g.quadraticCurveTo(v.l,v.bot,v.l+r,v.bot);g.lineTo(v.r-r,v.bot);g.quadraticCurveTo(v.r,v.bot,v.r,v.bot-r);g.lineTo(v.r,v.top)};
+ g.fillStyle=rgba([30,24,20],.16);g.beginPath();g.ellipse(k.x+3,v.bot+1,k.w*.62,2.2,0,0,TAU);g.fill();
+ g.save();path();g.closePath();g.clip();g.fillStyle=rgba(mixc([240,240,236],[40,44,50],dark?.6:0),.2);g.fillRect(v.l,v.top,k.w,h);
+ var y=v.bot,vals=D.kinds[i];for(var j=0;j<vals.length;j++){var hh=vals[j]/sc*h;if(hh<=0)continue;var shade=mixc(colB,j%2?[255,255,255]:[0,0,0],j===0?0:.12+ (j%2?.06:0));
+  var lg=g.createLinearGradient(v.l,0,v.r,0);lg.addColorStop(0,rgba(mixc(shade,[255,255,255],.2),.92));lg.addColorStop(.6,rgba(shade,.95));lg.addColorStop(1,rgba(mixc(shade,[0,0,0],.15),.95));g.fillStyle=lg;
+  var top=y-hh,isTop=j===vals.length-1;g.beginPath();g.moveTo(v.l-1,y+.4);g.lineTo(v.r+1,y+.4);if(isTop){for(var x=v.r+1;x>=v.l-1;x-=2)g.lineTo(x,top+Math.sin(t*1.4+x*.3+i)*.35)}else{g.lineTo(v.r+1,top);g.lineTo(v.l-1,top)}g.closePath();g.fill();
+  if(j>0){g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=.4;g.beginPath();g.moveTo(v.l,y);g.lineTo(v.r,y);g.stroke()}y=top}
+ if(y<v.bot-1){g.strokeStyle='rgba(255,255,255,.65)';g.lineWidth=.5;g.beginPath();g.moveTo(v.l+1,y+.3);g.lineTo(v.r-1,y+.3);g.stroke()}
+ g.restore();
+ g.strokeStyle=rgba(pd?[220,230,232]:[120,136,140],.55);g.lineWidth=.9;path();g.stroke();g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=1.1;g.beginPath();g.moveTo(v.l+2.5,v.top+4);g.lineTo(v.l+2.5,v.bot-5);g.stroke();
+ if(k.honey){g.strokeStyle=rgba(mixc(hex('#B98E5E'),[30,26,24],dark?.45:0));g.lineWidth=1.6;g.beginPath();g.moveTo(v.l-2,v.top);g.lineTo(v.r+2,v.top);g.stroke()}
+ // last month: a dashed hairline
+ var yl=v.bot-k.last/sc*h;g.strokeStyle=pd?'rgba(240,236,228,.7)':'rgba(40,40,38,.5)';g.lineWidth=.55;g.setLineDash([1.6,1.6]);g.beginPath();g.moveTo(v.l-3,yl);g.lineTo(v.r+3,yl);g.stroke();g.setLineDash([]);
+ // name and this month's amount on the table, in the kind's colour
+ var txt=pd?mixc(hex(k.dk),[255,255,255],.1):mixc(hex(k.col),[0,0,0],.25);g.fillStyle=rgba(txt);g.font='600 5px Figtree, system-ui, sans-serif';g.textAlign='center';g.fillText((k.short||k.n).toUpperCase(),k.x,v.bot+8.5);g.font='400 6.6px Outfit, Figtree, sans-serif';g.fillText(fmt(D.kinds[i].reduce(function(a,b){return a+b},0)),k.x,v.bot+15.5);
+ // open: the bands are named with hairlines to the side
+ if(open){var yy=v.bot,dir=k.x>250?-1:1;for(var j2=0;j2<vals.length;j2++){var hh2=vals[j2]/sc*h,mid=yy-hh2/2;yy-=hh2;var lx=dir>0?v.r+4:v.l-4,ly=v.top-6-(vals.length-1-j2)*11;g.strokeStyle=rgba(txt,.9);g.lineWidth=.5;g.beginPath();g.moveTo(k.x,mid);g.lineTo(lx,mid);g.lineTo(lx+dir*6,ly);g.lineTo(lx+dir*8,ly);g.stroke();g.fillStyle=rgba(txt);g.textAlign=dir>0?'left':'right';g.font='600 4.6px Figtree, system-ui, sans-serif';g.fillText(k.items[j2].n.toUpperCase(),lx+dir*9,ly-.6);g.font='400 6px Outfit, Figtree, sans-serif';g.fillText(fmt(vals[j2]),lx+dir*9,ly+5.4)}
+  g.font='500 4.6px Figtree, system-ui, sans-serif';g.textAlign='center';g.fillStyle=pd?'rgba(240,236,228,.75)':'rgba(40,40,38,.6)';g.fillText('last month '+fmt(k.last),k.x,v.bot+22)}
+};
+Flow.prototype.flowsDraw=function(g,L,t,dt,D,dark){var self=this;
+ // income: a gush from the pipe into the jar
+ this.gush=this.gush.filter(function(x){var e=W.t-x.t0;if(e>x.dur+.5)return false;var a=e<.3?e/.3:e>x.dur?1-(e-x.dur)/.5:1;var wc=mixc([160,206,190],[60,90,90],dark?.5:0);var sx=JAR.cx+3,y0=PIPE.y+8,y1=JAR.bot-clamp(D.hand/JAR.cap,0,1)*(JAR.bot-JAR.top);var w=5*a+Math.sin(t*22)*.3;
+  var sg=g.createLinearGradient(0,y0,0,y1);sg.addColorStop(0,rgba(wc,.9*a));sg.addColorStop(1,rgba(wc,.75*a));g.fillStyle=sg;g.fillRect(sx-w/2,y0,w,y1-y0);g.fillStyle=rgba([255,255,255],.5*a);g.fillRect(sx-w/2+1,y0,.8,y1-y0);
+  if(e<x.dur){self.kick(.2*dt*60*.1);for(var q=0;q<2;q++)self.fx.push({type:'drop',x:sx+(Math.random()-.5)*6,y:y1,vx:(Math.random()-.5)*40,vy:-25-Math.random()*25,life:.45,col:wc,inJar:1});if(Math.random()<.5)self.fx.push({type:'bubble',x:JAR.l+8+Math.random()*56,y:JAR.bot-3,vy:-24-Math.random()*20,life:1.6,r:.7+Math.random()*1.2})}
+  if(e<1.6){g.save();g.globalAlpha=Math.sin(clamp(e/1.6,0,1)*Math.PI);g.fillStyle=dark?'rgba(214,236,224,.95)':'rgba(40,96,74,.95)';g.font='400 8px Outfit, Figtree, sans-serif';g.textAlign='left';g.fillText('+'+fmt2(x.v),JAR.r+6,PIPE.y+20-e*4);g.font='600 4.6px Figtree, system-ui, sans-serif';g.fillText(x.n.toUpperCase(),JAR.r+6,PIPE.y+12-e*4);g.restore()}
+  if(e>x.dur-.1&&!x.glowed){x.glowed=1;self.glow.push({x:JAR.cx,y:(JAR.top+JAR.bot)/2,t0:W.t,r:56,col:[200,250,226]})}return true});
+ // out: a slug of water runs along the tube to its kind, then drops in
+ this.runs=this.runs.filter(function(r){var e=W.t-r.t0;if(e>2.6)return false;var k=kind(r.kid),v=vessel(k),colK=hex(dark?k.dk:k.col);var wc=mixc([150,196,186],[40,70,80],dark?.55:0);
+  var travel=clamp((e-.3)/.6,0,1),slugX=lerp(TUBE.x0,k.x,ease(travel));
+  if(e>.25&&e<1.0){var len=18;g.strokeStyle=rgba(wc,.95);g.lineWidth=3.6;g.lineCap='round';g.beginPath();g.moveTo(Math.max(TUBE.x0,slugX-len),tubeY(Math.max(TUBE.x0,slugX-len)));g.lineTo(slugX,tubeY(slugX));g.stroke();g.strokeStyle='rgba(255,255,255,.6)';g.lineWidth=.6;g.beginPath();g.moveTo(Math.max(TUBE.x0,slugX-len),tubeY(Math.max(TUBE.x0,slugX-len))-1);g.lineTo(slugX,tubeY(slugX)-1);g.stroke()}
+  if(e>.85&&e<1.6){var a=e<1?(e-.85)/.15:e>1.45?1-(e-1.45)/.15:1;var y0=tubeY(k.x)+7,lvl=v.bot-D.kinds[M.kinds.indexOf(k)].reduce(function(s,x){return s+x},0)/vscale(k)*(v.bot-v.top);var fall=mixc(wc,colK,k.honey?.9:.55);
+   var sg=g.createLinearGradient(0,y0,0,lvl);sg.addColorStop(0,rgba(wc,.9*a));sg.addColorStop(1,rgba(fall,.95*a));g.fillStyle=sg;g.fillRect(k.x-1.6,y0,3.2,Math.max(0,lvl-y0));
+   if(Math.random()<.7)self.fx.push({type:'drop',x:k.x+(Math.random()-.5)*4,y:lvl,vx:(Math.random()-.5)*30,vy:-18-Math.random()*20,life:.4,col:fall})}
+  if(e>1.0&&!r.glowed){r.glowed=1;self.glow.push({x:k.x,y:v.top+(v.bot-v.top)*.55,t0:W.t,r:26,col:k.honey?[255,214,120]:mixc(colK,[255,255,255],.4)});if(k.honey)for(var s2=0;s2<12;s2++){var a2=seed(s2+W.t)*TAU;self.fx.push({type:'spark',x:k.x+Math.cos(a2)*10,y:v.top+8+Math.sin(a2)*8,vx:Math.cos(a2)*12,vy:-18-seed(s2)*16,life:1.1})}}
+  if(e>1.1&&e<2.6){var u=(e-1.1)/1.5;g.save();g.globalAlpha=Math.sin(clamp(u,0,1)*Math.PI);var tc=dark?mixc(hex(k.dk),[255,255,255],.1):mixc(hex(k.col),[0,0,0],.3);g.fillStyle=rgba(tc);g.textAlign='center';g.font='600 4.6px Figtree, system-ui, sans-serif';g.fillText(r.n.toUpperCase(),k.x,v.top-14-u*8);g.font='400 7.5px Outfit, Figtree, sans-serif';g.fillText(fmt2(r.v),k.x,v.top-6-u*8);g.restore()}
+  return true})};
+Flow.prototype.effects=function(g,t,dt,pd){var self=this;
+ this.glow=this.glow.filter(function(G){var e=W.t-G.t0;if(e>1.4)return false;var a=Math.sin(clamp(e/1.4,0,1)*Math.PI);var gg=g.createRadialGradient(G.x,G.y,1,G.x,G.y,G.r);gg.addColorStop(0,rgba(G.col,.65*a));gg.addColorStop(1,rgba(G.col,0));g.save();g.globalCompositeOperation=pd?'lighter':'source-over';g.fillStyle=gg;g.beginPath();g.arc(G.x,G.y,G.r,0,TAU);g.fill();g.restore();return true});
+ this.fx=this.fx.filter(function(f){f.life-=dt||0;if(f.life<=0)return false;f.x+=(f.vx||0)*(dt||0);f.y+=(f.vy||0)*(dt||0);
+  if(f.type==='drop'){f.vy+=200*(dt||0);g.fillStyle=rgba(f.col,Math.min(1,f.life*2.5));g.beginPath();g.arc(f.x,f.y,.8,0,TAU);g.fill()}
+  else if(f.type==='bubble'){var y=JAR.bot-clamp(self.disp.hand/JAR.cap,0,1)*(JAR.bot-JAR.top);if(f.y<y+2)return false;g.strokeStyle='rgba(255,255,255,.75)';g.lineWidth=.5;g.beginPath();g.arc(f.x,f.y,f.r,0,TAU);g.stroke()}
+  else if(f.type==='spark'){f.vy-=30*(dt||0);var tw=.6+.4*Math.sin(W.t*24+f.x),a=Math.min(1,f.life*1.6)*tw;g.fillStyle='rgba(255,236,170,'+a+')';g.beginPath();g.arc(f.x,f.y,.9,0,TAU);g.fill();g.strokeStyle='rgba(255,236,170,'+(a*.7)+')';g.lineWidth=.4;g.beginPath();g.moveTo(f.x-2.2,f.y);g.lineTo(f.x+2.2,f.y);g.moveTo(f.x,f.y-2.2);g.lineTo(f.x,f.y+2.2);g.stroke()}
+  return true})};
+Flow.prototype.jarLabels=function(g,D,pd){var c=pd?'rgba(240,236,228,.9)':'rgba(40,40,38,.8)';g.fillStyle=c;g.strokeStyle=c;g.lineWidth=.5;g.textAlign='left';
+ var rows=[['IN',fmt(inT())],['OUT',fmt(outT())],['IN HAND',fmt(hand())]];rows.forEach(function(r,i){var y=JAR.top+30+i*13;g.font='600 4.6px Figtree, system-ui, sans-serif';g.fillText(r[0],JAR.r+8,y);g.font='400 8px Outfit, Figtree, sans-serif';g.fillText(r[1],JAR.r+8,y+8)})};
+// edges: the woodland's dissolve
+Flow.prototype.haze=function(g,bg){g.save();g.setTransform(this.s,0,0,this.s,0,0);var lum=(bg[0]+bg[1]+bg[2])/765;g.fillStyle=rgba(bg,lum<.5?.18:.1);g.fillRect(0,0,402,182);
+ function band(gr,st){st.forEach(function(x){gr.addColorStop(x[0],rgba(bg,x[1]))})}var cv=[[0,.85],[.25,.5],[.5,.2],[.75,.05],[1,0]];
+ var l=g.createLinearGradient(0,0,56,0);band(l,cv);g.fillStyle=l;g.fillRect(0,0,56,182);var r=g.createLinearGradient(402,0,346,0);band(r,cv);g.fillStyle=r;g.fillRect(346,0,56,182);
+ var tp=g.createLinearGradient(0,0,0,30);band(tp,cv);g.fillStyle=tp;g.fillRect(0,0,402,30);var bt=g.createLinearGradient(0,182,0,156);band(bt,cv);g.fillStyle=bt;g.fillRect(0,156,402,26);g.restore()};
+Flow.prototype.dissolve=function(g){if(!this.mask||this.mask.width!==this.cv.width){var W_=this.cv.width,H_=this.cv.height,m=document.createElement('canvas');m.width=W_;m.height=H_;var mg=m.getContext('2d'),img=mg.createImageData(W_,H_),d=img.data;function ss(u){u=clamp(u,0,1);return u*u*u*(u*(u*6-15)+10)}var fx=new Float32Array(W_),fy=new Float32Array(H_);for(var x=0;x<W_;x++){var u=x/W_;fx[x]=ss(u/.1)*ss((1-u)/.1)}for(var y=0;y<H_;y++){var v=y/H_;fy[y]=ss(v/.1)*ss((1-v)/.12)}for(var y2=0;y2<H_;y2++)for(var x2=0;x2<W_;x2++)d[(y2*W_+x2)*4+3]=Math.round(fx[x2]*fy[y2]*255);mg.putImageData(img,0,0);this.mask=m}
+ g.save();g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-in';g.drawImage(this.mask,0,0);g.restore()};
+
+var statusEl=$('#status');
+function say(s){if(statusEl)statusEl.textContent=s;$$('[data-cap]').forEach(function(e){e.textContent=s})}
+function syncText(){$$('[data-in]').forEach(function(e){e.textContent=fmt(inT())});$$('[data-out]').forEach(function(e){e.textContent=fmt(outT())});$$('[data-saved]').forEach(function(e){e.textContent=fmt(sum(kind('save').items))})}
+
+flows=$$('canvas[data-jar]').map(function(cv){return new Flow(cv)});
+function fit(){var w=Math.min(402,document.documentElement.clientWidth-32),s=w/402;$$('[data-fit]').forEach(function(el){el.style.height=(874*s)+'px';el.firstElementChild.style.transform='scale('+s+')'});flows.forEach(function(f){f.size()})}
+fit();addEventListener('resize',fit);
+$$('[data-act]').forEach(function(b){b.addEventListener('click',function(){var a=b.dataset.act;
+ if(a==='income')income('Side job',180);if(a==='groceries')pay('food','Groceries',86.2);if(a==='coffee')pay('food','Eating out',5.4);if(a==='drinks')pay('out','Drinks',42);if(a==='bill')pay('home','Phone',45);if(a==='save')pay('save','October',100);
+ if(a==='reset'){M=fresh();flows.forEach(function(f){f.disp={hand:hand(),inT:inT(),kinds:M.kinds.map(function(k){return k.items.map(function(it){return it.v})})};f.fx=[];f.runs=[];f.gush=[];f.open=null;f.jarOpen=false});syncText();say('Reset.')}})});
+var hourEl=$('#hour'),hv=$('#hourv');hourEl.value=W.hour;hourEl.addEventListener('input',function(){W.hour=+hourEl.value});
+function fmtH(h){var hh=Math.floor(h)%24,m=Math.floor((h-Math.floor(h))*60);return ((hh+11)%12+1)+':'+(m<10?'0':'')+m+(hh<12?' am':' pm')}
+(function(){var d=Q.demo;if(!d)return;
+ if(d==='groceries')pay('food','Groceries',86.2);if(d==='income')income('Side job',180);if(d==='save')pay('save','October',100);if(d==='bill')pay('home','Phone',45);
+ if(d==='open')flows.forEach(function(f){f.open=Q.k||'home'});if(d==='jar')flows.forEach(function(f){f.jarOpen=true});})();
+var last=performance.now();
+function frame(now){var dt=Math.min(.05,(now-last)/1000);last=now;W.t+=dt;hv.textContent=fmtH(W.hour);var clk=fmtH(W.hour).replace(/ (am|pm)/,'');$$('.clk').forEach(function(e){e.textContent=clk});
+ flows.forEach(function(f){try{f.draw(dt)}catch(e){if(!f.err){f.err=1;console.error(e);say('Error: '+e.message)}}});requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

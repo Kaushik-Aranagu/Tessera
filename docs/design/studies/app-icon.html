@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tessera icon</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and masters for docs/design/app-icon.md (Design item 39): Tessera's app icon. A (recommended) is Tess's soul exactly as she is in the app, scaled up, on Porcelain by day and Obsidian by night, with a tinted master. B is the alternative: the page, one ink line with the soul in her corner. ?icon=a-light|a-dark|a-tinted|b-light|b-dark|b-tinted renders one 1024 master, full bleed (the system masks the corners); add &layer=bg|cobalt|vermilion|cadmium|line for Icon Composer layers on transparent. The default is the board: the masters, three Home Screens, and the size ladder. -->
+<style>
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;color:#17141F}
+body.board{padding:28px 30px 30px}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(23,20,31,.66)}
+.row{display:flex;gap:36px;align-items:flex-start}
+.sq{position:relative;overflow:hidden}
+.blob{position:absolute;border-radius:52% 48% 60% 40%/55% 45% 55% 45%}
+.mask{border-radius:22.37%;overflow:hidden;position:relative}
+.cap{height:34px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;border-radius:0}
+.grid{position:absolute;left:27px;right:27px;top:80px;display:grid;grid-template-columns:repeat(4,64px);column-gap:calc((336px - 256px)/3);row-gap:26px}
+.app{width:64px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.app .ic{width:64px;height:64px;border-radius:14.3px;overflow:hidden;position:relative}
+.app .nm{font-size:12px;font-weight:500;letter-spacing:0;height:14px;line-height:14px;white-space:nowrap}
+.bar{height:6px;width:34px;border-radius:3px;margin-top:4px}
+.dock{position:absolute;left:12px;right:12px;bottom:14px;height:92px;border-radius:34px;display:flex;justify-content:space-around;align-items:center;padding:0 14px}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2090px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const Q=new URLSearchParams(location.search);
+// Tess's soul, exactly as the app draws her: a 46 x 40 box, three 20 x 17 blobs (cobalt at 0,4; vermilion at 22,2;
+// cadmium at 12,20), each a radial from its pigment to 20% at the edge, blurred 1.2pt. k scales the whole of her.
+const PIG={
+ light:['#2450D8','#E2432A','#F0A500'],
+ dark:['#86B4FF','#FF5B3A','#FFC23D'],
+ tinted:['#FFFFFF','#D8D8D8','#EDEDED'],
+};
+const rgba=(h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`};
+function soul(k,look,only){
+ const P=PIG[look],pos=[[0,4],[22,2],[12,20]],names=['cobalt','vermilion','cadmium'];
+ return `<div style="position:absolute;left:0;top:0;width:${46*k}px;height:${40*k}px">${pos.map(([x,y],i)=>only&&only!==names[i]?'':`<div class="blob" style="left:${x*k}px;top:${y*k}px;width:${20*k}px;height:${17*k}px;background:radial-gradient(closest-side,${P[i]},${rgba(P[i],.2)});filter:blur(${1.2*k}px)"></div>`).join('')}</div>`;
+}
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const GROUND={light:'linear-gradient(#FFFFFF,#F5F1EA)',dark:'#000',tinted:'#000'};
+const INK={light:'#17141F',dark:'rgb(245,242,236)',tinted:'#FFFFFF'};
+// One icon at size s (px). A: the soul alone, 62.9% of the width, centred on her own box. B: the page: one ink line
+// at the upper left and the soul small in her corner.
+function icon(s,kind,look,layer){
+ const u=s/1024;let html='';
+ const bg=layer&&layer!=='bg'?'transparent':GROUND[look];if(layer==='all')layer=null;
+ if(layer==='bg')return `<div class="sq" style="width:${s}px;height:${s}px;background:${bg}"></div>`;
+ if(kind==='a'){
+  const k=14*u,cx=(s-46*k)/2+2*k;
+  // Her glow, the way the soul lights when she speaks: one wide wash of each pigment behind her, very low.
+  if(!layer&&look!=='tinted'){const P=PIG[look],a=look==='dark'?.22:.13;
+   html+=[[10,12.5],[32,10.5],[22,28.5]].map(([x,y],i)=>`<div style="position:absolute;left:${cx+(x-19)*k}px;top:${(s-40*k)/2+(y-16)*k}px;width:${38*k}px;height:${32*k}px;border-radius:50%;background:radial-gradient(closest-side,${rgba(P[i],a)},${rgba(P[i],0)})"></div>`).join('');}
+  html+=`<div style="position:absolute;left:${cx}px;top:${(s-40*k)/2}px">${soul(k,look,layer)}</div>`;
+ }else{
+  const k=7.2*u;
+  if(!layer||layer==='line')html+=`<svg style="position:absolute;left:${170*u}px;top:${400*u}px;overflow:visible" width="${520*u}" height="${12*u}"><path transform="scale(${u})" d="${lens(520,18)}" fill="${INK[look]}"/></svg>`;
+  if(layer!=='line')html+=`<div style="position:absolute;left:${(1024-170-46*8.4)*u}px;top:${(1024-190-40*8.4)*u}px">${soul(8.4*u,look,layer)}</div>`;
+ }
+ return `<div class="sq" style="width:${s}px;height:${s}px;background:${bg}">${html}</div>`;
+}
+const masked=(s,kind,look)=>`<div class="mask" style="width:${s}px;height:${s}px;border-radius:${s*.2237}px">${icon(s,kind,look)}</div>`;
+
+const ICON=Q.get('icon');
+if(ICON){
+ const [kind,look]=ICON.split('-');
+ document.body.style.background='transparent';document.documentElement.style.background='transparent';
+ const clear=Q.get('clear');
+ document.getElementById('root').innerHTML=icon(1024,kind,look,Q.get('layer')||(clear?'all':null));
+}else{
+ document.body.classList.add('board');
+ // Home Screens. The other icons are neutral blanks so nothing on the board borrows another app's mark.
+ const blanks={light:['#DCD6CC','#C9D3DA','#D9CFC8','#CDD5C9','#D6D0DA','#E0D8C8'],dark:['#2B2A2E','#26292D','#2C2826','#272B27','#2A272D','#2E2B26'],tinted:['#3A3020','#352C1E','#3D3222','#32291B','#3A2F1F','#372D1D']};
+ const wall={light:'linear-gradient(160deg,#F4E9DC 0%,#E7E2EE 55%,#DCE6EE 100%)',dark:'linear-gradient(160deg,#141218 0%,#0B0D12 60%,#12100E 100%)',tinted:'linear-gradient(160deg,#1A140C 0%,#0E0B07 100%)'};
+ const tint=look=>look==='tinted'?'filter:sepia(1) saturate(2.2) hue-rotate(-12deg) brightness(.95)':'';
+ const nameCol=look=>look==='light'?'#17141F':'#F5F2EC';
+ const app=(look,i,isT,kind)=>`<div class="app"><div class="ic" style="${isT?tint(look):''}">${isT?masked(64,kind,look==='tinted'?'tinted':look):`<div style="position:absolute;inset:0;background:${blanks[look][i%6]}"></div>`}</div>${isT?`<div class="nm" style="color:${nameCol(look)}">Tessera</div>`:`<div class="bar" style="background:${look==='light'?'rgba(23,20,31,.22)':'rgba(245,242,236,.22)'}"></div>`}</div>`;
+ const home=(look,kind,cap)=>`<div><div class="lbl s2 cap">${cap}</div><div class="ph" style="background:${wall[look]}">
+  <div style="position:absolute;left:0;right:0;top:16px;text-align:center;font-weight:600;font-size:16px;color:${nameCol(look)}">9:41</div>
+  <div class="grid">${Array.from({length:20},(_,i)=>app(look,i,i===9,kind)).join('')}</div>
+  <div class="dock" style="background:${look==='light'?'rgba(255,255,255,.35)':'rgba(255,255,255,.08)'};backdrop-filter:blur(20px)">${[0,1,2,3].map(i=>`<div class="app"><div class="ic"><div style="position:absolute;inset:0;background:${blanks[look][(i+2)%6]}"></div></div></div>`).join('')}</div></div></div>`;
+ const big=(kind,look,cap)=>`<div><div class="lbl s2 cap">${cap}</div><div style="${look==='tinted'?'filter:sepia(1) saturate(2.2) hue-rotate(-12deg) brightness(.95)':''}">${masked(300,kind,look)}</div></div>`;
+ const ladder=(kind,look)=>`<div class="row" style="align-items:flex-end;gap:22px">${[180,120,87,80,60,40,29].map(px=>`<div style="text-align:center"><div style="display:inline-block">${masked(px/2,kind,look)}</div><div class="lbl s2" style="margin-top:8px">${px}</div></div>`).join('')}</div>`;
+ document.getElementById('root').innerHTML=
+  `<div class="row">${big('a','light','A · BY DAY (ANY)')}${big('a','dark','A · BY NIGHT (DARK)')}${big('a','tinted','A · TINTED')}<div style="width:40px"></div>${big('b','light','B · THE PAGE, BY DAY')}${big('b','dark','B · BY NIGHT')}${big('b','tinted','B · TINTED')}</div>
+  <div class="row" style="margin-top:40px">${home('light','a','A ON A HOME SCREEN, BY DAY')}${home('dark','a','A, DARK')}${home('tinted','a','A, TINTED')}${home('light','b','B, BY DAY')}${home('dark','b','B, DARK')}</div>
+  <div class="row" style="margin-top:40px;gap:80px"><div><div class="lbl s2 cap">A AT EVERY SIZE (PX)</div>${ladder('a','light')}</div><div><div class="lbl s2 cap">A, DARK</div>${ladder('a','dark')}</div></div>
+  <div class="row" style="margin-top:28px;gap:80px"><div><div class="lbl s2 cap">B AT EVERY SIZE (PX)</div>${ladder('b','light')}</div><div><div class="lbl s2 cap">B, DARK</div>${ladder('b','dark')}</div></div>
+  <div class="note">A, RECOMMENDED: TESS’S SOUL, EXACTLY AS SHE IS IN THE APP (THREE PIGMENTS, SAME PLACES, SAME BLUR), SCALED 14 TIMES ONTO PORCELAIN BY DAY AND OBSIDIAN BY NIGHT. NO LETTER, NO BADGE, NO GLYPH: SHE IS THE MARK. B: THE PAGE. ONE INK LINE, AND HER IN HER CORNER, THE WAY EVERY SCREEN LOOKS. THE SYSTEM ROUNDS THE CORNERS AND ADDS THE GLASS; THE MASTERS ARE FULL BLEED.</div>`;
+}
+document.fonts.ready.then(()=>{document.body.dataset.done='1'});
+</script>
+</body>
+</html>

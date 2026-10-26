@@ -38,7 +38,7 @@ enum MeasureStyle {
     static let gap: CGFloat = 4
     static let pairGap: CGFloat = 8
     /// A swipe moves one unit per this many points.
-    static let stepLength: CGFloat = 14
+    static let stepLength: CGFloat = 28
 }
 
 /// A number with its small unit, drawn apart: the number in its own role, the unit as a small word that can be swiped
@@ -146,13 +146,16 @@ struct MeasureView: View {
     }
 
     private var swipe: some Gesture {
-        DragGesture(minimumDistance: 8)
+        DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart))
             .onChanged { unitSwipeChanged($0) }
             .onEnded { _ in unitSwipeEnded() }
     }
 
     private func unitSwipeChanged(_ value: DragGesture.Value) {
-        guard abs(value.translation.height) > abs(value.translation.width) else { return }
+        // A scroll that happens to start on a number must not change its unit: the drag has to lead by 2x downward or
+        // upward before the first step (gesture policy).
+        guard abs(value.translation.height) >= abs(value.translation.width) * CGFloat(GestureTuning.pagerBias)
+        else { return }
         let start = swipeFrom ?? unit
         swipeFrom = start
         let steps = Int((-value.translation.height / MeasureStyle.stepLength).rounded(.towardZero))
