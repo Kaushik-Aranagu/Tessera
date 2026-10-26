@@ -184,6 +184,16 @@ struct MosaicScreenTests {
         #expect(retinted.colour.green > later.colour.green)
     }
 
+    /// At the largest text sizes a text block can sit wholly outside the grid: that is no shield, never a crash.
+    @Test func aTextBlockOutsideTheGridShieldsNothingAndDoesNotCrash() {
+        let engine = engine()
+        let far = [CGRect(x: 0, y: 5000, width: 300, height: 80), CGRect(x: 9000, y: 100, width: 80, height: 80),
+                   CGRect(x: -900, y: -900, width: 80, height: 80)]
+        for rect in far {
+            #expect(engine.grid.shield(for: [rect]).isEmpty)
+        }
+    }
+
     @Test func theTextShieldKeepsAFifthUnderWordsAndFeathersBackOverFiveTiles() throws {
         let engine = engine()
         engine.settle { _, _ in (0.2, 0.2, 0.9) }

@@ -16,8 +16,23 @@ enum GlyphKind: String, CaseIterable {
     /// Purse
     case calendar, coins, indexLine
 
-    /// The first rule that matches the item's words, or nil (the cover: the item's own words).
-    static func pick(header: String, big: String, middle: String) -> GlyphKind? {
+    /// The rooms and their libraries (sheet 283 v3): a room only draws from its own drawings.
+    enum Room { case log, lookout, deck, galley, watch, purse }
+
+    var room: Room {
+        switch self {
+        case .spark, .bulb, .book, .checklist: .log
+        case .rain, .moon, .sun: .lookout
+        case .steps, .ticks, .barbell: .deck
+        case .plates, .bowl, .ticket, .basket: .galley
+        case .wateringCan, .grove, .birdAndFlower: .watch
+        case .calendar, .coins, .indexLine: .purse
+        }
+    }
+
+    /// The first rule that matches the item's words, or nil (the cover: the item's own words). With a `room`, only
+    /// that room's drawings are considered.
+    static func pick(header: String, big: String, middle: String, room: Room? = nil) -> GlyphKind? {
         let words = [header, big, middle].joined(separator: " ").lowercased()
         func has(_ needles: String...) -> Bool {
             needles.contains { words.contains($0) }
@@ -44,7 +59,7 @@ enum GlyphKind: String, CaseIterable {
             (.coins, has("today", "spent", "spend")),
             (.indexLine, has("still yours", "pace", "month")),
         ]
-        return rules.first { $0.1 }?.0
+        return rules.first { $0.1 && (room == nil || $0.0.room == room) }?.0
     }
 }
 
@@ -267,11 +282,12 @@ struct GlyphCover: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(words.prefix(3).enumerated()), id: \.offset) { _, word in
+                // Sized to the word: the largest size (18 at most) at which it fits 80 pt, so it never ends in "...".
                 Text(word.uppercased())
-                    .font(.custom("Figtree", fixedSize: 18).weight(.black))
+                    .font(.custom("Figtree", fixedSize: min(18, 78 / max(WordWallMeasure.advance(word), 0.1))).weight(.black))
                     .foregroundStyle(color)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.4)
+                    .fixedSize()
                     .frame(width: 80, alignment: .leading)
             }
         }
@@ -287,6 +303,8 @@ struct LandingGlyph: View {
     let color: Color
     /// When the drawing forms after it collapses (330 ms in the widget; the shell starts it sooner after a split).
     var formDelay = 0.33
+    /// The room whose library to draw from (nil: all of them).
+    var room: GlyphKind.Room?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var formed = false
@@ -300,7 +318,7 @@ struct LandingGlyph: View {
                 // One move on arrival, then one every 7 s: a 2 s move inside each 7 s cycle.
                 let cycle = reduceMotion ? 0 : seconds.truncatingRemainder(dividingBy: 7)
                 let t = cycle < 2 ? cycle / 2 : 0
-                if let kind = GlyphKind.pick(header: item.header, big: item.big, middle: item.middle) {
+                if let kind = GlyphKind.pick(header: item.header, big: item.big, middle: item.middle, room: room) {
                     GlyphDrawing(kind: kind, color: color, t: t)
                 } else {
                     GlyphCover(words: [item.big, item.middle, item.header].filter { !$0.isEmpty }, color: color)

@@ -50,7 +50,7 @@ struct SettingsLandingPage: View {
                                 open(area)
                             }
                         },
-                        glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? Theme.Colors.ink) },
+                        glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? Theme.Colors.ink, room: .log) },
                         doors: SettingsLandingWords.doors(facts, colors: colors), focus: $focus,
                         openDoor: { door in
                             if let area = SettingsArea(rawValue: door.id) {

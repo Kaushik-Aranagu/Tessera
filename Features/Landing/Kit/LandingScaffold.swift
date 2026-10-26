@@ -52,6 +52,7 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                 if !caption.isEmpty {
                     FitLine(forms: caption, size: 15, color: Theme.Colors.inkSecondary)
                         .frame(width: width - 48, alignment: .leading)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                         .landingSection(.caption)
                         .offset(x: 24, y: 388 * k)
                 }
@@ -87,7 +88,7 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
             }
             .frame(width: width, height: proxy.size.height, alignment: .topLeading)
         }
-        .ignoresSafeArea(.container, edges: .top)
+        .ignoresSafeArea(.container, edges: [.top, .bottom])
         .background {
             if let backdrop {
                 backdrop.ignoresSafeArea()

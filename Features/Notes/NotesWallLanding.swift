@@ -34,7 +34,7 @@ struct NotesLandingPage: View {
     var body: some View {
         let _ = model.revision
         let shown = load()
-        LandingScaffold(title: "Log", accent: LandingAccent.notes, navWord: "Bridge", onBack: { dismiss() },
+        LandingScaffold(title: "Log", accent: Self.plum(scheme), navWord: "Bridge", onBack: { dismiss() },
                         switcher: ["Newest", "Due", "Pinned", "From Tess"],
                         switcherVertical: ["Today", "This week", "Earlier"],
                         switcherIndex: $switcherIndex, switcherVerticalIndex: $switcherVerticalIndex,
@@ -51,7 +51,7 @@ struct NotesLandingPage: View {
                         openWidget: { item in
                             if let uuid = UUID(uuidString: item.id) { openNote(uuid) }
                         },
-                        glyph: { item in LandingGlyph(item: item, color: LandingAccent.notes) },
+                        glyph: { item in LandingGlyph(item: item, color: Self.plum(scheme), room: .log) },
                         doors: shown.doors, focus: $focus,
                         openDoor: { door in
                             switch door.id {
@@ -140,6 +140,11 @@ struct NotesLandingPage: View {
 
     /// A wall word: the title cut on a whole word at 14 characters, then stepped back past trailing small words
     /// and punctuation (228). Never "...", never an empty word.
+    /// The Log's own colour (sheet 241 and 283: plum 8A4570 / E3A3CB), not the app-wide Notes violet.
+    static func plum(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color(hex: 0xE3A3CB) : Color(hex: 0x8A4570)
+    }
+
     static func short(_ title: String) -> String {
         let words = title.replacingOccurrences(of: "@", with: "").split(separator: " ").map(String.init)
         var kept: [String] = []

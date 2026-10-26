@@ -104,7 +104,7 @@ struct LandingWidget<Glyph: View>: View {
                 case .deck:
                     Text(item.big.uppercased()).font(.custom("BarlowCondensed-SemiBold", size: 50, relativeTo: .largeTitle))
                 case .galley:
-                    Text(item.big.uppercased()).font(.custom("IBMPlexSansCondensed-Bold", size: 40, relativeTo: .largeTitle))
+                    Text(item.big.uppercased()).font(.custom("IBMPlexSansCond-Bold", size: 40, relativeTo: .largeTitle))
                         .tracking(40 * 0.04)
                 }
             }

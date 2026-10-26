@@ -119,8 +119,15 @@ struct MosaicScreenGrid: Equatable {
             let first = tile(at: CGPoint(x: rect.minX, y: rect.minY))
             let last = tile(at: CGPoint(x: rect.maxX, y: rect.maxY))
             let left = first.column - 1, right = last.column + 1, top = first.row - 1, bottom = last.row + 1
-            for column in max(left - feather, 0) ... min(right + feather, columns - 1) {
-                for row in max(top - feather, 0) ... min(bottom + feather, rows - 1) {
+            // A text block can sit wholly outside the grid at large text sizes (below it, or off a side): that is no
+            // tiles, never a crash (a closed range with its bounds the wrong way round traps).
+            let columnLow = max(left - feather, 0), columnHigh = min(right + feather, columns - 1)
+            let rowLow = max(top - feather, 0), rowHigh = min(bottom + feather, rows - 1)
+            guard columnLow <= columnHigh, rowLow <= rowHigh else { continue }
+            let columnRange = columnLow ... columnHigh
+            let rowRange = rowLow ... rowHigh
+            for column in columnRange {
+                for row in rowRange {
                     let dx = max(left - column, 0, column - right), dy = max(top - row, 0, row - bottom)
                     let distance = max(dx, dy)
                     guard distance < feather else { continue }

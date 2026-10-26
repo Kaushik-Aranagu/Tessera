@@ -64,7 +64,7 @@ struct RoutinesWoodlandLandingPage: View {
                                 model.open(.routinesBrowse)
                             }
                         },
-                        glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? Self.accent) },
+                        glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? Self.accent, room: .watch) },
                         doors: doors(facts), focus: $focus,
                         openDoor: { _ in model.open(.routinesBrowse) },
                         action: footAction(facts), summaryStyle: .grow)

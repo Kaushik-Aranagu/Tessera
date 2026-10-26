@@ -91,7 +91,7 @@ struct TrainingWallLanding: View {
                         widget: deck.widget, widgetIndex: $widgetIndex,
                         openWidget: openWidget,
                         glyph: { item in
-                            LandingGlyph(item: Self.glyphWords(item), color: Theme.Colors.Accent.training)
+                            LandingGlyph(item: Self.glyphWords(item), color: Theme.Colors.Accent.training, room: .deck)
                         },
                         doors: facts.doors, focus: $focus, openDoor: openDoor,
                         action: action(facts), summaryStyle: .chalk)

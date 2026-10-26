@@ -202,21 +202,21 @@ struct GalleyTicketView: View {
         let shown = pages[min(page, pages.count - 1)]
         VStack(alignment: .leading, spacing: 0) {
             Text(ticket.title.uppercased())
-                .font(.custom("IBMPlexSansCondensed-Bold", fixedSize: 13))
+                .font(.custom("IBMPlexSansCond-Bold", fixedSize: 13))
                 .tracking(13 * 0.08)
                 .foregroundStyle(titleColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             if let sub = ticket.sub {
                 Text(sub.uppercased())
-                    .font(.custom("IBMPlexSansCondensed-Medium", fixedSize: 10.5))
+                    .font(.custom("IBMPlexSansCond-Medium", fixedSize: 10.5))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
             ForEach(Array(shown.enumerated()), id: \.offset) { _, line in
                 Text(line)
-                    .font(.custom("IBMPlexSansCondensed-Regular", fixedSize: 12.5))
+                    .font(.custom("IBMPlexSansCond-Regular", fixedSize: 12.5))
                     .foregroundStyle(Theme.Colors.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
@@ -224,7 +224,7 @@ struct GalleyTicketView: View {
             Spacer(minLength: 0)
             if pages.count > 1 {
                 Text(page < pages.count - 1 ? "over" : "back")
-                    .font(.custom("IBMPlexSansCondensed-Regular", fixedSize: 12.5))
+                    .font(.custom("IBMPlexSansCond-Regular", fixedSize: 12.5))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
@@ -349,7 +349,7 @@ struct KitchenLandingPage: View {
                             default: open(.recipes)
                             }
                         },
-                        glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? LandingAccent.kitchen) },
+                        glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? LandingAccent.kitchen, room: .galley) },
                         doors: doors(front, pass), focus: $focus,
                         openDoor: { door in
                             switch door.id {

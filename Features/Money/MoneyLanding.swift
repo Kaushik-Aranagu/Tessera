@@ -136,7 +136,7 @@ struct MoneyLandingView: View {
                         },
                         caption: [caption(wall)],
                         widget: widget(categories), widgetIndex: $widgetIndex,
-                        glyph: { item in LandingGlyph(item: item, color: LandingAccent.money) },
+                        glyph: { item in LandingGlyph(item: item, color: LandingAccent.money, room: .purse) },
                         doors: doors(categories), focus: $category,
                         openDoor: { door in
                             TessVoice.shared.say("\(door.name) opens with the full chart soon.")

@@ -64,7 +64,7 @@ struct WeatherLandingPage: View {
                                 openDoor(card?.opens == .week ? .week : .hours)
                             },
                             glyph: { item in
-                                LandingGlyph(item: item, color: item.bigColor ?? WeatherAccent.room)
+                                LandingGlyph(item: item, color: item.bigColor ?? WeatherAccent.room, room: .lookout)
                             },
                             doors: doors(snapshot), focus: $focus,
                             openDoor: { door in openDoor(WeatherDoor(rawValue: door.id) ?? .hours) },

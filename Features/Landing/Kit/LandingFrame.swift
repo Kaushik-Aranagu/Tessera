@@ -95,7 +95,7 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
             }
             .frame(width: width, height: proxy.size.height, alignment: .topLeading)
         }
-        .ignoresSafeArea(.container, edges: .top)
+        .ignoresSafeArea(.container, edges: [.top, .bottom])
         .background { ThemedBackground() }
     }
 
@@ -130,6 +130,8 @@ extension FitLine {
     /// The longest form first, then every shorter whole-word cut: trailing small words, commas and full stops are
     /// dropped, so a fixed slot shows a clean shorter line, never "...".
     static func cuts(_ text: String) -> [String] {
+        // Sentence case: a line starts with a capital ("cook at 6:45 pm" reads "Cook at 6:45 pm").
+        let text = text.prefix(1).uppercased() + text.dropFirst()
         let words = text.split(separator: " ").map(String.init)
         guard words.count > 1 else { return [text] }
         var forms = [text]
