@@ -37,6 +37,7 @@ enum ShellRooms {
             Entry(id: WatchRoomContent.room) { AnyView(WatchShellHost()) },
             Entry(id: LookoutRoomContent.room) { AnyView(LookoutShellHost()) },
             Entry(id: GalleyRoomContent.room) { AnyView(GalleyShellHost()) },
+            Entry(id: PurseRoomContent.room) { AnyView(PurseShellHost()) },
         ]
     }
 
