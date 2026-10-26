@@ -16,6 +16,11 @@ enum LandingAccent {
     static var lists: Color {
         Theme.Colors.Accent.lists
     }
+
+    /// Kitchen's text shade on landings (contract §9, 231): 93611A light, C49A5E dark.
+    static var kitchen: Color {
+        Color(light: 0x93611A, dark: 0xC49A5E)
+    }
 }
 
 /// A sentence with its one key word, for pages whose words come from the app (Core's `LandingSentence` cannot be

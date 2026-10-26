@@ -119,12 +119,19 @@ struct HomeSpatialView: View {
             ScrollView(.horizontal) {
                 HStack(spacing: 0) {
                     ForEach(Page.allCases) { sibling in
-                        fitted(content(for: sibling))
-                            .scrollDisabled(false)
-                            .containerRelativeFrame(.horizontal)
-                            // The hero's parallax stays inside its own page.
-                            .clipped()
-                            .id(sibling.rawValue)
+                        Group {
+                            // The Kitchen landing owns its whole frame (landing contract §1): no padding around it.
+                            if sibling == .kitchen, LandingSwitch.isOn {
+                                content(for: sibling)
+                            } else {
+                                fitted(content(for: sibling))
+                            }
+                        }
+                        .scrollDisabled(false)
+                        .containerRelativeFrame(.horizontal)
+                        // The hero's parallax stays inside its own page.
+                        .clipped()
+                        .id(sibling.rawValue)
                     }
                 }
                 .scrollTargetLayout()
@@ -430,7 +437,12 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .notes: NotesView()
         case .review: ReviewView()
         case .money: MoneyLandingView()
-        case .training: ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
+        // The landing while Settings › Review › Landing pages is On; else the full page as it was.
+        case .training: if LandingSwitch.isOn {
+                TrainingRoomView()
+            } else {
+                ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
+            }
         case .today: TodayRoomView()
         // Settings as its own page from Home's top row, with Close above it (Kaushik, Oct 22: he couldn't find it).
         case .settings: NavigationStack { SettingsPage(cameFrom: "Home") }.environment(\.animateEntrance, true)

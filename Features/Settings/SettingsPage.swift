@@ -12,8 +12,11 @@ struct SettingsPage: View {
     @Environment(\.isPresented) private var isPresented
 
     var body: some View {
-        // Sheet 203: with Settings v2 On (the default) the overhauled page; Off keeps the older stack of sections.
-        if SettingsV2.isOn {
+        // With Landing pages On, the landing (contract §12); its title opens the hub. Sheet 203: with Settings v2 On
+        // (the default) the overhauled page; Off keeps the older stack of sections.
+        if LandingSwitch.isOn {
+            SettingsLandingPage()
+        } else if SettingsV2.isOn {
             SettingsHub(cameFrom: cameFrom == "Review" ? "Home" : cameFrom)
         } else {
             legacy
@@ -109,6 +112,18 @@ struct SettingsPage: View {
                     .settingsWordStyle()
                     .padding(.top, Theme.Spacing.xxl)
                     .accessibilityHint("Where your history is kept")
+
+                    #if DEBUG
+                        // Design 283 v8: the shared landing layout as raised glass, read-only. A debug surface.
+                        NavigationLink {
+                            LayoutModeView()
+                        } label: {
+                            Text("Layout mode")
+                        }
+                        .settingsWordStyle()
+                        .padding(.top, Theme.Spacing.l)
+                        .accessibilityHint("Every landing screen as panes of glass")
+                    #endif
 
                     // Privacy (179, walledPageV2): what stays on this phone, in counts. Drawn only while its switch is
                     // On.

@@ -61,8 +61,23 @@ struct TesseraApp: App {
                             SoulGallery()
                         } else if LaunchFlags.has("-measureGallery") {
                             MeasureGallery().environment(model)
+                        } else if ShellFlagRoot.isAsked {
+                            // The standing shell (-shell) or Layout mode (-layoutMode), sheet 283; simulator only.
+                            ShellFlagRoot()
                         } else if LaunchFlags.has("-notes") {
                             NotesView()
+                        } else if LaunchFlags.has("-trainingLanding") {
+                            TrainingRoomView()
+                        } else if LaunchFlags.has("-routinesLanding") {
+                            NavigationStack { RoutinesWoodlandLandingPage() }
+                        } else if LaunchFlags.has("-settingsLanding") {
+                            NavigationStack { SettingsLandingPage() }
+                        } else if LaunchFlags.has("-weatherLanding") {
+                            WeatherLandingView()
+                        } else if LaunchFlags.has("-money") {
+                            NavigationStack { MoneyLandingView() }
+                        } else if LaunchFlags.has("-kitchen") {
+                            KitchenLandingHost()
                         } else if LaunchFlags.has("-review") {
                             ReviewView()
                         } else if LaunchFlags.has("-groceries") {

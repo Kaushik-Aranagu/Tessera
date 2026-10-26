@@ -10,6 +10,8 @@ struct HomeMosaicPage: View {
 
     @Environment(AppModel.self) private var model
     @State private var link: HomeLink?
+    /// A room word that opens a room landing as a door (Galley, sheet 283), not a link page.
+    @State private var roomDoor: HomeV2Door?
     /// Where the doorway starts: the tapped word's centre (global), else the mosaic's.
     @State private var doorwayOrigin: CGPoint?
     /// Set by the mosaic when it is on the page: lays a finished row's colour into the picture.
@@ -57,6 +59,10 @@ struct HomeMosaicPage: View {
     @State private var signSlot: CGRect = .zero
     /// Sheet 214: the scene Core's picker chose for now (nil: the mood stripes). Weather and place are not read yet.
     @State private var scenery: MosaicScenery?
+    /// Home 236: the stack of faces, and the board's latest line it plays as Now.
+    @State private var faces = MosaicFaceModel()
+    @State private var announcement: MosaicNowReading?
+    @State private var gallery: [MosaicScenery] = []
     /// "Sunset" washes the mosaic to dusk for a few seconds.
     @State private var dusk = false
     @State private var duskTask: Task<Void, Never>?
@@ -64,7 +70,6 @@ struct HomeMosaicPage: View {
     /// Sheet 209: the mosaic's pages and the width of the page, for the swipe that changes them.
     @State private var pager = MosaicPager(count: MosaicPage.count)
     @State private var pageDirection = 1
-    @State private var pageTicks = 0
     /// Sheet 213: the one-thing space's own page (the mosaic's pages are the pager's), and when Home was left.
     @State private var thingIndex = 0
     @State private var thingsLeftAt: Date?
@@ -77,68 +82,63 @@ struct HomeMosaicPage: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: HomeMosaic.sectionGap) {
-                MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses,
-                               onDoor: { clause, frame in
-                                   doorwayFrom(frame) {
-                                       DaySentence.open(clause, model: model, openLink: { present($0) })
-                                   }
-                               },
-                               noticeList: notices,
-                               onRoom: { app, frame in doorwayFrom(frame) { present(linkFor(app)) } },
-                               onSky: { playDusk() },
-                               facts: facts,
-                               paused: scenePhase != .active || link != nil)
-                    // Until the first refresh has read Core's loaders the sentence waits (no flicker between the
-                    // fallback and the real lines).
-                    .opacity(dayClauses == nil ? 0 : 1)
-                    .accessibilityHidden(dayClauses == nil)
-                    .mosaicShield()
-                VStack(alignment: .leading, spacing: 0) {
-                    MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption)
-                        .padding(.top, HomeMosaic.moodsIsOn ? HomeMosaic.moodsMosaicGap - HomeMosaic.sectionGap : 0)
-                    // No caption under the mosaic (sheet 211): its words live in the slot's accessibility label.
-                }
+        // Sheet 283 v4 places: Bridge is laid out at the sheet's fixed coordinates, no ScrollView. The departure board
+        // in the masthead, the mosaic in the keystone band, the one-thing box in the widget place (24, 412, 354 x 200),
+        // the dial in the doors place (24, 640, 160 x 120) with its fact at x 186; Tess has the foot.
+        GeometryReader { proxy in
+            let rise = max(0.86, min(1.1, proxy.size.height / 874))
+            ZStack(alignment: .topLeading) {
+                board(rise: rise)
+                    // The board's rows are fixed 30 pt flaps: its type stops at xLarge so rows never overlap at AX5.
+                    .dynamicTypeSize(...DynamicTypeSize.xLarge)
+                MosaicSlot(coreTop: $coreTop, facts: facts, scene: $scene, caption: $caption, faces: faces)
+                    .frame(width: BridgePlace.keystone.width)
+                    .padding(.leading, BridgePlace.keystone.minX)
+                    // The 160 pt core centred in the 182 pt keystone band.
+                    .padding(.top, BridgePlace.coreTop * rise)
                 // Sheet 213: one thing at a time, no Next list.
                 HomeOneThing(things: things, index: $thingIndex, turn: { turnThing($0) },
                              done: { finishThing($0) }, open: { openThing($0) }, onSlot: { signSlot = $0 })
+                    .frame(width: BridgePlace.widget.width, height: BridgePlace.widget.height)
                     .mosaicShield()
+                    .padding(.leading, BridgePlace.widget.minX)
+                    .padding(.top, BridgePlace.widget.minY * rise)
                 if HomeMosaic.appsListIsOn {
                     AppsListSlot(onHold: { wheelHeld = $0 }, onGlance: { playGlance($0) })
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                        .frame(width: BridgePlace.doors.width, height: BridgePlace.doors.height, alignment: .top)
                         .mosaicShield()
+                        .padding(.leading, BridgePlace.doors.minX)
+                        .padding(.top, BridgePlace.doors.minY * rise)
                 }
             }
-            .padding(.horizontal, HomeMosaic.gutter)
-            .padding(.top, HomeMosaic.moodsIsOn ? 16 : Theme.Spacing.s)
-            .padding(.bottom, Theme.Spacing.xl)
+            // Bridge's sections are fixed places: their type stops growing at AX2 and every line cuts on whole words.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
             .coordinateSpace(.named(Self.space))
         }
-        .scrollIndicators(.hidden)
-        .scrollBounceBehavior(.basedOnSize)
-        .scrollDisabled(wheelHeld)
-        // Sheet 216: the date is the board's first line, so the Settings entry sits at the top left, clear of the
-        // right-aligned rows (the date row is short and begins well to its right).
         .overlay(alignment: .topLeading) {
             SettingsEntry { link = .settings }
-                .padding(.leading, HomeMosaic.gutter - 8)
-                .padding(.top, Self.settingsTop)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                // Sheet 283: the Settings word in its place (24, 74, 110 x 44), level with the board's date line.
+                .frame(height: BridgePlace.settings.height)
+                .padding(.leading, BridgePlace.settings.minX - 8)
+                .padding(.top, BridgePlace.settings.minY)
         }
-        // Sheet 212: an 80 pt clear band at the bottom for Tess's corner; everything else sits above it.
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: HomeMosaic.tessRoom).accessibilityHidden(true)
-        }
+        .ignoresSafeArea(.container, edges: .vertical)
         // Sheet 202: the mosaic is the page's own pixels, edge to edge, behind everything; every touch leans it.
         .background {
             if layerOn, let facts, let mood = pick?.mood {
                 HomeLayerHost(
                     scroll: scroll,
-                    scrollMinY: scrollMinY,
+                    // Bridge has no scroll and its places are measured in the page's own space, whose origin is the
+                    // screen's top (sheet 283 fixed places).
+                    scrollMinY: 0,
                     facts: facts,
                     scene: $scene,
                     controller: controller,
                     // The core sits where it does at rest, whatever the scroll, in whole tiles.
-                    coreTop: ((scrollMinY + insetTop + coreTop) / 4).rounded() * 4,
+                    coreTop: (coreTop / 4).rounded() * 4,
                     shield: shield,
                     mood: mood,
                     moment: moment,
@@ -147,7 +147,8 @@ struct HomeMosaicPage: View {
                     pageDirection: pageDirection,
                     signSpec: signSpec,
                     scenery: scenery,
-                    dusk: dusk
+                    dusk: dusk,
+                    faceModel: faces
                 )
             }
         }
@@ -156,23 +157,7 @@ struct HomeMosaicPage: View {
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in scroll.value = new }
         .onPreferenceChange(MosaicShieldKey.self) { shield = $0 }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
-        // A swipe that starts on the mosaic itself turns the things (the mosaic's own pages are gone).
-        .simultaneousGesture(
-            DragGesture(minimumDistance: CGFloat(GestureTuning.dragStart), coordinateSpace: .global).onEnded { value in
-                let size = HomeMosaic.moodsMosaicSize
-                let top = scrollMinY - scroll.value + coreTop
-                let mosaic = CGRect(x: pageWidth - HomeMosaic.gutter - size.width, y: top,
-                                    width: size.width, height: size.height)
-                if layerOn, MosaicPager.accepts(start: value.startLocation, translation: value.translation,
-                                                mosaic: mosaic, reach: 0),
-                    turnThing(value.translation.width)
-                {
-                    pageDirection = value.translation.width < 0 ? 1 : -1
-                    pageTicks += 1
-                }
-            }
-        )
-        .tesseraFeedback(.selection, trigger: pageTicks)
+        // The mosaic's swipe lives on MosaicSlot itself (never here: a page-level drag bled into the one-thing list).
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 // After two minutes or more away the space is back on its first thing.
@@ -206,6 +191,25 @@ struct HomeMosaicPage: View {
             }
         )
         .task(id: Int(AppClock.now.timeIntervalSince1970 / 60) &+ model.revision) { refreshPick() }
+        // Home 236: the faces turn on the line clock, a few times a second to keep time, never under a touch.
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(250))
+                let now = AppClock.now
+                faces.tick(now: now, environment: .init(
+                    reduceMotion: reduceMotion, lowPower: ProcessInfo.processInfo.isLowPowerModeEnabled,
+                    quiet: MosaicMomentMapping.isQuiet(now), turnsByItself: HomeMosaic.facesTurnByThemselves,
+                    paused: scenePhase != .active || link != nil || moment != nil || tessOpen || !onScreen
+                ))
+            }
+        }
+        .task(id: faces.faces.count > 1) {
+            // The next face leans in once, so the swipe is found.
+            guard faces.faces.count > 1, !reduceMotion else { return }
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+            faces.peekOnce()
+        }
         .onAppear { onScreen = true }
         .onDisappear {
             onScreen = false
@@ -222,6 +226,26 @@ struct HomeMosaicPage: View {
                                reduceMotion: reduceMotion, navigate: { withoutAnimation(navigate) })
             doorwayOrigin = nil
         }
+        // A room word for a room with a landing (Galley) opens its landing as a door, with Tess in the room's colour.
+        .fullScreenCover(item: $roomDoor) { door in
+            HomeV2DoorPage(door: door)
+                .overlay(alignment: .bottomTrailing) {
+                    BottomChrome(onSoulDoubleTap: { roomDoor = nil }, room: door.roomID)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                }
+                .overlay(alignment: .leading) {
+                    Color.clear
+                        .frame(width: 20)
+                        .contentShape(Rectangle())
+                        .gesture(DragGesture(minimumDistance: 12).onEnded { value in
+                            if value.translation.width > 60, abs(value.translation.height) < value.translation.width {
+                                roomDoor = nil
+                            }
+                        })
+                        .accessibilityHidden(true)
+                }
+                .accessibilityAction(.escape) { roomDoor = nil }
+        }
         .fullScreenCover(item: $link) { link in
             // Settings and Today have no Close word of their own; a room has Close at the top right.
             Group {
@@ -236,6 +260,14 @@ struct HomeMosaicPage: View {
                                     .buttonStyle(InkLabelWordStyle())
                             }
                             .padding(.horizontal, Theme.Spacing.gutter - 8)
+                        }
+                        // Sheet 283: Tess bottom right on every room landing too (306, 776, 96 x 96), not only on
+                        // Bridge; her double tap goes back to Bridge.
+                        .overlay(alignment: .bottomTrailing) {
+                            if LandingSwitch.isOn {
+                                BottomChrome(onSoulDoubleTap: { dismissLink() }, room: link.roomID)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                            }
                         }
                 }
             }
@@ -254,6 +286,39 @@ struct HomeMosaicPage: View {
         }
     }
 
+    /// The departure board in its masthead place (sheet 283: 140, 74, 238 x 104).
+    private func board(rise: CGFloat) -> some View {
+        MosaicSentence(pickedClauses: momentClause.map { [$0] }, dayClauses: dayClauses,
+                       onDoor: { clause, frame in
+                           doorwayFrom(frame) {
+                               DaySentence.open(clause, model: model, openLink: { present($0) })
+                           }
+                       },
+                       noticeList: notices,
+                       onRoom: { app, frame in
+                           doorwayFrom(frame) {
+                               if LandingSwitch.isOn, HomeApp(appID: app) == .kitchen {
+                                   roomDoor = .app(.kitchen)
+                               } else {
+                                   present(linkFor(app))
+                               }
+                           }
+                       },
+                       onSky: { playDusk() },
+                       facts: facts,
+                       paused: scenePhase != .active || link != nil,
+                       onAnnouncement: { announce($0) })
+            // Until the first refresh has read Core's loaders the sentence waits (no flicker between the
+            // fallback and the real lines).
+            .opacity(dayClauses == nil ? 0 : 1)
+            .accessibilityHidden(dayClauses == nil)
+            .mosaicShield()
+            .frame(width: BridgePlace.board.width, alignment: .topTrailing)
+            .frame(maxHeight: BridgePlace.board.height + 18, alignment: .top)
+            .padding(.leading, BridgePlace.board.minX)
+            .padding(.top, BridgePlace.board.minY * rise - 8)
+    }
+
     /// Settings sits on row 1's baseline (the date): the date row is 30 pt at Figtree 23 under a 16 pt top pad, and the
     /// word is Figtree 16 centred in a 44 pt target, so the offset is the difference of the two baselines.
     static let settingsTop: CGFloat = {
@@ -266,6 +331,35 @@ struct HomeMosaicPage: View {
         return max(row - word, 0)
     }()
 
+    /// Home 236: what the faces draw this minute. The weather is the device's sample until Core's source is allowed;
+    /// the workout is only whether one is going, its length and its rest; Now is the board's own latest line.
+    private func updateFaces(backdrop: MosaicBackdrop, read: MosaicFacts, at now: Date) {
+        let phase = MosaicScenePicker.phase(read)
+        let pick = MosaicScenePicker.pick(backdrop, facts: read, place: nil, weather: nil)
+        gallery = MosaicGallery.sequence(backdrop: backdrop, pick: pick, phase: phase)
+        let workout = model.session.flatMap { session -> MosaicWorkoutReading? in
+            guard session.finishedAt == nil else { return nil }
+            return MosaicWorkoutReading(startedAt: session.startedAt, restEndsAt: session.restEndsAt,
+                                        restTotal: session.restTotal)
+        }
+        faces.update(
+            MosaicFaceInputs(scenery: gallery.first, announcement: announcement,
+                             weather: SampleWeatherSource().reading(now: now), workout: workout),
+            sequence: gallery, on: { MosaicFaceStack.isOn($0) }, now: now
+        )
+    }
+
+    /// The board turned to a line: Now plays it. A line with no drawing (Notes, Money) leaves Now empty.
+    private func announce(_ notice: HomeNotice?) {
+        let next = notice.flatMap(MosaicNowKind.of).map { MosaicNowReading(kind: $0.kind, opens: $0.opens) }
+        guard next != announcement else { return }
+        announcement = next
+        if let facts {
+            updateFaces(backdrop: model.settingsAreReal ? SettingsStore(engine: model.engine).read().backdrop
+                : .tessPicks, read: facts, at: AppClock.now)
+        }
+    }
+
     private static let backShownKey = "homeMosaic.backShown"
 
     /// Asks Core's picker what the day looks like now; "Welcome back" shows once per absence.
@@ -276,6 +370,7 @@ struct HomeMosaicPage: View {
         things = HomeThings.make(model: model, facts: read, routines: routinesPart)
         let backdrop = model.settingsAreReal ? SettingsStore(engine: model.engine).read().backdrop : .tessPicks
         scenery = facts.flatMap { MosaicScenePicker.pick(backdrop, facts: $0, place: nil, weather: nil) }
+        updateFaces(backdrop: backdrop, read: read, at: at)
         thingIndex = min(thingIndex, max(things.count - 1, 0))
         dayClauses = HomeMosaic.firstThree(HomeSentence.compose(HomeSentence.inputs(
             engine: model.engine, plan: model.plan, moneyDue: .next(engine: model.engine, now: at),
@@ -663,6 +758,7 @@ private struct HomeLayerHost: View {
     var signSpec: MosaicSignSpec?
     var scenery: MosaicScenery?
     var dusk = false
+    var faceModel: MosaicFaceModel?
 
     var body: some View {
         MosaicHomeLayer(
@@ -679,7 +775,19 @@ private struct HomeLayerHost: View {
             pageDirection: pageDirection,
             signSpec: signSpec,
             scenery: scenery,
-            dusk: dusk
+            dusk: dusk,
+            faceModel: faceModel
         )
     }
+}
+
+/// Bridge's places from sheet 283 v4 (`LandingPlace`), as frames.
+private enum BridgePlace {
+    static let board = LandingPlace.Masthead.departureBoard
+    static let settings = LandingPlace.Masthead.settingsWord
+    static let keystone = LandingPlace.keystone.frame
+    static let widget = LandingPlace.widget.frame
+    static let doors = LandingPlace.doors.frame
+    /// The 160 pt mosaic core centred in the 182 pt keystone band.
+    static let coreTop = keystone.minY + (keystone.height - HomeMosaic.moodsMosaicSize.height) / 2
 }

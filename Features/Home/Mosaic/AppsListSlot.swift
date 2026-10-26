@@ -7,11 +7,42 @@ import TesseraCore
 @MainActor
 enum AppsListRows {
     struct Row: Identifiable, Equatable {
+        /// Bridge's dial also holds two doors that are not apps (sheet 283): the weather landing and Settings.
+        enum Extra: String { case lookout, settings }
+
         let app: HomeApp
         let summary: String
         let opens: HomeSentence.Opens?
-        var id: HomeApp {
-            app
+        var extra: Extra?
+
+        var id: String {
+            extra?.rawValue ?? app.rawValue
+        }
+
+        /// The ship name on the dial (sheet 281).
+        var name: String {
+            switch extra {
+            case .lookout: "Lookout"
+            case .settings: "Settings"
+            case nil: app.shipName
+            }
+        }
+
+        var accent: Color {
+            switch extra {
+            case .lookout: Color(light: 0xC9772E, dark: 0xE8A06A)
+            case .settings: Theme.Colors.ink
+            case nil: app.accent
+            }
+        }
+
+        /// What opening it shows.
+        var door: HomeV2Door {
+            switch extra {
+            case .lookout: .lookout
+            case .settings: .settings
+            case nil: .app(app)
+            }
         }
     }
 
@@ -31,12 +62,19 @@ enum AppsListRows {
 
     /// One row per app, in Core's order. An app whose line is missing (Core omits Money and Routines when it did not
     /// read their source) still has its row, name only, and still opens. A private top item already reads "Private".
-    static func make(_ lines: [AppSummaryLine]) -> [Row] {
-        AppSummaryApp.allCases.map { app in
+    /// The dial's order (sheet 283): Log, Lookout, Deck, Galley, Watch, Purse, then To do and Settings. Lists folded
+    /// into the Log (sheet 280), so it has no row of its own; To do stays until Tasks has another door.
+    static let order: [AppSummaryApp?] = [.notes, nil, .training, .kitchen, .routines, .money, .tasks]
+
+    static func make(_ lines: [AppSummaryLine], weather: String = "") -> [Row] {
+        var rows: [Row] = order.map { app in
+            guard let app else { return Row(app: .tasks, summary: weather, opens: nil, extra: .lookout) }
             let line = lines.first { $0.app == app }
             return Row(app: home(app), summary: line.map { $0.text.isEmpty ? quiet : $0.text } ?? "",
                        opens: line?.opens)
         }
+        rows.append(Row(app: .tasks, summary: "", opens: nil, extra: .settings))
+        return rows
     }
 
     /// A fact that fits one short line: cut at a word edge, never with an ellipsis.
@@ -111,7 +149,8 @@ struct AppsListSlot: View {
     /// The rows, read once per change in the model and not on every drag frame.
     @State private var rows: [AppsListRows.Row] = []
     /// 40 pt at the default size; the rows grow with the text.
-    @ScaledMetric(relativeTo: .body) private var rowHeight: CGFloat = 40
+    /// Sheet 283: three 40 pt places; the dial's type stops growing at AX1, so the places stay 40 pt.
+    private let rowHeight: CGFloat = 40
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
@@ -182,7 +221,9 @@ struct AppsListSlot: View {
             guard moved, rows.indices.contains(middle) else { return }
             try? await Task.sleep(for: .milliseconds(240))
             guard !Task.isCancelled else { return }
-            onGlance?(rows[middle].app)
+            if rows[middle].extra == nil {
+                onGlance?(rows[middle].app)
+            }
         }
         // Read again when the model changes and when the day turns over.
         .task(id: "\(model.revision)-\(Calendar.current.startOfDay(for: AppClock.now).timeIntervalSince1970)") {
@@ -202,6 +243,14 @@ struct AppsListSlot: View {
             // No visible "‹ Home" (Kaushik): the edge swipe goes back, and VoiceOver has a hidden Back to Home.
             HomeV2DoorPage(door: door)
                 .background { EdgeSwipeBack() }
+                // Sheet 283: Tess bottom right on the room's landing, in the room's colour.
+                .overlay(alignment: .bottomTrailing) {
+                    if LandingSwitch.isOn, door != .settings {
+                        BottomChrome(onSoulDoubleTap: { playDoorway(door.accent, true) { self.door = nil } },
+                                     room: door.roomID)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    }
+                }
                 .simultaneousGesture(
                     DragGesture(minimumDistance: 24, coordinateSpace: .global).onEnded { value in
                         if value.startLocation.x < 28, value.translation.width > 80 {
@@ -228,43 +277,39 @@ struct AppsListSlot: View {
                 settle(by: offset, count: rows.count)
             }
         } label: {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
-                Text(row.app.rawValue)
-                    // Laid out at the swelled size always, so the width is reserved; the others sit scaled down and
-                    // the pick springs up to full size.
-                    .font(Theme.voice(size: reduceMotion ? 18 : 18 * 1.3).weight(isMiddle ? .semibold : .regular))
-                    .scaleEffect(
-                        (isMiddle || reduceMotion ? 1 : 1 / 1.3) * (isMiddle && held && !reduceMotion ? 1.06 : 1),
-                        anchor: .leading
-                    )
-                    .foregroundStyle(isMiddle ? row.app.accent : Theme.Colors.inkTertiary)
-                    .fixedSize()
+            // Sheet 283 section 6: the dial on the left (x 24-184), focus 26 pt 700 in its colour, neighbours 20 pt
+            // with a 1.6 pt depth blur; the focus's one fact at x 186, left-aligned, 15 pt ink 2, cut on whole words.
+            ZStack(alignment: .leading) {
+                Text(row.name)
+                    .font(.custom("Figtree", size: isMiddle ? 26 : 20, relativeTo: .title3)
+                        .weight(isMiddle ? .bold : .regular))
+                    .scaleEffect(isMiddle && held && !reduceMotion ? 1.06 : 1, anchor: .leading)
+                    .foregroundStyle(isMiddle ? row.accent : Theme.Colors.inkSecondary)
+                    .blur(radius: isMiddle || reduceMotion ? 0 : 1.6)
+                    .lineLimit(1)
+                    .frame(width: 160, alignment: .leading)
                 if isMiddle, !row.summary.isEmpty {
-                    Spacer(minLength: Theme.Spacing.s)
-                    NumberedText(text: AppsListRows.fit(row.summary, limit: typeSize.isAccessibilitySize ? 22 : 38),
-                                 size: 16)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.trailing)
-                        .minimumScaleFactor(0.8)
-                        .id(row.app)
-                        .transition(reduceMotion ? .identity : .reveal)
+                    FitLine(forms: FitLine.cuts(row.summary), size: 15, color: Theme.Colors.inkSecondary)
+                        .frame(width: 192, alignment: .leading)
+                        .offset(x: 162)
+                        .id(row.id)
+                        .transition(.offset(y: reduceMotion ? 0 : 6))
                 }
             }
             .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isMiddle && !row.summary.isEmpty ? "\(row.app.rawValue), \(row.summary)" : row.app.rawValue)
-        .accessibilityHint(isMiddle ? "Opens \(row.app.rawValue)" : "Brings it to the middle")
+        .accessibilityLabel(isMiddle && !row.summary.isEmpty ? "\(row.name), \(row.summary)" : row.name)
+        .accessibilityHint(isMiddle ? "Opens \(row.name)" : "Brings it to the middle")
     }
 
     /// A tap on the middle row: the object its line names, else the app.
     private func open(_ row: AppsListRows.Row) {
-        if case let .object(id)? = row.opens {
+        if row.extra == nil, case let .object(id)? = row.opens {
             model.path.append(Route.object(id))
         } else {
-            playDoorway(row.app.accent, false) { door = .app(row.app) }
+            playDoorway(row.accent, false) { door = row.door }
         }
     }
 

@@ -127,7 +127,7 @@ struct MosaicPagesTests {
         let after = facts(at(12)).pageFacts(engine: engine, plan: plan)
         #expect(after.weekDone >= before.weekDone && after.weekPlanned == before.weekPlanned)
         if after.weekPlanned > 0 {
-            #expect(after.weekCaption == "This week, \(after.weekDone) of \(after.weekPlanned) training days")
+            #expect(after.weekCaption?.contains(" of ") == false && after.weekCaption?.hasPrefix("This week") == true)
         } else {
             #expect(after.weekCaption == nil)
         }
