@@ -74,7 +74,9 @@ struct HouseRulesTests {
             missing += Self.violations(in: source, file: name).map { "\(name):\($0)" }
         }
         #expect(missing.isEmpty, "\(missing)")
-        var expected: Set = ["ClaudeKey.swift", "ClaudeTessModel.swift", "PlanWording.swift", "RecipeLinkReader.swift"]
+        // ClaudeBrain.swift is the harness's Messages client (H1a): it passes NoRedirects.shared on every call too.
+        var expected: Set = ["ClaudeKey.swift", "ClaudeTessModel.swift", "PlanWording.swift", "RecipeLinkReader.swift",
+                             "ClaudeBrain.swift"]
         if files.contains(where: { $0.lastPathComponent == "HomeDoneWording.swift" }) {
             expected.insert("HomeDoneWording.swift")
         }
