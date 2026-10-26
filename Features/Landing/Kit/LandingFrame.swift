@@ -110,7 +110,7 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
 }
 
 extension FitLine {
-    private static let small: Set<String> = [
+    private nonisolated static let small: Set<String> = [
         "and",
         "the",
         "a",
@@ -128,13 +128,13 @@ extension FitLine {
     ]
 
     /// Words a cut never ends on: a line that stops on "opens", "around" or "this" says nothing (AX5 QA).
-    private static let weak: Set<String> = [
+    private nonisolated static let weak: Set<String> = [
         "opens", "open", "is", "are", "was", "were", "around", "about", "this", "next", "from", "until", "since",
         "than", "starts", "start", "last", "then", "so", "but", "your", "my", "his", "her",
     ]
 
     /// A bare number ("5", "12", "6:10", "82.5", "+10"), which never stands alone at the end of a cut.
-    static func isNumber(_ word: String) -> Bool {
+    nonisolated static func isNumber(_ word: String) -> Bool {
         let core = word.trimmingCharacters(in: CharacterSet(charactersIn: ",;:.!?()+-−°"))
         guard let first = core.unicodeScalars.first, CharacterSet.decimalDigits.contains(first) else { return false }
         return core.unicodeScalars
@@ -143,7 +143,7 @@ extension FitLine {
 
     /// Words grouped so a cut never splits them: a number travels with the word after it ("40 min", "5 lifts",
     /// "6:10 pm", "82.5 kg", "12 hours"), unless that word is a small one ("3 to go" keeps "3" apart).
-    static func tokens(_ text: String) -> [String] {
+    nonisolated static func tokens(_ text: String) -> [String] {
         let words = text.split(separator: " ").map(String.init)
         var tokens: [String] = []
         var index = 0
@@ -165,7 +165,7 @@ extension FitLine {
         return tokens
     }
 
-    private static func bareLast(_ kept: [String]) -> String {
+    private nonisolated static func bareLast(_ kept: [String]) -> String {
         let last = kept[kept.count - 1].split(separator: " ").last.map(String.init) ?? ""
         return last.lowercased().trimmingCharacters(in: .punctuationCharacters)
     }
@@ -173,7 +173,7 @@ extension FitLine {
     /// The longest form first, then every shorter whole-word cut: trailing small and weak words, lone numbers, commas
     /// and full stops are dropped, a number keeps its unit and a time its am or pm, so a fixed slot shows a clean
     /// shorter line, never "..." and never a fragment like "About 40 min, 5" or "Starts around 6:10".
-    static func cuts(_ text: String) -> [String] {
+    nonisolated static func cuts(_ text: String) -> [String] {
         // Sentence case: a line starts with a capital ("cook at 6:45 pm" reads "Cook at 6:45 pm").
         let text = text.prefix(1).uppercased() + text.dropFirst()
         let tokens = tokens(text)

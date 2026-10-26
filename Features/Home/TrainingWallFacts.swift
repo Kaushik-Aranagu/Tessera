@@ -304,10 +304,11 @@ extension TrainingWallFacts {
         switch day {
         case let .ready(name, _, count):
             todayLabel = name == ObjectPrivacy.routineLabel ? name : "\(short(name)), \(count) \(count == 1 ? "lift" : "lifts")"
+            // The same source the day was read from: tonight's workout first, else the tried or planned routine.
             if name != ObjectPrivacy.routineLabel,
-               let routine = model.triedRoutine() ?? model.todaysRoutine(now: now)
+               let source = model.tonightWorkout(around: now) ?? model.triedRoutine() ?? model.todaysRoutine(now: now)
             {
-                for slot in routine.orderedChildren.filter({ !$0.isDeleted }).prefix(3) {
+                for slot in source.orderedChildren.filter({ !$0.isDeleted }).prefix(3) {
                     guard let exercise = store.linkedClass("exercise", of: slot) else { continue }
                     let weight = model.ledger.sessions(of: exercise).first?.sets.first?.weight ?? 0
                     todayLines

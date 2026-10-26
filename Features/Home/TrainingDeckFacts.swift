@@ -175,7 +175,8 @@ extension TrainingDeckFacts {
             widget.append(WidgetItem(id: "today", header: when, big: name,
                                      middle: "About \(minutes) min, \(lifts) \(lifts == 1 ? "lift" : "lifts")",
                                      small: wall.brief?.text ?? "Tap to open it",
-                                     bigColor: TrainingSplit(name: name)?.color(dark: dark), strikeable: false))
+                                     bigColor: TrainingSplit(name: name)?.color(dark: dark), strikeable: false,
+                                     middleShort: "\(minutes) min", smallShort: wall.brief?.name))
         case let .running(name, done):
             widget.append(WidgetItem(id: "today", header: "Under way", big: name,
                                      middle: done > 0 ? "\(done) \(done == 1 ? "lift" : "lifts") done" : "Just started",
@@ -186,7 +187,7 @@ extension TrainingDeckFacts {
         case let .rest(next, _):
             widget.append(WidgetItem(id: "today", header: "Today", big: "Rest",
                                      middle: next.map { "Next is \($0)" } ?? "A rest day counts too",
-                                     small: "", strikeable: false))
+                                     small: "", strikeable: false, middleShort: next ?? "Rest"))
         case .nothing:
             break
         }
