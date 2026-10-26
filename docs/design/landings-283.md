@@ -14,7 +14,7 @@ Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v4). Owners: Builder A
 3. Keystone: 24-378 x 196-378, live on every page of the room. Bridge: the mosaic, 180-400.
 4. Caption: top 388, 15 pt ink2, one line on how to touch the keystone. Bridge: none.
 5. Widget: 24-378 x 400-612, Bridge's one-thing box exactly. Header (13 pt 600, .12em caps, at 429), Big line (64 tall: a word at 38 pt 700, or a number in Outfit 56 with its unit at half size), Middle line (20 pt 500), Small line (15 pt 500 ink2), Glyph (80 x 80, right edge, top 444). Bridge: the one thing.
-6. Doors: Dial x 24-184, top 640, three 40 pt places (focus 26 pt 700 in its color with an Outfit count; neighbours 20 pt, 1.6 pt blur). Door summary x 186-378, top 652: a 13 pt ink2 label and up to three 16/24 lines, the first 700. It rises 6 pt by clip on change. Bridge: the apps dial and one fact line at 688.
+6. Doors: Dial x 218-378 (right, for his right thumb; words right-aligned, growing from the right edge), top 640, three 40 pt places (focus 26 pt 700 in its color with an Outfit count; neighbours 20 pt, 1.6 pt blur). Door summary x 24-216, top 652: a 13 pt ink2 label and up to three 16/24 lines, the first 700. It rises 6 pt by clip on change. Bridge: the apps dial and one fact line at 688.
 7. Foot: Action word bottom left (Figtree 600 20), Tess bottom right.
 - Text fits its slot: cut on a whole word, drop trailing small words and commas. No ellipsis, no shrinking.
 
@@ -47,7 +47,7 @@ Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v4). Owners: Builder A
 
 ## Changes for builders (against v1 of this sheet)
 1. The up-next switcher at 422 and the summary sentence are gone; the middle is now the Widget at 400, Bridge's one-thing box.
-2. The doors dial moves from 540 to 640 and becomes Bridge's dial (40 pt places, width 160); the Door summary moves to x 186, top 652.
+2. The doors dial moves from 540 to 640 and becomes Bridge's dial (40 pt places, width 160); the Door summary moves to x 24, top 652 (the dial sits at x 218, on the right).
 3. The masthead gains the Switcher and Needs at 106.
 4. Lookout's flip is the cloud drift above.
 5. Names: use the seven section names above in code and talk.
@@ -83,7 +83,7 @@ Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v4). Owners: Builder A
   - Caption 24, 378, 354 by 34 (empty on Bridge).
   - Widget 24, 412, 354 by 200 (Bridge's one-thing box; content from 429). Glyph 298, 444, 80 by 80.
   - Breath 24, 612, 354 by 28.
-  - Doors 24, 640, 354 by 120: Dial 24, 640, 160 by 120; Door summary 186, 640, 192 by 120.
+  - Doors 24, 640, 354 by 120: Door summary 24, 640, 192 by 120; Dial 218, 640, 160 by 120 (sheet 289: the dial is on the right).
   - Breath 24, 760, 354 by 16.
   - Foot 0, 776, 402 by 76: Action word 24, 786, 220 by 62 (empty on Bridge, which shows the undo line); Tess 306, 776, 96 by 96.
   - Home bar 0, 852, 402 by 22 (system).
@@ -114,7 +114,7 @@ Board: https://claude.ai/artifact/Tq1KkB6diZUzCjV6xp98Xp (v4). Owners: Builder A
 - Back never moves the page. An edge pull leaves the screen where it is: content blurs up to 2.4 pt and fades
   to 60% with the pull (full at 120 pt) and the nav word scales up to 1.18. Past 80 pt the places change in place
   (v5 rules); short of it, everything settles back in 0.28 s. No interactive pop, no screen translation.
-- Door summary (186,640 192x120) keeps its place; its lines change per room when the dial turns:
+- Door summary (24,640 192x120, left of the dial since sheet 289) keeps its place; its lines change per room when the dial turns:
   - Log: new lines type on (one step per letter, up to 0.42 s, 0.12 s apart); old lines backspace (0.15 s).
   - Lookout: new lines condense out of fog (blur 8 to 0, letter spacing .22 em to normal, 0.62 s); old lines
     evaporate upward with blur.
@@ -151,7 +151,10 @@ Settings > Layout mode. Places only, no content; read-only for now (editable lat
 
 ## v8: Layout mode in glass (his Oct 25 7:27-7:28 PM notes: "neat, smooth, right spaces, glass-like, mixing and splitting")
 Replaces the v7 bubbles.
-- Panes: each place is a pane at its exact frame, inset 2 pt (every seam reads as a 4 pt gap). Radius
+- Panes: each place is a pane at its exact frame, and every seam is an even 4 pt. The frames stay as they are.
+  Frames that touch inset 2 pt on each facing side. Switcher and Needs are already 4 pt apart (224 and 228), so they
+  get no inset on the sides that face each other. Door summary and Dial are 2 pt apart (216 and 218), so they get
+  1 pt on those sides. Every other side insets 2 pt. Radius
   min(22, max(10, 0.3 x shorter side)). The glass is the Lookout's raised glass (his 7:41 PM note: the glossy
   v8 look was "too artificial"): clear inside (room tint 3%, black 7%), no blur, no gloss; light from the top
   left (white glow -4,-4 blur 14 at 90%, black look 9%), shadow to the bottom right (5,8 blur 20 at 13%, black
@@ -170,3 +173,21 @@ Replaces the v7 bubbles.
 - Tap a pane: a raised-glass card (26 pt radius, 10 pt blur over 78% page) with frame, holds, touch, next room and door page rules.
   It docks over the keystone for lower panes and above the foot for upper panes. Tap outside to close.
 - Reduce Motion: no liquid, no sheen; panes change in place.
+
+## v9 hotfixes (his Oct 26 1:30 PM note on the installed build; sheet 289)
+- **Dial on the right.** On every landing and on Bridge, the Dial is at 218, 640, 160 by 120 and the Door summary at
+  24, 640, 192 by 120 (Bridge's fact line 24, 688). He is right-handed and turns the dial with his right thumb.
+  - Dial words are right-aligned: the focus and neighbours grow from the right edge (transform origin right
+    centre), and a count sits after the name.
+  - The room-change reel runs in the same right-aligned column.
+  - Index and Sentence forms right-align too. Index's two columns read left to right, with the second column on
+    the right edge.
+  - Geometry check: the dial ends at 760, and Tess's 96 pt square starts at 774 (x 302 to 398), so they never
+    touch. The action word stays bottom left. Layout mode seams stay an even 4 pt (Summary right side 1 pt, Dial
+    left side 1 pt).
+- **The departure board is always right-aligned.** Every row's right edge is at 378, whatever its length. The
+  first row is the date.
+- **No full stop at the end of a shown line**, anywhere in the app. That covers titles, needs, captions, widget lines,
+  summaries, rows, receipts, the Undo line ("Tess logged yesterday's walk, 32 min  Undo") and Tess's spoken
+  line. Full stops stay only inside notes and documents (note bodies, the Log's text and Tess's kept notes). Inside
+  a line, a full stop between two sentences is fine, but prefer a comma.
