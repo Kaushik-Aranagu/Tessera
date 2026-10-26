@@ -69,7 +69,8 @@ struct WeatherLandingPage: View {
                             doors: doors(snapshot), focus: $focus,
                             openDoor: { door in openDoor(WeatherDoor(rawValue: door.id) ?? .hours) },
                             action: action(snapshot),
-                            backdrop: AnyView(LookoutSkyView(kind: snapshot.kind, now: snapshot.now)))
+                            backdrop: AnyView(LookoutSkyView(kind: snapshot.kind, now: snapshot.now)),
+                            summaryStyle: .fog)
         }
         .overlay { LookoutDropHandover() }
         .toolbar(.hidden, for: .navigationBar)

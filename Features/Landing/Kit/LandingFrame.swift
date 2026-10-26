@@ -110,7 +110,22 @@ struct LandingFrame<Keystone: View, Brief: View>: View {
 }
 
 extension FitLine {
-    private static let small: Set<String> = ["and", "the", "a", "an", "of", "to", "by", "in", "on", "or", "for", "with", "at", "is"]
+    private static let small: Set<String> = [
+        "and",
+        "the",
+        "a",
+        "an",
+        "of",
+        "to",
+        "by",
+        "in",
+        "on",
+        "or",
+        "for",
+        "with",
+        "at",
+        "is",
+    ]
 
     /// The longest form first, then every shorter whole-word cut: trailing small words, commas and full stops are
     /// dropped, so a fixed slot shows a clean shorter line, never "...".
@@ -120,11 +135,15 @@ extension FitLine {
         var forms = [text]
         for count in stride(from: words.count - 1, through: 1, by: -1) {
             var kept = Array(words.prefix(count))
-            while kept.count > 1, small.contains(kept[kept.count - 1].lowercased().trimmingCharacters(in: .punctuationCharacters)) {
+            while kept.count > 1,
+                  small.contains(kept[kept.count - 1].lowercased().trimmingCharacters(in: .punctuationCharacters))
+            {
                 kept.removeLast()
             }
             let form = kept.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ",;:.-"))
-            if !form.isEmpty, form != forms.last { forms.append(form) }
+            if !form.isEmpty, form != forms.last {
+                forms.append(form)
+            }
         }
         return forms
     }
@@ -137,6 +156,8 @@ struct FitLine: View {
     var size: CGFloat = 16
     var color: Color = Theme.Colors.inkSecondary
     var weight: Font.Weight = .regular
+    /// The face; Figtree unless a room writes in its own (Deck's door summary in Barlow Condensed).
+    var family = "Figtree"
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -150,6 +171,6 @@ struct FitLine: View {
     }
 
     private func text(_ form: String) -> Text {
-        Text(form).font(.custom("Figtree", size: size, relativeTo: .body).weight(weight)).foregroundStyle(color)
+        Text(form).font(.custom(family, size: size, relativeTo: .body).weight(weight)).foregroundStyle(color)
     }
 }

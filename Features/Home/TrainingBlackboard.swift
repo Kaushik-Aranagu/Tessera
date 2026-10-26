@@ -38,9 +38,8 @@ struct TrainingBlackboard: View {
         GeometryReader { proxy in
             let size = proxy.size
             ZStack(alignment: .topLeading) {
+                // Noise only (contract: no blur but the dial's): fine cells and a dithered edge read as dust.
                 BlackboardSlate(dark: dark)
-                    // Softens the noise cells into dust, so the edge never reads as pixels or tiles.
-                    .blur(radius: 1.6)
                     .drawingGroup()
                 if !reduceMotion, !ProcessInfo.processInfo.isLowPowerModeEnabled {
                     BlackboardDust(chalk: chalk)
@@ -285,7 +284,7 @@ private struct BlackboardSlate: View {
     var body: some View {
         Canvas { context, size in
             let base = dark ? (r: 0.17, g: 0.19, b: 0.19) : (r: 0.17, g: 0.21, b: 0.20)
-            let cell: CGFloat = 2
+            let cell: CGFloat = 1.5
             let columns = Int(ceil(size.width / cell))
             let rows = Int(ceil(size.height / cell))
             let feather = TrainingBlackboard.feather
@@ -303,7 +302,12 @@ private struct BlackboardSlate: View {
                     )
                     let ragged = edge + (BoardNoise.fractal(x / 14, y / 14, seed: 11) - 0.5) * feather * 0.9
                     let reach = max(0, min(1, ragged / feather))
-                    let alpha = reach * reach * (3 - 2 * reach)
+                    let eased = reach * reach * (3 - 2 * reach)
+                    // Dither the feather: inside it each cell keeps or drops by fine noise, so the edge breaks
+                    // into grains of dust instead of a soft gradient or visible cells.
+                    let hashed = (column &* 73_856_093) ^ (row &* 19_349_663) ^ 0x5BD1_E995
+                    let grain = CGFloat(abs(hashed) % 1000) / 1000
+                    let alpha = eased >= 0.98 ? 1 : (grain < eased ? min(1, eased * 1.3) : eased * 0.25)
                     guard alpha > 0.01 else { continue }
                     let light = 0.05 * (1 - (x / size.width + y / size.height) / 2)
                     let tone = (shade - 0.5) * 0.06 + light

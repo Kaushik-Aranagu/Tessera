@@ -67,7 +67,7 @@ struct RoutinesWoodlandLandingPage: View {
                         glyph: { item in LandingGlyph(item: item, color: item.bigColor ?? Self.accent) },
                         doors: doors(facts), focus: $focus,
                         openDoor: { _ in model.open(.routinesBrowse) },
-                        action: footAction(facts))
+                        action: footAction(facts), summaryStyle: .grow)
             .overlay { WatchHandOver(moment: handOver) }
             .onAppear { handOver = .init(kind: .bird, at: Date()) }
             .onChange(of: widgetIndex) { _, index in

@@ -27,10 +27,21 @@ struct DoorsDial: View {
     /// focus 26 pt, neighbours 20 pt, 1.6 pt blur, 160 pt wide; the summary is drawn apart by `DoorSummary`).
     enum Style { case notes, landing }
     static let slot: CGFloat = 48
-    private var placeHeight: CGFloat { style == .landing ? 40 : Self.slot }
-    private var focusSize: CGFloat { style == .landing ? 26 : 28 }
-    private var neighbourSize: CGFloat { style == .landing ? 20 : 21 }
-    private var maxBlur: CGFloat { style == .landing ? 1.6 : 1.8 }
+    private var placeHeight: CGFloat {
+        style == .landing ? 40 : Self.slot
+    }
+
+    private var focusSize: CGFloat {
+        style == .landing ? 26 : 28
+    }
+
+    private var neighbourSize: CGFloat {
+        style == .landing ? 20 : 21
+    }
+
+    private var maxBlur: CGFloat {
+        style == .landing ? 1.6 : 1.8
+    }
 
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -59,7 +70,9 @@ struct DoorsDial: View {
                 ForEach(places(count), id: \.self) { place in
                     row(for: wrapped(focus + place), place: place)
                 }
-                if style == .notes { facts }
+                if style == .notes {
+                    facts
+                }
             }
         }
         .frame(height: slotHeight * CGFloat(places(count).count == 3 ? 3 : (large ? 2 : 3)))
@@ -104,7 +117,11 @@ struct DoorsDial: View {
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(door.name)
-                    .font(.custom("Figtree", size: focusSize - (focusSize - neighbourSize) * distance, relativeTo: .title3).weight(.bold))
+                    .font(.custom(
+                        "Figtree",
+                        size: focusSize - (focusSize - neighbourSize) * distance,
+                        relativeTo: .title3
+                    ).weight(.bold))
                     .foregroundStyle(isFocus ? door.color : Theme.Colors.inkSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.4)
@@ -194,32 +211,63 @@ private extension CGFloat {
 }
 
 /// The door summary beside the landing dial (sheet 283): x 186, top 652; a 13 pt ink 2 label and up to three
-/// 16/24 lines, the first 700. It rises 6 pt by a clip when the focus changes. Not blurred; each room fills it its way.
+/// 16/24 lines, the first 700. Not blurred; each room fills it its way, and (283 v6) each room changes it its way when
+/// the dial turns (`DoorSummaryStyle`). The old and new rows share their places, so nothing moves the layout.
 struct DoorSummary: View {
     let door: DialDoor?
+    var style: DoorSummaryStyle = .rise
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    struct Row: Identifiable, Equatable {
+        let id: String
+        let text: String
+        let isLabel: Bool
+        let isFirst: Bool
+        let index: Int
+        let y: CGFloat
+    }
+
+    static func rows(_ door: DialDoor) -> [Row] {
+        var rows: [Row] = []
+        var y: CGFloat = 0
+        if let label = door.label {
+            rows.append(Row(id: "\(door.id)#label", text: label, isLabel: true, isFirst: false, index: 0, y: 0))
+            y = 20
+        }
+        for (index, line) in door.lines.prefix(3).enumerated() {
+            rows.append(Row(id: "\(door.id)#\(index)", text: line, isLabel: false, isFirst: index == 0,
+                            index: rows.count, y: y + CGFloat(index) * 24))
+        }
+        return rows
+    }
+
     var body: some View {
-        if let door, door.label != nil || !door.lines.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
-                if let label = door.label {
-                    Text(label)
-                        .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .lineLimit(1)
-                        .frame(height: 20, alignment: .leading)
-                }
-                ForEach(Array(door.lines.prefix(3).enumerated()), id: \.offset) { index, line in
-                    FitLine(forms: FitLine.cuts(line), size: 16, color: Theme.Colors.ink, weight: index == 0 ? .bold : .regular)
-                        .frame(width: 192, height: 24, alignment: .leading)
-                }
+        let rows = door.map(Self.rows) ?? []
+        ZStack(alignment: .topLeading) {
+            ForEach(rows) { row in
+                rowView(row)
+                    .offset(y: row.y)
+                    .transition(style.transition(index: row.index, count: rows.count, reduceMotion: reduceMotion))
             }
-            .frame(width: 192, alignment: .leading)
-            .id(door.id)
-            .transition(.offset(y: reduceMotion ? 0 : 6))
-            .tesseraAnimation(Theme.Motion.firm, value: door.id)
-            .accessibilityElement(children: .combine)
+        }
+        .frame(width: 192, height: 92, alignment: .topLeading)
+        .tesseraAnimation(style.animation(rows: rows.count), value: door?.id)
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private func rowView(_ row: Row) -> some View {
+        if row.isLabel {
+            Text(row.text)
+                .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.regular))
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .lineLimit(1)
+                .frame(width: 192, height: 20, alignment: .leading)
+        } else {
+            FitLine(forms: FitLine.cuts(row.text), size: style.lineSize, color: Theme.Colors.ink,
+                    weight: row.isFirst ? .bold : .regular, family: style.family)
+                .frame(width: 192, height: 24, alignment: .leading)
         }
     }
 }

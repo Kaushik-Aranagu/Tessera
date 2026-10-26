@@ -90,9 +90,11 @@ struct TrainingWallLanding: View {
                         caption: ["Tap a number to open the lift. Swipe left to wipe."],
                         widget: deck.widget, widgetIndex: $widgetIndex,
                         openWidget: openWidget,
-                        glyph: { item in LandingGlyph(item: item, color: Theme.Colors.Accent.training) },
+                        glyph: { item in
+                            LandingGlyph(item: Self.glyphWords(item), color: Theme.Colors.Accent.training)
+                        },
                         doors: facts.doors, focus: $focus, openDoor: openDoor,
-                        action: action(facts))
+                        action: action(facts), summaryStyle: .chalk)
             .overlay { ChalkDustHandOver() }
             .toolbar(.hidden, for: .navigationBar)
     }
@@ -265,5 +267,14 @@ struct ChalkDustHandOver: View {
             dot.fill(Path(ellipseIn: CGRect(x: x, y: y, width: size, height: size)),
                      with: .color(landed || fallen > 0.85 ? blue : chalk))
         }
+    }
+}
+
+extension TrainingWallLanding {
+    /// Deck's glyph is the board's ticks (283): the library picks by words, and "Tonight" or a routine like
+    /// "Lower body" would draw a moon, so today's item is picked as the week's sessions. Yesterday keeps its words.
+    static func glyphWords(_ item: WidgetItem) -> WidgetItem {
+        guard item.id == "today" || item.id == "week" else { return item }
+        return WidgetItem(id: item.id, header: "This week", big: "", middle: "")
     }
 }

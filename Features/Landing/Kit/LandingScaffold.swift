@@ -33,6 +33,8 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
     var onSwitcherChange: () -> Void = {}
     /// The page behind the sections; nil is the theme's page colour. Lookout draws its sky here.
     var backdrop: AnyView?
+    /// How the door summary changes when the dial turns (283 v6); the kit's plain rise unless the room has its own.
+    var summaryStyle: DoorSummaryStyle = .rise
 
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -61,7 +63,8 @@ struct LandingScaffold<Keystone: View, Glyph: View>: View {
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.doors)
                     .offset(x: 24, y: 640 * k)
-                DoorSummary(door: doors.isEmpty ? nil : doors[((focus % doors.count) + doors.count) % doors.count])
+                DoorSummary(door: doors.isEmpty ? nil : doors[((focus % doors.count) + doors.count) % doors.count],
+                            style: summaryStyle)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .landingSection(.doors)
                     .offset(x: 186, y: 652 * k)
