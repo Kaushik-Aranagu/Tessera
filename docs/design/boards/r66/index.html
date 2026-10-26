@@ -126,6 +126,7 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
  <h1>Every landing, one layout.</h1>
  <p class="lede">Every landing now opens like Bridge and keeps Bridge’s lower half: the widget in the middle and the doors dial below it. The top holds the title, a text-only switcher and the room’s needs. Tap a room in Bridge’s apps dial (or a face, or a highlighted word) to watch the flip. Swipe from the left edge, or tap “Bridge”, to go back.</p>
  <div class="notes283">
+  <p><b>New: living looks and coming back into view (sheet 286, Oct 26).</b> Every place can be shown more than one way, and Tess can change it. Try the third row of buttons. The Deck’s doors can be a Reel (the wheel), a Column (every door at once) or a Sentence (the doors as one line of words). The frame never moves; the door words travel from where they were to where they go. The look is kept per room. “Leave, change, come back” takes you to Bridge, changes the Galley’s data while you are away, and brings you back: the rail shows now, then only the two tickets that changed reprint, once, after the room has settled. Nothing replays.</p>
   <p><b>New: when Tess makes the change (sheet 285).</b> Use the “Tess acts” buttons under the phone. Her dab flies from her to the place on an arc, spreads into a blue wash, and the place plays its own move inside it, the same move your finger makes, only a little slower. What she changed stays in her blue until the 10 s Undo window closes, then it dries into the room’s own ink: blue chalk turns white on the Deck, the blue clip on a new Galley ticket turns steel, and her blue strike turns ink. On the rail the wash sits behind the tickets. The board has no gaps, so there the wash lies over it in light. When the engine refuses, her dab stops short, waits, and goes home. Nothing moves, and only her line says why. While Undo holds the foot, the action word steps aside. “Tess sets a rest day” shows the Deck’s rest: the board wipes tonight’s line and chalks the rest, today’s letter in the week takes the word “rest” under it (never a cross), the needs flap, the widget says it in type, and the barbell sets its plates down.</p>
   <p><b>New: level 1 and level 2 in every room (sheet 284, his 7:44 PM note).</b> Turn any room’s dial and tap the focused door. The page does not slide: the title and the keystone stay exactly where they were (the Galley rail keeps its tickets, the Deck keeps its board), the switcher and needs become the door’s title, and the widget, dial and summary make way for the door’s list. The list fills its block exactly, biggest first, so there is never a gap or a run of equal rows. Swipe the door title across for the next door. Tap a row for its item page: the same frame again, with the item’s title, three facts, and its body (Trip packing is a checklist, the Run plan is Tess’s note, 7 PM is the hours around it, Bench is its sets, Tacos are the steps, Walk is the week, Food is the ledger in “about” amounts). Swipe the item title across for the next item. Back undoes each step in place.</p>
   <p><b>New in version 6 (his 4:47 and 4:48 PM notes).</b> Back no longer moves the page. Pull from the left edge and the screen stays put: the content loosens and blurs a little and the nav word grows; let go past a short pull and every place changes in place, short of it everything settles back. The door summary beside the dial now changes in each room’s own way as you turn the dial. Log types its lines and backspaces the old ones. Lookout’s lines condense out of fog. The Deck chalks them on and wipes them off with a puff of dust. The Galley prints them like a ticket and tears the old one off. The Watch grows them from the ground and the old ones fall like leaves. The Purse keeps its words still and rolls only the numbers.</p>
@@ -176,6 +177,13 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
   <button class="w" data-th="galley-tess">Galley: Tess hangs a ticket</button>
   <button class="w" data-th="galley-you">Galley: your finger hangs it</button>
   <button class="w" data-th="galley-dish">Galley: Tess does the dishes</button>
+ </div>
+ <div class="bar" role="group" aria-label="Looks and coming back into view (sheet 286)">
+  <button class="w" data-th="look-column">Deck doors: Column</button>
+  <button class="w" data-th="look-sentence">Deck doors: Sentence</button>
+  <button class="w" data-th="look-reel">Deck doors: Reel</button>
+  <button class="w" data-th="look-tess">Galley: Tess shows the doors as a column</button>
+  <button class="w" data-th="away-galley">Galley: leave, change, come back</button>
  </div>
  <nav class="map" id="map" aria-label="Every screen"></nav>
 </div>
@@ -1135,6 +1143,7 @@ MAP.push(
 .clip.tess{background:var(--tessblue)}
 .thstrike{position:absolute;left:0;top:55%;height:1.5px;width:0;background:#2E2A24;transition:background .7s ease;pointer-events:none}
 .thstrike.tess{background:var(--tessblue)}
+.dlook .dw{cursor:pointer;font-weight:500;color:var(--ink);white-space:nowrap;letter-spacing:-.01em}.dlook .dw.f{font-weight:700}.dlook.column .dw{display:block}
 .tix.n5{gap:8px}.tix.n5 .face{padding:11px 6px 9px}.tix.n5 .face .ttk{letter-spacing:.02em;font-size:12px}.tix.n5 .face .sub{letter-spacing:.02em}
 #tessline span{margin-right:.27em}
 </style>
@@ -1738,7 +1747,7 @@ let back0=back;back=function(){const top=stack[stack.length-1],prev=stack[stack.
    Door summary: the old one slides off to the right, and the new one slides in from the right once the dial slows.
    Foot: the old action word streams out to the left, the new one streams in. Tess stays where she is, and only her colour changes.
    An empty side (Bridge has no caption and no action word) is still a slot: the other side plays its half alone. */
-const SECT={masthead:['.board','.setw','.ltop','.lband'],caption:['.lcap'],widget:['.one'],dial:['.dial'],summary:['.bfact','.lsum'],foot:['.act','.undoline']};
+const SECT={masthead:['.board','.setw','.ltop','.lband'],caption:['.lcap'],widget:['.one'],dial:['.dial','.dlook'],summary:['.bfact','.lsum'],foot:['.act','.undoline']};
 const sectOf=(el,k)=>SECT[k].flatMap(s=>[...el.querySelectorAll(':scope > '+s)]);
 function dialNames(d){return [...d.querySelectorAll('.d')].map(e=>{const m=(e.style.transform||'').match(/translateY\((-?[\d.]+)px/);return {y:m?+m[1]:0,t:e.textContent.replace(/\d+$/,'').trim(),o:+(e.style.opacity||1)}}).filter(x=>x.o>0.05).sort((a,b)=>a.y-b.y).map(x=>x.t)}
 function swap(from,to){if(RM)return;const A=(e,k,o)=>e.animate(k,o);
@@ -1758,8 +1767,13 @@ function swap(from,to){if(RM)return;const A=(e,k,o)=>e.animate(k,o);
  old.widget.forEach(e=>{A(e,[{transform:'none',opacity:1},{transform:'translateY(-48px)',opacity:0}],{duration:260,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'});drop(e,270)});
  neu.widget.forEach(e=>A(e,[{transform:'translateY(64px)',opacity:0,clipPath:'inset(0 0 100% 0)'},{transform:'none',opacity:1,clipPath:'inset(-20px -20px -20px -20px)'}],{duration:420,delay:200,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
  // doors: the reel. Too fast to read through both lists, then it slows onto the new doors.
- const od=old.dial[0],nd=neu.dial[0];
- if(od&&nd){const a=dialNames(od),b=dialNames(nd);od.remove();const all=[...a,...b];const mix=[];for(let i=0;i<9;i++)mix.push(all[(i*5+3)%all.length]);
+ const od=old.dial.find(e=>e.classList.contains('dial')),nd=neu.dial.find(e=>e.classList.contains('dial'));
+ // a door look other than the reel (sheet 286): the old doors fade, the new words rise in order; only Reel spins
+ const ol=old.dial.find(e=>e.classList.contains('dlook')),nl=neu.dial.find(e=>e.classList.contains('dlook'));
+ if(ol||nl){old.dial.forEach(e=>{A(e,[{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(3px)'}],{duration:240,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'});drop(e,250)});
+  if(nl)nl.querySelectorAll('.dw').forEach((w,i)=>A(w,[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:320,delay:420+i*40,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
+  else if(nd)A(nd,[{opacity:0},{opacity:1}],{duration:300,delay:300,fill:'backwards'})}
+ else if(od&&nd){const a=dialNames(od),b=dialNames(nd);od.remove();const all=[...a,...b];const mix=[];for(let i=0;i<9;i++)mix.push(all[(i*5+3)%all.length]);
   const L=[...a.slice(0,3),...mix,...b.slice(0,3)];while(L.length<6)L.unshift('');
   const reel=h('div','reel');reel.style.cssText='position:absolute;left:24px;top:640px;width:170px;height:120px;overflow:hidden;z-index:7;pointer-events:none;-webkit-mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent)';
   const col=h('div');col.innerHTML=L.map((t,i)=>'<div style="height:40px;line-height:40px;font:600 '+(i===L.length-2?26:21)+'px var(--sans);white-space:nowrap;color:'+(i===L.length-2?'var(--room,var(--ink))':'var(--ink2)')+'">'+t+'</div>').join('');reel.appendChild(col);to.appendChild(reel);
@@ -1876,7 +1890,7 @@ function lvBody(box,b,color){box.innerHTML='';const add=x=>{box.insertAdjacentHT
  else if(b.kind==='week'){add('<div class="lbw">'+b.l.map(([d,s])=>'<div class="'+(s===1?'y':s===2?'t':'n')+'"><b>'+d+'</b><span>'+(s===1?'tended':s===2?'today':'rested')+'</span></div>').join('')+'</div>');if(b.note)add('<p class="lbn">'+b.note+'</p>')}
  else if(b.kind==='sib'){b.l.forEach(([t,s2,v])=>add('<div class="lbk'+(t===b.me?' on':'')+'"><em>'+t+'<small>'+s2+'</small></em><b>'+v+'</b></div>'))}
  else if(b.kind==='tess')add('<p class="lbt">'+b.t+'</p>');else add('<p class="lbp">'+b.t+'</p>')}
-function lvBase(el,room){const S=SCREENS[room];const own=el.dataset.id;el.dataset.id=room;const c=S.render(el,{});el.dataset.id=own;[...el.querySelectorAll(':scope > .lband,:scope > .one,:scope > .dial,:scope > .lsum,:scope > .act,:scope > .undoline')].forEach(e=>e.remove());return c}
+function lvBase(el,room){const S=SCREENS[room];const own=el.dataset.id;el.dataset.id=room;const c=S.render(el,{});el.dataset.id=own;[...el.querySelectorAll(':scope > .lband,:scope > .one,:scope > .dlook,:scope > .dial,:scope > .lsum,:scope > .act,:scope > .undoline')].forEach(e=>e.remove());return c}
 function lvNav(el,txt){const nb=el.querySelector('.lnav');if(nb)nb.textContent=txt}
 function lvAct(el,color,acts){const A=acts.map(a=>({...a,f:a.f||(e=>receipt(e,a.v+', '+a.o+'.'))}));return actionX(el,{color,acts:A})}
 // the Door title (or Item title): across for the next sibling; only the words inside change
@@ -2312,6 +2326,56 @@ function thDeckRest(byTess){const el=current,cv=el&&el.querySelector('canvas.tbo
 const TH_DEMOS={'deck-tess':['training',()=>thDeckLog(true)],'deck-you':['training',()=>thDeckLog(false)],'deck-no':['training',thDeckRefuse],'deck-rest':['training',()=>thDeckRest(true)],'deck-rest-you':['training',()=>thDeckRest(false)],
  'galley-tess':['kitchen',()=>thGalleyHang(true)],'galley-you':['kitchen',()=>thGalleyHang(false)],'galley-dish':['kitchen',()=>thGalleyDishes(true)]};
 window.__th=k=>{const [room,f]=TH_DEMOS[k];const tl=$('#tessline');if(tl)tl.innerHTML='';const top=stack.length?stack[stack.length-1].id:null;if(top===room){f();return}reset('home');go(room);setTimeout(f,1500)};
+document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
+
+/* ================= 286: living UI. A place keeps its frame and its meaning; only its look changes.
+   The doors dial has three looks: Reel (the wheel), Column (every door at once), Sentence (the doors as one line of
+   words). A swap moves the words that both looks share from where they were to where they go, and fades the rest. */
+const LOOKS=window.__looks={};const LOOK_NAMES={reel:'Reel',column:'Column',sentence:'Sentence'};
+function doorList(el,room){const L=LV[room];const d=el.querySelector(':scope > .dial');let focus=0;
+ if(d){const f=[...d.querySelectorAll('.d')].find(e=>/translateY\(40px\)/.test(e.style.transform||''));if(f){const t=f.textContent.replace(/\d+$/,'').trim();const i=L.doors.findIndex(x=>x.k===t);if(i>=0)focus=i}}
+ return {doors:L.doors.map(x=>x.k),focus}}
+function lookEl(el,room,look){const {doors,focus}=doorList(el,room);const f0=[...el.querySelectorAll(':scope > .dial .d')].find(e=>/translateY\(40px\)/.test(e.style.transform||''));const color=(f0&&f0.style.color)||'var(--ink)';
+ const w=h('div','dlook '+look);w.style.cssText='position:absolute;left:24px;top:640px;width:160px;height:120px;z-index:6';
+ const word=(t,i)=>{const s=h('span','dw',t);s.dataset.t=t;if(i===focus){s.classList.add('f');s.style.color=color}s.onclick=()=>go('l1_'+room,{door:i});return s};
+ if(look==='column'){const two=doors.length>5,rows=two?Math.ceil(doors.length/2):doors.length,lh=120/rows;
+  doors.forEach((t,i)=>{const s=word(t,i);const c=two?Math.floor(i/rows):0,r=two?i%rows:i;s.style.cssText+='position:absolute;left:'+(c*84)+'px;top:'+(r*lh)+'px;height:'+lh+'px;line-height:'+lh+'px;font-size:'+(two?14:Math.min(20,lh*.72))+'px';w.appendChild(s)})}
+ else{w.style.cssText+=';display:block;font-size:19px;line-height:26px';doors.forEach((t,i)=>{w.appendChild(word(t,i));w.appendChild(document.createTextNode(i===doors.length-1?'.':i===doors.length-2?' and ':', '))})}
+ return w}
+function labelRects(host){const m={};host.querySelectorAll('.dial .d,.dlook .dw').forEach(e=>{const t=(e.dataset.t||e.textContent.replace(/\d+$/,'')).trim();const s=e.querySelector('span')||e;const r=s.getBoundingClientRect();if(+getComputedStyle(e).opacity>0.05&&r.width)m[t]=r});return m}
+function setDoorLook(el,room,look,anim){const dl=el.querySelector(':scope > .dial');if(!dl)return;const old=el.querySelector(':scope > .dlook');const was=old?old.classList[1]:'reel';if(was===look&&!anim)return;
+ const before=anim?labelRects(el):null;old&&old.remove();
+ if(look==='reel'){dl.style.visibility=''}else{el.appendChild(lookEl(el,room,look));dl.style.visibility='hidden'}
+ if(!before||RM)return;
+ /* shared words travel; the place itself never moves */
+ const now=el.querySelector(':scope > .dlook')||dl;const after=labelRects(el);
+ now.querySelectorAll('.d,.dw').forEach(e=>{const t=(e.dataset.t||e.textContent.replace(/\d+$/,'')).trim();const a=before[t],b=after[t];const tgt=e.querySelector('span')||e;
+  if(a&&b){const dx=(a.left-b.left)/K,dy=(a.top-b.top)/K,sc=a.height/b.height;tgt.style.display='inline-block';tgt.style.transformOrigin='0 0';tgt.animate([{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')'},{transform:'none'}],{duration:520,easing:'cubic-bezier(.2,.9,.25,1.04)'})}
+  else e.animate([{opacity:0},{opacity:1}],{duration:260,delay:260})})}
+/* every landing keeps its looks: applied on render, before anything is seen */
+['notes','weather','training','kitchen','routines','money'].forEach(room=>{const S=SCREENS[room];if(!S||S._looked)return;const r=S.render;S._looked=1;
+ S.render=function(el,P){const c=r.call(this,el,P);if(LOOKS[room]&&el.querySelector(':scope > .dial'))setDoorLook(el,room,LOOKS[room],false);return c}});
+function lookBy(room,look,byTess){const el=current;if(!el)return;const was=LOOKS[room]||'reel';if(was===look)return;
+ const play=()=>{LOOKS[room]=look;setDoorLook(el,room,look,true);thUndo(el,byTess,(byTess?'showed':'Showing')+' the doors as a '+LOOK_NAMES[look].toLowerCase()+'.',()=>{LOOKS[room]=was;setDoorLook(el,room,was,true)},null)};
+ if(byTess)tessHand({x:24,y:640,w:160,h:120},{hold:900}).then(play);else play()}
+
+/* ================= 286: back into view. Show now, then play only what changed while away, once (600 ms at most).
+   Never a replay. More than six changes, or away over an hour: just show now with the keystone's settle. */
+const SEEN={};
+function railSnap(el){const m={};el.querySelectorAll('.tix .tk').forEach(t=>{const k=(t.querySelector('.ttk')||{}).textContent;if(k)m[k]=t.querySelector('.front').textContent});return m}
+function railReturn(el,snap){const diffs=[];el.querySelectorAll('.tix .tk').forEach(t=>{const k=(t.querySelector('.ttk')||{}).textContent;if(!(k in snap))diffs.push([t,'new']);else if(snap[k]!==t.querySelector('.front').textContent)diffs.push([t,'changed'])});
+ if(RM||diffs.length>6)return diffs.length;
+ diffs.forEach(([t,kind],i)=>{const f=t.querySelector('.front');
+  if(kind==='new'){t.style.transformOrigin='50% 0';t.animate([{transform:'translateY(-20px) rotate(6deg)',opacity:0},{transform:'rotate(-3deg)',opacity:1,offset:.5},{transform:'none'}],{duration:560,delay:650+i*80,easing:'cubic-bezier(.3,.6,.4,1)',fill:'backwards'})}
+  else f.animate([{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:520,delay:650+i*80,easing:'steps(7,end)',fill:'backwards'})});
+ return diffs.length}
+function galleyAway(){const go2=()=>{const el=current;SEEN.kitchen=railSnap(el);
+  reset('home');setTimeout(()=>{/* while he is away, only the data changes */GET=GET.filter(x=>x!=='Limes');dishes=0;
+   go('kitchen');setTimeout(()=>{railReturn(current,SEEN.kitchen)},0)},1400)};
+ const top=stack.length?stack[stack.length-1].id:null;if(top==='kitchen')go2();else{reset('home');go('kitchen');setTimeout(go2,1500)}}
+
+Object.assign(TH_DEMOS,{'look-column':['training',()=>lookBy('training','column',false)],'look-sentence':['training',()=>lookBy('training','sentence',false)],
+ 'look-reel':['training',()=>lookBy('training','reel',false)],'look-tess':['kitchen',()=>lookBy('kitchen','column',true)],'away-galley':['kitchen',galleyAway]});
 document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
 
 })();
