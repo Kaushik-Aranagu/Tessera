@@ -327,7 +327,7 @@ struct GalleyShellHost: View {
         .fullScreenCover(item: $recipe) { RecipeView(recipeID: $0.id) }
         .fullScreenCover(item: $cookCover) { CookClockPage(cookID: $0.id) }
         #if DEBUG
-            .task { await ShellStills.walk(navigator, room: GalleyRoomContent.room) }
+            .task { await navigator.walkForStills(room: GalleyRoomContent.room) }
         #endif
     }
 
@@ -390,18 +390,3 @@ struct GalleyShellHost: View {
     }
 }
 
-#if DEBUG
-    /// `-shellDoor <id>` (simulator only, LaunchFlags): opens that door 2 s after launch and, with `-shellBack`, comes
-    /// back 3 s later, so stills can catch a room's door page.
-    @MainActor
-    enum ShellStills {
-        static func walk(_ navigator: ShellNavigator, room: String) async {
-            guard let door = LaunchFlags.value(after: "-shellDoor") else { return }
-            try? await Task.sleep(for: .seconds(2))
-            navigator.push(.door(room, door))
-            guard LaunchFlags.has("-shellBack") else { return }
-            try? await Task.sleep(for: .seconds(3))
-            navigator.pop()
-        }
-    }
-#endif

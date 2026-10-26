@@ -266,7 +266,7 @@ struct PurseShellHost: View {
                 Button("Cancel", role: .cancel) {}
             }
         #if DEBUG
-            .task { await ShellStills.walk(navigator, room: PurseRoomContent.room) }
+            .task { await navigator.walkForStills(room: PurseRoomContent.room) }
         #endif
     }
 
