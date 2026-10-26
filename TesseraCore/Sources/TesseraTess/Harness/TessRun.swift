@@ -45,6 +45,9 @@ public final class TessRun {
     public var flagOn: @MainActor () -> Bool = { true }
     public var now: () -> Date = { .now }
     public var calendar: Calendar = .current
+    /// The shell's quiet stage (sheet 287, section 5): a look Tess picks is drawn off screen first and applied only
+    /// if it passes. Nil until the host has one; then the shell's own check is the only gate.
+    public var stage: LookStage?
 
     private final class Active: @unchecked Sendable {
         let id = UUID()
@@ -97,7 +100,7 @@ public final class TessRun {
     /// thing in focus ("done", "open this") is bound from the frame and runs with no model at all. The frame's
     /// fragments replace the old "On screen" line, and its object ids become the run's handles.
     public func ask(_ text: String, frame: TessFrame) -> AsyncStream<TessRunEvent> {
-        let pick = ToolPicker.pick(text, frame: frame, agent: agent)
+        let pick = ToolPicker.pick(text, frame: frame, agent: agent, looks: SettingsStore(engine: engine).read().looks)
         let about = frame.aboutIDs.compactMap { engine.store.object(id: $0) }.filter { !$0.isDeleted }
         return start(text, about: about, context: Context(screen: nil, frame: frame, pick: pick))
     }
@@ -191,13 +194,15 @@ public final class TessRun {
                 .object([("window", .string("The word"))])
             ),
             spec("goBack", "Go back one page", .object([])),
-            spec("setLook", "Change how a place on screen looks (a setting; his things don't change). Only a look "
-                + "from that place's look line", .object([
+            spec("setLook", "Change how a place on screen looks (a setting; his things don't change): one form, or "
+                + "one trait to one value, only from that place's look line. It is tried off screen first", .object([
                     ("place", .string("The place: dial, widget, page, needs, doorSummary, glyph, keystone...")),
-                    ("look", .string("The look's id from the look line")),
+                    ("form", .nullable(.string("A form from the look line, or designed for the studio's look"))),
+                    ("trait", .nullable(.string("A trait from the look line, with value"))),
+                    ("value", .nullable(.string("The trait's new value"))),
                     ("scope", .nullable(.string("room for this room, everywhere for every room; null is this room"))),
                 ])),
-            spec("showLooks", "Open the looks of a place so he can swipe through them",
+            spec("showLooks", "Open shape mode on a place so he can swipe through its forms",
                  .object([("place", .string("The place"))])),
         ]
     }
@@ -521,6 +526,10 @@ public final class TessRun {
                     object = id
                 }
             }
+            if name == "setLook", let refusal = await staged(strings) {
+                result = refusal
+                break
+            }
             sink(.shell(ShellIntent(call: name, object: object, arguments: strings)))
             result = ("Shown.", false)
         default:
@@ -543,6 +552,20 @@ public final class TessRun {
         await trace.record(TraceSpan(kind: .tool, name: name, at: now(), totalMs: LatencyBench.ms(.now - started),
                                      outcome: result.isError ? "error" : "works", runID: runID))
         return result
+    }
+
+    /// A look the model picked, checked before the host sees it: a form or value the place has, then the quiet stage.
+    /// Nil when it may go to the shell; otherwise what the model hears instead. Nothing is shown either way.
+    func staged(_ arguments: [String: String]) async -> (text: String, isError: Bool)? {
+        guard let key = arguments["place"], let place = ElementPlace(rawValue: key),
+              let change = LookWords.change(arguments), LookWords.isKnown(change, place: key)
+        else {
+            return ("That place has no such look. Use one from its look line.", true)
+        }
+        guard let stage else { return nil }
+        let report = await stage(place, change)
+        guard !report.passed else { return nil }
+        return ("I tried it off screen and kept his look: \(report.line) Try another form, or tell him why.", false)
     }
 
     // MARK: Bound calls
@@ -600,12 +623,15 @@ public final class TessRun {
         }
     }
 
-    /// "The dial, as a column." from a bound look; the shell's own Undo line follows.
+    /// "The dial, as index." from a bound look; the shell's own Undo line follows.
     static func lookLine(_ arguments: [String: String]) -> String {
-        guard let place = arguments["place"], let id = arguments["look"],
-              let look = LookCatalog.look(id, for: place) else { return "Done." }
+        guard let place = arguments["place"], let change = LookWords.change(arguments) else { return "Done." }
         let everywhere = arguments["scope"] == "everywhere" ? ", in every room" : ""
-        return "The \(place), as \(look.name.lowercased())\(everywhere)."
+        return switch change {
+        case let .form(id): "The \(place), as \(id)\(everywhere)."
+        case .designed: "The \(place), as drawn\(everywhere)."
+        case let .trait(name, value): "The \(place): \(name) \(value)\(everywhere)."
+        }
     }
 
     static func boundFailure(_ text: String) -> String {

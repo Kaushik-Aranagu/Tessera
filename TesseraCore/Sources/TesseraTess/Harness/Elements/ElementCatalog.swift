@@ -70,7 +70,7 @@ public enum ElementCatalog {
     static let cookTogether = ElementCall("cookTogether", phrases: ["cook together", "plan dinner", "tonight"],
                                           inputs: [CallInput("recipes", from: .asked)], reaction: .keystoneTakes)
     static let setServeTime = ElementCall("setServeTime", phrases: ["eat at", "serve at", "dinner at"],
-                                          inputs: [CallInput("time", from: .asked)], reaction: .lines)
+                                          inputs: [CallInput("serveAt", from: .asked)], reaction: .lines)
     static let addGroceries = ElementCall("addGroceries", phrases: ["get", "buy", "need", "out of"],
                                           inputs: [CallInput("lines", from: .asked)], reaction: .keystoneTakes)
     static let startShop = ElementCall("startShop", phrases: ["shopping", "at the store", "shop"],
@@ -102,17 +102,20 @@ public enum ElementCatalog {
     // MARK: Reads
 
     static let query = ElementCall("query", phrases: ["how many", "when did", "what was", "how much"],
-                                   inputs: [CallInput("question", from: .asked)], reaction: .tessLine)
+                                   inputs: [CallInput("from", from: .asked)], reaction: .tessLine)
 
     /// Tools named here that `TessTools` does not have yet. Each wraps an engine action that exists.
     /// Tools named here that `TessTools` does not have yet. None: every call wraps an engine action that exists.
     public static let proposed: Set<String> = []
 
-    /// Looks (sheet 286, element-looks.md): every place with looks can take one or open Layout mode on itself. Shell
-    /// calls: a look is a setting, not his data. They bind only through `ToolPicker.lookBound`.
+    /// Looks (sheets 286 and 287, element-looks.md): every living place can take another form or a trait step, or
+    /// open shape mode on itself. Shell calls: a look is a setting, not his data. They bind only through
+    /// `ToolPicker.lookBound`.
     static let setLook = ElementCall("setLook", .shell, phrases: [],
-                                     inputs: [CallInput("look", from: .asked), CallInput("scope", from: .asked,
-                                                                                           required: false)],
+                                     inputs: [CallInput("form", from: .asked, required: false),
+                                              CallInput("trait", from: .asked, required: false),
+                                              CallInput("value", from: .asked, required: false),
+                                              CallInput("scope", from: .asked, required: false)],
                                      reaction: .reshape)
     static let showLooks = ElementCall("showLooks", .shell, phrases: [], reaction: .navigate)
 
@@ -177,7 +180,7 @@ public enum ElementCatalog {
         for call in shared[place] ?? [] where !out.contains(where: { $0.name == call.name }) {
             out.append(call)
         }
-        if LookCatalog.looks(for: place.rawValue, room: room).count > 1 {
+        if LookCatalog.isLiving(place.rawValue, room: room) {
             out += [setLook, showLooks]
         }
         return out

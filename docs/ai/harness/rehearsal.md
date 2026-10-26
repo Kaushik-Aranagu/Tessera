@@ -60,35 +60,39 @@ Rehearsals have a budget: at most 3 per ask, each under 2 s on the phone. Past t
 It writes nothing, so it doesn't count against the ghost budget, but it does count as a round. Then she calls the
 same tools for real, or says what went wrong and what she would do instead.
 
-## 4. Looks: an off-screen render
+## 4. Looks: the quiet stage (sheet 287, section 5)
 
 **UI (Builder A, with the shell):**
-- `LookRehearsal.render(place:look:screen:)` draws the place's `PlaceHost` in the candidate look, with today's
-  content, through `ImageRenderer`, at the place's own frame size.
-- It is outside the window and outside every `liveScope`, so nothing animates, nothing is shown, and the live gate
-  (`live-visibility.md`) stays closed.
-- Each item view reports a preference, `RenderedItem(id, visible, truncated, typeSize)`, and the renderer gathers
-  them into a `LookCheck`.
+- `ShellStage.render(screen:looks:)` draws the screen he is on with the candidate look and today's content. It has no
+  window and no clock, and draws only the end frame, plus the 50% frame for moves that travel.
+- It is outside every `liveScope`, so nothing animates, nothing is shown, and the live gate (`live-visibility.md`)
+  stays closed.
+- Each item view can report a preference, `RenderedItem(id, visible, truncated, typeSize)`, which the stage gathers
+  into its flags.
 
-**Checks (on the phone, no model, no pixels sent anywhere):**
-- Every item in the place's `ElementMeaning` is drawn, and none is cut. Sheet 286's rule is that a look keeps the
-  items, focus and calls.
-- Nothing is smaller than the type floor at his Dynamic Type size.
-- The look rules still hold: no more than 4 colours on the page, no filled dots, and money is "about".
-- With Reduce Motion on, the look's entrance has a crossfade.
+**Checks (on the phone, no model, no pixels sent anywhere), as a `StageReport` per place:**
+- **fits:** no clipped text, lines within their count, every item in the place's `ElementMeaning` drawn.
+- **floor:** no type under the room's floor at his Dynamic Type size.
+- **contrast:** AA or better, in both looks.
+- **rules:** at most 4 colours, the three biggest words never share one, nothing near Ember, money "about".
+- **touch:** every target at least 44 pt.
+- **calm:** the move ends within 1 s, and a Reduce Motion version exists.
 
-**Tess's tool:** `tryLook(place, look)` returns one line, for example "Column shows all 5 doors, none cut" or
-"Sentence cuts 2 of 8 doors". She shows him only a look that passed, with `setLook` (the wash, the swap, the Undo
-line). If none passes, she says so and keeps his look.
+**Wired today (AI lane):** the host gives `TessRun.stage` a closure that stages one `LookChange`. When the model
+picks a form or value with `setLook`, `TessRun` first checks the change against the place's own list. Then it stages
+the change, and hands the intent to the shell only if every flag passes. Otherwise the model hears the failed checks,
+for example "The dial fails fits, touch.", and tries the next form or tells him why. His look stays. Only the flags
+reach the model, never a picture or an item name. A bound change ("the doors as an index") is his own choice, like his
+hand, so it isn't staged.
 
 ## 5. Order of work
 
 1. **Core:** `ObjectStore.fork()`, `Rehearsal` with the diff and the engine checks, the `rehearse` tool, and its
    tests. A rehearsal must leave the real store byte for byte unchanged, and fire no observer.
-2. **AI lane (this thread):** when she rehearses (the picker flags bulk and structural asks), the `rehearse` and
-   `tryLook` specs, the diff as fragments with taint, and test-world cases scored on "rehearsed, then acted
-   correctly".
-3. **Builder A:** `LookRehearsal` and the `RenderedItem` preference on each place's item views, after the sheet 286
-   looks exist.
+2. **AI lane (this thread):** the stage gate on `setLook` is done (`TessRun.stage`, `StageReport`). Still to do:
+   when she rehearses data (the picker flags bulk and structural asks), the `rehearse` spec, the diff as fragments
+   with taint, and test-world cases scored on "rehearsed, then acted correctly".
+3. **Builder A:** `ShellStage.render(screen:looks:) -> StageReport`, wired to `TessRun.stage`, and the
+   `RenderedItem` preference on each place's item views, after the sheet 287 forms exist.
 4. **Later:** a vision check of the rendered image on the phone's own model, and rebuilding code on the Mac or an
    edge server for changes bigger than a look.

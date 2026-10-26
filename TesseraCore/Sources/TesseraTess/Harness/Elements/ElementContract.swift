@@ -92,8 +92,10 @@ public enum Reaction: String, Sendable, Equatable {
     case lines
     /// Nothing on screen moves; Tess's own line says it.
     case tessLine
-    /// The place takes a new look (sheet 286): shared things travel, the rest fades. By Tess, sheet 285's wash comes
-    /// first, then the swap, then the Undo line; a look carries no blue (docs/ai/harness/element-looks.md).
+    /// The place takes a new form or trait (sheet 287): what both forms show travels to where it goes, matched by
+    /// item id over 520 ms, and the rest fades; it collapses to a point only when the two share no item
+    /// (`ReshapeMove`). By Tess, sheet 285's wash comes first, then the travel, then the Undo line; a look carries no
+    /// blue (docs/ai/harness/element-looks.md).
     case reshape
 }
 

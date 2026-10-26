@@ -33,10 +33,13 @@ public enum ToolPicker {
     /// A bound call is a short command; a longer ask has more in it than the frame can fill.
     static let boundWords = 6
 
-    public static func pick(_ ask: String, frame: TessFrame, agent: AgentSpec? = nil) -> Pick {
-        // A look nudge on one place ("denser", "the dial as a list", "as it was"): no model.
+    /// `looks` is his kept looks (settings), which a trait word steps from ("denser" is one step denser than now).
+    public static func pick(_ ask: String, frame: TessFrame, agent: AgentSpec? = nil,
+                            looks kept: RoomLooks = RoomLooks()) -> Pick
+    {
+        // A look nudge on one place ("denser", "the doors as an index", "as it was"): no model.
         let looks = LookWords.isAbout(ask)
-        if let bound = lookBound(ask, frame: frame, about: looks) {
+        if let bound = lookBound(ask, frame: frame, about: looks, looks: kept) {
             return Pick(tools: [bound.call], plan: forced(bound.call), bound: bound, matched: [bound.call], looks: true)
         }
         let offered = frame.calls
