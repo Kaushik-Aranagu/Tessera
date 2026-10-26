@@ -76,7 +76,7 @@ struct DoorsDial: View {
             }
         }
         .frame(height: slotHeight * CGFloat(places(count).count == 3 ? 3 : (large ? 2 : 3)))
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: style == .landing ? .trailing : .leading)
         .contentShape(Rectangle())
         .highPriorityGesture(turn)
         .tesseraFeedback(cue)
@@ -131,12 +131,12 @@ struct DoorsDial: View {
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
             }
-            .frame(height: slotHeight, alignment: .leading)
+            .frame(height: slotHeight, alignment: style == .landing ? .trailing : .leading)
             .blur(radius: blurOn ? maxBlur * distance : 0)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: style == .landing ? 160 : 190, alignment: .leading)
+        .frame(maxWidth: style == .landing ? 160 : 190, alignment: style == .landing ? .trailing : .leading)
         .offset(y: offset)
         .accessibilityLabel("\(door.name)\(door.count.map { ", \($0)" } ?? "")")
         .accessibilityAddTraits(place == 0 ? .isSelected : [])
