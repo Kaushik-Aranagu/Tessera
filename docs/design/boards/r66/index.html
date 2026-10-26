@@ -286,7 +286,7 @@ function dial(host,items,opts){let f=opts.start||0;const n=items.length,S=opts.s
  function draw(){els.forEach((d,i)=>{const o=rel(i),it=items[i];d.innerHTML=opts.label(it,o===0);
   d.style.transform='translateY('+((o+1)*S)+'px)'+(o?' scale(.66)':'');d.style.opacity=Math.abs(o)>1?0:o?.6:1;d.style.pointerEvents=Math.abs(o)>1?'none':'auto';
   d.style.filter=o&&!RM?'blur('+(opts.blur??1.8)+'px)':'none';d.style.color=o?'var(--ink2)':(it.color||'var(--room)')});opts.change&&opts.change(items[f],f)}
- function turn(s){f=((f+s)%n+n)%n;draw()}
+ function turn(s){f=((f+s)%n+n)%n;draw();/* 290: a detent, the focus word settles a hair past and back */if(!RM&&s&&els[f])els[f].animate([{translate:'0 '+(s>0?3:-3)+'px'},{translate:'0 0'}],{duration:280,easing:'cubic-bezier(.3,1.7,.5,1)',composite:'add'})}
  let y0=null,acc=0;host.addEventListener('pointerdown',e=>{y0=e.clientY;acc=0});
  host.addEventListener('pointermove',e=>{if(y0==null)return;const dy=(e.clientY-y0)/K;if(Math.abs(dy-acc)>S*.6){turn(dy-acc<0?1:-1);acc=dy}});
  host.addEventListener('pointerup',()=>{y0=null});
@@ -306,7 +306,7 @@ function tessDraw(now){tessT=now/1000;const t=tessT;tc.clearRect(0,0,192,192);
   const g=tc.createRadialGradient(x,y,2,cx,cy,R*(1.05+.04*Math.sin(2*t+k)));const c=ember[k];
   g.addColorStop(0,'rgba('+c+','+(k?.75:.95)+')');g.addColorStop(.55,'rgba('+c+','+(k?.45:.6)+')');g.addColorStop(1,'rgba('+c+',0)');
   tc.fillStyle=g;tc.beginPath();tc.arc(cx,cy,R*1.1,0,7);tc.fill()}
- const bl=(t%5)<.13?.15:1,gl=Math.sin(t*.7)*3;tc.fillStyle=black?'rgba(21,21,23,.82)':'rgba(30,24,30,.86)';
+ const bl=((t%5)<.13||performance.now()<(window.__tblink||0))?.15:1,gl=Math.sin(t*.7)*3;tc.fillStyle=black?'rgba(21,21,23,.82)':'rgba(30,24,30,.86)';
  [[-9,-4],[9,-4]].forEach(([dx,dy])=>{tc.beginPath();tc.ellipse(cx+dx+gl,cy+dy,3.2,4.6*bl,0,0,7);tc.fill()});
  requestAnimationFrame(tessDraw)}
 requestAnimationFrame(tessDraw);
@@ -352,6 +352,8 @@ $('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('
 .apps .ar span{font-size:15px;font-weight:500;color:var(--ink2);clip-path:inset(0 100% 0 0);transform:translateX(14px);transition:clip-path .35s,transform .35s}
 .apps .ar.mid b{transform:scale(1.3)}
 .apps .ar.mid span{clip-path:inset(0 0 0 0);transform:none;margin-left:22px}
+/* the streamed action word sets its letters visible, so stepping aside also holds opacity */
+.act.aside{opacity:0!important}
 .undoline{position:absolute;left:24px;bottom:56px;font-size:15px;font-weight:500;color:var(--ink2);height:22px;white-space:nowrap}
 .undoline button{font:inherit;background:none;border:0;color:var(--ink);font-weight:600;cursor:pointer;padding:0 4px}
 .wx{position:relative;display:inline-block}
@@ -472,12 +474,12 @@ SCREENS.home={title:'Home',accent:null,tess:'Stretch at 8 may run into Push A. M
   const old=curB;setTimeout(()=>old.remove(),400);curB=nb;oi=n}
  let ox=null,oy,odx,ody,oax,hold=null,struck=false;
  one.addEventListener('pointerdown',e=>{ox=e.clientX;oy=e.clientY;odx=ody=0;oax=null;struck=false;one.setPointerCapture(e.pointerId);
-  const [,ly]=localXY(e,one);if(ly>40&&ly<110){const st=$('.strike',curB);hold=setTimeout(()=>{st.style.transition='width .6s linear';st.style.width='100%';hold=setTimeout(()=>{struck=true},600)},180)}});
- one.addEventListener('pointermove',e=>{if(ox==null)return;odx=(e.clientX-ox)/K;ody=(e.clientY-oy)/K;oax=lockAxis(odx,ody,oax);if(oax){clearTimeout(hold);const st=$('.strike',curB);st.style.transition='width .2s';st.style.width='0';
+  const [,ly]=localXY(e,one);if(ly>40&&ly<110){const st=$('.strike',curB);hold=setTimeout(()=>{st.style.transition='width .6s linear';st.style.width='100%';hold=setTimeout(()=>{struck=true;st.classList.add('lift')},600)},180)}});
+ one.addEventListener('pointermove',e=>{if(ox==null)return;odx=(e.clientX-ox)/K;ody=(e.clientY-oy)/K;oax=lockAxis(odx,ody,oax);if(oax){clearTimeout(hold);const st=$('.strike',curB);st.style.transition='width .2s';st.style.width='0';st.classList.remove('lift');
   curB.style.transition='none';curB.style.transform=oax==='x'?'translateX('+odx*.9+'px)':'translateY('+ody*.72+'px)'}});
  one.addEventListener('pointerup',e=>{if(ox==null)return;ox=null;clearTimeout(hold);curB.style.transition='transform .3s';curB.style.transform='none';
   if(struck){const it=ONE[oi];setUndo(it.hdr+', done.');show((oi+1)%ONE.length,'y');return}
-  const st=$('.strike',curB);st.style.transition='width .2s';st.style.width='0';
+  const st=$('.strike',curB);st.style.transition='width .2s';st.style.width='0';st.classList.remove('lift');
   if(oax==='x'&&Math.abs(odx)>50)show((oi+(odx<0?1:-1)+ONE.length)%ONE.length,'x');
   else if(oax==='y'&&Math.abs(ody)>44)show((oi+(ody<0?1:-1)+ONE.length)%ONE.length,'y');
   else if(!oax){const [x,y]=localXY(e,phone);go(ONE[oi].go,{},{doorway:1,x,y})}});
@@ -1146,6 +1148,9 @@ MAP.push(
 .clip.tess{background:var(--tessblue)}
 .thstrike{position:absolute;left:0;top:55%;height:1.5px;width:0;background:#2E2A24;transition:background .7s ease;pointer-events:none}
 .thstrike.tess{background:var(--tessblue)}
+/* 290: the pen lifts at the end of a strike, a 4 pt flick up and right */
+.strike::after,.thstrike::after{content:'';position:absolute;right:-3px;top:0;width:5px;height:100%;background:inherit;transform:rotate(-28deg);transform-origin:left center;opacity:0;transition:opacity .12s}
+.strike.lift::after,.thstrike.lift::after{opacity:1}
 .shp{position:absolute;z-index:8;cursor:pointer;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--room,var(--ink)) 34%,transparent),0 6px 18px -12px color-mix(in srgb,var(--room,var(--ink)) 50%,transparent);transition:box-shadow .2s,transform .2s;touch-action:none}
 .shp.on{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--room,var(--ink)) 80%,transparent),inset 0 1.5px 0 rgba(255,255,255,.5),0 12px 26px -12px color-mix(in srgb,var(--room,var(--ink)) 70%,transparent);transform:translateY(-1px)}
 .shaping > *:not(.shp):not(.shapebar):not(.lnav):not(.dial):not(.dlook):not(.sbar){filter:saturate(.85)}
@@ -1241,7 +1246,7 @@ function passCenter(el,list,onOpen,onStep){const pass=h('div','pass','<div class
   let y0=null,x0=null;e.onpointerdown=ev=>{y0=ev.clientY;x0=ev.clientX;e.setPointerCapture(ev.pointerId)};
   e.onpointerup=ev=>{if(y0==null)return;const dy=(ev.clientY-y0)/K,dx=(ev.clientX-x0)/K;y0=null;if(dy<-30){flip(1);return}if(dy>30){flip(-1);return}if(Math.abs(dy)<8&&Math.abs(dx)<8){const li=ev.target.closest('[data-step]');if(li&&onStep){onStep(+li.dataset.step);return}onOpen&&onOpen(tk.id)}};
   e._refresh=()=>{const cur=sheet.classList.contains('flipped')?'.back':'.front';e.querySelector(cur).innerHTML=pageHTML(tk,pi)};tix.appendChild(e)});return tix}
-const dishT=()=>({id:'dish',title:'Dishes',color:'money',pages:[{lines:[dishes?dishes+' waiting':'none waiting','since lunch']}]});
+const dishT=()=>({id:'dish',title:'Dishes',color:'money',pages:[{lines:[dishes?dishes+' waiting':'the sink is clear','since lunch']}]});
 const tacosT=big=>({id:'tacos',title:'Tacos',color:'clay',big,pages:[{sub:'25 min, tonight',lines:big?TACOS.ing.slice(0,6).map(([a,b])=>a+(b?', '+b:'')):TACOS.ing.slice(0,3).map(a=>a[0])},...(big?[{sub:'and',lines:TACOS.ing.slice(6).map(([a,b])=>a+(b?', '+b:''))}]:[]),{sub:'the plan',lines:TACOS.steps.map((s,i)=>({t:s,n:i+1,idx:i}))}]});
 const getT=big=>{const per=big?6:3;const pages=[];for(let i=0;i<GET.length;i+=per)pages.push({sub:i?'':GET.length+' things',lines:GET.slice(i,i+per)});return {id:'get',title:'Get',color:'lists',big,pages}};
 const riceT=()=>({id:'rice',title:'Rice',color:'wine',pages:[{lines:['goes out today','cooked Thursday']}]});
@@ -1507,12 +1512,12 @@ function widgetV3(el,R,id){const W=R.w,box=h('div','one lw');box.style.zIndex=6;
   setTimeout(()=>old.remove(),400);cur=nb;wi=n;setTimeout(()=>enter(nb),id==='notes'?380:0)}
  let ox=null,oy,dx,dy,oa,hold=null,struck=false;
  box.addEventListener('pointerdown',e=>{ox=e.clientX;oy=e.clientY;dx=dy=0;oa=null;struck=false;box.setPointerCapture(e.pointerId);
-  const [,ly]=localXY(e,box);if(ly>40&&ly<110){const st=$('.strike',cur);hold=R.noStrike?null:setTimeout(()=>{st.style.transition='width .6s linear';st.style.width='100%';hold=setTimeout(()=>{struck=true},600)},180)}});
- box.addEventListener('pointermove',e=>{if(ox==null)return;dx=(e.clientX-ox)/K;dy=(e.clientY-oy)/K;oa=lockAxis(dx,dy,oa);if(oa){clearTimeout(hold);const st=$('.strike',cur);st.style.transition='width .2s';st.style.width='0';
+  const [,ly]=localXY(e,box);if(ly>40&&ly<110){const st=$('.strike',cur);hold=R.noStrike?null:setTimeout(()=>{st.style.transition='width .6s linear';st.style.width='100%';hold=setTimeout(()=>{struck=true;st.classList.add('lift')},600)},180)}});
+ box.addEventListener('pointermove',e=>{if(ox==null)return;dx=(e.clientX-ox)/K;dy=(e.clientY-oy)/K;oa=lockAxis(dx,dy,oa);if(oa){clearTimeout(hold);const st=$('.strike',cur);st.style.transition='width .2s';st.style.width='0';st.classList.remove('lift');
   cur.style.transition='none';cur.style.transform=oa==='x'?'translateX('+dx*.9+'px)':'translateY('+dy*.72+'px)'}});
  box.addEventListener('pointerup',()=>{if(ox==null)return;ox=null;clearTimeout(hold);cur.style.transition='transform .3s';cur.style.transform='none';
   if(struck&&!R.noStrike){const it=W[wi],k=wi;W.splice(k,1);if(!W.length){W.splice(k,0,it);return}receipt(el,it.hdr+', '+it.big+', done.',()=>{W.splice(k,0,it);show(k,'y',-1)});show(k%W.length,'y',1);return}
-  const st=$('.strike',cur);st.style.transition='width .2s';st.style.width='0';
+  const st=$('.strike',cur);st.style.transition='width .2s';st.style.width='0';st.classList.remove('lift');
   if(oa==='x'&&Math.abs(dx)>50)show((wi+(dx<0?1:-1)+W.length)%W.length,'x',dx<0?1:-1);
   else if(oa==='y'&&Math.abs(dy)>44)show((wi+(dy<0?1:-1)+W.length)%W.length,'y',dy<0?1:-1);
   else if(!oa&&W[wi].go)go(...W[wi].go)});
@@ -2255,7 +2260,7 @@ function tessHand(rc,o={}){return new Promise(res=>{
   const end=w.classList.contains('over')?.55:.9;
   if(RM){w.animate([{opacity:0},{opacity:end}],{duration:150,fill:'forwards'});setTimeout(()=>{w.animate([{opacity:end},{opacity:0}],{duration:150,fill:'forwards'}).onfinish=()=>w.remove()},hold);res();return}
   w.animate([{transform:'scale(.12,.09)',opacity:end},{transform:'scale(1)',opacity:end}],{duration:260,easing:'cubic-bezier(.2,.8,.3,1)',fill:'forwards'});
-  setTimeout(res,200);setTimeout(()=>{w.animate([{transform:'scale(1)',opacity:end},{transform:'scale(1.06)',opacity:0}],{duration:600,easing:'ease-in',fill:'forwards'}).onfinish=()=>w.remove()},260+hold)};
+  setTimeout(()=>{res();window.__tblink=performance.now()+140},200);setTimeout(()=>{w.animate([{transform:'scale(1)',opacity:end},{transform:'scale(1.06)',opacity:0}],{duration:600,easing:'ease-in',fill:'forwards'}).onfinish=()=>w.remove()},260+hold)};
  if(RM){if(o.refuse){res('refused');return}washAt();return}
  const x=h('i','thx'),y=h('i','thy'),d=h('i','thdab');y.appendChild(d);x.appendChild(y);L.appendChild(x);
  const f=o.refuse?.72:1,tx=sx+(cx-sx)*f,ty=sy+(cy-sy)*f,dur=460;
@@ -2273,10 +2278,10 @@ function thUndo(el,byTess,msg,undo,dry){msg=msg.replace(/\.\s*$/,'');let ul=el.q
  const aside=on=>thAside(el,on);
  /* a new change dries the one before it at once */
  if(ul._dry){const d=ul._dry;ul._dry=null;d()}ul._dry=dry||null;
- ul.innerHTML=(byTess?'<span style="color:var(--tessblue)">Tess</span> ':'')+msg+' <button>Undo</button>';clearTimeout(ul._t);aside(1);
+ ul.innerHTML=(byTess?'<span style="color:var(--tessblue)">Tess</span> ':'')+msg+' <button>Undo</button>';clearTimeout(ul._t);aside(1);if(!RM)ul.querySelector('button').animate([{opacity:1},{opacity:1,offset:.6},{opacity:.45}],{duration:10000,fill:'forwards'});
  ul.querySelector('button').onclick=()=>{clearTimeout(ul._t);ul.innerHTML='';ul._dry=null;aside(0);undo()};ul._t=setTimeout(()=>{ul.innerHTML='';aside(0);const d=ul._dry;ul._dry=null;d&&d()},10000)}
 function thAside(el,on){const act=el&&el.querySelector('.act');if(!act||!!act._aside===!!on)return;act._aside=on;act.style.pointerEvents=on?'none':'';
- if(on)act.animate([{opacity:1},{opacity:0}],{duration:RM?0:200}).onfinish=()=>{if(act._aside)act.style.visibility='hidden'};else{act.style.visibility='';act.animate([{opacity:0},{opacity:1}],{duration:RM?0:260})}}
+ if(on)act.animate([{opacity:1},{opacity:0}],{duration:RM?0:200}).onfinish=()=>{if(act._aside){act.style.visibility='hidden';act.classList.add('aside')}};else{act.style.visibility='';act.classList.remove('aside');act.animate([{opacity:0},{opacity:1}],{duration:RM?0:260})}}
 const thTween=(ms,f,done)=>{const t0=performance.now();const s=now=>{const u=Math.min(1,(now-t0)/ms);f(u);if(u<1)requestAnimationFrame(s);else done&&done()};requestAnimationFrame(s)};
 const TESSCHALK='158,186,240';
 const mixRGB=(a,b,u)=>{const A=a.split(',').map(Number),B=b.split(',').map(Number);return A.map((v,i)=>Math.round(v+(B[i]-v)*u)).join(',')};
@@ -2284,25 +2289,29 @@ const mixRGB=(a,b,u)=>{const A=a.split(',').map(Number),B=b.split(',').map(Numbe
 /* Deck: Tess writes on the board in blue chalk; it whitens when the Undo window closes. His finger writes white. */
 function thDeckLog(byTess){const el=current,cv=el&&el.querySelector('canvas.tboard');if(!cv)return;
  const st={p:0,dry:byTess?0:1};cv._x=(cv._x||[]).filter(f=>!f._walk);
- const f=ck=>{if(st.p<=0)return;ck.save();ck.beginPath();ck.rect(18,300,st.p*230,40);ck.clip();chalk(ck,'Walk, 32 min, Saturday',26,326,19,.78+.17*st.dry,mixRGB(TESSCHALK,C,st.dry));ck.restore()};f._walk=1;cv._x.push(f);
- const write=()=>thTween(byTess?1080:900,u=>{st.p=u},()=>thUndo(el,byTess,byTess?'logged yesterday’s walk, 32 min.':'Walk, 32 min, logged.',()=>thTween(320,u=>{st.p=1-u}),()=>byTess&&thTween(700,u=>{st.dry=u})));
+ const f=ck=>{const a=st.p>0;if(!a&&!(st.g>0))return;ck.save();ck.beginPath();ck.rect(18,300,(a?st.p:1)*230,40);ck.clip();chalk(ck,'Walk, 32 min, Saturday',26,326,19,a?.78+.17*st.dry:st.g,mixRGB(TESSCHALK,C,st.dry));ck.restore()};f._walk=1;cv._x.push(f);
+ const write=()=>thTween(byTess?1080:900,u=>{st.p=u},()=>thUndo(el,byTess,byTess?'logged yesterday’s walk, 32 min.':'Walk, 32 min, logged.',()=>thTween(320,u=>{st.p=1-u},()=>{/* 290: a wiped line leaves a faint ghost, like real chalk */if(!RM){st.g=.1;thTween(2600,u=>{st.g=.1*(1-u)})}}),()=>byTess&&thTween(700,u=>{st.dry=u})));
  if(byTess)tessHand({x:20,y:304,w:220,h:30},{hold:1100}).then(write);else write()}
 function thDeckRefuse(){if(!current)return;tessHand({x:20,y:220,w:340,h:30},{refuse:1}).then(()=>{const el=current;thAside(el,1);tessSay('Pull A is already tomorrow morning, so Push A stays tonight. Want both on one day?');setTimeout(()=>thAside(el,0),7600)})}
 
 /* Galley: Tess hangs a ticket on the rail with a blue clip; the clip turns steel when it dries. */
+/* 290: a ticket hung on the rail nudges its neighbours, less with distance, and the rail dips half a point */
+function railSway(tix,src,delay){if(RM)return;const all=[...tix.querySelectorAll('.tk')],i0=all.indexOf(src);
+ all.forEach((t,i)=>{if(t===src)return;const d=Math.abs(i-i0),a=1.6/d*(i<i0?-1:1);t.style.transformOrigin='50% 0';t.animate([{rotate:'0deg'},{rotate:a+'deg'},{rotate:(-a*.4)+'deg'},{rotate:'0deg'}],{duration:900,delay:delay+d*60,easing:'cubic-bezier(.3,.6,.4,1)',composite:'add'})});
+ tix.animate([{translate:'0 0'},{translate:'0 .6px'},{translate:'0 0'}],{duration:420,delay,easing:'ease-out',composite:'add'})}
 function thGalleyHang(byTess){const el=current,tix=el&&el.querySelector('.tix');if(!tix)return;const pass=tix.parentNode;
  const old=tix.querySelector('.tk.th');if(old)old.remove();
  const tk={id:'dal2',title:'Dal',color:'clay',pages:[{sub:'tomorrow, 40 min',lines:['Soak tonight','Red lentils']}]};
  const e=h('div','tk th');e.innerHTML='<div class="clip"></div><div class="sheet"><div class="face front">'+pageHTML(tk,0)+'</div><div class="face back"></div></div>';
- const tr=thRect(tix);const hang=()=>{e.style.flex='0 0 0px';e.style.opacity=0;e.style.transformOrigin='50% 0';tix.appendChild(e);tix.classList.add('n5');if(byTess)e.querySelector('.clip').classList.add('tess');void e.offsetWidth;
+ const tr=thRect(tix);const hang=()=>{e.style.flex='0 0 0px';e.style.opacity=0;e.style.transformOrigin='50% 0';tix.appendChild(e);tix.classList.add('n5');railSway(tix,e,120);if(byTess)e.querySelector('.clip').classList.add('tess');void e.offsetWidth;
   e.style.flex='';e.style.opacity='';const k=byTess?1.15:1;
   if(!RM)e.animate([{transform:'translateY(-34px) rotate(10deg)',opacity:0},{transform:'translateY(0) rotate(-6deg)',opacity:1,offset:.42},{transform:'rotate(3deg)',offset:.64},{transform:'rotate(-1.2deg)',offset:.82},{transform:'none'}],{duration:1150*k,easing:'cubic-bezier(.3,.6,.4,1)'});
   setTimeout(()=>thUndo(el,byTess,byTess?'hung Dal for tomorrow.':'Dal, hung for tomorrow.',()=>{e.animate([{transform:'none',opacity:1},{transform:'translateY(-30px) rotate(-4deg)',opacity:0}],{duration:260,easing:'ease-in',fill:'forwards'}).onfinish=()=>{e.style.flex='0 0 0px';setTimeout(()=>{e.remove();tix.classList.remove('n5')},500)}},()=>e.querySelector('.clip').classList.remove('tess')),500)};
  if(byTess)tessHand({x:tr.x+tr.w-70,y:tr.y-6,w:70,h:tr.h},{behind:pass,hold:1200}).then(hang);else hang()}
 function thGalleyDishes(byTess){const el=current;if(!el)return;const t=[...el.querySelectorAll('.tix .tk')].find(k=>/Dishes/.test(k.textContent));if(!t)return;
  const li=t.querySelector('.front .li');if(!li)return;const was=li.innerHTML;
- const play=()=>{li.innerHTML='<span style="position:relative">'+was+'</span>';const s=h('i','thstrike'+(byTess?' tess':''));li.firstChild.appendChild(s);s.animate([{width:'0%'},{width:'100%'}],{duration:RM?0:180*(byTess?1.2:1),easing:'ease-out',fill:'forwards'});
-  const dry=()=>{s.classList.remove('tess');setTimeout(()=>{li.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}).onfinish=()=>{li.innerHTML='none waiting';dishes=0;li.animate([{opacity:0},{opacity:1}],{duration:260,fill:'forwards'})}},600)};
+ const play=()=>{li.innerHTML='<span style="position:relative">'+was+'</span>';const s=h('i','thstrike'+(byTess?' tess':''));li.firstChild.appendChild(s);s.animate([{width:'0%'},{width:'100%'}],{duration:RM?0:180*(byTess?1.2:1),easing:'ease-out',fill:'forwards'}).onfinish=()=>s.classList.add('lift');
+  const dry=()=>{s.classList.remove('tess');setTimeout(()=>{li.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}).onfinish=()=>{li.innerHTML='the sink is clear';dishes=0;li.animate([{opacity:0},{opacity:1}],{duration:260,fill:'forwards'})}},600)};
   thUndo(el,byTess,byTess?'did the dishes, all 7.':'Dishes, done.',()=>{s.remove();li.innerHTML=was},byTess?dry:null);if(!byTess)dry()};
  if(byTess)tessHand(thRect(t),{behind:t.closest('.pass'),hold:1000}).then(play);else play()}
 
@@ -2362,7 +2371,7 @@ function setDoorLook(el,room,look,anim){const dl=el.querySelector(':scope > .dia
  const now=el.querySelector(':scope > .dlook')||dl;const after=labelRects(el);
  now.querySelectorAll('.d,.dw').forEach(e=>{const t=(e.dataset.t||e.textContent.replace(/\d+$/,'')).trim();const a=before[t],b=after[t];const tgt=e.querySelector('span')||e;
   if(a&&b){const dx=(a.left-b.left)/K,dy=(a.top-b.top)/K,sc=a.height/b.height;tgt.style.display='inline-block';tgt.style.transformOrigin='0 0';tgt.animate([{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')'},{transform:'none'}],{duration:520,easing:'cubic-bezier(.2,.9,.25,1.04)'})}
-  else e.animate([{opacity:0},{opacity:1}],{duration:260,delay:260})})}
+  else{/* 290: new words arrive as a ripple from the right thumb's corner */const pr=now.getBoundingClientRect(),r=e.getBoundingClientRect(),dist=Math.hypot(pr.right-r.right,r.top-pr.top)/K;e.animate([{opacity:0},{opacity:1}],{duration:260,delay:260+Math.min(90,dist*.35),fill:'backwards'})}})}
 /* every landing keeps its looks: applied on render, before anything is seen */
 ['notes','weather','training','kitchen','routines','money'].forEach(room=>{const S=SCREENS[room];if(!S||S._looked)return;const r=S.render;S._looked=1;
  S.render=function(el,P){const c=r.call(this,el,P);if(LOOKS[room]&&el.querySelector(':scope > .dial'))setDoorLook(el,room,LOOKS[room],false);return c}});
