@@ -652,6 +652,10 @@ public final class TessRun {
             current = Rehearsal(engine: engine)
             rehearsal = (runID, current)
         }
+        guard current.tries < Rehearsal.budget else {
+            // Said here, not as the rehearsal's own refusal, which strict holds back with the other refusals.
+            return ("That's \(Rehearsal.budget) rehearsals for this ask. Ask him instead of guessing", true)
+        }
         let result = current.try(asked.calls, expecting: asked.expecting,
                                  scope: MemoryScope(agent, policy: door.policy()), onDevice: onDevice)
         if onDevice {

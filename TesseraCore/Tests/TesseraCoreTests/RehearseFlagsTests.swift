@@ -91,7 +91,8 @@ struct RehearseFlagsTests {
         #expect(r.rig.store.context.objects.count == before && budget == 10)
         _ = r.run.rehearsed(input, runID: runID, onDevice: false)
         _ = r.run.rehearsed(input, runID: runID, onDevice: false)
-        #expect(r.run.rehearsed(input, runID: runID, onDevice: false).text.contains("three tries"))
+        let fourth = r.run.rehearsed(input, runID: runID, onDevice: false)
+        #expect(fourth.isError && fourth.text.hasPrefix("That's 3 rehearsals for this ask"))
         // A new ask starts again.
         #expect(r.run.rehearsed(input, runID: UUID(), onDevice: false).text.hasSuffix("All checks passed."))
     }
