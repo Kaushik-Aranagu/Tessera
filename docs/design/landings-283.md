@@ -148,3 +148,25 @@ Settings > Layout mode. Places only, no content; read-only for now (editable lat
   "Back up") rules, straight from shell-contract-283.md. Tap the background: where you are ("Galley, the
   landing, 5 of 7") and the three gestures. Leave: Nav word twice, or the left-edge pull.
 - Reduce Motion: bubbles jump to their frames; labels change without motion.
+
+## v8: Layout mode in glass (his Oct 25 7:27-7:28 PM notes: "neat, smooth, right spaces, glass-like, mixing and splitting")
+Replaces the v7 bubbles.
+- Panes: each place is a pane at its exact frame, inset 2 pt (every seam reads as a 4 pt gap). Radius
+  min(22, max(10, 0.3 x shorter side)). The glass is the Lookout's raised glass (his 7:41 PM note: the glossy
+  v8 look was "too artificial"): clear inside (room tint 3%, black 7%), no blur, no gloss; light from the top
+  left (white glow -4,-4 blur 14 at 90%, black look 9%), shadow to the bottom right (5,8 blur 20 at 13%, black
+  60%) plus an ambient 2,14 blur 34 at 5%; a 1 pt edge running white 70% top left to clear to black 8% bottom
+  right. Selected panes lift 1x2 pt with deeper shadows. Empty places are pressed in (inset shadows, dashed).
+- Masthead is a low-relief plate (half the shadow) the title panes sit on. Empty places are hollow hatched glass.
+- Breaths are not panes: a measured gap with end ticks and its height (14, 28, 16 pt). The 24 pt side margins
+  are dashed guides labelled 24. Behind everything, three soft room-tinted glows so the glass has light to bend.
+- Title pane carries the room name (24 pt bold) and "the landing, 3 of 7" / "a door page, 3 of 7".
+- Next room: no pane moves. Tint crossfades (0.45 s), a sheen sweeps every pane left to right, top to bottom
+  (0.9 s), labels change per place (title flaps, keystone turns, dial spins and slows, summary from the right).
+- Depth and Bridge to room: panes that change shape go liquid. They become metaballs (blur 7, alpha threshold,
+  26% room tint), spring to their new frames (720 ms, damped, staggered by distance), merging into the Door
+  title and the Page or pulling apart on the way back, then set into glass (300 ms blur-in); the liquid is a faint 16% tint. Bridge's Settings
+  word becomes the Title; its Departure board splits into Switcher, Needs and Nav word.
+- Tap a pane: a raised-glass card (26 pt radius, 10 pt blur over 78% page) with frame, holds, touch, next room and door page rules.
+  It docks over the keystone for lower panes and above the foot for upper panes. Tap outside to close.
+- Reduce Motion: no liquid, no sheen; panes change in place.
