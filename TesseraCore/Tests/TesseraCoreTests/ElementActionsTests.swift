@@ -166,7 +166,7 @@ struct ElementActionsTests {
     }
 
     @Test func anErrorWithNoSpokenLineIsNeverSpokenRaw() throws {
-        _ = try SettingsStore(engine: engine).read()
+        try engine.perform(SetRainAlert(on: false), by: .user)
         let settings = try #require(store.object(id: SettingsStore.objectID))
         store.softDelete(settings)
         let spoken = #expect(throws: TessToolError.self) {
