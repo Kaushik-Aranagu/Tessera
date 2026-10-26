@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tess has eyes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/settings-eyes.md (Design item 70): the "Tess has eyes" line in Settings' LOOK section, the one setting for her face (eyes and mouth, Product 9:58 AM Oct 16, default no). ?play records one flip to yes (her eyes open on the soul, one blink, the mouth at rest) and back to no. Board: Porcelain and Obsidian, no and yes, with a 6x loupe on the soul. Add ?x2 for 2x. -->
+<style>
+:root{--ink:18,16,22;--bg:#FBFAF7;--tess:#2450D8;--board:#E9E6EE}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:40px;padding:40px}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;flex:none}
+.ph.obs{--ink:245,242,236;--bg:#121014;--tess:#86B4FF}
+.abs{position:absolute}
+.back{left:22px;top:58px;font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.62)}
+.title{left:22px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.02em;line-height:52px}
+.flow{position:absolute;left:22px;right:22px;top:158px;display:flex;flex-direction:column;gap:22px}
+.lbl{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.62);margin-bottom:12px}
+.b{font-size:21px;line-height:28px;margin-bottom:8px}
+.s2{color:rgba(var(--ink),.62)}
+.vw{font-weight:600;position:relative;display:inline-block}
+.vw u{position:absolute;left:0;right:0;bottom:-3px;height:2px;background:rgb(var(--ink));transform-origin:0 50%;transform:scaleX(0);text-decoration:none}
+.say{color:var(--tess);font-size:21px;line-height:28px;overflow:hidden}
+.band{left:52px;width:270px;top:765px;text-align:right;font-size:21px;line-height:28px;color:var(--tess)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
+.dab{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.face{position:absolute;left:0;top:0;width:46px;height:40px}
+.eye{position:absolute;width:3.2px;height:3.5px;border-radius:50%;background:rgba(24,18,30,.82);transform-origin:50% 60%}
+.mouth{position:absolute}
+.loupe{position:absolute;width:150px;height:150px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1px rgba(var(--ink),.14);background:var(--bg)}
+.loupe .inner{position:absolute;left:0;top:0;width:46px;height:40px;transform-origin:0 0}
+.cap{position:absolute;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(18,16,22,.55)}
+#note{padding:0 40px 40px;max-width:1700px;font-weight:700;font-size:14px;letter-spacing:.08em;color:rgba(18,16,22,.6);line-height:22px}
+body.play #note{display:none}
+body.play .row{padding:0;gap:0}
+</style></head><body>
+<div class="row" id="row"></div>
+<div id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');if(PLAY)document.body.classList.add('play');
+let n=0;
+// One soul: three dabs, then the face (eyes + mouth) drawn from the main dabs' mean, as SoulEyes/SoulMouth will be.
+function soulHTML(id,obs){
+  const t=obs?'#86B4FF':'#2450D8';
+  return `<div class="dab" style="left:0;top:4px;background:radial-gradient(closest-side,${t},rgba(36,80,216,.2))"></div>
+  <div class="dab" style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></div>
+  <div class="dab" style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></div>
+  <div class="face" id="${id}f">
+   <div class="eye" id="${id}e1" style="left:17.3px;top:14px"></div>
+   <div class="eye" id="${id}e2" style="left:25.7px;top:14px"></div>
+   <svg class="mouth" id="${id}m" style="left:18.4px;top:19.2px;overflow:visible" width="5.6" height="2" viewBox="0 0 5.6 2"><path d="M0 0 Q2.8 0.34 5.6 0" stroke="rgba(24,18,30,.7)" stroke-width="1.1" stroke-linecap="round" fill="none"/></svg>
+  </div>`;
+}
+function face(id,on){const f=document.getElementById(id+'f');if(f)f.style.opacity=on?1:0}
+function phone(obs,eyes,opts={}){
+  const id='p'+(n++);
+  const say=eyes?'Tess has a face now.':(opts.offSaid?'Tess has no face. She still moves.':'');
+  const html=`<div class="ph${obs?' obs':''}" id="${id}">
+   <div class="abs back">‹ REVIEW</div>
+   <div class="abs title">Settings</div>
+   <div class="flow">
+    <div><span class="lbl">LOOK</span>
+     <div class="b"><span class="vw">Porcelain</span> by day, <span class="vw">Obsidian</span> by night.</div>
+     <div class="b s2">Hold a name to keep it day and night.</div>
+     <div class="b">Tess has eyes: <span class="vw" id="${id}v"><span id="${id}w">${eyes?'yes':'no'}</span><u id="${id}u"></u></span>.</div>
+     <div class="say" id="${id}say">${say}</div>
+    </div>
+    <div><span class="lbl">CLAUDE</span>
+     <div class="b">Tess asks Claude: <span class="vw">yes</span>.</div>
+     <div class="b">This month <span class="vw">$1.20</span> of $50.</div>
+    </div>
+    <div><span class="lbl">BACKUPS</span>
+     <div class="b">Also kept in <span class="vw">iCloud Drive/Tessera</span>.</div>
+    </div>
+    <div><span class="lbl">UNITS</span>
+     <div class="b">Weights in <span class="vw">kg</span>.</div>
+    </div>
+   </div>
+   <div class="soul" id="${id}s">${soulHTML(id,obs)}</div>
+   ${opts.loupe?`<div class="loupe" style="left:205px;top:560px"><div class="inner" style="transform:translate(-${(323+23)*0-0}px,0)">${''}</div></div>`:''}
+  </div>`;
+  return {id,html};
+}
+function addLoupe(id,obs,eyes){
+  const ph=document.getElementById(id);
+  const l=document.createElement('div');l.className='loupe';l.style.left='205px';l.style.top='560px';
+  const s=6;const inner=document.createElement('div');inner.className='inner';
+  inner.style.transform=`translate(${75-23*s}px,${75-16*s}px) scale(${s})`;
+  inner.innerHTML=soulHTML(id+'L',obs);l.appendChild(inner);ph.appendChild(l);
+  face(id+'L',eyes);
+  // a thin leader from the loupe to the soul
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width','393');svg.setAttribute('height','852');svg.style.position='absolute';svg.style.left=0;svg.style.top=0;svg.style.pointerEvents='none';
+  svg.innerHTML=`<line x1="300" y1="700" x2="336" y2="760" stroke="rgba(${obs?'245,242,236':'18,16,22'},.18)" stroke-width="1"/>`;
+  ph.appendChild(svg);
+  return l;
+}
+const row=document.getElementById('row');
+if(!PLAY){
+  const items=[[0,0],[0,1],[1,0],[1,1]];
+  const made=items.map(([o,e])=>{const p=phone(!!o,!!e,{offSaid:false});row.insertAdjacentHTML('beforeend',p.html);return [p.id,o,e]});
+  made.forEach(([id,o,e])=>{face(id,!!e);addLoupe(id,!!o,!!e)});
+  document.getElementById('note').innerHTML='LOOK GAINS ONE SENTENCE: "TESS HAS EYES: NO." THE VALUE WORD CYCLES YES / NO, NO TOGGLE. ONE SETTING FOR HER FACE: EYES AND MOUTH COME AND GO TOGETHER (PRODUCT, NO MOUTH WITHOUT EYES). TESS ANSWERS INLINE IN COBALT, THIRD PERSON. THE LOUPE IS 6X; ON THE PHONE THE FACE IS AS SMALL AS THE SOUL.';
+  document.fonts.ready.then(()=>{document.body.dataset.done='1'});
+}else{
+  const p=phone(false,false);row.innerHTML=p.html;const id=p.id;face(id,false);
+  const L=addLoupe(id,false,false);
+  const $=x=>document.getElementById(id+x);
+  const E=(el,k,o)=>el.animate(k,Object.assign({fill:'forwards'},o));
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const faces=[id,id+'L'];
+  function setFace(on,ms){faces.forEach(f=>{const el=document.getElementById(f+'f');E(el,[{opacity:on?0:1},{opacity:on?1:0}],{duration:ms})})}
+  function lids(from,to,ms,ease){faces.forEach(f=>['e1','e2'].forEach(e=>E(document.getElementById(f+e),[{transform:`scaleY(${from})`},{transform:`scaleY(${to})`}],{duration:ms,easing:ease})))}
+  async function blink(){lids(1,.1,80,'ease-in');await wait(90);lids(.1,1,120,'ease-out')}
+  async function tap(word,line){
+    E($('u'),[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:150,easing:'cubic-bezier(.2,.8,.2,1)'});
+    await wait(160);
+    const w=$('w');E(w,[{opacity:1},{opacity:0}],{duration:60});await wait(60);w.textContent=word;E(w,[{opacity:0},{opacity:1}],{duration:60});
+    E($('u'),[{transform:'scaleX(1)'},{transform:'scaleX(0)'}],{duration:200,delay:200});
+    const s=$('say');E(s,[{opacity:1},{opacity:0}],{duration:120});await wait(130);s.textContent=line;
+    E(s,[{height:'0px',opacity:0},{height:'28px',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});
+  }
+  document.fonts.ready.then(async()=>{
+    document.body.dataset.start='1';
+    await wait(1200);
+    // no -> yes: the eyes open on the soul (lids 0.25 -> 1, 400 ms ease-out), the mouth at rest arrives with them.
+    tap('yes','Tess has a face now.');
+    await wait(220);
+    lids(.25,.25,1,'linear');setFace(true,200);lids(.25,1,400,'ease-out');
+    await wait(1600);await blink();
+    await wait(2200);await blink();
+    await wait(1600);
+    // yes -> no: the face goes (120 ms), the soul keeps its breath and colour.
+    tap('no','Tess has no face. She still moves.');
+    await wait(220);setFace(false,120);
+    await wait(2400);
+    document.body.dataset.done='1';
+  });
+}
+</script></body></html>

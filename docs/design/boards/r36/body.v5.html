@@ -1,0 +1,332 @@
+<title>Tess in her corner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300;400&display=swap">
+<style>
+/*TOKENS*/
+:root{--tess:#2A4FA8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tess:#8FB5FF}}
+:root[data-theme="dark"],:root[data-look="black"]{--tess:#8FB5FF}
+:root[data-look="white"]{--tess:#2A4FA8}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;gap:56px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+.notes{flex:1 1 360px;min-width:0;max-width:520px;display:flex;flex-direction:column;gap:16px}
+.notes p{margin:0}.notes b{font-weight:600}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,56px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);font-size:19px;margin:0}.lab{color:var(--ink3);font-size:16px;margin:0}
+.row{display:flex;flex-wrap:wrap;gap:4px 18px}
+.row button{all:unset;cursor:pointer;color:var(--ink2);padding:3px 0}
+.row button[aria-pressed="true"]{color:var(--ink);text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px}
+.row button:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+.phone{position:relative;width:360px;max-width:100%;height:740px;background:var(--phone);border:1px solid var(--edge);border-radius:44px;overflow:hidden;
+  display:flex;flex-direction:column;padding:60px 24px 112px;box-sizing:border-box;gap:14px;user-select:none;-webkit-user-select:none;touch-action:none}
+.top{text-align:right;font-size:22px;line-height:1.32}
+.top .d{color:var(--ink)}
+.k{font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px;border-radius:2px;transition:text-decoration-thickness .15s}
+.k.sky{background:linear-gradient(90deg,var(--sky1),var(--sky2));-webkit-background-clip:text;background-clip:text;color:transparent;text-decoration-color:var(--sky2)}
+.k.hot{text-decoration-thickness:3px}
+.n{font-family:var(--nums);font-weight:300}
+.one{margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.one .big{font-family:var(--nums);font-weight:200;font-size:60px;line-height:1;letter-spacing:-.03em}
+.one .mid{font-size:20px}.one .small{font-size:15px;color:var(--ink3)}
+.apps{display:flex;flex-direction:column;margin-top:auto}
+.apps div{display:flex;justify-content:space-between;align-items:baseline;min-height:38px;color:var(--ink3);font-size:18px}
+.apps .hot{color:var(--ink)}
+/* her band: the bottom 92 pt belongs to Tess */
+#band{position:absolute;left:24px;right:104px;bottom:26px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+#picks{display:flex;gap:4px 16px;flex-wrap:wrap;pointer-events:auto}
+#picks button{all:unset;cursor:pointer;font-size:16px;color:var(--ink);text-decoration:underline;text-decoration-color:var(--tess);text-decoration-thickness:1.5px;text-underline-offset:5px}
+#say{font-size:17px;line-height:1.38;min-height:24px}
+#say .c{display:inline-block;white-space:pre;transform-origin:50% 52%}
+#say .c.flip{animation:flip 70ms cubic-bezier(.3,.7,.4,1)}
+@keyframes flip{0%{transform:scaleY(.08)}100%{transform:scaleY(1)}}
+#ask{all:unset;pointer-events:auto;font-size:17px;color:var(--ink);caret-color:var(--tess);width:100%}
+#ask::placeholder{color:var(--ink3)}
+.you{color:var(--ink2)}
+.rise{animation:rise .32s cubic-bezier(.2,.8,.2,1) both}@keyframes rise{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0)}}
+#mos{display:block;width:248px;height:150px;align-self:flex-end;margin-right:-6px}
+#veil{position:absolute;inset:0;z-index:4;pointer-events:none;-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);background:transparent;transition:backdrop-filter .38s cubic-bezier(.2,.8,.2,1),-webkit-backdrop-filter .38s,background-color .38s}
+#veil.on{-webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);background:color-mix(in srgb,var(--phone) 52%,transparent);pointer-events:auto}
+#focusL{position:absolute;left:28px;right:28px;top:76px;bottom:206px;z-index:5;display:flex;flex-direction:column;gap:18px;visibility:hidden;pointer-events:none}
+#focusL.on{visibility:visible;pointer-events:auto}
+#fstate{margin:0;color:var(--ink3);font-size:15px;min-height:22px}
+#convo{display:flex;flex-direction:column;gap:12px;margin-top:auto;min-height:0;overflow:hidden;justify-content:flex-end}
+#convo .when{color:var(--ink3);font-size:13px;font-family:var(--nums);font-weight:300;letter-spacing:.02em}
+#convo .t{font-size:16px;line-height:1.38;color:var(--ink2)}
+#convo .t.you{color:var(--ink3)}
+#convo .t.now{font-size:22px;line-height:1.32;color:var(--ink)}
+#convo .t.you.now{font-size:17px;color:var(--ink2)}
+#convo .t.you.live{font-size:28px;font-weight:300;line-height:1.22;color:var(--ink)}
+#convo .c{display:inline-block;white-space:pre;transform-origin:50% 52%}#convo .c.flip{animation:flip 70ms cubic-bezier(.3,.7,.4,1)}
+#sugg{display:flex;flex-wrap:wrap;gap:6px 22px;min-height:26px}
+#sugg button{all:unset;cursor:pointer;font-size:17px;color:var(--ink);white-space:nowrap}
+#sugg button .ot{transition:color .18s}#sugg button.pick .ot,#sugg button:active .ot{color:var(--tess)}
+#sugg button:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+#fask{margin-top:auto}
+.gw button .ot{transition:color .18s}.gw button.pick .ot{color:var(--tess)}
+.gw button:active .ot{color:var(--tess)}
+.gw button:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+#fask{all:unset;font-size:18px;color:var(--ink);caret-color:var(--tess);border-bottom:1px solid var(--edge);padding-bottom:8px}
+#fask::placeholder{color:var(--ink3)}
+#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
+#hit{position:absolute;width:84px;height:84px;border-radius:42px;z-index:7;touch-action:none;cursor:grab}
+#hit:focus-visible{outline:2px solid var(--ink3);outline-offset:2px}
+/* her room: slides up from her corner as a clip, not a sheet */
+#room{position:absolute;inset:0;background:var(--phone);z-index:5;padding:64px 24px 120px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;
+  clip-path:circle(0 at calc(100% - 48px) calc(100% - 48px));transition:clip-path .55s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+#room.on{clip-path:circle(150% at calc(100% - 48px) calc(100% - 48px));pointer-events:auto}
+#room h2{font-weight:500;font-size:34px;letter-spacing:-.02em;margin:0}
+#room .lg{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px 10px;font-size:16px;line-height:1.4}
+#room .t{font-family:var(--nums);font-weight:300;color:var(--ink3)}
+#room .u{color:var(--ink);text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;cursor:pointer}
+#room .watch{color:var(--ink2);font-size:16px}
+#room .back{all:unset;cursor:pointer;color:var(--ink2);margin-top:auto;font-size:16px}
+@media (prefers-reduced-motion:reduce){#say .c.flip,#convo .c.flip,.rise{animation:none}#room,#veil{transition:none}}
+</style>
+<div class="wrap">
+<div class="phone" id="phone">
+  <div class="top"><div class="d" data-ask="date">Friday, October 23</div>
+    <div><span class="k" style="color:var(--training)" data-ask="push">Push day</span> at <span class="n">6:30</span> pm.</div>
+    <div><span class="k sky" data-ask="sunset">Sunset</span> at <span class="n">6:34</span> pm.</div></div>
+  <canvas id="mos" aria-hidden="true"></canvas>
+  <div class="one" data-ask="push"><div class="big">6:30</div><div class="mid"><span class="k" style="color:var(--training)" data-ask="push">Push day</span>, bench first</div><div class="small">4 lifts, about 1 hr 10 min</div></div>
+  <div class="apps"><div data-ask="notes"><span>Notes</span></div><div data-ask="kitchen"><span>Kitchen</span></div><div data-ask="training"><span>Training</span></div></div>
+  <div id="band" aria-live="polite"><div id="picks"></div><div id="say"></div></div>
+  <div id="room" aria-label="Tess's room">
+    <h2>Tess</h2>
+    <p class="watch">Watching today: Push day, Stretch, and the grocery list.</p>
+    <div class="lg">
+      <span class="t">12:31</span><span>Moved <span class="k" style="color:var(--routines)">Stretch</span> to 9 pm, since Push day runs late. <span class="u" data-undo>Undo</span></span>
+      <span class="t">11:08</span><span>Added limes to <span class="k" style="color:var(--kitchen)">Groceries</span> for Tacos. <span class="u" data-undo>Undo</span></span>
+      <span class="t">9:40</span><span>Noticed a new best on bench from Tuesday.</span>
+      <span class="t">7:02</span><span>Kept a private note private.</span>
+    </div>
+    <button class="back" id="back">Back to Home</button>
+  </div>
+  <div id="veil" aria-hidden="true"></div>
+  <div id="focusL" role="dialog" aria-label="Tess">
+    <p class="st" id="fstate"></p>
+    <div class="st" id="convo" aria-live="polite"></div>
+    <div class="st" id="sugg"></div>
+    <input class="st" id="fask" placeholder="Type to Tess" aria-label="Type to Tess" autocomplete="off">
+  </div>
+  <canvas id="ov" aria-hidden="true"></canvas>
+  <div id="hit" role="button" tabindex="0" aria-label="Tess" aria-describedby="vohint"></div>
+</div>
+<div class="notes">
+  <p class="lab">Round 215, rev 5, Oct 23</p>
+  <h1>Tess in her corner</h1>
+  <p class="sub">She sits bottom right and stays quiet. Everything she does starts from your finger on her: a tap to ask, a hold to talk, a drag to ask about something, a swipe up to see what she has been doing.</p>
+  <p class="lab">Try it on her, or here</p>
+  <div class="row" id="demo"><button data-d="tap">Tap</button><button data-d="hold">Hold to talk</button><button data-d="drag">Drag onto Push day</button><button data-d="up">Swipe up</button><button data-d="quiet">Double tap</button></div>
+  <p class="lab">Look</p><div class="row" id="looks"><button data-l="black">Black</button><button data-l="paper">Warm paper</button><button data-l="white">White</button><button data-l="system" aria-pressed="true">As the phone</button></div>
+  <p><b>Her own layer: one conversation.</b> A tap or a hold brings her into focus. Home blurs under her (blur is hers alone), and she rises to the middle of the bottom. The layer is the running conversation between you and her: what you said earlier today stays above, smaller and quieter, and she opens with one line about what matters now. Below it are at most three short replies you can tap, or you can type or hold to talk. Each answer keeps the conversation going. Only the newest exchange is large. Tap the blurred Home or swipe down to put her back.</p>
+  <p><b>Tap: talk with her.</b> The layer opens on her line about now, with the keyboard. As you type, her eyes follow along. The reply you pick turns her cobalt for a moment as she takes it.</p>
+  <p><b>Hold: talk.</b> The layer opens at once while she stays under your finger, swelling with your voice; the paint inside her turns faster. Let go to send. Slide left to drop it. Speech stays on the phone.</p>
+  <p><b>Her colors.</b> Soft and glowing, with no ring around her. Vermilion is at her middle, and cobalt and gold drift around it as wide soft fields that overlap gently, so there are three colors, not a rainbow. Parts of her reach out in different directions and come back, each on its own slow clock. She breathes in a smaller range than before.</p>
+  <p><b>Drag her onto anything.</b> She leaves her corner and follows your finger, sitting a little above it so you can see her. The word under her thickens its underline. Drop her and she answers about that thing, then floats home. Anything with a name can be asked about: a notice, the date, an app, the one thing.</p>
+  <p><b>Swipe up: her room.</b> Her room opens from her corner as a circle. It shows what she is watching and what she did today, each with its time and its Undo. Swipe down or tap Back to close it.</p>
+  <p><b>Double tap: quiet for an hour.</b> She closes her eyes and breathes slower, and the top lines stop rolling. Tap once to wake her: she blinks twice.</p>
+  <p><b>When she speaks first.</b> Only when something changes: one line beside her for 6 s, every name in it a door. No standing line, ever.</p>
+  <p class="lab" id="vohint">VoiceOver: she is one button with the actions Ask, Talk, Open her room and Quiet for an hour. Every named thing also gets the action Ask Tess about this, in place of the drag. Reduce Motion: she does not fly home; she is simply back in her corner. Private things are named by their label in everything she says. She never offers money actions to Claude.</p>
+</div>
+</div>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cs=()=>getComputedStyle(document.documentElement);const hex=h=>{h=h.trim().replace('#','');return[0,2,4].map(k=>parseInt(h.slice(k,k+2),16))};
+const clamp=x=>Math.max(0,Math.min(1,x));const col=v=>hex(cs().getPropertyValue('--'+v));
+function lum(c){const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2])}
+const phone=document.getElementById('phone'),ov=document.getElementById('ov'),hit=document.getElementById('hit'),say=document.getElementById('say'),picks=document.getElementById('picks'),room=document.getElementById('room');
+const dpr=Math.min(2,devicePixelRatio||1);let W=360,Hh=740;
+function size(){W=phone.clientWidth;Hh=phone.clientHeight;ov.width=W*dpr;ov.height=Hh*dpr}size();addEventListener('resize',size);
+const LS=140;
+// Tess as she was (soft, glowing, the same three colours), but one continuous blend: the colour runs along one ramp
+// cobalt > violet > vermilion > orange > gold across her body, so no colour ever sits as a separate blob and no seam goes grey or green
+function makeSoul(N){
+  const toLin=v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)},toS=v=>{v=v<=.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-.055;return Math.max(0,Math.min(255,Math.round(v*255)))};
+  const lab=([r,g,b])=>{r=toLin(r);g=toLin(g);b=toLin(b);const l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*b),m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*b),s=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*b);
+    return[.2104542553*l+.793617785*m-.0040720468*s,1.9779984951*l-2.428592205*m+.4505937099*s,.0259040371*l+.7827717662*m-.808675766*s]};
+  const rgb=([L,a,b])=>{const l=(L+.3963377774*a+.2158037573*b)**3,m=(L-.1055613458*a-.0638541728*b)**3,s=(L-.0894841775*a-1.291485548*b)**3;
+    return[toS(4.0767416621*l-3.3077115913*m+.2309699292*s),toS(-1.2684380046*l+2.6097574011*m-.3413193965*s),toS(-.0041960863*l-.7034186147*m+1.707614701*s)]};
+  const Hn=(x,y)=>{const s=Math.sin(x*127.1+y*311.7)*43758.5453;return s-Math.floor(s)};
+  const vn=(x,y)=>{const i=Math.floor(x),j=Math.floor(y),f=x-i,g=y-j,u=f*f*(3-2*f),v=g*g*(3-2*g);return (Hn(i,j)*(1-u)+Hn(i+1,j)*u)*(1-v)+(Hn(i,j+1)*(1-u)+Hn(i+1,j+1)*u)*v};
+  const cv=document.createElement('canvas');cv.width=cv.height=N;const x=cv.getContext('2d'),img=x.createImageData(N,N);
+  let ramp=null,key='';
+  // the ramp is built in OKLCh, walking hue the long way round through violet and red (never through green)
+  function build(P){const [r,b,g]=P.map(h=>lab([0,2,4].map(k=>parseInt(h.slice(1+k,3+k),16))));const lch=c=>[c[0],Math.hypot(c[1],c[2]),Math.atan2(c[2],c[1])];
+    const B=lch(b),Rr=lch(r),G=lch(g);let hb=B[2],hr=Rr[2],hg=G[2];while(hr<hb)hr+=2*Math.PI;while(hg<hr)hg+=2*Math.PI;
+    const stops=[[0,B[0],B[1],hb],[.48,Rr[0],Rr[1],hr],[1,G[0],G[1],hg]];const out=[];
+    for(let k=0;k<=256;k++){const s=k/256;const [a0,a1]=s<.5?[stops[0],stops[1]]:[stops[1],stops[2]];const u=(s-a0[0])/(a1[0]-a0[0]);const e=u*u*(3-2*u)*.5+u*.5;
+      const L=a0[1]+(a1[1]-a0[1])*e,C=(a0[2]+(a1[2]-a0[2])*e)*(s<.5?1-.2*Math.sin(Math.PI*u):1),h=a0[3]+(a1[3]-a0[3])*e;out.push(rgb([L,C*Math.cos(h),C*Math.sin(h)]))}return out}
+  let LAB=null;
+  return {canvas:cv,draw(t,o){const k=o.paints.join();if(k!==key){key=k;ramp=build(o.paints);LAB=o.paints.map(h=>lab([0,2,4].map(q=>parseInt(h.slice(1+q,3+q),16))))}
+    const sp=t*(o.quiet?.35:1);
+    // she breathes in a narrower band than before (0.88 to 1.04), and a voice adds up to 8%
+    const br=.96+(o.quiet?.03:.08)*Math.sin(sp*.98)+.08*o.level,R=.215*br*(1+.1*o.spread);
+    const ang=.6+sp*.16+o.spin,dx=Math.cos(ang),dy=Math.sin(ang);const d=img.data;let p=0;
+    const CP=[[.08*R*Math.cos(sp*.21),.08*R*Math.sin(sp*.27),1.7],
+      [.62*R*Math.cos(ang+2.3+.4*Math.sin(sp*.29)),.62*R*Math.sin(ang+2.3+.4*Math.sin(sp*.29)),1.15],
+      [.62*R*Math.cos(ang-.5+.45*Math.sin(sp*.23+1)),.62*R*Math.sin(ang-.5+.45*Math.sin(sp*.23+1)),1.05]];
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++,p+=4){const u=i/N-.5,v=j/N-.5;
+      const th=Math.atan2(v,u),r=Math.hypot(u,v)/R;if(r>2.2){d[p+3]=0;continue}
+      // her body: no solid disc and no rim. Density falls off smoothly from her middle, and a slow inner flow
+      // thickens and thins it, so she reads as a soft cloud of colour, not a sun with a glow
+      const fl=vn(u/R*1.2+sp*.11,v/R*1.2-sp*.09),body=Math.exp(-Math.pow(r/(.95+.08*(fl-.5)),2.4))*(.85+.3*fl);
+      // her aura: faint wisps that circle around her at about her edge, each drifting on its own; it flows around, it never squishes her
+      const rot=th-sp*.22,wisp=vn(Math.cos(rot)*1.6+3,Math.sin(rot)*1.6+sp*.05)*vn(Math.cos(th+sp*.13)*2.3+7,Math.sin(th+sp*.13)*2.3),
+        aura=.9*Math.pow(wisp,3)*Math.exp(-Math.pow((r-1.02)/(.26+.08*wisp),2));
+      // a soft saturating curve: full colour in her middle, easing out with no edge and no plateau
+      let a=1-Math.exp(-2.6*(body+aura));a=Math.max(0,a-.04)/.96;if(a<=0){d[p+3]=0;continue}
+      // colour like her three dabs, but with no outlines: vermilion near her middle, cobalt and gold drifting around it,
+      // each a wide soft field; they meet as soft overlaps (straight OKLab mixing, a little chroma kept), never as stripes
+      let ws=0,L=0,A=0,B=0,Cs=0;for(let k=0;k<3;k++){const c=CP[k],ddx=u-c[0],ddy=v-c[1];const w=c[2]*Math.exp(-(ddx*ddx+ddy*ddy)/(2*Math.pow(R*.5,2)));ws+=w;L+=w*LAB[k][0];A+=w*LAB[k][1];B+=w*LAB[k][2];Cs+=w*Math.hypot(LAB[k][1],LAB[k][2])}
+      L/=ws;A/=ws;B/=ws;Cs/=ws;const ch=Math.hypot(A,B)||1e-6,kp=Math.min(1.3,Cs/ch);A*=kp;B*=kp;
+      const c=rgb([L,A,B]);d[p]=c[0];d[p+1]=c[1];d[p+2]=c[2];d[p+3]=Math.round(a*(o.dark?235:225))}
+    x.putImageData(img,0,0);return cv}}}
+
+const SOUL=makeSoul(112);
+// ---- her state
+const S={mode:'idle',x:0,y:0,tx:0,ty:0,sc:1,tsc:1,sp:0,tsp:0,lv:0,eye:[0,0],teye:null,closed:0,blinkAt:performance.now()+2600,blinks:0,spin:0};
+const home=()=>[W-54,Hh-54];[S.x,S.y]=home();[S.tx,S.ty]=home();
+const DABS=[[-9,-4,0],[9,-4,1],[0,8,2],[-14,7,0],[13,8,1],[3,-13,2]];
+function draw(now){const t=RM?0:now/1000,L=lum(col('phone')),dark=L<.18;
+  const P=dark?['#FF5B3A','#5E8BFF','#FFC23D']:['#D2502F','#3561C8','#E0A21E'];
+  // springs
+  const k=RM?1:.16;S.x+=(S.tx-S.x)*k;S.y+=(S.ty-S.y)*k;S.sc+=(S.tsc-S.sc)*.14;S.sp+=(S.tsp-S.sp)*.12;
+  if(S.mode==='talk'){S.lv=.5+.5*Math.abs(Math.sin(t*7.3)*Math.sin(t*2.1+1));S.spin+=RM?0:.03+.05*S.lv}else S.lv*=.9;
+  const quiet=S.mode==='quiet',br=1+(quiet?.04*Math.sin(t*.45):.06*Math.sin(t*.98))+.12*S.lv;
+  const so=SOUL.draw(t,{dark,spread:S.sp,spin:S.spin,level:S.lv,quiet,paints:P});const C=LS/2;
+  const o=ov.getContext('2d');o.setTransform(1,0,0,1,0,0);o.clearRect(0,0,ov.width,ov.height);o.setTransform(dpr,0,0,dpr,0,0);
+  o.save();o.translate(S.x,S.y);o.scale(S.sc,S.sc);o.imageSmoothingQuality='high';o.drawImage(so,-C*.95,-C*.95,LS*.95,LS*.95);
+  // eyes: wander when idle, look where she is attending otherwise
+  const want=S.teye||[1.2*Math.sin(t*.41)+.8*Math.sin(t*1.13),.7*Math.sin(t*.29+1)];S.eye[0]+=(want[0]-S.eye[0])*.12;S.eye[1]+=(want[1]-S.eye[1])*.12;
+  let open=1;if(!RM&&now>S.blinkAt&&!quiet){const u=(now-S.blinkAt)/160;open=u<1?Math.max(.12,Math.abs(Math.cos(u*Math.PI))):1;if(u>=1){if(S.blinks>0){S.blinks--;S.blinkAt=now+120}else S.blinkAt=now+3000+Math.random()*5000}}
+  o.fillStyle=dark?'rgba(21,21,23,.82)':'rgba(30,24,30,.86)';o.strokeStyle=o.fillStyle;o.lineWidth=1.3;o.lineCap='round';
+  for(const sg of[-1,1]){const ex=sg*4.2+S.eye[0],ey=-4+S.eye[1];if(quiet){o.beginPath();o.moveTo(ex-1.9,ey+.4);o.quadraticCurveTo(ex,ey+1.5,ex+1.9,ey+.4);o.stroke()}else{o.beginPath();o.ellipse(ex,ey,1.6,Math.max(.25,1.75*open),0,0,7);o.fill()}}
+  o.restore();
+  hit.style.left=(S.x-42)+'px';hit.style.top=(S.y-42)+'px';requestAnimationFrame(draw)}
+requestAnimationFrame(draw);
+// the mosaic, City at dusk from the gallery (214), with its dithered edge
+const mc=document.getElementById('mos'),MC=62,MR=37,ST=4;mc.width=248*dpr;mc.height=150*dpr;
+const B4=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]].map(r=>r.map(v=>(v+.5)/16));
+const Hs=(a,b)=>{const s=Math.sin(a*127.1+b*311.7)*43758.5453;return s-Math.floor(s)};const vn=(x,sd)=>{const i=Math.floor(x),f=x-i,u=f*f*(3-2*f);return Hs(i,sd)*(1-u)+Hs(i+1,sd)*u};
+const mixc=(a,b,t)=>a.map((v,k)=>v+(b[k]-v)*t);
+function city(i,j,t){const h=Math.floor(10+vn(j/3.2,1)*9+(Hs(Math.floor(j/4),2)>.7?5:0)),base=MR-h;
+  if(i<base){const c=mixc([64,58,110],[236,140,96],i/MR);return(Hs(i,j)>.995&&i<12)?[250,240,220]:c}
+  const w=(j%4!==0)&&(i%3!==0)&&i>base+1,on=w&&Hs(i,j*3)>.55&&((t*.4+Hs(j,i)*9)%9>2.5);return on?[246,206,120]:mixc([40,36,62],[60,50,80],(i-base)/h)}
+function mos(now){const t=RM?0:now/1000,x=mc.getContext('2d'),pg=col('phone'),L=lum(pg),tint=L<.02?[.18,[20,18,26]]:L<.18?[.3,[20,18,26]]:[0,[0,0,0]];
+  x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,248,150);
+  // the same dithered edge as the gallery (214): edge tiles step toward the page in 16 levels, so the scene dissolves without a hard side
+  for(let i=0;i<MR;i++)for(let j=0;j<MC;j++){const qx=Math.max(0,Math.max(9-j,j-(MC-10))),qy=Math.max(0,Math.max(7-i,i-(MR-8))),dd=Math.cbrt(qx**3+qy**3),u=clamp((9-dd)/9),l=Math.floor((u*u*(3-2*u))*16+B4[i&3][j&3])/16;if(l<=0)continue;
+    const c=mixc(mixc(city(i,j,t),tint[1],tint[0]),pg,1-l);x.fillStyle=`rgb(${c.map(Math.round)})`;x.fillRect(j*ST+.4,i*ST+.4,3.2,3.2)}
+  setTimeout(()=>requestAnimationFrame(mos),150)}
+requestAnimationFrame(mos);
+// ---- her words: departure flips, names are doors
+const AL=" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:,.'?";
+let sayT=null,flipT=[];
+function speak(parts,{hold=6000,cls='',to=say,keep=false}={}){if(!keep)flipT.forEach(clearTimeout),flipT=[];clearTimeout(sayT);to.innerHTML='';const line=document.createElement('div');if(cls)line.className=cls;to.appendChild(line);let n=0;
+  parts.forEach(p=>{const [txt,c]=typeof p==='string'?[p,null]:p;let host=line;if(c){host=document.createElement('span');host.className='k'+(c==='sky'?' sky':'');if(c!=='sky')host.style.color=`var(--${c})`;line.appendChild(host)}
+    // whole words never break across lines: each word is one nowrap group of flipping letters
+    let wd=null;for(const ch of txt){if(ch===' '){host.appendChild(document.createTextNode(' '));wd=null;n++;continue}if(!wd){wd=document.createElement('span');wd.style.whiteSpace='nowrap';host.appendChild(wd)}
+      const s=document.createElement('span');s.className='c';s.textContent=RM?ch:'\u00a0';wd.appendChild(s);if(RM)continue;const ti=AL.indexOf(ch);let steps=ti<0?1:Math.min(9,1+(ti%9));const d=n++*14;
+      for(let q=0;q<steps;q++)flipT.push(setTimeout(()=>{s.textContent=q===steps-1?ch:AL[(ti-steps+q+1+AL.length)%AL.length]||ch;s.classList.remove('flip');void s.offsetWidth;s.classList.add('flip')},d+q*52))}});
+  if(hold)sayT=setTimeout(()=>{to.innerHTML='';if(S.mode==='answer'&&!F)settle()},hold)}
+function setPicks(list){picks.innerHTML='';list.forEach(([w,fn])=>{const b=document.createElement('button');b.textContent=w;b.onclick=e=>{e.stopPropagation();fn()};picks.appendChild(b)});if(list.length)picks.classList.add('rise')}
+function settle(){closeFocus(true);S.mode='idle';S.tsc=1;S.tsp=0;S.teye=null;[S.tx,S.ty]=home();setPicks([]);const a=document.getElementById('ask');if(a)a.remove()}
+const ANS={date:['Friday, October 23. Three things today; the next is ',['Push day','training'],'.'],
+  push:[['Push day','training'],': 4 lifts, about 1 hr 10 min. Bench is first.'],
+  sunset:[['Sunset','sky'],' at 6:34 pm, clear and 64°. A walk fits after.'],
+  notes:['3 notes this week. One is ',['a private note','notes'],'.'],
+  kitchen:[['Tacos','kitchen'],' tonight. ',['Groceries','kitchen'],' has 4 to get.'],
+  training:['Your last session was Tuesday, with a new best on bench.']};
+// ---- her layer: a tap or a hold brings Tess into focus; Home blurs under her (blur is hers alone)
+// It is one running conversation between Tess and him: what they said earlier today stays above, quieter and smaller,
+// and she always opens with one line about what matters now, with at most three short replies he can tap
+const veil=document.getElementById('veil'),FL=document.getElementById('focusL'),convo=document.getElementById('convo'),sugg=document.getElementById('sugg'),fstate=document.getElementById('fstate'),fask=document.getElementById('fask');
+let F=false;const spot=()=>[W/2,Hh-112];
+const HISTORY=[['when','Earlier, 11:08 am'],['you','Add limes for the tacos'],['her',[['Added limes to '],['Groceries','kitchen'],['. ',null]]],['when','12:31 pm'],['her',[['I moved '],['Stretch','routines'],[' to 9 pm, since Push day may run late.']]]];
+function turn(kind,parts,{now=false,live=false,flip=true}={}){const el=document.createElement('div');el.className='t'+(kind==='you'?' you':'')+(now?' now':'')+(live?' live':'');convo.appendChild(el);
+  if(kind==='when'){el.className='when';el.textContent=parts;return el}
+  const P=typeof parts==='string'?[parts]:parts.map(x=>Array.isArray(x)?(x[1]?x:x[0]):x);if(flip)speak(P,{to:el,hold:0,keep:true});else{P.forEach(p=>{const[t,c]=typeof p==='string'?[p,null]:p;if(c){const k=document.createElement('span');k.className='k'+(c==='sky'?' sky':'');if(c!=='sky')k.style.color=`var(--${c})`;k.textContent=t;el.appendChild(k)}else el.appendChild(document.createTextNode(t))})}
+  // older turns step down: only the newest exchange is large
+  [...convo.querySelectorAll('.t.now')].forEach(x=>{if(x!==el&&!(kind==='her'&&x.classList.contains('you')&&x===el.previousElementSibling))x.classList.remove('now')});
+  while(convo.children.length>9)convo.firstElementChild.remove();return el}
+const NODES={start:{her:[['Push day','training'],' is at 6:30. ',['Stretch','routines'],' at 8 may run into it. Move it to 9?'],sug:[['Move it to 9','n1'],['Keep it at 8','n2'],["What's in Push day",'n3']]},
+  n1:{her:['Done, ',['Stretch','routines'],' is at 9 pm. Undo is in my room.'],sug:[['Add the rest for tacos','n6'],["That's all",null]]},
+  n2:{her:['Okay, it stays at 8. I will nudge you at 7:50.'],sug:[["What's in Push day",'n3'],["That's all",null]]},
+  n3:{her:['4 lifts, about 1 hr 10 min. Bench first, then incline, rows and dips.'],sug:[['Have it ready at 6:30','n5'],['Move Stretch to 9','n1']]},
+  n5:{her:['It will be ready at 6:30, and I will stay quiet until then.'],sug:[['Thanks',null]]},
+  n6:{her:[['Tacos','kitchen'],' still needs tortillas, cilantro and salsa.'],sug:[['Add all three','n7'],["That's all",null]]},
+  n7:{her:['All three are on ',['Groceries','kitchen'],'. 7 to get.'],sug:[['Thanks',null]]},
+  talk:{her:['Yes. ',['Push day','training'],' takes about 1 hr 10 min, and dinner is at 7:45 pm.'],sug:[['Have it ready at 6:30','n5'],['Move Stretch to 9','n1']]},
+  typed:{her:['Got it. I will put that where it belongs. Anything else?'],sug:[["That's all",null]]}};
+function setSugg(list){sugg.innerHTML='';list.slice(0,3).forEach(([t,next])=>{const b=document.createElement('button');b.innerHTML=`<span class="ot">${t}</span>`;
+  b.onclick=e=>{e.stopPropagation();b.classList.add('pick');setTimeout(()=>{if(!next){closeFocus();return}say_you(t);her(next)},220)};sugg.appendChild(b)})}
+function say_you(t){turn('you',t,{now:true,flip:false})}
+function her(id){const n=NODES[id];S.mode='answer';S.teye=[-1.2,-2.2];setSugg([]);setTimeout(()=>{if(!F)return;turn('her',n.her,{now:true});setTimeout(()=>F&&setSugg(n.sug),900)},360)}
+function openFocus(state){if(!F){F=true;veil.classList.add('on');FL.classList.add('on');convo.innerHTML='';HISTORY.forEach(([k,p])=>turn(k,p,{flip:false}));
+    FL.querySelectorAll('.st').forEach((el,k)=>{el.classList.remove('rise');void el.offsetWidth;el.style.animationDelay=(80+k*45)+'ms';el.classList.add('rise')})}
+  fstate.textContent=state;setPicks([]);say.innerHTML=''}
+function closeFocus(quietly){if(!F)return;F=false;veil.classList.remove('on');FL.classList.remove('on');sugg.innerHTML='';fask.value='';fask.blur();if(!quietly){S.mode='idle';S.tsc=1;S.tsp=0;S.teye=null;[S.tx,S.ty]=home()}}
+// tap: she opens the conversation where it left off, with one line about now
+function listen(){openFocus('');S.mode='listen';S.tsp=.45;S.tsc=1.35;[S.tx,S.ty]=spot();S.teye=[0,-1.4];her('start');setTimeout(()=>fask.focus({preventScroll:true}),120)}
+fask.addEventListener('input',()=>{S.teye=[-2.6+Math.min(5.2,fask.value.length*.16),-1.6]});
+fask.addEventListener('keydown',e=>{if(e.key==='Enter'&&fask.value.trim()){const v=fask.value.trim();fask.value='';say_you(v);her('typed')}});
+function answer(you,parts){if(!F)openFocus('');say_you(you);S.mode='answer';setTimeout(()=>{turn('her',parts,{now:true})},360)}
+function bandAnswer(parts){S.mode='answer';S.tsp=.15;S.tsc=1;S.teye=[-2,-.4];setPicks([]);speak(parts)}
+// hold: talk. Your words land large, letter by letter, as the newest line of the conversation
+const HEARD="is there time to lift before dinner";let heardT=null,cancelArmed=false,liveEl=null;
+function talkStart(){const was=F;openFocus('Listening. Slide left to let it go');S.mode='talk';S.tsc=was&&S.x<W-80?1.5:1.2;S.tsp=.25;S.teye=[0,-1.8];cancelArmed=false;setSugg([]);
+  liveEl=turn('you','',{now:true,live:true,flip:false});let w=0;const words=HEARD.split(' ');
+  const tick=()=>{if(S.mode!=='talk')return;w++;speak([words.slice(0,w).join(' ')],{to:liveEl,hold:0});if(w<words.length)heardT=setTimeout(tick,330)};heardT=setTimeout(tick,250)}
+function talkEnd(){clearTimeout(heardT);if(cancelArmed){if(liveEl)liveEl.remove();liveEl=null;closeFocus();return}
+  if(liveEl){liveEl.classList.remove('live');liveEl.textContent=HEARD.charAt(0).toUpperCase()+HEARD.slice(1)}fstate.textContent='';[S.tx,S.ty]=spot();S.tsc=1.35;her('talk')}
+veil.addEventListener('pointerdown',()=>closeFocus());
+let fY=null;FL.addEventListener('pointerdown',e=>{fY=e.clientY});FL.addEventListener('pointerup',e=>{if(fY!=null&&e.clientY-fY>70)closeFocus();fY=null});
+addEventListener('keydown',e=>{if(e.key==='Escape'){closeFocus();closeRoom()}});
+// ---- drag: ask about this
+let hot=null;
+function targetAt(x,y){const r=phone.getBoundingClientRect();ov.style.display='none';hit.style.pointerEvents='none';const el=document.elementFromPoint(r.left+x,r.top+y);ov.style.display='';hit.style.pointerEvents='';return el&&el.closest('[data-ask]')}
+function markHot(el){if(hot===el)return;if(hot){hot.querySelectorAll('.k').forEach(k=>k.classList.remove('hot'));hot.classList.remove('hot');if(hot.classList.contains('k'))hot.classList.remove('hot')}hot=el;if(el){if(el.classList.contains('k'))el.classList.add('hot');el.querySelectorAll('.k').forEach(k=>k.classList.add('hot'));el.classList.add('hot')}}
+function drop(){const el=hot;markHot(null);if(!el){settle();return}const key=el.dataset.ask;S.tsc=.8;S.teye=[-1.5,0];
+  bandAnswer(ANS[key]||['That one has nothing new.']);setTimeout(()=>{if(RM){[S.x,S.y]=home()}[S.tx,S.ty]=home();S.tsc=1},1300)}
+// ---- room
+function openRoom(){settle();room.classList.add('on');S.teye=[-1,-1.4]}
+function closeRoom(){room.classList.remove('on');S.teye=null}
+document.getElementById('back').onclick=closeRoom;
+room.querySelectorAll('[data-undo]').forEach(u=>u.onclick=()=>{u.textContent='Reversed';u.style.textDecoration='none';u.style.color='var(--ink3)'});
+// ---- quiet
+function quiet(){settle();S.mode='quiet';S.tsc=.94;speak(['Quiet until 1:30 pm.'],{hold:3000})}
+function wake(){S.mode='idle';S.tsc=1;S.blinks=1;S.blinkAt=performance.now()}
+// ---- gestures on her
+let g=null,lastTap=0;
+hit.addEventListener('pointerdown',e=>{hit.setPointerCapture(e.pointerId);const r=phone.getBoundingClientRect();g={x0:e.clientX,y0:e.clientY,t0:performance.now(),r,kind:null,hold:setTimeout(()=>{if(!g.kind){g.kind='talk';talkStart()}},350)}});
+hit.addEventListener('pointermove',e=>{if(!g)return;const dx=e.clientX-g.x0,dy=e.clientY-g.y0,dt=performance.now()-g.t0;
+  if(g.kind==='talk'){cancelArmed=dx<-60;S.teye=cancelArmed?[-3,0]:[0,-1.6];S.tsc=cancelArmed?1.0:1.2;fstate.textContent=cancelArmed?'Let go to drop it':'Listening. Slide left to let it go';return}
+  if(!g.kind&&Math.hypot(dx,dy)>10){clearTimeout(g.hold);if(dy<-40&&dt<260&&Math.abs(dx)<30){g.kind='up';openRoom();return}g.kind='drag';S.mode='drag';setPicks([]);say.innerHTML='';S.tsc=.78}
+  if(g.kind==='drag'){const x=e.clientX-g.r.left,y=e.clientY-g.r.top-44;S.tx=x;S.ty=y;if(RM){S.x=x;S.y=y}S.teye=[Math.max(-3,Math.min(3,dx*.02)),Math.max(-2,Math.min(2,dy*.02))];markHot(targetAt(x,y))}});
+hit.addEventListener('pointerup',e=>{if(!g)return;clearTimeout(g.hold);const kind=g.kind;g=null;
+  if(kind==='talk')return talkEnd();if(kind==='drag')return drop();if(kind==='up')return;
+  const now=performance.now();if(S.mode==='quiet'){wake();return}
+  if(now-lastTap<300){lastTap=0;quiet();return}lastTap=now;if(F)closeFocus();else listen()});
+hit.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();F?closeFocus():listen()}});
+phone.addEventListener('pointerdown',e=>{if(e.target===hit||hit.contains(e.target)||picks.contains(e.target)||e.target.id==='ask'||room.contains(e.target))return;if(!F&&S.mode==='answer'){say.innerHTML='';settle()}});
+let rY=null;room.addEventListener('pointerdown',e=>rY=e.clientY);room.addEventListener('pointerup',e=>{if(rY!=null&&e.clientY-rY>60)closeRoom();rY=null});
+// ---- she speaks first, once, when something changes
+setTimeout(()=>{if(S.mode==='idle'){S.teye=[-2,-.5];speak([['Stretch','routines'],' can move to 9 if ',['Push day','training'],' runs late.']);setTimeout(()=>{if(S.mode==='idle')S.teye=null},6000)}},1800);
+// ---- demo buttons
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+document.getElementById('demo').addEventListener('click',async e=>{const d=e.target.dataset&&e.target.dataset.d;if(!d)return;closeRoom();if(S.mode==='quiet')wake();settle();say.innerHTML='';
+  if(d==='tap')listen();
+  if(d==='hold'){talkStart();await wait(3200);talkEnd()}
+  if(d==='drag'){const t=phone.querySelector('.one .k').getBoundingClientRect(),r=phone.getBoundingClientRect();S.mode='drag';S.tsc=.78;const tx=t.left-r.left+t.width/2,ty=t.top-r.top+t.height/2-44;
+    for(let i=1;i<=30;i++){const u=i/30;const[hx,hy]=home();S.tx=hx+(tx-hx)*u;S.ty=hy+(ty-hy)*u-Math.sin(u*Math.PI)*30;if(RM){S.x=S.tx;S.y=S.ty}markHot(targetAt(S.tx,S.ty+0));await wait(22)}markHot(phone.querySelector('.one .k'));await wait(500);drop()}
+  if(d==='up')openRoom();
+  if(d==='quiet')quiet()});
+// ---- looks
+const root=document.documentElement;document.getElementById('looks').addEventListener('click',e=>{const l=e.target.dataset&&e.target.dataset.l;if(!l)return;
+  document.querySelectorAll('#looks button').forEach(b=>b.setAttribute('aria-pressed',b===e.target));root.removeAttribute('data-look');
+  if(l==='black'){root.dataset.look='black';root.dataset.theme='dark'}else if(l==='white'){root.dataset.look='white';root.dataset.theme='light'}else if(l==='paper')root.dataset.theme='light';else root.removeAttribute('data-theme')});
+})();
+</script>

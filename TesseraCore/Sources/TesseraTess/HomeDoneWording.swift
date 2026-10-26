@@ -21,13 +21,13 @@ public struct HomeDoneWords: Codable, Equatable, Sendable {
 /// Home's done job (board 0al, docs/ai/home-lines-job.md §2b and §2c; Kaushik's "Sonnet on Home", 2:41 PM PT Oct
 /// 16). Only a finished workout with a best, or one 4 or more days after the same routine, is asked, and only once
 /// ever: the answer, or the lack of one, is kept by the workout's id. Sonnet 5.5, `SYSTEM_DONE`, a 6 s deadline, no
-/// retries, no redirects, behind "Tess asks Claude", the $50 month and its 80% step-aside. The rules line always
+/// retries, no redirects, behind "Tess asks Claude", the $100 month and its 80% step-aside. The rules line always
 /// shows first; a slot Claude words only replaces it when it passes every check.
 @MainActor
 public final class ClaudeHomeDone {
     public static let model = "claude-sonnet-5-5"
     static let maxTokens = 512
-    /// Lines jobs step aside at 80% of the month ($40 of $50; §2c item 6).
+    /// Lines jobs step aside at 80% of the month ($80 of $100; §2c item 6).
     static let stepAsideNano = TessUsageLedger.capNano * 8 / 10
     /// Home lines calls in one house day (04:00 to 04:00), counted from the ledger (architecture §5.5; injection
     /// audit). The 10-minute debounce in the same section is for the pack-changed case; this job asks once per
@@ -179,7 +179,7 @@ public final class ClaudeHomeDone {
         let house = TessLineCheck.HouseDay(finish: ended, now: now(), calendar: calendar)
         var failures: [String] = []
         func slot(_ text: String?, _ slot: TessLineCheck.Slot, rules: String?) -> String? {
-            guard let text, text != rules else { return nil }
+            guard let text, ShownLine.unstopped(text) != rules.map({ ShownLine.unstopped($0) }) else { return nil }
             // The digits Claude was given (the pack's) and the line's own, together (AI architecture on #658).
             let verdict = TessLineCheck.check(text, slot: slot, numbers: Array(Set(line.numbers + pack.numbers)),
                                               names: pack.names,
@@ -190,7 +190,8 @@ public final class ClaudeHomeDone {
                 failures += codes
                 return nil
             }
-            return verdict == .pass ? text : nil
+            // Shown with no closing stop (Kaushik, Oct 26).
+            return verdict == .pass ? ShownLine.unstopped(text) : nil
         }
         let result = HomeDoneWords(context: slot(words.context, .context, rules: line.context),
                                    detail: slot(words.detail, .detail, rules: line.detail))
@@ -324,8 +325,8 @@ public final class ClaudeHomeDone {
     - Never use a word the day label or hero already shows (the weekday, the routine name, done) unless rules.context \
     already uses it.
     - The item may drop its clock time. Every other digit in rules.context stays.
-    Detail: one sentence ending in a full stop, 14 words or fewer, 80 characters or fewer. Every digit in rules.detail \
-    stays. If rules.detail is null, return a null detail.
+    Detail: one sentence with no full stop at the end, 14 words or fewer, 80 characters or fewer. Every digit in \
+    rules.detail stays. If rules.detail is null, return a null detail.
     Both slots:
     - Digits only from that item's "numbers", never number words. No weights, reps or units.
     - Capitalise only the first word and the item's own names.

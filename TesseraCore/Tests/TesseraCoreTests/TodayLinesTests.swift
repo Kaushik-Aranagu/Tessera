@@ -110,7 +110,7 @@ struct TodayLinesTests {
             }
         }
         let texts = notices.map(\.text)
-        #expect(texts.contains("Packing, 0 of 2 done."), "\(texts)")
+        #expect(texts.contains("Packing, 2 left."), "\(texts)")
         let packing = try #require(notices.first { $0.text.hasPrefix("Packing") })
         #expect(packing.clause.app == .lists && packing.clause.keyWord == 0 ..< 7)
         // The soonest timed thing comes first; the sun's turn is a notice too.

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Day log v1</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/day-log-v1.md (Design item 14), drawn to Research's day-log-acceptance.md and fixed to day-log-v1-check.md. Phones: late night, travel (read in New York), the fall-back night (read in Los Angeles), rest day and faint row with an empty and an untrained day, the 6-line cap, the first day. ?play records the 04:00 turnover: TODAY relabels WED 21 in place, a new TODAY crossfades into the foot, nothing moves, and the running line stays ink and keeps counting. Porcelain, one base, no dabs. Add ?x2 for 2x. -->
+<style>
+:root{--ink:23,20,31;--house:cubic-bezier(.2,.8,.2,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;color:rgb(var(--ink));transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.66);height:48px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),.66)}
+.win{position:absolute;left:0;right:0;top:150px;bottom:76px;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 48px)}
+.stack{position:absolute;left:0;right:0;bottom:0;padding-bottom:34px}
+#nt{height:auto}
+.day{padding:0 22px 30px}
+.date{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.66);height:34px}
+.date.today{color:rgb(var(--ink))}
+.date.empty{color:rgba(var(--ink),.45)}
+.ln{display:grid;grid-template-columns:64px 1fr;min-height:30px;margin-bottom:4px}
+.t{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;color:rgba(var(--ink),.66);padding-top:5px}
+.x{font-size:21px;line-height:28px}
+.faint .x{color:rgba(var(--ink),.66)}
+.also .x{color:rgba(var(--ink),.66)}
+.obs .ph{--ink:245,242,236;background:#000;color:rgb(var(--ink))}
+.obs .ph .s2,.obs .ph .t,.obs .ph .date,.obs .ph .faint .x,.obs .ph .also .x{color:rgba(var(--ink),.72)}
+.obs .soul{--sa:#86B4FF;--sb:#FF5B3A;--sc:#FFC23D}
+.obs .ph .date.today{color:rgb(var(--ink))}
+.obs .ph .date.empty{color:rgba(var(--ink),.38)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.66);margin-top:20px;max-width:1650px;line-height:24px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const soul=`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,var(--sa,#2450D8),rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,var(--sb,#E2432A),rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,var(--sc,#F0A500),rgba(240,165,0,.2))"></i></div>`;
+const L=(t,x,cls='')=>`<div class="ln ${cls}"><div class="t">${t||''}</div><div class="x">${x}</div></div>`;
+const D=(date,lines,cls='',id='')=>`<div class="day" ${id?`id="${id}"`:''}><div class="date ${cls}">${date}</div>${lines.join('')}</div>`;
+const phone=(cap,month,days,extra='')=>`<div><div class="cap">${cap}</div><div class="ph"><div class="abs lbl s2" style="left:22px;top:58px">‹ TODAY</div><div class="abs" style="left:22px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px">${month}</div><div class="win"><div class="stack">${days.join('')}</div></div>${extra}${soul}</div></div>`;
+const P1=phone('LATE NIGHT · THU 22 00:45','October',[
+ D('TUE 20',[L('07:10','Added 2 tasks'),L('18:40','Cooked ramen, 40 min')]),
+ D('TODAY',[L('19:05','Added 2 tasks'),L('23:20','Push Day B, 5 sets'),L('00:31','Note: flight check-in')],'today')]);
+const P2=phone('TRAVEL · READ IN NEW YORK ON TUE 27','October',[
+ D('SUN 25',[],'empty'),
+ D('MON 26',[L('10:30','Done: water the plants'),L('00:40','Mobility, 35 min'),L('04:30','Note: seat 14C, no sleep')]),
+ D('TODAY',[L('06:55','Added 2 tasks')],'today')]);
+const P3=phone('FALL-BACK NIGHT · READ IN LA','October',[
+ D('WED 28 TO FRI 30',[],'empty'),
+ D('SAT 31',[L('20:00','Cooked dal tadka, 50 min'),L('00:50','Push Day B, 90 min. Bench 82.5&nbsp;×&nbsp;8.'),L('01:30','Note: hall light out'),L('01:30','Done: bins')]),
+ D('TODAY',[],'today')]);
+const P4=phone('REST DAY, FAINT ROW, EMPTY, UNTRAINED','October',[
+ D('SUN 11',[L('','Rest day','faint'),L('09:15','Added 3 tasks'),L('18:05','Ticked 2 on Home')]),
+ D('MON 12',[L('06:55','Pull Day A, 3 sets. Row 60&nbsp;×&nbsp;10.','faint'),L('12:30','Done: book the dentist')]),
+ D('TUE 13',[],'empty'),
+ D('WED 14',[L('12:40','Done: call the bank'),L('19:30','Cooked carbonara, 35 min')])]);
+const P5=phone('THE 6-LINE CAP, SCROLLED BACK','October',[
+ D('THU 8',[L('06:50','Pull Day A, 61 min. Row 70&nbsp;×&nbsp;10.'),L('08:30','4 tasks done'),L('09:00','Added 7 tasks, 5 groceries'),L('13:15','New list: Lisbon packing'),L('17:40','Cooked omelette, 10 min'),L('18:20','Done: pay the rent'),L('','Also: 3 notes, ticked 4 on Lisbon packing.','also')]),
+ D('FRI 9 TO SAT 10',[],'empty')]);
+const P6=phone('THE FIRST DAY · NOTHING LOGGED YET','October',[
+ D('TODAY',[`<div class="x" style="color:rgba(var(--ink),.66);font-weight:400">Your days write themselves here.</div>`],'today')]);
+const PLAY=Q.includes('play');
+// S7 (day-seams.md): 04:00 is night, so the turnover plays in Obsidian. ?por keeps Porcelain.
+const TOUR=Q.includes('tour');
+const OBS=Q.includes('obs')||(PLAY&&!TOUR&&!Q.includes('por'));if(OBS)document.body.classList.add('obs');
+// ?tour (item 33): the final recording for Builder B. Porcelain, Thu 15 at 19:40: a set lands, a task is taken back
+// and redone, a Tess write lands with its wash, then a scroll back through the states and down to TODAY again.
+if(PLAY&&TOUR){
+ document.getElementById('row').innerHTML=phone('THU 15, 19:40 · TODAY AT THE FOOT','October',[
+  D('THU 8',[L('06:50','Pull Day A, 61 min. Row 70&nbsp;×&nbsp;10.'),L('08:30','4 tasks done'),L('09:00','Added 7 tasks, 5 groceries'),L('13:15','New list: Lisbon packing'),L('17:40','Cooked omelette, 10 min'),L('18:20','Done: pay the rent'),L('','Also: 3 notes, ticked 4 on Lisbon packing.','also')]),
+  D('FRI 9 TO SAT 10',[],'empty'),
+  D('SUN 11',[L('','Rest day','faint'),L('09:15','Added 3 tasks'),L('18:05','Ticked 2 on Home')]),
+  D('MON 12',[L('06:55','Pull Day A, 3 sets. Row 60&nbsp;×&nbsp;10.','faint'),L('12:30','Done: book the dentist')]),
+  D('TUE 13',[],'empty'),
+  D('WED 14',[L('12:40','Done: call the bank'),L('19:30','Cooked carbonara, 35 min')]),
+  D('TODAY',[L('08:10','Added 2 tasks'),`<div id="dentw" style="overflow:hidden">${L('16:00','Done: dentist')}</div>`,L('18:50','<span id="run">Push Day B, 4 sets</span>'),`<div id="tw" style="overflow:hidden;height:0">${L('19:40','<span style="position:relative;display:inline-block"><span id="wash" style="position:absolute;left:-8px;right:-8px;top:0;bottom:0;border-radius:8px;background:rgba(36,80,216,.16);filter:blur(4px);opacity:0"></span><span id="twx" style="position:relative;color:#2450D8">Added 3 groceries</span></span>')}</div>`],'today')],
+  `<div id="fing" style="position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20"></div>`);
+}else if(PLAY){
+ document.getElementById('row').innerHTML=phone('04:00 · TODAY BECOMES WED 21 IN PLACE, NOTHING MOVES','October',[
+  D('TUE 20',[L('07:10','Added 2 tasks'),L('18:40','Cooked ramen, 40 min')]),
+  D('<span id="lab">TODAY</span>',[L('19:05','Added 2 tasks'),L('23:20','<span id="run">Push Day B, 6 sets</span>'),L('00:31','Note: flight check-in')],'today','wed')].concat([`<div style="position:absolute;left:22px;bottom:4px" class="date today" id="nt"><span style="opacity:0" id="ntl">TODAY</span></div>`]));
+}else{
+ document.getElementById('row').innerHTML=P1+P2+P3+P4+P5+P6;
+ document.getElementById('note').innerHTML='NO DABS: TIME, THEN TEXT. TIMES, DATES OF PAST DAYS, THE REST DAY ROW, THE FAINT ROW AND THE ALSO TAIL ALL REST IN INK SECONDARY; EMPTY DAYS AT 45%. A RUNNING LINE IS INK WHEREVER ITS BLOCK IS. EACH PHONE IS ONE READ IN ONE ZONE. THE TAIL APPEARS ONLY PAST THE 6-LINE CAP. 00:31 FLIGHT CHECK-IN IS ILLUSTRATIVE (NOT IN DL3).';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(!PLAY){document.body.dataset.done='1';return}
+ if(TOUR){tourPlay();return}
+ const lab=document.getElementById('lab'),date=lab.parentNode;
+ setTimeout(()=>{
+  lab.animate([{filter:'blur(0)',opacity:1},{filter:'blur(4px)',opacity:0}],{duration:110,fill:'forwards'}).onfinish=()=>{lab.textContent='WED 21';date.classList.remove('today');lab.animate([{filter:'blur(4px)',opacity:0},{filter:'blur(0)',opacity:1}],{duration:110,fill:'forwards'})};
+  document.getElementById('ntl').animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:220,delay:260,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+ },1400);
+ setTimeout(()=>{const r=document.getElementById('run');r.animate([{filter:'blur(0)',opacity:1},{filter:'blur(4px)',opacity:0}],{duration:110,fill:'forwards'}).onfinish=()=>{r.textContent='Push Day B, 7 sets';r.animate([{filter:'blur(4px)',opacity:0},{filter:'blur(0)',opacity:1}],{duration:110,fill:'forwards'})}},2600);
+ setTimeout(()=>document.body.dataset.done='1',4200);
+});
+
+async function tourPlay(){
+ const $=id=>document.getElementById(id),wait=ms=>new Promise(r=>setTimeout(r,ms)),H='cubic-bezier(.2,.8,.2,1)';
+ const cap=t=>{const c=document.querySelector('.cap');c.animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'}).onfinish=()=>{c.textContent=t;c.animate([{opacity:0},{opacity:1}],{duration:200,fill:'forwards'})}};
+ const swap=(el,t)=>{el.animate([{filter:'blur(0)',opacity:1},{filter:'blur(4px)',opacity:0}],{duration:110,fill:'forwards'}).onfinish=()=>{el.textContent=t;el.animate([{filter:'blur(4px)',opacity:0},{filter:'blur(0)',opacity:1}],{duration:110,fill:'forwards'})}};
+ const stack=document.querySelector('.stack'),win=document.querySelector('.win'),f=$('fing');
+ let y=0;const scrollTo=(to,ms)=>{const a=stack.animate([{transform:`translateY(${y}px)`},{transform:`translateY(${to}px)`}],{duration:ms,easing:H,fill:'forwards'});y=to;return a.finished};
+ const drag=async(x,y0,dy,ms)=>{f.style.left=x+'px';f.style.top=y0+'px';f.style.opacity=1;f.animate([{transform:'none'},{transform:`translateY(${dy}px)`}],{duration:ms,easing:H,fill:'forwards'});await wait(ms);f.style.opacity=0;f.getAnimations().forEach(a=>a.cancel())};
+ await wait(1600);
+ cap('A SET LANDS ON THE WORKOUT · ONLY THE NUMBER CHANGES');await wait(500);swap($('run'),'Push Day B, 5 sets');await wait(1700);
+ cap('“DENTIST TAKEN BACK.” ON HOME · ITS LINE FADES OUT');await wait(500);
+ const dw=$('dentw'),dh=dw.offsetHeight;
+ await dw.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'}).finished;
+ await dw.animate([{height:dh+'px'},{height:'0px'}],{duration:300,easing:H,fill:'forwards'}).finished;
+ await wait(1200);cap('REDO · IT COMES BACK');await wait(400);
+ await dw.animate([{height:'0px',opacity:0},{height:dh+'px',opacity:0}],{duration:300,easing:H,fill:'forwards'}).finished;
+ await dw.animate([{opacity:0},{opacity:1}],{duration:220,fill:'forwards'}).finished;
+ await wait(1300);cap('A TESS WRITE · THE WASH SITS BEHIND THE TEXT, THEN DRIES');await wait(500);
+ const tw=$('tw');tw.style.height='auto';const th=tw.offsetHeight;tw.style.height='0px';
+ tw.animate([{height:'0px'},{height:th+'px'}],{duration:360,easing:H,fill:'forwards'});
+ tw.firstElementChild.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:360,easing:H,fill:'forwards'});
+ $('wash').animate([{opacity:0},{opacity:1,offset:.08},{opacity:1,offset:.6},{opacity:0}],{duration:2800,fill:'forwards'});
+ await wait(2100);$('twx').animate([{color:'#2450D8'},{color:'rgb(23,20,31)'}],{duration:700,fill:'forwards'});
+ await wait(1300);
+ const maxY=stack.offsetHeight-win.offsetHeight+60;
+ const sun=[...document.querySelectorAll('.date')].find(d=>d.textContent==='SUN 11');
+ cap('SCROLLED BACK · UNTRAINED, EMPTY, THE FAINT ROW, REST DAY');
+ const target1=Math.max(0,Math.min(maxY,(stack.offsetHeight-sun.parentNode.offsetTop)-win.offsetHeight+40));
+ drag(200,300,240,900);await scrollTo(target1,900);await wait(2600);
+ cap('THE 6-LINE CAP · THE TAIL ONLY PAST SIX');
+ drag(200,300,240,900);await scrollTo(maxY,900);await wait(2600);
+ cap('BACK TO TODAY');drag(200,560,-300,800);await scrollTo(0,800);await wait(1400);
+ document.body.dataset.done='1';
+}
+</script>
+</body>
+</html>

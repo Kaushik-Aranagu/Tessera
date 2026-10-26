@@ -16,6 +16,19 @@ struct RootView: View {
     @State private var demoCook: DemoCookCover?
     /// Settings, opened from the entry at the top right of any page below Home.
     @State private var settingsOpen = false
+    #if DEBUG
+        /// `-openLayoutMode` (simulator only, LaunchFlags) opens Layout mode at launch, for its UI tests and stills.
+        @State private var layoutModeOpen = false
+    #endif
+
+    /// A full-screen cover or Tess's capture surface hides the stack: nothing under it draws live.
+    private var covered: Bool {
+        var covers = model.isWorkoutPresented || model.isCommandExpanded || demoCook != nil || settingsOpen
+        #if DEBUG
+            covers = covers || layoutModeOpen
+        #endif
+        return covers
+    }
 
     var body: some View {
         @Bindable var model = model
@@ -33,10 +46,14 @@ struct RootView: View {
                         }
                     }
                     .environment(\.animateEntrance, model.consumeFirstVisit(nil))
+                    // Live only when seen: Home is the visible page only with nothing pushed over it and no cover up.
+                    .liveScope(model.path.isEmpty && !covered)
                     .toolbarVisibility(.hidden, for: .navigationBar)
                     .navigationDestination(for: Route.self) { route in
                         ObjectPage(route: route)
                             .environment(\.animateEntrance, model.consumeFirstVisit(route))
+                            // Only the top of the stack is seen; the pages under it and any cover hide it.
+                            .liveScope(model.path.last == route && !covered)
                             .modifier(ArrivalTransition(
                                 id: route,
                                 arrival: model.arrivals[route] ?? .crossFade,
@@ -95,42 +112,52 @@ struct RootView: View {
             }
         }
         .fullScreenCover(item: $demoCook) { CookClockPage(cookID: $0.id) }
-        .fullScreenCover(isPresented: $settingsOpen) {
-            NavigationStack { SettingsPage(cameFrom: "Back") }
-                .environment(\.animateEntrance, true)
-        }
-        .task {
-            guard let title = LaunchFlags.value(after: "-openCook"),
-                  let recipe = model.objects(of: .recipe).first(where: { $0.title == title }),
-                  let cook = try? model.engine.perform(StartCooking(recipe: recipe.id), by: .user).output
-            else { return }
-            try? await Task.sleep(for: .milliseconds(600))
-            demoCook = DemoCookCover(id: cook.id)
-        }
-        .task {
-            // Simulator only (LaunchFlags): opens the first routine's workout, for the large-text swipe test.
-            guard LaunchFlags.has("-openWorkout"),
-                  let routine = model.objects(of: .routine).first(where: { !$0.isDeleted }) else { return }
-            try? await Task.sleep(for: .milliseconds(800))
-            model.startRoutine(routine)
-        }
-        .task {
-            // Simulator only (LaunchFlags): `-openExercise "Bench Press"` opens that exercise's page, for stills.
-            // `-massUnit lb` shows weights in pounds, the way the Measure choice will.
-            if LaunchFlags.value(after: "-massUnit") == "lb" {
-                Format.unit = .pounds
+        #if DEBUG
+            .fullScreenCover(isPresented: $layoutModeOpen) {
+                NavigationStack { LayoutModeView() }
             }
-            guard let name = LaunchFlags.value(after: "-openExercise"), let root = model.classDef(.exercise),
-                  let target = ClassResolver.descendants(of: root).first(where: { $0.name == name }) else { return }
-            try? await Task.sleep(for: .milliseconds(1500))
-            model.open(.classDef(target.id))
-        }
-        .background { ThemedBackground() }
-        .modifier(RestReceipt())
-        .environment(\.lowPowerMotion, lowPower)
-        .onReceive(PowerState.changes) { _ in
-            lowPower = PowerState.isLowPower
-        }
+            .task {
+                guard LaunchFlags.has("-openLayoutMode") else { return }
+                try? await Task.sleep(for: .milliseconds(1200))
+                layoutModeOpen = true
+            }
+        #endif
+            .fullScreenCover(isPresented: $settingsOpen) {
+                NavigationStack { SettingsPage(cameFrom: "Back") }
+                    .environment(\.animateEntrance, true)
+            }
+            .task {
+                guard let title = LaunchFlags.value(after: "-openCook"),
+                      let recipe = model.objects(of: .recipe).first(where: { $0.title == title }),
+                      let cook = try? model.engine.perform(StartCooking(recipe: recipe.id), by: .user).output
+                else { return }
+                try? await Task.sleep(for: .milliseconds(600))
+                demoCook = DemoCookCover(id: cook.id)
+            }
+            .task {
+                // Simulator only (LaunchFlags): opens the first routine's workout, for the large-text swipe test.
+                guard LaunchFlags.has("-openWorkout"),
+                      let routine = model.objects(of: .routine).first(where: { !$0.isDeleted }) else { return }
+                try? await Task.sleep(for: .milliseconds(800))
+                model.startRoutine(routine)
+            }
+            .task {
+                // Simulator only (LaunchFlags): `-openExercise "Bench Press"` opens that exercise's page, for stills.
+                // `-massUnit lb` shows weights in pounds, the way the Measure choice will.
+                if LaunchFlags.value(after: "-massUnit") == "lb" {
+                    Format.unit = .pounds
+                }
+                guard let name = LaunchFlags.value(after: "-openExercise"), let root = model.classDef(.exercise),
+                      let target = ClassResolver.descendants(of: root).first(where: { $0.name == name }) else { return }
+                try? await Task.sleep(for: .milliseconds(1500))
+                model.open(.classDef(target.id))
+            }
+            .background { ThemedBackground() }
+            .modifier(RestReceipt())
+            .environment(\.lowPowerMotion, lowPower)
+            .onReceive(PowerState.changes) { _ in
+                lowPower = PowerState.isLowPower
+            }
     }
 
     /// Paint floods out of Tess (~0.5 s); Home is swapped in underneath, then the paint fades. Tapping her again on

@@ -1,0 +1,351 @@
+<title>Tessera App Rooms</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300;400&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --training:#A8203F;--kitchen:#A8701F;--routines:#8E4A78;--lists:#5E6B1F;--notes:#5B3FB8;--money:#3F7A62;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E0E10;--phone:#151517;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#D04A6A;--kitchen:#C49A5E;--routines:#D79AA6;--lists:#B5BE7A;--notes:#B9A9E0;--money:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#0E0E10;--phone:#151517;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#D04A6A;--kitchen:#C49A5E;--routines:#D79AA6;--lists:#B5BE7A;--notes:#B9A9E0;--money:#8DBFA7;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;gap:56px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+.notes{flex:1 1 360px;min-width:0;max-width:520px;display:flex;flex-direction:column;gap:18px}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,56px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);font-size:19px;margin:0}
+.notes p{margin:0}.notes b{font-weight:600}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px;padding:4px 0}
+.tr:focus-visible,.lift:focus-visible,.back:focus-visible,.go:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+.trs{display:flex;flex-wrap:wrap;gap:6px 22px}
+.phone{position:relative;width:360px;max-width:100%;height:740px;background:var(--phone);border:1px solid var(--edge);border-radius:44px;overflow:hidden;
+  display:flex;flex-direction:column;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+#lin{display:block;width:100%;height:176px;flex:none;touch-action:pan-y}
+.back{all:unset;cursor:pointer;position:absolute;top:52px;left:24px;color:var(--ink2);font-size:17px;z-index:2}
+.in{padding:4px 24px 18px;display:flex;flex-direction:column;gap:10px;flex:1;min-height:0}
+.fact{font-family:var(--words);color:var(--ink2);font-size:16px;margin:-6px 0 0;text-align:right;min-height:24px}
+.fact .n{font-family:var(--nums);font-weight:300;color:var(--ink)}
+.sent{text-align:right;font-size:23px;line-height:1.3;letter-spacing:-.005em;margin:6px 0 8px;min-height:90px}
+.sent .w{font-weight:600;color:var(--training);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px;font-size:1.12em}
+.lift{all:unset;cursor:pointer;display:grid;width:100%;box-sizing:border-box;grid-template-columns:1fr auto;gap:2px 12px;padding:8px 0;align-items:baseline}
+.lift .nm{font-size:18px}
+.lift .dt{color:var(--ink2);font-size:16px;text-align:right}
+.lift .dt .n{font-family:var(--nums);font-weight:300;color:var(--ink);font-size:18px}
+.lift svg{grid-column:1/3;height:14px;overflow:visible}
+.lift[aria-pressed="true"] .nm{color:var(--training);font-weight:600}
+.go{all:unset;cursor:pointer;margin-top:auto;color:var(--training);font-size:20px;font-weight:600;align-self:flex-start;padding:6px 0}
+.tr[aria-pressed="true"]{color:var(--ink);font-weight:600}
+.sent .w.k{color:var(--kitchen)}
+.lift.k[aria-pressed="true"] .nm{color:var(--kitchen)}
+.lift.k{display:grid;width:100%;box-sizing:border-box}
+.go.k{color:var(--kitchen)}
+.pr{color:var(--ink3);font-size:15px;margin:0}
+.sent .w.nt{color:var(--notes)}.lift.nt[aria-pressed="true"] .nm{color:var(--notes)}.go.nt{color:var(--notes)}
+.sent .w.ls{color:var(--lists)}.go.ls{color:var(--lists)}
+.lift.ls{grid-template-columns:22px 1fr auto}.lift.ls .ring{width:14px;height:14px}.lift.ls.done .nm{color:var(--ink2);text-decoration:line-through;text-decoration-thickness:1px}
+.lift.nt,.lift.ls{width:100%;box-sizing:border-box}
+.lift.nt .dt,.lift.ls .dt{font-family:var(--nums);font-weight:300}
+#lin{transition:height .42s cubic-bezier(.3,.7,.4,1)}
+.sent .n,.sm .n,.lift .n{font-family:var(--nums);font-weight:300;color:var(--ink)}
+.sent{min-height:0}
+.act{display:flex;justify-content:space-between;align-items:baseline}
+.act .go{margin-top:0}
+.pl{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}
+.wk{display:flex;justify-content:space-between;padding:4px 2px 2px}
+.wk span{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--ink3)}
+.doors{display:flex;flex-wrap:wrap;gap:4px 22px;margin-top:auto}
+.dr{all:unset;cursor:pointer;font-size:17px;color:var(--ink);display:inline-flex;gap:7px;align-items:baseline}
+.dr span{color:var(--ink2);font-size:15px}
+.door{all:unset;cursor:pointer;font-size:30px;font-weight:600;letter-spacing:-.015em;line-height:1.1;color:var(--ink)}
+.lv{display:grid;grid-template-columns:1fr 1fr;gap:2px 20px}
+.lvi{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:15px;color:var(--ink2)}
+.lvi svg{width:64px;height:4px;overflow:visible}
+.sm{color:var(--ink2);font-size:15px;margin:0}
+.krow{all:unset;cursor:pointer;display:flex;width:100%;box-sizing:border-box;justify-content:space-between;font-size:16px;padding:2px 0;color:var(--ink3)}
+.krow.today{color:var(--ink)}.krow[aria-pressed="true"]{color:var(--kitchen);font-weight:600}
+.wl{display:block;border-bottom:1px solid var(--edge);padding:2px 0 6px}
+.wl input{all:unset;width:100%;font-size:18px;color:var(--ink)}.wl input::placeholder{color:var(--ink3)}
+.field{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 16px;padding:6px 0}
+.th{all:unset;cursor:pointer;color:var(--ink);font-weight:500;letter-spacing:-.01em;line-height:1.25}
+.th.on{color:var(--notes);font-weight:600}.th.q{color:var(--ink3);font-size:16px;font-weight:400}
+.mg{display:flex;flex-direction:column;gap:8px}.mg p{margin:0;font-size:16px;color:var(--ink2);line-height:1.4}
+.mg .mk{color:var(--ink3);margin-right:6px}
+.u{all:unset;cursor:pointer;color:var(--ink);text-decoration:underline;text-decoration-color:var(--notes);text-decoration-thickness:1px;text-underline-offset:4px}
+.go.inl{margin-top:0;font-size:18px;padding:0 0 0 10px}
+.lead{font-size:27px;line-height:1.22;letter-spacing:-.015em;font-weight:500}
+.lw{all:unset;cursor:pointer;transition:opacity .3s}.lw.gone{text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:var(--lists);color:var(--ink2)}
+.fills{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.fn{font-size:26px;font-weight:600;letter-spacing:-.015em;line-height:1.1;background:linear-gradient(90deg,var(--ink) var(--p),var(--ink3) var(--p));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ll{margin:0;font-size:16px;color:var(--ink2)}
+.go.rt{color:var(--routines)}
+.rlist{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.rrow{all:unset;cursor:pointer;display:flex;justify-content:space-between;gap:10px;width:100%;box-sizing:border-box;padding:4px 0;font-size:17px}
+.rrow .dt{color:var(--ink2);font-size:15px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<div class="wrap">
+<div class="phone" id="phone">
+  <button class="back" id="home">Home</button>
+  <canvas id="lin" aria-label="Training, the lintel: your best for the picked lift over twelve weeks, as a pixel ridge"></canvas>
+  <div class="in" id="in"></div>
+</div>
+<div class="notes">
+  <p class="lab">Rounds 210, 217 and 218, Oct 23</p>
+  <h1 id="h1">The Training room</h1>
+  <p class="sub">Where the doorway lands. The Home mosaic comes through with you and becomes the room's lintel, a strip of pixels across the top that shows this app's own life.</p>
+  <p><b>The lintel.</b> Twelve weeks of your best for one lift, as a pixel ridge: a landscape, not a chart. The high ground is this app's red, the valley fades to the page in steps, and the bottom edge blends the same way Home's mosaic does. The week of your best glints once when you arrive.</p>
+  <p><b>Tap a lift.</b> The ridge re-forms for it, column by column from left to right, and the line above it says that lift's best in plain words. Tap the same lift again to go back to the session's lead lift.</p>
+  <p><b>Set marks.</b> Each set is an ink ring under its lift. Done sets are drawn in red; sets still to do are pale. Nothing is filled.</p>
+  <p><b>Start.</b> The ridge flattens into a level line, the live-workout pulse, and the sentence becomes the first set. The lintel stays the doorway home: tap Home and the pixels fold back into the mosaic.</p>
+  <div class="trs"><button class="tr" id="rt" aria-pressed="true">Training room</button><button class="tr" id="rk" aria-pressed="false">Kitchen room</button><button class="tr" id="rn" aria-pressed="false">Notes room</button><button class="tr" id="rl" aria-pressed="false">Lists room</button><button class="tr" id="rr" aria-pressed="false">Routines room</button><button class="tr" id="rq" aria-pressed="false" hidden>Quiet day</button></div>
+  <div class="trs"><button class="tr" id="tl">Lead lift</button><button class="tr" id="tg">Replay the glint</button></div>
+  <p><b>Every room is its own place.</b> The lintel is what they share: a strip of pixels that comes through the doorway from Home. Each lintel has its own height and its own way of arriving: Training's ridge rises column by column, firmly; Kitchen's buildings settle in one after another, with weight; Notes write themselves in, drifting; Lists' line steps in from the left. Under the lintel, each room keeps its approved landing (sheet 131 v2), so no two rooms are laid out alike.</p>
+  <p><b>Touch the lintel to read it.</b> Hold and slide along any lintel and the line under it reads what is under your finger: the week and its best, the day and its dinner, which line of the note and what else it is on, how many were left that day or how many will be at this pace. Let go and it settles back after a moment.</p>
+  <p><b>Training.</b> The best is the lintel's one numeral, top right, and the week it came from glints once; how often you set a new best is in the line under it. Under it, the approved landing: the session in words, Start with the place word, the week as set marks, today's lifts with their sets, and the doors.</p>
+  <p><b>Kitchen.</b> Each dinner's building has a window for every ingredient still to get, so tonight's tacos show four gaps until they are in the pantry. Under it, Pantry and Recipes as two large doors, Pantry with its level lines, Recipes with the week.</p>
+  <p><b>Notes.</b> A line that is also something elsewhere carries that app's colour in the margin: Packing's olive, Bench press's red, Tacos' ochre. Under it, the search-and-write line, the things you write about sized by how much, and the margin sentences. No numbers anywhere in Notes.</p>
+  <p><b>Lists.</b> How many are left is the lintel's one numeral, top right; ahead of today a few pale whole tiles step down toward zero, and the day it gets there is in the sentence. Under it, the lead list's next things as large words (tap one when it's packed and a tile drops from the line), then every other list as a name that fills with ink by how much is done.</p>
+  <p><b>Routines.</b> The day is a tide line, from 5 am to 11 pm. Each routine is a swell at its usual time, as wide as it usually runs. What has passed is water in the room's rose, fading to the page in steps; what is ahead is only its surface, in pale whole tiles. Now is one ink stitch standing on the water, and the routine that is running breathes. Tap a routine and its swell glints. Under it, the approved landing: the step in large words, minutes on this step, Pick up, one line per routine, and Browse. On a quiet day the top reads Nothing is running with three Start words.</p>
+  <p class="pr">Private workouts show "Private workout" and no lifts on the Lock Screen and in widgets; inside the room they read normally. Reduce Motion: the ridge swaps plainly, no glint.</p>
+</div>
+</div>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cs=()=>getComputedStyle(document.documentElement);const hex=h=>{h=h.trim().replace('#','');return[0,2,4].map(k=>parseInt(h.slice(k,k+2),16))};
+const mix=(a,b,t)=>a.map((v,k)=>v+(b[k]-v)*t);const clamp=x=>Math.max(0,Math.min(1,x));
+const B4=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]].map(r=>r.map(v=>(v+.5)/16));
+const GL={0:'111101101101111',1:'010110010010111',2:'111001111100111',3:'111001111001111',4:'101101111001001',5:'111100111001111',6:'111100111101111',7:'111001001001001',8:'111101111101111',9:'111101111001111'};
+// a tiny pixel numeral, 3 by 5 tiles per digit, centered on column j0
+function pix(str,j0,i0,c){str=String(str);const w=str.length*4-1,s0=Math.round(j0-w/2);x.fillStyle=`rgb(${c.map(Math.round)})`;
+  [...str].forEach((ch,k)=>{const g=GL[ch];if(!g)return;for(let r=0;r<5;r++)for(let q=0;q<3;q++)if(g[r*3+q]==='1')x.fillRect((s0+k*4+q)*STEP+(STEP-TILE)/2,(i0+r)*STEP+(STEP-TILE)/2,TILE,TILE)})}
+let scrub=null,scrubOff=0;
+function scrubTile(j,i,c,ink){return scrub&&scrub.j===j?mix(c,ink,.38):c}
+const LIFTS=[
+ {k:'bench',nm:'Bench press',sets:'3 x 5',at:'185',done:2,n:3,best:205,ago:'three weeks ago',w:[180,182,186,190,192,195,199,205,201,198,200,202]},
+ {k:'ohp',nm:'Overhead press',sets:'3 x 6',at:'105',done:0,n:3,best:115,ago:'last week',w:[98,100,100,103,104,106,108,107,110,111,113,115]},
+ {k:'dip',nm:'Dips',sets:'3 x 10',at:'body',done:0,n:3,best:24,ago:'in August',w:[14,16,18,20,22,24,23,22,21,22,22,23],unit:'reps'},
+ {k:'fly',nm:'Cable fly',sets:'2 x 12',at:'30',done:0,n:2,best:35,ago:'two weeks ago',w:[25,25,27,28,28,30,30,32,33,35,34,34]}];
+let pick=0,prev=null,morph0=0,glint0=performance.now()+400,live=0;
+const cv=document.getElementById('lin'),x=cv.getContext('2d'),STEP=4,TILE=3.3;let W,H,C,R,dpr;
+function size(){dpr=devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;C=Math.ceil(W/STEP);R=Math.ceil(H/STEP)}
+function ridge(L,j){const w=L.w,mn=Math.min(...w)-(Math.max(...w)-Math.min(...w))*.45,mx=Math.max(...w);const u=j/(C-1)*(w.length-1),a=Math.floor(u),b=Math.min(w.length-1,a+1),f=u-a,s=f*f*(3-2*f);
+  const v=w[a]+(w[b]-w[a])*s;return (v-mn)/(mx-mn)}
+function bestCol(L){const k=L.w.indexOf(Math.max(...L.w));return Math.round(k/(L.w.length-1)*(C-1))}
+function frame(now){if(room===4)return rframe(now);if(room===1)return kframe(now);if(room===2)return nframe(now);if(room===3)return lframe(now);const T=cs(),acc=hex(T.getPropertyValue('--training')),pg=hex(T.getPropertyValue('--phone')),ink=hex(T.getPropertyValue('--ink'));
+  x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle=`rgb(${pg})`;x.fillRect(0,0,W,H);
+  const L=LIFTS[pick],P=prev!=null?LIFTS[prev]:null,top=19,base=R-1,span=base-top-7,bc=bestCol(L);
+  for(let j=0;j<C;j++){
+    const d=RM?1:clamp((now-morph0-j*9)/260);const r=P&&d<1?ridge(P,j)+(ridge(L,j)-ridge(P,j))*(d*d*(3-2*d)):ridge(L,j);
+    const lv=live?(.5+.015*Math.sin(now/300+j*.25)):r;const hy=base-6-lv*span;
+    for(let i=0;i<R;i++){let c=null,a=1;
+      if(i>=hy){const depth=(i-hy)/(base-hy+.001);c=mix(acc,pg,clamp(.42+depth*.58));if(i-hy<1.2)c=acc}
+      else{const sky=(hy-i);if(sky<3&&((i*7+j*3)%5===0))c=mix(acc,pg,.82)}
+      if(!c)continue;
+      // the bottom edge straddles into the page in 1/16 steps
+      const e=clamp((R-1-i)/9),q=Math.floor(e*16+B4[i&3][j&3])/16;c=mix(pg,c,q);
+      if(j===bc&&!RM&&i>=hy-1&&i<hy+3){const g=(now-glint0)/700;if(g>0&&g<1)c=mix(c,ink,Math.sin(g*Math.PI)*.55)}
+      c=scrubTile(j,i,c,ink);const s=d<1&&P?TILE*(.55+.45*Math.abs(Math.cos(d*Math.PI))):TILE;x.fillStyle=`rgb(${c.map(Math.round)})`;x.fillRect(j*STEP+(STEP-s)/2,i*STEP+(STEP-s)/2,s,s)}}
+  // one headline numeral per lintel, top right; the best week glints (above) and the rest is in the fact line
+  pix(L.best,C-14,12,acc);
+  requestAnimationFrame(frame)}
+let fact,lifts,sent;const IN=document.getElementById('in');
+function rings(L){let s='';for(let k=0;k<L.n;k++)s+=`<circle cx="${7+k*20}" cy="7" r="5.5" fill="none" stroke="${k<L.done?'var(--training)':'var(--edge)'}" stroke-width="${k<L.done?1.6:1.3}"/>`;return`<svg viewBox="0 0 ${L.n*20} 14" width="${L.n*20}" aria-label="${L.done} of ${L.n} sets done">${s}</svg>`}
+const WEEK=[['M',1],['T',1],['W',0],['T',1],['F',2],['S',0],['S',0]];
+function tplT(){IN.innerHTML=`<p class="fact" id="fact" aria-live="polite"></p><div class="sent" id="sent">${S0}</div>
+  <div class="act"><button class="go" id="go">Start Push A</button><button class="pl" id="pl" aria-label="Place">Gym</button></div>
+  <div class="wk" aria-label="This week: three sessions done, today open">${WEEK.map(([d,v])=>`<span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.3" fill="none" stroke="${v===1?'var(--ink)':v===2?'var(--training)':'var(--edge)'}" stroke-width="${v?1.7:1.2}"/></svg>${d}</span>`).join('')}</div>
+  <div id="lifts"></div>
+  <div class="doors">${[['Plan','push, pull, legs'],['Library','48'],['Log','Thursday'],['Stats','bench up 10 lb']].map(([d,v])=>`<button class="dr">${d}<span>${v}</span></button>`).join('')}</div>`;
+  fact=document.getElementById('fact');lifts=document.getElementById('lifts');sent=document.getElementById('sent')}
+function draw(){if(!document.getElementById('lifts'))tplT();lifts.innerHTML=LIFTS.map((L,n)=>`<button class="lift" data-n="${n}" aria-pressed="${n===pick}"><span class="nm">${L.nm}</span><span class="dt">${L.sets} at <span class="n">${L.at}</span>${L.at==='body'?'':' lb'}</span>${rings(L)}</button>`).join('');
+  const L=LIFTS[pick];let nb=0,run=L.w[0];L.w.forEach((v,k)=>{if(k&&v>run)nb++;run=Math.max(run,v)});fact.innerHTML=`${L.nm.split(' ')[0]} best ${L.ago}, new bests in <span class="n">${nb}</span> of <span class="n">12</span> weeks`}
+IN.addEventListener('click',e=>{
+  if(e.target.id==='go')return goTap(e);if(e.target.id==='pl'){e.target.textContent=e.target.textContent==='Gym'?'Home':'Gym';return}
+  const th=e.target.closest('.th');if(th&&th.dataset.n!=null){const n=+th.dataset.n;if(n!==np){np=n;nT0=performance.now();drawN()}return}
+  const lw=e.target.closest('.lw');if(lw){const n=+lw.dataset.n;if(lDone[n])return;lDone[n]=1;lw.classList.add('gone');if(!RM){const mx=14,left=lDone.filter(v=>!v).length;fall.push({t:performance.now(),j:Math.round(C*.68),i:Math.round((R-8)-((left+1)/mx)*((R-8)-22))})}setTimeout(drawL,RM?0:380);return}
+  const rr=e.target.closest('.rrow');if(rr){rGl=+rr.dataset.n;rGl0=performance.now();return}
+  const kr=e.target.closest('.krow');if(kr){kp=+kr.dataset.n;raised=true;glintK=kp;glint0=performance.now();drawK();return}
+  const b=e.target.closest('.lift');if(!b)return;const n=+b.dataset.n;
+  if(room===2){if(n!==np){np=n;nT0=performance.now();drawN()}return}
+  if(room===3){const was=lDone[n];lDone[n]=was?0:1;if(!was&&!RM){const mx=14,top=14,base=R-11,left=lDone.filter(v=>!v).length;fall.push({t:performance.now(),j:Math.round(C*.68),i:Math.round((R-8)-((left+1)/mx)*((R-8)-22))})}drawL();return}
+  if(room){kp=n;raised=true;glintK=n;glint0=performance.now();drawK();return}setPick(n===pick&&n!==0?0:n)});
+function setPick(n){if(n===pick)return;prev=pick;pick=n;morph0=performance.now();glint0=morph0+C*9+260;live=0;draw();document.getElementById('go').textContent='Start Push A';resetSent()}
+const S0='Push A today, about <span class="n">45</span> min.<br><span class="w">Bench</span> opens at <span class="n">185</span>.';function resetSent(){sent.innerHTML=S0}
+function goTap(e){if(room===2){nT0=performance.now();return}if(room===3)return;if(room){steam=!steam;e.target.textContent=steam?'Done':'Cook';return}if(!live&&pick!==0)setPick(0);live=!live;e.target.textContent=live?'End':'Start Push A';sent.innerHTML=live?`<span class="w">Bench</span>, set <span style="font-family:var(--nums);font-weight:300">3</span> of <span style="font-family:var(--nums);font-weight:300">3</span>,<br><span style="font-family:var(--nums);font-weight:300">185</span> lb for <span style="font-family:var(--nums);font-weight:300">5</span>.`:S0}
+document.getElementById('tl').onclick=()=>{if(room){kp=4;raised=false;glintK=4;glint0=performance.now();drawK()}else setPick(0)};document.getElementById('tg').onclick=()=>{glint0=performance.now()};
+document.getElementById('home').onclick=()=>{glint0=performance.now()};
+
+// ---- Kitchen room
+const DAYS=[['Monday','Lentil soup','Lentil soup on Monday, a pot for two days'],['Tuesday','Leftovers','Leftovers on Tuesday, two boxes in the fridge'],['Wednesday','Stir fry','Stir fry on Wednesday, ready in ten minutes'],['Thursday','Pasta','Pasta on Thursday, all in the pantry'],['Friday','Tacos',null],['Saturday','Out','Out on Saturday, nothing to cook'],['Sunday','Roast vegetables','Roast vegetables on Sunday, an hour in the oven']];
+const GET=[0,0,1,0,4,0,2],KW=[13,11,14,13,13,11,15],KS=KW.map((w,k)=>KW.slice(0,k).reduce((a,b)=>a+b,0));
+const dome=u=>Math.sqrt(Math.max(0,1-(2*u-1)**2));
+const PROF=[u=>.12+.5*dome(u),u=>(u>.3&&u<.7)?.95:.27,(u,j,w)=>(j===0||j===w-1)?.5:.42,u=>.2+.62*(1-Math.abs(2*u-1)),u=>.3+.62*Math.min(1,1.4*dome(u)),u=>(u>.44&&u<.56)?.55:.2,u=>.35+.22*Math.abs(Math.sin(u*Math.PI*3))];
+let room=0,kp=4,steam=0,glintK=4,rise=[0,0,0,0,0,0,0],lastT=0;
+function kframe(now){const T=cs(),acc=hex(T.getPropertyValue('--kitchen')),pg=hex(T.getPropertyValue('--phone')),ink=hex(T.getPropertyValue('--ink')),i2=hex(T.getPropertyValue('--ink2'));
+  x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle=`rgb(${pg})`;x.fillRect(0,0,W,H);
+  const top=19,base=R-1,span=base-top-7,dt=Math.min(64,now-lastT);lastT=now;
+  for(let k=0;k<7;k++){const t=(k===kp&&raised)?2:0;rise[k]=RM?t:rise[k]+(t-rise[k])*Math.min(1,dt/110)}
+  let steamTop=0,steamCol=0;
+  for(let j=0;j<C;j++){let k=0;while(k<6&&j>=KS[k+1])k++;
+    const w=KW[k],u=(j-KS[k]+.5)/w,h=PROF[k](u,j-KS[k],w),hy=base-6-Math.round(h*span)-Math.round(rise[k])-(RM?0:Math.round(6*Math.pow(1-clamp((now-kT0-k*70)/520),3)));
+    if(k===4&&j===KS[4]+(w>>1)){steamTop=hy;steamCol=j}
+    for(let i=0;i<R;i++){if(i<hy)continue;
+      const depth=(i-hy)/(base-hy+.001);let c=mix(acc,pg,clamp(.42+depth*.58));if(i-hy<1.2)c=acc;
+      // a window for every ingredient still to get: the building has a gap until it's in the pantry
+      const wr=hy+4,mid=KS[k]+(w>>1),n=GET[k];if(n&&i>=wr&&i<wr+2){const o=j-mid+(n-1);if(o>=0&&o<=2*(n-1)&&o%2===0)c=mix(pg,acc,.12)}
+      c=scrubTile(j,i,c,ink);
+      const e=clamp((R-1-i)/9),q=Math.floor(e*16+B4[i&3][j&3])/16;c=mix(pg,c,q);
+      if(k===glintK&&!RM&&i<hy+3){const g=(now-glint0-(j-KS[k])*22)/700;if(g>0&&g<1)c=mix(c,ink,Math.sin(g*Math.PI)*.55)}
+      x.fillStyle=`rgb(${c.map(Math.round)})`;x.fillRect(j*STEP+(STEP-TILE)/2,i*STEP+(STEP-TILE)/2,TILE,TILE)}}
+  if(steam&&!RM){for(let n=0;n<7;n++){const ph=((now/2200)+n/7)%1,row=Math.round(steamTop-2-ph*10),col=steamCol+Math.round(Math.sin(ph*5+n*2.1)*2)+(n%3-1);
+      const c=mix(pg,mix(ink,i2,.4),.5*Math.sin(Math.PI*ph)+.04);x.fillStyle=`rgb(${c.map(Math.round)})`;x.fillRect(col*STEP+(STEP-TILE)/2,row*STEP+(STEP-TILE)/2,TILE,TILE)}}
+  requestAnimationFrame(frame)}
+let raised=false,kT0=0,lT0=0;
+// ---- Routines room: the day as a tide line, one swell for each routine at its usual time
+const RT=[{nm:'Morning',h:6.85,w:3.0,at:'6:40 am',len:22,days:14},{nm:'Workday start',h:9.1,w:2.2,at:'9:00 am',len:10,days:9},{nm:'Lunch walk',h:12.7,w:2.8,at:'12:30 pm',len:20,days:11},
+ {nm:'Evening reset',h:18.8,w:2.6,at:'6:40 pm',len:18,days:12},{nm:'Night',h:22.1,w:2.9,at:'10:15 pm',len:25,days:14}];
+const NOW_H=18.8;let rPrev=0,rT0=0,quiet=false,rGl=-1,rGl0=0;
+const clock=h=>{const H=Math.floor(h),m=Math.round((h-H)*60/15)*15%60,hh=((H+11)%12)+1;return`${hh}${m?':'+String(m).padStart(2,'0'):''} ${H<12?'am':'pm'}`};
+function rframe(now){const T=cs(),acc=hex(T.getPropertyValue('--routines')),pg=hex(T.getPropertyValue('--phone')),ink=hex(T.getPropertyValue('--ink')),i3=hex(T.getPropertyValue('--ink3'));
+  x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle=`rgb(${pg})`;x.fillRect(0,0,W,H);
+  const base=R-2,low=8,peak=R-24,t=RM?0:now/1000,nowJ=Math.round((NOW_H-5)/18*(C-1));
+  // the tide comes in from below when you arrive, calmly
+  const fill=RM?1:1-Math.pow(1-clamp((now-rT0)/900),3);
+  for(let j=0;j<C;j++){const h=5+j/(C-1)*18;let lv=low;let run=null;
+    for(const r of RT){const u=(h-r.h)/(r.w/2);if(Math.abs(u)<1){const sw=(1+Math.cos(u*Math.PI))/2;if(low+sw*(peak-low)>lv){lv=low+sw*(peak-low);run=r}}}
+    const running=!quiet&&run===RT[3];
+    // the running swell breathes; the rest of the water lies flat with a slow small swell
+    const ahead=j>nowJ;lv+=RM||ahead?0:(running?1.1*Math.sin(t*1.6+j*.35):.45*Math.sin(t*.7+j*.22));
+    const top=Math.round(base-lv*fill);
+    for(let i=ahead?Math.min(top,rPrev):top;i<R;i++){let c;
+      if(ahead){if(i>Math.max(top,rPrev))continue;c=mix(pg,i3,.5)}
+      else{const depth=Math.floor((i-top)/(R-top+.001)*4)/4;c=mix(acc,pg,clamp((running?.25:.42)+depth*.58));if(i===top)c=running?mix(acc,ink,.12):acc;
+        const e=clamp((R-1-i)/9),q=Math.floor(e*16+B4[i&3][j&3])/16;c=mix(pg,c,q)}
+      if(run&&RT.indexOf(run)===rGl&&!RM&&i<top+3){const g=(now-rGl0-(j%40)*12)/700;if(g>0&&g<1)c=mix(c,ink,Math.sin(g*Math.PI)*.5)}
+      if(j===nowJ&&!ahead&&i>=top-3&&i<top)c=null;
+      if(!c)continue;c=scrubTile(j,i,c,ink);x.fillStyle=`rgb(${c.map(Math.round)})`;x.fillRect(j*STEP+(STEP-TILE)/2,i*STEP+(STEP-TILE)/2,TILE,TILE)}
+    rPrev=top;
+    // now: one ink stitch standing on the water
+    if(j===nowJ){const c=mix(pg,ink,.7);x.fillStyle=`rgb(${c.map(Math.round)})`;for(let i=top-3;i<top;i++)x.fillRect(j*STEP+(STEP-TILE)/2,i*STEP+(STEP-TILE)/2,TILE,TILE)}}
+  requestAnimationFrame(frame)}
+function drawR(){const n=v=>`<span class="n">${v}</span>`;
+  IN.innerHTML=`<p class="fact" id="fact" aria-live="polite"></p>`+(quiet?
+   `<p class="ll">Nothing is running</p><div class="lead" style="font-size:34px">A quiet evening.</div>
+    <div class="doors" style="margin-top:0">${['Night','Morning','Lunch walk'].map(d=>`<button class="dr" style="font-size:20px">Start ${d.toLowerCase()}</button>`).join('')}</div>`
+  :`<p class="ll"><span style="color:var(--routines);font-weight:600">Evening reset</span> is running</p>
+    <div class="lead" style="font-size:38px;line-height:1.1">Dishes away</div>
+    <p class="sm">${n(4)} min on this step, then wipe the counter</p><button class="go rt" id="go" style="margin-top:0">Pick up</button>`)+
+  `<div class="rlist">${RT.map((r,k)=>`<button class="rrow" data-n="${k}"><span class="nm">${r.nm}</span><span class="dt">${n(r.days)} days, usually ${n(r.at)}, ${n(r.len)} min</span></button>`).join('')}</div>
+   <div class="doors"><button class="dr">Browse</button></div>`;
+  fact=document.getElementById('fact');fact.innerHTML=`Night next, at ${n('10:15')} pm`}
+// ---- Notes room: the latest page as written rows
+const NOTES=[{t:'Trip packing',w:'this morning',tm:'9:12 am',rows:['Charger, both cables','Running shoes and socks','Passport, the blue folder','Snacks for the drive','Book for the plane','Ask about the late checkout'],links:['lists','lists','lists','lists','lists',null],on:'Packing'},
+ {t:'Bench cues',w:'yesterday',tm:'Thu',rows:['Feet planted','Shoulder blades down','Bar over the wrist','Pause on the chest'],links:['training','training','training','training'],on:'Bench press'},
+ {t:'Gift ideas',w:'on Monday',tm:'Mon',rows:['A good pan','Concert tickets','The green notebook']},
+ {t:'Tacos',w:'last week',tm:'Oct 16',rows:['Beans the night before','Warm the tortillas dry','Lime on everything','Cilantro, a lot','Salsa from the jar is fine'],links:['kitchen',null,null,'kitchen','kitchen'],on:'Tacos'}];
+let np=0,nT0=performance.now()+300,nPrev=null;
+function nframe(now){const T=cs(),acc=hex(T.getPropertyValue('--notes')),pg=hex(T.getPropertyValue('--phone')),i3=hex(T.getPropertyValue('--ink3'));
+  x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle=`rgb(${pg})`;x.fillRect(0,0,W,H);
+  const N=NOTES[np],top=22,gap=Math.max(3,Math.min(5,Math.floor((R-24)/N.rows.length))),left=6,maxC=C-12;let caret=null;
+  const longest=Math.max(...N.rows.map(r=>r.split(' ').reduce((a,w)=>a+Math.max(1,Math.round(w.length*.62))+1,0)));
+  N.rows.forEach((row,r)=>{const i=top+r*gap;if(i>R-3)return;const last=r===N.rows.length-1;let j=left;
+    // each letter becomes a third of a tile column, each space a gap: the note's shape, not its words
+    const cols=[];for(const wd of row.split(' ')){const n=Math.max(1,Math.round(wd.length*.62));for(let q=0;q<n;q++)cols.push(1);cols.push(0)}
+    cols.pop();const sc=maxC*.92/longest;
+    cols.forEach((on,q)=>{const j0=left+Math.round(q*sc),j1=left+Math.round((q+1)*sc);for(let jj=j0;jj<Math.max(j0+1,j1);jj++){const d=RM?1:clamp((now-nT0-(r*90+q*12))/90);if(!on||d<=0)return;
+      const fresh=last?1:.72,c=mix(pg,acc,fresh*d);x.fillStyle=`rgb(${c.map(Math.round)})`;const s=TILE*(.5+.5*d);for(const ii of [i,i+1])x.fillRect(jj*STEP+(STEP-s)/2,ii*STEP+(STEP-s)/2,s,s)}});
+    if(last)caret=[left+Math.round(cols.length*sc)+2,i];
+    // a line that is also something elsewhere carries that app's colour in the margin
+    const ln=N.links&&N.links[r];if(ln){const d=RM?1:clamp((now-nT0-(r*90+400))/200);const c=mix(pg,hex(T.getPropertyValue('--'+ln)),d);x.fillStyle=`rgb(${c.map(Math.round)})`;for(const ii of [i,i+1])x.fillRect((left-3)*STEP+(STEP-TILE)/2,ii*STEP+(STEP-TILE)/2,TILE,TILE)}
+    if(scrub&&scrub.i>=i-1&&scrub.i<=i+2){const c=mix(pg,hex(T.getPropertyValue('--ink')),.3);x.fillStyle=`rgb(${c.map(Math.round)})`;x.fillRect((left-1)*STEP+1.5,i*STEP+1,1,STEP*2-2)}});
+  // the next word's place: one pale tile that breathes
+  if(caret){const done=RM||now-nT0>N.rows.length*90+400;if(done){const b=RM?.5:.35+.3*Math.sin(now/420);const c=mix(pg,i3,b);x.fillStyle=`rgb(${c.map(Math.round)})`;for(const ii of [caret[1],caret[1]+1])x.fillRect(caret[0]*STEP+(STEP-TILE)/2,ii*STEP+(STEP-TILE)/2,TILE,TILE)}}
+  // the page's bottom edge, in the same 1/16 steps as Home
+  for(let i=R-9;i<R;i++)for(let j=0;j<C;j++){}
+  requestAnimationFrame(frame)}
+// Notes: the things he writes about, sized by how much; no numbers anywhere on the page
+const THINGS=[['Trip',30,0],['Training',24,1],['Kitchen',22,3],['Gifts',19,2],['Home',17,-1]];
+function drawN(){if(!document.getElementById('wq')){IN.innerHTML=`<p class="fact" id="fact" aria-live="polite"></p>
+  <label class="wl"><input id="wq" placeholder="Search or write. @ links a thing." aria-label="Search or write"></label>
+  <div class="field" id="field"></div>
+  <div class="mg"><p><span class="mk">Running</span>Trip packing is open from this morning. <button class="u">Go on</button></p>
+  <p><span class="mk">Waiting</span>Bench cues names Bench press. <button class="u">Link them</button></p>
+  <p><span class="mk">New</span>Gift ideas has no home yet. <button class="u">Make it a thing</button></p></div>
+  <button class="go nt" id="go">Write</button>`;fact=document.getElementById('fact')}
+  document.getElementById('field').innerHTML=THINGS.map(([w,z,k])=>`<button class="th${k===np?' on':''}"${k>=0?` data-n="${k}"`:''} style="font-size:${z}px" aria-pressed="${k===np}">${w}</button>`).join('')+'<button class="th q">Loose</button><button class="th q">Private</button>';
+  const N=NOTES[np];fact.innerHTML=`${N.t}, written ${N.w}`}
+// ---- Lists room: what is left, as a falling line
+const ITEMS=['Charger, both cables','Running shoes','Passport','Snacks for the drive','Book for the plane','Sunglasses','Rain jacket','Toothbrush'];
+let lDone=[1,1,0,0,0,0,0,0],lHist=[14,13,12,12,11,9,8,7,6],fall=[];
+function lframe(now){const T=cs(),acc=hex(T.getPropertyValue('--lists')),pg=hex(T.getPropertyValue('--phone')),i3=hex(T.getPropertyValue('--ink3'));
+  x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle=`rgb(${pg})`;x.fillRect(0,0,W,H);
+  const left=lHist.length+lDone.filter(v=>!v).length-ITEMS.length+0,hist=[...lHist,ITEMS.length-lDone.reduce((a,b)=>a+b,0)];
+  const top=22,base=R-8,mx=14,nowCol=Math.round(C*.68),toC=c=>Math.round(c);
+  const yOf=v=>Math.round(base-(v/mx)*(base-top));
+  const rev=RM?C:(now-lT0)/700*C;for(let j=0;j<C;j++){if(j>rev)break;let i,pale=false;
+    if(j<=nowCol){const u=j/nowCol*(hist.length-1),k=Math.min(hist.length-1,Math.floor(u+.5));i=yOf(hist[k])}
+    else{if((j-nowCol)%3)continue;const v=Math.ceil(hist[hist.length-1]*(1-(j-nowCol)/(C-1-nowCol)));i=yOf(v);pale=true}
+    let c=pale?mix(pg,i3,.45):acc;c=scrubTile(j,i,c,hex(T.getPropertyValue('--ink')));
+    x.fillStyle=`rgb(${c.map(Math.round)})`;x.fillRect(j*STEP+(STEP-TILE)/2,i*STEP+(STEP-TILE)/2,TILE,TILE);
+    // what is left, filled below the line and fading to the page in steps, like the Training ridge
+    if(!pale)for(let ii=i+1;ii<R;ii++){const depth=(ii-i)/(R-i);let c2=mix(acc,pg,clamp(.42+depth*.58));const e=clamp((R-1-ii)/9),q=Math.floor(e*16+B4[ii&3][j&3])/16;c2=mix(pg,c2,q);x.fillStyle=`rgb(${c2.map(Math.round)})`;x.fillRect(j*STEP+(STEP-TILE)/2,ii*STEP+(STEP-TILE)/2,TILE,TILE)}}
+  // one headline numeral: how many are left
+  pix(hist[hist.length-1],C-10,12,acc);
+  // a tile that broke off when something got done falls away into the page
+  fall=fall.filter(f=>now-f.t<900);for(const f of fall){const u=(now-f.t)/900,i=f.i+u*u*22,c=mix(acc,pg,u);x.fillStyle=`rgb(${c.map(Math.round)})`;const s=TILE*(1-u*.4);x.fillRect(f.j*STEP+(STEP-s)/2+u*6,i*STEP+(STEP-s)/2,s,s)}
+  requestAnimationFrame(frame)}
+function ringL(d){return`<svg class="ring" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="none" stroke="${d?'var(--lists)':'var(--edge)'}" stroke-width="${d?1.6:1.3}"/></svg>`}
+// Lists: the lead list's next items as large words, every other list as a name that fills with ink
+const OTHER=[['Day bag',1,'all done'],['Gym bag',.7,'3 left of 10'],['Hardware store',.2,'4 left of 5, new from Shelf fix']];
+function drawL(){const left=lDone.filter(v=>!v).length,lw=ITEMS.map((t,k)=>[t,k]).filter(([t,k])=>!lDone[k]);
+  IN.innerHTML=`<p class="fact" id="fact" aria-live="polite"></p><p class="ll"><span class="w ls" style="font-weight:600;color:var(--lists)">Packing</span> is done by Sunday</p>
+  <div class="lead">${lw.length?lw.map(([t,k],q)=>`<button class="lw" data-n="${k}" aria-label="${t}, tap when packed">${q?t.toLowerCase():t}</button>`).join(', ')+'.':'All packed.'}</div>
+  <p class="sm" style="margin-left:-10px"><button class="go ls inl" id="go">Resume</button></p>
+  <div class="fills">${OTHER.map(([nm,p,v])=>`<div><div class="fn" style="--p:${p*100}%">${nm}</div><p class="sm">${v}</p></div>`).join('')}</div>
+  <div class="doors">${['Shelf','Reusable','Picks','Runs'].map(d=>`<button class="dr">${d}</button>`).join('')}</div>`;
+  fact=document.getElementById('fact');fact.innerHTML=`left of <span class="n">14</span>, <span class="n">${14-left}</span> packed`}
+// Kitchen: two large doors, Pantry with its level lines, Recipes with the week
+const PLACES=[['Fridge',.62],['Freezer',.8],['Shelf',.45],['Counter',.3]];
+function drawK(){if(!document.getElementById('kw')){IN.innerHTML=`<p class="fact" id="fact" aria-live="polite"></p>
+  <div class="sent"><span class="w k">Tacos</span> tonight, start at <span class="n">6:05</span>.<br>Lemon is short.</div>
+  <button class="door">Pantry</button>
+  <div class="lv">${PLACES.map(([nm,v])=>`<span class="lvi"><span>${nm}</span><svg viewBox="0 0 64 4" aria-label="${nm} ${Math.round(v*100)} percent full"><line x1="1" y1="2" x2="${1+62*v}" y2="2" stroke="var(--kitchen)" stroke-width="1.5" stroke-linecap="round"/></svg></span>`).join('')}</div>
+  <p class="sm"><span class="n">2</span> use soon, <span class="n">7</span> to get, covers <span class="n">4</span> dinners</p>
+  <button class="door">Recipes</button><div id="kw"></div>
+  <button class="go k" id="go">Cook</button>`;fact=document.getElementById('fact')}
+  document.getElementById('kw').innerHTML=DAYS.map((d,n)=>`<button class="krow${n===4?' today':''}" data-n="${n}" aria-pressed="${n===kp&&raised}"><span>${d[0]}</span><span>${n===4?'Tacos, <span class="n">6:05</span>':d[1]}</span></button>`).join('');
+  fact.innerHTML=kp===4?'Tacos tonight, <span class="n">4</span> to get':DAYS[kp][2]}
+function setRoom(r){IN.innerHTML='';cv.style.height=[176,188,168,156,196][r]+'px';setTimeout(size,440);kT0=lT0=rT0=performance.now()+120;document.getElementById('rq').hidden=r!==4;room=r;steam=0;raised=false;rise.fill(0);kp=4;glintK=4;glint0=performance.now()+300;nT0=performance.now()+300;
+  document.getElementById('h1').textContent=['The Training room','The Kitchen room','The Notes room','The Lists room','The Routines room'][r];
+  ['rt','rk','rn','rl','rr'].forEach((id,k)=>document.getElementById(id).setAttribute('aria-pressed',k===r));
+    if(r===4){drawR();cv.setAttribute('aria-label','Routines, the lintel: the day as a tide, one swell for each routine at its usual time');return}
+  if(r===2){drawN();cv.setAttribute('aria-label','Notes, the lintel: the latest page as rows of pixels, its shape without its words');return}
+  if(r===3){drawL();cv.setAttribute('aria-label','Lists, the lintel: what is left on Packing as a falling line');return}
+  cv.setAttribute('aria-label',r?'Kitchen, the lintel: this week\'s seven dinners as a pixel skyline':'Training, the lintel: your best for the picked lift over twelve weeks, as a pixel ridge');
+  if(r===1){drawK()}
+  else{live=0;draw();glint0=performance.now()+300}}
+['rt','rk','rn','rl','rr'].forEach((id,k)=>document.getElementById(id).onclick=()=>{if(room!==k)setRoom(k)});
+const WK=k=>{const d=new Date(2026,9,19-7*(11-k));return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})};
+function scrubFact(){if(!scrub)return;const j=scrub.j;
+  if(room===0){const L=LIFTS[pick],k=Math.round(j/(C-1)*(L.w.length-1));fact.innerHTML=`Week of ${WK(k)}, best <span class="n">${L.w[k]}</span> ${L.unit||'lb'}`}
+  else if(room===1){let k=0;while(k<6&&j>=KS[k+1])k++;fact.innerHTML=`${DAYS[k][0]}, ${DAYS[k][1].toLowerCase()}`+(GET[k]?`, <span class="n">${GET[k]}</span> to get`:'')}
+  else if(room===2){const N=NOTES[np],gap=Math.max(3,Math.min(5,Math.floor((R-24)/N.rows.length))),r=Math.max(0,Math.min(N.rows.length-1,Math.floor((scrub.i-22)/gap)));fact.innerHTML=`The ${['first','second','third','fourth','fifth','sixth','seventh'][r]} line`+(N.links&&N.links[r]?`, also on ${N.on}`:'')}
+  else if(room===4){const h=5+j/(C-1)*18,sw=RT.find(r=>Math.abs(h-r.h)<r.w/2);fact.innerHTML=sw?`${sw.nm}, usually ${sw.at}, <span class="n">${sw.len}</span> min`:`${clock(h)}, nothing runs`}
+  else{const nowCol=Math.round(C*.68),hist=[...lHist,ITEMS.length-lDone.reduce((a,b)=>a+b,0)];const DN=['Oct 15','Oct 16','Oct 17','Oct 18','Oct 19','Oct 20','Oct 21','Oct 22','Oct 23','today'];
+    if(j<=nowCol){const k=Math.min(hist.length-1,Math.floor(j/nowCol*(hist.length-1)+.5));fact.innerHTML=`${k===hist.length-1?'Today':DN[k]}, <span class="n">${hist[k]}</span> left`}
+    else{const v=Math.ceil(hist[hist.length-1]*(1-(j-nowCol)/(C-1-nowCol)));fact.innerHTML=`${j<(nowCol+C)/2?'Saturday':'Sunday'}, about <span class="n">${v}</span> left at this pace`}}}
+function restoreFact(){if(room===4)drawR();else if(room===0)draw();else if(room===1)drawK();else if(room===2)drawN();else drawL()}
+function onScrub(e){const r=cv.getBoundingClientRect();scrub={j:Math.max(0,Math.min(C-1,Math.floor((e.clientX-r.left)/STEP))),i:Math.floor((e.clientY-r.top)/STEP)};clearTimeout(scrubOff);scrubFact()}
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);onScrub(e)});cv.addEventListener('pointermove',e=>{if(scrub)onScrub(e)});
+const endScrub=()=>{clearTimeout(scrubOff);scrubOff=setTimeout(()=>{scrub=null;restoreFact()},1200)};cv.addEventListener('pointerup',endScrub);cv.addEventListener('pointercancel',endScrub);
+document.getElementById('rq').onclick=e=>{quiet=!quiet;e.target.setAttribute('aria-pressed',quiet);e.target.textContent=quiet?'Running':'Quiet day';rT0=performance.now();drawR()};
+addEventListener('resize',size);size();draw();requestAnimationFrame(frame);
+})();
+</script>

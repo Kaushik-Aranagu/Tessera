@@ -1,0 +1,220 @@
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1,1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e,u);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const spring=u=>1-Math.exp(-7*u)*Math.cos(9*u);
+const $=id=>document.getElementById(id);
+const clipIn=(node,delay=0)=>{node.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>anim(.3,e=>node.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`,()=>node.style.clipPath=''),RM?0:delay)};
+const haptic=k=>{try{navigator.vibrate&&navigator.vibrate(k==='commit'?14:5)}catch(_){}};
+const mctx=document.createElement('canvas').getContext('2d');
+let DEPTH=true;
+// ---------- sample data (Friday, Oct 23; sample only). c = kind, today = on today's list, from = a borrowed routine's room
+const st=(t,m,how)=>({t,m,how:how||'',d:false});
+const H0=[0,1,0,1,1,0,1,0,1,0,1,1,0,1];
+let R;const seed=()=>[
+ {n:'Morning walk',c:'Mornings',today:1,w:'Morning',at:'7:30 am',when:'every morning',done:'7:52 am',run:'Six mornings running',h:[1,1,1,0,1,1,1,1,1,1,1,1,1,1],steps:[st('Shoes on, out the door',1),st('Walk the long block',18),st('Water when you get back',1)]},
+ {n:'Vitamins',c:'Mornings',today:1,w:'Morning',at:'8 am',when:'every morning',done:'8:04 am',run:'Every day this month',h:[1,1,1,1,1,1,1,1,1,1,1,1,1,1],steps:[st('D3 and the fish oil',1)]},
+ {n:'Make the bed',c:'Mornings',w:'Morning',when:'weekdays',run:'Most weekdays',h:H0,steps:[st('Make the bed',2,'Sheets straight, pillows up.')]},
+ {n:'Water the plants',c:'Home',today:1,w:'Morning',at:'9 am',when:'every other day',late:true,run:'Every other day',h:[1,0,1,0,1,0,1,0,1,0,1,0,0,0],steps:[st('Fill the green can',1),st('Fern and pothos by the window',2),st('Basil on the sill, just a little',1)]},
+ {n:'Ten-minute reset',c:'Home',w:'Evening',when:'Sundays',run:'Three Sundays running',h:H0,steps:[st('Dishes away',3),st('Counters wiped',2),st('Floor, a quick pass',4),st('Trash and recycling out',1)]},
+ {n:'Take out recycling',c:'Home',w:'Evening',when:'Thursdays',run:'Every Thursday',h:H0,steps:[st('Take out recycling',3,'Blue bin to the curb.')]},
+ {n:'Evening stretch',c:'Body',today:1,w:'Evening',at:'8 pm',when:'every evening',run:'Fourth night in a row',h:[1,0,1,1,0,1,1,1,0,0,1,1,1,1],steps:[st('Neck rolls',1,'Slow circles, five each way, shoulders down.'),st('Cat and cow',1,'On hands and knees, round up on the out-breath.'),st('Hip opener',2,'Low lunge, one minute a side, hips square.'),st('Hamstrings',2,'Seated, reach for your feet, knees soft.'),st('Breathe',3,'Lie flat. In for four, out for six.')]},
+ {n:'Hip mobility',c:'Body',w:'Any time',when:'Mondays and Thursdays',run:'Twice a week',h:H0,steps:[st('90-90 switches',2),st('Pigeon, each side',3),st('Deep squat hold',2),st('Hip circles',1)]},
+ {n:'Rower, easy',c:'Body',w:'Any time',when:'Saturdays',run:'Three Saturdays running',h:H0,steps:[st('Rower, easy',20,'Easy pace, you can talk the whole way.')]},
+ {n:'Wind down',c:'Evenings',today:1,w:'Night',at:'10:30 pm',when:'every night',run:'Three nights this week',h:[0,1,0,1,1,0,1,0,1,0,1,1,0,1],steps:[st('Phone on the charger, in the kitchen',1,'Out of the bedroom, face down.'),st('Lights low',1,'Lamp only.'),st('Read',20,'Paper book, twenty minutes.'),st('Write tomorrow’s one thing',2,'One line, in Notes.')]},
+ {n:'Lay out tomorrow',c:'Evenings',w:'Evening',when:'weeknights',run:'Most weeknights',h:H0,steps:[st('Lay out tomorrow',5,'Clothes, keys, the gym bag.')]},
+ {n:'Read 20 minutes',c:'Mind',w:'Any time',when:'any time',run:'Five days this week',h:H0,steps:[st('Read 20 minutes',20,'Paper book, phone in another room.')]},
+ {n:'Journal',c:'Mind',w:'Morning',when:'mornings',run:'Twice this week',h:H0,steps:[st('Three lines about yesterday',4),st('One thing for today',1)]},
+ {n:'Box breathing',c:'Mind',w:'Any time',when:'when it helps',run:'Four times this week',h:H0,steps:[st('Box breathing',3,'In four, hold four, out four, hold four.')]},
+ {n:'Push A warm-up',c:'Borrowed',from:'Training',w:'Before training',when:'training days',run:'Every training day',h:H0,steps:[st('Rower, easy',5),st('Band pull-aparts',2),st('Push-ups, slow',2),st('Empty bar, two sets',3)]},
+ {n:'Taco night prep',c:'Borrowed',from:'Kitchen',w:'Evening',when:'Fridays',run:'Two Fridays running',h:H0,steps:[st('Soak the beans',1),st('Chop the onion and cilantro',8),st('Warm the tortillas',4)]},
+ {n:'Trip packing',c:'Borrowed',from:'Lists',w:'Any time',when:'before a trip',run:'Last used in September',h:H0,steps:[st('Passports',1),st('Both chargers',1),st('The blue jacket',1),st('Cash for tolls',1),st('Sunglasses',1),st('Pack the small bag',5)]}];
+const BORROW=[{n:'Pull day warm-up',from:'Training',steps:['Rower, easy','Dead hangs','Band rows','Empty bar rows']},{n:'Cooldown',from:'Training',steps:['Walk it off','Doorway chest stretch','Child’s pose']},{n:'Sunday soup prep',from:'Kitchen',steps:['Stock out to thaw','Chop the vegetables','Soup on low','Portion for the week']},{n:'Weekly groceries check',from:'Lists',steps:['Fridge','Pantry','Freezer','Spices','Write the list']}];
+const CATS=['Mornings','Evenings','Body','Home','Mind','Borrowed'];
+const ROOM={Training:'var(--training)',Kitchen:'var(--kitchen)',Lists:'var(--lists)'};
+const WEEK=[['M',1],['T',0],['W',1],['T',1],['F',2],['S',3],['S',3]];
+const leftOf=x=>x.steps.filter(s=>!s.d).length,minsLeft=x=>x.steps.filter(s=>!s.d).reduce((a,s)=>a+s.m,0);
+const isDone=x=>!!x.done,one=x=>x.steps.length===1,TD=()=>R.filter(x=>x.today);
+function fitTitle(el,max,min){el.style.fontSize=max+'px';const w=el.parentElement.clientWidth;let f=max;while(el.scrollWidth>w&&f>min){f--;el.style.fontSize=f+'px'}if(el.scrollWidth>w){let s=el.textContent;while(el.scrollWidth>w&&s.includes(' ')){s=s.slice(0,s.lastIndexOf(' '));el.textContent=s.replace(/,$/,'')}}}
+const sayT={};function say(t,undo,el='receipt'){const r=$(el);r.innerHTML=t+(undo?' <button class="tap un" style="color:var(--acc);font-weight:600;margin-left:2px;padding:0 8px;display:inline-block;height:44px;line-height:44px;min-width:44px;text-align:center">Undo</button>':'');clipIn(r);clearTimeout(sayT[el]);sayT[el]=setTimeout(()=>r.textContent='',undo?10000:3000);if(undo)r.querySelector('.un').onclick=()=>{r.textContent='';undo()}}
+// ---------- the week as letters (rhythm in words beside it)
+function renderWeek(){const run=R.find(x=>x.n==='Evening stretch');$('week').innerHTML=`<span style="display:flex;gap:9px;align-items:baseline;flex:none">${WEEK.map(([l,s])=>`<span style="font-size:${s===2?19:15}px;font-weight:${s===1?600:s===2?600:400};color:${s===1?'var(--acc)':s===2?'var(--ink)':s===3?'var(--ink3)':'var(--ink2)'}">${l}</span>`).join('')}</span><span style="font-size:15px;color:var(--ink2)">${run.done?'five':'four'} nights of stretch</span>`;
+  $('week').setAttribute('aria-label','This week: every routine kept Monday, Wednesday and Thursday; today Friday; '+(run.done?'stretch five':'stretch four')+' nights running')}
+function briefOf(){const T=TD(),late=T.filter(x=>x.late&&!isDone(x)),nx=T.filter(x=>!isDone(x)&&!x.late&&!x.skip),left=T.filter(x=>!isDone(x)&&!x.skip).length;
+  if(!left)return 'Every routine done today.<br>Tomorrow starts with a walk.';
+  return `${left} left today.<br>${late.length?`<span style="color:var(--warm)">${late[0].n} is late</span>, from ${late[0].at}.`:nx.length?`${nx[0].n} is next, at ${nx[0].at}.`:'&nbsp;'}`}
+// ---------- screens: a stack; each slides in from the right and back out (swaps in place under Reduce Motion)
+let stack=['home'];const RC={home:'rcHome',day:'receipt',cat:'rcCat',mk:'rcMk',br:'rcHome',page:'pRc'};
+function openScr(id){const P=$(id);if(stack[stack.length-1]===id)return;P.hidden=false;P.style.zIndex=4+stack.length;stack.push(id);
+  if(!RM){P.style.transform='translateX(100%)';anim(.4,(e,u)=>P.style.transform=`translateX(${(1-spring(u))*100}%)`,()=>P.style.transform='')}}
+function backScr(then){if(stack.length<2)return;const id=stack.pop();if(id==='page')dropPending();const P=$(id);
+  const done=()=>{P.hidden=true;P.style.transform='';refreshTop();then&&then()};if(RM){done();return}anim(.3,e=>P.style.transform=`translateX(${e*100}%)`,done)}
+function refreshTop(){const t=stack[stack.length-1];if(t==='home')renderHome();if(t==='day')refreshDay();if(t==='cat')renderCat()}
+['day','cat','mk','br','page'].forEach(id=>{const P=$(id);let sx=null;P.addEventListener('pointerdown',e=>{const r=P.getBoundingClientRect();sx=e.clientX-r.left<28?e.clientX:null});P.addEventListener('pointerup',e=>{if(sx!=null&&e.clientX-sx>60&&stack[stack.length-1]===id)backScr();sx=null})});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&stack.length>1&&!e.target.isContentEditable)backScr()});
+// ---------- one depth wheel, used by Today and by each kind (blur up to 1 pt, never on the front row)
+const RH=44,FX=58,FY=44;
+const blurAt=a=>RM||!DEPTH?0:Math.min(1,.65*Math.min(a,1)+.35*Math.max(0,Math.min(a-1,1)));
+const wPos=d=>FY+(d<=0?d*RH:d<1?d*(RH+FX):RH+FX+(d-1)*RH);
+function firstSteps(x,w){const o=x.steps.filter(s=>!s.d).slice(0,4).map(s=>s.t);let s=o.join(', ');mctx.font='400 15px Figtree, system-ui, sans-serif';while(o.length>1&&mctx.measureText(s).width>w){o.pop();s=o.join(', ')}return s}
+// a one-thing routine reads as one line, no step count; a routine with steps says how many and how long
+function d1Of(x,todayView){if(isDone(x))return one(x)?`done at ${x.done}, ${x.run.toLowerCase()}`:`all ${x.steps.length} steps done, ${x.run.toLowerCase()}`;
+  const when=todayView?(x.late?`<span style="color:var(--warm);font-weight:500">late since ${x.at}</span>`:`at ${x.at}`):x.today?`today at ${x.at}`:x.when;
+  return one(x)?`about ${x.steps[0].m} min, ${when}`:`${leftOf(x)} steps, about ${minsLeft(x)} min, ${when}`}
+function d2Of(x){return isDone(x)?'Do it again tomorrow':one(x)?(x.steps[0].how||x.run):firstSteps(x,$('wheel').clientWidth||300)}
+function mkWheel(W,o){let off=0,spin=0,drag=false,lastF=-1;const S={get off(){return off},set off(v){off=v},get drag(){return drag}};
+  S.render=()=>{const xs=o.items();
+    W.innerHTML=`<div class="wHd" style="position:absolute;left:0;right:0;top:0;height:${RH}px;display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:6px;box-sizing:border-box;white-space:nowrap;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--sec)"><span>${o.hd[0]}</span><span>${o.hd[1]}</span></div>`+
+     xs.map((x,i)=>`<div class="wr" data-i="${i}" role="listitem" tabindex="0" style="position:absolute;left:0;right:0;top:0;height:${RH}px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;white-space:nowrap;height:${RH}px;line-height:${RH}px"><span class="tt" style="overflow:hidden;transform-origin:left center"></span><span class="ag n" style="font-size:15px"></span></div><div class="dt" hidden style="margin-top:-6px"><div class="d1" style="font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;line-height:18px"></div><div class="d2" style="font-size:15px;color:var(--ink);white-space:nowrap;overflow:hidden;line-height:22px"></div></div></div>`).join('');
+    [...W.querySelectorAll('.wr')].forEach(r=>{const x=xs[+r.dataset.i],w=W.clientWidth*.9;let fz=26;const m=(t,z)=>{mctx.font=`600 ${z}px Figtree, system-ui, sans-serif`;return mctx.measureText(t).width};while(fz>21&&m(x.n,fz)>w)fz--;let ft=x.n;while(m(ft,fz)>w&&ft.includes(' '))ft=ft.slice(0,ft.lastIndexOf(' '));r.dataset.fz=fz;r.dataset.ft=ft;
+      r.onclick=()=>{if(drag)return;const d=Math.round(+r.dataset.i-off);if(d===0)o.open(x);else S.spinTo(+r.dataset.i)};r.onkeydown=e=>{if(e.key==='Enter')r.onclick()}});
+    lastF=-1;S.paint()};
+  S.paint=()=>{const xs=o.items(),H=W.querySelector('.wHd'),lim=W.clientHeight;if(H){const d=-1-off;H.style.transform=`translateY(${wPos(d)}px)`;H.style.visibility=d>-.3||wPos(d)<-RH?'hidden':''}
+    [...W.querySelectorAll('.wr')].forEach(r=>{const i=+r.dataset.i,d=i-off,a=Math.abs(d),x=xs[i];if(!x)return;const f=Math.max(0,1-a),fz=+r.dataset.fz;
+      r.style.transform=`translateY(${wPos(d)}px)`;r.style.visibility=(wPos(d)<-RH||wPos(d)+RH>lim+2)?'hidden':'';
+      const tt=r.querySelector('.tt'),ag=r.querySelector('.ag');const size=d<0?17:a<1?17+(fz-17)*f:Math.max(15,17-(a-1));tt.style.fontSize=size+'px';const fr=a<.5;
+      tt.style.fontWeight=fr?600:400;tt.style.color=fr?'var(--acc)':'var(--ink2)';tt.textContent=fr?r.dataset.ft:x.n;
+      const bl=fr?0:blurAt(a);r.style.filter=bl>.05?`blur(${bl.toFixed(2)}px)`:'';
+      const g=o.ag(x);ag.innerHTML=g.t;ag.style.color=g.c||'var(--ink2)';ag.style.fontWeight=g.w||300;r.setAttribute('aria-label',`${x.n}, ${one(x)?'one thing':x.steps.length+' steps'}, ${g.t.replace(/<[^>]+>/g,'')}`)});
+    const fi=Math.round(off);if(fi!==lastF){lastF=fi;[...W.querySelectorAll('.wr')].forEach(r=>{const dt=r.querySelector('.dt'),on=+r.dataset.i===fi;if(on){const x=xs[fi];
+      dt.querySelector('.d1').innerHTML=d1Of(x,o.today);dt.querySelector('.d2').textContent=d2Of(x);if(dt.hidden){dt.hidden=false;clipIn(dt,120)}}else dt.hidden=true});o.onFront&&xs[fi]&&o.onFront(xs[fi])}};
+  S.spinTo=(t,dur=.42)=>{const n=o.items().length;t=Math.max(0,Math.min(n-1,t));const from=off,id=++spin;anim(dur,(e,u)=>{if(id!==spin)return;off=from+(t-from)*spring(u);S.paint()},()=>{if(id!==spin)return;off=t;S.paint()})};
+  S.front=()=>{const xs=o.items();return xs[Math.max(0,Math.min(xs.length-1,Math.round(off)))]};
+  let sy=null,so=0,vy=0,ly=0,lt=0;
+  W.onpointerdown=e=>{sy=e.clientY;so=off;drag=false;vy=0;ly=e.clientY;lt=performance.now();spin++};
+  W.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!drag){drag=true;W.setPointerCapture(e.pointerId)}if(!drag)return;const n=performance.now();vy=(e.clientY-ly)/Math.max(1,n-lt);ly=e.clientY;lt=n;off=Math.max(-.35,Math.min(o.items().length-.65,so-dy/RH));S.paint()};
+  W.onpointerup=W.onpointercancel=()=>{if(sy==null)return;sy=null;if(drag){S.spinTo(Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(off),.36);setTimeout(()=>drag=false,0)}};
+  let wt=null;W.addEventListener('wheel',e=>{e.preventDefault();spin++;off=Math.max(-.35,Math.min(o.items().length-.65,off+e.deltaY/120));S.paint();clearTimeout(wt);wt=setTimeout(()=>S.spinTo(Math.round(off),.36),120)},{passive:false});
+  return S}
+const agOf=x=>isDone(x)?{t:'done '+x.done}:x.skip?{t:'skipped'}:x.today?(x.late?{t:x.at,c:'var(--warm)',w:400}:{t:x.at}):x.from?{t:x.from,c:ROOM[x.from],w:600}:{t:x.when};
+const dayW=mkWheel($('wheel'),{items:TD,hd:['Today','by time'],today:true,ag:agOf,open:x=>openR(x,!isDone(x)),onFront:x=>$('act').textContent=isDone(x)?'Do it again':'Start'});
+let curCat='Mornings';const catW=mkWheel($('cWheel'),{items:()=>R.filter(x=>x.c===curCat),hd:['',''],ag:agOf,open:x=>openR(x,false)});
+function refreshDay(){$('brief').innerHTML=briefOf();renderWeek();dayW.render()}
+// ---------- the landing: today in three lines, then doors
+const words=n=>['no','one','two','three','four','five','six','seven','eight','nine','ten'][n]||n;
+function factOf(c){const xs=R.filter(x=>x.c===c),n=xs.length,lead=`${n} ${n===1?'routine':'routines'}`;
+  if(c==='Mornings')return `${lead}, walk six mornings running`;if(c==='Evenings')return `${lead}, wind down at 10:30 pm`;if(c==='Body')return `${lead}, from Training’s moves`;
+  if(c==='Home'){const l=xs.find(x=>x.late&&!isDone(x)&&!x.skip);return l?`${lead}, <span style="color:var(--warm)">the plants are late</span>`:`${lead}, recycling on Thursday`}
+  if(c==='Mind')return `${lead}, read 20 minutes any time`;return `${lead}, from Training, Kitchen and Lists`}
+// the landing (226 bands, 219 tide line, 231 reel): the next routine as a reel you roll, the day as one fine tide line,
+// a two-line brief, three numbers that open Today, and the kinds one at a time. A summary and the ways in, not the list.
+const tmin=a=>{if(!a)return null;const m=a.match(/(\d+)(?::(\d+))?\s*(am|pm)/);if(!m)return null;let h=+m[1]%12+(m[3]==='pm'?12:0);return h*60+(+m[2]||0)};
+const NOW=19*60+40;let reelI=0,kindI=0,kx=0;
+const reelList=()=>TD().filter(x=>!isDone(x)&&!x.skip).sort((a,b)=>(a.late?-1:0)-(b.late?-1:0)||tmin(a.at)-tmin(b.at)).filter(x=>!x.late).concat(TD().filter(x=>x.late&&!isDone(x)&&!x.skip));
+function paintReel(dir){const L=reelList(),x=L[reelI%Math.max(1,L.length)],R_=$('reelIn');if(!x){R_.innerHTML='<span style="font-size:46px;font-weight:600;letter-spacing:-.03em;line-height:56px;color:var(--ink3)">All done</span>';$('reelS').textContent='the evening is yours';$('hGo').textContent='New routine';return}
+  const nm=x.n==='Evening stretch'?'Stretch':x.n;R_.innerHTML=`<span id="reelN" style="display:block;font-size:46px;font-weight:600;letter-spacing:-.03em;line-height:56px;white-space:nowrap;color:${x.late?'var(--warm)':'var(--acc)'}">${nm}</span>`;
+  fitTitle($('reelN'),46,35);$('reelS').innerHTML=(x.late?`late, from <span class="n">${x.at}</span>`:`at <span class="n">${x.at}</span>`)+`, ${one(x)?'one thing':`<span class="n">${x.steps.length}</span> steps`}, about <span class="n">${x.steps.reduce((a,s)=>a+s.m,0)}</span> min`;
+  $('hGo').textContent='Start '+nm.toLowerCase();if(dir&&!RM){R_.style.transform=`translateY(${dir*56}px)`;anim(.42,(e,u)=>R_.style.transform=`translateY(${dir*56*(1-spring(u))}px)`,()=>R_.style.transform='');clipIn($('reelS'),120)}paintTide()}
+function rollReel(d){const n=reelList().length;if(n<2)return;reelI=(reelI+d+n)%n;haptic('tick');paintReel(d)}
+// the day 5 am to 11 pm as one fine line: a swell per routine at its time; passed water in plum, ahead in ink 3, now an ink stitch
+function paintTide(){const S=$('tide'),W=S.clientWidth||354,H=62,base=50,x0=5*60,x1=23*60,X=m=>(m-x0)/(x1-x0)*W,T=TD().filter(x=>tmin(x.at)!=null),L=reelList(),fx=L[reelI%Math.max(1,L.length)];
+  const y=px=>{let v=0;T.forEach(r=>{const c=X(tmin(r.at)),w=W*.075,d=(px-c)/w;if(Math.abs(d)<1)v=Math.max(v,(r===fx?30:20)*(1+Math.cos(Math.PI*d))/2)});return base-v};
+  const nx=X(NOW);let a='',b='';for(let p=0;p<=W;p+=2){const s=`${p===0?'M':'L'}${p.toFixed(1)},${y(p).toFixed(1)}`;if(p<=nx)a+=s;else b+=(b?'L':'M')+`${p.toFixed(1)},${y(p).toFixed(1)}`}
+  const late=T.filter(r=>r.late&&!isDone(r)&&!r.skip).map(r=>{const c=X(tmin(r.at)),w=W*.075;let d='';for(let p=Math.max(0,c-w);p<=c+w;p+=2)d+=(d?'L':'M')+`${p.toFixed(1)},${y(p).toFixed(1)}`;return `<path d="${d}" fill="none" stroke="var(--warm)" stroke-width="2" stroke-linecap="round"/>`}).join('');
+  S.innerHTML=`<path d="${a}" fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="${b}" fill="none" stroke="var(--ink3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>${late}<line x1="${nx}" x2="${nx}" y1="${y(nx)-9}" y2="${y(nx)+4}" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round"/>`+
+    T.map(r=>`<rect data-n="${r.n}" x="${X(tmin(r.at))-22}" y="0" width="44" height="62" fill="transparent" style="cursor:pointer"/>`).join('');
+  S.querySelectorAll('rect').forEach(el=>el.onclick=()=>{const x=R.find(r=>r.n===el.dataset.n);openR(x,false)})}
+function renderHome(){const T=TD(),dn=T.filter(isDone),left=T.filter(x=>!isDone(x)&&!x.skip),late=left.filter(x=>x.late);
+  const L=reelList();if(reelI>=L.length)reelI=0;paintReel();
+  const nameList=a=>a.length===1?a[0]:a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+  const nx=L[0];$('hBrief').innerHTML=(nx?`<button class="tap" id="nextB" style="font-weight:600;color:${nx.late?'var(--warm)':'var(--acc)'};min-height:44px;margin:-9px 0">${nx.n}</button> is next, ${nx.late?'late from':'at'} <span class="n">${nx.at}</span>.`:'All done for today.')+`<br><span style="color:var(--ink2)">${late.length&&late[0]!==nx?`<span style="color:var(--warm)">${late[0].n}</span> is still waiting, from <span class="n">${late[0].at}</span>.`:'Nothing is late.'}</span>`;
+  if(nx)$('nextB').onclick=()=>openR(nx,false);fitBrief();
+  [...$('hBrief').children].length;$('hBrief').querySelectorAll('br');
+  const num=(n,w,c,id)=>`<button class="tap" data-go="${id}" style="display:flex;flex-direction:column;align-items:flex-start;min-width:64px"><span class="big" style="font-size:40px;line-height:48px;color:${c}">${n}</span><span style="font-size:13px;color:var(--ink2);margin-top:2px">${w}</span></button>`;
+  $('nums').innerHTML=num(dn.length,'done','var(--acc)','day')+num(left.length,'to go','var(--ink)','day')+(late.length?num(late.length,'late','var(--warm)','day'):'');
+  $('nums').querySelectorAll('button').forEach(b=>b.onclick=()=>{openScr('day');refreshDay()});renderKinds()}
+// the kinds, one at a time on the right (the saved swiper template, no lens, no counter); tap opens the kind
+function renderKinds(){const G=$('kGrid');G.innerHTML=CATS.map(c=>`<button class="tap kd" style="display:flex;flex-direction:column;justify-content:center;align-items:flex-start;text-align:left;min-width:0"><span style="font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:26px;white-space:nowrap">${c}<span class="n" style="font-size:17px;font-weight:400;margin-left:7px;color:var(--acc)">${R.filter(x=>x.c===c).length}</span></span><span class="kf" style="font-size:13px;line-height:18px;color:var(--ink2);white-space:nowrap;overflow:hidden;max-width:100%">${CATF[c]}</span></button>`).join('');
+  G.querySelectorAll('.kd').forEach((b,i)=>b.onclick=()=>openCat(CATS[i]));G.querySelectorAll('.kf').forEach(cutWords);return;
+  const K=$('kindR'),w=$('kinds').clientWidth;K.innerHTML=CATS.map(c=>{const xs=R.filter(x=>x.c===c);return `<button class="tap" style="flex:none;width:${w}px;height:72px;text-align:right;display:flex;flex-direction:column;align-items:flex-end;justify-content:center"><span style="font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:30px">${c}<span class="n" style="font-size:19px;margin-left:8px;color:var(--acc)">${xs.length}</span></span><span style="font-size:15px;line-height:20px;color:var(--ink2);white-space:nowrap">${factOf(c).replace(/^\d+ routines?, /,'')}</span></button>`}).join('');
+  [...K.children].forEach((b,i)=>b.onclick=()=>{if(kDrag)return;openCat(CATS[i])});placeKinds(true)}
+function placeKinds(now){const K=$('kindR'),to=-kindI*$('kinds').clientWidth;if(now||RM){kx=to;K.style.transform=`translateX(${kx}px)`;return}const f=kx;anim(.44,(e,u)=>{kx=f+(to-f)*spring(u);K.style.transform=`translateX(${kx}px)`},()=>kx=to)}
+let kDrag=false;(()=>{const C=$('kinds'),K=$('kindR');let sx=null,s0=0;C.addEventListener('pointerdown',e=>{sx=e.clientX;s0=kx;kDrag=false});
+  C.addEventListener('pointermove',e=>{if(sx==null)return;const dx=e.clientX-sx;if(Math.abs(dx)>8){kDrag=true;C.setPointerCapture(e.pointerId)}if(kDrag){const w=C.clientWidth,mn=-(CATS.length-1)*w;let x=s0+dx;if(x>0)x*=.3;if(x<mn)x=mn+(x-mn)*.3;kx=x;K.style.transform=`translateX(${kx}px)`}});
+  C.addEventListener('pointerup',e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(kDrag){const t=Math.max(0,Math.min(CATS.length-1,kindI+(Math.abs(dx)>C.clientWidth*.22?(dx<0?1:-1):0)));if(t!==kindI)haptic('tick');kindI=t;placeKinds();setTimeout(()=>kDrag=false,0)}});
+  C.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){kindI=Math.max(0,Math.min(CATS.length-1,kindI+(e.key==='ArrowRight'?1:-1)));placeKinds()}});C.tabIndex=0})();
+// the reel rolls up or down; "another" rolls it; tap the name to open it
+(()=>{const E=$('reel');let sy=null,moved=false;E.addEventListener('pointerdown',e=>{sy=e.clientY;moved=false});E.addEventListener('pointermove',e=>{if(sy!=null&&Math.abs(e.clientY-sy)>10)moved=true});
+  E.addEventListener('pointerup',e=>{if(sy==null)return;const dy=e.clientY-sy;sy=null;if(moved&&Math.abs(dy)>18)rollReel(dy<0?1:-1);else{const x=reelList()[reelI];if(x)openR(x,false)}});
+  E.addEventListener('wheel',e=>{e.preventDefault();if(E.dataset.l)return;E.dataset.l=1;rollReel(e.deltaY>0?1:-1);setTimeout(()=>delete E.dataset.l,380)},{passive:false});$('another').onclick=()=>rollReel(1)})();
+const cutWords=e=>{let t=e.textContent;while(e.scrollWidth>e.clientWidth&&t.includes(' ')){t=t.slice(0,t.lastIndexOf(' '));e.textContent=t}};
+function fitBrief(){const b=$('hBrief');let f=19;while(b.scrollWidth>b.clientWidth&&f>15){f--;b.style.fontSize=f+'px'}}
+// ---------- a kind of routine
+const CATF={Mornings:'every morning',Evenings:'winding down',Body:'Training’s moves',Home:'chores and resets',Mind:'read, write, breathe',Borrowed:'from other rooms'};
+function openCat(c,frontName){curCat=c;$('cTitle').textContent=c;fitTitle($('cTitle'),28,21);$('cFact').innerHTML=CATF[c];openScr('cat');catW.off=0;if(frontName){const i=R.filter(x=>x.c===c).findIndex(x=>x.n===frontName);if(i>=0)catW.off=i}renderCat()}
+function renderCat(){const W=$('cWheel');catW.render();W.querySelector('.wHd').innerHTML=`<span>${curCat}</span><span>${curCat==='Borrowed'?'from':'when'}</span>`;W.setAttribute('aria-label',curCat+' routines')}
+// ---------- making one: name, its kind, then steps or one thing
+let mkShape='one',mkList=[];
+function openMk(shape,cat){mkShape=shape;mkList=[];$('mkName').textContent='';$('mkCat').textContent=cat&&cat!=='Borrowed'?cat:'Evenings';openScr('mk');paintMk();setTimeout(()=>$('mkName').focus(),RM?0:420)}
+function paintMk(){document.querySelectorAll('.mkS').forEach(b=>{const on=b.dataset.s===mkShape;b.style.fontWeight=on?600:400;b.style.color=on?'var(--ink)':'var(--ink2)';b.setAttribute('aria-checked',on)});
+  const M=$('mkSteps');if(mkShape==='one'){M.innerHTML=`<div style="font-size:15px;line-height:22px;color:var(--ink2)">One thing: it checks off in one tap, and reads as one line.</div>`;return}
+  M.innerHTML=`<div style="height:30px;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--sec)">Steps</div>`+mkList.map(t=>`<div style="height:44px;line-height:44px;font-size:19px;white-space:nowrap;overflow:hidden">${t}</div>`).join('')+
+   `<div style="height:44px;display:flex;align-items:center"><span id="mkNew" contenteditable="true" data-ph="Add a step" role="textbox" aria-label="Add a step" style="font-size:19px;outline:none;min-width:70%;min-height:28px;caret-color:var(--acc)"></span></div>`;
+  const e=$('mkNew');e.onkeydown=k=>{if(k.key==='Enter'){k.preventDefault();const t=e.textContent.trim();if(t){mkList.push(t);paintMk();$('mkNew').focus()}}}}
+document.querySelectorAll('.mkS').forEach(b=>b.onclick=()=>{mkShape=b.dataset.s;paintMk();if(mkShape==='steps')$('mkNew').focus()});
+$('mkCat').onclick=()=>{const K=CATS.filter(c=>c!=='Borrowed'),i=K.indexOf($('mkCat').textContent);$('mkCat').textContent=K[(i+1)%K.length];clipIn($('mkCat'));haptic('tick')};
+$('mkName').onkeydown=k=>{if(k.key==='Enter'){k.preventDefault();if(mkShape==='steps')$('mkNew').focus();else $('mkName').blur()}};
+function saveMk(){const n=$('mkName').textContent.trim()||'New routine',c=$('mkCat').textContent;const pend2=$('mkNew')&&$('mkNew').textContent.trim();if(pend2)mkList.push(pend2);
+  const steps=mkShape==='steps'&&mkList.length?mkList.map(t=>st(t,2)):[st(n,5)];const x={n,c,w:'Any time',when:'any time',run:'New this week',h:Array(14).fill(0),steps};R.push(x);
+  backScr(()=>{openCat(c,n);say(`${n}, saved.`,()=>{R.splice(R.indexOf(x),1);renderCat()},'rcCat')})}
+// ---------- borrowing one from another room
+function openBr(){const have=R.filter(x=>x.from).map(x=>x.n);$('brList').innerHTML=BORROW.filter(b=>!have.includes(b.n)).map(b=>`<button class="tap brr" data-n="${b.n}" role="listitem" style="display:flex;justify-content:space-between;align-items:baseline;width:100%;height:54px;white-space:nowrap"><span><span style="font-size:19px">${b.n}</span><span style="display:block;font-size:13px;line-height:16px;color:var(--ink2)">${b.steps.length} steps</span></span><span style="font-size:15px;font-weight:600;color:${ROOM[b.from]}">${b.from}</span></button>`).join('')||`<div style="font-size:15px;color:var(--ink2)">Everything there is already here.</div>`;
+  document.querySelectorAll('.brr').forEach(e=>e.onclick=()=>{const b=BORROW.find(q=>q.n===e.dataset.n),x={n:b.n,c:'Borrowed',from:b.from,w:'Any time',when:'when '+b.from+' has it',run:'Borrowed today',h:Array(14).fill(0),steps:b.steps.map(t=>st(t,2))};R.push(x);haptic('commit');
+    backScr(()=>{openCat('Borrowed',b.n);say(`${b.n}, borrowed from ${b.from}.`,()=>{R.splice(R.indexOf(x),1);renderCat()},'rcCat')})});openScr('br')}
+let cur=null,started=false;const IR=44;
+function openR(x,start){cur=x;started=!!start;$('pWhen').textContent=x.w;$('pTitle').textContent=x.n;$('pRc').textContent='';openScr('page');fitTitle($('pTitle'),28,21);renderSteps()}
+function head(){const x=cur,l=leftOf(x);$('pLeft').innerHTML=l?`about <span class="n">${minsLeft(x)}</span> min left`:'All done';
+  $('pRun').textContent=x.run;
+  // the last 14 days as stroke marks, all one length (227 rule): plum and heavier = did it, ink3 and light = didn't. No count.
+  const h=x.h.slice(1).concat([isDone(x)?1:0]);$('pMarks').innerHTML=`<svg width="${14*9}" height="18" aria-hidden="true">${h.map((v,i)=>{return `<line x1="${i*9+1}" x2="${i*9+1}" y1="4" y2="18" stroke="${v?'var(--acc)':'var(--ink3)'}" stroke-width="${v?2:1}"/>`}).join('')}</svg><span style="font-size:13px;color:var(--ink2);line-height:16px">last two weeks</span>`;
+  $('pMarks').setAttribute('aria-label','Last two weeks: '+h.map(v=>v?'done':'missed').join(', '));$('pGo').textContent=isDone(x)?'Do it again':started?'Next step':'Start'}
+function renderSteps(){const x=cur,open=x.steps.filter(s=>!s.d),done=x.steps.filter(s=>s.d);head();
+  const lab=t=>`<div style="height:${IR}px;display:flex;align-items:flex-end;padding-bottom:7px;box-sizing:border-box;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--sec)">${t}</div>`;
+  const row=(s,k,on)=>`<div class="ir" data-k="${k}" role="listitem" tabindex="0" style="position:relative;cursor:pointer;touch-action:pan-y"><div style="height:${IR}px;display:flex;justify-content:space-between;align-items:center;gap:12px;white-space:nowrap"><span class="it" style="position:relative;font-size:${on?21:19}px;font-weight:${on?600:400};overflow:hidden;color:${s.d?'var(--ink2)':on?'var(--acc)':'var(--ink)'}">${s.t}<svg class="sk" width="100%" height="2" style="position:absolute;left:0;top:52%;overflow:visible;${s.d?'':'visibility:hidden'}" aria-hidden="true"><line x1="0" x2="100%" y1="1" y2="1" stroke="var(--acc)" stroke-width="1"/></svg></span><span class="n" style="font-size:15px;color:var(--ink2)">${s.m} min</span></div>${on&&s.how?`<div class="hw" style="font-size:15px;color:var(--ink2);margin-top:-8px;line-height:22px;padding-bottom:6px">${s.how}</div>`:''}</div>`;
+  $('steps').innerHTML=open.map((s,i)=>row(s,x.steps.indexOf(s),i===0&&!isDone(x))).join('')+(done.length?lab('Done')+done.map(s=>row(s,x.steps.indexOf(s),false)).join(''):'');
+  const hw=$('steps').querySelector('.hw');if(hw)clipIn(hw,80);wireRows()}
+let pend=[],pendT=null;
+function check(k,row){const s=cur.steps[k];if(s.d){s.d=false;cur.done=null;say(`${s.t}, back on.`,()=>{s.d=true;renderSteps()},'pRc');renderSteps();return}
+  const sk=row.querySelector('.sk'),ln=sk.querySelector('line');
+  if(pend.includes(s)){pend=pend.filter(q=>q!==s);sk.style.visibility='hidden';haptic('tick');armDrop();return}
+  pend.push(s);started=true;sk.style.visibility='';row.querySelector('.it').style.color='var(--ink2)';haptic('commit');
+  if(!RM){ln.setAttribute('pathLength','1');ln.style.strokeDasharray='1';ln.style.strokeDashoffset='1';anim(.26,e=>ln.style.strokeDashoffset=String(1-e))}armDrop()}
+function armDrop(){clearTimeout(pendT);if(!pend.length)return;pendT=setTimeout(dropPending,RM?600:1500)}
+function finish(){cur.done='8:14 pm';cur.late=false;cur.run0=cur.run0||cur.run;if(cur.n==='Evening stretch')cur.run='Fifth night in a row'}
+function dropPending(){clearTimeout(pendT);if(!pend.length||!cur)return;const P=pend;pend=[];P.forEach(s=>s.d=true);const x=cur;
+  if(!leftOf(x)){finish();say(x.n==='Evening stretch'?'Done, fifth night running.':`${x.n}, done.`,()=>{P.forEach(s=>s.d=false);x.done=null;x.run=x.run0||x.run;renderSteps()},'pRc')}
+  else say(P.length>1?`${P.length} steps done.`:`${P[0].t}, done.`,()=>{P.forEach(s=>s.d=false);renderSteps()},'pRc');renderSteps()}
+function notNow(k){const s=cur.steps.splice(k,1)[0];cur.steps.push(s);say(`${s.t}, not now.`,()=>{cur.steps.splice(cur.steps.indexOf(s),1);cur.steps.splice(k,0,s);renderSteps()},'pRc');renderSteps()}
+function wireRows(){document.querySelectorAll('#steps .ir').forEach(r=>{const k=+r.dataset.k;let sx=null,dx=0;
+  r.onpointerdown=e=>{sx=e.clientX;dx=0};r.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;if(Math.abs(dx)>6){r.setPointerCapture(e.pointerId);r.style.transform=`translateX(${Math.sign(dx)*Math.min(90,Math.abs(dx))}px)`}};
+  r.onpointerup=r.onpointercancel=e=>{if(sx==null)return;sx=null;const d=dx;anim(.3,(q,u)=>r.style.transform=`translateX(${Math.sign(d)*Math.min(90,Math.abs(d))*(1-spring(u))}px)`,()=>r.style.transform='');
+    if(d>70&&!cur.steps[k].d)check(k,r);else if(d<-70&&!cur.steps[k].d)notNow(k);else if(Math.abs(d)<6&&e.type==='pointerup')check(k,r)};
+  r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){check(k,r);e.preventDefault()}}})}
+// ---------- the action word takes gestures (his 9:21 PM rule): tap does it; drag for the others; tick when one arms
+function actionWord(btn,o){let sx=null,dx=0,arm=null,base='',baseC='';const set=(t,c)=>{btn.textContent=t;btn.style.color=c};btn.style.touchAction='none';btn.style.display='inline-block';
+  btn.onpointerdown=e=>{sx=e.clientX;dx=0;arm=null;base=btn.textContent;baseC=btn.style.color;btn.setPointerCapture(e.pointerId)};
+  btn.onpointermove=e=>{if(sx==null)return;dx=e.clientX-sx;const side=dx<0?(o.left&&o.left()):(o.right&&o.right());btn.style.transform=`translateX(${Math.sign(dx)*Math.min(side?18:6,Math.abs(dx)*(side?.25:.1))}px)`;
+    const want=side&&Math.abs(dx)>56?side:null;if((want&&want.label)!==(arm&&arm.label)){arm=want;want?set(want.label,want.color):set(base,baseC);clipIn(btn);haptic('tick')}};
+  btn.onpointerup=btn.onpointercancel=e=>{if(sx==null)return;sx=null;const x0=parseFloat((btn.style.transform.match(/-?[\d.]+/)||[0])[0]);anim(.36,(q,u)=>btn.style.transform=`translateX(${x0*(1-spring(u))}px)`,()=>btn.style.transform='');
+    if(arm){const a=arm;arm=null;set(base,baseC);haptic('commit');a.fn()}else if(Math.abs(dx)<6&&e.type==='pointerup')o.tap()};
+  btn.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){o.tap();e.preventDefault()}const q=e.key==='ArrowLeft'?o.left&&o.left():e.key==='ArrowRight'?o.right&&o.right():null;if(q){q.fn();e.preventDefault()}}}
+const snap=()=>cur.steps.map(s=>({...s}));
+function nextStep(){if(isDone(cur)){const S=snap();cur.steps.forEach(s=>s.d=false);cur.done=null;started=true;renderSteps();say(`${cur.n}, again.`,()=>{cur.steps=S;finish();started=false;renderSteps()},'pRc');return}
+  if(!started){started=true;renderSteps();haptic('commit');return}const r=[...document.querySelectorAll('#steps .ir')].find(q=>{const s=cur.steps[+q.dataset.k];return !s.d&&!pend.includes(s)});if(r)check(+r.dataset.k,r)}
+// Skip today: recorded as skipped, a neutral receipt on the page underneath, never late or wine
+function skipToday(x){x=x||cur;const was={...x};x.skip=true;x.late=false;const back=stack[stack.length-1]==='page';const under=back?stack[stack.length-2]:stack[stack.length-1];
+  const tell=()=>say('Skipped today.',()=>{x.skip=false;x.late=was.late;refreshTop()},RC[under]);if(back)backScr(tell);else{refreshTop();tell()}}
+function restart(){pend=[];clearTimeout(pendT);const S=snap(),d=cur.done;cur.steps.forEach(s=>s.d=false);cur.done=null;started=false;renderSteps();say(`${cur.n}, restarted.`,()=>{cur.steps=S;cur.done=d;renderSteps()},'pRc')}
+actionWord($('pGo'),{tap:nextStep,left:()=>isDone(cur)?null:{label:'Skip today',color:'var(--ink)',fn:()=>skipToday()},right:()=>({label:'Restart',color:'var(--acc)',fn:restart})});
+const front=()=>dayW.front();
+actionWord($('act'),{tap:()=>openR(front(),!isDone(front())),left:()=>isDone(front())?null:{label:'Skip today',color:'var(--ink)',fn:()=>skipToday(front())},
+  right:()=>isDone(front())?null:{label:'Later, 9 pm',color:'var(--acc)',fn:()=>{const x=front(),a=x.at,l=x.late;x.at='9 pm';x.late=false;refreshDay();say(`${x.n}, moved to 9 pm.`,()=>{x.at=a;x.late=l;refreshDay()})}}});
+const newWord=c=>({tap:()=>c()==='Borrowed'?openBr():openMk('steps',c()),left:()=>({label:'One thing',color:'var(--ink)',fn:()=>openMk('one',c())}),right:()=>({label:'From another room',color:'var(--acc)',fn:openBr})});
+actionWord($('hGo'),{tap:()=>{const x=reelList()[reelI];if(x)openR(x,true);else openMk('steps',null)},left:()=>{const x=reelList()[reelI];return x?{label:'Skip today',color:'var(--ink)',fn:()=>skipToday(x)}:null},right:()=>({label:'New routine',color:'var(--acc)',fn:()=>openMk('steps',null)})});actionWord($('cGo'),newWord(()=>curCat));
+actionWord($('mkGo'),{tap:saveMk,left:()=>({label:'Discard',color:'var(--ink)',fn:()=>{backScr();}})});
+// ---------- board controls
+const setTheme=t=>{document.documentElement.dataset.theme=t;['th','tw'].forEach(b=>$(b).style.color='');$(t==='dark'?'th':'tw').style.color='var(--ink)'};
+$('th').onclick=()=>setTheme('dark');$('tw').onclick=()=>setTheme('light');
+$('dp').onclick=()=>{DEPTH=!DEPTH;$('dp').textContent='Depth on wheels: '+(DEPTH?'on':'off');$('dp').setAttribute('aria-pressed',DEPTH);dayW.paint();catW.paint()};
+function start(){R=seed();cur=null;started=false;['day','cat','mk','br','page'].forEach(id=>$(id).hidden=true);stack=['home'];dayW.off=TD().findIndex(x=>!isDone(x));renderHome();fitTitle($('hTitle'),40,30)}
+$('reset').onclick=start;start();
+})();

@@ -1,0 +1,1663 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Tess motion lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #000; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="screen"></canvas>
+<script>
+// Tess motion lab prototype. A deterministic port of TessSoul (SoulParameters.swift, SoulFrame.swift, TessSoul.swift)
+// plus the new motion vocabulary in docs/design/motion/tess-motion.md: work (fade, split, process, gather), roam,
+// drag and eyes. `renderAt(t)` draws one frame of the chosen scene, so the recorder can step at exactly 60 fps.
+
+const W = 393, H = 852, CAP = 64;
+const params = new URLSearchParams(location.search);
+const SCENE = params.get('scene') || 'work';
+// MARK: - Looks (DesignSystem/Looks.swift; inkSoft is each look's `neutral`)
+const LOOKS_BY_NAME = {
+  // Recut tables (#367, Design 43). `pale` is SoulPalette.look's rule on master: field pigmentBloom or glaze
+  // (so Plein, now flat paper with field pigmentBloom, joins it). `?pale=0|1` overrides it for a look.
+  obsidian: { ground: '#000000', ink: '#F5F2EC', inkSoft: '#8E879A', tess: '#86B4FF', live: '#FF5B3A', now: '#FFC23D', context: '#B7A6E0', dark: true, pale: false, field: 'emissive' },
+  porcelain: { ground: '#FFFFFF', ink: '#121016', inkSoft: '#9C95A8', tess: '#2450D8', live: '#E2432A', now: '#F0A500', context: '#5A3DAF', dark: false, pale: true, field: 'flat' },
+  plein: { ground: '#F3EDE2', ink: '#26201E', inkSoft: '#A89C90', tess: '#2A4FA8', live: '#B9452B', now: '#C98E1B', context: '#7D4E6E', dark: false, pale: true, field: 'flat' },
+  lacquer: { ground: '#130A0D', ink: '#F3E8D6', inkSoft: '#9E8F93', tess: '#8FB5FF', live: '#F0583A', now: '#E9B64A', context: '#D9A6B8', dark: true, pale: false, field: 'lacquer', fieldShade: '#050203', fieldSpecular: '#FFF1E0' },
+  celadon: { ground: '#E0EAE2', ink: '#0C1E19', inkSoft: '#7E918A', tess: '#2C59BE', live: '#D94B2E', now: '#CF9418', context: '#3A6584', dark: false, pale: true, field: 'glaze' },
+};
+const LOOK_NAME = params.get('look') || 'obsidian';
+const LOOK = { ...LOOKS_BY_NAME[LOOK_NAME], blend: LOOKS_BY_NAME[LOOK_NAME].dark ? 'screen' : 'multiply' };
+if (params.has('pale')) LOOK.pale = params.get('pale') === '1';
+const LIGHT = !LOOK.dark;
+// Drawn at this size, as BottomChrome does (`.scaleEffect(0.72)`, breathing 1 ↔ 1.08 over 3.2 s).
+const CHROME = 0.72;
+const chromeBreath = t => 1 + .08 * easeInOut(1 - Math.abs(2 * (((t % 6.4) + 6.4) % 6.4) / 6.4 - 1));
+// Close-up recordings render one region larger; `zoom` sets the device scale, `focus` the region.
+const DPR_PARAM = parseFloat(params.get('dpr') || '2');
+const PAINTS = [LOOK.live, LOOK.tess, LOOK.now];
+const DPR = DPR_PARAM;
+
+function rgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+// MARK: - Curves (SwiftUI UnitCurve)
+function bezier(p1x, p1y, p2x, p2y) {
+  const cx = 3 * p1x, bx = 3 * (p2x - p1x) - cx, ax = 1 - cx - bx;
+  const cy = 3 * p1y, by = 3 * (p2y - p1y) - cy, ay = 1 - cy - by;
+  const sx = t => ((ax * t + bx) * t + cx) * t;
+  const sy = t => ((ay * t + by) * t + cy) * t;
+  const dx = t => (3 * ax * t + 2 * bx) * t + cx;
+  return x => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++) { const e = sx(t) - x; const d = dx(t); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; }
+    let lo = 0, hi = 1;
+    if (Math.abs(sx(t) - x) > 1e-4) { t = x; for (let i = 0; i < 30; i++) { if (sx(t) < x) lo = t; else hi = t; t = (lo + hi) / 2; } }
+    return sy(t);
+  };
+}
+const easeInOut = bezier(0.42, 0, 0.58, 1);
+const easeOut = bezier(0, 0, 0.58, 1);
+const easeIn = bezier(0.42, 0, 1, 1);
+const doneCurve = bezier(0.4, 0, 0.2, 1);
+const travelX = bezier(0.55, 0, 0.15, 1);  // SoulTravel x
+const travelY = bezier(0.3, 0, 0.25, 1);   // SoulTravel y
+const gatherCurve = bezier(0.55, 0, 0.15, 1);
+const splitCurve = bezier(0.4, 0, 0.2, 1);
+const clamp = (v, a = 0, b = 1) => Math.min(Math.max(v, a), b);
+const lerp = (a, b, t) => a + (b - a) * t;
+const ramp = (t, start, dur, curve = easeInOut) => curve(clamp((t - start) / dur));
+
+// Spring (Theme.Motion.house: duration 0.42, bounce 0.12), step response 0…1 for a target change at t=0.
+function spring(t, duration = 0.42, bounce = 0.12) {
+  if (t <= 0) return 0;
+  const omega = 2 * Math.PI / duration, zeta = 1 - bounce;
+  const wd = omega * Math.sqrt(1 - zeta * zeta);
+  return 1 - Math.exp(-zeta * omega * t) * (Math.cos(wd * t) + (zeta * omega / wd) * Math.sin(wd * t));
+}
+
+// MARK: - Soul keyframes (SoulMotion)
+const K = (time, o) => Object.assign({ time, home: 1, bloom: 0, target: 0, dx: 0, dy: 0, scaleX: o.scale, scaleY: o.scaleY ?? o.scale, blur: 4, opacity: 1 }, o);
+const M = {
+  drift: [K(0, { dy: -6, scale: .78, blur: 3 }), K(.25, { dx: 6, scale: .9, blur: 5 }), K(.5, { dy: 6, scale: .8, blur: 4 }), K(.75, { dx: -6, scale: .92, blur: 6 }), K(1, { dy: -6, scale: .78, blur: 3 })],
+  lift: [K(0, { scale: .78, blur: 4 }), K(.1, { dx: 5, dy: -10, scale: .92, blur: 5.5 }), K(.17, { dx: 7, dy: -7, scale: .86, blur: 4.5 }), K(.24, { dx: 5, dy: -10, scale: .92, blur: 5.5 }), K(.38, { scale: .78, blur: 4 }), K(1, { scale: .78, blur: 4 })],
+  pulse: [K(0, { home: .6, scale: .72, blur: 3, opacity: .85 }), K(.3, { home: 1.3, scale: 1.06, blur: 7 }), K(.6, { home: .9, scale: .84, blur: 4, opacity: .92 }), K(1, { home: .6, scale: .72, blur: 3, opacity: .85 })],
+  bloom: [K(0, { home: .45, scale: .6, blur: 3 }), K(.4, { home: 0, bloom: 1, scale: 1.15, blur: 6 }), K(.7, { home: .6, scale: .9, blur: 4 }), K(1, { home: .45, scale: .6, blur: 3 })],
+  merge: [K(0, { scale: .8, blur: 4 }), K(.3, { home: 0, scale: .9, blur: 5 }), K(.45, { home: 0, scale: 1.35, blur: 9 }), K(.6, { home: 0, scale: 1, blur: 6 }), K(.72, { home: 0, scale: 1, blur: 6 }), K(1, { scale: .8, blur: 4 })],
+  splash: [K(0, { home: 0, scale: .4, opacity: 0 }), K(.3, { home: 0, scale: .4, opacity: 0 }), K(.42, { home: 0, scale: .75, opacity: 1 }), K(.88, { home: 0, scale: 2.6, opacity: 0 }), K(1, { home: 0, scale: 2.6, opacity: 0 })],
+};
+const track = (keys, period, delay = 0, curve = easeInOut) => ({ keys, period, delay, curve });
+const LOOKS = { base: { scale: 1, saturation: 1.45, contrast: 1.04, brightness: 0, opacity: 1, satellites: 1 } };
+const look = o => Object.assign({}, LOOKS.base, o);
+
+const TABLE = {
+  idle: { look: look({ scale: .62 }), mains: [0, -6, -3].map(d => track(M.lift, 9, d)), sats: [[9, -4], [11, -1], [7.5, -5]].map(([p, d]) => track(M.drift, p, d)) },
+  listening: { look: look({}), mains: [0, -.8, -1.6].map(d => track(M.bloom, 2.4, d)), sats: [-1.2, -2, -.4].map(d => track(M.bloom, 2.4, d)) },
+  thinking: { look: look({ scale: .8 }), mains: [[.9, 0], [.72, -.3], [1.1, -.5]].map(([p, d]) => track(M.pulse, p, d)), sats: [[.8, -.2], [1, -.6], [.66, -.1]].map(([p, d]) => track(M.pulse, p, d)) },
+  done: { look: look({}), mains: [0, 0, 0].map(d => track(M.merge, 1.8, d, doneCurve)), sats: [.08, .16, .24].map(d => track(M.merge, 1.8, d, doneCurve)), ring: track(M.splash, 1.8, 0, easeOut), oneShot: 1.8 },
+};
+
+function keyAt(tr, p) {
+  const c = clamp(p), keys = tr.keys;
+  const n = keys.findIndex(k => k.time >= c);
+  if (n < 0) return keys[keys.length - 1];
+  if (n === 0) return keys[0];
+  const a = keys[n - 1], b = keys[n];
+  const local = b.time === a.time ? 1 : (c - a.time) / (b.time - a.time);
+  const e = tr.curve(local), r = {};
+  for (const k in a) r[k] = lerp(a[k], b[k], e);
+  return r;
+}
+const phase = (time, period, delay = 0) => { const v = ((time - delay) % period) / period; return v < 0 ? v + 1 : v; };
+
+// Dab geometry (SoulFrame.swift SoulDab.all), with the spread from soul-explore.md (default if he's silent: 65%).
+const SPREAD = parseFloat(params.get('spread') || '0.65');
+const CENTROID = { x: 0, y: -1 };
+const MAIN = { w: 76, h: 70 }, SAT = { w: 46, h: 42 };
+const DABS = [
+  { home: [-14, -8], bloom: [18, -10], size: MAIN, paint: 0 },
+  { home: [14, -8], bloom: [-16, -12], size: MAIN, paint: 1 },
+  { home: [0, 13], bloom: [0, 18], size: MAIN, paint: 2 },
+  { home: [-22, 10], bloom: [-20, 14], size: SAT, paint: 0 },
+  { home: [20, 12], bloom: [22, 10], size: SAT, paint: 1 },
+  { home: [4, -20], bloom: [6, -22], size: SAT, paint: 2 },
+].map(d => ({ ...d, home: [CENTROID.x + SPREAD * (d.home[0] - CENTROID.x), CENTROID.y + SPREAD * (d.home[1] - CENTROID.y)] }));
+
+// One mode sampled (SoulFrame.sample): soul-relative poses.
+function sampleMode(mode, time, elapsed) {
+  const P = TABLE[mode];
+  const prog = tr => P.oneShot ? (elapsed - tr.delay) / tr.period : phase(time, tr.period, tr.delay);
+  const tracks = P.mains.concat(P.sats);
+  const dabs = tracks.map((tr, i) => {
+    const k = keyAt(tr, prog(tr)), d = DABS[i];
+    return { x: k.home * d.home[0] + k.bloom * d.bloom[0] + k.dx, y: k.home * d.home[1] + k.bloom * d.bloom[1] + k.dy, sx: k.scaleX, sy: k.scaleY, blur: k.blur, opacity: k.opacity };
+  });
+  let ring = { sx: 0, opacity: 0 };
+  if (P.ring) { const k = keyAt(P.ring, prog(P.ring)); ring = { sx: k.scaleX, opacity: k.opacity }; }
+  const breath = easeInOut(1 - Math.abs(2 * phase(time, 7) - 1));
+  return { dabs, ring, halo: { s: .8 + .2 * breath, opacity: .6 + .4 * breath }, look: { ...P.look } };
+}
+function mixFrame(a, b, w) {
+  const m = (x, y) => { const r = {}; for (const k in x) r[k] = lerp(x[k], y[k], w); return r; };
+  return { dabs: a.dabs.map((d, i) => m(d, b.dabs[i])), ring: m(a.ring, b.ring), halo: m(a.halo, b.halo), look: m(a.look, b.look) };
+}
+// SoulBlend: modes stack, each new one fades in over 0.4 s.
+function soulFrame(modes, t) {
+  const live = modes.filter(m => m.at <= t);
+  let base = 0;
+  live.forEach((m, i) => { if (t - m.at >= .4) base = i; });
+  let f = null;
+  for (const m of live.slice(base)) {
+    const next = sampleMode(m.mode, t + 100, t - m.at);
+    f = f ? mixFrame(f, next, easeInOut(clamp((t - m.at) / .4))) : next;
+  }
+  return f;
+}
+
+// MARK: - Particles
+// Twelve lights. 0-5 are the six dabs as built. 6-11 are hidden children of the three mains (6,7 vermilion;
+// 8,9 cobalt; 10,11 cadmium) that only show when she splits. Formed, every child sits inside its parent at alpha 0.
+const PARENT = [0, 1, 2, 3, 4, 5, 0, 0, 1, 1, 2, 2];
+const PAINT_OF = i => DABS[PARENT[i]].paint;
+
+function formedParticles(frame, C, scale) {
+  const L = frame.look.scale * scale;
+  return PARENT.map((p, i) => {
+    const d = frame.dabs[p], g = DABS[p];
+    const sat = p >= 3 ? frame.look.satellites : 1;
+    return { x: C.x + L * d.x, y: C.y + L * d.y, rx: L * g.size.w / 2 * d.sx, ry: L * g.size.h / 2 * d.sy, blur: L * d.blur, alpha: i < 6 ? d.opacity * sat : 0 };
+  });
+}
+
+// MARK: - Work: fade, split, process, gather
+// The constellation: each light on its own slow Lissajous loop round a point beside her line, so lights cross and
+// mix (screen on dark) without ever lining up. Readers: three lights in a short chain that scan under the rows of
+// the thing she's working on, left to right then back, like a finger under a line.
+const CONSTELLATION = [
+  // index, ax, ay, periodX, periodY, phase, radius
+  [0, 26, 14, 6.2, 4.4, 0.0, 15], [2, 20, 18, 7.4, 5.2, 1.7, 15], [3, 34, 12, 8.6, 6.1, 3.1, 11],
+  [4, 16, 20, 5.6, 7.8, 4.4, 11], [5, 10, 8, 9.2, 6.6, 2.2, 11], [7, 30, 16, 6.8, 5.7, 5.3, 12],
+  [8, 5, 4, 7.9, 4.9, 0.9, 12], [9, 12, 22, 8.3, 6.9, 3.8, 12], [11, 28, 20, 9.7, 7.3, 2.6, 12],
+];
+const READERS = [[1, 0], [6, .09], [10, .18]]; // cobalt leads, vermilion and cadmium follow
+
+function constellationPose(entry, t, W0) {
+  const [i, ax, ay, px, py, ph, r] = entry;
+  const breathe = 1 + .14 * Math.sin(2 * Math.PI * t / (3.1 + i * .37) + ph);
+  return {
+    x: W0.x + ax * Math.sin(2 * Math.PI * t / px + ph),
+    y: W0.y + ay * Math.sin(2 * Math.PI * t / py + ph * 1.3),
+    rx: r * breathe, ry: r * .9 * breathe, blur: 5, alpha: .55,
+  };
+}
+
+// A boustrophedon path under each row: [{x,y}] sampled every few points, measured by arc length.
+function scanPath(rows) {
+  const pts = [];
+  rows.forEach((r, i) => {
+    const y = r.y + 13, ltr = i % 2 === 0;
+    const xs = ltr ? [r.x0, r.x1] : [r.x1, r.x0];
+    for (let s = 0; s <= 1.0001; s += .02) pts.push({ x: lerp(xs[0], xs[1], s), y });
+    if (i < rows.length - 1) {
+      const ny = rows[i + 1].y + 13, cy = (y + ny) / 2, rr = (ny - y) / 2, cx = xs[1];
+      for (let a = -Math.PI / 2; a <= Math.PI / 2; a += .2) pts.push({ x: cx + (ltr ? 1 : -1) * rr * Math.cos(a) * .9, y: cy + rr * Math.sin(a) });
+    }
+  });
+  let len = 0; pts[0].s = 0;
+  for (let i = 1; i < pts.length; i++) { len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); pts[i].s = len; }
+  return { pts, len };
+}
+function along(path, s) {
+  s = clamp(s, 0, path.len);
+  const p = path.pts; let i = 1;
+  while (i < p.length - 1 && p[i].s < s) i++;
+  const a = p[i - 1], b = p[i], u = b.s === a.s ? 0 : (s - a.s) / (b.s - a.s);
+  return { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u) };
+}
+
+// Weight 0…1 of each light's work pose. Split staggers the children out after the fade starts; gather brings the
+// far readers home first so every light lands together.
+function workWeight(i, t, work) {
+  if (!work) return 0;
+  const reader = (work.path || work.pathFn) && READERS.some(r => r[0] === i);
+  const outDelay = .25 + (i >= 6 ? .08 * (i - 5) : .03 * i) + (reader ? .1 : 0);
+  const outDur = reader ? 1.1 : .9;
+  const w = ramp(t, work.split + outDelay, outDur, splitCurve);
+  if (work.gather === undefined) return w;
+  const inDelay = reader ? 0 : .14 + .025 * (i % 6);
+  const inDur = reader ? .82 : .68;
+  return w * (1 - ramp(t, work.gather + inDelay, inDur, gatherCurve));
+}
+// The fade: colour drains from her before she splits, and floods back as she gathers.
+function workFade(t, work) {
+  if (!work) return 0;
+  const out = ramp(t, work.split, .5);
+  return work.gather === undefined ? out : out * (1 - ramp(t, work.gather + .3, .55));
+}
+
+function workParticles(t, work) {
+  const res = [];
+  const W0 = work.at;
+  for (const c of CONSTELLATION) {
+    res[c[0]] = constellationPose(c, t, W0);
+    if (work.noise) { const n = noiseDrift(c[0], t); res[c[0]] = { ...res[c[0]], x: W0.x + c[1] * n.x, y: W0.y + c[2] * n.y }; }
+  }
+  for (const [i, lag] of READERS) {
+    if (work.pathFn) {
+      const p = work.pathFn(t - work.scan - lag);
+      res[i] = { x: p.x, y: p.y + (i === 1 ? 0 : 1.5), rx: i === 1 ? 15 : 12, ry: i === 1 ? 11 : 9, blur: 5, alpha: i === 1 ? .5 : .42 };
+      continue;
+    }
+    if (work.path) {
+      const tau = t - work.scan - lag;
+      const s = work.path.len * clamp(tau / work.scanDur);
+      const p = along(work.path, s);
+      // The chain tightens as it reads (it's one glint with colour in its tail) and fades a touch on the turns.
+      res[i] = { x: p.x, y: p.y + (i === 1 ? 0 : 1.5), rx: i === 1 ? 15 : 12, ry: i === 1 ? 11 : 9, blur: 5, alpha: i === 1 ? .5 : .42 };
+      // The page is leaving (a lens hold, section 15): the readers come home to the constellation inside 360 ms.
+      if (work.pathUntil !== undefined && t > work.pathUntil) {
+        const home = constellationPose([i, 18 + i, 12 + (i % 3) * 4, 6 + i * .3, 5 + i * .2, i, i === 1 ? 15 : 12], t, W0);
+        const u = ramp(t, work.pathUntil, .36, gatherCurve);
+        res[i] = { x: lerp(res[i].x, home.x, u), y: lerp(res[i].y, home.y, u), rx: lerp(res[i].rx, home.rx, u), ry: lerp(res[i].ry, home.ry, u), blur: lerp(5, home.blur, u), alpha: lerp(res[i].alpha, home.alpha, u) };
+      }
+    } else {
+      res[i] = constellationPose([i, 18 + i, 12 + (i % 3) * 4, 6 + i * .3, 5 + i * .2, i, i === 1 ? 15 : 12], t, W0);
+    }
+  }
+  return res;
+}
+
+// Blend a formed light to its work pose along an arc (never a straight slide).
+function travel(a, b, w, i) {
+  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+  const side = i % 2 ? 1 : -1;
+  const cx = mx + (-dy / (d || 1)) * d * .22 * side, cy = my + (dx / (d || 1)) * d * .22 * side;
+  const u = 1 - w;
+  return {
+    x: u * u * a.x + 2 * u * w * cx + w * w * b.x,
+    y: u * u * a.y + 2 * u * w * cy + w * w * b.y,
+    rx: lerp(a.rx, b.rx, w), ry: lerp(a.ry, b.ry, w), blur: lerp(a.blur, b.blur, w),
+    alpha: i < 6 ? lerp(a.alpha, b.alpha, w) : b.alpha * clamp(w * 1.6),
+  };
+}
+
+// MARK: - Drawing
+const canvas = document.getElementById('screen');
+canvas.width = W * DPR; canvas.height = (H + CAP) * DPR;
+canvas.style.width = W + 'px'; canvas.style.height = (H + CAP) + 'px';
+const ctx = canvas.getContext('2d');
+const off = document.createElement('canvas');
+off.width = W * DPR; off.height = H * DPR;
+const octx = off.getContext('2d');
+
+function shapePath(h, v) {
+  const rx = h.map(x => x / 50), ry = v.map(x => x / 50), k = .5523, p = new Path2D();
+  p.moveTo(-1 + rx[0], -1); p.lineTo(1 - rx[1], -1);
+  p.bezierCurveTo(1 - rx[1] * (1 - k), -1, 1, -1 + ry[1] * (1 - k), 1, -1 + ry[1]);
+  p.lineTo(1, 1 - ry[2]);
+  p.bezierCurveTo(1, 1 - ry[2] * (1 - k), 1 - rx[2] * (1 - k), 1, 1 - rx[2], 1);
+  p.lineTo(-1 + rx[3], 1);
+  p.bezierCurveTo(-1 + rx[3] * (1 - k), 1, -1, 1 - ry[3] * (1 - k), -1, 1 - ry[3]);
+  p.lineTo(-1, -1 + ry[0]);
+  p.bezierCurveTo(-1, -1 + ry[0] * (1 - k), -1 + rx[0] * (1 - k), -1, -1 + rx[0], -1);
+  p.closePath(); return p;
+}
+const SHAPES = [shapePath([52, 48, 60, 40], [55, 45, 55, 45]), shapePath([45, 55, 40, 60], [50, 60, 40, 50]), shapePath([60, 40, 55, 45], [45, 55, 45, 55])];
+const [CORE, MID] = LOOK.pale ? [.58, .42] : [.8, .6];
+
+function drawSoul(parts, frame, C, scale, grade) {
+  octx.setTransform(1, 0, 0, 1, 0, 0);
+  octx.clearRect(0, 0, off.width, off.height);
+  octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  octx.globalCompositeOperation = 'source-over';
+  const L = frame.look.scale * scale;
+  // Halo (normal blend), fading out while she works.
+  const haloA = frame.halo.opacity * (1 - grade.fade) * grade.haloBoost;
+  if (haloA > .01) {
+    octx.save(); octx.translate(C.x, C.y); octx.scale(L * frame.halo.s, L * frame.halo.s * 70 / 75);
+    const g = octx.createRadialGradient(0, 0, 0, 0, 0, 75);
+    const a1 = LIGHT ? .08 : .22, a2 = LIGHT ? .05 : .14;
+    const warm = grade.palette ? (grade.palette.reveal[0] >= 1 ? grade.palette.to[0] : grade.palette.from[0]) : LOOK.live;
+    g.addColorStop(0, rgba(warm, a1)); g.addColorStop(.55, rgba(LOOK.context, a2)); g.addColorStop(1, rgba(LOOK.context, 0));
+    octx.globalAlpha = haloA; octx.fillStyle = g; octx.beginPath(); octx.arc(0, 0, 75, 0, Math.PI * 2); octx.fill(); octx.restore();
+  }
+  if (frame.ring.opacity > .01) {
+    const r = 50 * frame.ring.sx;
+    octx.save(); octx.translate(C.x, C.y); octx.scale(L, L);
+    const g = octx.createRadialGradient(0, 0, 0, 0, 0, r);
+    g.addColorStop(.52, rgba(LOOK.context, 0)); g.addColorStop(.72, rgba(LOOK.context, .6 * .5)); g.addColorStop(1, rgba(LOOK.context, 0));
+    octx.globalAlpha = frame.ring.opacity; octx.fillStyle = g; octx.beginPath(); octx.arc(0, 0, r, 0, Math.PI * 2); octx.fill(); octx.restore();
+  }
+  octx.globalCompositeOperation = LOOK.blend;
+  const pal = grade.palette;
+  parts.forEach((p, i) => {
+    if (p.alpha < .01 || p.rx < .2 || p.ry < .2) return;
+    const paint = PAINT_OF(i);
+    const wet = pal ? pal.wet[paint] : 0, reveal = pal ? pal.reveal[paint] : 0;
+    octx.save();
+    octx.filter = `blur(${(p.blur * DPR).toFixed(2)}px)`;
+    octx.globalAlpha = clamp(p.alpha);
+    octx.translate(p.x, p.y); octx.scale(p.rx * (1 + .12 * wet), p.ry * (1 + .12 * wet));
+    const wash = (hex, lift) => { const g = octx.createRadialGradient(0, 0, 0, 0, 0, 1); g.addColorStop(0, rgba(hex, Math.min(1, CORE * (1 + lift)))); g.addColorStop(.4, rgba(hex, Math.min(1, MID * (1 + lift)))); g.addColorStop(1, rgba(hex, 0)); return g; };
+    const oldHex = pal ? pal.from[paint] : PAINTS[paint];
+    // The new pigment pools from the centre outward (900 ms, house curve): its wash grows from the centre to the
+    // edge while the old wash thins under it, so the edge of the pool is as soft as the dab.
+    octx.globalAlpha = clamp(p.alpha) * (1 - reveal);
+    octx.fillStyle = wash(oldHex, 0); octx.fill(SHAPES[paint]);
+    if (reveal > 0) {
+      octx.globalAlpha = clamp(p.alpha);
+      const r = Math.max(reveal * 1.15, .01), hex = pal.to[paint], lift = .2 * wet;
+      const g = octx.createRadialGradient(0, 0, 0, 0, 0, r);
+      // Wet: light looks lift core and mid; dark looks lift only the mid, the core never (Design 58).
+      g.addColorStop(0, rgba(hex, Math.min(1, CORE * (1 + (LOOK.dark ? 0 : lift))))); g.addColorStop(.4, rgba(hex, Math.min(1, MID * (1 + lift)))); g.addColorStop(1, rgba(hex, 0));
+      octx.fillStyle = g; octx.fill(SHAPES[paint]);
+    }
+    octx.restore();
+  });
+  octx.filter = 'none';
+  // The group grade: saturation, contrast and opacity over the whole soul, as the SwiftUI view does.
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.filter = `saturate(${grade.saturation.toFixed(3)}) contrast(${grade.contrast.toFixed(3)})`;
+  ctx.globalAlpha = grade.opacity;
+  ctx.drawImage(off, 0, 0);
+  ctx.restore();
+}
+
+function drawEyes(C, scale, frame, eyes, t) {
+  if (!eyes || eyes.alpha < .01) return;
+  const L = frame.look.scale * scale;
+  // They sit on the soul's centroid, a touch above it, and ride the dabs' own motion (the mains' mean offset).
+  const m = frame.dabs.slice(0, 3).reduce((a, d) => ({ x: a.x + d.x / 3, y: a.y + d.y / 3 }), { x: 0, y: 0 });
+  // Values (at soul scale 1): 8.4 pt apart, 3.2 × 3.5 pt, 3 pt above the centroid; a glance moves them up to 3 pt.
+  const cx = C.x + L * (m.x + eyes.look.x * 3), cy = C.y + L * (m.y - 3 + eyes.look.y * 2.2);
+  const open = eyes.blink;
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = rgba(LOOK.dark ? LOOK.ground : LOOK.ink, .82 * eyes.alpha); // Design 51: always the dark one
+  for (const s of [-1, 1]) {
+    const o = s < 0 ? (eyes.blinkL ?? open) : (eyes.blinkR ?? open);
+    ctx.beginPath(); ctx.ellipse(cx + s * 4.2 * L, cy, 1.6 * L, Math.max(1.75 * o, .25) * L, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// MARK: - The page (a plain stand-in for Home, so the motion can be judged against real content)
+function font(size, weight = 500) { return `${weight} ${size}px "Inter Tight", system-ui, sans-serif`; }
+function text(str, x, y, size, color, weight = 500, align = 'left', alpha = 1) {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha;
+  ctx.font = font(size, weight); ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(str, x, y); ctx.restore();
+}
+function width(str, size, weight = 500) { ctx.save(); ctx.font = font(size, weight); const w = ctx.measureText(str).width; ctx.restore(); return w; }
+
+const ROWS = [
+  { title: 'Call the bank', when: '9:30 am' },
+  { title: 'Push A', when: '12:15 pm' },
+  { title: 'Pick up the dry cleaning', when: '' },
+  { title: 'Book the dentist', when: '' },
+  { title: 'Water the plants', when: '6 pm' },
+];
+// Sheet 41's frame: the day label at 138, the context line at 186, the hero at 220 (34), NEXT and the rows below.
+const ROW_Y0 = 330, ROW_DY = 50;
+function rowGeom(scrollY = 0) {
+  return ROWS.map((r, i) => {
+    const y = ROW_Y0 + i * ROW_DY - scrollY;
+    return { y, x0: 24, x1: 24 + width(r.title, 18), titleEnd: 24 + width(r.title, 18) };
+  });
+}
+
+function drawPage(o = {}) {
+  const scroll = o.scroll || 0;
+  ground();
+  text('7:42', 32, 34, 16, LOOK.ink, 600);
+  const nav = ['Review', 'Today', 'Training', 'Kitchen'];
+  let x = 24;
+  nav.forEach(n => { text(n, x, 82, 16, n === 'Today' ? LOOK.ink : LOOK.inkSoft, n === 'Today' ? 600 : 500); x += width(n, 16) + 22; });
+  text(o.day || 'Friday morning', 24, 138 - scroll, 21, LOOK.ink, 500);
+  text(o.context || 'nothing due till 9:30 am', 24, 186 - scroll, 21, LOOK.context, 500);
+  text(o.header || 'Push A at 12:15 pm', 24, 220 - scroll, 34, LOOK.ink, 600);
+  text('NEXT', 24, 290 - scroll, 16, LOOK.inkSoft, 600);
+  rowGeom(scroll).forEach((g, i) => {
+    const r = ROWS[i];
+    if (g.y < 110 || g.y > 700) return;
+    const a = o.rowAlpha ? o.rowAlpha(i, g) : 1;
+    text(r.title, 24, g.y, 18, LOOK.ink, 500, 'left', a);
+    if (r.when) text(r.when, 369, g.y, 16, LOOK.inkSoft, 500, 'right', a);
+  });
+  if (o.extra) o.extra(scroll);
+}
+
+// Tess's line in the ask band (736-820): cobalt, blurred in over 300 ms like a value word.
+function drawLine(lines, t) {
+  for (const l of lines) {
+    const a = ramp(t, l.at, .3) * (l.until ? 1 - ramp(t, l.until, .25) : 1);
+    if (a < .01) continue;
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.filter = `blur(${((1 - a) * 4 * DPR).toFixed(2)}px)`;
+    ctx.globalAlpha = a; ctx.font = font(17, 500); ctx.fillStyle = LOOK.tess; ctx.textAlign = 'left';
+    ctx.fillText(l.text, 24, 785); ctx.restore();
+  }
+}
+
+// The caption strip under the phone names each beat and its haptic; it isn't part of the app.
+function drawCaption(caps, t) {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = LIGHT ? '#F2F0F5' : '#111014'; ctx.fillRect(0, H, W, CAP);
+  ctx.restore();
+  let cur = null;
+  for (const c of caps) if (c.at <= t) cur = c;
+  if (!cur) return;
+  const a = ramp(t, cur.at, .2);
+  text(cur.text, 16, H + 27, 16, LOOK.ink, 500, 'left', a);
+  if (cur.haptic) text('Haptic: ' + cur.haptic, 16, H + 50, 16, LOOK.inkSoft, 500, 'left', a);
+}
+
+function drawFinger(f) {
+  if (!f || f.alpha < .01) return;
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.globalAlpha = f.alpha;
+  ctx.fillStyle = LIGHT ? 'rgba(23,20,31,0.10)' : 'rgba(245,242,236,0.14)';
+  ctx.strokeStyle = LIGHT ? 'rgba(23,20,31,0.28)' : 'rgba(245,242,236,0.32)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(f.x, f.y, 19 * (f.press || 1), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+// MARK: - Compose one frame
+const HOME = { x: 346, y: 779 };
+
+function composeSoul(t, s) {
+  const frame = soulFrame(s.modes, t);
+  const C = s.centre(t);
+  const scale = (s.scale ? s.scale(t) : 1) * CHROME * (s.frozen ? 1 : chromeBreath(t)) * (s.beat ? s.beat(t).scale : 1);
+  let parts = formedParticles(frame, C, scale);
+  const work = s.work;
+  if (work) {
+    const wp = workParticles(t, work);
+    parts = parts.map((p, i) => { const w = workWeight(i, t, work); return w > 0 ? travel(p, wp[i], w, i) : p; });
+  }
+  // Low Power (section 13): the six children never leave the dabs, so only six lights split.
+  if (s.lowPower) parts = parts.map((p, i) => i >= 6 ? { ...p, alpha: 0 } : p);
+  if (s.wobble) parts = s.wobble(parts, t, C);
+  const beat = s.beat ? s.beat(t) : null;
+  if (beat && beat.gather > 0) {
+    // The small gather: the satellites (and their children) pull in toward the mains' centre.
+    parts = parts.map((p, i) => PARENT[i] >= 3 ? { ...p, x: lerp(p.x, C.x + (p.x - C.x) * .55, beat.gather), y: lerp(p.y, C.y + (p.y - C.y) * .55, beat.gather) } : p);
+  }
+  const fade = workFade(t, work);
+  const reduced = s.reduced ? s.reduced(t) : 0;
+  const grade = {
+    saturation: lerp(frame.look.saturation, .62, fade) * lerp(1, .5, reduced) + (beat ? beat.sat : 0),
+    contrast: lerp(frame.look.contrast, 1, fade),
+    opacity: frame.look.opacity * lerp(1, .9, fade) * lerp(1, .6, reduced) * (s.opacityMul ? s.opacityMul(t) : 1),
+    fade: Math.max(fade, reduced), haloBoost: s.haloBoost ? s.haloBoost(t) : 1,
+    palette: s.palette ? s.palette(t) : null,
+  };
+  if (reduced > 0) {
+    // Reduce Motion: no travel. The three mains loosen apart in place and hold; the satellites fade.
+    parts = parts.map((p, i) => {
+      const d = i < 3 ? 1.5 : 1;
+      return { ...p, x: lerp(p.x, C.x + (p.x - C.x) * d, reduced), y: lerp(p.y, C.y + (p.y - C.y) * d, reduced), alpha: p.alpha * (i >= 3 ? 1 - reduced * .6 : 1) };
+    });
+  }
+  drawSoul(parts, frame, C, scale, grade);
+  if (s.eyes) drawEyes(C, scale, frame, s.eyes(t), t);
+}
+
+// MARK: - Scenes
+const SCENES = {};
+
+// 1. Work: he asks for a plan; she drains, splits, reads the rows, gathers, and Done plays exactly as built.
+SCENES.work = () => {
+  const S = 1.8, scan = S + 1.25, scanDur = 5.4, G = scan + scanDur + .35, D = G + .78;
+  const rows = rowGeom().map(g => ({ y: g.y, x0: 26, x1: Math.max(g.titleEnd, 170) }));
+  const work = { split: S, scan, scanDur, gather: G, at: { x: 336, y: 772 }, path: scanPath(rows) };
+  const modes = [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }];
+  return {
+    duration: D + 3.4,
+    soul: { modes, centre: () => HOME, work },
+    lines: [{ text: 'Planning your day.', at: S - .2, until: D }, { text: 'Plan ready. Push A at 12:15 pm.', at: D + .55 }],
+    caps: [
+      { at: 0, text: 'At rest: idle, as built.' },
+      { at: S, text: 'Fade: her colour drains to 60%, the halo goes.' },
+      { at: S + .3, text: 'Split: twelve faint lights. Three go to read.' },
+      { at: scan, text: 'Process: the lights read under each row.' },
+      { at: G, text: 'Gather: the readers fly home first, all land together.' },
+      { at: D, text: 'Done: exactly as built.', haptic: 'success (Done’s own, the only one)' },
+      { at: D + 1.9, text: 'Back to rest.' },
+    ],
+  };
+};
+
+// 2. Thinking with nothing on screen to work on: no readers, the whole soul loosens into a constellation beside
+// her line and gathers back.
+SCENES.think = () => {
+  const S = 1.4, G = S + 5.2, D = G + .7;
+  const work = { split: S, gather: G, at: { x: 336, y: 772 } };
+  return {
+    duration: D + 3,
+    soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME, work },
+    lines: [{ text: 'Thinking.', at: S - .2, until: D }, { text: 'Bench is up 5 kg this month.', at: D + .55 }],
+    caps: [
+      { at: 0, text: 'At rest.' },
+      { at: S, text: 'Nothing to read on screen: she loosens in place.' },
+      { at: S + 1.4, text: 'Lights orbit beside her line; they never cross it.' },
+      { at: G, text: 'Gather.' },
+      { at: D, text: 'Done: exactly as built.', haptic: 'success' },
+    ],
+  };
+};
+
+// 3. Roam: she goes to the row she's changing, works there, and comes home. Then the page scrolls and a row she's
+// sitting on carries her; when it leaves, she comes home.
+SCENES.roam = () => {
+  const geo = rowGeom();
+  const row = 1, g = geo[row];
+  const spot = { x: Math.max(g.titleEnd + 40, 200), y: g.y - 6 };
+  const T1 = 1.6, T1d = .76, S = T1 + .7, G = S + 2.4, D = G + .7, back = D + 1.9;
+  const T2 = back + 1.6; // second act: he scrolls while she's on a row
+  const row2 = 3, spot2 = { x: geo[row2].titleEnd + 40, y: geo[row2].y - 6 };
+  const scrollStart = T2 + 1.6, scrollDur = 1.6;
+  const scroll = t => 330 * ramp(t, scrollStart, scrollDur, bezier(.3, 0, .2, 1));
+  const goes = (t, from, to, at) => {
+    const u = clamp((t - at) / T1d);
+    return { x: lerp(from.x, to.x, travelX(u)), y: lerp(from.y, to.y, travelY(u)) };
+  };
+  const centre = t => {
+    if (t < back) return t < T1 + T1d ? goes(t, HOME, spot, T1) : goes(t, spot, HOME, back);
+    if (t < T2 + T1d) return goes(t, HOME, spot2, T2);
+    // Riding the row while it scrolls; when the row passes under the nav (y < 130) she lets go and flies home.
+    const s = scroll(t);
+    const ride = { x: spot2.x, y: spot2.y - s };
+    const leaveAt = scrollStart + .55;
+    if (t < leaveAt) return ride;
+    const from = { x: spot2.x, y: spot2.y - scroll(leaveAt) };
+    return goes(t, from, HOME, leaveAt);
+  };
+  const work = { split: S, gather: G, at: spot, small: true };
+  return {
+    duration: scrollStart + scrollDur + 2.2,
+    page: t => ({ scroll: scroll(t) }),
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }],
+      centre, work: localWork(work),
+      scale: t => 1,
+    },
+    lines: [{ text: 'Moving Push A to 6 pm.', at: T1 - .1, until: D }, { text: 'Push A moved to 6 pm.', at: D + .5, until: T2 }, { text: 'Book the dentist?', at: T2, until: scrollStart + .6 }],
+    caps: [
+      { at: 0, text: 'Roam: she goes to what she’s changing.' },
+      { at: T1, text: 'An arc to the free space after the row’s words.' },
+      { at: S, text: 'She works there, small, never over the words.' },
+      { at: D, text: 'Done in place, then home on the same arc.', haptic: 'success' },
+      { at: T2, text: 'Sitting on a row, she rides it when the page scrolls.' },
+      { at: scrollStart + .55, text: 'Its row is leaving: she lets go and flies home.' },
+    ],
+  };
+};
+// A small local work state (no readers): the lights orbit tightly round where she sits.
+function localWork(w) {
+  return { ...w, at: w.at, small: true };
+}
+
+// 4. Drag: a press that moves picks her up; she follows a little above the finger with paint lag; let go and she
+// settles at the nearest dock along the throw. A press that holds still is still "hold to talk".
+SCENES.drag = () => {
+  const DOCKS = [HOME, { x: 47, y: 779 }]; // Design 51: two docks only
+  const P = 1.5, pick = P + .12;
+  // Finger path keyframes: [t, x, y]
+  const F = [[P - .3, 346, 830], [P, 346, 806], [pick, 344, 800], [P + .9, 230, 640], [P + 1.6, 120, 720], [P + 2.0, 80, 770]];
+  const rel1 = P + 2.0, settle1 = rel1;
+  const P2 = rel1 + 1.6, F2 = [[P2 - .3, 47, 830], [P2, 47, 806], [P2 + .5, 150, 760], [P2 + .75, 230, 780]];
+  const rel2 = P2 + .75; // flick: released moving up-right, projected to the right-edge dock
+  const fingerAt = (keys, t) => {
+    if (t <= keys[0][0]) return { x: keys[0][1], y: keys[0][2] };
+    for (let i = 1; i < keys.length; i++) if (t <= keys[i][0]) {
+      const [t0, x0, y0] = keys[i - 1], [t1, x1, y1] = keys[i];
+      const u = easeInOut((t - t0) / (t1 - t0)); return { x: lerp(x0, x1, u), y: lerp(y0, y1, u) };
+    }
+    const l = keys[keys.length - 1]; return { x: l[1], y: l[2] };
+  };
+  const finger = t => {
+    if (t < P - .3) return null;
+    if (t < rel1 + .25) { const f = fingerAt(F, t); return { ...f, alpha: t < P - .1 ? ramp(t, P - .3, .2) : 1 - ramp(t, rel1, .25), press: 1 - .1 * ramp(t, P, .1) }; }
+    if (t < P2 - .3) return null;
+    const f = fingerAt(F2, t);
+    return { ...f, alpha: t < P2 - .1 ? ramp(t, P2 - .3, .2) : 1 - ramp(t, rel2, .2), press: 1 };
+  };
+  // She sits 44 pt above the fingertip so the finger never covers her, and follows on the snappy spring.
+  const follow = (keys, t, from) => {
+    const f = fingerAt(keys, t), lag = fingerAt(keys, t - .06);
+    return { x: lerp(lag.x, f.x, .4), y: lerp(lag.y, f.y, .4) - 44 * ramp(t, from, .18) };
+  };
+  const centre = t => {
+    if (t < pick) return HOME;
+    if (t < rel1) {
+      const c = follow(F, t, pick);
+      // Lift from home into the hand: blend from home over 180 ms.
+      const u = ramp(t, pick, .18);
+      return { x: lerp(HOME.x, c.x, u), y: lerp(HOME.y, c.y, u) };
+    }
+    const dropFrom = (() => { const f = fingerAt(F, rel1); return { x: f.x, y: f.y - 44 }; })();
+    if (t < P2 + .12) { const s = spring(t - rel1); return { x: lerp(dropFrom.x, DOCKS[1].x, s), y: lerp(dropFrom.y, DOCKS[1].y, s) }; }
+    if (t < rel2) {
+      const c = follow(F2, t, P2 + .12); const u = ramp(t, P2 + .12, .18);
+      return { x: lerp(DOCKS[1].x, c.x, u), y: lerp(DOCKS[1].y, c.y, u) };
+    }
+    const f = fingerAt(F2, rel2), from = { x: f.x, y: f.y - 44 };
+    const s = spring(t - rel2, .55, .14);
+    return { x: lerp(from.x, DOCKS[0].x, s), y: lerp(from.y, DOCKS[0].y, s) };
+  };
+  const carried = t => (t > pick && t < rel1 + .1) || (t > P2 + .12 && t < rel2 + .1);
+  const scale = t => {
+    const up = ramp(t, pick, .16) * (1 - ramp(t, rel1, .3)) + ramp(t, P2 + .12, .16) * (1 - ramp(t, rel2, .3));
+    return 1 + .22 * up;
+  };
+  // Paint lag: while carried, each dab trails its own amount behind the motion, so she stretches a little.
+  let prev = null;
+  const wobble = (parts, t, C) => {
+    const v = prev ? { x: (C.x - prev.x) * 60, y: (C.y - prev.y) * 60 } : { x: 0, y: 0 };
+    prev = { ...C };
+    const lagK = [0.010, 0.016, 0.022, 0.03, 0.034, 0.026];
+    return parts.map((p, i) => {
+      const k = lagK[PARENT[i]] ;
+      return { ...p, x: p.x - clamp(v.x * k, -14, 14), y: p.y - clamp(v.y * k, -14, 14) };
+    });
+  };
+  return {
+    duration: rel2 + 2.4,
+    finger,
+    soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'listening', at: pick }, { mode: 'idle', at: rel1 + .3 }, { mode: 'listening', at: P2 + .12 }, { mode: 'idle', at: rel2 + .4 }], centre, scale, wobble, haloBoost: t => carried(t) ? 1.12 : 1 },
+    lines: [],
+    caps: [
+      { at: 0, text: 'Drag: press her and move. Holding still is still talk.' },
+      { at: pick, text: 'Picked up after 10 pt of movement: she swells and lifts.', haptic: 'soft impact 0.5, once' },
+      { at: P + .5, text: 'She rides 44 pt above the finger; her paint lags.' },
+      { at: rel1, text: 'Let go: she settles at the nearest dock.', haptic: 'selection' },
+      { at: P2 + .12, text: 'A flick: the throw is projected to a dock.', haptic: 'soft impact 0.5' },
+      { at: rel2, text: 'Home again. Two docks: bottom-right, bottom-left.', haptic: 'selection' },
+    ],
+  };
+};
+
+// 5. Eyes (an option, off by default): two ink dots that blink and glance toward what she's attending to.
+SCENES.eyes = () => {
+  const blinks = [1.2, 3.9, 4.15, 7.3, 10.2];
+  const blink = t => {
+    let o = 1;
+    for (const b of blinks) { const u = (t - b) / .16; if (u > 0 && u < 1) o = Math.min(o, Math.abs(1 - 2 * u)); }
+    return o;
+  };
+  const looks = [[0, 0, 0], [2.2, -1, -.4], [3.2, -1, -1], [5.2, .2, -1], [6.4, 0, 0], [8.4, -.8, .3], [9.6, 0, 0]];
+  const lookAt = t => {
+    let cur = looks[0], nxt = looks[0];
+    for (let i = 0; i < looks.length; i++) if (looks[i][0] <= t) { cur = looks[i]; nxt = looks[i + 1] || looks[i]; }
+    const s = spring(t - cur[0], .3, .05);
+    const prevL = looks[Math.max(0, looks.indexOf(cur) - 1)];
+    return { x: lerp(prevL[1], cur[1], s), y: lerp(prevL[2], cur[2], s) };
+  };
+  const D = 8.0;
+  return {
+    duration: 12,
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }, { mode: 'listening', at: 5.2 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }],
+      centre: () => HOME, scale: () => 1.25,
+      eyes: t => ({ alpha: (1 - ramp(t, D - .05, .12)) + ramp(t, D + 1.75, .2), blink: blink(t), look: lookAt(t) }),
+    },
+    lines: [{ text: 'Call the bank at 9:30?', at: 2.0, until: 5 }, { text: 'Listening.', at: 5.2, until: D }, { text: 'Bank call kept for 9:30.', at: D + .4 }],
+    caps: [
+      { at: 0, text: 'Eyes (a setting, off by default): two dark dots.' },
+      { at: 1.15, text: 'A blink: 160 ms, every 3 to 8 s, now and then a double.' },
+      { at: 2.2, text: 'She glances at her own line when she speaks.' },
+      { at: 3.2, text: 'Then up toward the row she means.' },
+      { at: 5.2, text: 'Listening: eyes up, toward him.' },
+      { at: D, text: 'Done plays exactly as built; the eyes step aside for it.', haptic: 'success' },
+      { at: D + 1.8, text: 'They open again after.' },
+    ],
+  };
+};
+
+// 6. Reduce Motion: nothing travels. The colour drains and the dabs loosen in place; Done is its still frame.
+SCENES.reduced = () => {
+  const S = 1.6, G = 6.2;
+  return {
+    duration: 9,
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }],
+      centre: () => HOME,
+      reduced: t => ramp(t, S, .2) * (1 - ramp(t, G, .2)),
+      frozen: true,
+      eyes: t => { let b = 1; for (const k of [1.1, 3.9, 4.15, 7.6]) { const u = (t - k) / .16; if (u > 0 && u < 1) b = Math.min(b, Math.abs(1 - 2 * u)); } return { alpha: 1, blink: b, look: { x: 0, y: 0 } }; },
+    },
+    lines: [{ text: 'Planning your day.', at: S - .1, until: G }, { text: 'Plan ready. Push A at 12:15 pm.', at: G + .1 }],
+    caps: [
+      { at: 0, text: 'Reduce Motion: no travel. An opacity breath; the blink stays.' },
+      { at: S, text: 'Working: a 200 ms crossfade to faded and loosened.' },
+      { at: G, text: 'Done: a 200 ms crossfade back. Haptics stay.', haptic: 'success' },
+    ],
+  };
+};
+
+
+// 7. Pages: the roam rules on each tab page as it stands now (board item 5). Each segment draws its page, shows
+// the lab overlay of her free ground for a moment (not part of the app), then she goes to one allowed spot,
+// works there, Done plays in place when the 80 × 80 clear holds, and she comes home. Review has no free ground
+// in the bands, so she stays home and the readers scan THE WEEK'S LINES.
+function tabs(active) {
+  const nav = ['Review', 'Today', 'Training', 'Kitchen'];
+  let x = 24;
+  nav.forEach(n => { text(n, x, 82, 16, n === active ? LOOK.ink : LOOK.inkSoft, n === active ? 600 : 500); x += width(n, 16) + 22; });
+  text('7:42', 32, 34, 16, LOOK.ink, 600);
+}
+// The look's ground with its field (ThemeLayers.swift): Celadon's glaze pools 6 % ink-darker over the bottom
+// 260 pt; Lacquer deepens to fieldShade at 75 % over the bottom 45 % with one specular band at −24°, 150 pt,
+// 5 % warm white, blur 14. Porcelain, Plein (flat since #367) and Obsidian are one colour.
+function ground() {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, W, H + CAP);
+  if (LOOK.field === 'glaze') {
+    const g = ctx.createLinearGradient(0, H - 260, 0, H); g.addColorStop(0, rgba(LOOK.ink, 0)); g.addColorStop(1, rgba(LOOK.ink, .06));
+    ctx.fillStyle = g; ctx.fillRect(0, H - 260, W, 260);
+  } else if (LOOK.field === 'lacquer') {
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(.55, rgba(LOOK.fieldShade, 0)); g.addColorStop(1, rgba(LOOK.fieldShade, .75));
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(-24 * Math.PI / 180); ctx.filter = `blur(${14 * DPR}px)`;
+    ctx.fillStyle = rgba(LOOK.fieldSpecular, .05); ctx.fillRect(-W * 1.1, -75, W * 2.2, 150); ctx.restore();
+  }
+  ctx.restore();
+}
+function stroke(x0, x1, y, w, color, alpha, dash) {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round';
+  if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); ctx.restore();
+}
+function dab(x, y, r, color, alpha) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y, r, r * .9, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+function overlay(rects, a) {
+  if (a < .01) return;
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = a; ctx.strokeStyle = LOOK.tess; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+  for (const r of rects) { ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 6); ctx.stroke(); }
+  ctx.restore();
+  text('lab overlay: where she may go', 369, 34, 16, LOOK.tess, 500, 'right', a);
+}
+
+const HOME41 = {
+  rows: [['Call the bank', '9:30 am'], ['Pick up the dry cleaning', ''], ['Book the dentist', ''], ['Water the plants', '6 pm']],
+  draw() {
+    ground(); tabs('Today');
+    text('Thursday night', 24, 138, 21, LOOK.ink, 500);
+    text('paused 21 min ago', 24, 186, 21, LOOK.context, 500);
+    text('Push A, paused', 24, 268, 44, LOOK.ink, 600);
+    text('RESUME PUSH A', 24, 296, 16, LOOK.ink, 700);
+    stroke(24, 369, 304, 1.5, LOOK.ink, .22); stroke(24, 24 + 345 * .22, 304, 1.5, LOOK.ink, 1);
+    text('NEXT', 24, 388, 16, LOOK.inkSoft, 600);
+    this.rows.forEach((r, i) => { const y = 440 + 46 * i; text(r[0], 24, y, 21, LOOK.ink, 500); if (r[1]) text(r[1], 369, y, 16, LOOK.inkSoft, 500, 'right'); });
+  },
+  free() { return this.rows.map((r, i) => ({ x: 24 + width(r[0], 21) + 22, y: 440 + 46 * i - 34, w: 369 - (r[1] ? width(r[1], 16) + 16 : 0) - (24 + width(r[0], 21) + 22), h: 44 })).filter(f => f.w >= 56).concat([{ x: 24, y: 640, w: 345, h: 70 }]); },
+  spot() { const r = this.rows[1]; return { x: 24 + width(r[0], 21) + 40 + 18, y: 440 + 46 - 6 }; },
+};
+const TRAINING = {
+  lanes: [['Bench press', '82.5 × 8', 4], ['Overhead press', '45 × 8', 3], ['Incline dumbbell press', '28 × 10', 3], ['Lateral raise', '9 × 15', 3], ['Triceps pushdown', '30 × 12', 3]],
+  draw() {
+    ground(); tabs('Training');
+    let x = 24; this.lanes.forEach((l, i) => { const w = 30 + l[2] * 12; stroke(x, x + w, 104, 3, LOOK.ink, .14); x += w + 8; });
+    text('today, 5 exercises, about 55 min', 24, 138, 21, LOOK.context, 500);
+    text('Push A', 24, 196, 44, LOOK.ink, 600);
+    text('START PUSH A', 24, 236, 16, LOOK.ink, 700); stroke(24, 369, 244, 1.5, LOOK.ink, 1);
+    this.lanes.forEach((l, i) => {
+      const y = 300 + 72 * i;
+      text(l[0], 24, y, 21, LOOK.ink, 500); text(l[1], 369, y, 16, LOOK.inkSoft, 600, 'right');
+      for (let k = 0; k < l[2]; k++) stroke(24 + 48 * k, 24 + 48 * k + 36, y + 16, 3, LOOK.ink, .22, [6, 5]);
+    });
+    text('PUSH PULL LEGS, ROLLS ON', 24, 688, 16, LOOK.inkSoft, 600); text('ROUTINES', 369, 688, 16, LOOK.ink, 700, 'right');
+    stroke(369 - width('ROUTINES', 16), 369, 696, 1.5, LOOK.ink, 1);
+  },
+  free() { return this.lanes.map((l, i) => { const x0 = 24 + width(l[0], 21) + 22, x1 = 369 - width(l[1], 16) - 16; return { x: x0, y: 300 + 72 * i - 34, w: x1 - x0, h: 44 }; }).filter(f => f.w >= 56); },
+  spot() { const l = this.lanes[0]; return { x: 24 + width(l[0], 21) + 40 + 18, y: 300 - 6 }; },
+};
+const REVIEW = {
+  lines: [['Tue', 'Bench 85 × 8, a best.'], ['Wed', 'First Pull B of the cycle.'], ['Thu', 'Seven tasks done, a record.']],
+  draw() {
+    ground(); tabs('Review');
+    text('the week so far', 24, 138, 21, LOOK.context, 500);
+    text('Three sessions', 24, 196, 44, LOOK.ink, 600);
+    const col = i => 22 + 49.4 * i + 8;
+    'MTWTFSS'.split('').forEach((d, i) => text(d, col(i), 240, 16, i < 3 ? LOOK.inkSoft : i === 3 ? LOOK.ink : LOOK.inkSoft, 500, 'center', i > 3 ? .45 : 1));
+    const band = (y, label, fig) => { text(label, 22, y, 16, LOOK.inkSoft, 600); text(fig, 369, y, 16, LOOK.ink, 600, 'right'); };
+    band(268, 'TRAINING', '3 OF 6'); [0, 1, 3].forEach(i => dab(col(i), 290, 5, LOOK.health || LOOK.context, .5)); stroke(col(2) - 6, col(2) + 6, 290, 2, LOOK.ink, .3);
+    band(326, 'TASKS DONE', '14'); ['3', '4', '2', '5', '·', '·', '·'].forEach((n, i) => text(n, col(i), 350, 16, LOOK.ink, 600, 'center', n === '·' ? .38 : 1));
+    band(380, 'COOK', '2 OF 4'); stroke(col(1) - 4, col(2) + 4, 402, 3, LOOK.now, .5);
+    band(428, 'READ', '3 OF 5'); stroke(col(0) - 4, col(2) + 4, 450, 3, LOOK.context, .5);
+    band(476, 'WEIGHT', '78.2 KG'); stroke(col(0), col(3), 508, 3, LOOK.now, .5); text('78.6', col(0), 528, 16, LOOK.inkSoft, 500, 'center'); text('78.2', col(3), 528, 16, LOOK.inkSoft, 500, 'center');
+    band(546, 'MONEY', '$161'); ['$42', '·', '$78', '$41', '·', '·', '·'].forEach((n, i) => text(n, col(i), 570, 16, LOOK.ink, 600, 'center', n === '·' ? .38 : 1));
+    band(600, 'COOKED', '2'); [1, 2].forEach(i => dab(col(i), 622, 5, LOOK.now, .5));
+    text("THE WEEK'S LINES", 22, 660, 16, LOOK.inkSoft, 600);
+    this.lines.forEach((l, i) => { const y = 686 + 26 * i; text(l[0], 22, y, 16, LOOK.inkSoft, 600); text(l[1], 60, y, 16, LOOK.ink, 500); });
+  },
+  free() { return []; },
+  readRows() { return this.lines.map((l, i) => ({ y: 686 + 26 * i - 2, x0: 60, x1: 60 + width(l[1], 16) })); },
+};
+const KITCHEN = {
+  draw() {
+    ground(); tabs('Kitchen');
+    text('What we eat, and what we need.', 24, 138, 21, LOOK.inkSoft, 500);
+    text('Groceries', 24, 212, 34, LOOK.ink, 600); text('Recipes', 24, 300, 34, LOOK.ink, 600);
+    text('Paste a recipe', 24, 700, 21, LOOK.ink, 600);
+  },
+  free() { return [{ x: 24 + width('Groceries', 34) + 22, y: 212 - 44, w: 369 - (24 + width('Groceries', 34) + 22), h: 56 }, { x: 24 + width('Recipes', 34) + 22, y: 300 - 44, w: 369 - (24 + width('Recipes', 34) + 22), h: 56 }, { x: 24, y: 360, w: 345, h: 300 }]; },
+  spot() { return { x: 24 + width('Groceries', 34) + 40 + 18, y: 212 - 8 }; },
+};
+
+function roamSegment(page, line, doneLine, caps) {
+  const T1 = 1.5, S = T1 + .76 + .2, G = S + 2.3, D = G + .7, back = D + 1.9, end = back + .76 + .9;
+  const spot = page.spot();
+  const goes = (t, from, to, at) => { const u = clamp((t - at) / .76); return { x: lerp(from.x, to.x, travelX(u)), y: lerp(from.y, to.y, travelY(u)) }; };
+  return {
+    duration: end,
+    draw: t => { page.draw(); overlay(page.free(), ramp(t, .2, .3) * (1 - ramp(t, 1.2, .3))); },
+    soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: t => t < back ? goes(t, HOME, spot, T1) : goes(t, spot, HOME, back), work: localWork({ split: S, gather: G, at: spot }) },
+    lines: [{ text: line, at: T1 - .1, until: D }, { text: doneLine, at: D + .5 }],
+    caps: [{ at: 0, text: caps[0] }, { at: .2, text: caps[1] }, { at: .9, text: caps[2] }, { at: T1, text: 'She goes to the thing she is changing.' }, { at: S, text: 'Works there, small.' }, { at: D, text: 'Done in place: the 80 × 80 clear holds.', haptic: 'success' }, { at: back, text: 'Home on the same arc.' }],
+  };
+}
+SCENES.pages = () => {
+  const segs = [
+    roamSegment(HOME41, 'Moving the dry cleaning to Saturday.', 'Dry cleaning moved to Saturday.',
+      ['Home after Design 41: one line per thing.', 'May go: after a Next row, under the last row.', 'Never the hero, the key or the day word.']),
+    roamSegment(TRAINING, 'Bench at 85 today.', 'Bench set to 85 × 8.',
+      ['Training at rest: the plan as lanes.', 'Free ground: the gap between a name and its target, 56 pt or wider. Never the strip, the Start mark, the strokes.', 'She sits in the lane’s gap, above the strokes.']),
+    (() => {
+      const S = 1.5, scan = S + 1.2, scanDur = 2.6, G = scan + scanDur + .3, D = G + .78, end = D + 3;
+      const rows = REVIEW.readRows();
+      return {
+        duration: end,
+        draw: t => { REVIEW.draw(); overlay(rows.map(r => ({ x: r.x0 - 6, y: r.y - 14, w: r.x1 - r.x0 + 12, h: 24 })), ramp(t, .2, .3) * (1 - ramp(t, 1.2, .3))); },
+        soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME, work: { split: S, scan, scanDur, gather: G, at: { x: 336, y: 772 }, path: scanPath(rows) } },
+        lines: [{ text: 'Reading your week.', at: S - .1, until: D }, { text: 'Tuesday’s bench was the best.', at: D + .5 }],
+        caps: [{ at: 0, text: 'Review: the week as bands.' }, { at: .2, text: 'No free ground in the bands. She stays home.' }, { at: scan, text: 'Readers only under THE WEEK’S LINES.' }, { at: D, text: 'Done at home.', haptic: 'success' }],
+      };
+    })(),
+    roamSegment(KITCHEN, 'Adding dal to Groceries.', 'Dal added to Groceries, 7 things.',
+      ['Kitchen: two words and a foot line.', 'May go: after each word, and the space below.', 'She sits beside the word she adds to.']),
+  ];
+  let at = 0; for (const s of segs) { s.start = at; at += s.duration; }
+  return { duration: at, segments: segs };
+};
+
+
+// 8. Reward: the done pattern from task-reward.md after Design 41 (the fleck arcs to the day label), with the
+// soul's own beat at the bloom (board item 6): a small gather, the brighten as written, one blink. One haptic
+// per moment, none of them hers.
+SCENES.reward = () => {
+  const A = 1.0, armed = A + .62, go = armed + .5; // finger starts, strike armed at 140 pt, let go
+  const land = go + .52, D = go;
+  const rowIdx = 0, rowY = 440, nameW = width('Call the bank', 21);
+  const labelEnd = 24 + width('Thursday night', 21);
+  const bloomAt = { x: labelEnd + 16, y: 138 - 7 };
+  const fingerX = t => t < A ? 36 : t < armed ? lerp(36, 36 + 140, easeInOut((t - A) / (armed - A))) : t < go ? 176 + 6 * Math.sin((t - armed) * 6) : 176;
+  const strikeEnd = t => {
+    if (t < A) return 0;
+    if (t < armed) return clamp(fingerX(t) - 24, 0, nameW);
+    return lerp(140, nameW, ramp(t, armed, .16, bezier(.3, 0, .2, 1))); // runs itself out
+  };
+  const fold = t => ramp(t, go + .08, .32, bezier(.3, 0, .2, 1)); // the row folds, rows below rise
+  const beat = t => {
+    const up = ramp(t, land, .18, easeOut), down = ramp(t, land + .18, .32, bezier(.3, 0, .2, 1));
+    const g = up * (1 - down);
+    const dry = 1 - ramp(t, land + .2, .9);
+    return { scale: 1 + .12 * g, gather: g, sat: .3 * g * dry };
+  };
+  const eyes = t => {
+    let blink = 1; const u = (t - land) / .16; if (u > 0 && u < 1) blink = Math.abs(1 - 2 * u);
+    const glance = ramp(t, go, .3, easeOut) * (1 - ramp(t, land + .42, .3));
+    return { alpha: 1, blink, look: { x: -1 * glance, y: -1 * glance } };
+  };
+  return {
+    duration: land + 3.2,
+    draw: t => {
+      ground(); tabs('Today');
+      text('Thursday night', 24, 138, 21, LOOK.ink, 500);
+      // The bloom at the day label: a 30 pt wash that grows and fades over 900 ms.
+      const b = ramp(t, land, .9);
+      if (b > 0 && b < 1) {
+        ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalCompositeOperation = LOOK.blend;
+        const r = 30 * lerp(.4, 1.2, easeOut(b)); const g = ctx.createRadialGradient(bloomAt.x, bloomAt.y, 0, bloomAt.x, bloomAt.y, r);
+        g.addColorStop(0, rgba(LOOK.context, .6 * (1 - b))); g.addColorStop(1, rgba(LOOK.context, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bloomAt.x, bloomAt.y, r, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      }
+      text('paused 21 min ago', 24, 186, 21, LOOK.context, 500);
+      text('Push A, paused', 24, 268, 44, LOOK.ink, 600);
+      text('RESUME PUSH A', 24, 296, 16, LOOK.ink, 700);
+      stroke(24, 369, 304, 1.5, LOOK.ink, .22); stroke(24, 24 + 345 * .22, 304, 1.5, LOOK.ink, 1);
+      text('NEXT', 24, 388, 16, LOOK.inkSoft, 600);
+      const f = fold(t);
+      HOME41.rows.forEach((r, i) => {
+        if (i === rowIdx) {
+          if (f >= 1) return;
+          const a = (1 - f) * (t >= go ? lerp(1, .45, ramp(t, go, .5)) : 1);
+          text(r[0], 24, rowY, 21, LOOK.ink, 500, 'left', a);
+          if (r[1]) text(r[1], 369, rowY, 16, LOOK.inkSoft, 500, 'right', (1 - clamp(strikeEnd(t) / 40)) * (1 - f));
+          const e = strikeEnd(t);
+          if (e > 0) stroke(24, 24 + e, rowY + 6, 2, LOOK.context, (t >= go ? lerp(1, .45, ramp(t, go, .7)) : 1) * (1 - f));
+          return;
+        }
+        const y = 440 + 46 * i - (i > rowIdx ? 46 * f : 0);
+        text(r[0], 24, y, 21, LOOK.ink, 500); if (r[1]) text(r[1], 369, y, 16, LOOK.inkSoft, 500, 'right');
+      });
+      // The fleck: a 12 pt lens of the pigment leaves the strike's end and arcs up to the day label.
+      const u = ramp(t, go, .52, bezier(.3, 0, .2, 1));
+      if (t >= go && u < 1) {
+        const from = { x: 24 + nameW, y: rowY + 6 }, to = bloomAt, cx = (from.x + to.x) / 2 + 70, cy = (from.y + to.y) / 2 - 60;
+        const x = (1 - u) * (1 - u) * from.x + 2 * (1 - u) * u * cx + u * u * to.x, y = (1 - u) * (1 - u) * from.y + 2 * (1 - u) * u * cy + u * u * to.y;
+        const sc = lerp(1.2, .7, u);
+        ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = LOOK.context; ctx.beginPath(); ctx.ellipse(x, y, 6 * sc, 1.6 * sc, -.5, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      }
+      // UNDO under her line, with the line.
+      if (t > go + .08) { const a = ramp(t, go + .08, .3); text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, a); }
+    },
+    finger: t => (t < A - .2 || t > go + .15) ? null : { x: fingerX(t), y: rowY - 6, alpha: ramp(t, A - .2, .2) * (1 - ramp(t, go, .15)) },
+    soul: { modes: [{ mode: 'idle', at: -10 }], centre: () => HOME, beat, eyes, scale: () => 1 },
+    lines: [{ text: 'Call the bank done.', at: go + .08 }],
+    caps: [
+      { at: 0, text: 'Done, after Design 41: swipe right on a row.' },
+      { at: armed, text: 'Armed at 140 pt: the strike runs itself out.', haptic: 'selection' },
+      { at: go, text: 'Let go: the fleck leaves for the day label.', haptic: 'the done pattern (QueueRow’s)' },
+      { at: go + .02, text: 'Her eyes glance at the row. No beat yet.', haptic: 'the done pattern (QueueRow’s)' },
+      { at: land, text: 'Bloom. Her beat: a small gather, brighter, one blink.', haptic: 'soft impact 0.4 (the bloom’s, not hers)' },
+      { at: land + .5, text: 'Dry by 940 ms. Done’s pour never plays for his win.' },
+    ],
+  };
+};
+
+
+// 9. Living colour (board item 7, Design 48): a palette change arrives as paint through her own dabs. Each dab,
+// 120 ms after the last (cool, warm, bright), pools its new pigment from its centre outward (900 ms, house
+// curve); while it pools it's wet (swells to 1.12, brightens by a third), then dries back over 2.8 s in all. No
+// haptic, no line, no sound; the blur doesn't change; text never follows. A capture mid-repaint: work wins.
+const PALETTES = {
+  today: { light: [LOOK.tess, LOOK.live, LOOK.now], dark: [LOOK.tess, LOOK.live, LOOK.now] },
+  kiln: { light: ['#2F3C9E', '#C4553B', '#D79A2B'], dark: ['#7C8BF2', '#EB7A5C', '#E9B14E'] }, // dark deepened 8% (Design, d2145ec)
+  lagoon: { light: ['#0E8C86', '#F0624D', '#EDB730'], dark: ['#4FD8CF', '#FF8A75', '#FFD563'] },
+  orchard: { light: ['#6E3A8E', '#E2557A', '#F29A5B'], dark: ['#C39BFF', '#FF86A6', '#FFBC86'] },
+  aurora: { light: ['#2F6FE0', '#14A37F', '#8C5BD6'], dark: ['#7FB0FF', '#4FE0B5', '#BC97FF'] },
+  ember: { light: ['#3433D6', '#D6266E', '#F2B21B'], dark: ['#9A98FF', '#FF5C9A', '#FFD24A'] },
+};
+// Palette order is cool, warm, bright; her dabs are vermilion (warm), cobalt (cool), cadmium (bright).
+const pigments = name => { const p = PALETTES[name][LOOK.dark ? 'dark' : 'light']; return [p[1], p[0], p[2]]; };
+const houseCurve = bezier(.3, 0, .2, 1);
+function repaintState(changes, t, cut) {
+  // changes: [{at, to}]; the dab order of the pool is cool (cobalt, dab 1), warm (0), bright (2), 120 ms apart.
+  let from = pigments('today'), to = from, reveal = [0, 0, 0], wet = [0, 0, 0];
+  for (const c of changes) {
+    if (t < c.at) break;
+    const order = [1, 0, 2];
+    from = to; to = pigments(c.to);
+    reveal = [0, 0, 0]; wet = [0, 0, 0];
+    order.forEach((dab, k) => {
+      const start = c.at + .12 * k;
+      let u = (t - start) / .9;
+      // A capture that starts mid-repaint: the pool finishes inside the fade's 500 ms (work wins).
+      if (cut && cut > c.at && t > cut) u = Math.max(u, (t - cut) / .5 + (cut - start) / .9);
+      reveal[dab] = houseCurve(clamp(u));
+      const dryEnd = c.at + .12 * k + 2.8;
+      const w = clamp((t - start) / .25) * (1 - clamp((t - start - .9) / (dryEnd - start - .9)));
+      wet[dab] = cut && t > cut ? w * (1 - clamp((t - cut) / .5)) : w;
+    });
+  }
+  return { from, to, reveal, wet };
+}
+SCENES.colour = () => {
+  const changes = [{ at: 1.2, to: 'lagoon' }, { at: 6.0, to: 'kiln' }, { at: 10.8, to: 'ember' }, { at: 16.4, to: 'today' }];
+  const CUT = 17.0, G = CUT + 2.8, D = G + .78; // a capture lands 600 ms into the last repaint
+  const work = { split: CUT, gather: G, at: { x: 336, y: 772 } };
+  return {
+    duration: D + 3.4,
+    draw: t => { HOME41.draw(); },
+    soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME, palette: t => repaintState(changes, t, CUT), work, scale: () => 1.35 },
+    lines: [{ text: 'Bench best today.', at: 10.8 - 2, until: 16 }, { text: 'Planning your day.', at: CUT - .1, until: D }, { text: 'Plan ready. Push A at 12:15 pm.', at: D + .5 }],
+    caps: [
+      { at: 0, text: 'Living colour: Today, at rest. Shown at 1.35× for the camera.' },
+      { at: 1.2, text: 'Morning: Lagoon pools in, cool, warm, bright, 120 ms apart.' },
+      { at: 2.3, text: 'Wet while it pools: 1.12, a third brighter; dry over 2.8 s.' },
+      { at: 6.0, text: 'Evening: Kiln. No haptic, no line, no sound.' },
+      { at: 10.8, text: 'A best: Ember. Her voice stays cobalt; text never follows.' },
+      { at: 16.4, text: 'Back to Today, and a capture lands mid-pool:' },
+      { at: CUT, text: 'Work wins: the pool finishes inside the 500 ms fade.' },
+      { at: D, text: 'Done: its own colour and motion, fixed.', haptic: 'success' },
+    ],
+  };
+};
+
+
+// 10. Listening and asking (board item 8): the soul from the Speak surface, the hold in the corner, a Claude call
+// out, and the wait beside a one-ask line. Nothing on the page moves for her slot (band 736 to 820).
+function level(t) { return .5 + .5 * Math.sin(t * 9.1) * Math.sin(t * 4.3) * Math.sin(t * 1.7 + 1); }
+function veil(a) {
+  if (a < .01) return;
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = Math.min(a * .5, .8); ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, W, H); ctx.restore();
+}
+function wordsStream(words, x, y, at, align = 'left', color = LOOK.inkSoft) {
+  // Each word rises out of a 6 pt blur, 180 ms apart.
+  let cx = x; const ws = words.map(w => width(w + ' ', 21)); if (align === 'right') cx = x - ws.reduce((a, b) => a + b, 0);
+  words.forEach((w, i) => {
+    const a = ramp(at, i * .18, .26); if (a <= 0) return;
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.filter = `blur(${((1 - a) * 6 * DPR).toFixed(2)}px)`; ctx.globalAlpha = a; ctx.font = font(21, 400); ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.fillText(w, cx, y); ctx.restore();
+    cx += ws[i];
+  });
+}
+SCENES.ask = () => {
+  const segs = [];
+  // (a) Speak from the surface: tap the soul, the words rise, tap Speak, she travels to (196, 698) and blooms.
+  segs.push((() => {
+    const tap = .8, speak = tap + 1.3, end = speak + 3.6, dry = end + .4, D = dry + 3.0;
+    const LISTEN = { x: 196, y: 698 };
+    const goes = (t, from, to, at) => { const u = spring(t - at, .42, .12); return t < at ? from : { x: lerp(from.x, to.x, u), y: lerp(from.y, to.y, u) }; };
+    const back = D + .05; // the ghost dries on the surface; then she gathers back and the page comes forward
+    const centre = t => t < speak ? HOME : t < back ? goes(t, HOME, LISTEN, speak) : goes(t, LISTEN, HOME, back);
+    return {
+      duration: D + 2.6,
+      draw: t => {
+        HOME41.draw();
+        const open = ramp(t, tap, .32) * (1 - ramp(t, back, .42));
+        veil(open * 1.6);
+        const col = ['Speak', 'Write', 'Show'];
+        col.forEach((w, i) => { const a = open * (t > speak ? 1 - ramp(t, speak, .2) : 1) * (i === 0 && t > speak - .02 ? 1 : 1); if (a > 0) text(w, 300, 560 + 48 * i, 21, LOOK.ink, 500, 'left', a); });
+        if (t > speak - .02 && t < end + .22) { // the ink line under Speak, then the listening block
+          text('Listening', 24, 470, 21, LOOK.tess, 500, 'left', ramp(t, speak, .3) * (1 - ramp(t, end, .2)));
+          wordsStream(['oat', 'milk', 'and', 'um', 'eggs'], 24, 506, t - speak - .9, 'left');
+        }
+        if (t > end) { // tidy into the clean sentence, the ghost at 45 %, the Heard line, the cobalt line draining
+          const a = ramp(t, end, .3) * (1 - ramp(t, D - .1, .25));
+          text('Oat milk and eggs, on Groceries.', 24, 506, 21, LOOK.ink, 500, 'left', a * .45);
+          text('Heard: oat milk and um eggs', 24, 536, 16, LOOK.inkSoft, 500, 'left', a);
+          const drain = 1 - ramp(t, dry, 3.0, x => x);
+          stroke(24, 24 + 300 * drain, 520, 2.5, LOOK.tess, a);
+        }
+        if (t > D + .25) { const a = ramp(t, D + .25, .3); text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, a); }
+      },
+      finger: t => (t > tap - .15 && t < tap + .2) ? { x: HOME.x, y: HOME.y, alpha: 1 - ramp(t, tap, .2) } : (t > speak - .15 && t < speak + .2) ? { x: 322, y: 552, alpha: 1 - ramp(t, speak, .2) } : null,
+      soul: {
+        modes: [{ mode: 'idle', at: -10 }, { mode: 'listening', at: speak }, { mode: 'idle', at: end + .1 }],
+        centre, scale: t => t > speak && t < back ? lerp(1, t < end ? 1.4 + .15 * level(t) : 1.2, ramp(t, speak, .3)) : 1,
+        eyes: t => ({ alpha: 1, blink: t > end && t < end + .16 ? Math.abs(1 - 2 * (t - end) / .16) : 1, look: { x: 0, y: t > speak && t < end ? -1 : 0 } }),
+      },
+      lines: [{ text: 'Added oat milk and eggs to Groceries.', at: D + .25 }],
+      caps: [{ at: 0, text: 'Speak from the surface: tap her, then Speak.' }, { at: speak, text: 'She travels to the bloom and breathes with the mic.' }, { at: speak + .5, text: 'Eyes up, toward him. No blink while listening.' }, { at: end, text: 'A pause ends it; one blink; the ghost dries 3 s.' }, { at: D + .05, text: 'Dry: she gathers back to the corner, the page comes forward.' }, { at: D + .25, text: 'Her line, with UNDO. No haptic of hers.', haptic: 'soft impact 0.6 (the made, the row’s)' }],
+    };
+  })());
+  // (b) The hold in the corner, then a Claude call out: work state, no readers, Done, the line.
+  segs.push((() => {
+    const press = .6, hold = press + .4, rel = hold + 2.4, CUT = rel + .55, G = CUT + 3.4, D = G + .78;
+    return {
+      duration: D + 3,
+      draw: t => {
+        HOME41.draw();
+        if (t > hold && t < rel + .25) wordsStream(['remind', 'me', 'to', 'call', 'mom', 'at', 'six'], 330, 720, t - hold - .3, 'right');
+        if (t > D + .25) { const a = ramp(t, D + .25, .3); text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, a); }
+      },
+      finger: t => (t > press - .15 && t < rel + .2) ? { x: HOME.x, y: HOME.y + 6, alpha: ramp(t, press - .15, .15) * (1 - ramp(t, rel, .2)), press: 1 - .1 * ramp(t, press, .1) } : null,
+      soul: {
+        modes: [{ mode: 'idle', at: -10 }, { mode: 'listening', at: hold }, { mode: 'idle', at: rel + .22 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }],
+        centre: () => HOME, work: { split: CUT, gather: G, at: { x: 336, y: 772 } },
+        scale: t => t > press && t < hold ? 1.06 : t >= hold && t < rel + .22 ? lerp(1.06, 1.4 + .15 * level(t), ramp(t, hold, .25)) : 1,
+        eyes: t => ({ alpha: 1, blink: 1, look: { x: 0, y: t > hold && t < rel ? -1 : 0 } }),
+      },
+      lines: [{ text: 'Asking Claude.', at: CUT - .1, until: D }, { text: 'Call mom, today 6 pm.', at: D + .25 }],
+      caps: [{ at: 0, text: 'The fast path: hold her at rest.' }, { at: hold, text: 'After 400 ms she swells in place and listens.' }, { at: rel, text: 'Let go sends it. A miss goes to Claude:' }, { at: CUT, text: 'Work: fade and split, no readers (nothing to read).' }, { at: G, text: 'Gather.' }, { at: D, text: 'Done, as built.', haptic: 'success' }],
+    };
+  })());
+  // (c) The wait beside a one-ask line: breath slows to 4.8 s, she leans 4 pt toward her line, eyes on the words.
+  segs.push((() => {
+    const askAt = .8, tapAt = askAt + 3.4, ans = tapAt + .35;
+    const lean = t => 4 * ramp(t, askAt, .5) * (1 - ramp(t, tapAt, .3));
+    return {
+      duration: ans + 3.2,
+      draw: t => {
+        HOME41.draw();
+        if (t > askAt && t < ans) {
+          const a = ramp(t, askAt, .3) * (1 - ramp(t, tapAt + .1, .2));
+          const w1 = '2 SETS', w2 = '2 KG';
+          text(w1, 24, 812, 16, LOOK.ink, 700, 'left', a); text(w2, 24 + width(w1, 16) + 30, 812, 16, LOOK.ink, 700, 'left', a * (t > tapAt ? 1 - ramp(t, tapAt, .2) : 1));
+          if (t > tapAt) stroke(24, 24 + width(w1, 16) * ramp(t, tapAt, .15, houseCurve), 818, 1.5, LOOK.ink, 1);
+        }
+        if (t > ans + .25) { const a = ramp(t, ans + .25, .3); text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, a); }
+      },
+      finger: t => (t > tapAt - .15 && t < tapAt + .2) ? { x: 48, y: 806, alpha: 1 - ramp(t, tapAt, .2) } : null,
+      soul: {
+        modes: [{ mode: 'idle', at: -10 }], centre: t => ({ x: HOME.x - lean(t), y: HOME.y }),
+        // The breath slows from 3.2 s to 4.8 s while the ask waits (chromeBreath is 3.2 s; the slow one is drawn here).
+        scale: t => { const w = ramp(t, askAt, .5) * (1 - ramp(t, tapAt, .3)); return lerp(1, (1 + .08 * easeInOut(1 - Math.abs(2 * ((t % 9.6) / 9.6) - 1))) / chromeBreath(t), w); },
+        eyes: t => ({ alpha: 1, blink: t > tapAt && t < tapAt + .16 ? Math.abs(1 - 2 * (t - tapAt) / .16) : 1, look: { x: t > askAt && t < ans ? -1 : 0, y: t > askAt && t < ans ? .6 : 0 } }),
+      },
+      lines: [{ text: '2 × 10: 2 sets, or 2 kg?', at: askAt, until: tapAt + .1 }, { text: 'Logged bench 2 × 10 at 80.', at: ans + .25 }],
+      caps: [{ at: 0, text: 'One ask: his phrase raised a choice.' }, { at: askAt, text: 'The wait: breath slows to 4.8 s, a 4 pt lean to her line.' }, { at: askAt + 1, text: 'Eyes on the two words. No glow, no colour, no split.' }, { at: tapAt, text: 'A tap: the ink line draws; one blink; she settles back.', haptic: 'selection (the ask’s)' }, { at: ans + .25, text: 'Her answer with UNDO. Nothing on the page moved.' }],
+    };
+  })());
+  let at = 0; for (const s of segs) { s.start = at; at += s.duration; }
+  return { duration: at, segments: segs };
+};
+
+// 11. Outside the app (board item 9, Design 54 + 36): she is not drawn there. A widget is her line and nothing
+// else; the accessories are words and a time; a Live Activity is Cobalt sky (her voice as a ground, not her
+// body) whose only motion is the system's push and the washes warming on Go; the Island is black. The one
+// moment that is hers is the return: a tap brings the app forward with her at her dock at rest, the return
+// line draws in beside her and she glances once. No beat, no colour, no haptic of hers for what happened
+// while the app was closed.
+const SKY = { cobalt: '#2450D8', violet: '#6A4C9C', cadmium: '#F0A500', vermilion: '#E2432A', cream: '#F6EFE4' };
+function mixHex(a, b, u) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const c = s => Math.round(lerp((pa >> s) & 255, (pb >> s) & 255, u));
+  return `rgb(${c(16)},${c(8)},${c(0)})`;
+}
+function tick(x, y, s, color, alpha) {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(x - s * .5, y); ctx.lineTo(x - s * .12, y + s * .38); ctx.lineTo(x + s * .55, y - s * .42); ctx.stroke(); ctx.restore();
+}
+// The Lock Screen with the rest Live Activity. `go` is seconds since the rest came up (negative while resting;
+// the countdown shows -go). `alpha` fades the whole thing when the app comes forward.
+function drawLockScreen(go, t, alpha = 1) {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha;
+  const wall = ctx.createLinearGradient(0, 0, 0, H); wall.addColorStop(0, '#1C1B24'); wall.addColorStop(1, '#09090D');
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+  const cream = SKY.cream;
+  text('Thursday, October 16', 196, 92, 16, cream, 500, 'center', .8 * alpha);
+  text('7:42', 196, 212, 88, cream, 300, 'center', alpha);
+  // The face: the system's material, clipped, with the two washes.
+  const F = { x: 16, y: 300, w: 361, h: 160, r: 24 };
+  const warm = clamp(go / 1.4); const wu = houseCurve(warm);
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha;
+  ctx.beginPath(); ctx.roundRect(F.x, F.y, F.w, F.h, F.r); ctx.clip();
+  ctx.fillStyle = 'rgba(30,30,40,0.88)'; ctx.fillRect(F.x, F.y, F.w, F.h);
+  const w1 = ctx.createRadialGradient(F.x + 40, F.y + 10, 0, F.x + 40, F.y + 10, 200); w1.addColorStop(0, mixHex(SKY.cobalt, SKY.cadmium, wu)); w1.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalAlpha = alpha * .55; ctx.fillStyle = w1; ctx.beginPath(); ctx.arc(F.x + 40, F.y + 10, 200, 0, Math.PI * 2); ctx.fill();
+  const w2 = ctx.createRadialGradient(F.x + F.w - 30, F.y, 0, F.x + F.w - 30, F.y, 190); w2.addColorStop(0, mixHex(SKY.violet, SKY.vermilion, wu)); w2.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalAlpha = alpha * .5; ctx.fillStyle = w2; ctx.beginPath(); ctx.arc(F.x + F.w - 30, F.y, 190, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = alpha;
+  // Left: the countdown, then Go pushing in from below (the system's push, 350 ms).
+  const push = clamp(go / .35), pu = easeOut(push);
+  if (push < 1) {
+    const secs = Math.max(0, Math.ceil(-go)); const dy = -24 * pu, a = 1 - pu;
+    ctx.globalAlpha = alpha * a; ctx.fillStyle = cream; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    ctx.font = font(48, 300); ctx.fillText('0', F.x + 20, F.y + 76 + dy);
+    const w0 = ctx.measureText('0').width; ctx.globalAlpha = alpha * a * .55; ctx.fillText(':', F.x + 20 + w0, F.y + 76 + dy);
+    const wc = ctx.measureText(':').width; ctx.globalAlpha = alpha * a; ctx.fillText(String(secs).padStart(2, '0'), F.x + 20 + w0 + wc, F.y + 76 + dy);
+  }
+  if (go > 0) { ctx.globalAlpha = alpha * pu; ctx.fillStyle = cream; ctx.font = font(48, 300); ctx.textAlign = 'left'; ctx.fillText('Go', F.x + 20, F.y + 76 + 24 * (1 - pu)); }
+  // Right column: the set as the Done button, the vermilion tick; on Go a soft glow breathes behind it.
+  ctx.globalAlpha = alpha * .62; ctx.fillStyle = cream; ctx.font = font(17, 400); ctx.textAlign = 'right'; ctx.fillText('Bench', F.x + F.w - 22, F.y + 40);
+  ctx.globalAlpha = alpha; ctx.font = font(24, 400); ctx.fillText('82.5 × 8', F.x + F.w - 22, F.y + 70);
+  if (go > 0) { const b = .22 + .14 * Math.sin(t * 2.4); const gl = ctx.createRadialGradient(F.x + F.w - 34, F.y + 94, 0, F.x + F.w - 34, F.y + 94, 26); gl.addColorStop(0, rgba(SKY.vermilion, b * wu)); gl.addColorStop(1, rgba(SKY.vermilion, 0)); ctx.globalAlpha = alpha; ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(F.x + F.w - 34, F.y + 94, 26, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+  tick(F.x + F.w - 34, F.y + 94, 14, SKY.vermilion, alpha);
+  // The horizon: a 1.5 pt guide at 14 %, the 2.5 pt cream line draining along it as the rest runs out.
+  const x0 = F.x + 20, x1 = F.x + F.w - 20, hy = F.y + 118;
+  stroke(x0, x1, hy, 1.5, cream, .14 * alpha);
+  const remain = go < 0 ? clamp(-go / 150) : 0; // 0:04 left of a 2:30 rest
+  if (remain > 0) stroke(x0, x0 + (x1 - x0) * remain, hy, 2.5, cream, alpha);
+  // Bottom row.
+  const bottomA = alpha * .8;
+  if (push < 1) text('Rest, then set 4', x0, F.y + 144, 16, cream, 500, 'left', bottomA * (1 - pu));
+  if (go > 0) text('Rested 2:30', x0, F.y + 144, 16, cream, 500, 'left', bottomA * pu);
+  text('Skip', x1, F.y + 144, 16, cream, 600, 'right', alpha);
+  const skipW = width('Skip', 16, 600);
+  text('|', x1 - skipW - 12, F.y + 144, 16, cream, 400, 'right', .3 * alpha);
+  text('+15', x1 - skipW - 28, F.y + 144, 16, cream, 600, 'right', alpha * lerp(1, .25, pu));
+}
+SCENES.outside = () => {
+  const segs = [];
+  // (a) The rest face on the Lock Screen: the last seconds, then Go. Nothing of her is on it.
+  segs.push((() => {
+    const up = 4.0, tapAt = 6.9, D = tapAt + .25;
+    return {
+      duration: D,
+      draw: t => drawLockScreen(t - up, t, 1),
+      finger: t => (t > tapAt - .15 && t < D) ? { x: 196, y: 380, alpha: 1 - ramp(t, tapAt, .2) } : null,
+      soul: { hidden: true, modes: [{ mode: 'idle', at: -10 }], centre: () => HOME },
+      lines: [],
+      caps: [
+        { at: 0, text: 'Outside the app she isn’t drawn: no dabs, no eyes.' },
+        { at: 1.4, text: 'Rest face: Cobalt sky in every look. Her voice, not her.' },
+        { at: up, text: 'Go: the system’s push; washes warm 1.4 s. Not her beat.' },
+        { at: up + 1.7, text: 'Widgets, accessories, Island: words and a time only.' },
+      ],
+    };
+  })());
+  // (b) The tap brings the app forward; she is at her dock, at rest; the return line draws in; one glance.
+  segs.push((() => {
+    const fwd = .05, line = fwd + .55, back = line + .75, D = line + 3.6;
+    return {
+      duration: D,
+      draw: t => {
+        ground(); tabs('Today');
+        text('Thursday night', 24, 138, 21, LOOK.ink, 500);
+        text('running now', 24, 186, 21, LOOK.context, 500);
+        text('Push A, bench set 5', 24, 268, 34, LOOK.ink, 600);
+        text('RESUME PUSH A', 24, 296, 16, LOOK.ink, 700);
+        // Running, not paused: the key's fill is liveInk (41.5), and UNDO under her line is liveInk too.
+        stroke(24, 369, 304, 1.5, LOOK.ink, .22); stroke(24, 24 + 345 * .48, 304, 1.5, LOOK.live, 1);
+        text('NEXT', 24, 388, 16, LOOK.inkSoft, 600);
+        HOME41.rows.forEach((r, i) => { const y = 440 + 46 * i; text(r[0], 24, y, 21, LOOK.ink, 500); if (r[1]) text(r[1], 369, y, 16, LOOK.inkSoft, 500, 'right'); });
+        if (t > line) { const a = ramp(t, line, .3); text('UNDO', 24, 812, 16, LOOK.live, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.live, a); }
+        const cover = 1 - ramp(t, fwd, .38, houseCurve); // the Lock Screen gives way to the app (the system's transition)
+        if (cover > 0) drawLockScreen(3.0, t + 7, cover);
+      },
+      soul: {
+        modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+        eyes: t => { const g = ramp(t, line, .3, easeOut) * (1 - ramp(t, back, .3)); return { alpha: ramp(t, fwd, .38), blink: 1, look: { x: -1 * g, y: .6 * g } }; },
+      },
+      lines: [{ text: 'Set 4 logged.', at: line }],
+      caps: [
+        { at: 0, text: 'A tap opens the app. She is at her dock, at rest.' },
+        { at: line, text: 'The return line, with UNDO. One glance, 300 ms.' },
+        { at: line + 1.3, text: 'No beat, no colour, no haptic of hers: that moment is gone.' },
+        { at: line + 2.5, text: 'Living colour never reaches Lock Screen, widgets, icon.' },
+      ],
+    };
+  })());
+  let at = 0; for (const s of segs) { s.start = at; at += s.duration; }
+  return { duration: at, segments: segs };
+};
+
+// 12. A full minute of Home at rest (board item 12): nothing happens, and that is the test. Breath 3.2 s, the
+// idle tracks (lift 9 s, drift 11 / 7.5 s, halo 7 s), blinks every 3 to 8 s with a double about one in five, no
+// glance (nothing appeared), no roam, no repaint. Deterministic so the clip and the build can be compared.
+function blinkSchedule(seed = 7, until = 60) {
+  let x = seed; const rnd = () => { x = (x * 1103515245 + 12345) % 2147483648; return x / 2147483648; };
+  const out = []; let t = 2.4 + rnd() * 2;
+  while (t < until) { out.push(t); if (rnd() < .2) out.push(t + .25); t += 3 + rnd() * 5; }
+  return out;
+}
+SCENES.minute = () => {
+  const blinks = blinkSchedule();
+  const blink = t => { let o = 1; for (const b of blinks) { const u = (t - b) / .16; if (u > 0 && u < 1) o = Math.min(o, Math.abs(1 - 2 * u)); } return o; };
+  const caps = [{ at: 0, text: 'A minute at rest. Breath 3.2 s; lift 9 s; halo 7 s.' }];
+  for (let s = 10; s < 60; s += 10) {
+    const n = blinks.filter(b => b < s).length;
+    caps.push({ at: s, text: `0:${s}. ${n} blinks so far. No glance, no roam, no repaint.` });
+  }
+  caps[3].text = '0:30. Idle ticks at 30 fps; every frame is under 2 ms.';
+  caps[5].text = '0:50. Nothing on the page moved. Nothing of hers was owed.';
+  return {
+    duration: 60,
+    page: () => ({}),
+    soul: { modes: [{ mode: 'idle', at: -10 }], centre: () => HOME, eyes: t => ({ alpha: 1, blink: blink(t), look: { x: 0, y: 0 } }) },
+    lines: [],
+    caps,
+  };
+};
+
+// 13. Low Power: the same Plan my day ask with the phone in Low Power Mode. Six lights (the children never leave
+// the dabs), no readers, the constellation at 30 fps, the halo breath held; fade, gather, Done and the line
+// keep their timing exactly.
+SCENES.lowpower = () => {
+  const S = 1.8, G = S + 3.8, D = G + .78;
+  const work = { split: S, gather: G, at: { x: 336, y: 772 } };
+  const modes = [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }];
+  return {
+    duration: D + 3.4,
+    soul: { modes, centre: () => HOME, work, lowPower: true, tick: 30, eyes: t => ({ alpha: 1, blink: t > 4.1 && t < 4.26 ? Math.abs(1 - 2 * (t - 4.1) / .16) : 1, look: { x: 0, y: 0 } }) },
+    lines: [{ text: 'Planning your day.', at: S - .2, until: D }, { text: 'Plan ready. Push A at 12:15 pm.', at: D + .55 }],
+    caps: [
+      { at: 0, text: 'Low Power: at rest she ticks at 20 fps. Same breath.' },
+      { at: S, text: 'Fade: unchanged, 500 ms.' },
+      { at: S + .3, text: 'Split: six lights, not twelve. No readers. 30 fps.' },
+      { at: 4.1, text: 'The blink stays; the halo breath is held.' },
+      { at: G, text: 'Gather: unchanged, 820 ms.' },
+      { at: D, text: 'Done: exactly as built. A moment never gets cheaper.', haptic: 'success (Done’s own)' },
+      { at: D + 1.9, text: 'Back to rest. No repaint can start in Low Power.' },
+    ],
+  };
+};
+
+// 15. The glass-tab hold and swipe (Design 42, #342): she is on the chrome layer, so the pages shrink around her
+// and she stays put, breathing. Segment (b): the hold while she is reading the rows; the readers come home inside
+// the shrink, the constellation keeps working at the dock.
+const PAGE_BUFFERS = [0, 1, 2, 3].map(() => document.createElement('canvas'));
+const NAV_H = 104;
+function drawDeck(t, hold, release, slideFrom, slideTo, slide) {
+  // Each page is drawn full size and copied (below its nav row), then the four are drawn back shrunk, side by
+  // side on the darkened ground; the tab row and the lens stay full size on the navigation layer.
+  const shrink = ramp(t, hold, .36, houseCurve) * (1 - ramp(t, release, .48, houseCurve));
+  const sc = lerp(1, .78, shrink);
+  const pos = lerp(slideFrom, slideTo, slide(t)); // in tab units
+  const pages = ['Review', 'Today', 'Training', 'Kitchen'];
+  const headers = ['Four sessions', 'Push A at 12:15 pm', 'Push A at 12:15 pm', 'Tacos tonight'];
+  if (shrink <= 0) { drawPage({ header: headers[Math.round(pos)], day: ['This week', 'Friday morning', 'Friday morning', 'Friday morning'][Math.round(pos)] }); return; }
+  pages.forEach((p, i) => {
+    drawPage({ header: headers[i], day: ['This week', 'Friday morning', 'Friday morning', 'Friday morning'][i] });
+    const b = PAGE_BUFFERS[i]; b.width = canvas.width; b.height = canvas.height;
+    const bc = b.getContext('2d'); bc.setTransform(1, 0, 0, 1, 0, 0); bc.drawImage(canvas, 0, 0);
+  });
+  const dark = LOOK.dark ? '#0A0A0C' : mixHex(LOOK.ground, '#000000', .04);
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = dark; ctx.fillRect(0, 0, W, H); ctx.restore();
+  const ph = H - NAV_H, pw = W * sc, gap = 14 * sc, cx = (W - pw) / 2 - pos * (pw + gap), py = NAV_H + (ph - ph * sc) / 2;
+  pages.forEach((p, i) => {
+    const x = cx + i * (pw + gap), near = 1 - Math.min(1, Math.abs(i - pos));
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = lerp(.55, 1, near);
+    ctx.drawImage(PAGE_BUFFERS[i], 0, NAV_H * DPR, canvas.width, ph * DPR, x, py, pw, ph * sc); ctx.restore();
+  });
+  text('7:42', 32, 34, 16, LOOK.ink, 600);
+  const lensUp = ramp(t, hold, .32, x => spring(x * .32, .32, .12)) * (1 - ramp(t, release, .28, houseCurve));
+  let x = 24; const spots = [];
+  pages.forEach(n => { const w = width(n, 16); spots.push({ x, w }); x += w + 22; });
+  const li = clamp(pos, 0, 3), i0 = Math.floor(li), i1 = Math.min(3, i0 + 1), f = li - i0;
+  const lx = lerp(spots[i0].x, spots[i1].x, f), lw = lerp(spots[i0].w, spots[i1].w, f);
+  if (lensUp > .01) {
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = lensUp;
+    ctx.fillStyle = LOOK.dark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.08)'; ctx.strokeStyle = LOOK.dark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.12)'; ctx.lineWidth = .8;
+    ctx.beginPath(); ctx.roundRect(lx - 10, 82 - 27, lw + 20, 40, 22); ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+  pages.forEach((n, i) => {
+    const near = 1 - Math.min(1, Math.abs(i - pos)); const s = 1 + .12 * near * lensUp;
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.translate(spots[i].x + spots[i].w / 2, 76); ctx.scale(s, s);
+    ctx.font = font(16, near > .5 ? 600 : 500); ctx.fillStyle = near > .5 ? LOOK.ink : LOOK.inkSoft; ctx.textAlign = 'center'; ctx.fillText(n, 0, 6); ctx.restore();
+  });
+  // The ink line fades while the lens is up.
+  const r = Math.round(pos); stroke(spots[r].x, spots[r].x + spots[r].w, 90, 1.5, LOOK.ink, 1 - lensUp);
+}
+SCENES.lens = () => {
+  const segs = [];
+  segs.push((() => {
+    const hold = .8, slide0 = 1.8, slide1 = 2.6, release = 3.4, D = release + 2.2;
+    const slide = t => ramp(t, slide0, slide1 - slide0, easeInOut);
+    return {
+      duration: D,
+      draw: t => drawDeck(t, hold, release, 1, 2, slide),
+      finger: t => (t > hold - .3 && t < release + .15) ? { x: lerp(118, 190, slide(t)), y: 76, alpha: ramp(t, hold - .3, .2) * (1 - ramp(t, release, .15)), press: t > hold ? .9 : 1 } : null,
+      soul: { modes: [{ mode: 'idle', at: -10 }], centre: () => HOME, eyes: () => ({ alpha: 1, blink: 1, look: { x: 0, y: 0 } }) },
+      lines: [],
+      caps: [
+        { at: 0, text: 'The glass tabs (42): she is on the chrome layer.' },
+        { at: hold, text: 'Hold 260 ms: the lens forms, the pages shrink to 78%.', haptic: 'selection (the lens’s)' },
+        { at: hold + .5, text: 'She stays put, full size, breathing. No glance.' },
+        { at: 2.2, text: 'Slide: a tick per word. Not hers.', haptic: 'selection (the lens’s)' },
+        { at: release, text: 'Let go: Training opens, the lens melts. Nothing of hers moved.' },
+      ],
+    };
+  })());
+  segs.push((() => {
+    const S = 1.0, scan = S + 1.25, hold = scan + 1.4, release = hold + 1.6, G = release + 1.0, D = G + .78;
+    const rows = rowGeom().map(g => ({ y: g.y, x0: 26, x1: Math.max(g.titleEnd, 170) }));
+    const work = { split: S, scan, scanDur: 5.4, pathUntil: hold, gather: G, at: { x: 336, y: 772 }, path: scanPath(rows) };
+    return {
+      duration: D + 2.6,
+      draw: t => drawDeck(t, hold, release, 1, 1, () => 0),
+      finger: t => (t > hold - .3 && t < release + .15) ? { x: 118, y: 76, alpha: ramp(t, hold - .3, .2) * (1 - ramp(t, release, .15)), press: t > hold ? .9 : 1 } : null,
+      soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME, work },
+      lines: [{ text: 'Planning your day.', at: S - .2, until: D }, { text: 'Plan ready. Push A at 12:15 pm.', at: D + .55 }],
+      caps: [
+        { at: 0, text: 'The same hold while she is reading the rows.' },
+        { at: scan, text: 'Readers under the rows.' },
+        { at: hold, text: 'Hold: the readers come home inside the shrink (360 ms).', haptic: 'selection (the lens’s)' },
+        { at: hold + .6, text: 'The constellation keeps working at the dock.' },
+        { at: release, text: 'A hold with no slide: the page returns. No haptic.' },
+        { at: D, text: 'Done at the dock, as built.', haptic: 'success' },
+      ],
+    };
+  })());
+  let at = 0; for (const s of segs) { s.start = at; at += s.duration; }
+  return { duration: at, segments: segs };
+};
+
+// 17. Ideas (board item 17): ten small ways for her to be more alive, each a clip of 6 s or less, for Kaushik to
+// pick from. Ideas, not specs: values here are first guesses, and his picks become sheets.
+const blinkAt = (t, at, dur = .16) => { const u = (t - at) / dur; return u > 0 && u < 1 ? Math.abs(1 - 2 * u) : 1; };
+const blinks = (t, list) => list.reduce((o, b) => Math.min(o, blinkAt(t, b)), 1);
+const IDEAS = {};
+// 1. Wake with him: the first open of the day; eyes closed, they open, one slow stretch, one blink.
+IDEAS.wake = () => ({
+  duration: 5,
+  page: t => ({ extra: () => { const a = 1 - ramp(t, .1, .45); if (a > 0) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = a; ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, W, H); ctx.restore(); } } }),
+  soul: {
+    modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+    wobble: (parts, t, C) => { const s = 1 + .22 * ramp(t, 1.5, .6, easeInOut) * (1 - ramp(t, 2.3, .7, houseCurve)); return parts.map(p => ({ ...p, x: C.x + (p.x - C.x) * s, y: C.y + (p.y - C.y) * (2 - s * .98) })); },
+    eyes: t => ({ alpha: 1, blink: t < 1.0 ? 0 : Math.min(ramp(t, 1.0, .4, easeOut), blinkAt(t, 3.4)), look: { x: 0, y: 0 } }),
+  },
+});
+// 2. Stroke her: a finger swipes across her; a ripple runs through the dabs, one blink, one soft tick.
+IDEAS.stroke = () => {
+  const s0 = 1.4, s1 = 1.75;
+  return {
+    duration: 5,
+    page: () => ({}),
+    finger: t => (t > s0 - .2 && t < s1 + .15) ? { x: lerp(296, 396, ramp(t, s0, s1 - s0)), y: lerp(792, 770, ramp(t, s0, s1 - s0)), alpha: ramp(t, s0 - .2, .15) * (1 - ramp(t, s1, .15)) } : null,
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+      wobble: (parts, t, C) => {
+        const k = t - s0; if (k < 0 || k > 1.6) return parts;
+        const amp = 4 * Math.exp(-k * 2.6);
+        return parts.map(p => ({ ...p, x: p.x + amp * Math.sin((p.x - C.x) * .25 - k * 16), y: p.y + amp * .6 * Math.cos((p.x - C.x) * .2 - k * 14) }));
+      },
+      eyes: t => ({ alpha: 1, blink: blinks(t, [s1 + .05, 4.2]), look: { x: t > s0 && t < s1 + .4 ? 1 : 0, y: 0 } }),
+    },
+  };
+};
+// 3. She wears the day: each thing he finishes leaves her a little richer; at 04:00 she starts plain again.
+IDEAS.wear = () => {
+  const dones = [.8, 2.0, 3.2, 4.4];
+  return {
+    duration: 6,
+    page: t => ({ rowAlpha: i => { const d = dones[i]; return d === undefined ? 1 : 1 - ramp(t, d - .1, .35); } }),
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+      beat: t => {
+        let g = 0, steps = 0;
+        for (const d of dones) { if (t > d + .52) steps++; const up = ramp(t, d + .52, .18, easeOut), dn = ramp(t, d + .7, .32); g = Math.max(g, up * (1 - dn)); }
+        return { scale: 1 + .1 * g, gather: g, sat: .1 * steps + .25 * g };
+      },
+      eyes: t => ({ alpha: 1, blink: blinks(t, dones.map(d => d + .52)), look: { x: 0, y: 0 } }),
+    },
+  };
+};
+// 4. Tilt: she sits a point or two deeper than the page; tilting the phone shifts her, the far lights more.
+IDEAS.tilt = () => ({
+  duration: 6,
+  page: () => ({}),
+  soul: {
+    modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+    wobble: (parts, t, C) => { const tx = 2 * Math.sin(t * 1.3), ty = 1.4 * Math.sin(t * .9 + 1); return parts.map((p, i) => { const d = i < 3 ? 1 : 1.7; return { ...p, x: p.x + tx * d, y: p.y + ty * d }; }); },
+    eyes: t => ({ alpha: 1, blink: blinks(t, [3.1]), look: { x: .6 * Math.sin(t * 1.3), y: .4 * Math.sin(t * .9 + 1) } }),
+  },
+});
+// 5. Sleep: in quiet hours her eyes are closed and she breathes slowly; open the app late and one eye opens.
+IDEAS.sleep = () => {
+  const tap = 2.6;
+  return {
+    duration: 6,
+    page: () => ({ day: 'Thursday night', context: 'quiet till 7 am', header: 'Push A tomorrow' }),
+    timeScale: t => t < tap ? .45 : lerp(.45, 1, ramp(t, tap, 1.2)),
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: () => HOME, scale: t => lerp(.92, 1, ramp(t, tap + .3, 1.5)),
+      beat: t => ({ scale: 1, gather: 0, sat: lerp(-.35, 0, ramp(t, tap + .3, 1.5)) }),
+      eyes: t => { const open = ramp(t, tap + .25, .35, easeOut) * (1 - ramp(t, tap + 1.6, .3)); const both = ramp(t, tap + 2.4, .4, easeOut); return { alpha: 1, blink: 0, blinkL: Math.max(both, open * .15), blinkR: Math.max(open, both), look: { x: -.4 * open, y: -.3 * open } }; },
+    },
+  };
+};
+// 6. She watches the clock: the last seconds of a rest, she leans 4 pt toward the timer; at Go the timer owns it.
+IDEAS.clock = () => {
+  const go = 4.2, lean = t => 4 * ramp(t, 1.8, .6, easeInOut) * (1 - ramp(t, go, .3, houseCurve));
+  return {
+    duration: 6,
+    draw: t => {
+      ground(); tabs('Training');
+      text('Push A', 24, 160, 34, LOOK.ink, 600);
+      const left = Math.max(0, Math.ceil(go - t));
+      if (t < go) text('0:0' + left, 196, 430, 64, LOOK.ink, 300, 'center');
+      else text('Go', 196, 430 + 20 * (1 - ramp(t, go, .3, easeOut)), 64, LOOK.ink, 300, 'center', ramp(t, go, .3));
+      stroke(70, 322, 470, 1.5, LOOK.ink, .14);
+      const r = clamp((go - t) / 6); if (r > 0) stroke(70, 70 + 252 * r, 470, 2.5, LOOK.now, 1);
+      text('Bench, set 4', 196, 520, 21, LOOK.inkSoft, 500, 'center');
+    },
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: t => ({ x: HOME.x - lean(t) * .7, y: HOME.y - lean(t) * .7 }),
+      eyes: t => { const g = ramp(t, 1.8, .3, easeOut) * (1 - ramp(t, go, .3)); return { alpha: 1, blink: blinks(t, [go + .1]), look: { x: -1 * g, y: -1 * g } }; },
+    },
+  };
+};
+// 7. She follows what he holds: while he lifts a row to move it, her eyes follow the row; on the drop, back.
+IDEAS.held = () => {
+  const lift = 1.0, drop = 3.6, from = 2, to = 0;
+  const rowY = t => { const u = ramp(t, lift + .35, drop - lift - .5, easeInOut); return ROW_Y0 + lerp(from, to, u) * ROW_DY; };
+  return {
+    duration: 5.4,
+    draw: t => {
+      ground(); tabs('Today');
+      text('Friday morning', 24, 138, 21, LOOK.ink, 500); text('nothing due till 9:30 am', 24, 186, 21, LOOK.context, 500);
+      text('Push A at 12:15 pm', 24, 220, 34, LOOK.ink, 600); text('NEXT', 24, 290, 16, LOOK.inkSoft, 600);
+      const y = t < lift ? ROW_Y0 + from * ROW_DY : rowY(t), v = (y - ROW_Y0) / ROW_DY, lifted = ramp(t, lift, .15) * (1 - ramp(t, drop, .2));
+      // The rows above make room as the held row passes them; the rows below stay.
+      for (const i of [0, 1, 3, 4]) {
+        const yy = ROW_Y0 + (i + (i < from ? clamp(i + .5 - v + .5) : 0)) * ROW_DY;
+        text(ROWS[i].title, 24, yy, 18, LOOK.ink, 500); if (ROWS[i].when) text(ROWS[i].when, 369, yy, 16, LOOK.inkSoft, 500, 'right');
+      }
+      text(ROWS[from].title, 24 + 4 * lifted, y, 18, LOOK.ink, 500); stroke(24, 24 + width(ROWS[from].title, 18), y + 7, 2, LOOK.context, lifted * .8);
+    },
+    finger: t => (t > lift - .2 && t < drop + .15) ? { x: 120, y: rowY(t) - 6, alpha: ramp(t, lift - .2, .2) * (1 - ramp(t, drop, .15)), press: .9 } : null,
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+      eyes: t => { const on = ramp(t, lift, .3, easeOut) * (1 - ramp(t, drop + .1, .3)); const dy = (rowY(t) - HOME.y) / 600; return { alpha: 1, blink: blinks(t, [drop + .2]), look: { x: -1 * on, y: clamp(dy, -1, 1) * on } }; },
+    },
+  };
+};
+// 8. She peeks at the end of a list: scrolled to the last row, she rises 5 pt as if looking over it, then settles.
+IDEAS.peek = () => {
+  const s0 = .8, s1 = 2.3, rise = t => 5 * ramp(t, s1 - .1, .35, easeOut) * (1 - ramp(t, s1 + 1.6, .5, houseCurve));
+  return {
+    duration: 5,
+    page: t => ({ scroll: 140 * ramp(t, s0, s1 - s0, bezier(.2, .7, .3, 1)), extra: () => { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, W, 100); ctx.restore(); tabs('Today'); } }),
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: t => ({ x: HOME.x, y: HOME.y - rise(t) }),
+      eyes: t => ({ alpha: 1, blink: blinks(t, [s1 + 1.3]), look: { x: -.5 * rise(t) / 5, y: -1 * rise(t) / 5 } }),
+    },
+  };
+};
+// 9. She hears him type: in Ask Tess, each finished word gives her one small pulse; no glow, no haptic.
+IDEAS.typing = () => {
+  const words = ['call', 'mom', 'at', 'six'], at = [1.0, 1.55, 2.0, 2.4];
+  return {
+    duration: 4.8,
+    draw: t => {
+      ground(); tabs('Today');
+      let typed = ''; const cps = 11;
+      const full = words.join(' '); const n = Math.min(full.length, Math.max(0, Math.floor((t - .6) * cps)));
+      typed = full.slice(0, n);
+      text(typed, 24, 506, 18, LOOK.ink, 400);
+      if (Math.floor(t * 2) % 2 === 0 || n < full.length) stroke(24 + width(typed, 18, 400) + 2, 24 + width(typed, 18, 400) + 2.1, 500, 14, LOOK.tess, .8);
+    },
+    soul: {
+      modes: [{ mode: 'listening', at: -10 }], centre: () => ({ x: 196, y: 698 }),
+      scale: t => { let p = 0; const full = words.join(' '); const ends = []; let c = 0; words.forEach(w => { c += w.length; ends.push(.6 + c / 11); c += 1; }); for (const e of ends) p = Math.max(p, ramp(t, e, .08) * (1 - ramp(t, e + .08, .25))); return 1.25 + .06 * p; },
+      eyes: t => ({ alpha: 1, blink: 1, look: { x: 0, y: -1 } }),
+    },
+  };
+};
+// 10. A nudge for the next thing: ten minutes before a timed task, she leans toward its row once and glances at it.
+IDEAS.nudge = () => {
+  const n = 1.6, lean = t => 4 * ramp(t, n, .4, easeOut) * (1 - ramp(t, n + 1.3, .5, houseCurve));
+  return {
+    duration: 5,
+    page: t => ({ context: 'call the bank in 10 min' }),
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: t => ({ x: HOME.x - lean(t) * .6, y: HOME.y - lean(t) * .8 }),
+      eyes: t => { const g = ramp(t, n, .3, easeOut) * (1 - ramp(t, n + 1.4, .3)); return { alpha: 1, blink: blinks(t, [n + 1.7]), look: { x: -1 * g, y: -1 * g } }; },
+    },
+  };
+};
+// 11. Lights that follow the page (Kaushik, 8:53 AM PT: "after it spreads the pattern is very predictive"). No model:
+// the readers hop between the words on the page that matter to the ask (the ones it changed or reads), dwell on
+// each, and skip around rather than sweep; the lights at the dock drift on smooth noise instead of a loop.
+function seeded(seed) { let x = seed; return () => { x = (x * 1103515245 + 12345) % 2147483648; return x / 2147483648; }; }
+function noiseDrift(i, t) {
+  const r = seeded(97 + i * 13); const terms = [0, 1, 2].map(() => ({ p: 3.5 + r() * 6, ph: r() * 6.28, a: .4 + r() * .6 }));
+  const s = (o) => terms.reduce((acc, k, j) => acc + k.a * Math.sin(2 * Math.PI * t / (k.p * (j + 1) * .7) + k.ph + o), 0) / 1.6;
+  return { x: s(0), y: s(1.9) };
+}
+IDEAS.wander = () => {
+  const S = .6, scan = S + 1.1, G = 5.2, D = G + .78;
+  // The words this ask touches, from the page: "Push A" (moved), "12:15 pm", "Call the bank", "9:30 am", "Book the dentist".
+  const geom = rowGeom();
+  const word = (row, which) => { const g = geom[row]; return which === 'time' ? { x: 340, y: g.y + 13 } : { x: lerp(28, g.titleEnd - 4, .5), y: g.y + 13, w: g.titleEnd - 28 }; };
+  const stops = [word(1), word(1, 'time'), word(0), word(0, 'time'), word(3), word(1)];
+  const hop = .34, dwell = .38;
+  const pathFn = u => {
+    if (u <= 0) return stops[0];
+    const per = hop + dwell; const k = Math.floor(u / per), f = u - k * per;
+    const a = stops[Math.min(k, stops.length - 1)], b = stops[Math.min(k + 1, stops.length - 1)];
+    if (f < dwell) { const g = (a.w || 18) * .45; return { x: a.x + g * Math.sin(f / dwell * Math.PI - Math.PI / 2), y: a.y }; }
+    const e = houseCurve((f - dwell) / hop), g = (a.w || 18) * .45;
+    return { x: lerp(a.x + g, b.x - (b.w || 18) * .45, e), y: lerp(a.y, b.y, e) - 10 * Math.sin(e * Math.PI) };
+  };
+  return {
+    duration: 6,
+    page: t => ({ context: 'moving Push A' }),
+    soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME,
+      work: { split: S, scan, scanDur: 3.2, gather: G, at: { x: 336, y: 772 }, pathFn, noise: true } },
+  };
+};
+for (const [name, make] of Object.entries(IDEAS)) {
+  SCENES['idea-' + name] = () => { const s = make(); s.lines = s.lines || []; s.caps = []; s.noCaption = true; return s; };
+}
+
+// The work state when she's out on a row: tighter constellation, no readers.
+const _workParticles = workParticles;
+workParticles = function (t, work) {
+  if (!work.small) return _workParticles(t, work);
+  const res = [];
+  CONSTELLATION.concat(READERS.map(([i]) => [i, 14, 9, 5 + i * .3, 4.4 + i * .2, i, i === 1 ? 13 : 11])).forEach(c => {
+    const [i, ax, ay, px, py, ph, r] = c;
+    res[i] = constellationPose([i, ax * .55, ay * .55, px * .8, py * .8, ph, r * .8], t, work.at);
+  });
+  return res;
+};
+// Roam's work follows wherever she is.
+const _compose = composeSoul;
+
+let scene = null;
+function renderAt(t) {
+  if (!scene) scene = SCENES[SCENE]();
+  if (scene.segments) {
+    const seg = scene.segments.findLast(x => x.start <= t) || scene.segments[0];
+    const u = t - seg.start;
+    seg.draw(u); drawLine(seg.lines, u); if (!seg.soul.hidden) composeSoul(u, seg.soul); if (seg.finger) drawFinger(seg.finger(u)); drawCaption(seg.caps, u);
+    return;
+  }
+  if (scene.draw) scene.draw(t); else drawPage(scene.page ? scene.page(t) : {});
+  drawLine(scene.lines, t);
+  const soul = scene.soul;
+  if (soul.frozen) {
+    // Reduce Motion: the soul's frame is frozen at idle's still phase (no TimelineView ticking).
+    // Design (11-13 pass): the breath is opacity only, 0.85 to 1 over 3.2 s, and the blink stays.
+    const breath = .85 + .15 * easeInOut(1 - Math.abs(2 * (((t % 3.2) + 3.2) % 3.2) / 3.2 - 1));
+    composeSoul(0, { ...soul, modes: [{ mode: 'idle', at: -10 }], reduced: () => soul.reduced(t), opacityMul: () => breath, eyes: soul.eyes ? () => soul.eyes(t) : undefined });
+  } else {
+    // `tick` holds the soul at that frame rate (Low Power: 30 fps) while the page stays at 60.
+    const tt = soul.tick ? Math.floor(t * soul.tick) / soul.tick : t;
+    if (scene.timeScale) {
+      // A slower soul clock (sleep): her motion runs at a fraction of time, her eyes and overlays on real time.
+      let acc = 0; const dt = 1 / 120; for (let u = 0; u < tt; u += dt) acc += scene.timeScale(u) * dt;
+      const wrap = f => f ? (() => f(t)) : f;
+      composeSoul(acc, { ...soul, eyes: wrap(soul.eyes), beat: wrap(soul.beat), scale: wrap(soul.scale), centre: wrap(soul.centre) });
+    } else composeSoul(tt, soul);
+  }
+  if (scene.finger) drawFinger(scene.finger(t));
+  drawCaption(scene.caps, t);
+}
+window.renderAt = renderAt;
+window.sceneDuration = () => { if (!scene) scene = SCENES[SCENE](); return scene.duration; };
+window.ready = document.fonts.ready.then(() => document.fonts.load('500 18px "Inter Tight"')).then(() => { scene = SCENES[SCENE](); renderAt(0); return true; });
+
+// Live preview when opened in a browser (not recording): play the scene on a loop.
+if (!params.has('record')) {
+  window.ready.then(() => {
+    const start = performance.now();
+    const tick = now => { const t = ((now - start) / 1000) % scene.duration; renderAt(t); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+}
+</script>
+</body>
+</html>

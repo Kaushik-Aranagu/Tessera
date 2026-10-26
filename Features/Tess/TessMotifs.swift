@@ -12,7 +12,7 @@ struct Glint: ViewModifier {
         if reduceMotion {
             content
         } else {
-            TimelineView(.animation(minimumInterval: 1 / 30)) { context in
+            LiveTimeline(LiveFeatures.tessGlint, minimumInterval: 1 / 30) { context in
                 let time = context.date.timeIntervalSinceReferenceDate
                 let sweep = TessSoul.phase(time, period: period)
                 // The sheen crosses during the first quarter of the period, then rests.
@@ -51,7 +51,7 @@ struct RoundRobin: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
+        LiveTimeline(LiveFeatures.tessRoundRobin, minimumInterval: 1 / 30) { context in
             let time = context.date.timeIntervalSinceReferenceDate
             HStack(alignment: .bottom, spacing: 6) {
                 ForEach(0 ..< 5, id: \.self) { index in

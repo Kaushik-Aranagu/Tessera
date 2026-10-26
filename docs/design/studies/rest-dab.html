@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rest dab</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Still mockup for docs/design/rest-dab.md: Home's Review page on F27 (a full plan week) in Plein light and dark, and four more weeks from Research's review-sentence fixtures as dab rows. -->
+<style>
+body{margin:0;background:#E9E2D6;font-family:'Inter Tight',sans-serif;width:1280px}
+.row{display:flex;gap:40px;padding:40px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;flex:none}
+.light{--ink:43,36,64;--ctx:#7A5C8E;--tess:#2E6DA4;--sage:110,158,106;color:rgb(var(--ink));
+ background:radial-gradient(60% 40% at 85% 6%,#E3EAD8 0%,rgba(227,234,216,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8E6DC 0%,rgba(216,230,220,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F2ECE3}
+.dark{--ink:243,236,224;--ctx:#B9A4CC;--tess:#7FA9D9;--sage:132,182,126;color:rgb(var(--ink));
+ background:radial-gradient(60% 40% at 85% 6%,#2A2440 0%,rgba(42,36,64,0) 70%),radial-gradient(80% 50% at 100% 75%,#2B2235 0%,rgba(43,34,53,0) 70%),#1C1828}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.hero{text-wrap:balance;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px}
+.dabs{position:absolute;left:22px;right:22px;display:flex}
+.day{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
+.slot{position:relative;width:34px;height:30px}
+.slot .fill{position:absolute;inset:0;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--sage),.92) 0%,rgba(var(--sage),.7) 50%,rgba(var(--sage),0) 100%);filter:blur(1px)}
+.slot .ring{position:absolute;inset:2px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;border:1.5px solid rgba(var(--ink),.25)}
+.slot svg{position:absolute;left:0;top:0;overflow:visible}
+.day .l{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.6)}
+.day.today .l{color:rgb(var(--ink))}
+.day.before .l{color:rgba(var(--ink),.38)}
+.legend{padding:0 40px 40px;display:grid;grid-template-columns:repeat(2,1fr);gap:28px 40px}
+.wk{position:relative;height:200px;border-radius:0;overflow:hidden}
+.wk .id{position:absolute;left:22px;top:18px}
+.wk .h{position:absolute;left:22px;top:46px;font-size:34px;font-weight:500;letter-spacing:-.03em}
+.wk .dabs{top:104px}
+.key{padding:0 40px 40px;display:flex;gap:48px;color:#2B2440;font-size:21px}
+.key div{display:flex;align-items:center;gap:14px}
+</style>
+</head>
+<body class="light" style="background:#E9E2D6">
+<svg width="0" height="0" style="position:absolute"><defs>
+ <filter id="rough" x="-10%" y="-80%" width="120%" height="260%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.3" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+ <filter id="dry" x="-10%" y="-80%" width="120%" height="260%"><feTurbulence type="fractalNoise" baseFrequency="0.06 1.4" numOctaves="2" seed="9" result="n"/><feColorMatrix in="n" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.5" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter>
+</defs></svg>
+<div class="row" id="phones"></div>
+<div class="key" id="key"></div>
+<div class="legend" id="legend"></div>
+<script>
+// the rest mark: a short dry horizon stroke lying across the dab's lower middle; ink, never a colour
+const REST = `<svg width="34" height="30"><g filter="url(#rough)"><path filter="url(#dry)" d="M1 17.5 C 9 15.2, 22 14.8, 33 16.2 L 32.2 21.4 C 22 22.6, 10 22.4, 1.8 21.6 Z" fill="rgba(var(--ink),.5)"/></g></svg>`;
+const mark = s => s==='●' ? '<div class="fill"></div>' : s==='○' ? '<div class="ring"></div>' : s==='–' ? REST : '';
+function dabs(pattern, letters, top){
+  const p=[...pattern], L=letters.split(' ');
+  return `<div class="dabs" style="top:${top}px">${p.map((s,i)=>`<div class="day${i===p.length-1?' today':''}${s==='·'?' before':''}"><div class="slot">${mark(s)}</div><div class="l">${L[i]}</div></div>`).join('')}</div>`;
+}
+function phone(theme){
+  return `<div class="ph ${theme}">
+   <div class="abs" style="left:22px;right:22px;top:78px;display:flex;justify-content:space-between;font-weight:700;font-size:16px;letter-spacing:.06em;color:rgba(var(--ink),.38)"><span style="color:rgb(var(--ink))">REVIEW</span><span style="color:rgba(var(--ink),.38)">TODAY</span><span style="color:rgba(var(--ink),.38)">TRAINING</span><span style="color:rgba(var(--ink),.38)">KITCHEN</span></div>
+   <div class="abs" style="left:22px;top:150px;font-size:21px;color:var(--ctx)">the week so far</div>
+   <div class="abs hero" style="left:22px;top:186px;width:340px">All six sessions in</div>
+   ${dabs('●●●●●●–','M T W T F S S',354)}
+   <div class="abs" style="left:22px;top:470px;width:330px;font-size:21px;line-height:28px;color:var(--tess)">Two records this week: Bench Press and Squat.</div>
+   <div class="abs lbl" style="left:22px;bottom:150px;color:rgba(var(--ink),.6)">F27 · SUN 11 OCT, 20:00</div>
+  </div>`;
+}
+document.getElementById('phones').innerHTML = phone('light') + phone('dark') + `<div style="flex:1;font-size:21px;line-height:30px;color:#2B2440;padding-top:150px">
+  <div style="font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;margin-bottom:20px">A rest day lies down.</div>
+  A planned rest day is a short dry stroke across the dab's lower half, the horizon the rest timer already uses. It is ink, not colour, and it has no outline, so it never reads as an empty ring.<br><br>
+  A miss keeps the faint ring. A day before Tessera existed has no mark at all.<br><br>
+  The hero counts sessions against the plan, in the same Hero 56 type. It never says “good”, and never says “of seven”.</div>`;
+document.getElementById('key').innerHTML = [['●','Trained'],['–','Rest'],['○','Open (a real miss)'],['·','Before first use']].map(([s,t])=>`<div><div class="slot">${mark(s)}</div>${t}</div>`).join('');
+const weeks = [
+ ['F01 · FIRST OPEN','Your first week starts today','······○','T F S S M T W'],
+ ['F16 · THIN WEEK','Two sessions this week','●○○●○○○','M T W T F S S'],
+ ['F30 · MISSED TUE, CAUGHT UP','All six sessions in','●–●●●●–','M T W T F S S'],
+ ['F28 · MONDAY MORNING','Five sessions this week','●●●●●–○','T W T F S S M'],
+];
+document.getElementById('legend').innerHTML = weeks.map(([id,h,p,l],i)=>`<div class="wk ${i%2?'dark':'light'}"><div class="id lbl" style="color:rgba(var(--ink),.6)">${id}</div><div class="h">${h}</div>${dabs(p,l,104)}</div>`).join('');
+document.fonts.ready.then(()=>document.body.dataset.done='1');
+</script>
+</body>
+</html>

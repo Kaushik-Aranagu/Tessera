@@ -1,0 +1,186 @@
+<title>Money Three Ways</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500&display=swap">
+<style>
+/* Layout: three Money keystone candidates, each in the 354 x 182 slot shown large, all driven by the same month and the same buttons. */
+:root{--bg:#F7F5F1;--fg:#242423;--fg2:#6E6A63;--line:rgba(36,36,35,.14);--acc:#3F7A62;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--fg:#E8E3DA;--fg2:#A49E96;--line:rgba(232,227,218,.16);--acc:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#000;--fg:#E8E3DA;--fg2:#A49E96;--line:rgba(232,227,218,.16);--acc:#8DBFA7;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin:0}
+main{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(36px,6vw,58px);line-height:1.04;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 6px}
+h3{font-size:22px;font-weight:600;margin:0 0 4px}
+p{margin:0 0 10px;max-width:68ch}
+.lede{font-size:18px;color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 18px;align-items:center;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;padding-block:6px;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer}
+button.w:hover{color:var(--fg)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.status{min-height:24px;color:var(--fg2);font-size:15px}
+.way{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;align-items:center}
+@media (max-width:820px){.way{grid-template-columns:minmax(0,1fr)}}
+canvas{width:100%;aspect-ratio:354/182;display:block;touch-action:none}
+.way p{color:var(--fg2);font-size:15px}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Money / sheet 273</h2>
+<h1>Three ways to see in and out.</h1>
+<p class="lede">Same month, same buttons, three different elements for the Money keystone. Each is drawn at the standard slot's shape. Press the buttons and watch all three answer: is more coming in or going out, where is it going, what is left.</p>
+</header>
+
+<div class="ctl" role="group" aria-label="Money moves">
+<button class="w" data-act="groceries">Groceries 86</button>
+<button class="w" data-act="drinks">Drinks 42</button>
+<button class="w" data-act="save">Save 300 for Japan</button>
+<button class="w" data-act="side">Side job 180</button>
+<button class="w" data-act="laptop">Laptop 1,800</button>
+<button class="w" data-act="reset">Reset</button>
+<span class="status" id="status" aria-live="polite"></span>
+</div>
+
+<section class="way" aria-label="Threads">
+<canvas id="threads"></canvas>
+<div><h2>1</h2><h3>Threads</h3><p>Every 50 that came in is one fine thread entering from the left. Where money went, the threads peel away into a bundle for each kind; what is still yours runs straight on. A payment lifts one thread out of the straight run and lays it into its bundle. Thick bundles are where it went; the straight run is what is left.</p></div>
+</section>
+
+<section class="way" aria-label="Liquid">
+<canvas id="liquid"></canvas>
+<div><h2>2</h2><h3>Liquid</h3><p>What is still yours is one soft sage body. A payment pinches a droplet off it; the droplet travels and melts into the body for its kind. Pay pours new liquid in. The sizes are the amounts, so you see at once what is left against what went.</p></div>
+</section>
+
+<section class="way" aria-label="Two lines">
+<canvas id="race"></canvas>
+<div><h2>3</h2><h3>Two lines</h3><p>Across the month, what came in (sage) and what went out (ink) are two lines drawing themselves. The space between them is still yours. Every step on the out line takes its kind's colour. The day out crosses above in, you are spending more than you earn, and the space turns to a hatch. Last month's out line is dashed.</p></div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var Q={};try{location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var p=kv.split('=');Q[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||'')})}catch(e){}
+var TAU=Math.PI*2;
+function lerp(a,b,u){return a+(b-a)*u}
+function clamp(v,a,b){return v<a?a:v>b?b:v}
+function ease(u){u=clamp(u,0,1);return u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2}
+function hex(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]}
+function rgba(c,a){return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(a==null?1:a)+')'}
+function mixc(a,b,u){return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)]}
+function seed(n){var a=Math.sin(n*127.1+311.7)*43758.5453;return a-Math.floor(a)}
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+var DARK=matchMedia('(prefers-color-scheme: dark)').matches&&document.documentElement.dataset.theme!=='light'||document.documentElement.dataset.theme==='dark';
+// kinds (sheet 241)
+var K={left:{n:'Still yours',c:['#3F7A62','#8DBFA7']},home:{n:'Home',c:['#9C4B2C','#E2A07F']},food:{n:'Food',c:['#93611A','#C49A5E']},body:{n:'Body',c:['#0B62AE','#8FB0EE']},subs:{n:'Subscriptions',c:['#1E6E77','#84C3C9']},out:{n:'Going out',c:['#34506F','#A7BCD6']},save:{n:'Japan',c:['#7E6A1E','#D9C27A']},big:{n:'Laptop',c:['#5B3FB8','#B9A9E0']}};
+var ORDER=['home','save','food','out','body','subs','big'];
+function kc(k){return hex(K[k].c[DARK?1:0])}
+var INK=DARK?[232,227,218]:[36,36,35],INK2=DARK?[164,158,150]:[110,106,99],INK3=DARK?[107,103,95]:[169,164,155],BG=DARK?[0,0,0]:[247,245,241];
+// the month: a dated ledger (day of October)
+function fresh(){return {today:14,ins:[{n:'Salary',v:4200,d:0},{n:'Side job',v:180,d:9}],
+ outs:[{n:'Rent',k:'home',v:1150,d:1},{n:'Groceries',k:'food',v:64,d:2},{n:'Music',k:'subs',v:11,d:2},{n:'Gym',k:'body',v:49,d:3},{n:'Drinks',k:'out',v:38,d:4},{n:'Eating out',k:'food',v:42,d:5},{n:'Streaming',k:'subs',v:18,d:6},{n:'Groceries',k:'food',v:71,d:7},
+  {n:'Electricity',k:'home',v:82,d:8},{n:'Badminton',k:'body',v:23,d:8},{n:'Cinema',k:'out',v:34,d:9},{n:'Japan',k:'save',v:400,d:10},{n:'Groceries',k:'food',v:47,d:10},{n:'Drinks',k:'out',v:66,d:11},{n:'Apps',k:'subs',v:34,d:11},{n:'Eating out',k:'food',v:58,d:12},{n:'Badminton',k:'body',v:24,d:13},{n:'Eating out',k:'food',v:44,d:14}],
+ lastOut:[0,1180,1230,1290,1330,1380,1420,1500,1590,1640,1700,1760,1830,1880,1950,2030,2120,2190,2260,2350,2420,2480,2560,2620,2700,2790,2860,2930,3010,3080,3150,3220]}}
+var M=fresh();
+function sum(a){return a.reduce(function(s,x){return s+x.v},0)}
+function inT(){return sum(M.ins)}
+function outT(){return sum(M.outs)}
+function byKind(){var o={};ORDER.forEach(function(k){o[k]=0});M.outs.forEach(function(x){o[x.k]+=x.v});return o}
+var W={t:0};
+
+function setup(cv){var r=cv.getBoundingClientRect(),dpr=Math.max(2,window.devicePixelRatio||1),w=Math.max(1,r.width||354);cv.width=Math.round(w*dpr);cv.height=Math.round(w*182/354*dpr);return cv.width/354}
+
+// ===================== 1. THREADS
+var TH={cv:$('#threads'),threads:[],moves:[]};TH.g=TH.cv.getContext('2d');TH.s=setup(TH.cv);
+var PER=50;
+function threadsBuild(){ // assign each thread to a kind (or still yours), in order of spending
+ var n=Math.round(inT()/PER),bk=byKind(),list=[];ORDER.forEach(function(k){var c=Math.round(bk[k]/PER);for(var i=0;i<c;i++)list.push(k)});while(list.length<n)list.push('left');list=list.slice(0,Math.max(n,list.length));
+ // bundles on the right: still yours on top, then kinds in order; stacked with gaps
+ var counts={};list.forEach(function(k){counts[k]=(counts[k]||0)+1});var y=20,bundles={},keys=['left'].concat(ORDER.filter(function(k){return counts[k]}));var total=list.length,span=150-(keys.length-1)*7;
+ keys.forEach(function(k){var h=counts[k]/total*span;bundles[k]={y0:y,h:h,n:counts[k]};y+=h+7});
+ var idx={};var old=TH.threads;TH.threads=list.map(function(k,i){idx[k]=(idx[k]||0);var b=bundles[k],j=idx[k]++;var ty=b.y0+(j+.5)/b.n*b.h;var o=old[i];return {k:k,y0:22+(i+.5)/list.length*138,ty:ty,cy:o?o.cy:ty,ck:o?o.ck:k,born:o?o.born:W.t}});
+ TH.bundles=bundles;TH.keys=keys}
+threadsBuild();
+function drawThreads(dt){var g=TH.g,s=TH.s;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,TH.cv.width,TH.cv.height);g.setTransform(s,0,0,s,0,0);var t=W.t;
+ var k=Math.min(1,(dt||0)*2.2);
+ TH.threads.forEach(function(th,i){th.cy+=(th.ty-th.cy)*k;var moving=Math.abs(th.ty-th.cy)>.6;if(!moving)th.ck=th.k;var born=clamp((W.t-th.born)/1.2,0,1);if(born<=0)return;
+  var c0=kc('left'),c1=kc(th.ck),x0=0,x1=354*born,y0=th.y0+Math.sin(t*.7+i*.37)*.6,y1=th.cy+Math.sin(t*.6+i*.29)*.4;var split=140+(th.k==='left'?0:ORDER.indexOf(th.k)*6);
+  var gr=g.createLinearGradient(split-20,0,split+60,0);gr.addColorStop(0,rgba(c0,.9));gr.addColorStop(1,rgba(c1,.95));g.strokeStyle=gr;g.lineWidth=moving?1.1:.55;
+  g.beginPath();g.moveTo(x0,y0);if(x1<=split){g.lineTo(x1,y0)}else{g.lineTo(split,y0);var cx1=split+70,ex=Math.min(x1,330);g.bezierCurveTo(cx1,y0,cx1,y1,Math.min(ex,cx1+40),y1);if(x1>cx1+40)g.lineTo(Math.min(x1,330),y1)}g.stroke();
+  if(moving){g.strokeStyle=rgba(c1,.25);g.lineWidth=3;g.stroke()}});
+ // bundle labels at the right edge: name and amount, small, in the kind's colour
+ var bk=byKind();TH.keys.forEach(function(kk){var b=TH.bundles[kk];var c=kc(kk);g.fillStyle=rgba(c);g.textAlign='right';g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText(K[kk].n.toUpperCase(),352,b.y0+b.h/2-.5);g.font='400 7px Outfit, Figtree, sans-serif';g.fillText(fmt(kk==='left'?inT()-outT():bk[kk]),352,b.y0+b.h/2+7)});
+ g.fillStyle=rgba(kc('left'));g.textAlign='left';g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText('IN',2,13);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(inT()),14,13.5);
+ g.fillStyle=rgba(INK);g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText('OUT',2,176);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(outT()),20,176.5)}
+
+// ===================== 2. LIQUID (metaballs on a low-res field)
+var LQ={cv:$('#liquid'),drops:[]};LQ.g=LQ.cv.getContext('2d');LQ.s=setup(LQ.cv);var FW=236,FH=121;LQ.field=document.createElement('canvas');LQ.field.width=FW;LQ.field.height=FH;LQ.fg=LQ.field.getContext('2d');LQ.img=LQ.fg.createImageData(FW,FH);
+function liquidTargets(){var bk=byKind(),left=Math.max(0,inT()-outT()),R=function(v){return Math.sqrt(v)*.62};var T={left:{x:92,y:92,r:R(left)}};
+ var ks=ORDER.filter(function(k){return bk[k]>0}).sort(function(a,b){return bk[b]-bk[a]});var pos=[[232,70],[292,112],[226,138],[318,52],[276,30],[330,150],[184,32]];
+ ks.forEach(function(k,i){var p=pos[i%pos.length];T[k]={x:p[0],y:p[1],r:R(bk[k])}});return T}
+LQ.disp=liquidTargets();
+function drawLiquid(dt){var g=LQ.g,s=LQ.s,t=W.t;var T=liquidTargets(),k=Math.min(1,(dt||0)*2.5);var pend={};LQ.drops.forEach(function(d){if(W.t-d.t0<1.4)pend[d.k]=(pend[d.k]||0)+d.v});
+ Object.keys(T).forEach(function(key){var tg=T[key];if(!LQ.disp[key])LQ.disp[key]={x:tg.x,y:tg.y,r:0};var D=LQ.disp[key];var tr=key==='left'?tg.r:Math.sqrt(Math.max(0,(byKind()[key]||0)-(pend[key]||0)))*.62;if(key==='left'){var leaving=LQ.drops.reduce(function(a,d){return a+(W.t-d.t0<.5&&!d.inflow?d.v:0)},0),coming=LQ.drops.reduce(function(a,d){return a+(d.inflow&&W.t-d.t0<1.2?d.v:0)},0);tr=Math.sqrt(Math.max(0,inT()-outT()+leaving-coming))*.62}
+  D.x+=(tg.x-D.x)*k;D.y+=(tg.y-D.y)*k;D.r+=(tr-D.r)*k});
+ // balls: each body is a cluster of a few balls that breathe; drops are small balls in flight
+ var balls=[];Object.keys(LQ.disp).forEach(function(key){var D=LQ.disp[key];if(D.r<.5)return;var c=kc(key);for(var j=0;j<3;j++){var a=t*.5+j*2.1+key.length,off=D.r*.18;balls.push({x:D.x+Math.cos(a)*off,y:D.y+Math.sin(a*1.3)*off,r:D.r*(j?0.62:.82),c:c})}});
+ LQ.drops=LQ.drops.filter(function(d){var e=W.t-d.t0;if(e>1.6)return false;var from=d.inflow?{x:-20,y:92}:LQ.disp.left,to=LQ.disp[d.k]||{x:300,y:90};var u=ease(clamp((e-.15)/1.1,0,1));var x=lerp(from.x+(d.inflow?0:from.r*.3),to.x,u),y=lerp(from.y,to.y,u)-Math.sin(u*Math.PI)*14;var r=Math.max(2,Math.sqrt(d.v)*.62*(d.inflow?.8:.75));balls.push({x:x,y:y,r:r,c:mixc(kc('left'),kc(d.k),d.inflow?0:u)});return true});
+ // field at low res: sum of r^2/d^2, coloured by the strongest contributor blend
+ var data=LQ.img.data,sx=354/FW,sy=182/FH;for(var py=0;py<FH;py++){for(var px=0;px<FW;px++){var X=px*sx,Y=py*sy,f=0,cr=0,cg=0,cb=0;for(var b=0;b<balls.length;b++){var B=balls[b],dx=X-B.x,dy=Y-B.y,v=B.r*B.r/(dx*dx+dy*dy+.01);f+=v;cr+=B.c[0]*v;cg+=B.c[1]*v;cb+=B.c[2]*v}
+   var o=(py*FW+px)*4,a=clamp((f-.9)/.22,0,1);if(a>0){data[o]=cr/f;data[o+1]=cg/f;data[o+2]=cb/f;data[o+3]=a*255}else data[o+3]=0}}
+ LQ.fg.putImageData(LQ.img,0,0);g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,LQ.cv.width,LQ.cv.height);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(LQ.field,0,0,LQ.cv.width,LQ.cv.height);g.setTransform(s,0,0,s,0,0);
+ // a soft highlight on each body
+ Object.keys(LQ.disp).forEach(function(key){var D=LQ.disp[key];if(D.r<3)return;var hg=g.createRadialGradient(D.x-D.r*.35,D.y-D.r*.4,0,D.x-D.r*.35,D.y-D.r*.4,D.r*.7);hg.addColorStop(0,'rgba(255,255,255,.35)');hg.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=hg;g.beginPath();g.arc(D.x,D.y,D.r,0,TAU);g.fill()});
+ // labels beside bodies
+ var bk=byKind();Object.keys(LQ.disp).forEach(function(key){var D=LQ.disp[key];if(D.r<1)return;var c=kc(key);var lx=D.x,ly=D.y+D.r+8;g.textAlign='center';g.fillStyle=rgba(c);g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText(K[key].n.toUpperCase(),lx,Math.min(ly,170));g.font='400 7px Outfit, Figtree, sans-serif';g.fillText(fmt(key==='left'?inT()-outT():bk[key]),lx,Math.min(ly,170)+7.5)});
+ g.textAlign='left';g.fillStyle=rgba(kc('left'));g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText('IN',2,13);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(inT()),14,13.5);g.fillStyle=rgba(INK);g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText('OUT',2,176);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(outT()),20,176.5)}
+
+// ===================== 3. TWO LINES
+var RC={cv:$('#race'),grow:[]};RC.g=RC.cv.getContext('2d');RC.s=setup(RC.cv);RC.drawn=0;
+function drawRace(dt){var g=RC.g,s=RC.s,t=W.t;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,RC.cv.width,RC.cv.height);g.setTransform(s,0,0,s,0,0);
+ var X0=20,X1=338,Y0=166,Y1=18,days=31;var maxV=Math.max(inT(),outT(),M.lastOut[days])*1.06;function X(d){return X0+(X1-X0)*d/days}function Y(v){return Y0-(Y0-Y1)*v/maxV}
+ // cumulative series by day
+ var cin=[],cout=[],steps=[];var ci=0,co=0;var outsSorted=M.outs.slice().sort(function(a,b){return a.d-b.d});var insSorted=M.ins.slice().sort(function(a,b){return a.d-b.d});
+ // in: steps at each income day; out: steps at each payment, coloured by kind
+ var inPts=[[0,0]];insSorted.forEach(function(x){inPts.push([x.d,ci]);ci+=x.v;inPts.push([x.d,ci])});inPts.push([M.today,ci]);
+ var outPts=[[0,0]];outsSorted.forEach(function(x,i){outPts.push([x.d,co]);var a=co;co+=x.v;steps.push({d:x.d,a:a,b:co,k:x.k,i:i});outPts.push([x.d,co])});outPts.push([M.today,co]);
+ // drawing progress (the newest step draws itself)
+ var prog=clamp((W.t-(RC.lastChange||-9))/1.2,0,1);
+ // the space between: still yours, or the hatch where out is above in
+ var N=200;g.save();for(var q=0;q<N;q++){var d=M.today*q/N,d2=M.today*(q+1)/N;var vi=valAt(inPts,d),vo=valAt(outPts,d);var x=X(d),w=X(d2)-x+.3;if(vi>=vo){g.fillStyle=rgba(kc('left'),.13);g.fillRect(x,Y(vi),w,Y(vo)-Y(vi))}else{g.fillStyle=rgba(INK,.12);g.fillRect(x,Y(vo),w,Y(vi)-Y(vo));g.strokeStyle=rgba(INK,.25);g.lineWidth=.4;if(q%3===0){g.beginPath();g.moveTo(x,Y(vo));g.lineTo(x+3,Y(vi));g.stroke()}}}g.restore();
+ function valAt(pts,d){var v=0;for(var i=0;i<pts.length;i++){if(pts[i][0]<=d)v=pts[i][1];else break}return v}
+ // axis: the month as a hairline with today
+ g.strokeStyle=rgba(INK3,.8);g.lineWidth=.5;g.beginPath();g.moveTo(X0,Y0+.5);g.lineTo(X1,Y0+.5);g.stroke();[1,8,15,22,29].forEach(function(d){g.beginPath();g.moveTo(X(d),Y0);g.lineTo(X(d),Y0+2.5);g.stroke();g.fillStyle=rgba(INK3);g.font='400 5px Figtree, system-ui, sans-serif';g.textAlign='center';g.fillText(d+(d===1?' Oct':''),X(d),Y0+9)});
+ var tx=X(M.today);g.strokeStyle=rgba(INK2,.6);g.setLineDash([1,2]);g.beginPath();g.moveTo(tx,Y0);g.lineTo(tx,Y1);g.stroke();g.setLineDash([]);g.fillStyle=rgba(INK2);g.font='600 5px Figtree, system-ui, sans-serif';g.textAlign='center';g.fillText('TODAY',tx,Y1-4);
+ // last month's out, dashed, faint, whole month
+ g.strokeStyle=rgba(INK3,.9);g.lineWidth=.6;g.setLineDash([2,2]);g.beginPath();M.lastOut.forEach(function(v,d){d?g.lineTo(X(d),Y(v)):g.moveTo(X(d),Y(v))});g.stroke();g.setLineDash([]);g.fillStyle=rgba(INK3);g.textAlign='right';g.font='500 5px Figtree, system-ui, sans-serif';g.fillText('LAST MONTH OUT',X(31),Y(M.lastOut[31])-4);
+ // in line (sage)
+ g.strokeStyle=rgba(kc('left'));g.lineWidth=1.4;g.lineJoin='round';g.beginPath();inPts.forEach(function(p,i){i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1]))});g.stroke();
+ // out line: grey run, each step's rise in its kind's colour; the newest step draws itself
+ g.strokeStyle=rgba(INK,.85);g.lineWidth=1;g.beginPath();outPts.forEach(function(p,i){i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1]))});g.stroke();
+ steps.forEach(function(st,i){var newest=i===steps.length-1&&prog<1;var b=newest?lerp(st.a,st.b,ease(prog)):st.b;g.strokeStyle=rgba(kc(st.k));g.lineWidth=2.6;g.lineCap='butt';g.beginPath();g.moveTo(X(st.d),Y(st.a));g.lineTo(X(st.d),Y(b));g.stroke();
+  if(newest){var gl=g.createRadialGradient(X(st.d),Y(b),0,X(st.d),Y(b),14);gl.addColorStop(0,rgba(kc(st.k),.45*(1-prog)));gl.addColorStop(1,rgba(kc(st.k),0));g.fillStyle=gl;g.beginPath();g.arc(X(st.d),Y(b),14,0,TAU);g.fill()}});
+ // end labels
+ var ei=Y(ci),eo=Y(co);g.textAlign='left';g.fillStyle=rgba(kc('left'));g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText('IN',tx+4,ei-7);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(ci),tx+4,ei+1);
+ g.fillStyle=rgba(INK);g.font='600 5.2px Figtree, system-ui, sans-serif';g.fillText('OUT',tx+4,eo+8);g.font='400 9px Outfit, Figtree, sans-serif';g.fillText(fmt(co),tx+4,eo+16);
+ var diff=ci-co;g.fillStyle=rgba(diff>=0?kc('left'):INK);g.font='600 5.2px Figtree, system-ui, sans-serif';g.textAlign='left';g.fillText(diff>=0?'STILL YOURS '+fmt(diff):'OVER BY '+fmt(-diff),X0+2,Y1+4)}
+
+// ===================== actions (all three answer)
+var statusEl=$('#status');function say(s){statusEl.textContent=s}
+function pay(n,k,v){M.outs.push({n:n,k:k,v:v,d:M.today});threadsBuild();LQ.drops.push({k:k,v:v,t0:W.t});RC.lastChange=W.t;var d=inT()-outT();say(n+' '+fmt(v)+' to '+K[k].n+'. '+(d>=0?'Still yours '+fmt(d)+'.':'Out is ahead of in by '+fmt(-d)+'.'))}
+function income(n,v){M.ins.push({n:n,v:v,d:M.today});var before=TH.threads.length;threadsBuild();TH.threads.forEach(function(th,i){if(i>=before)th.born=W.t+(i-before)*.05});LQ.drops.push({k:'left',v:v,t0:W.t,inflow:1});RC.lastChange=W.t;say(n+' '+fmt(v)+' in.')}
+$$('[data-act]').forEach(function(b){b.addEventListener('click',function(){var a=b.dataset.act;if(a==='groceries')pay('Groceries','food',86);if(a==='drinks')pay('Drinks','out',42);if(a==='save')pay('Japan','save',300);if(a==='side')income('Side job',180);if(a==='laptop')pay('Laptop','big',1800);
+ if(a==='reset'){M=fresh();TH.threads=[];threadsBuild();LQ.drops=[];LQ.disp=liquidTargets();RC.lastChange=-9;say('Reset.')}})});
+addEventListener('resize',function(){TH.s=setup(TH.cv);LQ.s=setup(LQ.cv);RC.s=setup(RC.cv)});
+(function(){var d=Q.demo;if(!d)return;if(d==='over'){pay('Laptop','big',1800);pay('Weekend away','out',600)}if(d==='pay')pay('Groceries','food',86);if(d==='side')income('Side job',180);
+ if(Q.instant){var back=+Q.instant;TH.threads.forEach(function(th){th.cy=th.ty;th.ck=th.k;th.born-=back});LQ.drops.forEach(function(x){x.t0-=back});LQ.disp=liquidTargets();RC.lastChange-=back}})();
+var last=performance.now();
+function frame(now){var dt=clamp((now-last)/1000,0,.05);last=now;W.t+=dt;try{drawThreads(dt)}catch(e){say('Threads: '+e.message)}try{drawLiquid(dt)}catch(e){say('Liquid: '+e.message)}try{drawRace(dt)}catch(e){say('Lines: '+e.message)}requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

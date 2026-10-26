@@ -1,0 +1,295 @@
+<title>Money Indices</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: the Money landing (paper and black) with one index in the slot, then the full chart as a sandbox with the index switcher and the money moves. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#3F7A62;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#8DBFA7;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));margin:0}
+main{max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 10px}
+p{margin:0 0 10px;max-width:66ch}
+.lede{font-size:19px;color:var(--fg2);max-width:64ch}
+button.w{font:inherit;font-size:15px;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w:hover{color:var(--fg)}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.phones{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start}
+.slot{width:min(402px,100%);flex:0 0 auto}
+.cap{margin-top:14px;max-width:402px;color:var(--fg2);font-size:14px}
+.cap b{color:var(--fg);font-weight:600}
+.phone{--p-bg:#F7F5F1;--ink:#242423;--ink2:#6E6A63;--money:#3F7A62;--clay:#9C4B2C;--gold:#7E6A1E;--slate:#34506F;
+ width:402px;height:874px;position:relative;border-radius:46px;background:var(--p-bg);color:var(--ink);overflow:hidden;transform-origin:top left;font-family:var(--sans);user-select:none;-webkit-user-select:none}
+.phone.black{--p-bg:#000;--ink:#E8E3DA;--ink2:#A49E96;--money:#8DBFA7;--clay:#E2A07F;--gold:#D9C27A;--slate:#A7BCD6}
+.sbar{position:absolute;top:20px;left:30px;right:30px;display:flex;justify-content:space-between;font-size:13px;z-index:3}
+.home{position:absolute;bottom:9px;left:134px;width:134px;height:4px;border-radius:2px;background:var(--ink);opacity:.9;z-index:5}
+.ttl{position:absolute;left:24px;top:54px;font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--money)}
+.say{position:absolute;left:24px;right:24px;top:106px;font-size:26px;line-height:1.16;font-weight:300;letter-spacing:-.015em}
+.say b{font-weight:600}
+.n{font-family:var(--num);font-weight:400}
+.key{position:absolute;left:24px;top:196px;width:354px;height:182px;display:block;touch-action:none;cursor:crosshair}
+.kline{position:absolute;left:24px;right:24px;top:390px;font-size:15px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:22px}
+.kline b{color:var(--ink);font-weight:600}
+.ups{position:absolute;left:24px;right:24px;top:424px}
+.up{height:52px;display:flex;align-items:center;font-size:17px;line-height:1.3;font-weight:300}
+.up b{font-weight:600}
+.doors{position:absolute;left:24px;right:24px;top:540px;display:flex;flex-wrap:wrap;gap:0 18px}
+.door{font-size:22px;font-weight:600;color:var(--ink2);padding:6px 0;cursor:pointer}
+.door.on{color:var(--money)}
+.foot{position:absolute;left:28px;bottom:30px;font:600 20px var(--sans);color:var(--money);padding:8px 0}
+.tessw{position:absolute;right:26px;bottom:34px;font:italic 400 27px var(--serif);color:#9C775B;z-index:4}
+.phone.black .tessw{color:#C79B7C}
+.big{width:100%;max-width:1062px;aspect-ratio:354/182;display:block;touch-action:none;cursor:crosshair}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:0 40px}
+.rule{padding:14px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600;margin-bottom:2px}
+.rule span{color:var(--fg2)}
+.ctl{display:flex;flex-wrap:wrap;gap:0 18px;align-items:center}
+.status{min-height:26px;color:var(--fg2);font-size:15px;margin-top:8px}
+.status b{color:var(--fg)}
+table{border-collapse:collapse;font-size:14px;width:100%;max-width:980px}
+th,td{text-align:left;padding:8px 10px 8px 0;border-top:1px solid var(--line);vertical-align:top}
+th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);font-weight:600}
+</style>
+
+<main>
+<header>
+<h2>Tessera / Money / sheet 278</h2>
+<h1>Your indices.</h1>
+<p class="lede">A stock is a basket of your transactions with its own clock. MONTH is pay and payments, day by day, where the expectation is zero: it comes in and it goes out. SPEND is your pace against your own past. FOOD and the other kinds are each a stock. SURPRISES tracks the unexpected. SAVE and NET only go up, so they are charted against the plan, not against zero. PORTFOLIO is live. The indices are the doors: swipe across the chart or tap one in the watchlist and the chart becomes that stock, at its own timescale, normalised so it reads.</p>
+</header>
+
+<section aria-label="Landing">
+<div class="phones">
+ <div><div class="slot" data-fit><div class="phone" id="ph1">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say" data-say><b><span class="n">2,125</span> still yours.</b> Closing at <b style="color:var(--money)">179</b> after rent. <b style="color:var(--gold)">Japan</b> is on plan.</div>
+  <canvas class="key" data-ix="small"></canvas>
+  <div class="kline" data-cap>Swipe across for a category, up and down for an index.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;today.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;on Monday is the next drop.</div></div>
+  <div class="doors" data-doors></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Paper: This month › MONTH.</b> Categories across the top, indices down the right, the chart between. Same slot as every app.</p></div>
+
+ <div><div class="slot" data-fit><div class="phone black" id="ph2">
+  <div class="sbar"><span>5:36</span><span></span></div>
+  <div class="ttl">Money</div>
+  <div class="say" data-say><b><span class="n">2,125</span> still yours.</b> Closing at <b style="color:var(--money)">179</b> after rent. <b style="color:var(--gold)">Japan</b> is on plan.</div>
+  <canvas class="key" data-ix="small" data-start="save"></canvas>
+  <div class="kline" data-cap>Swipe across for a category, up and down for an index.</div>
+  <div class="ups"><div class="up"><b>Groceries</b>&nbsp;<span class="n">86</span>&nbsp;today.</div><div class="up"><b style="color:var(--clay)">Phone</b>&nbsp;<span class="n">45</span>&nbsp;on Monday is the next drop.</div></div>
+  <div class="doors" data-doors></div>
+  <div class="foot">Log</div><div class="tessw">Tess</div><div class="home"></div>
+ </div></div>
+ <p class="cap"><b>Black: Saving › SAVE.</b> Swipe sideways for Investing or Debts; up and down for the next index in the category.</p></div>
+</div>
+</section>
+
+<section aria-label="Sandbox">
+<h2>The chart</h2>
+<canvas class="big" id="big" data-ix="big"></canvas>
+<div class="status" id="status" aria-live="polite">Swipe across for a category, up and down for an index.</div>
+<div class="ctl" id="ixbar" style="margin-top:6px"></div>
+<div class="ctl" style="margin-top:2px">
+<button class="w" data-act="groceries">Groceries 86</button>
+<button class="w" data-act="dentist">Dentist 240 (a surprise)</button>
+<button class="w" data-act="save">Save 300 for Japan</button>
+<button class="w" data-act="side">Side job 180</button>
+<button class="w" data-act="reset">Reset</button>
+</div>
+</section>
+
+<section aria-label="Maker">
+<h2>Making one</h2>
+<p class="lede" style="font-size:17px">Say it to Tess ("track everything I send to India") or fill the blanks. The matching transactions appear as you choose, with the total; the chart above previews it; the index gets a door.</p>
+<p style="font-family:var(--num);font-weight:300;font-size:clamp(22px,3.4vw,34px);line-height:1.3;max-width:none"><span style="color:var(--fg2)">Track</span> <b style="font-weight:500;border-bottom:1.5px solid var(--acc)">money out</b> <span style="color:var(--fg2)">to</span> <b style="font-weight:500;border-bottom:1.5px solid var(--acc)">Mum, Zerodha, HDFC</b> <span style="color:var(--fg2)">in</span> <b style="font-weight:500;border-bottom:1.5px solid var(--acc)">INR</b> <span style="color:var(--fg2)">as</span> <b style="font-weight:500;border-bottom:1.5px solid var(--acc)">a monthly flow</b><span style="color:var(--fg2)">, called</span> <b style="font-weight:500;color:var(--acc)">INDIA</b><span style="color:var(--fg2)">.</span></p>
+<p style="color:var(--fg2)">38 transactions in twelve months · 8,160 total · 15% of income · overlaps DEBTS (the education loan) and SAVE (Zerodha).</p>
+</section>
+
+<section aria-label="The model">
+<h2>What an index is</h2>
+<table>
+<tr><th>Index</th><th>Basket</th><th>Clock</th><th>Baseline (what reads as flat)</th><th>Live</th></tr>
+<tr><td>MONTH</td><td>pay, all payments</td><td>this month, by day</td><td>zero: in equals out; chart is still yours, forecast to the close</td><td>each payment</td></tr>
+<tr><td>SPEND</td><td>everyday payments</td><td>this month, by day</td><td>100 = your pace last month; above is faster</td><td>each payment</td></tr>
+<tr><td>FOOD, OUT, HOME…</td><td>one kind</td><td>twelve months</td><td>100 = your twelve-month average for that kind</td><td>monthly, this month live</td></tr>
+<tr><td>SURPRISES</td><td>one-off, unplanned payments</td><td>twelve months</td><td>share of income; flat means the same surprise load as usual</td><td>when one lands</td></tr>
+<tr><td>SAVE</td><td>transfers to goals</td><td>two years, by month</td><td>the plan: 100 = on plan; the level only rises so it is the headline, not the chart</td><td>monthly</td></tr>
+<tr><td>PORTFOLIO</td><td>holdings</td><td>thirty days</td><td>100 = cost basis; the chart is return</td><td>ticks in market hours</td></tr>
+<tr><td>NET</td><td>everything you own minus owe</td><td>five years, by quarter</td><td>the plan, as SAVE; quarterly dots</td><td>quarterly</td></tr>
+</table>
+</section>
+
+<section aria-label="Rules">
+<h2>Normalisation rules</h2>
+<div class="rules">
+<div class="rule"><b>Zero-expectation series</b><span>In and out, where a good month ends near where it started. Chart the balance against zero, absolute, with the forecast to the close. (MONTH)</span></div>
+<div class="rule"><b>Pace series</b><span>Cumulative spending compared to the same day of your own past. Index to 100 so faster and slower are above and below one line. (SPEND, each kind in-month)</span></div>
+<div class="rule"><b>Monotonic series</b><span>Savings and net worth only go up, so a level chart is a staircase that says nothing. Chart the gap to the plan (100 = on plan) and the monthly contribution as bars; the level is the headline number. (SAVE, NET)</span></div>
+<div class="rule"><b>Ratio series</b><span>Things that scale with income read best as a share of it: fixed costs, surprises. Flat is the usual load. (SURPRISES, FIXED)</span></div>
+<div class="rule"><b>Live series</b><span>Index to the window's start (cost basis) so the chart is return, not price; tick during market hours; say when it last updated. (PORTFOLIO)</span></div>
+<div class="rule"><b>Clock by nature</b><span>Each index declares the window it is readable at: a month by day, a year by month, five years by quarter. Pinch moves within a window but the default is the natural one.</span></div>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var Q={};try{location.search.replace(/^\?/,'').split('&').forEach(function(kv){if(!kv)return;var p=kv.split('=');Q[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||'')})}catch(e){}
+var TAU=Math.PI*2;
+function lerp(a,b,u){return a+(b-a)*u}
+function clamp(v,a,b){return v<a?a:v>b?b:v}
+function ease(u){u=clamp(u,0,1);return 1-Math.pow(1-u,3)}
+function hex(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]}
+function rgba(c,a){return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(a==null?1:a)+')'}
+function mixc(a,b,u){return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)]}
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+function ord(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+function seed(n){var a=Math.sin(n*127.1+311.7)*43758.5453;return a-Math.floor(a)}
+var K={in:['#3F7A62','#8DBFA7'],home:['#9C4B2C','#E2A07F'],save:['#7E6A1E','#D9C27A'],food:['#93611A','#C49A5E'],out:['#34506F','#A7BCD6'],body:['#0B62AE','#8FB0EE'],subs:['#1E6E77','#84C3C9'],sur:['#5B3FB8','#B9A9E0'],port:['#6E6A63','#A49E96'],net:['#34506F','#A7BCD6']};
+var KN={home:'Home',food:'Food',out:'Going out',body:'Body',subs:'Subscriptions',save:'Japan',sur:'Surprise'};
+// ---------- the ledger (Tue 14 Oct) and the longer past
+function fresh(){return {today:14,days:31,
+ tx:[{d:0,n:'Salary',v:4200,in:1},{d:1,n:'Rent',k:'home',v:1150,fx:1},{d:2,n:'Groceries',k:'food',v:64},{d:2,n:'Music',k:'subs',v:11,fx:1},{d:3,n:'Gym',k:'body',v:49,fx:1},{d:4,n:'Drinks',k:'out',v:38},{d:5,n:'Eating out',k:'food',v:42},{d:6,n:'Streaming',k:'subs',v:18,fx:1},{d:7,n:'Groceries',k:'food',v:71},{d:8,n:'Electricity',k:'home',v:82,fx:1},{d:8,n:'Badminton',k:'body',v:23},{d:9,n:'Side job',v:180,in:1},{d:9,n:'Cinema',k:'out',v:34},{d:10,n:'Japan',k:'save',v:400,fx:1},{d:10,n:'Groceries',k:'food',v:47},{d:11,n:'Drinks',k:'out',v:66},{d:11,n:'Apps',k:'subs',v:34,fx:1},{d:12,n:'Eating out',k:'food',v:58},{d:13,n:'Badminton',k:'body',v:24},{d:14,n:'Eating out',k:'food',v:44}],
+ due:[{d:17,n:'Phone',k:'home',v:45},{d:22,n:'Electricity',k:'home',v:82},{d:25,n:'Gym',k:'body',v:49},{d:31,n:'Rent',k:'home',v:1150}],
+ lastCum:[0,1180,1230,1290,1330,1380,1420,1500,1590,1640,1700,1760,1830,1880,1950,2030,2120,2190,2260,2350,2420,2480,2560,2620,2700,2790,2860,2930,3010,3080,3150,3220],
+ lastEveryday:[0,0,50,110,150,200,240,320,330,380,440,500,570,620,690,770,860,930,1000,1090,1160,1220,1300,1360,1440,1530,1600,1670,1750,1820,1890,1960],
+ months:['N','D','J','F','M','A','M','J','J','A','S','O'],
+ food:[480,610,520,500,540,470,530,560,510,490,520,326],out:[180,260,150,170,210,190,240,230,200,180,210,138],home:[1277,1277,1290,1290,1290,1290,1290,1310,1310,1310,1277,1232],
+ surprises:[[0,''],[320,'Car tyre'],[0,''],[140,'Vet'],[0,''],[0,''],[480,'Fridge'],[0,''],[60,'Lost card'],[0,''],[0,''],[0,'']],income:[4200,4200,4300,4300,4300,4300,4300,4380,4380,4380,4380,4380],
+ saveLevel:[200,500,800,1100,1400,1700,1950,2250,2550,2800,3100,3450,3750,4000,4350,4700,5000,5300,5650,6000,6250,6600,6950,7260],savePlan:[300,600,900,1200,1500,1800,2100,2400,2700,3000,3300,3600,3900,4200,4500,4800,5100,5400,5700,6000,6300,6600,6900,7200],
+ port:{basis:12190,path:[12190,12240,12170,12300,12360,12310,12410,12380,12450,12390,12470,12520,12440,12500,12480,12530,12490,12560,12600,12540,12620,12590,12650,12700,12660,12710,12690,12740,12780,12760]},
+ net:[18.2,18.9,19.1,19.8,20.6,20.9,21.7,22.4,22.6,23.5,24.1,24.4,25.2,25.9,26.3,27.0,27.6,28.1,28.9,29.6],netPlan:[18,18.8,19.6,20.4,21.2,22,22.8,23.6,24.4,25.2,26,26.8,27.6,28.4,29.2,30,30.8,31.6,32.4,33.2]}}
+var M=fresh();
+// user-made indices: DEBTS (children) and INDIA (composite)
+var DEBT={sched:[42.0,41.2,40.4,39.6,38.8,38.0,37.2,36.4,35.6,34.8,34.0,33.2,32.4,31.6,30.8,30.0,29.2,28.4,27.6,26.8,26.0,25.2,24.4,23.6],
+ bal:[42.0,41.1,40.3,39.3,38.6,37.6,36.5,35.7,34.7,33.6,32.9,31.8,30.9,29.8,28.9,27.8,26.9,25.9,24.8,23.9,22.9,22.0,21.0,20.1],
+ kids:[{n:'HOME',v:14.2},{n:'CAR',v:3.1},{n:'EDUCATION',v:2.4},{n:'PERSONAL',v:0.4}]};
+var INDIA={fam:[300,300,300,300,350,300,300,300,300,300,300,300],inv:[200,200,0,400,200,200,200,0,200,200,200,200],loan:[180,180,180,180,180,180,180,180,180,180,180,180]};
+function series(){var bal=0,s=[];for(var d=0;d<=M.today;d++){M.tx.forEach(function(t){if(t.d===d)bal+=t.in?t.v:-t.v});s.push(bal)}return s}
+function burn(){var o=0;M.tx.forEach(function(t){if(!t.in&&!t.fx)o+=t.v});return o/Math.max(1,M.today)}
+function forecast(){var s=series(),bal=s[s.length-1],f=[bal],b=burn();for(var d=M.today+1;d<=M.days;d++){bal-=b;M.due.forEach(function(x){if(x.d===d)bal-=x.v});f.push(bal)}return f}
+function cumEveryday(){var c=0,s=[0];for(var d=1;d<=M.today;d++){M.tx.forEach(function(t){if(t.d===d&&!t.in&&!t.fx)c+=t.v});s.push(c)}return s}
+function kindMonth(k){var t=0;M.tx.forEach(function(x){if(!x.in&&x.k===k)t+=x.v});return t}
+function surThis(){var t=0;M.tx.forEach(function(x){if(x.k==='sur')t+=x.v});return t}
+function avg(a){return a.reduce(function(x,y){return x+y},0)/a.length}
+
+// ---------- the indices: id, name, kind of series, colour, window label, build() -> {pts, base, labels, headline, number, sub, extra}
+var IX=[
+ {id:'month',n:'MONTH',col:'in',kind:'zero',clock:'this month, by day',build:function(){var s=series(),f=forecast();return {pts:s,fc:f,base:0,xl:['1 Oct','8','15','22','29'],xn:31,num:fmt(s[s.length-1]),lab:'STILL YOURS',sub:'closes at '+fmt(f[f.length-1])+' at this pace',hl:'In and out, day by day. Flat means a good month: it came in and went out.'}}},
+ {id:'spend',n:'SPEND',col:'out',kind:'pace',clock:'this month vs last, by day',build:function(){var c=cumEveryday(),pts=c.map(function(v,d){return d?v/Math.max(1,M.lastEveryday[d])*100:100});var now=pts[pts.length-1];return {pts:pts,base:100,xl:['1 Oct','8','15','22','29'],xn:31,num:Math.round(now),lab:'PACE · 100 = LAST MONTH',sub:(now>100?Math.round(now-100)+'% faster':Math.round(100-now)+'% slower')+' than last month by the '+ord(M.today),hl:'Everyday spending against the same day last month. Above the line is faster.'}}},
+ {id:'food',n:'FOOD',col:'food',kind:'ratio',clock:'twelve months',build:function(){var a=M.food.slice(0,11),m=avg(a),cur=kindMonth('food'),proj=cur/M.today*M.days,pts=a.map(function(v){return v/m*100}).concat([proj/m*100]);return {pts:pts,base:100,xl:M.months,xn:11,bars:1,projLast:1,num:fmt(cur),lab:'FOOD THIS MONTH',sub:'heading for '+fmt(proj)+' · average '+fmt(m),hl:'One kind as a stock. 100 is your own year. This month is projected, hollow.'}}},
+ {id:'out',n:'OUT',col:'out',kind:'ratio',clock:'twelve months',build:function(){var a=M.out.slice(0,11),m=avg(a),cur=kindMonth('out'),proj=cur/M.today*M.days,pts=a.map(function(v){return v/m*100}).concat([proj/m*100]);return {pts:pts,base:100,xl:M.months,xn:11,bars:1,projLast:1,num:fmt(cur),lab:'GOING OUT THIS MONTH',sub:'heading for '+fmt(proj)+' · average '+fmt(m),hl:'Going out, against your own year.'}}},
+ {id:'sur',n:'SURPRISES',col:'sur',kind:'share',clock:'twelve months, share of income',build:function(){var pts=M.surprises.map(function(x,i){return x[0]/M.income[i]*100});pts[11]=surThis()/M.income[11]*100;var yr=M.surprises.reduce(function(a,x){return a+x[0]},0)+surThis();return {pts:pts,base:avg(pts),xl:M.months,xn:11,bars:1,names:M.surprises.map(function(x){return x[1]}),num:fmt(yr),lab:'UNPLANNED, TWELVE MONTHS',sub:(avg(pts)).toFixed(1)+'% of income is your usual surprise load',pct:1,hl:'The unexpected, as a share of what came in. The dashed line is your usual load.'}}},
+ {id:'save',n:'SAVE',col:'save',kind:'plan',clock:'two years, by month',build:function(){var lv=M.saveLevel.slice(),pl=M.savePlan;lv[lv.length-1]=lv[lv.length-1]+(M.saveExtra||0);var pts=lv.map(function(v,i){return v/pl[i]*100});return {pts:pts,base:100,xl:['two years ago','','a year ago','','now'],xn:23,num:fmt(lv[lv.length-1]),lab:'SAVED',sub:(pts[pts.length-1]>=100?'ahead of plan by '+fmt(lv[lv.length-1]-pl[pl.length-1]):'behind plan by '+fmt(pl[pl.length-1]-lv[lv.length-1]))+' · '+fmt(lv[lv.length-1]-lv[lv.length-2])+' this month',contrib:lv.map(function(v,i){return i?v-lv[i-1]:v}),hl:'Savings only go up, so the chart is the gap to the plan. 100 is on plan. Bars are what you put in each month.'}}},
+ {id:'port',n:'PORTFOLIO',col:'port',kind:'live',clock:'thirty days, live',build:function(){var p=M.port.path.slice();p[p.length-1]=p[p.length-1]+Math.sin(W.t*.35)*18+Math.sin(W.t*2.3)*4;var pts=p.map(function(v){return v/M.port.basis*100});var r=pts[pts.length-1]-100;return {pts:pts,base:100,xl:['30 days ago','','','','today'],xn:29,num:fmt(p[p.length-1]),lab:'PORTFOLIO',sub:(r>=0?'+':'')+r.toFixed(1)+'% on cost · live',live:1,hl:'Return on what you paid, not the price. It ticks in market hours.'}}},
+ {id:'debts',n:'DEBTS',col:'home',kind:'plan',down:1,clock:'two years, by month · you made this',kids:DEBT.kids,build:function(){var pts=DEBT.bal.map(function(v,i){return DEBT.sched[i]/v*100});var cur=DEBT.bal[DEBT.bal.length-1],rate=DEBT.bal[DEBT.bal.length-13]-cur,months=Math.ceil(cur/(rate/12));return {pts:pts,base:100,xl:['two years ago','','a year ago','','now'],xn:23,num:cur.toFixed(1)+'k',lab:'OWED · CAR, HOME, EDUCATION, PERSONAL',sub:(pts[pts.length-1]>=100?'ahead of schedule':'behind schedule')+' · paid off in '+months+' months at this pace',contrib:DEBT.bal.map(function(v,i){return i?DEBT.bal[i-1]-v:0}),hl:'Debts only go down, so the chart is the gap to the schedule. 100 is on schedule. Bars are what you paid each month.'}}},
+ {id:'india',n:'INDIA',col:'save',kind:'ratio',clock:'twelve months · you made this',stack:[['fam','FAMILY','#7E6A1E'],['inv','INVESTED','#3F7A62'],['loan','LOAN · ALSO IN DEBTS','#9C4B2C']],build:function(){var tot=INDIA.fam.map(function(v,i){return v+INDIA.inv[i]+INDIA.loan[i]});var m=avg(tot);var sh=tot.map(function(v,i){return v/M.income[i]*100});return {pts:tot.map(function(v){return v/m*100}),raw:tot,share:sh,base:100,xl:M.months,xn:11,bars:1,num:fmt(tot[11]),lab:'TO INDIA THIS MONTH',sub:sh[11].toFixed(0)+'% of income · average '+fmt(m)+' a month',hl:'Family, investments and the education loan, stacked. The loan ends in May and the share drops to 9%.'}}},
+ {id:'net',n:'NET',col:'net',kind:'plan',clock:'five years, by quarter',build:function(){var pts=M.net.map(function(v,i){return v/M.netPlan[i]*100});var cur=M.net[M.net.length-1];return {pts:pts,base:100,xl:['5y','4y','3y','2y','1y'],xn:19,num:cur.toFixed(1)+'k',lab:'NET, EVERYTHING',sub:(pts[pts.length-1]>=100?'ahead of':'behind')+' the plan · +'+(cur-M.net[M.net.length-5]).toFixed(1)+'k this year',dots:1,hl:'What you own minus what you owe, against the plan. One dot a quarter.'}}}
+];
+function ix(id){return IX.filter(function(x){return x.id===id})[0]}
+var CATS=[{n:'This month',ids:['month','spend','sur']},{n:'Kinds',ids:['food','out']},{n:'Saving',ids:['save']},{n:'Investing',ids:['port','net']},{n:'Debts',ids:['debts']},{n:'Mine',ids:['india']}];
+function catOf(id){for(var i=0;i<CATS.length;i++)if(CATS[i].ids.indexOf(id)>=0)return i;return 0}
+var W={t:0,cur:Q.ix||'month',from:null,swT:-9};
+function setIndex(id,who){if(W.cur===id)return;W.from=W.cur;W.cur=id;W.swT=W.t;var x=ix(id);say('<b>'+x.n+'</b> · '+x.clock+'. '+x.build().hl);syncDoors()}
+
+function Ix(cv){var self=this;this.cv=cv;this.g=cv.getContext('2d');this.dark=!!cv.closest('.phone.black')||(!cv.closest('.phone')&&matchMedia('(prefers-color-scheme: dark)').matches);this.compact=cv.dataset.st==='small'||cv.dataset.ix==='small';this.own=cv.dataset.start||null;this.scrub=-1;
+ this.size();addEventListener('resize',function(){self.size()});
+ this.dialOff=0;this.scrollOff=0;
+ cv.addEventListener('pointerdown',function(e){var p=self.pt(e);self.down={p:p,t:W.t,moved:false,zone:p.y<26?'dial':p.x>self.WX-8?'side':'chart'}});
+ cv.addEventListener('pointermove',function(e){if(!self.down)return;var p=self.pt(e),dx=p.x-self.down.p.x,dy=p.y-self.down.p.y;if(Math.abs(dx)>8||Math.abs(dy)>8)self.down.moved=true;
+  if(self.down.zone==='chart'&&!self.down.moved){self.scrub=clamp((p.x-self.X0)/(self.X1-self.X0),0,1)}
+  if(self.down.zone==='dial'||(self.down.zone==='chart'&&self.down.moved&&Math.abs(dx)>Math.abs(dy)*1.3)){self.dialOff=clamp(dx*.6,-50,50);self.scrub=-1}
+  if(self.down.zone==='side'||(self.down.zone==='chart'&&self.down.moved&&Math.abs(dy)>Math.abs(dx)*1.3)){self.scrollOff=clamp(dy*.6,-20,20);self.scrub=-1}});
+ cv.addEventListener('pointerup',function(e){var d=self.down;self.down=null;self.scrub=-1;if(!d)return;var p=self.pt(e),dx=p.x-d.p.x,dy=p.y-d.p.y;var id=self.curId(),ci=catOf(id),list=CATS[ci].ids,fi=list.indexOf(id);
+  function go(nid){if(self.own){self.own=nid;var x=ix(nid);say('<b>'+x.n+'</b> · '+x.clock+'. '+x.build().hl);syncDoors()}else setIndex(nid)}
+  if(d.moved&&Math.abs(dx)>36&&Math.abs(dx)>Math.abs(dy)){var nc=((ci+(dx<0?1:-1))%CATS.length+CATS.length)%CATS.length;self.dialOff=dx<0?60:-60;go(CATS[nc].ids[0]);return}
+  if(d.moved&&Math.abs(dy)>24&&Math.abs(dy)>Math.abs(dx)){var ni=clamp(fi+(dy<0?1:-1),0,list.length-1);if(ni!==fi){self.scrollOff=dy<0?24:-24;go(list[ni])}return}
+  if(!d.moved&&d.zone==='side'){var row=Math.round((p.y-self.WY0)/self.WH);var li=fi+row-1;if(li>=0&&li<list.length&&li!==fi)go(list[li]);return}
+  if(!d.moved&&d.zone==='dial'){var k=Math.round((p.x-177)/86);if(k){var nc2=((ci+k)%CATS.length+CATS.length)%CATS.length;go(CATS[nc2].ids[0])}}});
+ cv.addEventListener('pointercancel',function(){self.down=null;self.scrub=-1})}
+Ix.prototype.curId=function(){return this.own||W.cur};
+Ix.prototype.size=function(){var r=this.cv.getBoundingClientRect();var dpr=Math.max(2,window.devicePixelRatio||1);var w=Math.max(1,r.width||354);this.cv.width=Math.round(w*dpr);this.cv.height=Math.round(w*182/354*dpr);this.s=this.cv.width/354;this.X0=12;this.X1=262;this.Y0=48;this.Y1=136;this.WX=276;this.WY0=30;this.WH=30};
+Ix.prototype.pt=function(e){var r=this.cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*354,y:(e.clientY-r.top)/r.height*182}};
+Ix.prototype.draw=function(dt){var g=this.g,s=this.s,t=W.t,self=this,dk=this.dark;function kc(k){return hex(K[k][dk?1:0])}
+ var ink=dk?[232,227,218]:[36,36,35],ink2=dk?[164,158,150]:[110,106,99],ink3=dk?[107,103,95]:[169,164,155],bg=dk?[0,0,0]:[247,245,241];
+ g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,this.cv.width,this.cv.height);g.setTransform(s,0,0,s,0,0);
+ var X0=this.X0,X1=this.X1,Y0=this.Y0,Y1=this.Y1,cp=this.compact;var cur=ix(this.curId()),B=cur.build(),col=kc(cur.col);
+ var sw=this.own?1:ease((W.t-W.swT)/.7);   // switch transition: the old chart fades and slides, the new one draws in
+ var n=B.pts.length,xs=function(i){return X0+(X1-X0)*i/(B.xn||(n-1))};
+ var vals=B.pts.slice();if(B.fc)vals=vals.concat(B.fc);var lo=Math.min.apply(null,vals.concat([B.base])),hi=Math.max.apply(null,vals.concat([B.base]));var pad=(hi-lo)*.18||1;lo-=pad;hi+=pad;if(cur.kind==='zero'){lo=Math.min(lo,-60)}if(cur.stack){lo=0;hi=Math.max.apply(null,B.pts)*1.25}
+ var Y=function(v){return Y1-(Y1-Y0)*(v-lo)/(hi-lo)};
+ g.save();g.globalAlpha=sw;g.translate((1-sw)*10,0);
+ // baseline: what reads as flat
+ var by=Y(B.base);g.save();g.setLineDash(cur.kind==='zero'?[]:[1.6,2.2]);g.strokeStyle=rgba(ink3,.9);g.lineWidth=.6;g.beginPath();g.moveTo(X0,by);g.lineTo(X1,by);g.stroke();g.restore();
+ if(cur.kind!=='zero'){g.fillStyle=rgba(ink3);g.textAlign='right';g.font='500 4.4px Figtree, system-ui, sans-serif';g.fillText(cur.kind==='plan'?(cur.down?'ON SCHEDULE':'ON PLAN'):cur.kind==='share'?'USUAL':cur.kind==='live'?'COST':'YOUR AVERAGE',X1,by-2)}
+ // x labels
+ g.fillStyle=rgba(ink3);g.font='400 4.8px Figtree, system-ui, sans-serif';g.textAlign='center';if(B.xl.length===n||cur.kind==='ratio'||cur.kind==='share'){B.xl.forEach(function(l,i){if(l)g.fillText(l,xs(i),Y1+9)})}else{var ticks=cur.kind==='zero'||cur.kind==='pace'?[1,8,15,22,29]:[0,Math.round(B.xn/2),B.xn];ticks.forEach(function(d,i){var lab=cur.kind==='zero'||cur.kind==='pace'?B.xl[i]:B.xl[[0,2,4][i]];if(!lab)return;g.textAlign=d===0?'left':d===B.xn?'right':'center';g.fillText(lab,xs(d),Y1+9)});g.textAlign='center'}
+ var born=ease((W.t-W.born)/1.2)*sw;var upto=Math.max(1,Math.floor(born*(n-1))),fr=born*(n-1)-Math.floor(born*(n-1));
+ function pathTo(k){g.beginPath();for(var i=0;i<=k&&i<n;i++){var x=xs(i),y=Y(B.pts[i]);if(i===k&&k<n-1){x=lerp(xs(i),xs(i+1),fr);y=lerp(y,Y(B.pts[i+1]),fr)}i?g.lineTo(x,y):g.moveTo(x,y)}}
+ if(cur.stack){ // composite: stacked bars by child, in each child's colour; the share-of-income line over the top
+  var bw0=(X1-X0)/n*.5,m0=avg(B.raw);var keys=cur.stack;for(var i=0;i<n;i++){var y=by,base0=Y(0);y=Y(0);var acc=0;keys.forEach(function(kd){var v=INDIA[kd[0]][i];var h=(v/m0*100)/(hi-lo)*(Y1-Y0);g.fillStyle=rgba(hex(kd[2]),dk?.75:.85);g.fillRect(xs(i)-bw0/2,y-h,bw0,h);y-=h})}
+  var smax=Math.max.apply(null,B.share)*1.35;g.strokeStyle=rgba(ink,.7);g.lineWidth=.8;g.beginPath();B.share.forEach(function(v,i){var yy=Y1-(Y1-Y0)*(v/smax);i?g.lineTo(xs(i),yy):g.moveTo(xs(i),yy)});g.stroke();g.fillStyle=rgba(ink2);g.textAlign='right';g.font='500 4.4px Figtree, system-ui, sans-serif';g.fillText('SHARE OF INCOME · '+B.share[11].toFixed(0)+'%',X1,Y1-(Y1-Y0)*(B.share[11]/smax)-3);
+  var lx0=X0;keys.forEach(function(kd){g.fillStyle=rgba(hex(kd[2]));g.fillRect(lx0,Y1+28,4,4);g.textAlign='left';g.font='500 4.4px Figtree, system-ui, sans-serif';g.fillText(kd[1],lx0+6,Y1+31.6);lx0+=g.measureText(kd[1]).width+14})}
+ else if(B.bars){ // ratio and share: bars per month, this month hollow if projected; surprises named
+  var bw=(X1-X0)/(n)*.5;B.pts.forEach(function(v,i){var x=xs(i)-bw/2,y=Y(v),h=by-y,last=i===n-1;g.fillStyle=rgba(col,last&&B.projLast?.25:.85);if(h>=0){g.fillRect(x,y,bw,h)}else{g.fillRect(x,by,bw,-h)}if(last&&B.projLast){g.strokeStyle=rgba(col);g.lineWidth=.7;g.strokeRect(x,Math.min(y,by),bw,Math.abs(h))}
+   if(B.names&&B.names[i]&&v>0){g.fillStyle=rgba(col);g.textAlign='center';g.font='500 4.2px Figtree, system-ui, sans-serif';g.fillText(B.names[i].toUpperCase(),xs(i),y-3)}});
+  if(B.names){var cs=surThis();if(cs>0){g.fillStyle=rgba(col);g.textAlign='center';g.font='500 4.2px Figtree, system-ui, sans-serif';g.fillText('THIS MONTH',xs(n-1),Y(B.pts[n-1])-3)}}}
+ else{ // lines: fill toward the baseline, then the line
+  pathTo(upto);var ex=upto<n-1?lerp(xs(upto),xs(upto+1),fr):xs(n-1);g.lineTo(ex,by);g.lineTo(X0,by);g.closePath();var fg=g.createLinearGradient(0,Y0,0,Y1);fg.addColorStop(0,rgba(col,dk?.2:.14));fg.addColorStop(1,rgba(col,0));g.fillStyle=fg;g.fill();
+  if(B.contrib){var bw2=(X1-X0)/n*.5,cm=Math.max.apply(null,B.contrib);B.contrib.forEach(function(c,i){var h=c/cm*12;g.fillStyle=rgba(col,.35);g.fillRect(xs(i)-bw2/2,Y1-h,bw2,h)})}
+  g.strokeStyle=rgba(col);g.lineWidth=1.5;g.lineJoin='round';pathTo(upto);g.stroke();
+  if(B.dots){B.pts.forEach(function(v,i){if(i>upto)return;g.fillStyle=rgba(col);g.beginPath();g.arc(xs(i),Y(v),1.6,0,TAU);g.fill()})}
+  if(B.fc){g.save();g.setLineDash([1.6,2]);g.strokeStyle=rgba(ink,.8);g.lineWidth=.9;g.beginPath();B.fc.forEach(function(v,i){var x=xs(M.today+i),y=Y(v);i?g.lineTo(x,y):g.moveTo(x,y)});g.stroke();g.restore();M.due.forEach(function(x){var i=x.d-M.today;if(i<1)return;g.strokeStyle=rgba(kc(x.k));g.lineWidth=1.5;g.beginPath();g.moveTo(xs(x.d),Y(B.fc[i-1]-burn()));g.lineTo(xs(x.d),Y(B.fc[i]));g.stroke()});var cl=B.fc[B.fc.length-1];g.fillStyle=rgba(cl>=0?col:ink);g.textAlign='right';g.font='600 4.6px Figtree, system-ui, sans-serif';g.fillText('CLOSE',X1-3,Y(cl)-9);g.font='400 7.5px Outfit, Figtree, sans-serif';g.fillText(fmt(cl),X1-3,Y(cl)-1.5)}
+  // the live dot
+  var lx=xs(n-1),ly=Y(B.pts[n-1]);if(born>=1){if(B.live){g.fillStyle=rgba(col,.3*(.5+.5*Math.sin(t*4)));g.beginPath();g.arc(lx,ly,5,0,TAU);g.fill()}g.fillStyle=rgba(col);g.beginPath();g.arc(lx,ly,2,0,TAU);g.fill()}}
+ // the header: name, clock, number, reading
+ g.fillStyle=rgba(ink3);g.textAlign='left';g.font='600 4.6px Figtree, system-ui, sans-serif';g.fillText(cur.clock.toUpperCase(),X0,Y0-18);
+ g.fillStyle=rgba(col);g.font='600 4.8px Figtree, system-ui, sans-serif';g.fillText(B.lab,X0,Y0-10);g.font='300 12px Outfit, Figtree, sans-serif';g.fillText(String(B.num)+(B.pct?'':''),X0,Y0+1);
+ g.fillStyle=rgba(ink2);g.font='400 5px Figtree, system-ui, sans-serif';var nw=g.measureText(String(B.num)).width;g.font='300 12px Outfit, Figtree, sans-serif';nw=g.measureText(String(B.num)).width;g.font='400 5px Figtree, system-ui, sans-serif';g.fillText(B.sub,X0+nw+6,Y0+1);
+ // scrub
+ if(this.scrub>=0){var i=Math.round(this.scrub*(B.xn||(n-1)));var v=i<n?B.pts[i]:(B.fc?B.fc[i-M.today]:null);if(v!=null){var x=xs(i);g.strokeStyle=rgba(ink,.6);g.lineWidth=.6;g.beginPath();g.moveTo(x,Y0-4);g.lineTo(x,Y1);g.stroke();g.fillStyle=rgba(ink);g.beginPath();g.arc(x,Y(v),2.4,0,TAU);g.fill();g.textAlign=x>X1-40?'right':'left';g.font='400 7px Outfit, Figtree, sans-serif';g.fillText(cur.kind==='zero'?fmt(v):cur.kind==='share'?v.toFixed(1)+'%':Math.round(v)+'',x+(x>X1-40?-5:5),Y(v)-5)}}
+ g.restore();
+ // headline (Tess) under the chart
+ g.fillStyle=rgba(ink);g.textAlign='left';g.globalAlpha=sw;var hl=B.hl;g.font='italic 400 6px Newsreader, Georgia, serif';while(g.measureText(hl).width>X1-X0&&hl.indexOf(' ')>0)hl=hl.slice(0,hl.lastIndexOf(' ',hl.length-2))+'…';g.fillText(hl,X0,Y1+22);g.globalAlpha=1;
+ // the dial across the top: high-level categories; the focused one large, neighbours faded; swipe sideways
+ var ci=catOf(this.curId()),cx=177,dy=8;g.textAlign='center';
+ for(var k=-2;k<=2;k++){var j=((ci+k)%CATS.length+CATS.length)%CATS.length;var x=cx+k*86+this.dialOff;var a=k===0?1:Math.max(0,.55-Math.abs(k)*.18);if(Math.abs(x-cx)>170)continue;g.fillStyle=rgba(k===0?col:ink2,a);g.font=(k===0?'600 7.5px':'400 6.5px')+' Figtree, system-ui, sans-serif';g.fillText(CATS[j].n,x,dy+8)}
+ g.strokeStyle=rgba(ink3,.5);g.lineWidth=.5;g.beginPath();g.moveTo(X0,dy+14);g.lineTo(354-X0,dy+14);g.stroke();
+ g.fillStyle=rgba(col);g.beginPath();g.moveTo(cx,dy+13.5);g.lineTo(cx-2.4,dy+17.5);g.lineTo(cx+2.4,dy+17.5);g.closePath();g.fill();
+ // the scroller down the right: the indices in this category, the focused one lit, more above and below; swipe up and down
+ var cat=CATS[ci],list=cat.ids,fi=list.indexOf(this.curId()),rows=3;g.strokeStyle=rgba(ink3,.5);g.beginPath();g.moveTo(this.WX-8,this.WY0-2);g.lineTo(this.WX-8,this.WY0+rows*this.WH+2);g.stroke();
+ for(var r=-1;r<=rows;r++){var li=fi+r-1;var y=this.WY0+r*this.WH+this.scrollOff;if(y<this.WY0-this.WH*.5||y>this.WY0+rows*this.WH-this.WH*.5)continue;if(li<0||li>=list.length)continue;var x2=ix(list[li]);var b2=x2.build(),c2=kc(x2.col),foc=li===fi;var al=foc?1:.45;
+  var p=b2.pts.slice(-13),mn=Math.min.apply(null,p.concat([b2.base])),mx=Math.max.apply(null,p.concat([b2.base])),rg=Math.max(1e-6,mx-mn),w=40,h=9,sx0=this.WX+32;
+  g.globalAlpha=al;g.strokeStyle=rgba(ink3,.6);g.lineWidth=.4;g.setLineDash([1,1.5]);var yb=y+8+h-(b2.base-mn)/rg*h;g.beginPath();g.moveTo(sx0,yb);g.lineTo(sx0+w,yb);g.stroke();g.setLineDash([]);
+  g.strokeStyle=rgba(c2);g.lineWidth=foc?1:.8;g.beginPath();p.forEach(function(v,i){var px=sx0+w*i/(p.length-1),py=y+8+h-(v-mn)/rg*h;i?g.lineTo(px,py):g.moveTo(px,py)});g.stroke();
+  g.fillStyle=rgba(c2);g.textAlign='left';g.font=(foc?'700':'600')+' 4.8px Figtree, system-ui, sans-serif';g.fillText(x2.n,this.WX,y+9);g.fillStyle=rgba(ink2);g.font='400 5.6px Outfit, Figtree, sans-serif';g.fillText(String(b2.num),this.WX,y+17);g.globalAlpha=1}
+ g.fillStyle=rgba(ink3);g.textAlign='center';g.font='400 5px Figtree, system-ui, sans-serif';if(fi>0)g.fillText('▲',this.WX+36,this.WY0-4);if(fi<list.length-1)g.fillText('▼',this.WX+36,this.WY0+rows*this.WH+6);
+ if(this.dialOff)this.dialOff*=Math.pow(.001,dt||0);if(Math.abs(this.dialOff)<.3)this.dialOff=0;if(this.scrollOff)this.scrollOff*=Math.pow(.001,dt||0);if(Math.abs(this.scrollOff)<.3)this.scrollOff=0;
+ if(cur.kids){var kx=X0;cur.kids.forEach(function(k,i){var w=k.v/20.1*(X1-X0);g.fillStyle=rgba(col,.35+.15*(i%2));g.fillRect(kx,Y1+27,w-1,4);g.fillStyle=rgba(ink2);g.textAlign='left';g.font='500 4.2px Figtree, system-ui, sans-serif';if(w>24)g.fillText(k.n+' '+k.v+'k',kx,Y1+36.5);kx+=w})}
+};
+var views=[];function all(f){views.forEach(f)}
+var statusEl=$('#status');function say(s){if(statusEl)statusEl.innerHTML=s;$$('[data-cap]').forEach(function(e){e.innerHTML=s})}
+function syncDoors(){$$('[data-doors]').forEach(function(d){var ph=d.closest('.phone'),cv=ph.querySelector('canvas'),view=views.filter(function(v){return v.cv===cv})[0],curId=view?view.curId():W.cur;var ci=catOf(curId);d.innerHTML=CATS.map(function(c,i){return '<span class="door'+(i===ci?' on':'')+'" data-id="'+c.ids[0]+'">'+c.n+'</span>'}).join('');$$('.door',d).forEach(function(el){el.onclick=function(){if(view&&view.own){view.own=el.dataset.id;syncDoors()}else setIndex(el.dataset.id)}})});
+ var bar=$('#ixbar');if(bar){bar.innerHTML=IX.map(function(x){return '<button class="w" data-ix="'+x.id+'" aria-pressed="'+(x.id===W.cur)+'">'+x.n.charAt(0)+x.n.slice(1).toLowerCase()+'</button>'}).join('');$$('[data-ix]',bar).forEach(function(b){b.onclick=function(){setIndex(b.dataset.ix)}})}}
+function pay(n,k,v,fx){M.tx.push({d:M.today,n:n,k:k,v:v,fx:fx?1:0});if(k==='save')M.saveExtra=(M.saveExtra||0)+v;say('<b>'+n+'</b>, '+fmt(v)+'. Watch MONTH, SPEND'+(k==='food'?', FOOD':k==='sur'?', SURPRISES':k==='save'?', SAVE':'')+' move.')}
+function income(n,v){M.tx.push({d:M.today,n:n,v:v,in:1});say('<b>'+n+'</b>, +'+fmt(v)+'.')}
+views=$$('canvas[data-ix]').map(function(cv){return new Ix(cv)});W.born=0;
+function fit(){var w=Math.min(402,document.documentElement.clientWidth-32),s=w/402;$$('[data-fit]').forEach(function(el){el.style.height=(874*s)+'px';el.firstElementChild.style.transform='scale('+s+')'});views.forEach(function(v){v.size()})}
+fit();addEventListener('resize',fit);syncDoors();
+$$('[data-act]').forEach(function(b){b.addEventListener('click',function(){var a=b.dataset.act;if(a==='groceries')pay('Groceries','food',86);if(a==='dentist')pay('Dentist','sur',240);if(a==='save')pay('Japan','save',300,1);if(a==='side')income('Side job',180);if(a==='reset'){M=fresh();W.born=W.t;say('Reset.')}})});
+(function(){if(Q.born)W.born=-9;if(Q.ix)W.swT=-9;if(Q.demo==='dentist')pay('Dentist','sur',240)})();
+var last=performance.now();
+function frame(now){var dt=clamp((now-last)/1000,0,.05);last=now;W.t+=dt;views.forEach(function(v){try{v.draw(dt)}catch(e){if(!v.err){v.err=1;console.error(e);say('Error: '+e.message)}}});requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>

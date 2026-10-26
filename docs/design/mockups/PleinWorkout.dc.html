@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plein Air Workout</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=Hanken+Grotesk:wght@400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.wk a{color:#F3ECE0;text-decoration:none}
+.wk *::-webkit-scrollbar{display:none}
+.lbl{font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:16px;letter-spacing:.08em;color:#A79FB5}
+.it{font-family:'Fraunces',serif;font-style:italic;font-variation-settings:'SOFT' 100}
+.fr{font-family:'Fraunces',serif;font-variation-settings:'opsz' 144,'SOFT' 100,'WONK' 1;font-variant-numeric:lining-nums tabular-nums}
+.key{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 0 0 .5px rgba(0,0,0,.6),0 10px 28px rgba(0,0,0,.35)}
+@keyframes procGlint{0%{background-position:180% 0}30%,100%{background-position:-80% 0}}
+@keyframes paintIn{0%{stroke-dashoffset:70}100%{stroke-dashoffset:0}}
+@keyframes curMark{0%,100%{opacity:.45}50%{opacity:.9}}
+@keyframes glintText{0%{background-position:150% 0}40%,100%{background-position:-50% 0}}
+@keyframes restIn{0%{opacity:0;filter:blur(6px)}100%{opacity:1;filter:blur(0)}}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-14px,10px) scale(1.08)}}
+/* Tess's soul v2: every state is wet paint. Soft radial dabs, live blur, multiply mixing */
+.d{position:absolute;width:76px;height:70px;margin:-35px 0 0 -38px;border-radius:52% 48% 60% 40% / 55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.8) 0%,rgba(var(--c),.6) 40%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(4px)}
+.r{--c:200,69,47;--x:-14px;--y:-8px;--mx:18px;--my:-10px}
+.b{--c:46,109,164;--x:14px;--y:-8px;--mx:-16px;--my:-12px;border-radius:45% 55% 40% 60% / 50% 60% 40% 50%}
+.y{--c:224,179,65;--x:0px;--y:13px;--mx:0px;--my:18px;border-radius:60% 40% 55% 45% / 45% 55% 45% 55%}
+.halo{position:absolute;width:150px;height:140px;margin:-70px 0 0 -75px;border-radius:50%;background:radial-gradient(closest-side,rgba(214,96,70,.16),rgba(122,92,142,.10) 55%,rgba(224,179,65,0) 100%);filter:blur(10px);animation:halo 7s ease-in-out infinite;pointer-events:none}
+.ring{position:absolute;width:100px;height:100px;margin:-50px 0 0 -50px;border-radius:50%;background:radial-gradient(closest-side,rgba(122,74,58,0) 52%,rgba(122,74,58,.5) 72%,rgba(122,74,58,0) 100%);filter:blur(3px);opacity:0;pointer-events:none}
+@keyframes halo{0%,100%{transform:scale(.8);opacity:.6}50%{transform:scale(1);opacity:1}}
+@keyframes idle{0%,100%{transform:translate(var(--x),calc(var(--y) - 6px)) scale(.78);filter:blur(3px)}25%{transform:translate(calc(var(--x) + 6px),var(--y)) scale(.9);filter:blur(5px)}50%{transform:translate(var(--x),calc(var(--y) + 6px)) scale(.8);filter:blur(4px)}75%{transform:translate(calc(var(--x) - 6px),var(--y)) scale(.92);filter:blur(6px)}}
+@keyframes listen{0%,100%{transform:translate(calc(var(--x)*.6),calc(var(--y)*.6)) scale(.72);filter:blur(3px);opacity:.85}30%{transform:translate(calc(var(--x)*1.3),calc(var(--y)*1.3)) scale(1.06);filter:blur(7px);opacity:1}60%{transform:translate(calc(var(--x)*.9),calc(var(--y)*.9)) scale(.84);filter:blur(4px);opacity:.92}}
+@keyframes bloom{0%,100%{transform:translate(0,0) scale(.55);filter:blur(2px)}40%{transform:translate(var(--mx),var(--my)) scale(1.15);filter:blur(6px)}70%{transform:translate(0,0) scale(.9);filter:blur(3px)}}
+@keyframes stir{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes smear{0%,100%{transform:translate(calc(var(--x)*.8),calc(var(--y)*.8)) scale(.85,.7);filter:blur(5px)}50%{transform:translate(calc(var(--x)*1.5),calc(var(--y)*1.5)) scale(1.1,.66);filter:blur(8px)}}
+@keyframes merge{0%{transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}30%{transform:translate(0,0) scale(.9);filter:blur(5px)}45%{transform:translate(0,0) scale(1.35);filter:blur(9px)}60%,72%{transform:translate(0,0) scale(1);filter:blur(6px)}100%{transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}}
+@keyframes splash{0%,30%{transform:scale(.4);opacity:0}42%{transform:scale(.75);opacity:1}88%,100%{transform:scale(2.6);opacity:0}}
+@keyframes nudge{0%,100%{transform:translate(var(--x),var(--y)) scale(.85);filter:blur(4px)}35%{transform:translate(calc(var(--x) + 12px),calc(var(--y) - 16px)) scale(1.06);filter:blur(7px)}50%{transform:translate(calc(var(--x) + 15px),calc(var(--y) - 12px)) scale(.98);filter:blur(5px)}65%{transform:translate(calc(var(--x) + 12px),calc(var(--y) - 16px)) scale(1.06);filter:blur(7px)}}
+@keyframes drip{0%,40%{transform:translate(-2px,-12px) scale(.2);opacity:0}52%{transform:translate(0,-4px) scale(.38);opacity:.85}92%,100%{transform:translate(0,34px) scale(.16);opacity:0}}
+@keyframes carry{0%,8%{transform:translate(var(--x),var(--y)) scale(.8);opacity:1;filter:blur(4px)}38%{transform:translate(132px,-66px) scale(.55);filter:blur(5px);opacity:1}50%{transform:translate(132px,-66px) scale(2.8,.75);filter:blur(10px);opacity:.6}78%{transform:translate(132px,-66px) scale(2.8,.75);filter:blur(12px);opacity:.45}90%{opacity:0;transform:translate(var(--x),var(--y)) scale(.3);filter:blur(4px)}100%{opacity:1;transform:translate(var(--x),var(--y)) scale(.8);filter:blur(4px)}}
+@keyframes rest{0%,100%{transform:translate(calc(var(--x)*.7),calc(var(--y)*.7 - 3px)) scale(.62);filter:blur(6px)}50%{transform:translate(calc(var(--x)*.8 + 3px),calc(var(--y)*.8)) scale(.68);filter:blur(8px)}}
+.d.s{width:46px;height:42px;margin:-21px 0 0 -23px}
+.r.s{--x:-22px;--y:10px;--mx:-20px;--my:14px}.b.s{--x:20px;--y:12px;--mx:22px;--my:10px}.y.s{--x:4px;--y:-20px;--mx:6px;--my:-22px}
+
+.soulmix{filter:saturate(1.45) contrast(1.04)}
+
+/* on a dark ground the paint glows instead of staining */
+.wk .d{mix-blend-mode:screen}
+.wk .r{--c:217,86,63}.wk .b{--c:63,127,192}.wk .y{--c:232,189,76}
+.wk .halo{background:radial-gradient(closest-side,rgba(217,86,63,.22),rgba(63,127,192,.14) 55%,rgba(232,189,76,0) 100%)}
+.wk .ring{background:radial-gradient(closest-side,rgba(232,189,76,0) 52%,rgba(232,189,76,.55) 72%,rgba(232,189,76,0) 100%)}
+</style>
+</helmet>
+<div class="wk" style="position: relative; width: 390px; height: 844px; overflow: hidden; color: #F3ECE0; font-family: 'Hanken Grotesk', sans-serif; background: radial-gradient(70% 45% at 0% 10%, #3B2D57 0%, rgba(59,45,87,0) 70%), radial-gradient(70% 50% at 100% 55%, #1E3D4A 0%, rgba(30,61,74,0) 70%), radial-gradient(70% 40% at 20% 100%, #45302A 0%, rgba(69,48,42,0) 70%), #1C1828">
+  <div style="position: absolute; right: -80px; top: 220px; width: 300px; height: 240px; border-radius: 50%; background: radial-gradient(closest-side, rgba(122,92,142,.35), rgba(122,92,142,0)); animation: drift 16s ease-in-out infinite"></div>
+  <svg width="390" height="844" style="position: absolute; inset: 0; mix-blend-mode: soft-light; opacity: .35; pointer-events: none" aria-hidden="true">
+    <filter id="wkGrain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="11"/><feColorMatrix values="0 0 0 0 .9  0 0 0 0 .85  0 0 0 0 .8  0 0 0 .5 0"/></filter>
+    <rect width="390" height="844" filter="url(#wkGrain)"/>
+  </svg>
+
+  <!-- a running process: a lit seam on the top edge -->
+  <div style="position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, #D9563F 0%, #D9563F 40%, #FFE2A8 50%, #D9563F 60%, #D9563F 100%); background-size: 300% 100%; animation: procGlint 4.5s ease-in-out infinite; box-shadow: 0 0 14px rgba(217,86,63,.6)"></div>
+
+  <div style="position: absolute; left: 22px; right: 22px; top: 56px; display: flex; justify-content: space-between; align-items: baseline">
+    <span class="it" style="font-size: 21px; color: #A79FB5">Push Day A, {{elapsed}}</span>
+    <span class="lbl">{{exCount}}</span>
+  </div>
+
+  <!-- x: exercises; the next one peeks in -->
+  <div id="wkEx" onScroll="{{onEx}}" style="position: absolute; left: 22px; right: 0; top: 92px; height: 64px; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none">
+    <sc-for list="{{exs}}" as="e" hint-placeholder-count="5">
+      <a href="BenchObject.dc.html" class="fr" style="flex: none; width: 322px; scroll-snap-align: start; font-weight: 640; font-size: 48px; letter-spacing: -0.025em; line-height: 1.2; white-space: nowrap; color: {{e.fg}}; transition: color 240ms">{{e.n}}</a>
+    </sc-for>
+    <span style="flex: none; width: 30px"></span>
+  </div>
+
+  <!-- y, as paint: each set is one brushstroke -->
+  <div style="position: absolute; left: 22px; top: 176px; display: flex; gap: 10px">
+    <sc-for list="{{marks}}" as="m" hint-placeholder-count="4">
+      <svg width="64" height="20" viewBox="0 0 64 20" aria-hidden="true" style="overflow: visible">
+        <path d="M4 12 C 18 5, 40 15, 60 7" fill="none" stroke="{{m.c}}" stroke-width="{{m.w}}" stroke-linecap="round" stroke-dasharray="{{m.dash}}" style="opacity: {{m.op}}; animation: {{m.anim}}"/>
+      </svg>
+    </sc-for>
+  </div>
+  <div class="it" style="position: absolute; left: 22px; top: 210px; font-size: 21px; color: {{subColor}}">{{sub}}</div>
+
+  <sc-if value="{{isSet}}" hint-placeholder-val="{{true}}">
+    <div>
+      <!-- weight, huge; reps as a drum beside it -->
+      <div style="position: absolute; left: 20px; top: 270px; display: flex; align-items: baseline; gap: 8px">
+        <span class="fr" style="font-weight: 600; font-size: 72px; line-height: 1; letter-spacing: -0.03em; background: {{numBg}}; background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: {{numAnim}}">{{weight}}</span>
+        <span class="it" style="font-size: 21px; color: #A79FB5">kg</span>
+      </div>
+      <div class="lbl" style="position: absolute; left: 22px; top: 356px">{{plateText}}</div>
+      <div class="it" style="position: absolute; right: 22px; top: 384px; font-size: 18px; color: rgba(243,236,224,.55)">reps</div>
+      <div id="wkReps" onScroll="{{onReps}}" style="position: absolute; right: 22px; top: 252px; width: 92px; height: 132px; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; padding: 44px 0; box-sizing: border-box; -webkit-mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent); mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent)">
+        <sc-for list="{{repList}}" as="r" hint-placeholder-count="31">
+          <div class="fr" style="height: 44px; display: flex; align-items: center; justify-content: flex-end; scroll-snap-align: center; font-weight: 600; font-size: {{r.fs}}; color: {{r.c}}; transition: font-size 160ms, color 160ms">{{r.t}}</div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isRest}}" hint-placeholder-val="{{false}}">
+    <div style="animation: restIn 320ms ease-out both">
+      <div style="position: absolute; left: 20px; top: 270px; display: flex; align-items: baseline; gap: 10px">
+        <span class="fr" style="font-weight: 600; font-size: 72px; line-height: 1; letter-spacing: -0.03em; color: #E8BD4C">{{restText}}</span>
+        <span class="it" style="font-size: 21px; color: #A79FB5">rest</span>
+      </div>
+      <div class="it" style="position: absolute; left: 22px; right: 22px; top: 352px; font-size: 21px; color: #9DBFE6">{{restNote}}</div>
+    </div>
+  </sc-if>
+
+  <!-- the dial: hairline ticks on nothing, one lit needle; during rest it drains -->
+  <div style="position: absolute; left: 0; right: 0; top: 470px; height: 80px">
+    <div id="wkDial" onScroll="{{onDial}}" style="position: absolute; inset: 0; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; pointer-events: {{dialPE}}; opacity: {{dialOp}}; transition: opacity 300ms; -webkit-mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent); mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent)">
+      <div style="display: flex; align-items: flex-start; padding: 0 188px; width: max-content; height: 100%">
+        <sc-for list="{{ticks}}" as="t" hint-placeholder-count="65">
+          <div style="flex: none; width: 14px; height: 100%; position: relative; scroll-snap-align: center">
+            <span style="position: absolute; left: 6.5px; top: 6px; width: {{t.w}}; height: {{t.h}}; background: {{t.c}}"></span>
+            <span class="lbl" style="position: absolute; left: 7px; top: 50px; transform: translateX(-50%); white-space: nowrap; font-weight: 600">{{t.lab}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <span style="position: absolute; left: 0; top: 4px; height: 36px; width: {{restFill}}; background: linear-gradient(90deg, rgba(232,189,76,0), rgba(232,189,76,.28)); border-right: 2px solid #E8BD4C; transition: width 1s linear; pointer-events: none; filter: blur(.3px)"></span>
+    <span style="position: absolute; left: 50%; top: 0; width: 2px; height: 44px; margin-left: -1px; background: #D9563F; box-shadow: 0 0 10px 1px rgba(217,86,63,.7); pointer-events: none; opacity: {{needleOp}}"></span>
+  </div>
+
+  <!-- hold to log: a cream key; paint spreads through it as you hold -->
+  <div onPointerDown="{{holdStart}}" onPointerUp="{{holdEnd}}" onPointerLeave="{{holdEnd}}" class="key" style="position: absolute; left: 22px; width: 240px; top: 624px; height: 62px; overflow: hidden; background: #F3ECE0; color: #1C1828; cursor: pointer; user-select: none; touch-action: none">
+    <span style="position: absolute; inset: -24px; background: radial-gradient(closest-side, #D9563F 0%, #D9563F 70%, rgba(217,86,63,0) 100%); transform-origin: 12% 50%; transform: scale({{fillS}}); transition: {{fillT}}; filter: blur(4px)"></span>
+    <span style="position: relative; display: flex; height: 100%; align-items: center; padding: 0 20px; font-size: 21px; font-weight: 600; color: {{keyFg}}; transition: color 300ms">{{keyText}}</span>
+  </div>
+  <span class="lbl" style="position: absolute; left: 280px; top: 636px; line-height: 1.35; color: #F3ECE0">{{keyMeta}}</span>
+
+  <!-- Tess -->
+  <div style="position: absolute; left: 14px; right: 14px; top: 756px; height: 66px; border-radius: 18px; background: rgba(255,255,255,.07); backdrop-filter: blur(16px); box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 0 0 .5px rgba(0,0,0,.6); display: flex; align-items: center; padding-left: 78px; padding-right: 16px">
+    <span class="it" style="font-size: 21px; line-height: 1.2; color: #C9D9EE">{{tess}}</span>
+  </div>
+  <div class="soulmix" style="position: absolute; left: 50px; top: 789px; width: 0; height: 0; transform: scale(.5)">
+    <span class="halo"></span>
+    <span class="ring" style="animation: {{splash}}"></span>
+    <span class="d r" style="animation: {{a1}}"></span><span class="d b" style="animation: {{a2}}"></span><span class="d y" style="animation: {{a3}}"></span>
+    <span class="d r s" style="animation: {{a4}}"></span><span class="d b s" style="animation: {{a5}}"></span><span class="d y s" style="animation: {{a6}}"></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const ex = [
+      { n: 'Bench press', sets: 4, tw: 82.5, tr: 8, best: 104.5, done: [[80, 8], [82.5, 8]], w: 82.5, r: 8 },
+      { n: 'Incline press', sets: 3, tw: 30, tr: 10, best: 41, done: [], w: 30, r: 10 },
+      { n: 'Overhead press', sets: 3, tw: 50, tr: 6, best: 60, done: [], w: 50, r: 6 },
+      { n: 'Cable fly', sets: 3, tw: 15, tr: 12, best: 22, done: [], w: 15, r: 12 },
+      { n: 'Dips', sets: 3, tw: 0, tr: 12, best: 0, done: [], w: 0, r: 12 }
+    ];
+    this.state = { ex, cur: 0, phase: 'set', holding: false, rest: 0, restMax: 150, soul: 'idle', pr: false, prVal: 0, justLogged: false, elapsed: 768 };
+    this.timer = null; this.hold = null;
+    setTimeout(() => this.sync(), 60);
+    setInterval(() => this.setState({ elapsed: this.state.elapsed + 1 }), 1000);
+  }
+  sync() {
+    const e = this.state.ex[this.state.cur];
+    const d = document.getElementById('wkDial'); if (d) d.scrollLeft = Math.round(e.w / 2.5) * 14;
+    const r = document.getElementById('wkReps'); if (r) r.scrollTop = e.r * 44;
+  }
+  patch(fn) { this.setState({ ex: this.state.ex.map((e, i) => i === this.state.cur ? fn({ ...e }) : e) }); }
+  renderVals() {
+    const s = this.state, e = s.ex[s.cur];
+    const fmt = (t) => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+    const e1 = (w, r) => w * (1 + r / 30);
+    const isRest = s.phase === 'rest';
+    const finished = e.done.length >= e.sets;
+    const setNo = Math.min(e.done.length + 1, e.sets);
+    const paints = ['#D9563F', '#3F7FC0', '#E8BD4C', '#7FB07A'];
+    const marks = Array.from({ length: e.sets }, (_, i) => {
+      if (i < e.done.length) {
+        const fresh = s.justLogged && i === e.done.length - 1;
+        return { c: paints[i % 4], w: 9, dash: '70', op: 1, anim: fresh ? 'paintIn 700ms cubic-bezier(.3,.7,.2,1) both' : 'none' };
+      }
+      if (i === e.done.length && !isRest) return { c: '#F3ECE0', w: 2, dash: '3 5', op: .7, anim: 'curMark 2.4s ease-in-out infinite' };
+      return { c: '#F3ECE0', w: 2, dash: '3 5', op: .22, anim: 'none' };
+    });
+    const curE1 = e1(e.w, e.r);
+    const willPR = e.best > 0 && curE1 > e.best + 0.01 && !finished;
+    const last = e.done.length ? e.done[e.done.length - 1] : null;
+    let sub = finished ? 'all ' + e.sets + ' sets in. Swipe for the next.' : 'set ' + setNo + ' of ' + e.sets + (last ? ', last was ' + last[0] + ' × ' + last[1] : '');
+    if (willPR) sub = 'set ' + setNo + ': this would be a new best';
+    if (isRest) sub = s.pr ? 'a new best: e1RM ' + s.prVal.toFixed(1) : 'set ' + e.done.length + ' painted in';
+    const perSide = Math.max(0, (e.w - 20) / 2);
+    const ticks = Array.from({ length: 65 }, (_, i) => {
+      const major = i % 4 === 0;
+      return { w: major ? '1.5px' : '1px', h: major ? '30px' : (i % 2 === 0 ? '18px' : '11px'), c: major ? 'rgba(243,236,224,.9)' : 'rgba(243,236,224,.38)', lab: major ? String(i * 2.5) : '' };
+    });
+    const repList = Array.from({ length: 31 }, (_, n) => ({ t: n === e.r ? '× ' + n : String(n), fs: n === e.r ? '48px' : '21px', c: n === e.r ? '#F3ECE0' : 'rgba(243,236,224,.35)' }));
+    const E = 'ease-in-out';
+    const S = {
+      idle: [`idle 7s ${E} infinite`, `idle 8.5s ${E} -3s infinite`, `idle 10s ${E} -6s infinite`, `idle 9s ${E} -4s infinite`, `idle 11s ${E} -1s infinite`, `idle 7.5s ${E} -5s infinite`],
+      done: Array(6).fill('merge 1.8s cubic-bezier(.4,0,.2,1) 1 both'),
+      pr: [`bloom 1.2s ${E} 2`, `bloom 1.2s ${E} -.4s 2`, `bloom 1.2s ${E} -.8s 2`, `bloom 1.2s ${E} -.2s 2`, `bloom 1.2s ${E} -.6s 2`, `bloom 1.2s ${E} -1s 2`]
+    }[s.soul];
+    let tess = willPR ? 'Go on. You have this.' : 'Last time 80 × 8 moved fast. Try 82.5.';
+    if (isRest) tess = s.pr ? 'That one goes on the wall.' : 'Breathe. The dial will tell you.';
+    if (finished && !isRest) tess = 'Bench is done. Incline next.';
+    const go = () => this.sync();
+    return {
+      elapsed: fmt(s.elapsed), exCount: (s.cur + 1) + ' / ' + s.ex.length,
+      exs: s.ex.map((x, i) => ({ n: x.n, fg: i === s.cur ? '#F3ECE0' : 'rgba(243,236,224,.28)' })),
+      marks, sub, subColor: willPR || s.pr ? '#E8BD4C' : '#A79FB5',
+      isSet: !isRest, isRest,
+      weight: e.w % 1 ? e.w.toFixed(1) : String(e.w),
+      numBg: willPR ? 'linear-gradient(105deg, #F3ECE0 0%, #F3ECE0 40%, #FFE2A8 50%, #F3ECE0 60%, #F3ECE0 100%)' : 'linear-gradient(#F3ECE0, #F3ECE0)',
+      numAnim: willPR ? 'glintText 3s ease-in-out infinite' : 'none',
+      plateText: perSide > 0 ? perSide + ' KG A SIDE' : 'BAR ONLY',
+      repList, ticks,
+      dialPE: isRest ? 'none' : 'auto', dialOp: isRest ? 0.35 : 1, needleOp: isRest ? 0.3 : 1,
+      restText: fmt(s.rest), restFill: isRest ? ((s.rest / s.restMax) * 100).toFixed(1) + '%' : '0%',
+      restNote: 'the dial drains, then turns back into weight',
+      fillS: s.holding ? 1.5 : 0, fillT: s.holding ? 'transform 800ms cubic-bezier(.3,.6,.4,1)' : 'transform 200ms ease-out',
+      keyFg: s.holding ? '#FFF6EA' : '#1C1828',
+      keyText: isRest ? 'Skip rest' : finished ? 'Next exercise' : (s.holding ? 'Keep holding' : 'Hold to log'),
+      keyMeta: isRest ? '' : finished ? '' : e.w + ' × ' + e.r,
+      tess, a1: S[0], a2: S[1], a3: S[2], a4: S[3], a5: S[4], a6: S[5], splash: s.soul !== 'idle' ? 'splash 1.8s ease-out 1' : 'none',
+      onEx: (ev) => { const x = ev && ev.target ? ev.target.scrollLeft : 0; const i = Math.max(0, Math.min(s.ex.length - 1, Math.round(x / 322))); if (i !== this.state.cur) { this.setState({ cur: i, justLogged: false }); setTimeout(go, 30); } },
+      onDial: (ev) => { if (this.state.phase !== 'set') return; const x = ev && ev.target ? ev.target.scrollLeft : 0; const w = Math.max(0, Math.min(160, Math.round(x / 14) * 2.5)); if (w !== this.state.ex[this.state.cur].w) this.patch((o) => { o.w = w; return o; }); },
+      onReps: (ev) => { const y = ev && ev.target ? ev.target.scrollTop : 0; const r = Math.max(0, Math.min(30, Math.round(y / 44))); if (r !== this.state.ex[this.state.cur].r) this.patch((o) => { o.r = r; return o; }); },
+      holdStart: () => {
+        const st = this.state, ce = st.ex[st.cur];
+        if (st.phase === 'rest') { clearInterval(this.timer); this.setState({ phase: 'set', rest: 0, pr: false, soul: 'idle' }); setTimeout(go, 30); return; }
+        if (ce.done.length >= ce.sets) { const el = document.getElementById('wkEx'); if (el) el.scrollTo({ left: Math.min(st.ex.length - 1, st.cur + 1) * 322, behavior: 'smooth' }); return; }
+        this.setState({ holding: true });
+        clearTimeout(this.hold);
+        this.hold = setTimeout(() => {
+          const c = this.state.ex[this.state.cur];
+          const v = c.w * (1 + c.r / 30);
+          const pr = c.best > 0 && v > c.best + 0.01;
+          this.patch((o) => { o.done = [...o.done, [o.w, o.r]]; if (pr) o.best = v; return o; });
+          this.setState({ holding: false, justLogged: true, soul: pr ? 'pr' : 'done', pr, prVal: v, phase: 'rest', rest: this.state.restMax });
+          setTimeout(() => this.setState({ soul: 'idle' }), 2600);
+          clearInterval(this.timer);
+          this.timer = setInterval(() => {
+            const left = this.state.rest - 1;
+            if (left <= 0) { clearInterval(this.timer); this.setState({ rest: 0, phase: 'set', pr: false }); setTimeout(go, 30); }
+            else this.setState({ rest: left });
+          }, 1000);
+        }, 800);
+      },
+      holdEnd: () => { clearTimeout(this.hold); if (this.state.holding) this.setState({ holding: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

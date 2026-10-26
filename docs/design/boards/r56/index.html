@@ -1,0 +1,179 @@
+<title>Room landings</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Outfit:wght@200;300;400&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --routines:#8E4A78;--kitchen:#93611A;--go:#25803D;--gold:#8A6A10;--slate:#34506F;--warm:#9A2541;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--routines:#D59AC4;--kitchen:#C49A5E;--go:#8FC9A0;--gold:#E2C26A;--slate:#A7BCD6;--warm:#EE8E9C;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--routines:#D59AC4;--kitchen:#C49A5E;--go:#8FC9A0;--gold:#E2C26A;--slate:#A7BCD6;--warm:#EE8E9C;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 60px}
+.head{max-width:1180px;margin:0 auto 26px;display:flex;flex-direction:column;gap:8px}
+.lab{margin:0;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--slate)}
+h1{margin:0;font-size:34px;line-height:1.1;letter-spacing:-.02em;text-wrap:balance}
+.sub{margin:0;color:var(--ink2);max-width:70ch}
+.tools{display:flex;gap:8px 22px;flex-wrap:wrap}
+.tr{background:none;border:0;padding:10px 0;font:inherit;font-size:15px;color:var(--slate);cursor:pointer;min-height:44px}
+h2{margin:0;font-size:22px;letter-spacing:-.01em}
+.concept{max-width:1180px;margin:44px auto 0;display:flex;flex-direction:column;gap:14px}
+.concept>p{margin:0;color:var(--ink2);max-width:72ch}
+.row{display:flex;gap:28px;flex-wrap:wrap}
+.col{flex:1 1 320px;min-width:0;max-width:420px;display:flex;flex-direction:column;gap:8px}
+.cap{margin:0;font-size:14px;color:var(--ink2)}
+.fit{width:100%;aspect-ratio:402/874;position:relative;max-width:402px}
+.phone{position:absolute;left:0;top:0;width:402px;height:874px;transform-origin:0 0;background:var(--phone);border-radius:54px;outline:1px solid var(--edge);overflow:hidden}
+.scr{position:absolute;inset:0;transition:transform .42s cubic-bezier(.2,.9,.25,1)}
+.z{position:absolute;left:24px;right:24px}
+.door{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;text-align:inherit;-webkit-tap-highlight-color:transparent}
+.door:focus-visible{outline:2px solid var(--slate);outline-offset:3px;border-radius:4px}
+.n{font-family:var(--nums);font-variant-numeric:tabular-nums}
+.ttl{top:54px;height:44px;font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:44px;white-space:nowrap;display:flex;justify-content:space-between;align-items:baseline}
+.ttl small{font-size:15px;font-weight:400;letter-spacing:0;color:var(--ink2)}
+.ft{left:28px;bottom:22px;height:44px;display:flex;justify-content:space-between;align-items:center}
+.act{font-size:19px;font-weight:600}
+.tess{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFB36B,#E5532A 70%)}
+.sub-p{transform:translateX(100%)}
+.sub-p.on{transform:none}
+.back{position:absolute;left:28px;top:58px;font-size:17px;color:var(--ink2);min-height:44px}
+/* A: the paragraph */
+.para{font-size:27px;line-height:40px;font-weight:500;letter-spacing:-.015em;text-wrap:pretty}
+.para .door{font-weight:700;display:inline}
+.para{font-size:29px;line-height:42px}
+.para .q{color:var(--ink2);font-weight:500}
+/* C: the contents page */
+.toc .door{display:flex;align-items:baseline;gap:14px;width:100%;white-space:nowrap}
+.toc .k{font-weight:600;letter-spacing:-.02em}
+.toc .f{font-size:14px;color:var(--ink2);overflow:hidden}
+@media (prefers-reduced-motion:reduce){.scr{transition:none}}
+</style>
+
+<div class="head">
+  <p class="lab">Round 240, Oct 24</p>
+  <h1>Room landings, one composed page</h1>
+  <p class="sub">His 11:39, 11:45 and 11:52 PM: a landing is not a list or stacked sections. It's a short summary with a few ways in. Here are three systems, each drawn for Routines and Kitchen. Every coloured word or label is a door, so tap it to open the page behind it. Each page uses 3 or 4 colours, each with a meaning.</p>
+  <div class="tools"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button></div>
+</div>
+
+<section class="concept"><h2>A  The paragraph</h2>
+<p><b>The room speaks in one paragraph.</b> It's set at 27 pt, like the Home board, and reads top to bottom as a summary. The bold words in their role colours are the doors. There are no labels, no sections and no list. The next thing opens it, and the room's parts sit inside the prose, so the whole page is one thought. Other apps draw on the same idea: Journal's prompts, Weather's sentence summary and Fitness's "Move 420 of 500".</p>
+<div class="row">
+ <div class="col"><div class="fit"><div class="phone" data-p>
+  <div class="scr" data-home>
+   <div class="z ttl" style="color:var(--routines)">Routines<small>Friday</small></div>
+   <div class="z para" style="top:132px">
+    <button class="door" data-to="Evening stretch" style="color:var(--routines)">Stretch</button> is next, at <span class="n">8</span> pm. <button class="door" data-to="Water the plants" style="color:var(--warm)">Water the plants</button> is still waiting from this morning. <span class="q">Two are done today.</span></div>
+   <div class="z para" style="bottom:100px">You keep <button class="door" data-to="Mornings" style="color:var(--gold)">mornings</button>, <button class="door" data-to="Evenings" style="color:var(--slate)">evenings</button>, a few for the <button class="door" data-to="Body" style="color:var(--go)">body</button>, and some for <button class="door" data-to="Home" style="color:var(--ink)">home</button> and <button class="door" data-to="Mind" style="color:var(--ink)">mind</button>, plus <button class="door" data-to="Borrowed" style="color:var(--routines)">three borrowed</button> from other rooms.
+   </div>
+   <div class="z ft"><button class="door act" style="color:var(--routines)" data-to="Stretch, started">Start stretch</button><span class="tess" aria-hidden="true"></span></div>
+  </div></div></div><p class="cap">Routines. Colours: plum is the room and what's next, wine is late, gold is mornings, slate is evenings and green is body. Home and mind stay in ink, bold.</p></div>
+ <div class="col"><div class="fit"><div class="phone" data-p>
+  <div class="scr" data-home>
+   <div class="z ttl" style="color:var(--kitchen)">Kitchen<small>Friday</small></div>
+   <div class="z para" style="top:132px">
+    <button class="door" data-to="Rice" style="color:var(--warm)">Rice</button> goes out today. Tonight could be <button class="door" data-to="Lemon pasta" style="color:var(--kitchen)">lemon pasta</button>; you have everything but parsley.</div>
+   <div class="z para" style="bottom:100px">The <button class="door" data-to="Pantry" style="color:var(--go)">pantry</button> holds <span class="n">46</span> things, and <button class="door" data-to="Running low" style="color:var(--gold)">four are low</button>. There are <button class="door" data-to="Recipes" style="color:var(--kitchen)"><span class="n">31</span> recipes</button> to cook from and <button class="door" data-to="Shopping" style="color:var(--slate)"><span class="n">9</span> things to buy</button>.
+   </div>
+   <div class="z ft"><button class="door act" style="color:var(--kitchen)" data-to="Cooking lemon pasta">Cook lemon pasta</button><span class="tess" aria-hidden="true"></span></div>
+  </div></div></div><p class="cap">Kitchen. Colours: amber is the room and recipes, wine is "goes out", green is the pantry, gold is running low and slate is shopping.</p></div>
+</div></section>
+
+<section class="concept"><h2>B  The drawing with doors</h2>
+<p><b>One fine-line drawing fills the upper page, and its regions are the doors.</b> Each part of the room has a place in the drawing with its name and one number beside it. You find things by where they are, not by reading down. This is the room as a place, like Photos' collections or a map. The drawing is plain 1.5 pt lines with no pixels, and it moves gently.</p>
+<div class="row">
+ <div class="col"><div class="fit"><div class="phone" data-p>
+  <div class="scr" data-home>
+   <div class="z ttl" style="color:var(--routines)">Routines<small>Friday</small></div>
+   <svg class="z" style="top:140px;height:300px;overflow:visible" viewBox="0 0 354 300" aria-hidden="true">
+    <path d="M6 238 H348" stroke="var(--ink3)" stroke-width="1.5" fill="none"/>
+    <path id="arcA" d="M20 238 C 70 40, 284 40, 334 238" stroke="var(--ink3)" stroke-width="1.5" fill="none" stroke-dasharray="2 5" stroke-linecap="round"/>
+    <path d="M20 238 C 70 40, 284 40, 334 238" stroke="var(--routines)" stroke-width="2" fill="none" pathLength="100" stroke-dasharray="78 100" stroke-linecap="round"/>
+    <g stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round"><path d="M296 128 l0 -12"/></g>
+    <g stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" fill="none"><path d="M44 238 a14 14 0 0 1 28 0"/><path d="M58 214 v-6 M40 222 l-5 -4 M76 222 l5 -4"/></g>
+    <g stroke="var(--slate)" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M318 186 a12 12 0 1 0 10 18 a9 9 0 1 1 -10 -18"/></g>
+    <g stroke="var(--go)" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M88 262 q12 -14 24 0 t24 0"/></g>
+    <g stroke="var(--ink2)" stroke-width="1.5" fill="none" stroke-linejoin="round"><path d="M196 272 l14 -12 l14 12 v14 h-28z"/></g>
+    <g stroke="var(--ink2)" stroke-width="1.5" fill="none" stroke-linecap="round"><path d="M282 268 q8 -8 16 0 q8 8 16 0"/><path d="M282 280 q8 -8 16 0 q8 8 16 0"/></g>
+   </svg>
+   <button class="door z" data-to="Evening stretch" style="top:200px;left:auto;right:30px;width:auto;text-align:right"><span style="display:block;font-size:24px;font-weight:600;color:var(--routines);letter-spacing:-.02em">Stretch</span><span style="font-size:15px;color:var(--ink2)">next, <span class="n">8</span> pm</span></button>
+   
+   <button class="door z" data-to="Mornings" style="top:330px;width:auto;left:66px"><span style="font-size:18px;font-weight:600;color:var(--gold)">Mornings</span> <span class="n" style="font-size:16px;color:var(--ink2)">3</span></button>
+   <button class="door z" data-to="Evenings" style="top:326px;left:auto;right:92px;width:auto"><span style="font-size:18px;font-weight:600;color:var(--slate)">Evenings</span> <span class="n" style="font-size:16px;color:var(--ink2)">2</span></button>
+   <button class="door z" data-to="Body" style="top:428px;width:auto;left:84px"><span style="font-size:18px;font-weight:600;color:var(--go)">Body</span> <span class="n" style="font-size:16px;color:var(--ink2)">3</span></button>
+   <button class="door z" data-to="Home" style="top:428px;width:auto;left:196px"><span style="font-size:18px;font-weight:600">Home</span> <span class="n" style="font-size:16px;color:var(--ink2)">3</span></button>
+   <button class="door z" data-to="Mind" style="top:428px;left:auto;right:30px;width:auto"><span style="font-size:18px;font-weight:600">Mind</span> <span class="n" style="font-size:16px;color:var(--ink2)">3</span></button>
+   <div class="z" style="top:560px;font-size:19px;line-height:28px;color:var(--ink2)">Two done today, three to go. <button class="door" data-to="Water the plants" style="color:var(--warm);font-weight:600">Water the plants</button> is late. <button class="door" data-to="Borrowed" style="color:var(--routines);font-weight:600">Three are borrowed</button> from Training and Kitchen.</div>
+   <div class="z ft"><button class="door act" style="color:var(--routines)" data-to="Stretch, started">Start stretch</button><span class="tess" aria-hidden="true"></span></div>
+  </div></div></div><p class="cap">Routines. The day is one sun path: plum for the part that has passed, then a small ink stitch for now. Mornings sit at sunrise, evenings at moonrise, and body, home and mind lie on the ground beneath.</p></div>
+ <div class="col"><div class="fit"><div class="phone" data-p>
+  <div class="scr" data-home>
+   <div class="z ttl" style="color:var(--kitchen)">Kitchen<small>Friday</small></div>
+   <svg class="z" style="top:140px;height:330px;overflow:visible" viewBox="0 0 354 330" aria-hidden="true" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="var(--go)"><path d="M14 30 H176 M14 82 H176 M14 134 H176"/><path d="M30 30 v-16 h14 v16 M56 30 v-22 h10 v22 M84 30 v-12 a8 8 0 0 1 16 0 v12 M124 82 v-18 h20 v18 M34 82 v-14 h22 v14 M70 134 v-20 a6 6 0 0 1 12 0 v20"/></g>
+    <g stroke="var(--gold)"><path d="M150 134 v-10 h14 v10"/></g>
+    <g stroke="var(--ink2)"><rect x="230" y="10" width="104" height="200" rx="8"/><path d="M230 76 H334 M244 40 v18 M244 92 v24"/></g>
+    <g stroke="var(--warm)"><path d="M264 150 q14 -12 28 0 q-14 12 -28 0z"/></g>
+    <g stroke="var(--kitchen)"><path d="M14 240 H200"/><path d="M50 240 v-18 h76 v18"/><path d="M60 222 q0 -18 28 -18 q28 0 28 18"/><path d="M78 196 q4 -10 0 -18 M94 196 q4 -10 0 -18" class="steam"/></g>
+    <g stroke="var(--slate)"><path d="M250 250 h52 l-6 56 h-40z"/><path d="M262 250 q14 -22 28 0"/></g>
+   </svg>
+   <button class="door z" data-to="Pantry" style="top:290px;width:auto;left:24px"><span style="font-size:18px;font-weight:600;color:var(--go)">Pantry</span> <span class="n" style="font-size:16px;color:var(--ink2)">46</span></button>
+   <button class="door z" data-to="Running low" style="top:290px;width:auto;left:132px"><span style="font-size:15px;font-weight:600;color:var(--gold)">four low</span></button>
+   <button class="door z" data-to="Rice" style="top:300px;left:auto;right:46px;width:auto;text-align:right"><span style="display:block;font-size:17px;font-weight:600;color:var(--warm)">Rice</span><span style="font-size:13px;color:var(--ink2)">goes out</span></button>
+   <button class="door z" data-to="Recipes" style="top:392px;width:auto;left:24px"><span style="font-size:18px;font-weight:600;color:var(--kitchen)">Recipes</span> <span class="n" style="font-size:16px;color:var(--ink2)">31</span></button>
+   <button class="door z" data-to="Shopping" style="top:452px;left:auto;right:34px;width:auto"><span style="font-size:18px;font-weight:600;color:var(--slate)">To buy</span> <span class="n" style="font-size:16px;color:var(--ink2)">9</span></button>
+   <div class="z" style="top:560px;font-size:19px;line-height:28px;color:var(--ink2)">Tonight could be <button class="door" data-to="Lemon pasta" style="color:var(--kitchen);font-weight:600">lemon pasta</button>; you have everything but parsley.</div>
+   <div class="z ft"><button class="door act" style="color:var(--kitchen)" data-to="Cooking lemon pasta">Cook lemon pasta</button><span class="tess" aria-hidden="true"></span></div>
+  </div></div></div><p class="cap">Kitchen as a room. The shelves are the pantry, and the jar running low is drawn in gold. In the fridge, the rice going out is drawn in wine. The pot is recipes, with steam that rises, and the bag is shopping.</p></div>
+</div></section>
+
+<section class="concept"><h2>C  The contents page</h2>
+<p><b>A magazine contents page.</b> One sentence of state sits up top. Below it, a handful of big words are set at different sizes by how much they matter today. Each word has one quiet fact beside it, and that's the only text. There are no headers or groups, and the words are the doors. Things 3's areas, Music's Library and Wallet's stack each have about five entries, never the whole list.</p>
+<div class="row">
+ <div class="col"><div class="fit"><div class="phone" data-p>
+  <div class="scr" data-home>
+   <div class="z ttl" style="color:var(--routines)">Routines<small>Friday</small></div>
+   <div class="z" style="top:118px;font-size:19px;line-height:28px;color:var(--ink2)"><button class="door" data-to="Evening stretch" style="color:var(--routines);font-weight:600">Stretch</button> at <span class="n">8</span> pm, then the evening is clear.</div>
+   <div class="z toc" style="top:206px;display:flex;flex-direction:column;gap:16px">
+    <button class="door" data-to="Today"><span class="k" style="font-size:60px;line-height:68px;color:var(--routines)">Today</span><span class="f"><span class="n">2</span> done, <span style="color:var(--warm)">1 late</span></span></button>
+    <button class="door" data-to="Mornings"><span class="k" style="font-size:40px;line-height:50px;color:var(--gold)">Mornings</span><span class="f">walk, vitamins, pages</span></button>
+    <button class="door" data-to="Evenings"><span class="k" style="font-size:40px;line-height:50px;color:var(--slate)">Evenings</span><span class="f">stretch, wind down</span></button>
+    <button class="door" data-to="Body"><span class="k" style="font-size:30px;line-height:40px;color:var(--go)">Body</span><span class="f">from Training’s moves</span></button>
+    <button class="door" data-to="Home and mind"><span class="k" style="font-size:30px;line-height:40px">Home and mind</span><span class="f"><span class="n">6</span></span></button>
+    <button class="door" data-to="Borrowed"><span class="k" style="font-size:24px;line-height:34px;color:var(--ink2)">Borrowed</span><span class="f">from other rooms</span></button>
+   </div>
+   <div class="z ft"><button class="door act" style="color:var(--routines)" data-to="Stretch, started">Start stretch</button><span class="tess" aria-hidden="true"></span></div>
+  </div></div></div><p class="cap">Routines. Today is the biggest word, and each kind shrinks by how much it holds. Each kind is a door into its wheel.</p></div>
+ <div class="col"><div class="fit"><div class="phone" data-p>
+  <div class="scr" data-home>
+   <div class="z ttl" style="color:var(--kitchen)">Kitchen<small>Friday</small></div>
+   <div class="z" style="top:118px;font-size:19px;line-height:28px;color:var(--ink2)"><button class="door" data-to="Rice" style="color:var(--warm);font-weight:600">Rice</button> goes out today, so cook it first.</div>
+   <div class="z toc" style="top:206px;display:flex;flex-direction:column;gap:16px">
+    <button class="door" data-to="Tonight"><span class="k" style="font-size:60px;line-height:68px;color:var(--kitchen)">Tonight</span><span class="f">lemon pasta</span></button>
+    <button class="door" data-to="Pantry"><span class="k" style="font-size:40px;line-height:50px;color:var(--go)">Pantry</span><span class="f"><span class="n">46</span>, <span style="color:var(--gold)">4 low</span></span></button>
+    <button class="door" data-to="Recipes"><span class="k" style="font-size:40px;line-height:50px;color:var(--kitchen)">Recipes</span><span class="f"><span class="n">31</span>, <span class="n">3</span> new</span></button>
+    <button class="door" data-to="Shopping"><span class="k" style="font-size:30px;line-height:40px;color:var(--slate)">To buy</span><span class="f">parsley and <span class="n">8</span> more</span></button>
+    <button class="door" data-to="Meals"><span class="k" style="font-size:24px;line-height:34px;color:var(--ink2)">Meals this week</span><span class="f"><span class="n">5</span> planned</span></button>
+   </div>
+   <div class="z ft"><button class="door act" style="color:var(--kitchen)" data-to="Cooking lemon pasta">Cook lemon pasta</button><span class="tess" aria-hidden="true"></span></div>
+  </div></div></div><p class="cap">Kitchen. Tonight leads, the pantry and recipes come next, then shopping and the week. The fact beside each word stays one line, cut at whole words.</p></div>
+</div></section>
+
+<section class="concept"><h2>The system, whichever is picked</h2>
+<p>Every room landing has the same parts. First, a title with the weekday. Second, one statement of now: the next thing, or what needs you. Third, three to six doors into the room's parts, each with one fact. Last, the action word bottom-left with tap and drag options, and Tess bottom-right. Each page has 3 or 4 colours, each with a meaning: the room accent for the room and what's next, wine for late or going out, and one or two role colours for its parts (gold, green, slate, as in the Library). A door is never a list row, a section header or a card. Recommendation: <b>A, the paragraph</b>. It reads like Home and Tess, and it's the calmest. It also works for every room, including Money ("About 1,240 left this month; rent goes out Monday") and Notes.</p>
+</section>
+
+<script>
+(()=>{const $=s=>document.querySelector(s);
+function fit(){document.querySelectorAll('.fit').forEach(f=>{const p=f.querySelector('.phone');p.style.transform=`scale(${f.clientWidth/402})`})}
+addEventListener('resize',fit);fit();
+document.querySelectorAll('[data-p]').forEach(P=>{
+  const sub=document.createElement('div');sub.className='scr sub-p';sub.style.background='var(--phone)';
+  sub.innerHTML='<button class="door back">Back</button><div class="z ttl" style="top:118px"><span class="st"></span></div><p class="z" style="top:176px;margin:0;font-size:17px;color:var(--ink2)">The page behind this door opens here.</p>';P.appendChild(sub);
+  P.querySelectorAll('[data-to]').forEach(d=>d.addEventListener('click',()=>{const c=getComputedStyle(d.querySelector('span')||d).color;const st=sub.querySelector('.st');st.textContent=d.dataset.to;st.style.color=c;let f=40;st.style.fontSize=f+'px';while(st.offsetWidth>354&&f>30){f--;st.style.fontSize=f+'px'}P.querySelector('[data-home]').style.transform='translateX(-30%)';sub.classList.add('on')}));
+  sub.querySelector('.back').onclick=()=>{sub.classList.remove('on');P.querySelector('[data-home]').style.transform=''}});
+$('#th').onclick=()=>document.documentElement.dataset.theme='dark';$('#tw').onclick=()=>document.documentElement.dataset.theme='light';
+const steam=[...document.querySelectorAll('.steam')];const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!RM)(function loop(t){steam.forEach(s=>s.style.transform=`translateY(${(-2*Math.sin(t/900)).toFixed(2)}px)`);requestAnimationFrame(loop)})(0);
+})();
+</script>

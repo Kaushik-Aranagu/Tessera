@@ -1,0 +1,44 @@
+<div class="head">
+  <p class="lab">Round 243, Oct 24</p>
+  <h1>The Weather room, first cut</h1>
+  <p class="sub">His 12:29 AM: weather becomes its own app, opened by tapping any weather word on Home. A basic room and its landing, carrying the weather words he liked. Interactive: tap a word in the week sentence to open that day, drag the hours sideways or up and down, tap Rain alert.</p>
+  <div class="tools"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button><button class="tr" id="fromHome">Arrive from Home’s “Rain”</button></div>
+</div>
+<div class="row">
+ <div><div class="fit"><div class="phone" id="ph">
+  <canvas id="wxbk" width="804" height="1748" style="position:absolute;inset:0;width:402px;height:874px;pointer-events:none;z-index:1"></canvas>
+  <div class="scr" id="land" style="z-index:2;background:transparent">
+    <div class="z" style="top:54px;height:44px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:44px;color:var(--acc)">Weather</span><span class="n" style="font-size:15px;color:var(--ink2)">3:40 PM</span></div>
+    <div class="z" style="top:112px;height:110px;display:flex;align-items:flex-end;gap:16px">
+      <span class="n" style="font-size:104px;font-weight:200;line-height:96px;letter-spacing:-.04em;color:var(--cloud)">58<span style="font-size:52px;vertical-align:top;line-height:60px">°</span></span>
+      <span style="font-size:15px;line-height:22px;color:var(--ink2);padding-bottom:8px">feels like <span class="n">55°</span><br>high <span class="n">61°</span>, low <span class="n">49°</span></span>
+    </div>
+    <div class="z" style="top:238px;font-size:26px;font-weight:500;line-height:34px;white-space:nowrap" id="hl"></div>
+    <div class="z" style="top:276px;font-size:17px;line-height:25px;color:var(--ink2);white-space:nowrap" id="hl2"></div>
+    <div class="z sl" style="top:330px">Next hours</div>
+    <div class="z" style="top:350px;height:84px;overflow:hidden;touch-action:none;cursor:ew-resize" id="hrsW" aria-label="Next hours, drag to move"><div class="hrs" id="hrs"></div></div>
+    <div class="z sl" style="top:456px">The week</div>
+    <div class="z" style="top:476px;font-size:22px;line-height:34px;font-weight:500" id="wk"></div>
+    <div class="z" style="top:640px;font-size:15px;line-height:22px;color:var(--ink2)">Air is <span style="color:var(--go);font-weight:600">good</span>, UV <span class="n">2</span>, wind <span class="n">9</span> mph from the west.</div>
+    <div class="z" style="top:690px;height:44px;font-size:15px;line-height:44px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="rc"></div>
+    <div class="z ft"><button class="act" id="alert" style="color:var(--rain)">Rain alert</button></div><span class="tess" aria-hidden="true"></span>
+  </div>
+  <div class="scr" id="day" hidden style="z-index:3">
+    <div class="z" style="top:54px"><button class="tap" id="back" style="font-size:17px;color:var(--ink2)">Weather</button></div>
+    <div class="z" style="top:100px;font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:44px;color:var(--acc)" id="dT"></div>
+    <div class="z" style="top:160px;display:flex;align-items:baseline;gap:14px"><span class="n" id="dHi" style="font-size:88px;font-weight:200;line-height:88px;letter-spacing:-.04em"></span><span class="n" id="dLo" style="font-size:40px;font-weight:200;color:var(--ink3)"></span></div>
+    <div class="z" style="top:270px;font-size:24px;font-weight:500;line-height:34px" id="dS"></div>
+    <div class="z sl" style="top:356px">Hours</div>
+    <div class="z" style="top:376px;height:84px;overflow:hidden;touch-action:none" id="dHrsW"><div class="hrs" id="dHrs"></div></div>
+    <div class="z" style="top:486px;font-size:15px;line-height:22px;color:var(--ink2)" id="dSun"></div>
+    <span class="tess" aria-hidden="true"></span>
+  </div>
+  <canvas id="wxfx" width="804" height="1748" style="position:absolute;inset:0;width:402px;height:874px;pointer-events:none;z-index:7"></canvas>
+ </div></div><p class="cap">The landing: the room name, now, the big temperature in the colour of the sky, a two-line sentence of what’s coming, the next hours, the week as one sentence whose weather words are doors, the air, and Rain alert.</p></div>
+</div>
+<div class="notes">
+ <div><h2>1 What it is</h2><p><b>A basic Weather room</b>, the first new room built on the weather words. Data: Open-Meteo (free, on by default, 0.1° rounding, 30 min cache): current, hourly 48 h, daily 7 days, feels-like, gusts, UV; air quality from Open-Meteo’s free air-quality API. Core’s WeatherCondition cases name every word. No city is ever shown; the place is just “here”.</p></div>
+ <div><h2>2 The landing</h2><p><b>Top:</b> “Weather” in sky amber, the time on the right. <b>Now:</b> the temperature in Outfit 200 at 104 pt, coloured by the sky right now (cloud grey here), with feels-like and the day’s high and low. <b>The sentence:</b> two lines of what’s coming, each weather word acting out its weather (the 236 words). <b>Next hours:</b> one column per hour (time, temperature, one word in its colour), dragged across or up and down, snapping three hours at a time. <b>The week:</b> a single sentence, “Saturday is Sunny, …”, where each day’s weather word is a door to that day. <b>Air:</b> one line. <b>Foot:</b> Rain alert (tap: a receipt with Undo 10 s; you hear 30 minutes before rain starts).</p></div>
+ <div><h2>3 A day</h2><p>Tap a week word: the day slides in. Its name, the high large and the low in ink 3, its own sentence with its weather word, the hours for that day, sunrise and sunset. Back: “Weather” at the top, or the edge swipe (0 to 24 pt).</p></div>
+ <div><h2>4 From Home</h2><p>Tapping a weather word on Home’s board (Rain, Snow, Windy, …) opens this room through the doorway, with that word’s sentence first. The same words, colours and effects as Home (sheet 236 v2.8). The landing is a first cut: it will follow whatever landing system he picks.</p></div>
+</div>

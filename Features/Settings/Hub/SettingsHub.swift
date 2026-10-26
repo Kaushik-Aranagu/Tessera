@@ -92,6 +92,14 @@ struct SettingsHub: View {
                         RecentChangesPage()
                     }
                 }
+                #if DEBUG
+                    // Design 283 v8: the shared landing layout as raised glass, read-only. A debug surface.
+                    group("Layout") {
+                        SettingsPageLine(sentence: "Layout mode", hint: "Every landing screen as panes of glass") {
+                            LayoutModeView()
+                        }
+                    }
+                #endif
                 group("About") {
                     SettingsPageLine(sentence: "Credits", hint: "Who made what") { AboutPage() }
                     buildLine

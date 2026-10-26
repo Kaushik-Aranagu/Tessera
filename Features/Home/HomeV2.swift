@@ -28,12 +28,31 @@ enum HomeV2 {
 enum HomeV2Door: Identifiable, Hashable {
     case review
     case app(HomeApp)
+    /// Bridge's dial (sheet 283): the weather landing and Settings are doors too.
+    case lookout
+    case settings
 
     /// The doorway's colour for this room.
     var accent: Color {
         switch self {
         case .review: HomeApp.routines.accent
         case let .app(app): app.accent
+        case .lookout: Color(light: 0xC9772E, dark: 0xE8A06A)
+        case .settings: Theme.Colors.ink
+        }
+    }
+
+    /// The room Tess takes her colour from on this door's landing; nil for the week, Lookout and Settings.
+    var roomID: AppID? {
+        guard case let .app(app) = self else { return nil }
+        return switch app {
+        case .training: .training
+        case .kitchen: .kitchen
+        case .money: .money
+        case .notes: .notes
+        case .lists: .lists
+        case .routines: .routines
+        case .tasks: nil
         }
     }
 
@@ -41,6 +60,22 @@ enum HomeV2Door: Identifiable, Hashable {
         switch self {
         case .review: "review"
         case let .app(app): app.rawValue
+        case .lookout: "lookout"
+        case .settings: "settings"
+        }
+    }
+}
+
+extension HomeLink {
+    /// The room Tess takes her colour from when this link's page is a room landing.
+    var roomID: AppID? {
+        switch self {
+        case .training: .training
+        case .recipes, .groceries, .pantry, .pasteRecipe: .kitchen
+        case .money: .money
+        case .notes: .notes
+        case .lists: .lists
+        case .review, .today, .settings: nil
         }
     }
 }
@@ -125,13 +160,14 @@ struct HomeV2DoorPage: View {
             case .review:
                 ScrollView { ReviewPage().padding(.horizontal, Theme.Spacing.gutter) }
             case .app(.training):
-                ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
-            case .app(.kitchen):
-                ScrollView {
-                    KitchenLandingPage()
-                        .padding(.horizontal, Theme.Spacing.gutter)
-                        .padding(.top, Theme.Spacing.m)
+                if LandingSwitch.isOn {
+                    TrainingRoomView()
+                } else {
+                    ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
                 }
+            case .app(.kitchen):
+                // The landing owns its whole frame (landing contract §1): no scroll, no padding around it.
+                KitchenLandingPage()
             case .app(.money): MoneyLandingView()
             case .app(.notes): NotesView()
             case .app(.lists): ListsView()
@@ -139,6 +175,8 @@ struct HomeV2DoorPage: View {
             case .app(.routines):
                 // Routines' landing is Builder A's (sheet 131 L4); until then its plans.
                 ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
+            case .lookout: WeatherLandingView()
+            case .settings: NavigationStack { SettingsPage(cameFrom: "Bridge") }
             }
         }
         .scrollIndicators(.hidden)

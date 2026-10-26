@@ -100,6 +100,7 @@ struct HomeOneThing: View {
     var onSlot: (CGRect) -> Void = { _ in }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var strike: Double = 0
     @State private var holdTask: Task<Void, Never>?
     @State private var full = false
@@ -108,29 +109,25 @@ struct HomeOneThing: View {
     @State private var turns = 0
     @State private var finishes = 0
 
-    static let height: CGFloat = 196
+    /// Sheet 283 v4: the widget place is 200 tall (412 to 612).
+    static let height: CGFloat = 200
     static let swipeDistance: CGFloat = 50
-    static let signTop: CGFloat = 62
+    /// Home 236: the 80 pt sign is centred on the big and mid tiers (4 to 150 pt), so its top sits at 37.
+    static let signTop: CGFloat = 32
     /// The sign's width plus the 12 pt that every tier's text stops short of it.
-    static let signRoom: CGFloat = 72 + 12
+    static let signRoom: CGFloat = 80 + 12
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             if things.indices.contains(index) {
                 let thing = things[index]
                 page(thing)
-                // A's 72 pt pixel sign sits at the top right; its slot is left clear here.
-                Color.clear.frame(width: 72, height: 72)
+                // A's 80 pt pixel sign sits at the top right; its slot is left clear here.
+                Color.clear.frame(width: 80, height: 80)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { onSlot($0) }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                    // Sheet 213: the sign's top sits 62 pt below the space's top, so it centres at 98 pt, and it never
-                    // moves with the pages.
+                    // Home 236: the sign is centred on the big and mid tiers and never moves with the pages.
                     .padding(.top, Self.signTop)
-                    .accessibilityHidden(true)
-                Text("\(index + 1) of \(things.count)")
-                    .font(Theme.numeral(14, weight: .light))
-                    .foregroundStyle(Theme.Colors.inkTertiary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                     .accessibilityHidden(true)
             }
         }
@@ -152,17 +149,31 @@ struct HomeOneThing: View {
     // MARK: Page
 
     private func page(_ thing: HomeThing) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            tier(thing, delay: 0.2, height: 84) { big(thing) }
-            tier(thing, delay: 0.28, height: 56) { mid(thing) }
-            tier(thing, delay: 0.36, height: 22) {
-                Text(thing.small)
-                    .font(Theme.voice(size: 15))
-                    .foregroundStyle(Theme.Colors.inkTertiary)
+        // Sheet 283 section 5, Bridge's one-thing box: header (13 pt 600 caps, tracked .12 em) at 429, the Big line in
+        // a
+        // 64 pt slot at 444, the Middle line (20 pt) at 522, the Small line (15 pt 500 ink 2) at 554. Fixed slots: text
+        // cuts on whole words and never wraps; the type stops growing at AX1 so nothing overlaps.
+        ZStack(alignment: .topLeading) {
+            tier(thing, delay: 0.12, height: 20) {
+                Text(Self.header(thing.kind).uppercased())
+                    .font(.custom("Figtree", size: 13, relativeTo: .caption).weight(.semibold))
+                    .tracking(13 * 0.12)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .lineLimit(1)
             }
-            Spacer(minLength: 0)
+            .offset(y: 17)
+            tier(thing, delay: 0.2, height: 64) { big(thing) }
+                .frame(height: 64, alignment: .leading)
+                .offset(y: 32)
+            tier(thing, delay: 0.28, height: 28) { mid(thing) }
+                .offset(y: 110)
+            tier(thing, delay: 0.36, height: 22) {
+                FitLine(forms: FitLine.cuts(thing.small), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)
+            }
+            .offset(y: 142)
         }
-        .padding(.top, 4)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+        .frame(height: Self.height, alignment: .topLeading)
         .padding(.trailing, Self.signRoom)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .combine)
@@ -203,12 +214,13 @@ struct HomeOneThing: View {
     @ViewBuilder
     private func big(_ thing: HomeThing) -> some View {
         let colour = thing.accentColor
-        let text = Text(thing.bigIsNumber ? thing.big : AppsListRows.fit(thing.big, limit: 28))
-            // Always Outfit 200: 60 pt for a short value, 44 pt for words (which may wrap to two lines).
-            .font(Theme.numeral(thing.bigIsNumber ? 60 : 44))
+        // Sheet 283: a word at Figtree 38 700 on one line (cut on whole words), or an Outfit 56 number.
+        let text = Text(thing.bigIsNumber ? thing.big : Self.cut(thing.big, size: 38, width: 262, typeSize: typeSize))
+            .font(thing.bigIsNumber ? .custom("Outfit", size: 56, relativeTo: .largeTitle).weight(.light)
+                : .custom("Figtree", size: 38, relativeTo: .largeTitle).weight(.bold))
             .foregroundStyle(colour)
+            .lineLimit(1)
             .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink))
-            .fixedSize(horizontal: false, vertical: true)
         if thing.taskID != nil {
             text.simultaneousGesture(hold(thing))
         } else {
@@ -219,9 +231,8 @@ struct HomeOneThing: View {
     private func mid(_ thing: HomeThing) -> some View {
         Button { open(thing) } label: {
             Text(Self.midText(thing))
-                .multilineTextAlignment(.leading)
+                .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .buttonStyle(.plain)
     }
@@ -231,15 +242,66 @@ struct HomeOneThing: View {
     /// (ink
     /// for tasks).
     static func midText(_ thing: HomeThing) -> AttributedString {
-        var text = AttributedString(thing.mid)
+        midText(thing.mid, keyword: thing.keyword, accent: thing.accentColor)
+    }
+
+    static func midText(_ mid: String, keyword: String?, accent: Color) -> AttributedString {
+        var text = AttributedString(mid)
         text.font = Theme.voice(size: 20)
         text.foregroundColor = Theme.Colors.ink
-        if let keyword = thing.keyword, let range = text.range(of: keyword) {
-            let accent = thing.accentColor
-            text[range].font = Theme.voice(size: 22).weight(.semibold)
+        if let keyword, let range = text.range(of: keyword) {
+            // Sheet 283: no decorative underline; the key word is 600 in its accent at the line's own size.
+            text[range].font = Theme.voice(size: 20).weight(.semibold)
             text[range].foregroundColor = accent
         }
         return text
+    }
+
+    /// The widget header (283): the room the thing belongs to, by its ship name.
+    static func header(_ kind: OneThing.Kind) -> String {
+        switch kind {
+        case .training: "Deck"
+        case .groceries: "Galley"
+        case .birthday: "Birthday"
+        case .task: "To do"
+        case .list: "Log"
+        case .weather: "Lookout"
+        case .routine: "Watch"
+        }
+    }
+
+    /// The longest whole-word cut of `text` that fits `width` at Figtree `size` 700; never an ellipsis. It measures at
+    /// the size the line draws at: scaled with the reader's text size, but clamped to AX1 like the page (so a larger
+    /// size never cuts words that still fit).
+    static func cut(_ text: String, size: CGFloat, width: CGFloat, typeSize: DynamicTypeSize = .large) -> String {
+        let descriptor = UIFontDescriptor(fontAttributes: [
+            .family: "Figtree", .traits: [UIFontDescriptor.TraitKey.weight: UIFont.Weight.bold],
+        ])
+        let traits = UITraitCollection(preferredContentSizeCategory: category(min(typeSize, .accessibility1)))
+        let scaled = UIFontMetrics(forTextStyle: .largeTitle).scaledValue(for: size, compatibleWith: traits)
+        let font = UIFont(descriptor: descriptor, size: scaled)
+        for form in FitLine.cuts(text) where (form as NSString).size(withAttributes: [.font: font]).width <= width {
+            return form
+        }
+        return FitLine.cuts(text).last ?? text
+    }
+
+    private static func category(_ size: DynamicTypeSize) -> UIContentSizeCategory {
+        switch size {
+        case .xSmall: .extraSmall
+        case .small: .small
+        case .medium: .medium
+        case .large: .large
+        case .xLarge: .extraLarge
+        case .xxLarge: .extraExtraLarge
+        case .xxxLarge: .extraExtraExtraLarge
+        case .accessibility1: .accessibilityMedium
+        case .accessibility2: .accessibilityLarge
+        case .accessibility3: .accessibilityExtraLarge
+        case .accessibility4: .accessibilityExtraExtraLarge
+        case .accessibility5: .accessibilityExtraExtraExtraLarge
+        @unknown default: .large
+        }
     }
 
     // MARK: Gestures

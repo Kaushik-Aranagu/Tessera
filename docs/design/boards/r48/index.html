@@ -1,0 +1,234 @@
+<title>Recipes page</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --kit:#A8701F;--kitT:#93611A;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--kit:#C49A5E;--kitT:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--kit:#C49A5E;--kitT:#C49A5E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head,.sec{max-width:1120px;margin:0 auto 40px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:0}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+.notes{flex:1 1 340px;min-width:0;max-width:540px;display:flex;flex-direction:column;gap:12px}
+.notes p{margin:0}
+.flow{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;font-size:16px;color:var(--ink3)}
+.flow b{color:var(--ink);font-weight:600}
+.try{display:grid;grid-template-columns:22px 1fr;gap:6px;font-size:16px}
+.try span:nth-child(odd){color:var(--ink3);font-family:var(--nums)}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr:hover{color:var(--ink)}
+.tap{all:unset;cursor:pointer}
+.tr:focus-visible,.tap:focus-visible,.act:focus-visible{outline:2px solid var(--ink3);outline-offset:3px}
+.phone{position:relative;width:350px;max-width:100%;height:720px;background:var(--phone);border:1px solid var(--edge);border-radius:44px;overflow:hidden;box-sizing:border-box;flex:none;user-select:none;-webkit-user-select:none}
+.scr{position:absolute;inset:0}
+.z{position:absolute;left:24px;right:24px}
+.n{font-family:var(--nums);font-weight:300}
+.big{font-family:var(--nums);font-weight:200;line-height:.86;letter-spacing:-.02em}
+.brief{text-align:right;font-size:19px;line-height:25px;height:50px;overflow:hidden}
+.l{height:26px;line-height:26px;font-size:15px;white-space:nowrap;overflow:hidden;color:var(--ink2);display:flex;justify-content:space-between;gap:10px}
+.act{all:unset;cursor:pointer;font-size:19px;font-weight:600}
+.tess{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#FFA90F,#FF5A26 55%,#E5341C)}
+.ft{bottom:24px;height:40px;display:flex;justify-content:space-between;align-items:center}
+.u{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+</style>
+<div class="head">
+  <p class="lab">Round 233, Oct 23</p>
+  <h1>Recipes, by what you can cook</h1>
+  <p class="sub">The Recipes page from the Kitchen landing. The same three-place dial as the Pantry, but its places are ways of looking: Ready now, One short, Planned, All. Every recipe you can make has Cook now; one that's a thing short offers to put that thing on To get.</p>
+  <div style="display:flex;gap:22px;flex-wrap:wrap"><button class="tr" id="mW" style="color:var(--ink);font-weight:600">Wheel (my pick)</button><button class="tr" id="mT">Timetable</button><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button><button class="tr" id="reset">Start over</button></div>
+</div>
+<div class="sec">
+  <div class="row">
+    <div class="phone" id="ph">
+      <div class="scr" id="pg0">
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span>Recipes</span><span style="color:var(--ink2)" id="tgL"><span class="n" id="tgN">5</span> to get</span></div>
+        <div class="z" style="top:82px;height:196px;overflow:hidden;touch-action:none;cursor:ns-resize" id="dial" role="slider" aria-label="Show"></div>
+        <button class="z tap" id="fullT" hidden style="top:96px;display:flex;justify-content:space-between;align-items:center;height:64px"><span id="fullN" style="font-size:44px;font-weight:600;letter-spacing:-.03em;color:var(--kit)"></span><span id="fullC" class="n" style="font-size:44px;font-weight:200"></span></button>
+        <div class="z brief" style="top:292px" id="brief"></div>
+        <div class="z" style="top:352px;height:20px;display:flex;justify-content:space-between;font-size:13px;color:var(--ink2)"><span id="secL"></span><span id="pg" class="n"></span></div>
+        <div class="z" style="top:376px;height:220px;overflow:hidden" id="list"></div>
+        <div class="z" style="top:380px;height:202px;overflow:hidden;touch-action:none;cursor:ns-resize" id="wheel" role="list" aria-label="Recipes" hidden></div>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="receipt"></div>
+        <div class="z ft"><button class="act" id="act" style="color:var(--kit)">New recipe</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <div class="scr" id="cook" hidden style="background:var(--phone);z-index:2">
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span>Kitchen</span><span style="color:var(--kitT)">Cooking</span></div>
+        <div class="z" style="top:82px;height:196px" id="cTop"><div id="cName" style="font-size:30px;font-weight:600;letter-spacing:-.025em;color:var(--kit)"></div><div id="cStep" style="font-size:15px;color:var(--ink2)"></div><div style="position:absolute;left:0;right:0;bottom:4px"><div id="cTitle" style="font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:29px"></div><div style="display:flex;align-items:baseline;gap:10px;margin-top:6px;height:66px"><span class="big" id="cT" style="font-size:72px"></span><span id="cNote" style="font-size:17px;color:var(--ink2)"></span></div></div></div>
+        <div class="z brief" style="top:292px" id="cBrief"></div>
+        <div class="z ft"><button class="act" id="cGo" style="color:var(--kit)">Next step</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <div class="scr" id="rec" hidden style="background:var(--phone)">
+        <div class="z" style="top:50px;font-size:15px;color:var(--ink3)">Recipe</div>
+        <div class="z" style="top:96px;height:140px;display:flex;flex-direction:column;justify-content:flex-end">
+          <div style="font-size:15px;color:var(--ink2);margin-bottom:6px" id="rsub"></div>
+          <div style="font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1;color:var(--kit);white-space:nowrap;overflow:hidden" id="rname"></div>
+          <div style="font-size:16px;color:var(--ink2);margin-top:12px" id="rmeta"></div>
+        </div>
+        <div class="z brief" style="top:292px" id="rbrief"></div>
+        <div class="z" style="top:358px" id="ring"></div>
+        <div class="z" style="top:530px"><button class="tap l" id="pinL" style="width:100%;color:var(--ink);font-size:16px"><span>Keep at the top</span><span id="pinD" style="color:var(--kitT);font-weight:600"></span></button></div>
+        <div class="z" style="top:560px"><button class="tap l" id="planL" style="width:100%;color:var(--ink);font-size:16px"><span>Plan for</span><span id="planD" style="color:var(--kitT);font-weight:600;display:inline-block;height:26px;overflow:hidden"></span></button></div>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap" id="rreceipt"></div>
+        <div class="z ft"><button class="act" id="cooknow" style="color:var(--kit)">Cook now</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+    </div>
+    <div class="notes">
+      <h2>How it works</h2>
+      <div class="try">
+        <span>1</span><span><b>The dial picks how you look.</b> Ready now (everything's here), One short, Planned, All. The focus is large in the Kitchen colour with its count. Drag it, flick it, or tap a small one. It loops.</span>
+        <span>2</span><span><b>The brief</b> picks out the useful one: the fastest, or the one that uses what's about to go.</span>
+        <span>3</span><span><b>A timetable, five to a page.</b> Minutes run down the left, quickest first, like a departures board. Each recipe says what goes in it, with anything that wants using first in the Kitchen colour (spinach, lemons). <i>Cook in 30 min</i> steps 15, 20, 30, 45, any time; recipes that won't fit go lighter. Drag the list up for the next page.</span>
+        <span>4</span><span><b>Tap a recipe and it opens in place</b> with its one action: Cook now (the Kitchen landing becomes the cooking), or Get it when one thing is short. Tap the name again for the full recipe; tap the row to close it. Hold <i>serves 2</i> to step it. Only one row is open at a time, and the rows below slide under the edge and come back.</span>
+        <span>5</span><span><b>Hold</b> a recipe to pin it to the top (three at most). <b>New recipe</b>: tell Tess, paste a link, or type it in.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1,1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e,u);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const spring=u=>1-Math.exp(-7*u)*Math.cos(9*u);
+const $=id=>document.getElementById(id);
+const clipIn=(node,delay=0)=>{node.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>anim(.3,e=>node.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`,()=>node.style.clipPath=''),RM?0:delay)};
+const LENS=['Ready now','One short','Planned','All'];
+let R;const seed=()=>[
+ {n:'Lemon pasta',min:25,have:8,of:8,serves:2,plan:'Thursday',ing:[['Spaghetti','200 g'],['Lemons','2'],['Butter','40 g'],['Parmesan','60 g'],['Garlic','2 cloves'],['Black pepper','']]},
+ {n:'Fried rice',min:20,have:6,of:6,low:'eggs',serves:2,ing:[['Rice','day old'],['Eggs','2'],['Peas','1 cup'],['Soy sauce','2 tbsp'],['Scallions','3']]},
+ {n:'Dal',min:35,have:8,of:8,serves:4,ing:[['Red lentils','250 g'],['Spinach','1 bunch'],['Onion','1'],['Tomatoes','2'],['Cumin','1 tsp'],['Turmeric','1 tsp'],['Rice','300 g']]},
+ {n:'Tomato soup',min:30,have:5,of:5,serves:3,ing:[['Tomatoes','6'],['Onion','1'],['Stock','1 l'],['Cream','splash']]},
+ {n:'Overnight oats',min:5,have:4,of:4,serves:1,ing:[['Oats','1 cup'],['Yogurt','half cup'],['Milk','splash'],['Honey','1 tsp']]},
+ {n:'Chicken thighs',min:40,have:5,of:5,serves:3,ing:[['Chicken thighs','6'],['Lemons','1'],['Garlic','4 cloves'],['Potatoes','1 lb']]},
+ {n:'Shakshuka',min:30,have:6,of:7,short:'feta',serves:2,ing:[['Eggs','4'],['Tomatoes','4'],['Onion','1'],['Feta','100 g, to get']]},
+ {n:'Pancakes',min:20,have:6,of:6,low:'milk',serves:2,ing:[['Flour','1 cup'],['Eggs','1'],['Milk','1 cup, low'],['Butter','1 tbsp'],['Sugar','1 tbsp'],['Baking powder','2 tsp']]},
+ {n:'Tiramisu',min:30,have:5,of:6,short:'mascarpone',serves:6,ing:[['Ladyfingers','1 pack'],['Mascarpone','250 g, to get'],['Eggs','3'],['Coffee','1 cup']]},
+ {n:'Pesto pasta',min:15,have:5,of:6,short:'basil',serves:2,ing:[['Spaghetti','200 g'],['Basil','1 bunch, to get'],['Parmesan','40 g']]},
+ {n:'Tacos',min:30,have:4,of:7,plan:'Saturday',serves:4,ing:[['Tortillas','8, to get'],['Onion','1']]}];
+const inLens=(x,l)=>l==='Ready now'?x.have===x.of:l==='One short'?x.of-x.have===1:l==='Planned'?!!x.plan:true;
+let li=0,off=0,page=0,pins=[],spin=0,toGet=5,recI=0;
+const list=l=>{const a=R.filter(x=>inLens(x,l));return [...a.filter(x=>pins.includes(x.n)),...a.filter(x=>!pins.includes(x.n))]};
+const wrap=i=>(i%4+4)%4;
+const BRIEF={'Ready now':'Dal uses up the spinach.<br>Oats take 5 min.','One short':'Feta makes Shakshuka work.<br>Basil for the pesto.','Planned':'Pasta on Thursday.<br>Tacos on Saturday, 3 things short.','All':'Eleven recipes.<br>Dal, last made Tuesday.'};
+// ---------- dial (same as the Pantry's)
+function renderDial(){const d=$('dial');d.innerHTML=[-2,-1,0,1,2].map(k=>`<button class="tap" data-k="${k}" style="position:absolute;left:0;width:100%;height:64px;display:flex;justify-content:space-between;align-items:center;white-space:nowrap"><span style="transform-origin:left center;display:inline-block;font-size:44px;letter-spacing:-.03em"></span><span class="n" style="transform-origin:right center;display:inline-block;font-size:44px"></span></button>`).join('');paintDial();
+  [...d.children].forEach(b=>b.onclick=()=>{if(dragged)return;if(+b.dataset.k!==0)spinTo(Math.round(off)+(+b.dataset.k));else if(mode==='wheel')setFull(true)})}
+function paintDial(){const base=Math.round(off);[...$('dial').children].forEach(b=>{const k=+b.dataset.k,i=base+k,dd=i-off,a=Math.abs(dd),l=LENS[wrap(i)];
+  b.style.transform=`translateY(${66+dd*64}px)`;b.style.visibility=a>1.6?'hidden':'';const sc=1-(1-26/44)*Math.min(a,1);const [pn,pc]=b.children;pn.textContent=l;pc.textContent=R.filter(x=>inLens(x,l)).length;
+  pn.style.transform=pc.style.transform=`scale(${sc})`;const f=a<.5;pn.style.color=f?'var(--kit)':'var(--ink2)';pn.style.fontWeight=f?600:400;pc.style.color=f?'var(--ink)':'var(--ink2)';pc.style.fontWeight=f?200:300})}
+function spinTo(t,dur=.42){const from=off,id=++spin;anim(dur,(e,u)=>{if(id!==spin)return;off=from+(t-from)*spring(u);paintDial()},()=>{if(id!==spin)return;off=t;paintDial();setLens(wrap(t))})}
+let dragged=false;(()=>{const d=$('dial');let sy=null,so=0,vy=0,ly=0,lt=0;
+  d.onpointerdown=e=>{sy=e.clientY;so=off;dragged=false;vy=0;ly=e.clientY;lt=performance.now();spin++};
+  d.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!dragged){dragged=true;d.setPointerCapture(e.pointerId)}if(!dragged)return;const n=performance.now();vy=(e.clientY-ly)/Math.max(1,n-lt);ly=e.clientY;lt=n;off=so-dy/64;paintDial()};
+  d.onpointerup=d.onpointercancel=()=>{if(sy==null)return;sy=null;if(dragged){spinTo(Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(off),.36);setTimeout(()=>dragged=false,0)}else spinTo(Math.round(off))};
+  d.tabIndex=0;d.onkeydown=e=>{if(e.key==='ArrowDown'){spinTo(Math.round(off)+1,.36);e.preventDefault()}if(e.key==='ArrowUp'){spinTo(Math.round(off)-1,.36);e.preventDefault()}}})();
+function setLens(i,force){const l=LENS[i];$('dial').setAttribute('aria-valuetext',`${l}, ${R.filter(x=>inLens(x,l)).length} recipes`);if(i===li&&!force)return;li=i;page=0;$('brief').innerHTML=BRIEF[l];clipIn($('brief'));if(mode==='wheel')setMode('wheel');else renderList(0)}
+// ---------- rows: name, minutes and what you have, then Cook now (or Get feta)
+// the list is a timetable: minutes down the left, each recipe with what goes in it
+const USE=['Spinach','Lemons'];let have=30,open=null;const HAVE=[15,20,30,45,'Any'];
+const fits=x=>have==='Any'||x.min<=have;
+function inLine(x){if(x.short)return `needs <b style="color:var(--kitT);font-weight:600">${x.short}</b>`;
+  const ing=x.ing.map(i=>i[0]),use=ing.filter(n=>USE.includes(n)),rest=ing.filter(n=>!USE.includes(n));
+  const shown=[...use.map(n=>`<b style="color:var(--kitT);font-weight:600">${n.toLowerCase()}</b>`),...rest.slice(0,Math.max(0,2-use.length)).map(n=>n.toLowerCase()===x.low?`${x.low} low`:n.toLowerCase())];if(x.low&&!shown.includes(`${x.low} low`))shown.push(`${x.low} low`);const more=ing.length-Math.max(2,use.length);return shown.join(', ')+(more>0?` and ${more} more`:'')}
+function rowHTML(x,i,arr){const l=LENS[li],pin=pins.includes(x.n),ready=x.have===x.of,f=fits(x),same=i>0&&arr[i-1].min===x.min&&!pins.includes(arr[i-1].n);
+  const ink=f?'var(--ink)':'var(--ink2)',isOpen=open===x.n;
+  const act=ready?`<button class="tap" data-c="${x.n}" style="color:var(--kitT);font-weight:600">Cook now</button>`:x.short?`<button class="tap" data-g="${x.n}" style="color:var(--kitT);font-weight:600">Get it</button>`:`<span style="color:var(--ink2)">${x.of-x.have} short</span>`;
+  return `<div class="rw" data-n="${x.n}" style="height:${isOpen?80:44}px;display:grid;grid-template-columns:44px 1fr;grid-template-rows:40px 36px;align-content:start;padding-top:4px;box-sizing:border-box;overflow:hidden">
+    <span class="n" style="font-size:24px;line-height:24px;color:${ink};font-weight:300">${same||!f?'':x.min}</span>
+    <button class="tap nm" data-r="${x.n}" style="min-width:0;overflow:hidden;text-align:left;display:flex;flex-direction:column;white-space:nowrap"><span style="flex:none;font-size:17px;line-height:21px;color:${ink};font-weight:${pin||isOpen?600:400}">${x.n}${l==='Planned'?`<span style="font-size:13px;color:var(--ink2);font-weight:400">, ${x.plan}</span>`:''}</span><span style="flex:none;font-size:13px;line-height:17px;color:var(--ink2);overflow:hidden">${pin?'pinned, ':''}${inLine(x)}</span></button>
+    <span></span><div class="op" style="display:flex;gap:22px;font-size:15px;height:30px;align-items:flex-end">${act}<span class="sv" data-s="${x.n}" style="color:var(--ink2);cursor:ns-resize;touch-action:none" aria-label="Serves ${x.serves}, hold to change">serves <span class="n svn" style="display:inline-block;height:20px;overflow:hidden;vertical-align:bottom;line-height:20px">${x.serves}</span></span></div></div>`}
+function renderList(dir){const l=LENS[li],it=list(l).sort((a,b)=>(pins.includes(b.n)-pins.includes(a.n))||a.min-b.min),pages=Math.max(1,Math.ceil(it.length/5));page=Math.min(page,pages-1);
+  const nf=it.filter(fits).length;$('secL').innerHTML=`Cook in <button class="tap" id="haveB" style="color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:3px">${have==='Any'?'any time':have+' min'}</button>, ${nf} ${nf===1?'fits':'fit'}`;$('haveB').onclick=()=>{have=HAVE[(HAVE.indexOf(have)+1)%HAVE.length];renderList(0)};$('pg').textContent=pages>1?`${page+1} of ${pages}`:'';
+  const sl=it.slice(page*5,page*5+5);const html=sl.map(rowHTML).join('')||`<div style="height:44px;line-height:44px;color:var(--ink2)">Nothing here.</div>`;const L=$('list');
+  if(dir&&!RM){L.innerHTML=`<div id="pA" style="position:absolute;left:0;right:0">${L.innerHTML}</div><div id="pB" style="position:absolute;left:0;right:0;top:${dir*220}px">${html}</div>`;const A=$('pA'),B=$('pB');anim(.4,(e,u)=>{const k=spring(u);A.style.transform=B.style.transform=`translateY(${-dir*220*k}px)`},()=>{L.innerHTML=html;wire()})}else{L.innerHTML=html;wire()}}
+// tap a recipe: it opens in place (others close), showing its one action
+function toggleRow(n){const was=open;open=open===n?null:n;document.querySelectorAll('#list .rw').forEach(rw=>{const t=rw.dataset.n===open?80:44,h0=rw.offsetHeight;if(h0!==t)anim(.34,(e,u)=>rw.style.height=`${h0+(t-h0)*spring(u)}px`);rw.querySelector('.nm span').style.fontWeight=(rw.dataset.n===open||pins.includes(rw.dataset.n))?600:400});
+  const rw=open&&document.querySelector(`#list .rw[data-n="${open}"] .op`);if(rw){rw.style.clipPath='inset(0 100% 0 0)';anim(.32,e=>rw.style.clipPath=`inset(0 ${(1-e)*100}% 0 0)`)}}
+function wire(){const L=$('list');
+  L.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>cook(b.dataset.c,b));
+  L.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>getIt(b.dataset.g,b));
+  L.querySelectorAll('[data-r]').forEach(b=>{let hold=null,sx=0,sy=0,held=false;b.onpointerdown=e=>{sx=e.clientX;sy=e.clientY;held=false;hold=setTimeout(()=>{held=true;pin(b.dataset.r)},520)};b.onpointermove=e=>{if(Math.abs(e.clientX-sx)>3||Math.abs(e.clientY-sy)>3)clearTimeout(hold)};b.onpointerup=b.onpointerleave=()=>clearTimeout(hold);b.onclick=e=>{if(held)return;const n=b.dataset.r;if(open===n&&e.target===b.firstChild)openRec(n);else toggleRow(n)}});
+  L.querySelectorAll('.sv').forEach(sv=>{let t=null;const x=R.find(y=>y.n===sv.dataset.s);const step=()=>{const nd=sv.querySelector('.svn'),old=x.serves;x.serves=x.serves%8+1;if(RM){nd.textContent=x.serves;return}nd.innerHTML=`<span style="display:block">${old}</span><span style="display:block">${x.serves}</span>`;anim(.3,(e,u)=>{const k=spring(u);[...nd.children].forEach(c=>c.style.transform=`translateY(${-20*k}px)`)},()=>nd.textContent=x.serves)};
+    sv.onpointerdown=()=>{t=setTimeout(function f(){step();t=setTimeout(f,450)},450)};sv.onpointerup=sv.onpointerleave=()=>clearTimeout(t)})}
+(()=>{const L=$('list');let sy=null,sx=0;L.addEventListener('pointerdown',e=>{sy=e.clientY;sx=e.clientX});L.addEventListener('pointerup',e=>{if(sy==null)return;const dy=e.clientY-sy,dx=e.clientX-sx;sy=null;if(Math.abs(dy)>40&&Math.abs(dy)>Math.abs(dx)*1.5)turn(dy<0?1:-1)});
+  L.addEventListener('wheel',e=>{e.preventDefault();if(Math.abs(e.deltaY)>20&&!L.dataset.lock){L.dataset.lock=1;turn(e.deltaY>0?1:-1);setTimeout(()=>delete L.dataset.lock,500)}},{passive:false})})();
+function turn(dir){open=null;const pages=Math.ceil(list(LENS[li]).length/5);const np=page+dir;if(np<0||np>=pages)return;page=np;renderList(dir)}
+// Cook now: the word underlines itself left to right, then the Kitchen landing takes over
+function cook(n,b){const u=document.createElement('span');u.style.cssText='position:absolute;left:0;bottom:-2px;height:1.5px;width:100%;background:var(--kitT);transform-origin:left;transform:scaleX(0)';b.style.position='relative';b.append(u);say(`Cooking ${n}.`,()=>{u.remove()});anim(.2,e=>u.style.transform=`scaleX(${e})`)}
+function getIt(n,b){const x=R.find(y=>y.n===n);const it=x.short;toGet++;rollN(1);b.textContent='Got it';b.style.color='var(--ink2)';b.style.fontWeight=400;b.onclick=null;say(`${it[0].toUpperCase()+it.slice(1)}, on To get.`,()=>{toGet--;rollN(-1);renderList(0)})}
+function pin(n){if(pins.includes(n)){pins=pins.filter(x=>x!==n);renderList(0);say(`${n}, unpinned.`,()=>{pins.push(n);renderList(0)});return}if(pins.length>=3){say('Three pins already. Unpin one first.');return}pins.push(n);renderList(0);say(`${n}, pinned.`,()=>{pins=pins.filter(x=>x!==n);renderList(0)})}
+function rollN(d){const node=$('tgN'),v=toGet;if(RM){node.textContent=v;return}const old=node.textContent;node.style.cssText='display:inline-block;height:1.2em;overflow:hidden;vertical-align:bottom';
+  node.innerHTML=d>0?`<span style="display:block;line-height:1.2em">${old}</span><span style="display:block;line-height:1.2em">${v}</span>`:`<span style="display:block;line-height:1.2em">${v}</span><span style="display:block;line-height:1.2em">${old}</span>`;const s0=d>0?0:-1.2;[...node.children].forEach(c=>c.style.transform=`translateY(${s0}em)`);
+  anim(.42,(e,u)=>{const k=spring(u);[...node.children].forEach(c=>c.style.transform=`translateY(${s0+(d>0?-1.2:1.2)*k}em)`)},()=>{node.textContent=v;node.removeAttribute('style')})}
+let sayT=null;function say(t,undo){const r=$('receipt');r.innerHTML=t+(undo?' <button class="tap" id="undo" style="color:var(--kitT);font-weight:600">Undo</button>':'');clipIn(r);clearTimeout(sayT);sayT=setTimeout(()=>r.textContent='',undo?10000:3000);if(undo)$('undo').onclick=()=>{r.textContent='';undo()}}
+// ---------- recipe page (from 231), slides in from the right; left edge goes back
+function openRec(n){const r=R.find(x=>x.n===n);recI=n;$('rname').textContent=r.n;$('rsub').textContent=r.plan?`Planned for ${r.plan}`:'A recipe';$('rmeta').innerHTML=`<span class="n">${r.min}</span> min, serves <span class="n">${r.serves}</span>, about <span class="n">${CAL[r.n]}</span> cal each`;
+  $('rbrief').innerHTML=r.have===r.of?`You have all <span class="n">${r.of}</span> things.<br>&nbsp;`:`You have <span class="n">${r.have}</span> of <span class="n">${r.of}</span>.<br>${r.short?'Short on '+r.short+'.':'&nbsp;'}`;
+  $('ring').innerHTML=r.ing.slice(0,r.ing.length>5?4:5).map(([a,b])=>`<div class="l" style="height:30px;line-height:30px;font-size:16px;color:var(--ink)"><span>${a}</span><span style="color:${/to get|low/.test(b)?'var(--kitT)':'var(--ink2)'}">${b}</span></div>`).join('')+(r.ing.length>5?`<div class="l" style="height:30px;line-height:30px;font-size:16px"><span>and ${r.ing.length-4} more</span><span></span></div>`:'');
+  const c=$('cooknow');c.textContent=r.have===r.of?'Cook now':r.short?'Get it':'Add to To get';$('planD').textContent=r.plan||'No day';$('pinD').textContent=pins.includes(r.n)?'Pinned':'No';$('rreceipt').textContent='';
+  const p=$('rec');p.hidden=false;anim(.34,e=>p.style.transform=`translateX(${(1-e)*100}%)`)}
+$('pinL').onclick=()=>{const n=recI;const rr=$('rreceipt');if(pins.includes(n)){pins=pins.filter(x=>x!==n)}else{if(pins.length>=3){rr.textContent='Three pins already. Unpin one first.';return}pins.push(n)}$('pinD').textContent=pins.includes(n)?'Pinned':'No';rr.innerHTML=`${n}, ${pins.includes(n)?'pinned':'unpinned'}. <button class="tap" id="pnU" style="color:var(--kitT);font-weight:600">Undo</button>`;clipIn(rr);$('pnU').onclick=()=>{$('pinL').onclick()};if(mode==='wheel')renderWheel()};
+const DAYS=['No day','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+$('planL').onclick=()=>{const r=R.find(x=>x.n===recI),was=r.plan;const i=(DAYS.indexOf(r.plan||'No day')+1)%8;r.plan=i?DAYS[i]:undefined;const d=$('planD'),old=d.textContent,v=DAYS[i];
+  if(RM)d.textContent=v;else{d.innerHTML=`<span style="display:block;line-height:26px">${old}</span><span style="display:block;line-height:26px">${v}</span>`;anim(.36,(e,u)=>{const k=spring(u);[...d.children].forEach(c=>c.style.transform=`translateY(${-26*k}px)`)},()=>d.textContent=v)}
+  const rr=$('rreceipt');rr.innerHTML=`${r.n}, ${r.plan?'planned for '+r.plan:'not planned'}. <button class="tap" id="pundo" style="color:var(--kitT);font-weight:600">Undo</button>`;clipIn(rr);$('pundo').onclick=()=>{r.plan=was;$('planD').textContent=was||'No day';rr.textContent=''};paintDial();setLens(li,true)};
+function closeRec(){const p=$('rec');anim(.28,e=>p.style.transform=`translateX(${e*100}%)`,()=>p.hidden=true)}
+$('cooknow').onclick=()=>{const r=R.find(x=>x.n===recI);closeRec();if(r.have===r.of)startCook(r);else{toGet++;rollN(1);say(`${r.short||'Missing things'}, on To get.`,()=>{toGet--;rollN(-1)})}};
+(()=>{const p=$('rec');let sx=null;p.onpointerdown=e=>{const r=p.getBoundingClientRect();if(e.clientX-r.left<36){sx=e.clientX;p.setPointerCapture(e.pointerId)}};p.onpointermove=e=>{if(sx!=null)p.style.transform=`translateX(${Math.max(0,e.clientX-sx)}px)`};p.onpointerup=e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(dx>80)closeRec();else anim(.2,u=>p.style.transform=`translateX(${dx*(1-u)}px)`)};document.addEventListener('keydown',k=>{if(k.key==='Escape'&&!p.hidden)closeRec()})})();
+$('act').onclick=()=>{if(mode==='wheel'){const x=R.find(y=>y.n===$('act').dataset.n);if(x&&x.have===x.of){startCook(x);return}if(x&&!x.nw&&x.have<x.of&&!x.short){const k=x.of-x.have;toGet+=k;rollN(1);say(`${k} things for ${x.n}, on To get.`,()=>{toGet-=k;rollN(-1)});return}if(x&&x.short){toGet++;rollN(1);say(`${x.short[0].toUpperCase()+x.short.slice(1)}, on To get.`,()=>{toGet--;rollN(-1)});return}}const b=$('brief');b.innerHTML='Tell Tess or type it in. A link is<br>fetched from its site, read on the phone.';clipIn(b)};
+// ---------- the wheel (230 grammar): one recipe in focus with its details, the rest are just names
+let mode='wheel',wOff=0,wSpin=0,wDrag=false;const WRH=38;
+const NEWR={n:'New recipe',nw:1,min:'',ing:[],have:0,of:0};const wItems=()=>[...list(LENS[li]).sort((a,b)=>(pins.includes(b.n)-pins.includes(a.n))||a.min-b.min),NEWR];
+const CAL={'Lemon pasta':520,'Fried rice':430,'Dal':380,'Tomato soup':210,'Overnight oats':350,'Chicken thighs':480,'Shakshuka':330,'Pancakes':410,'Pesto pasta':560,'Tiramisu':450,'Tacos':470};
+// the focus sits in the first slot; the list loops, so the one you pass goes round to the back
+let WFY=22;const WEX=46;const md=(a,n)=>((a%n)+n)%n;
+function wD(i,N){let d=md(i-wOff,N);if(d>N-1.5)d-=N;return d}
+function wPos(d){return WFY+(d<0?d*WRH:d*WRH+Math.min(d,1)*WEX)}
+const wIdx=()=>md(Math.round(wOff),wItems().length);
+function renderWheel(){const W=$('wheel'),it=wItems();
+  W.innerHTML=it.map((x,i)=>`<div class="wr" data-i="${i}" role="listitem" aria-label="${x.n}${x.nw?'':`, ${x.min} minutes, about ${CAL[x.n]} cal`}" style="position:absolute;left:0;right:0;top:0;height:${WRH}px"><button class="tap wn" style="position:absolute;left:0;top:0;white-space:nowrap;transform-origin:left center;font-size:28px;line-height:${WRH}px;letter-spacing:-.02em">${x.n}</button><span class="wm" style="position:absolute;right:0;top:0;transform-origin:right center;font-size:28px;line-height:${WRH}px;white-space:nowrap">${x.nw?'':`<span class="n">${x.min}</span><span style="font-size:.62em"> min</span>`}</span><div class="wd" style="position:absolute;left:0;right:0;top:${WRH-4}px;font-size:15px;line-height:21px;color:var(--ink2);white-space:nowrap;overflow:hidden">${x.nw?'Tell Tess, type it, or paste a link.':`<span class="n">${x.min}</span> min, about <span class="n">${CAL[x.n]}</span> cal a serving<br>${inLine(x)}`}</div></div>`).join('');
+  [...W.querySelectorAll('.wr')].forEach(r=>{r.querySelector('.wn').onclick=()=>{if(wDrag)return;const i=+r.dataset.i;if(wIdx()===i){if(!it[i].nw)openRec(it[i].n)}else wSpinTo(Math.round(wOff)+wD(i,it.length))}});paintWheel()}
+function paintWheel(){const it=wItems(),N=it.length;[...$('wheel').querySelectorAll('.wr')].forEach(r=>{const i=+r.dataset.i,d=wD(i,N),a=Math.abs(d);
+  r.style.transform=`translateY(${wPos(d)-WRH/2}px)`;r.style.visibility=d<-1.2||d>7?'hidden':'';
+  const f=28-10*Math.min(a,1)-2*Math.max(0,Math.min(a-1,1)),sc=f/28,wn=r.querySelector('.wn'),wm=r.querySelector('.wm'),wd=r.querySelector('.wd');
+  wn.style.transform=wm.style.transform=`scale(${sc})`;const focus=a<.5,x=it[i];
+  wn.style.color=x.nw?'var(--kitT)':focus?'var(--ink)':'var(--ink2)';wn.style.fontWeight=focus||pins.includes(x.n)?600:400;wm.style.color='var(--ink2)';wm.style.fontWeight=300;
+  // the detail lines belong to the focused recipe only; they wipe open as it arrives
+  const k=Math.max(0,1-a*2);wd.style.clipPath=`inset(0 ${(1-k)*100}% 0 0)`;wm.style.visibility=a<.5?'hidden':''});
+  const x=it[wIdx()];const A=$('act');if(mode==='wheel'&&x){const ready=x.have===x.of&&!x.nw;A.textContent=x.nw?'New recipe':ready?'Cook now':x.short?'Get it':`Get ${x.of-x.have} things`;A.dataset.n=x.n}}
+function wSpinTo(t,dur=.42){const from=wOff,id=++wSpin;anim(dur,(e,u)=>{if(id!==wSpin)return;wOff=from+(t-from)*spring(u);paintWheel()},()=>{if(id!==wSpin)return;wOff=t;paintWheel()})}
+(()=>{const W=$('wheel');let sy=null,so=0,vy=0,ly=0,lt=0;
+  W.onpointerdown=e=>{sy=e.clientY;so=wOff;wDrag=false;vy=0;ly=e.clientY;lt=performance.now();wSpin++};
+  W.onpointermove=e=>{if(sy==null)return;const dy=e.clientY-sy;if(Math.abs(dy)>4&&!wDrag){wDrag=true;W.setPointerCapture(e.pointerId)}if(!wDrag)return;const n=performance.now();vy=(e.clientY-ly)/Math.max(1,n-lt);ly=e.clientY;lt=n;wOff=so-dy/WRH;paintWheel()};
+  W.onpointerup=W.onpointercancel=()=>{if(sy==null)return;sy=null;if(wDrag){wSpinTo(Math.abs(vy)>.6?Math.round(so)+(vy<0?1:-1):Math.round(wOff),.36);setTimeout(()=>wDrag=false,0)}};
+  let wt=null;W.addEventListener('wheel',e=>{e.preventDefault();wSpin++;wOff+=e.deltaY/90;paintWheel();clearTimeout(wt);wt=setTimeout(()=>wSpinTo(Math.round(wOff),.36),120)},{passive:false});
+  W.tabIndex=0;W.onkeydown=e=>{if(e.key==='ArrowDown'){wSpinTo(Math.round(wOff)+1,.36);e.preventDefault()}if(e.key==='ArrowUp'){wSpinTo(Math.round(wOff)-1,.36);e.preventDefault()}if(e.key==='Enter'){const x=wItems()[wIdx()];if(!x.nw)openRec(x.n)}}})();
+// tap the lens in focus: the whole page becomes that list
+let full=false;function setFull(on){full=on;const l=LENS[li];$('dial').hidden=on;$('brief').hidden=on;$('fullT').hidden=!on;
+  const sec=$('secL').parentNode,W=$('wheel');if(on){$('fullN').textContent=l;$('fullC').textContent=R.filter(x=>inLens(x,l)).length;sec.style.top='170px';W.style.top='200px';W.style.height='392px';clipIn($('fullT'));clipIn(W,60)}else{sec.style.top='352px';W.style.top='380px';W.style.height='202px';clipIn($('dial'))}}
+$('fullT').onclick=()=>{};document.addEventListener('keydown',k=>{if(k.key==='Escape'&&full&&$('rec').hidden&&$('cook').hidden)setFull(false)});
+(()=>{const p=$('pg0');let sx=null;p.addEventListener('pointerdown',e=>{const r=p.getBoundingClientRect();if(full&&e.clientX-r.left<30)sx=e.clientX});p.addEventListener('pointerup',e=>{if(sx!=null&&e.clientX-sx>80)setFull(false);sx=null})})();
+// cooking mode (231): the dish, the step, its timer
+let ck=null,cstep=0,ctick=null,cleft=0;
+function stepsOf(x){return x.n==='Lemon pasta'?[['Boil the pasta','Salt the water well.',540],['Soften the garlic','In butter, low heat.',90],['Zest the lemons','Into the pan, then the juice.',0],['Toss it all','Pasta, cheese, a splash of water.',0],['Pepper and serve','Lots of pepper.',0]]:[['Get things out',`${x.ing.slice(0,3).map(i=>i[0].toLowerCase()).join(', ')}`,0],['Cook',`About ${x.min} min.`,x.min*60],['Serve','',0]]}
+function startCook(x){ck=x;cstep=0;const c=$('cook');c.hidden=false;c.style.transform='translateY(100%)';anim(.42,(e,u)=>c.style.transform=`translateY(${(1-spring(u))*100}%)`);renderCook()}
+function renderCook(){const st=stepsOf(ck),s=st[cstep],nx=st[cstep+1];$('cName').textContent=ck.n;$('cStep').innerHTML=`Step <span class="n">${cstep+1}</span> of <span class="n">${st.length}</span>`;$('cTitle').textContent=s[0];
+  cleft=s[2];$('cT').textContent=cleft?`${Math.floor(cleft/60)}:${String(cleft%60).padStart(2,'0')}`:'';$('cNote').textContent=cleft?'':s[1];
+  $('cBrief').innerHTML=nx?`Then: ${nx[0].toLowerCase()}.<br>${nx[1]||'&nbsp;'}`:'Last step.<br>Enjoy it.';$('cGo').textContent=nx?'Next step':'Done cooking';
+  clearInterval(ctick);if(cleft)ctick=setInterval(()=>{cleft=Math.max(0,cleft-5);const t=$('cT');t.textContent=`${Math.floor(cleft/60)}:${String(cleft%60).padStart(2,'0')}`;if(!cleft){clearInterval(ctick);t.style.color='var(--kit)'}else t.style.color=''},100);clipIn($('cTop'))}
+$('cGo').onclick=()=>{const st=stepsOf(ck);if(cstep<st.length-1){cstep++;renderCook();return}clearInterval(ctick);const c=$('cook'),n=ck.n;anim(.32,e=>c.style.transform=`translateY(${e*100}%)`,()=>c.hidden=true);say(`${n}, cooked. Pantry took ${ck.ing.length} things.`,()=>{})};
+function setMode(m){mode=m;$('wheel').hidden=m!=='wheel';$('list').hidden=m==='wheel';$('mW').style.color=m==='wheel'?'var(--ink)':'';$('mW').style.fontWeight=m==='wheel'?600:400;$('mT').style.color=m!=='wheel'?'var(--ink)':'';$('mT').style.fontWeight=m!=='wheel'?600:400;
+  $('secL').parentNode.style.justifyContent=m==='wheel'?'flex-end':'space-between';if(m==='wheel'){wOff=0;renderWheel();$('secL').innerHTML=`${wItems().filter(x=>x.have===x.of&&!x.nw).length} you can make now, quickest first`;$('pg').textContent=''}else{$('act').textContent='New recipe';renderList(0)}}
+$('mW').onclick=()=>setMode('wheel');$('mT').onclick=()=>setMode('table');
+function reset(){if(full)setFull(false);$('cook').hidden=true;clearInterval(ctick);R=seed();pins=[];open=null;have=30;toGet=5;li=0;off=0;page=0;$('tgN').textContent=5;$('receipt').textContent='';$('rec').hidden=true;renderDial();setLens(0,true);clipIn($('dial'))}
+$('reset').onclick=reset;$('th').onclick=()=>document.documentElement.dataset.theme='dark';$('tw').onclick=()=>document.documentElement.dataset.theme='light';
+reset();
+})();
+</script>

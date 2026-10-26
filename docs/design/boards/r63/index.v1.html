@@ -1,0 +1,195 @@
+<title>Notes landing wall</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@800&family=Urbanist:wght@900&family=Outfit:wght@400;500&display=swap">
+<style>
+:root{--ground:#EFECE6;--ink:#1D1B19;--ink2:#5E5A55;--slate:#34506F;--acc:#7A5A1E;--edge:#DDD8D0;--words:"Figtree",-apple-system,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--ink:#F1EEE9;--ink2:#ABA6A0;--slate:#A7BCD6;--acc:#D9B26A;--edge:#2A2A2E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--ink:#F1EEE9;--ink2:#ABA6A0;--slate:#A7BCD6;--acc:#D9B26A;--edge:#2A2A2E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 60px}
+.head{max-width:1180px;margin:0 auto 22px;display:flex;flex-direction:column;gap:8px}h1{font-size:34px;letter-spacing:-.02em;margin:0}.sub{margin:0;max-width:72ch;color:var(--ink2);font-size:16px;line-height:1.5}
+.lab{margin:0;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--slate)}
+.tools{display:flex;gap:4px 22px;flex-wrap:wrap}.tr{background:none;border:0;font:inherit;font-size:15px;color:var(--acc);padding:10px 0;cursor:pointer;min-height:44px}.tr[aria-pressed="true"]{color:var(--ink);font-weight:700}
+.tl{font-size:13px;color:var(--ink2);align-self:center}
+.row{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;max-width:1180px;margin:0 auto}
+.row>div{width:min(402px,100%)}.fit{width:100%;aspect-ratio:402/874;position:relative}
+.lite{--c0:#B5452B;--c1:#1E6E77;--c2:#7A5A12;--c3:#5A3F8E;--c4:#2F6A8F;--c5:#8A4570;--c6:#3F6B2A;--c7:#9A2541;--c8:#0F766E;--c9:#92400E;--c10:#1F4E8C;--c11:#1D1B19;--bg:#F7F5F1;--t:#1D1B19;--t2:#5E5A55;--room:#8A4570;--tess:#2B4FB3;--gold:#8A6410;--slate2:#4A5F78}
+.blk{--c0:#F09A7E;--c1:#84C3C9;--c2:#E2C26A;--c3:#B4A3E6;--c4:#8DBAD6;--c5:#E3A3CB;--c6:#A9D48A;--c7:#F08E9C;--c8:#5FD0C0;--c9:#F0B07A;--c10:#9DB8F0;--c11:#F1EEE9;--bg:#000;--t:#F1EEE9;--t2:#ABA6A0;--room:#E3A3CB;--tess:#9DB4F5;--gold:#E2C26A;--slate2:#A7BCD6}
+.phone{position:absolute;left:0;top:0;width:402px;height:874px;transform-origin:0 0;background:var(--bg);color:var(--t);border-radius:54px;overflow:hidden;outline:1px solid var(--edge)}
+.z{position:absolute;left:24px;right:24px}
+.wall,.shelf{position:absolute;left:24px;width:354px}
+.w{position:absolute;left:0;top:0;cursor:pointer;transform-origin:50% 50%;will-change:transform;user-select:none}
+.w svg,.sp svg{display:block;overflow:visible}
+.sp{position:absolute;bottom:0;cursor:pointer;transition:transform .35s cubic-bezier(.2,.9,.25,1.1)}
+.act{background:none;border:0;font:inherit;font-size:20px;font-weight:700;min-height:44px;padding:0;cursor:pointer;color:var(--room)}
+.tess{position:absolute;right:24px;bottom:30px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFB36B,#E8582A 60%,#B2301C)}
+.ghost{position:absolute;left:0;right:0;pointer-events:none;outline:1px dashed var(--t2);opacity:0}
+.show .ghost{opacity:.35}
+.cap{color:var(--ink2);font-size:14px;max-width:402px;margin:12px 0 0;line-height:1.5}
+.notes{max-width:900px;margin:34px auto 0;color:var(--ink2);font-size:16px;line-height:1.55}.notes b{color:var(--ink)}.notes p{margin:0 0 14px}
+#ms{position:absolute;left:-9999px;top:0}
+</style>
+<div class="head">
+  <p class="lab">Round 246, Oct 24</p>
+  <h1>Notes landing: wall and shelf</h1>
+  <p class="sub">His 1:27 AM: the quarter band, Figtree with a little something (sharper corners), no gaps and never unevenly spaced letters (filler or repeated words are fine), and words that stay live with effects. His 1:28 AM: the rest of the page holds the doors into Notes. Here the doors stand as book spines on a shelf.</p>
+  <div class="tools"><span class="tl">Moments</span><button class="tr" data-fx="flip">Flip a word</button><button class="tr" data-fx="jumble">Jumble a word</button><button class="tr" data-fx="dust">Dissolve a word</button><button class="tr" data-fx="wave">Flip wave</button><button class="tr" data-fx="melt">Dissolve all, rebuild</button><button class="tr" data-fx="pile">Pile and tidy</button><button class="tr" id="slot" aria-pressed="false">Show mosaic slot</button></div>
+  <div class="tools"><span class="tl">Font</span><button class="tr ff" data-f="Figtree" data-w="900" data-k="-0.01" data-sh="1" aria-pressed="true">Figtree, sharpened (pick)</button><button class="tr ff" data-f="Figtree" data-w="900" data-k="-0.01" data-sh="0">Figtree</button><button class="tr ff" data-f="Plus Jakarta Sans" data-w="800" data-k="-0.015" data-sh="0">Plus Jakarta Sans</button><button class="tr ff" data-f="Urbanist" data-w="900" data-k="-0.01" data-sh="0">Urbanist</button></div>
+</div>
+<div class="row">
+ <div><div class="fit"><div class="phone lite" id="p1"></div></div><p class="cap">Paper.</p></div>
+ <div><div class="fit"><div class="phone blk" id="p2"></div></div><p class="cap">Pure black.</p></div>
+</div>
+<div class="notes">
+<p><b>The page.</b> Room name and one line at the top. The word wall is a quarter of the screen (220 pt), centred on the Home mosaic's slot (180 to 400 pt), so the mosaic hands its place to the words on the way in. Under it, the shelf of doors (430 to 680 pt), one plain line, then the action word.</p>
+<p><b>Figtree, sharpened.</b> Figtree 900 in capitals, with a hairline outline of its own colour drawn behind each letter with mitred joins (3.5% of the size). It adds a touch of weight and squares off the soft joins, so corners read crisper. Plus Jakarta Sans and Urbanist are on the toggles as sharper relatives.</p>
+<p><b>No gaps, no uneven letters.</b> Every word fits its brick by its own size, never by spacing. The notch beside a stacked name is filled by one to three small words stacked to its exact height; repeats of any Notes word are allowed when the fresh ones run out. Two small words side by side at the name's own size can fill it too. Repeats are only of words not already on the wall. A word may stretch by 8% at most, glyphs and spacing together, so letters always stay evenly spaced. If nothing fits, that name goes on one line and the wall is packed again; a row that can't reach both edges is thrown out, never squeezed. The wall is packed at 36 slightly different row heights and the one that meets the band's bottom edge closest wins, so rows never open up.</p>
+<p><b>Moments (live).</b> Every few seconds one word does something: it flips over top to bottom, its letters jumble and settle like the Home departure board, or it dissolves into the page and comes back. Every 30 s the whole wall does one: a diagonal flip wave, a dissolve into the page that rebuilds with new words, or the pile-and-tidy. One word swaps every 6 s. Reduce Motion: no moments, swaps cross-fade.</p>
+<p><b>The shelf (doors).</b> Each door is a spine standing on the shelf, its name in capitals read bottom to top, with its count in Outfit at half size. Spines are thicker for doors you use more, and the whole shelf is justified edge to edge. Tap a spine and it lifts out like a book being pulled, then the door opens. Colours by meaning: Tess's door in Tess's blue, Pinned in gold, Private in slate, the rest in ink and the room colour.</p>
+</div>
+<svg id="ms" width="10" height="10" aria-hidden="true"><text id="mt" x="0" y="50"></text></svg>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const POOL=[['Trip packing',9,1],['Mom’s birthday',9,6],['Tacos',8,3],['Garage',7,2],['Book ideas',8,4],['Passport',7,1],['Work notes',6,5],['Gift list',6,6],['Dreams',5,4],['Run plan',6,7],['Recipes',6,3],['Plumber',4,2],['Tess said',5,4],['Voice memo',4,5],['Wifi code',3,2],['Movies',4,4],['Sleep log',3,7],['Paint colors',4,2],['Kids’ sizes',3,6],['Coffee',3,3],['Quotes',3,4],['Bike fit',3,7],['Taxes',4,5],['Doctor',4,7],['Neighbors',2,6],['Podcasts',2,4],['Seeds',2,2],['Spices',2,3],['Shoes',2,6],['Old phone',2,2],['Jokes',2,4],['Stretch',2,7],['Wine',2,3],['Fonts',2,4],['Keys',2,2],['Hikes',2,7],['Tea',2,3],['Lamp',2,2]];
+const DOORS=[['All notes',38,'t',1],['Ideas',9,'room',.7],['From Tess',4,'tess',.6],['Voice memos',5,'room',.55],['Pinned',2,'gold',.5],['Mentions',12,'t',.5],['Private',3,'slate2',.45],['Archive',61,'t2',.4]];
+let F={f:'Figtree',w:900,k:-0.01,sh:1},start=0,H=220,TOP=180,SHT=430,SHH=250,state='wall',L=null;
+const W=354,G=3,MINFS=13;
+const mt=document.getElementById('mt');
+function fontCss(wt,fam){return `font-family:'${fam||F.f}',sans-serif;font-weight:${wt};letter-spacing:${F.k}em`}
+const cache={};
+function unit(t,wt){const key=F.f+wt+t;if(cache[key])return cache[key];mt.setAttribute('style',fontCss(wt)+';font-size:100px');mt.textContent=t.toUpperCase();return cache[key]=mt.getComputedTextLength()/100}
+let C=.7;function capRatio(){const c=document.createElement('canvas').getContext('2d');c.font=`${F.w} 200px '${F.f}'`;C=c.measureText('H').actualBoundingBoxAscent/200||.7}
+const sum=(a,f)=>a.reduce((s,x)=>s+f(x),0);
+// Brick widths are linear in the row height h, so each row's height is solved for an exact full-width fit.
+function brickW(b,h){if(b.k==='one')return b.a/C*h;if(b.k==='name')return b.amax/C*(h-G)/2;const n=b.lines.length;return (h-(n-1)*G)/(C*sum(b.lines,l=>1/l.a))}
+function solveH(bs){let lo=4,hi=400;for(let i=0;i<40;i++){const m=(lo+hi)/2;if(sum(bs,b=>brickW(b,m))+G*(bs.length-1)>W)hi=m;else lo=m}return lo}
+function layoutOnce(words,mult,flat){
+  const s0=[...words].sort((a,b)=>b[1]-a[1]);const hi=s0.filter(x=>x[1]>3);const lo=s0.filter(x=>x[1]<=3).sort((a,b)=>b[0].length-a[0].length);
+  const spare=lo.splice(0,Math.min(8,Math.max(0,lo.length-6)));
+  const sc=H/300*mult,T=[64,44,56,40,60,46,50,38].map(v=>v*sc),PAT=[['B','S'],['S','B','S'],['B','B','S'],['S','B'],['B','S','B']];
+  const rows=[];let y=0,r=0,hiI=0,hiE=hi.length,nameFlip=0;const wt=F.w;
+  const one=x=>({k:'one',x,a:unit(x[0],wt)});
+  const smallFrom=()=>lo.length?lo.pop():(hiI<hiE?hi[--hiE]:null);
+  while((hiI<hiE||lo.length)&&H-y>16){
+    const rem=H-y,tgt=Math.min(T[r%T.length],rem),pat=PAT[r%PAT.length],bs=[];let p=0;
+    const last=rem-tgt<T[(r+1)%T.length]*.6;
+    for(;;){const kind=pat[p%pat.length];p++;let b=null;
+      if(kind==='B'&&hiI<hiE){const x=hi[hiI++];const sp=x[0].indexOf(' ');
+        if(sp>0&&!flat.has(x[0])&&tgt>=36&&(x[0].length>10||nameFlip++%2===0)){const l1=x[0].slice(0,sp),l2=x[0].slice(sp+1);const a1=unit(l1,wt),a2=unit(l2,wt);b={k:'name',x,l:[l1,l2],a:[a1,a2],amax:Math.max(a1,a2),side:r%2}}
+        else b=one(x)}
+      else{let n=tgt>=56?3:2;while(n>1&&(tgt-(n-1)*G)/n<MINFS*C)n--;const Ls=[];for(let q=0;q<n;q++){const x=smallFrom();if(!x)break;Ls.push({x,a:unit(x[0],wt)})}
+        if(Ls.length)b=Ls.length>1?{k:'stack',lines:Ls}:one(Ls[0].x)}
+      if(!b){if(hiI>=hiE&&!lo.length)break;continue}
+      bs.push(b);
+      if(last){if(solveH(bs)<=rem)break}else if(sum(bs,q=>brickW(q,tgt))+G*(bs.length-1)>=W*.95)break;
+      if(hiI>=hiE&&!lo.length)break}
+    if(!bs.length)break;const h=solveH(bs);if(h>rem+.5)return null;// a row that can't reach both edges is never squeezed
+    rows.push({bs,h});y+=h+G;r++;if(last)break}
+  const used=sum(rows,q=>q.h)+G*(rows.length-1);
+  if(used>H+.5)return null;
+  const gap=rows.length>1?G+Math.max(0,H-used)/(rows.length-1):G;
+  const inWall=new Set();rows.forEach(({bs})=>bs.forEach(b=>{if(b.x)inWall.add(b.x[0]);(b.lines||[]).forEach(l=>inWall.add(l.x[0]))}));
+  const out=[],seen={};let yy=0,ci=0,bad=null;
+  const key=t=>{seen[t]=(seen[t]||0)+1;return seen[t]>1?t+'~'+seen[t]:t};
+  rows.forEach(({bs,h})=>{let x=0;bs.forEach(b=>{const bw=brickW(b,h),col=(ci++*5)%12;
+    if(b.k==='one')out.push({t:b.x[0],key:key(b.x[0]),x,y:yy,w:bw,h,fs:h/C,col});
+    else if(b.k==='stack'){let ly=yy;b.lines.forEach((l,i)=>{const fs=bw/l.a,lh=fs*C;out.push({t:l.x[0],key:key(l.x[0]),x,y:ly,w:bw,h:lh,fs,col:(col+3*(i+1))%12});ly+=lh+G})}
+    else{const lh=(h-G)/2,fs=lh/C,short=b.a[0]<b.a[1]?0:1,sw=b.a[short]*fs,d=bw-sw;
+      b.l.forEach((t,i)=>{const isS=i===short;let x0=x,w=isS?sw:bw;
+        if(isS&&bw/sw<=1.08)w=bw;// a few percent stretches the glyphs evenly, never the spacing
+        else if(isS){// fill the notch with one to three small words stacked to its exact height; repeats are allowed
+          const nw=d-G,room=lh;
+          const rep=POOL.filter(q=>!spare.includes(q)&&!lo.includes(q)&&q[1]<=6&&!inWall.has(q[0]));// repeats only of words not already on the wall
+          const pool=spare.concat(lo,rep);
+          const hgt=q=>C*nw/unit(q[0],wt);let pick=null,err=.08;
+          if(nw>MINFS)for(let i1=0;i1<pool.length;i1++){const h1=hgt(pool[i1]);let e=Math.abs(h1-room)/room;if(e<err&&h1/C>=MINFS){err=e;pick=[pool[i1]]}
+            for(let i2=i1+1;i2<pool.length;i2++){const h2=hgt(pool[i2]);if(h1+h2>room*1.1)continue;e=Math.abs(h1+h2+G-room)/room;if(e<err&&Math.min(h1,h2)/C>=MINFS){err=e;pick=[pool[i1],pool[i2]]}
+              for(let i3=i2+1;i3<pool.length;i3++){const h3=hgt(pool[i3]);e=Math.abs(h1+h2+h3+2*G-room)/room;if(e<err&&Math.min(h1,h2,h3)/C>=MINFS){err=e;pick=[pool[i1],pool[i2],pool[i3]]}}}}
+          let pair=null;if(!pick&&lh/C>=MINFS){let e2=.08;const nat=q=>unit(q[0],wt)*fs;// or two small words side by side at the name's own size
+            for(let i1=0;i1<pool.length;i1++)for(let i2=i1+1;i2<pool.length;i2++){const e=Math.abs(nat(pool[i1])+nat(pool[i2])+G-nw)/nw;if(e<e2){e2=e;pair=[pool[i1],pool[i2]]}}}
+          if(!pick&&!pair){bad=b.x[0];return}
+          const take=fx=>{inWall.add(fx[0]);const si=spare.indexOf(fx);if(si>=0)spare.splice(si,1);else{const li=lo.indexOf(fx);if(li>=0)lo.splice(li,1)}};
+          if(pair){const k=(nw-G)/(unit(pair[0][0],wt)*fs+unit(pair[1][0],wt)*fs);let fx0=b.side?x:x+sw+G;x0=b.side?x+d:x;
+            pair.forEach((fx,j)=>{take(fx);const fw=unit(fx[0],wt)*fs*k;out.push({t:fx[0],key:key(fx[0]),x:fx0,y:yy+i*(lh+G),w:fw,h:lh,fs,col:(col+6+j*3)%12});fx0+=fw+G})}
+          else{
+          const tot=sum(pick,hgt),k=(room-(pick.length-1)*G)/tot;let fy=yy+i*(lh+G);const fillX=b.side?x:x+sw+G;x0=b.side?x+d:x;
+          pick.forEach((fx,j)=>{take(fx);const fh=hgt(fx)*k;out.push({t:fx[0],key:key(fx[0]),x:fillX,y:fy,w:nw,h:fh,fs:fh/C,col:(col+6+j*3)%12});fy+=fh+G})}}
+        out.push({t,key:b.x[0]+'#'+i,x:x0,y:yy+i*(lh+G),w,h:lh,fs,col})})}
+    x+=bw+G});yy+=h+gap});
+  return bad?{bad}:{out,left:H-used}}
+// Pack at 21 row-height scales and keep the one that meets the band's bottom edge closest; a stacked name whose notch
+// can't be filled within 5% goes on one line and the wall is packed again.
+function layout(words){const flat=new Set();for(let tries=0;tries<8;tries++){let best=null,badName=null;
+  for(let m=.7;m<=1.4;m+=.02){const r=layoutOnce(words,m,flat);if(!r)continue;if(r.bad){badName=badName||r.bad;continue}if(r.left<8&&(!best||best.left>=8||m>best.m))best=Object.assign(r,{m});else if(!best||(best.left>=8&&r.left<best.left))best=Object.assign(r,{m})}
+  if(best&&best.left<8)return best.out;if(badName)flat.add(badName);else if(best)return best.out}
+  return layoutOnce(words,1,new Set(POOL.map(p=>p[0]))).out||[]}
+function rnd(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
+function obb(cx,cy,w,h,t){const c=Math.cos(t),s=Math.sin(t),hw=w/2+1.5,hh=h/2+1.5;const ax=[[c,s],[-s,c]];const pts=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([u,v])=>[cx+u*c-v*s,cy+u*s+v*c]);return{pts,ax,cx,cy,r:Math.hypot(hw,hh)}}
+function hit(A,B){if(Math.hypot(A.cx-B.cx,A.cy-B.cy)>A.r+B.r)return false;for(const ax of A.ax.concat(B.ax)){let a0=1e9,a1=-1e9,b0=1e9,b1=-1e9;for(const p of A.pts){const d=p[0]*ax[0]+p[1]*ax[1];a0=Math.min(a0,d);a1=Math.max(a1,d)}for(const p of B.pts){const d=p[0]*ax[0]+p[1]*ax[1];b0=Math.min(b0,d);b1=Math.max(b1,d)}if(a1<=b0||b1<=a0)return false}return true}
+const ANG=[0,0,-.12,.12,-.32,.32,-.6,.6,Math.PI/2,-Math.PI/2];
+// The pile: words drop biggest first, each tries tilts and spots, falls until it touches, keeps the lowest rest; never overlapping.
+function pile(items,seed){
+  for(let s=1;s>.3;s-=.03){const R=rnd(seed),placed=[],res=[];let ok=true;
+    const order=items.map((o,i)=>i).sort((a,b)=>items[b].w*items[b].h-items[a].w*items[a].h);
+    for(const i of order){const o=items[i],w=o.w*s,h=o.h*s;let best=null;
+      const tries=ANG.filter(()=>R()<.6);if(!tries.length)tries.push(0);
+      for(const t of tries){const ex=(w*Math.abs(Math.cos(t))+h*Math.abs(Math.sin(t)))/2,ey=(w*Math.abs(Math.sin(t))+h*Math.abs(Math.cos(t)))/2;if(ex*2>W||ey*2>H)continue;
+        for(let cx=ex;cx<=W-ex;cx+=5){let cy=ey;if(placed.some(P=>hit(obb(cx,cy,w,h,t),P)))continue;
+          while(cy+3<=H-ey&&!placed.some(P=>hit(obb(cx,cy+3,w,h,t),P)))cy+=3;
+          const sc=cy+R()*2;if(!best||sc>best.sc)best={cx,cy,t,sc}}}
+      if(!best){ok=false;break}placed.push(obb(best.cx,best.cy,w,h,best.t));res[i]={cx:best.cx,cy:best.cy,t:best.t,s}}
+    if(ok)return res}
+  return items.map(o=>({cx:o.x+o.w/2,cy:o.y+o.h/2,t:0,s:1}))}
+let fid=0;
+function svg(o){const id='dz'+(fid++),c=`var(--c${o.col})`,sh=F.sh?` stroke="${c}" stroke-width="${(o.fs*.035).toFixed(2)}" stroke-linejoin="miter" stroke-miterlimit="10" paint-order="stroke"`:'';
+  return `<svg width="${o.w}" height="${o.h}" viewBox="0 0 ${o.w} ${o.h}"><filter id="${id}" x="-30%" y="-60%" width="160%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="${(2.4/Math.max(10,o.h)).toFixed(3)}" numOctaves="2" seed="${fid%50}"/><feDisplacementMap in="SourceGraphic" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter><text x="0" y="${o.h}" textLength="${o.w}" lengthAdjust="spacingAndGlyphs" fill="${c}"${sh} style="${fontCss(F.w)};font-size:${o.fs}px">${o.t.toUpperCase()}</text></svg>`}
+let PL=null,seed=7;
+function compute(){const vis=POOL.slice(start).concat(POOL.slice(0,start));L=layout(vis);PL=RM?null:pile(L,seed++)}
+function place(P,mode,stag){const band=P.querySelector('.wall');band.style.top=TOP+'px';band.style.height=H+'px';P.querySelector('.ghost').style.cssText=`top:${TOP}px;height:${H}px`;
+  const old={};band.querySelectorAll('.w').forEach(e=>old[e.dataset.k]=e);const keep=new Set();
+  L.forEach((o,i)=>{const k=o.key;let e=old[k];if(!e){e=document.createElement('div');e.className='w';e.dataset.k=k;e.style.opacity=0;band.appendChild(e);e.onclick=()=>fxFlip(e)}
+    keep.add(k);const sig=o.t+o.w.toFixed(1)+o.h.toFixed(1)+o.col+F.f+F.sh;if(e.dataset.sig!==sig){e.innerHTML=svg(o);e.dataset.sig=sig}e.dataset.t=o.t;e.style.width=o.w+'px';e.style.height=o.h+'px';
+    let tr=`translate(${o.x}px,${o.y}px)`;if(mode==='pile'&&PL){const p=PL[i];tr=`translate(${p.cx-o.w/2}px,${p.cy-o.h/2}px) rotate(${p.t}rad) scale(${p.s})`}
+    const d=stag?i*22:0;
+    if(RM){e.style.transition='opacity .3s';e.style.transform=tr;e.style.opacity=1}else{e.style.transition=`transform ${mode==='pile'?'.5s cubic-bezier(.5,0,.8,.4)':'.65s cubic-bezier(.2,.9,.25,1.06)'} ${d}ms,opacity .4s`;e.style.transform=tr;requestAnimationFrame(()=>e.style.opacity=1)}});
+  Object.keys(old).forEach(k=>{if(!keep.has(k)){old[k].style.opacity=0;setTimeout(()=>old[k].remove(),450)}})}
+// The shelf: spines justified edge to edge, thicker for doors used more, each name read bottom to top.
+function shelf(P){const s=P.querySelector('.shelf');s.style.top=SHT+'px';s.style.height=SHH+'px';s.innerHTML='';const g=6,wt=800;
+  const A=DOORS.map(d=>{const a=unit(d[0],wt),n=String(d[1]);mt.setAttribute('style',`font-family:Outfit;font-weight:500;font-size:100px`);mt.textContent=n;const an=mt.getComputedTextLength()/100;return{d,a,an}});
+  const capOf=x=>(SHH-4)/(x.a+.5*x.an+.12);// longest size whose name and count fit the spine's height
+  let lo=0,hi=40;for(let i=0;i<40;i++){const m=(lo+hi)/2;const tot=sum(A,x=>C*Math.min(m*x.d[3]*10,capOf(x)))+g*(A.length-1);if(tot>W)hi=m;else lo=m}
+  let x=0;const fsAll=A.map(q=>Math.min(lo*q.d[3]*10,capOf(q)));const left=W-sum(fsAll,f=>C*f)-g*(A.length-1),gg=g+Math.max(0,left)/(A.length-1);
+  A.forEach((q,i)=>{const fs=fsAll[i],cw=C*fs,len=q.a*fs,nfs=fs*.5,col=`var(--${q.d[2]})`,sh=F.sh?` stroke="${col}" stroke-width="${(fs*.035).toFixed(2)}" stroke-linejoin="miter" paint-order="stroke"`:'';
+    const el=document.createElement('div');el.className='sp';el.style.left=x+'px';el.style.width=cw+'px';el.style.height=SHH+'px';
+    el.innerHTML=`<svg width="${cw}" height="${SHH}"><g transform="translate(${cw},${SHH}) rotate(-90)"><text x="0" y="0" fill="${col}"${sh} style="${fontCss(wt)};font-size:${fs}px">${q.d[0].toUpperCase()}</text><text x="${len+fs*.12}" y="0" fill="${col}" style="font-family:Outfit;font-weight:500;font-size:${nfs}px">${q.d[1]}</text></g></svg>`;
+    el.onclick=()=>{el.style.transform='translateY(-16px)';setTimeout(()=>el.style.transform='',520)};s.appendChild(el);x+=cw+gg})}
+function build(P){P.innerHTML=`<div class="z" style="top:54px;font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:44px;color:var(--room)">Notes</div><div class="z" style="top:102px;font-size:16px;color:var(--t2)">Three new today, one from Tess.</div><div class="ghost"></div><div class="wall"></div><div class="shelf"></div><div class="z" style="top:${SHT+SHH+22}px;font-size:15px;line-height:22px;color:var(--t2)">Last written an hour ago, the plumber’s number.</div><div class="z" style="left:28px;bottom:30px;height:44px;display:flex;align-items:center"><button class="act">New note</button></div><span class="tess"></span>`}
+const PH=[document.getElementById('p1'),document.getElementById('p2')];PH.forEach(build);
+function all(mode,stag){PH.forEach(P=>place(P,mode,stag));state=mode}
+let busy=false;
+function words(P){return [...P.querySelectorAll('.wall .w')].filter(e=>e.style.opacity!=='0')}
+function fxFlip(e){if(RM)return;const s=e.querySelector('svg');s.animate([{transform:'perspective(400px) rotateX(0)'},{transform:'perspective(400px) rotateX(-180deg)',offset:.5},{transform:'perspective(400px) rotateX(-360deg)'}],{duration:800,easing:'cubic-bezier(.4,0,.2,1)'})}
+const AZ='ABCDEFGHIJKLMNOPRSTUVWY';
+function fxJumble(e){if(RM)return;const t=e.querySelector('text'),word=e.dataset.t.toUpperCase();let n=0;const steps=14,iv=setInterval(()=>{n++;const fixed=Math.floor(word.length*n/steps);t.textContent=word.split('').map((ch,i)=>i<fixed||ch===' '||ch==='’'?ch:AZ[Math.floor(Math.random()*AZ.length)]).join('');if(n>=steps){clearInterval(iv);t.textContent=word}},55)}
+function fxDust(e,back=true,dur=1300){if(RM)return Promise.resolve();const f=e.querySelector('filter'),dm=f.querySelector('feDisplacementMap'),t=e.querySelector('text'),H0=e.offsetHeight;t.setAttribute('filter',`url(#${f.id})`);
+  return new Promise(res=>{const t0=performance.now();(function step(now){const p=Math.min(1,(now-t0)/dur),q=back?(p<.5?p*2:2-p*2):p,ease=q*q;dm.setAttribute('scale',(ease*H0*1.6).toFixed(1));t.style.opacity=(1-ease*.95).toFixed(3);if(p<1)requestAnimationFrame(step);else{if(back){t.removeAttribute('filter');t.style.opacity=1}res()}})(t0)})}
+function fxWave(){PH.forEach(P=>words(P).forEach(e=>{const m=e.style.transform.match(/translate\(([\d.]+)px,\s*([\d.]+)px/);const d=m?(+m[1]+ +m[2]*1.4)*1.6:0;setTimeout(()=>fxFlip(e),d)}))}
+function fxMelt(){if(RM){start=(start+5)%POOL.length;compute();all('wall');return}busy=true;Promise.all(PH.flatMap(P=>words(P).map((e,i)=>new Promise(r=>setTimeout(()=>fxDust(e,false,700).then(r),i*18))))).then(()=>{PH.forEach(P=>P.querySelector('.wall').innerHTML='');start=(start+5)%POOL.length;compute();all('wall',true);busy=false})}
+function cycle(){if(RM){all('wall');return}busy=true;all('pile',true);setTimeout(()=>{all('wall',true);busy=false},1500)}
+const FX={flip:()=>pickDo(fxFlip),jumble:()=>pickDo(fxJumble),dust:()=>pickDo(e=>fxDust(e)),wave:fxWave,melt:fxMelt,pile:cycle};
+function pickDo(fn){const ws=words(PH[0]);if(!ws.length)return;const i=Math.floor(Math.random()*ws.length),k=ws[i].dataset.k;PH.forEach(P=>{const e=P.querySelector(`.wall .w[data-k="${CSS.escape(k)}"]`);if(e)fn(e)})}
+function ready(){return document.fonts?Promise.all([F.w,800].map(w=>document.fonts.load(`${w} 40px '${F.f}'`,'AB')).concat([document.fonts.load(`500 20px Outfit`,'12')])).then(()=>document.fonts.ready):Promise.resolve()}
+function redo(cyc){ready().then(()=>{capRatio();compute();PH.forEach(shelf);cyc?cycle():all(state==='pile'?'wall':state)})}
+function fit(){document.querySelectorAll('.fit').forEach(f=>{f.firstElementChild.style.transform=`scale(${f.clientWidth/402})`})}addEventListener('resize',fit);fit();
+document.querySelectorAll('[data-fx]').forEach(b=>b.onclick=()=>{if(!busy)FX[b.dataset.fx]()});
+document.getElementById('slot').onclick=e=>{const on=e.target.getAttribute('aria-pressed')!=='true';e.target.setAttribute('aria-pressed',on);PH.forEach(P=>P.classList.toggle('show',on))};
+const press=(sel,b)=>document.querySelectorAll(sel).forEach(x=>x.setAttribute('aria-pressed',x===b));
+document.querySelectorAll('.ff').forEach(b=>b.onclick=()=>{if(busy)return;F={f:b.dataset.f,w:+b.dataset.w,k:+b.dataset.k,sh:+b.dataset.sh};press('.ff',b);redo(false)});
+redo(true);
+let tick=0;
+setInterval(()=>{if(RM||busy||state!=='wall')return;tick++;
+  if(tick%15===0){[fxWave,fxMelt,cycle][(tick/15)%3]();return}
+  if(tick%3===0){start=(start+1)%POOL.length;compute();all('wall');return}
+  [()=>pickDo(fxFlip),()=>pickDo(fxJumble),()=>pickDo(e=>fxDust(e))][tick%3]()},2000);
+})();
+</script>

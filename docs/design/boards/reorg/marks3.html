@@ -1,0 +1,72 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight','Inter',sans-serif;color:#14181F;padding:24px;width:1700px;box-sizing:border-box}
+.row{display:flex;gap:30px}
+.p{width:390px;height:560px;background:#FBFBF8;position:relative;box-sizing:border-box;padding:26px 24px}
+.l{font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase}
+.why{font-size:18px;line-height:24px;color:rgba(20,24,31,.66);margin-top:8px;height:72px}
+.big{margin-top:6px;height:170px}
+.det{height:26px;margin-top:6px;font-size:21px;font-weight:600;transition:none}
+.hr{height:1px;background:rgba(20,24,31,.12);margin:12px 0}
+.rw{display:flex;align-items:center;justify-content:space-between;height:44px}
+.rw b{font-size:21px;font-weight:500;letter-spacing:-.01em}
+.sub{font-size:16px;color:rgba(20,24,31,.66)}
+svg{display:block}
+</style></head><body><div class="row" id="r"></div><script>
+const PAL='216,67,42',INK='#14181F';
+const SETS=[{r:8,w:80,at:1.0,t:8},{r:8,w:85,at:3.2,t:8},{r:6,w:90,at:5.4,t:8},{r:6,w:90,at:null,t:6}];
+const DUR=1.3,T=13,TAP=9.2;
+const clamp=x=>Math.max(0,Math.min(1,x));
+const back=p=>{p=clamp(p);const c=1.9;return 1+(c+1)*Math.pow(p-1,3)+c*Math.pow(p-1,2)};
+const prog=(t,at)=>at==null?0:back((t-at)/DUR);
+const lin=(t,at)=>at==null?0:clamp((t-at)/DUR);
+const tone=w=>.4+Math.min(1,Math.max(0,(w-60)/45))*.55;
+const sel=(t)=>t>=TAP&&t<T-0.6?2:-1;
+const CX=171,CY=85;
+const ease3=p=>1-Math.pow(1-clamp(p),3);
+const arcPath=(r0,r1,a0,a1)=>{const pt=(r,a)=>[(CX+r*Math.cos(a)).toFixed(1),(CY+r*Math.sin(a)).toFixed(1)];const big=(a1-a0)>Math.PI?1:0;const A=pt(r1,a0),B=pt(r1,a1),C=pt(r0,a1),D=pt(r0,a0);return `M${A}A${r1} ${r1} 0 ${big} 1 ${B}L${C}A${r0} ${r0} 0 ${big} 0 ${D}Z`};
+// H: ripples
+function mH(t){let o='',R=12;
+ SETS.forEach((s,i)=>{R+=6+s.r*1.6;const sw=1.6+Math.max(0,(s.w-60)/45)*4.2,p=lin(t,s.at),sl=sel(t)===i;
+  if(s.at==null||p<=0){o+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${INK}" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="4 4"/>`}
+  else{const e=ease3(p),r=R*e;
+   if(p<1)o+=`<circle cx="${CX}" cy="${CY}" r="${(r*1.07).toFixed(1)}" fill="none" stroke="rgb(${PAL})" stroke-opacity="${(.5*(1-p)).toFixed(2)}" stroke-width="2"/>`;
+   o+=`<circle cx="${CX}" cy="${CY}" r="${r.toFixed(1)}" fill="none" stroke="rgba(${PAL},${tone(s.w)})" stroke-width="${sw+(sl?2:0)}"/><circle cx="${CX}" cy="${CY}" r="${r.toFixed(1)}" fill="none" stroke="${INK}" stroke-width="${sl?2.4:1}"/>`}});
+ o+=`<circle cx="${CX}" cy="${CY}" r="4" fill="${INK}"/>`;return `<svg width="342" height="170" viewBox="0 0 342 170">${o}</svg>`}
+// I: orbits (a lap per set, filled by reps against the target)
+function mI(t){let o='';
+ SETS.forEach((s,i)=>{const R=22+i*16,sw=5+Math.max(0,(s.w-60)/45)*6,p=lin(t,s.at),sl=sel(t)===i;
+  o+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${INK}" stroke-opacity="${s.at==null?.32:.12}" stroke-width="${s.at==null?1.5:1.2}" ${s.at==null?'stroke-dasharray="4 4"':''}/>`;
+  if(s.at!=null&&p>0){const full=s.r/s.t,ang=Math.min(Math.min(full,1)*2*Math.PI*ease3(p),2*Math.PI-.02),a0=-Math.PI/2,a1=a0+Math.max(ang,.02);
+   const pt=a=>[(CX+R*Math.cos(a)).toFixed(1),(CY+R*Math.sin(a)).toFixed(1)];
+   o+=`<path d="M${pt(a0)}A${R} ${R} 0 ${ang>Math.PI?1:0} 1 ${pt(a1)}" fill="none" stroke="rgba(${PAL},${tone(s.w)})" stroke-width="${sw+(sl?2:0)}" stroke-linecap="round"/>`;
+   const e=pt(a1);o+=`<circle cx="${e[0]}" cy="${e[1]}" r="${sl?4:2.6}" fill="${INK}"/>`}});
+ o+=`<circle cx="${CX}" cy="${CY}" r="4" fill="${INK}"/>`;return `<svg width="342" height="170" viewBox="0 0 342 170">${o}</svg>`}
+const REST=[90,120,150,0];
+// L: core strip (one line, a band per set: width reps, tone load, gap rest)
+function mL(t){let x=24,o=`<path d="M24 85H318" stroke="${INK}" stroke-opacity=".14" stroke-width="1.2"/>`;
+ SETS.forEach((s,i)=>{const w=s.r*8.2,sl=sel(t)===i,p=lin(t,s.at);
+  if(s.at==null||p<=0){o+=`<rect x="${x}" y="${85-10}" width="${w}" height="20" rx="4" fill="none" stroke="${INK}" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="4 4"/>`}
+  else{const e=ease3(p);o+=`<rect x="${x}" y="${85-10-(sl?4:0)}" width="${(w*Math.max(e,.03)).toFixed(1)}" height="${20+(sl?8:0)}" rx="4" fill="rgba(${PAL},${tone(s.w)})" stroke="${INK}" stroke-width="${sl?2.6:0}"/>`}
+  x+=w+REST[i]/9});
+ return `<svg width="342" height="170" viewBox="0 0 342 170">${o}</svg>`}
+// M: segmented ring (one ring, an arc per set: length reps, weight and tone load, gap rest)
+function mM(t){let a=-Math.PI/2,o=`<circle cx="${CX}" cy="${CY}" r="56" fill="none" stroke="${INK}" stroke-opacity=".12" stroke-width="1.2"/>`;
+ SETS.forEach((s,i)=>{const len=s.r*8.5*Math.PI/180,gap=REST[i]/12*Math.PI/180,sw=5+Math.max(0,(s.w-60)/45)*8,sl=sel(t)===i,p=lin(t,s.at);
+  const pt=q=>[(CX+56*Math.cos(q)).toFixed(1),(CY+56*Math.sin(q)).toFixed(1)];
+  const a1=a+len*(s.at==null?1:Math.max(ease3(p),.02));
+  if(s.at==null||p<=0){o+=`<path d="M${pt(a)}A56 56 0 ${len>Math.PI?1:0} 1 ${pt(a+len)}" fill="none" stroke="${INK}" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="3 4"/>`}
+  else{o+=`<path d="M${pt(a)}A56 56 0 ${(a1-a)>Math.PI?1:0} 1 ${pt(a1)}" fill="none" stroke="rgba(${PAL},${tone(s.w)})" stroke-width="${sw+(sl?3:0)}" stroke-linecap="butt"/>`}
+  a+=len+gap});
+ return `<svg width="342" height="170" viewBox="0 0 342 170">${o}</svg>`}
+const O=[['H','Ripples','Each set is a ripple that spreads out and settles. Spacing is reps, line weight is load.',mH],['I','Orbits','Each set is a lap that fills as you rep. A full lap hits the target; thicker is heavier.',mI],['L','Core strip','One line. Each set is a band: wider is more reps, darker is heavier, the gaps are your rests.',mL],['M','Segmented ring','One ring. Each set is an arc: longer is more reps, thicker and darker is heavier, the gaps are rests.',mM]];
+const det=t=>{const s=SETS[2];return t>=TAP&&t<T-0.6?`Set 3: ${s.w} kg x ${s.r}`:''};
+const R=document.getElementById('r');
+R.innerHTML=O.map((o,i)=>`<div class="p"><div class="l">${o[0]}  ${o[1]}</div><div class="why">${o[2]}</div><div class="big" id="b${i}"></div><div class="det" id="d${i}"></div><div class="hr"></div><div class="rw"><div><b>Bench press</b><div class="sub">4 x 6-8, on the Training page</div></div><div id="s${i}" style="width:140px"></div></div></div>`).join('');
+const t0=performance.now();
+function loop(){const t=window.FREEZE!==undefined?window.FREEZE:((performance.now()-t0)/1000)%T;
+ O.forEach((o,i)=>{document.getElementById('b'+i).innerHTML=o[3](t);document.getElementById('d'+i).textContent=det(t);
+  const s=o[3](t).replace(/width="342" height="\d+"/,m=>m.replace('342','140').replace(/height="\d+"/,'height="48"'));document.getElementById('s'+i).innerHTML=s.replace(/<svg width="140" height="48" viewBox="0 0 342 (\d+)"/,'<svg width="140" height="48" viewBox="0 0 342 $1" preserveAspectRatio="xMidYMid meet"')});
+ if(window.FREEZE===undefined)requestAnimationFrame(loop)}
+document.body.style.zoom=window.ZOOM||1;loop();
+</script></body></html>

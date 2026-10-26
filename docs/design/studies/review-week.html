@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review, the week on one page</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/review-week.md (Design item 46). Kaushik's first review (16 Oct, 11:58 PM PT): Review shows too little. The whole week on one page: seven day columns as the ground, one band per thing (training, tasks, habits, weight, money, cooked), the day log's best lines under them, no cards. Tap a day and the page reads that day. ?play records the arrival and a tap on Tuesday. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--health:#12936A;--tint:.45;background:#fff;color:rgb(var(--ink))}
+.ph.obs{--ink:245,242,236;--s2:.72;--s3:.38;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;--now:#FFC23D;--health:#3FD49A;--tint:.55;background:#000}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.sm{font-size:16px;line-height:22px}
+.nw{white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.n{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;text-align:center;width:49px}
+.ctx{color:var(--ctx)}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35);opacity:0;z-index:30;transition:opacity .15s}
+.obs #fing{background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6)}
+.col{transition:opacity .3s}
+.ph[data-pick] .col:not([data-c="1"]){opacity:.3}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const soul=obs=>{const P=obs?['#86B4FF','#FF5B3A','#FFC23D']:['#2450D8','#E2432A','#F0A500'],f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;
+ return `<div class="soul">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33);mix-blend-mode:${obs?'screen':'multiply'}"></i>`).join('')}</div>`};
+const TABS=['REVIEW','TODAY','TRAINING','KITCHEN'],TX=[22,118,199,300];
+const tabs=on=>`<div class="abs lbl" style="left:0;right:0;top:78px;height:24px;letter-spacing:.06em;z-index:13">${TABS.map((t,i)=>`<span class="abs" style="left:${TX[i]}px;top:0;color:rgba(var(--ink),${t===on?1:.38})">${t}</span>`).join('')}<svg class="abs" style="left:${TX[TABS.indexOf(on)]}px;top:24px;overflow:visible" width="90" height="12"><path d="${lens(on.length*10.6,1.2)}" fill="rgb(var(--ink))"/></svg></div>`;
+// The week: Monday to Sunday, today is Thursday (index 3). Days after today are empty.
+const DAYS=['M','T','W','T','F','S','S'],TODAY=3,X=i=>22+49.4*i,cx=i=>X(i)+24.7;
+const W={training:['Push A','Pull A','rest','Legs A',null,null,null],tasks:[3,5,2,4,null,null,null],cook:[1,0,1,0,null,null,null],read:[1,1,0,1,null,null,null],weight:[78.6,null,78.4,78.2,null,null,null],money:[32,0,58,71,null,null,null],cooked:[0,1,0,1,null,null,null]};
+const BEST=[['Tue','Bench 85 × 8, a best.'],['Wed','Chili cooked for 4, 2 lunches boxed.'],['Thu','Up at 6:40, the earliest this week.']];
+const DAY_LINES={1:[['6:52 am','Bench 85 × 8, a best.'],['12:10 pm','5 tasks done by noon.'],['7:30 pm','Read 20 pages.']]};
+// Marks. A dab is a sage PaintDab at the rest tint; rest is the dry stroke; an open past day is the faint ring; ahead is empty.
+const dab=(x,y,pig='var(--health)',a='var(--tint)')=>`<div class="abs" style="left:${x-13}px;top:${y-11}px;width:26px;height:22px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:${pig};opacity:${a}"></div>`;
+const restStroke=(x,y)=>`<div class="abs" style="left:${x-16}px;top:${y+4}px;width:32px;height:5px;background:rgba(var(--ink),.5);border-radius:3px 1px 2px 3px/2px 3px 1px 2px;clip-path:polygon(0 20%,30% 0,70% 15%,100% 30%,96% 100%,60% 80%,25% 100%,2% 70%)"></div>`;
+const ring=(x,y)=>`<div class="abs" style="left:${x-11}px;top:${y-9}px;width:22px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(var(--ink),.25)"></div>`;
+const thread=(y,vals,pig)=>{let out='';for(let i=0;i<7;i++){if(vals[i]===null)continue;if(vals[i]){const joinNext=vals[i+1];out+=`<div class="abs" style="left:${cx(i)-14}px;top:${y}px;width:${joinNext?49.4+28:28}px;height:3px;background:${pig};opacity:var(--tint);border-radius:2px"></div>`}}return out};
+const band=(y,label,right,cells)=>`<div class="abs lbl s2" style="left:22px;top:${y}px">${label}</div>${right?`<div class="abs lbl" style="right:22px;top:${y}px">${right}</div>`:''}${cells}`;
+const page=(obs,pick=-1)=>{const trained=W.training.filter(t=>t&&t!=='rest').length;
+ let h=`${tabs('REVIEW')}
+ <div class="abs b ctx nw" style="left:22px;top:138px">${pick<0?'the week so far':'Tuesday'}</div>
+ <div class="abs t44" style="left:22px;top:172px">${pick<0?'Three sessions':'Bench best, 5 done'}</div>
+ <div class="abs" style="left:0;top:240px;width:390px;height:460px" id="grid">`;
+ // day letters
+ for(let i=0;i<7;i++)h+=`<div class="abs lbl col" data-c="${i}" style="left:${X(i)}px;width:49px;text-align:center;top:0;color:rgba(var(--ink),${i===TODAY?1:i<TODAY?'var(--s2)':'var(--s3)'})">${DAYS[i]}</div>`;
+ // training
+ h+=band(28,'TRAINING','3 OF 6',W.training.map((t,i)=>t===null?'':t==='rest'?restStroke(cx(i),52):t?dab(cx(i),58):ring(cx(i),58)).map((m,i)=>`<div class="col" data-c="${i}">${m}</div>`).join(''));
+ // tasks: numerals
+ h+=band(86,'TASKS DONE','14',W.tasks.map((n,i)=>n===null?'':`<div class="abs n col" data-c="${i}" style="left:${X(i)}px;top:108px;color:rgba(var(--ink),${n?1:.38})">${n||'·'}</div>`).join(''));
+ // habits: two threads
+ h+=band(140,'COOK · 2 OF 4','',thread(170,W.cook,'var(--health)'));
+ h+=band(188,'READ · 3 OF 5','',thread(218,W.read,'var(--ctx)'));
+ // weight: a painted stroke through the weigh-ins, values at the ends
+ const wy=v=>262+(78.7-v)*40;const pts=W.weight.map((v,i)=>v===null?null:[cx(i),wy(v)]).filter(Boolean);
+ h+=band(236,'WEIGHT','78.2 KG',`<svg class="abs" style="left:0;top:0;overflow:visible" width="390" height="300"><path d="M${pts.map(p=>p.join(' ')).join(' L')}" stroke="var(--now)" stroke-width="3" fill="none" stroke-linecap="round" opacity="var(--tint)"/>${pts.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3" fill="var(--now)" opacity="var(--tint)"/>`).join('')}</svg><div class="abs sm s2" style="left:${X(0)}px;top:${wy(78.6)+8}px;width:49px;text-align:center">78.6</div><div class="abs sm" style="left:${X(3)}px;top:${wy(78.2)-28}px;width:49px;text-align:center">78.2</div>`);
+ // money: numerals, dollars
+ h+=band(306,'MONEY','$161',W.money.map((n,i)=>n===null?'':`<div class="abs n col" data-c="${i}" style="left:${X(i)}px;top:328px;color:rgba(var(--ink),${n?1:.38})">${n?'$'+n:'·'}</div>`).join(''));
+ // cooked
+ h+=band(360,'COOKED','2',W.cooked.map((n,i)=>n===null?'':n?dab(cx(i),392,'var(--now)'):'').map((m,i)=>`<div class="col" data-c="${i}">${m}</div>`).join(''));
+ h+=`</div>`;
+ // the day log's best lines, or the picked day's lines
+ const lines=pick<0?BEST:DAY_LINES[pick];
+ h+=`<div class="abs lbl s2" style="left:22px;top:660px">${pick<0?'THE WEEK’S LINES':'TUESDAY'}</div>`;
+ lines.forEach(([d,t],k)=>{h+=`<div class="abs sm" style="left:22px;top:${686+24*k}px;width:346px"><span style="font-weight:600;color:rgba(var(--ink),var(--s2))">${d}</span>&nbsp; ${t}</div>`});
+ return h};
+const phone=(c,inner,obs,opt={})=>`<div><div class="cap">${c}</div><div class="ph ${obs?'obs':''}" ${opt.id?`id="${opt.id}"`:''}>${inner}${opt.line?`<div class="tl">${opt.line}</div>`:''}${soul(obs)}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+
+if(PLAY){
+ $('row').innerHTML=phone('REVIEW · THE WEEK ARRIVES',`<div id="stage" class="abs" style="inset:0"></div>`,0,{id:'P',fing:1});
+}else{
+ $('row').innerHTML=phone('REVIEW · THE WEEK ON ONE PAGE',page(0),0)+phone('OBSIDIAN',page(1),1)+phone('TAP A DAY: THE PAGE READS TUESDAY',page(0,1),0,{line:'Tuesday was the bench best.'}).replace('<div class="ph "','<div class="ph " data-pick="1"');
+ $('note').innerHTML='THE WEEK IS THE GROUND: SEVEN DAY COLUMNS, MONDAY TO SUNDAY, TODAY IN INK AND THE DAYS AHEAD EMPTY. ONE BAND PER THING, EACH A LABEL WITH ITS WEEK COUNT AT THE RIGHT AND ONE MARK PER DAY UNDER IT: TRAINING (SAGE DABS, THE DRY REST STROKE, THE FAINT RING FOR AN OPEN DAY), TASKS DONE AND MONEY AS NUMERALS, HABITS AS PAINTED THREADS, WEIGHT AS ONE STROKE THROUGH THE WEIGH-INS, COOKED AS CADMIUM DABS. ALL MARKS REST AT THE REST TINT. UNDER THE BANDS, THE DAY LOG’S THREE BEST LINES. TAP A DAY COLUMN AND THE PAGE READS THAT DAY: THE OTHER COLUMNS RECEDE, THE HERO AND THE LINES BECOME THAT DAY’S. NO CARDS, NO BOXES, NO CHART FRAME.';
+}
+
+async function play(){
+ const st=$('stage'),P=$('P'),f=$('fing'),cap=document.querySelector('.cap');
+ st.innerHTML=page(0);
+ // arrival: the bands land top to bottom, each 60ms after the last; marks pop on the settle spring
+ const grid=$('grid');const kids=[...grid.children];kids.forEach(k=>k.style.opacity=0);
+ await sleep(400);
+ kids.forEach((k,i)=>{const y=parseInt(k.style.top)||parseInt((k.firstElementChild||k).style?.top)||0;k.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:360,delay:Math.min(i*22,700),easing:SET,fill:'forwards'})});
+ await sleep(2000);kids.forEach(k=>{k.getAnimations().forEach(x=>x.cancel());k.style.opacity=1});
+ // tap Tuesday: the other columns recede, the hero and the lines become Tuesday's
+ cap.textContent='TAP TUESDAY: THE PAGE READS THAT DAY';
+ f.style.left=cx(1)+'px';f.style.top='250px';f.style.opacity=1;await sleep(200);f.style.opacity=0;
+ [...st.querySelectorAll('.col')].forEach(el=>{if(el.dataset.c!=='1')el.style.opacity=.3});
+ const hero=st.querySelector('.t44'),ctxl=st.querySelector('.ctx');
+ for(const [el,txt] of [[ctxl,'Tuesday'],[hero,'Bench best, 5 done']]){el.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:180,fill:'forwards'});await sleep(180);el.textContent=txt;el.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:260,fill:'forwards'})}
+ const lbl=[...st.querySelectorAll('.lbl')].find(e=>e.textContent==='THE WEEK’S LINES');lbl.textContent='TUESDAY';
+ const ls=[...st.querySelectorAll('.sm')].filter(e=>parseInt(e.style.top)>=686);ls.forEach((e,k)=>{e.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'});setTimeout(()=>{const [d,t]=DAY_LINES[1][k];e.innerHTML=`<span style="font-weight:600;color:rgba(18,16,22,.66)">${d}</span>&nbsp; ${t}`;e.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:300,delay:k*50,easing:H,fill:'forwards'})},180)});
+ st.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">Tuesday was the bench best.</div>`);const tl=st.querySelector('.tl');tl.animate([{opacity:0},{opacity:1}],{duration:300,delay:400,fill:'forwards'});
+ await sleep(2200);
+ // tap away: the week comes back
+ cap.textContent='TAP AWAY: THE WEEK COMES BACK';
+ f.style.left='300px';f.style.top='172px';f.style.opacity=1;await sleep(200);f.style.opacity=0;
+ [...st.querySelectorAll('.col')].forEach(el=>el.style.opacity=1);
+ for(const [el,txt] of [[ctxl,'the week so far'],[hero,'Three sessions']]){el.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:180,fill:'forwards'});await sleep(180);el.textContent=txt;el.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:260,fill:'forwards'})}
+ lbl.textContent='THE WEEK’S LINES';ls.forEach((e,k)=>{const [d,t]=BEST[k];e.innerHTML=`<span style="font-weight:600;color:rgba(18,16,22,.66)">${d}</span>&nbsp; ${t}`});tl.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});
+ await sleep(1600);document.body.dataset.done='1';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';if(!PLAY){document.body.dataset.done='1';return}play()});
+</script>
+</body>
+</html>

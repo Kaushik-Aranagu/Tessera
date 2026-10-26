@@ -8,6 +8,8 @@ import TesseraTess
 /// writing line. Speak and Show are words only until their layers ship. Spec: `docs/design/no-buttons.md`.
 struct BottomChrome: View {
     var onSoulDoubleTap: () -> Void = {}
+    /// On a room's landing she wears the room's colour (sheet 283); nil keeps her own palette.
+    var room: AppID?
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -244,11 +246,12 @@ struct BottomChrome: View {
     /// The soul at 0.72, breathing 1 ↔ 1.08 over 3.2 s; tap opens, hold opens, double tap goes Home.
     private var soulKey: some View {
         TessSoul(mode: model.tessMode, hostScale: 0.72, eyes: model.tessHasEyes, gaze: model.soul.gaze,
+                 pageAccents: room.map { [$0] } ?? [],
+                 director: room.map { SoulRoomTint.director($0) } ?? CoreSoulDirector(),
                  wake: model.soul.wake, stroke: model.soul.stroke, strokeBlink: model.soul.strokeBlink,
                  beat: model.soul.beat, wear: model.soul.wear(at:)) { model.soul.placeDock($0) }
             .scaleEffect(0.72)
-            .scaleEffect(breathe ? 1.08 : 1)
-            .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
+            .liveBreath(on: breathe)
             .scaleEffect(swell ? 1.06 : 1)
             // The brighten after a local capture is the router's (900 ms), drawn here.
             .saturation(model.soul.isBright ? 1.35 : 1)

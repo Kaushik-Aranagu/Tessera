@@ -1,0 +1,69 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#fff}canvas{display:block}</style>
+<script src="three.min.js"></script><canvas id=c width=540 height=540></canvas>
+<script>
+const R=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
+R.setSize(540,540,false);R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;R.setClearColor(0xffffff);
+const sc=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(22,1,.1,50);cam.position.set(-2.95,2.25,3.45);cam.lookAt(.22,.72,0);
+sc.add(new THREE.HemisphereLight(0xffffff,0xb9bcc4,1.05));
+const dl=new THREE.DirectionalLight(0xffffff,1.15);dl.position.set(-1.5,3.5,2.2);dl.castShadow=true;dl.shadow.mapSize.set(2048,2048);
+Object.assign(dl.shadow.camera,{left:-2,right:2,top:2,bottom:-2});dl.shadow.radius=6;dl.shadow.bias=-.0004;sc.add(dl);
+const M=(c,r=.55,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+const GREY=M(0xd9dadf,.6),PAD=M(0x1b1d22,.7),RACK=M(0xe6e7ea,.6),BAR=M(0x9a9da6,.3,.7),PLATE=M(0x15171b,.45,.2);
+const mk=(geo,mat,p=[0,0,0],cast=true)=>{const m=new THREE.Mesh(geo,mat);m.position.set(...p);m.castShadow=cast;m.receiveShadow=true;sc.add(m);return m};
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+// segment between two points (capsule-ish: cylinder + spheres)
+function seg(mat,r0,r1=r0){const g=new THREE.Group();const cyl=new THREE.Mesh(new THREE.CylinderGeometry(r1,r0,1,24),mat);cyl.castShadow=true;g.add(cyl);
+ const a=new THREE.Mesh(new THREE.SphereGeometry(r0,24,16),mat),b=new THREE.Mesh(new THREE.SphereGeometry(r1,24,16),mat);a.castShadow=b.castShadow=true;g.add(a,b);sc.add(g);g.cyl=cyl;g.a=a;g.b=b;g.r0=r0;g.r1=r1;return g}
+function place(g,p,q){const d=q.clone().sub(p),L=d.length();g.cyl.scale.set(1,L,1);g.cyl.position.copy(p).add(q).multiplyScalar(.5);
+ g.cyl.quaternion.setFromUnitVectors(V(0,1,0),d.clone().normalize());g.a.position.copy(p);g.b.position.copy(q)}
+// floor
+const fl=mk(new THREE.PlaneGeometry(10,10),new THREE.ShadowMaterial({opacity:.22}),[0,0,0],false);fl.rotation.x=-Math.PI/2;
+// bench
+mk(new THREE.BoxGeometry(1.35,.09,.30),PAD,[.30,.46,0]);
+mk(new THREE.BoxGeometry(.06,.42,.06),PAD,[-.15,.21,0]);mk(new THREE.BoxGeometry(.06,.42,.06),PAD,[.78,.21,0]);
+mk(new THREE.BoxGeometry(.06,.04,.5),PAD,[-.15,.02,0]);mk(new THREE.BoxGeometry(.06,.04,.5),PAD,[.78,.02,0]);
+// rack: two uprights beside the head end with J-hooks
+for(const z of[-.42,.42]){mk(new THREE.BoxGeometry(.06,1.35,.06),RACK,[.78,.675,z]);mk(new THREE.BoxGeometry(.5,.04,.06),RACK,[.78,.02,z]);
+ mk(new THREE.BoxGeometry(.10,.03,.06),RACK,[.72,1.0,z]);for(let i=0;i<8;i++)mk(new THREE.BoxGeometry(.04,.015,.07),RACK,[.78,.25+i*.14,z])}
+// body
+const TORSO=new THREE.Group();sc.add(TORSO);
+const chest=mk(new THREE.SphereGeometry(1,32,24),GREY,[.52,.70,0]);chest.scale.set(.20,.14,.25);
+const belly=mk(new THREE.SphereGeometry(1,32,24),GREY,[.28,.64,0]);belly.scale.set(.22,.11,.18);
+const pelvis=mk(new THREE.SphereGeometry(1,32,24),GREY,[.06,.62,0]);pelvis.scale.set(.15,.10,.19);
+const head=mk(new THREE.SphereGeometry(.105,32,24),GREY,[.84,.66,0]);head.scale.set(1.15,1,.95);
+const neck=seg(GREY,.05);place(neck,V(.70,.66,0),V(.78,.66,0));
+const SHZ=.235,SHX=.56,SHY=.74;
+const legs=[];
+for(const s of[-1,1]){const th=seg(GREY,.09,.068),sh=seg(GREY,.068,.048);place(th,V(.04,.62,.10*s),V(-.28,.84,.20*s));place(sh,V(-.28,.84,.20*s),V(-.40,.05,.26*s));
+ const ft=mk(new THREE.BoxGeometry(.24,.05,.10),GREY,[-.47,.03,.26*s]);}
+// bar + plates
+const bar=mk(new THREE.CylinderGeometry(.014,.014,2.2,16),BAR);bar.rotation.x=Math.PI/2;
+const plates=[];for(const z of[-1,1])for(const k of[0,1,2]){const p=mk(new THREE.CylinderGeometry(.215,.215,.03,48),PLATE);p.rotation.x=Math.PI/2;plates.push([p,z,k]);}
+// arms
+const arms=[-1,1].map(s=>({s,up:seg(GREY,.05,.042),fo:seg(GREY,.042,.034),hand:mk(new THREE.SphereGeometry(.045,16,12),GREY),
+ tri:mk(new THREE.SphereGeometry(1,20,14),M(0xb61e00,.5)),del:mk(new THREE.SphereGeometry(.07,24,16),M(0xb61e00,.5)),pec:mk(new THREE.SphereGeometry(1,28,20),M(0xb61e00,.5))}));
+const redC=new THREE.Color(),DK=new THREE.Color(0x540400),LT=new THREE.Color(0xc42200);
+const T={hold:.35,down:1.7,pause:.3,up:1.0},CYC=T.hold+T.down+T.pause+T.up;
+const sm=x=>x*x*x*(x*(6*x-15)+10),mx=(a,b,t)=>a+(b-a)*t;
+function phase(t){t=((t%CYC)+CYC)%CYC;if(t<T.hold)return{p:0,a:.2};t-=T.hold;
+ if(t<T.down){const u=t/T.down;return{p:sm(u),a:.35+.2*Math.sin(u*Math.PI)}}t-=T.down;
+ if(t<T.pause)return{p:1,a:.4};t-=T.pause;const u=t/T.up;return{p:1-(sm(u)*.7+u*.3),a:1-.65*u}}
+function ik(S,H,a,b,pole){const d=H.clone().sub(S);let L=Math.min(Math.max(d.length(),Math.abs(a-b)+.01),a+b-.001);const u=d.clone().normalize();
+ const x=(L*L+a*a-b*b)/(2*L),y=Math.sqrt(Math.max(0,a*a-x*x));let pv=pole.clone().sub(u.clone().multiplyScalar(pole.dot(u))).normalize();
+ return S.clone().add(u.clone().multiplyScalar(x)).add(pv.multiplyScalar(y))}
+function draw(t){const{p,a}=phase(t);
+ const barY=mx(1.24,.755,p),barX=mx(.60,.52,p);bar.position.set(barX,barY,0);
+ const sd=[-1,1];plates.forEach(([m,z,k])=>m.position.set(barX,barY,z*(.50+k*.035)));
+ for(const A of arms){const s=A.s;const S=V(SHX,SHY,SHZ*s),H=V(barX,barY,.33*s);
+  const E=ik(S,H,.30,.27,V(-.35,-.15,1.0*s));place(A.up,S,E);place(A.fo,E,H);A.hand.position.copy(H);
+  const col=redC.copy(DK).lerp(LT,a);
+  [A.tri,A.del,A.pec].forEach(m=>m.material.color.copy(col));
+  A.del.position.copy(S).add(V(0,.015,0));
+  const mid=S.clone().lerp(E,.5).add(V(-.005,.02,.0));A.tri.position.copy(mid);A.tri.scale.set(.034,.14,.034);
+  A.tri.quaternion.setFromUnitVectors(V(0,1,0),E.clone().sub(S).normalize());
+  A.pec.position.set(.50,.835,.125*s);A.pec.scale.set(.13,.04,.105);A.pec.quaternion.setFromEuler(new THREE.Euler(0,0,0));}
+ chest.position.y=.70+.004*Math.sin(t*2.1);
+ R.render(sc,cam)}
+window.sceneDuration=()=>CYC*2;window.renderAt=draw;draw(.1);
+</script>

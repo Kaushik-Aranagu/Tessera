@@ -1,0 +1,152 @@
+<title>Word wall band</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700;800;900&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,600..800&family=Inter+Tight:wght@800;900&family=Mona+Sans:wdth,wght@75..125,700..900&display=swap">
+<style>
+:root{--ground:#EFECE6;--ink:#1D1B19;--ink2:#5E5A55;--slate:#34506F;--acc:#7A5A1E;--edge:#DDD8D0;--words:"Figtree",-apple-system,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--ink:#F1EEE9;--ink2:#ABA6A0;--slate:#A7BCD6;--acc:#D9B26A;--edge:#2A2A2E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--ink:#F1EEE9;--ink2:#ABA6A0;--slate:#A7BCD6;--acc:#D9B26A;--edge:#2A2A2E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 60px}
+.head{max-width:1180px;margin:0 auto 22px;display:flex;flex-direction:column;gap:8px}h1{font-size:34px;letter-spacing:-.02em;margin:0}.sub{margin:0;max-width:72ch;color:var(--ink2);font-size:16px;line-height:1.5}
+.lab{margin:0;font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.08em;color:var(--slate)}
+.tools{display:flex;gap:4px 22px;flex-wrap:wrap}.tr{background:none;border:0;font:inherit;font-size:15px;color:var(--acc);padding:10px 0;cursor:pointer;min-height:44px}.tr[aria-pressed="true"]{color:var(--ink);font-weight:700}
+.tl{font-size:13px;color:var(--ink2);align-self:center}
+.row{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;max-width:1180px;margin:0 auto}
+.fit{width:min(402px,100%);aspect-ratio:402/874;position:relative}
+.lite{--c0:#B5452B;--c1:#1E6E77;--c2:#7A5A12;--c3:#5A3F8E;--c4:#2F6A8F;--c5:#8A4570;--c6:#3F6B2A;--c7:#9A2541;--c8:#0F766E;--c9:#92400E;--c10:#1F4E8C;--c11:#1D1B19;--bg:#F7F5F1;--t:#1D1B19;--t2:#5E5A55;--room:#8A4570}
+.blk{--c0:#F09A7E;--c1:#84C3C9;--c2:#E2C26A;--c3:#B4A3E6;--c4:#8DBAD6;--c5:#E3A3CB;--c6:#A9D48A;--c7:#F08E9C;--c8:#5FD0C0;--c9:#F0B07A;--c10:#9DB8F0;--c11:#F1EEE9;--bg:#000;--t:#F1EEE9;--t2:#ABA6A0;--room:#E3A3CB}
+.phone{position:absolute;left:0;top:0;width:402px;height:874px;transform-origin:0 0;background:var(--bg);color:var(--t);border-radius:54px;overflow:hidden;outline:1px solid var(--edge)}
+.z{position:absolute;left:24px;right:24px}
+.wall{position:absolute;left:24px;width:354px}
+.w{position:absolute;left:0;top:0;cursor:pointer;transform-origin:50% 50%;will-change:transform;user-select:none}
+.w svg{display:block;overflow:visible}
+.act{background:none;border:0;font:inherit;font-size:20px;font-weight:700;min-height:44px;padding:0;cursor:pointer;color:var(--room)}
+.tess{position:absolute;right:24px;bottom:30px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFB36B,#E8582A 60%,#B2301C)}
+.ghost{position:absolute;left:0;right:0;pointer-events:none;outline:1px dashed var(--t2);outline-offset:0;opacity:0}
+.show .ghost{opacity:.35}
+.cap{color:var(--ink2);font-size:14px;max-width:402px;margin:12px 0 0;line-height:1.5}
+.notes{max-width:900px;margin:34px auto 0;color:var(--ink2);font-size:16px;line-height:1.55}.notes b{color:var(--ink)}.notes p{margin:0 0 14px}
+#ms{position:absolute;left:-9999px;top:0}
+</style>
+<div class="head">
+  <p class="lab">Round 245, Oct 24</p>
+  <h1>Word wall, as a band</h1>
+  <p class="sub">His 1:13 AM: capitals, a Figtree or Bricolage feel packed tighter, two-word names stacked into one brick (same colour, same size) so the wall gets Tetris L and J shapes, and a band the size of the Home mosaic in the mosaic's own place. His 1:13 AM pile: inside the band, words tilted at angles, never on top of each other, still packed, then they tidy into the wall.</p>
+  <div class="tools"><button class="tr" id="pile">Pile it</button><button class="tr" id="tidy">Tidy</button><button class="tr" id="swap">Next words</button><button class="tr" id="slot" aria-pressed="false">Show mosaic slot</button></div>
+  <div class="tools"><span class="tl">Font</span><button class="tr ff" data-f="Figtree" data-s="100" data-w="900" data-k="-0.01">Figtree</button><button class="tr ff" data-f="Bricolage Grotesque" data-s="100" data-w="800" data-k="-0.01">Bricolage</button><button class="tr ff" data-f="Bricolage Grotesque" data-s="84" data-w="800" data-k="-0.005" aria-pressed="true">Bricolage, narrowed (pick)</button><button class="tr ff" data-f="Inter Tight" data-s="100" data-w="900" data-k="-0.015">Inter Tight</button><button class="tr ff" data-f="Mona Sans" data-s="88" data-w="900" data-k="-0.01">Mona Sans</button></div>
+  <div class="tools"><span class="tl">Band</span><button class="tr bb" data-h="300" aria-pressed="true">Mosaic size, a third</button><button class="tr bb" data-h="220">Slim, a quarter</button></div>
+</div>
+<div class="row">
+ <div><div class="fit"><div class="phone lite" id="p1"></div></div><p class="cap">Paper. Deep tones, every brick its own colour; a stacked name keeps one colour across both lines.</p></div>
+ <div><div class="fit"><div class="phone blk" id="p2"></div></div><p class="cap">Pure black. Light tints of the same twelve.</p></div>
+</div>
+<div class="notes">
+<p><b>Where it sits.</b> The band takes the Home mosaic's slot (the mosaic's middle, 140 to 440 pt, a third of the screen), so going from Home into a room the mosaic hands its place to the words. Above it the room name and one line; below it two plain lines and the action word.</p>
+<p><b>Capitals and type.</b> Every word in capitals, so each line box is only the cap height: no descender space, rows sit 3 pt apart and read as solid bricks. Each word is fitted to its brick exactly (the last few points go into letter-spacing). The pick is Bricolage narrowed to 84% width at 800: it keeps Bricolage's shapes and packs about 12% more. Figtree 900, plain Bricolage, Inter Tight and Mona Sans are on the toggles. Nothing under 13 pt.</p>
+<p><b>Stacked names.</b> A two-word name can stand as one brick on two lines in one colour and one size. The shorter line leaves a notch, and a small word in another colour drops into it, so the brick reads as a Tetris L or J; when no small word fits, the shorter line is spaced out to the full width.</p>
+<p><b>The pile (the clever part).</b> Words drop one at a time into the band, biggest first. Each one tries a few tilts (flat, slight, steep, upright) and many spots across the band, falls straight down until it touches the floor or another word, and keeps whichever spot lets it settle lowest. Words never overlap (tilted boxes are tested edge against edge with a 3 pt margin). If a word can't fit, every word shrinks a little and the drop runs again, so the pile always fills the band and stays packed. Then each word glides, turns and grows into its wall place, one after another.</p>
+<p><b>Liveness.</b> Every 6 s one word changes and the wall re-packs (spring 0.6 s). Tap a word to open it. Reduce Motion: no pile, just a cross-fade.</p>
+</div>
+<svg id="ms" width="10" height="10" aria-hidden="true"><text id="mt" x="0" y="50"></text></svg>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const POOL=[['Trip packing',9,1],['Mom’s birthday',9,6],['Tacos',8,3],['Garage',7,2],['Book ideas',8,4],['Passport',7,1],['Work notes',6,5],['Gift list',6,6],['Dreams',5,4],['Run plan',6,7],['Recipes',6,3],['Plumber',4,2],['Tess said',5,4],['Voice memo',4,5],['Wifi code',3,2],['Movies',4,4],['Sleep log',3,7],['Paint colors',4,2],['Kids’ sizes',3,6],['Coffee',3,3],['Quotes',3,4],['Bike fit',3,7],['Taxes',4,5],['Doctor',4,7],['Neighbors',2,6],['Podcasts',2,4],['Seeds',2,2],['Spices',2,3],['Shoes',2,6],['Old phone',2,2],['Jokes',2,4],['Stretch',2,7],['Wine',2,3],['Fonts',2,4],['Keys',2,2],['Hikes',2,7],['Tea',2,3],['Lamp',2,2]];
+let F={f:'Bricolage Grotesque',s:84,w:800,k:-0.005},start=0,H=300,TOP=140,state='wall',L=null;
+const W=354,G=3,MINFS=13;
+const mt=document.getElementById('mt');
+function fontCss(wt){return `font-family:'${F.f}',sans-serif;font-weight:${wt};font-stretch:${F.s}%;letter-spacing:${F.k}em`}
+const cache={};
+function unit(t,wt){const key=F.f+F.s+wt+t;if(cache[key])return cache[key];mt.setAttribute('style',fontCss(wt)+';font-size:100px');mt.textContent=t.toUpperCase();return cache[key]=mt.getComputedTextLength()/100}
+let C=.7;function capRatio(){const c=document.createElement('canvas').getContext('2d');c.font=`${F.w} 200px '${F.f}'`;const m=c.measureText('H');C=m.actualBoundingBoxAscent/200||.7}
+const sum=(a,f)=>a.reduce((s,x)=>s+f(x),0);
+// Brick widths are linear in the row height h, so a row's height can be solved for an exact full-width fit.
+function brickW(b,h){if(b.k==='one')return b.a/C*h;if(b.k==='name')return b.amax/C*(h-G)/2;const n=b.lines.length;return (h-(n-1)*G)/(C*sum(b.lines,l=>1/l.a))}
+function solveH(bs){let lo=4,hi=400;for(let i=0;i<40;i++){const m=(lo+hi)/2;if(sum(bs,b=>brickW(b,m))+G*(bs.length-1)>W)hi=m;else lo=m}return lo}
+function layout(words){
+  const s0=[...words].sort((a,b)=>b[1]-a[1]);const hi=s0.filter(x=>x[1]>3);const lo=s0.filter(x=>x[1]<=3).sort((a,b)=>b[0].length-a[0].length);const spare=lo.splice(0,Math.min(10,Math.max(0,lo.length-6)));// a few longer small words are kept back to fill the notches of stacked names
+  const sc=H/300,T=[64,44,56,40,60,46,50,38].map(v=>v*sc),PAT=[['B','S'],['S','B','S'],['B','B','S'],['S','B'],['B','S','B']];
+  const rows=[];let y=0,r=0,hiI=0,nameFlip=0,wt=F.w;
+  const one=x=>({k:'one',x,a:unit(x[0],wt)});
+  let hiE=hi.length;const smallFrom=()=>lo.length?lo.pop():(hiI<hiE?hi[--hiE]:null);// when the small words run out, the least-used big ones stack
+  while((hiI<hiE||lo.length)&&H-y>16){
+    const rem=H-y,tgt=Math.min(T[r%T.length],rem),pat=PAT[r%PAT.length],bs=[];let p=0;
+    const last=rem-tgt<T[(r+1)%T.length]*.6;
+    for(;;){const kind=pat[p%pat.length];p++;let b=null;
+      if(kind==='B'&&hiI<hiE){const x=hi[hiI++];const sp=x[0].indexOf(' ');
+        if(sp>0&&tgt>=40*sc&&(x[0].length>10||nameFlip++%2===0)){const l1=x[0].slice(0,sp),l2=x[0].slice(sp+1);const a1=unit(l1,wt),a2=unit(l2,wt);b={k:'name',x,l:[l1,l2],a:[a1,a2],amax:Math.max(a1,a2),side:r%2}}
+        else b=one(x)}
+      else{let n=tgt>=56*sc?3:2;while(n>1&&(tgt-(n-1)*G)/n<MINFS*C)n--;const Ls=[];for(let q=0;q<n;q++){const x=smallFrom();if(!x)break;Ls.push({x,a:unit(x[0],wt)})}
+        if(Ls.length)b=Ls.length>1?{k:'stack',lines:Ls}:one(Ls[0].x)}
+      if(!b){if(hiI>=hiE&&!lo.length)break;continue}
+      bs.push(b);
+      if(last){if(solveH(bs)<=rem)break}else if(sum(bs,q=>brickW(q,tgt))+G*(bs.length-1)>=W*.95)break;
+      if(hiI>=hiE&&!lo.length)break}
+    if(!bs.length)break;let h=Math.min(solveH(bs),rem);rows.push({bs,h});y+=h+G;r++;if(last)break}
+  // leftover height goes into the row gaps, so the band's top and bottom edges are both met
+  const used=sum(rows,q=>q.h)+G*(rows.length-1),gap=rows.length>1?G+Math.max(0,H-used)/(rows.length-1):G;
+  const out=[];let yy=0,ci=0;
+  rows.forEach(({bs,h})=>{let x=0;bs.forEach(b=>{const bw=brickW(b,h),col=(ci++*5)%12;
+    if(b.k==='one')out.push({t:b.x[0],x,y:yy,w:bw,h,fs:h/C,col});
+    else if(b.k==='stack'){let ly=yy;b.lines.forEach((l,i)=>{const fs=bw/l.a,lh=fs*C;out.push({t:l.x[0],x,y:ly,w:bw,h:lh,fs,col:(col+3*(i+1))%12});ly+=lh+G})}
+    else{const lh=(h-G)/2,fs=lh/C,short=b.a[0]<b.a[1]?0:1,sw=b.a[short]*fs,d=bw-sw;
+      b.l.forEach((t,i)=>{const isS=i===short;let w=isS?sw:bw,x0=x;
+        if(isS&&d>G+MINFS*1.5){// look for a small word to fill the notch
+          const pool=spare.concat(lo),nw=d-G,room=lh;// fill the notch with one, two or three small words stacked to its exact height
+          const hgt=x=>C*nw/unit(x[0],wt);let pick=null,err=.2;
+          for(let i1=0;i1<pool.length;i1++){const h1=hgt(pool[i1]);let e=Math.abs(h1-room)/room;if(e<err&&h1/C>=MINFS){err=e;pick=[pool[i1]]}
+            for(let i2=i1+1;i2<pool.length;i2++){const h2=hgt(pool[i2]);e=Math.abs(h1+h2+G-room)/room;if(e<err&&Math.min(h1,h2)/C>=MINFS){err=e;pick=[pool[i1],pool[i2]]}
+              for(let i3=i2+1;i3<pool.length;i3++){const h3=hgt(pool[i3]);e=Math.abs(h1+h2+h3+2*G-room)/room;if(e<err&&Math.min(h1,h2,h3)/C>=MINFS){err=e;pick=[pool[i1],pool[i2],pool[i3]]}}}}
+          if(pick){const tot=pick.reduce((q,x)=>q+hgt(x),0),k=(room-(pick.length-1)*G)/tot;let fy=yy+i*(lh+G);const fillX=b.side?x:x+sw+G;x0=b.side?x+d:x;
+            pick.forEach((fx,j)=>{const si=spare.indexOf(fx);if(si>=0)spare.splice(si,1);else lo.splice(lo.indexOf(fx),1);const fh=hgt(fx)*k;out.push({t:fx[0],x:fillX,y:fy,w:nw,h:fh,fs:fh/C,col:(col+6+j*3)%12,fill:1});fy+=fh+G})}
+          else{w=bw}}
+        else if(isS)w=bw;
+        out.push({t:t,x:x0,y:yy+i*(lh+G),w,h:lh,fs,col,key:b.x[0]+'#'+i})})}
+    x+=bw+G});yy+=h+gap});
+  return out}
+// The pile: words drop one by one into the band, each tries tilts and spots, falls until it touches, and keeps the
+// lowest resting place. Tilted boxes never overlap (separating-axis test with a 3 pt margin).
+function rnd(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
+function obb(cx,cy,w,h,t){const c=Math.cos(t),s=Math.sin(t),hw=w/2+1.5,hh=h/2+1.5;const ax=[[c,s],[-s,c]];const pts=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([u,v])=>[cx+u*c-v*s,cy+u*s+v*c]);return{pts,ax,cx,cy,r:Math.hypot(hw,hh)}}
+function hit(A,B){if(Math.hypot(A.cx-B.cx,A.cy-B.cy)>A.r+B.r)return false;for(const ax of A.ax.concat(B.ax)){let a0=1e9,a1=-1e9,b0=1e9,b1=-1e9;for(const p of A.pts){const d=p[0]*ax[0]+p[1]*ax[1];a0=Math.min(a0,d);a1=Math.max(a1,d)}for(const p of B.pts){const d=p[0]*ax[0]+p[1]*ax[1];b0=Math.min(b0,d);b1=Math.max(b1,d)}if(a1<=b0||b1<=a0)return false}return true}
+const ANG=[0,0,-.12,.12,-.32,.32,-.6,.6,Math.PI/2,-Math.PI/2];
+function pile(items,seed){
+  for(let s=1;s>.3;s-=.03){const R=rnd(seed),placed=[],res=[];let ok=true;
+    const order=items.map((o,i)=>i).sort((a,b)=>items[b].w*items[b].h-items[a].w*items[a].h);
+    for(const i of order){const o=items[i],w=o.w*s,h=o.h*s;let best=null;
+      const tries=ANG.filter(()=>R()<.6);if(!tries.length)tries.push(0);
+      for(const t of tries){const ex=(w*Math.abs(Math.cos(t))+h*Math.abs(Math.sin(t)))/2,ey=(w*Math.abs(Math.sin(t))+h*Math.abs(Math.cos(t)))/2;if(ex*2>W||ey*2>H)continue;
+        for(let cx=ex;cx<=W-ex;cx+=5){let cy=ey;if(placed.some(P=>hit(obb(cx,cy,w,h,t),P)))continue;
+          while(cy+3<=H-ey&&!placed.some(P=>hit(obb(cx,cy+3,w,h,t),P)))cy+=3;
+          const sc=cy+R()*2;if(!best||sc>best.sc)best={cx,cy,t,sc}}}
+      if(!best){ok=false;break}placed.push(obb(best.cx,best.cy,w,h,best.t));res[i]={cx:best.cx,cy:best.cy,t:best.t,s}}
+    if(ok)return res}
+  return items.map(o=>({cx:o.x+o.w/2,cy:o.y+o.h/2,t:0,s:1}))}
+function svg(o,P){return `<svg width="${o.w}" height="${o.h}" viewBox="0 0 ${o.w} ${o.h}"><text x="0" y="${o.h}" textLength="${o.w}" lengthAdjust="spacing" fill="var(--c${o.col})" style="${fontCss(F.w)};font-size:${o.fs}px">${o.t.toUpperCase()}</text></svg>`}
+let PL=null,seed=7;
+function compute(){const vis=POOL.slice(start).concat(POOL.slice(0,start));L=layout(vis);PL=RM?null:pile(L,seed++)}
+function place(P,mode,stag){const band=P.querySelector('.wall');band.style.top=TOP+'px';band.style.height=H+'px';P.querySelector('.ghost').style.cssText=`top:${TOP}px;height:${H}px`;
+  const old={};band.querySelectorAll('.w').forEach(e=>old[e.dataset.k]=e);const keep=new Set();
+  L.forEach((o,i)=>{const k=o.key||o.t;let e=old[k];if(!e){e=document.createElement('div');e.className='w';e.dataset.k=k;e.style.opacity=0;band.appendChild(e);e.onclick=()=>e.animate([{opacity:1},{opacity:.4},{opacity:1}],{duration:300})}
+    keep.add(k);e.innerHTML=svg(o);e.style.width=o.w+'px';e.style.height=o.h+'px';
+    let tr=`translate(${o.x}px,${o.y}px)`;if(mode==='pile'&&PL){const p=PL[i];tr=`translate(${p.cx-o.w/2}px,${p.cy-o.h/2}px) rotate(${p.t}rad) scale(${p.s})`}
+    const d=stag?i*22:0;
+    if(RM){e.style.transition='opacity .3s';e.style.transform=tr;e.style.opacity=1}else{e.style.transition=`transform ${mode==='pile'?'.5s cubic-bezier(.5,0,.8,.4)':'.65s cubic-bezier(.2,.9,.25,1.06)'} ${d}ms,opacity .4s`;e.style.transform=tr;requestAnimationFrame(()=>e.style.opacity=1)}});
+  Object.keys(old).forEach(k=>{if(!keep.has(k)){old[k].style.opacity=0;setTimeout(()=>old[k].remove(),450)}})}
+function build(P){P.innerHTML=`<div class="z" style="top:54px;font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:44px;color:var(--room)">Notes</div><div class="z" style="top:102px;font-size:16px;color:var(--t2)">Three new today, one from Tess.</div><div class="ghost"></div><div class="wall"></div><div class="z lo" style="font-size:15px;line-height:22px;color:var(--t2)">Pinned: <b style="color:var(--t);font-weight:600">Trip packing</b> and <b style="color:var(--t);font-weight:600">Mom’s birthday</b>.<br>Last written an hour ago, the plumber’s number.</div><div class="z" style="left:28px;bottom:30px;height:44px;display:flex;align-items:center"><button class="act">New note</button></div><span class="tess"></span>`}
+const PH=[document.getElementById('p1'),document.getElementById('p2')];PH.forEach(build);
+function all(mode,stag){PH.forEach(P=>{P.querySelector('.lo').style.top=(TOP+H+26)+'px';place(P,mode,stag)});state=mode}
+function cycle(){if(RM){all('wall');return}all('pile',true);setTimeout(()=>all('wall',true),1500)}
+function ready(){return document.fonts?Promise.all([700,800,900].map(w=>document.fonts.load(`${w} 40px '${F.f}'`,'AB'))).then(()=>document.fonts.ready):Promise.resolve()}
+function redo(cyc){ready().then(()=>{capRatio();compute();cyc?cycle():all(state)})}
+function fit(){document.querySelectorAll('.fit').forEach(f=>{f.firstElementChild.style.transform=`scale(${f.clientWidth/402})`})}addEventListener('resize',fit);fit();
+document.getElementById('pile').onclick=()=>{if(!RM)all('pile',true)};document.getElementById('tidy').onclick=()=>all('wall',true);
+document.getElementById('swap').onclick=()=>{start=(start+3)%POOL.length;compute();all(state)};
+document.getElementById('slot').onclick=e=>{const on=e.target.getAttribute('aria-pressed')!=='true';e.target.setAttribute('aria-pressed',on);PH.forEach(P=>P.classList.toggle('show',on))};
+const press=(sel,b)=>document.querySelectorAll(sel).forEach(x=>x.setAttribute('aria-pressed',x===b));
+document.querySelectorAll('.ff').forEach(b=>b.onclick=()=>{F={f:b.dataset.f,s:+b.dataset.s,w:+b.dataset.w,k:+b.dataset.k};press('.ff',b);redo(false)});
+document.querySelectorAll('.bb').forEach(b=>b.onclick=()=>{H=+b.dataset.h;TOP=140+(300-H)/2;press('.bb',b);redo(false)});
+redo(true);
+setInterval(()=>{if(RM||state!=='wall')return;start=(start+1)%POOL.length;compute();all('wall')},6000);
+setInterval(()=>{if(!RM&&state==='wall')cycle()},30000);
+})();
+</script>
