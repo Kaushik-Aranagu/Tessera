@@ -22,6 +22,18 @@ enum HomeApp: String, CaseIterable {
     case training = "Training", kitchen = "Kitchen", money = "Money", notes = "Notes", lists = "Lists"
     case routines = "Routines", tasks = "Tasks"
 
+    /// The ship name Bridge shows (sheet 281): Deck, Galley, Purse, Log, Watch. Tasks keeps a plain name.
+    var shipName: String {
+        switch self {
+        case .training: "Deck"
+        case .kitchen: "Galley"
+        case .money: "Purse"
+        case .notes, .lists: "Log"
+        case .routines: "Watch"
+        case .tasks: "To do"
+        }
+    }
+
     var accent: Color {
         switch self {
         case .training: Theme.Colors.Accent.training

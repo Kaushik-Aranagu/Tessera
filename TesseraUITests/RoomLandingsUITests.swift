@@ -65,4 +65,20 @@ final class RoomLandingsUITests: SimulatorOnlyTestCase {
         sleep(2)
         XCTAssertFalse(cook.exists && cook.isHittable, "the word opened its page over the landing")
     }
+
+    /// Bridge (QA on sheet 283): no "N of M" counter anywhere on Home, and the dial wears ship names.
+    func testBridgeHasNoCountersAndShipNames() {
+        let app = launch([])
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH[c] %@", "Settings")).firstMatch
+            .waitForExistence(timeout: 30), "Bridge is up")
+        sleep(3)
+        let labels = app.staticTexts.allElementsBoundByIndex.map(\.label)
+            + app.buttons.allElementsBoundByIndex.map(\.label)
+        let counter = try? NSRegularExpression(pattern: "\\b\\d+ of \\d+\\b")
+        let hits = labels.filter { label in
+            counter?.firstMatch(in: label, range: NSRange(label.startIndex..., in: label)) != nil
+        }
+        XCTAssertTrue(hits.isEmpty, "counters on Bridge: \(hits)")
+        XCTAssertFalse(labels.contains { $0.hasPrefix("Training") || $0.hasPrefix("Kitchen") }, "old names: \(labels)")
+    }
 }

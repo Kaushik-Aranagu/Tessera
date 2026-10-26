@@ -110,11 +110,15 @@ struct HomeMosaicPage: View {
                     .mosaicShield()
                 if HomeMosaic.appsListIsOn {
                     AppsListSlot(onHold: { wheelHeld = $0 }, onGlance: { playGlance($0) })
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                         .mosaicShield()
                 }
             }
             .padding(.horizontal, HomeMosaic.gutter)
             .padding(.top, HomeMosaic.moodsIsOn ? 16 : Theme.Spacing.s)
+            // Home at AX5 (QA): Bridge's sections are fixed slots, so their type stops growing at AX2 and every line
+            // cuts on whole words; nothing overlaps.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .padding(.bottom, Theme.Spacing.xl)
             .coordinateSpace(.named(Self.space))
         }
@@ -125,6 +129,7 @@ struct HomeMosaicPage: View {
         // right-aligned rows (the date row is short and begins well to its right).
         .overlay(alignment: .topLeading) {
             SettingsEntry { link = .settings }
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 .padding(.leading, HomeMosaic.gutter - 8)
                 .padding(.top, Self.settingsTop)
         }
@@ -244,6 +249,14 @@ struct HomeMosaicPage: View {
                                     .buttonStyle(InkLabelWordStyle())
                             }
                             .padding(.horizontal, Theme.Spacing.gutter - 8)
+                        }
+                        // Sheet 283: Tess bottom right on every room landing too (306, 776, 96 x 96), not only on
+                        // Bridge; her double tap goes back to Bridge.
+                        .overlay(alignment: .bottomTrailing) {
+                            if LandingSwitch.isOn {
+                                BottomChrome(onSoulDoubleTap: { dismissLink() })
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                            }
                         }
                 }
             }
