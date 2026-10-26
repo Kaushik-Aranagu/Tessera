@@ -92,20 +92,15 @@ struct TrainingDeckFacts: Equatable {
 
 @MainActor
 extension TrainingDeckFacts {
-    static func load(_ model: AppModel, wall: TrainingWallFacts, now: Date = AppClock.now,
-                     dark: Bool = false, calendar: Calendar = .current) -> TrainingDeckFacts
+    /// The board's week: a letter per day, done or not, and (for a done day) the first lift of its first finished,
+    /// non-private workout, so the day's row can open that lift.
+    static func boardDays(_ week: [WeekDay], today: Date, letters: [String], store: ObjectStore,
+                          calendar: Calendar) -> [BoardDay]
     {
-        let store = model.store
         func shown(_ title: String) -> String {
             ObjectPrivacy.routineTitle(title, in: store)
         }
-        let plan = model.plan
-        let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan) ?? 0
-        let week = model.ledger.week(containing: now, plan: plan, now: now,
-                                     sessionsPerWeek: perWeek > 0 ? perWeek : nil, calendar: calendar)
-        let today = TesseraDay(calendar: calendar).today(now)
-        let letters = calendar.veryShortWeekdaySymbols
-        let days = week.enumerated().map { index, slot in
+        return week.enumerated().map { index, slot in
             // The day's first finished, non-private workout names the lift its row opens.
             let lift = slot.done.lazy
                 .filter { shown($0.title) != ObjectPrivacy.routineLabel }
@@ -119,6 +114,22 @@ extension TrainingDeckFacts {
                             done: !slot.done.isEmpty, isToday: slot.day == today,
                             liftID: lift?.id, liftName: lift.map { TrainingWallFacts.lift($0.name) })
         }
+    }
+
+    static func load(_ model: AppModel, wall: TrainingWallFacts, now: Date = AppClock.now,
+                     dark: Bool = false, calendar: Calendar = .current) -> TrainingDeckFacts
+    {
+        let store = model.store
+        func shown(_ title: String) -> String {
+            ObjectPrivacy.routineTitle(title, in: store)
+        }
+        let plan = model.plan
+        let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan) ?? 0
+        let week = model.ledger.week(containing: now, plan: plan, now: now,
+                                     sessionsPerWeek: perWeek > 0 ? perWeek : nil, calendar: calendar)
+        let today = TesseraDay(calendar: calendar).today(now)
+        let letters = calendar.veryShortWeekdaySymbols
+        let days = boardDays(week, today: today, letters: letters, store: store, calendar: calendar)
         let doneDays = days.filter(\.done).count
 
         // Bests from the lifts that have them, newest lifts first.

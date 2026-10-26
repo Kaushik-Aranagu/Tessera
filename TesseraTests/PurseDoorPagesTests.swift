@@ -12,7 +12,7 @@ struct PurseDoorPagesTests {
     private static let categories = [
         PurseCategory(id: "month", name: "This month", indices: [series("you", values: [0, 10])]),
         PurseCategory(id: "kinds", name: "Kinds", indices: [series("lunch", values: [0, 4]),
-                                                          series("coffee", values: [])]),
+                                                            series("coffee", values: [])]),
         PurseCategory(id: "saving", name: "Saving", indices: []),
         PurseCategory(id: "investing", name: "Investing", indices: []),
         PurseCategory(id: "debts", name: "Debts", indices: []),

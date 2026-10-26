@@ -204,7 +204,9 @@ struct DeckActions {
     /// One of the foot's steps, by id.
     func step(_ id: String) {
         defer {
-            if Self.opensWorkout(id), model.isWorkoutPresented { openWorkout?() }
+            if Self.opensWorkout(id), model.isWorkoutPresented {
+                openWorkout?()
+            }
         }
         switch id {
         case "start": start()
@@ -277,8 +279,11 @@ extension DeckRoomContent.Facts {
         // A trained day opens the first lift it did; other days open the week (the log).
         rows["week"] = deck.board.week.map { day in
             let detail = day.isToday ? "Today" : (day.done ? (day.liftName.map { "Trained, \($0)" } ?? "Trained") : "")
-            return ShellRow(id: day.liftID.map { "\(TrainingWallTarget.exercise($0).id)#w\(day.id)" } ?? "week#\(day.id)",
-                            title: day.letter, detail: detail)
+            return ShellRow(
+                id: day.liftID.map { "\(TrainingWallTarget.exercise($0).id)#w\(day.id)" } ?? "week#\(day.id)",
+                title: day.letter,
+                detail: detail
+            )
         }
         rows["library"] = wall.words.filter {
             if case .exercise = TrainingWallTarget(id: $0.id) {

@@ -237,7 +237,8 @@ struct DoorSummary: View {
     /// `label` and `line` are the rows' heights (20 and 24 at the default size; they grow with Dynamic Type so a
     /// line never sits in a box shorter than itself, which is what drew "..." at AX5).
     static func rows(_ door: DialDoor, key: String? = nil, label labelHeight: CGFloat = 20,
-                     line lineHeight: CGFloat = 24) -> [Row] {
+                     line lineHeight: CGFloat = 24) -> [Row]
+    {
         let key = key ?? door.id
         var rows: [Row] = []
         var y: CGFloat = 0
