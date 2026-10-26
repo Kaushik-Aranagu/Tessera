@@ -9,6 +9,7 @@ public enum ObjectPrivacy {
     public static let noteLabel = SecretWords.title
     public static let taskLabel = "Private task"
     public static let memoryLabel = "Private memory"
+    public static let mealLabel = "Private meal"
     /// A recipe has no flag on master; the title rule decides (kitchen-week-one-private-filter PF4, gap hunt G21).
     public static let recipeLabel = "Private recipe"
     /// What a spend reads everywhere but its own page and the Month page (Money amendment 2).
@@ -55,6 +56,18 @@ public enum ObjectPrivacy {
             let body = store.value("body", of: object)?.stringValue ?? ""
             return flagged || object.title == noteLabel || isPrivateText(object.title) || isPrivateText(body)
                 ? noteLabel : nil
+        }
+        if isA(.leftover) || isA(.mealEntry) {
+            // Private by its own words (a doctor's name, a medicine), by its flag, or by what it was made from.
+            // One step out through its links, by title and flag only: a leftover and the meal eaten from it point at
+            // each other, so reading their labels would never end.
+            let near = store.linkedObjects("source", of: object) + store.linkedObjects("leftover", of: object)
+            let far = near.flatMap { store.linkedObjects("source", of: $0) + store.linkedObjects("leftover", of: $0) }
+            let fromPrivate = (near + far).contains {
+                store.value("isPrivate", of: $0) == .bool(true)
+                    || isPrivateRecipeTitle($0.title, lastWeightKg: last)
+            }
+            return flagged || isPrivateTitle(object.title, lastWeightKg: last) || fromPrivate ? mealLabel : nil
         }
         if isA(.tessMemory) {
             let rule = store.value("rule", of: object)?.stringValue ?? ""
@@ -115,7 +128,8 @@ public enum ObjectPrivacy {
             return flagged ? bookLabel : nil
         }
         // A workout or routine (OL01): its own title, its flag, or the routine a workout was made from.
-        // The `flagged` branch is unused here for now: Workout and Routine declare no isPrivate field. Privacy is by words,
+        // The `flagged` branch is unused here for now: Workout and Routine declare no isPrivate field. Privacy is by
+        // words,
         // through the title and the routine link (decided Oct 22).
         if isA(.routine) || isA(.workout) {
             let routine = isA(.workout) ? store.linkedObjects("routine", of: object).first : nil

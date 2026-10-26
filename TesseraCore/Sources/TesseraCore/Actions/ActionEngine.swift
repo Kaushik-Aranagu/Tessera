@@ -36,6 +36,15 @@ public final class ActionEngine {
     /// The zone stamped on each record: the device's zone now (autoupdating, so a flight is seen without a relaunch;
     /// QA Z1), unless a test sets it.
     public var zone: () -> TimeZone = { TimeZone.autoupdatingCurrent }
+    /// The clock actions read when the caller gave no time (the app sets its own, so `-demoTime` and the test world
+    /// hold; Kitchen actions use it for "tomorrow's 4 am" and "this weekday").
+    public var now: () -> Date = { Date.now }
+    /// Gregorian in the engine's zone: the calendar days are read in.
+    public func calendar() -> Calendar {
+        var calendar = Calendar.current
+        calendar.timeZone = zone()
+        return calendar
+    }
 
     // MARK: Performing
 
@@ -44,12 +53,13 @@ public final class ActionEngine {
     public func perform<A: EngineAction>(_ action: A, by actor: Actor,
                                          pending: Bool = false) throws -> Result<A.Output>
     {
-        var transaction = Transaction(store: store, classes: classes)
+        var transaction = Transaction(store: store, classes: classes, now: now(), calendar: calendar())
         let output: A.Output
         do {
             output = try action.apply(&transaction)
         } catch {
             _ = replay(transaction.ops.reversed().map(\.inverse), guarded: false)
+            LeftoverWrites.purgeNumbers(forCreatedIn: transaction.ops, store: store, classes: classes)
             throw error
         }
         let record = OpRecord(
@@ -118,7 +128,10 @@ public final class ActionEngine {
     @discardableResult
     public func discard(_ record: OpRecord) throws -> ReplayOutcome {
         guard record.state == .pending else { throw ActionError.notPending(record.id) }
-        return undo(record)
+        let outcome = undo(record)
+        // A dismissed meal leaves no numbers behind: they sit outside the log, so nothing else would clear them.
+        LeftoverWrites.purgeNumbers(forCreatedIn: record.ops, store: store, classes: classes)
+        return outcome
     }
 
     /// Commits every preview older than the grace period. Call it from a timer or on the next interaction.
