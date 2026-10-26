@@ -116,4 +116,29 @@ final class ShellUITests: SimulatorOnlyTestCase {
         _ = settledState(app, timeout: 2)
         XCTAssertEqual(token(app), first, "The keystone stayed under Reduce Motion too")
     }
+
+    /// Sheet 283 v6: the edge pull never drags the page. A short pull settles back on the door page; a pull past
+    /// 80 pt changes every place in place (the keystone stays the same view).
+    func testAShortPullSettlesBackAndALongPullGoesBack() {
+        let app = launch()
+        XCTAssertTrue(app.staticTexts["Log"].waitForExistence(timeout: 30))
+        sleep(1)
+        let first = token(app)
+        openAllNotes(app)
+        let doorTitle = app.descendants(matching: .any)["shell.doorTitle"]
+        XCTAssertTrue(doorTitle.waitForExistence(timeout: 3))
+        _ = settledState(app)
+
+        let edge = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0.55)).withOffset(CGVector(dx: 6, dy: 0))
+        edge.press(forDuration: 0.05, thenDragTo: edge.withOffset(CGVector(dx: 40, dy: 0)))
+        sleep(1)
+        XCTAssertTrue(state(app).hasPrefix("route log/1/all"), "A short pull settles back on the door page")
+        XCTAssertTrue(doorTitle.exists)
+
+        edge.press(forDuration: 0.05, thenDragTo: edge.withOffset(CGVector(dx: 160, dy: 0)))
+        XCTAssertTrue(app.buttons["Back to Bridge"].waitForExistence(timeout: 3), "A long pull goes back")
+        let after = settledState(app)
+        XCTAssertTrue(after.hasPrefix("route log/0"), after)
+        XCTAssertEqual(token(app), first, "The keystone stayed through the pull")
+    }
 }

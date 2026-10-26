@@ -122,7 +122,7 @@ private struct PlaceRenderer: View {
     private func doorTitle(name: String, line: String, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             FitLine(forms: FitLine.cuts(name), size: 38, color: color, weight: .light)
-                .frame(height: 50, alignment: .leading)
+                .frame(height: 46, alignment: .leading)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("shell.doorTitle")
             FitLine(forms: FitLine.cuts(line), size: 15, color: Theme.Colors.inkSecondary, weight: .medium)

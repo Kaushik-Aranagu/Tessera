@@ -179,8 +179,8 @@ struct ShellMergeTests {
         #expect(ShellLayout.merges[.page] == [.widget, .glyph, .dial, .doorSummary])
     }
 
-    @Test func mergedRectsAreTheUnionOfTheirSources() {
-        #expect(ShellLayout.mergedFrame(.doorTitle) == CGRect(x: 24, y: 106, width: 354, height: 76))
+    @Test func mergedRectsAreTheSheets() {
+        #expect(ShellLayout.mergedFrame(.doorTitle) == CGRect(x: 24, y: 106, width: 354, height: 70))
         // Widget top 412 down through the breath at 760 (it ends at 776, where the foot starts).
         #expect(ShellLayout.mergedFrame(.page) == CGRect(x: 24, y: 412, width: 354, height: 364))
     }
@@ -223,5 +223,73 @@ struct ShellMergeTests {
                 }
             }
         }
+    }
+}
+
+struct ShellBackTests {
+    @Test func aPullPastEightyCommitsAndAShortOneSettlesBack() {
+        #expect(ShellBack.commits(CGSize(width: 81, height: 0)))
+        #expect(!ShellBack.commits(CGSize(width: 79, height: 0)))
+        #expect(!ShellBack.commits(CGSize(width: 140, height: 160)), "a mostly vertical drag is not a back pull")
+    }
+
+    @Test func thePullIsFullAtOneTwentyWithTheSheetsNumbers() {
+        #expect(ShellBack.full == 120)
+        #expect(ShellBack.blur == 2.4)
+        #expect(1 - ShellBack.fade == 0.6)
+        #expect(1 + ShellBack.grow == 1.18)
+        #expect(ShellBack.settle == 0.28)
+    }
+}
+
+struct LayoutModeTests {
+    private let screen = CGRect(x: 0, y: 0, width: 402, height: 874)
+
+    @Test func bubblesNeverLeaveTheScreen() {
+        for room in LayoutRoom.allCases {
+            for level in [LayoutKind.landing, .door] {
+                for bubble in LayoutBubble.all {
+                    #expect(screen.contains(bubble.frame(room: room, level: level)), "\(bubble.key) in \(room.name)")
+                }
+            }
+        }
+    }
+
+    @Test func bridgeFoldsItsMastheadAndHasOneLevel() {
+        #expect(LayoutBubble.place(.title).frame(room: .bridge, level: .landing) == LandingPlace.Masthead.settingsWord)
+        #expect(LayoutBubble.place(.switcher).frame(room: .bridge, level: .landing) == LandingPlace.Masthead
+            .departureBoard)
+        #expect(!LayoutBubble.place(.needs).isShown(room: .bridge, level: .landing))
+        #expect(LayoutBubble.place(.title).frame(room: .log, level: .landing) == LandingPlace.Masthead.title)
+        #expect(!LayoutRoom.bridge.hasDoors)
+        let roomsWithDoors = LayoutRoom.allCases.count(where: \.hasDoors)
+        #expect(roomsWithDoors == LayoutRoom.allCases.count - 1)
+    }
+
+    @Test func theDoorPageMergesIntoTheDoorTitleAndThePage() {
+        for source in [Place.widget, .glyph, .dial, .doorSummary] {
+            #expect(LayoutBubble.place(source).frame(room: .galley, level: .door) == CGRect(
+                x: 24,
+                y: 412,
+                width: 354,
+                height: 364
+            ))
+            #expect(!LayoutBubble.place(source).isShown(room: .galley, level: .door))
+        }
+        #expect(LayoutBubble.place(.needs).frame(room: .log, level: .door) == CGRect(
+            x: 24,
+            y: 106,
+            width: 354,
+            height: 70
+        ))
+        #expect(LayoutBubble.place(.page).isShown(room: .log, level: .door))
+        #expect(!LayoutBubble.place(.page).isShown(room: .log, level: .landing))
+    }
+
+    @Test func emptyPlacesAreKeptAndNamedEmpty() {
+        #expect(LayoutBubble.place(.navWord).holds(room: .bridge, level: .landing) == nil)
+        #expect(LayoutBubble.place(.caption).holds(room: .bridge, level: .landing) == nil)
+        #expect(LayoutBubble.place(.actionWord).holds(room: .deck, level: .landing) == "Start, Log, Rest")
+        #expect(LayoutBubble.breath(.breathBelowWidget).holds(room: .log, level: .landing) == nil)
     }
 }
