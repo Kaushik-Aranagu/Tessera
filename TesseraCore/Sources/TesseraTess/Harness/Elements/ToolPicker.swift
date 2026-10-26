@@ -22,6 +22,8 @@ public enum ToolPicker {
         public var bound: Bound?
         /// The calls the ask named, best first, so the trace can show why.
         public var matched: [String]
+        /// The ask is about how something looks: the frame sends each place's look line.
+        public var looks = false
     }
 
     /// The most tools one ask carries.
@@ -32,6 +34,12 @@ public enum ToolPicker {
     static let boundWords = 6
 
     public static func pick(_ ask: String, frame: TessFrame, agent: AgentSpec? = nil) -> Pick {
+        // A look nudge on one place ("denser", "the dial as a list", "as it was"): no model.
+        let looks = LookWords.isAbout(ask)
+        if looks, let bound = lookBound(ask, frame: frame) {
+            let plan = frame.room == "purse" ? device(bound.call) : forced(bound.call)
+            return Pick(tools: [bound.call], plan: plan, bound: bound, matched: [bound.call], looks: true)
+        }
         let offered = frame.calls
         let words = TessFrame.words(ask)
         let pointed = TessFrame.points(ask)
@@ -43,8 +51,10 @@ public enum ToolPicker {
 
         // One call named ("open this" names two, but only one of them takes a thing), every input filled from the
         // frame: run it, no model.
-        let aboutThing = matched.filter { entry in entry.call.inputs.contains { $0.source == .referent } }
-        let single: (place: ElementPlace, call: ElementCall)? = matched.count == 1 ? matched.first
+        // The look tools bind only above, from the look words.
+        let bindable = matched.filter { !LookWords.calls.contains($0.call.name) }
+        let aboutThing = bindable.filter { entry in entry.call.inputs.contains { $0.source == .referent } }
+        let single: (place: ElementPlace, call: ElementCall)? = bindable.count == 1 ? bindable.first
             : pointed && aboutThing.count == 1 ? aboutThing.first : nil
         if let entry = single, words.count <= boundWords,
            let bound = bind(entry.call, at: entry.place, frame: frame, pointed: pointed)
@@ -68,7 +78,13 @@ public enum ToolPicker {
             tools.append(name)
         }
         let plan = matched.isEmpty ? RungPlan.pick(ask) : small(ask)
-        return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name })
+        if looks {
+            // About a look: the two look tools lead, whatever else the screen offers.
+            let lookTools = ["reshape", "restoreLook"].filter { !deviceOnly.contains($0) }
+            tools = lookTools + tools.filter { !LookWords.calls.contains($0) }
+        }
+        return Pick(tools: Array(tools.prefix(maxTools)), plan: plan, bound: nil, matched: matched.map { $0.call.name },
+                    looks: looks)
     }
 
     /// Fills a call's inputs from the frame. Nil when a required input needs his words, or "this" means nothing.

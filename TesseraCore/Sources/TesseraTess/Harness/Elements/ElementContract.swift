@@ -1,4 +1,5 @@
 import Foundation
+import TesseraCore
 
 // Tess AI-first (docs/ai/harness/elements.md): every place of the standing shell (sheet 283) says what it shows and
 // what can be done to it, as data. The shell renders it, Tess reads it. A room's `RoomContent` attaches one
@@ -92,6 +93,9 @@ public enum Reaction: String, Sendable, Equatable {
     case lines
     /// Nothing on screen moves; Tess's own line says it.
     case tessLine
+    /// The place takes its new look: a new form collapses to a point and forms again, a trait eases to its new value
+    /// (docs/ai/harness/element-looks.md).
+    case reshape
 }
 
 /// Who may run a call. Money actions are never offered to Claude (his standing rule): they run on the phone's own
@@ -148,15 +152,59 @@ public struct ElementMeaning: Sendable, Equatable {
     /// The item in focus: the widget's shown item, the dial's focused door, the switcher's word.
     public var focus: Int?
     public var calls: [ElementCall]
+    /// Whether he can see it now: the shell's `liveScope` (docs/design/live-visibility.md), not whether it is resident.
+    /// "This" only points at a shown place, and a call on one that isn't shown writes the data and skips the move.
+    public var isShown: Bool
+    /// How it is drawn and how it could be, so Tess can reshape it.
+    public var look: LookInfo?
 
-    public init(place: ElementPlace, items: [ElementItem] = [], focus: Int? = nil, calls: [ElementCall] = []) {
+    public init(place: ElementPlace, items: [ElementItem] = [], focus: Int? = nil, calls: [ElementCall] = [],
+                isShown: Bool = true, look: LookInfo? = nil)
+    {
         self.place = place
         self.items = items
         self.focus = focus
         self.calls = calls
+        self.isShown = isShown
+        self.look = look
     }
 
     public var focused: ElementItem? {
         focus.flatMap { items.indices.contains($0) ? items[$0] : nil }
+    }
+}
+
+/// A place's look as Tess reads it: what it shows, the form it takes, the forms it could take for that content, and
+/// each trait's word now. The room fills it from `ElementLooks.look`, the same call the shell draws from.
+public struct LookInfo: Sendable, Equatable {
+    public var scope: LookScope
+    public var shape: ContentShape
+    public var form: String
+    /// The studio's form for this place.
+    public var designed: String
+    /// Every form that could draw this content here, the studio's first.
+    public var forms: [String]
+    public var traits: [String: String]
+    public var isChanged: Bool
+
+    public init(scope: LookScope, shape: ContentShape, form: String, designed: String, forms: [String],
+                traits: [String: String], isChanged: Bool)
+    {
+        self.scope = scope
+        self.shape = shape
+        self.form = form
+        self.designed = designed
+        self.forms = forms
+        self.traits = traits
+        self.isChanged = isChanged
+    }
+
+    /// One line for Tess: "dial: drawn as reel; could be index; motion designed, size designed."
+    public var line: String {
+        let others = forms.filter { $0 != form }
+        let could = others.isEmpty ? "" : "; could be \(others.joined(separator: ", "))"
+        let tuned = traits.keys.sorted().map { "\($0) \(traits[$0] ?? "")" }.joined(separator: ", ")
+        let mark = isChanged ? " (reshaped)" : ""
+        return "\(scope.place): drawn as \(form)\(mark)\(could); \(tuned)."
     }
 }

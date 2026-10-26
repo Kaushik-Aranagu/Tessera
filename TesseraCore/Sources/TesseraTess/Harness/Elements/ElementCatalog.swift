@@ -1,4 +1,5 @@
 import Foundation
+import TesseraCore
 
 /// The calls each room's places offer, as data (docs/ai/harness/elements.md has the same tables in words). A room's
 /// `RoomContent` takes its place's calls from here and fills the items and focus from its own facts, so what Tess may
@@ -107,6 +108,18 @@ public enum ElementCatalog {
     /// Tools named here that `TessTools` does not have yet. None: every call wraps an engine action that exists.
     public static let proposed: Set<String> = []
 
+    /// Looks (element-looks.md): every place with forms can be reshaped or put back as drawn. They bind only through
+    /// `ToolPicker.lookBound`; the phrases here are what the trace shows.
+    static let reshape = ElementCall("reshape", phrases: lookPhrases(restore: false) + ["reshape"],
+                                     inputs: [CallInput("place", from: .asked, required: false)], reaction: .reshape)
+    static let restoreLook = ElementCall("restoreLook", phrases: lookPhrases(restore: true),
+                                         inputs: [CallInput("place", from: .asked, required: false)],
+                                         reaction: .reshape)
+
+    static func lookPhrases(restore: Bool) -> [String] {
+        LookWords.nudges.filter { ($0.change == .restore) == restore }.map { $0.phrase }
+    }
+
     /// Shell calls: they change what is shown and write nothing.
     public static let shellCalls: Set<String> = ["openItem", "openDoor", "showWindow", "goBack"]
 
@@ -167,6 +180,14 @@ public enum ElementCatalog {
         for call in shared[place] ?? [] where !out.contains(where: { $0.name == call.name }) {
             out.append(call)
         }
+        if ElementForms.all.contains(where: { $0.places.contains(place.rawValue) }) {
+            // The Purse's calls never reach Claude, looks included: a nudge there runs bound or on the phone's model.
+            out += [reshape, restoreLook].map { call in
+                var look = call
+                look.reach = room == "purse" ? .deviceOnly : .anyRung
+                return look
+            }
+        }
         return out
     }
 
@@ -174,6 +195,7 @@ public enum ElementCatalog {
     public static var everyCall: [ElementCall] {
         var out: [ElementCall] = []
         let lists: [[ElementCall]] = rooms.values.flatMap(\.values) + Array(shared.values)
+            + [[reshape, restoreLook]]
         for call in lists.flatMap(\.self) where !out.contains(where: { $0.name == call.name }) {
             out.append(call)
         }

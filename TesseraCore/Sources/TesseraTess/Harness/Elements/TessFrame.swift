@@ -53,16 +53,27 @@ public struct TessFrame: Sendable, Equatable {
 
     /// What "this" means: a touch in the last 30 s, then the widget's item, the page's focused row, the keystone's
     /// focused part, the dial's door. Nil when nothing is in focus.
+    /// Only a place he can see counts (docs/design/live-visibility.md): a page kept resident behind another is not
+    /// "this".
     public func referent() -> (place: ElementPlace, item: ElementItem)? {
-        if let touch, now.timeIntervalSince(touch.at) <= Self.touchWindow, touch.at <= now {
+        if let touch, now.timeIntervalSince(touch.at) <= Self.touchWindow, touch.at <= now,
+           element(touch.place)?.isShown ?? true
+        {
             return (touch.place, touch.item)
         }
         for place in Self.focusOrder {
-            if let item = element(place)?.focused {
+            if let shown = element(place), shown.isShown, let item = shown.focused {
                 return (place, item)
             }
         }
         return nil
+    }
+
+    /// The move the shell plays when a call lands on a place, or nil when he can't see the place: the data is
+    /// already written and the Undo clock runs, so the place arrives changed (live-visibility.md, compatibility).
+    public func reaction(of call: ElementCall, on place: ElementPlace) -> Reaction? {
+        guard element(place)?.isShown ?? false else { return nil }
+        return call.reaction
     }
 
     /// Whether the ask points at something on screen ("move it", "this is done").
@@ -108,7 +119,8 @@ public struct TessFrame: Sendable, Equatable {
 
     /// The frame as context: where he is (always safe), what "this" is, and what each place shows by shown name.
     /// A name or fact keeps its own taint, so the Door drops money, body and calendar under strict.
-    public func fragments(itemsPerPlace: Int = 5) -> [PackFragment] {
+    /// With `looks`, each shown place's look line follows (what it's drawn as, what it could be, its traits).
+    public func fragments(itemsPerPlace: Int = 5, looks: Bool = false) -> [PackFragment] {
         let level = level == 0 ? "the landing" : "the \(door ?? "door") page"
         var fragments = [PackFragment("Where: \(room.capitalized), \(level)\(window.map { ", \($0)" } ?? "").")]
         if let referent = referent() {
@@ -118,6 +130,13 @@ public struct TessFrame: Sendable, Equatable {
         for element in elements where !element.items.isEmpty {
             for item in element.items.prefix(itemsPerPlace) {
                 fragments.append(PackFragment("\(element.place.rawValue): \(line(item))", taint: taint(of: item)))
+            }
+        }
+        if looks {
+            for element in elements where element.isShown {
+                if let look = element.look {
+                    fragments.append(PackFragment("Look of \(look.line)"))
+                }
             }
         }
         return fragments

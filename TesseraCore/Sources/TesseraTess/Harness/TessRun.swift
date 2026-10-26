@@ -242,7 +242,7 @@ public final class TessRun {
         let store = engine.store, classes = engine.classes
         if let frame {
             // Where he is, by shown names; each fragment keeps its own taint for the Door.
-            fragments.append(contentsOf: frame.fragments())
+            fragments.append(contentsOf: frame.fragments(looks: pick?.looks ?? false))
         } else if let screen, !screen.isEmpty {
             fragments.append(PackFragment("On screen: \(screen)"))
         }

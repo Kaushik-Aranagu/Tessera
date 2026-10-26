@@ -98,6 +98,7 @@ reads as the screen's own life, not an overlay:
 | navigate | Places change content in place (v5): a door page opens, or an item. |
 | lines | The needs or door summary change in the room's own way (types on, chalks on, prints down). |
 | tessLine | Nothing moves; her line says it ("Rain alert set for 7 pm."). |
+| reshape | The place takes its new look: a new form collapses to a point and forms again, a trait eases in place (`element-looks.md`). |
 
 Tess's soul does `handOff(target:)` to the reacting place's frame first (tess-soul.md), then the place plays. A
 bound call that the engine refuses moves nothing: her line says why.
