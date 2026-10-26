@@ -56,10 +56,14 @@ struct RootView: View {
                         .padding(.trailing, Theme.Spacing.gutter - 8)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                 }
-                BottomChrome(onSoulDoubleTap: goHome)
-                    .environment(\.zoomNamespace, zoom)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                // On Home, with the mosaic's own Tess layer up, she is that layer (one Tess in the corner, not two).
+                if !(model.homeTessLayerActive && model.path.isEmpty) {
+                    BottomChrome(onSoulDoubleTap: goHome)
+                        .environment(\.zoomNamespace, zoom)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                }
 
+                DoorwayOverlay(doorway: model.doorway)
                 PaintFlood(isOn: flooding, origin: CGPoint(x: proxy.size.width - 46, y: proxy.size.height - 30))
                     .ignoresSafeArea()
             }

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The looks, recut</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/looks-recut.md (Design item 43). Kaushik, first review of the build (16 Oct, 11:58 PM PT): pure black is good, the other colours could be better. Obsidian stays as is. The other four looks are recut on the Home frame from item 41: each at rest (only the context line in colour) and in a moment (a task struck, the fleck's bloom on the day label, Tess's line with UNDO). Under each, the new tokens with the old ones beneath. ?play records the flood from one look to the next, out of the soul. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px;margin-bottom:28px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:var(--ground);color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.nw{white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.ctx{color:var(--ctx)}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:4px;line-height:24px;max-width:2100px}
+.sw{width:390px;height:150px;position:relative}
+.sw .c{position:absolute;top:22px;width:40px;height:40px;border-radius:2px}
+.sw .o{position:absolute;top:66px;width:40px;height:12px;border-radius:2px}
+.sw .k{position:absolute;top:0;font-size:12px;font-weight:700;letter-spacing:.06em;color:rgba(23,20,31,.55);width:46px}
+.sw .v{position:absolute;top:84px;font-size:11px;font-weight:600;letter-spacing:.02em;color:rgba(23,20,31,.7);width:46px}
+.sw .w{position:absolute;top:98px;font-size:11px;font-weight:500;letter-spacing:.02em;color:rgba(23,20,31,.4);width:46px}
+.sw .line{position:absolute;left:0;top:124px;font-size:14px;font-weight:600;color:rgba(23,20,31,.7);white-space:nowrap}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30}
+</style>
+</head>
+<body>
+<div class="row" id="r1"></div>
+<div class="row" id="r2"></div>
+<div class="row" id="r3"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const rgb=h=>{const n=parseInt(h.slice(1),16);return `${n>>16},${(n>>8)&255},${n&255}`};
+// The five looks, recut. `old` holds the tokens as built (master Looks.swift) where they change.
+const LOOKS={
+ Porcelain:{dark:0,field:'bloom',ground:'#FFFFFF',raised:'#F6F5F9',ink:'#121016',context:'#5A3DAF',tess:'#2450D8',live:'#E2432A',liveInk:'#C23A22',now:'#F0A500',health:'#12936A',
+  old:{raised:'#F5F4F8',ink:'#17141F',context:'#6A4C9C'},line:'Pure white. Colour pools only behind what matters now.',idea:'WHITE, AND THE SOUL’S OWN PIGMENTS AS THE POPS'},
+ Plein:{dark:0,field:'flat',ground:'#F3EDE2',raised:'#FBF7F0',ink:'#26201E',context:'#7D4E6E',tess:'#2A4FA8',live:'#B9452B',liveInk:'#A33A22',now:'#C98E1B',health:'#5E8F5A',
+  old:{ground:'#F2ECE3',raised:'#FAF6EF',ink:'#2B2440',context:'#7A5C8E',tess:'#2A64A0',live:'#C8452F',liveInk:'#B83C28',now:'#E0B341',health:'#6E9E6A'},line:'Warm paper, flat, with earth pigments.',idea:'WARM PAPER AND EARTH: INDIGO, RUST, OCHRE. NO WASHES, NO GRAIN'},
+ Celadon:{dark:0,field:'glaze',ground:'#E0EAE2',raised:'#FFFFFF',ink:'#0C1E19',context:'#3A6584',tess:'#2C59BE',live:'#D94B2E',liveInk:'#B23A1F',now:'#CF9418',health:'#1F8B6A',
+  old:{ground:'#E7EEE9',ink:'#0F231D',context:'#456680',live:'#D8462C',liveInk:'#B8361E',now:'#D99A1C',health:'#23866A'},line:'Jade glaze that pools darker at the foot of the page.',idea:'JADE GLAZE AND SLATE: COOL GROUND, WARM MOMENTS'},
+ Obsidian:{dark:1,field:'glow',ground:'#000000',raised:'#0F0E12',ink:'#F5F2EC',context:'#B7A6E0',tess:'#86B4FF',live:'#FF5B3A',liveInk:'#FF7A5C',now:'#FFC23D',health:'#3FD49A',
+  old:{},line:'True black. Colour turns to light and glows.',idea:'STAYS AS IS'},
+ Lacquer:{dark:1,field:'lacquer',ground:'#130A0D',raised:'#221317',ink:'#F3E8D6',context:'#D9A6B8',tess:'#8FB5FF',live:'#F0583A',liveInk:'#FF7C5E',now:'#E9B64A',health:'#86C9A0',
+  old:{ground:'#140F1B',raised:'#221A2D',ink:'#F1E7D6',context:'#C3A6DE',tess:'#8DB2FF',live:'#F06A4C',liveInk:'#FF8466',now:'#E8B54A',health:'#8FCB9E'},line:'Black-red lacquer with one slow sheen that moves as you tilt.',idea:'URUSHI: BLACK-RED, IVORY INK, GOLD AND VERMILION'}};
+const ORDER=['Porcelain','Plein','Celadon','Obsidian','Lacquer'];
+const vars=L=>`--ground:${L.ground};--raised:${L.raised};--ink:${rgb(L.ink)};--s2:${L.dark?.72:.66};--ctx:${L.context};--tess:${L.tess};--live:${L.live};--liveInk:${L.liveInk};--now:${L.now};--health:${L.health}`;
+const soul=(L,glow)=>{const P=[L.tess,L.live,L.now],f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;
+ return `<div class="soul" style="${glow?`transform:scale(1.1);filter:drop-shadow(0 0 ${L.dark?8:4}px ${L.tess}${L.dark?'8C':'55'})`:''}">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33);mix-blend-mode:${L.dark?'screen':'multiply'}"></i>`).join('')}</div>`};
+// The field: what the ground itself does in each look. Never a texture.
+const field=L=>{switch(L.field){
+ case 'lacquer':return `<div class="abs" style="inset:0;background:linear-gradient(180deg,rgba(5,2,3,0) 55%,rgba(5,2,3,.75) 100%)"></div><div class="abs" style="left:-120px;right:-120px;top:300px;height:150px;transform:rotate(-24deg);background:linear-gradient(180deg,rgba(255,241,224,0),rgba(255,241,224,.05) 50%,rgba(255,241,224,0));filter:blur(14px)"></div>`;
+ case 'glaze':return `<div class="abs" style="left:0;right:0;bottom:0;height:260px;background:linear-gradient(180deg,rgba(12,30,25,0),rgba(12,30,25,.06))"></div>`;
+ default:return ''}};
+// The bloom behind the moment: pigment pooling on light looks, emitted light on dark ones.
+const bloom=(L,x,y,w,h,pig)=>L.dark?`<div class="abs" style="left:${x-w/2}px;top:${y-h/2}px;width:${w}px;height:${h}px;border-radius:50%;background:radial-gradient(closest-side,${pig}29,${pig}00);filter:blur(18px);mix-blend-mode:screen"></div>`
+ :`<div class="abs" style="left:${x-w/2}px;top:${y-h/2}px;width:${w}px;height:${h}px;border-radius:48% 52% 55% 45%/52% 48% 52% 48%;background:radial-gradient(closest-side,${pig}1F 0%,${pig}12 55%,${pig}00 100%);filter:blur(6px)"></div>`;
+const TABS=['REVIEW','TODAY','TRAINING','KITCHEN'],TX=[22,118,199,300];
+const tabs=on=>`<div class="abs lbl" style="left:0;right:0;top:78px;height:24px;letter-spacing:.06em;z-index:13">${TABS.map((t,i)=>`<span class="abs" style="left:${TX[i]}px;top:0;color:rgba(var(--ink),${t===on?1:.38})">${t}</span>`).join('')}<svg class="abs" style="left:${TX[TABS.indexOf(on)]}px;top:24px;overflow:visible" width="80" height="12"><path d="${lens(on.length*10.6,1.2)}" fill="rgb(var(--ink))"/></svg></div>`;
+const startKey=(word,fill,y=296)=>`<div class="abs lbl" style="left:22px;top:${y}px">${word}<svg style="position:absolute;left:0;top:22px;overflow:visible" width="${word.length*10.8}" height="12"><path d="${lens(word.length*10.8-6,1.6)}" fill="rgba(var(--ink),.22)"/><path d="${lens((word.length*10.8-6)*fill,1.6)}" fill="rgb(var(--ink))"/></svg></div>`;
+const next=(y0,rows)=>`<div class="abs t34" style="left:22px;top:${y0}px">Next</div>${rows.map(([t,h,wrap,struck],k,a)=>{const y=y0+52+a.slice(0,k).reduce((s,r)=>s+(r[2]?74:46),0);return `<div class="abs b" style="left:22px;top:${y}px;width:${h?280:346}px;${struck?'color:rgba(var(--ink),.45)':''}">${t}${struck?`<svg class="abs" style="left:-2px;top:13px;overflow:visible" width="${t.length*9.6+4}" height="8"><path d="${lens(t.length*9.6+4,1.4)}" fill="var(--ctx)" opacity=".9"/></svg>`:''}</div>${h?`<div class="abs lbl s2" style="right:22px;top:${y+4}px">${h}</div>`:''}`}).join('')}`;
+const rest=L=>{const night=L.dark;return `${field(L)}${tabs('TODAY')}
+ <div class="abs b nw" style="left:22px;top:138px">Thursday ${night?'night':'afternoon'}</div>
+ <div class="abs b ctx nw" style="left:22px;top:186px">${night?'tonight':'today'}</div>
+ <div class="abs hero" style="left:22px;top:220px">Push A</div>
+ ${startKey('START PUSH A',1)}
+ ${next(388,night?[['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1],['Call mom','tomorrow']]:[['Call the bank','15:00'],['Groceries at Trader Joe’s','17:30'],['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1]])}${soul(L)}`};
+const moment=L=>{const night=L.dark;return `${field(L)}${bloom(L,84,150,110,54,L.context)}${tabs('TODAY')}
+ <div class="abs b nw" style="left:22px;top:138px">Thursday ${night?'night':'afternoon'}</div>
+ <div class="abs b ctx nw" style="left:22px;top:186px">${night?'this evening':'this afternoon'}</div>
+ <div class="abs hero" style="left:22px;top:220px">Push A done</div>
+ ${next(326,[['Stretch and mobility','20:30',0,1],['Read Designing Data-Intensive Applications','21:10',1],['Call mom','tomorrow']])}
+ ${bloom(L,286,779,200,96,L.tess)}<div class="tl">Stretch and mobility done.<span class="u">UNDO</span></div>${soul(L,1)}`};
+const phone=(c,L,inner,id='')=>`<div><div class="cap">${c}</div><div class="ph" ${id?`id="${id}"`:''} style="${vars(L)}">${inner}</div></div>`;
+const KEYS=['ground','raised','ink','context','tess','live','now','health'];
+const swatches=L=>`<div class="sw">${KEYS.map((k,i)=>{const x=i*48;const o=L.old[k];return `<div class="k" style="left:${x}px">${({ground:'GRND',raised:'RAIS',ink:'INK',context:'CTX',tess:'TESS',live:'LIVE',now:'NOW',health:'HLTH'})[k]}</div><div class="c" style="left:${x}px;background:${L[k]};${k==='ground'||k==='raised'?'box-shadow:inset 0 0 0 1px rgba(23,20,31,.12)':''}"></div>${o?`<div class="o" style="left:${x}px;background:${o};box-shadow:inset 0 0 0 1px rgba(23,20,31,.12)"></div>`:''}<div class="v" style="left:${x}px">${L[k].slice(1)}</div>${o?`<div class="w" style="left:${x}px">was ${o.slice(1)}</div>`:''}`}).join('')}<div class="line">“${L.line}”</div></div>`;
+
+if(PLAY){
+ $('r1').innerHTML=phone('PORCELAIN',LOOKS.Porcelain,`<div id="under" class="abs" style="inset:0"></div><div id="over" class="abs" style="inset:0"></div>`,'P');
+ $('r2').remove();$('r3').remove();
+}else{
+ $('r1').innerHTML=ORDER.map(n=>phone(`${n.toUpperCase()} · ${LOOKS[n].idea}`,LOOKS[n],rest(LOOKS[n]))).join('');
+ $('r2').innerHTML=ORDER.map(n=>phone(`${n.toUpperCase()} · A MOMENT: STRUCK, THE BLOOM, TESS`,LOOKS[n],moment(LOOKS[n]))).join('');
+ $('r3').innerHTML=ORDER.map(n=>`<div>${swatches(LOOKS[n])}</div>`).join('');
+ $('note').innerHTML='FIVE LOOKS ON THE HOME FRAME FROM ITEM 41, AT REST (ONLY THE CONTEXT LINE IN COLOUR) AND IN A MOMENT (A TASK STRUCK IN CONTEXT, THE FLECK’S BLOOM ON THE DAY NAME, TESS IN HER COBALT WITH UNDO). OBSIDIAN STAYS AS IS. THE OTHER FOUR ARE RECUT: EACH GETS ONE IDEA, A DENSER INK, A CLEARER CONTEXT COLOUR AND PIGMENTS THAT BELONG TO ITS MATERIAL. PLEIN LOSES ITS WASHES AND GRAIN. UNDER EACH, THE NEW TOKENS WITH THE OLD ONES BENEATH (“WAS”). TEXT ONLY EVER SITS IN INK, CONTEXT, TESS OR LIVEINK; EVERY ONE OF THOSE CLEARS 4.5:1 ON ITS GROUND.';
+}
+
+async function play(){
+ const under=$('under'),over=$('over'),P=$('P'),cap=document.querySelector('.cap');
+ const ring=['Porcelain','Plein','Celadon','Obsidian','Lacquer','Porcelain'];
+ const wrap=(L,inner)=>`<div class="abs" style="inset:0;background:${L.ground};color:rgb(${rgb(L.ink)});${vars(L)}">${inner}</div>`;
+ under.innerHTML=wrap(LOOKS.Porcelain,rest(LOOKS.Porcelain));
+ await sleep(1200);
+ for(let i=1;i<ring.length;i++){const L=LOOKS[ring[i]];
+  cap.textContent=`${ring[i].toUpperCase()} · THE NEW GROUND FLOODS IN FROM THE SOUL`;
+  over.innerHTML=wrap(L,rest(L));over.style.clipPath='circle(0px at 346px 779px)';
+  over.animate([{clipPath:'circle(0px at 346px 779px)'},{clipPath:'circle(900px at 346px 779px)'}],{duration:700,easing:H,fill:'forwards'});
+  await sleep(760);under.innerHTML=over.innerHTML;over.innerHTML='';over.style.clipPath='';
+  await sleep(1500)}
+ await sleep(600);document.body.dataset.done='1';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';if(!PLAY){document.body.dataset.done='1';return}play()});
+</script>
+</body>
+</html>

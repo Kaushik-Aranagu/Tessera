@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>What Tess knows</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M4 slice 11 (docs/design/m4-steers.md, What Tess knows). Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#D6E2F0 0%,rgba(214,226,240,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F4F0EC}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.grp{position:absolute;left:22px;font-size:34px;font-weight:500;letter-spacing:-.035em}
+.fact{position:absolute;left:22px;right:22px}
+.fact .in{position:relative}
+.fact .s{font-size:21px;line-height:1.3}
+.fact .s b{font-weight:600}
+.fact .src{font-size:18px;color:var(--ctx);margin-top:2px}
+.fact .trk{position:absolute;right:0;top:4px;opacity:0;color:var(--ink)}
+.px{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--cobalt);filter:blur(.6px);z-index:9}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:20;pointer-events:none}
+.d{position:absolute;width:76px;height:70px;margin:-35px 0 0 -38px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.8) 0%,rgba(var(--c),.6) 40%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(4px)}
+.r{--c:200,69,47;--x:-14px;--y:-8px}.b{--c:46,109,164;--x:14px;--y:-8px}.y{--c:224,179,65;--x:0px;--y:13px}
+@keyframes idle{0%,100%{transform:translate(var(--x),calc(var(--y) - 6px)) scale(.78)}50%{transform:translate(var(--x),calc(var(--y) + 6px)) scale(.86)}}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+  <div class="abs lbl" style="left:22px;top:58px">SETTINGS › TESS</div>
+  <div class="abs" style="left:20px;right:30px;top:90px;font-size:44px;font-weight:500;line-height:1.02;letter-spacing:-.035em">What I know<br>about you</div>
+  <div id="facts"></div>
+  <div class="abs" style="left:14px;right:14px;bottom:18px;height:74px;border-radius:20px;background:rgba(250,246,239,.62);backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 .5px rgba(43,36,64,.2),0 10px 28px rgba(43,36,64,.12);z-index:6">
+    <span id="tess" class="abs" style="left:78px;top:24px;font-size:21px;color:#8A7F96">Ask Tess…</span>
+    <span id="undo" class="abs" style="right:20px;top:24px;font-size:21px;font-weight:600;color:var(--verm);opacity:0">Undo</span>
+  </div>
+  <div id="soul" class="abs" style="left:50px;top:789px;width:0;height:0;transform:scale(.5);z-index:7">
+    <span class="d r" style="animation:idle 7s ease-in-out infinite"></span><span class="d b" style="animation:idle 8.5s ease-in-out -3s infinite"></span><span class="d y" style="animation:idle 10s ease-in-out -6s infinite"></span>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(ease(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+async function tessSay(text, colour = '#2E6DA4') {
+  const t = $('tess'); await anim(t, [{ opacity: 1 }, { opacity: 0 }], { duration: 120 });
+  t.textContent = text; t.style.color = colour;
+  anim(t, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: HOUSE });
+}
+const ITEMS = [
+  { g: 'Training', y: 200 },
+  { s: 'You train <b>Monday, Wednesday, Friday</b>.', src: 'from 6 workouts', y: 248 },
+  { s: 'Your <b>left shoulder</b> gets sore on overhead pressing.', src: 'you said so on Oct 9', y: 318 },
+  { s: 'You like <b>2:30</b> of rest on big lifts.', src: 'from 40 sets', y: 412 },
+  { g: 'Kitchen', y: 490 },
+  { s: 'You cook for <b>2</b>.', src: 'from 5 recipes', y: 538 },
+  { s: 'You buy milk at <b>the corner shop</b>.', src: 'from 3 shops', y: 600 }
+];
+for (const it of ITEMS) {
+  const e = document.createElement('div');
+  if (it.g) { e.className = 'grp'; e.textContent = it.g; }
+  else { e.className = 'fact'; e.innerHTML = `<div class="trk lbl">FORGET</div><div class="in"><div class="s">${it.s}</div><div class="src">${it.src}</div></div>`; }
+  $('facts').appendChild(e); it.el = e;
+}
+// flow layout from measured heights: groups take 48, facts their height + 16
+function layout(animate) {
+  let y = 200;
+  for (const it of ITEMS) {
+    const from = it.y; it.y = y; it.el.style.top = y + 'px';
+    if (animate && from !== undefined && from !== y) it.el.animate([{ transform: `translateY(${from - y}px)` }, { transform: 'none' }], { duration: 420, easing: HOUSE });
+    y += it.g ? 48 : it.el.offsetHeight + (ITEMS[ITEMS.indexOf(it) + 1]?.g ? 30 : 16);
+  }
+}
+for (const it of ITEMS) delete it.y;
+
+// forgetting: the sentence breaks into cobalt pigment that drifts down into the soul
+async function dissolve(el) {
+  const r = rel(el.querySelector('.s').getBoundingClientRect());
+  const soul = { x: 50, y: 789 };
+  const N = 70; const ps = [];
+  for (let i = 0; i < N; i++) {
+    const p = document.createElement('span'); p.className = 'px';
+    const x = r.left + Math.random() * r.width, y = r.top + 4 + Math.random() * (r.height - 8);
+    Object.assign(p.style, { left: x + 'px', top: y + 'px', opacity: 0 }); $('ph').appendChild(p);
+    const mx = (x + soul.x) / 2 + (Math.random() - .5) * 120, my = y + (soul.y - y) * .35 + (Math.random() - .5) * 40;
+    p.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: .9 },
+      { transform: `translate(${mx - x}px,${my - y}px) scale(1.4)`, opacity: .7, offset: .45 },
+      { transform: `translate(${soul.x - x}px,${soul.y - y}px) scale(.4)`, opacity: 0 }
+    ], { duration: 1100 + Math.random() * 400, delay: (x - r.left) / r.width * 260, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' });
+    ps.push(p);
+  }
+  anim(el, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(5px)' }], { duration: 300 });
+  await sleep(1300);
+  // the soul takes one slow breath as the pigment arrives
+  anim($('soul'), [{ transform: 'scale(.5)' }, { transform: 'scale(.6)' }, { transform: 'scale(.5)' }], { duration: 1400, easing: 'ease-in-out' });
+  await sleep(400); ps.forEach((p) => p.remove());
+}
+async function revealText(el, html) {
+  // glyph reveal: 30ms per glyph, under a cobalt wash that fades over 2.8s
+  el.innerHTML = '';
+  const wash = document.createElement('span'); Object.assign(wash.style, { position: 'absolute', left: '-10px', right: '-6px', top: '-4px', bottom: '-4px', borderRadius: '40% 60% 50% 50% / 60% 40% 60% 40%', background: 'rgba(46,109,164,.22)', filter: 'blur(5px)' });
+  el.parentNode.style.position = 'relative'; el.parentNode.prepend(wash);
+  wash.animate([{ opacity: .9 }, { opacity: 0 }], { duration: 2800, delay: 400, fill: 'forwards' });
+  const tmp = document.createElement('div'); tmp.innerHTML = html;
+  const spans = [];
+  for (const node of tmp.childNodes) {
+    const bold = node.nodeName === 'B'; const txt = node.textContent;
+    for (const ch of txt) { const s = document.createElement('span'); s.textContent = ch; s.style.opacity = 0; if (bold) s.style.fontWeight = 600; el.appendChild(s); spans.push(s); }
+  }
+  spans.forEach((s, i) => s.animate([{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 160, delay: i * 30, fill: 'forwards' }));
+  await sleep(spans.length * 30 + 200);
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; layout(false); await sleep(400); document.body.dataset.start = '1';
+  ITEMS.forEach((it, k) => it.el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 100 + k * 40, easing: 'ease-out', fill: 'backwards' }));
+  await sleep(1600);
+
+  // swipe left on the shoulder fact: FORGET rises in the track
+  const f = ITEMS[2]; const fr = rel(f.el.getBoundingClientRect());
+  const inner = f.el.querySelector('.in'), trk = f.el.querySelector('.trk');
+  await fingerOn(300, fr.top + 24);
+  await tween(480, (t) => { const d = -170 * t; fingerAt(300 + d, fr.top + 24); const dd = d > -140 ? d : -140 + (d + 140) * .35; inner.style.transform = `translateX(${dd}px)`; trk.style.opacity = Math.max(0, Math.min(1, (-dd - 100) / 20)); });
+  fingerOff();
+  anim(trk, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  inner.style.transform = 'none';
+  await dissolve(inner);
+  // the rest close up
+  f.el.remove(); ITEMS.splice(2, 1); layout(true);
+  tessSay('Forgotten.');
+  anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
+  await sleep(1600);
+
+  // a new fact arrives: glyph reveal with the cobalt wash
+  anim($('undo'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  const NEW = 'You warm up with <b>two</b> lighter sets.';
+  const nf = document.createElement('div'); nf.className = 'fact';
+  nf.innerHTML = `<div class="in"><div class="s" style="visibility:hidden">${NEW}</div><div class="src" style="opacity:0">from today’s workout</div></div>`;
+  $('facts').appendChild(nf);
+  ITEMS.splice(3, 0, { s: NEW, el: nf }); layout(true);
+  await sleep(300);
+  tessSay('I noticed something.');
+  const ns = nf.querySelector('.s'); ns.innerHTML = ''; ns.style.visibility = 'visible';
+  await revealText(ns, NEW);
+  anim(nf.querySelector('.src'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  await sleep(2600);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

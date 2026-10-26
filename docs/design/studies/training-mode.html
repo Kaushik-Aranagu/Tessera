@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Training in workout mode</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/training-mode.md (Design item 44). Kaushik's first review (16 Oct, 11:58 PM PT): the Training page should open on today's plan in workout mode, the Start workout underline should change, and he wants routines and fixed days. Obsidian. ?play records: the page at rest, tap START (the ink line lifts into the seam and the first exercise wakes), then the routine editor's DAYS line (tap Mon, the week unfolds, tap Thu). Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.72;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;--now:#FFC23D;--health:#3FD49A;background:#000;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),.38)}
+.b{font-size:21px;line-height:28px}
+.nw{white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.num{font-size:80px;font-weight:300;letter-spacing:-.04em;line-height:80px;font-variant-numeric:tabular-nums}
+.ctx{color:var(--ctx)}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;transition:opacity .15s}
+.seg{position:absolute;top:0;height:3px;border-radius:0 0 2px 2px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const soul=()=>{const P=['#86B4FF','#FF5B3A','#FFC23D'],f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;
+ return `<div class="soul">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+const TABS=['REVIEW','TODAY','TRAINING','KITCHEN'],TX=[22,118,199,300];
+const tabs=on=>`<div class="abs lbl" style="left:0;right:0;top:78px;height:24px;letter-spacing:.06em;z-index:13">${TABS.map((t,i)=>`<span class="abs" style="left:${TX[i]}px;top:0;color:rgba(var(--ink),${t===on?1:.38})">${t}</span>`).join('')}<svg class="abs" style="left:${TX[TABS.indexOf(on)]}px;top:24px;overflow:visible" width="90" height="12"><path d="${lens(on.length*10.6,1.2)}" fill="rgb(var(--ink))"/></svg></div>`;
+const PLAN=[['Bench press',4,'82.5 × 8'],['Overhead press',3,'47.5 × 8'],['Incline dumbbell',3,'28 × 10'],['Lateral raise',3,'10 × 12'],['Triceps pushdown',3,'30 × 12']];
+// The strip at the very top: one segment per exercise, its length its sets. Unlit at rest, lit as the workout runs.
+const strip=(lit=-1,part=0)=>{const total=PLAN.reduce((s,p)=>s+p[1],0);let x=22;return `<div class="abs" style="left:0;right:0;top:0;height:3px;z-index:14">${PLAN.map((p,i)=>{const w=(346-4*(PLAN.length-1))*p[1]/total;const h=`<div class="seg" style="left:${x}px;width:${w}px;background:rgba(var(--ink),${i<lit?.9:.14})"></div>${i===lit?`<div class="seg" style="left:${x}px;width:${w*part}px;background:var(--live);box-shadow:0 0 6px var(--live)"></div>`:''}`;x+=w+4;return h}).join('')}</div>`};
+// A set stroke: logged (a 9pt lens in its pigment), current (a dashed 2pt guide), future (a dashed guide at 22%).
+const stroke=(x,y,kind,pig)=>kind==='done'?`<svg class="abs" style="left:${x}px;top:${y}px" width="40" height="12"><path d="${lens(40,3.2)}" fill="${pig}"/></svg>`
+ :`<svg class="abs" style="left:${x}px;top:${y}px" width="40" height="12"><path d="M1 6 H39" stroke="rgba(var(--ink),${kind==='current'?.9:.22})" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/></svg>`;
+const PIG=['var(--live)','var(--tess)','var(--now)','var(--health)'];
+// The plan in workout mode: each exercise as its own lane row, the sets as strokes under the name, the target beside.
+const planRows=(y0,done={})=>PLAN.map(([n,sets,t],i)=>{const y=y0+72*i;const d=done[i]||0;return `<div class="abs b" style="left:22px;top:${y}px;font-weight:500">${n}</div><div class="abs lbl s2" style="right:22px;top:${y+6}px;font-weight:600">${t}</div>${Array.from({length:sets},(_,k)=>stroke(22+48*k,y+34,k<d?'done':(k===d&&i===0&&done.live?'current':'future'),PIG[k%4])).join('')}`}).join('');
+const startKey=(word,fill,y,wet)=>`<div class="abs lbl" id="sk" style="left:22px;top:${y}px">${word}<svg id="skl" style="position:absolute;left:0;top:22px;overflow:visible" width="${word.length*10.8}" height="12"><path d="${lens(word.length*10.8-6,1.6)}" fill="rgba(var(--ink),.22)"/><path d="${lens((word.length*10.8-6)*fill,1.6)}" fill="${wet?'var(--live)':'rgb(var(--ink))'}"/></svg></div>`;
+const before=()=>`${tabs('TRAINING')}
+ <div class="abs b ctx nw" style="left:22px;top:138px">next in Push Pull Legs</div><div class="abs lbl" style="right:22px;top:142px">PLAN →</div>
+ <div class="abs hero" style="left:22px;top:176px;font-size:48px">Push Day A</div>
+ ${PLAN.map(([n,s,t],i)=>`<div class="abs b" style="left:22px;top:${270+50*i}px">${n}</div><div class="abs b s2" style="right:22px;top:${270+50*i}px;font-size:18px">${s} × ${t.split(' × ')[1]}</div>`).join('')}
+ <div class="abs" style="left:22px;top:600px;font-size:21px;font-weight:600;color:var(--live)">Start workout</div><div class="abs" style="left:15px;top:613px;width:150px;height:16px;background:var(--live);opacity:.85;border-radius:2px 8px 3px 9px/9px 3px 8px 2px;transform:rotate(-.6deg)"></div>
+ <div class="abs b" style="left:22px;top:660px;color:var(--tess);width:300px">Bench Press is ready for 82.5 today.</div>`;
+const rest=()=>`${strip()}${tabs('TRAINING')}
+ <div class="abs b ctx nw" style="left:22px;top:138px">today, 5 exercises, about 55 min</div>
+ <div class="abs t44" style="left:22px;top:172px">Push A</div>
+ ${startKey('START PUSH A',1,236)}
+ ${planRows(300)}
+ <div class="abs lbl s2" style="left:22px;top:688px">PUSH PULL LEGS, ROLLS ON</div><div class="abs lbl" style="right:22px;top:688px">ROUTINES</div>`;
+const lifting=()=>`${strip(0,0)}${tabs('TRAINING')}
+ <div class="abs b ctx nw" style="left:22px;top:138px">today, 5 exercises, about 55 min</div>
+ <div class="abs t44" style="left:22px;top:172px">Push A</div>
+ <div class="abs lbl" style="left:22px;top:236px;opacity:.35">START PUSH A</div>
+ <svg class="abs" style="left:22px;top:120px;overflow:visible" width="140" height="12"><path d="${lens(96,1.6)}" fill="var(--live)" style="filter:drop-shadow(0 0 5px var(--live))"/></svg>
+ ${planRows(300)}`;
+const live=()=>`${strip(0,.5)}
+ <div class="abs b s2 nw" style="left:22px;top:56px">Push A, 18:42</div><div class="abs lbl s2" style="right:22px;top:60px">1 / 5</div>
+ <div class="abs t44" style="left:22px;top:92px">Bench press</div><div class="abs t44 s3" style="left:300px;top:92px;width:120px;overflow:hidden">Overhead</div>
+ ${stroke(22,176,'done',PIG[0])}${stroke(70,176,'done',PIG[1])}${stroke(118,176,'current')}${stroke(166,176,'future')}
+ <div class="abs b s2 nw" style="left:22px;top:210px">set 3 of 4, last was 82.5 × 8</div>
+ <div class="abs num" style="left:22px;top:270px">82.5</div><div class="abs b s2" style="left:196px;top:318px">kg</div>
+ <div class="abs lbl s2" style="left:22px;top:362px">31.25 KG A SIDE</div>
+ <div class="abs" style="right:40px;top:262px;font-size:48px;font-weight:300;line-height:52px;text-align:center">8</div><div class="abs b s3" style="right:52px;top:236px">7</div><div class="abs b s3" style="right:52px;top:316px">9</div><div class="abs s2" style="right:44px;top:350px;font-size:18px">reps</div>
+ ${Array.from({length:29},(_,i)=>{const x=22+i*12.2;const maj=i%4===0;return `<div class="abs" style="left:${x}px;top:${maj?462:470}px;width:${maj?1.5:1}px;height:${maj?30:14}px;background:rgba(245,242,236,${maj?.9:.38})"></div>`}).join('')}
+ <div class="abs" style="left:194px;top:456px;width:2px;height:44px;background:var(--live);box-shadow:0 0 10px var(--live)"></div>
+ <div class="abs lbl" style="left:22px;top:560px">LOG 82.5 × 8<svg style="position:absolute;left:0;top:22px;overflow:visible" width="140" height="12"><path d="${lens(128,1.6)}" fill="rgb(var(--ink))"/></svg></div>`;
+const routines=()=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ TRAINING</div>
+ <div class="abs t44" style="left:22px;top:84px">Routines</div>
+ <div class="abs b ctx" style="left:22px;top:150px">Push Pull Legs, rolls on</div>
+ ${[['Push A','5 exercises, about 55 min'],['Pull A','5 exercises, about 50 min'],['Legs A','6 exercises, about 60 min'],['Push B','5 exercises, about 55 min'],['Pull B','5 exercises, about 50 min'],['Legs B','6 exercises, about 60 min']].map(([n,d],i)=>`<div class="abs b" style="left:22px;top:${210+62*i}px;font-weight:500">${n}</div><div class="abs s2" style="left:22px;top:${236+62*i}px;font-size:16px;line-height:22px">${d}</div>`).join('')}
+ <div class="abs b" style="left:22px;top:596px;color:rgba(var(--ink),.7)">Make a routine</div>
+ <div class="abs lbl s2" style="left:22px;top:668px">ROLLS ON</div><div class="abs lbl s3" style="left:118px;top:668px">FIXED DAYS</div>`;
+const editor=(open)=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ ROUTINES</div>
+ <div class="abs t44" style="left:22px;top:84px">Push A</div>
+ <div class="abs b ctx" style="left:22px;top:150px">5 exercises, about 55 min</div>
+ <div class="abs lbl s2" style="left:22px;top:196px">DAYS</div>
+ ${open?`<div class="abs" id="days" style="left:22px;top:222px;font-size:21px;line-height:28px;font-weight:600">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>`<span class="abs" style="left:${i*49}px;top:0;color:rgba(var(--ink),${d==='Mon'||d==='Thu'?1:.38});${d==='Thu'?'color:var(--tess)':''}">${d}</span>`).join('')}</div>`
+ :`<div class="abs b" style="left:22px;top:222px;font-weight:600">Mon, Thu</div>`}
+ <div class="abs lbl s2" style="left:22px;top:${open?290:280}px">EXERCISES</div>
+ ${PLAN.map(([n,s,t],i)=>`<div class="abs b" style="left:22px;top:${(open?318:308)+62*i}px;font-weight:500">${n}</div><div class="abs s2" style="left:22px;top:${(open?344:334)+62*i}px;font-size:16px;line-height:22px"><b style="color:rgb(var(--ink))">${s}</b> × 6–8 · <b style="color:rgb(var(--ink))">${t.split(' × ')[0]} kg</b></div>`).join('')}
+ <div class="abs b" style="left:22px;top:${open?640:630}px;color:rgba(var(--ink),.7)">Add an exercise</div>`;
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph" ${opt.id?`id="${opt.id}"`:''}>${inner}${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${soul()}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+
+if(PLAY){
+ $('row').innerHTML=phone('TRAINING · TODAY’S PLAN, IN WORKOUT MODE',`<div id="stage" class="abs" style="inset:0"></div>`,{id:'P',fing:1});
+}else{
+ $('row').innerHTML=
+  phone('BEFORE · THE BUILD: ROWS, A PAINT STROKE',before())+
+  phone('AFTER · TODAY’S PLAN IN WORKOUT MODE',rest(),{line:'Bench press is ready for 82.5 today.'})+
+  phone('TAP START: THE LINE LIFTS INTO THE SEAM',lifting())+
+  phone('LIVE: THE SEAM LIT, THE FIRST SET WAITING',live(),{line:'Set 2 seated. Rest 90.'})+
+  phone('ROUTINES: MAKE ONE, ROLLS ON OR FIXED DAYS',routines())+
+  phone('A ROUTINE: ITS DAYS, ITS EXERCISES',editor(true),{line:'Push A on Mondays and Thursdays.',undo:1});
+ $('note').innerHTML='THE TRAINING PAGE IS TODAY’S WORKOUT AT REST: THE SAME STRIP AT THE TOP (ONE SEGMENT PER EXERCISE, UNLIT), THE SAME SET STROKES (DASHED GUIDES), THE SAME TARGETS. THE START MARK IS A LABEL WORD WITH THE INK LINE, NOT A PAINT STROKE. TAP IT AND THE LINE LIFTS OFF THE WORD, TRAVELS UP INTO THE STRIP AND LIGHTS THE FIRST SEGMENT IN VERMILION: THE WORKOUT IS RUNNING. LIVE MODE RISES WITH THE FIRST EXERCISE MATCHED. ROUTINES IS ONE TAP FROM THE PLAN LINE: MAKE ONE BY WRITING ITS NAME, THEN ADD EXERCISES. THE PLAN EITHER ROLLS ON (TODAY) OR RUNS ON FIXED DAYS, WHERE EACH ROUTINE NAMES ITS WEEKDAYS AS VALUE WORDS.';
+}
+
+async function play(){
+ const st=$('stage'),P=$('P'),f=$('fing'),cap=document.querySelector('.cap');
+ st.innerHTML=rest()+`<div class="tl">Bench press is ready for 82.5 today.</div>`;
+ await sleep(1400);
+ // 1 · tap START: the ink line leaves the word, arcs up into the strip and lights the first segment; the word fades;
+ // the first set's guide wakes; the Tess line changes.
+ cap.textContent='TAP START: THE LINE LIFTS INTO THE SEAM';
+ f.style.left='70px';f.style.top='244px';f.style.opacity=1;await sleep(180);f.style.opacity=0;
+ const sk=$('sk'),skl=$('skl');
+ skl.animate([{transform:'translateY(0)',filter:'drop-shadow(0 0 0 rgba(0,0,0,0))'},{transform:'translateY(-234px) scaleX(.78)',filter:'drop-shadow(0 0 6px #FF5B3A)'}],{duration:520,easing:H,fill:'forwards'});
+ skl.lastElementChild.animate([{fill:'rgb(245,242,236)'},{fill:'#FF5B3A'}],{duration:300,fill:'forwards'});
+ sk.firstChild.parentElement.animate([{color:'rgba(245,242,236,1)'},{color:'rgba(245,242,236,.35)'}],{duration:400,fill:'forwards'});
+ await sleep(520);
+ st.insertAdjacentHTML('beforeend',strip(0,0));const segs=[...st.querySelectorAll('.seg')];skl.style.opacity=0;
+ const first=segs[1];first.animate([{width:'0px'},{width:'18px'}],{duration:260,easing:SET,fill:'forwards'});
+ // the first set's guide wakes: dashed at 22% → 90%, breathing
+ const g=st.querySelectorAll('svg path[stroke-dasharray]')[0];g.animate([{stroke:'rgba(245,242,236,.22)'},{stroke:'rgba(245,242,236,.9)'}],{duration:400,fill:'forwards'});
+ const tl=st.querySelector('.tl');tl.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});await sleep(220);tl.textContent='Push A running. Bench press first.';tl.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});
+ sk.getAnimations().forEach(x=>x.cancel());sk.querySelector('svg')?.remove();sk.textContent='PAUSE';sk.style.opacity=1;sk.insertAdjacentHTML('beforeend',`<svg style="position:absolute;left:0;top:22px;overflow:visible" width="60" height="12"><path d="${lens(54,1.6)}" fill="rgb(245,242,236)"/></svg>`);
+ await sleep(900);
+ // 2 · live mode rises: the page's first exercise becomes the lane; the rest of the plan sinks away
+ cap.textContent='LIVE MODE RISES ON THE FIRST EXERCISE';
+ const L=document.createElement('div');L.className='abs';L.style.cssText='inset:0;background:#000;opacity:0;transform:translateY(60px)';L.innerHTML=live()+`<div class="tl">Push A running. Bench press first.</div>`+soul();
+ P.appendChild(L);L.animate([{opacity:0,transform:'translateY(60px)'},{opacity:1,transform:'translateY(0)'}],{duration:480,easing:H,fill:'forwards'});
+ st.animate([{transform:'scale(1)',opacity:1},{transform:'scale(.96)',opacity:0}],{duration:420,easing:H,fill:'forwards'});
+ await sleep(2000);
+ // 3 · the routine's days: open the editor, tap Mon, the week unfolds, tap Thu
+ cap.textContent='A ROUTINE’S DAYS: TAP, THE WEEK UNFOLDS, PICK';
+ const E=document.createElement('div');E.className='abs';E.style.cssText='inset:0;background:#000;opacity:0';E.innerHTML=editor(false).replace('Mon, Thu','rolls on')+soul();
+ P.appendChild(E);E.animate([{opacity:0},{opacity:1}],{duration:400,fill:'forwards'});await sleep(1000);
+ f.style.left='60px';f.style.top='236px';f.style.opacity=1;await sleep(180);f.style.opacity=0;
+ const dayLine=E.querySelector('.b[style*="top:222px"]');dayLine.innerHTML=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>`<span class="abs" data-d="${d}" style="left:${i*49}px;top:0;color:rgba(245,242,236,.38);opacity:0">${d}</span>`).join('');
+ const ds=[...dayLine.querySelectorAll('span')];ds.forEach((s,i)=>s.animate([{opacity:0,transform:'translateX(-8px)'},{opacity:1,transform:'translateX(0)'}],{duration:260,delay:i*40,easing:H,fill:'forwards'}));
+ // the rows below make room
+ [...E.querySelectorAll('.abs')].filter(el=>{const t=parseInt(el.style.top);return t>=280&&t<700&&!el.classList.contains('soul')}).forEach(el=>el.animate([{transform:'translateY(0)'},{transform:'translateY(10px)'}],{duration:320,easing:H,fill:'forwards'}));
+ await sleep(700);
+ const pick=async(d)=>{const s=ds.find(x=>x.dataset.d===d);const r=s.getBoundingClientRect(),pr=P.getBoundingClientRect(),sc=document.body.classList.contains('x2')?2:1;
+  f.style.left=((r.left-pr.left)/sc+14)+'px';f.style.top=((r.top-pr.top)/sc+14)+'px';f.style.opacity=1;await sleep(160);f.style.opacity=0;
+  s.animate([{color:'rgba(245,242,236,.38)',transform:'scale(1)'},{color:'#86B4FF',transform:'scale(1.08)'},{color:'#86B4FF',transform:'scale(1)'}],{duration:320,easing:SET,fill:'forwards'});
+  await sleep(1400);s.animate([{color:'#86B4FF'},{color:'rgba(245,242,236,1)'}],{duration:900,easing:H,fill:'forwards'})};
+ await pick('Mon');
+ E.insertAdjacentHTML('beforeend',`<div class="tl" id="etl">Push A on Mondays.<span class="u">UNDO</span></div>`);
+ await pick('Thu');$('etl').innerHTML='Push A on Mondays and Thursdays.<span class="u">UNDO</span>';
+ await sleep(1800);
+ document.body.dataset.done='1';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';if(!PLAY){document.body.dataset.done='1';return}play()});
+</script>
+</body>
+</html>

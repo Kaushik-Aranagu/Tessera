@@ -186,12 +186,7 @@ private struct RoutinesRail: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 16).onEnded { value in
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                turn(value.translation.width < 0 ? kind.next : kind.previous)
-            }
-        )
+        .pageSwipe { next in turn(next ? kind.next : kind.previous) }
         .accessibilityLabel("Kind, \(kind.rawValue)")
         .accessibilityHint("Changes which routines show")
         .accessibilityAdjustableAction { direction in

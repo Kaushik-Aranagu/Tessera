@@ -286,12 +286,10 @@ struct StartSwipeRow<Content: View>: View {
     @State private var pull: CGFloat = 0
     /// A sideways drag or a hold owns the touch: the row doesn't also open on the lift.
     @State private var handled = false
-    @State private var armed = false
-    @State private var cue = HapticCue()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static var arm: CGFloat {
-        90
+        CGFloat(GestureTuning.armDistance)
     }
 
     var body: some View {
@@ -312,38 +310,27 @@ struct StartSwipeRow<Content: View>: View {
             .buttonStyle(HandleButtonStyle())
             .offset(x: pull)
         }
-        .simultaneousGesture(swipe)
+        .rowSwipe(.leading, arm: Self.arm, onEvent: swiped)
         .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
             hold()
             onDetail()
         })
-        .tesseraFeedback(cue)
     }
 
-    private var swipe: some Gesture {
-        DragGesture(minimumDistance: 20)
-            .onChanged { value in
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                handled = true
-                // Right only; left stays put.
-                pull = max(value.translation.width, 0)
-                if pull >= Self.arm, !armed {
-                    armed = true
-                    cue.play(.selection)
-                } else if pull < Self.arm {
-                    armed = false
-                }
-            }
-            .onEnded { _ in
-                let started = pull >= Self.arm
-                armed = false
-                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { pull = 0 }
-                if started {
-                    onStart()
-                }
-                // After the button has seen the lift, a tap opens the row again.
-                release()
-            }
+    /// Right only; left stays put.
+    private func swiped(_ event: RowSwipeEvent) {
+        switch event {
+        case let .pulled(value):
+            handled = true
+            pull = max(value, 0)
+        case .committed:
+            onStart()
+        case .ended:
+            withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { pull = 0 }
+            // After the button has seen the lift, a tap opens the row again.
+            release()
+        case .cancelled, .armed, .disarmed: break
+        }
     }
 
     private func hold() {

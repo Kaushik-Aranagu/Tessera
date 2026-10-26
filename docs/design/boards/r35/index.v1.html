@@ -1,0 +1,94 @@
+<title>Mosaic Scene Gallery</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300;400&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --training:#C4472A;--kitchen:#A8701F;--routines:#A4505F;--lists:#5E6B1F;--notes:#5B3FB8;--money:#3F7A62;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E0E10;--phone:#151517;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#EE6A4C;--kitchen:#E0A458;--routines:#D79AA6;--lists:#B5BE7A;--notes:#B9A9E0;--money:#8DBFA7;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#0E0E10;--phone:#151517;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#EE6A4C;--kitchen:#E0A458;--routines:#D79AA6;--lists:#B5BE7A;--notes:#B9A9E0;--money:#8DBFA7;color-scheme:dark}
+:root[data-look="black"]{--ground:#000000;--phone:#000000;--edge:#1E1E21;--ink:#F4F1EC;--ink2:#A3A09B;--ink3:#6E6B67;color-scheme:dark}
+:root[data-look="white"]{--ground:#FFFFFF;--phone:#FFFFFF;--edge:#E2E2E2;--ink:#121212;--ink2:#54514D;--ink3:#86827C}
+body{background:var(--phone);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.top{max-width:1100px;margin:0 auto 28px;display:flex;flex-direction:column;gap:12px}
+h1{font-weight:500;font-size:clamp(34px,6vw,52px);letter-spacing:-.03em;line-height:1.05;margin:0}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:64ch}.lab{color:var(--ink3);font-size:15px;margin:0}
+.looks{display:flex;flex-wrap:wrap;gap:4px 18px}.looks button{all:unset;cursor:pointer;color:var(--ink2);padding:3px 0}
+.looks button[aria-pressed="true"]{color:var(--ink);text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px}
+.grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:36px 28px}
+figure{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+figure canvas{width:248px;max-width:100%;aspect-ratio:248/150;height:auto}
+figcaption b{font-weight:600}figcaption span{display:block;color:var(--ink3);font-size:15px}
+.notes{max-width:1100px;margin:40px auto 0;display:flex;flex-direction:column;gap:14px;max-width:68ch}
+.notes p{margin:0}
+</style>
+<div class="top">
+  <p class="lab">Round 214, Oct 23</p>
+  <h1>The mosaic's gallery</h1>
+  <p class="sub">Scenes instead of stripes. Each one is alive in a small way and blends into the page at its edge. Tess picks one for the hour, the weather and the kind of place you are in.</p>
+  <div class="looks" id="looks"><button data-l="black">Black</button><button data-l="paper">Warm paper</button><button data-l="white">White</button><button data-l="system" aria-pressed="true">As the phone</button></div>
+</div>
+<div class="grid" id="grid"></div>
+<div class="notes">
+  <p><b>How Tess picks.</b> On the phone only: the hour (dawn, day, golden hour, night), today's weather, and the kind of place you are in, coast, city, mountains, desert, woods or plains, read once from a coarse location and never stored, sent or paired with anything of yours. A city is never named; it is just "a city". With no location she follows the hour and the weather.</p>
+  <p><b>Never still, never loud.</b> Every scene has one small life: windows lighting, waves rolling in, a ripple on the lake, fireflies, heat shimmer, raindrops sliding, stars turning, the sun clearing the furrows. The one-thing signs and moments still borrow pixels from whichever scene is showing.</p>
+  <p><b>More later.</b> The gallery grows: you can ask Tess for a different scene, and later she can make new ones from the same pieces.</p>
+</div>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cs=()=>getComputedStyle(document.documentElement);const hex=h=>{h=h.trim().replace('#','');return[0,2,4].map(k=>parseInt(h.slice(k,k+2),16))};
+const mix=(a,b,t)=>a.map((v,k)=>v+(b[k]-v)*t);const clamp=x=>Math.max(0,Math.min(1,x));
+const B4=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]].map(r=>r.map(v=>(v+.5)/16));
+const H=(a,b)=>{const s=Math.sin(a*127.1+b*311.7)*43758.5453;return s-Math.floor(s)};
+const vn=(x,s)=>{const i=Math.floor(x),f=x-i,u=f*f*(3-2*f);return H(i,s)*(1-u)+H(i+1,s)*u};
+const C=62,R=37;const sky=(i,top,bot)=>mix(top,bot,i/R);
+const S=[
+ {n:'City at dusk',d:'Windows light up one by one',f:(i,j,t)=>{const h=Math.floor(10+vn(j/3.2,1)*9+(H(Math.floor(j/4),2)>.7?5:0));const base=R-h;
+   if(i<base){const c=sky(i,[64,58,110],[236,140,96]);return (H(i,j)>.995&&i<12)?[250,240,220]:c}
+   const w=(j%4!==0)&&(i%3!==0)&&i>base+1;const on=w&&H(i,j*3)>.55&&((t*.4+H(j,i)*9)%9>2.5);return on?[246,206,120]:mix([40,36,62],[60,50,80],(i-base)/h)}},
+ {n:'Beach',d:'Waves roll in and slide back',f:(i,j,t)=>{const hz=15;if(i<hz){const d=Math.hypot(j-44,i-hz+2);if(d<4)return[252,226,160];return sky(i,[150,196,232],[250,214,180])}
+   const sh=26+Math.round(2*Math.sin(t*.9+j*.08));if(i<sh){const wv=Math.sin(j*.35-t*1.6+i*1.2)>.86;return wv?[236,246,250]:mix([58,126,170],[110,176,196],(i-hz)/(sh-hz))}
+   if(i===sh)return[244,248,250];return mix([232,206,160],[214,182,136],(i-sh)/(R-sh))}},
+ {n:'Mountains and lake',d:'A slow ripple crosses the water',f:(i,j,t)=>{const lake=24;const r1=8+vn(j/7,3)*10,r2=13+vn(j/5,4)*8;
+   const sk=k=>sky(k,[120,150,200],[230,210,200]);
+   const at=k=>{if(k>R-1-r1+0-(R-1-lake)&&false)return 0;const y=k;if(lake-y<r1*0+0)return 0;return y};
+   if(i<lake){if(i>lake-r2)return mix([70,90,120],[90,110,140],(i-(lake-r2))/r2);if(i>lake-r1-6&&i>lake-r1*1.6)return[130,146,176];if((lake-i)<r1+4&&(lake-i)>r2)return[150,164,192];return sk(i)}
+   const m=2*lake-i;const rip=Math.sin(j*.5-t*1.4+i)*.5+.5;let c=m>=0?(m>lake-r2?[70,90,120]:(lake-m)<r1+4&&(lake-m)>r2?[150,164,192]:sk(Math.max(0,m))):[150,170,200];return mix(mix(c,[60,90,130],.35),[230,236,245],rip>.93?.5:0)}},
+ {n:'Woods',d:'Fireflies drift between the trees',f:(i,j,t)=>{let c=sky(i,[40,60,70],[150,170,130]);
+   for(const [s,dark,base] of [[5,[60,90,80],30],[3,[34,60,50],34],[7,[20,40,34],37]]){const x=((j+s*3)%s);const cx=j-x+s/2,hgt=12+H(Math.floor(j/s),s)*14;const top=base-hgt;
+     if(i>top&&i<base&&Math.abs(j-cx)<(i-top)/hgt*s*.7)c=dark;else if(i>=base-1)c=dark}
+   const fx=Math.round(31+20*Math.sin(t*.3+Math.floor(j/9))),fy=Math.round(20+6*Math.sin(t*.5+j));if(!RM&&H(Math.floor(j/9),Math.floor(t))>.5&&Math.abs(j%9-4)<1&&i===fy%R)return[220,240,140];return c}},
+ {n:'Desert',d:'Heat shimmers over the dunes',f:(i,j,t)=>{const sh=RM?0:Math.sin(i*.9+t*3)*.6;const jj=j+sh*(i>20?1:0);
+   const d1=20+4*Math.sin(jj*.12),d2=26+3*Math.sin(jj*.2+2),d3=31+2*Math.sin(jj*.3+4);
+   if(i>d3)return[214,150,96];if(i>d2)return[230,172,112];if(i>d1)return[240,196,134];const sd=Math.hypot(j-14,i-8);if(sd<3.5)return[255,236,190];return sky(i,[120,170,220],[246,214,170])}},
+ {n:'Rain on the window',d:'Drops gather and slide down',f:(i,j,t)=>{let c=mix([70,84,104],[110,122,140],vn(j/6+i/14,9));const lane=j%5===0;
+   if(lane){const sp=.6+H(j,1)*1.2,y=((t*sp*8+H(j,2)*40)%(R+8))-4;if(i>y-5&&i<y)return mix(c,[200,214,230],(i-y+5)/5*.8);if(Math.abs(i-y)<1)return[226,234,244]}
+   if(H(i,j)>.985)return[180,196,214];return c}},
+ {n:'Night sky',d:'Stars turn slowly over the hill',f:(i,j,t)=>{const hill=29+Math.round(3*Math.sin(j*.09+1)+vn(j/4,7)*2);if(i>=hill)return[22,26,34];
+   const md=Math.hypot(j-48,i-8);if(md<3.2)return[236,232,214];if(md<4.2)return[70,74,110];
+   const a=t*.03,x=(j-31)*Math.cos(a)-(i-40)*Math.sin(a),y=(j-31)*Math.sin(a)+(i-40)*Math.cos(a);const st=H(Math.round(x),Math.round(y));
+   if(st>.975){const tw=.5+.5*Math.sin(t*3+st*90);return mix([40,46,86],[250,246,230],RM?.8:tw)}return sky(i,[16,20,48],[52,58,104])}},
+ {n:'Fields at sunrise',d:'The sun clears the furrows',f:(i,j,t)=>{const hz=14,su=RM?9:hz-((t*.6)%12);const sd=Math.hypot(j-31,i-su);
+   if(i<hz){if(sd<4)return[255,214,140];return mix(sky(i,[140,170,214],[252,196,150]),[255,214,160],clamp(1-sd/20)*.5)}
+   const k=(j-31)/((i-hz)+1.5);const row=Math.floor(k*3+100)%2;return mix(row?[120,150,70]:[150,170,86],[90,110,60],(i-hz)/(R-hz))}}];
+const grid=document.getElementById('grid');const cvs=S.map(s=>{const f=document.createElement('figure');f.innerHTML=`<canvas role="img" aria-label="${s.n}"></canvas><figcaption><b>${s.n}</b><span>${s.d}</span></figcaption>`;grid.appendChild(f);const c=f.querySelector('canvas');const d=devicePixelRatio||1;c.width=248*d;c.height=150*d;return c});
+function look(){const r=document.documentElement;return r.dataset.look||(hex(cs().getPropertyValue('--phone'))[0]<80?'dark':'paper')}
+function frame(now){const t=now/1000,pg=hex(cs().getPropertyValue('--phone')),lk=look(),d=devicePixelRatio||1;
+  cvs.forEach((c,n)=>{const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,248,150);
+    for(let i=0;i<R;i++)for(let j=0;j<C;j++){const qx=Math.max(0,Math.max(9-j,j-(C-10))),qy=Math.max(0,Math.max(7-i,i-(R-8)));const dd=Math.cbrt(qx**3+qy**3);const u=clamp((9-dd)/9),l=Math.floor((u*u*(3-2*u))*16+B4[i&3][j&3])/16;if(l<=0)continue;
+      let c0=S[n].f(i,j,t);if(lk==='black')c0=mix(c0,[20,18,26],.18);else if(lk==='dark')c0=mix(c0,[30,30,40],.3);else if(lk==='white')c0=c0.map(v=>Math.min(255,v*1.02));
+      c0=mix(c0,c0.map(v=>v+16),(H(i+n,j)-.5)*.35);x.fillStyle=`rgb(${mix(pg,c0,l).map(Math.round)})`;x.fillRect(j*4+.4,i*4+.4,3.2,3.2)}});
+  requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+const looks=document.getElementById('looks');looks.onclick=e=>{const b=e.target.closest('button');if(!b)return;const l=b.dataset.l,r=document.documentElement;r.removeAttribute('data-look');r.removeAttribute('data-theme');
+  if(l==='black'){r.dataset.theme='dark';r.dataset.look='black'}else if(l==='white'){r.dataset.theme='light';r.dataset.look='white'}else if(l==='paper')r.dataset.theme='light';looks.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))};
+})();
+</script>

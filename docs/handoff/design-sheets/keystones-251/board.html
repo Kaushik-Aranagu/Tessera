@@ -1,0 +1,313 @@
+<title>Tessera Keystones</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=Outfit:wght@200;300;400&family=Newsreader:ital,wght@1,400&display=swap">
+<style>
+/* Layout: a review board. Each app gets two living scenes, each running in the Home mosaic's slot (354 x 160) on the app's page color.
+   Board tokens around the scenes; the scenes read the 241 palette for the chosen look. */
+:root{--bg:#EFEDE9;--fg:#1D1B1F;--fg2:#5E5A62;--line:rgba(29,27,31,.16);--acc:#8E4A78;
+ --sans:'Figtree',system-ui,sans-serif;--num:'Outfit','Figtree',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121114;--fg:#F1EEE8;--fg2:#A9A4AE;--line:rgba(241,238,232,.18);--acc:#D59AC4;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;padding-block:36px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:52px}
+h1{font-family:var(--num);font-weight:200;font-size:clamp(38px,7vw,64px);line-height:1.03;margin:0;text-wrap:balance}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--fg2);margin:0 0 6px}
+h3{font-size:28px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em}
+p{margin:0 0 10px;max-width:68ch}
+.lede{font-size:19px;color:var(--fg2);max-width:64ch}
+.bar{display:flex;gap:4px 22px;flex-wrap:wrap;align-items:center;margin-top:16px}
+button.w{font:inherit;background:none;border:0;color:var(--fg2);padding:8px 0;min-height:44px;cursor:pointer;border-bottom:2px solid transparent}
+button.w[aria-pressed="true"]{color:var(--fg);border-color:var(--acc)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:0 40px}
+.rule{padding:12px 0;border-top:1px solid var(--line)}
+.rule b{display:block;font-weight:600}
+.rule span{color:var(--fg2);font-size:15px}
+.app>p{color:var(--fg2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,354px),1fr));gap:36px 32px;margin-top:16px}
+.tile{min-width:0}
+.frame{--p-bg:#F7F5F1;width:100%;max-width:354px;aspect-ratio:354/160;background:var(--p-bg);border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--line);position:relative}
+body[data-look="black"] .frame{--p-bg:#000}
+.frame canvas{width:100%;height:100%;display:block;touch-action:none}
+.tile b.nm{display:block;font-size:19px;font-weight:600;margin:12px 0 2px}
+.tile .pitch{font-size:15px;color:var(--fg);margin:0 0 6px}
+.tile dl{margin:0;font-size:14px;color:var(--fg2);display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+.tile dt{font-weight:600;color:var(--fg)}
+.tile dd{margin:0}
+.acts{display:flex;flex-wrap:wrap;gap:0 16px;margin-top:6px}
+.acts button{font:inherit;font-size:14px;font-weight:600;color:var(--acc);background:none;border:0;padding:8px 0;min-height:40px;cursor:pointer}
+.cap{font-size:14px;color:var(--fg2);min-height:22px;font-style:italic}
+.pick{border-top:2px solid var(--fg);padding-top:14px}
+.pick li{margin-bottom:8px}
+.pull{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.pull .frame{cursor:pointer}
+</style>
+
+<main>
+<header>
+<h2>Tessera / keystones / sheet 251, round two</h2>
+<h1>Ten small worlds.</h1>
+<p class="lede">Round one was charts in costume. The three keystones that work are each a little world with its own physics, made of the app's real material: pixels, words, plants. So this round is scenes. Each has a life of its own while you watch, and something happens when you do something. Press the words under a scene. Nothing here needs a tap to be worth looking at.</p>
+<div class="bar" role="group" aria-label="Look">
+<button class="w" id="lk-paper" aria-pressed="true">Paper</button>
+<button class="w" id="lk-black" aria-pressed="false">Black</button>
+</div>
+</header>
+
+<div id="apps"></div>
+
+<section class="app">
+<h3>Kept from round one: Pull apart, as an opening move</h3>
+<p>Not a keystone. The move itself: tap a name and its letters come apart to reveal what is inside, then the screen opens through the gap. Below, the same move on three names. Tap each one. I would reserve it for one app so it stays special; Kitchen fits best (a dish pulls apart into its ingredients), Lists second (a list pulls apart into its things).</p>
+<div class="pull" id="pull"></div>
+</section>
+
+<section class="pick">
+<h2>Where I would start</h2>
+<ul id="picks"></ul>
+<p style="color:var(--fg2)">Tell me which worlds feel right, which to mix, and anything of yours. The next round takes the picks to full landings with real data behind them.</p>
+</section>
+</main>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PAL={paper:{bg:'#F7F5F1',ink:'#242423',ink2:'#6E6A63',ink3:'#A9A49B',hair:'rgba(36,36,35,.16)',training:'#0B62AE',clay:'#9C4B2C',teal:'#1E6E77',plum:'#8A4570',gold:'#7E6A1E',green:'#25803D',wine:'#9A2541',slate:'#34506F',kitchen:'#A8701F',pine:'#2F6450',lists:'#5E6B1F',steel:'#2F6A8F',lav:'#6A5E8C',money:'#2A7878',weather:'#C9772E',rain:'#557A93',cloud:'#6B7480',paper2:'#ECE8E0',wood:'#B8976A'},
+ black:{bg:'#000000',ink:'#E8E3DA',ink2:'#A49E96',ink3:'#6B675F',hair:'rgba(232,227,218,.2)',training:'#8FB0EE',clay:'#E2A07F',teal:'#84C3C9',plum:'#D69CC0',gold:'#D9C27A',green:'#8FC9A0',wine:'#EE8E9C',slate:'#A7BCD6',kitchen:'#C49A5E',pine:'#8EC7AE',lists:'#B5BE7A',steel:'#8DBAD6',lav:'#B4A9D6',money:'#7BC0C4',weather:'#E8A06A',rain:'#9DBACE',cloud:'#B9C0C8',paper2:'#1A1917',wood:'#8A6E48'}};
+let look='paper',P=PAL.paper;
+const A=(hex,a)=>{if(hex.startsWith('rgb'))return hex.replace(/rgba?\(([^)]*)\)/,(m,g)=>'rgba('+g.split(',').slice(0,3).join(',')+','+a+')');const x=hex.replace('#','');return 'rgba('+parseInt(x.slice(0,2),16)+','+parseInt(x.slice(2,4),16)+','+parseInt(x.slice(4,6),16)+','+a+')'};
+const mixH=(a,b,u)=>{const p=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));const x=p(a),y=p(b);return 'rgb('+x.map((v,i)=>Math.round(v+(y[i]-v)*u))+')'};
+const ease=u=>u<0?0:u>1?1:u*u*(3-2*u),clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const rnd=(s=>()=>(s=(s*16807)%2147483647)/2147483647)(97);
+function noise(x,y){const s=Math.sin(x*12.9898+y*78.233)*43758.5453;return s-Math.floor(s)}
+function vnoise(x,y){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=ease(xf),v=ease(yf);const a=noise(xi,yi),b=noise(xi+1,yi),c=noise(xi,yi+1),d=noise(xi+1,yi+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+const SK=[];const add=s=>SK.push(s);
+function ell(c,x,y,rx,ry,col,rot=0){c.beginPath();c.ellipse(x,y,Math.max(.1,rx),Math.max(.1,ry),rot,0,7);c.fillStyle=col;c.fill()}
+function ln(c,pts,col,w=1){c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.strokeStyle=col;c.lineWidth=w;c.lineCap='round';c.stroke()}
+// a small person, like the woodland's caretaker: x,y at the feet, facing +1/-1, arm angle
+function person(c,x,y,face,arm,shirt){c.save();c.translate(x,y);c.scale(face,1);ell(c,0,1,7,1.6,A(P.ink,.18));ln(c,[[-1,-5],[-3,0]],P.slate,1.4);ln(c,[[1,-5],[3,0]],P.slate,1.4);c.fillStyle=shirt;c.beginPath();c.roundRect(-3,-12,6,8,2);c.fill();ell(c,0,-15,2.5,2.8,'#E0AE86');ln(c,[[2,-11],[2+Math.cos(arm)*7,-11+Math.sin(arm)*7]],'#E0AE86',1.3);c.restore()}
+
+/* ======================= TRAINING ======================= */
+add({app:'Training',name:'The forge',pitch:'Your lifts are bars of iron on a smith’s rack. Each one is as long and thick as the work you have put into it this month; the one you trained today still glows. A smith tends the fire. Leave a lift for a week and rust starts at its edges.',
+ ambient:'The fire breathes, embers rise, the smith shifts his weight. A glowing bar cools over the evening.',reacts:'A logged set: the smith takes that bar to the anvil and strikes three times, sparks fly, the bar lengthens a touch. A new best: he quenches it in the trough, steam rises, the bar rings. A rest day: he banks the fire low.',
+ init(){this.B=[['Bench','clay',.9,0],['Squat','plum',.7,0],['Deadlift','plum',.5,9],['Press','clay',.4,0],['Row','teal',.75,0]].map(([n,c,v,rust],i)=>({n,c,v,rust,glow:i===0?1:0,y:22+i*20}));this.sp=[];this.job=null;this.fire=1},
+ ev:{'Log a set of Row'(t){this.job={t0:t,b:4,kind:'hammer'}},'New best on Bench'(t){this.job={t0:t,b:0,kind:'quench'}},'Rest day'(t){this.fire=.25;this.fireAt=t}},
+ draw(c,t){const dt=1/60;this.fire+=(1-this.fire)*(this.fireAt&&t-this.fireAt<6?0:.01);
+  // floor, forge, trough
+  c.fillStyle=A(P.ink3,.25);c.fillRect(0,132,354,28);c.fillStyle=A(P.ink,.6);c.fillRect(230,96,80,36);c.fillStyle=A(P.ink,.75);c.fillRect(236,84,68,12);
+  for(let k=0;k<14;k++){const u=((t*.6+k*.37)%1),x=250+Math.sin(k*7+t)*20+Math.sin(u*6)*4,y=96-u*40*this.fire;ell(c,x,y,3*(1-u)*this.fire+.5,4*(1-u)*this.fire+.5,A('#FFB347',(1-u)*.9*this.fire));}
+  const fl=c.createRadialGradient(270,96,2,270,96,36*this.fire+8);fl.addColorStop(0,A('#FFD27A',.9*this.fire+.05));fl.addColorStop(.5,A('#E86A1E',.5*this.fire));fl.addColorStop(1,A('#E86A1E',0));c.fillStyle=fl;c.fillRect(220,50,100,50);
+  c.fillStyle=A(P.ink,.55);c.beginPath();c.roundRect(150,112,50,18,3);c.fill();c.fillStyle=A(P.rain,.8);c.fillRect(153,114,44,6);
+  // anvil
+  c.fillStyle=A(P.ink,.8);c.fillRect(104,108,36,8);c.fillRect(112,116,20,16);c.beginPath();c.moveTo(104,108);c.lineTo(92,110);c.lineTo(104,114);c.fill();
+  // rack of bars
+  c.fillStyle=P.wood;c.fillRect(8,14,3,120);c.fillRect(78,14,3,120);
+  this.B.forEach((b,i)=>{let gx=0,gy=0;const j=this.job;const onJob=j&&j.b===i;let shown=true;
+   if(onJob){const u=(t-j.t0)/4.6;if(u>=1){this.job=null;if(j.kind==='hammer')b.v=Math.min(1.2,b.v+.06);b.glow=1;b.rust=0}else shown=false}
+   const L=18+b.v*44,th=2+b.v*2.2;b.glow=Math.max(0,b.glow-dt*.004);
+   if(shown){const g=b.glow;c.fillStyle=g>.02?mixH(P[b.c].startsWith('#')?P[b.c]:'#888888','#FF8A3D',g*.9):P[b.c];c.fillRect(12,b.y,L,th);if(g>.02){const gl=c.createRadialGradient(12+L/2,b.y,1,12+L/2,b.y,L*.6);gl.addColorStop(0,A('#FF9A4D',.35*g));gl.addColorStop(1,A('#FF9A4D',0));c.fillStyle=gl;c.fillRect(0,b.y-14,100,30)}
+    for(let r=0;r<b.rust;r++){ell(c,12+L-2-r*1.7*(r%3+1)*.6,b.y+(r%2)*th,1.2,.9,A('#9A5A2B',.8))}}
+   c.fillStyle=P.ink2;c.font='500 9px Figtree';c.fillText(b.n,16,b.y+th+10)});
+  // the smith and his job
+  let sx=232,sy=132,arm=-.6,face=-1;
+  if(this.job){const j=this.job,b=this.B[j.b],u=(t-j.t0)/4.6,L=18+b.v*44,th=2+b.v*2.2;const tgt=j.kind==='hammer'?[122,132]:[175,132];
+   if(u<.3){const e=ease(u/.3);sx=232+(tgt[0]-232)*e;face=-1;c.fillStyle=mixH('#888888','#FF8A3D',.9);c.fillRect(sx-14-L*(1-e)*.0,sy-22,L*.6,th)}
+   else if(u<.75){sx=tgt[0];face=1;const k=(u-.3)/.45;
+    if(j.kind==='hammer'){const ph=Math.sin(k*Math.PI*3);arm=-2.2+ph*1.4;c.fillStyle='#FF8A3D';c.fillRect(104,104,L*.6,th);if(ph>.92&&Math.random()<.5)for(let s=0;s<5;s++)this.sp.push({x:120,y:104,vx:(Math.random()-.5)*90,vy:-60-Math.random()*60,l:1})}
+    else{arm=.9;c.fillStyle=mixH('#FF8A3D','#888888',k);c.fillRect(160,108+6*k,L*.6,th);for(let s=0;s<3;s++){const q=((t*1.4+s*.33)%1);ell(c,160+s*12+Math.sin(q*5)*4,108-q*40,5+q*8,3+q*4,A('#FFFFFF',(1-q)*.5))}if(k>.9&&!j.rang){j.rang=1;this.ring=t}}}
+   else{const e=ease((u-.75)/.25);sx=tgt[0]+(232-tgt[0])*e;face=1;c.fillStyle=mixH('#FF8A3D','#888888',.6);c.fillRect(sx+6,sy-22,L*.6,th)}}
+  else{arm=-.6+Math.sin(t*1.1)*.08}
+  person(c,sx,sy,face,arm,P.clay);
+  if(this.ring&&t-this.ring<1.2){const u=(t-this.ring)/1.2;c.strokeStyle=A(P.ink,.5*(1-u));c.lineWidth=1;c.beginPath();c.arc(175,112,8+u*30,0,7);c.stroke()}
+  this.sp=this.sp.filter(s=>{s.l-=dt*1.4;s.x+=s.vx*dt;s.y+=s.vy*dt;s.vy+=180*dt;if(s.l<=0)return false;ell(c,s.x,s.y,1.3,1.3,A('#FFD27A',s.l));return true})}});
+
+add({app:'Training',name:'Night sky',pitch:'Every session you have ever logged is a star, in the constellation of its lift. Your bests are the bright ones. The sky wheels slowly with the season, and on a training day, dawn comes up along the bottom.',
+ ambient:'Stars twinkle, the Milky Way drifts, a satellite crosses now and then. On training days the horizon warms toward evening.',reacts:'A logged session: a new star fades in and the constellation’s line reaches to meet it. A new best: a shooting star falls and ignites it gold. Weeks without a lift: its constellation dims toward the haze.',
+ init(){const C=[['Bench','clay',150,54,9],['Squat','plum',62,70,6],['Deadlift','plum',100,34,4],['Press','clay',230,78,5],['Row','teal',296,44,8]];this.C=C.map(([n,c,x,y,k],i)=>({n,c,x,y,dim:i===2?.4:1,st:Array.from({length:k},(_,j)=>({dx:(rnd()-.5)*60,dy:(rnd()-.5)*40,b:j===2,born:-9}))}));this.bg=Array.from({length:160},()=>({x:rnd()*354,y:rnd()*160,s:rnd()}));this.shoot=null;this.dawn=0},
+ ev:{'Log a session of Press'(t){this.C[3].st.push({dx:(rnd()-.5)*60,dy:(rnd()-.5)*40,b:false,born:t})},'New best on Row'(t){this.shoot={t0:t,c:4}},'Training day'(t){this.dawnAt=t}},
+ draw(c,t){const rot=RM?0:t*.004;const g=c.createLinearGradient(0,0,0,160);g.addColorStop(0,look==='black'?'#06080F':'#162038');g.addColorStop(1,look==='black'?'#0E1424':'#2A3658');c.fillStyle=g;c.fillRect(0,0,354,160);
+  const mw=c.createLinearGradient(0,0,354,160);mw.addColorStop(0,A('#C9D4F0',0));mw.addColorStop(.5,A('#C9D4F0',.12));mw.addColorStop(1,A('#C9D4F0',0));c.save();c.translate(177,80);c.rotate(-.5+rot*.3);c.fillStyle=mw;c.fillRect(-300,-28,600,56);c.restore();
+  this.dawn=this.dawnAt?clamp((t-this.dawnAt)/4,0,1):0;if(this.dawn>0){const d=c.createLinearGradient(0,100,0,160);d.addColorStop(0,A('#F2B07A',0));d.addColorStop(1,A('#F2B07A',.55*this.dawn));c.fillStyle=d;c.fillRect(0,100,354,60)}
+  this.bg.forEach(s=>{const tw=.3+.5*Math.abs(Math.sin(t*(.5+s.s)+s.x));ell(c,(s.x+rot*40)%354,s.y,.6+s.s*.5,.6+s.s*.5,A('#E8ECF8',tw*.6))});
+  const sat=((t*9)%500)-60;ell(c,sat,20+sat*.08,.9,.9,A('#FFFFFF',.8));
+  this.C.forEach((C,ci)=>{const cx=C.x+Math.sin(rot+ci)*6,cy=C.y+Math.cos(rot*1.3+ci)*3;const pts=C.st.map(s=>{const a=clamp((t-s.born)/1.5,0,1);return {x:cx+s.dx,y:cy+s.dy,a,b:s.b}});
+   c.strokeStyle=A(P[C.c],.35*C.dim);c.lineWidth=.7;c.beginPath();pts.forEach((p,i)=>{if(i===0)c.moveTo(p.x,p.y);else{const q=pts[i-1];c.moveTo(q.x,q.y);c.lineTo(q.x+(p.x-q.x)*p.a,q.y+(p.y-q.y)*p.a)}});c.stroke();
+   pts.forEach(p=>{const r=p.b?2.6:1.3,col=p.b?P.gold:'#F4F0E6';ell(c,p.x,p.y,r,r,A(col,(.55+.4*Math.abs(Math.sin(t*2+p.x)))*C.dim*p.a));if(p.b){ell(c,p.x,p.y,r*3,r*3,A(P.gold,.12*C.dim))}});
+   c.fillStyle=A('#C9D4F0',.6*C.dim);c.font='500 9px Figtree';c.fillText(C.n,cx-10,cy+30)});
+  if(this.shoot){const s=this.shoot,u=(t-s.t0)/1.6,C=this.C[s.c];const tx=C.x+C.st[0].dx,ty=C.y+C.st[0].dy;if(u>=1){C.st[0].b=true;this.shoot=null;this.flash={t0:t,x:tx,y:ty}}else{const x0=tx-160,y0=ty-120,x=x0+(tx-x0)*u*u,y=y0+(ty-y0)*u*u;ln(c,[[x-18*(1-u),y-13*(1-u)],[x,y]],A('#FFFFFF',.9),1.4)}}
+  if(this.flash&&t-this.flash.t0<1.2){const u=(t-this.flash.t0)/1.2;ell(c,this.flash.x,this.flash.y,4+u*22,4+u*22,A(P.gold,.4*(1-u)))}}});
+
+/* ======================= KITCHEN ======================= */
+add({app:'Kitchen',name:'Fridge poetry',pitch:'The fridge door, with magnet letters. They spell what is in the house. What needs using soon drifts up and leans; what is low loses letters; a word that ran out drops off the door. No food is ever drawn, only its name, which is what a kitchen note really looks like.',
+ ambient:'A letter slides a little now and then, like someone brushed past. The words that matter most climb slowly toward eye level.',reacts:'Something ran out: its letters let go one by one and fall, bouncing on the shelf. Groceries home: new letters fly in and arrange themselves into their word. Cooking: the words you are using huddle together.',
+ init(){const words=[['milk',2,1],['eggs',1,0],['rice',0,2],['spinach',0,2],['dal',0,0],['limes',3,0],['feta',4,0],['naan',1,0],['yogurt',0,0],['cumin',0,0]];this.W=[];let y=28;const cols=[P.wine,P.teal,P.kitchen,P.plum,P.steel,P.lists];
+  words.forEach(([w,low,soon],i)=>{const x=20+(i%4)*86+(rnd()-.5)*10,yy=22+Math.floor(i/4)*44+(rnd()-.5)*8;this.W.push({w,low,soon,L:[...w].map((ch,k)=>({ch,x:x+k*15,y:yy,r:(rnd()-.5)*.25,col:cols[(i*2+k)%6],vx:0,vy:0,free:0}))})})},
+ ev:{'Milk ran out'(t){const w=this.W.find(w=>w.w==='milk');w.L.forEach((l,k)=>{l.dropAt=t+k*.25})},'Groceries home'(t){const x=200,y=120;const cols=[P.wine,P.teal,P.kitchen,P.plum,P.steel,P.lists];this.W.push({w:'tortillas',low:0,soon:0,L:[...'tortillas'].map((ch,k)=>({ch,x:x+k*15,y,r:(rnd()-.5)*.25,col:cols[k%6],fly:t+k*.08,fx:-40+rnd()*40,fy:-30+rnd()*220}))})},'Cooking tacos'(t){this.huddle=t}},
+ draw(c,t){const dt=1/60;c.fillStyle=look==='black'?'#17191C':'#E9ECEE';c.fillRect(0,0,354,160);c.fillStyle=A(P.ink,.08);c.fillRect(0,0,354,3);c.fillRect(0,134,354,2);
+  const hud=this.huddle&&t-this.huddle<5?Math.sin(clamp((t-this.huddle)/5,0,1)*Math.PI):0;
+  this.W.forEach((w,wi)=>{const soonLift=w.soon*10;const inTacos=['limes','feta','tortillas'].includes(w.w);
+   w.L.forEach((l,k)=>{if(l.dropAt&&t>l.dropAt&&!l.free){l.free=1;l.vx=(Math.random()-.5)*40;l.vy=0;l.vr=(Math.random()-.5)*6}
+    if(l.free){l.vy+=420*dt;l.y+=l.vy*dt;l.x+=l.vx*dt;l.r+=l.vr*dt;if(l.y>128){l.y=128;l.vy*=-.35;l.vx*=.6;l.vr*=.5;if(Math.abs(l.vy)<10){l.vy=0;l.vr=0}}}
+    else{let tx=l.x,ty=l.y-soonLift;if(l.fly){const u=clamp((t-l.fly)/1.4,0,1);tx=l.fx+(l.x-l.fx)*ease(u);ty=l.fy+(l.y-l.fy)*ease(u);if(u>=1)l.fly=0}
+     if(inTacos&&hud){tx+=(190+(['limes','feta','tortillas'].indexOf(w.w)*48+k*14)-tx)*hud*.9;ty+=(74-ty)*hud*.9}
+     const nudge=Math.sin(t*.3+wi*3+k)*.4;l.dx=tx+nudge;l.dy=ty+(w.soon?Math.sin(t*2+k)*.6:0)}
+    const X=l.free?l.x:l.dx,Y=l.free?l.y:l.dy;const miss=w.low&&k>=w.w.length-w.low&&!l.free;if(miss){c.fillStyle=A(P.ink,.05);c.fillRect(X-1,Y-1,14,16);return}
+    c.save();c.translate(X+6,Y+7);c.rotate(l.r+(w.soon?.08:0));c.fillStyle=l.col;c.beginPath();c.roundRect(-7,-8,14,16,2.5);c.fill();c.fillStyle=A('#FFFFFF',.14);c.fillRect(-7,-8,14,4);c.fillStyle=look==='black'?'#111':'#F7F5F1';c.font='900 12px Figtree';c.textAlign='center';c.fillText(l.ch,0,4.5);c.restore()})});
+  c.fillStyle=A(P.ink,.3);c.fillRect(0,136,354,24)}});
+
+add({app:'Kitchen',name:'Lids',pitch:'The stove, seen head on. Each pot is a dish you could make tonight. A pot with everything in the house simmers and its lid rattles; a pot missing something sits still with the lid ajar. Tonight’s pick is on the big burner.',
+ ambient:'Lids tick and rattle on their own rhythm, steam curls and drifts, a burner flame breathes. A pot of leftovers at the back has gone quiet with a film on top.',reacts:'Start cooking: the flame under that pot roars, the lid dances, steam fills the top of the slot. Buy the missing thing: that pot comes up to a simmer over three seconds. Rice goes out today: its pot clouds over.',
+ init(){this.pots=[['Tacos',1,0,1],['Dal',1,0,0],['Shakshuka',0,1,0],['Pasta',1,0,0]].map(([n,ready,miss,big],i)=>({n,ready,miss,big,x:[70,150,230,300][i],w:big?64:44,cook:0,sim:ready?1:0}));this.left={x:122,y:46}},
+ ev:{'Start cooking Tacos'(t){this.pots[0].cook=t},'Get feta'(t){this.pots[2].simAt=t;this.pots[2].miss=0},'Rice goes out today'(t){this.leftAt=t}},
+ draw(c,t){c.fillStyle=A(P.ink3,.22);c.fillRect(0,118,354,42);c.fillStyle=A(P.ink,.5);c.fillRect(0,116,354,3);
+  // leftover pot at the back
+  const lf=this.leftAt?clamp((t-this.leftAt)/3,0,1):0;c.fillStyle=A(P.ink2,.5);c.fillRect(this.left.x-16,this.left.y,32,16);c.fillStyle=A(P.ink2,.6);c.fillRect(this.left.x-18,this.left.y-3,36,3);c.fillStyle=A('#C9C4B0',.3+.6*lf);c.fillRect(this.left.x-14,this.left.y-2,28,2);c.fillStyle=P.ink2;c.font='500 8px Figtree';c.fillText('rice, Thu',this.left.x-16,this.left.y+26);
+  this.pots.forEach(p=>{if(p.simAt)p.sim=clamp((t-p.simAt)/3,0,1);const hot=p.cook&&t-p.cook<14?1:0;const boil=p.sim*(hot?2.2:.7);const H=p.big?30:24,y0=116-H;
+   // flame
+   const fl=hot?1:p.sim*.35;if(fl>0){for(let k=0;k<7;k++){const fx=p.x-p.w/2+8+k*((p.w-16)/6),fh=6+fl*10*(.7+.3*Math.sin(t*9+k*2.1));c.fillStyle=A(hot?'#5BA6FF':'#FF9A3D',.75*fl+.1);c.beginPath();c.moveTo(fx-3,118);c.quadraticCurveTo(fx,118-fh,fx+3,118);c.fill()}}
+   // pot
+   c.fillStyle=A(P.ink,.72);c.beginPath();c.roundRect(p.x-p.w/2,y0,p.w,H,[2,2,6,6]);c.fill();c.fillStyle=A('#FFFFFF',.08);c.fillRect(p.x-p.w/2+4,y0+4,6,H-10);c.fillStyle=A(P.ink,.72);c.fillRect(p.x-p.w/2-7,y0+8,7,3);c.fillRect(p.x+p.w/2,y0+8,7,3);
+   // lid
+   const rattle=boil>0?Math.max(0,Math.sin(t*(10+boil*6)+p.x))*boil*1.6:0;const ajar=p.miss?3:0,tilt=p.miss?-.12:(rattle>0?.02*Math.sin(t*23+p.x):0);
+   c.save();c.translate(p.x,y0-rattle-ajar);c.rotate(tilt);c.fillStyle=A(P.ink,.85);c.beginPath();c.ellipse(0,0,p.w/2+3,3.5,0,0,7);c.fill();c.fillStyle=A(P.ink,.9);c.fillRect(-3,-7,6,4);c.restore();
+   // steam
+   if(boil>0)for(let s=0;s<(hot?5:2);s++){const q=((t*(.5+boil*.25)+s*.37+p.x)%1),sx=p.x+Math.sin(q*6+s)*(6+q*18)+(s-1)*8,sy=y0-6-q*(40+boil*20);ell(c,sx,sy,3+q*7,2+q*4,A(look==='black'?'#D8D8D8':'#FFFFFF',(1-q)*.55*(.5+.5*p.sim)))}
+   c.fillStyle=hot?P.clay:P.ink2;c.font=(hot?'600 ':'500 ')+'10px Figtree';c.textAlign='center';c.fillText(p.n+(p.miss?', feta':''),p.x,150);c.textAlign='left'})}});
+
+/* ======================= LISTS ======================= */
+add({app:'Lists',name:'Dominoes',pitch:'Every list is a run of standing dominoes, one per thing. Checking a thing tips it, and it comes to rest against the ones already down. A run that is all down is a finished list, flat and quiet. Due lists have a wine run.',
+ ambient:'The next domino in each run wobbles very slightly, as if ready. A finished run gets a tiny puff of dust that settles.',reacts:'Check: the next one tips over a quarter second and knocks, with a click. Add: a domino stands up at the end of its run. Finish: the last tile drops, the run settles, dust.',
+ init(){this.R=[['Before the trip',14,6,'wine'],['Groceries',6,2,'kitchen'],['Balcony fix',5,3,'teal'],['Call back',3,1,'plum']].map(([n,tot,done,c],i)=>({n,tot,done,c,y:30+i*32,anim:null,dust:[]}))},
+ ev:{'Check a thing'(t){const r=this.R.find(r=>r.done<r.tot&&!r.anim);if(r)r.anim={t0:t,i:r.done}},'Add to Groceries'(t){const r=this.R[1];r.tot++;r.stand={t0:t,i:r.tot-1}},'Finish Call back'(t){const r=this.R[3];r.anim={t0:t,i:r.done,all:true}}},
+ draw(c,t){const dt=1/60;this.R.forEach(r=>{c.fillStyle=A(P.ink3,.35);c.fillRect(12,r.y+22,330,1);c.fillStyle=P.ink2;c.font='500 9px Figtree';c.fillText(r.n,12,r.y-6);
+  const pitch=Math.min(22,300/Math.max(r.tot,12)),x0=24,H=20,Wd=5;
+  if(r.anim){const u=(t-r.anim.t0)/.35;if(u>=1){r.done++;if(r.anim.all&&r.done<r.tot)r.anim={t0:t,i:r.done,all:true};else{r.anim=null;if(r.done===r.tot)for(let k=0;k<8;k++)r.dust.push({x:x0+rnd()*pitch*r.tot,y:r.y+20,vx:(rnd()-.5)*30,vy:-10-rnd()*20,l:1})}}}
+  for(let i=0;i<r.tot;i++){const x=x0+i*pitch;let ang=0;const fallen=i<r.done,isAnim=r.anim&&r.anim.i===i;
+   if(fallen)ang=1.25;else if(isAnim)ang=1.25*ease((t-r.anim.t0)/.35)**1.6;else if(i===r.done)ang=Math.sin(t*2.6+r.y)*.03;
+   if(r.stand&&r.stand.i===i){const u=clamp((t-r.stand.t0)/.5,0,1);ang=1.25*(1-ease(u));if(u>=1)r.stand=null}
+   c.save();c.translate(x,r.y+22);c.rotate(ang);c.fillStyle=fallen||isAnim?A(P[r.c],.9):A(P[r.c],.55);c.beginPath();c.roundRect(-Wd/2,-H,Wd,H,1.2);c.fill();c.fillStyle=A(look==='black'?'#000':'#FFF',.35);c.fillRect(-Wd/2+1,-H/2,Wd-2,1);c.restore()}
+  r.dust=r.dust.filter(d=>{d.l-=dt*.8;d.x+=d.vx*dt;d.y+=d.vy*dt;d.vy+=20*dt;if(d.l<=0)return false;ell(c,d.x,d.y,2*(1-d.l)+1,1.2,A(P.ink3,d.l*.6));return true})})}});
+
+add({app:'Lists',name:'Abacus',pitch:'One abacus rod per list, with a bead for every thing. Open things sit on the left, checked ones slide to the right with a click of wood on wood. The frame is as old as counting, and that is the point: a list is counting what is left.',
+ ambient:'Beads tremble when a rod is touched, and settle. Due rods are wine wood.',reacts:'Check: a bead flicks right and knocks into the done pile, the pile nudges. Uncheck: it comes back. A new list: a rod slides in from below with its beads.',
+ init(){this.R=[['Before the trip',14,6,'wine'],['Groceries',6,2,'kitchen'],['Balcony fix',5,3,'teal'],['Call back',3,1,'plum'],['To watch',5,0,'lav']].map(([n,tot,done,c],i)=>({n,tot,done,c,y:26+i*26,beads:Array.from({length:tot},(_,k)=>({x:0,v:0,done:k<done}))}))},
+ ev:{'Check a thing'(t){const r=this.R[0],b=r.beads.find(b=>!b.done);if(b){b.done=true;b.v=380}},'Uncheck one'(t){const r=this.R[0],bs=r.beads.filter(b=>b.done);const b=bs[bs.length-1];if(b){b.done=false;b.v=-380}},'Check on Groceries'(t){const r=this.R[1],b=r.beads.find(b=>!b.done);if(b){b.done=true;b.v=380}}},
+ draw(c,t){const dt=1/60;c.fillStyle=P.wood;c.fillRect(6,8,5,146);c.fillRect(343,8,5,146);c.fillRect(6,8,342,4);c.fillRect(6,150,342,4);
+  this.R.forEach(r=>{c.fillStyle=A(P.ink2,.7);c.fillRect(11,r.y,332,1.5);const n=r.tot,bw=Math.min(16,290/Math.max(n,10)),bh=10;
+   // targets: open beads pack from the left, done beads pack from the right
+   let li=0,ri=0;r.beads.forEach(b=>{b.tx=b.done?(336-bw/2-(ri++)*(bw+1.5)):(18+bw/2+(li++)*(bw+1.5))});
+   r.beads.forEach(b=>{if(b.x===0)b.x=b.tx;const d=b.tx-b.x;b.v+=d*60*dt;b.v*=.72;b.x+=b.v*dt;if(Math.abs(d)<.3&&Math.abs(b.v)<2){b.x=b.tx;b.v=0}
+    c.save();c.translate(b.x,r.y+1);c.fillStyle=b.done?P[r.c]:A(P[r.c],.5);c.beginPath();c.ellipse(0,0,bw/2,bh/2,0,0,7);c.fill();c.fillStyle=A('#FFF',.2);c.beginPath();c.ellipse(-bw*.1,-bh*.15,bw*.3,bh*.18,0,0,7);c.fill();c.restore()});
+   c.fillStyle=P.ink2;c.font='500 9px Figtree';c.fillText(r.n,16,r.y-7)})}});
+
+/* ======================= WEATHER ======================= */
+add({app:'Weather',name:'The yard',pitch:'A small back yard that has today’s weather. Grass bends with the real wind, a washing line flaps as hard as it blows, rain fills a puddle that the sun later shrinks, frost whitens the grass on cold mornings. You read the weather the way you would from a window.',
+ ambient:'The grass never stops moving. Laundry flaps. A bird visits the line on still days. Clouds pass. Night falls when it is night.',reacts:'Wind picks up: everything leans and the sheets snap. Rain: drops fall, the puddle grows, the laundry darkens. Sun: the puddle shrinks, steam lifts off the line.',
+ init(){this.wind=1;this.rain=0;this.pud=.3;this.sun=1;this.drops=[];this.birdAt=0},
+ ev:{'Wind picks up'(t){this.gustAt=t},'Rain'(t){this.rain=this.rain?0:1},'Sun comes out'(t){this.rain=0;this.sunAt=t}},
+ draw(c,t){const dt=1/60;const gust=this.gustAt&&t-this.gustAt<5?1+2.2*Math.sin(clamp((t-this.gustAt)/5,0,1)*Math.PI):1;const wind=this.wind*gust*(RM?0:1);
+  if(this.rain)this.pud=Math.min(1,this.pud+dt*.08);else this.pud=Math.max(.05,this.pud-dt*(this.sunAt&&t-this.sunAt<6?.09:.01));
+  const sky=c.createLinearGradient(0,0,0,110);sky.addColorStop(0,this.rain?'#6B7A88':'#8FB6DA');sky.addColorStop(1,this.rain?'#9AA6B0':'#DCE8EE');c.fillStyle=sky;c.fillRect(0,0,354,110);
+  if(!this.rain){const sg=c.createRadialGradient(300,22,2,300,22,40);sg.addColorStop(0,A('#FFE9A8',.95));sg.addColorStop(.3,A('#FFD27A',.5));sg.addColorStop(1,A('#FFD27A',0));c.fillStyle=sg;c.fillRect(240,-20,120,90)}
+  for(let k=0;k<4;k++){const cx=((t*(3+k*1.5)*wind+k*110)%440)-40,cy=18+k*12;c.fillStyle=A(this.rain?'#7E8A94':'#FFFFFF',.8);for(let p=0;p<5;p++)ell(c,cx+p*11,cy+(p%2)*3,12,6)}
+  // ground and puddle
+  c.fillStyle=look==='black'?'#2E4A32':'#8FAE6E';c.fillRect(0,106,354,54);const pr=60*this.pud,py=130;const pg=c.createRadialGradient(236,py,1,236,py,pr);pg.addColorStop(0,A('#B9CCDC',.9));pg.addColorStop(1,A('#B9CCDC',.6));ell(c,236,py,pr,pr*.22,pg);
+  if(this.rain)for(let k=0;k<3;k++){const q=((t*1.2+k*.33)%1);c.strokeStyle=A('#FFFFFF',(1-q)*.6);c.lineWidth=.8;c.beginPath();c.ellipse(236+(noise(k,Math.floor(t+k))-.5)*pr*1.4,py+(noise(k*3,Math.floor(t))-.5)*pr*.3,q*10,q*2.5,0,0,7);c.stroke()}
+  // grass
+  for(let x=0;x<354;x+=4){const h=8+noise(x,1)*8,ph=Math.sin(t*(2+wind)+x*.08)*wind*3+wind*3;ln(c,[[x,112+noise(x,2)*44],[x+ph,112+noise(x,2)*44-h]],A(look==='black'?'#6FA06A':'#4F7F3C',.8),1)}
+  // washing line
+  const sag=y=>y+Math.sin((y)*0)*0;c.strokeStyle=P.ink2;c.lineWidth=1.5;c.beginPath();c.moveTo(20,120);c.lineTo(20,52);c.moveTo(170,120);c.lineTo(170,56);c.stroke();ln(c,[[20,52],[95,60],[170,56]],P.ink,1);
+  [[38,'#E3E8EE',22,30],[72,P.weather,16,24],[104,'#F2F2F2',26,28],[140,P.steel,14,22]].forEach(([x,col,w,h],k)=>{const yy=52+(x-20)/150*4+Math.sin((x-20)/150*Math.PI)*4;c.save();c.translate(x,yy);const sway=Math.sin(t*(3+wind*2)+k)*wind*.25+wind*.18;c.rotate(sway);
+   c.fillStyle=this.rain?mixH(col.startsWith('#')?col:'#888888','#555555',.35):col;c.beginPath();c.moveTo(-w/2,0);c.lineTo(w/2,0);for(let s=0;s<=6;s++){const u=s/6;c.lineTo(w/2-u*w,h+Math.sin(t*(6+wind*4)+u*6+k)*wind*2.4*u)}c.closePath();c.fill();
+   c.fillStyle=P.wood;c.fillRect(-w/2+2,-3,2,5);c.fillRect(w/2-4,-3,2,5);c.restore();
+   if(this.sunAt&&t-this.sunAt<6&&!this.rain)for(let s=0;s<2;s++){const q=((t*.5+s*.5+k*.2)%1);ell(c,x+Math.sin(q*5)*5,yy-q*26,3+q*5,2+q*3,A('#FFFFFF',(1-q)*.35))}});
+  if(wind<1.2&&!this.rain&&Math.sin(t*.2)>.3){const bx=150,by=55;ell(c,bx,by-3,3,2,P.ink);ell(c,bx+2.5,by-5,1.6,1.6,P.ink);ln(c,[[bx-1,by-1],[bx-1,by+1]],P.ink,.6)}
+  if(this.rain){for(let k=0;k<70;k++){const x=((k*53+t*20*wind)%360)-5,y=((k*37+t*170)%120);ln(c,[[x,y],[x-wind*1.5,y+6]],A('#DCE8F2',.8),1)}}}});
+
+add({app:'Weather',name:'Storm glass',pitch:'An old sailor’s storm glass: a sealed vial where crystals grow when the weather is turning and the liquid clears when it is set fair. Yours reads the real forecast. Feathery crystals climbing the glass mean a front; a clear glass with a few flakes means a good day.',
+ ambient:'The crystals grow and dissolve very slowly, drift when you tilt the phone, and catch a glint of light that moves with the hour.',reacts:'A storm in the forecast: ferns of crystal grow up the glass over five seconds. Clearing: they dissolve from the top. Cold snap: the glass frosts from the outside.',
+ init(){this.storm=.35;this.target=.35;this.frost=0;this.ferns=Array.from({length:9},(_,i)=>({x:150+rnd()*54,y:150-rnd()*20,h:30+rnd()*60,s:.6+rnd()*.5,a:rnd()*Math.PI*2}))},
+ ev:{'Storm coming'(t){this.target=1},'Set fair'(t){this.target=.1},'Cold snap'(t){this.frostAt=t}},
+ draw(c,t){this.storm+=(this.target-this.storm)*(RM?1:.012);const fr=this.frostAt?clamp((t-this.frostAt)/4,0,1):0;const st=this.storm;
+  // glass
+  const gx=177,top=14,bot=150,r=40;c.save();c.beginPath();c.moveTo(gx-r,bot);c.lineTo(gx-r,top+40);c.quadraticCurveTo(gx-r,top,gx-14,top);c.lineTo(gx+14,top);c.quadraticCurveTo(gx+r,top,gx+r,top+40);c.lineTo(gx+r,bot);c.closePath();
+  const lg=c.createLinearGradient(gx-r,0,gx+r,0);lg.addColorStop(0,A('#CFE3EE',.55));lg.addColorStop(.5,A('#EAF4F8',.35));lg.addColorStop(1,A('#B9D3E2',.55));c.fillStyle=lg;c.fill();c.clip();
+  // liquid
+  c.fillStyle=A(mixH('#D9EEF5','#8FA8B6',st),.65);c.fillRect(gx-r,top+30,2*r,bot);
+  // crystals: ferns that grow with the storm value
+  this.ferns.forEach((f,i)=>{const grow=clamp(st*1.4-i*.09,0,1),H=f.h*grow;if(H<2)return;c.strokeStyle=A('#FFFFFF',.85);c.lineWidth=.9;const sway=Math.sin(t*.4+i)*1.5;
+   ln(c,[[f.x,f.y],[f.x+sway,f.y-H]],A('#F4FBFF',.9),1.1);for(let k=1;k<10;k++){const u=k/10;if(u>grow)break;const y=f.y-H*u,l=(1-u)*14*f.s;ln(c,[[f.x+sway*u,y],[f.x+sway*u-l,y-l*.5]],A('#FFFFFF',.7),.7);ln(c,[[f.x+sway*u,y],[f.x+sway*u+l,y-l*.5]],A('#FFFFFF',.7),.7)}});
+  // flakes drifting
+  for(let k=0;k<14;k++){const q=((t*.05+k*.07)%1);ell(c,gx-30+((k*37)%60),top+36+q*100,1,1,A('#FFFFFF',.6*(1-st)))}
+  // glint
+  const gl=c.createLinearGradient(gx-r,0,gx+r,0);const gp=.5+.4*Math.sin(t*.3);gl.addColorStop(clamp(gp-.08,0,1),A('#FFF',0));gl.addColorStop(gp,A('#FFF',.35));gl.addColorStop(clamp(gp+.08,0,1),A('#FFF',0));c.fillStyle=gl;c.fillRect(gx-r,top,2*r,bot);
+  if(fr>0){for(let k=0;k<40;k++){const x=gx-r+((k*29)%(2*r)),y=top+10+((k*53)%120);const s=fr*(2+noise(k,1)*4);ln(c,[[x-s,y],[x+s,y]],A('#FFFFFF',.7*fr),.8);ln(c,[[x,y-s],[x,y+s]],A('#FFFFFF',.7*fr),.8)}}
+  c.restore();c.strokeStyle=A(P.ink,.35);c.lineWidth=1.2;c.beginPath();c.moveTo(gx-r,bot);c.lineTo(gx-r,top+40);c.quadraticCurveTo(gx-r,top,gx-14,top);c.lineTo(gx+14,top);c.quadraticCurveTo(gx+r,top,gx+r,top+40);c.lineTo(gx+r,bot);c.stroke();c.fillStyle=P.wood;c.fillRect(gx-r-6,bot,2*r+12,8);
+  c.fillStyle=P.ink2;c.font='500 10px Figtree';c.fillText(st>.7?'A front on the way':st>.3?'Changeable':'Set fair',24,150)}});
+
+/* ======================= MONEY ======================= */
+add({app:'Money',name:'Candles',pitch:'A shelf of candles, one for each bill. Each burns down toward its due day: a tall candle is weeks away, a stub is due tomorrow. Paying one blows it out, and the smoke curls up and is gone. No amounts, no colors for good or bad, just time and light.',
+ ambient:'Flames flicker and lean in a draft. Wax drips and sets. The light on the shelf shifts as candles burn down.',reacts:'Pay a bill: the flame goes out, a curl of smoke rises for three seconds, the stub stays until the month turns. A new bill: a candle appears and is lit from the one beside it. A day passes: every candle shortens a little.',
+ init(){this.C=[['Rent',5],['Phone',1],['Gym',12],['Internet',8],['Car',19]].map(([n,d],i)=>({n,d,x:40+i*68,lit:1,drips:[]}));this.smoke=[]},
+ ev:{'Pay the phone bill'(t){const c0=this.C[1];if(c0.lit){c0.lit=0;c0.outAt=t}},'A day passes'(t){this.C.forEach(c0=>{if(c0.lit)c0.d=Math.max(.3,c0.d-1)})},'New bill: Water'(t){this.C.push({n:'Water',d:14,x:this.C[this.C.length-1].x+68,lit:1,drips:[],born:t});if(this.C.length>6)this.C.shift()}},
+ draw(c,t){const dt=1/60;c.fillStyle=P.wood;c.fillRect(0,128,354,6);c.fillStyle=A(P.ink,.15);c.fillRect(0,134,354,26);
+  this.C.forEach((cd,i)=>{const h=8+cd.d*5.4,x=cd.x,y=128-h;const born=cd.born?clamp((t-cd.born)/1.2,0,1):1;
+   // candle body
+   c.fillStyle=look==='black'?'#E9DCC2':'#F6EBD3';c.beginPath();c.roundRect(x-9,y+h*(1-born),18,h*born,[3,3,0,0]);c.fill();c.fillStyle=A('#D9C9A6',.8);c.fillRect(x-9,y+h*(1-born),4,h*born);
+   if(Math.random()<.003&&cd.lit)cd.drips.push({y:y+4,v:0,s:x+(Math.random()-.5)*14});cd.drips.forEach(d=>{d.v+=2*dt;d.y=Math.min(128,d.y+d.v);ell(c,d.s,d.y,2,3,'#F6EBD3')});
+   // wick and flame
+   ln(c,[[x,y],[x,y-4]],P.ink,1);
+   if(cd.lit&&born>.9){const fl=Math.sin(t*9+i)*.6+Math.sin(t*23+i*3)*.3,lean=Math.sin(t*1.3+i)*1.5;const fg=c.createRadialGradient(x+lean,y-14,1,x+lean,y-12,16);fg.addColorStop(0,A('#FFF4C4',.9));fg.addColorStop(.4,A('#FFB84D',.5));fg.addColorStop(1,A('#FFB84D',0));c.fillStyle=fg;c.fillRect(x-20,y-40,40,40);
+    c.fillStyle='#FFD27A';c.beginPath();c.moveTo(x-3,y-4);c.quadraticCurveTo(x-3+lean,y-14-fl*3,x+lean,y-20-fl*4);c.quadraticCurveTo(x+3+lean,y-14-fl*3,x+3,y-4);c.fill();c.fillStyle='#FFF6D6';c.beginPath();c.moveTo(x-1.4,y-4);c.quadraticCurveTo(x+lean*.5,y-10,x+lean*.5,y-13);c.quadraticCurveTo(x+1.4+lean*.5,y-10,x+1.4,y-4);c.fill();
+    // light on the shelf
+    const sg=c.createRadialGradient(x,128,2,x,128,40);sg.addColorStop(0,A('#FFD27A',.22));sg.addColorStop(1,A('#FFD27A',0));c.fillStyle=sg;c.fillRect(x-40,118,80,20)}
+   else if(cd.outAt&&t-cd.outAt<3){const u=(t-cd.outAt)/3;for(let s=0;s<4;s++){const q=clamp(u*1.6-s*.15,0,1);ell(c,x+Math.sin(q*7+s)*(4+q*8),y-6-q*50,2+q*8,1.5+q*5,A(P.ink2,(1-q)*.45))}}
+   c.fillStyle=P.ink2;c.font='500 9px Figtree';c.textAlign='center';c.fillText(cd.n,x,148);c.font='300 9px Outfit';c.fillText(cd.lit?(cd.d<1.5?'tomorrow':cd.d<2.5?'in 2 days':'in '+Math.round(cd.d)+' days'):'paid',x,157);c.textAlign='left'})}});
+
+add({app:'Money',name:'The printer',pitch:'An old receipt printer that prints a line for every movement of money, the moment it happens: in, out, moved, reversed. The paper feeds down and curls into a pile that is the month. It sounds like a shop. A reversal prints a strike through the line.',
+ ambient:'The paper sways a little; the print head is warm; the pile settles. Now and then it prints the time.',reacts:'A spend: chug, one line. A paycheck: a longer line and a tear. A reversal: it reprints the line with a strike. Month end: it cuts the paper and the roll drops into the drawer.',
+ init(){this.L=[['5:02 pm','Coffee','4.50'],['12:40 pm','Lunch, Priya','18.20'],['9:15 am','Groceries','61.08'],['Yesterday','Phone bill','45.00']].map(([w,n,a])=>({w,n,a,y:0,age:9}));this.feed=0;this.chug=0},
+ ev:{'Coffee'(t){this.L.unshift({w:'5:10 pm',n:'Coffee',a:'4.50',y:0,age:0,born:t});this.chug=t},'Paycheck'(t){this.L.unshift({w:'5:10 pm',n:'In, paycheck',a:'3,200.00',y:0,age:0,born:t,inn:1});this.chug=t},'Reverse the coffee'(t){const l=this.L.find(l=>l.n==='Coffee');if(l){l.rev=1}this.L.unshift({w:'5:10 pm',n:'Coffee, reversed',a:'4.50',y:0,age:0,born:t,strike:1});this.chug=t}},
+ draw(c,t){const ch=this.chug&&t-this.chug<.9?Math.sin((t-this.chug)*40)*.8:0;
+  // printer
+  c.fillStyle=A(P.ink,.72);c.beginPath();c.roundRect(110,6,134,30,6);c.fill();c.fillStyle=A(P.ink,.9);c.fillRect(124,32,106,4);c.fillStyle=this.chug&&t-this.chug<.9?P.green:A(P.ink3,.6);c.fillRect(226,14,5,5);
+  // paper with lines, newest at the top near the head
+  const pw=100,px=127;let y=36;const fed=this.L.reduce((a,l)=>a+16,0);
+  c.save();c.translate(0,ch);c.fillStyle=look==='black'?'#EDE8DA':'#FFFDF6';c.beginPath();c.moveTo(px,y);c.lineTo(px+pw,y);const end=Math.min(126,36+this.L.length*16);c.lineTo(px+pw,end);for(let z=pw;z>=0;z-=8)c.lineTo(px+z-4,end+(z/8%2?3:0));c.closePath();c.fill();
+  this.L.forEach((l,i)=>{const born=l.born?clamp((t-l.born)/.6,0,1):1;const yy=36+i*16+12;if(yy>end)return;c.save();c.beginPath();c.rect(px,yy-12,pw*born,16);c.clip();c.fillStyle='#2A2622';c.font='500 8px Figtree';c.fillText(l.w,px+5,yy);c.fillText(l.n,px+34,yy);c.font='300 8px Outfit';c.textAlign='right';c.fillText(l.a,px+pw-5,yy);c.textAlign='left';if(l.rev||l.strike){c.fillStyle='#2A2622';c.fillRect(px+34,yy-3,pw-40,.8)}c.restore()});
+  c.restore();
+  // the pile: the month, curled at the bottom
+  const pile=Math.min(60,this.L.length*6+24);c.fillStyle=look==='black'?'#E3DECE':'#F7F3E8';for(let k=0;k<6;k++){c.beginPath();c.ellipse(177+Math.sin(k*2)*14,152-k*2.5,40-k*3,6,Math.sin(k)*.2,0,7);c.fill();c.strokeStyle=A(P.ink,.12);c.lineWidth=.6;c.stroke()}
+  c.fillStyle=P.ink2;c.font='500 9px Figtree';c.fillText('this month, 23 lines',24,150)}});
+
+/* ======================= pull apart, as an opening move ======================= */
+const PULLS=[{w:'TACOS',col:'kitchen',inside:[['tortillas',1],['cilantro',1],['limes',1],['chicken',0],['onions',0],['peppers',0],['cumin',0],['sour cream',0]],note:'Kitchen: a dish into what it is made of, missing things in wine.'},
+ {w:'PACKING',col:'lists',inside:[['passports',0],['charger',0],['the adapter',0],['the book',0],['socks',0],['rain jacket',0],['sunglasses',0],['toothbrush',0]],note:'Lists: a list into its things.'},
+ {w:'PUSH A',col:'training',inside:[['row 8 min',0],['bench 185',0],['press 95',0],['cable row 110',0],['triceps 40',0]],note:'Training: a workout into its lifts.'}];
+PULLS.forEach(pl=>{const tile=document.createElement('div');tile.className='tile';tile.innerHTML='<div class="frame"><canvas width="708" height="320" aria-label="Pull apart: '+pl.w+'"></canvas></div><p class="pitch">'+pl.note+'</p><div class="cap">Tap or pull down to open it.</div>';$('#pull').appendChild(tile);
+ const cv=tile.querySelector('canvas'),c=cv.getContext('2d');let p=0,goal=0,openAt=0;cv.onpointerdown=()=>{goal=goal?0:1;openAt=performance.now()};
+ add({app:null,name:'pull-'+pl.w,cv,c,init(){},ev:{},draw(c,t){if(goal&&performance.now()-openAt>4500)goal=0;p+=(goal-p)*(RM?1:.09);const e=ease(p);c.font='900 60px Figtree';const w=c.measureText(pl.w).width;let x=(354-w)/2;
+  [...pl.w].forEach((ch,i)=>{const cw=c.measureText(ch).width,mid=(pl.w.length-1)/2,off=(i-mid)*e*30,yo=-e*28;c.fillStyle=P[pl.col];c.fillText(ch,x+off,98+yo);x+=cw});
+  if(e>.04){c.font='500 13px Figtree';pl.inside.forEach(([n,miss],i)=>{const col=i%2,row=i>>1;const xx=70+col*140+(1-e)*(col?-30:30),yy=94+row*17*e;c.globalAlpha=e;c.fillStyle=miss?P.wine:P.ink;c.fillText(n,xx,yy+14);c.globalAlpha=1})}}})});
+
+/* ======================= board ======================= */
+const ABOUT={Training:'Material: iron, effort, the record of it.',Kitchen:'Material: the kitchen itself, since food is never drawn.',Lists:'Material: counting what is left, and the pleasure of one more down.',Weather:'Material: the sky, read the way people have always read it.',Money:'Material: time and light, never judgment.'};
+const PICKS=['<b>Training: The forge.</b> It has a character like the woodland’s caretaker, growth and decay, and iron is the right stuff. Night sky is the quiet alternative.','<b>Kitchen: Fridge poetry.</b> Words that fall off the door when something runs out is both funny and true. Lids is the alternative, and could live on the cooking screen.','<b>Lists: Dominoes.</b> The most satisfying check-off I can think of. Abacus if you want something calmer.','<b>Weather: The yard.</b> A washing line that tells you the weather is the kind of thing only this app would have. Storm glass as a second, smaller element.','<b>Money: Candles.</b> Bills as time and light, with no amounts. The printer if you want something busier and more playful.'];
+$('#picks').innerHTML=PICKS.map(p=>'<li>'+p+'</li>').join('');
+const host=$('#apps');[...new Set(SK.filter(s=>s.app).map(s=>s.app))].forEach(app=>{const sec=document.createElement('section');sec.className='app';sec.innerHTML='<h3>'+app+'</h3><p>'+ABOUT[app]+'</p>';const g=document.createElement('div');g.className='grid';sec.appendChild(g);host.appendChild(sec);
+ SK.filter(s=>s.app===app).forEach(s=>{const t=document.createElement('div');t.className='tile';
+  t.innerHTML='<div class="frame"><canvas width="708" height="320" aria-label="'+s.name+'"></canvas></div><b class="nm">'+s.name+'</b><p class="pitch">'+s.pitch+'</p><dl><dt>On its own</dt><dd>'+s.ambient+'</dd><dt>When you act</dt><dd>'+s.reacts+'</dd></dl><div class="acts"></div><div class="cap"></div>';
+  g.appendChild(t);s.cv=t.querySelector('canvas');s.c=s.cv.getContext('2d');s.cap=t.querySelector('.cap');s.init();
+  Object.keys(s.ev).forEach(k=>{const b=document.createElement('button');b.textContent=k;b.onclick=()=>{s.ev[k].call(s,now);s.cap.textContent=k+'.'};t.querySelector('.acts').appendChild(b)})})});
+SK.forEach(s=>{const io=new IntersectionObserver(es=>es.forEach(en=>{s.vis=en.isIntersecting}));io.observe(s.cv)});
+let now=0,last=performance.now();
+function loop(ts){const dt=Math.min(.05,(ts-last)/1000);last=ts;if(!RM)now+=dt;
+ SK.forEach(s=>{if(!s.vis&&now>.5)return;const c=s.c;c.setTransform(2,0,0,2,0,0);c.clearRect(0,0,354,160);c.fillStyle=P.bg;c.fillRect(0,0,354,160);try{s.draw(c,now)}catch(e){if(!s.err){s.err=1;console.error(s.name,e)}}});
+ requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+function setLook(l){look=l;P=PAL[l];document.body.dataset.look=l;$('#lk-paper').setAttribute('aria-pressed',l==='paper');$('#lk-black').setAttribute('aria-pressed',l==='black');SK.forEach(s=>s.app&&s.init())}
+$('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('black');
+})();
+</script>

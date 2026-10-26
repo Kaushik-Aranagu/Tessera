@@ -1,0 +1,204 @@
+<title>Kitchen landing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --kit:#A8701F;--kitT:#93611A;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--kit:#C49A5E;--kitT:#C49A5E;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;--kit:#C49A5E;--kitT:#C49A5E;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head,.sec{max-width:1120px;margin:0 auto 40px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:0}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+.notes{flex:1 1 340px;min-width:0;max-width:540px;display:flex;flex-direction:column;gap:12px}
+.notes p{margin:0}
+.flow{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;font-size:16px;color:var(--ink3)}
+.flow b{color:var(--ink);font-weight:600}
+.try{display:grid;grid-template-columns:22px 1fr;gap:6px;font-size:16px}
+.try span:nth-child(odd){color:var(--ink3);font-family:var(--nums)}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr:hover{color:var(--ink)}
+.tap{all:unset;cursor:pointer}
+.tr:focus-visible,.tap:focus-visible,.act:focus-visible{outline:2px solid var(--ink3);outline-offset:3px}
+.phone{position:relative;width:350px;max-width:100%;height:720px;background:var(--phone);border:1px solid var(--edge);border-radius:44px;overflow:hidden;box-sizing:border-box;flex:none;user-select:none;-webkit-user-select:none}
+.scr{position:absolute;inset:0}
+.z{position:absolute;left:24px;right:24px}
+.n{font-family:var(--nums);font-weight:300}
+.big{font-family:var(--nums);font-weight:200;line-height:.86;letter-spacing:-.02em}
+.brief{text-align:right;font-size:19px;line-height:25px;height:50px;overflow:hidden}
+.l{height:26px;line-height:26px;font-size:15px;white-space:nowrap;overflow:hidden;color:var(--ink2);display:flex;justify-content:space-between;gap:10px}
+.act{all:unset;cursor:pointer;font-size:19px;font-weight:600}
+.tess{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#FFA90F,#FF5A26 55%,#E5341C)}
+.ft{bottom:24px;height:40px;display:flex;justify-content:space-between;align-items:center}
+.u{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+</style>
+<div class="head">
+  <p class="lab">Round 231, Oct 23</p>
+  <h1>Kitchen, at a glance</h1>
+  <p class="sub">The Kitchen landing says what you could cook tonight and how the pantry stands, in a few numbers and two short lines. Cook leads to the recipes you can make, and every recipe has Cook now. While you cook, the top of the landing becomes the cooking: the step you're on and its timers.</p>
+  <div class="flow" id="flow"><span>Home</span><span>then</span><b data-s="land">Kitchen</b><span>then</span><span data-s="pick">Cook</span><span>then</span><span data-s="rec">a recipe</span><span>then</span><span data-s="cook">Cooking</span></div>
+  <div style="display:flex;gap:22px;flex-wrap:wrap"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button><button class="tr" id="reset">Start over</button></div>
+</div>
+
+<div class="sec">
+  <div class="row">
+    <div class="phone" id="ph">
+      <!-- landing -->
+      <div class="scr" id="land">
+        <div class="z" style="top:50px;display:flex;justify-content:space-between;font-size:15px;color:var(--ink3)"><span>Kitchen</span><span id="mode">Friday</span></div>
+        <div class="z" style="top:82px;height:196px;overflow:hidden" id="top"></div>
+        <div class="z brief" style="top:292px" id="brief"></div>
+        <div class="z" style="top:358px;height:250px" id="body"></div>
+        <div class="z" style="top:606px;height:26px;font-size:15px;color:var(--ink3);overflow:hidden" id="receipt"></div>
+        <div class="z ft"><button class="act" id="act" style="color:var(--kit)">Cook</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <!-- Cook: recipes you can make -->
+      <div class="scr page" id="pick" hidden style="background:var(--phone)">
+        <div class="z" style="top:50px;font-size:15px;color:var(--ink3)">Cook</div>
+        <div class="z" style="top:96px;height:140px;display:flex;flex-direction:column;justify-content:flex-end">
+          <div style="font-size:15px;color:var(--ink2);margin-bottom:6px">With what's here</div>
+          <div style="font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1.02">What are we<br>cooking?</div>
+        </div>
+        <div class="z brief" style="top:292px"><span class="n">4</span> you can make now.<br><span class="n">2</span> need one thing.</div>
+        <div class="z" style="top:358px" id="plist"></div>
+        <div class="z ft"><button class="act" id="newr" style="color:var(--kit)">New recipe</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+      <!-- recipe -->
+      <div class="scr page" id="rec" hidden style="background:var(--phone)">
+        <div class="z" style="top:50px;font-size:15px;color:var(--ink3)">Recipe</div>
+        <div class="z" style="top:96px;height:140px;display:flex;flex-direction:column;justify-content:flex-end">
+          <div style="font-size:15px;color:var(--ink2);margin-bottom:6px" id="rsub"></div>
+          <div style="font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1;color:var(--kit)" id="rname"></div>
+          <div style="font-size:16px;color:var(--ink2);margin-top:12px" id="rmeta"></div>
+        </div>
+        <div class="z brief" style="top:292px" id="rbrief"></div>
+        <div class="z" style="top:358px" id="ring"></div>
+        <div class="z ft"><button class="act" id="cooknow" style="color:var(--kit)">Cook now</button><span class="tess" aria-hidden="true"></span></div>
+      </div>
+    </div>
+    <div class="notes">
+      <h2 id="what">The landing</h2>
+      <div class="try" id="tryA">
+        <span>1</span><span><b>Tonight, in one name.</b> The big word is something you can cook right now with what's here. Tap <i>another</i> (or swipe the name up) and it rolls to the next one, like a reel. Tap the name to open the recipe.</span>
+        <span>2</span><span><b>The pantry in three numbers.</b> On hand, low, to get. They count up when you arrive. Low is in the Kitchen colour; the brief names what runs out first and what wants using.</span>
+        <span>3</span><span><b>Recipes in two lines.</b> How many you can make now and what's planned. The Pantry and Recipes pages come next, on their own.</span>
+        <span>4</span><span><b>Cook</b> opens the recipes you can make, each with Cook now, and New recipe at the foot.</span>
+      </div>
+      <div class="try" id="tryB" hidden>
+        <span>1</span><span><b>Cooking owns the top.</b> The dish, the step you're on, and the running timer, large. The brief says what comes next.</span>
+        <span>2</span><span><b>Timers stack</b> as plain lines under the brief, soonest first. A timer that finishes turns into words: "Pasta's ready."</span>
+        <span>3</span><span><b>The rest of the Kitchen</b> stays, shorter: one line for the pantry, one for what's planned.</span>
+        <span>4</span><span><b>Next step</b> moves on. The last step reads Done cooking, and the pantry takes what you used, with Undo for 10 s.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim=(dur,fn,done)=>{if(RM){fn(1,1);done&&done();return}const s=performance.now();(function f(n){const u=Math.min(1,(n-s)/(dur*1000)),e=1-Math.pow(1-u,3);fn(e,u);if(u<1)requestAnimationFrame(f);else done&&done()})(s)};
+const $=id=>document.getElementById(id);
+const clipIn=(node,delay=0)=>{node.style.clipPath='inset(0 0 100% 0)';setTimeout(()=>anim(.3,e=>node.style.clipPath=`inset(0 0 ${(1-e)*100}% 0)`,()=>node.style.clipPath=''),RM?0:delay)};
+const count=(node,to,dur=.6)=>anim(dur,e=>node.textContent=Math.round(to*e));
+const mmss=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+
+const R=[
+ {n:'Lemon pasta',min:25,serves:2,have:8,of:8,ing:[['Spaghetti','200 g'],['Lemons','2'],['Butter','40 g'],['Parmesan','60 g'],['Garlic','2 cloves'],['Black pepper','']],steps:[['Boil the pasta','Salt the water well.',540,'Pasta'],['Soften the garlic','In butter, low heat.',90,'Garlic'],['Zest the lemons','Into the pan, then the juice.',0],['Save the water','A cup of pasta water.',0],['Toss it all','Pasta, cheese, a splash of water.',0],['Pepper and serve','Lots of pepper.',0]]},
+ {n:'Dal',min:35,serves:4,have:7,of:7,ing:[['Red lentils','250 g'],['Onion','1'],['Tomatoes','2'],['Cumin','1 tsp'],['Turmeric','1 tsp'],['Rice','300 g']],steps:[['Rinse the lentils','Until clear.',0],['Simmer','With turmeric.',1200,'Lentils'],['Fry the onion','Golden.',480,'Onion'],['Stir together','Salt to taste.',0]]},
+ {n:'Fried rice',min:20,serves:2,have:6,of:6,ing:[['Rice','day old'],['Eggs','2'],['Peas','1 cup'],['Soy sauce','2 tbsp'],['Scallions','3']],steps:[['Scramble the eggs','Set aside.',0],['Fry the rice','High heat.',240,'Rice'],['Toss and serve','Eggs, peas, soy.',0]]},
+ {n:'Tomato soup',min:30,serves:3,have:5,of:5,ing:[['Tomatoes','6'],['Onion','1'],['Stock','1 l'],['Cream','splash']],steps:[['Soften the onion','',300,'Onion'],['Simmer','',900,'Soup'],['Blend','',0]]},
+];
+const NEED=[['Shakshuka','needs feta'],['Pancakes','needs milk']];
+let ti=0,cooking=null,step=0,timers=[],tick=null,rollBusy=false;
+
+// ---------- landing, not cooking
+function renderIdle(enter){const r=R[ti];$('mode').textContent='Friday';$('mode').style.color='';
+  $('top').innerHTML=`<div style="height:196px;display:flex;flex-direction:column;justify-content:flex-end">
+    <div style="font-size:15px;color:var(--ink2);margin-bottom:6px">Tonight you could make</div>
+    <div style="height:52px;overflow:hidden;position:relative" id="reel"><button class="tap" id="tname" style="display:block;font-size:46px;font-weight:600;letter-spacing:-.035em;line-height:52px;color:var(--kit);white-space:nowrap;touch-action:none">${r.n}</button></div>
+    <div class="l" style="font-size:16px;margin-top:8px;height:24px;line-height:24px"><span id="tmeta"><span class="n">${r.min}</span> min, you have all <span class="n">${r.of}</span> things</span><button class="tap" id="another" style="color:var(--ink3)">another</button></div></div>`;
+  $('brief').innerHTML='Eggs and milk run out first.<br>Spinach wants using by Sunday.';
+  $('body').innerHTML=`<div style="font-size:13px;color:var(--ink3);height:20px">Pantry</div>
+    <button class="tap" id="pan" aria-label="Pantry: 24 on hand, 3 low, 5 to get" style="display:grid;grid-template-columns:repeat(3,1fr);width:100%;margin-top:4px">
+      <span><span class="big" style="font-size:44px;display:block" id="c1" aria-hidden="true">0</span><span style="font-size:14px;color:var(--ink2)">on hand</span></span>
+      <span><span class="big" style="font-size:44px;display:block;color:var(--kit)" id="c2" aria-hidden="true">0</span><span style="font-size:14px;color:var(--ink2)">low</span></span>
+      <span><span class="big" style="font-size:44px;display:block" id="c3" aria-hidden="true">0</span><span style="font-size:14px;color:var(--ink2)">to get</span></span></button>
+    <div style="font-size:13px;color:var(--ink3);height:20px;margin-top:26px">Recipes</div>
+    <button class="tap l" id="canmake" style="width:100%;color:var(--ink);margin-top:2px"><span>You can make <span class="n">4</span> now</span><span style="color:var(--ink3)">more</span></button>
+    <div class="l"><span>Pasta on Thursday</span><span></span></div>
+    <div class="l"><span>Dal, last made Tuesday</span><span></span></div>`;
+  $('act').textContent='Cook';
+  if(enter){count($('c1'),24);count($('c2'),3,.4);count($('c3'),5,.5);[$('top'),$('brief'),$('body')].forEach((z,i)=>clipIn(z,i*70))}else{$('c1').textContent=24;$('c2').textContent=3;$('c3').textContent=5}
+  wireIdle()}
+function wireIdle(){$('tname').onclick=()=>openRec(ti);$('another').onclick=roll;$('canmake').onclick=openPick;$('pan').onclick=()=>say('The Pantry page is designed next.');
+  let sy=null;const t=$('tname');t.onpointerdown=e=>{sy=e.clientY};t.onpointerup=e=>{if(sy!=null&&sy-e.clientY>24){e.preventDefault();sy=null;roll();t.dataset.swiped=1;setTimeout(()=>delete t.dataset.swiped,50)}sy=null};
+  t.onclick=e=>{if(t.dataset.swiped)return;openRec(ti)}}
+// the reel: the name rolls up, the next one rolls in from below
+function roll(){if(rollBusy)return;rollBusy=true;const reel=$('reel'),old=$('tname');ti=(ti+1)%R.length;const r=R[ti];
+  const nu=old.cloneNode(true);nu.id='tname2';nu.textContent=r.n;nu.style.position='absolute';nu.style.top='52px';reel.append(nu);
+  anim(.42,e=>{old.style.transform=`translateY(${-52*e}px)`;nu.style.transform=`translateY(${-52*e}px)`},()=>{old.remove();nu.id='tname';nu.style.position='';nu.style.top='';nu.style.transform='';rollBusy=false;wireIdle()});
+  const m=$('tmeta');m.style.clipPath='inset(0 100% 0 0)';m.innerHTML=`<span class="n">${r.min}</span> min, you have all <span class="n">${r.of}</span> things`;anim(.4,e=>m.style.clipPath=`inset(0 ${(1-e)*100}% 0 0)`)}
+let sayT=null;function say(t){const r=$('receipt');r.textContent=t;clipIn(r);clearTimeout(sayT);sayT=setTimeout(()=>r.textContent='',4000)}
+
+// ---------- pages slide in from the right; the left edge goes back
+const stack=[];
+function push(id){const p=$(id);p.hidden=false;stack.push(id);p.style.transform='translateX(100%)';anim(.34,e=>p.style.transform=`translateX(${(1-e)*100}%)`);flow(id)}
+function pop(){const id=stack.pop();if(!id)return;const p=$(id);anim(.28,e=>p.style.transform=`translateX(${e*100}%)`,()=>p.hidden=true);flow(stack[stack.length-1]||(cooking?'cook':'land'))}
+function popAll(){while(stack.length){const p=$(stack.pop());p.hidden=true}}
+document.querySelectorAll('.page').forEach(p=>{let sx=null;p.onpointerdown=e=>{const r=p.getBoundingClientRect();if(e.clientX-r.left<36){sx=e.clientX;p.setPointerCapture(e.pointerId)}};p.onpointermove=e=>{if(sx!=null)p.style.transform=`translateX(${Math.max(0,e.clientX-sx)}px)`};p.onpointerup=e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(dx>80)pop();else anim(.2,u=>p.style.transform=`translateX(${dx*(1-u)}px)`)}});
+document.addEventListener('keydown',k=>{if(k.key==='Escape')pop()});
+function flow(s){document.querySelectorAll('#flow [data-s]').forEach(x=>{const on=x.dataset.s===s;x.style.color=on?'var(--ink)':'';x.style.fontWeight=on?600:400})}
+
+function openPick(){$('plist').innerHTML=R.map((r,i)=>`<div style="display:flex;align-items:center;height:44px;gap:12px;font-size:17px"><button class="tap" data-r="${i}" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden">${r.n}</button><span class="n" style="color:var(--ink2);font-size:15px">${r.min} min</span><button class="tap" data-c="${i}" style="color:var(--kitT);font-weight:600;font-size:15px">Cook now</button></div>`).join('')
+  +NEED.map(([n,w])=>`<div style="display:flex;align-items:center;height:44px;gap:12px;font-size:17px;color:var(--ink2)"><span style="flex:1">${n}</span><span style="font-size:15px">${w}</span></div>`).join('');
+  $('plist').querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>openRec(+b.dataset.r));$('plist').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>startCook(+b.dataset.c));push('pick')}
+$('newr').onclick=()=>{const b=$('pick').querySelector('.brief');b.innerHTML='Tell Tess, paste a link,<br>or type it in.';clipIn(b)};
+let recI=0;function openRec(i){recI=i;const r=R[i];$('rname').textContent=r.n;$('rsub').textContent=i===0?'Tonight':'A recipe';$('rmeta').innerHTML=`<span class="n">${r.min}</span> min, serves <span class="n">${r.serves}</span>, <span class="n">${r.steps.length}</span> steps`;
+  $('rbrief').innerHTML=`You have all <span class="n">${r.of}</span> things.<br>Last made two weeks ago.`;
+  $('ring').innerHTML=r.ing.map(([a,b])=>`<div class="l" style="height:30px;line-height:30px;font-size:16px;color:var(--ink)"><span>${a}</span><span class="n" style="color:var(--ink2)">${b}</span></div>`).join('');push('rec')}
+$('cooknow').onclick=()=>startCook(recI);
+
+// ---------- cooking: the landing's top becomes the cooking
+function startCook(i){cooking=R[i];step=0;timers=[];popAll();flow('cook');$('tryA').hidden=true;$('tryB').hidden=false;$('what').textContent='While you cook';
+  $('mode').textContent='Cooking';$('mode').style.color='var(--kitT)';
+  const z=[$('top'),$('brief'),$('body')];z.forEach(n=>anim(.2,e=>n.style.clipPath=`inset(0 0 ${e*100}% 0)`));setTimeout(()=>{z.forEach(n=>n.style.clipPath='');renderCook(true)},RM?0:220);
+  clearInterval(tick);tick=setInterval(()=>{timers.forEach(t=>{if(t.left>0){t.left=Math.max(0,t.left-5);if(!t.left)done(t)}});paint()},100)}
+function startTimer(){const s=cooking.steps[step];if(s[2]&&!timers.some(t=>t.step===step))timers.unshift({name:s[3],left:s[2],total:s[2],step})}
+function renderCook(enter){const r=cooking,s=r.steps[step];startTimer();
+  const cur=timers.find(t=>t.step===step)||[...timers].filter(t=>t.left).sort((a,b)=>a.left-b.left)[0];
+  $('top').innerHTML=`<div style="height:196px;position:relative">
+    <button class="tap" id="cname" style="font-size:30px;font-weight:600;letter-spacing:-.025em;line-height:1.1;color:var(--kit)">${r.n}</button>
+    <div style="font-size:15px;color:var(--ink2);margin-top:2px">Step <span class="n">${step+1}</span> of <span class="n">${r.steps.length}</span></div>
+    <div style="position:absolute;left:0;right:0;bottom:4px">
+      <div style="font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:29px;height:58px;overflow:hidden;display:flex;align-items:flex-end">${s[0]}</div>
+      ${cur?`<div style="display:flex;align-items:baseline;gap:10px;margin-top:6px"><span class="big" id="bigT" style="font-size:72px">${mmss(cur.left)}</span><span style="font-size:15px;color:var(--ink2)" id="bigL">${cur.name.toLowerCase()}</span></div>`:`<div style="font-size:17px;color:var(--ink2);margin-top:8px;height:62px">${s[1]}</div>`}
+    </div></div>`;
+  const nx=r.steps[step+1];$('brief').innerHTML=nx?`Then: ${nx[0].toLowerCase()}.<br>${nx[1]||'&nbsp;'}`:'Last step.<br>Enjoy it.';
+  paintBody();$('act').textContent=step<r.steps.length-1?'Next step':'Done cooking';$('cname').onclick=()=>openRec(R.indexOf(r));
+  if(enter)[$('top'),$('brief'),$('body')].forEach((z,i)=>clipIn(z,i*70))}
+function paintBody(){$('body').innerHTML=`<div style="font-size:13px;color:var(--ink3);height:20px">Timers</div><div id="tl"></div>
+  <div style="position:absolute;top:150px;left:0;right:0"><div style="font-size:13px;color:var(--ink3);height:20px">Kitchen</div>
+  <div class="l" style="color:var(--ink3)"><span>Pantry <span class="n">24</span> on hand, <span class="n">3</span> low</span><span></span></div>
+  <div class="l" style="color:var(--ink3)"><span>Pasta on Thursday</span><span></span></div></div>`;paint()}
+function paint(){const tl=$('tl');if(!tl||!cooking)return;const sorted=[...timers].sort((a,b)=>(a.left||1e9)-(b.left||1e9));
+  tl.innerHTML=sorted.length?sorted.slice(0,3).map(t=>t.left?`<div class="l" style="color:var(--ink)"><span>${t.name}</span><span class="n">${mmss(t.left)}</span></div>`:`<div class="l" style="color:var(--kitT);font-weight:600"><span>${t.name==='Pasta'?"Pasta's":t.name+(t.name.endsWith('s')?' are':' is')} ready</span><span></span></div>`).join(''):'<div class="l" style="color:var(--ink3)"><span>None running</span><span></span></div>';
+  const cur=timers.find(t=>t.step===step)||[...timers].filter(t=>t.left).sort((a,b)=>a.left-b.left)[0]||timers.find(t=>t.step===step-1),bt=$('bigT');if(bt&&cur){bt.textContent=cur.left?mmss(cur.left):'0:00';if(!cur.left){$('bigL').textContent='ready';bt.style.color='var(--kit)'}}}
+function done(t){/* a finished timer turns into words; on the phone, a local notification or Live Activity, sound follows the silent switch */}
+function nextStep(){const r=cooking;if(step>=r.steps.length-1){finish();return}step++;const n=$('top');anim(.2,e=>n.style.clipPath=`inset(0 0 ${e*100}% 0)`,()=>{n.style.clipPath='';renderCook(false);clipIn($('top'));clipIn($('brief'),60)})}
+function finish(){const r=cooking;clearInterval(tick);cooking=null;timers=[];flow('land');$('tryA').hidden=false;$('tryB').hidden=true;$('what').textContent='The landing';renderIdle(true);
+  const rc=$('receipt');rc.innerHTML=`Cooked. Pantry took <span class="n">${r.ing.length}</span> things. <button class="tap" style="color:var(--kitT);font-weight:600" id="undo">Undo</button>`;clipIn(rc);clearTimeout(sayT);sayT=setTimeout(()=>rc.textContent='',10000);$('undo').onclick=()=>{rc.textContent='Put back.';setTimeout(()=>rc.textContent='',2000)}}
+$('act').onclick=()=>{if(cooking)nextStep();else openPick()};
+
+function reset(){clearInterval(tick);cooking=null;timers=[];ti=0;popAll();$('tryA').hidden=false;$('tryB').hidden=true;$('what').textContent='The landing';$('receipt').textContent='';flow('land');renderIdle(true)}
+$('reset').onclick=reset;
+$('th').onclick=()=>document.documentElement.dataset.theme='dark';$('tw').onclick=()=>document.documentElement.dataset.theme='light';
+flow('land');renderIdle(true);
+})();
+</script>

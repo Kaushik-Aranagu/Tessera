@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Back word</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for docs/design/back-word.md: the title you leave becomes the way back. Push Day A, then Bench press, then Tuesday; back by tapping the word, then by the edge swipe. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--sage:#6E9E6A}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#DCE6EE 0%,rgba(220,230,238,0) 70%),radial-gradient(70% 45% at 0% 40%,#E3EAD8 0%,rgba(227,234,216,0) 70%),radial-gradient(80% 50% at 100% 80%,#EFE2CF 0%,rgba(239,226,207,0) 70%),#F4F0EA}
+.abs{position:absolute}
+.page{position:absolute;inset:0;transform-origin:0 0}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub);white-space:nowrap}
+.back{position:absolute;left:22px;top:58px}
+.back .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;background:var(--ink);transform:scaleX(0);transform-origin:left}
+.hero{position:absolute;left:20px;top:90px;font-weight:500;font-size:56px;line-height:1;letter-spacing:-.04em;white-space:nowrap}
+.ctx{position:absolute;left:22px;top:160px;font-size:21px;color:var(--ctx);white-space:nowrap}
+.row{position:absolute;left:22px;right:22px;height:52px;line-height:52px;font-size:21px;display:flex;justify-content:space-between;white-space:nowrap}
+.row b{font-weight:500}
+.row .lbl{line-height:52px}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+  <section id="stage" class="abs" style="inset:0"></section>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const stage = $('stage');
+
+const PAGES = {
+  routine: { back: 'TRAINING', hero: 'Push Day A', ctx: '5 lifts, about 55 min', rows: [['Bench press', '4 × 8'], ['Overhead press', '3 × 10'], ['Incline press', '3 × 12'], ['Lateral raise', '3 × 15'], ['Pushdown', '3 × 12']] },
+  bench: { back: 'PUSH DAY A', hero: 'Bench press', ctx: 'best 85 kg × 5, in May', label: 'HISTORY', rows: [['Tuesday', '80 × 8 · 3 sets'], ['Last Friday', '80 × 8 · 3 sets'], ['Tue 6 Oct', '77.5 × 8 · 4 sets'], ['Fri 2 Oct', '77.5 × 8 · 3 sets']] },
+  tuesday: { back: 'BENCH PRESS', hero: 'Tuesday', ctx: 'bench press, 3 sets, 1,920 kg', rows: [['Set 1', '80 kg × 8'], ['Set 2', '80 kg × 8'], ['Set 3', '80 kg × 8 · RPE 9']] },
+};
+function page(key) {
+  const p = PAGES[key]; const el = document.createElement('div'); el.className = 'page'; el.dataset.key = key;
+  let h = `<span class="back lbl">‹ ${p.back}<span class="line"></span></span><div class="hero">${p.hero}</div><div class="ctx">${p.ctx}</div>`;
+  let y = 226; if (p.label) { h += `<div class="abs lbl" style="left:22px;top:${y}px">${p.label}</div>`; y += 30; }
+  p.rows.forEach(([a, b]) => { h += `<div class="row" style="top:${y}px"><b>${a}</b><span class="lbl">${b}</span></div>`; y += 52; });
+  el.innerHTML = h; stage.appendChild(el); return el;
+}
+const q = (pg, s) => pg.querySelector(s);
+
+// push: the new page zooms out of the tapped row; the hero you're leaving flies up and becomes the back word
+async function push(from, row, key) {
+  const rr = rel(row.getBoundingClientRect());
+  await fingerOn(rr.left + 70, rr.top + rr.height / 2); await sleep(90); fingerOff();
+  anim(row, [{ background: 'rgba(43,36,64,0)' }, { background: 'rgba(43,36,64,.06)' }, { background: 'rgba(43,36,64,0)' }], { duration: 300 });
+  const to = page(key);
+  const hero = q(from, '.hero'); const hr = rel(hero.getBoundingClientRect());
+  const nb = q(to, '.back'); nb.style.opacity = 0;
+  // the clone travels from hero (56/500) to the back word's text position, shrinking to 16
+  const fly = document.createElement('div'); fly.className = 'abs'; fly.style.cssText = `left:${hr.left}px;top:${hr.top}px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:1;white-space:nowrap;transform-origin:0 0;z-index:5`;
+  fly.textContent = hero.textContent; stage.appendChild(fly);
+  hero.style.visibility = 'hidden';
+  const arrowW = 14; const s = 16 / 56;
+  anim(fly, [{ transform: 'none', opacity: 1, color: '#2B2440' }, { opacity: 1, offset: .55 }, { transform: `translate(${22 + arrowW - hr.left}px,${60 - hr.top}px) scale(${s})`, opacity: 0, color: '#6E6480' }], { duration: 440, easing: HOUSE });
+  anim(nb, [{ opacity: 0, transform: 'translateX(6px)' }, { opacity: 0, offset: .5 }, { opacity: 1, transform: 'none' }], { duration: 440, easing: HOUSE });
+  anim(q(from, '.back'), [{ opacity: 1 }, { opacity: 0, transform: 'translateX(-16px)' }], { duration: 220 });
+  // the parent recedes; the new page grows out of the row
+  anim(from, [{ opacity: 1, transform: 'none', filter: 'blur(0)' }, { opacity: 0, transform: 'scale(.94)', filter: 'blur(2px)' }], { duration: 440, easing: HOUSE });
+  const band = `inset(${rr.top}px 0 ${844 - rr.top - rr.height}px 0)`;
+  const content = [...to.children].filter((c) => c !== nb);
+  content.forEach((c) => anim(c, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 100 }));
+  await anim(to, [{ clipPath: band, transform: `translateY(${(rr.top - 90) * .25}px) scale(.96)` }, { clipPath: 'inset(0 0 0 0)', transform: 'none' }], { duration: 460, easing: HOUSE });
+  fly.remove();
+  return to;
+}
+
+// pop: the back word grows back into the parent's hero; the page shrinks into the row it came from
+async function pop(cur, parent, rowIndex, fromSwipe) {
+  const nb = q(cur, '.back'); const br = rel(nb.getBoundingClientRect());
+  if (!fromSwipe) {
+    await fingerOn(br.left + br.width / 2, br.top + 10);
+    anim(q(nb, '.line'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 150, easing: HOUSE });
+    await sleep(110); fingerOff();
+  }
+  const hero = q(parent, '.hero');
+  const fly = document.createElement('div'); fly.className = 'abs'; fly.style.cssText = `left:20px;top:90px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:1;white-space:nowrap;transform-origin:0 0;z-index:5`;
+  fly.textContent = hero.textContent; stage.appendChild(fly);
+  const s = 16 / 56;
+  anim(fly, [{ transform: `translate(${36 - 20}px,${60 - 90}px) scale(${s})`, opacity: 0 }, { opacity: 1, offset: .4 }, { transform: 'none', opacity: 1 }], { duration: 440, easing: HOUSE });
+  anim(nb, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+  hero.style.visibility = 'hidden';
+  const row = parent.querySelectorAll('.row')[rowIndex]; parent.style.visibility = 'visible';
+  parent.getAnimations().forEach((a) => a.cancel());
+  anim(parent, [{ opacity: fromSwipe ? .6 : 0, transform: fromSwipe ? 'scale(.97)' : 'scale(.94)', filter: 'blur(2px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 440, easing: HOUSE });
+  q(parent, '.back').getAnimations().forEach((a) => a.cancel());
+  anim(q(parent, '.back'), [{ opacity: 0, transform: 'translateX(-16px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: 160, easing: HOUSE });
+  const rr = rel(row.getBoundingClientRect());
+  const band = `inset(${rr.top}px 0 ${844 - rr.top - rr.height}px 0)`;
+  [...cur.children].forEach((c) => c.getAnimations().forEach((a) => a.cancel()));
+  if (fromSwipe) await anim(cur, [{ transform: 'translateX(200px)', opacity: 1 }, { transform: 'translateX(390px)', opacity: .6 }], { duration: 280, easing: HOUSE });
+  else await anim(cur, [{ clipPath: 'inset(0 0 0 0)', transform: 'none', opacity: 1 }, { clipPath: band, transform: `translateY(${(rr.top - 90) * .25}px) scale(.96)`, opacity: .3 }], { duration: 420, easing: HOUSE });
+  hero.style.visibility = 'visible'; fly.remove(); cur.remove();
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready;
+  const r = page('routine');
+  await sleep(400); document.body.dataset.start = '1';
+  await sleep(900);
+
+  // in two levels: Push Day A, then Bench press, then Tuesday
+  const b = await push(r, r.querySelectorAll('.row')[0], 'bench');
+  await sleep(1300);
+  const t = await push(b, b.querySelectorAll('.row')[0], 'tuesday');
+  await sleep(1500);
+
+  // back by the word
+  await pop(t, b, 0, false);
+  await sleep(1300);
+
+  // back by the edge swipe: the page follows the finger, the parent comes forward, the word swells toward its hero
+  await fingerOn(6, 420);
+  const nb = q(b, '.back');
+  r.getAnimations().forEach((a) => a.cancel());
+  b.getAnimations().forEach((a) => a.cancel());
+  await tween(520, (k) => {
+    fingerAt(6 + 200 * k, 420);
+    b.style.transform = `translateX(${200 * k}px)`;
+    r.style.opacity = .6 * k; r.style.transform = `scale(${.94 + .03 * k})`; r.style.filter = `blur(${2 - k}px)`;
+    nb.style.transform = `scale(${1 + .25 * k})`; nb.style.transformOrigin = '0 50%';
+  });
+  fingerOff();
+  b.getAnimations().forEach((a) => a.cancel());
+  await pop(b, r, 0, true);
+  await sleep(1600);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<title>Tessera Element Kit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300;400&display=swap">
+<style>
+:root{
+  --ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;
+  --training:#A8203F;--kitchen:#A8701F;--routines:#8E4A78;--lists:#5E6B1F;--notes:#5B3FB8;--money:#2A7878;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E0E10;--phone:#000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#D04A6A;--kitchen:#C49A5E;--routines:#D79AA6;--lists:#B5BE7A;--notes:#B9A9E0;--money:#7BC0C4;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000;--ink:#F1EEE9;--ink2:#ABA6A0;--ink3:#78736D;--edge:#2A2A2E;
+  --training:#D04A6A;--kitchen:#C49A5E;--routines:#D79AA6;--lists:#B5BE7A;--notes:#B9A9E0;--money:#7BC0C4;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.head{max-width:1100px;margin:0 auto 34px;display:flex;flex-direction:column;gap:12px}
+.lab{color:var(--ink3);font-size:16px;margin:0}
+h1{font-weight:500;font-size:clamp(36px,6.5vw,60px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:62ch}
+.grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:44px 36px}
+.el{display:flex;flex-direction:column;gap:10px;min-width:0}
+.stage{position:relative;height:270px;background:var(--phone);border:1px solid var(--edge);border-radius:28px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.el h2{font-size:22px;font-weight:600;letter-spacing:-.01em;margin:4px 0 0}
+.el p{margin:0;font-size:16px;color:var(--ink2);max-width:60ch}
+.el .where{color:var(--ink);font-size:15px}
+.el .where b{font-weight:600}
+.hint{position:absolute;left:18px;bottom:12px;font-size:13px;color:var(--ink3);pointer-events:none}
+.n{font-family:var(--nums);font-weight:300}
+.big{font-family:var(--nums);font-weight:200}
+table{border-collapse:collapse;font-size:15px;min-width:640px}
+td,th{padding:7px 18px 7px 0;text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--ink)}td{color:var(--ink2)}td:first-child{color:var(--ink);white-space:nowrap}
+.tw{max-width:1100px;margin:56px auto 0;overflow-x:auto}
+.tw h2{font-size:26px;font-weight:600;margin:0 0 12px}
+.tr{all:unset;cursor:pointer;color:var(--ink2)}.tr:focus-visible{outline:2px solid var(--ink3);outline-offset:4px}
+.pr{max-width:1100px;margin:28px auto 0;color:var(--ink3);font-size:15px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<div class="head">
+  <p class="lab">Round 222, Oct 23</p>
+  <h1>The element kit</h1>
+  <p class="sub">Eight ways to touch things, each with its own feel, and where each one belongs. Every one of them is ink and type only: no cards, pills, bars or filled dots. Try each one in its frame; the table at the end says which apps and moments use it.</p>
+  <div style="display:flex;gap:22px"><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button></div>
+</div>
+<div class="grid">
+ <section class="el"><div class="stage" id="s-drum"></div><h2>The drum</h2><p>Words on a turning cylinder. Drag and they roll past a reading line, the one on the line in ink, Outfit 300, the rest tipping away. It springs to the nearest value. For choosing one from a known run.</p><p class="where"><b>Uses:</b> a routine's start time, servings, rest between sets, a repeat rule.</p></section>
+ <section class="el"><div class="stage" id="s-arc"></div><h2>The thumb arc</h2><p>A quarter circle that comes out of the bottom-left corner only while you set a value, so it never reads as a progress ring and never meets Tess in her corner. Drag around it and the number steps in fives with a tick. One-handed, no reaching. The arc is a hairline; only the part you have set is in the app's colour.</p><p class="where"><b>Uses:</b> cook timers, focus minutes, the live set's weight when the phone is in one hand.</p></section>
+ <section class="el"><div class="stage" id="s-lens"></div><h2>The lens</h2><p>A long list read through a magnifier at one third of the height. The line under the lens grows to 1.38x and reads in ink; lines further away settle smaller and quieter. It snaps a line into the lens when you let go.</p><p class="where"><b>Uses:</b> Recipes, the exercise Library, Notes in a thing, Runs.</p></section>
+ <section class="el"><div class="stage" id="s-page"></div><h2>The page turn</h2><p>Long lists come as pages of six, not an endless scroll (your Oct 17 ask). Swipe up and the lines lift away one after another while the next six arrive; the last line says how many are left.</p><p class="where"><b>Uses:</b> Pantry places, a long packing list, the Log, Spending.</p></section>
+ <section class="el"><div class="stage" id="s-pinch"></div><h2>The fold</h2><p>One more dimension, by pinching. Twelve weeks of tiles, one per day. Pinch in (or tap the word) and the days fly together into weeks, then months; pinch out and they spread back into days. The same tiles, never a chart.</p><p class="where"><b>Uses:</b> the Training log, habits, the Routines tide (day to week), Money's shapes.</p></section>
+ <section class="el"><div class="stage" id="s-strip"></div><h2>The word strip</h2><p>A sideways run of words with the middle one large, 21 pt and 600, and its neighbours 16 pt in ink 2. Drag or flick and it settles a word in the middle. No blur, no underline bar.</p><p class="where"><b>Uses:</b> the days of Plan, a knob with several values, Recipes' week, a month in Money.</p></section>
+ <section class="el"><div class="stage" id="s-thread"></div><h2>The thread</h2><p>Daily's signature, made physical. Steps hang from one line down the left; the step you're on has one hot stitch. Pull down anywhere and the thread stretches, then lets go and the next step comes up. The finished step is struck through and rises away.</p><p class="where"><b>Uses:</b> a running routine, cook mode's steps, the sets of a live workout.</p></section>
+ <section class="el"><div class="stage" id="s-press"></div><h2>The pressed number</h2><p>Numbers are instruments (kept from your Oct 22 approval). Hold the top half and it climbs, faster the longer you hold; hold the bottom half and it falls; a flick steps it once. "was 185" stays under it for two seconds, and the change goes on the one Undo for 10 seconds. With Reduce Motion each press is one step.</p><p class="where"><b>Uses:</b> set weight and reps, amounts in Pantry, a bill's due day.</p></section>
+</div>
+<div class="tw"><h2>Where each one lives</h2>
+<table><thead><tr><th>Element</th><th>Training</th><th>Kitchen</th><th>Notes</th><th>Lists</th><th>Routines</th><th>Money</th></tr></thead><tbody>
+<tr><td>Drum</td><td>rest between sets</td><td>servings</td><td>none</td><td>reset rule</td><td>start time, repeat</td><td>due day</td></tr>
+<tr><td>Thumb arc</td><td>live set weight</td><td>cook timers</td><td>none</td><td>none</td><td>focus minutes</td><td>none</td></tr>
+<tr><td>Lens</td><td>Library</td><td>Recipes</td><td>notes in a thing</td><td>Runs</td><td>Browse</td><td>none</td></tr>
+<tr><td>Page turn</td><td>Log</td><td>Pantry places</td><td>none</td><td>long lists</td><td>none</td><td>Spending</td></tr>
+<tr><td>Fold</td><td>Log, weeks to months</td><td>cooked, weeks</td><td>none</td><td>none</td><td>tide, day to week</td><td>shapes only</td></tr>
+<tr><td>Word strip</td><td>Plan days</td><td>Recipes' week</td><td>Kind knob</td><td>Kind knob</td><td>Kind knob</td><td>month</td></tr>
+<tr><td>Thread</td><td>live sets</td><td>cook steps</td><td>none</td><td>none</td><td>running routine</td><td>none</td></tr>
+<tr><td>Pressed number</td><td>weight, reps</td><td>amounts</td><td>none</td><td>quantity</td><td>none</td><td>due day only</td></tr>
+</tbody></table></div>
+<p class="pr">Every element: one selection tick per step, MotionPolicy springs only, Reduce Motion steps plainly. VoiceOver: drums, arcs, strips and pressed numbers are adjustable elements; the lens and page turn read as lists; the thread reads the current step and "pull down for next". Money never shows an amount outside its own pages, and nothing here sends anything anywhere.</p>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cs=()=>getComputedStyle(document.documentElement);const tok=n=>cs().getPropertyValue(n).trim();
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const spring=(from,to,set,dur=340,done)=>{if(RM){set(to);done&&done();return}const t0=performance.now();(function f(now){const u=clamp((now-t0)/dur),e=1-Math.pow(1-u,3);set(from+(to-from)*e);if(u<1)requestAnimationFrame(f);else{set(to);done&&done()}})(t0)};
+function drag(el,{down,move,up}){let st=null;el.addEventListener('pointerdown',e=>{el.setPointerCapture(e.pointerId);st={x:e.clientX,y:e.clientY,t:performance.now(),lx:e.clientX,ly:e.clientY,lt:performance.now(),vx:0,vy:0};down&&down(st,e)});
+  el.addEventListener('pointermove',e=>{if(!st)return;const now=performance.now(),dt=Math.max(1,now-st.lt);st.vx=(e.clientX-st.lx)/dt;st.vy=(e.clientY-st.ly)/dt;st.lx=e.clientX;st.ly=e.clientY;st.lt=now;move&&move(st,e.clientX-st.x,e.clientY-st.y,e)});
+  const end=e=>{if(!st)return;up&&up(st,e.clientX-st.x,e.clientY-st.y,e);st=null};el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end)}
+const hint=(s,t)=>s.insertAdjacentHTML('beforeend',`<span class="hint">${t}</span>`);
+
+// ---- drum
+{const s=document.getElementById('s-drum');const V=[];for(let m=5*60+30;m<=8*60;m+=15){const h=Math.floor(m/60),mm=m%60;V.push(`${h}:${String(mm).padStart(2,'0')} am`)}
+ let pos=4;const box=document.createElement('div');box.style.cssText='position:absolute;inset:0;perspective:460px';s.appendChild(box);
+ const lab=document.createElement('div');lab.style.cssText='position:absolute;left:22px;top:22px;font-size:15px;color:var(--ink2)';lab.innerHTML='Morning starts at';s.appendChild(lab);
+ const els=V.map(v=>{const d=document.createElement('div');d.className='n';d.textContent=v;d.style.cssText='position:absolute;left:0;right:0;top:50%;height:40px;margin-top:-20px;text-align:center;font-size:28px;line-height:40px;backface-visibility:hidden';box.appendChild(d);return d});
+ const rd=document.createElement('div');rd.style.cssText='position:absolute;left:60px;right:60px;top:50%;margin-top:22px;height:1px;background:var(--routines)';s.appendChild(rd);
+ const draw=()=>els.forEach((d,i)=>{const a=(i-pos)*24;if(Math.abs(a)>80){d.style.visibility='hidden';return}d.style.visibility='visible';
+   d.style.transform=`rotateX(${-a}deg) translateZ(84px)`;const dd=Math.abs(i-pos),on=dd<.5;d.style.color=on?'var(--ink)':dd<1.5?'var(--ink2)':'var(--ink3)';d.style.fontWeight=on?300:200});
+ let p0;drag(s,{down:()=>p0=pos,move:(st,dx,dy)=>{pos=clamp(p0-dy/34,-.4,V.length-.6);draw()},up:(st)=>{const t=clamp(Math.round(pos-st.vy*6),0,V.length-1);spring(pos,t,v=>{pos=v;draw()},380)}});draw();hint(s,'Drag up or down')}
+
+// ---- thumb arc
+{const s=document.getElementById('s-arc');const NS='http://www.w3.org/2000/svg';const sv=document.createElementNS(NS,'svg');sv.setAttribute('width','100%');sv.setAttribute('height','100%');s.appendChild(sv);
+ const val=document.createElement('div');val.style.cssText='position:absolute;right:22px;top:22px;text-align:right';val.innerHTML='<div style="font-size:15px;color:var(--ink2)">Rice, simmer</div><div class="big" id="arcv" style="font-size:64px;line-height:1;margin-top:4px">15<span style="font-size:24px;margin-left:6px;font-family:var(--words);font-weight:400;color:var(--ink2)">min</span></div>';s.appendChild(val);
+ let v=15;const R=180;const geo=()=>{const W=s.clientWidth,H=s.clientHeight;return{W,H,cx:-6,cy:H+6}};
+ const draw=()=>{const {cx,cy}=geo();const ang=a=>[cx+R*Math.cos(a),cy+R*Math.sin(a)];const a0=1.5*Math.PI,a1=2*Math.PI,av=a0+(a1-a0)*(v/60);
+   const p=(a,b)=>{const [x0,y0]=ang(a),[x1,y1]=ang(b);return`M${x0} ${y0} A${R} ${R} 0 0 1 ${x1} ${y1}`};const [hx,hy]=ang(av),[hx2,hy2]=[cx+(R-14)*Math.cos(av),cy+(R-14)*Math.sin(av)],[hx3,hy3]=[cx+(R+14)*Math.cos(av),cy+(R+14)*Math.sin(av)];
+   sv.innerHTML=`<path d="${p(a0,a1)}" fill="none" stroke="var(--edge)" stroke-width="1"/><path d="${p(a0,av)}" fill="none" stroke="var(--kitchen)" stroke-width="2" stroke-linecap="round"/><line x1="${hx2}" y1="${hy2}" x2="${hx3}" y2="${hy3}" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>`;
+   document.getElementById('arcv').firstChild.nodeValue=v};
+ const set=e=>{const r=s.getBoundingClientRect(),{cx,cy}=geo();let a=Math.atan2(e.clientY-r.top-cy,e.clientX-r.left-cx);if(a<0)a+=2*Math.PI;const nv=Math.round(clamp((a-1.5*Math.PI)/(Math.PI/2))*60/5)*5;if(nv!==v){v=nv;draw()}};
+ sv.style.transition='clip-path .26s cubic-bezier(.3,.7,.4,1)';const show=on=>{sv.style.clipPath=on||RM?'circle(150% at 0 100%)':'circle(0% at 0 100%)';if(RM)sv.style.visibility=on?'visible':'hidden'};show(false);
+ drag(s,{down:(st,e)=>{show(true);set(e)},move:(st,dx,dy,e)=>set(e),up:()=>setTimeout(()=>show(false),600)});draw();addEventListener('resize',draw);hint(s,'Press bottom left, then drag')}
+
+// ---- lens
+{const s=document.getElementById('s-lens');const L=['Tacos','Lentil soup','Stir fry','Pasta with peas','Roast vegetables','Shakshuka','Rice bowls','Chili','Fried rice','Dal','Pancakes','Black bean soup','Gnocchi','Curry','Grain salad','Omelet','Noodle soup','Quesadillas'];
+ const RH=34;let off=0;const lensY=()=>s.clientHeight/3;
+ const els=L.map(t=>{const d=document.createElement('div');d.textContent=t;d.style.cssText='position:absolute;left:24px;top:0;font-size:18px;transform-origin:left center;white-space:nowrap';s.appendChild(d);return d});
+ const draw=()=>{const ly=lensY();els.forEach((d,i)=>{const y=ly+i*RH-off,dd=Math.abs(y-ly),k=clamp(1-dd/(RH*1.2));const sc=1+.38*k*k;let yy=y;if(y>ly)yy+=10*clamp(1-(y-ly)/(RH*2))*1;if(y<ly)yy-=10*clamp(1-(ly-y)/(RH*2));
+   d.style.transform=`translateY(${yy-12}px) scale(${sc})`;d.style.color=k>.5?'var(--ink)':dd<90?'var(--ink2)':'var(--ink3)';d.style.fontWeight=k>.5?600:400})};
+ let o0;drag(s,{down:()=>o0=off,move:(st,dx,dy)=>{off=clamp(o0-dy,-RH*.4,(L.length-1)*RH+RH*.4);draw()},up:st=>{const t=clamp(Math.round((off-st.vy*120)/RH),0,L.length-1)*RH;spring(off,t,v=>{off=v;draw()},420)}});draw();hint(s,'Drag the list')}
+
+// ---- page turn
+{const s=document.getElementById('s-page');const L=['Charger, both cables','Running shoes','Passport','Snacks for the drive','Book for the plane','Sunglasses','Rain jacket','Toothbrush','Socks, five pairs','Hat','Headphones','Water bottle','Pills for the week','Notebook'];
+ let pg=0;const per=6;const box=document.createElement('div');box.style.cssText='position:absolute;inset:18px 24px 30px';s.appendChild(box);
+ const render=(dir)=>{const old=box.firstChild;const p=document.createElement('div');p.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column';
+   L.slice(pg*per,pg*per+per).forEach(t=>p.insertAdjacentHTML('beforeend',`<div style="height:34px;font-size:18px">${t}</div>`));const rest=L.length-(pg+1)*per;
+   p.insertAdjacentHTML('beforeend',`<div style="margin-top:auto;font-size:14px;color:var(--ink3)">${rest>0?`<span class="n">${rest}</span> more, swipe up`:'swipe down to go back'}</div>`);box.appendChild(p);
+   if(old){old.remove();if(RM)return;[...p.children].forEach((c,q)=>c.animate([{transform:`translateY(${dir*22}px)`,clipPath:dir>0?'inset(0 0 100% 0)':'inset(100% 0 0 0)'},{transform:'none',clipPath:'inset(0 0 0 0)'}],{duration:280,delay:q*30,easing:'cubic-bezier(.3,.7,.4,1)',fill:'backwards'}))}};
+ drag(s,{up:(st,dx,dy)=>{if(Math.abs(dy)<40)return;const n=pg+(dy<0?1:-1);if(n<0||n*per>=L.length)return;pg=n;render(dy<0?1:-1)}});render(0);hint(s,'Swipe up or down')}
+
+// ---- fold (pinch through days, weeks, months)
+{const s=document.getElementById('s-pinch');const cv=document.createElement('canvas');cv.style.cssText='position:absolute;inset:0;width:100%;height:100%';s.appendChild(cv);const x=cv.getContext('2d');
+ const word=document.createElement('button');word.className='tr';word.style.cssText='position:absolute;right:22px;top:18px;font-size:17px';s.appendChild(word);
+ const lab=document.createElement('div');lab.style.cssText='position:absolute;left:22px;top:18px;font-size:15px;color:var(--ink2)';lab.textContent='Training, twelve weeks';s.appendChild(lab);
+ const D=84,did=[...Array(D)].map((_,i)=>{const dw=i%7;return (dw===0||dw===1||dw===3||dw===4)&&((i*7)%11!==3)?1:0});let mode=0,from=null,t0=0;const MODES=['Days','Weeks','Months'];
+ const target=(m,W,H)=>{const T=6,G=8;const out=[];if(m===0){const x0=(W-12*G)/2;for(let i=0;i<D;i++)out.push([x0+Math.floor(i/7)*G,62+(i%7)*G])}
+   else if(m===1){const x0=(W-12*14)/2;const cnt=Array(12).fill(0);for(let i=0;i<D;i++){const w=Math.floor(i/7);if(did[i]){out.push([x0+w*14,H-52-cnt[w]*G]);cnt[w]++}else out.push([x0+w*14,H-44])}}
+   else{const x0=(W-3*56)/2;const cnt=[0,0,0];for(let i=0;i<D;i++){const mo=Math.min(2,Math.floor(i/28));if(did[i]){const c=cnt[mo]++;out.push([x0+mo*56+(c%5)*G,H-52-Math.floor(c/5)*G])}else out.push([x0+mo*56+16,H-44])}}return out};
+ let cur=null;
+ function frame(now){const dpr=devicePixelRatio||1,W=s.clientWidth,H=s.clientHeight;if(cv.width!==W*dpr){cv.width=W*dpr;cv.height=H*dpr}x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+   const tg=target(mode,W,H);if(!cur)cur=tg.map(p=>[...p]);const acc=tok('--training'),pg=tok('--phone'),e3=tok('--edge');
+   for(let i=0;i<D;i++){let p=tg[i];if(from){const u=RM?1:clamp((now-t0-(i%7)*18-Math.floor(i/7)*6)/520),e=1-Math.pow(1-u,3);p=[from[i][0]+(tg[i][0]-from[i][0])*e,from[i][1]+(tg[i][1]-from[i][1])*e-Math.sin(e*Math.PI)*(did[i]?14:4)]}
+     cur[i]=p;const hide=!did[i]&&mode>0;x.fillStyle=did[i]?acc:e3;if(hide&&!(from&&now-t0<300))continue;x.fillRect(p[0],p[1],6,6)}
+   requestAnimationFrame(frame)}
+ const go=m=>{if(m===mode||m<0||m>2)return;from=cur.map(p=>[...p]);t0=performance.now();mode=m;word.textContent=MODES[m]};word.textContent='Days';
+ word.onclick=e=>{e.stopPropagation();go((mode+1)%3)};
+ // pinch: two pointers closer or apart; trackpad pinch arrives as ctrl+wheel
+ const pts=new Map();let d0=null;s.addEventListener('pointerdown',e=>{if(e.target===word)return;pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2){const [a,b]=[...pts.values()];d0=Math.hypot(a[0]-b[0],a[1]-b[1])}});
+ s.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2&&d0){const [a,b]=[...pts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(d<d0*.7){go(mode+1);d0=d}else if(d>d0*1.4){go(mode-1);d0=d}}});
+ const pu=e=>{pts.delete(e.pointerId);if(pts.size<2)d0=null};s.addEventListener('pointerup',pu);s.addEventListener('pointercancel',pu);
+ let wacc=0;s.addEventListener('wheel',e=>{if(!e.ctrlKey)return;e.preventDefault();wacc+=e.deltaY;if(wacc>40){go(mode+1);wacc=0}else if(wacc<-40){go(mode-1);wacc=0}},{passive:false});
+ requestAnimationFrame(frame);hint(s,'Pinch, or tap the word')}
+
+// ---- word strip
+{const s=document.getElementById('s-strip');const L=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];const box=document.createElement('div');box.style.cssText='position:absolute;left:0;right:0;top:50%;height:40px;margin-top:-30px';s.appendChild(box);
+ const sub=document.createElement('div');sub.style.cssText='position:absolute;left:0;right:0;top:50%;margin-top:22px;text-align:center;font-size:16px;color:var(--ink2)';s.appendChild(sub);
+ const SUB=['Pull A, 50 min','Legs, 55 min','Rest','Push B, 45 min','Push A, 45 min','Run, 30 min','Rest'];
+ const GAP=104;let pos=4;const els=L.map(t=>{const d=document.createElement('div');d.textContent=t;d.style.cssText='position:absolute;left:50%;top:0;white-space:nowrap;transform-origin:center';box.appendChild(d);return d});
+ const draw=()=>{els.forEach((d,i)=>{const k=clamp(1-Math.abs(i-pos));d.style.fontSize=(16+5*k)+'px';d.style.fontWeight=k>.5?600:400;d.style.color=k>.5?'var(--ink)':'var(--ink2)';d.style.transform=`translateX(calc(${(i-pos)*GAP}px - 50%))`;if(Math.abs(i-pos)>1.5)d.style.color='var(--ink3)'});sub.textContent=SUB[Math.round(clamp(pos,0,6))]};
+ let p0;drag(s,{down:()=>p0=pos,move:(st,dx)=>{pos=clamp(p0-dx/GAP,-.3,6.3);draw()},up:st=>{const t=clamp(Math.round(pos-st.vx*3),0,6);spring(pos,t,v=>{pos=v;draw()},360)}});draw();hint(s,'Drag sideways')}
+
+// ---- thread
+{const s=document.getElementById('s-thread');const ST=['Shoes on','Water bottle filled','Stretch, two minutes','Out the door'];let cur=0,pull=0;const NS='http://www.w3.org/2000/svg';
+ const sv=document.createElementNS(NS,'svg');sv.style.cssText='position:absolute;inset:0;width:100%;height:100%';s.appendChild(sv);const box=document.createElement('div');box.style.cssText='position:absolute;inset:0';s.appendChild(box);
+ const lab=document.createElement('div');lab.style.cssText='position:absolute;left:46px;top:18px;font-size:15px;color:var(--ink2)';lab.innerHTML='<span style="color:var(--routines);font-weight:600">Morning</span> is running';s.appendChild(lab);
+ const draw=()=>{const H=s.clientHeight,y0=58+pull*.5;let html='';ST.forEach((t,i)=>{const d=i-cur;if(d<0)return;const y=y0+(d===0?0:40+d*34)+pull*(d===0?.5:.25);html+=`<div style="position:absolute;left:46px;top:${y}px;font-size:${d===0?32:17}px;font-weight:${d===0?500:400};color:${d===0?'var(--ink)':'var(--ink3)'};white-space:nowrap">${t}</div>`});
+   if(cur>=ST.length)html=`<div style="position:absolute;left:46px;top:${y0}px;font-size:28px">Morning, done.</div>`;box.innerHTML=html;
+   const sy=y0+12+pull*.5;sv.innerHTML=`<line x1="28" y1="0" x2="28" y2="${H}" stroke="var(--edge)" stroke-width="1.2" stroke-dasharray="${cur>=ST.length?'0':'0'}"/>${cur<ST.length?`<line x1="28" y1="${sy}" x2="28" y2="${sy+26}" stroke="var(--routines)" stroke-width="3" stroke-linecap="round"/>`:''}`};
+ drag(s,{move:(st,dx,dy)=>{pull=Math.max(0,Math.min(110,dy*.8));draw()},up:(st,dx,dy)=>{if(dy>60&&cur<ST.length){const el=box.firstChild;if(el&&!RM)el.animate([{textDecoration:'line-through',clipPath:'inset(0 0 0 0)',transform:'none'},{textDecoration:'line-through',clipPath:'inset(0 0 100% 0)',transform:'translateY(-30px)'}],{duration:260,easing:'ease-in'});
+   setTimeout(()=>{cur++;spring(pull,0,v=>{pull=v;draw()},420)},RM?0:200)}else spring(pull,0,v=>{pull=v;draw()},300)}});
+ s.addEventListener('dblclick',()=>{cur=0;draw()});draw();hint(s,'Pull down for the next step')}
+
+// ---- pressed number
+{const s=document.getElementById('s-press');s.innerHTML='<div style="position:absolute;left:22px;top:18px;font-size:15px;color:var(--ink2)">Bench, set 2</div><div style="position:absolute;left:0;right:0;top:50%;margin-top:-50px;text-align:center"><span class="big" id="pv" style="font-size:76px;line-height:1">185</span><span style="font-size:22px;color:var(--ink2);margin-left:6px">lb</span><div id="pw" style="font-size:15px;color:var(--ink3);height:22px;margin-top:6px"></div></div>';
+ let v=185,was=185,hold=null,wT=0;const pv=()=>{document.getElementById('pv').textContent=v%1?v.toFixed(1):v;const w=document.getElementById('pw');w.innerHTML=v!==was?`was <span class="n">${was}</span>`:'';clearTimeout(wT);wT=setTimeout(()=>{was=v;w.innerHTML=''},2000)};
+ const step=d=>{if(v===was)was=v;v=Math.max(0,v+d);pv();const el=document.getElementById('pv');if(!RM)el.animate([{transform:`translateY(${d>0?6:-6}px)`},{transform:'none'}],{duration:140})};
+ drag(s,{down:(st,e)=>{const r=s.getBoundingClientRect(),up=e.clientY-r.top<r.height/2;let iv=320,t0=performance.now();const go=()=>{step(up?2.5:-2.5);if(RM){hold=null;return}iv=Math.max(60,iv*.82);hold=setTimeout(go,iv)};hold=setTimeout(go,380);st.up=up},
+   move:(st,dx,dy)=>{if(Math.abs(dy)>14){clearTimeout(hold);hold=null}},up:(st,dx,dy)=>{if(hold!==null)clearTimeout(hold);if(Math.abs(dy)>30)step(dy<0?2.5:-2.5);hold=null}});hint(s,'Hold the top or bottom half, or flick')}
+
+document.getElementById('th').onclick=()=>document.documentElement.dataset.theme='dark';document.getElementById('tw').onclick=()=>document.documentElement.dataset.theme='light';
+})();
+</script>

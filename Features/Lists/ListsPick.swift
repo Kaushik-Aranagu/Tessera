@@ -84,11 +84,11 @@ struct PickMoment: View {
                 .transition(reduceMotion ? .opacity
                     : .asymmetric(insertion: .scale(scale: 0.4).combined(with: .opacity),
                                   removal: .move(edge: .leading).combined(with: .opacity)))
-                .simultaneousGesture(DragGesture(minimumDistance: 24).onEnded { value in
-                    if value.translation.width < -60 {
+                .rowSwipe(.trailing, arm: CGFloat(GestureTuning.armUndrawn)) { event in
+                    if case .committed = event {
                         skipPick()
                     }
-                })
+                }
                 .accessibilityHint("Opens it")
                 .accessibilityAction(named: "Skip") { skipPick() }
             } else if !state.between {

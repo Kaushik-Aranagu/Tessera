@@ -396,7 +396,7 @@ extension HomeSpatialView.Page {
 
 /// The screens Home reaches that are not objects: Notes, Review, Groceries, Pantry and Recipes.
 enum HomeLink: Hashable, CaseIterable, Identifiable {
-    case groceries, lists, pantry, recipes, pasteRecipe, notes, review, money, settings
+    case groceries, lists, pantry, recipes, pasteRecipe, notes, review, money, settings, training, today
 
     var id: Self {
         self
@@ -413,6 +413,8 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .review: "The week"
         case .money: "Money"
         case .settings: "Settings"
+        case .training: "Training"
+        case .today: "Today"
         }
     }
 
@@ -428,6 +430,8 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .notes: NotesView()
         case .review: ReviewView()
         case .money: MoneyLandingView()
+        case .training: ScrollView { TrainingPage().padding(.horizontal, Theme.Spacing.gutter) }
+        case .today: TodayRoomView()
         // Settings as its own page from Home's top row, with Close above it (Kaushik, Oct 22: he couldn't find it).
         case .settings: NavigationStack { SettingsPage(cameFrom: "Home") }.environment(\.animateEntrance, true)
         }
