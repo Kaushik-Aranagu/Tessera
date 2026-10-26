@@ -165,6 +165,16 @@ struct ElementActionsTests {
         #expect(spoken?.description == "There's a session planned today.")
     }
 
+    @Test func anErrorWithNoSpokenLineIsNeverSpokenRaw() throws {
+        _ = try SettingsStore(engine: engine).read()
+        let settings = try #require(store.object(id: SettingsStore.objectID))
+        store.softDelete(settings)
+        let spoken = #expect(throws: TessToolError.self) {
+            try TessTools.run("rainAlert", arguments: Data(#"{"on":true,"leadMinutes":null}"#.utf8), engine: engine)
+        }
+        #expect(spoken?.description == "That didn't work.")
+    }
+
     @Test func anIdOfTheWrongClassIsNoNoteOrList() throws {
         let journal = try routine("Journal")
         let spoken = #expect(throws: TessToolError.self) {

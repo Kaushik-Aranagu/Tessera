@@ -129,7 +129,7 @@ public enum TessTools {
             if let line = TakeRest.refusalLine(error) {
                 throw TessToolError(line)
             }
-            throw (error as? TessToolError) ?? TessToolError("\(error)")
+            throw (error as? TessToolError) ?? TessToolError("That didn't work.")
         }
     }
 
