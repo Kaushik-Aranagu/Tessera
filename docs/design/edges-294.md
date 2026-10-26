@@ -12,12 +12,14 @@ Nothing is ever cut by an edge. Anything that crosses the edge of a clipped plac
 over the edge of a drum:
 - **Only past the edge.** Nothing changes while the thing is fully inside. The roll is driven by how much of it is
   already past the edge, so it stays readable under his finger.
-- **It rolls away.** By the time three quarters of it is past the edge, it has tilted up to 24° away over that edge (pivoting at the
-  far side), shrunk by up to 5%, blurred by up to 2.4 pt and faded to 40%. The curve is a smoothstep, so the start
-  is gentle.
-- **The edge itself is soft.** A thin band along each edge (18 pt across, 16 pt up and down) blurs by 2.5 pt whatever
-  passes under it. The band fades from the edge inward, and shows only while something is moving (180 ms in and
-  out), so text at rest is never touched.
+- **It fades through the edge, never at a line.** The moving thing carries its own soft gradient, 28 pt deep, that
+  ends exactly at the edge. So the part about to leave is already faint, and nothing is ever sliced. The gradient
+  sits on the moving thing only, so nothing at rest is touched and no box or band is ever drawn.
+- **It rolls away, a little.** By the time three quarters of it is past the edge, it has tilted up to 16° away over
+  that edge (pivoting at the far side), shrunk by up to 4%, blurred by at most 1.2 pt and faded to 8%. The curve is a
+  smoothstep, so the start is gentle.
+- **v1 was wrong (Kaushik, 3:56 PM):** v1 used a blur band along each edge. It read as a square box, blurred the
+  first letters of text at rest by the edge, and still cut the second line. The band is gone.
 - **Driven by position, not time.** A drag, a release that flies the card off, and the next card coming in all go
   through the same roll. Coming in is the same roll in reverse.
 - **Reduce Motion:** no roll and no band. The crossfade from sheet 288 applies.
@@ -29,7 +31,7 @@ over the edge of a drum:
 |---|---|
 | Widget (one thing), every landing | The card going across or up, and the next one coming in. Built on the board. |
 | Page rows (level 1) | The rows when a door's list turns or scrolls. |
-| Doors dial (reel) | It already has this: neighbours get smaller and blurred, which is the same roll. The reel's spin uses the band. |
+| Doors dial (reel) | It already has this: neighbours get smaller and blurred, which is the same roll. The reel's spin uses the same fade. |
 | Day strip, week fold | The hours or days scrolling across. |
 | Lookout hours | The hour columns going left. |
 | Log wall | Words leaving the wall on a page change. |
@@ -40,7 +42,8 @@ over the edge of a drum:
 - One modifier, `.edgeRoll(axis:)`. It reads each child's frame against the clip with `onGeometryChange` (or
   `visualEffect` with `GeometryProxy`) and applies `rotation3DEffect`, `scaleEffect`, `blur` and `opacity` from the
   overflow fraction. It goes through `MotionPolicy`, so Reduce Motion turns it off.
-- The edge band is a `blur` mask on the clip's edges, shown while the place reports a move in progress.
+- The fade is a `mask` on the moving view: a linear gradient from clear at the clip edge to opaque 28 pt inside,
+  placed from the same geometry. Never a blur or material over the clip.
 - The look rules still hold: this is not glass, and it has no tint or fill.
 
 ## 4. Board fix
