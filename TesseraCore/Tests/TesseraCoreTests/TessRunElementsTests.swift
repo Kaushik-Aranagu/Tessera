@@ -236,10 +236,15 @@ struct TessRunElementsTests {
             arguments: Data(#"{"recipe":"\#(recipe.id.uuidString)","serves":null}"#.utf8),
             engine: engine
         )
-        for record in checked + cooked {
+        let started = try TessTools.run(
+            "startWorkout",
+            arguments: Data(#"{"routine":"\#(routine.id.uuidString)"}"#.utf8),
+            engine: engine
+        )
+        #expect(!started.isEmpty)
+        for record in checked + cooked + started {
             let said = [record.summary, record.receipt ?? ""].joined(separator: " ").lowercased()
             #expect(!said.contains("melatonin"), "\(record.action): \(said)")
         }
-        _ = routine
     }
 }
