@@ -284,21 +284,24 @@ public struct TakeRest: EngineAction {
 public struct ResumeRoutine: EngineAction {
     public static let descriptor = ActionDescriptor(
         name: "resumeRoutine", summary: "Resume a paused routine",
-        parameters: [.init("routine", .object, "The routine")], isOfferedToModel: false
+        parameters: [.init("routine", .object, "The routine"), .init("at", .date, "Defaults to now", required: false)],
+        isOfferedToModel: false
     )
 
     public var routine: UUID
+    public var at: Date?
 
-    public init(routine: UUID) {
+    public init(routine: UUID, at: Date? = nil) {
         self.routine = routine
+        self.at = at
     }
 
     public func apply(_ transaction: inout Transaction) throws {
         let target = try transaction.object(routine, is: .routine)
         guard let pause = RestBook(store: transaction.store, classes: transaction.classes)
-            .pause(of: target.id, on: transaction.now, calendar: transaction.calendar)
+            .pause(of: target.id, on: at ?? transaction.now, calendar: transaction.calendar)
         else { throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: notPaused") }
-        try transaction.set("endedAt", to: .date(transaction.now), on: pause)
+        try transaction.set("endedAt", to: .date(at ?? transaction.now), on: pause)
     }
 
     public func summary(in _: ObjectStore) -> String {

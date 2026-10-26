@@ -158,9 +158,11 @@ struct ElementActionsTests {
         #expect(week.record.receipt == "Journal, resting until Monday.")
         #expect(book.pause(of: journal.id, on: at(26, 23), calendar: calendar) != nil)
         #expect(book.pause(of: journal.id, on: at(27), calendar: calendar) == nil)
-        let resumed = try engine.perform(ResumeRoutine(routine: journal.id), by: .tess)
+        let resumed = try engine.perform(ResumeRoutine(routine: journal.id, at: at(22)), by: .tess)
         _ = resumed
-        #expect(throws: ActionError.self) { try engine.perform(ResumeRoutine(routine: journal.id), by: .tess) }
+        #expect(throws: ActionError.self) {
+            try engine.perform(ResumeRoutine(routine: journal.id, at: at(22)), by: .tess)
+        }
     }
 
     // MARK: Tools

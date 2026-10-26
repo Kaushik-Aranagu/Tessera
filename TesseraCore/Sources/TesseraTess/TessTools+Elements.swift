@@ -49,10 +49,12 @@ extension TessTools {
 @MainActor
 extension TessTools {
     static var pinNote: Tool {
-        Tool(name: "pinNote", description: "Pin a note or a list, or unpin it",
+        Tool(name: "pinNote", description: "Keep a note or a list at the top of the Log, or let it go",
              input: .object([("note", .string("The note or list, by name")),
-                             ("pinned", .nullable(.boolean("Pin or unpin; the opposite of now when left out")))]))
-        { args, call in
+                             (
+                                 "pinned",
+                                 .nullable(.boolean("Keep it up top or let it go; the opposite of now when left out"))
+                             )])) { args, call in
             let target = try call.noteOrList(named: args.string("note"))
             return try [call.perform(SetPinned(object: target.id, pinned: args["pinned"] as? Bool))]
         }
@@ -101,7 +103,7 @@ extension TessTools {
         { args, call in
             let routine = try call.routine(named: args.string("routine"))
             if args["resume"] as? Bool == true {
-                return try [call.perform(ResumeRoutine(routine: routine.id))]
+                return try [call.perform(ResumeRoutine(routine: routine.id, at: call.now))]
             }
             // "For a week" is today plus 6: the pause holds that many days, today included.
             let until = (args["days"] as? Int).flatMap { $0 > 0 ? call.calendar.date(
