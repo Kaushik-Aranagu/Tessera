@@ -103,7 +103,7 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
 .roll .rw{position:absolute;left:0;top:0;white-space:nowrap;line-height:28px;transform-origin:left center;transition:transform .38s cubic-bezier(.3,.9,.3,1),opacity .3s,filter .3s,color .3s}
 .roll.right .rw{left:auto;right:0;transform-origin:right center}
 .dial{position:absolute;touch-action:none}
-.dial .d{position:absolute;left:0;right:0;display:flex;align-items:center;white-space:nowrap;cursor:pointer;transform-origin:left center;
+.dial .d{position:absolute;left:0;right:0;display:flex;align-items:center;justify-content:flex-end;white-space:nowrap;cursor:pointer;transform-origin:right center;
  transition:transform .38s cubic-bezier(.3,.9,.3,1),opacity .3s,filter .3s,color .3s}
 .dial .d i{font:300 normal 15px var(--num);color:var(--ink2);margin-left:8px;font-style:normal}
 
@@ -126,6 +126,7 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
  <h1>Every landing, one layout.</h1>
  <p class="lede">Every landing now opens like Bridge and keeps Bridge’s lower half: the widget in the middle and the doors dial below it. The top holds the title, a text-only switcher and the room’s needs. Tap a room in Bridge’s apps dial (or a face, or a highlighted word) to watch the flip. Swipe from the left edge, or tap “Bridge”, to go back.</p>
  <div class="notes283">
+  <p><b>New: hotfixes from his 1:30 PM note (sheet 289).</b> On every landing and on Bridge the dial now sits on the right, for the right thumb, and the door summary sits on the left. The dial’s words align right and grow from the right edge. The departure board is always right-aligned. No shown line ends with a full stop any more. Notes and documents keep theirs.</p>
   <p><b>New: reshape by hand (sheet 287).</b> Press “Deck: hold the Nav word to reshape”, or hold “Bridge” at the top right of any room yourself. The screen loosens: every place gets a glass outline, the Nav word becomes Done, and the foot becomes the shape line. Tap the doors, then swipe across inside them, or tap Reel, Index or Sentence. Each form is drawn from the room’s own doors, with the glass lens under your finger. Tap Done to keep it, with Undo for 10 s. Sheet 287 also maps every kind of change to its move, by who made it (you, Tess or the app), and adds a quiet stage where Tess can test a change without showing it.</p>
   <p><b>New: living looks and coming back into view (sheet 286, Oct 26).</b> Every place can be shown more than one way, and Tess can change it. Try the third row of buttons. The Deck’s doors can be a Reel (the wheel), an Index (every door at once) or a Sentence (the doors as one line of words). The frame never moves; the door words travel from where they were to where they go. The look is kept per room. “Leave, change, come back” takes you to Bridge, changes the Galley’s data while you are away, and brings you back: the rail shows now, then only the two tickets that changed reprint, once, after the room has settled. Nothing replays.</p>
   <p><b>New: when Tess makes the change (sheet 285).</b> Use the “Tess acts” buttons under the phone. Her dab flies from her to the place on an arc, spreads into a blue wash, and the place plays its own move inside it, the same move your finger makes, only a little slower. What she changed stays in her blue until the 10 s Undo window closes, then it dries into the room’s own ink: blue chalk turns white on the Deck, the blue clip on a new Galley ticket turns steel, and her blue strike turns ink. On the rail the wash sits behind the tickets. The board has no gaps, so there the wash lies over it in light. When the engine refuses, her dab stops short, waits, and goes home. Nothing moves, and only her line says why. While Undo holds the foot, the action word steps aside. “Tess sets a rest day” shows the Deck’s rest: the board wipes tonight’s line and chalks the rest, today’s letter in the week takes the word “rest” under it (never a cross), the needs flap, the widget says it in type, and the barbell sets its plates down.</p>
@@ -260,7 +261,7 @@ function doorway(el,x0,y0,color,done){const cv=$('#doorway'),c=cv.getContext('2d
 
 /* receipts, petals */
 let rT=null;
-function receipt(el,msg,undo,word){let r=$('.receipt',el);if(!r){r=h('div','receipt');el.appendChild(r)}
+function receipt(el,msg,undo,word){msg=String(msg).replace(/\.\s*$/,'');let r=$('.receipt',el);if(!r){r=h('div','receipt');el.appendChild(r)}
  r.innerHTML=msg+(undo?' <button style="color:var(--room)">'+(word||'Undo')+'</button>':'');
  if(undo)r.querySelector('button').onclick=()=>{undo();r.innerHTML=''};clearTimeout(rT);rT=setTimeout(()=>{r.innerHTML=''},10000)}
 function petals(host,x,y){if(RM)return;const cols=['#E7A6C9','#F1D27A','#9ED3B6','#F4B7A1'];for(let i=0;i<7;i++){const p=h('i','petal');p.style.left=x+'px';p.style.top=y+'px';p.style.background=cols[i%4];p.style.setProperty('--dx',(Math.random()*70-35)+'px');p.style.setProperty('--dy',(-30-Math.random()*50)+'px');p.style.setProperty('--rot',(Math.random()*240-120)+'deg');host.appendChild(p);setTimeout(()=>p.remove(),1400)}}
@@ -347,7 +348,7 @@ $('#lk-paper').onclick=()=>setLook('paper');$('#lk-black').onclick=()=>setLook('
 .one canvas{position:absolute;right:0;top:44px;width:80px;height:80px}
 .apps{position:absolute;left:24px;right:24px;top:640px;height:120px;overflow:hidden;touch-action:none}
 .apps .ar{position:absolute;left:0;right:0;height:40px;display:flex;align-items:center;gap:14px;white-space:nowrap;cursor:pointer;transition:top .32s cubic-bezier(.3,.9,.3,1)}
-.apps .ar b{font-weight:600;font-size:20px;transform-origin:left center;transition:transform .32s cubic-bezier(.3,.9,.3,1),color .3s}
+.apps .ar b{font-weight:600;font-size:20px;transform-origin:right center;transition:transform .32s cubic-bezier(.3,.9,.3,1),color .3s}
 .apps .ar span{font-size:15px;font-weight:500;color:var(--ink2);clip-path:inset(0 100% 0 0);transform:translateX(14px);transition:clip-path .35s,transform .35s}
 .apps .ar.mid b{transform:scale(1.3)}
 .apps .ar.mid span{clip-path:inset(0 0 0 0);transform:none;margin-left:22px}
@@ -482,13 +483,13 @@ SCREENS.home={title:'Home',accent:null,tess:'Stretch at 8 may run into Push A. M
   else if(!oax){const [x,y]=localXY(e,phone);go(ONE[oi].go,{},{doorway:1,x,y})}});
 
  // apps: the depth-blur dial on the left (focus sharp, neighbours smaller and blurred), one line on the right (283)
- const ap=h('div','dial');ap.style.cssText+='left:24px;top:640px;width:160px';el.appendChild(ap);const bf=h('div','bfact');el.appendChild(bf);
+ const ap=h('div','dial');ap.style.cssText+='left:218px;top:640px;width:160px';el.appendChild(ap);const bf=h('div','bfact');el.appendChild(bf);
  dial(ap,APPS.map(a=>({a,n:ROOMS[a].n,color:'var(--'+(a==='money'?'purse':a)+')'})),{start:0,slot:40,blur:1.6,label:(d,f)=>'<span style="font-size:'+(f?26:20)+'px;font-weight:'+(f?700:600)+'">'+d.n+'</span>',
   open:d=>flipTo(d.a),change:d=>{bf.textContent=ROOMS[d.a].fact;window.fitLine&&fitLine(bf);if(!bf._on){bf._on=1;return}bf.classList.remove('rise');void bf.offsetWidth;if(!RM)bf.classList.add('rise')}});
  document.fonts&&document.fonts.ready.then(()=>window.fitLine&&fitLine(bf));
  // foot: the Undo line
  const ul=h('div','undoline');el.appendChild(ul);let uT=null;
- function setUndo(m){ul.innerHTML=m+' <button>Undo</button>';ul.querySelector('button').onclick=()=>{ul.innerHTML='';show((oi-1+ONE.length)%ONE.length,'y')};clearTimeout(uT);uT=setTimeout(()=>{ul.innerHTML=''},10000)}
+ function setUndo(m){m=String(m).replace(/\.\s*$/,'');ul.innerHTML=m+' <button>Undo</button>';ul.querySelector('button').onclick=()=>{ul.innerHTML='';show((oi-1+ONE.length)%ONE.length,'y')};clearTimeout(uT);uT=setTimeout(()=>{ul.innerHTML=''},10000)}
  return ()=>{cancelAnimationFrame(raf);timers.forEach(clearTimeout)}}};
 </script>
 <style>
@@ -1301,7 +1302,7 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .lmid .rows{position:absolute;left:0;right:0;top:84px;height:100px;overflow:hidden;touch-action:pan-y}
 .lmid .rw{position:absolute;left:0;right:0;height:44px;line-height:44px;font:300 18px/44px var(--sans);white-space:nowrap;overflow:hidden;cursor:pointer;touch-action:none;transition:top .36s cubic-bezier(.3,.9,.3,1)}
 .lmid .rw b{font-weight:600}
-.lsum{position:absolute;left:186px;right:24px;top:652px;height:96px;z-index:6}
+.lsum{position:absolute;left:24px;right:186px;top:652px;height:96px;z-index:6}
 .lsum .lb{font-size:13px;color:var(--ink2);height:20px;white-space:nowrap;overflow:hidden}
 .lsum .ln{font-size:16px;line-height:24px;height:24px;white-space:nowrap;overflow:hidden}
 .lsum .ln:first-of-type{font-weight:700}
@@ -1314,7 +1315,7 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 @keyframes lopen{from{transform:translateY(10px) scale(.95);filter:blur(3px);clip-path:inset(0 0 100% 0)}to{transform:none;filter:blur(0);clip-path:inset(-40px -40px -40px -40px)}}
 .lsec.rm{animation:lfade .15s linear both}
 @keyframes lfade{from{opacity:0}to{opacity:1}}
-.bfact{position:absolute;left:186px;right:24px;top:688px;height:24px;font-size:15px;font-weight:500;color:var(--ink2);white-space:nowrap;overflow:hidden}
+.bfact{position:absolute;left:24px;right:186px;top:688px;height:24px;font-size:15px;font-weight:500;color:var(--ink2);white-space:nowrap;overflow:hidden}
 .bfact.rise{animation:lrise .3s cubic-bezier(.3,.9,.3,1)}
 .tw{display:inline-block;white-space:pre}
 .act{position:absolute;left:24px;bottom:22px;width:220px;height:64px;z-index:6;cursor:pointer;touch-action:none}
@@ -1579,7 +1580,7 @@ function landingV3(el,R){const stops=[];const id=el.dataset.id;
  const key=h('div','lkey');el.appendChild(key);stops.push(R.keystone(key,el));
  const cap=h('div','lcap',R.caption||'');el.appendChild(cap);
  const WG=widgetV3(el,R,id),mid=WG.box;el.appendChild(mid);stops.push(WG.stop);
- const dh=h('div','dial');dh.style.cssText+='left:24px;top:640px;width:160px;z-index:6';el.appendChild(dh);
+ const dh=h('div','dial');dh.style.cssText+='left:218px;top:640px;width:160px;z-index:6';el.appendChild(dh);
  const sum=h('div','lsum');el.appendChild(sum);
  dial(dh,R.doors.map(d=>({...d,color:d.color||R.color})),{start:0,slot:40,blur:1.6,label:(d,f)=>'<span style="font-size:'+(f?26:20)+'px;font-weight:'+(f?700:600)+';letter-spacing:-.01em">'+d.k+'</span>'+(d.n!=null?'<i>'+d.n+'</i>':''),
   open:d=>{const L=typeof LV!=='undefined'&&LV[id];const di=L?L.doors.findIndex(x=>x.k===d.k):-1;if(di>=0)return go('l1_'+id,{door:di});d.go?go(...d.go):receipt(el,d.k+' opens here. Inside pages are the next round.')},
@@ -1785,7 +1786,7 @@ function swap(from,to){if(RM)return;const A=(e,k,o)=>e.animate(k,o);
   else if(nd)A(nd,[{opacity:0},{opacity:1}],{duration:300,delay:300,fill:'backwards'})}
  else if(od&&nd){const a=dialNames(od),b=dialNames(nd);od.remove();const all=[...a,...b];const mix=[];for(let i=0;i<9;i++)mix.push(all[(i*5+3)%all.length]);
   const L=[...a.slice(0,3),...mix,...b.slice(0,3)];while(L.length<6)L.unshift('');
-  const reel=h('div','reel');reel.style.cssText='position:absolute;left:24px;top:640px;width:170px;height:120px;overflow:hidden;z-index:7;pointer-events:none;-webkit-mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent)';
+  const reel=h('div','reel');reel.style.cssText='position:absolute;left:208px;top:640px;width:170px;text-align:right;height:120px;overflow:hidden;z-index:7;pointer-events:none;-webkit-mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent)';
   const col=h('div');col.innerHTML=L.map((t,i)=>'<div style="height:40px;line-height:40px;font:600 '+(i===L.length-2?26:21)+'px var(--sans);white-space:nowrap;color:'+(i===L.length-2?'var(--room,var(--ink))':'var(--ink2)')+'">'+t+'</div>').join('');reel.appendChild(col);to.appendChild(reel);
   const dist=(L.length-3)*40;nd.style.opacity=0;
   A(col,[{transform:'translateY(0)',filter:'blur(0)'},{transform:'translateY('+(-dist*.35)+'px)',filter:'blur(3px)',offset:.25},{transform:'translateY('+(-dist*.9)+'px)',filter:'blur(1.2px)',offset:.7},{transform:'translateY('+(-dist)+'px)',filter:'blur(0)'}],{duration:980,easing:'cubic-bezier(.3,.05,.2,1)',fill:'both'}).onfinish=()=>{A(nd,[{opacity:0},{opacity:1}],{duration:140,fill:'both'}).onfinish=()=>{nd.style.opacity=''};A(reel,[{opacity:1},{opacity:0}],{duration:160,fill:'both'}).onfinish=()=>reel.remove()}}
@@ -1959,7 +1960,7 @@ SECT.masthead.push('.ldt');
 const PLACES_MAP=[// [name, x, y, w, h, kind] kind: band, sub, empty, system, edge
  ['Status bar',0,0,402,44,'system'],['Masthead',0,44,402,138,'band'],['Title',24,50,260,48,'sub','.ttl,.board'],['Nav word',300,50,94,46,'sub','.lnav,.setw'],['Switcher',24,106,200,76,'sub','.swx'],['Needs',228,118,150,58,'sub','.swn:not(:empty)'],
  ['Breath',24,182,354,14,'empty'],['Keystone',24,196,354,182,'band'],['Caption',24,378,354,34,'band','.lcap'],['Widget',24,412,354,200,'band','.one'],['Glyph',298,444,80,80,'sub','svg.lg,.one canvas'],
- ['Breath',24,612,354,28,'empty'],['Doors',24,640,354,120,'band'],['Dial',24,640,160,120,'sub','.dial'],['Door summary',186,640,192,120,'sub','.lsum,.bfact'],
+ ['Breath',24,612,354,28,'empty'],['Doors',24,640,354,120,'band'],['Door summary',24,640,192,120,'sub','.lsum,.bfact'],['Dial',218,640,160,120,'sub','.dial'],
  ['Breath',24,760,354,16,'empty'],['Foot',0,776,402,76,'band'],['Action word',24,786,220,62,'sub','.act'],['Tess',306,776,96,96,'sub','#tess'],['Home bar',0,852,402,22,'system'],
  ['Back edge',0,44,24,808,'edge'],['Right edge',378,44,24,808,'edge']];
 function filled(scr,sel){if(scr&&scr.querySelector(':scope > .board')&&/\.swx|\.swn/.test(sel||''))return true;if(!sel)return true;return sel.split(',').some(s=>{const e=s.trim()==='#tess'?$('#tess'):scr.querySelector(s.trim());return e&&(e.tagName==='svg'||e.tagName==='CANVAS'||e.textContent.trim().length>0)})}
@@ -2091,7 +2092,7 @@ SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Sw
  const isPlate=p=>p.n==='Masthead';const isGap=p=>p.k==='empty'&&p.n==='Breath';
  function label(P,p){if(p.n==='Title')return '<b class="tt">'+P.name+'</b><small>'+(P.id==='home'?'one level':lvl?'a door page':'the landing')+', '+(pi+1)+' of '+LPAGES.length+'</small>';
   const empty=(!lvl&&(P.empty||[]).includes(p.n));return '<b>'+p.n+'</b>'+(empty?'<small>empty</small>':'')}
- const SEAM={'Switcher':{r:0},'Needs':{l:0},'Dial':{r:1},'Door summary':{l:1}};
+ const SEAM={'Switcher':{r:0},'Needs':{l:0},'Door summary':{r:1},'Dial':{l:1}};
  function paint(e,P,p){const empty=!lvl&&(P.empty||[]).includes(p.n);
   e.className='pn'+(isPlate(p)?' plate':'')+(isGap(p)?' gap':'')+(empty?' em':'')+(p.n==='Title'?' ttl':'')+(sel===p.key?' on':'');
   /* every seam is 4 pt: frames that touch inset 2 pt each; Switcher and Needs already sit 4 pt apart, Dial and Door summary 2 pt */
@@ -2267,7 +2268,7 @@ function tessHand(rc,o={}){return new Promise(res=>{
     y.animate([{transform:'translateY('+ty+'px)'},{transform:'translateY('+sy+'px)'}],{duration:420,easing:'cubic-bezier(.6,0,.85,.5)',fill:'forwards'}).onfinish=()=>{x.remove();res('refused')}},340);return}
   d.animate([{transform:'scale(.55)',opacity:1},{transform:'scale(2.4,1.8)',opacity:0}],{duration:220,fill:'forwards'}).onfinish=()=>x.remove();washAt()}})}
 /* the Undo line, said as Tess or as the room; the change dries when it ends */
-function thUndo(el,byTess,msg,undo,dry){let ul=el.querySelector('.undoline');if(!ul){ul=h('div','undoline');el.appendChild(ul)}
+function thUndo(el,byTess,msg,undo,dry){msg=msg.replace(/\.\s*$/,'');let ul=el.querySelector('.undoline');if(!ul){ul=h('div','undoline');el.appendChild(ul)}
  /* the action word steps aside while the Undo line holds the foot, and comes back when it ends */
  const aside=on=>thAside(el,on);
  /* a new change dries the one before it at once */
@@ -2346,10 +2347,10 @@ function doorList(el,room){const L=LV[room];const d=el.querySelector(':scope > .
  if(d){const f=[...d.querySelectorAll('.d')].find(e=>/translateY\(40px\)/.test(e.style.transform||''));if(f){const t=f.textContent.replace(/\d+$/,'').trim();const i=L.doors.findIndex(x=>x.k===t);if(i>=0)focus=i}}
  return {doors:L.doors.map(x=>x.k),focus}}
 function lookEl(el,room,look){const {doors,focus}=doorList(el,room);const f0=[...el.querySelectorAll(':scope > .dial .d')].find(e=>/translateY\(40px\)/.test(e.style.transform||''));const color=(f0&&f0.style.color)||'var(--ink)';
- const w=h('div','dlook '+look);w.style.cssText='position:absolute;left:24px;top:640px;width:160px;height:120px;z-index:6';
+ const w=h('div','dlook '+look);w.style.cssText='position:absolute;left:218px;top:640px;width:160px;height:120px;z-index:6;text-align:right';
  const word=(t,i)=>{const s=h('span','dw',t);s.dataset.t=t;if(i===focus){s.classList.add('f');s.style.color=color}s.onclick=()=>go('l1_'+room,{door:i});return s};
  if(look==='index'){const two=doors.length>5,rows=two?Math.ceil(doors.length/2):doors.length,lh=120/rows;
-  doors.forEach((t,i)=>{const s=word(t,i);const c=two?Math.floor(i/rows):0,r=two?i%rows:i;s.style.cssText+='position:absolute;left:'+(c*84)+'px;top:'+(r*lh)+'px;height:'+lh+'px;line-height:'+lh+'px;font-size:'+(two?14:Math.min(20,lh*.72))+'px';w.appendChild(s)})}
+  doors.forEach((t,i)=>{const s=word(t,i);const c=two?Math.floor(i/rows):0,r=two?i%rows:i;s.style.cssText+='position:absolute;right:'+((two?1-c:0)*84)+'px;top:'+(r*lh)+'px;height:'+lh+'px;line-height:'+lh+'px;font-size:'+(two?14:Math.min(20,lh*.72))+'px';w.appendChild(s)})}
  else{w.style.cssText+=';display:block;font-size:19px;line-height:26px';doors.forEach((t,i)=>{w.appendChild(word(t,i));w.appendChild(document.createTextNode(i===doors.length-1?'.':i===doors.length-2?' and ':', '))})}
  return w}
 function labelRects(host){const m={};host.querySelectorAll('.dial .d,.dlook .dw').forEach(e=>{const t=(e.dataset.t||e.textContent.replace(/\d+$/,'')).trim();const s=e.querySelector('span')||e;const r=s.getBoundingClientRect();if(+getComputedStyle(e).opacity>0.05&&r.width)m[t]=r});return m}
@@ -2367,7 +2368,7 @@ function setDoorLook(el,room,look,anim){const dl=el.querySelector(':scope > .dia
  S.render=function(el,P){const c=r.call(this,el,P);if(LOOKS[room]&&el.querySelector(':scope > .dial'))setDoorLook(el,room,LOOKS[room],false);return c}});
 function lookBy(room,look,byTess){const el=current;if(!el)return;const was=LOOKS[room]||'reel';if(was===look)return;
  const play=()=>{LOOKS[room]=look;setDoorLook(el,room,look,true);thUndo(el,byTess,(byTess?'showed':'Showing')+' the doors as '+(look==='index'?'an index':'a '+LOOK_NAMES[look].toLowerCase())+'.',()=>{LOOKS[room]=was;setDoorLook(el,room,was,true)},null)};
- if(byTess)tessHand({x:24,y:640,w:160,h:120},{hold:900}).then(play);else play()}
+ if(byTess)tessHand({x:218,y:640,w:160,h:120},{hold:900}).then(play);else play()}
 
 /* ================= 286: back into view. Show now, then play only what changed while away, once (600 ms at most).
    Never a replay. More than six changes, or away over an hour: just show now with the keystone's settle. */
@@ -2393,7 +2394,7 @@ document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.da
    finger), or tap a form word in the foot, to flip its forms drawn from his own data. Tap Done to keep, Undo 10 s. */
 const FORMS={dial:['reel','index','sentence']};const FORM_WORD={reel:'Reel',index:'Index',sentence:'Sentence'};
 const SH_PLACES=[['keystone',24,196,354,182,['the room’s own material','calmer, as drawn']],['switcher',24,106,200,76,['type, roll','next round']],['needs',228,118,150,58,['type','one line, two lines']],
- ['widget',24,412,354,200,['rise, stack, rows','more detail, just names']],['dial',24,640,160,120,null],['summary',186,640,192,120,['type, sentence','numbers only']]];
+ ['widget',24,412,354,200,['rise, stack, rows','more detail, just names']],['dial',218,640,160,120,null],['summary',24,640,192,120,['type, sentence','numbers only']]];
 function shapeBind(el,room){const nav=el.querySelector('.lnav');if(!nav||nav._sb)return;nav._sb=1;let t=null;
  nav.addEventListener('pointerdown',()=>{t=setTimeout(()=>{nav._held=1;shapeOn(el,room)},450)});['pointerup','pointerleave','pointercancel'].forEach(k=>nav.addEventListener(k,()=>clearTimeout(t)));
  nav.addEventListener('click',e=>{if(nav._held||el.classList.contains('shaping')){e.stopImmediatePropagation();e.preventDefault();if(nav._held){nav._held=0;return}shapeOff(el,room)}},true)}
@@ -2423,6 +2424,17 @@ function shapeOff(el,room){el.classList.remove('shaping');const nav=el.querySele
  S.render=function(el,P){const c=r.call(this,el,P);if(el.querySelector(':scope > .dial'))shapeBind(el,room);return c}});
 TH_DEMOS['shape-deck']=['training',()=>{shapeOn(current,'training');setTimeout(()=>shapePick(current,'training','dial'),500)}];
 document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
+
+
+/* 289: no full stop at the end of a shown line (his 1:30 PM Oct 26 rule). Notes and documents keep theirs. */
+(function(){const KEEP='.nbody,.lbp,.lbn,.lbt,.tv,.tessv,.notebody,[data-doc],textarea,input,script,style';
+ const blockOf=n=>{let e=n.parentElement;while(e&&e!==phone&&getComputedStyle(e).display.startsWith('inline'))e=e.parentElement;return e};
+ const lastText=e=>{const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT,{acceptNode:t=>t.nodeValue.trim()?1:3});let l=null,t;while(t=w.nextNode())l=t;return l};
+ function sweep(root){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const hits=[];let t;
+  while(t=w.nextNode()){const v=t.nodeValue;if(!/[^.]\.\s*$/.test(v))continue;const p=t.parentElement;if(!p||p.closest(KEEP))continue;const b=blockOf(t);if(b&&lastText(b)===t)hits.push(t)}
+  hits.forEach(t=>{t.nodeValue=t.nodeValue.replace(/\.(\s*)$/,'$1')})}
+ let q=0;const mo=new MutationObserver(()=>{if(q)return;q=1;requestAnimationFrame(()=>{q=0;mo.disconnect();sweep(phone);mo.observe(phone,{subtree:true,childList:true,characterData:true})})});
+ sweep(phone);mo.observe(phone,{subtree:true,childList:true,characterData:true})})();
 
 })();
 </script>

@@ -73,7 +73,7 @@ Rules no element may override, because they are the walls:
 | Entry | DialElement |
 |---|---|
 | identity | Doors, a `ListElement`, the `dial` place |
-| frame | 24,640 160 x 120 on every landing; the Page takes it at level 1 |
+| frame | 218,640 160 x 120 on every landing (on the right, sheet 289); the Page takes it at level 1 |
 | shape | doors |
 | forms | reel (designed), index, sentence. Index's density trait: more than 5 doors become two columns of 4. |
 | touch | Reel: up and down turns it, and tapping the focus opens it. Index and Sentence: tap a door to open it. |

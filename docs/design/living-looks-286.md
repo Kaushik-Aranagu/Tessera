@@ -50,7 +50,7 @@ and `docs/design/live-visibility.md` (branch claude/project-thread-xhv9sw).
   (cubic-bezier .2,.9,.25,1.04).
 - **Everything else** fades out in 160 ms or fades in over 260 ms, starting at 260 ms. Nothing is cut.
 - **By Tess:** sheet 285 applies. The wash comes first, then the swap. The Undo line reads "Tess showed the doors as
-  a column. Undo" for 10 s. A look is not a material, so it carries no blue.
+  an index  Undo" for 10 s. A look is not a material, so it carries no blue.
 - **Keeping it everywhere:** the Undo line offers "Everywhere" as a second word only when Tess set the look in one
   room and the same look exists elsewhere.
 - **Moving between rooms:** the place plays its look's own entrance. Only Reel spins. Column and Sentence words

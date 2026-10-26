@@ -63,8 +63,8 @@ These are the moves for `.hand`. Section 3 says how `.tess` and `.system` change
 
 | Control | Tempo | Mark | Undo | Other rules |
 |---|---|---|---|---|
-| `.hand` | 1x, starting under his finger | None; the result is in the room's ink | "Rest today. Undo" | Always wins. |
-| `.tess` | 1.15 to 1.2x | The flight and wash come first. Materials stay in her blue until they dry (sheet 285). | "Tess set today as a rest day. Undo" | A refusal moves nothing; her line says why. |
+| `.hand` | 1x, starting under his finger | None; the result is in the room's ink | "Rest today  Undo" | Always wins. |
+| `.tess` | 1.15 to 1.2x | The flight and wash come first. Materials stay in her blue until they dry (sheet 285). | "Tess set today as a rest day  Undo" | A refusal moves nothing; her line says why. |
 | `.system` | 1.3x, calm | None | None, unless it changed his things, which the system never does unasked | It never plays under his finger. It waits for the lift (at most 2 s), then plays. Changes on one place within 1 s play as one. While he is scrolling or reading a list, rows don't reorder until he stops. |
 | `.stage` | No clock | None; nothing is shown | None | Section 5. |
 
@@ -84,13 +84,13 @@ The Nav word only takes a tap (back), so holding it is free on every screen.
 
 1. **Hold the Nav word** for 450 ms. The screen loosens into **shape mode** over the live screen. Every place gets a
    raised-glass outline (no fill), staggered 30 ms. The Nav word becomes "Done". The action word steps aside and
-   the foot turns into the shape line: "Shape. Tap a place to reshape it."
+   the foot turns into the shape line: "Shape" over "Tap a place to reshape it" (no full stops, sheet 289)
 2. **Tap a place** to pick it. It lifts 1 pt. The foot shows its forms as words in room type, with the current one
    in the room colour, and under them its trait words ("denser", "more detail", "calmer").
 3. **Swipe across inside the place**, or tap a form word, to flip its forms. Each form is drawn from his own data,
    with the glass lens under his finger (the only place the lens appears, as on every horizontal swipe). Tap a trait
    word to step it.
-4. **Tap Done** to keep it. The Undo line reads "Doors as an index. Undo" for 10 s.
+4. **Tap Done** to keep it. The Undo line reads "Doors as an index  Undo" for 10 s.
 
 Settings > Layout mode opens the same mode on Bridge, so there is one surface. Tess takes the same changes in words
 (#1449, section 4), and her version plays the sheet 285 wash first. The board shows this on the Deck's doors.

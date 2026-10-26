@@ -37,7 +37,7 @@ the ticket lifts off), and the foot returns.
 3. **Play.** It plays the place's own move from sheet 283 at 1.15 to 1.2 x his tempo (chalk writes left to right
    in 1.08 s; the ticket drops onto the rail and swings to rest in 1.3 s; a strike draws in 0.22 s).
 4. **Fade.** The wash holds about 1 s while the move plays, then fades out over 0.6 s.
-5. **Undo line.** "Tess logged yesterday's walk, 32 min. Undo". "Tess" is in her blue and the rest is in ink2. The
+5. **Undo line.** "Tess logged yesterday's walk, 32 min  Undo". "Tess" is in her blue and the rest is in ink2. The
    action word steps aside while the line holds the foot and returns after 10 s.
 
 **His finger:** no flight and no wash. The move plays at his tempo, the result is in the room's ink straight away,
@@ -105,6 +105,6 @@ goes where the week already lives, on the board:
   widget's own move (out the top, in from below).
 - **Glyph:** the barbell sets its plates down. The four plates come off the bar and lie flat, stacked under it.
 - **By Tess:** a wash over the board, the chalk in her blue until it dries, and the Undo line "Tess set today as a
-  rest day."
+  rest day"
 - **By finger:** no wash, and white chalk at once.
 - **Undo:** the chalk wipes, the needs flap back, the widget returns and the plates go back on.
