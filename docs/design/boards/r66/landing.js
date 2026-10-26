@@ -303,7 +303,7 @@ function landingV3(el,R){const stops=[];const id=el.dataset.id;
  const dh=h('div','dial');dh.style.cssText+='left:24px;top:640px;width:160px;z-index:6';el.appendChild(dh);
  const sum=h('div','lsum');el.appendChild(sum);
  dial(dh,R.doors.map(d=>({...d,color:d.color||R.color})),{start:0,slot:40,blur:1.6,label:(d,f)=>'<span style="font-size:'+(f?26:20)+'px;font-weight:'+(f?700:600)+';letter-spacing:-.01em">'+d.k+'</span>'+(d.n!=null?'<i>'+d.n+'</i>':''),
-  open:d=>d.go?go(...d.go):receipt(el,d.k+' opens here. Inside pages are the next round.'),
+  open:d=>{const L=typeof LV!=='undefined'&&LV[id];const di=L?L.doors.findIndex(x=>x.k===d.k):-1;if(di>=0)return go('l1_'+id,{door:di});d.go?go(...d.go):receipt(el,d.k+' opens here. Inside pages are the next round.')},
   change:d=>sumSet(sum,d.sum(),id,el)});
  const f=actionX(el,R);
  fitLine(cap);document.fonts&&document.fonts.ready.then(()=>{fitAll(el)});
