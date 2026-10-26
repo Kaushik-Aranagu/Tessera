@@ -122,10 +122,11 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
  <p class="how">Tap any highlighted word, face or door. Back is a swipe from the left edge of the phone (or Escape). Swipes and holds work as on the phone: right is Done, left is Not now, hold the one thing to strike it.</p>
 </div>
 <div>
- <p class="eyebrow">Round 283, version 4, Oct 25</p>
+ <p class="eyebrow">Round 283, version 5, Oct 25</p>
  <h1>Every landing, one layout.</h1>
  <p class="lede">Every landing now opens like Bridge and keeps Bridge’s lower half: the widget in the middle and the doors dial below it. The top holds the title, a text-only switcher and the room’s needs. Tap a room in Bridge’s apps dial (or a face, or a highlighted word) to watch the flip. Swipe from the left edge, or tap “Bridge”, to go back.</p>
  <div class="notes283">
+  <p><b>New in version 5 (his 4:21 and 4:22 PM notes).</b> The screen never changes now. The places stay where they are and only what is inside them changes. Open a door and nothing slides in: the masthead flaps to the door’s name, the keystone stays (the Galley’s rail keeps its tickets), the widget and the doors leave and the door’s list settles in from the top. Back runs the same moves the other way and puts every place back as you left it. In Layout mode, tap the Dial bubble twice (or press the down arrow) to open a door: Switcher and Needs melt into one Door title, and the widget, glyph, dial and summary melt into one Page. Tap the Nav word twice (or the up arrow) and they split apart again.</p>
   <p><b>New in version 4 (his 4:11 PM note).</b> The whole screen is mapped below, with empty places kept and marked. Moving between Bridge and a room now goes place by place: the masthead flaps, the mosaic flips, the widget swipes up, the dial spins too fast to read and slows onto the new doors, the summary slides off right and back in, and the action word streams. Open a room from Bridge’s dial to watch it, and go back to see it reverse.</p>
   <p><b>Layout mode.</b> Settings, then Layout mode, shows the app as its places only: soft bubbles in each room’s colour, empty places dashed. Swipe across (or use the arrow keys) to walk Bridge and every room, and the bubbles move the way their places do. Tap a bubble to read what it holds, how you touch it and how it moves. It is read-only for now and can become editable later.</p>
   <p><b>New in this version (his 3:57 PM notes).</b> Deck now writes in a condensed gym face (Barlow Condensed), on the board and in the widget. Galley’s tickets are printed now, in IBM Plex Sans Condensed, and Caveat is gone.</p>
@@ -1499,7 +1500,7 @@ function landingV3(el,R){const stops=[];const id=el.dataset.id;
   change:d=>{sum.innerHTML=d.sum();fitAll(sum);if(!sum._on){sum._on=1;return}sum.classList.remove('rise');void sum.offsetWidth;if(!RM)sum.classList.add('rise')}});
  const f=actionX(el,R);
  fitLine(cap);document.fonts&&document.fonts.ready.then(()=>{fitAll(el)});
- if(!el._flip)opening([top,band,key,cap,mid,dh,sum,f],0);
+ if(!el._flip&&!window.__morphing)opening([top,band,key,cap,mid,dh,sum,f],0);
  setTimeout(WG.start,el._flip?420:260);
  return ()=>stops.forEach(s=>s&&s())}
 const sum=(lb,lines)=>'<div class="lb">'+lb+'</div>'+lines.map(l=>'<div class="ln">'+l+'</div>').join('');
@@ -1652,8 +1653,8 @@ function flipTo(id){const from=current,fromC=cleanup,mos=from&&$('#mosaic',from)
  let c=null;try{c=S.render(el,{})}catch(e){window.__showErr&&window.__showErr('screen '+id+': '+e.message)}shipNames(el);stage.appendChild(el);current=el;cleanup=c;
  tiles(snap,id,'in',()=>{});swap(from,el);from.remove();setTimeout(()=>{fromC&&fromC()},1200);tessCue(S.accent);drawMap()}
 // any door into a room landing from Bridge flips; everything else keeps its own transition
-const go0=go;go=function(id,params,opts={}){if(current&&current.dataset.id==='home'&&LANDS.includes(id)&&!params?.k)return flipTo(id);return go0(id,params,opts)};
-const back0=back;back=function(){const top=stack[stack.length-1],prev=stack[stack.length-2];
+let go0=go;go=function(id,params,opts={}){if(current&&current.dataset.id==='home'&&LANDS.includes(id)&&!params?.k)return flipTo(id);return go0(id,params,opts)};
+let back0=back;back=function(){const top=stack[stack.length-1],prev=stack[stack.length-2];
  if(!RM&&top&&prev&&prev.id==='home'&&LANDS.includes(top.id)){stack.pop();const old=current,oldC=cleanup;const {el,c}=mount('home');current=el;cleanup=c;
   swap(old,el);old.remove();setTimeout(()=>{oldC&&oldC()},1200);tiles(null,top.id,'reveal');tessCue(null);drawMap();return}
  back0()};
@@ -1695,7 +1696,8 @@ function swap(from,to){if(RM)return;const A=(e,k,o)=>e.animate(k,o);
   const col=h('div');col.innerHTML=L.map((t,i)=>'<div style="height:40px;line-height:40px;font:600 '+(i===L.length-2?26:21)+'px var(--sans);white-space:nowrap;color:'+(i===L.length-2?'var(--room,var(--ink))':'var(--ink2)')+'">'+t+'</div>').join('');reel.appendChild(col);to.appendChild(reel);
   const dist=(L.length-3)*40;nd.style.opacity=0;
   A(col,[{transform:'translateY(0)',filter:'blur(0)'},{transform:'translateY('+(-dist*.35)+'px)',filter:'blur(3px)',offset:.25},{transform:'translateY('+(-dist*.9)+'px)',filter:'blur(1.2px)',offset:.7},{transform:'translateY('+(-dist)+'px)',filter:'blur(0)'}],{duration:980,easing:'cubic-bezier(.3,.05,.2,1)',fill:'both'}).onfinish=()=>{A(nd,[{opacity:0},{opacity:1}],{duration:140,fill:'both'}).onfinish=()=>{nd.style.opacity=''};A(reel,[{opacity:1},{opacity:0}],{duration:160,fill:'both'}).onfinish=()=>reel.remove()}}
- else if(nd)A(nd,[{opacity:0},{opacity:1}],{duration:300,delay:300,fill:'both'});
+ else if(nd)A(nd,[{opacity:0},{opacity:1}],{duration:300,delay:300,fill:'backwards'});
+ else if(od){A(od,[{opacity:1,transform:'none',filter:'blur(0)'},{opacity:0,transform:'translateY(-10px)',filter:'blur(3px)'}],{duration:240,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'});drop(od,250)}
  // door summary: off to the right, in from the right as the reel slows
  old.summary.forEach(e=>{A(e,[{transform:'none',opacity:1},{transform:'translateX(80px)',opacity:0}],{duration:260,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'});drop(e,270)});
  neu.summary.forEach(e=>A(e,[{transform:'translateX(90px)',opacity:0},{transform:'translateX(-3px)',opacity:1,offset:.75},{transform:'none',opacity:1}],{duration:420,delay:640,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
@@ -1739,20 +1741,41 @@ const LPAGES=[
  {id:'money',name:'Purse',col:'--purse',hold:{Switcher:'October, This year, Since May',Keystone:'The indices',Caption:'Across for a category, up and down for an index',Widget:'Still yours, next drop, today (no strike)',Dial:'This month, Kinds, Saving, Investing, Debts, Mine',['Action word']:'Log, Look, Plan'}}];
 const LTOUCH={Masthead:'Title tap opens the room index; the nav word goes back',Title:'Tap opens the room index',['Nav word']:'Tap goes back',Switcher:'Swipe across or up and down; tap for the next',Needs:'Changes with the switcher',Keystone:'Its own gestures; a drag that starts here stays here',Caption:'None',Widget:'Swipe four ways for the next; hold the big line to strike; tap opens',Glyph:'Follows the item',Dial:'Turn up and down; tap the focus',['Door summary']:'Rises when the focus changes',['Action word']:'Tap; swipe across for others; hold to start',Tess:'Tap to hear her; hold to talk',Foot:'The action word and Tess','Back edge':'Swipe from here to go back'};
 const LMOVE={Masthead:'Folds away and open like the board',Title:'Folds open',Switcher:'Folds open; its letters stream on a swipe',Needs:'Folds open',Keystone:'Flips tile by tile',Caption:'Unrolls from the keystone',Widget:'Leaves upward, rises from below',Glyph:'Collapses to a point, forms again',Dial:'Spins too fast to read, slows onto the new doors',['Door summary']:'Off to the right, in from the right',['Action word']:'Streams out left, in from the left',Tess:'Stays; only her colour changes'};
-SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Swipe across to walk the app.',render(el){let pi=0;el.classList.add('lmode');
+// a level 1 page: the keystone stays; the switcher and needs merge into the door's title, and the widget and the doors merge into one page
+const LEVEL1=[['Masthead',0,44,402,138,'band'],['Title',24,50,260,48,'sub'],['Nav word',300,50,94,46,'sub'],['Door title',24,106,354,70,'sub'],['Breath',24,182,354,14,'empty'],
+ ['Keystone',24,196,354,182,'band'],['Caption',24,378,354,34,'band'],['Page',24,412,354,364,'band'],['Action word',24,786,220,62,'sub'],['Tess',306,776,96,96,'sub']];
+const MERGES={'Door title':['Switcher','Needs'],'Page':['Widget','Glyph','Breath@612','Dial','Door summary','Breath@760']};
+const LTOUCH1={'Door title':'Swipe across for the next door; tap to rename',Page:'The door’s own list: scroll, swipe right Done, left Not now'};
+const LMOVE1={'Door title':'Switcher and Needs melt together into it, and split apart on back',Page:'Widget, dial and summary melt into one page, and split on back'};
+SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Swipe across to walk the app. Tap the dial twice to open a door.',render(el){let pi=0,lvl=0;el.classList.add('lmode');
  const head=h('div','lmh');el.appendChild(head);const stage2=h('div','lms');el.appendChild(stage2);const info=h('div','lmi');el.appendChild(info);
- function page(dir){const P=LPAGES[pi];phone.style.setProperty('--room','var('+P.col+')');head.innerHTML='<span>Layout</span> '+P.name;info.innerHTML='';
+ const keyOfP=(n,y)=>n==='Breath'?'Breath@'+y:n;
+ const listFor=(P,l)=>{const base=l?LEVEL1:(P.subs?[...P.subs,...PLACES_MAP.filter(r=>!['Masthead','Title','Nav word','Switcher','Needs'].includes(r[0]))]:PLACES_MAP);return base.filter(([n,,,,,k])=>k!=='system'&&k!=='edge'&&!['Doors','Foot'].includes(n))};
+ function mk(P,[n,x,y,w,hh,k]){const empty=k==='empty'||(!lvl&&(P.empty||[]).includes(n));const lab=n==='Title'?(lvl?P.name+', a door':P.name):n;
+  const b=h('button','lb'+(k==='band'?' band':'')+(empty?' em':''),'<b>'+lab+'</b>'+(empty&&k!=='empty'?'<i>empty</i>':''));b.style.cssText='left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+hh+'px';b.dataset.k=keyOfP(n,y);
+  if(k==='empty'){b.innerHTML='';b.setAttribute('aria-label','Breath, empty')}if(n==='Title')b.classList.add('ttlb');
+  b.onclick=e=>{e.stopPropagation();const was=b.classList.contains('on');
+   if(was&&n==='Nav word'){if(lvl){lvl=0;relayout()}else back();return}
+   if(was&&n==='Dial'&&!lvl){lvl=1;relayout();return}
+   stage2.querySelectorAll('.on').forEach(z=>z.classList.remove('on'));b.classList.add('on');
+   const holds=(lvl?{'Door title':'The door’s name, its count and its line',Page:'The door’s own list, in the one fixed block of its depth'}[n]:null)||P.hold[n]||P.hold[lab]||(empty?'Nothing on this screen. The place is kept so nothing moves into it.':'Same as every screen');
+   const hint=n==='Dial'&&!lvl?'<p><em>Try</em> Tap again to open a door</p>':n==='Nav word'?'<p><em>Try</em> Tap again to go back</p>':'';
+   info.innerHTML='<b>'+lab+'</b> <span>'+x+', '+y+', '+w+' by '+hh+'</span><p>'+holds+'</p><p><em>Touch</em> '+((lvl&&LTOUCH1[n])||LTOUCH[n]||'None')+'</p><p><em>Moves</em> '+((lvl&&LMOVE1[n])||LMOVE[n]||'Stays')+'</p>'+hint};
+  return b}
+ // a layout change: places that stay glide to their new frame; places that merge flow into the merged place; a merged place splits back into its parts
+ function relayout(){const P=LPAGES[pi];info.innerHTML='';const old=[...stage2.children];const byK={};old.forEach(b=>byK[b.dataset.k]=b);const L=listFor(P,lvl);const keep=new Set();
+  const R=(b,[,x,y,w,hh],d=0,o={})=>RM?null:b.animate([{left:b.style.left,top:b.style.top,width:b.style.width,height:b.style.height,borderRadius:'18px'},{borderRadius:o.mid||'26px',offset:.5},{left:x+'px',top:y+'px',width:w+'px',height:hh+'px',borderRadius:'18px'}],{duration:560,delay:d,easing:'cubic-bezier(.3,.8,.2,1)',fill:'both'});
+  L.forEach((p,i)=>{const k=keyOfP(p[0],p[2]);if(byK[k]){const b=byK[k];keep.add(b);const nb=mk(P,p);R(b,p,i*12);setTimeout(()=>{b.replaceWith(nb)},RM?0:580+i*12);return}
+   if(MERGES[p[0]]){const src=MERGES[p[0]].map(m=>byK[m]).filter(Boolean);src.forEach((b,j)=>{keep.add(b);b.querySelectorAll('b,i').forEach(t=>t.animate&&!RM&&t.animate([{opacity:1},{opacity:0}],{duration:200,fill:'both'}));R(b,p,j*40,{mid:'40px'})});
+    const nb=mk(P,p);nb.style.opacity=0;stage2.appendChild(nb);setTimeout(()=>{src.forEach(b=>b.remove());nb.style.opacity='';if(!RM)nb.querySelector('b')?.animate([{opacity:0,transform:'scale(.9)'},{opacity:1,transform:'none'}],{duration:260,fill:'both'})},RM?0:620);return}
+   const big=Object.keys(MERGES).find(g=>MERGES[g].includes(k)&&byK[g]);
+   if(big){const g=byK[big];keep.add(g);const nb=mk(P,p);const r=g.style;nb.style.left=r.left;nb.style.top=r.top;nb.style.width=r.width;nb.style.height=r.height;stage2.appendChild(nb);nb.querySelectorAll('b,i').forEach(t=>!RM&&t.animate([{opacity:0},{opacity:0,offset:.6},{opacity:1}],{duration:600,fill:'both'}));
+    const a=R(nb,p,80+i*20,{mid:'40px'});if(!RM)g.animate([{opacity:1},{opacity:0}],{duration:200,delay:60,fill:'both'});setTimeout(()=>g.remove(),RM?0:300);if(a)a.onfinish=()=>{nb.style.left=p[1]+'px';nb.style.top=p[2]+'px';nb.style.width=p[3]+'px';nb.style.height=p[4]+'px'};else{nb.style.left=p[1]+'px';nb.style.top=p[2]+'px';nb.style.width=p[3]+'px';nb.style.height=p[4]+'px'}return}
+   const nb=mk(P,p);stage2.appendChild(nb);if(!RM)nb.animate([{transform:'scale(.85)',opacity:0},{transform:'none',opacity:1}],{duration:380,delay:200,fill:'both'})});
+  old.forEach(b=>{if(!keep.has(b)){if(RM)b.remove();else b.animate([{opacity:1},{opacity:0,transform:'scale(.9)'}],{duration:220,fill:'both'}).onfinish=()=>b.remove()}})}
+ function page(dir){lvl=0;const P=LPAGES[pi];phone.style.setProperty('--room','var('+P.col+')');head.innerHTML='<span>Layout</span> '+P.name;info.innerHTML='';
   const old=[...stage2.children];const S=[];
-  const MAPX=P.subs?[...P.subs,...PLACES_MAP.filter(r=>!['Masthead','Title','Nav word','Switcher','Needs'].includes(r[0]))]:PLACES_MAP;
-  MAPX.forEach(([n,x,y,w,hh,k])=>{if(k==='system'||k==='edge')return;if(['Doors','Foot'].includes(n))return;
-   const empty=k==='empty'||(P.empty||[]).includes(n);const lab=n==='Title'?P.name:n;
-   const b=h('button','lb'+(k==='band'?' band':'')+(empty?' em':''),'<b>'+lab+'</b>'+(empty&&k!=='empty'?'<i>empty</i>':''));b.style.cssText='left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+hh+'px';
-   if(k==='empty'){b.innerHTML='';b.setAttribute('aria-label','Breath, empty')}
-   if(n==='Title')b.classList.add('ttlb');
-   b.onclick=e=>{e.stopPropagation();if(n==='Nav word'&&b.classList.contains('on')){back();return}stage2.querySelectorAll('.on').forEach(z=>z.classList.remove('on'));b.classList.add('on');
-    const holds=P.hold[n]||P.hold[lab]||(empty?'Nothing on this screen. The place is kept so nothing moves into it.':'Same as every screen');
-    info.innerHTML='<b>'+lab+'</b> <span>'+x+', '+y+', '+w+' by '+hh+'</span><p>'+holds+'</p><p><em>Touch</em> '+(LTOUCH[n]||'None')+'</p><p><em>Moves</em> '+(LMOVE[n]||'Stays')+'</p>';fitAll&&0};
-   stage2.appendChild(b);S.push([b,k,n])});
+  listFor(P,0).forEach(p=>{const b=mk(P,p);stage2.appendChild(b);S.push([b,p[5],p[0]])});
   if(RM||!dir){old.forEach(o=>o.remove());}
   else{old.forEach((o,i)=>{o.animate([{transform:'none',opacity:1},{transform:'translateX('+(-dir*40)+'px) scale(.92)',opacity:0}],{duration:240,delay:i*8,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'}).onfinish=()=>o.remove()})}
   if(!RM)S.forEach(([b,k,n],i)=>{const kf=n==='Masthead'||n==='Title'||n==='Nav word'||n==='Switcher'||n==='Needs'?[{transform:'perspective(500px) rotateX(-80deg)',opacity:0},{transform:'none',opacity:1}]:n==='Keystone'?[{transform:'perspective(600px) rotateY(-70deg)',opacity:0},{transform:'none',opacity:1}]:n==='Dial'?[{transform:'translateY(-40px)',opacity:0,filter:'blur(3px)'},{transform:'none',opacity:1,filter:'blur(0)'}]:n==='Door summary'?[{transform:'translateX(60px)',opacity:0},{transform:'none',opacity:1}]:n==='Widget'||n==='Glyph'?[{transform:'translateY(40px)',opacity:0},{transform:'none',opacity:1}]:[{transform:'scale(.85)',opacity:0},{transform:'none',opacity:1}];
@@ -1760,7 +1783,8 @@ SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Sw
  page(0);let x0=null,dx=0;
  el.addEventListener('pointerdown',e=>{x0=e.clientX;dx=0});el.addEventListener('pointermove',e=>{if(x0!=null)dx=(e.clientX-x0)/K});
  el.addEventListener('pointerup',()=>{if(x0==null)return;x0=null;if(Math.abs(dx)>50){const d=dx<0?1:-1;pi=(pi+d+LPAGES.length)%LPAGES.length;page(d)}});
- const kd=e=>{if(e.key==='ArrowRight'){pi=(pi+1)%LPAGES.length;page(1)}if(e.key==='ArrowLeft'){pi=(pi-1+LPAGES.length)%LPAGES.length;page(-1)}};document.addEventListener('keydown',kd);
+ const kd=e=>{if(e.key==='ArrowRight'){pi=(pi+1)%LPAGES.length;page(1)}if(e.key==='ArrowLeft'){pi=(pi-1+LPAGES.length)%LPAGES.length;page(-1)}if(e.key==='ArrowDown'&&!lvl){lvl=1;relayout()}if(e.key==='ArrowUp'&&lvl){lvl=0;relayout()}};document.addEventListener('keydown',kd);
+ window.__layoutLvl=v=>{lvl=v;relayout()};
  return ()=>document.removeEventListener('keydown',kd)}};
 {const st=document.createElement('style');st.textContent=`
 .lmode{background:color-mix(in srgb,var(--room,var(--ink)) 4%,var(--p-bg))}
@@ -1778,6 +1802,35 @@ SCREENS.layout={title:'Layout',accent:null,tess:'Only the places, no content. Sw
 // Settings gets the way in
 {const r0=SCREENS.settings.render;SCREENS.settings.render=function(el,p){const c=r0.call(this,el,p);const box=[...el.children].find(d=>d.style.top==='116px');
  if(box){const sc=h('div','sc','Layout');sc.style.cssText='color:var(--slate);margin-top:18px';const e=h('div','setl','<span>Layout mode</span><span>Open</span>');e.onclick=()=>go('layout');box.insertBefore(e,box.firstChild);box.insertBefore(sc,box.firstChild)}return c}}
+
+/* ---------- the shell stays; only the content changes (283 v5, his 4:21 PM note) ----------
+   The phone is one standing layout. No screen ever slides in over another, and back is the same move run the
+   other way. Going anywhere hands each place its new content and the place changes it in its own way (swap,
+   above). Content in no named place (the inner pages) leaves softly where it stands and the new content settles
+   in from the top down. A keystone that is the same on both sides (the Galley's pass, the Deck's board, the
+   Log's wall, the woods, the sky, the indices) is not touched at all: it stays and only its content moves. */
+const KEYS=['.wall','.pass','.tboard','.lclip','.sky','.glassw','#mosaic'];
+function keyOf(el){for(const k of KEYS){const e=el.querySelector(':scope > '+k+', :scope > .lkey > '+k);if(e)return [k,e]}return [null,null]}
+function morph(from,to){if(RM||!from)return;const A=(e,k,o)=>e.animate(k,o);
+ const [ka,ea]=keyOf(from),[kb,eb]=keyOf(to);const sameKey=ka&&ka===kb&&ka!=='#mosaic';
+ const mapped=new Set(Object.keys(SECT).flatMap(k=>sectOf(from,k)));
+ const hostA=ea&&(ea.closest('.lkey')||ea);const rest=[...from.children].filter(e=>!mapped.has(e)&&!e.classList.contains('sbar')&&e!==hostA&&!e.classList.contains('fx'));
+ const mappedTo=new Set(Object.keys(SECT).flatMap(k=>sectOf(to,k)));
+ const hostB=eb&&(eb.closest('.lkey')||eb);const restTo=[...to.children].filter(e=>!mappedTo.has(e)&&!e.classList.contains('sbar')&&e!==hostB);
+ // the keystone: kept if it is the same one, otherwise the old one dissolves under the new
+ if(ea&&!sameKey){const host=ea.closest('.lkey')||ea;host.style.pointerEvents='none';to.insertBefore(host,to.children[1]||null);A(host,[{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:320,fill:'both'}).onfinish=()=>host.remove();
+  if(eb)A(eb.closest('.lkey')||eb,[{opacity:0},{opacity:1}],{duration:320,delay:60,fill:'both'})}
+ swap(from,to);
+ const top=e=>{const r=e.getBoundingClientRect(),p=phone.getBoundingClientRect();return (r.top-p.top)/K};
+ rest.forEach(e=>{const y=top(e);e.style.pointerEvents='none';to.appendChild(e);A(e,[{opacity:1,transform:'none',filter:'blur(0)'},{opacity:0,transform:'translateY(-6px)',filter:'blur(2px)'}],{duration:200,delay:Math.max(0,y-180)/8,easing:'cubic-bezier(.5,0,.8,.4)',fill:'both'}).onfinish=()=>e.remove()});
+ restTo.forEach(e=>{const o=+getComputedStyle(e).opacity;if(!o)return;const y=top(e);A(e,[{opacity:0,transform:'translateY(8px)',filter:'blur(2px)'},{opacity:o,transform:'none',filter:'blur(0)'}],{duration:380,delay:160+Math.max(0,y-150)/3.2,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'})})}
+// every move goes through the shell: go and back no longer slide a screen
+go0=function(id,params,opts={}){if(!SCREENS[id])return;const from=current,fromCleanup=cleanup;stack.push({id,params});
+ window.__morphing=!!from;const {el,c}=mount(id,params);window.__morphing=false;current=el;cleanup=c;if(from){morph(from,el);from.remove();setTimeout(()=>fromCleanup&&fromCleanup(),1200)}
+ tessCue(SCREENS[id].accent);drawMap()};
+back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack.length-1],old=current,oldC=cleanup;
+ window.__morphing=true;const {el,c}=mount(prev.id,prev.params);window.__morphing=false;current=el;cleanup=c;morph(old,el);old.remove();setTimeout(()=>oldC&&oldC(),1200);
+ tessCue(SCREENS[prev.id].accent);drawMap()};
 
 /* ---------- the map, updated ---------- */
 MAP.length=0;MAP.push(
