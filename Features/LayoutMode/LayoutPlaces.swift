@@ -103,7 +103,7 @@ enum LayoutPlaces {
         pane("Keystone", 24, 196, 354, 182), pane("Caption", 24, 378, 354, 34),
         pane("Widget", 24, 412, 354, 200), pane("Glyph", 298, 444, 80, 80),
         breath(612, 28),
-        pane("Dial", 24, 640, 160, 120), pane("Door summary", 186, 640, 192, 120),
+        pane("Dial", 218, 640, 160, 120), pane("Door summary", 24, 640, 192, 120),
         breath(760, 16),
         pane("Action word", 24, 786, 220, 62), pane("Tess", 306, 776, 96, 96),
     ]

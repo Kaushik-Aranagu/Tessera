@@ -44,8 +44,9 @@ enum LandingPlace: String, CaseIterable {
     }
 
     enum Doors {
-        static let dial = CGRect(x: 24, y: 640, width: 160, height: 120)
-        static let summary = CGRect(x: 186, y: 640, width: 192, height: 120)
+        // Kaushik, Oct 26: the dial is on the RIGHT (he is right-handed) and the door summary on the LEFT.
+        static let dial = CGRect(x: 218, y: 640, width: 160, height: 120)
+        static let summary = CGRect(x: 24, y: 640, width: 192, height: 120)
     }
 
     enum Foot {
