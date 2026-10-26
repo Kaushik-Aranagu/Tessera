@@ -48,7 +48,7 @@ enum TrainingStop: Hashable {
 }
 
 /// Where a door, a wall word or the title goes.
-enum TrainingGo {
+enum TrainingGo: Equatable {
     case page
     case route(Route)
     case library

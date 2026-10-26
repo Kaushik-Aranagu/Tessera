@@ -11,6 +11,10 @@ struct BoardDay: Equatable, Identifiable {
     let letter: String
     let done: Bool
     let isToday: Bool
+    /// The first lift of the day's finished workout, so the day's row on the This week page opens that lift; nil on
+    /// a day with nothing done or a private workout.
+    var liftID: UUID?
+    var liftName: String?
 }
 
 /// A best written small along the bottom of the board; tapping its number opens the lift.
@@ -102,8 +106,18 @@ extension TrainingDeckFacts {
         let today = TesseraDay(calendar: calendar).today(now)
         let letters = calendar.veryShortWeekdaySymbols
         let days = week.enumerated().map { index, slot in
-            BoardDay(id: index, letter: letters[calendar.component(.weekday, from: slot.day) - 1],
-                     done: !slot.done.isEmpty, isToday: slot.day == today)
+            // The day's first finished, non-private workout names the lift its row opens.
+            let lift = slot.done.lazy
+                .filter { shown($0.title) != ObjectPrivacy.routineLabel }
+                .compactMap { summary in
+                    summary.workout.orderedChildren.lazy.filter { !$0.isDeleted }
+                        .compactMap { store.linkedClass("exercise", of: $0) }
+                        .first { !ObjectPrivacy.isPrivateWord($0.name, in: store) }
+                }
+                .first
+            return BoardDay(id: index, letter: letters[calendar.component(.weekday, from: slot.day) - 1],
+                            done: !slot.done.isEmpty, isToday: slot.day == today,
+                            liftID: lift?.id, liftName: lift.map { TrainingWallFacts.lift($0.name) })
         }
         let doneDays = days.filter(\.done).count
 
