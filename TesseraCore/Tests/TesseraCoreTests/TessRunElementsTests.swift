@@ -40,7 +40,10 @@ struct TessRunElementsTests {
             }
         }
         #expect(ghosts.count == 1)
-        guard case let .finished(line)? = events.last else { return Issue.record("no reply: \(events)") }
+        guard case let .finished(line)? = events.last else {
+            Issue.record("no reply: \(events)")
+            return
+        }
         #expect(line.lowercased().contains("call the bank"))
         // The task is done as a pending row (Undo within the window), by its id.
         #expect(r.engine.store.value("isDone", of: task) == .bool(true))
@@ -57,7 +60,10 @@ struct TessRunElementsTests {
         let events = await helper.collect(r.run.ask("done", frame: frame("bridge", items: [item])))
         #expect(r.engine.store.value("isDone", of: task) == .bool(true))
         #expect(haiku.streamCount == 0)
-        guard case let .finished(line)? = events.last else { return Issue.record("no reply: \(events)") }
+        guard case let .finished(line)? = events.last else {
+            Issue.record("no reply: \(events)")
+            return
+        }
         #expect(!line.lowercased().contains("bank"))
     }
 
