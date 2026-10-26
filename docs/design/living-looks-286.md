@@ -116,7 +116,6 @@ Tess's changes while he is away (live-visibility.md, section "Compatibility"):
 
 ## Open for the next round
 
-- Draw Column and Sentence for the Log's eight doors as well as the Deck's five. Column now uses two columns of
-  four.
+- ~~Draw Column and Sentence for the Log's eight doors~~ Done in sheet 292 (`transitions-287.md`, "Many doors").
 - Draw the Page looks (Even, Two columns, By time) on one room.
 - Draw the Layout mode swipe-through.

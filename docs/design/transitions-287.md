@@ -130,7 +130,7 @@ This replaces sheet 286, section 2, and uses the forms in `ElementForms`.
 | Needs | type | count (1 or 2 lines), facts ("numbers only") | none |
 | Widget | rise, stack (one and next), rows, ledger (Purse), trace (Lookout, Purse) | facts ("just names" is the Big line only, which hides the glyph), size | none |
 | Glyph | the room's drawing, trace | shows (on or off) | none |
-| Doors | reel, index, **sentence** | density (index: more than 5 doors become two columns of 4) | sentence |
+| Doors | reel, index, **sentence** | density (index: more than 5 doors become two columns of 4), count (sentence: at most 4 names, then "and N more") | sentence |
 | Door summary | type, **sentence** | facts ("numbers only") | none |
 | Page (level 1) | rows, **columns** (names only, two across), wall, ledger, stack | weight (ranked 1.7 to 0.84, or even), order (rank or time; by time adds a 52 pt time column), density | columns |
 | Body (level 2) | the kind's own drawing (sheet 284), type ("plain") | none | none |
@@ -141,6 +141,18 @@ The new forms each need a row in `ElementForms`:
 - `roll`: draws words, in the switcher.
 - `sentence`: draws doors and words, in the dial and the door summary. Its trait is count. (Needs stays `type`.)
 - `columns`: draws many, in the page only. (On the dial, two columns is the index form's density trait.)
+
+### Many doors (sheet 292, drawn on the Log's eight)
+
+- **Index, two columns:** two columns of four. Each column is right-aligned and as wide as its longest name, with a
+  14 pt gap, and the pair sits on the frame's right edge (the right thumb, sheet 289). Names are 15 pt. If the pair is
+  wider than the frame, the size steps down to 13 pt, then the gap narrows to 8 pt. The focus door is 600 weight.
+- **Sentence, count trait:** a sentence never lists more than four doors. After the fourth, it reads "and 4 more" in
+  ink2. Tapping "4 more" turns the place into the index form, with the usual travel (the four named doors move to
+  their index places). There is no full stop at the end (sheet 289). If four names don't fit in 120 pt, the type steps
+  down from 19 to 15 pt.
+- Both pass the Bounds check (sheet 291) in paper and black. Before this, the eight-door index ran past the frame's
+  left edge, and the eight-door sentence ran seven lines into the Undo line.
 
 ## 7. Interface changes
 

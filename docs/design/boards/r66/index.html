@@ -184,6 +184,9 @@ button.w:focus-visible,.map button:focus-visible{outline:2px solid var(--acc);ou
   <button class="w" data-th="look-index">Deck doors: Index</button>
   <button class="w" data-th="look-sentence">Deck doors: Sentence</button>
   <button class="w" data-th="look-reel">Deck doors: Reel</button>
+  <button class="w" data-th="log-index">Log doors: Index</button>
+  <button class="w" data-th="log-sentence">Log doors: Sentence</button>
+  <button class="w" data-th="log-reel">Log doors: Reel</button>
   <button class="w" data-th="look-tess">Galley: Tess shows the doors as an index</button>
   <button class="w" data-th="away-galley">Galley: leave, change, come back</button>
   <button class="w" data-th="shape-deck">Deck: hold the Nav word to reshape</button>
@@ -2360,14 +2363,22 @@ function doorList(el,room){const L=LV[room];const d=el.querySelector(':scope > .
 function lookEl(el,room,look){const {doors,focus}=doorList(el,room);const f0=[...el.querySelectorAll(':scope > .dial .d')].find(e=>/translateY\(40px\)/.test(e.style.transform||''));const color=(f0&&f0.style.color)||'var(--ink)';
  const w=h('div','dlook '+look);w.style.cssText='position:absolute;left:218px;top:640px;width:160px;height:120px;z-index:6;text-align:right';
  const word=(t,i)=>{const s=h('span','dw',t);s.dataset.t=t;if(i===focus){s.classList.add('f');s.style.color=color}s.onclick=()=>go('l1_'+room,{door:i});return s};
- if(look==='index'){const two=doors.length>5,rows=two?Math.ceil(doors.length/2):doors.length,lh=120/rows;
-  doors.forEach((t,i)=>{const s=word(t,i);const c=two?Math.floor(i/rows):0,r=two?i%rows:i;s.style.cssText+='position:absolute;right:'+((two?1-c:0)*84)+'px;top:'+(r*lh)+'px;height:'+lh+'px;line-height:'+lh+'px;font-size:'+(two?14:Math.min(20,lh*.72))+'px';w.appendChild(s)})}
- else{w.style.cssText+=';display:block;font-size:19px;line-height:26px';doors.forEach((t,i)=>{w.appendChild(word(t,i));w.appendChild(document.createTextNode(i===doors.length-1?'.':i===doors.length-2?' and ':', '))})}
+ if(look==='index'){const two=doors.length>5;
+  if(!two){const lh=120/doors.length;doors.forEach((t,i)=>{const s=word(t,i);s.style.cssText+='position:absolute;right:0;top:'+(i*lh)+'px;height:'+lh+'px;line-height:'+lh+'px;font-size:'+Math.min(20,lh*.72)+'px';w.appendChild(s)})}
+  else{/* 292: two columns of four, each right-aligned, sized to their longest name; the pair sits on the right edge */
+   const rows=Math.ceil(doors.length/2),lh=120/rows,row=h('div','dcols');row.style.cssText='position:absolute;right:0;top:0;display:inline-flex;gap:14px;font-size:15px';
+   [0,1].forEach(c=>{const col=h('div');col.style.cssText='display:flex;flex-direction:column;align-items:flex-end';doors.slice(c*rows,(c+1)*rows).forEach((t,k)=>{const s=word(t,c*rows+k);s.style.cssText+='height:'+lh+'px;line-height:'+lh+'px;white-space:nowrap';col.appendChild(s)});row.appendChild(col)});
+   w.appendChild(row);w._fit=()=>{let fs=15;while(row.offsetWidth>160&&fs>13){fs--;row.style.fontSize=fs+'px'}if(row.offsetWidth>160)row.style.gap=Math.max(8,14-(row.offsetWidth-160))+'px'}}}
+ else{/* 292: the sentence names at most four doors, then "and N more", which opens the index; no full stop (sheet 289) */
+  w.style.cssText+=';display:block;font-size:19px;line-height:26px';const cap=doors.length>5?4:doors.length,rest=doors.length-cap;
+  doors.slice(0,cap).forEach((t,i)=>{w.appendChild(word(t,i));if(i<cap-1)w.appendChild(document.createTextNode(i===cap-2&&!rest?' and ':', '))});
+  if(rest){w.appendChild(document.createTextNode(' and '));const m=h('span','dw dmore',rest+' more');m.style.color='var(--ink2)';m.onclick=e=>{e.stopPropagation();lookBy(room,'index',false)};w.appendChild(m)}
+  w._fit=()=>{let fs=19;while(w.scrollHeight>121&&fs>15){fs--;w.style.fontSize=fs+'px';w.style.lineHeight=Math.round(fs*1.37)+'px'}}}
  return w}
 function labelRects(host){const m={};host.querySelectorAll('.dial .d,.dlook .dw').forEach(e=>{const t=(e.dataset.t||e.textContent.replace(/\d+$/,'')).trim();const s=e.querySelector('span')||e;const r=s.getBoundingClientRect();if(+getComputedStyle(e).opacity>0.05&&r.width)m[t]=r});return m}
 function setDoorLook(el,room,look,anim){const dl=el.querySelector(':scope > .dial');if(!dl)return;const old=el.querySelector(':scope > .dlook');const was=old?old.classList[1]:'reel';if(was===look&&!anim)return;
  const before=anim?labelRects(el):null;old&&old.remove();
- if(look==='reel'){dl.style.visibility=''}else{el.appendChild(lookEl(el,room,look));dl.style.visibility='hidden'}
+ if(look==='reel'){dl.style.visibility=''}else{const lw=lookEl(el,room,look);el.appendChild(lw);lw._fit&&lw._fit();dl.style.visibility='hidden'}
  if(!before||RM)return;
  /* shared words travel; the place itself never moves */
  const now=el.querySelector(':scope > .dlook')||dl;const after=labelRects(el);
@@ -2397,7 +2408,7 @@ function galleyAway(){const go2=()=>{const el=current;SEEN.kitchen=railSnap(el);
  const top=stack.length?stack[stack.length-1].id:null;if(top==='kitchen')go2();else{reset('home');go('kitchen');setTimeout(go2,1500)}}
 
 Object.assign(TH_DEMOS,{'look-index':['training',()=>lookBy('training','index',false)],'look-sentence':['training',()=>lookBy('training','sentence',false)],
- 'look-reel':['training',()=>lookBy('training','reel',false)],'look-tess':['kitchen',()=>lookBy('kitchen','index',true)],'away-galley':['kitchen',galleyAway]});
+ 'look-reel':['training',()=>lookBy('training','reel',false)],'look-tess':['kitchen',()=>lookBy('kitchen','index',true)],'away-galley':['kitchen',galleyAway],'log-index':['notes',()=>lookBy('notes','index',false)],'log-sentence':['notes',()=>lookBy('notes','sentence',false)],'log-reel':['notes',()=>lookBy('notes','reel',false)]});
 document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>window.__th(b.dataset.th));
 
 /* ================= 287: reshape by hand. Hold the Nav word: the screen loosens into shape mode, over the live
