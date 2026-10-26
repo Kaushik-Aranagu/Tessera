@@ -3,23 +3,25 @@ import SwiftUI
 /// The widget glyph library (sheet 283 v3): 20 small line drawings plus the cover (the item's own words), 80 x 80, in
 /// the item's color, picked by rules on the item's header, big and middle lines (first match wins; Tess picks later).
 enum GlyphKind: String, CaseIterable {
-    // Log
+    /// Log
     case spark, bulb, book, checklist
-    // Lookout
+    /// Lookout
     case rain, moon, sun
-    // Deck
+    /// Deck
     case steps, ticks, barbell
-    // Galley
+    /// Galley
     case plates, bowl, ticket, basket
-    // Watch
+    /// Watch
     case wateringCan, grove, birdAndFlower
-    // Purse
+    /// Purse
     case calendar, coins, indexLine
 
     /// The first rule that matches the item's words, or nil (the cover: the item's own words).
     static func pick(header: String, big: String, middle: String) -> GlyphKind? {
         let words = [header, big, middle].joined(separator: " ").lowercased()
-        func has(_ needles: String...) -> Bool { needles.contains { words.contains($0) } }
+        func has(_ needles: String...) -> Bool {
+            needles.contains { words.contains($0) }
+        }
         let rules: [(GlyphKind, Bool)] = [
             (.bulb, has("repair", "fix", "lamp")),
             (.book, has("club", "book", "read")),
@@ -60,7 +62,9 @@ struct GlyphDrawing: View {
                 path.addLines(points)
                 context.stroke(path, with: .color(color), style: stroke)
             }
-            func oval(_ rect: CGRect) { context.stroke(Path(ellipseIn: rect), with: .color(color), style: stroke) }
+            func oval(_ rect: CGRect) {
+                context.stroke(Path(ellipseIn: rect), with: .color(color), style: stroke)
+            }
             func rect(_ rect: CGRect, _ radius: CGFloat = 4) {
                 context.stroke(Path(roundedRect: rect, cornerRadius: radius), with: .color(color), style: stroke)
             }
@@ -102,8 +106,20 @@ struct GlyphDrawing: View {
                 }
             case .moon:
                 var moon = Path()
-                moon.addArc(center: CGPoint(x: 40, y: 40), radius: 24, startAngle: .degrees(60), endAngle: .degrees(300), clockwise: false)
-                moon.addArc(center: CGPoint(x: 50, y: 34), radius: 20, startAngle: .degrees(300), endAngle: .degrees(60), clockwise: true)
+                moon.addArc(
+                    center: CGPoint(x: 40, y: 40),
+                    radius: 24,
+                    startAngle: .degrees(60),
+                    endAngle: .degrees(300),
+                    clockwise: false
+                )
+                moon.addArc(
+                    center: CGPoint(x: 50, y: 34),
+                    radius: 20,
+                    startAngle: .degrees(300),
+                    endAngle: .degrees(60),
+                    clockwise: true
+                )
                 context.stroke(moon, with: .color(color), style: stroke)
             case .sun:
                 oval(CGRect(x: 26, y: 26, width: 28, height: 28))
@@ -122,8 +138,11 @@ struct GlyphDrawing: View {
                     let x = CGFloat(10 + (index % 3) * 22)
                     let y = CGFloat(index < 3 ? 22 : 52)
                     let done = index < 3
-                    if done { line([CGPoint(x: x, y: y), CGPoint(x: x + 6, y: y + 8), CGPoint(x: x + 16, y: y - 8)]) }
-                    else { line([CGPoint(x: x, y: y + 4), CGPoint(x: x + 14, y: y + 4)]) }
+                    if done {
+                        line([CGPoint(x: x, y: y), CGPoint(x: x + 6, y: y + 8), CGPoint(x: x + 16, y: y - 8)])
+                    } else {
+                        line([CGPoint(x: x, y: y + 4), CGPoint(x: x + 14, y: y + 4)])
+                    }
                 }
             case .barbell:
                 line([CGPoint(x: 6, y: 40), CGPoint(x: 74, y: 40)])
@@ -136,32 +155,61 @@ struct GlyphDrawing: View {
                 }
             case .bowl:
                 var bowl = Path()
-                bowl.addArc(center: CGPoint(x: 40, y: 38), radius: 26, startAngle: .degrees(0), endAngle: .degrees(180), clockwise: false)
+                bowl.addArc(
+                    center: CGPoint(x: 40, y: 38),
+                    radius: 26,
+                    startAngle: .degrees(0),
+                    endAngle: .degrees(180),
+                    clockwise: false
+                )
                 bowl.closeSubpath()
                 context.stroke(bowl, with: .color(color), style: stroke)
                 for index in 0 ..< 3 {
                     let x = CGFloat(28 + index * 12)
-                    line([CGPoint(x: x, y: 28 - CGFloat(index % 2) * 4), CGPoint(x: x + 3 * wave, y: 14 - CGFloat(index % 2) * 4)])
+                    line([
+                        CGPoint(x: x, y: 28 - CGFloat(index % 2) * 4),
+                        CGPoint(x: x + 3 * wave, y: 14 - CGFloat(index % 2) * 4),
+                    ])
                 }
             case .ticket:
-                line([CGPoint(x: 18, y: 10), CGPoint(x: 62, y: 10), CGPoint(x: 62, y: 62), CGPoint(x: 55, y: 68), CGPoint(x: 48, y: 62),
-                      CGPoint(x: 41, y: 68), CGPoint(x: 34, y: 62), CGPoint(x: 27, y: 68), CGPoint(x: 18, y: 62), CGPoint(x: 18, y: 10)])
+                line([
+                    CGPoint(x: 18, y: 10),
+                    CGPoint(x: 62, y: 10),
+                    CGPoint(x: 62, y: 62),
+                    CGPoint(x: 55, y: 68),
+                    CGPoint(x: 48, y: 62),
+                    CGPoint(x: 41, y: 68),
+                    CGPoint(x: 34, y: 62),
+                    CGPoint(x: 27, y: 68),
+                    CGPoint(x: 18, y: 62),
+                    CGPoint(x: 18, y: 10),
+                ])
                 line([CGPoint(x: 26, y: 24), CGPoint(x: 54, y: 24)])
                 line([CGPoint(x: 26, y: 36), CGPoint(x: 50, y: 36)])
             case .basket:
                 var basket = Path()
                 basket.move(to: CGPoint(x: 12, y: 34)); basket.addLine(to: CGPoint(x: 68, y: 34))
-                basket.addLine(to: CGPoint(x: 60, y: 66)); basket.addLine(to: CGPoint(x: 20, y: 66)); basket.closeSubpath()
+                basket.addLine(to: CGPoint(x: 60, y: 66)); basket.addLine(to: CGPoint(x: 20, y: 66)); basket
+                    .closeSubpath()
                 context.stroke(basket, with: .color(color), style: stroke)
                 var handle = Path()
-                handle.addArc(center: CGPoint(x: 40, y: 34), radius: 20, startAngle: .degrees(180), endAngle: .degrees(360), clockwise: false)
+                handle.addArc(
+                    center: CGPoint(x: 40, y: 34),
+                    radius: 20,
+                    startAngle: .degrees(180),
+                    endAngle: .degrees(360),
+                    clockwise: false
+                )
                 context.stroke(handle, with: .color(color), style: stroke)
             case .wateringCan:
                 rect(CGRect(x: 16, y: 30, width: 34, height: 30), 6)
                 line([CGPoint(x: 50, y: 42), CGPoint(x: 70, y: 28)])
                 line([CGPoint(x: 16, y: 38), CGPoint(x: 6, y: 30), CGPoint(x: 6, y: 20)])
                 for index in 0 ..< 3 {
-                    line([CGPoint(x: 70 + CGFloat(index) * 3, y: 34 + CGFloat(index) * 8), CGPoint(x: 72 + CGFloat(index) * 3, y: 40 + CGFloat(index) * 8)])
+                    line([
+                        CGPoint(x: 70 + CGFloat(index) * 3, y: 34 + CGFloat(index) * 8),
+                        CGPoint(x: 72 + CGFloat(index) * 3, y: 40 + CGFloat(index) * 8),
+                    ])
                 }
             case .grove:
                 for (x, h) in [(18.0, 34.0), (40.0, 48.0), (62.0, 30.0)] {
@@ -171,7 +219,13 @@ struct GlyphDrawing: View {
             case .birdAndFlower:
                 line([CGPoint(x: 8, y: 30), CGPoint(x: 72, y: 24)])
                 var bird = Path()
-                bird.addArc(center: CGPoint(x: 38, y: 20 + wave), radius: 8, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+                bird.addArc(
+                    center: CGPoint(x: 38, y: 20 + wave),
+                    radius: 8,
+                    startAngle: .degrees(180),
+                    endAngle: .degrees(0),
+                    clockwise: false
+                )
                 context.stroke(bird, with: .color(color), style: stroke)
                 line([CGPoint(x: 52, y: 70), CGPoint(x: 52, y: 52)])
                 for index in 0 ..< 5 {
@@ -191,7 +245,12 @@ struct GlyphDrawing: View {
             case .indexLine:
                 var path = Path()
                 path.move(to: CGPoint(x: 6, y: 56))
-                for (x, y) in [(20.0, 48.0), (32.0, 52.0), (46.0, 34.0), (60.0, 26.0)] { path.addLine(to: CGPoint(x: x, y: y)) }
+                for (x, y) in [(20.0, 48.0), (32.0, 52.0), (46.0, 34.0), (60.0, 26.0)] {
+                    path.addLine(to: CGPoint(
+                        x: x,
+                        y: y
+                    ))
+                }
                 context.stroke(path, with: .color(color), style: stroke)
                 context.fill(Path(ellipseIn: CGRect(x: 56, y: 22, width: 8, height: 8)), with: .color(color))
             }
@@ -226,6 +285,8 @@ struct GlyphCover: View {
 struct LandingGlyph: View {
     let item: WidgetItem
     let color: Color
+    /// When the drawing forms after it collapses (330 ms in the widget; the shell starts it sooner after a split).
+    var formDelay = 0.33
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var formed = false
@@ -265,6 +326,6 @@ struct LandingGlyph: View {
         withAnimation(.easeIn(duration: 0.26)) { formed = false }
         try? await Task.sleep(for: .milliseconds(330))
         guard !Task.isCancelled else { return }
-        withAnimation(.spring(duration: 0.44, bounce: 0.3)) { formed = true }
+        withAnimation(.spring(duration: 0.44, bounce: 0.3).delay(formDelay)) { formed = true }
     }
 }

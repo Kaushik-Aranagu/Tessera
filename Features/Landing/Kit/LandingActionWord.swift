@@ -39,8 +39,12 @@ struct LandingFootAction {
 struct LandingActionWord: View {
     let action: LandingFootAction
     let accent: Color
+    /// The shell's move (sheet 283 v4): when set, the verb's letters stream in from the left after this many
+    /// seconds, 24 ms apart, 460 ms. Nil (the scaffold) shows the word at once.
+    var arrival: Double?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var arrived = false
     @State private var current = 0
     @State private var direction = 1
     @State private var pull: CGFloat = 0
@@ -56,7 +60,10 @@ struct LandingActionWord: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .leading) {
-                letters(holdHint ? "Hold to \(step.verb.lowercased())." : step.verb, color: accent.opacity(step.hold ? 0.35 : 1))
+                letters(
+                    holdHint ? "Hold to \(step.verb.lowercased())." : step.verb,
+                    color: accent.opacity(step.hold ? 0.35 : 1)
+                )
                 if step.hold {
                     letters(step.verb, color: accent)
                         .mask(alignment: .leading) {
@@ -90,14 +97,19 @@ struct LandingActionWord: View {
         })
         .simultaneousGesture(swipe)
         .tesseraFeedback(cue)
+        .onAppear { arrived = true }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(step.object.isEmpty ? step.verb : "\(step.verb), \(step.object)")
         .accessibilityHint(action.hint)
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { step.run() }
         .accessibilityActions {
-            if let left = action.left { Button(left.name, action: left.run) }
-            if let right = action.right { Button(right.name, action: right.run) }
+            if let left = action.left {
+                Button(left.name, action: left.run)
+            }
+            if let right = action.right {
+                Button(right.name, action: right.run)
+            }
             ForEach(Array(action.alternates.enumerated()), id: \.offset) { _, alternate in
                 Button(alternate.verb, action: alternate.run)
             }
@@ -111,6 +123,10 @@ struct LandingActionWord: View {
                 Text(String(letter))
                     .font(.custom("Figtree", size: 24, relativeTo: .title2).weight(.semibold))
                     .foregroundStyle(color)
+                    .offset(x: arrived || arrival == nil ? 0 : -28)
+                    .opacity(arrived || arrival == nil ? 1 : 0)
+                    .animation(arrival.map { MotionPolicy.resolve(.spring(duration: 0.46, bounce: 0.15)
+                            .delay($0 + Double(position) * 0.024), reduceMotion: reduceMotion) }, value: arrived)
                     .transition(reduceMotion ? .opacity : .asymmetric(
                         insertion: .offset(x: 28 * CGFloat(direction), y: 0).combined(with: .opacity)
                             .animation(.spring(duration: 0.48, bounce: 0.15).delay(Double(position) * 0.022)),
@@ -151,7 +167,11 @@ struct LandingActionWord: View {
                     cue.play(.selection)
                 } else if abs(value.translation.width) > 56 {
                     // No other action: the old drag options still answer.
-                    if value.translation.width > 0 { action.right?.run() } else { action.left?.run() }
+                    if value.translation.width > 0 {
+                        action.right?.run()
+                    } else {
+                        action.left?.run()
+                    }
                 }
             }
     }
