@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Habits on the new grammar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 59: the Habits page and a habit under the one-line, no-dots and one-base rules. One line per habit (name, count) with the week's seven strokes under it as the only marks; tap today's stroke to check in (lands wet, dries); the week met joins the strokes; a habit one tap down carries the rule word, the history line, PAUSE and DELETE. ?look=por|obs; ?play records Porcelain. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.72;--s3:.38;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;--now:#FFC23D;--train:#FF6B92;--health:#3FD49A;--tint:.62;background:#000;color:rgb(var(--ink))}
+.ph.por{--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--train:#CC3F68;--health:#12936A;--tint:.55;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.f18{font-size:18px;line-height:24px}
+.nw{white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.ctx{color:var(--ctx)}
+.v{font-weight:600}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.por .soul i{mix-blend-mode:multiply}
+.hair{position:absolute;left:22px;width:346px;height:1.5px;background:rgba(var(--ink),.12)}
+.dl{position:absolute;width:40px;text-align:center;font-weight:600;font-size:16px;letter-spacing:.08em;line-height:20px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;transition:opacity .15s}
+.por #fing{background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),POR=PLAY||Q.includes('look=por'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const pigOf=por=>por?['#2450D8','#E2432A','#F0A500']:['#86B4FF','#FF5B3A','#FFC23D'];
+const soul=(por,id='S')=>{const P=pigOf(por),f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;return `<div class="soul" id="${id}">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+const back=(w)=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ ${w}</div>`;
+const inkWord=(w,x,y,id='')=>`<div class="abs lbl" ${id?`id="${id}"`:''} style="left:${x}px;top:${y}px">${w}<svg style="position:absolute;left:0;top:22px;overflow:visible" width="${w.length*10.8}" height="12"><path d="${lens(w.length*10.8-6,1.6)}" fill="rgb(var(--ink))"/></svg></div>`;
+const DAYS=['M','T','W','T','F','S','S'];
+// A day's mark: a painted stroke in the habit's class pigment at the rest tint when done; a faint guide otherwise (today's guide a touch stronger, its letter in ink). A joined week is one stroke Monday to the day it was met.
+const mark=(x,y,kind,pig,id='',wet)=>kind==='done'?`<svg class="abs mk" ${id?`id="${id}"`:''} style="left:${x}px;top:${y}px;overflow:visible" width="40" height="12"><path d="${lens(40,3.2)}" fill="${pig}" opacity="${wet?1:'var(--tint)'}"/></svg>`:`<svg class="abs mk" ${id?`id="${id}"`:''} style="left:${x}px;top:${y}px;overflow:visible" width="40" height="12"><path d="M1 6 H39" stroke="rgb(var(--ink))" stroke-width="1.5" stroke-dasharray="3 3" opacity="${kind==='today'?.38:.14}" stroke-linecap="round"/></svg>`;
+const joined=(x,y,n,pig)=>`<svg class="abs" style="left:${x}px;top:${y}px;overflow:visible" width="${48*(n-1)+40}" height="12"><path d="${lens(48*(n-1)+40,3.2)}" fill="${pig}" opacity="var(--tint)"/></svg>`;
+// A habit block: the name and its count on one line at Body 21, the week's seven marks 40 under, the day letters 60 under. Pitch 112.
+const block=(h,y,today,opt={})=>{const pig=h.rule==='workout'?'var(--train)':h.rule==='cook'?'var(--health)':'var(--now)';const done=h.days.filter(Boolean).length;const count=h.paused?`<span class="s2">paused</span>`:`<span class="v" id="${h.id}n">${done}</span> of ${h.target}`;
+ let marks='';if(h.met){marks+=joined(22,y+40,h.met,pig)}else{marks=h.days.map((d,i)=>mark(22+48*i,y+40,d?'done':i===today?'today':'none',pig,`${h.id}m${i}`,opt.wet===i)).join('')}
+ const letters=DAYS.map((l,i)=>`<div class="dl" style="left:${22+48*i}px;top:${y+60}px;color:rgba(var(--ink),${i===today?1:'var(--s3)'})">${l}</div>`).join('');
+ return `<div class="abs hb" id="${h.id}" style="left:0;top:0;width:390px;height:844px"><div class="abs b nw" style="left:22px;top:${y}px">${h.name}</div><div class="abs b nw" style="right:22px;top:${y}px">${count}</div>${marks}${letters}</div>`};
+const READ={id:'r',name:'Read',target:5,days:[1,0,1,0,0,0,0]},TRAIN={id:'t',name:'Train',target:3,rule:'workout',days:[0,1,0,0,0,0,0]},MED={id:'m',name:'Meditate',target:3,days:[0,0,0,0,0,0,0]};
+const page=(o)=>`${back('REVIEW')}<div class="abs t44" style="left:22px;top:84px">Habits</div><div class="abs b ctx nw" id="ctxl" style="left:22px;top:146px">${o.ctx}</div><div class="abs f18 s2" id="wl" style="left:22px;top:200px;width:346px">new habit read 5 a week</div><div class="hair" style="top:232px"></div>${o.empty?`<div class="abs b s2" style="left:22px;top:280px">No habits yet.</div>`:(o.habits||[READ,TRAIN,MED]).map((h,i)=>block(h,280+112*i,o.today??3,{wet:o.wet&&o.wet[0]===h.id?o.wet[1]:undefined})).join('')}`;
+// A habit, one tap down: ‹ HABITS, the name at 44, the context line, the week's marks, the rule as a value word, the history line, PAUSE and DELETE as ink-line words.
+const habit=(o)=>{const pig=o.rule==='workout'?'var(--train)':'var(--now)';return `${back('HABITS')}<div class="abs t44" style="left:22px;top:84px">${o.name}</div><div class="abs b ctx nw" style="left:22px;top:146px">${o.ctx}</div>${o.days.map((d,i)=>mark(22+48*i,200,d?'done':i===3?'today':'none',pig)).join('')}${DAYS.map((l,i)=>`<div class="dl" style="left:${22+48*i}px;top:220px;color:rgba(var(--ink),${i===3?1:'var(--s3)'})">${l}</div>`).join('')}<div class="abs lbl s2" style="left:22px;top:276px">${o.ruleWord||'COUNTS BY HAND'}</div>${o.hist?`<div class="abs b s2" style="left:22px;top:316px">${o.hist}</div>`:''}${inkWord(o.paused?'RESUME THIS WEEK':'PAUSE THIS WEEK',22,o.hist?380:340)}${inkWord('DELETE HABIT',22,o.hist?440:400)}`};
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph${(opt.por??POR)?' por':''}" ${opt.id?`id="${opt.id}"`:''}>${inner}${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${opt.nosoul?'':soul(opt.por??POR,opt.id?'S':'s'+Math.random().toString(36).slice(2,6))}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+if(!PLAY){
+ $('row').innerHTML=phone('HABITS FROM REVIEW: ONE LINE PER HABIT, THE WEEK AS STROKES, NO DABS',page({ctx:'Thursday, 3 days to go'}),{por:1})
+  +phone('CHECK IN: TODAY\'S STROKE LANDS WET AND DRIES, THE COUNT ROLLS',page({ctx:'Thursday, 3 days to go',habits:[{...READ,days:[1,0,1,1,0,0,0]},TRAIN,MED],wet:['r',3]}),{por:1,line:'Read, 3&nbsp;of&nbsp;5 this week.',undo:1})
+  +phone('THE WEEK MET: THE STROKES JOIN INTO ONE, THE COUNT STAYS INK',page({ctx:'Friday, 2 days to go',today:4,habits:[{...READ,days:[1,1,1,1,1,0,0],met:5},{...TRAIN,days:[0,1,0,1,0,0,0]},MED]}),{por:1,line:'Read done for the week.'})
+  +phone('A HABIT: THE RULE WORD, THE HISTORY LINE, PAUSE AND DELETE',habit({name:'Train',ctx:'Thursday, 1 of 3 this week',rule:'workout',days:[0,1,0,0,0,0,0],ruleWord:'COUNTS WHEN A WORKOUT FINISHES',hist:'Met in 1 of the last 3 weeks.'}),{por:0})
+  +phone('COUNTED BY A RULE: THE WORKOUT\'S STROKE FLIES IN FROM THE TOP',page({ctx:'Saturday, 1 day to go',today:5,habits:[{...READ,days:[1,0,1,1,0,0,0]},{...TRAIN,days:[0,1,0,0,0,1,0]},MED],wet:['t',5]}),{por:0,line:'Push A counted for Train, 2&nbsp;of&nbsp;3.'})
+  +phone('EMPTY: ONE PLAIN LINE, AND THE WRITING LINE SAYS HOW',page({ctx:'Friday, 2 days to go',today:4,empty:1}),{por:1,line:'Type a habit and I’ll keep count.'});
+ $('note').innerHTML='HABITS UNDER THE ONE-LINE GRAMMAR: ‹ REVIEW AT 58, TITLE 44, THE DAY AS THE CONTEXT LINE, THE WRITING LINE AS A HAIRLINE, ONE BODY 21 LINE PER HABIT WITH ITS COUNT AT THE RIGHT (THE NUMBER 600, ALWAYS INK) AND THE WEEK\'S SEVEN STROKES UNDER IT AS THE ONLY MARKS: DONE DAYS PAINTED IN THE CLASS PIGMENT AT THE REST TINT, OTHER DAYS A FAINT GUIDE, TODAY\'S LETTER IN INK. NO DABS, NO LABEL UNDER THE NAME, NO HISTORY LINE ON THE LIST: THE RULE WORD, THE HISTORY LINE, PAUSE AND DELETE LIVE ONE TAP DOWN, ‹ HABITS.';
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+}else{
+ $('row').innerHTML=phone('HABITS',page({ctx:'Thursday, 3 days to go',habits:[READ,{id:'t',name:'Train',target:3,days:[0,0,0,0,0,0,0]},MED]}),{id:'P',fing:1,por:1});
+ const P=$('P'),f=$('fing'),cap=document.querySelector('.cap'),setCap=t=>cap.textContent=t;
+ const say=(t,undo)=>{const old=P.querySelector('.tl');if(old)old.remove();if(!t)return;P.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">${t}${undo?'<span class="u">UNDO</span>':''}</div>`);P.querySelector('.tl').animate([{opacity:0,transform:'translateY(-50%) translateY(4px)'},{opacity:1,transform:'translateY(-50%)'}],{duration:300,easing:H,fill:'forwards'})};
+ const tap=async(x,y)=>{f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1;await sleep(170);f.style.opacity=0};
+ (async()=>{document.body.dataset.start='1';await sleep(1300);
+  setCap('TAP TODAY\'S STROKE: THE PAINT DROPS IN WET, DRIES IN 2 S; THE COUNT ROLLS');await tap(22+48*3+20,326);
+  // the paint falls 26 pt into the slot, lands at 1.25 with a 2 pt blur, settles; the guide fades
+  const g=$('rm3');g.animate([{opacity:.38},{opacity:0}],{duration:160,fill:'forwards'});
+  P.insertAdjacentHTML('beforeend',`<svg class="abs" id="drop" style="left:${22+48*3}px;top:${320-26}px;overflow:visible;transform-origin:20px 6px" width="40" height="12"><path d="${lens(40,3.2)}" fill="var(--now)"/></svg>`);
+  $('drop').animate([{transform:'translateY(0) scale(.9)',filter:'blur(2px)',opacity:.9},{transform:'translateY(26px) scale(1.25)',filter:'blur(2px)',opacity:1,offset:.45},{transform:'translateY(26px) scale(1)',filter:'blur(0)',opacity:1}],{duration:460,easing:SET,fill:'forwards'});
+  await sleep(300);const n=$('rn');n.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-10px)',opacity:0}],{duration:160,fill:'forwards'});await sleep(160);n.textContent='3';n.animate([{transform:'translateY(10px)',opacity:0},{transform:'translateY(0)',opacity:1}],{duration:380,easing:H,fill:'forwards'});
+  say('Read, 3&nbsp;of&nbsp;5 this week.',1);await sleep(400);$('drop').animate([{opacity:1},{opacity:.55}],{duration:2000,easing:H,fill:'forwards'});await sleep(2400);
+  setCap('TAP THE LINE: THE HABIT GROWS OUT OF IT, ‹ HABITS');await tap(60,406);
+  const E=document.createElement('div');E.className='abs';E.style.cssText='inset:0;background:#fff;opacity:0;transform-origin:22px 406px;transform:scale(.94);z-index:8';E.innerHTML=habit({name:'Train',ctx:'Thursday, 0 of 3 this week',days:[0,0,0,0,0,0,0]})+soul(true,'S2');P.appendChild(E);P.querySelector('.tl').remove();E.animate([{opacity:0,transform:'scale(.94)'},{opacity:1,transform:'scale(1)'}],{duration:420,easing:H,fill:'forwards'});await sleep(1400);
+  setCap('TAP THE RULE WORD: IT CYCLES, TESS SAYS IT, UNDO FOR 4 S');await tap(90,284);
+  const rw=E.querySelector('.lbl.s2[style*="top:276px"]');rw.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(3px)'}],{duration:120,fill:'forwards'});await sleep(120);rw.textContent='COUNTS WHEN A WORKOUT FINISHES';rw.animate([{opacity:0,filter:'blur(3px)',transform:'translateY(4px)'},{opacity:1,filter:'blur(0)',transform:'translateY(0)'}],{duration:320,easing:SET,fill:'forwards'});
+  // this week's finished workouts paint in on their days in the training pigment, 120 ms apart; the count rolls
+  const mk=[...E.querySelectorAll('.mk')];const add=async(i)=>{mk[i].animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'});E.insertAdjacentHTML('beforeend',`<svg class="abs" style="left:${22+48*i}px;top:174px;overflow:visible;transform-origin:20px 6px" width="40" height="12"><path d="${lens(40,3.2)}" fill="var(--train)"/></svg>`);E.lastElementChild.animate([{transform:'translateY(0) scale(.9)',opacity:.9},{transform:'translateY(26px) scale(1.25)',opacity:1,offset:.45},{transform:'translateY(26px) scale(1)',opacity:.55}],{duration:900,easing:SET,fill:'forwards'})};
+  // the hand check-ins stay; Tuesday's workout joins
+  await sleep(200);add(1);const ec=E.querySelector('.ctx');setTimeout(()=>{ec.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:160,fill:'forwards'});setTimeout(()=>{ec.textContent='Thursday, 1 of 3 this week';ec.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:360,easing:H,fill:'forwards'})},160)},500);
+  E.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">Train now counts workouts.<span class="u">UNDO</span></div>`);E.lastElementChild.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});await sleep(2200);
+  setCap('‹ HABITS GOES BACK: THE RULE SHOWS ONLY IN THE STROKES\' PIGMENT');await tap(60,66);E.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.94)'}],{duration:380,easing:H,fill:'forwards'});
+  // on the list, Read's marks take the training pigment for the workout day
+  await sleep(200);const tm1=$('tm1');tm1.outerHTML=mark(22+48*1,432,'done','var(--train)','tm1');$('tn').textContent='1';await sleep(1400);document.body.dataset.done='1'})();
+}
+</script>
+</body>
+</html>

@@ -8,11 +8,11 @@ import Foundation
 @MainActor
 public struct PantryPlaces {
     /// The first place, always: the Groceries list under its Pantry name.
-    public static let toGet = "To get"
+    public nonisolated static let toGet = "To get"
 
     /// The places seeded the first time, in order, with their sections (item 118 §2). Stable ids: removing one
     /// leaves its tombstone, so it is never put back.
-    public static let defaults: [(key: String, name: String, sections: [String])] = [
+    public nonisolated static let defaults: [(key: String, name: String, sections: [String])] = [
         ("fridge", "Fridge", ["Door", "Shelves", "Drawer"]),
         ("freezer", "Freezer", ["Drawers", "Ice"]),
         ("shelf", "Shelf", []),

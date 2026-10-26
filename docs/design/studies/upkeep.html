@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Upkeep</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for M5 Upkeep screens 7 (a chore on Now), 6 (the Upkeep page: height is staleness) and 5 (chore page: day drum, rhythm, done and fine). Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--mute:#A39AAE;--grey:#8E8798;--cobalt:#2E6DA4;--verm:#C8452F;--sage:#6E9E6A}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#E2E6DA 0%,rgba(226,230,218,0) 70%),radial-gradient(70% 45% at 0% 40%,#E9E1D2 0%,rgba(233,225,210,0) 70%),radial-gradient(80% 50% at 100% 80%,#DCE4E6 0%,rgba(220,228,230,0) 70%),#F3EFE8}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.body{font-size:21px;line-height:30px;color:var(--ctx)}
+.num{font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.drum span{display:block;text-align:right}
+.sw{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap;position:relative}
+.sw svg{position:absolute;left:-7px;bottom:7px;z-index:-1}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0)}
+.ch{position:absolute;left:22px;font-size:28px;font-weight:500;letter-spacing:-.03em;line-height:36px;white-space:nowrap}
+.ch .age{font-size:16px;font-weight:700;letter-spacing:.08em;margin-left:12px;vertical-align:3px;opacity:.8}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+
+  <!-- 7 · a chore on Now: grey, never vermilion -->
+  <section id="home" class="abs" style="inset:0">
+    <div class="abs lbl" style="left:22px;top:58px;display:flex;gap:16px"><span style="color:var(--mute)">REVIEW</span><span style="color:var(--ink)">TODAY</span><span style="color:var(--mute)">TRAINING</span><span style="color:var(--mute)">KITCHEN</span></div>
+    <div class="abs" style="left:0;right:0;top:140px;height:1px;background:rgba(43,36,64,.14)"></div>
+    <div class="abs lbl" style="left:22px;top:150px">NOW</div>
+    <div id="nowSlot" class="abs" style="left:0;right:0;top:178px">
+      <div id="nowName" class="abs" style="left:20px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:1;color:var(--grey);white-space:nowrap">Water plants</div>
+      <div id="nowAge" class="abs body" style="left:22px;top:68px;color:var(--grey)">6 days, usually 7</div>
+    </div>
+    <div class="abs lbl" style="left:22px;top:420px">NEXT</div>
+    <div class="abs body" style="left:22px;top:448px;color:var(--ink)">Reply to Sam</div>
+    <div class="abs body" style="left:22px;top:484px;color:var(--ink)">Book the car service</div>
+  </section>
+
+  <!-- 6 · the Upkeep page -->
+  <section id="col" class="abs" style="inset:0;opacity:0">
+    <div class="abs lbl" style="left:22px;top:58px">UPKEEP</div>
+    <div class="abs lbl" style="left:22px;top:128px;color:var(--ink)">NOW</div>
+    <div class="abs" style="left:22px;right:22px;top:156px;height:1px;background:rgba(43,36,64,.4)"></div>
+    <div id="chores"></div>
+    <div id="foot" class="abs" style="left:22px;right:22px;top:704px"><div class="lbl" style="color:var(--mute)">NO RHYTHM YET</div><div class="body" style="color:var(--sub);margin-top:2px">Oil the bike chain · Smoke alarm</div></div>
+  </section>
+
+  <!-- 5 · a chore's page -->
+  <section id="page" class="abs" style="inset:0;opacity:0;pointer-events:none">
+    <div class="abs lbl" style="left:22px;top:58px">UPKEEP</div>
+    <div class="abs" style="left:20px;top:100px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:56px">Descale<br>the kettle</div>
+    <div id="pctx" class="abs body" style="left:22px;top:226px">descaled 25 days ago · usually every <span id="iv">60</span></div>
+    <div class="abs num" style="left:22px;top:362px;font-size:34px;color:var(--sub)">every</div>
+    <div class="abs" style="left:96px;width:120px;top:274px;height:220px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 20%,#000 40%,#000 60%,rgba(0,0,0,.25) 80%,transparent);mask-image:linear-gradient(transparent,rgba(0,0,0,.25) 20%,#000 40%,#000 60%,rgba(0,0,0,.25) 80%,transparent)">
+      <div id="drum" class="drum num abs" style="right:0;width:120px;font-size:96px;top:0"></div>
+    </div>
+    <div class="abs num" style="left:228px;top:362px;font-size:34px;color:var(--sub)">days</div>
+    <div class="abs lbl" style="left:22px;top:516px">THE LAST FEW TIMES</div>
+    <svg id="rhythm" class="abs" style="left:22px;top:546px" width="346" height="24"></svg>
+    <div class="abs lbl" style="left:22px;top:578px;color:var(--mute)" id="rlab">58 · 62 · 47 DAYS · NOW 25</div>
+    <div class="abs" style="left:22px;top:640px"><div class="sw">Descaled<svg width="146" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#6E9E6A" opacity=".82" filter="url(#rough)"/></svg></div></div>
+    <span id="fine" class="abs la lbl" style="left:200px;top:656px;color:var(--ink)">FINE<span class="line" style="background:var(--ink)"></span></span>
+  </section>
+
+  <div id="say" class="abs" style="right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;color:var(--cobalt);text-align:right;opacity:0;z-index:12"></div>
+  <span id="undo" class="abs la lbl" style="right:78px;top:808px;color:var(--verm);opacity:0;z-index:12">UNDO<span class="line" style="background:var(--verm)"></span></span>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const SETTLE = 'cubic-bezier(.3,1.3,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+async function say(t, undo) { const s = $('say'); s.textContent = t; anim(s, [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE }); if (undo) anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 120 }); }
+const hush = () => { anim($('say'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }); anim($('undo'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }); };
+
+// height is staleness: age / interval. 1 sits just under the NOW hairline; 0 sits at the foot. Ink darkens as it rises.
+const yOf = (s) => 640 - Math.min(s, 1.05) * 450;
+const inkOf = (s) => `rgba(43,36,64,${(.28 + .72 * Math.min(s, 1)).toFixed(2)})`;
+const C = [
+  { n: 'Change the bed sheets', a: 13, i: 14 },
+  { n: 'Wipe the hob', a: 5, i: 7 },
+  { n: 'Wash towels', a: 4, i: 7 },
+  { n: 'Descale the kettle', a: 25, i: 60 },
+  { n: 'Clean the fridge', a: 6, i: 30 },
+  { n: 'Water plants', a: 0, i: 7 },
+];
+C.forEach((c) => { c.s = c.a / c.i; const el = document.createElement('div'); el.className = 'ch'; el.innerHTML = `${c.n}<span class="age">${c.a ? c.a + ' D' : 'TODAY'}</span>`; el.style.top = yOf(c.s) + 'px'; el.style.color = inkOf(c.s); $('chores').appendChild(el); c.el = el; });
+for (let n = 30; n <= 90; n++) $('drum').insertAdjacentHTML('beforeend', `<span style="height:100px;line-height:100px">${n}</span>`);
+const drumY = (n) => 60 - (n - 30) * 100;
+$('drum').style.top = drumY(60) + 'px';
+// the rhythm: one short rule per gap, length is the gap; a fine check-in is hollow; the open gap is dashed
+function rhythm(gaps) {
+  const svg = $('rhythm'); svg.innerHTML = ''; let x = 0; const k = 1.6;
+  gaps.forEach((g) => { const w = g.d * k; const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect'); r.setAttribute('x', x); r.setAttribute('y', 8); r.setAttribute('width', Math.max(w - 6, 4)); r.setAttribute('height', 6); r.setAttribute('rx', 3);
+    if (g.fine) { r.setAttribute('fill', 'none'); r.setAttribute('stroke', '#2B2440'); r.setAttribute('stroke-opacity', '.5'); r.setAttribute('stroke-width', 1.2); }
+    else if (g.open) { r.setAttribute('fill', 'none'); r.setAttribute('stroke', '#2B2440'); r.setAttribute('stroke-opacity', '.35'); r.setAttribute('stroke-dasharray', '3 3'); }
+    else { r.setAttribute('fill', '#2B2440'); r.setAttribute('fill-opacity', '.55'); }
+    svg.appendChild(r); x += w; });
+}
+rhythm([{ d: 58 }, { d: 62 }, { d: 47 }, { d: 25, open: true }]);
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  await sleep(1300);
+
+  // 7 · hold the chore on Now: its grey fills to ink left to right, then the slot settles to the next thing, no celebration
+  await fingerOn(150, 206);
+  const nm = $('nowName');
+  await tween(600, (t) => { nm.style.backgroundImage = `linear-gradient(90deg,#2B2440 ${t * 100}%,#8E8798 ${t * 100}%)`; nm.style.webkitBackgroundClip = 'text'; nm.style.backgroundClip = 'text'; nm.style.color = 'transparent'; });
+  fingerOff();
+  await anim($('nowSlot'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(30px)' }], { duration: 300, easing: 'ease-in' });
+  nm.style.backgroundImage = ''; nm.style.color = 'var(--ink)'; nm.textContent = 'Reply to Sam'; $('nowAge').textContent = 'from this morning'; $('nowAge').style.color = 'var(--ctx)';
+  anim($('nowSlot'), [{ opacity: 0, transform: 'translateY(20px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: HOUSE });
+  const nx = $('home').children[5], nn = $('home').children[6];
+  anim(nx, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }).then(() => { nx.textContent = 'Book the car service'; anim(nn, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }); anim(nx, [{ opacity: 0 }, { opacity: 1 }], { duration: 240 }); });
+  say('Watered plants.', true);
+  await sleep(1800);
+
+  // 6 · the Upkeep page: chores arrive at the height of their staleness
+  hush();
+  anim($('home'), [{ opacity: 1 }, { opacity: 0 }], { duration: 300 });
+  $('col').style.opacity = 1;
+  [...$('col').children].forEach((el) => { if (el.id !== 'chores') anim(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 }); });
+  C.forEach((c, k) => anim(c.el, [{ opacity: 0, transform: 'translateY(40px)' }, { opacity: 1, transform: 'none' }], { duration: 560, delay: 120 + k * 50, easing: HOUSE }));
+  await sleep(1900);
+
+  // hold the stalest: it fills, then sinks to the foot on a spring; the one already there makes room
+  const top = C[0]; await fingerOn(130, yOf(top.s) + 18);
+  await tween(600, (t) => { top.el.style.color = `rgba(110,158,106,${.4 + .6 * t})`; });
+  fingerOff();
+  top.el.querySelector('.age').textContent = 'TODAY';
+  const from = yOf(top.s); top.el.style.top = '640px';
+  anim(top.el, [{ transform: `translateY(${from - 640}px)`, color: '#6E9E6A' }, { transform: 'none', color: inkOf(0) }], { duration: 760, easing: SETTLE });
+  const wp = C[5]; wp.el.style.top = '600px';
+  anim(wp.el, [{ transform: 'translateY(40px)' }, { transform: 'none' }], { duration: 520, delay: 120, easing: SETTLE });
+  say('Changed the bed sheets.', true);
+  await sleep(1900);
+
+  // 5 · tap a chore: the page opens with its interval on a day drum and its rhythm as rules
+  hush();
+  const kt = C[3]; const [kx, ky] = centre(kt.el); await fingerOn(kx - 40, ky); await sleep(100); fingerOff();
+  anim($('col'), [{ opacity: 1, filter: 'blur(0)', transform: 'none' }, { opacity: 0, filter: 'blur(3px)', transform: 'scale(.985)' }], { duration: 340, easing: HOUSE });
+  $('page').style.opacity = 1;
+  [...$('page').children].forEach((el, k) => anim(el, [{ opacity: 0, transform: 'translateY(20px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 60 + k * 35, easing: HOUSE }));
+  anim($('rhythm'), [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 700, delay: 400, easing: HOUSE });
+  await sleep(1800);
+
+  // the day drum: drag down to 45
+  await fingerOn(160, 330);
+  let last = 60;
+  await tween(800, (t) => { fingerAt(160, 330 + 120 * Math.min(1, t * 1.6)); $('drum').style.top = (drumY(60) + 1500 * t) + 'px'; const n = Math.round(60 - 15 * t); if (n !== last) { last = n; $('iv').textContent = n; } }, (t) => 1 - Math.pow(1 - t, 3));
+  fingerOff();
+  say('Descale the kettle, every 45 days.');
+  await sleep(1600);
+
+  // FINE: looked, it's fine. Age resets, nothing counts as done; the open gap closes as a hollow rule
+  hush();
+  const [fx, fy] = centre($('fine')); await fingerOn(fx, fy);
+  anim($('fine').querySelector('.line'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 160, easing: HOUSE });
+  await sleep(110); fingerOff();
+  rhythm([{ d: 58 }, { d: 62 }, { d: 47 }, { d: 25, fine: true }, { d: 0.1, open: true }]);
+  anim($('rhythm').children[3], [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  $('rlab').textContent = '58 · 62 · 47 · 25 DAYS · LOOKED TODAY';
+  anim($('pctx'), [{ opacity: 1 }, { opacity: 0 }], { duration: 140 }).then(() => { $('pctx').innerHTML = 'looked today, fine · usually every <span id="iv">45</span>'; anim($('pctx'), [{ opacity: 0 }, { opacity: 1 }], { duration: 220 }); });
+  say('Kettle: looked, fine. Counting from today.');
+  await sleep(2400);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

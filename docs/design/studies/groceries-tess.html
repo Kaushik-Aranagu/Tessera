@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Groceries with Tess</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/groceries-tess.md (Design item 47), the surfaces for the AI thread's "Groceries that know your recipes" (docs/ai/first-features.md section 3, corrected with the Kitchen lead): aisles sorted on the phone, Claude's proposed links as one ask, the planned meal's missing lines as ghost rows, "usually" from his own history, and the planned cook's Home line carrying the open count. Porcelain, item-43 tokens. ?play records the ask, KEEP, the ghost rows landing, and a tap on a usually word. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--health:#12936A;background:#fff;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.sm{font-size:16px;line-height:22px}
+.nw{white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.v{font-weight:600}
+.ctx{color:var(--ctx)}
+.wet{color:var(--tess)}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.tl .w{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:rgba(var(--ink),.6)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:multiply}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35);opacity:0;z-index:30;transition:opacity .15s}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const soul=()=>{const P=['#2450D8','#E2432A','#F0A500'],f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;
+ return `<div class="soul">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+const TABS=['REVIEW','TODAY','TRAINING','KITCHEN'],TX=[22,118,199,300];
+const tabs=on=>`<div class="abs lbl" style="left:0;right:0;top:78px;height:24px;letter-spacing:.06em;z-index:13">${TABS.map((t,i)=>`<span class="abs" style="left:${TX[i]}px;top:0;color:rgba(var(--ink),${t===on?1:.38})">${t}</span>`).join('')}<svg class="abs" style="left:${TX[TABS.indexOf(on)]}px;top:24px;overflow:visible" width="90" height="12"><path d="${lens(on.length*10.6,1.2)}" fill="rgb(var(--ink))"/></svg></div>`;
+// The list. Each row: amount (600), name, optional "for" line, and flags: ask (Claude's proposed link), ghost (just added, wet).
+const AISLES=(o={})=>[['Produce',[['1 bunch','scallions',o.kept?'for tacos':'',{ask:o.ask}],...(o.ghost?[['2','limes','for tacos',{ghost:1}],['1','avocado','for tacos',{ghost:1}]]:[]),['','bananas','']]],
+ ['Dairy and eggs',[...(o.oat?[['','oat milk','',{ghost:1}]]:[]),['1 dozen','eggs',''],['','greek yogurt','']]],
+ ['Meat and seafood',[['1 lb','ground beef','for tacos']]],
+ ['Cans and jars',[['1 can','black beans','for tacos · 15 oz']]],
+ ['Pantry',[['','tortillas','10 ct']]]];
+const list=(o={})=>{let y=200,h='';const rows=[];for(const [a,items] of AISLES(o)){h+=`<div class="abs t34" style="left:22px;top:${y}px;color:rgba(var(--ink),.85)">${a}</div>`;y+=48;
+ for(const [amt,name,sub,f={}] of items){const wet=f.ghost;h+=`<div class="abs b nw ${wet?'wet':''}" data-row="${name}" style="left:64px;top:${y}px"><span class="v">${amt}</span>${amt?' ':''}${name}</div>`;
+  if(sub)h+=`<div class="abs sm ${wet?'wet':'s2'}" style="left:64px;top:${y+28}px">${sub}</div>`;
+  if(f.ask)h+=`<div class="abs sm wet" data-ask="1" style="left:64px;top:${y+28}px;opacity:.9">for tacos?</div>`;
+  y+=sub||f.ask?52:44}
+ y+=10}
+ return h};
+const usually=(y=664)=>`<div class="abs lbl s2" style="left:22px;top:${y}px">USUALLY</div><div class="abs b" style="left:22px;top:${y+24}px">${['Oat milk','Bananas','Coffee'].map((w,i)=>`<span class="nw" data-u="${w}" style="margin-right:22px;font-weight:600;color:rgba(var(--ink),.7)">${w}</span>`).join('')}</div>`;
+const page=(o={})=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ KITCHEN</div><div class="abs t44" style="left:22px;top:84px">Groceries</div>
+ <div class="abs b s2 nw" style="left:22px;top:140px">${o.count||'9 to get'}, for tacos and two more</div><div class="abs" style="left:0;top:0;width:390px;height:640px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 590px,transparent 640px);mask-image:linear-gradient(#000 590px,transparent 640px)">${list(o)}</div>${usually()}`;
+const home=()=>`${tabs('TODAY')}
+ <div class="abs b nw" style="left:22px;top:138px">Thursday afternoon</div>
+ <div class="abs b ctx nw" style="left:22px;top:186px">2 to buy</div>
+ <div class="abs hero" style="left:22px;top:220px">Tacos tonight</div>
+ <div class="abs lbl" style="left:22px;top:296px">GROCERIES<svg style="position:absolute;left:0;top:22px;overflow:visible" width="110" height="12"><path d="${lens(100,1.6)}" fill="rgb(var(--ink))"/></svg></div>
+ <div class="abs t34" style="left:22px;top:388px">Next</div>
+ ${[['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1],['Call mom','tomorrow']].map(([t,h,w],k,a)=>{const y=440+a.slice(0,k).reduce((s,r)=>s+(r[2]?74:46),0);return `<div class="abs b" style="left:22px;top:${y}px;width:280px">${t}</div><div class="abs lbl s2" style="right:22px;top:${y+4}px">${h}</div>`}).join('')}`;
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph" ${opt.id?`id="${opt.id}"`:''}>${inner}${opt.line?`<div class="tl">${opt.line}${opt.words?`<span class="w">${opt.words}</span>`:''}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${soul()}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+
+if(PLAY){
+ $('row').innerHTML=phone('GROCERIES · SORTED ON THE PHONE',`<div id="stage" class="abs" style="inset:0"></div>`,{id:'P',fing:1});
+}else{
+ $('row').innerHTML=
+  phone('SORTED INTO AISLES, ON THE PHONE. “USUALLY” AT THE FOOT',page())+
+  phone('CLAUDE’S LINK IS ONE ASK: KEEP OR NOT NOW',page({ask:1}),{line:'Scallions, for the tacos?',words:'KEEP &nbsp;·&nbsp; NOT NOW'})+
+  phone('KEPT. THE TACOS’ MISSING LINES LAND AS GHOST ROWS',page({kept:1,ghost:1,count:'11 to get'}),{line:'Added 2 for tacos.',undo:1})+
+  phone('TAP A USUALLY WORD: IT FLIES TO ITS AISLE',page({kept:1,ghost:1,oat:1,count:'12 to get'}),{line:'Oat milk, in Dairy and eggs.',undo:1})+
+  phone('HOME · THE PLANNED COOK CARRIES THE COUNT',home());
+ $('note').innerHTML='GROCERIES UNDER TODAY’S RULES (‹ KITCHEN, TITLE 44, THE LINE UNDER IT, AISLE WORDS AT 34 WITH ITEMS HANGING FROM X 64, NO DOTS: A ROW’S RECIPE IS A SMALL LINE UNDER IT). THE PHONE SORTS THE AISLES AND WORKS OUT A PLANNED MEAL’S MISSING LINES, WHICH LAND AS WET COBALT GHOST ROWS WITH “FOR TACOS” UNDER THEM AND DRY TO INK. CLAUDE’S ONE JOB, MATCHING A ROW TO A RECIPE’S INGREDIENT BY NAME, ARRIVES AS ONE ASK BESIDE THE SOUL WITH TWO INK WORDS; KEEP WRITES THE LINK AND THE “FOR TACOS?” LINE DRIES INTO “FOR TACOS”. “USUALLY” IS A LINE OF INK WORDS AT THE FOOT FROM HIS OWN HISTORY; A TAP FLIES THE WORD INTO ITS AISLE AS A GHOST ROW. NOTHING NOTIFIES: THE PLANNED COOK’S HOME LINE CARRIES THE OPEN COUNT.';
+}
+
+async function play(){
+ const st=$('stage'),P=$('P'),f=$('fing'),cap=document.querySelector('.cap');
+ st.innerHTML=page({ask:1})+`<div class="tl" id="tl">Scallions, for the tacos?<span class="w">KEEP &nbsp;·&nbsp; NOT NOW</span></div>`;
+ cap.textContent='CLAUDE’S LINK ARRIVES AS ONE ASK';
+ await sleep(1600);
+ // KEEP: the ask line dries into the link line; Tess's line changes
+ cap.textContent='KEEP: THE LINK DRIES IN';
+ f.style.left='262px';f.style.top='806px';f.style.opacity=1;await sleep(200);f.style.opacity=0;
+ const ask=st.querySelector('[data-ask]');ask.textContent='for tacos';ask.animate([{color:'#2450D8'},{color:'rgba(18,16,22,.66)'}],{duration:900,easing:H,fill:'forwards'});
+ const tl=$('tl');tl.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});await sleep(220);tl.innerHTML='Scallions, for the tacos.';tl.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});
+ await sleep(1500);
+ // the missing lines land as ghost rows: the rows below make room, the new rows fly in from Tess and dry
+ cap.textContent='THE TACOS’ MISSING LINES LAND AS GHOST ROWS';
+ st.innerHTML=page({kept:1,ghost:1,count:'11 to get'})+`<div class="tl" id="tl">Added 2 for tacos.<span class="u">UNDO</span></div>`;
+ const ghosts=[...st.querySelectorAll('.wet')];ghosts.forEach((g,i)=>g.animate([{opacity:0,transform:'translate(240px,420px) scale(.6)'},{opacity:1,transform:'translate(0,0) scale(1)'}],{duration:520,delay:i*60,easing:H,fill:'forwards'}));
+ await sleep(900);ghosts.forEach(g=>g.animate([{color:'#2450D8'},{color:g.classList.contains('sm')?'rgba(18,16,22,.66)':'#121016'}],{duration:1400,delay:600,easing:H,fill:'forwards'}));
+ await sleep(2400);
+ // usually: tap Oat milk, it flies to Dairy and eggs
+ cap.textContent='TAP A USUALLY WORD: IT FLIES TO ITS AISLE';
+ const u=st.querySelector('[data-u="Oat milk"]');const r=u.getBoundingClientRect(),pr=P.getBoundingClientRect(),sc=document.body.classList.contains('x2')?2:1;
+ f.style.left=((r.left-pr.left)/sc+30)+'px';f.style.top=((r.top-pr.top)/sc+12)+'px';f.style.opacity=1;await sleep(200);f.style.opacity=0;
+ u.animate([{color:'rgba(18,16,22,.7)'},{color:'#2450D8'}],{duration:200,fill:'forwards'});
+ const fly=document.createElement('div');fly.className='abs b wet nw';fly.textContent='oat milk';fly.style.cssText=`left:${(r.left-pr.left)/sc}px;top:${(r.top-pr.top)/sc}px;z-index:20`;st.appendChild(fly);
+ const target=st.querySelector('[data-row="eggs"]');const ty=parseInt(target.style.top);
+ fly.animate([{transform:'translate(0,0)'},{transform:`translate(${64-(r.left-pr.left)/sc}px,${ty-(r.top-pr.top)/sc}px)`}],{duration:520,easing:H,fill:'forwards'});
+ await sleep(540);
+ st.innerHTML=page({kept:1,ghost:1,oat:1,count:'12 to get'})+`<div class="tl" id="tl">Oat milk, in Dairy and eggs.<span class="u">UNDO</span></div>`;
+ const oat=st.querySelector('[data-row="oat milk"]');oat.animate([{color:'#2450D8'},{color:'#121016'}],{duration:1400,delay:600,easing:H,fill:'forwards'});
+ await sleep(2400);document.body.dataset.done='1';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';if(!PLAY){document.body.dataset.done='1';return}play()});
+</script>
+</body>
+</html>

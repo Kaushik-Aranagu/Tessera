@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// A list row's left swipe (lists-acceptance 13.6): REMOVE rises in the live colour from 60 pt and commits past 96.
 /// Never a hold, a red row, a confirm or a trash can. VoiceOver gets the same thing as the Remove action.
@@ -9,8 +10,6 @@ struct SwipeToRemove: ViewModifier {
     var word = "Remove"
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pull: CGFloat = 0
-    /// The house "swipe is armed" tick, once as the pull crosses 96 pt (Design on #786).
-    @State private var armed = false
 
     static let rises: CGFloat = 60
     static let commits: CGFloat = 96
@@ -33,23 +32,17 @@ struct SwipeToRemove: ViewModifier {
                     .offset(y: reduceMotion ? 0 : 6 * (1 - Self.reveal(pull)))
                     .accessibilityHidden(true)
             }
-            .tesseraFeedback(trigger: armed) { _, isArmed in isArmed ? .selection : nil }
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 24)
-                    .onChanged { value in
-                        guard value.translation.width < 0,
-                              abs(value.translation.width) > abs(value.translation.height) else { return }
-                        pull = max(value.translation.width, -(Self.commits + 24))
-                        armed = abs(pull) >= Self.commits
+            .rowSwipe(.trailing, arm: Self.commits, limit: Self.commits + 24) { event in
+                switch event {
+                case let .pulled(value): pull = value
+                case .committed: _ = remove()
+                case .ended:
+                    if pull != 0 {
+                        withTesseraAnimation(reduceMotion: reduceMotion) { pull = 0 }
                     }
-                    .onEnded { _ in
-                        let went = abs(pull) >= Self.commits && remove()
-                        armed = false
-                        if !went {
-                            withTesseraAnimation(reduceMotion: reduceMotion) { pull = 0 }
-                        }
-                    }
-            )
+                case .cancelled, .armed, .disarmed: break
+                }
+            }
     }
 
     private func remove() -> Bool {

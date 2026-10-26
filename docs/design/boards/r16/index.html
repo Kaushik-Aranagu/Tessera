@@ -1,0 +1,293 @@
+<title>Tessera, instruments</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Outfit:wght@200;300;400&display=swap">
+<style>
+/* Layout: one reading column; each instrument is a name, one sentence, the thing itself, and where it lives. No cards. */
+:root{
+  --ground:#F6F2EA; --ink:#1D1A16; --ink2:rgba(29,26,22,.66); --ink3:rgba(29,26,22,.38); --rule:rgba(29,26,22,.14);
+  --training:#C4472A; --kitchen:#A8701F; --money:#3F7A62; --routines:#A4505F; --tess:#2E6DA4;
+  --words:"Figtree",ui-sans-serif,system-ui,sans-serif; --nums:"Outfit","Figtree",ui-sans-serif,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#121013; --ink:#EFE8DC; --ink2:rgba(239,232,220,.72); --ink3:rgba(239,232,220,.38); --rule:rgba(239,232,220,.14);
+  --training:#EE6A4C; --kitchen:#E0A458; --money:#8DBFA7; --routines:#D79AA6; --tess:#9DBFE6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#121013; --ink:#EFE8DC; --ink2:rgba(239,232,220,.72); --ink3:rgba(239,232,220,.38); --rule:rgba(239,232,220,.14);
+  --training:#EE6A4C; --kitchen:#E0A458; --money:#8DBFA7; --routines:#D79AA6; --tess:#9DBFE6; color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:72px}
+h1{font-weight:500;font-size:clamp(44px,8vw,72px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+h2{font-weight:500;font-size:clamp(30px,5vw,40px);letter-spacing:-.03em;line-height:1.05;margin:0;text-wrap:balance}
+p{margin:0;max-width:60ch}
+.sub{color:var(--ink2);font-size:19px}
+.ink2{color:var(--ink2)} .ink3{color:var(--ink3)}
+.n{font-family:var(--nums);font-weight:300;font-variant-numeric:tabular-nums}
+section{display:flex;flex-direction:column;gap:20px;border-top:1px solid var(--rule);padding-top:28px}
+.where{font-size:16px;color:var(--ink2)}
+.stage{touch-action:none;user-select:none;-webkit-user-select:none;position:relative;outline:none}
+.hint{font-size:16px;color:var(--ink3)}
+
+/* 1 drum */
+.drum{height:420px;perspective:700px;overflow:hidden;cursor:ns-resize}
+.drum .row{position:absolute;left:0;right:0;display:flex;justify-content:center;align-items:baseline;font-family:var(--nums);font-weight:200;font-size:84px;line-height:1;will-change:transform}
+.drum .w{position:relative}
+.drum .f{position:absolute;left:100%;bottom:.04em;font-size:.42em;font-weight:300;margin-left:6px;white-space:nowrap}
+.drum .tag{position:absolute;left:0;top:50%;transform:translateY(-50%);font:500 16px var(--words);color:var(--ink2)}
+.drum .mark{position:absolute;top:50%;height:2px;width:22px;background:var(--training);transform:translateY(-1px)}
+.drum .mark.l{left:0}.drum .mark.r{right:0}
+.unit{font:500 17px var(--words);color:var(--ink);background:none;border:0;padding:6px 0;text-decoration:underline;text-decoration-color:var(--training);text-decoration-thickness:2px;text-underline-offset:6px;cursor:pointer}
+
+/* 2 ruler */
+.ruler{height:150px;overflow:hidden;cursor:ew-resize}
+.ruler .val{position:absolute;top:0;left:0;right:0;text-align:center;font-family:var(--nums);font-weight:200;font-size:56px;line-height:1}
+.ruler .tr{position:absolute;left:0;right:0;top:80px;height:70px}
+.ruler i{position:absolute;top:0;width:1px;background:var(--ink3)}
+.ruler i.m{background:var(--ink2)} .ruler i.L{background:var(--ink);width:1.5px}
+.ruler b{position:absolute;top:44px;transform:translateX(-50%);font:300 17px var(--nums);color:var(--ink3);font-variant-numeric:tabular-nums}
+.ruler .pin{position:absolute;left:50%;top:70px;width:2px;height:60px;background:var(--routines);transform:translateX(-1px)}
+.ruler .last{position:absolute;top:128px;transform:translateX(-50%);font:500 16px var(--words);color:var(--ink2);white-space:nowrap}
+
+/* 3 crown */
+.crown{display:flex;justify-content:center}
+.crown svg{width:min(320px,100%);height:auto;cursor:grab;overflow:visible}
+.crown text{font-family:var(--nums);fill:var(--ink3);font-weight:300;font-size:17px}
+.crown .big{fill:var(--ink);font-weight:200;font-size:64px}
+.crown .unitw{fill:var(--ink2);font-family:var(--words);font-weight:500;font-size:17px}
+
+/* 4 lens */
+.lens{height:520px;overflow:hidden;cursor:crosshair}
+.lens .it{position:absolute;left:0;right:0;transform-origin:0 50%;white-space:nowrap;overflow:hidden}
+.lens .nm{font-weight:500;letter-spacing:-.02em;line-height:1.1;display:block}
+.lens .sb{font-size:16px;color:var(--ink2);display:block}.lens .sb[hidden]{display:none}
+
+/* 5 spine */
+.spinewrap{display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:8px;height:360px}
+.spinewrap .head{grid-column:1/-1}
+.sp-head{font-family:var(--nums);font-weight:200;font-size:44px;line-height:1;height:48px}
+.sp-list{overflow-y:scroll;scrollbar-width:none;height:300px;touch-action:pan-y}
+.sp-list::-webkit-scrollbar{display:none}
+.sp-row{display:grid;grid-template-columns:84px 1fr auto;gap:10px;align-items:baseline;height:46px}
+.sp-row .d{font-family:var(--nums);font-weight:300}
+.sp-ruler{touch-action:none;cursor:ns-resize;height:300px}
+.sp-ruler svg{width:100%;height:100%;display:block}
+.sp-ruler text{font:500 16px var(--words);fill:var(--ink2)}
+.rail{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 24px}
+</style>
+<main>
+<section style="border-top:0;padding-top:0">
+  <h1>Tessera, instruments</h1>
+  <p class="sub">The pages kept turning into sentences. This round is the parts you actually touch: a drum, a ruler, a crown, a lens and a scroll with a spine. Drag each one. They are the numbers and lists on every page, not new pages.</p>
+</section>
+
+<section>
+  <h2>The drum</h2>
+  <p>Every weight, rep count and amount is a drum you spin. The number in the middle is full size and the rest roll away from you. The decimal hangs off the side so the whole number never moves. Last time and your best sit on the drum itself.</p>
+  <div class="stage drum" id="drum" tabindex="0" role="slider" aria-label="Weight" aria-valuemin="20" aria-valuemax="200"></div>
+  <p><span id="drumSay" class="ink2"></span> <button class="unit" id="unitBtn" type="button">kg</button></p>
+  <p class="where">Training sets, Kitchen amounts, Money, anywhere a number is typed today. Drag, flick, or turn the scroll wheel. A tick plays at every step: <span id="drumTick" class="n ink3">0</span> so far.</p>
+</section>
+
+<section>
+  <h2>The ruler</h2>
+  <p>Time and length are a ruler under your thumb. The fine ticks are 5 seconds, a taller one is 15, the tallest is a minute. The mark in rose is where you are. What you chose last time is marked on the ruler too.</p>
+  <div class="stage ruler" id="ruler" tabindex="0" role="slider" aria-label="Rest time" aria-valuemin="30" aria-valuemax="300"></div>
+  <p class="where">Rest between sets, timers, cooking steps, quiet hours. Left and right, or the scroll wheel.</p>
+</section>
+
+<section>
+  <h2>The crown</h2>
+  <p>For a stretch of time, turn the crown. Ink fills clockwise from the top, a tick every 5 minutes, and the page tells you when it ends, in your clock.</p>
+  <div class="stage crown" id="crown" tabindex="0" role="slider" aria-label="Focus length" aria-valuemin="0" aria-valuemax="120"></div>
+  <p id="crownSay" class="ink2"></p>
+  <p class="where">Focus, routines, anything with a length. Go around the dial with one finger.</p>
+</section>
+
+<section>
+  <h2>The lens</h2>
+  <p>A long list does not need a search first. Put a finger on it and the line under it grows and opens its detail while its neighbours make room. Lift and it settles. No outline, no pop-up: the list itself is the magnifier.</p>
+  <div class="stage lens" id="lens"></div>
+  <p class="where">Exercises, recipes, pantry, lists, the rail. Touch and slide up and down.</p>
+</section>
+
+<section>
+  <h2>The spine</h2>
+  <p>Scrolling a long history shows you where you are. The strip at the edge is the whole record as a barcode: a long ink tick for every day you trained, a short one for a rest day. Drag the strip to jump.</p>
+  <div class="spinewrap">
+    <div class="sp-head" id="spHead"></div>
+    <div class="sp-list stage" id="spList" style="position:relative"></div>
+    <div class="sp-ruler stage" id="spRuler"></div>
+  </div>
+  <p class="where">Training log, Review, Money, Notes. The date above follows you.</p>
+</section>
+</main>
+
+<script>
+(function(){
+  var RM=false; try{RM=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+  function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+  function buzz(){try{navigator.vibrate&&navigator.vibrate(6)}catch(e){}}
+
+  /* shared physics: p is a position in steps; drag, coast, then settle on a step */
+  function dragger(el,o){
+    var p=o.start,v=0,drag=false,lastP=0,lastT=0,raf=0,lastInt=Math.round(p),startX=0,startY=0;
+    function set(np){
+      np=clamp(np,o.min,o.max); p=np;
+      var r=Math.round(p); if(r!==lastInt){lastInt=r; buzz(); o.tick&&o.tick(r)}
+      o.draw(p);
+    }
+    function frame(t){
+      var dt=Math.min(.05,(t-lastT)/1000||.016); lastT=t;
+      if(!drag){
+        if(Math.abs(v)>.6&&!RM){ set(p+v*dt); v*=Math.exp(-dt*3.2);
+          if(p<=o.min||p>=o.max) v=0 }
+        else { v=0; var tgt=Math.round(p), d=tgt-p;
+          if(Math.abs(d)<.002){ set(tgt); raf=0; return }
+          set(p+d*(RM?1:1-Math.exp(-dt*16))) }
+      }
+      raf=requestAnimationFrame(frame);
+    }
+    function kick(){ if(!raf){lastT=performance.now(); raf=requestAnimationFrame(frame)} }
+    el.addEventListener('pointerdown',function(e){
+      drag=true; v=0; el.setPointerCapture(e.pointerId); startX=e.clientX; startY=e.clientY;
+      lastP=o.pos?o.pos(e,el):(o.horizontal?e.clientX:e.clientY); lastT=performance.now(); kick();
+    });
+    el.addEventListener('pointermove',function(e){
+      if(!drag) return;
+      var cur=o.pos?o.pos(e,el):(o.horizontal?e.clientX:e.clientY), now=performance.now();
+      var du=o.pos?o.unit(cur,lastP):-(cur-lastP)/o.size;
+      set(p+du);
+      var dtm=Math.max(8,now-lastT)/1000; v=.7*v+.3*(du/dtm); lastP=cur; lastT=now;
+    });
+    function up(){ drag=false; kick() }
+    el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up);
+    el.addEventListener('wheel',function(e){ e.preventDefault(); v=0;
+      set(p+((o.horizontal&&Math.abs(e.deltaX)>Math.abs(e.deltaY))?e.deltaX:e.deltaY)/o.size); kick() },{passive:false});
+    el.addEventListener('keydown',function(e){
+      var k=e.key; var s=(k==='ArrowUp'||k==='ArrowRight')?1:(k==='ArrowDown'||k==='ArrowLeft')?-1:0;
+      if(s){ e.preventDefault(); set(Math.round(p)+s); kick() } });
+    set(p);
+    return {get:function(){return p}, set:set};
+  }
+
+  /* ---------- 1 drum ---------- */
+  var drum=document.getElementById('drum'), ROW=70, STEP=.5, BASE=20, MAXI=360, LAST=80, BEST=90, ticks=0, unit='kg';
+  var pool=[]; for(var i=0;i<11;i++){ var r=document.createElement('div'); r.className='row'; drum.appendChild(r); pool.push(r) }
+  ['l','r'].forEach(function(s){ var m=document.createElement('span'); m.className='mark '+s; drum.appendChild(m) });
+  function fmtKg(v){ var w=Math.floor(v+1e-9), f=Math.round((v-w)*10); return {w:w,f:f?'.'+f:''} }
+  function drawDrum(p){
+    var H=drum.clientHeight, c=H/2, ci=Math.round(p);
+    pool.forEach(function(r,k){
+      var idx=ci+(k-5), d=idx-p;
+      if(idx<0||idx>MAXI){ r.style.display='none'; return } r.style.display='flex';
+      var val=BASE+idx*STEP, f=fmtKg(val), ad=Math.abs(d);
+      var t=clamp(1-ad*.55,0,1);
+      r.style.top=(c+d*ROW-42)+'px';
+      r.style.transform='rotateX('+(-d*24)+'deg) scale('+(1-Math.min(ad,4)*.11)+')';
+      r.style.color='color-mix(in srgb, var(--ink) '+Math.round(t*100)+'%, var(--ground))';
+      r.innerHTML='<span class="w">'+f.w+(f.f?'<span class="f">'+f.f+'</span>':'')+'</span>'+
+        (val===LAST?'<span class="tag" style="left:0">last time</span>':'')+(val===BEST?'<span class="tag" style="left:0">best</span>':'');
+    });
+    var val=BASE+Math.round(p)*STEP, lb=Math.round(val*2.2046);
+    document.getElementById('drumSay').innerHTML=unit==='kg'?'<span class="n">'+val.toFixed(1).replace('.0','')+'</span> kg is <span class="n">'+lb+'</span> lb.':'<span class="n">'+lb+'</span> lb is <span class="n">'+val.toFixed(1).replace('.0','')+'</span> kg.';
+    drum.setAttribute('aria-valuenow',val);
+  }
+  dragger(drum,{start:(82.5-BASE)/STEP,min:0,max:MAXI,size:ROW,draw:drawDrum,tick:function(){ticks++;document.getElementById('drumTick').textContent=ticks}});
+  document.getElementById('unitBtn').addEventListener('click',function(){unit=unit==='kg'?'lb':'kg';this.textContent=unit;
+    drawDrum((function(){return Math.round(((parseFloat(document.getElementById('drum').getAttribute('aria-valuenow'))||82.5)-BASE)/STEP)})())});
+
+  /* ---------- 2 ruler ---------- */
+  var ruler=document.getElementById('ruler'), SP=14, RMIN=6, RMAX=60, RLAST=18; // units of 5 s
+  var valEl=document.createElement('div'); valEl.className='val'; ruler.appendChild(valEl);
+  var tr=document.createElement('div'); tr.className='tr'; ruler.appendChild(tr);
+  var pin=document.createElement('div'); pin.className='pin'; ruler.appendChild(pin);
+  function fmtT(s){ var m=Math.floor(s/60), r=s%60; return m?(r?m+' min '+r+' s':m+' min'):r+' s' }
+  function drawRuler(p){
+    var W=ruler.clientWidth, cx=W/2, half=Math.ceil(W/2/SP)+2, ci=Math.round(p), html='';
+    for(var u=ci-half;u<=ci+half;u++){
+      if(u<RMIN||u>RMAX) continue; var x=cx+(u-p)*SP, sec=u*5, cls=sec%60===0?'L':(sec%15===0?'m':''), h=sec%60===0?58:(sec%15===0?36:20);
+      html+='<i class="'+cls+'" style="left:'+x+'px;height:'+h+'px"></i>';
+      if(sec%60===0) html+='<b style="left:'+x+'px">'+(sec/60)+'</b>';
+    }
+    html+='<span class="last" style="left:'+(cx+(RLAST-p)*SP)+'px">last time</span>';
+    tr.innerHTML=html; valEl.innerHTML='<span class="n">'+fmtT(Math.round(p)*5).replace(/(\d+)/g,'<span class="n">$1</span>')+'</span>';
+    ruler.setAttribute('aria-valuenow',Math.round(p)*5);
+  }
+  dragger(ruler,{start:18,min:RMIN,max:RMAX,size:SP,horizontal:true,draw:drawRuler});
+
+  /* ---------- 3 crown ---------- */
+  var crown=document.getElementById('crown'), NS='http://www.w3.org/2000/svg', C=160, R=118;
+  crown.innerHTML='<svg viewBox="0 0 320 320" aria-hidden="true"><circle cx="'+C+'" cy="'+C+'" r="'+R+'" fill="none" stroke="var(--rule)" stroke-width="1"/><g id="cTicks"></g><path id="cArc" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/><line id="cHand" stroke="var(--training)" stroke-width="3" stroke-linecap="round"/><g id="cLab"></g><text id="cBig" class="big" x="'+C+'" y="'+(C+14)+'" text-anchor="middle"></text><text class="unitw" x="'+C+'" y="'+(C+46)+'" text-anchor="middle">min</text></svg>';
+  var cT=crown.querySelector('#cTicks'); for(var q=0;q<24;q++){ var a=q*15*Math.PI/180, L=q%6===0?16:(q%3===0?11:7), x1=C+Math.sin(a)*(R+2), y1=C-Math.cos(a)*(R+2), x2=C+Math.sin(a)*(R+2+L), y2=C-Math.cos(a)*(R+2+L);
+    var ln=document.createElementNS(NS,'line'); ln.setAttribute('x1',x1);ln.setAttribute('y1',y1);ln.setAttribute('x2',x2);ln.setAttribute('y2',y2);ln.setAttribute('stroke',q%6===0?'var(--ink)':'var(--ink3)');ln.setAttribute('stroke-width',q%6===0?1.5:1);cT.appendChild(ln) }
+  var cLab=crown.querySelector('#cLab'); [[0,'0'],[6,'30'],[12,'60'],[18,'90']].forEach(function(a){ var ang=a[0]*15*Math.PI/180, t=document.createElementNS(NS,'text'); t.setAttribute('x',C+Math.sin(ang)*(R-22));t.setAttribute('y',C-Math.cos(ang)*(R-22)+6);t.setAttribute('text-anchor','middle');t.textContent=a[1];cLab.appendChild(t) });
+  function clock(add){ var d=new Date(Date.now()+add*60000), h=d.getHours()%12||12, m=('0'+d.getMinutes()).slice(-2); return h+':'+m+(d.getHours()<12?' am':' pm') }
+  function drawCrown(p){
+    var m=Math.round(p)*5, ang=p*15*Math.PI/180;
+    var ex=C+Math.sin(ang)*R, ey=C-Math.cos(ang)*R, large=p*15>180?1:0;
+    crown.querySelector('#cArc').setAttribute('d',p<=.02?'':'M '+C+' '+(C-R)+' A '+R+' '+R+' 0 '+large+' 1 '+ex+' '+ey);
+    var h=crown.querySelector('#cHand'); h.setAttribute('x1',C+Math.sin(ang)*(R-14));h.setAttribute('y1',C-Math.cos(ang)*(R-14));h.setAttribute('x2',C+Math.sin(ang)*(R+10));h.setAttribute('y2',C-Math.cos(ang)*(R+10));
+    crown.querySelector('#cBig').textContent=m;
+    document.getElementById('crownSay').textContent=m?('Focus for '+(m>=60?Math.floor(m/60)+' hr '+(m%60?m%60+' min':''):m+' min')+'. Ends at '+clock(m)+'.').replace('  ',' '):'Turn it to set a length.';
+    crown.setAttribute('aria-valuenow',m);
+  }
+  var cPrev=0;
+  dragger(crown,{start:5,min:0,max:24,draw:drawCrown,
+    pos:function(e,el){var r=el.querySelector('svg').getBoundingClientRect(); return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI+90},
+    unit:function(cur,last){var d=cur-last; if(d>180)d-=360; if(d<-180)d+=360; return d/15}});
+
+  /* ---------- 4 lens ---------- */
+  var lens=document.getElementById('lens'), items=[
+    ['Bench press','3 sets, last 80 for 8, best 90'],['Overhead press','4 sets, last 45 for 8'],['Barbell row','3 sets, last 70 for 10'],
+    ['Back squat','4 sets, last 100 for 5, best 115'],['Romanian deadlift','3 sets, last 90 for 8'],['Pull-up','3 sets, last bodyweight for 8'],
+    ['Incline dumbbell press','3 sets, last 30 for 10'],['Lateral raise','3 sets, last 10 for 15'],['Cable curl','3 sets, last 25 for 12'],
+    ['Triceps pushdown','3 sets, last 30 for 12'],['Leg curl','3 sets, last 40 for 12'],['Calf raise','4 sets, last 60 for 15']];
+  var BASEH=40, els=items.map(function(it){ var d=document.createElement('div'); d.className='it'; d.innerHTML='<span class="nm"></span><span class="sb" hidden></span>'; d.querySelector('.nm').textContent=it[0]; d.querySelector('.sb').textContent=it[1]; lens.appendChild(d); return d });
+  var g=items.map(function(){return 0}), tg=g.slice(), py=null, lraf=0;
+  function layout(){
+    var y=0; els.forEach(function(d,i){ var gg=g[i], h=BASEH+44*gg, fs=17+17*gg;
+      d.style.top=y+'px'; d.style.height=h+'px'; d.querySelector('.nm').style.fontSize=fs+'px';
+      d.querySelector('.nm').style.color='color-mix(in srgb, var(--ink) '+Math.round(60+40*gg)+'%, var(--ground))';
+      var sb=d.querySelector('.sb'); sb.hidden=gg<.45; y+=h });
+  }
+  function target(){ if(py==null){tg=tg.map(function(){return 0});return}
+    var y=0,ys=[]; els.forEach(function(d,i){ys.push(y+BASEH/2);y+=BASEH});
+    tg=ys.map(function(cy){var d=(cy-py)/70;return Math.exp(-d*d)}) }
+  function lframe(){ var moving=false; target();
+    g=g.map(function(v,i){var n=RM?tg[i]:v+(tg[i]-v)*.22; if(Math.abs(n-tg[i])>.003)moving=true; return n}); layout();
+    lraf=moving||py!=null?requestAnimationFrame(lframe):0 }
+  function lpos(e){var r=lens.getBoundingClientRect(); py=e.clientY-r.top; if(!lraf)lraf=requestAnimationFrame(lframe)}
+  lens.addEventListener('pointerdown',function(e){lens.setPointerCapture(e.pointerId);lpos(e)});
+  lens.addEventListener('pointermove',function(e){if(e.buttons||e.pointerType==='mouse'){lpos(e)}});
+  lens.addEventListener('pointerup',function(){py=null;if(!lraf)lraf=requestAnimationFrame(lframe)});
+  lens.addEventListener('pointercancel',function(){py=null;if(!lraf)lraf=requestAnimationFrame(lframe)});
+  lens.addEventListener('pointerleave',function(e){if(!e.buttons){py=null;if(!lraf)lraf=requestAnimationFrame(lframe)}});
+  lens.style.height=(items.length*BASEH+60)+'px'; layout();
+
+  /* ---------- 5 spine ---------- */
+  var DAYS=120, today=new Date(2026,9,22), names=['Push A','Pull A','Legs','Push B','Pull B'], MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var days=[],sess=[]; for(var i=0;i<DAYS;i++){ var dt=new Date(today.getTime()-i*86400000), has=((i*7)%10)<6; days.push({d:dt,has:has});
+    if(has) sess.push({d:dt,name:names[sess.length%5],min:40+((i*13)%25)}) }
+  function fd(d){return MON[d.getMonth()]+' '+d.getDate()}
+  var list=document.getElementById('spList'), head=document.getElementById('spHead'), rul=document.getElementById('spRuler');
+  list.innerHTML=sess.map(function(s){return '<div class="sp-row"><span class="d">'+fd(s.d)+'</span><span>'+s.name+'</span><span class="ink2 n">'+s.min+' min</span></div>'}).join('');
+  var RH=46, LH=300;
+  function rulerSvg(){
+    var s='<svg viewBox="0 0 64 '+LH+'" preserveAspectRatio="none">';
+    for(var i=0;i<DAYS;i++){ var y=4+i/(DAYS-1)*(LH-8), dd=days[i], ms=dd.d.getDate()===1;
+      var len=ms?30:(dd.has?16:5);
+      s+='<line x1="'+(64-len)+'" x2="64" y1="'+y+'" y2="'+y+'" stroke="'+(ms||dd.has?'var(--ink)':'var(--ink3)')+'" stroke-width="'+(ms?1.5:1)+'" vector-effect="non-scaling-stroke"/>';
+      if(ms) s+='<text x="'+(64-len-6)+'" y="'+(y+5)+'" text-anchor="end" style="font:500 16px Figtree,sans-serif;fill:var(--ink2)">'+MON[dd.d.getMonth()]+'</text>'; }
+    s+='<line id="spView" x1="2" x2="2" y1="0" y2="40" stroke="var(--training)" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
+    rul.innerHTML=s }
+  rulerSvg();
+  function spUpdate(){ var max=Math.max(1,list.scrollHeight-LH), f=list.scrollTop/max, view=Math.min(1,LH/list.scrollHeight);
+    var ln=rul.querySelector('#spView'), span=(LH-8)*view; ln.setAttribute('y1',4+f*((LH-8)-span)); ln.setAttribute('y2',4+f*((LH-8)-span)+span);
+    var idx=clamp(Math.floor(list.scrollTop/RH),0,sess.length-1); head.innerHTML='<span class="n">'+fd(sess[idx].d)+'</span> <span class="ink3" style="font:500 17px Figtree">'+sess[idx].d.getFullYear()+'</span>' }
+  list.addEventListener('scroll',spUpdate); spUpdate();
+  var rd=false; function rset(e){ var r=rul.getBoundingClientRect(), f=clamp((e.clientY-r.top)/r.height,0,1); list.scrollTop=f*(list.scrollHeight-LH) }
+  rul.addEventListener('pointerdown',function(e){rd=true;rul.setPointerCapture(e.pointerId);rset(e)});
+  rul.addEventListener('pointermove',function(e){if(rd)rset(e)});
+  rul.addEventListener('pointerup',function(){rd=false}); rul.addEventListener('pointercancel',function(){rd=false});
+})();
+</script>

@@ -1,0 +1,67 @@
+<title>Set marks study</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Outfit:wght@200;300&display=swap">
+<style>
+:root{--ground:#EFECE6;--phone:#F7F5F1;--ink:#1D1B19;--ink2:#5E5A55;--ink3:#8E8982;--edge:#DDD8D0;--training:#0B62AE;--go:#2FA24D;
+  --words:"Figtree",-apple-system,system-ui,sans-serif;--nums:"Outfit","Figtree",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#0E0E10;--phone:#000000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#78736D;--edge:#2A2A2E;--training:#8FB0EE;--go:#8FC9A0;color-scheme:dark}}
+:root[data-theme="dark"]{--ground:#0E0E10;--phone:#000000;--ink:#E8E3DA;--ink2:#A49E96;--ink3:#78736D;--edge:#2A2A2E;--training:#8FB0EE;--go:#8FC9A0;color-scheme:dark}
+body{background:var(--ground);color:var(--ink);font-family:var(--words);font-size:17px;line-height:1.5;margin:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-weight:500;font-size:clamp(34px,6vw,54px);letter-spacing:-.03em;line-height:1;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);font-size:19px;margin:0;max-width:66ch}
+.ctl{display:flex;gap:22px;flex-wrap:wrap}
+.tr{all:unset;cursor:pointer;color:var(--ink2);font-size:17px}.tr:hover{color:var(--ink)}.tr:focus-visible{outline:2px solid var(--ink3);outline-offset:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}
+.c{background:var(--phone);border:1px solid var(--edge);border-radius:28px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.c h2{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.c .why{color:var(--ink2);font-size:15px;line-height:21px;margin:0 0 10px;min-height:84px}
+.r{display:flex;justify-content:space-between;align-items:center;gap:10px;height:40px;white-space:nowrap}
+.r .nm{font-size:19px;color:var(--ink2)}
+.r.f .nm{font-size:26px;font-weight:600;color:var(--training);letter-spacing:-.02em}
+.r.d .nm{text-decoration:line-through;text-decoration-color:var(--go);text-decoration-thickness:1.5px}
+.r .v{display:flex;align-items:center;gap:9px;color:var(--ink)}
+.r .w{font-family:var(--nums);font-weight:300;color:var(--ink2);font-size:15px}
+.pick{color:var(--training);font-size:13px;font-weight:600;font-variant-caps:all-small-caps;letter-spacing:.06em}
+svg{overflow:visible}
+</style>
+<div class="wrap">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <h1>Sets, without numbers</h1>
+    <p class="sub">Four ways to draw a lift's sets and reps in the Training wheels. Each shows the same workout: Bench done (the last set one short), Overhead press in progress, Dips and Cable fly still to do. Reps to do are thin ink; reps you did draw in go green. Tap <b>Log a rep</b> and watch each one fill in.</p>
+    <div class="ctl"><button class="tr" id="rep">Log a rep</button><button class="tr" id="miss">End the set one short</button><button class="tr" id="rs">Start over</button><button class="tr" id="th">Pure black</button><button class="tr" id="tw">Paper</button></div>
+  </div>
+  <div class="grid" id="g"></div>
+</div>
+<script>
+(()=>{
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches,$=id=>document.getElementById(id);
+const K=[
+ {k:'pulse',t:'Pulse',why:'The lift is one heartbeat line. Each set is a burst of peaks, one per rep, and the flat stretches between are your rests. The green runs along it as you go; a short set ends its burst early. Recommended: it reads as effort over time, and it can never be mistaken for a chart.',pick:1},
+ {k:'climb',t:'Climb',why:'Each set is a small staircase, one step per rep. A full set reaches the top; a short set stops a step below it. The green climbs as you lift.'},
+ {k:'waves',t:'Waves',why:'Each set is a run of soft crests, one per rep, like a bar moving up and down. Calm and rhythmic; the gaps between runs are the sets.'},
+ {k:'arrows',t:'Arrows',why:'Each rep is a small chevron and each set stacks into an arrow pointing forward. A full set is a whole arrow; a short set is missing its tip.'}];
+const seed=()=>[{n:'Bench press',w:185,sets:3,reps:5,done:[5,5,4]},{n:'Overhead press',w:115,sets:3,reps:6,done:[6],live:0},{n:'Dips',w:0,sets:3,reps:10,done:[]},{n:'Cable fly',w:40,sets:2,reps:12,done:[]}];
+let D=seed(),fresh=null;
+// reps done in set s (a live set counts what's logged so far)
+const did=(L,s)=>L.done[s]!=null?L.done[s]:(s===L.done.length&&L.live!=null?L.live:0);
+function svg(kind,L,big){const H=big?18:15,dx=kind==='arrows'?3.6:kind==='climb'?3.9:4.1,sg=kind==='pulse'?10:11,el=[];let x=1;const G='var(--go)',I='var(--ink3)';
+  const ln=(d,on,isNew)=>el.push(`<path d="${d}" fill="none" stroke="${on?G:I}" stroke-width="${on?1.8:1.15}" stroke-linecap="round" stroke-linejoin="round"${isNew?' pathLength="1" class="nw"':''}/>`);
+  for(let s=0;s<L.sets;s++){const dn=did(L,s),R=L.reps,setDone=L.done[s]!=null;
+    if(kind==='pulse'){if(s===0){ln(`M${x} ${H} h4`,dn>0);x+=4}
+      for(let r=0;r<R;r++){ln(`M${x} ${H} L${x+dx/2} ${0} L${x+dx} ${H}`,r<dn,fresh&&fresh.L===L&&fresh.s===s&&fresh.r===r);x+=dx}
+      ln(`M${x} ${H} h${s<L.sets-1?sg:4}`,setDone);x+=s<L.sets-1?sg:4}
+    else if(kind==='waves'){for(let r=0;r<R;r++){ln(`M${x} ${H} C${x+dx*.15} ${-H*.25} ${x+dx*.85} ${-H*.25} ${x+dx} ${H}`,r<dn,fresh&&fresh.L===L&&fresh.s===s&&fresh.r===r);x+=dx}x+=sg-0}
+    else if(kind==='climb'){const st=H/R;let y=H;for(let r=0;r<R;r++){ln(`M${x} ${y} h${dx} V${y-st}`,r<dn,fresh&&fresh.L===L&&fresh.s===s&&fresh.r===r);x+=dx;y-=st}x+=sg}
+    else{for(let r=0;r<R;r++){ln(`M${x} 1 L${x+4.6} ${H/2} L${x} ${H-1}`,r<dn,fresh&&fresh.L===L&&fresh.s===s&&fresh.r===r);x+=dx}x+=sg+1}}
+  const W=x-(kind==='pulse'?0:sg)+3;return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${el.join('')}</svg>`}
+function render(){$('g').innerHTML=K.map(c=>`<div class="c"><div style="display:flex;justify-content:space-between;align-items:baseline"><h2>${c.t}</h2>${c.pick?'<span class="pick">my pick</span>':''}</div><p class="why">${c.why}</p>${D.map((L,i)=>`<div class="r${i===1?' f':''}${L.done.length>=L.sets?' d':''}" aria-label="${L.n}, ${L.sets} sets of ${L.reps}${L.w?' at '+L.w:''}${L.done.length?', done '+L.done.join(', '):''}"><span class="nm">${L.n}</span><span class="v">${L.w?`<span class="w">${L.w}</span>`:''}${svg(c.k,L,i===1)}</span></div>`).join('')}</div>`).join('');
+  if(!RM)document.querySelectorAll('.nw').forEach(p=>{p.style.strokeDasharray='1';p.style.strokeDashoffset='1';const s0=performance.now();(function f(n){const u=Math.min(1,(n-s0)/320),e=1-Math.pow(1-u,3);p.style.strokeDashoffset=String(1-e);if(u<1)requestAnimationFrame(f)})(s0)});fresh=null}
+const cur=()=>D.find(L=>L.done.length<L.sets);
+$('rep').onclick=()=>{const L=cur();if(!L)return;if(L.live==null)L.live=0;const s=L.done.length;fresh={L,s,r:L.live};L.live++;if(L.live>=L.reps){L.done.push(L.live);L.live=0}render()};
+$('miss').onclick=()=>{const L=cur();if(!L)return;L.done.push(Math.max(1,(L.live||0)));L.live=0;render()};
+$('rs').onclick=()=>{D=seed();render()};
+$('th').onclick=()=>document.documentElement.dataset.theme='dark';$('tw').onclick=()=>document.documentElement.dataset.theme='light';
+(document.fonts?document.fonts.ready:Promise.resolve()).then(render);render();
+})();
+</script>

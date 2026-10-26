@@ -191,7 +191,7 @@ struct OneThingsTests {
         let mom = OneThingBirthday(name: "Mom", month: 10, day: 25, year: 1966)
         let first = try #require(things(at(12), birthdays: [mom]).first { $0.kind == .birthday })
         let again = try #require(things(at(12), birthdays: [mom]).first { $0.kind == .birthday })
-        #expect(first.target == .today && first.id == again.id && first.id.hasPrefix("birthday-10-25-"))
+        #expect(first.target == .today && first.id == again.id && first.id == "birthday-10-25-0")
         #expect(!first.id.contains("Mom"))
         let weather = try #require(things(at(12), weather: OneThingWeather(degrees: 64, summary: "Clear"))
             .first { $0.kind == .weather })
@@ -252,5 +252,18 @@ struct OneThingsTests {
             }
         }
         #expect(checked > 100)
+    }
+
+    @Test func birthdayIdsCountOnlyWithinTheirOwnDate() {
+        let mom = OneThingBirthday(name: "Mom", month: 10, day: 25)
+        let dad = OneThingBirthday(name: "Dad", month: 10, day: 25)
+        let sam = OneThingBirthday(name: "Sam", month: 10, day: 26)
+        func ids(_ list: [OneThingBirthday]) -> [String] {
+            things(at(12), birthdays: list).filter { $0.kind == .birthday }.map(\.id).sorted()
+        }
+        #expect(ids([mom, dad, sam]) == ["birthday-10-25-0", "birthday-10-25-1", "birthday-10-26-0"])
+        // Taking Sam out, or adding someone on another date, moves nothing else.
+        #expect(ids([mom, dad]) == ["birthday-10-25-0", "birthday-10-25-1"])
+        #expect(ids([sam, mom, dad]) == ids([mom, dad, sam]))
     }
 }

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Week and month</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=Hanken+Grotesk:wght@400..700&family=Inter+Tight:wght@100..900&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.v a{color:inherit;text-decoration:none}
+.v *::-webkit-scrollbar{display:none}
+.v{font-family:var(--bodyF)}
+.hero{font-family:var(--disp);font-weight:var(--heroW);font-size:56px;line-height:1;letter-spacing:var(--heroT);font-variation-settings:var(--fvs)}
+.ttl{font-family:var(--disp);font-weight:var(--heroW);font-size:34px;line-height:1.05;letter-spacing:var(--heroT);font-variation-settings:var(--fvs)}
+.ctx{font-family:var(--ctxF);font-style:var(--ctxS);font-size:21px;font-variation-settings:var(--fvs2)}
+.num{font-family:var(--disp);font-weight:var(--numW);font-variant-numeric:lining-nums tabular-nums;letter-spacing:-.03em;font-variation-settings:var(--fvs)}
+.lbl{font-family:'Inter Tight',sans-serif;font-weight:600;font-size:16px;letter-spacing:.08em}
+.key{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 .5px rgba(43,36,64,.5),0 6px 18px rgba(43,36,64,.14)}
+.dab{display:inline-block;border-radius:55% 45% 60% 40% / 50% 60% 40% 50%;filter:blur(.5px)}
+.tog{display:none;position:absolute;right:22px;top:14px;height:30px;display:flex;align-items:center;gap:6px;font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;letter-spacing:.06em;cursor:pointer;z-index:9}
+@keyframes inR{0%{opacity:0;transform:translateX(18px);filter:blur(4px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes inR2{0%{opacity:0;transform:translateX(18px);filter:blur(4px)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-12px,8px) scale(1.06)}}
+@keyframes wetTip{0%,100%{transform:scale(1);opacity:.75;filter:blur(3px)}50%{transform:scale(1.35);opacity:.4;filter:blur(6px)}}
+@keyframes stroke{0%{stroke-dashoffset:var(--from)}100%{stroke-dashoffset:var(--to)}}
+@keyframes rowIn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+
+</style>
+</helmet>
+<div class="v" style="position: relative; width: 390px; height: 844px; overflow: hidden; color: #2B2440; background: radial-gradient(60% 40% at 85% 6%, #F7E6B8 0%, rgba(247,230,184,0) 70%), radial-gradient(70% 45% at 0% 30%, #D8CBE6 0%, rgba(216,203,230,0) 70%), radial-gradient(80% 50% at 100% 70%, #BFD8E2 0%, rgba(191,216,226,0) 70%), radial-gradient(70% 40% at 20% 100%, #CFE0C3 0%, rgba(207,224,195,0) 70%), #F2ECE3; {{tyVars}}">
+  <svg width="390" height="844" style="position: absolute; inset: 0; mix-blend-mode: multiply; opacity: .3; pointer-events: none" aria-hidden="true"><filter id="grpl"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter><rect width="390" height="844" filter="url(#grpl)"/></svg>
+  <span class="tog" onClick="{{tyToggle}}" style="color: #7A6E86"><span style="font-size: 18px; font-weight: 500; letter-spacing: 0">Aa</span>{{tyLabel}}</span>
+  <div id="plPages" onScroll="{{onPages}}" style="position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none">
+    <!-- WEEK -->
+    <section style="flex: none; width: 390px; height: 844px; position: relative; scroll-snap-align: start">
+      <div class="ctx" style="position: absolute; left: 22px; top: 112px; color: #7A5C8E">this week, rolling on</div>
+      <div class="hero" style="position: absolute; left: 20px; top: 142px">3 of 6<br>sessions</div>
+      <!-- days across: one column each -->
+      <div style="position: absolute; left: 14px; right: 14px; top: 282px; display: grid; grid-template-columns: repeat(7, 1fr)">
+        <sc-for list="{{week}}" as="w" hint-placeholder-count="7">
+          <a href="{{w.href}}" style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+            <span class="lbl" style="color: {{w.fg}}">{{w.d}}</span>
+            <span class="dab" style="width: 34px; height: 30px; background: {{w.bg}}; box-shadow: {{w.ring}}; transform: rotate({{w.rot}})"></span>
+            <span style="font-size: 16px; font-weight: 500; color: {{w.fg2}}">{{w.r}}</span>
+          </a>
+        </sc-for>
+      </div>
+      <!-- weekly sets per muscle: paint fills toward a target band, never red -->
+      <div class="ttl" style="position: absolute; left: 22px; top: 412px">Sets per muscle</div>
+      <div style="position: absolute; left: 22px; right: 22px; top: 462px; height: 270px; overflow-y: auto; -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent)">
+        <sc-for list="{{mus}}" as="m" hint-placeholder-count="6">
+          <div style="display: grid; grid-template-columns: 112px 1fr 40px; align-items: center; height: 50px">
+            <span style="font-size: 21px; font-weight: 500">{{m.n}}</span>
+            <svg width="190" height="20" viewBox="0 0 190 20" style="overflow: visible" aria-hidden="true">
+              <rect x="{{m.bx}}" y="3" width="{{m.bw}}" height="14" rx="5" fill="#6E9E6A" fill-opacity=".16"/>
+              <path d="M2 11 C 60 7, 120 13, 188 9" fill="none" stroke="#2B2440" stroke-opacity=".14" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M2 11 C 60 7, 120 13, 188 9" fill="none" stroke="{{m.c}}" stroke-width="8" stroke-linecap="round" stroke-dasharray="192" style="--from: 192; --to: {{m.to}}; animation: stroke 800ms cubic-bezier(.3,.7,.2,1) {{m.d}} both; filter: blur(.4px)"/>
+            </svg>
+            <span class="num" style="font-size: 21px; font-weight: 400; text-align: right">{{m.v}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+    <!-- MONTH -->
+    <section style="flex: none; width: 390px; height: 844px; position: relative; scroll-snap-align: start">
+      <div class="ctx" style="position: absolute; left: 22px; top: 112px; color: #7A5C8E">October</div>
+      <div class="hero" style="position: absolute; left: 20px; top: 142px">Session 11<br>of 26</div>
+      <div style="position: absolute; left: 22px; right: 22px; top: 282px; display: grid; grid-template-columns: repeat(7, 1fr)" class="lbl">
+        <span style="color:#7A6E86;text-align:center">M</span><span style="color:#7A6E86;text-align:center">T</span><span style="color:#7A6E86;text-align:center">W</span><span style="color:#7A6E86;text-align:center">T</span><span style="color:#7A6E86;text-align:center">F</span><span style="color:#7A6E86;text-align:center">S</span><span style="color:#7A6E86;text-align:center">S</span>
+      </div>
+      <div style="position: absolute; left: 22px; right: 22px; top: 316px; display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 10px">
+        <sc-for list="{{month}}" as="c" hint-placeholder-count="35">
+          <a href="{{c.href}}" style="position: relative; height: 46px; display: flex; align-items: center; justify-content: center">
+            <span class="dab" style="position: absolute; width: {{c.s}}; height: {{c.s2}}; background: {{c.bg}}; opacity: {{c.o}}; transform: rotate({{c.rot}}); filter: blur(1px); box-shadow: {{c.ring}}"></span>
+            <span style="position: relative; font-size: 16px; font-weight: 500; color: {{c.fg}}">{{c.n}}</span>
+          </a>
+        </sc-for>
+      </div>
+      <div style="position: absolute; left: 22px; right: 22px; top: 610px; display: flex; align-items: center; gap: 10px; font-size: 18px; color: #6E6480">
+        <span class="dab" style="width: 14px; height: 12px; background: #C8452F; opacity: .35"></span>lighter
+        <span class="dab" style="width: 24px; height: 21px; background: #C8452F; opacity: .9; margin-left: 10px"></span>heavier than usual
+      </div>
+      <div class="ctx" style="position: absolute; left: 22px; right: 30px; top: 660px; line-height: 1.4; color: #2E6DA4">Three more this week keeps October level with September.</div>
+    </section>
+  </div>
+  <!-- the rail -->
+  <div style="position: absolute; left: 22px; right: 22px; top: 58px; height: 34px; pointer-events: none">
+    <div class="lbl" style="display: flex; gap: 28px"><span style="color: {{r0}}; transition: color 200ms">WEEK</span><span style="color: {{r1}}; transition: color 200ms">MONTH</span></div>
+    <span style="position: absolute; top: 26px; left: {{carL}}; width: 50px; height: 4px; border-radius: 2px 6px 3px 5px; background: #C8452F; filter: blur(.5px)"></span>
+  </div>
+  <div style="position: absolute; left: 14px; right: 14px; top: 762px; height: 64px; border-radius: 18px; background: rgba(250,246,239,.55); backdrop-filter: blur(16px); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 .5px rgba(43,36,64,.18); display: flex; align-items: center; padding-left: 78px">
+    <span style="font-size: 21px; color: #8A7F96">Ask Tess…</span>
+  </div>
+  <div style="position: absolute; left: 32px; top: 780px; width: 28px; height: 28px">
+    <span class="dab" style="position: absolute; left: 0; top: 4px; width: 18px; height: 16px; background: #C8452F; opacity: .8; filter: blur(2.5px); mix-blend-mode: multiply"></span>
+    <span class="dab" style="position: absolute; left: 10px; top: 2px; width: 18px; height: 16px; background: #2E6DA4; opacity: .8; filter: blur(2.5px); mix-blend-mode: multiply"></span>
+    <span class="dab" style="position: absolute; left: 5px; top: 12px; width: 18px; height: 16px; background: #E0B341; opacity: .85; filter: blur(2.5px); mix-blend-mode: multiply"></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { ty: 'sans', pageX: 0 }; }
+
+  typeVars() {
+    const sans = this.state.ty !== 'serif';
+    return {
+      tyVars: sans
+        ? "--disp: 'Inter Tight', sans-serif; --heroW: 500; --heroT: -0.04em; --fvs: normal; --ctxF: 'Inter Tight', sans-serif; --ctxS: normal; --fvs2: normal; --numW: 300; --bodyF: 'Inter Tight', sans-serif"
+        : "--disp: 'Fraunces', serif; --heroW: 640; --heroT: -0.025em; --fvs: 'opsz' 144, 'SOFT' 100, 'WONK' 1; --ctxF: 'Fraunces', serif; --ctxS: italic; --fvs2: 'SOFT' 100; --numW: 560; --bodyF: 'Hanken Grotesk', sans-serif",
+      tyLabel: sans ? 'SANS' : 'SERIF',
+      tyToggle: () => this.setState({ ty: sans ? 'serif' : 'sans' })
+    };
+  }
+
+  renderVals() {
+    const s = this.state, ink = '#2B2440', mute = '#A39AAE';
+    const R = { Push: '#C8452F', Pull: '#2E6DA4', Legs: '#E0B341', Rest: 'transparent' };
+    const plan = [['M', 'Push', 'done'], ['T', 'Pull', 'done'], ['W', 'Legs', 'done'], ['T', 'Push', 'today'], ['F', 'Rest', 'rest'], ['S', 'Pull', 'planned'], ['S', 'Legs', 'planned']];
+    const week = plan.map(([d, r, st], i) => ({
+      d, r, href: st === 'today' ? 'WorkoutTight.dc.html' : 'BoardWorkout.dc.html',
+      bg: st === 'done' ? R[r] : 'transparent',
+      ring: st === 'today' ? 'inset 0 0 0 2.5px ' + R[r] : st === 'planned' ? 'inset 0 0 0 1.5px rgba(43,36,64,.25)' : 'none',
+      rot: (i * 37 % 20 - 10) + 'deg', fg: st === 'today' ? ink : '#7A6E86', fg2: st === 'rest' ? '#A39AAE' : ink
+    }));
+    const mus = [['Chest', 8, 10, 20, '#C8452F'], ['Back', 12, 10, 20, '#2E6DA4'], ['Legs', 9, 10, 20, '#E0B341'], ['Shoulders', 6.5, 8, 16, '#C8452F'], ['Biceps', 6, 6, 12, '#2E6DA4'], ['Triceps', 7, 6, 12, '#C8452F']].map(([n, v, lo, hi, c], i) => {
+      const max = 22, px = (x) => 2 + x / max * 186;
+      return { n, v: String(v).replace('.5', '½'), c, bx: px(lo).toFixed(0), bw: (px(hi) - px(lo)).toFixed(0), to: (192 - (px(v) - 2)).toFixed(0), d: (i * 60) + 'ms' };
+    });
+    const vol = { 1: .5, 2: .8, 3: .6, 5: .9, 6: .7, 7: 1, 9: .65, 12: .75, 13: .7, 14: .85 };
+    const kinds = { 1: 'Push', 2: 'Pull', 3: 'Legs', 5: 'Push', 6: 'Pull', 7: 'Legs', 9: 'Push', 12: 'Push', 13: 'Pull', 14: 'Legs', 15: 'Push' };
+    const month = Array.from({ length: 35 }, (_, i) => {
+      const n = i - 2; // Oct 1 2026 is a Thursday
+      if (n < 1 || n > 31) return { n: '', s: '0px', s2: '0px', bg: 'transparent', o: 0, rot: '0deg', ring: 'none', fg: ink, href: '#' };
+      const v = vol[n], today = n === 15, k = kinds[n];
+      const size = v ? 26 + v * 16 : 30;
+      return { n: String(n), s: size + 'px', s2: (size * .88).toFixed(0) + 'px', bg: v ? R[k] : 'transparent', o: v ? (.35 + v * .55).toFixed(2) : 1,
+        rot: (n * 41 % 24 - 12) + 'deg', ring: today ? 'inset 0 0 0 2.5px #C8452F' : 'none', fg: v && v > .6 ? '#FFF8EE' : (n > 15 ? '#A39AAE' : ink), href: v ? 'BoardWorkout.dc.html' : '#' };
+    });
+    const frac = Math.max(0, Math.min(1, s.pageX / 390));
+    return {
+      ...this.typeVars(), week, mus, month,
+      r0: frac < .5 ? ink : mute, r1: frac >= .5 ? ink : mute,
+      carL: (frac * 78).toFixed(1) + 'px',
+      onPages: (e) => { const x = e && e.target ? e.target.scrollLeft : 0; if (Math.abs(x - this.state.pageX) > 2) this.setState({ pageX: x }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

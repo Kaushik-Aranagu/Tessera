@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Cook mode</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for kitchen sheet 12 (docs/design/kitchen/12-cook-mode.md), redrawn to the Kitchen lead's acceptance script (docs/product/cook-mode-acceptance.md): Weeknight dal, Cook to the dark cover, timers as held stroke words and horizon lines, a timer ending (flare stays until stopped, its step slides back as an overlay), and Finish. Timers run a minute per second. Add ?x2 to render at 2x. -->
+<style>
+:root{--cream:#F6F0E6;--cad:#E0A35C;--verm:#C8452F;--ink:#2B2440}
+body{margin:0;background:#111}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;font-family:'Inter Tight',sans-serif;background:#F4F0EA}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+#cover{position:absolute;inset:0;color:var(--cream);transform:translateY(844px);
+ background:radial-gradient(70% 45% at 90% 8%,rgba(224,163,92,.22),rgba(224,163,92,0) 70%),radial-gradient(80% 55% at 0% 55%,rgba(122,92,142,.38),rgba(122,92,142,0) 70%),radial-gradient(70% 45% at 100% 100%,rgba(200,69,47,.16),rgba(200,69,47,0) 70%),#221D2E}
+.dl{color:rgba(246,240,230,.65)}
+.step{position:absolute;left:22px;right:22px;font-size:34px;font-weight:500;line-height:1.15;letter-spacing:-.03em;transform-origin:0 0}
+.step .r{color:rgba(246,240,230,.85)}
+.sw{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap;position:relative;display:inline-block}
+.sw svg{position:absolute;left:-7px;bottom:7px;z-index:-1;overflow:visible}
+.hz{position:absolute;left:22px;right:22px;height:24px}
+.hz .guide{position:absolute;left:0;right:0;top:6px;height:1.5px;background:rgba(246,240,230,.14)}
+.hz .burn{position:absolute;left:0;top:5.5px;height:2.5px;background:var(--cream);box-shadow:0 0 6px rgba(246,240,230,.35)}
+.hz .tip{position:absolute;top:2px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--cream);filter:blur(3px);opacity:.8}
+.hz .lab{position:absolute;left:0;top:13px;color:rgba(246,240,230,.65);font-variant-numeric:tabular-nums}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(150,140,160,.3);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;pointer-events:none}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0);transform-origin:left}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+  <!-- the recipe page, light -->
+  <section id="recipe" class="abs" style="inset:0;color:var(--ink)">
+    <div class="abs lbl" style="left:22px;top:58px;color:#6E6480">‹ RECIPES</div>
+    <div class="abs" style="left:20px;top:90px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:1">Weeknight dal</div>
+    <div id="rctx" class="abs" style="left:22px;top:160px;font-size:21px;color:#7A5C8E">serves 2, 40 min</div>
+    <div class="abs" style="left:22px;top:256px;font-size:21px;line-height:44px"><b style="font-weight:600;display:inline-block;min-width:92px">1 cup</b>toor dal<br><b style="font-weight:600;display:inline-block;min-width:92px">1</b>onion<br><b style="font-weight:600;display:inline-block;min-width:92px">1 inch</b>ginger<br><b style="font-weight:600;display:inline-block;min-width:92px">1 tsp</b>cumin seeds</div>
+    <div class="abs lbl" style="left:22px;top:640px;color:#6E6480">4 STEPS</div>
+    <div id="cook" class="abs" style="left:22px;top:668px"><div class="sw"><span>Cook</span><svg width="86" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#E0A35C" opacity=".85" filter="url(#rough)"/></svg></div></div>
+    <span class="abs lbl" style="left:132px;top:684px;color:#6E6480">40 MIN</span>
+  </section>
+
+  <!-- cook mode: a dark cover that rises, a running process -->
+  <section id="cover">
+    <span class="abs" style="left:0;right:0;top:0;height:2px;background:var(--verm);box-shadow:0 0 12px rgba(200,69,47,.55)"></span>
+    <div id="timers"></div>
+    <div id="content" class="abs" style="left:0;top:0;width:390px;height:844px">
+      <div class="abs dl" style="left:22px;top:56px;font-size:21px">Weeknight dal, for 2</div>
+      <div id="count" class="abs lbl dl" style="right:22px;top:60px">1 / 4</div>
+      <div id="steps"></div>
+      <div id="ing" class="abs" style="left:22px;top:430px;font-size:21px;line-height:1.5;color:rgba(246,240,230,.7)"></div>
+      <div id="key" class="abs" style="left:22px;top:590px"></div>
+      <div id="peek" class="abs" style="left:22px;right:22px;top:690px;font-size:21px;color:rgba(246,240,230,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+    </div>
+    <div id="over" class="abs" style="left:0;right:0;top:0;height:330px;opacity:0;z-index:6;pointer-events:none"></div>
+  </section>
+
+  <div id="say" class="abs" style="right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;text-align:right;opacity:0;z-index:12"></div>
+  <span id="undo" class="abs la lbl" style="right:78px;top:808px;color:var(--verm);opacity:0;z-index:12">UNDO<span class="line" style="background:var(--verm)"></span></span>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const SETTLE = 'cubic-bezier(.3,1.3,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+function fadeTo(el, o, dur, delay = 0, extra) { const from = getComputedStyle(el).opacity; el.getAnimations().forEach((a) => a.cancel()); el.style.opacity = from; el.animate([{ opacity: from, ...(extra || {}) }, { opacity: o, transform: 'none' }], { duration: dur, delay, fill: 'forwards' }); }
+function say(t, colour, undo) { const s = $('say'); fadeTo(s, 0, 0); s.style.color = colour; s.textContent = t; fadeTo(s, 1, 300, 0, { transform: 'translateX(12px)' }); if (undo) fadeTo($('undo'), 1, 240, 120); }
+const dabs = [...$('soul').children];
+const darkSoul = (on) => dabs.forEach((d) => { d.style.mixBlendMode = on ? 'screen' : 'multiply'; });
+darkSoul(false);
+
+const STEPS = [
+  { t: '<span class="r">Rinse the </span>toor dal<span class="r"> until the water runs clear.</span>', ing: [['1 cup', 'toor dal']] },
+  { t: '<span class="r">Soften the </span>onion<span class="r"> and </span>ginger<span class="r"> in ghee.</span>', ing: [['1', 'onion, chopped'], ['1 inch', 'ginger, grated']], timer: { word: '8 minutes', meta: 'HOLD · SOFTEN', lab: 'SOFTEN', min: 8, w: 168 } },
+  { t: '<span class="r">Add the </span>dal<span class="r"> and </span>water<span class="r">, then simmer.</span>', ing: [['3 cups', 'water']], timer: { word: '20 minutes', meta: 'HOLD · UP TO 25', lab: 'SIMMER', min: 20, w: 190 } },
+  { t: '<span class="r">Fry the </span>cumin seeds<span class="r"> and pour the tadka over.</span>', ing: [['1 tsp', 'cumin seeds'], ['1 tbsp', 'ghee']], finish: true },
+];
+const plain = (i) => STEPS[i].t.replace(/<[^>]+>/g, '');
+let cur = 0; const els = [];
+function stepEl(i) { const e = document.createElement('div'); e.className = 'step'; e.innerHTML = STEPS[i].t; $('steps').appendChild(e); return e; }
+function showIng(i) { $('ing').innerHTML = STEPS[i].ing.map(([a, n]) => `<div><b style="font-weight:600;color:var(--cream)">${a}</b> ${n}</div>`).join(''); }
+let sid = 0;
+function keyFor(i) {
+  const s = STEPS[i]; const k = $('key');
+  if (!s.timer && !s.finish) { k.innerHTML = ''; return; }
+  const [word, meta, col, w] = s.finish ? ['Finish', 'HOLD', '#C8452F', 104] : [s.timer.word, s.timer.meta, '#E0A35C', s.timer.w];
+  const id = 'c' + (++sid);
+  k.innerHTML = `<div style="display:flex;align-items:baseline;gap:22px"><div class="sw" style="color:var(--cream)"><span>${word}</span><svg width="${w}" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><defs><clipPath id="${id}" clipPathUnits="userSpaceOnUse"><rect x="0" y="-10" width="200" height="40"/></clipPath></defs><path class="trace" d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="${col}" opacity="0" filter="url(#rough)"/><g clip-path="url(#${id})"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="${col}" opacity=".85" filter="url(#rough)"/></g><ellipse class="tip" cx="196" cy="7.5" rx="6" ry="4.5" fill="${col}" opacity="0"/></svg></div><div class="lbl dl">${meta}</div></div>`;
+  k.querySelector('.sw svg').setAttribute('width', k.querySelector('.sw span').offsetWidth + 14);
+}
+async function hold(dur) {
+  const sw = $('key').querySelector('.sw'); const [x, y] = centre(sw);
+  const clip = $('key').querySelector('clipPath rect'), trace = $('key').querySelector('.trace'), tip = $('key').querySelector('.tip');
+  await fingerOn(x, y);
+  trace.setAttribute('opacity', '.2');
+  await tween(140, (k) => clip.setAttribute('width', 200 * (1 - k)));
+  await tween(dur, (k) => clip.setAttribute('width', 200 * k), easeOut);
+  tip.setAttribute('opacity', '.85'); tip.style.transformOrigin = '196px 7.5px';
+  anim(tip, [{ transform: 'scale(.4)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 260, easing: SETTLE });
+  await sleep(160); fingerOff();
+}
+
+// horizons: stacked hairlines at the top, soonest on top, burning left to right; the page makes room
+const timers = []; let shift = 0; const speed = 60;
+function addTimer(lab, mins, step) {
+  const h = document.createElement('div'); h.className = 'hz';
+  h.innerHTML = `<span class="guide"></span><span class="burn" style="width:0"></span><span class="tip" style="left:0"></span><span class="lab lbl"></span>`;
+  $('timers').appendChild(h);
+  const t = { lab, secs: mins * 60, left: mins * 60, el: h, start: performance.now(), step };
+  timers.push(t); layoutTimers();
+  anim(h, [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: HOUSE });
+  return t;
+}
+function layoutTimers() {
+  timers.filter((t) => !t.gone).sort((a, b) => a.left - b.left).forEach((t, k) => { t.el.style.top = (10 + k * 30) + 'px'; });
+  const to = Math.max(0, timers.filter((t) => !t.gone).length - 1) * 30;
+  if (to !== shift) { anim($('content'), [{ transform: `translateY(${shift}px)` }, { transform: `translateY(${to}px)` }], { duration: 320, easing: HOUSE }); shift = to; }
+}
+const fmt = (s) => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+function tick() {
+  for (const t of timers) {
+    if (t.done || t.gone) continue;
+    t.left = t.secs - (performance.now() - t.start) / 1000 * speed;
+    const f = Math.min(1, 1 - t.left / t.secs);
+    t.el.querySelector('.burn').style.width = (f * 346) + 'px'; t.el.querySelector('.tip').style.left = (f * 346) + 'px';
+    t.el.querySelector('.lab').textContent = `${t.lab} ${fmt(t.left)}`;
+    if (t.left <= 0) { t.done = true; flare(t); }
+  }
+  requestAnimationFrame(tick);
+}
+// a timer ends: its line flares and stays flared until he stops it; its step slides back in over the page; the current step doesn't move
+async function flare(t) {
+  t.el.querySelector('.burn').animate([{ background: '#F6F0E6', height: '2.5px', top: '5.5px', boxShadow: '0 0 6px rgba(246,240,230,.35)' }, { background: '#E0A35C', height: '6px', top: '4px', boxShadow: '0 0 18px rgba(224,163,92,.9)' }], { duration: 420, easing: HOUSE, fill: 'forwards' });
+  t.el.querySelector('.tip').style.opacity = 0;
+  const lab = t.el.querySelector('.lab'); lab.style.color = '#E0A35C'; lab.textContent = `${t.lab} · DONE`;
+  const ov = $('over');
+  ov.innerHTML = `<div class="abs lbl" style="left:22px;top:${110 + shift}px;color:#E0A35C">SOFTEN IS DONE · STEP ${t.step + 1}</div><div class="step" style="top:${140 + shift}px;color:#E0A35C">${plain(t.step)}</div>`;
+  anim($('steps'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  anim(ov, [{ opacity: 0, transform: 'translateY(-24px)', filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 420, easing: HOUSE });
+}
+
+async function nextStep() {
+  const a = els[cur], i = cur + 1;
+  await fingerOn(200, 520);
+  const b = stepEl(i); b.style.top = '150px'; els[i] = b;
+  const swipe = tween(260, (t) => fingerAt(200, 520 - 180 * t));
+  anim(a, [{ top: '150px', fontSize: '34px', opacity: 1 }, { top: '100px', fontSize: '21px', opacity: .35 }], { duration: 380, easing: HOUSE });
+  anim(b, [{ opacity: 0, transform: 'translateY(540px) scale(.62)', filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 420, easing: HOUSE });
+  if (els[cur - 1]) anim(els[cur - 1], [{ opacity: .35 }, { opacity: 0, transform: 'translateY(-20px)' }], { duration: 300 });
+  anim($('ing'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }).then(() => { showIng(i); anim($('ing'), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE }); });
+  anim($('key'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }).then(() => { keyFor(i); anim($('key'), [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: HOUSE }); });
+  $('peek').textContent = STEPS[i + 1] ? 'then: ' + plain(i + 1).toLowerCase() : '';
+  $('count').textContent = (i + 1) + ' / 4';
+  await swipe; fingerOff();
+  a.style.whiteSpace = 'nowrap'; a.style.overflow = 'hidden'; a.style.textOverflow = 'ellipsis';
+  cur = i; await sleep(350);
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  const s0 = stepEl(0); s0.style.top = '150px'; els[0] = s0;
+  showIng(0); keyFor(0); $('peek').textContent = 'then: ' + plain(1).toLowerCase();
+  requestAnimationFrame(tick);
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  await sleep(700);
+
+  // 1 · Cook on the recipe page: the dark cover rises (a process rises, it doesn't zoom)
+  const [cx, cy] = centre($('cook')); await fingerOn(cx, cy); await sleep(100); fingerOff();
+  const csvg = $('cook').querySelector('svg'); csvg.style.transformOrigin = '50% 70%';
+  await anim(csvg, [{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.65)' }, { transform: 'scaleY(1)' }], { duration: 380, easing: 'ease-out' });
+  anim($('cover'), [{ transform: 'translateY(844px)' }, { transform: 'none' }], { duration: 460, easing: HOUSE });
+  darkSoul(true);
+  await sleep(1300);
+
+  // 2 · swipe up: step 2 arrives, step 1 stays as a dim line above
+  await nextStep(); await sleep(700);
+  // 3 · hold the cadmium "8 minutes": a horizon appears and burns down
+  await hold(600);
+  addTimer('SOFTEN', 8, 1); await sleep(1300);
+  // 4 · step 3, a second timer: two lines, the sooner on top
+  await nextStep(); await sleep(500);
+  await hold(600);
+  addTimer('SIMMER', 20, 2);
+  await sleep(4300);
+  // 5 · (Soften ends here) tap the overlay to put it away; the current step is still step 3. Tap the flared line to stop it
+  await sleep(1400);
+  await fingerOn(200, 200); await sleep(100); fingerOff();
+  await anim($('over'), [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-16px)' }], { duration: 300, easing: HOUSE });
+  anim($('steps'), [{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: HOUSE });
+  await sleep(500);
+  const done = timers.find((t) => t.done);
+  await fingerOn(120, 16); await sleep(100); fingerOff();
+  await anim(done.el, [{ opacity: 1 }, { opacity: 0 }], { duration: 260 });
+  done.gone = true; done.el.remove(); layoutTimers();
+  await sleep(900);
+
+  // 6 · the last step: hold Finish. The cover lowers; the simmer timer stops silently; Tess says one line
+  await nextStep(); await sleep(600);
+  await hold(600);
+  timers.forEach((t) => { if (!t.gone) { t.gone = true; anim(t.el, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }); } });
+  darkSoul(false);
+  $('rctx').textContent = 'serves 2, 40 min, cooked today';
+  await anim($('cover'), [{ transform: 'none' }, { transform: 'translateY(844px)' }], { duration: 440, easing: HOUSE });
+  say('Weeknight dal, first time.', '#2E6DA4', true);
+  await sleep(2400);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>

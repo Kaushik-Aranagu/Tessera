@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Pantry light</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for kitchen v2 backlog items 1-3 (docs/design/kitchen/kitchen-v2.md): pantry light on the recipe page and the Ingredient page, "usually by now" at the foot of Groceries, and the CAN COOK filter word on the shelf. Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--cad:#E0A35C;--sage:#6E9E6A}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 35%,#DCE8D2 0%,rgba(220,232,210,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2D9C0 0%,rgba(242,217,192,0) 70%),#F5F0E6}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0);transform-origin:left}
+.hero{font-weight:500;font-size:56px;line-height:1;letter-spacing:-.04em}
+.ing{position:absolute;left:22px;height:44px;line-height:44px;font-size:21px;white-space:nowrap;transition:opacity 420ms ease}
+.ing b{font-weight:600;display:inline-block;min-width:92px;font-variant-numeric:tabular-nums}
+.ring{position:absolute;left:6px;width:11px;height:11px}
+.vw{font-weight:600;background:linear-gradient(transparent 58%,rgba(224,163,92,.42) 58%,rgba(224,163,92,.42) 92%,transparent 92%);padding:0 2px;margin:0 -2px}
+.car{position:absolute;height:5px;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;background:var(--verm);opacity:.85;filter:blur(.3px)}
+.aisle{position:absolute;left:22px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;color:rgba(43,36,64,.85)}
+.it{position:absolute;left:64px;height:48px;line-height:48px;font-size:21px;white-space:nowrap}
+.it b{font-weight:600}
+.nm{position:absolute;left:22px;white-space:nowrap;font-weight:500}
+.miss{position:absolute;left:22px;font-size:21px;line-height:30px;color:var(--ctx);white-space:nowrap}
+.sw{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap;position:relative;display:inline-block}
+.sw svg{position:absolute;left:-7px;bottom:7px;z-index:-1}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+
+  <section id="stage" class="abs" style="inset:0"></section>
+
+  <div id="say" class="abs" style="right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;color:var(--cobalt);text-align:right;opacity:0;z-index:12"></div>
+  <span id="undo" class="abs la lbl" style="right:78px;top:808px;color:var(--verm);opacity:0;z-index:12">UNDO<span class="line" style="background:var(--verm)"></span></span>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const SETTLE = 'cubic-bezier(.3,1.3,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const tap = async (el, dx = 0, dy = 0) => { const r = rel(el.getBoundingClientRect()); await fingerOn(r.left + r.width / 2 + dx, r.top + r.height / 2 + dy); await sleep(110); fingerOff(); };
+const stage = $('stage');
+const add = (html) => { stage.insertAdjacentHTML('beforeend', html); return stage.lastElementChild; };
+function fadeTo(el, o, dur, delay = 0, extra) { const from = getComputedStyle(el).opacity; el.getAnimations().forEach((a) => a.cancel()); el.style.opacity = from; el.animate([{ opacity: from, ...(extra || {}) }, { opacity: o, transform: 'none' }], { duration: dur, delay, fill: 'forwards' }); }
+function say(t, undo) { const s = $('say'); fadeTo(s, 0, 0); s.textContent = t; fadeTo(s, 1, 300, 0, { transform: 'translateX(12px)' }); if (undo) fadeTo($('undo'), 1, 240, 120); }
+const hush = () => { fadeTo($('say'), 0, 160); fadeTo($('undo'), 0, 160); };
+const rise = (el, d = 0) => anim(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: d, easing: HOUSE });
+const swapText = async (el, html) => { await anim(el, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 120 }); el.innerHTML = html; anim(el, [{ opacity: 0, filter: 'blur(3px)', transform: 'translateY(6px)' }, { opacity: 1, filter: 'blur(0)', transform: 'none' }], { duration: 220, easing: HOUSE }); };
+async function clearStage() { hush(); await anim(stage, [{ opacity: 1 }, { opacity: 0 }], { duration: 300 }); stage.innerHTML = ''; stage.getAnimations().forEach((a) => a.cancel()); stage.style.opacity = 1; await sleep(250); }
+function strokeWord(text, colour, left, top, w) {
+  return add(`<div class="abs" style="left:${left}px;top:${top}px"><div class="sw"><span>${text}</span><svg width="${w}" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="${colour}" opacity=".82" filter="url(#rough)"/></svg></div></div>`);
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+
+  // 1 · the recipe page: lines you're out of drop to a lighter weight and get the faint miss ring
+  const crumb = add(`<div class="abs lbl" style="left:22px;top:58px">RECIPES</div>`);
+  const hero = add(`<div class="abs hero" style="left:20px;top:90px">Dal tadka</div>`);
+  const ctx = add(`<div class="abs" style="left:22px;top:160px;font-size:21px;color:var(--ctx)">serves 4, 40 min, cooked 9 days ago</div>`);
+  const ING = [['1 cup', 'toor dal'], ['1', 'onion'], ['2', 'tomatoes'], ['1 inch', 'ginger', 'out'], ['1 tsp', 'cumin seeds'], ['1 bunch', 'cilantro', 'out'], ['1 tsp', 'salt', 'staple'], ['2 tbsp', 'oil', 'staple']];
+  const rows = ING.map(([a, n, s], i) => add(`<div class="ing" data-s="${s || ''}" style="top:${256 + i * 44}px;${s === 'staple' ? 'opacity:.45' : ''}"><b ${s === 'staple' ? 'style="font-weight:400"' : ''}>${a}</b><span class="n">${n}</span></div>`));
+  const steps = add(`<div class="abs lbl" style="left:22px;top:640px">6 STEPS</div>`);
+  const cook = strokeWord('Cook', '#E0A35C', 22, 668, 86);
+  const mins = add(`<span class="abs lbl" style="left:132px;top:684px">40 MIN</span>`);
+  [crumb, hero, ctx, ...rows, steps, cook, mins].forEach((el, k) => { const o = getComputedStyle(el).opacity; anim(el, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: o, transform: 'none' }], { duration: 340, delay: k * 30, easing: HOUSE }); });
+  await sleep(1100);
+  // the pantry settles in: out lines lighten (amount 600 -> 400, ink 55%) and the ring draws round
+  for (const r of rows.filter((r) => r.dataset.s === 'out')) {
+    r.getAnimations().forEach((a) => a.cancel());
+    r.style.opacity = .55; r.querySelector('b').style.transition = 'font-weight 420ms ease'; r.querySelector('b').style.fontWeight = 400;
+    const ring = add(`<svg class="ring" viewBox="0 0 12 12" style="top:${parseFloat(r.style.top) + 16}px"><circle cx="6" cy="6" r="4.6" fill="none" stroke="rgba(43,36,64,.42)" stroke-width="1.3" stroke-dasharray="29" stroke-dashoffset="29" transform="rotate(-90 6 6)"/></svg>`);
+    anim(ring.querySelector('circle'), [{ strokeDashoffset: 29 }, { strokeDashoffset: 0 }], { duration: 520, delay: 200, easing: HOUSE });
+    await sleep(160);
+  }
+  await sleep(2000);
+
+  // 2 · tap "ginger": it travels up to be the Ingredient page's hero; its state is a value word you can tap
+  const g = rows[3];
+  await tap(g.querySelector('.n'));
+  const gr = rel(g.querySelector('.n').getBoundingClientRect());
+  const fly = add(`<div class="abs" style="left:${gr.left}px;top:${gr.top}px;font-size:21px;line-height:${gr.height}px;transform-origin:0 0;white-space:nowrap">ginger</div>`);
+  g.querySelector('.n').style.visibility = 'hidden';
+  [...stage.children].filter((el) => el !== fly).forEach((el) => anim(el, [{ opacity: getComputedStyle(el).opacity }, { opacity: 0 }], { duration: 260 }));
+  await anim(fly, [{ transform: 'none', fontWeight: 400 }, { transform: `translate(${20 - gr.left}px,${84 - gr.top}px) scale(${56 / 21})`, fontWeight: 500, letterSpacing: '-.04em' }], { duration: 460, easing: HOUSE });
+  [...stage.children].filter((el) => el !== fly).forEach((el) => el.remove());
+  const gh = add(`<div class="abs hero" style="left:20px;top:90px">Ginger</div>`);
+  anim(gh, [{ opacity: 0 }, { opacity: 1 }], { duration: 140 });
+  anim(fly, [{ opacity: 1 }, { opacity: 0 }], { duration: 140 }).then(() => fly.remove());
+  const gc = add(`<div class="abs lbl" style="left:22px;top:58px">DAL TADKA</div>`);
+  const state = add(`<div class="abs" style="left:22px;right:22px;top:168px;font-size:21px;line-height:30px"><span class="vw">Out</span> since you cooked dal on Tuesday.</div>`);
+  const rhythm = add(`<div class="abs" style="left:22px;right:22px;top:204px;font-size:21px;line-height:30px;color:var(--ctx)">Bought 4 times, about every 12 days.</div>`);
+  const usedL = add(`<div class="abs lbl" style="left:22px;top:276px">USED IN</div>`);
+  const used = add(`<div class="abs" style="left:22px;right:22px;top:304px;font-size:21px;line-height:30px">Dal tadka, chana masala, stir fry</div>`);
+  [gc, state, rhythm, usedL, used].forEach((el, k) => rise(el, k * 50));
+  await sleep(1500);
+  await tap(state.querySelector('.vw'));
+  await swapText(state, '<span class="vw">Low</span>, after dal on Tuesday.');
+  await sleep(800);
+  await tap(state.querySelector('.vw'));
+  await swapText(state, '<span class="vw">In</span>, as of now.');
+  await sleep(1500);
+  await clearStage();
+
+  // 3 · Groceries: "usually by now" sits dim at the foot of the list; tap a name and it joins its aisle
+  add(`<div class="abs lbl" style="left:22px;top:58px">RECIPES · <span style="color:var(--ink)">GROCERIES</span></div>`);
+  add(`<div class="car" style="left:118px;top:80px;width:104px"></div>`);
+  const gctx = add(`<div class="abs" style="left:22px;top:112px;font-size:21px;color:var(--ctx)">4 to get, for dal and one more</div>`);
+  add(`<div class="abs hero" style="left:20px;top:142px">Groceries</div>`);
+  add(`<div class="aisle" style="top:232px">Produce</div>`);
+  add(`<div class="it" style="top:276px"><b>2</b> lemons</div>`);
+  add(`<div class="it" style="top:324px"><b>1 bunch</b> cilantro</div>`);
+  add(`<div class="aisle" style="top:396px">Dairy</div>`);
+  add(`<div class="it" style="top:440px"><b>500 g</b> yoghurt</div>`);
+  const dry = [add(`<div class="aisle" style="top:512px">Dry goods</div>`), add(`<div class="it" style="top:556px"><b>1 kg</b> toor dal</div>`)];
+  const ubl = add(`<div class="abs lbl" style="left:22px;top:628px;opacity:.55">USUALLY BY NOW</div>`);
+  const ubn = add(`<div class="abs" style="left:22px;right:22px;top:656px;font-size:21px;line-height:30px;color:rgba(43,36,64,.55);white-space:nowrap"><span id="milk"><span id="mw">milk</span> · </span><span id="rest" style="display:inline-block">eggs · rice</span></div>`);
+  [...stage.children].forEach((el, k) => { const o = getComputedStyle(el).opacity; anim(el, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: o, transform: 'none' }], { duration: 340, delay: k * 25, easing: HOUSE }); });
+  await sleep(1800);
+  const milk = $('milk');
+  await tap(milk);
+  const mr = rel($('mw').getBoundingClientRect()); const shift = rel(milk.getBoundingClientRect()).width;
+  const mfly = add(`<div class="abs" style="left:${mr.left}px;top:${mr.top}px;font-size:21px;line-height:${mr.height}px;color:rgba(43,36,64,.55)">milk</div>`);
+  milk.style.visibility = 'hidden';
+  // the aisles below open by one row; the dim line closes up behind the name that left
+  [...dry, ubl, ubn].forEach((el) => anim(el, [{ transform: 'none' }, { transform: 'translateY(48px)' }], { duration: 420, easing: SETTLE }));
+  anim($('rest'), [{ transform: 'none' }, { transform: `translateX(${-shift}px)` }], { duration: 360, delay: 120, easing: HOUSE });
+  setTimeout(() => { $('rest').getAnimations().forEach((a) => a.cancel()); milk.remove(); }, 490);
+  await anim(mfly, [{ transform: 'none', color: 'rgba(43,36,64,.55)' }, { transform: `translate(${64 - mr.left}px,${488 + 9 - mr.top}px)`, color: 'rgba(43,36,64,1)' }], { duration: 520, easing: 'cubic-bezier(.3,0,.25,1)' });
+  swapText(gctx, '5 to get, for dal and one more');
+  say('Milk, on Groceries.', true);
+  await sleep(2300);
+  await clearStage();
+
+  // 4 · the shelf: CAN COOK re-sorts by what's missing; one-missing names say what they're short of
+  add(`<div class="abs lbl" style="left:22px;top:58px"><span style="color:var(--ink)">RECIPES</span> · GROCERIES</div>`);
+  add(`<div class="car" style="left:22px;top:80px;width:78px"></div>`);
+  const sctx = add(`<div class="abs" style="left:22px;top:112px;font-size:21px;color:var(--ctx)">14 recipes, carbonara last night</div>`);
+  const filt = add(`<div class="abs lbl" style="left:22px;top:150px;display:flex;gap:18px"><span>QUICK</span><span>NOT LATELY</span><span id="can">CAN COOK</span></div>`);
+  const T = { H: [56, 62, 1], R: [34, 44, .9], B: [21, 34, .7], Q: [21, 34, .45] };
+  const R = [['Carbonara', 'H', 2], ['Dal tadka', 'R', 1, 'cilantro'], ['Shakshuka', 'R', 0], ['Lemon pasta', 'B', 1, 'lemons'], ['Chana masala', 'B', 3], ['Fried rice', 'B', 0], ['Pancakes', 'Q', 0], ['Banana bread', 'Q', 2]];
+  let y = 196; const names = R.map(([n, t, m, w]) => { const [fs, lh, o] = T[t]; const el = add(`<div class="nm" style="top:${y}px;font-size:${fs}px;line-height:${lh}px;letter-spacing:${fs > 30 ? '-.035em' : '-.01em'};opacity:${o}">${n}</div>`); el.dataset.m = m; el.dataset.y = y; el.dataset.lh = lh; el.dataset.w = w || ''; y += lh; return el; });
+  [...stage.children].forEach((el, k) => { const o = getComputedStyle(el).opacity; anim(el, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: o, transform: 'none' }], { duration: 340, delay: k * 25, easing: HOUSE }); });
+  await sleep(1600);
+  const can = $('can');
+  await tap(can);
+  const cr = rel(can.getBoundingClientRect());
+  const fcar = add(`<div class="car" style="left:${cr.left}px;top:172px;width:0"></div>`);
+  anim(fcar, [{ width: '0px' }, { width: cr.width + 'px' }], { duration: 320, easing: HOUSE });
+  can.style.color = 'var(--ink)';
+  // names short of two or more drop; the rest re-sort: none missing first, then one missing with its line
+  names.forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); });
+  const drop = names.filter((el) => +el.dataset.m >= 2);
+  drop.forEach((el) => anim(el, [{ opacity: getComputedStyle(el).opacity, transform: 'none' }, { opacity: 0, transform: 'translateY(10px)' }], { duration: 180 }));
+  swapText(sctx, '3 you can cook now');
+  await sleep(200);
+  const keep = names.filter((el) => +el.dataset.m < 2).sort((a, b) => (+a.dataset.m) - (+b.dataset.m));
+  y = 196; const lines = [];
+  keep.forEach((el) => {
+    const to = y; y += +el.dataset.lh;
+    anim(el, [{ transform: 'none' }, { transform: `translateY(${to - +el.dataset.y}px)` }], { duration: 460, easing: SETTLE });
+    if (el.dataset.m === '1') { lines.push(add(`<div class="miss" style="top:${y - 4}px;opacity:0">1 missing: <span class="vw" style="color:var(--ink)">${el.dataset.w}</span></div>`)); y += 32; }
+  });
+  await sleep(380);
+  lines.forEach((l, k) => anim(l, [{ opacity: 0, clipPath: 'inset(0 100% 0 0)' }, { opacity: 1, clipPath: 'inset(0 0 0 0)' }], { duration: 360, delay: k * 80, easing: HOUSE }));
+  await sleep(1800);
+  await tap(lines[0].querySelector('.vw'));
+  await swapText(lines[0], '<span style="color:var(--sage)">cilantro is on the list</span>');
+  say('Cilantro, on Groceries.', true);
+  await sleep(2400);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>
