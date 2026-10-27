@@ -392,6 +392,8 @@ public final class TessRun {
         runs.save(state, now: now())
         if case let .reply(reply) = outcome, !Task.isCancelled {
             emit(.finished(reply), active)
+            // C6 in shadow, after the reply is out, so nothing on the phone waits on the check or the trace's write.
+            await recordAnswerCheck(reply: reply, ask: text, pack: pack, messages: state.messages, runID: state.id)
         } else if case let .phone(line) = outcome, !Task.isCancelled {
             emit(.failed(line), active)
         }

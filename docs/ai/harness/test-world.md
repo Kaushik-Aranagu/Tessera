@@ -73,3 +73,18 @@ Use the world's own dates. Set `AppClock` to `EvalWorld.now` during the seed and
   none on money; until then the trace records the result and nothing retries.
 
 The replay brain for `swift test` comes in my PR once the harness is on master.
+
+## How to run the runner
+
+```
+scripts/tess-eval.sh --world small --policy lab --dry          # scripted brain, nothing leaves the Mac, no cost
+scripts/tess-eval.sh --world small --policy strict --phone-spent 12.40   # LIVE: spends on the Claude API
+```
+
+A live run refuses to start without `--phone-spent`. `--kinds lookUp,count` limits the kinds; `--out DIR` moves the report folder (never inside the app's data folder).
+The live run needs the key in the Mac keychain (item `com.kaushikaranagu.tessera.anthropic`, account `api-key`) and
+never prints or writes it. The allowance is the smaller of $50 and ($100 minus `--phone-spent` minus the simulator's $20), minus what earlier runs
+spent this month (`~/Library/Application Support/TessEval/ledger.json`, one place whatever `--out` says); the test store's ledger starts with one row for everything above that, so the
+Door refuses a call before it is sent. The runner is `TessLiveEvalTests` and does nothing unless `TESSERA_LIVE_EVAL=1`.
+Each report holds the reply, the tools called, the rung, time to first word and to the end, the cost and the key's
+score per question, and under strict the sent-log scan (walled words, key shape).
