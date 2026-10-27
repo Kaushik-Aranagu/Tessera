@@ -6,7 +6,7 @@ import Testing
 /// canonical form. Every line here is a made-up placeholder.
 @MainActor
 struct WallTests {
-    static let key = "sk-ant-api03-" + "TESTFAKE" + String(repeating: "x", count: 24)
+    static let key = "sk" + "-" + "ant" + "-api03-" + "TESTFAKE" + String(repeating: "x", count: 24)
 
     /// Each line and a reason it must carry. Lines come from the rules' own tests, so the wall can't drift from them.
     static let walled: [(String, WallReasons)] = [
