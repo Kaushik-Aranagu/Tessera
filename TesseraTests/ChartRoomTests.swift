@@ -287,6 +287,38 @@ struct ChartRoomTests {
         #expect(OutlineSetting.duration(reduceMotion: true) == 0.2)
     }
 
+    // MARK: Sheet 365: the dial row
+
+    private func defaults(_ doc: ChartDoc?) -> UserDefaults {
+        let suite = UserDefaults(suiteName: "chart.\(UUID().uuidString)")!
+        if let doc {
+            suite.set(doc.encoded(), forKey: ChartRoomModel.defaultsKey)
+        }
+        return suite
+    }
+
+    @Test func anUnnamedRoomReadsChartRoomInSlateWithSayWhatItsFor() {
+        let row = ChartRoomSummary.row(defaults: defaults(nil))
+        #expect(row.name == "Chart room" && row.line == "Say what it's for")
+    }
+
+    @Test func aNamedRoomCarriesItsOwnNameColourAndTopFact() {
+        var doc = ChartDoc(name: "Chart room")
+        doc.color = "olive"
+        for step in ChartRoomModel.canned.prefix(3) {
+            doc = doc.applying(ChartPatch(step.patch))
+        }
+        let row = ChartRoomSummary.row(defaults: defaults(doc))
+        #expect(row.name == "Plants")
+        #expect(row.line == "Orchid, 6 days")
+    }
+
+    @Test func theAppsDialHasTheChartRowRightAfterPurse() {
+        let rows = AppsListRows.make([])
+        let chart = rows.firstIndex { $0.extra == .chart }
+        #expect(chart != nil && rows[(chart ?? 1) - 1].app == .money && rows[(chart ?? 1) - 1].extra == nil)
+    }
+
     // MARK: Sheets 360 and 361: point, then say; how the room says no
 
     @Test func aTapPicksAFilledPlaceWritesNothingAndLetsGoAfterItsTime() async throws {
@@ -307,7 +339,11 @@ struct ChartRoomTests {
     @Test func aRefusalOffersAChangeThatPlaysAsAnOrdinaryGhost() {
         let room = model()
         room.setSentences(2)
-        let bigger = RoomPatch(room: "Chart room", say: "Bigger numbers", ops: [.init(op: "look", trait: "size", value: "big")])
+        let bigger = RoomPatch(
+            room: "Chart room",
+            say: "Bigger numbers",
+            ops: [.init(op: "look", trait: "size", value: "big")]
+        )
         room.refuse("That size is not in the scale.", offer: ("Bigger numbers", bigger))
         #expect(room.note?.line == "That size is not in the scale")
         #expect(room.note?.button == "Bigger numbers")
@@ -343,7 +379,10 @@ struct ChartRoomTests {
             let rect = frame(place, hasNeeds: hasNeeds)
             for node in list {
                 for piece in PartLayout.place(node, in: rect) {
-                    #expect(rect.insetBy(dx: -0.5, dy: -0.5).contains(piece.rect), "\(place) \(piece.text) leaves its place")
+                    #expect(
+                        rect.insetBy(dx: -0.5, dy: -0.5).contains(piece.rect),
+                        "\(place) \(piece.text) leaves its place"
+                    )
                     placed.append((place, piece))
                 }
             }
@@ -354,6 +393,22 @@ struct ChartRoomTests {
                 Issue.record("\(one.place) \(one.piece.text) crosses \(two.place) \(two.piece.text)")
             }
         }
+    }
+
+    // MARK: Sheet 366, the outlines unroll
+
+    @Test func theOutlinesUnrollDownTheScreenSeventyMillisecondsApartFromThreeHundred() {
+        let frames = [CGRect(x: 24, y: 412, width: 354, height: 200), CGRect(x: 24, y: 50, width: 260, height: 48),
+                      CGRect(x: 24, y: 196, width: 354, height: 182), CGRect(x: 24, y: 106, width: 354, height: 76)]
+        #expect(OutlineUnroll.order(frames) == [1, 3, 2, 0])
+        #expect(OutlineUnroll.delay(rank: 0, reduceMotion: false) == 0.3)
+        #expect(abs(OutlineUnroll.delay(rank: 3, reduceMotion: false) - 0.51) < 1e-9)
+        #expect(OutlineUnroll.delay(rank: 3, reduceMotion: true) == 0)
+        #expect(OutlineUnroll.trim(at: 0.2, rank: 0, reduceMotion: false) == 0)
+        #expect(OutlineUnroll.trim(at: 0.3 + 0.45, rank: 0, reduceMotion: false) == 1)
+        #expect(OutlineUnroll.trim(at: 0, rank: 2, reduceMotion: true) == 1)
+        #expect(!OutlineUnroll.nameShown(at: 0.35, rank: 0, reduceMotion: false))
+        #expect(OutlineUnroll.nameShown(at: 0.43, rank: 0, reduceMotion: false))
     }
 
     // MARK: The kit is an element

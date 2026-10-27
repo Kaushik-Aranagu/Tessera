@@ -25,7 +25,9 @@ extension ChartRoomModel {
         let model = ChartRoomModel(defaults: defaults)
         // Simulator stills: `-chartSentences N` sets the first N canned sentences, `-chartFixture` loads Core's room.
         if LaunchFlags.has("-chartFixture") {
-            model.load(ChartDoc(RoomFixture.chart))
+            var doc = ChartDoc(RoomFixture.chart)
+            doc.color = "olive"
+            model.load(doc)
         } else if let count = LaunchFlags.value(after: "-chartSentences").flatMap(Int.init) {
             model.setSentences(count)
         }
@@ -42,7 +44,7 @@ final class ChartRoomDriver: ShellRoomDriver {
     let flip = KeystoneFlip.rows
     let glyphRoom: GlyphKind.Room? = nil
     var accent: Color {
-        Theme.Colors.Accent.chart
+        ChartRoomSummary.color(chart.document.color)
     }
 
     /// Made on first use, so the drivers the shell builds and drops never reset a built room.
@@ -89,7 +91,7 @@ struct ChartShellHost: View {
         ShellView(
             room: DocumentRoom(nodes: chart.nodes, ghost: chart.ghostPlaces, sayObject: chart.sayObject),
             navigator: navigator,
-            accent: Theme.Colors.Accent.chart
+            accent: ChartRoomSummary.color(chart.document.color)
         ) { intent in
             switch intent {
             case .back: navigator.pop()

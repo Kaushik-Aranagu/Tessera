@@ -9,6 +9,8 @@ struct ChartRoomLayer: View {
 
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    /// The blank room's outlines unroll once as the room opens (sheet 366).
+    @State private var unrolled = false
 
     private var reduceMotion: Bool {
         systemReduceMotion || ShellProbe.reduceMotion
@@ -28,7 +30,10 @@ struct ChartRoomLayer: View {
                     let set = committed[entry.place] != nil || ghosts.contains(entry.place)
                         || (entry.place == .widget && model.reachLine != nil)
                     let step = OutlineSetting.frame(at: 1, y: 0, setting: set, reduceMotion: reduceMotion)
-                    Outline(name: entry.name, showsName: !ghosts.contains(entry.place))
+                    let rank = DocumentRoom.outlined.firstIndex { $0.place == entry.place } ?? 0
+                    Outline(name: entry.name, showsName: !ghosts.contains(entry.place) && (unrolled || reduceMotion),
+                            drawn: unrolled || reduceMotion ? 1 : 0)
+                        .animation(reduceMotion ? nil : OutlineUnroll.animation(rank: rank), value: unrolled)
                         .frame(width: rect.width - 4, height: rect.height - 4, alignment: .topLeading)
                         .scaleEffect(step.scale)
                         .opacity(step.opacity)
@@ -90,6 +95,7 @@ struct ChartRoomLayer: View {
         }
         .ignoresSafeArea()
         .tesseraFeedback(model.cue)
+        .onAppear { unrolled = true }
     }
 
     /// A place's frame on screen; the Line runs the Needs' width too, and Doors is the dial and its summary together.
@@ -174,10 +180,12 @@ struct ChartRoomLayer: View {
 private struct Outline: View {
     let name: String
     let showsName: Bool
+    var drawn: Double = 1
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .strokeBorder(Theme.Colors.inkTertiary.opacity(0.7), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+        UnrollShape()
+            .trim(from: 0, to: drawn)
+            .stroke(Theme.Colors.inkTertiary.opacity(0.7), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
             .overlay(alignment: .topLeading) {
                 Text(name)
                     .font(.custom("Figtree", size: 11, relativeTo: .caption2).weight(.medium))

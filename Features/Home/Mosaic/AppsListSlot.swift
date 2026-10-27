@@ -14,6 +14,9 @@ enum AppsListRows {
         let summary: String
         let opens: HomeSentence.Opens?
         var extra: Extra?
+        /// A room that names itself (the Chart room): its own name and colour, read from its document.
+        var ownName: String?
+        var ownColor: Color?
 
         var id: String {
             extra?.rawValue ?? app.rawValue
@@ -24,7 +27,7 @@ enum AppsListRows {
             switch extra {
             case .lookout: "Lookout"
             case .settings: "Settings"
-            case .chart: "Chart room"
+            case .chart: ownName ?? "Chart room"
             case nil: app.shipName
             }
         }
@@ -33,7 +36,7 @@ enum AppsListRows {
             switch extra {
             case .lookout: Color(light: 0xC9772E, dark: 0xE8A06A)
             case .settings: Theme.Colors.ink
-            case .chart: Theme.Colors.Accent.chart
+            case .chart: ownColor ?? Theme.Colors.Accent.chart
             case nil: app.accent
             }
         }
@@ -78,7 +81,9 @@ enum AppsListRows {
         }
         // The Chart room sits after Purse (experimental, behind its flag; it has no line of its own yet).
         if ChartRoomFlag.isOn, let purse = rows.firstIndex(where: { $0.app == .money && $0.extra == nil }) {
-            rows.insert(Row(app: .tasks, summary: "Say what to build", opens: nil, extra: .chart), at: purse + 1)
+            let chart = ChartRoomSummary.row()
+            rows.insert(Row(app: .tasks, summary: chart.line, opens: nil, extra: .chart, ownName: chart.name,
+                            ownColor: chart.color), at: purse + 1)
         }
         rows.append(Row(app: .tasks, summary: "", opens: nil, extra: .settings))
         return rows
