@@ -113,7 +113,7 @@ These are claims we made earlier in this thread or in the design drafts, that th
 9. **Anchored against plain move under noise.** *Said:* the anchored rule beats move at 30% wrong cites (0.658 against 0.654). *Now:* with common random numbers the gap is +0.0009 ± 0.0006 [seed] [M]. It was noise.
 10. **Anchored keys "stay decodable".** *Now:* the cap only guarantees $\langle k,k^0\rangle\ge\sqrt{1-\zeta^2}=0.954$ for $\zeta=0.3$, a fidelity to the base key. After renormalisation $\lVert k-k^0\rVert$ can reach 0.30352, above the stated cap. The decode rate of live keys has not been measured.
 11. **"The move rule has no hub problem."** *Now:* common-mode drift is its main cost. At step size 0.1 the common-mode loss per visit (0.0296) is more than half the re-ask gain (0.0500) [M, method §6.4].
-12. **Exact deletion.** *Said:* deleting an item gives the state that would exist had it never been stored, and subtracting one term from a key sum is exact. *Now:* deletion gives exactly the state rebuilt from the retained records. Records selected while the item was present (opened sets, later probes) carry a residual unless they are dropped. In float32, $(\sum+x)-x$ differed from the sum that never held $x$ in 100% of 20,000 trials [M]. A running mean makes every centred key depend on every question.
+12. **Exact deletion.** *Said:* deleting an item gives the state that would exist had it never been stored, and subtracting one term from a key sum is exact. *Now:* deletion gives exactly the state rebuilt from the retained records. Records selected while the item was present (opened sets, later probes) carry a residual unless they are dropped. In float32, $(s+x)-x$ differed from the sum $s$ that never held $x$ in 100% of 20,000 trials [M]. A running mean makes every centred key depend on every question.
 13. **The alignment loss.** *Said:* its uniformity term removes the shared question direction. *Now:* withdrawn. The loss contains no node key, and the read loss is provably blind to that offset (method Proposition 6.18).
 14. **"The equaliser keeps the temperature bounded."** *Now:* false for questions with one evidence turn (73% of questions), where the equaliser is zero.
 15. **Self-feedback as noise with $p=1-P@1=0.748$.** *Now:* the predictions used the realised wrong-cite share of each run: 0.652, 0.683, 0.748 and 0.821 at step sizes 0.02, 0.05, 0.1 and 0.2 [M].
@@ -125,7 +125,7 @@ These are claims we made earlier in this thread or in the design drafts, that th
 21. **The sessions-first read.** *Said:* BM25 sessions then hybrid (0.649) is "the pyramid's sessions-first read", shown as a gain. *Now:* it is level with the flat bridges overall and costs multi-hop recall: 0.297 against 0.475 [M, E8]. Every router that opens 3 sessions loses heavily on multi-hop; for the best one the loss is 0.156, [unclustered] 0.112 to 0.200 [M].
 22. **The fixed alias rule "matches or beats move at every cite condition".** *Now:* the clean-cite win over move is not significant by chat. Against move with a properly tuned step size it is a tie in the self-loop, and the alias bonus does slight harm there at visit level (−0.004, [visit] −0.007 to −0.000) [M, alias-hub review].
 23. **The prototype's "deletions provably leave nothing derived behind" and "changing embeddings are trainable".** *Now:* shown empirically for the derived cache only, and training was shown only as offline retrains swapped in whole [M, E8 review].
-24. **The algorithms and latency draft** [M, `audits/algos_review.md`]:
+24. **The algorithms and latency draft** [M, algos_review.md]:
     - "The encoder is at least 95% of a memory hop": on the flat path it is 86% at 65k leaves (39.7 ms total, 5.5 ms memory) and about 67% at 100k with a cold cache. Quote a hop as 25 to 40 ms.
     - "Descent over untrained parents loses most of the exact top 10": on real vectors a k-means tree keeps 0.82, 0.96 and 0.99 of it at beam 8, 32 and 64 (0.56, 0.84 and 0.94 on the synthetic keys).
     - "Memory is under 2% to 5% of time to first token": up to about 6%.
@@ -141,7 +141,7 @@ These are claims we made earlier in this thread or in the design drafts, that th
 
 ### (a) LoCoMo retrieval arms (E1, E5, E6)
 
-All numbers [M]. Sources: the E1 and E5 runs, `e6_result.txt`, the E8 reproductions (`pyramid/results.json`), the code-against-math audit (`audits/wf4_results.json`) and method.md §4.4, §6.2 and §6.6. "With BM25" is recall@10 after reciprocal-rank fusion with BM25.
+All numbers [M]. Sources: the E1 and E5 runs, `e6_result.txt`, the E8 reproductions (`pyramid/results.json`), the code-against-math audit (`audits/wf4_results.json`) and method §4.4, §6.2 and §6.6. "With BM25" is recall@10 after reciprocal-rank fusion with BM25.
 
 | arm | recall@10 | multi-hop | with BM25 | difference and interval |
 |---|---|---|---|---|
@@ -205,7 +205,7 @@ Notes.
 - The alias rows come from a separate run with its own noise draws. There, move at step 0.1 scored −0.001 at 30% wrong. Noise draws alone move these point estimates by about ±0.002 [M, cite-noise review].
 - Other rules tried [M]: centred pull (+0.023 clean, −0.005 self-loop); a slow adapter refit every 10 questions (+0.016 clean, +0.009 opened only); surprise weighting, which looked robust but fails when wrong cites come from the top 50 (−0.017); BM25 agreement alone (+0.004 clean).
 - The noise model is idealised: wrong cites are uniform picks from the top 10. A real LLM probably errs on the most plausible distractor. The verifier is simulated with independent errors (it catches 70% of wrong cites and drops 10% of right ones), so the verifier rows are optimistic.
-- Break-even wrong-cite rates from method §6.4: about 0.24 to 0.27 for move at step 0.1, 0.38 to 0.42 at step 0.05 or less, 0.55 for the centred rule, and 0.57 for a rank-gated rule with far noise [M; no interval, and it rests on an untested identifying assumption].
+- Break-even wrong-cite rates from method §6.4: about 0.24 to 0.27 for move at step 0.1, 0.38 to 0.42 at step 0.05 or less, 0.55 for the centred rule, and 0.57 for a rank-gated rule with far noise [M, no interval, and it rests on an untested identifying assumption].
 - Under the "only discoveries pay" test (method §6.4), clean cites restricted to evidence already in the top 10 change recall by −0.0024, [unclustered] −0.007 to +0.002. A rule that only moves cited nodes ranked below 10 keeps 90% of the clean gain (+0.0183, [unclustered] +0.013 to +0.024) [M].
 
 ### (c) Second-hop attempts

@@ -129,7 +129,7 @@ Every other vector in $\mathcal Z$ comes from one of three sources:
 | base key | $k^0_v=\mathrm n(Ae_v)$ | $A$ | derived |
 | live key | $k_v$ (use rule, §3.7) | $A$ | fast |
 | facets | $\Phi_v=g(\cdot)$ | $A$ | derived |
-| reasoning state | $z_t=f(x^{\rm p}_t)$ in (a); $\Pi(\mathbf h_t)$ in (b) | anchor | message |
+| reasoning state | $z_t=f(x^{\rm p}_t)$ in instantiation (a); $\Pi(\mathbf h_t)$ in (b) (§2.6) | anchor | message |
 | read state | $s_t=\mathrm n(Sz_t)$ | $S$ | message |
 | content summary | $\hat c_t=\mathrm n\big(\sum_{v\in O_t}\tilde p_t(v)\,e_v\big)$ | anchor | message |
 | key summary | $\hat k_t=\mathrm n\big(\sum_{v\in O_t\cap V^{(0)}}\tilde p_t(v)\,k_v\big)$ | $A$ | internal to the bridges |
@@ -306,7 +306,7 @@ The parameter count is about $7.5\times10^4$, and it assumes these rank-16 maps.
 
 The maps are
 $$\Pi(\mathbf h)=\mathrm n\big(W_{\Pi,2}\,\mathrm{GELU}(W_{\Pi,1}\mathrm{LN}(\mathbf h))\big),\qquad\iota(z)=\mathrm{reshape}_{n_s\times d_h}\big(W_{\iota,2}\,\mathrm{GELU}(W_{\iota,1}z)\big),$$
-with $d_p=1024$. $\Pi$ has about 4.6M parameters. $\iota$ has about 4.6M at $n_s=1$ and grows by about 4.2M per extra soft token.
+with hidden width $d_p=1024$ (the output size of $W_{\Pi,1}$ and $W_{\iota,1}$). $\Pi$ has about 4.6M parameters. $\iota$ has about 4.6M at $n_s=1$ and grows by about 4.2M per extra soft token.
 
 **Alignment choice, the same in every section:** $\Pi$ is aligned to the **anchor view** $f(x^{\rm p}_t)$. The read state is then $s_t=\mathrm n(S\,\Pi(\mathbf h_t))$, so the state view is applied once. This keeps memory independent of the model and lets the bridges trained in (a) be reused (Prediction P11).
 
@@ -342,7 +342,7 @@ All of these were verified against autograd by both audits.
 **The loss the current code optimises** (`e5_bridges.train()`, verified line by line and numerically to within $10^{-6}$). It works on one chat at a time, with asks $\mathcal Q$:
 $$\mathcal L_{e5}=\frac1{\lvert\mathcal Q\rvert}\sum_{q}\mathcal L_{\rm out}(q)\;-\;\frac1{\lvert\mathcal V_{\rm cit}\rvert}\sum_{v\in\mathcal V_{\rm cit}}\sum_q\pi(q\mid v)\log\frac{e^{\ell_{qv}}}{\sum_{q'}e^{\ell_{q'v}}}\;+\;0.01\big(\lVert S-I\rVert_F^2+\lVert A-I\rVert_F^2\big).$$
 - $\mathcal V_{\rm cit}$ is the set of cited columns. ($\mathcal J$ is kept for the objective of §4.3 and Proposition 6.25.)
-- $\pi(q\mid v)=\dfrac{\mathbf 1[v\in P_q]/n^+_q}{\sum_{q'}\mathbf 1[v\in P_{q'}]/n^+_{q'}}$.
+- $\pi(q\mid v)=\big(\mathbf 1[v\in P_q]/n^+_q\big)\big/\textstyle\sum_{q'}\mathbf 1[v\in P_{q'}]/n^+_{q'}$.
 - For low-rank views the penalty equals $\lVert U_SB_S^\top\rVert_F^2+\lVert U_AB_A^\top\rVert_F^2$.
 
 Training settings:
@@ -480,7 +480,7 @@ The stop-gradients on $\Delta\theta$ in $\mathcal L_{\rm recon}$, $\mathcal L_{\
 | part | status | origin | size |
 |---|---|---|---|
 | $f$ | frozen | pretrained | about 33M |
-| $R$ | frozen; LoRA in (b) | pretrained | rank-16 LoRA on all attention projections: $36\cdot16\cdot(2\cdot8192+2\cdot5120)=15.3$M |
+| $R$ | frozen; LoRA in (b) | pretrained | rank-16 LoRA on all attention projections: $36\cdot16\cdot(2\cdot8192+2\cdot5120)=15.3\,\mathrm M$ |
 | views $S$, $A$, $W$ | trained, starting at the identity | from scratch | $2dr$ per view ($12{,}288$ at $r=16$; $768$ at $r=1$) |
 | stop, write, forget heads | trained | from scratch | tens of parameters |
 | reshape MLP | trained | from scratch | small |
@@ -872,9 +872,9 @@ where $\rho_{ss}$ and $\sigma_{ss}$ are the mean and spread of the cosine betwee
 - The Gaussian approximation gives 0.397; the measured rate is 0.414 (0.404 in the alias study). An ordinary key has $K/N\approx0.017$.
 - Recall collapses to 0.463 in the sequential run, and to 0.476 in the static run.
 - Storing aliases through the key view, as $\mathrm n(Aa)$, brings the unrelated cosine down to 0.120 and the entry rate to 5.8%. The alias rule then changes recall by +0.017 instead of −0.195 (margin tuned on dev data).
-- CSLS corrects location but not the inflation from taking a max: $\mathbb E\max(X,Y)-\mathbb EX=\sigma_{Y-X}/\sqrt{2\pi}$. Measured CSLS-max 0.566, z-scored max 0.615, sequential F2 0.609.
+- CSLS corrects location but not the inflation from taking a max: $\mathbb E\max(X,Y)-\mathbb EX=\sigma_{Y-X}/\sqrt{2\pi}$. Measured CSLS-max 0.566, z-scored max 0.615, the sequential CSLS alias rule (alias-study arm F2) 0.609.
 
-**Proposition 6.20 (calibrated alias bonus).** The bonus fires when $\langle a,q\rangle>r_K(a)$, where $r_K(a)$ is the $K$-th largest cosine of $a$ with $n_{\rm ref}$ reference asks. If $q$ is exchangeable with the reference set and independent of $a$, then
+**Proposition 6.20 (calibrated alias bonus).** The bonus fires when $\langle a,q\rangle>r_K(a)$, where $r_K(a)$ is the $K\text{-th}$ largest cosine of $a$ with $n_{\rm ref}$ reference asks. If $q$ is exchangeable with the reference set and independent of $a$, then
 $$\Pr\big[\langle a,q\rangle>r_K(a)\big]\le\frac{K}{n_{\rm ref}+1}\quad\text{(rank argument)}.\ \square$$
 
 Measured fire rates:

@@ -160,7 +160,7 @@ Cost: one E5 fold (8 LoCoMo chats, about 4.7k nodes, 40 epochs, $r=16$) took 2.7
 | synthetic leaf-shaped keys, $N=4096$, depth 3 | 0.15 | 0.40 | 0.56 | 0.71 | 0.84 | 0.94 |
 | synthetic leaf-shaped keys, $N=65{,}536$, depth 4 | 0.16 | 0.39 | 0.52 | 0.64 | 0.76 | 0.85 |
 | real LoCoMo turn vectors, $N=4096$ | 0.30 | 0.66 | 0.82 | 0.91 | 0.96 | 0.99 |
-| inside one persona, $N=512$, fan-out 8, depth 3, its own asks | | | 0.74 (0.70–0.78) | | | |
+| inside one persona, $N=512$, fan-out 8, depth 3, its own asks (run at $b=8$ only) | – | – | 0.74 (0.70–0.78) | – | – | – |
 
 - The synthetic keys (a convex mix of two real turns plus noise) understate fidelity. Inside one persona they give 0.57 at $b=8$, against 0.74 for real vectors [M].
 - Still, no untrained tree reaches 0.95 at a small beam. On synthetic keys, fidelity falls with depth [M].
@@ -343,6 +343,8 @@ Model: R = Qwen3-8B (36 layers, d_h = 4096) + LoRA r = 16 on q, k, v, o (15.3M p
 
 ### 9.3 Inference algorithms
 
+Both read paths fuse the dense and the BM25 (lexical) rankings by reciprocal rank fusion (RRF), with the usual constant 60:
+
 $$\mathrm{rrf}(v)=\sum_{j\in\{\text{dense},\,\text{lex}\}}\frac1{60+\mathrm{rank}_j(v)}$$
 
 #### 9.3.1 Read path (algorithm R)
@@ -492,7 +494,7 @@ $$T_{\rm ask}=T^{(1)}_{\rm hop}+\sum_{i=2}^{H_{\max}}\Big(T^{(i-1)}_{\rm probe}+
 | BM25 as e1 does it (score every document in Python) | 0.60 / 0.95 | 6.5 / 6.4 | | |
 | internode whole-tree recompute, full $384\times384$ (low-rank $r=32$) | | 64 / 93 (37 / 40) | 794 / 946 (715 / 697) | 28,352 / 18,986 (21,512 / 16,141); chunked 9,680; single runs |
 
-The run-1 rows at $10^3$ keys read about 3x high, probably from contention [M].
+Blank cells were not run. The run-1 rows at $10^3$ keys read about 3x high, probably from contention [M].
 
 | what | median ms, run 1 / rerun [M] |
 |---|---|
@@ -532,7 +534,7 @@ So the int8 per-query cost falls about 2x at 4 queries and 4–5x at 16. At $10^
 | encode re-entry state (64–128 tokens) | 42–71 ms | 4–15 ms [X] | 3–10 ms [X] | 1–3 ms [X] |
 | state view | 0.005–0.006 ms | about 0 | about 0 | about 0 |
 | leaves, $10^4$, exact | 0.40 ms on READ's int8 path; fp32 0.60–0.72 hot, 1.32 cold | 0.3–1.5 ms [X] | 0.2–1 ms [X] | under 0.1 ms [X] |
-| leaves, $10^5$, exact | 2.27 ms on READ's int8 path (hot); fp32 6.8–7.3 hot, 12.4 cold | about 3 ms cold if one core streams like this one [D]; measure | 0.5–3 ms [X] | under 0.5 ms [X] |
+| leaves, $10^5$, exact | 2.27 ms on READ's int8 path (hot); fp32 6.8–7.3 hot, 12.4 cold | about 3 ms cold if one core streams like this one [D]; measure on the phone | 0.5–3 ms [X] | under 0.5 ms [X] |
 | leaves, $10^6$ | exact int8 34–37 ms; HNSW 0.38–0.41 ms but overlap 0.92 fails the bar | not needed at personal scale (§9.5 item 8) | same | about 1 ms exact on GPU [X] |
 | parent scores $L_v$ from leaf scores | not timed (one pass over $N$ scores, no key reads) | below the scan time [X] | same [X] | same [X] |
 | BM25 top-50 | 0.03–0.04 ms at $10^4$; 0.34–0.58 ms at $10^5$ | SQLite FTS5 `bm25()`: not measured; 1–5 ms [X] | same [X] | n/a |
@@ -733,29 +735,29 @@ Notes.
 | b2b_batch.py | N=1e+06, Q=16 queries in one pass, numpy S @ K.T | 411.46 | 418.89 | 423.98 | 460.63 | 8 | 25.72 ms per query |
 | b2b_batch.py | N=1e+06, Q=16 queries in one pass, torch S @ K.T | 346.28 | 367.61 | 349.49 | 352.07 | 8 | 21.64 ms per query |
 | b2b_batch.py | N=1e+06, Q=16 queries in one pass, int8 fbgemm | 137.82 | 154.47 | 144.07 | 168.34 | 8 | 8.61 ms per query |
-| b2h_hnsw.py | HNSW build N=1e+04 (M=16, efC=100), whole index | 1,934 | 1,934 | 1,995 | 1,995 | 1 | 193 us per insert; single run: order of magnitude only |
+| b2h_hnsw.py | HNSW build N=1e+04 (M=16, efC=100), whole index | 1,934 | 1,934 | 1,995 | 1,995 | 1 | 193 µs per insert; single run: order of magnitude only |
 | b2h_hnsw.py | HNSW query N=1e+04 ef=32, top-10 | 0.0854 | 0.1423 | 0.0635 | 0.1195 | 400 | top-10 overlap with exact 0.905; differs >30% |
 | b2h_hnsw.py | HNSW query N=1e+04 ef=64, top-10 | 0.1299 | 0.2088 | 0.1214 | 0.1958 | 400 | top-10 overlap with exact 0.964 |
 | b2h_hnsw.py | HNSW query N=1e+04 ef=128, top-10 | 0.2452 | 0.3569 | 0.2290 | 0.3017 | 400 | top-10 overlap with exact 0.985 |
-| b2h_hnsw.py | HNSW build N=1e+05 (M=16, efC=100), whole index | 37,007 | 37,007 | 36,776 | 36,776 | 1 | 370 us per insert; single run: order of magnitude only |
+| b2h_hnsw.py | HNSW build N=1e+05 (M=16, efC=100), whole index | 37,007 | 37,007 | 36,776 | 36,776 | 1 | 370 µs per insert; single run: order of magnitude only |
 | b2h_hnsw.py | HNSW query N=1e+05 ef=32, top-10 | 0.0900 | 0.1640 | 0.1099 | 0.2009 | 400 | top-10 overlap with exact 0.886 |
 | b2h_hnsw.py | HNSW query N=1e+05 ef=64, top-10 | 0.1656 | 0.2389 | 0.1585 | 0.2570 | 400 | top-10 overlap with exact 0.948 |
 | b2h_hnsw.py | HNSW query N=1e+05 ef=128, top-10 | 0.3171 | 0.4471 | 0.2909 | 0.4188 | 400 | top-10 overlap with exact 0.978 |
-| b2h_hnsw.py | HNSW build N=1e+06 (M=16, efC=100), whole index | 501,310 | 501,310 | 480,174 | 480,174 | 1 | 501 us per insert; single run: order of magnitude only |
+| b2h_hnsw.py | HNSW build N=1e+06 (M=16, efC=100), whole index | 501,310 | 501,310 | 480,174 | 480,174 | 1 | 501 µs per insert; single run: order of magnitude only |
 | b2h_hnsw.py | HNSW query N=1e+06 ef=32, top-10 | 0.1387 | 0.2470 | 0.1373 | 0.2536 | 400 | top-10 overlap with exact 0.721 |
 | b2h_hnsw.py | HNSW query N=1e+06 ef=64, top-10 | 0.2171 | 0.3939 | 0.2303 | 0.3667 | 400 | top-10 overlap with exact 0.837 |
 | b2h_hnsw.py | HNSW query N=1e+06 ef=128, top-10 | 0.4057 | 0.6173 | 0.3806 | 0.5963 | 400 | top-10 overlap with exact 0.924 |
-| b3_pyramid.py | flat score + top-10, N=16^3=4096 | 0.2804 | 0.4198 | 0.2974 | 0.3695 | 300 |  |
+| b3_pyramid.py | flat score + top-10, N=16³=4096 | 0.2804 | 0.4198 | 0.2974 | 0.3695 | 300 |  |
 | b3_pyramid.py | beam descent B=1, depth 3 (N=4096), 48 dot products | 0.0220 | 0.0439 | 0.0218 | 0.0404 | 1000 | overlap vs flat: clustered 1.00, random 0.02 |
 | b3_pyramid.py | beam descent B=4, depth 3 (N=4096), 144 dot products | 0.0280 | 0.0635 | 0.0279 | 0.0437 | 1000 | overlap vs flat: clustered 1.00, random 0.07 |
 | b3_pyramid.py | beam descent B=8, depth 3 (N=4096), 272 dot products | 0.0357 | 0.0599 | 0.0444 | 0.0744 | 1000 | overlap vs flat: clustered 1.00, random 0.12 |
 | b3_pyramid.py | beam descent B=16, depth 3 (N=4096), 528 dot products | 0.0764 | 0.6994 | 0.0712 | 0.1291 | 1000 | overlap vs flat: clustered 1.00, random 0.24 |
-| b3_pyramid.py | flat score + top-10, N=16^4=65536 | 4.54 | 7.27 | 4.57 | 6.68 | 300 |  |
+| b3_pyramid.py | flat score + top-10, N=16⁴=65536 | 4.54 | 7.27 | 4.57 | 6.68 | 300 |  |
 | b3_pyramid.py | beam descent B=1, depth 4 (N=65536), 64 dot products | 0.0390 | 0.0999 | 0.0526 | 0.0969 | 1000 | overlap vs flat: clustered 0.99, random 0.00; differs >30% |
 | b3_pyramid.py | beam descent B=4, depth 4 (N=65536), 208 dot products | 0.0530 | 0.0885 | 0.0759 | 0.1476 | 1000 | overlap vs flat: clustered 1.00, random 0.01; differs >30% |
 | b3_pyramid.py | beam descent B=8, depth 4 (N=65536), 400 dot products | 0.0546 | 0.1075 | 0.0658 | 0.1039 | 1000 | overlap vs flat: clustered 1.00, random 0.02 |
 | b3_pyramid.py | beam descent B=16, depth 4 (N=65536), 784 dot products | 0.1921 | 0.2955 | 0.1141 | 0.2182 | 1000 | overlap vs flat: clustered 1.00, random 0.04; differs >30% |
-| b3_pyramid.py | flat score + top-10, N=16^5=1048576 | 135.53 | 160.47 | 143.32 | 165.20 | 15 |  |
+| b3_pyramid.py | flat score + top-10, N=16⁵=1048576 | 135.53 | 160.47 | 143.32 | 165.20 | 15 |  |
 | b3_pyramid.py | beam descent B=1, depth 5 (N=1048576), 80 dot products | 0.0817 | 0.1429 | 0.0531 | 0.0878 | 1000 | overlap vs flat: clustered 0.98, random 0.00; differs >30% |
 | b3_pyramid.py | beam descent B=4, depth 5 (N=1048576), 272 dot products | 0.1039 | 0.1676 | 0.0720 | 0.1156 | 1000 | overlap vs flat: clustered 1.00, random 0.00; differs >30% |
 | b3_pyramid.py | beam descent B=8, depth 5 (N=1048576), 528 dot products | 0.1305 | 0.2412 | 0.1011 | 0.5425 | 1000 | overlap vs flat: clustered 1.00, random 0.00 |
