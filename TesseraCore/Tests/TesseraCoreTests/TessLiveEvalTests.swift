@@ -102,6 +102,28 @@ struct TessLiveEvalTests {
         return folder.appendingPathComponent("ledger.json")
     }
 
+    static func readLedger(_ url: URL) -> [String: Int64] {
+        (try? JSONDecoder().decode([String: Int64].self, from: Data(contentsOf: url))) ?? [:]
+    }
+
+    /// Adds only the positive difference between what this run has spent and what it already recorded, to whatever the
+    /// file holds right now, under a lock, so two runners (this one and the pyramid score) can never overwrite each
+    /// other's rows on his money. Returns the new recorded figure.
+    static func addToLedger(_ url: URL, month: String, spent: Int64, recorded: Int64) throws -> Int64 {
+        let delta = max(0, spent - recorded)
+        guard delta > 0 else { return recorded }
+        let lockPath = url.appendingPathExtension("lock").path
+        let descriptor = open(lockPath, O_CREAT | O_RDWR, 0o600)
+        guard descriptor >= 0 else { throw CocoaError(.fileWriteUnknown) }
+        defer { close(descriptor) }
+        guard flock(descriptor, LOCK_EX) == 0 else { throw CocoaError(.fileWriteUnknown) }
+        defer { flock(descriptor, LOCK_UN) }
+        var months = readLedger(url)
+        months[month, default: 0] += delta
+        try JSONEncoder().encode(months).write(to: url, options: .atomic)
+        return recorded + delta
+    }
+
     /// $50, or $100 minus the phone's spend if that is smaller, minus what earlier runs spent this month.
     static func allowanceNano(phoneSpentDollars: Double, runnerSpentNano: Int64) -> Int64 {
         let ceiling = min(50.0, 100.0 - phoneSpentDollars)
@@ -115,7 +137,7 @@ struct TessLiveEvalTests {
         let monthKey = TessSpendFile.monthKey(.now, calendar: .current)
         // One ledger in one fixed place whatever --out says, so no run can hide its spend by moving the report folder.
         let ledgerFile = Self.ledgerURL
-        var months = (try? JSONDecoder().decode([String: Int64].self, from: Data(contentsOf: ledgerFile))) ?? [:]
+        let months = Self.readLedger(ledgerFile)
         if !options.dry {
             // A live run must be told what the phone spent: defaulting it to 0 could take him past his $100 cap.
             try #require(
@@ -124,6 +146,8 @@ struct TessLiveEvalTests {
             )
         }
         let baseSpent = options.dry ? 0 : months[monthKey] ?? 0
+        // What this run has already added to the shared ledger: only the difference is ever added again.
+        var recorded: Int64 = 0
         let allowance = Self.allowanceNano(
             phoneSpentDollars: options.phoneSpentDollars ?? 0,
             runnerSpentNano: baseSpent
@@ -248,8 +272,9 @@ struct TessLiveEvalTests {
             let cost = spans.reduce(Int64(0)) { $0 + $1.costNano }
             if !options.dry {
                 // Written after every question, so a crash doesn't lose this run's spend.
-                months[monthKey] = baseSpent + max(0, ledger.monthTotal(now: runStart) - before)
-                try JSONEncoder().encode(months).write(to: ledgerFile, options: .atomic)
+                recorded = try Self.addToLedger(ledgerFile, month: monthKey,
+                                                spent: max(0, ledger.monthTotal(now: runStart) - before),
+                                                recorded: recorded)
             }
             results.append(QuestionResult(
                 id: question.id, kind: question.kind.rawValue, turns: question.turns, reply: reply,
@@ -275,8 +300,7 @@ struct TessLiveEvalTests {
         }
         let spent = max(0, ledger.monthTotal(now: runStart) - before)
         if !options.dry {
-            months[monthKey] = baseSpent + spent
-            try JSONEncoder().encode(months).write(to: ledgerFile, options: .atomic)
+            recorded = try Self.addToLedger(ledgerFile, month: monthKey, spent: spent, recorded: recorded)
         }
         let scored = results.compactMap(\.score)
         let checked = results.filter { $0.answerCheck != nil }
@@ -327,6 +351,22 @@ struct TessLiveEvalTests {
 
     static func milliseconds(_ duration: Duration) -> Int {
         Int(duration.components.seconds * 1000 + duration.components.attoseconds / 1_000_000_000_000_000)
+    }
+
+    @Test func theLedgerOnlyEverGainsTheDifferenceAndNeverOverwritesAnotherRunner() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-\(UUID().uuidString).json")
+        defer {
+            try? FileManager.default.removeItem(at: url)
+            try? FileManager.default.removeItem(at: url.appendingPathExtension("lock"))
+        }
+        var mine = try Self.addToLedger(url, month: "2026-10", spent: 100, recorded: 0)
+        // Another runner adds its own row in between.
+        _ = try Self.addToLedger(url, month: "2026-10", spent: 40, recorded: 0)
+        mine = try Self.addToLedger(url, month: "2026-10", spent: 250, recorded: mine)
+        // Nothing new: nothing added, and a lower figure never subtracts.
+        mine = try Self.addToLedger(url, month: "2026-10", spent: 250, recorded: mine)
+        _ = try Self.addToLedger(url, month: "2026-10", spent: 10, recorded: mine)
+        #expect(Self.readLedger(url) == ["2026-10": 290])
     }
 
     @Test func theAllowanceIsTheSmallerOfFiftyAndWhatTheCapLeaves() {
