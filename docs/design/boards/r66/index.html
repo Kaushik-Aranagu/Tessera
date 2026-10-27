@@ -1231,7 +1231,10 @@ function weatherCenter(el,hh,cond,inner){const sky=h('canvas','sky');sky.width=8
  function draw(now){const t=(now-t0)/1000;const PF=plateFor(cond,hh),im=PLATES[PF.name];const dark=phone.dataset.look==='black';
   if(im){const sc=874/im.height,w=im.width*sc,pan=(w-402)/2*(1+Math.sin(t*.012));c.drawImage(im,-pan,0,w,874)}else{const gr=c.createLinearGradient(0,0,0,874);gr.addColorStop(0,'#4F93D6');gr.addColorStop(1,'#CFE3F0');c.fillStyle=gr;c.fillRect(0,0,402,874)}
   if(PF.dark>0){c.fillStyle='rgba(8,12,24,'+PF.dark+')';c.fillRect(0,0,402,874)}
-  if(cond==='rain'||cond==='storm'){for(let k=0;k<150;k++){const x=((k*53+t*50)%440)-20,y=((k*37+t*760*(0.8+((k*7)%10)/25))%940)-40;c.strokeStyle='rgba(225,235,245,.45)';c.lineWidth=1.2;c.beginPath();c.moveTo(x,y);c.lineTo(x-2.5,y+18);c.stroke()}}
+  /* 290, built in 304: the first drops are few. Rain starts at a third of its strength and reaches it over 3 s, the
+     way a shower begins; the glass beads gather at the same pace. */
+  const rp=RM?1:Math.min(1,t/3),rk=1/3+2/3*rp*rp*(3-2*rp);
+  if(cond==='rain'||cond==='storm'){for(let k=0;k<Math.round(150*rk);k++){const x=((k*53+t*50)%440)-20,y=((k*37+t*760*(0.8+((k*7)%10)/25))%940)-40;c.strokeStyle='rgba(225,235,245,.45)';c.lineWidth=1.2;c.beginPath();c.moveTo(x,y);c.lineTo(x-2.5,y+18);c.stroke()}}
   let ink;try{const d=c.getImageData(60,120,560,560).data;let acc=0,n=0;for(let i=0;i<d.length;i+=4*97){acc+=d[i]*.3+d[i+1]*.59+d[i+2]*.11;n++}ink=acc/n>150?'#1E1C1F':'#F6F2EA'}catch(err){ink=(bandOf(hh)==='night'||PF.dark>.3)?'#F6F2EA':'#1E1C1F'} /* from file:// the plate taints the canvas; judge by the hour instead */ el.style.color=ink;gl.style.color=ink;
   // the approved glass: light top-left, shadow bottom-right, the sky untouched inside
   const M=30,Wd=354,H=182,R=26;gc.clearRect(0,0,Wd+2*M,H+2*M);gc.save();gc.translate(M,M);const shape=()=>{gc.beginPath();gc.roundRect(0,0,Wd,H,R)};const dk=ink!=='#1E1C1F';
@@ -1239,7 +1242,7 @@ function weatherCenter(el,hh,cond,inner){const sky=h('canvas','sky');sky.width=8
   gc.save();gc.shadowColor='rgba(0,0,0,'+(dk?.36:.24)+')';gc.shadowBlur=20;gc.shadowOffsetX=5;gc.shadowOffsetY=8;gc.fillStyle='#000';shape();gc.fill();gc.restore();
   gc.save();gc.shadowColor='rgba(0,0,0,'+(dk?.16:.09)+')';gc.shadowBlur=34;gc.shadowOffsetX=2;gc.shadowOffsetY=14;gc.fillStyle='#000';shape();gc.fill();gc.restore();
   gc.save();shape();gc.clip();gc.drawImage(sky,24*2,196*2,Wd*2,H*2,0,0,Wd,H);
-  if(cond==='rain'||cond==='storm'||cond==='fog'){if(beads.length<60&&Math.random()<.2)beads.push({x:8+Math.random()*(Wd-16),y:6+Math.random()*(H-12),r:.6+Math.random()*1.6,v:0});beads=beads.filter(b=>{if(b.r>2.4&&Math.random()<.02&&!b.v)b.v=.4;if(b.v){b.y+=b.v;b.v*=1.03;if(b.y>H-4)return false}else if(Math.random()<.03)b.r=Math.min(3.2,b.r+.05);gc.fillStyle='rgba(255,255,255,.26)';gc.beginPath();gc.arc(b.x,b.y,b.r,0,7);gc.fill();gc.fillStyle='rgba(0,0,0,.09)';gc.beginPath();gc.arc(b.x+b.r*.35,b.y+b.r*.45,b.r*.55,0,7);gc.fill();return true})}
+  if(cond==='rain'||cond==='storm'||cond==='fog'){if(beads.length<Math.round(60*rk)&&Math.random()<.2*rk)beads.push({x:8+Math.random()*(Wd-16),y:6+Math.random()*(H-12),r:.6+Math.random()*1.6,v:0});beads=beads.filter(b=>{if(b.r>2.4&&Math.random()<.02&&!b.v)b.v=.4;if(b.v){b.y+=b.v;b.v*=1.03;if(b.y>H-4)return false}else if(Math.random()<.03)b.r=Math.min(3.2,b.r+.05);gc.fillStyle='rgba(255,255,255,.26)';gc.beginPath();gc.arc(b.x,b.y,b.r,0,7);gc.fill();gc.fillStyle='rgba(0,0,0,.09)';gc.beginPath();gc.arc(b.x+b.r*.35,b.y+b.r*.45,b.r*.55,0,7);gc.fill();return true})}
   const e=gc.createLinearGradient(0,0,Wd,H);e.addColorStop(0,'rgba(255,255,255,'+(dk?.18:.3)+')');e.addColorStop(.5,'rgba(255,255,255,0)');e.addColorStop(1,'rgba(0,0,0,'+(dk?.14:.08)+')');gc.strokeStyle=e;gc.lineWidth=1;gc.beginPath();gc.roundRect(.5,.5,Wd-1,H-1,R);gc.stroke();gc.restore();gc.restore();
   raf=requestAnimationFrame(draw)}
  raf=requestAnimationFrame(draw);return ()=>cancelAnimationFrame(raf)}

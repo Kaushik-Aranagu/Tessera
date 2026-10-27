@@ -42,7 +42,7 @@ Haptics use the iOS feedback names. One haptic per move at most, and none while 
 | Watch: a routine done | **The water drop slides.** The drop on the watered tree runs down one leaf and is gone (420 ms). | soft | builders |
 | Log: a word sets in the wall (`add`) | **The wall makes room.** The neighbouring words shuffle 1 pt aside and back as the new word presses in. | none | on the board (303) |
 | Log: a list item checked | **The tick is drawn**, not shown: one stroke, 160 ms, slightly heavier at its start. The line through the words follows once the pen lifts; unchecking lets the ink fade back to the faint mark. | rigid, light | on the board (300) |
-| Lookout: rain starts | **The first drops are few.** Rain starts at a third of its strength and reaches it over 3 s. | none | builders |
+| Lookout: rain starts | **The first drops are few.** Rain starts at a third of its strength and reaches it over 3 s. | none | on the board (304) |
 | Edge pull (back) | **The page resists at the end.** The last 8 pt of the pull is 30% stiffer, so letting go feels decided. | soft, at the commit | on the board (302) |
 | Shape mode (sheet 287) | **The places loosen.** Each outline breathes once, 1.006 in scale, as the screen goes into shape mode. | soft | on the board (291) |
 | Paper to black (`appLook`) | **Ink goes last.** The ground changes first and the type follows 60 ms later, as if the ink were catching up. The old ink keeps its own colours while it leaves, and the page never replays its arrivals for a look change. | none | on the board (299) |
@@ -121,3 +121,14 @@ No full stops at the end of any of these (sheet 289).
 - For the builders: the wall view keeps its packed rows; `add` refits only the last row with
   `withTesseraAnimation(.layout)`, then inserts the word with a scale-and-fade transition after a 380 ms delay.
   A full repack happens only on the next visit, never under his eyes.
+
+## 9. The first drops are few, as built (sheet 304)
+
+- When the Lookout sky starts to rain (on the board, open a rain hour such as 8 PM), the streaks start at a third of
+  their count and reach full over 3 s on a smoothstep, so the shower thickens instead of switching on. The beads on
+  the glass gather at the same pace.
+- Measured on the board (`t48.js`): about half the streak pixels at 0.2 s, full from about 1.5 s on, in paper and
+  black.
+- Reduce Motion: full strength at once.
+- For the builders: the rain emitter's birth rate is multiplied by the same ramp from the moment the condition turns
+  to rain, never on every view of a sky that is already raining.
