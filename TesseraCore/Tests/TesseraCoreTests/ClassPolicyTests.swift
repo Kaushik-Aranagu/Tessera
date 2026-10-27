@@ -26,11 +26,13 @@ struct ClassPolicyTests {
         for key in SystemCatalog.Key.allCases {
             let entry = ClassPolicy.of(key)
             if entry.mirror {
-                #expect(entry.neverRead && entry.unnameable && entry.localOnly, "mirror \(key.rawValue)")
+                // Read nowhere, or at least under no strict slice (lab may read the calendar and Health).
+                #expect((entry.neverRead || entry.strictNever) && entry.unnameable && entry.localOnly,
+                        "mirror \(key.rawValue)")
             }
             if entry.localOnly {
-                // Her bookkeeping and the mirrors are named to no one and in no slice.
-                #expect(entry.unnameable && entry.neverRead, "local only \(key.rawValue)")
+                // Her bookkeeping and the mirrors are named to no one and in no strict slice.
+                #expect(entry.unnameable && (entry.neverRead || entry.strictNever), "local only \(key.rawValue)")
             }
             if entry.neverRead, !entry.unnameable, key != .closedDay {
                 // Only closed days are unread yet nameable (the Day log and Home read them by name).
@@ -76,10 +78,15 @@ struct ClassPolicyTests {
         // Tightened (Oct 27): these were nameable and are not now.
         let nowUnnameable: Set<SystemCatalog.Key> = [.tessAgent, .settings, .tessMemory, .notebookPage, .agentEpisode,
                                                      .tessSentExact]
-        #expect(ClassPolicy.unnameableKeys == oldUnnameable.union(nowUnnameable))
-        // Tightened: the calendar and Health mirrors are in no slice, strict or lab.
-        let nowNeverRead: Set<SystemCatalog.Key> = [.event, .sleepNight, .stepsDay, .restingHeartRate]
-        #expect(ClassPolicy.neverReadKeys == oldNeverRead.union(nowNeverRead))
+        let names: (Set<SystemCatalog.Key>) -> [String] = { $0.map(\.rawValue).sorted() }
+        #expect(names(ClassPolicy.unnameableKeys) == names(oldUnnameable.union(nowUnnameable)),
+                "differs: \(names(ClassPolicy.unnameableKeys.symmetricDifference(oldUnnameable.union(nowUnnameable))))")
+        // Nothing loosened; neverRead is exactly what it was (the mirrors stay readable under lab, held back under
+        // strict by `strictNever`, which is the old list).
+        #expect(names(ClassPolicy.neverReadKeys) == names(oldNeverRead))
+        let oldStrictNever: Set<SystemCatalog.Key> = [.event, .sleepNight, .stepsDay, .restingHeartRate, .heldNotice]
+        #expect(oldStrictNever.isSubset(of: ClassPolicy.strictNeverKeys))
+        #expect(oldNeverRead.isSubset(of: ClassPolicy.strictNeverKeys))
     }
 
     /// A class marked labeled gives a private-looking object a label somewhere in the shown-label rule.

@@ -41,6 +41,7 @@ public struct MemoryScope: Sendable, Equatable {
 
     /// The system's own bookkeeping never enters a slice: turns, sent rows, settings, the profile and the memory lines
     /// that beliefs already carry.
+    @MainActor
     static var neverRead: Set<SystemCatalog.Key> {
         ClassPolicy.neverReadKeys
     }
@@ -48,7 +49,10 @@ public struct MemoryScope: Sendable, Equatable {
     /// What strict keeps on the phone beyond the lab-only belief classes: the calendar and Health mirrors and held
     /// notices (their titles are free text the Door's scan can't read), and meal numbers. `strictRawKeys` names system
     /// classes by key so a class that lands later (meal nutrition) is walled the day it exists.
-    static let strictNever: Set<SystemCatalog.Key> = [.event, .sleepNight, .stepsDay, .restingHeartRate, .heldNotice]
+    @MainActor
+    static var strictNever: Set<SystemCatalog.Key> {
+        ClassPolicy.strictNeverKeys
+    }
     static let strictRawKeys: Set<String> = ["mealNutrition", "nutrition", "nutritionRow"]
     /// Never in any slice, by key, for classes that may land after this file (meal numbers are never recalled).
     static let neverRawKeys: Set<String> = ["mealNutrition"]

@@ -19,6 +19,9 @@ public enum ClassPolicy {
         public var labeled = false
         public var unnameable = false
         public var neverRead = false
+        /// In no slice under strict (the calendar and Health mirrors, held notices); lab may read them. `neverRead` is
+        /// the stronger answer: no slice at all.
+        public var strictNever = false
         public var mirror = false
         public var localOnly = false
 
@@ -28,6 +31,9 @@ public enum ClassPolicy {
         static let money = Entry(labeled: true, unnameable: true)
         /// Calendar and Health mirrors, held notices and her conversation: this phone only, in no copy at all.
         static let mirror = Entry(unnameable: true, neverRead: true, mirror: true, localOnly: true)
+        /// A mirror of the calendar or Health: this phone only, in no strict slice, readable under lab (Claude sees
+        /// anything there). Her own conversation and sent rows are `.mirror`, never read at all.
+        static let sourceMirror = Entry(unnameable: true, strictNever: true, mirror: true, localOnly: true)
         /// Her bookkeeping that is not a mirror but stays on this phone: calls, sent rows, waiting phrases.
         static let bookkeeping = Entry(unnameable: true, neverRead: true, localOnly: true)
         /// The system's own state: in no slice and named to no one.
@@ -52,11 +58,18 @@ public enum ClassPolicy {
             Entry(labeled: true, unnameable: true)
         case .tessMemory:
             Entry(labeled: true, unnameable: true, neverRead: true)
-        case .settings, .tessAgent, .closedDay:
+        case .settings, .tessAgent:
             .internalState
+        case .closedDay:
+            // In no slice, but nameable: the Day log and Home read closed days by name. Not tightened.
+            Entry(neverRead: true)
         case .notebookPage, .agentEpisode:
             Entry(labeled: true, unnameable: true, neverRead: true, mirror: true, localOnly: true)
-        case .event, .sleepNight, .stepsDay, .restingHeartRate, .heldNotice, .tessSentExact, .tessTurn:
+        case .event, .sleepNight, .stepsDay, .restingHeartRate:
+            .sourceMirror
+        case .heldNotice:
+            Entry(unnameable: true, neverRead: true, strictNever: true, mirror: true, localOnly: true)
+        case .tessSentExact, .tessTurn:
             .mirror
         case .tessCall, .tessSent, .tessWaiting:
             .bookkeeping
@@ -71,6 +84,7 @@ public enum ClassPolicy {
 
     public static let unnameableKeys: Set<SystemCatalog.Key> = keys { $0.unnameable }
     public static let neverReadKeys: Set<SystemCatalog.Key> = keys { $0.neverRead }
+    public static let strictNeverKeys: Set<SystemCatalog.Key> = keys { $0.strictNever || $0.neverRead }
     public static let mirrorKeys: Set<SystemCatalog.Key> = keys { $0.mirror }
     public static let localOnlyKeys: Set<SystemCatalog.Key> = keys { $0.localOnly || $0.mirror }
 }
