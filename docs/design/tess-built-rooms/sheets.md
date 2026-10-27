@@ -98,3 +98,14 @@ The board's Chart room now has six sentences. Two new ones come before "Let me m
 - Reduce Motion: no roll, no walk, no rise. The room changes in place, and the haptic tick stays
 - Builder A: the re-rank is `ForEach` keyed by the bound object id, inside `withTesseraAnimation`, with `contentTransition(.numericText(countsDown:))` for the roll. The glow is a separate state that follows the ranking after a short delay, so it never travels with the old leader. Core: no new work. A bind resolves at render time, which R1 already specifies
 - Probe: `docs/design/boards/r66/plv.js` (order after watering, the glow and both sentences follow, Undo restores, all watered, nothing outside the keystone place)
+
+## Sheet 365: where the room lives
+
+- The Chart room sits in Bridge's apps dial right after Purse. Until it is named, the row reads "Chart room" in slate, and the line on the right reads "Say what it's for"
+- Once he names it ("Make this my plant room"), the row carries the name he gave it and the room's color, and the line on the right is the room's own top fact, live: "Orchid, 6 days", then "Monstera, 4 days" after he waters the orchid, then "All watered". Bridge reads a room built by talking the same way it reads a preset room
+- The dial keeps the old name until he turns to that row. There, once, the old name in slate lifts 0.6 em and fades (400 ms, after the dial's own 380 ms settle), and the new name rises into its place in the room's color. After that it is plain text. Reduce Motion: the new name appears, no move
+- Colors, found on the way: teal, which the board gave the plant room in 357 and 359, sits ΔE76 6.8 from the Purse's 2A7878, and the two sit next to each other in the dial. The plant room is now olive (5E6B1F / B5BE7A), the Lists color the Log freed in sheet 280. It sits 31 or more from every room in light and 24 or more in dark. Sheet 359's twelfth sentence, "Make it teal", now gets the refusal from 361: "Teal is the Purse's. Olive, like the leaves?", and the offer runs
+- New validator rule in `r1-spec.md` section 4: a room's own color sits ΔE76 20 or more from every other room's color, in both themes
+- Open, for Kaushik: the same check finds the Watch (8E4A78 / D59AC4) and the Log (8A4570 / E3A3CB) only ΔE00 2.0 apart in light and 3.1 in dark, next to each other in the dial. They read as one plum. The design bible already lists this as open (`docs/handoff/design-bible/01-system-learnings.md`, item 3 near line 365). It needs his pick before anything changes on the phone
+- Builder A: the dial reads `name`, `color` and the top fact from the Room object, so nothing about the Chart room is hard-coded in Bridge. The once-only relabel keys on the last name the dial showed, stored on the room
+- Probe: `docs/design/boards/r66/prl.js` (row after Purse, slate and "Say what it's for" before naming, relabel once on focus, olive and the live fact after, opens the room)

@@ -74,6 +74,7 @@ Each rejection returns one plain reason line. The first rejection goes back to t
 - Kinds and places: the kind is in the kit and allowed in that place; at most one part owns a single-occupant place (title, glyph, actionWord); at most 24 parts per room.
 - Props: keys known for the kind; text at most 80 characters per line; a trailing full stop is stripped from any shown line; sentence case kept; key-shaped text refused (the same check as `TessRouter`).
 - Look: color roles only (never hex); type sizes only from the scale; trait values only from `LookCatalog`; no new color within ΔE 10 of Ember; 3 to 4 colors per room (count the roles in use).
+- Room color (added with sheet 365): the room's own color sits ΔE76 20 or more from every other room's color in both themes, because rooms sit side by side in Bridge's apps dial. Teal fails (6.8 from the Purse's 2A7878), so "Make it teal" gets the refusal with an offer: "Teal is the Purse's. Olive, like the leaves?" Olive (5E6B1F / B5BE7A, the Lists color the Log freed) and slate pass.
 - Binds: the class exists; fields exist and have the right kind; private objects show as "Private" (the existing `ObjectPrivacy` check).
 - Reach: the room starts with read access to classes it binds. Any write (`actionWord.does` or `grant`) adds a grant. A patch that widens reach is applied pending and needs his Allow (section 5). It never commits on the drying line alone. Money classes (`pool`, `inflow`, `poolMove`, `spend`, `rateNote`) can never be written by a room; such a grant is refused with "Rooms can't change money". Health and body classes may be read and shown on his phone, but they never reach widgets, backups or logs (the existing walls).
 - Undo grants: undoing the patch removes its grant in the same op group.
@@ -91,6 +92,7 @@ Each rejection returns one plain reason line. The first rejection goes back to t
 ## 6. Where it lives (Builder A)
 
 - A new room, "Chart room", in the apps list and dial after Purse, in slate. Feature flag `chartRoom`, group Everywhere, ships On (the defaults-on rule).
+- Once he names it, the dial row carries the room's `name` and `color`, and the fact line on the right is the room's own top fact, read live from its `line` part ("Orchid, 6 days"). The dial keeps showing the old name until he turns to that row; there, once, the old name lifts off and the new one rises in (sheet 365). Reduce Motion: the new name, no move.
 - It needs "Tess asks Claude" for free sentences; with that Off, or in Demo, it uses the canned patches.
 - One Chart room in R1. "Make another room" comes later.
 - The player is a `RoomContent` (`DocumentRoom`) that answers `screen(for:state:)` from the room's parts, so the shell, its moves and back all work unchanged. Parts that fit an existing `SlotPayload` use it. Free compositions in the keystone and widget use one new `SlotKind.parts` with a recursive `PartNode` enum in a `@ViewBuilder` (no `AnyView`), and `ForEach` keyed by part id, so edits animate instead of remounting.

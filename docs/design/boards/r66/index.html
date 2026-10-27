@@ -521,7 +521,7 @@ SCREENS.home={title:'Home',accent:null,tess:'Stretch at 8 may run into Push A. M
 
  // apps: the depth-blur dial on the left (focus sharp, neighbours smaller and blurred), one line on the right (283)
  const ap=h('div','dial');ap.style.cssText+='left:218px;top:640px;width:160px';el.appendChild(ap);const bf=h('div','bfact');el.appendChild(bf);
- dial(ap,APPS.map(a=>({a,n:ROOMS[a].n,color:'var(--'+(a==='money'?'purse':a)+')'})),{start:0,slot:40,blur:1.6,label:(d,f)=>'<span style="font-size:'+(f?26:20)+'px;font-weight:'+(f?700:600)+'">'+d.n+'</span>',
+ dial(ap,APPS.map(a=>({a,n:ROOMS[a].n,color:ROOMS[a].c||'var(--'+(a==='money'?'purse':a)+')'})),{start:0,slot:40,blur:1.6,label:(d,f)=>'<span style="font-size:'+(f?26:20)+'px;font-weight:'+(f?700:600)+'">'+(d.a==='chart'?chartLabel(d,f):d.n)+'</span>',
   open:d=>flipTo(d.a),change:d=>{bf.textContent=ROOMS[d.a].fact;window.fitLine&&fitLine(bf);if(!bf._on){bf._on=1;return}bf.classList.remove('rise');void bf.offsetWidth;if(!RM)bf.classList.add('rise')}});
  document.fonts&&document.fonts.ready.then(()=>window.fitLine&&fitLine(bf));
  // foot: the Undo line
@@ -2814,7 +2814,7 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .ch-c{position:absolute;transition:opacity .45s cubic-bezier(.2,.8,.2,1)}
 .ch-c.gh{opacity:.38}
 .ch-dry{position:absolute;height:1px;background:var(--room,var(--ink));transform-origin:0 50%;z-index:7;pointer-events:none}
-.ch-ttl{left:24px;top:54px;font:700 40px/1.1 var(--sans);letter-spacing:-.02em;color:var(--teal);white-space:nowrap}
+.ch-ttl{left:24px;top:54px;font:700 40px/1.1 var(--sans);letter-spacing:-.02em;color:var(--lists);white-space:nowrap}
 .ch-line{left:24px;top:112px;width:354px;font:300 26px/32px var(--sans);color:var(--ink)}
 .ch-key{left:24px;top:196px;width:354px;height:182px;display:grid;grid-template-columns:repeat(4,1fr);align-items:end;padding-bottom:22px}
 .ch-key div{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
@@ -2830,7 +2830,7 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .ch-act{position:absolute;left:24px;bottom:22px;width:240px;height:64px;z-index:6;background:none;border:0;padding:0;text-align:left;cursor:pointer;color:var(--slate)}
 .ch-act .av{display:block;font:600 24px/32px var(--sans);letter-spacing:-.01em;white-space:nowrap}
 .ch-act .ao{display:block;font:500 13px/18px var(--sans);color:var(--ink2);white-space:nowrap}
-.ch-act.water{color:var(--teal)}
+.ch-act.water{color:var(--lists)}
 /* 360: point, then say. A tap on a set place picks it for 30 s: its outline comes back solid in slate, and the action
    word names it, so "make this calmer" changes only that place */
 .chart .ch-pl.pt{opacity:1;transform:none;border-color:transparent;outline:1.5px solid var(--slate);outline-offset:6px;border-radius:16px;transition:opacity .22s,transform .22s}.ch-pl.pt i{opacity:0}
@@ -2861,6 +2861,19 @@ back0=function(){if(stack.length<2)return;const top=stack.pop(),prev=stack[stack
 .ch-nm{font-style:normal;display:inline-block}
 @media (prefers-reduced-motion:reduce){.ch-key .th b{animation:none}.ch-pl{transition:opacity .2s}.ch-pl.set{transform:none}}
 `;document.head.appendChild(st)}
+/* 365: where the room lives. The Chart room sits in Bridge's apps dial after Purse, in slate, with "Say what it's
+   for" as its line. Once he names it, the dial carries the name he gave it and its colour, and the line on the right is
+   the room's own top fact, live ("Orchid, 6 days"), so Bridge reads a built room the way it reads a preset one. The dial
+   keeps the old name until he turns to that row; there, once, the old name lifts off and the new one rises in its place.
+   Teal sits ΔE76 6.8 from the Purse's colour, so the plant room takes olive, the Lists colour the Log freed (sheet 280). */
+ROOMS.chart={n:'Chart room',fact:'Say what it’s for',c:'var(--slate)',was:null,shown:'Chart room'};{const i=APPS.indexOf('money');if(i>=0&&!APPS.includes('chart'))APPS.splice(i+1,0,'chart')}
+function chartLabel(d,f){const R=ROOMS.chart;if(R.shown===R.n)return R.n;
+ if(!f||RM){if(f){R.shown=R.n;return R.n}return '<span style="color:var(--ink2)">'+R.shown+'</span>'}
+ const old=R.shown;R.shown=R.n;setTimeout(()=>document.querySelectorAll('.ch-rl').forEach(e=>e.replaceWith(R.n)),1000);
+ return '<span class="ch-rl"><span class="ch-rlo" aria-hidden="true" style="color:var(--slate)">'+old+'</span><span class="ch-rln">'+R.n+'</span></span>'}window.chartLabel=chartLabel;
+{const st=h('style');st.textContent=`.ch-rl{display:inline-grid;justify-items:end}.ch-rl>span{grid-area:1/1}
+.ch-rlo{animation:chrlout .4s .3s cubic-bezier(.4,0,.6,1) both}.ch-rln{animation:chrlin .46s .46s cubic-bezier(.2,.8,.2,1) both}
+@keyframes chrlout{to{opacity:0;transform:translateY(-.6em)}}@keyframes chrlin{from{opacity:0;transform:translateY(.6em)}}`;document.head.appendChild(st)}
 SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for. I’ll build it a piece at a time.',render(el){el.classList.add('chart');el.style.setProperty('--room','var(--slate)');
  const PL={title:[24,50,260,48,'Title'],line:[24,106,354,76,'Line'],key:[24,196,354,182,'Keystone'],cap:[24,378,354,34,'Caption'],wid:[24,412,354,200,'Widget'],doors:[24,640,354,120,'Doors']};
  const pls={};Object.entries(PL).forEach(([k,[x,y,w,hh,n]])=>{const p=h('div','ch-pl','<i>'+n+'</i>');p.style.cssText='left:'+(x+2)+'px;top:'+(y+2)+'px;width:'+(w-4)+'px;height:'+(hh-4)+'px;--d:'+Math.round((y-50)/4)+'ms';el.appendChild(p);pls[k]=p});
@@ -2877,7 +2890,8 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
  const layer=h('div');el.appendChild(layer);
  const act=h('button','ch-act');el.appendChild(act);
  const th=()=>[...plants].sort((a,b)=>b.d-a.d)[0];
- function draw(ghost){const t=th();let s='';if(at<2&&wv!=null){wv=null;tline=''}if(wv!=null)ghost=[...(ghost||[]),'key'];
+ function draw(ghost){const t=th();let s='';
+  {const R=ROOMS.chart;R.n=at>=1?'Plants':'Chart room';R.c=at>=1?'var(--lists)':'var(--slate)';R.fact=at>=1?(t.d>0?t.n+', '+t.d+(t.d===1?' day':' days'):'All watered'):'Say what it’s for'}if(at<2&&wv!=null){wv=null;tline=''}if(wv!=null)ghost=[...(ghost||[]),'key'];
   if(at>=1)s+='<div class="ch-c ch-ttl" data-p="title">Plants</div><div class="ch-c ch-line" data-p="line">'+plants.length+' plants'+(t.d>0?', the <em class="ch-nm">'+t.n.toLowerCase()+'</em> is thirsty':', all watered')+'</div>';
   if(at>=2)s+='<div class="ch-c ch-key w-'+WAYS[wv??way]+(calm?' calm':'')+(big?' big':'')+'" data-p="key">'+keyHTML(WAYS[wv??way],t)+'</div>'+
    '<div class="ch-c ch-cap" data-p="cap">Days since water'+(at>=3&&t.d>0?', the <em class="ch-nm">'+t.n.toLowerCase()+'</em> first':'')+'</div>';
@@ -2972,7 +2986,7 @@ SCREENS.chart={title:'Chart room',accent:'slate',tess:'Say what this room is for
    was told is listed in docs/design/tess-built-rooms/sheets.md (sheet 359). */
 SCREENS.chartfull={title:'Chart room',accent:'slate',tess:'Your plant room. Say what to change and I’ll redo that place.',render(el){
  const PL=[['Orchid',6,'Wednesday','Ice cubes, not a pour','By the east window'],['Monstera',4,'Friday','When the top inch is dry','By the couch'],['Fern',2,'Sunday','Keep it out of the sun','In the bathroom'],['Basil',1,'yesterday','Pinch the flowers off','On the kitchen sill']];
- return landingV3(el,{name:'Plants',color:'var(--teal)',theme:'grow',
+ return landingV3(el,{name:'Plants',color:'var(--lists)',theme:'grow',
   sw:{x:[{k:'Thirsty',lines:['Orchid, 6 days','Monstera, 4 days']},{k:'This week',lines:['Repot the basil','Feed the fern Friday']},{k:'Light',lines:['Orchid by the window','Fern in the shade']}]},
   w:[{hdr:'Thirstiest',big:'Orchid',c:'var(--wine)',mid:'Last watered Wednesday',sml:'Ice cubes, not a pour',g:'can'},
    {hdr:'Next',big:'Monstera',mid:'Last watered Friday',sml:'When the top inch is dry',g:'can'},
@@ -2980,7 +2994,7 @@ SCREENS.chartfull={title:'Chart room',accent:'slate',tess:'Your plant room. Say 
   keystone:k=>{const r=h('div','ch-c ch-key');r.style.cssText+=';position:absolute;top:196px;left:24px;z-index:5';
    r.innerHTML=PL.map(([n,d],i)=>'<div class="'+(i===0?'th':'')+'"><b>'+d+'</b><span>'+n+'</span></div>').join('');k.appendChild(r);return null},
   caption:'Days since water, the orchid first',
-  doors:PL.map(([n,d,last,care,where])=>({k:n,n:d,color:d>=5?'var(--wine)':'var(--teal)',sum:()=>sum('Last watered '+last,['Water every '+o('7')+un('days'),where,care])})),
+  doors:PL.map(([n,d,last,care,where])=>({k:n,n:d,color:d>=5?'var(--wine)':'var(--lists)',sum:()=>sum('Last watered '+last,['Water every '+o('7')+un('days'),where,care])})),
   acts:[{v:'Watered',o:'the orchid',f:e=>receipt(e,'Orchid, watered',()=>{})},{v:'Say',o:'what to change',f:()=>go('chart')}]})}};
 /* ---------- the map, updated ---------- */
 MAP.length=0;MAP.push(
@@ -2991,7 +3005,7 @@ MAP.length=0;MAP.push(
  {app:'Deck (Training)',state:'283 landing, blackboard 258',screens:[['training','Landing'],['workout','Workout mode'],['lock','Lock screen, live']],note:'The board stays through the app: on the workout page it carries the plan and strikes lifts as you log them.'},
  {app:'Galley (Kitchen)',state:'283 landing, the pass 259',screens:[['kitchen','Landing'],['tonight','Tonight'],['recipes','Recipes'],['groceries','Groceries'],['pantry','Pantry'],['leftovers','Leftovers'],['cook','Cooking Tacos']],note:'The pass stays through the app, live to each page; tickets flip up and down; cook mode strikes steps on the rail.'},
  {app:'Purse (Money)',state:'283 landing, indices 278 v3',screens:[['money','Landing']],note:'The indices keystone is the locked 278 board, shown in the slot: across for a category, up and down for an index.'});
-MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking'],['chartfull','After a dozen sentences']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered. Swipe across the keystone once it is set to see other ways (363). Watered re-ranks the room live (364).'});
+MAP.push({app:'Chart room (experimental)',state:'357 first board, Tess-built rooms',screens:[['chart','Blank, built by talking'],['chartfull','After a dozen sentences']],note:'Tap Say to speak the next sentence; each lands as a ghost with the drying line, then sets. Allow lets the room mark plants watered. Swipe across the keystone once it is set to see other ways (363). Watered re-ranks the room live (364). Back on Bridge, the apps dial carries the room after Purse, renamed once he names it (365).'});
 try{reset('home')}catch(e){window.__showErr&&window.__showErr('boot: '+(e&&e.message||e)+'\n'+(e&&e.stack||'').split('\n').slice(0,3).join('\n'))}
 
 /* ================= 285: Tess's hand. When Tess makes a change, the place plays its own move, after her hand-off.
