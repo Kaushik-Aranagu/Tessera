@@ -43,8 +43,7 @@ public struct AgentEpisodes {
     /// The words as they may be kept: a walled line becomes the placeholder.
     func kept(_ text: String) -> (text: String, walled: Bool) {
         let trimmed = String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(Self.maxCharacters))
-        let walled = looksLikeClaudeKey(trimmed) || SecretWords.mentions(trimmed)
-            || ObjectPrivacy.containsPrivateWord(trimmed, in: store)
+        let walled = !Wall.judge(trimmed, in: store).isDisjoint(with: [.key, .secret, .privateWord])
         return walled ? (TessConversation.placeholder, true) : (trimmed, false)
     }
 

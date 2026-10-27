@@ -283,8 +283,9 @@ public extension MosaicMomentInputs {
     }
 
     private static func isWalled(_ text: String, store: ObjectStore, weight: Double?) -> Bool {
-        ObjectPrivacy.containsPrivateWord(text, in: store) || SecretWords.mentions(text)
-            || PrivateFacts.isWalled(text, lastWeightKg: weight) || PrivateFacts.isCalorieShaped(text)
+        // The one wall (input-hygiene H2); a key-shaped line is walled here too now.
+        !Wall.judge(text, lastWeightKg: weight, store: store)
+            .isDisjoint(with: [.key, .secret, .money, .body, .calories, .privateWord])
     }
 
     /// Whether the workout a `finishWorkout` record ended set a new best (a heavier one-rep estimate than any before it

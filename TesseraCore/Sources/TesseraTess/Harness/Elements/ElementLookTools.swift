@@ -11,8 +11,8 @@ import TesseraCore
 
 /// The words he changes looks with.
 public enum LookWords {
-    /// The look shell calls.
-    public static let calls: Set<String> = ["setLook", "showLooks"]
+    /// The look calls: the two shell calls, and `tryLook`, which stages a look and shows nothing.
+    public static let calls: Set<String> = ["setLook", "showLooks", "tryLook"]
 
     /// Words that name a place ("the doors", "the sky").
     static let places: [String: ElementPlace] = [
