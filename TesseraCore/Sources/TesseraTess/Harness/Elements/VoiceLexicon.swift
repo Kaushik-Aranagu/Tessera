@@ -110,7 +110,7 @@ public extension TessFrame {
                 names.append((item.name, item.name == focus ? 5 : 2))
             }
             for call in element.calls {
-                names.append(contentsOf: call.phrases.map { ($0, 1) })
+                names.append(contentsOf: call.phrases.map { (name: $0, boost: 1.0) })
             }
         }
         return VoiceLexicon(names: names)
