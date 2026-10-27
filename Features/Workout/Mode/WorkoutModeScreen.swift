@@ -6,6 +6,8 @@ struct WorkoutModeActions {
     /// A set was logged: the lift's id, its weight and reps.
     var logged: (_ liftID: String, _ weight: Double, _ reps: Int) -> Void = { _, _, _ in }
     var finished: () -> Void = {}
+    /// The last logged set was taken back (Undo, 10 s).
+    var undone: () -> Void = {}
     /// The state changed (Live Activity, resume).
     var changed: (WorkoutModeState) -> Void = { _ in }
 }
@@ -23,6 +25,9 @@ struct WorkoutModeScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var cue = HapticCue()
     @State private var receipt: String?
+    /// What the receipt's Undo takes back, and until when (10 s).
+    @State private var undoKind: UndoKind?
+    @State private var undoDeadline = Date.distantPast
     @State private var dragSteps = 0
     @State private var dust = 0
     @State private var finishHold = false
@@ -42,6 +47,10 @@ struct WorkoutModeScreen: View {
     /// Slot heights follow the type they hold (the lines themselves stay one line, shrunk to fit).
     @ScaledMetric(relativeTo: .callout) private var line = 26.0
     @ScaledMetric(relativeTo: .title) private var title = 40.0
+
+    private enum UndoKind {
+        case set, felt
+    }
 
     private static let slate = Color(hex: 0x1F2524)
     private let dragStep: CGFloat = 26
@@ -112,13 +121,7 @@ struct WorkoutModeScreen: View {
                         .frame(width: 190, alignment: .trailing)
                         .offset(x: proxy.size.width - 44 - 190, y: listTop)
                 }
-                Text(receipt ?? " ")
-                    .font(Chalk.font(20, relativeTo: .callout))
-                    .foregroundStyle(Chalk.quiet)
-                    .lineLimit(1).minimumScaleFactor(0.6)
-                    .frame(height: line * 1.1, alignment: .leading)
-                    .accessibilityIdentifier("mode.receipt")
-                    .accessibilityHidden(receipt == nil)
+                receiptRow(now: now)
                     .offset(y: Spot.receipt * scale)
                 Button(action: { verb(now) }) {
                     Text(verbWord(board)).font(Chalk.font(44, relativeTo: .largeTitle)).foregroundStyle(Chalk.blue)
@@ -140,6 +143,50 @@ struct WorkoutModeScreen: View {
             .tesseraAnimation(value: receipt)
         }
         .ignoresSafeArea()
+    }
+
+    /// The receipt just above the thumb zone: what was done, and Undo while it can be taken back (10 s). It is above
+    /// the
+    /// swipe surface in the stack, and Undo is a Button, so a plain tap reaches it.
+    private func receiptRow(now: Date) -> some View {
+        HStack(spacing: 14) {
+            Text(receipt ?? " ")
+                .font(Chalk.font(20, relativeTo: .callout))
+                .foregroundStyle(Chalk.quiet)
+                .lineLimit(1).minimumScaleFactor(0.6)
+                .accessibilityIdentifier("mode.receipt")
+                .accessibilityHidden(receipt == nil)
+            if let kind = undoKind, now < undoDeadline, kind != .set || state.canUndo(at: now) {
+                Button(action: { undoReceipt(now) }) {
+                    Text("Undo").font(Chalk.font(24, relativeTo: .title3)).foregroundStyle(Chalk.blue)
+                        .frame(minWidth: 64, minHeight: 44)
+                }
+                .accessibilityIdentifier("mode.undo")
+                .accessibilityHint("Takes it back")
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(height: 44, alignment: .leading)
+    }
+
+    private func undoReceipt(_ now: Date) {
+        guard let kind = undoKind else { return }
+        switch kind {
+        case .set:
+            if state.undo(at: now) {
+                tickLift = nil
+                tickValue = 1
+                receipt = "Taken back"
+                actions.undone()
+            }
+        case .felt:
+            if state.undoFelt() {
+                receipt = "Felt taken back"
+            }
+        }
+        undoKind = nil
+        cue.play(.undo)
+        actions.changed(state)
     }
 
     /// The lifts list shows at default type and not in a rest or Done; it is the first thing larger type drops.
@@ -524,6 +571,9 @@ struct WorkoutModeScreen: View {
         tickLift = liftID
         tickSet = index
         tickValue = 0
+        receipt = "\(PlateLoad.number(planned.weight)) \u{00D7} \(planned.reps) logged"
+        undoKind = .set
+        undoDeadline = now.addingTimeInterval(WorkoutModeState.undoWindow)
         if state.isDone {
             drawTick()
         }
@@ -557,6 +607,8 @@ struct WorkoutModeScreen: View {
         guard let result = state.apply(felt: felt) else { return }
         cue.play(.selection)
         receipt = result.text
+        undoKind = .felt
+        undoDeadline = AppClock.now.addingTimeInterval(WorkoutModeState.undoWindow)
         actions.changed(state)
     }
 

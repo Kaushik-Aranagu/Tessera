@@ -296,6 +296,22 @@ struct WorkoutModeState: Equatable {
         )
     }
 
+    /// Takes a Felt answer back: the sets left return to their weights at the start of the rest, and the word comes off
+    /// the set you logged.
+    @discardableResult
+    mutating func undoFelt() -> Bool {
+        guard case let .rest(_, _, lift) = phase, let baseline = restBaseline else { return false }
+        for index in lifts[lift].sets.indices
+            where lifts[lift].sets[index].done == nil && baseline.indices.contains(index)
+        {
+            lifts[lift].sets[index].weight = baseline[index]
+        }
+        if let last = lifts[lift].sets.lastIndex(where: { $0.done != nil }) {
+            lifts[lift].sets[last].done?.felt = nil
+        }
+        return true
+    }
+
     /// Lighter: two steps (10 lb, 5 kg) off the sets left of the focused lift.
     @discardableResult
     mutating func lighter() -> Receipt? {
