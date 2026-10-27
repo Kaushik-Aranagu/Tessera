@@ -73,7 +73,9 @@ public struct SetWarmUp: EngineAction {
               !ObjectPrivacy.isPrivateTitle(trimmed, lastWeightKg: last),
               !ObjectPrivacy.isPrivateTitle(line, lastWeightKg: last)
         else { throw ActionError.invalidArguments(action: action, reason: "refused: words") }
-        guard let minutes, WarmUp.minutesRange.contains(minutes) else {
+        // No minutes given: the ones already set stay.
+        let kept = transaction.store.number("warmupMinutes", of: object).map { Int($0) }
+        guard let minutes = minutes ?? kept, WarmUp.minutesRange.contains(minutes) else {
             throw ActionError.invalidArguments(action: action, reason: "refused: minutes")
         }
         try transaction.set("warmupName", to: .text(trimmed), on: object)
@@ -87,6 +89,6 @@ public struct SetWarmUp: EngineAction {
 
     public func receipt(in _: ObjectStore) -> String? {
         let empty = (name ?? "").trimmingCharacters(in: .whitespaces).isEmpty
-        return empty ? "Warm-up taken off" : "Warm-up set, \(minutes ?? 0) min"
+        return empty ? "Warm-up taken off" : minutes.map { "Warm-up set, \($0) min" } ?? "Warm-up changed"
     }
 }

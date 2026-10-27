@@ -53,7 +53,7 @@ Board https://claude.ai/artifact/PFDdUde9cLtYA1G6Qjrpwp (v14). The sheet wins on
 All on `TrainingStats(store:classes:)` (engine only, pure reads), words in `TrainingSentences`:
 - `weekCount(plan:now:calendar:) -> WeekCount(done, planned)` and `TrainingSentences.weekCount(_:)` -> "3 of 6 this week".
 - `weeksOnPlan(plan:now:calendar:) -> Int` and `TrainingSentences.weeksInARow(_:)` -> "5 weeks in a row on plan" (nil under 2).
-  A week counts when its sessions reached what the plan asks for (`sessionsPerWeek(of:)`: the plan's number, else one per
+  A week counts when its sessions reached what the plan asks for (`sessionsPerWeek(of:now:)`: the plan's number, else one per
   routine up to six; on fixed days, the days that have a routine). This week counts once met and never breaks the run
   while it is being done.
 - `headlineGain(since:now:unit:calendar:) -> LiftGain?` and `TrainingSentences.gain(_:calendar:)` -> "+10 lb on bench press

@@ -103,6 +103,18 @@ struct TrainingLanding230Tests {
         #expect(stats.headlineGain(since: now.addingTimeInterval(-3 * 86400), now: now, calendar: calendar) == nil)
     }
 
+    @Test func aLiftWithAPrivateNameNeverLeadsTheLanding() throws {
+        let bench = try #require(classes[.benchPress])
+        let old = bench.name
+        bench.name = "Lexapro press"
+        defer { bench.name = old }
+        try session(daysAgo: 60, sets: [(80, 5)])
+        try session(daysAgo: 55, sets: [(82.5, 5)])
+        try session(daysAgo: 5, sets: [(95, 5)])
+        try session(daysAgo: 2, sets: [(97.5, 5)])
+        #expect(stats.headlineGain(since: now.addingTimeInterval(-70 * 86400), now: now, calendar: calendar) == nil)
+    }
+
     @Test func aLiftThatIsNotUpHasNoGain() throws {
         try session(daysAgo: 60, sets: [(100, 5)])
         try session(daysAgo: 55, sets: [(100, 5)])
@@ -123,6 +135,9 @@ struct TrainingLanding230Tests {
         let warm = try #require(stats.warmUp(of: routine))
         #expect(warm.minutes == 8 && warm.note == "Keep it easy, about 22 strokes a minute.")
         #expect(TrainingSentences.warmUpLine(warm) == "Starts with 8 min on the rower")
+        // A new name with no minutes keeps the minutes.
+        try engine.perform(SetWarmUp(routine: routine.id, name: "Bike"), by: .user)
+        #expect(stats.warmUp(of: routine)?.minutes == 8 && stats.warmUp(of: routine)?.name == "Bike")
         let off = try engine.perform(SetWarmUp(routine: routine.id, name: nil), by: .user)
         #expect(off.record.receipt == "Warm-up taken off" && stats.warmUp(of: routine) == nil)
         #expect(TrainingSentences.warmUpLine(nil) == nil)
@@ -136,6 +151,10 @@ struct TrainingLanding230Tests {
         let routine = try #require(store.linkedObjects("routines", of: plan).first)
         #expect(throws: ActionError.self) {
             try engine.perform(SetWarmUp(routine: routine.id, name: "Rower", minutes: 0), by: .user)
+        }
+        // No minutes and none set before: refused.
+        #expect(throws: ActionError.self) {
+            try engine.perform(SetWarmUp(routine: routine.id, name: "Rower"), by: .user)
         }
         #expect(throws: ActionError.self) {
             try engine.perform(SetWarmUp(routine: routine.id, name: "Lexapro dose", minutes: 5), by: .user)

@@ -22,9 +22,9 @@ public extension TrainingStats {
 
     /// How many sessions a week the plan asks for: its own number, else one per routine up to six; on fixed days, the
     /// days that have a routine.
-    func sessionsPerWeek(of plan: ObjectRecord, calendar: Calendar = .current) -> Int {
+    func sessionsPerWeek(of plan: ObjectRecord, now: Date, calendar: Calendar = .current) -> Int {
         if PlanSchedule.mode(of: plan, store: store) == .fixed, PlanSchedule.hasFixedDays(plan, store: store) {
-            let days = TesseraDay(calendar: calendar).weekDays(containing: .now)
+            let days = TesseraDay(calendar: calendar).weekDays(containing: now)
             return days.filter { PlanSchedule.routine(on: $0, in: plan, store: store, calendar: calendar) != nil }.count
         }
         let routines = store.linkedObjects("routines", of: plan).count
@@ -37,7 +37,7 @@ public extension TrainingStats {
     /// plan started don't count. A plan with no sessions asked for has no run.
     func weeksOnPlan(plan: ObjectRecord?, now: Date, calendar: Calendar = .current) -> Int {
         guard let plan else { return 0 }
-        let expected = sessionsPerWeek(of: plan, calendar: calendar)
+        let expected = sessionsPerWeek(of: plan, now: now, calendar: calendar)
         guard expected > 0 else { return 0 }
         let tessera = TesseraDay(calendar: calendar)
         let startsOn = store.value("startsOn", of: plan)?.dateValue.map { tessera.week(containing: $0).start }
@@ -85,9 +85,12 @@ public extension TrainingStats {
     {
         let recentStart = now.addingTimeInterval(-28 * 86400)
         var best: (gain: LiftGain, sessions: Int)?
+        let last = BodyWeight.lastKg(in: store)
         let grouped = Dictionary(grouping: counted(), by: { $0.exercise.id })
         for group in grouped.values {
             let exercise = group[0].exercise
+            // A lift whose name is a private word never leads the landing.
+            guard !ObjectPrivacy.isPrivateTitle(exercise.name, lastWeightKg: last) else { continue }
             let all = group.map(\.session).filter { $0.date >= since && $0.date <= now }.sorted { $0.date < $1.date }
             func top(_ session: TrainingLedger.Session) -> Double? {
                 session.sets.filter(\.isE1RMEligible).map(\.e1RM).max()
@@ -142,7 +145,8 @@ public extension TrainingSentences {
         return "+\(amount) on \(gain.exercise.lowercased()) since \(formatter.string(from: gain.since))"
     }
 
-    /// "Starts with 8 min on the rower" for the landing brief (no final stop, like every shown line), or nil with no warm-up.
+    /// "Starts with 8 min on the rower" for the landing brief (no final stop, like every shown line), or nil with no
+    /// warm-up.
     static func warmUpLine(_ warmUp: WarmUp?) -> String? {
         warmUp.map { "Starts with \($0.phrase)" }
     }
