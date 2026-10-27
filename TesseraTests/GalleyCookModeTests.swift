@@ -148,3 +148,22 @@ struct GalleyShopModeTests {
 
     private enum Failure: Error { case none }
 }
+
+struct GalleyCuesTests {
+    @Test func heatAndDoneness() {
+        #expect(GalleyCues.heat("Brown the chicken over medium-high heat for 5 minutes.") == "Medium high")
+        #expect(GalleyCues.heat("Simmer until thick.") == "Low")
+        #expect(GalleyCues.heat("Chop the onion.") == nil)
+        #expect(GalleyCues.doneness("Brown the chicken.") == "Turn it when it lets go of the pan")
+        #expect(GalleyCues.doneness("Chop the onion.") == nil)
+    }
+
+    @Test func aislesAndPicks() {
+        #expect(GalleyCues.aisleSpot("Produce") == "Right by the doors")
+        #expect(GalleyCues.aisleSpot("Dairy and eggs") == "Along the back wall")
+        #expect(GalleyCues.aisleSpot("Mystery") == nil)
+        #expect(GalleyCues.pick("Avocados") == "Pick ones that give a little")
+        #expect(GalleyCues.pick("Whole milk") == "The date furthest out is at the back")
+        #expect(GalleyCues.pick("Foil") == nil)
+    }
+}

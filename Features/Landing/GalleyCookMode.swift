@@ -25,6 +25,10 @@ struct GalleyCookFacts: Equatable {
         let how: String
         /// Its ingredients as a ledger: "Chicken thighs 1 lb".
         var ingredients: [String] = []
+        /// The heat for the step ("Medium high"), from its words or its verb; nil when unknown.
+        var heat: String?
+        /// What tells you it is done ("Turn it when it lets go of the pan"); nil when unknown.
+        var cue: String?
         /// The pan time the step names, in minutes, nil when it has none.
         var panMinutes: Double?
         /// The step's running timer, if one is.
@@ -128,12 +132,18 @@ enum GalleyCookWords {
         return [first, second]
     }
 
-    /// "Step 2 of 5, 2:47 left" (or without the time when the step has no timer running).
+    /// "Step 2 of 5": the scoreboard's top line (the heat sits on its right edge).
     static func header(_ facts: GalleyCookFacts) -> String {
-        let base = "Step \(facts.current + 1) of \(facts.steps.count)"
-        guard let timer = facts.step?.timer else { return base }
+        "Step \(facts.current + 1) of \(facts.steps.count)"
+    }
+
+    /// The running timer on its own line: "2:47 left on the chicken"; a done one reads "Ready".
+    static func timerLine(_ facts: GalleyCookFacts) -> String? {
+        guard let step = facts.step, let timer = step.timer else { return nil }
         let left = timer.left(at: facts.now)
-        return left > 0 ? "\(base), \(clock(left)) left" : "\(base), ready"
+        let what = step.short.lowercased()
+        return left > 0 ? "\(clock(left)) left on \(what.hasPrefix("brown the ") ? String(what.dropFirst(10)) : what)"
+            : "Ready: \(what)"
     }
 
     /// What comes next, or that Tess will say when.
@@ -177,9 +187,12 @@ struct GalleyCookContent: RoomContent {
     /// The sentence place: the step on, big; how; what is next. The whole place is the tap for Next.
     private var widget: SlotContent? {
         guard let step = facts.step else { return nil }
+        // The scoreboard (sheet 325): the step on the top line with its heat at the right edge, the step in big words,
+        // then what tells you it is done, then the running timer (or what is next).
         let item = WidgetItem(id: "step.\(step.index)", header: GalleyCookWords.header(facts), big: step.short,
-                              middle: step.how.isEmpty ? "Tess will say when" : step.how,
-                              small: GalleyCookWords.after(facts), bigColor: accent, strikeable: false)
+                              middle: step.cue ?? (step.how.isEmpty ? "Tess will say when" : step.how),
+                              small: GalleyCookWords.timerLine(facts) ?? GalleyCookWords.after(facts),
+                              bigColor: accent, strikeable: false, face: .galley, trailing: step.heat)
         return SlotContent(id: ContentID("galley.cook.widget.\(step.index)"), kind: .widget, payload: .widget([item]))
     }
 
@@ -221,40 +234,42 @@ struct GalleyCookContent: RoomContent {
 
     // MARK: The rail
 
-    /// The step on as the big ticket, then a small ticket for each running pan timer; a done one reads "Ready".
+    /// The big ticket is the next step to prep ("Get ready: Soften", with its ingredients), so you prepare while this
+    /// one
+    /// cooks; on the last step it is the step itself. A small ticket for each running pan timer prints its time large;
+    /// a done one reads "Ready".
     static func tickets(_ facts: GalleyCookFacts) -> [GalleyTicket] {
         var out: [GalleyTicket] = []
-        if let step = facts.step {
-            let left = step.timer.map { $0.left(at: facts.now) }
-            let sub = left.map { $0 > 0 ? "\(GalleyCookWords.clock($0)) left" : "Ready" }
-            var lines = [step.short]
-            if !step.how.isEmpty {
-                lines.append(step.how)
+        let ahead = facts.steps.indices.contains(facts.current + 1) ? facts.steps[facts.current + 1] : nil
+        if let big = ahead ?? facts.step {
+            var lines = big.ingredients
+            if lines.isEmpty, !big.how.isEmpty {
+                lines = [big.how]
             }
-            lines.append(contentsOf: step.ingredients.prefix(2))
-            out.append(GalleyTicket(id: "cook.step", title: "Step \(step.index + 1)", sub: sub, lines: lines, big: true,
-                                    ink: .dinner, opens: .cookTimer(step.index)))
+            out.append(GalleyTicket(id: "cook.step", title: ahead == nil ? "Step \(big.index + 1)" : "Get ready",
+                                    sub: big.short, lines: lines, big: true, ink: .dinner,
+                                    opens: .cookTimer(big.index)))
         }
         var others = facts.steps.compactMap { step in step.timer.map { (step, $0) } }
-            .filter { $0.0.index != facts.current }
         others.sort { $0.1.endsAt < $1.1.endsAt }
         for (step, timer) in others {
             let left = timer.left(at: facts.now)
             out.append(GalleyTicket(
                 id: "cook.timer.\(step.index)",
                 title: timer.label.isEmpty ? step.short : timer.label,
-                sub: left > 0 ? GalleyCookWords.clock(left) : "Ready",
+                sub: nil,
                 lines: [],
                 big: false,
                 ink: left > 0 ? .toGet : .runsOut,
-                opens: .cookTimer(step.index)
+                opens: .cookTimer(step.index),
+                time: left > 0 ? GalleyCookWords.clock(left) : "Ready"
             ))
         }
         for timer in facts.spoken {
             let left = timer.left(at: facts.now)
-            out.append(GalleyTicket(id: "cook.spoken.\(timer.id)", title: timer.label,
-                                    sub: left > 0 ? GalleyCookWords.clock(left) : "Ready", lines: [], big: false,
-                                    ink: left > 0 ? .toGet : .runsOut, opens: .cookTimer(-1)))
+            out.append(GalleyTicket(id: "cook.spoken.\(timer.id)", title: timer.label, sub: nil, lines: [], big: false,
+                                    ink: left > 0 ? .toGet : .runsOut, opens: .cookTimer(-1),
+                                    time: left > 0 ? GalleyCookWords.clock(left) : "Ready"))
         }
         return out
     }

@@ -46,6 +46,7 @@ struct GalleyFitLine: View {
     let size: CGFloat
     var tracking: CGFloat = 0
     let color: Color
+    var struck = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -54,6 +55,7 @@ struct GalleyFitLine: View {
                 .font(.custom(face, fixedSize: fit.size))
                 .tracking(fit.tracking)
                 .foregroundStyle(color)
+                .strikethrough(struck, color: color)
                 .lineLimit(1)
                 .fixedSize()
                 .frame(width: proxy.size.width, alignment: .leading)

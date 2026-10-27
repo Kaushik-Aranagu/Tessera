@@ -36,7 +36,9 @@ struct GalleyShopFacts: Equatable {
     var got = 0
     /// Tonight's dish, short, for the rail's ticket; nil when none is planned.
     var tonight: String?
+    /// The things on the list for tonight's dish, with the ones already in the basket struck off (by index).
     var tonightLines: [String] = []
+    var tonightGot: Set<Int> = []
 
     var left: Int {
         aisles.reduce(0) { $0 + $1.items.count }

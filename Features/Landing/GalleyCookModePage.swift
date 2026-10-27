@@ -117,7 +117,8 @@ struct GalleyCookModePage: View {
             }
             return GalleyCookFacts.Step(index: index, short: short,
                                         how: GalleyCookWords.how(text, short: short),
-                                        ingredients: ingredients,
+                                        ingredients: ingredients, heat: GalleyCues.heat(text),
+                                        cue: GalleyCues.doneness(text),
                                         panMinutes: step.timers.first.map(\.lowerBound), timer: timer)
         }
         facts.spoken = session.spokenTimers.map {

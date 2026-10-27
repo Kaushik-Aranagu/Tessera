@@ -26,6 +26,10 @@ struct GalleyTicket: Identifiable, Equatable {
     let big: Bool
     let ink: Ink
     let opens: Opens
+    /// Sheet 325: a timer ticket prints its time left large (Outfit 30), and "Ready" in wine.
+    var time: String?
+    /// Lines struck off (the Tacos ticket as things go in the basket), by index.
+    var struck: Set<Int> = []
 
     /// Lines a page holds in the 182 pt slot (259 v2): about six on a big ticket, three on a small one.
     var perPage: Int {
@@ -209,8 +213,19 @@ struct GalleyTicketView: View {
                 GalleyFitLine(text: sub.uppercased(), face: "IBMPlexSansCond-Medium", size: 10.5,
                               color: Theme.Colors.inkSecondary)
             }
-            ForEach(Array(shown.enumerated()), id: \.offset) { _, line in
-                GalleyFitLine(text: line, face: "IBMPlexSansCond-Regular", size: 12.5, color: Theme.Colors.ink)
+            if let time = ticket.time {
+                Text(time)
+                    .font(.custom("Outfit", fixedSize: 30).weight(.light))
+                    .monospacedDigit()
+                    .foregroundStyle(titleColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+            ForEach(Array(shown.enumerated()), id: \.offset) { offset, line in
+                GalleyFitLine(text: line, face: "IBMPlexSansCond-Regular", size: 12.5,
+                              color: ticket.struck.contains(page * ticket.perPage + offset)
+                                  ? Theme.Colors.inkSecondary : Theme.Colors.ink,
+                              struck: ticket.struck.contains(page * ticket.perPage + offset))
             }
             Spacer(minLength: 0)
             if pages.count > 1 {
