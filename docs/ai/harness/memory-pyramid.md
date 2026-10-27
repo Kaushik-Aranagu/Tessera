@@ -85,6 +85,56 @@ night writes every gist bottom up, and one edit stales only its chain's gists.
 - Under strict, every sent request is scanned for a walled leaf's words and for a key shape.
 - Pass line: zoom with gists at least as accurate as flat, with at most 70% of its input tokens.
 
+## P3 simulation (prototype, Oct 27): the backward pass on a made-up year
+
+`scripts/ai/pyramid_sim.py` runs with no model and no API call. It builds a seeded made-up year (workouts, cooks and
+notes, where each month favors one routine and one recipe) and a pyramid over it with the same totals and residuals
+as `MemoryPyramid`. A reader answers about 8 asks a night, and its answers are checked exactly. It counts the nodes
+opened and the tokens read per ask. The asks are: a day's routine or sets, a week's or month's workouts, a month's
+busiest day, a month's most-done routine or most-cooked recipe, and "when did I last do Legs".
+
+Four ways, the same asks:
+- **flat:** every leaf under the asked node, read at once.
+- **static:** the pyramid as P1 builds it. The reader digs when a node lacks the fact.
+- **per-node:** the backward pass. A fact dug for k times at one node is promoted onto that node.
+- **shared:** the backward pass with a weight shared per level. k digs for a kind of fact at a level promote it
+  onto every node of that level, each node's line computed exactly by the engine.
+
+The night pass demotes a line unused for 30 nights and keeps at most 3 promoted kinds per level. From night 30 the
+asks stop covering recipes. Results with seed 1, k = 3 (opens per ask, tokens per ask):
+
+| Nights | flat | static | per-node | shared |
+|---|---|---|---|---|
+| 1 | 1.0, 290 | 14.1, 498 | 14.1, 498 | 10.1, 358 |
+| 2-5 | 1.0, 891 | 6.8, 251 | 6.8, 251 | 1.7, 71 |
+| 6-10 | 1.0, 658 | 7.3, 273 | 5.8, 219 | 1.0, 44 |
+| 11-29 | 1.0, 748 | 7.3, 268 | 4.1, 157 | 1.0, 43 |
+| 30-45 | 1.0, 692 | 5.5, 205 | 1.6, 65 | 1.0, 43 |
+| 46-60 | 1.0, 747 | 5.7, 214 | 1.5, 61 | 1.0, 43 |
+
+Accuracy is 1.0 for every arm, because the reader digs until it finds the answer.
+
+What it shows:
+- **The shared backward pass meets P3's pass line easily.** Opens per ask fall from 10.1 to 1.7 by nights 2-5 and
+  to 1.0 after. Tokens fall to about 6% of flat. Seeds 2-5 give the same shape: shared reaches 1.0 opens by nights
+  6-10 every time.
+- **Sharing per level is what makes it fast.** The per-node arm needs k digs on each month separately, and asks
+  spread over months, so it takes about 30 nights to get close. This is the case for shared weights per level with
+  per-node offsets.
+- **Forgetting works.** The recipe line is demoted 30 nights after the asks stop (the lines after night 60 are
+  month: top routine, root: last done).
+- **k is the learning rate.** k = 1 learns in one night. k = 10 takes 6-10 nights. Neither costs accuracy here,
+  because a promoted line is computed exactly.
+- **Budget is the failure case.** With 1 promoted kind per month, the routine and recipe lines evict each other and
+  opens stay at 2.4 to 2.9 until the recipe asks stop. With a 5-night forget window, per-node keeps losing lines it
+  had earned. Budget and forgetting have to track the size of the ask mix.
+
+What it does not show yet:
+- Real asks are open-ended, not 8 fixed kinds.
+- A promoted line in words, written by a model, can be wrong. Here every line is the engine's exact fact.
+- The learned router and the confidence numbers ("Learned weights" in the design doc) are not in it yet. The next
+  version adds them, and paraphrased asks, so that routing has to be learned rather than read off the dates.
+
 ## Beyond the app: memory for anything Tess lives through
 
 Kaushik's follow-up (Oct 27): the goal is the general memory problem for a personal assistant, not only his app
