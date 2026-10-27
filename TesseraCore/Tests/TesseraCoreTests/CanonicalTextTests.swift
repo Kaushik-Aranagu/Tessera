@@ -30,6 +30,16 @@ struct CanonicalTextTests {
         #expect(SecretWords.cut("Preheat to 350\nthe ‘pin’: 2580").cut == 1)
     }
 
+    @Test func foldingNeverLosesAValue() {
+        // A Roman numeral is a number as typed and letters once folded ("pⅰn" becomes "pin", QA on #1470): either
+        // reading is enough to wall the line.
+        #expect(SecretWords.hasValue("door code p\u{2170}n"))
+        #expect(SecretWords.isPrivateLine("door code p\u{2170}n"))
+        #expect(SecretWords.isSecretListLine("door code p\u{2170}n"))
+        #expect(SecretWords.isPrivateLine("Account # \u{2170}\u{2171}\u{2172}\u{2173}"))
+        #expect(SecretWords.cut("Preheat to 350\ndoor code p\u{2170}n").cut == 1)
+    }
+
     @Test func plainLinesStayPlain() {
         for line in ["pinch of salt", "spinach and feta", "PIN the dough", "code 3", "a combination lock",
                      "Bench 80 kg x5", "café crème", "naïve plan"]
