@@ -70,7 +70,7 @@ struct PurseRoomContent: RoomContent {
     private func door(_ id: String) -> Screen {
         let door = facts.doors.first { $0.id == id }
         let rows = facts.rows[id] ?? []
-        let line = rows.isEmpty ? "Nothing here yet" : "\(rows.count) \(rows.count == 1 ? "spend" : "spends"), newest first"
+        let line = Self.doorLine(id: id, rows: rows, isFirst: id == facts.doors.first?.id)
         return Screen(layout: .door, slots: [
             .title: title,
             .navWord: SlotContent(id: "purse.nav.purse", kind: .text, payload: .navWord("Purse")),
@@ -83,6 +83,19 @@ struct PurseRoomContent: RoomContent {
             .actionWord: action,
             .tess: nil,
         ])
+    }
+
+    /// The line under a door page's title: the spends count on the first door, the indices on the others, and an
+    /// honest "Not set up yet." where the page holds only its placeholder row.
+    static func doorLine(id _: String, rows: [ShellRow], isFirst: Bool) -> String {
+        let real = rows.filter { !$0.id.hasPrefix(Facts.placeholderPrefix) }
+        if real.isEmpty {
+            return isFirst ? "Nothing here yet" : "Not set up yet"
+        }
+        if isFirst {
+            return "\(real.count) \(real.count == 1 ? "spend" : "spends"), newest first"
+        }
+        return "\(real.count) \(real.count == 1 ? "index" : "indices"), no figures here"
     }
 
     // MARK: Shared by both levels (same ids: the chart, title, caption and action are not touched)
@@ -129,6 +142,7 @@ extension PurseRoomContent.Facts {
         facts.widget = widget(facts.categories)
         facts.doors = doors(facts.categories)
         facts.rows = rows(model: model, now: now, first: facts.doors.first?.id)
+        facts.rows = pages(facts.rows, categories: facts.categories)
         return facts
     }
 
@@ -208,6 +222,33 @@ extension PurseRoomContent.Facts {
         ].filter { hasIncome || $0.id != "yours" }
     }
 
+    /// The id prefix of a page's placeholder row (a page is never empty).
+    static let placeholderPrefix = "purse.empty."
+
+    /// Every door gets a page that is never empty: the first door keeps its spends (or "Nothing logged yet"); each
+    /// other category lists its indices by name (no figures) or one honest "Not set up yet" row.
+    static func pages(_ rows: [String: [ShellRow]], categories: [PurseCategory]) -> [String: [ShellRow]] {
+        var pages = rows
+        for (offset, category) in categories.enumerated() {
+            if offset == 0 {
+                if (pages[category.id] ?? []).isEmpty {
+                    pages[category.id] = [ShellRow(id: placeholderPrefix + category.id, title: "Nothing logged yet",
+                                                   detail: "Log a spend and it shows here")]
+                }
+                continue
+            }
+            let named = category.indices.enumerated().map { index, series in
+                ShellRow(id: "purse.index.\(category.id).\(index)", title: series.name.capitalized,
+                         detail: series.isEmpty ? "Nothing yet" : "On the chart above")
+            }
+            pages[category.id] = named.isEmpty
+                ? [ShellRow(id: placeholderPrefix + category.id, title: "Not set up yet",
+                            detail: "\(category.name) comes with its own accounts")]
+                : named
+        }
+        return pages
+    }
+
     /// A whole figure with grouping, no symbol and no cents: "2,125".
     static func figure(_ value: Double) -> String {
         value.rounded().formatted(.number.precision(.fractionLength(0)).locale(Locale(identifier: "en_US")))
@@ -278,8 +319,14 @@ struct PurseShellHost: View {
             navigator.pop()
         case let .openDoor(id):
             navigator.push(.door(PurseRoomContent.room, id))
-        case .openItem:
-            break
+        case let .openItem(id):
+            // An index row turns the chart to that index (the chart is the keystone, above the page).
+            let parts = id.split(separator: ".")
+            if id.hasPrefix("purse.index."), let index = parts.last.flatMap({ Int($0) }) {
+                withTesseraAnimation(Theme.Motion.firm, reduceMotion: reduceMotion) {
+                    navigator.binding(\.keystonePage).wrappedValue = index
+                }
+            }
         case let .action(id):
             switch id {
             case "look":

@@ -236,6 +236,7 @@ struct BridgeLife: ViewModifier {
                     stage.endMoment()
                 }
             }
+            .onAppear { openLaunchLink() }
             .onDisappear {
                 stage.onScreen = false
                 stage.endMoment()
@@ -251,6 +252,24 @@ struct BridgeLife: ViewModifier {
                                    reduceMotion: reduceMotion, navigate: { BridgeStage.withoutAnimation(navigate) })
                 stage.doorwayOrigin = nil
             }
+    }
+
+    @MainActor private static var openedLaunchLink = false
+
+    /// `-openLink pantry|recipes|notes|...` opens that screen once per launch (simulator only, for UI tests): in the
+    /// standing shell when it holds the room, else on its own page.
+    private func openLaunchLink() {
+        #if DEBUG
+            guard !Self.openedLaunchLink, let value = LaunchFlags.value(after: "-openLink"),
+                  let target = HomeLink.allCases.first(where: { value == "\($0)" }) else { return }
+            Self.openedLaunchLink = true
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1.5))
+                if stage.openInShell?(target) != true {
+                    stage.link = target
+                }
+            }
+        #endif
     }
 
     private func wire() {

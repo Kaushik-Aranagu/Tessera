@@ -238,12 +238,12 @@ enum WeatherWords {
         rest: String
     )] {
         if snapshot.isSample {
-            return [("Sample sky", " until the live forecast is on"), ("Sample sky", ".")]
+            return [("Sample sky", " until the live forecast is on"), ("Sample sky", "")]
         }
         if let change = change(snapshot, calendar: calendar) {
-            return [(change.capitalizedFirst, ".")]
+            return [(change.capitalizedFirst, "")]
         }
-        return [("Steady", " for the next 12 hours"), ("Steady", ".")]
+        return [("Steady", " for the next 12 hours"), ("Steady", "")]
     }
 
     static func windUnit(_ fahrenheit: Bool) -> String {

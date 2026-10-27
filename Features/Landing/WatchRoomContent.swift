@@ -272,6 +272,8 @@ struct WatchShellHost: View {
         ShellView(room: WatchRoomContent(facts: facts), navigator: navigator, accent: WatchRoomContent.accent,
                   act: { handle($0, facts) })
             .environment(\.shellScene) { _ in AnyView(woods(facts)) }
+            // The woods span the phone (402 pt) in the shell too, as on the scaffold page.
+            .environment(\.keystoneBleeds, true)
             .environment(\.doorSummaryStyle, .grow)
             .environment(\.shellGlyphRoom, .watch)
             .overlay { WatchHandOver(moment: handOver) }

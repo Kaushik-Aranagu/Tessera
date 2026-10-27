@@ -12,22 +12,28 @@ struct RecipesShelfView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            RecipesShelfPage()
-                .navigationDestination(for: UUID.self) { RecipePage(recipeID: $0) }
-                // Paste from the shelf stays in the shelf, so back lands here, not Home (QA on #774). A save swaps
-                // Paste for the new recipe, so back from it is the shelf, never Paste again (#774 walk).
-                .navigationDestination(for: ShelfPaste.self) { stop in
-                    // Cleared as Paste leaves, so a recipe opened within the hold is never swapped (QA on #790).
-                    ShelfPaste.Page(link: stop.link, onTop: { pasteDepth = path.count }, offTop: { pasteDepth = nil })
-                        { id in
-                            // Only while Paste is still on top: if he already went back, the save stays on the shelf
-                            // and nothing is popped (QA on #790).
-                            guard !path.isEmpty, path.count == pasteDepth else { return }
-                            path.removeLast()
-                            path.append(id)
-                        }
+            Group {
+                if Tier1b.kitchenRoomsIsOn {
+                    RecipesRoomPage(open: { path.append($0) }, paste: { path.append(ShelfPaste()) })
+                } else {
+                    RecipesShelfPage()
                 }
-                .toolbar(.hidden, for: .navigationBar)
+            }
+            .navigationDestination(for: UUID.self) { RecipePage(recipeID: $0) }
+            // Paste from the shelf stays in the shelf, so back lands here, not Home (QA on #774). A save swaps
+            // Paste for the new recipe, so back from it is the shelf, never Paste again (#774 walk).
+            .navigationDestination(for: ShelfPaste.self) { stop in
+                // Cleared as Paste leaves, so a recipe opened within the hold is never swapped (QA on #790).
+                ShelfPaste.Page(link: stop.link, onTop: { pasteDepth = path.count }, offTop: { pasteDepth = nil })
+                    { id in
+                        // Only while Paste is still on top: if he already went back, the save stays on the shelf
+                        // and nothing is popped (QA on #790).
+                        guard !path.isEmpty, path.count == pasteDepth else { return }
+                        path.removeLast()
+                        path.append(id)
+                    }
+            }
+            .toolbar(.hidden, for: .navigationBar)
         }
         .environment(\.animateEntrance, true)
     }

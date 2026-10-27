@@ -732,10 +732,11 @@ private struct TessNoteLine: View {
     var body: some View {
         VStack(alignment: .trailing, spacing: 2) {
             if let note = voice.note {
+                // Everything she says is in her serif and in ink (sheet 215 rev 16).
                 Text(note.text)
                     .frame(maxWidth: 270, alignment: .trailing)
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.tess)
+                    .font(TessFont.beside)
+                    .foregroundStyle(Theme.Colors.ink)
                     .multilineTextAlignment(.trailing)
                     .lineLimit(2)
                 if let record = note.undo {

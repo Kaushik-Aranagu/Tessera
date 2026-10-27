@@ -71,7 +71,11 @@ struct SettingsRoomContent: RoomContent {
             .title: title,
             .navWord: SlotContent(id: "settings.nav.settings", kind: .text, payload: .navWord(Self.title)),
             .doorTitle: SlotContent(id: ContentID("settings.door.\(id).title"), kind: .text,
-                                    payload: .doorTitle(name: area.title, line: door?.label ?? door?.lines.first ?? "",
+                                    payload: .doorTitle(name: area.title,
+                                                        line: SettingsLandingWords.doorLine(
+                                                            area,
+                                                            facts: facts.settings
+                                                        ),
                                                         color: door?.color ?? accent)),
             .keystone: keystone,
             .caption: caption,

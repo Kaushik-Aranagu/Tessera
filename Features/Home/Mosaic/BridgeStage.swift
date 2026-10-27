@@ -452,7 +452,8 @@ final class BridgeStage {
         guard let model else { return }
         Task {
             let line = await model.ask(text)
-            tessModel.say(line.isEmpty ? "Got it" : line, names: [])
+            tessModel.say(line.isEmpty ? "Got it" : line, names: [],
+                          answeredBy: TessLayerModel.AnswerSource(model.lastAnswerSource))
             tessModel.offer(["That's all"])
         }
     }

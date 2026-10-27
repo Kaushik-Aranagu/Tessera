@@ -81,7 +81,7 @@ struct MoneyWall: Equatable {
         if let trend {
             let bare = trend.hasSuffix(".") ? String(trend.dropLast()) : trend
             forms.append("\(bare), \(spends) so far")
-            forms.append(trend)
+            forms.append(bare)
         }
         forms.append("\(spends) in \(monthName)")
         forms.append("\(spends)")

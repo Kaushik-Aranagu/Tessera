@@ -65,9 +65,12 @@ enum TrainingWallTarget: Equatable {
         }
     }
 
+    /// Reads "x:<uuid>" or "r:<uuid>"; a "#..." suffix (a page row's own place, so two rows naming one lift keep
+    /// distinct ids) is ignored.
     init?(id: String) {
         let parts = id.split(separator: ":", maxSplits: 1).map(String.init)
-        guard parts.count == 2, let uuid = UUID(uuidString: parts[1]) else { return nil }
+        guard parts.count == 2,
+              let uuid = UUID(uuidString: String(parts[1].prefix { $0 != "#" })) else { return nil }
         switch parts[0] {
         case "x": self = .exercise(uuid)
         case "r": self = .routine(uuid)
@@ -85,6 +88,9 @@ struct TrainingWallFacts: Equatable {
     let action: TrainingFoot?
     /// A rest day's other action: start the next routine anyway (its object is the routine).
     let restOption: String?
+    /// The exercise behind each of the Today door's lines, in order (nil where a line names no lift), so a row on
+    /// the Today page opens that one lift.
+    var todayLiftIDs: [UUID?] = []
 
     var stateLine: [String] {
         Self.stateForms(day)
@@ -104,7 +110,7 @@ struct TrainingWallFacts: Equatable {
                 ? ["\(name) under way, \(liftsDone) \(liftsDone == 1 ? "lift" : "lifts") done"] : []
             return forms + ["\(name) under way", "Under way"]
         case let .done(name, next):
-            let forms = next.map { ["\(name) done today. Next is \($0).", "\(name) done. Next is \($0)."] } ?? []
+            let forms = next.map { ["\(name) done today. Next is \($0)", "\(name) done. Next is \($0)"] } ?? []
             return forms + ["\(name) done today", "Done today"]
         case let .rest(next, nextDay):
             var forms: [String] = []
@@ -199,15 +205,15 @@ extension TrainingWallFacts {
                                   weight: isToday ? 0.95 : 0.4))
         }
 
-        let doors = doors(model, day: day, lifts: lifts, routines: routines, shown: shown, now: now,
-                          calendar: calendar, dark: dark)
+        let (doors, todayLiftIDs) = doors(model, day: day, lifts: lifts, routines: routines, shown: shown, now: now,
+                                          calendar: calendar, dark: dark)
         let brief = brief(model, day: day, lifts: lifts, calendar: calendar)
         var restOption: String?
         if case let .rest(next, _) = day, let next {
             restOption = next
         }
         return TrainingWallFacts(day: day, words: words, doors: doors, brief: brief, action: actionWord(day),
-                                 restOption: restOption)
+                                 restOption: restOption, todayLiftIDs: todayLiftIDs)
     }
 
     /// What today is, from the same sources the old page reads: running, tried, tonight's, the plan's, done, rest.
@@ -249,7 +255,7 @@ extension TrainingWallFacts {
     @MainActor
     private static func doors(_ model: AppModel, day: TrainingDay, lifts: [Lift], routines: [ObjectRecord],
                               shown: (String) -> String, now: Date, calendar: Calendar,
-                              dark: Bool) -> [DialDoor]
+                              dark: Bool) -> (doors: [DialDoor], todayLiftIDs: [UUID?])
     {
         let store = model.store
         let blue = Theme.Colors.Accent.training
@@ -301,6 +307,7 @@ extension TrainingWallFacts {
         // Today (board r66): the routine and its lifts, the opening weight where one is known.
         var todayLabel: String?
         var todayLines: [String] = []
+        var todayLiftIDs: [UUID?] = []
         switch day {
         case let .ready(name, _, count):
             todayLabel = name == ObjectPrivacy.routineLabel ? name : "\(short(name)), \(count) \(count == 1 ? "lift" : "lifts")"
@@ -313,6 +320,7 @@ extension TrainingWallFacts {
                     let weight = model.ledger.sessions(of: exercise).first?.sets.first?.weight ?? 0
                     todayLines
                         .append(weight > 0 ? "\(lift(exercise.name)) \(Format.mass(weight))" : lift(exercise.name))
+                    todayLiftIDs.append(exercise.id)
                 }
             }
         case let .running(name, done):
@@ -338,7 +346,7 @@ extension TrainingWallFacts {
 
         let first = calendar.weekdaySymbols[(calendar.firstWeekday - 1) % 7]
         let last = calendar.weekdaySymbols[(calendar.firstWeekday + 5) % 7]
-        return [
+        let doors = [
             DialDoor(id: "today", name: "Today", color: blue, label: todayLabel, lines: todayLines),
             DialDoor(id: "week", name: "This week", count: done > 0 ? "\(done)" : nil, color: blue,
                      label: "\(first) to \(last)", lines: weekLines),
@@ -349,6 +357,7 @@ extension TrainingWallFacts {
             DialDoor(id: "plan", name: "Plan", count: plans.count > 1 ? "\(plans.count)" : nil, color: slate,
                      label: plan.map { short(shown($0.title)) }, lines: Array(programLines.dropFirst())),
         ]
+        return (doors, todayLiftIDs)
     }
 
     // MARK: Brief

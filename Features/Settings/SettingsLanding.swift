@@ -177,7 +177,8 @@ extension SettingsLandingFacts {
         let real = realModel ?? model
         let privacy = PrivacyPage.lines(engine: real.engine, claudeOn: real.asksClaude, backupLine: backupLine ?? "")
         return Self(remembers: memory.countWord(), asksClaude: model.asksClaude, units: units,
-                    backupLine: backupLine, build: BuildStamp.short, privacyLines: privacy)
+                    backupLine: backupLine.map(SettingsLandingWords.unstopped), build: BuildStamp.short,
+                    privacyLines: privacy.map(SettingsLandingWords.unstopped))
     }
 }
 
@@ -229,7 +230,9 @@ enum SettingsLandingWords {
                 let count = facts.remembers.split(separator: " ").first.map(String.init)
                 return DialDoor(id: area.rawValue, name: area.title,
                                 count: count.flatMap { Int($0) == nil ? nil : $0 }, color: colors.gold,
-                                label: "Tess remembers", lines: [facts.remembers.capitalizedFirst])
+                                label: "Tess remembers",
+                                lines: [facts.remembers.capitalizedFirst,
+                                        facts.asksClaude ? "Claude only with your key" : "All on this phone"])
             case .privacy:
                 return DialDoor(id: area.rawValue, name: area.title, color: colors.slate,
                                 label: "Kept on this phone", lines: Array(facts.privacyLines.prefix(2)))
@@ -255,6 +258,25 @@ enum SettingsLandingWords {
     }
 
     static let switcher = ["Changed", "All", "Private"]
+
+    /// A door page's one line under its title: the room's facts as a sentence, counts and on or off only (never the
+    /// key, never a backup's contents). The Door title cuts it on whole words.
+    static func doorLine(_ area: SettingsArea, facts: SettingsLandingFacts) -> String {
+        switch area {
+        case .tess:
+            stateLine(facts).first ?? "Tess remembers \(facts.remembers)"
+        case .privacy:
+            facts.privacyLines.first ?? "Everything stays on this phone"
+        case .units:
+            facts.units.isEmpty ? "Standard units" : "Measures in \(LandingList.joined(facts.units))"
+        case .claude:
+            facts.asksClaude ? "Tess asks Claude only with your key" : "Tess never asks Claude. Nothing leaves"
+        case .backups:
+            facts.backupLine.flatMap { sentences($0).first } ?? "No backup read yet"
+        default:
+            "Tessera, build \(facts.build)"
+        }
+    }
 
     /// The two needs lines beside the switcher (283), counts and on or off only.
     static func needs(_ facts: SettingsLandingFacts, switcher index: Int, opened: [String: Date]) -> [String] {
@@ -314,7 +336,12 @@ enum SettingsLandingWords {
         return first.lowercased() == "this" && words.count > 1 ? "this \(words[1])" : first
     }
 
-    /// "A. B." into ["A.", "B."].
+    /// A shown line without its closing full stop ("..." is never used, so it is left alone).
+    static func unstopped(_ line: String) -> String {
+        line.hasSuffix(".") && !line.hasSuffix("..") ? String(line.dropLast()) : line
+    }
+
+    /// "A. B." into ["A", "B"].
     static func sentences(_ text: String) -> [String] {
         var result: [String] = []
         var current = ""
@@ -329,7 +356,8 @@ enum SettingsLandingWords {
         if !current.isEmpty {
             result.append(current)
         }
-        return result
+        // No shown line ends in a full stop (Kaushik, Oct 26).
+        return result.map(Self.unstopped)
     }
 }
 
