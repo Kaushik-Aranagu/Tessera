@@ -9,8 +9,11 @@ extension TessRun {
     /// The check span's name.
     static let answerCheck = "answer-check"
 
+    /// The keys whose strings are a server tool result's readable words.
+    static let readableKeys: Set<String> = ["text", "content", "title", "data", "cited_text"]
+
     /// What she was given for a run: the system blocks, the pack's fragments, his messages, every tool result, and
-    /// the results of server tools (web search and fetch), which arrive inside her own turns.
+    /// the readable words of server tool results (web search and fetch), which arrive inside her own turns.
     static func evidence(system: [TextBlock], fragments: [PackFragment], messages: [BrainMessage]) -> [String] {
         var texts = system.map(\.text) + fragments.map(\.text)
         for message in messages {
@@ -22,8 +25,8 @@ extension TessRun {
                     texts.append(content)
                 case let .raw(data):
                     let block = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
-                    if (block?["type"] as? String)?.hasSuffix("_result") == true {
-                        texts.append(String(decoding: data, as: UTF8.self))
+                    if let block, (block["type"] as? String)?.hasSuffix("_result") == true {
+                        texts += readable(block)
                     }
                 default:
                     break
@@ -31,6 +34,21 @@ extension TessRun {
             }
         }
         return texts
+    }
+
+    /// A result's readable words: never its ids, URLs, page ages or encrypted content, whose stray digits would
+    /// "support" a number she made up.
+    static func readable(_ value: Any, key: String? = nil) -> [String] {
+        switch value {
+        case let text as String:
+            key.map { readableKeys.contains($0) } == true ? [text] : []
+        case let list as [Any]:
+            list.flatMap { readable($0, key: key) }
+        case let object as [String: Any]:
+            object.flatMap { readable($0.value, key: $0.key) }
+        default:
+            []
+        }
     }
 
     /// Checks a finished reply and records the verdict on the run's trace.
