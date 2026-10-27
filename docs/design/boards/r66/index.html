@@ -1527,12 +1527,12 @@ SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. Iâ€
  const mm=t=>Math.floor(t/60)+':'+String(t%60).padStart(2,'0'),mins=()=>Math.max(0,Math.floor((Date.now()-S.t0)/60000));
  const clock=d=>(d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0');
  const left=()=>ST.filter((_,i)=>!S.done.has(i)).reduce((a,x)=>a+(x.tm?x.tm/60:3),0);
- const P=ticketScreen(el,{up:()=>next(),tap:(a)=>{if(a==='back')return back();if(a==='next')return next();if(a.startsWith('tm')){const k=a.slice(2);const st=ST.find(x=>x.k===k);S.T[k]=S.T[k]>0?S.T[k]+60:st.tm;paint(1)}if(a.startsWith('st')){S.i=+a.slice(2);paint()}}});
+ const P=ticketScreen(el,{up:()=>next(),tap:(a)=>{if(a==='ack'){S.alert=null;return paint()}if(a==='back')return back();if(a==='next')return next();if(a.startsWith('tm')){const k=a.slice(2);const st=ST.find(x=>x.k===k);S.T[k]=S.T[k]>0?S.T[k]+60:st.tm;paint(1)}if(a.startsWith('st')){S.i=+a.slice(2);paint()}}});
  let lastKey='';
- function paint(force){const s=ST[S.i];const key=S.i+'|'+S.fin+'|'+[...S.done].join()+'|'+Object.keys(S.T).join();
+ function paint(force){const s=ST[S.i];const key=S.i+'|'+S.fin+'|'+[...S.done].join()+'|'+Object.keys(S.T).join()+'|'+(S.alert||'');
   const timers=ST.filter(x=>x.tm).map(x=>{const T=S.T[x.k];return lead(x.tn,T==null?'<i>'+mm(x.tm)+', tap to start</i>':T>0?'<b class="o">'+mm(T)+'</b>':'<b class="ready">Ready, off the heat</b>',T>0?'run':'')}).map((h,j)=>h.replace('class="tl','data-a="tm'+ST.filter(x=>x.tm)[j].k+'" class="tl')).join('');
   const html=S.fin?'<div class="tk-top"><span data-a="back">Galley</span><span>Ready at '+clock(new Date())+'</span></div><div class="tk-h">Tacos for 2</div><div class="tk-big">Eat</div><div class="tk-how">All 5 steps, '+Math.max(1,mins())+' min</div><div class="tk-rule"></div>'+lead('Rice','goes out today')+lead('Leftovers','4 tacos, lunch')+lead('Dishes','5 for later')+'<div class="tk-verb" data-a="back">Back</div><div class="tk-sub">to the Galley</div>':
-   '<div class="tk-top"><span data-a="back">Galley</span><span>'+mins()+' min in, eat about '+clock(new Date(Date.now()+left()*60000))+'</span></div>'+
+   (S.alert?'<div class="tk-alert" data-a="ack">'+((ST.find(x=>x.k===S.alert)||{}).tn||S.alert)+' ready, off the heat</div>':'')+'<div class="tk-top"><span data-a="back">Galley</span><span>'+mins()+' min in, eat about '+clock(new Date(Date.now()+left()*60000))+'</span></div>'+
    '<div class="tk-h">Tacos for 2</div><div class="tk-row"><span class="tk-num">'+(S.i+1)+'</span><span class="tk-of">of '+ST.length+'</span><span class="tk-heat"><b>'+s.heat+'</b>'+(s.heat2?'<i>'+s.heat2+'</i>':'')+'</span></div>'+
    '<div class="tk-big tk-wrap">'+s.t+'</div><div class="tk-how">'+s.d+'</div><div class="tk-cue"><b>Done when</b> '+s.cue+'</div>'+
    '<div class="tk-rule"></div><div class="tk-lb">Needs</div>'+s.ing.map(([a,b])=>lead(a,b)).join('')+
@@ -1541,9 +1541,12 @@ SCREENS.cook={title:'Tacos',accent:'kitchen',tess:'Chicken in, five minutes. Iâ€
    '<div class="tk-verb" data-a="next">'+(ST.filter((_,i)=>!S.done.has(i)).length===1&&!S.done.has(S.i)?'Serve':'Next')+'</div><div class="tk-sub">'+(S.done.has(S.i)?'turn to what is left':'swipe up, or tap')+'</div>';
   if(key!==lastKey||force){P.innerHTML=html;if(lastKey&&!RM&&key.split('|')[0]!==lastKey.split('|')[0])[...P.children].forEach((e,i)=>e.animate([{clipPath:'inset(0 0 100% 0)',transform:'translateY(-8px)'},{clipPath:'inset(0 0 0 0)',transform:'none'}],{duration:360,delay:i*28,easing:'steps(6)',fill:'backwards'}));lastKey=key;P.querySelectorAll('.tk-how,.tk-cue,.tk-top span').forEach(fitLine)}
   else{P.querySelectorAll('.tl.run .o').forEach((o,j)=>{const k=o.closest('[data-a]').dataset.a.slice(2);const v=mm(S.T[k]);if(o.textContent!==v){const w=o.textContent;o.textContent=v;numRoll(o,w)}});const tp=P.querySelector('.tk-top span:last-child');if(tp&&!S.fin)tp.textContent=mins()+' min in, eat about '+clock(new Date(Date.now()+left()*60000))}}
- function next(){if(S.fin)return back();const was=S.i;if(!S.done.has(was)){S.done.add(was);receipt(el,ST[was].k+', done',()=>{S.done.delete(was);S.fin=0;S.i=was;paint()})}
+ /* 333: when a pan timer runs out the printer feeds: the whole ticket slides down one line and a new line prints at the
+    top in wine, "Chicken ready, off the heat", with one tick. It stays until the next tap. */
+ function feed(){if(navigator.vibrate)try{navigator.vibrate([6,60,6])}catch(e){}if(!RM)P.animate([{transform:'translateY(-30px)'},{transform:'translateY(4px)',offset:.7},{transform:'none'}],{duration:520,easing:'steps(5)'})}
+ function next(){S.alert=null;if(S.fin)return back();const was=S.i;if(!S.done.has(was)){S.done.add(was);receipt(el,ST[was].k+', done',()=>{S.done.delete(was);S.fin=0;S.i=was;paint()})}
   if(S.done.size===ST.length){S.fin=1;paint();return}let n=was;for(let k=1;k<=ST.length;k++){const q=(was+k)%ST.length;if(!S.done.has(q)){n=q;break}}S.i=n;const s=ST[n];if(s.tm&&S.T[s.k]==null)S.T[s.k]=s.tm;paint()}
- paint();const iv=setInterval(()=>{if(!document.contains(el))return;let ch=0;for(const k in S.T){if(S.T[k]>0){S.T[k]--;if(!S.T[k]){ch=1;receipt(el,k+', ready')}}}paint(ch)},1000);
+ paint();const iv=setInterval(()=>{if(!document.contains(el))return;let ch=0;for(const k in S.T){if(S.T[k]>0){S.T[k]--;if(!S.T[k]){ch=1;S.alert=k;feed()}}}paint(ch)},1000);
  window.__ck.fast=n=>{for(const k in S.T)if(S.T[k]>0)S.T[k]=Math.max(1,S.T[k]-n)};window.__ck.next=next;return ()=>clearInterval(iv)}};
 
 SCREENS.shop={title:'Groceries',accent:'kitchen',tess:'Produce first, the tortillas are by the bread.',render(el){
@@ -1653,6 +1656,7 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .fullticket .tk-rail i{position:absolute;left:50%;top:-4px;width:34px;height:18px;margin-left:-17px;background:#6f6f6f;border-radius:2px}
 .fullticket .tk-paper{position:absolute;left:24px;right:24px;top:70px;bottom:0;font-family:'IBM Plex Sans Condensed',sans-serif}
 .fullticket .tk-pad{position:absolute;inset:0;z-index:5;touch-action:none;cursor:pointer}
+.tk-alert{margin:-8px 0 10px;font-size:20px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8C2F39;height:28px;line-height:28px;border-bottom:1.5px dashed rgba(140,47,57,.5)}
 .tk-top{display:flex;justify-content:space-between;font-size:14px;color:var(--ink2);height:20px;white-space:nowrap}
 .tk-top span:first-child{color:var(--tk);font-weight:600}
 .tk-h{margin-top:14px;font-size:15px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tk);height:20px;white-space:nowrap;overflow:hidden}

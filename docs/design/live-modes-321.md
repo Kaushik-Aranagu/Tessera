@@ -249,3 +249,13 @@ On the shopping ticket, the thing you just got is struck through by a pen.
 - With Reduce Motion the line is simply there.
 
 For the builders: an overlay `Path` with `.trim(from:0,to:p)` animated on insert.
+
+## Sheet 333: the printer feeds when a timer is done
+
+When a pan timer reaches zero in cooking mode, the ticket printer feeds: the paper drops 30 pt, overshoots 4 pt and settles in five steps (a ticket rail, not a spring), with one short buzz.
+
+- A line prints at the very top of the ticket in the alert red (#8C2F39), 20 pt bold caps, over a dashed tear line: "Chicken ready, off the heat". It names the food from the timer (`tn`), not the step.
+- Tap the line to clear it. Doing the next step (swipe up or the verb) also clears it.
+- Only one alert shows; a second timer that finishes replaces it and feeds again.
+- The alert line is 28 pt tall and pushes the ticket down, so nothing overlaps.
+- Test: t67 paper and black green; AL.png shows the fed ticket.
