@@ -223,3 +223,19 @@ sheet 309 keyed on its text.
 
 For the builders: the caption is `Text(door.caption).id(door.id)` with the same asymmetric offset-and-opacity
 transition as the shape foot line, driven by the door index through `MotionPolicy`.
+
+## Sheet 316: the action word follows the door (Oct 26)
+
+- Found on the board: on a room's doors page, turning the door title to the next door left the action word saying
+  "Add to Today" while the page showed This week, and the receipt named the wrong door. A real bug, not only a
+  look.
+- Now the action's object follows the page. The verb ("Add") stays still; the object changes letter by letter, as
+  the Nav word does (sheet 309): "to " and any shared letters stay or slide, the rest leave upward and the new ones
+  rise in. The receipt names the door now showing ("Add, to Library").
+- The object line clips sideways only (sheet 298), so rising letters are never cut.
+- Reduce Motion: the object changes in place.
+- Measured on the board (`t60.js`): two turns on the Deck in paper and the Galley in black, then a tap; the object
+  and the receipt always match the door; `t39.js` finds no cut words, `t45.js` no stops, `t51.js` Undo unchanged.
+
+For the builders: the action's object is derived from the current door (`actions(for: door)`), never captured when
+the page is built. Its `Text` uses the letter morph keyed on its string.

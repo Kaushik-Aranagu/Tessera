@@ -728,7 +728,7 @@ function detailOf(r){if(DETAIL[r.id])return DETAIL[r.id];const m=/^(\d+) steps, 
    out upward and the new one rises in (as the shape foot line, sheet 310). Never a swap. */
 function numRoll(e,was){const now=e.textContent;if(RM||!was||was===now)return;const sp=t=>t.split(/(\d+)/);const A=sp(was),B=sp(now);
  const same=A.length===B.length&&A.every((x,i)=>i%2||x===B[i]);
- if(!same){const g=e.cloneNode(true);g.textContent=was;g.style.pointerEvents='none';e.after(g);
+ if(!same){const g=e.cloneNode(true);g.textContent=was;g.style.pointerEvents='none';if(getComputedStyle(e).position!=='absolute')Object.assign(g.style,{position:'absolute',margin:'0',left:e.offsetLeft+'px',top:e.offsetTop+'px',width:e.offsetWidth+'px'});e.after(g);
   g.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -4px'}],{duration:140,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'}).onfinish=()=>g.remove();
   e.animate([{opacity:0,translate:'0 4px'},{opacity:1,translate:'0 0'}],{duration:240,delay:120,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});return}
  e.innerHTML=B.map((x,i)=>i%2&&x!==A[i]?'<span class="nr" data-was="'+A[i]+'">'+x+'</span>':x.replace(/&/g,'&amp;').replace(/</g,'&lt;')).join('');
@@ -1404,7 +1404,8 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .act .av{font:600 24px/32px var(--sans);letter-spacing:-.01em;white-space:nowrap;display:inline-block;transition:letter-spacing .2s}
 .act .av .ch{display:inline-block;white-space:pre}
 .act .av.filling{color:transparent;background:linear-gradient(currentColor,currentColor) no-repeat left/0% 100%,linear-gradient(color-mix(in srgb,var(--room,currentColor) 40%,transparent),color-mix(in srgb,var(--room,currentColor) 40%,transparent));-webkit-background-clip:text;background-clip:text}
-.act .ao{font:500 13px/18px var(--sans);color:var(--ink2);white-space:nowrap;overflow:hidden;max-width:220px}
+.act .ao{font:500 13px/18px var(--sans);color:var(--ink2);white-space:nowrap;overflow-x:clip;overflow-y:visible;max-width:220px;position:relative}
+.act .ao .nl{display:inline-block;white-space:pre}
 
 `;document.head.appendChild(st)}
 
@@ -1617,9 +1618,12 @@ function widgetV3(el,R,id){const W=R.w,box=h('div','one lw');box.style.zIndex=6;
    to right, then does it (for the one thing that should not be a slip, like starting a workout). Undo 10 s after. */
 function actionX(el,R){const A=R.acts,f=h('div','act');el.appendChild(f);let i=0;
  const vb=h('div','av'),ob=h('div','ao');f.appendChild(vb);f.appendChild(ob);f.style.color=R.color;
- const set=(n,dir)=>{const a=A[n];const old=[...vb.children];vb.innerHTML='';[...a.v].forEach(ch=>{const s=h('span','ch');s.textContent=ch;vb.appendChild(s)});ob.textContent=a.o;fitLine(ob);
+ const set=(n,dir)=>{const a=A[n];const old=[...vb.children];vb.innerHTML='';[...a.v].forEach(ch=>{const s=h('span','ch');s.textContent=ch;vb.appendChild(s)});ob.textContent=a.o;ob._word=a.o;ob._mg=(ob._mg||0)+1;fitLine(ob);
   if(dir&&!RM){[...vb.children].forEach((c,j)=>c.animate([{transform:'translateX('+(dir*40)+'px) skewX('+(-dir*18)+'deg)',opacity:0,filter:'blur(2px)'},{transform:'none',opacity:1,filter:'blur(0)'}],{duration:480,delay:j*22,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));ob.animate([{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:300,delay:120,fill:'both'})}};
  set(0);let x0=null,y0,dx,ax,hold=null,did=false;
+ /* 316: the object follows the page. When the door turns, "Add to Today" becomes "Add to Body": the verb stays, only the
+    object eases over (the shared "to" stays put), and the receipt says the new one */
+ f.retarget=(objs,dir)=>{objs.forEach((o,k)=>{if(A[k])A[k].o=o});const was=ob._word||ob.textContent;if(was===A[i].o)return;ob.textContent=A[i].o;fitLine(ob);if(dir){ob.textContent=was;navMorph(ob,A[i].o)}else ob._word=A[i].o};
  f.onpointerdown=e=>{x0=e.clientX;y0=e.clientY;dx=0;ax=null;did=false;f.setPointerCapture(e.pointerId);e.stopPropagation();
   if(A[i].hold&&!RM){vb.style.setProperty('--fill','0%');hold=vb.animate([{backgroundSize:'0% 100%'},{backgroundSize:'100% 100%'}],{duration:500,fill:'forwards'});vb.classList.add('filling');hold.onfinish=()=>{did=true;vb.classList.remove('filling');hold=null;A[i].f(el)}}};
  f.onpointermove=e=>{if(x0==null)return;dx=(e.clientX-x0)/K;ax=lockAxis(dx,(e.clientY-y0)/K,ax);if(ax==='x'){if(hold){hold.cancel();hold=null;vb.classList.remove('filling')}vb.style.transform='translateX('+Math.max(-60,Math.min(60,dx*.6))+'px)';vb.style.letterSpacing=Math.min(.12,Math.abs(dx)/600)+'em'}};
@@ -2024,7 +2028,7 @@ function lvBody(box,b,color){box.innerHTML='';const add=x=>{box.insertAdjacentHT
  else if(b.kind==='tess')add('<p class="lbt">'+b.t+'</p>');else add('<p class="lbp">'+b.t+'</p>')}
 function lvBase(el,room){const S=SCREENS[room];const own=el.dataset.id;el.dataset.id=room;const c=S.render(el,{});el.dataset.id=own;[...el.querySelectorAll(':scope > .lband,:scope > .one,:scope > .dlook,:scope > .dial,:scope > .lsum,:scope > .act,:scope > .undoline')].forEach(e=>e.remove());return c}
 function lvNav(el,txt){const nb=el.querySelector('.lnav');if(nb){nb._mg=(nb._mg||0)+1;nb._word=txt;nb.textContent=txt}}
-function lvAct(el,color,acts){const A=acts.map(a=>({...a,f:a.f||(e=>receipt(e,a.v+', '+a.o+'.'))}));return actionX(el,{color,acts:A})}
+function lvAct(el,color,acts){const A=acts.map(a=>({...a,f:a.f||function(e){receipt(e,this.v+', '+this.o)}}));return actionX(el,{color,acts:A})}
 // the Door title (or Item title): across for the next sibling; only the words inside change
 function lvTitle(el,cls,get,n,i0,onTurn){const t=h('div',cls);el.appendChild(t);let i=i0;
  const draw=(dir)=>{const [a,b]=get(i);t.innerHTML='<b>'+a+'</b><span>'+b+'</span>';fitLine(t.querySelector('b'));if(dir&&!RM)[...t.children].forEach((c,j)=>c.animate([{transform:'perspective(500px) rotateX(-80deg)',opacity:0},{transform:'perspective(500px) rotateX(6deg)',opacity:1,offset:.75},{transform:'none'}],{duration:360,delay:j*60,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))};
@@ -2034,9 +2038,9 @@ function lvSettle(box){if(RM)return;[...box.children].forEach((c,j)=>c.animate([
 Object.keys(LV).forEach(room=>{const D=LV[room];const S=SCREENS[room];
  SCREENS['l1_'+room]={title:S.title,accent:S.accent,tess:S.tess,render(el,p){const stop=lvBase(el,room);lvNav(el,'Doors');let di=p.door||0;
   const cap=el.querySelector('.lcap');const pg=h('div','lpg');el.appendChild(pg);
-  const fill=(dir)=>{const d=D.doors[di];if(cap){const w=cap.textContent;cap.textContent=d.cap;if(dir)numRoll(cap,w)} /* 315: the caption eases to the new door's, never a swap */pg.innerHTML='';lvRows(pg,d.rows,D.color,r=>{const it=D.items[r.it]||{name:r.t,line:d.k,facts:[[r.v?r.v.replace(/<[^>]+>/g,''):'','',d.k.toLowerCase()]],body:{kind:'text',t:r.s+'.'},acts:[{v:'Open',o:r.t}]};go('l2_'+room,{door:di,it:r.it||null,row:r.t})},PAGE_FORM[room]);if(dir)lvSettle(pg)};el._refill=()=>fill(0);el._room=room;
+  const fill=(dir)=>{const d=D.doors[di];if(cap){const w=cap.textContent;cap.textContent=d.cap;if(dir)numRoll(cap,w)}if(el._act)el._act.retarget(['to '+d.k,'Tess about '+d.k],dir); /* 315: the caption eases to the new door's, never a swap */pg.innerHTML='';lvRows(pg,d.rows,D.color,r=>{const it=D.items[r.it]||{name:r.t,line:d.k,facts:[[r.v?r.v.replace(/<[^>]+>/g,''):'','',d.k.toLowerCase()]],body:{kind:'text',t:r.s+'.'},acts:[{v:'Open',o:r.t}]};go('l2_'+room,{door:di,it:r.it||null,row:r.t})},PAGE_FORM[room]);if(dir)lvSettle(pg)};el._refill=()=>fill(0);el._room=room;
   lvTitle(el,'ldt',i=>[D.doors[i].k,D.doors[i].line],D.doors.length,di,(i,d)=>{di=i;stack[stack.length-1].params={...p,door:i};fill(d)});fill(0);
-  const f=lvAct(el,D.color,[{v:'Add',o:'to '+D.doors[di].k},{v:'Ask',o:'Tess about '+D.doors[di].k}]);return stop}};
+  const f=lvAct(el,D.color,[{v:'Add',o:'to '+D.doors[di].k},{v:'Ask',o:'Tess about '+D.doors[di].k}]);el._act=f;return stop}};
  SCREENS['l2_'+room]={title:S.title,accent:S.accent,tess:S.tess,render(el,p){const stop=lvBase(el,room);const d=D.doors[p.door||0];lvNav(el,d.k);
   const rows=d.rows;let ri=Math.max(0,rows.findIndex(r=>r.t===p.row));
   const itemOf=r=>D.items[r.it]||{name:r.t,line:r.s,facts:[[r.v?r.v.replace(/<[^>]+>/g,''):'—','',d.k.toLowerCase()],[String(rows.indexOf(r)+1),'','of '+rows.length]],body:{kind:'sib',me:r.t,l:rows.map(x=>[x.t,x.s,x.v||''])},acts:[{v:'Open',o:r.t},{v:'Ask',o:'Tess about '+r.t}]};
