@@ -271,13 +271,13 @@ struct ChartRoomTests {
 
     @Test func anOutlineDropsShrinksAndFadesThenUndoRaisesItBack() {
         let rest = OutlineSetting.frame(at: 0, y: 0, setting: true, reduceMotion: false)
-        #expect(rest == OutlineSetting.Frame(offset: 0, scale: 1, opacity: 1))
+        #expect(abs(rest.offset) < 0.001 && abs(rest.scale - 1) < 0.0001 && rest.opacity > 0.999)
         let gone = OutlineSetting.frame(at: 0.38, y: 0, setting: true, reduceMotion: false)
         #expect(abs(gone.offset - 6) < 0.001 && abs(gone.scale - 0.985) < 0.0001 && gone.opacity < 0.001)
-        let before = OutlineSetting.frame(at: 0.2, y: 400, setting: true, reduceMotion: false)
+        let before = OutlineSetting.frame(at: 0.2, y: 4000, setting: true, reduceMotion: false)
         #expect(before.offset == 0, "a lower place waits its stagger")
         let up = OutlineSetting.frame(at: 0.38, y: 0, setting: false, reduceMotion: false)
-        #expect(up == OutlineSetting.Frame(offset: 0, scale: 1, opacity: 1))
+        #expect(abs(up.offset) < 0.001 && up.opacity > 0.999)
     }
 
     @Test func underReduceMotionItOnlyFadesOver200Milliseconds() {

@@ -25,6 +25,7 @@ enum ShownLines {
         case let .list(rows): rows.flatMap { [$0.title, $0.detail] }
         case let .action(steps, _): steps.flatMap { [$0.verb, $0.object] }
         case let .scene(_, label): [label]
+        case let .parts(tree): tree.nodes.flatMap(\.flattened).flatMap(\.words)
         }
     }
 
