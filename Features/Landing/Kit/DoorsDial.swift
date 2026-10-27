@@ -14,7 +14,7 @@ struct DialDoor: Identifiable, Equatable {
     var lines: [String] = []
     /// Sheet 320: ledger rows (name, right-aligned number, unit). When present `DoorSummary` draws the ledger
     /// (`DoorLedger`) with `label` above and `more` below, instead of `lines`.
-    var rows: [Row] = []
+    var rows: [DialDoor.Row] = []
     /// The quiet last line of the ledger (12 pt): what opening the door adds.
     var more: String?
 }
@@ -88,9 +88,16 @@ struct DoorsDial: View {
     var body: some View {
         Group {
             if let layout = formLayout {
-                DoorsFormView(doors: doors, layout: layout, isShown: isShown, open: open) {
-                    turnedToIndex = true
-                }
+                DoorsFormView(
+                    doors: doors, layout: layout, isShown: isShown, open: open,
+                    turnTo: { door in
+                        if let index = doors.firstIndex(of: door) {
+                            move(index - wrapped(focus))
+                        }
+                    },
+                    turnBy: { move($0) },
+                    showAll: { turnedToIndex = true }
+                )
                 .frame(width: DoorForms.frame.width, height: DoorForms.frame.height, alignment: .topLeading)
                 .frame(maxWidth: .infinity, alignment: .trailing)
             } else {

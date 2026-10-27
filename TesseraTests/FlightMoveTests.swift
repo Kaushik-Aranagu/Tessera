@@ -83,6 +83,18 @@ struct FlightMoveTests {
         #expect(end == CGPoint(x: 100, y: 500))
     }
 
+    @Test func theLandingsOwnContentFadesInOverTheLastTwentyPercentAndTheLandingNeverStepsBack() {
+        #expect(FlightMove.landingContentOpacity(at: 0) == 0)
+        #expect(FlightMove.landingContentOpacity(at: 0.8) == 0)
+        #expect(abs(FlightMove.landingContentOpacity(at: 0.9) - 0.5) < 0.0001)
+        #expect(FlightMove.landingContentOpacity(at: 1) == 1)
+        // A path that runs straight through the landing's frame still never steps it back.
+        let through = FlightRoute(path: [CGPoint(x: 100, y: 300), CGPoint(x: 100, y: 550)],
+                                  size: CGSize(width: 60, height: 24), source: .keystone, landing: .widget)
+        #expect(!FlightMove.crossed(through, frames: frames).contains(.widget))
+        #expect(FlightMove.collisions(through, frames: frames, at: 0.9).isEmpty)
+    }
+
     @Test func theFlightEndsWithinOneSecond() {
         #expect(FlightMove.duration <= 1)
     }

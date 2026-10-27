@@ -9,6 +9,10 @@ struct DoorsFormView: View {
     let layout: DoorFormLayout
     let isShown: Bool
     var open: (DialDoor) -> Void
+    /// Tapping a neighbour row of the index only turns the dial to it; it never opens a door.
+    var turnTo: (DialDoor) -> Void
+    /// A vertical drag anywhere on the dial turns it one door per row travelled.
+    var turnBy: (Int) -> Void
     var showAll: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -30,6 +34,14 @@ struct DoorsFormView: View {
         .id(reduceMotion ? layout.form.rawValue : "doors")
         .transition(.opacity)
         .animation(travelAnimation, value: layout)
+        .contentShape(Rectangle())
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 12).onEnded { value in
+                guard abs(value.translation.height) > abs(value.translation.width) else { return }
+                let rows = max(1, Int((abs(value.translation.height) / DoorForms.indexPitch).rounded()))
+                turnBy(value.translation.height < 0 ? rows : -rows)
+            }
+        )
         .accessibilityElement(children: .contain)
     }
 
@@ -43,21 +55,29 @@ struct DoorsFormView: View {
         let placement = layout.placements.first { $0.id == door.id && !$0.isJoiner }
         let rect = placement?.rect ?? hiddenRect(for: door)
         let size = placement?.size ?? 15
+        let isIndexNeighbour = layout.form == .index && placement?.bold == false
+        let height = layout.form == .index && placement?.bold == true
+            ? DoorForms.focusTargetHeight : max(rect.height, DoorForms.linePitch)
         return Button {
-            open(door)
+            if isIndexNeighbour {
+                turnTo(door)
+            } else {
+                open(door)
+            }
         } label: {
             Text(door.name)
                 .font(.custom("Figtree", fixedSize: size).weight(placement?.bold == true ? .semibold : .regular))
                 .foregroundStyle(placement?.ink == .room ? door.color : Theme.Colors.ink)
                 .lineLimit(1)
                 .fixedSize()
-                .frame(width: rect.width + 4, height: max(rect.height, DoorForms.linePitch), alignment: .center)
+                .frame(width: rect.width + 4, height: height, alignment: .center)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(placement == nil)
         .opacity(placement == nil ? 0 : 1)
-        .offset(x: rect.minX - origin.x - 2, y: rect.midY - origin.y - max(rect.height, DoorForms.linePitch) / 2)
+        .zIndex(placement?.bold == true ? 1 : 0)
+        .offset(x: rect.minX - origin.x - 2, y: rect.midY - origin.y - height / 2)
         .accessibilityLabel(door.name)
         .accessibilityHidden(placement == nil)
         .accessibilityHint("Opens it")
