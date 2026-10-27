@@ -1,6 +1,7 @@
 import Foundation
 @testable import Tessera
 import TesseraCore
+import TesseraTess
 import Testing
 
 /// QA M1: "Tess asks Claude" has one home, the settings object. Migrate runs on every launch, and a "no" left in the
@@ -41,28 +42,63 @@ struct TessAsksClaudeTests {
         }
     }
 
-    @Test func aFreshInstallDoesNotAskUntilAnswered() {
+    @Test func aFreshInstallAsksClaudeByDefault() {
+        // Kaushik, Oct 26: "set them on by default. Tess needs to use AI."
         launch()
-        #expect(!asks)
+        #expect(asks)
     }
 
-    /// QA F1: on a throwaway store (memory fallback, failed seed) the empty settings must not read as yes.
+    /// QA F1: on a throwaway store (memory fallback, failed seed) the empty settings never let Claude in.
     @Test func aThrowawayStoreNeverAsksClaude() {
         model.settingsAreReal = false
         #expect(!model.asksClaude)
         model.settingsAreReal = true
-        #expect(!model.asksClaude) // unanswered reads as no (G687)
-        try? SettingsStore(engine: model.engine).update { $0.missesGoToClaude = true }
-        #expect(model.asksClaude)
+        #expect(model.asksClaude) // never chosen reads as yes (Oct 26)
+        try? SettingsStore(engine: model.engine).update { $0.missesGoToClaude = false }
+        #expect(!model.asksClaude)
         model.settingsAreReal = false
+        try? SettingsStore(engine: model.engine).update { $0.missesGoToClaude = true }
         #expect(!model.asksClaude)
     }
 
-    @Test func asksClaudeIsFalseWhileTheKeyQuestionIsUnanswered() {
+    @Test func theKeyQuestionStillShowsButClaudeIsAlreadyOn() {
         model.settingsAreReal = true
         let settings = SettingsStore(engine: model.engine)
-        #expect(settings.claudeQuestionDue(keyPresent: true) && !model.asksClaude)
-        try? settings.answerClaudeQuestion(true)
-        #expect(!settings.claudeQuestionDue(keyPresent: true) && model.asksClaude)
+        #expect(settings.claudeQuestionDue(keyPresent: true) && model.asksClaude)
+        try? settings.answerClaudeQuestion(false)
+        #expect(!settings.claudeQuestionDue(keyPresent: true) && !model.asksClaude)
+    }
+
+    /// Sample data is the stamped test world: it may ask Claude (Kaushik, Oct 24), following his own choice, which it
+    /// reads from his model and never writes.
+    @Test func sampleDataAsksClaudeAndFollowsHisChoice() throws {
+        model.settingsAreReal = true
+        let sampleContainer = TesseraSchema.makeContainer(inMemory: true)
+        let sample = AppModel(context: sampleContainer.mainContext, launchDefaults: .testSuite(), isSample: true)
+        #expect(!sample.settingsAreReal)
+        #expect(sample.asksClaude, "a sample with no owner reads the default")
+        sample.claudeOwner = model
+        #expect(sample.asksClaude)
+        try SettingsStore(engine: model.engine).update { $0.missesGoToClaude = false }
+        #expect(!sample.asksClaude, "his Off holds in the sample too")
+        #expect(SettingsStore(engine: sample.engine).read().missesGoToClaude == nil, "nothing was written there")
+    }
+
+    /// Demos and the simulator flags keep Claude off (`isDemo`); a test run has none of them.
+    @Test func noDemoFlagInATestRun() {
+        #expect(!AppModel.isDemo)
+    }
+
+    /// Her sheet says who answered each reply: Claude, or this phone (the grammar, the on-device model, a miss kept).
+    @Test func eachReplyNamesWhoAnswered() {
+        #expect(TessLayerModel.AnswerSource(.claude) == .claude)
+        for source: TessCapture.Source? in [.grammar, .model, TessCapture.Source.none, nil] {
+            #expect(TessLayerModel.AnswerSource(source) == .phone)
+        }
+        #expect(TessLayerModel.AnswerSource.claude.line == "Answered by Claude")
+        #expect(TessLayerModel.AnswerSource.phone.line == "Answered on this phone")
+        let layer = TessLayerModel()
+        layer.say("Logged.", names: [], answeredBy: .claude)
+        #expect(layer.lines.last?.answeredBy == .claude)
     }
 }

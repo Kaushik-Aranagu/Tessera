@@ -25,7 +25,8 @@ struct SettingsTests {
     @Test func readIsAllNilBeforeAnyWrite() {
         #expect(settings.read() == TesseraSettings())
         #expect(store.object(id: SettingsStore.objectID) == nil)
-        #expect(!settings.read().sendsMissesToClaude && settings.read().restWeekday == nil)
+        // Tess asks Claude is On until he chooses Off (Kaushik, Oct 26).
+        #expect(settings.read().sendsMissesToClaude && settings.read().restWeekday == nil)
     }
 
     @Test func theFirstWriteMakesOneObjectWithTheFixedIDAndOneOp() throws {
@@ -184,11 +185,19 @@ struct SettingsTests {
         #expect(!settings.claudeQuestionDue(keyPresent: true) && settings.read().sendsMissesToClaude)
     }
 
-    @Test func noAnswerKeepsClaudeOffAcrossLaunches() throws {
+    @Test func noAnswerSendsMissesByDefaultAcrossLaunches() throws {
         #expect(settings.claudeQuestionDue(keyPresent: true))
         let reopened = try ObjectStore(context: TesseraContext(url: url))
         let again = try SettingsStore(engine: ActionEngine(store: reopened, classes: reopened.prepareCatalog()))
-        #expect(again.claudeQuestionDue(keyPresent: true) && !again.read().sendsMissesToClaude)
+        #expect(again.claudeQuestionDue(keyPresent: true) && again.read().sendsMissesToClaude)
+    }
+
+    @Test func aStoredNoIsKeptOverTheNewDefault() throws {
+        try settings.answerClaudeQuestion(false)
+        #expect(!settings.read().sendsMissesToClaude && settings.read().missesGoToClaude == false)
+        // Saving a key later never turns a stored no back on.
+        try settings.noteKeySaved()
+        #expect(!settings.read().sendsMissesToClaude)
     }
 
     @Test func savingAKeyInSettingsOptsInWhenUnanswered() throws {

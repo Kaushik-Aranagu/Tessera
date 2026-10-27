@@ -478,19 +478,19 @@ struct ClaudeRouteTests {
 
     // MARK: G687, the found key
 
-    @Test func foundKeyOnAFreshStoreSendsNothingUntilAsked() async {
-        // A key in the fake keychain and fresh settings: the one field reads no, so nothing leaves.
+    @Test func foundKeyOnAFreshStoreSendsByDefaultAndANoStopsIt() async {
+        // A key in the fake keychain and fresh settings: the field reads yes (Kaushik, Oct 26), so the miss goes.
         let settings = SettingsStore(engine: engine)
         var claude = ClaudeTessModel(keys: InMemoryKeychain(Self.key), ledger: ledger, flags: flags,
                                      session: RouteStub.session()) { settings.read().sendsMissesToClaude }
         claude.now = { TesseraDayTests.at(10, 15, 18, 10) }
         let capture = TessCaptureEngine(engine: engine)
         capture.claude = claude
-        _ = await capture.capture(miss, context: context)
-        #expect(RouteStub.requests.isEmpty && !settings.read().sendsMissesToClaude)
-        // Yes: the next miss goes.
         RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Logged."))]
-        try? settings.answerClaudeQuestion(true)
+        _ = await capture.capture(miss, context: context)
+        #expect(RouteStub.requests.count == 2 && settings.read().sendsMissesToClaude)
+        // No: the next miss stays on the phone.
+        try? settings.answerClaudeQuestion(false)
         _ = await capture.capture(miss, context: context)
         #expect(RouteStub.requests.count == 2)
     }

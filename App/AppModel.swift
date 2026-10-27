@@ -57,10 +57,19 @@ final class AppModel {
     /// Whether the settings object lives in his real store (not a memory fallback or a failed seed).
     var settingsAreReal = false
 
-    /// "Tess asks Claude", for misses and Plan my day: the one settings field, and never on a throwaway store.
+    /// "Tess asks Claude", for misses, Plan my day, Home's done words and day names: the one settings field (On
+    /// unless he chose Off), never on a throwaway store and never in a demo (`isDemo`: -demo, -resetDemo, -theme,
+    /// -fakeClaudeKey). Sample data is the stamped test world and may ask Claude (Kaushik, Oct 24): it follows his own
+    /// stored choice, read from his model and never written.
     var asksClaude: Bool {
-        settingsAreReal && SettingsStore(engine: engine).read().sendsMissesToClaude
+        guard !Self.isDemo else { return false }
+        let source = isSample ? (claudeOwner ?? self) : self
+        guard source.settingsAreReal || source.isSample else { return false }
+        return SettingsStore(engine: source.engine).read().sendsMissesToClaude
     }
+
+    /// For the Sample data model: his own model, whose "Tess asks Claude" choice the sample follows (read only).
+    @ObservationIgnored weak var claudeOwner: AppModel?
 
     /// Plan my day's Claude wording stays off until Core's G4 and G9 land and its eval passes (AI architecture, Oct
     /// 16). Turning it on is their one-line change.
@@ -195,8 +204,9 @@ final class AppModel {
         // A cold launch is a foreground too: told now, so her first frame already has her eyes shut if she wakes.
         soul.handle(.foregrounded(underLive: false))
         // Claude is the last capture step, gated on the one "Tess asks Claude" field, the key and the pause
-        // (it checks each at every call). Off in demos, so a fake key never goes over the network.
-        if !demo, let capture = runtime.tess as? TessCaptureEngine {
+        // (it checks each at every call). Off in demos, so a fake key never goes over the network. Sample data keeps
+        // it (Kaushik, Oct 24): its calls are counted in the sample's own store, never written to his.
+        if !Self.isDemo, let capture = runtime.tess as? TessCaptureEngine {
             capture.claude = ClaudeTessModel(
                 keys: SystemKeychain(),
                 ledger: TessUsageLedger(store: store, classes: classes),
@@ -305,12 +315,18 @@ final class AppModel {
             }
         #endif
         if let routed = routedWrite(phrase) {
+            lastAnswerSource = nil
             return routed
         } // Write anywhere (135 part 5)
         let result = await runtime.tess.capture(phrase, context: captureContext())
         isAskingClaude = false
+        lastAnswerSource = result.source
         return land(result)
     }
+
+    /// Who answered the last Ask: Claude, or the phone's own routes (the grammar, the on-device model; nil for a
+    /// routed write). Tess's sheet shows it as one small line under her reply.
+    private(set) var lastAnswerSource: TessCapture.Source?
 
     private var isDrainingWaiting = false
 
@@ -842,7 +858,7 @@ extension AppModel {
             return job
         }
         let job = ClaudeHomeDone(keys: SystemKeychain(), ledger: TessUsageLedger(store: store, classes: classes),
-                                 cacheURL: Self.isDemo ? nil : ClaudeHomeDone.defaultCacheURL)
+                                 cacheURL: Self.isDemo || isSample ? nil : ClaudeHomeDone.defaultCacheURL)
         {
             [weak self] in self?.asksClaude ?? false
         }
