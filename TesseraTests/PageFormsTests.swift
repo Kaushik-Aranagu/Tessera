@@ -47,7 +47,7 @@ struct PageFormsTests {
         #expect(ordered.map(\.name) == ["Walk", "Water", "Lift", "Read", "Stretch"])
         // At 5:10 pm, 6:00 is tonight and comes before 9:00, which is tomorrow morning.
         #expect(PageForms.until(18 * 60, now: 17 * 60 + 10) == 50)
-        #expect(PageForms.until(9 * 60, now: 17 * 60 + 10) == 960)
+        #expect(PageForms.until(9 * 60, now: 17 * 60 + 10) == 950)
     }
 
     @Test func byTimeHasA52PointTimeColumnAndInk2ForRowsBehind() {
