@@ -1434,6 +1434,36 @@ SCREENS.groceries={title:'Groceries',accent:'kitchen',tess:'Four of these are fo
  GET.forEach((g,i)=>{const r=h('div','krow','<span>'+g+'</span><span>'+(i<4?'for tacos':'')+'</span>');r.style.cursor='pointer';r.onclick=()=>{GET=GET.filter(x=>x!==g);receipt(el,g+', got it.',()=>{GET.splice(i,0,g)});r.remove();const e=tix.children[0];if(e){e._refresh()}};box.appendChild(r)});kfoot(el,'Got it all',()=>{GET=GET.slice(4);back()})}};
 SCREENS.pantry={title:'Pantry',accent:'kitchen',tess:'Rice goes out today.',render(el){khead(el);kback(el);passCenter(el,PLACES.map(([n,c,s])=>({id:'pl'+n,title:n,color:'teal',pages:[{lines:[c+' things',s]}]})),()=>{});const box=lowerBox(el);const t=h('div','','Pantry');t.style.cssText='font-size:34px;font-weight:700;color:var(--kitchen);margin-bottom:6px';box.appendChild(t);PLACES.forEach(([n,c,s])=>box.appendChild(h('div','krow','<span>'+n+'</span><span>'+c+', '+s+'</span>')));kfoot(el,'Add a thing',()=>receipt(el,'Say it or type it. Tess puts it in the right place.'))}};
 SCREENS.leftovers={title:'Leftovers',accent:'kitchen',tess:'The rice is from Thursday.',render(el){khead(el);kback(el);passCenter(el,LEFT.map(([n,d,s])=>({id:'lf'+n,title:n,color:d==='today'?'wine':'teal',pages:[{lines:[d,s]}]})).concat([dishT()]),openT);const box=lowerBox(el);const t=h('div','','Leftovers');t.style.cssText='font-size:34px;font-weight:700;color:var(--kitchen);margin-bottom:6px';box.appendChild(t);LEFT.forEach(([n,d,s])=>box.appendChild(h('div','krow','<span'+(d==='today'?' style="color:var(--wine)"':'')+'>'+n+'</span><span>'+d+', '+s+'</span>')));kfoot(el,'Eat it',()=>receipt(el,'Rice, eaten.'))}};
+/* ---------- 326 The modes on the lock screen. A mode keeps going when the phone locks: the Dynamic Island holds the one
+   number that counts down, and the Live Activity holds what you would glance at between sets, steps or aisles, in the
+   room's own face. Tap below the clock to see each mode. Nothing private shows: a private workout reads only "Rest". */
+SCREENS.lock={title:'Lock screen',accent:'training',tess:'',render(el){el.classList.add('lockscr');
+ const BC="font-family:'Barlow Condensed',sans-serif",PX="font-family:'IBM Plex Sans Condensed',sans-serif";
+ let m=0,priv=false,t=108,t2=167,t3=360,t4=118;
+ const modes=[
+  ()=>({isl:['<span style="'+BC+';font-weight:600;color:color-mix(in srgb,var(--training) 62%,#fff)">'+(priv?'Rest':'Bench')+'</span>',mm(t)],
+   la:priv?'<div class="la1" style="'+BC+'">Rest</div><div class="la2"><span class="lab" style="'+BC+'">'+mm(t)+'</span></div><div class="la3">Private workout</div>':
+   '<div class="la1" style="'+BC+';color:color-mix(in srgb,var(--training) 62%,#fff)">Rest, then bench</div><div class="la2"><span class="lab" style="'+BC+'">'+mm(t)+'</span><span class="lar"><b style="'+BC+'">185 lb × 5</b><i>each side 45 + 25</i></span></div><div class="la3">Set 2 of 3, done about 7:22</div>'}),
+  ()=>({isl:['<span style="'+PX+';font-weight:700;color:color-mix(in srgb,var(--kitchenText) 62%,#fff)">Chicken</span>',mm(t2)],
+   la:'<div class="la1" style="'+PX+';color:color-mix(in srgb,var(--kitchenText) 62%,#fff)">Brown the chicken</div><div class="la2"><span class="lab" style="font-family:var(--num);font-weight:300">'+mm(t2)+'</span><span class="lar"><b>Chicken</b><i>onions '+mm(t3)+' after</i></span></div><div class="la3">Step 2 of 5, turn it when it lets go of the pan</div>'}),
+  ()=>({isl:['<span style="'+PX+';font-weight:700;color:color-mix(in srgb,var(--kitchenText) 62%,#fff)">Dairy</span>','7 left'],
+   la:'<div class="la1" style="'+PX+';color:color-mix(in srgb,var(--kitchenText) 62%,#fff)">Dairy, the back wall</div><div class="la2"><span class="lab" style="'+PX+';font-weight:700">Milk</span><span class="lar"><b style="font-family:var(--num);font-weight:300">1 gal</b><i>then eggs, yogurt</i></span></div><div class="la3">7 of 11 to get, 4 for the tacos</div>'}),
+  ()=>({isl:['<span style="font-weight:800;color:color-mix(in srgb,var(--routines) 62%,#fff)">Hips</span>',mm(t4)],
+   la:'<div class="la1" style="color:color-mix(in srgb,var(--routines) 62%,#fff);font-weight:700">Stretch, 2 of 5</div><div class="la2"><span class="lab" style="font-family:var(--sans);font-weight:800;letter-spacing:-.02em">Hips</span><span class="lar"><b style="font-family:var(--num);font-weight:300">'+mm(t4)+'</b><i>then back</i></span></div><div class="la3">Knee over ankle, breathe out</div>'})];
+ const mm=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+ el.innerHTML='<div class="lk-island"><span class="il"></span><span class="ir o"></span></div><div class="lk-date">Tuesday, October 27</div><div class="lk-time o">6:52</div>'+
+  '<div class="lk-la"></div><div class="lk-tabs">'+['Workout','Cooking','Shopping','Routine'].map((x,i)=>'<span data-i="'+i+'">'+x+'</span>').join('')+'<span data-p="1">Private</span></div>';
+ const isl=el.querySelector('.lk-island'),la=el.querySelector('.lk-la');
+ let lastKey='';
+ function paint(){const v=modes[m]();isl.querySelector('.il').innerHTML=v.isl[0];const ir=isl.querySelector('.ir');const w=ir.textContent;if(w!==v.isl[1]){ir.textContent=v.isl[1];numRoll(ir,w)}
+  const key=m+'|'+priv;if(key!==lastKey){la.innerHTML=v.la;if(lastKey&&!RM)[...la.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:340,delay:i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));lastKey=key}
+  else{const b=la.querySelector('.lab');const nb=document.createElement('div');nb.innerHTML=v.la;const n=nb.querySelector('.lab');if(b&&n&&b.textContent!==n.textContent){const w0=b.textContent;b.textContent=n.textContent;numRoll(b,w0)}const r=la.querySelector('.lar b'),nr=nb.querySelector('.lar b');if(r&&nr&&r.textContent!==nr.textContent)r.textContent=nr.textContent;const i3=la.querySelector('.lar i'),ni=nb.querySelector('.lar i');if(i3&&ni&&i3.textContent!==ni.textContent)i3.textContent=ni.textContent}
+  el.querySelectorAll('.lk-tabs span[data-i]').forEach(s=>s.classList.toggle('on',+s.dataset.i===m));el.querySelector('.lk-tabs span[data-p]').classList.toggle('on',priv)}
+ el.querySelector('.lk-tabs').onclick=e=>{const s=e.target.closest('span');if(!s)return;if(s.dataset.p){priv=!priv}else m=+s.dataset.i;paint()};
+ la.onclick=()=>{m=(m+1)%modes.length;paint()};
+ paint();const iv=setInterval(()=>{if(!document.contains(el))return;t=Math.max(0,t-1);t2=Math.max(0,t2-1);t4=Math.max(0,t4-1);paint()},1000);
+ window.__lk={set:(i,p)=>{m=i;priv=!!p;paint()}};return ()=>clearInterval(iv)}};
+
 /* ---------- 323 Routine mode (Watch, from Begin). The woodland stays as the keystone, untouched; the mode lives in
    the places around it. The sentence place leads one step at a time at an unhurried pace: a stretch is its moves,
    each with a cue and a soft countdown; the dial is the evening's steps with their minutes; the summary is the
@@ -1625,6 +1655,21 @@ SCREENS.money={title:'Purse',accent:'money',tess:'2,125 still yours. Closing at 
 .mrail .face .tally{font-size:11px}
 .wob .wt .sq{font-family:var(--num);font-weight:300;font-size:44px;margin-left:14px}
 .wob .wt .su{font-family:var(--sans);font-weight:400;font-size:20px;margin-left:4px;color:var(--ink2)}
+.lockscr{background:radial-gradient(120% 80% at 30% 20%,#2a3140 0%,#12151b 60%,#0b0d10 100%)!important;color:#f3f1ea;--ink:#f3f1ea;--ink2:rgba(243,241,234,.66)}
+.lockscr .lk-island{position:absolute;left:50%;top:11px;transform:translateX(-50%);height:37px;min-width:230px;border-radius:19px;background:#000;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:16px;z-index:9}
+.lockscr .lk-island .ir{font-family:var(--num);font-variant-numeric:tabular-nums;color:#f3f1ea}
+.lockscr .lk-date{position:absolute;left:0;right:0;top:96px;text-align:center;font-size:20px;font-weight:500;color:rgba(243,241,234,.8)}
+.lockscr .lk-time{position:absolute;left:0;right:0;top:118px;text-align:center;font-family:var(--num);font-weight:200;font-size:104px;line-height:1;letter-spacing:-.02em}
+.lockscr .lk-la{position:absolute;left:14px;right:14px;top:560px;height:168px;border-radius:26px;padding:18px 20px;box-sizing:border-box;background:rgba(18,20,24,.62);backdrop-filter:blur(30px) saturate(1.4);-webkit-backdrop-filter:blur(30px) saturate(1.4);cursor:pointer}
+.lockscr .la1{font-size:17px;font-weight:600;letter-spacing:.01em;height:22px;line-height:22px;white-space:nowrap;overflow:hidden}
+.lockscr .la2{display:flex;align-items:center;justify-content:space-between;height:76px;margin-top:4px;white-space:nowrap}
+.lockscr .lab{font-size:68px;font-weight:600;line-height:76px;font-variant-numeric:tabular-nums}
+.lockscr .lar{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.lockscr .lar b{font-size:26px;font-weight:600;line-height:30px}
+.lockscr .lar i{font-style:normal;font-size:15px;color:rgba(243,241,234,.66)}
+.lockscr .la3{font-size:15px;color:rgba(243,241,234,.72);margin-top:8px;height:20px;white-space:nowrap;overflow:hidden}
+.lockscr .lk-tabs{position:absolute;left:24px;right:24px;top:762px;display:flex;justify-content:space-between;font-size:14px;color:rgba(243,241,234,.5)}
+.lockscr .lk-tabs span{cursor:pointer}.lockscr .lk-tabs span.on{color:#f3f1ea}
 .one.wo{cursor:ns-resize}
 .one.mode .big{max-width:none}
 .swn.rise{animation:lrise .32s cubic-bezier(.3,.9,.3,1)}
@@ -2651,7 +2696,7 @@ MAP.length=0;MAP.push(
  {app:'Watch (Routines)',state:'283 landing, woodland 268 v4',screens:[['routines','Landing'],['sheaf','Behind a door: the Sheaf',{mode:0,open:'Body'}],['routine','A routine',{id:'stretch'}]],note:'The woodland is the locked 268 board, shown in the slot. Hold a tree to water it; tap to see it. Doors open the Sheaf (249).'},
  {app:'Log (Notes + Lists)',state:'283 landing, word wall 246',screens:[['notes','Landing'],['door','Ideas',{k:'ideas'}],['door','From Tess',{k:'tess'}],['note','A note',{id:'n1'}],['lists','Lists (old page)'],['list','A checkable note: Before the trip']],note:'The word band stays on every door page: the centerpiece rule, already true here.'},
  {app:'Lookout (Weather)',state:'283 landing, skypiece 254 v9',screens:[['weather','Landing'],['weatherhour','An hour',{h:'7 PM',t:60,w:'Rain'}]],note:'Real sky plates behind everything; the glass stays on the hour page (the centerpiece rule). Inside: plain numbers for now.'},
- {app:'Deck (Training)',state:'283 landing, blackboard 258',screens:[['training','Landing'],['workout','Today’s workout']],note:'The board stays through the app: on the workout page it carries the plan and strikes lifts as you log them.'},
+ {app:'Deck (Training)',state:'283 landing, blackboard 258',screens:[['training','Landing'],['workout','Workout mode'],['lock','Lock screen, live']],note:'The board stays through the app: on the workout page it carries the plan and strikes lifts as you log them.'},
  {app:'Galley (Kitchen)',state:'283 landing, the pass 259',screens:[['kitchen','Landing'],['tonight','Tonight'],['recipes','Recipes'],['groceries','Groceries'],['pantry','Pantry'],['leftovers','Leftovers'],['cook','Cooking Tacos']],note:'The pass stays through the app, live to each page; tickets flip up and down; cook mode strikes steps on the rail.'},
  {app:'Purse (Money)',state:'283 landing, indices 278 v3',screens:[['money','Landing']],note:'The indices keystone is the locked 278 board, shown in the slot: across for a category, up and down for an index.'});
 try{reset('home')}catch(e){window.__showErr&&window.__showErr('boot: '+(e&&e.message||e)+'\n'+(e&&e.stack||'').split('\n').slice(0,3).join('\n'))}

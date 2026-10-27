@@ -136,3 +136,22 @@ Checks t63, t64 and t65 are updated for the new structure and pass in paper and 
 For the builders: the scoreboard is one `ModeSentence` view with `title`, `trailing`, `main` (numerals or words) and
 two info lines. Plate math is a pure function in TesseraCore (`plates(perSide:bar:inventory:)`) so the Live Activity
 and the watch can share it.
+
+## Sheet 326: the modes on the lock screen
+
+A mode keeps going when the phone locks.
+
+- **Dynamic Island:** the room's word on the left in the room's face (Bench, Chicken, Dairy, Hips) and the one
+  number that counts on the right in Outfit, rolling digit by digit.
+- **Live Activity:** three lines, as in the sentence place. The top line is in the room colour, lifted 38% toward
+  white so it reads on the lock screen: "Rest, then bench", "Brown the chicken", "Dairy, the back wall", "Stretch, 2
+  of 5". The middle line holds the big thing on the left (1:46, 2:44, Milk, Hips) and the next thing on the right
+  ("185 lb × 5, each side 45 + 25", "Chicken, onions 6:00 after", "1 gal, then eggs, yogurt", "1:53, then back"). The
+  bottom line is one quiet fact.
+- **Privacy:** a private workout shows only "Rest", the time, and "Private workout". No lift, weight or set count
+  reaches the lock screen.
+- Board: Deck app list, "Lock screen, live"; tap the panel or the words under it to see each mode. Check `t66.js`
+  finds no clipped line and no page errors.
+- For the builders: ActivityKit `ContentState` per mode, with `Text(timerInterval:)` for every countdown so it runs
+  while the app sleeps. Weights are training data, not body data; a workout marked private sends no lift names or
+  weights to the activity.
