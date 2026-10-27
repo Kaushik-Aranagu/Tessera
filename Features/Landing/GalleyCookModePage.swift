@@ -65,6 +65,30 @@ struct GalleyCookModePage: View {
             try? await Task.sleep(for: .seconds(3))
             await printLine(GalleyCookWords.readyLine(label: "Chicken"))
         }
+        .task {
+            // `-startTimerNow` starts the step's pan timer after 3 s (the digits roll up), then adds a minute 4 s
+            // later; `-serveNow` serves the last step after 3 s (the ticket is spiked, the Eat summary prints).
+            guard LaunchFlags.has("-startTimerNow") || LaunchFlags.has("-serveNow") else { return }
+            try? await Task.sleep(for: .seconds(3))
+            guard let session else { return }
+            let facts = Self.facts(session: session, model: model, now: AppClock.now, opened: opened)
+            if LaunchFlags.has("-serveNow") {
+                for _ in 0 ..< session.steps.count {
+                    _ = session.next()
+                }
+                try? await Task.sleep(for: .seconds(1))
+                let last = Self.facts(session: session, model: model, now: AppClock.now, opened: opened)
+                if session.finish(note: nil) {
+                    await serve(last)
+                }
+            } else {
+                startTimer(session, facts: facts)
+                try? await Task.sleep(for: .seconds(4))
+                if let line = session.timers.first {
+                    session.extend(line, minutes: line.remaining(at: AppClock.now) / 60 + 1)
+                }
+            }
+        }
         #endif
         .tesseraFeedback(cue)
     }
