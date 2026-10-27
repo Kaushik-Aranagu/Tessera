@@ -1,0 +1,17 @@
+const {chromium}=require('/opt/node22/lib/node_modules/playwright');
+(async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});const pg=await b.newPage({viewport:{width:402,height:874}});const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+await pg.goto('file://'+__dirname+'/index.html');await pg.waitForTimeout(600);
+await pg.evaluate(()=>go('lock'));await pg.waitForTimeout(700);
+await pg.evaluate(()=>{__lk.set(0,false);__lk.t(30)});await pg.waitForTimeout(300);
+const before=await pg.evaluate(()=>document.querySelector('.lk-island').textContent);
+await pg.evaluate(()=>__lk.t(0));await pg.waitForTimeout(60);
+const r=await pg.evaluate(()=>{const i=document.querySelector('.lk-island');const sw=i.getAnimations().length;const la=document.querySelector('.lk-la');
+ const lab=la.querySelector('.lab').getBoundingClientRect(),lar=la.querySelector('.lar')?.getBoundingClientRect(),box=la.getBoundingClientRect();
+ const over=[...la.querySelectorAll('*')].filter(e=>{const q=e.getBoundingClientRect();return q.width&&(q.right>box.right+.5||q.left<box.left-.5)}).map(e=>e.className);
+ return {isl:i.textContent,swell:sw,la1:la.querySelector('.la1').textContent,la3:la.querySelector('.la3').textContent,gap:lar?Math.round(lar.left-lab.right):null,out:over}});
+await pg.waitForTimeout(700);await pg.screenshot({path:'RS1.png',clip:{x:0,y:480,width:402,height:394}});
+await pg.evaluate(()=>__lk.set(0,true));await pg.waitForTimeout(500);
+const p=await pg.evaluate(()=>({isl:document.querySelector('.lk-island').textContent,la:document.querySelector('.lk-la').textContent}));
+await pg.evaluate(()=>{__lk.set(0,false);__lk.t(90)});await pg.waitForTimeout(400);
+const back=await pg.evaluate(()=>document.querySelector('.lk-island').textContent);
+console.log(before,'|',JSON.stringify(r),'| private:',JSON.stringify(p),'| new rest:',back,errs);await b.close()})();

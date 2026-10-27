@@ -469,3 +469,13 @@ A basics sweep against the standing rule "Undo 10 s everywhere"
 - Streak lines removed: the routine done receipt no longer says "Sixth evening running", it reads "<name>, done"; the plant line "Three watering days in a row went by" now reads "Last watered Thursday, so it needs a little care"
 - Builders: every receipt in every mode carries Undo, except plain information lines (hints, "opens here")
 - Probe: boards/r66/pud.js (skip then Undo in routine and shop, order restored)
+
+## Sheet 356: rest ends the way a pan timer ends
+
+- Live Activity, workout: when rest reaches 0:00 the island gives the same single swell as the finished pan timer in 344 (scale 1.08 by 1.14, 520 ms, one double tap of haptics). Its clock gives way to the word "up"
+- The activity reads "Rest done, you're up", big "Bench", "185 lb × 5" with "each side 45 + 25", and "Set 2 of 3, tap to open the board"
+- Private workout: the island reads "Rest" and "done"; the activity says "Rest done", big "Up", "Private workout". No lift name, no weight
+- A new rest puts the clock back and rolls it in (numRoll), with no swell
+- Reduce Motion: no swell; the words change in place
+- Builder A: ActivityKit state needs an `ended` flag so the compact and expanded views switch to the word without waiting for the app
+- Probe: boards/r66/prs.js

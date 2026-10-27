@@ -1461,7 +1461,12 @@ SCREENS.lock={title:'Lock screen',accent:'training',tess:'',render(el){el.classL
  const BC="font-family:'Barlow Condensed',sans-serif",PX="font-family:'IBM Plex Sans Condensed',sans-serif";
  let m=0,priv=false,t=108,t2=167,t3=360,t4=118;
  const modes=[
-  ()=>({isl:['<span style="'+BC+';font-weight:600;color:color-mix(in srgb,var(--training) 62%,#fff)">'+(priv?'Rest':'Bench')+'</span>',mm(t)],
+  /* 356: when rest runs out the island and the activity say so the same way a pan timer does (344): one swell, the
+     clock gives way to a word, and the activity names what to lift. Private keeps the lift's name off the screen */
+  ()=>!t?({isl:['<span style="'+BC+';font-weight:600;color:color-mix(in srgb,var(--training) 62%,#fff)">'+(priv?'Rest':'Bench')+'</span>',priv?'done':'up'],
+   la:priv?'<div class="la1" style="'+BC+'">Rest done</div><div class="la2"><span class="lab" style="'+BC+'">Up</span></div><div class="la3">Private workout</div>':
+   '<div class="la1" style="'+BC+';color:color-mix(in srgb,var(--training) 62%,#fff)">Rest done, you\'re up</div><div class="la2"><span class="lab" style="'+BC+'">Bench</span><span class="lar"><b style="'+BC+'">185 lb × 5</b><i>each side 45 + 25</i></span></div><div class="la3">Set 2 of 3, tap to open the board</div>'}):
+  ({isl:['<span style="'+BC+';font-weight:600;color:color-mix(in srgb,var(--training) 62%,#fff)">'+(priv?'Rest':'Bench')+'</span>',mm(t)],
    la:priv?'<div class="la1" style="'+BC+'">Rest</div><div class="la2"><span class="lab" style="'+BC+'">'+mm(t)+'</span></div><div class="la3">Private workout</div>':
    '<div class="la1" style="'+BC+';color:color-mix(in srgb,var(--training) 62%,#fff)">Rest, then bench</div><div class="la2"><span class="lab" style="'+BC+'">'+mm(t)+'</span><span class="lar"><b style="'+BC+'">185 lb × 5</b><i>each side 45 + 25</i></span></div><div class="la3">Set 2 of 3, done about 7:22</div>'}),
   ()=>!t2?({isl:['<span style="'+PX+';font-weight:700;color:'+WINE+'">Chicken</span>','ready'],
@@ -1481,13 +1486,13 @@ SCREENS.lock={title:'Lock screen',accent:'training',tess:'',render(el){el.classL
  const isl=el.querySelector('.lk-island'),la=el.querySelector('.lk-la');
  let lastKey='';
  function paint(){const v=modes[m]();isl.querySelector('.il').innerHTML=v.isl[0];const ir=isl.querySelector('.ir');const w=ir.textContent;if(w!==v.isl[1]){ir.textContent=v.isl[1];numRoll(ir,w)}
-  const key=m+'|'+priv+'|'+(m===1&&!t2);if(key!==lastKey){if(lastKey&&m===1&&!t2&&!RM){isl.animate([{transform:'scale(1)'},{transform:'scale(1.08,1.14)',offset:.35},{transform:'scale(1)'}],{duration:520,easing:'cubic-bezier(.3,1.4,.5,1)'});if(navigator.vibrate)try{navigator.vibrate([6,60,6])}catch(e){}}la.innerHTML=v.la;if(lastKey&&!RM)[...la.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:340,delay:i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));lastKey=key}
+  const ended=(m===1&&!t2)||(m===0&&!t);const key=m+'|'+priv+'|'+ended;if(key!==lastKey){if(lastKey&&ended&&!RM){isl.animate([{transform:'scale(1)'},{transform:'scale(1.08,1.14)',offset:.35},{transform:'scale(1)'}],{duration:520,easing:'cubic-bezier(.3,1.4,.5,1)'});if(navigator.vibrate)try{navigator.vibrate([6,60,6])}catch(e){}}la.innerHTML=v.la;if(lastKey&&!RM)[...la.children].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:340,delay:i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));lastKey=key}
   else{const b=la.querySelector('.lab');const nb=document.createElement('div');nb.innerHTML=v.la;const n=nb.querySelector('.lab');if(b&&n&&b.textContent!==n.textContent){const w0=b.textContent;b.textContent=n.textContent;numRoll(b,w0)}const r=la.querySelector('.lar b'),nr=nb.querySelector('.lar b');if(r&&nr&&r.textContent!==nr.textContent)r.textContent=nr.textContent;const i3=la.querySelector('.lar i'),ni=nb.querySelector('.lar i');if(i3&&ni&&i3.textContent!==ni.textContent)i3.textContent=ni.textContent}
   el.querySelectorAll('.lk-tabs span[data-i]').forEach(s=>s.classList.toggle('on',+s.dataset.i===m));el.querySelector('.lk-tabs span[data-p]').classList.toggle('on',priv)}
  el.querySelector('.lk-tabs').onclick=e=>{const s=e.target.closest('span');if(!s)return;if(s.dataset.p){priv=!priv}else m=+s.dataset.i;paint()};
  la.onclick=()=>{m=(m+1)%modes.length;paint()};
  paint();const iv=setInterval(()=>{if(!document.contains(el))return;t=Math.max(0,t-1);t2=Math.max(0,t2-1);t3=Math.max(0,t3-1);t4=Math.max(0,t4-1);paint()},1000);
- window.__lk={set:(i,p)=>{m=i;priv=!!p;paint()},t2:v=>{t2=v;paint()}};return ()=>clearInterval(iv)}};
+ window.__lk={set:(i,p)=>{m=i;priv=!!p;paint()},t2:v=>{t2=v;paint()},t:v=>{t=v;paint()}};return ()=>clearInterval(iv)}};
 
 /* ---------- 329 Routine mode, the whole evening (his 2:59 AM note). The screen is the dusk outside the Watch's
    woodland, and it darkens a little with every step tended, so by Lights it is night. One move at a time: its name
